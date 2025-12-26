@@ -36,6 +36,7 @@ import {
   Container,
   Title,
   Loader,
+  Autocomplete,
 } from '@mantine/core';
 import {
   IconPlus,
@@ -2611,6 +2612,9 @@ function PolicyCreationModal({
   // Changes panel expanded state
   const [changesExpanded, setChangesExpanded] = useState(false);
 
+  // Parameter search state
+  const [parameterSearch, setParameterSearch] = useState('');
+
   // API hook for creating policy
   const { createPolicy, isPending: isCreating } = useCreatePolicy(policyLabel || undefined);
 
@@ -2622,6 +2626,7 @@ function PolicyCreationModal({
       setSelectedParam(null);
       setExpandedMenuItems(new Set());
       setIntervals([]);
+      setParameterSearch('');
     }
   }, [isOpen]);
 
@@ -2658,6 +2663,51 @@ function PolicyCreationModal({
       };
     });
   }, [policyParameters, parameters]);
+
+  // Build flat list of all searchable parameters for autocomplete
+  const searchableParameters = useMemo(() => {
+    if (!parameters) return [];
+
+    return Object.values(parameters)
+      .filter((param): param is ParameterMetadata =>
+        param.type === 'parameter' && !!param.label
+      )
+      .map(param => {
+        const hierarchicalLabels = getHierarchicalLabels(param.parameter, parameters);
+        const fullLabel = hierarchicalLabels.length > 0
+          ? formatLabelParts(hierarchicalLabels)
+          : param.label;
+        return {
+          value: param.parameter,
+          label: fullLabel,
+        };
+      })
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }, [parameters]);
+
+  // Handle search selection - expand tree path and select parameter
+  const handleSearchSelect = useCallback((paramName: string) => {
+    const param = parameters[paramName];
+    if (!param || param.type !== 'parameter') return;
+
+    // Expand all parent nodes in the tree path
+    const pathParts = paramName.split('.');
+    const newExpanded = new Set(expandedMenuItems);
+    let currentPath = '';
+    for (let i = 0; i < pathParts.length - 1; i++) {
+      currentPath = currentPath ? `${currentPath}.${pathParts[i]}` : pathParts[i];
+      newExpanded.add(currentPath);
+    }
+    setExpandedMenuItems(newExpanded);
+
+    // Select the parameter
+    setSelectedParam(param);
+    setIntervals([]);
+    setValueSetterMode(ValueSetterMode.DEFAULT);
+
+    // Clear search
+    setParameterSearch('');
+  }, [parameters, expandedMenuItems]);
 
   // Handle policy update from value setter
   const handlePolicyUpdate = useCallback((updatedPolicy: PolicyStateProps) => {
@@ -3099,9 +3149,33 @@ function PolicyCreationModal({
           {/* Parameter Tree */}
           <Box style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
             <Box style={{ padding: spacing.md, borderBottom: `1px solid ${colors.border.light}` }}>
-              <Text fw={600} style={{ fontSize: FONT_SIZES.small, color: colors.gray[600] }}>
+              <Text fw={600} style={{ fontSize: FONT_SIZES.small, color: colors.gray[600], marginBottom: spacing.sm }}>
                 PARAMETERS
               </Text>
+              <Autocomplete
+                placeholder="Search parameters..."
+                value={parameterSearch}
+                onChange={setParameterSearch}
+                onOptionSubmit={handleSearchSelect}
+                data={searchableParameters}
+                limit={20}
+                leftSection={<IconSearch size={14} color={colors.gray[400]} />}
+                styles={{
+                  input: {
+                    fontSize: FONT_SIZES.small,
+                    height: 32,
+                    minHeight: 32,
+                  },
+                  dropdown: {
+                    maxHeight: 300,
+                  },
+                  option: {
+                    fontSize: FONT_SIZES.small,
+                    padding: `${spacing.xs} ${spacing.sm}`,
+                  },
+                }}
+                size="xs"
+              />
             </Box>
             <ScrollArea style={{ flex: 1 }} offsetScrollbars>
               <Box style={{ padding: spacing.sm }}>
