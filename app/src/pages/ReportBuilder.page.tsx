@@ -2670,7 +2670,7 @@ function PolicyCreationModal({
 
     return Object.values(parameters)
       .filter((param): param is ParameterMetadata =>
-        param.type === 'parameter' && !!param.label
+        param.type === 'parameter' && !!param.label && !param.parameter.includes('pycache')
       )
       .map(param => {
         const hierarchicalLabels = getHierarchicalLabels(param.parameter, parameters);
@@ -2786,21 +2786,23 @@ function PolicyCreationModal({
 
   // Render nested menu recursively - memoized to prevent expensive re-renders
   const renderMenuItems = useCallback((items: ParameterTreeNode[]): React.ReactNode => {
-    return items.map(item => (
-      <NavLink
-        key={item.name}
-        label={item.label}
-        active={selectedParam?.parameter === item.name}
-        opened={expandedMenuItems.has(item.name)}
-        onClick={() => handleMenuItemClick(item.name)}
-        childrenOffset={16}
-        style={{
-          borderRadius: spacing.radius.sm,
-        }}
-      >
-        {item.children && expandedMenuItems.has(item.name) && renderMenuItems(item.children)}
-      </NavLink>
-    ));
+    return items
+      .filter(item => !item.name.includes('pycache'))
+      .map(item => (
+        <NavLink
+          key={item.name}
+          label={item.label}
+          active={selectedParam?.parameter === item.name}
+          opened={expandedMenuItems.has(item.name)}
+          onClick={() => handleMenuItemClick(item.name)}
+          childrenOffset={16}
+          style={{
+            borderRadius: spacing.radius.sm,
+          }}
+        >
+          {item.children && expandedMenuItems.has(item.name) && renderMenuItems(item.children)}
+        </NavLink>
+      ));
   }, [selectedParam?.parameter, expandedMenuItems, handleMenuItemClick]);
 
   // Memoize the rendered tree to avoid expensive re-renders on unrelated state changes
