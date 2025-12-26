@@ -1,0 +1,75 @@
+{
+  "name": "@policyengine/shared",
+  "version": "0.1.0",
+  "description": "PolicyEngine shared utilities - routing, hooks, and country detection",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "!dist/__tests__",
+    "src",
+    "!src/__tests__"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src --ext .ts,.tsx",
+    "format": "prettier --write \"src/**/*.{ts,tsx}\"",
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0",
+    "react-router-dom": ">=7.0.0",
+    "@mantine/core": ">=8.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": false
+    },
+    "react-dom": {
+      "optional": false
+    },
+    "react-router-dom": {
+      "optional": false
+    },
+    "@mantine/core": {
+      "optional": false
+    }
+  },
+  "devDependencies": {
+    "@mantine/core": "^8.0.0",
+    "@types/node": "^22.15.11",
+    "@types/react": "^19.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-router-dom": "^7.0.0",
+    "typescript": "^5.8.3",
+    "prettier": "^3.5.3",
+    "vitest": "^3.2.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/PolicyEngine/policyengine-app-v2.git",
+    "directory": "packages/shared"
+  },
+  "license": "AGPL-3.0",
+  "keywords": [
+    "policyengine",
+    "shared",
+    "routing",
+    "geolocation"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}

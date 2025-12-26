@@ -1,0 +1,49 @@
+/* Note: For most components, we don't condone separate CSS stylesheets, but Mantine
+   provides no way to provide styling to child components natively */
+
+.rich-text-block p {
+  font-family:
+    Roboto,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Helvetica,
+    Arial,
+    sans-serif;
+  font-size: 16px;
+  line-height: 1.625;
+  margin-bottom: 16px;
+  margin-top: 0;
+}
+
+.rich-text-block p:last-child {
+  margin-bottom: 0;
+}
+
+.rich-text-block a {
+  color: var(--link-color);
+  text-decoration: underline;
+  transition: opacity 0.2s ease;
+}
+
+.rich-text-block a:hover {
+  opacity: 0.8;
+}
+
+.rich-text-block strong {
+  font-weight: 700;
+}
+
+.rich-text-block em {
+  font-style: italic;
+}
+
+.rich-text-block ul,
+.rich-text-block ol {
+  margin-bottom: 16px;
+  padding-left: 32px;
+}
+
+.rich-text-block li {
+  margin-bottom: 4px;
+}

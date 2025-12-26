@@ -1,8 +1,0 @@
-@@ -42,7 +44,6 @@
-     id: 'geo-1',
--    userId: 'test-user',
-     countryId: TEST_COUNTRIES.US,
-     geographyId: TEST_COUNTRIES.US,
-     scope: 'national',
- 
- 

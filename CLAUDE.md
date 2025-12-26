@@ -1,47 +1,85 @@
 # PolicyEngine App v2 Development Guidelines
 
+## Project Structure
+
+This is a Turborepo monorepo with the following structure:
+
+```
+├── apps/
+│   ├── website/         # policyengine.org - Static pages, research, blog
+│   └── calculator/      # app.policyengine.org - Interactive calculator
+├── packages/
+│   ├── design-system/   # Shared UI components and design tokens
+│   └── shared/          # Common utilities, hooks, and routing
+```
+
+### Apps
+
+- **`apps/website/`** - Static website (policyengine.org)
+  - NO Redux, NO React Query - lightweight static pages
+  - Research posts, blog, team, supporters, donate pages
+  - Port 3000 in development
+
+- **`apps/calculator/`** - Interactive calculator (app.policyengine.org)
+  - Full Redux + React Query stack
+  - Household builder, policy simulations, reports
+  - Port 3001 in development
+
+### Packages
+
+- **`packages/design-system/`** - Shared UI components
+  - Design tokens (colors, spacing, typography)
+  - HomeHeader, buttons, cards, etc.
+
+- **`packages/shared/`** - Common utilities
+  - Country configuration and hooks (`useCurrentCountry`)
+  - Geolocation-based routing (`RedirectToCountry`)
+  - Shared types
+
+## Development Commands
+
+```bash
+# Run both apps in development
+npm run dev
+
+# Run individual apps
+npm run website:dev      # Website on :3000
+npm run calculator:dev   # Calculator on :3001
+
+# Build
+npm run build            # Build all
+npm run website:build    # Build website only
+npm run calculator:build # Build calculator only
+
+# Quality
+npm run typecheck        # Type check all packages
+npm run lint             # Lint all packages
+npm run test             # Run tests
+```
+
 ## Branding & Logos
 
 ### Color Palette
 - **Teal** is the current brand color (not blue)
-- Old blue assets from `policyengine-app` should be updated to teal
 
 ### Logo Assets Location
-All logos are in `app/public/assets/logos/policyengine/`:
+Logos are in each app's `public/assets/logos/policyengine/`:
 
 | File | Type | Description |
 |------|------|-------------|
 | `teal.png` | Wide | Teal "POLICY ENGINE" logo |
 | `teal.svg` | Wide | SVG version |
-| `teal-square.png` | Square | Teal PE icon (trimmed) |
-| `teal-square.svg` | Square | SVG version |
+| `teal-square.png` | Square | Teal PE icon |
 | `white.png` | Wide | White logo (for dark backgrounds) |
 | `white.svg` | Wide | SVG version |
-| `white-square.svg` | Square | White PE icon SVG |
-
-### Favicon
-- Located at `app/src/favicon.svg`
-- Uses the teal-square logo
-
-### Chart Watermarks in Research Posts
-- Posts reference logos via URL path (e.g., `/assets/logos/policyengine/teal-square.png`)
-- Chart watermarks need public URLs, so logos must be in `public/`
-- Legacy posts may use `/logo512.png` or GitHub raw URLs - these should be updated to the standard path
 
 ### Component Logo Usage
-Components reference logos from public path:
 ```tsx
 const PolicyEngineLogo = '/assets/logos/policyengine/white.svg';
 ```
 
-## Project Structure
-
-- `app/` is the Vite project root
-- `app/public/` - Static assets served at exact URLs
-- `app/src/` - Source code processed by bundler
-
 ## Before Committing
 
-1. Run `cd app && npm run prettier -- --write .` to format
+1. Run `npm run typecheck` to check types
 2. Run `npm run lint` to check for errors
-3. CI uses `--max-warnings 0` so fix all warnings
+3. Run `npm run prettier:write` in the app directory to format

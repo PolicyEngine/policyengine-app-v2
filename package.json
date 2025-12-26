@@ -3,18 +3,23 @@
   "private": true,
   "workspaces": [
     "packages/*",
-    "app"
+    "apps/*"
   ],
   "scripts": {
-    "dev": "npm run design-system:build && npm run dev --workspace=policyengine-app-v2",
+    "dev": "npm run packages:build && turbo run dev --filter=@policyengine/website --filter=@policyengine/calculator",
     "build": "turbo run build",
+    "build:apps": "npm run packages:build && turbo run build --filter=@policyengine/website --filter=@policyengine/calculator",
     "test": "turbo run test",
     "lint": "turbo run lint",
     "format": "turbo run format",
     "typecheck": "turbo run typecheck",
+    "packages:build": "turbo run build --filter=@policyengine/design-system --filter=@policyengine/shared",
     "design-system:build": "npm run build --workspace=@policyengine/design-system",
-    "calculator:dev": "npm run dev --workspace=@policyengine/calculator",
-    "website:dev": "npm run dev --workspace=@policyengine/website"
+    "shared:build": "npm run build --workspace=@policyengine/shared",
+    "calculator:dev": "npm run packages:build && npm run dev --workspace=@policyengine/calculator",
+    "calculator:build": "npm run packages:build && npm run build --workspace=@policyengine/calculator",
+    "website:dev": "npm run packages:build && npm run dev --workspace=@policyengine/website",
+    "website:build": "npm run packages:build && npm run build --workspace=@policyengine/website"
   },
   "devDependencies": {
     "jsdom": "^26.1.0",
