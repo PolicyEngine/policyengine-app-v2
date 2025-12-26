@@ -16,5 +16,8 @@ export { fetchVariables } from "./variables";
 // Parameters
 export { fetchParameters } from "./parameters";
 
+// Parameter values (on-demand fetching)
+export { fetchParameterValues } from "./parameterValues";
+
 // Datasets
 export { fetchDatasets } from "./datasets";
