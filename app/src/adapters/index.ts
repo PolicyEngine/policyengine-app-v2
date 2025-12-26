@@ -3,6 +3,8 @@ export { PolicyAdapter } from './PolicyAdapter';
 export { SimulationAdapter } from './SimulationAdapter';
 export { ReportAdapter } from './ReportAdapter';
 export { HouseholdAdapter } from './HouseholdAdapter';
+export { MetadataAdapter } from './MetadataAdapter';
+export type { DatasetEntry } from './MetadataAdapter';
 
 // User Ingredient Adapters
 export { UserReportAdapter } from './UserReportAdapter';

@@ -2,15 +2,86 @@
  * Fixtures for API v2 module tests
  */
 import type { TaxBenefitModel, TaxBenefitModelVersion } from '@/api/v2/taxBenefitModels';
-import {
-  createMockVariables,
-  createMockParameters,
-  createMockDatasets,
-  TEST_COUNTRIES,
-} from '@/tests/fixtures/storage/storageMocks';
+import type { V2VariableMetadata, V2ParameterMetadata, V2DatasetMetadata } from '@/types/metadata';
 
-// Re-export shared constants
-export { TEST_COUNTRIES };
+// Test countries
+export const TEST_COUNTRIES = {
+  US: 'us',
+  UK: 'uk',
+  CA: 'ca',
+} as const;
+
+// Test versions
+export const TEST_VERSIONS = {
+  US_VERSION: '1.0.0',
+  US_VERSION_ID: 'version-id-123',
+  UK_VERSION: '2.0.0',
+  UK_VERSION_ID: 'version-id-456',
+} as const;
+
+// Variable factory
+export function createMockVariable(overrides: Partial<V2VariableMetadata> = {}): V2VariableMetadata {
+  return {
+    id: 'var-1',
+    name: 'test_variable',
+    entity: 'person',
+    description: 'Test variable description',
+    data_type: 'float',
+    possible_values: null,
+    tax_benefit_model_version_id: TEST_VERSIONS.US_VERSION_ID,
+    created_at: '2024-01-01T00:00:00Z',
+    ...overrides,
+  };
+}
+
+export function createMockVariables(count: number): V2VariableMetadata[] {
+  return Array.from({ length: count }, (_, i) =>
+    createMockVariable({ id: `var-${i}`, name: `variable_${i}` })
+  );
+}
+
+// Parameter factory
+export function createMockParameter(overrides: Partial<V2ParameterMetadata> = {}): V2ParameterMetadata {
+  return {
+    id: 'param-1',
+    name: 'test.parameter',
+    label: 'Test Parameter',
+    description: 'Test parameter description',
+    data_type: 'float',
+    unit: null,
+    tax_benefit_model_version_id: TEST_VERSIONS.US_VERSION_ID,
+    created_at: '2024-01-01T00:00:00Z',
+    ...overrides,
+  };
+}
+
+export function createMockParameters(count: number): V2ParameterMetadata[] {
+  return Array.from({ length: count }, (_, i) =>
+    createMockParameter({ id: `param-${i}`, name: `test.param_${i}`, label: `Param ${i}` })
+  );
+}
+
+// Dataset factory
+export function createMockDataset(overrides: Partial<V2DatasetMetadata> = {}): V2DatasetMetadata {
+  return {
+    id: 'dataset-1',
+    name: 'test_dataset',
+    description: 'Test dataset description',
+    filepath: '/path/to/dataset',
+    year: 2024,
+    is_output_dataset: false,
+    tax_benefit_model_id: '8ac12923-1282-420e-a440-0fa60d43950a',
+    created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2024-01-01T00:00:00Z',
+    ...overrides,
+  };
+}
+
+export function createMockDatasets(count: number): V2DatasetMetadata[] {
+  return Array.from({ length: count }, (_, i) =>
+    createMockDataset({ id: `dataset-${i}`, name: `dataset_${i}` })
+  );
+}
 
 // Model IDs
 export const MODEL_IDS = {
