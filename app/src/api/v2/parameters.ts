@@ -1,10 +1,10 @@
 import { API_V2_BASE_URL, getModelId } from "./taxBenefitModels";
-import type { Parameter } from "@/storage";
+import type { V2ParameterMetadata } from "@/types/metadata";
 
 /**
  * Fetch all parameters for a country.
  */
-export async function fetchParameters(countryId: string): Promise<Parameter[]> {
+export async function fetchParameters(countryId: string): Promise<V2ParameterMetadata[]> {
   const modelId = getModelId(countryId);
   const res = await fetch(
     `${API_V2_BASE_URL}/parameters/?tax_benefit_model_id=${modelId}&limit=10000`,

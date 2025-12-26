@@ -1,6 +1,45 @@
 import { UK_REGION_TYPES, US_REGION_TYPES } from "./regionTypes";
 
 /**
+ * V2 API response types - raw data from the API
+ * These represent the exact shape of data returned by the V2 API endpoints.
+ */
+
+export interface V2VariableMetadata {
+  id: string;
+  name: string;
+  entity: string;
+  description: string;
+  data_type: string;
+  possible_values: string[] | null;
+  tax_benefit_model_version_id: string;
+  created_at: string;
+}
+
+export interface V2ParameterMetadata {
+  id: string;
+  name: string;
+  label: string;
+  description: string;
+  data_type: string;
+  unit: string | null;
+  tax_benefit_model_version_id: string;
+  created_at: string;
+}
+
+export interface V2DatasetMetadata {
+  id: string;
+  name: string;
+  description: string;
+  filepath: string;
+  year: number;
+  is_output_dataset: boolean;
+  tax_benefit_model_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
  * Region entry from API metadata
  * All regions have: name, label, type
  * Congressional districts also have: state_abbreviation, state_name

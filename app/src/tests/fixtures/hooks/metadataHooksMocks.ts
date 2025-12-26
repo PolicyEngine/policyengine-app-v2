@@ -2,7 +2,7 @@
  * Fixtures for metadata hooks tests
  */
 import { MetadataState } from '@/types/metadata';
-import { TEST_COUNTRIES, TEST_VERSIONS } from '../storage/storageMocks';
+import { TEST_COUNTRIES, TEST_VERSIONS } from '../api/v2/apiV2Mocks';
 
 // Re-export shared constants
 export { TEST_COUNTRIES, TEST_VERSIONS };
