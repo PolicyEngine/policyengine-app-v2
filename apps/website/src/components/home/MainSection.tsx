@@ -1,6 +1,6 @@
 import { Container, Stack, Text, Title } from '@mantine/core';
 import { useCurrentCountry } from '@policyengine/shared';
-import { colors, spacing, typography } from '@/designTokens';
+import { colors, spacing, typography } from '@policyengine/design-system';
 
 export default function MainSection() {
   const countryId = useCurrentCountry();

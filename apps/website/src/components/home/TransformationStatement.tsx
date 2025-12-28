@@ -1,6 +1,6 @@
 import { Center, Container, Text } from '@mantine/core';
 import { useCurrentCountry } from '@policyengine/shared';
-import { spacing, typography } from '@/designTokens';
+import { spacing, typography } from '@policyengine/design-system';
 
 export default function TransformationStatement() {
   const countryId = useCurrentCountry();

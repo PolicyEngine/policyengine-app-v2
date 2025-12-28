@@ -5,7 +5,7 @@
  * special handling (no sleep state, no postMessage).
  */
 
-import { spacing } from '@/designTokens';
+import { spacing } from '@policyengine/design-system';
 import type { IframeContentProps } from '@/types/apps';
 
 export default function SimpleIframe({

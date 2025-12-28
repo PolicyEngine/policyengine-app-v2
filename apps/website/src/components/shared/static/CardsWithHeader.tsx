@@ -1,5 +1,5 @@
 import { Box, SimpleGrid, Title } from '@mantine/core';
-import { colors, spacing, typography } from '@/designTokens';
+import { colors, spacing, typography } from '@policyengine/design-system';
 import { CardProps, SingleCard } from './SingleCard';
 
 interface CardsContainerProps {

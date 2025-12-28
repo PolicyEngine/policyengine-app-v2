@@ -1,5 +1,5 @@
 // Spacing submodule for Mantine theme
-import { spacing } from '../designTokens';
+import { spacing } from '@policyengine/design-system';
 
 export const themeSpacing = {
   spacing: {

@@ -1,5 +1,5 @@
 // Typography submodule for Mantine theme
-import { typography } from '../designTokens';
+import { typography } from '@policyengine/design-system';
 
 export const themeTypography = {
   fontFamily: typography.fontFamily.primary,

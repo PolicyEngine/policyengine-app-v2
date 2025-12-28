@@ -5,7 +5,7 @@
  * to the new Mantine-based design tokens
  */
 
-import { colors, typography } from '@/designTokens';
+import { colors, typography } from '@policyengine/design-system';
 
 /**
  * Color palette for blog components

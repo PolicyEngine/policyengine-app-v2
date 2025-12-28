@@ -1,5 +1,5 @@
 import { Box, Image, Text } from '@mantine/core';
-import { colors, typography } from '@/designTokens';
+import { colors, typography } from '@policyengine/design-system';
 import SupportedProject, { SupportedProject as SupportedProjectType } from './SupportedProject';
 
 export interface Supporter {

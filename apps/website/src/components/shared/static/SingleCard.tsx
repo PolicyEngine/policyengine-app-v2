@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Badge, Box, Card, Flex, Group, Image, Text } from '@mantine/core';
-import { colors, spacing, typography } from '@/designTokens';
+import { colors, spacing, typography } from '@policyengine/design-system';
 
 export interface CardProps {
   title: string;

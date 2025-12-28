@@ -21,7 +21,7 @@ import {
   topicLabels,
   topicTags,
 } from '@/data/posts/postTransformers';
-import { colors } from '@/designTokens';
+import { colors } from '@policyengine/design-system';
 import type { AuthorsCollection, BlogPost, Notebook } from '@/types/blog';
 import { extractMarkdownFromNotebook, isNotebookFile } from '@/utils/notebookUtils';
 

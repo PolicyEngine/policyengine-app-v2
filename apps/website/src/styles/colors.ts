@@ -1,6 +1,6 @@
 // Colors submodule for Mantine theme
 import type { MantineColorsTuple } from '@mantine/core';
-import { colors } from '../designTokens';
+import { colors } from '@policyengine/design-system';
 
 export const themeColors: Record<string, MantineColorsTuple> = {
   primary: [

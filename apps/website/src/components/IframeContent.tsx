@@ -7,7 +7,7 @@
  */
 
 import { useState } from 'react';
-import { colors } from '@/designTokens';
+import { colors } from '@policyengine/design-system';
 import type { IframeContentProps } from '@/types/apps';
 
 export default function IframeContent({

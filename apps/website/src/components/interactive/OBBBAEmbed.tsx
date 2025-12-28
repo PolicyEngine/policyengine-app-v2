@@ -10,7 +10,7 @@
 
 import { useEffect, useMemo, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { spacing } from '@/designTokens';
+import { spacing } from '@policyengine/design-system';
 
 interface OBBBAEmbedProps {
   url: string;

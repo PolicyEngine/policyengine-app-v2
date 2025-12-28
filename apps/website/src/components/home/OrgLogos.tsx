@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Box, Flex, Text } from '@mantine/core';
 import { useCurrentCountry } from '@policyengine/shared';
 import { CountryId, getOrgsForCountry, Organization } from '@/data/organizations';
-import { colors, spacing, typography } from '@/designTokens';
+import { colors, spacing, typography } from '@policyengine/design-system';
 
 const NUM_VISIBLE = 7;
 const CYCLE_INTERVAL = 2000; // 2 seconds between each change

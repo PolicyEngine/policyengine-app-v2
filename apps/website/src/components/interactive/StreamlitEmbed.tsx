@@ -9,7 +9,7 @@
  */
 
 import { useState } from 'react';
-import { spacing } from '@/designTokens';
+import { spacing } from '@policyengine/design-system';
 import type { StreamlitEmbedProps } from '@/types/apps';
 
 export default function StreamlitEmbed({

@@ -1,5 +1,5 @@
 import { Box, Grid, Image, Text } from '@mantine/core';
-import { colors, spacing, typography } from '@/designTokens';
+import { colors, spacing, typography } from '@policyengine/design-system';
 
 export interface TeamMember {
   name: string;

@@ -1,4 +1,4 @@
-import { typography } from '../designTokens';
+import { typography } from '@policyengine/design-system';
 
 // Defaults submodule for Mantine theme
 export const themeDefaults = {

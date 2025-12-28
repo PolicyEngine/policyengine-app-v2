@@ -3,7 +3,7 @@ import ActionCards from '@/components/home/ActionCards';
 import MainSection from '@/components/home/MainSection';
 import OrgLogos from '@/components/home/OrgLogos';
 import AutumnBudgetBanner from '@/components/shared/AutumnBudgetBanner';
-import { colors, spacing, typography } from '@/designTokens';
+import { colors, spacing, typography } from '@policyengine/design-system';
 
 export default function HomePage() {
   return (

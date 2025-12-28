@@ -1,5 +1,5 @@
 import { Box, Container, Title } from '@mantine/core';
-import { colors, spacing, typography } from '@/designTokens';
+import { colors, spacing, typography } from '@policyengine/design-system';
 import StaticPageLayout from './StaticPageLayout';
 
 export interface LegalSection {

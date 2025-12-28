@@ -10,7 +10,7 @@ import {
 import { Anchor, Box, Container, Group, SimpleGrid, Stack, Text } from '@mantine/core';
 import { useCurrentCountry, CountryId } from '@policyengine/shared';
 import FooterSubscribe from '@/components/FooterSubscribe';
-import { colors, spacing, typography } from '@/designTokens';
+import { colors, spacing, typography } from '@policyengine/design-system';
 
 const PolicyEngineLogo = '/assets/logos/policyengine/white.svg';
 

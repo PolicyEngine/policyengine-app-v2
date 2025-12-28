@@ -15,7 +15,7 @@ import { useDisplayCategory } from '@/components/blog/useDisplayCategory';
 import HeroSection from '@/components/shared/static/HeroSection';
 import StaticPageLayout from '@/components/shared/static/StaticPageLayout';
 import { getResearchItems } from '@/data/posts/postTransformers';
-import { colors, spacing } from '@/designTokens';
+import { colors, spacing } from '@policyengine/design-system';
 
 // Mock authors for now - in production, import from authors.json
 const mockAuthors = [

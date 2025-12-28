@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Button, Stack, Text, TextInput } from '@mantine/core';
-import { colors, typography } from '@/designTokens';
+import { colors, typography } from '@policyengine/design-system';
 import { submitToMailchimp } from '@/utils/mailchimpSubscription';
 
 export default function FooterSubscribe() {

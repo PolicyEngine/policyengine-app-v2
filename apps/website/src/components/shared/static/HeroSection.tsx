@@ -1,5 +1,5 @@
 import { Box, Divider, Flex, Text, Title } from '@mantine/core';
-import { colors, spacing, typography } from '@/designTokens';
+import { colors, spacing, typography } from '@policyengine/design-system';
 
 export interface HeroSectionProps {
   title: string;

@@ -1,6 +1,6 @@
 // Components submodule for Mantine theme
 import { AppShell, Card, Container, Table, Title } from '@mantine/core';
-import { colors, spacing, typography } from '../designTokens';
+import { colors, spacing, typography } from '@policyengine/design-system';
 import { themeDefaults } from './defaults';
 
 // TODO: Remove variants from components, as these do not work correctly;

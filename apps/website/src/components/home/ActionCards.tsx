@@ -1,7 +1,7 @@
 import { Card, Center, Container, Text } from '@mantine/core';
 import { useCurrentCountry } from '@policyengine/shared';
 import { CALCULATOR_URL } from '@/constants';
-import { colors, spacing, typography } from '@/designTokens';
+import { colors, spacing, typography } from '@policyengine/design-system';
 
 export default function ActionCards() {
   const countryId = useCurrentCountry();

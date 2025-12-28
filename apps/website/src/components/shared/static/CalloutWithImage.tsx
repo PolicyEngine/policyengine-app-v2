@@ -1,5 +1,5 @@
 import { Button, Container, Grid, Image, Stack, Text, Title } from '@mantine/core';
-import { colors, typography } from '@/designTokens';
+import { colors, typography } from '@policyengine/design-system';
 
 export interface CalloutWithImageProps {
   title: string;

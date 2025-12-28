@@ -1,5 +1,5 @@
 import { Box, Button, Card, Group, Stack, Text, Title } from '@mantine/core';
-import { colors } from '../../../designTokens';
+import { colors } from '@policyengine/design-system';
 
 interface Section {
   heading?: string;

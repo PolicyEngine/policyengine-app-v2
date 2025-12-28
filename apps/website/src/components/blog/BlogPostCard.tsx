@@ -8,7 +8,7 @@
 import { Link } from 'react-router-dom';
 import { Badge, Box, Group, Text } from '@mantine/core';
 import { locationLabels, topicLabels } from '@/data/posts/postTransformers';
-import { colors, spacing } from '@/designTokens';
+import { colors, spacing } from '@policyengine/design-system';
 import type { ResearchItem } from '@/types/blog';
 
 interface BlogPostCardProps {
