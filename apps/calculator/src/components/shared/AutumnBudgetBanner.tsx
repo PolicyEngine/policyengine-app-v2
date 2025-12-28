@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Box, Card, CloseButton, Group, Text, Title } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
-import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useCurrentCountry } from '@policyengine/shared';
 
 const BANNER_DISMISSED_KEY = 'autumn-budget-2025-banner-dismissed';
 

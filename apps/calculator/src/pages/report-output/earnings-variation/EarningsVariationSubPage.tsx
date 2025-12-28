@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 import { Group, Select, Stack, Text } from '@mantine/core';
 import { PolicyAdapter } from '@/adapters/PolicyAdapter';
 import { spacing } from '@/designTokens';
-import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useCurrentCountry } from '@policyengine/shared';
 import { useHouseholdVariation } from '@/hooks/useHouseholdVariation';
 import { useReportYear } from '@/hooks/useReportYear';
 import type { RootState } from '@/store';

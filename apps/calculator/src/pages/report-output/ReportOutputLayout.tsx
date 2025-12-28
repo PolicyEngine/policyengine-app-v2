@@ -1,7 +1,7 @@
 import { IconCalendar, IconClock, IconPencil, IconStack2 } from '@tabler/icons-react';
 import { ActionIcon, Box, Container, Group, Stack, Text, Title } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
-import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useCurrentCountry } from '@policyengine/shared';
 import { getComparativeAnalysisTree } from './comparativeAnalysisTree';
 import { getHouseholdOutputTree } from './householdOutputTree';
 import { ReportSidebar } from './ReportSidebar';

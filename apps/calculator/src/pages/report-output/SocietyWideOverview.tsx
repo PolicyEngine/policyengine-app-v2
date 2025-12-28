@@ -1,7 +1,7 @@
 import { Box, Group, SimpleGrid, Stack, Text } from '@mantine/core';
 import { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { colors, spacing } from '@/designTokens';
-import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useCurrentCountry } from '@policyengine/shared';
 import { formatBudgetaryImpact } from '@/utils/formatPowers';
 import { currencySymbol } from '@/utils/formatters';
 

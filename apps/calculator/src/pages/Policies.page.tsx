@@ -6,7 +6,7 @@ import { ColumnConfig, IngredientRecord, TextValue } from '@/components/columns'
 import { RenameIngredientModal } from '@/components/common/RenameIngredientModal';
 import IngredientReadView from '@/components/IngredientReadView';
 import { MOCK_USER_ID } from '@/constants';
-import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useCurrentCountry } from '@policyengine/shared';
 import { useUpdatePolicyAssociation, useUserPolicies } from '@/hooks/useUserPolicy';
 import { countParameterChanges } from '@/utils/countParameterChanges';
 import { formatDate } from '@/utils/dateUtils';

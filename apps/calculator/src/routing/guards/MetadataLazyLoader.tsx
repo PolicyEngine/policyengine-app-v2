@@ -1,5 +1,5 @@
 import { Outlet } from 'react-router-dom';
-import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useCurrentCountry } from '@policyengine/shared';
 import { useFetchMetadata } from '@/hooks/useMetadata';
 
 /**

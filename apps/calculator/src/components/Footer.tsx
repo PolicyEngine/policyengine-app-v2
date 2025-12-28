@@ -11,7 +11,7 @@ import { Anchor, Box, Container, Group, SimpleGrid, Stack, Text } from '@mantine
 import type { CountryId } from '@/api/report';
 import FooterSubscribe from '@/components/FooterSubscribe';
 import { colors, spacing, typography } from '@/designTokens';
-import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useCurrentCountry } from '@policyengine/shared';
 
 const PolicyEngineLogo = '/assets/logos/policyengine/white.svg';
 

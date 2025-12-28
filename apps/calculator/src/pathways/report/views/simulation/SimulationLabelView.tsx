@@ -7,7 +7,7 @@
 import { useState } from 'react';
 import { TextInput } from '@mantine/core';
 import PathwayView from '@/components/common/PathwayView';
-import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useCurrentCountry } from '@policyengine/shared';
 import { PathwayMode } from '@/types/pathwayModes/PathwayMode';
 
 interface SimulationLabelViewProps {

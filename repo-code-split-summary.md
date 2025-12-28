@@ -68,6 +68,7 @@ policyengine-app-v2/
 | `src/hooks/useCurrentCountry.ts` | Hook to get current country from URL params |
 | `src/hooks/index.ts` | Hook exports |
 | `src/routing/RedirectToCountry.tsx` | Geolocation-based country redirect component |
+| `src/routing/urlUtils.ts` | URL utilities (e.g., `replaceCountryInPath`) |
 | `src/routing/index.ts` | Routing exports |
 | `src/services/geolocation.ts` | Geolocation service for country detection |
 | `src/services/index.ts` | Service exports |
@@ -124,22 +125,24 @@ policyengine-app-v2/
 
 These are changes beyond simple file moves and import path updates.
 
-### 1. HeaderNavigation Wrapper Component (Website)
+### 1. HeaderNavigation Wrapper Components
 
-**File:** `apps/website/src/components/shared/HeaderNavigation.tsx`
+**Files:**
+- `apps/website/src/components/shared/HeaderNavigation.tsx`
+- `apps/calculator/src/components/shared/HomeHeader.tsx`
 
-**Why:** The design-system's `HomeHeader` was refactored to be a "dumb" component that accepts props instead of using hooks directly. The website app needs a wrapper to provide the navigation logic.
+**Why:** The design-system's `HomeHeader` was refactored to be a "dumb" component that accepts props instead of using hooks directly. Each app needs a thin wrapper to provide navigation logic.
 
-**Change:** Created new wrapper component that:
+**Change:** Created wrapper components that use shared utilities:
 - Uses `useCurrentCountry` from `@policyengine/shared`
-- Uses `useNavigate` and `useLocation` from React Router
+- Uses `replaceCountryInPath` utility for cleaner URL handling
 - Passes navigation callbacks and country data as props to `HomeHeader`
 
 ```tsx
-// NEW FILE - apps/website/src/components/shared/HeaderNavigation.tsx
+// apps/website/src/components/shared/HeaderNavigation.tsx
 import { useNavigate, useLocation } from 'react-router-dom';
 import { HomeHeader, NavItemSetup, Country } from '@policyengine/design-system';
-import { useCurrentCountry } from '@policyengine/shared';
+import { useCurrentCountry, replaceCountryInPath } from '@policyengine/shared';
 
 export default function HeaderNavigation() {
   const navigate = useNavigate();
@@ -151,13 +154,7 @@ export default function HeaderNavigation() {
   };
 
   const handleCountryChange = (newCountryId: string) => {
-    const pathParts = location.pathname.split('/').filter(Boolean);
-    if (pathParts.length > 0) {
-      pathParts[0] = newCountryId;
-      navigate(`/${pathParts.join('/')}`);
-    } else {
-      navigate(`/${newCountryId}`);
-    }
+    navigate(replaceCountryInPath(location.pathname, newCountryId));
   };
 
   // ... navItems setup ...
@@ -171,6 +168,19 @@ export default function HeaderNavigation() {
       onCountryChange={handleCountryChange}
     />
   );
+}
+```
+
+### 1b. URL Utility for Country Switching
+
+**File:** `packages/shared/src/routing/urlUtils.ts`
+
+**Why:** Country switching requires replacing the first path segment. Added a dedicated utility for cleaner, more maintainable URL handling.
+
+```tsx
+export function replaceCountryInPath(path: string, newCountryId: string): string {
+  if (!path || path === '/') return `/${newCountryId}`;
+  return path.replace(/^\/[^/]+/, `/${newCountryId}`);
 }
 ```
 

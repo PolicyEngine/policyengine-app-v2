@@ -7,7 +7,7 @@ import { BulletsValue, ColumnConfig, IngredientRecord, TextValue } from '@/compo
 import { RenameIngredientModal } from '@/components/common/RenameIngredientModal';
 import IngredientReadView from '@/components/IngredientReadView';
 import { MOCK_USER_ID } from '@/constants';
-import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useCurrentCountry } from '@policyengine/shared';
 import {
   useGeographicAssociationsByUser,
   useUpdateGeographicAssociation,

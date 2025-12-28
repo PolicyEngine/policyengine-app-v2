@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { fetchPolicyById } from '@/api/policy';
-import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useCurrentCountry } from '@policyengine/shared';
 
 /* TODO Integrate hook for get user policies api */
 export function usePolicy(country?: string, policyId = '88713') {

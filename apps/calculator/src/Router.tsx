@@ -18,7 +18,7 @@ import SimulationPathwayWrapper from './pathways/simulation/SimulationPathwayWra
 import { CountryGuard } from './routing/guards/CountryGuard';
 import { MetadataGuard } from './routing/guards/MetadataGuard';
 import { MetadataLazyLoader } from './routing/guards/MetadataLazyLoader';
-import { RedirectToCountry } from './routing/RedirectToCountry';
+import { RedirectToCountry } from '@policyengine/shared';
 
 const router = createBrowserRouter(
   [

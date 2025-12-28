@@ -6,7 +6,7 @@ import { SocietyWideReportOutput as SocietyWideOutput } from '@/api/societyWideC
 import { RenameIngredientModal } from '@/components/common/RenameIngredientModal';
 import { ReportYearProvider } from '@/contexts/ReportYearContext';
 import { spacing } from '@/designTokens';
-import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useCurrentCountry } from '@policyengine/shared';
 import { useUpdateReportAssociation } from '@/hooks/useUserReportAssociations';
 import { useUserReportById } from '@/hooks/useUserReports';
 import type { Geography } from '@/types/ingredients/Geography';

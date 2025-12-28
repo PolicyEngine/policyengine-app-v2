@@ -7,6 +7,7 @@ export { useCurrentCountry } from './hooks/useCurrentCountry';
 
 // Routing
 export { RedirectToCountry } from './routing/RedirectToCountry';
+export { replaceCountryInPath } from './routing/urlUtils';
 export {
   GeolocationService,
   geolocationService,

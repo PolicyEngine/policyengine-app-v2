@@ -2,7 +2,7 @@ import { useSelector } from 'react-redux';
 import { Box, Text } from '@mantine/core';
 import ParameterTable from '@/components/report/ParameterTable';
 import { colors, spacing } from '@/designTokens';
-import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useCurrentCountry } from '@policyengine/shared';
 import { RootState } from '@/store';
 import { Policy } from '@/types/ingredients/Policy';
 import { UserPolicy } from '@/types/ingredients/UserPolicy';

@@ -3,7 +3,7 @@ import Plot from 'react-plotly.js';
 import { useSelector } from 'react-redux';
 import { useMediaQuery, useViewportSize } from '@mantine/hooks';
 import { colors } from '@/designTokens';
-import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useCurrentCountry } from '@policyengine/shared';
 import type { RootState } from '@/store';
 import type { Household } from '@/types/ingredients/Household';
 import {

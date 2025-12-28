@@ -3,7 +3,7 @@ import { createPolicy } from '@/api/policy';
 import { MOCK_USER_ID } from '@/constants';
 import { policyKeys } from '@/libs/queryKeys';
 import { PolicyCreationPayload } from '@/types/payloads';
-import { useCurrentCountry } from './useCurrentCountry';
+import { useCurrentCountry } from '@policyengine/shared';
 import { useCreatePolicyAssociation } from './useUserPolicy';
 
 export function useCreatePolicy(policyLabel?: string) {

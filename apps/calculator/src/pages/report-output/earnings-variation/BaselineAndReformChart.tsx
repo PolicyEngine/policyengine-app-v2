@@ -6,7 +6,7 @@ import { Group, Radio, Stack } from '@mantine/core';
 import { useMediaQuery, useViewportSize } from '@mantine/hooks';
 import { colors } from '@/designTokens';
 import { spacing } from '@/designTokens/spacing';
-import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useCurrentCountry } from '@policyengine/shared';
 import type { RootState } from '@/store';
 import type { Household } from '@/types/ingredients/Household';
 import {

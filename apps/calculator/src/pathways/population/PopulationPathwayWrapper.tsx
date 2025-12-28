@@ -11,7 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import StandardLayout from '@/components/StandardLayout';
 import { CURRENT_YEAR } from '@/constants';
 import { ReportYearProvider } from '@/contexts/ReportYearContext';
-import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useCurrentCountry } from '@policyengine/shared';
 import { usePathwayNavigation } from '@/hooks/usePathwayNavigation';
 import { RootState } from '@/store';
 import { Household } from '@/types/ingredients/Household';

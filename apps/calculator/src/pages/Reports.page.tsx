@@ -14,7 +14,7 @@ import IngredientReadView from '@/components/IngredientReadView';
 import { MultiSimOutputTypeCell } from '@/components/report/MultiSimReportOutputTypeCell';
 import { ReportOutputTypeCell } from '@/components/report/ReportOutputTypeCell';
 import { MOCK_USER_ID } from '@/constants';
-import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useCurrentCountry } from '@policyengine/shared';
 import { useUpdateReportAssociation } from '@/hooks/useUserReportAssociations';
 import { useUserReports } from '@/hooks/useUserReports';
 import { useCacheMonitor } from '@/utils/cacheMonitor';

@@ -1,6 +1,6 @@
 import { useSelector } from 'react-redux';
 import { Outlet } from 'react-router-dom';
-import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useCurrentCountry } from '@policyengine/shared';
 import { useFetchMetadata } from '@/hooks/useMetadata';
 import ErrorPage from '@/pages/report-output/ErrorPage';
 import LoadingPage from '@/pages/report-output/LoadingPage';

@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 import { Select, TextInput } from '@mantine/core';
 import PathwayView from '@/components/common/PathwayView';
 import { CURRENT_YEAR } from '@/constants';
-import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useCurrentCountry } from '@policyengine/shared';
 import { getTaxYears } from '@/libs/metadataUtils';
 
 interface ReportLabelViewProps {

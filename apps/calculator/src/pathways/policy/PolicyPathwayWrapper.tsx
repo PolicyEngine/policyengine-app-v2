@@ -8,7 +8,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import StandardLayout from '@/components/StandardLayout';
-import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useCurrentCountry } from '@policyengine/shared';
 import { usePathwayNavigation } from '@/hooks/usePathwayNavigation';
 import { StandalonePolicyViewMode } from '@/types/pathwayModes/PolicyViewMode';
 import { PolicyStateProps } from '@/types/pathwayState';

@@ -4,7 +4,7 @@
  */
 import { useNavigate, useLocation } from 'react-router-dom';
 import { HomeHeader, NavItemSetup, Country } from '@policyengine/design-system';
-import { useCurrentCountry } from '@policyengine/shared';
+import { useCurrentCountry, replaceCountryInPath } from '@policyengine/shared';
 import { WEBSITE_URL } from '@/constants';
 
 const countries: Country[] = [
@@ -24,14 +24,7 @@ export default function HeaderNavigation() {
   };
 
   const handleCountryChange = (newCountryId: string) => {
-    // Replace the country ID in the current path
-    const pathParts = location.pathname.split('/').filter(Boolean);
-    if (pathParts.length > 0) {
-      pathParts[0] = newCountryId;
-      navigate(`/${pathParts.join('/')}`);
-    } else {
-      navigate(`/${newCountryId}`);
-    }
+    navigate(replaceCountryInPath(location.pathname, newCountryId));
   };
 
   const navItems: NavItemSetup[] = [

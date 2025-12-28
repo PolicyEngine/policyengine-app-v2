@@ -1,20 +1,26 @@
-import { useNavigate } from 'react-router-dom';
-import { useDisclosure } from '@mantine/hooks';
-import HeaderContent from '@/components/homeHeader/HeaderContent';
-import { NavItemSetup } from '@/components/homeHeader/NavItem';
-import { colors, spacing, typography } from '@/designTokens';
-import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { HomeHeader, NavItemSetup } from '@policyengine/design-system';
+import { useCurrentCountry, replaceCountryInPath } from '@policyengine/shared';
 
-export default function HeaderNavigation() {
-  const [opened, { open, close }] = useDisclosure(false);
+const COUNTRIES = [
+  { id: 'us', label: 'United States' },
+  { id: 'uk', label: 'United Kingdom' },
+  { id: 'ca', label: 'Canada' },
+  { id: 'ng', label: 'Nigeria' },
+  { id: 'il', label: 'Israel' },
+];
+
+export default function CalculatorHeader() {
   const navigate = useNavigate();
+  const location = useLocation();
   const countryId = useCurrentCountry();
 
-  const handleNavClick = (path?: string) => {
-    if (path) {
-      navigate(path);
-      close();
-    }
+  const handleNavClick = (path: string) => {
+    navigate(path);
+  };
+
+  const handleCountryChange = (newCountryId: string) => {
+    navigate(replaceCountryInPath(location.pathname, newCountryId));
   };
 
   const navItems: NavItemSetup[] = [
@@ -25,7 +31,7 @@ export default function HeaderNavigation() {
     },
     {
       label: 'About',
-      onClick: () => {}, // No-op for dropdown parent
+      onClick: () => {},
       hasDropdown: true,
       dropdownItems: [
         { label: 'Team', onClick: () => handleNavClick(`/${countryId}/team`) },
@@ -40,33 +46,12 @@ export default function HeaderNavigation() {
   ];
 
   return (
-    <div
-      style={{
-        position: 'sticky' as const,
-        top: 0,
-        paddingTop: spacing.sm,
-        paddingBottom: spacing.sm,
-        paddingLeft: '24px',
-        paddingRight: '24px',
-        height: spacing.layout.header,
-        backgroundColor: colors.primary[600],
-        borderBottom: `0.5px solid ${colors.border.dark}`,
-        boxShadow: `
-      0px 2px 4px -1px rgba(0, 0, 0, 0.06),
-      0px 4px 6px -1px rgba(0, 0, 0, 0.10)
-    `,
-        zIndex: 1000,
-        fontFamily: typography.fontFamily.primary,
-        opacity: opened ? 0 : 1,
-        transition: 'opacity 0.1s ease',
-        marginTop: '0px',
-        marginLeft: '0px',
-        marginRight: '0px',
-        width: '100%',
-        borderRadius: '0px',
-      }}
-    >
-      <HeaderContent opened={opened} onOpen={open} onClose={close} navItems={navItems} />
-    </div>
+    <HomeHeader
+      countryId={countryId}
+      websiteUrl="https://policyengine.org"
+      navItems={navItems}
+      countries={COUNTRIES}
+      onCountryChange={handleCountryChange}
+    />
   );
 }
