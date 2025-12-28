@@ -3,7 +3,7 @@
   "installCommand": "cd ../.. && npm ci",
   "buildCommand": "cd ../.. && npm run build -w @policyengine/shared && npm run build -w @policyengine/design-system && npm run build -w @policyengine/website",
   "outputDirectory": "dist",
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }],
+  "rewrites": [{ "source": "/(.*)", "destination": "/" }],
   "headers": [
     {
       "source": "/assets/(.*)",
