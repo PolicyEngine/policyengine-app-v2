@@ -4,7 +4,7 @@
   "type": "module",
   "version": "0.0.0",
   "scripts": {
-    "dev": "vite --port 3001 --strictPort",
+    "dev": "VITE_WEBSITE_URL=http://localhost:3000 vite --port 3001 --strictPort",
     "build": "vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",

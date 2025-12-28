@@ -2,6 +2,8 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { HomeHeader, NavItemSetup } from '@policyengine/design-system';
 import { useCurrentCountry, replaceCountryInPath, COUNTRIES } from '@policyengine/shared';
 
+const WEBSITE_URL = import.meta.env.VITE_WEBSITE_URL || 'https://policyengine.org';
+
 export default function CalculatorHeader() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -40,7 +42,7 @@ export default function CalculatorHeader() {
   return (
     <HomeHeader
       countryId={countryId}
-      websiteUrl="https://policyengine.org"
+      websiteUrl={WEBSITE_URL}
       navItems={navItems}
       countries={COUNTRIES}
       onCountryChange={handleCountryChange}

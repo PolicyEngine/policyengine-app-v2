@@ -5,7 +5,6 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { HomeHeader, NavItemSetup } from '@policyengine/design-system';
 import { useCurrentCountry, replaceCountryInPath, WEBSITE_COUNTRIES } from '@policyengine/shared';
-import { WEBSITE_URL } from '@/constants';
 
 export default function HeaderNavigation() {
   const navigate = useNavigate();
@@ -47,7 +46,7 @@ export default function HeaderNavigation() {
   return (
     <HomeHeader
       countryId={countryId}
-      websiteUrl={WEBSITE_URL}
+      websiteUrl=""
       navItems={navItems}
       countries={WEBSITE_COUNTRIES}
       onCountryChange={handleCountryChange}

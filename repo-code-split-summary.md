@@ -484,26 +484,6 @@ npm run calculator:dev # Port 3001
 
 ### 1. Dev Mode Cross-App URLs
 
-**Issue:** "Enter PolicyEngine" button on website navigates to production calculator URL (`https://app.policyengine.org`) instead of dev URL (`http://localhost:3001`).
+**Status:** ✅ Fixed - Dev scripts now set `VITE_CALCULATOR_URL` and `VITE_WEBSITE_URL` env vars.
 
-**Root Cause:** `CALCULATOR_URL` constant in `apps/website/src/constants.ts` defaults to production URL. The old setup used `VITE_CALCULATOR_URL` env var which was set in the dev script.
-
-**Potential Fix:** Update vite.config.ts for each app to set env vars:
-```ts
-// apps/website/vite.config.ts
-export default defineConfig({
-  define: {
-    'import.meta.env.VITE_CALCULATOR_URL': JSON.stringify(
-      process.env.VITE_CALCULATOR_URL || 'http://localhost:3001'
-    ),
-  },
-  // ...
-});
-```
-
-Or update package.json scripts:
-```json
-"website:dev": "VITE_CALCULATOR_URL=http://localhost:3001 npm run packages:build && npm run dev --workspace=@policyengine/website"
-```
-
-**Status:** Will be resolved by [PR #540](https://github.com/PolicyEngine/policyengine-app-v2/pull/540) which adds dynamic port discovery and automatic cross-app URL configuration. After PR #540 is merged to main, this code split PR should be rebased to incorporate that logic into the monorepo structure.
+**Future Enhancement:** [PR #540](https://github.com/PolicyEngine/policyengine-app-v2/pull/540) adds dynamic port discovery, allowing multiple dev instances to run simultaneously. Consider rebasing to incorporate that logic.
