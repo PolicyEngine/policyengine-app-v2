@@ -2,7 +2,7 @@
 
 1. **No CSS modules**: Don't use `.module.css` files. Instead use Mantine's built-in styling system with inline styles, style props, and the theme.
 
-2. **Use design tokens**: Import colors, spacing, and typography from `@/designTokens` for consistency.
+2. **Use design tokens**: Import colors, spacing, and typography from `@policyengine/design-system` for consistency.
 
 3. **Inline styles with Mantine**: Use Mantine component props like `bg`, `c`, `p`, `m` for styling, and the `style` prop for custom CSS properties.
 
@@ -18,4 +18,4 @@
 
 - Use Mantine's built-in components and props for styling
 - Leverage the theme system for consistent colors and spacing
-- Use design tokens from `@/designTokens` for custom values
+- Use design tokens from `@policyengine/design-system` for custom values
