@@ -506,4 +506,4 @@ Or update package.json scripts:
 "website:dev": "VITE_CALCULATOR_URL=http://localhost:3001 npm run packages:build && npm run dev --workspace=@policyengine/website"
 ```
 
-**Status:** Not implemented - low priority for initial restructure.
+**Status:** Will be resolved by [PR #540](https://github.com/PolicyEngine/policyengine-app-v2/pull/540) which adds dynamic port discovery and automatic cross-app URL configuration. After PR #540 is merged to main, this code split PR should be rebased to incorporate that logic into the monorepo structure.
