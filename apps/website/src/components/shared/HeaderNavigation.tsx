@@ -3,14 +3,9 @@
  * Wraps the design-system HomeHeader with website-specific logic
  */
 import { useNavigate, useLocation } from 'react-router-dom';
-import { HomeHeader, NavItemSetup, Country } from '@policyengine/design-system';
-import { useCurrentCountry, replaceCountryInPath } from '@policyengine/shared';
+import { HomeHeader, NavItemSetup } from '@policyengine/design-system';
+import { useCurrentCountry, replaceCountryInPath, WEBSITE_COUNTRIES } from '@policyengine/shared';
 import { WEBSITE_URL } from '@/constants';
-
-const countries: Country[] = [
-  { id: 'us', label: 'United States' },
-  { id: 'uk', label: 'United Kingdom' },
-];
 
 export default function HeaderNavigation() {
   const navigate = useNavigate();
@@ -54,7 +49,7 @@ export default function HeaderNavigation() {
       countryId={countryId}
       websiteUrl={WEBSITE_URL}
       navItems={navItems}
-      countries={countries}
+      countries={WEBSITE_COUNTRIES}
       onCountryChange={handleCountryChange}
     />
   );

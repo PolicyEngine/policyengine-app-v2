@@ -140,7 +140,8 @@ export default function ReportSimulationSelectionView({
       return;
     }
 
-    const countryName = countryNames[countryId] || countryId.toUpperCase();
+    const countryName =
+      countryNames[countryId as keyof typeof countryNames] || countryId.toUpperCase();
     const geographyId = existingBaseline.geography?.geographyId || countryId;
 
     const policy = createCurrentLawPolicy(currentLawId);
@@ -165,7 +166,8 @@ export default function ReportSimulationSelectionView({
     }
 
     setIsCreatingBaseline(true);
-    const countryName = countryNames[countryId] || countryId.toUpperCase();
+    const countryName =
+      countryNames[countryId as keyof typeof countryNames] || countryId.toUpperCase();
 
     try {
       // Create geography association

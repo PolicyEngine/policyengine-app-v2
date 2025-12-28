@@ -1,6 +1,7 @@
 import type { Geography } from '@/types/ingredients/Geography';
 import { MetadataState } from '@/types/metadata';
 import { UK_REGION_TYPES } from '@/types/regionTypes';
+import { countryLabels } from '@policyengine/shared';
 
 /**
  * Extracts the UK region type from a Geography object based on its geographyId.
@@ -53,19 +54,11 @@ export function isUKLocalLevelGeography(geography: Geography): boolean {
   );
 }
 
-const countryLabels: Record<string, string> = {
-  us: 'United States',
-  uk: 'United Kingdom',
-  ca: 'Canada',
-  ng: 'Nigeria',
-  il: 'Israel',
-};
-
 export function getCountryLabel(countryCode: string): string {
   if (!(countryCode in countryLabels)) {
     return 'Unknown Country';
   }
-  return countryLabels[countryCode];
+  return countryLabels[countryCode as keyof typeof countryLabels];
 }
 
 export function getRegionLabel(regionCode: string, metadata: MetadataState): string {

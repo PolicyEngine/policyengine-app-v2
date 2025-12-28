@@ -1,14 +1,6 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { HomeHeader, NavItemSetup } from '@policyengine/design-system';
-import { useCurrentCountry, replaceCountryInPath } from '@policyengine/shared';
-
-const COUNTRIES = [
-  { id: 'us', label: 'United States' },
-  { id: 'uk', label: 'United Kingdom' },
-  { id: 'ca', label: 'Canada' },
-  { id: 'ng', label: 'Nigeria' },
-  { id: 'il', label: 'Israel' },
-];
+import { useCurrentCountry, replaceCountryInPath, COUNTRIES } from '@policyengine/shared';
 
 export default function CalculatorHeader() {
   const navigate = useNavigate();

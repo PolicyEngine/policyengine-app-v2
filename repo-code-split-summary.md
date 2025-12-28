@@ -64,7 +64,7 @@ policyengine-app-v2/
 | `package.json` | Package config with peer dependencies |
 | `tsconfig.json` | TypeScript config |
 | `src/index.ts` | Public exports |
-| `src/countries.ts` | Country IDs constant (`us`, `uk`, `ca`, `ng`, `il`) and types |
+| `src/countries.ts` | Country IDs, labels, and arrays (`COUNTRIES`, `WEBSITE_COUNTRIES`) |
 | `src/hooks/useCurrentCountry.ts` | Hook to get current country from URL params |
 | `src/hooks/index.ts` | Hook exports |
 | `src/routing/RedirectToCountry.tsx` | Geolocation-based country redirect component |
@@ -409,6 +409,38 @@ export default function App() {
 
 **Change:** Removed all LegacyBanner imports and usage from calculator layouts as part of the restructure cleanup.
 
+### 13. Country Labels Consolidated to Shared Package
+
+**Files modified:**
+- `packages/shared/src/countries.ts` - Added `countryLabels`, `COUNTRIES`, `WEBSITE_COUNTRIES`
+- `apps/calculator/src/utils/geographyUtils.ts` - Imports `countryLabels` from shared
+- `apps/calculator/src/utils/isDefaultBaselineSimulation.ts` - Imports `countryLabels` from shared
+- `apps/calculator/src/components/shared/HomeHeader.tsx` - Imports `COUNTRIES` from shared
+- `apps/website/src/components/shared/HeaderNavigation.tsx` - Imports `WEBSITE_COUNTRIES` from shared
+- `apps/website/src/data/posts/postTransformers.ts` - Spreads `countryLabels` into `locationLabels`
+
+**Why:** Country labels were duplicated in 5+ locations. Consolidated to single source of truth.
+
+**Change:** Added to `packages/shared/src/countries.ts`:
+```tsx
+export const countryLabels: Record<CountryId, string> = {
+  us: 'United States',
+  uk: 'United Kingdom',
+  ca: 'Canada',
+  ng: 'Nigeria',
+  il: 'Israel',
+};
+
+export const COUNTRIES: Country[] = countryIds.map((id) => ({
+  id,
+  label: countryLabels[id],
+}));
+
+export const WEBSITE_COUNTRIES: Country[] = COUNTRIES.filter((c) =>
+  (['us', 'uk'] as CountryId[]).includes(c.id)
+);
+```
+
 ---
 
 ## Import Path Changes Summary
@@ -421,6 +453,8 @@ All files in `apps/website/` and `apps/calculator/` had their imports updated:
 | `@/routing/RedirectToCountry` | `@policyengine/shared` |
 | `@/libs/countries` | `@policyengine/shared` |
 | `@/components/shared/HomeHeader` | Uses new `HeaderNavigation` wrapper |
+| Local `countryLabels`/`countryNames` definitions | `countryLabels` from `@policyengine/shared` |
+| Local `COUNTRIES` arrays | `COUNTRIES`/`WEBSITE_COUNTRIES` from `@policyengine/shared` |
 
 ---
 

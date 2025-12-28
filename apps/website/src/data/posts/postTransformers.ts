@@ -9,6 +9,7 @@
 
 import { apps } from '@/data/apps/appTransformers';
 import type { BlogPost, ResearchItem, TagLabels } from '@/types/blog';
+import { countryLabels } from '@policyengine/shared';
 import postsData from './posts.json';
 
 // Type assertion for imported JSON (Vite handles this)
@@ -104,12 +105,10 @@ export function getTopicLabel(tag: string, countryId: string): string {
 }
 
 // Location labels for display (all US states + countries)
+// Country labels from shared, extended with 'global' and US states
 const locationLabels: TagLabels = {
-  ca: 'Canada',
-  us: 'United States',
-  uk: 'United Kingdom',
+  ...countryLabels,
   global: 'Global',
-  ng: 'Nigeria',
   'us-dc': 'District of Columbia',
   'us-ak': 'Alaska',
   'us-al': 'Alabama',
