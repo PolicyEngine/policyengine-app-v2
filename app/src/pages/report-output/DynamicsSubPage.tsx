@@ -8,7 +8,6 @@ import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useBaselineValuesForParameters } from '@/hooks/useParameterValues';
 import { useReportYear } from '@/hooks/useReportYear';
 import { useCurrentLawId } from '@/hooks/useStaticMetadata';
-import { useReportYear } from '@/hooks/useReportYear';
 import { RootState } from '@/store';
 import { Policy } from '@/types/ingredients/Policy';
 import { UserPolicy } from '@/types/ingredients/UserPolicy';
