@@ -1816,10 +1816,11 @@ function PolicyBrowseModal({
     return (policies || [])
       .map((p) => {
         const policyId = p.association.policyId.toString();
+        const label = p.association.label || `Policy #${policyId}`;
         return {
           id: policyId,
           associationId: p.association.id, // For updating updatedAt on selection
-          label: p.association.label || `Policy #${policyId}`,
+          label,
           paramCount: countParameterChanges(p.policy), // Handles undefined gracefully
           policyJson: p.policy?.policy_json || {},
           createdAt: p.association.createdAt,
@@ -2566,7 +2567,7 @@ function PolicyCreationModal({
   const { minDate, maxDate } = useSelector(getDateRange);
 
   // Local policy state
-  const [policyLabel, setPolicyLabel] = useState<string>('Untitled policy');
+  const [policyLabel, setPolicyLabel] = useState<string>('New policy');
   const [policyParameters, setPolicyParameters] = useState<Parameter[]>([]);
   const [isEditingLabel, setIsEditingLabel] = useState(false);
 
@@ -2592,7 +2593,7 @@ function PolicyCreationModal({
   // Reset state when modal opens
   useEffect(() => {
     if (isOpen) {
-      setPolicyLabel('Untitled policy');
+      setPolicyLabel('New policy');
       setPolicyParameters([]);
       setSelectedParam(null);
       setExpandedMenuItems(new Set());
@@ -2928,7 +2929,7 @@ function PolicyCreationModal({
                         whiteSpace: 'nowrap',
                       }}
                     >
-                      {policyLabel || 'Untitled policy'}
+                      {policyLabel || 'New policy'}
                     </Text>
                     <ActionIcon
                       size="sm"
@@ -3350,9 +3351,10 @@ function SimulationCanvas({
     return (policies || [])
       .map((p) => {
         const policyId = p.association.policyId.toString();
+        const label = p.association.label || `Policy #${policyId}`;
         return {
           id: policyId,
-          label: p.association.label || `Policy #${policyId}`,
+          label,
           paramCount: countParameterChanges(p.policy), // Handles undefined gracefully
           createdAt: p.association.createdAt,
           updatedAt: p.association.updatedAt,
