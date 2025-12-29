@@ -102,8 +102,10 @@ export function createMockParameterValue(
     id: 'pv-1',
     parameter_id: 'param-1',
     policy_id: TEST_POLICY_IDS.BASELINE,
-    start_date: '2024-01-01',
-    value: 100,
+    dynamic_id: null,
+    start_date: '2024-01-01T00:00:00',
+    end_date: null,
+    value_json: 100,
     created_at: '2024-01-01T00:00:00Z',
     ...overrides,
   };
@@ -112,7 +114,7 @@ export function createMockParameterValue(
 export function createMockParameterValues(
   count: number,
   parameterId: string = 'param-1',
-  policyId: string = TEST_POLICY_IDS.BASELINE
+  policyId: string | null = TEST_POLICY_IDS.BASELINE
 ): V2ParameterValueMetadata[] {
   const baseYear = 2020;
   return Array.from({ length: count }, (_, i) =>
@@ -120,8 +122,9 @@ export function createMockParameterValues(
       id: `pv-${i}`,
       parameter_id: parameterId,
       policy_id: policyId,
-      start_date: `${baseYear + i}-01-01`,
-      value: 100 + i * 10,
+      start_date: `${baseYear + i}-01-01T00:00:00`,
+      end_date: i > 0 ? `${baseYear + i - 1}-01-01T00:00:00` : null,
+      value_json: 100 + i * 10,
     })
   );
 }

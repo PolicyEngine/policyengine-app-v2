@@ -17,7 +17,7 @@ export { fetchVariables } from "./variables";
 export { fetchParameters } from "./parameters";
 
 // Parameter values (on-demand fetching)
-export { fetchParameterValues } from "./parameterValues";
+export { fetchParameterValues, BASELINE_POLICY_ID } from "./parameterValues";
 
 // Datasets
 export { fetchDatasets } from "./datasets";

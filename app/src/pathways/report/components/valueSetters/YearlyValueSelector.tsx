@@ -19,11 +19,12 @@ export function YearlyValueSelector(props: ValueSetterProps) {
     setStartDate,
     endDate,
     setEndDate,
+    baselineValues,
   } = props;
 
   // Local state for param value
   const [paramValue, setParamValue] = useState<any>(
-    getDefaultValueForParam(param, policy, startDate)
+    getDefaultValueForParam(param, policy, startDate, baselineValues)
   );
 
   // Set endDate to end of year of startDate
@@ -34,13 +35,13 @@ export function YearlyValueSelector(props: ValueSetterProps) {
     }
   }, [startDate, setEndDate]);
 
-  // Update param value when startDate changes
+  // Update param value when startDate or baselineValues changes
   useEffect(() => {
     if (startDate) {
-      const newValue = getDefaultValueForParam(param, policy, startDate);
+      const newValue = getDefaultValueForParam(param, policy, startDate, baselineValues);
       setParamValue(newValue);
     }
-  }, [startDate, param, policy]);
+  }, [startDate, param, policy, baselineValues]);
 
   // Update intervals whenever local state changes
   useEffect(() => {

@@ -47,8 +47,10 @@ export interface V2ParameterValueMetadata {
   id: string;
   parameter_id: string;
   policy_id: string | null;
-  start_date: string; // ISO date string (YYYY-MM-DD)
-  value: number | string | boolean;
+  dynamic_id: string | null;
+  start_date: string; // ISO timestamp (e.g., "2025-01-01T00:00:00")
+  end_date: string | null; // ISO timestamp or null for indefinite
+  value_json: number | string | boolean; // The actual parameter value
   created_at: string;
 }
 

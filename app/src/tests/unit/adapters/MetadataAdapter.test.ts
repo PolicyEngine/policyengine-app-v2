@@ -236,17 +236,17 @@ describe('MetadataAdapter', () => {
 
   describe('parameterValuesFromV2', () => {
     it('given V2 parameter values then converts to ValuesList', () => {
-      // Given
+      // Given (note: API returns ISO timestamps like "2020-01-01T00:00:00")
       const v2Values = [
-        createMockParameterValue({ start_date: '2020-01-01', value: 100 }),
-        createMockParameterValue({ start_date: '2021-01-01', value: 110 }),
-        createMockParameterValue({ start_date: '2022-01-01', value: 120 }),
+        createMockParameterValue({ start_date: '2020-01-01T00:00:00', value_json: 100 }),
+        createMockParameterValue({ start_date: '2021-01-01T00:00:00', value_json: 110 }),
+        createMockParameterValue({ start_date: '2022-01-01T00:00:00', value_json: 120 }),
       ];
 
       // When
       const result = MetadataAdapter.parameterValuesFromV2(v2Values);
 
-      // Then
+      // Then (dates are converted to YYYY-MM-DD format)
       expect(result).toEqual({
         '2020-01-01': 100,
         '2021-01-01': 110,
@@ -268,9 +268,9 @@ describe('MetadataAdapter', () => {
     it('given values with different types then preserves types', () => {
       // Given
       const v2Values = [
-        createMockParameterValue({ start_date: '2020-01-01', value: 100 }),
-        createMockParameterValue({ start_date: '2021-01-01', value: 0.25 }),
-        createMockParameterValue({ start_date: '2022-01-01', value: true }),
+        createMockParameterValue({ start_date: '2020-01-01T00:00:00', value_json: 100 }),
+        createMockParameterValue({ start_date: '2021-01-01T00:00:00', value_json: 0.25 }),
+        createMockParameterValue({ start_date: '2022-01-01T00:00:00', value_json: true }),
       ];
 
       // When

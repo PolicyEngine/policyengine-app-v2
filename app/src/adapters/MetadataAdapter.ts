@@ -118,7 +118,9 @@ export class MetadataAdapter {
   static parameterValuesFromV2(values: V2ParameterValueMetadata[]): ValuesList {
     const valuesList: ValuesList = {};
     for (const v of values) {
-      valuesList[v.start_date] = v.value;
+      // Convert ISO timestamp (e.g., "2025-01-01T00:00:00") to date string (e.g., "2025-01-01")
+      const dateKey = v.start_date.split("T")[0];
+      valuesList[dateKey] = v.value_json;
     }
     return valuesList;
   }

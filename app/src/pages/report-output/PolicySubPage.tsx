@@ -1,7 +1,9 @@
+import { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import ParameterTable from '@/components/report/ParameterTable';
 import { getParamDefinitionDate } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useBaselineValuesForParameters } from '@/hooks/useParameterValues';
 import { useReportYear } from '@/hooks/useReportYear';
 import { useCurrentLawId } from '@/hooks/useStaticMetadata';
 import { RootState } from '@/store';
@@ -38,6 +40,15 @@ export default function PolicySubPage({ policies, userPolicies }: PolicySubPageP
   const reportYear = useReportYear();
   const reportDate = getParamDefinitionDate(reportYear ?? undefined);
 
+  // Collect all unique parameter names across all policies
+  const paramList = useMemo(
+    () => (policies ? collectUniqueParameterNames(policies) : []),
+    [policies]
+  );
+
+  // Fetch baseline values for all parameters from V2 API
+  const { baselineValuesMap } = useBaselineValuesForParameters(paramList, parameters);
+
   if (!policies || policies.length === 0) {
     return <div>No policy data available</div>;
   }
@@ -50,9 +61,6 @@ export default function PolicySubPage({ policies, userPolicies }: PolicySubPageP
 
   // Determine column structure with smart collapsing
   const columns = determinePolicyColumns(undefined, baseline, reform);
-
-  // Collect all unique parameter names across all policies
-  const paramList = collectUniqueParameterNames(policies);
 
   // Check if there are no policy changes (all policies are current law or have no parameters)
   const hasNoPolicyChanges =
@@ -81,7 +89,7 @@ export default function PolicySubPage({ policies, userPolicies }: PolicySubPageP
         valueColumnWidth={valueColumnWidth}
         renderColumnHeader={(column) => buildColumnHeaderText(column, userPolicies, currentLawId)}
         renderCurrentLawValue={(paramName) =>
-          getCurrentLawParameterValue(paramName, parameters, reportDate)
+          getCurrentLawParameterValue(paramName, parameters, reportDate, baselineValuesMap)
         }
         renderColumnValue={(column, paramName) => {
           // For merged columns, just use the first policy since they're equal

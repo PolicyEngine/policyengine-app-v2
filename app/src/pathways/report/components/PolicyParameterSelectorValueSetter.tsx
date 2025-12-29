@@ -11,19 +11,26 @@ import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { ParameterMetadata } from '@/types/metadata';
 import { PolicyStateProps } from '@/types/pathwayState';
 import { getParameterByName } from '@/types/subIngredients/parameter';
-import { ValueInterval, ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
+import {
+  ValueInterval,
+  ValueIntervalCollection,
+  ValuesList,
+} from '@/types/subIngredients/valueInterval';
 import { ModeSelectorButton, ValueSetterComponents, ValueSetterMode } from './valueSetters';
 
 interface PolicyParameterSelectorValueSetterProps {
   param: ParameterMetadata;
   policy: PolicyStateProps;
   onPolicyUpdate: (updatedPolicy: PolicyStateProps) => void;
+  /** Baseline (current law) values fetched from V2 API */
+  baselineValues?: ValuesList;
 }
 
 export default function PolicyParameterSelectorValueSetter({
   param,
   policy,
   onPolicyUpdate,
+  baselineValues,
 }: PolicyParameterSelectorValueSetterProps) {
   const countryId = useCurrentCountry();
   const [mode, setMode] = useState<ValueSetterMode>(ValueSetterMode.DEFAULT);
@@ -98,6 +105,7 @@ export default function PolicyParameterSelectorValueSetter({
     setStartDate,
     endDate,
     setEndDate,
+    baselineValues,
   };
 
   return (
