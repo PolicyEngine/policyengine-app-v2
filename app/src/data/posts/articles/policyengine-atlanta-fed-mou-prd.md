@@ -4,13 +4,11 @@ PolicyEngine has signed a memorandum of understanding with the [Federal Reserve 
 
 Earlier this year, we [partnered with NBER](policyengine-nber-mou-taxsim) to develop an open-source emulator of TAXSIM, the tax calculator that has powered academic research for nearly five decades. That collaboration is establishing a validation framework that compares estimates between PolicyEngine and TAXSIM using representative household samples from the Current Population Survey.
 
-The Atlanta Fed partnership extends this framework to include a third major microsimulation approach. By integrating the Policy Rules Database, we're creating a system where researchers can compare tax and benefit calculations across three independently developed models—each with its own methodology, policy interpretations, and implementation choices.
+The Atlanta Fed partnership extends this framework to include a third major microsimulation approach. The Policy Rules Database covers over a dozen programs—including SNAP, Medicaid, housing vouchers, and child care subsidies—along with federal and state income taxes and credits like the EITC and Child Tax Credit. By integrating it, we're creating a system where researchers can compare calculations across three independently developed models, each with its own methodology and policy interpretations.
 
 ## The Policy Rules Database
 
-The [Policy Rules Database](https://www.atlantafed.org/economic-mobility-and-resilience/advancing-careers-for-low-income-families/policy-rules-database) is a collaboration between the Federal Reserve Bank of Atlanta and the [National Center for Children in Poverty](https://www.nccp.org/). The database simplifies the interpretation of public assistance programs by creating a common structure and terminology, consolidating eligibility information into one system.
-
-The PRD covers over a dozen programs—including SNAP, Medicaid, housing vouchers, and child care subsidies—along with federal and state income taxes and credits like the EITC and Child Tax Credit.
+The [Policy Rules Database](https://www.atlantafed.org/economic-mobility-and-resilience/advancing-careers-for-low-income-families/policy-rules-database) is a collaboration between the Federal Reserve Bank of Atlanta and the [National Center for Children in Poverty](https://www.nccp.org/), consolidating eligibility information into one system.
 
 The database powers the Atlanta Fed's [CLIFF tools](https://www.atlantafed.org/economic-mobility-and-resilience/advancing-careers-for-low-income-families), which help users understand how benefits phase out as income rises.
 
