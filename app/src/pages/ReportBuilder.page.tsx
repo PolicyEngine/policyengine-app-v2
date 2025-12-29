@@ -768,13 +768,22 @@ function BrowseMoreChip({ label, description, onClick, variant, colorConfig }: B
   );
 }
 
+// Recent population for display in IngredientSection
+interface RecentPopulation {
+  id: string;
+  label: string;
+  type: 'geography' | 'household';
+  population: PopulationStateProps;
+}
+
 interface IngredientSectionProps {
   type: IngredientType;
   currentId?: string;
   countryId?: 'us' | 'uk';
   onQuickSelectPolicy?: (type: 'current-law') => void;
   onSelectSavedPolicy?: (id: string, label: string, paramCount: number) => void;
-  onQuickSelectPopulation?: (type: 'household' | 'nationwide') => void;
+  onQuickSelectPopulation?: (type: 'nationwide') => void;
+  onSelectRecentPopulation?: (population: PopulationStateProps) => void;
   onDeselectPopulation?: () => void;
   onDeselectPolicy?: () => void;
   onCreateCustom: () => void;
@@ -782,6 +791,7 @@ interface IngredientSectionProps {
   isInherited?: boolean;
   inheritedPopulationType?: 'household' | 'nationwide' | null;
   savedPolicies?: SavedPolicy[];
+  recentPopulations?: RecentPopulation[];
   viewMode: ViewMode;
 }
 
@@ -792,6 +802,7 @@ function IngredientSection({
   onQuickSelectPolicy,
   onSelectSavedPolicy,
   onQuickSelectPopulation,
+  onSelectRecentPopulation,
   onDeselectPopulation,
   onDeselectPolicy,
   onCreateCustom,
@@ -799,6 +810,7 @@ function IngredientSection({
   isInherited,
   inheritedPopulationType,
   savedPolicies = [],
+  recentPopulations = [],
   viewMode,
 }: IngredientSectionProps) {
   const countryConfig = COUNTRY_CONFIG[countryId] || COUNTRY_CONFIG.us;
@@ -811,7 +823,7 @@ function IngredientSection({
 
   const typeLabels = {
     policy: 'Policy',
-    population: 'Population',
+    population: 'Household(s)',
     dynamics: 'Dynamics',
   };
 
@@ -980,20 +992,7 @@ function IngredientSection({
 
           {type === 'population' && onQuickSelectPopulation && (
             <>
-              <ChipComponent
-                icon={<IconHome size={iconSize} color={currentId === 'sample-household' ? colorConfig.icon : colors.gray[500]} />}
-                label="Household"
-                description="Single family"
-                isSelected={currentId === 'sample-household'}
-                onClick={() => {
-                  if (currentId === 'sample-household' && onDeselectPopulation) {
-                    onDeselectPopulation();
-                  } else {
-                    onQuickSelectPopulation('household');
-                  }
-                }}
-                colorConfig={colorConfig}
-              />
+              {/* Nationwide - always first */}
               <ChipComponent
                 icon={<CountryMapIcon countryId={countryId} size={iconSize} color={currentId === countryConfig.nationwideId ? colorConfig.icon : colors.gray[500]} />}
                 label={countryConfig.nationwideTitle}
@@ -1008,6 +1007,27 @@ function IngredientSection({
                 }}
                 colorConfig={colorConfig}
               />
+              {/* Recent populations - up to 4 shown */}
+              {recentPopulations.slice(0, 4).map((pop) => (
+                <ChipComponent
+                  key={pop.id}
+                  icon={pop.type === 'household'
+                    ? <IconHome size={iconSize} color={currentId === pop.id ? colorConfig.icon : colors.gray[500]} />
+                    : <IconFolder size={iconSize} color={currentId === pop.id ? colorConfig.icon : colors.gray[500]} />
+                  }
+                  label={pop.label}
+                  description={pop.type === 'household' ? 'Household' : 'Geography'}
+                  isSelected={currentId === pop.id}
+                  onClick={() => {
+                    if (currentId === pop.id && onDeselectPopulation) {
+                      onDeselectPopulation();
+                    } else {
+                      onSelectRecentPopulation?.(pop.population);
+                    }
+                  }}
+                  colorConfig={colorConfig}
+                />
+              ))}
               {/* Browse more - always shown for searching/browsing all populations */}
               {onBrowseMore && (
                 <BrowseMoreChip
@@ -1018,12 +1038,6 @@ function IngredientSection({
                   colorConfig={colorConfig}
                 />
               )}
-              <CreateCustomChip
-                label="Create new policy"
-                onClick={onCreateCustom}
-                variant={chipVariant}
-                colorConfig={colorConfig}
-              />
             </>
           )}
 
@@ -1061,12 +1075,12 @@ interface SimulationBlockProps {
   onLabelChange: (label: string) => void;
   onQuickSelectPolicy: (policyType: 'current-law') => void;
   onSelectSavedPolicy: (id: string, label: string, paramCount: number) => void;
-  onQuickSelectPopulation: (populationType: 'household' | 'nationwide') => void;
+  onQuickSelectPopulation: (populationType: 'nationwide') => void;
+  onSelectRecentPopulation: (population: PopulationStateProps) => void;
   onDeselectPolicy: () => void;
   onDeselectPopulation: () => void;
   onCreateCustomPolicy: () => void;
   onBrowseMorePolicies: () => void;
-  onCreateCustomPopulation: () => void;
   onBrowseMorePopulations: () => void;
   onRemove?: () => void;
   canRemove: boolean;
@@ -1074,6 +1088,7 @@ interface SimulationBlockProps {
   populationInherited?: boolean;
   inheritedPopulation?: PopulationStateProps | null;
   savedPolicies: SavedPolicy[];
+  recentPopulations: RecentPopulation[];
   viewMode: ViewMode;
 }
 
@@ -1085,11 +1100,11 @@ function SimulationBlock({
   onQuickSelectPolicy,
   onSelectSavedPolicy,
   onQuickSelectPopulation,
+  onSelectRecentPopulation,
   onDeselectPolicy,
   onDeselectPopulation,
   onCreateCustomPolicy,
   onBrowseMorePolicies,
-  onCreateCustomPopulation,
   onBrowseMorePopulations,
   onRemove,
   canRemove,
@@ -1097,6 +1112,7 @@ function SimulationBlock({
   populationInherited,
   inheritedPopulation,
   savedPolicies,
+  recentPopulations,
   viewMode,
 }: SimulationBlockProps) {
   const [isEditingLabel, setIsEditingLabel] = useState(false);
@@ -1236,11 +1252,13 @@ function SimulationBlock({
         currentId={currentPopulationId}
         countryId={countryId}
         onQuickSelectPopulation={onQuickSelectPopulation}
+        onSelectRecentPopulation={onSelectRecentPopulation}
         onDeselectPopulation={onDeselectPopulation}
-        onCreateCustom={onCreateCustomPopulation}
+        onCreateCustom={() => {}} // Not used for population
         onBrowseMore={onBrowseMorePopulations}
         isInherited={populationInherited}
         inheritedPopulationType={inheritedPopulationType}
+        recentPopulations={recentPopulations}
         viewMode={viewMode}
       />
 
@@ -2862,24 +2880,23 @@ function PopulationBrowseModal({
                 {sortedHouseholds.length}
               </Text>
             </UnstyledButton>
+
+            {/* Create New Button - directly under My households */}
+            <Button
+              variant="outline"
+              color="gray"
+              size="xs"
+              leftSection={<IconPlus size={14} />}
+              onClick={() => {
+                onCreateNew();
+                onClose();
+              }}
+              fullWidth
+              mt={spacing.xs}
+            >
+              Create new household
+            </Button>
           </Box>
-
-          {/* Spacer */}
-          <Box style={{ flex: 1 }} />
-
-          {/* Create New Button */}
-          <Button
-            variant="outline"
-            color="gray"
-            leftSection={<IconPlus size={16} />}
-            onClick={() => {
-              onCreateNew();
-              onClose();
-            }}
-            fullWidth
-          >
-            Create new household
-          </Button>
         </Box>
 
         {/* Main Content Area */}
@@ -3888,6 +3905,8 @@ function SimulationCanvas({
   const countryConfig = COUNTRY_CONFIG[countryId] || COUNTRY_CONFIG.us;
   const userId = MOCK_USER_ID.toString();
   const { data: policies, isLoading: policiesLoading } = useUserPolicies(userId);
+  const { data: households } = useUserHouseholds(userId);
+  const regionOptions = useSelector((state: RootState) => state.metadata.economyOptions.region);
   const isNationwideSelected = reportState.simulations[0]?.population?.geography?.id === countryConfig.nationwideId;
 
   // State for the augmented policy browse modal
@@ -3930,6 +3949,79 @@ function SimulationCanvas({
         return bTime.localeCompare(aTime); // Descending (most recent first)
       });
   }, [policies]);
+
+  // Build recent populations from usage tracking
+  const recentPopulations: RecentPopulation[] = useMemo(() => {
+    const results: Array<RecentPopulation & { timestamp: string }> = [];
+
+    // Get all region options for lookup
+    const regions = regionOptions || [];
+    const allRegions: RegionOption[] = countryId === 'us'
+      ? [...getUSStates(regions), ...getUSCongressionalDistricts(regions)]
+      : [...getUKCountries(regions), ...getUKConstituencies(regions), ...getUKLocalAuthorities(regions)];
+
+    // Add recent geographies (excluding national - that's shown separately)
+    const recentGeoIds = geographyUsageStore.getRecentIds(10);
+    for (const geoId of recentGeoIds) {
+      // Skip national scopes as they're shown separately
+      if (geoId === 'us' || geoId === 'uk') continue;
+
+      const timestamp = geographyUsageStore.getLastUsed(geoId) || '';
+      const region = allRegions.find((r) => r.value === geoId);
+
+      if (region) {
+        const geographyId = `${countryId}-${geoId}`;
+        const geography: Geography = {
+          id: geographyId,
+          countryId,
+          scope: 'subnational',
+          geographyId: geoId,
+        };
+        results.push({
+          id: geographyId, // Use full id for matching with currentPopulationId
+          label: region.label,
+          type: 'geography',
+          population: {
+            geography,
+            household: null,
+            label: generateGeographyLabel(geography),
+            type: 'geography',
+          },
+          timestamp,
+        });
+      }
+    }
+
+    // Add recent households
+    const recentHouseholdIds = householdUsageStore.getRecentIds(10);
+    for (const householdId of recentHouseholdIds) {
+      const timestamp = householdUsageStore.getLastUsed(householdId) || '';
+
+      // Find the household in the fetched data
+      const householdData = households?.find((h) => h.association.householdId === householdId);
+      if (householdData?.household) {
+        const household = HouseholdAdapter.fromMetadata(householdData.household);
+        results.push({
+          id: householdId,
+          label: householdData.association.label || `Household #${householdId}`,
+          type: 'household',
+          population: {
+            geography: null,
+            household,
+            label: householdData.association.label || `Household #${householdId}`,
+            type: 'household',
+          },
+          timestamp,
+        });
+      }
+    }
+
+    // Sort by timestamp (most recent first) and return without timestamp
+    return results
+      .sort((a, b) => b.timestamp.localeCompare(a.timestamp))
+      .slice(0, 10)
+      .map(({ timestamp: _t, ...rest }) => rest);
+  }, [countryId, households, regionOptions]);
 
   const handleAddSimulation = useCallback(() => {
     if (reportState.simulations.length >= 2) return;
@@ -4049,30 +4141,22 @@ function SimulationCanvas({
   );
 
   const handleQuickSelectPopulation = useCallback(
-    (simulationIndex: number, populationType: 'household' | 'nationwide') => {
+    (simulationIndex: number, populationType: 'nationwide') => {
       const samplePopulations = getSamplePopulations(countryId);
-      const populationState = populationType === 'household' ? samplePopulations.household : samplePopulations.nationwide;
+      const populationState = samplePopulations.nationwide;
+
+      // Record usage for the geography
+      if (populationState.geography?.geographyId) {
+        geographyUsageStore.recordUsage(populationState.geography.geographyId);
+      }
+
       setReportState((prev) => {
         let newSimulations = prev.simulations.map((sim, i) =>
           i === simulationIndex ? { ...sim, population: { ...populationState } } : sim
         );
 
-        // If switching baseline from nationwide to household, check if reform should be cleared
-        if (simulationIndex === 0 && populationType === 'household' && newSimulations.length > 1) {
-          const reform = newSimulations[1];
-          // Check if reform has only default/inherited values (no custom policy configured)
-          const hasDefaultPolicy = !reform.policy.id || reform.policy.id === 'current-law';
-          const hasDefaultLabel = !reform.label || reform.label === 'Reform simulation';
-
-          // If reform is essentially default, remove it when switching to household
-          if (hasDefaultPolicy && hasDefaultLabel) {
-            newSimulations = [newSimulations[0]];
-          } else {
-            // Otherwise just update the inherited population
-            newSimulations[1] = { ...newSimulations[1], population: { ...populationState } };
-          }
-        } else if (simulationIndex === 0 && newSimulations.length > 1) {
-          // Update the reform's inherited population
+        // Update reform's inherited population if baseline
+        if (simulationIndex === 0 && newSimulations.length > 1) {
           newSimulations[1] = { ...newSimulations[1], population: { ...populationState } };
         }
 
@@ -4080,6 +4164,32 @@ function SimulationCanvas({
       });
     },
     [countryId, setReportState]
+  );
+
+  // Handle selection from recent populations
+  const handleSelectRecentPopulation = useCallback(
+    (simulationIndex: number, population: PopulationStateProps) => {
+      // Record usage
+      if (population.geography?.geographyId) {
+        geographyUsageStore.recordUsage(population.geography.geographyId);
+      } else if (population.household?.id) {
+        householdUsageStore.recordUsage(population.household.id);
+      }
+
+      setReportState((prev) => {
+        let newSimulations = prev.simulations.map((sim, i) =>
+          i === simulationIndex ? { ...sim, population } : sim
+        );
+
+        // Update reform's inherited population if baseline
+        if (simulationIndex === 0 && newSimulations.length > 1) {
+          newSimulations[1] = { ...newSimulations[1], population: { ...population } };
+        }
+
+        return { ...prev, simulations: newSimulations };
+      });
+    },
+    [setReportState]
   );
 
   const handleDeselectPolicy = useCallback(
@@ -4164,15 +4274,16 @@ function SimulationCanvas({
             onLabelChange={(label) => handleSimulationLabelChange(0, label)}
             onQuickSelectPolicy={() => handleQuickSelectPolicy(0)}
             onSelectSavedPolicy={(id, label, paramCount) => handleSelectSavedPolicy(0, id, label, paramCount)}
-            onQuickSelectPopulation={(type) => handleQuickSelectPopulation(0, type)}
+            onQuickSelectPopulation={() => handleQuickSelectPopulation(0, 'nationwide')}
+            onSelectRecentPopulation={(pop) => handleSelectRecentPopulation(0, pop)}
             onDeselectPolicy={() => handleDeselectPolicy(0)}
             onDeselectPopulation={() => handleDeselectPopulation(0)}
             onCreateCustomPolicy={() => handleCreateCustom(0, 'policy')}
             onBrowseMorePolicies={() => handleBrowseMorePolicies(0)}
-            onCreateCustomPopulation={() => handleCreateCustom(0, 'population')}
             onBrowseMorePopulations={() => handleBrowseMorePopulations(0)}
             canRemove={false}
             savedPolicies={savedPolicies}
+            recentPopulations={recentPopulations}
             viewMode={viewMode}
           />
 
@@ -4184,12 +4295,12 @@ function SimulationCanvas({
               onLabelChange={(label) => handleSimulationLabelChange(1, label)}
               onQuickSelectPolicy={() => handleQuickSelectPolicy(1)}
               onSelectSavedPolicy={(id, label, paramCount) => handleSelectSavedPolicy(1, id, label, paramCount)}
-              onQuickSelectPopulation={(type) => handleQuickSelectPopulation(1, type)}
+              onQuickSelectPopulation={() => handleQuickSelectPopulation(1, 'nationwide')}
+              onSelectRecentPopulation={(pop) => handleSelectRecentPopulation(1, pop)}
               onDeselectPolicy={() => handleDeselectPolicy(1)}
               onDeselectPopulation={() => handleDeselectPopulation(1)}
               onCreateCustomPolicy={() => handleCreateCustom(1, 'policy')}
               onBrowseMorePolicies={() => handleBrowseMorePolicies(1)}
-              onCreateCustomPopulation={() => handleCreateCustom(1, 'population')}
               onBrowseMorePopulations={() => handleBrowseMorePopulations(1)}
               onRemove={() => handleRemoveSimulation(1)}
               canRemove={!isNationwideSelected}
@@ -4197,6 +4308,7 @@ function SimulationCanvas({
               populationInherited={true}
               inheritedPopulation={reportState.simulations[0].population}
               savedPolicies={savedPolicies}
+              recentPopulations={recentPopulations}
               viewMode={viewMode}
             />
           ) : (
