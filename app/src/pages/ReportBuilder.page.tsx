@@ -3014,22 +3014,8 @@ function PopulationBrowseModal({
                   <Text c="dimmed" ta="center" maw={300} style={{ fontSize: FONT_SIZES.small }}>
                     {searchQuery
                       ? 'Try adjusting your search terms'
-                      : 'Create a custom household to simulate policy effects on specific demographics'}
+                      : 'Create a custom household using the button in the sidebar'}
                   </Text>
-                  {!searchQuery && (
-                    <Button
-                      variant="outline"
-                      color="gray"
-                      leftSection={<IconPlus size={16} />}
-                      onClick={() => {
-                        onCreateNew();
-                        onClose();
-                      }}
-                      mt={spacing.sm}
-                    >
-                      Create household
-                    </Button>
-                  )}
                 </Box>
               ) : (
                 <Stack gap={spacing.sm}>
