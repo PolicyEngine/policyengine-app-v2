@@ -6,7 +6,7 @@ import {
   fetchModelVersion,
 } from "@/api/v2";
 import { MetadataAdapter } from "@/adapters";
-import { buildParameterTree } from "@/libs/buildParameterTree";
+import { buildParameterTreeV2 } from "@/libs/buildParameterTree";
 import { MetadataState } from "@/types/metadata";
 
 /**
@@ -103,9 +103,9 @@ const metadataSlice = createSlice({
         );
         state.parameters = parametersRecord;
 
-        // Build parameter tree
+        // Build parameter tree from V2 API data
         try {
-          state.parameterTree = buildParameterTree(parametersRecord) || null;
+          state.parameterTree = buildParameterTreeV2(parametersRecord) || null;
         } catch {
           state.parameterTree = null;
         }
