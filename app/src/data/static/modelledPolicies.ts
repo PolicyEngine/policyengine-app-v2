@@ -23,7 +23,7 @@ export interface ModelledPolicies {
 export const US_MODELLED_POLICIES: ModelledPolicies = {
   core: {
     baseline: {
-      id: 1,
+      id: 2,
       label: 'Current law',
       description: 'The current US tax and benefit system',
     },
@@ -60,13 +60,17 @@ export function getModelledPolicies(countryId: string): ModelledPolicies {
 }
 
 /**
- * Current law ID (same for all countries)
+ * Current law IDs by country
+ * US: 2, UK: 1
  */
-export const CURRENT_LAW_ID = 1;
+export const CURRENT_LAW_IDS: Record<string, number> = {
+  us: 2,
+  uk: 1,
+};
 
 /**
  * Get current law ID for a country
  */
-export function getCurrentLawId(_countryId: string): number {
-  return CURRENT_LAW_ID;
+export function getCurrentLawId(countryId: string): number {
+  return CURRENT_LAW_IDS[countryId] ?? 1;
 }
