@@ -6,10 +6,9 @@
  * - Population: Primary (teal) - brand-focused, people
  * - Dynamics: Blue - forward-looking, data-driven
  *
- * Three view modes:
+ * Two view modes:
  * - Card view: 50/50 grid with square chips
  * - Row view: Stacked horizontal rows
- * - Horizontal view: Full-width stacked simulations
  */
 import { useState, useCallback, useEffect, useMemo, Fragment } from 'react';
 import {
@@ -51,7 +50,6 @@ import {
   IconTrash,
   IconSparkles,
   IconFileDescription,
-  IconLayoutList,
   IconLayoutColumns,
   IconHome,
   IconRowInsertBottom,
@@ -114,7 +112,7 @@ interface ReportBuilderState {
 }
 
 type IngredientType = 'policy' | 'population' | 'dynamics';
-type ViewMode = 'cards' | 'rows' | 'horizontal';
+type ViewMode = 'cards' | 'rows';
 
 interface IngredientPickerState {
   isOpen: boolean;
@@ -270,14 +268,6 @@ const styles = {
     alignItems: 'start',
   },
 
-  simulationsContainerHorizontal: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: spacing.xl,
-    position: 'relative' as const,
-    zIndex: 1,
-  },
-
   simulationCard: {
     background: colors.white,
     borderRadius: spacing.radius.lg,
@@ -289,16 +279,6 @@ const styles = {
     gridRow: 'span 4', // span all 4 rows (header + 3 panels)
     gridTemplateRows: 'subgrid',
     gap: spacing.sm,
-  },
-
-  simulationCardHorizontal: {
-    background: colors.white,
-    borderRadius: spacing.radius.lg,
-    border: `2px solid ${colors.gray[200]}`,
-    padding: spacing.xl,
-    width: '100%',
-    transition: 'all 0.2s ease',
-    position: 'relative' as const,
   },
 
   simulationCardActive: {
@@ -449,22 +429,6 @@ const styles = {
     cursor: 'pointer',
     transition: 'all 0.2s ease',
     gridRow: 'span 4', // span all 4 rows to match SimulationBlock
-  },
-
-  addSimulationCardHorizontal: {
-    background: colors.white,
-    borderRadius: spacing.radius.lg,
-    border: `2px dashed ${colors.border.medium}`,
-    padding: spacing.xl,
-    width: '100%',
-    display: 'flex',
-    flexDirection: 'column' as const,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.md,
-    cursor: 'pointer',
-    transition: 'all 0.2s ease',
-    minHeight: '120px',
   },
 
   reportMetaCard: {
@@ -838,7 +802,7 @@ function IngredientSection({
     dynamics: 'Dynamics',
   };
 
-  const useRowLayout = viewMode === 'rows' || viewMode === 'horizontal';
+  const useRowLayout = viewMode === 'rows';
   const chipVariant = useRowLayout ? 'row' : 'square';
   const iconSize = useRowLayout ? 20 : 16;
 
@@ -1140,8 +1104,6 @@ function SimulationBlock({
   };
 
   const defaultLabel = index === 0 ? 'Baseline simulation' : 'Reform simulation';
-  const isHorizontal = viewMode === 'horizontal';
-  const cardStyle = isHorizontal ? styles.simulationCardHorizontal : styles.simulationCard;
 
   const currentPolicyId = simulation.policy.id;
   const currentPopulationId = effectivePopulation?.household?.id || effectivePopulation?.geography?.id;
@@ -1154,7 +1116,7 @@ function SimulationBlock({
   return (
     <Paper
       style={{
-        ...cardStyle,
+        ...styles.simulationCard,
         ...(isFullyConfigured ? styles.simulationCardActive : {}),
       }}
     >
@@ -1282,18 +1244,15 @@ function SimulationBlock({
 interface AddSimulationCardProps {
   onClick: () => void;
   disabled?: boolean;
-  viewMode: ViewMode;
 }
 
-function AddSimulationCard({ onClick, disabled, viewMode }: AddSimulationCardProps) {
+function AddSimulationCard({ onClick, disabled }: AddSimulationCardProps) {
   const [isHovered, setIsHovered] = useState(false);
-  const isHorizontal = viewMode === 'horizontal';
-  const cardStyle = isHorizontal ? styles.addSimulationCardHorizontal : styles.addSimulationCard;
 
   return (
     <Box
       style={{
-        ...cardStyle,
+        ...styles.addSimulationCard,
         opacity: disabled ? 0.5 : 1,
         cursor: disabled ? 'not-allowed' : 'pointer',
         borderColor: isHovered && !disabled ? colors.primary[400] : colors.border.medium,
@@ -3569,14 +3528,11 @@ function SimulationCanvas({
     [setReportState]
   );
 
-  const isHorizontal = viewMode === 'horizontal';
-  const containerStyle = isHorizontal ? styles.simulationsContainerHorizontal : styles.simulationsGrid;
-
   return (
     <>
       <Box style={styles.canvasContainer}>
         <Box style={styles.canvasGrid} />
-        <Box style={containerStyle}>
+        <Box style={styles.simulationsGrid}>
           <SimulationBlock
             simulation={reportState.simulations[0]}
             index={0}
@@ -3620,7 +3576,7 @@ function SimulationCanvas({
               viewMode={viewMode}
             />
           ) : (
-            <AddSimulationCard onClick={handleAddSimulation} disabled={false} viewMode={viewMode} />
+            <AddSimulationCard onClick={handleAddSimulation} disabled={false} />
           )}
         </Box>
       </Box>
@@ -4063,7 +4019,6 @@ export default function ReportBuilderPage() {
         <Tabs.List>
           <Tabs.Tab value="cards" leftSection={<IconLayoutColumns size={16} />}>Card view</Tabs.Tab>
           <Tabs.Tab value="rows" leftSection={<IconRowInsertBottom size={16} />}>Row view</Tabs.Tab>
-          <Tabs.Tab value="horizontal" leftSection={<IconLayoutList size={16} />}>Horizontal view</Tabs.Tab>
         </Tabs.List>
       </Tabs>
 
