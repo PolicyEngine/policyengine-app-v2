@@ -2,7 +2,12 @@
  * Fixtures for API v2 module tests
  */
 import type { TaxBenefitModel, TaxBenefitModelVersion } from '@/api/v2/taxBenefitModels';
-import type { V2VariableMetadata, V2ParameterMetadata, V2DatasetMetadata } from '@/types/metadata';
+import type {
+  V2VariableMetadata,
+  V2ParameterMetadata,
+  V2DatasetMetadata,
+  V2ParameterValueMetadata,
+} from '@/types/metadata';
 
 // Test countries
 export const TEST_COUNTRIES = {
@@ -83,6 +88,44 @@ export function createMockDatasets(count: number): V2DatasetMetadata[] {
   );
 }
 
+// Test policy IDs
+export const TEST_POLICY_IDS = {
+  BASELINE: 'policy-baseline-123',
+  REFORM: 'policy-reform-456',
+} as const;
+
+// Parameter value factory
+export function createMockParameterValue(
+  overrides: Partial<V2ParameterValueMetadata> = {}
+): V2ParameterValueMetadata {
+  return {
+    id: 'pv-1',
+    parameter_id: 'param-1',
+    policy_id: TEST_POLICY_IDS.BASELINE,
+    start_date: '2024-01-01',
+    value: 100,
+    created_at: '2024-01-01T00:00:00Z',
+    ...overrides,
+  };
+}
+
+export function createMockParameterValues(
+  count: number,
+  parameterId: string = 'param-1',
+  policyId: string = TEST_POLICY_IDS.BASELINE
+): V2ParameterValueMetadata[] {
+  const baseYear = 2020;
+  return Array.from({ length: count }, (_, i) =>
+    createMockParameterValue({
+      id: `pv-${i}`,
+      parameter_id: parameterId,
+      policy_id: policyId,
+      start_date: `${baseYear + i}-01-01`,
+      value: 100 + i * 10,
+    })
+  );
+}
+
 // Model IDs
 export const MODEL_IDS = {
   US: '8ac12923-1282-420e-a440-0fa60d43950a',
@@ -154,6 +197,7 @@ export const SAMPLE_RESPONSES = {
   VARIABLES: createMockVariables(5),
   PARAMETERS: createMockParameters(5),
   DATASETS: createMockDatasets(3),
+  PARAMETER_VALUES: createMockParameterValues(3),
 } as const;
 
 // Expected API endpoints
@@ -166,4 +210,6 @@ export const API_ENDPOINTS = {
   PARAMETERS: (modelId: string, limit: number = 10000) =>
     `${API_V2_BASE_URL}/parameters/?tax_benefit_model_id=${modelId}&limit=${limit}`,
   DATASETS: (modelId: string) => `${API_V2_BASE_URL}/datasets/?tax_benefit_model_id=${modelId}`,
+  PARAMETER_VALUES: (parameterId: string, policyId: string) =>
+    `${API_V2_BASE_URL}/parameter-values/?parameter_id=${parameterId}&policy_id=${policyId}`,
 } as const;
