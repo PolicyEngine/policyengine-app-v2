@@ -58,26 +58,6 @@ export const MOCK_METADATA_CONTEXT: HouseholdMetadataContext = {
       description: 'An individual person',
     },
   },
-  parameters: {},
-  variableModules: {},
-  economyOptions: {
-    region: [],
-    time_period: [],
-    datasets: [],
-  },
-  currentCountry: 'us',
-  currentLawId: 1,
-  basicInputs: [],
-  modelledPolicies: {
-    core: {},
-    filtered: {},
-  },
-  version: '1.0.0',
-  loading: false,
-  error: null,
-  ...DEFAULT_V2_LOADING_STATES,
-  progress: 100,
-  parameterTree: null,
 };
 
 export const MOCK_HOUSEHOLD_DATA: Household = {

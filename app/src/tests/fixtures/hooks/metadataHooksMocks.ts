@@ -15,6 +15,7 @@ export const MOCK_METADATA_STATE_INITIAL: MetadataState = {
   loading: false,
   loaded: false,
   error: null,
+  progress: 0,
   currentCountry: null,
   version: null,
   variables: {},
