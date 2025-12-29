@@ -1,4 +1,4 @@
-PolicyEngine has signed a memorandum of understanding with the [Federal Reserve Bank of Atlanta](https://www.atlantafed.org/) to integrate their [Policy Rules Database](https://www.atlantafed.org/economic-mobility-and-resilience/advancing-careers-for-low-income-families/policy-rules-database) into our validation infrastructure. This partnership marks another step in our mission to build a robust, multi-model validation ecosystem for tax and benefit microsimulation.
+PolicyEngine has signed a [memorandum of understanding](https://drive.google.com/file/d/1ye8BQo6gXVWl50F1ht6UzB9HsdrfpeOQ/view) with the [Federal Reserve Bank of Atlanta](https://www.atlantafed.org/) to integrate their [Policy Rules Database](https://www.atlantafed.org/economic-mobility-and-resilience/advancing-careers-for-low-income-families/policy-rules-database) into our validation infrastructure. This partnership marks another step in our mission to build a robust, multi-model validation ecosystem for tax and benefit microsimulation.
 
 ## Building on our NBER partnership
 
