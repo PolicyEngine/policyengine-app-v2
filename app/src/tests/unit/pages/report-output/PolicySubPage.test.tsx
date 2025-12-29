@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { configureStore } from '@reduxjs/toolkit';
 import { render, screen, within } from '@test-utils';
 import { Provider } from 'react-redux';
@@ -16,10 +17,35 @@ vi.mock('@/hooks/useCurrentCountry', () => ({
   useCurrentCountry: () => 'us',
 }));
 
+// Mock useReportYear hook
+vi.mock('@/hooks/useReportYear', () => ({
+  useReportYear: () => 2024,
+}));
+
+// Mock useBaselineValuesForParameters to avoid actual API calls in tests
+vi.mock('@/hooks/useParameterValues', () => ({
+  useBaselineValuesForParameters: () => ({
+    baselineValuesMap: {},
+    isLoading: false,
+    isError: false,
+  }),
+}));
+
 describe('PolicySubPage - Design 4 Table Format (No Current Law)', () => {
   let store: any;
+  let queryClient: QueryClient;
 
   beforeEach(() => {
+    // Create a fresh QueryClient for each test
+    queryClient = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+          staleTime: 0,
+        },
+      },
+    });
+
     // Create a mock store with metadata reducer containing parameter metadata
     store = configureStore({
       reducer: {
@@ -46,7 +72,11 @@ describe('PolicySubPage - Design 4 Table Format (No Current Law)', () => {
   });
 
   const renderWithStore = (ui: React.ReactElement) => {
-    return render(<Provider store={store}>{ui}</Provider>);
+    return render(
+      <QueryClientProvider client={queryClient}>
+        <Provider store={store}>{ui}</Provider>
+      </QueryClientProvider>
+    );
   };
 
   describe('Empty and error states', () => {
@@ -231,9 +261,11 @@ describe('PolicySubPage - Design 4 Table Format (No Current Law)', () => {
       const props = createPolicySubPageProps.baselineOnly();
 
       render(
-        <Provider store={storeWithoutMetadata}>
-          <PolicySubPage {...props} />
-        </Provider>
+        <QueryClientProvider client={queryClient}>
+          <Provider store={storeWithoutMetadata}>
+            <PolicySubPage {...props} />
+          </Provider>
+        </QueryClientProvider>
       );
 
       // Parameter name should be used as fallback label (appears twice: as label and as name)
