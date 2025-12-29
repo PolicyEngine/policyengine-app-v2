@@ -10,7 +10,7 @@ The Atlanta Fed partnership extends this framework to include a third major micr
 
 The [Policy Rules Database](https://www.atlantafed.org/economic-mobility-and-resilience/advancing-careers-for-low-income-families/policy-rules-database) is a collaboration between the Federal Reserve Bank of Atlanta and the [National Center for Children in Poverty](https://www.nccp.org/), consolidating eligibility information into one system.
 
-The database powers the Atlanta Fed's [CLIFF tools](https://www.atlantafed.org/economic-mobility-and-resilience/advancing-careers-for-low-income-families), which help users understand how benefits phase out as income rises.
+The database powers the Atlanta Fed's [CLIFF tools](https://www.atlantafed.org/economic-mobility-and-resilience/advancing-careers-for-low-income-families), which help users understand how benefits phase out as income rises. [Colorado's Workforce Development Council](https://cdle.colorado.gov/press-releases/press-release-new-tool-analyzes-interplay-of-employment-and-benefits-to-help-workers) uses these tools to help workforce center staff guide clients through career decisions, while the [New Mexico Caregivers Coalition](https://www.nmdcc.org/public-assistance-benefits-test/) uses them to help job-seekers and social workers understand how employment changes affect public assistance.
 
 Alex Ruder, Assistant Vice President, and Jacob Walker, Senior Research Analyst, lead this work at the Atlanta Fed and will collaborate with us on the integration.
 
