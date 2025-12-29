@@ -75,6 +75,19 @@ import { initializePopulationState } from '@/utils/pathwayState/initializePopula
 import { CURRENT_YEAR } from '@/constants';
 import { useUserPolicies, useUpdatePolicyAssociation } from '@/hooks/useUserPolicy';
 import { useUserHouseholds } from '@/hooks/useUserHousehold';
+import { geographyUsageStore, householdUsageStore } from '@/api/usageTracking';
+import { generateGeographyLabel } from '@/utils/geographyUtils';
+import {
+  getUSStates,
+  getUSCongressionalDistricts,
+  getUKCountries,
+  getUKConstituencies,
+  getUKLocalAuthorities,
+  RegionOption,
+} from '@/utils/regionStrategies';
+import { Geography } from '@/types/ingredients/Geography';
+import { Household } from '@/types/ingredients/Household';
+import { HouseholdAdapter } from '@/adapters/HouseholdAdapter';
 import { MOCK_USER_ID } from '@/constants';
 import { RootState } from '@/store';
 import {
@@ -87,11 +100,11 @@ import {
 } from '@/components/icons/CountryOutlineIcons';
 import { formatParameterValue } from '@/utils/policyTableHelpers';
 import { formatPeriod } from '@/utils/dateUtils';
-import { countPolicyModifications, countParameterChanges } from '@/utils/countParameterChanges';
+import { countPolicyModifications } from '@/utils/countParameterChanges';
 import { ParameterTreeNode } from '@/types/metadata';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import { useCreatePolicy } from '@/hooks/useCreatePolicy';
-import { PolicyAdapter, convertDateRangeMapToValueIntervals } from '@/adapters';
+import { PolicyAdapter } from '@/adapters';
 import { Policy } from '@/types/ingredients/Policy';
 import { PolicyCreationPayload } from '@/types/payloads';
 import { Parameter, getParameterByName } from '@/types/subIngredients/parameter';
@@ -1429,9 +1442,8 @@ function IngredientPickerModal({
                   // Use association data for display (like Policies page)
                   const policyId = p.association.policyId.toString();
                   const label = p.association.label || `Policy #${policyId}`;
-                  const paramCount = countParameterChanges(p.policy); // Handles undefined gracefully
-                  const policyJson = p.policy?.policy_json || {};
-                  const paramEntries = Object.entries(policyJson);
+                  const paramCount = countPolicyModifications(p.policy); // Handles undefined gracefully
+                  const policyParams = p.policy?.parameters || [];
                   const isExpanded = expandedPolicyId === policyId;
 
                   return (
@@ -1547,19 +1559,16 @@ function IngredientPickerModal({
                               changes: Array<{ period: string; value: string }>;
                             }> = [];
 
-                            paramEntries.forEach(([paramName, paramValues]) => {
+                            policyParams.forEach((param) => {
+                              const paramName = param.name;
                               const hierarchicalLabels = getHierarchicalLabels(paramName, parameters);
                               const displayLabel = hierarchicalLabels.length > 0
                                 ? formatLabelParts(hierarchicalLabels)
                                 : paramName.split('.').pop() || paramName;
                               const metadata = parameters[paramName];
 
-                              // Convert date range map (e.g. {"2024-01-01.2024-12-31": 3000}) to value intervals
-                              const valueIntervals = convertDateRangeMapToValueIntervals(
-                                paramValues as Record<string, unknown>
-                              );
-
-                              const changes = valueIntervals.map((interval) => ({
+                              // Use value intervals directly from the Policy type
+                              const changes = (param.values || []).map((interval) => ({
                                 period: formatPeriod(interval.startDate, interval.endDate),
                                 value: formatParameterValue(interval.value, metadata?.unit),
                               }));
@@ -1780,8 +1789,8 @@ function PolicyBrowseModal({
           id: policyId,
           associationId: p.association.id, // For updating updatedAt on selection
           label,
-          paramCount: countParameterChanges(p.policy), // Handles undefined gracefully
-          policyJson: p.policy?.policy_json || {},
+          paramCount: countPolicyModifications(p.policy), // Handles undefined gracefully
+          parameters: p.policy?.parameters || [],
           createdAt: p.association.createdAt,
           updatedAt: p.association.updatedAt,
         };
@@ -1805,11 +1814,11 @@ function PolicyBrowseModal({
         // Search in policy label
         if (p.label.toLowerCase().includes(query)) return true;
         // Search in parameter display names (hierarchical labels)
-        const paramDisplayNames = Object.keys(p.policyJson).map(paramName => {
-          const hierarchicalLabels = getHierarchicalLabels(paramName, parameters);
+        const paramDisplayNames = p.parameters.map(param => {
+          const hierarchicalLabels = getHierarchicalLabels(param.name, parameters);
           return hierarchicalLabels.length > 0
             ? formatLabelParts(hierarchicalLabels)
-            : paramName.split('.').pop() || paramName;
+            : param.name.split('.').pop() || param.name;
         }).join(' ').toLowerCase();
         if (paramDisplayNames.includes(query)) return true;
         return false;
@@ -2385,19 +2394,16 @@ function PolicyBrowseModal({
                           changes: Array<{ period: string; value: string }>;
                         }> = [];
 
-                        Object.entries(drawerPolicy.policyJson).forEach(([paramName, paramValues]) => {
+                        drawerPolicy.parameters.forEach((param) => {
+                          const paramName = param.name;
                           const hierarchicalLabels = getHierarchicalLabels(paramName, parameters);
                           const displayLabel = hierarchicalLabels.length > 0
                             ? formatLabelParts(hierarchicalLabels)
                             : paramName.split('.').pop() || paramName;
                           const metadata = parameters[paramName];
 
-                          // Convert date range map (e.g. {"2024-01-01.2024-12-31": 3000}) to value intervals
-                          const valueIntervals = convertDateRangeMapToValueIntervals(
-                            paramValues as Record<string, unknown>
-                          );
-
-                          const changes = valueIntervals.map((interval) => ({
+                          // Use value intervals directly from the Policy type
+                          const changes = (param.values || []).map((interval) => ({
                             period: formatPeriod(interval.startDate, interval.endDate),
                             value: formatParameterValue(interval.value, metadata?.unit),
                           }));
@@ -2496,6 +2502,598 @@ function PolicyBrowseModal({
           </Box>
         )}
       </Transition>
+    </Modal>
+  );
+}
+
+// ============================================================================
+// POPULATION BROWSE MODAL - Geography and household selection
+// ============================================================================
+
+type PopulationCategory =
+  | 'national'
+  | 'states'
+  | 'districts'
+  | 'countries'
+  | 'constituencies'
+  | 'local-authorities'
+  | 'my-households';
+
+interface PopulationBrowseModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSelect: (population: PopulationStateProps) => void;
+  onCreateNew: () => void;
+}
+
+function PopulationBrowseModal({
+  isOpen,
+  onClose,
+  onSelect,
+  onCreateNew,
+}: PopulationBrowseModalProps) {
+  const countryId = useCurrentCountry() as 'us' | 'uk';
+  const userId = MOCK_USER_ID.toString();
+  const { data: households, isLoading: householdsLoading } = useUserHouseholds(userId);
+  const regionOptions = useSelector((state: RootState) => state.metadata.economyOptions.region);
+
+  // State
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeCategory, setActiveCategory] = useState<PopulationCategory>('national');
+
+  // Reset state on mount
+  useEffect(() => {
+    if (isOpen) {
+      setSearchQuery('');
+      setActiveCategory('national');
+    }
+  }, [isOpen]);
+
+  // Get geography categories based on country
+  const geographyCategories = useMemo(() => {
+    if (countryId === 'uk') {
+      const ukCountries = getUKCountries(regionOptions);
+      const ukConstituencies = getUKConstituencies(regionOptions);
+      const ukLocalAuthorities = getUKLocalAuthorities(regionOptions);
+      return [
+        { id: 'countries' as const, label: 'Countries', count: ukCountries.length, regions: ukCountries },
+        { id: 'constituencies' as const, label: 'Constituencies', count: ukConstituencies.length, regions: ukConstituencies },
+        { id: 'local-authorities' as const, label: 'Local authorities', count: ukLocalAuthorities.length, regions: ukLocalAuthorities },
+      ];
+    }
+    // US
+    const usStates = getUSStates(regionOptions);
+    const usDistricts = getUSCongressionalDistricts(regionOptions);
+    return [
+      { id: 'states' as const, label: 'States', count: usStates.length, regions: usStates },
+      { id: 'districts' as const, label: 'Congressional districts', count: usDistricts.length, regions: usDistricts },
+    ];
+  }, [countryId, regionOptions]);
+
+  // Get regions for active category
+  const activeRegions = useMemo(() => {
+    const category = geographyCategories.find((c) => c.id === activeCategory);
+    return category?.regions || [];
+  }, [activeCategory, geographyCategories]);
+
+  // Transform households with usage tracking sort
+  const sortedHouseholds = useMemo(() => {
+    if (!households) return [];
+
+    return [...households]
+      .map((h) => {
+        // Get usage timestamp, fall back to association's updatedAt
+        const usageTimestamp = householdUsageStore.getLastUsed(h.association.householdId);
+        const sortTimestamp = usageTimestamp || h.association.updatedAt || h.association.createdAt || '';
+        return {
+          id: h.association.householdId,
+          label: h.association.label || `Household #${h.association.householdId}`,
+          memberCount: h.household?.household_json?.people
+            ? Object.keys(h.household.household_json.people).length
+            : 0,
+          sortTimestamp,
+          household: h.household,
+        };
+      })
+      .sort((a, b) => b.sortTimestamp.localeCompare(a.sortTimestamp));
+  }, [households]);
+
+  // Filter regions/households based on search
+  const filteredRegions = useMemo(() => {
+    if (!searchQuery.trim()) return activeRegions;
+    const query = searchQuery.toLowerCase();
+    return activeRegions.filter((r) => r.label.toLowerCase().includes(query));
+  }, [activeRegions, searchQuery]);
+
+  const filteredHouseholds = useMemo(() => {
+    if (!searchQuery.trim()) return sortedHouseholds;
+    const query = searchQuery.toLowerCase();
+    return sortedHouseholds.filter((h) => h.label.toLowerCase().includes(query));
+  }, [sortedHouseholds, searchQuery]);
+
+  // Handle geography selection
+  const handleSelectGeography = (region: RegionOption | null) => {
+    // Create geography object
+    const geography: Geography = region
+      ? {
+          id: `${countryId}-${region.value}`,
+          countryId,
+          scope: 'subnational',
+          geographyId: region.value,
+        }
+      : {
+          id: countryId,
+          countryId,
+          scope: 'national',
+          geographyId: countryId,
+        };
+
+    // Record usage
+    geographyUsageStore.recordUsage(geography.geographyId);
+
+    // Generate label and create population state
+    const label = generateGeographyLabel(geography);
+    onSelect({
+      geography,
+      household: null,
+      label,
+      type: 'geography',
+    });
+    onClose();
+  };
+
+  // Handle household selection
+  const handleSelectHousehold = (householdData: (typeof sortedHouseholds)[0]) => {
+    // Record usage
+    householdUsageStore.recordUsage(householdData.id);
+
+    // Convert HouseholdMetadata to Household using the adapter
+    const household: Household | null = householdData.household
+      ? HouseholdAdapter.fromMetadata(householdData.household)
+      : null;
+
+    onSelect({
+      geography: null,
+      household,
+      label: householdData.label,
+      type: 'household',
+    });
+    onClose();
+  };
+
+  const colorConfig = INGREDIENT_COLORS.population;
+  const countryConfig = COUNTRY_CONFIG[countryId] || COUNTRY_CONFIG.us;
+
+  // Styles (matching PolicyBrowseModal)
+  const modalStyles = {
+    sidebar: {
+      width: 220,
+      borderRight: `1px solid ${colors.border.light}`,
+      paddingRight: spacing.lg,
+      display: 'flex',
+      flexDirection: 'column' as const,
+      gap: spacing.lg,
+    },
+    sidebarSection: {
+      display: 'flex',
+      flexDirection: 'column' as const,
+      gap: spacing.xs,
+    },
+    sidebarLabel: {
+      fontSize: FONT_SIZES.small,
+      fontWeight: typography.fontWeight.semibold,
+      color: colors.gray[500],
+      padding: `0 ${spacing.sm}`,
+      marginBottom: spacing.xs,
+    },
+    sidebarItem: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: spacing.sm,
+      padding: `${spacing.sm} ${spacing.md}`,
+      borderRadius: spacing.radius.md,
+      cursor: 'pointer',
+      transition: 'all 0.15s ease',
+      fontSize: FONT_SIZES.small,
+      fontWeight: typography.fontWeight.medium,
+    },
+    mainContent: {
+      flex: 1,
+      display: 'flex',
+      flexDirection: 'column' as const,
+      gap: spacing.lg,
+      minWidth: 0,
+    },
+    regionGrid: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
+      gap: spacing.sm,
+    },
+    regionChip: {
+      padding: `${spacing.sm} ${spacing.md}`,
+      borderRadius: spacing.radius.md,
+      border: `1px solid ${colors.border.light}`,
+      background: colors.white,
+      cursor: 'pointer',
+      transition: 'all 0.15s ease',
+      fontSize: FONT_SIZES.small,
+      textAlign: 'center' as const,
+    },
+    householdCard: {
+      padding: spacing.md,
+      borderRadius: spacing.radius.md,
+      border: `1px solid ${colors.border.light}`,
+      background: colors.white,
+      cursor: 'pointer',
+      transition: 'all 0.15s ease',
+    },
+  };
+
+  // Get section title
+  const getSectionTitle = () => {
+    if (activeCategory === 'national') return countryId === 'uk' ? 'UK-wide' : 'Nationwide';
+    if (activeCategory === 'my-households') return 'My households';
+    const category = geographyCategories.find((c) => c.id === activeCategory);
+    return category?.label || 'Regions';
+  };
+
+  // Get item count for display
+  const getItemCount = () => {
+    if (activeCategory === 'national') return 1;
+    if (activeCategory === 'my-households') return filteredHouseholds.length;
+    return filteredRegions.length;
+  };
+
+  return (
+    <Modal
+      opened={isOpen}
+      onClose={onClose}
+      title={
+        <Group gap={spacing.sm}>
+          <Box
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: spacing.radius.md,
+              background: `linear-gradient(135deg, ${colorConfig.bg} 0%, ${colors.white} 100%)`,
+              border: `1px solid ${colorConfig.border}`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <IconUsers size={20} color={colorConfig.icon} />
+          </Box>
+          <Stack gap={0}>
+            <Text fw={600} style={{ fontSize: FONT_SIZES.normal, color: colors.gray[900] }}>
+              Select population
+            </Text>
+            <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
+              Choose a geographic region or household
+            </Text>
+          </Stack>
+        </Group>
+      }
+      size="90vw"
+      radius="lg"
+      styles={{
+        content: {
+          maxWidth: '1000px',
+          height: '70vh',
+          maxHeight: '600px',
+          display: 'flex',
+          flexDirection: 'column',
+        },
+        header: {
+          borderBottom: `1px solid ${colors.border.light}`,
+          paddingBottom: spacing.md,
+          paddingLeft: spacing.xl,
+          paddingRight: spacing.xl,
+        },
+        body: {
+          padding: 0,
+          flex: 1,
+          position: 'relative',
+        },
+      }}
+    >
+      <Group align="stretch" gap={spacing.xl} style={{ height: '100%', width: '100%', padding: spacing.xl }} wrap="nowrap">
+        {/* Left Sidebar */}
+        <Box style={modalStyles.sidebar}>
+          {/* Quick Select */}
+          <Box style={modalStyles.sidebarSection}>
+            <Text style={modalStyles.sidebarLabel}>Quick select</Text>
+            <UnstyledButton
+              style={{
+                ...modalStyles.sidebarItem,
+                background: activeCategory === 'national' ? colorConfig.bg : colors.gray[50],
+                border: `1px solid ${activeCategory === 'national' ? colorConfig.border : colors.border.light}`,
+                color: activeCategory === 'national' ? colorConfig.icon : colors.gray[700],
+              }}
+              onClick={() => setActiveCategory('national')}
+            >
+              {countryId === 'uk' ? <UKOutlineIcon size={16} /> : <USOutlineIcon size={16} />}
+              <Text style={{ fontSize: FONT_SIZES.small, fontWeight: typography.fontWeight.medium }}>
+                {countryId === 'uk' ? 'UK-wide' : 'Nationwide'}
+              </Text>
+            </UnstyledButton>
+          </Box>
+
+          <Divider />
+
+          {/* Geography Categories */}
+          <Box style={modalStyles.sidebarSection}>
+            <Text style={modalStyles.sidebarLabel}>Geographies</Text>
+            {geographyCategories.map((category) => (
+              <UnstyledButton
+                key={category.id}
+                style={{
+                  ...modalStyles.sidebarItem,
+                  background: activeCategory === category.id ? colorConfig.bg : 'transparent',
+                  color: activeCategory === category.id ? colorConfig.icon : colors.gray[700],
+                }}
+                onClick={() => setActiveCategory(category.id)}
+              >
+                <IconFolder size={16} />
+                <Text style={{ fontSize: FONT_SIZES.small, flex: 1 }}>{category.label}</Text>
+                <Text fw={700} style={{ fontSize: FONT_SIZES.small, color: colors.gray[500] }}>
+                  {category.count}
+                </Text>
+              </UnstyledButton>
+            ))}
+          </Box>
+
+          <Divider />
+
+          {/* My Households */}
+          <Box style={modalStyles.sidebarSection}>
+            <Text style={modalStyles.sidebarLabel}>Households</Text>
+            <UnstyledButton
+              style={{
+                ...modalStyles.sidebarItem,
+                background: activeCategory === 'my-households' ? colorConfig.bg : 'transparent',
+                color: activeCategory === 'my-households' ? colorConfig.icon : colors.gray[700],
+              }}
+              onClick={() => setActiveCategory('my-households')}
+            >
+              <IconHome size={16} />
+              <Text style={{ fontSize: FONT_SIZES.small, flex: 1 }}>My households</Text>
+              <Text fw={700} style={{ fontSize: FONT_SIZES.small, color: colors.gray[500] }}>
+                {sortedHouseholds.length}
+              </Text>
+            </UnstyledButton>
+          </Box>
+
+          {/* Spacer */}
+          <Box style={{ flex: 1 }} />
+
+          {/* Create New Button */}
+          <Button
+            variant="outline"
+            color="gray"
+            leftSection={<IconPlus size={16} />}
+            onClick={() => {
+              onCreateNew();
+              onClose();
+            }}
+            fullWidth
+          >
+            Create new household
+          </Button>
+        </Box>
+
+        {/* Main Content Area */}
+        <Box style={modalStyles.mainContent}>
+          {/* Search Bar */}
+          {activeCategory !== 'national' && (
+            <TextInput
+              placeholder={
+                activeCategory === 'my-households'
+                  ? 'Search households...'
+                  : `Search ${getSectionTitle().toLowerCase()}...`
+              }
+              leftSection={<IconSearch size={16} color={colors.gray[400]} />}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              size="sm"
+              styles={{
+                input: {
+                  borderRadius: spacing.radius.md,
+                  border: `1px solid ${colors.border.light}`,
+                  fontSize: FONT_SIZES.small,
+                  '&:focus': {
+                    borderColor: colorConfig.accent,
+                  },
+                },
+              }}
+            />
+          )}
+
+          {/* Section Header */}
+          <Group justify="space-between" align="center">
+            <Text fw={600} style={{ fontSize: FONT_SIZES.normal, color: colors.gray[800] }}>
+              {getSectionTitle()}
+            </Text>
+            <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
+              {getItemCount()} {getItemCount() === 1 ? 'option' : 'options'}
+            </Text>
+          </Group>
+
+          {/* Content */}
+          <ScrollArea style={{ flex: 1 }} offsetScrollbars>
+            {activeCategory === 'national' ? (
+              // National selection - single prominent option
+              <Box
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: spacing['2xl'],
+                  gap: spacing.lg,
+                }}
+              >
+                <Paper
+                  style={{
+                    ...modalStyles.householdCard,
+                    width: '100%',
+                    maxWidth: 400,
+                    textAlign: 'center',
+                    padding: spacing.xl,
+                  }}
+                  onClick={() => handleSelectGeography(null)}
+                >
+                  <Stack align="center" gap={spacing.md}>
+                    {countryId === 'uk' ? <UKOutlineIcon size={48} /> : <USOutlineIcon size={48} />}
+                    <Stack gap={spacing.xs}>
+                      <Text fw={600} style={{ fontSize: FONT_SIZES.normal }}>
+                        {countryId === 'uk' ? 'Households UK-wide' : 'Households nationwide'}
+                      </Text>
+                      <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
+                        Simulate policy effects across the entire {countryId === 'uk' ? 'United Kingdom' : 'United States'}
+                      </Text>
+                    </Stack>
+                    <Button color="teal" rightSection={<IconChevronRight size={16} />}>
+                      Select
+                    </Button>
+                  </Stack>
+                </Paper>
+              </Box>
+            ) : activeCategory === 'my-households' ? (
+              // Households list
+              householdsLoading ? (
+                <Stack gap={spacing.md}>
+                  {[1, 2, 3].map((i) => (
+                    <Skeleton key={i} height={60} radius="md" />
+                  ))}
+                </Stack>
+              ) : filteredHouseholds.length === 0 ? (
+                <Box
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: spacing['4xl'],
+                    gap: spacing.md,
+                  }}
+                >
+                  <Box
+                    style={{
+                      width: 64,
+                      height: 64,
+                      borderRadius: '50%',
+                      background: colors.gray[100],
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <IconHome size={28} color={colors.gray[400]} />
+                  </Box>
+                  <Text fw={500} c={colors.gray[600]}>
+                    {searchQuery ? 'No households match your search' : 'No households yet'}
+                  </Text>
+                  <Text c="dimmed" ta="center" maw={300} style={{ fontSize: FONT_SIZES.small }}>
+                    {searchQuery
+                      ? 'Try adjusting your search terms'
+                      : 'Create a custom household to simulate policy effects on specific demographics'}
+                  </Text>
+                  {!searchQuery && (
+                    <Button
+                      variant="outline"
+                      color="gray"
+                      leftSection={<IconPlus size={16} />}
+                      onClick={() => {
+                        onCreateNew();
+                        onClose();
+                      }}
+                      mt={spacing.sm}
+                    >
+                      Create household
+                    </Button>
+                  )}
+                </Box>
+              ) : (
+                <Stack gap={spacing.sm}>
+                  {filteredHouseholds.map((household) => (
+                    <Paper
+                      key={household.id}
+                      style={modalStyles.householdCard}
+                      onClick={() => handleSelectHousehold(household)}
+                    >
+                      <Group justify="space-between" align="center">
+                        <Group gap={spacing.md}>
+                          <Box
+                            style={{
+                              width: 40,
+                              height: 40,
+                              borderRadius: spacing.radius.md,
+                              background: colorConfig.bg,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                            }}
+                          >
+                            <IconHome size={20} color={colorConfig.icon} />
+                          </Box>
+                          <Stack gap={2}>
+                            <Text fw={600} style={{ fontSize: FONT_SIZES.normal }}>
+                              {household.label}
+                            </Text>
+                            <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
+                              {household.memberCount} {household.memberCount === 1 ? 'member' : 'members'}
+                            </Text>
+                          </Stack>
+                        </Group>
+                        <IconChevronRight size={16} color={colors.gray[400]} />
+                      </Group>
+                    </Paper>
+                  ))}
+                </Stack>
+              )
+            ) : (
+              // Geography grid
+              filteredRegions.length === 0 ? (
+                <Box
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: spacing['4xl'],
+                    gap: spacing.md,
+                  }}
+                >
+                  <Text fw={500} c={colors.gray[600]}>
+                    No regions match your search
+                  </Text>
+                </Box>
+              ) : (
+                <Box style={modalStyles.regionGrid}>
+                  {filteredRegions.map((region) => (
+                    <UnstyledButton
+                      key={region.value}
+                      style={modalStyles.regionChip}
+                      onClick={() => handleSelectGeography(region)}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.borderColor = colorConfig.border;
+                        e.currentTarget.style.background = colorConfig.bg;
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = colors.border.light;
+                        e.currentTarget.style.background = colors.white;
+                      }}
+                    >
+                      {region.label}
+                    </UnstyledButton>
+                  ))}
+                </Box>
+              )
+            )}
+          </ScrollArea>
+        </Box>
+      </Group>
     </Modal>
   );
 }
@@ -3304,6 +3902,12 @@ function SimulationCanvas({
     simulationIndex: 0,
   });
 
+  // State for the population browse modal
+  const [populationBrowseState, setPopulationBrowseState] = useState<PolicyBrowseState>({
+    isOpen: false,
+    simulationIndex: 0,
+  });
+
   // Transform policies data into SavedPolicy format, sorted by most recent
   // Uses association data for display (like Policies page), policy data only for param count
   const savedPolicies: SavedPolicy[] = useMemo(() => {
@@ -3314,7 +3918,7 @@ function SimulationCanvas({
         return {
           id: policyId,
           label,
-          paramCount: countParameterChanges(p.policy), // Handles undefined gracefully
+          paramCount: countPolicyModifications(p.policy), // Handles undefined gracefully
           createdAt: p.association.createdAt,
           updatedAt: p.association.updatedAt,
         };
@@ -3415,13 +4019,33 @@ function SimulationCanvas({
 
   const handleBrowseMorePopulations = useCallback(
     (simulationIndex: number) => {
-      setPickerState({
+      // Open the augmented population browse modal
+      setPopulationBrowseState({
         isOpen: true,
         simulationIndex,
-        ingredientType: 'population',
       });
     },
-    [setPickerState]
+    []
+  );
+
+  // Handle population selection from the browse modal
+  const handlePopulationSelectFromBrowse = useCallback(
+    (population: PopulationStateProps) => {
+      const { simulationIndex } = populationBrowseState;
+      setReportState((prev) => {
+        let newSimulations = prev.simulations.map((sim, i) =>
+          i === simulationIndex ? { ...sim, population } : sim
+        );
+
+        // If updating baseline population, also update reform's inherited population
+        if (simulationIndex === 0 && newSimulations.length > 1) {
+          newSimulations[1] = { ...newSimulations[1], population: { ...population } };
+        }
+
+        return { ...prev, simulations: newSimulations };
+      });
+    },
+    [populationBrowseState, setReportState]
   );
 
   const handleQuickSelectPopulation = useCallback(
@@ -3595,6 +4219,14 @@ function SimulationCanvas({
         onClose={() => setPolicyBrowseState((prev) => ({ ...prev, isOpen: false }))}
         onSelect={handlePolicySelectFromBrowse}
         onCreateNew={() => handleCreateCustom(policyBrowseState.simulationIndex, 'policy')}
+      />
+
+      {/* Augmented Population Browse Modal */}
+      <PopulationBrowseModal
+        isOpen={populationBrowseState.isOpen}
+        onClose={() => setPopulationBrowseState((prev) => ({ ...prev, isOpen: false }))}
+        onSelect={handlePopulationSelectFromBrowse}
+        onCreateNew={() => handleCreateCustom(populationBrowseState.simulationIndex, 'population')}
       />
 
       {/* Policy Creation Modal */}
