@@ -12,7 +12,7 @@ The [Policy Rules Database](https://www.atlantafed.org/economic-mobility-and-res
 
 The database powers the Atlanta Fed's [CLIFF tools](https://www.atlantafed.org/economic-mobility-and-resilience/advancing-careers-for-low-income-families), which help users understand how benefits phase out as income rises. [Colorado's Workforce Development Council](https://cdle.colorado.gov/press-releases/press-release-new-tool-analyzes-interplay-of-employment-and-benefits-to-help-workers) uses these tools to help workforce center staff guide clients through career decisions, while the [New Mexico Caregivers Coalition](https://www.nmdcc.org/public-assistance-benefits-test/) uses them to help job-seekers and social workers understand how employment changes affect public assistance.
 
-Alex Ruder, Assistant Vice President, and Jacob Walker, Senior Research Analyst, lead this work at the Atlanta Fed and will collaborate with us on the integration.
+Alex Ruder, Assistant Vice President, and Jacob Walker, Senior Research Analyst, lead this work at the Atlanta Fed and will collaborate with us on the validation.
 
 ## A three-way validation approach
 
@@ -30,4 +30,4 @@ The MOU establishes protocols for both organizations to share updates and collab
 
 Tax and benefit microsimulation shapes research and policy decisions affecting millions of families. By validating across multiple independent models, we're working to ensure these tools provide the most accurate estimates possible. The Atlanta Fed partnership brings us closer to that goal, and we're grateful to Karen Leone de Nie, Vice President and Community Affairs Officer, for making this collaboration possible.
 
-We'll share updates as the integration progresses. For questions about the project, reach out to us directly.
+We'll share updates as the validation progresses. For questions about the project, reach out to us directly.
