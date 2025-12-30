@@ -11,6 +11,7 @@
  * - Row view: Stacked horizontal rows
  */
 import { useState, useCallback, useEffect, useMemo, Fragment } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   Box,
   Stack,
@@ -111,6 +112,7 @@ import { PolicyCreationPayload } from '@/types/payloads';
 import { Parameter, getParameterByName } from '@/types/subIngredients/parameter';
 import { ValueInterval, ValueIntervalCollection, ValuesList } from '@/types/subIngredients/valueInterval';
 import { getDateRange } from '@/libs/metadataUtils';
+import { householdAssociationKeys } from '@/libs/queryKeys';
 import { capitalize } from '@/utils/stringUtils';
 import { ValueSetterComponents, ValueSetterMode, ModeSelectorButton } from '@/pathways/report/components/valueSetters';
 import HistoricalValues from '@/pathways/report/components/policyParameterSelector/HistoricalValues';
@@ -2557,6 +2559,7 @@ function PopulationBrowseModal({
 }: PopulationBrowseModalProps) {
   const countryId = useCurrentCountry() as 'us' | 'uk';
   const userId = MOCK_USER_ID.toString();
+  const queryClient = useQueryClient();
   const { data: households, isLoading: householdsLoading } = useUserHouseholds(userId);
   const regionOptions = useSelector((state: RootState) => state.metadata.economyOptions.region);
   const metadata = useSelector((state: RootState) => state.metadata);
@@ -2637,12 +2640,14 @@ function PopulationBrowseModal({
 
     return [...households]
       .map((h) => {
+        // Ensure householdId is always a string for consistent comparisons
+        const householdIdStr = String(h.association.householdId);
         // Get usage timestamp, fall back to association's updatedAt
-        const usageTimestamp = householdUsageStore.getLastUsed(h.association.householdId);
+        const usageTimestamp = householdUsageStore.getLastUsed(householdIdStr);
         const sortTimestamp = usageTimestamp || h.association.updatedAt || h.association.createdAt || '';
         return {
-          id: h.association.householdId,
-          label: h.association.label || `Household #${h.association.householdId}`,
+          id: householdIdStr,
+          label: h.association.label || `Household #${householdIdStr}`,
           memberCount: h.household?.household_json?.people
             ? Object.keys(h.household.household_json.people).length
             : 0,
@@ -2699,20 +2704,32 @@ function PopulationBrowseModal({
 
   // Handle household selection
   const handleSelectHousehold = (householdData: (typeof sortedHouseholds)[0]) => {
-    // Record usage
-    householdUsageStore.recordUsage(householdData.id);
+    // Record usage with string ID
+    const householdIdStr = String(householdData.id);
+    householdUsageStore.recordUsage(householdIdStr);
 
     // Convert HouseholdMetadata to Household using the adapter
-    const household: Household | null = householdData.household
-      ? HouseholdAdapter.fromMetadata(householdData.household)
-      : null;
+    // If household data isn't available, create a minimal household object with just the ID
+    let household: Household | null = null;
+    if (householdData.household) {
+      household = HouseholdAdapter.fromMetadata(householdData.household);
+    } else {
+      // Fallback: create minimal household with ID for selection to work
+      household = {
+        id: householdIdStr,
+        countryId,
+        householdData: { people: {} },
+      };
+    }
 
-    onSelect({
+    const populationState: PopulationStateProps = {
       geography: null,
       household,
       label: householdData.label,
       type: 'household',
-    });
+    };
+
+    onSelect(populationState);
     onClose();
   };
 
@@ -2783,29 +2800,44 @@ function PopulationBrowseModal({
 
   // Handle household creation submission
   const handleCreateHousehold = useCallback(async () => {
-    if (!householdDraft || !householdLabel.trim()) return;
+    if (!householdDraft || !householdLabel.trim()) {
+      return;
+    }
 
     const payload = HouseholdAdapter.toCreationPayload(householdDraft.householdData, countryId);
 
     try {
       const result = await createHousehold(payload);
-      const householdId = result.result.household_id;
+      const householdId = result.result.household_id.toString();
 
       // Record usage
       householdUsageStore.recordUsage(householdId);
 
-      // Select the newly created household
-      onSelect({
+      // Create household with ID set for proper selection highlighting
+      const createdHousehold: Household = {
+        ...householdDraft,
+        id: householdId,
+      };
+
+      const populationState = {
         geography: null,
-        household: householdDraft,
+        household: createdHousehold,
         label: householdLabel,
-        type: 'household',
+        type: 'household' as const,
+      };
+
+      // Wait for the household associations query to refetch so the new household appears in recentPopulations
+      await queryClient.refetchQueries({
+        queryKey: householdAssociationKeys.byUser(userId, countryId),
       });
+
+      // Select the newly created household
+      onSelect(populationState);
       onClose();
     } catch (err) {
       console.error('Failed to create household:', err);
     }
-  }, [householdDraft, householdLabel, countryId, createHousehold, onSelect, onClose]);
+  }, [householdDraft, householdLabel, countryId, createHousehold, onSelect, onClose, queryClient, userId]);
 
   const colorConfig = INGREDIENT_COLORS.population;
   const countryConfig = COUNTRY_CONFIG[countryId] || COUNTRY_CONFIG.us;
@@ -4209,12 +4241,14 @@ function SimulationCanvas({
     for (const householdId of recentHouseholdIds) {
       const timestamp = householdUsageStore.getLastUsed(householdId) || '';
 
-      // Find the household in the fetched data
-      const householdData = households?.find((h) => h.association.householdId === householdId);
+      // Find the household in the fetched data (use String() for type-safe comparison)
+      const householdData = households?.find((h) => String(h.association.householdId) === householdId);
       if (householdData?.household) {
         const household = HouseholdAdapter.fromMetadata(householdData.household);
+        // Use the household.id from the adapter for consistent matching with currentPopulationId
+        const resolvedId = household.id || householdId;
         results.push({
-          id: householdId,
+          id: resolvedId,
           label: householdData.association.label || `Household #${householdId}`,
           type: 'household',
           population: {
@@ -4336,14 +4370,18 @@ function SimulationCanvas({
   const handlePopulationSelectFromBrowse = useCallback(
     (population: PopulationStateProps) => {
       const { simulationIndex } = populationBrowseState;
+
       setReportState((prev) => {
+        // Create a new population object to ensure React detects the change
+        const newPopulation = { ...population };
+
         let newSimulations = prev.simulations.map((sim, i) =>
-          i === simulationIndex ? { ...sim, population } : sim
+          i === simulationIndex ? { ...sim, population: newPopulation } : sim
         );
 
         // If updating baseline population, also update reform's inherited population
         if (simulationIndex === 0 && newSimulations.length > 1) {
-          newSimulations[1] = { ...newSimulations[1], population: { ...population } };
+          newSimulations[1] = { ...newSimulations[1], population: { ...newPopulation } };
         }
 
         return { ...prev, simulations: newSimulations };
@@ -4389,13 +4427,16 @@ function SimulationCanvas({
       }
 
       setReportState((prev) => {
+        // Create a new population object to ensure React detects the change
+        const newPopulation = { ...population };
+
         let newSimulations = prev.simulations.map((sim, i) =>
-          i === simulationIndex ? { ...sim, population } : sim
+          i === simulationIndex ? { ...sim, population: newPopulation } : sim
         );
 
         // Update reform's inherited population if baseline
         if (simulationIndex === 0 && newSimulations.length > 1) {
-          newSimulations[1] = { ...newSimulations[1], population: { ...population } };
+          newSimulations[1] = { ...newSimulations[1], population: { ...newPopulation } };
         }
 
         return { ...prev, simulations: newSimulations };
