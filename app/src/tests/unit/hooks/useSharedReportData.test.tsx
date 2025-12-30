@@ -1,17 +1,22 @@
-import React from 'react';
-import { QueryNormalizerProvider } from '@normy/react-query';
-import { configureStore } from '@reduxjs/toolkit';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
-import { Provider } from 'react-redux';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { fetchHouseholdById } from '@/api/household';
 import { fetchPolicyById } from '@/api/policy';
-// Import mocked modules
 import { fetchReportById } from '@/api/report';
 import { fetchSimulationById } from '@/api/simulation';
 import { useSharedReportData } from '@/hooks/useSharedReportData';
-import { ShareData } from '@/utils/shareUtils';
+import {
+  createMockStore,
+  createQueryClient,
+  createWrapper,
+  MOCK_HOUSEHOLD_METADATA,
+  MOCK_HOUSEHOLD_SHARE_DATA,
+  MOCK_POLICY_METADATA,
+  MOCK_REPORT_METADATA,
+  MOCK_SHARE_DATA,
+  MOCK_SIMULATION_METADATA,
+} from '@/tests/fixtures/hooks/useSharedReportDataMocks';
 
 // Mock API functions
 vi.mock('@/api/report', () => ({
@@ -29,107 +34,6 @@ vi.mock('@/api/policy', () => ({
 vi.mock('@/api/household', () => ({
   fetchHouseholdById: vi.fn(),
 }));
-
-// Test fixtures
-const MOCK_SHARE_DATA: ShareData = {
-  reportId: '308',
-  countryId: 'us',
-  year: '2024',
-  simulationIds: ['sim-1'],
-  policyIds: ['policy-1'],
-  householdId: null,
-  geographyId: 'us',
-  userReportId: 'sur-test123',
-};
-
-const MOCK_HOUSEHOLD_SHARE_DATA: ShareData = {
-  reportId: '309',
-  countryId: 'uk',
-  year: '2025',
-  simulationIds: ['sim-2'],
-  policyIds: ['policy-2'],
-  householdId: 'hh-1',
-  geographyId: null,
-  userReportId: 'sur-test456',
-};
-
-// Mock metadata - cast to any for test simplicity
-const MOCK_REPORT_METADATA: any = {
-  id: 308,
-  country_id: 'us',
-  year: '2024',
-  simulation_ids: ['1'],
-  simulation_1_id: '1',
-  simulation_2_id: null,
-  status: 'complete',
-  api_version: '1.0.0',
-  output: null,
-};
-
-const MOCK_SIMULATION_METADATA: any = {
-  id: 1,
-  country_id: 'us',
-  year: '2024',
-  population_type: 'geography',
-  population_id: 'us',
-  policy_id: 1,
-  api_version: '1.0.0',
-};
-
-const MOCK_POLICY_METADATA: any = {
-  id: '1',
-  country_id: 'us',
-  label: 'Test Policy',
-  policy_json: {},
-  api_version: '1.0.0',
-  policy_hash: 'abc123',
-};
-
-const MOCK_HOUSEHOLD_METADATA: any = {
-  id: 'hh-1',
-  country_id: 'uk',
-  label: 'Test Household',
-  household_json: {},
-  api_version: '1.0.0',
-  household_hash: 'def456',
-};
-
-// Helper to create mock store with metadata
-const createMockStore = () => {
-  const metadataReducer = (
-    state = {
-      currentCountry: 'us',
-      economyOptions: {
-        region: [{ name: 'us', label: 'US Nationwide' }],
-        time_period: [],
-        datasets: [],
-      },
-    }
-  ) => state;
-
-  return configureStore({
-    reducer: { metadata: metadataReducer },
-  });
-};
-
-// Helper to create query client
-const createQueryClient = () =>
-  new QueryClient({
-    defaultOptions: {
-      queries: { retry: false, gcTime: 0 },
-    },
-  });
-
-// Wrapper component
-const createWrapper = (queryClient: QueryClient, store: ReturnType<typeof createMockStore>) => {
-  return ({ children }: { children: React.ReactNode }) => (
-    <Provider store={store}>
-      <QueryClientProvider client={queryClient}>
-        <QueryNormalizerProvider queryClient={queryClient}>{children}</QueryNormalizerProvider>
-      </QueryClientProvider>
-    </Provider>
-  );
-};
 
 describe('useSharedReportData', () => {
   let queryClient: QueryClient;
@@ -155,6 +59,7 @@ describe('useSharedReportData', () => {
     expect(result.current.report).toBeUndefined();
     expect(result.current.simulations).toEqual([]);
     expect(result.current.policies).toEqual([]);
+    expect(result.current.userReport).toBeUndefined();
     expect(fetchReportById).not.toHaveBeenCalled();
   });
 
@@ -187,10 +92,45 @@ describe('useSharedReportData', () => {
       expect(result.current.isLoading).toBe(false);
     });
 
+    // Fetches report using reportId from userReport
     expect(fetchReportById).toHaveBeenCalledWith('us', '308');
-    expect(fetchSimulationById).toHaveBeenCalledWith('us', 'sim-1');
-    expect(fetchPolicyById).toHaveBeenCalledWith('us', 'policy-1');
     expect(fetchHouseholdById).not.toHaveBeenCalled();
+  });
+
+  test('given valid shareData then returns user associations from ShareData', async () => {
+    // Given
+    vi.mocked(fetchReportById).mockResolvedValue(MOCK_REPORT_METADATA);
+    vi.mocked(fetchSimulationById).mockResolvedValue(MOCK_SIMULATION_METADATA);
+    vi.mocked(fetchPolicyById).mockResolvedValue(MOCK_POLICY_METADATA);
+
+    // When
+    const { result } = renderHook(() => useSharedReportData(MOCK_SHARE_DATA), { wrapper });
+
+    // Then
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    // User associations are returned from ShareData (expanded with userId: 'shared')
+    expect(result.current.userReport).toMatchObject({
+      id: 'sur-test123',
+      reportId: '308',
+      countryId: 'us',
+      label: 'Test Report',
+      userId: 'shared',
+    });
+    expect(result.current.userSimulations).toHaveLength(1);
+    expect(result.current.userSimulations[0]).toMatchObject({
+      simulationId: 'sim-1',
+      label: 'Baseline Sim',
+      userId: 'shared',
+    });
+    expect(result.current.userPolicies).toHaveLength(1);
+    expect(result.current.userPolicies[0]).toMatchObject({
+      policyId: 'policy-1',
+      label: 'Test Policy',
+      userId: 'shared',
+    });
   });
 
   test('given valid shareData with geographyId then builds geography object', async () => {
@@ -213,6 +153,14 @@ describe('useSharedReportData', () => {
       countryId: 'us',
       scope: 'national',
     });
+
+    // User geography from ShareData
+    expect(result.current.userGeographies).toHaveLength(1);
+    expect(result.current.userGeographies[0]).toMatchObject({
+      geographyId: 'us',
+      label: 'United States',
+      userId: 'shared',
+    });
   });
 
   test('given shareData with householdId then fetches household', async () => {
@@ -221,6 +169,7 @@ describe('useSharedReportData', () => {
     vi.mocked(fetchSimulationById).mockResolvedValue({
       ...MOCK_SIMULATION_METADATA,
       population_type: 'household',
+      population_id: 'hh-1',
     });
     vi.mocked(fetchPolicyById).mockResolvedValue(MOCK_POLICY_METADATA);
     vi.mocked(fetchHouseholdById).mockResolvedValue(MOCK_HOUSEHOLD_METADATA);
@@ -236,6 +185,14 @@ describe('useSharedReportData', () => {
     });
 
     expect(fetchHouseholdById).toHaveBeenCalledWith('uk', 'hh-1');
+
+    // User household from ShareData
+    expect(result.current.userHouseholds).toHaveLength(1);
+    expect(result.current.userHouseholds[0]).toMatchObject({
+      householdId: 'hh-1',
+      label: 'My Household',
+      userId: 'shared',
+    });
   });
 
   test('given API error then returns error state', async () => {

@@ -1,16 +1,22 @@
 /**
  * Utilities for encoding/decoding shareable report URLs
  *
- * All share-related URL logic lives here. To change what data goes in the URL
- * or how it's encoded, only this file needs to be modified.
+ * ShareData encodes user associations (not base ingredients) into a URL.
+ * When decoding, we use the user associations to fetch base ingredients
+ * via the shared useFetchReportIngredients utility.
+ *
+ * This approach mirrors the existing useUserReportById architecture:
+ * user associations → fetch base ingredients → return EnhancedUserReport
  */
 
+import {
+  MinimalUserGeography,
+  MinimalUserHousehold,
+  MinimalUserPolicy,
+  MinimalUserReport,
+  MinimalUserSimulation,
+} from '@/hooks/utils/useFetchReportIngredients';
 import { CountryId, countryIds } from '@/libs/countries';
-import { Geography } from '@/types/ingredients/Geography';
-import { Household } from '@/types/ingredients/Household';
-import { Policy } from '@/types/ingredients/Policy';
-import { Report } from '@/types/ingredients/Report';
-import { Simulation } from '@/types/ingredients/Simulation';
 import { UserPolicy } from '@/types/ingredients/UserPolicy';
 import {
   UserGeographyPopulation,
@@ -22,28 +28,15 @@ import { UserSimulation } from '@/types/ingredients/UserSimulation';
 /**
  * Data encoded in shareable URLs
  *
- * Includes base ingredient IDs (for API fetching), userReportId
- * (for idempotent save), and labels (for exact UI reproduction).
+ * Contains user associations with their IDs and labels.
+ * Base ingredients are NOT stored - they're fetched from API using these IDs.
  */
 export interface ShareData {
-  // Base ingredient IDs (for API fetching)
-  reportId: string;
-  countryId: CountryId;
-  year: string;
-  simulationIds: string[];
-  policyIds: string[];
-  householdId?: string | null;
-  geographyId?: string | null;
-
-  // User report ID (for idempotent save and URL path)
-  userReportId: string;
-
-  // Label fields (for exact UI reproduction)
-  reportLabel?: string | null;
-  simulationLabels?: (string | null)[];
-  policyLabels?: (string | null)[];
-  householdLabel?: string | null;
-  geographyLabel?: string | null;
+  userReport: MinimalUserReport;
+  userSimulations: MinimalUserSimulation[];
+  userPolicies: MinimalUserPolicy[];
+  userHouseholds: MinimalUserHousehold[];
+  userGeographies: MinimalUserGeography[];
 }
 
 /**
@@ -93,47 +86,83 @@ export function isValidShareData(data: unknown): data is ShareData {
 
   const obj = data as Record<string, unknown>;
 
-  const hasRequiredStrings =
-    typeof obj.reportId === 'string' &&
-    typeof obj.countryId === 'string' &&
-    countryIds.includes(obj.countryId as CountryId) &&
-    typeof obj.year === 'string' &&
-    typeof obj.userReportId === 'string'; // NEW: userReportId is required
+  // Validate userReport
+  if (!obj.userReport || typeof obj.userReport !== 'object') {
+    return false;
+  }
+  const userReport = obj.userReport as Record<string, unknown>;
+  if (
+    typeof userReport.reportId !== 'string' ||
+    typeof userReport.countryId !== 'string' ||
+    !countryIds.includes(userReport.countryId as CountryId)
+  ) {
+    return false;
+  }
 
-  const hasRequiredArrays =
-    Array.isArray(obj.simulationIds) &&
-    obj.simulationIds.every((id) => typeof id === 'string') &&
-    Array.isArray(obj.policyIds) &&
-    obj.policyIds.every((id) => typeof id === 'string');
+  // Validate userSimulations array
+  if (!Array.isArray(obj.userSimulations)) {
+    return false;
+  }
+  for (const sim of obj.userSimulations) {
+    if (
+      !sim ||
+      typeof sim !== 'object' ||
+      typeof (sim as Record<string, unknown>).simulationId !== 'string' ||
+      typeof (sim as Record<string, unknown>).countryId !== 'string'
+    ) {
+      return false;
+    }
+  }
 
-  // Validate optional base ingredient IDs
-  const hasValidOptionalIds =
-    (obj.householdId === undefined ||
-      obj.householdId === null ||
-      typeof obj.householdId === 'string') &&
-    (obj.geographyId === undefined ||
-      obj.geographyId === null ||
-      typeof obj.geographyId === 'string');
+  // Validate userPolicies array
+  if (!Array.isArray(obj.userPolicies)) {
+    return false;
+  }
+  for (const pol of obj.userPolicies) {
+    if (
+      !pol ||
+      typeof pol !== 'object' ||
+      typeof (pol as Record<string, unknown>).policyId !== 'string' ||
+      typeof (pol as Record<string, unknown>).countryId !== 'string'
+    ) {
+      return false;
+    }
+  }
 
-  // Validate optional labels (strings or null, or arrays of strings/null)
-  const hasValidOptionalLabels =
-    (obj.reportLabel === undefined ||
-      obj.reportLabel === null ||
-      typeof obj.reportLabel === 'string') &&
-    (obj.simulationLabels === undefined ||
-      (Array.isArray(obj.simulationLabels) &&
-        obj.simulationLabels.every((l) => l === null || typeof l === 'string'))) &&
-    (obj.policyLabels === undefined ||
-      (Array.isArray(obj.policyLabels) &&
-        obj.policyLabels.every((l) => l === null || typeof l === 'string'))) &&
-    (obj.householdLabel === undefined ||
-      obj.householdLabel === null ||
-      typeof obj.householdLabel === 'string') &&
-    (obj.geographyLabel === undefined ||
-      obj.geographyLabel === null ||
-      typeof obj.geographyLabel === 'string');
+  // Validate userHouseholds array
+  if (!Array.isArray(obj.userHouseholds)) {
+    return false;
+  }
+  for (const hh of obj.userHouseholds) {
+    if (
+      !hh ||
+      typeof hh !== 'object' ||
+      typeof (hh as Record<string, unknown>).householdId !== 'string' ||
+      typeof (hh as Record<string, unknown>).countryId !== 'string'
+    ) {
+      return false;
+    }
+  }
 
-  return hasRequiredStrings && hasRequiredArrays && hasValidOptionalIds && hasValidOptionalLabels;
+  // Validate userGeographies array
+  if (!Array.isArray(obj.userGeographies)) {
+    return false;
+  }
+  for (const geo of obj.userGeographies) {
+    if (!geo || typeof geo !== 'object') {
+      return false;
+    }
+    const g = geo as Record<string, unknown>;
+    if (
+      typeof g.geographyId !== 'string' ||
+      typeof g.countryId !== 'string' ||
+      (g.scope !== 'national' && g.scope !== 'subnational')
+    ) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 /**
@@ -142,9 +171,10 @@ export function isValidShareData(data: unknown): data is ShareData {
  * (e.g., "/us/report-output/sur-abc123?share=...")
  * Caller should prepend origin if full URL is needed
  */
-export function buildSharePath(countryId: CountryId, data: ShareData): string {
+export function buildSharePath(data: ShareData): string {
   const encoded = encodeShareData(data);
-  return `/${countryId}/report-output/${data.userReportId}?share=${encoded}`;
+  const userReportId = data.userReport.id ?? data.userReport.reportId;
+  return `/${data.userReport.countryId}/report-output/${userReportId}?share=${encoded}`;
 }
 
 /**
@@ -160,80 +190,59 @@ export function extractShareDataFromUrl(searchParams: URLSearchParams): ShareDat
 }
 
 /**
- * Create ShareData from report entities
- * Helper to build ShareData from the various report-related objects
+ * Create ShareData from user associations
  *
- * Includes user association IDs and labels for exact UI reproduction
- * and idempotent save functionality.
+ * Takes the user association objects and extracts the minimal data needed
+ * for sharing (IDs and labels). Base ingredient data is not included
+ * since it will be fetched from the API when the shared link is opened.
  */
-export function createShareDataFromReport(
-  report: Report,
-  simulations: Simulation[],
-  policies: Policy[],
-  households: Household[],
-  geographies: Geography[],
-  // User association parameters (for IDs and labels)
-  userReport?: UserReport,
-  userSimulations?: UserSimulation[],
-  userPolicies?: UserPolicy[],
-  userHouseholds?: UserHouseholdPopulation[],
-  userGeographies?: UserGeographyPopulation[]
+export function createShareData(
+  userReport: UserReport,
+  userSimulations: UserSimulation[],
+  userPolicies: UserPolicy[],
+  userHouseholds: UserHouseholdPopulation[],
+  userGeographies: UserGeographyPopulation[]
 ): ShareData | null {
-  if (!report.id) {
+  // userReport must have an id and reportId
+  if (!userReport.id || !userReport.reportId) {
     return null;
   }
-
-  // userReportId is required for the new URL pattern
-  if (!userReport?.id) {
-    return null;
-  }
-
-  // Ensure all IDs are strings (API may return numbers)
-  const policyIds = policies
-    .map((p) => p.id)
-    .filter((id) => id != null)
-    .map((id) => String(id));
-
-  const simulationIds = report.simulationIds.map((id) => String(id));
-
-  // Determine population type from first simulation
-  const firstSim = simulations[0];
-  const isHousehold = firstSim?.populationType === 'household';
-
-  const householdId = isHousehold && households[0]?.id ? String(households[0].id) : null;
-  const geographyId = !isHousehold && geographies[0]?.id ? String(geographies[0].id) : null;
-
-  // Build positional label arrays (matching simulationIds/policyIds order)
-  const simulationLabels = simulationIds.map((simId) => {
-    const userSim = userSimulations?.find((us) => String(us.simulationId) === simId);
-    return userSim?.label ?? null;
-  });
-
-  const policyLabels = policyIds.map((policyId) => {
-    const userPolicy = userPolicies?.find((up) => String(up.policyId) === policyId);
-    return userPolicy?.label ?? null;
-  });
-
-  // Get household/geography labels
-  const householdLabel = isHousehold ? (userHouseholds?.[0]?.label ?? null) : null;
-  const geographyLabel = !isHousehold ? (userGeographies?.[0]?.label ?? null) : null;
 
   return {
-    // Base ingredient IDs
-    reportId: String(report.id),
-    countryId: report.countryId,
-    year: report.year,
-    simulationIds,
-    policyIds,
-    householdId,
-    geographyId,
-    // User report ID (for idempotent save)
-    userReportId: userReport.id,
-    // Labels
-    reportLabel: userReport.label ?? report.label ?? null,
-    simulationLabels,
-    policyLabels,
-    householdLabel,
-    geographyLabel,
+    userReport: {
+      id: userReport.id,
+      reportId: userReport.reportId,
+      countryId: userReport.countryId,
+      label: userReport.label ?? null,
+    },
+    userSimulations: userSimulations.map((s) => ({
+      simulationId: s.simulationId,
+      countryId: s.countryId,
+      label: s.label ?? null,
+    })),
+    userPolicies: userPolicies.map((p) => ({
+      policyId: p.policyId,
+      countryId: p.countryId,
+      label: p.label ?? null,
+    })),
+    userHouseholds: userHouseholds.map((h) => ({
+      householdId: h.householdId,
+      countryId: h.countryId,
+      label: h.label ?? null,
+    })),
+    userGeographies: userGeographies.map((g) => ({
+      geographyId: g.geographyId,
+      countryId: g.countryId,
+      scope: g.scope,
+      label: g.label ?? null,
+    })),
   };
+}
+
+/**
+ * Get the userReportId from ShareData
+ * Used for URL path and idempotent save
+ */
+export function getShareDataUserReportId(shareData: ShareData): string {
+  return shareData.userReport.id ?? shareData.userReport.reportId;
 }

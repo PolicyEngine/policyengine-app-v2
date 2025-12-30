@@ -18,8 +18,9 @@ import { formatReportTimestamp } from '@/utils/dateUtils';
 import { isUKLocalLevelGeography } from '@/utils/geographyUtils';
 import {
   buildSharePath,
-  createShareDataFromReport,
+  createShareData,
   extractShareDataFromUrl,
+  getShareDataUserReportId,
 } from '@/utils/shareUtils';
 import { HouseholdReportOutput } from './report-output/HouseholdReportOutput';
 import ReportOutputLayout from './report-output/ReportOutputLayout';
@@ -38,6 +39,10 @@ export type ReportOutputType = 'household' | 'societyWide';
  * - Manages tab navigation
  * - Delegates to type-specific output components (Household or SocietyWide)
  * - Wraps content in ReportOutputLayout for consistent chrome
+ *
+ * Both owned and shared views now use the same data shape:
+ * - useUserReportById: fetches from localStorage associations
+ * - useSharedReportData: uses ShareData from URL (same shape)
  */
 
 export default function ReportOutputPage() {
@@ -57,6 +62,7 @@ export default function ReportOutputPage() {
   // Detect shared view from URL
   const shareData = extractShareDataFromUrl(searchParams);
   const isSharedView = shareData !== null;
+  const shareDataUserReportId = shareData ? getShareDataUserReportId(shareData) : null;
 
   // Alert state for clipboard copy notification
   const [showCopyAlert, setShowCopyAlert] = useState(false);
@@ -73,41 +79,27 @@ export default function ReportOutputPage() {
   }
 
   // Fetch report data - use appropriate hook based on view type
-  // For owned reports: fetch from localStorage associations
+  // Both hooks return the same shape, so we can select the active one directly
+  const ownedData = useUserReportById(userReportId ?? '', {
+    enabled: !isSharedView && !!userReportId,
+  });
+  const sharedData = useSharedReportData(shareData, { enabled: isSharedView });
+  const data = isSharedView ? sharedData : ownedData;
+
   const {
     userReport,
-    report: ownedReport,
-    simulations: ownedSimulations,
+    report,
+    simulations,
+    policies,
+    households,
+    geographies,
     userSimulations,
     userPolicies,
-    policies: ownedPolicies,
-    households: ownedHouseholds,
     userHouseholds,
-    geographies: ownedGeographies,
     userGeographies,
-    isLoading: ownedLoading,
-    error: ownedError,
-  } = useUserReportById(userReportId ?? '', { enabled: !isSharedView && !!userReportId });
-
-  // For shared reports: fetch directly from API using ShareData
-  const {
-    report: sharedReport,
-    simulations: sharedSimulations,
-    policies: sharedPolicies,
-    households: sharedHouseholds,
-    geographies: sharedGeographies,
-    isLoading: sharedLoading,
-    error: sharedError,
-  } = useSharedReportData(shareData, { enabled: isSharedView });
-
-  // Unify data from either source
-  const report = isSharedView ? sharedReport : ownedReport;
-  const simulations = isSharedView ? sharedSimulations : ownedSimulations;
-  const policies = isSharedView ? sharedPolicies : ownedPolicies;
-  const households = isSharedView ? sharedHouseholds : ownedHouseholds;
-  const geographies = isSharedView ? sharedGeographies : ownedGeographies;
-  const dataLoading = isSharedView ? sharedLoading : ownedLoading;
-  const dataError = isSharedView ? sharedError : ownedError;
+    isLoading: dataLoading,
+    error: dataError,
+  } = data;
 
   // Derive output type from simulation (needed for target type determination)
   const outputType: ReportOutputType | undefined =
@@ -125,10 +117,9 @@ export default function ReportOutputPage() {
   // For shared views, preserve the share param in the URL
   useEffect(() => {
     if (!subpage && report && simulations) {
-      if (isSharedView && shareData?.userReportId) {
-        // For shared views, navigate to overview using userReportId from shareData
+      if (isSharedView && shareDataUserReportId) {
         navigate(
-          `/${countryId}/report-output/${shareData.userReportId}/${DEFAULT_PAGE}?${searchParams.toString()}`
+          `/${countryId}/report-output/${shareDataUserReportId}/${DEFAULT_PAGE}?${searchParams.toString()}`
         );
       } else if (userReportId) {
         navigate(`/${countryId}/report-output/${userReportId}/${DEFAULT_PAGE}`);
@@ -143,7 +134,7 @@ export default function ReportOutputPage() {
     userReportId,
     isSharedView,
     searchParams,
-    shareData?.userReportId,
+    shareDataUserReportId,
   ]);
 
   // Determine which tabs to show based on output type, country, and geography scope
@@ -151,9 +142,9 @@ export default function ReportOutputPage() {
 
   // Handle tab navigation (absolute path, preserve search params for shared views)
   const handleTabClick = (tabValue: string) => {
-    if (isSharedView && shareData?.userReportId) {
+    if (isSharedView && shareDataUserReportId) {
       navigate(
-        `/${countryId}/report-output/${shareData.userReportId}/${tabValue}?${searchParams.toString()}`
+        `/${countryId}/report-output/${shareDataUserReportId}/${tabValue}?${searchParams.toString()}`
       );
     } else {
       navigate(`/${countryId}/report-output/${userReportId}/${tabValue}`);
@@ -191,23 +182,17 @@ export default function ReportOutputPage() {
 
   // Handle share button click - copy share URL to clipboard
   const handleShare = async () => {
-    if (!report || !simulations.length) {
+    if (!userReport || !userSimulations?.length) {
       return;
     }
 
-    // Pass user associations for labels and user IDs
-    // Convert null to undefined for optional parameters
-    const shareDataToEncode = createShareDataFromReport(
-      report,
-      simulations,
-      policies,
-      households,
-      geographies,
-      userReport ?? undefined,
-      userSimulations ?? undefined,
-      userPolicies ?? undefined,
-      userHouseholds ?? undefined,
-      userGeographies ?? undefined
+    // Create ShareData from user associations
+    const shareDataToEncode = createShareData(
+      userReport,
+      userSimulations ?? [],
+      userPolicies ?? [],
+      userHouseholds ?? [],
+      userGeographies ?? []
     );
 
     if (!shareDataToEncode) {
@@ -215,7 +200,7 @@ export default function ReportOutputPage() {
       return;
     }
 
-    const sharePath = buildSharePath(countryId, shareDataToEncode);
+    const sharePath = buildSharePath(shareDataToEncode);
     const shareUrl = `${CALCULATOR_URL}${sharePath}`;
 
     try {
@@ -230,19 +215,13 @@ export default function ReportOutputPage() {
 
   // Handle save button click - create user associations and navigate to owned view
   const handleSave = async () => {
-    if (!report || !simulations.length || !shareData) {
+    if (!shareData) {
       return;
     }
 
     try {
-      const newUserReport = await saveSharedReport({
-        report,
-        simulations,
-        policies,
-        households,
-        geographies,
-        shareData, // Pass shareData for idempotent save and label preservation
-      });
+      // ShareData already contains user associations - just pass it directly
+      const newUserReport = await saveSharedReport(shareData);
       // Navigate to owned view (same URL pattern but now in localStorage)
       navigate(`/${countryId}/report-output/${newUserReport.id}/${activeTab}`);
     } catch (error) {
@@ -277,9 +256,9 @@ export default function ReportOutputPage() {
 
   // Handle sidebar navigation (absolute path, preserve search params for shared views)
   const handleSidebarNavigate = (viewName: string) => {
-    if (isSharedView && shareData?.userReportId) {
+    if (isSharedView && shareDataUserReportId) {
       navigate(
-        `/${countryId}/report-output/${shareData.userReportId}/comparative-analysis/${viewName}?${searchParams.toString()}`
+        `/${countryId}/report-output/${shareDataUserReportId}/comparative-analysis/${viewName}?${searchParams.toString()}`
       );
     } else {
       navigate(`/${countryId}/report-output/${userReportId}/comparative-analysis/${viewName}`);
@@ -287,23 +266,22 @@ export default function ReportOutputPage() {
   };
 
   // Determine the display label and ID for the report
-  const displayLabel = isSharedView ? report?.label : userReport?.label;
-  const displayReportId = isSharedView
-    ? (shareData?.userReportId ?? shareData?.reportId)
-    : userReportId;
+  const displayLabel = userReport?.label;
+  const displayReportId = isSharedView ? shareDataUserReportId : userReportId;
 
   // Render content based on output type
+  // Both shared and owned views now use the same user associations shape
   const renderContent = () => {
     if (outputType === 'household') {
       return (
         <HouseholdReportOutput
           report={report}
           simulations={simulations}
-          userSimulations={isSharedView ? [] : userSimulations}
-          userPolicies={isSharedView ? [] : userPolicies}
+          userSimulations={userSimulations}
+          userPolicies={userPolicies}
           policies={policies}
           households={households}
-          userHouseholds={isSharedView ? [] : userHouseholds}
+          userHouseholds={userHouseholds}
           subpage={activeTab}
           activeView={activeView}
           isLoading={dataLoading}
@@ -320,11 +298,11 @@ export default function ReportOutputPage() {
           activeView={activeView}
           report={report}
           simulations={simulations}
-          userSimulations={isSharedView ? [] : userSimulations}
-          userPolicies={isSharedView ? [] : userPolicies}
+          userSimulations={userSimulations}
+          userPolicies={userPolicies}
           policies={policies}
           geographies={geographies}
-          userGeographies={isSharedView ? [] : userGeographies}
+          userGeographies={userGeographies}
         />
       );
     }

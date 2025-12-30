@@ -1,12 +1,17 @@
-import { useState } from 'react';
+/**
+ * Hook for saving a shared report to user's localStorage
+ *
+ * When a user clicks "Save" on a shared report, this hook persists the
+ * user associations from ShareData to localStorage, making the report
+ * appear in their reports list.
+ */
+
+import { useCallback, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { CountryId } from '@/libs/countries';
 import { RootState } from '@/store';
-import { Geography } from '@/types/ingredients/Geography';
-import { Household } from '@/types/ingredients/Household';
-import { Policy } from '@/types/ingredients/Policy';
-import { Report } from '@/types/ingredients/Report';
-import { Simulation } from '@/types/ingredients/Simulation';
-import { ShareData } from '@/utils/shareUtils';
+import { UserReport } from '@/types/ingredients/UserReport';
+import { getShareDataUserReportId, ShareData } from '@/utils/shareUtils';
 import { useCreateGeographicAssociation } from './useUserGeographic';
 import { useCreateHouseholdAssociation } from './useUserHousehold';
 import { useCreatePolicyAssociation } from './useUserPolicy';
@@ -15,32 +20,16 @@ import { useCreateSimulationAssociation } from './useUserSimulationAssociations'
 
 export type SaveResult = 'success' | 'partial' | 'already_saved' | null;
 
-interface SaveSharedReportParams {
-  report: Report;
-  simulations: Simulation[];
-  policies: Policy[];
-  households: Household[];
-  geographies: Geography[];
-  shareData?: ShareData | null;
-}
-
 /**
- * Hook for saving a shared report and all its ingredients to user associations
+ * Hook for saving a shared report and all its user associations to localStorage
  *
- * Creates associations for:
- * - Report
- * - Simulations
- * - Policies
- * - Households (if present)
- * - Geographies (if present)
+ * ShareData already contains user associations with IDs and labels.
+ * This hook simply persists them to localStorage.
  *
- * Uses Promise.allSettled for best-effort saving of ingredients.
- * Report save is required; ingredient saves are optional.
- *
- * If shareData is provided, performs idempotent save:
- * - Checks if userReportId already exists
- * - If exists, returns existing report without creating duplicates
- * - Uses labels from shareData for exact UI reproduction
+ * Features:
+ * - Idempotent save using userReportId (won't create duplicates)
+ * - Best-effort saving of ingredients (report save required, others optional)
+ * - Skips current law policies (they're pre-defined, not user-created)
  */
 export function useSaveSharedReport() {
   const createReportAssociation = useCreateReportAssociation();
@@ -51,84 +40,75 @@ export function useSaveSharedReport() {
   const reportStore = useUserReportStore();
 
   // Get currentLawId to skip creating associations for current law policies
-  // (current law is a pre-defined policy, not user-created)
   const currentLawId = useSelector((state: RootState) => state.metadata.currentLawId);
 
   const [saveResult, setSaveResult] = useState<SaveResult>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const saveSharedReport = async ({
-    report,
-    simulations,
-    policies,
-    households,
-    geographies,
-    shareData,
-  }: SaveSharedReportParams) => {
+  // Clear previous timeout before setting new one
+  const setResultWithTimeout = useCallback((result: SaveResult) => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    setSaveResult(result);
+    timeoutRef.current = setTimeout(() => setSaveResult(null), 3000);
+  }, []);
+
+  const saveSharedReport = async (shareData: ShareData): Promise<UserReport> => {
     const userId = 'anonymous'; // TODO: Replace with auth context
+    const userReportId = getShareDataUserReportId(shareData);
 
-    // Idempotency check: if shareData has userReportId, check if it already exists
-    if (shareData?.userReportId) {
-      const existingReport = await reportStore.findByUserReportId(shareData.userReportId);
-      if (existingReport) {
-        // Report already saved - don't create duplicates
-        setSaveResult('already_saved');
-        setTimeout(() => setSaveResult(null), 3000);
-        return existingReport;
-      }
+    // Idempotency check: see if this report is already saved
+    const existingReport = await reportStore.findByUserReportId(userReportId);
+    if (existingReport) {
+      setResultWithTimeout('already_saved');
+      return existingReport;
     }
 
-    // Save all simulations (labels already applied by useSharedReportData)
-    const simPromises = simulations
-      .filter((s) => s.id)
-      .map((sim) =>
-        createSimulationAssociation.mutateAsync({
-          userId,
-          simulationId: sim.id!,
-          countryId: sim.countryId!,
-          label: sim.label ?? undefined,
-        })
-      );
+    // Save simulations (labels from ShareData)
+    const simPromises = shareData.userSimulations.map((sim) =>
+      createSimulationAssociation.mutateAsync({
+        userId,
+        simulationId: sim.simulationId,
+        countryId: sim.countryId as CountryId,
+        label: sim.label ?? undefined,
+      })
+    );
 
-    // Save all policies (labels already applied by useSharedReportData)
-    // Skip current law policies - they're pre-defined, not user-created
-    const policyPromises = policies
-      .filter((p) => p.id && String(p.id) !== String(currentLawId))
+    // Save policies (skip current law - it's pre-defined)
+    const policyPromises = shareData.userPolicies
+      .filter((p) => String(p.policyId) !== String(currentLawId))
       .map((policy) =>
         createPolicyAssociation.mutateAsync({
           userId,
-          policyId: policy.id!,
-          countryId: policy.countryId!,
+          policyId: policy.policyId,
+          countryId: policy.countryId as CountryId,
           label: policy.label ?? undefined,
         })
       );
 
-    // Save households if present
-    // Note: Household base type doesn't have label, only UserHousehold association does
-    const householdPromises = households
-      .filter((h) => h.id)
-      .map((hh) =>
-        createHouseholdAssociation.mutateAsync({
-          userId,
-          householdId: hh.id!,
-          countryId: hh.countryId,
-          label: shareData?.householdLabel ?? undefined,
-        })
-      );
+    // Save households
+    const householdPromises = shareData.userHouseholds.map((hh) =>
+      createHouseholdAssociation.mutateAsync({
+        userId,
+        householdId: hh.householdId,
+        countryId: hh.countryId as CountryId,
+        label: hh.label ?? undefined,
+      })
+    );
 
-    // Save geographies (name already has sharer's label applied by useSharedReportData)
-    const geographyPromises = geographies
-      .filter((g) => g.id)
-      .map((geo) =>
-        createGeographicAssociation.mutateAsync({
-          userId,
-          geographyId: geo.geographyId,
-          countryId: geo.countryId,
-          scope: geo.scope,
-          label: geo.name,
-        })
-      );
+    // Save geographies
+    const geographyPromises = shareData.userGeographies.map((geo) =>
+      createGeographicAssociation.mutateAsync({
+        userId,
+        geographyId: geo.geographyId,
+        countryId: geo.countryId as CountryId,
+        scope: geo.scope,
+        label: geo.label ?? undefined,
+      })
+    );
 
-    // Run all in parallel, don't fail on individual errors
+    // Run all ingredient saves in parallel (best-effort)
     const allResults = await Promise.allSettled([
       ...simPromises,
       ...policyPromises,
@@ -136,40 +116,38 @@ export function useSaveSharedReport() {
       ...geographyPromises,
     ]);
 
-    // Use report label (already has sharer's label applied by useSharedReportData)
-    const savedReportLabel =
-      report.label ??
+    // Save the report (required)
+    // Use the userReportId from ShareData for idempotent save
+    const reportLabel =
+      shareData.userReport.label ??
       `Saved Report - ${new Date().toLocaleDateString('en-US', {
         month: 'short',
         day: 'numeric',
         year: 'numeric',
       })}`;
 
-    // Save report (this one is required)
-    // If shareData has userReportId, use it (idempotent save with sharer's ID)
-    // Otherwise, generate a new ID via createReportAssociation
-    let newUserReport;
-    if (shareData?.userReportId) {
+    let newUserReport: UserReport;
+    try {
       newUserReport = await reportStore.createWithId({
-        id: shareData.userReportId,
+        id: userReportId,
         userId,
-        reportId: String(report.id!),
-        countryId: report.countryId,
-        label: savedReportLabel,
+        reportId: shareData.userReport.reportId,
+        countryId: shareData.userReport.countryId as CountryId,
+        label: reportLabel,
       });
-    } else {
-      newUserReport = await createReportAssociation.mutateAsync({
-        userId,
-        reportId: report.id!,
-        countryId: report.countryId,
-        label: savedReportLabel,
-      });
+    } catch (error) {
+      // Handle race condition: if another save completed first
+      const existingAfterRace = await reportStore.findByUserReportId(userReportId);
+      if (existingAfterRace) {
+        setResultWithTimeout('already_saved');
+        return existingAfterRace;
+      }
+      throw error;
     }
 
     // Check if any ingredient saves failed
     const hasFailures = allResults.some((r) => r.status === 'rejected');
-    setSaveResult(hasFailures ? 'partial' : 'success');
-    setTimeout(() => setSaveResult(null), 3000);
+    setResultWithTimeout(hasFailures ? 'partial' : 'success');
 
     return newUserReport;
   };
