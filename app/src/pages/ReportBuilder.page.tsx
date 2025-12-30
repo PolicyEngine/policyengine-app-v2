@@ -36,6 +36,7 @@ import {
   Title,
   Loader,
   Autocomplete,
+  LoadingOverlay,
 } from '@mantine/core';
 import {
   IconPlus,
@@ -113,6 +114,10 @@ import { getDateRange } from '@/libs/metadataUtils';
 import { capitalize } from '@/utils/stringUtils';
 import { ValueSetterComponents, ValueSetterMode, ModeSelectorButton } from '@/pathways/report/components/valueSetters';
 import HistoricalValues from '@/pathways/report/components/policyParameterSelector/HistoricalValues';
+import HouseholdBuilderForm from '@/components/household/HouseholdBuilderForm';
+import { useCreateHousehold } from '@/hooks/useCreateHousehold';
+import { getBasicInputFields } from '@/libs/metadataUtils';
+import { HouseholdBuilder } from '@/utils/HouseholdBuilder';
 
 // ============================================================================
 // TYPES
@@ -2554,16 +2559,48 @@ function PopulationBrowseModal({
   const userId = MOCK_USER_ID.toString();
   const { data: households, isLoading: householdsLoading } = useUserHouseholds(userId);
   const regionOptions = useSelector((state: RootState) => state.metadata.economyOptions.region);
+  const metadata = useSelector((state: RootState) => state.metadata);
+  const basicInputFields = useSelector(getBasicInputFields);
 
   // State
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<PopulationCategory>('national');
+
+  // Creation mode state
+  const [isCreationMode, setIsCreationMode] = useState(false);
+  const [householdLabel, setHouseholdLabel] = useState('');
+  const [householdDraft, setHouseholdDraft] = useState<Household | null>(null);
+
+  // Get report year (default to current year)
+  const reportYear = CURRENT_YEAR.toString();
+
+  // Create household hook
+  const { createHousehold, isPending: isCreating } = useCreateHousehold(householdLabel || undefined);
+
+  // Get all basic non-person fields dynamically
+  const basicNonPersonFields = useMemo(() => {
+    return Object.entries(basicInputFields)
+      .filter(([key]) => key !== 'person')
+      .flatMap(([, fields]) => fields);
+  }, [basicInputFields]);
+
+  // Derive marital status and number of children from household draft
+  const householdPeople = useMemo(() => {
+    if (!householdDraft) return [];
+    return Object.keys(householdDraft.householdData.people || {});
+  }, [householdDraft]);
+
+  const maritalStatus = householdPeople.includes('your partner') ? 'married' : 'single';
+  const numChildren = householdPeople.filter((p) => p.includes('dependent')).length;
 
   // Reset state on mount
   useEffect(() => {
     if (isOpen) {
       setSearchQuery('');
       setActiveCategory('national');
+      setIsCreationMode(false);
+      setHouseholdLabel('');
+      setHouseholdDraft(null);
     }
   }, [isOpen]);
 
@@ -2679,6 +2716,97 @@ function PopulationBrowseModal({
     onClose();
   };
 
+  // Enter creation mode
+  const handleEnterCreationMode = useCallback(() => {
+    const builder = new HouseholdBuilder(countryId as 'us' | 'uk', reportYear);
+    builder.addAdult('you', 30, { employment_income: 0 });
+    setHouseholdDraft(builder.build());
+    setHouseholdLabel('');
+    setIsCreationMode(true);
+  }, [countryId, reportYear]);
+
+  // Exit creation mode (back to browse)
+  const handleExitCreationMode = useCallback(() => {
+    setIsCreationMode(false);
+    setHouseholdDraft(null);
+    setHouseholdLabel('');
+  }, []);
+
+  // Handle marital status change
+  const handleMaritalStatusChange = useCallback((newStatus: 'single' | 'married') => {
+    if (!householdDraft) return;
+
+    const builder = new HouseholdBuilder(countryId as 'us' | 'uk', reportYear);
+    builder.loadHousehold(householdDraft);
+
+    const hasPartner = householdPeople.includes('your partner');
+
+    if (newStatus === 'married' && !hasPartner) {
+      builder.addAdult('your partner', 30, { employment_income: 0 });
+      builder.setMaritalStatus('you', 'your partner');
+    } else if (newStatus === 'single' && hasPartner) {
+      builder.removePerson('your partner');
+    }
+
+    setHouseholdDraft(builder.build());
+  }, [householdDraft, householdPeople, countryId, reportYear]);
+
+  // Handle number of children change
+  const handleNumChildrenChange = useCallback((newCount: number) => {
+    if (!householdDraft) return;
+
+    const builder = new HouseholdBuilder(countryId as 'us' | 'uk', reportYear);
+    builder.loadHousehold(householdDraft);
+
+    const currentChildren = householdPeople.filter((p) => p.includes('dependent'));
+    const currentChildCount = currentChildren.length;
+
+    if (newCount !== currentChildCount) {
+      // Remove all existing children
+      currentChildren.forEach((child) => builder.removePerson(child));
+
+      // Add new children
+      if (newCount > 0) {
+        const hasPartner = householdPeople.includes('your partner');
+        const parentIds = hasPartner ? ['you', 'your partner'] : ['you'];
+        const ordinals = ['first', 'second', 'third', 'fourth', 'fifth'];
+
+        for (let i = 0; i < newCount; i++) {
+          const childName = `your ${ordinals[i] || `${i + 1}th`} dependent`;
+          builder.addChild(childName, 10, parentIds, { employment_income: 0 });
+        }
+      }
+    }
+
+    setHouseholdDraft(builder.build());
+  }, [householdDraft, householdPeople, countryId, reportYear]);
+
+  // Handle household creation submission
+  const handleCreateHousehold = useCallback(async () => {
+    if (!householdDraft || !householdLabel.trim()) return;
+
+    const payload = HouseholdAdapter.toCreationPayload(householdDraft.householdData, countryId);
+
+    try {
+      const result = await createHousehold(payload);
+      const householdId = result.result.household_id;
+
+      // Record usage
+      householdUsageStore.recordUsage(householdId);
+
+      // Select the newly created household
+      onSelect({
+        geography: null,
+        household: householdDraft,
+        label: householdLabel,
+        type: 'household',
+      });
+      onClose();
+    } catch (err) {
+      console.error('Failed to create household:', err);
+    }
+  }, [householdDraft, householdLabel, countryId, createHousehold, onSelect, onClose]);
+
   const colorConfig = INGREDIENT_COLORS.population;
   const countryConfig = COUNTRY_CONFIG[countryId] || COUNTRY_CONFIG.us;
 
@@ -2687,10 +2815,17 @@ function PopulationBrowseModal({
     sidebar: {
       width: 220,
       borderRight: `1px solid ${colors.border.light}`,
-      paddingRight: spacing.lg,
+      display: 'flex',
+      flexDirection: 'column' as const,
+      flexShrink: 0,
+      overflow: 'hidden' as const,
+    },
+    sidebarInner: {
       display: 'flex',
       flexDirection: 'column' as const,
       gap: spacing.lg,
+      padding: spacing.md,
+      paddingRight: spacing.lg,
     },
     sidebarSection: {
       display: 'flex',
@@ -2721,6 +2856,8 @@ function PopulationBrowseModal({
       flexDirection: 'column' as const,
       gap: spacing.lg,
       minWidth: 0,
+      padding: spacing.xl,
+      overflow: 'hidden' as const,
     },
     regionGrid: {
       display: 'grid',
@@ -2784,10 +2921,12 @@ function PopulationBrowseModal({
           </Box>
           <Stack gap={0}>
             <Text fw={600} style={{ fontSize: FONT_SIZES.normal, color: colors.gray[900] }}>
-              Select population
+              {isCreationMode ? 'Create household' : 'Select population'}
             </Text>
             <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
-              Choose a geographic region or household
+              {isCreationMode
+                ? 'Configure your household composition and details'
+                : 'Choose a geographic region or household'}
             </Text>
           </Stack>
         </Group>
@@ -2796,9 +2935,9 @@ function PopulationBrowseModal({
       radius="lg"
       styles={{
         content: {
-          maxWidth: '1000px',
-          height: '70vh',
-          maxHeight: '600px',
+          maxWidth: '1400px',
+          height: '85vh',
+          maxHeight: '800px',
           display: 'flex',
           flexDirection: 'column',
         },
@@ -2811,133 +2950,190 @@ function PopulationBrowseModal({
         body: {
           padding: 0,
           flex: 1,
-          position: 'relative',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
         },
       }}
     >
-      <Group align="stretch" gap={spacing.xl} style={{ height: '100%', width: '100%', padding: spacing.xl }} wrap="nowrap">
-        {/* Left Sidebar */}
-        <Box style={modalStyles.sidebar}>
-          {/* Quick Select */}
-          <Box style={modalStyles.sidebarSection}>
-            <Text style={modalStyles.sidebarLabel}>Quick select</Text>
-            <UnstyledButton
-              style={{
-                ...modalStyles.sidebarItem,
-                background: activeCategory === 'national' ? colorConfig.bg : colors.gray[50],
-                border: `1px solid ${activeCategory === 'national' ? colorConfig.border : colors.border.light}`,
-                color: activeCategory === 'national' ? colorConfig.icon : colors.gray[700],
-              }}
-              onClick={() => setActiveCategory('national')}
-            >
-              {countryId === 'uk' ? <UKOutlineIcon size={16} /> : <USOutlineIcon size={16} />}
-              <Text style={{ fontSize: FONT_SIZES.small, fontWeight: typography.fontWeight.medium }}>
-                {countryId === 'uk' ? 'UK-wide' : 'Nationwide'}
-              </Text>
-            </UnstyledButton>
-          </Box>
+      <Group align="stretch" gap={0} style={{ flex: 1, height: '100%', overflow: 'hidden' }} wrap="nowrap">
+        {/* Left Sidebar - independently scrollable */}
+        <Box style={{ ...modalStyles.sidebar, height: '100%' }}>
+          <ScrollArea h="100%" offsetScrollbars>
+            <Box style={modalStyles.sidebarInner}>
+              {/* Quick Select */}
+              <Box style={modalStyles.sidebarSection}>
+                <Text style={modalStyles.sidebarLabel}>Quick select</Text>
+                <UnstyledButton
+                  style={{
+                    ...modalStyles.sidebarItem,
+                    background: activeCategory === 'national' && !isCreationMode ? colorConfig.bg : colors.gray[50],
+                    border: `1px solid ${activeCategory === 'national' && !isCreationMode ? colorConfig.border : colors.border.light}`,
+                    color: activeCategory === 'national' && !isCreationMode ? colorConfig.icon : colors.gray[700],
+                  }}
+                  onClick={() => {
+                    setActiveCategory('national');
+                    setIsCreationMode(false);
+                  }}
+                >
+                  {countryId === 'uk' ? <UKOutlineIcon size={16} /> : <USOutlineIcon size={16} />}
+                  <Text style={{ fontSize: FONT_SIZES.small, fontWeight: typography.fontWeight.medium }}>
+                    {countryId === 'uk' ? 'UK-wide' : 'Nationwide'}
+                  </Text>
+                </UnstyledButton>
+              </Box>
 
-          <Divider />
+              <Divider />
 
-          {/* Geography Categories */}
-          <Box style={modalStyles.sidebarSection}>
-            <Text style={modalStyles.sidebarLabel}>Geographies</Text>
-            {geographyCategories.map((category) => (
-              <UnstyledButton
-                key={category.id}
-                style={{
-                  ...modalStyles.sidebarItem,
-                  background: activeCategory === category.id ? colorConfig.bg : 'transparent',
-                  color: activeCategory === category.id ? colorConfig.icon : colors.gray[700],
-                }}
-                onClick={() => setActiveCategory(category.id)}
-              >
-                <IconFolder size={16} />
-                <Text style={{ fontSize: FONT_SIZES.small, flex: 1 }}>{category.label}</Text>
-                <Text fw={700} style={{ fontSize: FONT_SIZES.small, color: colors.gray[500] }}>
-                  {category.count}
-                </Text>
-              </UnstyledButton>
-            ))}
-          </Box>
+              {/* Geography Categories */}
+              <Box style={modalStyles.sidebarSection}>
+                <Text style={modalStyles.sidebarLabel}>Geographies</Text>
+                {geographyCategories.map((category) => (
+                  <UnstyledButton
+                    key={category.id}
+                    style={{
+                      ...modalStyles.sidebarItem,
+                      background: activeCategory === category.id && !isCreationMode ? colorConfig.bg : 'transparent',
+                      color: activeCategory === category.id && !isCreationMode ? colorConfig.icon : colors.gray[700],
+                    }}
+                    onClick={() => {
+                      setActiveCategory(category.id);
+                      setIsCreationMode(false);
+                    }}
+                  >
+                    <IconFolder size={16} />
+                    <Text style={{ fontSize: FONT_SIZES.small, flex: 1 }}>{category.label}</Text>
+                    <Text fw={700} style={{ fontSize: FONT_SIZES.small, color: colors.gray[500] }}>
+                      {category.count}
+                    </Text>
+                  </UnstyledButton>
+                ))}
+              </Box>
 
-          <Divider />
+              <Divider />
 
-          {/* My Households */}
-          <Box style={modalStyles.sidebarSection}>
-            <Text style={modalStyles.sidebarLabel}>Households</Text>
-            <UnstyledButton
-              style={{
-                ...modalStyles.sidebarItem,
-                background: activeCategory === 'my-households' ? colorConfig.bg : 'transparent',
-                color: activeCategory === 'my-households' ? colorConfig.icon : colors.gray[700],
-              }}
-              onClick={() => setActiveCategory('my-households')}
-            >
-              <IconHome size={16} />
-              <Text style={{ fontSize: FONT_SIZES.small, flex: 1 }}>My households</Text>
-              <Text fw={700} style={{ fontSize: FONT_SIZES.small, color: colors.gray[500] }}>
-                {sortedHouseholds.length}
-              </Text>
-            </UnstyledButton>
+              {/* My Households */}
+              <Box style={modalStyles.sidebarSection}>
+                <Text style={modalStyles.sidebarLabel}>Households</Text>
+                <UnstyledButton
+                  style={{
+                    ...modalStyles.sidebarItem,
+                    background: activeCategory === 'my-households' && !isCreationMode ? colorConfig.bg : 'transparent',
+                    color: activeCategory === 'my-households' && !isCreationMode ? colorConfig.icon : colors.gray[700],
+                  }}
+                  onClick={() => {
+                    setActiveCategory('my-households');
+                    setIsCreationMode(false);
+                  }}
+                >
+                  <IconHome size={16} />
+                  <Text style={{ fontSize: FONT_SIZES.small, flex: 1 }}>My households</Text>
+                  <Text fw={700} style={{ fontSize: FONT_SIZES.small, color: colors.gray[500] }}>
+                    {sortedHouseholds.length}
+                  </Text>
+                </UnstyledButton>
 
-            {/* Create New Button - directly under My households */}
-            <Button
-              variant="outline"
-              color="gray"
-              size="xs"
-              leftSection={<IconPlus size={14} />}
-              onClick={() => {
-                onCreateNew();
-                onClose();
-              }}
-              fullWidth
-              mt={spacing.xs}
-            >
-              Create new household
-            </Button>
-          </Box>
+                {/* Create New - styled as sidebar tab */}
+                <UnstyledButton
+                  style={{
+                    ...modalStyles.sidebarItem,
+                    background: isCreationMode ? colorConfig.bg : 'transparent',
+                    color: isCreationMode ? colorConfig.icon : colors.gray[700],
+                  }}
+                  onClick={handleEnterCreationMode}
+                >
+                  <IconPlus size={16} />
+                  <Text style={{ fontSize: FONT_SIZES.small, flex: 1 }}>Create new</Text>
+                </UnstyledButton>
+              </Box>
+            </Box>
+          </ScrollArea>
         </Box>
 
         {/* Main Content Area */}
         <Box style={modalStyles.mainContent}>
-          {/* Search Bar */}
-          {activeCategory !== 'national' && (
-            <TextInput
-              placeholder={
-                activeCategory === 'my-households'
-                  ? 'Search households...'
-                  : `Search ${getSectionTitle().toLowerCase()}...`
-              }
-              leftSection={<IconSearch size={16} color={colors.gray[400]} />}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              size="sm"
-              styles={{
-                input: {
-                  borderRadius: spacing.radius.md,
-                  border: `1px solid ${colors.border.light}`,
-                  fontSize: FONT_SIZES.small,
-                  '&:focus': {
-                    borderColor: colorConfig.accent,
-                  },
-                },
-              }}
-            />
-          )}
+          {isCreationMode ? (
+            // Household Creation Form
+            <ScrollArea style={{ flex: 1 }} offsetScrollbars>
+              <Stack gap={spacing.lg}>
+                {/* Household Name Input */}
+                <TextInput
+                  label="Household name"
+                  placeholder="Enter a name for this household"
+                  value={householdLabel}
+                  onChange={(e) => setHouseholdLabel(e.currentTarget.value)}
+                  size="md"
+                  styles={{
+                    input: {
+                      borderRadius: spacing.radius.md,
+                      border: `1px solid ${colors.border.light}`,
+                      fontSize: FONT_SIZES.normal,
+                    },
+                  }}
+                />
 
-          {/* Section Header */}
-          <Group justify="space-between" align="center">
-            <Text fw={600} style={{ fontSize: FONT_SIZES.normal, color: colors.gray[800] }}>
-              {getSectionTitle()}
-            </Text>
-            <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
-              {getItemCount()} {getItemCount() === 1 ? 'option' : 'options'}
-            </Text>
-          </Group>
+                <Divider />
 
-          {/* Content */}
-          <ScrollArea style={{ flex: 1 }} offsetScrollbars>
+                {/* HouseholdBuilderForm */}
+                {householdDraft && (
+                  <Box pos="relative">
+                    <LoadingOverlay visible={isCreating} />
+                    <HouseholdBuilderForm
+                      household={householdDraft}
+                      metadata={metadata}
+                      year={reportYear}
+                      maritalStatus={maritalStatus}
+                      numChildren={numChildren}
+                      basicPersonFields={basicInputFields.person || []}
+                      basicNonPersonFields={basicNonPersonFields}
+                      onChange={setHouseholdDraft}
+                      onMaritalStatusChange={handleMaritalStatusChange}
+                      onNumChildrenChange={handleNumChildrenChange}
+                      disabled={isCreating}
+                    />
+                  </Box>
+                )}
+              </Stack>
+            </ScrollArea>
+          ) : (
+            <>
+              {/* Search Bar */}
+              {activeCategory !== 'national' && (
+                <TextInput
+                  placeholder={
+                    activeCategory === 'my-households'
+                      ? 'Search households...'
+                      : `Search ${getSectionTitle().toLowerCase()}...`
+                  }
+                  leftSection={<IconSearch size={16} color={colors.gray[400]} />}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  size="sm"
+                  styles={{
+                    input: {
+                      borderRadius: spacing.radius.md,
+                      border: `1px solid ${colors.border.light}`,
+                      fontSize: FONT_SIZES.small,
+                      '&:focus': {
+                        borderColor: colorConfig.accent,
+                      },
+                    },
+                  }}
+                />
+              )}
+
+              {/* Section Header */}
+              <Group justify="space-between" align="center">
+                <Text fw={600} style={{ fontSize: FONT_SIZES.normal, color: colors.gray[800] }}>
+                  {getSectionTitle()}
+                </Text>
+                <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
+                  {getItemCount()} {getItemCount() === 1 ? 'option' : 'options'}
+                </Text>
+              </Group>
+
+              {/* Content */}
+              <ScrollArea style={{ flex: 1 }} offsetScrollbars>
             {activeCategory === 'national' ? (
               // National selection - single prominent option
               <Box
@@ -3094,9 +3290,39 @@ function PopulationBrowseModal({
                 </Box>
               )
             )}
-          </ScrollArea>
+              </ScrollArea>
+            </>
+          )}
         </Box>
       </Group>
+
+      {/* Footer for creation mode - fixed at bottom */}
+      {isCreationMode && (
+        <Box
+          style={{
+            flexShrink: 0,
+            borderTop: `1px solid ${colors.border.light}`,
+            padding: spacing.md,
+            paddingLeft: spacing.xl,
+            paddingRight: spacing.xl,
+            background: colors.white,
+          }}
+        >
+          <Group justify="flex-end" gap={spacing.sm}>
+            <Button variant="default" onClick={handleExitCreationMode} disabled={isCreating}>
+              Cancel
+            </Button>
+            <Button
+              color="teal"
+              onClick={handleCreateHousehold}
+              loading={isCreating}
+              disabled={!householdLabel.trim() || !householdDraft}
+            >
+              Create household
+            </Button>
+          </Group>
+        </Box>
+      )}
     </Modal>
   );
 }
