@@ -3341,9 +3341,6 @@ function PopulationBrowseModal({
           }}
         >
           <Group justify="flex-end" gap={spacing.sm}>
-            <Button variant="default" onClick={handleExitCreationMode} disabled={isCreating}>
-              Cancel
-            </Button>
             <Button
               color="teal"
               onClick={handleCreateHousehold}
