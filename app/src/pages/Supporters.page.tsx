@@ -91,6 +91,14 @@ const supporters: Supporter[] = [
     description:
       'an independent federal agency supporting science and engineering in all 50 states and U.S. territories through research and education.',
   },
+  {
+    id: 'pci',
+    name: "Pritzker Children's Initiative",
+    websiteUrl: 'https://www.pritzkerchildrensinitiative.org/',
+    logoUrl: '/assets/supporters/pci.png',
+    description:
+      'a program of the J.B. and M.K. Pritzker Family Foundation focused on ensuring every child arrives at kindergarten ready to succeed, with particular emphasis on the prenatal to age three period.',
+  },
 ];
 
 const projects: SupportedProject[] = [
@@ -232,6 +240,15 @@ const projects: SupportedProject[] = [
     description:
       'Supporting the development of organizational infrastructure and community engagement to strengthen the open-source ecosystem around economic policy analysis tools.',
     supporterId: 'nsf',
+  },
+  {
+    title: 'PolicyEngine policy analysis expansion',
+    amount: 150000,
+    currency: 'USD',
+    awardDate: '2025-12',
+    description:
+      'Supporting the expansion of policy analysis capabilities to model child poverty impacts and family economic security policies across all 50 states, including a Child Poverty Impact Dashboard, comprehensive state-level TANF and child care subsidy modeling, and training for national and state partners.',
+    supporterId: 'pci',
   },
 ];
 
