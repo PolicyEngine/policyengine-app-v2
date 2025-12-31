@@ -7,14 +7,17 @@
  *
  * This approach mirrors the existing useUserReportById architecture:
  * user associations → fetch base ingredients → return EnhancedUserReport
+ *
+ * Uses URL-safe base64 encoding for maximum browser compatibility.
  */
 
 import {
-  MinimalUserGeography,
-  MinimalUserHousehold,
-  MinimalUserPolicy,
-  MinimalUserReport,
-  MinimalUserSimulation,
+  ReportIngredientsInput,
+  ShareableUserGeography,
+  ShareableUserHousehold,
+  ShareableUserPolicy,
+  ShareableUserReport,
+  ShareableUserSimulation,
 } from '@/hooks/utils/useFetchReportIngredients';
 import { CountryId, countryIds } from '@/libs/countries';
 import { UserPolicy } from '@/types/ingredients/UserPolicy';
@@ -28,35 +31,37 @@ import { UserSimulation } from '@/types/ingredients/UserSimulation';
 /**
  * Data encoded in shareable URLs
  *
- * Contains user associations with their IDs and labels.
+ * Contains user associations (minus userId/timestamps) with their IDs and labels.
  * Base ingredients are NOT stored - they're fetched from API using these IDs.
+ * This type is equivalent to ReportIngredientsInput.
  */
 export interface ShareData {
-  userReport: MinimalUserReport;
-  userSimulations: MinimalUserSimulation[];
-  userPolicies: MinimalUserPolicy[];
-  userHouseholds: MinimalUserHousehold[];
-  userGeographies: MinimalUserGeography[];
+  userReport: ShareableUserReport;
+  userSimulations: ShareableUserSimulation[];
+  userPolicies: ShareableUserPolicy[];
+  userHouseholds: ShareableUserHousehold[];
+  userGeographies: ShareableUserGeography[];
 }
 
 /**
- * Encode ShareData to URL-safe Base64 string
- * Uses URL-safe characters: + → -, / → _, removes = padding
+ * Encode ShareData to a URL-safe base64 string.
+ * Uses URL-safe characters: + → -, / → _, removes = padding.
  */
 export function encodeShareData(data: ShareData): string {
   const json = JSON.stringify(data);
   const base64 = btoa(json);
+  // Make URL-safe: replace + with -, / with _, remove = padding
   const urlSafe = base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
   return urlSafe;
 }
 
 /**
- * Decode URL-safe Base64 string back to ShareData
- * Returns null if decoding fails or data is invalid
+ * Decode URL-safe base64 string back to ShareData.
+ * Returns null if decoding fails or data is invalid.
  */
 export function decodeShareData(encoded: string): ShareData | null {
   try {
-    // Restore standard Base64 characters
+    // Restore standard base64 characters
     let base64 = encoded.replace(/-/g, '+').replace(/_/g, '/');
 
     // Add back padding if needed
@@ -192,9 +197,9 @@ export function extractShareDataFromUrl(searchParams: URLSearchParams): ShareDat
 /**
  * Create ShareData from user associations
  *
- * Takes the user association objects and extracts the minimal data needed
- * for sharing (IDs and labels). Base ingredient data is not included
- * since it will be fetched from the API when the shared link is opened.
+ * Takes the user association objects and strips userId/timestamps for sharing.
+ * Base ingredient data is not included since it will be fetched from the API
+ * when the shared link is opened.
  */
 export function createShareData(
   userReport: UserReport,
@@ -208,34 +213,20 @@ export function createShareData(
     return null;
   }
 
+  // Helper to strip userId and timestamp fields
+  const stripUserFields = <T extends { userId?: string; createdAt?: string; updatedAt?: string }>(
+    obj: T
+  ): Omit<T, 'userId' | 'createdAt' | 'updatedAt'> => {
+    const { userId, createdAt, updatedAt, ...rest } = obj;
+    return rest;
+  };
+
   return {
-    userReport: {
-      id: userReport.id,
-      reportId: userReport.reportId,
-      countryId: userReport.countryId,
-      label: userReport.label ?? null,
-    },
-    userSimulations: userSimulations.map((s) => ({
-      simulationId: s.simulationId,
-      countryId: s.countryId,
-      label: s.label ?? null,
-    })),
-    userPolicies: userPolicies.map((p) => ({
-      policyId: p.policyId,
-      countryId: p.countryId,
-      label: p.label ?? null,
-    })),
-    userHouseholds: userHouseholds.map((h) => ({
-      householdId: h.householdId,
-      countryId: h.countryId,
-      label: h.label ?? null,
-    })),
-    userGeographies: userGeographies.map((g) => ({
-      geographyId: g.geographyId,
-      countryId: g.countryId,
-      scope: g.scope,
-      label: g.label ?? null,
-    })),
+    userReport: stripUserFields(userReport),
+    userSimulations: userSimulations.map(stripUserFields),
+    userPolicies: userPolicies.map(stripUserFields),
+    userHouseholds: userHouseholds.map(stripUserFields),
+    userGeographies: userGeographies.map(stripUserFields),
   };
 }
 

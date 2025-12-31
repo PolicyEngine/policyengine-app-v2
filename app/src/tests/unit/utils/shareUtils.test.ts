@@ -10,7 +10,7 @@ import {
   ShareData,
 } from '@/utils/shareUtils';
 
-// Test fixtures using the new ShareData structure
+// Test fixtures using Omit<> types (include all fields except userId/timestamps)
 const VALID_SHARE_DATA: ShareData = {
   userReport: {
     id: 'sur-abc123',
@@ -28,7 +28,13 @@ const VALID_SHARE_DATA: ShareData = {
   ],
   userHouseholds: [],
   userGeographies: [
-    { geographyId: 'us', countryId: 'us', scope: 'national', label: 'United States' },
+    {
+      type: 'geography',
+      geographyId: 'us',
+      countryId: 'us',
+      scope: 'national',
+      label: 'United States',
+    },
   ],
 };
 
@@ -41,7 +47,9 @@ const VALID_HOUSEHOLD_SHARE_DATA: ShareData = {
   },
   userSimulations: [{ simulationId: 'sim-3', countryId: 'uk', label: 'My Simulation' }],
   userPolicies: [{ policyId: 'policy-3', countryId: 'uk', label: 'My Policy' }],
-  userHouseholds: [{ householdId: 'household-123', countryId: 'uk', label: 'My Household' }],
+  userHouseholds: [
+    { type: 'household', householdId: 'household-123', countryId: 'uk', label: 'My Household' },
+  ],
   userGeographies: [],
 };
 
@@ -69,8 +77,22 @@ describe('shareUtils', () => {
       // When
       const encoded = encodeShareData(VALID_SHARE_DATA);
 
-      // Then - should not contain +, /, or = (standard base64 chars)
+      // Then - should not contain +, /, or = (standard base64 chars that need URL encoding)
       expect(encoded).not.toMatch(/[+/=]/);
+      // Should only contain URL-safe base64 characters
+      expect(encoded).toMatch(/^[A-Za-z0-9_-]+$/);
+    });
+
+    test('given encoded string then can be used in URL without breaking', () => {
+      // When
+      const encoded = encodeShareData(VALID_SHARE_DATA);
+
+      // Then - verify round-trip through URL: encode -> put in URL -> extract -> decode
+      const url = new URL(`https://example.com/report?share=${encoded}`);
+      const extractedParam = url.searchParams.get('share');
+      const decoded = decodeShareData(extractedParam!);
+
+      expect(decoded).toEqual(VALID_SHARE_DATA);
     });
 
     test('given invalid base64 string then returns null', () => {
@@ -81,12 +103,12 @@ describe('shareUtils', () => {
       expect(result).toBeNull();
     });
 
-    test('given valid base64 but invalid JSON then returns null', () => {
-      // Given - "hello" in base64
-      const invalidJson = btoa('hello').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    test('given valid base64 but invalid JSON structure then returns null', () => {
+      // Given - encode a non-ShareData object
+      const invalidShareData = btoa(JSON.stringify({ foo: 'bar' }));
 
       // When
-      const result = decodeShareData(invalidJson);
+      const result = decodeShareData(invalidShareData);
 
       // Then
       expect(result).toBeNull();
@@ -285,7 +307,7 @@ describe('shareUtils', () => {
         userGeographies
       );
 
-      // Then
+      // Then - result should have all fields except userId/timestamps
       expect(result).toMatchObject({
         userReport: {
           id: 'sur-test1',
@@ -297,9 +319,18 @@ describe('shareUtils', () => {
         userPolicies: [{ policyId: 'policy-1', countryId: 'us', label: 'Policy Label' }],
         userHouseholds: [],
         userGeographies: [
-          { geographyId: 'geo-1', countryId: 'us', scope: 'national', label: 'Geography Label' },
+          {
+            type: 'geography',
+            geographyId: 'geo-1',
+            countryId: 'us',
+            scope: 'national',
+            label: 'Geography Label',
+          },
         ],
       });
+      // Verify userId was stripped
+      expect(result?.userReport).not.toHaveProperty('userId');
+      expect(result?.userSimulations[0]).not.toHaveProperty('userId');
     });
 
     test('given user report without id then returns null', () => {
@@ -345,14 +376,14 @@ describe('shareUtils', () => {
     });
 
     test('given share data without id then falls back to reportId', () => {
-      // Given
-      const shareData: ShareData = {
+      // Given - simulate legacy data without id field
+      const shareData = {
         ...VALID_SHARE_DATA,
         userReport: {
           ...VALID_SHARE_DATA.userReport,
           id: undefined,
         },
-      };
+      } as unknown as ShareData;
 
       // When
       const result = getShareDataUserReportId(shareData);

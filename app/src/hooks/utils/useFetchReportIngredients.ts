@@ -35,51 +35,31 @@ import { UserSimulation } from '@/types/ingredients/UserSimulation';
 import { combineLoadingStates, extractUniqueIds, useParallelQueries } from './normalizedUtils';
 
 /**
- * Minimal user association data needed for fetching
- * These are the fields we encode in ShareData
+ * Shareable user association types - excludes fields that don't make sense for sharing
+ * Uses Omit<> to automatically include all other fields from the base types
  */
-export interface MinimalUserReport {
-  id?: string;
-  reportId: string;
-  countryId: string;
-  label?: string | null;
-}
-
-export interface MinimalUserSimulation {
-  simulationId: string;
-  countryId: string;
-  label?: string | null;
-}
-
-export interface MinimalUserPolicy {
-  policyId: string;
-  countryId: string;
-  label?: string | null;
-}
-
-export interface MinimalUserHousehold {
-  householdId: string;
-  countryId: string;
-  label?: string | null;
-}
-
-export interface MinimalUserGeography {
-  geographyId: string;
-  countryId: string;
-  scope: 'national' | 'subnational';
-  label?: string | null;
-}
+export type ShareableUserReport = Omit<UserReport, 'userId' | 'createdAt' | 'updatedAt'>;
+export type ShareableUserSimulation = Omit<UserSimulation, 'userId' | 'createdAt' | 'updatedAt'>;
+export type ShareableUserPolicy = Omit<UserPolicy, 'userId' | 'createdAt' | 'updatedAt'>;
+export type ShareableUserHousehold = Omit<
+  UserHouseholdPopulation,
+  'userId' | 'createdAt' | 'updatedAt'
+>;
+export type ShareableUserGeography = Omit<
+  UserGeographyPopulation,
+  'userId' | 'createdAt' | 'updatedAt'
+>;
 
 /**
  * Input for useFetchReportIngredients
  * Contains the user associations (either from localStorage or decoded from URL)
  */
 export interface ReportIngredientsInput {
-  userReport: MinimalUserReport;
-  userSimulations: MinimalUserSimulation[];
-  userPolicies: MinimalUserPolicy[];
-  userHouseholds: MinimalUserHousehold[];
-  userGeographies: MinimalUserGeography[];
+  userReport: ShareableUserReport;
+  userSimulations: ShareableUserSimulation[];
+  userPolicies: ShareableUserPolicy[];
+  userHouseholds: ShareableUserHousehold[];
+  userGeographies: ShareableUserGeography[];
 }
 
 /**
@@ -97,8 +77,8 @@ export interface ReportIngredientsResult {
 }
 
 /**
- * Expand minimal user associations to full types
- * Adds required fields with placeholder values for shared view
+ * Expand shareable user associations to full types
+ * Adds userId field for shared view
  */
 export function expandUserAssociations(
   input: ReportIngredientsInput,
@@ -112,38 +92,25 @@ export function expandUserAssociations(
 } {
   return {
     userReport: {
+      ...input.userReport,
       id: input.userReport.id ?? input.userReport.reportId, // Fallback to reportId if id not set
       userId,
-      reportId: input.userReport.reportId,
-      countryId: input.userReport.countryId as UserReport['countryId'],
-      label: input.userReport.label ?? undefined,
     },
     userSimulations: input.userSimulations.map((s) => ({
+      ...s,
       userId,
-      simulationId: s.simulationId,
-      countryId: s.countryId as UserSimulation['countryId'],
-      label: s.label ?? undefined,
     })),
     userPolicies: input.userPolicies.map((p) => ({
+      ...p,
       userId,
-      policyId: p.policyId,
-      countryId: p.countryId as UserPolicy['countryId'],
-      label: p.label ?? undefined,
     })),
     userHouseholds: input.userHouseholds.map((h) => ({
-      type: 'household' as const,
+      ...h,
       userId,
-      householdId: h.householdId,
-      countryId: h.countryId as UserHouseholdPopulation['countryId'],
-      label: h.label ?? undefined,
     })),
     userGeographies: input.userGeographies.map((g) => ({
-      type: 'geography' as const,
+      ...g,
       userId,
-      geographyId: g.geographyId,
-      countryId: g.countryId as UserGeographyPopulation['countryId'],
-      scope: g.scope,
-      label: g.label ?? undefined,
     })),
   };
 }
@@ -163,7 +130,9 @@ export function useFetchReportIngredients(
   options?: { enabled?: boolean }
 ): ReportIngredientsResult {
   const isEnabled = options?.enabled !== false && input !== null;
-  const country = useCurrentCountry();
+  const currentCountry = useCurrentCountry();
+  // Use country from input if available (for shared reports), otherwise use current country
+  const country = input?.userReport.countryId ?? currentCountry;
 
   // Get geography metadata for building Geography objects
   const geographyOptions = useSelector((state: RootState) => state.metadata.economyOptions.region);

@@ -9,7 +9,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Provider } from 'react-redux';
 import { ShareData } from '@/utils/shareUtils';
 
-// ShareData fixtures
+// ShareData fixtures - using Omit<> types which include all fields except userId/timestamps
 export const MOCK_SHARE_DATA: ShareData = {
   userReport: {
     id: 'sur-test123',
@@ -21,7 +21,13 @@ export const MOCK_SHARE_DATA: ShareData = {
   userPolicies: [{ policyId: 'policy-1', countryId: 'us', label: 'Test Policy' }],
   userHouseholds: [],
   userGeographies: [
-    { geographyId: 'us', countryId: 'us', scope: 'national', label: 'United States' },
+    {
+      type: 'geography',
+      geographyId: 'us',
+      countryId: 'us',
+      scope: 'national',
+      label: 'United States',
+    },
   ],
 };
 
@@ -34,7 +40,9 @@ export const MOCK_HOUSEHOLD_SHARE_DATA: ShareData = {
   },
   userSimulations: [{ simulationId: 'sim-2', countryId: 'uk', label: 'HH Sim' }],
   userPolicies: [{ policyId: 'policy-2', countryId: 'uk', label: 'HH Policy' }],
-  userHouseholds: [{ householdId: 'hh-1', countryId: 'uk', label: 'My Household' }],
+  userHouseholds: [
+    { type: 'household', householdId: 'hh-1', countryId: 'uk', label: 'My Household' },
+  ],
   userGeographies: [],
 };
 

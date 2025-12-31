@@ -18,6 +18,11 @@ import {
   MOCK_SIMULATION_METADATA,
 } from '@/tests/fixtures/hooks/useSharedReportDataMocks';
 
+// Mock useCurrentCountry hook (required by useFetchReportIngredients)
+vi.mock('@/hooks/useCurrentCountry', () => ({
+  useCurrentCountry: vi.fn(() => 'us'),
+}));
+
 // Mock API functions
 vi.mock('@/api/report', () => ({
   fetchReportById: vi.fn(),
