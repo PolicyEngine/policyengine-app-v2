@@ -14,7 +14,6 @@ export async function fetchReportById(
   reportId: string
 ): Promise<ReportMetadata> {
   const url = `${BASE_URL}/${countryId}/report/${reportId}`;
-  console.log('[fetchReportById] Fetching:', url);
 
   const res = await fetch(url, {
     method: 'GET',
@@ -30,7 +29,6 @@ export async function fetchReportById(
   }
 
   const json = await res.json();
-  console.log('[fetchReportById] Success, report id:', json.result?.id);
   return json.result;
 }
 
