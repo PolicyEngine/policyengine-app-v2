@@ -1,3 +1,13 @@
+/**
+ * BrowseModalTemplate - Shared template for browse modals (Policy, Population)
+ *
+ * Handles ONLY visual layout:
+ * - Modal shell with header
+ * - Sidebar (standard sections OR custom render)
+ * - Main content area
+ * - Optional status header slot
+ * - Optional footer slot
+ */
 import { ReactNode } from 'react';
 import {
   Box,
@@ -28,10 +38,52 @@ export function BrowseModalTemplate({
   headerSubtitle,
   colorConfig,
   sidebarSections,
+  renderSidebar,
+  sidebarWidth = BROWSE_MODAL_CONFIG.sidebarWidth,
   renderMainContent,
   statusHeader,
   footer,
 }: BrowseModalTemplateProps) {
+  // Render standard sidebar sections
+  const renderStandardSidebar = (sections: BrowseModalSidebarSection[]) => (
+    <ScrollArea style={{ flex: 1 }} offsetScrollbars>
+      <Stack gap={spacing.lg}>
+        {sections.map((section, sectionIndex) => (
+          <Box key={section.id}>
+            {sectionIndex > 0 && <Divider mb={spacing.lg} />}
+            <Box style={modalStyles.sidebarSection}>
+              <Text style={modalStyles.sidebarLabel}>{section.label}</Text>
+              {section.items.map((item) => (
+                <UnstyledButton
+                  key={item.id}
+                  style={{
+                    ...modalStyles.sidebarItem,
+                    background: item.isActive ? colorConfig.bg : 'transparent',
+                    color: item.isActive ? colorConfig.icon : colors.gray[700],
+                  }}
+                  onClick={item.onClick}
+                >
+                  {item.icon}
+                  <Text style={{ fontSize: FONT_SIZES.small, flex: 1 }}>
+                    {item.label}
+                  </Text>
+                  {item.badge !== undefined && (
+                    <Text
+                      fw={700}
+                      style={{ fontSize: FONT_SIZES.small, color: colors.gray[500] }}
+                    >
+                      {item.badge}
+                    </Text>
+                  )}
+                </UnstyledButton>
+              ))}
+            </Box>
+          </Box>
+        ))}
+      </Stack>
+    </ScrollArea>
+  );
+
   return (
     <Modal
       opened={isOpen}
@@ -89,43 +141,18 @@ export function BrowseModalTemplate({
     >
       <Group align="stretch" gap={0} style={{ flex: 1, overflow: 'hidden' }} wrap="nowrap">
         {/* Sidebar */}
-        <Box style={{ ...modalStyles.sidebar, padding: spacing.lg }}>
-          <ScrollArea style={{ flex: 1 }} offsetScrollbars>
-            <Stack gap={spacing.lg}>
-              {sidebarSections.map((section, sectionIndex) => (
-                <Box key={section.id}>
-                  {sectionIndex > 0 && <Divider mb={spacing.lg} />}
-                  <Box style={modalStyles.sidebarSection}>
-                    <Text style={modalStyles.sidebarLabel}>{section.label}</Text>
-                    {section.items.map((item) => (
-                      <UnstyledButton
-                        key={item.id}
-                        style={{
-                          ...modalStyles.sidebarItem,
-                          background: item.isActive ? colorConfig.bg : 'transparent',
-                          color: item.isActive ? colorConfig.icon : colors.gray[700],
-                        }}
-                        onClick={item.onClick}
-                      >
-                        {item.icon}
-                        <Text style={{ fontSize: FONT_SIZES.small, flex: 1 }}>
-                          {item.label}
-                        </Text>
-                        {item.badge !== undefined && (
-                          <Text
-                            fw={700}
-                            style={{ fontSize: FONT_SIZES.small, color: colors.gray[500] }}
-                          >
-                            {item.badge}
-                          </Text>
-                        )}
-                      </UnstyledButton>
-                    ))}
-                  </Box>
-                </Box>
-              ))}
-            </Stack>
-          </ScrollArea>
+        <Box
+          style={{
+            width: sidebarWidth,
+            borderRight: `1px solid ${colors.border.light}`,
+            display: 'flex',
+            flexDirection: 'column',
+            flexShrink: 0,
+            padding: spacing.lg,
+            overflow: 'hidden',
+          }}
+        >
+          {renderSidebar ? renderSidebar() : (sidebarSections && renderStandardSidebar(sidebarSections))}
         </Box>
 
         {/* Main Content Area */}
