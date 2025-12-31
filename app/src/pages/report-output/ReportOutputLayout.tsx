@@ -1,5 +1,24 @@
-import { IconCalendar, IconClock, IconPencil } from '@tabler/icons-react';
-import { ActionIcon, Box, Container, Group, Stack, Text, Title } from '@mantine/core';
+import {
+  IconBookmark,
+  IconCalendar,
+  IconChevronLeft,
+  IconClock,
+  IconPencil,
+  IconShare,
+  IconStack2,
+} from '@tabler/icons-react';
+import {
+  ActionIcon,
+  Anchor,
+  Box,
+  Container,
+  Group,
+  Stack,
+  Text,
+  Title,
+  Tooltip,
+} from '@mantine/core';
+import { SharedReportTag } from '@/components/report/SharedReportTag';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { getComparativeAnalysisTree } from './comparativeAnalysisTree';
@@ -19,6 +38,9 @@ interface ReportOutputLayoutProps {
   outputType?: 'household' | 'societyWide';
   activeView?: string;
   onSidebarNavigate?: (view: string) => void;
+  isSharedView?: boolean;
+  onShare?: () => void;
+  onSave?: () => void;
   children: React.ReactNode;
 }
 
@@ -45,6 +67,9 @@ export default function ReportOutputLayout({
   outputType = 'societyWide',
   activeView = '',
   onSidebarNavigate,
+  isSharedView = false,
+  onShare,
+  onSave,
   children,
 }: ReportOutputLayoutProps) {
   const countryId = useCurrentCountry();
@@ -57,7 +82,7 @@ export default function ReportOutputLayout({
       <Stack gap={spacing.xl}>
         {/* Header Section */}
         <Box>
-          {/* Title row with edit action */}
+          {/* Title row with actions */}
           <Group gap={spacing.xs} align="center" mb={spacing.xs}>
             <Title
               order={1}
@@ -67,15 +92,53 @@ export default function ReportOutputLayout({
             >
               {reportLabel || reportId}
             </Title>
-            <ActionIcon
-              variant="subtle"
-              color="gray"
-              size="lg"
-              aria-label="Edit report name"
-              onClick={onEditName}
-            >
-              <IconPencil size={18} />
-            </ActionIcon>
+            {isSharedView && <SharedReportTag />}
+            {/* Normal view: Share + Edit buttons */}
+            {!isSharedView && (
+              <>
+                <ActionIcon
+                  variant="subtle"
+                  color="gray"
+                  size="lg"
+                  aria-label="Share report"
+                  onClick={onShare}
+                >
+                  <IconShare size={18} />
+                </ActionIcon>
+                <ActionIcon
+                  variant="subtle"
+                  color="gray"
+                  size="lg"
+                  aria-label="Edit report name"
+                  onClick={onEditName}
+                >
+                  <IconPencil size={18} />
+                </ActionIcon>
+              </>
+            )}
+            {/* Shared view: Save button only */}
+            {isSharedView && (
+              <Tooltip
+                label="Save to my reports"
+                position="right"
+                styles={{
+                  tooltip: {
+                    backgroundColor: colors.gray[700],
+                    fontSize: typography.fontSize.xs,
+                  },
+                }}
+              >
+                <ActionIcon
+                  variant="subtle"
+                  color="gray"
+                  size="lg"
+                  aria-label="Save report to my reports"
+                  onClick={onSave}
+                >
+                  <IconBookmark size={18} />
+                </ActionIcon>
+              </Tooltip>
+            )}
           </Group>
 
           {/* Timestamp and View All */}

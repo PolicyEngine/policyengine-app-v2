@@ -13,6 +13,10 @@ vi.mock('@/hooks/useCurrentCountry', () => ({
   useCurrentCountry: () => 'us',
 }));
 
+vi.mock('@/components/report/SharedReportTag', () => ({
+  SharedReportTag: () => <span data-testid="shared-report-tag">Shared</span>,
+}));
+
 describe('ReportOutputLayout', () => {
   test('given report year then year is displayed in metadata line', () => {
     // Given
@@ -196,5 +200,53 @@ describe('ReportOutputLayout', () => {
 
     // Then
     expect(screen.getByText(testContent)).toBeInTheDocument();
+  });
+
+  test('given isSharedView=true then shows SharedReportTag and save button', () => {
+    // Given
+    render(
+      <ReportOutputLayout
+        reportId={MOCK_REPORT_ID}
+        reportLabel={MOCK_REPORT_LABEL}
+        reportYear={MOCK_REPORT_YEAR}
+        timestamp={MOCK_TIMESTAMP}
+        tabs={MOCK_TABS}
+        activeTab="overview"
+        onTabChange={vi.fn()}
+        isSharedView
+        onSave={vi.fn()}
+      >
+        <div>Content</div>
+      </ReportOutputLayout>
+    );
+
+    // Then
+    expect(screen.getByTestId('shared-report-tag')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /save report to my reports/i })).toBeInTheDocument();
+  });
+
+  test('given isSharedView=false then shows share and edit buttons', () => {
+    // Given
+    render(
+      <ReportOutputLayout
+        reportId={MOCK_REPORT_ID}
+        reportLabel={MOCK_REPORT_LABEL}
+        reportYear={MOCK_REPORT_YEAR}
+        timestamp={MOCK_TIMESTAMP}
+        tabs={MOCK_TABS}
+        activeTab="overview"
+        onTabChange={vi.fn()}
+        isSharedView={false}
+        onShare={vi.fn()}
+        onEditName={vi.fn()}
+      >
+        <div>Content</div>
+      </ReportOutputLayout>
+    );
+
+    // Then
+    expect(screen.queryByTestId('shared-report-tag')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /share report/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /edit report name/i })).toBeInTheDocument();
   });
 });
