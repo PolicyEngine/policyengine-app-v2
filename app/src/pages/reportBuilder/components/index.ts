@@ -13,6 +13,9 @@ export {
   CreationStatusHeader,
 } from './shared';
 
-// Re-export page components (to be extracted)
-// These are currently in the main ReportBuilder.page.tsx file
-// and will be extracted progressively
+// Page components
+export { IngredientSection } from './IngredientSection';
+export { SimulationBlock } from './SimulationBlock';
+export { AddSimulationCard } from './AddSimulationCard';
+export { ReportMetaPanel } from './ReportMetaPanel';
+export { SimulationCanvas } from './SimulationCanvas';

@@ -2,7 +2,6 @@
  * ReportBuilder Module
  *
  * This folder contains the refactored ReportBuilder page and its components.
- * The original ReportBuilder.page.tsx is being progressively migrated here.
  *
  * Structure:
  * - types.ts: All TypeScript interfaces and types
@@ -11,12 +10,16 @@
  * - components/: Reusable UI components
  *   - chips/: Chip components (OptionChipSquare, OptionChipRow, etc.)
  *   - shared/: Shared components (CreationStatusHeader, ProgressDot, etc.)
+ *   - IngredientSection, SimulationBlock, AddSimulationCard, etc.
  * - modals/: Modal components
  *   - BrowseModalTemplate.tsx: Template for browse modals
- *   - IngredientPickerModal.tsx: Simple ingredient picker
- *   - PolicyBrowseModal.tsx: Policy browsing and creation (TODO: extract)
- *   - PopulationBrowseModal.tsx: Population browsing and creation (TODO: extract)
+ *   - PolicyBrowseModal.tsx: Policy browsing and creation
+ *   - PopulationBrowseModal.tsx: Population browsing and creation
+ *   - PolicyCreationModal.tsx: Policy creation form
  */
+
+// Main page component
+export { default } from './ReportBuilderPage';
 
 // Types
 export * from './types';
@@ -31,8 +34,4 @@ export * from './styles';
 export * from './components';
 
 // Modals
-export { BrowseModalTemplate, CreationModeFooter } from './modals/BrowseModalTemplate';
-export { IngredientPickerModal } from './modals/IngredientPickerModal';
-
-// Note: The main ReportBuilderPage component is still in ReportBuilder.page.tsx
-// It will be migrated once all subcomponents are extracted
+export * from './modals';
