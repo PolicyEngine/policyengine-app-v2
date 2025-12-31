@@ -978,23 +978,16 @@ function IngredientSection({
                   colorConfig={colorConfig}
                 />
               ))}
-              {/* Browse more - always shown for searching/browsing all policies */}
+              {/* More options - always shown for searching/browsing all policies */}
               {onBrowseMore && (
                 <BrowseMoreChip
-                  label="Browse more"
+                  label="More options"
                   description="View all your policies"
                   onClick={onBrowseMore}
                   variant={chipVariant}
                   colorConfig={colorConfig}
                 />
               )}
-              {/* Create new policy - always last */}
-              <CreateCustomChip
-                label="Create new policy"
-                onClick={onCreateCustom}
-                variant={chipVariant}
-                colorConfig={colorConfig}
-              />
             </>
           )}
 
@@ -1036,10 +1029,10 @@ function IngredientSection({
                   colorConfig={colorConfig}
                 />
               ))}
-              {/* Browse more - always shown for searching/browsing all populations */}
+              {/* More options - always shown for searching/browsing all populations */}
               {onBrowseMore && (
                 <BrowseMoreChip
-                  label="Browse more"
+                  label="More options"
                   description="Search all"
                   onClick={onBrowseMore}
                   variant={chipVariant}
@@ -2645,23 +2638,20 @@ function PolicyBrowseModal({
               <IconUsers size={16} />
               <Text style={{ fontSize: FONT_SIZES.small, flex: 1 }}>User-created policies</Text>
             </UnstyledButton>
+
+            {/* Create New Policy */}
+            <UnstyledButton
+              style={{
+                ...modalStyles.sidebarItem,
+                background: isCreationMode ? colorConfig.bg : 'transparent',
+                color: isCreationMode ? colorConfig.icon : colors.gray[700],
+              }}
+              onClick={handleEnterCreationMode}
+            >
+              <IconPlus size={16} />
+              <Text style={{ fontSize: FONT_SIZES.small, flex: 1 }}>Create new policy</Text>
+            </UnstyledButton>
           </Box>
-
-          {/* Spacer */}
-          <Box style={{ flex: 1 }} />
-
-          {/* Create New - styled as sidebar tab */}
-          <UnstyledButton
-            style={{
-              ...modalStyles.sidebarItem,
-              background: isCreationMode ? colorConfig.bg : 'transparent',
-              color: isCreationMode ? colorConfig.icon : colors.gray[700],
-            }}
-            onClick={handleEnterCreationMode}
-          >
-            <IconPlus size={16} />
-            <Text style={{ fontSize: FONT_SIZES.small, flex: 1 }}>Create new</Text>
-          </UnstyledButton>
         </Box>
 
         {/* Main Content Area */}
@@ -3130,6 +3120,7 @@ function PopulationBrowseModal({
   const [isCreationMode, setIsCreationMode] = useState(false);
   const [householdLabel, setHouseholdLabel] = useState('');
   const [householdDraft, setHouseholdDraft] = useState<Household | null>(null);
+  const [isEditingLabel, setIsEditingLabel] = useState(false);
 
   // Get report year (default to current year)
   const reportYear = CURRENT_YEAR.toString();
@@ -3161,6 +3152,7 @@ function PopulationBrowseModal({
       setIsCreationMode(false);
       setHouseholdLabel('');
       setHouseholdDraft(null);
+      setIsEditingLabel(false);
     }
   }, [isOpen]);
 
@@ -3473,6 +3465,23 @@ function PopulationBrowseModal({
     },
   };
 
+  // Dock styles for creation mode status header
+  const dockStyles = {
+    statusHeader: {
+      background: 'rgba(255, 255, 255, 0.95)',
+      backdropFilter: 'blur(20px) saturate(180%)',
+      WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+      borderRadius: spacing.radius.lg,
+      border: `1px solid ${householdDraft ? colorConfig.border : colors.border.light}`,
+      boxShadow: householdDraft
+        ? `0 4px 20px rgba(0, 0, 0, 0.08), 0 0 0 1px ${colorConfig.border}`
+        : `0 2px 12px ${colors.shadow.light}`,
+      padding: `${spacing.sm} ${spacing.lg}`,
+      transition: 'all 0.3s ease',
+      marginBottom: spacing.md,
+    },
+  };
+
   // Get section title
   const getSectionTitle = () => {
     if (activeCategory === 'national') return countryId === 'uk' ? 'UK-wide' : 'Nationwide';
@@ -3510,12 +3519,12 @@ function PopulationBrowseModal({
           </Box>
           <Stack gap={0}>
             <Text fw={600} style={{ fontSize: FONT_SIZES.normal, color: colors.gray[900] }}>
-              {isCreationMode ? 'Create household' : 'Select population'}
+              {isCreationMode ? 'Create household' : 'Household(s)'}
             </Text>
             <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
               {isCreationMode
                 ? 'Configure your household composition and details'
-                : 'Choose a geographic region or household'}
+                : 'Choose a geographic region or create a household'}
             </Text>
           </Stack>
         </Group>
@@ -3632,7 +3641,7 @@ function PopulationBrowseModal({
                   onClick={handleEnterCreationMode}
                 >
                   <IconPlus size={16} />
-                  <Text style={{ fontSize: FONT_SIZES.small, flex: 1 }}>Create new</Text>
+                  <Text style={{ fontSize: FONT_SIZES.small, flex: 1 }}>Create new household</Text>
                 </UnstyledButton>
               </Box>
             </Box>
@@ -3643,26 +3652,114 @@ function PopulationBrowseModal({
         <Box style={modalStyles.mainContent}>
           {isCreationMode ? (
             // Household Creation Form
-            <ScrollArea style={{ flex: 1 }} offsetScrollbars>
-              <Stack gap={spacing.lg}>
-                {/* Household Name Input */}
-                <TextInput
-                  label="Household name"
-                  placeholder="Enter a name for this household"
-                  value={householdLabel}
-                  onChange={(e) => setHouseholdLabel(e.currentTarget.value)}
-                  size="md"
-                  styles={{
-                    input: {
-                      borderRadius: spacing.radius.md,
-                      border: `1px solid ${colors.border.light}`,
-                      fontSize: FONT_SIZES.normal,
-                    },
-                  }}
-                />
+            <>
+              {/* Status Header Bar */}
+              <Box style={dockStyles.statusHeader}>
+                <Group justify="space-between" align="center" wrap="nowrap">
+                  {/* Left side: Household icon and editable name */}
+                  <Group gap={spacing.md} align="center" wrap="nowrap" style={{ minWidth: 0 }}>
+                    {/* Household icon */}
+                    <Box
+                      style={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: spacing.radius.md,
+                        background: `linear-gradient(135deg, ${colorConfig.bg} 0%, ${colors.white} 100%)`,
+                        border: `1px solid ${colorConfig.border}`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <IconHome size={18} color={colorConfig.icon} />
+                    </Box>
 
-                <Divider />
+                    {/* Editable household name */}
+                    <Box style={{ minWidth: 0, display: 'flex', alignItems: 'center', gap: spacing.xs }}>
+                      {isEditingLabel ? (
+                        <TextInput
+                          value={householdLabel}
+                          onChange={(e) => setHouseholdLabel(e.currentTarget.value)}
+                          onBlur={() => setIsEditingLabel(false)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') setIsEditingLabel(false);
+                            if (e.key === 'Escape') setIsEditingLabel(false);
+                          }}
+                          autoFocus
+                          placeholder="Enter household name..."
+                          size="xs"
+                          style={{ width: 250 }}
+                          styles={{
+                            input: {
+                              fontFamily: typography.fontFamily.primary,
+                              fontWeight: 600,
+                              fontSize: FONT_SIZES.normal,
+                              border: 'none',
+                              background: 'transparent',
+                              padding: 0,
+                            },
+                          }}
+                        />
+                      ) : (
+                        <>
+                          <Text
+                            fw={600}
+                            style={{
+                              fontFamily: typography.fontFamily.primary,
+                              fontSize: FONT_SIZES.normal,
+                              color: householdLabel ? colors.gray[800] : colors.gray[400],
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                              cursor: 'pointer',
+                            }}
+                            onClick={() => setIsEditingLabel(true)}
+                          >
+                            {householdLabel || 'Click to name your household...'}
+                          </Text>
+                          <ActionIcon
+                            size="sm"
+                            variant="subtle"
+                            color="gray"
+                            onClick={() => setIsEditingLabel(true)}
+                            style={{ flexShrink: 0 }}
+                          >
+                            <IconPencil size={14} />
+                          </ActionIcon>
+                        </>
+                      )}
+                    </Box>
+                  </Group>
 
+                  {/* Right side: Member count */}
+                  <Group gap={spacing.md} align="center" wrap="nowrap" style={{ flexShrink: 0 }}>
+                    <Group gap={spacing.xs} style={{ flexShrink: 0 }}>
+                      {householdPeople.length > 0 ? (
+                        <>
+                          <Box
+                            style={{
+                              width: 8,
+                              height: 8,
+                              borderRadius: '50%',
+                              background: colors.primary[500],
+                            }}
+                          />
+                          <Text style={{ fontSize: FONT_SIZES.small, color: colors.gray[600] }}>
+                            {householdPeople.length} member{householdPeople.length !== 1 ? 's' : ''}
+                          </Text>
+                        </>
+                      ) : (
+                        <Text style={{ fontSize: FONT_SIZES.small, color: colors.gray[400] }}>
+                          No members yet
+                        </Text>
+                      )}
+                    </Group>
+                  </Group>
+                </Group>
+              </Box>
+
+              <ScrollArea style={{ flex: 1 }} offsetScrollbars>
                 {/* HouseholdBuilderForm */}
                 {householdDraft && (
                   <Box pos="relative">
@@ -3682,8 +3779,8 @@ function PopulationBrowseModal({
                     />
                   </Box>
                 )}
-              </Stack>
-            </ScrollArea>
+              </ScrollArea>
+            </>
           ) : (
             <>
               {/* Search Bar */}
@@ -3897,7 +3994,15 @@ function PopulationBrowseModal({
             background: colors.white,
           }}
         >
-          <Group justify="flex-end" gap={spacing.sm}>
+          <Group justify="space-between" gap={spacing.sm}>
+            <Button
+              variant="subtle"
+              color="gray"
+              leftSection={<IconChevronLeft size={16} />}
+              onClick={handleExitCreationMode}
+            >
+              Back
+            </Button>
             <Button
               color="teal"
               onClick={handleCreateHousehold}
@@ -4705,7 +4810,9 @@ function SimulationCanvas({
   const { data: policies, isLoading: policiesLoading } = useUserPolicies(userId);
   const { data: households } = useUserHouseholds(userId);
   const regionOptions = useSelector((state: RootState) => state.metadata.economyOptions.region);
-  const isNationwideSelected = reportState.simulations[0]?.population?.geography?.id === countryConfig.nationwideId;
+  // Any geography selection (nationwide or subnational) requires dual-simulation
+  // Only households allow single-simulation reports
+  const isGeographySelected = !!reportState.simulations[0]?.population?.geography?.id;
 
   // State for the augmented policy browse modal
   const [policyBrowseState, setPolicyBrowseState] = useState<PolicyBrowseState>({
@@ -5110,8 +5217,8 @@ function SimulationCanvas({
               onBrowseMorePolicies={() => handleBrowseMorePolicies(1)}
               onBrowseMorePopulations={() => handleBrowseMorePopulations(1)}
               onRemove={() => handleRemoveSimulation(1)}
-              canRemove={!isNationwideSelected}
-              isRequired={isNationwideSelected}
+              canRemove={!isGeographySelected}
+              isRequired={isGeographySelected}
               populationInherited={true}
               inheritedPopulation={reportState.simulations[0].population}
               savedPolicies={savedPolicies}
@@ -5536,16 +5643,18 @@ export default function ReportBuilderPage() {
     ingredientType: 'policy',
   });
 
-  const isNationwideSelected = reportState.simulations[0]?.population?.geography?.id === countryConfig.nationwideId;
+  // Any geography selection (nationwide or subnational) requires dual-simulation
+  // Only households allow single-simulation reports
+  const isGeographySelected = !!reportState.simulations[0]?.population?.geography?.id;
 
   useEffect(() => {
-    if (isNationwideSelected && reportState.simulations.length === 1) {
+    if (isGeographySelected && reportState.simulations.length === 1) {
       const newSim = initializeSimulationState();
       newSim.label = 'Reform simulation';
       newSim.population = { ...reportState.simulations[0].population };
       setReportState((prev) => ({ ...prev, simulations: [...prev.simulations, newSim] }));
     }
-  }, [isNationwideSelected, reportState.simulations]);
+  }, [isGeographySelected, reportState.simulations]);
 
   const isReportConfigured = reportState.simulations.every(
     (sim) => !!sim.policy.id && !!(sim.population.household?.id || sim.population.geography?.id)
