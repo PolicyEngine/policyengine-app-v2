@@ -4,7 +4,7 @@ import {
   createInvalidShareDataBadGeographyScope,
   createInvalidShareDataMissingUserReport,
   createInvalidShareDataNonArraySimulations,
-  createInvalidShareDataNumericSimulationId,
+  createInvalidShareDataNullSimulationId,
   createShareDataWithoutId,
   createUserReportWithoutId,
   createUserReportWithoutReportId,
@@ -130,8 +130,8 @@ describe('shareUtils', () => {
     });
 
     test('given object with invalid userSimulation objects then returns false', () => {
-      // Given - simulationId should be string, not number
-      const invalid = createInvalidShareDataNumericSimulationId();
+      // Given - simulationId should be string or number, not null
+      const invalid = createInvalidShareDataNullSimulationId();
 
       // When
       const result = isValidShareData(invalid);

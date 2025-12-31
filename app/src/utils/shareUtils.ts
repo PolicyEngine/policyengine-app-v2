@@ -86,9 +86,10 @@ export function decodeShareData(encoded: string): ReportIngredientsInput | null 
 }
 
 /**
- * Validate that an array contains objects with required string fields
+ * Validate that an array contains objects with required string or number fields
+ * (IDs can be either strings or numbers depending on source)
  */
-function isValidArrayWithStringFields(
+function isValidArrayWithStringOrNumberFields(
   arr: unknown,
   requiredFields: string[],
   additionalValidator?: (item: Record<string, unknown>) => boolean
@@ -101,7 +102,11 @@ function isValidArrayWithStringFields(
       return false;
     }
     const obj = item as Record<string, unknown>;
-    const hasRequiredFields = requiredFields.every((field) => typeof obj[field] === 'string');
+    // Accept both strings and numbers for ID fields
+    const hasRequiredFields = requiredFields.every((field) => {
+      const value = obj[field];
+      return typeof value === 'string' || typeof value === 'number';
+    });
     if (!hasRequiredFields) {
       return false;
     }
@@ -126,8 +131,11 @@ export function isValidShareData(data: unknown): data is ReportIngredientsInput 
     return false;
   }
   const userReport = obj.userReport as Record<string, unknown>;
-  if (typeof userReport.reportId !== 'string') {
-    console.error('[isValidShareData] userReport.reportId is not a string:', userReport.reportId);
+  if (typeof userReport.reportId !== 'string' && typeof userReport.reportId !== 'number') {
+    console.error(
+      '[isValidShareData] userReport.reportId is not a string or number:',
+      userReport.reportId
+    );
     return false;
   }
   if (typeof userReport.countryId !== 'string') {
@@ -147,24 +155,24 @@ export function isValidShareData(data: unknown): data is ReportIngredientsInput 
     return false;
   }
 
-  // Validate arrays with their required fields
-  if (!isValidArrayWithStringFields(obj.userSimulations, ['simulationId', 'countryId'])) {
+  // Validate arrays with their required fields (IDs can be strings or numbers)
+  if (!isValidArrayWithStringOrNumberFields(obj.userSimulations, ['simulationId', 'countryId'])) {
     console.error('[isValidShareData] userSimulations validation failed:', obj.userSimulations);
     return false;
   }
 
-  if (!isValidArrayWithStringFields(obj.userPolicies, ['policyId', 'countryId'])) {
+  if (!isValidArrayWithStringOrNumberFields(obj.userPolicies, ['policyId', 'countryId'])) {
     console.error('[isValidShareData] userPolicies validation failed:', obj.userPolicies);
     return false;
   }
 
-  if (!isValidArrayWithStringFields(obj.userHouseholds, ['householdId', 'countryId'])) {
+  if (!isValidArrayWithStringOrNumberFields(obj.userHouseholds, ['householdId', 'countryId'])) {
     console.error('[isValidShareData] userHouseholds validation failed:', obj.userHouseholds);
     return false;
   }
 
   if (
-    !isValidArrayWithStringFields(obj.userGeographies, ['geographyId', 'countryId'], (geo) =>
+    !isValidArrayWithStringOrNumberFields(obj.userGeographies, ['geographyId', 'countryId'], (geo) =>
       ['national', 'subnational'].includes(geo.scope as string)
     )
   ) {

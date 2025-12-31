@@ -146,9 +146,9 @@ export const createInvalidShareDataNonArraySimulations = () => ({
   userSimulations: 'not-an-array',
 });
 
-export const createInvalidShareDataNumericSimulationId = () => ({
+export const createInvalidShareDataNullSimulationId = () => ({
   ...VALID_SHARE_DATA,
-  userSimulations: [{ simulationId: 123, countryId: TEST_COUNTRIES.US }],
+  userSimulations: [{ simulationId: null, countryId: TEST_COUNTRIES.US }],
 });
 
 export const createInvalidShareDataBadCountryId = () => ({
