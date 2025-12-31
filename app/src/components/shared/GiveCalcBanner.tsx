@@ -1,0 +1,75 @@
+import { useState } from 'react';
+import { Alert, Anchor } from '@mantine/core';
+import { colors, spacing, typography } from '@/designTokens';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+
+const BANNER_DISMISSED_KEY = 'givecalc-banner-dismissed';
+
+/**
+ * Banner promoting GiveCalc for year-end giving
+ * Only shows for US users on December 31, 2025
+ */
+export default function GiveCalcBanner() {
+  const countryId = useCurrentCountry();
+  const [visible, setVisible] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem(BANNER_DISMISSED_KEY) !== 'true';
+    }
+    return true;
+  });
+
+  // Only show for US users on December 31, 2025
+  const currentDate = new Date();
+  const isLastDay =
+    currentDate.getFullYear() === 2025 &&
+    currentDate.getMonth() === 11 && // December is month 11
+    currentDate.getDate() === 31;
+
+  if (countryId !== 'us' || !visible || !isLastDay) {
+    return null;
+  }
+
+  const handleClose = () => {
+    setVisible(false);
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem(BANNER_DISMISSED_KEY, 'true');
+    }
+  };
+
+  return (
+    <Alert
+      withCloseButton
+      closeButtonLabel="Dismiss banner"
+      onClose={handleClose}
+      styles={{
+        root: {
+          backgroundColor: '#fef3c7',
+          borderBottom: `1px solid #fcd34d`,
+          borderRadius: 0,
+          padding: `${spacing.sm} ${spacing.md}`,
+          fontFamily: typography.fontFamily.primary,
+        },
+        message: {
+          textAlign: 'center',
+          fontSize: '14px',
+          color: colors.gray[800],
+        },
+      }}
+    >
+      Last day to make tax-deductible donations in 2025! See how much your giving saves on taxes at{' '}
+      <Anchor
+        href="https://givecalc.org"
+        target="_blank"
+        rel="noopener noreferrer"
+        size="sm"
+        style={{
+          color: colors.primary[700],
+          fontWeight: typography.fontWeight.semibold,
+          textDecoration: 'underline',
+        }}
+      >
+        GiveCalc.org
+      </Anchor>
+    </Alert>
+  );
+}
