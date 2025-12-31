@@ -3,6 +3,7 @@ import { Outlet, useLocation } from 'react-router-dom';
 import { AppShell } from '@mantine/core';
 import { spacing } from '@/designTokens';
 import { cacheMonitor } from '@/utils/cacheMonitor';
+import GiveCalcBanner from './shared/GiveCalcBanner';
 import HeaderNavigation from './shared/HomeHeader';
 import LegacyBanner from './shared/LegacyBanner';
 import Sidebar from './Sidebar';
@@ -34,6 +35,7 @@ export default function Layout() {
     >
       <AppShell.Header p={0}>
         <HeaderNavigation />
+        <GiveCalcBanner />
         <LegacyBanner />
       </AppShell.Header>
 
