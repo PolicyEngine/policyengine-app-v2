@@ -39,6 +39,9 @@ export function encodeShareData(data: ReportIngredientsInput): string {
  */
 export function decodeShareData(encoded: string): ReportIngredientsInput | null {
   try {
+    console.log('[decodeShareData] Input length:', encoded.length);
+    console.log('[decodeShareData] First 100 chars:', encoded.substring(0, 100));
+
     // Restore standard base64 characters
     let base64 = encoded.replace(/-/g, '+').replace(/_/g, '/');
 
@@ -46,15 +49,38 @@ export function decodeShareData(encoded: string): ReportIngredientsInput | null 
     const paddingNeeded = (4 - (base64.length % 4)) % 4;
     base64 += '='.repeat(paddingNeeded);
 
-    const json = atob(base64);
-    const data = JSON.parse(json);
+    console.log('[decodeShareData] After base64 restore, length:', base64.length);
 
-    if (!isValidShareData(data)) {
+    let json: string;
+    try {
+      json = atob(base64);
+    } catch (atobError) {
+      console.error('[decodeShareData] atob() failed:', atobError);
       return null;
     }
 
+    console.log('[decodeShareData] Decoded JSON length:', json.length);
+
+    let data: unknown;
+    try {
+      data = JSON.parse(json);
+    } catch (parseError) {
+      console.error('[decodeShareData] JSON.parse() failed:', parseError);
+      console.log('[decodeShareData] Raw JSON (first 500 chars):', json.substring(0, 500));
+      return null;
+    }
+
+    console.log('[decodeShareData] Parsed data keys:', Object.keys(data as object));
+
+    if (!isValidShareData(data)) {
+      console.error('[decodeShareData] Validation failed - see isValidShareData logs above');
+      return null;
+    }
+
+    console.log('[decodeShareData] Success!');
     return data;
-  } catch {
+  } catch (error) {
+    console.error('[decodeShareData] Unexpected error:', error);
     return null;
   }
 }
@@ -88,6 +114,7 @@ function isValidArrayWithStringFields(
  */
 export function isValidShareData(data: unknown): data is ReportIngredientsInput {
   if (!data || typeof data !== 'object') {
+    console.error('[isValidShareData] Data is not an object:', typeof data);
     return false;
   }
 
@@ -95,27 +122,44 @@ export function isValidShareData(data: unknown): data is ReportIngredientsInput 
 
   // Validate userReport
   if (!obj.userReport || typeof obj.userReport !== 'object') {
+    console.error('[isValidShareData] userReport missing or not an object');
     return false;
   }
   const userReport = obj.userReport as Record<string, unknown>;
-  if (
-    typeof userReport.reportId !== 'string' ||
-    typeof userReport.countryId !== 'string' ||
-    !countryIds.includes(userReport.countryId as CountryId)
-  ) {
+  if (typeof userReport.reportId !== 'string') {
+    console.error('[isValidShareData] userReport.reportId is not a string:', userReport.reportId);
+    return false;
+  }
+  if (typeof userReport.countryId !== 'string') {
+    console.error(
+      '[isValidShareData] userReport.countryId is not a string:',
+      userReport.countryId
+    );
+    return false;
+  }
+  if (!countryIds.includes(userReport.countryId as CountryId)) {
+    console.error(
+      '[isValidShareData] userReport.countryId not in allowed list:',
+      userReport.countryId,
+      'allowed:',
+      countryIds
+    );
     return false;
   }
 
   // Validate arrays with their required fields
   if (!isValidArrayWithStringFields(obj.userSimulations, ['simulationId', 'countryId'])) {
+    console.error('[isValidShareData] userSimulations validation failed:', obj.userSimulations);
     return false;
   }
 
   if (!isValidArrayWithStringFields(obj.userPolicies, ['policyId', 'countryId'])) {
+    console.error('[isValidShareData] userPolicies validation failed:', obj.userPolicies);
     return false;
   }
 
   if (!isValidArrayWithStringFields(obj.userHouseholds, ['householdId', 'countryId'])) {
+    console.error('[isValidShareData] userHouseholds validation failed:', obj.userHouseholds);
     return false;
   }
 
@@ -124,9 +168,11 @@ export function isValidShareData(data: unknown): data is ReportIngredientsInput 
       ['national', 'subnational'].includes(geo.scope as string)
     )
   ) {
+    console.error('[isValidShareData] userGeographies validation failed:', obj.userGeographies);
     return false;
   }
 
+  console.log('[isValidShareData] All validations passed');
   return true;
 }
 
@@ -150,10 +196,15 @@ export function extractShareDataFromUrl(
   searchParams: URLSearchParams
 ): ReportIngredientsInput | null {
   const shareParam = searchParams.get('share');
+  console.log('[extractShareDataFromUrl] share param present:', !!shareParam);
   if (!shareParam) {
+    console.log('[extractShareDataFromUrl] No share param in URL');
     return null;
   }
-  return decodeShareData(shareParam);
+  console.log('[extractShareDataFromUrl] share param length:', shareParam.length);
+  const result = decodeShareData(shareParam);
+  console.log('[extractShareDataFromUrl] Decode result:', result ? 'success' : 'null');
+  return result;
 }
 
 /**
