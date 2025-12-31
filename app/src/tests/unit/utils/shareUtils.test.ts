@@ -7,51 +7,26 @@ import {
   extractShareDataFromUrl,
   getShareDataUserReportId,
   isValidShareData,
-  ShareData,
 } from '@/utils/shareUtils';
-
-// Test fixtures using Omit<> types (include all fields except userId/timestamps)
-const VALID_SHARE_DATA: ShareData = {
-  userReport: {
-    id: 'sur-abc123',
-    reportId: '308',
-    countryId: 'us',
-    label: 'My Report',
-  },
-  userSimulations: [
-    { simulationId: 'sim-1', countryId: 'us', label: 'Baseline' },
-    { simulationId: 'sim-2', countryId: 'us', label: 'Reform' },
-  ],
-  userPolicies: [
-    { policyId: 'policy-1', countryId: 'us', label: 'Current Law' },
-    { policyId: 'policy-2', countryId: 'us', label: 'My Policy' },
-  ],
-  userHouseholds: [],
-  userGeographies: [
-    {
-      type: 'geography',
-      geographyId: 'us',
-      countryId: 'us',
-      scope: 'national',
-      label: 'United States',
-    },
-  ],
-};
-
-const VALID_HOUSEHOLD_SHARE_DATA: ShareData = {
-  userReport: {
-    id: 'sur-def456',
-    reportId: '309',
-    countryId: 'uk',
-    label: 'Household Report',
-  },
-  userSimulations: [{ simulationId: 'sim-3', countryId: 'uk', label: 'My Simulation' }],
-  userPolicies: [{ policyId: 'policy-3', countryId: 'uk', label: 'My Policy' }],
-  userHouseholds: [
-    { type: 'household', householdId: 'household-123', countryId: 'uk', label: 'My Household' },
-  ],
-  userGeographies: [],
-};
+import {
+  createInvalidShareDataBadCountryId,
+  createInvalidShareDataBadGeographyScope,
+  createInvalidShareDataMissingUserReport,
+  createInvalidShareDataNonArraySimulations,
+  createInvalidShareDataNumericSimulationId,
+  createShareDataWithoutId,
+  createUserReportWithoutId,
+  createUserReportWithoutReportId,
+  MOCK_USER_GEOGRAPHIES,
+  MOCK_USER_HOUSEHOLDS,
+  MOCK_USER_POLICIES,
+  MOCK_USER_REPORT,
+  MOCK_USER_SIMULATIONS,
+  TEST_BASE_REPORT_IDS,
+  TEST_USER_REPORT_IDS,
+  VALID_HOUSEHOLD_SHARE_DATA,
+  VALID_SHARE_DATA,
+} from '@/tests/fixtures/utils/shareUtilsMocks';
 
 describe('shareUtils', () => {
   describe('encodeShareData / decodeShareData', () => {
@@ -134,7 +109,7 @@ describe('shareUtils', () => {
 
     test('given object missing userReport then returns false', () => {
       // Given
-      const invalid = { ...VALID_SHARE_DATA, userReport: undefined };
+      const invalid = createInvalidShareDataMissingUserReport();
 
       // When
       const result = isValidShareData(invalid);
@@ -145,7 +120,7 @@ describe('shareUtils', () => {
 
     test('given object with non-array userSimulations then returns false', () => {
       // Given
-      const invalid = { ...VALID_SHARE_DATA, userSimulations: 'not-an-array' };
+      const invalid = createInvalidShareDataNonArraySimulations();
 
       // When
       const result = isValidShareData(invalid);
@@ -156,10 +131,7 @@ describe('shareUtils', () => {
 
     test('given object with invalid userSimulation objects then returns false', () => {
       // Given - simulationId should be string, not number
-      const invalid = {
-        ...VALID_SHARE_DATA,
-        userSimulations: [{ simulationId: 123, countryId: 'us' }],
-      };
+      const invalid = createInvalidShareDataNumericSimulationId();
 
       // When
       const result = isValidShareData(invalid);
@@ -170,10 +142,7 @@ describe('shareUtils', () => {
 
     test('given object with invalid countryId then returns false', () => {
       // Given
-      const invalid = {
-        ...VALID_SHARE_DATA,
-        userReport: { ...VALID_SHARE_DATA.userReport, countryId: 'invalid' },
-      };
+      const invalid = createInvalidShareDataBadCountryId();
 
       // When
       const result = isValidShareData(invalid);
@@ -184,10 +153,7 @@ describe('shareUtils', () => {
 
     test('given object with invalid geography scope then returns false', () => {
       // Given
-      const invalid = {
-        ...VALID_SHARE_DATA,
-        userGeographies: [{ geographyId: 'us', countryId: 'us', scope: 'invalid' }],
-      };
+      const invalid = createInvalidShareDataBadGeographyScope();
 
       // When
       const result = isValidShareData(invalid);
@@ -203,7 +169,9 @@ describe('shareUtils', () => {
       const path = buildSharePath(VALID_SHARE_DATA);
 
       // Then - should use userReport.id in path
-      expect(path).toMatch(/^\/us\/report-output\/sur-abc123\?share=/);
+      expect(path).toMatch(
+        new RegExp(`^/us/report-output/${TEST_USER_REPORT_IDS.SOCIETY_WIDE}\\?share=`)
+      );
     });
 
     test('given share data with different country then uses that country in path', () => {
@@ -211,7 +179,9 @@ describe('shareUtils', () => {
       const path = buildSharePath(VALID_HOUSEHOLD_SHARE_DATA);
 
       // Then
-      expect(path).toMatch(/^\/uk\/report-output\/sur-def456\?share=/);
+      expect(path).toMatch(
+        new RegExp(`^/uk/report-output/${TEST_USER_REPORT_IDS.HOUSEHOLD}\\?share=`)
+      );
     });
 
     test('given share data then path contains decodable data', () => {
@@ -262,56 +232,21 @@ describe('shareUtils', () => {
   });
 
   describe('createShareData', () => {
-    test('given user associations then creates share data', () => {
-      // Given
-      const userReport = {
-        id: 'sur-test1',
-        userId: 'anonymous',
-        reportId: '100',
-        countryId: 'us' as const,
-        label: 'My Report',
-      };
-      const userSimulations = [
-        {
-          userId: 'anonymous',
-          simulationId: 'sim-1',
-          countryId: 'us' as const,
-          label: 'Sim Label',
-        },
-      ];
-      const userPolicies = [
-        {
-          userId: 'anonymous',
-          policyId: 'policy-1',
-          countryId: 'us' as const,
-          label: 'Policy Label',
-        },
-      ];
-      const userGeographies = [
-        {
-          type: 'geography' as const,
-          userId: 'anonymous',
-          geographyId: 'geo-1',
-          countryId: 'us' as const,
-          scope: 'national' as const,
-          label: 'Geography Label',
-        },
-      ];
-
+    test('given user associations then creates share data with userId stripped', () => {
       // When
       const result = createShareData(
-        userReport,
-        userSimulations,
-        userPolicies,
-        [],
-        userGeographies
+        MOCK_USER_REPORT,
+        MOCK_USER_SIMULATIONS,
+        MOCK_USER_POLICIES,
+        MOCK_USER_HOUSEHOLDS,
+        MOCK_USER_GEOGRAPHIES
       );
 
       // Then - result should have all fields except userId/timestamps
       expect(result).toMatchObject({
         userReport: {
-          id: 'sur-test1',
-          reportId: '100',
+          id: TEST_USER_REPORT_IDS.TEST,
+          reportId: TEST_BASE_REPORT_IDS.TEST,
           countryId: 'us',
           label: 'My Report',
         },
@@ -331,16 +266,12 @@ describe('shareUtils', () => {
       // Verify userId was stripped
       expect(result?.userReport).not.toHaveProperty('userId');
       expect(result?.userSimulations[0]).not.toHaveProperty('userId');
+      expect(result?.userGeographies[0]).not.toHaveProperty('userId');
     });
 
     test('given user report without id then returns null', () => {
       // Given
-      const userReport = {
-        id: undefined as unknown as string,
-        userId: 'anonymous',
-        reportId: '100',
-        countryId: 'us' as const,
-      };
+      const userReport = createUserReportWithoutId();
 
       // When
       const result = createShareData(userReport, [], [], [], []);
@@ -351,12 +282,7 @@ describe('shareUtils', () => {
 
     test('given user report without reportId then returns null', () => {
       // Given
-      const userReport = {
-        id: 'sur-test',
-        userId: 'anonymous',
-        reportId: undefined as unknown as string,
-        countryId: 'us' as const,
-      };
+      const userReport = createUserReportWithoutReportId();
 
       // When
       const result = createShareData(userReport, [], [], [], []);
@@ -372,24 +298,18 @@ describe('shareUtils', () => {
       const result = getShareDataUserReportId(VALID_SHARE_DATA);
 
       // Then
-      expect(result).toBe('sur-abc123');
+      expect(result).toBe(TEST_USER_REPORT_IDS.SOCIETY_WIDE);
     });
 
     test('given share data without id then falls back to reportId', () => {
       // Given - simulate legacy data without id field
-      const shareData = {
-        ...VALID_SHARE_DATA,
-        userReport: {
-          ...VALID_SHARE_DATA.userReport,
-          id: undefined,
-        },
-      } as unknown as ShareData;
+      const shareData = createShareDataWithoutId();
 
       // When
       const result = getShareDataUserReportId(shareData);
 
       // Then
-      expect(result).toBe('308'); // Falls back to reportId
+      expect(result).toBe(TEST_BASE_REPORT_IDS.SOCIETY_WIDE);
     });
   });
 });
