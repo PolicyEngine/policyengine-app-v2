@@ -82,9 +82,16 @@ export interface BrowseModalTemplateProps {
   headerTitle: string;
   headerSubtitle: string;
   colorConfig: IngredientColorConfig;
-  sidebarSections: BrowseModalSidebarSection[];
+  /** Standard sidebar sections - use for simple browse mode sidebars */
+  sidebarSections?: BrowseModalSidebarSection[];
+  /** Custom sidebar rendering - use when sidebar needs custom layout (e.g., parameter tree) */
+  renderSidebar?: () => ReactNode;
+  /** Sidebar width override (default: 220px) */
+  sidebarWidth?: number;
   renderMainContent: () => ReactNode;
+  /** Status header shown above main content (e.g., creation mode status bar) */
   statusHeader?: ReactNode;
+  /** Footer shown below main content (e.g., creation mode buttons) */
   footer?: ReactNode;
 }
 
