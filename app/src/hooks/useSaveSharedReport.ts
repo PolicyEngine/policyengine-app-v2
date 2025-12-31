@@ -2,16 +2,17 @@
  * Hook for saving a shared report to user's localStorage
  *
  * When a user clicks "Save" on a shared report, this hook persists the
- * user associations from ShareData to localStorage, making the report
+ * user associations from ReportIngredientsInput to localStorage, making the report
  * appear in their reports list.
  */
 
 import { useCallback, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { ReportIngredientsInput } from '@/hooks/utils/useFetchReportIngredients';
 import { CountryId } from '@/libs/countries';
 import { RootState } from '@/store';
 import { UserReport } from '@/types/ingredients/UserReport';
-import { getShareDataUserReportId, ShareData } from '@/utils/shareUtils';
+import { getShareDataUserReportId } from '@/utils/shareUtils';
 import { useCreateGeographicAssociation } from './useUserGeographic';
 import { useCreateHouseholdAssociation } from './useUserHousehold';
 import { useCreatePolicyAssociation } from './useUserPolicy';
@@ -23,7 +24,7 @@ export type SaveResult = 'success' | 'partial' | 'already_saved' | null;
 /**
  * Hook for saving a shared report and all its user associations to localStorage
  *
- * ShareData already contains user associations with IDs and labels.
+ * ReportIngredientsInput already contains user associations with IDs and labels.
  * This hook simply persists them to localStorage.
  *
  * Features:
@@ -54,7 +55,7 @@ export function useSaveSharedReport() {
     timeoutRef.current = setTimeout(() => setSaveResult(null), 3000);
   }, []);
 
-  const saveSharedReport = async (shareData: ShareData): Promise<UserReport> => {
+  const saveSharedReport = async (shareData: ReportIngredientsInput): Promise<UserReport> => {
     const userId = 'anonymous'; // TODO: Replace with auth context
     const userReportId = getShareDataUserReportId(shareData);
 
@@ -65,7 +66,7 @@ export function useSaveSharedReport() {
       return existingReport;
     }
 
-    // Save simulations (labels from ShareData)
+    // Save simulations (labels from shareData)
     const simPromises = shareData.userSimulations.map((sim) =>
       createSimulationAssociation.mutateAsync({
         userId,
@@ -117,7 +118,7 @@ export function useSaveSharedReport() {
     ]);
 
     // Save the report (required)
-    // Use the userReportId from ShareData for idempotent save
+    // Use the userReportId from shareData for idempotent save
     const reportLabel =
       shareData.userReport.label ??
       `Saved Report - ${new Date().toLocaleDateString('en-US', {
@@ -128,7 +129,8 @@ export function useSaveSharedReport() {
 
     let newUserReport: UserReport;
     try {
-      newUserReport = await reportStore.createWithId({
+      // Use createReportAssociation with id for idempotent save
+      newUserReport = await createReportAssociation.mutateAsync({
         id: userReportId,
         userId,
         reportId: shareData.userReport.reportId,

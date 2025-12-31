@@ -83,8 +83,8 @@ describe('useSaveSharedReport', () => {
     mockCreatePolicy.mutateAsync.mockResolvedValue({});
     mockCreateHousehold.mutateAsync.mockResolvedValue({});
     mockCreateGeography.mutateAsync.mockResolvedValue({});
+    mockCreateReport.mutateAsync.mockResolvedValue(MOCK_SAVED_USER_REPORT);
     mockReportStore.findByUserReportId.mockResolvedValue(null);
-    mockReportStore.createWithId.mockResolvedValue(MOCK_SAVED_USER_REPORT);
   });
 
   test('given valid shareData then saves all associations and returns userReport', async () => {
@@ -121,7 +121,7 @@ describe('useSaveSharedReport', () => {
       scope: 'national',
       label: 'United States',
     });
-    expect(mockReportStore.createWithId).toHaveBeenCalled();
+    expect(mockCreateReport.mutateAsync).toHaveBeenCalled();
   });
 
   test('given existing report then returns already_saved without creating duplicates', async () => {
@@ -141,7 +141,7 @@ describe('useSaveSharedReport', () => {
     // Then
     expect(savedReport).toEqual(MOCK_EXISTING_USER_REPORT);
     expect(mockCreateSimulation.mutateAsync).not.toHaveBeenCalled();
-    expect(mockReportStore.createWithId).not.toHaveBeenCalled();
+    expect(mockCreateReport.mutateAsync).not.toHaveBeenCalled();
 
     await waitFor(() => {
       expect(result.current.saveResult).toBe('already_saved');
@@ -205,7 +205,7 @@ describe('useSaveSharedReport', () => {
     });
 
     // Then
-    expect(mockReportStore.createWithId).toHaveBeenCalledWith(
+    expect(mockCreateReport.mutateAsync).toHaveBeenCalledWith(
       expect.objectContaining({
         label: expect.stringContaining('Saved Report'),
       })
@@ -226,7 +226,7 @@ describe('useSaveSharedReport', () => {
     });
 
     // Then - report should still be saved, but result is partial
-    expect(mockReportStore.createWithId).toHaveBeenCalled();
+    expect(mockCreateReport.mutateAsync).toHaveBeenCalled();
     await waitFor(() => {
       expect(result.current.saveResult).toBe('partial');
     });
@@ -251,12 +251,12 @@ describe('useSaveSharedReport', () => {
   });
 
   test('given race condition then handles second concurrent save', async () => {
-    // Given - first findByUserReportId returns null, createWithId fails,
+    // Given - first findByUserReportId returns null, createReportAssociation fails,
     // but then findByUserReportId finds existing report
     mockReportStore.findByUserReportId
       .mockResolvedValueOnce(null)
       .mockResolvedValueOnce(MOCK_EXISTING_USER_REPORT);
-    mockReportStore.createWithId.mockRejectedValue(new Error('Duplicate key'));
+    mockCreateReport.mutateAsync.mockRejectedValue(new Error('Duplicate key'));
 
     const store = createMockStore();
     const wrapper = createWrapper(store);

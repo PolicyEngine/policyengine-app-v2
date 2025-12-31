@@ -3,7 +3,7 @@
  */
 
 import { vi } from 'vitest';
-import { ShareData } from '@/utils/shareUtils';
+import { ReportIngredientsInput } from '@/hooks/utils/useFetchReportIngredients';
 
 // ============================================================================
 // Constants
@@ -27,10 +27,10 @@ export const TEST_COUNTRIES = {
 export const CURRENT_LAW_ID = '1';
 
 // ============================================================================
-// ShareData Fixtures
+// ReportIngredientsInput Fixtures
 // ============================================================================
 
-export const MOCK_SAVE_SHARE_DATA: ShareData = {
+export const MOCK_SAVE_SHARE_DATA: ReportIngredientsInput = {
   userReport: {
     id: TEST_IDS.USER_REPORT,
     reportId: TEST_IDS.BASE_REPORT,
@@ -55,7 +55,7 @@ export const MOCK_SAVE_SHARE_DATA: ShareData = {
   ],
 };
 
-export const MOCK_SHARE_DATA_WITH_CURRENT_LAW: ShareData = {
+export const MOCK_SHARE_DATA_WITH_CURRENT_LAW: ReportIngredientsInput = {
   ...MOCK_SAVE_SHARE_DATA,
   userPolicies: [
     { policyId: TEST_IDS.CURRENT_LAW_POLICY, countryId: TEST_COUNTRIES.US, label: 'Current Law' },
@@ -63,7 +63,7 @@ export const MOCK_SHARE_DATA_WITH_CURRENT_LAW: ShareData = {
   ],
 };
 
-export const MOCK_SHARE_DATA_WITH_HOUSEHOLD: ShareData = {
+export const MOCK_SHARE_DATA_WITH_HOUSEHOLD: ReportIngredientsInput = {
   ...MOCK_SAVE_SHARE_DATA,
   userHouseholds: [
     { type: 'household', householdId: TEST_IDS.HOUSEHOLD, countryId: TEST_COUNTRIES.UK, label: 'My Household' },
@@ -71,7 +71,7 @@ export const MOCK_SHARE_DATA_WITH_HOUSEHOLD: ShareData = {
   userGeographies: [],
 };
 
-export const MOCK_SHARE_DATA_WITHOUT_LABEL: ShareData = {
+export const MOCK_SHARE_DATA_WITHOUT_LABEL: ReportIngredientsInput = {
   userReport: {
     id: 'sur-no-label',
     reportId: TEST_IDS.BASE_REPORT,

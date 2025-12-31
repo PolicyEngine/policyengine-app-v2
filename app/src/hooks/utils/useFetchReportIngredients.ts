@@ -34,11 +34,63 @@ import { UserReport } from '@/types/ingredients/UserReport';
 import { UserSimulation } from '@/types/ingredients/UserSimulation';
 import { combineLoadingStates, extractUniqueIds, useParallelQueries } from './normalizedUtils';
 
+// Type for geography options from redux store
+type GeographyOption = { name: string; label: string };
+
+/**
+ * Construct Geography objects from geography-type simulations
+ *
+ * Extracts geography metadata from simulations and builds Geography objects.
+ * For subnational regions, looks up display names from metadata.
+ *
+ * @param simulations - Array of simulations to extract geographies from
+ * @param geographyOptions - Region metadata for name lookups
+ * @returns Array of Geography objects
+ */
+export function buildGeographiesFromSimulations(
+  simulations: Simulation[],
+  geographyOptions: GeographyOption[] | undefined
+): Geography[] {
+  const geographies: Geography[] = [];
+
+  simulations.forEach((sim) => {
+    if (sim.populationType === 'geography' && sim.populationId && sim.countryId) {
+      const isNational = sim.populationId === sim.countryId;
+
+      let name: string;
+      if (isNational) {
+        name = sim.countryId.toUpperCase();
+      } else {
+        // For subnational, extract the base geography ID and look up in metadata
+        const parts = sim.populationId.split('-');
+        const baseGeographyId = parts.length > 1 ? parts.slice(1).join('-') : sim.populationId;
+        const regionData = geographyOptions?.find((r) => r.name === baseGeographyId);
+        name = regionData?.label || sim.populationId;
+      }
+
+      geographies.push({
+        id: sim.populationId,
+        countryId: sim.countryId,
+        scope: isNational ? 'national' : 'subnational',
+        geographyId: sim.populationId,
+        name,
+      });
+    }
+  });
+
+  return geographies;
+}
+
 /**
  * Shareable user association types - excludes fields that don't make sense for sharing
  * Uses Omit<> to automatically include all other fields from the base types
+ *
+ * Note: ShareableUserReport makes `id` optional since shared reports can use
+ * `reportId` as a fallback (see getShareDataUserReportId in shareUtils.ts)
  */
-export type ShareableUserReport = Omit<UserReport, 'userId' | 'createdAt' | 'updatedAt'>;
+export type ShareableUserReport = Omit<UserReport, 'userId' | 'createdAt' | 'updatedAt' | 'id'> & {
+  id?: string;
+};
 export type ShareableUserSimulation = Omit<UserSimulation, 'userId' | 'createdAt' | 'updatedAt'>;
 export type ShareableUserPolicy = Omit<UserPolicy, 'userId' | 'createdAt' | 'updatedAt'>;
 export type ShareableUserHousehold = Omit<
@@ -205,31 +257,7 @@ export function useFetchReportIngredients(
   const households = householdResults.queries.map((q) => q.data).filter((h): h is Household => !!h);
 
   // Step 5: Construct Geography objects from geography-type simulations
-  const geographies: Geography[] = [];
-  simulations.forEach((sim) => {
-    if (sim.populationType === 'geography' && sim.populationId && sim.countryId) {
-      const isNational = sim.populationId === sim.countryId;
-
-      let name: string;
-      if (isNational) {
-        name = sim.countryId.toUpperCase();
-      } else {
-        // For subnational, extract the base geography ID and look up in metadata
-        const parts = sim.populationId.split('-');
-        const baseGeographyId = parts.length > 1 ? parts.slice(1).join('-') : sim.populationId;
-        const regionData = geographyOptions?.find((r) => r.name === baseGeographyId);
-        name = regionData?.label || sim.populationId;
-      }
-
-      geographies.push({
-        id: sim.populationId,
-        countryId: sim.countryId,
-        scope: isNational ? 'national' : 'subnational',
-        geographyId: sim.populationId,
-        name,
-      });
-    }
-  });
+  const geographies = buildGeographiesFromSimulations(simulations, geographyOptions);
 
   // Combine loading states
   const { isLoading, error } = combineLoadingStates(

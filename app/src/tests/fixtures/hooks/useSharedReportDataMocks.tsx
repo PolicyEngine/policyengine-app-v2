@@ -7,10 +7,10 @@ import { QueryNormalizerProvider } from '@normy/react-query';
 import { configureStore } from '@reduxjs/toolkit';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Provider } from 'react-redux';
-import { ShareData } from '@/utils/shareUtils';
+import { ReportIngredientsInput } from '@/hooks/utils/useFetchReportIngredients';
 
-// ShareData fixtures - using Omit<> types which include all fields except userId/timestamps
-export const MOCK_SHARE_DATA: ShareData = {
+// ReportIngredientsInput fixtures - using Omit<> types which include all fields except userId/timestamps
+export const MOCK_SHARE_DATA: ReportIngredientsInput = {
   userReport: {
     id: 'sur-test123',
     reportId: '308',
@@ -31,7 +31,7 @@ export const MOCK_SHARE_DATA: ShareData = {
   ],
 };
 
-export const MOCK_HOUSEHOLD_SHARE_DATA: ShareData = {
+export const MOCK_HOUSEHOLD_SHARE_DATA: ReportIngredientsInput = {
   userReport: {
     id: 'sur-test456',
     reportId: '309',

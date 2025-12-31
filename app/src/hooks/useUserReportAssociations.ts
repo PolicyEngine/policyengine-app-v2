@@ -64,12 +64,26 @@ export const useReportAssociationById = (userReportId: string, options?: { enabl
   });
 };
 
+/**
+ * Create a new report association
+ *
+ * Supports two modes:
+ * - Without id: generates a new id (use for new reports)
+ * - With id: uses the provided id (use for saving shared reports with a specific id)
+ */
 export const useCreateReportAssociation = () => {
   const store = useUserReportStore();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (userReport: Omit<UserReport, 'id' | 'createdAt'>) => store.create(userReport),
+    mutationFn: (userReport: Omit<UserReport, 'createdAt'> | Omit<UserReport, 'id' | 'createdAt'>) => {
+      // If id is provided, use createWithId for idempotent save
+      if ('id' in userReport && userReport.id) {
+        return store.createWithId(userReport as Omit<UserReport, 'createdAt'>);
+      }
+      // Otherwise, generate a new id
+      return store.create(userReport as Omit<UserReport, 'id' | 'createdAt'>);
+    },
     onSuccess: (newAssociation) => {
       // Invalidate and refetch related queries
       queryClient.invalidateQueries({

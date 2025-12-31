@@ -1,7 +1,7 @@
 /**
  * Utilities for encoding/decoding shareable report URLs
  *
- * ShareData encodes user associations (not base ingredients) into a URL.
+ * Encodes user associations (not base ingredients) into a URL using ReportIngredientsInput.
  * When decoding, we use the user associations to fetch base ingredients
  * via the shared useFetchReportIngredients utility.
  *
@@ -11,14 +11,7 @@
  * Uses URL-safe base64 encoding for maximum browser compatibility.
  */
 
-import {
-  ReportIngredientsInput,
-  ShareableUserGeography,
-  ShareableUserHousehold,
-  ShareableUserPolicy,
-  ShareableUserReport,
-  ShareableUserSimulation,
-} from '@/hooks/utils/useFetchReportIngredients';
+import { ReportIngredientsInput } from '@/hooks/utils/useFetchReportIngredients';
 import { CountryId, countryIds } from '@/libs/countries';
 import { UserPolicy } from '@/types/ingredients/UserPolicy';
 import {
@@ -29,25 +22,10 @@ import { UserReport } from '@/types/ingredients/UserReport';
 import { UserSimulation } from '@/types/ingredients/UserSimulation';
 
 /**
- * Data encoded in shareable URLs
- *
- * Contains user associations (minus userId/timestamps) with their IDs and labels.
- * Base ingredients are NOT stored - they're fetched from API using these IDs.
- * This type is equivalent to ReportIngredientsInput.
- */
-export interface ShareData {
-  userReport: ShareableUserReport;
-  userSimulations: ShareableUserSimulation[];
-  userPolicies: ShareableUserPolicy[];
-  userHouseholds: ShareableUserHousehold[];
-  userGeographies: ShareableUserGeography[];
-}
-
-/**
- * Encode ShareData to a URL-safe base64 string.
+ * Encode ReportIngredientsInput to a URL-safe base64 string.
  * Uses URL-safe characters: + → -, / → _, removes = padding.
  */
-export function encodeShareData(data: ShareData): string {
+export function encodeShareData(data: ReportIngredientsInput): string {
   const json = JSON.stringify(data);
   const base64 = btoa(json);
   // Make URL-safe: replace + with -, / with _, remove = padding
@@ -56,10 +34,10 @@ export function encodeShareData(data: ShareData): string {
 }
 
 /**
- * Decode URL-safe base64 string back to ShareData.
+ * Decode URL-safe base64 string back to ReportIngredientsInput.
  * Returns null if decoding fails or data is invalid.
  */
-export function decodeShareData(encoded: string): ShareData | null {
+export function decodeShareData(encoded: string): ReportIngredientsInput | null {
   try {
     // Restore standard base64 characters
     let base64 = encoded.replace(/-/g, '+').replace(/_/g, '/');
@@ -82,9 +60,33 @@ export function decodeShareData(encoded: string): ShareData | null {
 }
 
 /**
- * Type guard to validate ShareData structure
+ * Validate that an array contains objects with required string fields
  */
-export function isValidShareData(data: unknown): data is ShareData {
+function isValidArrayWithStringFields(
+  arr: unknown,
+  requiredFields: string[],
+  additionalValidator?: (item: Record<string, unknown>) => boolean
+): boolean {
+  if (!Array.isArray(arr)) {
+    return false;
+  }
+  return arr.every((item) => {
+    if (!item || typeof item !== 'object') {
+      return false;
+    }
+    const obj = item as Record<string, unknown>;
+    const hasRequiredFields = requiredFields.every((field) => typeof obj[field] === 'string');
+    if (!hasRequiredFields) {
+      return false;
+    }
+    return additionalValidator ? additionalValidator(obj) : true;
+  });
+}
+
+/**
+ * Type guard to validate ReportIngredientsInput structure for sharing
+ */
+export function isValidShareData(data: unknown): data is ReportIngredientsInput {
   if (!data || typeof data !== 'object') {
     return false;
   }
@@ -104,67 +106,25 @@ export function isValidShareData(data: unknown): data is ShareData {
     return false;
   }
 
-  // Validate userSimulations array
-  if (!Array.isArray(obj.userSimulations)) {
+  // Validate arrays with their required fields
+  if (!isValidArrayWithStringFields(obj.userSimulations, ['simulationId', 'countryId'])) {
     return false;
-  }
-  for (const sim of obj.userSimulations) {
-    if (
-      !sim ||
-      typeof sim !== 'object' ||
-      typeof (sim as Record<string, unknown>).simulationId !== 'string' ||
-      typeof (sim as Record<string, unknown>).countryId !== 'string'
-    ) {
-      return false;
-    }
   }
 
-  // Validate userPolicies array
-  if (!Array.isArray(obj.userPolicies)) {
+  if (!isValidArrayWithStringFields(obj.userPolicies, ['policyId', 'countryId'])) {
     return false;
-  }
-  for (const pol of obj.userPolicies) {
-    if (
-      !pol ||
-      typeof pol !== 'object' ||
-      typeof (pol as Record<string, unknown>).policyId !== 'string' ||
-      typeof (pol as Record<string, unknown>).countryId !== 'string'
-    ) {
-      return false;
-    }
   }
 
-  // Validate userHouseholds array
-  if (!Array.isArray(obj.userHouseholds)) {
+  if (!isValidArrayWithStringFields(obj.userHouseholds, ['householdId', 'countryId'])) {
     return false;
-  }
-  for (const hh of obj.userHouseholds) {
-    if (
-      !hh ||
-      typeof hh !== 'object' ||
-      typeof (hh as Record<string, unknown>).householdId !== 'string' ||
-      typeof (hh as Record<string, unknown>).countryId !== 'string'
-    ) {
-      return false;
-    }
   }
 
-  // Validate userGeographies array
-  if (!Array.isArray(obj.userGeographies)) {
+  if (
+    !isValidArrayWithStringFields(obj.userGeographies, ['geographyId', 'countryId'], (geo) =>
+      ['national', 'subnational'].includes(geo.scope as string)
+    )
+  ) {
     return false;
-  }
-  for (const geo of obj.userGeographies) {
-    if (!geo || typeof geo !== 'object') {
-      return false;
-    }
-    const g = geo as Record<string, unknown>;
-    if (
-      typeof g.geographyId !== 'string' ||
-      typeof g.countryId !== 'string' ||
-      (g.scope !== 'national' && g.scope !== 'subnational')
-    ) {
-      return false;
-    }
   }
 
   return true;
@@ -176,17 +136,17 @@ export function isValidShareData(data: unknown): data is ShareData {
  * (e.g., "/us/report-output/sur-abc123?share=...")
  * Caller should prepend origin if full URL is needed
  */
-export function buildSharePath(data: ShareData): string {
+export function buildSharePath(data: ReportIngredientsInput): string {
   const encoded = encodeShareData(data);
   const userReportId = data.userReport.id ?? data.userReport.reportId;
   return `/${data.userReport.countryId}/report-output/${userReportId}?share=${encoded}`;
 }
 
 /**
- * Extract ShareData from URL search params
+ * Extract ReportIngredientsInput from URL search params
  * Returns null if share param is missing or invalid
  */
-export function extractShareDataFromUrl(searchParams: URLSearchParams): ShareData | null {
+export function extractShareDataFromUrl(searchParams: URLSearchParams): ReportIngredientsInput | null {
   const shareParam = searchParams.get('share');
   if (!shareParam) {
     return null;
@@ -195,7 +155,7 @@ export function extractShareDataFromUrl(searchParams: URLSearchParams): ShareDat
 }
 
 /**
- * Create ShareData from user associations
+ * Create ReportIngredientsInput from user associations for sharing
  *
  * Takes the user association objects and strips userId/timestamps for sharing.
  * Base ingredient data is not included since it will be fetched from the API
@@ -207,7 +167,7 @@ export function createShareData(
   userPolicies: UserPolicy[],
   userHouseholds: UserHouseholdPopulation[],
   userGeographies: UserGeographyPopulation[]
-): ShareData | null {
+): ReportIngredientsInput | null {
   // userReport must have an id and reportId
   if (!userReport.id || !userReport.reportId) {
     return null;
@@ -231,9 +191,9 @@ export function createShareData(
 }
 
 /**
- * Get the userReportId from ShareData
+ * Get the userReportId from ReportIngredientsInput
  * Used for URL path and idempotent save
  */
-export function getShareDataUserReportId(shareData: ShareData): string {
+export function getShareDataUserReportId(shareData: ReportIngredientsInput): string {
   return shareData.userReport.id ?? shareData.userReport.reportId;
 }

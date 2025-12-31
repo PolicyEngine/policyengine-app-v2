@@ -2,7 +2,7 @@
  * Test fixtures for shareUtils tests
  */
 
-import { ShareData } from '@/utils/shareUtils';
+import { ReportIngredientsInput } from '@/hooks/utils/useFetchReportIngredients';
 import { UserReport } from '@/types/ingredients/UserReport';
 import { UserSimulation } from '@/types/ingredients/UserSimulation';
 import { UserPolicy } from '@/types/ingredients/UserPolicy';
@@ -33,10 +33,10 @@ export const TEST_COUNTRIES = {
 } as const;
 
 // ============================================================================
-// ShareData Fixtures - Society-wide report (geographies, no households)
+// ReportIngredientsInput Fixtures - Society-wide report (geographies, no households)
 // ============================================================================
 
-export const VALID_SHARE_DATA: ShareData = {
+export const VALID_SHARE_DATA: ReportIngredientsInput = {
   userReport: {
     id: TEST_USER_REPORT_IDS.SOCIETY_WIDE,
     reportId: TEST_BASE_REPORT_IDS.SOCIETY_WIDE,
@@ -64,10 +64,10 @@ export const VALID_SHARE_DATA: ShareData = {
 };
 
 // ============================================================================
-// ShareData Fixtures - Household report (households, no geographies)
+// ReportIngredientsInput Fixtures - Household report (households, no geographies)
 // ============================================================================
 
-export const VALID_HOUSEHOLD_SHARE_DATA: ShareData = {
+export const VALID_HOUSEHOLD_SHARE_DATA: ReportIngredientsInput = {
   userReport: {
     id: TEST_USER_REPORT_IDS.HOUSEHOLD,
     reportId: TEST_BASE_REPORT_IDS.HOUSEHOLD,
@@ -170,7 +170,7 @@ export const createShareDataWithoutId = () =>
       ...VALID_SHARE_DATA.userReport,
       id: undefined,
     },
-  }) as unknown as ShareData;
+  }) as unknown as ReportIngredientsInput;
 
 // ============================================================================
 // Helper functions
