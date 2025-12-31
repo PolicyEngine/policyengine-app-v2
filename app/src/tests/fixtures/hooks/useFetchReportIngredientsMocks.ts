@@ -56,7 +56,11 @@ export const SOCIETY_WIDE_INPUT: ReportIngredientsInput = {
     label: 'Society-Wide Report',
   },
   userSimulations: [
-    { simulationId: TEST_IDS.SIMULATIONS.BASELINE, countryId: TEST_COUNTRIES.US, label: 'Baseline' },
+    {
+      simulationId: TEST_IDS.SIMULATIONS.BASELINE,
+      countryId: TEST_COUNTRIES.US,
+      label: 'Baseline',
+    },
     { simulationId: TEST_IDS.SIMULATIONS.REFORM, countryId: TEST_COUNTRIES.US, label: 'Reform' },
   ],
   userPolicies: [
@@ -165,7 +169,12 @@ export const createExpectedExpandedSocietyWide = (userId: string = TEST_USER_IDS
       label: 'Current Law',
       userId,
     },
-    { policyId: TEST_IDS.POLICIES.REFORM, countryId: TEST_COUNTRIES.US, label: 'My Reform', userId },
+    {
+      policyId: TEST_IDS.POLICIES.REFORM,
+      countryId: TEST_COUNTRIES.US,
+      label: 'My Reform',
+      userId,
+    },
   ],
   userHouseholds: [],
   userGeographies: [

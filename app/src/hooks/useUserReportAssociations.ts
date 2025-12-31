@@ -76,7 +76,9 @@ export const useCreateReportAssociation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (userReport: Omit<UserReport, 'createdAt'> | Omit<UserReport, 'id' | 'createdAt'>) => {
+    mutationFn: (
+      userReport: Omit<UserReport, 'createdAt'> | Omit<UserReport, 'id' | 'createdAt'>
+    ) => {
       // If id is provided, use createWithId for idempotent save
       if ('id' in userReport && userReport.id) {
         return store.createWithId(userReport as Omit<UserReport, 'createdAt'>);

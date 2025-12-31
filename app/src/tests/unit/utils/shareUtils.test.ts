@@ -1,14 +1,5 @@
 import { describe, expect, test } from 'vitest';
 import {
-  buildSharePath,
-  createShareData,
-  decodeShareData,
-  encodeShareData,
-  extractShareDataFromUrl,
-  getShareDataUserReportId,
-  isValidShareData,
-} from '@/utils/shareUtils';
-import {
   createInvalidShareDataBadCountryId,
   createInvalidShareDataBadGeographyScope,
   createInvalidShareDataMissingUserReport,
@@ -27,6 +18,15 @@ import {
   VALID_HOUSEHOLD_SHARE_DATA,
   VALID_SHARE_DATA,
 } from '@/tests/fixtures/utils/shareUtilsMocks';
+import {
+  buildSharePath,
+  createShareData,
+  decodeShareData,
+  encodeShareData,
+  extractShareDataFromUrl,
+  getShareDataUserReportId,
+  isValidShareData,
+} from '@/utils/shareUtils';
 
 describe('shareUtils', () => {
   describe('encodeShareData / decodeShareData', () => {

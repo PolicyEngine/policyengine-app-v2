@@ -1,4 +1,4 @@
-import { IconCalendar, IconClock, IconStack2 } from '@tabler/icons-react';
+import { IconCalendar, IconClock } from '@tabler/icons-react';
 import { Box, Container, Group, Stack, Text, Title } from '@mantine/core';
 import { ReportActionButtons } from '@/components/report/ReportActionButtons';
 import { SharedReportTag } from '@/components/report/SharedReportTag';

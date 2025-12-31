@@ -40,9 +40,7 @@ export const MOCK_SAVE_SHARE_DATA: ReportIngredientsInput = {
   userSimulations: [
     { simulationId: TEST_IDS.SIMULATION, countryId: TEST_COUNTRIES.US, label: 'Baseline' },
   ],
-  userPolicies: [
-    { policyId: TEST_IDS.POLICY, countryId: TEST_COUNTRIES.US, label: 'My Policy' },
-  ],
+  userPolicies: [{ policyId: TEST_IDS.POLICY, countryId: TEST_COUNTRIES.US, label: 'My Policy' }],
   userHouseholds: [],
   userGeographies: [
     {
@@ -66,7 +64,12 @@ export const MOCK_SHARE_DATA_WITH_CURRENT_LAW: ReportIngredientsInput = {
 export const MOCK_SHARE_DATA_WITH_HOUSEHOLD: ReportIngredientsInput = {
   ...MOCK_SAVE_SHARE_DATA,
   userHouseholds: [
-    { type: 'household', householdId: TEST_IDS.HOUSEHOLD, countryId: TEST_COUNTRIES.UK, label: 'My Household' },
+    {
+      type: 'household',
+      householdId: TEST_IDS.HOUSEHOLD,
+      countryId: TEST_COUNTRIES.UK,
+      label: 'My Household',
+    },
   ],
   userGeographies: [],
 };

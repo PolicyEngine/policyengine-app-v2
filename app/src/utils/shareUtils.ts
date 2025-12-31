@@ -146,7 +146,9 @@ export function buildSharePath(data: ReportIngredientsInput): string {
  * Extract ReportIngredientsInput from URL search params
  * Returns null if share param is missing or invalid
  */
-export function extractShareDataFromUrl(searchParams: URLSearchParams): ReportIngredientsInput | null {
+export function extractShareDataFromUrl(
+  searchParams: URLSearchParams
+): ReportIngredientsInput | null {
   const shareParam = searchParams.get('share');
   if (!shareParam) {
     return null;

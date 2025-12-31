@@ -3,13 +3,13 @@
  */
 
 import { ReportIngredientsInput } from '@/hooks/utils/useFetchReportIngredients';
-import { UserReport } from '@/types/ingredients/UserReport';
-import { UserSimulation } from '@/types/ingredients/UserSimulation';
 import { UserPolicy } from '@/types/ingredients/UserPolicy';
 import {
   UserGeographyPopulation,
   UserHouseholdPopulation,
 } from '@/types/ingredients/UserPopulation';
+import { UserReport } from '@/types/ingredients/UserReport';
+import { UserSimulation } from '@/types/ingredients/UserSimulation';
 
 // ============================================================================
 // Constants
