@@ -24,6 +24,7 @@ export async function fetchReportById(
   });
 
   if (!res.ok) {
+    console.error('[fetchReportById] Failed:', res.status, res.statusText);
     throw new Error(`Failed to fetch report ${reportId}`);
   }
 
