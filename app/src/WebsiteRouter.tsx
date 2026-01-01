@@ -9,6 +9,7 @@ import AppPage from './pages/AppPage';
 import BlogPage from './pages/Blog.page';
 import DonatePage from './pages/Donate.page';
 import OrgLogosEmbedPage from './pages/embed/OrgLogosEmbed.page';
+import YearInReviewPage from './pages/YearInReview.page';
 import HomePage from './pages/Home.page';
 import PrivacyPage from './pages/Privacy.page';
 import ResearchPage from './pages/Research.page';
@@ -81,6 +82,10 @@ const router = createBrowserRouter(
             {
               path: 'embed/org-logos',
               element: <OrgLogosEmbedPage />,
+            },
+            {
+              path: '2025-year-in-review',
+              element: <YearInReviewPage />,
             },
           ],
         },
