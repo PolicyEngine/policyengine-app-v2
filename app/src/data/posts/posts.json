@@ -1,5 +1,14 @@
 [
   {
+    "title": "Pritzker Children's Initiative awards grant for child poverty analysis",
+    "description": "Grant supports building a child poverty impact dashboard, expanding TANF and child care subsidy modeling to all 50 states, and training partners on PolicyEngine tools.",
+    "date": "2025-12-31 12:00:00",
+    "tags": ["us", "org", "featured"],
+    "filename": "pritzker-childrens-initiative-grant.md",
+    "image": "pritzker-childrens-initiative-grant.png",
+    "authors": ["max-ghenis"]
+  },
+  {
     "title": "PolicyEngine and Atlanta Fed sign memorandum of understanding for Policy Rules Database validation",
     "description": "Partnership enables multi-model validation of tax and benefit microsimulation across PolicyEngine, TAXSIM, and the Atlanta Fed's Policy Rules Database.",
     "date": "2025-12-29 12:00:00",
