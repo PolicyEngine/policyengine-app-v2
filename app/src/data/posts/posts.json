@@ -1,5 +1,23 @@
 [
   {
+    "title": "Supporting Better Government Lab research on benefit takeup",
+    "description": "PolicyEngine provides technical guidance and modeling expertise for research on benefit program takeup.",
+    "date": "2026-01-15 12:00:00",
+    "tags": ["us", "org"],
+    "filename": "policyengine-better-government-lab-collaboration.md",
+    "image": "policyengine-better-government-lab-collaboration.png",
+    "authors": ["max-ghenis"]
+  },
+  {
+    "title": "Supporting a University of Southern California study on marginal tax rates",
+    "description": "PolicyEngine supports Matt Unrath's research analyzing effective marginal and average tax rates using our open-source microsimulation platform.",
+    "date": "2026-01-15 12:00:00",
+    "tags": ["us", "org"],
+    "filename": "policyengine-usc-collaboration.md",
+    "image": "policyengine-usc-collaboration.png",
+    "authors": ["max-ghenis"]
+  },
+  {
     "title": "PolicyEngine and Atlanta Fed sign memorandum of understanding for Policy Rules Database validation",
     "description": "Partnership enables multi-model validation of tax and benefit microsimulation across PolicyEngine, TAXSIM, and the Atlanta Fed's Policy Rules Database.",
     "date": "2025-12-29 12:00:00",
