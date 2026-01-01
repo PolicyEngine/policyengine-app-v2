@@ -15,6 +15,7 @@ import ResearchPage from './pages/Research.page';
 import SupportersPage from './pages/Supporters.page';
 import TeamPage from './pages/Team.page';
 import TermsPage from './pages/Terms.page';
+import YearInReviewPage from './pages/YearInReview.page';
 import { CountryAppGuard } from './routing/guards/CountryAppGuard';
 import { CountryGuardSimple } from './routing/guards/CountryGuardSimple';
 import { RedirectToCountry } from './routing/RedirectToCountry';
@@ -74,6 +75,11 @@ const router = createBrowserRouter(
               element: <BlogPage />,
             },
           ],
+        },
+        // Full-page embeds - no layout wrapper
+        {
+          path: '2025-year-in-review',
+          element: <YearInReviewPage />,
         },
         // Embed routes - minimal layout for iframe embedding
         {
