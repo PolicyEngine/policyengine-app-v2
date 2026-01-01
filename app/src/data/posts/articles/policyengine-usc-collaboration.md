@@ -1,4 +1,4 @@
-PolicyEngine is collaborating with [Matt Unrath](https://priceschool.usc.edu/faculty/directory/matthew-unrath/), an assistant professor at the University of Southern California, on a new project examining effective marginal and average tax rates facing American families.
+PolicyEngine is collaborating with [Matt Unrath](https://priceschool.usc.edu/faculty/directory/matthew-unrath/), an assistant professor at the University of Southern California, on a new project examining effective marginal and average tax rates facing American families. The study is supported by the [Institute for Research on Poverty](https://www.irp.wisc.edu/).
 
 Understanding how taxes and benefits interact is notoriously difficult. A family's effective tax rate depends not just on federal and state income taxes, but on how dozens of benefit programs phase in and out as income changes. These interactions can create surprisingly high marginal tax rates that discourage work and complicate financial planning for families.
 
