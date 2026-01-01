@@ -1,12 +1,12 @@
-PolicyEngine is partnering with the [Better Government Lab](https://fordschool.umich.edu/bgl) to support research on government benefit programs and their effects on American households.
+PolicyEngine is supporting the [Better Government Lab](https://fordschool.umich.edu/bgl) in research on benefit program takeup among American households.
 
-Understanding how safety net programs interact is essential for evidence-based policymaking. Program rules for SNAP, TANF, SSI, and state tax credits vary significantly across states and have changed over time—making comprehensive analysis challenging without specialized modeling tools.
+Understanding benefit takeup—who enrolls in programs they're eligible for—is essential for evidence-based policymaking. Program rules for SNAP, TANF, SSI, and state tax credits vary significantly across states and have changed over time, making comprehensive analysis challenging without specialized modeling tools.
 
-## Scope of the partnership
+## Scope of support
 
 Our team is consulting on how to model historical program rules for tax years 2018 and 2023, helping the Lab analyze how safety net programs have evolved over time. We're also assisting with integration of PolicyEngine code into their analysis pipeline and training research assistants on policy parameter updates.
 
-The collaboration focuses on programs where state-level policy choices substantially affect household eligibility and benefit amounts—including SNAP, TANF, SSI, and state tax credits.
+The research focuses on programs where state-level policy choices substantially affect household eligibility and benefit amounts—including SNAP, TANF, SSI, and state tax credits.
 
 ## Building in public
 
