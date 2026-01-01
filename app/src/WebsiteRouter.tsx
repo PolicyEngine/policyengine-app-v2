@@ -76,16 +76,17 @@ const router = createBrowserRouter(
             },
           ],
         },
+        // Full-page embeds - no layout wrapper
+        {
+          path: '2025-year-in-review',
+          element: <YearInReviewPage />,
+        },
         // Embed routes - minimal layout for iframe embedding
         {
           children: [
             {
               path: 'embed/org-logos',
               element: <OrgLogosEmbedPage />,
-            },
-            {
-              path: '2025-year-in-review',
-              element: <YearInReviewPage />,
             },
           ],
         },
