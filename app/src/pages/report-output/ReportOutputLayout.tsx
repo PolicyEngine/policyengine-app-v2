@@ -1,5 +1,7 @@
-import { IconCalendar, IconClock, IconPencil } from '@tabler/icons-react';
-import { ActionIcon, Box, Container, Group, Stack, Text, Title } from '@mantine/core';
+import { IconCalendar, IconClock } from '@tabler/icons-react';
+import { Box, Container, Group, Stack, Text, Title } from '@mantine/core';
+import { ReportActionButtons } from '@/components/report/ReportActionButtons';
+import { SharedReportTag } from '@/components/report/SharedReportTag';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { getComparativeAnalysisTree } from './comparativeAnalysisTree';
@@ -19,6 +21,9 @@ interface ReportOutputLayoutProps {
   outputType?: 'household' | 'societyWide';
   activeView?: string;
   onSidebarNavigate?: (view: string) => void;
+  isSharedView?: boolean;
+  onShare?: () => void;
+  onSave?: () => void;
   children: React.ReactNode;
 }
 
@@ -45,6 +50,9 @@ export default function ReportOutputLayout({
   outputType = 'societyWide',
   activeView = '',
   onSidebarNavigate,
+  isSharedView = false,
+  onShare,
+  onSave,
   children,
 }: ReportOutputLayoutProps) {
   const countryId = useCurrentCountry();
@@ -57,7 +65,7 @@ export default function ReportOutputLayout({
       <Stack gap={spacing.xl}>
         {/* Header Section */}
         <Box>
-          {/* Title row with edit action */}
+          {/* Title row with actions */}
           <Group gap={spacing.xs} align="center" mb={spacing.xs}>
             <Title
               order={1}
@@ -67,15 +75,13 @@ export default function ReportOutputLayout({
             >
               {reportLabel || reportId}
             </Title>
-            <ActionIcon
-              variant="subtle"
-              color="gray"
-              size="lg"
-              aria-label="Edit report name"
-              onClick={onEditName}
-            >
-              <IconPencil size={18} />
-            </ActionIcon>
+            {isSharedView && <SharedReportTag />}
+            <ReportActionButtons
+              isSharedView={isSharedView}
+              onShare={onShare}
+              onSave={onSave}
+              onEdit={onEditName}
+            />
           </Group>
 
           {/* Timestamp and View All */}

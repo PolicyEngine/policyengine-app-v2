@@ -29,6 +29,7 @@ vi.mock('react-router-dom', async () => {
       subpage: 'overview',
       view: undefined,
     }),
+    useSearchParams: () => [new URLSearchParams(), vi.fn()],
   };
 });
 
@@ -58,6 +59,22 @@ vi.mock('@/hooks/useUserReportAssociations', () => ({
     mutate: vi.fn(),
     isPending: false,
   })),
+  useCreateReportAssociation: vi.fn(() => ({
+    mutateAsync: vi.fn(),
+    isPending: false,
+  })),
+}));
+
+vi.mock('@/hooks/useSharedReportData', () => ({
+  useSharedReportData: vi.fn(() => ({
+    report: undefined,
+    simulations: [],
+    policies: [],
+    households: [],
+    geographies: [],
+    isLoading: false,
+    error: null,
+  })),
 }));
 
 // Mock calculation hooks
@@ -83,6 +100,15 @@ vi.mock('@/hooks/useReportProgressDisplay', () => ({
 
 vi.mock('@/hooks/useStartCalculationOnLoad', () => ({
   useStartCalculationOnLoad: vi.fn(),
+}));
+
+vi.mock('@/hooks/useSaveSharedReport', () => ({
+  useSaveSharedReport: vi.fn(() => ({
+    saveSharedReport: vi.fn(),
+    saveResult: null,
+    setSaveResult: vi.fn(),
+    isPending: false,
+  })),
 }));
 
 describe('ReportOutputPage', () => {
