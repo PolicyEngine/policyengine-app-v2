@@ -18,7 +18,7 @@ As part of this project, we are extending our model back to tax year 2018 for th
 
 ## Why open source matters
 
-Other tools exist for this type of analysis, including TRIM, the Fiscal Analyzer, and the Policy Rules Database. However, most are proprietary or not adaptable for independent research. We built PolicyEngine to be different: fully transparent, publicly accessible, and designed so researchers can verify every calculation.
+We built PolicyEngine to be fully transparent, publicly accessible, and designed so researchers can verify every calculation.
 
 The entire codebase is [available on GitHub](https://github.com/PolicyEngine), and anyone can use our [web calculator](https://policyengine.org/us) to explore how policies affect hypothetical households. Policy researchers at Georgetown University, Vanderbilt University, University of Hawaii, and the Niskanen Center have used PolicyEngine's Python package and web interface to study tax and benefit program structures.
 
