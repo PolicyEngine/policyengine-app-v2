@@ -1,4 +1,4 @@
-PolicyEngine is collaborating with [Matt Unrath](https://priceschool.usc.edu/faculty/directory/matthew-unrath/), an assistant professor at the University of Southern California, on a new project examining effective marginal and average tax rates facing American families. The study is supported by the [Institute for Research on Poverty](https://www.irp.wisc.edu/).
+PolicyEngine is supporting [Matt Unrath](https://priceschool.usc.edu/faculty/directory/matthew-unrath/), an assistant professor at the University of Southern California, in a new project examining effective marginal and average tax rates facing American families. The study is supported by the [Institute for Research on Poverty](https://www.irp.wisc.edu/).
 
 Understanding how taxes and benefits interact is notoriously difficult. A family's effective tax rate depends not just on federal and state income taxes, but on how dozens of benefit programs phase in and out as income changes. These interactions can create surprisingly high marginal tax rates that discourage work and complicate financial planning for families.
 
@@ -14,7 +14,7 @@ For this research, the relevant components of our model include:
 
 Our model captures critical state-level policy choices—such as broad-based categorical eligibility and expense deductions—that substantially affect household eligibility, benefit amounts, and effective tax rates. We've also [worked closely with NBER staff](https://www.policyengine.org/us/research/policyengine-nber-mou-taxsim) to ensure our estimates align with TAXSIM for overlapping tax years.
 
-As part of this collaboration, we are extending our model back to tax year 2018 for the relevant programs and adding comprehensive state-specific TANF rules across all 50 states.
+As part of this project, we are extending our model back to tax year 2018 for the relevant programs and adding comprehensive state-specific TANF rules across all 50 states.
 
 ## Why open source matters
 
