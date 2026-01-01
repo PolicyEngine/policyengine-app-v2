@@ -6,13 +6,13 @@ Understanding how taxes and benefits interact is notoriously difficult. A family
 
 For this project, we're providing our Python microsimulation package, which researchers will run over restricted-use microdata to calculate comprehensive tax and benefit outcomes for households across the country.
 
-Our US model currently covers:
+For this research, the relevant components of our model include:
 
 - Federal and state income taxes for tax years 2022-2024
 - Nationwide benefit programs including SSI, WIC, and Pell Grants
 - State-level program rules for SNAP, Medicaid, CHIP, ACA subsidies, and related programs across all 50 states
 
-The model captures critical state-level policy choices—such as broad-based categorical eligibility and expense deductions—that substantially affect household eligibility, benefit amounts, and effective tax rates. We've also [worked closely with NBER staff](https://www.policyengine.org/us/research/policyengine-nber-mou-taxsim) to ensure our estimates align with TAXSIM for overlapping tax years.
+Our model captures critical state-level policy choices—such as broad-based categorical eligibility and expense deductions—that substantially affect household eligibility, benefit amounts, and effective tax rates. We've also [worked closely with NBER staff](https://www.policyengine.org/us/research/policyengine-nber-mou-taxsim) to ensure our estimates align with TAXSIM for overlapping tax years.
 
 As part of this collaboration, we are extending our model back to tax year 2018 for the relevant programs and adding comprehensive state-specific TANF rules across all 50 states.
 
