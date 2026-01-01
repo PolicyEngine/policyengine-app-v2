@@ -1,11 +1,11 @@
 [
   {
     "title": "Partnering with the Better Government Lab on safety net program research",
-    "description": "PolicyEngine provides technical guidance and modeling expertise for research on SNAP, TANF, SSI, and state tax credits.",
+    "description": "PolicyEngine provides technical guidance and modeling expertise for research on benefit programs and income tax credits.",
     "date": "2026-01-15 12:00:00",
     "tags": ["us", "org"],
     "filename": "policyengine-better-government-lab-collaboration.md",
-    "image": "policyengine-better-government-lab-collaboration.jpg",
+    "image": "policyengine-better-government-lab-collaboration/logo.png",
     "authors": ["max-ghenis"]
   },
   {
@@ -14,7 +14,7 @@
     "date": "2026-01-15 12:00:00",
     "tags": ["us", "org"],
     "filename": "policyengine-usc-collaboration.md",
-    "image": "policyengine-usc-collaboration.jpg",
+    "image": "policyengine-usc-collaboration/usc-logo.png",
     "authors": ["max-ghenis"]
   },
   {

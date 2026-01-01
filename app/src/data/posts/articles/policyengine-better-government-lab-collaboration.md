@@ -1,6 +1,6 @@
-PolicyEngine is partnering with the [Better Government Lab](https://fordschool.umich.edu/bgl) to support research on government benefit programs and their effects on American households.
-
 ![Better Government Lab](/assets/posts/better_government_lab_logo.png)
+
+PolicyEngine is partnering with the [Better Government Lab](https://fordschool.umich.edu/bgl) to support research on government benefit programs and their effects on American households.
 
 Understanding how safety net programs interact is essential for evidence-based policymaking. Program rules for SNAP, TANF, SSI, and state tax credits vary significantly across states and have changed over time—making comprehensive analysis challenging without specialized modeling tools.
 
