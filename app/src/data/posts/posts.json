@@ -1,5 +1,23 @@
 [
   {
+    "title": "Partnering with the Better Government Lab on safety net program research",
+    "description": "PolicyEngine provides technical guidance and modeling expertise for research on SNAP, TANF, SSI, and state tax credits.",
+    "date": "2026-01-15 12:00:00",
+    "tags": ["us", "org"],
+    "filename": "policyengine-better-government-lab-collaboration.md",
+    "image": "policyengine-better-government-lab-collaboration.jpg",
+    "authors": ["max-ghenis"]
+  },
+  {
+    "title": "Partnering with USC to study how tax and benefit programs affect American families",
+    "description": "PolicyEngine collaborates with University of Southern California researchers to analyze effective marginal and average tax rates using our open-source microsimulation platform.",
+    "date": "2026-01-15 12:00:00",
+    "tags": ["us", "org"],
+    "filename": "policyengine-usc-collaboration.md",
+    "image": "policyengine-usc-collaboration.jpg",
+    "authors": ["max-ghenis"]
+  },
+  {
     "title": "PolicyEngine and Atlanta Fed sign memorandum of understanding for Policy Rules Database validation",
     "description": "Partnership enables multi-model validation of tax and benefit microsimulation across PolicyEngine, TAXSIM, and the Atlanta Fed's Policy Rules Database.",
     "date": "2025-12-29 12:00:00",
