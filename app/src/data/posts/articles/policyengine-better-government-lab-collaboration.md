@@ -1,4 +1,4 @@
-PolicyEngine is supporting the [Better Government Lab](https://fordschool.umich.edu/bgl) in research on benefit program takeup among American households.
+PolicyEngine is supporting the [Better Government Lab](https://fordschool.umich.edu/bgl) and [Eric Giannella](https://gufaculty360.georgetown.edu/s/contact/003UH000006T24bYAC/eric-giannella) of Georgetown University in research on benefit program takeup among American households.
 
 Understanding benefit takeup—who enrolls in programs they're eligible for—is essential for evidence-based policymaking. Program rules for SNAP, TANF, SSI, and state tax credits vary significantly across states and have changed over time, making comprehensive analysis challenging without specialized modeling tools.
 
