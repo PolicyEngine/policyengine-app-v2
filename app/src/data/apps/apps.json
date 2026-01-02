@@ -48,6 +48,15 @@
     "countryId": "us"
   },
   {
+    "type": "iframe",
+    "slug": "aca-calc",
+    "title": "ACA Reforms Calculator",
+    "description": "Compare how ACA policy changes like the IRA extension, 700% FPL bill, and CRFB reform proposals would affect your household's premium tax credits",
+    "source": "https://aca-calc.vercel.app/?embedded=true",
+    "tags": ["us", "healthcare", "policy", "interactives"],
+    "countryId": "us"
+  },
+  {
     "type": "streamlit",
     "slug": "cec",
     "title": "Citizens' Economic Council reform simulator",
