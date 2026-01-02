@@ -10,7 +10,6 @@ import { useSelector } from 'react-redux';
 import { AppShell, Box, Button, Group, Text } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import HeaderNavigation from '@/components/shared/HomeHeader';
-import LegacyBanner from '@/components/shared/LegacyBanner';
 import { spacing } from '@/designTokens';
 import { colors } from '@/designTokens/colors';
 import { RootState } from '@/store';
@@ -108,7 +107,6 @@ export default function PolicyParameterSelectorView({
     >
       <AppShell.Header p={0}>
         <HeaderNavigation />
-        <LegacyBanner />
       </AppShell.Header>
 
       <AppShell.Navbar p="md" bg="gray.0">

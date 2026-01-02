@@ -13,7 +13,6 @@ import { LayoutProvider, useIsInsideLayout } from '@/contexts/LayoutContext';
 import { spacing } from '@/designTokens';
 import GiveCalcBanner from './shared/GiveCalcBanner';
 import HeaderNavigation from './shared/HomeHeader';
-import LegacyBanner from './shared/LegacyBanner';
 import Sidebar from './Sidebar';
 
 interface StandardLayoutProps {
@@ -42,7 +41,6 @@ export default function StandardLayout({ children }: StandardLayoutProps) {
         <AppShell.Header p={0}>
           <HeaderNavigation />
           <GiveCalcBanner />
-          <LegacyBanner />
         </AppShell.Header>
 
         <AppShell.Navbar>
