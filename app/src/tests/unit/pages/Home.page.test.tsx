@@ -44,7 +44,12 @@ describe('HomePage', () => {
       el.getAttribute('data-testid')
     );
 
-    expect(sections).toEqual(['year-in-review-banner', 'main-section', 'action-cards', 'org-logos']);
+    expect(sections).toEqual([
+      'year-in-review-banner',
+      'main-section',
+      'action-cards',
+      'org-logos',
+    ]);
   });
 
   test('given page renders then passes orgData to OrgLogos component', () => {
