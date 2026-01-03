@@ -1,6 +1,30 @@
 [
   {
     "type": "iframe",
+    "slug": "2025-year-in-review",
+    "title": "PolicyEngine 2025 Year in Review",
+    "description": "2025 was our biggest year yet. 62 jurisdictions, 100K+ people served, PolicyEngine 2.0, and more.",
+    "source": "https://policyengine.github.io/2025-year-in-review/us?embed=true",
+    "tags": ["us", "featured"],
+    "countryId": "us",
+    "image": "2025-year-in-review.png",
+    "date": "2025-12-31 12:00:00",
+    "authors": ["max-ghenis"]
+  },
+  {
+    "type": "iframe",
+    "slug": "2025-year-in-review",
+    "title": "PolicyEngine 2025 Year in Review",
+    "description": "2025 was our biggest year yet. 62 jurisdictions, 100K+ people served, PolicyEngine 2.0, and more.",
+    "source": "https://policyengine.github.io/2025-year-in-review/uk?embed=true",
+    "tags": ["uk", "featured"],
+    "countryId": "uk",
+    "image": "2025-year-in-review.png",
+    "date": "2025-12-31 12:00:00",
+    "authors": ["max-ghenis"]
+  },
+  {
+    "type": "iframe",
     "slug": "local-areas-dashboard",
     "title": "UK local areas dashboard",
     "description": "Explore how national policies affect different local areas across the UK, including parliamentary constituencies and local authorities",
