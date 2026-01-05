@@ -11,7 +11,7 @@
  * - Row view: Stacked horizontal rows
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { Box, Tabs } from '@mantine/core';
 import { IconLayoutColumns, IconRowInsertBottom } from '@tabler/icons-react';
 
@@ -25,6 +25,20 @@ import { styles } from './styles';
 import { SimulationCanvas, ReportMetaPanel } from './components';
 
 export default function ReportBuilderPage() {
+  const renderCount = useRef(0);
+  const mountTime = useRef(performance.now());
+  renderCount.current++;
+
+  // Reset mount time on first render
+  if (renderCount.current === 1) {
+    mountTime.current = performance.now();
+  }
+
+  // Debug logging for page render cycle
+  console.log('[ReportBuilderPage] Render #' + renderCount.current, {
+    timeSinceMount: (performance.now() - mountTime.current).toFixed(2) + 'ms',
+  });
+
   const countryId = useCurrentCountry() as 'us' | 'uk';
   const countryConfig = COUNTRY_CONFIG[countryId] || COUNTRY_CONFIG.us;
   const [activeTab, setActiveTab] = useState<string | null>('cards');
@@ -51,6 +65,25 @@ export default function ReportBuilderPage() {
   // Only households allow single-simulation reports
   const isGeographySelected = !!reportState.simulations[0]?.population?.geography?.id;
 
+  // Debug: Track when effects run
+  useLayoutEffect(() => {
+    console.log('[ReportBuilderPage] useLayoutEffect START', {
+      timeSinceMount: (performance.now() - mountTime.current).toFixed(2) + 'ms',
+    });
+    return () => {
+      console.log('[ReportBuilderPage] useLayoutEffect CLEANUP');
+    };
+  });
+
+  useEffect(() => {
+    console.log('[ReportBuilderPage] useEffect (mount) START', {
+      timeSinceMount: (performance.now() - mountTime.current).toFixed(2) + 'ms',
+    });
+    return () => {
+      console.log('[ReportBuilderPage] useEffect (mount) CLEANUP');
+    };
+  }, []);
+
   useEffect(() => {
     if (isGeographySelected && reportState.simulations.length === 1) {
       const newSim = initializeSimulationState();
@@ -65,6 +98,10 @@ export default function ReportBuilderPage() {
   );
 
   const viewMode = (activeTab || 'cards') as ViewMode;
+
+  console.log('[ReportBuilderPage] About to return JSX', {
+    timeSinceMount: (performance.now() - mountTime.current).toFixed(2) + 'ms',
+  });
 
   return (
     <Box style={styles.pageContainer}>

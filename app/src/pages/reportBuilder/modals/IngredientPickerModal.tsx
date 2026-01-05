@@ -1,4 +1,4 @@
-import { useState, Fragment } from 'react';
+import { useState, Fragment, useRef } from 'react';
 import {
   Box,
   Group,
@@ -54,6 +54,10 @@ export function IngredientPickerModal({
   onSelect,
   onCreateNew,
 }: IngredientPickerModalProps) {
+  const renderCount = useRef(0);
+  renderCount.current++;
+  console.log('[IngredientPickerModal] Render #' + renderCount.current + ' (isOpen=' + isOpen + ')');
+
   const countryId = useCurrentCountry() as 'us' | 'uk';
   const countryConfig = COUNTRY_CONFIG[countryId] || COUNTRY_CONFIG.us;
   const userId = MOCK_USER_ID.toString();

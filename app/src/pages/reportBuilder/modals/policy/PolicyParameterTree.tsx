@@ -2,12 +2,13 @@
  * PolicyParameterTree - Parameter tree navigation for policy creation mode
  */
 import { useCallback, useMemo } from 'react';
+import { useSelector } from 'react-redux';
 import { Box, Text, Stack, Skeleton, NavLink, Autocomplete, ScrollArea } from '@mantine/core';
 import { IconSearch } from '@tabler/icons-react';
 import { colors, spacing } from '@/designTokens';
+import { selectSearchableParameters } from '@/libs/metadataUtils';
 import { ParameterTreeNode } from '@/types/metadata';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
-import { getHierarchicalLabels, formatLabelParts } from '@/utils/parameterLabels';
 import { FONT_SIZES } from '../../constants';
 
 interface PolicyParameterTreeProps {
@@ -33,25 +34,8 @@ export function PolicyParameterTree({
   onMenuItemClick,
   onSearchSelect,
 }: PolicyParameterTreeProps) {
-  // Build flat list of all searchable parameters
-  const searchableParameters = useMemo(() => {
-    if (!parameters) return [];
-    return Object.values(parameters)
-      .filter((param): param is ParameterMetadata =>
-        param.type === 'parameter' && !!param.label && !param.parameter.includes('pycache')
-      )
-      .map(param => {
-        const hierarchicalLabels = getHierarchicalLabels(param.parameter, parameters);
-        const fullLabel = hierarchicalLabels.length > 0
-          ? formatLabelParts(hierarchicalLabels)
-          : param.label;
-        return {
-          value: param.parameter,
-          label: fullLabel,
-        };
-      })
-      .sort((a, b) => a.label.localeCompare(b.label));
-  }, [parameters]);
+  // Get searchable parameters from memoized selector (computed once when metadata loads)
+  const searchableParameters = useSelector(selectSearchableParameters);
 
   // Render nested menu recursively
   const renderMenuItems = useCallback((items: ParameterTreeNode[]): React.ReactNode => {
@@ -85,7 +69,6 @@ export function PolicyParameterTree({
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column',
-        background: colors.gray[50],
         margin: `-${spacing.lg}`,
         marginRight: 0,
       }}
