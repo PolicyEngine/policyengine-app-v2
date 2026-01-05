@@ -2,7 +2,7 @@ National tax and benefit policies have varying impacts across different areas of
 
 We're launching new capabilities in PolicyEngine to disaggregate policy analyses to parliamentary constituencies and local authorities, with an interactive app to explore estimates for your area.
 
-[_See new estimates for your local area here_](https://uk-local-areas-dashboard-578039519715.us-central1.run.app/).
+[_See new estimates for your local area here_](https://policyengine.org/uk/local-areas-dashboard).
 
 ## A new approach to local area modelling
 
@@ -20,7 +20,7 @@ We construct over 11,000 calibration targets covering income brackets, age bands
 
 ## Interactive dashboard for local area analysis
 
-The [interactive dashboard](https://uk-local-areas-dashboard-578039519715.us-central1.run.app/) provides economic indicators for all UK parliamentary constituencies and local authorities. Users can view average market income, net income, taxes paid, and benefits received for any area, with the ability to compare areas directly to understand relative differences.
+The [interactive dashboard](https://policyengine.org/uk/local-areas-dashboard) provides economic indicators for all UK parliamentary constituencies and local authorities. Users can view average market income, net income, taxes paid, and benefits received for any area, with the ability to compare areas directly to understand relative differences.
 
 ![](/assets/posts/uk-local-areas-dashboard/dashboard.png)
 
@@ -28,7 +28,7 @@ _Figure 1: Local area economic analysis dashboard showing England summary. The d
 
 ## Area comparison example
 
-To demonstrate the capabilities of PolicyEngine's local modelling dashboard, we [compare](https://uk-local-areas-dashboard-578039519715.us-central1.run.app/) two constituencies: the Cities of London and Westminster and Cambridge. In this example, we highlight how national tax and benefit policies play out differently across local areas, influencing income distribution, consumption, and public finances. The figure below shows the comparison of main statistics of these two areas.
+To demonstrate the capabilities of PolicyEngine's local modelling dashboard, we [compare](https://policyengine.org/uk/local-areas-dashboard) two constituencies: the Cities of London and Westminster and Cambridge. In this example, we highlight how national tax and benefit policies play out differently across local areas, influencing income distribution, consumption, and public finances. The figure below shows the comparison of main statistics of these two areas.
 
 ![](/assets/posts/uk-local-areas-dashboard/compare.png)
 
