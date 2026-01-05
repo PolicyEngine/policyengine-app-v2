@@ -2,9 +2,10 @@
  * SimulationCanvas - Main orchestrator for simulation blocks
  */
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
-import { Box } from '@mantine/core';
+import { Box, Skeleton, Stack, Group, Text } from '@mantine/core';
+import { IconScale, IconUsers } from '@tabler/icons-react';
 
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useUserPolicies } from '@/hooks/useUserPolicy';
@@ -59,13 +60,57 @@ export function SimulationCanvas({
   setPickerState,
   viewMode,
 }: SimulationCanvasProps) {
+  const renderCount = useRef(0);
+  const mountTime = useRef(performance.now());
+  renderCount.current++;
+
+  if (renderCount.current === 1) {
+    mountTime.current = performance.now();
+  }
+
+  console.log('[SimulationCanvas] Render #' + renderCount.current + ' START', {
+    timeSinceMount: (performance.now() - mountTime.current).toFixed(2) + 'ms',
+  });
+
   const countryId = useCurrentCountry() as 'us' | 'uk';
   const countryConfig = COUNTRY_CONFIG[countryId] || COUNTRY_CONFIG.us;
   const userId = MOCK_USER_ID.toString();
-  const { data: policies } = useUserPolicies(userId);
-  const { data: households } = useUserHouseholds(userId);
+  const { data: policies, isLoading: policiesLoading } = useUserPolicies(userId);
+  const { data: households, isLoading: householdsLoading } = useUserHouseholds(userId);
   const regionOptions = useSelector((state: RootState) => state.metadata.economyOptions.region);
+  const metadataLoading = useSelector((state: RootState) => state.metadata.loading);
   const isGeographySelected = !!reportState.simulations[0]?.population?.geography?.id;
+
+  // Show loading skeleton if:
+  // 1. Policies/households are still loading (isLoading is true)
+  // 2. Data is still undefined (hasn't resolved yet)
+  // 3. Metadata is still loading (needed for regions)
+  const isInitialLoading = policiesLoading || householdsLoading || metadataLoading ||
+    policies === undefined || households === undefined;
+
+  // Debug logging for render cycle analysis
+  console.log('[SimulationCanvas] Data state:', {
+    timeSinceMount: (performance.now() - mountTime.current).toFixed(2) + 'ms',
+    policiesLoading,
+    householdsLoading,
+    metadataLoading,
+    policiesUndefined: policies === undefined,
+    householdsUndefined: households === undefined,
+    policiesCount: policies?.length ?? 'undefined',
+    householdsCount: households?.length ?? 'undefined',
+    isInitialLoading,
+    regionOptionsCount: regionOptions?.length ?? 0,
+  });
+
+  // Track when effects run
+  useEffect(() => {
+    console.log('[SimulationCanvas] useEffect (mount) ran', {
+      timeSinceMount: (performance.now() - mountTime.current).toFixed(2) + 'ms',
+    });
+    return () => {
+      console.log('[SimulationCanvas] useEffect (mount) cleanup');
+    };
+  }, []);
 
   // Suppress unused variable
   void countryConfig;
@@ -88,7 +133,8 @@ export function SimulationCanvas({
 
   // Transform policies data into SavedPolicy format
   const savedPolicies: SavedPolicy[] = useMemo(() => {
-    return (policies || [])
+    const start = performance.now();
+    const result = (policies || [])
       .map((p) => {
         const policyId = p.association.policyId.toString();
         const label = p.association.label || `Policy #${policyId}`;
@@ -105,10 +151,13 @@ export function SimulationCanvas({
         const bTime = b.updatedAt || b.createdAt || '';
         return bTime.localeCompare(aTime);
       });
+    console.log('[SimulationCanvas] useMemo savedPolicies took', (performance.now() - start).toFixed(2) + 'ms');
+    return result;
   }, [policies]);
 
   // Build recent populations from usage tracking
   const recentPopulations: RecentPopulation[] = useMemo(() => {
+    const start = performance.now();
     const results: Array<RecentPopulation & { timestamp: string }> = [];
 
     const regions = regionOptions || [];
@@ -168,10 +217,12 @@ export function SimulationCanvas({
       }
     }
 
-    return results
+    const result = results
       .sort((a, b) => b.timestamp.localeCompare(a.timestamp))
       .slice(0, 10)
       .map(({ timestamp: _t, ...rest }) => rest);
+    console.log('[SimulationCanvas] useMemo recentPopulations took', (performance.now() - start).toFixed(2) + 'ms');
+    return result;
   }, [countryId, households, regionOptions]);
 
   const handleAddSimulation = useCallback(() => {
@@ -398,6 +449,111 @@ export function SimulationCanvas({
     },
     [setReportState]
   );
+
+  console.log('[SimulationCanvas] All hooks/callbacks defined', {
+    timeSinceMount: (performance.now() - mountTime.current).toFixed(2) + 'ms',
+    modalsState: {
+      policyBrowseOpen: policyBrowseState.isOpen,
+      policyCreationOpen: policyCreationState.isOpen,
+      populationBrowseOpen: populationBrowseState.isOpen,
+      pickerOpen: pickerState.isOpen,
+    },
+  });
+
+  // Loading skeleton component
+  const LoadingSkeleton = () => (
+    <Box style={styles.canvasContainer}>
+      <Box style={styles.canvasGrid} />
+      <Box style={styles.simulationsGrid}>
+        {/* Simulation block skeleton */}
+        <Box
+          style={{
+            background: 'white',
+            borderRadius: 12,
+            border: '2px solid #e5e7eb',
+            padding: 24,
+            gridRow: 'span 4',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 16,
+          }}
+        >
+          {/* Header skeleton */}
+          <Group justify="space-between">
+            <Skeleton height={24} width={180} radius="md" />
+            <Skeleton height={20} width={20} radius="sm" />
+          </Group>
+
+          {/* Policy section skeleton */}
+          <Box style={{ padding: 16, background: '#f9fafb', borderRadius: 8 }}>
+            <Group gap={8} mb={12}>
+              <Skeleton height={32} width={32} radius="md" />
+              <Skeleton height={16} width={60} radius="sm" />
+            </Group>
+            <Group gap={8}>
+              <Skeleton height={80} style={{ flex: 1 }} radius="md" />
+              <Skeleton height={80} style={{ flex: 1 }} radius="md" />
+              <Skeleton height={80} style={{ flex: 1 }} radius="md" />
+            </Group>
+          </Box>
+
+          {/* Population section skeleton */}
+          <Box style={{ padding: 16, background: '#f9fafb', borderRadius: 8 }}>
+            <Group gap={8} mb={12}>
+              <Skeleton height={32} width={32} radius="md" />
+              <Skeleton height={16} width={80} radius="sm" />
+            </Group>
+            <Group gap={8}>
+              <Skeleton height={80} style={{ flex: 1 }} radius="md" />
+              <Skeleton height={80} style={{ flex: 1 }} radius="md" />
+              <Skeleton height={80} style={{ flex: 1 }} radius="md" />
+            </Group>
+          </Box>
+
+          {/* Dynamics section skeleton */}
+          <Box style={{ padding: 16, background: '#f9fafb', borderRadius: 8 }}>
+            <Group gap={8} mb={12}>
+              <Skeleton height={32} width={32} radius="md" />
+              <Skeleton height={16} width={70} radius="sm" />
+            </Group>
+            <Skeleton height={48} radius="md" />
+          </Box>
+        </Box>
+
+        {/* Add simulation card skeleton */}
+        <Box
+          style={{
+            background: 'white',
+            borderRadius: 12,
+            border: '2px dashed #d1d5db',
+            padding: 24,
+            gridRow: 'span 4',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 12,
+          }}
+        >
+          <Skeleton height={48} width={48} radius="xl" />
+          <Skeleton height={20} width={140} radius="sm" />
+          <Skeleton height={14} width={200} radius="sm" />
+        </Box>
+      </Box>
+    </Box>
+  );
+
+  // Show loading skeleton while fetching initial data
+  if (isInitialLoading) {
+    console.log('[SimulationCanvas] Returning LoadingSkeleton', {
+      timeSinceMount: (performance.now() - mountTime.current).toFixed(2) + 'ms',
+    });
+    return <LoadingSkeleton />;
+  }
+
+  console.log('[SimulationCanvas] About to return full JSX (modals will mount)', {
+    timeSinceMount: (performance.now() - mountTime.current).toFixed(2) + 'ms',
+  });
 
   return (
     <>

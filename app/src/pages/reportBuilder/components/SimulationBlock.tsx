@@ -2,7 +2,7 @@
  * SimulationBlock - A simulation configuration card
  */
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import {
   Box,
   Group,
@@ -72,6 +72,10 @@ export function SimulationBlock({
   recentPopulations,
   viewMode,
 }: SimulationBlockProps) {
+  const renderCount = useRef(0);
+  renderCount.current++;
+  console.log('[SimulationBlock #' + index + '] Render #' + renderCount.current);
+
   const [isEditingLabel, setIsEditingLabel] = useState(false);
   const [labelInput, setLabelInput] = useState(simulation.label || '');
 

@@ -5,7 +5,7 @@
  * - Browse mode: PopulationBrowseContent for main content
  * - Creation mode: HouseholdCreationContent + PopulationStatusHeader
  */
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { useQueryClient } from '@tanstack/react-query';
 import { IconUsers, IconFolder, IconHome, IconPlus } from '@tabler/icons-react';
@@ -57,6 +57,11 @@ export function PopulationBrowseModal({
   onSelect,
   onCreateNew,
 }: PopulationBrowseModalProps) {
+  const renderCount = useRef(0);
+  renderCount.current++;
+  const renderStart = performance.now();
+  console.log('[PopulationBrowseModal] Render #' + renderCount.current + ' START (isOpen=' + isOpen + ')');
+
   const countryId = useCurrentCountry() as 'us' | 'uk';
   const userId = MOCK_USER_ID.toString();
   const queryClient = useQueryClient();
@@ -451,6 +456,8 @@ export function PopulationBrowseModal({
   };
 
   // ========== Render ==========
+
+  console.log('[PopulationBrowseModal] About to return JSX, took', (performance.now() - renderStart).toFixed(2) + 'ms');
 
   return (
     <BrowseModalTemplate

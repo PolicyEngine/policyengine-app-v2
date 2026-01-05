@@ -139,6 +139,7 @@ export function BrowseModalTemplate({
         },
       }}
     >
+      {/* Main layout: sidebar + content */}
       <Group align="stretch" gap={0} style={{ flex: 1, overflow: 'hidden' }} wrap="nowrap">
         {/* Sidebar */}
         <Box
@@ -172,21 +173,22 @@ export function BrowseModalTemplate({
           <Box style={{ flex: 1, overflow: 'auto', padding: spacing.lg }}>
             {renderMainContent()}
           </Box>
-
-          {/* Optional Footer */}
-          {footer && (
-            <Box
-              style={{
-                padding: spacing.lg,
-                borderTop: `1px solid ${colors.border.light}`,
-                background: colors.white,
-              }}
-            >
-              {footer}
-            </Box>
-          )}
         </Box>
       </Group>
+
+      {/* Footer spans full width, outside the sidebar/content layout */}
+      {footer && (
+        <Box
+          style={{
+            padding: `${spacing.md} ${spacing.xl}`,
+            borderTop: `1px solid ${colors.border.light}`,
+            background: colors.white,
+            flexShrink: 0,
+          }}
+        >
+          {footer}
+        </Box>
+      )}
     </Modal>
   );
 }
