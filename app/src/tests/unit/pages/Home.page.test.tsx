@@ -20,8 +20,8 @@ vi.mock('@/components/home/OrgLogos', () => ({
   default: () => <div data-testid="org-logos">Org Logos</div>,
 }));
 
-vi.mock('@/components/shared/AutumnBudgetBanner', () => ({
-  default: () => <div data-testid="autumn-budget-banner">Autumn Budget Banner</div>,
+vi.mock('@/components/shared/YearInReviewBanner', () => ({
+  default: () => <div data-testid="year-in-review-banner">Year In Review Banner</div>,
 }));
 
 describe('HomePage', () => {
@@ -44,7 +44,7 @@ describe('HomePage', () => {
       el.getAttribute('data-testid')
     );
 
-    expect(sections).toEqual(['autumn-budget-banner', 'main-section', 'action-cards', 'org-logos']);
+    expect(sections).toEqual(['year-in-review-banner', 'main-section', 'action-cards', 'org-logos']);
   });
 
   test('given page renders then passes orgData to OrgLogos component', () => {
