@@ -13,6 +13,7 @@ import { RegionOption } from '@/utils/regionStrategies';
 import { USOutlineIcon, UKOutlineIcon } from '@/components/icons/CountryOutlineIcons';
 import { FONT_SIZES, INGREDIENT_COLORS } from '../../constants';
 import { PopulationCategory } from '../../types';
+import { StateDistrictSelector } from './StateDistrictSelector';
 
 interface HouseholdItem {
   id: string;
@@ -26,6 +27,7 @@ interface PopulationBrowseContentProps {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   filteredRegions: RegionOption[];
+  allDistricts?: RegionOption[]; // Full list of congressional districts for StateDistrictSelector
   filteredHouseholds: HouseholdItem[];
   householdsLoading: boolean;
   getSectionTitle: () => string;
@@ -40,6 +42,7 @@ export function PopulationBrowseContent({
   searchQuery,
   setSearchQuery,
   filteredRegions,
+  allDistricts,
   filteredHouseholds,
   householdsLoading,
   getSectionTitle,
@@ -75,10 +78,13 @@ export function PopulationBrowseContent({
     },
   };
 
+  // StateDistrictSelector handles its own search and header
+  const showExternalSearchAndHeader = activeCategory !== 'national' && activeCategory !== 'districts';
+
   return (
     <Stack gap={spacing.lg} style={{ height: '100%' }}>
-      {/* Search Bar */}
-      {activeCategory !== 'national' && (
+      {/* Search Bar - hidden for national and districts (StateDistrictSelector has its own) */}
+      {showExternalSearchAndHeader && (
         <TextInput
           placeholder={
             activeCategory === 'my-households'
@@ -102,15 +108,17 @@ export function PopulationBrowseContent({
         />
       )}
 
-      {/* Section Header */}
-      <Group justify="space-between" align="center">
-        <Text fw={600} style={{ fontSize: FONT_SIZES.normal, color: colors.gray[800] }}>
-          {getSectionTitle()}
-        </Text>
-        <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
-          {getItemCount()} {getItemCount() === 1 ? 'option' : 'options'}
-        </Text>
-      </Group>
+      {/* Section Header - hidden for national and districts */}
+      {showExternalSearchAndHeader && (
+        <Group justify="space-between" align="center">
+          <Text fw={600} style={{ fontSize: FONT_SIZES.normal, color: colors.gray[800] }}>
+            {getSectionTitle()}
+          </Text>
+          <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
+            {getItemCount()} {getItemCount() === 1 ? 'option' : 'options'}
+          </Text>
+        </Group>
+      )}
 
       {/* Content */}
       <ScrollArea style={{ flex: 1 }} offsetScrollbars>
@@ -231,8 +239,16 @@ export function PopulationBrowseContent({
               ))}
             </Stack>
           )
+        ) : activeCategory === 'districts' && allDistricts ? (
+          // Congressional districts - use StateDistrictSelector
+          <StateDistrictSelector
+            districts={allDistricts}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            onSelectDistrict={onSelectGeography}
+          />
         ) : (
-          // Geography grid
+          // Standard geography grid (states, countries, constituencies, local authorities)
           filteredRegions.length === 0 ? (
             <Box
               style={{
