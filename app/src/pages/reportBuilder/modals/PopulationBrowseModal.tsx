@@ -130,7 +130,7 @@ export function PopulationBrowseModal({
     const usStates = getUSStates(regionOptions);
     const usDistricts = getUSCongressionalDistricts(regionOptions);
     return [
-      { id: 'states' as const, label: 'States', count: usStates.length, regions: usStates },
+      { id: 'states' as const, label: 'States and territories', count: usStates.length, regions: usStates },
       { id: 'districts' as const, label: 'Congressional districts', count: usDistricts.length, regions: usDistricts },
     ];
   }, [countryId, regionOptions]);
@@ -429,6 +429,11 @@ export function PopulationBrowseModal({
       );
     }
 
+    // Get all congressional districts for StateDistrictSelector (US only)
+    const allDistricts = countryId === 'us'
+      ? geographyCategories.find(c => c.id === 'districts')?.regions
+      : undefined;
+
     return (
       <PopulationBrowseContent
         countryId={countryId}
@@ -436,6 +441,7 @@ export function PopulationBrowseModal({
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
         filteredRegions={filteredRegions}
+        allDistricts={allDistricts}
         filteredHouseholds={filteredHouseholds.map(h => ({
           id: h.id,
           label: h.label,
