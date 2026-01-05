@@ -18,7 +18,7 @@ const PopulationsPage = lazy(() => import('./pages/Populations.page'));
 const ReportOutputPage = lazy(() => import('./pages/ReportOutput.page'));
 const ReportsPage = lazy(() => import('./pages/Reports.page'));
 const SimulationsPage = lazy(() => import('./pages/Simulations.page'));
-const ReportBuilderPage = lazy(() => import('./pages/ReportBuilder.page'));
+const ReportBuilderPage = lazy(() => import('./pages/reportBuilder/ReportBuilderPage'));
 
 // Lazy-loaded pathway wrappers — heavy components with their own sub-routes
 const PolicyPathwayWrapper = lazy(() => import('./pathways/policy/PolicyPathwayWrapper'));

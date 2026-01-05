@@ -7,7 +7,7 @@
  * - Policy creation with API integration
  */
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import {
   Modal,
@@ -46,7 +46,7 @@ import { Policy } from '@/types/ingredients/Policy';
 import { PolicyCreationPayload } from '@/types/payloads';
 import { Parameter } from '@/types/subIngredients/parameter';
 import { ValueInterval, ValueIntervalCollection, ValuesList } from '@/types/subIngredients/valueInterval';
-import { getDateRange } from '@/libs/metadataUtils';
+import { getDateRange, selectSearchableParameters } from '@/libs/metadataUtils';
 import { getHierarchicalLabels, formatLabelParts } from '@/utils/parameterLabels';
 import { formatParameterValue } from '@/utils/policyTableHelpers';
 import { formatPeriod } from '@/utils/dateUtils';
@@ -70,6 +70,11 @@ export function PolicyCreationModal({
   onPolicyCreated,
   simulationIndex,
 }: PolicyCreationModalProps) {
+  const renderCount = useRef(0);
+  renderCount.current++;
+  const renderStart = performance.now();
+  console.log('[PolicyCreationModal] Render #' + renderCount.current + ' START (isOpen=' + isOpen + ')');
+
   const countryId = useCurrentCountry() as 'us' | 'uk';
 
   // Get metadata from Redux state
@@ -152,26 +157,8 @@ export function PolicyCreationModal({
     });
   }, [policyParameters, parameters]);
 
-  // Build flat list of all searchable parameters for autocomplete
-  const searchableParameters = useMemo(() => {
-    if (!parameters) return [];
-
-    return Object.values(parameters)
-      .filter((param): param is ParameterMetadata =>
-        param.type === 'parameter' && !!param.label && !param.parameter.includes('pycache')
-      )
-      .map(param => {
-        const hierarchicalLabels = getHierarchicalLabels(param.parameter, parameters);
-        const fullLabel = hierarchicalLabels.length > 0
-          ? formatLabelParts(hierarchicalLabels)
-          : param.label;
-        return {
-          value: param.parameter,
-          label: fullLabel,
-        };
-      })
-      .sort((a, b) => a.label.localeCompare(b.label));
-  }, [parameters]);
+  // Get searchable parameters from memoized selector (computed once when metadata loads)
+  const searchableParameters = useSelector(selectSearchableParameters);
 
   // Handle search selection - expand tree path and select parameter
   const handleSearchSelect = useCallback((paramName: string) => {
@@ -316,6 +303,8 @@ export function PolicyCreationModal({
   const colorConfig = INGREDIENT_COLORS.policy;
 
   const ValueSetterToRender = ValueSetterComponents[valueSetterMode];
+
+  console.log('[PolicyCreationModal] About to return JSX, took', (performance.now() - renderStart).toFixed(2) + 'ms');
 
   // Dock styles matching ReportMetaPanel
   const dockStyles = {

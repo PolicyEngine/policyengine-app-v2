@@ -5,7 +5,7 @@
  * - Browse mode: PolicyBrowseContent for main content
  * - Creation mode: PolicyCreationContent + PolicyParameterTree
  */
-import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { Box, Text, UnstyledButton, Divider, ScrollArea, Stack } from '@mantine/core';
 import { IconScale, IconUsers, IconPlus, IconFolder } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
@@ -48,6 +48,11 @@ export function PolicyBrowseModal({
   onClose,
   onSelect,
 }: PolicyBrowseModalProps) {
+  const renderCount = useRef(0);
+  renderCount.current++;
+  const renderStart = performance.now();
+  console.log('[PolicyBrowseModal] Render #' + renderCount.current + ' START (isOpen=' + isOpen + ')');
+
   const countryId = useCurrentCountry() as 'us' | 'uk';
   const userId = MOCK_USER_ID.toString();
   const { data: policies, isLoading } = useUserPolicies(userId);
@@ -407,6 +412,8 @@ export function PolicyBrowseModal({
   };
 
   // ========== Render ==========
+
+  console.log('[PolicyBrowseModal] About to return JSX, took', (performance.now() - renderStart).toFixed(2) + 'ms');
 
   return (
     <BrowseModalTemplate
