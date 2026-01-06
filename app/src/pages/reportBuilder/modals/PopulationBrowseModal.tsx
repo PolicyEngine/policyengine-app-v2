@@ -5,43 +5,41 @@
  * - Browse mode: PopulationBrowseContent for main content
  * - Creation mode: HouseholdCreationContent + PopulationStatusHeader
  */
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { useSelector } from 'react-redux';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { IconFolder, IconHome, IconPlus, IconUsers } from '@tabler/icons-react';
 import { useQueryClient } from '@tanstack/react-query';
-import { IconUsers, IconFolder, IconHome, IconPlus } from '@tabler/icons-react';
-
+import { useSelector } from 'react-redux';
+import { HouseholdAdapter } from '@/adapters/HouseholdAdapter';
+import { geographyUsageStore, householdUsageStore } from '@/api/usageTracking';
+import { UKOutlineIcon, USOutlineIcon } from '@/components/icons/CountryOutlineIcons';
+import { CURRENT_YEAR, MOCK_USER_ID } from '@/constants';
 import { colors, spacing } from '@/designTokens';
+import { useCreateHousehold } from '@/hooks/useCreateHousehold';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useUserHouseholds } from '@/hooks/useUserHousehold';
-import { useCreateHousehold } from '@/hooks/useCreateHousehold';
-import { householdAssociationKeys } from '@/libs/queryKeys';
-import { HouseholdBuilder } from '@/utils/HouseholdBuilder';
-import { HouseholdAdapter } from '@/adapters/HouseholdAdapter';
-import { RootState } from '@/store';
 import { getBasicInputFields } from '@/libs/metadataUtils';
-import {
-  getUSStates,
-  getUSCongressionalDistricts,
-  getUKCountries,
-  getUKConstituencies,
-  getUKLocalAuthorities,
-  RegionOption,
-} from '@/utils/regionStrategies';
-import { generateGeographyLabel } from '@/utils/geographyUtils';
-import { householdUsageStore, geographyUsageStore } from '@/api/usageTracking';
-import { USOutlineIcon, UKOutlineIcon } from '@/components/icons/CountryOutlineIcons';
+import { householdAssociationKeys } from '@/libs/queryKeys';
+import { RootState } from '@/store';
 import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
 import { PopulationStateProps } from '@/types/pathwayState';
-import { CURRENT_YEAR, MOCK_USER_ID } from '@/constants';
-
+import { generateGeographyLabel } from '@/utils/geographyUtils';
+import { HouseholdBuilder } from '@/utils/HouseholdBuilder';
+import {
+  getUKConstituencies,
+  getUKCountries,
+  getUKLocalAuthorities,
+  getUSCongressionalDistricts,
+  getUSStates,
+  RegionOption,
+} from '@/utils/regionStrategies';
 import { INGREDIENT_COLORS } from '../constants';
 import { PopulationCategory } from '../types';
 import { BrowseModalTemplate, CreationModeFooter } from './BrowseModalTemplate';
 import {
-  PopulationStatusHeader,
-  PopulationBrowseContent,
   HouseholdCreationContent,
+  PopulationBrowseContent,
+  PopulationStatusHeader,
 } from './population';
 
 interface PopulationBrowseModalProps {
@@ -60,7 +58,9 @@ export function PopulationBrowseModal({
   const renderCount = useRef(0);
   renderCount.current++;
   const renderStart = performance.now();
-  console.log('[PopulationBrowseModal] Render #' + renderCount.current + ' START (isOpen=' + isOpen + ')');
+  console.log(
+    '[PopulationBrowseModal] Render #' + renderCount.current + ' START (isOpen=' + isOpen + ')'
+  );
 
   const countryId = useCurrentCountry() as 'us' | 'uk';
   const userId = MOCK_USER_ID.toString();
@@ -78,13 +78,14 @@ export function PopulationBrowseModal({
   const [isCreationMode, setIsCreationMode] = useState(false);
   const [householdLabel, setHouseholdLabel] = useState('');
   const [householdDraft, setHouseholdDraft] = useState<Household | null>(null);
-  const [isEditingLabel, setIsEditingLabel] = useState(false);
 
   // Get report year (default to current year)
   const reportYear = CURRENT_YEAR.toString();
 
   // Create household hook
-  const { createHousehold, isPending: isCreating } = useCreateHousehold(householdLabel || undefined);
+  const { createHousehold, isPending: isCreating } = useCreateHousehold(
+    householdLabel || undefined
+  );
 
   // Get all basic non-person fields dynamically
   const basicNonPersonFields = useMemo(() => {
@@ -110,7 +111,6 @@ export function PopulationBrowseModal({
       setIsCreationMode(false);
       setHouseholdLabel('');
       setHouseholdDraft(null);
-      setIsEditingLabel(false);
     }
   }, [isOpen]);
 
@@ -121,17 +121,42 @@ export function PopulationBrowseModal({
       const ukConstituencies = getUKConstituencies(regionOptions);
       const ukLocalAuthorities = getUKLocalAuthorities(regionOptions);
       return [
-        { id: 'countries' as const, label: 'Countries', count: ukCountries.length, regions: ukCountries },
-        { id: 'constituencies' as const, label: 'Constituencies', count: ukConstituencies.length, regions: ukConstituencies },
-        { id: 'local-authorities' as const, label: 'Local authorities', count: ukLocalAuthorities.length, regions: ukLocalAuthorities },
+        {
+          id: 'countries' as const,
+          label: 'Countries',
+          count: ukCountries.length,
+          regions: ukCountries,
+        },
+        {
+          id: 'constituencies' as const,
+          label: 'Constituencies',
+          count: ukConstituencies.length,
+          regions: ukConstituencies,
+        },
+        {
+          id: 'local-authorities' as const,
+          label: 'Local authorities',
+          count: ukLocalAuthorities.length,
+          regions: ukLocalAuthorities,
+        },
       ];
     }
     // US
     const usStates = getUSStates(regionOptions);
     const usDistricts = getUSCongressionalDistricts(regionOptions);
     return [
-      { id: 'states' as const, label: 'States and territories', count: usStates.length, regions: usStates },
-      { id: 'districts' as const, label: 'Congressional districts', count: usDistricts.length, regions: usDistricts },
+      {
+        id: 'states' as const,
+        label: 'States and territories',
+        count: usStates.length,
+        regions: usStates,
+      },
+      {
+        id: 'districts' as const,
+        label: 'Congressional districts',
+        count: usDistricts.length,
+        regions: usDistricts,
+      },
     ];
   }, [countryId, regionOptions]);
 
@@ -149,7 +174,8 @@ export function PopulationBrowseModal({
       .map((h) => {
         const householdIdStr = String(h.association.householdId);
         const usageTimestamp = householdUsageStore.getLastUsed(householdIdStr);
-        const sortTimestamp = usageTimestamp || h.association.updatedAt || h.association.createdAt || '';
+        const sortTimestamp =
+          usageTimestamp || h.association.updatedAt || h.association.createdAt || '';
         return {
           id: householdIdStr,
           label: h.association.label || `Household #${householdIdStr}`,
@@ -248,51 +274,57 @@ export function PopulationBrowseModal({
   }, []);
 
   // Handle marital status change
-  const handleMaritalStatusChange = useCallback((newStatus: 'single' | 'married') => {
-    if (!householdDraft) return;
+  const handleMaritalStatusChange = useCallback(
+    (newStatus: 'single' | 'married') => {
+      if (!householdDraft) return;
 
-    const builder = new HouseholdBuilder(countryId as 'us' | 'uk', reportYear);
-    builder.loadHousehold(householdDraft);
+      const builder = new HouseholdBuilder(countryId as 'us' | 'uk', reportYear);
+      builder.loadHousehold(householdDraft);
 
-    const hasPartner = householdPeople.includes('your partner');
+      const hasPartner = householdPeople.includes('your partner');
 
-    if (newStatus === 'married' && !hasPartner) {
-      builder.addAdult('your partner', 30, { employment_income: 0 });
-      builder.setMaritalStatus('you', 'your partner');
-    } else if (newStatus === 'single' && hasPartner) {
-      builder.removePerson('your partner');
-    }
+      if (newStatus === 'married' && !hasPartner) {
+        builder.addAdult('your partner', 30, { employment_income: 0 });
+        builder.setMaritalStatus('you', 'your partner');
+      } else if (newStatus === 'single' && hasPartner) {
+        builder.removePerson('your partner');
+      }
 
-    setHouseholdDraft(builder.build());
-  }, [householdDraft, householdPeople, countryId, reportYear]);
+      setHouseholdDraft(builder.build());
+    },
+    [householdDraft, householdPeople, countryId, reportYear]
+  );
 
   // Handle number of children change
-  const handleNumChildrenChange = useCallback((newCount: number) => {
-    if (!householdDraft) return;
+  const handleNumChildrenChange = useCallback(
+    (newCount: number) => {
+      if (!householdDraft) return;
 
-    const builder = new HouseholdBuilder(countryId as 'us' | 'uk', reportYear);
-    builder.loadHousehold(householdDraft);
+      const builder = new HouseholdBuilder(countryId as 'us' | 'uk', reportYear);
+      builder.loadHousehold(householdDraft);
 
-    const currentChildren = householdPeople.filter((p) => p.includes('dependent'));
-    const currentChildCount = currentChildren.length;
+      const currentChildren = householdPeople.filter((p) => p.includes('dependent'));
+      const currentChildCount = currentChildren.length;
 
-    if (newCount !== currentChildCount) {
-      currentChildren.forEach((child) => builder.removePerson(child));
+      if (newCount !== currentChildCount) {
+        currentChildren.forEach((child) => builder.removePerson(child));
 
-      if (newCount > 0) {
-        const hasPartner = householdPeople.includes('your partner');
-        const parentIds = hasPartner ? ['you', 'your partner'] : ['you'];
-        const ordinals = ['first', 'second', 'third', 'fourth', 'fifth'];
+        if (newCount > 0) {
+          const hasPartner = householdPeople.includes('your partner');
+          const parentIds = hasPartner ? ['you', 'your partner'] : ['you'];
+          const ordinals = ['first', 'second', 'third', 'fourth', 'fifth'];
 
-        for (let i = 0; i < newCount; i++) {
-          const childName = `your ${ordinals[i] || `${i + 1}th`} dependent`;
-          builder.addChild(childName, 10, parentIds, { employment_income: 0 });
+          for (let i = 0; i < newCount; i++) {
+            const childName = `your ${ordinals[i] || `${i + 1}th`} dependent`;
+            builder.addChild(childName, 10, parentIds, { employment_income: 0 });
+          }
         }
       }
-    }
 
-    setHouseholdDraft(builder.build());
-  }, [householdDraft, householdPeople, countryId, reportYear]);
+      setHouseholdDraft(builder.build());
+    },
+    [householdDraft, householdPeople, countryId, reportYear]
+  );
 
   // Handle household creation submission
   const handleCreateHousehold = useCallback(async () => {
@@ -329,7 +361,16 @@ export function PopulationBrowseModal({
     } catch (err) {
       console.error('Failed to create household:', err);
     }
-  }, [householdDraft, householdLabel, countryId, createHousehold, onSelect, onClose, queryClient, userId]);
+  }, [
+    householdDraft,
+    householdLabel,
+    countryId,
+    createHousehold,
+    onSelect,
+    onClose,
+    queryClient,
+    userId,
+  ]);
 
   const colorConfig = INGREDIENT_COLORS.population;
 
@@ -350,63 +391,73 @@ export function PopulationBrowseModal({
 
   // ========== Sidebar Sections ==========
 
-  const browseSidebarSections = useMemo(() => [
-    {
-      id: 'quick-select',
-      label: 'Quick select',
-      items: [
-        {
-          id: 'national',
-          label: countryId === 'uk' ? 'UK-wide' : 'Nationwide',
-          icon: countryId === 'uk' ? <UKOutlineIcon size={16} /> : <USOutlineIcon size={16} />,
-          isActive: activeCategory === 'national' && !isCreationMode,
+  const browseSidebarSections = useMemo(
+    () => [
+      {
+        id: 'quick-select',
+        label: 'Quick select',
+        items: [
+          {
+            id: 'national',
+            label: countryId === 'uk' ? 'UK-wide' : 'Nationwide',
+            icon: countryId === 'uk' ? <UKOutlineIcon size={16} /> : <USOutlineIcon size={16} />,
+            isActive: activeCategory === 'national' && !isCreationMode,
+            onClick: () => {
+              setActiveCategory('national');
+              setIsCreationMode(false);
+            },
+          },
+        ],
+      },
+      {
+        id: 'geographies',
+        label: 'Geographies',
+        items: geographyCategories.map((category) => ({
+          id: category.id,
+          label: category.label,
+          icon: <IconFolder size={16} />,
+          badge: category.count,
+          isActive: activeCategory === category.id && !isCreationMode,
           onClick: () => {
-            setActiveCategory('national');
+            setActiveCategory(category.id);
             setIsCreationMode(false);
           },
-        },
-      ],
-    },
-    {
-      id: 'geographies',
-      label: 'Geographies',
-      items: geographyCategories.map((category) => ({
-        id: category.id,
-        label: category.label,
-        icon: <IconFolder size={16} />,
-        badge: category.count,
-        isActive: activeCategory === category.id && !isCreationMode,
-        onClick: () => {
-          setActiveCategory(category.id);
-          setIsCreationMode(false);
-        },
-      })),
-    },
-    {
-      id: 'households',
-      label: 'Households',
-      items: [
-        {
-          id: 'my-households',
-          label: 'My households',
-          icon: <IconHome size={16} />,
-          badge: sortedHouseholds.length,
-          isActive: activeCategory === 'my-households' && !isCreationMode,
-          onClick: () => {
-            setActiveCategory('my-households');
-            setIsCreationMode(false);
+        })),
+      },
+      {
+        id: 'households',
+        label: 'Households',
+        items: [
+          {
+            id: 'my-households',
+            label: 'My households',
+            icon: <IconHome size={16} />,
+            badge: sortedHouseholds.length,
+            isActive: activeCategory === 'my-households' && !isCreationMode,
+            onClick: () => {
+              setActiveCategory('my-households');
+              setIsCreationMode(false);
+            },
           },
-        },
-        {
-          id: 'create-new',
-          label: 'Create new household',
-          icon: <IconPlus size={16} />,
-          isActive: isCreationMode,
-          onClick: handleEnterCreationMode,
-        },
-      ],
-    },
-  ], [countryId, activeCategory, isCreationMode, geographyCategories, sortedHouseholds.length, handleEnterCreationMode]);
+          {
+            id: 'create-new',
+            label: 'Create new household',
+            icon: <IconPlus size={16} />,
+            isActive: isCreationMode,
+            onClick: handleEnterCreationMode,
+          },
+        ],
+      },
+    ],
+    [
+      countryId,
+      activeCategory,
+      isCreationMode,
+      geographyCategories,
+      sortedHouseholds.length,
+      handleEnterCreationMode,
+    ]
+  );
 
   // ========== Main Content Rendering ==========
 
@@ -430,9 +481,10 @@ export function PopulationBrowseModal({
     }
 
     // Get all congressional districts for StateDistrictSelector (US only)
-    const allDistricts = countryId === 'us'
-      ? geographyCategories.find(c => c.id === 'districts')?.regions
-      : undefined;
+    const allDistricts =
+      countryId === 'us'
+        ? geographyCategories.find((c) => c.id === 'districts')?.regions
+        : undefined;
 
     return (
       <PopulationBrowseContent
@@ -442,7 +494,7 @@ export function PopulationBrowseModal({
         setSearchQuery={setSearchQuery}
         filteredRegions={filteredRegions}
         allDistricts={allDistricts}
-        filteredHouseholds={filteredHouseholds.map(h => ({
+        filteredHouseholds={filteredHouseholds.map((h) => ({
           id: h.id,
           label: h.label,
           memberCount: h.memberCount,
@@ -452,7 +504,7 @@ export function PopulationBrowseModal({
         getItemCount={getItemCount}
         onSelectGeography={handleSelectGeography}
         onSelectHousehold={(household) => {
-          const fullHousehold = sortedHouseholds.find(h => h.id === household.id);
+          const fullHousehold = sortedHouseholds.find((h) => h.id === household.id);
           if (fullHousehold) {
             handleSelectHousehold(fullHousehold);
           }
@@ -463,7 +515,10 @@ export function PopulationBrowseModal({
 
   // ========== Render ==========
 
-  console.log('[PopulationBrowseModal] About to return JSX, took', (performance.now() - renderStart).toFixed(2) + 'ms');
+  console.log(
+    '[PopulationBrowseModal] About to return JSX, took',
+    (performance.now() - renderStart).toFixed(2) + 'ms'
+  );
 
   return (
     <BrowseModalTemplate
@@ -471,30 +526,34 @@ export function PopulationBrowseModal({
       onClose={onClose}
       headerIcon={<IconUsers size={20} color={colorConfig.icon} />}
       headerTitle={isCreationMode ? 'Create household' : 'Household(s)'}
-      headerSubtitle={isCreationMode
-        ? 'Configure your household composition and details'
-        : 'Choose a geographic region or create a household'}
+      headerSubtitle={
+        isCreationMode
+          ? 'Configure your household composition and details'
+          : 'Choose a geographic region or create a household'
+      }
       colorConfig={colorConfig}
       sidebarSections={browseSidebarSections}
       renderMainContent={renderMainContent}
-      statusHeader={isCreationMode ? (
-        <PopulationStatusHeader
-          householdLabel={householdLabel}
-          setHouseholdLabel={setHouseholdLabel}
-          isEditingLabel={isEditingLabel}
-          setIsEditingLabel={setIsEditingLabel}
-          memberCount={householdPeople.length}
-        />
-      ) : undefined}
-      footer={isCreationMode ? (
-        <CreationModeFooter
-          onBack={handleExitCreationMode}
-          onSubmit={handleCreateHousehold}
-          isLoading={isCreating}
-          submitDisabled={!householdLabel.trim() || !householdDraft}
-          submitLabel="Create household"
-        />
-      ) : undefined}
+      statusHeader={
+        isCreationMode ? (
+          <PopulationStatusHeader
+            householdLabel={householdLabel}
+            setHouseholdLabel={setHouseholdLabel}
+            memberCount={householdPeople.length}
+          />
+        ) : undefined
+      }
+      footer={
+        isCreationMode ? (
+          <CreationModeFooter
+            onBack={handleExitCreationMode}
+            onSubmit={handleCreateHousehold}
+            isLoading={isCreating}
+            submitDisabled={!householdLabel.trim() || !householdDraft}
+            submitLabel="Create household"
+          />
+        ) : undefined
+      }
     />
   );
 }

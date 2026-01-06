@@ -2,8 +2,9 @@
  * ReportMetaPanel - Floating dock showing report status and configuration
  */
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useLayoutEffect, useState } from 'react';
 import {
+  IconCheck,
   IconCircleCheck,
   IconCircleDashed,
   IconFileDescription,
@@ -44,6 +45,8 @@ export function ReportMetaPanel({
   const [isEditingLabel, setIsEditingLabel] = useState(false);
   const [labelInput, setLabelInput] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [inputWidth, setInputWidth] = useState<number | null>(null);
+  const measureRef = React.useRef<HTMLSpanElement>(null);
 
   const navigate = useNavigate();
   const countryId = useCurrentCountry();
@@ -54,6 +57,17 @@ export function ReportMetaPanel({
     setReportState((prev) => ({ ...prev, label: labelInput || 'Untitled report' }));
     setIsEditingLabel(false);
   };
+
+  const defaultReportLabel = 'Untitled report';
+
+  // Measure text width for auto-sizing input
+  useLayoutEffect(() => {
+    if (measureRef.current && isEditingLabel) {
+      const textToMeasure = labelInput || defaultReportLabel;
+      measureRef.current.textContent = textToMeasure;
+      setInputWidth(measureRef.current.offsetWidth);
+    }
+  }, [labelInput, isEditingLabel]);
 
   // Convert SimulationStateProps to API Simulation format for useCreateReport
   const convertToSimulation = useCallback(
@@ -339,26 +353,49 @@ export function ReportMetaPanel({
             style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: spacing.xs }}
           >
             {isEditingLabel ? (
-              <TextInput
-                value={labelInput}
-                onChange={(e) => setLabelInput(e.target.value)}
-                onBlur={handleLabelSubmit}
-                onKeyDown={(e) => e.key === 'Enter' && handleLabelSubmit()}
-                placeholder="Report name..."
-                size="xs"
-                autoFocus
-                style={{ flex: 1 }}
-                styles={{
-                  input: {
+              <>
+                {/* Hidden span for measuring text width */}
+                <span
+                  ref={measureRef}
+                  style={{
+                    position: 'absolute',
+                    visibility: 'hidden',
+                    whiteSpace: 'pre',
                     fontFamily: typography.fontFamily.primary,
                     fontWeight: 600,
                     fontSize: FONT_SIZES.normal,
-                    border: 'none',
-                    background: 'transparent',
-                    padding: 0,
-                  },
-                }}
-              />
+                  }}
+                />
+                <TextInput
+                  value={labelInput}
+                  onChange={(e) => setLabelInput(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleLabelSubmit()}
+                  placeholder={defaultReportLabel}
+                  size="xs"
+                  autoFocus
+                  style={{ width: inputWidth ? inputWidth + 8 : 'auto' }}
+                  styles={{
+                    input: {
+                      fontFamily: typography.fontFamily.primary,
+                      fontWeight: 600,
+                      fontSize: FONT_SIZES.normal,
+                      border: 'none',
+                      background: 'transparent',
+                      padding: 0,
+                    },
+                  }}
+                />
+                <ActionIcon
+                  size="sm"
+                  variant="subtle"
+                  color="teal"
+                  onClick={handleLabelSubmit}
+                  aria-label="Confirm report name"
+                  style={{ flexShrink: 0 }}
+                >
+                  <IconCheck size={14} />
+                </ActionIcon>
+              </>
             ) : (
               <>
                 <Text
@@ -370,6 +407,7 @@ export function ReportMetaPanel({
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',
+                    marginRight: 8,
                   }}
                 >
                   {reportState.label || 'Untitled report'}
@@ -585,10 +623,39 @@ export function ReportMetaPanel({
                 </Box>
                 <Text
                   c="dimmed"
-                  style={{ fontFamily: typography.fontFamily.primary, fontSize: FONT_SIZES.tiny }}
+                  style={{ fontFamily: typography.fontFamily.primary, fontSize: FONT_SIZES.small }}
                 >
-                  (inherits population)
+                  +
                 </Text>
+                <Box style={dockStyles.configChip}>
+                  {baselinePopulationConfigured ? (
+                    <>
+                      <IconUsers size={12} color={colors.primary[500]} />
+                      <Text
+                        style={{
+                          fontFamily: typography.fontFamily.primary,
+                          fontSize: FONT_SIZES.small,
+                          color: colors.primary[600],
+                        }}
+                      >
+                        {baselinePopulationLabel}
+                      </Text>
+                    </>
+                  ) : (
+                    <>
+                      <IconCircleDashed size={12} color={colors.gray[400]} />
+                      <Text
+                        c="dimmed"
+                        style={{
+                          fontFamily: typography.fontFamily.primary,
+                          fontSize: FONT_SIZES.small,
+                        }}
+                      >
+                        Select population
+                      </Text>
+                    </>
+                  )}
+                </Box>
               </Box>
             )}
 
