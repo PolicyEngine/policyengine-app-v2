@@ -25,7 +25,7 @@ import { PolicyCreationPayload } from '@/types/payloads';
 import { Parameter } from '@/types/subIngredients/parameter';
 import { ValueInterval, ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
 import { countPolicyModifications } from '@/utils/countParameterChanges';
-import { formatLabelParts, getHierarchicalLabels } from '@/utils/parameterLabels';
+import { formatLabelParts, getHierarchicalLabelsFromTree } from '@/utils/parameterLabels';
 import { FONT_SIZES, INGREDIENT_COLORS } from '../constants';
 import { modalStyles } from '../styles';
 import { BrowseModalTemplate, CreationModeFooter } from './BrowseModalTemplate';
@@ -131,7 +131,7 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
         if (p.label.toLowerCase().includes(query)) return true;
         const paramDisplayNames = p.parameters
           .map((param) => {
-            const hierarchicalLabels = getHierarchicalLabels(param.name, parameters);
+            const hierarchicalLabels = getHierarchicalLabelsFromTree(param.name, parameterTree);
             return hierarchicalLabels.length > 0
               ? formatLabelParts(hierarchicalLabels)
               : param.name.split('.').pop() || param.name;
@@ -143,7 +143,7 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
       });
     }
     return result;
-  }, [userPolicies, searchQuery, parameters]);
+  }, [userPolicies, searchQuery, parameterTree]);
 
   // Get policies for current section
   const displayedPolicies = useMemo(() => {
@@ -426,6 +426,7 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
         <PolicyDetailsDrawer
           policy={drawerPolicy}
           parameters={parameters}
+          parameterTree={parameterTree}
           onClose={() => setDrawerPolicyId(null)}
           onSelect={() => {
             if (drawerPolicy) {

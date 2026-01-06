@@ -2,9 +2,13 @@ import { getParamDefinitionDate } from '@/constants';
 import { Policy } from '@/types/ingredients/Policy';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import { ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
+import { formatParameterValue } from './chartValueUtils';
 
 export { determinePolicyColumns } from './policyComparison';
 export type { PolicyColumn } from './policyComparison';
+
+// Re-export formatParameterValue from chartValueUtils for backwards compatibility
+export { formatParameterValue };
 
 /**
  * Extract baseline and reform policies from a policies array
@@ -66,38 +70,6 @@ export function getParameterValueFromPolicy(
   const unit = metadata?.unit || '';
 
   return formatParameterValue(value, unit);
-}
-
-/**
- * Format a parameter value with appropriate unit formatting
- * Always uses 1 decimal place for consistency across all columns
- */
-export function formatParameterValue(value: any, unit?: string): string {
-  if (typeof value === 'number') {
-    const DECIMAL_PRECISION = 1;
-
-    if (unit === '/1') {
-      const percentValue = value * 100;
-      return `${percentValue.toFixed(DECIMAL_PRECISION)}%`;
-    }
-    if (unit === 'currency-USD') {
-      return `$${value.toLocaleString('en-US', {
-        minimumFractionDigits: DECIMAL_PRECISION,
-        maximumFractionDigits: DECIMAL_PRECISION,
-      })}`;
-    }
-    if (unit === 'currency-GBP') {
-      return `£${value.toLocaleString('en-GB', {
-        minimumFractionDigits: DECIMAL_PRECISION,
-        maximumFractionDigits: DECIMAL_PRECISION,
-      })}`;
-    }
-    return value.toLocaleString('en-US', {
-      minimumFractionDigits: DECIMAL_PRECISION,
-      maximumFractionDigits: DECIMAL_PRECISION,
-    });
-  }
-  return String(value);
 }
 
 /**
