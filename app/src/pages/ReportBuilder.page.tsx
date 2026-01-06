@@ -10,117 +10,113 @@
  * - Card view: 50/50 grid with square chips
  * - Row view: Stacked horizontal rows
  */
-import { useState, useCallback, useEffect, useMemo, Fragment } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  Box,
-  Stack,
-  Group,
-  Text,
-  ActionIcon,
-  Paper,
-  Modal,
-  TextInput,
-  Select,
-  Button,
-  Tooltip,
-  Transition,
-  Divider,
-  ScrollArea,
-  Tabs,
-  UnstyledButton,
-  Skeleton,
-  Drawer,
-  NavLink,
-  Popover,
-  Container,
-  Title,
-  Loader,
-  Autocomplete,
-  LoadingOverlay,
-} from '@mantine/core';
-import {
-  IconPlus,
-  IconScale,
-  IconUsers,
+  IconArrowRight,
   IconChartLine,
   IconCheck,
-  IconX,
-  IconPencil,
-  IconChevronRight,
   IconChevronLeft,
-  IconInfoCircle,
-  IconTrash,
-  IconSparkles,
-  IconFileDescription,
-  IconLayoutColumns,
-  IconHome,
-  IconRowInsertBottom,
-  IconSearch,
-  IconPlayerPlay,
+  IconChevronRight,
   IconCircleCheck,
   IconCircleDashed,
-  IconArrowRight,
   IconClock,
+  IconFileDescription,
   IconFolder,
+  IconHome,
+  IconInfoCircle,
+  IconLayoutColumns,
+  IconPencil,
+  IconPlayerPlay,
+  IconPlus,
+  IconRowInsertBottom,
+  IconScale,
+  IconSearch,
+  IconSparkles,
+  IconTrash,
+  IconUsers,
+  IconX,
 } from '@tabler/icons-react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
-import { colors, spacing, typography } from '@/designTokens';
-import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import {
-  SimulationStateProps,
-  PolicyStateProps,
-  PopulationStateProps,
-} from '@/types/pathwayState';
-import { initializeSimulationState } from '@/utils/pathwayState/initializeSimulationState';
-import { initializePolicyState } from '@/utils/pathwayState/initializePolicyState';
-import { initializePopulationState } from '@/utils/pathwayState/initializePopulationState';
-import { CURRENT_YEAR } from '@/constants';
-import { useUserPolicies, useUpdatePolicyAssociation } from '@/hooks/useUserPolicy';
-import { useUserHouseholds } from '@/hooks/useUserHousehold';
+  ActionIcon,
+  Autocomplete,
+  Box,
+  Button,
+  Container,
+  Divider,
+  Drawer,
+  Group,
+  Loader,
+  LoadingOverlay,
+  Modal,
+  NavLink,
+  Paper,
+  Popover,
+  ScrollArea,
+  Select,
+  Skeleton,
+  Stack,
+  Tabs,
+  Text,
+  TextInput,
+  Title,
+  Tooltip,
+  Transition,
+  UnstyledButton,
+} from '@mantine/core';
+import { PolicyAdapter } from '@/adapters';
+import { HouseholdAdapter } from '@/adapters/HouseholdAdapter';
 import { geographyUsageStore, householdUsageStore } from '@/api/usageTracking';
-import { generateGeographyLabel } from '@/utils/geographyUtils';
+import HouseholdBuilderForm from '@/components/household/HouseholdBuilderForm';
+import { UKOutlineIcon, USOutlineIcon } from '@/components/icons/CountryOutlineIcons';
+import { CURRENT_YEAR, MOCK_USER_ID } from '@/constants';
+import { colors, spacing, typography } from '@/designTokens';
+import { useCreateHousehold } from '@/hooks/useCreateHousehold';
+import { useCreatePolicy } from '@/hooks/useCreatePolicy';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useUserHouseholds } from '@/hooks/useUserHousehold';
+import { useUpdatePolicyAssociation, useUserPolicies } from '@/hooks/useUserPolicy';
+import { getBasicInputFields, getDateRange } from '@/libs/metadataUtils';
+import { householdAssociationKeys } from '@/libs/queryKeys';
+import HistoricalValues from '@/pathways/report/components/policyParameterSelector/HistoricalValues';
 import {
-  getUSStates,
-  getUSCongressionalDistricts,
-  getUKCountries,
-  getUKConstituencies,
-  getUKLocalAuthorities,
-  RegionOption,
-} from '@/utils/regionStrategies';
+  ModeSelectorButton,
+  ValueSetterComponents,
+  ValueSetterMode,
+} from '@/pathways/report/components/valueSetters';
+import { RootState } from '@/store';
 import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
-import { HouseholdAdapter } from '@/adapters/HouseholdAdapter';
-import { MOCK_USER_ID } from '@/constants';
-import { RootState } from '@/store';
-import {
-  getHierarchicalLabels,
-  formatLabelParts,
-} from '@/utils/parameterLabels';
-import {
-  USOutlineIcon,
-  UKOutlineIcon,
-} from '@/components/icons/CountryOutlineIcons';
-import { formatParameterValue } from '@/utils/policyTableHelpers';
-import { formatPeriod } from '@/utils/dateUtils';
-import { countPolicyModifications } from '@/utils/countParameterChanges';
+import { Policy } from '@/types/ingredients/Policy';
 import { ParameterTreeNode } from '@/types/metadata';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
-import { useCreatePolicy } from '@/hooks/useCreatePolicy';
-import { PolicyAdapter } from '@/adapters';
-import { Policy } from '@/types/ingredients/Policy';
+import { PolicyStateProps, PopulationStateProps, SimulationStateProps } from '@/types/pathwayState';
 import { PolicyCreationPayload } from '@/types/payloads';
-import { Parameter, getParameterByName } from '@/types/subIngredients/parameter';
-import { ValueInterval, ValueIntervalCollection, ValuesList } from '@/types/subIngredients/valueInterval';
-import { getDateRange } from '@/libs/metadataUtils';
-import { householdAssociationKeys } from '@/libs/queryKeys';
-import { capitalize } from '@/utils/stringUtils';
-import { ValueSetterComponents, ValueSetterMode, ModeSelectorButton } from '@/pathways/report/components/valueSetters';
-import HistoricalValues from '@/pathways/report/components/policyParameterSelector/HistoricalValues';
-import HouseholdBuilderForm from '@/components/household/HouseholdBuilderForm';
-import { useCreateHousehold } from '@/hooks/useCreateHousehold';
-import { getBasicInputFields } from '@/libs/metadataUtils';
+import { getParameterByName, Parameter } from '@/types/subIngredients/parameter';
+import {
+  ValueInterval,
+  ValueIntervalCollection,
+  ValuesList,
+} from '@/types/subIngredients/valueInterval';
+import { countPolicyModifications } from '@/utils/countParameterChanges';
+import { formatPeriod } from '@/utils/dateUtils';
+import { generateGeographyLabel } from '@/utils/geographyUtils';
 import { HouseholdBuilder } from '@/utils/HouseholdBuilder';
+import { formatLabelParts, getHierarchicalLabels } from '@/utils/parameterLabels';
+import { initializePolicyState } from '@/utils/pathwayState/initializePolicyState';
+import { initializePopulationState } from '@/utils/pathwayState/initializePopulationState';
+import { initializeSimulationState } from '@/utils/pathwayState/initializeSimulationState';
+import { formatParameterValue } from '@/utils/policyTableHelpers';
+import {
+  getUKConstituencies,
+  getUKCountries,
+  getUKLocalAuthorities,
+  getUSCongressionalDistricts,
+  getUSStates,
+  RegionOption,
+} from '@/utils/regionStrategies';
+import { capitalize } from '@/utils/stringUtils';
 
 // ============================================================================
 // TYPES
@@ -223,7 +219,15 @@ const getSamplePopulations = (countryId: 'us' | 'uk') => {
 };
 
 // Country-specific map icon component
-function CountryMapIcon({ countryId, size, color }: { countryId: string; size: number; color: string }) {
+function CountryMapIcon({
+  countryId,
+  size,
+  color,
+}: {
+  countryId: string;
+  size: number;
+  color: string;
+}) {
   if (countryId === 'uk') {
     return <UKOutlineIcon size={size} color={color} />;
   }
@@ -506,7 +510,7 @@ function OptionChipSquare({
       style={{
         ...styles.chipSquare,
         borderColor: isSelected ? colorConfig.accent : colors.border.light,
-        background: isSelected ? colorConfig.bg : (isHovered ? colors.gray[50] : colors.white),
+        background: isSelected ? colorConfig.bg : isHovered ? colors.gray[50] : colors.white,
         ...(isSelected
           ? {
               ...styles.chipSquareSelected,
@@ -540,11 +544,7 @@ function OptionChipSquare({
         {label}
       </Text>
       {description && (
-        <Text
-          ta="center"
-          c="dimmed"
-          style={{ fontSize: FONT_SIZES.tiny, lineHeight: 1.2 }}
-        >
+        <Text ta="center" c="dimmed" style={{ fontSize: FONT_SIZES.tiny, lineHeight: 1.2 }}>
           {description}
         </Text>
       )}
@@ -576,7 +576,7 @@ function OptionChipRow({
       style={{
         ...styles.chipRow,
         borderColor: isSelected ? colorConfig.accent : colors.border.light,
-        background: isSelected ? colorConfig.bg : (isHovered ? colors.gray[50] : colors.white),
+        background: isSelected ? colorConfig.bg : isHovered ? colors.gray[50] : colors.white,
         ...(isSelected ? styles.chipRowSelected : {}),
       }}
       onMouseEnter={() => setIsHovered(true)}
@@ -605,9 +605,7 @@ function OptionChipRow({
           </Text>
         )}
       </Stack>
-      {isSelected && (
-        <IconCheck size={18} color={colorConfig.accent} stroke={2.5} />
-      )}
+      {isSelected && <IconCheck size={18} color={colorConfig.accent} stroke={2.5} />}
     </Box>
   );
 }
@@ -634,10 +632,7 @@ function CreateCustomChip({ label, onClick, variant, colorConfig }: CreateCustom
         onMouseLeave={() => setIsHovered(false)}
         onClick={onClick}
       >
-        <IconPlus
-          size={20}
-          color={isHovered ? colorConfig.icon : colors.gray[400]}
-        />
+        <IconPlus size={20} color={isHovered ? colorConfig.icon : colors.gray[400]} />
         <Text
           ta="center"
           fw={600}
@@ -696,7 +691,13 @@ interface BrowseMoreChipProps {
   colorConfig: IngredientColorConfig;
 }
 
-function BrowseMoreChip({ label, description, onClick, variant, colorConfig }: BrowseMoreChipProps) {
+function BrowseMoreChip({
+  label,
+  description,
+  onClick,
+  variant,
+  colorConfig,
+}: BrowseMoreChipProps) {
   const [isHovered, setIsHovered] = useState(false);
 
   if (variant === 'square') {
@@ -711,10 +712,7 @@ function BrowseMoreChip({ label, description, onClick, variant, colorConfig }: B
         onMouseLeave={() => setIsHovered(false)}
         onClick={onClick}
       >
-        <IconSearch
-          size={20}
-          color={isHovered ? colorConfig.icon : colors.gray[400]}
-        />
+        <IconSearch size={20} color={isHovered ? colorConfig.icon : colors.gray[400]} />
         <Text
           ta="center"
           fw={600}
@@ -860,12 +858,14 @@ function IngredientSection({
         >
           <IconComponent size={16} color={colorConfig.icon} stroke={2} />
         </Box>
-        <Text fw={600} c={colorConfig.icon} style={{ fontSize: FONT_SIZES.normal, userSelect: 'none' }}>
+        <Text
+          fw={600}
+          c={colorConfig.icon}
+          style={{ fontSize: FONT_SIZES.normal, userSelect: 'none' }}
+        >
           {typeLabels[type]}
         </Text>
-        {isInherited && (
-          <Text style={styles.inheritedBadge}>(inherited from baseline)</Text>
-        )}
+        {isInherited && <Text style={styles.inheritedBadge}>(inherited from baseline)</Text>}
       </Box>
 
       {/* Chips container */}
@@ -896,10 +896,14 @@ function IngredientSection({
                 </Box>
                 <Stack gap={2} style={{ flex: 1 }}>
                   <Text fw={600} c={colors.gray[500]} style={{ fontSize: FONT_SIZES.normal }}>
-                    {inheritedPopulationType === 'household' ? 'Household' : countryConfig.nationwideTitle}
+                    {inheritedPopulationType === 'household'
+                      ? 'Household'
+                      : countryConfig.nationwideTitle}
                   </Text>
                   <Text c={colors.gray[400]} style={{ fontSize: FONT_SIZES.small }}>
-                    {inheritedPopulationType === 'household' ? 'Inherited from baseline' : countryConfig.nationwideSubtitle}
+                    {inheritedPopulationType === 'household'
+                      ? 'Inherited from baseline'
+                      : countryConfig.nationwideSubtitle}
                   </Text>
                 </Stack>
               </>
@@ -928,14 +932,18 @@ function IngredientSection({
                   c={colors.gray[500]}
                   style={{ fontSize: FONT_SIZES.small, lineHeight: 1.2 }}
                 >
-                  {inheritedPopulationType === 'household' ? 'Household' : countryConfig.nationwideTitle}
+                  {inheritedPopulationType === 'household'
+                    ? 'Household'
+                    : countryConfig.nationwideTitle}
                 </Text>
                 <Text
                   ta="center"
                   c={colors.gray[400]}
                   style={{ fontSize: FONT_SIZES.tiny, lineHeight: 1.2 }}
                 >
-                  {inheritedPopulationType === 'household' ? 'Inherited' : countryConfig.nationwideSubtitle}
+                  {inheritedPopulationType === 'household'
+                    ? 'Inherited'
+                    : countryConfig.nationwideSubtitle}
                 </Text>
               </>
             )}
@@ -947,7 +955,12 @@ function IngredientSection({
             <>
               {/* Current law - always first */}
               <ChipComponent
-                icon={<IconScale size={iconSize} color={currentId === 'current-law' ? colorConfig.icon : colors.gray[500]} />}
+                icon={
+                  <IconScale
+                    size={iconSize}
+                    color={currentId === 'current-law' ? colorConfig.icon : colors.gray[500]}
+                  />
+                }
                 label="Current law"
                 description="No changes"
                 isSelected={currentId === 'current-law'}
@@ -964,7 +977,12 @@ function IngredientSection({
               {savedPolicies.slice(0, 3).map((policy) => (
                 <ChipComponent
                   key={policy.id}
-                  icon={<IconFileDescription size={iconSize} color={currentId === policy.id ? colorConfig.icon : colors.gray[500]} />}
+                  icon={
+                    <IconFileDescription
+                      size={iconSize}
+                      color={currentId === policy.id ? colorConfig.icon : colors.gray[500]}
+                    />
+                  }
                   label={policy.label}
                   description={`${policy.paramCount} param${policy.paramCount !== 1 ? 's' : ''} changed`}
                   isSelected={currentId === policy.id}
@@ -995,7 +1013,15 @@ function IngredientSection({
             <>
               {/* Nationwide - always first */}
               <ChipComponent
-                icon={<CountryMapIcon countryId={countryId} size={iconSize} color={currentId === countryConfig.nationwideId ? colorConfig.icon : colors.gray[500]} />}
+                icon={
+                  <CountryMapIcon
+                    countryId={countryId}
+                    size={iconSize}
+                    color={
+                      currentId === countryConfig.nationwideId ? colorConfig.icon : colors.gray[500]
+                    }
+                  />
+                }
                 label={countryConfig.nationwideTitle}
                 description={countryConfig.nationwideSubtitle}
                 isSelected={currentId === countryConfig.nationwideId}
@@ -1012,9 +1038,18 @@ function IngredientSection({
               {recentPopulations.slice(0, 4).map((pop) => (
                 <ChipComponent
                   key={pop.id}
-                  icon={pop.type === 'household'
-                    ? <IconHome size={iconSize} color={currentId === pop.id ? colorConfig.icon : colors.gray[500]} />
-                    : <IconFolder size={iconSize} color={currentId === pop.id ? colorConfig.icon : colors.gray[500]} />
+                  icon={
+                    pop.type === 'household' ? (
+                      <IconHome
+                        size={iconSize}
+                        color={currentId === pop.id ? colorConfig.icon : colors.gray[500]}
+                      />
+                    ) : (
+                      <IconFolder
+                        size={iconSize}
+                        color={currentId === pop.id ? colorConfig.icon : colors.gray[500]}
+                      />
+                    )
                   }
                   label={pop.label}
                   description={pop.type === 'household' ? 'Household' : 'Geography'}
@@ -1120,9 +1155,8 @@ function SimulationBlock({
   const [labelInput, setLabelInput] = useState(simulation.label || '');
 
   const isPolicyConfigured = !!simulation.policy.id;
-  const effectivePopulation = populationInherited && inheritedPopulation
-    ? inheritedPopulation
-    : simulation.population;
+  const effectivePopulation =
+    populationInherited && inheritedPopulation ? inheritedPopulation : simulation.population;
   const isPopulationConfigured = !!(
     effectivePopulation?.household?.id || effectivePopulation?.geography?.id
   );
@@ -1136,12 +1170,18 @@ function SimulationBlock({
   const defaultLabel = index === 0 ? 'Baseline simulation' : 'Reform simulation';
 
   const currentPolicyId = simulation.policy.id;
-  const currentPopulationId = effectivePopulation?.household?.id || effectivePopulation?.geography?.id;
+  const currentPopulationId =
+    effectivePopulation?.household?.id || effectivePopulation?.geography?.id;
 
   // Determine inherited population type for display
-  const inheritedPopulationType = populationInherited && inheritedPopulation
-    ? (inheritedPopulation.household?.id ? 'household' : inheritedPopulation.geography?.id ? 'nationwide' : null)
-    : null;
+  const inheritedPopulationType =
+    populationInherited && inheritedPopulation
+      ? inheritedPopulation.household?.id
+        ? 'household'
+        : inheritedPopulation.geography?.id
+          ? 'nationwide'
+          : null
+      : null;
 
   return (
     <Paper
@@ -1185,9 +1225,7 @@ function SimulationBlock({
             />
           ) : (
             <Group gap={spacing.xs}>
-              <Text style={styles.simulationTitle}>
-                {simulation.label || defaultLabel}
-              </Text>
+              <Text style={styles.simulationTitle}>{simulation.label || defaultLabel}</Text>
               <ActionIcon
                 size="xs"
                 variant="subtle"
@@ -1318,11 +1356,7 @@ function AddSimulationCard({ onClick, disabled }: AddSimulationCardProps) {
       >
         Add reform simulation
       </Text>
-      <Text
-        c="dimmed"
-        ta="center"
-        style={{ fontSize: FONT_SIZES.small, maxWidth: 200 }}
-      >
+      <Text c="dimmed" ta="center" style={{ fontSize: FONT_SIZES.small, maxWidth: 200 }}>
         Compare policy changes against your baseline
       </Text>
     </Box>
@@ -1359,18 +1393,24 @@ function IngredientPickerModal({
 
   const getTitle = () => {
     switch (type) {
-      case 'policy': return 'Select policy';
-      case 'population': return 'Select population';
-      case 'dynamics': return 'Configure dynamics';
+      case 'policy':
+        return 'Select policy';
+      case 'population':
+        return 'Select population';
+      case 'dynamics':
+        return 'Configure dynamics';
     }
   };
 
   const getIcon = () => {
     const iconProps = { size: 20, color: colorConfig.icon };
     switch (type) {
-      case 'policy': return <IconScale {...iconProps} />;
-      case 'population': return <IconUsers {...iconProps} />;
-      case 'dynamics': return <IconChartLine {...iconProps} />;
+      case 'policy':
+        return <IconScale {...iconProps} />;
+      case 'population':
+        return <IconUsers {...iconProps} />;
+      case 'dynamics':
+        return <IconChartLine {...iconProps} />;
     }
   };
 
@@ -1394,7 +1434,11 @@ function IngredientPickerModal({
     onClose();
   };
 
-  const handleSelectGeography = (geoId: string, label: string, scope: 'national' | 'subnational') => {
+  const handleSelectGeography = (
+    geoId: string,
+    label: string,
+    scope: 'national' | 'subnational'
+  ) => {
     onSelect({
       label,
       type: 'geography',
@@ -1424,7 +1468,9 @@ function IngredientPickerModal({
           >
             {getIcon()}
           </Box>
-          <Text fw={600} style={{ fontSize: FONT_SIZES.normal }}>{getTitle()}</Text>
+          <Text fw={600} style={{ fontSize: FONT_SIZES.normal }}>
+            {getTitle()}
+          </Text>
         </Group>
       }
       size="xl"
@@ -1438,14 +1484,35 @@ function IngredientPickerModal({
       <Stack gap={spacing.lg}>
         {type === 'policy' && (
           <>
-            <Paper p="md" radius="md" withBorder style={{ cursor: 'pointer' }} onClick={handleSelectCurrentLaw}>
+            <Paper
+              p="md"
+              radius="md"
+              withBorder
+              style={{ cursor: 'pointer' }}
+              onClick={handleSelectCurrentLaw}
+            >
               <Group gap={spacing.md}>
-                <Box style={{ width: 36, height: 36, borderRadius: spacing.radius.md, background: colorConfig.bg, border: `1px solid ${colorConfig.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Box
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: spacing.radius.md,
+                    background: colorConfig.bg,
+                    border: `1px solid ${colorConfig.border}`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
                   <IconScale size={18} color={colorConfig.icon} />
                 </Box>
                 <Stack gap={2}>
-                  <Text fw={600} style={{ fontSize: FONT_SIZES.normal }}>Current law</Text>
-                  <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>Use existing tax and benefit rules without modifications</Text>
+                  <Text fw={600} style={{ fontSize: FONT_SIZES.normal }}>
+                    Current law
+                  </Text>
+                  <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
+                    Use existing tax and benefit rules without modifications
+                  </Text>
                 </Stack>
               </Group>
             </Paper>
@@ -1456,260 +1523,350 @@ function IngredientPickerModal({
                   <Loader size="sm" />
                 </Box>
               ) : (
-              <Stack gap={spacing.sm}>
-                {policies?.map((p) => {
-                  // Use association data for display (like Policies page)
-                  const policyId = p.association.policyId.toString();
-                  const label = p.association.label || `Policy #${policyId}`;
-                  const paramCount = countPolicyModifications(p.policy); // Handles undefined gracefully
-                  const policyParams = p.policy?.parameters || [];
-                  const isExpanded = expandedPolicyId === policyId;
+                <Stack gap={spacing.sm}>
+                  {policies?.map((p) => {
+                    // Use association data for display (like Policies page)
+                    const policyId = p.association.policyId.toString();
+                    const label = p.association.label || `Policy #${policyId}`;
+                    const paramCount = countPolicyModifications(p.policy); // Handles undefined gracefully
+                    const policyParams = p.policy?.parameters || [];
+                    const isExpanded = expandedPolicyId === policyId;
 
-                  return (
-                    <Paper
-                      key={policyId}
-                      radius="md"
-                      withBorder
-                      style={{
-                        overflow: 'hidden',
-                        transition: 'all 0.2s ease',
-                        borderColor: isExpanded ? colorConfig.border : undefined,
-                      }}
-                    >
-                      {/* Main clickable row */}
-                      <Box
+                    return (
+                      <Paper
+                        key={policyId}
+                        radius="md"
+                        withBorder
                         style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          padding: spacing.sm,
-                          cursor: 'pointer',
-                          transition: 'background 0.15s ease',
-                        }}
-                        onClick={() => handleSelectPolicy(policyId, label, paramCount)}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.background = colors.gray[50];
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.background = 'transparent';
+                          overflow: 'hidden',
+                          transition: 'all 0.2s ease',
+                          borderColor: isExpanded ? colorConfig.border : undefined,
                         }}
                       >
-                        {/* Policy info - takes remaining space */}
-                        <Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
-                          <Text fw={500} style={{ fontSize: FONT_SIZES.normal }}>{label}</Text>
-                          <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
-                            {paramCount} param{paramCount !== 1 ? 's' : ''} changed
-                          </Text>
-                        </Stack>
-
-                        {/* Info/expand button - isolated click zone */}
-                        <ActionIcon
-                          variant="subtle"
-                          color="gray"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation(); // Prevent selection
-                            setExpandedPolicyId(isExpanded ? null : policyId);
-                          }}
-                          style={{ marginRight: spacing.sm }}
-                          aria-label={isExpanded ? 'Hide parameter details' : 'Show parameter details'}
-                        >
-                          <IconInfoCircle size={18} />
-                        </ActionIcon>
-
-                        {/* Select indicator */}
-                        <IconChevronRight size={16} color={colors.gray[400]} />
-                      </Box>
-
-                      {/* Expandable parameter details - table-like display */}
-                      <Box
-                        style={{
-                          maxHeight: isExpanded ? '400px' : '0px',
-                          opacity: isExpanded ? 1 : 0,
-                          overflow: isExpanded ? 'auto' : 'hidden',
-                          transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-                          borderTop: isExpanded ? `1px solid ${colors.gray[200]}` : 'none',
-                        }}
-                      >
-                        {/* Unified grid for header and data rows */}
+                        {/* Main clickable row */}
                         <Box
                           style={{
-                            display: 'grid',
-                            gridTemplateColumns: '1fr 180px',
-                            gap: `0 ${spacing.md}`,
+                            display: 'flex',
+                            alignItems: 'center',
+                            padding: spacing.sm,
+                            cursor: 'pointer',
+                            transition: 'background 0.15s ease',
+                          }}
+                          onClick={() => handleSelectPolicy(policyId, label, paramCount)}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = colors.gray[50];
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = 'transparent';
                           }}
                         >
-                          {/* Header row */}
-                          <Text
-                            fw={600}
-                            c="dimmed"
+                          {/* Policy info - takes remaining space */}
+                          <Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
+                            <Text fw={500} style={{ fontSize: FONT_SIZES.normal }}>
+                              {label}
+                            </Text>
+                            <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
+                              {paramCount} param{paramCount !== 1 ? 's' : ''} changed
+                            </Text>
+                          </Stack>
+
+                          {/* Info/expand button - isolated click zone */}
+                          <ActionIcon
+                            variant="subtle"
+                            color="gray"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation(); // Prevent selection
+                              setExpandedPolicyId(isExpanded ? null : policyId);
+                            }}
+                            style={{ marginRight: spacing.sm }}
+                            aria-label={
+                              isExpanded ? 'Hide parameter details' : 'Show parameter details'
+                            }
+                          >
+                            <IconInfoCircle size={18} />
+                          </ActionIcon>
+
+                          {/* Select indicator */}
+                          <IconChevronRight size={16} color={colors.gray[400]} />
+                        </Box>
+
+                        {/* Expandable parameter details - table-like display */}
+                        <Box
+                          style={{
+                            maxHeight: isExpanded ? '400px' : '0px',
+                            opacity: isExpanded ? 1 : 0,
+                            overflow: isExpanded ? 'auto' : 'hidden',
+                            transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                            borderTop: isExpanded ? `1px solid ${colors.gray[200]}` : 'none',
+                          }}
+                        >
+                          {/* Unified grid for header and data rows */}
+                          <Box
                             style={{
-                              fontSize: FONT_SIZES.tiny,
-                              textTransform: 'uppercase',
-                              letterSpacing: '0.05em',
-                              padding: spacing.md,
-                              paddingBottom: spacing.xs,
-                              borderBottom: `1px solid ${colors.gray[200]}`,
+                              display: 'grid',
+                              gridTemplateColumns: '1fr 180px',
+                              gap: `0 ${spacing.md}`,
                             }}
                           >
-                            Parameter
-                          </Text>
-                          <Text
-                            fw={600}
-                            c="dimmed"
-                            style={{
-                              fontSize: FONT_SIZES.tiny,
-                              textTransform: 'uppercase',
-                              letterSpacing: '0.05em',
-                              textAlign: 'right',
-                              padding: spacing.md,
-                              paddingBottom: spacing.xs,
-                              borderBottom: `1px solid ${colors.gray[200]}`,
-                            }}
-                          >
-                            Changes
-                          </Text>
+                            {/* Header row */}
+                            <Text
+                              fw={600}
+                              c="dimmed"
+                              style={{
+                                fontSize: FONT_SIZES.tiny,
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.05em',
+                                padding: spacing.md,
+                                paddingBottom: spacing.xs,
+                                borderBottom: `1px solid ${colors.gray[200]}`,
+                              }}
+                            >
+                              Parameter
+                            </Text>
+                            <Text
+                              fw={600}
+                              c="dimmed"
+                              style={{
+                                fontSize: FONT_SIZES.tiny,
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.05em',
+                                textAlign: 'right',
+                                padding: spacing.md,
+                                paddingBottom: spacing.xs,
+                                borderBottom: `1px solid ${colors.gray[200]}`,
+                              }}
+                            >
+                              Changes
+                            </Text>
 
-                          {/* Data rows - grouped by parameter */}
-                          {(() => {
-                            // Build grouped list of parameters with their changes
-                            const groupedParams: Array<{
-                              paramName: string;
-                              label: string;
-                              changes: Array<{ period: string; value: string }>;
-                            }> = [];
+                            {/* Data rows - grouped by parameter */}
+                            {(() => {
+                              // Build grouped list of parameters with their changes
+                              const groupedParams: Array<{
+                                paramName: string;
+                                label: string;
+                                changes: Array<{ period: string; value: string }>;
+                              }> = [];
 
-                            policyParams.forEach((param) => {
-                              const paramName = param.name;
-                              const hierarchicalLabels = getHierarchicalLabels(paramName, parameters);
-                              const displayLabel = hierarchicalLabels.length > 0
-                                ? formatLabelParts(hierarchicalLabels)
-                                : paramName.split('.').pop() || paramName;
-                              const metadata = parameters[paramName];
+                              policyParams.forEach((param) => {
+                                const paramName = param.name;
+                                const hierarchicalLabels = getHierarchicalLabels(
+                                  paramName,
+                                  parameters
+                                );
+                                const displayLabel =
+                                  hierarchicalLabels.length > 0
+                                    ? formatLabelParts(hierarchicalLabels)
+                                    : paramName.split('.').pop() || paramName;
+                                const metadata = parameters[paramName];
 
-                              // Use value intervals directly from the Policy type
-                              const changes = (param.values || []).map((interval) => ({
-                                period: formatPeriod(interval.startDate, interval.endDate),
-                                value: formatParameterValue(interval.value, metadata?.unit),
-                              }));
+                                // Use value intervals directly from the Policy type
+                                const changes = (param.values || []).map((interval) => ({
+                                  period: formatPeriod(interval.startDate, interval.endDate),
+                                  value: formatParameterValue(interval.value, metadata?.unit),
+                                }));
 
-                              groupedParams.push({ paramName, label: displayLabel, changes });
-                            });
+                                groupedParams.push({ paramName, label: displayLabel, changes });
+                              });
 
-                            if (groupedParams.length === 0) {
+                              if (groupedParams.length === 0) {
+                                return (
+                                  <>
+                                    <Text
+                                      c="dimmed"
+                                      style={{
+                                        fontSize: FONT_SIZES.small,
+                                        padding: spacing.md,
+                                        gridColumn: '1 / -1',
+                                      }}
+                                    >
+                                      No parameter details available
+                                    </Text>
+                                  </>
+                                );
+                              }
+
+                              const displayParams = groupedParams.slice(0, 10);
+                              const remainingCount = groupedParams.length - 10;
+
                               return (
                                 <>
-                                  <Text c="dimmed" style={{ fontSize: FONT_SIZES.small, padding: spacing.md, gridColumn: '1 / -1' }}>
-                                    No parameter details available
-                                  </Text>
+                                  {displayParams.map((param) => (
+                                    <Fragment key={param.paramName}>
+                                      {/* Parameter name cell */}
+                                      <Box
+                                        style={{
+                                          padding: `${spacing.sm} ${spacing.md}`,
+                                          borderBottom: `1px solid ${colors.gray[100]}`,
+                                          minWidth: 0,
+                                        }}
+                                      >
+                                        <Tooltip
+                                          label={param.paramName}
+                                          multiline
+                                          w={300}
+                                          withArrow
+                                        >
+                                          <Text
+                                            style={{
+                                              fontSize: FONT_SIZES.small,
+                                              color: colors.gray[700],
+                                              lineHeight: 1.4,
+                                            }}
+                                          >
+                                            {param.label}
+                                          </Text>
+                                        </Tooltip>
+                                      </Box>
+                                      {/* Changes cell - multiple lines */}
+                                      <Box
+                                        style={{
+                                          padding: `${spacing.sm} ${spacing.md}`,
+                                          borderBottom: `1px solid ${colors.gray[100]}`,
+                                          textAlign: 'right',
+                                        }}
+                                      >
+                                        {param.changes.map((change, idx) => (
+                                          <Text
+                                            key={idx}
+                                            style={{
+                                              fontSize: FONT_SIZES.small,
+                                              lineHeight: 1.5,
+                                            }}
+                                          >
+                                            <Text
+                                              component="span"
+                                              style={{ color: colors.gray[500] }}
+                                            >
+                                              {change.period}:
+                                            </Text>{' '}
+                                            <Text
+                                              component="span"
+                                              fw={500}
+                                              style={{ color: colorConfig.icon }}
+                                            >
+                                              {change.value}
+                                            </Text>
+                                          </Text>
+                                        ))}
+                                      </Box>
+                                    </Fragment>
+                                  ))}
+                                  {remainingCount > 0 && (
+                                    <Text
+                                      c="dimmed"
+                                      style={{
+                                        fontSize: FONT_SIZES.tiny,
+                                        textAlign: 'center',
+                                        padding: spacing.sm,
+                                        gridColumn: '1 / -1',
+                                      }}
+                                    >
+                                      +{remainingCount} more parameter
+                                      {remainingCount !== 1 ? 's' : ''}
+                                    </Text>
+                                  )}
                                 </>
                               );
-                            }
-
-                            const displayParams = groupedParams.slice(0, 10);
-                            const remainingCount = groupedParams.length - 10;
-
-                            return (
-                              <>
-                                {displayParams.map((param) => (
-                                  <Fragment key={param.paramName}>
-                                    {/* Parameter name cell */}
-                                    <Box
-                                      style={{
-                                        padding: `${spacing.sm} ${spacing.md}`,
-                                        borderBottom: `1px solid ${colors.gray[100]}`,
-                                        minWidth: 0,
-                                      }}
-                                    >
-                                      <Tooltip label={param.paramName} multiline w={300} withArrow>
-                                        <Text
-                                          style={{
-                                            fontSize: FONT_SIZES.small,
-                                            color: colors.gray[700],
-                                            lineHeight: 1.4,
-                                          }}
-                                        >
-                                          {param.label}
-                                        </Text>
-                                      </Tooltip>
-                                    </Box>
-                                    {/* Changes cell - multiple lines */}
-                                    <Box
-                                      style={{
-                                        padding: `${spacing.sm} ${spacing.md}`,
-                                        borderBottom: `1px solid ${colors.gray[100]}`,
-                                        textAlign: 'right',
-                                      }}
-                                    >
-                                      {param.changes.map((change, idx) => (
-                                        <Text
-                                          key={idx}
-                                          style={{
-                                            fontSize: FONT_SIZES.small,
-                                            lineHeight: 1.5,
-                                          }}
-                                        >
-                                          <Text component="span" style={{ color: colors.gray[500] }}>
-                                            {change.period}:
-                                          </Text>{' '}
-                                          <Text component="span" fw={500} style={{ color: colorConfig.icon }}>
-                                            {change.value}
-                                          </Text>
-                                        </Text>
-                                      ))}
-                                    </Box>
-                                  </Fragment>
-                                ))}
-                                {remainingCount > 0 && (
-                                  <Text
-                                    c="dimmed"
-                                    style={{
-                                      fontSize: FONT_SIZES.tiny,
-                                      textAlign: 'center',
-                                      padding: spacing.sm,
-                                      gridColumn: '1 / -1',
-                                    }}
-                                  >
-                                    +{remainingCount} more parameter{remainingCount !== 1 ? 's' : ''}
-                                  </Text>
-                                )}
-                              </>
-                            );
-                          })()}
+                            })()}
+                          </Box>
                         </Box>
-                      </Box>
-                    </Paper>
-                  );
-                })}
-                {(!policies || policies.length === 0) && <Text c="dimmed" ta="center" py="lg">No saved policies</Text>}
-              </Stack>
+                      </Paper>
+                    );
+                  })}
+                  {(!policies || policies.length === 0) && (
+                    <Text c="dimmed" ta="center" py="lg">
+                      No saved policies
+                    </Text>
+                  )}
+                </Stack>
               )}
             </ScrollArea>
             <Divider />
-            <Button variant="light" color="teal" leftSection={<IconPlus size={16} />} onClick={() => { onCreateNew(); onClose(); }}>Create new policy</Button>
+            <Button
+              variant="light"
+              color="teal"
+              leftSection={<IconPlus size={16} />}
+              onClick={() => {
+                onCreateNew();
+                onClose();
+              }}
+            >
+              Create new policy
+            </Button>
           </>
         )}
 
         {type === 'population' && (
           <>
-            <Paper p="md" radius="md" withBorder style={{ cursor: 'pointer' }} onClick={() => handleSelectGeography(countryConfig.nationwideId, countryConfig.nationwideLabel, 'national')}>
+            <Paper
+              p="md"
+              radius="md"
+              withBorder
+              style={{ cursor: 'pointer' }}
+              onClick={() =>
+                handleSelectGeography(
+                  countryConfig.nationwideId,
+                  countryConfig.nationwideLabel,
+                  'national'
+                )
+              }
+            >
               <Group gap={spacing.md}>
-                <Box style={{ width: 36, height: 36, borderRadius: spacing.radius.md, background: colorConfig.bg, border: `1px solid ${colorConfig.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Box
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: spacing.radius.md,
+                    background: colorConfig.bg,
+                    border: `1px solid ${colorConfig.border}`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
                   <CountryMapIcon countryId={countryId} size={18} color={colorConfig.icon} />
                 </Box>
                 <Stack gap={2}>
-                  <Text fw={600} style={{ fontSize: FONT_SIZES.normal }}>{countryConfig.nationwideTitle}</Text>
-                  <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>{countryConfig.nationwideSubtitle}</Text>
+                  <Text fw={600} style={{ fontSize: FONT_SIZES.normal }}>
+                    {countryConfig.nationwideTitle}
+                  </Text>
+                  <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
+                    {countryConfig.nationwideSubtitle}
+                  </Text>
                 </Stack>
               </Group>
             </Paper>
-            <Paper p="md" radius="md" withBorder style={{ cursor: 'pointer' }} onClick={() => handleSelectHousehold('sample-household', 'Sample household')}>
+            <Paper
+              p="md"
+              radius="md"
+              withBorder
+              style={{ cursor: 'pointer' }}
+              onClick={() => handleSelectHousehold('sample-household', 'Sample household')}
+            >
               <Group gap={spacing.md}>
-                <Box style={{ width: 36, height: 36, borderRadius: spacing.radius.md, background: colorConfig.bg, border: `1px solid ${colorConfig.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Box
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: spacing.radius.md,
+                    background: colorConfig.bg,
+                    border: `1px solid ${colorConfig.border}`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
                   <IconHome size={18} color={colorConfig.icon} />
                 </Box>
                 <Stack gap={2}>
-                  <Text fw={600} style={{ fontSize: FONT_SIZES.normal }}>Sample household</Text>
-                  <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>Single household simulation</Text>
+                  <Text fw={600} style={{ fontSize: FONT_SIZES.normal }}>
+                    Sample household
+                  </Text>
+                  <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
+                    Single household simulation
+                  </Text>
                 </Stack>
               </Group>
             </Paper>
@@ -1720,37 +1877,75 @@ function IngredientPickerModal({
                   <Loader size="sm" />
                 </Box>
               ) : (
-              <Stack gap={spacing.sm}>
-                {households?.map((h) => {
-                  // Use association data for display (like Populations page)
-                  const householdId = h.association.householdId.toString();
-                  const label = h.association.label || `Household #${householdId}`;
-                  return (
-                    <Paper key={householdId} p="sm" radius="md" withBorder style={{ cursor: 'pointer' }} onClick={() => handleSelectHousehold(householdId, label)}>
-                      <Group justify="space-between">
-                        <Text fw={500} style={{ fontSize: FONT_SIZES.normal }}>{label}</Text>
-                        <IconChevronRight size={16} color={colors.gray[400]} />
-                      </Group>
-                    </Paper>
-                  );
-                })}
-                {(!households || households.length === 0) && <Text c="dimmed" ta="center" py="lg">No saved households</Text>}
-              </Stack>
+                <Stack gap={spacing.sm}>
+                  {households?.map((h) => {
+                    // Use association data for display (like Populations page)
+                    const householdId = h.association.householdId.toString();
+                    const label = h.association.label || `Household #${householdId}`;
+                    return (
+                      <Paper
+                        key={householdId}
+                        p="sm"
+                        radius="md"
+                        withBorder
+                        style={{ cursor: 'pointer' }}
+                        onClick={() => handleSelectHousehold(householdId, label)}
+                      >
+                        <Group justify="space-between">
+                          <Text fw={500} style={{ fontSize: FONT_SIZES.normal }}>
+                            {label}
+                          </Text>
+                          <IconChevronRight size={16} color={colors.gray[400]} />
+                        </Group>
+                      </Paper>
+                    );
+                  })}
+                  {(!households || households.length === 0) && (
+                    <Text c="dimmed" ta="center" py="lg">
+                      No saved households
+                    </Text>
+                  )}
+                </Stack>
               )}
             </ScrollArea>
             <Divider />
-            <Button variant="light" color="teal" leftSection={<IconPlus size={16} />} onClick={() => { onCreateNew(); onClose(); }}>Create new household</Button>
+            <Button
+              variant="light"
+              color="teal"
+              leftSection={<IconPlus size={16} />}
+              onClick={() => {
+                onCreateNew();
+                onClose();
+              }}
+            >
+              Create new household
+            </Button>
           </>
         )}
 
         {type === 'dynamics' && (
           <Stack gap={spacing.lg} align="center" py="xl">
-            <Box style={{ width: 64, height: 64, borderRadius: '50%', background: colorConfig.bg, border: `1px solid ${colorConfig.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Box
+              style={{
+                width: 64,
+                height: 64,
+                borderRadius: '50%',
+                background: colorConfig.bg,
+                border: `1px solid ${colorConfig.border}`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
               <IconSparkles size={28} color={colorConfig.icon} />
             </Box>
             <Stack gap={spacing.xs} align="center">
-              <Text fw={600} c={colors.gray[700]}>Dynamics coming soon</Text>
-              <Text c="dimmed" ta="center" maw={300} style={{ fontSize: FONT_SIZES.small }}>Dynamic behavioral responses will be available in a future update.</Text>
+              <Text fw={600} c={colors.gray[700]}>
+                Dynamics coming soon
+              </Text>
+              <Text c="dimmed" ta="center" maw={300} style={{ fontSize: FONT_SIZES.small }}>
+                Dynamic behavioral responses will be available in a future update.
+              </Text>
             </Stack>
           </Stack>
         )}
@@ -1769,17 +1964,15 @@ interface PolicyBrowseModalProps {
   onSelect: (policy: PolicyStateProps) => void;
 }
 
-function PolicyBrowseModal({
-  isOpen,
-  onClose,
-  onSelect,
-}: PolicyBrowseModalProps) {
+function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseModalProps) {
   const countryId = useCurrentCountry() as 'us' | 'uk';
   const userId = MOCK_USER_ID.toString();
   const { data: policies, isLoading } = useUserPolicies(userId);
-  const { parameterTree, parameters, loading: metadataLoading } = useSelector(
-    (state: RootState) => state.metadata
-  );
+  const {
+    parameterTree,
+    parameters,
+    loading: metadataLoading,
+  } = useSelector((state: RootState) => state.metadata);
   const { minDate, maxDate } = useSelector(getDateRange);
   const updatePolicyAssociation = useUpdatePolicyAssociation();
 
@@ -1854,16 +2047,19 @@ function PolicyBrowseModal({
     // Apply search filter
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      result = result.filter(p => {
+      result = result.filter((p) => {
         // Search in policy label
         if (p.label.toLowerCase().includes(query)) return true;
         // Search in parameter display names (hierarchical labels)
-        const paramDisplayNames = p.parameters.map(param => {
-          const hierarchicalLabels = getHierarchicalLabels(param.name, parameters);
-          return hierarchicalLabels.length > 0
-            ? formatLabelParts(hierarchicalLabels)
-            : param.name.split('.').pop() || param.name;
-        }).join(' ').toLowerCase();
+        const paramDisplayNames = p.parameters
+          .map((param) => {
+            const hierarchicalLabels = getHierarchicalLabels(param.name, parameters);
+            return hierarchicalLabels.length > 0
+              ? formatLabelParts(hierarchicalLabels)
+              : param.name.split('.').pop() || param.name;
+          })
+          .join(' ')
+          .toLowerCase();
         if (paramDisplayNames.includes(query)) return true;
         return false;
       });
@@ -1885,14 +2081,22 @@ function PolicyBrowseModal({
   // Get section title for display
   const getSectionTitle = () => {
     switch (activeSection) {
-      case 'my-policies': return 'My policies';
-      case 'public': return 'User-created policies';
-      default: return 'Policies';
+      case 'my-policies':
+        return 'My policies';
+      case 'public':
+        return 'User-created policies';
+      default:
+        return 'Policies';
     }
   };
 
   // Handle policy selection
-  const handleSelectPolicy = (policyId: string, label: string, paramCount: number, associationId?: string) => {
+  const handleSelectPolicy = (
+    policyId: string,
+    label: string,
+    paramCount: number,
+    associationId?: string
+  ) => {
     // Update the association's updatedAt to track "recently used"
     if (associationId) {
       updatePolicyAssociation.mutate({
@@ -1914,10 +2118,13 @@ function PolicyBrowseModal({
   // ========== Creation Mode Logic ==========
 
   // Create local policy state object for components
-  const localPolicy: PolicyStateProps = useMemo(() => ({
-    label: policyLabel,
-    parameters: policyParameters,
-  }), [policyLabel, policyParameters]);
+  const localPolicy: PolicyStateProps = useMemo(
+    () => ({
+      label: policyLabel,
+      parameters: policyParameters,
+    }),
+    [policyLabel, policyParameters]
+  );
 
   // Count modifications
   const modificationCount = countPolicyModifications(localPolicy);
@@ -1927,14 +2134,14 @@ function PolicyBrowseModal({
     if (!parameters) return [];
 
     return Object.values(parameters)
-      .filter((param): param is ParameterMetadata =>
-        param.type === 'parameter' && !!param.label && !param.parameter.includes('pycache')
+      .filter(
+        (param): param is ParameterMetadata =>
+          param.type === 'parameter' && !!param.label && !param.parameter.includes('pycache')
       )
-      .map(param => {
+      .map((param) => {
         const hierarchicalLabels = getHierarchicalLabels(param.parameter, parameters);
-        const fullLabel = hierarchicalLabels.length > 0
-          ? formatLabelParts(hierarchicalLabels)
-          : param.label;
+        const fullLabel =
+          hierarchicalLabels.length > 0 ? formatLabelParts(hierarchicalLabels) : param.label;
         return {
           value: param.parameter,
           label: fullLabel,
@@ -1944,56 +2151,62 @@ function PolicyBrowseModal({
   }, [parameters]);
 
   // Handle search selection - expand tree path and select parameter
-  const handleSearchSelect = useCallback((paramName: string) => {
-    const param = parameters[paramName];
-    if (!param || param.type !== 'parameter') return;
+  const handleSearchSelect = useCallback(
+    (paramName: string) => {
+      const param = parameters[paramName];
+      if (!param || param.type !== 'parameter') return;
 
-    // Expand all parent nodes in the tree path
-    const pathParts = paramName.split('.');
-    const newExpanded = new Set(expandedMenuItems);
-    let currentPath = '';
-    for (let i = 0; i < pathParts.length - 1; i++) {
-      currentPath = currentPath ? `${currentPath}.${pathParts[i]}` : pathParts[i];
-      newExpanded.add(currentPath);
-    }
-    setExpandedMenuItems(newExpanded);
+      // Expand all parent nodes in the tree path
+      const pathParts = paramName.split('.');
+      const newExpanded = new Set(expandedMenuItems);
+      let currentPath = '';
+      for (let i = 0; i < pathParts.length - 1; i++) {
+        currentPath = currentPath ? `${currentPath}.${pathParts[i]}` : pathParts[i];
+        newExpanded.add(currentPath);
+      }
+      setExpandedMenuItems(newExpanded);
 
-    // Select the parameter
-    setSelectedParam(param);
-    setIntervals([]);
-    setValueSetterMode(ValueSetterMode.DEFAULT);
-
-    // Clear search
-    setParameterSearch('');
-  }, [parameters, expandedMenuItems]);
-
-  // Handle menu item click
-  const handleMenuItemClick = useCallback((paramName: string) => {
-    const param = parameters[paramName];
-    if (param && param.type === 'parameter') {
+      // Select the parameter
       setSelectedParam(param);
-      // Reset value setter state when selecting new parameter
       setIntervals([]);
       setValueSetterMode(ValueSetterMode.DEFAULT);
-    }
-    // Toggle expansion for non-leaf nodes
-    setExpandedMenuItems(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(paramName)) {
-        newSet.delete(paramName);
-      } else {
-        newSet.add(paramName);
+
+      // Clear search
+      setParameterSearch('');
+    },
+    [parameters, expandedMenuItems]
+  );
+
+  // Handle menu item click
+  const handleMenuItemClick = useCallback(
+    (paramName: string) => {
+      const param = parameters[paramName];
+      if (param && param.type === 'parameter') {
+        setSelectedParam(param);
+        // Reset value setter state when selecting new parameter
+        setIntervals([]);
+        setValueSetterMode(ValueSetterMode.DEFAULT);
       }
-      return newSet;
-    });
-  }, [parameters]);
+      // Toggle expansion for non-leaf nodes
+      setExpandedMenuItems((prev) => {
+        const newSet = new Set(prev);
+        if (newSet.has(paramName)) {
+          newSet.delete(paramName);
+        } else {
+          newSet.add(paramName);
+        }
+        return newSet;
+      });
+    },
+    [parameters]
+  );
 
   // Handle value submission
   const handleValueSubmit = useCallback(() => {
     if (!selectedParam || intervals.length === 0) return;
 
     const updatedParameters = [...policyParameters];
-    let existingParam = updatedParameters.find(p => p.name === selectedParam.parameter);
+    let existingParam = updatedParameters.find((p) => p.name === selectedParam.parameter);
 
     if (!existingParam) {
       existingParam = { name: selectedParam.parameter, values: [] };
@@ -2002,7 +2215,7 @@ function PolicyBrowseModal({
 
     // Use ValueIntervalCollection to properly merge intervals
     const paramCollection = new ValueIntervalCollection(existingParam.values);
-    intervals.forEach(interval => {
+    intervals.forEach((interval) => {
       paramCollection.addInterval(interval);
     });
 
@@ -2061,25 +2274,28 @@ function PolicyBrowseModal({
   }, [policyLabel, policyParameters, createPolicy, onSelect, onClose]);
 
   // Render nested menu recursively
-  const renderMenuItems = useCallback((items: ParameterTreeNode[]): React.ReactNode => {
-    return items
-      .filter(item => !item.name.includes('pycache'))
-      .map(item => (
-        <NavLink
-          key={item.name}
-          label={item.label}
-          active={selectedParam?.parameter === item.name}
-          opened={expandedMenuItems.has(item.name)}
-          onClick={() => handleMenuItemClick(item.name)}
-          childrenOffset={16}
-          style={{
-            borderRadius: spacing.radius.sm,
-          }}
-        >
-          {item.children && expandedMenuItems.has(item.name) && renderMenuItems(item.children)}
-        </NavLink>
-      ));
-  }, [selectedParam?.parameter, expandedMenuItems, handleMenuItemClick]);
+  const renderMenuItems = useCallback(
+    (items: ParameterTreeNode[]): React.ReactNode => {
+      return items
+        .filter((item) => !item.name.includes('pycache'))
+        .map((item) => (
+          <NavLink
+            key={item.name}
+            label={item.label}
+            active={selectedParam?.parameter === item.name}
+            opened={expandedMenuItems.has(item.name)}
+            onClick={() => handleMenuItemClick(item.name)}
+            childrenOffset={16}
+            style={{
+              borderRadius: spacing.radius.sm,
+            }}
+          >
+            {item.children && expandedMenuItems.has(item.name) && renderMenuItems(item.children)}
+          </NavLink>
+        ));
+    },
+    [selectedParam?.parameter, expandedMenuItems, handleMenuItemClick]
+  );
 
   // Memoize the rendered tree
   const renderedMenuTree = useMemo(() => {
@@ -2094,7 +2310,7 @@ function PolicyBrowseModal({
     const baseValues = new ValueIntervalCollection(selectedParam.values as ValuesList);
     const reformValues = new ValueIntervalCollection(baseValues);
 
-    const paramToChart = policyParameters.find(p => p.name === selectedParam.parameter);
+    const paramToChart = policyParameters.find((p) => p.name === selectedParam.parameter);
     if (paramToChart && paramToChart.values && paramToChart.values.length > 0) {
       const userIntervals = new ValueIntervalCollection(paramToChart.values as ValuesList);
       for (const interval of userIntervals.getIntervals()) {
@@ -2187,9 +2403,10 @@ function PolicyBrowseModal({
       WebkitBackdropFilter: 'blur(20px) saturate(180%)',
       borderRadius: spacing.radius.lg,
       border: `1px solid ${modificationCount > 0 ? colorConfig.border : colors.border.light}`,
-      boxShadow: modificationCount > 0
-        ? `0 4px 20px rgba(0, 0, 0, 0.08), 0 0 0 1px ${colorConfig.border}`
-        : `0 2px 12px ${colors.shadow.light}`,
+      boxShadow:
+        modificationCount > 0
+          ? `0 4px 20px rgba(0, 0, 0, 0.08), 0 0 0 1px ${colorConfig.border}`
+          : `0 2px 12px ${colors.shadow.light}`,
       padding: `${spacing.sm} ${spacing.lg}`,
       transition: 'all 0.3s ease',
       margin: spacing.md,
@@ -2206,7 +2423,7 @@ function PolicyBrowseModal({
   // Policy for drawer preview
   const drawerPolicy = useMemo(() => {
     if (!drawerPolicyId) return null;
-    return userPolicies.find(p => p.id === drawerPolicyId) || null;
+    return userPolicies.find((p) => p.id === drawerPolicyId) || null;
   }, [drawerPolicyId, userPolicies]);
 
   return (
@@ -2234,7 +2451,9 @@ function PolicyBrowseModal({
               {isCreationMode ? 'Create policy' : 'Select policy'}
             </Text>
             <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
-              {isCreationMode ? 'Configure parameters for your new policy' : 'Choose an existing policy or create a new one'}
+              {isCreationMode
+                ? 'Configure parameters for your new policy'
+                : 'Choose an existing policy or create a new one'}
             </Text>
           </Stack>
         </Group>
@@ -2279,9 +2498,20 @@ function PolicyBrowseModal({
               }}
             >
               {/* Parameter Tree */}
-              <Box style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-                <Box style={{ padding: spacing.md, borderBottom: `1px solid ${colors.border.light}` }}>
-                  <Text fw={600} style={{ fontSize: FONT_SIZES.small, color: colors.gray[600], marginBottom: spacing.sm }}>
+              <Box
+                style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+              >
+                <Box
+                  style={{ padding: spacing.md, borderBottom: `1px solid ${colors.border.light}` }}
+                >
+                  <Text
+                    fw={600}
+                    style={{
+                      fontSize: FONT_SIZES.small,
+                      color: colors.gray[600],
+                      marginBottom: spacing.sm,
+                    }}
+                  >
                     PARAMETERS
                   </Text>
                   <Autocomplete
@@ -2326,7 +2556,15 @@ function PolicyBrowseModal({
             </Box>
 
             {/* Main Content - Parameter Editor */}
-            <Box style={{ flex: 1, display: 'flex', flexDirection: 'column', background: colors.white, overflow: 'hidden' }}>
+            <Box
+              style={{
+                flex: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                background: colors.white,
+                overflow: 'hidden',
+              }}
+            >
               {/* Status Header Bar */}
               <Box style={dockStyles.statusHeader}>
                 <Group justify="space-between" align="center" wrap="nowrap">
@@ -2350,7 +2588,14 @@ function PolicyBrowseModal({
                     </Box>
 
                     {/* Editable policy name */}
-                    <Box style={{ minWidth: 0, display: 'flex', alignItems: 'center', gap: spacing.xs }}>
+                    <Box
+                      style={{
+                        minWidth: 0,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: spacing.xs,
+                      }}
+                    >
                       {isEditingLabel ? (
                         <TextInput
                           value={policyLabel}
@@ -2421,7 +2666,8 @@ function PolicyBrowseModal({
                             }}
                           />
                           <Text style={{ fontSize: FONT_SIZES.small, color: colors.gray[600] }}>
-                            {modificationCount} parameter{modificationCount !== 1 ? 's' : ''} modified
+                            {modificationCount} parameter{modificationCount !== 1 ? 's' : ''}{' '}
+                            modified
                           </Text>
                         </>
                       ) : (
@@ -2436,107 +2682,118 @@ function PolicyBrowseModal({
 
               {/* Parameter Editor Content */}
               <Box style={{ flex: 1, overflow: 'auto' }}>
-              {!selectedParam ? (
-                <Box
-                  style={{
-                    height: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: spacing.xl,
-                  }}
-                >
-                  <Stack align="center" gap={spacing.md}>
-                    <Box
-                      style={{
-                        width: 64,
-                        height: 64,
-                        borderRadius: spacing.radius.lg,
-                        background: colors.gray[100],
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      <IconScale size={32} color={colors.gray[400]} />
-                    </Box>
-                    <Text ta="center" style={{ fontSize: FONT_SIZES.normal, color: colors.gray[600], maxWidth: 400 }}>
-                      Select a parameter from the menu to modify its value for your policy reform.
-                    </Text>
-                  </Stack>
-                </Box>
-              ) : (
-                <Box style={{ padding: spacing.xl }}>
-                  <Stack gap={spacing.lg}>
-                    {/* Parameter Header */}
-                    <Box>
-                      <Title order={3} style={{ marginBottom: spacing.sm }}>
-                        {capitalize(selectedParam.label || 'Label unavailable')}
-                      </Title>
-                      {selectedParam.description && (
-                        <Text style={{ fontSize: FONT_SIZES.normal, color: colors.gray[600] }}>
-                          {selectedParam.description}
-                        </Text>
-                      )}
-                    </Box>
-
-                    {/* Value Setter */}
-                    <Box
-                      style={{
-                        background: colors.gray[50],
-                        border: `1px solid ${colors.border.light}`,
-                        borderRadius: spacing.radius.md,
-                        padding: spacing.lg,
-                      }}
-                    >
-                      <Stack gap={spacing.md}>
-                        <Text fw={600} style={{ fontSize: FONT_SIZES.normal }}>Set new value</Text>
-                        <Divider />
-                        <Group align="flex-end" wrap="nowrap">
-                          <Box style={{ flex: 1 }}>
-                            <ValueSetterToRender
-                              minDate={minDate}
-                              maxDate={maxDate}
-                              param={selectedParam}
-                              policy={localPolicy}
-                              intervals={intervals}
-                              setIntervals={setIntervals}
-                              startDate={startDate}
-                              setStartDate={setStartDate}
-                              endDate={endDate}
-                              setEndDate={setEndDate}
-                            />
-                          </Box>
-                          <ModeSelectorButton setMode={(mode) => {
-                            setIntervals([]);
-                            setValueSetterMode(mode);
-                          }} />
-                          <Button
-                            onClick={handleValueSubmit}
-                            disabled={intervals.length === 0}
-                            color="teal"
-                          >
-                            Add change
-                          </Button>
-                        </Group>
-                      </Stack>
-                    </Box>
-
-                    {/* Historical Values Chart */}
-                    {baseValues && reformValues && (
-                      <Box>
-                        <HistoricalValues
-                          param={selectedParam}
-                          baseValues={baseValues}
-                          reformValues={reformValues}
-                          policyLabel={policyLabel}
-                          policyId={null}
-                        />
+                {!selectedParam ? (
+                  <Box
+                    style={{
+                      height: '100%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: spacing.xl,
+                    }}
+                  >
+                    <Stack align="center" gap={spacing.md}>
+                      <Box
+                        style={{
+                          width: 64,
+                          height: 64,
+                          borderRadius: spacing.radius.lg,
+                          background: colors.gray[100],
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <IconScale size={32} color={colors.gray[400]} />
                       </Box>
-                    )}
-                  </Stack>
-                </Box>
-              )}
+                      <Text
+                        ta="center"
+                        style={{
+                          fontSize: FONT_SIZES.normal,
+                          color: colors.gray[600],
+                          maxWidth: 400,
+                        }}
+                      >
+                        Select a parameter from the menu to modify its value for your policy reform.
+                      </Text>
+                    </Stack>
+                  </Box>
+                ) : (
+                  <Box style={{ padding: spacing.xl }}>
+                    <Stack gap={spacing.lg}>
+                      {/* Parameter Header */}
+                      <Box>
+                        <Title order={3} style={{ marginBottom: spacing.sm }}>
+                          {capitalize(selectedParam.label || 'Label unavailable')}
+                        </Title>
+                        {selectedParam.description && (
+                          <Text style={{ fontSize: FONT_SIZES.normal, color: colors.gray[600] }}>
+                            {selectedParam.description}
+                          </Text>
+                        )}
+                      </Box>
+
+                      {/* Value Setter */}
+                      <Box
+                        style={{
+                          background: colors.gray[50],
+                          border: `1px solid ${colors.border.light}`,
+                          borderRadius: spacing.radius.md,
+                          padding: spacing.lg,
+                        }}
+                      >
+                        <Stack gap={spacing.md}>
+                          <Text fw={600} style={{ fontSize: FONT_SIZES.normal }}>
+                            Set new value
+                          </Text>
+                          <Divider />
+                          <Group align="flex-end" wrap="nowrap">
+                            <Box style={{ flex: 1 }}>
+                              <ValueSetterToRender
+                                minDate={minDate}
+                                maxDate={maxDate}
+                                param={selectedParam}
+                                policy={localPolicy}
+                                intervals={intervals}
+                                setIntervals={setIntervals}
+                                startDate={startDate}
+                                setStartDate={setStartDate}
+                                endDate={endDate}
+                                setEndDate={setEndDate}
+                              />
+                            </Box>
+                            <ModeSelectorButton
+                              setMode={(mode) => {
+                                setIntervals([]);
+                                setValueSetterMode(mode);
+                              }}
+                            />
+                            <Button
+                              onClick={handleValueSubmit}
+                              disabled={intervals.length === 0}
+                              color="teal"
+                            >
+                              Add change
+                            </Button>
+                          </Group>
+                        </Stack>
+                      </Box>
+
+                      {/* Historical Values Chart */}
+                      {baseValues && reformValues && (
+                        <Box>
+                          <HistoricalValues
+                            param={selectedParam}
+                            baseValues={baseValues}
+                            reformValues={reformValues}
+                            policyLabel={policyLabel}
+                            policyId={null}
+                          />
+                        </Box>
+                      )}
+                    </Stack>
+                  </Box>
+                )}
               </Box>
             </Box>
           </Group>
@@ -2575,503 +2832,530 @@ function PolicyBrowseModal({
       ) : (
         // ========== BROWSE MODE ==========
         <>
-        <Group align="stretch" gap={spacing.xl} style={{ height: '100%', width: '100%', padding: spacing.xl }} wrap="nowrap">
-          {/* Left Sidebar */}
-          <Box style={modalStyles.sidebar}>
-            {/* Quick Actions */}
-            <Box style={modalStyles.sidebarSection}>
-              <Text style={modalStyles.sidebarLabel}>Quick select</Text>
-              <UnstyledButton
-                style={{
-                  ...modalStyles.sidebarItem,
-                  background: colors.gray[50],
-                  border: `1px solid ${colors.border.light}`,
-                }}
-                onClick={handleSelectCurrentLaw}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = colorConfig.bg;
-                  e.currentTarget.style.borderColor = colorConfig.border;
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = colors.gray[50];
-                  e.currentTarget.style.borderColor = colors.border.light;
-                }}
-              >
-                <IconScale size={16} color={colorConfig.icon} />
-                <Text style={{ fontSize: FONT_SIZES.small, fontWeight: typography.fontWeight.medium }}>
-                  Current law
-                </Text>
-              </UnstyledButton>
-          </Box>
-
-          <Divider />
-
-          {/* Navigation Sections */}
-          <Box style={modalStyles.sidebarSection}>
-            <Text style={modalStyles.sidebarLabel}>Library</Text>
-
-            {/* My Policies (sorted by most recent) */}
-            <UnstyledButton
-              style={{
-                ...modalStyles.sidebarItem,
-                background: activeSection === 'my-policies' ? colorConfig.bg : 'transparent',
-                color: activeSection === 'my-policies' ? colorConfig.icon : colors.gray[700],
-              }}
-              onClick={() => setActiveSection('my-policies')}
-            >
-              <IconFolder size={16} />
-              <Text style={{ fontSize: FONT_SIZES.small, flex: 1 }}>My policies</Text>
-              <Text fw={700} style={{ fontSize: FONT_SIZES.small, color: colors.gray[500] }}>
-                {userPolicies.length}
-              </Text>
-            </UnstyledButton>
-
-            {/* User-created policies */}
-            <UnstyledButton
-              style={{
-                ...modalStyles.sidebarItem,
-                background: activeSection === 'public' ? colorConfig.bg : 'transparent',
-                color: activeSection === 'public' ? colorConfig.icon : colors.gray[700],
-              }}
-              onClick={() => setActiveSection('public')}
-            >
-              <IconUsers size={16} />
-              <Text style={{ fontSize: FONT_SIZES.small, flex: 1 }}>User-created policies</Text>
-            </UnstyledButton>
-
-            {/* Create New Policy */}
-            <UnstyledButton
-              style={{
-                ...modalStyles.sidebarItem,
-                background: isCreationMode ? colorConfig.bg : 'transparent',
-                color: isCreationMode ? colorConfig.icon : colors.gray[700],
-              }}
-              onClick={handleEnterCreationMode}
-            >
-              <IconPlus size={16} />
-              <Text style={{ fontSize: FONT_SIZES.small, flex: 1 }}>Create new policy</Text>
-            </UnstyledButton>
-          </Box>
-        </Box>
-
-        {/* Main Content Area */}
-        <Box style={modalStyles.mainContent}>
-          {/* Search Bar */}
-          <Box style={modalStyles.searchBar}>
-            <TextInput
-              placeholder="Search policies by name or parameter..."
-              leftSection={<IconSearch size={16} color={colors.gray[400]} />}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              size="sm"
-              styles={{
-                input: {
-                  borderRadius: spacing.radius.md,
-                  border: `1px solid ${colors.border.light}`,
-                  fontSize: FONT_SIZES.small,
-                  '&:focus': {
-                    borderColor: colorConfig.accent,
-                  },
-                },
-              }}
-            />
-          </Box>
-
-          {/* Section Header */}
-          <Group justify="space-between" align="center">
-            <Text fw={600} style={{ fontSize: FONT_SIZES.normal, color: colors.gray[800] }}>
-              {getSectionTitle()}
-            </Text>
-            <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
-              {displayedPolicies.length} {displayedPolicies.length === 1 ? 'policy' : 'policies'}
-            </Text>
-          </Group>
-
-          {/* Policy Grid */}
-          <ScrollArea style={{ flex: 1 }} offsetScrollbars>
-            {isLoading ? (
-              <Stack gap={spacing.md}>
-                {[1, 2, 3].map((i) => (
-                  <Skeleton key={i} height={80} radius="md" />
-                ))}
-              </Stack>
-            ) : activeSection === 'public' ? (
-              // Placeholder for User-created policies section
-              <Box
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  padding: spacing['4xl'],
-                  gap: spacing.md,
-                }}
-              >
-                <Box
+          <Group
+            align="stretch"
+            gap={spacing.xl}
+            style={{ height: '100%', width: '100%', padding: spacing.xl }}
+            wrap="nowrap"
+          >
+            {/* Left Sidebar */}
+            <Box style={modalStyles.sidebar}>
+              {/* Quick Actions */}
+              <Box style={modalStyles.sidebarSection}>
+                <Text style={modalStyles.sidebarLabel}>Quick select</Text>
+                <UnstyledButton
                   style={{
-                    width: 64,
-                    height: 64,
-                    borderRadius: '50%',
-                    background: colors.gray[100],
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
+                    ...modalStyles.sidebarItem,
+                    background: colors.gray[50],
+                    border: `1px solid ${colors.border.light}`,
+                  }}
+                  onClick={handleSelectCurrentLaw}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = colorConfig.bg;
+                    e.currentTarget.style.borderColor = colorConfig.border;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = colors.gray[50];
+                    e.currentTarget.style.borderColor = colors.border.light;
                   }}
                 >
-                  <IconUsers size={28} color={colors.gray[400]} />
-                </Box>
-                <Text fw={500} c={colors.gray[600]}>
-                  Coming soon
-                </Text>
-                <Text c="dimmed" ta="center" maw={300} style={{ fontSize: FONT_SIZES.small }}>
-                  Search and browse policies created by other PolicyEngine users.
-                </Text>
-              </Box>
-            ) : displayedPolicies.length === 0 ? (
-              <Box
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  padding: spacing['4xl'],
-                  gap: spacing.md,
-                }}
-              >
-                <Box
-                  style={{
-                    width: 64,
-                    height: 64,
-                    borderRadius: '50%',
-                    background: colors.gray[100],
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <IconFolder size={28} color={colors.gray[400]} />
-                </Box>
-                <Text fw={500} c={colors.gray[600]}>
-                  {searchQuery ? 'No policies match your search' : 'No policies yet'}
-                </Text>
-                <Text c="dimmed" ta="center" maw={300} style={{ fontSize: FONT_SIZES.small }}>
-                  {searchQuery
-                    ? 'Try adjusting your search terms or browse all policies'
-                    : 'Create your first policy to get started'
-                  }
-                </Text>
-                {!searchQuery && (
-                  <Button
-                    variant="outline"
-                    color="gray"
-                    leftSection={<IconPlus size={16} />}
-                    onClick={handleEnterCreationMode}
-                    mt={spacing.sm}
+                  <IconScale size={16} color={colorConfig.icon} />
+                  <Text
+                    style={{ fontSize: FONT_SIZES.small, fontWeight: typography.fontWeight.medium }}
                   >
-                    Create policy
-                  </Button>
-                )}
+                    Current law
+                  </Text>
+                </UnstyledButton>
               </Box>
-            ) : (
-              <Box style={modalStyles.policyGrid}>
-                {displayedPolicies.map((policy) => {
-                  const isSelected = selectedPolicyId === policy.id;
 
-                  return (
-                    <Paper
-                      key={policy.id}
+              <Divider />
+
+              {/* Navigation Sections */}
+              <Box style={modalStyles.sidebarSection}>
+                <Text style={modalStyles.sidebarLabel}>Library</Text>
+
+                {/* My Policies (sorted by most recent) */}
+                <UnstyledButton
+                  style={{
+                    ...modalStyles.sidebarItem,
+                    background: activeSection === 'my-policies' ? colorConfig.bg : 'transparent',
+                    color: activeSection === 'my-policies' ? colorConfig.icon : colors.gray[700],
+                  }}
+                  onClick={() => setActiveSection('my-policies')}
+                >
+                  <IconFolder size={16} />
+                  <Text style={{ fontSize: FONT_SIZES.small, flex: 1 }}>My policies</Text>
+                  <Text fw={700} style={{ fontSize: FONT_SIZES.small, color: colors.gray[500] }}>
+                    {userPolicies.length}
+                  </Text>
+                </UnstyledButton>
+
+                {/* User-created policies */}
+                <UnstyledButton
+                  style={{
+                    ...modalStyles.sidebarItem,
+                    background: activeSection === 'public' ? colorConfig.bg : 'transparent',
+                    color: activeSection === 'public' ? colorConfig.icon : colors.gray[700],
+                  }}
+                  onClick={() => setActiveSection('public')}
+                >
+                  <IconUsers size={16} />
+                  <Text style={{ fontSize: FONT_SIZES.small, flex: 1 }}>User-created policies</Text>
+                </UnstyledButton>
+
+                {/* Create New Policy */}
+                <UnstyledButton
+                  style={{
+                    ...modalStyles.sidebarItem,
+                    background: isCreationMode ? colorConfig.bg : 'transparent',
+                    color: isCreationMode ? colorConfig.icon : colors.gray[700],
+                  }}
+                  onClick={handleEnterCreationMode}
+                >
+                  <IconPlus size={16} />
+                  <Text style={{ fontSize: FONT_SIZES.small, flex: 1 }}>Create new policy</Text>
+                </UnstyledButton>
+              </Box>
+            </Box>
+
+            {/* Main Content Area */}
+            <Box style={modalStyles.mainContent}>
+              {/* Search Bar */}
+              <Box style={modalStyles.searchBar}>
+                <TextInput
+                  placeholder="Search policies by name or parameter..."
+                  leftSection={<IconSearch size={16} color={colors.gray[400]} />}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  size="sm"
+                  styles={{
+                    input: {
+                      borderRadius: spacing.radius.md,
+                      border: `1px solid ${colors.border.light}`,
+                      fontSize: FONT_SIZES.small,
+                      '&:focus': {
+                        borderColor: colorConfig.accent,
+                      },
+                    },
+                  }}
+                />
+              </Box>
+
+              {/* Section Header */}
+              <Group justify="space-between" align="center">
+                <Text fw={600} style={{ fontSize: FONT_SIZES.normal, color: colors.gray[800] }}>
+                  {getSectionTitle()}
+                </Text>
+                <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
+                  {displayedPolicies.length}{' '}
+                  {displayedPolicies.length === 1 ? 'policy' : 'policies'}
+                </Text>
+              </Group>
+
+              {/* Policy Grid */}
+              <ScrollArea style={{ flex: 1 }} offsetScrollbars>
+                {isLoading ? (
+                  <Stack gap={spacing.md}>
+                    {[1, 2, 3].map((i) => (
+                      <Skeleton key={i} height={80} radius="md" />
+                    ))}
+                  </Stack>
+                ) : activeSection === 'public' ? (
+                  // Placeholder for User-created policies section
+                  <Box
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: spacing['4xl'],
+                      gap: spacing.md,
+                    }}
+                  >
+                    <Box
                       style={{
-                        ...modalStyles.policyCard,
-                        background: colors.white,
-                        borderColor: isSelected ? colorConfig.border : colors.gray[200],
-                      }}
-                      onClick={() => {
-                        setSelectedPolicyId(policy.id);
-                        handleSelectPolicy(policy.id, policy.label, policy.paramCount, policy.associationId);
+                        width: 64,
+                        height: 64,
+                        borderRadius: '50%',
+                        background: colors.gray[100],
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
                       }}
                     >
-                      {/* Policy accent bar */}
-                      <Box
-                        style={{
-                          position: 'absolute',
-                          top: 0,
-                          left: 0,
-                          right: 0,
-                          height: 3,
-                          background: isSelected
-                            ? `linear-gradient(90deg, ${colorConfig.accent}, ${colorConfig.icon})`
-                            : colors.gray[200],
-                          transition: 'all 0.2s ease',
-                        }}
-                      />
+                      <IconUsers size={28} color={colors.gray[400]} />
+                    </Box>
+                    <Text fw={500} c={colors.gray[600]}>
+                      Coming soon
+                    </Text>
+                    <Text c="dimmed" ta="center" maw={300} style={{ fontSize: FONT_SIZES.small }}>
+                      Search and browse policies created by other PolicyEngine users.
+                    </Text>
+                  </Box>
+                ) : displayedPolicies.length === 0 ? (
+                  <Box
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: spacing['4xl'],
+                      gap: spacing.md,
+                    }}
+                  >
+                    <Box
+                      style={{
+                        width: 64,
+                        height: 64,
+                        borderRadius: '50%',
+                        background: colors.gray[100],
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <IconFolder size={28} color={colors.gray[400]} />
+                    </Box>
+                    <Text fw={500} c={colors.gray[600]}>
+                      {searchQuery ? 'No policies match your search' : 'No policies yet'}
+                    </Text>
+                    <Text c="dimmed" ta="center" maw={300} style={{ fontSize: FONT_SIZES.small }}>
+                      {searchQuery
+                        ? 'Try adjusting your search terms or browse all policies'
+                        : 'Create your first policy to get started'}
+                    </Text>
+                    {!searchQuery && (
+                      <Button
+                        variant="outline"
+                        color="gray"
+                        leftSection={<IconPlus size={16} />}
+                        onClick={handleEnterCreationMode}
+                        mt={spacing.sm}
+                      >
+                        Create policy
+                      </Button>
+                    )}
+                  </Box>
+                ) : (
+                  <Box style={modalStyles.policyGrid}>
+                    {displayedPolicies.map((policy) => {
+                      const isSelected = selectedPolicyId === policy.id;
 
-                      <Group justify="space-between" align="flex-start" wrap="nowrap">
-                        <Stack gap={spacing.xs} style={{ flex: 1, minWidth: 0 }}>
+                      return (
+                        <Paper
+                          key={policy.id}
+                          style={{
+                            ...modalStyles.policyCard,
+                            background: colors.white,
+                            borderColor: isSelected ? colorConfig.border : colors.gray[200],
+                          }}
+                          onClick={() => {
+                            setSelectedPolicyId(policy.id);
+                            handleSelectPolicy(
+                              policy.id,
+                              policy.label,
+                              policy.paramCount,
+                              policy.associationId
+                            );
+                          }}
+                        >
+                          {/* Policy accent bar */}
+                          <Box
+                            style={{
+                              position: 'absolute',
+                              top: 0,
+                              left: 0,
+                              right: 0,
+                              height: 3,
+                              background: isSelected
+                                ? `linear-gradient(90deg, ${colorConfig.accent}, ${colorConfig.icon})`
+                                : colors.gray[200],
+                              transition: 'all 0.2s ease',
+                            }}
+                          />
+
+                          <Group justify="space-between" align="flex-start" wrap="nowrap">
+                            <Stack gap={spacing.xs} style={{ flex: 1, minWidth: 0 }}>
+                              <Text
+                                fw={600}
+                                style={{
+                                  fontSize: FONT_SIZES.normal,
+                                  color: colors.gray[900],
+                                }}
+                              >
+                                {policy.label}
+                              </Text>
+                              <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
+                                {policy.paramCount} param{policy.paramCount !== 1 ? 's' : ''}{' '}
+                                changed
+                              </Text>
+                            </Stack>
+
+                            <Group gap={spacing.xs} style={{ flexShrink: 0 }}>
+                              {/* Info button */}
+                              <ActionIcon
+                                variant="subtle"
+                                color="gray"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setDrawerPolicyId(policy.id);
+                                }}
+                              >
+                                <IconInfoCircle size={18} />
+                              </ActionIcon>
+                              {/* Select indicator */}
+                              <IconChevronRight size={16} color={colors.gray[400]} />
+                            </Group>
+                          </Group>
+                        </Paper>
+                      );
+                    })}
+                  </Box>
+                )}
+              </ScrollArea>
+            </Box>
+          </Group>
+
+          {/* Sliding panel overlay - click to close */}
+          <Transition mounted={!!drawerPolicy} transition="fade" duration={200}>
+            {(transitionStyles) => (
+              <Box
+                style={{
+                  ...transitionStyles,
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  background: 'rgba(0, 0, 0, 0.08)',
+                  zIndex: 10,
+                }}
+                onClick={() => setDrawerPolicyId(null)}
+              />
+            )}
+          </Transition>
+
+          {/* Sliding panel for policy details */}
+          <Transition mounted={!!drawerPolicy} transition="slide-left" duration={250}>
+            {(transitionStyles) => (
+              <Box
+                style={{
+                  ...transitionStyles,
+                  position: 'absolute',
+                  top: 0,
+                  right: 0,
+                  bottom: 0,
+                  width: 480,
+                  background: colors.white,
+                  borderLeft: `1px solid ${colors.gray[200]}`,
+                  boxShadow: '-8px 0 24px rgba(0, 0, 0, 0.08)',
+                  zIndex: 11,
+                  display: 'flex',
+                  flexDirection: 'column',
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {drawerPolicy && (
+                  <>
+                    {/* Panel header */}
+                    <Box
+                      style={{
+                        padding: spacing.lg,
+                        borderBottom: `1px solid ${colors.gray[200]}`,
+                      }}
+                    >
+                      <Group justify="space-between" align="flex-start">
+                        <Stack gap={spacing.xs} style={{ flex: 1 }}>
+                          <Text
+                            fw={600}
+                            style={{ fontSize: FONT_SIZES.normal, color: colors.gray[900] }}
+                          >
+                            {drawerPolicy.label}
+                          </Text>
+                          <Text style={{ fontSize: FONT_SIZES.small, color: colors.gray[500] }}>
+                            {drawerPolicy.paramCount} parameter
+                            {drawerPolicy.paramCount !== 1 ? 's' : ''} changed from current law
+                          </Text>
+                        </Stack>
+                        <ActionIcon
+                          variant="subtle"
+                          color="gray"
+                          onClick={() => setDrawerPolicyId(null)}
+                        >
+                          <IconX size={18} />
+                        </ActionIcon>
+                      </Group>
+                    </Box>
+
+                    {/* Panel body */}
+                    <Box
+                      style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}
+                    >
+                      <ScrollArea style={{ flex: 1 }} offsetScrollbars>
+                        {/* Unified grid for header and data rows */}
+                        <Box
+                          style={{
+                            display: 'grid',
+                            gridTemplateColumns: '1fr auto auto',
+                            gap: `0`,
+                          }}
+                        >
+                          {/* Header row */}
                           <Text
                             fw={600}
                             style={{
-                              fontSize: FONT_SIZES.normal,
-                              color: colors.gray[900],
+                              fontSize: FONT_SIZES.small,
+                              color: colors.gray[600],
+                              padding: spacing.lg,
+                              paddingBottom: spacing.sm,
+                              borderBottom: `1px solid ${colors.gray[200]}`,
                             }}
                           >
-                            {policy.label}
+                            Parameter
                           </Text>
                           <Text
-                            c="dimmed"
-                            style={{ fontSize: FONT_SIZES.small }}
-                          >
-                            {policy.paramCount} param{policy.paramCount !== 1 ? 's' : ''} changed
-                          </Text>
-                        </Stack>
-
-                        <Group gap={spacing.xs} style={{ flexShrink: 0 }}>
-                          {/* Info button */}
-                          <ActionIcon
-                            variant="subtle"
-                            color="gray"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setDrawerPolicyId(policy.id);
+                            fw={600}
+                            style={{
+                              fontSize: FONT_SIZES.small,
+                              color: colors.gray[600],
+                              textAlign: 'right',
+                              padding: spacing.lg,
+                              paddingBottom: spacing.sm,
+                              borderBottom: `1px solid ${colors.gray[200]}`,
+                              gridColumn: 'span 2',
                             }}
                           >
-                            <IconInfoCircle size={18} />
-                          </ActionIcon>
-                          {/* Select indicator */}
-                          <IconChevronRight size={16} color={colors.gray[400]} />
-                        </Group>
-                      </Group>
-                    </Paper>
-                  );
-                })}
+                            Changes
+                          </Text>
+
+                          {/* Data rows - grouped by parameter */}
+                          {(() => {
+                            const groupedParams: Array<{
+                              paramName: string;
+                              label: string;
+                              changes: Array<{ period: string; value: string }>;
+                            }> = [];
+
+                            drawerPolicy.parameters.forEach((param) => {
+                              const paramName = param.name;
+                              const hierarchicalLabels = getHierarchicalLabels(
+                                paramName,
+                                parameters
+                              );
+                              const displayLabel =
+                                hierarchicalLabels.length > 0
+                                  ? formatLabelParts(hierarchicalLabels)
+                                  : paramName.split('.').pop() || paramName;
+                              const metadata = parameters[paramName];
+
+                              // Use value intervals directly from the Policy type
+                              const changes = (param.values || []).map((interval) => ({
+                                period: formatPeriod(interval.startDate, interval.endDate),
+                                value: formatParameterValue(interval.value, metadata?.unit),
+                              }));
+
+                              groupedParams.push({ paramName, label: displayLabel, changes });
+                            });
+
+                            return groupedParams.map((param) => (
+                              <Fragment key={param.paramName}>
+                                {/* Parameter name cell */}
+                                <Box
+                                  style={{
+                                    padding: `${spacing.sm} ${spacing.lg}`,
+                                    borderBottom: `1px solid ${colors.gray[100]}`,
+                                  }}
+                                >
+                                  <Tooltip label={param.paramName} multiline w={300} withArrow>
+                                    <Text
+                                      style={{
+                                        fontSize: FONT_SIZES.small,
+                                        color: colors.gray[700],
+                                        lineHeight: 1.4,
+                                      }}
+                                    >
+                                      {param.label}
+                                    </Text>
+                                  </Tooltip>
+                                </Box>
+                                {/* Period column */}
+                                <Box
+                                  style={{
+                                    padding: `${spacing.sm} ${spacing.md}`,
+                                    borderBottom: `1px solid ${colors.gray[100]}`,
+                                    textAlign: 'right',
+                                  }}
+                                >
+                                  {param.changes.map((change, idx) => (
+                                    <Text
+                                      key={idx}
+                                      style={{
+                                        fontSize: FONT_SIZES.small,
+                                        color: colors.gray[500],
+                                        lineHeight: 1.4,
+                                      }}
+                                    >
+                                      {change.period}
+                                    </Text>
+                                  ))}
+                                </Box>
+                                {/* Value column */}
+                                <Box
+                                  style={{
+                                    padding: `${spacing.sm} ${spacing.lg}`,
+                                    paddingLeft: spacing.sm,
+                                    borderBottom: `1px solid ${colors.gray[100]}`,
+                                    textAlign: 'right',
+                                  }}
+                                >
+                                  {param.changes.map((change, idx) => (
+                                    <Text
+                                      key={idx}
+                                      fw={500}
+                                      style={{
+                                        fontSize: FONT_SIZES.small,
+                                        color: colorConfig.icon,
+                                        lineHeight: 1.4,
+                                      }}
+                                    >
+                                      {change.value}
+                                    </Text>
+                                  ))}
+                                </Box>
+                              </Fragment>
+                            ));
+                          })()}
+                        </Box>
+                      </ScrollArea>
+                    </Box>
+
+                    {/* Panel footer */}
+                    <Box
+                      style={{ padding: spacing.lg, borderTop: `1px solid ${colors.gray[200]}` }}
+                    >
+                      <Button
+                        color="teal"
+                        fullWidth
+                        onClick={() => {
+                          handleSelectPolicy(
+                            drawerPolicy.id,
+                            drawerPolicy.label,
+                            drawerPolicy.paramCount,
+                            drawerPolicy.associationId
+                          );
+                          setDrawerPolicyId(null);
+                        }}
+                        rightSection={<IconChevronRight size={16} />}
+                      >
+                        Select this policy
+                      </Button>
+                    </Box>
+                  </>
+                )}
               </Box>
             )}
-          </ScrollArea>
-        </Box>
-      </Group>
-
-      {/* Sliding panel overlay - click to close */}
-      <Transition mounted={!!drawerPolicy} transition="fade" duration={200}>
-        {(transitionStyles) => (
-          <Box
-            style={{
-              ...transitionStyles,
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              background: 'rgba(0, 0, 0, 0.08)',
-              zIndex: 10,
-            }}
-            onClick={() => setDrawerPolicyId(null)}
-          />
-        )}
-      </Transition>
-
-      {/* Sliding panel for policy details */}
-      <Transition mounted={!!drawerPolicy} transition="slide-left" duration={250}>
-        {(transitionStyles) => (
-          <Box
-            style={{
-              ...transitionStyles,
-              position: 'absolute',
-              top: 0,
-              right: 0,
-              bottom: 0,
-              width: 480,
-              background: colors.white,
-              borderLeft: `1px solid ${colors.gray[200]}`,
-              boxShadow: '-8px 0 24px rgba(0, 0, 0, 0.08)',
-              zIndex: 11,
-              display: 'flex',
-              flexDirection: 'column',
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {drawerPolicy && (
-              <>
-                {/* Panel header */}
-                <Box
-                  style={{
-                    padding: spacing.lg,
-                    borderBottom: `1px solid ${colors.gray[200]}`,
-                  }}
-                >
-                  <Group justify="space-between" align="flex-start">
-                    <Stack gap={spacing.xs} style={{ flex: 1 }}>
-                      <Text fw={600} style={{ fontSize: FONT_SIZES.normal, color: colors.gray[900] }}>
-                        {drawerPolicy.label}
-                      </Text>
-                      <Text style={{ fontSize: FONT_SIZES.small, color: colors.gray[500] }}>
-                        {drawerPolicy.paramCount} parameter{drawerPolicy.paramCount !== 1 ? 's' : ''} changed from current law
-                      </Text>
-                    </Stack>
-                    <ActionIcon
-                      variant="subtle"
-                      color="gray"
-                      onClick={() => setDrawerPolicyId(null)}
-                    >
-                      <IconX size={18} />
-                    </ActionIcon>
-                  </Group>
-                </Box>
-
-                {/* Panel body */}
-                <Box style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-                  <ScrollArea style={{ flex: 1 }} offsetScrollbars>
-                    {/* Unified grid for header and data rows */}
-                    <Box
-                      style={{
-                        display: 'grid',
-                        gridTemplateColumns: '1fr auto auto',
-                        gap: `0`,
-                      }}
-                    >
-                      {/* Header row */}
-                      <Text
-                        fw={600}
-                        style={{
-                          fontSize: FONT_SIZES.small,
-                          color: colors.gray[600],
-                          padding: spacing.lg,
-                          paddingBottom: spacing.sm,
-                          borderBottom: `1px solid ${colors.gray[200]}`,
-                        }}
-                      >
-                        Parameter
-                      </Text>
-                      <Text
-                        fw={600}
-                        style={{
-                          fontSize: FONT_SIZES.small,
-                          color: colors.gray[600],
-                          textAlign: 'right',
-                          padding: spacing.lg,
-                          paddingBottom: spacing.sm,
-                          borderBottom: `1px solid ${colors.gray[200]}`,
-                          gridColumn: 'span 2',
-                        }}
-                      >
-                        Changes
-                      </Text>
-
-                      {/* Data rows - grouped by parameter */}
-                      {(() => {
-                        const groupedParams: Array<{
-                          paramName: string;
-                          label: string;
-                          changes: Array<{ period: string; value: string }>;
-                        }> = [];
-
-                        drawerPolicy.parameters.forEach((param) => {
-                          const paramName = param.name;
-                          const hierarchicalLabels = getHierarchicalLabels(paramName, parameters);
-                          const displayLabel = hierarchicalLabels.length > 0
-                            ? formatLabelParts(hierarchicalLabels)
-                            : paramName.split('.').pop() || paramName;
-                          const metadata = parameters[paramName];
-
-                          // Use value intervals directly from the Policy type
-                          const changes = (param.values || []).map((interval) => ({
-                            period: formatPeriod(interval.startDate, interval.endDate),
-                            value: formatParameterValue(interval.value, metadata?.unit),
-                          }));
-
-                          groupedParams.push({ paramName, label: displayLabel, changes });
-                        });
-
-                        return groupedParams.map((param) => (
-                          <Fragment key={param.paramName}>
-                            {/* Parameter name cell */}
-                            <Box
-                              style={{
-                                padding: `${spacing.sm} ${spacing.lg}`,
-                                borderBottom: `1px solid ${colors.gray[100]}`,
-                              }}
-                            >
-                              <Tooltip label={param.paramName} multiline w={300} withArrow>
-                                <Text
-                                  style={{
-                                    fontSize: FONT_SIZES.small,
-                                    color: colors.gray[700],
-                                    lineHeight: 1.4,
-                                  }}
-                                >
-                                  {param.label}
-                                </Text>
-                              </Tooltip>
-                            </Box>
-                            {/* Period column */}
-                            <Box
-                              style={{
-                                padding: `${spacing.sm} ${spacing.md}`,
-                                borderBottom: `1px solid ${colors.gray[100]}`,
-                                textAlign: 'right',
-                              }}
-                            >
-                              {param.changes.map((change, idx) => (
-                                <Text
-                                  key={idx}
-                                  style={{
-                                    fontSize: FONT_SIZES.small,
-                                    color: colors.gray[500],
-                                    lineHeight: 1.4,
-                                  }}
-                                >
-                                  {change.period}
-                                </Text>
-                              ))}
-                            </Box>
-                            {/* Value column */}
-                            <Box
-                              style={{
-                                padding: `${spacing.sm} ${spacing.lg}`,
-                                paddingLeft: spacing.sm,
-                                borderBottom: `1px solid ${colors.gray[100]}`,
-                                textAlign: 'right',
-                              }}
-                            >
-                              {param.changes.map((change, idx) => (
-                                <Text
-                                  key={idx}
-                                  fw={500}
-                                  style={{
-                                    fontSize: FONT_SIZES.small,
-                                    color: colorConfig.icon,
-                                    lineHeight: 1.4,
-                                  }}
-                                >
-                                  {change.value}
-                                </Text>
-                              ))}
-                            </Box>
-                          </Fragment>
-                        ));
-                      })()}
-                    </Box>
-                  </ScrollArea>
-                </Box>
-
-                {/* Panel footer */}
-                <Box style={{ padding: spacing.lg, borderTop: `1px solid ${colors.gray[200]}` }}>
-                  <Button
-                    color="teal"
-                    fullWidth
-                    onClick={() => {
-                      handleSelectPolicy(drawerPolicy.id, drawerPolicy.label, drawerPolicy.paramCount, drawerPolicy.associationId);
-                      setDrawerPolicyId(null);
-                    }}
-                    rightSection={<IconChevronRight size={16} />}
-                  >
-                    Select this policy
-                  </Button>
-                </Box>
-              </>
-            )}
-          </Box>
-        )}
-      </Transition>
+          </Transition>
         </>
       )}
     </Modal>
@@ -3126,7 +3410,9 @@ function PopulationBrowseModal({
   const reportYear = CURRENT_YEAR.toString();
 
   // Create household hook
-  const { createHousehold, isPending: isCreating } = useCreateHousehold(householdLabel || undefined);
+  const { createHousehold, isPending: isCreating } = useCreateHousehold(
+    householdLabel || undefined
+  );
 
   // Get all basic non-person fields dynamically
   const basicNonPersonFields = useMemo(() => {
@@ -3163,9 +3449,24 @@ function PopulationBrowseModal({
       const ukConstituencies = getUKConstituencies(regionOptions);
       const ukLocalAuthorities = getUKLocalAuthorities(regionOptions);
       return [
-        { id: 'countries' as const, label: 'Countries', count: ukCountries.length, regions: ukCountries },
-        { id: 'constituencies' as const, label: 'Constituencies', count: ukConstituencies.length, regions: ukConstituencies },
-        { id: 'local-authorities' as const, label: 'Local authorities', count: ukLocalAuthorities.length, regions: ukLocalAuthorities },
+        {
+          id: 'countries' as const,
+          label: 'Countries',
+          count: ukCountries.length,
+          regions: ukCountries,
+        },
+        {
+          id: 'constituencies' as const,
+          label: 'Constituencies',
+          count: ukConstituencies.length,
+          regions: ukConstituencies,
+        },
+        {
+          id: 'local-authorities' as const,
+          label: 'Local authorities',
+          count: ukLocalAuthorities.length,
+          regions: ukLocalAuthorities,
+        },
       ];
     }
     // US
@@ -3173,7 +3474,12 @@ function PopulationBrowseModal({
     const usDistricts = getUSCongressionalDistricts(regionOptions);
     return [
       { id: 'states' as const, label: 'States', count: usStates.length, regions: usStates },
-      { id: 'districts' as const, label: 'Congressional districts', count: usDistricts.length, regions: usDistricts },
+      {
+        id: 'districts' as const,
+        label: 'Congressional districts',
+        count: usDistricts.length,
+        regions: usDistricts,
+      },
     ];
   }, [countryId, regionOptions]);
 
@@ -3193,7 +3499,8 @@ function PopulationBrowseModal({
         const householdIdStr = String(h.association.householdId);
         // Get usage timestamp, fall back to association's updatedAt
         const usageTimestamp = householdUsageStore.getLastUsed(householdIdStr);
-        const sortTimestamp = usageTimestamp || h.association.updatedAt || h.association.createdAt || '';
+        const sortTimestamp =
+          usageTimestamp || h.association.updatedAt || h.association.createdAt || '';
         return {
           id: householdIdStr,
           label: h.association.label || `Household #${householdIdStr}`,
@@ -3299,53 +3606,59 @@ function PopulationBrowseModal({
   }, []);
 
   // Handle marital status change
-  const handleMaritalStatusChange = useCallback((newStatus: 'single' | 'married') => {
-    if (!householdDraft) return;
+  const handleMaritalStatusChange = useCallback(
+    (newStatus: 'single' | 'married') => {
+      if (!householdDraft) return;
 
-    const builder = new HouseholdBuilder(countryId as 'us' | 'uk', reportYear);
-    builder.loadHousehold(householdDraft);
+      const builder = new HouseholdBuilder(countryId as 'us' | 'uk', reportYear);
+      builder.loadHousehold(householdDraft);
 
-    const hasPartner = householdPeople.includes('your partner');
+      const hasPartner = householdPeople.includes('your partner');
 
-    if (newStatus === 'married' && !hasPartner) {
-      builder.addAdult('your partner', 30, { employment_income: 0 });
-      builder.setMaritalStatus('you', 'your partner');
-    } else if (newStatus === 'single' && hasPartner) {
-      builder.removePerson('your partner');
-    }
+      if (newStatus === 'married' && !hasPartner) {
+        builder.addAdult('your partner', 30, { employment_income: 0 });
+        builder.setMaritalStatus('you', 'your partner');
+      } else if (newStatus === 'single' && hasPartner) {
+        builder.removePerson('your partner');
+      }
 
-    setHouseholdDraft(builder.build());
-  }, [householdDraft, householdPeople, countryId, reportYear]);
+      setHouseholdDraft(builder.build());
+    },
+    [householdDraft, householdPeople, countryId, reportYear]
+  );
 
   // Handle number of children change
-  const handleNumChildrenChange = useCallback((newCount: number) => {
-    if (!householdDraft) return;
+  const handleNumChildrenChange = useCallback(
+    (newCount: number) => {
+      if (!householdDraft) return;
 
-    const builder = new HouseholdBuilder(countryId as 'us' | 'uk', reportYear);
-    builder.loadHousehold(householdDraft);
+      const builder = new HouseholdBuilder(countryId as 'us' | 'uk', reportYear);
+      builder.loadHousehold(householdDraft);
 
-    const currentChildren = householdPeople.filter((p) => p.includes('dependent'));
-    const currentChildCount = currentChildren.length;
+      const currentChildren = householdPeople.filter((p) => p.includes('dependent'));
+      const currentChildCount = currentChildren.length;
 
-    if (newCount !== currentChildCount) {
-      // Remove all existing children
-      currentChildren.forEach((child) => builder.removePerson(child));
+      if (newCount !== currentChildCount) {
+        // Remove all existing children
+        currentChildren.forEach((child) => builder.removePerson(child));
 
-      // Add new children
-      if (newCount > 0) {
-        const hasPartner = householdPeople.includes('your partner');
-        const parentIds = hasPartner ? ['you', 'your partner'] : ['you'];
-        const ordinals = ['first', 'second', 'third', 'fourth', 'fifth'];
+        // Add new children
+        if (newCount > 0) {
+          const hasPartner = householdPeople.includes('your partner');
+          const parentIds = hasPartner ? ['you', 'your partner'] : ['you'];
+          const ordinals = ['first', 'second', 'third', 'fourth', 'fifth'];
 
-        for (let i = 0; i < newCount; i++) {
-          const childName = `your ${ordinals[i] || `${i + 1}th`} dependent`;
-          builder.addChild(childName, 10, parentIds, { employment_income: 0 });
+          for (let i = 0; i < newCount; i++) {
+            const childName = `your ${ordinals[i] || `${i + 1}th`} dependent`;
+            builder.addChild(childName, 10, parentIds, { employment_income: 0 });
+          }
         }
       }
-    }
 
-    setHouseholdDraft(builder.build());
-  }, [householdDraft, householdPeople, countryId, reportYear]);
+      setHouseholdDraft(builder.build());
+    },
+    [householdDraft, householdPeople, countryId, reportYear]
+  );
 
   // Handle household creation submission
   const handleCreateHousehold = useCallback(async () => {
@@ -3386,7 +3699,16 @@ function PopulationBrowseModal({
     } catch (err) {
       console.error('Failed to create household:', err);
     }
-  }, [householdDraft, householdLabel, countryId, createHousehold, onSelect, onClose, queryClient, userId]);
+  }, [
+    householdDraft,
+    householdLabel,
+    countryId,
+    createHousehold,
+    onSelect,
+    onClose,
+    queryClient,
+    userId,
+  ]);
 
   const colorConfig = INGREDIENT_COLORS.population;
   const countryConfig = COUNTRY_CONFIG[countryId] || COUNTRY_CONFIG.us;
@@ -3554,7 +3876,12 @@ function PopulationBrowseModal({
         },
       }}
     >
-      <Group align="stretch" gap={0} style={{ flex: 1, height: '100%', overflow: 'hidden' }} wrap="nowrap">
+      <Group
+        align="stretch"
+        gap={0}
+        style={{ flex: 1, height: '100%', overflow: 'hidden' }}
+        wrap="nowrap"
+      >
         {/* Left Sidebar - independently scrollable */}
         <Box style={{ ...modalStyles.sidebar, height: '100%' }}>
           <ScrollArea h="100%" offsetScrollbars>
@@ -3565,9 +3892,15 @@ function PopulationBrowseModal({
                 <UnstyledButton
                   style={{
                     ...modalStyles.sidebarItem,
-                    background: activeCategory === 'national' && !isCreationMode ? colorConfig.bg : colors.gray[50],
+                    background:
+                      activeCategory === 'national' && !isCreationMode
+                        ? colorConfig.bg
+                        : colors.gray[50],
                     border: `1px solid ${activeCategory === 'national' && !isCreationMode ? colorConfig.border : colors.border.light}`,
-                    color: activeCategory === 'national' && !isCreationMode ? colorConfig.icon : colors.gray[700],
+                    color:
+                      activeCategory === 'national' && !isCreationMode
+                        ? colorConfig.icon
+                        : colors.gray[700],
                   }}
                   onClick={() => {
                     setActiveCategory('national');
@@ -3575,7 +3908,9 @@ function PopulationBrowseModal({
                   }}
                 >
                   {countryId === 'uk' ? <UKOutlineIcon size={16} /> : <USOutlineIcon size={16} />}
-                  <Text style={{ fontSize: FONT_SIZES.small, fontWeight: typography.fontWeight.medium }}>
+                  <Text
+                    style={{ fontSize: FONT_SIZES.small, fontWeight: typography.fontWeight.medium }}
+                  >
                     {countryId === 'uk' ? 'UK-wide' : 'Nationwide'}
                   </Text>
                 </UnstyledButton>
@@ -3591,8 +3926,14 @@ function PopulationBrowseModal({
                     key={category.id}
                     style={{
                       ...modalStyles.sidebarItem,
-                      background: activeCategory === category.id && !isCreationMode ? colorConfig.bg : 'transparent',
-                      color: activeCategory === category.id && !isCreationMode ? colorConfig.icon : colors.gray[700],
+                      background:
+                        activeCategory === category.id && !isCreationMode
+                          ? colorConfig.bg
+                          : 'transparent',
+                      color:
+                        activeCategory === category.id && !isCreationMode
+                          ? colorConfig.icon
+                          : colors.gray[700],
                     }}
                     onClick={() => {
                       setActiveCategory(category.id);
@@ -3616,8 +3957,14 @@ function PopulationBrowseModal({
                 <UnstyledButton
                   style={{
                     ...modalStyles.sidebarItem,
-                    background: activeCategory === 'my-households' && !isCreationMode ? colorConfig.bg : 'transparent',
-                    color: activeCategory === 'my-households' && !isCreationMode ? colorConfig.icon : colors.gray[700],
+                    background:
+                      activeCategory === 'my-households' && !isCreationMode
+                        ? colorConfig.bg
+                        : 'transparent',
+                    color:
+                      activeCategory === 'my-households' && !isCreationMode
+                        ? colorConfig.icon
+                        : colors.gray[700],
                   }}
                   onClick={() => {
                     setActiveCategory('my-households');
@@ -3676,7 +4023,14 @@ function PopulationBrowseModal({
                     </Box>
 
                     {/* Editable household name */}
-                    <Box style={{ minWidth: 0, display: 'flex', alignItems: 'center', gap: spacing.xs }}>
+                    <Box
+                      style={{
+                        minWidth: 0,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: spacing.xs,
+                      }}
+                    >
                       {isEditingLabel ? (
                         <TextInput
                           value={householdLabel}
@@ -3820,162 +4174,166 @@ function PopulationBrowseModal({
 
               {/* Content */}
               <ScrollArea style={{ flex: 1 }} offsetScrollbars>
-            {activeCategory === 'national' ? (
-              // National selection - single prominent option
-              <Box
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  padding: spacing['2xl'],
-                  gap: spacing.lg,
-                }}
-              >
-                <Paper
-                  style={{
-                    ...modalStyles.householdCard,
-                    width: '100%',
-                    maxWidth: 400,
-                    textAlign: 'center',
-                    padding: spacing.xl,
-                  }}
-                  onClick={() => handleSelectGeography(null)}
-                >
-                  <Stack align="center" gap={spacing.md}>
-                    {countryId === 'uk' ? <UKOutlineIcon size={48} /> : <USOutlineIcon size={48} />}
-                    <Stack gap={spacing.xs}>
-                      <Text fw={600} style={{ fontSize: FONT_SIZES.normal }}>
-                        {countryId === 'uk' ? 'Households UK-wide' : 'Households nationwide'}
-                      </Text>
-                      <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
-                        Simulate policy effects across the entire {countryId === 'uk' ? 'United Kingdom' : 'United States'}
-                      </Text>
-                    </Stack>
-                    <Button color="teal" rightSection={<IconChevronRight size={16} />}>
-                      Select
-                    </Button>
-                  </Stack>
-                </Paper>
-              </Box>
-            ) : activeCategory === 'my-households' ? (
-              // Households list
-              householdsLoading ? (
-                <Stack gap={spacing.md}>
-                  {[1, 2, 3].map((i) => (
-                    <Skeleton key={i} height={60} radius="md" />
-                  ))}
-                </Stack>
-              ) : filteredHouseholds.length === 0 ? (
-                <Box
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: spacing['4xl'],
-                    gap: spacing.md,
-                  }}
-                >
+                {activeCategory === 'national' ? (
+                  // National selection - single prominent option
                   <Box
                     style={{
-                      width: 64,
-                      height: 64,
-                      borderRadius: '50%',
-                      background: colors.gray[100],
                       display: 'flex',
+                      flexDirection: 'column',
                       alignItems: 'center',
                       justifyContent: 'center',
+                      padding: spacing['2xl'],
+                      gap: spacing.lg,
                     }}
                   >
-                    <IconHome size={28} color={colors.gray[400]} />
-                  </Box>
-                  <Text fw={500} c={colors.gray[600]}>
-                    {searchQuery ? 'No households match your search' : 'No households yet'}
-                  </Text>
-                  <Text c="dimmed" ta="center" maw={300} style={{ fontSize: FONT_SIZES.small }}>
-                    {searchQuery
-                      ? 'Try adjusting your search terms'
-                      : 'Create a custom household using the button in the sidebar'}
-                  </Text>
-                </Box>
-              ) : (
-                <Stack gap={spacing.sm}>
-                  {filteredHouseholds.map((household) => (
                     <Paper
-                      key={household.id}
-                      style={modalStyles.householdCard}
-                      onClick={() => handleSelectHousehold(household)}
+                      style={{
+                        ...modalStyles.householdCard,
+                        width: '100%',
+                        maxWidth: 400,
+                        textAlign: 'center',
+                        padding: spacing.xl,
+                      }}
+                      onClick={() => handleSelectGeography(null)}
                     >
-                      <Group justify="space-between" align="center">
-                        <Group gap={spacing.md}>
-                          <Box
-                            style={{
-                              width: 40,
-                              height: 40,
-                              borderRadius: spacing.radius.md,
-                              background: colorConfig.bg,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                            }}
-                          >
-                            <IconHome size={20} color={colorConfig.icon} />
-                          </Box>
-                          <Stack gap={2}>
-                            <Text fw={600} style={{ fontSize: FONT_SIZES.normal }}>
-                              {household.label}
-                            </Text>
-                            <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
-                              {household.memberCount} {household.memberCount === 1 ? 'member' : 'members'}
-                            </Text>
-                          </Stack>
-                        </Group>
-                        <IconChevronRight size={16} color={colors.gray[400]} />
-                      </Group>
+                      <Stack align="center" gap={spacing.md}>
+                        {countryId === 'uk' ? (
+                          <UKOutlineIcon size={48} />
+                        ) : (
+                          <USOutlineIcon size={48} />
+                        )}
+                        <Stack gap={spacing.xs}>
+                          <Text fw={600} style={{ fontSize: FONT_SIZES.normal }}>
+                            {countryId === 'uk' ? 'Households UK-wide' : 'Households nationwide'}
+                          </Text>
+                          <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
+                            Simulate policy effects across the entire{' '}
+                            {countryId === 'uk' ? 'United Kingdom' : 'United States'}
+                          </Text>
+                        </Stack>
+                        <Button color="teal" rightSection={<IconChevronRight size={16} />}>
+                          Select
+                        </Button>
+                      </Stack>
                     </Paper>
-                  ))}
-                </Stack>
-              )
-            ) : (
-              // Geography grid
-              filteredRegions.length === 0 ? (
-                <Box
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: spacing['4xl'],
-                    gap: spacing.md,
-                  }}
-                >
-                  <Text fw={500} c={colors.gray[600]}>
-                    No regions match your search
-                  </Text>
-                </Box>
-              ) : (
-                <Box style={modalStyles.regionGrid}>
-                  {filteredRegions.map((region) => (
-                    <UnstyledButton
-                      key={region.value}
-                      style={modalStyles.regionChip}
-                      onClick={() => handleSelectGeography(region)}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.borderColor = colorConfig.border;
-                        e.currentTarget.style.background = colorConfig.bg;
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.borderColor = colors.border.light;
-                        e.currentTarget.style.background = colors.white;
+                  </Box>
+                ) : activeCategory === 'my-households' ? (
+                  // Households list
+                  householdsLoading ? (
+                    <Stack gap={spacing.md}>
+                      {[1, 2, 3].map((i) => (
+                        <Skeleton key={i} height={60} radius="md" />
+                      ))}
+                    </Stack>
+                  ) : filteredHouseholds.length === 0 ? (
+                    <Box
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: spacing['4xl'],
+                        gap: spacing.md,
                       }}
                     >
-                      {region.label}
-                    </UnstyledButton>
-                  ))}
-                </Box>
-              )
-            )}
+                      <Box
+                        style={{
+                          width: 64,
+                          height: 64,
+                          borderRadius: '50%',
+                          background: colors.gray[100],
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <IconHome size={28} color={colors.gray[400]} />
+                      </Box>
+                      <Text fw={500} c={colors.gray[600]}>
+                        {searchQuery ? 'No households match your search' : 'No households yet'}
+                      </Text>
+                      <Text c="dimmed" ta="center" maw={300} style={{ fontSize: FONT_SIZES.small }}>
+                        {searchQuery
+                          ? 'Try adjusting your search terms'
+                          : 'Create a custom household using the button in the sidebar'}
+                      </Text>
+                    </Box>
+                  ) : (
+                    <Stack gap={spacing.sm}>
+                      {filteredHouseholds.map((household) => (
+                        <Paper
+                          key={household.id}
+                          style={modalStyles.householdCard}
+                          onClick={() => handleSelectHousehold(household)}
+                        >
+                          <Group justify="space-between" align="center">
+                            <Group gap={spacing.md}>
+                              <Box
+                                style={{
+                                  width: 40,
+                                  height: 40,
+                                  borderRadius: spacing.radius.md,
+                                  background: colorConfig.bg,
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                }}
+                              >
+                                <IconHome size={20} color={colorConfig.icon} />
+                              </Box>
+                              <Stack gap={2}>
+                                <Text fw={600} style={{ fontSize: FONT_SIZES.normal }}>
+                                  {household.label}
+                                </Text>
+                                <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
+                                  {household.memberCount}{' '}
+                                  {household.memberCount === 1 ? 'member' : 'members'}
+                                </Text>
+                              </Stack>
+                            </Group>
+                            <IconChevronRight size={16} color={colors.gray[400]} />
+                          </Group>
+                        </Paper>
+                      ))}
+                    </Stack>
+                  )
+                ) : // Geography grid
+                filteredRegions.length === 0 ? (
+                  <Box
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: spacing['4xl'],
+                      gap: spacing.md,
+                    }}
+                  >
+                    <Text fw={500} c={colors.gray[600]}>
+                      No regions match your search
+                    </Text>
+                  </Box>
+                ) : (
+                  <Box style={modalStyles.regionGrid}>
+                    {filteredRegions.map((region) => (
+                      <UnstyledButton
+                        key={region.value}
+                        style={modalStyles.regionChip}
+                        onClick={() => handleSelectGeography(region)}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.borderColor = colorConfig.border;
+                          e.currentTarget.style.background = colorConfig.bg;
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.borderColor = colors.border.light;
+                          e.currentTarget.style.background = colors.white;
+                        }}
+                      >
+                        {region.label}
+                      </UnstyledButton>
+                    ))}
+                  </Box>
+                )}
               </ScrollArea>
             </>
           )}
@@ -4038,9 +4396,11 @@ function PolicyCreationModal({
   const countryId = useCurrentCountry() as 'us' | 'uk';
 
   // Get metadata from Redux state
-  const { parameterTree, parameters, loading: metadataLoading } = useSelector(
-    (state: RootState) => state.metadata
-  );
+  const {
+    parameterTree,
+    parameters,
+    loading: metadataLoading,
+  } = useSelector((state: RootState) => state.metadata);
   const { minDate, maxDate } = useSelector(getDateRange);
 
   // Local policy state
@@ -4080,24 +4440,28 @@ function PolicyCreationModal({
   }, [isOpen]);
 
   // Create local policy state object for components
-  const localPolicy: PolicyStateProps = useMemo(() => ({
-    label: policyLabel,
-    parameters: policyParameters,
-  }), [policyLabel, policyParameters]);
+  const localPolicy: PolicyStateProps = useMemo(
+    () => ({
+      label: policyLabel,
+      parameters: policyParameters,
+    }),
+    [policyLabel, policyParameters]
+  );
 
   // Count modifications
   const modificationCount = countPolicyModifications(localPolicy);
 
   // Get modified parameter data for the Changes section - grouped by parameter with multiple changes each
   const modifiedParams = useMemo(() => {
-    return policyParameters.map(p => {
+    return policyParameters.map((p) => {
       const metadata = parameters[p.name];
 
       // Get full hierarchical label for the parameter (no compacting) - same as report builder
       const hierarchicalLabels = getHierarchicalLabels(p.name, parameters);
-      const displayLabel = hierarchicalLabels.length > 0
-        ? formatLabelParts(hierarchicalLabels)
-        : p.name.split('.').pop() || p.name;
+      const displayLabel =
+        hierarchicalLabels.length > 0
+          ? formatLabelParts(hierarchicalLabels)
+          : p.name.split('.').pop() || p.name;
 
       // Build changes array for this parameter
       const changes = p.values.map((interval) => ({
@@ -4118,14 +4482,14 @@ function PolicyCreationModal({
     if (!parameters) return [];
 
     return Object.values(parameters)
-      .filter((param): param is ParameterMetadata =>
-        param.type === 'parameter' && !!param.label && !param.parameter.includes('pycache')
+      .filter(
+        (param): param is ParameterMetadata =>
+          param.type === 'parameter' && !!param.label && !param.parameter.includes('pycache')
       )
-      .map(param => {
+      .map((param) => {
         const hierarchicalLabels = getHierarchicalLabels(param.parameter, parameters);
-        const fullLabel = hierarchicalLabels.length > 0
-          ? formatLabelParts(hierarchicalLabels)
-          : param.label;
+        const fullLabel =
+          hierarchicalLabels.length > 0 ? formatLabelParts(hierarchicalLabels) : param.label;
         return {
           value: param.parameter,
           label: fullLabel,
@@ -4135,28 +4499,31 @@ function PolicyCreationModal({
   }, [parameters]);
 
   // Handle search selection - expand tree path and select parameter
-  const handleSearchSelect = useCallback((paramName: string) => {
-    const param = parameters[paramName];
-    if (!param || param.type !== 'parameter') return;
+  const handleSearchSelect = useCallback(
+    (paramName: string) => {
+      const param = parameters[paramName];
+      if (!param || param.type !== 'parameter') return;
 
-    // Expand all parent nodes in the tree path
-    const pathParts = paramName.split('.');
-    const newExpanded = new Set(expandedMenuItems);
-    let currentPath = '';
-    for (let i = 0; i < pathParts.length - 1; i++) {
-      currentPath = currentPath ? `${currentPath}.${pathParts[i]}` : pathParts[i];
-      newExpanded.add(currentPath);
-    }
-    setExpandedMenuItems(newExpanded);
+      // Expand all parent nodes in the tree path
+      const pathParts = paramName.split('.');
+      const newExpanded = new Set(expandedMenuItems);
+      let currentPath = '';
+      for (let i = 0; i < pathParts.length - 1; i++) {
+        currentPath = currentPath ? `${currentPath}.${pathParts[i]}` : pathParts[i];
+        newExpanded.add(currentPath);
+      }
+      setExpandedMenuItems(newExpanded);
 
-    // Select the parameter
-    setSelectedParam(param);
-    setIntervals([]);
-    setValueSetterMode(ValueSetterMode.DEFAULT);
+      // Select the parameter
+      setSelectedParam(param);
+      setIntervals([]);
+      setValueSetterMode(ValueSetterMode.DEFAULT);
 
-    // Clear search
-    setParameterSearch('');
-  }, [parameters, expandedMenuItems]);
+      // Clear search
+      setParameterSearch('');
+    },
+    [parameters, expandedMenuItems]
+  );
 
   // Handle policy update from value setter
   const handlePolicyUpdate = useCallback((updatedPolicy: PolicyStateProps) => {
@@ -4164,32 +4531,35 @@ function PolicyCreationModal({
   }, []);
 
   // Handle menu item click
-  const handleMenuItemClick = useCallback((paramName: string) => {
-    const param = parameters[paramName];
-    if (param && param.type === 'parameter') {
-      setSelectedParam(param);
-      // Reset value setter state when selecting new parameter
-      setIntervals([]);
-      setValueSetterMode(ValueSetterMode.DEFAULT);
-    }
-    // Toggle expansion for non-leaf nodes
-    setExpandedMenuItems(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(paramName)) {
-        newSet.delete(paramName);
-      } else {
-        newSet.add(paramName);
+  const handleMenuItemClick = useCallback(
+    (paramName: string) => {
+      const param = parameters[paramName];
+      if (param && param.type === 'parameter') {
+        setSelectedParam(param);
+        // Reset value setter state when selecting new parameter
+        setIntervals([]);
+        setValueSetterMode(ValueSetterMode.DEFAULT);
       }
-      return newSet;
-    });
-  }, [parameters]);
+      // Toggle expansion for non-leaf nodes
+      setExpandedMenuItems((prev) => {
+        const newSet = new Set(prev);
+        if (newSet.has(paramName)) {
+          newSet.delete(paramName);
+        } else {
+          newSet.add(paramName);
+        }
+        return newSet;
+      });
+    },
+    [parameters]
+  );
 
   // Handle value submission
   const handleValueSubmit = useCallback(() => {
     if (!selectedParam || intervals.length === 0) return;
 
     const updatedParameters = [...policyParameters];
-    let existingParam = updatedParameters.find(p => p.name === selectedParam.parameter);
+    let existingParam = updatedParameters.find((p) => p.name === selectedParam.parameter);
 
     if (!existingParam) {
       existingParam = { name: selectedParam.parameter, values: [] };
@@ -4198,7 +4568,7 @@ function PolicyCreationModal({
 
     // Use ValueIntervalCollection to properly merge intervals
     const paramCollection = new ValueIntervalCollection(existingParam.values);
-    intervals.forEach(interval => {
+    intervals.forEach((interval) => {
       paramCollection.addInterval(interval);
     });
 
@@ -4234,25 +4604,28 @@ function PolicyCreationModal({
   }, [policyLabel, policyParameters, createPolicy, onPolicyCreated, onClose]);
 
   // Render nested menu recursively - memoized to prevent expensive re-renders
-  const renderMenuItems = useCallback((items: ParameterTreeNode[]): React.ReactNode => {
-    return items
-      .filter(item => !item.name.includes('pycache'))
-      .map(item => (
-        <NavLink
-          key={item.name}
-          label={item.label}
-          active={selectedParam?.parameter === item.name}
-          opened={expandedMenuItems.has(item.name)}
-          onClick={() => handleMenuItemClick(item.name)}
-          childrenOffset={16}
-          style={{
-            borderRadius: spacing.radius.sm,
-          }}
-        >
-          {item.children && expandedMenuItems.has(item.name) && renderMenuItems(item.children)}
-        </NavLink>
-      ));
-  }, [selectedParam?.parameter, expandedMenuItems, handleMenuItemClick]);
+  const renderMenuItems = useCallback(
+    (items: ParameterTreeNode[]): React.ReactNode => {
+      return items
+        .filter((item) => !item.name.includes('pycache'))
+        .map((item) => (
+          <NavLink
+            key={item.name}
+            label={item.label}
+            active={selectedParam?.parameter === item.name}
+            opened={expandedMenuItems.has(item.name)}
+            onClick={() => handleMenuItemClick(item.name)}
+            childrenOffset={16}
+            style={{
+              borderRadius: spacing.radius.sm,
+            }}
+          >
+            {item.children && expandedMenuItems.has(item.name) && renderMenuItems(item.children)}
+          </NavLink>
+        ));
+    },
+    [selectedParam?.parameter, expandedMenuItems, handleMenuItemClick]
+  );
 
   // Memoize the rendered tree to avoid expensive re-renders on unrelated state changes
   const renderedMenuTree = useMemo(() => {
@@ -4267,7 +4640,7 @@ function PolicyCreationModal({
     const baseValues = new ValueIntervalCollection(selectedParam.values as ValuesList);
     const reformValues = new ValueIntervalCollection(baseValues);
 
-    const paramToChart = policyParameters.find(p => p.name === selectedParam.parameter);
+    const paramToChart = policyParameters.find((p) => p.name === selectedParam.parameter);
     if (paramToChart && paramToChart.values && paramToChart.values.length > 0) {
       const userIntervals = new ValueIntervalCollection(paramToChart.values as ValuesList);
       for (const interval of userIntervals.getIntervals()) {
@@ -4291,9 +4664,10 @@ function PolicyCreationModal({
       WebkitBackdropFilter: 'blur(20px) saturate(180%)',
       borderRadius: spacing.radius.lg,
       border: `1px solid ${modificationCount > 0 ? colorConfig.border : colors.border.light}`,
-      boxShadow: modificationCount > 0
-        ? `0 4px 20px rgba(0, 0, 0, 0.08), 0 0 0 1px ${colorConfig.border}`
-        : `0 2px 12px ${colors.shadow.light}`,
+      boxShadow:
+        modificationCount > 0
+          ? `0 4px 20px rgba(0, 0, 0, 0.08), 0 0 0 1px ${colorConfig.border}`
+          : `0 2px 12px ${colors.shadow.light}`,
       padding: `${spacing.sm} ${spacing.lg}`,
       transition: 'all 0.3s ease',
       margin: spacing.md,
@@ -4484,12 +4858,7 @@ function PolicyCreationModal({
               </UnstyledButton>
 
               {/* Close button */}
-              <ActionIcon
-                variant="subtle"
-                color="gray"
-                onClick={onClose}
-                style={{ flexShrink: 0 }}
-              >
+              <ActionIcon variant="subtle" color="gray" onClick={onClose} style={{ flexShrink: 0 }}>
                 <IconX size={18} />
               </ActionIcon>
             </Group>
@@ -4502,7 +4871,8 @@ function PolicyCreationModal({
                 {modifiedParams.length === 0 ? (
                   <Box style={{ padding: spacing.md }}>
                     <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
-                      No parameters have been modified yet. Select a parameter from the menu to make changes.
+                      No parameters have been modified yet. Select a parameter from the menu to make
+                      changes.
                     </Text>
                   </Box>
                 ) : (
@@ -4518,10 +4888,20 @@ function PolicyCreationModal({
                         background: colors.gray[50],
                       }}
                     >
-                      <Text fw={600} style={{ fontSize: FONT_SIZES.small, color: colors.gray[600] }}>
+                      <Text
+                        fw={600}
+                        style={{ fontSize: FONT_SIZES.small, color: colors.gray[600] }}
+                      >
                         Parameter
                       </Text>
-                      <Text fw={600} style={{ fontSize: FONT_SIZES.small, color: colors.gray[600], textAlign: 'right' }}>
+                      <Text
+                        fw={600}
+                        style={{
+                          fontSize: FONT_SIZES.small,
+                          color: colors.gray[600],
+                          textAlign: 'right',
+                        }}
+                      >
                         Changes
                       </Text>
                     </Box>
@@ -4543,7 +4923,10 @@ function PolicyCreationModal({
                             gap: spacing.md,
                             padding: `${spacing.sm} ${spacing.md}`,
                             borderBottom: `1px solid ${colors.border.light}`,
-                            background: selectedParam?.parameter === param.paramName ? colorConfig.bg : colors.white,
+                            background:
+                              selectedParam?.parameter === param.paramName
+                                ? colorConfig.bg
+                                : colors.white,
                             alignItems: 'start',
                           }}
                         >
@@ -4568,7 +4951,11 @@ function PolicyCreationModal({
                                 <Text component="span" style={{ color: colors.gray[500] }}>
                                   {change.period}:
                                 </Text>{' '}
-                                <Text component="span" fw={500} style={{ color: colors.primary[600] }}>
+                                <Text
+                                  component="span"
+                                  fw={500}
+                                  style={{ color: colors.primary[600] }}
+                                >
                                   {change.value}
                                 </Text>
                               </Text>
@@ -4600,7 +4987,14 @@ function PolicyCreationModal({
           {/* Parameter Tree */}
           <Box style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
             <Box style={{ padding: spacing.md, borderBottom: `1px solid ${colors.border.light}` }}>
-              <Text fw={600} style={{ fontSize: FONT_SIZES.small, color: colors.gray[600], marginBottom: spacing.sm }}>
+              <Text
+                fw={600}
+                style={{
+                  fontSize: FONT_SIZES.small,
+                  color: colors.gray[600],
+                  marginBottom: spacing.sm,
+                }}
+              >
                 PARAMETERS
               </Text>
               <Autocomplete
@@ -4670,7 +5064,10 @@ function PolicyCreationModal({
                 >
                   <IconScale size={32} color={colors.gray[400]} />
                 </Box>
-                <Text ta="center" style={{ fontSize: FONT_SIZES.normal, color: colors.gray[600], maxWidth: 400 }}>
+                <Text
+                  ta="center"
+                  style={{ fontSize: FONT_SIZES.normal, color: colors.gray[600], maxWidth: 400 }}
+                >
                   Select a parameter from the menu to modify its value for your policy reform.
                 </Text>
               </Stack>
@@ -4700,7 +5097,9 @@ function PolicyCreationModal({
                   }}
                 >
                   <Stack gap={spacing.md}>
-                    <Text fw={600} style={{ fontSize: FONT_SIZES.normal }}>Set new value</Text>
+                    <Text fw={600} style={{ fontSize: FONT_SIZES.normal }}>
+                      Set new value
+                    </Text>
                     <Divider />
                     <Group align="flex-end" wrap="nowrap">
                       <Box style={{ flex: 1 }}>
@@ -4717,10 +5116,12 @@ function PolicyCreationModal({
                           setEndDate={setEndDate}
                         />
                       </Box>
-                      <ModeSelectorButton setMode={(mode) => {
-                        setIntervals([]);
-                        setValueSetterMode(mode);
-                      }} />
+                      <ModeSelectorButton
+                        setMode={(mode) => {
+                          setIntervals([]);
+                          setValueSetterMode(mode);
+                        }}
+                      />
                       <Button
                         onClick={handleValueSubmit}
                         disabled={intervals.length === 0}
@@ -4765,11 +5166,7 @@ function PolicyCreationModal({
             <Button variant="default" onClick={onClose}>
               Cancel
             </Button>
-            <Button
-              color="teal"
-              onClick={handleCreatePolicy}
-              loading={isCreating}
-            >
+            <Button color="teal" onClick={handleCreatePolicy} loading={isCreating}>
               Create policy
             </Button>
           </Group>
@@ -4861,9 +5258,14 @@ function SimulationCanvas({
 
     // Get all region options for lookup
     const regions = regionOptions || [];
-    const allRegions: RegionOption[] = countryId === 'us'
-      ? [...getUSStates(regions), ...getUSCongressionalDistricts(regions)]
-      : [...getUKCountries(regions), ...getUKConstituencies(regions), ...getUKLocalAuthorities(regions)];
+    const allRegions: RegionOption[] =
+      countryId === 'us'
+        ? [...getUSStates(regions), ...getUSCongressionalDistricts(regions)]
+        : [
+            ...getUKCountries(regions),
+            ...getUKConstituencies(regions),
+            ...getUKLocalAuthorities(regions),
+          ];
 
     // Add recent geographies (excluding national - that's shown separately)
     const recentGeoIds = geographyUsageStore.getRecentIds(10);
@@ -4903,7 +5305,9 @@ function SimulationCanvas({
       const timestamp = householdUsageStore.getLastUsed(householdId) || '';
 
       // Find the household in the fetched data (use String() for type-safe comparison)
-      const householdData = households?.find((h) => String(h.association.householdId) === householdId);
+      const householdData = households?.find(
+        (h) => String(h.association.householdId) === householdId
+      );
       if (householdData?.household) {
         const household = HouseholdAdapter.fromMetadata(householdData.household);
         // Use the household.id from the adapter for consistent matching with currentPopulationId
@@ -4938,17 +5342,26 @@ function SimulationCanvas({
     setReportState((prev) => ({ ...prev, simulations: [...prev.simulations, newSim] }));
   }, [reportState.simulations, setReportState]);
 
-  const handleRemoveSimulation = useCallback((index: number) => {
-    if (index === 0) return;
-    setReportState((prev) => ({ ...prev, simulations: prev.simulations.filter((_, i) => i !== index) }));
-  }, [setReportState]);
+  const handleRemoveSimulation = useCallback(
+    (index: number) => {
+      if (index === 0) return;
+      setReportState((prev) => ({
+        ...prev,
+        simulations: prev.simulations.filter((_, i) => i !== index),
+      }));
+    },
+    [setReportState]
+  );
 
-  const handleSimulationLabelChange = useCallback((index: number, label: string) => {
-    setReportState((prev) => ({
-      ...prev,
-      simulations: prev.simulations.map((sim, i) => i === index ? { ...sim, label } : sim),
-    }));
-  }, [setReportState]);
+  const handleSimulationLabelChange = useCallback(
+    (index: number, label: string) => {
+      setReportState((prev) => ({
+        ...prev,
+        simulations: prev.simulations.map((sim, i) => (i === index ? { ...sim, label } : sim)),
+      }));
+    },
+    [setReportState]
+  );
 
   const handleIngredientSelect = useCallback(
     (item: PolicyStateProps | PopulationStateProps | null) => {
@@ -4957,11 +5370,15 @@ function SimulationCanvas({
         const newSimulations = prev.simulations.map((sim, i) => {
           if (i !== simulationIndex) return sim;
           if (ingredientType === 'policy') return { ...sim, policy: item as PolicyStateProps };
-          if (ingredientType === 'population') return { ...sim, population: item as PopulationStateProps };
+          if (ingredientType === 'population')
+            return { ...sim, population: item as PopulationStateProps };
           return sim;
         });
         if (ingredientType === 'population' && simulationIndex === 0 && newSimulations.length > 1) {
-          newSimulations[1] = { ...newSimulations[1], population: { ...(item as PopulationStateProps) } };
+          newSimulations[1] = {
+            ...newSimulations[1],
+            population: { ...(item as PopulationStateProps) },
+          };
         }
         return { ...prev, simulations: newSimulations };
       });
@@ -4971,10 +5388,16 @@ function SimulationCanvas({
 
   const handleQuickSelectPolicy = useCallback(
     (simulationIndex: number) => {
-      const policyState: PolicyStateProps = { id: 'current-law', label: 'Current law', parameters: [] };
+      const policyState: PolicyStateProps = {
+        id: 'current-law',
+        label: 'Current law',
+        parameters: [],
+      };
       setReportState((prev) => ({
         ...prev,
-        simulations: prev.simulations.map((sim, i) => i === simulationIndex ? { ...sim, policy: policyState } : sim),
+        simulations: prev.simulations.map((sim, i) =>
+          i === simulationIndex ? { ...sim, policy: policyState } : sim
+        ),
       }));
     },
     [setReportState]
@@ -4982,25 +5405,28 @@ function SimulationCanvas({
 
   const handleSelectSavedPolicy = useCallback(
     (simulationIndex: number, policyId: string, label: string, paramCount: number) => {
-      const policyState: PolicyStateProps = { id: policyId, label, parameters: Array(paramCount).fill({}) };
+      const policyState: PolicyStateProps = {
+        id: policyId,
+        label,
+        parameters: Array(paramCount).fill({}),
+      };
       setReportState((prev) => ({
         ...prev,
-        simulations: prev.simulations.map((sim, i) => i === simulationIndex ? { ...sim, policy: policyState } : sim),
+        simulations: prev.simulations.map((sim, i) =>
+          i === simulationIndex ? { ...sim, policy: policyState } : sim
+        ),
       }));
     },
     [setReportState]
   );
 
-  const handleBrowseMorePolicies = useCallback(
-    (simulationIndex: number) => {
-      // Open the augmented policy browse modal
-      setPolicyBrowseState({
-        isOpen: true,
-        simulationIndex,
-      });
-    },
-    []
-  );
+  const handleBrowseMorePolicies = useCallback((simulationIndex: number) => {
+    // Open the augmented policy browse modal
+    setPolicyBrowseState({
+      isOpen: true,
+      simulationIndex,
+    });
+  }, []);
 
   // Handle policy selection from the browse modal
   const handlePolicySelectFromBrowse = useCallback(
@@ -5016,16 +5442,13 @@ function SimulationCanvas({
     [policyBrowseState, setReportState]
   );
 
-  const handleBrowseMorePopulations = useCallback(
-    (simulationIndex: number) => {
-      // Open the augmented population browse modal
-      setPopulationBrowseState({
-        isOpen: true,
-        simulationIndex,
-      });
-    },
-    []
-  );
+  const handleBrowseMorePopulations = useCallback((simulationIndex: number) => {
+    // Open the augmented population browse modal
+    setPopulationBrowseState({
+      isOpen: true,
+      simulationIndex,
+    });
+  }, []);
 
   // Handle population selection from the browse modal
   const handlePopulationSelectFromBrowse = useCallback(
@@ -5111,9 +5534,7 @@ function SimulationCanvas({
       setReportState((prev) => ({
         ...prev,
         simulations: prev.simulations.map((sim, i) =>
-          i === simulationIndex
-            ? { ...sim, policy: initializePolicyState() }
-            : sim
+          i === simulationIndex ? { ...sim, policy: initializePolicyState() } : sim
         ),
       }));
     },
@@ -5124,9 +5545,7 @@ function SimulationCanvas({
     (simulationIndex: number) => {
       setReportState((prev) => {
         let newSimulations = prev.simulations.map((sim, i) =>
-          i === simulationIndex
-            ? { ...sim, population: initializePopulationState() }
-            : sim
+          i === simulationIndex ? { ...sim, population: initializePopulationState() } : sim
         );
 
         // If deselecting baseline population, also clear reform's inherited population
@@ -5187,7 +5606,9 @@ function SimulationCanvas({
             countryId={countryId}
             onLabelChange={(label) => handleSimulationLabelChange(0, label)}
             onQuickSelectPolicy={() => handleQuickSelectPolicy(0)}
-            onSelectSavedPolicy={(id, label, paramCount) => handleSelectSavedPolicy(0, id, label, paramCount)}
+            onSelectSavedPolicy={(id, label, paramCount) =>
+              handleSelectSavedPolicy(0, id, label, paramCount)
+            }
             onQuickSelectPopulation={() => handleQuickSelectPopulation(0, 'nationwide')}
             onSelectRecentPopulation={(pop) => handleSelectRecentPopulation(0, pop)}
             onDeselectPolicy={() => handleDeselectPolicy(0)}
@@ -5208,7 +5629,9 @@ function SimulationCanvas({
               countryId={countryId}
               onLabelChange={(label) => handleSimulationLabelChange(1, label)}
               onQuickSelectPolicy={() => handleQuickSelectPolicy(1)}
-              onSelectSavedPolicy={(id, label, paramCount) => handleSelectSavedPolicy(1, id, label, paramCount)}
+              onSelectSavedPolicy={(id, label, paramCount) =>
+                handleSelectSavedPolicy(1, id, label, paramCount)
+              }
               onQuickSelectPopulation={() => handleQuickSelectPopulation(1, 'nationwide')}
               onSelectRecentPopulation={(pop) => handleSelectRecentPopulation(1, pop)}
               onDeselectPolicy={() => handleDeselectPolicy(1)}
@@ -5236,7 +5659,9 @@ function SimulationCanvas({
         onClose={() => setPickerState((prev) => ({ ...prev, isOpen: false }))}
         type={pickerState.ingredientType}
         onSelect={handleIngredientSelect}
-        onCreateNew={() => handleCreateCustom(pickerState.simulationIndex, pickerState.ingredientType)}
+        onCreateNew={() =>
+          handleCreateCustom(pickerState.simulationIndex, pickerState.ingredientType)
+        }
       />
 
       {/* Augmented Policy Browse Modal */}
@@ -5258,7 +5683,9 @@ function SimulationCanvas({
       <PolicyCreationModal
         isOpen={policyCreationState.isOpen}
         onClose={() => setPolicyCreationState((prev) => ({ ...prev, isOpen: false }))}
-        onPolicyCreated={(policy) => handlePolicyCreated(policyCreationState.simulationIndex, policy)}
+        onPolicyCreated={(policy) =>
+          handlePolicyCreated(policyCreationState.simulationIndex, policy)
+        }
         simulationIndex={policyCreationState.simulationIndex}
       />
     </>
@@ -5291,7 +5718,11 @@ function ProgressDot({ filled, pulsing }: { filled: boolean; pulsing?: boolean }
   );
 }
 
-function ReportMetaPanel({ reportState, setReportState, isReportConfigured }: ReportMetaPanelProps) {
+function ReportMetaPanel({
+  reportState,
+  setReportState,
+  isReportConfigured,
+}: ReportMetaPanelProps) {
   const [isEditingLabel, setIsEditingLabel] = useState(false);
   const [labelInput, setLabelInput] = useState('');
 
@@ -5303,16 +5734,22 @@ function ReportMetaPanel({ reportState, setReportState, isReportConfigured }: Re
   // Calculate configuration progress
   const simulations = reportState.simulations;
   const baselinePolicyConfigured = !!simulations[0]?.policy?.id;
-  const baselinePopulationConfigured = !!(simulations[0]?.population?.household?.id || simulations[0]?.population?.geography?.id);
+  const baselinePopulationConfigured = !!(
+    simulations[0]?.population?.household?.id || simulations[0]?.population?.geography?.id
+  );
   const hasReform = simulations.length > 1;
   const reformPolicyConfigured = hasReform && !!simulations[1]?.policy?.id;
 
   // Get labels for display
   const baselinePolicyLabel = simulations[0]?.policy?.label || null;
-  const baselinePopulationLabel = simulations[0]?.population?.label ||
-    (simulations[0]?.population?.household?.id ? 'Household' :
-     simulations[0]?.population?.geography?.id ? 'Nationwide' : null);
-  const reformPolicyLabel = hasReform ? (simulations[1]?.policy?.label || null) : null;
+  const baselinePopulationLabel =
+    simulations[0]?.population?.label ||
+    (simulations[0]?.population?.household?.id
+      ? 'Household'
+      : simulations[0]?.population?.geography?.id
+        ? 'Nationwide'
+        : null);
+  const reformPolicyLabel = hasReform ? simulations[1]?.policy?.label || null : null;
 
   // Progress steps
   const steps = [
@@ -5374,9 +5811,7 @@ function ReportMetaPanel({ reportState, setReportState, isReportConfigured }: Re
       alignItems: 'center',
       gap: spacing.xs,
       transition: 'all 0.3s ease',
-      boxShadow: isReportConfigured
-        ? `0 4px 12px rgba(44, 122, 123, 0.3)`
-        : 'none',
+      boxShadow: isReportConfigured ? `0 4px 12px rgba(44, 122, 123, 0.3)` : 'none',
     },
     configRow: {
       display: 'flex',
@@ -5418,7 +5853,9 @@ function ReportMetaPanel({ reportState, setReportState, isReportConfigured }: Re
           </Box>
 
           {/* Title with pencil icon - flexible width */}
-          <Box style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: spacing.xs }}>
+          <Box
+            style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: spacing.xs }}
+          >
             {isEditingLabel ? (
               <TextInput
                 value={labelInput}
@@ -5437,7 +5874,7 @@ function ReportMetaPanel({ reportState, setReportState, isReportConfigured }: Re
                     border: 'none',
                     background: 'transparent',
                     padding: 0,
-                  }
+                  },
                 }}
               />
             ) : (
@@ -5479,7 +5916,9 @@ function ReportMetaPanel({ reportState, setReportState, isReportConfigured }: Re
           <Select
             aria-label="Report year"
             value={reportState.year}
-            onChange={(value) => setReportState((prev) => ({ ...prev, year: value || CURRENT_YEAR }))}
+            onChange={(value) =>
+              setReportState((prev) => ({ ...prev, year: value || CURRENT_YEAR }))
+            }
             data={['2023', '2024', '2025', '2026']}
             size="xs"
             w={60}
@@ -5495,7 +5934,7 @@ function ReportMetaPanel({ reportState, setReportState, isReportConfigured }: Re
                 cursor: 'pointer',
                 padding: 0,
                 minHeight: 'auto',
-              }
+              },
             }}
           />
 
@@ -5544,31 +5983,77 @@ function ReportMetaPanel({ reportState, setReportState, isReportConfigured }: Re
           <Stack gap={spacing.sm}>
             {/* Baseline row */}
             <Box style={dockStyles.configRow}>
-              <Text c="dimmed" style={{ fontFamily: typography.fontFamily.primary, fontSize: FONT_SIZES.small, width: 60 }}>Baseline</Text>
+              <Text
+                c="dimmed"
+                style={{
+                  fontFamily: typography.fontFamily.primary,
+                  fontSize: FONT_SIZES.small,
+                  width: 60,
+                }}
+              >
+                Baseline
+              </Text>
               <Box style={dockStyles.configChip}>
                 {baselinePolicyConfigured ? (
                   <>
                     <IconScale size={12} color={colors.secondary[500]} />
-                    <Text style={{ fontFamily: typography.fontFamily.primary, fontSize: FONT_SIZES.small, color: colors.secondary[600] }}>{baselinePolicyLabel}</Text>
+                    <Text
+                      style={{
+                        fontFamily: typography.fontFamily.primary,
+                        fontSize: FONT_SIZES.small,
+                        color: colors.secondary[600],
+                      }}
+                    >
+                      {baselinePolicyLabel}
+                    </Text>
                   </>
                 ) : (
                   <>
                     <IconCircleDashed size={12} color={colors.gray[400]} />
-                    <Text c="dimmed" style={{ fontFamily: typography.fontFamily.primary, fontSize: FONT_SIZES.small }}>Select policy</Text>
+                    <Text
+                      c="dimmed"
+                      style={{
+                        fontFamily: typography.fontFamily.primary,
+                        fontSize: FONT_SIZES.small,
+                      }}
+                    >
+                      Select policy
+                    </Text>
                   </>
                 )}
               </Box>
-              <Text c="dimmed" style={{ fontFamily: typography.fontFamily.primary, fontSize: FONT_SIZES.small }}>+</Text>
+              <Text
+                c="dimmed"
+                style={{ fontFamily: typography.fontFamily.primary, fontSize: FONT_SIZES.small }}
+              >
+                +
+              </Text>
               <Box style={dockStyles.configChip}>
                 {baselinePopulationConfigured ? (
                   <>
                     <IconUsers size={12} color={colors.primary[500]} />
-                    <Text style={{ fontFamily: typography.fontFamily.primary, fontSize: FONT_SIZES.small, color: colors.primary[600] }}>{baselinePopulationLabel}</Text>
+                    <Text
+                      style={{
+                        fontFamily: typography.fontFamily.primary,
+                        fontSize: FONT_SIZES.small,
+                        color: colors.primary[600],
+                      }}
+                    >
+                      {baselinePopulationLabel}
+                    </Text>
                   </>
                 ) : (
                   <>
                     <IconCircleDashed size={12} color={colors.gray[400]} />
-                    <Text c="dimmed" style={{ fontFamily: typography.fontFamily.primary, fontSize: FONT_SIZES.small }}>Select population</Text>
+                    <Text
+                      c="dimmed"
+                      style={{
+                        fontFamily: typography.fontFamily.primary,
+                        fontSize: FONT_SIZES.small,
+                      }}
+                    >
+                      Select population
+                    </Text>
                   </>
                 )}
               </Box>
@@ -5577,21 +6062,51 @@ function ReportMetaPanel({ reportState, setReportState, isReportConfigured }: Re
             {/* Reform row (if applicable) */}
             {hasReform && (
               <Box style={dockStyles.configRow}>
-                <Text c="dimmed" style={{ fontFamily: typography.fontFamily.primary, fontSize: FONT_SIZES.small, width: 60 }}>Reform</Text>
+                <Text
+                  c="dimmed"
+                  style={{
+                    fontFamily: typography.fontFamily.primary,
+                    fontSize: FONT_SIZES.small,
+                    width: 60,
+                  }}
+                >
+                  Reform
+                </Text>
                 <Box style={dockStyles.configChip}>
                   {reformPolicyConfigured ? (
                     <>
                       <IconScale size={12} color={colors.secondary[500]} />
-                      <Text style={{ fontFamily: typography.fontFamily.primary, fontSize: FONT_SIZES.small, color: colors.secondary[600] }}>{reformPolicyLabel}</Text>
+                      <Text
+                        style={{
+                          fontFamily: typography.fontFamily.primary,
+                          fontSize: FONT_SIZES.small,
+                          color: colors.secondary[600],
+                        }}
+                      >
+                        {reformPolicyLabel}
+                      </Text>
                     </>
                   ) : (
                     <>
                       <IconCircleDashed size={12} color={colors.gray[400]} />
-                      <Text c="dimmed" style={{ fontFamily: typography.fontFamily.primary, fontSize: FONT_SIZES.small }}>Select policy</Text>
+                      <Text
+                        c="dimmed"
+                        style={{
+                          fontFamily: typography.fontFamily.primary,
+                          fontSize: FONT_SIZES.small,
+                        }}
+                      >
+                        Select policy
+                      </Text>
                     </>
                   )}
                 </Box>
-                <Text c="dimmed" style={{ fontFamily: typography.fontFamily.primary, fontSize: FONT_SIZES.tiny }}>(inherits population)</Text>
+                <Text
+                  c="dimmed"
+                  style={{ fontFamily: typography.fontFamily.primary, fontSize: FONT_SIZES.tiny }}
+                >
+                  (inherits population)
+                </Text>
               </Box>
             )}
 
@@ -5599,7 +6114,13 @@ function ReportMetaPanel({ reportState, setReportState, isReportConfigured }: Re
             {isReportConfigured && (
               <Group gap={spacing.xs} justify="center" mt={spacing.xs}>
                 <IconCircleCheck size={14} color={colors.success} />
-                <Text style={{ fontFamily: typography.fontFamily.primary, fontSize: FONT_SIZES.small, color: colors.success }}>
+                <Text
+                  style={{
+                    fontFamily: typography.fontFamily.primary,
+                    fontSize: FONT_SIZES.small,
+                    color: colors.success,
+                  }}
+                >
                   Ready to run your analysis
                 </Text>
               </Group>
@@ -5676,8 +6197,12 @@ export default function ReportBuilderPage() {
 
       <Tabs value={activeTab} onChange={setActiveTab} mb="xl">
         <Tabs.List>
-          <Tabs.Tab value="cards" leftSection={<IconLayoutColumns size={16} />}>Card view</Tabs.Tab>
-          <Tabs.Tab value="rows" leftSection={<IconRowInsertBottom size={16} />}>Row view</Tabs.Tab>
+          <Tabs.Tab value="cards" leftSection={<IconLayoutColumns size={16} />}>
+            Card view
+          </Tabs.Tab>
+          <Tabs.Tab value="rows" leftSection={<IconRowInsertBottom size={16} />}>
+            Row view
+          </Tabs.Tab>
         </Tabs.List>
       </Tabs>
 

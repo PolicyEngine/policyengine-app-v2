@@ -2,14 +2,25 @@
  * PolicyDetailsDrawer - Sliding panel showing policy parameter details
  */
 import { Fragment } from 'react';
-import { Box, Group, Stack, Text, ScrollArea, Button, ActionIcon, Tooltip, Transition } from '@mantine/core';
-import { IconX, IconChevronRight } from '@tabler/icons-react';
+import { IconChevronRight, IconX } from '@tabler/icons-react';
+import {
+  ActionIcon,
+  Box,
+  Button,
+  Group,
+  ScrollArea,
+  Stack,
+  Text,
+  Tooltip,
+  Transition,
+} from '@mantine/core';
 import { colors, spacing } from '@/designTokens';
+import { ParameterTreeNode } from '@/libs/buildParameterTree';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
-import { getHierarchicalLabels, formatLabelParts } from '@/utils/parameterLabels';
-import { formatParameterValue } from '@/utils/policyTableHelpers';
-import { formatPeriod } from '@/utils/dateUtils';
 import { Parameter } from '@/types/subIngredients/parameter';
+import { formatPeriod } from '@/utils/dateUtils';
+import { formatLabelParts, getHierarchicalLabelsFromTree } from '@/utils/parameterLabels';
+import { formatParameterValue } from '@/utils/policyTableHelpers';
 import { FONT_SIZES, INGREDIENT_COLORS } from '../../constants';
 
 interface PolicyDetailsDrawerProps {
@@ -21,6 +32,7 @@ interface PolicyDetailsDrawerProps {
     parameters: Parameter[];
   } | null;
   parameters: Record<string, ParameterMetadata>;
+  parameterTree: ParameterTreeNode | null | undefined;
   onClose: () => void;
   onSelect: () => void;
 }
@@ -28,6 +40,7 @@ interface PolicyDetailsDrawerProps {
 export function PolicyDetailsDrawer({
   policy,
   parameters,
+  parameterTree,
   onClose,
   onSelect,
 }: PolicyDetailsDrawerProps) {
@@ -79,11 +92,15 @@ export function PolicyDetailsDrawer({
                 <Box style={{ padding: spacing.lg, borderBottom: `1px solid ${colors.gray[200]}` }}>
                   <Group justify="space-between" align="flex-start">
                     <Stack gap={spacing.xs} style={{ flex: 1 }}>
-                      <Text fw={600} style={{ fontSize: FONT_SIZES.normal, color: colors.gray[900] }}>
+                      <Text
+                        fw={600}
+                        style={{ fontSize: FONT_SIZES.normal, color: colors.gray[900] }}
+                      >
                         {policy.label}
                       </Text>
                       <Text style={{ fontSize: FONT_SIZES.small, color: colors.gray[500] }}>
-                        {policy.paramCount} parameter{policy.paramCount !== 1 ? 's' : ''} changed from current law
+                        {policy.paramCount} parameter{policy.paramCount !== 1 ? 's' : ''} changed
+                        from current law
                       </Text>
                     </Stack>
                     <ActionIcon variant="subtle" color="gray" onClick={onClose}>
@@ -134,36 +151,82 @@ export function PolicyDetailsDrawer({
                         }> = [];
                         policy.parameters.forEach((param) => {
                           const paramName = param.name;
-                          const hierarchicalLabels = getHierarchicalLabels(paramName, parameters);
-                          const displayLabel = hierarchicalLabels.length > 0
-                            ? formatLabelParts(hierarchicalLabels)
-                            : paramName.split('.').pop() || paramName;
+                          const hierarchicalLabels = getHierarchicalLabelsFromTree(
+                            paramName,
+                            parameterTree
+                          );
+                          const displayLabel =
+                            hierarchicalLabels.length > 0
+                              ? formatLabelParts(hierarchicalLabels)
+                              : paramName.split('.').pop() || paramName;
                           const metadata = parameters[paramName];
                           const changes = (param.values || []).map((interval) => ({
                             period: formatPeriod(interval.startDate, interval.endDate),
-                            value: formatParameterValue(interval.value, metadata?.unit ?? undefined),
+                            value: formatParameterValue(
+                              interval.value,
+                              metadata?.unit ?? undefined
+                            ),
                           }));
                           groupedParams.push({ paramName, label: displayLabel, changes });
                         });
                         return groupedParams.map((param) => (
                           <Fragment key={param.paramName}>
-                            <Box style={{ padding: `${spacing.sm} ${spacing.lg}`, borderBottom: `1px solid ${colors.gray[100]}` }}>
+                            <Box
+                              style={{
+                                padding: `${spacing.sm} ${spacing.lg}`,
+                                borderBottom: `1px solid ${colors.gray[100]}`,
+                              }}
+                            >
                               <Tooltip label={param.paramName} multiline w={300} withArrow>
-                                <Text style={{ fontSize: FONT_SIZES.small, color: colors.gray[700], lineHeight: 1.4 }}>
+                                <Text
+                                  style={{
+                                    fontSize: FONT_SIZES.small,
+                                    color: colors.gray[700],
+                                    lineHeight: 1.4,
+                                  }}
+                                >
                                   {param.label}
                                 </Text>
                               </Tooltip>
                             </Box>
-                            <Box style={{ padding: `${spacing.sm} ${spacing.md}`, borderBottom: `1px solid ${colors.gray[100]}`, textAlign: 'right' }}>
+                            <Box
+                              style={{
+                                padding: `${spacing.sm} ${spacing.md}`,
+                                borderBottom: `1px solid ${colors.gray[100]}`,
+                                textAlign: 'right',
+                              }}
+                            >
                               {param.changes.map((change, idx) => (
-                                <Text key={idx} style={{ fontSize: FONT_SIZES.small, color: colors.gray[500], lineHeight: 1.4 }}>
+                                <Text
+                                  key={idx}
+                                  style={{
+                                    fontSize: FONT_SIZES.small,
+                                    color: colors.gray[500],
+                                    lineHeight: 1.4,
+                                  }}
+                                >
                                   {change.period}
                                 </Text>
                               ))}
                             </Box>
-                            <Box style={{ padding: `${spacing.sm} ${spacing.lg}`, paddingLeft: spacing.sm, borderBottom: `1px solid ${colors.gray[100]}`, textAlign: 'right' }}>
+                            <Box
+                              style={{
+                                padding: `${spacing.sm} ${spacing.lg}`,
+                                paddingLeft: spacing.sm,
+                                borderBottom: `1px solid ${colors.gray[100]}`,
+                                textAlign: 'right',
+                              }}
+                            >
                               {param.changes.map((change, idx) => (
-                                <Text key={idx} fw={500} style={{ fontSize: FONT_SIZES.small, color: colorConfig.icon, lineHeight: 1.4 }}>
+                                <Text
+                                  key={idx}
+                                  fw={500}
+                                  style={{
+                                    fontSize: FONT_SIZES.small,
+                                    color: colorConfig.icon,
+                                    lineHeight: 1.4,
+                                  }}
+                                >
                                   {change.value}
                                 </Text>
                               ))}

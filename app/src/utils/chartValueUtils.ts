@@ -18,10 +18,11 @@ export interface PlotlyAxisFormat {
 }
 
 /**
- * Formats a parameter value for display based on its unit
+ * Formats a parameter value for display based on its unit.
+ * By default shows up to 2 decimal places, but none for whole numbers.
  * @param value - The value to format
  * @param unit - The unit type (e.g., 'currency-USD', '/1', 'bool')
- * @param options - Formatting options (decimal places, include symbol)
+ * @param options - Formatting options (decimalPlaces forces exact decimals; includeSymbol)
  * @returns Formatted string representation of the value
  */
 export function formatParameterValue(
@@ -29,7 +30,7 @@ export function formatParameterValue(
   unit: string | null | undefined,
   options: FormatValueOptions = {}
 ): string {
-  const { decimalPlaces = 2, includeSymbol = true } = options;
+  const { decimalPlaces, includeSymbol = true } = options;
 
   // Handle null/undefined
   if (value === null || value === undefined) {
@@ -44,7 +45,15 @@ export function formatParameterValue(
   // Handle percentage
   if (unit === '/1') {
     const percentage = Number(value) * 100;
-    return `${percentage.toFixed(decimalPlaces)}%`;
+    if (decimalPlaces !== undefined) {
+      return `${percentage.toFixed(decimalPlaces)}%`;
+    }
+    // Default: up to 2 decimals, none for whole numbers
+    const formatted = percentage.toLocaleString('en-US', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    });
+    return `${formatted}%`;
   }
 
   // Handle currency
@@ -53,24 +62,45 @@ export function formatParameterValue(
 
   if (currencyUnits.includes(unit || '')) {
     const symbol = includeSymbol ? '$' : '';
+    if (decimalPlaces !== undefined) {
+      return `${symbol}${Number(value).toLocaleString('en-US', {
+        minimumFractionDigits: decimalPlaces,
+        maximumFractionDigits: decimalPlaces,
+      })}`;
+    }
+    // Default: up to 2 decimals, none for whole numbers
     return `${symbol}${Number(value).toLocaleString('en-US', {
-      minimumFractionDigits: decimalPlaces,
-      maximumFractionDigits: decimalPlaces,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
     })}`;
   }
 
   if (gbpUnits.includes(unit || '')) {
     const symbol = includeSymbol ? '£' : '';
+    if (decimalPlaces !== undefined) {
+      return `${symbol}${Number(value).toLocaleString('en-GB', {
+        minimumFractionDigits: decimalPlaces,
+        maximumFractionDigits: decimalPlaces,
+      })}`;
+    }
+    // Default: up to 2 decimals, none for whole numbers
     return `${symbol}${Number(value).toLocaleString('en-GB', {
-      minimumFractionDigits: decimalPlaces,
-      maximumFractionDigits: decimalPlaces,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
     })}`;
   }
 
   // Default numeric formatting
+  if (decimalPlaces !== undefined) {
+    return Number(value).toLocaleString('en-US', {
+      minimumFractionDigits: decimalPlaces,
+      maximumFractionDigits: decimalPlaces,
+    });
+  }
+  // Default: up to 2 decimals, none for whole numbers
   return Number(value).toLocaleString('en-US', {
     minimumFractionDigits: 0,
-    maximumFractionDigits: decimalPlaces,
+    maximumFractionDigits: 2,
   });
 }
 
