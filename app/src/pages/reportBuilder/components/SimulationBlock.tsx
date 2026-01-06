@@ -2,28 +2,14 @@
  * SimulationBlock - A simulation configuration card
  */
 
-import { useState, useRef } from 'react';
-import {
-  Box,
-  Group,
-  Text,
-  TextInput,
-  ActionIcon,
-  Paper,
-  Tooltip,
-} from '@mantine/core';
-import {
-  IconCheck,
-  IconPencil,
-  IconTrash,
-} from '@tabler/icons-react';
-
+import { useLayoutEffect, useRef, useState } from 'react';
+import { IconCheck, IconPencil, IconTrash } from '@tabler/icons-react';
+import { ActionIcon, Box, Group, Paper, Text, TextInput, Tooltip } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
-import type { SimulationStateProps, PopulationStateProps } from '@/types/pathwayState';
-
-import type { SavedPolicy, RecentPopulation, ViewMode } from '../types';
+import type { PopulationStateProps, SimulationStateProps } from '@/types/pathwayState';
 import { FONT_SIZES } from '../constants';
 import { styles } from '../styles';
+import type { RecentPopulation, SavedPolicy, ViewMode } from '../types';
 import { IngredientSection } from './IngredientSection';
 
 interface SimulationBlockProps {
@@ -78,11 +64,12 @@ export function SimulationBlock({
 
   const [isEditingLabel, setIsEditingLabel] = useState(false);
   const [labelInput, setLabelInput] = useState(simulation.label || '');
+  const [inputWidth, setInputWidth] = useState<number | null>(null);
+  const measureRef = useRef<HTMLSpanElement>(null);
 
   const isPolicyConfigured = !!simulation.policy.id;
-  const effectivePopulation = populationInherited && inheritedPopulation
-    ? inheritedPopulation
-    : simulation.population;
+  const effectivePopulation =
+    populationInherited && inheritedPopulation ? inheritedPopulation : simulation.population;
   const isPopulationConfigured = !!(
     effectivePopulation?.household?.id || effectivePopulation?.geography?.id
   );
@@ -95,13 +82,28 @@ export function SimulationBlock({
 
   const defaultLabel = index === 0 ? 'Baseline simulation' : 'Reform simulation';
 
+  // Measure text width for auto-sizing input
+  useLayoutEffect(() => {
+    if (measureRef.current && isEditingLabel) {
+      const textToMeasure = labelInput || defaultLabel;
+      measureRef.current.textContent = textToMeasure;
+      setInputWidth(measureRef.current.offsetWidth);
+    }
+  }, [labelInput, defaultLabel, isEditingLabel]);
+
   const currentPolicyId = simulation.policy.id;
-  const currentPopulationId = effectivePopulation?.household?.id || effectivePopulation?.geography?.id;
+  const currentPopulationId =
+    effectivePopulation?.household?.id || effectivePopulation?.geography?.id;
 
   // Determine inherited population type for display
-  const inheritedPopulationType = populationInherited && inheritedPopulation
-    ? (inheritedPopulation.household?.id ? 'household' : inheritedPopulation.geography?.id ? 'nationwide' : null)
-    : null;
+  const inheritedPopulationType =
+    populationInherited && inheritedPopulation
+      ? inheritedPopulation.household?.id
+        ? 'household'
+        : inheritedPopulation.geography?.id
+          ? 'nationwide'
+          : null
+      : null;
 
   return (
     <Paper
@@ -129,23 +131,46 @@ export function SimulationBlock({
       <Box style={styles.simulationHeader}>
         <Group gap={spacing.sm}>
           {isEditingLabel ? (
-            <TextInput
-              value={labelInput}
-              onChange={(e) => setLabelInput(e.target.value)}
-              onBlur={handleLabelSubmit}
-              onKeyDown={(e) => e.key === 'Enter' && handleLabelSubmit()}
-              size="sm"
-              autoFocus
-              styles={{
-                input: {
+            <>
+              {/* Hidden span for measuring text width */}
+              <span
+                ref={measureRef}
+                style={{
+                  position: 'absolute',
+                  visibility: 'hidden',
+                  whiteSpace: 'pre',
                   fontWeight: typography.fontWeight.semibold,
                   fontSize: FONT_SIZES.normal,
-                },
-              }}
-            />
+                }}
+              />
+              <TextInput
+                value={labelInput}
+                onChange={(e) => setLabelInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleLabelSubmit()}
+                placeholder={defaultLabel}
+                size="sm"
+                autoFocus
+                style={{ width: inputWidth ? inputWidth + 8 : 'auto' }}
+                styles={{
+                  input: {
+                    fontWeight: typography.fontWeight.semibold,
+                    fontSize: FONT_SIZES.normal,
+                  },
+                }}
+              />
+              <ActionIcon
+                size="sm"
+                variant="subtle"
+                color="teal"
+                onClick={handleLabelSubmit}
+                aria-label="Confirm simulation name"
+              >
+                <IconCheck size={14} />
+              </ActionIcon>
+            </>
           ) : (
             <Group gap={spacing.xs}>
-              <Text style={styles.simulationTitle}>
+              <Text style={{ ...styles.simulationTitle, marginRight: 8 }}>
                 {simulation.label || defaultLabel}
               </Text>
               <ActionIcon

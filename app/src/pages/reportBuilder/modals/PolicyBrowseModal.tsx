@@ -5,36 +5,36 @@
  * - Browse mode: PolicyBrowseContent for main content
  * - Creation mode: PolicyCreationContent + PolicyParameterTree
  */
-import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
-import { Box, Text, UnstyledButton, Divider, ScrollArea, Stack } from '@mantine/core';
-import { IconScale, IconUsers, IconPlus, IconFolder } from '@tabler/icons-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { IconFolder, IconPlus, IconScale, IconUsers } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
-import { colors, spacing, typography } from '@/designTokens';
-import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { PolicyStateProps } from '@/types/pathwayState';
-import { useUserPolicies, useUpdatePolicyAssociation } from '@/hooks/useUserPolicy';
-import { MOCK_USER_ID } from '@/constants';
-import { RootState } from '@/store';
-import { getHierarchicalLabels, formatLabelParts } from '@/utils/parameterLabels';
-import { countPolicyModifications } from '@/utils/countParameterChanges';
-import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
-import { useCreatePolicy } from '@/hooks/useCreatePolicy';
+import { Box, Divider, ScrollArea, Stack, Text, UnstyledButton } from '@mantine/core';
 import { PolicyAdapter } from '@/adapters';
+import { MOCK_USER_ID } from '@/constants';
+import { colors, spacing, typography } from '@/designTokens';
+import { useCreatePolicy } from '@/hooks/useCreatePolicy';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useUpdatePolicyAssociation, useUserPolicies } from '@/hooks/useUserPolicy';
+import { getDateRange } from '@/libs/metadataUtils';
+import { ValueSetterMode } from '@/pathways/report/components/valueSetters';
+import { RootState } from '@/store';
 import { Policy } from '@/types/ingredients/Policy';
+import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
+import { PolicyStateProps } from '@/types/pathwayState';
 import { PolicyCreationPayload } from '@/types/payloads';
 import { Parameter } from '@/types/subIngredients/parameter';
 import { ValueInterval, ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
-import { getDateRange } from '@/libs/metadataUtils';
-import { ValueSetterMode } from '@/pathways/report/components/valueSetters';
+import { countPolicyModifications } from '@/utils/countParameterChanges';
+import { formatLabelParts, getHierarchicalLabels } from '@/utils/parameterLabels';
 import { FONT_SIZES, INGREDIENT_COLORS } from '../constants';
 import { modalStyles } from '../styles';
 import { BrowseModalTemplate, CreationModeFooter } from './BrowseModalTemplate';
 import {
-  PolicyStatusHeader,
-  PolicyParameterTree,
-  PolicyCreationContent,
   PolicyBrowseContent,
+  PolicyCreationContent,
   PolicyDetailsDrawer,
+  PolicyParameterTree,
+  PolicyStatusHeader,
 } from './policy';
 
 interface PolicyBrowseModalProps {
@@ -43,22 +43,22 @@ interface PolicyBrowseModalProps {
   onSelect: (policy: PolicyStateProps) => void;
 }
 
-export function PolicyBrowseModal({
-  isOpen,
-  onClose,
-  onSelect,
-}: PolicyBrowseModalProps) {
+export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseModalProps) {
   const renderCount = useRef(0);
   renderCount.current++;
   const renderStart = performance.now();
-  console.log('[PolicyBrowseModal] Render #' + renderCount.current + ' START (isOpen=' + isOpen + ')');
+  console.log(
+    '[PolicyBrowseModal] Render #' + renderCount.current + ' START (isOpen=' + isOpen + ')'
+  );
 
   const countryId = useCurrentCountry() as 'us' | 'uk';
   const userId = MOCK_USER_ID.toString();
   const { data: policies, isLoading } = useUserPolicies(userId);
-  const { parameterTree, parameters, loading: metadataLoading } = useSelector(
-    (state: RootState) => state.metadata
-  );
+  const {
+    parameterTree,
+    parameters,
+    loading: metadataLoading,
+  } = useSelector((state: RootState) => state.metadata);
   const { minDate, maxDate } = useSelector(getDateRange);
   const updatePolicyAssociation = useUpdatePolicyAssociation();
 
@@ -79,7 +79,6 @@ export function PolicyBrowseModal({
   const [startDate, setStartDate] = useState<string>('2025-01-01');
   const [endDate, setEndDate] = useState<string>('2025-12-31');
   const [parameterSearch, setParameterSearch] = useState('');
-  const [isEditingLabel, setIsEditingLabel] = useState(false);
 
   // API hook for creating policy
   const { createPolicy, isPending: isCreating } = useCreatePolicy(policyLabel || undefined);
@@ -97,7 +96,6 @@ export function PolicyBrowseModal({
       setExpandedMenuItems(new Set());
       setIntervals([]);
       setParameterSearch('');
-      setIsEditingLabel(false);
     }
   }, [isOpen]);
 
@@ -129,14 +127,17 @@ export function PolicyBrowseModal({
     let result = userPolicies;
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      result = result.filter(p => {
+      result = result.filter((p) => {
         if (p.label.toLowerCase().includes(query)) return true;
-        const paramDisplayNames = p.parameters.map(param => {
-          const hierarchicalLabels = getHierarchicalLabels(param.name, parameters);
-          return hierarchicalLabels.length > 0
-            ? formatLabelParts(hierarchicalLabels)
-            : param.name.split('.').pop() || param.name;
-        }).join(' ').toLowerCase();
+        const paramDisplayNames = p.parameters
+          .map((param) => {
+            const hierarchicalLabels = getHierarchicalLabels(param.name, parameters);
+            return hierarchicalLabels.length > 0
+              ? formatLabelParts(hierarchicalLabels)
+              : param.name.split('.').pop() || param.name;
+          })
+          .join(' ')
+          .toLowerCase();
         if (paramDisplayNames.includes(query)) return true;
         return false;
       });
@@ -153,14 +154,22 @@ export function PolicyBrowseModal({
   // Get section title
   const getSectionTitle = () => {
     switch (activeSection) {
-      case 'my-policies': return 'My policies';
-      case 'public': return 'User-created policies';
-      default: return 'Policies';
+      case 'my-policies':
+        return 'My policies';
+      case 'public':
+        return 'User-created policies';
+      default:
+        return 'Policies';
     }
   };
 
   // Handle policy selection
-  const handleSelectPolicy = (policy: { id: string; label: string; paramCount: number; associationId?: string }) => {
+  const handleSelectPolicy = (policy: {
+    id: string;
+    label: string;
+    paramCount: number;
+    associationId?: string;
+  }) => {
     if (policy.associationId) {
       updatePolicyAssociation.mutate({
         userPolicyId: policy.associationId,
@@ -180,62 +189,71 @@ export function PolicyBrowseModal({
   // ========== Creation Mode Logic ==========
 
   // Create local policy state object
-  const localPolicy: PolicyStateProps = useMemo(() => ({
-    label: policyLabel,
-    parameters: policyParameters,
-  }), [policyLabel, policyParameters]);
+  const localPolicy: PolicyStateProps = useMemo(
+    () => ({
+      label: policyLabel,
+      parameters: policyParameters,
+    }),
+    [policyLabel, policyParameters]
+  );
 
   // Count modifications
   const modificationCount = countPolicyModifications(localPolicy);
 
   // Handle search selection
-  const handleSearchSelect = useCallback((paramName: string) => {
-    const param = parameters[paramName];
-    if (!param || param.type !== 'parameter') return;
-    const pathParts = paramName.split('.');
-    const newExpanded = new Set(expandedMenuItems);
-    let currentPath = '';
-    for (let i = 0; i < pathParts.length - 1; i++) {
-      currentPath = currentPath ? `${currentPath}.${pathParts[i]}` : pathParts[i];
-      newExpanded.add(currentPath);
-    }
-    setExpandedMenuItems(newExpanded);
-    setSelectedParam(param);
-    setIntervals([]);
-    setValueSetterMode(ValueSetterMode.DEFAULT);
-    setParameterSearch('');
-  }, [parameters, expandedMenuItems]);
-
-  // Handle menu item click
-  const handleMenuItemClick = useCallback((paramName: string) => {
-    const param = parameters[paramName];
-    if (param && param.type === 'parameter') {
+  const handleSearchSelect = useCallback(
+    (paramName: string) => {
+      const param = parameters[paramName];
+      if (!param || param.type !== 'parameter') return;
+      const pathParts = paramName.split('.');
+      const newExpanded = new Set(expandedMenuItems);
+      let currentPath = '';
+      for (let i = 0; i < pathParts.length - 1; i++) {
+        currentPath = currentPath ? `${currentPath}.${pathParts[i]}` : pathParts[i];
+        newExpanded.add(currentPath);
+      }
+      setExpandedMenuItems(newExpanded);
       setSelectedParam(param);
       setIntervals([]);
       setValueSetterMode(ValueSetterMode.DEFAULT);
-    }
-    setExpandedMenuItems(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(paramName)) {
-        newSet.delete(paramName);
-      } else {
-        newSet.add(paramName);
+      setParameterSearch('');
+    },
+    [parameters, expandedMenuItems]
+  );
+
+  // Handle menu item click
+  const handleMenuItemClick = useCallback(
+    (paramName: string) => {
+      const param = parameters[paramName];
+      if (param && param.type === 'parameter') {
+        setSelectedParam(param);
+        setIntervals([]);
+        setValueSetterMode(ValueSetterMode.DEFAULT);
       }
-      return newSet;
-    });
-  }, [parameters]);
+      setExpandedMenuItems((prev) => {
+        const newSet = new Set(prev);
+        if (newSet.has(paramName)) {
+          newSet.delete(paramName);
+        } else {
+          newSet.add(paramName);
+        }
+        return newSet;
+      });
+    },
+    [parameters]
+  );
 
   // Handle value submission
   const handleValueSubmit = useCallback(() => {
     if (!selectedParam || intervals.length === 0) return;
     const updatedParameters = [...policyParameters];
-    let existingParam = updatedParameters.find(p => p.name === selectedParam.parameter);
+    let existingParam = updatedParameters.find((p) => p.name === selectedParam.parameter);
     if (!existingParam) {
       existingParam = { name: selectedParam.parameter, values: [] };
       updatedParameters.push(existingParam);
     }
     const paramCollection = new ValueIntervalCollection(existingParam.values);
-    intervals.forEach(interval => {
+    intervals.forEach((interval) => {
       paramCollection.addInterval(interval);
     });
     existingParam.values = paramCollection.getIntervals();
@@ -251,7 +269,6 @@ export function PolicyBrowseModal({
     setExpandedMenuItems(new Set());
     setIntervals([]);
     setParameterSearch('');
-    setIsEditingLabel(false);
     setIsCreationMode(true);
   }, []);
 
@@ -288,7 +305,7 @@ export function PolicyBrowseModal({
   // Policy for drawer preview
   const drawerPolicy = useMemo(() => {
     if (!drawerPolicyId) return null;
-    return userPolicies.find(p => p.id === drawerPolicyId) || null;
+    return userPolicies.find((p) => p.id === drawerPolicyId) || null;
   }, [drawerPolicyId, userPolicies]);
 
   const colorConfig = INGREDIENT_COLORS.policy;
@@ -296,48 +313,58 @@ export function PolicyBrowseModal({
   // ========== Sidebar Rendering ==========
 
   // Browse mode sidebar sections
-  const browseSidebarSections = useMemo(() => [
-    {
-      id: 'quick-select',
-      label: 'Quick select',
-      items: [
-        {
-          id: 'current-law',
-          label: 'Current law',
-          icon: <IconScale size={16} color={colorConfig.icon} />,
-          onClick: handleSelectCurrentLaw,
-        },
-      ],
-    },
-    {
-      id: 'library',
-      label: 'Library',
-      items: [
-        {
-          id: 'my-policies',
-          label: 'My policies',
-          icon: <IconFolder size={16} />,
-          badge: userPolicies.length,
-          isActive: activeSection === 'my-policies',
-          onClick: () => setActiveSection('my-policies'),
-        },
-        {
-          id: 'public',
-          label: 'User-created policies',
-          icon: <IconUsers size={16} />,
-          isActive: activeSection === 'public',
-          onClick: () => setActiveSection('public'),
-        },
-        {
-          id: 'create-new',
-          label: 'Create new policy',
-          icon: <IconPlus size={16} />,
-          isActive: isCreationMode,
-          onClick: handleEnterCreationMode,
-        },
-      ],
-    },
-  ], [activeSection, userPolicies.length, isCreationMode, handleEnterCreationMode, handleSelectCurrentLaw, colorConfig.icon]);
+  const browseSidebarSections = useMemo(
+    () => [
+      {
+        id: 'quick-select',
+        label: 'Quick select',
+        items: [
+          {
+            id: 'current-law',
+            label: 'Current law',
+            icon: <IconScale size={16} color={colorConfig.icon} />,
+            onClick: handleSelectCurrentLaw,
+          },
+        ],
+      },
+      {
+        id: 'library',
+        label: 'Library',
+        items: [
+          {
+            id: 'my-policies',
+            label: 'My policies',
+            icon: <IconFolder size={16} />,
+            badge: userPolicies.length,
+            isActive: activeSection === 'my-policies',
+            onClick: () => setActiveSection('my-policies'),
+          },
+          {
+            id: 'public',
+            label: 'User-created policies',
+            icon: <IconUsers size={16} />,
+            isActive: activeSection === 'public',
+            onClick: () => setActiveSection('public'),
+          },
+          {
+            id: 'create-new',
+            label: 'Create new policy',
+            icon: <IconPlus size={16} />,
+            isActive: isCreationMode,
+            onClick: handleEnterCreationMode,
+          },
+        ],
+      },
+    ],
+    [
+      activeSection,
+      userPolicies.length,
+      isCreationMode,
+      handleEnterCreationMode,
+      handleSelectCurrentLaw,
+      colorConfig.icon,
+    ]
+  );
 
   // Creation mode custom sidebar
   const renderCreationSidebar = () => (
@@ -413,7 +440,10 @@ export function PolicyBrowseModal({
 
   // ========== Render ==========
 
-  console.log('[PolicyBrowseModal] About to return JSX, took', (performance.now() - renderStart).toFixed(2) + 'ms');
+  console.log(
+    '[PolicyBrowseModal] About to return JSX, took',
+    (performance.now() - renderStart).toFixed(2) + 'ms'
+  );
 
   return (
     <BrowseModalTemplate
@@ -421,30 +451,36 @@ export function PolicyBrowseModal({
       onClose={onClose}
       headerIcon={<IconScale size={20} color={colorConfig.icon} />}
       headerTitle={isCreationMode ? 'Create policy' : 'Select policy'}
-      headerSubtitle={isCreationMode ? 'Configure parameters for your new policy' : 'Choose an existing policy or create a new one'}
+      headerSubtitle={
+        isCreationMode
+          ? 'Configure parameters for your new policy'
+          : 'Choose an existing policy or create a new one'
+      }
       colorConfig={colorConfig}
       sidebarSections={isCreationMode ? undefined : browseSidebarSections}
       renderSidebar={isCreationMode ? renderCreationSidebar : undefined}
       sidebarWidth={isCreationMode ? 280 : undefined}
       renderMainContent={renderMainContent}
-      statusHeader={isCreationMode ? (
-        <PolicyStatusHeader
-          policyLabel={policyLabel}
-          setPolicyLabel={setPolicyLabel}
-          isEditingLabel={isEditingLabel}
-          setIsEditingLabel={setIsEditingLabel}
-          modificationCount={modificationCount}
-        />
-      ) : undefined}
-      footer={isCreationMode ? (
-        <CreationModeFooter
-          onBack={handleExitCreationMode}
-          onSubmit={handleCreatePolicy}
-          isLoading={isCreating}
-          submitDisabled={!policyLabel.trim()}
-          submitLabel="Create policy"
-        />
-      ) : undefined}
+      statusHeader={
+        isCreationMode ? (
+          <PolicyStatusHeader
+            policyLabel={policyLabel}
+            setPolicyLabel={setPolicyLabel}
+            modificationCount={modificationCount}
+          />
+        ) : undefined
+      }
+      footer={
+        isCreationMode ? (
+          <CreationModeFooter
+            onBack={handleExitCreationMode}
+            onSubmit={handleCreatePolicy}
+            isLoading={isCreating}
+            submitDisabled={!policyLabel.trim()}
+            submitLabel="Create policy"
+          />
+        ) : undefined
+      }
     />
   );
 }
