@@ -1,4 +1,5 @@
 import { Box, Button, Flex, List, SimpleGrid, Text, Title } from '@mantine/core';
+import { IconCheck, IconX } from '@tabler/icons-react';
 import { Link } from 'react-router-dom';
 import StaticPageLayout from '@/components/shared/static/StaticPageLayout';
 import { colors, spacing, typography } from '@/designTokens';
@@ -91,7 +92,10 @@ function UsageCard({ type, items }: { type: 'do' | 'dont'; items: string[] }) {
           color: isDo ? colors.success : colors.error,
         }}
       >
-        {isDo ? '✓ Do' : '✗ Don\'t'}
+        <Flex align="center" gap={4}>
+          {isDo ? <IconCheck size={14} /> : <IconX size={14} />}
+          {isDo ? 'Do' : "Don't"}
+        </Flex>
       </Text>
       <List
         style={{ color: colors.text.secondary, fontSize: typography.fontSize.sm }}

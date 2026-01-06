@@ -1,4 +1,16 @@
 import { Box, CopyButton, Flex, SimpleGrid, Text, Title, Tooltip, UnstyledButton } from '@mantine/core';
+import {
+  IconArrowDown,
+  IconArrowUp,
+  IconCheck,
+  IconChevronRight,
+  IconDownload,
+  IconInfoCircle,
+  IconPlus,
+  IconSearch,
+  IconWorld,
+  IconX,
+} from '@tabler/icons-react';
 import { Link } from 'react-router-dom';
 import StaticPageLayout from '@/components/shared/static/StaticPageLayout';
 import { colors, spacing, typography } from '@/designTokens';
@@ -317,6 +329,68 @@ export default function BrandDesignPage() {
               </Flex>
             ))}
           </Flex>
+        </Box>
+
+        {/* Icons */}
+        <Box mb={spacing['4xl']}>
+          <SectionTitle badge="Tabler Icons">Icons</SectionTitle>
+          <Text
+            mb="xl"
+            style={{
+              fontSize: typography.fontSize.base,
+              color: colors.text.secondary,
+            }}
+          >
+            PolicyEngine uses{' '}
+            <a
+              href="https://tabler.io/icons"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: colors.primary[500] }}
+            >
+              Tabler Icons
+            </a>
+            . Import from <code style={{ fontFamily: typography.fontFamily.mono, fontSize: typography.fontSize.sm }}>@tabler/icons-react</code>.
+          </Text>
+
+          <SimpleGrid cols={{ base: 4, sm: 5, md: 10 }} spacing="md">
+            {[
+              { icon: IconSearch, name: 'Search' },
+              { icon: IconCheck, name: 'Check' },
+              { icon: IconX, name: 'X' },
+              { icon: IconPlus, name: 'Plus' },
+              { icon: IconChevronRight, name: 'ChevronRight' },
+              { icon: IconArrowUp, name: 'ArrowUp' },
+              { icon: IconArrowDown, name: 'ArrowDown' },
+              { icon: IconDownload, name: 'Download' },
+              { icon: IconInfoCircle, name: 'InfoCircle' },
+              { icon: IconWorld, name: 'World' },
+            ].map(({ icon: Icon, name }) => (
+              <Flex
+                key={name}
+                direction="column"
+                align="center"
+                gap="xs"
+                p="md"
+                style={{
+                  background: colors.white,
+                  border: `1px solid ${colors.border.light}`,
+                  borderRadius: spacing.radius.md,
+                }}
+              >
+                <Icon size={24} color={colors.text.secondary} />
+                <Text
+                  style={{
+                    fontFamily: typography.fontFamily.mono,
+                    fontSize: typography.fontSize.xs,
+                    color: colors.text.tertiary,
+                  }}
+                >
+                  {name}
+                </Text>
+              </Flex>
+            ))}
+          </SimpleGrid>
         </Box>
 
         {/* Usage */}

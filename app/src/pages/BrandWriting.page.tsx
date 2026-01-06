@@ -1,4 +1,5 @@
 import { Box, Flex, List, Text, Title } from '@mantine/core';
+import { IconCheck, IconX } from '@tabler/icons-react';
 import { Link } from 'react-router-dom';
 import StaticPageLayout from '@/components/shared/static/StaticPageLayout';
 import { colors, spacing, typography } from '@/designTokens';
@@ -75,7 +76,10 @@ function ExampleBox({ type, children }: { type: 'good' | 'bad'; children: React.
           color: isGood ? colors.success : colors.error,
         }}
       >
-        {isGood ? '✓ Correct' : '✗ Incorrect'}
+        <Flex align="center" gap={4}>
+          {isGood ? <IconCheck size={14} /> : <IconX size={14} />}
+          {isGood ? 'Correct' : 'Incorrect'}
+        </Flex>
       </Text>
       <Text
         style={{
