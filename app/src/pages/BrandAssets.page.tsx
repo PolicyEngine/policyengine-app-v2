@@ -209,21 +209,49 @@ export default function BrandAssetsPage() {
             Download official PolicyEngine logos for use in publications, presentations, and partner materials.
           </Text>
 
-          <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="lg">
+          <Text
+            mb="md"
+            style={{
+              fontSize: typography.fontSize.base,
+              fontWeight: typography.fontWeight.semibold,
+              color: colors.text.primary,
+            }}
+          >
+            Full logo
+          </Text>
+          <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="lg" mb="xl">
             <LogoCard
-              variant="Primary (teal on white)"
+              variant="Teal on white"
               background={colors.white}
-              logoSrc="https://raw.githubusercontent.com/PolicyEngine/policyengine-app/master/src/images/logos/policyengine/teal.png"
+              logoSrc="/assets/logos/policyengine/teal.png"
             />
             <LogoCard
               variant="White on dark"
               background={colors.primary[700]}
-              logoSrc="https://raw.githubusercontent.com/PolicyEngine/policyengine-app/master/src/images/logos/policyengine/white.png"
+              logoSrc="/assets/logos/policyengine/white.png"
+            />
+          </SimpleGrid>
+
+          <Text
+            mb="md"
+            style={{
+              fontSize: typography.fontSize.base,
+              fontWeight: typography.fontWeight.semibold,
+              color: colors.text.primary,
+            }}
+          >
+            Square mark
+          </Text>
+          <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="lg">
+            <LogoCard
+              variant="Teal square"
+              background={colors.white}
+              logoSrc="/assets/logos/policyengine/teal-square.png"
             />
             <LogoCard
-              variant="Blue variant"
-              background={colors.white}
-              logoSrc="https://raw.githubusercontent.com/PolicyEngine/policyengine-app/master/src/images/logos/policyengine/blue.png"
+              variant="Teal square (transparent)"
+              background={colors.gray[100]}
+              logoSrc="/assets/logos/policyengine/teal-square-transparent.png"
             />
           </SimpleGrid>
         </Box>
@@ -261,7 +289,7 @@ export default function BrandAssetsPage() {
               }}
             >
               <img
-                src="https://raw.githubusercontent.com/PolicyEngine/policyengine-app/master/src/images/logos/policyengine/teal.png"
+                src="/assets/logos/policyengine/teal.png"
                 alt="PolicyEngine logo"
                 style={{ height: 40 }}
               />

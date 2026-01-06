@@ -212,10 +212,8 @@ export default function BrandDesignPage() {
             }}
           >
             {[
-              { label: 'Primary', font: typography.fontFamily.primary, sample: 'Inter' },
-              { label: 'Body', font: typography.fontFamily.body, sample: 'Roboto — The quick brown fox jumps over the lazy dog.' },
+              { label: 'Primary', font: typography.fontFamily.primary, sample: 'Inter — The quick brown fox jumps over the lazy dog.' },
               { label: 'Mono', font: typography.fontFamily.mono, sample: 'JetBrains Mono — const x = fn(args);' },
-              { label: 'Chart', font: typography.fontFamily.chart, sample: 'Roboto Serif — Figure 1: Distribution of benefits' },
             ].map((item, i) => (
               <Flex
                 key={item.label}
@@ -223,7 +221,7 @@ export default function BrandDesignPage() {
                 gap="xl"
                 p="lg"
                 style={{
-                  borderBottom: i < 3 ? `1px solid ${colors.border.light}` : 'none',
+                  borderBottom: i < 1 ? `1px solid ${colors.border.light}` : 'none',
                 }}
               >
                 <Text
