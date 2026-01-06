@@ -1,24 +1,21 @@
 /**
  * PopulationStatusHeader - Glassmorphic status bar for household creation mode
  */
-import { Box, Group, Text, TextInput, ActionIcon } from '@mantine/core';
-import { IconHome, IconPencil } from '@tabler/icons-react';
-import { colors, spacing, typography } from '@/designTokens';
+import { IconHome } from '@tabler/icons-react';
+import { Box, Group, Text } from '@mantine/core';
+import { colors, spacing } from '@/designTokens';
+import { EditableLabel } from '../../components/EditableLabel';
 import { FONT_SIZES, INGREDIENT_COLORS } from '../../constants';
 
 interface PopulationStatusHeaderProps {
   householdLabel: string;
   setHouseholdLabel: (label: string) => void;
-  isEditingLabel: boolean;
-  setIsEditingLabel: (editing: boolean) => void;
   memberCount: number;
 }
 
 export function PopulationStatusHeader({
   householdLabel,
   setHouseholdLabel,
-  isEditingLabel,
-  setIsEditingLabel,
   memberCount,
 }: PopulationStatusHeaderProps) {
   const colorConfig = INGREDIENT_COLORS.population;
@@ -30,9 +27,10 @@ export function PopulationStatusHeader({
       WebkitBackdropFilter: 'blur(20px) saturate(180%)',
       borderRadius: spacing.radius.lg,
       border: `1px solid ${memberCount > 0 ? colorConfig.border : colors.border.light}`,
-      boxShadow: memberCount > 0
-        ? `0 4px 20px rgba(0, 0, 0, 0.08), 0 0 0 1px ${colorConfig.border}`
-        : `0 2px 12px ${colors.shadow.light}`,
+      boxShadow:
+        memberCount > 0
+          ? `0 4px 20px rgba(0, 0, 0, 0.08), 0 0 0 1px ${colorConfig.border}`
+          : `0 2px 12px ${colors.shadow.light}`,
       padding: `${spacing.sm} ${spacing.lg}`,
       transition: 'all 0.3s ease',
       margin: spacing.md,
@@ -63,60 +61,12 @@ export function PopulationStatusHeader({
           </Box>
 
           {/* Editable household name */}
-          <Box style={{ minWidth: 0, display: 'flex', alignItems: 'center', gap: spacing.xs }}>
-            {isEditingLabel ? (
-              <TextInput
-                value={householdLabel}
-                onChange={(e) => setHouseholdLabel(e.currentTarget.value)}
-                onBlur={() => setIsEditingLabel(false)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') setIsEditingLabel(false);
-                  if (e.key === 'Escape') setIsEditingLabel(false);
-                }}
-                autoFocus
-                placeholder="Enter household name..."
-                size="xs"
-                style={{ width: 250 }}
-                styles={{
-                  input: {
-                    fontFamily: typography.fontFamily.primary,
-                    fontWeight: 600,
-                    fontSize: FONT_SIZES.normal,
-                    border: 'none',
-                    background: 'transparent',
-                    padding: 0,
-                  },
-                }}
-              />
-            ) : (
-              <>
-                <Text
-                  fw={600}
-                  style={{
-                    fontFamily: typography.fontFamily.primary,
-                    fontSize: FONT_SIZES.normal,
-                    color: householdLabel ? colors.gray[800] : colors.gray[400],
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                    cursor: 'pointer',
-                  }}
-                  onClick={() => setIsEditingLabel(true)}
-                >
-                  {householdLabel || 'Click to name your household...'}
-                </Text>
-                <ActionIcon
-                  size="sm"
-                  variant="subtle"
-                  color="gray"
-                  onClick={() => setIsEditingLabel(true)}
-                  style={{ flexShrink: 0 }}
-                >
-                  <IconPencil size={14} />
-                </ActionIcon>
-              </>
-            )}
-          </Box>
+          <EditableLabel
+            value={householdLabel}
+            onChange={setHouseholdLabel}
+            placeholder="Enter household name..."
+            emptyStateText="Click to name your household..."
+          />
         </Group>
 
         {/* Right side: Member count */}

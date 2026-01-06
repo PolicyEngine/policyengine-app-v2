@@ -1,24 +1,21 @@
 /**
  * PolicyStatusHeader - Glassmorphic status bar for policy creation mode
  */
-import { Box, Group, Text, TextInput, ActionIcon } from '@mantine/core';
-import { IconScale, IconPencil } from '@tabler/icons-react';
-import { colors, spacing, typography } from '@/designTokens';
+import { IconScale } from '@tabler/icons-react';
+import { Box, Group, Text } from '@mantine/core';
+import { colors, spacing } from '@/designTokens';
+import { EditableLabel } from '../../components/EditableLabel';
 import { FONT_SIZES, INGREDIENT_COLORS } from '../../constants';
 
 interface PolicyStatusHeaderProps {
   policyLabel: string;
   setPolicyLabel: (label: string) => void;
-  isEditingLabel: boolean;
-  setIsEditingLabel: (editing: boolean) => void;
   modificationCount: number;
 }
 
 export function PolicyStatusHeader({
   policyLabel,
   setPolicyLabel,
-  isEditingLabel,
-  setIsEditingLabel,
   modificationCount,
 }: PolicyStatusHeaderProps) {
   const colorConfig = INGREDIENT_COLORS.policy;
@@ -30,9 +27,10 @@ export function PolicyStatusHeader({
       WebkitBackdropFilter: 'blur(20px) saturate(180%)',
       borderRadius: spacing.radius.lg,
       border: `1px solid ${modificationCount > 0 ? colorConfig.border : colors.border.light}`,
-      boxShadow: modificationCount > 0
-        ? `0 4px 20px rgba(0, 0, 0, 0.08), 0 0 0 1px ${colorConfig.border}`
-        : `0 2px 12px ${colors.shadow.light}`,
+      boxShadow:
+        modificationCount > 0
+          ? `0 4px 20px rgba(0, 0, 0, 0.08), 0 0 0 1px ${colorConfig.border}`
+          : `0 2px 12px ${colors.shadow.light}`,
       padding: `${spacing.sm} ${spacing.lg}`,
       transition: 'all 0.3s ease',
       margin: spacing.md,
@@ -59,60 +57,12 @@ export function PolicyStatusHeader({
           >
             <IconScale size={18} color={colorConfig.icon} />
           </Box>
-          <Box style={{ minWidth: 0, display: 'flex', alignItems: 'center', gap: spacing.xs }}>
-            {isEditingLabel ? (
-              <TextInput
-                value={policyLabel}
-                onChange={(e) => setPolicyLabel(e.currentTarget.value)}
-                onBlur={() => setIsEditingLabel(false)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') setIsEditingLabel(false);
-                  if (e.key === 'Escape') setIsEditingLabel(false);
-                }}
-                autoFocus
-                placeholder="Enter policy name..."
-                size="xs"
-                style={{ width: 250 }}
-                styles={{
-                  input: {
-                    fontFamily: typography.fontFamily.primary,
-                    fontWeight: 600,
-                    fontSize: FONT_SIZES.normal,
-                    border: 'none',
-                    background: 'transparent',
-                    padding: 0,
-                  },
-                }}
-              />
-            ) : (
-              <>
-                <Text
-                  fw={600}
-                  style={{
-                    fontFamily: typography.fontFamily.primary,
-                    fontSize: FONT_SIZES.normal,
-                    color: policyLabel ? colors.gray[800] : colors.gray[400],
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                    cursor: 'pointer',
-                  }}
-                  onClick={() => setIsEditingLabel(true)}
-                >
-                  {policyLabel || 'Click to name your policy...'}
-                </Text>
-                <ActionIcon
-                  size="sm"
-                  variant="subtle"
-                  color="gray"
-                  onClick={() => setIsEditingLabel(true)}
-                  style={{ flexShrink: 0 }}
-                >
-                  <IconPencil size={14} />
-                </ActionIcon>
-              </>
-            )}
-          </Box>
+          <EditableLabel
+            value={policyLabel}
+            onChange={setPolicyLabel}
+            placeholder="Enter policy name..."
+            emptyStateText="Click to name your policy..."
+          />
         </Group>
         <Group gap={spacing.md} align="center" wrap="nowrap" style={{ flexShrink: 0 }}>
           <Group gap={spacing.xs} style={{ flexShrink: 0 }}>
