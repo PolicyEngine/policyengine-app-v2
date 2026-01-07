@@ -7,6 +7,10 @@ import AppLayout from './components/AppLayout';
 import StaticLayout from './components/StaticLayout';
 import AppPage from './pages/AppPage';
 import BlogPage from './pages/Blog.page';
+import BrandPage from './pages/Brand.page';
+import BrandAssetsPage from './pages/BrandAssets.page';
+import BrandDesignPage from './pages/BrandDesign.page';
+import BrandWritingPage from './pages/BrandWriting.page';
 import DonatePage from './pages/Donate.page';
 import OrgLogosEmbedPage from './pages/embed/OrgLogosEmbed.page';
 import HomePage from './pages/Home.page';
@@ -73,6 +77,22 @@ const router = createBrowserRouter(
             {
               path: 'research/:slug',
               element: <BlogPage />,
+            },
+            {
+              path: 'brand',
+              element: <BrandPage />,
+            },
+            {
+              path: 'brand/design',
+              element: <BrandDesignPage />,
+            },
+            {
+              path: 'brand/writing',
+              element: <BrandWritingPage />,
+            },
+            {
+              path: 'brand/assets',
+              element: <BrandAssetsPage />,
             },
           ],
         },
