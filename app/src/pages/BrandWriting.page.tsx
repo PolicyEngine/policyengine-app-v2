@@ -1,6 +1,6 @@
-import { Box, Flex, List, Text, Title } from '@mantine/core';
 import { IconCheck, IconX } from '@tabler/icons-react';
 import { Link } from 'react-router-dom';
+import { Box, Flex, List, Text, Title } from '@mantine/core';
 import StaticPageLayout from '@/components/shared/static/StaticPageLayout';
 import { colors, spacing, typography } from '@/designTokens';
 
@@ -207,7 +207,8 @@ export default function BrandWritingPage() {
             maxWidth: 600,
           }}
         >
-          How PolicyEngine communicates. Voice, tone, and content guidelines for research-oriented writing.
+          How PolicyEngine communicates. Voice, tone, and content guidelines for research-oriented
+          writing.
         </Text>
       </Box>
 
@@ -231,30 +232,36 @@ export default function BrandWritingPage() {
               lineHeight: typography.lineHeight.relaxed,
             }}
           >
-            Always use sentence case for headings, not title case. This follows the modern
-            standard used by Apple, Google, Slack, Notion, and GOV.UK.
+            Always use sentence case for headings, not title case. This follows the modern standard
+            used by Apple, Google, Slack, Notion, and GOV.UK.
           </Text>
 
           <Box mb="xl">
             <RuleTitle>The rule</RuleTitle>
             <RuleDescription>
-              Capitalize only the first word of a heading and any proper nouns.
-              Everything else stays lowercase.
+              Capitalize only the first word of a heading and any proper nouns. Everything else
+              stays lowercase.
             </RuleDescription>
             <Flex gap="md" direction={{ base: 'column', sm: 'row' }}>
               <Box flex={1}>
                 <ExampleBox type="good">
-                  How tax reform affects families<br />
-                  Understanding the EITC<br />
-                  Getting started with PolicyEngine<br />
+                  How tax reform affects families
+                  <br />
+                  Understanding the EITC
+                  <br />
+                  Getting started with PolicyEngine
+                  <br />
                   Why microsimulation matters
                 </ExampleBox>
               </Box>
               <Box flex={1}>
                 <ExampleBox type="bad">
-                  How Tax Reform Affects Families<br />
-                  Understanding The EITC<br />
-                  Getting Started With PolicyEngine<br />
+                  How Tax Reform Affects Families
+                  <br />
+                  Understanding The EITC
+                  <br />
+                  Getting Started With PolicyEngine
+                  <br />
                   Why Microsimulation Matters
                 </ExampleBox>
               </Box>
@@ -269,17 +276,23 @@ export default function BrandWritingPage() {
             <Flex gap="md" direction={{ base: 'column', sm: 'row' }}>
               <Box flex={1}>
                 <ExampleBox type="good">
-                  How AI affects income distribution<br />
-                  Analyzing the American Rescue Plan<br />
-                  UK benefit calculations<br />
+                  How AI affects income distribution
+                  <br />
+                  Analyzing the American Rescue Plan
+                  <br />
+                  UK benefit calculations
+                  <br />
                   Building with PolicyEngine
                 </ExampleBox>
               </Box>
               <Box flex={1}>
                 <ExampleBox type="bad">
-                  How ai affects income distribution<br />
-                  Analyzing the american rescue plan<br />
-                  Uk benefit calculations<br />
+                  How ai affects income distribution
+                  <br />
+                  Analyzing the american rescue plan
+                  <br />
+                  Uk benefit calculations
+                  <br />
                   Building with policyengine
                 </ExampleBox>
               </Box>
@@ -288,9 +301,7 @@ export default function BrandWritingPage() {
 
           <Box>
             <RuleTitle>Where this applies</RuleTitle>
-            <RuleDescription>
-              Use sentence case consistently across all content:
-            </RuleDescription>
+            <RuleDescription>Use sentence case consistently across all content:</RuleDescription>
             <List
               style={{ color: colors.text.secondary, lineHeight: 1.8 }}
               styles={{ itemWrapper: { marginBottom: spacing.xs } }}
@@ -318,8 +329,8 @@ export default function BrandWritingPage() {
             }}
           >
             PolicyEngine's voice is research-oriented but accessible. We explain complex policy
-            concepts clearly while maintaining rigor. When writing about our products, the tone
-            can be more natural and conversational.
+            concepts clearly while maintaining rigor. When writing about our products, the tone can
+            be more natural and conversational.
           </Text>
 
           <Box mb="xl">
@@ -330,15 +341,19 @@ export default function BrandWritingPage() {
             <Flex gap="md" direction={{ base: 'column', sm: 'row' }}>
               <Box flex={1}>
                 <ExampleBox type="good">
-                  The policy increases benefits by $1,200/year.<br />
-                  We validated against IRS data.<br />
+                  The policy increases benefits by $1,200/year.
+                  <br />
+                  We validated against IRS data.
+                  <br />
                   PolicyEngine calculates taxes for all 50 states.
                 </ExampleBox>
               </Box>
               <Box flex={1}>
                 <ExampleBox type="bad">
-                  Benefits are increased by $1,200/year by the policy.<br />
-                  Validation was performed against IRS data.<br />
+                  Benefits are increased by $1,200/year by the policy.
+                  <br />
+                  Validation was performed against IRS data.
+                  <br />
                   Taxes for all 50 states are calculated by PolicyEngine.
                 </ExampleBox>
               </Box>
@@ -352,9 +367,7 @@ export default function BrandWritingPage() {
             </RuleDescription>
             <Flex gap="md" direction={{ base: 'column', sm: 'row' }}>
               <Box flex={1}>
-                <ExampleBox type="good">
-                  The reform costs $50 billion annually.
-                </ExampleBox>
+                <ExampleBox type="good">The reform costs $50 billion annually.</ExampleBox>
               </Box>
               <Box flex={1}>
                 <ExampleBox type="bad">
@@ -371,14 +384,10 @@ export default function BrandWritingPage() {
             </RuleDescription>
             <Flex gap="md" direction={{ base: 'column', sm: 'row' }}>
               <Box flex={1}>
-                <ExampleBox type="good">
-                  The policy affects 42 million households.
-                </ExampleBox>
+                <ExampleBox type="good">The policy affects 42 million households.</ExampleBox>
               </Box>
               <Box flex={1}>
-                <ExampleBox type="bad">
-                  The policy affects many households.
-                </ExampleBox>
+                <ExampleBox type="bad">The policy affects many households.</ExampleBox>
               </Box>
             </Flex>
           </Box>
@@ -386,21 +395,25 @@ export default function BrandWritingPage() {
           <Box mb="xl">
             <RuleTitle>Present numbers dispassionately</RuleTitle>
             <RuleDescription>
-              When presenting results from PolicyEngine, let the data speak for itself.
-              Avoid adjectives or adverbs that aren't backed by the numbers themselves.
+              When presenting results from PolicyEngine, let the data speak for itself. Avoid
+              adjectives or adverbs that aren't backed by the numbers themselves.
             </RuleDescription>
             <Flex gap="md" direction={{ base: 'column', sm: 'row' }}>
               <Box flex={1}>
                 <ExampleBox type="good">
-                  The policy reduces poverty by 15%.<br />
-                  Average benefits increase by $2,400/year.<br />
+                  The policy reduces poverty by 15%.
+                  <br />
+                  Average benefits increase by $2,400/year.
+                  <br />
                   The reform costs $80 billion annually.
                 </ExampleBox>
               </Box>
               <Box flex={1}>
                 <ExampleBox type="bad">
-                  The policy dramatically slashes poverty by an impressive 15%.<br />
-                  Benefits skyrocket by a remarkable $2,400/year.<br />
+                  The policy dramatically slashes poverty by an impressive 15%.
+                  <br />
+                  Benefits skyrocket by a remarkable $2,400/year.
+                  <br />
                   The reform has a surprisingly modest cost of just $80 billion.
                 </ExampleBox>
               </Box>
@@ -423,19 +436,28 @@ export default function BrandWritingPage() {
           </Text>
 
           <Flex direction="column" gap="sm">
-            <TermItem term="PolicyEngine" definition="The organization and platform. Capital P, capital E, one word." />
-            <TermItem term="microsimulation" definition="One word, no hyphen. The technique for modeling policy effects." />
+            <TermItem
+              term="PolicyEngine"
+              definition="The organization and platform. Capital P, capital E, one word."
+            />
+            <TermItem
+              term="microsimulation"
+              definition="One word, no hyphen. The technique for modeling policy effects."
+            />
             <TermItem term="EITC" definition="Earned Income Tax Credit. Spell out on first use." />
             <TermItem term="CTC" definition="Child Tax Credit. Spell out on first use." />
             <TermItem term="UBI" definition="Universal Basic Income. Spell out on first use." />
-            <TermItem term="poverty rate" definition="Lowercase. The share of people below the poverty line." />
+            <TermItem
+              term="poverty rate"
+              definition="Lowercase. The share of people below the poverty line."
+            />
             <TermItem term="Gini index" definition="Capital G. A measure of income inequality." />
           </Flex>
 
           <TipBox>
-            When in doubt about capitalization, check how the term appears in official
-            government sources or academic literature. Acronyms stay uppercase; their
-            spelled-out forms follow normal capitalization rules.
+            When in doubt about capitalization, check how the term appears in official government
+            sources or academic literature. Acronyms stay uppercase; their spelled-out forms follow
+            normal capitalization rules.
           </TipBox>
         </Box>
 
@@ -448,16 +470,23 @@ export default function BrandWritingPage() {
             <Flex direction="column" gap="sm">
               <TermItem term="1-9" definition='Spell out: "three states", "five scenarios"' />
               <TermItem term="10+" definition='Use numerals: "50 states", "100 households"' />
-              <TermItem term="Large numbers" definition='Use commas: "1,000,000 households" or abbreviate: "1M households"' />
+              <TermItem
+                term="Large numbers"
+                definition='Use commas: "1,000,000 households" or abbreviate: "1M households"'
+              />
               <TermItem term="Percentages" definition='Use numerals with symbol: "15% reduction"' />
-              <TermItem term="Money" definition='Use $ with numerals: "$50 billion", "$1,200/year"' />
+              <TermItem
+                term="Money"
+                definition='Use $ with numerals: "$50 billion", "$1,200/year"'
+              />
             </Flex>
           </Box>
 
           <Box>
             <RuleTitle>Code references</RuleTitle>
             <RuleDescription>
-              Use inline code formatting for variable names, function names, file paths, and API endpoints.
+              Use inline code formatting for variable names, function names, file paths, and API
+              endpoints.
             </RuleDescription>
           </Box>
         </Box>

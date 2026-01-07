@@ -33,9 +33,8 @@ export default function YearInReviewBanner() {
     }
   };
 
-  const yearInReviewUrl = countryId === 'uk'
-    ? '/uk/2025-year-in-review'
-    : '/us/2025-year-in-review';
+  const yearInReviewUrl =
+    countryId === 'uk' ? '/uk/2025-year-in-review' : '/us/2025-year-in-review';
 
   return (
     <Box
@@ -78,11 +77,7 @@ export default function YearInReviewBanner() {
         >
           New
         </Text>
-        <Text
-          size={typography.fontSize.base}
-          fw={typography.fontWeight.semibold}
-          c={colors.white}
-        >
+        <Text size={typography.fontSize.base} fw={typography.fontWeight.semibold} c={colors.white}>
           Explore our 2025 Year in Review
         </Text>
         <Text

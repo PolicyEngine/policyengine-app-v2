@@ -1,4 +1,3 @@
-import { Box, CopyButton, Flex, SimpleGrid, Text, Title, Tooltip, UnstyledButton } from '@mantine/core';
 import {
   IconArrowDown,
   IconArrowUp,
@@ -12,6 +11,16 @@ import {
   IconX,
 } from '@tabler/icons-react';
 import { Link } from 'react-router-dom';
+import {
+  Box,
+  CopyButton,
+  Flex,
+  SimpleGrid,
+  Text,
+  Title,
+  Tooltip,
+  UnstyledButton,
+} from '@mantine/core';
 import StaticPageLayout from '@/components/shared/static/StaticPageLayout';
 import { colors, spacing, typography } from '@/designTokens';
 
@@ -50,7 +59,15 @@ const radiusTokens = [
   { name: '2xl', value: spacing.radius['2xl'] },
 ];
 
-function ColorSwatch({ name: _name, value, label }: { name: string; value: string; label: string }) {
+function ColorSwatch({
+  name: _name,
+  value,
+  label,
+}: {
+  name: string;
+  value: string;
+  label: string;
+}) {
   const isLight = value === colors.white || value === colors.primary[100];
 
   return (
@@ -224,8 +241,16 @@ export default function BrandDesignPage() {
             }}
           >
             {[
-              { label: 'Primary', font: typography.fontFamily.primary, sample: 'Inter — The quick brown fox jumps over the lazy dog.' },
-              { label: 'Mono', font: typography.fontFamily.mono, sample: 'JetBrains Mono — const x = fn(args);' },
+              {
+                label: 'Primary',
+                font: typography.fontFamily.primary,
+                sample: 'Inter — The quick brown fox jumps over the lazy dog.',
+              },
+              {
+                label: 'Mono',
+                font: typography.fontFamily.mono,
+                sample: 'JetBrains Mono — const x = fn(args);',
+              },
             ].map((item, i) => (
               <Flex
                 key={item.label}
@@ -350,7 +375,13 @@ export default function BrandDesignPage() {
             >
               Tabler Icons
             </a>
-            . Import from <code style={{ fontFamily: typography.fontFamily.mono, fontSize: typography.fontSize.sm }}>@tabler/icons-react</code>.
+            . Import from{' '}
+            <code
+              style={{ fontFamily: typography.fontFamily.mono, fontSize: typography.fontSize.sm }}
+            >
+              @tabler/icons-react
+            </code>
+            .
           </Text>
 
           <SimpleGrid cols={{ base: 4, sm: 5, md: 10 }} spacing="md">
@@ -413,7 +444,7 @@ export default function BrandDesignPage() {
                 overflow: 'auto',
               }}
             >
-{`// Import design tokens
+              {`// Import design tokens
 import { colors, spacing, typography } from '@/designTokens';
 
 // Use in styles

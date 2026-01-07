@@ -1,5 +1,5 @@
-import { Box, SimpleGrid, Text, Title, UnstyledButton } from '@mantine/core';
 import { Link } from 'react-router-dom';
+import { Box, SimpleGrid, Text, Title, UnstyledButton } from '@mantine/core';
 import HeroSection from '@/components/shared/static/HeroSection';
 import StaticPageLayout from '@/components/shared/static/StaticPageLayout';
 import { colors, spacing, typography } from '@/designTokens';
@@ -73,7 +73,8 @@ const brandCards: BrandCardProps[] = [
   {
     to: 'design',
     title: 'Design system',
-    description: 'Colors, typography, spacing, and component tokens for building consistent PolicyEngine interfaces.',
+    description:
+      'Colors, typography, spacing, and component tokens for building consistent PolicyEngine interfaces.',
     meta: 'Tokens and guidelines',
   },
   {

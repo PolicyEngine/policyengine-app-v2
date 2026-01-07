@@ -1,6 +1,6 @@
-import { Box, Button, Flex, List, SimpleGrid, Text, Title } from '@mantine/core';
 import { IconCheck, IconX } from '@tabler/icons-react';
 import { Link } from 'react-router-dom';
+import { Box, Button, Flex, List, SimpleGrid, Text, Title } from '@mantine/core';
 import StaticPageLayout from '@/components/shared/static/StaticPageLayout';
 import { colors, spacing, typography } from '@/designTokens';
 
@@ -21,7 +21,15 @@ function SectionTitle({ children }: { children: string }) {
   );
 }
 
-function LogoCard({ variant, background, logoSrc }: { variant: string; background: string; logoSrc: string }) {
+function LogoCard({
+  variant,
+  background,
+  logoSrc,
+}: {
+  variant: string;
+  background: string;
+  logoSrc: string;
+}) {
   return (
     <Box
       style={{
@@ -40,11 +48,7 @@ function LogoCard({ variant, background, logoSrc }: { variant: string; backgroun
           minHeight: 120,
         }}
       >
-        <img
-          src={logoSrc}
-          alt={`PolicyEngine logo - ${variant}`}
-          style={{ height: 48 }}
-        />
+        <img src={logoSrc} alt={`PolicyEngine logo - ${variant}`} style={{ height: 48 }} />
       </Flex>
       <Box p="md">
         <Text
@@ -210,7 +214,8 @@ export default function BrandAssetsPage() {
               color: colors.text.secondary,
             }}
           >
-            Download official PolicyEngine logos for use in publications, presentations, and partner materials.
+            Download official PolicyEngine logos for use in publications, presentations, and partner
+            materials.
           </Text>
 
           <Text
