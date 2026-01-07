@@ -50,7 +50,7 @@ const radiusTokens = [
   { name: '2xl', value: spacing.radius['2xl'] },
 ];
 
-function ColorSwatch({ name, value, label }: { name: string; value: string; label: string }) {
+function ColorSwatch({ name: _name, value, label }: { name: string; value: string; label: string }) {
   const isLight = value === colors.white || value === colors.primary[100];
 
   return (
