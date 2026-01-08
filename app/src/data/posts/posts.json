@@ -1,5 +1,14 @@
 [
   {
+    "title": "Utah SB60: Proposed income tax rate reduction for 2026",
+    "description": "Utah Senate Bill 60 would reduce the state's flat income tax rate from 4.5% to 4.45%, lowering state revenues by $83.6 million and benefiting 53.2% of residents.",
+    "date": "2026-01-08",
+    "tags": ["us", "us-ut", "policy"],
+    "authors": ["david-trimmer"],
+    "filename": "utah-sb60-income-tax-reduction.ipynb",
+    "image": "ut-SB60.jpg"
+  },
+  {
     "title": "Arnold Ventures awards grant for congressional district analysis",
     "description": "PolicyEngine receives grant to develop state and congressional district-level policy analysis capabilities.",
     "date": "2025-07-21 12:00:00",
