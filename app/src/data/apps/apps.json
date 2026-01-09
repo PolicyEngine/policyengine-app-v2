@@ -133,7 +133,7 @@
     "slug": "salternative",
     "title": "The SALTernative",
     "description": "SALT deduction and AMT calculator",
-    "source": "https://salt-amt-calculator-578039519715.us-central1.run.app/?embedded=true",
+    "source": "https://policyengine.github.io/salt-amt-calculator/",
     "tags": ["us", "policy"],
     "countryId": "us"
   },
