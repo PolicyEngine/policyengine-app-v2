@@ -1,6 +1,20 @@
 [
   {
     "type": "iframe",
+    "slug": "scottish-budget-2026-27",
+    "title": "Scotland economic outlook pre-budget",
+    "description": "Compare PolicyEngine's projections with official statistics, including poverty rates, household incomes through 2030-31, and expected policy changes.",
+    "source": "https://scottish-budget-dashboard.vercel.app/",
+    "tags": ["uk", "featured", "policy", "scotland"],
+    "countryId": "uk",
+    "displayWithResearch": true,
+    "image": "scottish-budget-2026-27.webp",
+    "image_credit": "insider.co.uk",
+    "date": "2026-01-09 12:00:00",
+    "authors": ["vahid-ahmadi"]
+  },
+  {
+    "type": "iframe",
     "slug": "local-areas-dashboard",
     "title": "UK local areas dashboard",
     "description": "Explore how national policies affect different local areas across the UK, including parliamentary constituencies and local authorities",
