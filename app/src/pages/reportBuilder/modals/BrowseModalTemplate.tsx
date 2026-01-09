@@ -36,6 +36,7 @@ export function BrowseModalTemplate({
   headerIcon,
   headerTitle,
   headerSubtitle,
+  headerRightContent,
   colorConfig,
   sidebarSections,
   renderSidebar,
@@ -43,6 +44,7 @@ export function BrowseModalTemplate({
   renderMainContent,
   statusHeader,
   footer,
+  contentPadding = spacing.lg,
 }: BrowseModalTemplateProps) {
   // Render standard sidebar sections
   const renderStandardSidebar = (sections: BrowseModalSidebarSection[]) => (
@@ -89,29 +91,38 @@ export function BrowseModalTemplate({
       opened={isOpen}
       onClose={onClose}
       title={
-        <Group gap={spacing.sm}>
-          <Box
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: spacing.radius.md,
-              background: `linear-gradient(135deg, ${colorConfig.bg} 0%, ${colors.white} 100%)`,
-              border: `1px solid ${colorConfig.border}`,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            {headerIcon}
-          </Box>
-          <Stack gap={0}>
-            <Text fw={600} style={{ fontSize: FONT_SIZES.normal, color: colors.gray[900] }}>
-              {headerTitle}
-            </Text>
-            <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
-              {headerSubtitle}
-            </Text>
-          </Stack>
+        <Group justify="space-between" align="center" wrap="nowrap" style={{ width: '100%' }}>
+          <Group gap={spacing.sm}>
+            <Box
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: spacing.radius.md,
+                background: `linear-gradient(135deg, ${colorConfig.bg} 0%, ${colors.white} 100%)`,
+                border: `1px solid ${colorConfig.border}`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              {headerIcon}
+            </Box>
+            <Stack gap={0}>
+              {typeof headerTitle === 'string' ? (
+                <Text fw={600} style={{ fontSize: FONT_SIZES.normal, color: colors.gray[900] }}>
+                  {headerTitle}
+                </Text>
+              ) : (
+                headerTitle
+              )}
+              {headerSubtitle && (
+                <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
+                  {headerSubtitle}
+                </Text>
+              )}
+            </Stack>
+          </Group>
+          {headerRightContent}
         </Group>
       }
       size={BROWSE_MODAL_CONFIG.width}
@@ -129,6 +140,9 @@ export function BrowseModalTemplate({
           paddingBottom: spacing.md,
           paddingLeft: spacing.xl,
           paddingRight: spacing.xl,
+        },
+        title: {
+          flex: 1,
         },
         body: {
           padding: 0,
@@ -170,7 +184,7 @@ export function BrowseModalTemplate({
           {statusHeader}
 
           {/* Main Content */}
-          <Box style={{ flex: 1, overflow: 'auto', padding: spacing.lg }}>
+          <Box style={{ flex: 1, overflow: 'auto', padding: contentPadding }}>
             {renderMainContent()}
           </Box>
         </Box>
