@@ -79,8 +79,10 @@ export interface BrowseModalTemplateProps {
   isOpen: boolean;
   onClose: () => void;
   headerIcon: ReactNode;
-  headerTitle: string;
-  headerSubtitle: string;
+  headerTitle: ReactNode;
+  headerSubtitle?: string;
+  /** Content to display on the right side of the header (e.g., status indicator) */
+  headerRightContent?: ReactNode;
   colorConfig: IngredientColorConfig;
   /** Standard sidebar sections - use for simple browse mode sidebars */
   sidebarSections?: BrowseModalSidebarSection[];
@@ -93,6 +95,8 @@ export interface BrowseModalTemplateProps {
   statusHeader?: ReactNode;
   /** Footer shown below main content (e.g., creation mode buttons) */
   footer?: ReactNode;
+  /** Content area padding override (default: spacing.lg). Set to 0 for full-bleed content. */
+  contentPadding?: number | string;
 }
 
 // ============================================================================

@@ -11,18 +11,17 @@
  * - Row view: Stacked horizontal rows
  */
 
-import { useState, useEffect, useRef, useLayoutEffect } from 'react';
-import { Box, Tabs } from '@mantine/core';
-import { IconLayoutColumns, IconRowInsertBottom } from '@tabler/icons-react';
-
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { IconLayoutColumns, IconPalette, IconRowInsertBottom } from '@tabler/icons-react';
+import { Link } from 'react-router-dom';
+import { Box, Group, Tabs, Text } from '@mantine/core';
+import { CURRENT_YEAR } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { initializeSimulationState } from '@/utils/pathwayState/initializeSimulationState';
-import { CURRENT_YEAR } from '@/constants';
-
-import type { ReportBuilderState, IngredientPickerState, ViewMode } from './types';
+import { ReportMetaPanel, SimulationCanvas } from './components';
 import { COUNTRY_CONFIG } from './constants';
 import { styles } from './styles';
-import { SimulationCanvas, ReportMetaPanel } from './components';
+import type { IngredientPickerState, ReportBuilderState, ViewMode } from './types';
 
 export default function ReportBuilderPage() {
   const renderCount = useRef(0);
@@ -117,8 +116,12 @@ export default function ReportBuilderPage() {
 
       <Tabs value={activeTab} onChange={setActiveTab} mb="xl">
         <Tabs.List>
-          <Tabs.Tab value="cards" leftSection={<IconLayoutColumns size={16} />}>Card view</Tabs.Tab>
-          <Tabs.Tab value="rows" leftSection={<IconRowInsertBottom size={16} />}>Row view</Tabs.Tab>
+          <Tabs.Tab value="cards" leftSection={<IconLayoutColumns size={16} />}>
+            Card view
+          </Tabs.Tab>
+          <Tabs.Tab value="rows" leftSection={<IconRowInsertBottom size={16} />}>
+            Row view
+          </Tabs.Tab>
         </Tabs.List>
       </Tabs>
 
@@ -129,6 +132,35 @@ export default function ReportBuilderPage() {
         setPickerState={setPickerState}
         viewMode={viewMode}
       />
+
+      {/* Dev tools - mockup links */}
+      <Box
+        style={{
+          marginTop: 48,
+          paddingTop: 24,
+          borderTop: '1px solid #E2E8F0',
+        }}
+      >
+        <Text size="xs" c="dimmed" mb="sm">
+          Development
+        </Text>
+        <Group gap="md">
+          <Link
+            to="../mockups"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              fontSize: 13,
+              color: '#319795',
+              textDecoration: 'none',
+            }}
+          >
+            <IconPalette size={16} />
+            Parameter setter mockups
+          </Link>
+        </Group>
+      </Box>
     </Box>
   );
 }

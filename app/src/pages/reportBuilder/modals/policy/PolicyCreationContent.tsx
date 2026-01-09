@@ -1,24 +1,34 @@
 /**
- * PolicyCreationContent - Main content area for policy creation mode
+ * PolicyCreationContent - Main content area for policy creation mode (V6 styled)
  */
 import { Dispatch, SetStateAction } from 'react';
-import { Box, Stack, Text, Title, Divider, Group, Button } from '@mantine/core';
-import { IconScale } from '@tabler/icons-react';
+import { ActionIcon, Badge, Box, Button, Group, SegmentedControl, Stack, Text, Title, UnstyledButton } from '@mantine/core';
+import { IconScale, IconTrash } from '@tabler/icons-react';
 import { colors, spacing } from '@/designTokens';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import { PolicyStateProps } from '@/types/pathwayState';
 import { ValueInterval, ValueIntervalCollection, ValuesList } from '@/types/subIngredients/valueInterval';
 import { capitalize } from '@/utils/stringUtils';
-import { ValueSetterComponents, ValueSetterMode, ModeSelectorButton } from '@/pathways/report/components/valueSetters';
+import { ValueSetterMode } from '@/pathways/report/components/valueSetters';
 import HistoricalValues from '@/pathways/report/components/policyParameterSelector/HistoricalValues';
 import { FONT_SIZES } from '../../constants';
 import { Parameter } from '@/types/subIngredients/parameter';
+import { ValueSetterComponentsV6 } from '../policyCreation/valueSelectors';
+
+// Mode selector options for SegmentedControl
+const MODE_OPTIONS = [
+  { label: 'Default', value: ValueSetterMode.DEFAULT },
+  { label: 'Yearly', value: ValueSetterMode.YEARLY },
+  { label: 'Date range', value: ValueSetterMode.DATE },
+  { label: 'Multi-year', value: ValueSetterMode.MULTI_YEAR },
+];
 
 interface PolicyCreationContentProps {
   selectedParam: ParameterMetadata | null;
   localPolicy: PolicyStateProps;
   policyLabel: string;
   policyParameters: Parameter[];
+  setPolicyParameters: Dispatch<SetStateAction<Parameter[]>>;
   minDate: string;
   maxDate: string;
   intervals: ValueInterval[];
@@ -37,6 +47,7 @@ export function PolicyCreationContent({
   localPolicy,
   policyLabel,
   policyParameters,
+  setPolicyParameters,
   minDate,
   maxDate,
   intervals,
@@ -65,7 +76,55 @@ export function PolicyCreationContent({
   };
 
   const { baseValues, reformValues } = getChartValues();
-  const ValueSetterToRender = ValueSetterComponents[valueSetterMode];
+  const ValueSetterToRender = ValueSetterComponentsV6[valueSetterMode];
+
+  // Get changes for the current parameter
+  const currentParamChanges = selectedParam
+    ? policyParameters.find(p => p.name === selectedParam.parameter)?.values || []
+    : [];
+
+  // Format a date range for display
+  const formatPeriod = (interval: ValueInterval): string => {
+    const start = interval.startDate;
+    const end = interval.endDate;
+    if (!end || end === '9999-12-31') {
+      const year = start.split('-')[0];
+      return `${year} onward`;
+    }
+    const startYear = start.split('-')[0];
+    const endYear = end.split('-')[0];
+    if (startYear === endYear) {
+      return startYear;
+    }
+    return `${startYear}-${endYear}`;
+  };
+
+  // Format a value for display
+  const formatValue = (value: number | string | boolean): string => {
+    if (typeof value === 'boolean') return value ? 'Yes' : 'No';
+    if (typeof value === 'number') {
+      if (selectedParam?.unit === '/1') {
+        return `${(value * 100).toFixed(1)}%`;
+      }
+      return value.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+    }
+    return String(value);
+  };
+
+  // Remove a change from the current parameter
+  const handleRemoveChange = (indexToRemove: number) => {
+    if (!selectedParam) return;
+    const updatedParameters = policyParameters.map(param => {
+      if (param.name === selectedParam.parameter) {
+        return {
+          ...param,
+          values: param.values.filter((_, i) => i !== indexToRemove),
+        };
+      }
+      return param;
+    }).filter(param => param.values.length > 0);
+    setPolicyParameters(updatedParameters);
+  };
 
   if (!selectedParam) {
     return (
@@ -75,7 +134,8 @@ export function PolicyCreationContent({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: spacing.xl,
+          background: colors.gray[50],
+          padding: spacing.lg,
         }}
       >
         <Stack align="center" gap={spacing.md}>
@@ -101,10 +161,18 @@ export function PolicyCreationContent({
   }
 
   return (
-    <Box style={{ padding: spacing.xl }}>
+    <Box style={{ background: colors.gray[50], minHeight: '100%', padding: spacing.lg }}>
       <Stack gap={spacing.lg}>
-        <Box>
-          <Title order={3} style={{ marginBottom: spacing.sm }}>
+        {/* Parameter Header Card */}
+        <Box
+          style={{
+            background: colors.white,
+            borderRadius: spacing.radius.lg,
+            padding: spacing.lg,
+            border: `1px solid ${colors.border.light}`,
+          }}
+        >
+          <Title order={3} style={{ marginBottom: spacing.xs }}>
             {capitalize(selectedParam.label || 'Label unavailable')}
           </Title>
           {selectedParam.description && (
@@ -113,19 +181,46 @@ export function PolicyCreationContent({
             </Text>
           )}
         </Box>
-        <Box
-          style={{
-            background: colors.gray[50],
-            border: `1px solid ${colors.border.light}`,
-            borderRadius: spacing.radius.md,
-            padding: spacing.lg,
-          }}
-        >
-          <Stack gap={spacing.md}>
-            <Text fw={600} style={{ fontSize: FONT_SIZES.normal }}>Set new value</Text>
-            <Divider />
-            <Group align="flex-end" wrap="nowrap">
-              <Box style={{ flex: 1 }}>
+
+        {/* 50/50 Split Content */}
+        <Group gap={spacing.lg} align="flex-start" wrap="nowrap">
+          {/* Left Column: Setter + Changes */}
+          <Stack gap={spacing.lg} style={{ flex: 1, minWidth: 0 }}>
+            {/* Value Setter Card */}
+            <Box
+              style={{
+                background: colors.white,
+                borderRadius: spacing.radius.lg,
+                padding: spacing.lg,
+                border: `1px solid ${colors.border.light}`,
+              }}
+            >
+              <Stack gap={spacing.md}>
+                <Text fw={600} style={{ fontSize: FONT_SIZES.normal, color: colors.gray[700] }}>
+                  Set new value
+                </Text>
+
+                {/* Mode selector - SegmentedControl per V6 mockup */}
+                <SegmentedControl
+                  value={valueSetterMode}
+                  onChange={(value) => {
+                    setIntervals([]);
+                    setValueSetterMode(value as ValueSetterMode);
+                  }}
+                  size="xs"
+                  data={MODE_OPTIONS}
+                  styles={{
+                    root: {
+                      background: colors.gray[100],
+                      borderRadius: spacing.radius.md,
+                    },
+                    indicator: {
+                      background: colors.white,
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                    },
+                  }}
+                />
+
                 <ValueSetterToRender
                   minDate={minDate}
                   maxDate={maxDate}
@@ -138,32 +233,97 @@ export function PolicyCreationContent({
                   endDate={endDate}
                   setEndDate={setEndDate}
                 />
-              </Box>
-              <ModeSelectorButton setMode={(mode) => {
-                setIntervals([]);
-                setValueSetterMode(mode);
-              }} />
-              <Button
-                onClick={onValueSubmit}
-                disabled={intervals.length === 0}
-                color="teal"
+
+                <Button
+                  onClick={onValueSubmit}
+                  disabled={intervals.length === 0}
+                  color="teal"
+                  fullWidth
+                >
+                  Add change
+                </Button>
+              </Stack>
+            </Box>
+
+            {/* Changes for this parameter */}
+            {currentParamChanges.length > 0 && (
+              <Box
+                style={{
+                  background: colors.white,
+                  border: `1px solid ${colors.border.light}`,
+                  borderRadius: spacing.radius.lg,
+                  padding: spacing.lg,
+                }}
               >
-                Add change
-              </Button>
-            </Group>
+                <Group justify="space-between" mb={spacing.sm}>
+                  <Text size="sm" fw={600} style={{ color: colors.gray[700] }}>
+                    Changes for this parameter
+                  </Text>
+                  <Badge size="xs" color="teal" variant="light">
+                    {currentParamChanges.length}
+                  </Badge>
+                </Group>
+                <Stack gap={spacing.xs}>
+                  {currentParamChanges.map((change, i) => (
+                    <Group
+                      key={i}
+                      justify="space-between"
+                      style={{
+                        padding: spacing.sm,
+                        background: colors.gray[50],
+                        borderRadius: spacing.radius.sm,
+                      }}
+                    >
+                      <Text size="xs" style={{ color: colors.gray[600] }}>
+                        {formatPeriod(change)}
+                      </Text>
+                      <Group gap={spacing.xs}>
+                        <Text size="xs" fw={600} style={{ color: colors.primary[700] }}>
+                          {formatValue(change.value)}
+                        </Text>
+                        <ActionIcon
+                          size="xs"
+                          variant="subtle"
+                          color="gray"
+                          onClick={() => handleRemoveChange(i)}
+                        >
+                          <IconTrash size={12} />
+                        </ActionIcon>
+                      </Group>
+                    </Group>
+                  ))}
+                </Stack>
+              </Box>
+            )}
           </Stack>
-        </Box>
-        {baseValues && reformValues && (
-          <Box>
-            <HistoricalValues
-              param={selectedParam}
-              baseValues={baseValues}
-              reformValues={reformValues}
-              policyLabel={policyLabel}
-              policyId={null}
-            />
+
+          {/* Right Column: Historical Values Chart */}
+          <Box
+            style={{
+              flex: 1,
+              minWidth: 0,
+              background: colors.white,
+              borderRadius: spacing.radius.lg,
+              padding: spacing.lg,
+              border: `1px solid ${colors.border.light}`,
+            }}
+          >
+            <Stack gap={spacing.md}>
+              <Text fw={600} style={{ fontSize: FONT_SIZES.normal, color: colors.gray[700] }}>
+                Historical values
+              </Text>
+              {baseValues && reformValues && (
+                <HistoricalValues
+                  param={selectedParam}
+                  baseValues={baseValues}
+                  reformValues={reformValues}
+                  policyLabel={policyLabel}
+                  policyId={null}
+                />
+              )}
+            </Stack>
           </Box>
-        )}
+        </Group>
       </Stack>
     </Box>
   );
