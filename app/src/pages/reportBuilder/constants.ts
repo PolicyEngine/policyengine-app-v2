@@ -104,7 +104,7 @@ export const SAMPLE_POPULATIONS = getSamplePopulations('us');
 export const BROWSE_MODAL_CONFIG = {
   width: '90vw',
   maxWidth: '1400px',
-  height: '85vh',
-  maxHeight: '800px',
+  height: '92vh',
+  maxHeight: '1300px',
   sidebarWidth: 220,
 };

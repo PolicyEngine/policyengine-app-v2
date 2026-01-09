@@ -8,7 +8,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { IconFolder, IconPlus, IconScale, IconUsers } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
-import { Box, Divider, ScrollArea, Stack, Text, UnstyledButton } from '@mantine/core';
+import { Box, Divider, Group, ScrollArea, Stack, Text, UnstyledButton } from '@mantine/core';
+import { EditableLabel } from '../components/EditableLabel';
 import { PolicyAdapter } from '@/adapters';
 import { MOCK_USER_ID } from '@/constants';
 import { colors, spacing, typography } from '@/designTokens';
@@ -34,7 +35,6 @@ import {
   PolicyCreationContent,
   PolicyDetailsDrawer,
   PolicyParameterTree,
-  PolicyStatusHeader,
 } from './policy';
 
 interface PolicyBrowseModalProps {
@@ -391,6 +391,7 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
           localPolicy={localPolicy}
           policyLabel={policyLabel}
           policyParameters={policyParameters}
+          setPolicyParameters={setPolicyParameters}
           minDate={minDate}
           maxDate={maxDate}
           intervals={intervals}
@@ -446,31 +447,54 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
     (performance.now() - renderStart).toFixed(2) + 'ms'
   );
 
+  // Custom header title for creation mode - just the editable label
+  const creationModeHeaderTitle = (
+    <EditableLabel
+      value={policyLabel}
+      onChange={setPolicyLabel}
+      placeholder="Enter policy name..."
+      emptyStateText="Click to name your policy..."
+    />
+  );
+
+  // Modification count for right side of header
+  const creationModeHeaderRight = (
+    <Group gap={spacing.xs} style={{ flexShrink: 0 }}>
+      {modificationCount > 0 ? (
+        <>
+          <Box
+            style={{
+              width: 8,
+              height: 8,
+              borderRadius: '50%',
+              background: colors.primary[500],
+            }}
+          />
+          <Text style={{ fontSize: FONT_SIZES.small, color: colors.gray[600] }}>
+            {modificationCount} parameter{modificationCount !== 1 ? 's' : ''} modified
+          </Text>
+        </>
+      ) : (
+        <Text style={{ fontSize: FONT_SIZES.small, color: colors.gray[400] }}>
+          No changes yet
+        </Text>
+      )}
+    </Group>
+  );
+
   return (
     <BrowseModalTemplate
       isOpen={isOpen}
       onClose={onClose}
       headerIcon={<IconScale size={20} color={colorConfig.icon} />}
-      headerTitle={isCreationMode ? 'Create policy' : 'Select policy'}
-      headerSubtitle={
-        isCreationMode
-          ? 'Configure parameters for your new policy'
-          : 'Choose an existing policy or create a new one'
-      }
+      headerTitle={isCreationMode ? creationModeHeaderTitle : 'Select policy'}
+      headerSubtitle={isCreationMode ? undefined : 'Choose an existing policy or create a new one'}
+      headerRightContent={isCreationMode ? creationModeHeaderRight : undefined}
       colorConfig={colorConfig}
       sidebarSections={isCreationMode ? undefined : browseSidebarSections}
       renderSidebar={isCreationMode ? renderCreationSidebar : undefined}
       sidebarWidth={isCreationMode ? 280 : undefined}
       renderMainContent={renderMainContent}
-      statusHeader={
-        isCreationMode ? (
-          <PolicyStatusHeader
-            policyLabel={policyLabel}
-            setPolicyLabel={setPolicyLabel}
-            modificationCount={modificationCount}
-          />
-        ) : undefined
-      }
       footer={
         isCreationMode ? (
           <CreationModeFooter
@@ -482,6 +506,7 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
           />
         ) : undefined
       }
+      contentPadding={isCreationMode ? 0 : undefined}
     />
   );
 }
