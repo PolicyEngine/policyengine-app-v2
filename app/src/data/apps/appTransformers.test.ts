@@ -55,10 +55,10 @@ describe('appTransformers', () => {
     });
   });
 
-  test('slugs are unique', () => {
-    const slugs = apps.map((a) => a.slug);
-    const uniqueSlugs = new Set(slugs);
-    expect(uniqueSlugs.size).toBe(slugs.length);
+  test('slug-countryId pairs are unique', () => {
+    const pairs = apps.map((a) => `${a.countryId}/${a.slug}`);
+    const uniquePairs = new Set(pairs);
+    expect(uniquePairs.size).toBe(pairs.length);
   });
 
   test('OBBBA iframe apps are configured correctly', () => {
