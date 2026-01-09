@@ -1,4 +1,4 @@
-- bump: minor
+- bump: patch
   changes:
-    added:
-      - Add UK local areas dashboard to research section
+    changed:
+      - Update SALTernative app to use new React frontend on GitHub Pages
