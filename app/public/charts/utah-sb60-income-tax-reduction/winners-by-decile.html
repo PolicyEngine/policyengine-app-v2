@@ -1,0 +1,104 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body style="margin: 0; padding: 0;">
+    <div>
+      <script type="text/javascript">
+        window.PlotlyConfig = { MathJaxConfig: 'local' };
+      </script>
+      <script
+        charset="utf-8"
+        src="https://cdn.plot.ly/plotly-2.27.0.min.js"
+      ></script>
+      <div
+        id="chart"
+        class="plotly-graph-div"
+        style="height: 600px; width: 100%"
+      ></div>
+      <script type="text/javascript">
+        // Data from statewide.py
+        const deciles = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
+        const gainLessThan5 = [17.2, 7.4, 26.5, 29.7, 44.4, 72.2, 57.5, 78.3, 99.8, 99.1];
+        const noChange = [82.8, 92.6, 73.5, 70.3, 55.6, 27.8, 42.5, 21.7, 0.2, 0.9];
+
+        // Colors matching app-v2 design tokens
+        const COLOR_GAIN_LESS = 'rgba(49, 151, 149, 0.6)';  // Teal with 60% opacity
+        const COLOR_NO_CHANGE = '#E5E7EB';  // Gray 200
+
+        const data = [
+          {
+            y: deciles,
+            x: gainLessThan5,
+            name: 'Gain <5%',
+            type: 'bar',
+            orientation: 'h',
+            marker: { color: COLOR_GAIN_LESS },
+            text: gainLessThan5.map(x => x > 0 ? x.toFixed(0) + '%' : ''),
+            textposition: 'inside',
+            textfont: { color: '#000' },
+            hovertemplate: '%{x:.1f}%<extra></extra>'
+          },
+          {
+            y: deciles,
+            x: noChange,
+            name: 'No change',
+            type: 'bar',
+            orientation: 'h',
+            marker: { color: COLOR_NO_CHANGE },
+            text: noChange.map(x => x > 0 ? x.toFixed(0) + '%' : ''),
+            textposition: 'inside',
+            textfont: { color: '#000' },
+            hovertemplate: '%{x:.1f}%<extra></extra>'
+          }
+        ];
+
+        const layout = {
+          title: {
+            text: 'Figure 2: Winners of Utah SB60 by income decile',
+            font: { family: 'Roboto Serif, serif', size: 16 }
+          },
+          font: { family: 'Roboto Serif, serif', color: '#000' },
+          barmode: 'stack',
+          xaxis: {
+            title: { text: 'Population share' },
+            ticksuffix: '%',
+            range: [0, 100],
+            fixedrange: true
+          },
+          yaxis: {
+            title: { text: 'Income decile' },
+            automargin: true
+          },
+          legend: {
+            orientation: 'h',
+            yanchor: 'bottom',
+            y: 1.02,
+            xanchor: 'center',
+            x: 0.5
+          },
+          margin: { l: 80, r: 40, t: 100, b: 80 },
+          plot_bgcolor: '#fff',
+          paper_bgcolor: '#fff',
+          images: [{
+            source: 'https://raw.githubusercontent.com/PolicyEngine/policyengine-app-v2/main/app/public/assets/logos/policyengine/teal-square.png',
+            xref: 'paper',
+            yref: 'paper',
+            x: 1.02,
+            y: -0.12,
+            sizex: 0.08,
+            sizey: 0.08,
+            xanchor: 'right',
+            yanchor: 'bottom'
+          }]
+        };
+
+        Plotly.newPlot('chart', data, layout, { responsive: true, displayModeBar: false });
+      </script>
+    </div>
+  </body>
+</html>

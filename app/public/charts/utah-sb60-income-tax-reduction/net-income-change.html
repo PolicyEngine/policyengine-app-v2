@@ -1,0 +1,87 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body style="margin: 0; padding: 0;">
+    <div>
+      <script type="text/javascript">
+        window.PlotlyConfig = { MathJaxConfig: 'local' };
+      </script>
+      <script
+        charset="utf-8"
+        src="https://cdn.plot.ly/plotly-2.27.0.min.js"
+      ></script>
+      <div
+        id="chart"
+        class="plotly-graph-div"
+        style="height: 600px; width: 100%"
+      ></div>
+      <script type="text/javascript">
+        // Generate employment income values and net income changes
+        const employmentIncome = [];
+        const netIncomeChanges = [];
+        for (let income = 0; income <= 200000; income += 50) {
+          employmentIncome.push(income);
+          if (income <= 20500) {
+            netIncomeChanges.push(0);
+          } else {
+            const change = 10 + (income - 21000) * (100 - 10) / (200000 - 21000);
+            netIncomeChanges.push(change);
+          }
+        }
+
+        const data = [{
+          x: employmentIncome,
+          y: netIncomeChanges,
+          type: 'scatter',
+          mode: 'lines',
+          line: { color: '#319795', width: 2 },
+          hovertemplate: 'Employment income: $%{x:,}<br>Change in net income: $%{y:.2f}<extra></extra>'
+        }];
+
+        const layout = {
+          title: {
+            text: 'Figure 1: Change in net income for a single adult',
+            font: { family: 'Roboto Serif, serif', size: 16 }
+          },
+          font: { family: 'Roboto Serif, serif', color: '#000' },
+          xaxis: {
+            title: { text: 'Employment income' },
+            tickformat: ',',
+            tickprefix: '$',
+            fixedrange: true,
+            gridcolor: '#e0e0e0'
+          },
+          yaxis: {
+            title: { text: 'Change in net income' },
+            tickformat: ',',
+            tickprefix: '$',
+            fixedrange: true,
+            gridcolor: '#e0e0e0'
+          },
+          margin: { l: 80, r: 40, t: 80, b: 80 },
+          showlegend: false,
+          plot_bgcolor: '#fff',
+          paper_bgcolor: '#fff',
+          images: [{
+            source: 'https://raw.githubusercontent.com/PolicyEngine/policyengine-app-v2/main/app/public/assets/logos/policyengine/teal-square.png',
+            xref: 'paper',
+            yref: 'paper',
+            x: 1.02,
+            y: -0.15,
+            sizex: 0.08,
+            sizey: 0.08,
+            xanchor: 'right',
+            yanchor: 'bottom'
+          }]
+        };
+
+        Plotly.newPlot('chart', data, layout, { responsive: true, displayModeBar: false });
+      </script>
+    </div>
+  </body>
+</html>
