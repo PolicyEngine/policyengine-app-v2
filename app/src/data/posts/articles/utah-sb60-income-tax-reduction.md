@@ -23,7 +23,7 @@ Unlike the [2025 tax package](https://www.policyengine.org/us/research/utah-inco
 
 Let's examine how SB60 affects a single adult's net income in Utah. Due to interactions with the Utah taxpayer credit, this household does not benefit with earnings below $20,500. Above this threshold, the taxpayer credit begins to phase out, and tax savings become proportional to earnings. For example, [at $80,000 of earnings](https://app.policyengine.org/us/report-output/sur-mk70207zzf9k), the single adult would see their Utah income tax liability decrease by $40. Figure 1 displays the change in net income for a single adult as earnings rise.
 
-<iframe src="/charts/utah-sb60-income-tax-reduction/net-income-change.html" width="100%" height="650" frameborder="0"></iframe>
+<iframe src="https://policyengine.github.io/utah-sb60-calc/net-income-change.html" width="100%" height="650" frameborder="0"></iframe>
 
 ## Statewide impacts
 
@@ -31,11 +31,11 @@ For tax year 2026, SB60 would reduce state revenues by $83.6 million, according 
 
 The tax cut would raise the net income of 53.2% of residents in Utah. The percentage of residents in each income decile who are net beneficiaries varies, with residents in higher-income deciles more likely to benefit since they have greater taxable income.
 
-<iframe src="/charts/utah-sb60-income-tax-reduction/winners-by-decile.html" width="100%" height="650" frameborder="0"></iframe>
+<iframe src="https://policyengine.github.io/utah-sb60-calc/winners-by-decile.html" width="100%" height="650" frameborder="0"></iframe>
 
 SB60 would provide an average benefit of $130 per household, ranging from $5 in the bottom income decile to $583 in the top decile.
 
-<iframe src="/charts/utah-sb60-income-tax-reduction/avg-benefit-by-decile.html" width="100%" height="650" frameborder="0"></iframe>
+<iframe src="https://policyengine.github.io/utah-sb60-calc/avg-benefit-by-decile.html" width="100%" height="650" frameborder="0"></iframe>
 
 We project that SB60 would have no effect on poverty or deep poverty while raising the state's Gini index of inequality by 0.01%.
 
