@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import {
   TEST_COUNTRIES,
-  MODEL_IDS,
+  MODEL_NAMES,
   SAMPLE_RESPONSES,
   API_ENDPOINTS,
   mockFetchSuccess,
@@ -23,7 +23,7 @@ describe('parameters', () => {
   });
 
   describe('fetchParameters', () => {
-    it('given US country then fetches parameters with correct model ID', async () => {
+    it('given US country then fetches parameters with correct model name', async () => {
       // Given
       vi.mocked(global.fetch).mockResolvedValue(mockFetchSuccess(SAMPLE_RESPONSES.PARAMETERS));
 
@@ -32,10 +32,10 @@ describe('parameters', () => {
 
       // Then
       expect(result).toEqual(SAMPLE_RESPONSES.PARAMETERS);
-      expect(global.fetch).toHaveBeenCalledWith(API_ENDPOINTS.PARAMETERS(MODEL_IDS.US));
+      expect(global.fetch).toHaveBeenCalledWith(API_ENDPOINTS.PARAMETERS(MODEL_NAMES.US));
     });
 
-    it('given UK country then fetches parameters with correct model ID', async () => {
+    it('given UK country then fetches parameters with correct model name', async () => {
       // Given
       vi.mocked(global.fetch).mockResolvedValue(mockFetchSuccess(SAMPLE_RESPONSES.PARAMETERS));
 
@@ -43,7 +43,7 @@ describe('parameters', () => {
       await fetchParameters(TEST_COUNTRIES.UK);
 
       // Then
-      expect(global.fetch).toHaveBeenCalledWith(API_ENDPOINTS.PARAMETERS(MODEL_IDS.UK));
+      expect(global.fetch).toHaveBeenCalledWith(API_ENDPOINTS.PARAMETERS(MODEL_NAMES.UK));
     });
 
     it('given failed response then throws error', async () => {

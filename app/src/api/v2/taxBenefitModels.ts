@@ -1,8 +1,12 @@
 export const API_V2_BASE_URL = "https://v2.api.policyengine.org";
 
-export const COUNTRY_TO_MODEL_ID: Record<string, string> = {
-  us: "8ac12923-1282-420e-a440-0fa60d43950a",
-  uk: "00652f95-f350-4932-b65d-9f9f03b4b8eb",
+/**
+ * Map country IDs to their API model names.
+ * The API uses model names (e.g., "policyengine-us") for filtering.
+ */
+export const COUNTRY_TO_MODEL_NAME: Record<string, string> = {
+  us: "policyengine-us",
+  uk: "policyengine-uk",
 };
 
 export interface TaxBenefitModel {
@@ -32,54 +36,82 @@ export async function fetchTaxBenefitModels(): Promise<TaxBenefitModel[]> {
 }
 
 /**
- * Get the model ID for a country
+ * Get the model name for a country (e.g., "policyengine-us")
  */
-export function getModelId(countryId: string): string {
-  const modelId = COUNTRY_TO_MODEL_ID[countryId];
-  if (!modelId) {
+export function getModelName(countryId: string): string {
+  const modelName = COUNTRY_TO_MODEL_NAME[countryId];
+  if (!modelName) {
     throw new Error(`Unknown country: ${countryId}`);
   }
-  return modelId;
+  return modelName;
 }
 
 /**
  * Fetch the current version for a country's model
  */
 export async function fetchModelVersion(countryId: string): Promise<string> {
-  const modelId = getModelId(countryId);
-  const res = await fetch(
-    `${API_V2_BASE_URL}/tax-benefit-model-versions/?model_id=${modelId}`,
-  );
+  const modelName = getModelName(countryId);
+  const res = await fetch(`${API_V2_BASE_URL}/tax-benefit-models/`);
 
   if (!res.ok) {
-    throw new Error(`Failed to fetch model version for ${countryId}`);
+    throw new Error(`Failed to fetch models`);
   }
 
-  const versions: TaxBenefitModelVersion[] = await res.json();
-  if (versions.length === 0) {
+  const models: TaxBenefitModel[] = await res.json();
+  const model = models.find((m) => m.name === modelName);
+  if (!model) {
+    throw new Error(`Model not found for ${countryId}`);
+  }
+
+  const versionsRes = await fetch(
+    `${API_V2_BASE_URL}/tax-benefit-model-versions/`,
+  );
+
+  if (!versionsRes.ok) {
+    throw new Error(`Failed to fetch model versions`);
+  }
+
+  const versions: TaxBenefitModelVersion[] = await versionsRes.json();
+  const modelVersions = versions.filter((v) => v.model_id === model.id);
+
+  if (modelVersions.length === 0) {
     throw new Error(`No versions found for ${countryId}`);
   }
 
-  return versions[0].version;
+  return modelVersions[0].version;
 }
 
 /**
  * Fetch the current version ID for a country's model
  */
 export async function fetchModelVersionId(countryId: string): Promise<string> {
-  const modelId = getModelId(countryId);
-  const res = await fetch(
-    `${API_V2_BASE_URL}/tax-benefit-model-versions/?model_id=${modelId}`,
-  );
+  const modelName = getModelName(countryId);
+  const res = await fetch(`${API_V2_BASE_URL}/tax-benefit-models/`);
 
   if (!res.ok) {
-    throw new Error(`Failed to fetch model version for ${countryId}`);
+    throw new Error(`Failed to fetch models`);
   }
 
-  const versions: TaxBenefitModelVersion[] = await res.json();
-  if (versions.length === 0) {
+  const models: TaxBenefitModel[] = await res.json();
+  const model = models.find((m) => m.name === modelName);
+  if (!model) {
+    throw new Error(`Model not found for ${countryId}`);
+  }
+
+  const versionsRes = await fetch(
+    `${API_V2_BASE_URL}/tax-benefit-model-versions/`,
+  );
+
+  if (!versionsRes.ok) {
+    throw new Error(`Failed to fetch model versions`);
+  }
+
+  const versions: TaxBenefitModelVersion[] = await versionsRes.json();
+  const modelVersions = versions.filter((v) => v.model_id === model.id);
+
+  if (modelVersions.length === 0) {
     throw new Error(`No versions found for ${countryId}`);
   }
 
-  return versions[0].id;
+  return modelVersions[0].id;
 }

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import {
   TEST_COUNTRIES,
-  MODEL_IDS,
+  MODEL_NAMES,
   SAMPLE_RESPONSES,
   API_ENDPOINTS,
   mockFetchSuccess,
@@ -32,10 +32,10 @@ describe('datasets', () => {
 
       // Then
       expect(result).toEqual(SAMPLE_RESPONSES.DATASETS);
-      expect(global.fetch).toHaveBeenCalledWith(API_ENDPOINTS.DATASETS(MODEL_IDS.US));
+      expect(global.fetch).toHaveBeenCalledWith(API_ENDPOINTS.DATASETS(MODEL_NAMES.US));
     });
 
-    it('given UK country then fetches datasets with correct model ID', async () => {
+    it('given UK country then fetches datasets with correct model name', async () => {
       // Given
       vi.mocked(global.fetch).mockResolvedValue(mockFetchSuccess(SAMPLE_RESPONSES.DATASETS));
 
@@ -43,7 +43,7 @@ describe('datasets', () => {
       await fetchDatasets(TEST_COUNTRIES.UK);
 
       // Then
-      expect(global.fetch).toHaveBeenCalledWith(API_ENDPOINTS.DATASETS(MODEL_IDS.UK));
+      expect(global.fetch).toHaveBeenCalledWith(API_ENDPOINTS.DATASETS(MODEL_NAMES.UK));
     });
 
     it('given failed response then throws error', async () => {

@@ -1,8 +1,8 @@
 // Tax benefit models
 export {
   API_V2_BASE_URL,
-  COUNTRY_TO_MODEL_ID,
-  getModelId,
+  COUNTRY_TO_MODEL_NAME,
+  getModelName,
   fetchTaxBenefitModels,
   fetchModelVersion,
   fetchModelVersionId,

@@ -1,11 +1,13 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import {
   TEST_COUNTRIES,
-  MODEL_IDS,
+  MODEL_NAMES,
   SAMPLE_RESPONSES,
   API_ENDPOINTS,
   mockFetchSuccess,
   mockFetchError,
+  createMockTaxBenefitModel,
+  createMockModelVersion,
 } from '@/tests/fixtures/api/v2/apiV2Mocks';
 
 // Import the module
@@ -13,8 +15,8 @@ import {
   fetchTaxBenefitModels,
   fetchModelVersion,
   fetchModelVersionId,
-  getModelId,
-  COUNTRY_TO_MODEL_ID,
+  getModelName,
+  COUNTRY_TO_MODEL_NAME,
   API_V2_BASE_URL,
 } from '@/api/v2/taxBenefitModels';
 
@@ -30,15 +32,15 @@ describe('taxBenefitModels', () => {
     global.fetch = originalFetch;
   });
 
-  describe('COUNTRY_TO_MODEL_ID', () => {
-    it('given US country then returns correct model ID', () => {
+  describe('COUNTRY_TO_MODEL_NAME', () => {
+    it('given US country then returns correct model name', () => {
       // Then
-      expect(COUNTRY_TO_MODEL_ID.us).toBe(MODEL_IDS.US);
+      expect(COUNTRY_TO_MODEL_NAME.us).toBe(MODEL_NAMES.US);
     });
 
-    it('given UK country then returns correct model ID', () => {
+    it('given UK country then returns correct model name', () => {
       // Then
-      expect(COUNTRY_TO_MODEL_ID.uk).toBe(MODEL_IDS.UK);
+      expect(COUNTRY_TO_MODEL_NAME.uk).toBe(MODEL_NAMES.UK);
     });
   });
 
@@ -49,26 +51,26 @@ describe('taxBenefitModels', () => {
     });
   });
 
-  describe('getModelId', () => {
-    it('given US country then returns US model ID', () => {
+  describe('getModelName', () => {
+    it('given US country then returns US model name', () => {
       // When
-      const result = getModelId(TEST_COUNTRIES.US);
+      const result = getModelName(TEST_COUNTRIES.US);
 
       // Then
-      expect(result).toBe(MODEL_IDS.US);
+      expect(result).toBe(MODEL_NAMES.US);
     });
 
-    it('given UK country then returns UK model ID', () => {
+    it('given UK country then returns UK model name', () => {
       // When
-      const result = getModelId(TEST_COUNTRIES.UK);
+      const result = getModelName(TEST_COUNTRIES.UK);
 
       // Then
-      expect(result).toBe(MODEL_IDS.UK);
+      expect(result).toBe(MODEL_NAMES.UK);
     });
 
     it('given unknown country then throws error', () => {
       // When/Then
-      expect(() => getModelId('unknown')).toThrow('Unknown country: unknown');
+      expect(() => getModelName('unknown')).toThrow('Unknown country: unknown');
     });
   });
 
@@ -97,35 +99,76 @@ describe('taxBenefitModels', () => {
   });
 
   describe('fetchModelVersion', () => {
+    // Model ID used for filtering versions
+    const US_MODEL_ID = 'model-id-us';
+
     it('given US country with versions then returns first version string', async () => {
       // Given
-      vi.mocked(global.fetch).mockResolvedValue(
-        mockFetchSuccess(SAMPLE_RESPONSES.MODEL_VERSIONS)
-      );
+      const mockModels = [
+        createMockTaxBenefitModel({ id: US_MODEL_ID, name: MODEL_NAMES.US }),
+      ];
+      const mockVersions = [
+        createMockModelVersion({ id: 'v1', model_id: US_MODEL_ID, version: '1.0.0' }),
+      ];
+
+      vi.mocked(global.fetch)
+        .mockResolvedValueOnce(mockFetchSuccess(mockModels))
+        .mockResolvedValueOnce(mockFetchSuccess(mockVersions));
 
       // When
       const result = await fetchModelVersion(TEST_COUNTRIES.US);
 
       // Then
-      expect(result).toBe(SAMPLE_RESPONSES.MODEL_VERSIONS[0].version);
-      expect(global.fetch).toHaveBeenCalledWith(API_ENDPOINTS.MODEL_VERSIONS(MODEL_IDS.US));
+      expect(result).toBe('1.0.0');
+      expect(global.fetch).toHaveBeenCalledTimes(2);
+      expect(global.fetch).toHaveBeenNthCalledWith(1, API_ENDPOINTS.TAX_BENEFIT_MODELS);
+      expect(global.fetch).toHaveBeenNthCalledWith(2, API_ENDPOINTS.TAX_BENEFIT_MODEL_VERSIONS);
     });
 
-    it('given failed response then throws error', async () => {
+    it('given failed models fetch then throws error', async () => {
       // Given
       vi.mocked(global.fetch).mockResolvedValue(mockFetchError());
 
       // When/Then
+      await expect(fetchModelVersion(TEST_COUNTRIES.US)).rejects.toThrow('Failed to fetch models');
+    });
+
+    it('given model not found then throws error', async () => {
+      // Given
+      const mockModels = [
+        createMockTaxBenefitModel({ id: 'other-id', name: 'other-model' }),
+      ];
+      vi.mocked(global.fetch).mockResolvedValue(mockFetchSuccess(mockModels));
+
+      // When/Then
       await expect(fetchModelVersion(TEST_COUNTRIES.US)).rejects.toThrow(
-        `Failed to fetch model version for ${TEST_COUNTRIES.US}`
+        `Model not found for ${TEST_COUNTRIES.US}`
+      );
+    });
+
+    it('given failed versions fetch then throws error', async () => {
+      // Given
+      const mockModels = [
+        createMockTaxBenefitModel({ id: US_MODEL_ID, name: MODEL_NAMES.US }),
+      ];
+      vi.mocked(global.fetch)
+        .mockResolvedValueOnce(mockFetchSuccess(mockModels))
+        .mockResolvedValueOnce(mockFetchError());
+
+      // When/Then
+      await expect(fetchModelVersion(TEST_COUNTRIES.US)).rejects.toThrow(
+        'Failed to fetch model versions'
       );
     });
 
     it('given empty versions array then throws error', async () => {
       // Given
-      vi.mocked(global.fetch).mockResolvedValue(
-        mockFetchSuccess(SAMPLE_RESPONSES.EMPTY_VERSIONS)
-      );
+      const mockModels = [
+        createMockTaxBenefitModel({ id: US_MODEL_ID, name: MODEL_NAMES.US }),
+      ];
+      vi.mocked(global.fetch)
+        .mockResolvedValueOnce(mockFetchSuccess(mockModels))
+        .mockResolvedValueOnce(mockFetchSuccess([]));
 
       // When/Then
       await expect(fetchModelVersion(TEST_COUNTRIES.US)).rejects.toThrow(
@@ -135,35 +178,61 @@ describe('taxBenefitModels', () => {
   });
 
   describe('fetchModelVersionId', () => {
+    // Model ID used for filtering versions
+    const US_MODEL_ID = 'model-id-us';
+
     it('given US country with versions then returns first version ID', async () => {
       // Given
-      vi.mocked(global.fetch).mockResolvedValue(
-        mockFetchSuccess(SAMPLE_RESPONSES.MODEL_VERSIONS)
-      );
+      const mockModels = [
+        createMockTaxBenefitModel({ id: US_MODEL_ID, name: MODEL_NAMES.US }),
+      ];
+      const mockVersions = [
+        createMockModelVersion({ id: 'version-id-123', model_id: US_MODEL_ID, version: '1.0.0' }),
+      ];
+
+      vi.mocked(global.fetch)
+        .mockResolvedValueOnce(mockFetchSuccess(mockModels))
+        .mockResolvedValueOnce(mockFetchSuccess(mockVersions));
 
       // When
       const result = await fetchModelVersionId(TEST_COUNTRIES.US);
 
       // Then
-      expect(result).toBe(SAMPLE_RESPONSES.MODEL_VERSIONS[0].id);
-      expect(global.fetch).toHaveBeenCalledWith(API_ENDPOINTS.MODEL_VERSIONS(MODEL_IDS.US));
+      expect(result).toBe('version-id-123');
+      expect(global.fetch).toHaveBeenCalledTimes(2);
+      expect(global.fetch).toHaveBeenNthCalledWith(1, API_ENDPOINTS.TAX_BENEFIT_MODELS);
+      expect(global.fetch).toHaveBeenNthCalledWith(2, API_ENDPOINTS.TAX_BENEFIT_MODEL_VERSIONS);
     });
 
-    it('given failed response then throws error', async () => {
+    it('given failed models fetch then throws error', async () => {
       // Given
       vi.mocked(global.fetch).mockResolvedValue(mockFetchError());
 
       // When/Then
+      await expect(fetchModelVersionId(TEST_COUNTRIES.US)).rejects.toThrow('Failed to fetch models');
+    });
+
+    it('given model not found then throws error', async () => {
+      // Given
+      const mockModels = [
+        createMockTaxBenefitModel({ id: 'other-id', name: 'other-model' }),
+      ];
+      vi.mocked(global.fetch).mockResolvedValue(mockFetchSuccess(mockModels));
+
+      // When/Then
       await expect(fetchModelVersionId(TEST_COUNTRIES.US)).rejects.toThrow(
-        `Failed to fetch model version for ${TEST_COUNTRIES.US}`
+        `Model not found for ${TEST_COUNTRIES.US}`
       );
     });
 
     it('given empty versions array then throws error', async () => {
       // Given
-      vi.mocked(global.fetch).mockResolvedValue(
-        mockFetchSuccess(SAMPLE_RESPONSES.EMPTY_VERSIONS)
-      );
+      const mockModels = [
+        createMockTaxBenefitModel({ id: US_MODEL_ID, name: MODEL_NAMES.US }),
+      ];
+      vi.mocked(global.fetch)
+        .mockResolvedValueOnce(mockFetchSuccess(mockModels))
+        .mockResolvedValueOnce(mockFetchSuccess([]));
 
       // When/Then
       await expect(fetchModelVersionId(TEST_COUNTRIES.US)).rejects.toThrow(
