@@ -1,5 +1,15 @@
 [
   {
+    "title": "How tax and benefit policies vary across UK local areas",
+    "description": "New methodology enables PolicyEngine to analyse policy impacts at constituency and local authority level.",
+    "date": "2026-01-06 11:00:00",
+    "tags": ["uk", "featured"],
+    "authors": ["vahid-ahmadi"],
+    "filename": "uk-local-areas-dashboard.md",
+    "image": "uk-local-areas-dashboard.png",
+    "imageCredit": "ons.gov.uk"
+  },
+  {
     "title": "Arnold Ventures awards grant for congressional district analysis",
     "description": "PolicyEngine receives grant to develop state and congressional district-level policy analysis capabilities.",
     "date": "2025-07-21 12:00:00",
