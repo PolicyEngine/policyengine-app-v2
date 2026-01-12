@@ -53,12 +53,21 @@
     "authors": ["vahid-ahmadi"]
   },
   {
-    "type": "streamlit",
+    "type": "iframe",
+    "slug": "aca-reforms-calculator",
+    "title": "ACA Reforms Calculator",
+    "description": "Compare how ACA policy changes like the IRA extension, 700% FPL bill, and CRFB reform proposals would affect your household's premium tax credits",
+    "source": "https://aca-calc.vercel.app/?embedded=true",
+    "tags": ["us", "featured", "healthcare", "policy", "interactives"],
+    "countryId": "us"
+  },
+  {
+    "type": "iframe",
     "slug": "aca-calc",
-    "title": "ACA-Calc",
-    "description": "Calculate your household's premium tax credits under the Affordable Care Act",
-    "source": "https://policyengine-aca-calc.streamlit.app",
-    "tags": ["us", "featured", "healthcare", "policy"],
+    "title": "ACA Reforms Calculator",
+    "description": "Compare how ACA policy changes like the IRA extension, 700% FPL bill, and CRFB reform proposals would affect your household's premium tax credits",
+    "source": "https://aca-calc.vercel.app/?embedded=true",
+    "tags": ["us", "healthcare", "policy", "interactives"],
     "countryId": "us"
   },
   {
