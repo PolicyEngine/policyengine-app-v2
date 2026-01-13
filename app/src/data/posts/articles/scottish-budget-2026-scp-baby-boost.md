@@ -28,75 +28,7 @@ The reform is highly progressive, with benefits concentrated entirely in the bot
 
 **Figure 1: Relative change in household income by income decile**
 
-```plotly
-{
-  "data": [
-    {
-      "x": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-      "y": [1.38, 0.96, 0.46, 0.18, 0, 0, 0, 0, 0, 0],
-      "type": "bar",
-      "marker": {"color": "#319795"},
-      "hovertemplate": "Decile %{x}<br>Change: +%{y:.2f}%<extra></extra>",
-      "text": ["+1.38%", "+0.96%", "+0.46%", "+0.18%", "+0.00%", "+0.00%", "+0.00%", "+0.00%", "+0.00%", "+0.00%"],
-      "textposition": "outside",
-      "textfont": {"family": "Roboto Serif", "size": 11}
-    }
-  ],
-  "layout": {
-    "xaxis": {
-      "title": "Income decile",
-      "titlefont": {"family": "Roboto Serif"},
-      "tickfont": {"family": "Roboto Serif"},
-      "tickmode": "array",
-      "tickvals": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-      "showgrid": true,
-      "gridcolor": "#e0e0e0"
-    },
-    "yaxis": {
-      "title": "Relative change in household income (%)",
-      "titlefont": {"family": "Roboto Serif"},
-      "tickfont": {"family": "Roboto Serif"},
-      "ticksuffix": "%",
-      "showgrid": true,
-      "gridcolor": "#e0e0e0",
-      "range": [0, 1.6]
-    },
-    "height": 500,
-    "margin": {"l": 80, "r": 50, "b": 100, "t": 80, "pad": 4},
-    "updatemenus": [{
-      "type": "dropdown",
-      "active": 0,
-      "x": 0.02,
-      "y": 1.15,
-      "xanchor": "left",
-      "yanchor": "top",
-      "bgcolor": "white",
-      "bordercolor": "#319795",
-      "font": {"family": "Roboto Serif", "size": 12},
-      "buttons": [
-        {"label": "2026-27", "method": "update", "args": [{"y": [[1.38, 0.96, 0.46, 0.18, 0, 0, 0, 0, 0, 0]], "text": [["+1.38%", "+0.96%", "+0.46%", "+0.18%", "+0.00%", "+0.00%", "+0.00%", "+0.00%", "+0.00%", "+0.00%"]]}]},
-        {"label": "2027-28", "method": "update", "args": [{"y": [[0.88, 0.95, 0.46, 0.24, 0, 0, 0, 0, 0, 0]], "text": [["+0.88%", "+0.95%", "+0.46%", "+0.24%", "+0.00%", "+0.00%", "+0.00%", "+0.00%", "+0.00%", "+0.00%"]]}]},
-        {"label": "2028-29", "method": "update", "args": [{"y": [[1.05, 0.93, 0.46, 0.29, 0, 0, 0, 0, 0, 0]], "text": [["+1.05%", "+0.93%", "+0.46%", "+0.29%", "+0.00%", "+0.00%", "+0.00%", "+0.00%", "+0.00%", "+0.00%"]]}]},
-        {"label": "2029-30", "method": "update", "args": [{"y": [[1.04, 0.92, 0.44, 0.29, 0, 0, 0, 0, 0, 0]], "text": [["+1.04%", "+0.92%", "+0.44%", "+0.29%", "+0.00%", "+0.00%", "+0.00%", "+0.00%", "+0.00%", "+0.00%"]]}]},
-        {"label": "2030-31", "method": "update", "args": [{"y": [[1.16, 0.91, 0.44, 0.28, 0, 0, 0, 0, 0, 0]], "text": [["+1.16%", "+0.91%", "+0.44%", "+0.28%", "+0.00%", "+0.00%", "+0.00%", "+0.00%", "+0.00%", "+0.00%"]]}]}
-      ]
-    }],
-    "images": [
-      {
-        "source": "https://raw.githubusercontent.com/PolicyEngine/policyengine-app-v2/main/app/public/assets/logos/policyengine/teal.png",
-        "x": 1,
-        "y": -0.15,
-        "xref": "paper",
-        "yref": "paper",
-        "sizex": 0.15,
-        "sizey": 0.15,
-        "xanchor": "right",
-        "yanchor": "bottom"
-      }
-    ]
-  }
-}
-```
+<iframe src="/assets/posts/scottish-budget-2026-scp-baby-boost/figure1_relative_change.html" width="100%" height="520" frameborder="0"></iframe>
 
 In 2026-27, the first decile sees the largest relative gain at 1.38%, followed by the second decile at 0.95%. The benefits decline sharply for higher deciles, with deciles 5-10 seeing no gains as families in these income groups are unlikely to qualify for the Scottish Child Payment.
 
@@ -104,79 +36,13 @@ Figure 2 shows the absolute change in household income (in £ per year) by incom
 
 **Figure 2: Absolute change in household income by income decile (£/year)**
 
-```plotly
-{
-  "data": [
-    {
-      "x": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-      "y": [2.54, 2.84, 1.71, 0.70, 0, 0, 0, 0, 0, 0],
-      "type": "bar",
-      "marker": {"color": "#319795"},
-      "hovertemplate": "Decile %{x}<br>Change: £%{y:.2f}<extra></extra>",
-      "text": ["£2.54", "£2.84", "£1.71", "£0.70", "£0.00", "£0.00", "£0.00", "£0.00", "£0.00", "£0.00"],
-      "textposition": "outside",
-      "textfont": {"family": "Roboto Serif", "size": 11}
-    }
-  ],
-  "layout": {
-    "xaxis": {
-      "title": "Income decile",
-      "titlefont": {"family": "Roboto Serif"},
-      "tickfont": {"family": "Roboto Serif"},
-      "tickmode": "array",
-      "tickvals": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-      "showgrid": true,
-      "gridcolor": "#e0e0e0"
-    },
-    "yaxis": {
-      "title": "Absolute change in household income (£/year)",
-      "titlefont": {"family": "Roboto Serif"},
-      "tickfont": {"family": "Roboto Serif"},
-      "tickprefix": "£",
-      "showgrid": true,
-      "gridcolor": "#e0e0e0",
-      "range": [0, 3.5]
-    },
-    "height": 500,
-    "margin": {"l": 80, "r": 50, "b": 100, "t": 80, "pad": 4},
-    "updatemenus": [{
-      "type": "dropdown",
-      "active": 0,
-      "x": 0.02,
-      "y": 1.15,
-      "xanchor": "left",
-      "yanchor": "top",
-      "bgcolor": "white",
-      "bordercolor": "#319795",
-      "font": {"family": "Roboto Serif", "size": 12},
-      "buttons": [
-        {"label": "2026-27", "method": "update", "args": [{"y": [[2.54, 2.84, 1.71, 0.70, 0, 0, 0, 0, 0, 0]], "text": [["£2.54", "£2.84", "£1.71", "£0.70", "£0.00", "£0.00", "£0.00", "£0.00", "£0.00", "£0.00"]]}]},
-        {"label": "2027-28", "method": "update", "args": [{"y": [[1.63, 2.85, 1.73, 0.97, 0, 0, 0, 0, 0, 0]], "text": [["£1.63", "£2.85", "£1.73", "£0.97", "£0.00", "£0.00", "£0.00", "£0.00", "£0.00", "£0.00"]]}]},
-        {"label": "2028-29", "method": "update", "args": [{"y": [[1.96, 2.85, 1.75, 1.21, 0, 0, 0, 0, 0, 0]], "text": [["£1.96", "£2.85", "£1.75", "£1.21", "£0.00", "£0.00", "£0.00", "£0.00", "£0.00", "£0.00"]]}]},
-        {"label": "2029-30", "method": "update", "args": [{"y": [[1.96, 2.86, 1.72, 1.20, 0, 0, 0, 0, 0, 0]], "text": [["£1.96", "£2.86", "£1.72", "£1.20", "£0.00", "£0.00", "£0.00", "£0.00", "£0.00", "£0.00"]]}]},
-        {"label": "2030-31", "method": "update", "args": [{"y": [[2.18, 2.87, 1.71, 1.20, 0, 0, 0, 0, 0, 0]], "text": [["£2.18", "£2.87", "£1.71", "£1.20", "£0.00", "£0.00", "£0.00", "£0.00", "£0.00", "£0.00"]]}]}
-      ]
-    }],
-    "images": [
-      {
-        "source": "https://raw.githubusercontent.com/PolicyEngine/policyengine-app-v2/main/app/public/assets/logos/policyengine/teal.png",
-        "x": 1,
-        "y": -0.15,
-        "xref": "paper",
-        "yref": "paper",
-        "sizex": 0.15,
-        "sizey": 0.15,
-        "xanchor": "right",
-        "yanchor": "bottom"
-      }
-    ]
-  }
-}
-```
+<iframe src="/assets/posts/scottish-budget-2026-scp-baby-boost/figure2_absolute_change.html" width="100%" height="520" frameborder="0"></iframe>
 
 ## Poverty impact
 
-Due to the narrow targeting of the policy, the impact on overall poverty rates is modest. In 2026-27, overall poverty falls by 0.004% and child poverty by 0.010%, remaining roughly stable through 2030-31. While these aggregate impacts appear small, they reflect the policy's precise targeting at families with very young children. For the approximately 6,000 families who receive the baby boost, the additional £668 per year during their child's first year of life provides meaningful support during a period of high financial pressure.
+We measure poverty using absolute poverty before housing costs, defined as households with income below 60% of the 2010/11 median income, adjusted for inflation. This is the standard definition used in the government's Households Below Average Income publication.
+
+Due to the narrow targeting of the policy, the impact on overall poverty rates is modest. In 2026-27, overall poverty falls by 0.004 percentage points and child poverty by 0.010 percentage points, remaining roughly stable through 2030-31. While these aggregate impacts appear small, they reflect the policy's precise targeting at families with very young children. For the approximately 6,000 families who receive the baby boost, the additional £668 per year during their child's first year of life provides meaningful support during a period of high financial pressure.
 
 ## Constituency impact
 
@@ -193,5 +59,3 @@ Edinburgh South sees the largest average gain at £11.90, followed by Paisley an
 The Scottish Child Payment baby boost represents a targeted investment in families with very young children. At a cost of approximately £80 million per year, the policy provides an additional £668 annually to eligible families during their child's first year of life.
 
 The reform is highly progressive, with all benefits flowing to the bottom four income deciles. While the aggregate poverty impact is modest due to the policy's precise targeting, the baby boost delivers meaningful support to around 6,000 families at a critical time in their children's development.
-
-For more analysis of Scottish and UK policy reforms, visit [policyengine.org](https://policyengine.org) or explore our [Scotland economic outlook dashboard](https://policyengine.org/uk/research/scottish-budget-2026-27).

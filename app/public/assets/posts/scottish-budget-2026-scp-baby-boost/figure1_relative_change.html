@@ -1,0 +1,211 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Relative change in household income by income decile</title>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <style>
+      body {
+        margin: 0;
+        font-family: 'Roboto Serif', Georgia, serif;
+        background: white;
+      }
+      .container {
+        max-width: 100%;
+        margin: 0 auto;
+        padding: 10px;
+      }
+      .controls {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 15px;
+        padding: 10px 15px;
+        background: #f8f9fa;
+        border-radius: 8px;
+      }
+      .play-btn {
+        width: 40px;
+        height: 40px;
+        border: none;
+        background: #319795;
+        color: white;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.2s;
+      }
+      .play-btn:hover {
+        background: #2c8482;
+      }
+      .slider-container {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+      }
+      .year-slider {
+        width: 100%;
+        height: 6px;
+        -webkit-appearance: none;
+        background: #e5e5e5;
+        border-radius: 3px;
+        outline: none;
+      }
+      .year-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 18px;
+        height: 18px;
+        background: #319795;
+        border-radius: 50%;
+        cursor: pointer;
+      }
+      .year-slider::-moz-range-thumb {
+        width: 18px;
+        height: 18px;
+        background: #319795;
+        border-radius: 50%;
+        cursor: pointer;
+        border: none;
+      }
+      .year-labels {
+        display: flex;
+        justify-content: space-between;
+        font-size: 11px;
+        color: #666;
+        margin-top: 5px;
+      }
+      .current-year {
+        font-weight: 600;
+        color: #319795;
+        font-size: 14px;
+        min-width: 70px;
+        text-align: right;
+      }
+      #chart {
+        width: 100%;
+        height: 420px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="controls">
+        <button class="play-btn" id="play-btn" title="Play animation">&#9654;</button>
+        <div class="slider-container">
+          <input type="range" class="year-slider" id="year-slider" min="0" max="4" value="0" step="1" />
+          <div class="year-labels">
+            <span>2026-27</span>
+            <span>2027-28</span>
+            <span>2028-29</span>
+            <span>2029-30</span>
+            <span>2030-31</span>
+          </div>
+        </div>
+        <div class="current-year" id="current-year">2026-27</div>
+      </div>
+      <div id="chart"></div>
+    </div>
+    <script>
+      const years = ['2026-27', '2027-28', '2028-29', '2029-30', '2030-31'];
+      const data = {
+        '2026-27': [1.38, 0.96, 0.46, 0.18, 0, 0, 0, 0, 0, 0],
+        '2027-28': [0.88, 0.95, 0.46, 0.24, 0, 0, 0, 0, 0, 0],
+        '2028-29': [1.05, 0.93, 0.46, 0.29, 0, 0, 0, 0, 0, 0],
+        '2029-30': [1.04, 0.92, 0.44, 0.29, 0, 0, 0, 0, 0, 0],
+        '2030-31': [1.16, 0.91, 0.44, 0.28, 0, 0, 0, 0, 0, 0]
+      };
+
+      let currentIndex = 0;
+      let isPlaying = false;
+      let playInterval = null;
+
+      const trace = {
+        x: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        y: data['2026-27'],
+        type: 'bar',
+        marker: { color: '#319795' },
+        text: data['2026-27'].map(v => v > 0 ? `+${v.toFixed(2)}%` : ''),
+        textposition: 'outside',
+        textfont: { family: 'Roboto Serif', size: 11 },
+        hovertemplate: 'Decile %{x}<br>Change: +%{y:.2f}%<extra></extra>'
+      };
+
+      const layout = {
+        xaxis: {
+          title: 'Income decile',
+          titlefont: { family: 'Roboto Serif' },
+          tickfont: { family: 'Roboto Serif' },
+          tickmode: 'array',
+          tickvals: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+          showgrid: true,
+          gridcolor: '#e0e0e0'
+        },
+        yaxis: {
+          title: 'Relative change in household income (%)',
+          titlefont: { family: 'Roboto Serif' },
+          tickfont: { family: 'Roboto Serif' },
+          ticksuffix: '%',
+          showgrid: true,
+          gridcolor: '#e0e0e0',
+          range: [0, 1.6]
+        },
+        margin: { l: 70, r: 40, b: 60, t: 20 },
+        images: [{
+          source: 'https://raw.githubusercontent.com/PolicyEngine/policyengine-app-v2/main/app/public/assets/logos/policyengine/teal.png',
+          x: 1, y: -0.18, xref: 'paper', yref: 'paper',
+          sizex: 0.15, sizey: 0.15, xanchor: 'right', yanchor: 'bottom'
+        }]
+      };
+
+      Plotly.newPlot('chart', [trace], layout, { responsive: true, displayModeBar: false });
+
+      function updateChart(index) {
+        const year = years[index];
+        const yData = data[year];
+        const textData = yData.map(v => v > 0 ? `+${v.toFixed(2)}%` : '');
+        Plotly.animate('chart', {
+          data: [{ y: yData, text: textData }]
+        }, {
+          transition: { duration: 300, easing: 'cubic-in-out' },
+          frame: { duration: 300 }
+        });
+        document.getElementById('current-year').textContent = year;
+        document.getElementById('year-slider').value = index;
+      }
+
+      document.getElementById('year-slider').addEventListener('input', (e) => {
+        currentIndex = parseInt(e.target.value);
+        updateChart(currentIndex);
+      });
+
+      document.getElementById('play-btn').addEventListener('click', () => {
+        if (isPlaying) {
+          clearInterval(playInterval);
+          document.getElementById('play-btn').innerHTML = '&#9654;';
+          isPlaying = false;
+        } else {
+          if (currentIndex >= years.length - 1) {
+            currentIndex = 0;
+            updateChart(currentIndex);
+          }
+          isPlaying = true;
+          document.getElementById('play-btn').innerHTML = '&#10074;&#10074;';
+          playInterval = setInterval(() => {
+            if (currentIndex < years.length - 1) {
+              currentIndex++;
+              updateChart(currentIndex);
+            }
+            if (currentIndex >= years.length - 1) {
+              clearInterval(playInterval);
+              document.getElementById('play-btn').innerHTML = '&#9654;';
+              isPlaying = false;
+            }
+          }, 1200);
+        }
+      });
+    </script>
+  </body>
+</html>
