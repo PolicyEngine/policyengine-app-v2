@@ -270,19 +270,7 @@ Figure 2 shows the absolute change in household income (in £ per year) by incom
 
 ## Poverty impact
 
-Due to the narrow targeting of the policy, the impact on overall poverty rates is modest. Table 3 shows the change in poverty rates across the forecast period.
-
-**Table 3: Change in poverty rates**
-
-| Year    | Overall poverty change | Child poverty change |
-| ------- | ---------------------- | -------------------- |
-| 2026-27 | -0.004%                | -0.010%              |
-| 2027-28 | -0.004%                | -0.010%              |
-| 2028-29 | -0.004%                | -0.010%              |
-| 2029-30 | -0.004%                | -0.010%              |
-| 2030-31 | -0.004%                | -0.010%              |
-
-While these aggregate impacts appear small, they reflect the policy's precise targeting at families with very young children. For the approximately 6,000 families who receive the baby boost, the additional £668 per year during their child's first year of life provides meaningful support during a period of high financial pressure.
+Due to the narrow targeting of the policy, the impact on overall poverty rates is modest. In 2026-27, overall poverty falls by 0.004% and child poverty by 0.010%, remaining roughly stable through 2030-31. While these aggregate impacts appear small, they reflect the policy's precise targeting at families with very young children. For the approximately 6,000 families who receive the baby boost, the additional £668 per year during their child's first year of life provides meaningful support during a period of high financial pressure.
 
 ## Constituency impact
 
