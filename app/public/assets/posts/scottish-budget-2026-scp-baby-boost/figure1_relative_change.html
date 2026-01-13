@@ -7,7 +7,7 @@
     <style>
       body {
         margin: 0;
-        font-family: 'Roboto Serif', Georgia, serif;
+        font-family: '-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif', Georgia, serif;
         background: white;
       }
       .container {
@@ -129,15 +129,15 @@
         marker: { color: '#319795' },
         text: data['2026-27'].map(v => v > 0 ? `+${v.toFixed(2)}%` : ''),
         textposition: 'outside',
-        textfont: { family: 'Roboto Serif', size: 11 },
+        textfont: { family: '-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif', size: 11 },
         hovertemplate: 'Decile %{x}<br>Change: +%{y:.2f}%<extra></extra>'
       };
 
       const layout = {
         xaxis: {
           title: 'Income decile',
-          titlefont: { family: 'Roboto Serif' },
-          tickfont: { family: 'Roboto Serif' },
+          titlefont: { family: '-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif' },
+          tickfont: { family: '-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif' },
           tickmode: 'array',
           tickvals: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
           showgrid: true,
@@ -145,8 +145,8 @@
         },
         yaxis: {
           title: 'Relative change in household income (%)',
-          titlefont: { family: 'Roboto Serif' },
-          tickfont: { family: 'Roboto Serif' },
+          titlefont: { family: '-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif' },
+          tickfont: { family: '-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif' },
           ticksuffix: '%',
           showgrid: true,
           gridcolor: '#e0e0e0',
