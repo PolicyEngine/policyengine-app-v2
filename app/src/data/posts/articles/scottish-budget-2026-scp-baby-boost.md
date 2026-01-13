@@ -1,4 +1,4 @@
-Finance Secretary Shona Robison announced today that the Scottish Child Payment will be boosted to £40 per week for families with a baby under the age of one. This new "baby boost" rate represents a 47% increase over the current payment of £27.15 per week, delivering what Robison described as the "strongest package of support for families with young children anywhere in the UK."
+Finance Secretary Shona Robison [announced today](https://news.stv.tv/politics/families-with-babies-to-get-40-a-week-scottish-government-announces) that the Scottish Child Payment will be boosted to £40 per week for families with a baby under the age of one. This new "baby boost" rate represents a 47% increase over the current payment of £27.15 per week, delivering what Robison described as the "strongest package of support for families with young children anywhere in the UK."
 
 Using PolicyEngine's Scotland tax-benefit microsimulation model, we estimate that this reform would cost approximately £80 million in 2026-27, rising to £83 million by 2030-31. The policy is highly targeted, benefiting around 0.12% of the Scottish population, with all gains concentrated in the bottom four income deciles.
 
@@ -16,11 +16,11 @@ PolicyEngine estimates the following costs for the baby boost over the forecast 
 
 | Year    | Cost (£ million) |
 | ------- | ---------------- |
-| 2026-27 | 80               |
-| 2027-28 | 75               |
-| 2028-29 | 79               |
-| 2029-30 | 79               |
-| 2030-31 | 83               |
+| 2026-27 | 79.9             |
+| 2027-28 | 74.9             |
+| 2028-29 | 78.6             |
+| 2029-30 | 79.2             |
+| 2030-31 | 83.5             |
 
 ## Distributional impact
 
@@ -33,11 +33,11 @@ The reform is highly progressive, with benefits concentrated entirely in the bot
   "data": [
     {
       "x": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-      "y": [1.38, 0.95, 0.46, 0.18, 0, 0, 0, 0, 0, 0],
+      "y": [1.38, 0.96, 0.46, 0.18, 0, 0, 0, 0, 0, 0],
       "type": "bar",
       "marker": {"color": "#319795"},
       "hovertemplate": "Decile %{x}<br>Change: +%{y:.2f}%<extra></extra>",
-      "text": ["+1.38%", "+0.95%", "+0.46%", "+0.18%", "+0.00%", "+0.00%", "+0.00%", "+0.00%", "+0.00%", "+0.00%"],
+      "text": ["+1.38%", "+0.96%", "+0.46%", "+0.18%", "+0.00%", "+0.00%", "+0.00%", "+0.00%", "+0.00%", "+0.00%"],
       "textposition": "outside",
       "textfont": {"family": "Roboto Serif", "size": 11}
     }
@@ -62,34 +62,24 @@ The reform is highly progressive, with benefits concentrated entirely in the bot
       "range": [0, 1.6]
     },
     "height": 500,
-    "margin": {"l": 80, "r": 50, "b": 100, "t": 100, "pad": 4},
+    "margin": {"l": 80, "r": 50, "b": 100, "t": 80, "pad": 4},
     "updatemenus": [{
-      "type": "buttons",
-      "showactive": false,
-      "x": 0.1,
-      "y": 1.25,
-      "xanchor": "right",
-      "buttons": [{
-        "label": "Play",
-        "method": "animate",
-        "args": [null, {"frame": {"duration": 1000, "redraw": true}, "fromcurrent": true, "mode": "afterall"}]
-      }]
-    }],
-    "sliders": [{
+      "type": "dropdown",
       "active": 0,
-      "steps": [
-        {"label": "2026-27", "method": "animate", "args": [["2026-27"], {"frame": {"duration": 0, "redraw": true}, "mode": "immediate"}]},
-        {"label": "2027-28", "method": "animate", "args": [["2027-28"], {"frame": {"duration": 0, "redraw": true}, "mode": "immediate"}]},
-        {"label": "2028-29", "method": "animate", "args": [["2028-29"], {"frame": {"duration": 0, "redraw": true}, "mode": "immediate"}]},
-        {"label": "2029-30", "method": "animate", "args": [["2029-30"], {"frame": {"duration": 0, "redraw": true}, "mode": "immediate"}]},
-        {"label": "2030-31", "method": "animate", "args": [["2030-31"], {"frame": {"duration": 0, "redraw": true}, "mode": "immediate"}]}
-      ],
-      "x": 0.25,
-      "len": 0.5,
+      "x": 0.02,
       "y": 1.15,
-      "yanchor": "bottom",
-      "currentvalue": {"visible": false},
-      "font": {"family": "Roboto Serif"}
+      "xanchor": "left",
+      "yanchor": "top",
+      "bgcolor": "white",
+      "bordercolor": "#319795",
+      "font": {"family": "Roboto Serif", "size": 12},
+      "buttons": [
+        {"label": "2026-27", "method": "update", "args": [{"y": [[1.38, 0.96, 0.46, 0.18, 0, 0, 0, 0, 0, 0]], "text": [["+1.38%", "+0.96%", "+0.46%", "+0.18%", "+0.00%", "+0.00%", "+0.00%", "+0.00%", "+0.00%", "+0.00%"]]}]},
+        {"label": "2027-28", "method": "update", "args": [{"y": [[0.88, 0.95, 0.46, 0.24, 0, 0, 0, 0, 0, 0]], "text": [["+0.88%", "+0.95%", "+0.46%", "+0.24%", "+0.00%", "+0.00%", "+0.00%", "+0.00%", "+0.00%", "+0.00%"]]}]},
+        {"label": "2028-29", "method": "update", "args": [{"y": [[1.05, 0.93, 0.46, 0.29, 0, 0, 0, 0, 0, 0]], "text": [["+1.05%", "+0.93%", "+0.46%", "+0.29%", "+0.00%", "+0.00%", "+0.00%", "+0.00%", "+0.00%", "+0.00%"]]}]},
+        {"label": "2029-30", "method": "update", "args": [{"y": [[1.04, 0.92, 0.44, 0.29, 0, 0, 0, 0, 0, 0]], "text": [["+1.04%", "+0.92%", "+0.44%", "+0.29%", "+0.00%", "+0.00%", "+0.00%", "+0.00%", "+0.00%", "+0.00%"]]}]},
+        {"label": "2030-31", "method": "update", "args": [{"y": [[1.16, 0.91, 0.44, 0.28, 0, 0, 0, 0, 0, 0]], "text": [["+1.16%", "+0.91%", "+0.44%", "+0.28%", "+0.00%", "+0.00%", "+0.00%", "+0.00%", "+0.00%", "+0.00%"]]}]}
+      ]
     }],
     "images": [
       {
@@ -104,44 +94,7 @@ The reform is highly progressive, with benefits concentrated entirely in the bot
         "yanchor": "bottom"
       }
     ]
-  },
-  "frames": [
-    {
-      "name": "2026-27",
-      "data": [{
-        "y": [1.38, 0.95, 0.46, 0.18, 0, 0, 0, 0, 0, 0],
-        "text": ["+1.38%", "+0.95%", "+0.46%", "+0.18%", "+0.00%", "+0.00%", "+0.00%", "+0.00%", "+0.00%", "+0.00%"]
-      }]
-    },
-    {
-      "name": "2027-28",
-      "data": [{
-        "y": [0.88, 0.95, 0.46, 0.24, 0, 0, 0, 0, 0, 0],
-        "text": ["+0.88%", "+0.95%", "+0.46%", "+0.24%", "+0.00%", "+0.00%", "+0.00%", "+0.00%", "+0.00%", "+0.00%"]
-      }]
-    },
-    {
-      "name": "2028-29",
-      "data": [{
-        "y": [1.05, 0.93, 0.46, 0.29, 0, 0, 0, 0, 0, 0],
-        "text": ["+1.05%", "+0.93%", "+0.46%", "+0.29%", "+0.00%", "+0.00%", "+0.00%", "+0.00%", "+0.00%", "+0.00%"]
-      }]
-    },
-    {
-      "name": "2029-30",
-      "data": [{
-        "y": [1.04, 0.92, 0.44, 0.29, 0, 0, 0, 0, 0, 0],
-        "text": ["+1.04%", "+0.92%", "+0.44%", "+0.29%", "+0.00%", "+0.00%", "+0.00%", "+0.00%", "+0.00%", "+0.00%"]
-      }]
-    },
-    {
-      "name": "2030-31",
-      "data": [{
-        "y": [1.16, 0.91, 0.44, 0.28, 0, 0, 0, 0, 0, 0],
-        "text": ["+1.16%", "+0.91%", "+0.44%", "+0.28%", "+0.00%", "+0.00%", "+0.00%", "+0.00%", "+0.00%", "+0.00%"]
-      }]
-    }
-  ]
+  }
 }
 ```
 
@@ -185,34 +138,24 @@ Figure 2 shows the absolute change in household income (in £ per year) by incom
       "range": [0, 3.5]
     },
     "height": 500,
-    "margin": {"l": 80, "r": 50, "b": 100, "t": 100, "pad": 4},
+    "margin": {"l": 80, "r": 50, "b": 100, "t": 80, "pad": 4},
     "updatemenus": [{
-      "type": "buttons",
-      "showactive": false,
-      "x": 0.1,
-      "y": 1.25,
-      "xanchor": "right",
-      "buttons": [{
-        "label": "Play",
-        "method": "animate",
-        "args": [null, {"frame": {"duration": 1000, "redraw": true}, "fromcurrent": true, "mode": "afterall"}]
-      }]
-    }],
-    "sliders": [{
+      "type": "dropdown",
       "active": 0,
-      "steps": [
-        {"label": "2026-27", "method": "animate", "args": [["2026-27"], {"frame": {"duration": 0, "redraw": true}, "mode": "immediate"}]},
-        {"label": "2027-28", "method": "animate", "args": [["2027-28"], {"frame": {"duration": 0, "redraw": true}, "mode": "immediate"}]},
-        {"label": "2028-29", "method": "animate", "args": [["2028-29"], {"frame": {"duration": 0, "redraw": true}, "mode": "immediate"}]},
-        {"label": "2029-30", "method": "animate", "args": [["2029-30"], {"frame": {"duration": 0, "redraw": true}, "mode": "immediate"}]},
-        {"label": "2030-31", "method": "animate", "args": [["2030-31"], {"frame": {"duration": 0, "redraw": true}, "mode": "immediate"}]}
-      ],
-      "x": 0.25,
-      "len": 0.5,
+      "x": 0.02,
       "y": 1.15,
-      "yanchor": "bottom",
-      "currentvalue": {"visible": false},
-      "font": {"family": "Roboto Serif"}
+      "xanchor": "left",
+      "yanchor": "top",
+      "bgcolor": "white",
+      "bordercolor": "#319795",
+      "font": {"family": "Roboto Serif", "size": 12},
+      "buttons": [
+        {"label": "2026-27", "method": "update", "args": [{"y": [[2.54, 2.84, 1.71, 0.70, 0, 0, 0, 0, 0, 0]], "text": [["£2.54", "£2.84", "£1.71", "£0.70", "£0.00", "£0.00", "£0.00", "£0.00", "£0.00", "£0.00"]]}]},
+        {"label": "2027-28", "method": "update", "args": [{"y": [[1.63, 2.85, 1.73, 0.97, 0, 0, 0, 0, 0, 0]], "text": [["£1.63", "£2.85", "£1.73", "£0.97", "£0.00", "£0.00", "£0.00", "£0.00", "£0.00", "£0.00"]]}]},
+        {"label": "2028-29", "method": "update", "args": [{"y": [[1.96, 2.85, 1.75, 1.21, 0, 0, 0, 0, 0, 0]], "text": [["£1.96", "£2.85", "£1.75", "£1.21", "£0.00", "£0.00", "£0.00", "£0.00", "£0.00", "£0.00"]]}]},
+        {"label": "2029-30", "method": "update", "args": [{"y": [[1.96, 2.86, 1.72, 1.20, 0, 0, 0, 0, 0, 0]], "text": [["£1.96", "£2.86", "£1.72", "£1.20", "£0.00", "£0.00", "£0.00", "£0.00", "£0.00", "£0.00"]]}]},
+        {"label": "2030-31", "method": "update", "args": [{"y": [[2.18, 2.87, 1.71, 1.20, 0, 0, 0, 0, 0, 0]], "text": [["£2.18", "£2.87", "£1.71", "£1.20", "£0.00", "£0.00", "£0.00", "£0.00", "£0.00", "£0.00"]]}]}
+      ]
     }],
     "images": [
       {
@@ -227,44 +170,7 @@ Figure 2 shows the absolute change in household income (in £ per year) by incom
         "yanchor": "bottom"
       }
     ]
-  },
-  "frames": [
-    {
-      "name": "2026-27",
-      "data": [{
-        "y": [2.54, 2.84, 1.71, 0.70, 0, 0, 0, 0, 0, 0],
-        "text": ["£2.54", "£2.84", "£1.71", "£0.70", "£0.00", "£0.00", "£0.00", "£0.00", "£0.00", "£0.00"]
-      }]
-    },
-    {
-      "name": "2027-28",
-      "data": [{
-        "y": [1.63, 2.85, 1.73, 0.97, 0, 0, 0, 0, 0, 0],
-        "text": ["£1.63", "£2.85", "£1.73", "£0.97", "£0.00", "£0.00", "£0.00", "£0.00", "£0.00", "£0.00"]
-      }]
-    },
-    {
-      "name": "2028-29",
-      "data": [{
-        "y": [1.96, 2.85, 1.75, 1.21, 0, 0, 0, 0, 0, 0],
-        "text": ["£1.96", "£2.85", "£1.75", "£1.21", "£0.00", "£0.00", "£0.00", "£0.00", "£0.00", "£0.00"]
-      }]
-    },
-    {
-      "name": "2029-30",
-      "data": [{
-        "y": [1.96, 2.86, 1.72, 1.21, 0, 0, 0, 0, 0, 0],
-        "text": ["£1.96", "£2.86", "£1.72", "£1.21", "£0.00", "£0.00", "£0.00", "£0.00", "£0.00", "£0.00"]
-      }]
-    },
-    {
-      "name": "2030-31",
-      "data": [{
-        "y": [2.18, 2.88, 1.71, 1.20, 0, 0, 0, 0, 0, 0],
-        "text": ["£2.18", "£2.88", "£1.71", "£1.20", "£0.00", "£0.00", "£0.00", "£0.00", "£0.00", "£0.00"]
-      }]
-    }
-  ]
+  }
 }
 ```
 
