@@ -42,7 +42,7 @@ Figure 2 shows the absolute change in household income (in £ per year) by incom
 
 We measure poverty using absolute poverty before housing costs, defined as households with income below 60% of the 2010/11 median income, adjusted for inflation. This is the standard definition used in the government's Households Below Average Income publication.
 
-Due to the narrow targeting of the policy, the impact on overall poverty rates is modest. In 2026-27, overall poverty falls by 0.004 percentage points and child poverty by 0.010 percentage points, remaining roughly stable through 2030-31. While these aggregate impacts appear small, they reflect the policy's precise targeting at families with very young children. For the approximately 6,000 families who receive the baby boost, the additional £668 per year during their child's first year of life provides meaningful support during a period of high financial pressure.
+Due to the narrow targeting of the policy, the impact on overall poverty rates is limited. In 2026-27, overall poverty falls by 0.004 percentage points and child poverty by 0.010 percentage points, remaining roughly stable through 2030-31. Approximately 6,000 families would receive the baby boost, gaining an additional £668 per year during their child's first year of life.
 
 ## Constituency impact
 
@@ -56,6 +56,6 @@ Edinburgh South sees the largest average gain at £11.90, followed by Paisley an
 
 ## Conclusion
 
-The Scottish Child Payment baby boost represents a targeted investment in families with very young children. At a cost of approximately £80 million per year, the policy provides an additional £668 annually to eligible families during their child's first year of life.
+The Scottish Child Payment baby boost would cost approximately £80 million per year and provide an additional £668 annually to eligible families during their child's first year of life.
 
-The reform is highly progressive, with all benefits flowing to the bottom four income deciles. While the aggregate poverty impact is modest due to the policy's precise targeting, the baby boost delivers meaningful support to around 6,000 families at a critical time in their children's development.
+The reform is progressive, with all benefits flowing to the bottom four income deciles. The aggregate poverty impact is limited due to the policy's narrow targeting, affecting around 6,000 families.
