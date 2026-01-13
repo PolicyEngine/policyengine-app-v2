@@ -35,7 +35,7 @@ The reform would raise the net income of 3.4% of Americans, with beneficiaries c
 
 <iframe src="https://policyengine.github.io/stronger-start-calc/winners-by-decile.html" width="100%" height="650" frameborder="0"></iframe>
 
-We project that the Stronger Start for Working Families Act would reduce child poverty by 0.11%, as determined by the Supplemental Poverty Measure, while having no effect on deep child poverty. The proposed legislation would also reduce the Gini index of inequality by 0.017%.
+We project that the Stronger Start for Working Families Act would reduce child poverty by 0.11%, as determined by the Supplemental Poverty Measure, while having no effect on deep child poverty. The proposed legislation would also reduce the Gini index of income inequality by 0.017%.
 
 ## Conclusion
 
