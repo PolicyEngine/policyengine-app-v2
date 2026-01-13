@@ -66,7 +66,6 @@ const topicLabels: TagLabels = {
   louisiana: 'Louisiana',
   minnesota: 'Minnesota',
   org: 'Organization', // UK variant: Organisation
-  scotland: 'Scotland',
   tariffs: 'Tariffs',
   tax: 'Tax',
   technology: 'Technology',
