@@ -39,7 +39,7 @@ We project that the Stronger Start for Working Families Act would reduce child p
 
 ## Conclusion
 
-The Stronger Start for Working Families Act would expand the Child Tax Credit's reach by eliminating the $2,500 earnings threshold. This reform would raise the net income of 3.4% of American residents, while providing a maximum benefit of $375 for those who currently receive less than the $1,700 refundable portion per child.
+The Stronger Start for Working Families Act would expand the Child Tax Credit's reach by eliminating the $2,500 earnings threshold. This reform would raise the net income of 3.4% of American residents, while providing a maximum benefit of $375 for those who currently receive less than the $1,700 refundable credit per child.
 
 As policymakers evaluate reforms such as these, analytical tools like PolicyEngine offer critical insights into the impacts on diverse household compositions and the broader economy.
 
