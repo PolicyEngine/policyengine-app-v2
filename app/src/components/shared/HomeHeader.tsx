@@ -1,40 +1,32 @@
-import { useNavigate } from 'react-router-dom';
 import { useDisclosure } from '@mantine/hooks';
 import HeaderContent from '@/components/homeHeader/HeaderContent';
 import { NavItemSetup } from '@/components/homeHeader/NavItem';
+import { WEBSITE_URL } from '@/constants';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 
 export default function HeaderNavigation() {
   const [opened, { open, close }] = useDisclosure(false);
-  const navigate = useNavigate();
   const countryId = useCurrentCountry();
 
-  const handleNavClick = (path?: string) => {
-    if (path) {
-      navigate(path);
-      close();
-    }
-  };
-
+  // Nav items link to the website (policyengine.org), not the calculator
   const navItems: NavItemSetup[] = [
     {
       label: 'Research',
-      onClick: () => handleNavClick(`/${countryId}/research`),
+      href: `${WEBSITE_URL}/${countryId}/research`,
       hasDropdown: false,
     },
     {
       label: 'About',
-      onClick: () => {}, // No-op for dropdown parent
       hasDropdown: true,
       dropdownItems: [
-        { label: 'Team', onClick: () => handleNavClick(`/${countryId}/team`) },
-        { label: 'Supporters', onClick: () => handleNavClick(`/${countryId}/supporters`) },
+        { label: 'Team', href: `${WEBSITE_URL}/${countryId}/team` },
+        { label: 'Supporters', href: `${WEBSITE_URL}/${countryId}/supporters` },
       ],
     },
     {
       label: 'Donate',
-      onClick: () => handleNavClick(`/${countryId}/donate`),
+      href: `${WEBSITE_URL}/${countryId}/donate`,
       hasDropdown: false,
     },
   ];

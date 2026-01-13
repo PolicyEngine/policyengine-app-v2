@@ -54,7 +54,8 @@ export default function MobileMenu({ opened, onOpen, onClose, navItems }: Mobile
                       td="none"
                       fw={typography.fontWeight.normal}
                       size="sm"
-                      onClick={dropdownItem.onClick}
+                      href={dropdownItem.href}
+                      onClick={dropdownItem.href ? undefined : dropdownItem.onClick}
                       style={{ fontFamily: typography.fontFamily.primary }}
                     >
                       {dropdownItem.label}
@@ -71,7 +72,8 @@ export default function MobileMenu({ opened, onOpen, onClose, navItems }: Mobile
                 td="none"
                 fw={typography.fontWeight.medium}
                 size="sm"
-                onClick={item.onClick}
+                href={item.href}
+                onClick={item.href ? undefined : item.onClick}
                 style={{ fontFamily: typography.fontFamily.primary }}
                 display="block"
               >

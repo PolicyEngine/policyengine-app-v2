@@ -4,12 +4,18 @@ import { colors, typography } from '@/designTokens';
 
 export interface DropdownItem {
   label: string;
-  onClick: () => void;
+  /** For internal navigation (SPA) */
+  onClick?: () => void;
+  /** For external links - renders as <a> tag */
+  href?: string;
 }
 
 export interface NavItemSetup {
   label: string;
-  onClick: () => void;
+  /** For internal navigation (SPA) */
+  onClick?: () => void;
+  /** For external links - renders as <a> tag */
+  href?: string;
   hasDropdown: boolean;
   dropdownItems?: DropdownItem[];
 }
@@ -23,7 +29,7 @@ interface NavItemProps {
  * Can be either a simple link or a dropdown menu
  */
 export default function NavItem({ setup }: NavItemProps) {
-  const { label, onClick, hasDropdown, dropdownItems } = setup;
+  const { label, onClick, href, hasDropdown, dropdownItems } = setup;
 
   if (hasDropdown && dropdownItems) {
     return (
@@ -44,11 +50,17 @@ export default function NavItem({ setup }: NavItemProps) {
           </UnstyledButton>
         </Menu.Target>
         <Menu.Dropdown>
-          {dropdownItems.map((item) => (
-            <Menu.Item key={item.label} onClick={item.onClick}>
-              {item.label}
-            </Menu.Item>
-          ))}
+          {dropdownItems.map((item) =>
+            item.href ? (
+              <Menu.Item key={item.label} component="a" href={item.href}>
+                {item.label}
+              </Menu.Item>
+            ) : (
+              <Menu.Item key={item.label} onClick={item.onClick}>
+                {item.label}
+              </Menu.Item>
+            )
+          )}
         </Menu.Dropdown>
       </Menu>
     );
@@ -62,7 +74,8 @@ export default function NavItem({ setup }: NavItemProps) {
       fw={typography.fontWeight.medium}
       size="18px"
       style={{ fontFamily: typography.fontFamily.primary }}
-      onClick={onClick}
+      href={href}
+      onClick={href ? undefined : onClick}
     >
       {label}
     </Anchor>
