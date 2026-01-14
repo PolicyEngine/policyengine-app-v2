@@ -233,13 +233,14 @@ export function PlotlyChartCode({
         data={plotlyData.data}
         layout={{
           ...plotlyData.layout,
-          width: mobile ? 400 : undefined,
-          height: 600,
-          plot_bgcolor: backgroundColor || 'transparent',
-          paper_bgcolor: backgroundColor || 'transparent',
+          width: mobile ? 400 : plotlyData.layout?.width,
+          height: plotlyData.layout?.height || 600,
+          plot_bgcolor: backgroundColor || plotlyData.layout?.plot_bgcolor || 'transparent',
+          paper_bgcolor: backgroundColor || plotlyData.layout?.paper_bgcolor || 'transparent',
           margin: margins,
           autosize: true,
         }}
+        frames={plotlyData.frames}
         config={{
           displayModeBar: false,
           responsive: true,
