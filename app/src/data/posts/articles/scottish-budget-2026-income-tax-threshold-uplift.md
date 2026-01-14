@@ -70,18 +70,6 @@ Benefits are distributed across all income deciles, with higher relative gains i
     "plot_bgcolor": "#F4F4F4",
     "paper_bgcolor": "#F4F4F4",
     "font": {"family": "Roboto Serif"},
-    "updatemenus": [{
-      "type": "buttons",
-      "showactive": false,
-      "x": 0.1,
-      "y": 1.25,
-      "xanchor": "right",
-      "buttons": [{
-        "label": "Play",
-        "method": "animate",
-        "args": [null, {"frame": {"duration": 1000, "redraw": true}, "fromcurrent": true, "mode": "afterall"}]
-      }]
-    }],
     "sliders": [{
       "active": 0,
       "steps": [
@@ -93,7 +81,7 @@ Benefits are distributed across all income deciles, with higher relative gains i
       ],
       "x": 0.25,
       "len": 0.5,
-      "y": 1.15,
+      "y": 1.12,
       "yanchor": "bottom",
       "currentvalue": {"visible": false},
       "font": {"family": "Roboto Serif"}
@@ -196,18 +184,6 @@ Figure 2 shows the absolute change in household income (in £ per year) by incom
     "plot_bgcolor": "#F4F4F4",
     "paper_bgcolor": "#F4F4F4",
     "font": {"family": "Roboto Serif"},
-    "updatemenus": [{
-      "type": "buttons",
-      "showactive": false,
-      "x": 0.1,
-      "y": 1.25,
-      "xanchor": "right",
-      "buttons": [{
-        "label": "Play",
-        "method": "animate",
-        "args": [null, {"frame": {"duration": 1000, "redraw": true}, "fromcurrent": true, "mode": "afterall"}]
-      }]
-    }],
     "sliders": [{
       "active": 0,
       "steps": [
@@ -219,7 +195,7 @@ Figure 2 shows the absolute change in household income (in £ per year) by incom
       ],
       "x": 0.25,
       "len": 0.5,
-      "y": 1.15,
+      "y": 1.12,
       "yanchor": "bottom",
       "currentvalue": {"visible": false},
       "font": {"family": "Roboto Serif"}
