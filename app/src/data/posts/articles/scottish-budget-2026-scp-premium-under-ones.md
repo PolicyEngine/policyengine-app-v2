@@ -1,4 +1,6 @@
-Finance Secretary Shona Robison [announced today](https://news.stv.tv/politics/families-with-babies-to-get-40-a-week-scottish-government-announces) that the Scottish Child Payment will be increased to £40 per week for families with a baby under the age of one. This new SCP Premium for under-ones represents a 47% increase over the current payment of £27.15 per week, delivering what Robison described as the "strongest package of support for families with young children anywhere in the UK."
+Finance Secretary Shona Robison [announced today](https://news.stv.tv/politics/families-with-babies-to-get-40-a-week-scottish-government-announces) that the Scottish Child Payment (SCP) will be increased to £40 per week for families with a baby under the age of one. This new SCP Premium for under-ones represents a 47% increase over the current payment of £27.15 per week, delivering what Robison described as the "strongest package of support for families with young children anywhere in the UK."
+
+The Scottish Child Payment is a weekly payment to low-income families in Scotland for each child under 16. The SCP Premium for under-ones increases this payment from £27.15 to £40 per week during a child's first year of life.
 
 Using PolicyEngine's Scotland tax-benefit microsimulation model, we estimate that this reform would cost approximately £26 million in 2026-27, averaging around £25 million per year through 2030-31. Around 0.12% of the Scottish population would benefit, with all gains concentrated in the bottom four income deciles.
 
