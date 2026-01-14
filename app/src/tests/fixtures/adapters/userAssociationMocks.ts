@@ -3,7 +3,6 @@ import { UserReport } from '@/types/ingredients/UserReport';
 import { UserSimulation } from '@/types/ingredients/UserSimulation';
 import { UserPolicyMetadata } from '@/types/metadata/userPolicyMetadata';
 import {
-  UserPolicyCreationPayload,
   UserReportCreationPayload,
   UserSimulationCreationPayload,
 } from '@/types/payloads';
@@ -19,7 +18,7 @@ import {
 
 // UserPolicy fixtures
 export const mockUserPolicyUS: UserPolicy = {
-  id: TEST_POLICY_IDS.POLICY_789, // UserPolicyAdapter uses policyId as the id
+  id: 'user-policy-123', // Association ID from backend
   userId: TEST_USER_IDS.USER_123,
   policyId: TEST_POLICY_IDS.POLICY_789,
   countryId: TEST_COUNTRIES.US,
@@ -31,7 +30,7 @@ export const mockUserPolicyUS: UserPolicy = {
 
 export const mockUserPolicyUK: UserPolicy = {
   ...mockUserPolicyUS,
-  id: TEST_POLICY_IDS.POLICY_ABC,
+  id: 'user-policy-456', // Association ID from backend
   policyId: TEST_POLICY_IDS.POLICY_ABC,
   countryId: TEST_COUNTRIES.UK,
 };
@@ -43,15 +42,15 @@ export const mockUserPolicyWithoutOptionalFields: Omit<UserPolicy, 'id' | 'creat
   isCreated: true,
 };
 
-export const mockUserPolicyCreationPayload: UserPolicyCreationPayload = {
+export const mockUserPolicyCreationPayload = {
   user_id: TEST_USER_IDS.USER_123,
   policy_id: TEST_POLICY_IDS.POLICY_789,
   country_id: TEST_COUNTRIES.US,
   label: TEST_LABELS.MY_POLICY,
-  updated_at: TEST_TIMESTAMPS.UPDATED_AT,
 };
 
 export const mockUserPolicyApiResponse: UserPolicyMetadata = {
+  id: 'user-policy-123',
   policy_id: TEST_POLICY_IDS.POLICY_789,
   user_id: TEST_USER_IDS.USER_123,
   country_id: TEST_COUNTRIES.US,

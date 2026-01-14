@@ -17,7 +17,7 @@ describe('ApiPolicyStore', () => {
   };
 
   const mockApiResponse = {
-    id: 'policy-456',
+    id: 'user-policy-abc123',
     user_id: 'user-123',
     policy_id: 'policy-456',
     country_id: 'us',
@@ -48,7 +48,7 @@ describe('ApiPolicyStore', () => {
 
       // Then
       expect(fetch).toHaveBeenCalledWith(
-        '/api/user-policy-associations',
+        '/user-policies/',
         expect.objectContaining({
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -67,6 +67,7 @@ describe('ApiPolicyStore', () => {
       (global.fetch as any).mockResolvedValue({
         ok: false,
         status: 500,
+        json: async () => ({}),
       });
 
       // When/Then
@@ -89,7 +90,7 @@ describe('ApiPolicyStore', () => {
 
       // Then
       expect(fetch).toHaveBeenCalledWith(
-        '/api/user-policy-associations/user/user-123',
+        '/user-policies/?user_id=user-123',
         expect.objectContaining({
           headers: { 'Content-Type': 'application/json' },
         })
@@ -118,7 +119,7 @@ describe('ApiPolicyStore', () => {
   });
 
   describe('findById', () => {
-    it('given valid IDs then fetches specific association', async () => {
+    it('given valid userPolicyId then fetches specific association', async () => {
       // Given
       (global.fetch as any).mockResolvedValue({
         ok: true,
@@ -127,11 +128,11 @@ describe('ApiPolicyStore', () => {
       });
 
       // When
-      const result = await store.findById('user-123', 'policy-456');
+      const result = await store.findById('user-policy-abc123');
 
       // Then
       expect(fetch).toHaveBeenCalledWith(
-        '/api/user-policy-associations/user-123/policy-456',
+        '/user-policies/user-policy-abc123',
         expect.objectContaining({
           headers: { 'Content-Type': 'application/json' },
         })
@@ -152,7 +153,7 @@ describe('ApiPolicyStore', () => {
       });
 
       // When
-      const result = await store.findById('user-123', 'nonexistent');
+      const result = await store.findById('nonexistent-id');
 
       // Then
       expect(result).toBeNull();
@@ -166,37 +167,84 @@ describe('ApiPolicyStore', () => {
       });
 
       // When/Then
-      await expect(store.findById('user-123', 'policy-456')).rejects.toThrow(
+      await expect(store.findById('user-policy-abc123')).rejects.toThrow(
         'Failed to fetch association'
       );
     });
   });
 
   describe('update', () => {
-    it('given update called then throws not supported error', async () => {
-      // Given & When & Then
-      await expect(store.update('sup-abc123', { label: 'Updated Label' })).rejects.toThrow(
-        'Please ensure you are using localStorage mode'
+    it('given valid update then sends PATCH request', async () => {
+      // Given
+      const updatedResponse = {
+        ...mockApiResponse,
+        label: 'Updated Label',
+        updated_at: '2025-01-02T00:00:00Z',
+      };
+      (global.fetch as any).mockResolvedValue({
+        ok: true,
+        json: async () => updatedResponse,
+      });
+
+      // When
+      const result = await store.update('user-policy-abc123', { label: 'Updated Label' });
+
+      // Then
+      expect(fetch).toHaveBeenCalledWith(
+        '/user-policies/user-policy-abc123',
+        expect.objectContaining({
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+        })
+      );
+      expect(result.label).toBe('Updated Label');
+    });
+
+    it('given API error then throws error', async () => {
+      // Given
+      (global.fetch as any).mockResolvedValue({
+        ok: false,
+        status: 500,
+      });
+
+      // When/Then
+      await expect(store.update('user-policy-abc123', { label: 'Updated Label' })).rejects.toThrow(
+        'Failed to update policy association'
+      );
+    });
+  });
+
+  describe('delete', () => {
+    it('given valid userPolicyId then sends DELETE request', async () => {
+      // Given
+      (global.fetch as any).mockResolvedValue({
+        ok: true,
+        status: 204,
+      });
+
+      // When
+      await store.delete('user-policy-abc123');
+
+      // Then
+      expect(fetch).toHaveBeenCalledWith(
+        '/user-policies/user-policy-abc123',
+        expect.objectContaining({
+          method: 'DELETE',
+        })
       );
     });
 
-    it('given update called then logs warning', async () => {
+    it('given API error then throws error', async () => {
       // Given
-      const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      (global.fetch as any).mockResolvedValue({
+        ok: false,
+        status: 500,
+      });
 
-      // When
-      try {
-        await store.update('sup-abc123', { label: 'Updated Label' });
-      } catch {
-        // Expected to throw
-      }
-
-      // Then
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('API endpoint not yet implemented')
+      // When/Then
+      await expect(store.delete('user-policy-abc123')).rejects.toThrow(
+        'Failed to delete association'
       );
-
-      consoleWarnSpy.mockRestore();
     });
   });
 });
@@ -305,12 +353,12 @@ describe('LocalStoragePolicyStore', () => {
   });
 
   describe('findById', () => {
-    it('given existing policy then returns it', async () => {
+    it('given existing policy then returns it by userPolicyId', async () => {
       // Given
-      await store.create(mockPolicyInput1);
+      const created = await store.create(mockPolicyInput1);
 
       // When
-      const result = await store.findById('user-123', 'policy-456');
+      const result = await store.findById(created.id!);
 
       // Then
       expect(result).toMatchObject({
@@ -319,9 +367,9 @@ describe('LocalStoragePolicyStore', () => {
       });
     });
 
-    it('given nonexistent policy then returns null', async () => {
+    it('given nonexistent userPolicyId then returns null', async () => {
       // When
-      const result = await store.findById('user-123', 'nonexistent');
+      const result = await store.findById('sup-nonexistent');
 
       // Then
       expect(result).toBeNull();
@@ -373,21 +421,21 @@ describe('LocalStoragePolicyStore', () => {
       await store.update(created.id!, { label: 'Updated Label' });
 
       // Then
-      const persisted = await store.findById(mockPolicyInput1.userId, mockPolicyInput1.policyId);
+      const persisted = await store.findById(created.id!);
       expect(persisted?.label).toBe('Updated Label');
     });
 
     it('given multiple policies then updates correct one by ID', async () => {
       // Given
       const created1 = await store.create(mockPolicyInput1);
-      await store.create(mockPolicyInput2);
+      const created2 = await store.create(mockPolicyInput2);
 
       // When
       await store.update(created1.id!, { label: 'Updated Label' });
 
       // Then
-      const updated = await store.findById(mockPolicyInput1.userId, mockPolicyInput1.policyId);
-      const unchanged = await store.findById(mockPolicyInput2.userId, mockPolicyInput2.policyId);
+      const updated = await store.findById(created1.id!);
+      const unchanged = await store.findById(created2.id!);
       expect(updated?.label).toBe('Updated Label');
       expect(unchanged?.label).toBe(mockPolicyInput2.label);
     });

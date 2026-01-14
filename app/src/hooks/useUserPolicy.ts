@@ -33,14 +33,15 @@ export const usePolicyAssociationsByUser = (userId: string) => {
   });
 };
 
-export const usePolicyAssociation = (userId: string, policyId: string) => {
+export const usePolicyAssociation = (userPolicyId: string) => {
   const store = useUserPolicyStore();
   const isLoggedIn = false; // TODO: Replace with actual auth check in future
   const config = isLoggedIn ? queryConfig.api : queryConfig.localStorage;
 
   return useQuery({
-    queryKey: policyAssociationKeys.specific(userId, policyId),
-    queryFn: () => store.findById(userId, policyId),
+    queryKey: policyAssociationKeys.byId(userPolicyId),
+    queryFn: () => store.findById(userPolicyId),
+    enabled: !!userPolicyId,
     ...config,
   });
 };
