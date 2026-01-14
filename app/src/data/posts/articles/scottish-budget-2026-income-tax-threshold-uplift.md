@@ -1,4 +1,4 @@
-The Scottish Government [announced in the 2026-27 Budget](https://www.gov.scot/publications/scottish-budget-2026-27/) that it will raise the Basic and Intermediate rate income tax thresholds by 7.4%, significantly more than inflation. Finance Secretary Shona Robison stated that whilst the UK Government has chosen to freeze all income tax thresholds, Scotland has chosen to support those with lower incomes. The government analysis suggests that 55% of taxpayers will be expected to pay less in 2026-27 than they would in the rest of the UK.
+The Scottish Government [announced in the 2026-27 Budget](https://www.gov.scot/publications/scottish-budget-2026-27/) that it will raise the Basic and Intermediate rate income tax thresholds by 7.4%. Finance Secretary Shona Robison stated that whilst the UK Government has chosen to freeze all income tax thresholds, Scotland has chosen to support those with lower incomes. The [government analysis](https://www.gov.scot/publications/scottish-budget-2026-27/) suggests that 55% of taxpayers will be expected to pay less in 2026-27 than they would in the rest of the UK.
 
 Using PolicyEngine's Scotland tax-benefit microsimulation model, we estimate that this reform would cost approximately £63 million in 2026-27, rising to £68 million by 2030-31. Benefits are spread across all income deciles, with the largest relative gains concentrated in middle to upper income households.
 
@@ -39,7 +39,7 @@ Benefits are distributed across all income deciles, with higher relative gains i
       "x": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
       "y": [0.65283333, 3.129607, 3.0004922, 3.6947224, 5.388424, 4.5356914, 6.0548972, 5.9629746, 5.669861, 4.1767877],
       "type": "bar",
-      "marker": {"color": "#2C6496"},
+      "marker": {"color": "#319795"},
       "hovertemplate": "Decile %{x}<br>Change: +%{y:.2f}%<extra></extra>",
       "text": ["+0.65%", "+3.13%", "+3.00%", "+3.69%", "+5.39%", "+4.54%", "+6.05%", "+5.96%", "+5.67%", "+4.18%"],
       "textposition": "outside",
@@ -256,9 +256,9 @@ Figure 2 shows the absolute change in household income (in £ per year) by incom
 
 ## Poverty impact
 
-We measure poverty using absolute poverty before housing costs, defined as households with income below 60% of the 2010/11 median income, adjusted for inflation. This is the standard definition used in the government's Households Below Average Income publication.
+We measure poverty using absolute poverty before housing costs, defined as households with income below 60% of the 2010/11 median income, adjusted for inflation. This is the standard definition used in the government's [Households Below Average Income](https://www.gov.uk/government/collections/households-below-average-income-hbai--2) publication.
 
-The income tax threshold uplift has minimal impact on poverty rates. In 2026-27, overall poverty remains essentially unchanged, and child poverty shows no change. This is expected as the policy primarily benefits working households above the poverty line who pay income tax.
+The income tax threshold uplift has negligible impact on poverty rates. In 2026-27, overall poverty changes by less than 0.01 percentage points, and child poverty shows no change. This is expected as the policy primarily benefits working households above the poverty line who pay income tax.
 
 ## Constituency impact
 
