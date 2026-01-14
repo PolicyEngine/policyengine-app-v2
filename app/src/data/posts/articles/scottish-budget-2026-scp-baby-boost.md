@@ -1,6 +1,6 @@
 Finance Secretary Shona Robison [announced today](https://news.stv.tv/politics/families-with-babies-to-get-40-a-week-scottish-government-announces) that the Scottish Child Payment will be boosted to £40 per week for families with a baby under the age of one. This new "baby boost" rate represents a 47% increase over the current payment of £27.15 per week, delivering what Robison described as the "strongest package of support for families with young children anywhere in the UK."
 
-Using PolicyEngine's Scotland tax-benefit microsimulation model, we estimate that this reform would cost approximately £80 million in 2026-27, rising to £83 million by 2030-31. Around 0.12% of the Scottish population would benefit, with all gains concentrated in the bottom four income deciles.
+Using PolicyEngine's Scotland tax-benefit microsimulation model, we estimate that this reform would cost approximately £26 million in 2026-27, averaging around £25 million per year through 2030-31. Around 0.12% of the Scottish population would benefit, with all gains concentrated in the bottom four income deciles.
 
 ## Background: The Scottish Child Payment
 
@@ -16,11 +16,11 @@ PolicyEngine estimates the following costs for the baby boost over the forecast 
 
 | Year    | Cost (£ million) |
 | ------- | ---------------- |
-| 2026-27 | 79.9             |
-| 2027-28 | 74.9             |
-| 2028-29 | 78.6             |
-| 2029-30 | 79.2             |
-| 2030-31 | 83.5             |
+| 2026-27 | 25.5             |
+| 2027-28 | 23.8             |
+| 2028-29 | 27.2             |
+| 2029-30 | 25.3             |
+| 2030-31 | 23.5             |
 
 ## Distributional impact
 
@@ -30,7 +30,7 @@ Benefits are concentrated in the bottom four income deciles. Figure 1 shows the 
 
 <iframe src="/assets/posts/scottish-budget-2026-scp-baby-boost/figure1_relative_change.html" width="100%" height="520" frameborder="0"></iframe>
 
-In 2026-27, the first decile sees the largest relative gain at 1.38%, followed by the second decile at 0.96%. Deciles 5-10 see no gains.
+In 2026-27, the first decile sees a relative gain of 0.13%, with an average gain of £23 per year. The second decile sees a 0.12% gain (£32 per year), the third decile 0.06% (£18 per year), and the fourth decile 0.02% (£9 per year). Deciles 5-10 see no gains.
 
 Figure 2 shows the absolute change in household income (in £ per year) by income decile.
 
@@ -42,7 +42,7 @@ Figure 2 shows the absolute change in household income (in £ per year) by incom
 
 We measure poverty using absolute poverty before housing costs, defined as households with income below 60% of the 2010/11 median income, adjusted for inflation. This is the standard definition used in the government's Households Below Average Income publication.
 
-In 2026-27, overall poverty falls by 0.004 percentage points and child poverty by 0.010 percentage points. These figures remain roughly stable through 2030-31. Approximately 6,000 families would receive the baby boost.
+In 2026-27, overall poverty falls by 0.048 percentage points and child poverty by 0.12 percentage points. These figures remain roughly stable through 2029-30. Approximately 6,000 families would receive the baby boost.
 
 ## Constituency impact
 
@@ -52,8 +52,8 @@ Figure 3 shows the average annual household gain by constituency in 2026-27.
 
 <iframe src="/assets/posts/scottish-budget-2026-scp-baby-boost/constituency_map_scp_baby_boost.html" width="100%" height="600" frameborder="0"></iframe>
 
-In 2026-27, Moray West, Nairn and Strathspey sees the largest average gain at £8.16, followed by East Kilbride and Strathaven at £8.06. Glasgow North has the smallest average gain at £6.87.
+In 2026-27, Moray West, Nairn and Strathspey sees the largest average gain at £8.21, followed by East Kilbride and Strathaven at £8.11. Glasgow North has the smallest average gain at £6.91.
 
 ## Conclusion
 
-The Scottish Child Payment baby boost would cost approximately £80 million per year and provide an additional £668 annually to eligible families during their child's first year of life. All benefits flow to the bottom four income deciles, affecting around 6,000 families.
+The Scottish Child Payment baby boost would cost approximately £26 million per year and provide an additional £668 annually to eligible families during their child's first year of life. All benefits flow to the bottom four income deciles, affecting around 6,000 families.
