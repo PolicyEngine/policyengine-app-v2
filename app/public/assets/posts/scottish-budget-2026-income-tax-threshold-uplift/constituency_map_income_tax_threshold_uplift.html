@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Income tax threshold uplift (7.4%) - Constituency Map</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background-color: #fff;
+            overflow: hidden;
+        }
+        .map-container {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .map-header {
+            padding: 20px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .map-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+        .map-description {
+            font-size: 14px;
+            color: #6b7280;
+        }
+        .map-controls {
+            padding: 16px 20px;
+            background-color: #f9fafb;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+        }
+        .year-animation-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+            max-width: 500px;
+        }
+        .play-button {
+            width: 36px;
+            height: 36px;
+            background-color: #319795;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        .play-button:hover {
+            background-color: #2c7a7b;
+            transform: scale(1.05);
+        }
+        .year-slider-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .year-display {
+            font-size: 13px;
+            font-weight: 600;
+            color: #374151;
+            text-align: center;
+        }
+        .year-slider {
+            width: 100%;
+            height: 6px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: #d1d5db;
+            outline: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .year-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            background: #319795;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .year-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+        .year-slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            background: #319795;
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+        .year-slider::-moz-range-thumb:hover {
+            transform: scale(1.2);
+        }
+        .year-marks {
+            display: flex;
+            justify-content: space-between;
+            padding: 0 2px;
+        }
+        .year-mark {
+            font-size: 10px;
+            color: #9ca3af;
+        }
+        .map-legend {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .legend-label {
+            font-size: 12px;
+            color: #6b7280;
+        }
+        .legend-container {
+            position: relative;
+            width: 300px;
+        }
+        .legend-gradient {
+            width: 100%;
+            height: 24px;
+            background: linear-gradient(to right,
+                #E5E7EB 0%,
+                #14B8A6 100%);
+            border-radius: 4px;
+            position: relative;
+        }
+        .legend-labels {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 8px;
+        }
+        .legend-labels span {
+            font-size: 11px;
+            font-weight: 600;
+            color: #374151;
+            text-shadow: 0 0 3px white, 0 0 3px white, 0 0 3px white;
+        }
+        .map-canvas {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+        svg {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        .constituency-path {
+            stroke: #fff;
+            stroke-width: 0.3;
+            cursor: pointer;
+            transition: stroke 0.2s, stroke-width 0.2s;
+        }
+        .constituency-path:hover {
+            stroke: #666;
+            stroke-width: 0.8;
+        }
+        .tooltip {
+            position: absolute;
+            padding: 12px 16px;
+            background-color: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            pointer-events: none;
+            font-size: 13px;
+            z-index: 1000;
+            display: none;
+        }
+        .tooltip.visible {
+            display: block;
+        }
+        .tooltip-name {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 6px;
+        }
+        .tooltip-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: #14B8A6;
+            margin-bottom: 2px;
+        }
+        .tooltip-label {
+            font-size: 11px;
+            color: #6b7280;
+        }
+        .zoom-controls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 100;
+        }
+        .zoom-btn {
+            width: 36px;
+            height: 36px;
+            background-color: white;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .zoom-btn:hover {
+            background-color: #f9fafb;
+            border-color: #319795;
+        }
+    </style>
+</head>
+<body>
+    <div class="map-container">
+        <div class="map-header">
+            <div class="map-title">Constituency impacts by year</div>
+            <div class="map-description">This map shows the average annual household gain from the Income tax threshold uplift (7.4%) across Scottish constituencies. Darker green indicates larger gains.</div>
+        </div>
+        <div class="map-controls">
+            <div class="year-animation-controls">
+                <button class="play-button" id="play-button" title="Play animation">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" id="play-icon">
+                        <path d="M8 5v14l11-7z"/>
+                    </svg>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" id="pause-icon" style="display: none;">
+                        <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
+                    </svg>
+                </button>
+                <div class="year-slider-container">
+                    <div class="year-display" id="year-display">2026-27</div>
+                    <input type="range" min="0" max="4" value="0" class="year-slider" id="year-slider">
+                    <div class="year-marks">
+                        <span class="year-mark">2026</span>
+                        <span class="year-mark">2027</span>
+                        <span class="year-mark">2028</span>
+                        <span class="year-mark">2029</span>
+                        <span class="year-mark">2030</span>
+                    </div>
+                </div>
+            </div>
+            <div class="map-legend">
+                <span class="legend-label">Average gain:</span>
+                <div class="legend-container">
+                    <div class="legend-gradient">
+                        <div class="legend-labels">
+                            <span>£18</span>
+                            <span>£22</span>
+                            <span>£25</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="map-canvas">
+            <svg id="map"></svg>
+            <div class="zoom-controls">
+                <button class="zoom-btn" id="zoom-in" title="Zoom in">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="10" cy="10" r="7"/>
+                        <path d="M10 7V13M7 10H13"/>
+                        <path d="M15 15L20 20"/>
+                    </svg>
+                </button>
+                <button class="zoom-btn" id="zoom-out" title="Zoom out">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="10" cy="10" r="7"/>
+                        <path d="M7 10H13"/>
+                        <path d="M15 15L20 20"/>
+                    </svg>
+                </button>
+                <button class="zoom-btn" id="zoom-reset" title="Reset zoom">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C14.8273 3 17.35 4.30367 19 6.34267"/>
+                        <path d="M21 3V8H16"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="tooltip" id="tooltip">
+                <div class="tooltip-name" id="tooltip-name"></div>
+                <div class="tooltip-value" id="tooltip-value"></div>
+                <div class="tooltip-label">Average household gain</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const constituencyData = [{"reform_id":"income_tax_threshold_uplift","year":2026,"constituency_code":"S14000021","constituency_name":"East Renfrewshire","average_gain":23.0320827912,"relative_change":0.0470415687},{"reform_id":"income_tax_threshold_uplift","year":2026,"constituency_code":"S14000027","constituency_name":"Na h-Eileanan an Iar","average_gain":23.4428043254,"relative_change":0.0473343996},{"reform_id":"income_tax_threshold_uplift","year":2026,"constituency_code":"S14000045","constituency_name":"Midlothian","average_gain":22.8100268252,"relative_change":0.0469049603},{"reform_id":"income_tax_threshold_uplift","year":2026,"constituency_code":"S14000048","constituency_name":"North Ayrshire and Arran","average_gain":23.7323856118,"relative_change":0.0474845113},{"reform_id":"income_tax_threshold_uplift","year":2026,"constituency_code":"S14000051","constituency_name":"Orkney and Shetland","average_gain":17.8710816581,"relative_change":0.0419162257},{"reform_id":"income_tax_threshold_uplift","year":2026,"constituency_code":"S14000060","constituency_name":"Aberdeen North","average_gain":23.4417344033,"relative_change":0.0475072808},{"reform_id":"income_tax_threshold_uplift","year":2026,"constituency_code":"S14000061","constituency_name":"Aberdeen South","average_gain":23.8748894508,"relative_change":0.0476421189},{"reform_id":"income_tax_threshold_uplift","year":2026,"constituency_code":"S14000062","constituency_name":"Aberdeenshire North and Moray East","average_gain":22.8129135809,"relative_change":0.0468602517},{"reform_id":"income_tax_threshold_uplift","year":2026,"constituency_code":"S14000063","constituency_name":"Airdrie and Shotts","average_gain":21.7734029242,"relative_change":0.0458463745},{"reform_id":"income_tax_threshold_uplift","year":2026,"constituency_code":"S14000064","constituency_name":"Alloa and Grangemouth","average_gain":23.8414740832,"relative_change":0.0475372752},{"reform_id":"income_tax_threshold_uplift","year":2026,"constituency_code":"S14000065","constituency_name":"Angus and Perthshire Glens","average_gain":23.5963447996,"relative_change":0.0474356972},{"reform_id":"income_tax_threshold_uplift","year":2026,"constituency_code":"S14000066","constituency_name":"Arbroath and Broughty Ferry","average_gain":24.0267080051,"relative_change":0.0477401897},{"reform_id":"income_tax_threshold_uplift","year":2026,"constituency_code":"S14000067","constituency_name":"Argyll, Bute and South Lochaber","average_gain":23.3379398033,"relative_change":0.0473342586},{"reform_id":"income_tax_threshold_uplift","year":2026,"constituency_code":"S14000068","constituency_name":"Bathgate and Linlithgow","average_gain":23.0521472756,"relative_change":0.0471102188},{"reform_id":"income_tax_threshold_uplift","year":2026,"constituency_code":"S14000069","constituency_name":"Caithness, Sutherland and Easter Ross","average_gain":23.5363927833,"relative_change":0.0473083369},{"reform_id":"income_tax_threshold_uplift","year":2026,"constituency_code":"S14000070","constituency_name":"Coatbridge and Bellshill","average_gain":23.4120672525,"relative_change":0.0473634843},{"reform_id":"income_tax_threshold_uplift","year":2026,"constituency_code":"S14000071","constituency_name":"Cowdenbeath and Kirkcaldy","average_gain":23.2977256637,"relative_change":0.0473759768},{"reform_id":"income_tax_threshold_uplift","year":2026,"constituency_code":"S14000072","constituency_name":"Cumbernauld and Kirkintilloch","average_gain":23.4143086157,"relative_change":0.0473346042},{"reform_id":"income_tax_threshold_uplift","year":2026,"constituency_code":"S14000073","constituency_name":"Dumfries and Galloway","average_gain":23.2948049485,"relative_change":0.0471840924},{"reform_id":"income_tax_threshold_uplift","year":2026,"constituency_code":"S14000074","constituency_name":"Dumfriesshire, Clydesdale and Tweeddale","average_gain":23.5443708485,"relative_change":0.0475950281},{"reform_id":"income_tax_threshold_uplift","year":2026,"constituency_code":"S14000075","constituency_name":"Dundee Central","average_gain":23.249948691,"relative_change":0.0472927158},{"reform_id":"income_tax_threshold_uplift","year":2026,"constituency_code":"S14000076","constituency_name":"Dunfermline and Dollar","average_gain":23.0610305869,"relative_change":0.0470352158},{"reform_id":"income_tax_threshold_uplift","year":2026,"constituency_code":"S14000077","constituency_name":"East Kilbride and Strathaven","average_gain":23.1668473719,"relative_change":0.0472010997},{"reform_id":"income_tax_threshold_uplift","year":2026,"constituency_code":"S14000078","constituency_name":"Edinburgh East and Musselburgh","average_gain":23.6382361457,"relative_change":0.0475193016},{"reform_id":"income_tax_threshold_uplift","year":2026,"constituency_code":"S14000079","constituency_name":"Edinburgh North and Leith","average_gain":23.1923142966,"relative_change":0.0471048984},{"reform_id":"income_tax_threshold_uplift","year":2026,"constituency_code":"S14000080","constituency_name":"Edinburgh South","average_gain":23.1692763501,"relative_change":0.0472418241},{"reform_id":"income_tax_threshold_uplift","year":2026,"constituency_code":"S14000081","constituency_name":"Edinburgh South West","average_gain":23.3374669211,"relative_change":0.0472831216},{"reform_id":"income_tax_threshold_uplift","year":2026,"constituency_code":"S14000082","constituency_name":"Edinburgh West","average_gain":23.2505753263,"relative_change":0.047289942},{"reform_id":"income_tax_threshold_uplift","year":2026,"constituency_code":"S14000083","constituency_name":"Falkirk","average_gain":23.8318216151,"relative_change":0.0477160618},{"reform_id":"income_tax_threshold_uplift","year":2026,"constituency_code":"S14000084","constituency_name":"Glasgow East","average_gain":24.2835778448,"relative_change":0.0477837213},{"reform_id":"income_tax_threshold_uplift","year":2026,"constituency_code":"S14000085","constituency_name":"Glasgow North","average_gain":24.0171553078,"relative_change":0.0475615868},{"reform_id":"income_tax_threshold_uplift","year":2026,"constituency_code":"S14000086","constituency_name":"Glasgow North East","average_gain":23.846909467,"relative_change":0.0476949816},{"reform_id":"income_tax_threshold_uplift","year":2026,"constituency_code":"S14000087","constituency_name":"Glasgow South","average_gain":24.1701751089,"relative_change":0.0476945962},{"reform_id":"income_tax_threshold_uplift","year":2026,"constituency_code":"S14000088","constituency_name":"Glasgow South West","average_gain":23.4816821829,"relative_change":0.0474322464},{"reform_id":"income_tax_threshold_uplift","year":2026,"constituency_code":"S14000089","constituency_name":"Glasgow West","average_gain":23.4053410979,"relative_change":0.0474141533},{"reform_id":"income_tax_threshold_uplift","year":2026,"constituency_code":"S14000090","constituency_name":"Glenrothes and Mid Fife","average_gain":23.4254243747,"relative_change":0.0474660504},{"reform_id":"income_tax_threshold_uplift","year":2026,"constituency_code":"S14000091","constituency_name":"Gordon and Buchan","average_gain":23.3774157445,"relative_change":0.0474146625},{"reform_id":"income_tax_threshold_uplift","year":2026,"constituency_code":"S14000092","constituency_name":"Hamilton and Clyde Valley","average_gain":23.346788945,"relative_change":0.047244093},{"reform_id":"income_tax_threshold_uplift","year":2026,"constituency_code":"S14000093","constituency_name":"Inverclyde and Renfrewshire West","average_gain":23.2963686648,"relative_change":0.0473902635},{"reform_id":"income_tax_threshold_uplift","year":2026,"constituency_code":"S14000094","constituency_name":"Inverness, Skye and West Ross-shire","average_gain":23.4244698664,"relative_change":0.047357876},{"reform_id":"income_tax_threshold_uplift","year":2026,"constituency_code":"S14000095","constituency_name":"Livingston","average_gain":23.0174094508,"relative_change":0.0471785574},{"reform_id":"income_tax_threshold_uplift","year":2026,"constituency_code":"S14000096","constituency_name":"Lothian East","average_gain":23.5516532149,"relative_change":0.0473607637},{"reform_id":"income_tax_threshold_uplift","year":2026,"constituency_code":"S14000097","constituency_name":"Mid Dunbartonshire","average_gain":23.5560427914,"relative_change":0.0474933652},{"reform_id":"income_tax_threshold_uplift","year":2026,"constituency_code":"S14000098","constituency_name":"Moray West, Nairn and Strathspey","average_gain":22.8899900576,"relative_change":0.0469610064},{"reform_id":"income_tax_threshold_uplift","year":2026,"constituency_code":"S14000099","constituency_name":"Motherwell, Wishaw and Carluke","average_gain":23.5865181178,"relative_change":0.0475131802},{"reform_id":"income_tax_threshold_uplift","year":2026,"constituency_code":"S14000100","constituency_name":"North East Fife","average_gain":23.8743108335,"relative_change":0.0478167476},{"reform_id":"income_tax_threshold_uplift","year":2026,"constituency_code":"S14000101","constituency_name":"Paisley and Renfrewshire North","average_gain":23.657116722,"relative_change":0.0473820673},{"reform_id":"income_tax_threshold_uplift","year":2026,"constituency_code":"S14000102","constituency_name":"Paisley and Renfrewshire South","average_gain":23.6764704957,"relative_change":0.0474578275},{"reform_id":"income_tax_threshold_uplift","year":2026,"constituency_code":"S14000103","constituency_name":"Perth and Kinross-shire","average_gain":23.6822088273,"relative_change":0.0476502402},{"reform_id":"income_tax_threshold_uplift","year":2026,"constituency_code":"S14000104","constituency_name":"Rutherglen","average_gain":23.1836039014,"relative_change":0.0471526853},{"reform_id":"income_tax_threshold_uplift","year":2026,"constituency_code":"S14000105","constituency_name":"Stirling and Strathallan","average_gain":23.5386609162,"relative_change":0.0474437936},{"reform_id":"income_tax_threshold_uplift","year":2026,"constituency_code":"S14000106","constituency_name":"West Dunbartonshire","average_gain":23.3016907767,"relative_change":0.0472608088},{"reform_id":"income_tax_threshold_uplift","year":2026,"constituency_code":"S14000107","constituency_name":"Ayr, Carrick and Cumnock","average_gain":23.0579679086,"relative_change":0.0471693026},{"reform_id":"income_tax_threshold_uplift","year":2026,"constituency_code":"S14000108","constituency_name":"Berwickshire, Roxburgh and Selkirk","average_gain":23.6832471545,"relative_change":0.0474959999},{"reform_id":"income_tax_threshold_uplift","year":2026,"constituency_code":"S14000109","constituency_name":"Central Ayrshire","average_gain":23.2444261313,"relative_change":0.0472764391},{"reform_id":"income_tax_threshold_uplift","year":2026,"constituency_code":"S14000110","constituency_name":"Kilmarnock and Loudoun","average_gain":23.7739678592,"relative_change":0.0475931488},{"reform_id":"income_tax_threshold_uplift","year":2026,"constituency_code":"S14000111","constituency_name":"West Aberdeenshire and Kincardine","average_gain":23.136438238,"relative_change":0.0471280178},{"reform_id":"income_tax_threshold_uplift","year":2027,"constituency_code":"S14000021","constituency_name":"East Renfrewshire","average_gain":23.31956079,"relative_change":0.0468687955},{"reform_id":"income_tax_threshold_uplift","year":2027,"constituency_code":"S14000027","constituency_name":"Na h-Eileanan an Iar","average_gain":23.7284996037,"relative_change":0.0471474042},{"reform_id":"income_tax_threshold_uplift","year":2027,"constituency_code":"S14000045","constituency_name":"Midlothian","average_gain":23.098189574,"relative_change":0.0467396831},{"reform_id":"income_tax_threshold_uplift","year":2027,"constituency_code":"S14000048","constituency_name":"North Ayrshire and Arran","average_gain":24.0208272383,"relative_change":0.0472952513},{"reform_id":"income_tax_threshold_uplift","year":2027,"constituency_code":"S14000051","constituency_name":"Orkney and Shetland","average_gain":18.1308399599,"relative_change":0.0418357929},{"reform_id":"income_tax_threshold_uplift","year":2027,"constituency_code":"S14000060","constituency_name":"Aberdeen North","average_gain":23.7228351112,"relative_change":0.0473144928},{"reform_id":"income_tax_threshold_uplift","year":2027,"constituency_code":"S14000061","constituency_name":"Aberdeen South","average_gain":24.1611112212,"relative_change":0.047443713},{"reform_id":"income_tax_threshold_uplift","year":2027,"constituency_code":"S14000062","constituency_name":"Aberdeenshire North and Moray East","average_gain":23.103031423,"relative_change":0.0467023258},{"reform_id":"income_tax_threshold_uplift","year":2027,"constituency_code":"S14000063","constituency_name":"Airdrie and Shotts","average_gain":22.0530433224,"relative_change":0.0456879998},{"reform_id":"income_tax_threshold_uplift","year":2027,"constituency_code":"S14000064","constituency_name":"Alloa and Grangemouth","average_gain":24.1262890108,"relative_change":0.0473384433},{"reform_id":"income_tax_threshold_uplift","year":2027,"constituency_code":"S14000065","constituency_name":"Angus and Perthshire Glens","average_gain":23.8939569583,"relative_change":0.0472700361},{"reform_id":"income_tax_threshold_uplift","year":2027,"constituency_code":"S14000066","constituency_name":"Arbroath and Broughty Ferry","average_gain":24.3152186981,"relative_change":0.047546892},{"reform_id":"income_tax_threshold_uplift","year":2027,"constituency_code":"S14000067","constituency_name":"Argyll, Bute and South Lochaber","average_gain":23.624417784,"relative_change":0.0471535565},{"reform_id":"income_tax_threshold_uplift","year":2027,"constituency_code":"S14000068","constituency_name":"Bathgate and Linlithgow","average_gain":23.3398422994,"relative_change":0.0469407075},{"reform_id":"income_tax_threshold_uplift","year":2027,"constituency_code":"S14000069","constituency_name":"Caithness, Sutherland and Easter Ross","average_gain":23.8232484099,"relative_change":0.04711869},{"reform_id":"income_tax_threshold_uplift","year":2027,"constituency_code":"S14000070","constituency_name":"Coatbridge and Bellshill","average_gain":23.7041427981,"relative_change":0.0471920225},{"reform_id":"income_tax_threshold_uplift","year":2027,"constituency_code":"S14000071","constituency_name":"Cowdenbeath and Kirkcaldy","average_gain":23.5817006824,"relative_change":0.047193154},{"reform_id":"income_tax_threshold_uplift","year":2027,"constituency_code":"S14000072","constituency_name":"Cumbernauld and Kirkintilloch","average_gain":23.699109813,"relative_change":0.0471453921},{"reform_id":"income_tax_threshold_uplift","year":2027,"constituency_code":"S14000073","constituency_name":"Dumfries and Galloway","average_gain":23.5802714712,"relative_change":0.0469992282},{"reform_id":"income_tax_threshold_uplift","year":2027,"constituency_code":"S14000074","constituency_name":"Dumfriesshire, Clydesdale and Tweeddale","average_gain":23.828657471,"relative_change":0.0474056186},{"reform_id":"income_tax_threshold_uplift","year":2027,"constituency_code":"S14000075","constituency_name":"Dundee Central","average_gain":23.5363384717,"relative_change":0.0471165885},{"reform_id":"income_tax_threshold_uplift","year":2027,"constituency_code":"S14000076","constituency_name":"Dunfermline and Dollar","average_gain":23.3397578334,"relative_change":0.0468463491},{"reform_id":"income_tax_threshold_uplift","year":2027,"constituency_code":"S14000077","constituency_name":"East Kilbride and Strathaven","average_gain":23.453198615,"relative_change":0.0470278811},{"reform_id":"income_tax_threshold_uplift","year":2027,"constituency_code":"S14000078","constituency_name":"Edinburgh East and Musselburgh","average_gain":23.9322093359,"relative_change":0.0473419556},{"reform_id":"income_tax_threshold_uplift","year":2027,"constituency_code":"S14000079","constituency_name":"Edinburgh North and Leith","average_gain":23.4750269458,"relative_change":0.0469178134},{"reform_id":"income_tax_threshold_uplift","year":2027,"constituency_code":"S14000080","constituency_name":"Edinburgh South","average_gain":23.4525732909,"relative_change":0.0470602911},{"reform_id":"income_tax_threshold_uplift","year":2027,"constituency_code":"S14000081","constituency_name":"Edinburgh South West","average_gain":23.623905367,"relative_change":0.0471010021},{"reform_id":"income_tax_threshold_uplift","year":2027,"constituency_code":"S14000082","constituency_name":"Edinburgh West","average_gain":23.5385511228,"relative_change":0.0471138865},{"reform_id":"income_tax_threshold_uplift","year":2027,"constituency_code":"S14000083","constituency_name":"Falkirk","average_gain":24.1171702003,"relative_change":0.0475204365},{"reform_id":"income_tax_threshold_uplift","year":2027,"constituency_code":"S14000084","constituency_name":"Glasgow East","average_gain":24.5667061789,"relative_change":0.0475699626},{"reform_id":"income_tax_threshold_uplift","year":2027,"constituency_code":"S14000085","constituency_name":"Glasgow North","average_gain":24.3071288211,"relative_change":0.0473676287},{"reform_id":"income_tax_threshold_uplift","year":2027,"constituency_code":"S14000086","constituency_name":"Glasgow North East","average_gain":24.1306572161,"relative_change":0.0474945606},{"reform_id":"income_tax_threshold_uplift","year":2027,"constituency_code":"S14000087","constituency_name":"Glasgow South","average_gain":24.4588326686,"relative_change":0.0474945968},{"reform_id":"income_tax_threshold_uplift","year":2027,"constituency_code":"S14000088","constituency_name":"Glasgow South West","average_gain":23.7649431134,"relative_change":0.0472419843},{"reform_id":"income_tax_threshold_uplift","year":2027,"constituency_code":"S14000089","constituency_name":"Glasgow West","average_gain":23.6922854933,"relative_change":0.0472343665},{"reform_id":"income_tax_threshold_uplift","year":2027,"constituency_code":"S14000090","constituency_name":"Glenrothes and Mid Fife","average_gain":23.7136947847,"relative_change":0.047284589},{"reform_id":"income_tax_threshold_uplift","year":2027,"constituency_code":"S14000091","constituency_name":"Gordon and Buchan","average_gain":23.6696880696,"relative_change":0.0472466096},{"reform_id":"income_tax_threshold_uplift","year":2027,"constituency_code":"S14000092","constituency_name":"Hamilton and Clyde Valley","average_gain":23.6296331829,"relative_change":0.0470560573},{"reform_id":"income_tax_threshold_uplift","year":2027,"constituency_code":"S14000093","constituency_name":"Inverclyde and Renfrewshire West","average_gain":23.5856485529,"relative_change":0.0472181218},{"reform_id":"income_tax_threshold_uplift","year":2027,"constituency_code":"S14000094","constituency_name":"Inverness, Skye and West Ross-shire","average_gain":23.714172405,"relative_change":0.0471815986},{"reform_id":"income_tax_threshold_uplift","year":2027,"constituency_code":"S14000095","constituency_name":"Livingston","average_gain":23.3054254454,"relative_change":0.0470092592},{"reform_id":"income_tax_threshold_uplift","year":2027,"constituency_code":"S14000096","constituency_name":"Lothian East","average_gain":23.8376619375,"relative_change":0.0471722661},{"reform_id":"income_tax_threshold_uplift","year":2027,"constituency_code":"S14000097","constituency_name":"Mid Dunbartonshire","average_gain":23.8438744058,"relative_change":0.0473088898},{"reform_id":"income_tax_threshold_uplift","year":2027,"constituency_code":"S14000098","constituency_name":"Moray West, Nairn and Strathspey","average_gain":23.1751691839,"relative_change":0.0467907801},{"reform_id":"income_tax_threshold_uplift","year":2027,"constituency_code":"S14000099","constituency_name":"Motherwell, Wishaw and Carluke","average_gain":23.8743089214,"relative_change":0.0473269411},{"reform_id":"income_tax_threshold_uplift","year":2027,"constituency_code":"S14000100","constituency_name":"North East Fife","average_gain":24.1697239834,"relative_change":0.0476378951},{"reform_id":"income_tax_threshold_uplift","year":2027,"constituency_code":"S14000101","constituency_name":"Paisley and Renfrewshire North","average_gain":23.9437294633,"relative_change":0.0471895254},{"reform_id":"income_tax_threshold_uplift","year":2027,"constituency_code":"S14000102","constituency_name":"Paisley and Renfrewshire South","average_gain":23.957690882,"relative_change":0.0472549206},{"reform_id":"income_tax_threshold_uplift","year":2027,"constituency_code":"S14000103","constituency_name":"Perth and Kinross-shire","average_gain":23.9696526294,"relative_change":0.0474591321},{"reform_id":"income_tax_threshold_uplift","year":2027,"constituency_code":"S14000104","constituency_name":"Rutherglen","average_gain":23.4666502406,"relative_change":0.0469703084},{"reform_id":"income_tax_threshold_uplift","year":2027,"constituency_code":"S14000105","constituency_name":"Stirling and Strathallan","average_gain":23.8237828572,"relative_change":0.0472520699},{"reform_id":"income_tax_threshold_uplift","year":2027,"constituency_code":"S14000106","constituency_name":"West Dunbartonshire","average_gain":23.5802535618,"relative_change":0.0470647187},{"reform_id":"income_tax_threshold_uplift","year":2027,"constituency_code":"S14000107","constituency_name":"Ayr, Carrick and Cumnock","average_gain":23.3378533264,"relative_change":0.0469848841},{"reform_id":"income_tax_threshold_uplift","year":2027,"constituency_code":"S14000108","constituency_name":"Berwickshire, Roxburgh and Selkirk","average_gain":23.9677558186,"relative_change":0.0473005265},{"reform_id":"income_tax_threshold_uplift","year":2027,"constituency_code":"S14000109","constituency_name":"Central Ayrshire","average_gain":23.5296357006,"relative_change":0.0470965946},{"reform_id":"income_tax_threshold_uplift","year":2027,"constituency_code":"S14000110","constituency_name":"Kilmarnock and Loudoun","average_gain":24.0557739083,"relative_change":0.0473915926},{"reform_id":"income_tax_threshold_uplift","year":2027,"constituency_code":"S14000111","constituency_name":"West Aberdeenshire and Kincardine","average_gain":23.4242779623,"relative_change":0.0469555296},{"reform_id":"income_tax_threshold_uplift","year":2028,"constituency_code":"S14000021","constituency_name":"East Renfrewshire","average_gain":23.5679754691,"relative_change":0.0465777918},{"reform_id":"income_tax_threshold_uplift","year":2028,"constituency_code":"S14000027","constituency_name":"Na h-Eileanan an Iar","average_gain":23.988925253,"relative_change":0.0468598542},{"reform_id":"income_tax_threshold_uplift","year":2028,"constituency_code":"S14000045","constituency_name":"Midlothian","average_gain":23.3471008775,"relative_change":0.0464556836},{"reform_id":"income_tax_threshold_uplift","year":2028,"constituency_code":"S14000048","constituency_name":"North Ayrshire and Arran","average_gain":24.2749822357,"relative_change":0.0469894078},{"reform_id":"income_tax_threshold_uplift","year":2028,"constituency_code":"S14000051","constituency_name":"Orkney and Shetland","average_gain":18.3453155112,"relative_change":0.041626949},{"reform_id":"income_tax_threshold_uplift","year":2028,"constituency_code":"S14000060","constituency_name":"Aberdeen North","average_gain":23.973097632,"relative_change":0.0470172068},{"reform_id":"income_tax_threshold_uplift","year":2028,"constituency_code":"S14000061","constituency_name":"Aberdeen South","average_gain":24.415000796,"relative_change":0.0471408415},{"reform_id":"income_tax_threshold_uplift","year":2028,"constituency_code":"S14000062","constituency_name":"Aberdeenshire North and Moray East","average_gain":23.348539383,"relative_change":0.0464139245},{"reform_id":"income_tax_threshold_uplift","year":2028,"constituency_code":"S14000063","constituency_name":"Airdrie and Shotts","average_gain":22.3029088646,"relative_change":0.045425489},{"reform_id":"income_tax_threshold_uplift","year":2028,"constituency_code":"S14000064","constituency_name":"Alloa and Grangemouth","average_gain":24.3815677567,"relative_change":0.047034775},{"reform_id":"income_tax_threshold_uplift","year":2028,"constituency_code":"S14000065","constituency_name":"Angus and Perthshire Glens","average_gain":24.1493403191,"relative_change":0.0469812078},{"reform_id":"income_tax_threshold_uplift","year":2028,"constituency_code":"S14000066","constituency_name":"Arbroath and Broughty Ferry","average_gain":24.5666687358,"relative_change":0.0472378605},{"reform_id":"income_tax_threshold_uplift","year":2028,"constituency_code":"S14000067","constituency_name":"Argyll, Bute and South Lochaber","average_gain":23.8758382318,"relative_change":0.0468561504},{"reform_id":"income_tax_threshold_uplift","year":2028,"constituency_code":"S14000068","constituency_name":"Bathgate and Linlithgow","average_gain":23.5835707642,"relative_change":0.0466482953},{"reform_id":"income_tax_threshold_uplift","year":2028,"constituency_code":"S14000069","constituency_name":"Caithness, Sutherland and Easter Ross","average_gain":24.0767750721,"relative_change":0.04682046},{"reform_id":"income_tax_threshold_uplift","year":2028,"constituency_code":"S14000070","constituency_name":"Coatbridge and Bellshill","average_gain":23.9597273625,"relative_change":0.046900051},{"reform_id":"income_tax_threshold_uplift","year":2028,"constituency_code":"S14000071","constituency_name":"Cowdenbeath and Kirkcaldy","average_gain":23.8356719142,"relative_change":0.0469039681},{"reform_id":"income_tax_threshold_uplift","year":2028,"constituency_code":"S14000072","constituency_name":"Cumbernauld and Kirkintilloch","average_gain":23.954094971,"relative_change":0.0468489408},{"reform_id":"income_tax_threshold_uplift","year":2028,"constituency_code":"S14000073","constituency_name":"Dumfries and Galloway","average_gain":23.823512648,"relative_change":0.046696939},{"reform_id":"income_tax_threshold_uplift","year":2028,"constituency_code":"S14000074","constituency_name":"Dumfriesshire, Clydesdale and Tweeddale","average_gain":24.0834097244,"relative_change":0.0471100597},{"reform_id":"income_tax_threshold_uplift","year":2028,"constituency_code":"S14000075","constituency_name":"Dundee Central","average_gain":23.7799592774,"relative_change":0.0468145721},{"reform_id":"income_tax_threshold_uplift","year":2028,"constituency_code":"S14000076","constituency_name":"Dunfermline and Dollar","average_gain":23.5835849728,"relative_change":0.0465501831},{"reform_id":"income_tax_threshold_uplift","year":2028,"constituency_code":"S14000077","constituency_name":"East Kilbride and Strathaven","average_gain":23.7015172349,"relative_change":0.0467366469},{"reform_id":"income_tax_threshold_uplift","year":2028,"constituency_code":"S14000078","constituency_name":"Edinburgh East and Musselburgh","average_gain":24.1951192948,"relative_change":0.0470560444},{"reform_id":"income_tax_threshold_uplift","year":2028,"constituency_code":"S14000079","constituency_name":"Edinburgh North and Leith","average_gain":23.7326384818,"relative_change":0.0466332361},{"reform_id":"income_tax_threshold_uplift","year":2028,"constituency_code":"S14000080","constituency_name":"Edinburgh South","average_gain":23.7016944861,"relative_change":0.0467670495},{"reform_id":"income_tax_threshold_uplift","year":2028,"constituency_code":"S14000081","constituency_name":"Edinburgh South West","average_gain":23.8738556003,"relative_change":0.0468016873},{"reform_id":"income_tax_threshold_uplift","year":2028,"constituency_code":"S14000082","constituency_name":"Edinburgh West","average_gain":23.7884833104,"relative_change":0.0468191228},{"reform_id":"income_tax_threshold_uplift","year":2028,"constituency_code":"S14000083","constituency_name":"Falkirk","average_gain":24.3734573639,"relative_change":0.047219008},{"reform_id":"income_tax_threshold_uplift","year":2028,"constituency_code":"S14000084","constituency_name":"Glasgow East","average_gain":24.8227020351,"relative_change":0.0472545982},{"reform_id":"income_tax_threshold_uplift","year":2028,"constituency_code":"S14000085","constituency_name":"Glasgow North","average_gain":24.5647977195,"relative_change":0.0470607375},{"reform_id":"income_tax_threshold_uplift","year":2028,"constituency_code":"S14000086","constituency_name":"Glasgow North East","average_gain":24.3817246087,"relative_change":0.0471841386},{"reform_id":"income_tax_threshold_uplift","year":2028,"constituency_code":"S14000087","constituency_name":"Glasgow South","average_gain":24.7135773844,"relative_change":0.0471809957},{"reform_id":"income_tax_threshold_uplift","year":2028,"constituency_code":"S14000088","constituency_name":"Glasgow South West","average_gain":24.0127965034,"relative_change":0.046937805},{"reform_id":"income_tax_threshold_uplift","year":2028,"constituency_code":"S14000089","constituency_name":"Glasgow West","average_gain":23.9426566559,"relative_change":0.0469397262},{"reform_id":"income_tax_threshold_uplift","year":2028,"constituency_code":"S14000090","constituency_name":"Glenrothes and Mid Fife","average_gain":23.9646385909,"relative_change":0.0469903876},{"reform_id":"income_tax_threshold_uplift","year":2028,"constituency_code":"S14000091","constituency_name":"Gordon and Buchan","average_gain":23.9193327254,"relative_change":0.0469546097},{"reform_id":"income_tax_threshold_uplift","year":2028,"constituency_code":"S14000092","constituency_name":"Hamilton and Clyde Valley","average_gain":23.8785333361,"relative_change":0.0467555167},{"reform_id":"income_tax_threshold_uplift","year":2028,"constituency_code":"S14000093","constituency_name":"Inverclyde and Renfrewshire West","average_gain":23.836677633,"relative_change":0.0469264223},{"reform_id":"income_tax_threshold_uplift","year":2028,"constituency_code":"S14000094","constituency_name":"Inverness, Skye and West Ross-shire","average_gain":23.963539278,"relative_change":0.0468804335},{"reform_id":"income_tax_threshold_uplift","year":2028,"constituency_code":"S14000095","constituency_name":"Livingston","average_gain":23.5567141713,"relative_change":0.0467248829},{"reform_id":"income_tax_threshold_uplift","year":2028,"constituency_code":"S14000096","constituency_name":"Lothian East","average_gain":24.0915327931,"relative_change":0.0468765541},{"reform_id":"income_tax_threshold_uplift","year":2028,"constituency_code":"S14000097","constituency_name":"Mid Dunbartonshire","average_gain":24.0944471407,"relative_change":0.0470089217},{"reform_id":"income_tax_threshold_uplift","year":2028,"constituency_code":"S14000098","constituency_name":"Moray West, Nairn and Strathspey","average_gain":23.4199991018,"relative_change":0.0465032155},{"reform_id":"income_tax_threshold_uplift","year":2028,"constituency_code":"S14000099","constituency_name":"Motherwell, Wishaw and Carluke","average_gain":24.1327138184,"relative_change":0.0470365668},{"reform_id":"income_tax_threshold_uplift","year":2028,"constituency_code":"S14000100","constituency_name":"North East Fife","average_gain":24.423133624,"relative_change":0.0473367652},{"reform_id":"income_tax_threshold_uplift","year":2028,"constituency_code":"S14000101","constituency_name":"Paisley and Renfrewshire North","average_gain":24.1977386206,"relative_change":0.0468815361},{"reform_id":"income_tax_threshold_uplift","year":2028,"constituency_code":"S14000102","constituency_name":"Paisley and Renfrewshire South","average_gain":24.2110183329,"relative_change":0.0469512287},{"reform_id":"income_tax_threshold_uplift","year":2028,"constituency_code":"S14000103","constituency_name":"Perth and Kinross-shire","average_gain":24.2256503997,"relative_change":0.0471662954},{"reform_id":"income_tax_threshold_uplift","year":2028,"constituency_code":"S14000104","constituency_name":"Rutherglen","average_gain":23.7097884107,"relative_change":0.0466711024},{"reform_id":"income_tax_threshold_uplift","year":2028,"constituency_code":"S14000105","constituency_name":"Stirling and Strathallan","average_gain":24.0853519301,"relative_change":0.0469651034},{"reform_id":"income_tax_threshold_uplift","year":2028,"constituency_code":"S14000106","constituency_name":"West Dunbartonshire","average_gain":23.8225030911,"relative_change":0.0467574799},{"reform_id":"income_tax_threshold_uplift","year":2028,"constituency_code":"S14000107","constituency_name":"Ayr, Carrick and Cumnock","average_gain":23.5832396814,"relative_change":0.0466911179},{"reform_id":"income_tax_threshold_uplift","year":2028,"constituency_code":"S14000108","constituency_name":"Berwickshire, Roxburgh and Selkirk","average_gain":24.2216662045,"relative_change":0.0469968439},{"reform_id":"income_tax_threshold_uplift","year":2028,"constituency_code":"S14000109","constituency_name":"Central Ayrshire","average_gain":23.7742726633,"relative_change":0.046795156},{"reform_id":"income_tax_threshold_uplift","year":2028,"constituency_code":"S14000110","constituency_name":"Kilmarnock and Loudoun","average_gain":24.3071101635,"relative_change":0.0470795599},{"reform_id":"income_tax_threshold_uplift","year":2028,"constituency_code":"S14000111","constituency_name":"West Aberdeenshire and Kincardine","average_gain":23.6692373631,"relative_change":0.0466575717},{"reform_id":"income_tax_threshold_uplift","year":2029,"constituency_code":"S14000021","constituency_name":"East Renfrewshire","average_gain":23.7995206218,"relative_change":0.0462664123},{"reform_id":"income_tax_threshold_uplift","year":2029,"constituency_code":"S14000027","constituency_name":"Na h-Eileanan an Iar","average_gain":24.235035311,"relative_change":0.0465602059},{"reform_id":"income_tax_threshold_uplift","year":2029,"constituency_code":"S14000045","constituency_name":"Midlothian","average_gain":23.5803977656,"relative_change":0.046153571},{"reform_id":"income_tax_threshold_uplift","year":2029,"constituency_code":"S14000048","constituency_name":"North Ayrshire and Arran","average_gain":24.5159025622,"relative_change":0.0466730763},{"reform_id":"income_tax_threshold_uplift","year":2029,"constituency_code":"S14000051","constituency_name":"Orkney and Shetland","average_gain":18.5547730697,"relative_change":0.0414133387},{"reform_id":"income_tax_threshold_uplift","year":2029,"constituency_code":"S14000060","constituency_name":"Aberdeen North","average_gain":24.2078036152,"relative_change":0.046701734},{"reform_id":"income_tax_threshold_uplift","year":2029,"constituency_code":"S14000061","constituency_name":"Aberdeen South","average_gain":24.6517680659,"relative_change":0.0468162546},{"reform_id":"income_tax_threshold_uplift","year":2029,"constituency_code":"S14000062","constituency_name":"Aberdeenshire North and Moray East","average_gain":23.5774620295,"relative_change":0.0461046973},{"reform_id":"income_tax_threshold_uplift","year":2029,"constituency_code":"S14000063","constituency_name":"Airdrie and Shotts","average_gain":22.540576378,"relative_change":0.0451511509},{"reform_id":"income_tax_threshold_uplift","year":2029,"constituency_code":"S14000064","constituency_name":"Alloa and Grangemouth","average_gain":24.6211903815,"relative_change":0.0467153862},{"reform_id":"income_tax_threshold_uplift","year":2029,"constituency_code":"S14000065","constituency_name":"Angus and Perthshire Glens","average_gain":24.3839466886,"relative_change":0.0466621641},{"reform_id":"income_tax_threshold_uplift","year":2029,"constituency_code":"S14000066","constituency_name":"Arbroath and Broughty Ferry","average_gain":24.800050125,"relative_change":0.0469044301},{"reform_id":"income_tax_threshold_uplift","year":2029,"constituency_code":"S14000067","constituency_name":"Argyll, Bute and South Lochaber","average_gain":24.1130256177,"relative_change":0.0465448372},{"reform_id":"income_tax_threshold_uplift","year":2029,"constituency_code":"S14000068","constituency_name":"Bathgate and Linlithgow","average_gain":23.8076601341,"relative_change":0.0463279208},{"reform_id":"income_tax_threshold_uplift","year":2029,"constituency_code":"S14000069","constituency_name":"Caithness, Sutherland and Easter Ross","average_gain":24.3143313651,"relative_change":0.0465060141},{"reform_id":"income_tax_threshold_uplift","year":2029,"constituency_code":"S14000070","constituency_name":"Coatbridge and Bellshill","average_gain":24.1991858373,"relative_change":0.0465913898},{"reform_id":"income_tax_threshold_uplift","year":2029,"constituency_code":"S14000071","constituency_name":"Cowdenbeath and Kirkcaldy","average_gain":24.0714781553,"relative_change":0.0465913493},{"reform_id":"income_tax_threshold_uplift","year":2029,"constituency_code":"S14000072","constituency_name":"Cumbernauld and Kirkintilloch","average_gain":24.1939547127,"relative_change":0.046537473},{"reform_id":"income_tax_threshold_uplift","year":2029,"constituency_code":"S14000073","constituency_name":"Dumfries and Galloway","average_gain":24.0487062772,"relative_change":0.046368524},{"reform_id":"income_tax_threshold_uplift","year":2029,"constituency_code":"S14000074","constituency_name":"Dumfriesshire, Clydesdale and Tweeddale","average_gain":24.3203761912,"relative_change":0.0467944578},{"reform_id":"income_tax_threshold_uplift","year":2029,"constituency_code":"S14000075","constituency_name":"Dundee Central","average_gain":24.0033645713,"relative_change":0.0464882267},{"reform_id":"income_tax_threshold_uplift","year":2029,"constituency_code":"S14000076","constituency_name":"Dunfermline and Dollar","average_gain":23.8095296778,"relative_change":0.0462299383},{"reform_id":"income_tax_threshold_uplift","year":2029,"constituency_code":"S14000077","constituency_name":"East Kilbride and Strathaven","average_gain":23.9317628323,"relative_change":0.0464219703},{"reform_id":"income_tax_threshold_uplift","year":2029,"constituency_code":"S14000078","constituency_name":"Edinburgh East and Musselburgh","average_gain":24.4406260951,"relative_change":0.0467480872},{"reform_id":"income_tax_threshold_uplift","year":2029,"constituency_code":"S14000079","constituency_name":"Edinburgh North and Leith","average_gain":23.9759256307,"relative_change":0.0463336922},{"reform_id":"income_tax_threshold_uplift","year":2029,"constituency_code":"S14000080","constituency_name":"Edinburgh South","average_gain":23.93189722,"relative_change":0.0464502506},{"reform_id":"income_tax_threshold_uplift","year":2029,"constituency_code":"S14000081","constituency_name":"Edinburgh South West","average_gain":24.1115437455,"relative_change":0.0464939601},{"reform_id":"income_tax_threshold_uplift","year":2029,"constituency_code":"S14000082","constituency_name":"Edinburgh West","average_gain":24.0253107813,"relative_change":0.0465113416},{"reform_id":"income_tax_threshold_uplift","year":2029,"constituency_code":"S14000083","constituency_name":"Falkirk","average_gain":24.6173008435,"relative_change":0.0469085899},{"reform_id":"income_tax_threshold_uplift","year":2029,"constituency_code":"S14000084","constituency_name":"Glasgow East","average_gain":25.064481822,"relative_change":0.0469261995},{"reform_id":"income_tax_threshold_uplift","year":2029,"constituency_code":"S14000085","constituency_name":"Glasgow North","average_gain":24.8069990359,"relative_change":0.0467378525},{"reform_id":"income_tax_threshold_uplift","year":2029,"constituency_code":"S14000086","constituency_name":"Glasgow North East","average_gain":24.6179227105,"relative_change":0.0468597625},{"reform_id":"income_tax_threshold_uplift","year":2029,"constituency_code":"S14000087","constituency_name":"Glasgow South","average_gain":24.9537312233,"relative_change":0.0468540515},{"reform_id":"income_tax_threshold_uplift","year":2029,"constituency_code":"S14000088","constituency_name":"Glasgow South West","average_gain":24.2431984867,"relative_change":0.0466146093},{"reform_id":"income_tax_threshold_uplift","year":2029,"constituency_code":"S14000089","constituency_name":"Glasgow West","average_gain":24.1756951738,"relative_change":0.0466233472},{"reform_id":"income_tax_threshold_uplift","year":2029,"constituency_code":"S14000090","constituency_name":"Glenrothes and Mid Fife","average_gain":24.1989643037,"relative_change":0.0466731222},{"reform_id":"income_tax_threshold_uplift","year":2029,"constituency_code":"S14000091","constituency_name":"Gordon and Buchan","average_gain":24.1510224662,"relative_change":0.0466411089},{"reform_id":"income_tax_threshold_uplift","year":2029,"constituency_code":"S14000092","constituency_name":"Hamilton and Clyde Valley","average_gain":24.1152627051,"relative_change":0.0464446219},{"reform_id":"income_tax_threshold_uplift","year":2029,"constituency_code":"S14000093","constituency_name":"Inverclyde and Renfrewshire West","average_gain":24.0674889577,"relative_change":0.0466058592},{"reform_id":"income_tax_threshold_uplift","year":2029,"constituency_code":"S14000094","constituency_name":"Inverness, Skye and West Ross-shire","average_gain":24.1964891527,"relative_change":0.0465604992},{"reform_id":"income_tax_threshold_uplift","year":2029,"constituency_code":"S14000095","constituency_name":"Livingston","average_gain":23.7884451951,"relative_change":0.0464150445},{"reform_id":"income_tax_threshold_uplift","year":2029,"constituency_code":"S14000096","constituency_name":"Lothian East","average_gain":24.3295501534,"relative_change":0.0465649306},{"reform_id":"income_tax_threshold_uplift","year":2029,"constituency_code":"S14000097","constituency_name":"Mid Dunbartonshire","average_gain":24.3250182185,"relative_change":0.046682829},{"reform_id":"income_tax_threshold_uplift","year":2029,"constituency_code":"S14000098","constituency_name":"Moray West, Nairn and Strathspey","average_gain":23.6448351793,"relative_change":0.0461854642},{"reform_id":"income_tax_threshold_uplift","year":2029,"constituency_code":"S14000099","constituency_name":"Motherwell, Wishaw and Carluke","average_gain":24.37942709,"relative_change":0.0467331859},{"reform_id":"income_tax_threshold_uplift","year":2029,"constituency_code":"S14000100","constituency_name":"North East Fife","average_gain":24.6548981037,"relative_change":0.0470050663},{"reform_id":"income_tax_threshold_uplift","year":2029,"constituency_code":"S14000101","constituency_name":"Paisley and Renfrewshire North","average_gain":24.4403009482,"relative_change":0.0465639426},{"reform_id":"income_tax_threshold_uplift","year":2029,"constituency_code":"S14000102","constituency_name":"Paisley and Renfrewshire South","average_gain":24.4493607968,"relative_change":0.0466310098},{"reform_id":"income_tax_threshold_uplift","year":2029,"constituency_code":"S14000103","constituency_name":"Perth and Kinross-shire","average_gain":24.4625657578,"relative_change":0.0468466577},{"reform_id":"income_tax_threshold_uplift","year":2029,"constituency_code":"S14000104","constituency_name":"Rutherglen","average_gain":23.9334091745,"relative_change":0.0463440226},{"reform_id":"income_tax_threshold_uplift","year":2029,"constituency_code":"S14000105","constituency_name":"Stirling and Strathallan","average_gain":24.3329431218,"relative_change":0.0466666039},{"reform_id":"income_tax_threshold_uplift","year":2029,"constituency_code":"S14000106","constituency_name":"West Dunbartonshire","average_gain":24.0462694979,"relative_change":0.046424759},{"reform_id":"income_tax_threshold_uplift","year":2029,"constituency_code":"S14000107","constituency_name":"Ayr, Carrick and Cumnock","average_gain":23.8127858368,"relative_change":0.0463778231},{"reform_id":"income_tax_threshold_uplift","year":2029,"constituency_code":"S14000108","constituency_name":"Berwickshire, Roxburgh and Selkirk","average_gain":24.4584666212,"relative_change":0.0466735705},{"reform_id":"income_tax_threshold_uplift","year":2029,"constituency_code":"S14000109","constituency_name":"Central Ayrshire","average_gain":24.0009912149,"relative_change":0.0464748332},{"reform_id":"income_tax_threshold_uplift","year":2029,"constituency_code":"S14000110","constituency_name":"Kilmarnock and Loudoun","average_gain":24.5443310123,"relative_change":0.0467547958},{"reform_id":"income_tax_threshold_uplift","year":2029,"constituency_code":"S14000111","constituency_name":"West Aberdeenshire and Kincardine","average_gain":23.8940998979,"relative_change":0.0463297223},{"reform_id":"income_tax_threshold_uplift","year":2030,"constituency_code":"S14000021","constituency_name":"East Renfrewshire","average_gain":24.1317283825,"relative_change":0.0461371045},{"reform_id":"income_tax_threshold_uplift","year":2030,"constituency_code":"S14000027","constituency_name":"Na h-Eileanan an Iar","average_gain":24.5740848008,"relative_change":0.0464217757},{"reform_id":"income_tax_threshold_uplift","year":2030,"constituency_code":"S14000045","constituency_name":"Midlothian","average_gain":23.9078453281,"relative_change":0.0460203057},{"reform_id":"income_tax_threshold_uplift","year":2030,"constituency_code":"S14000048","constituency_name":"North Ayrshire and Arran","average_gain":24.8502236758,"relative_change":0.0465164363},{"reform_id":"income_tax_threshold_uplift","year":2030,"constituency_code":"S14000051","constituency_name":"Orkney and Shetland","average_gain":18.8264406307,"relative_change":0.0413610698},{"reform_id":"income_tax_threshold_uplift","year":2030,"constituency_code":"S14000060","constituency_name":"Aberdeen North","average_gain":24.5414777407,"relative_change":0.0465599022},{"reform_id":"income_tax_threshold_uplift","year":2030,"constituency_code":"S14000061","constituency_name":"Aberdeen South","average_gain":24.9886240815,"relative_change":0.0466643375},{"reform_id":"income_tax_threshold_uplift","year":2030,"constituency_code":"S14000062","constituency_name":"Aberdeenshire North and Moray East","average_gain":23.9034543691,"relative_change":0.0459697968},{"reform_id":"income_tax_threshold_uplift","year":2030,"constituency_code":"S14000063","constituency_name":"Airdrie and Shotts","average_gain":22.8668240513,"relative_change":0.045053009},{"reform_id":"income_tax_threshold_uplift","year":2030,"constituency_code":"S14000064","constituency_name":"Alloa and Grangemouth","average_gain":24.96390252,"relative_change":0.0465703342},{"reform_id":"income_tax_threshold_uplift","year":2030,"constituency_code":"S14000065","constituency_name":"Angus and Perthshire Glens","average_gain":24.7197584056,"relative_change":0.0465167734},{"reform_id":"income_tax_threshold_uplift","year":2030,"constituency_code":"S14000066","constituency_name":"Arbroath and Broughty Ferry","average_gain":25.1389844217,"relative_change":0.0467514435},{"reform_id":"income_tax_threshold_uplift","year":2030,"constituency_code":"S14000067","constituency_name":"Argyll, Bute and South Lochaber","average_gain":24.449117569,"relative_change":0.0464060328},{"reform_id":"income_tax_threshold_uplift","year":2030,"constituency_code":"S14000068","constituency_name":"Bathgate and Linlithgow","average_gain":24.1328167794,"relative_change":0.0461906261},{"reform_id":"income_tax_threshold_uplift","year":2030,"constituency_code":"S14000069","constituency_name":"Caithness, Sutherland and Easter Ross","average_gain":24.6520421389,"relative_change":0.046365388},{"reform_id":"income_tax_threshold_uplift","year":2030,"constituency_code":"S14000070","constituency_name":"Coatbridge and Bellshill","average_gain":24.5379039974,"relative_change":0.0464534657},{"reform_id":"income_tax_threshold_uplift","year":2030,"constituency_code":"S14000071","constituency_name":"Cowdenbeath and Kirkcaldy","average_gain":24.4138920131,"relative_change":0.0464671606},{"reform_id":"income_tax_threshold_uplift","year":2030,"constituency_code":"S14000072","constituency_name":"Cumbernauld and Kirkintilloch","average_gain":24.5317027055,"relative_change":0.046397005},{"reform_id":"income_tax_threshold_uplift","year":2030,"constituency_code":"S14000073","constituency_name":"Dumfries and Galloway","average_gain":24.3718892277,"relative_change":0.0462139667},{"reform_id":"income_tax_threshold_uplift","year":2030,"constituency_code":"S14000074","constituency_name":"Dumfriesshire, Clydesdale and Tweeddale","average_gain":24.6636602495,"relative_change":0.046665204},{"reform_id":"income_tax_threshold_uplift","year":2030,"constituency_code":"S14000075","constituency_name":"Dundee Central","average_gain":24.333795277,"relative_change":0.046349391},{"reform_id":"income_tax_threshold_uplift","year":2030,"constituency_code":"S14000076","constituency_name":"Dunfermline and Dollar","average_gain":24.1350558312,"relative_change":0.0460903798},{"reform_id":"income_tax_threshold_uplift","year":2030,"constituency_code":"S14000077","constituency_name":"East Kilbride and Strathaven","average_gain":24.261443564,"relative_change":0.0462843431},{"reform_id":"income_tax_threshold_uplift","year":2030,"constituency_code":"S14000078","constituency_name":"Edinburgh East and Musselburgh","average_gain":24.7847100992,"relative_change":0.0466144888},{"reform_id":"income_tax_threshold_uplift","year":2030,"constituency_code":"S14000079","constituency_name":"Edinburgh North and Leith","average_gain":24.3189366203,"relative_change":0.0462118111},{"reform_id":"income_tax_threshold_uplift","year":2030,"constituency_code":"S14000080","constituency_name":"Edinburgh South","average_gain":24.2679513195,"relative_change":0.0463209683},{"reform_id":"income_tax_threshold_uplift","year":2030,"constituency_code":"S14000081","constituency_name":"Edinburgh South West","average_gain":24.4442399589,"relative_change":0.0463505856},{"reform_id":"income_tax_threshold_uplift","year":2030,"constituency_code":"S14000082","constituency_name":"Edinburgh West","average_gain":24.3580937055,"relative_change":0.0463735517},{"reform_id":"income_tax_threshold_uplift","year":2030,"constituency_code":"S14000083","constituency_name":"Falkirk","average_gain":24.9594923401,"relative_change":0.0467633197},{"reform_id":"income_tax_threshold_uplift","year":2030,"constituency_code":"S14000084","constituency_name":"Glasgow East","average_gain":25.4089032721,"relative_change":0.0467683519},{"reform_id":"income_tax_threshold_uplift","year":2030,"constituency_code":"S14000085","constituency_name":"Glasgow North","average_gain":25.1537456086,"relative_change":0.0465927398},{"reform_id":"income_tax_threshold_uplift","year":2030,"constituency_code":"S14000086","constituency_name":"Glasgow North East","average_gain":24.957705914,"relative_change":0.0467128835},{"reform_id":"income_tax_threshold_uplift","year":2030,"constituency_code":"S14000087","constituency_name":"Glasgow South","average_gain":25.3016136622,"relative_change":0.0467085835},{"reform_id":"income_tax_threshold_uplift","year":2030,"constituency_code":"S14000088","constituency_name":"Glasgow South West","average_gain":24.5778565915,"relative_change":0.0464714221},{"reform_id":"income_tax_threshold_uplift","year":2030,"constituency_code":"S14000089","constituency_name":"Glasgow West","average_gain":24.5071267912,"relative_change":0.0464797012},{"reform_id":"income_tax_threshold_uplift","year":2030,"constituency_code":"S14000090","constituency_name":"Glenrothes and Mid Fife","average_gain":24.533326703,"relative_change":0.0465342754},{"reform_id":"income_tax_threshold_uplift","year":2030,"constituency_code":"S14000091","constituency_name":"Gordon and Buchan","average_gain":24.4741874446,"relative_change":0.0464851682},{"reform_id":"income_tax_threshold_uplift","year":2030,"constituency_code":"S14000092","constituency_name":"Hamilton and Clyde Valley","average_gain":24.4493172752,"relative_change":0.0463030558},{"reform_id":"income_tax_threshold_uplift","year":2030,"constituency_code":"S14000093","constituency_name":"Inverclyde and Renfrewshire West","average_gain":24.4025424638,"relative_change":0.0464721387},{"reform_id":"income_tax_threshold_uplift","year":2030,"constituency_code":"S14000094","constituency_name":"Inverness, Skye and West Ross-shire","average_gain":24.5311544677,"relative_change":0.0464184992},{"reform_id":"income_tax_threshold_uplift","year":2030,"constituency_code":"S14000095","constituency_name":"Livingston","average_gain":24.1200868134,"relative_change":0.0462851188},{"reform_id":"income_tax_threshold_uplift","year":2030,"constituency_code":"S14000096","constituency_name":"Lothian East","average_gain":24.6680184102,"relative_change":0.0464258093},{"reform_id":"income_tax_threshold_uplift","year":2030,"constituency_code":"S14000097","constituency_name":"Mid Dunbartonshire","average_gain":24.6578949729,"relative_change":0.046535348},{"reform_id":"income_tax_threshold_uplift","year":2030,"constituency_code":"S14000098","constituency_name":"Moray West, Nairn and Strathspey","average_gain":23.9732479262,"relative_change":0.0460558253},{"reform_id":"income_tax_threshold_uplift","year":2030,"constituency_code":"S14000099","constituency_name":"Motherwell, Wishaw and Carluke","average_gain":24.7245457685,"relative_change":0.0466018125},{"reform_id":"income_tax_threshold_uplift","year":2030,"constituency_code":"S14000100","constituency_name":"North East Fife","average_gain":24.9919912634,"relative_change":0.0468582124},{"reform_id":"income_tax_threshold_uplift","year":2030,"constituency_code":"S14000101","constituency_name":"Paisley and Renfrewshire North","average_gain":24.7812687954,"relative_change":0.0464185992},{"reform_id":"income_tax_threshold_uplift","year":2030,"constituency_code":"S14000102","constituency_name":"Paisley and Renfrewshire South","average_gain":24.7865112962,"relative_change":0.0464822428},{"reform_id":"income_tax_threshold_uplift","year":2030,"constituency_code":"S14000103","constituency_name":"Perth and Kinross-shire","average_gain":24.8016983621,"relative_change":0.0467055219},{"reform_id":"income_tax_threshold_uplift","year":2030,"constituency_code":"S14000104","constituency_name":"Rutherglen","average_gain":24.2584751217,"relative_change":0.0461981067},{"reform_id":"income_tax_threshold_uplift","year":2030,"constituency_code":"S14000105","constituency_name":"Stirling and Strathallan","average_gain":24.6754611818,"relative_change":0.0465326875},{"reform_id":"income_tax_threshold_uplift","year":2030,"constituency_code":"S14000106","constituency_name":"West Dunbartonshire","average_gain":24.3736828955,"relative_change":0.0462780999},{"reform_id":"income_tax_threshold_uplift","year":2030,"constituency_code":"S14000107","constituency_name":"Ayr, Carrick and Cumnock","average_gain":24.1443220343,"relative_change":0.0462479624},{"reform_id":"income_tax_threshold_uplift","year":2030,"constituency_code":"S14000108","constituency_name":"Berwickshire, Roxburgh and Selkirk","average_gain":24.7949541824,"relative_change":0.046525172},{"reform_id":"income_tax_threshold_uplift","year":2030,"constituency_code":"S14000109","constituency_name":"Central Ayrshire","average_gain":24.3300269036,"relative_change":0.0463344624},{"reform_id":"income_tax_threshold_uplift","year":2030,"constituency_code":"S14000110","constituency_name":"Kilmarnock and Loudoun","average_gain":24.8876952366,"relative_change":0.0466164411},{"reform_id":"income_tax_threshold_uplift","year":2030,"constituency_code":"S14000111","constituency_name":"West Aberdeenshire and Kincardine","average_gain":24.2233041668,"relative_change":0.0461917945}];
+        const MIN_GAIN = 17.871081658112093;
+        const MAX_GAIN = 25.408903272107093;
+        const YEARS = [2026, 2027, 2028, 2029, 2030];
+
+        const dataByYear = {};
+        constituencyData.forEach(d => {
+            if (!dataByYear[d.year]) dataByYear[d.year] = {};
+            dataByYear[d.year][d.constituency_code] = d;
+        });
+
+        let currentYearIndex = 0;
+        let isPlaying = false;
+        let animationInterval = null;
+        let svg, g, path, zoom;
+
+        function getColor(value) {
+            const t = (value - MIN_GAIN) / (MAX_GAIN - MIN_GAIN);
+            return d3.interpolateRgb("#E5E7EB", "#14B8A6")(t);
+        }
+
+        async function initMap() {
+            const geoData = await d3.json("uk_constituencies_2024.geojson");
+            const scottishFeatures = geoData.features.filter(f =>
+                f.properties.GSScode && f.properties.GSScode.startsWith('S')
+            );
+
+            const width = window.innerWidth;
+            const height = window.innerHeight - 140;
+
+            svg = d3.select("#map").attr("width", width).attr("height", height);
+            g = svg.append("g");
+
+            const bounds = {xMin: Infinity, xMax: -Infinity, yMin: Infinity, yMax: -Infinity};
+            scottishFeatures.forEach(feature => {
+                function traverse(c) {
+                    if (typeof c[0] === 'number') {
+                        bounds.xMin = Math.min(bounds.xMin, c[0]);
+                        bounds.xMax = Math.max(bounds.xMax, c[0]);
+                        bounds.yMin = Math.min(bounds.yMin, c[1]);
+                        bounds.yMax = Math.max(bounds.yMax, c[1]);
+                    } else { c.forEach(traverse); }
+                }
+                traverse(feature.geometry.coordinates);
+            });
+
+            const padding = 20;
+            const scale = Math.min(
+                (width - 2 * padding) / (bounds.xMax - bounds.xMin),
+                (height - 2 * padding) / (bounds.yMax - bounds.yMin)
+            );
+            const offsetX = (width - (bounds.xMax - bounds.xMin) * scale) / 2;
+            const offsetY = (height - (bounds.yMax - bounds.yMin) * scale) / 2;
+
+            const projection = d3.geoTransform({
+                point: function(x, y) {
+                    this.stream.point(
+                        (x - bounds.xMin) * scale + offsetX,
+                        height - ((y - bounds.yMin) * scale + offsetY)
+                    );
+                }
+            });
+
+            path = d3.geoPath().projection(projection);
+
+            g.selectAll("path")
+                .data(scottishFeatures)
+                .join("path")
+                .attr("d", path)
+                .attr("class", "constituency-path")
+                .on("mousemove", handleMouseMove)
+                .on("mouseout", handleMouseOut);
+
+            zoom = d3.zoom().scaleExtent([1, 8]).on("zoom", (event) => {
+                g.attr("transform", event.transform);
+            });
+            svg.call(zoom);
+
+            updateMap();
+        }
+
+        function updateMap() {
+            const year = YEARS[currentYearIndex];
+            const yearData = dataByYear[year] || {};
+
+            document.getElementById('year-display').textContent = `${year}-${(year + 1).toString().slice(-2)}`;
+            document.getElementById('year-slider').value = currentYearIndex;
+
+            svg.selectAll(".constituency-path")
+                .transition()
+                .duration(500)
+                .ease(d3.easeCubicInOut)
+                .attr("fill", d => {
+                    const constData = yearData[d.properties.GSScode];
+                    return constData ? getColor(constData.average_gain) : "#ddd";
+                });
+        }
+
+        function togglePlay() {
+            isPlaying = !isPlaying;
+            const playIcon = document.getElementById('play-icon');
+            const pauseIcon = document.getElementById('pause-icon');
+
+            if (isPlaying) {
+                playIcon.style.display = 'none';
+                pauseIcon.style.display = 'block';
+                animationInterval = setInterval(() => {
+                    currentYearIndex = (currentYearIndex + 1) % YEARS.length;
+                    updateMap();
+                }, 1500);
+            } else {
+                playIcon.style.display = 'block';
+                pauseIcon.style.display = 'none';
+                clearInterval(animationInterval);
+            }
+        }
+
+        function handleMouseMove(event, d) {
+            const year = YEARS[currentYearIndex];
+            const yearData = dataByYear[year] || {};
+            const constData = yearData[d.properties.GSScode];
+            if (!constData) return;
+
+            const tooltip = d3.select("#tooltip");
+            tooltip.classed("visible", true);
+            d3.select("#tooltip-name").text(constData.constituency_name);
+            d3.select("#tooltip-value").text(`£${constData.average_gain.toFixed(2)}`);
+            tooltip.style("left", (event.pageX + 10) + "px").style("top", (event.pageY - 60) + "px");
+        }
+
+        function handleMouseOut() {
+            d3.select("#tooltip").classed("visible", false);
+        }
+
+        document.getElementById('play-button').addEventListener('click', togglePlay);
+        document.getElementById('year-slider').addEventListener('input', (e) => {
+            if (isPlaying) togglePlay();
+            currentYearIndex = parseInt(e.target.value);
+            updateMap();
+        });
+
+        d3.select("#zoom-in").on("click", () => svg.transition().duration(300).call(zoom.scaleBy, 1.5));
+        d3.select("#zoom-out").on("click", () => svg.transition().duration(300).call(zoom.scaleBy, 0.67));
+        d3.select("#zoom-reset").on("click", () => svg.transition().duration(750).call(zoom.transform, d3.zoomIdentity));
+
+        initMap();
+    </script>
+</body>
+</html>
