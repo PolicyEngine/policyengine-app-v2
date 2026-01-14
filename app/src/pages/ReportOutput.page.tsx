@@ -386,11 +386,15 @@ function getTabsForOutputType(
 
     // Only show constituencies and local authorities for UK national or country-level reports
     // Hide these tabs for constituency-level or local authority-level reports
-    // US does not have this capability
     const hasLocalLevelGeography = geographies?.some((g) => isUKLocalLevelGeography(g));
     if (countryId === 'uk' && !hasLocalLevelGeography) {
       tabs.push({ value: 'constituency', label: 'Constituencies' });
       tabs.push({ value: 'local-authority', label: 'Local authorities' });
+    }
+
+    // Show congressional districts tab for US nationwide reports
+    if (countryId === 'us') {
+      tabs.push({ value: 'congressional-district', label: 'Congressional districts' });
     }
 
     return tabs;

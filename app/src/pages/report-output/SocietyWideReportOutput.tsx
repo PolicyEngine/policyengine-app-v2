@@ -13,6 +13,7 @@ import type { UserGeographyPopulation } from '@/types/ingredients/UserPopulation
 import type { UserSimulation } from '@/types/ingredients/UserSimulation';
 import { getDisplayStatus } from '@/utils/statusMapping';
 import { ComparativeAnalysisPage } from './ComparativeAnalysisPage';
+import { CongressionalDistrictSubPage } from './CongressionalDistrictSubPage';
 import { ConstituencySubPage } from './ConstituencySubPage';
 import DynamicsSubPage from './DynamicsSubPage';
 import ErrorPage from './ErrorPage';
@@ -182,6 +183,9 @@ export function SocietyWideReportOutput({
 
       case 'local-authority':
         return <LocalAuthoritySubPage output={output} />;
+
+      case 'congressional-district':
+        return <CongressionalDistrictSubPage output={output} />;
 
       default:
         return <NotFoundSubPage />;
