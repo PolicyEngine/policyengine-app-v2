@@ -1,33 +1,53 @@
-# Congressional District GeoJSON Data
+# Congressional District Geographic Data
 
 ## Current File
 
-- **File:** `real_congressional_districts.geojson`
+- **File:** `congressional_districts.topojson`
+- **Format:** TopoJSON (compressed from GeoJSON, ~80% smaller)
 - **Congress:** 118th (used as fallback - boundaries nearly identical to 119th)
 - **Source:** US Census Bureau via PolicyEngine/snap-district-map
 - **Note:** 119th Congress boundaries differ only in 5 states (AL, GA, LA, NY, NC) due to court-ordered redistricting
 
+## TopoJSON Format
+
+We use TopoJSON instead of GeoJSON for file size efficiency:
+
+- **Original GeoJSON:** ~4.4 MB
+- **TopoJSON:** ~900 KB (~80% reduction)
+
+The `USDistrictChoroplethMap` component automatically converts TopoJSON back to GeoJSON at runtime using `topojson-client`.
+
 ## Pre-processing
 
-The GeoJSON file has been pre-processed to add a `DISTRICT_ID` property to each feature. This property matches the district identifier format used by the PolicyEngine API (e.g., "AL-01", "CA-52").
+The data has been pre-processed to add a `DISTRICT_ID` property to each feature. This property matches the district identifier format used by the PolicyEngine API (e.g., "AL-01", "CA-52").
 
 ### Why pre-process?
 
 The Census Bureau uses FIPS codes for geographic identifiers:
+
 - `STATEFP`: State FIPS code (e.g., "01" for Alabama)
 - `GEOID`: Combined state FIPS + district number (e.g., "0101")
 
 The PolicyEngine API returns district identifiers using state abbreviations:
+
 - Format: `{STATE_ABBR}-{DISTRICT_NUM}` (e.g., "AL-01")
 
-By adding `DISTRICT_ID` to the GeoJSON, we:
+By adding `DISTRICT_ID` to the data, we:
+
 1. Eliminate runtime FIPS-to-abbreviation conversion
 2. Remove duplicated state code mappings from the application code
 3. Enable direct matching between API data and map features
 
-### Regenerating DISTRICT_ID
+### Regenerating from Source
 
-If you update the GeoJSON file, run this script to add `DISTRICT_ID` properties:
+If you need to update the district boundaries:
+
+1. **Download/update GeoJSON** from source
+2. **Add DISTRICT_ID properties** using the Python script below
+3. **Convert to TopoJSON:**
+   ```bash
+   npx geo2topo -q 1e5 districts=source.geojson > congressional_districts.topojson
+   ```
 
 ```python
 import json
@@ -49,7 +69,7 @@ FIPS_TO_STATE = {
 # At-large states use "00" in GeoJSON, API uses "01"
 AT_LARGE_FIPS = {'02', '10', '38', '46', '50', '56'}  # AK, DE, ND, SD, VT, WY
 
-with open('real_congressional_districts.geojson', 'r') as f:
+with open('source.geojson', 'r') as f:
     data = json.load(f)
 
 for feature in data['features']:
@@ -68,20 +88,20 @@ for feature in data['features']:
                 district_num = '01'
             props['DISTRICT_ID'] = f"{state_abbr}-{district_num}"
 
-with open('real_congressional_districts.geojson', 'w') as f:
+with open('source.geojson', 'w') as f:
     json.dump(data, f)
 ```
 
 ## Feature Properties
 
-Each GeoJSON feature includes:
+Each feature includes:
 
-| Property | Description | Example |
-|----------|-------------|---------|
+| Property      | Description                | Example |
+| ------------- | -------------------------- | ------- |
 | `DISTRICT_ID` | API-compatible district ID | "AL-01" |
-| `STATEFP` | State FIPS code | "01" |
-| `CD118FP` | District number | "01" |
-| `GEOID` | Combined FIPS identifier | "0101" |
+| `STATEFP`     | State FIPS code            | "01"    |
+| `CD118FP`     | District number            | "01"    |
+| `GEOID`       | Combined FIPS identifier   | "0101"  |
 
 ## Data Source
 

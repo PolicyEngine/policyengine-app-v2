@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { Config, Layout, PlotData } from 'plotly.js';
 import Plot from 'react-plotly.js';
+import { feature } from 'topojson-client';
+import type { GeometryCollection, Topology } from 'topojson-specification';
 import { Box, Center, Loader, Stack, Text } from '@mantine/core';
 import { colors, spacing } from '@/designTokens';
 import { DEFAULT_CHART_CONFIG, DEFAULT_CHART_LAYOUT } from '@/utils/chartUtils';
@@ -76,8 +78,8 @@ interface USDistrictChoroplethMapProps {
   /** Configuration for the map */
   config?: Partial<ChoroplethMapConfig>;
 
-  /** Path to GeoJSON file (optional, defaults to 119th Congress) */
-  geoJsonPath?: string;
+  /** Path to GeoJSON or TopoJSON file (optional, defaults to 119th Congress TopoJSON) */
+  geoDataPath?: string;
 }
 
 // GeoJSON cache to avoid re-fetching (keyed by path)
@@ -110,9 +112,9 @@ const geoJSONCache: Record<string, GeoJSONFeatureCollection> = {};
 export function USDistrictChoroplethMap({
   data,
   config = {},
-  geoJsonPath = '/data/geojson/real_congressional_districts.geojson',
+  geoDataPath = '/data/geojson/congressional_districts.topojson',
 }: USDistrictChoroplethMapProps) {
-  const cached = geoJSONCache[geoJsonPath];
+  const cached = geoJSONCache[geoDataPath];
   const [geoJSON, setGeoJSON] = useState<GeoJSONFeatureCollection | null>(cached || null);
   const [loading, setLoading] = useState(!cached);
   const [error, setError] = useState<string | null>(null);
@@ -134,25 +136,38 @@ export function USDistrictChoroplethMap({
     [config]
   );
 
-  // Load GeoJSON data
+  // Load GeoJSON or TopoJSON data
   useEffect(() => {
-    const cachedData = geoJSONCache[geoJsonPath];
+    const cachedData = geoJSONCache[geoDataPath];
     if (cachedData) {
       setGeoJSON(cachedData);
       setLoading(false);
       return;
     }
 
-    const loadGeoJSON = async () => {
+    const loadGeoData = async () => {
       try {
         setLoading(true);
-        const response = await fetch(geoJsonPath);
+        const response = await fetch(geoDataPath);
         if (!response.ok) {
-          throw new Error(`Failed to load GeoJSON: ${response.status}`);
+          throw new Error(`Failed to load geo data: ${response.status}`);
         }
         const jsonData = await response.json();
-        geoJSONCache[geoJsonPath] = jsonData;
-        setGeoJSON(jsonData);
+
+        // Convert TopoJSON to GeoJSON if needed
+        let geoJSONData: GeoJSONFeatureCollection;
+        if (geoDataPath.endsWith('.topojson')) {
+          // TopoJSON file - convert to GeoJSON
+          const topology = jsonData as Topology<{ districts: GeometryCollection }>;
+          const converted = feature(topology, topology.objects.districts);
+          geoJSONData = converted as unknown as GeoJSONFeatureCollection;
+        } else {
+          // Already GeoJSON
+          geoJSONData = jsonData;
+        }
+
+        geoJSONCache[geoDataPath] = geoJSONData;
+        setGeoJSON(geoJSONData);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load map data');
       } finally {
@@ -160,8 +175,8 @@ export function USDistrictChoroplethMap({
       }
     };
 
-    loadGeoJSON();
-  }, [geoJsonPath]);
+    loadGeoData();
+  }, [geoDataPath]);
 
   // Create data lookup map for efficient access
   const dataMap = useMemo(() => {
