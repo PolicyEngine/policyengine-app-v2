@@ -1,8 +1,13 @@
 import { useMemo } from 'react';
+import { useSelector } from 'react-redux';
 import { Stack, Text, Title } from '@mantine/core';
-import { transformDistrictRelativeChange } from '@/adapters/congressional-district/congressionalDistrictDataAdapter';
+import {
+  buildDistrictLabelLookup,
+  transformDistrictRelativeChange,
+} from '@/adapters/congressional-district/congressionalDistrictDataAdapter';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { USDistrictChoroplethMap } from '@/components/visualization/USDistrictChoroplethMap';
+import type { RootState } from '@/store';
 import type { USCongressionalDistrictBreakdown } from '@/types/metadata/ReportOutputSocietyWideByCongressionalDistrict';
 import type { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
 import { formatParameterValue } from '@/utils/chartValueUtils';
@@ -221,20 +226,30 @@ interface RelativeChangeByDistrictProps {
  * income change for each US congressional district.
  */
 export function RelativeChangeByDistrict({ output }: RelativeChangeByDistrictProps) {
+  // Get district labels from metadata
+  const regions = useSelector((state: RootState) => state.metadata.economyOptions.region);
+
+  // Build label lookup from metadata (memoized)
+  const labelLookup = useMemo(() => buildDistrictLabelLookup(regions), [regions]);
+
   // Transform API data to choropleth map format
   const mapData = useMemo(() => {
     // Type guard to ensure output is US report with district data
     if (!('congressional_district_impact' in output)) {
-      // TODO: Remove mock data fallback after API integration
-      return transformDistrictRelativeChange(MOCK_DISTRICT_DATA);
+      // TODO: Remove mock data fallback and console.log after API integration
+      console.log('[RelativeChangeByDistrict] Using MOCK data (no congressional_district_impact in output)');
+      return transformDistrictRelativeChange(MOCK_DISTRICT_DATA, labelLookup);
     }
     const districtData = (output as ReportOutputSocietyWideUS).congressional_district_impact;
     if (!districtData) {
-      // TODO: Remove mock data fallback after API integration
-      return transformDistrictRelativeChange(MOCK_DISTRICT_DATA);
+      // TODO: Remove mock data fallback and console.log after API integration
+      console.log('[RelativeChangeByDistrict] Using MOCK data (congressional_district_impact is null)');
+      return transformDistrictRelativeChange(MOCK_DISTRICT_DATA, labelLookup);
     }
-    return transformDistrictRelativeChange(districtData);
-  }, [output]);
+    // TODO: Remove console.log after API integration
+    console.log('[RelativeChangeByDistrict] Using REAL API data', { districtCount: districtData.districts.length });
+    return transformDistrictRelativeChange(districtData, labelLookup);
+  }, [output, labelLookup]);
 
   if (!mapData.length) {
     return (

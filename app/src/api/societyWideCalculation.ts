@@ -2,6 +2,13 @@ import { BASE_URL } from '@/constants';
 import { ReportOutputSocietyWideUK } from '@/types/metadata/ReportOutputSocietyWideUK';
 import { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
 
+// =============================================================================
+// DEV FLAG: Set to true to use faster test endpoint for district breakdowns
+// TODO: Remove this flag and related code before merging to main
+// =============================================================================
+const USE_TEST_DISTRICT_ENDPOINT = true;
+// =============================================================================
+
 export type SocietyWideReportOutput = ReportOutputSocietyWideUS | ReportOutputSocietyWideUK;
 
 /**
@@ -27,6 +34,7 @@ export interface SocietyWideCalculationParams {
   region: string; // Must include a region; "us" for US nationwide, two-letter state code for US states
   time_period: string; // Four-digit year
   dataset?: string; // Optional dataset parameter; defaults to API's default dataset
+  include_district_breakdowns?: boolean; // Enable congressional district breakdowns (US nationwide only)
 }
 
 export interface SocietyWideCalculationResponse {
@@ -51,9 +59,19 @@ export async function fetchSocietyWideCalculation(
 
   Object.entries(paramsWithDataset).forEach(([key, value]) => {
     if (value !== undefined) {
-      queryParams.append(key, value);
+      queryParams.append(key, String(value));
     }
   });
+
+  // Enable congressional district breakdowns for US nationwide simulations
+  // TODO: Remove USE_TEST_DISTRICT_ENDPOINT logic before merging to main
+  if (countryId === 'us' && params.region === 'us') {
+    if (USE_TEST_DISTRICT_ENDPOINT) {
+      // Use test dataset for faster response during development
+      queryParams.set('dataset', 'national-with-breakdowns-test');
+    }
+    queryParams.append('include_district_breakdowns', 'true');
+  }
 
   const queryString = queryParams.toString();
   const url = `${BASE_URL}/${countryId}/economy/${reformPolicyId}/over/${baselinePolicyId}${queryString ? `?${queryString}` : ''}`;

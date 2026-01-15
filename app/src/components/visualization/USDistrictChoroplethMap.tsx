@@ -16,6 +16,7 @@ interface GeoJSONFeature {
     STATEFP?: string;
     CD118FP?: string;
     GEOID?: string;
+    DISTRICT_ID?: string; // Added: matches API format (e.g., "AL-01")
     NAMELSAD?: string;
     [key: string]: unknown;
   } | null;
@@ -34,7 +35,7 @@ interface GeoJSONFeatureCollection {
  * Data point for choropleth map visualization
  */
 export interface ChoroplethDataPoint {
-  /** GeoJSON feature ID (e.g., "0101" for AL-01) */
+  /** District ID matching GeoJSON DISTRICT_ID property (e.g., "AL-01") */
   geoId: string;
 
   /** Display label for hover tooltip */
@@ -92,8 +93,8 @@ const geoJSONCache: Record<string, GeoJSONFeatureCollection> = {};
  * ```tsx
  * <USDistrictChoroplethMap
  *   data={[
- *     { geoId: '0101', label: "Alabama's 1st congressional district", value: 312.45 },
- *     { geoId: '0102', label: "Alabama's 2nd congressional district", value: -45.30 },
+ *     { geoId: 'AL-01', label: "Alabama's 1st congressional district", value: 312.45 },
+ *     { geoId: 'AL-02', label: "Alabama's 2nd congressional district", value: -45.30 },
  *   ]}
  *   config={{
  *     colorScale: {
@@ -202,16 +203,17 @@ export function USDistrictChoroplethMap({
 
     // Process each GeoJSON feature
     geoJSON.features.forEach((feature: GeoJSONFeature) => {
-      const geoId = feature.properties?.GEOID as string;
-      if (!geoId) {
+      // Use DISTRICT_ID which matches API format (e.g., "AL-01")
+      const districtId = feature.properties?.DISTRICT_ID as string;
+      if (!districtId) {
         return;
       }
 
-      const dataPoint = dataMap.get(geoId);
+      const dataPoint = dataMap.get(districtId);
       const value = dataPoint?.value ?? 0;
-      const label = dataPoint?.label ?? `District ${geoId}`;
+      const label = dataPoint?.label ?? `District ${districtId}`;
 
-      locations.push(geoId);
+      locations.push(districtId);
       z.push(value);
       text.push(`${label}<br>${fullConfig.formatValue!(value)}`);
     });
