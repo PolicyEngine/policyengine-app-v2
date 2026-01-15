@@ -4,10 +4,10 @@ We at PolicyEngine have analyzed the effects of this proposed change.
 
 Key results:
 
-* Costs $8.6 billion over ten years (2026-2035)
-* Benefits 3.4% of Americans
-* Reduces child poverty by 0.11%
-* Lowers the Gini index of inequality by 0.017%
+* Costs $14.5 billion over ten years (2026-2035)
+* Benefits 5.9% of Americans
+* Reduces child poverty by 0.4%
+* Lowers the Gini index of inequality by 0.024%
 
 *[Use PolicyEngine](https://www.policyengine.org/us) to view the full results or calculate the effect on your household.*
 
@@ -33,17 +33,17 @@ Additionally, due to immigration requirements enacted by H.R. 1, households with
 
 ## Nationwide impacts
 
-The Stronger Start for Working Families Act would cost $789 million in 2026, according to [PolicyEngine's static modeling](https://app.policyengine.org/us/report-output/sur-mk5steto8pe9?share=eyJ1c2VyUmVwb3J0Ijp7InJlcG9ydElkIjoiNDc3IiwiY291bnRyeUlkIjoidXMiLCJsYWJlbCI6IlN0cm9uZ2VyIFN0YXJ0IGZvciBXb3JraW5nIEZhbWlsaWVzIEFjdCIsImlzQ3JlYXRlZCI6dHJ1ZSwiaWQiOiJzdXItbWs1c3RldG84cGU5In0sInVzZXJTaW11bGF0aW9ucyI6W3sic2ltdWxhdGlvbklkIjoiNzEiLCJjb3VudHJ5SWQiOiJ1cyIsImxhYmVsIjoiVW5pdGVkIFN0YXRlcyBjdXJyZW50IGxhdyBmb3IgYWxsIGhvdXNlaG9sZHMgbmF0aW9ud2lkZSIsImlzQ3JlYXRlZCI6dHJ1ZSwiaWQiOiJzdXMtbWs1c3NqdGZhMXVmIn0seyJzaW11bGF0aW9uSWQiOiI1MzUiLCJjb3VudHJ5SWQiOiJ1cyIsImxhYmVsIjoiU3Ryb25nZXIgU3RhcnQgZm9yIFdvcmtpbmcgRmFtaWxpZXMgQWN0IHJlZm9ybSBzaW11bGF0aW9uIiwiaXNDcmVhdGVkIjp0cnVlLCJpZCI6InN1cy1tazVzdGQ1eDE0Y28ifV0sInVzZXJQb2xpY2llcyI6W3sicG9saWN5SWQiOiI4NTU4NyIsImNvdW50cnlJZCI6InVzIiwibGFiZWwiOiJTdHJvbmdlciBTdGFydCBmb3IgV29ya2luZyBGYW1pbGllcyBBY3QgcmVmb3JtIHBvbGljeSIsImlzQ3JlYXRlZCI6dHJ1ZSwiaWQiOiJzdXAtbWs1c3Q4eXdnMjVmIn1dLCJ1c2VySG91c2Vob2xkcyI6W10sInVzZXJHZW9ncmFwaGllcyI6W3siaWQiOiJhbm9ueW1vdXMtMTc2Nzg5Nzk0ODU2MiIsImNvdW50cnlJZCI6InVzIiwiZ2VvZ3JhcGh5SWQiOiJ1cyIsInNjb3BlIjoibmF0aW9uYWwiLCJsYWJlbCI6IlVuaXRlZCBTdGF0ZXMgbmF0aW9ud2lkZSIsInR5cGUiOiJnZW9ncmFwaHkifV19). Over ten years, the bill would lower federal revenues by $8.6 billion.
+The Stronger Start for Working Families Act would cost $1.6 billion in 2026, according to [PolicyEngine's static modeling](https://app.policyengine.org/us/report-output/sur-mk5steto8pe9?share=eyJ1c2VyUmVwb3J0Ijp7InJlcG9ydElkIjoiNDc3IiwiY291bnRyeUlkIjoidXMiLCJsYWJlbCI6IlN0cm9uZ2VyIFN0YXJ0IGZvciBXb3JraW5nIEZhbWlsaWVzIEFjdCIsImlzQ3JlYXRlZCI6dHJ1ZSwiaWQiOiJzdXItbWs1c3RldG84cGU5In0sInVzZXJTaW11bGF0aW9ucyI6W3sic2ltdWxhdGlvbklkIjoiNzEiLCJjb3VudHJ5SWQiOiJ1cyIsImxhYmVsIjoiVW5pdGVkIFN0YXRlcyBjdXJyZW50IGxhdyBmb3IgYWxsIGhvdXNlaG9sZHMgbmF0aW9ud2lkZSIsImlzQ3JlYXRlZCI6dHJ1ZSwiaWQiOiJzdXMtbWs1c3NqdGZhMXVmIn0seyJzaW11bGF0aW9uSWQiOiI1MzUiLCJjb3VudHJ5SWQiOiJ1cyIsImxhYmVsIjoiU3Ryb25nZXIgU3RhcnQgZm9yIFdvcmtpbmcgRmFtaWxpZXMgQWN0IHJlZm9ybSBzaW11bGF0aW9uIiwiaXNDcmVhdGVkIjp0cnVlLCJpZCI6InN1cy1tazVzdGQ1eDE0Y28ifV0sInVzZXJQb2xpY2llcyI6W3sicG9saWN5SWQiOiI4NTU4NyIsImNvdW50cnlJZCI6InVzIiwibGFiZWwiOiJTdHJvbmdlciBTdGFydCBmb3IgV29ya2luZyBGYW1pbGllcyBBY3QgcmVmb3JtIHBvbGljeSIsImlzQ3JlYXRlZCI6dHJ1ZSwiaWQiOiJzdXAtbWs1c3Q4eXdnMjVmIn1dLCJ1c2VySG91c2Vob2xkcyI6W10sInVzZXJHZW9ncmFwaGllcyI6W3siaWQiOiJhbm9ueW1vdXMtMTc2Nzg5Nzk0ODU2MiIsImNvdW50cnlJZCI6InVzIiwiZ2VvZ3JhcGh5SWQiOiJ1cyIsInNjb3BlIjoibmF0aW9uYWwiLCJsYWJlbCI6IlVuaXRlZCBTdGF0ZXMgbmF0aW9ud2lkZSIsInR5cGUiOiJnZW9ncmFwaHkifV19). Over ten years, the bill would lower federal revenues by $14.5 billion.
 
-The reform would raise the net income of 3.4% of Americans, with beneficiaries concentrated in the lower income deciles. Figure 3 shows the share of residents in each income decile that would gain from the reform.
+The reform would raise the net income of 5.9% of Americans, with beneficiaries concentrated in the lower income deciles. Figure 3 shows the share of residents in each income decile that would gain from the reform.
 
 <iframe src="https://policyengine.github.io/stronger-start-calc/winners-by-decile.html" width="100%" height="650" frameborder="0"></iframe>
 
-We project that the Stronger Start for Working Families Act would reduce child poverty by 0.11%, as determined by the Supplemental Poverty Measure, while having no effect on deep child poverty. The proposed legislation would also reduce the Gini index of income inequality by 0.017%.
+We project that the Stronger Start for Working Families Act would reduce child poverty by 0.4%, as determined by the Supplemental Poverty Measure, while lowering deep child poverty by 0.024%. The proposed legislation would also reduce the Gini index of income inequality by 0.024%.
 
 ## Conclusion
 
-The Stronger Start for Working Families Act would expand the Child Tax Credit's reach by eliminating the $2,500 earnings threshold. This reform would raise the net income of 3.4% of American residents, providing up to $375 for those who currently receive less than the maximum refundable credit.
+The Stronger Start for Working Families Act would expand the Child Tax Credit's reach by eliminating the $2,500 earnings threshold. This reform would raise the net income of 5.9% of American residents, providing up to $375 for those who currently receive less than the maximum refundable credit.
 
 As policymakers evaluate reforms such as these, analytical tools like PolicyEngine offer critical insights into the impacts on diverse household compositions and the broader economy.
 
