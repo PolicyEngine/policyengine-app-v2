@@ -976,17 +976,17 @@ const MOCK_DISTRICT_DATA: USCongressionalDistrictBreakdown = {
   ],
 };
 
-interface AverageChangeByDistrictProps {
+interface AbsoluteChangeByDistrictProps {
   output: SocietyWideReportOutput;
 }
 
 /**
- * Average household income change by congressional district
+ * Absolute household income change by congressional district
  *
- * Displays a geographic choropleth map showing the average household income change
- * for each US congressional district in absolute currency terms.
+ * Displays a geographic choropleth map showing the absolute household income change
+ * for each US congressional district in currency terms.
  */
-export function AverageChangeByDistrict({ output }: AverageChangeByDistrictProps) {
+export function AbsoluteChangeByDistrict({ output }: AbsoluteChangeByDistrictProps) {
   // Get district labels from metadata
   const regions = useSelector((state: RootState) => state.metadata.economyOptions.region);
 
@@ -1023,7 +1023,7 @@ export function AverageChangeByDistrict({ output }: AverageChangeByDistrictProps
   return (
     <Stack gap="md">
       <div>
-        <Title order={3}>Average household income change by congressional district</Title>
+        <Title order={3}>Absolute household income change by congressional district</Title>
       </div>
 
       <USDistrictChoroplethMap

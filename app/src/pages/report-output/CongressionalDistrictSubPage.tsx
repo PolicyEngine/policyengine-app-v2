@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { SidebarTabs, type SidebarTab } from '@/components/SidebarTabs';
-import { AverageChangeByDistrict } from './congressional-district/AverageChangeByDistrict';
+import { AbsoluteChangeByDistrict } from './congressional-district/AbsoluteChangeByDistrict';
 import { RelativeChangeByDistrict } from './congressional-district/RelativeChangeByDistrict';
 
 interface CongressionalDistrictSubPageProps {
@@ -9,7 +9,7 @@ interface CongressionalDistrictSubPageProps {
 }
 
 const DISTRICT_TABS: SidebarTab[] = [
-  { value: 'average', label: 'Average change' },
+  { value: 'average', label: 'Absolute change' },
   { value: 'relative', label: 'Relative change' },
 ];
 
@@ -17,7 +17,7 @@ const DISTRICT_TABS: SidebarTab[] = [
  * Congressional district analysis subpage for society-wide reports
  *
  * Provides sidebar tabs to view:
- * - Average household income change by congressional district
+ * - Absolute household income change by congressional district
  * - Relative household income change by congressional district
  *
  * Only available for US reports with congressional district data.
@@ -37,7 +37,7 @@ export function CongressionalDistrictSubPage({ output }: CongressionalDistrictSu
 
   return (
     <SidebarTabs tabs={DISTRICT_TABS} activeTab={activeTab} onTabChange={setActiveTab}>
-      {activeTab === 'average' && <AverageChangeByDistrict output={output} />}
+      {activeTab === 'average' && <AbsoluteChangeByDistrict output={output} />}
       {activeTab === 'relative' && <RelativeChangeByDistrict output={output} />}
     </SidebarTabs>
   );
