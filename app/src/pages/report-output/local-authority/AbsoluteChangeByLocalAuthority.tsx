@@ -7,17 +7,17 @@ import type { ReportOutputSocietyWideUK } from '@/types/metadata/ReportOutputSoc
 import { formatParameterValue } from '@/utils/chartValueUtils';
 import { DIVERGING_GRAY_TEAL } from '@/utils/visualization/colorScales';
 
-interface AverageChangeByLocalAuthorityProps {
+interface AbsoluteChangeByLocalAuthorityProps {
   output: SocietyWideReportOutput;
 }
 
 /**
- * Average household income change by local authority
+ * Absolute household income change by local authority
  *
- * Displays a hexagonal map showing the average household income change
- * for each UK local authority in absolute currency terms.
+ * Displays a hexagonal map showing the absolute household income change
+ * for each UK local authority in currency terms.
  */
-export function AverageChangeByLocalAuthority({ output }: AverageChangeByLocalAuthorityProps) {
+export function AbsoluteChangeByLocalAuthority({ output }: AbsoluteChangeByLocalAuthorityProps) {
   // Transform API data to hexagonal map format
   const hexMapData = useMemo(() => {
     // Type guard to ensure output is UK report with local authority data
@@ -43,7 +43,7 @@ export function AverageChangeByLocalAuthority({ output }: AverageChangeByLocalAu
   return (
     <Stack gap="md">
       <div>
-        <Title order={3}>Average household income change by local authority</Title>
+        <Title order={3}>Absolute household income change by local authority</Title>
       </div>
 
       <HexagonalMap

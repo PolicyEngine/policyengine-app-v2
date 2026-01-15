@@ -7,17 +7,17 @@ import type { ReportOutputSocietyWideUK } from '@/types/metadata/ReportOutputSoc
 import { formatParameterValue } from '@/utils/chartValueUtils';
 import { DIVERGING_GRAY_TEAL } from '@/utils/visualization/colorScales';
 
-interface AverageChangeByConstituencyProps {
+interface AbsoluteChangeByConstituencyProps {
   output: SocietyWideReportOutput;
 }
 
 /**
- * Average household income change by parliamentary constituency
+ * Absolute household income change by parliamentary constituency
  *
- * Displays a hexagonal map showing the average household income change
- * for each UK parliamentary constituency in absolute currency terms.
+ * Displays a hexagonal map showing the absolute household income change
+ * for each UK parliamentary constituency in currency terms.
  */
-export function AverageChangeByConstituency({ output }: AverageChangeByConstituencyProps) {
+export function AbsoluteChangeByConstituency({ output }: AbsoluteChangeByConstituencyProps) {
   // Transform API data to hexagonal map format
   const hexMapData = useMemo(() => {
     // Type guard to ensure output is UK report with constituency data
@@ -43,7 +43,7 @@ export function AverageChangeByConstituency({ output }: AverageChangeByConstitue
   return (
     <Stack gap="md">
       <div>
-        <Title order={3}>Average household income change by constituency</Title>
+        <Title order={3}>Absolute household income change by constituency</Title>
       </div>
 
       <HexagonalMap

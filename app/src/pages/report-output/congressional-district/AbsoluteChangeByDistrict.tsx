@@ -997,18 +997,12 @@ export function AbsoluteChangeByDistrict({ output }: AbsoluteChangeByDistrictPro
   const mapData = useMemo(() => {
     // Type guard to ensure output is US report with district data
     if (!('congressional_district_impact' in output)) {
-      // TODO: Remove mock data fallback and console.log after API integration
-      console.log('[AverageChangeByDistrict] Using MOCK data (no congressional_district_impact in output)');
       return transformDistrictAverageChange(MOCK_DISTRICT_DATA, labelLookup);
     }
     const districtData = (output as ReportOutputSocietyWideUS).congressional_district_impact;
     if (!districtData) {
-      // TODO: Remove mock data fallback and console.log after API integration
-      console.log('[AverageChangeByDistrict] Using MOCK data (congressional_district_impact is null)');
       return transformDistrictAverageChange(MOCK_DISTRICT_DATA, labelLookup);
     }
-    // TODO: Remove console.log after API integration
-    console.log('[AverageChangeByDistrict] Using REAL API data', { districtCount: districtData.districts.length });
     return transformDistrictAverageChange(districtData, labelLookup);
   }, [output, labelLookup]);
 

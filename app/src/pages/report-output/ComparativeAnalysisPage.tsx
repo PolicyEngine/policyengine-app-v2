@@ -2,6 +2,8 @@ import type { ComponentType } from 'react';
 import type { SocietyWideReportOutput as SocietyWideOutput } from '@/api/societyWideCalculation';
 import BudgetaryImpactByProgramSubPage from './budgetary-impact/BudgetaryImpactByProgramSubPage';
 import BudgetaryImpactSubPage from './budgetary-impact/BudgetaryImpactSubPage';
+import { AbsoluteChangeByDistrict } from './congressional-district/AbsoluteChangeByDistrict';
+import { RelativeChangeByDistrict } from './congressional-district/RelativeChangeByDistrict';
 import DistributionalImpactIncomeAverageSubPage from './distributional-impact/DistributionalImpactIncomeAverageSubPage';
 import DistributionalImpactIncomeRelativeSubPage from './distributional-impact/DistributionalImpactIncomeRelativeSubPage';
 import DistributionalImpactWealthAverageSubPage from './distributional-impact/DistributionalImpactWealthAverageSubPage';
@@ -44,6 +46,8 @@ const VIEW_MAP: Record<string, ComponentType<ViewComponentProps>> = {
   'deep-poverty-impact-age': DeepPovertyImpactByAgeSubPage,
   'deep-poverty-impact-gender': DeepPovertyImpactByGenderSubPage,
   'inequality-impact': InequalityImpactSubPage,
+  'congressional-district-absolute': AbsoluteChangeByDistrict,
+  'congressional-district-relative': RelativeChangeByDistrict,
 };
 
 /**

@@ -392,10 +392,7 @@ function getTabsForOutputType(
       tabs.push({ value: 'local-authority', label: 'Local authorities' });
     }
 
-    // Show congressional districts tab for US nationwide reports
-    if (countryId === 'us') {
-      tabs.push({ value: 'congressional-district', label: 'Congressional districts' });
-    }
+    // Congressional districts are now under Comparative Analysis sidebar for US
 
     return tabs;
   }
