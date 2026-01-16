@@ -78,7 +78,7 @@ interface USDistrictChoroplethMapProps {
   /** Configuration for the map */
   config?: Partial<ChoroplethMapConfig>;
 
-  /** Path to GeoJSON or TopoJSON file (optional, defaults to 119th Congress TopoJSON) */
+  /** Path to GeoJSON or TopoJSON file (optional, defaults to 118th Congress TopoJSON) */
   geoDataPath?: string;
 }
 
