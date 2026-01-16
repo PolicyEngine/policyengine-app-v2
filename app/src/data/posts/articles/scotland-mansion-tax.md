@@ -13,7 +13,7 @@ Edinburgh's six constituencies account for half of all affected properties. Edin
 
 ## Interactive map
 
-<center><iframe src="https://policyengine.github.io/scotland-mansion-tax/scottish_mansion_tax_map.html?v=5" width="100%" height="950" style="border:none;"></iframe></center>
+<center><iframe src="https://policyengine.github.io/scotland-mansion-tax/scottish_mansion_tax_map.html?v=6" width="100%" height="950" style="border:none;"></iframe></center>
 
 **Top 10 constituencies by estimated impact**
 
