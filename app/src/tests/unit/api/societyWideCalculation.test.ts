@@ -237,9 +237,10 @@ describe('societyWide API', () => {
       }
 
       // Then
+      // NOTE: US uses test dataset with district breakdowns during development
       expect(global.fetch).toHaveBeenNthCalledWith(
         1,
-        `${BASE_URL}/${TEST_COUNTRIES.US}/economy/${reformPolicyId}/over/${baselinePolicyId}?region=us&time_period=${CURRENT_YEAR}&dataset=enhanced_cps`,
+        `${BASE_URL}/${TEST_COUNTRIES.US}/economy/${reformPolicyId}/over/${baselinePolicyId}?region=us&time_period=${CURRENT_YEAR}&dataset=national-with-breakdowns-test&include_district_breakdowns=true`,
         expect.objectContaining({
           headers: {
             'Content-Type': 'application/json',
@@ -266,7 +267,7 @@ describe('societyWide API', () => {
       );
     });
 
-    test('given US nationwide then automatically adds enhanced_cps dataset', async () => {
+    test('given US nationwide then adds district breakdowns dataset', async () => {
       // Given
       const countryId = TEST_COUNTRIES.US;
       const reformPolicyId = TEST_POLICY_IDS.REFORM;
@@ -279,8 +280,9 @@ describe('societyWide API', () => {
       await fetchSocietyWideCalculation(countryId, reformPolicyId, baselinePolicyId, params);
 
       // Then
+      // NOTE: Uses test dataset with district breakdowns enabled during development
       expect(global.fetch).toHaveBeenCalledWith(
-        `${BASE_URL}/${countryId}/economy/${reformPolicyId}/over/${baselinePolicyId}?region=us&time_period=${CURRENT_YEAR}&dataset=enhanced_cps`,
+        `${BASE_URL}/${countryId}/economy/${reformPolicyId}/over/${baselinePolicyId}?region=us&time_period=${CURRENT_YEAR}&dataset=national-with-breakdowns-test&include_district_breakdowns=true`,
         expect.objectContaining({
           headers: {
             'Content-Type': 'application/json',
@@ -335,7 +337,7 @@ describe('societyWide API', () => {
       );
     });
 
-    test('given explicit dataset parameter then uses that instead of default', async () => {
+    test('given explicit dataset parameter for US nationwide then dev flag overrides it', async () => {
       // Given
       const countryId = TEST_COUNTRIES.US;
       const reformPolicyId = TEST_POLICY_IDS.REFORM;
@@ -348,8 +350,9 @@ describe('societyWide API', () => {
       await fetchSocietyWideCalculation(countryId, reformPolicyId, baselinePolicyId, params);
 
       // Then
+      // NOTE: Dev flag overrides dataset for US nationwide during development
       expect(global.fetch).toHaveBeenCalledWith(
-        `${BASE_URL}/${countryId}/economy/${reformPolicyId}/over/${baselinePolicyId}?region=us&time_period=${CURRENT_YEAR}&dataset=custom_dataset`,
+        `${BASE_URL}/${countryId}/economy/${reformPolicyId}/over/${baselinePolicyId}?region=us&time_period=${CURRENT_YEAR}&dataset=national-with-breakdowns-test&include_district_breakdowns=true`,
         expect.objectContaining({
           headers: {
             'Content-Type': 'application/json',
