@@ -6,7 +6,6 @@ To show where this reform would have the most impact, we mapped estimated proper
 
 | Metric | Value |
 | :----- | :---: |
-| Estimated £1m+ sales/year | [~457](https://www.rettie.co.uk/property-research-services/2024-a-record-year-for-1m-sales) |
 | Constituencies affected | 69 of 73 |
 | Edinburgh share | 50.1% (£8.0m) |
 
