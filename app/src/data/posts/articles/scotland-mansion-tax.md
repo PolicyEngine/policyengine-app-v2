@@ -6,12 +6,11 @@ To show where this reform would have the most impact, we mapped estimated proper
 
 | Metric | Value |
 | :----- | :---: |
-| Estimated £1m+ sales/year | ~457 |
+| Estimated £1m+ sales/year | [~457](https://www.rettie.co.uk/property-research-services/2024-a-record-year-for-1m-sales) |
 | Constituencies affected | 69 of 73 |
 | Edinburgh share | 50.1% (£8.0m) |
-| Glasgow share | 3.3% (£0.5m) |
 
-Edinburgh's six constituencies account for half of all affected properties. Edinburgh has higher average property prices (£322,000 vs Glasgow's £190,000). Glasgow's suburbs with higher property values (Newton Mearns, Giffnock) are in East Renfrewshire, a separate council area.
+Edinburgh's six constituencies account for half of all affected properties. Edinburgh has higher average property prices ([£322,000 vs Glasgow's £190,000](https://www.ros.gov.uk/data-and-statistics/property-market-statistics)).
 
 ## Interactive map
 
