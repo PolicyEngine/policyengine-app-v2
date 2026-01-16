@@ -183,6 +183,8 @@ export function SocietyWideReportOutput({
       case 'local-authority':
         return <LocalAuthoritySubPage output={output} />;
 
+      // Congressional districts are now under Comparative Analysis sidebar
+
       default:
         return <NotFoundSubPage />;
     }

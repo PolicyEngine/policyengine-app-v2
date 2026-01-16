@@ -27,6 +27,7 @@ export interface SocietyWideCalculationParams {
   region: string; // Must include a region; "us" for US nationwide, two-letter state code for US states
   time_period: string; // Four-digit year
   dataset?: string; // Optional dataset parameter; defaults to API's default dataset
+  include_district_breakdowns?: boolean; // Enable congressional district breakdowns (US nationwide only)
 }
 
 export interface SocietyWideCalculationResponse {
@@ -51,9 +52,14 @@ export async function fetchSocietyWideCalculation(
 
   Object.entries(paramsWithDataset).forEach(([key, value]) => {
     if (value !== undefined) {
-      queryParams.append(key, value);
+      queryParams.append(key, String(value));
     }
   });
+
+  // Enable congressional district breakdowns for US nationwide simulations
+  if (countryId === 'us' && params.region === 'us') {
+    queryParams.append('include_district_breakdowns', 'true');
+  }
 
   const queryString = queryParams.toString();
   const url = `${BASE_URL}/${countryId}/economy/${reformPolicyId}/over/${baselinePolicyId}${queryString ? `?${queryString}` : ''}`;

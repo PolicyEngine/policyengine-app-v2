@@ -1,6 +1,6 @@
 import { render, screen } from '@test-utils';
 import { describe, expect, test, vi } from 'vitest';
-import { AverageChangeByConstituency } from '@/pages/report-output/constituency/AverageChangeByConstituency';
+import { AbsoluteChangeByConstituency } from '@/pages/report-output/constituency/AbsoluteChangeByConstituency';
 import {
   MOCK_UK_REPORT_OUTPUT,
   MOCK_UK_REPORT_OUTPUT_NO_CONSTITUENCY,
@@ -9,16 +9,18 @@ import {
 // Mock Plotly
 vi.mock('react-plotly.js', () => ({ default: vi.fn(() => null) }));
 
-describe('AverageChangeByConstituency', () => {
+describe('AbsoluteChangeByConstituency', () => {
   test('given constituency data then renders component', () => {
     // Given
     const output = MOCK_UK_REPORT_OUTPUT;
 
     // When
-    render(<AverageChangeByConstituency output={output} />);
+    render(<AbsoluteChangeByConstituency output={output} />);
 
     // Then
-    expect(screen.getByText('Average household income change by constituency')).toBeInTheDocument();
+    expect(
+      screen.getByText('Absolute household income change by constituency')
+    ).toBeInTheDocument();
   });
 
   test('given no constituency data then shows no data message', () => {
@@ -26,7 +28,7 @@ describe('AverageChangeByConstituency', () => {
     const output = MOCK_UK_REPORT_OUTPUT_NO_CONSTITUENCY;
 
     // When
-    render(<AverageChangeByConstituency output={output} />);
+    render(<AbsoluteChangeByConstituency output={output} />);
 
     // Then
     expect(screen.getByText('No constituency data available')).toBeInTheDocument();
@@ -37,7 +39,7 @@ describe('AverageChangeByConstituency', () => {
     const output = MOCK_UK_REPORT_OUTPUT;
 
     // When
-    const { container } = render(<AverageChangeByConstituency output={output} />);
+    const { container } = render(<AbsoluteChangeByConstituency output={output} />);
 
     // Then
     expect(container).toBeInTheDocument();
@@ -48,7 +50,7 @@ describe('AverageChangeByConstituency', () => {
     const output = MOCK_UK_REPORT_OUTPUT;
 
     // When
-    const { container } = render(<AverageChangeByConstituency output={output} />);
+    const { container } = render(<AbsoluteChangeByConstituency output={output} />);
 
     // Then
     expect(container).toBeInTheDocument();

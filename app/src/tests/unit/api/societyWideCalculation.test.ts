@@ -237,9 +237,10 @@ describe('societyWide API', () => {
       }
 
       // Then
+      // US nationwide uses enhanced_cps dataset and includes district breakdowns
       expect(global.fetch).toHaveBeenNthCalledWith(
         1,
-        `${BASE_URL}/${TEST_COUNTRIES.US}/economy/${reformPolicyId}/over/${baselinePolicyId}?region=us&time_period=${CURRENT_YEAR}&dataset=enhanced_cps`,
+        `${BASE_URL}/${TEST_COUNTRIES.US}/economy/${reformPolicyId}/over/${baselinePolicyId}?region=us&time_period=${CURRENT_YEAR}&dataset=enhanced_cps&include_district_breakdowns=true`,
         expect.objectContaining({
           headers: {
             'Content-Type': 'application/json',
@@ -266,7 +267,7 @@ describe('societyWide API', () => {
       );
     });
 
-    test('given US nationwide then automatically adds enhanced_cps dataset', async () => {
+    test('given US nationwide then adds enhanced_cps dataset and district breakdowns', async () => {
       // Given
       const countryId = TEST_COUNTRIES.US;
       const reformPolicyId = TEST_POLICY_IDS.REFORM;
@@ -280,7 +281,7 @@ describe('societyWide API', () => {
 
       // Then
       expect(global.fetch).toHaveBeenCalledWith(
-        `${BASE_URL}/${countryId}/economy/${reformPolicyId}/over/${baselinePolicyId}?region=us&time_period=${CURRENT_YEAR}&dataset=enhanced_cps`,
+        `${BASE_URL}/${countryId}/economy/${reformPolicyId}/over/${baselinePolicyId}?region=us&time_period=${CURRENT_YEAR}&dataset=enhanced_cps&include_district_breakdowns=true`,
         expect.objectContaining({
           headers: {
             'Content-Type': 'application/json',
@@ -335,7 +336,7 @@ describe('societyWide API', () => {
       );
     });
 
-    test('given explicit dataset parameter then uses that instead of default', async () => {
+    test('given explicit dataset parameter for US nationwide then uses it with district breakdowns', async () => {
       // Given
       const countryId = TEST_COUNTRIES.US;
       const reformPolicyId = TEST_POLICY_IDS.REFORM;
@@ -348,8 +349,9 @@ describe('societyWide API', () => {
       await fetchSocietyWideCalculation(countryId, reformPolicyId, baselinePolicyId, params);
 
       // Then
+      // Custom dataset is used but district breakdowns are still added for US nationwide
       expect(global.fetch).toHaveBeenCalledWith(
-        `${BASE_URL}/${countryId}/economy/${reformPolicyId}/over/${baselinePolicyId}?region=us&time_period=${CURRENT_YEAR}&dataset=custom_dataset`,
+        `${BASE_URL}/${countryId}/economy/${reformPolicyId}/over/${baselinePolicyId}?region=us&time_period=${CURRENT_YEAR}&dataset=custom_dataset&include_district_breakdowns=true`,
         expect.objectContaining({
           headers: {
             'Content-Type': 'application/json',

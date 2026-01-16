@@ -131,5 +131,23 @@ export function getComparativeAnalysisTree(countryId: string): TreeNode[] {
       name: 'inequality-impact',
       label: 'Inequality impact',
     },
+    ...(countryId === 'us'
+      ? [
+          {
+            name: 'congressionalDistricts',
+            label: 'Congressional districts',
+            children: [
+              {
+                name: 'congressional-district-absolute',
+                label: 'Absolute',
+              },
+              {
+                name: 'congressional-district-relative',
+                label: 'Relative',
+              },
+            ],
+          },
+        ]
+      : []),
   ];
 }
