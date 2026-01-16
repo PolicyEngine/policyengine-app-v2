@@ -43,10 +43,12 @@ Since property-level transaction data is not freely available for Scotland, we u
 
 **Stage 2: Population-based distribution** - Within each council, we distribute sales proportionally by constituency population using [NRS Scottish Parliamentary Constituency Population Estimates (mid-2021)](https://www.nrscotland.gov.uk/publications/scottish-parliamentary-constituency-population-estimates/). This transparent, reproducible approach uses official data rather than subjective assumptions.
 
-**Stage 3: Stock-based revenue** - Council tax applies to all properties (stock), not just sales. Following the [UK mansion tax methodology](https://github.com/PolicyEngine/uk-mansion-tax), we:
-1. Calculate implied revenue from sales using UK rates (£1,500/yr for Band I, £2,500/yr for Band J)
-2. Multiply by stock/sales ratio (~26x) to estimate stock-based revenue
+**Stage 3: Stock-based revenue** - Council tax applies to all properties (stock), not just sales. The [stock figure (~11,000)](https://www.savills.co.uk/research_articles/229130/372275-0) tells us how many £1m+ properties exist in Scotland, but not where they are—sales data provides the geographic distribution. Following the [UK mansion tax methodology](https://github.com/PolicyEngine/uk-mansion-tax), we:
+1. Use sales to determine each constituency's **share** (geographic distribution)
+2. Calculate total stock-based revenue using UK rates (£1,500/yr for Band I, £2,500/yr for Band J)
 3. Allocate proportionally by constituency share
+
+Our estimate (**£18.5m**) is close to Finance Secretary Shona Robison's [verbal estimate of £16m](https://www.lbc.co.uk/article/wealthy-scots-in-snp-sights-as-budget-proposes-mansion-house-tax-and-a-tax-on-pr-5HjdQg9_2/). The difference likely reflects different rate assumptions or stock estimates.
 
 **Validation**: Our Edinburgh share (~47%) matches [Registers of Scotland's finding](https://www.ros.gov.uk/__data/assets/pdf_file/0006/299184/Registers-of-Scotland-Property-Market-Report-2024-25-June.pdf) that "over half" of £1m+ sales are in Edinburgh. [The Scotsman's postcode analysis](https://www.scotsman.com/business/the-affluent-postcodes-driving-scotlands-record-sales-of-ps1-million-plus-homes-5215393) reports [53 sales over £1m in EH3](https://www.scotsman.com/business/the-affluent-postcodes-driving-scotlands-record-sales-of-ps1-million-plus-homes-5215393) and [49 in EH4](https://www.scotsman.com/business/the-affluent-postcodes-driving-scotlands-record-sales-of-ps1-million-plus-homes-5215393).
 
