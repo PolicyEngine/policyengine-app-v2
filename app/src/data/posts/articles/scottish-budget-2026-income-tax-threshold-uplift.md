@@ -1,6 +1,6 @@
 The Scottish Government [announced in the 2026-27 Budget](https://www.gov.scot/publications/scottish-budget-2026-27/) that it will raise the Basic and Intermediate rate income tax thresholds by 7.4%. Finance Secretary Shona Robison stated that whilst the UK Government has chosen to freeze all income tax thresholds, Scotland has chosen to support those with lower incomes. The [government analysis](https://www.gov.scot/publications/scottish-budget-2026-27/) suggests that 55% of taxpayers will be expected to pay less in 2026-27 than they would in the rest of the UK.
 
-Using PolicyEngine's Scotland tax-benefit microsimulation model, we estimate that this reform would cost approximately £63 million in 2026-27, rising to £68 million by 2030-31. Benefits are spread across all income deciles, with the largest relative gains concentrated in middle to upper income households.
+Using PolicyEngine's Scotland tax-benefit microsimulation model, we estimate that this reform would cost approximately £62 million in 2026-27, rising to £67 million by 2030-31. Benefits are spread across all income deciles, with the largest relative gains concentrated in middle to upper income households.
 
 ## Background: Scottish income tax thresholds
 
@@ -20,11 +20,11 @@ PolicyEngine estimates the following costs for the threshold uplift over the for
 
 | Year    | Cost (£ million) |
 | ------- | ---------------- |
-| 2026-27 | 62.7             |
-| 2027-28 | 64.2             |
-| 2028-29 | 65.2             |
-| 2029-30 | 66.2             |
-| 2030-31 | 67.5             |
+| 2026-27 | 61.7             |
+| 2027-28 | 63.1             |
+| 2028-29 | 64.2             |
+| 2029-30 | 65.2             |
+| 2030-31 | 66.5             |
 
 ## Distributional impact
 
@@ -37,11 +37,11 @@ Benefits are distributed across all income deciles, with higher relative gains i
   "data": [
     {
       "x": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-      "y": [0.65283333, 3.129607, 3.0004922, 3.6947224, 5.388424, 4.5356914, 6.0548972, 5.9629746, 5.669861, 4.1767877],
+      "y": [0.62, 2.93, 3.41, 3.97, 5.07, 4.73, 5.33, 5.57, 5.46, 4.17],
       "type": "bar",
       "marker": {"color": "#319795"},
       "hovertemplate": "Decile %{x}<br>Change: +%{y:.2f}%<extra></extra>",
-      "text": ["+0.65%", "+3.13%", "+3.00%", "+3.69%", "+5.39%", "+4.54%", "+6.05%", "+5.96%", "+5.67%", "+4.18%"],
+      "text": ["+0.62%", "+2.93%", "+3.41%", "+3.97%", "+5.07%", "+4.73%", "+5.33%", "+5.57%", "+5.46%", "+4.17%"],
       "textposition": "outside",
       "textfont": {"family": "Roboto Serif", "size": 11}
     }
@@ -63,7 +63,7 @@ Benefits are distributed across all income deciles, with higher relative gains i
       "ticksuffix": "%",
       "showgrid": true,
       "gridcolor": "#e0e0e0",
-      "range": [0, 7.5]
+      "range": [0, 7]
     },
     "height": 500,
     "margin": {"l": 80, "r": 50, "b": 100, "t": 100, "pad": 4},
@@ -104,43 +104,43 @@ Benefits are distributed across all income deciles, with higher relative gains i
     {
       "name": "2026-27",
       "data": [{
-        "y": [0.65283333, 3.129607, 3.0004922, 3.6947224, 5.388424, 4.5356914, 6.0548972, 5.9629746, 5.669861, 4.1767877],
-        "text": ["+0.65%", "+3.13%", "+3.00%", "+3.69%", "+5.39%", "+4.54%", "+6.05%", "+5.96%", "+5.67%", "+4.18%"]
+        "y": [0.62, 2.93, 3.41, 3.97, 5.07, 4.73, 5.33, 5.57, 5.46, 4.17],
+        "text": ["+0.62%", "+2.93%", "+3.41%", "+3.97%", "+5.07%", "+4.73%", "+5.33%", "+5.57%", "+5.46%", "+4.17%"]
       }]
     },
     {
       "name": "2027-28",
       "data": [{
-        "y": [0.72261863, 2.9985292, 3.1009406, 3.8062385999999995, 5.17637, 4.4246703, 6.2266923, 5.9788354, 5.6146316, 4.113659],
-        "text": ["+0.72%", "+3.00%", "+3.10%", "+3.81%", "+5.18%", "+4.42%", "+6.23%", "+5.98%", "+5.61%", "+4.11%"]
+        "y": [0.61, 2.88, 3.52, 3.81, 5.05, 4.76, 5.37, 5.59, 5.42, 4.12],
+        "text": ["+0.61%", "+2.88%", "+3.52%", "+3.81%", "+5.05%", "+4.76%", "+5.37%", "+5.59%", "+5.42%", "+4.12%"]
       }]
     },
     {
       "name": "2028-29",
       "data": [{
-        "y": [0.76094656, 3.0094706999999996, 2.8971385, 3.9929308, 5.1244195999999995, 4.391136, 6.1699875, 5.991827000000001, 5.525095, 4.0132288],
-        "text": ["+0.76%", "+3.01%", "+2.90%", "+3.99%", "+5.12%", "+4.39%", "+6.17%", "+5.99%", "+5.53%", "+4.01%"]
+        "y": [0.64, 3.01, 3.43, 3.83, 5.11, 4.74, 5.31, 5.61, 5.33, 4.05],
+        "text": ["+0.64%", "+3.01%", "+3.43%", "+3.83%", "+5.11%", "+4.74%", "+5.31%", "+5.61%", "+5.33%", "+4.05%"]
       }]
     },
     {
       "name": "2029-30",
       "data": [{
-        "y": [0.8450367999999999, 3.0047704, 2.9465867, 3.8727578, 5.263794, 4.254932, 6.1360553, 5.9736863, 5.45813, 3.9777554999999998],
-        "text": ["+0.85%", "+3.00%", "+2.95%", "+3.87%", "+5.26%", "+4.25%", "+6.14%", "+5.97%", "+5.46%", "+3.98%"]
+        "y": [0.66, 3.21, 3.42, 3.85, 5.07, 4.65, 5.28, 5.61, 5.26, 4.00],
+        "text": ["+0.66%", "+3.21%", "+3.42%", "+3.85%", "+5.07%", "+4.65%", "+5.28%", "+5.61%", "+5.26%", "+4.00%"]
       }]
     },
     {
       "name": "2030-31",
       "data": [{
-        "y": [0.9055623, 2.962463, 3.0915383000000003, 3.9661467, 5.2233756, 4.255492, 6.1046954, 5.96167, 5.37707, 3.9075474999999997],
-        "text": ["+0.91%", "+2.96%", "+3.09%", "+3.97%", "+5.22%", "+4.26%", "+6.10%", "+5.96%", "+5.38%", "+3.91%"]
+        "y": [0.70, 3.17, 3.33, 4.02, 5.14, 4.65, 5.23, 5.56, 5.22, 3.92],
+        "text": ["+0.70%", "+3.17%", "+3.33%", "+4.02%", "+5.14%", "+4.65%", "+5.23%", "+5.56%", "+5.22%", "+3.92%"]
       }]
     }
   ]
 }
 ```
 
-In 2026-27, the seventh decile sees the largest relative gain at 6.05%, followed by the eighth decile at 5.96% and the ninth decile at 5.67%. Lower income deciles see smaller gains: the first decile gains 0.65%, the second decile 3.13%, and the third decile 3.00%.
+In 2026-27, the eighth decile sees the largest relative gain at 5.57%, followed by the ninth decile at 5.46% and the seventh decile at 5.33%. Lower income deciles see smaller gains: the first decile gains 0.62%, the second decile 2.93%, and the third decile 3.41%.
 
 Figure 2 shows the absolute change in household income (in £ per year) by income decile.
 
@@ -151,11 +151,11 @@ Figure 2 shows the absolute change in household income (in £ per year) by incom
   "data": [
     {
       "x": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-      "y": [1.1739502, 8.528791, 9.657907, 14.925929, 24.573185, 21.517292, 35.703278, 41.6923, 44.787724, 49.502354],
+      "y": [1.13, 8.21, 11.04, 17.06, 22.67, 24.21, 27.80, 41.19, 42.69, 49.15],
       "type": "bar",
       "marker": {"color": "#319795"},
       "hovertemplate": "Decile %{x}<br>Change: £%{y:.2f}<extra></extra>",
-      "text": ["£1.17", "£8.53", "£9.66", "£14.93", "£24.57", "£21.52", "£35.70", "£41.69", "£44.79", "£49.50"],
+      "text": ["£1.13", "£8.21", "£11.04", "£17.06", "£22.67", "£24.21", "£27.80", "£41.19", "£42.69", "£49.15"],
       "textposition": "outside",
       "textfont": {"family": "Roboto Serif", "size": 11}
     }
@@ -218,36 +218,36 @@ Figure 2 shows the absolute change in household income (in £ per year) by incom
     {
       "name": "2026-27",
       "data": [{
-        "y": [1.1739502, 8.528791, 9.657907, 14.925929, 24.573185, 21.517292, 35.703278, 41.6923, 44.787724, 49.502354],
-        "text": ["£1.17", "£8.53", "£9.66", "£14.93", "£24.57", "£21.52", "£35.70", "£41.69", "£44.79", "£49.50"]
+        "y": [1.13, 8.21, 11.04, 17.06, 22.67, 24.21, 27.80, 41.19, 42.69, 49.15],
+        "text": ["£1.13", "£8.21", "£11.04", "£17.06", "£22.67", "£24.21", "£27.80", "£41.19", "£42.69", "£49.15"]
       }]
     },
     {
       "name": "2027-28",
       "data": [{
-        "y": [1.2980821, 8.324215, 10.2392645, 15.679519, 24.079605, 21.152308, 37.157948, 42.5038, 45.165546, 49.526917],
-        "text": ["£1.30", "£8.32", "£10.24", "£15.68", "£24.08", "£21.15", "£37.16", "£42.50", "£45.17", "£49.53"]
+        "y": [1.09, 8.30, 11.43, 16.78, 23.15, 24.94, 28.36, 42.00, 43.25, 49.25],
+        "text": ["£1.09", "£8.30", "£11.43", "£16.78", "£23.15", "£24.94", "£28.36", "£42.00", "£43.25", "£49.25"]
       }]
     },
     {
       "name": "2028-29",
       "data": [{
-        "y": [1.3772949, 8.475538, 9.819492, 16.672169, 23.944454, 21.515928, 37.438095, 43.30782, 45.329338, 49.461792],
-        "text": ["£1.38", "£8.48", "£9.82", "£16.67", "£23.94", "£21.52", "£37.44", "£43.31", "£45.33", "£49.46"]
+        "y": [1.18, 8.80, 11.23, 17.27, 23.57, 25.30, 28.40, 42.93, 43.30, 49.29],
+        "text": ["£1.18", "£8.80", "£11.23", "£17.27", "£23.57", "£25.30", "£28.40", "£42.93", "£43.30", "£49.29"]
       }]
     },
     {
       "name": "2029-30",
       "data": [{
-        "y": [1.5546128, 8.602399, 9.984511, 16.664972, 24.935036, 21.203747, 37.665592, 44.05479, 45.21265, 49.828674],
-        "text": ["£1.55", "£8.60", "£9.98", "£16.66", "£24.94", "£21.20", "£37.67", "£44.05", "£45.21", "£49.83"]
+        "y": [1.30, 9.21, 11.40, 17.43, 23.74, 25.37, 28.73, 43.66, 43.25, 49.49],
+        "text": ["£1.30", "£9.21", "£11.40", "£17.43", "£23.74", "£25.37", "£28.73", "£43.66", "£43.25", "£49.49"]
       }]
     },
     {
       "name": "2030-31",
       "data": [{
-        "y": [1.7043703, 8.769535, 10.391815, 17.41873, 25.217083, 21.588268, 37.593983, 44.76136, 45.396435, 49.975407],
-        "text": ["£1.70", "£8.77", "£10.39", "£17.42", "£25.22", "£21.59", "£37.59", "£44.76", "£45.40", "£49.98"]
+        "y": [1.37, 9.29, 11.25, 18.64, 24.46, 25.93, 28.78, 44.35, 43.42, 49.74],
+        "text": ["£1.37", "£9.29", "£11.25", "£18.64", "£24.46", "£25.93", "£28.78", "£44.35", "£43.42", "£49.74"]
       }]
     }
   ]
@@ -268,8 +268,8 @@ Figure 3 shows the average annual household gain by constituency in 2026-27.
 
 <iframe src="/assets/posts/scottish-budget-2026-income-tax-threshold-uplift/constituency_map_income_tax_threshold_uplift.html" width="100%" height="600" frameborder="0"></iframe>
 
-In 2026-27, Glasgow East sees the largest average gain at £24.28, followed by Glasgow South at £24.17 and Arbroath and Broughty Ferry at £24.03. Orkney and Shetland has the smallest average gain at £17.87.
+In 2026-27, Glasgow South sees the largest average gain at £29.31, followed by Glasgow East at £28.90 and Glasgow North at £28.09. Orkney and Shetland has the smallest average gain at £12.74.
 
 ## Conclusion
 
-The Scottish income tax threshold uplift would cost approximately £63 million per year and provide tax relief averaging £23 per household annually. Benefits are distributed across all income deciles, with the largest relative gains going to middle and upper income households who pay more income tax. The policy has minimal impact on poverty rates, as it primarily benefits working households above the poverty line.
+The Scottish income tax threshold uplift would cost approximately £62 million per year and provide tax relief averaging £23 per household annually. Benefits are distributed across all income deciles, with the largest relative gains going to middle and upper income households who pay more income tax. The policy has minimal impact on poverty rates, as it primarily benefits working households above the poverty line.
