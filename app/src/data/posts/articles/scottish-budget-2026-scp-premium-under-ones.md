@@ -2,7 +2,7 @@ Finance Secretary Shona Robison [announced today](https://news.stv.tv/politics/f
 
 The Scottish Child Payment is a weekly payment to low-income families in Scotland for each child under 16. The SCP Premium for under-ones increases this payment from £27.15 to £40 per week during a child's first year of life.
 
-Using PolicyEngine's Scotland tax-benefit microsimulation model, we estimate that this reform would cost approximately £26 million in 2026-27, averaging around £25 million per year through 2030-31. Around 0.12% of the Scottish population would benefit, with all gains concentrated in the bottom four income deciles.
+Using PolicyEngine's Scotland tax-benefit microsimulation model, we estimate that this reform would cost approximately £14 million in 2026-27, rising to £16 million by 2030-31. All gains are concentrated in the bottom five income deciles, with the largest relative benefits going to the second decile.
 
 ## Background: The Scottish Child Payment
 
@@ -18,21 +18,21 @@ PolicyEngine estimates the following costs for the premium over the forecast per
 
 | Year    | Cost (£ million) |
 | ------- | ---------------- |
-| 2026-27 | 25.5             |
-| 2027-28 | 23.8             |
-| 2028-29 | 27.2             |
-| 2029-30 | 25.3             |
-| 2030-31 | 23.5             |
+| 2026-27 | 14.2             |
+| 2027-28 | 14.9             |
+| 2028-29 | 16.2             |
+| 2029-30 | 16.3             |
+| 2030-31 | 16.3             |
 
 ## Distributional impact
 
-Benefits are concentrated in the bottom four income deciles. Figure 1 shows the relative change in household income by decile, with a year selector to see how the impact evolves from 2026-27 to 2030-31.
+Benefits are concentrated in the bottom five income deciles. Figure 1 shows the relative change in household income by decile, with a year selector to see how the impact evolves from 2026-27 to 2030-31.
 
 **Figure 1: Relative change in household income by income decile**
 
 <iframe src="/assets/posts/scottish-budget-2026-scp-premium-under-ones/figure1_relative_change.html" width="100%" height="520" frameborder="0"></iframe>
 
-In 2026-27, the first decile sees a relative gain of 0.13%, with an average gain of £23 per year. The second decile sees a 0.12% gain (£32 per year), the third decile 0.06% (£18 per year), and the fourth decile 0.02% (£9 per year). Deciles 5-10 see no gains.
+In 2026-27, the second decile sees the largest relative gain at 8.77%, with an average gain of £25 per year. The first decile gains 2.17% (£4 per year), the third decile 1.48% (£5 per year), the fourth decile 1.36% (£6 per year), and the fifth decile 2.96% (£13 per year). Deciles 6-10 see no gains.
 
 Figure 2 shows the absolute change in household income (in £ per year) by income decile.
 
@@ -54,8 +54,8 @@ Figure 3 shows the average annual household gain by constituency in 2026-27.
 
 <iframe src="/assets/posts/scottish-budget-2026-scp-premium-under-ones/constituency_map.html" width="100%" height="600" frameborder="0"></iframe>
 
-In 2026-27, Moray West, Nairn and Strathspey sees the largest average gain at £8.21, followed by East Kilbride and Strathaven at £8.11. Glasgow North has the smallest average gain at £6.91.
+In 2026-27, Orkney and Shetland sees the largest average gain at £7.78, followed by Airdrie and Shotts at £7.36. Argyll, Bute and South Lochaber has the smallest average gain at £5.09.
 
 ## Conclusion
 
-The SCP Premium for under-ones would cost approximately £26 million per year and provide an additional £668 annually to eligible families during their child's first year of life. All benefits flow to the bottom four income deciles, affecting around 6,000 families.
+The SCP Premium for under-ones would cost approximately £14 million in 2026-27, rising to £16 million by 2030-31, and provide an additional £668 annually to eligible families during their child's first year of life. All benefits flow to the bottom five income deciles, with the second decile seeing the largest relative gains.
