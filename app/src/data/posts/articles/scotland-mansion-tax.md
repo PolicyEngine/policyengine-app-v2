@@ -1,6 +1,6 @@
 The [Scottish Budget 2026-27](https://www.gov.scot/publications/scottish-budget-2026-27/) introduces new council tax bands for properties valued over £1 million, effective from April 2028. This reform creates Band I (£1m-£2m) and Band J (£2m+), with councils setting their own rates. The Scottish Government estimates this will raise £16 million annually, affecting less than 1% of Scottish households.
 
-To show where this reform would have the most impact, we mapped estimated property sales above £1 million by Scottish Parliament constituency. Unlike England and Wales where Land Registry provides free transaction-level data, Scotland's Registers of Scotland charges for bulk data access, so we developed a weighted distribution model to allocate council-level estimates to constituencies.
+To show where this reform would have the most impact, we mapped estimated property sales above £1 million by Scottish Parliament constituency. Unlike England and Wales where Land Registry provides free transaction-level data, Scotland's Registers of Scotland charges for bulk data access, so we developed a [weighted distribution model](https://github.com/PolicyEngine/scotland-mansion-tax) to allocate council-level estimates to constituencies.
 
 ## Key findings
 
