@@ -13,22 +13,22 @@ Edinburgh's six constituencies account for half of all affected properties. Edin
 
 ## Interactive map
 
-<center><iframe src="https://policyengine.github.io/scotland-mansion-tax/scottish_mansion_tax_map.html?v=4" width="100%" height="950" style="border:none;"></iframe></center>
+<center><iframe src="https://policyengine.github.io/scotland-mansion-tax/scottish_mansion_tax_map.html?v=5" width="100%" height="950" style="border:none;"></iframe></center>
 
 **Top 10 constituencies by estimated impact**
 
 | Constituency | Council | Est. Sales | Revenue | Share |
 | :----------- | :------ | :--------: | :-----: | :---: |
-| Edinburgh Central | City of Edinburgh | 57.5 | £2.00m | 12.5% |
-| Edinburgh Western | City of Edinburgh | 46.0 | £1.60m | 10.0% |
-| Edinburgh Southern | City of Edinburgh | 41.4 | £1.44m | 9.0% |
-| East Lothian | East Lothian | 35.0 | £1.22m | 7.6% |
-| Edinburgh Pentlands | City of Edinburgh | 34.5 | £1.20m | 7.5% |
-| Edinburgh Northern and Leith | City of Edinburgh | 27.6 | £0.96m | 6.0% |
-| Edinburgh Eastern | City of Edinburgh | 23.0 | £0.80m | 5.0% |
-| Strathkelvin and Bearsden | East Dunbartonshire | 16.2 | £0.57m | 3.5% |
-| North East Fife | Fife | 15.0 | £0.52m | 3.3% |
-| Stirling | Stirling | 10.0 | £0.35m | 2.2% |
+| Edinburgh Central | City of Edinburgh | 58 | £2.00m | 12.5% |
+| Edinburgh Western | City of Edinburgh | 46 | £1.60m | 10.0% |
+| Edinburgh Southern | City of Edinburgh | 41 | £1.44m | 9.0% |
+| East Lothian | East Lothian | 35 | £1.22m | 7.6% |
+| Edinburgh Pentlands | City of Edinburgh | 34 | £1.20m | 7.5% |
+| Edinburgh Northern and Leith | City of Edinburgh | 28 | £0.96m | 6.0% |
+| Edinburgh Eastern | City of Edinburgh | 23 | £0.80m | 5.0% |
+| Strathkelvin and Bearsden | East Dunbartonshire | 16 | £0.57m | 3.5% |
+| North East Fife | Fife | 15 | £0.52m | 3.3% |
+| Stirling | Stirling | 10 | £0.35m | 2.2% |
 
 ## Methodology
 
