@@ -7,8 +7,9 @@ To show where this reform would have the most impact, we mapped estimated proper
 | Metric | Value |
 | :----- | :---: |
 | Estimated £1m+ sales (2024) | [~425](https://www.rettie.co.uk/property-research-services/2024-a-record-year-for-1m-sales) |
+| Edinburgh sales | 230 (50.1%) |
+| Glasgow sales | 15 (3.3%) |
 | Constituencies affected | 69 of 73 |
-| Edinburgh share | 50.1% (£8.0m) |
 
 Edinburgh's six constituencies account for half of all affected properties. Edinburgh has higher average property prices ([£322,000 vs Glasgow's £190,000](https://www.ros.gov.uk/data-and-statistics/property-market-statistics)).
 
