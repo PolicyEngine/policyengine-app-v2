@@ -57,11 +57,11 @@ export function transformConstituencyData(
  * @example
  * ```typescript
  * const apiData = output.constituency_impact?.by_constituency;
- * const hexMapData = transformConstituencyAverageChange(apiData);
+ * const hexMapData = transformConstituencyAbsoluteChange(apiData);
  * // Use with HexagonalMap component for currency visualization
  * ```
  */
-export function transformConstituencyAverageChange(
+export function transformConstituencyAbsoluteChange(
   apiData: ReportOutputSocietyWideByConstituency
 ): HexMapDataPoint[] {
   return transformConstituencyData(apiData, 'average_household_income_change');

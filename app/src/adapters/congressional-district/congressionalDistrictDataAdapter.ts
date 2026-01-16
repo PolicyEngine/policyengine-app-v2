@@ -80,7 +80,7 @@ export function transformDistrictData(
  * @param labelLookup - Map from district ID to human-readable label (from metadata)
  * @returns Array of ChoroplethDataPoint with average income changes
  */
-export function transformDistrictAverageChange(
+export function transformDistrictAbsoluteChange(
   apiData: USCongressionalDistrictBreakdown,
   labelLookup: DistrictLabelLookup
 ): ChoroplethDataPoint[] {

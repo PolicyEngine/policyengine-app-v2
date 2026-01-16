@@ -34,7 +34,7 @@ export const MOCK_CONSTITUENCY_DATA: ReportOutputSocietyWideByConstituency = {
 /**
  * Expected output after transforming average change data
  */
-export const EXPECTED_AVERAGE_CHANGE_DATA: HexMapDataPoint[] = [
+export const EXPECTED_ABSOLUTE_CHANGE_DATA: HexMapDataPoint[] = [
   {
     id: 'Westminster North',
     label: 'Westminster North',

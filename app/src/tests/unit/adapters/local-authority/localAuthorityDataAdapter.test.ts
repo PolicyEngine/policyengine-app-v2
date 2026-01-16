@@ -1,12 +1,12 @@
 import { describe, expect, test } from 'vitest';
 import {
-  transformLocalAuthorityAverageChange,
+  transformLocalAuthorityAbsoluteChange,
   transformLocalAuthorityData,
   transformLocalAuthorityRelativeChange,
 } from '@/adapters/local-authority/localAuthorityDataAdapter';
 import {
   EMPTY_LOCAL_AUTHORITY_DATA,
-  EXPECTED_AVERAGE_CHANGE_DATA,
+  EXPECTED_ABSOLUTE_CHANGE_DATA,
   EXPECTED_RELATIVE_CHANGE_DATA,
   LARGE_LOCAL_AUTHORITY_DATA,
   MOCK_LOCAL_AUTHORITY_DATA,
@@ -24,7 +24,7 @@ describe('localAuthorityDataAdapter', () => {
       const result = transformLocalAuthorityData(apiData, valueField);
 
       // Then
-      expect(result).toEqual(EXPECTED_AVERAGE_CHANGE_DATA);
+      expect(result).toEqual(EXPECTED_ABSOLUTE_CHANGE_DATA);
     });
 
     test('given relative change field then transforms data correctly', () => {
@@ -118,16 +118,16 @@ describe('localAuthorityDataAdapter', () => {
     });
   });
 
-  describe('transformLocalAuthorityAverageChange', () => {
+  describe('transformLocalAuthorityAbsoluteChange', () => {
     test('given local authority data then extracts average change values', () => {
       // Given
       const apiData = MOCK_LOCAL_AUTHORITY_DATA;
 
       // When
-      const result = transformLocalAuthorityAverageChange(apiData);
+      const result = transformLocalAuthorityAbsoluteChange(apiData);
 
       // Then
-      expect(result).toEqual(EXPECTED_AVERAGE_CHANGE_DATA);
+      expect(result).toEqual(EXPECTED_ABSOLUTE_CHANGE_DATA);
     });
 
     test('given data then uses average_household_income_change field', () => {
@@ -135,7 +135,7 @@ describe('localAuthorityDataAdapter', () => {
       const apiData = MOCK_LOCAL_AUTHORITY_DATA;
 
       // When
-      const result = transformLocalAuthorityAverageChange(apiData);
+      const result = transformLocalAuthorityAbsoluteChange(apiData);
 
       // Then
       expect(result[0].value).toBe(1234.56); // average_household_income_change
@@ -147,7 +147,7 @@ describe('localAuthorityDataAdapter', () => {
       const apiData = MOCK_LOCAL_AUTHORITY_DATA;
 
       // When
-      const result = transformLocalAuthorityAverageChange(apiData);
+      const result = transformLocalAuthorityAbsoluteChange(apiData);
 
       // Then
       expect(result[0].value).toBeGreaterThan(0); // Maidstone

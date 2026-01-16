@@ -100,7 +100,7 @@ export const MOCK_MIXED_REGIONS: MetadataRegionEntry[] = [
 /**
  * Expected output after transforming average change data
  */
-export const EXPECTED_AVERAGE_CHANGE_DATA: ChoroplethDataPoint[] = [
+export const EXPECTED_ABSOLUTE_CHANGE_DATA: ChoroplethDataPoint[] = [
   {
     geoId: 'AL-01',
     label: "Alabama's 1st congressional district",

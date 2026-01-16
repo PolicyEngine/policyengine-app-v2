@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { Stack, Text, Title } from '@mantine/core';
-import { transformConstituencyAverageChange } from '@/adapters/constituency/constituencyDataAdapter';
+import { transformConstituencyAbsoluteChange } from '@/adapters/constituency/constituencyDataAdapter';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { HexagonalMap } from '@/components/visualization/HexagonalMap';
 import type { ReportOutputSocietyWideUK } from '@/types/metadata/ReportOutputSocietyWideUK';
@@ -29,7 +29,7 @@ export function AbsoluteChangeByConstituency({ output }: AbsoluteChangeByConstit
     if (!constituencyData) {
       return [];
     }
-    return transformConstituencyAverageChange(constituencyData);
+    return transformConstituencyAbsoluteChange(constituencyData);
   }, [output]);
 
   if (!hexMapData.length) {

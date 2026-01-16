@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 import { Stack, Text, Title } from '@mantine/core';
 import {
   buildDistrictLabelLookup,
-  transformDistrictAverageChange,
+  transformDistrictAbsoluteChange,
 } from '@/adapters/congressional-district/congressionalDistrictDataAdapter';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { USDistrictChoroplethMap } from '@/components/visualization/USDistrictChoroplethMap';
@@ -39,7 +39,7 @@ export function AbsoluteChangeByDistrict({ output }: AbsoluteChangeByDistrictPro
     if (!districtData) {
       return [];
     }
-    return transformDistrictAverageChange(districtData, labelLookup);
+    return transformDistrictAbsoluteChange(districtData, labelLookup);
   }, [output, labelLookup]);
 
   if (!mapData.length) {

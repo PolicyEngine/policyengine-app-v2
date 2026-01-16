@@ -1,14 +1,14 @@
 import { describe, expect, test } from 'vitest';
 import {
   buildDistrictLabelLookup,
-  transformDistrictAverageChange,
+  transformDistrictAbsoluteChange,
   transformDistrictData,
   transformDistrictRelativeChange,
 } from '@/adapters/congressional-district/congressionalDistrictDataAdapter';
 import {
   DISTRICT_DATA_WITH_UNKNOWN,
   EMPTY_DISTRICT_DATA,
-  EXPECTED_AVERAGE_CHANGE_DATA,
+  EXPECTED_ABSOLUTE_CHANGE_DATA,
   EXPECTED_RELATIVE_CHANGE_DATA,
   MOCK_DISTRICT_DATA,
   MOCK_MIXED_REGIONS,
@@ -87,7 +87,7 @@ describe('congressionalDistrictDataAdapter', () => {
       const result = transformDistrictData(apiData, valueField, labelLookup);
 
       // Then
-      expect(result).toEqual(EXPECTED_AVERAGE_CHANGE_DATA);
+      expect(result).toEqual(EXPECTED_ABSOLUTE_CHANGE_DATA);
     });
 
     test('given relative change field then transforms data correctly', () => {
@@ -172,17 +172,17 @@ describe('congressionalDistrictDataAdapter', () => {
     });
   });
 
-  describe('transformDistrictAverageChange', () => {
+  describe('transformDistrictAbsoluteChange', () => {
     test('given district data then extracts average change values', () => {
       // Given
       const apiData = MOCK_DISTRICT_DATA;
       const labelLookup = buildDistrictLabelLookup(MOCK_REGIONS);
 
       // When
-      const result = transformDistrictAverageChange(apiData, labelLookup);
+      const result = transformDistrictAbsoluteChange(apiData, labelLookup);
 
       // Then
-      expect(result).toEqual(EXPECTED_AVERAGE_CHANGE_DATA);
+      expect(result).toEqual(EXPECTED_ABSOLUTE_CHANGE_DATA);
     });
 
     test('given data then uses average_household_income_change field', () => {
@@ -191,7 +191,7 @@ describe('congressionalDistrictDataAdapter', () => {
       const labelLookup = buildDistrictLabelLookup(MOCK_REGIONS);
 
       // When
-      const result = transformDistrictAverageChange(apiData, labelLookup);
+      const result = transformDistrictAbsoluteChange(apiData, labelLookup);
 
       // Then
       expect(result[0].value).toBe(312.45);
@@ -204,7 +204,7 @@ describe('congressionalDistrictDataAdapter', () => {
       const labelLookup = buildDistrictLabelLookup(MOCK_REGIONS);
 
       // When
-      const result = transformDistrictAverageChange(apiData, labelLookup);
+      const result = transformDistrictAbsoluteChange(apiData, labelLookup);
 
       // Then
       expect(result[0].value).toBeGreaterThan(0); // AL-01

@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { Stack, Text, Title } from '@mantine/core';
-import { transformLocalAuthorityAverageChange } from '@/adapters/local-authority/localAuthorityDataAdapter';
+import { transformLocalAuthorityAbsoluteChange } from '@/adapters/local-authority/localAuthorityDataAdapter';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { HexagonalMap } from '@/components/visualization/HexagonalMap';
 import type { ReportOutputSocietyWideUK } from '@/types/metadata/ReportOutputSocietyWideUK';
@@ -29,7 +29,7 @@ export function AbsoluteChangeByLocalAuthority({ output }: AbsoluteChangeByLocal
     if (!localAuthorityData) {
       return [];
     }
-    return transformLocalAuthorityAverageChange(localAuthorityData);
+    return transformLocalAuthorityAbsoluteChange(localAuthorityData);
   }, [output]);
 
   if (!hexMapData.length) {
