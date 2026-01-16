@@ -42,4 +42,4 @@ Since property-level transaction data is not freely available for Scotland, we u
 
 **Limitations**: Constituency-level figures are modelled estimates, not directly observed. We assume static buying patterns and uniform distribution within postcodes.
 
-[Download the constituency dataset (CSV)](https://policyengine.github.io/scotland-mansion-tax/scottish_parliament_constituency_impact.csv) | [View code on GitHub](https://github.com/PolicyEngine/scotland-mansion-tax)
+[View code on GitHub](https://github.com/PolicyEngine/scotland-mansion-tax)
