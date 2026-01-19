@@ -204,35 +204,26 @@ export const MOCK_US_REPORT_OUTPUT_NO_DISTRICT: ReportOutputSocietyWideUS = {
 };
 
 /**
- * Mock metadata state with congressional district regions
+ * Mock metadata state matching the new MetadataState structure
+ * Note: Regions are now accessed via static metadata hooks (useRegionsList),
+ * not from Redux state. This mock only contains API-driven data.
  */
 export const MOCK_METADATA_WITH_REGIONS: MetadataState = {
   currentCountry: 'us',
   loading: false,
+  loaded: true,
   error: null,
   progress: 100,
   variables: {},
   parameters: {},
-  entities: {},
-  variableModules: {},
-  economyOptions: {
-    region: MOCK_CONGRESSIONAL_DISTRICT_REGIONS,
-    time_period: [{ name: 2024, label: '2024' }],
-    datasets: [
-      {
-        name: 'cps_2023',
-        label: 'CPS 2023',
-        title: 'Current Population Survey 2023',
-        default: true,
-      },
-    ],
-  },
-  currentLawId: 1,
-  basicInputs: [],
-  modelledPolicies: {
-    core: {},
-    filtered: {},
-  },
+  datasets: [
+    {
+      name: 'cps_2023',
+      label: 'CPS 2023',
+      title: 'Current Population Survey 2023',
+      default: true,
+    },
+  ],
   version: '1.0.0',
   parameterTree: null,
 };
