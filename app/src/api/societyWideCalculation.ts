@@ -56,11 +56,6 @@ export async function fetchSocietyWideCalculation(
     }
   });
 
-  // Enable congressional district breakdowns for US nationwide simulations
-  if (countryId === 'us' && params.region === 'us') {
-    queryParams.append('include_district_breakdowns', 'true');
-  }
-
   const queryString = queryParams.toString();
   const url = `${BASE_URL}/${countryId}/economy/${reformPolicyId}/over/${baselinePolicyId}${queryString ? `?${queryString}` : ''}`;
 

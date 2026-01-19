@@ -174,6 +174,9 @@ export function SocietyWideReportOutput({
             key={`comparative-analysis-${activeView}`}
             output={output}
             view={activeView}
+            reformPolicyId={simulations?.[1]?.policyId}
+            baselinePolicyId={simulations?.[0]?.policyId}
+            year={report.year}
           />
         );
 

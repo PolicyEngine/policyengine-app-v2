@@ -21,10 +21,22 @@ import PovertyImpactByRaceSubPage from './poverty-impact/PovertyImpactByRaceSubP
 interface Props {
   output: SocietyWideOutput;
   view?: string;
+  /** Reform policy ID for state-by-state congressional district fetching */
+  reformPolicyId?: string;
+  /** Baseline policy ID for state-by-state congressional district fetching */
+  baselinePolicyId?: string;
+  /** Year for calculations */
+  year?: string;
 }
 
 interface ViewComponentProps {
   output: SocietyWideOutput;
+  /** Reform policy ID for state-by-state congressional district fetching */
+  reformPolicyId?: string;
+  /** Baseline policy ID for state-by-state congressional district fetching */
+  baselinePolicyId?: string;
+  /** Year for calculations */
+  year?: string;
 }
 
 /**
@@ -54,7 +66,13 @@ const VIEW_MAP: Record<string, ComponentType<ViewComponentProps>> = {
  * Sub-router for Comparative Analysis tab - maps :view URL parameter to specific chart components.
  * Acts as a mini-router to keep SocietyWideReportOutput clean as we add 20+ analysis charts.
  */
-export function ComparativeAnalysisPage({ output, view }: Props) {
+export function ComparativeAnalysisPage({
+  output,
+  view,
+  reformPolicyId,
+  baselinePolicyId,
+  year,
+}: Props) {
   // If no view specified, use default view
   const effectiveView = view || 'budgetary-impact-overall';
 
@@ -62,5 +80,14 @@ export function ComparativeAnalysisPage({ output, view }: Props) {
   const ViewComponent = VIEW_MAP[effectiveView];
 
   // If found, render it; otherwise show NotFound
-  return ViewComponent ? <ViewComponent output={output} /> : <NotFoundSubPage />;
+  return ViewComponent ? (
+    <ViewComponent
+      output={output}
+      reformPolicyId={reformPolicyId}
+      baselinePolicyId={baselinePolicyId}
+      year={year}
+    />
+  ) : (
+    <NotFoundSubPage />
+  );
 }
