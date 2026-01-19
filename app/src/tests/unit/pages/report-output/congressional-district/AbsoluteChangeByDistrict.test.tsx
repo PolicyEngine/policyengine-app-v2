@@ -5,19 +5,21 @@ import {
   MOCK_CONGRESSIONAL_DISTRICT_REGIONS,
   MOCK_US_REPORT_OUTPUT,
   MOCK_US_REPORT_OUTPUT_NO_DISTRICT,
+  TEST_COUNTRY_US,
 } from '@/tests/fixtures/pages/congressional-district/congressionalDistrictComponentMocks';
 
 // Mock Plotly
 vi.mock('react-plotly.js', () => ({ default: vi.fn(() => null) }));
 
-// Mock react-redux to provide region data from metadata
-vi.mock('react-redux', async () => {
-  const actual = await vi.importActual('react-redux');
-  return {
-    ...actual,
-    useSelector: vi.fn(() => MOCK_CONGRESSIONAL_DISTRICT_REGIONS),
-  };
-});
+// Mock static metadata hooks to provide region data
+vi.mock('@/hooks/useStaticMetadata', () => ({
+  useRegionsList: vi.fn(() => MOCK_CONGRESSIONAL_DISTRICT_REGIONS),
+}));
+
+// Mock useCurrentCountry hook
+vi.mock('@/hooks/useCurrentCountry', () => ({
+  useCurrentCountry: vi.fn(() => TEST_COUNTRY_US),
+}));
 
 describe('AbsoluteChangeByDistrict', () => {
   test('given district data then renders component', () => {

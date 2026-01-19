@@ -1,8 +1,6 @@
 import React from 'react';
-import { configureStore } from '@reduxjs/toolkit';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, renderHook, waitFor } from '@testing-library/react';
-import { Provider } from 'react-redux';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { useSaveSharedReport } from '@/hooks/useSaveSharedReport';
 import {
@@ -15,6 +13,7 @@ import {
   MOCK_SHARE_DATA_WITH_CURRENT_LAW,
   MOCK_SHARE_DATA_WITH_HOUSEHOLD,
   MOCK_SHARE_DATA_WITHOUT_LABEL,
+  TEST_COUNTRY_US,
   TEST_ERRORS,
   TEST_IDS,
 } from '@/tests/fixtures/hooks/useSaveSharedReportMocks';
@@ -48,26 +47,21 @@ vi.mock('@/hooks/useUserReportAssociations', () => ({
   useUserReportStore: () => mockReportStore,
 }));
 
+// Mock static metadata hooks instead of Redux
+vi.mock('@/hooks/useCurrentCountry', () => ({
+  useCurrentCountry: vi.fn(() => TEST_COUNTRY_US),
+}));
+
+vi.mock('@/hooks/useStaticMetadata', () => ({
+  useCurrentLawId: vi.fn(() => CURRENT_LAW_ID),
+}));
+
 describe('useSaveSharedReport', () => {
   let queryClient: QueryClient;
 
-  const createMockStore = (currentLawId: string = CURRENT_LAW_ID) => {
-    const metadataReducer = () => ({
-      currentCountry: 'us',
-      currentLawId,
-      economyOptions: { region: [], time_period: [], datasets: [] },
-    });
-
-    return configureStore({
-      reducer: { metadata: metadataReducer },
-    });
-  };
-
-  const createWrapper = (store: ReturnType<typeof createMockStore>) => {
+  const createWrapper = () => {
     return ({ children }: { children: React.ReactNode }) => (
-      <Provider store={store}>
-        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-      </Provider>
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     );
   };
 
@@ -88,8 +82,7 @@ describe('useSaveSharedReport', () => {
 
   test('given valid shareData then saves all associations and returns userReport', async () => {
     // Given
-    const store = createMockStore();
-    const wrapper = createWrapper(store);
+    const wrapper = createWrapper();
 
     // When
     const { result } = renderHook(() => useSaveSharedReport(), { wrapper });
@@ -126,8 +119,7 @@ describe('useSaveSharedReport', () => {
   test('given existing report then returns already_saved without creating duplicates', async () => {
     // Given
     mockReportStore.findByUserReportId.mockResolvedValue(MOCK_EXISTING_USER_REPORT);
-    const store = createMockStore();
-    const wrapper = createWrapper(store);
+    const wrapper = createWrapper();
 
     // When
     const { result } = renderHook(() => useSaveSharedReport(), { wrapper });
@@ -149,8 +141,7 @@ describe('useSaveSharedReport', () => {
 
   test('given shareData with current law policy then skips current law', async () => {
     // Given
-    const store = createMockStore();
-    const wrapper = createWrapper(store);
+    const wrapper = createWrapper();
 
     // When
     const { result } = renderHook(() => useSaveSharedReport(), { wrapper });
@@ -171,8 +162,7 @@ describe('useSaveSharedReport', () => {
 
   test('given shareData with household then saves household associations', async () => {
     // Given
-    const store = createMockStore();
-    const wrapper = createWrapper(store);
+    const wrapper = createWrapper();
 
     // When
     const { result } = renderHook(() => useSaveSharedReport(), { wrapper });
@@ -193,8 +183,7 @@ describe('useSaveSharedReport', () => {
 
   test('given shareData without label then generates default label', async () => {
     // Given
-    const store = createMockStore();
-    const wrapper = createWrapper(store);
+    const wrapper = createWrapper();
 
     // When
     const { result } = renderHook(() => useSaveSharedReport(), { wrapper });
@@ -214,8 +203,7 @@ describe('useSaveSharedReport', () => {
   test('given ingredient save failure then returns partial result', async () => {
     // Given
     mockCreateSimulation.mutateAsync.mockRejectedValue(TEST_ERRORS.SAVE_FAILED);
-    const store = createMockStore();
-    const wrapper = createWrapper(store);
+    const wrapper = createWrapper();
 
     // When
     const { result } = renderHook(() => useSaveSharedReport(), { wrapper });
@@ -233,8 +221,7 @@ describe('useSaveSharedReport', () => {
 
   test('given success then sets saveResult to success', async () => {
     // Given
-    const store = createMockStore();
-    const wrapper = createWrapper(store);
+    const wrapper = createWrapper();
 
     // When
     const { result } = renderHook(() => useSaveSharedReport(), { wrapper });
@@ -257,8 +244,7 @@ describe('useSaveSharedReport', () => {
       .mockResolvedValueOnce(MOCK_EXISTING_USER_REPORT);
     mockCreateReport.mutateAsync.mockRejectedValue(new Error('Duplicate key'));
 
-    const store = createMockStore();
-    const wrapper = createWrapper(store);
+    const wrapper = createWrapper();
 
     // When
     const { result } = renderHook(() => useSaveSharedReport(), { wrapper });
@@ -277,8 +263,7 @@ describe('useSaveSharedReport', () => {
 
   test('given setSaveResult then allows manual result override', async () => {
     // Given
-    const store = createMockStore();
-    const wrapper = createWrapper(store);
+    const wrapper = createWrapper();
 
     // When
     const { result } = renderHook(() => useSaveSharedReport(), { wrapper });

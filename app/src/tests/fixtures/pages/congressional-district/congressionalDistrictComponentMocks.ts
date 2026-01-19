@@ -2,6 +2,10 @@ import type { MetadataRegionEntry, MetadataState } from '@/types/metadata';
 import type { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
 import { US_REGION_TYPES } from '@/types/regionTypes';
 
+// Test constants
+export const TEST_COUNTRY_US = 'us';
+export const TEST_CURRENT_YEAR = 2025;
+
 /**
  * Mock US congressional district region entries for metadata
  */
