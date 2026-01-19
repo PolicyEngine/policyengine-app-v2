@@ -4,7 +4,7 @@
  * Manages parameter display and modification without Redux
  */
 
-import { Container, Loader, Text, Title } from '@mantine/core';
+import { Container, Text, Title } from '@mantine/core';
 import { useParameterValues, BASELINE_POLICY_ID } from '@/hooks/useParameterValues';
 import { ParameterMetadata } from '@/types/metadata';
 import { PolicyStateProps } from '@/types/pathwayState';
@@ -78,6 +78,7 @@ export default function PolicyParameterSelectorMain({
         policy={policy}
         onPolicyUpdate={onPolicyUpdate}
         baselineValues={baselineValuesSource}
+        isLoading={isLoadingBaseline}
       />
       <HistoricalValues
         param={param}
@@ -85,6 +86,7 @@ export default function PolicyParameterSelectorMain({
         reformValues={reformValues}
         policyLabel={policyLabel}
         policyId={policyId}
+        isLoading={isLoadingBaseline}
       />
     </Container>
   );

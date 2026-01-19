@@ -5,7 +5,7 @@
  */
 
 import { useState } from 'react';
-import { Button, Container, Divider, Group, Stack, Text } from '@mantine/core';
+import { Button, Container, Divider, Group, Skeleton, Stack, Text } from '@mantine/core';
 import { getDateRange } from '@/data/static';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { ParameterMetadata } from '@/types/metadata';
@@ -24,6 +24,8 @@ interface PolicyParameterSelectorValueSetterProps {
   onPolicyUpdate: (updatedPolicy: PolicyStateProps) => void;
   /** Baseline (current law) values fetched from V2 API */
   baselineValues?: ValuesList;
+  /** Whether baseline values are currently loading */
+  isLoading?: boolean;
 }
 
 export default function PolicyParameterSelectorValueSetter({
@@ -31,6 +33,7 @@ export default function PolicyParameterSelectorValueSetter({
   policy,
   onPolicyUpdate,
   baselineValues,
+  isLoading = false,
 }: PolicyParameterSelectorValueSetterProps) {
   const countryId = useCurrentCountry();
   const [mode, setMode] = useState<ValueSetterMode>(ValueSetterMode.DEFAULT);
@@ -113,11 +116,13 @@ export default function PolicyParameterSelectorValueSetter({
       <Stack>
         <Text fw={700}>Current value</Text>
         <Divider style={{ padding: 0 }} />
-        <Group align="flex-end" w="100%">
-          <ValueSetterToRender {...valueSetterProps} />
-          <ModeSelectorButton setMode={handleModeChange} />
-          <Button onClick={handleSubmit}>Add parameter</Button>
-        </Group>
+        <Skeleton visible={isLoading} height={isLoading ? 60 : 'auto'}>
+          <Group align="flex-end" w="100%">
+            <ValueSetterToRender {...valueSetterProps} />
+            <ModeSelectorButton setMode={handleModeChange} />
+            <Button onClick={handleSubmit}>Add parameter</Button>
+          </Group>
+        </Skeleton>
       </Stack>
     </Container>
   );
