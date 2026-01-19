@@ -1,6 +1,6 @@
 export const FOREVER = '2100-12-31';
 export const BASE_URL = 'https://api.policyengine.org';
-export const CURRENT_YEAR = '2025';
+export const CURRENT_YEAR = '2026';
 
 // App URLs for the split website/calculator architecture
 // In dev mode, these are set via VITE_* env vars to localhost URLs
@@ -13,7 +13,7 @@ export const CALCULATOR_URL = import.meta.env.VITE_CALCULATOR_URL || 'https://ap
  * Temporary constant for report time calculations
  * TODO: Replace with dynamic date selection from user input
  */
-export const TEMP_REPORT_TIME = 2025;
+export const TEMP_REPORT_TIME = 2026;
 
 /**
  * Get parameter definition date for a given year

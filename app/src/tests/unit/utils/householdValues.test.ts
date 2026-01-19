@@ -26,7 +26,7 @@ describe('getValueFromHousehold', () => {
   test('given household variable with specific time period and entity then returns correct value', () => {
     // Given
     const variableName = TEST_VARIABLE_NAMES.HOUSEHOLD_INCOME;
-    const timePeriod = TEST_TIME_PERIODS.YEAR_2024;
+    const timePeriod = TEST_TIME_PERIODS.CURRENT;
     const entityName = TEST_ENTITY_NAMES.YOUR_HOUSEHOLD;
 
     // When
@@ -45,7 +45,7 @@ describe('getValueFromHousehold', () => {
   test('given person variable with specific time period and entity then returns correct value', () => {
     // Given
     const variableName = TEST_VARIABLE_NAMES.AGE;
-    const timePeriod = TEST_TIME_PERIODS.YEAR_2024;
+    const timePeriod = TEST_TIME_PERIODS.CURRENT;
     const entityName = TEST_ENTITY_NAMES.PERSON_1;
 
     // When
@@ -64,7 +64,7 @@ describe('getValueFromHousehold', () => {
   test('given null entity name then aggregates across all entities', () => {
     // Given
     const variableName = TEST_VARIABLE_NAMES.AGE;
-    const timePeriod = TEST_TIME_PERIODS.YEAR_2024;
+    const timePeriod = TEST_TIME_PERIODS.CURRENT;
     const entityName = null;
 
     // When
@@ -121,7 +121,7 @@ describe('getValueFromHousehold', () => {
   test('given nonexistent variable then returns zero', () => {
     // Given
     const variableName = TEST_VARIABLE_NAMES.NONEXISTENT;
-    const timePeriod = TEST_TIME_PERIODS.YEAR_2024;
+    const timePeriod = TEST_TIME_PERIODS.CURRENT;
     const entityName = TEST_ENTITY_NAMES.YOUR_HOUSEHOLD;
 
     // When
@@ -140,7 +140,7 @@ describe('getValueFromHousehold', () => {
   test('given valueFromFirstOnly true then returns value from first entity only', () => {
     // Given
     const variableName = TEST_VARIABLE_NAMES.BENEFITS;
-    const timePeriod = TEST_TIME_PERIODS.YEAR_2024;
+    const timePeriod = TEST_TIME_PERIODS.CURRENT;
     const entityName = null;
     const valueFromFirstOnly = true;
 
@@ -224,8 +224,8 @@ describe('formatVariableValue', () => {
 
 describe('getParameterAtInstant', () => {
   test('given instant matching exact date then returns value at that date', () => {
-    // Given
-    const instant = '2025-01-01';
+    // Given - MOCK_PARAMETER has '2026-01-01': 14600 (CURRENT_YEAR)
+    const instant = '2026-01-01';
 
     // When
     const result = getParameterAtInstant(MOCK_PARAMETER, instant);
@@ -235,8 +235,8 @@ describe('getParameterAtInstant', () => {
   });
 
   test('given instant between dates then returns most recent prior value', () => {
-    // Given
-    const instant = '2025-06-15';
+    // Given - instant is between '2026-01-01' and '2027-01-01'
+    const instant = '2026-06-15';
 
     // When
     const result = getParameterAtInstant(MOCK_PARAMETER, instant);
@@ -257,8 +257,8 @@ describe('getParameterAtInstant', () => {
   });
 
   test('given instant after all dates then returns latest value', () => {
-    // Given
-    const instant = '2026-01-01';
+    // Given - MOCK_PARAMETER has '2027-01-01': 15000 as the latest
+    const instant = '2028-01-01';
 
     // When
     const result = getParameterAtInstant(MOCK_PARAMETER, instant);
@@ -269,7 +269,7 @@ describe('getParameterAtInstant', () => {
 
   test('given null parameter then returns empty array', () => {
     // Given
-    const instant = '2025-01-01';
+    const instant = '2026-01-01';
 
     // When
     const result = getParameterAtInstant(null, instant);

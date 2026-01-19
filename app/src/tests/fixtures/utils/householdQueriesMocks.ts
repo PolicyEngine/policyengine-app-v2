@@ -37,9 +37,9 @@ export const QUERY_COUNTRIES = {
 // Years
 export const QUERY_YEARS = {
   CURRENT: CURRENT_YEAR,
-  PAST: '2023',
-  FUTURE: '2026',
-  NON_EXISTENT: '2027',
+  PAST: '2024',
+  FUTURE: '2027',
+  NON_EXISTENT: '2028',
 } as const;
 
 // Entity names
