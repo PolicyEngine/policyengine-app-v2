@@ -1,6 +1,6 @@
 import { CURRENT_YEAR } from '@/constants';
 import { ParameterTreeNode } from '@/libs/buildParameterTree';
-import { MetadataApiPayload, MetadataState, VariableMetadata, ParameterMetadata } from '@/types/metadata';
+import { MetadataState, VariableMetadata, ParameterMetadata } from '@/types/metadata';
 import { US_REGION_TYPES } from '@/types/regionTypes';
 
 // Test constants
@@ -160,26 +160,6 @@ export const MOCK_PARAMETER_TREE: ParameterTreeNode = {
   type: 'parameterNode',
 };
 
-// Mock API payload
-export const createMockApiPayload = (
-  overrides?: Partial<MetadataApiPayload['result']>
-): MetadataApiPayload => ({
-  status: 'ok',
-  message: null,
-  result: {
-    variables: MOCK_VARIABLES,
-    parameters: MOCK_PARAMETERS,
-    entities: MOCK_ENTITIES,
-    variableModules: MOCK_VARIABLE_MODULES,
-    economy_options: MOCK_ECONOMY_OPTIONS,
-    current_law_id: TEST_CURRENT_LAW_ID,
-    basicInputs: MOCK_BASIC_INPUTS,
-    modelled_policies: MOCK_MODELLED_POLICIES,
-    version: TEST_VERSION,
-    ...overrides,
-  },
-});
-
 // Mock state with data (only API-driven data)
 export const createMockStateWithData = (overrides?: Partial<MetadataState>): MetadataState => ({
   currentCountry: TEST_COUNTRY_US,
@@ -210,22 +190,6 @@ export const MOCK_ERROR_STATE: MetadataState = {
 export const createMockClearedState = (country: string | null): MetadataState => ({
   ...EXPECTED_INITIAL_STATE,
   currentCountry: country,
-});
-
-// Expected state after successful fetch (only API-driven data)
-export const createExpectedFulfilledState = (
-  country: string,
-  apiPayload: MetadataApiPayload
-): MetadataState => ({
-  currentCountry: country,
-  ...DEFAULT_LOADING_STATES,
-  loaded: true,
-  progress: 100,
-  variables: apiPayload.result.variables,
-  parameters: apiPayload.result.parameters,
-  datasets: apiPayload.result.economy_options.datasets,
-  version: apiPayload.result.version,
-  parameterTree: null, // Will be built by reducer
 });
 
 // Test utility functions

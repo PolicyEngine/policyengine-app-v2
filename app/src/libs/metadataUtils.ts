@@ -9,7 +9,6 @@
  */
 import { createSelector } from '@reduxjs/toolkit';
 import { RootState } from '@/store';
-import { MetadataApiPayload, MetadataState } from '@/types/metadata';
 
 // For field options, we need a function that takes fieldName as parameter
 // We'll use a factory function that returns a memoized selector
@@ -82,27 +81,3 @@ export const getFieldLabel = (fieldName: string) => {
   );
 };
 
-/**
- * Transform API payload to MetadataState format
- * Note: Static data (entities, basicInputs, economyOptions, etc.) is now handled separately
- * via static files in src/data/static/
- */
-export function transformMetadataPayload(
-  payload: MetadataApiPayload,
-  country: string
-): MetadataState {
-  const data = payload.result;
-  return {
-    currentCountry: country,
-    // V2 unified loading states
-    loading: false,
-    loaded: false,
-    error: null,
-    progress: 100, // Transformation happens after successful load
-    variables: data.variables ?? {},
-    parameters: data.parameters ?? {},
-    datasets: data.economy_options?.datasets ?? [],
-    version: data.version ?? null,
-    parameterTree: null, // Will be built separately in the reducer
-  };
-}

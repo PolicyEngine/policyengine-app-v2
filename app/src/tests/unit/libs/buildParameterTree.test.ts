@@ -1,15 +1,13 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { buildParameterTree, convertMetadataToParameterTree } from '@/libs/buildParameterTree';
+import { buildParameterTreeV2 } from '@/libs/buildParameterTree';
 import {
   EXPECTED_ALLOWANCE_LABEL,
-  EXPECTED_BENEFITS_LABEL,
   EXPECTED_BRACKET_1_LABEL,
   EXPECTED_BRACKET_2_LABEL,
   EXPECTED_BRACKETS_LABEL,
   EXPECTED_CHILD_CARE_SUPPORT_LABEL,
   EXPECTED_FIRST_BRACKET_LABEL,
   EXPECTED_GOV_LABEL,
-  EXPECTED_GOVERNMENT_LABEL,
   EXPECTED_INCOME_LABEL,
   EXPECTED_INCOME_TAX_RATE_LABEL,
   EXPECTED_ONE_CHILD,
@@ -19,7 +17,6 @@ import {
   EXPECTED_SORTED_LABELS,
   EXPECTED_TAX_LABEL,
   EXPECTED_TAXATION_LABEL,
-  EXPECTED_TAXATION_NODE_LABEL,
   EXPECTED_THIRD_BRACKET_LABEL,
   EXPECTED_THREE_CHILDREN,
   EXPECTED_TWO_CHILDREN,
@@ -27,8 +24,6 @@ import {
   expectNodeToHaveLabel,
   findNodeByName,
   GOV_ABOLITIONS_NODE_NAME,
-  GOV_BENEFIT_NODE_NAME,
-  GOV_INTERNAL_NODE_NAME,
   GOV_TAX_BRACKETS_NODE_NAME,
   GOV_TAX_INCOME_NODE_NAME,
   GOV_TAX_INCOME_PERSONAL_ALLOWANCE_NODE_NAME,
@@ -43,9 +38,6 @@ import {
   mockDeepNestedParameters,
   mockEmptyParameters,
   mockFilteredParameters,
-  mockMetadataApiPayload,
-  mockNestedParameters,
-  mockNonApplicableParameters,
   mockNonGovParameters,
   mockSimpleParameters,
   mockSpecialCharParameters,
@@ -55,7 +47,7 @@ import {
   TEST_VALUE_2025,
 } from '@/tests/fixtures/libs/buildParameterTreeMocks';
 
-describe('buildParameterTree', () => {
+describe('buildParameterTreeV2', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Clear console.error mock
@@ -67,7 +59,7 @@ describe('buildParameterTree', () => {
     const parameters = mockSimpleParameters;
 
     // When
-    const tree = buildParameterTree(parameters);
+    const tree = buildParameterTreeV2(parameters);
 
     // Then
     expect(tree).toBeDefined();
@@ -75,34 +67,13 @@ describe('buildParameterTree', () => {
     expectNodeToHaveChildren(tree, EXPECTED_TWO_CHILDREN); // tax and benefit nodes
   });
 
-  test('given nested parameters then creates proper hierarchy', () => {
-    // Given
-    const parameters = mockNestedParameters;
-
-    // When
-    const tree = buildParameterTree(parameters);
-
-    // Then
-    expect(tree).toBeDefined();
-    expectNodeToHaveLabel(tree, EXPECTED_GOVERNMENT_LABEL);
-
-    const taxNode = findNodeByName(tree, GOV_TAX_NODE_NAME);
-    expect(taxNode).toBeDefined();
-    expectNodeToHaveLabel(taxNode, EXPECTED_TAXATION_NODE_LABEL);
-    expectNodeToHaveChildren(taxNode, EXPECTED_TWO_CHILDREN); // income_tax and capital_gains
-
-    const benefitNode = findNodeByName(tree, GOV_BENEFIT_NODE_NAME);
-    expect(benefitNode).toBeDefined();
-    expectNodeToHaveLabel(benefitNode, EXPECTED_BENEFITS_LABEL);
-    expectNodeToHaveChildren(benefitNode, EXPECTED_ONE_CHILD); // child_benefit
-  });
 
   test('given parameters with brackets then creates bracket structure', () => {
     // Given
     const parameters = mockBracketParameters;
 
     // When
-    const tree = buildParameterTree(parameters);
+    const tree = buildParameterTreeV2(parameters);
 
     // Then
     expect(tree).toBeDefined();
@@ -133,7 +104,7 @@ describe('buildParameterTree', () => {
     const parameters = mockBracketIndicesParameters;
 
     // When
-    const tree = buildParameterTree(parameters);
+    const tree = buildParameterTreeV2(parameters);
 
     // Then
     const ratesNode = findNodeByName(tree, GOV_TAX_RATES_NODE_NAME);
@@ -152,7 +123,7 @@ describe('buildParameterTree', () => {
     const parameters = mockFilteredParameters;
 
     // When
-    const tree = buildParameterTree(parameters);
+    const tree = buildParameterTreeV2(parameters);
 
     // Then
     expect(tree).toBeDefined();
@@ -170,32 +141,13 @@ describe('buildParameterTree', () => {
     expect(abolitionsNode).toBeUndefined();
   });
 
-  test('given parameters without economy or household flags then excludes them', () => {
-    // Given
-    const parameters = mockNonApplicableParameters;
-
-    // When
-    const tree = buildParameterTree(parameters);
-
-    // Then
-    expect(tree).toBeDefined();
-
-    // Should only have the income_tax parameter
-    const taxNode = findNodeByName(tree, GOV_TAX_NODE_NAME);
-    expect(taxNode).toBeDefined();
-    expectNodeToHaveChildren(taxNode, EXPECTED_ONE_CHILD);
-
-    // Should not have internal config
-    const internalNode = findNodeByName(tree, GOV_INTERNAL_NODE_NAME);
-    expect(internalNode).toBeUndefined();
-  });
 
   test('given empty parameters then returns undefined', () => {
     // Given
     const parameters = mockEmptyParameters;
 
     // When
-    const tree = buildParameterTree(parameters);
+    const tree = buildParameterTreeV2(parameters);
 
     // Then
     expect(tree).toBeUndefined();
@@ -206,7 +158,7 @@ describe('buildParameterTree', () => {
     const parameters = mockNonGovParameters;
 
     // When
-    const tree = buildParameterTree(parameters);
+    const tree = buildParameterTreeV2(parameters);
 
     // Then
     expect(tree).toBeUndefined();
@@ -217,7 +169,7 @@ describe('buildParameterTree', () => {
     const parameters = mockSpecialCharParameters;
 
     // When
-    const tree = buildParameterTree(parameters);
+    const tree = buildParameterTreeV2(parameters);
 
     // Then
     expect(tree).toBeDefined();
@@ -236,7 +188,7 @@ describe('buildParameterTree', () => {
     const parameters = mockAlphabeticalParameters;
 
     // When
-    const tree = buildParameterTree(parameters);
+    const tree = buildParameterTreeV2(parameters);
 
     // Then
     expect(tree).toBeDefined();
@@ -251,7 +203,7 @@ describe('buildParameterTree', () => {
     const parameters = mockCustomLabelParameters;
 
     // When
-    const tree = buildParameterTree(parameters);
+    const tree = buildParameterTreeV2(parameters);
 
     // Then
     expect(tree).toBeDefined();
@@ -269,7 +221,7 @@ describe('buildParameterTree', () => {
     const parameters = mockSimpleParameters;
 
     // When
-    const tree = buildParameterTree(parameters);
+    const tree = buildParameterTreeV2(parameters);
 
     // Then
     const incomeTaxNode = findNodeByName(tree, 'gov.tax.income_tax');
@@ -288,7 +240,7 @@ describe('buildParameterTree', () => {
     const parameters = mockDeepNestedParameters;
 
     // When
-    const tree = buildParameterTree(parameters);
+    const tree = buildParameterTreeV2(parameters);
 
     // Then
     expect(tree).toBeDefined();
@@ -316,7 +268,7 @@ describe('buildParameterTree', () => {
     const parameters = mockSimpleParameters;
 
     // When
-    const tree = buildParameterTree(parameters);
+    const tree = buildParameterTreeV2(parameters);
 
     // Then
     expect(tree).toBeDefined();
@@ -325,39 +277,3 @@ describe('buildParameterTree', () => {
   });
 });
 
-describe('convertMetadataToParameterTree', () => {
-  test('given metadata API payload then extracts parameters and builds tree', () => {
-    // Given
-    const metadata = mockMetadataApiPayload;
-
-    // When
-    const tree = convertMetadataToParameterTree(metadata);
-
-    // Then
-    expect(tree).toBeDefined();
-    expectNodeToHaveLabel(tree, EXPECTED_GOV_LABEL);
-    expectNodeToHaveChildren(tree, EXPECTED_TWO_CHILDREN);
-
-    // Verify it used the parameters from the metadata
-    const incomeTaxNode = findNodeByName(tree, 'gov.tax.income_tax');
-    expect(incomeTaxNode).toBeDefined();
-    expect(incomeTaxNode?.description).toBe(TEST_DESCRIPTION);
-  });
-
-  test('given metadata with empty parameters then returns undefined', () => {
-    // Given
-    const metadata = {
-      ...mockMetadataApiPayload,
-      result: {
-        ...mockMetadataApiPayload.result,
-        parameters: {},
-      },
-    };
-
-    // When
-    const tree = convertMetadataToParameterTree(metadata);
-
-    // Then
-    expect(tree).toBeUndefined();
-  });
-});

@@ -70,33 +70,6 @@ export interface MetadataRegionEntry {
   state_name?: string;
 }
 
-export interface MetadataApiPayload {
-  status: string;
-  message: string | null;
-  result: {
-    variables: Record<string, VariableMetadata>;
-    parameters: Record<string, ParameterMetadata>;
-    entities: Record<string, EntityMetadata>;
-    variableModules: Record<string, ModuleMetadata>;
-    economy_options: {
-      region: MetadataRegionEntry[];
-      time_period: Array<{ name: number; label: string }>;
-      datasets: Array<{
-        name: string;
-        label: string;
-        title: string;
-        default: boolean;
-      }>;
-    };
-    current_law_id: number;
-    basicInputs: string[];
-    modelled_policies: {
-      core: Record<string, ModelledPolicy>;
-      filtered: Record<string, ModelledPolicy>;
-    };
-    version: string;
-  };
-}
 
 /**
  * Variable metadata - represents a variable in the tax-benefit model

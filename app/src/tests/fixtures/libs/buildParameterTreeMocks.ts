@@ -1,6 +1,5 @@
 import { CURRENT_YEAR } from '@/constants';
 import { ParameterTreeNode } from '@/libs/buildParameterTree';
-import { MetadataApiPayload } from '@/types/metadata';
 
 // Test constants
 export const TEST_PARAMETER_NAME = 'gov.tax.income_tax';
@@ -288,29 +287,6 @@ export const expectedSimpleTree: ParameterTreeNode = {
   type: 'parameterNode',
 };
 
-// Mock MetadataApiPayload for convertMetadataToParameterTree test
-export const mockMetadataApiPayload: MetadataApiPayload = {
-  status: 'ok',
-  message: null,
-  result: {
-    parameters: mockSimpleParameters,
-    variables: {},
-    entities: {},
-    variableModules: {},
-    economy_options: {
-      region: [],
-      time_period: [],
-      datasets: [],
-    },
-    current_law_id: 1,
-    basicInputs: [],
-    modelled_policies: {
-      core: {},
-      filtered: {},
-    },
-    version: '1.0.0',
-  },
-};
 
 // Mock parameters for alphabetical sorting test
 export const mockAlphabeticalParameters = {

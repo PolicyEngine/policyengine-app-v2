@@ -1,16 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import {
-  getFieldLabel,
-  getFieldOptions,
-  isDropdownField,
-  transformMetadataPayload,
-} from '@/libs/metadataUtils';
+import { getFieldLabel, getFieldOptions, isDropdownField } from '@/libs/metadataUtils';
 import type { RootState } from '@/store';
 import {
   EXPECTED_LABELS,
-  mockMetadataPayload,
-  mockMinimalPayload,
-  mockStateWithMetadata,
+  mockStateWithVariables,
   TEST_FIELD_NAMES,
 } from '@/tests/fixtures/libs/metadataUtilsMocks';
 
@@ -18,7 +11,7 @@ describe('metadataUtils', () => {
   describe('isDropdownField', () => {
     it('given state_name with possibleValues then returns true', () => {
       // Given
-      const state = mockStateWithMetadata() as RootState;
+      const state = mockStateWithVariables() as RootState;
 
       // When
       const result = isDropdownField(state, TEST_FIELD_NAMES.STATE_NAME);
@@ -29,7 +22,7 @@ describe('metadataUtils', () => {
 
     it('given region with possibleValues then returns true', () => {
       // Given
-      const state = mockStateWithMetadata() as RootState;
+      const state = mockStateWithVariables() as RootState;
 
       // When
       const result = isDropdownField(state, TEST_FIELD_NAMES.REGION);
@@ -40,7 +33,7 @@ describe('metadataUtils', () => {
 
     it('given brma with possibleValues then returns true', () => {
       // Given
-      const state = mockStateWithMetadata() as RootState;
+      const state = mockStateWithVariables() as RootState;
 
       // When
       const result = isDropdownField(state, TEST_FIELD_NAMES.BRMA);
@@ -51,7 +44,7 @@ describe('metadataUtils', () => {
 
     it('given local_authority with possibleValues then returns true', () => {
       // Given
-      const state = mockStateWithMetadata() as RootState;
+      const state = mockStateWithVariables() as RootState;
 
       // When
       const result = isDropdownField(state, TEST_FIELD_NAMES.LOCAL_AUTHORITY);
@@ -62,7 +55,7 @@ describe('metadataUtils', () => {
 
     it('given age without possibleValues then returns false', () => {
       // Given
-      const state = mockStateWithMetadata() as RootState;
+      const state = mockStateWithVariables() as RootState;
 
       // When
       const result = isDropdownField(state, TEST_FIELD_NAMES.AGE);
@@ -73,7 +66,7 @@ describe('metadataUtils', () => {
 
     it('given employment_income without possibleValues then returns false', () => {
       // Given
-      const state = mockStateWithMetadata() as RootState;
+      const state = mockStateWithVariables() as RootState;
 
       // When
       const result = isDropdownField(state, TEST_FIELD_NAMES.EMPLOYMENT_INCOME);
@@ -84,7 +77,7 @@ describe('metadataUtils', () => {
 
     it('given unknown field then returns false', () => {
       // Given
-      const state = mockStateWithMetadata() as RootState;
+      const state = mockStateWithVariables() as RootState;
 
       // When
       const result = isDropdownField(state, 'unknown_field');
@@ -97,7 +90,7 @@ describe('metadataUtils', () => {
   describe('getFieldOptions', () => {
     it('given field with possibleValues then returns options array', () => {
       // Given
-      const state = mockStateWithMetadata() as RootState;
+      const state = mockStateWithVariables() as RootState;
       const fieldName = TEST_FIELD_NAMES.STATE_NAME;
 
       // When
@@ -112,7 +105,7 @@ describe('metadataUtils', () => {
 
     it('given field without possibleValues then returns empty array', () => {
       // Given
-      const state = mockStateWithMetadata() as RootState;
+      const state = mockStateWithVariables() as RootState;
       const fieldName = TEST_FIELD_NAMES.AGE;
 
       // When
@@ -124,7 +117,7 @@ describe('metadataUtils', () => {
 
     it('given region field then returns region options from possibleValues', () => {
       // Given
-      const state = mockStateWithMetadata() as RootState;
+      const state = mockStateWithVariables() as RootState;
       const fieldName = TEST_FIELD_NAMES.REGION;
 
       // When
@@ -139,7 +132,7 @@ describe('metadataUtils', () => {
 
     it('given nonexistent field then returns empty array', () => {
       // Given
-      const state = mockStateWithMetadata() as RootState;
+      const state = mockStateWithVariables() as RootState;
       const fieldName = 'nonexistent_field';
 
       // When
@@ -184,56 +177,4 @@ describe('metadataUtils', () => {
     });
   });
 
-  describe('transformMetadataPayload', () => {
-    it('given valid payload then transforms correctly', () => {
-      // Given
-      const payload = mockMetadataPayload();
-
-      // When
-      const result = transformMetadataPayload(payload, 'us');
-
-      // Then - only API-driven data is included
-      expect(result.currentCountry).toBe('us');
-      expect(result.version).toBe('1.0.0');
-      expect(result.parameterTree).toBeNull();
-      expect(result.variables).toHaveProperty('age');
-      expect(result.variables).toHaveProperty('state_name');
-      expect(result.variables.state_name.possible_values).toBeDefined();
-      // Static data (entities, basicInputs, economyOptions, etc.) is no longer returned
-    });
-
-    it('given missing economy_options then datasets uses empty array', () => {
-      // Given
-      const payload = mockMinimalPayload();
-
-      // When
-      const result = transformMetadataPayload(payload, 'us');
-
-      // Then - datasets is extracted from economy_options
-      expect(result.datasets).toEqual([]);
-    });
-
-    it('given parameterTree in payload then sets to null', () => {
-      // Given
-      const payload = mockMinimalPayload();
-
-      // When
-      const result = transformMetadataPayload(payload, 'us');
-
-      // Then
-      expect(result.parameterTree).toBeNull();
-    });
-
-    it('given payload with datasets then extracts datasets', () => {
-      // Given
-      const payload = mockMetadataPayload();
-
-      // When
-      const result = transformMetadataPayload(payload, 'us');
-
-      // Then
-      expect(result.datasets).toBeDefined();
-      expect(Array.isArray(result.datasets)).toBe(true);
-    });
-  });
 });

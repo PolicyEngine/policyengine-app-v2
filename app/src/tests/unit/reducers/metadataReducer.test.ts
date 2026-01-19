@@ -139,7 +139,7 @@ describe('metadataReducer', () => {
         },
       };
 
-      vi.mocked(buildParameterTreeModule.buildParameterTree).mockReturnValue(MOCK_PARAMETER_TREE);
+      vi.mocked(buildParameterTreeModule.buildParameterTreeV2).mockReturnValue(MOCK_PARAMETER_TREE);
 
       const state = metadataReducer(initialState, action);
 
@@ -186,7 +186,7 @@ describe('metadataReducer', () => {
       expect(state.loading).toBe(true);
 
       // Receive data
-      vi.mocked(buildParameterTreeModule.buildParameterTree).mockReturnValue(MOCK_PARAMETER_TREE);
+      vi.mocked(buildParameterTreeModule.buildParameterTreeV2).mockReturnValue(MOCK_PARAMETER_TREE);
       state = metadataReducer(state, {
         type: fetchMetadataThunk.fulfilled.type,
         payload: {
