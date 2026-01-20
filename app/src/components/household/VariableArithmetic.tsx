@@ -1,11 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { IconCircleMinus, IconCirclePlus, IconTriangleFilled } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import { ActionIcon, Box, Group, Text } from '@mantine/core';
 import { spacing, typography } from '@/designTokens';
-import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useHouseholdMetadataContext } from '@/hooks/useMetadata';
 import { useReportYear } from '@/hooks/useReportYear';
-import { useEntities } from '@/hooks/useStaticMetadata';
 import { RootState } from '@/store';
 import { Household } from '@/types/ingredients/Household';
 import { calculateVariableComparison } from '@/utils/householdComparison';
@@ -14,7 +13,6 @@ import { getVariableDisplayText } from '@/utils/householdDisplayText';
 import {
   formatVariableValue,
   getParameterAtInstant,
-  HouseholdMetadataContext,
   shouldShowVariable,
 } from '@/utils/householdValues';
 
@@ -43,20 +41,10 @@ export default function VariableArithmetic({
 }: VariableArithmeticProps) {
   const [expanded, setExpanded] = useState(defaultExpanded);
   const reportYear = useReportYear();
-  const countryId = useCurrentCountry();
-  const reduxMetadata = useSelector((state: RootState) => state.metadata);
-  const entities = useEntities(countryId);
+  const metadataContext = useHouseholdMetadataContext();
+  const parameters = useSelector((state: RootState) => state.metadata.parameters);
 
-  // Build HouseholdMetadataContext by combining Redux variables with static entities
-  const metadataContext: HouseholdMetadataContext = useMemo(
-    () => ({
-      variables: reduxMetadata.variables,
-      entities,
-    }),
-    [reduxMetadata.variables, entities]
-  );
-
-  const variable = reduxMetadata.variables[variableName];
+  const variable = metadataContext.variables[variableName];
   if (!variable) {
     return null;
   }
@@ -72,7 +60,7 @@ export default function VariableArithmetic({
   if (variable.adds) {
     if (typeof variable.adds === 'string') {
       // It's a parameter name - resolve it
-      const parameter = reduxMetadata.parameters[variable.adds];
+      const parameter = parameters[variable.adds];
       if (parameter) {
         addsArray = getParameterAtInstant(parameter, `${reportYear}-01-01`) || [];
       }
@@ -84,7 +72,7 @@ export default function VariableArithmetic({
   if (variable.subtracts) {
     if (typeof variable.subtracts === 'string') {
       // It's a parameter name - resolve it
-      const parameter = reduxMetadata.parameters[variable.subtracts];
+      const parameter = parameters[variable.subtracts];
       if (parameter) {
         subtractsArray = getParameterAtInstant(parameter, `${reportYear}-01-01`) || [];
       }

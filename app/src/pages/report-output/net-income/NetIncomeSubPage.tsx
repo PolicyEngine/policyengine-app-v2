@@ -1,18 +1,10 @@
-import { useMemo } from 'react';
-import { useSelector } from 'react-redux';
 import { Stack, Text, Title } from '@mantine/core';
 import VariableArithmetic from '@/components/household/VariableArithmetic';
 import { spacing } from '@/designTokens';
-import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useHouseholdMetadataContext } from '@/hooks/useMetadata';
 import { useReportYear } from '@/hooks/useReportYear';
-import { useEntities } from '@/hooks/useStaticMetadata';
-import type { RootState } from '@/store';
 import type { Household } from '@/types/ingredients/Household';
-import {
-  formatVariableValue,
-  getValueFromHousehold,
-  HouseholdMetadataContext,
-} from '@/utils/householdValues';
+import { formatVariableValue, getValueFromHousehold } from '@/utils/householdValues';
 
 interface Props {
   baseline: Household;
@@ -25,22 +17,11 @@ interface Props {
  * Supports both single mode (baseline only) and comparison mode (baseline vs reform)
  */
 export default function NetIncomeSubPage({ baseline, reform }: Props) {
-  const countryId = useCurrentCountry();
-  const reduxMetadata = useSelector((state: RootState) => state.metadata);
-  const entities = useEntities(countryId);
+  const metadataContext = useHouseholdMetadataContext();
   const reportYear = useReportYear();
 
-  // Build HouseholdMetadataContext by combining Redux variables with static entities
-  const metadataContext: HouseholdMetadataContext = useMemo(
-    () => ({
-      variables: reduxMetadata.variables,
-      entities,
-    }),
-    [reduxMetadata.variables, entities]
-  );
-
   // Check if we have the household_net_income variable
-  const netIncomeVariable = reduxMetadata.variables.household_net_income;
+  const netIncomeVariable = metadataContext.variables.household_net_income;
   if (!netIncomeVariable) {
     return (
       <Stack gap={spacing.md}>

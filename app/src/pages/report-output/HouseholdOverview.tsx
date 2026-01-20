@@ -1,17 +1,13 @@
-import { useMemo } from 'react';
 import { IconChevronDown, IconChevronRight, IconWallet } from '@tabler/icons-react';
-import { useSelector } from 'react-redux';
 import { Box, Collapse, Group, Stack, Text, UnstyledButton } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import HouseholdBreakdown from '@/components/household/HouseholdBreakdown';
 import MetricCard from '@/components/report/MetricCard';
 import { colors, spacing, typography } from '@/designTokens';
-import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { useEntities } from '@/hooks/useStaticMetadata';
-import { RootState } from '@/store';
+import { useHouseholdMetadataContext } from '@/hooks/useMetadata';
 import { Household } from '@/types/ingredients/Household';
 import { calculateVariableComparison } from '@/utils/householdComparison';
-import { formatVariableValue, HouseholdMetadataContext } from '@/utils/householdValues';
+import { formatVariableValue } from '@/utils/householdValues';
 
 interface HouseholdOverviewProps {
   outputs: Household[];
@@ -31,20 +27,9 @@ const HERO_ICON_SIZE = 48;
  */
 export default function HouseholdOverview({ outputs, policyLabels }: HouseholdOverviewProps) {
   const [breakdownOpen, { toggle: toggleBreakdown }] = useDisclosure(false);
-  const countryId = useCurrentCountry();
-  const reduxMetadata = useSelector((state: RootState) => state.metadata);
-  const entities = useEntities(countryId);
+  const metadataContext = useHouseholdMetadataContext();
 
-  // Build HouseholdMetadataContext by combining Redux variables with static entities
-  const metadataContext: HouseholdMetadataContext = useMemo(
-    () => ({
-      variables: reduxMetadata.variables,
-      entities,
-    }),
-    [reduxMetadata.variables, entities]
-  );
-
-  const rootVariable = reduxMetadata.variables.household_net_income;
+  const rootVariable = metadataContext.variables.household_net_income;
   if (!rootVariable) {
     return (
       <Box>

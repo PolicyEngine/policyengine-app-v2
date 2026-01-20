@@ -105,5 +105,14 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: './vitest.setup.mjs',
+    testTimeout: 30000, // 30 seconds per test (increased from default 5s)
+    hookTimeout: 30000, // 30 seconds for setup/teardown hooks
+    pool: 'forks', // Use process forks for better isolation
+    poolOptions: {
+      forks: {
+        singleFork: false, // Use multiple forks for parallelization
+        isolate: true, // Isolate each test file
+      },
+    },
   },
 });

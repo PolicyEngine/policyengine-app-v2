@@ -1,7 +1,10 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useEntities } from '@/hooks/useStaticMetadata';
 import { fetchMetadataThunk } from '@/reducers/metadataReducer';
 import { AppDispatch, RootState } from '@/store';
+import { HouseholdMetadataContext } from '@/utils/householdValues';
 
 /**
  * Selects metadata loading state from Redux.
@@ -36,4 +39,21 @@ export function useFetchMetadata(countryId: string): void {
       dispatch(fetchMetadataThunk(countryId));
     }
   }, [countryId, loading, loaded, currentCountry, dispatch]);
+}
+
+/**
+ * Hook that builds a HouseholdMetadataContext by combining Redux variables with static entities.
+ * Use this to get the metadata context needed for household value extraction utilities.
+ *
+ * @returns HouseholdMetadataContext with variables and entities
+ */
+export function useHouseholdMetadataContext(): HouseholdMetadataContext {
+  const countryId = useCurrentCountry();
+  const reduxMetadata = useSelector((state: RootState) => state.metadata);
+  const entities = useEntities(countryId);
+
+  return useMemo(
+    () => ({ variables: reduxMetadata.variables, entities }),
+    [reduxMetadata.variables, entities]
+  );
 }

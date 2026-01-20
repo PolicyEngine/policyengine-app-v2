@@ -1,18 +1,16 @@
-import { useMemo, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useState } from 'react';
 import { Group, Select, Stack, Text } from '@mantine/core';
 import { PolicyAdapter } from '@/adapters/PolicyAdapter';
 import { spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useHouseholdVariation } from '@/hooks/useHouseholdVariation';
+import { useHouseholdMetadataContext } from '@/hooks/useMetadata';
 import { useReportYear } from '@/hooks/useReportYear';
-import { useEntities } from '@/hooks/useStaticMetadata';
-import type { RootState } from '@/store';
 import type { Household } from '@/types/ingredients/Household';
 import type { Policy } from '@/types/ingredients/Policy';
 import type { Simulation } from '@/types/ingredients/Simulation';
 import type { UserPolicy } from '@/types/ingredients/UserPolicy';
-import { getValueFromHousehold, HouseholdMetadataContext } from '@/utils/householdValues';
+import { getValueFromHousehold } from '@/utils/householdValues';
 import LoadingPage from '../LoadingPage';
 import BaselineAndReformChart from './BaselineAndReformChart';
 import BaselineOnlyChart from './BaselineOnlyChart';
@@ -42,14 +40,7 @@ export default function EarningsVariationSubPage({
   const [selectedVariable, setSelectedVariable] = useState('household_net_income');
   const countryId = useCurrentCountry();
   const reportYear = useReportYear();
-  const reduxMetadata = useSelector((state: RootState) => state.metadata);
-  const entities = useEntities(countryId);
-
-  // Build HouseholdMetadataContext
-  const metadataContext: HouseholdMetadataContext = useMemo(
-    () => ({ variables: reduxMetadata.variables, entities }),
-    [reduxMetadata.variables, entities]
-  );
+  const metadataContext = useHouseholdMetadataContext();
 
   // Early return if no report year available (shouldn't happen in report output context)
   if (!reportYear) {
@@ -140,9 +131,9 @@ export default function EarningsVariationSubPage({
   }
 
   // Build variable options (only non-input variables with array values)
-  const variableOptions = Object.keys(reduxMetadata.variables)
+  const variableOptions = Object.keys(metadataContext.variables)
     .filter((varName) => {
-      const variable = reduxMetadata.variables[varName];
+      const variable = metadataContext.variables[varName];
       // Exclude input variables and marginal_tax_rate (has its own page)
       if (!variable || variable.isInputVariable || varName === 'marginal_tax_rate') {
         return false;
@@ -154,7 +145,7 @@ export default function EarningsVariationSubPage({
     })
     .map((varName) => ({
       value: varName,
-      label: reduxMetadata.variables[varName]?.label || varName,
+      label: metadataContext.variables[varName]?.label || varName,
     }));
 
   return (

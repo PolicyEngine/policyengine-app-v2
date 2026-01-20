@@ -1,14 +1,12 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import type { Layout } from 'plotly.js';
 import Plot from 'react-plotly.js';
-import { useSelector } from 'react-redux';
 import { Group, Radio, Stack } from '@mantine/core';
 import { useMediaQuery, useViewportSize } from '@mantine/hooks';
 import { colors } from '@/designTokens';
 import { spacing } from '@/designTokens/spacing';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { useEntities } from '@/hooks/useStaticMetadata';
-import type { RootState } from '@/store';
+import { useHouseholdMetadataContext } from '@/hooks/useMetadata';
 import type { Household } from '@/types/ingredients/Household';
 import {
   DEFAULT_CHART_CONFIG,
@@ -16,7 +14,7 @@ import {
   getClampedChartHeight,
 } from '@/utils/chartUtils';
 import { currencySymbol, localeCode } from '@/utils/formatters';
-import { getValueFromHousehold, HouseholdMetadataContext } from '@/utils/householdValues';
+import { getValueFromHousehold } from '@/utils/householdValues';
 
 interface Props {
   baseline: Household;
@@ -47,17 +45,10 @@ export default function BaselineAndReformChart({
   const mobile = useMediaQuery('(max-width: 768px)');
   const { height: viewportHeight } = useViewportSize();
   const countryId = useCurrentCountry();
-  const reduxMetadata = useSelector((state: RootState) => state.metadata);
-  const entities = useEntities(countryId);
+  const metadataContext = useHouseholdMetadataContext();
   const chartHeight = getClampedChartHeight(viewportHeight, mobile);
 
-  // Build HouseholdMetadataContext
-  const metadataContext: HouseholdMetadataContext = useMemo(
-    () => ({ variables: reduxMetadata.variables, entities }),
-    [reduxMetadata.variables, entities]
-  );
-
-  const variable = reduxMetadata.variables[variableName];
+  const variable = metadataContext.variables[variableName];
   if (!variable) {
     return <div>Variable not found</div>;
   }
