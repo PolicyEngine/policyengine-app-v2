@@ -10,12 +10,6 @@ export const WEBSITE_URL = import.meta.env.VITE_WEBSITE_URL || 'https://policyen
 export const CALCULATOR_URL = import.meta.env.VITE_CALCULATOR_URL || 'https://app.policyengine.org';
 
 /**
- * Temporary constant for report time calculations
- * TODO: Replace with dynamic date selection from user input
- */
-export const TEMP_REPORT_TIME = 2026;
-
-/**
  * Get parameter definition date for a given year
  * Used for querying parameter values from metadata at a specific point in time
  *
