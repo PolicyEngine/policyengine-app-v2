@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { getTaxYears, getDateRange } from '@/data/static/taxYears';
+import { getDateRange, getTaxYears } from '@/data/static/taxYears';
 import {
-  TEST_COUNTRIES,
-  EXPECTED_TAX_YEAR_RANGE,
   DEFAULT_DATE_RANGE,
+  EXPECTED_TAX_YEAR_RANGE,
+  TEST_COUNTRIES,
 } from '@/tests/fixtures/data/static/staticDataMocks';
 
 describe('taxYears', () => {

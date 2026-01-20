@@ -67,7 +67,6 @@ describe('buildParameterTreeV2', () => {
     expectNodeToHaveChildren(tree, EXPECTED_TWO_CHILDREN); // tax and benefit nodes
   });
 
-
   test('given parameters with brackets then creates bracket structure', () => {
     // Given
     const parameters = mockBracketParameters;
@@ -140,7 +139,6 @@ describe('buildParameterTreeV2', () => {
     const abolitionsNode = findNodeByName(tree, GOV_ABOLITIONS_NODE_NAME);
     expect(abolitionsNode).toBeUndefined();
   });
-
 
   test('given empty parameters then returns undefined', () => {
     // Given
@@ -276,4 +274,3 @@ describe('buildParameterTreeV2', () => {
     expectNodeToHaveChildren(tree, EXPECTED_TWO_CHILDREN);
   });
 });
-

@@ -6,20 +6,12 @@
 /**
  * US basic input fields
  */
-export const US_BASIC_INPUTS: string[] = [
-  'age',
-  'employment_income',
-  'state_name',
-];
+export const US_BASIC_INPUTS: string[] = ['age', 'employment_income', 'state_name'];
 
 /**
  * UK basic input fields
  */
-export const UK_BASIC_INPUTS: string[] = [
-  'age',
-  'employment_income',
-  'region',
-];
+export const UK_BASIC_INPUTS: string[] = ['age', 'employment_income', 'region'];
 
 /**
  * Get basic inputs for a country

@@ -1,12 +1,12 @@
-import { API_V2_BASE_URL } from "./taxBenefitModels";
-import type { V2ParameterValueMetadata } from "@/types/metadata";
+import type { V2ParameterValueMetadata } from '@/types/metadata';
+import { API_V2_BASE_URL } from './taxBenefitModels';
 
 /**
  * Special constant to indicate baseline (current law) values.
  * Baseline values have policy_id = null in the database.
  * When fetching baseline values, we omit the policy_id parameter entirely.
  */
-export const BASELINE_POLICY_ID = "baseline" as const;
+export const BASELINE_POLICY_ID = 'baseline' as const;
 
 /**
  * Fetch parameter values for a specific parameter and policy.
@@ -23,17 +23,15 @@ export async function fetchParameterValues(
   policyId: string
 ): Promise<V2ParameterValueMetadata[]> {
   const params = new URLSearchParams();
-  params.set("parameter_id", parameterId);
+  params.set('parameter_id', parameterId);
 
   // For baseline (current law), omit policy_id to get values where policy_id IS NULL
   // For reform policies, include the actual policy UUID
   if (policyId !== BASELINE_POLICY_ID) {
-    params.set("policy_id", policyId);
+    params.set('policy_id', policyId);
   }
 
-  const res = await fetch(
-    `${API_V2_BASE_URL}/parameter-values/?${params.toString()}`
-  );
+  const res = await fetch(`${API_V2_BASE_URL}/parameter-values/?${params.toString()}`);
 
   if (!res.ok) {
     throw new Error(

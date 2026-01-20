@@ -18,8 +18,8 @@
 
 import { useMemo } from 'react';
 import { useSelector } from 'react-redux';
-import { useBasicInputs, useEntities } from './useStaticMetadata';
 import { RootState } from '@/store';
+import { useBasicInputs, useEntities } from './useStaticMetadata';
 
 /**
  * Get basic input fields categorized by entity type
@@ -63,7 +63,9 @@ export function useBasicInputFields(countryId: string) {
 
       if (!entityInfo) {
         // Unknown entity - skip field with warning
-        console.warn(`[useBasicInputFields] Unknown entity type "${entityType}" for field "${field}"`);
+        console.warn(
+          `[useBasicInputFields] Unknown entity type "${entityType}" for field "${field}"`
+        );
         continue;
       }
 

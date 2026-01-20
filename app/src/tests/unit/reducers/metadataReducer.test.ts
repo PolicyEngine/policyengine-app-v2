@@ -116,15 +116,9 @@ describe('metadataReducer', () => {
 
     test('given fulfilled action then updates all metadata fields', () => {
       const initialState = { ...EXPECTED_INITIAL_STATE, loading: true };
-      const mockVariables = [
-        { id: '1', name: 'income', entity: 'person', description: 'Income' },
-      ];
-      const mockDatasets = [
-        { id: '1', name: 'cps_2024', description: 'CPS 2024' },
-      ];
-      const mockParameters = [
-        { id: 'p1', name: 'tax.rate', label: 'Tax Rate' },
-      ];
+      const mockVariables = [{ id: '1', name: 'income', entity: 'person', description: 'Income' }];
+      const mockDatasets = [{ id: '1', name: 'cps_2024', description: 'CPS 2024' }];
+      const mockParameters = [{ id: 'p1', name: 'tax.rate', label: 'Tax Rate' }];
       const action = {
         type: fetchMetadataThunk.fulfilled.type,
         payload: {

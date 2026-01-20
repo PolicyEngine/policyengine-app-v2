@@ -1,4 +1,4 @@
-import { UK_REGION_TYPES, US_REGION_TYPES } from "./regionTypes";
+import { UK_REGION_TYPES, US_REGION_TYPES } from './regionTypes';
 
 /**
  * V2 API response types - raw data from the API
@@ -70,9 +70,21 @@ export interface MetadataRegionEntry {
   state_name?: string;
 }
 
-
 /**
  * Variable metadata - represents a variable in the tax-benefit model
+ * Based on V2 API response with computed label for display
+ *
+ * TODO: Migrate fully to V2VariableMetadata. This intermediate type exists because:
+ * 1. `label` is computed from `name` in MetadataAdapter (V2 API doesn't provide labels)
+ * 2. `adds`/`subtracts` are V1 fields used by VariableArithmetic for breakdown display
+ *
+ * KNOWN ISSUES:
+ * - `adds`/`subtracts` are NEVER POPULATED from V2 API, so VariableArithmetic
+ *   breakdown functionality is currently broken. V1 API included these fields
+ *   directly in the response to describe variable arithmetic formulas.
+ * - `label` is auto-generated from `name` (e.g., "employment_income" -> "Employment income")
+ *   using sentence case. V1 API provided human-curated labels. V2 API should add
+ *   a `label` field to match V1's quality.
  */
 export interface VariableMetadata {
   // Core fields from V2 API
@@ -85,18 +97,11 @@ export interface VariableMetadata {
   tax_benefit_model_version_id?: string;
   created_at?: string;
 
-  // V1 API fields (may not be present in V2)
+  // Auto-generated from name (sentence case) - V2 API should provide this field
   label?: string;
-  unit?: string | null;
-  valueType?: string;
-  definitionPeriod?: string;
-  documentation?: string | null;
-  isInputVariable?: boolean;
-  moduleName?: string;
-  indexInModule?: number;
-  hidden?: boolean;
 
   // Variable arithmetic (for breakdown calculations)
+  // WARNING: These fields are NOT populated from V2 API - see note above
   adds?: string | string[];
   subtracts?: string | string[];
 }
@@ -116,7 +121,7 @@ export interface ParameterMetadata {
   created_at?: string;
 
   // Parameter tree fields
-  type?: "parameter" | "parameterNode";
+  type?: 'parameter' | 'parameterNode';
   parameter: string; // Dot-separated path to parameter
 
   // Values indexed by date
@@ -167,7 +172,7 @@ export interface ParameterTreeNode {
   label: string;
   index: number;
   children?: ParameterTreeNode[];
-  type?: "parameterNode" | "parameter";
+  type?: 'parameterNode' | 'parameter';
   parameter?: string;
   description?: string | null;
   unit?: string | null;

@@ -1,13 +1,12 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
-import {
-  TEST_POLICY_IDS,
-  SAMPLE_RESPONSES,
-  API_ENDPOINTS,
-  mockFetchSuccess,
-  mockFetchError,
-} from '@/tests/fixtures/api/v2/apiV2Mocks';
-
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fetchParameterValues } from '@/api/v2/parameterValues';
+import {
+  API_ENDPOINTS,
+  mockFetchError,
+  mockFetchSuccess,
+  SAMPLE_RESPONSES,
+  TEST_POLICY_IDS,
+} from '@/tests/fixtures/api/v2/apiV2Mocks';
 
 describe('parameterValues', () => {
   const originalFetch = global.fetch;

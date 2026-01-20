@@ -21,7 +21,9 @@ function parseLocalAuthorities(csv: string): MetadataRegionEntry[] {
   const authorities: MetadataRegionEntry[] = [];
 
   for (const line of lines) {
-    if (!line.trim()) continue;
+    if (!line.trim()) {
+      continue;
+    }
 
     // Handle CSV with potential quoted fields containing commas
     let name: string;

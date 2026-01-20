@@ -143,7 +143,7 @@ export function getValueFromHousehold(
 /**
  * Gets input formatting properties for a variable based on its metadata
  * Determines prefix, suffix, decimal scale, and thousands separator
- * based on the variable's valueType and unit
+ * based on the variable's data_type and unit
  *
  * @param variable - The variable metadata
  * @returns Formatting properties for NumberInput components
@@ -160,11 +160,11 @@ export function getInputFormattingProps(variable: any): {
     'currency-EUR': '€',
   };
 
-  // Determine decimal scale based on valueType
+  // Determine decimal scale based on data_type (V2 API field)
   let decimalScale: number | undefined;
-  if (variable.valueType === 'int' || variable.valueType === 'Enum') {
+  if (variable.data_type === 'int' || variable.data_type === 'Enum') {
     decimalScale = 0;
-  } else if (variable.valueType === 'float') {
+  } else if (variable.data_type === 'float') {
     // For currency, use 2 decimals; for percentages use 2; otherwise use 0 for simplicity
     if (variable.unit && currencyMap[variable.unit]) {
       decimalScale = 2;

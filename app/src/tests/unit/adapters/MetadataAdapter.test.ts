@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { MetadataAdapter } from '@/adapters/MetadataAdapter';
 import {
-  createMockVariable,
-  createMockVariables,
-  createMockParameter,
-  createMockParameters,
   createMockDataset,
   createMockDatasets,
+  createMockParameter,
+  createMockParameters,
   createMockParameterValue,
   createMockParameterValues,
+  createMockVariable,
+  createMockVariables,
   TEST_POLICY_IDS,
 } from '@/tests/fixtures/api/v2/apiV2Mocks';
 
@@ -66,9 +66,9 @@ describe('MetadataAdapter', () => {
 
       // Then
       expect(Object.keys(result)).toHaveLength(3);
-      expect(result['variable_0']).toBeDefined();
-      expect(result['variable_1']).toBeDefined();
-      expect(result['variable_2']).toBeDefined();
+      expect(result.variable_0).toBeDefined();
+      expect(result.variable_1).toBeDefined();
+      expect(result.variable_2).toBeDefined();
     });
 
     it('given empty array then returns empty record', () => {

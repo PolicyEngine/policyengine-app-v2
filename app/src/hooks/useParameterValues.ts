@@ -1,15 +1,12 @@
-import { useMemo } from "react";
-import { useQuery, useQueries } from "@tanstack/react-query";
-import {
-  fetchParameterValues,
-  BASELINE_POLICY_ID,
-} from "@/api/v2/parameterValues";
-import { MetadataAdapter } from "@/adapters";
-import { parameterValueKeys } from "@/libs/queryKeys";
-import { ParameterMetadata } from "@/types/metadata";
-import { ValuesList } from "@/types/subIngredients/valueInterval";
+import { useMemo } from 'react';
+import { useQueries, useQuery } from '@tanstack/react-query';
+import { MetadataAdapter } from '@/adapters';
+import { BASELINE_POLICY_ID, fetchParameterValues } from '@/api/v2/parameterValues';
+import { parameterValueKeys } from '@/libs/queryKeys';
+import { ParameterMetadata } from '@/types/metadata';
+import { ValuesList } from '@/types/subIngredients/valueInterval';
 
-export { BASELINE_POLICY_ID } from "@/api/v2/parameterValues";
+export { BASELINE_POLICY_ID } from '@/api/v2/parameterValues';
 
 /**
  * Extract parameter IDs from parameter names using the parameters metadata.
@@ -19,9 +16,7 @@ export function extractParameterIds(
   parameterNames: string[],
   parameters: Record<string, ParameterMetadata>
 ): string[] {
-  return parameterNames
-    .map((name) => parameters[name]?.id)
-    .filter((id): id is string => !!id);
+  return parameterNames.map((name) => parameters[name]?.id).filter((id): id is string => !!id);
 }
 
 /**
@@ -41,10 +36,7 @@ export function useParameterValues(
   options?: { enabled?: boolean }
 ) {
   return useQuery({
-    queryKey: parameterValueKeys.byPolicyAndParameter(
-      policyId ?? "",
-      parameterId ?? ""
-    ),
+    queryKey: parameterValueKeys.byPolicyAndParameter(policyId ?? '', parameterId ?? ''),
     queryFn: async (): Promise<ValuesList> => {
       if (!parameterId || !policyId) {
         return {};
@@ -77,7 +69,7 @@ export function useMultipleParameterValues(
 ) {
   const queries = useQueries({
     queries: parameterIds.map((parameterId) => ({
-      queryKey: parameterValueKeys.byPolicyAndParameter(policyId ?? "", parameterId),
+      queryKey: parameterValueKeys.byPolicyAndParameter(policyId ?? '', parameterId),
       queryFn: async (): Promise<{ parameterId: string; values: ValuesList }> => {
         if (!policyId) {
           return { parameterId, values: {} };
@@ -111,7 +103,7 @@ export function useMultipleParameterValues(
   };
 }
 
-export { fetchParameterValues } from "@/api/v2/parameterValues";
+export { fetchParameterValues } from '@/api/v2/parameterValues';
 
 /**
  * Result type for useBaselineValuesForParameters hook

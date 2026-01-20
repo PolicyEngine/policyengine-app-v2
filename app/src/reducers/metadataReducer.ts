@@ -1,13 +1,8 @@
-import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
-import {
-  fetchVariables,
-  fetchDatasets,
-  fetchParameters,
-  fetchModelVersion,
-} from "@/api/v2";
-import { MetadataAdapter } from "@/adapters";
-import { buildParameterTreeV2 } from "@/libs/buildParameterTree";
-import { MetadataState } from "@/types/metadata";
+import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { MetadataAdapter } from '@/adapters';
+import { fetchDatasets, fetchModelVersion, fetchParameters, fetchVariables } from '@/api/v2';
+import { buildParameterTreeV2 } from '@/libs/buildParameterTree';
+import { MetadataState } from '@/types/metadata';
 
 /**
  * Initial state for API-driven metadata
@@ -34,7 +29,7 @@ const initialState: MetadataState = {
 
 // Fetch all metadata (variables, datasets, parameters) directly from API
 export const fetchMetadataThunk = createAsyncThunk(
-  "metadata/fetch",
+  'metadata/fetch',
   async (countryId: string, { rejectWithValue }) => {
     try {
       const [variables, datasets, parameters, version] = await Promise.all([
@@ -48,15 +43,13 @@ export const fetchMetadataThunk = createAsyncThunk(
         countryId,
       };
     } catch (error) {
-      return rejectWithValue(
-        error instanceof Error ? error.message : "Unknown error",
-      );
+      return rejectWithValue(error instanceof Error ? error.message : 'Unknown error');
     }
-  },
+  }
 );
 
 const metadataSlice = createSlice({
-  name: "metadata",
+  name: 'metadata',
   initialState,
   reducers: {
     setCurrentCountry(state, action: PayloadAction<string>) {
@@ -98,9 +91,7 @@ const metadataSlice = createSlice({
         // Convert V2 API data to frontend format using adapters
         state.variables = MetadataAdapter.variablesFromV2(data.variables);
         state.datasets = MetadataAdapter.datasetsFromV2(data.datasets);
-        const parametersRecord = MetadataAdapter.parametersFromV2(
-          data.parameters
-        );
+        const parametersRecord = MetadataAdapter.parametersFromV2(data.parameters);
         state.parameters = parametersRecord;
 
         // Build parameter tree from V2 API data

@@ -176,5 +176,4 @@ describe('metadataUtils', () => {
       expect(getFieldLabel('some_field_name')).toBe('Some Field Name');
     });
   });
-
 });

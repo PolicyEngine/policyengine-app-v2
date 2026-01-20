@@ -42,7 +42,13 @@ export default function BaselineOnlyChart({
   }
 
   // Get variation data (401-point array)
-  const yValues = getValueFromHousehold(variableName, year, null, baselineVariation, metadataContext);
+  const yValues = getValueFromHousehold(
+    variableName,
+    year,
+    null,
+    baselineVariation,
+    metadataContext
+  );
 
   if (!Array.isArray(yValues)) {
     return <div>No variation data available</div>;

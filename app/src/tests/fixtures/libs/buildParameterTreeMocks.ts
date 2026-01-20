@@ -287,7 +287,6 @@ export const expectedSimpleTree: ParameterTreeNode = {
   type: 'parameterNode',
 };
 
-
 // Mock parameters for alphabetical sorting test
 export const mockAlphabeticalParameters = {
   'gov.zebra': {

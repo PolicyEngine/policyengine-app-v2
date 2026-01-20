@@ -80,4 +80,3 @@ export const getFieldLabel = (fieldName: string) => {
     labelMap[fieldName] || fieldName.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())
   );
 };
-

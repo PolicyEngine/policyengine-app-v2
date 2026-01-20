@@ -1,5 +1,5 @@
 import { CURRENT_YEAR } from '@/constants';
-import { MetadataState, VariableMetadata, ParameterMetadata } from '@/types/metadata';
+import { MetadataState, ParameterMetadata, VariableMetadata } from '@/types/metadata';
 import { DEFAULT_LOADING_STATES } from '../reducers/metadataReducerMocks';
 
 // Test country IDs
@@ -34,11 +34,27 @@ export const mockLoadedMetadataState: MetadataState = {
   loaded: true,
   progress: 100,
   variables: {
-    income: { name: 'income', entity: 'person', description: 'Total income', label: 'Income', unit: 'currency-USD' } as VariableMetadata,
-    age: { name: 'age', entity: 'person', description: 'Age in years', label: 'Age', unit: 'year' } as VariableMetadata,
+    income: {
+      name: 'income',
+      entity: 'person',
+      description: 'Total income',
+      label: 'Income',
+      unit: 'currency-USD',
+    } as VariableMetadata,
+    age: {
+      name: 'age',
+      entity: 'person',
+      description: 'Age in years',
+      label: 'Age',
+      unit: 'year',
+    } as VariableMetadata,
   },
   parameters: {
-    tax_rate: { parameter: 'tax_rate', label: 'Tax Rate', values: { [CURRENT_YEAR]: 0.25 } } as ParameterMetadata,
+    tax_rate: {
+      parameter: 'tax_rate',
+      label: 'Tax Rate',
+      values: { [CURRENT_YEAR]: 0.25 },
+    } as ParameterMetadata,
   },
   datasets: [
     {
@@ -61,7 +77,13 @@ export const mockUKMetadataState: MetadataState = {
   ...mockLoadedMetadataState,
   currentCountry: TEST_COUNTRY_UK,
   variables: {
-    income: { name: 'income', entity: 'person', description: 'Total income', label: 'Income', unit: 'currency-GBP' } as VariableMetadata,
+    income: {
+      name: 'income',
+      entity: 'person',
+      description: 'Total income',
+      label: 'Income',
+      unit: 'currency-GBP',
+    } as VariableMetadata,
   },
   datasets: [
     {

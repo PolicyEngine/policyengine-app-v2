@@ -61,7 +61,13 @@ export default function BaselineAndReformChart({
     baselineVariation,
     metadataContext
   );
-  const reformYValues = getValueFromHousehold(variableName, year, null, reformVariation, metadataContext);
+  const reformYValues = getValueFromHousehold(
+    variableName,
+    year,
+    null,
+    reformVariation,
+    metadataContext
+  );
 
   if (!Array.isArray(baselineYValues) || !Array.isArray(reformYValues)) {
     return <div>No variation data available</div>;

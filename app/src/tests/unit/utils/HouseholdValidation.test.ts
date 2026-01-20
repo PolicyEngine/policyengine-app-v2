@@ -604,7 +604,7 @@ describe('HouseholdValidation', () => {
       expect(result).toBeDefined();
       expect(result?.name).toBe(VALIDATION_VARIABLE_NAMES.EMPLOYMENT_INCOME);
       expect(result?.entity).toBe(VALIDATION_ENTITY_NAMES.PEOPLE);
-      expect(result?.valueType).toBe('float');
+      expect(result?.data_type).toBe('float');
     });
 
     test('given non-existent variable when getting metadata then returns undefined', () => {
@@ -640,7 +640,7 @@ describe('HouseholdValidation', () => {
       expect(result).toBeDefined();
       expect(result?.name).toBe(VALIDATION_VARIABLE_NAMES.STATE_CODE);
       expect(result?.entity).toBe(VALIDATION_ENTITY_NAMES.HOUSEHOLDS);
-      expect(result?.valueType).toBe('string');
+      expect(result?.data_type).toBe('string');
     });
   });
 });

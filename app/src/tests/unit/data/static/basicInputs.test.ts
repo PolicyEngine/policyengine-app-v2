@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { getBasicInputs, US_BASIC_INPUTS, UK_BASIC_INPUTS } from '@/data/static/basicInputs';
+import { getBasicInputs, UK_BASIC_INPUTS, US_BASIC_INPUTS } from '@/data/static/basicInputs';
 import {
-  TEST_COUNTRIES,
-  EXPECTED_US_BASIC_INPUTS,
   EXPECTED_UK_BASIC_INPUTS,
+  EXPECTED_US_BASIC_INPUTS,
+  TEST_COUNTRIES,
 } from '@/tests/fixtures/data/static/staticDataMocks';
 
 describe('basicInputs', () => {

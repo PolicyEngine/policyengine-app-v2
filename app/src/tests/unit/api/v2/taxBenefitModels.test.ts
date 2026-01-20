@@ -1,24 +1,23 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
-import {
-  TEST_COUNTRIES,
-  MODEL_NAMES,
-  SAMPLE_RESPONSES,
-  API_ENDPOINTS,
-  mockFetchSuccess,
-  mockFetchError,
-  createMockTaxBenefitModel,
-  createMockModelVersion,
-} from '@/tests/fixtures/api/v2/apiV2Mocks';
-
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 // Import the module
 import {
-  fetchTaxBenefitModels,
+  API_V2_BASE_URL,
+  COUNTRY_TO_MODEL_NAME,
   fetchModelVersion,
   fetchModelVersionId,
+  fetchTaxBenefitModels,
   getModelName,
-  COUNTRY_TO_MODEL_NAME,
-  API_V2_BASE_URL,
 } from '@/api/v2/taxBenefitModels';
+import {
+  API_ENDPOINTS,
+  createMockModelVersion,
+  createMockTaxBenefitModel,
+  mockFetchError,
+  mockFetchSuccess,
+  MODEL_NAMES,
+  SAMPLE_RESPONSES,
+  TEST_COUNTRIES,
+} from '@/tests/fixtures/api/v2/apiV2Mocks';
 
 describe('taxBenefitModels', () => {
   const originalFetch = global.fetch;
@@ -104,9 +103,7 @@ describe('taxBenefitModels', () => {
 
     it('given US country with versions then returns first version string', async () => {
       // Given
-      const mockModels = [
-        createMockTaxBenefitModel({ id: US_MODEL_ID, name: MODEL_NAMES.US }),
-      ];
+      const mockModels = [createMockTaxBenefitModel({ id: US_MODEL_ID, name: MODEL_NAMES.US })];
       const mockVersions = [
         createMockModelVersion({ id: 'v1', model_id: US_MODEL_ID, version: '1.0.0' }),
       ];
@@ -135,9 +132,7 @@ describe('taxBenefitModels', () => {
 
     it('given model not found then throws error', async () => {
       // Given
-      const mockModels = [
-        createMockTaxBenefitModel({ id: 'other-id', name: 'other-model' }),
-      ];
+      const mockModels = [createMockTaxBenefitModel({ id: 'other-id', name: 'other-model' })];
       vi.mocked(global.fetch).mockResolvedValue(mockFetchSuccess(mockModels));
 
       // When/Then
@@ -148,9 +143,7 @@ describe('taxBenefitModels', () => {
 
     it('given failed versions fetch then throws error', async () => {
       // Given
-      const mockModels = [
-        createMockTaxBenefitModel({ id: US_MODEL_ID, name: MODEL_NAMES.US }),
-      ];
+      const mockModels = [createMockTaxBenefitModel({ id: US_MODEL_ID, name: MODEL_NAMES.US })];
       vi.mocked(global.fetch)
         .mockResolvedValueOnce(mockFetchSuccess(mockModels))
         .mockResolvedValueOnce(mockFetchError());
@@ -163,9 +156,7 @@ describe('taxBenefitModels', () => {
 
     it('given empty versions array then throws error', async () => {
       // Given
-      const mockModels = [
-        createMockTaxBenefitModel({ id: US_MODEL_ID, name: MODEL_NAMES.US }),
-      ];
+      const mockModels = [createMockTaxBenefitModel({ id: US_MODEL_ID, name: MODEL_NAMES.US })];
       vi.mocked(global.fetch)
         .mockResolvedValueOnce(mockFetchSuccess(mockModels))
         .mockResolvedValueOnce(mockFetchSuccess([]));
@@ -183,9 +174,7 @@ describe('taxBenefitModels', () => {
 
     it('given US country with versions then returns first version ID', async () => {
       // Given
-      const mockModels = [
-        createMockTaxBenefitModel({ id: US_MODEL_ID, name: MODEL_NAMES.US }),
-      ];
+      const mockModels = [createMockTaxBenefitModel({ id: US_MODEL_ID, name: MODEL_NAMES.US })];
       const mockVersions = [
         createMockModelVersion({ id: 'version-id-123', model_id: US_MODEL_ID, version: '1.0.0' }),
       ];
@@ -209,14 +198,14 @@ describe('taxBenefitModels', () => {
       vi.mocked(global.fetch).mockResolvedValue(mockFetchError());
 
       // When/Then
-      await expect(fetchModelVersionId(TEST_COUNTRIES.US)).rejects.toThrow('Failed to fetch models');
+      await expect(fetchModelVersionId(TEST_COUNTRIES.US)).rejects.toThrow(
+        'Failed to fetch models'
+      );
     });
 
     it('given model not found then throws error', async () => {
       // Given
-      const mockModels = [
-        createMockTaxBenefitModel({ id: 'other-id', name: 'other-model' }),
-      ];
+      const mockModels = [createMockTaxBenefitModel({ id: 'other-id', name: 'other-model' })];
       vi.mocked(global.fetch).mockResolvedValue(mockFetchSuccess(mockModels));
 
       // When/Then
@@ -227,9 +216,7 @@ describe('taxBenefitModels', () => {
 
     it('given empty versions array then throws error', async () => {
       // Given
-      const mockModels = [
-        createMockTaxBenefitModel({ id: US_MODEL_ID, name: MODEL_NAMES.US }),
-      ];
+      const mockModels = [createMockTaxBenefitModel({ id: US_MODEL_ID, name: MODEL_NAMES.US })];
       vi.mocked(global.fetch)
         .mockResolvedValueOnce(mockFetchSuccess(mockModels))
         .mockResolvedValueOnce(mockFetchSuccess([]));

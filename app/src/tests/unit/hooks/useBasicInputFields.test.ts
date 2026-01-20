@@ -1,10 +1,10 @@
-import { describe, expect, it, vi } from 'vitest';
 import { renderHook } from '@test-utils';
+import { describe, expect, it, vi } from 'vitest';
 import { useBasicInputFields } from '@/hooks/useBasicInputFields';
 import {
-  TEST_COUNTRIES,
-  MOCK_VARIABLES_RECORD,
   createMockRootState,
+  MOCK_VARIABLES_RECORD,
+  TEST_COUNTRIES,
 } from '@/tests/fixtures/hooks/metadataHooksMocks';
 
 // Mock react-redux
@@ -56,10 +56,9 @@ describe('useBasicInputFields', () => {
   describe('memoization', () => {
     it('given same country then returns memoized result', () => {
       // Given
-      const { result, rerender } = renderHook(
-        ({ countryId }) => useBasicInputFields(countryId),
-        { initialProps: { countryId: TEST_COUNTRIES.US } }
-      );
+      const { result, rerender } = renderHook(({ countryId }) => useBasicInputFields(countryId), {
+        initialProps: { countryId: TEST_COUNTRIES.US },
+      });
       const firstResult = result.current;
 
       // When

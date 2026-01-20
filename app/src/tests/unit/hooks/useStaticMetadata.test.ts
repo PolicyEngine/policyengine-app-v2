@@ -1,12 +1,12 @@
-import { describe, expect, it } from 'vitest';
 import { renderHook } from '@test-utils';
+import { describe, expect, it } from 'vitest';
 import {
-  useStaticMetadata,
-  useEntities,
   useBasicInputs,
-  useTimePeriods,
-  useModelledPolicies,
   useCurrentLawId,
+  useEntities,
+  useModelledPolicies,
+  useStaticMetadata,
+  useTimePeriods,
 } from '@/hooks/useStaticMetadata';
 import { TEST_COUNTRIES, TEST_YEAR } from '@/tests/fixtures/hooks/metadataHooksMocks';
 
@@ -92,10 +92,9 @@ describe('useStaticMetadata', () => {
 
     it('given same country then returns memoized result', () => {
       // Given
-      const { result, rerender } = renderHook(
-        ({ countryId }) => useEntities(countryId),
-        { initialProps: { countryId: TEST_COUNTRIES.US } }
-      );
+      const { result, rerender } = renderHook(({ countryId }) => useEntities(countryId), {
+        initialProps: { countryId: TEST_COUNTRIES.US },
+      });
       const firstResult = result.current;
 
       // When

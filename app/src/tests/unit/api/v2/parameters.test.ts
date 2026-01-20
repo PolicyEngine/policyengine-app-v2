@@ -1,14 +1,13 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { fetchParameters } from '@/api/v2/parameters';
 import {
-  TEST_COUNTRIES,
+  API_ENDPOINTS,
+  mockFetchError,
+  mockFetchSuccess,
   MODEL_NAMES,
   SAMPLE_RESPONSES,
-  API_ENDPOINTS,
-  mockFetchSuccess,
-  mockFetchError,
+  TEST_COUNTRIES,
 } from '@/tests/fixtures/api/v2/apiV2Mocks';
-
-import { fetchParameters } from '@/api/v2/parameters';
 
 describe('parameters', () => {
   const originalFetch = global.fetch;

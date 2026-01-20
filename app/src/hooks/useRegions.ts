@@ -7,7 +7,7 @@
  */
 
 import { useMemo } from 'react';
-import { resolveRegions, ResolvedRegions } from '@/data/static/regions';
+import { ResolvedRegions, resolveRegions } from '@/data/static/regions';
 
 /**
  * Get regions for a country and simulation year
@@ -45,10 +45,7 @@ export function useRegions(countryId: string, year: number): ResolvedRegions {
  *
  * Convenience wrapper when you don't need version information.
  */
-export function useRegionsList(
-  countryId: string,
-  year: number
-): ResolvedRegions['regions'] {
+export function useRegionsList(countryId: string, year: number): ResolvedRegions['regions'] {
   const { regions } = useRegions(countryId, year);
   return regions;
 }

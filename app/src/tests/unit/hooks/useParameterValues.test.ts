@@ -2,19 +2,15 @@ import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+// Import the mocked function
+import { fetchParameterValues } from '@/api/v2/parameterValues';
 import { useParameterValues } from '@/hooks/useParameterValues';
-import {
-  createMockParameterValues,
-  TEST_POLICY_IDS,
-} from '@/tests/fixtures/api/v2/apiV2Mocks';
+import { createMockParameterValues, TEST_POLICY_IDS } from '@/tests/fixtures/api/v2/apiV2Mocks';
 
 // Mock the API module
 vi.mock('@/api/v2/parameterValues', () => ({
   fetchParameterValues: vi.fn(),
 }));
-
-// Import the mocked function
-import { fetchParameterValues } from '@/api/v2/parameterValues';
 
 describe('useParameterValues', () => {
   let queryClient: QueryClient;
@@ -90,10 +86,9 @@ describe('useParameterValues', () => {
   describe('disabled states', () => {
     it('given undefined parameterId then does not fetch', async () => {
       // When
-      const { result } = renderHook(
-        () => useParameterValues(undefined, TEST_POLICY_IDS.BASELINE),
-        { wrapper }
-      );
+      const { result } = renderHook(() => useParameterValues(undefined, TEST_POLICY_IDS.BASELINE), {
+        wrapper,
+      });
 
       // Then
       // Query should be disabled and return empty object
@@ -103,10 +98,9 @@ describe('useParameterValues', () => {
 
     it('given undefined policyId then does not fetch', async () => {
       // When
-      const { result } = renderHook(
-        () => useParameterValues(TEST_PARAMETER_ID, undefined),
-        { wrapper }
-      );
+      const { result } = renderHook(() => useParameterValues(TEST_PARAMETER_ID, undefined), {
+        wrapper,
+      });
 
       // Then
       expect(result.current.fetchStatus).toBe('idle');

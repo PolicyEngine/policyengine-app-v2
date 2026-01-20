@@ -1,3 +1,8 @@
+import { getBasicInputs } from './basicInputs';
+import { getEntities } from './entities';
+import { getCurrentLawId, getModelledPolicies } from './modelledPolicies';
+import { getTimePeriods } from './timePeriods';
+
 /**
  * Static metadata loader
  * Provides country-specific static data that doesn't come from the API
@@ -13,11 +18,7 @@ export {
 } from './entities';
 
 // Basic input fields
-export {
-  getBasicInputs,
-  US_BASIC_INPUTS,
-  UK_BASIC_INPUTS,
-} from './basicInputs';
+export { getBasicInputs, US_BASIC_INPUTS, UK_BASIC_INPUTS } from './basicInputs';
 
 // Static region definitions (states and countries only)
 // For full regions including congressional districts, constituencies, etc.,
@@ -45,11 +46,6 @@ export {
 
 // Tax year utilities
 export { getTaxYears, getDateRange } from './taxYears';
-
-import { getEntities } from './entities';
-import { getBasicInputs } from './basicInputs';
-import { getModelledPolicies, getCurrentLawId } from './modelledPolicies';
-import { getTimePeriods } from './timePeriods';
 
 /**
  * Get all static data for a country (excluding regions)

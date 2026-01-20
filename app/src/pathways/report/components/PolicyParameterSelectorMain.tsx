@@ -5,7 +5,7 @@
  */
 
 import { Container, Text, Title } from '@mantine/core';
-import { useParameterValues, BASELINE_POLICY_ID } from '@/hooks/useParameterValues';
+import { BASELINE_POLICY_ID, useParameterValues } from '@/hooks/useParameterValues';
 import { ParameterMetadata } from '@/types/metadata';
 import { PolicyStateProps } from '@/types/pathwayState';
 import { getParameterByName } from '@/types/subIngredients/parameter';

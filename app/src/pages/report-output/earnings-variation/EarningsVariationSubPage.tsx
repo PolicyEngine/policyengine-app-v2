@@ -130,17 +130,23 @@ export default function EarningsVariationSubPage({
     );
   }
 
-  // Build variable options (only non-input variables with array values)
+  // Build variable options (variables with array values in variation data)
   const variableOptions = Object.keys(metadataContext.variables)
     .filter((varName) => {
       const variable = metadataContext.variables[varName];
-      // Exclude input variables and marginal_tax_rate (has its own page)
-      if (!variable || variable.isInputVariable || varName === 'marginal_tax_rate') {
+      // Exclude marginal_tax_rate (has its own page)
+      if (!variable || varName === 'marginal_tax_rate') {
         return false;
       }
 
       // Check if baseline variation has array values for this variable
-      const value = getValueFromHousehold(varName, reportYear, null, baselineVariation, metadataContext);
+      const value = getValueFromHousehold(
+        varName,
+        reportYear,
+        null,
+        baselineVariation,
+        metadataContext
+      );
       return Array.isArray(value);
     })
     .map((varName) => ({

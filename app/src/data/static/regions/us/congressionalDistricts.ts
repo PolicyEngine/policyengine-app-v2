@@ -129,7 +129,9 @@ const DISTRICT_COUNTS_2020: [string, number][] = [
  * Get ordinal suffix for a number (1st, 2nd, 3rd, 4th, etc.)
  */
 function getOrdinalSuffix(n: number): string {
-  if (n % 100 >= 11 && n % 100 <= 13) return 'th';
+  if (n % 100 >= 11 && n % 100 <= 13) {
+    return 'th';
+  }
   switch (n % 10) {
     case 1:
       return 'st';
@@ -156,9 +158,7 @@ function buildDistrictLabel(stateCode: string, districtNumber: number): string {
 /**
  * Generate all congressional district entries from compact data
  */
-function buildCongressionalDistricts(
-  districtCounts: [string, number][]
-): MetadataRegionEntry[] {
+function buildCongressionalDistricts(districtCounts: [string, number][]): MetadataRegionEntry[] {
   const districts: MetadataRegionEntry[] = [];
 
   for (const [stateCode, count] of districtCounts) {
@@ -181,10 +181,8 @@ const VERSION_2020_CENSUS: RegionVersionMeta = {
   version: '2020-census',
   effectiveFrom: 2023,
   effectiveUntil: null,
-  description:
-    'Districts based on 2020 Census apportionment (118th-119th Congress)',
-  source:
-    'https://ballotpedia.org/Congressional_apportionment_after_the_2020_census',
+  description: 'Districts based on 2020 Census apportionment (118th-119th Congress)',
+  source: 'https://ballotpedia.org/Congressional_apportionment_after_the_2020_census',
 };
 
 // Generate districts once at module load

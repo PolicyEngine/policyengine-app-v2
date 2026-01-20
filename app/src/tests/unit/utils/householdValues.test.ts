@@ -217,8 +217,8 @@ describe('formatVariableValue', () => {
     // When
     const result = formatVariableValue(variable, value, precision);
 
-    // Then
-    expect(result).toBe('$50,000.57');
+    // Then - V2 API doesn't include 'unit', so no currency symbol
+    expect(result).toBe('50,000.57');
   });
 });
 
@@ -283,7 +283,7 @@ describe('getInputFormattingProps', () => {
   describe('Currency formatting', () => {
     test('given USD currency variable then returns dollar prefix with 2 decimals', () => {
       // Given
-      const variable = { valueType: 'float', unit: 'currency-USD' };
+      const variable = { data_type: 'float', unit: 'currency-USD' };
 
       // When
       const result = getInputFormattingProps(variable);
@@ -298,7 +298,7 @@ describe('getInputFormattingProps', () => {
 
     test('given GBP currency variable then returns pound prefix with 2 decimals', () => {
       // Given
-      const variable = { valueType: 'float', unit: 'currency-GBP' };
+      const variable = { data_type: 'float', unit: 'currency-GBP' };
 
       // When
       const result = getInputFormattingProps(variable);
@@ -313,7 +313,7 @@ describe('getInputFormattingProps', () => {
 
     test('given EUR currency variable then returns euro prefix with 2 decimals', () => {
       // Given
-      const variable = { valueType: 'float', unit: 'currency-EUR' };
+      const variable = { data_type: 'float', unit: 'currency-EUR' };
 
       // When
       const result = getInputFormattingProps(variable);
@@ -330,7 +330,7 @@ describe('getInputFormattingProps', () => {
   describe('Percentage formatting', () => {
     test('given percentage variable then returns percent suffix with 2 decimals', () => {
       // Given
-      const variable = { valueType: 'float', unit: '/1' };
+      const variable = { data_type: 'float', unit: '/1' };
 
       // When
       const result = getInputFormattingProps(variable);
@@ -347,7 +347,7 @@ describe('getInputFormattingProps', () => {
   describe('Integer formatting', () => {
     test('given int variable then returns 0 decimals', () => {
       // Given
-      const variable = { valueType: 'int', unit: null };
+      const variable = { data_type: 'int', unit: null };
 
       // When
       const result = getInputFormattingProps(variable);
@@ -361,7 +361,7 @@ describe('getInputFormattingProps', () => {
 
     test('given Enum variable then returns 0 decimals', () => {
       // Given
-      const variable = { valueType: 'Enum', unit: null };
+      const variable = { data_type: 'Enum', unit: null };
 
       // When
       const result = getInputFormattingProps(variable);
@@ -377,7 +377,7 @@ describe('getInputFormattingProps', () => {
   describe('Float formatting', () => {
     test('given float variable without unit then returns 0 decimals', () => {
       // Given
-      const variable = { valueType: 'float', unit: null };
+      const variable = { data_type: 'float', unit: null };
 
       // When
       const result = getInputFormattingProps(variable);
@@ -391,7 +391,7 @@ describe('getInputFormattingProps', () => {
 
     test('given float variable with unknown unit then returns 0 decimals', () => {
       // Given
-      const variable = { valueType: 'float', unit: 'years' };
+      const variable = { data_type: 'float', unit: 'years' };
 
       // When
       const result = getInputFormattingProps(variable);
@@ -405,7 +405,7 @@ describe('getInputFormattingProps', () => {
   });
 
   describe('Edge cases', () => {
-    test('given variable without valueType then handles gracefully', () => {
+    test('given variable without data_type then handles gracefully', () => {
       // Given
       const variable = { unit: 'currency-USD' };
 
@@ -422,7 +422,7 @@ describe('getInputFormattingProps', () => {
 
     test('given variable without unit then returns default formatting', () => {
       // Given
-      const variable = { valueType: 'float' };
+      const variable = { data_type: 'float' };
 
       // When
       const result = getInputFormattingProps(variable);
@@ -442,7 +442,12 @@ describe('shouldShowVariable', () => {
     const variableName = TEST_VARIABLE_NAMES.HOUSEHOLD_INCOME;
 
     // When
-    const result = shouldShowVariable(variableName, MOCK_HOUSEHOLD_DATA, null, MOCK_METADATA_CONTEXT);
+    const result = shouldShowVariable(
+      variableName,
+      MOCK_HOUSEHOLD_DATA,
+      null,
+      MOCK_METADATA_CONTEXT
+    );
 
     // Then
     expect(result).toBe(true);
@@ -453,7 +458,12 @@ describe('shouldShowVariable', () => {
     const variableName = TEST_VARIABLE_NAMES.NONEXISTENT;
 
     // When
-    const result = shouldShowVariable(variableName, MOCK_HOUSEHOLD_DATA, null, MOCK_METADATA_CONTEXT);
+    const result = shouldShowVariable(
+      variableName,
+      MOCK_HOUSEHOLD_DATA,
+      null,
+      MOCK_METADATA_CONTEXT
+    );
 
     // Then
     expect(result).toBe(false);

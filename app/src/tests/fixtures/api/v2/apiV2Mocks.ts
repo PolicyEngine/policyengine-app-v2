@@ -3,10 +3,10 @@
  */
 import type { TaxBenefitModel, TaxBenefitModelVersion } from '@/api/v2/taxBenefitModels';
 import type {
-  V2VariableMetadata,
-  V2ParameterMetadata,
   V2DatasetMetadata,
+  V2ParameterMetadata,
   V2ParameterValueMetadata,
+  V2VariableMetadata,
 } from '@/types/metadata';
 
 // Test countries
@@ -25,7 +25,9 @@ export const TEST_VERSIONS = {
 } as const;
 
 // Variable factory
-export function createMockVariable(overrides: Partial<V2VariableMetadata> = {}): V2VariableMetadata {
+export function createMockVariable(
+  overrides: Partial<V2VariableMetadata> = {}
+): V2VariableMetadata {
   return {
     id: 'var-1',
     name: 'test_variable',
@@ -46,7 +48,9 @@ export function createMockVariables(count: number): V2VariableMetadata[] {
 }
 
 // Parameter factory
-export function createMockParameter(overrides: Partial<V2ParameterMetadata> = {}): V2ParameterMetadata {
+export function createMockParameter(
+  overrides: Partial<V2ParameterMetadata> = {}
+): V2ParameterMetadata {
   return {
     id: 'param-1',
     name: 'test.parameter',
@@ -217,7 +221,8 @@ export const API_ENDPOINTS = {
     `${API_V2_BASE_URL}/variables/?tax_benefit_model_name=${modelName}&limit=${limit}`,
   PARAMETERS: (modelName: string, limit: number = 10000) =>
     `${API_V2_BASE_URL}/parameters/?tax_benefit_model_name=${modelName}&limit=${limit}`,
-  DATASETS: (modelName: string) => `${API_V2_BASE_URL}/datasets/?tax_benefit_model_name=${modelName}`,
+  DATASETS: (modelName: string) =>
+    `${API_V2_BASE_URL}/datasets/?tax_benefit_model_name=${modelName}`,
   PARAMETER_VALUES: (parameterId: string, policyId: string) =>
     `${API_V2_BASE_URL}/parameter-values/?parameter_id=${parameterId}&policy_id=${policyId}`,
 } as const;

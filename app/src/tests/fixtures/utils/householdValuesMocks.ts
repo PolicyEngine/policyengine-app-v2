@@ -10,32 +10,32 @@ export const MOCK_HOUSEHOLD_INCOME_VARIABLE = {
   entity: 'household',
   description: 'Total household income',
   label: 'Household income',
-  unit: 'currency-USD',
-  valueType: 'float',
+  name: 'household_income',
+  data_type: 'float',
 };
 
 export const MOCK_AGE_VARIABLE = {
   entity: 'person',
   description: 'Age of person',
   label: 'Age',
-  unit: 'year',
-  valueType: 'int',
+  name: 'age',
+  data_type: 'int',
 };
 
 export const MOCK_BENEFIT_VARIABLE = {
   entity: 'person',
   description: 'Benefits received',
   label: 'Benefits',
-  unit: 'currency-USD',
-  valueType: 'float',
+  name: 'benefits',
+  data_type: 'float',
 };
 
 export const MOCK_TAX_RATE_VARIABLE = {
   entity: 'household',
   description: 'Effective tax rate',
   label: 'Tax rate',
-  unit: '/1',
-  valueType: 'float',
+  name: 'tax_rate',
+  data_type: 'float',
 };
 
 // HouseholdMetadataContext for household value tests
@@ -190,9 +190,11 @@ export const EXPECTED_VALUES = {
   HOUSEHOLD_INCOME_ALL_PERIODS: 150000, // 48000 + 50000 + 52000
 } as const;
 
+// Note: V2 API doesn't include 'unit' for variables, so currency formatting
+// is no longer automatic. Values are formatted as plain numbers.
 export const EXPECTED_FORMATTED_VALUES = {
-  USD_50000: '$50,000',
-  USD_5000: '$5,000',
-  PERCENTAGE_15: '15%',
+  USD_50000: '50,000', // No currency symbol without unit
+  USD_5000: '5,000', // No currency symbol without unit
+  PERCENTAGE_15: '0', // No percentage formatting without unit (0.15 -> 0)
   PLAIN_67: '67',
 } as const;

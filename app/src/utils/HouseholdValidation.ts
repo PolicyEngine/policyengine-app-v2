@@ -208,8 +208,8 @@ export const HouseholdValidation = {
     const errors: ValidationError[] = [];
     const warnings: ValidationWarning[] = [];
 
-    // Type checking
-    switch (metadata.valueType) {
+    // Type checking based on V2 API data_type
+    switch (metadata.data_type) {
       case 'float':
       case 'int':
         if (typeof value !== 'number') {
@@ -219,7 +219,7 @@ export const HouseholdValidation = {
             field: metadata.name,
           });
         }
-        if (metadata.valueType === 'int' && !Number.isInteger(value)) {
+        if (metadata.data_type === 'int' && !Number.isInteger(value)) {
           errors.push({
             code: 'NOT_INTEGER',
             message: `Variable ${metadata.name} must be an integer`,

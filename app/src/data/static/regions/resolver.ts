@@ -3,11 +3,11 @@
  */
 
 import { MetadataRegionEntry } from '@/types/metadata';
-import { US_REGIONS, UK_REGIONS } from '../staticRegions';
-import { US_CONGRESSIONAL_DISTRICTS } from './us/congressionalDistricts';
+import { UK_REGIONS, US_REGIONS } from '../staticRegions';
+import { ResolvedRegions } from './types';
 import { UK_CONSTITUENCIES } from './uk/constituencies';
 import { UK_LOCAL_AUTHORITIES } from './uk/localAuthorities';
-import { ResolvedRegions } from './types';
+import { US_CONGRESSIONAL_DISTRICTS } from './us/congressionalDistricts';
 
 /**
  * Resolve all regions for a country and simulation year
@@ -20,16 +20,11 @@ import { ResolvedRegions } from './types';
  * Dynamic regions (congressional districts, constituencies, local authorities)
  * are resolved based on the simulation year.
  */
-export function resolveRegions(
-  countryId: string,
-  year: number
-): ResolvedRegions {
+export function resolveRegions(countryId: string, year: number): ResolvedRegions {
   switch (countryId) {
     case 'us': {
-      const districtVersion =
-        US_CONGRESSIONAL_DISTRICTS.getVersionForYear(year);
-      const districts =
-        US_CONGRESSIONAL_DISTRICTS.versions[districtVersion].data;
+      const districtVersion = US_CONGRESSIONAL_DISTRICTS.getVersionForYear(year);
+      const districts = US_CONGRESSIONAL_DISTRICTS.versions[districtVersion].data;
 
       return {
         regions: [...US_REGIONS, ...districts],

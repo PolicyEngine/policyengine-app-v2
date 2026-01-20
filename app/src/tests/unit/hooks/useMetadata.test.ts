@@ -1,18 +1,23 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { renderHook } from '@test-utils';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+// Import after mocks are set up
+import { selectMetadataState, useFetchMetadata } from '@/hooks/useMetadata';
+import { fetchMetadataThunk } from '@/reducers/metadataReducer';
 import {
-  TEST_COUNTRIES,
-  MOCK_METADATA_STATE_INITIAL,
-  MOCK_METADATA_STATE_LOADING,
-  MOCK_METADATA_STATE_LOADED,
   MOCK_METADATA_STATE_ERROR,
+  MOCK_METADATA_STATE_INITIAL,
+  MOCK_METADATA_STATE_LOADED,
+  MOCK_METADATA_STATE_LOADING,
+  TEST_COUNTRIES,
 } from '@/tests/fixtures/hooks/metadataHooksMocks';
 
 // Mock dispatch function
 const mockDispatch = vi.fn();
 
 // Mock state values - type to allow reassignment
-let mockState: { metadata: typeof MOCK_METADATA_STATE_INITIAL } = { metadata: MOCK_METADATA_STATE_INITIAL };
+let mockState: { metadata: typeof MOCK_METADATA_STATE_INITIAL } = {
+  metadata: MOCK_METADATA_STATE_INITIAL,
+};
 
 // Mock react-redux
 vi.mock('react-redux', async () => {
@@ -29,13 +34,12 @@ vi.mock('@/reducers/metadataReducer', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/reducers/metadataReducer')>();
   return {
     ...actual,
-    fetchMetadataThunk: vi.fn((countryId: string) => ({ type: 'FETCH_METADATA', payload: countryId })),
+    fetchMetadataThunk: vi.fn((countryId: string) => ({
+      type: 'FETCH_METADATA',
+      payload: countryId,
+    })),
   };
 });
-
-// Import after mocks are set up
-import { selectMetadataState, useFetchMetadata } from '@/hooks/useMetadata';
-import { fetchMetadataThunk } from '@/reducers/metadataReducer';
 
 describe('useMetadata', () => {
   beforeEach(() => {

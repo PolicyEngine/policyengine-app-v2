@@ -44,16 +44,11 @@ function sortTreeInPlace(tree: ParameterTreeNode[]): ParameterTreeNode[] {
   return tree;
 }
 
-
 /**
  * Prefixes to exclude from the parameter tree.
  * These are internal/calibration parameters not meant for policy editing.
  */
-const EXCLUDED_PREFIXES = [
-  'calibration.',
-  'gov.abolitions.',
-  'taxsim.',
-];
+const EXCLUDED_PREFIXES = ['calibration.', 'gov.abolitions.', 'gov.taxsim.', 'taxsim.'];
 
 /**
  * Checks if a parameter name should be included in the tree.
@@ -112,6 +107,8 @@ export function buildParameterTreeV2(
       unit: parameter.unit,
       period: parameter.period,
       values: parameter.values,
+      economy: parameter.economy,
+      household: parameter.household,
     };
 
     // Split based on . or [
@@ -177,4 +174,3 @@ export function buildParameterTreeV2(
 
   return govTree;
 }
-

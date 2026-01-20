@@ -21,14 +21,14 @@
 
 import { useMemo } from 'react';
 import {
-  getEntities,
   getBasicInputs,
-  getTimePeriods,
-  getModelledPolicies,
   getCurrentLawId,
+  getEntities,
+  getModelledPolicies,
+  getTimePeriods,
   type EntitiesRecord,
-  type TimePeriodOption,
   type ModelledPolicies,
+  type TimePeriodOption,
 } from '@/data/static';
 import { resolveRegions, type ResolvedRegions } from '@/data/static/regions';
 import { MetadataRegionEntry } from '@/types/metadata';
@@ -62,10 +62,7 @@ export interface StaticMetadata {
  * @param countryId - Country code ('us' or 'uk')
  * @param year - Simulation year (affects which region boundaries are used)
  */
-export function useStaticMetadata(
-  countryId: string,
-  year: number
-): StaticMetadata {
+export function useStaticMetadata(countryId: string, year: number): StaticMetadata {
   return useMemo(() => {
     const { regions, versions } = resolveRegions(countryId, year);
 

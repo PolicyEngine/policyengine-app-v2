@@ -1,17 +1,19 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { configureStore } from '@reduxjs/toolkit';
 import { render, screen } from '@testing-library/react';
 import { Provider } from 'react-redux';
-import { configureStore } from '@reduxjs/toolkit';
-import { MemoryRouter, Routes, Route } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { MantineProvider } from '@mantine/core';
 import metadataReducer from '@/reducers/metadataReducer';
-import { policyEngineTheme } from '@/theme';
+// Import after mocks
+import { MetadataGuard } from '@/routing/guards/MetadataGuard';
 import {
-  TEST_COUNTRIES,
-  METADATA_STATE,
-  LOADING_MESSAGES,
   CHILD_CONTENT,
+  LOADING_MESSAGES,
+  METADATA_STATE,
+  TEST_COUNTRIES,
 } from '@/tests/fixtures/routing/guards/guardsMocks';
+import { policyEngineTheme } from '@/theme';
 
 // Track current mock state - type to allow reassignment to different states
 let mockMetadataState: {
@@ -48,9 +50,6 @@ vi.mock('@/pages/report-output/ErrorPage', () => ({
 vi.mock('@/pages/report-output/LoadingPage', () => ({
   default: ({ message }: { message: string }) => <div data-testid="loading-page">{message}</div>,
 }));
-
-// Import after mocks
-import { MetadataGuard } from '@/routing/guards/MetadataGuard';
 
 // Create a fresh store for each test
 function createTestStore() {

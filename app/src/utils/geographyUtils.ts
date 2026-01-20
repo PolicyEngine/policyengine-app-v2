@@ -105,7 +105,10 @@ export function getCountryLabel(countryCode: string): string {
  * @param regions - Array of region entries from static metadata
  * @returns The matched region entry or undefined
  */
-function findRegion(regionCode: string, regions: MetadataRegionEntry[]): MetadataRegionEntry | undefined {
+function findRegion(
+  regionCode: string,
+  regions: MetadataRegionEntry[]
+): MetadataRegionEntry | undefined {
   // Try exact match first
   const exactMatch = regions.find((r) => r.name === regionCode);
   if (exactMatch) {

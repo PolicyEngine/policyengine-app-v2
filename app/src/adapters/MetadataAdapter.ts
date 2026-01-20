@@ -1,12 +1,12 @@
 import {
-  V2VariableMetadata,
-  V2ParameterMetadata,
-  V2DatasetMetadata,
-  V2ParameterValueMetadata,
-  VariableMetadata,
   ParameterMetadata,
-} from "@/types/metadata";
-import { ValuesList } from "@/types/subIngredients/valueInterval";
+  V2DatasetMetadata,
+  V2ParameterMetadata,
+  V2ParameterValueMetadata,
+  V2VariableMetadata,
+  VariableMetadata,
+} from '@/types/metadata';
+import { ValuesList } from '@/types/subIngredients/valueInterval';
 
 /**
  * Dataset type used in the frontend (simplified from V2DatasetMetadata)
@@ -35,19 +35,16 @@ export class MetadataAdapter {
       possible_values: v2.possible_values,
       tax_benefit_model_version_id: v2.tax_benefit_model_version_id,
       created_at: v2.created_at,
-      // Generate label from name if not provided
-      label: v2.name
-        .replace(/_/g, " ")
-        .replace(/\b\w/g, (c: string) => c.toUpperCase()),
+      // Auto-generate label from name (sentence case)
+      // TODO: V2 API should provide labels like V1 API did
+      label: v2.name.replace(/_/g, ' ').replace(/^./, (c: string) => c.toUpperCase()),
     };
   }
 
   /**
    * Convert V2 variables array to a keyed record
    */
-  static variablesFromV2(
-    variables: V2VariableMetadata[]
-  ): Record<string, VariableMetadata> {
+  static variablesFromV2(variables: V2VariableMetadata[]): Record<string, VariableMetadata> {
     const record: Record<string, VariableMetadata> = {};
     for (const v of variables) {
       record[v.name] = MetadataAdapter.variableFromV2(v);
@@ -69,7 +66,7 @@ export class MetadataAdapter {
       tax_benefit_model_version_id: p.tax_benefit_model_version_id,
       created_at: p.created_at,
       parameter: p.name, // Use name as parameter path
-      type: "parameter",
+      type: 'parameter',
       values: {}, // Parameter values are fetched on-demand
     };
   }
@@ -77,9 +74,7 @@ export class MetadataAdapter {
   /**
    * Convert V2 parameters array to a keyed record
    */
-  static parametersFromV2(
-    parameters: V2ParameterMetadata[]
-  ): Record<string, ParameterMetadata> {
+  static parametersFromV2(parameters: V2ParameterMetadata[]): Record<string, ParameterMetadata> {
     const record: Record<string, ParameterMetadata> = {};
     for (const p of parameters) {
       record[p.name] = MetadataAdapter.parameterFromV2(p);
@@ -119,7 +114,7 @@ export class MetadataAdapter {
     const valuesList: ValuesList = {};
     for (const v of values) {
       // Convert ISO timestamp (e.g., "2025-01-01T00:00:00") to date string (e.g., "2025-01-01")
-      const dateKey = v.start_date.split("T")[0];
+      const dateKey = v.start_date.split('T')[0];
       valuesList[dateKey] = v.value_json;
     }
     return valuesList;

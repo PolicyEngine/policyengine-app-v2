@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { getEntities, US_ENTITIES, UK_ENTITIES } from '@/data/static/entities';
+import { getEntities, UK_ENTITIES, US_ENTITIES } from '@/data/static/entities';
 import {
-  TEST_COUNTRIES,
-  EXPECTED_US_ENTITY_KEYS,
-  EXPECTED_UK_ENTITY_KEYS,
   EXPECTED_ENTITY_PROPERTIES,
+  EXPECTED_UK_ENTITY_KEYS,
+  EXPECTED_US_ENTITY_KEYS,
+  TEST_COUNTRIES,
 } from '@/tests/fixtures/data/static/staticDataMocks';
 
 describe('entities', () => {

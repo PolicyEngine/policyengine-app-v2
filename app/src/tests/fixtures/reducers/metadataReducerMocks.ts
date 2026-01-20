@@ -1,6 +1,6 @@
 import { CURRENT_YEAR } from '@/constants';
 import { ParameterTreeNode } from '@/libs/buildParameterTree';
-import { MetadataState, VariableMetadata, ParameterMetadata } from '@/types/metadata';
+import { MetadataState, ParameterMetadata, VariableMetadata } from '@/types/metadata';
 import { US_REGION_TYPES } from '@/types/regionTypes';
 
 // Test constants
@@ -41,14 +41,14 @@ export const MOCK_VARIABLES: Record<string, VariableMetadata> = {
     entity: 'person',
     description: 'Annual employment income',
     label: 'Employment Income',
-    unit: 'currency-USD',
-    documentation: 'Annual employment income',
+    data_type: 'float',
   },
   marital_status: {
     name: 'marital_status',
     entity: 'person',
     description: 'Marital status of the person',
     label: 'Marital Status',
+    data_type: 'Enum',
     possible_values: {
       single: 'Single',
       married: 'Married',
