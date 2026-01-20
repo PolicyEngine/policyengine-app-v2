@@ -179,22 +179,6 @@ export interface ModelledPolicy {
   id: number;
 }
 
-// Re-export ParameterTreeNode type from buildParameterTree
-export interface ParameterTreeNode {
-  name: string;
-  label: string;
-  index: number;
-  children?: ParameterTreeNode[];
-  type?: 'parameterNode' | 'parameter';
-  parameter?: string;
-  description?: string | null;
-  unit?: string | null;
-  period?: string | null;
-  values?: Record<string, unknown>;
-  economy?: boolean;
-  household?: boolean;
-}
-
 /**
  * MetadataState - Redux state for API-driven metadata
  *
