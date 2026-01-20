@@ -19,7 +19,6 @@ export const mockInitialMetadataState: MetadataState = {
   parameters: {},
   datasets: [],
   version: null,
-  parameterTree: null,
 };
 
 export const mockLoadingMetadataState: MetadataState = {
@@ -65,12 +64,6 @@ export const mockLoadedMetadataState: MetadataState = {
     },
   ],
   version: '1.0.0',
-  parameterTree: {
-    name: 'root',
-    label: 'Parameters',
-    index: 0,
-    children: [],
-  },
 };
 
 export const mockUKMetadataState: MetadataState = {

@@ -1,6 +1,4 @@
-import { configureStore } from '@reduxjs/toolkit';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import * as buildParameterTreeModule from '@/libs/buildParameterTree';
 import metadataReducer, {
   clearMetadata,
   fetchMetadataThunk,
@@ -14,9 +12,7 @@ import {
   expectEmptyMetadata,
   expectErrorState,
   expectLoadingState,
-  expectParameterTree,
   expectStateToEqual,
-  MOCK_PARAMETER_TREE,
   TEST_COUNTRY_CA,
   TEST_COUNTRY_UK,
   TEST_COUNTRY_US,
@@ -31,8 +27,6 @@ vi.mock('@/api/v2', () => ({
   fetchParameters: vi.fn(),
   fetchModelVersion: vi.fn(),
 }));
-
-vi.mock('@/libs/buildParameterTree');
 
 describe('metadataReducer', () => {
   beforeEach(() => {
@@ -133,8 +127,6 @@ describe('metadataReducer', () => {
         },
       };
 
-      vi.mocked(buildParameterTreeModule.buildParameterTreeV2).mockReturnValue(MOCK_PARAMETER_TREE);
-
       const state = metadataReducer(initialState, action);
 
       expect(state.loading).toBe(false);
@@ -152,7 +144,7 @@ describe('metadataReducer', () => {
       expect(state.parameters['tax.rate']).toBeDefined();
       // Parameter values are fetched on-demand, not prefetched
       expect(state.parameters['tax.rate']?.values).toEqual({});
-      expectParameterTree(state, true);
+      // Parameter tree is built lazily on-demand via useLazyParameterTree hook
     });
 
     test('given rejected action then sets error state', () => {
@@ -180,7 +172,6 @@ describe('metadataReducer', () => {
       expect(state.loading).toBe(true);
 
       // Receive data
-      vi.mocked(buildParameterTreeModule.buildParameterTreeV2).mockReturnValue(MOCK_PARAMETER_TREE);
       state = metadataReducer(state, {
         type: fetchMetadataThunk.fulfilled.type,
         payload: {

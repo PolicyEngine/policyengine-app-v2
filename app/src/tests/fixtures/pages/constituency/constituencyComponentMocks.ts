@@ -202,5 +202,4 @@ export const MOCK_METADATA: MetadataState = {
   parameters: {},
   datasets: [],
   version: '1.0.0',
-  parameterTree: null,
 };

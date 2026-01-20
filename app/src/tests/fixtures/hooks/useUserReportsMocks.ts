@@ -194,7 +194,6 @@ export const mockMetadataInitialState = {
     parameters: {},
     datasets: [],
     version: 'v1.0.0',
-    parameterTree: null,
   } satisfies MetadataState,
 };
 

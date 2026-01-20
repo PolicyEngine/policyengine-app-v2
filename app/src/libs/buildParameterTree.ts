@@ -78,6 +78,11 @@ function shouldIncludeParameter(paramName: string): boolean {
  * - Include: Parameters starting with "gov." (policy parameters)
  * - Exclude: calibration.*, gov.abolitions.*, taxsim.*
  *
+ * PERFORMANCE NOTE: V1 API returned a pre-built tree; V2 requires client-side
+ * tree construction. With ~67K parameters, current implementation uses array
+ * .find() for child lookups which is O(n). If performance becomes an issue,
+ * optimize by using a Map for O(1) child lookups instead of array .find().
+ *
  * @param parameters - Record of parameters keyed by name from V2 API
  * @returns The root "gov" node of the parameter tree, or undefined if empty
  */

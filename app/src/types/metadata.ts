@@ -108,6 +108,19 @@ export interface VariableMetadata {
 
 /**
  * Parameter metadata - represents a policy parameter
+ *
+ * TODO: Deprecate in favor of V2ParameterMetadata. This intermediate type exists
+ * because the frontend requires additional fields not present in V2 API:
+ *
+ * Fields needing resolution:
+ * - `economy`/`household`: V1 scope flags for filtering parameters by simulation type.
+ *   V2 API doesn't provide these. Need to determine if V2 should add them or if
+ *   filtering logic should be removed/changed.
+ * - `period`: V1 included time period info. V2 doesn't provide this.
+ * - `type`: V1 distinguished "parameter" vs "parameterNode" for tree hierarchy.
+ *   V2 only returns actual parameters; nodes are created dynamically in buildParameterTreeV2.
+ * - `values`: V1 included values inline. V2 fetches via separate /parameter-values endpoint.
+ *   Currently set to {} and populated on-demand.
  */
 export interface ParameterMetadata {
   // Core fields
@@ -188,6 +201,8 @@ export interface ParameterTreeNode {
  * This state contains only data fetched from the API.
  * Static metadata (entities, basicInputs, timePeriods, regions, modelledPolicies, currentLawId)
  * is accessed via hooks from @/hooks/useStaticMetadata or @/hooks/useDerivedMetadata.
+ *
+ * Parameter tree is built lazily on-demand via useLazyParameterTree hook - not stored in Redux.
  */
 export interface MetadataState {
   currentCountry: string | null;
@@ -209,7 +224,4 @@ export interface MetadataState {
     default: boolean;
   }>;
   version: string | null;
-
-  // Computed parameter tree for policy creation UI (built when metadata is fetched)
-  parameterTree: ParameterTreeNode | null;
 }

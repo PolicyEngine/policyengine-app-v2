@@ -37,9 +37,8 @@ export default function PolicyParameterSelectorView({
   const [mobileOpened, { toggle: toggleMobile }] = useDisclosure();
 
   // Get metadata from Redux state
-  const { parameterTree, parameters, loading, error } = useSelector(
-    (state: RootState) => state.metadata
-  );
+  const { parameters, loading, error } = useSelector((state: RootState) => state.metadata);
+  const hasParameters = Object.keys(parameters).length > 0;
 
   // Count modifications from policy prop
   const modificationCount = countPolicyModifications(policy);
@@ -110,15 +109,15 @@ export default function PolicyParameterSelectorView({
       </AppShell.Header>
 
       <AppShell.Navbar p="md" bg="gray.0">
-        {loading || !parameterTree ? (
+        {loading || !hasParameters ? (
           <div>Loading parameters...</div>
         ) : (
-          <Menu setSelectedParamLabel={handleMenuItemClick} parameterTree={parameterTree} />
+          <Menu setSelectedParamLabel={handleMenuItemClick} />
         )}
       </AppShell.Navbar>
 
       <AppShell.Main bg="gray.0">
-        {loading || !parameterTree ? (
+        {loading || !hasParameters ? (
           <MainEmpty />
         ) : selectedLeafParam ? (
           <PolicyParameterSelectorMain

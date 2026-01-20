@@ -21,7 +21,6 @@ export const MOCK_METADATA_STATE_INITIAL: MetadataState = {
   variables: {},
   parameters: {},
   datasets: [],
-  parameterTree: null,
 };
 
 export const MOCK_METADATA_STATE_LOADING: MetadataState = {

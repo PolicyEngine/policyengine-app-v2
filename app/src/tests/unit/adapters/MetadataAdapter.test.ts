@@ -33,7 +33,7 @@ describe('MetadataAdapter', () => {
       expect(result.description).toBe('Employment income');
     });
 
-    it('given variable name with underscores then generates title-case label', () => {
+    it('given variable name with underscores then generates sentence-case label', () => {
       // Given
       const v2Variable = createMockVariable({ name: 'employment_income' });
 
@@ -41,7 +41,7 @@ describe('MetadataAdapter', () => {
       const result = MetadataAdapter.variableFromV2(v2Variable);
 
       // Then
-      expect(result.label).toBe('Employment Income');
+      expect(result.label).toBe('Employment income');
     });
 
     it('given single word name then capitalizes label', () => {

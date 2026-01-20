@@ -1,5 +1,4 @@
 import { CURRENT_YEAR } from '@/constants';
-import { ParameterTreeNode } from '@/libs/buildParameterTree';
 import { MetadataState, ParameterMetadata, VariableMetadata } from '@/types/metadata';
 import { US_REGION_TYPES } from '@/types/regionTypes';
 
@@ -31,7 +30,6 @@ export const EXPECTED_INITIAL_STATE: MetadataState = {
   parameters: {},
   datasets: [],
   version: null,
-  parameterTree: null,
 };
 
 // Mock variables
@@ -135,31 +133,6 @@ export const MOCK_MODELLED_POLICIES = {
   },
 };
 
-// Mock parameter tree
-export const MOCK_PARAMETER_TREE: ParameterTreeNode = {
-  name: 'gov',
-  label: 'Government',
-  index: 0,
-  children: [
-    {
-      name: 'gov.tax',
-      label: 'Tax',
-      index: 0,
-      children: [
-        {
-          name: TEST_PARAMETER_KEY,
-          label: TEST_PARAMETER_LABEL,
-          index: 0,
-          parameter: TEST_PARAMETER_KEY,
-          type: 'parameter',
-        },
-      ],
-      type: 'parameterNode',
-    },
-  ],
-  type: 'parameterNode',
-};
-
 // Mock state with data (only API-driven data)
 export const createMockStateWithData = (overrides?: Partial<MetadataState>): MetadataState => ({
   currentCountry: TEST_COUNTRY_US,
@@ -170,7 +143,6 @@ export const createMockStateWithData = (overrides?: Partial<MetadataState>): Met
   parameters: MOCK_PARAMETERS,
   datasets: MOCK_ECONOMY_OPTIONS.datasets,
   version: TEST_VERSION,
-  parameterTree: MOCK_PARAMETER_TREE,
   ...overrides,
 });
 
@@ -213,19 +185,9 @@ export const expectVersion = (state: MetadataState, version: string | null) => {
   expect(state.version).toBe(version);
 };
 
-export const expectParameterTree = (state: MetadataState, hasTree: boolean) => {
-  if (hasTree) {
-    expect(state.parameterTree).toBeDefined();
-    expect(state.parameterTree).not.toBeNull();
-  } else {
-    expect(state.parameterTree).toBeNull();
-  }
-};
-
 export const expectEmptyMetadata = (state: MetadataState) => {
   expect(state.variables).toEqual({});
   expect(state.parameters).toEqual({});
   expect(state.datasets).toEqual([]);
   expect(state.version).toBeNull();
-  expect(state.parameterTree).toBeNull();
 };

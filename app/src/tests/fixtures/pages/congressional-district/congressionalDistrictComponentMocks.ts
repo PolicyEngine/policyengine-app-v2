@@ -229,5 +229,4 @@ export const MOCK_METADATA_WITH_REGIONS: MetadataState = {
     },
   ],
   version: '1.0.0',
-  parameterTree: null,
 };

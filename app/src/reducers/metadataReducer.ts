@@ -1,7 +1,6 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { MetadataAdapter } from '@/adapters';
 import { fetchDatasets, fetchModelVersion, fetchParameters, fetchVariables } from '@/api/v2';
-import { buildParameterTreeV2 } from '@/libs/buildParameterTree';
 import { MetadataState } from '@/types/metadata';
 
 /**
@@ -24,7 +23,6 @@ const initialState: MetadataState = {
   parameters: {},
   datasets: [],
   version: null,
-  parameterTree: null,
 };
 
 // Fetch all metadata (variables, datasets, parameters) directly from API
@@ -62,7 +60,6 @@ const metadataSlice = createSlice({
         state.parameters = {};
         state.datasets = [];
         state.version = null;
-        state.parameterTree = null;
         // Reset loading states
         state.loaded = false;
         state.loading = false;
@@ -91,18 +88,10 @@ const metadataSlice = createSlice({
         // Convert V2 API data to frontend format using adapters
         state.variables = MetadataAdapter.variablesFromV2(data.variables);
         state.datasets = MetadataAdapter.datasetsFromV2(data.datasets);
-        const parametersRecord = MetadataAdapter.parametersFromV2(data.parameters);
-        state.parameters = parametersRecord;
+        state.parameters = MetadataAdapter.parametersFromV2(data.parameters);
 
-        // Build parameter tree from V2 API data
-        try {
-          state.parameterTree = buildParameterTreeV2(parametersRecord) || null;
-        } catch {
-          state.parameterTree = null;
-        }
-
-        // Static data (entities, basicInputs, timePeriods, regions, modelledPolicies, currentLawId)
-        // is no longer stored in Redux. Access it via hooks from @/hooks/useStaticMetadata.
+        // Parameter tree is now built lazily on-demand via useLazyParameterTree hook.
+        // Static data (entities, basicInputs, etc.) is accessed via @/hooks/useStaticMetadata.
       })
       .addCase(fetchMetadataThunk.rejected, (state, action) => {
         state.loading = false;
