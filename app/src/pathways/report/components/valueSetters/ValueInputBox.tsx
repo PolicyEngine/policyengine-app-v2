@@ -1,5 +1,6 @@
 import { Group, NumberInput, Stack, Switch, Text } from '@mantine/core';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
+import { coerceByUnit } from '@/utils/valueCoercion';
 
 interface ValueInputBoxProps {
   label?: string;
@@ -29,10 +30,12 @@ export function ValueInputBox(props: ValueInputBoxProps) {
     return <NumberInput disabled value={0} />;
   }
 
-  const handleChange = (newValue: any) => {
+  const handleChange = (newValue: unknown) => {
     if (onChange) {
+      // Coerce to proper type - Mantine NumberInput can return strings
+      const coerced = coerceByUnit(newValue, param.unit);
       // Convert percentage display value (0-100) to decimal (0-1) for storage
-      const valueToStore = isPercentage ? newValue / 100 : newValue;
+      const valueToStore = isPercentage ? (coerced as number) / 100 : coerced;
       onChange(valueToStore);
     }
   };
