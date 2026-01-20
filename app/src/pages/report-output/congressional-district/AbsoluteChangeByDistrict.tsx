@@ -1,6 +1,6 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useSelector } from 'react-redux';
-import { Button, Group, Loader, Progress, Stack, Text, Title } from '@mantine/core';
+import { Group, Loader, Progress, Stack, Text, Title } from '@mantine/core';
 import {
   buildDistrictLabelLookup,
   transformDistrictAbsoluteChange,
@@ -59,7 +59,7 @@ export function AbsoluteChangeByDistrict({
 
   // Hook for fetching districts via parallel state requests
   const canFetchByState = !!reformPolicyId && !!baselinePolicyId && !!year;
-  const { state: fetchState, fetchAllStates, cancelFetch } = useCongressionalDistrictsByState({
+  const { state: fetchState, fetchAllStates } = useCongressionalDistrictsByState({
     reformPolicyId: reformPolicyId || '',
     baselinePolicyId: baselinePolicyId || '',
     year: year || '',
@@ -76,6 +76,13 @@ export function AbsoluteChangeByDistrict({
       ? Math.round((fetchState.completedStates / fetchState.totalStates) * 100)
       : 0;
 
+  // Automatically fetch when component mounts if no existing data
+  useEffect(() => {
+    if (canFetchByState && existingMapData.length === 0 && !fetchState.isLoading && fetchState.districts.length === 0) {
+      fetchAllStates();
+    }
+  }, [canFetchByState, existingMapData.length, fetchState.isLoading, fetchState.districts.length, fetchAllStates]);
+
   // No data and no way to fetch
   if (!mapData.length && !canFetchByState && !fetchState.isLoading) {
     return (
@@ -91,18 +98,6 @@ export function AbsoluteChangeByDistrict({
         <Title order={3}>Absolute household income change by congressional district</Title>
       </div>
 
-      {/* Show fetch button if no existing data and can fetch */}
-      {!existingMapData.length && canFetchByState && !fetchState.isLoading && !mapData.length && (
-        <Group>
-          <Button onClick={fetchAllStates} variant="light">
-            Load congressional district data
-          </Button>
-          <Text size="sm" c="dimmed">
-            This will fetch data from {fetchState.totalStates} state-level calculations
-          </Text>
-        </Group>
-      )}
-
       {/* Show progress while loading */}
       {fetchState.isLoading && (
         <Stack gap="xs">
@@ -112,9 +107,6 @@ export function AbsoluteChangeByDistrict({
               Loading districts: {fetchState.completedStates} / {fetchState.totalStates} states
               complete ({fetchState.computingStates} computing)
             </Text>
-            <Button size="xs" variant="subtle" color="gray" onClick={cancelFetch}>
-              Cancel
-            </Button>
           </Group>
           <Progress value={progressPercent} size="sm" />
         </Stack>
