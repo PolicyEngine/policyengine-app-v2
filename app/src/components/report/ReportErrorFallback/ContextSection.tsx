@@ -19,7 +19,10 @@ export function ContextSection({ context }: ContextSectionProps) {
 
       {/* User associations */}
       {context.userReport && (
-        <CodeBlock title="User report association" content={JSON.stringify(context.userReport, null, 2)} />
+        <CodeBlock
+          title="User report association"
+          content={JSON.stringify(context.userReport, null, 2)}
+        />
       )}
 
       {context.userSimulations && context.userSimulations.length > 0 && (
