@@ -171,7 +171,6 @@ export function SocietyWideReportOutput({
       case 'comparative-analysis':
         return (
           <ComparativeAnalysisPage
-            key={`comparative-analysis-${activeView}`}
             output={output}
             view={activeView}
             reformPolicyId={simulations?.[1]?.policyId}

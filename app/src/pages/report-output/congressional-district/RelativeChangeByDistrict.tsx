@@ -1,26 +1,14 @@
 import { useEffect, useMemo } from 'react';
-import { useSelector } from 'react-redux';
 import { Group, Loader, Progress, Stack, Text, Title } from '@mantine/core';
-import {
-  buildDistrictLabelLookup,
-  transformDistrictRelativeChange,
-} from '@/adapters/congressional-district/congressionalDistrictDataAdapter';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { USDistrictChoroplethMap } from '@/components/visualization/USDistrictChoroplethMap';
-import { useCongressionalDistrictsByState } from '@/hooks/useCongressionalDistrictsByState';
-import type { RootState } from '@/store';
+import { useCongressionalDistrictData } from '@/contexts/CongressionalDistrictDataContext';
 import type { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
 import { formatParameterValue } from '@/utils/chartValueUtils';
 import { DIVERGING_GRAY_TEAL } from '@/utils/visualization/colorScales';
 
 interface RelativeChangeByDistrictProps {
   output: SocietyWideReportOutput;
-  /** Reform policy ID for state-by-state fetching */
-  reformPolicyId?: string;
-  /** Baseline policy ID for state-by-state fetching */
-  baselinePolicyId?: string;
-  /** Year for calculations */
-  year?: string;
 }
 
 /**
@@ -29,62 +17,72 @@ interface RelativeChangeByDistrictProps {
  * Displays a geographic choropleth map showing the relative (percentage) household
  * income change for each US congressional district.
  *
- * Supports two modes:
- * 1. If `output` already contains congressional_district_impact data, display it directly
- * 2. If policy IDs and year are provided, allow fetching district data via parallel state requests
+ * Uses shared CongressionalDistrictDataContext for data fetching so that
+ * switching between absolute and relative views doesn't trigger re-fetching.
  */
-export function RelativeChangeByDistrict({
-  output,
-  reformPolicyId,
-  baselinePolicyId,
-  year,
-}: RelativeChangeByDistrictProps) {
-  // Get district labels from metadata
-  const regions = useSelector((state: RootState) => state.metadata.economyOptions.region);
+export function RelativeChangeByDistrict({ output }: RelativeChangeByDistrictProps) {
+  // Get shared district data from context
+  const {
+    stateResponses,
+    completedCount,
+    totalDistrictsLoaded,
+    totalStates,
+    isLoading,
+    isComplete,
+    hasStarted,
+    labelLookup,
+    startFetch,
+  } = useCongressionalDistrictData();
 
-  // Build label lookup from metadata (memoized)
-  const labelLookup = useMemo(() => buildDistrictLabelLookup(regions), [regions]);
-
-  // Transform existing API data to choropleth map format (if available from nationwide calc)
+  // Check if output already has district data (from nationwide calculation)
   const existingMapData = useMemo(() => {
     if (!('congressional_district_impact' in output)) {
       return [];
     }
     const districtData = (output as ReportOutputSocietyWideUS).congressional_district_impact;
-    if (!districtData) {
+    if (!districtData?.districts) {
       return [];
     }
-    return transformDistrictRelativeChange(districtData, labelLookup);
+    return districtData.districts.map((item) => ({
+      geoId: item.district,
+      label: labelLookup.get(item.district) ?? `District ${item.district}`,
+      value: item.relative_household_income_change,
+    }));
   }, [output, labelLookup]);
 
-  // Hook for fetching districts via parallel state requests
-  const canFetchByState = !!reformPolicyId && !!baselinePolicyId && !!year;
-  const { state: fetchState, fetchAllStates } = useCongressionalDistrictsByState({
-    reformPolicyId: reformPolicyId || '',
-    baselinePolicyId: baselinePolicyId || '',
-    year: year || '',
-    valueField: 'relative_household_income_change',
-  });
-
-  // Use existing data if available, otherwise use progressively fetched data
-  const mapData = existingMapData.length > 0 ? existingMapData : fetchState.districts;
-  const isUsingFetchedData = existingMapData.length === 0 && fetchState.districts.length > 0;
-
-  // Show progress info while loading
-  const progressPercent =
-    fetchState.totalStates > 0
-      ? Math.round((fetchState.completedStates / fetchState.totalStates) * 100)
-      : 0;
-
-  // Automatically fetch when component mounts if no existing data
-  useEffect(() => {
-    if (canFetchByState && existingMapData.length === 0 && !fetchState.isLoading && fetchState.districts.length === 0) {
-      fetchAllStates();
+  // Transform context data to choropleth format (relative change)
+  const contextMapData = useMemo(() => {
+    if (stateResponses.size === 0) {
+      return [];
     }
-  }, [canFetchByState, existingMapData.length, fetchState.isLoading, fetchState.districts.length, fetchAllStates]);
+    const points: Array<{ geoId: string; label: string; value: number }> = [];
+    stateResponses.forEach((stateData) => {
+      stateData.districts.forEach((district) => {
+        points.push({
+          geoId: district.district,
+          label: labelLookup.get(district.district) ?? `District ${district.district}`,
+          value: district.relative_household_income_change,
+        });
+      });
+    });
+    return points;
+  }, [stateResponses, labelLookup]);
 
-  // No data and no way to fetch
-  if (!mapData.length && !canFetchByState && !fetchState.isLoading) {
+  // Use existing data if available, otherwise use context data
+  const mapData = existingMapData.length > 0 ? existingMapData : contextMapData;
+
+  // Auto-start fetch when component mounts if no existing data
+  useEffect(() => {
+    if (existingMapData.length === 0 && !hasStarted) {
+      startFetch();
+    }
+  }, [existingMapData.length, hasStarted, startFetch]);
+
+  // Calculate progress percentage
+  const progressPercent = totalStates > 0 ? Math.round((completedCount / totalStates) * 100) : 0;
+
+  // No data and not loading
+  if (!mapData.length && !isLoading && !hasStarted) {
     return (
       <Stack align="center" justify="center" h={400}>
         <Text c="dimmed">No congressional district data available</Text>
@@ -99,25 +97,24 @@ export function RelativeChangeByDistrict({
       </div>
 
       {/* Show progress while loading */}
-      {fetchState.isLoading && (
+      {isLoading && (
         <Stack gap="xs">
           <Group gap="sm">
             <Loader size="sm" />
             <Text size="sm">
-              Loading districts: {fetchState.completedStates} / {fetchState.totalStates} states
-              complete ({fetchState.computingStates} computing)
+              Loading states and districts: {completedCount} / {totalStates} states complete
+              ({totalDistrictsLoaded} districts loaded)
             </Text>
           </Group>
           <Progress value={progressPercent} size="sm" />
         </Stack>
       )}
 
-      {/* Show completion message if fetched */}
-      {isUsingFetchedData && !fetchState.isLoading && (
+      {/* Show completion message */}
+      {isComplete && !isLoading && contextMapData.length > 0 && (
         <Group gap="xs">
           <Text size="sm" c="dimmed">
-            Loaded {mapData.length} districts from {fetchState.completedStates} states
-            {fetchState.errors.length > 0 && ` (${fetchState.errors.length} errors)`}
+            Loaded {totalDistrictsLoaded} districts from {completedCount} states and districts
           </Text>
         </Group>
       )}

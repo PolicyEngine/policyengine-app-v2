@@ -1,5 +1,6 @@
 import type { ComponentType } from 'react';
 import type { SocietyWideReportOutput as SocietyWideOutput } from '@/api/societyWideCalculation';
+import { CongressionalDistrictDataProvider } from '@/contexts/CongressionalDistrictDataContext';
 import BudgetaryImpactByProgramSubPage from './budgetary-impact/BudgetaryImpactByProgramSubPage';
 import BudgetaryImpactSubPage from './budgetary-impact/BudgetaryImpactSubPage';
 import { AbsoluteChangeByDistrict } from './congressional-district/AbsoluteChangeByDistrict';
@@ -31,12 +32,6 @@ interface Props {
 
 interface ViewComponentProps {
   output: SocietyWideOutput;
-  /** Reform policy ID for state-by-state congressional district fetching */
-  reformPolicyId?: string;
-  /** Baseline policy ID for state-by-state congressional district fetching */
-  baselinePolicyId?: string;
-  /** Year for calculations */
-  year?: string;
 }
 
 /**
@@ -65,6 +60,9 @@ const VIEW_MAP: Record<string, ComponentType<ViewComponentProps>> = {
 /**
  * Sub-router for Comparative Analysis tab - maps :view URL parameter to specific chart components.
  * Acts as a mini-router to keep SocietyWideReportOutput clean as we add 20+ analysis charts.
+ *
+ * Wraps content with CongressionalDistrictDataProvider so district data is shared
+ * between absolute and relative congressional district views.
  */
 export function ComparativeAnalysisPage({
   output,
@@ -79,15 +77,26 @@ export function ComparativeAnalysisPage({
   // Look up component in map
   const ViewComponent = VIEW_MAP[effectiveView];
 
-  // If found, render it; otherwise show NotFound
-  return ViewComponent ? (
-    <ViewComponent
-      output={output}
-      reformPolicyId={reformPolicyId}
-      baselinePolicyId={baselinePolicyId}
-      year={year}
-    />
+  // Render content
+  const content = ViewComponent ? (
+    <ViewComponent output={output} />
   ) : (
     <NotFoundSubPage />
   );
+
+  // Wrap with CongressionalDistrictDataProvider if we have the required props
+  // This ensures district data is shared between absolute and relative views
+  if (reformPolicyId && baselinePolicyId && year) {
+    return (
+      <CongressionalDistrictDataProvider
+        reformPolicyId={reformPolicyId}
+        baselinePolicyId={baselinePolicyId}
+        year={year}
+      >
+        {content}
+      </CongressionalDistrictDataProvider>
+    );
+  }
+
+  return content;
 }
