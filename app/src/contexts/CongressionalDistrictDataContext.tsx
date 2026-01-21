@@ -2,6 +2,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useReducer,
   useRef,
@@ -132,7 +133,7 @@ export interface CongressionalDistrictDataContextValue {
   loadingCount: number;
   /** Total number of districts loaded across all completed states */
   totalDistrictsLoaded: number;
-  /** Total number of states expected (51) */
+  /** Total number of states expected (51 for national, 1 for state-level) */
   totalStates: number;
   /** Whether all states have finished (completed or errored) */
   isComplete: boolean;
@@ -144,9 +145,13 @@ export interface CongressionalDistrictDataContextValue {
   errorCount: number;
   /** Label lookup for district display names */
   labelLookup: DistrictLabelLookup;
+  /** Whether this is a state-level report (single state) vs national */
+  isStateLevelReport: boolean;
+  /** The region code for state-level reports (e.g., 'ca', 'dc'), null for national */
+  stateCode: string | null;
   /** Start fetching data (no-op if already started) */
   startFetch: () => void;
-  /** Validate that all 51 states (50 + DC) have loaded successfully */
+  /** Validate that all expected states have loaded successfully */
   validateAllLoaded: () => boolean;
   /** Get list of all completed state codes */
   getCompletedStates: () => string[];
@@ -161,12 +166,16 @@ interface CongressionalDistrictDataProviderProps {
   reformPolicyId: string;
   baselinePolicyId: string;
   year: string;
+  /** Region/geography for the report. If a state code (e.g., 'ca'), only fetches that state. */
+  region?: string;
 }
 
 /**
  * Provider that manages congressional district data fetching.
  *
- * Fetches data from all 51 states in parallel, polling each until complete.
+ * For national reports: Fetches data from all 51 states in parallel on-demand.
+ * For state-level reports: Fetches only that state's data automatically on mount.
+ *
  * Stores the raw district data which can be used by multiple visualization components.
  */
 export function CongressionalDistrictDataProvider({
@@ -174,15 +183,31 @@ export function CongressionalDistrictDataProvider({
   reformPolicyId,
   baselinePolicyId,
   year,
+  region,
 }: CongressionalDistrictDataProviderProps) {
   // Get regions from Redux metadata to extract US states
   const regions = useSelector((state: RootState) => state.metadata.economyOptions.region);
 
-  // Extract state codes from metadata (e.g., ['al', 'ak', 'az', ...])
-  const stateCodes = useMemo(() => {
+  // Extract all state codes from metadata (e.g., ['al', 'ak', 'az', ...])
+  const allStateCodes = useMemo(() => {
     const states = getUSStates(regions);
     return states.map((s) => s.value);
   }, [regions]);
+
+  // Determine if this is a state-level report (region starts with 'state/')
+  // Region format is 'state/ca', 'state/dc', etc.
+  const isStateLevelReport = useMemo(() => {
+    if (!region) return false;
+    return region.toLowerCase().startsWith('state/');
+  }, [region]);
+
+  // For state-level reports, only fetch that state; otherwise fetch all states
+  const stateCodes = useMemo(() => {
+    if (isStateLevelReport && region) {
+      return [region.toLowerCase()];
+    }
+    return allStateCodes;
+  }, [isStateLevelReport, region, allStateCodes]);
 
   // Build district label lookup from metadata (for display labels)
   const labelLookup = useMemo(() => buildDistrictLabelLookup(regions), [regions]);
@@ -290,6 +315,13 @@ export function CongressionalDistrictDataProvider({
     });
   }, [state.hasStarted, stateCodes, pollState]);
 
+  // Auto-start fetching for state-level reports (single state, fast)
+  useEffect(() => {
+    if (isStateLevelReport && !state.hasStarted && stateCodes.length > 0) {
+      startFetch();
+    }
+  }, [isStateLevelReport, state.hasStarted, stateCodes.length, startFetch]);
+
   // Computed values
   const completedCount = state.completedStates.size;
   const loadingCount = state.loadingStates.size;
@@ -306,11 +338,12 @@ export function CongressionalDistrictDataProvider({
   }, [state.stateResponses]);
 
   /**
-   * Validate that all 51 states (50 + DC) have loaded successfully
+   * Validate that all expected states have loaded successfully
+   * (51 for national reports, 1 for state-level reports)
    */
   const validateAllLoaded = useCallback(() => {
-    return state.completedStates.size >= EXPECTED_STATE_COUNT;
-  }, [state.completedStates]);
+    return state.completedStates.size >= stateCodes.length;
+  }, [state.completedStates, stateCodes.length]);
 
   /**
    * Get list of all completed state codes
@@ -326,6 +359,14 @@ export function CongressionalDistrictDataProvider({
     return Array.from(state.loadingStates);
   }, [state.loadingStates]);
 
+  // Compute stateCode for state-level reports (stripped of 'state/' prefix)
+  // e.g., 'state/dc' becomes 'dc', 'state/ca' becomes 'ca'
+  const stateCodeValue = useMemo(() => {
+    if (!isStateLevelReport || !region) return null;
+    const regionLower = region.toLowerCase();
+    return regionLower.startsWith('state/') ? regionLower.slice(6) : regionLower;
+  }, [isStateLevelReport, region]);
+
   const contextValue = useMemo<CongressionalDistrictDataContextValue>(
     () => ({
       stateResponses: state.stateResponses,
@@ -338,6 +379,8 @@ export function CongressionalDistrictDataProvider({
       hasStarted: state.hasStarted,
       errorCount,
       labelLookup,
+      isStateLevelReport,
+      stateCode: stateCodeValue,
       startFetch,
       validateAllLoaded,
       getCompletedStates,
@@ -354,6 +397,8 @@ export function CongressionalDistrictDataProvider({
       isLoading,
       errorCount,
       labelLookup,
+      isStateLevelReport,
+      stateCodeValue,
       startFetch,
       validateAllLoaded,
       getCompletedStates,

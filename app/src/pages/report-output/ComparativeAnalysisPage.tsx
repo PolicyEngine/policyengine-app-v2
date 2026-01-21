@@ -28,6 +28,8 @@ interface Props {
   baselinePolicyId?: string;
   /** Year for calculations */
   year?: string;
+  /** Region/geography for the report (e.g., 'enhanced_us' for national, 'ca' for California) */
+  region?: string;
 }
 
 interface ViewComponentProps {
@@ -70,6 +72,7 @@ export function ComparativeAnalysisPage({
   reformPolicyId,
   baselinePolicyId,
   year,
+  region,
 }: Props) {
   // If no view specified, use default view
   const effectiveView = view || 'budgetary-impact-overall';
@@ -92,6 +95,7 @@ export function ComparativeAnalysisPage({
         reformPolicyId={reformPolicyId}
         baselinePolicyId={baselinePolicyId}
         year={year}
+        region={region}
       >
         {content}
       </CongressionalDistrictDataProvider>

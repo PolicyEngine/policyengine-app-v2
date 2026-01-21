@@ -31,6 +31,8 @@ export function RelativeChangeByDistrict({ output }: RelativeChangeByDistrictPro
     isComplete,
     hasStarted,
     labelLookup,
+    isStateLevelReport,
+    stateCode,
     startFetch,
   } = useCongressionalDistrictData();
 
@@ -81,6 +83,19 @@ export function RelativeChangeByDistrict({ output }: RelativeChangeByDistrictPro
   // Calculate progress percentage
   const progressPercent = totalStates > 0 ? Math.round((completedCount / totalStates) * 100) : 0;
 
+  // Generate description text for completion message
+  const getCompletionText = () => {
+    const districtWord = totalDistrictsLoaded === 1 ? 'district' : 'districts';
+    if (isStateLevelReport && completedCount === 1) {
+      // Check if it's DC (federal district) or a state
+      if (stateCode === 'dc') {
+        return `Loaded ${totalDistrictsLoaded} ${districtWord} from 1 federal district`;
+      }
+      return `Loaded ${totalDistrictsLoaded} ${districtWord} from 1 state`;
+    }
+    return `Loaded ${totalDistrictsLoaded} ${districtWord} from ${completedCount} states`;
+  };
+
   // No data and not loading
   if (!mapData.length && !isLoading && !hasStarted) {
     return (
@@ -114,7 +129,7 @@ export function RelativeChangeByDistrict({ output }: RelativeChangeByDistrictPro
       {isComplete && !isLoading && contextMapData.length > 0 && (
         <Group gap="xs">
           <Text size="sm" c="dimmed">
-            Loaded {totalDistrictsLoaded} districts from {completedCount} states and districts
+            {getCompletionText()}
           </Text>
         </Group>
       )}
@@ -134,6 +149,7 @@ export function RelativeChangeByDistrict({ output }: RelativeChangeByDistrictPro
                 decimalPlaces: 1,
               }),
           }}
+          focusState={stateCode ?? undefined}
         />
       )}
     </Stack>

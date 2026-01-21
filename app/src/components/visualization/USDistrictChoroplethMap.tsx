@@ -78,6 +78,9 @@ interface USDistrictChoroplethMapProps {
 
   /** Path to GeoJSON file (optional, defaults to 119th Congress boundaries) */
   geoDataPath?: string;
+
+  /** State code to focus/zoom on (e.g., 'ca', 'ny'). If provided, map will zoom to fit that state's districts. */
+  focusState?: string;
 }
 
 // GeoJSON cache to avoid re-fetching (keyed by path)
@@ -111,6 +114,7 @@ export function USDistrictChoroplethMap({
   data,
   config = {},
   geoDataPath = '/data/geojson/congressional_districts.geojson',
+  focusState,
 }: USDistrictChoroplethMapProps) {
   const cached = geoJSONCache[geoDataPath];
   const [geoJSON, setGeoJSON] = useState<GeoJSONFeatureCollection | null>(cached || null);
@@ -277,22 +281,31 @@ export function USDistrictChoroplethMap({
       } as Partial<PlotData>,
     ];
 
+    // Configure geo layout - use fitbounds for single-state zoom
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const geoConfig: any = {
+      scope: 'usa',
+      projection: {
+        type: 'albers usa',
+      },
+      showlakes: true,
+      lakecolor: 'rgb(255, 255, 255)',
+      bgcolor: colors.background.primary,
+      showland: false,
+      showframe: false,
+      showcoastlines: false,
+      showcountries: false,
+      showsubunits: false,
+    };
+
+    // If focusing on a single state, use fitbounds to zoom to the visible districts
+    if (focusState) {
+      geoConfig.fitbounds = 'geojson';
+    }
+
     const plotLayout: Partial<Layout> = {
       ...DEFAULT_CHART_LAYOUT,
-      geo: {
-        scope: 'usa',
-        projection: {
-          type: 'albers usa',
-        },
-        showlakes: true,
-        lakecolor: 'rgb(255, 255, 255)',
-        bgcolor: colors.background.primary,
-        showland: false,
-        showframe: false,
-        showcoastlines: false,
-        showcountries: false,
-        showsubunits: false,
-      },
+      geo: geoConfig,
       height: fullConfig.height,
       margin: { t: 10, b: 10, l: 10, r: 60 },
       paper_bgcolor: colors.background.primary,
@@ -300,7 +313,7 @@ export function USDistrictChoroplethMap({
     };
 
     return { plotData, plotLayout };
-  }, [geoJSON, dataMap, colorRange, fullConfig]);
+  }, [geoJSON, dataMap, colorRange, fullConfig, focusState]);
 
   // Plotly config
   const plotConfig: Partial<Config> = {

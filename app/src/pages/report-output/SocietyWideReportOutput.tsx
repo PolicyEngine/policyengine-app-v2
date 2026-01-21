@@ -176,6 +176,7 @@ export function SocietyWideReportOutput({
             reformPolicyId={simulations?.[1]?.policyId}
             baselinePolicyId={simulations?.[0]?.policyId}
             year={report.year}
+            region={simulations?.[0]?.populationId}
           />
         );
 
