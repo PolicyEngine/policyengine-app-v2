@@ -201,8 +201,9 @@ export function USDistrictChoroplethMap({
     const locations: string[] = [];
     const z: number[] = [];
     const text: string[] = [];
+    const includedFeatures: GeoJSONFeature[] = [];
 
-    // Process each GeoJSON feature
+    // Process each GeoJSON feature - only include districts that have data
     geoJSON.features.forEach((feature: GeoJSONFeature) => {
       // Use DISTRICT_ID which matches API format (e.g., "AL-01")
       const districtId = feature.properties?.DISTRICT_ID as string;
@@ -211,18 +212,24 @@ export function USDistrictChoroplethMap({
       }
 
       const dataPoint = dataMap.get(districtId);
-      const value = dataPoint?.value ?? 0;
-      const label = dataPoint?.label ?? `District ${districtId}`;
+      // Skip districts without data (still loading)
+      if (!dataPoint) {
+        return;
+      }
+
+      const value = dataPoint.value;
+      const label = dataPoint.label;
 
       locations.push(districtId);
       z.push(value);
       text.push(`${label}<br>${fullConfig.formatValue!(value)}`);
+      includedFeatures.push(feature);
     });
 
-    // Create modified GeoJSON with feature IDs
+    // Create modified GeoJSON with only features that have data
     const geoJSONWithIds = {
       ...geoJSON,
-      features: geoJSON.features.map((feature: GeoJSONFeature, idx: number) => ({
+      features: includedFeatures.map((feature: GeoJSONFeature, idx: number) => ({
         ...feature,
         id: locations[idx],
       })),
