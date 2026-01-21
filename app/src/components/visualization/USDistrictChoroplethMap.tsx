@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { Config, Layout, PlotData } from 'plotly.js';
 import Plot from 'react-plotly.js';
-import { feature } from 'topojson-client';
-import type { GeometryCollection, Topology } from 'topojson-specification';
 import { Box, Center, Loader, Stack, Text } from '@mantine/core';
 import { colors, spacing } from '@/designTokens';
 import { DEFAULT_CHART_CONFIG, DEFAULT_CHART_LAYOUT } from '@/utils/chartUtils';
@@ -16,7 +14,7 @@ interface GeoJSONFeature {
   id?: string | number;
   properties: {
     STATEFP?: string;
-    CD118FP?: string;
+    CD119FP?: string;
     GEOID?: string;
     DISTRICT_ID?: string; // Added: matches API format (e.g., "AL-01")
     NAMELSAD?: string;
@@ -78,7 +76,7 @@ interface USDistrictChoroplethMapProps {
   /** Configuration for the map */
   config?: Partial<ChoroplethMapConfig>;
 
-  /** Path to GeoJSON or TopoJSON file (optional, defaults to 118th Congress TopoJSON) */
+  /** Path to GeoJSON file (optional, defaults to 119th Congress boundaries) */
   geoDataPath?: string;
 }
 
@@ -112,7 +110,7 @@ const geoJSONCache: Record<string, GeoJSONFeatureCollection> = {};
 export function USDistrictChoroplethMap({
   data,
   config = {},
-  geoDataPath = '/data/geojson/congressional_districts.topojson',
+  geoDataPath = '/data/geojson/congressional_districts.geojson',
 }: USDistrictChoroplethMapProps) {
   const cached = geoJSONCache[geoDataPath];
   const [geoJSON, setGeoJSON] = useState<GeoJSONFeatureCollection | null>(cached || null);
@@ -136,7 +134,7 @@ export function USDistrictChoroplethMap({
     [config]
   );
 
-  // Load GeoJSON or TopoJSON data
+  // Load GeoJSON data
   useEffect(() => {
     const cachedData = geoJSONCache[geoDataPath];
     if (cachedData) {
@@ -152,19 +150,7 @@ export function USDistrictChoroplethMap({
         if (!response.ok) {
           throw new Error(`Failed to load geo data: ${response.status}`);
         }
-        const jsonData = await response.json();
-
-        // Convert TopoJSON to GeoJSON if needed
-        let geoJSONData: GeoJSONFeatureCollection;
-        if (geoDataPath.endsWith('.topojson')) {
-          // TopoJSON file - convert to GeoJSON
-          const topology = jsonData as Topology<{ districts: GeometryCollection }>;
-          const converted = feature(topology, topology.objects.districts);
-          geoJSONData = converted as unknown as GeoJSONFeatureCollection;
-        } else {
-          // Already GeoJSON
-          geoJSONData = jsonData;
-        }
+        const geoJSONData: GeoJSONFeatureCollection = await response.json();
 
         geoJSONCache[geoDataPath] = geoJSONData;
         setGeoJSON(geoJSONData);
@@ -274,7 +260,7 @@ export function USDistrictChoroplethMap({
         marker: {
           line: {
             color: 'white',
-            width: 0.5,
+            width: 1.0,
           },
         },
       } as Partial<PlotData>,
