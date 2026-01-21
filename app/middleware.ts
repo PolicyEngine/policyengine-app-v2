@@ -139,7 +139,10 @@ function createOgResponse(html: string): Response {
 }
 
 function getImageUrl(imageName: string | undefined): string {
-  return imageName ? `${BASE_URL}/assets/posts/${imageName}` : DEFAULT_OG.image;
+  if (!imageName) {
+    return DEFAULT_OG.image;
+  }
+  return imageName.startsWith('http') ? imageName : `${BASE_URL}/assets/posts/${imageName}`;
 }
 
 // Content handlers
