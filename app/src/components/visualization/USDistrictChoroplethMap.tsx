@@ -315,10 +315,17 @@ export function USDistrictChoroplethMap({
     return { plotData, plotLayout };
   }, [geoJSON, dataMap, colorRange, fullConfig, focusState]);
 
-  // Plotly config
+  // Plotly config - enable zoom controls
   const plotConfig: Partial<Config> = {
     ...DEFAULT_CHART_CONFIG,
-    displayModeBar: false,
+    displayModeBar: 'hover',
+    modeBarButtonsToRemove: [
+      'select2d',
+      'lasso2d',
+      'hoverClosestGeo',
+      'toImage',
+    ],
+    scrollZoom: true,
     responsive: true,
   };
 
