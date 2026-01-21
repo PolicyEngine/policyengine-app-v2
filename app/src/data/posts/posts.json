@@ -1,5 +1,14 @@
 [
   {
+    "title": "PolicyEngine powers rapid policy analysis at No 10 Downing Street",
+    "description": "Our CTO Nikhil Woodruff spent six months as an Innovation Fellow adapting PolicyEngine's microsimulation technology for government use.",
+    "date": "2026-01-20 12:00:00",
+    "tags": ["global", "org", "featured"],
+    "authors": ["max-ghenis"],
+    "filename": "policyengine-10-downing-street.md",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/10_Downing_Street._MOD_45155532.jpg/2560px-10_Downing_Street._MOD_45155532.jpg"
+  },
+  {
     "title": "Stronger Start for Working Families Act: Eliminating the CTC earnings threshold",
     "description": "The bipartisan legislation would cost $14.6 billion over ten years and benefit 5.9% of Americans.",
     "date": "2026-01-13",

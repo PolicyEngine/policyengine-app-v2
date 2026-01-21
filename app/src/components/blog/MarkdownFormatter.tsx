@@ -500,8 +500,8 @@ export function MarkdownFormatter({
       </span>
     ),
 
-    // Links with footnote support
-    a: ({ href, children }) => {
+    // Links with footnote support and CTA button styling
+    a: ({ href, children, className }) => {
       let id: string | undefined;
       let footnoteNumber: number | null = null;
       let isFootnoteRef = false;
@@ -512,6 +512,37 @@ export function MarkdownFormatter({
         isFootnoteRef = true;
       } else if (href?.startsWith('#user-content-fnref-')) {
         id = href.replace('#user-content-fnref-', 'user-content-fn-');
+      }
+
+      // CTA button styling for links with class="cta-button"
+      if (className === 'cta-button') {
+        return (
+          <a
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: 'inline-block',
+              backgroundColor: blogColors.primary,
+              color: 'white',
+              padding: '12px 24px',
+              borderRadius: '6px',
+              textDecoration: 'none',
+              fontWeight: blogFontWeights.semiBold,
+              fontFamily: blogTypography.bodyFont,
+              transition: 'background-color 0.2s ease',
+              border: 'none',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = blogColors.primaryHover;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = blogColors.primary;
+            }}
+          >
+            {children}
+          </a>
+        );
       }
 
       return (
