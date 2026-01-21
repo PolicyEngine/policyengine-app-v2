@@ -1,10 +1,10 @@
 Our co-founder and CTO Nikhil Woodruff has spent the past six months working with the data science team at 10 Downing Street to adapt and extend PolicyEngine's microsimulation technology for government use.
 
-We're excited to share that PolicyEngine's microsimulation technology has been supporting policy analysis at 10 Downing Street—and now Nikhil has written publicly about the work.
+We're excited to share that PolicyEngine's microsimulation technology has been supporting policy analysis at 10 Downing Street—and now Nikhil has [written publicly about the work](https://fellows.ai.gov.uk/news/2025/01/06/innovation-fellow-develops-microsimulation-model-for-analysis-in-number-10/).
 
 <div style="text-align: center; margin: 24px 0;"><a class="cta-button" href="https://fellows.ai.gov.uk/news/2025/01/06/innovation-fellow-develops-microsimulation-model-for-analysis-in-number-10/">Read Nikhil's article on gov.uk →</a></div>
 
-Since summer 2025, Nikhil has been working as an Innovation Fellow with 10DS—the data science team at No 10—adapting PolicyEngine's open-source microsimulation model for government use. The goal: give decision-makers faster access to analysis when the policy process moves too quickly for traditional approaches.
+Since summer 2025, Nikhil has been working as an [Innovation Fellow](https://www.gov.uk/government/publications/the-no10-innovation-fellowship-programme) with [10DS](https://no10innovationfellows.campaign.gov.uk/401-2/)—the data science team at No 10—adapting PolicyEngine's open-source microsimulation model for government use. The goal: give decision-makers faster access to analysis when the policy process moves too quickly for traditional approaches.
 
 ## Why PolicyEngine?
 
@@ -16,15 +16,15 @@ PolicyEngine is built in Python—the language of choice for data scientists acr
 
 ### Novel calibration and imputation methods
 
-Our microsimulation goes beyond traditional static models by applying machine learning-based imputation to fill gaps in survey data and calibration techniques to align our estimates with known administrative totals. This gives us accuracy that exceeds what conventional microsimulation methods can achieve.
+Our microsimulation goes beyond traditional static models by applying [machine learning-based imputation](https://policyengine.org/uk/research/how-machine-learning-tools-make-policyengine-more-accurate) to fill gaps in survey data and calibration techniques to align our estimates with known administrative totals. This gives us accuracy that exceeds what conventional microsimulation methods can achieve.
 
 ### Comprehensive policy coverage
 
-PolicyEngine UK models the full breadth of the UK tax and benefit system: income tax, National Insurance, VAT, capital gains tax, council tax, stamp duty, Universal Credit, Child Benefit, State Pension, disability benefits, and more. Recent additions include the new surcharge on properties over £2 million, private school VAT changes, and the latest Capital Gains Tax reforms. This comprehensiveness means analysts can model realistic reform packages rather than isolated policy changes.
+PolicyEngine UK models the full breadth of the UK tax and benefit system: [income tax, National Insurance, VAT, capital gains tax, council tax, stamp duty](https://policyengine.org/uk/research/uk-taxes-post), [Universal Credit, Child Benefit, State Pension, disability benefits](https://policyengine.org/uk/research/uk-benefits-post), and more. Recent additions include the [new surcharge on properties over £2 million](https://policyengine.org/uk/research/high-value-council-tax-surcharge), [private school VAT changes](https://policyengine.org/uk/research/vat-school-comparison), and the [latest Capital Gains Tax reforms](https://policyengine.org/uk/research/cgt-autumn-budget). This comprehensiveness means analysts can model realistic reform packages rather than isolated policy changes.
 
 ### Local area modelling
 
-With support from the Nuffield Foundation, we've developed enhanced microdata that enables geographic analysis down to local authority level. Nikhil's work at No 10 has leveraged this capability to provide estimates of how policies affect local area incomes—analysis that would be difficult or impossible with other tools.
+With [support from the Nuffield Foundation](https://policyengine.org/uk/research/uk-nuffield-grant), we've developed enhanced microdata that enables [geographic analysis down to local authority level](https://policyengine.org/uk/local-areas-dashboard). Nikhil's work at No 10 has leveraged this capability to provide estimates of how policies affect local area incomes—analysis that would be difficult or impossible with other tools.
 
 ## What this means
 
