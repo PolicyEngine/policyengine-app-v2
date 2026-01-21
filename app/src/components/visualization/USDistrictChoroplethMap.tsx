@@ -228,10 +228,14 @@ export function USDistrictChoroplethMap({
       })),
     };
 
-    // Build color scale for Plotly (typed as [number, string] tuples)
-    const colorscale: Array<[number, string]> = fullConfig.colorScale!.colors.map(
-      (color, i, arr) => [i / (arr.length - 1), color] as [number, string]
-    );
+    // Build diverging color scale: gradients fade toward cream, but stop at ~20% before pure cream
+    const colorscale: Array<[number, string]> = [
+      [0, colors.gray[700]], // Most negative - dark gray
+      [0.4999, '#EDEBE6'], // Approaching zero - creamy gray (still visible tint)
+      [0.5, '#F9F2EA'], // Exactly zero - cream neutral
+      [0.5001, '#D6EEEB'], // Just past zero - creamy teal (still visible tint)
+      [1, colors.primary[600]], // Most positive - dark teal
+    ];
 
     const plotData: Partial<PlotData>[] = [
       {
@@ -278,6 +282,9 @@ export function USDistrictChoroplethMap({
         bgcolor: colors.background.primary,
         showland: false,
         showframe: false,
+        showcoastlines: false,
+        showcountries: false,
+        showsubunits: false,
       },
       height: fullConfig.height,
       margin: { t: 10, b: 10, l: 10, r: 60 },
