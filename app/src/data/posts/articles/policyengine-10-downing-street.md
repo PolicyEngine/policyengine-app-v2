@@ -2,7 +2,7 @@ Our co-founder and CTO Nikhil Woodruff has spent the past six months working wit
 
 We're excited to share that PolicyEngine's microsimulation technology has been supporting policy analysis at 10 Downing Street—and now Nikhil has written publicly about the work.
 
-<a href="https://fellows.ai.gov.uk/news/2025/01/06/innovation-fellow-develops-microsimulation-model-for-analysis-in-number-10/" target="_blank" rel="noopener noreferrer" style="display: inline-block; background-color: #319795; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 600; margin: 16px 0;">Read Nikhil's article on gov.uk →</a>
+<a class="cta-button" href="https://fellows.ai.gov.uk/news/2025/01/06/innovation-fellow-develops-microsimulation-model-for-analysis-in-number-10/">Read Nikhil's article on gov.uk →</a>
 
 Since summer 2025, Nikhil has been working as an Innovation Fellow with 10DS—the data science team at No 10—adapting PolicyEngine's open-source microsimulation model for government use. The goal: give decision-makers faster access to analysis when the policy process moves too quickly for traditional approaches.
 
