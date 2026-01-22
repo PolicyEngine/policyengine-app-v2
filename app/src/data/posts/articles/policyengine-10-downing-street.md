@@ -4,7 +4,7 @@ We're excited to share that PolicyEngine's microsimulation technology has been s
 
 <div style="text-align: center; margin: 24px 0;"><a class="cta-button" href="https://fellows.ai.gov.uk/news/2025/01/06/innovation-fellow-develops-microsimulation-model-for-analysis-in-number-10/">Read Nikhil's article on gov.uk →</a></div>
 
-Since summer 2025, Nikhil has been working as an [Innovation Fellow](https://www.gov.uk/government/publications/the-no10-innovation-fellowship-programme) with [10DS](https://no10innovationfellows.campaign.gov.uk/401-2/)—the data science team at No 10—adapting PolicyEngine's open-source microsimulation model for government use. The goal: give decision-makers faster access to analysis when the policy process moves too quickly for traditional approaches.
+Since summer 2025, Nikhil has been working as an [Innovation Fellow](https://www.gov.uk/government/publications/the-no10-innovation-fellowship-programme) with [10DS](https://fellows.ai.gov.uk)—the data science team at No 10—adapting PolicyEngine's open-source microsimulation model for government use. The goal: give decision-makers faster access to analysis when the policy process moves too quickly for traditional approaches.
 
 ## Why PolicyEngine?
 
