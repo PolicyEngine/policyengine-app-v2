@@ -38,15 +38,15 @@ The reform primarily benefits lower-income families with children, as they see l
 
 ## Statewide impacts
 
-For tax year 2027, the proposal would reduce state revenues by $36.7 million, according to PolicyEngine's static modeling. The reform would also raise the net income of 29.2% of Rhode Island residents, with beneficiaries concentrated in lower income deciles. We project that the proposal would reduce poverty and child poverty by 1.0 and 2.1%, respectively, as measured by the Supplemental Poverty Measure.
+For tax year 2027, the proposal would reduce state revenues by $36.7 million, according to PolicyEngine's static modeling. The reform would also raise the net income of 29.2% of Rhode Island residents, with beneficiaries concentrated in lower income ranges (see Figure 2). We project that the proposal would reduce poverty and child poverty by 1.0 and 2.1%, respectively, as measured by the Supplemental Poverty Measure. Figure 3 displays the statewide impacts of Governor McKee's CTC proposal. 
 
-![Figure 2: Share of population gaining or losing by income decile](/assets/posts/ri-governor-ctc-income-chart.png)
+![Figure 2: Average household benefit by income range](/assets/posts/ri-governor-ctc-income-chart.png)
 
 ![Figure 3: Statewide impacts of Governor McKee's child tax credit proposal](/assets/posts/ri-governor-ctc-statewide-impacts.png)
 
 ## Conclusion
 
-Governor McKee's proposed child tax credit would shift Rhode Island's approach to supporting families with children from an income exemption to a refundable credit. This change would direct more benefits to lower-income families while reducing support for higher-income households.
+Governor McKee's proposed child tax credit would replace the personal exemption with a $325 fully refundable CTC for children under the age of 19. We project the reform would benefit 29.2% of the state, while lowering net income for no households. 
 
 As policymakers evaluate reforms such as these, analytical tools like PolicyEngine offer critical insights into the impacts on diverse household compositions and the broader economy.
 
@@ -54,4 +54,4 @@ We invite you to explore our [additional analyses](https://www.policyengine.org/
 
 ---
 
-Explore our [Rhode Island CTC Calculator](https://www.policyengine.org/us/rhode-island-ctc-calculator), developed in partnership with the Niskanen Center, to model how different child tax credit designs would affect your household and the state. You can input your household details and create custom CTC reforms to see their personalized impact.
+Explore our [Rhode Island CTC Calculator](https://www.policyengine.org/us/rhode-island-ctc-calculator) to model how different Child Tax Credit designs would affect your household and the state.
