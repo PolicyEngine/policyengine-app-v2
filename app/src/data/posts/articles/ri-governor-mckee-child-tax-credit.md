@@ -28,15 +28,21 @@ Governor McKee's proposal would replace this exemption with a $325 fully refunda
 
 The reform primarily benefits lower-income families with children. A married couple with two children would see their net income change as shown in Figure 1.
 
+![Figure 1: Net income change by employment income for a married couple with two children](/assets/posts/ri-governor-ctc-household.png)
+
 Lower-income households gain the most because the $325 credit is fully refundable, while the eliminated personal exemption provided less value to families with lower tax liability. Higher-income households near the phase-out threshold see smaller gains as the elimination of the exemption lowers gains from the new CTC.
 
 ## Statewide impacts
 
 For tax year 2027, the proposal would reduce state revenues by $36.7 million, according to PolicyEngine's static modeling. 
 
-The reform would raise the net income of 29.2% of Rhode Island families, with beneficiaries concentrated in lower income deciles. 
+The reform would raise the net income of 29.2% of Rhode Island families, with beneficiaries concentrated in lower income deciles.
+
+![Figure 2: Share of population gaining or losing by income decile](/assets/posts/ri-governor-ctc-income-chart.png)
 
 We project that the proposal would reduce child poverty by 2.1% as measured by the Supplemental Poverty Measure.
+
+![Figure 3: Statewide impacts of Governor McKee's child tax credit proposal](/assets/posts/ri-governor-ctc-statewide-impacts.png)
 
 ## Conclusion
 
