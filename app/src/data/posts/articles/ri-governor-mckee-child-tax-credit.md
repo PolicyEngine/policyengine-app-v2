@@ -14,7 +14,7 @@ _[Use PolicyEngine's Rhode Island CTC Calculator](https://www.policyengine.org/u
 
 ## Background
 
-Rhode Island currently provides a personal exemption ($5,100 in 2025) for all household members. The exemption reduces the household's taxable income, providing tax savingswhich rises as household's move up the state's tax brackets. For example, families with income in the higherest tax bracket, can receive a maximum benefit of $305 per exemption ($5,100 x 5.99% = $305). Lower-income families often cannot fully benefit from the exemption, and those with taxable income below the state's standard deduction receive no benefit.
+Rhode Island currently provides a personal exemption ($5,100 in 2025) for all household members. The exemption reduces the household's taxable income, providing tax savings which rise as households move up the state's tax brackets. For example, families with income in the highest tax bracket can receive a maximum benefit of $305 per exemption ($5,100 x 5.99% = $305). Lower-income families often cannot fully benefit from the exemption, and those with taxable income below the state's standard deduction receive no benefit.
 
 Governor McKee's proposal would replace this exemption with a $325 fully refundable child tax credit. Key features include:
 
@@ -24,27 +24,23 @@ Governor McKee's proposal would replace this exemption with a $325 fully refunda
 - **Phase-out:** Mirrors the personal exemption's phase-out structure. The credit amount reduces by 20% for each $7,590 of AGI above $265,965 in 2027. 
 - **Exemption integration:** Eliminates the personal exemption for CTC-qualifying children; the exemption remains for dependents 19 and older. 
 
-Every household with a child would receive the same credit amount of $325 before the phaseout, rather than their tax savings detemined by their income.
+Every household with a child would receive the same credit amount of $325 before the phase-out, rather than tax savings determined by their income.
 
 ## Household impacts
 
-The reform primarily benefits lower-income families with children, as they see little or no benefit from the personal exemption. For example, a single parent with one child and $20,000 of AGI would see their net income increase by $325, the full credit amount. However, as AGI rises, the change in net income falls as the credit amount is partially offset by the elimination of the perosnal exemption for CTC eligible children. Once a single parent reaches the top income bracket, their change in net income is $7.[^1]
+The reform primarily benefits lower-income families with children, as they see little or no benefit from the personal exemption. For example, a single parent with one child and $20,000 of AGI would see their net income increase by $325, the full credit amount. However, as AGI rises, the change in net income falls as the credit amount is partially offset by the elimination of the personal exemption for CTC-eligible children. Once the single parent reaches the top income bracket, their change in net income is $8.[^1] Once the credit enters its phase-out range, net income slowly drops as the CTC phase-out overlaps with the personal exemption.[^2] Figure 1 displays the change in net income for a single parent of one child.
 
-[^1]: We project in 2027, that the maximum tax savinsg that can be attined from the personal exemption is $318 per person. Replacing the exemption with the $325 credit, results in a gain of $7 in net income per child for those in the top income tax bracket.
+[^1]: We project that in 2027, the maximum tax savings that can be attained from the personal exemption is $317 per person. Replacing the exemption with the $325 credit results in a gain of $8 per child for those in the top income tax bracket.
+
+[^2]: As seen in Figure 1, the phase-out of the CTC does not perfectly align with the personal exemption, leading to instances where net income jumps suddenly. This may be due to the inflation adjustment of the CTC's phase-out parameters being rounded to a different number than the personal exemption.
 
 ![Figure 1: Net income change by employment income for a married couple with two children](/assets/posts/ri-governor-ctc-household.png)
 
-Lower-income households gain the most because the $325 credit is fully refundable, while the eliminated personal exemption provided less value to families with lower tax liability. Higher-income households near the phase-out threshold see smaller gains as the elimination of the exemption lowers gains from the new CTC.
-
 ## Statewide impacts
 
-For tax year 2027, the proposal would reduce state revenues by $36.7 million, according to PolicyEngine's static modeling. 
-
-The reform would raise the net income of 29.2% of Rhode Island families, with beneficiaries concentrated in lower income deciles.
+For tax year 2027, the proposal would reduce state revenues by $36.7 million, according to PolicyEngine's static modeling. The reform would also raise the net income of 29.2% of Rhode Island residents, with beneficiaries concentrated in lower income deciles. We project that the proposal would reduce poverty and child poverty by 1.0 and 2.1%, respectively, as measured by the Supplemental Poverty Measure.
 
 ![Figure 2: Share of population gaining or losing by income decile](/assets/posts/ri-governor-ctc-income-chart.png)
-
-We project that the proposal would reduce child poverty by 2.1% as measured by the Supplemental Poverty Measure.
 
 ![Figure 3: Statewide impacts of Governor McKee's child tax credit proposal](/assets/posts/ri-governor-ctc-statewide-impacts.png)
 
