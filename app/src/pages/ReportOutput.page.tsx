@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Container, Stack, Text } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
@@ -6,7 +6,7 @@ import { SocietyWideReportOutput as SocietyWideOutput } from '@/api/societyWideC
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { FloatingAlert } from '@/components/common/FloatingAlert';
 import { RenameIngredientModal } from '@/components/common/RenameIngredientModal';
-import { ReportErrorContext, ReportErrorFallback } from '@/components/report/ReportErrorFallback';
+import { ReportErrorFallback } from '@/components/report/ReportErrorFallback';
 import { CALCULATOR_URL } from '@/constants';
 import { ReportYearProvider } from '@/contexts/ReportYearContext';
 import { spacing } from '@/designTokens';
@@ -312,34 +312,6 @@ export default function ReportOutputPage() {
     return <Text c="red">Unknown report type</Text>;
   };
 
-  // Memoize error context to avoid recreating on every render
-  const errorContext: ReportErrorContext = useMemo(
-    () => ({
-      userReport,
-      userSimulations,
-      userPolicies,
-      userHouseholds: userHouseholds as ReportErrorContext['userHouseholds'],
-      userGeographies: userGeographies as ReportErrorContext['userGeographies'],
-      report,
-      simulations,
-      policies,
-      households,
-      geographies,
-    }),
-    [
-      userReport,
-      userSimulations,
-      userPolicies,
-      userHouseholds,
-      userGeographies,
-      report,
-      simulations,
-      policies,
-      households,
-      geographies,
-    ]
-  );
-
   return (
     <ReportYearProvider year={report?.year ?? null}>
       {showCopyAlert && (
@@ -380,7 +352,7 @@ export default function ReportOutputPage() {
       >
         <ErrorBoundary
           fallback={(error, errorInfo) => (
-            <ReportErrorFallback error={error} errorInfo={errorInfo} context={errorContext} />
+            <ReportErrorFallback error={error} errorInfo={errorInfo} />
           )}
         >
           {renderContent()}
