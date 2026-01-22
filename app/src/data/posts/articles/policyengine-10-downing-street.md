@@ -1,8 +1,8 @@
 Our co-founder and CTO Nikhil Woodruff has spent the past six months working with the data science team at 10 Downing Street to adapt and extend PolicyEngine's microsimulation technology for government use.
 
-We're excited to share that PolicyEngine's microsimulation technology has been supporting policy analysis at 10 Downing Street—and now Nikhil has [written publicly about the work](https://fellows.ai.gov.uk/news/2025/01/06/innovation-fellow-develops-microsimulation-model-for-analysis-in-number-10/).
+We're excited to share that PolicyEngine's microsimulation technology has been supporting policy analysis at 10 Downing Street—and now Nikhil has [written publicly about the work](https://fellows.ai.gov.uk/articles/nikhil-woodruff-micro-simulation).
 
-<div style="text-align: center; margin: 24px 0;"><a class="cta-button" href="https://fellows.ai.gov.uk/news/2025/01/06/innovation-fellow-develops-microsimulation-model-for-analysis-in-number-10/">Read Nikhil's article on gov.uk →</a></div>
+<div style="text-align: center; margin: 24px 0;"><a class="cta-button" href="https://fellows.ai.gov.uk/articles/nikhil-woodruff-micro-simulation">Read Nikhil's article on gov.uk →</a></div>
 
 Since summer 2025, Nikhil has been working as an [Innovation Fellow](https://www.gov.uk/government/publications/the-no10-innovation-fellowship-programme) with [10DS](https://fellows.ai.gov.uk)—the data science team at No 10—adapting PolicyEngine's open-source microsimulation model for government use. The goal: give decision-makers faster access to analysis when the policy process moves too quickly for traditional approaches.
 
@@ -38,4 +38,4 @@ This project demonstrates what open-source policy modelling can achieve. Because
 
 We believe government analysis should be built on transparent, reproducible foundations. Seeing PolicyEngine's technology contribute to decision-making at the centre of UK government is a validation of that vision.
 
-You can read Nikhil's full article on the [No10 Innovation Fellows website](https://fellows.ai.gov.uk/news/2025/01/06/innovation-fellow-develops-microsimulation-model-for-analysis-in-number-10/), and as always, you can explore PolicyEngine's UK model at [policyengine.org/uk](https://policyengine.org/uk).
+You can read Nikhil's full article on the [No10 Innovation Fellows website](https://fellows.ai.gov.uk/articles/nikhil-woodruff-micro-simulation), and as always, you can explore PolicyEngine's UK model at [policyengine.org/uk](https://policyengine.org/uk).
