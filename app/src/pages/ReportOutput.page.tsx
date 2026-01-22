@@ -3,8 +3,10 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Container, Stack, Text } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { SocietyWideReportOutput as SocietyWideOutput } from '@/api/societyWideCalculation';
+import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { FloatingAlert } from '@/components/common/FloatingAlert';
 import { RenameIngredientModal } from '@/components/common/RenameIngredientModal';
+import { ReportErrorFallback } from '@/components/report/ReportErrorFallback';
 import { CALCULATOR_URL } from '@/constants';
 import { ReportYearProvider } from '@/contexts/ReportYearContext';
 import { spacing } from '@/designTokens';
@@ -348,7 +350,13 @@ export default function ReportOutputPage() {
         onShare={handleShare}
         onSave={handleSave}
       >
-        {renderContent()}
+        <ErrorBoundary
+          fallback={(error, errorInfo) => (
+            <ReportErrorFallback error={error} errorInfo={errorInfo} />
+          )}
+        >
+          {renderContent()}
+        </ErrorBoundary>
       </ReportOutputLayout>
 
       <RenameIngredientModal

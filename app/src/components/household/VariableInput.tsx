@@ -8,6 +8,7 @@
 import { Group, NumberInput, Select, Switch, Text, TextInput } from '@mantine/core';
 import { Household } from '@/types/ingredients/Household';
 import { getInputFormattingProps } from '@/utils/householdValues';
+import { coerceByValueType } from '@/utils/valueCoercion';
 import { getValue, setValue, VariableInfo } from '@/utils/VariableResolver';
 
 export interface VariableInputProps {
@@ -98,7 +99,7 @@ export default function VariableInput({
         <NumberInput
           label={variable.label}
           value={currentValue ?? variable.defaultValue ?? 0}
-          onChange={(val) => handleChange(val)}
+          onChange={(val) => handleChange(coerceByValueType(val, variable.valueType))}
           placeholder={`Enter ${variable.label}`}
           disabled={disabled}
           {...formattingProps}
