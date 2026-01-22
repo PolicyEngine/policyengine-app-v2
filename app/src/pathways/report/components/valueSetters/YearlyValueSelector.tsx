@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { Group } from '@mantine/core';
 import { YearPickerInput } from '@mantine/dates';
 import { ValueInterval } from '@/types/subIngredients/valueInterval';
-import { fromISODateString, toISODateString } from '@/utils/dateUtils';
+import { fromLocalDateString, toLocalDateString } from '@/utils/dateUtils';
 import { getDefaultValueForParam } from './getDefaultValueForParam';
 import { ValueInputBox } from './ValueInputBox';
 import { ValueSetterProps } from './ValueSetterProps';
@@ -57,11 +57,11 @@ export function YearlyValueSelector(props: ValueSetterProps) {
   }, [startDate, endDate, paramValue, setIntervals]);
 
   function handleStartDateChange(value: Date | string | null) {
-    setStartDate(toISODateString(value));
+    setStartDate(toLocalDateString(value));
   }
 
   function handleEndDateChange(value: Date | string | null) {
-    const isoString = toISODateString(value);
+    const isoString = toLocalDateString(value);
     if (isoString) {
       const endOfYearDate = dayjs(isoString).endOf('year').format('YYYY-MM-DD');
       setEndDate(endOfYearDate);
@@ -75,18 +75,18 @@ export function YearlyValueSelector(props: ValueSetterProps) {
       <YearPickerInput
         placeholder="Pick a year"
         label="From"
-        minDate={fromISODateString(minDate)}
-        maxDate={fromISODateString(maxDate)}
-        value={fromISODateString(startDate)}
+        minDate={fromLocalDateString(minDate)}
+        maxDate={fromLocalDateString(maxDate)}
+        value={fromLocalDateString(startDate)}
         onChange={handleStartDateChange}
         style={{ flex: 1 }}
       />
       <YearPickerInput
         placeholder="Pick a year"
         label="To"
-        minDate={fromISODateString(minDate)}
-        maxDate={fromISODateString(maxDate)}
-        value={fromISODateString(endDate)}
+        minDate={fromLocalDateString(minDate)}
+        maxDate={fromLocalDateString(maxDate)}
+        value={fromLocalDateString(endDate)}
         onChange={handleEndDateChange}
         style={{ flex: 1 }}
       />
