@@ -25,12 +25,13 @@ import type { RootState } from '@/store';
 import type { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
 import { getUSStates } from '@/utils/regionStrategies';
 import { fetchReducer, initialFetchState } from './reducer';
-import type {
-  CongressionalDistrictDataContextValue,
-  CongressionalDistrictDataProviderProps,
-  StateDistrictData,
+import {
+  MAX_POLL_ATTEMPTS,
+  POLL_INTERVAL_MS,
+  type CongressionalDistrictDataContextValue,
+  type CongressionalDistrictDataProviderProps,
+  type StateDistrictData,
 } from './types';
-import { MAX_POLL_ATTEMPTS, POLL_INTERVAL_MS } from './types';
 import {
   calculateTotalDistrictsLoaded,
   computeFetchStatus,
@@ -91,7 +92,9 @@ export function CongressionalDistrictDataProvider({
       let attempts = 0;
 
       while (attempts < MAX_POLL_ATTEMPTS) {
-        if (signal.aborted) return;
+        if (signal.aborted) {
+          return;
+        }
 
         try {
           const response: SocietyWideCalculationResponse = await fetchSocietyWideCalculation(
@@ -146,7 +149,9 @@ export function CongressionalDistrictDataProvider({
 
   // Start fetching congressional district data for all states in parallel
   const startFetch = useCallback(() => {
-    if (state.hasStarted) return;
+    if (state.hasStarted) {
+      return;
+    }
 
     if (stateCodes.length === 0) {
       console.warn('[CongressionalDistrictDataProvider] No state codes available from metadata');

@@ -15,7 +15,9 @@ const STATE_REGION_PREFIX = 'state/';
  * @returns True if this is a state-level region
  */
 export function isStateLevelRegion(region: string | undefined): boolean {
-  if (!region) return false;
+  if (!region) {
+    return false;
+  }
   return region.toLowerCase().startsWith(STATE_REGION_PREFIX);
 }
 
@@ -33,7 +35,9 @@ export function isStateLevelRegion(region: string | undefined): boolean {
  * extractStateCode(undefined) // returns null
  */
 export function extractStateCode(region: string | undefined): string | null {
-  if (!region) return null;
+  if (!region) {
+    return null;
+  }
   const regionLower = region.toLowerCase();
   return regionLower.startsWith(STATE_REGION_PREFIX)
     ? regionLower.slice(STATE_REGION_PREFIX.length)

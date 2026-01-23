@@ -121,10 +121,14 @@ export function processGeoJSONFeatures(
 
   geoJSON.features.forEach((feature: GeoJSONFeature) => {
     const districtId = feature.properties?.DISTRICT_ID as string;
-    if (!districtId) return;
+    if (!districtId) {
+      return;
+    }
 
     const dataPoint = dataMap.get(districtId);
-    if (!dataPoint) return; // Skip districts without data
+    if (!dataPoint) {
+      return; // Skip districts without data
+    }
 
     locations.push(districtId);
     values.push(dataPoint.value);

@@ -46,6 +46,7 @@ The Census Bureau maintains yearly archives of geographic data:
 - **Historical archives:** https://www2.census.gov/geo/tiger/
 
 Available cartographic boundary files by year:
+
 - `GENZ2024/` - 119th Congress (2025-2027)
 - `GENZ2023/` - 118th Congress
 - `GENZ2022/` - 118th Congress
@@ -59,11 +60,13 @@ To use a different Congress version, download from the appropriate year's archiv
 If you need to update the district boundaries:
 
 1. **Download the shapefile** from Census:
+
    ```bash
    curl -o cd119.zip "https://www2.census.gov/geo/tiger/GENZ2024/shp/cb_2024_us_cd119_20m.zip"
    ```
 
 2. **Convert shapefile to GeoJSON** using shpjs (Node.js):
+
    ```javascript
    const shp = await import('shpjs');
    const fs = await import('fs');
@@ -78,17 +81,62 @@ If you need to update the district boundaries:
 const fs = require('fs');
 
 const FIPS_TO_STATE = {
-  '01': 'AL', '02': 'AK', '04': 'AZ', '05': 'AR', '06': 'CA',
-  '08': 'CO', '09': 'CT', '10': 'DE', '11': 'DC', '12': 'FL',
-  '13': 'GA', '15': 'HI', '16': 'ID', '17': 'IL', '18': 'IN',
-  '19': 'IA', '20': 'KS', '21': 'KY', '22': 'LA', '23': 'ME',
-  '24': 'MD', '25': 'MA', '26': 'MI', '27': 'MN', '28': 'MS',
-  '29': 'MO', '30': 'MT', '31': 'NE', '32': 'NV', '33': 'NH',
-  '34': 'NJ', '35': 'NM', '36': 'NY', '37': 'NC', '38': 'ND',
-  '39': 'OH', '40': 'OK', '41': 'OR', '42': 'PA', '44': 'RI',
-  '45': 'SC', '46': 'SD', '47': 'TN', '48': 'TX', '49': 'UT',
-  '50': 'VT', '51': 'VA', '53': 'WA', '54': 'WV', '55': 'WI',
-  '56': 'WY', '60': 'AS', '66': 'GU', '69': 'MP', '72': 'PR', '78': 'VI'
+  '01': 'AL',
+  '02': 'AK',
+  '04': 'AZ',
+  '05': 'AR',
+  '06': 'CA',
+  '08': 'CO',
+  '09': 'CT',
+  10: 'DE',
+  11: 'DC',
+  12: 'FL',
+  13: 'GA',
+  15: 'HI',
+  16: 'ID',
+  17: 'IL',
+  18: 'IN',
+  19: 'IA',
+  20: 'KS',
+  21: 'KY',
+  22: 'LA',
+  23: 'ME',
+  24: 'MD',
+  25: 'MA',
+  26: 'MI',
+  27: 'MN',
+  28: 'MS',
+  29: 'MO',
+  30: 'MT',
+  31: 'NE',
+  32: 'NV',
+  33: 'NH',
+  34: 'NJ',
+  35: 'NM',
+  36: 'NY',
+  37: 'NC',
+  38: 'ND',
+  39: 'OH',
+  40: 'OK',
+  41: 'OR',
+  42: 'PA',
+  44: 'RI',
+  45: 'SC',
+  46: 'SD',
+  47: 'TN',
+  48: 'TX',
+  49: 'UT',
+  50: 'VT',
+  51: 'VA',
+  53: 'WA',
+  54: 'WV',
+  55: 'WI',
+  56: 'WY',
+  60: 'AS',
+  66: 'GU',
+  69: 'MP',
+  72: 'PR',
+  78: 'VI',
 };
 
 // At-large states use '00' in Census data but API uses '01'
@@ -96,7 +144,7 @@ const AT_LARGE_FIPS = new Set(['02', '10', '38', '46', '50', '56']);
 
 const data = JSON.parse(fs.readFileSync('input.geojson'));
 
-data.features.forEach(feature => {
+data.features.forEach((feature) => {
   const props = feature.properties || {};
   const stateFips = props.STATEFP;
   let districtNum = props.CD119FP;
@@ -125,9 +173,9 @@ data.features.forEach(feature => {
 
 function roundCoords(coords, precision) {
   if (typeof coords[0] === 'number') {
-    return coords.map(c => Math.round(c * Math.pow(10, precision)) / Math.pow(10, precision));
+    return coords.map((c) => Math.round(c * Math.pow(10, precision)) / Math.pow(10, precision));
   }
-  return coords.map(c => roundCoords(c, precision));
+  return coords.map((c) => roundCoords(c, precision));
 }
 
 fs.writeFileSync('congressional_districts.geojson', JSON.stringify(data));
@@ -137,12 +185,12 @@ fs.writeFileSync('congressional_districts.geojson', JSON.stringify(data));
 
 Each feature includes:
 
-| Property      | Description                | Example             |
-| ------------- | -------------------------- | ------------------- |
-| `DISTRICT_ID` | API-compatible district ID | "AL-01"             |
-| `STATEFP`     | State FIPS code            | "01"                |
-| `CD119FP`     | District number            | "01"                |
-| `GEOID`       | Combined FIPS code         | "0101"              |
+| Property      | Description                | Example                    |
+| ------------- | -------------------------- | -------------------------- |
+| `DISTRICT_ID` | API-compatible district ID | "AL-01"                    |
+| `STATEFP`     | State FIPS code            | "01"                       |
+| `CD119FP`     | District number            | "01"                       |
+| `GEOID`       | Combined FIPS code         | "0101"                     |
 | `NAMELSAD`    | Full district name         | "Congressional District 1" |
 
 ## Update Schedule
@@ -156,8 +204,8 @@ Each feature includes:
 
 Census provides multiple resolutions for different use cases:
 
-| Scale | File | Size | Use Case |
-| ----- | ---- | ---- | -------- |
-| 20m   | `cb_2024_us_cd119_20m.zip` | ~400 KB | Web visualization (current) |
-| 5m    | `cb_2024_us_cd119_5m.zip` | ~2 MB | Higher detail maps |
-| 500k  | `cb_2024_us_cd119_500k.zip` | ~7 MB | Print-quality maps |
+| Scale | File                        | Size    | Use Case                    |
+| ----- | --------------------------- | ------- | --------------------------- |
+| 20m   | `cb_2024_us_cd119_20m.zip`  | ~400 KB | Web visualization (current) |
+| 5m    | `cb_2024_us_cd119_5m.zip`   | ~2 MB   | Higher detail maps          |
+| 500k  | `cb_2024_us_cd119_500k.zip` | ~7 MB   | Print-quality maps          |
