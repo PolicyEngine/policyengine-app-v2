@@ -114,7 +114,7 @@ export default function OrgLogos() {
         style={{ fontFamily: typography.fontFamily.primary }}
       >
         {countryId === 'us'
-          ? 'Trusted by researchers, policy organizations, and benefit platforms'
+          ? 'Trusted by researchers, governments, and benefit platforms'
           : 'Trusted by researchers and policy organizations'}
       </Text>
 

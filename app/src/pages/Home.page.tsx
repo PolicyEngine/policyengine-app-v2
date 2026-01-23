@@ -1,11 +1,15 @@
 import { Box } from '@mantine/core';
 import ActionCards from '@/components/home/ActionCards';
+import DowningStreetCredibility from '@/components/home/DowningStreetCredibility';
 import MainSection from '@/components/home/MainSection';
 import OrgLogos from '@/components/home/OrgLogos';
 import YearInReviewBanner from '@/components/shared/YearInReviewBanner';
 import { colors, spacing, typography } from '@/designTokens';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 
 export default function HomePage() {
+  const countryId = useCurrentCountry();
+
   return (
     <>
       <YearInReviewBanner />
@@ -19,6 +23,7 @@ export default function HomePage() {
       >
         <Box pt={spacing['4xl']}>
           <MainSection />
+          {countryId === 'uk' && <DowningStreetCredibility />}
           <ActionCards />
         </Box>
         <OrgLogos />
