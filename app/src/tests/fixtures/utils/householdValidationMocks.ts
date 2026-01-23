@@ -47,9 +47,9 @@ export const VALIDATION_COUNTRIES = {
 // Years
 export const VALIDATION_YEARS = {
   DEFAULT: CURRENT_YEAR,
-  PAST: '2023',
-  FUTURE: '2026',
-  MISSING: '2027',
+  PAST: '2024',
+  FUTURE: '2027',
+  MISSING: '2028',
 } as const;
 
 // Entity names

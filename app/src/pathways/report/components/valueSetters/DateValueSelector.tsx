@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { Group } from '@mantine/core';
 import { DatePickerInput } from '@mantine/dates';
 import { ValueInterval } from '@/types/subIngredients/valueInterval';
-import { fromISODateString, toISODateString } from '@/utils/dateUtils';
+import { fromLocalDateString, toLocalDateString } from '@/utils/dateUtils';
 import { getDefaultValueForParam } from './getDefaultValueForParam';
 import { ValueInputBox } from './ValueInputBox';
 import { ValueSetterProps } from './ValueSetterProps';
@@ -57,11 +57,11 @@ export function DateValueSelector(props: ValueSetterProps) {
   }, [startDate, endDate, paramValue, setIntervals]);
 
   function handleStartDateChange(value: Date | string | null) {
-    setStartDate(toISODateString(value));
+    setStartDate(toLocalDateString(value));
   }
 
   function handleEndDateChange(value: Date | string | null) {
-    setEndDate(toISODateString(value));
+    setEndDate(toLocalDateString(value));
   }
 
   return (
@@ -69,18 +69,18 @@ export function DateValueSelector(props: ValueSetterProps) {
       <DatePickerInput
         placeholder="Pick a start date"
         label="From"
-        minDate={fromISODateString(minDate)}
-        maxDate={fromISODateString(maxDate)}
-        value={fromISODateString(startDate)}
+        minDate={fromLocalDateString(minDate)}
+        maxDate={fromLocalDateString(maxDate)}
+        value={fromLocalDateString(startDate)}
         onChange={handleStartDateChange}
         style={{ flex: 1 }}
       />
       <DatePickerInput
         placeholder="Pick an end date"
         label="To"
-        minDate={fromISODateString(minDate)}
-        maxDate={fromISODateString(maxDate)}
-        value={fromISODateString(endDate)}
+        minDate={fromLocalDateString(minDate)}
+        maxDate={fromLocalDateString(maxDate)}
+        value={fromLocalDateString(endDate)}
         onChange={handleEndDateChange}
         style={{ flex: 1 }}
       />
