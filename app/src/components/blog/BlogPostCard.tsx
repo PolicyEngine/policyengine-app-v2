@@ -68,7 +68,7 @@ export function BlogPostCard({ item, countryId }: BlogPostCardProps) {
       >
         {item.image && (
           <img
-            src={`/assets/posts/${item.image}`}
+            src={item.image.startsWith('http') ? item.image : `/assets/posts/${item.image}`}
             alt={item.title}
             style={{
               width: '100%',
