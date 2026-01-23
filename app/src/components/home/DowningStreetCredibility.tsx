@@ -2,8 +2,7 @@ import { IconBuildingCastle } from '@tabler/icons-react';
 import { Anchor, Box, Container, Group, Text } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
 
-const GOV_UK_ARTICLE_URL =
-  'https://fellows.ai.gov.uk/articles/nikhil-woodruff-micro-simulation';
+const GOV_UK_ARTICLE_URL = 'https://fellows.ai.gov.uk/articles/nikhil-woodruff-micro-simulation';
 
 /**
  * Social proof element highlighting PolicyEngine's use at 10 Downing Street.

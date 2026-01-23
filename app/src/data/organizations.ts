@@ -1,5 +1,5 @@
 // Organization logos
-import downingStreet from '@/images/logos/orgs/10-downing-street.svg';
+import downingStreet from '@/images/logos/orgs/10-downing-street.png';
 import arnoldVentures from '@/images/logos/orgs/arnold-ventures.png';
 import asi from '@/images/logos/orgs/asi.png';
 import cec from '@/images/logos/orgs/cec.svg';
@@ -56,12 +56,12 @@ export const organizations: Record<string, Organization> = {
     countries: ['uk', 'us'],
   },
 
-  // UK only - pinned organizations first
+  // Pinned organizations (shown first, never shuffled)
   downing_street: {
     name: '10 Downing Street',
     logo: downingStreet,
     link: 'https://fellows.ai.gov.uk/articles/nikhil-woodruff-micro-simulation',
-    countries: ['uk'],
+    countries: ['uk', 'us'],
     pinned: true,
   },
   ukeu: {
