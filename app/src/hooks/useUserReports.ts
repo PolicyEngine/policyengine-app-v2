@@ -1,13 +1,12 @@
 import { useQueryNormalizer } from '@normy/react-query';
 import { useQuery } from '@tanstack/react-query';
-import { useSelector } from 'react-redux';
 import { HouseholdAdapter, PolicyAdapter, ReportAdapter, SimulationAdapter } from '@/adapters';
 import { fetchHouseholdById } from '@/api/household';
 import { fetchPolicyById } from '@/api/policy';
 import { fetchReportById } from '@/api/report';
 import { fetchSimulationById } from '@/api/simulation';
+import { CURRENT_YEAR } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { RootState } from '@/store';
 import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
 import { Policy } from '@/types/ingredients/Policy';
@@ -21,6 +20,7 @@ import {
 import { UserReport } from '@/types/ingredients/UserReport';
 import { UserSimulation } from '@/types/ingredients/UserSimulation';
 import { householdKeys, policyKeys, reportKeys, simulationKeys } from '../libs/queryKeys';
+import { useRegionsList } from './useStaticMetadata';
 import { useGeographicAssociationsByUser } from './useUserGeographic';
 import { useHouseholdAssociationsByUser } from './useUserHousehold';
 import { usePolicyAssociationsByUser } from './useUserPolicy';
@@ -75,8 +75,9 @@ export const useUserReports = (userId: string) => {
   const country = useCurrentCountry();
   const queryNormalizer = useQueryNormalizer();
 
-  // Get geography data from metadata
-  const geographyOptions = useSelector((state: RootState) => state.metadata.economyOptions.region);
+  // Get geography data from static metadata
+  const currentYear = parseInt(CURRENT_YEAR, 10);
+  const geographyOptions = useRegionsList(country, currentYear);
 
   // Step 1: Fetch all user associations in parallel
   const {
@@ -346,6 +347,7 @@ export const useUserReportById = (userReportId: string, options?: { enabled?: bo
   const queryNormalizer = useQueryNormalizer();
   const country = useCurrentCountry();
   const isEnabled = options?.enabled !== false;
+  const currentYear = parseInt(CURRENT_YEAR, 10);
 
   // Step 1: Fetch UserReport by userReportId to get the base reportId
   const {
@@ -458,7 +460,7 @@ export const useUserReportById = (userReportId: string, options?: { enabled?: bo
   );
 
   // Step 7: Get geography data from simulations
-  const geographyOptions = useSelector((state: RootState) => state.metadata.economyOptions.region);
+  const geographyOptions = useRegionsList(country, currentYear);
 
   const geographies: Geography[] = [];
   simulations.forEach((sim) => {

@@ -3,6 +3,7 @@ import { IconCircleMinus, IconCirclePlus, IconTriangleFilled } from '@tabler/ico
 import { useSelector } from 'react-redux';
 import { ActionIcon, Box, Group, Text } from '@mantine/core';
 import { spacing, typography } from '@/designTokens';
+import { useHouseholdMetadataContext } from '@/hooks/useMetadata';
 import { useReportYear } from '@/hooks/useReportYear';
 import { RootState } from '@/store';
 import { Household } from '@/types/ingredients/Household';
@@ -40,16 +41,17 @@ export default function VariableArithmetic({
 }: VariableArithmeticProps) {
   const [expanded, setExpanded] = useState(defaultExpanded);
   const reportYear = useReportYear();
-  const metadata = useSelector((state: RootState) => state.metadata);
+  const metadataContext = useHouseholdMetadataContext();
+  const parameters = useSelector((state: RootState) => state.metadata.parameters);
 
-  const variable = metadata.variables[variableName];
+  const variable = metadataContext.variables[variableName];
   if (!variable) {
     return null;
   }
 
   // Calculate comparison (handles both single and comparison modes)
   const isComparisonMode = reform !== null;
-  const comparison = calculateVariableComparison(variableName, baseline, reform, metadata);
+  const comparison = calculateVariableComparison(variableName, baseline, reform, metadataContext);
 
   // Get child variables (adds and subtracts)
   let addsArray: string[] = [];
@@ -58,7 +60,7 @@ export default function VariableArithmetic({
   if (variable.adds) {
     if (typeof variable.adds === 'string') {
       // It's a parameter name - resolve it
-      const parameter = metadata.parameters[variable.adds];
+      const parameter = parameters[variable.adds];
       if (parameter) {
         addsArray = getParameterAtInstant(parameter, `${reportYear}-01-01`) || [];
       }
@@ -70,7 +72,7 @@ export default function VariableArithmetic({
   if (variable.subtracts) {
     if (typeof variable.subtracts === 'string') {
       // It's a parameter name - resolve it
-      const parameter = metadata.parameters[variable.subtracts];
+      const parameter = parameters[variable.subtracts];
       if (parameter) {
         subtractsArray = getParameterAtInstant(parameter, `${reportYear}-01-01`) || [];
       }
@@ -81,10 +83,10 @@ export default function VariableArithmetic({
 
   // Filter child variables to only show non-zero ones
   const visibleAdds = addsArray.filter((v) =>
-    shouldShowVariable(v, baseline, reform, metadata, false)
+    shouldShowVariable(v, baseline, reform, metadataContext, false)
   );
   const visibleSubtracts = subtractsArray.filter((v) =>
-    shouldShowVariable(v, baseline, reform, metadata, false)
+    shouldShowVariable(v, baseline, reform, metadataContext, false)
   );
 
   // Recursively render children
@@ -119,7 +121,11 @@ export default function VariableArithmetic({
   }
 
   // Get display text and style configuration
-  const displayText = getVariableDisplayText(variable.label, comparison, isComparisonMode);
+  const displayText = getVariableDisplayText(
+    variable.label ?? variable.name,
+    comparison,
+    isComparisonMode
+  );
   const styleConfig = getDisplayStyleConfig(isComparisonMode, comparison.direction, isAdd);
 
   // Create arrow element based on configuration (hide if no change)

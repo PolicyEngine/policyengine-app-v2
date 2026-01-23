@@ -1,34 +1,28 @@
 import { useSelector } from 'react-redux';
 import { Outlet } from 'react-router-dom';
-import { MetadataLoadingExperience } from '@/components/common/MetadataLoadingExperience';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { useFetchMetadata } from '@/hooks/useMetadata';
+import { selectMetadataState, useFetchMetadata } from '@/hooks/useMetadata';
 import ErrorPage from '@/pages/report-output/ErrorPage';
-import { RootState } from '@/store';
+import LoadingPage from '@/pages/report-output/LoadingPage';
 
 /**
- * Guard component that ensures metadata is loaded before rendering child routes.
+ * Guard component that ensures all metadata (variables, datasets, parameters)
+ * is loaded before rendering child routes.
  *
- * This guard BLOCKS rendering until metadata is fully loaded, showing a polished
- * loading experience while fetching. Use this for routes that absolutely require
- * metadata to render properly (e.g., ReportOutputPage, HouseholdOverview).
+ * This is the V2 unified loading approach - loads all metadata in one request.
  *
- * The guard checks:
- * 1. If metadata is currently loading - shows MetadataLoadingExperience with progress
- * 2. If metadata fetch failed - shows error page
- * 3. If metadata.version is missing - shows MetadataLoadingExperience
- * 4. Otherwise - renders child routes via <Outlet />
- *
- * Note: useFetchMetadata is smart and won't re-fetch if metadata already exists
- * for the current country, so navigation between guarded routes is instant once
- * metadata is cached.
+ * Loading states:
+ * 1. loading === true → Shows loading page
+ * 2. error !== null → Shows error page
+ * 3. loaded === false → Shows loading page
+ * 4. loaded === true → Renders child routes
  *
  * Example usage in Router:
  * ```tsx
  * {
  *   element: <MetadataGuard />,
  *   children: [
- *     { path: 'report-output/:reportId', element: <ReportOutputPage /> },
+ *     { path: 'household/*', element: <HouseholdPage /> },
  *   ],
  * }
  * ```
@@ -37,24 +31,15 @@ export function MetadataGuard() {
   const countryId = useCurrentCountry();
   useFetchMetadata(countryId);
 
-  const metadata = useSelector((state: RootState) => state.metadata);
+  const { loading, loaded, error } = useSelector(selectMetadataState);
 
-  // Show loading experience while metadata is being fetched
-  if (metadata.loading) {
-    return <MetadataLoadingExperience countryId={countryId} />;
+  if (error) {
+    return <ErrorPage error={error} />;
   }
 
-  // Show error page if fetch failed
-  if (metadata.error) {
-    return <ErrorPage error={metadata.error} />;
+  if (loading || !loaded) {
+    return <LoadingPage message="Loading metadata..." />;
   }
 
-  // If metadata.version is null/undefined, metadata hasn't loaded yet
-  // This handles the case where loading is false but fetch hasn't started
-  if (!metadata.version) {
-    return <MetadataLoadingExperience countryId={countryId} />;
-  }
-
-  // Metadata is loaded and ready - render child routes
   return <Outlet />;
 }

@@ -1,12 +1,8 @@
 import { CURRENT_YEAR } from '@/constants';
 import { RootState } from '@/store';
 import { Household, HouseholdPerson } from '@/types/ingredients/Household';
-import {
-  ValidationError,
-  ValidationResult,
-  ValidationWarning,
-  VariableMetadata,
-} from '@/utils/HouseholdValidation';
+import { VariableMetadata } from '@/types/metadata';
+import { ValidationError, ValidationResult, ValidationWarning } from '@/utils/HouseholdValidation';
 
 // ============= TEST CONSTANTS =============
 
@@ -82,19 +78,12 @@ export const VALIDATION_VARIABLE_NAMES = {
   HOUSEHOLD_SIZE: 'household_size',
 } as const;
 
-// Variable metadata
-export const VALIDATION_VALUE_TYPES = {
+// Variable data types (V2 API format)
+export const VALIDATION_DATA_TYPES = {
   FLOAT: 'float',
   INT: 'int',
   BOOL: 'bool',
   STRING: 'string',
-} as const;
-
-export const VALIDATION_DEFINITION_PERIODS = {
-  YEAR: 'year',
-  MONTH: 'month',
-  DAY: 'day',
-  ETERNITY: 'eternity',
 } as const;
 
 // Test values
@@ -312,43 +301,34 @@ export const mockEmptyHousehold: Household = {
 
 export const mockFloatMetadata: VariableMetadata = {
   entity: VALIDATION_ENTITY_NAMES.PEOPLE,
-  valueType: VALIDATION_VALUE_TYPES.FLOAT as any,
-  definitionPeriod: VALIDATION_DEFINITION_PERIODS.YEAR as any,
+  data_type: VALIDATION_DATA_TYPES.FLOAT,
   name: VALIDATION_VARIABLE_NAMES.EMPLOYMENT_INCOME,
+  description: 'Employment income',
   label: 'Employment Income',
-  unit: 'USD',
-  isInputVariable: true,
-  defaultValue: 0,
 };
 
 export const mockIntMetadata: VariableMetadata = {
   entity: VALIDATION_ENTITY_NAMES.HOUSEHOLDS,
-  valueType: VALIDATION_VALUE_TYPES.INT as any,
-  definitionPeriod: VALIDATION_DEFINITION_PERIODS.YEAR as any,
+  data_type: VALIDATION_DATA_TYPES.INT,
   name: VALIDATION_VARIABLE_NAMES.HOUSEHOLD_SIZE,
+  description: 'Household size',
   label: 'Household Size',
-  isInputVariable: false,
-  defaultValue: 1,
 };
 
 export const mockBoolMetadata: VariableMetadata = {
   entity: VALIDATION_ENTITY_NAMES.PEOPLE,
-  valueType: VALIDATION_VALUE_TYPES.BOOL as any,
-  definitionPeriod: VALIDATION_DEFINITION_PERIODS.ETERNITY as any,
+  data_type: VALIDATION_DATA_TYPES.BOOL,
   name: VALIDATION_VARIABLE_NAMES.IS_MARRIED,
+  description: 'Is married',
   label: 'Is Married',
-  isInputVariable: true,
-  defaultValue: false,
 };
 
 export const mockStringMetadata: VariableMetadata = {
   entity: VALIDATION_ENTITY_NAMES.HOUSEHOLDS,
-  valueType: VALIDATION_VALUE_TYPES.STRING as any,
-  definitionPeriod: VALIDATION_DEFINITION_PERIODS.YEAR as any,
+  data_type: VALIDATION_DATA_TYPES.STRING,
   name: VALIDATION_VARIABLE_NAMES.STATE_CODE,
+  description: 'State code',
   label: 'State Code',
-  isInputVariable: true,
-  defaultValue: '',
 };
 
 // ============= MOCK REDUX STATE =============
@@ -358,22 +338,17 @@ export const mockReduxStateWithMetadata: Partial<RootState> = {
     variables: {
       [VALIDATION_VARIABLE_NAMES.EMPLOYMENT_INCOME]: {
         entity: VALIDATION_ENTITY_NAMES.PEOPLE,
-        valueType: VALIDATION_VALUE_TYPES.FLOAT,
-        definitionPeriod: VALIDATION_DEFINITION_PERIODS.YEAR,
+        data_type: VALIDATION_DATA_TYPES.FLOAT,
         name: VALIDATION_VARIABLE_NAMES.EMPLOYMENT_INCOME,
+        description: 'Employment income',
         label: 'Employment Income',
-        unit: 'USD',
-        isInputVariable: true,
-        defaultValue: 0,
       },
       [VALIDATION_VARIABLE_NAMES.STATE_CODE]: {
         entity: VALIDATION_ENTITY_NAMES.HOUSEHOLDS,
-        valueType: VALIDATION_VALUE_TYPES.STRING,
-        definitionPeriod: VALIDATION_DEFINITION_PERIODS.YEAR,
+        data_type: VALIDATION_DATA_TYPES.STRING,
         name: VALIDATION_VARIABLE_NAMES.STATE_CODE,
+        description: 'State code',
         label: 'State Code',
-        isInputVariable: true,
-        defaultValue: '',
       },
     },
   },

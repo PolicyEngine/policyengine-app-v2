@@ -1,5 +1,4 @@
 import { useMemo } from 'react';
-import { useSelector } from 'react-redux';
 import { Stack, Text, Title } from '@mantine/core';
 import {
   buildDistrictLabelLookup,
@@ -7,7 +6,9 @@ import {
 } from '@/adapters/congressional-district/congressionalDistrictDataAdapter';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { USDistrictChoroplethMap } from '@/components/visualization/USDistrictChoroplethMap';
-import type { RootState } from '@/store';
+import { CURRENT_YEAR } from '@/constants';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useRegionsList } from '@/hooks/useStaticMetadata';
 import type { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
 import { formatParameterValue } from '@/utils/chartValueUtils';
 import { DIVERGING_GRAY_TEAL } from '@/utils/visualization/colorScales';
@@ -23,8 +24,10 @@ interface AbsoluteChangeByDistrictProps {
  * for each US congressional district in currency terms.
  */
 export function AbsoluteChangeByDistrict({ output }: AbsoluteChangeByDistrictProps) {
-  // Get district labels from metadata
-  const regions = useSelector((state: RootState) => state.metadata.economyOptions.region);
+  // Get district labels from static metadata
+  const countryId = useCurrentCountry();
+  const currentYear = parseInt(CURRENT_YEAR, 10);
+  const regions = useRegionsList(countryId, currentYear);
 
   // Build label lookup from metadata (memoized)
   const labelLookup = useMemo(() => buildDistrictLabelLookup(regions), [regions]);

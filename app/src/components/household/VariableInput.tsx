@@ -1,7 +1,7 @@
 /**
  * VariableInput - Renders the appropriate input control based on variable metadata
  *
- * Dynamically selects NumberInput, Select, Switch, or TextInput based on valueType.
+ * Dynamically selects NumberInput, Select, Switch, or TextInput based on data_type.
  * Uses VariableResolver for entity-aware value getting/setting.
  */
 
@@ -38,12 +38,11 @@ export default function VariableInput({
 
   // Get formatting props for number inputs
   const formattingProps = getInputFormattingProps({
-    valueType: variable.valueType,
-    unit: variable.unit,
+    data_type: variable.dataType,
   });
 
-  // Render based on valueType
-  switch (variable.valueType) {
+  // Render based on data_type (V2 API field)
+  switch (variable.dataType) {
     // Note: Same pattern in ValueInputBox.tsx - extract to shared component if reused again
     case 'bool': {
       const isChecked = Boolean(currentValue);
@@ -65,15 +64,19 @@ export default function VariableInput({
     }
 
     case 'Enum':
-      if (variable.possibleValues && variable.possibleValues.length > 0) {
+      if (
+        variable.possibleValues &&
+        Array.isArray(variable.possibleValues) &&
+        variable.possibleValues.length > 0
+      ) {
         return (
           <Select
             label={variable.label}
             value={currentValue?.toString() || ''}
             onChange={(val) => handleChange(val)}
-            data={variable.possibleValues.map((pv) => ({
-              value: pv.value,
-              label: pv.label,
+            data={variable.possibleValues.map((pv: string) => ({
+              value: pv,
+              label: pv,
             }))}
             placeholder={`Select ${variable.label}`}
             searchable

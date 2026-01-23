@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
   EXPECTED_COUNTRY_LABELS,
   EXPECTED_REGION_TYPE_LABELS,
-  mockMetadataEmptyRegions,
-  mockMetadataWithRegions,
+  mockEmptyRegions,
+  mockRegionsWithData,
   TEST_COUNTRY_CODES,
   TEST_REGION_CODES,
 } from '@/tests/fixtures/utils/geographyUtilsMocks';
@@ -11,7 +11,6 @@ import type { Geography } from '@/types/ingredients/Geography';
 import {
   getCountryLabel,
   getRegionLabel,
-  getRegionType,
   getRegionTypeLabel,
   getUKRegionTypeFromGeography,
   isUKLocalLevelGeography,
@@ -55,10 +54,10 @@ describe('geographyUtils', () => {
   describe('getRegionLabel', () => {
     it('given California code then returns California', () => {
       // Given
-      const metadata = mockMetadataWithRegions();
+      const regions = mockRegionsWithData();
 
       // When
-      const result = getRegionLabel(TEST_REGION_CODES.CALIFORNIA, metadata);
+      const result = getRegionLabel(TEST_REGION_CODES.CALIFORNIA, regions);
 
       // Then
       expect(result).toBe('California');
@@ -66,10 +65,10 @@ describe('geographyUtils', () => {
 
     it('given state/ca format then returns California', () => {
       // Given
-      const metadata = mockMetadataWithRegions();
+      const regions = mockRegionsWithData();
 
       // When
-      const result = getRegionLabel('state/ca', metadata);
+      const result = getRegionLabel('state/ca', regions);
 
       // Then
       expect(result).toBe('California');
@@ -77,10 +76,10 @@ describe('geographyUtils', () => {
 
     it('given constituency code then returns label', () => {
       // Given
-      const metadata = mockMetadataWithRegions();
+      const regions = mockRegionsWithData();
 
       // When
-      const result = getRegionLabel(TEST_REGION_CODES.LONDON, metadata);
+      const result = getRegionLabel(TEST_REGION_CODES.LONDON, regions);
 
       // Then
       expect(result).toBe('Cities of London and Westminster');
@@ -88,21 +87,21 @@ describe('geographyUtils', () => {
 
     it('given unknown region then returns code', () => {
       // Given
-      const metadata = mockMetadataWithRegions();
+      const regions = mockRegionsWithData();
 
       // When
-      const result = getRegionLabel('unknown', metadata);
+      const result = getRegionLabel('unknown', regions);
 
       // Then
       expect(result).toBe('unknown');
     });
 
-    it('given empty metadata then returns code', () => {
+    it('given empty regions then returns code', () => {
       // Given
-      const metadata = mockMetadataEmptyRegions();
+      const regions = mockEmptyRegions();
 
       // When
-      const result = getRegionLabel(TEST_REGION_CODES.CALIFORNIA, metadata);
+      const result = getRegionLabel(TEST_REGION_CODES.CALIFORNIA, regions);
 
       // Then
       expect(result).toBe(TEST_REGION_CODES.CALIFORNIA);
@@ -110,11 +109,11 @@ describe('geographyUtils', () => {
 
     it('given UK constituency with prefix then returns label via exact match', () => {
       // Given
-      const metadata = mockMetadataWithRegions();
+      const regions = mockRegionsWithData();
       const regionCode = TEST_REGION_CODES.UK_CONSTITUENCY_PREFIXED;
 
       // When
-      const result = getRegionLabel(regionCode, metadata);
+      const result = getRegionLabel(regionCode, regions);
 
       // Then
       expect(result).toBe('Sheffield Central');
@@ -122,11 +121,11 @@ describe('geographyUtils', () => {
 
     it('given UK country with prefix then returns label via exact match', () => {
       // Given
-      const metadata = mockMetadataWithRegions();
+      const regions = mockRegionsWithData();
       const regionCode = TEST_REGION_CODES.UK_COUNTRY_PREFIXED;
 
       // When
-      const result = getRegionLabel(regionCode, metadata);
+      const result = getRegionLabel(regionCode, regions);
 
       // Then
       expect(result).toBe('England');
@@ -134,11 +133,11 @@ describe('geographyUtils', () => {
 
     it('given unprefixed UK region then tries fallback with prefix', () => {
       // Given
-      const metadata = mockMetadataWithRegions();
+      const regions = mockRegionsWithData();
       const unprefixedCode = 'Sheffield Central';
 
       // When
-      const result = getRegionLabel(unprefixedCode, metadata);
+      const result = getRegionLabel(unprefixedCode, regions);
 
       // Then
       // Should find it by adding the constituency/ prefix
@@ -147,11 +146,11 @@ describe('geographyUtils', () => {
 
     it('given congressional district with prefix then returns label', () => {
       // Given
-      const metadata = mockMetadataWithRegions();
+      const regions = mockRegionsWithData();
       const regionCode = TEST_REGION_CODES.US_CONGRESSIONAL_DISTRICT_PREFIXED;
 
       // When
-      const result = getRegionLabel(regionCode, metadata);
+      const result = getRegionLabel(regionCode, regions);
 
       // Then
       expect(result).toBe("California's 1st congressional district");
@@ -159,53 +158,27 @@ describe('geographyUtils', () => {
 
     it('given legacy US state code (tx) without prefix then finds via fallback', () => {
       // Given
-      const metadata = mockMetadataWithRegions();
+      const regions = mockRegionsWithData();
       const legacyCode = TEST_REGION_CODES.US_LEGACY_STATE_TX;
 
       // When
-      const result = getRegionLabel(legacyCode, metadata);
+      const result = getRegionLabel(legacyCode, regions);
 
       // Then
       expect(result).toBe('Texas');
     });
   });
 
-  describe('getRegionType', () => {
-    it('given US then returns state', () => {
-      // When
-      const result = getRegionType(TEST_COUNTRY_CODES.US);
-
-      // Then
-      expect(result).toBe('state');
-    });
-
-    it('given UK then returns constituency', () => {
-      // When
-      const result = getRegionType(TEST_COUNTRY_CODES.UK);
-
-      // Then
-      expect(result).toBe('constituency');
-    });
-
-    it('given CA then returns constituency', () => {
-      // When
-      const result = getRegionType(TEST_COUNTRY_CODES.CA);
-
-      // Then
-      expect(result).toBe('constituency');
-    });
-  });
-
   describe('getRegionTypeLabel', () => {
     it('given US state then returns State', () => {
       // Given
-      const metadata = mockMetadataWithRegions();
+      const regions = mockRegionsWithData();
 
       // When
       const result = getRegionTypeLabel(
         TEST_COUNTRY_CODES.US,
         TEST_REGION_CODES.CALIFORNIA,
-        metadata
+        regions
       );
 
       // Then
@@ -214,10 +187,10 @@ describe('geographyUtils', () => {
 
     it('given UK country then returns Country', () => {
       // Given
-      const metadata = mockMetadataWithRegions();
+      const regions = mockRegionsWithData();
 
       // When
-      const result = getRegionTypeLabel(TEST_COUNTRY_CODES.UK, TEST_REGION_CODES.WALES, metadata);
+      const result = getRegionTypeLabel(TEST_COUNTRY_CODES.UK, TEST_REGION_CODES.WALES, regions);
 
       // Then
       expect(result).toBe(EXPECTED_REGION_TYPE_LABELS.COUNTRY);
@@ -225,57 +198,58 @@ describe('geographyUtils', () => {
 
     it('given UK constituency then returns Constituency', () => {
       // Given
-      const metadata = mockMetadataWithRegions();
+      const regions = mockRegionsWithData();
 
       // When
-      const result = getRegionTypeLabel(TEST_COUNTRY_CODES.UK, TEST_REGION_CODES.LONDON, metadata);
+      const result = getRegionTypeLabel(TEST_COUNTRY_CODES.UK, TEST_REGION_CODES.LONDON, regions);
 
       // Then
       expect(result).toBe(EXPECTED_REGION_TYPE_LABELS.CONSTITUENCY);
     });
 
-    it('given UK region not in metadata then returns Constituency as fallback', () => {
+    it('given region not found then returns Region as fallback', () => {
       // Given
-      const metadata = mockMetadataWithRegions();
+      const regions = mockRegionsWithData();
 
       // When
-      const result = getRegionTypeLabel(TEST_COUNTRY_CODES.UK, 'unknown-region', metadata);
-
-      // Then
-      expect(result).toBe(EXPECTED_REGION_TYPE_LABELS.CONSTITUENCY);
-    });
-
-    it('given unknown country then returns Region as fallback', () => {
-      // Given
-      const metadata = mockMetadataWithRegions();
-
-      // When
-      const result = getRegionTypeLabel('zz', 'some-region', metadata);
+      const result = getRegionTypeLabel(TEST_COUNTRY_CODES.UK, 'unknown-region', regions);
 
       // Then
       expect(result).toBe(EXPECTED_REGION_TYPE_LABELS.REGION);
     });
 
-    it('given empty metadata then returns appropriate fallback', () => {
+    it('given unknown country then returns Region as fallback', () => {
       // Given
-      const metadata = mockMetadataEmptyRegions();
+      const regions = mockRegionsWithData();
 
       // When
-      const resultUS = getRegionTypeLabel(TEST_COUNTRY_CODES.US, 'ca', metadata);
-      const resultUK = getRegionTypeLabel(TEST_COUNTRY_CODES.UK, 'wales', metadata);
+      const result = getRegionTypeLabel('zz', 'some-region', regions);
 
       // Then
-      expect(resultUS).toBe(EXPECTED_REGION_TYPE_LABELS.STATE);
-      expect(resultUK).toBe(EXPECTED_REGION_TYPE_LABELS.CONSTITUENCY);
+      expect(result).toBe(EXPECTED_REGION_TYPE_LABELS.REGION);
+    });
+
+    it('given empty regions then returns Region as fallback', () => {
+      // Given
+      const regions = mockEmptyRegions();
+
+      // When
+      const resultUS = getRegionTypeLabel(TEST_COUNTRY_CODES.US, 'ca', regions);
+      const resultUK = getRegionTypeLabel(TEST_COUNTRY_CODES.UK, 'wales', regions);
+
+      // Then
+      // Without region data, both return generic 'Region' fallback
+      expect(resultUS).toBe(EXPECTED_REGION_TYPE_LABELS.REGION);
+      expect(resultUK).toBe(EXPECTED_REGION_TYPE_LABELS.REGION);
     });
 
     it('given US congressional district with prefix then returns Congressional district', () => {
       // Given
-      const metadata = mockMetadataWithRegions();
+      const regions = mockRegionsWithData();
       const regionCode = TEST_REGION_CODES.US_CONGRESSIONAL_DISTRICT_PREFIXED;
 
       // When
-      const result = getRegionTypeLabel(TEST_COUNTRY_CODES.US, regionCode, metadata);
+      const result = getRegionTypeLabel(TEST_COUNTRY_CODES.US, regionCode, regions);
 
       // Then
       expect(result).toBe(EXPECTED_REGION_TYPE_LABELS.CONGRESSIONAL_DISTRICT);
@@ -283,11 +257,11 @@ describe('geographyUtils', () => {
 
     it('given legacy US state code (tx) then returns State via fallback', () => {
       // Given
-      const metadata = mockMetadataWithRegions();
+      const regions = mockRegionsWithData();
       const legacyCode = TEST_REGION_CODES.US_LEGACY_STATE_TX;
 
       // When
-      const result = getRegionTypeLabel(TEST_COUNTRY_CODES.US, legacyCode, metadata);
+      const result = getRegionTypeLabel(TEST_COUNTRY_CODES.US, legacyCode, regions);
 
       // Then
       expect(result).toBe(EXPECTED_REGION_TYPE_LABELS.STATE);

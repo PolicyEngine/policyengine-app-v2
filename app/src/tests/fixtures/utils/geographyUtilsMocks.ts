@@ -1,4 +1,4 @@
-import type { MetadataState } from '@/types/metadata';
+import type { MetadataRegionEntry } from '@/types/metadata';
 import { UK_REGION_TYPES, US_REGION_TYPES } from '@/types/regionTypes';
 
 export const TEST_COUNTRY_CODES = {
@@ -38,67 +38,30 @@ export const EXPECTED_REGION_TYPE_LABELS = {
   CONGRESSIONAL_DISTRICT: 'Congressional district',
 } as const;
 
-export const mockMetadataWithRegions = (): MetadataState => ({
-  currentCountry: 'us',
-  variables: {},
-  parameters: {},
-  entities: {},
-  variableModules: {},
-  economyOptions: {
-    region: [
-      { name: 'state/ca', label: 'California', type: US_REGION_TYPES.STATE },
-      { name: 'state/tx', label: 'Texas', type: US_REGION_TYPES.STATE },
-      {
-        name: 'congressional_district/CA-01',
-        label: "California's 1st congressional district",
-        type: US_REGION_TYPES.CONGRESSIONAL_DISTRICT,
-        state_abbreviation: 'CA',
-        state_name: 'California',
-      },
-      { name: 'country/wales', label: 'Wales', type: UK_REGION_TYPES.COUNTRY },
-      { name: 'country/scotland', label: 'Scotland', type: UK_REGION_TYPES.COUNTRY },
-      {
-        name: 'constituency/E14000698',
-        label: 'Cities of London and Westminster',
-        type: UK_REGION_TYPES.CONSTITUENCY,
-      },
-      {
-        name: 'constituency/Sheffield Central',
-        label: 'Sheffield Central',
-        type: UK_REGION_TYPES.CONSTITUENCY,
-      },
-      { name: 'country/england', label: 'England', type: UK_REGION_TYPES.COUNTRY },
-    ],
-    time_period: [],
-    datasets: [],
+// Region arrays for geography utility tests (no longer MetadataState)
+export const mockRegionsWithData = (): MetadataRegionEntry[] => [
+  { name: 'state/ca', label: 'California', type: US_REGION_TYPES.STATE },
+  { name: 'state/tx', label: 'Texas', type: US_REGION_TYPES.STATE },
+  {
+    name: 'congressional_district/CA-01',
+    label: "California's 1st congressional district",
+    type: US_REGION_TYPES.CONGRESSIONAL_DISTRICT,
+    state_abbreviation: 'CA',
+    state_name: 'California',
   },
-  currentLawId: 1,
-  basicInputs: [],
-  modelledPolicies: { core: {}, filtered: {} },
-  version: '1.0.0',
-  parameterTree: null,
-  loading: false,
-  error: null,
-  progress: 100,
-});
+  { name: 'country/wales', label: 'Wales', type: UK_REGION_TYPES.COUNTRY },
+  { name: 'country/scotland', label: 'Scotland', type: UK_REGION_TYPES.COUNTRY },
+  {
+    name: 'constituency/E14000698',
+    label: 'Cities of London and Westminster',
+    type: UK_REGION_TYPES.CONSTITUENCY,
+  },
+  {
+    name: 'constituency/Sheffield Central',
+    label: 'Sheffield Central',
+    type: UK_REGION_TYPES.CONSTITUENCY,
+  },
+  { name: 'country/england', label: 'England', type: UK_REGION_TYPES.COUNTRY },
+];
 
-export const mockMetadataEmptyRegions = (): MetadataState => ({
-  currentCountry: 'us',
-  variables: {},
-  parameters: {},
-  entities: {},
-  variableModules: {},
-  economyOptions: {
-    region: [],
-    time_period: [],
-    datasets: [],
-  },
-  currentLawId: 1,
-  basicInputs: [],
-  modelledPolicies: { core: {}, filtered: {} },
-  version: '1.0.0',
-  parameterTree: null,
-  progress: 100,
-  loading: false,
-  error: null,
-});
+export const mockEmptyRegions = (): MetadataRegionEntry[] => [];

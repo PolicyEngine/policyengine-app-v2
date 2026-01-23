@@ -1,5 +1,6 @@
 import type { MetadataState } from '@/types/metadata';
 import type { ReportOutputSocietyWideUK } from '@/types/metadata/ReportOutputSocietyWideUK';
+import { DEFAULT_LOADING_STATES } from '../../reducers/metadataReducerMocks';
 
 /**
  * Mock UK report output with constituency data
@@ -190,28 +191,15 @@ export const MOCK_UK_REPORT_OUTPUT_NO_CONSTITUENCY: ReportOutputSocietyWideUK = 
 };
 
 /**
- * Mock metadata state
+ * Mock metadata state (only API-driven data)
  */
 export const MOCK_METADATA: MetadataState = {
   currentCountry: 'uk',
-  loading: false,
-  error: null,
+  ...DEFAULT_LOADING_STATES,
+  loaded: true,
   progress: 100,
   variables: {},
   parameters: {},
-  entities: {},
-  variableModules: {},
-  economyOptions: {
-    region: [],
-    time_period: [],
-    datasets: [],
-  },
-  currentLawId: 1,
-  basicInputs: [],
-  modelledPolicies: {
-    core: {},
-    filtered: {},
-  },
+  datasets: [],
   version: '1.0.0',
-  parameterTree: null,
 };

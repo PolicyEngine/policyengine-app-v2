@@ -24,7 +24,11 @@ export const TEST_COUNTRIES = {
   UK: 'uk',
 } as const;
 
-export const CURRENT_LAW_ID = '1';
+// Convenience exports for direct usage in mocks
+export const TEST_COUNTRY_US = TEST_COUNTRIES.US;
+export const TEST_COUNTRY_UK = TEST_COUNTRIES.UK;
+
+export const CURRENT_LAW_ID = 1;
 
 // ============================================================================
 // ReportIngredientsInput Fixtures

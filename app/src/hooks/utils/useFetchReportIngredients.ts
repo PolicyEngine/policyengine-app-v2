@@ -11,15 +11,15 @@
  * and returns the fully-hydrated base ingredients.
  */
 
-import { useSelector } from 'react-redux';
 import { HouseholdAdapter, PolicyAdapter, ReportAdapter, SimulationAdapter } from '@/adapters';
 import { fetchHouseholdById } from '@/api/household';
 import { fetchPolicyById } from '@/api/policy';
 import { fetchReportById } from '@/api/report';
 import { fetchSimulationById } from '@/api/simulation';
+import { CURRENT_YEAR } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useRegionsList } from '@/hooks/useStaticMetadata';
 import { householdKeys, policyKeys, reportKeys, simulationKeys } from '@/libs/queryKeys';
-import { RootState } from '@/store';
 import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
 import { Policy } from '@/types/ingredients/Policy';
@@ -186,8 +186,9 @@ export function useFetchReportIngredients(
   // Use country from input if available (for shared reports), otherwise use current country
   const country = input?.userReport.countryId ?? currentCountry;
 
-  // Get geography metadata for building Geography objects
-  const geographyOptions = useSelector((state: RootState) => state.metadata.economyOptions.region);
+  // Get geography metadata for building Geography objects from static metadata
+  const currentYear = parseInt(CURRENT_YEAR, 10);
+  const geographyOptions = useRegionsList(country, currentYear);
 
   // Step 1: Fetch the base Report using reportId from userReport
   const reportId = input?.userReport.reportId;

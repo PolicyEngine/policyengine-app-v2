@@ -5,7 +5,8 @@
  */
 
 import { Container, Text, Title } from '@mantine/core';
-import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
+import { BASELINE_POLICY_ID, useParameterValues } from '@/hooks/useParameterValues';
+import { ParameterMetadata } from '@/types/metadata';
 import { PolicyStateProps } from '@/types/pathwayState';
 import { getParameterByName } from '@/types/subIngredients/parameter';
 import { ValueIntervalCollection, ValuesList } from '@/types/subIngredients/valueInterval';
@@ -24,7 +25,15 @@ export default function PolicyParameterSelectorMain({
   policy,
   onPolicyUpdate,
 }: PolicyParameterSelectorMainProps) {
-  const baseValues = new ValueIntervalCollection(param.values as ValuesList);
+  // Fetch baseline parameter values on-demand from V2 API
+  const { data: fetchedBaselineValues, isLoading: isLoadingBaseline } = useParameterValues(
+    param.id,
+    BASELINE_POLICY_ID
+  );
+
+  // Use fetched values if available, otherwise fall back to metadata values (for backward compatibility)
+  const baselineValuesSource = fetchedBaselineValues ?? (param.values as ValuesList) ?? {};
+  const baseValues = new ValueIntervalCollection(baselineValuesSource);
 
   // Always start reform with a copy of base values (reform line matches current law initially)
   const reformValues = new ValueIntervalCollection(baseValues);
@@ -68,6 +77,8 @@ export default function PolicyParameterSelectorMain({
         param={param}
         policy={policy}
         onPolicyUpdate={onPolicyUpdate}
+        baselineValues={baselineValuesSource}
+        isLoading={isLoadingBaseline}
       />
       <HistoricalValues
         param={param}
@@ -75,6 +86,7 @@ export default function PolicyParameterSelectorMain({
         reformValues={reformValues}
         policyLabel={policyLabel}
         policyId={policyId}
+        isLoading={isLoadingBaseline}
       />
     </Container>
   );

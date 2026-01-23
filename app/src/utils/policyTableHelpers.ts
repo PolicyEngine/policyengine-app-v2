@@ -1,7 +1,7 @@
 import { getParamDefinitionDate } from '@/constants';
 import { Policy } from '@/types/ingredients/Policy';
-import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
-import { ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
+import { ParameterMetadata } from '@/types/metadata';
+import { ValueIntervalCollection, ValuesList } from '@/types/subIngredients/valueInterval';
 
 export { determinePolicyColumns } from './policyComparison';
 export type { PolicyColumn } from './policyComparison';
@@ -105,12 +105,14 @@ export function formatParameterValue(value: any, unit?: string): string {
  * @param paramName - The parameter identifier (e.g., "gov.hmrc.income_tax.rates.uk[0].rate")
  * @param parameters - The parameter metadata collection
  * @param date - ISO date string (YYYY-MM-DD) to query, defaults to current year via getParamDefinitionDate()
+ * @param baselineValuesMap - Optional map of parameter IDs to fetched baseline values from V2 API
  * @returns Formatted string value or '—' if not found
  */
 export function getCurrentLawParameterValue(
   paramName: string,
   parameters: Record<string, ParameterMetadata>,
-  date: string = getParamDefinitionDate()
+  date: string = getParamDefinitionDate(),
+  baselineValuesMap?: Record<string, ValuesList>
 ): string {
   const metadata = parameters[paramName];
 
@@ -119,7 +121,20 @@ export function getCurrentLawParameterValue(
     return '—';
   }
 
-  // If no values defined, return dash
+  // Prefer fetched baseline values from V2 API (keyed by parameter ID)
+  if (baselineValuesMap && metadata.id && baselineValuesMap[metadata.id]) {
+    const fetchedValues = baselineValuesMap[metadata.id];
+    if (Object.keys(fetchedValues).length > 0) {
+      const intervalCollection = new ValueIntervalCollection(fetchedValues);
+      const value = intervalCollection.getValueAtDate(date);
+      if (value !== undefined) {
+        const unit = metadata.unit || '';
+        return formatParameterValue(value, unit);
+      }
+    }
+  }
+
+  // Fall back to metadata values (backward compatibility)
   if (!metadata.values) {
     return '—';
   }

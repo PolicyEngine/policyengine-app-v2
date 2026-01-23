@@ -1,6 +1,6 @@
 import { CURRENT_YEAR } from '@/constants';
-import { MetadataState } from '@/types/metadata';
-import { UK_REGION_TYPES, US_REGION_TYPES } from '@/types/regionTypes';
+import { MetadataState, ParameterMetadata, VariableMetadata } from '@/types/metadata';
+import { DEFAULT_LOADING_STATES } from '../reducers/metadataReducerMocks';
 
 // Test country IDs
 export const TEST_COUNTRY_US = 'us';
@@ -10,22 +10,15 @@ export const TEST_COUNTRY_CA = 'ca';
 // Test error message
 export const TEST_ERROR_MESSAGE = 'Previous fetch failed';
 
-// Mock metadata states
+// Mock metadata states (only API-driven data, not static data)
 export const mockInitialMetadataState: MetadataState = {
-  loading: false,
-  error: null,
   currentCountry: null,
+  ...DEFAULT_LOADING_STATES,
   progress: 0,
   variables: {},
   parameters: {},
-  entities: {},
-  variableModules: {},
-  economyOptions: { region: [], time_period: [], datasets: [] },
-  currentLawId: 0,
-  basicInputs: [],
-  modelledPolicies: { core: {}, filtered: {} },
+  datasets: [],
   version: null,
-  parameterTree: null,
 };
 
 export const mockLoadingMetadataState: MetadataState = {
@@ -35,68 +28,64 @@ export const mockLoadingMetadataState: MetadataState = {
 };
 
 export const mockLoadedMetadataState: MetadataState = {
-  loading: false,
-  error: null,
   currentCountry: TEST_COUNTRY_US,
+  ...DEFAULT_LOADING_STATES,
+  loaded: true,
   progress: 100,
   variables: {
-    income: { label: 'Income', unit: 'currency-USD' },
-    age: { label: 'Age', unit: 'year' },
+    income: {
+      name: 'income',
+      entity: 'person',
+      description: 'Total income',
+      label: 'Income',
+      unit: 'currency-USD',
+    } as VariableMetadata,
+    age: {
+      name: 'age',
+      entity: 'person',
+      description: 'Age in years',
+      label: 'Age',
+      unit: 'year',
+    } as VariableMetadata,
   },
   parameters: {
-    tax_rate: { label: 'Tax Rate', values: { [CURRENT_YEAR]: 0.25 } },
+    tax_rate: {
+      parameter: 'tax_rate',
+      label: 'Tax Rate',
+      values: { [CURRENT_YEAR]: 0.25 },
+    } as ParameterMetadata,
   },
-  entities: {
-    person: { label: 'Person', plural: 'People' },
-  },
-  variableModules: {
-    person: { label: 'Person', description: 'Person variables' },
-  },
-  economyOptions: {
-    region: [{ name: 'us', label: 'United States', type: US_REGION_TYPES.NATIONAL }],
-    time_period: [{ name: parseInt(CURRENT_YEAR, 10), label: CURRENT_YEAR }],
-    datasets: [
-      {
-        name: `cps_${CURRENT_YEAR}`,
-        label: `CPS ${CURRENT_YEAR}`,
-        title: `Current Population Survey ${CURRENT_YEAR}`,
-        default: true,
-      },
-    ],
-  },
-  currentLawId: 1,
-  basicInputs: ['income', 'age'],
-  modelledPolicies: {
-    core: { baseline: { id: 1, label: 'Current Law' } },
-    filtered: {},
-  },
+  datasets: [
+    {
+      name: `cps_${CURRENT_YEAR}`,
+      label: `CPS ${CURRENT_YEAR}`,
+      title: `Current Population Survey ${CURRENT_YEAR}`,
+      default: true,
+    },
+  ],
   version: '1.0.0',
-  parameterTree: {
-    name: 'root',
-    label: 'Parameters',
-    index: 0,
-    children: [],
-  },
 };
 
 export const mockUKMetadataState: MetadataState = {
   ...mockLoadedMetadataState,
   currentCountry: TEST_COUNTRY_UK,
   variables: {
-    income: { label: 'Income', unit: 'currency-GBP' },
+    income: {
+      name: 'income',
+      entity: 'person',
+      description: 'Total income',
+      label: 'Income',
+      unit: 'currency-GBP',
+    } as VariableMetadata,
   },
-  economyOptions: {
-    region: [{ name: 'uk', label: 'United Kingdom', type: UK_REGION_TYPES.NATIONAL }],
-    time_period: [{ name: parseInt(CURRENT_YEAR, 10), label: CURRENT_YEAR }],
-    datasets: [
-      {
-        name: `frs_${CURRENT_YEAR}`,
-        label: `FRS ${CURRENT_YEAR}`,
-        title: `Family Resources Survey ${CURRENT_YEAR}`,
-        default: true,
-      },
-    ],
-  },
+  datasets: [
+    {
+      name: `frs_${CURRENT_YEAR}`,
+      label: `FRS ${CURRENT_YEAR}`,
+      title: `Family Resources Survey ${CURRENT_YEAR}`,
+      default: true,
+    },
+  ],
   version: '2.0.0',
 };
 

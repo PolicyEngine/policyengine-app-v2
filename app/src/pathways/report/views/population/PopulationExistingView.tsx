@@ -5,11 +5,12 @@
  */
 
 import { useState } from 'react';
-import { useSelector } from 'react-redux';
 import { Text } from '@mantine/core';
 import { HouseholdAdapter } from '@/adapters';
 import PathwayView from '@/components/common/PathwayView';
-import { MOCK_USER_ID } from '@/constants';
+import { CURRENT_YEAR, MOCK_USER_ID } from '@/constants';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useRegionsList } from '@/hooks/useStaticMetadata';
 import {
   isGeographicMetadataWithAssociation,
   UserGeographicMetadataWithAssociation,
@@ -20,7 +21,6 @@ import {
   UserHouseholdMetadataWithAssociation,
   useUserHouseholds,
 } from '@/hooks/useUserHousehold';
-import { RootState } from '@/store';
 import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
 import { getCountryLabel, getRegionLabel } from '@/utils/geographyUtils';
@@ -43,7 +43,9 @@ export default function PopulationExistingView({
   onCancel,
 }: PopulationExistingViewProps) {
   const userId = MOCK_USER_ID.toString();
-  const metadata = useSelector((state: RootState) => state.metadata);
+  const countryId = useCurrentCountry();
+  const currentYear = parseInt(CURRENT_YEAR, 10);
+  const regions = useRegionsList(countryId, currentYear);
 
   // Fetch household populations
   const {
@@ -246,9 +248,9 @@ export default function PopulationExistingView({
       return getCountryLabel(geography.countryId);
     }
 
-    // For subnational, look up in metadata
+    // For subnational, look up in regions
     if (geography.scope === 'subnational') {
-      return getRegionLabel(geography.geographyId, metadata);
+      return getRegionLabel(geography.geographyId, regions);
     }
     return geography.name || geography.geographyId;
   };

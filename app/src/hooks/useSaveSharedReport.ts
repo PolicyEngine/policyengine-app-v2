@@ -7,10 +7,10 @@
  */
 
 import { useCallback, useRef, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useCurrentLawId } from '@/hooks/useStaticMetadata';
 import { ReportIngredientsInput } from '@/hooks/utils/useFetchReportIngredients';
 import { CountryId } from '@/libs/countries';
-import { RootState } from '@/store';
 import { UserReport } from '@/types/ingredients/UserReport';
 import { getShareDataUserReportId } from '@/utils/shareUtils';
 import { useCreateGeographicAssociation } from './useUserGeographic';
@@ -40,8 +40,9 @@ export function useSaveSharedReport() {
   const createGeographicAssociation = useCreateGeographicAssociation();
   const reportStore = useUserReportStore();
 
-  // Get currentLawId to skip creating associations for current law policies
-  const currentLawId = useSelector((state: RootState) => state.metadata.currentLawId);
+  // Get currentLawId from static metadata to skip creating associations for current law policies
+  const countryId = useCurrentCountry();
+  const currentLawId = useCurrentLawId(countryId);
 
   const [saveResult, setSaveResult] = useState<SaveResult>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);

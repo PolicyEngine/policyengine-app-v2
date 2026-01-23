@@ -1,39 +1,50 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
-// Import the API function
-import { fetchMetadata as fetchMetadataApi } from '@/api/metadata';
-import { buildParameterTree } from '@/libs/buildParameterTree';
+import { MetadataAdapter } from '@/adapters';
+import { fetchDatasets, fetchModelVersion, fetchParameters, fetchVariables } from '@/api/v2';
 import { MetadataState } from '@/types/metadata';
 
+/**
+ * Initial state for API-driven metadata
+ *
+ * Static metadata (entities, basicInputs, timePeriods, regions, modelledPolicies, currentLawId)
+ * is no longer stored in Redux. Access it via hooks from @/hooks/useStaticMetadata.
+ */
 const initialState: MetadataState = {
-  loading: false,
-  error: null,
   currentCountry: null,
+
+  // Unified loading state
+  loading: false,
+  loaded: false,
+  error: null,
   progress: 0,
 
+  // API-driven data
   variables: {},
   parameters: {},
-  entities: {},
-  variableModules: {},
-  economyOptions: { region: [], time_period: [], datasets: [] },
-  currentLawId: 0,
-  basicInputs: [],
-  modelledPolicies: { core: {}, filtered: {} },
+  datasets: [],
   version: null,
-  parameterTree: null,
 };
 
-// Async thunk for fetching metadata
-export const fetchMetadataThunk = createAsyncThunk<
-  { data: Awaited<ReturnType<typeof fetchMetadataApi>>; country: string },
-  string
->('metadata/fetch', async (country: string, { rejectWithValue }) => {
-  try {
-    const data = await fetchMetadataApi(country);
-    return { data, country };
-  } catch (error) {
-    return rejectWithValue(error instanceof Error ? error.message : 'Unknown error');
+// Fetch all metadata (variables, datasets, parameters) directly from API
+export const fetchMetadataThunk = createAsyncThunk(
+  'metadata/fetch',
+  async (countryId: string, { rejectWithValue }) => {
+    try {
+      const [variables, datasets, parameters, version] = await Promise.all([
+        fetchVariables(countryId),
+        fetchDatasets(countryId),
+        fetchParameters(countryId),
+        fetchModelVersion(countryId),
+      ]);
+      return {
+        data: { variables, datasets, parameters, version },
+        countryId,
+      };
+    } catch (error) {
+      return rejectWithValue(error instanceof Error ? error.message : 'Unknown error');
+    }
   }
-});
+);
 
 const metadataSlice = createSlice({
   name: 'metadata',
@@ -43,18 +54,16 @@ const metadataSlice = createSlice({
       state.currentCountry = action.payload;
       // Optionally clear existing metadata when country changes
       // This prevents showing stale data from previous country
-      if (state.version !== null) {
-        // Clear metadata but keep loading/error states
+      if (state.version !== null || state.loaded) {
+        // Clear API-driven metadata and reset loading states
         state.variables = {};
         state.parameters = {};
-        state.entities = {};
-        state.variableModules = {};
-        state.economyOptions = { region: [], time_period: [], datasets: [] };
-        state.currentLawId = 0;
-        state.basicInputs = [];
-        state.modelledPolicies = { core: {}, filtered: {} };
+        state.datasets = [];
         state.version = null;
-        state.parameterTree = null;
+        // Reset loading states
+        state.loaded = false;
+        state.loading = false;
+        state.error = null;
       }
     },
     clearMetadata(state) {
@@ -68,30 +77,21 @@ const metadataSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchMetadataThunk.fulfilled, (state, action) => {
-        const { data, country } = action.payload;
-        const body = data.result;
+        const { data, countryId } = action.payload;
 
         state.loading = false;
+        state.loaded = true;
         state.error = null;
-        state.currentCountry = country;
+        state.currentCountry = countryId;
+        state.version = data.version;
 
-        // Transform API response to state
-        state.variables = body.variables;
-        state.parameters = body.parameters;
-        state.entities = body.entities;
-        state.variableModules = body.variableModules;
-        state.economyOptions = body.economy_options;
-        state.currentLawId = body.current_law_id;
-        state.basicInputs = body.basicInputs;
-        state.modelledPolicies = body.modelled_policies;
-        state.version = body.version;
+        // Convert V2 API data to frontend format using adapters
+        state.variables = MetadataAdapter.variablesFromV2(data.variables);
+        state.datasets = MetadataAdapter.datasetsFromV2(data.datasets);
+        state.parameters = MetadataAdapter.parametersFromV2(data.parameters);
 
-        // Build parameter tree from parameters (following V1 approach)
-        try {
-          state.parameterTree = buildParameterTree(body.parameters) || null;
-        } catch (error) {
-          state.parameterTree = null;
-        }
+        // Parameter tree is now built lazily on-demand via useLazyParameterTree hook.
+        // Static data (entities, basicInputs, etc.) is accessed via @/hooks/useStaticMetadata.
       })
       .addCase(fetchMetadataThunk.rejected, (state, action) => {
         state.loading = false;
@@ -101,8 +101,5 @@ const metadataSlice = createSlice({
 });
 
 export const { setCurrentCountry, clearMetadata } = metadataSlice.actions;
-
-// The metadata.currentCountry state is only used internally by useFetchMetadata
-// to track which country's metadata is currently cached.
 
 export default metadataSlice.reducer;

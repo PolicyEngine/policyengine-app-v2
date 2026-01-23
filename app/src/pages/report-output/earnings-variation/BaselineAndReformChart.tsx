@@ -1,13 +1,12 @@
 import { useState } from 'react';
 import type { Layout } from 'plotly.js';
 import Plot from 'react-plotly.js';
-import { useSelector } from 'react-redux';
 import { Group, Radio, Stack } from '@mantine/core';
 import { useMediaQuery, useViewportSize } from '@mantine/hooks';
 import { colors } from '@/designTokens';
 import { spacing } from '@/designTokens/spacing';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import type { RootState } from '@/store';
+import { useHouseholdMetadataContext } from '@/hooks/useMetadata';
 import type { Household } from '@/types/ingredients/Household';
 import {
   DEFAULT_CHART_CONFIG,
@@ -46,10 +45,10 @@ export default function BaselineAndReformChart({
   const mobile = useMediaQuery('(max-width: 768px)');
   const { height: viewportHeight } = useViewportSize();
   const countryId = useCurrentCountry();
-  const metadata = useSelector((state: RootState) => state.metadata);
+  const metadataContext = useHouseholdMetadataContext();
   const chartHeight = getClampedChartHeight(viewportHeight, mobile);
 
-  const variable = metadata.variables[variableName];
+  const variable = metadataContext.variables[variableName];
   if (!variable) {
     return <div>Variable not found</div>;
   }
@@ -60,9 +59,15 @@ export default function BaselineAndReformChart({
     year,
     null,
     baselineVariation,
-    metadata
+    metadataContext
   );
-  const reformYValues = getValueFromHousehold(variableName, year, null, reformVariation, metadata);
+  const reformYValues = getValueFromHousehold(
+    variableName,
+    year,
+    null,
+    reformVariation,
+    metadataContext
+  );
 
   if (!Array.isArray(baselineYValues) || !Array.isArray(reformYValues)) {
     return <div>No variation data available</div>;
@@ -74,7 +79,7 @@ export default function BaselineAndReformChart({
     year,
     null,
     baseline,
-    metadata
+    metadataContext
   ) as number;
 
   // X-axis is earnings range

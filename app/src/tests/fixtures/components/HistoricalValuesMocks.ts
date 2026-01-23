@@ -2,7 +2,7 @@
  * Mock data and fixtures for testing HistoricalValues chart component
  */
 
-import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
+import { ParameterMetadata } from '@/types/metadata';
 import { ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
 
 // Sample parameter metadata for different unit types

@@ -1,11 +1,10 @@
 import { IconChevronDown, IconChevronRight, IconWallet } from '@tabler/icons-react';
-import { useSelector } from 'react-redux';
 import { Box, Collapse, Group, Stack, Text, UnstyledButton } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import HouseholdBreakdown from '@/components/household/HouseholdBreakdown';
 import MetricCard from '@/components/report/MetricCard';
 import { colors, spacing, typography } from '@/designTokens';
-import { RootState } from '@/store';
+import { useHouseholdMetadataContext } from '@/hooks/useMetadata';
 import { Household } from '@/types/ingredients/Household';
 import { calculateVariableComparison } from '@/utils/householdComparison';
 import { formatVariableValue } from '@/utils/householdValues';
@@ -28,9 +27,9 @@ const HERO_ICON_SIZE = 48;
  */
 export default function HouseholdOverview({ outputs, policyLabels }: HouseholdOverviewProps) {
   const [breakdownOpen, { toggle: toggleBreakdown }] = useDisclosure(false);
-  const metadata = useSelector((state: RootState) => state.metadata);
+  const metadataContext = useHouseholdMetadataContext();
 
-  const rootVariable = metadata.variables.household_net_income;
+  const rootVariable = metadataContext.variables.household_net_income;
   if (!rootVariable) {
     return (
       <Box>
@@ -49,7 +48,7 @@ export default function HouseholdOverview({ outputs, policyLabels }: HouseholdOv
     'household_net_income',
     baseline,
     reform,
-    metadata
+    metadataContext
   );
 
   // Format the value

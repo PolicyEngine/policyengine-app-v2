@@ -1,7 +1,7 @@
 import { Dispatch, SetStateAction } from 'react';
-import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
+import { ParameterMetadata } from '@/types/metadata';
 import { PolicyStateProps } from '@/types/pathwayState';
-import { ValueInterval } from '@/types/subIngredients/valueInterval';
+import { ValueInterval, ValuesList } from '@/types/subIngredients/valueInterval';
 
 export interface ValueSetterProps {
   minDate: string;
@@ -14,4 +14,6 @@ export interface ValueSetterProps {
   setStartDate: Dispatch<SetStateAction<string>>;
   endDate: string;
   setEndDate: Dispatch<SetStateAction<string>>;
+  /** Baseline (current law) values fetched from V2 API */
+  baselineValues?: ValuesList;
 }

@@ -1,10 +1,13 @@
+import { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { Box, Text } from '@mantine/core';
 import ParameterTable from '@/components/report/ParameterTable';
 import { getParamDefinitionDate } from '@/constants';
 import { colors, spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useBaselineValuesForParameters } from '@/hooks/useParameterValues';
 import { useReportYear } from '@/hooks/useReportYear';
+import { useCurrentLawId } from '@/hooks/useStaticMetadata';
 import { RootState } from '@/store';
 import { Policy } from '@/types/ingredients/Policy';
 import { UserPolicy } from '@/types/ingredients/UserPolicy';
@@ -55,9 +58,18 @@ function collectDynamicsParameterNames(policies: Policy[], countryId: string): s
 export default function DynamicsSubPage({ policies, userPolicies }: DynamicsSubPageProps) {
   const countryId = useCurrentCountry();
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
-  const currentLawId = useSelector((state: RootState) => state.metadata.currentLawId);
+  const currentLawId = useCurrentLawId(countryId);
   const reportYear = useReportYear();
   const reportDate = getParamDefinitionDate(reportYear ?? undefined);
+
+  // Collect dynamics parameters only
+  const paramList = useMemo(
+    () => (policies ? collectDynamicsParameterNames(policies, countryId) : []),
+    [policies, countryId]
+  );
+
+  // Fetch baseline values for all dynamics parameters from V2 API
+  const { baselineValuesMap } = useBaselineValuesForParameters(paramList, parameters);
 
   if (!policies || policies.length === 0) {
     return <div>No policy data available</div>;
@@ -65,9 +77,6 @@ export default function DynamicsSubPage({ policies, userPolicies }: DynamicsSubP
 
   // Extract baseline and reform from policies array
   const { baseline, reform } = extractPoliciesFromArray(policies);
-
-  // Collect dynamics parameters only
-  const paramList = collectDynamicsParameterNames(policies, countryId);
 
   // If no dynamics parameters, show empty state
   if (paramList.length === 0) {
@@ -115,7 +124,7 @@ export default function DynamicsSubPage({ policies, userPolicies }: DynamicsSubP
         valueColumnWidth={valueColumnWidth}
         renderColumnHeader={(column) => buildColumnHeaderText(column, userPolicies)}
         renderCurrentLawValue={(paramName) =>
-          getCurrentLawParameterValue(paramName, parameters, reportDate)
+          getCurrentLawParameterValue(paramName, parameters, reportDate, baselineValuesMap)
         }
         renderColumnValue={(column, paramName) => {
           // For merged columns, just use the first policy since they're equal

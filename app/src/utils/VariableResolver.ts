@@ -18,14 +18,10 @@ export interface VariableInfo {
   name: string;
   label: string;
   entity: string;
-  valueType: string; // "float", "int", "bool", "Enum"
-  unit?: string;
+  dataType?: string; // "float", "int", "bool", "Enum" - from V2 API data_type
   defaultValue: any;
-  isInputVariable: boolean;
-  hiddenInput: boolean;
-  moduleName: string;
-  possibleValues?: Array<{ value: string; label: string }>;
-  documentation?: string;
+  possibleValues?: string[] | Record<string, string> | null;
+  description?: string;
 }
 
 /**
@@ -82,14 +78,10 @@ export function getVariableInfo(variableName: string, metadata: any): VariableIn
     name: variable.name,
     label: variable.label,
     entity: variable.entity,
-    valueType: variable.valueType,
-    unit: variable.unit,
+    dataType: variable.data_type,
     defaultValue: variable.defaultValue,
-    isInputVariable: variable.isInputVariable,
-    hiddenInput: variable.hidden_input,
-    moduleName: variable.moduleName,
-    possibleValues: variable.possibleValues,
-    documentation: variable.documentation || variable.description,
+    possibleValues: variable.possible_values,
+    description: variable.description,
   };
 }
 
@@ -361,26 +353,22 @@ export function removeVariable(
 }
 
 /**
- * Get all input variables from metadata (excluding hidden and computed)
+ * Get all variables from metadata
+ * Note: Previously filtered to isInputVariable only, now returns all variables
+ * since V2 API doesn't distinguish input vs computed variables
  */
 export function getInputVariables(metadata: any): VariableInfo[] {
   if (!metadata.variables) {
     return [];
   }
 
-  return Object.values(metadata.variables)
-    .filter((v: any) => v.isInputVariable && !v.hidden_input)
-    .map((v: any) => ({
-      name: v.name,
-      label: v.label,
-      entity: v.entity,
-      valueType: v.valueType,
-      unit: v.unit,
-      defaultValue: v.defaultValue,
-      isInputVariable: v.isInputVariable,
-      hiddenInput: v.hidden_input,
-      moduleName: v.moduleName,
-      possibleValues: v.possibleValues,
-      documentation: v.documentation || v.description,
-    }));
+  return Object.values(metadata.variables).map((v: any) => ({
+    name: v.name,
+    label: v.label,
+    entity: v.entity,
+    dataType: v.data_type,
+    defaultValue: v.defaultValue,
+    possibleValues: v.possible_values,
+    description: v.description,
+  }));
 }

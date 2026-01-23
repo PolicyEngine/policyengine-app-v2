@@ -118,9 +118,9 @@ export default function VariableSearchDropdown({
             <Text size="sm" truncate>
               {sentenceCaseLabel(variable.label)}
             </Text>
-            {variable.documentation && (
+            {variable.description && (
               <Text size="xs" c="dimmed" lineClamp={1}>
-                {variable.documentation}
+                {variable.description}
               </Text>
             )}
           </div>

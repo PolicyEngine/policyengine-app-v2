@@ -1,15 +1,14 @@
 import { useState } from 'react';
 import type { Layout } from 'plotly.js';
 import Plot from 'react-plotly.js';
-import { useSelector } from 'react-redux';
 import { Group, Radio, Stack, Text } from '@mantine/core';
 import { useMediaQuery, useViewportSize } from '@mantine/hooks';
 import { PolicyAdapter } from '@/adapters/PolicyAdapter';
 import { colors, spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useHouseholdVariation } from '@/hooks/useHouseholdVariation';
+import { useHouseholdMetadataContext } from '@/hooks/useMetadata';
 import { useReportYear } from '@/hooks/useReportYear';
-import type { RootState } from '@/store';
 import type { Household } from '@/types/ingredients/Household';
 import type { Policy } from '@/types/ingredients/Policy';
 import type { Simulation } from '@/types/ingredients/Simulation';
@@ -52,7 +51,7 @@ export default function MarginalTaxRatesSubPage({
   const { height: viewportHeight } = useViewportSize();
   const countryId = useCurrentCountry();
   const reportYear = useReportYear();
-  const metadata = useSelector((state: RootState) => state.metadata);
+  const metadataContext = useHouseholdMetadataContext();
   const chartHeight = getClampedChartHeight(viewportHeight, mobile);
 
   // Early return if no report year available (shouldn't happen in report output context)
@@ -152,7 +151,7 @@ export default function MarginalTaxRatesSubPage({
     reportYear,
     firstPersonName,
     baselineVariation,
-    metadata
+    metadataContext
   );
 
   const reformMTR =
@@ -162,7 +161,7 @@ export default function MarginalTaxRatesSubPage({
           reportYear,
           firstPersonName,
           reformVariation,
-          metadata
+          metadataContext
         )
       : null;
 
@@ -188,7 +187,7 @@ export default function MarginalTaxRatesSubPage({
     reportYear,
     firstPersonNameBaseline,
     baseline,
-    metadata
+    metadataContext
   ) as number;
 
   // Get current MTR (first person only)
@@ -197,7 +196,7 @@ export default function MarginalTaxRatesSubPage({
     reportYear,
     firstPersonNameBaseline,
     baseline,
-    metadata
+    metadataContext
   ) as number;
 
   // X-axis is earnings range

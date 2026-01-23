@@ -1,9 +1,9 @@
 import { memo, useMemo, useRef } from 'react';
 import Plot from 'react-plotly.js';
-import { Stack, Text } from '@mantine/core';
+import { Box, LoadingOverlay, Stack, Text } from '@mantine/core';
 import { CHART_COLORS } from '@/constants/chartColors';
 import { useChartWidth, useIsMobile, useWindowHeight } from '@/hooks/useChartDimensions';
-import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
+import { ParameterMetadata } from '@/types/metadata';
 import { ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
 import {
   extendForDisplay,
@@ -22,6 +22,7 @@ interface PolicyParameterSelectorHistoricalValuesProps {
   reformValues?: ValueIntervalCollection;
   policyLabel?: string | null;
   policyId?: string | null;
+  isLoading?: boolean;
 }
 
 interface ParameterOverTimeChartProps {
@@ -41,19 +42,23 @@ export default function PolicyParameterSelectorHistoricalValues(
     reformValues,
     policyLabel,
     policyId,
+    isLoading = false,
   } = props;
 
   return (
     <Stack mt="xl">
       <Text fw={700}>Historical values</Text>
       <Text>{capitalize(param.label)} over time</Text>
-      <ParameterOverTimeChart
-        param={param}
-        baseValuesCollection={baseValues}
-        reformValuesCollection={reformValues}
-        policyLabel={policyLabel}
-        policyId={policyId}
-      />
+      <Box pos="relative" mih={200}>
+        <LoadingOverlay visible={isLoading} />
+        <ParameterOverTimeChart
+          param={param}
+          baseValuesCollection={baseValues}
+          reformValuesCollection={reformValues}
+          policyLabel={policyLabel}
+          policyId={policyId}
+        />
+      </Box>
     </Stack>
   );
 }

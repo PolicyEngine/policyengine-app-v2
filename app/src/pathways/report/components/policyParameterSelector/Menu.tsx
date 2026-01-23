@@ -1,18 +1,18 @@
 import { Box, Divider, ScrollArea, Stack, Text } from '@mantine/core';
-import NestedMenu from '@/components/common/NestedMenu';
-import { ParameterTreeNode } from '@/types/metadata';
+import LazyNestedMenu from '@/components/common/LazyNestedMenu';
+import { useLazyParameterTree } from '@/hooks/useLazyParameterTree';
 
 interface PolicyParameterSelectorMenuProps {
   setSelectedParamLabel: (param: string) => void;
-  parameterTree: ParameterTreeNode;
 }
 
 export default function PolicyParameterSelectorMenu({
   setSelectedParamLabel,
-  parameterTree,
 }: PolicyParameterSelectorMenuProps) {
-  // Convert parameter tree to format expected by NestedMenu
-  const menuOptions = parameterTree.children || [];
+  const { getChildren } = useLazyParameterTree();
+
+  // Get root level children (direct children of 'gov')
+  const rootNodes = getChildren('gov');
 
   return (
     <Stack h="100%">
@@ -22,7 +22,11 @@ export default function PolicyParameterSelectorMenu({
       </Box>
 
       <ScrollArea flex={1} type="scroll">
-        <NestedMenu menuOptions={menuOptions} onItemClick={setSelectedParamLabel} />
+        <LazyNestedMenu
+          nodes={rootNodes}
+          getChildren={getChildren}
+          onParameterClick={setSelectedParamLabel}
+        />
       </ScrollArea>
     </Stack>
   );

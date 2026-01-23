@@ -9,9 +9,10 @@ import { useCallback, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import StandardLayout from '@/components/StandardLayout';
-import { MOCK_USER_ID } from '@/constants';
+import { CURRENT_YEAR, MOCK_USER_ID } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { usePathwayNavigation } from '@/hooks/usePathwayNavigation';
+import { useCurrentLawId, useRegionsList } from '@/hooks/useStaticMetadata';
 import { useUserGeographics } from '@/hooks/useUserGeographic';
 import { useUserHouseholds } from '@/hooks/useUserHousehold';
 import { useUserPolicies } from '@/hooks/useUserPolicy';
@@ -62,7 +63,9 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
 
   // Get metadata for population views
   const metadata = useSelector((state: RootState) => state.metadata);
-  const currentLawId = useSelector((state: RootState) => state.metadata.currentLawId);
+  const currentLawId = useCurrentLawId(countryId);
+  const currentYear = parseInt(CURRENT_YEAR, 10);
+  const regionData = useRegionsList(countryId, currentYear);
 
   // ========== NAVIGATION ==========
   const { currentMode, navigateToMode, goBack, canGoBack } = usePathwayNavigation(
@@ -285,7 +288,7 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
       currentView = (
         <PopulationScopeView
           countryId={countryId}
-          regionData={metadata.economyOptions?.region || []}
+          regionData={regionData}
           onScopeSelected={populationCallbacks.handleScopeSelected}
           onBack={canGoBack ? goBack : undefined}
           onCancel={() => navigate(`/${countryId}/simulations`)}
@@ -327,7 +330,7 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
       currentView = (
         <GeographicConfirmationView
           population={simulationState.population}
-          metadata={metadata}
+          regions={regionData}
           onSubmitSuccess={populationCallbacks.handleGeographicSubmitSuccess}
           onBack={canGoBack ? goBack : undefined}
         />

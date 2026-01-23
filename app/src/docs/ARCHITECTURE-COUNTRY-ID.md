@@ -177,26 +177,22 @@ clearAllPopulations();
 
 ## Metadata Loading
 
-### MetadataGuard & MetadataLazyLoader
+### MetadataGuard
 
-Two guards handle metadata loading:
+A single guard handles all metadata loading (variables, datasets, parameters):
 
 **MetadataGuard** (Blocking):
 
-- Blocks rendering until metadata loads
+- Blocks rendering until all metadata loads
 - Shows loading/error pages
-- Used for routes that require metadata immediately (e.g., report-output)
+- Uses V2 API with IndexedDB caching for performance
+- Loads all metadata in a single unified request
 
-**MetadataLazyLoader** (Non-blocking):
+**The guard**:
 
-- Triggers metadata fetch but doesn't block rendering
-- Used for routes that benefit from metadata but can render without it (e.g., reports, policies)
-
-**Both guards**:
-
-- Use `useCurrentCountry()` to read country from URL
-- Call `useFetchMetadata(countryId)` to trigger fetch
-- Smart caching prevents duplicate fetches
+- Uses `useCurrentCountry()` to read country from URL
+- Calls `useFetchMetadata(countryId)` to trigger fetch
+- Smart caching with version-based invalidation prevents duplicate fetches
 
 **Flow**:
 
@@ -205,17 +201,17 @@ User navigates to /uk/reports
   ↓
 CountryGuard validates 'uk' and sets metadata.currentCountry = 'uk'
   ↓
-MetadataLazyLoader renders
+MetadataGuard renders
   ↓
 Calls useCurrentCountry() → returns 'uk' from URL
   ↓
 Calls useFetchMetadata('uk')
   ↓
-useFetchMetadata checks if metadata.currentCountry === 'uk' and metadata.version exists
+useFetchMetadata checks if metadata.loaded === true and currentCountry === 'uk'
   ↓
 If not, dispatches fetchMetadataThunk('uk')
   ↓
-Metadata loads for UK
+All metadata (variables, datasets, parameters) loads for UK
 ```
 
 ## Data Flow Diagram
@@ -375,10 +371,11 @@ All of these patterns have been replaced with the URL-as-source-of-truth archite
 
 - `src/routing/guards/CountryGuard.tsx` - Entry point and state management
 - `src/hooks/useCurrentCountry.ts` - Hook to read country from URL
+- `src/hooks/useMetadata.ts` - Hook for fetching metadata
 - `src/reducers/reportReducer.ts` - Report state with clearReport thunk
-- `src/reducers/metadataReducer.ts` - Metadata state with setCurrentCountry
-- `src/routing/guards/MetadataGuard.tsx` - Blocking metadata loader
-- `src/routing/guards/MetadataLazyLoader.tsx` - Non-blocking metadata loader
+- `src/reducers/metadataReducer.ts` - Metadata state with unified loading
+- `src/routing/guards/MetadataGuard.tsx` - Unified metadata loader (blocking)
+- `src/storage/loaders/metadataLoader.ts` - V2 API + IndexedDB caching
 
 ### Tests
 

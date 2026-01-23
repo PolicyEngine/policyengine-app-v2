@@ -1,7 +1,6 @@
-import { useSelector } from 'react-redux';
 import { Box, Stack, Text } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
-import { RootState } from '@/store';
+import { useHouseholdMetadataContext } from '@/hooks/useMetadata';
 import { Household } from '@/types/ingredients/Household';
 import { calculateVariableComparison } from '@/utils/householdComparison';
 import { formatVariableValue } from '@/utils/householdValues';
@@ -22,9 +21,9 @@ export default function HouseholdSummaryCard({
   reform,
   policyLabels,
 }: HouseholdSummaryCardProps) {
-  const metadata = useSelector((state: RootState) => state.metadata);
+  const metadataContext = useHouseholdMetadataContext();
 
-  const rootVariable = metadata.variables.household_net_income;
+  const rootVariable = metadataContext.variables.household_net_income;
   if (!rootVariable) {
     return (
       <Box>
@@ -39,7 +38,7 @@ export default function HouseholdSummaryCard({
     'household_net_income',
     baseline,
     reform,
-    metadata
+    metadataContext
   );
 
   // Format the value

@@ -1,12 +1,11 @@
 import { useState } from 'react';
-import { useSelector } from 'react-redux';
 import { Group, Select, Stack, Text } from '@mantine/core';
 import { PolicyAdapter } from '@/adapters/PolicyAdapter';
 import { spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useHouseholdVariation } from '@/hooks/useHouseholdVariation';
+import { useHouseholdMetadataContext } from '@/hooks/useMetadata';
 import { useReportYear } from '@/hooks/useReportYear';
-import type { RootState } from '@/store';
 import type { Household } from '@/types/ingredients/Household';
 import type { Policy } from '@/types/ingredients/Policy';
 import type { Simulation } from '@/types/ingredients/Simulation';
@@ -41,7 +40,7 @@ export default function EarningsVariationSubPage({
   const [selectedVariable, setSelectedVariable] = useState('household_net_income');
   const countryId = useCurrentCountry();
   const reportYear = useReportYear();
-  const metadata = useSelector((state: RootState) => state.metadata);
+  const metadataContext = useHouseholdMetadataContext();
 
   // Early return if no report year available (shouldn't happen in report output context)
   if (!reportYear) {
@@ -131,22 +130,28 @@ export default function EarningsVariationSubPage({
     );
   }
 
-  // Build variable options (only non-input variables with array values)
-  const variableOptions = Object.keys(metadata.variables)
+  // Build variable options (variables with array values in variation data)
+  const variableOptions = Object.keys(metadataContext.variables)
     .filter((varName) => {
-      const variable = metadata.variables[varName];
-      // Exclude input variables and marginal_tax_rate (has its own page)
-      if (!variable || variable.isInputVariable || varName === 'marginal_tax_rate') {
+      const variable = metadataContext.variables[varName];
+      // Exclude marginal_tax_rate (has its own page)
+      if (!variable || varName === 'marginal_tax_rate') {
         return false;
       }
 
       // Check if baseline variation has array values for this variable
-      const value = getValueFromHousehold(varName, reportYear, null, baselineVariation, metadata);
+      const value = getValueFromHousehold(
+        varName,
+        reportYear,
+        null,
+        baselineVariation,
+        metadataContext
+      );
       return Array.isArray(value);
     })
     .map((varName) => ({
       value: varName,
-      label: metadata.variables[varName]?.label || varName,
+      label: metadataContext.variables[varName]?.label || varName,
     }));
 
   return (
