@@ -1,29 +1,40 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Box, Flex, Text } from '@mantine/core';
-import { CountryId, getOrgsForCountry, Organization } from '@/data/organizations';
+import { CountryId, getOrgsForCountrySorted, Organization } from '@/data/organizations';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 
 const NUM_VISIBLE = 7;
 const CYCLE_INTERVAL = 2000; // 2 seconds between each change
 
-// Fisher-Yates shuffle
-function shuffleArray<T>(array: T[]): T[] {
-  const shuffled = [...array];
+// Fisher-Yates shuffle, placing initialFirst orgs in the center
+function shuffleArrayWithCenter<T extends { initialFirst?: boolean }>(array: T[]): T[] {
+  const initialFirst = array.filter((item) => item.initialFirst);
+  const rest = array.filter((item) => !item.initialFirst);
+
+  // Shuffle only the non-initialFirst items
+  const shuffled = [...rest];
   for (let i = shuffled.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
   }
-  return shuffled;
+
+  // Place initialFirst orgs in the center of the visible slots
+  // For 7 visible slots, center is index 3
+  const centerIndex = Math.floor(NUM_VISIBLE / 2);
+  const before = shuffled.slice(0, centerIndex);
+  const after = shuffled.slice(centerIndex);
+
+  return [...before, ...initialFirst, ...after];
 }
 
 export default function OrgLogos() {
   const countryId = useCurrentCountry() as CountryId;
 
-  // Get and shuffle logos for current country
+  // Get logos for current country, with initialFirst orgs in the center, rest shuffled
   const shuffledOrgs = useMemo(() => {
-    const orgs = getOrgsForCountry(countryId);
-    return shuffleArray(orgs);
+    const orgs = getOrgsForCountrySorted(countryId);
+    return shuffleArrayWithCenter(orgs);
   }, [countryId]);
 
   // Track which logo index each slot is showing and its transition state
@@ -114,7 +125,7 @@ export default function OrgLogos() {
         style={{ fontFamily: typography.fontFamily.primary }}
       >
         {countryId === 'us'
-          ? 'Trusted by researchers, policy organizations, and benefit platforms'
+          ? 'Trusted by researchers, governments, and benefit platforms'
           : 'Trusted by researchers and policy organizations'}
       </Text>
 

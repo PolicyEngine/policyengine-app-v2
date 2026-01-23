@@ -2,13 +2,13 @@ import { Box } from '@mantine/core';
 import ActionCards from '@/components/home/ActionCards';
 import MainSection from '@/components/home/MainSection';
 import OrgLogos from '@/components/home/OrgLogos';
-import YearInReviewBanner from '@/components/shared/YearInReviewBanner';
+import DowningStreetBanner from '@/components/shared/DowningStreetBanner';
 import { colors, spacing, typography } from '@/designTokens';
 
 export default function HomePage() {
   return (
     <>
-      <YearInReviewBanner />
+      <DowningStreetBanner />
       <Box
         style={{
           backgroundImage: `linear-gradient(180deg, ${colors.primary[50]}, #f2fcfaff, ${colors.white})`,

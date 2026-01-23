@@ -1,4 +1,5 @@
 // Organization logos
+import downingStreet from '@/images/logos/orgs/10-downing-street.png';
 import arnoldVentures from '@/images/logos/orgs/arnold-ventures.png';
 import asi from '@/images/logos/orgs/asi.png';
 import cec from '@/images/logos/orgs/cec.svg';
@@ -36,6 +37,8 @@ export interface Organization {
   logo: string;
   link: string;
   countries: CountryId[];
+  /** If true, this org appears first on initial load (but still participates in shuffle) */
+  initialFirst?: boolean;
 }
 
 export const organizations: Record<string, Organization> = {
@@ -53,7 +56,14 @@ export const organizations: Record<string, Organization> = {
     countries: ['uk', 'us'],
   },
 
-  // UK only
+  // Featured organizations (shown first on initial load)
+  downing_street: {
+    name: '10 Downing Street',
+    logo: downingStreet,
+    link: 'https://fellows.ai.gov.uk/articles/nikhil-woodruff-micro-simulation',
+    countries: ['uk', 'us'],
+    initialFirst: true,
+  },
   ukeu: {
     name: 'UK in a Changing Europe',
     logo: ukeu,
@@ -223,3 +233,12 @@ export const organizations: Record<string, Organization> = {
 // Helper to get orgs for a specific country
 export const getOrgsForCountry = (countryId: CountryId): Organization[] =>
   Object.values(organizations).filter((org) => org.countries.includes(countryId));
+
+// Helper to get orgs sorted with initialFirst orgs at the beginning
+export const getOrgsForCountrySorted = (countryId: CountryId): Organization[] => {
+  const orgs = Object.values(organizations).filter((org) => org.countries.includes(countryId));
+  // Put initialFirst orgs at the beginning, rest in original order
+  const initialFirst = orgs.filter((org) => org.initialFirst);
+  const rest = orgs.filter((org) => !org.initialFirst);
+  return [...initialFirst, ...rest];
+};
