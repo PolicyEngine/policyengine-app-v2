@@ -2,31 +2,31 @@
  * Tests for choropleth utility functions
  */
 
-import { describe, test, expect } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import {
-  mergeConfig,
-  createDataLookupMap,
-  calculateColorRange,
   buildDivergingColorscale,
-  processGeoJSONFeatures,
   buildGeoConfig,
+  calculateColorRange,
+  createDataLookupMap,
   DEFAULT_CHOROPLETH_CONFIG,
+  mergeConfig,
+  processGeoJSONFeatures,
 } from '@/components/visualization/choropleth/utils';
 import {
-  MOCK_CHOROPLETH_DATA_POINTS,
-  MOCK_EMPTY_DATA_POINTS,
-  MOCK_ALL_POSITIVE_DATA_POINTS,
+  EXPECTED_ASYMMETRIC_NEGATIVE_RANGE,
+  EXPECTED_ASYMMETRIC_POSITIVE_RANGE,
+  EXPECTED_EMPTY_DATA_RANGE,
   MOCK_ALL_NEGATIVE_DATA_POINTS,
+  MOCK_ALL_POSITIVE_DATA_POINTS,
+  MOCK_CHOROPLETH_DATA_POINTS,
+  MOCK_CUSTOM_HEIGHT_CONFIG,
+  MOCK_EMPTY_DATA_POINTS,
+  MOCK_FULL_CUSTOM_CONFIG,
   MOCK_GEOJSON_FEATURE_COLLECTION,
   MOCK_GEOJSON_WITH_MISSING_IDS,
-  MOCK_CUSTOM_HEIGHT_CONFIG,
-  MOCK_FULL_CUSTOM_CONFIG,
   TEST_DISTRICT_IDS,
-  TEST_VALUES,
   TEST_FOCUS_STATES,
-  EXPECTED_EMPTY_DATA_RANGE,
-  EXPECTED_ASYMMETRIC_POSITIVE_RANGE,
-  EXPECTED_ASYMMETRIC_NEGATIVE_RANGE,
+  TEST_VALUES,
 } from '@/tests/fixtures/components/visualization/choropleth/choroplethMocks';
 
 describe('mergeConfig', () => {
@@ -213,11 +213,7 @@ describe('processGeoJSONFeatures', () => {
     const formatValue = (val: number) => `$${val.toFixed(2)}`;
 
     // When
-    const result = processGeoJSONFeatures(
-      MOCK_GEOJSON_FEATURE_COLLECTION,
-      dataMap,
-      formatValue
-    );
+    const result = processGeoJSONFeatures(MOCK_GEOJSON_FEATURE_COLLECTION, dataMap, formatValue);
 
     // Then
     expect(result.locations).toHaveLength(5);
@@ -232,11 +228,7 @@ describe('processGeoJSONFeatures', () => {
     const formatValue = (val: number) => val.toString();
 
     // When
-    const result = processGeoJSONFeatures(
-      MOCK_GEOJSON_WITH_MISSING_IDS,
-      dataMap,
-      formatValue
-    );
+    const result = processGeoJSONFeatures(MOCK_GEOJSON_WITH_MISSING_IDS, dataMap, formatValue);
 
     // Then
     // Only AL-01 and CA-52 have both IDs in geoJSON and data in dataMap
@@ -268,11 +260,7 @@ describe('processGeoJSONFeatures', () => {
     const formatValue = (val: number) => `$${val.toFixed(2)}`;
 
     // When
-    const result = processGeoJSONFeatures(
-      MOCK_GEOJSON_FEATURE_COLLECTION,
-      dataMap,
-      formatValue
-    );
+    const result = processGeoJSONFeatures(MOCK_GEOJSON_FEATURE_COLLECTION, dataMap, formatValue);
 
     // Then
     const alabama1Index = result.locations.indexOf(TEST_DISTRICT_IDS.ALABAMA_1);

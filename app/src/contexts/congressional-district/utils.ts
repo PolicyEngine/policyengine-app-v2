@@ -2,7 +2,7 @@
  * Utility functions for congressional district data processing
  */
 
-import type { StateDistrictData, FetchState } from './types';
+import type { FetchState, StateDistrictData } from './types';
 
 /** Prefix used for state region codes in the API */
 const STATE_REGION_PREFIX = 'state/';

@@ -117,8 +117,8 @@ export function AbsoluteChangeByDistrict({ output }: AbsoluteChangeByDistrictPro
           <Group gap="sm">
             <Loader size="sm" />
             <Text size="sm">
-              Loading states and districts: {completedCount} / {totalStates} states complete
-              ({totalDistrictsLoaded} districts loaded)
+              Loading states and districts: {completedCount} / {totalStates} states complete (
+              {totalDistrictsLoaded} districts loaded)
             </Text>
           </Group>
           <Progress value={progressPercent} size="sm" />

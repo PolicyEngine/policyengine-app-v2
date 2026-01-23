@@ -2,28 +2,28 @@
  * Tests for congressional district utility functions
  */
 
-import { describe, test, expect } from 'vitest';
+import { describe, expect, test } from 'vitest';
+import type { StateDistrictData } from '@/contexts/congressional-district/types';
 import {
-  isStateLevelRegion,
-  extractStateCode,
-  getStateCodesToFetch,
   calculateTotalDistrictsLoaded,
   computeFetchStatus,
+  extractStateCode,
+  getStateCodesToFetch,
+  isStateLevelRegion,
   validateAllStatesLoaded,
 } from '@/contexts/congressional-district/utils';
 import {
+  ALL_US_STATE_CODES,
+  MOCK_ALABAMA_DISTRICT_DATA,
+  MOCK_CALIFORNIA_DISTRICT_DATA,
+  MOCK_COMPLETE_FETCH_STATE,
+  MOCK_ERROR_FETCH_STATE,
+  MOCK_INITIAL_FETCH_STATE,
+  MOCK_LOADING_FETCH_STATE,
   TEST_REGION_FORMATS,
   TEST_STATE_CODES,
   TEST_STRIPPED_STATE_CODES,
-  MOCK_INITIAL_FETCH_STATE,
-  MOCK_LOADING_FETCH_STATE,
-  MOCK_COMPLETE_FETCH_STATE,
-  MOCK_ERROR_FETCH_STATE,
-  MOCK_ALABAMA_DISTRICT_DATA,
-  MOCK_CALIFORNIA_DISTRICT_DATA,
-  ALL_US_STATE_CODES,
 } from '@/tests/fixtures/contexts/congressional-district/congressionalDistrictMocks';
-import type { StateDistrictData } from '@/contexts/congressional-district/types';
 
 describe('isStateLevelRegion', () => {
   test('given state/ca region then returns true', () => {

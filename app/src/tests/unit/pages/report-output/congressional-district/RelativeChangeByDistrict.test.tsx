@@ -1,12 +1,12 @@
 import { render, screen } from '@test-utils';
 import { describe, expect, test, vi } from 'vitest';
 import { RelativeChangeByDistrict } from '@/pages/report-output/congressional-district/RelativeChangeByDistrict';
+import { MOCK_NATIONAL_COMPLETE_CONTEXT } from '@/tests/fixtures/contexts/congressional-district/congressionalDistrictMocks';
 import {
   MOCK_CONGRESSIONAL_DISTRICT_REGIONS,
   MOCK_US_REPORT_OUTPUT,
   MOCK_US_REPORT_OUTPUT_NO_DISTRICT,
 } from '@/tests/fixtures/pages/congressional-district/congressionalDistrictComponentMocks';
-import { MOCK_NATIONAL_COMPLETE_CONTEXT } from '@/tests/fixtures/contexts/congressional-district/congressionalDistrictMocks';
 
 // Mock Plotly
 vi.mock('react-plotly.js', () => ({ default: vi.fn(() => null) }));

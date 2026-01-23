@@ -2,22 +2,21 @@
  * Utility functions for US District Choropleth Map
  */
 
-import type { PlotData, Layout } from 'plotly.js';
+import type { Layout, PlotData } from 'plotly.js';
 import { colors } from '@/designTokens';
 import { DEFAULT_CHART_LAYOUT } from '@/utils/chartUtils';
 import { DIVERGING_GRAY_TEAL } from '@/utils/visualization/colorScales';
-
 import type {
   ChoroplethDataPoint,
   ChoroplethMapConfig,
-  PartialChoroplethMapConfig,
   ColorRange,
-  ProcessedFeatureData,
-  PlotlyGeoConfig,
   ColorscaleEntry,
   GeoJSONFeature,
   GeoJSONFeatureCollection,
+  PartialChoroplethMapConfig,
   PlotDataAndLayout,
+  PlotlyGeoConfig,
+  ProcessedFeatureData,
 } from './types';
 
 /**

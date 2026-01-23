@@ -2,15 +2,15 @@
  * Tests for CongressionalDistrictDataContext
  */
 
-import { renderHook, waitFor, act } from '@testing-library/react';
-import { describe, test, expect, vi, beforeEach } from 'vitest';
-import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
+import { act, renderHook, waitFor } from '@testing-library/react';
+import { Provider } from 'react-redux';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import * as societyWideApi from '@/api/societyWideCalculation';
 import {
   CongressionalDistrictDataProvider,
   useCongressionalDistrictData,
 } from '@/contexts/congressional-district/CongressionalDistrictDataContext';
-import * as societyWideApi from '@/api/societyWideCalculation';
 import { MOCK_ALABAMA_DISTRICT_DATA } from '@/tests/fixtures/contexts/congressional-district/congressionalDistrictMocks';
 
 // Mock the API module
@@ -52,9 +52,7 @@ const createWrapper = (
   return function Wrapper({ children }: { children: React.ReactNode }) {
     return (
       <Provider store={store}>
-        <CongressionalDistrictDataProvider {...props}>
-          {children}
-        </CongressionalDistrictDataProvider>
+        <CongressionalDistrictDataProvider {...props}>{children}</CongressionalDistrictDataProvider>
       </Provider>
     );
   };
@@ -73,7 +71,9 @@ describe('CongressionalDistrictDataContext', () => {
       // When/Then
       expect(() => {
         renderHook(() => useCongressionalDistrictData());
-      }).toThrow('useCongressionalDistrictData must be used within a CongressionalDistrictDataProvider');
+      }).toThrow(
+        'useCongressionalDistrictData must be used within a CongressionalDistrictDataProvider'
+      );
 
       consoleSpy.mockRestore();
     });
@@ -358,7 +358,9 @@ describe('CongressionalDistrictDataContext', () => {
       // Then
       await waitFor(() => {
         expect(result.current.stateResponses.size).toBe(1);
-        expect(result.current.totalDistrictsLoaded).toBe(MOCK_ALABAMA_DISTRICT_DATA.districts.length);
+        expect(result.current.totalDistrictsLoaded).toBe(
+          MOCK_ALABAMA_DISTRICT_DATA.districts.length
+        );
       });
     });
 

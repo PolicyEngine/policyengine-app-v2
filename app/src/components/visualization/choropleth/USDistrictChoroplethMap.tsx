@@ -29,13 +29,12 @@ import Plot from 'react-plotly.js';
 import { Box, Center, Loader, Stack, Text } from '@mantine/core';
 import { colors, spacing } from '@/designTokens';
 import { DEFAULT_CHART_CONFIG } from '@/utils/chartUtils';
-
-import type { USDistrictChoroplethMapProps, GeoJSONFeatureCollection } from './types';
+import type { GeoJSONFeatureCollection, USDistrictChoroplethMapProps } from './types';
 import {
-  mergeConfig,
-  createDataLookupMap,
-  calculateColorRange,
   buildPlotDataAndLayout,
+  calculateColorRange,
+  createDataLookupMap,
+  mergeConfig,
 } from './utils';
 
 /** GeoJSON cache to avoid re-fetching (keyed by path) */

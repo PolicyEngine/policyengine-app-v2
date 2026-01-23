@@ -2,7 +2,7 @@
  * Reducer for managing congressional district fetch state
  */
 
-import type { FetchState, FetchAction, StateDistrictData } from './types';
+import type { FetchAction, FetchState, StateDistrictData } from './types';
 
 /**
  * Initial state for the fetch reducer

@@ -4,9 +4,9 @@
 
 import type {
   ChoroplethDataPoint,
+  ColorRange,
   GeoJSONFeature,
   GeoJSONFeatureCollection,
-  ColorRange,
   PartialChoroplethMapConfig,
 } from '@/components/visualization/choropleth/types';
 
@@ -116,7 +116,15 @@ export function createMockGeoJSONFeature(districtId: string): GeoJSONFeature {
     },
     geometry: {
       type: 'Polygon',
-      coordinates: [[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]],
+      coordinates: [
+        [
+          [0, 0],
+          [1, 0],
+          [1, 1],
+          [0, 1],
+          [0, 0],
+        ],
+      ],
     },
   };
 }
@@ -146,7 +154,15 @@ export const MOCK_FEATURE_WITHOUT_ID: GeoJSONFeature = {
   },
   geometry: {
     type: 'Polygon',
-    coordinates: [[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]],
+    coordinates: [
+      [
+        [0, 0],
+        [1, 0],
+        [1, 1],
+        [0, 1],
+        [0, 0],
+      ],
+    ],
   },
 };
 

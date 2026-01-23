@@ -27,7 +27,9 @@ describe('USGeographicOptions', () => {
 
     // Then
     expect(screen.getByLabelText('All households nationally')).toBeInTheDocument();
-    expect(screen.getByLabelText('All households in a state or federal district')).toBeInTheDocument();
+    expect(
+      screen.getByLabelText('All households in a state or federal district')
+    ).toBeInTheDocument();
     expect(screen.getByLabelText('All households in a congressional district')).toBeInTheDocument();
     expect(screen.getByLabelText('Custom household')).toBeInTheDocument();
   });
@@ -51,7 +53,9 @@ describe('USGeographicOptions', () => {
 
     // Then
     expect(screen.getByLabelText('All households nationally')).toBeChecked();
-    expect(screen.getByLabelText('All households in a state or federal district')).not.toBeChecked();
+    expect(
+      screen.getByLabelText('All households in a state or federal district')
+    ).not.toBeChecked();
   });
 
   test('given state scope then shows state selector', () => {

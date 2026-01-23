@@ -81,11 +81,7 @@ export function ComparativeAnalysisPage({
   const ViewComponent = VIEW_MAP[effectiveView];
 
   // Render content
-  const content = ViewComponent ? (
-    <ViewComponent output={output} />
-  ) : (
-    <NotFoundSubPage />
-  );
+  const content = ViewComponent ? <ViewComponent output={output} /> : <NotFoundSubPage />;
 
   // Wrap with CongressionalDistrictDataProvider if we have the required props
   // This ensures district data is shared between absolute and relative views

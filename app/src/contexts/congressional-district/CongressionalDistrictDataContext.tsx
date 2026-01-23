@@ -16,28 +16,27 @@ import {
   useRef,
 } from 'react';
 import { useSelector } from 'react-redux';
+import { buildDistrictLabelLookup } from '@/adapters/congressional-district/congressionalDistrictDataAdapter';
 import {
   fetchSocietyWideCalculation,
   SocietyWideCalculationResponse,
 } from '@/api/societyWideCalculation';
-import { buildDistrictLabelLookup } from '@/adapters/congressional-district/congressionalDistrictDataAdapter';
 import type { RootState } from '@/store';
 import type { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
 import { getUSStates } from '@/utils/regionStrategies';
-
+import { fetchReducer, initialFetchState } from './reducer';
 import type {
-  StateDistrictData,
   CongressionalDistrictDataContextValue,
   CongressionalDistrictDataProviderProps,
+  StateDistrictData,
 } from './types';
-import { POLL_INTERVAL_MS, MAX_POLL_ATTEMPTS } from './types';
-import { fetchReducer, initialFetchState } from './reducer';
+import { MAX_POLL_ATTEMPTS, POLL_INTERVAL_MS } from './types';
 import {
-  isStateLevelRegion,
-  extractStateCode,
-  getStateCodesToFetch,
   calculateTotalDistrictsLoaded,
   computeFetchStatus,
+  extractStateCode,
+  getStateCodesToFetch,
+  isStateLevelRegion,
   validateAllStatesLoaded,
 } from './utils';
 

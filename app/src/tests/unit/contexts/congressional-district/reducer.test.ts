@@ -2,13 +2,13 @@
  * Tests for congressional district fetch reducer
  */
 
-import { describe, test, expect } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import { fetchReducer, initialFetchState } from '@/contexts/congressional-district/reducer';
 import {
+  MOCK_ACTIONS,
+  MOCK_ALABAMA_DISTRICT_DATA,
   MOCK_INITIAL_FETCH_STATE,
   MOCK_LOADING_FETCH_STATE,
-  MOCK_ALABAMA_DISTRICT_DATA,
-  MOCK_ACTIONS,
   TEST_STATE_CODES,
 } from '@/tests/fixtures/contexts/congressional-district/congressionalDistrictMocks';
 

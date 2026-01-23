@@ -2,7 +2,7 @@
  * Type definitions for US District Choropleth Map
  */
 
-import type { PlotData, Layout } from 'plotly.js';
+import type { Layout, PlotData } from 'plotly.js';
 
 /**
  * GeoJSON Feature interface for congressional districts

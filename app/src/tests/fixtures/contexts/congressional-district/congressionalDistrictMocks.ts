@@ -3,10 +3,10 @@
  */
 
 import type {
-  StateDistrictData,
-  FetchState,
-  FetchAction,
   CongressionalDistrictDataContextValue,
+  FetchAction,
+  FetchState,
+  StateDistrictData,
 } from '@/contexts/congressional-district/types';
 
 // ============================================================================
@@ -78,13 +78,37 @@ export function createMockStateDistrictData(
 export const MOCK_ALABAMA_DISTRICT_DATA: StateDistrictData = {
   stateCode: TEST_STATE_CODES.ALABAMA,
   districts: [
-    { district: 'AL-01', average_household_income_change: 312.45, relative_household_income_change: 0.0187 },
-    { district: 'AL-02', average_household_income_change: -45.3, relative_household_income_change: -0.0028 },
-    { district: 'AL-03', average_household_income_change: 156.78, relative_household_income_change: 0.0093 },
-    { district: 'AL-04', average_household_income_change: -89.12, relative_household_income_change: -0.0054 },
-    { district: 'AL-05', average_household_income_change: 234.56, relative_household_income_change: 0.014 },
+    {
+      district: 'AL-01',
+      average_household_income_change: 312.45,
+      relative_household_income_change: 0.0187,
+    },
+    {
+      district: 'AL-02',
+      average_household_income_change: -45.3,
+      relative_household_income_change: -0.0028,
+    },
+    {
+      district: 'AL-03',
+      average_household_income_change: 156.78,
+      relative_household_income_change: 0.0093,
+    },
+    {
+      district: 'AL-04',
+      average_household_income_change: -89.12,
+      relative_household_income_change: -0.0054,
+    },
+    {
+      district: 'AL-05',
+      average_household_income_change: 234.56,
+      relative_household_income_change: 0.014,
+    },
     { district: 'AL-06', average_household_income_change: 0, relative_household_income_change: 0 },
-    { district: 'AL-07', average_household_income_change: -123.45, relative_household_income_change: -0.0075 },
+    {
+      district: 'AL-07',
+      average_household_income_change: -123.45,
+      relative_household_income_change: -0.0075,
+    },
   ],
 };
 
@@ -94,9 +118,21 @@ export const MOCK_ALABAMA_DISTRICT_DATA: StateDistrictData = {
 export const MOCK_CALIFORNIA_DISTRICT_DATA: StateDistrictData = {
   stateCode: TEST_STATE_CODES.CALIFORNIA,
   districts: [
-    { district: 'CA-01', average_household_income_change: 412.88, relative_household_income_change: 0.025 },
-    { district: 'CA-02', average_household_income_change: -156.32, relative_household_income_change: -0.0095 },
-    { district: 'CA-52', average_household_income_change: 612.88, relative_household_income_change: 0.041 },
+    {
+      district: 'CA-01',
+      average_household_income_change: 412.88,
+      relative_household_income_change: 0.025,
+    },
+    {
+      district: 'CA-02',
+      average_household_income_change: -156.32,
+      relative_household_income_change: -0.0095,
+    },
+    {
+      district: 'CA-52',
+      average_household_income_change: 612.88,
+      relative_household_income_change: 0.041,
+    },
   ],
 };
 
@@ -106,7 +142,11 @@ export const MOCK_CALIFORNIA_DISTRICT_DATA: StateDistrictData = {
 export const MOCK_DC_DISTRICT_DATA: StateDistrictData = {
   stateCode: TEST_STATE_CODES.DC,
   districts: [
-    { district: 'DC-00', average_household_income_change: 289.34, relative_household_income_change: 0.0173 },
+    {
+      district: 'DC-00',
+      average_household_income_change: 289.34,
+      relative_household_income_change: 0.0173,
+    },
   ],
 };
 
@@ -129,9 +169,7 @@ export const MOCK_INITIAL_FETCH_STATE: FetchState = {
  * Loading fetch state (some states loading)
  */
 export const MOCK_LOADING_FETCH_STATE: FetchState = {
-  stateResponses: new Map([
-    [TEST_STATE_CODES.ALABAMA, MOCK_ALABAMA_DISTRICT_DATA],
-  ]),
+  stateResponses: new Map([[TEST_STATE_CODES.ALABAMA, MOCK_ALABAMA_DISTRICT_DATA]]),
   completedStates: new Set([TEST_STATE_CODES.ALABAMA]),
   loadingStates: new Set([TEST_STATE_CODES.CALIFORNIA, TEST_STATE_CODES.NEW_YORK]),
   erroredStates: new Set(),
@@ -156,9 +194,7 @@ export const MOCK_COMPLETE_FETCH_STATE: FetchState = {
  * Fetch state with some errors
  */
 export const MOCK_ERROR_FETCH_STATE: FetchState = {
-  stateResponses: new Map([
-    [TEST_STATE_CODES.ALABAMA, MOCK_ALABAMA_DISTRICT_DATA],
-  ]),
+  stateResponses: new Map([[TEST_STATE_CODES.ALABAMA, MOCK_ALABAMA_DISTRICT_DATA]]),
   completedStates: new Set([TEST_STATE_CODES.ALABAMA]),
   loadingStates: new Set(),
   erroredStates: new Set([TEST_STATE_CODES.TEXAS]),
@@ -169,9 +205,7 @@ export const MOCK_ERROR_FETCH_STATE: FetchState = {
  * State-level fetch state (single state for DC)
  */
 export const MOCK_DC_STATE_LEVEL_FETCH_STATE: FetchState = {
-  stateResponses: new Map([
-    [TEST_STATE_CODES.DC, MOCK_DC_DISTRICT_DATA],
-  ]),
+  stateResponses: new Map([[TEST_STATE_CODES.DC, MOCK_DC_DISTRICT_DATA]]),
   completedStates: new Set([TEST_STATE_CODES.DC]),
   loadingStates: new Set(),
   erroredStates: new Set(),
@@ -306,15 +340,55 @@ export const MOCK_CA_STATE_LEVEL_CONTEXT: CongressionalDistrictDataContextValue 
 // ============================================================================
 
 export const ALL_US_STATE_CODES = [
-  'state/al', 'state/ak', 'state/az', 'state/ar', 'state/ca',
-  'state/co', 'state/ct', 'state/de', 'state/dc', 'state/fl',
-  'state/ga', 'state/hi', 'state/id', 'state/il', 'state/in',
-  'state/ia', 'state/ks', 'state/ky', 'state/la', 'state/me',
-  'state/md', 'state/ma', 'state/mi', 'state/mn', 'state/ms',
-  'state/mo', 'state/mt', 'state/ne', 'state/nv', 'state/nh',
-  'state/nj', 'state/nm', 'state/ny', 'state/nc', 'state/nd',
-  'state/oh', 'state/ok', 'state/or', 'state/pa', 'state/ri',
-  'state/sc', 'state/sd', 'state/tn', 'state/tx', 'state/ut',
-  'state/vt', 'state/va', 'state/wa', 'state/wv', 'state/wi',
+  'state/al',
+  'state/ak',
+  'state/az',
+  'state/ar',
+  'state/ca',
+  'state/co',
+  'state/ct',
+  'state/de',
+  'state/dc',
+  'state/fl',
+  'state/ga',
+  'state/hi',
+  'state/id',
+  'state/il',
+  'state/in',
+  'state/ia',
+  'state/ks',
+  'state/ky',
+  'state/la',
+  'state/me',
+  'state/md',
+  'state/ma',
+  'state/mi',
+  'state/mn',
+  'state/ms',
+  'state/mo',
+  'state/mt',
+  'state/ne',
+  'state/nv',
+  'state/nh',
+  'state/nj',
+  'state/nm',
+  'state/ny',
+  'state/nc',
+  'state/nd',
+  'state/oh',
+  'state/ok',
+  'state/or',
+  'state/pa',
+  'state/ri',
+  'state/sc',
+  'state/sd',
+  'state/tn',
+  'state/tx',
+  'state/ut',
+  'state/vt',
+  'state/va',
+  'state/wa',
+  'state/wv',
+  'state/wi',
   'state/wy',
 ];
