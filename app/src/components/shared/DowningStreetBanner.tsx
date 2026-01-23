@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Box, CloseButton, Group, Text } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 
 const BANNER_DISMISSED_KEY = 'downing-street-banner-dismissed';
 const GOV_UK_ARTICLE_URL = 'https://fellows.ai.gov.uk/articles/nikhil-woodruff-micro-simulation';
@@ -11,6 +12,7 @@ const GOV_UK_ARTICLE_URL = 'https://fellows.ai.gov.uk/articles/nikhil-woodruff-m
  * Dismissible with session storage persistence.
  */
 export default function DowningStreetBanner() {
+  const countryId = useCurrentCountry();
   const [visible, setVisible] = useState(() => {
     if (typeof window !== 'undefined') {
       return sessionStorage.getItem(BANNER_DISMISSED_KEY) !== 'true';
@@ -81,7 +83,9 @@ export default function DowningStreetBanner() {
           Featured
         </Text>
         <Text size={typography.fontSize.base} fw={typography.fontWeight.semibold} c={colors.white}>
-          Our technology supports policy analysis at 10 Downing Street
+          {countryId === 'uk'
+            ? 'Our technology supports policy analysis at 10 Downing Street'
+            : "Our technology supports policy analysis at the UK Prime Minister's office"}
         </Text>
         <Text
           size={typography.fontSize.sm}
