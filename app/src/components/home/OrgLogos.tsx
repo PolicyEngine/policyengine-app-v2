@@ -7,8 +7,8 @@ import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 const NUM_VISIBLE = 7;
 const CYCLE_INTERVAL = 2000; // 2 seconds between each change
 
-// Fisher-Yates shuffle, but keeps initialFirst orgs at the beginning
-function shuffleArrayKeepingFirst<T extends { initialFirst?: boolean }>(array: T[]): T[] {
+// Fisher-Yates shuffle, placing initialFirst orgs in the center
+function shuffleArrayWithCenter<T extends { initialFirst?: boolean }>(array: T[]): T[] {
   const initialFirst = array.filter((item) => item.initialFirst);
   const rest = array.filter((item) => !item.initialFirst);
 
@@ -19,17 +19,22 @@ function shuffleArrayKeepingFirst<T extends { initialFirst?: boolean }>(array: T
     [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
   }
 
-  // Return initialFirst orgs first, then shuffled rest
-  return [...initialFirst, ...shuffled];
+  // Place initialFirst orgs in the center of the visible slots
+  // For 7 visible slots, center is index 3
+  const centerIndex = Math.floor(NUM_VISIBLE / 2);
+  const before = shuffled.slice(0, centerIndex);
+  const after = shuffled.slice(centerIndex);
+
+  return [...before, ...initialFirst, ...after];
 }
 
 export default function OrgLogos() {
   const countryId = useCurrentCountry() as CountryId;
 
-  // Get logos for current country, with initialFirst orgs at the start, rest shuffled
+  // Get logos for current country, with initialFirst orgs in the center, rest shuffled
   const shuffledOrgs = useMemo(() => {
     const orgs = getOrgsForCountrySorted(countryId);
-    return shuffleArrayKeepingFirst(orgs);
+    return shuffleArrayWithCenter(orgs);
   }, [countryId]);
 
   // Track which logo index each slot is showing and its transition state
