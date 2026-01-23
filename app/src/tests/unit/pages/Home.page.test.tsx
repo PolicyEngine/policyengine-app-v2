@@ -20,8 +20,8 @@ vi.mock('@/components/home/OrgLogos', () => ({
   default: () => <div data-testid="org-logos">Org Logos</div>,
 }));
 
-vi.mock('@/components/shared/YearInReviewBanner', () => ({
-  default: () => <div data-testid="year-in-review-banner">Year In Review Banner</div>,
+vi.mock('@/components/shared/DowningStreetBanner', () => ({
+  default: () => <div data-testid="downing-street-banner">Downing Street Banner</div>,
 }));
 
 describe('HomePage', () => {
@@ -45,7 +45,7 @@ describe('HomePage', () => {
     );
 
     expect(sections).toEqual([
-      'year-in-review-banner',
+      'downing-street-banner',
       'main-section',
       'action-cards',
       'org-logos',
