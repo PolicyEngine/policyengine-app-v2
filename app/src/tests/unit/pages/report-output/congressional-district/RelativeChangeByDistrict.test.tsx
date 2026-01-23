@@ -6,6 +6,7 @@ import {
   MOCK_US_REPORT_OUTPUT,
   MOCK_US_REPORT_OUTPUT_NO_DISTRICT,
 } from '@/tests/fixtures/pages/congressional-district/congressionalDistrictComponentMocks';
+import { MOCK_NATIONAL_COMPLETE_CONTEXT } from '@/tests/fixtures/contexts/congressional-district/congressionalDistrictMocks';
 
 // Mock Plotly
 vi.mock('react-plotly.js', () => ({ default: vi.fn(() => null) }));
@@ -22,18 +23,7 @@ vi.mock('react-redux', async () => {
 // Mock the congressional district data context hook
 vi.mock('@/contexts/CongressionalDistrictDataContext', () => ({
   useCongressionalDistrictData: vi.fn(() => ({
-    stateResponses: new Map(),
-    completedCount: 51,
-    loadingCount: 0,
-    totalDistrictsLoaded: 435,
-    totalStates: 51,
-    isComplete: true,
-    isLoading: false,
-    hasStarted: true,
-    errorCount: 0,
-    labelLookup: new Map(), // Must be a Map, not an object
-    isStateLevelReport: false,
-    stateCode: null,
+    ...MOCK_NATIONAL_COMPLETE_CONTEXT,
     startFetch: vi.fn(),
     validateAllLoaded: vi.fn(() => true),
     getCompletedStates: vi.fn(() => []),
