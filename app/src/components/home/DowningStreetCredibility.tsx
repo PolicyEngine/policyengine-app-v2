@@ -3,7 +3,7 @@ import { Anchor, Box, Container, Group, Text } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
 
 const GOV_UK_ARTICLE_URL =
-  'https://fellows.ai.gov.uk/news/2025/01/06/innovation-fellow-develops-microsimulation-model-for-analysis-in-number-10/';
+  'https://fellows.ai.gov.uk/articles/nikhil-woodruff-micro-simulation';
 
 /**
  * Social proof element highlighting PolicyEngine's use at 10 Downing Street.
