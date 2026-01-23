@@ -37,8 +37,8 @@ export interface Organization {
   logo: string;
   link: string;
   countries: CountryId[];
-  /** If true, this org is always shown first in the carousel and never shuffled out */
-  pinned?: boolean;
+  /** If true, this org appears first on initial load (but still participates in shuffle) */
+  initialFirst?: boolean;
 }
 
 export const organizations: Record<string, Organization> = {
@@ -56,13 +56,13 @@ export const organizations: Record<string, Organization> = {
     countries: ['uk', 'us'],
   },
 
-  // Pinned organizations (shown first, never shuffled)
+  // Featured organizations (shown first on initial load)
   downing_street: {
     name: '10 Downing Street',
     logo: downingStreet,
     link: 'https://fellows.ai.gov.uk/articles/nikhil-woodruff-micro-simulation',
     countries: ['uk', 'us'],
-    pinned: true,
+    initialFirst: true,
   },
   ukeu: {
     name: 'UK in a Changing Europe',
@@ -234,10 +234,11 @@ export const organizations: Record<string, Organization> = {
 export const getOrgsForCountry = (countryId: CountryId): Organization[] =>
   Object.values(organizations).filter((org) => org.countries.includes(countryId));
 
-// Helper to get pinned orgs for a specific country (always shown first)
-export const getPinnedOrgsForCountry = (countryId: CountryId): Organization[] =>
-  Object.values(organizations).filter((org) => org.countries.includes(countryId) && org.pinned);
-
-// Helper to get non-pinned orgs for a specific country (can be shuffled)
-export const getShuffleableOrgsForCountry = (countryId: CountryId): Organization[] =>
-  Object.values(organizations).filter((org) => org.countries.includes(countryId) && !org.pinned);
+// Helper to get orgs sorted with initialFirst orgs at the beginning
+export const getOrgsForCountrySorted = (countryId: CountryId): Organization[] => {
+  const orgs = Object.values(organizations).filter((org) => org.countries.includes(countryId));
+  // Put initialFirst orgs at the beginning, rest in original order
+  const initialFirst = orgs.filter((org) => org.initialFirst);
+  const rest = orgs.filter((org) => !org.initialFirst);
+  return [...initialFirst, ...rest];
+};

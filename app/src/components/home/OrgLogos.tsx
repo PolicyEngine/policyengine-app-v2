@@ -1,70 +1,65 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Box, Flex, Text } from '@mantine/core';
-import {
-  CountryId,
-  getPinnedOrgsForCountry,
-  getShuffleableOrgsForCountry,
-  Organization,
-} from '@/data/organizations';
+import { CountryId, getOrgsForCountrySorted, Organization } from '@/data/organizations';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 
 const NUM_VISIBLE = 7;
 const CYCLE_INTERVAL = 2000; // 2 seconds between each change
 
-// Fisher-Yates shuffle
-function shuffleArray<T>(array: T[]): T[] {
-  const shuffled = [...array];
+// Fisher-Yates shuffle, but keeps initialFirst orgs at the beginning
+function shuffleArrayKeepingFirst<T extends { initialFirst?: boolean }>(array: T[]): T[] {
+  const initialFirst = array.filter((item) => item.initialFirst);
+  const rest = array.filter((item) => !item.initialFirst);
+
+  // Shuffle only the non-initialFirst items
+  const shuffled = [...rest];
   for (let i = shuffled.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
   }
-  return shuffled;
+
+  // Return initialFirst orgs first, then shuffled rest
+  return [...initialFirst, ...shuffled];
 }
 
 export default function OrgLogos() {
   const countryId = useCurrentCountry() as CountryId;
 
-  // Get pinned orgs (always shown first, never shuffled)
-  const pinnedOrgs = useMemo(() => getPinnedOrgsForCountry(countryId), [countryId]);
-
-  // Get and shuffle non-pinned logos for current country
+  // Get logos for current country, with initialFirst orgs at the start, rest shuffled
   const shuffledOrgs = useMemo(() => {
-    const orgs = getShuffleableOrgsForCountry(countryId);
-    return shuffleArray(orgs);
+    const orgs = getOrgsForCountrySorted(countryId);
+    return shuffleArrayKeepingFirst(orgs);
   }, [countryId]);
 
-  // Number of shuffleable slots (total visible minus pinned)
-  const numShuffleableSlots = NUM_VISIBLE - pinnedOrgs.length;
-
-  // Track which logo index each shuffleable slot is showing and its transition state
+  // Track which logo index each slot is showing and its transition state
   const [slotIndices, setSlotIndices] = useState<number[]>([]);
   const [transitioningSlot, setTransitioningSlot] = useState<number | null>(null);
   const lastSlotRef = useRef<number>(-1);
-  const nextLogoRef = useRef<number>(numShuffleableSlots);
+  const nextLogoRef = useRef<number>(NUM_VISIBLE);
 
-  // Initialize shuffleable slots with first N logos (after pinned)
+  // Initialize slots with first N logos
   useEffect(() => {
-    if (shuffledOrgs.length === 0 && pinnedOrgs.length === 0) {
+    if (shuffledOrgs.length === 0) {
       return;
     }
-    const initial = shuffledOrgs.slice(0, numShuffleableSlots).map((_, i) => i);
+    const initial = shuffledOrgs.slice(0, NUM_VISIBLE).map((_, i) => i);
     setSlotIndices(initial);
-    nextLogoRef.current = numShuffleableSlots;
+    nextLogoRef.current = NUM_VISIBLE;
     lastSlotRef.current = -1;
-  }, [shuffledOrgs, pinnedOrgs.length, numShuffleableSlots]);
+  }, [shuffledOrgs]);
 
   // Cycle slots using golden ratio step for visually scattered but deterministic pattern
-  // Step of 4 with 6 shuffleable slots creates: 0, 4, 2, 0, 4...
+  // Step of 4 with 7 slots creates: 0, 4, 1, 5, 2, 6, 3, 0, 4...
   const GOLDEN_STEP = 4;
 
   const cycleNextSlot = useCallback(() => {
-    if (shuffledOrgs.length <= numShuffleableSlots) {
+    if (shuffledOrgs.length <= NUM_VISIBLE) {
       return;
     }
 
     // Use golden ratio stepping for an unexpected but non-random pattern
-    const nextSlot = (lastSlotRef.current + GOLDEN_STEP) % numShuffleableSlots;
+    const nextSlot = (lastSlotRef.current + GOLDEN_STEP) % NUM_VISIBLE;
     lastSlotRef.current = nextSlot;
 
     // Start fade out
@@ -95,31 +90,24 @@ export default function OrgLogos() {
       // Fade back in
       setTransitioningSlot(null);
     }, 300);
-  }, [shuffledOrgs.length, numShuffleableSlots]);
+  }, [shuffledOrgs.length]);
 
   // Set up single interval timer
   useEffect(() => {
-    if (shuffledOrgs.length <= numShuffleableSlots || slotIndices.length === 0) {
+    if (shuffledOrgs.length <= NUM_VISIBLE || slotIndices.length === 0) {
       return;
     }
 
     const interval = setInterval(cycleNextSlot, CYCLE_INTERVAL);
 
     return () => clearInterval(interval);
-  }, [shuffledOrgs.length, numShuffleableSlots, slotIndices.length, cycleNextSlot]);
+  }, [shuffledOrgs.length, slotIndices.length, cycleNextSlot]);
 
-  if (
-    (shuffledOrgs.length === 0 && pinnedOrgs.length === 0) ||
-    (slotIndices.length === 0 && pinnedOrgs.length === 0)
-  ) {
+  if (shuffledOrgs.length === 0 || slotIndices.length === 0) {
     return null;
   }
 
-  // Combine pinned orgs (first) with shuffleable orgs
-  const shuffleableVisibleOrgs = slotIndices
-    .map((idx) => shuffledOrgs[idx])
-    .filter(Boolean) as Organization[];
-  const visibleOrgs = [...pinnedOrgs, ...shuffleableVisibleOrgs];
+  const visibleOrgs = slotIndices.map((idx) => shuffledOrgs[idx]).filter(Boolean) as Organization[];
 
   return (
     <Box mt={spacing['4xl']} mb={spacing['4xl']}>
@@ -151,56 +139,48 @@ export default function OrgLogos() {
           px={spacing['4xl']}
           style={{ minWidth: 'max-content' }}
         >
-          {visibleOrgs.map((org, i) => {
-            // Pinned orgs are at indices 0 to pinnedOrgs.length - 1
-            // Shuffleable slots start at pinnedOrgs.length
-            const isPinned = i < pinnedOrgs.length;
-            const shuffleableIndex = i - pinnedOrgs.length;
-            const isTransitioning = !isPinned && transitioningSlot === shuffleableIndex;
-
-            return (
-              <Box
-                key={`slot-${i}`}
+          {visibleOrgs.map((org, i) => (
+            <Box
+              key={`slot-${i}`}
+              style={{
+                flex: '0 0 auto',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                width: '120px',
+                height: '100px',
+                opacity: transitioningSlot === i ? 0 : 1,
+                transition: 'opacity 0.3s ease-in-out',
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => window.open(org.link, '_blank')}
+                title={org.name}
                 style={{
-                  flex: '0 0 auto',
+                  all: 'unset',
+                  cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  cursor: 'pointer',
-                  width: '120px',
-                  height: '100px',
-                  opacity: isTransitioning ? 0 : 1,
-                  transition: 'opacity 0.3s ease-in-out',
+                  width: '100%',
+                  height: '100%',
                 }}
               >
-                <button
-                  type="button"
-                  onClick={() => window.open(org.link, '_blank')}
-                  title={org.name}
+                <img
+                  src={org.logo}
+                  alt={org.name}
                   style={{
-                    all: 'unset',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    width: '100%',
-                    height: '100%',
+                    maxWidth: '120px',
+                    maxHeight: '100px',
+                    width: 'auto',
+                    height: 'auto',
                   }}
-                >
-                  <img
-                    src={org.logo}
-                    alt={org.name}
-                    style={{
-                      maxWidth: '120px',
-                      maxHeight: '100px',
-                      width: 'auto',
-                      height: 'auto',
-                    }}
-                  />
-                </button>
-              </Box>
-            );
-          })}
+                />
+              </button>
+            </Box>
+          ))}
         </Flex>
       </Box>
     </Box>
