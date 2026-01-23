@@ -1,4 +1,5 @@
 // Organization logos
+import downingStreet from '@/images/logos/orgs/10-downing-street.svg';
 import arnoldVentures from '@/images/logos/orgs/arnold-ventures.png';
 import asi from '@/images/logos/orgs/asi.png';
 import cec from '@/images/logos/orgs/cec.svg';
@@ -36,6 +37,8 @@ export interface Organization {
   logo: string;
   link: string;
   countries: CountryId[];
+  /** If true, this org is always shown first in the carousel and never shuffled out */
+  pinned?: boolean;
 }
 
 export const organizations: Record<string, Organization> = {
@@ -53,7 +56,14 @@ export const organizations: Record<string, Organization> = {
     countries: ['uk', 'us'],
   },
 
-  // UK only
+  // UK only - pinned organizations first
+  downing_street: {
+    name: '10 Downing Street',
+    logo: downingStreet,
+    link: 'https://fellows.ai.gov.uk/articles/nikhil-woodruff-micro-simulation',
+    countries: ['uk'],
+    pinned: true,
+  },
   ukeu: {
     name: 'UK in a Changing Europe',
     logo: ukeu,
@@ -223,3 +233,11 @@ export const organizations: Record<string, Organization> = {
 // Helper to get orgs for a specific country
 export const getOrgsForCountry = (countryId: CountryId): Organization[] =>
   Object.values(organizations).filter((org) => org.countries.includes(countryId));
+
+// Helper to get pinned orgs for a specific country (always shown first)
+export const getPinnedOrgsForCountry = (countryId: CountryId): Organization[] =>
+  Object.values(organizations).filter((org) => org.countries.includes(countryId) && org.pinned);
+
+// Helper to get non-pinned orgs for a specific country (can be shuffled)
+export const getShuffleableOrgsForCountry = (countryId: CountryId): Organization[] =>
+  Object.values(organizations).filter((org) => org.countries.includes(countryId) && !org.pinned);

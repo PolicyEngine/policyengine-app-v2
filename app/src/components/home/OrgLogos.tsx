@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Box, Flex, Text } from '@mantine/core';
-import { CountryId, getOrgsForCountry, Organization } from '@/data/organizations';
+import {
+  CountryId,
+  getPinnedOrgsForCountry,
+  getShuffleableOrgsForCountry,
+  Organization,
+} from '@/data/organizations';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 
@@ -20,40 +25,46 @@ function shuffleArray<T>(array: T[]): T[] {
 export default function OrgLogos() {
   const countryId = useCurrentCountry() as CountryId;
 
-  // Get and shuffle logos for current country
+  // Get pinned orgs (always shown first, never shuffled)
+  const pinnedOrgs = useMemo(() => getPinnedOrgsForCountry(countryId), [countryId]);
+
+  // Get and shuffle non-pinned logos for current country
   const shuffledOrgs = useMemo(() => {
-    const orgs = getOrgsForCountry(countryId);
+    const orgs = getShuffleableOrgsForCountry(countryId);
     return shuffleArray(orgs);
   }, [countryId]);
 
-  // Track which logo index each slot is showing and its transition state
+  // Number of shuffleable slots (total visible minus pinned)
+  const numShuffleableSlots = NUM_VISIBLE - pinnedOrgs.length;
+
+  // Track which logo index each shuffleable slot is showing and its transition state
   const [slotIndices, setSlotIndices] = useState<number[]>([]);
   const [transitioningSlot, setTransitioningSlot] = useState<number | null>(null);
   const lastSlotRef = useRef<number>(-1);
-  const nextLogoRef = useRef<number>(NUM_VISIBLE);
+  const nextLogoRef = useRef<number>(numShuffleableSlots);
 
-  // Initialize slots with first N logos
+  // Initialize shuffleable slots with first N logos (after pinned)
   useEffect(() => {
-    if (shuffledOrgs.length === 0) {
+    if (shuffledOrgs.length === 0 && pinnedOrgs.length === 0) {
       return;
     }
-    const initial = shuffledOrgs.slice(0, NUM_VISIBLE).map((_, i) => i);
+    const initial = shuffledOrgs.slice(0, numShuffleableSlots).map((_, i) => i);
     setSlotIndices(initial);
-    nextLogoRef.current = NUM_VISIBLE;
+    nextLogoRef.current = numShuffleableSlots;
     lastSlotRef.current = -1;
-  }, [shuffledOrgs]);
+  }, [shuffledOrgs, pinnedOrgs.length, numShuffleableSlots]);
 
   // Cycle slots using golden ratio step for visually scattered but deterministic pattern
-  // Step of 4 with 7 slots creates: 0, 4, 1, 5, 2, 6, 3, 0, 4...
+  // Step of 4 with 6 shuffleable slots creates: 0, 4, 2, 0, 4...
   const GOLDEN_STEP = 4;
 
   const cycleNextSlot = useCallback(() => {
-    if (shuffledOrgs.length <= NUM_VISIBLE) {
+    if (shuffledOrgs.length <= numShuffleableSlots) {
       return;
     }
 
     // Use golden ratio stepping for an unexpected but non-random pattern
-    const nextSlot = (lastSlotRef.current + GOLDEN_STEP) % NUM_VISIBLE;
+    const nextSlot = (lastSlotRef.current + GOLDEN_STEP) % numShuffleableSlots;
     lastSlotRef.current = nextSlot;
 
     // Start fade out
@@ -84,24 +95,31 @@ export default function OrgLogos() {
       // Fade back in
       setTransitioningSlot(null);
     }, 300);
-  }, [shuffledOrgs.length]);
+  }, [shuffledOrgs.length, numShuffleableSlots]);
 
   // Set up single interval timer
   useEffect(() => {
-    if (shuffledOrgs.length <= NUM_VISIBLE || slotIndices.length === 0) {
+    if (shuffledOrgs.length <= numShuffleableSlots || slotIndices.length === 0) {
       return;
     }
 
     const interval = setInterval(cycleNextSlot, CYCLE_INTERVAL);
 
     return () => clearInterval(interval);
-  }, [shuffledOrgs.length, slotIndices.length, cycleNextSlot]);
+  }, [shuffledOrgs.length, numShuffleableSlots, slotIndices.length, cycleNextSlot]);
 
-  if (shuffledOrgs.length === 0 || slotIndices.length === 0) {
+  if (
+    (shuffledOrgs.length === 0 && pinnedOrgs.length === 0) ||
+    (slotIndices.length === 0 && pinnedOrgs.length === 0)
+  ) {
     return null;
   }
 
-  const visibleOrgs = slotIndices.map((idx) => shuffledOrgs[idx]).filter(Boolean) as Organization[];
+  // Combine pinned orgs (first) with shuffleable orgs
+  const shuffleableVisibleOrgs = slotIndices
+    .map((idx) => shuffledOrgs[idx])
+    .filter(Boolean) as Organization[];
+  const visibleOrgs = [...pinnedOrgs, ...shuffleableVisibleOrgs];
 
   return (
     <Box mt={spacing['4xl']} mb={spacing['4xl']}>
@@ -133,48 +151,56 @@ export default function OrgLogos() {
           px={spacing['4xl']}
           style={{ minWidth: 'max-content' }}
         >
-          {visibleOrgs.map((org, i) => (
-            <Box
-              key={`slot-${i}`}
-              style={{
-                flex: '0 0 auto',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                width: '120px',
-                height: '100px',
-                opacity: transitioningSlot === i ? 0 : 1,
-                transition: 'opacity 0.3s ease-in-out',
-              }}
-            >
-              <button
-                type="button"
-                onClick={() => window.open(org.link, '_blank')}
-                title={org.name}
+          {visibleOrgs.map((org, i) => {
+            // Pinned orgs are at indices 0 to pinnedOrgs.length - 1
+            // Shuffleable slots start at pinnedOrgs.length
+            const isPinned = i < pinnedOrgs.length;
+            const shuffleableIndex = i - pinnedOrgs.length;
+            const isTransitioning = !isPinned && transitioningSlot === shuffleableIndex;
+
+            return (
+              <Box
+                key={`slot-${i}`}
                 style={{
-                  all: 'unset',
-                  cursor: 'pointer',
+                  flex: '0 0 auto',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  width: '100%',
-                  height: '100%',
+                  cursor: 'pointer',
+                  width: '120px',
+                  height: '100px',
+                  opacity: isTransitioning ? 0 : 1,
+                  transition: 'opacity 0.3s ease-in-out',
                 }}
               >
-                <img
-                  src={org.logo}
-                  alt={org.name}
+                <button
+                  type="button"
+                  onClick={() => window.open(org.link, '_blank')}
+                  title={org.name}
                   style={{
-                    maxWidth: '120px',
-                    maxHeight: '100px',
-                    width: 'auto',
-                    height: 'auto',
+                    all: 'unset',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '100%',
+                    height: '100%',
                   }}
-                />
-              </button>
-            </Box>
-          ))}
+                >
+                  <img
+                    src={org.logo}
+                    alt={org.name}
+                    style={{
+                      maxWidth: '120px',
+                      maxHeight: '100px',
+                      width: 'auto',
+                      height: 'auto',
+                    }}
+                  />
+                </button>
+              </Box>
+            );
+          })}
         </Flex>
       </Box>
     </Box>
