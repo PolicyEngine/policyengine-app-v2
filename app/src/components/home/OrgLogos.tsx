@@ -51,7 +51,8 @@ export default function OrgLogos() {
     const initial = shuffledOrgs.slice(0, NUM_VISIBLE).map((_, i) => i);
     setSlotIndices(initial);
     nextLogoRef.current = NUM_VISIBLE;
-    lastSlotRef.current = -1;
+    // Randomize starting position so the first slot to rotate isn't predictable
+    lastSlotRef.current = Math.floor(Math.random() * NUM_VISIBLE);
   }, [shuffledOrgs]);
 
   // Cycle slots using golden ratio step for visually scattered but deterministic pattern
