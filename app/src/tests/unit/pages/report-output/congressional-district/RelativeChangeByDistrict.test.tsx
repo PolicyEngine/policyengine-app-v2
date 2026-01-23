@@ -19,6 +19,28 @@ vi.mock('react-redux', async () => {
   };
 });
 
+// Mock the congressional district data context hook
+vi.mock('@/contexts/CongressionalDistrictDataContext', () => ({
+  useCongressionalDistrictData: vi.fn(() => ({
+    stateResponses: new Map(),
+    completedCount: 51,
+    loadingCount: 0,
+    totalDistrictsLoaded: 435,
+    totalStates: 51,
+    isComplete: true,
+    isLoading: false,
+    hasStarted: true,
+    errorCount: 0,
+    labelLookup: new Map(), // Must be a Map, not an object
+    isStateLevelReport: false,
+    stateCode: null,
+    startFetch: vi.fn(),
+    validateAllLoaded: vi.fn(() => true),
+    getCompletedStates: vi.fn(() => []),
+    getLoadingStates: vi.fn(() => []),
+  })),
+}));
+
 describe('RelativeChangeByDistrict', () => {
   test('given district data then renders component', () => {
     // Given
@@ -33,15 +55,18 @@ describe('RelativeChangeByDistrict', () => {
     ).toBeInTheDocument();
   });
 
-  test('given no district data then shows no data message', () => {
-    // Given
+  test('given no district data in output but context started then shows title', () => {
+    // Given - output has no district data, but context mock has hasStarted: true
+    // so component will show title (loading or complete state, not "no data" message)
     const output = MOCK_US_REPORT_OUTPUT_NO_DISTRICT;
 
     // When
     render(<RelativeChangeByDistrict output={output} />);
 
-    // Then
-    expect(screen.getByText('No congressional district data available')).toBeInTheDocument();
+    // Then - shows title since context has started (would show progress or map)
+    expect(
+      screen.getByText('Relative household income change by congressional district')
+    ).toBeInTheDocument();
   });
 
   test('given district data then renders choropleth map', () => {
