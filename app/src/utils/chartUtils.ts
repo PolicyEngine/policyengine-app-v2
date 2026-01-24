@@ -118,13 +118,14 @@ export interface ChartLogoOptions {
 
 /**
  * Default chart logo configuration
+ * Positions the wide PolicyEngine logo below the chart, right-aligned with the x-axis
  */
 const DEFAULT_CHART_LOGO = {
-  source: '/assets/logos/policyengine/teal-square.png',
+  source: '/assets/logos/policyengine/teal.png',
   xref: 'paper' as const,
   yref: 'paper' as const,
   x: 1,
-  y: 0,
+  y: -0.12,
   sizex: 0.1,
   sizey: 0.1,
   xanchor: 'right' as const,
