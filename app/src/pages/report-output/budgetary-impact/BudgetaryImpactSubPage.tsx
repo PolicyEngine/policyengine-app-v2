@@ -10,7 +10,12 @@ import { spacing } from '@/designTokens/spacing';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import type { RootState } from '@/store';
 import { absoluteChangeMessage } from '@/utils/chartMessages';
-import { DEFAULT_CHART_CONFIG, downloadCsv, getClampedChartHeight } from '@/utils/chartUtils';
+import {
+  DEFAULT_CHART_CONFIG,
+  downloadCsv,
+  getChartLogoImage,
+  getClampedChartHeight,
+} from '@/utils/chartUtils';
 import { currencySymbol, formatCurrencyAbbr, localeCode } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
 
@@ -159,6 +164,7 @@ export default function BudgetaryImpactSubPage({ output }: Props) {
       l: 80,
       r: 0,
     },
+    images: [getChartLogoImage()],
   } as Partial<Layout>;
 
   return (

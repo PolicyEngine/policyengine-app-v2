@@ -99,3 +99,55 @@ export function getClampedChartHeight(viewportHeight: number, mobile: boolean): 
 
   return Math.max(minHeight, Math.min(maxHeight, targetHeight));
 }
+
+/**
+ * Chart logo image configuration for Plotly watermarks
+ */
+export interface ChartLogoOptions {
+  /** X position (0-1, where 1 is right edge) */
+  x?: number;
+  /** Y position (0-1, where 0 is bottom edge) */
+  y?: number;
+  /** X size as fraction of chart width */
+  sizex?: number;
+  /** Y size as fraction of chart height */
+  sizey?: number;
+  /** Opacity (0-1) */
+  opacity?: number;
+}
+
+/**
+ * Default chart logo configuration
+ */
+const DEFAULT_CHART_LOGO = {
+  source: '/assets/logos/policyengine/teal-square.png',
+  xref: 'paper' as const,
+  yref: 'paper' as const,
+  x: 1,
+  y: 0,
+  sizex: 0.1,
+  sizey: 0.1,
+  xanchor: 'right' as const,
+  yanchor: 'bottom' as const,
+  opacity: 0.8,
+};
+
+/**
+ * Returns the PolicyEngine logo image configuration for Plotly charts
+ * Use in layout.images array to add watermark to bottom-right corner
+ *
+ * @param options - Optional overrides for position, size, or opacity
+ * @returns Plotly image configuration object
+ *
+ * @example
+ * const layout = {
+ *   images: [getChartLogoImage()],
+ *   // ... other layout options
+ * };
+ */
+export function getChartLogoImage(options?: ChartLogoOptions) {
+  return {
+    ...DEFAULT_CHART_LOGO,
+    ...options,
+  };
+}

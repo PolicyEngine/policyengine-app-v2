@@ -13,6 +13,7 @@ import {
   DEFAULT_CHART_CONFIG,
   DEFAULT_CHART_LAYOUT,
   downloadCsv,
+  getChartLogoImage,
   getClampedChartHeight,
 } from '@/utils/chartUtils';
 import { formatPercent, localeCode, ordinal } from '@/utils/formatters';
@@ -248,6 +249,7 @@ export default function WinnersLosersIncomeDecileSubPage({ output }: Props) {
       l: 40,
       r: 0,
     },
+    images: [getChartLogoImage()],
   } as Partial<Layout>;
 
   // Description text
