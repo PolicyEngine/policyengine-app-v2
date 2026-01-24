@@ -12,8 +12,8 @@ import type { RootState } from '@/store';
 import { relativeChangeMessage } from '@/utils/chartMessages';
 import {
   DEFAULT_CHART_CONFIG,
+  DEFAULT_CHART_LAYOUT,
   downloadCsv,
-  getChartLogoImage,
   getClampedChartHeight,
 } from '@/utils/chartUtils';
 import { formatPercent, localeCode, ordinal, precision } from '@/utils/formatters';
@@ -100,6 +100,7 @@ export default function DistributionalImpactWealthRelativeSubPage({ output }: Pr
   ];
 
   const layout = {
+    ...DEFAULT_CHART_LAYOUT,
     xaxis: {
       title: { text: 'Wealth decile' },
       tickvals: Object.keys(decileRelative),
@@ -121,7 +122,6 @@ export default function DistributionalImpactWealthRelativeSubPage({ output }: Pr
       l: 80,
       r: 0,
     },
-    images: [getChartLogoImage()],
   } as Partial<Layout>;
 
   return (

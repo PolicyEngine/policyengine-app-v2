@@ -21,8 +21,8 @@ vi.mock('@/hooks/useCurrentCountry', () => ({
 // Mock chart utils
 vi.mock('@/utils/chartUtils', () => ({
   DEFAULT_CHART_CONFIG: { displayModeBar: false },
+  DEFAULT_CHART_LAYOUT: { font: {}, images: [{}] },
   downloadCsv: vi.fn(),
-  getChartLogoImage: vi.fn(() => ({})),
   getClampedChartHeight: vi.fn(() => 500),
 }));
 

@@ -15,7 +15,7 @@ import {
   SAMPLE_POLICY_LABEL_EMPTY_STRING,
   SAMPLE_POLICY_LABEL_SHORT,
 } from '@/tests/fixtures/utils/chartUtilsMocks';
-import { getChartLogoImage, getReformPolicyLabel } from '@/utils/chartUtils';
+import { DEFAULT_CHART_LAYOUT, getChartLogoImage, getReformPolicyLabel } from '@/utils/chartUtils';
 
 describe('chartUtils', () => {
   describe('getReformPolicyLabel', () => {
@@ -127,6 +127,26 @@ describe('chartUtils', () => {
 
         // Then
         expect(result).toBe(EXPECTED_LABEL_DEFAULT);
+      });
+    });
+  });
+
+  describe('DEFAULT_CHART_LAYOUT', () => {
+    it('includes images array with default logo', () => {
+      // Then
+      expect(DEFAULT_CHART_LAYOUT.images).toBeDefined();
+      expect(DEFAULT_CHART_LAYOUT.images).toHaveLength(1);
+      expect(DEFAULT_CHART_LAYOUT.images[0]).toEqual({
+        source: '/assets/logos/policyengine/teal.png',
+        xref: 'paper',
+        yref: 'paper',
+        x: 1,
+        y: -0.18,
+        sizex: 0.1,
+        sizey: 0.1,
+        xanchor: 'right',
+        yanchor: 'bottom',
+        opacity: 0.8,
       });
     });
   });

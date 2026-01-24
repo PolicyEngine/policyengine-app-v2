@@ -64,43 +64,6 @@ export const CHART_FONT = {
 };
 
 /**
- * Default layout properties that should be applied to all charts
- * Spread this into your layout object to automatically include font settings
- */
-export const DEFAULT_CHART_LAYOUT = {
-  font: CHART_FONT,
-};
-
-/**
- * Returns base layout configuration for charts
- * @param mobile - Whether the chart is being rendered on mobile
- * @returns Plotly layout object
- */
-export function getBaseChartLayout(mobile: boolean) {
-  return {
-    ...DEFAULT_CHART_LAYOUT,
-    height: mobile ? 300 : 500,
-    margin: { t: 40, r: 20, b: 60, l: 80 },
-    xaxis: { fixedrange: true },
-    yaxis: { fixedrange: true },
-  };
-}
-
-/**
- * Calculate responsive chart height with min/max constraints
- * @param viewportHeight - Current viewport height in pixels
- * @param mobile - Whether the chart is being rendered on mobile
- * @returns Clamped chart height in pixels
- */
-export function getClampedChartHeight(viewportHeight: number, mobile: boolean): number {
-  const targetHeight = mobile ? viewportHeight * 0.4 : viewportHeight * 0.5;
-  const minHeight = mobile ? 250 : 400;
-  const maxHeight = mobile ? 400 : 700;
-
-  return Math.max(minHeight, Math.min(maxHeight, targetHeight));
-}
-
-/**
  * Chart logo image configuration for Plotly watermarks
  */
 export interface ChartLogoOptions {
@@ -135,20 +98,55 @@ const DEFAULT_CHART_LOGO = {
 
 /**
  * Returns the PolicyEngine logo image configuration for Plotly charts
- * Use in layout.images array to add watermark to bottom-right corner
+ * Note: Most charts should use DEFAULT_CHART_LAYOUT which includes the logo automatically.
+ * Use this function only if you need custom logo options.
  *
  * @param options - Optional overrides for position, size, or opacity
  * @returns Plotly image configuration object
- *
- * @example
- * const layout = {
- *   images: [getChartLogoImage()],
- *   // ... other layout options
- * };
  */
 export function getChartLogoImage(options?: ChartLogoOptions) {
   return {
     ...DEFAULT_CHART_LOGO,
     ...options,
   };
+}
+
+/**
+ * Default layout properties that should be applied to all charts
+ * Includes font settings and PolicyEngine logo watermark
+ * Spread this into your layout object to automatically include these settings
+ */
+export const DEFAULT_CHART_LAYOUT = {
+  font: CHART_FONT,
+  images: [DEFAULT_CHART_LOGO],
+};
+
+/**
+ * Returns base layout configuration for charts
+ * Includes font, logo, height, margins, and fixed axis ranges
+ * @param mobile - Whether the chart is being rendered on mobile
+ * @returns Plotly layout object
+ */
+export function getBaseChartLayout(mobile: boolean) {
+  return {
+    ...DEFAULT_CHART_LAYOUT,
+    height: mobile ? 300 : 500,
+    margin: { t: 40, r: 20, b: 60, l: 80 },
+    xaxis: { fixedrange: true },
+    yaxis: { fixedrange: true },
+  };
+}
+
+/**
+ * Calculate responsive chart height with min/max constraints
+ * @param viewportHeight - Current viewport height in pixels
+ * @param mobile - Whether the chart is being rendered on mobile
+ * @returns Clamped chart height in pixels
+ */
+export function getClampedChartHeight(viewportHeight: number, mobile: boolean): number {
+  const targetHeight = mobile ? viewportHeight * 0.4 : viewportHeight * 0.5;
+  const minHeight = mobile ? 250 : 400;
+  const maxHeight = mobile ? 400 : 700;
+
+  return Math.max(minHeight, Math.min(maxHeight, targetHeight));
 }

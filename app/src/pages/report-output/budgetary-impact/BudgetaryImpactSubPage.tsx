@@ -12,8 +12,8 @@ import type { RootState } from '@/store';
 import { absoluteChangeMessage } from '@/utils/chartMessages';
 import {
   DEFAULT_CHART_CONFIG,
+  DEFAULT_CHART_LAYOUT,
   downloadCsv,
-  getChartLogoImage,
   getClampedChartHeight,
 } from '@/utils/chartUtils';
 import { currencySymbol, formatCurrencyAbbr, localeCode } from '@/utils/formatters';
@@ -144,6 +144,7 @@ export default function BudgetaryImpactSubPage({ output }: Props) {
   ];
 
   const layout = {
+    ...DEFAULT_CHART_LAYOUT,
     xaxis: {
       title: { text: '' },
       fixedrange: true,
@@ -164,7 +165,6 @@ export default function BudgetaryImpactSubPage({ output }: Props) {
       l: 80,
       r: 0,
     },
-    images: [getChartLogoImage()],
   } as Partial<Layout>;
 
   return (

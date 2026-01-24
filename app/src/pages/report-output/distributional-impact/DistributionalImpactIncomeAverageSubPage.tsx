@@ -12,8 +12,8 @@ import type { RootState } from '@/store';
 import { absoluteChangeMessage } from '@/utils/chartMessages';
 import {
   DEFAULT_CHART_CONFIG,
+  DEFAULT_CHART_LAYOUT,
   downloadCsv,
-  getChartLogoImage,
   getClampedChartHeight,
 } from '@/utils/chartUtils';
 import { currencySymbol, formatCurrency, localeCode, ordinal, precision } from '@/utils/formatters';
@@ -105,6 +105,7 @@ export default function DistributionalImpactIncomeAverageSubPage({ output }: Pro
   ];
 
   const layout = {
+    ...DEFAULT_CHART_LAYOUT,
     xaxis: {
       title: { text: 'Income decile' },
       tickvals: Object.keys(decileAverage),
@@ -127,7 +128,6 @@ export default function DistributionalImpactIncomeAverageSubPage({ output }: Pro
       l: 60,
       r: 20,
     },
-    images: [getChartLogoImage()],
   } as Partial<Layout>;
 
   // Description text

@@ -12,8 +12,8 @@ import type { RootState } from '@/store';
 import { relativeChangeMessage } from '@/utils/chartMessages';
 import {
   DEFAULT_CHART_CONFIG,
+  DEFAULT_CHART_LAYOUT,
   downloadCsv,
-  getChartLogoImage,
   getClampedChartHeight,
 } from '@/utils/chartUtils';
 import { formatNumber, formatPercent, localeCode, precision } from '@/utils/formatters';
@@ -139,6 +139,7 @@ export default function DeepPovertyImpactByGenderSubPage({ output }: Props) {
   ];
 
   const layout = {
+    ...DEFAULT_CHART_LAYOUT,
     yaxis: {
       title: { text: 'Relative change in deep poverty rate' },
       tickformat: `+,.${ytickPrecision}%`,
@@ -154,7 +155,6 @@ export default function DeepPovertyImpactByGenderSubPage({ output }: Props) {
       b: 100,
       r: 0,
     },
-    images: [getChartLogoImage()],
   } as Partial<Layout>;
 
   // Description text
