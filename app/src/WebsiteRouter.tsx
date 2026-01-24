@@ -5,6 +5,7 @@
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
 import AppLayout from './components/AppLayout';
 import StaticLayout from './components/StaticLayout';
+import AIGrowthResearchPage from './pages/AIGrowthResearch.page';
 import AppPage from './pages/AppPage';
 import BlogPage from './pages/Blog.page';
 import BrandPage from './pages/Brand.page';
@@ -100,6 +101,10 @@ const router = createBrowserRouter(
         {
           path: '2025-year-in-review',
           element: <YearInReviewPage />,
+        },
+        {
+          path: 'ai-inequality',
+          element: <AIGrowthResearchPage />,
         },
         // Embed routes - minimal layout for iframe embedding
         {

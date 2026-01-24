@@ -1,4 +1,4 @@
 - bump: minor
   changes:
     added:
-      - Add Scottish Budget 2026-27 impact analysis dashboard
+      - Embed AI Growth Research site at /{countryId}/ai-inequality
