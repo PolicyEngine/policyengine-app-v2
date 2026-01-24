@@ -103,7 +103,7 @@ const router = createBrowserRouter(
           element: <YearInReviewPage />,
         },
         {
-          path: 'ai-growth-research',
+          path: 'ai-inequality',
           element: <AIGrowthResearchPage />,
         },
         // Embed routes - minimal layout for iframe embedding

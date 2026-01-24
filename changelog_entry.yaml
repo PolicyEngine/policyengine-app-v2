@@ -1,4 +1,4 @@
 - bump: minor
   changes:
     added:
-      - Embed AI Growth Research site at /{countryId}/ai-growth-research
+      - Embed AI Growth Research site at /{countryId}/ai-inequality
