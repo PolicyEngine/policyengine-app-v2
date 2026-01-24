@@ -125,7 +125,7 @@ const DEFAULT_CHART_LOGO = {
   xref: 'paper' as const,
   yref: 'paper' as const,
   x: 1,
-  y: -0.12,
+  y: -0.18,
   sizex: 0.1,
   sizey: 0.1,
   xanchor: 'right' as const,
