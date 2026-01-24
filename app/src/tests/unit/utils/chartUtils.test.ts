@@ -138,11 +138,11 @@ describe('chartUtils', () => {
 
       // Then
       expect(result).toEqual({
-        source: '/assets/logos/policyengine/teal-square.png',
+        source: '/assets/logos/policyengine/teal.png',
         xref: 'paper',
         yref: 'paper',
         x: 1,
-        y: 0,
+        y: -0.18,
         sizex: 0.1,
         sizey: 0.1,
         xanchor: 'right',
@@ -158,7 +158,7 @@ describe('chartUtils', () => {
       // Then
       expect(result.sizex).toBe(0.15);
       expect(result.sizey).toBe(0.15);
-      expect(result.source).toBe('/assets/logos/policyengine/teal-square.png');
+      expect(result.source).toBe('/assets/logos/policyengine/teal.png');
     });
 
     it('given custom opacity then returns logo image config with custom opacity', () => {
