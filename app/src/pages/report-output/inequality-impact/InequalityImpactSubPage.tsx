@@ -10,7 +10,12 @@ import { spacing } from '@/designTokens/spacing';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import type { RootState } from '@/store';
 import { relativeChangeMessage } from '@/utils/chartMessages';
-import { DEFAULT_CHART_CONFIG, downloadCsv, getClampedChartHeight } from '@/utils/chartUtils';
+import {
+  DEFAULT_CHART_CONFIG,
+  downloadCsv,
+  getChartLogoImage,
+  getClampedChartHeight,
+} from '@/utils/chartUtils';
 import { formatPercent, localeCode, precision } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
 
@@ -146,6 +151,7 @@ export default function InequalityImpactSubPage({ output }: Props) {
       b: 100,
       r: 0,
     },
+    images: [getChartLogoImage()],
   } as Partial<Layout>;
 
   return (
