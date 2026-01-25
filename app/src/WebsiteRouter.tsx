@@ -5,6 +5,7 @@
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
 import AppLayout from './components/AppLayout';
 import StaticLayout from './components/StaticLayout';
+import AdsDashboardPage from './pages/AdsDashboard.page';
 import AIGrowthResearchPage from './pages/AIGrowthResearch.page';
 import AppPage from './pages/AppPage';
 import BlogPage from './pages/Blog.page';
@@ -105,6 +106,10 @@ const router = createBrowserRouter(
         {
           path: 'ai-inequality',
           element: <AIGrowthResearchPage />,
+        },
+        {
+          path: 'ads-dashboard',
+          element: <AdsDashboardPage />,
         },
         // Embed routes - minimal layout for iframe embedding
         {

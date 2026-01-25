@@ -1,4 +1,4 @@
-- bump: minor
+- bump: patch
   changes:
     added:
-      - Embed AI Growth Research site at /{countryId}/ai-inequality
+      - Ads transparency dashboard at /{countryId}/ads-dashboard
