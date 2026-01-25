@@ -1,4 +1,4 @@
 - bump: patch
   changes:
-    added:
-      - Ads transparency dashboard at /{countryId}/ads-dashboard
+    changed:
+      - Move ads dashboard route into StaticLayout (shows PE header)
