@@ -4,11 +4,12 @@
 export default function AdsDashboardPage() {
   return (
     <iframe
-      src="https://policyengine-ads-dashboard.vercel.app"
+      src="https://policyengine-ads-dashboard.vercel.app?embedded=true"
       style={{
         width: '100%',
-        height: '100vh',
+        height: 'calc(100vh - 64px)', // Account for PE header
         border: 'none',
+        display: 'block',
       }}
       title="PolicyEngine Ads Transparency Dashboard"
     />

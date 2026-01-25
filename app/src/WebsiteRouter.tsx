@@ -96,6 +96,10 @@ const router = createBrowserRouter(
               path: 'brand/assets',
               element: <BrandAssetsPage />,
             },
+            {
+              path: 'ads-dashboard',
+              element: <AdsDashboardPage />,
+            },
           ],
         },
         // Full-page embeds - no layout wrapper
@@ -106,10 +110,6 @@ const router = createBrowserRouter(
         {
           path: 'ai-inequality',
           element: <AIGrowthResearchPage />,
-        },
-        {
-          path: 'ads-dashboard',
-          element: <AdsDashboardPage />,
         },
         // Embed routes - minimal layout for iframe embedding
         {
