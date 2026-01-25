@@ -8,6 +8,8 @@ import StandardLayout from './components/StandardLayout';
 import DashboardPage from './pages/Dashboard.page';
 import PoliciesPage from './pages/Policies.page';
 import PopulationsPage from './pages/Populations.page';
+// Old monolithic file preserved but not used - see ./pages/ReportBuilder.page.tsx
+import ReportBuilderPage from './pages/reportBuilder/ReportBuilderPage';
 import ReportOutputPage from './pages/ReportOutput.page';
 import ReportsPage from './pages/Reports.page';
 import SimulationsPage from './pages/Simulations.page';
@@ -118,6 +120,10 @@ const router = createBrowserRouter(
                 {
                   path: 'policies',
                   element: <PoliciesPage />,
+                },
+                {
+                  path: 'report-builder',
+                  element: <ReportBuilderPage />,
                 },
                 {
                   path: 'account',
