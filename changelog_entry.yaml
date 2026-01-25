@@ -1,4 +1,4 @@
 - bump: patch
   changes:
     changed:
-      - Move ads dashboard route into StaticLayout (shows PE header)
+      - Convert from npm to bun for faster installs and builds
