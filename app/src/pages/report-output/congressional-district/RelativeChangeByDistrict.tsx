@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from 'react';
-import { Group, Loader, Progress, Stack, Text, Title } from '@mantine/core';
+import { Progress, Stack, Text, Title } from '@mantine/core';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { USDistrictChoroplethMap } from '@/components/visualization/USDistrictChoroplethMap';
 import { useCongressionalDistrictData } from '@/contexts/CongressionalDistrictDataContext';
@@ -25,13 +25,10 @@ export function RelativeChangeByDistrict({ output }: RelativeChangeByDistrictPro
   const {
     stateResponses,
     completedCount,
-    totalDistrictsLoaded,
     totalStates,
     isLoading,
-    isComplete,
     hasStarted,
     labelLookup,
-    isStateLevelReport,
     stateCode,
     startFetch,
   } = useCongressionalDistrictData();
@@ -83,19 +80,6 @@ export function RelativeChangeByDistrict({ output }: RelativeChangeByDistrictPro
   // Calculate progress percentage
   const progressPercent = totalStates > 0 ? Math.round((completedCount / totalStates) * 100) : 0;
 
-  // Generate description text for completion message
-  const getCompletionText = () => {
-    const districtWord = totalDistrictsLoaded === 1 ? 'district' : 'districts';
-    if (isStateLevelReport && completedCount === 1) {
-      // Check if it's DC (federal district) or a state
-      if (stateCode === 'dc') {
-        return `Loaded ${totalDistrictsLoaded} ${districtWord} from 1 federal district`;
-      }
-      return `Loaded ${totalDistrictsLoaded} ${districtWord} from 1 state`;
-    }
-    return `Loaded ${totalDistrictsLoaded} ${districtWord} from ${completedCount} states`;
-  };
-
   // No data and not loading
   if (!mapData.length && !isLoading && !hasStarted) {
     return (
@@ -112,27 +96,7 @@ export function RelativeChangeByDistrict({ output }: RelativeChangeByDistrictPro
       </div>
 
       {/* Show progress while loading */}
-      {isLoading && (
-        <Stack gap="xs">
-          <Group gap="sm">
-            <Loader size="sm" />
-            <Text size="sm">
-              Loading states and districts: {completedCount} / {totalStates} states complete (
-              {totalDistrictsLoaded} districts loaded)
-            </Text>
-          </Group>
-          <Progress value={progressPercent} size="sm" />
-        </Stack>
-      )}
-
-      {/* Show completion message */}
-      {isComplete && !isLoading && contextMapData.length > 0 && (
-        <Group gap="xs">
-          <Text size="sm" c="dimmed">
-            {getCompletionText()}
-          </Text>
-        </Group>
-      )}
+      {isLoading && <Progress value={progressPercent} size="sm" />}
 
       {/* Show map if we have any data */}
       {mapData.length > 0 && (
