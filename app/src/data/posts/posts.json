@@ -1,5 +1,14 @@
 [
   {
+    "title": "Validating unemployment insurance estimates",
+    "description": "PolicyEngine corrects CPS underreporting of UI benefits using quantile regression forests and reweighting, matching administrative totals within 2-4%.",
+    "date": "2026-01-25",
+    "tags": ["us", "technical"],
+    "authors": ["max-ghenis"],
+    "filename": "validating-unemployment-insurance-estimates.md",
+    "image": "validating-unemployment-insurance-estimates-hero.jpg"
+  },
+  {
     "title": "PolicyEngine powers rapid policy analysis at No 10 Downing Street",
     "description": "Our CTO Nikhil Woodruff spent six months as an Innovation Fellow adapting PolicyEngine's microsimulation technology for government use.",
     "date": "2026-01-20 12:00:00",
