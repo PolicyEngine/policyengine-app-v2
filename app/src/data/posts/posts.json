@@ -1,5 +1,14 @@
 [
   {
+    "title": "South Carolina H.3492: Making the state EITC partially refundable",
+    "description": "The bill would lower state revenues by $403 million while reducing child poverty by 4.8%.",
+    "date": "2026-01-26",
+    "tags": ["us", "us-sc", "policy", "featured"],
+    "authors": ["david-trimmer"],
+    "filename": "sc-h3492-eitc-refundability.md",
+    "image": "sc-h3492-eitc-refundability.jpg"
+  },
+  {
     "title": "PolicyEngine powers rapid policy analysis at No 10 Downing Street",
     "description": "Our CTO Nikhil Woodruff spent six months as an Innovation Fellow adapting PolicyEngine's microsimulation technology for government use.",
     "date": "2026-01-20 12:00:00",
