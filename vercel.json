@@ -3,6 +3,18 @@
   "installCommand": "npm ci",
   "buildCommand": "npm run design-system:build && npm run build:website --workspace=policyengine-app-v2",
   "outputDirectory": "app/dist",
+  "redirects": [
+    {
+      "source": "/:countryId/blog/:slug",
+      "destination": "/:countryId/research/:slug",
+      "permanent": true
+    },
+    {
+      "source": "/:countryId/blog",
+      "destination": "/:countryId/research",
+      "permanent": true
+    }
+  ],
   "rewrites": [{ "source": "/(.*)", "destination": "/website.html" }],
   "headers": [
     {
