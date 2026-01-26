@@ -2,7 +2,7 @@
  * Router for the Website (policyengine.org)
  * Contains homepage, blog, team, and embedded apps
  */
-import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
+import { createBrowserRouter, Navigate, RouterProvider, useParams } from 'react-router-dom';
 import AppLayout from './components/AppLayout';
 import StaticLayout from './components/StaticLayout';
 import AdsDashboardPage from './pages/AdsDashboard.page';
@@ -25,6 +25,12 @@ import YearInReviewPage from './pages/YearInReview.page';
 import { CountryAppGuard } from './routing/guards/CountryAppGuard';
 import { CountryGuardSimple } from './routing/guards/CountryGuardSimple';
 import { RedirectToCountry } from './routing/RedirectToCountry';
+
+// Redirect component for legacy /blog/:postName URLs
+function BlogRedirect() {
+  const { postName } = useParams();
+  return <Navigate to={`../research/${postName}`} replace />;
+}
 
 const router = createBrowserRouter(
   [
@@ -139,8 +145,12 @@ const router = createBrowserRouter(
         {
           children: [
             {
+              path: 'blog',
+              element: <Navigate to="../research" replace />,
+            },
+            {
               path: 'blog/:postName',
-              element: <Navigate to="../research/:postName" replace />,
+              element: <BlogRedirect />,
             },
           ],
         },
