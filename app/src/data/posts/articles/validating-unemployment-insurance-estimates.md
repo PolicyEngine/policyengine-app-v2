@@ -103,4 +103,4 @@ This distinction extends beyond federal taxes. The Supplemental Poverty Measure 
 
 Survey underreporting of unemployment insurance is well-documented. Correcting it requires choices about imputation methodology that affect downstream tax and poverty calculations. PolicyEngine uses nonparametric imputation (QRF) and reweights to match administrative totals within 2-4%.
 
-The Enhanced CPS with these corrections is available through our [web app](https://policyengine.org), [Python package](https://github.com/PolicyEngine/policyengine-us), and [direct download](https://github.com/PolicyEngine/policyengine-us/releases).
+The Enhanced CPS with these corrections is available through our [web app](https://policyengine.org) and [Python package](https://github.com/PolicyEngine/policyengine-us-data).
