@@ -32,14 +32,16 @@ This enables targeting both caseloads and benefit amounts simultaneously. Cell-b
 
 ## Other approaches
 
-### Federal Reserve
+### Federal Reserve / Joint Committee on Taxation
 
-The [Federal Reserve's 2022 methodology](https://www.federalreserve.gov/econres/notes/feds-notes/unemployment-insurance-in-survey-and-administrative-data-20220705.html) ([Stata code](https://davidsplinter.com/CPS-UI-Imputation.txt)):
+A [2022 FEDS Notes paper](https://www.federalreserve.gov/econres/notes/feds-notes/unemployment-insurance-in-survey-and-administrative-data-20220705.html) by Fed and JCT researchers documented an imputation methodology ([Stata code](https://davidsplinter.com/CPS-UI-Imputation.txt)). This was a one-off research paper, not part of regular Fed publications:
 
 1. Stratify CPS respondents into 100 income percentiles
 2. Calculate mean and standard deviation of UI within each percentile from IRS 1099-G data
 3. For non-reporters, draw UI amounts from Normal(μ, σ) for their percentile
-4. Select non-reporters randomly until totals match administrative targets
+4. Select non-reporters randomly until **benefit totals** match administrative targets
+
+The method targets aggregate benefits, not recipient counts—the number of recipients is an outcome, not a constraint.
 
 ### CBO
 
@@ -67,7 +69,7 @@ TRIM3 does not document how it selects which non-reporters to assign UI or how i
 | Model               | Method                         | Distribution            | Open source                                                          |
 | ------------------- | ------------------------------ | ----------------------- | -------------------------------------------------------------------- |
 | **PolicyEngine**    | QRF + reweight to SOI          | Nonparametric (learned) | [Yes](https://github.com/PolicyEngine/policyengine-us-data)          |
-| **Federal Reserve** | Normal draw by percentile      | Normal(μ, σ)            | [Yes (Stata)](https://davidsplinter.com/CPS-UI-Imputation.txt)       |
+| **Fed/JCT**         | Normal draw by percentile      | Normal(μ, σ)            | [Yes (Stata)](https://davidsplinter.com/CPS-UI-Imputation.txt)       |
 | **CBO**             | Probit → assign group averages | Point estimates         | [Partial](https://github.com/US-CBO/means_tested_transfer_imputations) |
 | **TRIM3**           | Adjust reported amounts        | Deterministic           | No                                                                   |
 
