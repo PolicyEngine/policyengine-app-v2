@@ -18,8 +18,26 @@
     "image": "ri-governor-mckee-ctc.webp"
   },
   {
+    "title": "Validating unemployment insurance estimates",
+    "description": "PolicyEngine corrects CPS underreporting of UI benefits using quantile regression forests and reweighting, matching administrative totals within 2-4%.",
+    "date": "2026-01-25",
+    "tags": ["us", "technical"],
+    "authors": ["max-ghenis"],
+    "filename": "validating-unemployment-insurance-estimates.md",
+    "image": "validating-unemployment-insurance-estimates-hero.jpg"
+  },
+  {
+    "title": "PolicyEngine powers rapid policy analysis at No 10 Downing Street",
+    "description": "Our CTO Nikhil Woodruff spent six months as an Innovation Fellow adapting PolicyEngine's microsimulation technology for government use.",
+    "date": "2026-01-20 12:00:00",
+    "tags": ["global", "org", "featured"],
+    "authors": ["max-ghenis"],
+    "filename": "policyengine-10-downing-street.md",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/10_Downing_Street._MOD_45155532.jpg/2560px-10_Downing_Street._MOD_45155532.jpg"
+  },
+  {
     "title": "Stronger Start for Working Families Act: Eliminating the CTC earnings threshold",
-    "description": "The bipartisan legislation would cost $789 million in 2026 and benefit 3.4% of Americans.",
+    "description": "The bipartisan legislation would cost $14.6 billion over ten years and benefit 5.9% of Americans.",
     "date": "2026-01-13",
     "tags": ["us", "policy"],
     "authors": ["david-trimmer"],
@@ -29,7 +47,7 @@
   {
     "title": "Utah SB60: Proposed income tax rate reduction for 2026",
     "description": "Utah Senate Bill 60 would reduce the state's flat income tax rate from 4.5% to 4.45%, lowering state revenues by $83.6 million and benefiting 53.2% of residents.",
-    "date": "2026-01-08",
+    "date": "2026-01-12",
     "tags": ["us", "us-ut", "policy"],
     "authors": ["david-trimmer"],
     "filename": "utah-sb60-income-tax-reduction.md",

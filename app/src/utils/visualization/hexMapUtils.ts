@@ -7,7 +7,7 @@ import type { HexMapDataPoint } from '@/types/visualization/HexMapDataPoint';
  * to create the honeycomb pattern.
  *
  * Based on the positioning logic from policyengine-app v1:
- * https://github.com/PolicyEngine/policyengine-app/blob/master/src/pages/policy/output/constituencies/AverageChangeByConstituency.jsx
+ * https://github.com/PolicyEngine/policyengine-app/blob/master/src/pages/policy/output/constituencies/AbsoluteChangeByConstituency.jsx
  *
  * @param points - Array of data points with x, y coordinates
  * @returns New array with adjusted x coordinates

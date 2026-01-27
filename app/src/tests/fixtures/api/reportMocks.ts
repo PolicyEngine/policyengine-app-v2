@@ -250,6 +250,7 @@ export const MOCK_ECONOMY_RESULT: ReportOutputSocietyWideUS = {
     },
   },
   wealth_decile: null,
+  congressional_district_impact: null,
 };
 
 // Mock Report objects

@@ -2,15 +2,14 @@
   {
     "type": "iframe",
     "slug": "scottish-budget-2026-27",
-    "title": "Scotland's economic outlook",
-    "description": "Compare PolicyEngine's projections with official statistics, including poverty rates, household incomes through 2030-31, and expected policy changes.",
-    "source": "https://scottish-budget-dashboard.vercel.app/",
-    "tags": ["uk", "featured", "policy", "scotland"],
+    "title": "Scottish Budget 2026-27",
+    "description": "Interactive dashboard analysing how the Scottish Budget 2026-27 measures affect living standards, poverty, and local areas across Scotland",
+    "source": "https://post-scottish-budget-dashboard.vercel.app/",
+    "tags": ["uk", "featured", "policy", "scotland", "interactives"],
     "countryId": "uk",
     "displayWithResearch": true,
-    "image": "scottish-budget-2026-27.webp",
-    "image_credit": "insider.co.uk",
-    "date": "2026-01-12 12:00:00",
+    "image": "scottish-budget-2026.jpg",
+    "date": "2026-01-23 12:00:00",
     "authors": ["vahid-ahmadi"]
   },
   {

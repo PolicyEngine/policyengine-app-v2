@@ -103,6 +103,7 @@ export const MOCK_REPORT_OUTPUT: ReportOutputSocietyWideUS = {
     },
   },
   wealth_decile: null,
+  congressional_district_impact: null,
 };
 
 export const MOCK_REPORT_OUTPUT_ALTERNATIVE: ReportOutputSocietyWideUS = {
@@ -196,6 +197,7 @@ export const MOCK_REPORT_OUTPUT_ALTERNATIVE: ReportOutputSocietyWideUS = {
     },
   },
   wealth_decile: null,
+  congressional_district_impact: null,
 };
 
 // Initial state

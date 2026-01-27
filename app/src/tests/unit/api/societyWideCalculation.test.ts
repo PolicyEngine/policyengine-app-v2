@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { fetchSocietyWideCalculation, getDatasetForRegion } from '@/api/societyWideCalculation';
+import { fetchSocietyWideCalculation } from '@/api/societyWideCalculation';
 import { BASE_URL, CURRENT_YEAR } from '@/constants';
 import {
   ERROR_MESSAGES,
@@ -12,7 +12,6 @@ import {
   mockSuccessResponse,
   TEST_COUNTRIES,
   TEST_POLICY_IDS,
-  TEST_REGIONS,
 } from '@/tests/fixtures/api/societyWideMocks';
 
 global.fetch = vi.fn();
@@ -32,7 +31,7 @@ describe('societyWide API', () => {
       const countryId = TEST_COUNTRIES.US;
       const reformPolicyId = TEST_POLICY_IDS.REFORM;
       const baselinePolicyId = TEST_POLICY_IDS.BASELINE;
-      const params = { region: TEST_REGIONS.ENHANCED_US, time_period: CURRENT_YEAR };
+      const params = { region: 'us', time_period: CURRENT_YEAR };
       const mockResponse = mockSuccessResponse(mockCompletedResponse);
       (global.fetch as any).mockResolvedValue(mockResponse);
 
@@ -46,7 +45,7 @@ describe('societyWide API', () => {
 
       // Then
       expect(global.fetch).toHaveBeenCalledWith(
-        `${BASE_URL}/${countryId}/economy/${reformPolicyId}/over/${baselinePolicyId}?region=${TEST_REGIONS.ENHANCED_US}&time_period=${CURRENT_YEAR}`,
+        `${BASE_URL}/${countryId}/economy/${reformPolicyId}/over/${baselinePolicyId}?region=us&time_period=${CURRENT_YEAR}`,
         {
           headers: {
             'Content-Type': 'application/json',
@@ -236,10 +235,10 @@ describe('societyWide API', () => {
         await fetchSocietyWideCalculation(country, reformPolicyId, baselinePolicyId, params);
       }
 
-      // Then
+      // Then - all countries use the same URL format (backend handles dataset selection)
       expect(global.fetch).toHaveBeenNthCalledWith(
         1,
-        `${BASE_URL}/${TEST_COUNTRIES.US}/economy/${reformPolicyId}/over/${baselinePolicyId}?region=us&time_period=${CURRENT_YEAR}&dataset=enhanced_cps`,
+        `${BASE_URL}/${TEST_COUNTRIES.US}/economy/${reformPolicyId}/over/${baselinePolicyId}?region=us&time_period=${CURRENT_YEAR}`,
         expect.objectContaining({
           headers: {
             'Content-Type': 'application/json',
@@ -266,76 +265,7 @@ describe('societyWide API', () => {
       );
     });
 
-    test('given US nationwide then automatically adds enhanced_cps dataset', async () => {
-      // Given
-      const countryId = TEST_COUNTRIES.US;
-      const reformPolicyId = TEST_POLICY_IDS.REFORM;
-      const baselinePolicyId = TEST_POLICY_IDS.BASELINE;
-      const params = { region: 'us', time_period: CURRENT_YEAR };
-      const mockResponse = mockSuccessResponse(mockCompletedResponse);
-      (global.fetch as any).mockResolvedValue(mockResponse);
-
-      // When
-      await fetchSocietyWideCalculation(countryId, reformPolicyId, baselinePolicyId, params);
-
-      // Then
-      expect(global.fetch).toHaveBeenCalledWith(
-        `${BASE_URL}/${countryId}/economy/${reformPolicyId}/over/${baselinePolicyId}?region=us&time_period=${CURRENT_YEAR}&dataset=enhanced_cps`,
-        expect.objectContaining({
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        })
-      );
-    });
-
-    test('given US state then does not add dataset parameter', async () => {
-      // Given
-      const countryId = TEST_COUNTRIES.US;
-      const reformPolicyId = TEST_POLICY_IDS.REFORM;
-      const baselinePolicyId = TEST_POLICY_IDS.BASELINE;
-      const params = { region: 'ca', time_period: CURRENT_YEAR };
-      const mockResponse = mockSuccessResponse(mockCompletedResponse);
-      (global.fetch as any).mockResolvedValue(mockResponse);
-
-      // When
-      await fetchSocietyWideCalculation(countryId, reformPolicyId, baselinePolicyId, params);
-
-      // Then
-      expect(global.fetch).toHaveBeenCalledWith(
-        `${BASE_URL}/${countryId}/economy/${reformPolicyId}/over/${baselinePolicyId}?region=ca&time_period=${CURRENT_YEAR}`,
-        expect.objectContaining({
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        })
-      );
-    });
-
-    test('given UK then does not add dataset parameter', async () => {
-      // Given
-      const countryId = TEST_COUNTRIES.UK;
-      const reformPolicyId = TEST_POLICY_IDS.REFORM;
-      const baselinePolicyId = TEST_POLICY_IDS.BASELINE;
-      const params = { region: 'uk', time_period: CURRENT_YEAR };
-      const mockResponse = mockSuccessResponse(mockPendingResponse);
-      (global.fetch as any).mockResolvedValue(mockResponse);
-
-      // When
-      await fetchSocietyWideCalculation(countryId, reformPolicyId, baselinePolicyId, params);
-
-      // Then
-      expect(global.fetch).toHaveBeenCalledWith(
-        `${BASE_URL}/${countryId}/economy/${reformPolicyId}/over/${baselinePolicyId}?region=uk&time_period=${CURRENT_YEAR}`,
-        expect.objectContaining({
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        })
-      );
-    });
-
-    test('given explicit dataset parameter then uses that instead of default', async () => {
+    test('given explicit dataset parameter then includes it in URL', async () => {
       // Given
       const countryId = TEST_COUNTRIES.US;
       const reformPolicyId = TEST_POLICY_IDS.REFORM;
@@ -356,40 +286,6 @@ describe('societyWide API', () => {
           },
         })
       );
-    });
-  });
-
-  describe('getDatasetForRegion', () => {
-    test('given US country and US region then returns enhanced_cps', () => {
-      // When
-      const result = getDatasetForRegion('us', 'us');
-
-      // Then
-      expect(result).toBe('enhanced_cps');
-    });
-
-    test('given US country and state region then returns undefined', () => {
-      // When
-      const result = getDatasetForRegion('us', 'ca');
-
-      // Then
-      expect(result).toBeUndefined();
-    });
-
-    test('given UK country then returns undefined', () => {
-      // When
-      const result = getDatasetForRegion('uk', 'uk');
-
-      // Then
-      expect(result).toBeUndefined();
-    });
-
-    test('given CA country then returns undefined', () => {
-      // When
-      const result = getDatasetForRegion('ca', 'ca');
-
-      // Then
-      expect(result).toBeUndefined();
     });
   });
 });

@@ -1,12 +1,12 @@
 import { describe, expect, test } from 'vitest';
 import {
-  transformConstituencyAverageChange,
+  transformConstituencyAbsoluteChange,
   transformConstituencyData,
   transformConstituencyRelativeChange,
 } from '@/adapters/constituency/constituencyDataAdapter';
 import {
   EMPTY_CONSTITUENCY_DATA,
-  EXPECTED_AVERAGE_CHANGE_DATA,
+  EXPECTED_ABSOLUTE_CHANGE_DATA,
   EXPECTED_RELATIVE_CHANGE_DATA,
   LARGE_CONSTITUENCY_DATA,
   MOCK_CONSTITUENCY_DATA,
@@ -24,7 +24,7 @@ describe('constituencyDataAdapter', () => {
       const result = transformConstituencyData(apiData, valueField);
 
       // Then
-      expect(result).toEqual(EXPECTED_AVERAGE_CHANGE_DATA);
+      expect(result).toEqual(EXPECTED_ABSOLUTE_CHANGE_DATA);
     });
 
     test('given relative change field then transforms data correctly', () => {
@@ -118,16 +118,16 @@ describe('constituencyDataAdapter', () => {
     });
   });
 
-  describe('transformConstituencyAverageChange', () => {
+  describe('transformConstituencyAbsoluteChange', () => {
     test('given constituency data then extracts average change values', () => {
       // Given
       const apiData = MOCK_CONSTITUENCY_DATA;
 
       // When
-      const result = transformConstituencyAverageChange(apiData);
+      const result = transformConstituencyAbsoluteChange(apiData);
 
       // Then
-      expect(result).toEqual(EXPECTED_AVERAGE_CHANGE_DATA);
+      expect(result).toEqual(EXPECTED_ABSOLUTE_CHANGE_DATA);
     });
 
     test('given data then uses average_household_income_change field', () => {
@@ -135,7 +135,7 @@ describe('constituencyDataAdapter', () => {
       const apiData = MOCK_CONSTITUENCY_DATA;
 
       // When
-      const result = transformConstituencyAverageChange(apiData);
+      const result = transformConstituencyAbsoluteChange(apiData);
 
       // Then
       expect(result[0].value).toBe(1234.56); // average_household_income_change
@@ -147,7 +147,7 @@ describe('constituencyDataAdapter', () => {
       const apiData = MOCK_CONSTITUENCY_DATA;
 
       // When
-      const result = transformConstituencyAverageChange(apiData);
+      const result = transformConstituencyAbsoluteChange(apiData);
 
       // Then
       expect(result[0].value).toBeGreaterThan(0); // Westminster North

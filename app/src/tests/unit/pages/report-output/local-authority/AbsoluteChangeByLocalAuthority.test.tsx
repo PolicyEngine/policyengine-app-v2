@@ -1,6 +1,6 @@
 import { render, screen } from '@test-utils';
 import { describe, expect, test, vi } from 'vitest';
-import { AverageChangeByLocalAuthority } from '@/pages/report-output/local-authority/AverageChangeByLocalAuthority';
+import { AbsoluteChangeByLocalAuthority } from '@/pages/report-output/local-authority/AbsoluteChangeByLocalAuthority';
 import {
   MOCK_UK_REPORT_OUTPUT_NO_LA_DATA,
   MOCK_UK_REPORT_OUTPUT_WITH_LA,
@@ -9,17 +9,17 @@ import {
 // Mock Plotly
 vi.mock('react-plotly.js', () => ({ default: vi.fn(() => null) }));
 
-describe('AverageChangeByLocalAuthority', () => {
+describe('AbsoluteChangeByLocalAuthority', () => {
   test('given local authority data then renders component', () => {
     // Given
     const output = MOCK_UK_REPORT_OUTPUT_WITH_LA;
 
     // When
-    render(<AverageChangeByLocalAuthority output={output} />);
+    render(<AbsoluteChangeByLocalAuthority output={output} />);
 
     // Then
     expect(
-      screen.getByText('Average household income change by local authority')
+      screen.getByText('Absolute household income change by local authority')
     ).toBeInTheDocument();
   });
 
@@ -28,7 +28,7 @@ describe('AverageChangeByLocalAuthority', () => {
     const output = MOCK_UK_REPORT_OUTPUT_NO_LA_DATA;
 
     // When
-    render(<AverageChangeByLocalAuthority output={output} />);
+    render(<AbsoluteChangeByLocalAuthority output={output} />);
 
     // Then
     expect(screen.getByText('No local authority data available')).toBeInTheDocument();
@@ -39,7 +39,7 @@ describe('AverageChangeByLocalAuthority', () => {
     const output = MOCK_UK_REPORT_OUTPUT_WITH_LA;
 
     // When
-    const { container } = render(<AverageChangeByLocalAuthority output={output} />);
+    const { container } = render(<AbsoluteChangeByLocalAuthority output={output} />);
 
     // Then
     expect(container).toBeInTheDocument();
@@ -50,7 +50,7 @@ describe('AverageChangeByLocalAuthority', () => {
     const output = MOCK_UK_REPORT_OUTPUT_WITH_LA;
 
     // When
-    const { container } = render(<AverageChangeByLocalAuthority output={output} />);
+    const { container } = render(<AbsoluteChangeByLocalAuthority output={output} />);
 
     // Then
     expect(container).toBeInTheDocument();

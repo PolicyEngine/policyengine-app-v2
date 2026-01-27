@@ -57,11 +57,11 @@ export function transformLocalAuthorityData(
  * @example
  * ```typescript
  * const apiData = output.local_authority_impact?.by_local_authority;
- * const hexMapData = transformLocalAuthorityAverageChange(apiData);
+ * const hexMapData = transformLocalAuthorityAbsoluteChange(apiData);
  * // Use with HexagonalMap component for currency visualization
  * ```
  */
-export function transformLocalAuthorityAverageChange(
+export function transformLocalAuthorityAbsoluteChange(
   apiData: ReportOutputSocietyWideByLocalAuthority
 ): HexMapDataPoint[] {
   return transformLocalAuthorityData(apiData, 'average_household_income_change');

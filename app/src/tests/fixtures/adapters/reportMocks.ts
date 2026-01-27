@@ -104,6 +104,7 @@ export const mockReportOutput: ReportOutputSocietyWideUS = {
     },
   },
   wealth_decile: null,
+  congressional_district_impact: null,
 };
 
 export const mockReport: Report = {

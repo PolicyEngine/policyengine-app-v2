@@ -1,41 +1,41 @@
 import { useMemo } from 'react';
 import { Stack, Text, Title } from '@mantine/core';
-import { transformConstituencyAverageChange } from '@/adapters/constituency/constituencyDataAdapter';
+import { transformLocalAuthorityAbsoluteChange } from '@/adapters/local-authority/localAuthorityDataAdapter';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { HexagonalMap } from '@/components/visualization/HexagonalMap';
 import type { ReportOutputSocietyWideUK } from '@/types/metadata/ReportOutputSocietyWideUK';
 import { formatParameterValue } from '@/utils/chartValueUtils';
 import { DIVERGING_GRAY_TEAL } from '@/utils/visualization/colorScales';
 
-interface AverageChangeByConstituencyProps {
+interface AbsoluteChangeByLocalAuthorityProps {
   output: SocietyWideReportOutput;
 }
 
 /**
- * Average household income change by parliamentary constituency
+ * Absolute household income change by local authority
  *
- * Displays a hexagonal map showing the average household income change
- * for each UK parliamentary constituency in absolute currency terms.
+ * Displays a hexagonal map showing the absolute household income change
+ * for each UK local authority in currency terms.
  */
-export function AverageChangeByConstituency({ output }: AverageChangeByConstituencyProps) {
+export function AbsoluteChangeByLocalAuthority({ output }: AbsoluteChangeByLocalAuthorityProps) {
   // Transform API data to hexagonal map format
   const hexMapData = useMemo(() => {
-    // Type guard to ensure output is UK report with constituency data
-    if (!('constituency_impact' in output)) {
+    // Type guard to ensure output is UK report with local authority data
+    if (!('local_authority_impact' in output)) {
       return [];
     }
-    const constituencyData = (output as ReportOutputSocietyWideUK).constituency_impact
-      ?.by_constituency;
-    if (!constituencyData) {
+    const localAuthorityData = (output as ReportOutputSocietyWideUK).local_authority_impact
+      ?.by_local_authority;
+    if (!localAuthorityData) {
       return [];
     }
-    return transformConstituencyAverageChange(constituencyData);
+    return transformLocalAuthorityAbsoluteChange(localAuthorityData);
   }, [output]);
 
   if (!hexMapData.length) {
     return (
       <Stack align="center" justify="center" h={400}>
-        <Text c="dimmed">No constituency data available</Text>
+        <Text c="dimmed">No local authority data available</Text>
       </Stack>
     );
   }
@@ -43,12 +43,13 @@ export function AverageChangeByConstituency({ output }: AverageChangeByConstitue
   return (
     <Stack gap="md">
       <div>
-        <Title order={3}>Average household income change by constituency</Title>
+        <Title order={3}>Absolute household income change by local authority</Title>
       </div>
 
       <HexagonalMap
         data={hexMapData}
         config={{
+          hexSize: 11,
           colorScale: {
             colors: DIVERGING_GRAY_TEAL.colors,
             tickFormat: '£,.0f',

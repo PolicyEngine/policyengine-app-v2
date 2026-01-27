@@ -171,9 +171,12 @@ export function SocietyWideReportOutput({
       case 'comparative-analysis':
         return (
           <ComparativeAnalysisPage
-            key={`comparative-analysis-${activeView}`}
             output={output}
             view={activeView}
+            reformPolicyId={simulations?.[1]?.policyId}
+            baselinePolicyId={simulations?.[0]?.policyId}
+            year={report.year}
+            region={simulations?.[0]?.populationId}
           />
         );
 
@@ -182,6 +185,8 @@ export function SocietyWideReportOutput({
 
       case 'local-authority':
         return <LocalAuthoritySubPage output={output} />;
+
+      // Congressional districts are now under Comparative Analysis sidebar
 
       default:
         return <NotFoundSubPage />;

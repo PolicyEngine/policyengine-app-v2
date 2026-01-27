@@ -5,7 +5,7 @@ import { TEST_COUNTRY_IDS } from '@/tests/fixtures/components/homeHeader/Country
 
 // Mock the organizations module
 vi.mock('@/data/organizations', () => ({
-  getOrgsForCountry: vi.fn((countryId: string) => {
+  getOrgsForCountrySorted: vi.fn((countryId: string) => {
     if (countryId === 'us') {
       return [
         {

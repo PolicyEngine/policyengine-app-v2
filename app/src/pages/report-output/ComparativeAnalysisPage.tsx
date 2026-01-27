@@ -1,7 +1,10 @@
 import type { ComponentType } from 'react';
 import type { SocietyWideReportOutput as SocietyWideOutput } from '@/api/societyWideCalculation';
+import { CongressionalDistrictDataProvider } from '@/contexts/CongressionalDistrictDataContext';
 import BudgetaryImpactByProgramSubPage from './budgetary-impact/BudgetaryImpactByProgramSubPage';
 import BudgetaryImpactSubPage from './budgetary-impact/BudgetaryImpactSubPage';
+import { AbsoluteChangeByDistrict } from './congressional-district/AbsoluteChangeByDistrict';
+import { RelativeChangeByDistrict } from './congressional-district/RelativeChangeByDistrict';
 import DistributionalImpactIncomeAverageSubPage from './distributional-impact/DistributionalImpactIncomeAverageSubPage';
 import DistributionalImpactIncomeRelativeSubPage from './distributional-impact/DistributionalImpactIncomeRelativeSubPage';
 import DistributionalImpactWealthAverageSubPage from './distributional-impact/DistributionalImpactWealthAverageSubPage';
@@ -19,6 +22,14 @@ import PovertyImpactByRaceSubPage from './poverty-impact/PovertyImpactByRaceSubP
 interface Props {
   output: SocietyWideOutput;
   view?: string;
+  /** Reform policy ID for state-by-state congressional district fetching */
+  reformPolicyId?: string;
+  /** Baseline policy ID for state-by-state congressional district fetching */
+  baselinePolicyId?: string;
+  /** Year for calculations */
+  year?: string;
+  /** Region/geography for the report (e.g., 'enhanced_us' for national, 'ca' for California) */
+  region?: string;
 }
 
 interface ViewComponentProps {
@@ -44,19 +55,48 @@ const VIEW_MAP: Record<string, ComponentType<ViewComponentProps>> = {
   'deep-poverty-impact-age': DeepPovertyImpactByAgeSubPage,
   'deep-poverty-impact-gender': DeepPovertyImpactByGenderSubPage,
   'inequality-impact': InequalityImpactSubPage,
+  'congressional-district-absolute': AbsoluteChangeByDistrict,
+  'congressional-district-relative': RelativeChangeByDistrict,
 };
 
 /**
  * Sub-router for Comparative Analysis tab - maps :view URL parameter to specific chart components.
  * Acts as a mini-router to keep SocietyWideReportOutput clean as we add 20+ analysis charts.
+ *
+ * Wraps content with CongressionalDistrictDataProvider so district data is shared
+ * between absolute and relative congressional district views.
  */
-export function ComparativeAnalysisPage({ output, view }: Props) {
+export function ComparativeAnalysisPage({
+  output,
+  view,
+  reformPolicyId,
+  baselinePolicyId,
+  year,
+  region,
+}: Props) {
   // If no view specified, use default view
   const effectiveView = view || 'budgetary-impact-overall';
 
   // Look up component in map
   const ViewComponent = VIEW_MAP[effectiveView];
 
-  // If found, render it; otherwise show NotFound
-  return ViewComponent ? <ViewComponent output={output} /> : <NotFoundSubPage />;
+  // Render content
+  const content = ViewComponent ? <ViewComponent output={output} /> : <NotFoundSubPage />;
+
+  // Wrap with CongressionalDistrictDataProvider if we have the required props
+  // This ensures district data is shared between absolute and relative views
+  if (reformPolicyId && baselinePolicyId && year) {
+    return (
+      <CongressionalDistrictDataProvider
+        reformPolicyId={reformPolicyId}
+        baselinePolicyId={baselinePolicyId}
+        year={year}
+        region={region}
+      >
+        {content}
+      </CongressionalDistrictDataProvider>
+    );
+  }
+
+  return content;
 }
