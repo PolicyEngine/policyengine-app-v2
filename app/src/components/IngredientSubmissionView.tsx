@@ -1,6 +1,6 @@
 import { IconCheck } from '@tabler/icons-react';
 import { Badge, Card, Container, Divider, Group, Stack, Text, Title } from '@mantine/core';
-import { colors, spacing } from '@/designTokens';
+import { colors, spacing, typography } from '@/designTokens';
 import MultiButtonFooter, { ButtonConfig } from './common/MultiButtonFooter';
 
 // Interfaces for different content types
@@ -213,7 +213,7 @@ export default function IngredientSubmissionView({
         )}
         <Divider my="sm" />
         {warningMessage && (
-          <Text c="orange.7" fw={500} mb="md">
+          <Text c={colors.text.warning} fw={typography.fontWeight.medium} mb="md">
             {warningMessage}
           </Text>
         )}
