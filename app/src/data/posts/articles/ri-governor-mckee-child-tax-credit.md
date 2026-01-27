@@ -1,6 +1,6 @@
 On January 13th, Rhode Island Governor Dan McKee, in his State of the State address, proposed a Child Tax Credit (CTC) as part of his fiscal year 2027 budget. The fully refundable credit would replace the state's personal exemption for children under the age of 19.
 
-We at PolicyEngine, in partnership with the [Niskanen Center](https://www.niskanencenter.org/), constructed a Rhode Island CTC Calculator to analyze the impact of potential Child Tax Credit reforms, including Governor McKee's proposal. This tool was used by the Governor's office to examine different reform options before adopting their final proposal. Read more about the tool and how it contributed to the Governor's proposal [here](link).
+We at PolicyEngine, in partnership with the [Niskanen Center](https://www.niskanencenter.org/), developed a Rhode Island CTC Calculator to analyze the impact of potential Child Tax Credit reforms, including Governor McKee's proposal. This tool was used by the Governor's office to examine different reform options before adopting their final proposal. Read more about the tool and how it contributed to the Governor's proposal [here](https://www.policyengine.org/us/research/ri-ctc-calculator-press-release).
 
 Key results of the Governor's CTC proposal for 2027:
 
@@ -12,17 +12,17 @@ _[Use PolicyEngine's Rhode Island CTC Calculator](https://www.policyengine.org/u
 
 ## Background
 
-Rhode Island currently provides a personal exemption ($5,100 in 2025) for all household members. The exemption reduces the household's taxable income, providing tax savings which rise as households move up the state's tax brackets. For example, families with income in the highest tax bracket can receive a maximum benefit of $305 per exemption ($5,100 x 5.99% = $305). Lower-income families often cannot fully benefit from the exemption, and those with taxable income below the state's standard deduction receive no benefit.
+Rhode Island currently provides a personal exemption ($5,100 in 2025) for all household members. The exemption reduces the household's taxable income, providing tax savings that rise as households move up the state's tax brackets. For example, families with income in the highest tax bracket can receive a maximum benefit of $305 per exemption ($5,100 x 5.99% = $305). Lower-income families often cannot fully benefit from the exemption, and those with taxable income below the state's standard deduction receive no benefit.
 
 Governor McKee's proposal would replace this exemption with a $325 fully refundable child tax credit. Key features include:
 
 - **Credit amount:** $325 per qualifying child
 - **Age eligibility:** Children under 19 years old
 - **Refundability:** Fully refundable, meaning families can receive the credit with no earnings
-- **Phase-out:** Mirrors the personal exemption's phase-out structure. The credit amount reduces by 20% for each $7,590 of AGI above $265,965 in 2027. 
+- **Phase-out:** Mirrors the personal exemption's phase-out structure. The credit amount is reduced by 20% for each $7,590 of AGI above $265,965 in 2027. 
 - **Exemption integration:** Eliminates the personal exemption for CTC-qualifying children; the exemption remains for dependents 19 and older. 
 
-Every household with a child would receive the same credit amount of $325 before the phase-out, rather than tax savings determined by their income.
+Every household with a child would receive the same credit amount of $325 before the phase-out, rather than receiving tax savings determined by their income.
 
 ## Household impacts
 
@@ -44,7 +44,7 @@ For tax year 2027, the proposal would reduce state revenues by $36.7 million, ac
 
 ## Conclusion
 
-Governor McKee's proposed child tax credit would replace the personal exemption with a $325 fully refundable CTC for children under the age of 19. We project the reform would benefit 29.2% of the state, while lowering net income for no households. 
+Governor McKee's proposed child tax credit would replace the personal exemption with a $325 fully refundable CTC for children under the age of 19. We project the reform would benefit 29.2% of Rhode Island residents, while lowering net income for no households. 
 
 As policymakers evaluate reforms such as these, analytical tools like PolicyEngine offer critical insights into the impacts on diverse household compositions and the broader economy.
 
