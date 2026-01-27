@@ -1,4 +1,4 @@
-PolicyEngine, in partnership with the [Niskanen Center](https://www.niskanencenter.org/), developed a [Rhode Island CTC Calculator](https://www.policyengine.org/us/rhode-island-ctc-calculator) to help policymakers analyze how different CTC designs would affect Rhode Island families and state revenues. Governor Dan McKee's office used the tool to evaluate reform options before finalizing the Child Tax Credit proposal.
+PolicyEngine, commmisioned by the [Niskanen Center](https://www.niskanencenter.org/), developed a [Rhode Island CTC Calculator](https://www.policyengine.org/us/rhode-island-ctc-calculator) to help policymakers analyze how different CTC designs would affect Rhode Island families and state revenues. Governor Dan McKee's office used the tool to evaluate reform options before finalizing the Child Tax Credit proposal.
 
 ## How we built the calculator
 
@@ -25,7 +25,7 @@ The Niskanen Center then shared the tool with Governor Dan McKee's office, which
 
 ## The Governor's proposal
 
-On January 13th, Governor McKee announced the proposal during his State of the State address. The $325 fully refundable Child Tax Credit for children under 19 would:
+On January 13th, Governor McKee announced the proposal during his [State of the State address](https://governor.ri.gov/press-releases/governor-daniel-j-mckees-2026-state-state-address). The $325 fully refundable Child Tax Credit for children under 19 would:
 
 - Cost the state $36.7 million
 - Benefit 29.2% of Rhode Island residents
