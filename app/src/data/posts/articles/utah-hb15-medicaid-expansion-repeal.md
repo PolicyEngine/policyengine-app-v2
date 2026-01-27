@@ -30,9 +30,9 @@ At $18,000/year (110% FPL), that same adult could transition to ACA coverage, re
 |--------|-------|---------------------|-------------------|-------------------|------------------|-------|
 | $12,000 | 75% | $8,000 | $0 | $0 | $0 | Coverage gap |
 | $16,334 | 100% | $8,000 | $0 | $0 | $11,579 | FPL threshold |
-| $18,000 | 110% | $8,000 | $0 | $0 | $10,861 | ACA eligible |
-| $22,541 | 138% | $8,000 | $0 | $0 | $7,256 | Expansion limit |
-| $25,000 | 153% | $0 | $0 | $5,299 | $5,299 | Above expansion |
+| $18,000 | 110% | $8,000 | $0 | $0 | $11,544 | ACA eligible |
+| $22,541 | 138% | $8,000 | $0 | $0 | $11,103 | Expansion limit |
+| $25,000 | 153% | $0 | $0 | $10,802 | $10,802 | Above expansion |
 
 The chart below shows how health benefits change across income levels for a single adult. Solid lines represent current law, while dotted lines show the reform scenario.
 
@@ -42,9 +42,9 @@ The chart below shows how health benefits change across income levels for a sing
 
 For a single parent with one child, the FPL threshold is higher (~$22,100 for a family of two), meaning the coverage gap extends to higher income levels.
 
-A parent earning $15,000/year (68% FPL for a family of two) would fall into the coverage gap under HB 15. The parent would no longer receive ~$8,000 in annual Medicaid benefits and would not qualify for ACA subsidies at this income level. Their child, however, remains covered through Medicaid/CHIP—children's eligibility is unaffected by the expansion repeal.
+A parent earning $15,000/year (68% FPL for a family of two) would fall into the coverage gap under HB 15. The parent would no longer receive ~$8,000 in annual Medicaid benefits and would not qualify for ACA subsidies at this income level. Their child remains covered through Medicaid at lower incomes, transitioning to CHIP at higher incomes—children's eligibility is unaffected by the adult expansion repeal.
 
-At higher incomes (above 100% FPL for their family size), parents can transition to ACA subsidies while children remain on Medicaid/CHIP.
+At higher incomes (above 100% FPL for their family size), parents can transition to ACA subsidies. Children remain on Medicaid up to ~136% FPL, then CHIP up to 205% FPL (~$46,000 for a family of two), after which they lose coverage.
 
 **Table 2: Health Benefits for Single Parent + Child in Utah (2027)**
 
@@ -52,11 +52,11 @@ At higher incomes (above 100% FPL for their family size), parents can transition
 |--------|-------|---------------------------|-------------------------|---------------------|-------------------|------------------|-------|
 | $15,000 | 68% | $8,000 | $0 | $3,495 | $0 | $0 | Coverage gap for parent |
 | $22,138 | 100% | $8,000 | $0 | $3,495 | $0 | $11,457 | FPL threshold |
-| $25,000 | 113% | $8,000 | $0 | $3,495 | $0 | $9,187 | ACA eligible |
-| $30,550 | 138% | $8,000 | $0 | $3,495 | $0 | $4,786 | Expansion limit |
-| $35,000 | 158% | $0 | $0 | $3,495 | $1,252 | $1,252 | Above expansion |
+| $25,000 | 113% | $8,000 | $0 | $3,495 | $0 | $11,397 | ACA eligible |
+| $30,550 | 138% | $8,000 | $0 | $3,495 | $0 | $10,812 | Expansion limit |
+| $35,000 | 158% | $0 | $0 | $2,827 | $10,270 | $10,270 | Above expansion (CHIP) |
 
-The chart below shows how health benefits change across income levels for a single parent with one child. The child's Medicaid/CHIP coverage remains constant across all income levels regardless of the reform.
+The chart below shows how health benefits change across income levels for a single parent with one child. The child transitions from Medicaid ($3,495) to CHIP ($2,827) at higher incomes, losing coverage entirely above 205% FPL (~$46,000).
 
 ![Single Parent + Child: Health Benefits by Income](/assets/posts/utah-hb15-parent-child.png)
 
