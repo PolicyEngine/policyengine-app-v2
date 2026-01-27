@@ -6,7 +6,10 @@ The Niskanen Center funded a project to explore converting Rhode Island's person
 
 The Rhode Island CTC Calculator allows users to model how different Child Tax Credit parameters—including credit amounts, age eligibility, refundability, and phase-out structures—would affect both individual households and the state as a whole. Users can input their own household characteristics to see personalized impacts or examine statewide effects on state revenues, income distribution, and poverty.
 
-This tool exemplifies PolicyEngine's approach to policy analysis: providing transparent, accessible modeling that empowers policymakers, advocates, and the public to understand the trade-offs inherent in policy design.
+This tool exemplifies PolicyEngine's approach to policy analysis: providing transparent, accessible modeling that empowers policymakers, advocates, and the public to understand the trade-offs inherent in policy design. Use the calculator below:
+
+<iframe src="https://policyengine.org/us/rhode-island-ctc-calculator" width="100%"
+  height="800" frameborder="0"></iframe>                    
 
 The Niskanen Center tested the calculator and used it to evaluate how different CTC parameters would affect Rhode Island households across the income distribution.
 
