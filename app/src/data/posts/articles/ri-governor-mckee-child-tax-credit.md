@@ -1,8 +1,6 @@
 On January 13th, Rhode Island Governor Dan McKee, in his State of the State address, proposed a Child Tax Credit (CTC) as part of his fiscal year 2027 budget. The fully refundable credit would replace the state's personal exemption for children under the age of 19.
 
-We at PolicyEngine, in partnership with the [Niskanen Center](https://www.niskanencenter.org/), constructed a Rhode Island CTC Calculator to analyze the impact of potential Child Tax Credit reforms, including Governor McKee's proposal. This tool was used by the Governor's office to examine different reform options before adopting their final proposal.
-
-[Quote]
+We at PolicyEngine, in partnership with the [Niskanen Center](https://www.niskanencenter.org/), constructed a Rhode Island CTC Calculator to analyze the impact of potential Child Tax Credit reforms, including Governor McKee's proposal. This tool was used by the Governor's office to examine different reform options before adopting their final proposal. Read more about the tool and how it contributed to the Governor's proposal [here](link).
 
 Key results of the Governor's CTC proposal for 2027:
 
@@ -30,7 +28,7 @@ Every household with a child would receive the same credit amount of $325 before
 
 The reform primarily benefits lower-income families with children, as they see little or no benefit from the personal exemption. For example, a single parent with one child and $20,000 of AGI would see their net income increase by $325, the full credit amount. However, as AGI rises, the change in net income falls as the credit amount is partially offset by the elimination of the personal exemption for CTC-eligible children. Once the single parent reaches the top income bracket, their change in net income is $8.[^1] Once the credit enters its phase-out range, net income slowly drops as the CTC phase-out overlaps with the personal exemption.[^2] Figure 1 displays the change in net income for a single parent of one child.
 
-[^1]: We project that in 2027, the maximum tax savings that can be attained from the personal exemption is $317 per person. Replacing the exemption with the $325 credit results in a gain of $8 per child for those in the top income tax bracket.
+[^1]: We project that in 2027, the maximum tax savings that can be attained from the personal exemption will be $317 per person. Replacing the exemption with the $325 credit results in a gain of $8 per child for those in the top income tax bracket.
 
 [^2]: As seen in Figure 1, the phase-out of the CTC does not perfectly align with the personal exemption, leading to instances where net income jumps suddenly. This may be due to the inflation adjustment of the CTC's phase-out parameters being rounded to a different number than the personal exemption.
 
