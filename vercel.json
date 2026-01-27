@@ -1,7 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "installCommand": "npm ci",
-  "buildCommand": "npm run design-system:build && npm run build:website --workspace=policyengine-app-v2",
+  "installCommand": "bun install --frozen-lockfile",
+  "buildCommand": "bun run design-system:build && cd app && bun run build:website",
   "outputDirectory": "app/dist",
   "redirects": [
     {

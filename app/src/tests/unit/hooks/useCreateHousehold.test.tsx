@@ -89,8 +89,9 @@ describe('useCreateHousehold', () => {
         expect(result.current.isPending).toBe(false);
       });
 
-      // Verify API calls
-      expect(mockCreateHousehold).toHaveBeenCalledWith(mockHouseholdCreationPayload);
+      // Verify API calls (check only first argument, as React Query may pass additional context)
+      expect(mockCreateHousehold).toHaveBeenCalled();
+      expect(mockCreateHousehold.mock.calls[0][0]).toEqual(mockHouseholdCreationPayload);
       expect(mockCreateHouseholdAssociationMutateAsync).toHaveBeenCalledWith({
         userId: TEST_IDS.USER_ID,
         householdId: TEST_IDS.HOUSEHOLD_ID,
@@ -177,8 +178,9 @@ describe('useCreateHousehold', () => {
         associationError
       );
 
-      // Household creation should succeed
-      expect(mockCreateHousehold).toHaveBeenCalledWith(mockHouseholdCreationPayload);
+      // Household creation should succeed (check only first argument)
+      expect(mockCreateHousehold).toHaveBeenCalled();
+      expect(mockCreateHousehold.mock.calls[0][0]).toEqual(mockHouseholdCreationPayload);
     });
   });
 
