@@ -1,6 +1,6 @@
 On January 13th, Rhode Island Governor Dan McKee, in his [State of the State address](https://governor.ri.gov/press-releases/governor-daniel-j-mckees-2026-state-state-address), proposed a Child Tax Credit (CTC) as part of his fiscal year 2027 budget. The fully refundable credit would replace the state's personal exemption for children under the age of 19.
 
-We at PolicyEngine, in partnership with the [Niskanen Center](https://www.niskanencenter.org/), developed a Rhode Island CTC Calculator to analyze the impact of potential Child Tax Credit reforms, including Governor McKee's proposal. This tool was used by the Governor's office to examine different reform options before adopting their final proposal. Read more about the tool and how it contributed to the Governor's proposal [here](https://www.policyengine.org/us/research/ri-ctc-calculator-press-release).
+We at PolicyEngine developed a Rhode Island CTC Calculator, commissioned by the [Niskanen Center](https://www.niskanencenter.org/), to analyze the impact of potential Child Tax Credit reforms, including Governor McKee's proposal. This tool was used by the Governor's office to examine different reform options before adopting their final proposal. Read more about the tool and how it contributed to the Governor's proposal [here](https://www.policyengine.org/us/research/ri-ctc-calculator-press-release).
 
 Key results of the Governor's CTC proposal for 2027:
 

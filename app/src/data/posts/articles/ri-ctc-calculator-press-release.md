@@ -2,7 +2,7 @@ PolicyEngine, commmisioned by the [Niskanen Center](https://www.niskanencenter.o
 
 ## How we built the calculator
 
-The Niskanen Center funded a project to explore converting Rhode Island's personal exemption for dependents into a Child Tax Credit. PolicyEngine built the calculator on the foundation of its existing analytical tools, leveraging its growing use of Claude Code to accelerate the development of the tool.
+Last summer, Josh McCabe, Director of Social Policy at the Niskanen Center, discovered that Rhode Island legislators were interested in exploring reforms to their family tax policies. As his team had previously used PolicyEngine’s free tools for a [range of policy simulations](https://www.policyengine.org/us/research/niskanen-center-analysis), Josh commissioned us to build a new one focused on Rhode Island’s structure. Building on our foundational microsimulation model and expanding use of the Claude Code agentic AI system, we built a web app for simulating reforms that could adjust the state’s existing personal exemption and introduce a child tax credit.
 
 The Rhode Island CTC Calculator allows users to model how different Child Tax Credit parameters—including credit amounts, age eligibility, refundability, and phase-out structures—would affect both individual households and the state as a whole. Users can input their own household characteristics to see personalized impacts or examine statewide effects on state revenues, income distribution, and poverty.
 
