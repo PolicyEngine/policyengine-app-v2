@@ -1,3 +1,5 @@
+import { USCongressionalDistrictBreakdown } from './ReportOutputSocietyWideByCongressionalDistrict';
+
 export interface ReportOutputSocietyWideUS {
   budget: {
     baseline_net_income: number;
@@ -8,6 +10,7 @@ export interface ReportOutputSocietyWideUS {
     tax_revenue_impact: number;
   };
   cliff_impact: Record<string, any> | null;
+  congressional_district_impact: USCongressionalDistrictBreakdown | null;
   constituency_impact: null;
   data_version: string;
   decile: {

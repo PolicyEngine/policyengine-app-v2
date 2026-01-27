@@ -1,3 +1,4 @@
+import dayjs from 'dayjs';
 import { countryIds } from '@/libs/countries';
 
 /**
@@ -11,10 +12,11 @@ export type DateFormatType =
   | 'year-only'; // e.g., "2023"
 
 /**
- * Convert a Date object or ISO string to YYYY-MM-DD format
- * Handles both Date objects from Mantine pickers and ISO strings
+ * Convert a Date object to ISO date string (YYYY-MM-DD) in UTC
+ * Use for API calls, data storage, and serialization
+ * WARNING: Do not use for UI date pickers - use toLocalDateString instead
  * @param value - Date object, ISO string, or null
- * @returns ISO date string (YYYY-MM-DD) or empty string if null
+ * @returns ISO date string (YYYY-MM-DD) in UTC, or empty string if null
  */
 export function toISODateString(value: Date | string | null): string {
   if (!value) {
@@ -22,21 +24,51 @@ export function toISODateString(value: Date | string | null): string {
   }
   if (typeof value === 'string') {
     return value;
-  } // Already ISO string
+  }
   return value.toISOString().split('T')[0];
 }
 
 /**
- * Convert ISO string to Date object for Mantine pickers
- * Returns undefined if empty string (Mantine pickers expect undefined, not null)
+ * Convert ISO date string to Date object (interprets as UTC)
+ * Use for API responses and stored data
+ * WARNING: Do not use for UI date pickers - use fromLocalDateString instead
  * @param isoString - ISO date string (YYYY-MM-DD)
- * @returns Date object or undefined
+ * @returns Date object (UTC interpretation), or undefined
  */
 export function fromISODateString(isoString: string): Date | undefined {
   if (!isoString) {
     return undefined;
   }
   return new Date(isoString);
+}
+
+/**
+ * Convert a Date object to date string (YYYY-MM-DD) in local timezone
+ * Use for UI components like Mantine date pickers
+ * @param value - Date object, date string, or null
+ * @returns Date string (YYYY-MM-DD) in local time, or empty string if null
+ */
+export function toLocalDateString(value: Date | string | null): string {
+  if (!value) {
+    return '';
+  }
+  if (typeof value === 'string') {
+    return value;
+  }
+  return dayjs(value).format('YYYY-MM-DD');
+}
+
+/**
+ * Convert date string to Date object in local timezone
+ * Use for UI components like Mantine date pickers
+ * @param dateString - Date string (YYYY-MM-DD)
+ * @returns Date object in local time, or undefined
+ */
+export function fromLocalDateString(dateString: string): Date | undefined {
+  if (!dateString) {
+    return undefined;
+  }
+  return dayjs(dateString).toDate();
 }
 
 /**

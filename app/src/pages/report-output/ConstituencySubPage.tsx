@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Stack, Text } from '@mantine/core';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { SidebarTabs, type SidebarTab } from '@/components/SidebarTabs';
-import { AverageChangeByConstituency } from './constituency/AverageChangeByConstituency';
+import { AbsoluteChangeByConstituency } from './constituency/AbsoluteChangeByConstituency';
 import { RelativeChangeByConstituency } from './constituency/RelativeChangeByConstituency';
 
 interface ConstituencySubPageProps {
@@ -10,7 +10,7 @@ interface ConstituencySubPageProps {
 }
 
 const CONSTITUENCY_TABS: SidebarTab[] = [
-  { value: 'average', label: 'Average change' },
+  { value: 'average', label: 'Absolute change' },
   { value: 'relative', label: 'Relative change' },
 ];
 
@@ -18,7 +18,7 @@ const CONSTITUENCY_TABS: SidebarTab[] = [
  * Constituency analysis subpage for society-wide reports
  *
  * Provides sidebar tabs to view:
- * - Average household income change by constituency
+ * - Absolute household income change by constituency
  * - Relative household income change by constituency
  *
  * Only available for UK reports with constituency data.
@@ -37,7 +37,7 @@ export function ConstituencySubPage({ output }: ConstituencySubPageProps) {
 
   return (
     <SidebarTabs tabs={CONSTITUENCY_TABS} activeTab={activeTab} onTabChange={setActiveTab}>
-      {activeTab === 'average' && <AverageChangeByConstituency output={output} />}
+      {activeTab === 'average' && <AbsoluteChangeByConstituency output={output} />}
       {activeTab === 'relative' && <RelativeChangeByConstituency output={output} />}
     </SidebarTabs>
   );

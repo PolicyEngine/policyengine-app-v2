@@ -15,7 +15,7 @@ import {
   SAMPLE_POLICY_LABEL_EMPTY_STRING,
   SAMPLE_POLICY_LABEL_SHORT,
 } from '@/tests/fixtures/utils/chartUtilsMocks';
-import { getReformPolicyLabel } from '@/utils/chartUtils';
+import { getChartLogoImage, getReformPolicyLabel } from '@/utils/chartUtils';
 
 describe('chartUtils', () => {
   describe('getReformPolicyLabel', () => {
@@ -128,6 +128,54 @@ describe('chartUtils', () => {
         // Then
         expect(result).toBe(EXPECTED_LABEL_DEFAULT);
       });
+    });
+  });
+
+  describe('getChartLogoImage', () => {
+    it('given no arguments then returns logo image config with default size', () => {
+      // Given/When
+      const result = getChartLogoImage();
+
+      // Then
+      expect(result).toEqual({
+        source: '/assets/logos/policyengine/teal.png',
+        xref: 'paper',
+        yref: 'paper',
+        x: 1,
+        y: -0.18,
+        sizex: 0.1,
+        sizey: 0.1,
+        xanchor: 'right',
+        yanchor: 'bottom',
+        opacity: 0.8,
+      });
+    });
+
+    it('given custom size then returns logo image config with custom size', () => {
+      // Given/When
+      const result = getChartLogoImage({ sizex: 0.15, sizey: 0.15 });
+
+      // Then
+      expect(result.sizex).toBe(0.15);
+      expect(result.sizey).toBe(0.15);
+      expect(result.source).toBe('/assets/logos/policyengine/teal.png');
+    });
+
+    it('given custom opacity then returns logo image config with custom opacity', () => {
+      // Given/When
+      const result = getChartLogoImage({ opacity: 0.5 });
+
+      // Then
+      expect(result.opacity).toBe(0.5);
+    });
+
+    it('given custom position then returns logo image config with custom position', () => {
+      // Given/When
+      const result = getChartLogoImage({ x: 0.5, y: 0.5 });
+
+      // Then
+      expect(result.x).toBe(0.5);
+      expect(result.y).toBe(0.5);
     });
   });
 });

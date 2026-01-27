@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Stack, Text } from '@mantine/core';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { SidebarTabs, type SidebarTab } from '@/components/SidebarTabs';
-import { AverageChangeByLocalAuthority } from './local-authority/AverageChangeByLocalAuthority';
+import { AbsoluteChangeByLocalAuthority } from './local-authority/AbsoluteChangeByLocalAuthority';
 import { RelativeChangeByLocalAuthority } from './local-authority/RelativeChangeByLocalAuthority';
 
 interface LocalAuthoritySubPageProps {
@@ -10,7 +10,7 @@ interface LocalAuthoritySubPageProps {
 }
 
 const LOCAL_AUTHORITY_TABS: SidebarTab[] = [
-  { value: 'average', label: 'Average change' },
+  { value: 'average', label: 'Absolute change' },
   { value: 'relative', label: 'Relative change' },
 ];
 
@@ -18,7 +18,7 @@ const LOCAL_AUTHORITY_TABS: SidebarTab[] = [
  * Local authority analysis subpage for society-wide reports
  *
  * Provides sidebar tabs to view:
- * - Average household income change by local authority
+ * - Absolute household income change by local authority
  * - Relative household income change by local authority
  *
  * Only available for UK reports with local authority data.
@@ -37,7 +37,7 @@ export function LocalAuthoritySubPage({ output }: LocalAuthoritySubPageProps) {
 
   return (
     <SidebarTabs tabs={LOCAL_AUTHORITY_TABS} activeTab={activeTab} onTabChange={setActiveTab}>
-      {activeTab === 'average' && <AverageChangeByLocalAuthority output={output} />}
+      {activeTab === 'average' && <AbsoluteChangeByLocalAuthority output={output} />}
       {activeTab === 'relative' && <RelativeChangeByLocalAuthority output={output} />}
     </SidebarTabs>
   );

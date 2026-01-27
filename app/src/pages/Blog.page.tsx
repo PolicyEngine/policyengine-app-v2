@@ -188,7 +188,11 @@ function PostHeadingSection({
   countryId: string;
   displayCategory: string;
 }) {
-  const imageUrl = post.image ? `/assets/posts/${post.image}` : '';
+  const imageUrl = post.image
+    ? post.image.startsWith('http')
+      ? post.image
+      : `/assets/posts/${post.image}`
+    : '';
   const readingTime = calculateReadingTime(markdown);
 
   if (displayCategory === 'desktop') {

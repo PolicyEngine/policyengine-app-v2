@@ -17,6 +17,7 @@ import type { UserPolicy } from '@/types/ingredients/UserPolicy';
 import {
   DEFAULT_CHART_CONFIG,
   DEFAULT_CHART_LAYOUT,
+  getChartLogoImage,
   getClampedChartHeight,
 } from '@/utils/chartUtils';
 import { currencySymbol, localeCode } from '@/utils/formatters';
@@ -274,6 +275,7 @@ export default function MarginalTaxRatesSubPage({
           l: 80,
           r: 20,
         },
+        images: [getChartLogoImage()],
       } as Partial<Layout>;
 
       return (
@@ -327,6 +329,7 @@ export default function MarginalTaxRatesSubPage({
         l: 80,
         r: 20,
       },
+      images: [getChartLogoImage()],
     } as Partial<Layout>;
 
     return (

@@ -41,7 +41,7 @@ export default function USGeographicOptions({
       <Box>
         <Radio
           value={US_REGION_TYPES.STATE}
-          label="All households in a state"
+          label="All households in a state or federal district"
           checked={scope === US_REGION_TYPES.STATE}
           onChange={() => handleScopeChange(US_REGION_TYPES.STATE)}
         />

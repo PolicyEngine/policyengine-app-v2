@@ -3,7 +3,7 @@ import { Box, Group, Text } from '@mantine/core';
 import { YearPickerInput } from '@mantine/dates';
 import { FOREVER } from '@/constants';
 import { ValueInterval } from '@/types/subIngredients/valueInterval';
-import { fromISODateString, toISODateString } from '@/utils/dateUtils';
+import { fromLocalDateString, toLocalDateString } from '@/utils/dateUtils';
 import { getDefaultValueForParam } from './getDefaultValueForParam';
 import { ValueInputBox } from './ValueInputBox';
 import { ValueSetterProps } from './ValueSetterProps';
@@ -54,7 +54,7 @@ export function DefaultValueSelector(props: ValueSetterProps) {
   }, [startDate, endDate, paramValue, setIntervals]);
 
   function handleStartDateChange(value: Date | string | null) {
-    setStartDate(toISODateString(value));
+    setStartDate(toLocalDateString(value));
   }
 
   return (
@@ -62,9 +62,9 @@ export function DefaultValueSelector(props: ValueSetterProps) {
       <YearPickerInput
         placeholder="Pick a year"
         label="From"
-        minDate={fromISODateString(minDate)}
-        maxDate={fromISODateString(maxDate)}
-        value={fromISODateString(startDate)}
+        minDate={fromLocalDateString(minDate)}
+        maxDate={fromLocalDateString(maxDate)}
+        value={fromLocalDateString(startDate)}
         onChange={handleStartDateChange}
         style={{ flex: 1 }}
       />

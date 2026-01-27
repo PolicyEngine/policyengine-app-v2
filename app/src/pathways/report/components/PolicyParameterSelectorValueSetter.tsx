@@ -7,6 +7,7 @@
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Button, Container, Divider, Group, Stack, Text } from '@mantine/core';
+import { CURRENT_YEAR } from '@/constants';
 import { getDateRange } from '@/libs/metadataUtils';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import { PolicyStateProps } from '@/types/pathwayState';
@@ -33,8 +34,8 @@ export default function PolicyParameterSelectorValueSetter({
   const [intervals, setIntervals] = useState<ValueInterval[]>([]);
 
   // Hoisted date state for all non-multi-year selectors
-  const [startDate, setStartDate] = useState<string>('2025-01-01');
-  const [endDate, setEndDate] = useState<string>('2025-12-31');
+  const [startDate, setStartDate] = useState<string>(`${CURRENT_YEAR}-01-01`);
+  const [endDate, setEndDate] = useState<string>(`${CURRENT_YEAR}-12-31`);
 
   function resetValueSettingState() {
     setIntervals([]);

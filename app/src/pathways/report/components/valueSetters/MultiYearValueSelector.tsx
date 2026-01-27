@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Box, Group, SimpleGrid, Stack, Text } from '@mantine/core';
+import { CURRENT_YEAR } from '@/constants';
 import { getTaxYears } from '@/libs/metadataUtils';
 import { RootState } from '@/store';
 import { ValueInterval } from '@/types/subIngredients/valueInterval';
@@ -22,8 +23,9 @@ export function MultiYearValueSelector(props: ValueSetterProps) {
   };
 
   // Generate years from metadata, starting from current year
+  // Uses CURRENT_YEAR constant for consistency with report year defaults
   const generateYears = () => {
-    const currentYear = new Date().getFullYear();
+    const currentYear = parseInt(CURRENT_YEAR, 10);
     const maxYears = MAX_YEARS_BY_COUNTRY[countryId || 'us'] || 10;
 
     // Filter available years from metadata to only include current year onwards

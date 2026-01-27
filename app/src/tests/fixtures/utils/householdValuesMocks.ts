@@ -155,9 +155,9 @@ export const MOCK_HOUSEHOLD_DATA_MULTI_PERIOD: Household = {
     households: {
       'your household': {
         household_income: {
-          '2023': 48000,
+          '2024': 48000,
           [CURRENT_YEAR]: 50000,
-          '2026': 52000,
+          '2027': 52000,
         },
       },
     },
@@ -169,16 +169,17 @@ export const MOCK_PARAMETER = {
   description: 'Standard deduction',
   values: {
     '2020-01-01': 12000,
-    '2023-01-01': 13850,
+    '2024-01-01': 13850,
     [`${CURRENT_YEAR}-01-01`]: 14600,
-    '2026-01-01': 15000,
+    '2027-01-01': 15000,
   },
 };
 
 export const TEST_TIME_PERIODS = {
-  YEAR_2023: '2023',
-  YEAR_2024: CURRENT_YEAR,
-  YEAR_2025: CURRENT_YEAR,
+  YEAR_2024: '2024',
+  YEAR_2025: '2025',
+  YEAR_2026: '2026',
+  CURRENT: CURRENT_YEAR,
 } as const;
 
 export const TEST_ENTITY_NAMES = {
