@@ -42,21 +42,23 @@ The chart below shows how health benefits change across income levels for a sing
 
 For a single parent with one child, the FPL threshold is higher (~$22,100 for a family of two), meaning the coverage gap extends to higher income levels.
 
-A parent earning $15,000/year (68% FPL for a family of two) would fall into the coverage gap under HB 15. The parent would no longer receive ~$8,000 in annual Medicaid benefits and would not qualify for ACA subsidies at this income level. Their child remains covered through Medicaid at lower incomes, transitioning to CHIP at higher incomes—children's eligibility is unaffected by the adult expansion repeal.
+Utah has a separate parent/caretaker Medicaid category with an income limit of 46% FPL (~$10,200 for a family of two). Under HB 15, very low-income parents would retain Medicaid through this category, though at a lower benefit level ($6,043 vs $8,000).
 
-At higher incomes (above 100% FPL for their family size), parents can transition to ACA subsidies. Children remain on Medicaid up to ~136% FPL, then CHIP up to 205% FPL (~$46,000 for a family of two), after which they lose coverage.
+A parent earning $12,000/year (54% FPL) would fall into the coverage gap under HB 15—above the parent Medicaid limit but below the ACA threshold. Their child remains covered through Medicaid at lower incomes, transitioning to CHIP at higher incomes.
+
+At higher incomes (above 100% FPL), parents can transition to ACA subsidies. Children remain on Medicaid up to ~136% FPL, then CHIP up to 205% FPL (~$46,000 for a family of two), after which they lose coverage.
 
 **Table 2: Health Benefits for Single Parent + Child in Utah (2027)**
 
 | Income | % FPL | Parent Medicaid (Baseline) | Parent Medicaid (Reform) | Child Medicaid/CHIP | ACA PTC (Baseline) | ACA PTC (Reform) | Notes |
 |--------|-------|---------------------------|-------------------------|---------------------|-------------------|------------------|-------|
-| $15,000 | 68% | $8,000 | $0 | $3,495 | $0 | $0 | Coverage gap for parent |
+| $8,000 | 36% | $8,000 | $6,043 | $3,495 | $0 | $0 | Parent Medicaid (below 46% FPL) |
+| $12,000 | 54% | $8,000 | $0 | $3,495 | $0 | $0 | Coverage gap (above 46% FPL) |
 | $22,138 | 100% | $8,000 | $0 | $3,495 | $0 | $11,457 | FPL threshold |
-| $25,000 | 113% | $8,000 | $0 | $3,495 | $0 | $11,397 | ACA eligible |
 | $30,550 | 138% | $8,000 | $0 | $3,495 | $0 | $10,812 | Expansion limit |
 | $35,000 | 158% | $0 | $0 | $2,827 | $10,270 | $10,270 | Above expansion (CHIP) |
 
-The chart below shows how health benefits change across income levels for a single parent with one child. The child transitions from Medicaid ($3,495) to CHIP ($2,827) at higher incomes, losing coverage entirely above 205% FPL (~$46,000).
+The chart below shows how health benefits change across income levels for a single parent with one child. Very low-income parents retain some Medicaid coverage under the reform. The child transitions from Medicaid ($3,495) to CHIP ($2,827) at higher incomes, losing coverage entirely above 205% FPL (~$46,000).
 
 ![Single Parent + Child: Health Benefits by Income](/assets/posts/utah-hb15-parent-child.png)
 
