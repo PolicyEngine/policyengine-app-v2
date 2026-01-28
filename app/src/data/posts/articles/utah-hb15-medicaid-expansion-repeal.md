@@ -1,5 +1,33 @@
 Utah's [House Bill 15](https://le.utah.gov/~2026/bills/static/HB0015.html) would repeal the state's Medicaid expansion if federal matching (FMAP) drops below 85%. Currently, the federal government pays 90% of expansion Medicaid costs. This analysis models the scenario where the trigger condition is met and expansion is repealed.
 
+## Background: Medicaid and the ACA expansion
+
+Medicaid is a joint federal-state program providing health coverage to low-income individuals. Before the Affordable Care Act (ACA), Medicaid primarily covered specific groups: children, pregnant women, parents with very low incomes, and people with disabilities. Non-disabled, non-elderly adults without children generally could not qualify, regardless of income.
+
+The ACA expanded Medicaid eligibility to all adults under 65 with household income at or below 138% of the Federal Poverty Level (FPL). The federal government covers 90% of costs for this "expansion" population, compared to the standard Federal Medical Assistance Percentage (FMAP) of roughly 70% for traditional Medicaid.
+
+### Utah's Medicaid expansion history
+
+Utah voters approved Medicaid expansion via [Proposition 3](https://ballotpedia.org/Utah_Proposition_3,_Medicaid_Expansion_Initiative_(2018)) in November 2018. The legislature initially modified the expansion, but full expansion took effect in 2020. Today, approximately 165,000 Utahns are enrolled in expansion Medicaid.
+
+Utah also maintains separate Medicaid categories for specific populations:
+- **Parents/caretaker relatives**: Income limit of 46% FPL (~$10,200 for family of two)
+- **Children**: Covered through Medicaid up to 136% FPL, then CHIP up to 205% FPL
+- **Pregnant women**: Higher income limits with comprehensive coverage
+
+### 2027 Federal Poverty Levels
+
+This analysis uses projected 2027 FPL values:
+
+| Household Size | 100% FPL | 138% FPL (Expansion Limit) |
+|----------------|----------|---------------------------|
+| 1 person | $16,334 | $22,541 |
+| 2 people | $22,138 | $30,550 |
+| 3 people | $27,942 | $38,560 |
+| 4 people | $33,746 | $46,569 |
+
+## Key findings
+
 We at PolicyEngine have analyzed the effects of this proposed change on Utah residents.
 
 Key results for 2027:
