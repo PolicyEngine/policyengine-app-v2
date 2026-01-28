@@ -1,5 +1,23 @@
 [
   {
+    "title": "How PolicyEngine's CTC Calculator informed Rhode Island Governor McKee's Child Tax Credit design",
+    "description": "PolicyEngine developed a Rhode Island Child Tax Credit Calculator to help policymakers analyze how different CTC reforms would impact the state and its families.",
+    "date": "2026-01-29",
+    "tags": ["us", "us-ri", "policy", "featured"],
+    "authors": ["david-trimmer"],
+    "filename": "ri-ctc-calculator-press-release.md",
+    "image": "ri-ctc-calc.png"
+  },
+  {
+    "title": "Analysis of Rhode Island Governor McKee's proposed Child Tax Credit",
+    "description": "The $325 fully refundable credit would cost $36.7 million and benefit 29.2% of Rhode Island residents.",
+    "date": "2026-01-29",
+    "tags": ["us", "us-ri", "policy", "featured"],
+    "authors": ["david-trimmer"],
+    "filename": "ri-governor-mckee-child-tax-credit.md",
+    "image": "ri-governor-mckee-ctc.webp"
+  },
+  {
     "title": "Validating unemployment insurance estimates",
     "description": "PolicyEngine corrects CPS underreporting of UI benefits using quantile regression forests and reweighting, matching administrative totals within 2-4%.",
     "date": "2026-01-25",
