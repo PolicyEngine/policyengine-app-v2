@@ -1,4 +1,4 @@
-PolicyEngine, commmisioned by the [Niskanen Center](https://www.niskanencenter.org/), developed a [Rhode Island CTC Calculator](https://www.policyengine.org/us/rhode-island-ctc-calculator) to help policymakers analyze how different CTC designs would affect Rhode Island families and state revenues. Governor Dan McKee's office used the tool to evaluate reform options before finalizing the Child Tax Credit proposal.
+Prior to the release of [Rhode Island Governor Dan McKee's FY2027 budget](https://omb.ri.gov/sites/g/files/xkgbur751/files/2026-01/FY%202027_Executive%20Summary_Full%20Book_FOR%20WEBSITE.pdf), his office used PolicyEngine's new [Rhode Island Child Tax Credit Calculator](https://www.policyengine.org/us/rhode-island-ctc-calculator) to evaluate how different CTC designs would affect Rhode Island families and the state economy. The tool, commissioned by the [Niskanen Center](https://www.niskanencenter.org/), helps policymakers analyze potential CTC reforms, including the proposal the Governor ultimately adopted in his budget.
 
 ## How we built the calculator
 
