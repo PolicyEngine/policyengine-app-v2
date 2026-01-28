@@ -74,7 +74,7 @@ Utah has a separate parent/caretaker Medicaid category with an income limit of 4
 
 A parent earning $12,000/year (54% FPL) would fall into the coverage gap under HB 15—above the parent Medicaid limit but below the ACA threshold. Their child remains covered through Medicaid at lower incomes, transitioning to CHIP at higher incomes.
 
-At higher incomes (above 100% FPL), parents can transition to ACA subsidies. Children remain on Medicaid up to ~136% FPL, then CHIP up to 205% FPL (~$46,000 for a family of two), after which they lose coverage.
+At higher incomes (above 100% FPL), parents can transition to ACA subsidies. Children remain on Medicaid up to about 136% FPL, then CHIP up to 205% FPL (about $46,000 for a family of two), after which they lose coverage.
 
 **Table 2: Health Benefits for Single Parent + Child in Utah (2027)**
 
