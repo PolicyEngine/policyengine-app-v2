@@ -11,13 +11,7 @@ This tool exemplifies PolicyEngine's approach to policy analysis: providing tran
 <iframe src="https://policyengine.org/us/rhode-island-ctc-calculator" width="100%"
   height="800" frameborder="0"></iframe>                    
 
-The Niskanen Center tested the calculator and used it to evaluate how different CTC parameters would affect Rhode Island households across the income distribution.
-
-> [Josh McCabe quote placeholder]
->
-> — Josh McCabe, Director of Social Policy, Niskanen Center
-
-The Niskanen Center then shared the tool with Governor Dan McKee's office, which used the calculator to evaluate reform options and design the Child Tax Credit proposal included in his fiscal year 2027 budget.
+The Niskanen Center tested the calculator and used it to evaluate how different CTC parameters would affect Rhode Island households across the income distribution. They then shared the tool with Governor Dan McKee's office, which used the calculator to evaluate reform options and design the Child Tax Credit proposal included in his fiscal year 2027 budget.
 
 > "I'm grateful to the PolicyEngine team for building the models that helped us see clearly how different policy choices would affect Rhode Island families. That ability to test options in real time strengthened our proposal and helped us design a Child Tax Credit that will deliver more than $30 million each year to the families who need it most."
 >
