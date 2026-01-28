@@ -2,7 +2,7 @@ Prior to the release of [Rhode Island Governor Dan McKee's FY2027 budget](https:
 
 ## How we built the calculator
 
-Last summer, [Josh McCabe](https://www.niskanencenter.org/author/joshua-mccabe/), Director of Social Policy at the Niskanen Center, discovered that Rhode Island legislators were interested in exploring reforms to their family tax policies. As his team had previously used PolicyEngine’s free tools for a [range of policy simulations](https://www.policyengine.org/us/research/niskanen-center-analysis), Josh commissioned us to build a new one focused on Rhode Island’s structure. Building on our foundational microsimulation model and expanding use of the Claude Code agentic AI system, we built a web app for simulating reforms that could adjust the state’s existing personal exemption and introduce a child tax credit.
+The Niskanen Center, having previously used PolicyEngine's free tools for a [range of policy simulations](https://www.policyengine.org/us/research/niskanen-center-analysis), commissioned us to build a specialized calculator for Rhode Island's tax structure. Building on our foundational microsimulation model and expanding use of the Claude Code agentic AI system, we built a web app for simulating reforms that could adjust the state's existing personal exemption and introduce a child tax credit.
 
 The Rhode Island CTC Calculator allows users to model how different Child Tax Credit parameters—including credit amounts, age eligibility, refundability, and phase-out structures—would affect both individual households and the state as a whole. Users can input their own household characteristics to see personalized impacts or examine statewide effects on state revenues, income distribution, and poverty.
 
