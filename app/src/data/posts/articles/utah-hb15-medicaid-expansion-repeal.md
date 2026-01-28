@@ -64,7 +64,7 @@ At $18,000/year (110% FPL), that same adult could transition to ACA coverage, re
 
 The chart below shows how health benefits change across income levels for a single adult. Solid lines represent current law, while dotted lines show the reform scenario.
 
-![Single Adult: Health Benefits by Income](/assets/posts/utah-hb15-single-adult.png)
+<iframe src="https://policyengine.github.io/utah-hb15-charts/single-adult.html" width="100%" height="550" frameborder="0"></iframe>
 
 ## Single parent with child
 
@@ -88,7 +88,7 @@ At higher incomes (above 100% FPL), parents can transition to ACA subsidies. Chi
 
 The chart below shows how health benefits change across income levels for a single parent with one child. Very low-income parents retain some Medicaid coverage under the reform. The child transitions from Medicaid ($3,495) to CHIP ($2,827) at higher incomes, losing coverage entirely above 205% FPL (~$46,000).
 
-![Single Parent + Child: Health Benefits by Income](/assets/posts/utah-hb15-parent-child.png)
+<iframe src="https://policyengine.github.io/utah-hb15-charts/parent-child.html" width="100%" height="550" frameborder="0"></iframe>
 
 ## Statewide fiscal impact
 
