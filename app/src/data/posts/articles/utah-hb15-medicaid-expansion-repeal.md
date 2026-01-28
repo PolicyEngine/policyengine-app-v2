@@ -4,7 +4,9 @@ Utah's [House Bill 15](https://le.utah.gov/~2026/bills/static/HB0015.html) would
 
 Medicaid is a joint federal-state program providing health coverage to low-income individuals. Before the Affordable Care Act (ACA), Medicaid primarily covered specific groups: children, pregnant women, parents with very low incomes, and people with disabilities. Non-disabled, non-elderly adults without children generally could not qualify, regardless of income.
 
-The ACA expanded Medicaid eligibility to all adults under 65 with household income at or below 138% of the Federal Poverty Level (FPL). The federal government covers 90% of costs for this "expansion" population, compared to the standard Federal Medical Assistance Percentage (FMAP) of roughly 70% for traditional Medicaid.
+The ACA expanded Medicaid eligibility to all adults under 65 with household income at or below 138% of the Federal Poverty Level (FPL). To incentivize states to expand, the federal government initially covered 100% of expansion costs, phasing down to 90% by 2020—significantly more generous than the standard Federal Medical Assistance Percentage (FMAP) of about 70% for traditional Medicaid in Utah.
+
+HB 15's trigger—repealing expansion if federal matching drops below 85%—reflects concerns that Congress could further reduce the enhanced FMAP, shifting more costs to states.
 
 ### Utah's Medicaid expansion history
 
