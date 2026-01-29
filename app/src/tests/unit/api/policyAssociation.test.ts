@@ -11,7 +11,6 @@ describe('ApiPolicyStore', () => {
   const mockPolicyInput: Omit<UserPolicy, 'id' | 'createdAt'> = {
     userId: 'user-123',
     policyId: 'policy-456',
-    countryId: 'us',
     label: 'Test Policy',
     isCreated: true,
   };
@@ -20,7 +19,6 @@ describe('ApiPolicyStore', () => {
     id: 'user-policy-abc123',
     user_id: 'user-123',
     policy_id: 'policy-456',
-    country_id: 'us',
     label: 'Test Policy',
     created_at: '2025-01-01T00:00:00Z',
     updated_at: '2025-01-01T00:00:00Z',
@@ -57,7 +55,6 @@ describe('ApiPolicyStore', () => {
       expect(result).toMatchObject({
         userId: 'user-123',
         policyId: 'policy-456',
-        countryId: 'us',
         label: 'Test Policy',
       });
     });
@@ -99,7 +96,6 @@ describe('ApiPolicyStore', () => {
       expect(result[0]).toMatchObject({
         userId: 'user-123',
         policyId: 'policy-456',
-        countryId: 'us',
         label: 'Test Policy',
       });
     });
@@ -140,7 +136,6 @@ describe('ApiPolicyStore', () => {
       expect(result).toMatchObject({
         userId: 'user-123',
         policyId: 'policy-456',
-        countryId: 'us',
         label: 'Test Policy',
       });
     });
@@ -256,7 +251,6 @@ describe('LocalStoragePolicyStore', () => {
   const mockPolicyInput1: Omit<UserPolicy, 'id' | 'createdAt'> = {
     userId: 'user-123',
     policyId: 'policy-456',
-    countryId: 'us',
     label: 'Test Policy 1',
     isCreated: true,
   };
@@ -264,7 +258,6 @@ describe('LocalStoragePolicyStore', () => {
   const mockPolicyInput2: Omit<UserPolicy, 'id' | 'createdAt'> = {
     userId: 'user-123',
     policyId: 'policy-789',
-    countryId: 'us',
     label: 'Test Policy 2',
     isCreated: true,
   };
@@ -449,7 +442,7 @@ describe('LocalStoragePolicyStore', () => {
 
       // Then
       expect(result.label).toBe('Updated Label');
-      expect(result.countryId).toBe(mockPolicyInput1.countryId); // unchanged
+      expect(result.policyId).toBe(mockPolicyInput1.policyId); // unchanged
     });
   });
 

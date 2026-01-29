@@ -4,7 +4,7 @@ import { UserPolicy } from '../types/ingredients/UserPolicy';
 
 export interface UserPolicyStore {
   create: (policy: Omit<UserPolicy, 'id' | 'createdAt'>) => Promise<UserPolicy>;
-  findByUser: (userId: string, countryId?: string) => Promise<UserPolicy[]>;
+  findByUser: (userId: string, taxBenefitModelId?: string) => Promise<UserPolicy[]>;
   findById: (userPolicyId: string) => Promise<UserPolicy | null>;
   update: (userPolicyId: string, updates: Partial<UserPolicy>) => Promise<UserPolicy>;
   delete: (userPolicyId: string) => Promise<void>;
@@ -31,10 +31,10 @@ export class ApiPolicyStore implements UserPolicyStore {
     return UserPolicyAdapter.fromApiResponse(apiResponse);
   }
 
-  async findByUser(userId: string, countryId?: string): Promise<UserPolicy[]> {
+  async findByUser(userId: string, taxBenefitModelId?: string): Promise<UserPolicy[]> {
     const params = new URLSearchParams({ user_id: userId });
-    if (countryId) {
-      params.append('country_id', countryId);
+    if (taxBenefitModelId) {
+      params.append('tax_benefit_model_id', taxBenefitModelId);
     }
 
     const response = await fetch(`${this.BASE_URL}/?${params}`, {
@@ -128,9 +128,11 @@ export class LocalStoragePolicyStore implements UserPolicyStore {
     return newPolicy;
   }
 
-  async findByUser(userId: string, countryId?: string): Promise<UserPolicy[]> {
+  async findByUser(userId: string, _taxBenefitModelId?: string): Promise<UserPolicy[]> {
     const policies = this.getStoredPolicies();
-    return policies.filter((p) => p.userId === userId && (!countryId || p.countryId === countryId));
+    // LocalStorage doesn't have tax_benefit_model context - return all user's policies
+    // The underlying Policy contains tax_benefit_model_id, which would require fetching policy data
+    return policies.filter((p) => p.userId === userId);
   }
 
   async findById(userPolicyId: string): Promise<UserPolicy | null> {

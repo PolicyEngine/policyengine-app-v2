@@ -19,7 +19,6 @@ export class UserPolicyAdapter {
     return {
       user_id: String(userPolicy.userId),
       policy_id: String(userPolicy.policyId),
-      country_id: userPolicy.countryId,
       label: userPolicy.label,
     };
   }
@@ -44,7 +43,6 @@ export class UserPolicyAdapter {
       id: String(apiData.id),
       userId: String(apiData.user_id),
       policyId: String(apiData.policy_id),
-      countryId: apiData.country_id,
       label: apiData.label ?? undefined,
       createdAt: apiData.created_at,
       updatedAt: apiData.updated_at,

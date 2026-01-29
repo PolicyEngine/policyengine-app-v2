@@ -23,7 +23,6 @@ export const MOCK_USER_POLICY_BASELINE: UserPolicy = {
   userId: 'user-123',
   policyId: 'policy-1',
   label: 'My Baseline',
-  countryId: 'us',
   createdAt: '2024-01-01T00:00:00Z',
 };
 
@@ -32,7 +31,6 @@ export const MOCK_USER_POLICY_REFORM: UserPolicy = {
   userId: 'user-123',
   policyId: 'policy-2',
   label: 'My Reform',
-  countryId: 'us',
   createdAt: '2024-01-01T00:00:00Z',
 };
 

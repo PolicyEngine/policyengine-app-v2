@@ -116,12 +116,7 @@ export default function PoliciesPage() {
         } as TextValue,
         dateCreated: {
           text: item.association.createdAt
-            ? formatDate(
-                item.association.createdAt,
-                'short-month-day-year',
-                item.association.countryId,
-                true
-              )
+            ? formatDate(item.association.createdAt, 'short-month-day-year', countryId, true)
             : '',
         } as TextValue,
         provisions: {

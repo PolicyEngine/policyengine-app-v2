@@ -54,11 +54,9 @@ export const useCreatePolicyAssociation = () => {
     mutationFn: (userPolicy: Omit<UserPolicy, 'id' | 'createdAt'>) => store.create(userPolicy),
     onSuccess: (newAssociation) => {
       // Invalidate and refetch related queries
+      // Note: country/model filtering now happens via Policy.tax_benefit_model_id, not UserPolicy
       queryClient.invalidateQueries({
-        queryKey: policyAssociationKeys.byUser(
-          newAssociation.userId.toString(),
-          newAssociation.countryId
-        ),
+        queryKey: policyAssociationKeys.byUser(newAssociation.userId.toString()),
       });
       queryClient.invalidateQueries({
         queryKey: policyAssociationKeys.byPolicy(newAssociation.policyId.toString()),
@@ -91,11 +89,9 @@ export const useUpdatePolicyAssociation = () => {
 
     onSuccess: (updatedAssociation) => {
       // Invalidate all related queries to trigger refetch
+      // Note: country/model filtering now happens via Policy.tax_benefit_model_id, not UserPolicy
       queryClient.invalidateQueries({
-        queryKey: policyAssociationKeys.byUser(
-          updatedAssociation.userId,
-          updatedAssociation.countryId
-        ),
+        queryKey: policyAssociationKeys.byUser(updatedAssociation.userId),
       });
 
       queryClient.invalidateQueries({
@@ -118,10 +114,10 @@ export const useDeleteAssociation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ userId, policyId }: { userId: string; policyId: string; countryId?: string }) =>
+    mutationFn: ({ userId, policyId }: { userId: string; policyId: string }) =>
       store.delete(userId, policyId),
-    onSuccess: (_, { userId, policyId, countryId }) => {
-      queryClient.invalidateQueries({ queryKey: policyAssociationKeys.byUser(userId, countryId) });
+    onSuccess: (_, { userId, policyId }) => {
+      queryClient.invalidateQueries({ queryKey: policyAssociationKeys.byUser(userId) });
       queryClient.invalidateQueries({ queryKey: policyAssociationKeys.byPolicy(policyId) });
 
       queryClient.setQueryData(

@@ -2,10 +2,7 @@ import { UserPolicy } from '@/types/ingredients/UserPolicy';
 import { UserReport } from '@/types/ingredients/UserReport';
 import { UserSimulation } from '@/types/ingredients/UserSimulation';
 import { UserPolicyMetadata } from '@/types/metadata/userPolicyMetadata';
-import {
-  UserReportCreationPayload,
-  UserSimulationCreationPayload,
-} from '@/types/payloads';
+import { UserReportCreationPayload, UserSimulationCreationPayload } from '@/types/payloads';
 import {
   TEST_COUNTRIES,
   TEST_LABELS,
@@ -21,7 +18,6 @@ export const mockUserPolicyUS: UserPolicy = {
   id: 'user-policy-123', // Association ID from backend
   userId: TEST_USER_IDS.USER_123,
   policyId: TEST_POLICY_IDS.POLICY_789,
-  countryId: TEST_COUNTRIES.US,
   label: TEST_LABELS.MY_POLICY,
   createdAt: TEST_TIMESTAMPS.CREATED_AT,
   updatedAt: TEST_TIMESTAMPS.UPDATED_AT,
@@ -32,20 +28,17 @@ export const mockUserPolicyUK: UserPolicy = {
   ...mockUserPolicyUS,
   id: 'user-policy-456', // Association ID from backend
   policyId: TEST_POLICY_IDS.POLICY_ABC,
-  countryId: TEST_COUNTRIES.UK,
 };
 
 export const mockUserPolicyWithoutOptionalFields: Omit<UserPolicy, 'id' | 'createdAt'> = {
   userId: TEST_USER_IDS.USER_123,
   policyId: TEST_POLICY_IDS.POLICY_789,
-  countryId: TEST_COUNTRIES.US,
   isCreated: true,
 };
 
 export const mockUserPolicyCreationPayload = {
   user_id: TEST_USER_IDS.USER_123,
   policy_id: TEST_POLICY_IDS.POLICY_789,
-  country_id: TEST_COUNTRIES.US,
   label: TEST_LABELS.MY_POLICY,
 };
 
@@ -53,7 +46,6 @@ export const mockUserPolicyApiResponse: UserPolicyMetadata = {
   id: 'user-policy-123',
   policy_id: TEST_POLICY_IDS.POLICY_789,
   user_id: TEST_USER_IDS.USER_123,
-  country_id: TEST_COUNTRIES.US,
   label: TEST_LABELS.MY_POLICY,
   created_at: TEST_TIMESTAMPS.CREATED_AT,
   updated_at: TEST_TIMESTAMPS.UPDATED_AT,

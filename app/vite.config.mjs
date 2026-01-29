@@ -50,7 +50,9 @@ function spaFallbackPlugin() {
   const isStaticAsset = (url) => url.includes('.');
   const isViteInternal = (url) => url.startsWith('/@');
   const isNodeModule = (url) => url.startsWith('/node_modules');
-  const isSpaRoute = (url) => !isStaticAsset(url) && !isViteInternal(url) && !isNodeModule(url);
+  const isApiRoute = (url) => url.startsWith('/user-policies');
+  const isSpaRoute = (url) =>
+    !isStaticAsset(url) && !isViteInternal(url) && !isNodeModule(url) && !isApiRoute(url);
 
   const middleware = (req, res, next) => {
     if (req.url && isSpaRoute(req.url)) {
@@ -88,6 +90,13 @@ export default defineConfig({
     // Use discovered ports in dev, defaults otherwise
     port: appMode === 'calculator' ? (calculatorPort ?? 3001) : (websitePort ?? 3000),
     strictPort: true,
+    // Proxy API v2 endpoints to local backend during development
+    proxy: {
+      '/user-policies': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+      },
+    },
   },
   define: viteDefines,
   // Use separate cache directories for website and calculator to avoid conflicts
