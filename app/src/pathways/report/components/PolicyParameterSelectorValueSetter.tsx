@@ -2,6 +2,9 @@
  * PolicyParameterSelectorValueSetter - Props-based version of ValueSetter container
  * Duplicated from components/policyParameterSelectorFrame/ValueSetter.tsx
  * Updates policy state via props instead of Redux dispatch
+ *
+ * Issue #602: Fixed immutability bug where shallow copy of policy didn't create
+ * new references for nested arrays, causing React state updates to not trigger.
  */
 
 import { useState } from 'react';
@@ -11,8 +14,8 @@ import { CURRENT_YEAR } from '@/constants';
 import { getDateRange } from '@/libs/metadataUtils';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import { PolicyStateProps } from '@/types/pathwayState';
-import { getParameterByName } from '@/types/subIngredients/parameter';
-import { ValueInterval, ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
+import { ValueInterval } from '@/types/subIngredients/valueInterval';
+import { addParameterToPolicy } from '@/utils/policyParameterUpdate';
 import { ModeSelectorButton, ValueSetterComponents, ValueSetterMode } from './valueSetters';
 
 interface PolicyParameterSelectorValueSetterProps {
@@ -47,36 +50,9 @@ export default function PolicyParameterSelectorValueSetter({
   }
 
   function handleSubmit() {
-    // This mimics the Redux reducer's addPolicyParamAtPosition logic
-    // We need to update the policy's parameters array with new intervals
-
-    const updatedPolicy = { ...policy };
-
-    // Ensure parameters array exists
-    if (!updatedPolicy.parameters) {
-      updatedPolicy.parameters = [];
-    }
-
-    // Find existing parameter or create new one
-    let existingParam = getParameterByName(updatedPolicy, param.parameter);
-
-    if (!existingParam) {
-      // Create new parameter entry
-      existingParam = { name: param.parameter, values: [] };
-      updatedPolicy.parameters.push(existingParam);
-    }
-
-    // Use ValueIntervalCollection to properly merge intervals
-    const paramCollection = new ValueIntervalCollection(existingParam.values);
-
-    // Add each interval (collection handles overlaps/merging)
-    intervals.forEach((interval) => {
-      paramCollection.addInterval(interval);
-    });
-
-    // Get the final intervals and update the parameter
-    const newValues = paramCollection.getIntervals();
-    existingParam.values = newValues;
+    // Use immutable utility to add parameter intervals
+    // This creates new array references to ensure React detects the state change
+    const updatedPolicy = addParameterToPolicy(policy, param.parameter, intervals);
 
     // Notify parent of policy update
     onPolicyUpdate(updatedPolicy);

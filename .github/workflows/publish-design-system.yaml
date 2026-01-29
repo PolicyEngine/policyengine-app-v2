@@ -5,8 +5,8 @@
 # - Manual workflow dispatch
 #
 # Prerequisites:
-# - NPM_TOKEN secret configured in repo settings
 # - @policyengine org exists on npmjs.com
+# - Package is linked to this GitHub repo on npmjs.com for OIDC provenance
 #
 # Version bumps are determined automatically from commit messages:
 # - fix: ... → patch (0.1.0 → 0.1.1)
@@ -27,6 +27,11 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+      id-token: write
     defaults:
       run:
         working-directory: .
@@ -42,7 +47,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22"
-          registry-url: "https://registry.npmjs.org"
 
       - name: Install dependencies
         run: npm ci
@@ -58,7 +62,6 @@ jobs:
         working-directory: packages/design-system
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Summary
         run: |

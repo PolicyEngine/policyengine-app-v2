@@ -34,6 +34,9 @@ export default function PolicySubmitView({
 }: PolicySubmitViewProps) {
   const { createPolicy, isPending } = useCreatePolicy(policy?.label || undefined);
 
+  // Issue #605: Block empty policy creation
+  const hasNoParameters = !policy.parameters || policy.parameters.length === 0;
+
   // Convert state to Policy type structure
   const policyData: Partial<Policy> = {
     parameters: policy?.parameters,
@@ -64,23 +67,25 @@ export default function PolicySubmitView({
   };
 
   // Create hierarchical provisions list with header and date intervals
-  const provisions: TextListItem[] = [
-    {
-      text: 'Provision',
-      isHeader: true,
-      subItems: policy.parameters.map((param) => {
-        const dateIntervals: DateIntervalValue[] = param.values.map((valueInterval) => ({
-          dateRange: formatDateRange(valueInterval.startDate, valueInterval.endDate),
-          value: valueInterval.value,
-        }));
+  const provisions: TextListItem[] = hasNoParameters
+    ? []
+    : [
+        {
+          text: 'Provision',
+          isHeader: true,
+          subItems: policy.parameters.map((param) => {
+            const dateIntervals: DateIntervalValue[] = param.values.map((valueInterval) => ({
+              dateRange: formatDateRange(valueInterval.startDate, valueInterval.endDate),
+              value: valueInterval.value,
+            }));
 
-        return {
-          label: param.name,
-          dateIntervals,
-        } as TextListSubItem;
-      }),
-    },
-  ];
+            return {
+              label: param.name,
+              dateIntervals,
+            } as TextListSubItem;
+          }),
+        },
+      ];
 
   return (
     <IngredientSubmissionView
@@ -90,6 +95,10 @@ export default function PolicySubmitView({
       submitButtonText="Create policy"
       submissionHandler={handleSubmit}
       submitButtonLoading={isPending}
+      submitButtonDisabled={hasNoParameters}
+      warningMessage={
+        hasNoParameters ? 'Add at least one parameter change to create a policy.' : undefined
+      }
       onBack={onBack}
       onCancel={onCancel}
     />

@@ -90,6 +90,7 @@ export const colors = {
     tertiary: '#9CA3AF',
     inverse: '#FFFFFF',
     title: '#000000',
+    warning: '#d9480f', // Mantine orange.9 - WCAG AA compliant (~4.8:1 contrast)
   },
 
   // Teal alias (for convenience)
