@@ -72,7 +72,7 @@ export default function EarningsVariationSubPage({
     householdId: simulations[0]?.populationId || 'baseline',
     policyId: simulations[0]?.policyId || 'baseline-policy',
     policyData: baselinePolicyData,
-    year: reportYear,
+    year: parseInt(reportYear, 10),
     countryId,
     enabled: !!simulations[0]?.populationId && !!baselinePolicy,
   });
@@ -86,7 +86,7 @@ export default function EarningsVariationSubPage({
     householdId: simulations[1]?.populationId || 'reform',
     policyId: simulations[1]?.policyId || 'reform-policy',
     policyData: reformPolicyData,
-    year: reportYear,
+    year: parseInt(reportYear, 10),
     countryId,
     enabled: !!reform && !!simulations[1]?.populationId && !!reformPolicy,
   });
@@ -115,7 +115,7 @@ export default function EarningsVariationSubPage({
   }
 
   // Verify baseline data exists and has required structure
-  if (!baselineVariation || !baselineVariation.householdData?.people) {
+  if (!baselineVariation || !baselineVariation.people?.length) {
     return (
       <Stack gap={spacing.md}>
         <Text c="red">No baseline variation data available</Text>
@@ -124,7 +124,7 @@ export default function EarningsVariationSubPage({
   }
 
   // If reform exists, verify reform data has required structure
-  if (reform && reformVariation && !reformVariation.householdData?.people) {
+  if (reform && reformVariation && !reformVariation.people?.length) {
     return (
       <Stack gap={spacing.md}>
         <Text c="red">Invalid reform variation data</Text>
@@ -142,13 +142,7 @@ export default function EarningsVariationSubPage({
       }
 
       // Check if baseline variation has array values for this variable
-      const value = getValueFromHousehold(
-        varName,
-        reportYear,
-        null,
-        baselineVariation,
-        metadataContext
-      );
+      const value = getValueFromHousehold(varName, null, baselineVariation, metadataContext);
       return Array.isArray(value);
     })
     .map((varName) => ({
@@ -179,14 +173,12 @@ export default function EarningsVariationSubPage({
           reform={reform}
           reformVariation={reformVariation}
           variableName={selectedVariable}
-          year={reportYear}
         />
       ) : (
         <BaselineOnlyChart
           baseline={baseline}
           baselineVariation={baselineVariation}
           variableName={selectedVariable}
-          year={reportYear}
         />
       )}
     </Stack>

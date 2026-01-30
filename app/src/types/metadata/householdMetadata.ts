@@ -1,45 +1,190 @@
-// Models the GET household api payload
+/**
+ * API v2 Alpha Household Metadata Types
+ *
+ * These types model the API v2 Alpha household job system where:
+ * - Households are submitted via POST /household/calculate
+ * - Results are polled via GET /household/calculate/{job_id}
+ * - Jobs store request_data (input) and result (output) as JSON
+ */
+
+import {
+  Household,
+  HouseholdBenunit,
+  HouseholdFamily,
+  HouseholdMaritalUnit,
+  HouseholdPerson,
+  HouseholdSpmUnit,
+  HouseholdTaxUnit,
+  HouseholdUnit,
+  TaxBenefitModelName,
+} from '@/types/ingredients/Household';
+
+// ============================================================================
+// API v2 Alpha Job Types
+// ============================================================================
+
+/**
+ * Status of a household calculation job
+ */
+export type HouseholdJobStatus = 'pending' | 'running' | 'completed' | 'failed';
+
+/**
+ * Response from creating a household calculation job
+ * POST /household/calculate
+ */
+export interface HouseholdJobCreateResponse {
+  job_id: string;
+  status: HouseholdJobStatus;
+}
+
+/**
+ * Response from polling a household calculation job
+ * GET /household/calculate/{job_id}
+ */
+export interface HouseholdJobStatusResponse {
+  job_id: string;
+  status: HouseholdJobStatus;
+  result?: HouseholdCalculationResult;
+  error_message?: string | null;
+}
+
+/**
+ * The calculated output from a household simulation
+ * Contains computed values for all entities
+ */
+export interface HouseholdCalculationResult {
+  person: HouseholdPersonOutput[];
+  tax_unit?: HouseholdTaxUnitOutput[];
+  family?: HouseholdFamilyOutput[];
+  spm_unit?: HouseholdSpmUnitOutput[];
+  marital_unit?: HouseholdMaritalUnitOutput[];
+  household?: HouseholdUnitOutput[];
+  benunit?: HouseholdBenunitOutput[]; // UK only
+}
+
+/**
+ * Calculated output for a person
+ * Contains all computed variables for that person
+ */
+export interface HouseholdPersonOutput {
+  [variableName: string]: number | boolean | string;
+}
+
+/**
+ * Calculated output for a tax unit
+ */
+export interface HouseholdTaxUnitOutput {
+  [variableName: string]: number | boolean | string;
+}
+
+/**
+ * Calculated output for a family
+ */
+export interface HouseholdFamilyOutput {
+  [variableName: string]: number | boolean | string;
+}
+
+/**
+ * Calculated output for an SPM unit
+ */
+export interface HouseholdSpmUnitOutput {
+  [variableName: string]: number | boolean | string;
+}
+
+/**
+ * Calculated output for a marital unit
+ */
+export interface HouseholdMaritalUnitOutput {
+  [variableName: string]: number | boolean | string;
+}
+
+/**
+ * Calculated output for a household unit
+ */
+export interface HouseholdUnitOutput {
+  [variableName: string]: number | boolean | string;
+}
+
+/**
+ * Calculated output for a benefit unit (UK)
+ */
+export interface HouseholdBenunitOutput {
+  [variableName: string]: number | boolean | string;
+}
+
+// ============================================================================
+// Household Metadata for Storage/Association
+// ============================================================================
+
+/**
+ * Metadata for a stored household (in localStorage or future API)
+ * This wraps a Household with additional metadata for user association
+ */
 export interface HouseholdMetadata {
+  /** Unique identifier for this stored household */
   id: string;
-  country_id: string;
+
+  /** The household data in v2 format */
+  household: Household;
+
+  /** User-provided label */
   label?: string | null;
-  api_version: string;
-  household_json: HouseholdData;
-  household_hash: string;
+
+  /** When this was created */
+  created_at?: string;
+
+  /** When this was last updated */
+  updated_at?: string;
 }
 
-// Models a household's json structure that can be reused in GET and POST api payloads
-export interface HouseholdData {
-  people: Record<string, HouseholdPerson>;
-  families: Record<string, MemberGroup>;
-  tax_units: Record<string, MemberGroup>;
-  spm_units: Record<string, MemberGroup>;
-  households: Record<string, MemberGroup & HouseholdProperties>;
-  marital_units: Record<string, MemberGroup & { marital_unit_id?: Record<string, number> }>;
-  // UK-specific structure
-  benunits?: Record<string, MemberGroup & { is_married?: Record<string, boolean> }>;
+// ============================================================================
+// Impact Comparison Types
+// ============================================================================
+
+/**
+ * Request for household impact comparison
+ * POST /household/impact
+ */
+export interface HouseholdImpactRequest extends Omit<Household, 'id' | 'label'> {
+  policy_id: string; // Reform policy to compare against baseline
+  dynamic_id?: string; // Optional behavioral response
 }
 
-export interface HouseholdPerson {
-  age: Record<string, number>;
-  employment_income?: Record<string, number>;
-  is_tax_unit_dependent?: Record<string, boolean>;
+/**
+ * Response from household impact comparison
+ */
+export interface HouseholdImpactResponse {
+  job_id: string;
+  status: HouseholdJobStatus;
+  baseline_result?: HouseholdCalculationResult;
+  reform_result?: HouseholdCalculationResult;
+  impact?: HouseholdImpactDiff;
+  error_message?: string | null;
 }
 
-export interface MemberGroup {
-  members: string[];
+/**
+ * Computed differences between baseline and reform
+ */
+export interface HouseholdImpactDiff {
+  [variableName: string]: {
+    baseline: number;
+    reform: number;
+    change: number;
+  };
 }
 
-// Extended household properties to support dynamic fields
-export interface HouseholdProperties {
-  // US fields
-  state_name?: Record<string, string>;
+// ============================================================================
+// Re-exports for convenience
+// ============================================================================
 
-  // UK fields
-  brma?: Record<string, string>;
-  region?: Record<string, string>;
-  local_authority?: Record<string, string>;
-
-  // Allow for other dynamic fields based on basicInputs
-  [key: string]: Record<string, string | number | boolean> | string[] | undefined;
-}
+export type {
+  Household,
+  HouseholdPerson,
+  HouseholdTaxUnit,
+  HouseholdFamily,
+  HouseholdSpmUnit,
+  HouseholdMaritalUnit,
+  HouseholdUnit,
+  HouseholdBenunit,
+  TaxBenefitModelName,
+};

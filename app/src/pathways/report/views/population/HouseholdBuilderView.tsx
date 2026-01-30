@@ -1,13 +1,12 @@
 /**
  * HouseholdBuilderView - View for building custom household
- * Duplicated from HouseholdBuilderFrame
  * Props-based instead of Redux-based
  */
 
 import { useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { LoadingOverlay, Stack, Text } from '@mantine/core';
-import { HouseholdAdapter } from '@/adapters/HouseholdAdapter';
+import { countryIdToModelName } from '@/adapters/HouseholdAdapter';
 import PathwayView from '@/components/common/PathwayView';
 import HouseholdBuilderForm from '@/components/household/HouseholdBuilderForm';
 import { useBasicInputFields } from '@/hooks/useBasicInputFields';
@@ -15,7 +14,7 @@ import { useCreateHousehold } from '@/hooks/useCreateHousehold';
 import { useReportYear } from '@/hooks/useReportYear';
 import { useEntities } from '@/hooks/useStaticMetadata';
 import { RootState } from '@/store';
-import { Household } from '@/types/ingredients/Household';
+import { Household, TaxBenefitModelName } from '@/types/ingredients/Household';
 import { PopulationStateProps } from '@/types/pathwayState';
 import { HouseholdBuilder } from '@/utils/HouseholdBuilder';
 import { HouseholdValidation } from '@/utils/HouseholdValidation';
@@ -45,8 +44,9 @@ export default function HouseholdBuilderView({
   // Merge static entities into metadata so VariableResolver can resolve entity types
   const metadata = useMemo(() => ({ ...reduxMetadata, entities }), [reduxMetadata, entities]);
 
+  const modelName: TaxBenefitModelName = countryIdToModelName(countryId as 'us' | 'uk');
+
   // Get all basic non-person fields dynamically (country-agnostic)
-  // This handles US entities (tax_unit, spm_unit, etc.) and UK entities (benunit) automatically
   const basicNonPersonFields = Object.entries(basicInputFields)
     .filter(([key]) => key !== 'person')
     .flatMap(([, fields]) => fields);
@@ -75,33 +75,35 @@ export default function HouseholdBuilderView({
     );
   }
 
+  const yearNum = parseInt(reportYear, 10);
+
   // Initialize household with "you" if none exists
   const [household, setLocalHousehold] = useState<Household>(() => {
     if (population?.household) {
       return population.household;
     }
-    const builder = new HouseholdBuilder(countryId as any, reportYear);
-    builder.addAdult('you', 30, { employment_income: 0 });
+    const builder = new HouseholdBuilder(modelName, yearNum);
+    builder.addAdult({ name: 'you', age: 30, employment_income: 0 });
     return builder.build();
   });
 
   // Derive marital status and number of children from household (single source of truth)
-  const people = Object.keys(household.householdData.people);
-  const maritalStatus = people.includes('your partner') ? 'married' : 'single';
-  const numChildren = people.filter((p) => p.includes('dependent')).length;
+  const hasPartner = household.people.some((p) => p.name === 'your partner');
+  const maritalStatus = hasPartner ? 'married' : 'single';
+  const numChildren = household.people.filter((p) => p.name?.includes('dependent')).length;
 
   // Handler for marital status change - directly modifies household
   const handleMaritalStatusChange = (newStatus: 'single' | 'married') => {
-    const builder = new HouseholdBuilder(countryId as any, reportYear);
+    const builder = new HouseholdBuilder(modelName, yearNum);
     builder.loadHousehold(household);
 
-    const hasPartner = people.includes('your partner');
-
     if (newStatus === 'married' && !hasPartner) {
-      builder.addAdult('your partner', 30, { employment_income: 0 });
-      builder.setMaritalStatus('you', 'your partner');
+      builder.addAdult({ name: 'your partner', age: 30, employment_income: 0 });
     } else if (newStatus === 'single' && hasPartner) {
-      builder.removePerson('your partner');
+      const partner = household.people.find((p) => p.name === 'your partner');
+      if (partner?.person_id !== undefined) {
+        builder.removePerson(partner.person_id);
+      }
     }
 
     setLocalHousehold(builder.build());
@@ -109,25 +111,27 @@ export default function HouseholdBuilderView({
 
   // Handler for number of children change - directly modifies household
   const handleNumChildrenChange = (newCount: number) => {
-    const builder = new HouseholdBuilder(countryId as any, reportYear);
+    const builder = new HouseholdBuilder(modelName, yearNum);
     builder.loadHousehold(household);
 
-    const currentChildren = people.filter((p) => p.includes('dependent'));
+    const currentChildren = household.people.filter((p) => p.name?.includes('dependent'));
     const currentChildCount = currentChildren.length;
 
     if (newCount !== currentChildCount) {
       // Remove all existing children
-      currentChildren.forEach((child) => builder.removePerson(child));
+      currentChildren.forEach((child) => {
+        if (child.person_id !== undefined) {
+          builder.removePerson(child.person_id);
+        }
+      });
 
       // Add new children
       if (newCount > 0) {
-        const hasPartner = people.includes('your partner');
-        const parentIds = hasPartner ? ['you', 'your partner'] : ['you'];
         const ordinals = ['first', 'second', 'third', 'fourth', 'fifth'];
 
         for (let i = 0; i < newCount; i++) {
           const childName = `your ${ordinals[i] || `${i + 1}th`} dependent`;
-          builder.addChild(childName, 10, parentIds, { employment_income: 0 });
+          builder.addChild({ name: childName, age: 10 });
         }
       }
     }
@@ -157,25 +161,20 @@ export default function HouseholdBuilderView({
 
   const handleSubmit = async () => {
     // Validate household
-    const validation = HouseholdValidation.isReadyForSimulation(household, reportYear);
+    const validation = HouseholdValidation.isReadyForSimulation(household);
     if (!validation.isValid) {
       return;
     }
 
-    // Convert to API format
-    const payload = HouseholdAdapter.toCreationPayload(household.householdData, countryId);
-
     try {
-      const result = await createHousehold(payload);
-
-      const householdId = result.result.household_id;
-      onSubmitSuccess(householdId, household);
+      const result = await createHousehold(household);
+      onSubmitSuccess(result.householdId, household);
     } catch (err) {
       // Error is handled by the mutation
     }
   };
 
-  const validation = HouseholdValidation.isReadyForSimulation(household, reportYear);
+  const validation = HouseholdValidation.isReadyForSimulation(household);
   const canProceed = validation.isValid;
 
   const primaryAction = {
@@ -192,7 +191,6 @@ export default function HouseholdBuilderView({
       <HouseholdBuilderForm
         household={household}
         metadata={metadata}
-        year={reportYear}
         maritalStatus={maritalStatus}
         numChildren={numChildren}
         basicPersonFields={basicInputFields.person || []}

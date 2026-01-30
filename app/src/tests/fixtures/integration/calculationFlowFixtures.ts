@@ -48,19 +48,10 @@ export const mockHouseholdCalcConfig = (overrides?: Partial<CalcStartConfig>): C
   populations: {
     household1: {
       id: INTEGRATION_TEST_CONSTANTS.HOUSEHOLD_IDS.HOUSEHOLD_1,
-      countryId: 'us',
-      householdData: {
-        people: {
-          you: {
-            age: { 2024: 30 },
-          },
-        },
-        households: {
-          'your household': {
-            members: ['you'],
-          },
-        },
-      } as any,
+      tax_benefit_model_name: 'policyengine_us' as const,
+      year: 2024,
+      people: [{ person_id: 0, age: 30 }],
+      household: [{ household_id: 0 }],
     },
     household2: null,
     geography1: null,
@@ -107,24 +98,6 @@ export const mockSocietyWideCalcConfig = (
     geography2: null,
   },
   ...overrides,
-});
-
-/**
- * Create mock household calculation result
- */
-export const mockHouseholdCalcResult = () => ({
-  people: {
-    you: {
-      age: { 2024: 30 },
-      employment_income: { 2024: 50000 },
-    },
-  },
-  households: {
-    'your household': {
-      members: ['you'],
-      household_net_income: { 2024: 45000 },
-    },
-  },
 });
 
 /**
@@ -218,7 +191,3 @@ export const mockSocietyWideAPICompleteResponse = {
   result: mockSocietyWideCalcResult(),
 };
 
-/**
- * Mock API response for household calculation
- */
-export const mockHouseholdAPIResponse = mockHouseholdCalcResult();

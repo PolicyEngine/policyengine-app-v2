@@ -1,5 +1,4 @@
 import { vi } from 'vitest';
-import { countryIds } from '@/libs/countries';
 import type { Population } from '@/types/ingredients/Population';
 
 // Test constants for current law integration tests
@@ -78,10 +77,9 @@ export const mockPopulation: Population = {
   isCreated: true,
   household: {
     id: 'household-123',
-    countryId: 'us' as (typeof countryIds)[number],
-    householdData: {
-      people: {},
-    },
+    tax_benefit_model_name: 'policyengine_us',
+    year: 2025,
+    people: [],
   },
   geography: null,
 };

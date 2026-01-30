@@ -19,31 +19,23 @@ export const TEST_GEOGRAPHY_LABEL = 'Test Geography Population';
 // Mock household metadata (API format)
 export const mockApiHouseholdMetadata1: HouseholdMetadata = {
   id: TEST_HOUSEHOLD_ID_1,
-  country_id: 'us',
-  label: TEST_HOUSEHOLD_LABEL,
-  api_version: '1.0.0',
-  household_hash: 'hash-123',
-  household_json: {
-    people: {
-      you: {
-        age: { '2025': 30 },
-        employment_income: { '2025': 50000 },
+  household: {
+    tax_benefit_model_name: 'policyengine_us',
+    year: 2025,
+    people: [
+      {
+        person_id: 0,
+        name: 'you',
+        age: 30,
+        employment_income: 50000,
+        person_household_id: 0,
+        person_tax_unit_id: 0,
       },
-    },
-    families: {},
-    spm_units: {},
-    households: {
-      'your household': {
-        members: ['you'],
-      },
-    },
-    marital_units: {},
-    tax_units: {
-      'your tax unit': {
-        members: ['you'],
-      },
-    },
+    ],
+    household: [{ household_id: 0 }],
+    tax_unit: [{ tax_unit_id: 0 }],
   },
+  label: TEST_HOUSEHOLD_LABEL,
 };
 
 // Mock association
@@ -68,31 +60,23 @@ export const mockHouseholdMetadata = {
 
 export const mockApiHouseholdMetadata2: HouseholdMetadata = {
   id: TEST_HOUSEHOLD_ID_2,
-  country_id: 'us',
-  label: 'Second Household',
-  api_version: '1.0.0',
-  household_hash: 'hash-456',
-  household_json: {
-    people: {
-      you: {
-        age: { '2025': 35 },
-        employment_income: { '2025': 60000 },
+  household: {
+    tax_benefit_model_name: 'policyengine_us',
+    year: 2025,
+    people: [
+      {
+        person_id: 0,
+        name: 'you',
+        age: 35,
+        employment_income: 60000,
+        person_household_id: 0,
+        person_tax_unit_id: 0,
       },
-    },
-    families: {},
-    spm_units: {},
-    households: {
-      'your household': {
-        members: ['you'],
-      },
-    },
-    marital_units: {},
-    tax_units: {
-      'your tax unit': {
-        members: ['you'],
-      },
-    },
+    ],
+    household: [{ household_id: 0 }],
+    tax_unit: [{ tax_unit_id: 0 }],
   },
+  label: 'Second Household',
 };
 
 export const mockHouseholdAssociation2: UserHouseholdPopulation = {

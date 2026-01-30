@@ -52,15 +52,9 @@ export const setupConsoleMocks = () => {
 // Mock Household
 export const mockHousehold: Household = {
   id: 'household-123',
-  countryId: 'us',
-  householdData: {
-    people: {},
-    families: {},
-    tax_units: {},
-    spm_units: {},
-    households: {},
-    marital_units: {},
-  },
+  tax_benefit_model_name: 'policyengine_us',
+  year: 2025,
+  people: [],
 };
 
 // Mock Geography - National

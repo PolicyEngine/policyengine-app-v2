@@ -88,11 +88,11 @@ export default function PopulationsPage() {
 
   // Helper function to get household configuration details
   const getHouseholdDetails = (household: any) => {
-    const peopleCount = Object.keys(household?.household_json?.people || {}).length;
-    const familiesCount = Object.keys(household?.household_json?.families || {}).length;
+    const peopleCount = household?.people?.length ?? 0;
+    const householdCount = household?.household?.length ?? 0;
     return [
       { text: `${peopleCount} person${peopleCount !== 1 ? 's' : ''}`, badge: '' },
-      { text: `${familiesCount} household${familiesCount !== 1 ? 's' : ''}`, badge: '' },
+      { text: `${householdCount} household${householdCount !== 1 ? 's' : ''}`, badge: '' },
     ];
   };
 

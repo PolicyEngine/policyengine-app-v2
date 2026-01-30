@@ -22,7 +22,6 @@ interface Props {
   reform: Household;
   reformVariation: Household;
   variableName: string;
-  year: string;
 }
 
 type ViewMode = 'both' | 'absolute' | 'relative';
@@ -39,7 +38,6 @@ export default function BaselineAndReformChart({
   reform: _reform,
   reformVariation,
   variableName,
-  year,
 }: Props) {
   const [viewMode, setViewMode] = useState<ViewMode>('both');
   const mobile = useMediaQuery('(max-width: 768px)');
@@ -56,18 +54,11 @@ export default function BaselineAndReformChart({
   // Get variation data (401-point arrays)
   const baselineYValues = getValueFromHousehold(
     variableName,
-    year,
     null,
     baselineVariation,
     metadataContext
   );
-  const reformYValues = getValueFromHousehold(
-    variableName,
-    year,
-    null,
-    reformVariation,
-    metadataContext
-  );
+  const reformYValues = getValueFromHousehold(variableName, null, reformVariation, metadataContext);
 
   if (!Array.isArray(baselineYValues) || !Array.isArray(reformYValues)) {
     return <div>No variation data available</div>;
@@ -76,7 +67,6 @@ export default function BaselineAndReformChart({
   // Get current earnings for marker
   const currentEarnings = getValueFromHousehold(
     'employment_income',
-    year,
     null,
     baseline,
     metadataContext

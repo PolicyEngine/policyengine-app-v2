@@ -166,7 +166,7 @@ describe('useUserReports', () => {
 
     vi.spyOn(householdApi, 'fetchHouseholdById').mockImplementation((_country, id) => {
       if (id === TEST_HOUSEHOLD_ID) {
-        return Promise.resolve(mockHouseholdMetadata);
+        return Promise.resolve(mockHousehold1);
       }
       return Promise.reject(new Error(ERROR_MESSAGES.HOUSEHOLD_NOT_FOUND(id)));
     });
@@ -591,7 +591,7 @@ describe('useUserReportById', () => {
       }
       return Promise.reject(new Error(ERROR_MESSAGES.POLICY_NOT_FOUND(id)));
     });
-    vi.spyOn(householdApi, 'fetchHouseholdById').mockResolvedValue(mockHouseholdMetadata);
+    vi.spyOn(householdApi, 'fetchHouseholdById').mockResolvedValue(mockHousehold1);
 
     // Setup association mocks
     (useSimulationAssociationsByUser as any).mockReturnValue({

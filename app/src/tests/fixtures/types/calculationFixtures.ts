@@ -85,18 +85,14 @@ export const mockSocietyWideResult = (): SocietyWideReportOutput =>
  * Mock household calculation result
  */
 export const mockHouseholdResult = (): HouseholdData => ({
-  people: {
-    person1: {
-      age: { '2024': 30 },
-      employment_income: { '2024': 50000 },
-    },
-  },
-  households: {
-    household1: {
-      members: ['person1'],
-      household_net_income: { '2024': 45000 },
-    },
-  },
+  tax_benefit_model_name: 'policyengine_us',
+  year: 2024,
+  people: [
+    { person_id: 0, age: 30, employment_income: 50000 },
+  ],
+  household: [
+    { household_id: 0, household_net_income: 45000 },
+  ],
 });
 
 /**

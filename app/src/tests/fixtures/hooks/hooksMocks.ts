@@ -3,7 +3,6 @@ import { vi } from 'vitest';
 import { CURRENT_YEAR } from '@/constants';
 import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
-import { HouseholdCreationPayload } from '@/types/payloads';
 
 // ============= TEST CONSTANTS =============
 
@@ -92,31 +91,27 @@ export const TEST_VALUES = {
 // ============= MOCK DATA OBJECTS =============
 
 export const mockHouseholdMetadata: HouseholdMetadata = {
-  id: TEST_IDS.HOUSEHOLD_ID.split('-')[1],
-  country_id: GEO_CONSTANTS.COUNTRY_US,
-  household_json: {
-    people: {
-      person1: {
-        age: { [CURRENT_YEAR]: TEST_VALUES.AGE },
-        employment_income: { [CURRENT_YEAR]: TEST_VALUES.INCOME },
+  id: TEST_IDS.HOUSEHOLD_ID,
+  household: {
+    tax_benefit_model_name: 'policyengine_us',
+    year: parseInt(CURRENT_YEAR, 10),
+    people: [
+      {
+        person_id: 0,
+        age: TEST_VALUES.AGE,
+        employment_income: TEST_VALUES.INCOME,
+        person_tax_unit_id: 0,
+        person_family_id: 0,
+        person_spm_unit_id: 0,
+        person_marital_unit_id: 0,
       },
-    },
-    tax_units: {
-      unit1: {
-        members: ['person1'],
-      },
-    },
-    spm_units: {
-      unit1: {
-        members: ['person1'],
-      },
-    },
-    households: {},
-    marital_units: {},
-    families: {},
+    ],
+    tax_unit: [{ tax_unit_id: 0 }],
+    family: [{ family_id: 0 }],
+    spm_unit: [{ spm_unit_id: 0 }],
+    marital_unit: [{ marital_unit_id: 0 }],
+    household: [{ household_id: 0 }],
   },
-  api_version: 'v1',
-  household_hash: '<household_hash>',
 };
 
 export const mockUserHouseholdPopulation: UserHouseholdPopulation = {
@@ -143,46 +138,28 @@ export const mockUserHouseholdPopulationList: UserHouseholdPopulation[] = [
 
 // Note: UserGeographyPopulation mocks removed - geographies are no longer stored as user associations
 
-export const mockHouseholdCreationPayload: HouseholdCreationPayload = {
-  country_id: GEO_CONSTANTS.COUNTRY_US,
-  data: {
-    people: {
-      person1: {
-        age: { [CURRENT_YEAR]: TEST_VALUES.AGE },
-      },
+export const mockHouseholdCreationPayload: Household = {
+  tax_benefit_model_name: 'policyengine_us',
+  year: parseInt(CURRENT_YEAR, 10),
+  people: [
+    {
+      person_id: 0,
+      age: TEST_VALUES.AGE,
+      person_tax_unit_id: 0,
+      person_family_id: 0,
+      person_spm_unit_id: 0,
+      person_marital_unit_id: 0,
     },
-    tax_units: {
-      unit1: {
-        members: ['person1'],
-      },
-    },
-    spm_units: {
-      unit1: {
-        members: ['person1'],
-      },
-    },
-    households: {
-      household1: {
-        members: ['person1', 'person2'],
-      },
-    },
-    marital_units: {
-      unit1: {
-        members: ['person1', 'person2'],
-      },
-    },
-    families: {
-      family1: {
-        members: ['person1', 'person2'],
-      },
-    },
-  },
+  ],
+  tax_unit: [{ tax_unit_id: 0 }],
+  family: [{ family_id: 0 }],
+  spm_unit: [{ spm_unit_id: 0 }],
+  marital_unit: [{ marital_unit_id: 0 }],
+  household: [{ household_id: 0 }],
 };
 
 export const mockCreateHouseholdResponse = {
-  result: {
-    household_id: TEST_IDS.HOUSEHOLD_ID,
-  },
+  householdId: TEST_IDS.HOUSEHOLD_ID,
 };
 
 // ============= MOCK FUNCTIONS =============

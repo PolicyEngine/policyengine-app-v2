@@ -6,157 +6,128 @@ import { Household } from '@/types/ingredients/Household';
 
 export const MOCK_HOUSEHOLD_SIMPLE: Household = {
   id: 'household-1',
-  countryId: 'us',
-  householdData: {
-    people: {
-      'person-1': {
-        age: {
-          '2024': 35,
-        },
-        employment_income: {
-          '2024': 50000,
-        },
-      },
-      'person-2': {
-        age: {
-          '2024': 32,
-        },
-        employment_income: {
-          '2024': 45000,
-        },
-      },
+  tax_benefit_model_name: 'policyengine_us',
+  year: 2024,
+  people: [
+    {
+      person_id: 0,
+      name: 'person-1',
+      age: 35,
+      employment_income: 50000,
+      person_family_id: 0,
+      person_tax_unit_id: 0,
+      person_household_id: 0,
     },
-    families: {
-      'family-1': {
-        members: ['person-1', 'person-2'],
-      },
+    {
+      person_id: 1,
+      name: 'person-2',
+      age: 32,
+      employment_income: 45000,
+      person_family_id: 0,
+      person_tax_unit_id: 0,
+      person_household_id: 0,
     },
-    taxUnits: {
-      'tax-unit-1': {
-        members: ['person-1', 'person-2'],
-      },
+  ],
+  family: [{ family_id: 0 }],
+  tax_unit: [{ tax_unit_id: 0 }],
+  household: [
+    {
+      household_id: 0,
+      state_name: 'CA',
     },
-    households: {
-      'household-1': {
-        members: ['person-1', 'person-2'],
-        state_name: {
-          '2024': 'CA',
-        },
-      },
-    },
-  },
+  ],
 };
 
 export const MOCK_HOUSEHOLD_COMPLEX: Household = {
   id: 'household-2',
-  countryId: 'us',
-  householdData: {
-    people: {
-      adult1: {
-        age: {
-          '2024': 45,
-        },
-        employment_income: {
-          '2024': 75000,
-        },
-        self_employment_income: {
-          '2024': 10000,
-        },
-      },
-      adult2: {
-        age: {
-          '2024': 42,
-        },
-        employment_income: {
-          '2024': 65000,
-        },
-      },
-      child1: {
-        age: {
-          '2024': 12,
-        },
-      },
-      child2: {
-        age: {
-          '2024': 8,
-        },
-      },
+  tax_benefit_model_name: 'policyengine_us',
+  year: 2024,
+  people: [
+    {
+      person_id: 0,
+      name: 'adult1',
+      age: 45,
+      employment_income: 75000,
+      self_employment_income: 10000,
+      person_family_id: 0,
+      person_tax_unit_id: 0,
+      person_household_id: 0,
     },
-    families: {
-      'family-1': {
-        members: ['adult1', 'adult2', 'child1', 'child2'],
-      },
+    {
+      person_id: 1,
+      name: 'adult2',
+      age: 42,
+      employment_income: 65000,
+      person_family_id: 0,
+      person_tax_unit_id: 0,
+      person_household_id: 0,
     },
-    taxUnits: {
-      'tax-unit-1': {
-        members: ['adult1', 'adult2', 'child1', 'child2'],
-      },
+    {
+      person_id: 2,
+      name: 'child1',
+      age: 12,
+      person_family_id: 0,
+      person_tax_unit_id: 0,
+      person_household_id: 0,
     },
-    households: {
-      'household-1': {
-        members: ['adult1', 'adult2', 'child1', 'child2'],
-        state_name: {
-          '2024': 'NY',
-        },
-        rent: {
-          '2024': 24000,
-        },
-      },
+    {
+      person_id: 3,
+      name: 'child2',
+      age: 8,
+      person_family_id: 0,
+      person_tax_unit_id: 0,
+      person_household_id: 0,
     },
-  },
+  ],
+  family: [{ family_id: 0 }],
+  tax_unit: [{ tax_unit_id: 0 }],
+  household: [
+    {
+      household_id: 0,
+      state_name: 'NY',
+      rent: 24000,
+    },
+  ],
 };
 
 export const MOCK_HOUSEHOLD_EMPTY: Household = {
   id: 'household-empty',
-  countryId: 'us',
-  householdData: {
-    people: {},
-    families: {},
-    taxUnits: {},
-    households: {},
-  },
+  tax_benefit_model_name: 'policyengine_us',
+  year: 2024,
+  people: [],
 };
 
 // Clone of simple household for equality testing
 export const MOCK_HOUSEHOLD_SIMPLE_CLONE: Household = {
   id: 'household-1-clone',
-  countryId: 'us',
-  householdData: {
-    people: {
-      'person-1': {
-        age: {
-          '2024': 35,
-        },
-        employment_income: {
-          '2024': 50000,
-        },
-      },
-      'person-2': {
-        age: {
-          '2024': 32,
-        },
-        employment_income: {
-          '2024': 45000,
-        },
-      },
+  tax_benefit_model_name: 'policyengine_us',
+  year: 2024,
+  people: [
+    {
+      person_id: 0,
+      name: 'person-1',
+      age: 35,
+      employment_income: 50000,
+      person_family_id: 0,
+      person_tax_unit_id: 0,
+      person_household_id: 0,
     },
-    families: {
-      'family-1': {
-        members: ['person-1', 'person-2'],
-      },
+    {
+      person_id: 1,
+      name: 'person-2',
+      age: 32,
+      employment_income: 45000,
+      person_family_id: 0,
+      person_tax_unit_id: 0,
+      person_household_id: 0,
     },
-    taxUnits: {
-      'tax-unit-1': {
-        members: ['person-1', 'person-2'],
-      },
+  ],
+  family: [{ family_id: 0 }],
+  tax_unit: [{ tax_unit_id: 0 }],
+  household: [
+    {
+      household_id: 0,
+      state_name: 'CA',
     },
-    households: {
-      'household-1': {
-        members: ['person-1', 'person-2'],
-        state_name: {
-          '2024': 'CA',
-        },
-      },
-    },
-  },
+  ],
 };

@@ -78,16 +78,8 @@ export default function PopulationExistingView({
       return;
     }
 
-    // Handle both API format (household_json) and transformed format (householdData)
-    // The cache might contain transformed data from useUserSimulations
-    let householdToSet;
-    if ('household_json' in localPopulation.household) {
-      // API format - needs transformation
-      householdToSet = HouseholdAdapter.fromMetadata(localPopulation.household);
-    } else {
-      // Already transformed format from cache
-      householdToSet = localPopulation.household as unknown as Household;
-    }
+    // Household is already in v2 format (Household type)
+    const householdToSet = localPopulation.household;
 
     const label = localPopulation.association?.label || '';
     const householdId = householdToSet.id!;

@@ -11,7 +11,7 @@
  * and returns the fully-hydrated base ingredients.
  */
 
-import { HouseholdAdapter, PolicyAdapter, ReportAdapter, SimulationAdapter } from '@/adapters';
+import { PolicyAdapter, ReportAdapter, SimulationAdapter } from '@/adapters';
 import { fetchHouseholdById } from '@/api/household';
 import { fetchPolicyById } from '@/api/policy';
 import { fetchReportById } from '@/api/report';
@@ -217,10 +217,7 @@ export function useFetchReportIngredients(
 
   const householdResults = useParallelQueries<Household>(isEnabled ? householdIds : [], {
     queryKey: householdKeys.byId,
-    queryFn: async (id) => {
-      const metadata = await fetchHouseholdById(country, id);
-      return HouseholdAdapter.fromMetadata(metadata);
-    },
+    queryFn: (id) => fetchHouseholdById(country, id),
     enabled: isEnabled && householdIds.length > 0,
     staleTime: 5 * 60 * 1000,
   });

@@ -1,4 +1,11 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+
+// Mock legacyConversion to isolate API layer from conversion logic
+vi.mock('@/api/legacyConversion', () => ({
+  v1ResponseToHousehold: vi.fn((data: any) => data),
+  householdToV1Request: vi.fn((data: any) => data),
+}));
+
 import { fetchHouseholdCalculation } from '@/api/householdCalculation';
 import { BASE_URL } from '@/constants';
 import {
@@ -70,8 +77,8 @@ describe('household_calculation API', () => {
         })
       );
       expect(result).toEqual(mockUKCalculationResponse.result);
-      // Verify it has UK-specific structure (benunits instead of families)
-      expect(result.benunits).toBeDefined();
+      // Verify it has UK-specific structure (benunit instead of families)
+      expect(result.benunit).toBeDefined();
     });
 
     test('given API returns error status then throws error with message', async () => {

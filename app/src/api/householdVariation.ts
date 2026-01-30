@@ -1,4 +1,13 @@
+/**
+ * Household Variation API - Earnings variation calculations
+ *
+ * Internally uses v2 Alpha format. Communicates with API v1 endpoints.
+ */
+
+import { modelNameToCountryId } from '@/adapters/HouseholdAdapter';
 import { BASE_URL } from '@/constants';
+import { HouseholdWithAxes } from '@/utils/householdVariationAxes';
+import { householdToV1Request } from './legacyConversion';
 
 export interface HouseholdVariationResponse {
   status: 'ok' | 'error';
@@ -7,30 +16,29 @@ export interface HouseholdVariationResponse {
 }
 
 /**
- * Fetches household variation data across earnings range
- * Uses calculate-full endpoint with axes parameter to get 401-point arrays for all variables
- *
- * @param countryId - Country code (e.g., 'us', 'uk')
- * @param householdWithAxes - Household data with axes configuration
- * @param policyData - Policy parameters to apply
- * @returns Household data with array values (401 points) for all variables
+ * Fetch household variation data across earnings range
+ * Uses calculate-full endpoint with axes parameter
  */
 export async function fetchHouseholdVariation(
   countryId: string,
-  householdWithAxes: any,
+  householdWithAxes: HouseholdWithAxes,
   policyData: any
 ): Promise<any> {
   const requestUrl = `${BASE_URL}/${countryId}/calculate-full`;
 
+  // Convert v2 household to v1 format and attach axes
+  const v1Household = householdToV1Request(householdWithAxes);
+  v1Household.axes = householdWithAxes.axes;
+
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 600000); // 10-minute timeout
+  const timeoutId = setTimeout(() => controller.abort(), 600000);
 
   try {
     const response = await fetch(requestUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        household: householdWithAxes,
+        household: v1Household,
         policy: policyData,
       }),
       signal: controller.signal,
@@ -40,14 +48,12 @@ export async function fetchHouseholdVariation(
 
     if (!response.ok) {
       const errorText = await response.text();
-
-      // Try to parse error response if it's JSON
       let errorDetail = errorText;
       try {
         const errorJson = JSON.parse(errorText);
         errorDetail = errorJson.message || errorJson.error || errorText;
       } catch {
-        // Not JSON, use text as-is
+        // Not JSON
       }
 
       throw new Error(
@@ -65,13 +71,21 @@ export async function fetchHouseholdVariation(
   } catch (error) {
     clearTimeout(timeoutId);
 
-    // Check if it's a timeout error
     if (error instanceof Error && error.name === 'AbortError') {
-      throw new Error(
-        'Household variation calculation timed out after 10 minutes (client-side timeout)'
-      );
+      throw new Error('Household variation calculation timed out after 10 minutes');
     }
 
     throw error;
   }
+}
+
+/**
+ * Convenience wrapper that extracts countryId from household
+ */
+export async function fetchHouseholdVariationV2(
+  householdWithAxes: HouseholdWithAxes,
+  policyData: any
+): Promise<any> {
+  const countryId = modelNameToCountryId(householdWithAxes.tax_benefit_model_name);
+  return fetchHouseholdVariation(countryId, householdWithAxes, policyData);
 }

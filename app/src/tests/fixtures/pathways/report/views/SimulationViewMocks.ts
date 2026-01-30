@@ -44,10 +44,9 @@ export const mockSimulationStateConfigured: SimulationStateProps = {
     type: 'household',
     household: {
       id: '789',
-      countryId: 'us',
-      householdData: {
-        people: {},
-      },
+      tax_benefit_model_name: 'policyengine_us',
+      year: 2025,
+      people: [],
     },
     geography: null,
   },
@@ -71,10 +70,9 @@ export const mockSimulationStateWithPopulation: SimulationStateProps = {
     type: 'household',
     household: {
       id: '789',
-      countryId: 'us',
-      householdData: {
-        people: {},
-      },
+      tax_benefit_model_name: 'policyengine_us',
+      year: 2025,
+      people: [],
     },
     geography: null,
   },

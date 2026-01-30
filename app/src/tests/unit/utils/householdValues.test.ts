@@ -4,14 +4,12 @@ import {
   EXPECTED_VALUES,
   MOCK_AGE_VARIABLE,
   MOCK_HOUSEHOLD_DATA,
-  MOCK_HOUSEHOLD_DATA_MULTI_PERIOD,
   MOCK_HOUSEHOLD_DATA_REFORM,
   MOCK_HOUSEHOLD_INCOME_VARIABLE,
   MOCK_METADATA_CONTEXT,
   MOCK_PARAMETER,
   MOCK_TAX_RATE_VARIABLE,
-  TEST_ENTITY_NAMES,
-  TEST_TIME_PERIODS,
+  TEST_ENTITY_IDS,
   TEST_VARIABLE_NAMES,
 } from '@/tests/fixtures/utils/householdValuesMocks';
 import {
@@ -23,17 +21,15 @@ import {
 } from '@/utils/householdValues';
 
 describe('getValueFromHousehold', () => {
-  test('given household variable with specific time period and entity then returns correct value', () => {
+  test('given household variable with specific entity ID then returns correct value', () => {
     // Given
     const variableName = TEST_VARIABLE_NAMES.HOUSEHOLD_INCOME;
-    const timePeriod = TEST_TIME_PERIODS.YEAR_2024;
-    const entityName = TEST_ENTITY_NAMES.YOUR_HOUSEHOLD;
+    const entityId = TEST_ENTITY_IDS.HOUSEHOLD_0;
 
     // When
     const result = getValueFromHousehold(
       variableName,
-      timePeriod,
-      entityName,
+      entityId,
       MOCK_HOUSEHOLD_DATA,
       MOCK_METADATA_CONTEXT
     );
@@ -42,36 +38,32 @@ describe('getValueFromHousehold', () => {
     expect(result).toBe(EXPECTED_VALUES.HOUSEHOLD_INCOME_2025);
   });
 
-  test('given person variable with specific time period and entity then returns correct value', () => {
+  test('given person variable with specific entity ID then returns correct value', () => {
     // Given
     const variableName = TEST_VARIABLE_NAMES.AGE;
-    const timePeriod = TEST_TIME_PERIODS.YEAR_2024;
-    const entityName = TEST_ENTITY_NAMES.PERSON_1;
+    const entityId = TEST_ENTITY_IDS.PERSON_0;
 
     // When
     const result = getValueFromHousehold(
       variableName,
-      timePeriod,
-      entityName,
+      entityId,
       MOCK_HOUSEHOLD_DATA,
       MOCK_METADATA_CONTEXT
     );
 
     // Then
-    expect(result).toBe(EXPECTED_VALUES.AGE_PERSON_1);
+    expect(result).toBe(EXPECTED_VALUES.AGE_PERSON_0);
   });
 
-  test('given null entity name then aggregates across all entities', () => {
+  test('given null entity ID then aggregates across all entities', () => {
     // Given
     const variableName = TEST_VARIABLE_NAMES.AGE;
-    const timePeriod = TEST_TIME_PERIODS.YEAR_2024;
-    const entityName = null;
+    const entityId = null;
 
     // When
     const result = getValueFromHousehold(
       variableName,
-      timePeriod,
-      entityName,
+      entityId,
       MOCK_HOUSEHOLD_DATA,
       MOCK_METADATA_CONTEXT
     );
@@ -80,36 +72,15 @@ describe('getValueFromHousehold', () => {
     expect(result).toBe(EXPECTED_VALUES.AGE_TOTAL);
   });
 
-  test('given null time period then aggregates across all time periods', () => {
-    // Given
-    const variableName = TEST_VARIABLE_NAMES.HOUSEHOLD_INCOME;
-    const timePeriod = null;
-    const entityName = TEST_ENTITY_NAMES.YOUR_HOUSEHOLD;
-
-    // When
-    const result = getValueFromHousehold(
-      variableName,
-      timePeriod,
-      entityName,
-      MOCK_HOUSEHOLD_DATA_MULTI_PERIOD,
-      MOCK_METADATA_CONTEXT
-    );
-
-    // Then
-    expect(result).toBe(EXPECTED_VALUES.HOUSEHOLD_INCOME_ALL_PERIODS);
-  });
-
-  test('given null time period and entity then aggregates across all', () => {
+  test('given null entity ID for benefits then aggregates across all people', () => {
     // Given
     const variableName = TEST_VARIABLE_NAMES.BENEFITS;
-    const timePeriod = null;
-    const entityName = null;
+    const entityId = null;
 
     // When
     const result = getValueFromHousehold(
       variableName,
-      timePeriod,
-      entityName,
+      entityId,
       MOCK_HOUSEHOLD_DATA,
       MOCK_METADATA_CONTEXT
     );
@@ -121,14 +92,12 @@ describe('getValueFromHousehold', () => {
   test('given nonexistent variable then returns zero', () => {
     // Given
     const variableName = TEST_VARIABLE_NAMES.NONEXISTENT;
-    const timePeriod = TEST_TIME_PERIODS.YEAR_2024;
-    const entityName = TEST_ENTITY_NAMES.YOUR_HOUSEHOLD;
+    const entityId = TEST_ENTITY_IDS.HOUSEHOLD_0;
 
     // When
     const result = getValueFromHousehold(
       variableName,
-      timePeriod,
-      entityName,
+      entityId,
       MOCK_HOUSEHOLD_DATA,
       MOCK_METADATA_CONTEXT
     );
@@ -140,22 +109,20 @@ describe('getValueFromHousehold', () => {
   test('given valueFromFirstOnly true then returns value from first entity only', () => {
     // Given
     const variableName = TEST_VARIABLE_NAMES.BENEFITS;
-    const timePeriod = TEST_TIME_PERIODS.YEAR_2024;
-    const entityName = null;
+    const entityId = null;
     const valueFromFirstOnly = true;
 
     // When
     const result = getValueFromHousehold(
       variableName,
-      timePeriod,
-      entityName,
+      entityId,
       MOCK_HOUSEHOLD_DATA,
       MOCK_METADATA_CONTEXT,
       valueFromFirstOnly
     );
 
     // Then
-    expect(result).toBe(EXPECTED_VALUES.BENEFITS_PERSON_1);
+    expect(result).toBe(EXPECTED_VALUES.BENEFITS_PERSON_0);
   });
 });
 
@@ -474,14 +441,16 @@ describe('shouldShowVariable', () => {
     const variableName = TEST_VARIABLE_NAMES.BENEFITS;
     const householdZeroBenefits = {
       ...MOCK_HOUSEHOLD_DATA,
-      householdData: {
-        ...MOCK_HOUSEHOLD_DATA.householdData,
-        people: {
-          'person 1': {
-            benefits: { '2025': 0 },
-          },
+      people: [
+        {
+          person_id: 0,
+          benefits: 0,
+          person_tax_unit_id: 0,
+          person_family_id: 0,
+          person_spm_unit_id: 0,
+          person_marital_unit_id: 0,
         },
-      },
+      ],
     };
 
     // When

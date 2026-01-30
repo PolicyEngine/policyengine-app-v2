@@ -30,7 +30,7 @@ describe('householdTableData', () => {
       );
       expect(person1Income).toBeDefined();
       expect(person1Income?.value).toBe(50000);
-      expect(person1Income?.label).toBe('Employment Income');
+      expect(person1Income?.label).toBe('Employment income');
     });
 
     it('extracts household-level inputs', () => {
@@ -41,7 +41,7 @@ describe('householdTableData', () => {
       );
       expect(householdState).toBeDefined();
       expect(householdState?.value).toBe('CA');
-      expect(householdState?.label).toBe('State Name');
+      expect(householdState?.label).toBe('State name');
     });
 
     it('handles complex household with multiple parameters', () => {
@@ -79,10 +79,10 @@ describe('householdTableData', () => {
       const rows = extractHouseholdInputs(MOCK_HOUSEHOLD_SIMPLE);
 
       const employmentIncome = rows.find((r) => r.paramName === 'employment_income');
-      expect(employmentIncome?.label).toBe('Employment Income');
+      expect(employmentIncome?.label).toBe('Employment income');
 
       const stateName = rows.find((r) => r.paramName === 'state_name');
-      expect(stateName?.label).toBe('State Name');
+      expect(stateName?.label).toBe('State name');
     });
 
     it('returns structured row objects', () => {

@@ -94,7 +94,7 @@ describe('useCreateHousehold', () => {
       expect(mockCreateHouseholdAssociationMutateAsync).toHaveBeenCalledWith({
         userId: TEST_IDS.USER_ID,
         householdId: TEST_IDS.HOUSEHOLD_ID,
-        countryId: mockHouseholdCreationPayload.country_id,
+        countryId: 'us', // derived from tax_benefit_model_name: 'policyengine_us'
         label: TEST_LABELS.HOUSEHOLD,
       });
 
@@ -118,7 +118,7 @@ describe('useCreateHousehold', () => {
       expect(mockCreateHouseholdAssociationMutateAsync).toHaveBeenCalledWith({
         userId: TEST_IDS.USER_ID,
         householdId: TEST_IDS.HOUSEHOLD_ID,
-        countryId: mockHouseholdCreationPayload.country_id,
+        countryId: 'us',
         label: undefined,
       });
     });
@@ -135,7 +135,7 @@ describe('useCreateHousehold', () => {
       expect(mockCreateHouseholdAssociationMutateAsync).toHaveBeenCalledWith({
         userId: TEST_IDS.USER_ID,
         householdId: TEST_IDS.HOUSEHOLD_ID,
-        countryId: mockHouseholdCreationPayload.country_id,
+        countryId: 'us',
         label: customLabel,
       });
     });
@@ -294,7 +294,7 @@ describe('useCreateHousehold', () => {
       expect(mockCreateHouseholdAssociationMutateAsync).toHaveBeenCalledWith({
         userId: TEST_IDS.USER_ID,
         householdId: undefined,
-        countryId: mockHouseholdCreationPayload.country_id,
+        countryId: 'us',
         label: TEST_LABELS.HOUSEHOLD,
       });
     });
