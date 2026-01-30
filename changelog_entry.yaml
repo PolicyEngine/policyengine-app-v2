@@ -1,4 +1,4 @@
-- bump: minor
+- bump: patch
   changes:
-    added:
-      - Add Scottish Budget 2026-27 impact analysis dashboard
+    changed:
+      - Move ads dashboard route into StaticLayout (shows PE header)

@@ -1,6 +1,6 @@
 import { IconCheck } from '@tabler/icons-react';
 import { Badge, Card, Container, Divider, Group, Stack, Text, Title } from '@mantine/core';
-import { colors, spacing } from '@/designTokens';
+import { colors, spacing, typography } from '@/designTokens';
 import MultiButtonFooter, { ButtonConfig } from './common/MultiButtonFooter';
 
 // Interfaces for different content types
@@ -35,6 +35,8 @@ interface IngredientSubmissionViewProps {
   submitButtonText?: string; // Defaults to title
   submissionHandler: CallableFunction; // Function to handle form submission
   submitButtonLoading?: boolean;
+  submitButtonDisabled?: boolean; // Disable submit button (e.g., for validation)
+  warningMessage?: string; // Warning message to display (e.g., for empty states)
   onBack?: () => void;
   onCancel?: () => void;
 
@@ -53,6 +55,8 @@ export default function IngredientSubmissionView({
   submitButtonText,
   submissionHandler,
   submitButtonLoading,
+  submitButtonDisabled,
+  warningMessage,
   onBack,
   onCancel,
 }: IngredientSubmissionViewProps) {
@@ -176,6 +180,7 @@ export default function IngredientSubmissionView({
           label: submitButtonText || title,
           onClick: () => submissionHandler(),
           isLoading: submitButtonLoading,
+          isDisabled: submitButtonDisabled,
         },
       }
     : {
@@ -190,6 +195,7 @@ export default function IngredientSubmissionView({
             variant: 'filled' as const,
             onClick: () => submissionHandler(),
             isLoading: submitButtonLoading,
+            isDisabled: submitButtonDisabled,
           },
         ] as ButtonConfig[],
       };
@@ -206,6 +212,11 @@ export default function IngredientSubmissionView({
           </Text>
         )}
         <Divider my="sm" />
+        {warningMessage && (
+          <Text c={colors.text.warning} fw={typography.fontWeight.medium} mb="md">
+            {warningMessage}
+          </Text>
+        )}
         <Stack gap="md" pb="lg">
           {renderContent()}
         </Stack>

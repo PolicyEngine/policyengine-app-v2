@@ -1,6 +1,6 @@
 # Publishing @policyengine/design-system to npm
 
-This document describes how to set up and publish the design system package to npm.
+This document describes how the design system package is published to npm.
 
 ## Prerequisites
 
@@ -19,45 +19,31 @@ npm view @policyengine/design-system
 2. Create organization named `policyengine`
 3. Add team members with appropriate access
 
-### 2. npm Access Token
+### 2. Link package to GitHub repo (OIDC provenance)
 
-Generate an automation token for CI/CD:
+Publishing uses GitHub Actions OIDC — no npm tokens or secrets needed. For this to work, the package must be linked to the GitHub repo on npmjs.com:
 
-1. Log in to https://www.npmjs.com
-2. Go to Access Tokens → Generate New Token
-3. Select **"Automation"** type (bypasses 2FA for CI)
-4. Copy the token (starts with `npm_...`)
+1. Go to https://www.npmjs.com/package/@policyengine/design-system/access
+2. Under "Publishing access", link to the `PolicyEngine/policyengine-app-v2` GitHub repository
 
-### 3. GitHub Secret
-
-Add the npm token as a repository secret:
-
-1. Go to repo Settings → Secrets and variables → Actions
-2. Click "New repository secret"
-3. Name: `NPM_TOKEN`
-4. Value: paste the npm token
-5. Click "Add secret"
+This allows GitHub Actions to authenticate with npm using a short-lived OIDC token, and published versions get a verified provenance badge.
 
 ## Publishing
 
 ### Automatic (Recommended)
 
-The package is automatically published when you create a GitHub Release:
+Publishing is handled automatically by [semantic-release](https://github.com/semantic-release/semantic-release) via the `publish-design-system.yaml` workflow. It triggers on:
 
-1. Update version in `packages/design-system/package.json`
-2. Commit and push to main
-3. Create a new Release on GitHub
-4. The `publish-design-system.yaml` workflow triggers automatically
+- Push to `main` with changes in `packages/design-system/**`
+- Manual `workflow_dispatch`
 
-### Manual
+Version bumps are determined from **conventional commit messages** — no manual version changes needed:
 
-Trigger the workflow manually:
+- `fix: ...` → patch (0.1.0 → 0.1.1)
+- `feat: ...` → minor (0.1.0 → 0.2.0)
+- `feat!: ...` or `BREAKING CHANGE:` → major (0.1.0 → 1.0.0)
 
-1. Go to Actions → "Publish Design System"
-2. Click "Run workflow"
-3. Optionally enable "Dry run" to test without publishing
-
-### Local (Development)
+### Manual (Development)
 
 ```bash
 # Login to npm (one-time)
@@ -68,23 +54,6 @@ npm run build --workspace=@policyengine/design-system
 
 # Publish (requires npm org access)
 npm publish --workspace=@policyengine/design-system --access public
-```
-
-## Version Bumping
-
-Before publishing a new version:
-
-```bash
-cd packages/design-system
-
-# Patch (0.1.0 → 0.1.1) - bug fixes
-npm version patch
-
-# Minor (0.1.0 → 0.2.0) - new features
-npm version minor
-
-# Major (0.1.0 → 1.0.0) - breaking changes
-npm version major
 ```
 
 ## Consuming the Package
@@ -131,12 +100,12 @@ https://unpkg.com/@policyengine/design-system/dist/tokens.json
 - You may not have publish access to the org
 
 ### "npm ERR! 403 Forbidden"
-- Token may be expired or invalid
-- Token may not have publish permissions
+- OIDC provenance may not be configured (see Prerequisites step 2)
+- The workflow may be missing `id-token: write` permission
 
 ### "npm ERR! 402 Payment Required"
 - Trying to publish private package without paid npm account
-- Ensure `--access public` flag is used
+- Ensure `publishConfig.access` is `"public"` in package.json
 
 ## Package Contents
 

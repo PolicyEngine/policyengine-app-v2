@@ -2,9 +2,11 @@
  * Router for the Website (policyengine.org)
  * Contains homepage, blog, team, and embedded apps
  */
-import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
+import { createBrowserRouter, Navigate, RouterProvider, useParams } from 'react-router-dom';
 import AppLayout from './components/AppLayout';
 import StaticLayout from './components/StaticLayout';
+import AdsDashboardPage from './pages/AdsDashboard.page';
+import AIGrowthResearchPage from './pages/AIGrowthResearch.page';
 import AppPage from './pages/AppPage';
 import BlogPage from './pages/Blog.page';
 import BrandPage from './pages/Brand.page';
@@ -23,6 +25,12 @@ import YearInReviewPage from './pages/YearInReview.page';
 import { CountryAppGuard } from './routing/guards/CountryAppGuard';
 import { CountryGuardSimple } from './routing/guards/CountryGuardSimple';
 import { RedirectToCountry } from './routing/RedirectToCountry';
+
+// Redirect component for legacy /blog/:postName URLs
+function BlogRedirect() {
+  const { postName } = useParams();
+  return <Navigate to={`../research/${postName}`} replace />;
+}
 
 const router = createBrowserRouter(
   [
@@ -94,12 +102,20 @@ const router = createBrowserRouter(
               path: 'brand/assets',
               element: <BrandAssetsPage />,
             },
+            {
+              path: 'ads-dashboard',
+              element: <AdsDashboardPage />,
+            },
           ],
         },
         // Full-page embeds - no layout wrapper
         {
           path: '2025-year-in-review',
           element: <YearInReviewPage />,
+        },
+        {
+          path: 'ai-inequality',
+          element: <AIGrowthResearchPage />,
         },
         // Embed routes - minimal layout for iframe embedding
         {
@@ -129,8 +145,12 @@ const router = createBrowserRouter(
         {
           children: [
             {
+              path: 'blog',
+              element: <Navigate to="../research" replace />,
+            },
+            {
               path: 'blog/:postName',
-              element: <Navigate to="../research/:postName" replace />,
+              element: <BlogRedirect />,
             },
           ],
         },
