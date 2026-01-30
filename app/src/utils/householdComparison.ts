@@ -1,3 +1,10 @@
+/**
+ * householdComparison - Comparison utilities for API v2 Alpha household structure
+ *
+ * These functions compare baseline and reform household values.
+ * Works with the array-based household structure with flat values.
+ */
+
 import { Household } from '@/types/ingredients/Household';
 import { getValueFromHousehold, HouseholdMetadataContext } from './householdValues';
 
@@ -29,7 +36,7 @@ export function calculateVariableComparison(
   reform: Household | null,
   metadata: HouseholdMetadataContext
 ): VariableComparison {
-  const baselineValue = getValueFromHousehold(variableName, null, null, baseline, metadata);
+  const baselineValue = getValueFromHousehold(variableName, null, baseline, metadata);
   const baselineNumeric = typeof baselineValue === 'number' ? baselineValue : 0;
 
   if (!reform) {
@@ -40,7 +47,7 @@ export function calculateVariableComparison(
     };
   }
 
-  const reformValue = getValueFromHousehold(variableName, null, null, reform, metadata);
+  const reformValue = getValueFromHousehold(variableName, null, reform, metadata);
   const reformNumeric = typeof reformValue === 'number' ? reformValue : 0;
   const difference = reformNumeric - baselineNumeric;
 
@@ -50,4 +57,44 @@ export function calculateVariableComparison(
     baselineValue: baselineNumeric,
     reformValue: reformNumeric,
   };
+}
+
+/**
+ * Calculate percentage change between baseline and reform
+ */
+export function calculatePercentageChange(
+  variableName: string,
+  baseline: Household,
+  reform: Household,
+  metadata: HouseholdMetadataContext
+): number {
+  const baselineValue = getValueFromHousehold(variableName, null, baseline, metadata);
+  const reformValue = getValueFromHousehold(variableName, null, reform, metadata);
+
+  const baselineNumeric = typeof baselineValue === 'number' ? baselineValue : 0;
+  const reformNumeric = typeof reformValue === 'number' ? reformValue : 0;
+
+  if (baselineNumeric === 0) {
+    return reformNumeric === 0 ? 0 : Infinity;
+  }
+
+  return ((reformNumeric - baselineNumeric) / Math.abs(baselineNumeric)) * 100;
+}
+
+/**
+ * Compare multiple variables and return sorted by impact
+ */
+export function compareMultipleVariables(
+  variableNames: string[],
+  baseline: Household,
+  reform: Household,
+  metadata: HouseholdMetadataContext
+): Array<{ variableName: string; comparison: VariableComparison }> {
+  const results = variableNames.map((variableName) => ({
+    variableName,
+    comparison: calculateVariableComparison(variableName, baseline, reform, metadata),
+  }));
+
+  // Sort by absolute impact (largest first)
+  return results.sort((a, b) => b.comparison.displayValue - a.comparison.displayValue);
 }

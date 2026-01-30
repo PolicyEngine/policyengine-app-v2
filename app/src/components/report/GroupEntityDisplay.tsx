@@ -29,10 +29,10 @@ export default function GroupEntityDisplay({
   const entityType = baselineEntity?.entityType || reformEntity?.entityType || '';
 
   // Get all instances (merging by ID)
-  const allInstanceIds = new Set<string>();
+  const allInstanceIds = new Set<number>();
   baselineEntity?.instances.forEach((inst) => allInstanceIds.add(inst.id));
   reformEntity?.instances.forEach((inst) => allInstanceIds.add(inst.id));
-  const sortedInstanceIds = Array.from(allInstanceIds).sort();
+  const sortedInstanceIds = Array.from(allInstanceIds).sort((a, b) => a - b);
 
   // Determine if we need to show instance headers (when there are multiple instances)
   const showInstanceHeaders = sortedInstanceIds.length > 1;

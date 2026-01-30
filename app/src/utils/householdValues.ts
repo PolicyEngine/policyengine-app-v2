@@ -1,5 +1,13 @@
+/**
+ * householdValues - Value extraction utilities for API v2 Alpha household structure
+ *
+ * These functions extract and format values from the array-based household structure.
+ * Values are flat (no year-keying) - year is at the household level.
+ */
+
 import type { EntitiesRecord } from '@/data/static';
-import { Household } from '@/types/ingredients/Household';
+import { EntityType, Household, HouseholdPerson } from '@/types/ingredients/Household';
+import * as HouseholdQueries from './HouseholdQueries';
 
 /**
  * Metadata interface for household value extraction
@@ -12,11 +20,10 @@ export interface HouseholdMetadataContext {
 
 /**
  * Extracts a value from household data for a specific variable
- * Based on the v1 app's getValueFromHousehold function
+ * Works with the v2 array-based household structure
  *
  * @param variableName - The name of the variable to extract
- * @param timePeriod - Specific time period (e.g., "2025"), or null to aggregate all periods
- * @param entityName - Specific entity name (e.g., "your household"), or null to aggregate all entities
+ * @param entityId - Specific entity ID, or null to aggregate all entities
  * @param household - The household data structure
  * @param metadata - The metadata containing variable definitions and entities
  * @param valueFromFirstOnly - If true, only returns value from first entity (no aggregation)
@@ -24,8 +31,7 @@ export interface HouseholdMetadataContext {
  */
 export function getValueFromHousehold(
   variableName: string,
-  timePeriod: string | null,
-  entityName: string | null,
+  entityId: number | null,
   household: Household,
   metadata: HouseholdMetadataContext,
   valueFromFirstOnly = false
@@ -37,107 +43,101 @@ export function getValueFromHousehold(
   }
 
   // Get the entity type (e.g., "person", "household", "tax_unit")
-  const entity = variable.entity;
-  const entityPlural = metadata.entities[entity]?.plural;
+  const entityType = variable.entity as EntityType;
 
-  if (!entityPlural) {
-    console.warn(`Entity ${entity} not found in metadata`);
+  // Get entities array
+  const entities = HouseholdQueries.getEntitiesByType(household, entityType);
+
+  if (entities.length === 0) {
     return 0;
   }
 
-  const householdData = household.householdData;
-  const entityGroup = householdData[entityPlural];
-
-  if (!entityGroup) {
-    console.warn(`Entity group ${entityPlural} not found in household data`);
-    return 0;
-  }
-
-  // If no entityName specified, aggregate across all entities
-  if (!entityName) {
-    const possibleEntities = Object.keys(entityGroup);
-
-    if (possibleEntities.length === 0) {
-      return 0;
-    }
-
-    if (possibleEntities.length === 1 || valueFromFirstOnly) {
-      return getValueFromHousehold(
-        variableName,
-        timePeriod,
-        possibleEntities[0],
-        household,
-        metadata,
-        valueFromFirstOnly
-      );
+  // If entityId is null, aggregate across all entities
+  if (entityId === null) {
+    if (entities.length === 1 || valueFromFirstOnly) {
+      const firstEntity = entities[0];
+      return getVariableValueFromEntity(firstEntity, variableName, entityType);
     }
 
     // Aggregate across all entities
     let total: number | number[] = 0;
-    for (const entity of possibleEntities) {
-      const entityData = getValueFromHousehold(
-        variableName,
-        timePeriod,
-        entity,
-        household,
-        metadata,
-        valueFromFirstOnly
-      );
+    for (const entity of entities) {
+      const entityValue = getVariableValueFromEntity(entity, variableName, entityType);
 
-      // Handle arrays
-      if (Array.isArray(entityData)) {
+      if (Array.isArray(entityValue)) {
         if (!Array.isArray(total)) {
-          total = Array(entityData.length).fill(0);
+          total = Array(entityValue.length).fill(0);
         }
-        for (let i = 0; i < entityData.length; i++) {
-          (total as number[])[i] += entityData[i];
+        for (let i = 0; i < entityValue.length; i++) {
+          (total as number[])[i] += entityValue[i];
         }
       } else if (Array.isArray(total)) {
         console.warn('Mixed array and scalar values in aggregation');
       } else {
-        total += entityData;
+        total += entityValue;
       }
     }
     return total;
   }
 
-  // Get the specific entity
-  const entityData = entityGroup[entityName];
-  if (!entityData) {
-    console.warn(`Entity ${entityName} not found in ${entityPlural}`);
+  // Get the specific entity by ID
+  const idField = getEntityIdField(entityType);
+  const entity = entities.find((e) => e[idField] === entityId);
+
+  if (!entity) {
+    console.warn(`Entity with ID ${entityId} not found in ${entityType}`);
     return 0;
   }
 
-  // Get the variable data for this entity
-  const variableData = entityData[variableName];
-  if (!variableData) {
-    // Variable might not exist for this entity - return 0
+  return getVariableValueFromEntity(entity, variableName, entityType);
+}
+
+/**
+ * Get variable value from a single entity
+ */
+function getVariableValueFromEntity(
+  entity: Record<string, any>,
+  variableName: string,
+  _entityType: EntityType
+): number {
+  const value = entity[variableName];
+  if (value === undefined) {
     return 0;
   }
+  return typeof value === 'number' ? value : 0;
+}
 
-  // If no timePeriod specified, aggregate across all time periods
-  if (!timePeriod) {
-    const possibleTimePeriods = Object.keys(variableData);
-    let total = 0;
-    for (const period of possibleTimePeriods) {
-      const periodValue = getValueFromHousehold(
-        variableName,
-        period,
-        entityName,
-        household,
-        metadata,
-        valueFromFirstOnly
-      );
-      if (typeof periodValue === 'number') {
-        total += periodValue;
-      }
-    }
-    return total;
+/**
+ * Get the ID field name for an entity type
+ */
+function getEntityIdField(entityType: EntityType): string {
+  if (entityType === 'person') {
+    return 'person_id';
   }
+  return `${entityType}_id`;
+}
 
-  // Return the specific value
-  const value = variableData[timePeriod];
-  return value !== undefined ? value : 0;
+/**
+ * Get value for a specific person
+ */
+export function getPersonValue(
+  household: Household,
+  personId: number,
+  variableName: string
+): number | boolean | string | undefined {
+  return HouseholdQueries.getPersonVariable(household, personId, variableName);
+}
+
+/**
+ * Get value for a specific entity
+ */
+export function getEntityValue(
+  household: Household,
+  entityType: EntityType,
+  entityId: number,
+  variableName: string
+): number | boolean | string | undefined {
+  return HouseholdQueries.getEntityVariable(household, entityType, entityId, variableName);
 }
 
 /**
@@ -202,7 +202,6 @@ export function getInputFormattingProps(variable: any): {
 
 /**
  * Formats a variable value for display
- * Based on the v1 app's formatVariableValue function
  *
  * @param variable - The variable metadata
  * @param value - The value to format
@@ -243,7 +242,6 @@ export function formatVariableValue(variable: any, value: number, precision = 0)
 
 /**
  * Gets parameter value at a specific instant in time
- * Based on the v1 app's getParameterAtInstant function
  *
  * @param parameter - The parameter metadata
  * @param instant - The instant in time (e.g., "2025-01-01")
@@ -293,13 +291,7 @@ export function shouldShowVariable(
     return true;
   }
 
-  const baselineValue = getValueFromHousehold(
-    variableName,
-    null,
-    null,
-    householdBaseline,
-    metadata
-  );
+  const baselineValue = getValueFromHousehold(variableName, null, householdBaseline, metadata);
 
   const isNonZeroInBaseline =
     typeof baselineValue === 'number' ? baselineValue !== 0 : baselineValue.some((v) => v !== 0);
@@ -308,10 +300,32 @@ export function shouldShowVariable(
     return isNonZeroInBaseline;
   }
 
-  const reformValue = getValueFromHousehold(variableName, null, null, householdReform, metadata);
+  const reformValue = getValueFromHousehold(variableName, null, householdReform, metadata);
 
   const isNonZeroInReform =
     typeof reformValue === 'number' ? reformValue !== 0 : reformValue.some((v) => v !== 0);
 
   return isNonZeroInBaseline || isNonZeroInReform;
+}
+
+/**
+ * Sum a variable across all entities of a type
+ */
+export function sumVariable(
+  household: Household,
+  entityType: EntityType,
+  variableName: string
+): number {
+  const entities = HouseholdQueries.getEntitiesByType(household, entityType);
+  return entities.reduce((sum, entity) => {
+    const value = entity[variableName];
+    return sum + (typeof value === 'number' ? value : 0);
+  }, 0);
+}
+
+/**
+ * Get the simulation year from household
+ */
+export function getSimulationYear(household: Household): number {
+  return household.year;
 }

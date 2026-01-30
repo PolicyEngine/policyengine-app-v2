@@ -1,64 +1,110 @@
-import { countryIds } from '@/libs/countries';
+/**
+ * HouseholdBuilder - Fluent API for constructing households in API v2 Alpha format
+ *
+ * This builder creates households with:
+ * - Array-based entities with numeric IDs
+ * - Flat variable values (year specified at top level)
+ * - Entity relationships via person_{entity}_id fields
+ *
+ * Example usage:
+ *   const builder = new HouseholdBuilder('policyengine_us', 2025);
+ *   const aliceId = builder.addAdult({ name: 'Alice', age: 35, employment_income: 50000 });
+ *   const bobId = builder.addChild({ name: 'Bob', age: 10 });
+ *   const household = builder.build();
+ */
+
 import {
+  getEntitiesForModel,
   Household,
-  HouseholdData,
-  HouseholdGroupEntity,
+  HouseholdBenunit,
+  HouseholdFamily,
+  HouseholdMaritalUnit,
   HouseholdPerson,
+  HouseholdSpmUnit,
+  HouseholdTaxUnit,
+  HouseholdUnit,
+  TaxBenefitModelName,
 } from '@/types/ingredients/Household';
 
-// Country-specific default entities
-const COUNTRY_DEFAULT_ENTITIES = {
-  us: ['people', 'families', 'taxUnits', 'spmUnits', 'households', 'maritalUnits'],
-  uk: ['people', 'benunits', 'households'],
-  ca: ['people', 'households'],
-  ng: ['people', 'households'],
-  il: ['people', 'households'],
-} as const;
-
-// Country-specific strategies for marital status
-const MARITAL_STATUS_STRATEGIES = {
-  us: (householdData: HouseholdData, person1Key: string, person2Key: string) => {
-    // For US, create a marital unit
-    if (!householdData.maritalUnits) {
-      householdData.maritalUnits = {};
-    }
-    const maritalUnitKey = 'your marital unit';
-    (householdData.maritalUnits as Record<string, HouseholdGroupEntity>)[maritalUnitKey] = {
-      members: [person1Key, person2Key],
-    };
-  },
-  uk: () => {
-    // For UK, we might handle this differently, e.g., in benefit units
-    // For now, no specific marital unit handling
-  },
-  ca: () => {
-    // For Canada, handle as needed
-  },
-  ng: () => {
-    // For Nigeria, handle as needed
-  },
-  il: () => {
-    // For Israel, handle as needed
-  },
-};
+/**
+ * Options for adding an adult
+ */
+export interface AddAdultOptions {
+  name?: string;
+  age: number;
+  employment_income?: number;
+  [key: string]: number | boolean | string | undefined;
+}
 
 /**
- * Utility class for building and modifying Household structures
- * Provides a fluent API for common household operations
- * Country-aware with specific strategies for each country
+ * Options for adding a child
+ */
+export interface AddChildOptions {
+  name?: string;
+  age: number;
+  [key: string]: number | boolean | string | undefined;
+}
+
+/**
+ * Options for entity-level variables
+ */
+export interface EntityVariables {
+  [key: string]: number | boolean | string | undefined;
+}
+
+/**
+ * Utility class for building Household structures in API v2 Alpha format
  */
 export class HouseholdBuilder {
   private household: Household;
-  private currentYear: string;
 
-  constructor(countryId: (typeof countryIds)[number], currentYear: string) {
-    // Validate year format
-    if (!/^\d{4}$/.test(currentYear)) {
-      throw new Error('currentYear must be a four-digit year string');
+  // ID counters for each entity type
+  private nextPersonId = 0;
+  private nextTaxUnitId = 0;
+  private nextFamilyId = 0;
+  private nextSpmUnitId = 0;
+  private nextMaritalUnitId = 0;
+  private nextHouseholdId = 0;
+  private nextBenunitId = 0;
+
+  // Track the "default" entity IDs that all people are added to
+  private defaultTaxUnitId: number | null = null;
+  private defaultFamilyId: number | null = null;
+  private defaultSpmUnitId: number | null = null;
+  private defaultHouseholdId: number | null = null;
+  private defaultBenunitId: number | null = null;
+
+  // Track adult marital unit for US
+  private adultMaritalUnitId: number | null = null;
+
+  constructor(modelName: TaxBenefitModelName, year: number) {
+    this.household = this.createEmptyHousehold(modelName, year);
+  }
+
+  /**
+   * Create an empty household structure
+   */
+  private createEmptyHousehold(modelName: TaxBenefitModelName, year: number): Household {
+    const household: Household = {
+      tax_benefit_model_name: modelName,
+      year,
+      people: [],
+    };
+
+    // Initialize entity arrays based on model
+    if (modelName === 'policyengine_us') {
+      household.tax_unit = [];
+      household.family = [];
+      household.spm_unit = [];
+      household.marital_unit = [];
+      household.household = [];
+    } else {
+      // UK
+      household.benunit = [];
+      household.household = [];
     }
 
-    this.currentYear = currentYear;
-    this.household = this.createEmptyHousehold(countryId);
+    return household;
   }
 
   /**
@@ -66,414 +112,476 @@ export class HouseholdBuilder {
    */
   loadHousehold(household: Household): HouseholdBuilder {
     this.household = JSON.parse(JSON.stringify(household)); // Deep clone
+
+    // Update ID counters based on existing data
+    this.nextPersonId = this.getMaxId(household.people, 'person_id') + 1;
+    if (household.tax_unit) {
+      this.nextTaxUnitId = this.getMaxId(household.tax_unit, 'tax_unit_id') + 1;
+    }
+    if (household.family) {
+      this.nextFamilyId = this.getMaxId(household.family, 'family_id') + 1;
+    }
+    if (household.spm_unit) {
+      this.nextSpmUnitId = this.getMaxId(household.spm_unit, 'spm_unit_id') + 1;
+    }
+    if (household.marital_unit) {
+      this.nextMaritalUnitId = this.getMaxId(household.marital_unit, 'marital_unit_id') + 1;
+    }
+    if (household.household) {
+      this.nextHouseholdId = this.getMaxId(household.household, 'household_id') + 1;
+    }
+    if (household.benunit) {
+      this.nextBenunitId = this.getMaxId(household.benunit, 'benunit_id') + 1;
+    }
+
     return this;
   }
 
   /**
-   * Create an empty household structure with country-specific entities
+   * Get the maximum ID from an array of entities
    */
-  private createEmptyHousehold(countryId: (typeof countryIds)[number]): Household {
-    const householdData: HouseholdData = {
-      people: {},
-    };
-
-    // Add country-specific default entities
-    const defaultEntities = COUNTRY_DEFAULT_ENTITIES[countryId] || ['people', 'households'];
-
-    for (const entity of defaultEntities) {
-      if (entity !== 'people') {
-        householdData[entity] = {};
-      }
-    }
-
-    return {
-      countryId,
-      householdData,
-    };
+  private getMaxId<T extends Record<string, any>>(entities: T[], idField: string): number {
+    if (entities.length === 0) return -1;
+    return Math.max(...entities.map((e) => (e[idField] as number) ?? -1));
   }
 
   /**
    * Add an adult to the household
+   * @returns The person_id of the added adult
    */
-  addAdult(name: string, age: number, variables?: Record<string, any>): string {
-    const personKey = name;
+  addAdult(options: AddAdultOptions): number {
+    const personId = this.nextPersonId++;
+
     const person: HouseholdPerson = {
-      age: { [this.currentYear]: age },
-      ...this.expandVariables(variables),
+      person_id: personId,
+      name: options.name,
+      age: options.age,
     };
 
-    // Add person to people collection
-    this.household.householdData.people[personKey] = person;
+    // Copy other variables
+    for (const [key, value] of Object.entries(options)) {
+      if (key !== 'name' && key !== 'age' && value !== undefined) {
+        person[key] = value;
+      }
+    }
 
-    // Apply country-specific defaults for adults
-    this.applyCountrySpecificPersonDefaults(personKey, 'adult');
+    // Add to appropriate entities based on model
+    if (this.household.tax_benefit_model_name === 'policyengine_us') {
+      this.addPersonToUSEntities(person, 'adult');
+    } else {
+      this.addPersonToUKEntities(person);
+    }
 
-    return personKey;
+    this.household.people.push(person);
+    return personId;
   }
 
   /**
    * Add a child to the household
+   * @returns The person_id of the added child
    */
-  addChild(
-    name: string,
-    age: number,
-    _parentIds: string[],
-    variables?: Record<string, any>
-  ): string {
-    const childKey = name;
-    const child: HouseholdPerson = {
-      age: { [this.currentYear]: age },
-      ...this.expandVariables(variables),
+  addChild(options: AddChildOptions): number {
+    const personId = this.nextPersonId++;
+
+    const person: HouseholdPerson = {
+      person_id: personId,
+      name: options.name,
+      age: options.age,
     };
 
-    // Add country-specific child defaults
-    if (this.household.countryId === 'us') {
-      child.is_tax_unit_dependent = { [this.currentYear]: true };
-    }
-
-    // Add child to people collection
-    this.household.householdData.people[childKey] = child;
-
-    // Apply country-specific defaults for children
-    this.applyCountrySpecificPersonDefaults(childKey, 'child');
-
-    return childKey;
-  }
-
-  /**
-   * Expand variables to have year-based values
-   */
-  private expandVariables(variables?: Record<string, any>): Record<string, any> {
-    if (!variables) {
-      return {};
-    }
-
-    const expanded: Record<string, any> = {};
-    for (const [key, value] of Object.entries(variables)) {
-      // If the value is already an object with year keys, use it as-is
-      if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-        expanded[key] = value;
-      } else {
-        // Otherwise, wrap it in a year-based object
-        expanded[key] = { [this.currentYear]: value };
+    // Copy other variables
+    for (const [key, value] of Object.entries(options)) {
+      if (key !== 'name' && key !== 'age' && value !== undefined) {
+        person[key] = value;
       }
     }
-    return expanded;
+
+    // Add US-specific child defaults
+    if (this.household.tax_benefit_model_name === 'policyengine_us') {
+      person.is_tax_unit_dependent = true;
+      this.addPersonToUSEntities(person, 'child');
+    } else {
+      this.addPersonToUKEntities(person);
+    }
+
+    this.household.people.push(person);
+    return personId;
   }
 
   /**
-   * Apply country-specific defaults when adding a person
+   * Add multiple children with the same age
    */
-  private applyCountrySpecificPersonDefaults(
-    personKey: string,
-    personType: 'adult' | 'child'
-  ): void {
-    const countryId = this.household.countryId;
-
-    switch (countryId) {
-      case 'us':
-        // Add person to all US entities
-        this.ensureUSDefaults(personKey, personType);
-        break;
-      case 'uk':
-        // Add person to default benefit unit and household
-        this.ensureUKDefaults(personKey);
-        break;
-      default:
-        // Add person to default household
-        this.ensureDefaultHousehold(personKey);
-        break;
+  addChildren(count: number, options: AddChildOptions): number[] {
+    const childIds: number[] = [];
+    for (let i = 0; i < count; i++) {
+      const name = options.name
+        ? count === 1
+          ? options.name
+          : `${options.name} ${i + 1}`
+        : undefined;
+      childIds.push(this.addChild({ ...options, name }));
     }
+    return childIds;
   }
 
   /**
-   * Ensure US-specific defaults - adds person to all required US entities
+   * Add a person to US-specific entities
    */
-  private ensureUSDefaults(personKey: string, personType: 'adult' | 'child'): void {
-    // Ensure default tax unit exists and add person
-    if (!this.household.householdData.taxUnits) {
-      this.household.householdData.taxUnits = {};
+  private addPersonToUSEntities(person: HouseholdPerson, personType: 'adult' | 'child'): void {
+    // Ensure default tax unit exists
+    if (this.defaultTaxUnitId === null) {
+      this.defaultTaxUnitId = this.addTaxUnit({});
     }
-    const taxUnits = this.household.householdData.taxUnits as Record<string, HouseholdGroupEntity>;
-    if (Object.keys(taxUnits).length === 0) {
-      taxUnits['your tax unit'] = { members: [] };
-    }
-    const firstTaxUnit = Object.values(taxUnits)[0];
-    if (!firstTaxUnit.members.includes(personKey)) {
-      firstTaxUnit.members.push(personKey);
-    }
+    person.person_tax_unit_id = this.defaultTaxUnitId;
 
-    // Ensure default family exists and add person
-    if (!this.household.householdData.families) {
-      this.household.householdData.families = {};
+    // Ensure default family exists
+    if (this.defaultFamilyId === null) {
+      this.defaultFamilyId = this.addFamily({});
     }
-    const families = this.household.householdData.families as Record<string, HouseholdGroupEntity>;
-    if (Object.keys(families).length === 0) {
-      families['your family'] = { members: [] };
-    }
-    const firstFamily = Object.values(families)[0];
-    if (!firstFamily.members.includes(personKey)) {
-      firstFamily.members.push(personKey);
-    }
+    person.person_family_id = this.defaultFamilyId;
 
-    // Ensure default SPM unit exists and add person
-    if (!this.household.householdData.spmUnits) {
-      this.household.householdData.spmUnits = {};
+    // Ensure default SPM unit exists
+    if (this.defaultSpmUnitId === null) {
+      this.defaultSpmUnitId = this.addSpmUnit({});
     }
-    const spmUnits = this.household.householdData.spmUnits as Record<string, HouseholdGroupEntity>;
-    if (Object.keys(spmUnits).length === 0) {
-      spmUnits['your household'] = { members: [] };
+    person.person_spm_unit_id = this.defaultSpmUnitId;
+
+    // Ensure default household exists
+    if (this.defaultHouseholdId === null) {
+      this.defaultHouseholdId = this.addHouseholdUnit({});
     }
-    const firstSpmUnit = Object.values(spmUnits)[0];
-    if (!firstSpmUnit.members.includes(personKey)) {
-      firstSpmUnit.members.push(personKey);
-    }
+    person.person_household_id = this.defaultHouseholdId;
 
     // Handle marital units - adults share one, children get their own
-    if (!this.household.householdData.maritalUnits) {
-      this.household.householdData.maritalUnits = {};
-    }
-    const maritalUnits = this.household.householdData.maritalUnits as Record<
-      string,
-      HouseholdGroupEntity
-    >;
-
     if (personType === 'adult') {
-      // Adults share "your marital unit"
-      if (!maritalUnits['your marital unit']) {
-        maritalUnits['your marital unit'] = { members: [] };
+      if (this.adultMaritalUnitId === null) {
+        this.adultMaritalUnitId = this.addMaritalUnit({});
       }
-      if (!maritalUnits['your marital unit'].members.includes(personKey)) {
-        maritalUnits['your marital unit'].members.push(personKey);
-      }
+      person.person_marital_unit_id = this.adultMaritalUnitId;
     } else {
       // Children get their own marital unit
-      const childMaritalUnitKey = `${personKey}'s marital unit`;
-      const childCount = Object.keys(maritalUnits).filter((k) =>
-        k.includes("'s marital unit")
-      ).length;
-      maritalUnits[childMaritalUnitKey] = {
-        members: [personKey],
-        marital_unit_id: { [this.currentYear]: childCount + 1 },
-      };
+      const childMaritalUnitId = this.addMaritalUnit({});
+      person.person_marital_unit_id = childMaritalUnitId;
     }
-
-    // Ensure default household exists
-    this.ensureDefaultHousehold(personKey);
   }
 
   /**
-   * Ensure UK-specific defaults
+   * Add a person to UK-specific entities
    */
-  private ensureUKDefaults(personKey: string): void {
+  private addPersonToUKEntities(person: HouseholdPerson): void {
     // Ensure default benefit unit exists
-    if (!this.household.householdData.benunits) {
-      this.household.householdData.benunits = {};
+    if (this.defaultBenunitId === null) {
+      this.defaultBenunitId = this.addBenunit({});
     }
-    const benunits = this.household.householdData.benunits as Record<string, HouseholdGroupEntity>;
-    if (Object.keys(benunits).length === 0) {
-      benunits['your benefit unit'] = { members: [] };
-    }
-    // Add person to first benefit unit
-    const firstBenunit = Object.values(benunits)[0];
-    if (!firstBenunit.members.includes(personKey)) {
-      firstBenunit.members.push(personKey);
-    }
+    person.person_benunit_id = this.defaultBenunitId;
 
     // Ensure default household exists
-    this.ensureDefaultHousehold(personKey);
+    if (this.defaultHouseholdId === null) {
+      this.defaultHouseholdId = this.addHouseholdUnit({});
+    }
+    person.person_household_id = this.defaultHouseholdId;
   }
 
   /**
-   * Ensure default household exists and add person to it
+   * Add a tax unit (US)
+   * @returns The tax_unit_id
    */
-  private ensureDefaultHousehold(personKey: string): void {
-    if (!this.household.householdData.households) {
-      this.household.householdData.households = {};
+  addTaxUnit(variables: EntityVariables = {}): number {
+    if (!this.household.tax_unit) {
+      this.household.tax_unit = [];
     }
-    const households = this.household.householdData.households as Record<
-      string,
-      HouseholdGroupEntity
-    >;
-    if (Object.keys(households).length === 0) {
-      households['your household'] = { members: [] };
-    }
-    // Add person to first household
-    const firstHousehold = Object.values(households)[0];
-    if (!firstHousehold.members.includes(personKey)) {
-      firstHousehold.members.push(personKey);
-    }
+    const id = this.nextTaxUnitId++;
+    this.household.tax_unit.push({ tax_unit_id: id, ...variables });
+    return id;
   }
 
   /**
-   * Add multiple children with the same settings
+   * Add a family (US)
+   * @returns The family_id
    */
-  addChildren(
-    baseName: string,
-    count: number,
-    age: number,
-    parentIds: string[],
-    variables?: Record<string, any>
-  ): string[] {
-    const childKeys: string[] = [];
-    for (let i = 0; i < count; i++) {
-      const name = count === 1 ? baseName : `${baseName} ${i + 1}`;
-      childKeys.push(this.addChild(name, age, parentIds, variables));
+  addFamily(variables: EntityVariables = {}): number {
+    if (!this.household.family) {
+      this.household.family = [];
     }
-    return childKeys;
+    const id = this.nextFamilyId++;
+    this.household.family.push({ family_id: id, ...variables });
+    return id;
   }
 
   /**
-   * Remove a person from the household
+   * Add an SPM unit (US)
+   * @returns The spm_unit_id
    */
-  removePerson(personKey: string): HouseholdBuilder {
-    // Remove from people
-    delete this.household.householdData.people[personKey];
+  addSpmUnit(variables: EntityVariables = {}): number {
+    if (!this.household.spm_unit) {
+      this.household.spm_unit = [];
+    }
+    const id = this.nextSpmUnitId++;
+    this.household.spm_unit.push({ spm_unit_id: id, ...variables });
+    return id;
+  }
 
-    // Remove from all groups
-    this.removeFromAllGroups(personKey);
+  /**
+   * Add a marital unit (US)
+   * @returns The marital_unit_id
+   */
+  addMaritalUnit(variables: EntityVariables = {}): number {
+    if (!this.household.marital_unit) {
+      this.household.marital_unit = [];
+    }
+    const id = this.nextMaritalUnitId++;
+    this.household.marital_unit.push({ marital_unit_id: id, ...variables });
+    return id;
+  }
 
+  /**
+   * Add a household unit
+   * @returns The household_id
+   */
+  addHouseholdUnit(variables: EntityVariables = {}): number {
+    if (!this.household.household) {
+      this.household.household = [];
+    }
+    const id = this.nextHouseholdId++;
+    this.household.household.push({ household_id: id, ...variables });
+    return id;
+  }
+
+  /**
+   * Add a benefit unit (UK)
+   * @returns The benunit_id
+   */
+  addBenunit(variables: EntityVariables = {}): number {
+    if (!this.household.benunit) {
+      this.household.benunit = [];
+    }
+    const id = this.nextBenunitId++;
+    this.household.benunit.push({ benunit_id: id, ...variables });
+    return id;
+  }
+
+  /**
+   * Remove a person from the household by ID
+   */
+  removePerson(personId: number): HouseholdBuilder {
+    const index = this.household.people.findIndex((p) => p.person_id === personId);
+    if (index !== -1) {
+      this.household.people.splice(index, 1);
+    }
     return this;
   }
 
   /**
-   * Set marital status between two people using country-specific strategy
+   * Get a person by ID
    */
-  setMaritalStatus(person1Key: string, person2Key: string): HouseholdBuilder {
-    const strategy = MARITAL_STATUS_STRATEGIES[this.household.countryId];
-    if (strategy) {
-      strategy(this.household.householdData, person1Key, person2Key);
-    }
-    return this;
+  getPerson(personId: number): HouseholdPerson | undefined {
+    return this.household.people.find((p) => p.person_id === personId);
   }
 
   /**
-   * Assign a person to a group entity
+   * Set a variable on a person
    */
-  assignToGroupEntity(personKey: string, entityName: string, groupKey: string): HouseholdBuilder {
-    // Ensure the entity type exists
-    if (!this.household.householdData[entityName]) {
-      this.household.householdData[entityName] = {};
-    }
-
-    const entities = this.household.householdData[entityName] as Record<
-      string,
-      HouseholdGroupEntity
-    >;
-
-    // Create group if doesn't exist
-    if (!entities[groupKey]) {
-      entities[groupKey] = {
-        members: [],
-      };
-    }
-
-    // Add person to group if not already present
-    if (!entities[groupKey].members.includes(personKey)) {
-      entities[groupKey].members.push(personKey);
-    }
-
-    return this;
-  }
-
-  /**
-   * Set a variable for a person
-   */
-  setPersonVariable(personKey: string, variableName: string, value: any): HouseholdBuilder {
-    const person = this.household.householdData.people[personKey];
-    if (!person) {
-      throw new Error(`Person ${personKey} not found`);
-    }
-
-    // If value is already year-keyed, use as-is
-    if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-      person[variableName] = value;
-    } else {
-      // Otherwise wrap in year object
-      person[variableName] = { [this.currentYear]: value };
-    }
-
-    return this;
-  }
-
-  /**
-   * Set a variable for a group entity
-   */
-  setGroupVariable(
-    entityName: string,
-    groupKey: string,
+  setPersonVariable(
+    personId: number,
     variableName: string,
-    value: any
+    value: number | boolean | string
   ): HouseholdBuilder {
-    const entities = this.household.householdData[entityName] as Record<
-      string,
-      HouseholdGroupEntity
-    >;
-    if (!entities || !entities[groupKey]) {
-      throw new Error(`Group ${groupKey} not found in ${entityName}`);
+    const person = this.getPerson(personId);
+    if (!person) {
+      throw new Error(`Person with ID ${personId} not found`);
+    }
+    person[variableName] = value;
+    return this;
+  }
+
+  /**
+   * Set a variable on a tax unit
+   */
+  setTaxUnitVariable(
+    taxUnitId: number,
+    variableName: string,
+    value: number | boolean | string
+  ): HouseholdBuilder {
+    const taxUnit = this.household.tax_unit?.find((t) => t.tax_unit_id === taxUnitId);
+    if (!taxUnit) {
+      throw new Error(`Tax unit with ID ${taxUnitId} not found`);
+    }
+    taxUnit[variableName] = value;
+    return this;
+  }
+
+  /**
+   * Set a variable on a household unit
+   */
+  setHouseholdUnitVariable(
+    householdId: number,
+    variableName: string,
+    value: number | boolean | string
+  ): HouseholdBuilder {
+    const unit = this.household.household?.find((h) => h.household_id === householdId);
+    if (!unit) {
+      throw new Error(`Household unit with ID ${householdId} not found`);
+    }
+    unit[variableName] = value;
+    return this;
+  }
+
+  /**
+   * Set the state for US households
+   */
+  setState(stateCode: string, stateFips: number): HouseholdBuilder {
+    if (this.household.tax_benefit_model_name !== 'policyengine_us') {
+      throw new Error('setState is only valid for US households');
     }
 
-    // If value is already year-keyed, use as-is
-    if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-      entities[groupKey][variableName] = value;
-    } else {
-      // Otherwise wrap in year object
-      entities[groupKey][variableName] = { [this.currentYear]: value };
+    // Set on tax unit
+    if (this.household.tax_unit && this.household.tax_unit.length > 0) {
+      this.household.tax_unit[0].state_code = stateCode;
+    }
+
+    // Set on household unit
+    if (this.household.household && this.household.household.length > 0) {
+      this.household.household[0].state_fips = stateFips;
     }
 
     return this;
   }
 
   /**
-   * Remove person from all group entities
+   * Set the region for UK households
    */
-  private removeFromAllGroups(personKey: string): void {
-    // Iterate through all properties of householdData
-    Object.keys(this.household.householdData).forEach((entityName) => {
-      // Skip 'people' as it's not a group entity
-      if (entityName === 'people') {
-        return;
-      }
-
-      const entities = this.household.householdData[entityName] as Record<
-        string,
-        HouseholdGroupEntity
-      >;
-
-      // Remove person from each group in this entity type
-      Object.values(entities).forEach((group) => {
-        if (group.members) {
-          const index = group.members.indexOf(personKey);
-          if (index > -1) {
-            group.members.splice(index, 1);
-          }
-        }
-      });
-    });
-  }
-
-  /**
-   * Set the current year for data
-   */
-  setCurrentYear(year: string): HouseholdBuilder {
-    if (!/^\d{4}$/.test(year)) {
-      throw new Error('Year must be a four-digit string');
+  setRegion(region: string): HouseholdBuilder {
+    if (this.household.tax_benefit_model_name !== 'policyengine_uk') {
+      throw new Error('setRegion is only valid for UK households');
     }
-    this.currentYear = year;
+
+    if (this.household.household && this.household.household.length > 0) {
+      this.household.household[0].region = region;
+    }
+
     return this;
   }
 
   /**
-   * Build and return the household
+   * Assign a person to a different tax unit (US)
+   */
+  assignToTaxUnit(personId: number, taxUnitId: number): HouseholdBuilder {
+    const person = this.getPerson(personId);
+    if (!person) {
+      throw new Error(`Person with ID ${personId} not found`);
+    }
+    person.person_tax_unit_id = taxUnitId;
+    return this;
+  }
+
+  /**
+   * Assign a person to a different family (US)
+   */
+  assignToFamily(personId: number, familyId: number): HouseholdBuilder {
+    const person = this.getPerson(personId);
+    if (!person) {
+      throw new Error(`Person with ID ${personId} not found`);
+    }
+    person.person_family_id = familyId;
+    return this;
+  }
+
+  /**
+   * Assign a person to a different benefit unit (UK)
+   */
+  assignToBenunit(personId: number, benunitId: number): HouseholdBuilder {
+    const person = this.getPerson(personId);
+    if (!person) {
+      throw new Error(`Person with ID ${personId} not found`);
+    }
+    person.person_benunit_id = benunitId;
+    return this;
+  }
+
+  /**
+   * Set the simulation year
+   */
+  setYear(year: number): HouseholdBuilder {
+    this.household.year = year;
+    return this;
+  }
+
+  /**
+   * Set the display label
+   */
+  setLabel(label: string): HouseholdBuilder {
+    this.household.label = label;
+    return this;
+  }
+
+  /**
+   * Get the number of people in the household
+   */
+  getPersonCount(): number {
+    return this.household.people.length;
+  }
+
+  /**
+   * Build and return a deep clone of the household
    */
   build(): Household {
-    return JSON.parse(JSON.stringify(this.household)); // Return deep clone
+    return JSON.parse(JSON.stringify(this.household));
   }
 
   /**
-   * Get current household without building
+   * Get the current household (not cloned)
    */
   getHousehold(): Household {
     return this.household;
   }
+}
+
+// ============================================================================
+// Factory functions for common household patterns
+// ============================================================================
+
+/**
+ * Create a single adult US household
+ */
+export function createSingleAdultUS(year: number, options: AddAdultOptions): Household {
+  const builder = new HouseholdBuilder('policyengine_us', year);
+  builder.addAdult(options);
+  return builder.build();
+}
+
+/**
+ * Create a single adult UK household
+ */
+export function createSingleAdultUK(year: number, options: AddAdultOptions): Household {
+  const builder = new HouseholdBuilder('policyengine_uk', year);
+  builder.addAdult(options);
+  return builder.build();
+}
+
+/**
+ * Create a couple US household
+ */
+export function createCoupleUS(
+  year: number,
+  adult1: AddAdultOptions,
+  adult2: AddAdultOptions
+): Household {
+  const builder = new HouseholdBuilder('policyengine_us', year);
+  builder.addAdult(adult1);
+  builder.addAdult(adult2);
+  return builder.build();
+}
+
+/**
+ * Create a couple UK household
+ */
+export function createCoupleUK(
+  year: number,
+  adult1: AddAdultOptions,
+  adult2: AddAdultOptions
+): Household {
+  const builder = new HouseholdBuilder('policyengine_uk', year);
+  builder.addAdult(adult1);
+  builder.addAdult(adult2);
+  return builder.build();
 }

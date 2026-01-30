@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { createHousehold, fetchHouseholdById } from '@/api/household';
-import { BASE_URL } from '@/constants';
+import { BASE_URL, CURRENT_YEAR } from '@/constants';
+import { Household } from '@/types/ingredients/Household';
 import {
   ERROR_MESSAGES,
   EXISTING_HOUSEHOLD_ID,
@@ -8,9 +9,8 @@ import {
   mockCreateHouseholdResponse,
   mockErrorResponse,
   mockFetchError,
-  mockHouseholdCreationPayload,
-  mockHouseholdCreationPayloadUK,
-  mockHouseholdMetadata,
+  mockHouseholdCalculatePayload,
+  mockHouseholdCalculatePayloadUK,
   mockLargeHouseholdPayload,
   mockNetworkError,
   mockSuccessResponse,
@@ -18,11 +18,42 @@ import {
   TEST_COUNTRIES,
 } from '@/tests/fixtures/api/householdMocks';
 
+// Mock legacyConversion to isolate API layer from conversion logic
+const mockV1ResponseToHousehold = vi.fn();
+const mockHouseholdToV1CreationPayload = vi.fn();
+vi.mock('@/api/legacyConversion', () => ({
+  v1ResponseToHousehold: (...args: any[]) => mockV1ResponseToHousehold(...args),
+  householdToV1CreationPayload: (...args: any[]) => mockHouseholdToV1CreationPayload(...args),
+  householdToV1Request: vi.fn(),
+}));
+
 global.fetch = vi.fn();
+
+// Mock v1 API response format (what the real API returns)
+const mockV1ApiResult = {
+  id: 12345,
+  household_json: { people: { person1: { age: { [CURRENT_YEAR]: 30 } } } },
+  label: 'Test Household',
+};
+
+// Expected v2 household returned by mocked conversion
+const mockConvertedHousehold: Household = {
+  tax_benefit_model_name: 'policyengine_us',
+  year: parseInt(CURRENT_YEAR),
+  people: [{ person_id: 0, name: 'person1', age: 30 }],
+};
+
+// Known v1 creation payload returned by mocked conversion
+const mockV1CreationPayload = {
+  country_id: 'us',
+  data: { people: { person1: { age: { [CURRENT_YEAR]: 25 } } } },
+};
 
 describe('household API', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockV1ResponseToHousehold.mockReturnValue({ ...mockConvertedHousehold });
+    mockHouseholdToV1CreationPayload.mockReturnValue(mockV1CreationPayload);
   });
 
   afterEach(() => {
@@ -34,7 +65,7 @@ describe('household API', () => {
       // Given
       const country = TEST_COUNTRIES.US;
       const householdId = EXISTING_HOUSEHOLD_ID;
-      const mockResponse = mockSuccessResponse({ result: mockHouseholdMetadata });
+      const mockResponse = mockSuccessResponse({ result: mockV1ApiResult });
       (global.fetch as any).mockResolvedValue(mockResponse);
 
       // When
@@ -48,7 +79,12 @@ describe('household API', () => {
           Accept: 'application/json',
         },
       });
-      expect(result).toEqual(mockHouseholdMetadata);
+      expect(mockV1ResponseToHousehold).toHaveBeenCalledWith(
+        mockV1ApiResult.household_json,
+        country
+      );
+      expect(result.id).toBe(String(mockV1ApiResult.id));
+      expect(result.label).toBe(mockV1ApiResult.label);
     });
 
     test('given API returns error then throws error with household ID', async () => {
@@ -68,7 +104,7 @@ describe('household API', () => {
       // Given
       const countries = Object.values(TEST_COUNTRIES);
       const householdId = EXISTING_HOUSEHOLD_ID;
-      const mockResponse = mockSuccessResponse({ result: mockHouseholdMetadata });
+      const mockResponse = mockSuccessResponse({ result: mockV1ApiResult });
       (global.fetch as any).mockResolvedValue(mockResponse);
 
       // When
@@ -117,18 +153,18 @@ describe('household API', () => {
       (global.fetch as any).mockResolvedValue(mockResponse);
 
       // When
-      const result = await createHousehold(mockHouseholdCreationPayload);
+      const result = await createHousehold(mockHouseholdCalculatePayload as Household);
 
       // Then
-      expect(global.fetch).toHaveBeenCalledWith(
-        `${BASE_URL}/${mockHouseholdCreationPayload.country_id}/household`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(mockHouseholdCreationPayload),
-        }
-      );
-      expect(result).toEqual(mockCreateHouseholdResponse);
+      expect(mockHouseholdToV1CreationPayload).toHaveBeenCalledWith(mockHouseholdCalculatePayload);
+      expect(global.fetch).toHaveBeenCalledWith(`${BASE_URL}/us/household`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(mockV1CreationPayload),
+      });
+      expect(result).toEqual({
+        householdId: String(mockCreateHouseholdResponse.result.household_id),
+      });
     });
 
     test('given API returns error then throws error', async () => {
@@ -137,7 +173,7 @@ describe('household API', () => {
       (global.fetch as any).mockResolvedValue(mockResponse);
 
       // When/Then
-      await expect(createHousehold(mockHouseholdCreationPayload)).rejects.toThrow(
+      await expect(createHousehold(mockHouseholdCalculatePayload as Household)).rejects.toThrow(
         ERROR_MESSAGES.CREATE_HOUSEHOLD_FAILED
       );
     });
@@ -146,9 +182,13 @@ describe('household API', () => {
       // Given
       const mockResponse = mockSuccessResponse(mockCreateHouseholdResponse);
       (global.fetch as any).mockResolvedValue(mockResponse);
+      mockHouseholdToV1CreationPayload.mockReturnValue({
+        country_id: 'uk',
+        data: { people: {} },
+      });
 
       // When
-      await createHousehold(mockHouseholdCreationPayloadUK);
+      await createHousehold(mockHouseholdCalculatePayloadUK as Household);
 
       // Then
       expect(global.fetch).toHaveBeenCalledWith(
@@ -163,7 +203,7 @@ describe('household API', () => {
       (global.fetch as any).mockResolvedValue(mockResponse);
 
       // When/Then
-      await expect(createHousehold(mockHouseholdCreationPayload)).rejects.toThrow(
+      await expect(createHousehold(mockHouseholdCalculatePayload as Household)).rejects.toThrow(
         ERROR_MESSAGES.CREATE_HOUSEHOLD_FAILED
       );
     });
@@ -173,7 +213,7 @@ describe('household API', () => {
       (global.fetch as any).mockRejectedValue(mockFetchError);
 
       // When/Then
-      await expect(createHousehold(mockHouseholdCreationPayload)).rejects.toThrow(
+      await expect(createHousehold(mockHouseholdCalculatePayload as Household)).rejects.toThrow(
         ERROR_MESSAGES.FAILED_TO_FETCH
       );
     });
@@ -184,13 +224,14 @@ describe('household API', () => {
       (global.fetch as any).mockResolvedValue(mockResponse);
 
       // When
-      await createHousehold(mockLargeHouseholdPayload);
+      await createHousehold(mockLargeHouseholdPayload as Household);
 
       // Then
+      expect(mockHouseholdToV1CreationPayload).toHaveBeenCalledWith(mockLargeHouseholdPayload);
       expect(global.fetch).toHaveBeenCalledWith(
         expect.any(String),
         expect.objectContaining({
-          body: JSON.stringify(mockLargeHouseholdPayload),
+          body: JSON.stringify(mockV1CreationPayload),
         })
       );
     });

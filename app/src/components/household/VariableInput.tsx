@@ -14,8 +14,7 @@ export interface VariableInputProps {
   variable: VariableInfo;
   household: Household;
   metadata: any;
-  year: string;
-  entityName?: string; // Required for person-level variables
+  entityId?: number; // Required for person-level variables
   onChange: (newHousehold: Household) => void;
   disabled?: boolean;
 }
@@ -24,15 +23,14 @@ export default function VariableInput({
   variable,
   household,
   metadata,
-  year,
-  entityName,
+  entityId,
   onChange,
   disabled = false,
 }: VariableInputProps) {
-  const currentValue = getValue(household, variable.name, metadata, year, entityName);
+  const currentValue = getValue(household, variable.name, metadata, entityId);
 
   const handleChange = (value: any) => {
-    const newHousehold = setValue(household, variable.name, value, metadata, year, entityName);
+    const newHousehold = setValue(household, variable.name, value, metadata, entityId);
     onChange(newHousehold);
   };
 

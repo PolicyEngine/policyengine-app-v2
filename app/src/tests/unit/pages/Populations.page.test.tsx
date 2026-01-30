@@ -389,10 +389,7 @@ describe('PopulationsPage', () => {
           ...mockUserHouseholdsData[0],
           household: {
             ...mockUserHouseholdsData[0].household,
-            household_json: {
-              people: {},
-              families: {},
-            },
+            people: [],
           },
         },
       ];

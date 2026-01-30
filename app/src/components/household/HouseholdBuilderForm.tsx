@@ -12,8 +12,8 @@ import { useMemo, useState } from 'react';
 import { IconInfoCircle, IconPlus } from '@tabler/icons-react';
 import { Accordion, Alert, Button, Divider, Group, Select, Stack, Text } from '@mantine/core';
 import { colors, spacing } from '@/designTokens';
-import { Household } from '@/types/ingredients/Household';
-import { sortPeopleKeys } from '@/utils/householdIndividuals';
+import { Household, HouseholdPerson } from '@/types/ingredients/Household';
+import { getPersonDisplayName, sortPeopleByOrder } from '@/utils/householdIndividuals';
 import {
   addVariable,
   addVariableToEntity,
@@ -29,7 +29,6 @@ import VariableSearchDropdown from './VariableSearchDropdown';
 export interface HouseholdBuilderFormProps {
   household: Household;
   metadata: any;
-  year: string;
   maritalStatus: 'single' | 'married';
   numChildren: number;
   basicPersonFields: string[]; // Basic inputs for person entity (e.g., age, employment_income)
@@ -43,7 +42,6 @@ export interface HouseholdBuilderFormProps {
 export default function HouseholdBuilderForm({
   household,
   metadata,
-  year,
   maritalStatus,
   numChildren,
   basicPersonFields,
@@ -57,7 +55,7 @@ export default function HouseholdBuilderForm({
   const [selectedVariables, setSelectedVariables] = useState<string[]>([]);
 
   // Search state for person variables (per person)
-  const [activePersonSearch, setActivePersonSearch] = useState<string | null>(null);
+  const [activePersonSearch, setActivePersonSearch] = useState<number | null>(null);
   const [personSearchValue, setPersonSearchValue] = useState('');
   const [, setIsPersonSearchFocused] = useState(false);
 
@@ -73,21 +71,7 @@ export default function HouseholdBuilderForm({
   const allInputVariables = useMemo(() => getInputVariables(metadata), [metadata]);
 
   // Get list of people, sorted in display order (you, partner, dependents)
-  const people = useMemo(
-    () => sortPeopleKeys(Object.keys(household.householdData.people || {})),
-    [household]
-  );
-
-  // Helper to get person display name (entirely lowercase)
-  const getPersonDisplayName = (personKey: string): string => {
-    return personKey.toLowerCase();
-  };
-
-  // Helper to get person display name with first letter capitalized
-  const getPersonDisplayNameCapitalized = (personKey: string): string => {
-    const lowercase = personKey.toLowerCase();
-    return lowercase.charAt(0).toUpperCase() + lowercase.slice(1);
-  };
+  const sortedPeople = useMemo(() => sortPeopleByOrder(household.people || []), [household]);
 
   // Maximum number of results to display in dropdown for performance
   const MAX_DROPDOWN_RESULTS = 100;
@@ -123,17 +107,12 @@ export default function HouseholdBuilderForm({
   );
 
   // Get variables for a specific person (custom only, not basic inputs)
-  const getPersonVariables = (personName: string): string[] => {
-    const personData = household.householdData.people[personName];
-    if (!personData) {
-      return [];
-    }
-
+  const getPersonVariables = (person: HouseholdPerson): string[] => {
     return selectedVariables.filter((varName) => {
       const entityInfo = resolveEntity(varName, metadata);
       // Exclude basic inputs - they're shown permanently above
       const isBasicInput = basicPersonFields.includes(varName);
-      return entityInfo?.isPerson && personData[varName] !== undefined && !isBasicInput;
+      return entityInfo?.isPerson && person[varName] !== undefined && !isBasicInput;
     });
   };
 
@@ -154,8 +133,8 @@ export default function HouseholdBuilderForm({
   }, [selectedVariables, metadata, basicNonPersonFields]);
 
   // Handle opening person search
-  const handleOpenPersonSearch = (person: string) => {
-    setActivePersonSearch(person);
+  const handleOpenPersonSearch = (personId: number) => {
+    setActivePersonSearch(personId);
     setPersonSearchValue('');
     setIsPersonSearchFocused(true);
   };
@@ -163,7 +142,7 @@ export default function HouseholdBuilderForm({
   // Handle person variable selection
   const handlePersonVariableSelect = (
     variable: { name: string; label: string },
-    person: string
+    personId: number
   ) => {
     const { isPerson } = getVariableEntityDisplayInfo(variable.name, metadata);
 
@@ -179,7 +158,7 @@ export default function HouseholdBuilderForm({
     }
 
     // addVariableToEntity handles routing to correct entity based on metadata
-    const newHousehold = addVariableToEntity(household, variable.name, metadata, year, person);
+    const newHousehold = addVariableToEntity(household, variable.name, metadata, personId);
     onChange(newHousehold);
 
     if (!selectedVariables.includes(variable.name)) {
@@ -192,18 +171,18 @@ export default function HouseholdBuilderForm({
   };
 
   // Handle removing person variable
-  const handleRemovePersonVariable = (varName: string, person: string) => {
+  const handleRemovePersonVariable = (varName: string, personId: number) => {
     // Remove the variable data from this person's household data
-    const newHousehold = { ...household };
-    const personData = newHousehold.householdData.people[person];
-    if (personData && personData[varName]) {
-      delete personData[varName];
+    const newHousehold = JSON.parse(JSON.stringify(household)) as Household;
+    const person = newHousehold.people.find((p) => p.person_id === personId);
+    if (person && person[varName] !== undefined) {
+      delete person[varName];
     }
     onChange(newHousehold);
 
     // Check if any other person still has this variable
-    const stillUsedByOthers = Object.keys(newHousehold.householdData.people).some(
-      (p) => p !== person && newHousehold.householdData.people[p][varName]
+    const stillUsedByOthers = newHousehold.people.some(
+      (p) => p.person_id !== personId && p[varName] !== undefined
     );
 
     // If no one else has it, remove from selectedVariables
@@ -238,7 +217,7 @@ export default function HouseholdBuilderForm({
     if (isPerson) {
       // For person-level variables selected from household, add to ALL people
       // Always call addVariable to ensure new members get it too
-      newHousehold = addVariable(household, variable.name, metadata, year);
+      newHousehold = addVariable(household, variable.name, metadata);
     } else {
       // For non-person variables, only add if not already present
       if (selectedVariables.includes(variable.name)) {
@@ -251,8 +230,7 @@ export default function HouseholdBuilderForm({
         household,
         variable.name,
         metadata,
-        year,
-        'your household'
+        0 // Default entity ID
       );
     }
     onChange(newHousehold);
@@ -338,15 +316,23 @@ export default function HouseholdBuilderForm({
             <Text fw={500}>Individuals</Text>
           </Accordion.Control>
           <Accordion.Panel>
-            <Accordion key={people.join(',')} defaultValue={people} multiple>
-              {people.map((person) => {
+            <Accordion
+              key={sortedPeople.map((p) => p.person_id).join(',')}
+              defaultValue={sortedPeople.map((p) => String(p.person_id ?? 0))}
+              multiple
+            >
+              {sortedPeople.map((person) => {
+                const personId = person.person_id ?? 0;
+                const displayName = getPersonDisplayName(person);
+                const displayNameCapitalized =
+                  displayName.charAt(0).toUpperCase() + displayName.slice(1);
                 const personVars = getPersonVariables(person);
 
                 return (
-                  <Accordion.Item key={person} value={person}>
+                  <Accordion.Item key={personId} value={String(personId)}>
                     <Accordion.Control>
                       <Text fw={600} size="sm">
-                        {getPersonDisplayNameCapitalized(person)}
+                        {displayNameCapitalized}
                       </Text>
                     </Accordion.Control>
                     <Accordion.Panel>
@@ -363,8 +349,7 @@ export default function HouseholdBuilderForm({
                               variable={variable}
                               household={household}
                               metadata={metadata}
-                              year={year}
-                              entityName={person}
+                              entityId={personId}
                               onChange={onChange}
                               disabled={disabled}
                               showRemoveColumn
@@ -384,24 +369,23 @@ export default function HouseholdBuilderForm({
                               variable={variable}
                               household={household}
                               metadata={metadata}
-                              year={year}
-                              entityName={person}
+                              entityId={personId}
                               onChange={onChange}
-                              onRemove={() => handleRemovePersonVariable(varName, person)}
+                              onRemove={() => handleRemovePersonVariable(varName, personId)}
                               disabled={disabled}
                             />
                           );
                         })}
 
                         {/* Add variable search or link */}
-                        {activePersonSearch === person ? (
+                        {activePersonSearch === personId ? (
                           <VariableSearchDropdown
                             searchValue={personSearchValue}
                             onSearchChange={setPersonSearchValue}
                             onFocusChange={setIsPersonSearchFocused}
                             filteredVariables={filteredPersonVariables.variables}
                             truncated={filteredPersonVariables.truncated}
-                            onSelect={(variable) => handlePersonVariableSelect(variable, person)}
+                            onSelect={(variable) => handlePersonVariableSelect(variable, personId)}
                             getEntityHint={(variable) => {
                               const { isPerson } = getVariableEntityDisplayInfo(
                                 variable.name,
@@ -422,10 +406,10 @@ export default function HouseholdBuilderForm({
                             variant="subtle"
                             size="compact-sm"
                             leftSection={<IconPlus size={14} />}
-                            onClick={() => handleOpenPersonSearch(person)}
+                            onClick={() => handleOpenPersonSearch(personId)}
                             style={{ alignSelf: 'flex-start' }}
                           >
-                            Add variable to {getPersonDisplayName(person)}
+                            Add variable to {displayName}
                           </Button>
                         )}
                       </Stack>
@@ -456,7 +440,6 @@ export default function HouseholdBuilderForm({
                     variable={variable}
                     household={household}
                     metadata={metadata}
-                    year={year}
                     onChange={onChange}
                     disabled={disabled}
                     showRemoveColumn
@@ -476,7 +459,6 @@ export default function HouseholdBuilderForm({
                     variable={variable}
                     household={household}
                     metadata={metadata}
-                    year={year}
                     onChange={onChange}
                     onRemove={() => handleRemoveHouseholdVariable(varName)}
                     disabled={disabled}

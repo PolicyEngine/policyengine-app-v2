@@ -31,10 +31,10 @@ export default function EntityInstanceDisplay({
   const instanceName = baselineInstance?.name || reformInstance?.name || '';
 
   // Get all members for this instance (used for people entities)
-  const allMemberIds = new Set<string>();
+  const allMemberIds = new Set<number>();
   baselineInstance?.members.forEach((m) => allMemberIds.add(m.id));
   reformInstance?.members.forEach((m) => allMemberIds.add(m.id));
-  const sortedMemberIds = Array.from(allMemberIds).sort();
+  const sortedMemberIds = Array.from(allMemberIds).sort((a, b) => a - b);
 
   // Check if entity has entity-level variables
   const hasEntityVariables =
@@ -55,7 +55,7 @@ export default function EntityInstanceDisplay({
       )}
 
       {/* For non-people entities: Display entity-level variables */}
-      {hasEntityVariables && entityType !== 'people' && (
+      {hasEntityVariables && entityType !== 'person' && (
         <Box style={{ marginTop: spacing.md }}>
           <IndividualTable
             baselineMember={
@@ -84,14 +84,14 @@ export default function EntityInstanceDisplay({
       )}
 
       {/* For people entity: Display each person */}
-      {entityType === 'people' &&
+      {entityType === 'person' &&
         sortedMemberIds.map((memberId) => {
           // Find this member in baseline and reform instances
           const baselineMember = baselineInstance?.members.find((m) => m.id === memberId);
           const reformMember = reformInstance?.members.find((m) => m.id === memberId);
 
           // Member name (e.g., "You", "Your first dependent")
-          const memberName = baselineMember?.name || reformMember?.name || memberId;
+          const memberName = baselineMember?.name || reformMember?.name || `Person ${memberId}`;
 
           // If entity has multiple members, show member name as subheader
           const showMemberHeader = sortedMemberIds.length > 1;

@@ -29,64 +29,61 @@ export const TEST_USER_ID = 'user-xyz-789';
 // Mock Households
 export const mockHouseholdFamilyOfFour: Household = {
   id: TEST_HOUSEHOLD_IDS.FAMILY_OF_FOUR,
-  countryId: 'us',
-  householdData: {
-    people: {
-      person1: {
-        age: { '2024': 35 },
-        employment_income: { '2024': 50000 },
-      },
-      person2: {
-        age: { '2024': 33 },
-        employment_income: { '2024': 45000 },
-      },
+  tax_benefit_model_name: 'policyengine_us',
+  year: 2024,
+  people: [
+    {
+      person_id: 0,
+      name: 'person1',
+      age: 35,
+      employment_income: 50000,
+      person_family_id: 0,
+      person_tax_unit_id: 0,
+      person_household_id: 0,
     },
-    families: {
-      family1: {
-        members: ['person1', 'person2'],
-      },
+    {
+      person_id: 1,
+      name: 'person2',
+      age: 33,
+      employment_income: 45000,
+      person_family_id: 0,
+      person_tax_unit_id: 0,
+      person_household_id: 0,
     },
-    taxUnits: {
-      taxUnit1: {
-        members: ['person1', 'person2'],
-      },
+  ],
+  family: [{ family_id: 0 }],
+  tax_unit: [{ tax_unit_id: 0 }],
+  household: [
+    {
+      household_id: 0,
+      state_name: 'CA',
     },
-    households: {
-      'household-1': {
-        members: ['person1', 'person2'],
-        state_name: { '2024': 'CA' },
-      },
-    },
-  },
+  ],
 };
 
 export const mockHouseholdSinglePerson: Household = {
   id: TEST_HOUSEHOLD_IDS.SINGLE_PERSON,
-  countryId: 'us',
-  householdData: {
-    people: {
-      person1: {
-        age: { '2024': 28 },
-        employment_income: { '2024': 60000 },
-      },
+  tax_benefit_model_name: 'policyengine_us',
+  year: 2024,
+  people: [
+    {
+      person_id: 0,
+      name: 'person1',
+      age: 28,
+      employment_income: 60000,
+      person_family_id: 0,
+      person_tax_unit_id: 0,
+      person_household_id: 0,
     },
-    families: {
-      family1: {
-        members: ['person1'],
-      },
+  ],
+  family: [{ family_id: 0 }],
+  tax_unit: [{ tax_unit_id: 0 }],
+  household: [
+    {
+      household_id: 0,
+      state_name: 'NY',
     },
-    taxUnits: {
-      taxUnit1: {
-        members: ['person1'],
-      },
-    },
-    households: {
-      'household-1': {
-        members: ['person1'],
-        state_name: { '2024': 'NY' },
-      },
-    },
-  },
+  ],
 };
 
 // Mock Geographies

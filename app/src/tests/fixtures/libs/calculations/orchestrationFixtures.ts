@@ -39,11 +39,9 @@ export const mockSimulation = (overrides?: Partial<Simulation>): Simulation => (
  */
 export const mockHousehold = (overrides?: Partial<Household>): Household => ({
   id: ORCHESTRATION_TEST_CONSTANTS.TEST_HOUSEHOLD_ID,
-  countryId: 'us',
-  householdData: {
-    people: {},
-    households: {},
-  },
+  tax_benefit_model_name: 'policyengine_us',
+  year: 2025,
+  people: [],
   ...overrides,
 });
 

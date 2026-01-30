@@ -3,15 +3,9 @@ import type { HouseholdMetadataContext } from '@/utils/householdValues';
 
 export const mockHousehold = (_netIncome: number = 50000): Household => ({
   id: 'household-1',
-  countryId: 'us',
-  householdData: {
-    people: {},
-    households: {},
-    families: {},
-    marital_units: {},
-    tax_units: {},
-    spm_units: {},
-  },
+  tax_benefit_model_name: 'policyengine_us',
+  year: 2025,
+  people: [],
 });
 
 // HouseholdMetadataContext for household comparison tests

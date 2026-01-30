@@ -10,36 +10,31 @@ export function mockPopulationWithComplexHousehold(): Population {
     isCreated: true,
     household: {
       id: '12345',
-      countryId: 'us',
-      householdData: {
-        people: {
-          person1: {
-            name: 'John Doe',
-            age: { '2024': 35 },
-            employment_income: { '2024': 50000 },
-          },
-          person2: {
-            name: 'Jane Doe',
-            age: { '2024': 33 },
-            employment_income: { '2024': 45000 },
-          },
+      tax_benefit_model_name: 'policyengine_us',
+      year: 2024,
+      people: [
+        {
+          person_id: 0,
+          name: 'John Doe',
+          age: 35,
+          employment_income: 50000,
+          person_family_id: 0,
+          person_tax_unit_id: 0,
+          person_household_id: 0,
         },
-        families: {
-          family1: {
-            members: ['person1', 'person2'],
-          },
+        {
+          person_id: 1,
+          name: 'Jane Doe',
+          age: 33,
+          employment_income: 45000,
+          person_family_id: 0,
+          person_tax_unit_id: 0,
+          person_household_id: 0,
         },
-        tax_units: {
-          tax_unit1: {
-            members: ['person1', 'person2'],
-          },
-        },
-        households: {
-          household1: {
-            members: ['person1', 'person2'],
-          },
-        },
-      },
+      ],
+      family: [{ family_id: 0 }],
+      tax_unit: [{ tax_unit_id: 0 }],
+      household: [{ household_id: 0 }],
     },
     geography: null,
   };

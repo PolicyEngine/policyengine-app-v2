@@ -31,7 +31,7 @@ export const HTTP_STATUS = {
 
 export const ERROR_MESSAGES = {
   CALCULATION_FAILED: (statusText: string) => `Household calculation failed: ${statusText}`,
-  TIMEOUT: 'Household calculation timed out after 50 seconds (client-side timeout)',
+  TIMEOUT: 'Household calculation timed out after 4 minutes',
   API_ERROR: 'Household calculation failed',
   NETWORK_ERROR: 'Network error',
   INVALID_PARAMETERS: 'Invalid parameters provided for household calculation',
@@ -53,106 +53,150 @@ export const mockErrorResponse = (status: number) => ({
 // Mock household result
 export const mockHouseholdResult: Household = {
   id: TEST_HOUSEHOLD_IDS.EXISTING,
-  countryId: 'us',
-  householdData: {
-    people: {
-      person1: {
-        age: { [CURRENT_YEAR]: 30 },
-        employment_income: { [CURRENT_YEAR]: 50000 },
-        capital_gains: { [CURRENT_YEAR]: 5000 },
-      },
-      person2: {
-        age: { [CURRENT_YEAR]: 28 },
-        employment_income: { [CURRENT_YEAR]: 45000 },
-        dividend_income: { [CURRENT_YEAR]: 2000 },
-      },
+  tax_benefit_model_name: 'policyengine_us',
+  year: parseInt(CURRENT_YEAR),
+  people: [
+    {
+      person_id: 0,
+      name: 'person1',
+      age: 30,
+      employment_income: 50000,
+      capital_gains: 5000,
+      person_family_id: 0,
+      person_tax_unit_id: 0,
+      person_household_id: 0,
     },
-    families: {
-      family1: {
-        members: ['person1', 'person2'],
-        family_size: { [CURRENT_YEAR]: 2 },
-      },
+    {
+      person_id: 1,
+      name: 'person2',
+      age: 28,
+      employment_income: 45000,
+      dividend_income: 2000,
+      person_family_id: 0,
+      person_tax_unit_id: 0,
+      person_household_id: 0,
     },
-    tax_units: {
-      tax_unit1: {
-        members: ['person1', 'person2'],
-        adjusted_gross_income: { [CURRENT_YEAR]: 102000 },
-      },
+  ],
+  family: [
+    {
+      family_id: 0,
+      family_size: 2,
     },
-    households: {
-      household1: {
-        members: ['person1', 'person2'],
-        household_size: { [CURRENT_YEAR]: 2 },
-      },
+  ],
+  tax_unit: [
+    {
+      tax_unit_id: 0,
+      adjusted_gross_income: 102000,
     },
-  },
+  ],
+  household: [
+    {
+      household_id: 0,
+      household_size: 2,
+    },
+  ],
 };
 
 // UK variant for testing different countries
 export const mockHouseholdResultUK: Household = {
   id: TEST_HOUSEHOLD_IDS.EXISTING,
-  countryId: 'uk',
-  householdData: {
-    people: {
-      person1: {
-        age: { [CURRENT_YEAR]: 35 },
-        employment_income: { [CURRENT_YEAR]: 40000 },
-      },
-      person2: {
-        age: { [CURRENT_YEAR]: 33 },
-        employment_income: { [CURRENT_YEAR]: 35000 },
-      },
+  tax_benefit_model_name: 'policyengine_uk',
+  year: parseInt(CURRENT_YEAR),
+  people: [
+    {
+      person_id: 0,
+      name: 'person1',
+      age: 35,
+      employment_income: 40000,
+      person_benunit_id: 0,
+      person_household_id: 0,
     },
-    benunits: {
-      benunit1: {
-        members: ['person1', 'person2'],
-      },
+    {
+      person_id: 1,
+      name: 'person2',
+      age: 33,
+      employment_income: 35000,
+      person_benunit_id: 0,
+      person_household_id: 0,
     },
-    households: {
-      household1: {
-        members: ['person1', 'person2'],
-      },
-    },
-  },
+  ],
+  benunit: [{ benunit_id: 0 }],
+  household: [{ household_id: 0 }],
 };
 
 // Large household for testing complex scenarios
 export const mockLargeHouseholdResult: Household = {
   id: TEST_HOUSEHOLD_IDS.LARGE_HOUSEHOLD,
-  countryId: 'us',
-  householdData: {
-    people: {
-      person1: { age: { [CURRENT_YEAR]: 40 }, employment_income: { [CURRENT_YEAR]: 75000 } },
-      person2: { age: { [CURRENT_YEAR]: 38 }, employment_income: { [CURRENT_YEAR]: 65000 } },
-      person3: { age: { [CURRENT_YEAR]: 16 } },
-      person4: { age: { [CURRENT_YEAR]: 14 } },
-      person5: { age: { [CURRENT_YEAR]: 10 } },
+  tax_benefit_model_name: 'policyengine_us',
+  year: parseInt(CURRENT_YEAR),
+  people: [
+    {
+      person_id: 0,
+      name: 'person1',
+      age: 40,
+      employment_income: 75000,
+      person_family_id: 0,
+      person_tax_unit_id: 0,
+      person_household_id: 0,
     },
-    families: {
-      family1: {
-        members: ['person1', 'person2', 'person3', 'person4', 'person5'],
-        family_size: { [CURRENT_YEAR]: 5 },
-      },
+    {
+      person_id: 1,
+      name: 'person2',
+      age: 38,
+      employment_income: 65000,
+      person_family_id: 0,
+      person_tax_unit_id: 0,
+      person_household_id: 0,
     },
-    tax_units: {
-      tax_unit1: {
-        members: ['person1', 'person2', 'person3', 'person4', 'person5'],
-        adjusted_gross_income: { [CURRENT_YEAR]: 140000 },
-      },
+    {
+      person_id: 2,
+      name: 'person3',
+      age: 16,
+      person_family_id: 0,
+      person_tax_unit_id: 0,
+      person_household_id: 0,
     },
-    households: {
-      household1: {
-        members: ['person1', 'person2', 'person3', 'person4', 'person5'],
-        household_size: { [CURRENT_YEAR]: 5 },
-      },
+    {
+      person_id: 3,
+      name: 'person4',
+      age: 14,
+      person_family_id: 0,
+      person_tax_unit_id: 0,
+      person_household_id: 0,
     },
-  },
+    {
+      person_id: 4,
+      name: 'person5',
+      age: 10,
+      person_family_id: 0,
+      person_tax_unit_id: 0,
+      person_household_id: 0,
+    },
+  ],
+  family: [
+    {
+      family_id: 0,
+      family_size: 5,
+    },
+  ],
+  tax_unit: [
+    {
+      tax_unit_id: 0,
+      adjusted_gross_income: 140000,
+    },
+  ],
+  household: [
+    {
+      household_id: 0,
+      household_size: 5,
+    },
+  ],
 };
 
 // Mock API responses
 export const mockSuccessfulCalculationResponse: HouseholdCalculationResponse = {
   status: 'ok',
-  result: mockHouseholdResult.householdData,
+  result: mockHouseholdResult,
 };
 
 export const mockErrorCalculationResponse: HouseholdCalculationResponse = {
@@ -163,7 +207,7 @@ export const mockErrorCalculationResponse: HouseholdCalculationResponse = {
 
 export const mockUKCalculationResponse: HouseholdCalculationResponse = {
   status: 'ok',
-  result: mockHouseholdResultUK.householdData,
+  result: mockHouseholdResultUK,
 };
 
 // Network error mock

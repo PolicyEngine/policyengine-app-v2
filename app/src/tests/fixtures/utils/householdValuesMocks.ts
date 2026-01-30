@@ -1,9 +1,8 @@
-import { CURRENT_YEAR } from '@/constants';
 import { Household } from '@/types/ingredients/Household';
 import { HouseholdMetadataContext } from '@/utils/householdValues';
 
 /**
- * Test fixtures for householdValues utility functions
+ * Test fixtures for householdValues utility functions (v2 format)
  */
 
 export const MOCK_HOUSEHOLD_INCOME_VARIABLE = {
@@ -56,95 +55,98 @@ export const MOCK_METADATA_CONTEXT: HouseholdMetadataContext = {
       plural: 'people',
       label: 'Person',
       description: 'An individual person',
+      is_person: true,
     },
   },
 };
 
 export const MOCK_HOUSEHOLD_DATA: Household = {
   id: 'test-household',
-  countryId: 'us',
-  householdData: {
-    households: {
-      'your household': {
-        household_income: {
-          [CURRENT_YEAR]: 50000,
-        },
-        tax_rate: {
-          [CURRENT_YEAR]: 0.15,
-        },
-      },
+  tax_benefit_model_name: 'policyengine_us',
+  year: 2025,
+  people: [
+    {
+      person_id: 0,
+      age: 35,
+      benefits: 5000,
+      person_tax_unit_id: 0,
+      person_family_id: 0,
+      person_spm_unit_id: 0,
+      person_marital_unit_id: 0,
     },
-    people: {
-      'person 1': {
-        age: {
-          [CURRENT_YEAR]: 35,
-        },
-        benefits: {
-          [CURRENT_YEAR]: 5000,
-        },
-      },
-      'person 2': {
-        age: {
-          [CURRENT_YEAR]: 32,
-        },
-        benefits: {
-          [CURRENT_YEAR]: 3000,
-        },
-      },
+    {
+      person_id: 1,
+      age: 32,
+      benefits: 3000,
+      person_tax_unit_id: 0,
+      person_family_id: 0,
+      person_spm_unit_id: 0,
+      person_marital_unit_id: 0,
     },
-  },
+  ],
+  household: [
+    {
+      household_id: 0,
+      household_income: 50000,
+      tax_rate: 0.15,
+    },
+  ],
+  tax_unit: [{ tax_unit_id: 0 }],
+  family: [{ family_id: 0 }],
+  spm_unit: [{ spm_unit_id: 0 }],
+  marital_unit: [{ marital_unit_id: 0 }],
 };
 
 export const MOCK_HOUSEHOLD_DATA_REFORM: Household = {
   id: 'test-household-reform',
-  countryId: 'us',
-  householdData: {
-    households: {
-      'your household': {
-        household_income: {
-          [CURRENT_YEAR]: 52000,
-        },
-        tax_rate: {
-          [CURRENT_YEAR]: 0.12,
-        },
-      },
+  tax_benefit_model_name: 'policyengine_us',
+  year: 2025,
+  people: [
+    {
+      person_id: 0,
+      age: 35,
+      benefits: 7000,
+      person_tax_unit_id: 0,
+      person_family_id: 0,
+      person_spm_unit_id: 0,
+      person_marital_unit_id: 0,
     },
-    people: {
-      'person 1': {
-        age: {
-          [CURRENT_YEAR]: 35,
-        },
-        benefits: {
-          [CURRENT_YEAR]: 7000,
-        },
-      },
-      'person 2': {
-        age: {
-          [CURRENT_YEAR]: 32,
-        },
-        benefits: {
-          [CURRENT_YEAR]: 5000,
-        },
-      },
+    {
+      person_id: 1,
+      age: 32,
+      benefits: 5000,
+      person_tax_unit_id: 0,
+      person_family_id: 0,
+      person_spm_unit_id: 0,
+      person_marital_unit_id: 0,
     },
-  },
+  ],
+  household: [
+    {
+      household_id: 0,
+      household_income: 52000,
+      tax_rate: 0.12,
+    },
+  ],
+  tax_unit: [{ tax_unit_id: 0 }],
+  family: [{ family_id: 0 }],
+  spm_unit: [{ spm_unit_id: 0 }],
+  marital_unit: [{ marital_unit_id: 0 }],
 };
 
+// In v2, there's no multi-period concept - year is top-level on household.
+// We keep this for backward compat but it's just a single-year household.
 export const MOCK_HOUSEHOLD_DATA_MULTI_PERIOD: Household = {
   id: 'test-household-multi',
-  countryId: 'us',
-  householdData: {
-    households: {
-      'your household': {
-        household_income: {
-          '2023': 48000,
-          [CURRENT_YEAR]: 50000,
-          '2026': 52000,
-        },
-      },
+  tax_benefit_model_name: 'policyengine_us',
+  year: 2025,
+  people: [],
+  household: [
+    {
+      household_id: 0,
+      household_income: 50000,
     },
-    people: {},
-  },
+  ],
 };
 
 export const MOCK_PARAMETER = {
@@ -152,21 +154,16 @@ export const MOCK_PARAMETER = {
   values: {
     '2020-01-01': 12000,
     '2023-01-01': 13850,
-    [`${CURRENT_YEAR}-01-01`]: 14600,
+    '2025-01-01': 14600,
     '2026-01-01': 15000,
   },
 };
 
-export const TEST_TIME_PERIODS = {
-  YEAR_2023: '2023',
-  YEAR_2024: CURRENT_YEAR,
-  YEAR_2025: CURRENT_YEAR,
-} as const;
-
-export const TEST_ENTITY_NAMES = {
-  YOUR_HOUSEHOLD: 'your household',
-  PERSON_1: 'person 1',
-  PERSON_2: 'person 2',
+// In v2, entity IDs are numbers instead of named strings
+export const TEST_ENTITY_IDS = {
+  HOUSEHOLD_0: 0,
+  PERSON_0: 0,
+  PERSON_1: 1,
 } as const;
 
 export const TEST_VARIABLE_NAMES = {
@@ -179,15 +176,16 @@ export const TEST_VARIABLE_NAMES = {
 
 export const EXPECTED_VALUES = {
   HOUSEHOLD_INCOME_2025: 50000,
-  AGE_PERSON_1: 35,
-  AGE_PERSON_2: 32,
+  AGE_PERSON_0: 35,
+  AGE_PERSON_1: 32,
   AGE_TOTAL: 67,
-  BENEFITS_PERSON_1: 5000,
-  BENEFITS_PERSON_2: 3000,
+  BENEFITS_PERSON_0: 5000,
+  BENEFITS_PERSON_1: 3000,
   BENEFITS_TOTAL: 8000,
   BENEFITS_REFORM_TOTAL: 12000,
   TAX_RATE_2025: 0.15,
-  HOUSEHOLD_INCOME_ALL_PERIODS: 150000, // 48000 + 50000 + 52000
+  // In v2, no multi-period aggregation - single year value
+  HOUSEHOLD_INCOME_SINGLE: 50000,
 } as const;
 
 // Note: V2 API doesn't include 'unit' for variables, so currency formatting

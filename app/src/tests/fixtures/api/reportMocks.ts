@@ -15,17 +15,6 @@ export const TEST_COUNTRIES = {
   UK: 'uk',
 } as const;
 
-// Mock calculation results
-export const MOCK_HOUSEHOLD_RESULT = {
-  id: 'household-123',
-  countryId: TEST_COUNTRIES.US as (typeof TEST_COUNTRIES)[keyof typeof TEST_COUNTRIES],
-  householdData: {
-    people: {
-      person1: { age: 30, income: 50000 },
-    },
-  },
-};
-
 // Complete mock for US society-wide result
 export const MOCK_ECONOMY_RESULT: ReportOutputSocietyWideUS = {
   budget: {
