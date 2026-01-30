@@ -22,7 +22,7 @@
     "description": "PolicyEngine corrects CPS underreporting of UI benefits using quantile regression forests and reweighting, matching administrative totals within 2-4%.",
     "date": "2026-01-25",
     "tags": ["us", "technical"],
-    "authors": ["max-ghenis"],
+    "authors": ["max-ghenis", "daphne-hansell"],
     "filename": "validating-unemployment-insurance-estimates.md",
     "image": "validating-unemployment-insurance-estimates-hero.jpg"
   },

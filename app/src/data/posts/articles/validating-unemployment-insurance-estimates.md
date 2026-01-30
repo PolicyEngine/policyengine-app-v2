@@ -64,6 +64,16 @@ CBO notes their method "was designed with a degree of precision that is suited f
 
 TRIM3 does not document how it selects which non-reporters to assign UI or how it determines benefit amounts for them. TRIM3 code is not publicly available.
 
+### St. Louis Fed (Birinci & See)
+
+[Birinci and See (2023)](https://www.aeaweb.org/articles?id=10.1257/mac.20200057) take a different approach, using a heterogeneous-agent job search model to study how UI policy changes affect different groups ([replication code](https://www.openicpsr.org/openicpsr/project/170261/version/V1/view)). Rather than correcting survey underreporting, they focus on behavioral responses:
+
+1. Use SIPP, PSID, and CPS data to characterize wealth and income differences between UI recipients and non-recipients
+2. Build a structural model that matches these empirical distributions
+3. Simulate how different wealth groups respond to UI policy changes
+
+Their key finding: labor market responses to UI are **non-monotonic in wealth**. The poorest unemployed show weak responses because they highly value employment and cannot afford to be selective about job offers.
+
 ## Summary
 
 | Model               | Method                         | Distribution            | Open source                                                          |
@@ -72,6 +82,7 @@ TRIM3 does not document how it selects which non-reporters to assign UI or how i
 | **Fed/JCT**         | Normal draw by percentile      | Normal(μ, σ)            | [Yes (Stata)](https://davidsplinter.com/CPS-UI-Imputation.txt)       |
 | **CBO**             | Probit → assign group averages | Point estimates         | [Partial](https://github.com/US-CBO/means_tested_transfer_imputations) |
 | **TRIM3**           | Adjust reported amounts        | Deterministic           | No                                                                   |
+| **St. Louis Fed**   | Heterogeneous-agent model      | Structural simulation   | [Yes](https://www.openicpsr.org/openicpsr/project/170261/version/V1/view) |
 
 ## Why methodology matters
 
@@ -90,6 +101,16 @@ The Fed stratifies by pre-UI income. Adding UI changes income rank: a worker at 
 QRF samples from the empirical UI distribution in tax data. High amounts are rare in the training data, so they remain rare in imputations.
 
 This distinction extends beyond federal taxes. The Supplemental Poverty Measure (SPM) subtracts taxes from resources. If a model assigns higher UI amounts than actually occur, computed tax liabilities increase, SPM resources decrease, and SPM poverty rates rise. The Official Poverty Measure (pre-tax thresholds) does not incorporate taxes, so it is unaffected by this mechanism.
+
+**Heterogeneity in behavioral responses**:
+
+[Birinci and See (2023)](https://www.aeaweb.org/articles?id=10.1257/mac.20200057) provide additional evidence for why capturing heterogeneity matters. They find that labor market responses to UI changes are non-monotonic in wealth: the poorest unemployed workers show weak responses because they cannot afford to be selective about job offers, while middle-wealth workers are more responsive.
+
+This has two implications for imputation methodology:
+
+1. **Composition matters for policy analysis**: If a model misallocates UI benefits across wealth groups, downstream policy simulations will produce biased behavioral predictions. PolicyEngine's QRF conditions on 37+ variables including income and asset-related measures, preserving the empirical joint distribution.
+
+2. **Simple stratification is insufficient**: Stratifying only by income percentile (as in the Fed/JCT approach) misses wealth variation within income groups. Two workers at the same income percentile may have very different wealth levels and thus different UI receipt probabilities and behavioral responses.
 
 ## Limitations
 
