@@ -1,12 +1,12 @@
-Utah's [House Bill 15](https://le.utah.gov/~2026/bills/static/HB0015.html), sponsored by Rep. Steve Eliason (R-Salt Lake County) and Sen. Keith Grover (R-Utah County) in the 2026 legislative session, would repeal the state's Medicaid expansion if federal matching (FMAP) drops below 85%. Currently, the federal government pays 90% of expansion Medicaid costs. This analysis models the scenario where the trigger condition is met and expansion is repealed.
+Utah's [House Bill 15](https://le.utah.gov/~2026/bills/static/HB0015.html), sponsored by Rep. Steve Eliason (R-Salt Lake County) and Sen. Keith Grover (R-Utah County) in the 2026 legislative session, would repeal the state's Medicaid expansion if the federal matching rate (FMAP) drops below 85%. Currently, the federal government pays 90% of expansion Medicaid costs. This analysis models the scenario where expansion is repealed.
 
 ## Background: Medicaid and the ACA expansion
 
 Medicaid is a joint federal-state program providing health coverage to low-income individuals. Before the Affordable Care Act (ACA), Medicaid primarily covered specific groups: children, pregnant women, parents with very low incomes, and people with disabilities. Non-disabled, non-elderly adults without children generally could not qualify, regardless of income.
 
-The ACA expanded Medicaid eligibility to all adults under 65 with household income at or below 138% of the Federal Poverty Level (FPL). To incentivize states to expand, the federal government initially covered 100% of expansion costs, phasing down to 90% by 2020—higher than the standard Federal Medical Assistance Percentage (FMAP) of about 70% for traditional Medicaid in Utah.
+The ACA expanded Medicaid eligibility to all adults under 65 with household income at or below 138% of the Federal Poverty Level (FPL). The federal government initially covered 100% of expansion costs, phasing down to 90% by 2020—higher than the standard FMAP of about 70% for traditional Medicaid in Utah.
 
-HB 15's trigger—repealing expansion if federal matching drops below 85%—reflects concerns that Congress could further reduce the enhanced FMAP, shifting more costs to states.
+HB 15 would repeal expansion if federal matching drops below 85%, reflecting concerns that Congress could further reduce the enhanced FMAP and shift more costs to states.
 
 ### Utah's Medicaid expansion history
 
@@ -21,7 +21,7 @@ Utah also maintains separate Medicaid categories for specific populations:
 
 ### 2027 Federal Poverty Levels
 
-This analysis uses projected 2027 FPL values:
+This analysis uses projected 2027 FPL values, estimated by applying historical inflation trends to the 2024 FPL guidelines:
 
 | Household Size | 100% FPL | 138% FPL (Expansion Limit) |
 |----------------|----------|---------------------------|
@@ -44,7 +44,7 @@ _[Use PolicyEngine](https://www.policyengine.org/us) to calculate the effect on 
 
 ## Understanding the coverage gap
 
-The "coverage gap" refers to people who earn too much to qualify for traditional Medicaid but too little to qualify for ACA marketplace subsidies. ACA subsidies only begin at 100% of the Federal Poverty Level (FPL), while Medicaid expansion covers adults up to 138% FPL. If expansion is repealed, those below 100% FPL would no longer qualify for either program.
+The "coverage gap" refers to individuals whose earnings exceed traditional Medicaid limits but do not reach the ACA marketplace subsidy threshold. ACA subsidies begin at 100% of the Federal Poverty Level (FPL), while Medicaid expansion covers adults up to 138% FPL. If expansion is repealed, adults below 100% FPL would no longer qualify for either program.
 
 ## Single adult household
 
@@ -96,16 +96,16 @@ The chart below shows how health benefits change across income levels for a sing
 
 ## Statewide fiscal impact
 
-For tax year 2027, HB 15 would generate the following fiscal impacts:
+For tax year 2027, HB 15 would generate the following fiscal impacts (all figures represent spending changes, not revenue):
 
 | Category | Amount |
 |----------|--------|
-| Total Medicaid savings | $988 million |
+| Total Medicaid spending reduction | $988 million |
 | Federal share (90%) | $889 million |
 | State share (10%) | $99 million |
-| Increased ACA costs (federal) | $160 million |
-| **Net federal savings** | **$729 million** |
-| **Net state savings** | **$99 million** |
+| Increased federal ACA spending | $160 million |
+| **Net federal spending reduction** | **$729 million** |
+| **Net state spending reduction** | **$99 million** |
 
 ## Who is affected?
 
@@ -115,7 +115,7 @@ Of the ~121,000 people losing Medicaid enrollment:
 
 - **22% can transition to ACA**: These individuals earn between 100-138% FPL and can obtain marketplace coverage with premium subsidies.
 
-Children's coverage is largely unaffected—they remain eligible for Medicaid/CHIP regardless of the expansion repeal. Only adult coverage under the expansion category is affected.
+Children's coverage is unaffected by HB 15—they remain eligible for Medicaid up to 136% FPL and CHIP up to 205% FPL regardless of the expansion repeal. Only adult coverage under the expansion category is affected.
 
 ### Demographics of affected population
 
@@ -128,9 +128,9 @@ The table below summarizes the demographic profile of those who would lose Medic
 | Average household income | $62,500 | $64,200 | $56,300 |
 | Average FPL | 81% | 70% | 116% |
 
-The chart below shows the distribution of affected individuals by household income. Those in lower-income households are more likely to fall into the coverage gap, while those with higher household incomes can transition to ACA coverage.
+The chart below shows the distribution of affected individuals by household income decile. Those in lower deciles are more likely to fall into the coverage gap, while those in higher deciles can transition to ACA coverage.
 
-**Figure 3: Affected population by household income**
+**Figure 3: Affected population by household income decile**
 <iframe src="https://policyengine.github.io/utah-hb15-charts/income-distribution.html" width="100%" height="500" frameborder="0"></iframe>
 
 **Age distribution**: The affected population skews young—36% are young adults (18-25), and 24% are ages 26-34. The average age is 34 years.
@@ -138,15 +138,9 @@ The chart below shows the distribution of affected individuals by household inco
 **Figure 4: Affected population by age group**
 <iframe src="https://policyengine.github.io/utah-hb15-charts/age-distribution.html" width="100%" height="500" frameborder="0"></iframe>
 
-**Gender**: Women make up 58% of those affected, while men account for 42%.
-
-**Employment**: 68% of those losing coverage have some employment income, with average earnings of $25,500 among those who are employed. This highlights that many affected individuals are working but in low-wage jobs that don't provide health insurance.
-
-**Household composition**: The average affected person lives in a household of 4.2 people. Nearly two-thirds (64%) live in households of four or more people.
-
 ## Conclusion
 
-Utah HB 15 creates a contingent repeal of Medicaid expansion that would take effect if federal matching drops below 85%. If triggered, the policy would reduce state Medicaid spending by ~$99 million annually. Approximately 94,000 adults earning below 100% FPL would lose coverage and would not qualify for ACA subsidies, while ~27,000 adults at 100-138% FPL could transition to ACA marketplace plans.
+Utah HB 15 creates a contingent repeal of Medicaid expansion that would take effect if federal matching drops below 85%. If enacted, the policy would reduce state Medicaid spending by ~$99 million annually. Approximately 94,000 adults earning below 100% FPL would lose coverage and would not qualify for ACA subsidies, while ~27,000 adults at 100-138% FPL could transition to ACA marketplace plans.
 
 Analytical tools like PolicyEngine can help evaluate the impacts of reforms like this on diverse household compositions and state budgets.
 
