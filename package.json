@@ -6,15 +6,15 @@
     "app"
   ],
   "scripts": {
-    "dev": "bun run design-system:build && bun run dev --filter=policyengine-app-v2",
+    "dev": "bun run design-system:build && bun run --filter=policyengine-app-v2 dev",
     "build": "turbo run build",
     "test": "turbo run test",
     "lint": "turbo run lint",
     "format": "turbo run format",
     "typecheck": "turbo run typecheck",
-    "design-system:build": "bun run build --filter=@policyengine/design-system",
-    "calculator:dev": "bun run dev --filter=@policyengine/calculator",
-    "website:dev": "bun run dev --filter=@policyengine/website"
+    "design-system:build": "bun run --filter=@policyengine/design-system build",
+    "calculator:dev": "bun run --filter=@policyengine/calculator dev",
+    "website:dev": "bun run --filter=@policyengine/website dev"
   },
   "devDependencies": {
     "jsdom": "^26.1.0",
