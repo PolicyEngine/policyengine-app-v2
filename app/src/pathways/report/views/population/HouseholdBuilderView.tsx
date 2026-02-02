@@ -83,14 +83,19 @@ export default function HouseholdBuilderView({
       return population.household;
     }
     const builder = new HouseholdBuilder(modelName, yearNum);
-    builder.addAdult({ name: 'you', age: 30, employment_income: 0 });
+    builder.addAdult({ age: 30, employment_income: 0 });
     return builder.build();
   });
 
-  // Derive marital status and number of children from household (single source of truth)
-  const hasPartner = household.people.some((p) => p.name === 'your partner');
+  // Derive marital status and number of dependents from household
+  // For US: dependents identified by is_tax_unit_dependent === true
+  // For UK: dependents identified by age < 18
+  const isDependent = (p: Record<string, any>) =>
+    p.is_tax_unit_dependent === true || (p.age !== undefined && p.age < 18);
+  const adults = household.people.filter((p) => !isDependent(p));
+  const hasPartner = adults.length >= 2;
   const maritalStatus = hasPartner ? 'married' : 'single';
-  const numChildren = household.people.filter((p) => p.name?.includes('dependent')).length;
+  const numChildren = household.people.filter((p) => isDependent(p)).length;
 
   // Handler for marital status change - directly modifies household
   const handleMaritalStatusChange = (newStatus: 'single' | 'married') => {
@@ -98,11 +103,13 @@ export default function HouseholdBuilderView({
     builder.loadHousehold(household);
 
     if (newStatus === 'married' && !hasPartner) {
-      builder.addAdult({ name: 'your partner', age: 30, employment_income: 0 });
+      builder.addAdult({ age: 30, employment_income: 0 });
     } else if (newStatus === 'single' && hasPartner) {
-      const partner = household.people.find((p) => p.name === 'your partner');
-      if (partner?.person_id !== undefined) {
-        builder.removePerson(partner.person_id);
+      // Remove the second adult (index 1)
+      // Find the index of the second non-dependent adult
+      const secondAdultIndex = household.people.findIndex((p, i) => i > 0 && !isDependent(p));
+      if (secondAdultIndex >= 0) {
+        builder.removePerson(secondAdultIndex);
       }
     }
 
@@ -114,25 +121,21 @@ export default function HouseholdBuilderView({
     const builder = new HouseholdBuilder(modelName, yearNum);
     builder.loadHousehold(household);
 
-    const currentChildren = household.people.filter((p) => p.name?.includes('dependent'));
-    const currentChildCount = currentChildren.length;
+    // Find all current dependents
+    const currentDependentIndices = household.people
+      .map((p, i) => (isDependent(p) ? i : -1))
+      .filter((i) => i >= 0);
+    const currentChildCount = currentDependentIndices.length;
 
     if (newCount !== currentChildCount) {
-      // Remove all existing children
-      currentChildren.forEach((child) => {
-        if (child.person_id !== undefined) {
-          builder.removePerson(child.person_id);
-        }
-      });
+      // Remove all existing dependents (in reverse order to preserve indices)
+      for (let i = currentDependentIndices.length - 1; i >= 0; i--) {
+        builder.removePerson(currentDependentIndices[i]);
+      }
 
       // Add new children
-      if (newCount > 0) {
-        const ordinals = ['first', 'second', 'third', 'fourth', 'fifth'];
-
-        for (let i = 0; i < newCount; i++) {
-          const childName = `your ${ordinals[i] || `${i + 1}th`} dependent`;
-          builder.addChild({ name: childName, age: 10 });
-        }
+      for (let i = 0; i < newCount; i++) {
+        builder.addChild({ age: 10 });
       }
     }
 

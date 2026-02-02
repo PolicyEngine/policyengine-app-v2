@@ -54,143 +54,85 @@ export const mockErrorResponse = (status: number) => ({
 export const mockHouseholdResult: Household = {
   id: TEST_HOUSEHOLD_IDS.EXISTING,
   tax_benefit_model_name: 'policyengine_us',
-  year: parseInt(CURRENT_YEAR),
+  year: parseInt(CURRENT_YEAR, 10),
   people: [
     {
-      person_id: 0,
-      name: 'person1',
       age: 30,
       employment_income: 50000,
       capital_gains: 5000,
-      person_family_id: 0,
-      person_tax_unit_id: 0,
-      person_household_id: 0,
     },
     {
-      person_id: 1,
-      name: 'person2',
       age: 28,
       employment_income: 45000,
       dividend_income: 2000,
-      person_family_id: 0,
-      person_tax_unit_id: 0,
-      person_household_id: 0,
     },
   ],
-  family: [
-    {
-      family_id: 0,
-      family_size: 2,
-    },
-  ],
-  tax_unit: [
-    {
-      tax_unit_id: 0,
-      adjusted_gross_income: 102000,
-    },
-  ],
-  household: [
-    {
-      household_id: 0,
-      household_size: 2,
-    },
-  ],
+  family: {
+    family_size: 2,
+  },
+  tax_unit: {
+    adjusted_gross_income: 102000,
+  },
+  household: {
+    household_size: 2,
+  },
 };
 
 // UK variant for testing different countries
 export const mockHouseholdResultUK: Household = {
   id: TEST_HOUSEHOLD_IDS.EXISTING,
   tax_benefit_model_name: 'policyengine_uk',
-  year: parseInt(CURRENT_YEAR),
+  year: parseInt(CURRENT_YEAR, 10),
   people: [
     {
-      person_id: 0,
-      name: 'person1',
       age: 35,
       employment_income: 40000,
-      person_benunit_id: 0,
-      person_household_id: 0,
     },
     {
-      person_id: 1,
-      name: 'person2',
       age: 33,
       employment_income: 35000,
-      person_benunit_id: 0,
-      person_household_id: 0,
     },
   ],
-  benunit: [{ benunit_id: 0 }],
-  household: [{ household_id: 0 }],
+  benunit: {},
+  household: {},
 };
 
 // Large household for testing complex scenarios
 export const mockLargeHouseholdResult: Household = {
   id: TEST_HOUSEHOLD_IDS.LARGE_HOUSEHOLD,
   tax_benefit_model_name: 'policyengine_us',
-  year: parseInt(CURRENT_YEAR),
+  year: parseInt(CURRENT_YEAR, 10),
   people: [
     {
-      person_id: 0,
-      name: 'person1',
       age: 40,
       employment_income: 75000,
-      person_family_id: 0,
-      person_tax_unit_id: 0,
-      person_household_id: 0,
     },
     {
-      person_id: 1,
-      name: 'person2',
       age: 38,
       employment_income: 65000,
-      person_family_id: 0,
-      person_tax_unit_id: 0,
-      person_household_id: 0,
     },
     {
-      person_id: 2,
-      name: 'person3',
       age: 16,
-      person_family_id: 0,
-      person_tax_unit_id: 0,
-      person_household_id: 0,
+      is_tax_unit_dependent: true,
     },
     {
-      person_id: 3,
-      name: 'person4',
       age: 14,
-      person_family_id: 0,
-      person_tax_unit_id: 0,
-      person_household_id: 0,
+      is_tax_unit_dependent: true,
     },
     {
-      person_id: 4,
-      name: 'person5',
       age: 10,
-      person_family_id: 0,
-      person_tax_unit_id: 0,
-      person_household_id: 0,
+      is_tax_unit_dependent: true,
     },
   ],
-  family: [
-    {
-      family_id: 0,
-      family_size: 5,
-    },
-  ],
-  tax_unit: [
-    {
-      tax_unit_id: 0,
-      adjusted_gross_income: 140000,
-    },
-  ],
-  household: [
-    {
-      household_id: 0,
-      household_size: 5,
-    },
-  ],
+  family: {
+    family_size: 5,
+  },
+  tax_unit: {
+    adjusted_gross_income: 140000,
+  },
+  household: {
+    household_size: 5,
+  },
 };
 
 // Mock API responses

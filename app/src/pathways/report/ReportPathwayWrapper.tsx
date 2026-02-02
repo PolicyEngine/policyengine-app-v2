@@ -86,6 +86,7 @@ export default function ReportPathwayWrapper({ onComplete }: ReportPathwayWrappe
 
   const { createReport, isPending: isSubmitting } = useCreateReport(reportState.label || undefined);
 
+  // Get metadata for population views
   const currentLawId = useCurrentLawId(countryId);
   const regionData = useRegionsList(countryId);
 

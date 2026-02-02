@@ -97,20 +97,15 @@ export const mockHouseholdMetadata: HouseholdMetadata = {
     year: parseInt(CURRENT_YEAR, 10),
     people: [
       {
-        person_id: 0,
         age: TEST_VALUES.AGE,
         employment_income: TEST_VALUES.INCOME,
-        person_tax_unit_id: 0,
-        person_family_id: 0,
-        person_spm_unit_id: 0,
-        person_marital_unit_id: 0,
       },
     ],
-    tax_unit: [{ tax_unit_id: 0 }],
-    family: [{ family_id: 0 }],
-    spm_unit: [{ spm_unit_id: 0 }],
-    marital_unit: [{ marital_unit_id: 0 }],
-    household: [{ household_id: 0 }],
+    tax_unit: {},
+    family: {},
+    spm_unit: {},
+    marital_unit: {},
+    household: {},
   },
 };
 
@@ -143,19 +138,14 @@ export const mockHouseholdCreationPayload: Household = {
   year: parseInt(CURRENT_YEAR, 10),
   people: [
     {
-      person_id: 0,
       age: TEST_VALUES.AGE,
-      person_tax_unit_id: 0,
-      person_family_id: 0,
-      person_spm_unit_id: 0,
-      person_marital_unit_id: 0,
     },
   ],
-  tax_unit: [{ tax_unit_id: 0 }],
-  family: [{ family_id: 0 }],
-  spm_unit: [{ spm_unit_id: 0 }],
-  marital_unit: [{ marital_unit_id: 0 }],
-  household: [{ household_id: 0 }],
+  tax_unit: {},
+  family: {},
+  spm_unit: {},
+  marital_unit: {},
+  household: {},
 };
 
 export const mockCreateHouseholdResponse = {

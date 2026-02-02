@@ -50,8 +50,8 @@ export const mockHouseholdCalcConfig = (overrides?: Partial<CalcStartConfig>): C
       id: INTEGRATION_TEST_CONSTANTS.HOUSEHOLD_IDS.HOUSEHOLD_1,
       tax_benefit_model_name: 'policyengine_us' as const,
       year: 2024,
-      people: [{ person_id: 0, age: 30 }],
-      household: [{ household_id: 0 }],
+      people: [{ age: 30 }],
+      household: {},
     },
     household2: null,
     geography1: null,
@@ -190,4 +190,3 @@ export const mockSocietyWideAPICompleteResponse = {
   status: 'ok',
   result: mockSocietyWideCalcResult(),
 };
-

@@ -31,7 +31,6 @@ import {
   createNormalizedCacheMock,
   ERROR_MESSAGES,
   mockHousehold1,
-  mockHouseholdMetadata,
   mockMetadataInitialState,
   mockPolicy1,
   mockSimulation1,

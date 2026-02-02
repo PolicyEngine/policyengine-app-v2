@@ -55,11 +55,11 @@ describe('PopulationSubPage - Design 4 Router', () => {
       render(<PopulationSubPage {...props} />);
 
       // Should display data from baseline household (Family of Four)
-      const person1Matches = screen.getAllByText(/person1/i);
-      expect(person1Matches.length).toBeGreaterThan(0);
+      const youMatches = screen.getAllByText(/^You$/i);
+      expect(youMatches.length).toBeGreaterThan(0);
 
-      const person2Matches = screen.getAllByText(/person2/i);
-      expect(person2Matches.length).toBeGreaterThan(0);
+      const partnerMatches = screen.getAllByText(/your partner/i);
+      expect(partnerMatches.length).toBeGreaterThan(0);
 
       expect(screen.getByText('35')).toBeInTheDocument(); // Age from baseline
 

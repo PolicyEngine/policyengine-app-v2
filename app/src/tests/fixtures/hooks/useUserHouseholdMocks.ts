@@ -16,7 +16,7 @@ export const TEST_GEOGRAPHY_ID_2 = 'geography-012';
 export const TEST_HOUSEHOLD_LABEL = 'Test Household Population';
 export const TEST_GEOGRAPHY_LABEL = 'Test Geography Population';
 
-// Mock household metadata (API format)
+// Mock household metadata (v2 Alpha: no person_id/name/person_*_id, entity dicts)
 export const mockApiHouseholdMetadata1: HouseholdMetadata = {
   id: TEST_HOUSEHOLD_ID_1,
   household: {
@@ -24,16 +24,12 @@ export const mockApiHouseholdMetadata1: HouseholdMetadata = {
     year: 2025,
     people: [
       {
-        person_id: 0,
-        name: 'you',
         age: 30,
         employment_income: 50000,
-        person_household_id: 0,
-        person_tax_unit_id: 0,
       },
     ],
-    household: [{ household_id: 0 }],
-    tax_unit: [{ tax_unit_id: 0 }],
+    household: {},
+    tax_unit: {},
   },
   label: TEST_HOUSEHOLD_LABEL,
 };
@@ -65,16 +61,12 @@ export const mockApiHouseholdMetadata2: HouseholdMetadata = {
     year: 2025,
     people: [
       {
-        person_id: 0,
-        name: 'you',
         age: 35,
         employment_income: 60000,
-        person_household_id: 0,
-        person_tax_unit_id: 0,
       },
     ],
-    household: [{ household_id: 0 }],
-    tax_unit: [{ tax_unit_id: 0 }],
+    household: {},
+    tax_unit: {},
   },
   label: 'Second Household',
 };

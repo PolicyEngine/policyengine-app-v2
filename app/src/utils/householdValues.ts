@@ -1,13 +1,13 @@
 /**
  * householdValues - Value extraction utilities for API v2 Alpha household structure
  *
- * These functions extract and format values from the array-based household structure.
+ * Entity groups are single flat dicts (not arrays).
+ * People are identified by array index.
  * Values are flat (no year-keying) - year is at the household level.
  */
 
 import type { EntitiesRecord } from '@/data/static';
-import { EntityType, Household, HouseholdPerson } from '@/types/ingredients/Household';
-import * as HouseholdQueries from './HouseholdQueries';
+import { EntityType, Household } from '@/types/ingredients/Household';
 
 /**
  * Metadata interface for household value extraction
@@ -20,13 +20,13 @@ export interface HouseholdMetadataContext {
 
 /**
  * Extracts a value from household data for a specific variable
- * Works with the v2 array-based household structure
+ * Works with the v2 single-dict entity structure
  *
  * @param variableName - The name of the variable to extract
- * @param entityId - Specific entity ID, or null to aggregate all entities
+ * @param entityId - For person vars: array index or null for first person. For entities: ignored (single dict).
  * @param household - The household data structure
  * @param metadata - The metadata containing variable definitions and entities
- * @param valueFromFirstOnly - If true, only returns value from first entity (no aggregation)
+ * @param valueFromFirstOnly - Unused (kept for API compatibility) - entities are single dicts now
  * @returns The extracted value (number or array)
  */
 export function getValueFromHousehold(
@@ -45,99 +45,66 @@ export function getValueFromHousehold(
   // Get the entity type (e.g., "person", "household", "tax_unit")
   const entityType = variable.entity as EntityType;
 
-  // Get entities array
-  const entities = HouseholdQueries.getEntitiesByType(household, entityType);
-
-  if (entities.length === 0) {
-    return 0;
-  }
-
-  // If entityId is null, aggregate across all entities
-  if (entityId === null) {
-    if (entities.length === 1 || valueFromFirstOnly) {
-      const firstEntity = entities[0];
-      return getVariableValueFromEntity(firstEntity, variableName, entityType);
-    }
-
-    // Aggregate across all entities
-    let total: number | number[] = 0;
-    for (const entity of entities) {
-      const entityValue = getVariableValueFromEntity(entity, variableName, entityType);
-
-      if (Array.isArray(entityValue)) {
-        if (!Array.isArray(total)) {
-          total = Array(entityValue.length).fill(0);
-        }
-        for (let i = 0; i < entityValue.length; i++) {
-          (total as number[])[i] += entityValue[i];
-        }
-      } else if (Array.isArray(total)) {
-        console.warn('Mixed array and scalar values in aggregation');
-      } else {
-        total += entityValue;
+  if (entityType === 'person') {
+    // For person variables
+    if (entityId !== null) {
+      // Specific person by index
+      const person = household.people[entityId];
+      if (!person) {
+        return 0;
       }
+      const value = person[variableName];
+      return typeof value === 'number' ? value : 0;
     }
-    return total;
+    // Aggregate across all people or return first
+    if (household.people.length === 0) {
+      return 0;
+    }
+    if (household.people.length === 1 || valueFromFirstOnly) {
+      const value = household.people[0][variableName];
+      return typeof value === 'number' ? value : 0;
+    }
+    // Sum across all people
+    return household.people.reduce((sum, person) => {
+      const value = person[variableName];
+      return sum + (typeof value === 'number' ? value : 0);
+    }, 0);
   }
 
-  // Get the specific entity by ID
-  const idField = getEntityIdField(entityType);
-  const entity = entities.find((e) => e[idField] === entityId);
-
-  if (!entity) {
-    console.warn(`Entity with ID ${entityId} not found in ${entityType}`);
+  // For group entities: access the single dict directly
+  const entity = household[entityType as keyof Household] as Record<string, any> | undefined;
+  if (!entity || typeof entity !== 'object' || Array.isArray(entity)) {
     return 0;
   }
 
-  return getVariableValueFromEntity(entity, variableName, entityType);
-}
-
-/**
- * Get variable value from a single entity
- */
-function getVariableValueFromEntity(
-  entity: Record<string, any>,
-  variableName: string,
-  _entityType: EntityType
-): number {
   const value = entity[variableName];
-  if (value === undefined) {
-    return 0;
-  }
   return typeof value === 'number' ? value : 0;
 }
 
 /**
- * Get the ID field name for an entity type
- */
-function getEntityIdField(entityType: EntityType): string {
-  if (entityType === 'person') {
-    return 'person_id';
-  }
-  return `${entityType}_id`;
-}
-
-/**
- * Get value for a specific person
+ * Get value for a specific person by array index
  */
 export function getPersonValue(
   household: Household,
-  personId: number,
+  personIndex: number,
   variableName: string
 ): number | boolean | string | undefined {
-  return HouseholdQueries.getPersonVariable(household, personId, variableName);
+  return household.people[personIndex]?.[variableName];
 }
 
 /**
- * Get value for a specific entity
+ * Get value for a specific entity (single dict access)
  */
 export function getEntityValue(
   household: Household,
   entityType: EntityType,
-  entityId: number,
   variableName: string
 ): number | boolean | string | undefined {
-  return HouseholdQueries.getEntityVariable(household, entityType, entityId, variableName);
+  if (entityType === 'person') {
+    return household.people[0]?.[variableName];
+  }
+  const entity = household[entityType as keyof Household] as Record<string, any> | undefined;
+  return entity?.[variableName];
 }
 
 /**
@@ -272,13 +239,6 @@ export function getParameterAtInstant(parameter: any, instant: string): any {
 /**
  * Determines if a variable should be shown based on whether it has non-zero values
  * in baseline and/or reform scenarios
- *
- * @param variableName - The variable to check
- * @param householdBaseline - The baseline household data
- * @param householdReform - The reform household data (optional)
- * @param metadata - The metadata
- * @param forceShow - If true, always show even if zero
- * @returns True if the variable should be displayed
  */
 export function shouldShowVariable(
   variableName: string,
@@ -309,18 +269,27 @@ export function shouldShowVariable(
 }
 
 /**
- * Sum a variable across all entities of a type
+ * Sum a variable across all entities of a type.
+ * For person: sums across all people. For others: returns value from single dict.
  */
 export function sumVariable(
   household: Household,
   entityType: EntityType,
   variableName: string
 ): number {
-  const entities = HouseholdQueries.getEntitiesByType(household, entityType);
-  return entities.reduce((sum, entity) => {
-    const value = entity[variableName];
-    return sum + (typeof value === 'number' ? value : 0);
-  }, 0);
+  if (entityType === 'person') {
+    return household.people.reduce((sum, person) => {
+      const value = person[variableName];
+      return sum + (typeof value === 'number' ? value : 0);
+    }, 0);
+  }
+
+  const entity = household[entityType as keyof Household] as Record<string, any> | undefined;
+  if (!entity || typeof entity !== 'object' || Array.isArray(entity)) {
+    return 0;
+  }
+  const value = entity[variableName];
+  return typeof value === 'number' ? value : 0;
 }
 
 /**

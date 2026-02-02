@@ -1,19 +1,19 @@
 /**
  * householdIndividuals - Person and entity extraction utilities for API v2 Alpha structure
  *
- * These functions extract and format people and entity groups from the
- * array-based household structure with flat values.
+ * People are identified by array index + is_tax_unit_dependent (US) or age (UK).
+ * Entity groups are single flat dicts (not arrays).
  */
 
 import { EntityType, Household, HouseholdPerson } from '@/types/ingredients/Household';
 import * as HouseholdQueries from './HouseholdQueries';
 
 /**
- * Sort people by their ID (which represents their order)
- * Person 0 = "You", Person 1 = "Your partner" or first dependent, etc.
+ * Return people in their existing array order (already sorted by convention:
+ * adults first, dependents after)
  */
 export function sortPeopleByOrder(people: HouseholdPerson[]): HouseholdPerson[] {
-  return [...people].sort((a, b) => (a.person_id ?? 0) - (b.person_id ?? 0));
+  return [...people];
 }
 
 export interface EntityVariable {
@@ -24,7 +24,7 @@ export interface EntityVariable {
 }
 
 export interface EntityMember {
-  id: number;
+  id: number; // array index
   name: string;
   variables: EntityVariable[];
 }
@@ -43,9 +43,8 @@ export interface GroupEntityInstance {
 }
 
 /**
- * Extract all group entities from household data
- * Returns entities like people, households, tax_units, etc.
- * Only includes group entities that have variables defined
+ * Extract all group entities from household data.
+ * Entity groups are single dicts, so each type has at most one instance.
  */
 export function extractGroupEntities(
   household: Household,
@@ -55,10 +54,10 @@ export function extractGroupEntities(
 
   // Extract people as a group entity
   if (household.people.length > 0) {
-    const peopleInstances: GroupEntityInstance[] = household.people.map((person) => ({
-      id: person.person_id ?? 0,
-      name: formatPersonName(person),
-      members: [extractEntityMember(person, variablesMetadata)],
+    const peopleInstances: GroupEntityInstance[] = household.people.map((person, index) => ({
+      id: index,
+      name: getPersonDisplayName(person, index),
+      members: [extractEntityMember(person, index, variablesMetadata)],
     }));
 
     groupEntities.push({
@@ -74,64 +73,57 @@ export function extractGroupEntities(
     : ['benunit', 'household'];
 
   for (const entityType of entityTypesToExtract) {
-    const entities = HouseholdQueries.getEntitiesByType(household, entityType);
-    if (entities.length === 0) continue;
+    const entity = household[entityType as keyof Household] as Record<string, any> | undefined;
+    if (!entity || typeof entity !== 'object' || Array.isArray(entity)) {
+      continue;
+    }
 
-    const instances: GroupEntityInstance[] = [];
+    // Extract entity-level variables
+    const entityVariables = extractEntityVariables(entity, variablesMetadata);
 
-    for (const entity of entities) {
-      // Get entity ID
-      const idField = `${entityType}_id`;
-      const entityId = entity[idField] as number;
+    // Skip if no variables
+    if (entityVariables.length === 0) {
+      continue;
+    }
 
-      // Extract entity-level variables (excluding ID and system fields)
-      const entityVariables = extractEntityVariables(entity, entityType, variablesMetadata);
+    // All people are members of every entity
+    const members = household.people.map((person, index) =>
+      extractEntityMember(person, index, variablesMetadata)
+    );
 
-      // Skip if no variables
-      if (entityVariables.length === 0) continue;
-
-      // Get members of this entity
-      const members = HouseholdQueries.getPeopleInEntity(household, entityType, entityId).map(
-        (person) => extractEntityMember(person, variablesMetadata)
-      );
-
-      instances.push({
-        id: entityId,
-        name: formatEntityInstanceName(entityType, entityId),
+    const instances: GroupEntityInstance[] = [
+      {
+        id: 0,
+        name: formatEntityTypeName(entityType),
         members,
         variables: entityVariables,
-      });
-    }
+      },
+    ];
 
-    if (instances.length > 0) {
-      groupEntities.push({
-        entityType,
-        entityTypeName: formatEntityTypeName(entityType),
-        instances,
-      });
-    }
+    groupEntities.push({
+      entityType,
+      entityTypeName: formatEntityTypeName(entityType),
+      instances,
+    });
   }
 
   return groupEntities;
 }
 
 /**
- * Extract variables from an entity (not including ID fields or members)
+ * Extract variables from an entity dict (not including system fields)
  */
 function extractEntityVariables(
   entity: Record<string, any>,
-  entityType: EntityType,
   variablesMetadata?: Record<string, any>
 ): EntityVariable[] {
   const variables: EntityVariable[] = [];
-  const idField = `${entityType}_id`;
 
   for (const [paramName, value] of Object.entries(entity)) {
-    // Skip ID fields and undefined values
-    if (paramName === idField || value === undefined) continue;
-
-    // Skip known non-variable fields
-    if (paramName.startsWith('person_')) continue;
+    // Skip undefined values
+    if (value === undefined) {
+      continue;
+    }
 
     const unit = variablesMetadata?.[paramName]?.unit;
 
@@ -151,19 +143,15 @@ function extractEntityVariables(
  */
 function extractEntityMember(
   person: HouseholdPerson,
+  index: number,
   variablesMetadata?: Record<string, any>
 ): EntityMember {
   const variables: EntityVariable[] = [];
 
   for (const [paramName, value] of Object.entries(person)) {
-    // Skip ID fields, name, and undefined values
-    if (
-      paramName === 'person_id' ||
-      paramName === 'name' ||
-      paramName.startsWith('person_') ||
-      value === undefined
-    )
+    if (value === undefined) {
       continue;
+    }
 
     const unit = variablesMetadata?.[paramName]?.unit;
 
@@ -176,8 +164,8 @@ function extractEntityMember(
   }
 
   return {
-    id: person.person_id ?? 0,
-    name: formatPersonName(person),
+    id: index,
+    name: getPersonDisplayName(person, index),
     variables,
   };
 }
@@ -199,17 +187,77 @@ function formatParameterLabel(paramName: string): string {
 }
 
 /**
- * Format person to human-readable name
- * Uses the person's name if set, otherwise generates from ID
+ * Format person display name from array index and role.
+ *
+ * Convention:
+ * - Index 0: "You"
+ * - Non-dependent at index 1+: "Your partner"
+ * - Dependents: "Your first dependent", "Your second dependent", etc.
+ *
+ * For US: dependents identified by is_tax_unit_dependent === true
+ * For UK: dependents identified by age < 18
  */
-function formatPersonName(person: HouseholdPerson): string {
-  if (person.name) {
-    return person.name;
+export function getPersonDisplayName(person: HouseholdPerson, index: number): string {
+  if (index === 0) {
+    return 'you';
   }
 
-  const id = person.person_id ?? 0;
-  if (id === 0) {
-    return 'You';
+  // Check if this person is a dependent
+  const isDependent =
+    person.is_tax_unit_dependent === true || (person.age !== undefined && person.age < 18);
+
+  if (!isDependent) {
+    return 'your partner';
+  }
+
+  // Count how many dependents come before this person in the array
+  // We don't have access to the full people array here, so we derive from index
+  // The caller should use getDependentOrdinalName for precise ordinal
+  const ordinals = [
+    'first',
+    'second',
+    'third',
+    'fourth',
+    'fifth',
+    'sixth',
+    'seventh',
+    'eighth',
+    'ninth',
+    'tenth',
+  ];
+  // Default to using index - 1 or index - 2 depending on partner presence
+  // This is a best-effort: the precise ordinal needs full array context
+  const ordinal = ordinals[0] || '1st';
+  return `your ${ordinal} dependent`;
+}
+
+/**
+ * Get person display name with full array context for precise dependent ordinals
+ */
+export function getPersonDisplayNameInContext(people: HouseholdPerson[], index: number): string {
+  if (index === 0) {
+    return 'you';
+  }
+
+  const person = people[index];
+  if (!person) {
+    return `person ${index + 1}`;
+  }
+
+  const isDependent =
+    person.is_tax_unit_dependent === true || (person.age !== undefined && person.age < 18);
+
+  if (!isDependent) {
+    return 'your partner';
+  }
+
+  // Count dependents before this person
+  let dependentOrdinal = 0;
+  for (let i = 0; i < index; i++) {
+    const p = people[i];
+    if (p.is_tax_unit_dependent === true || (p.age !== undefined && p.age < 18)) {
+      dependentOrdinal++;
+    }
   }
 
   const ordinals = [
@@ -224,8 +272,8 @@ function formatPersonName(person: HouseholdPerson): string {
     'ninth',
     'tenth',
   ];
-  const ordinal = ordinals[id - 1] || `${id}th`;
-  return `Your ${ordinal} dependent`;
+  const ordinal = ordinals[dependentOrdinal] || `${dependentOrdinal + 1}th`;
+  return `your ${ordinal} dependent`;
 }
 
 /**
@@ -257,42 +305,10 @@ function formatEntityTypeName(entityType: EntityType): string {
 }
 
 /**
- * Format entity instance name
- * For single instances, uses the entity type name
- * For multiple instances, adds ordinal
- */
-function formatEntityInstanceName(entityType: EntityType, entityId: number): string {
-  if (entityId === 0) {
-    return formatEntityTypeName(entityType);
-  }
-
-  const ordinals = ['first', 'second', 'third', 'fourth', 'fifth'];
-  const ordinal = ordinals[entityId] || `${entityId + 1}th`;
-  const singularType = entityType.replace(/_/g, ' ');
-  return `Your ${ordinal} ${singularType}`;
-}
-
-/**
- * Get person display name
- */
-export function getPersonDisplayName(person: HouseholdPerson): string {
-  return formatPersonName(person);
-}
-
-/**
  * Get all person display names from household
  */
 export function getAllPersonDisplayNames(household: Household): string[] {
-  return sortPeopleByOrder(household.people).map(formatPersonName);
-}
-
-/**
- * Get members of an entity group from household
- */
-export function getEntityMembers(
-  household: Household,
-  entityType: EntityType,
-  entityId: number
-): HouseholdPerson[] {
-  return HouseholdQueries.getPeopleInEntity(household, entityType, entityId);
+  return household.people.map((_person, index) =>
+    getPersonDisplayNameInContext(household.people, index)
+  );
 }

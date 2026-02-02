@@ -2,7 +2,7 @@ import { Population } from '@/types/ingredients/Population';
 
 /**
  * Creates a mock population with a complex household structure
- * including nested people and family data
+ * v2 Alpha: no person_id/name/person_*_id, entity groups are single dicts
  */
 export function mockPopulationWithComplexHousehold(): Population {
   return {
@@ -14,27 +14,17 @@ export function mockPopulationWithComplexHousehold(): Population {
       year: 2024,
       people: [
         {
-          person_id: 0,
-          name: 'John Doe',
           age: 35,
           employment_income: 50000,
-          person_family_id: 0,
-          person_tax_unit_id: 0,
-          person_household_id: 0,
         },
         {
-          person_id: 1,
-          name: 'Jane Doe',
           age: 33,
           employment_income: 45000,
-          person_family_id: 0,
-          person_tax_unit_id: 0,
-          person_household_id: 0,
         },
       ],
-      family: [{ family_id: 0 }],
-      tax_unit: [{ tax_unit_id: 0 }],
-      household: [{ household_id: 0 }],
+      family: {},
+      tax_unit: {},
+      household: {},
     },
     geography: null,
   };

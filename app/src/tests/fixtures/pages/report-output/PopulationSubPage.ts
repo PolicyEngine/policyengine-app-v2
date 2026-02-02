@@ -33,32 +33,19 @@ export const mockHouseholdFamilyOfFour: Household = {
   year: 2024,
   people: [
     {
-      person_id: 0,
-      name: 'person1',
       age: 35,
       employment_income: 50000,
-      person_family_id: 0,
-      person_tax_unit_id: 0,
-      person_household_id: 0,
     },
     {
-      person_id: 1,
-      name: 'person2',
       age: 33,
       employment_income: 45000,
-      person_family_id: 0,
-      person_tax_unit_id: 0,
-      person_household_id: 0,
     },
   ],
-  family: [{ family_id: 0 }],
-  tax_unit: [{ tax_unit_id: 0 }],
-  household: [
-    {
-      household_id: 0,
-      state_name: 'CA',
-    },
-  ],
+  family: {},
+  tax_unit: {},
+  household: {
+    state_name: 'CA',
+  },
 };
 
 export const mockHouseholdSinglePerson: Household = {
@@ -67,23 +54,15 @@ export const mockHouseholdSinglePerson: Household = {
   year: 2024,
   people: [
     {
-      person_id: 0,
-      name: 'person1',
       age: 28,
       employment_income: 60000,
-      person_family_id: 0,
-      person_tax_unit_id: 0,
-      person_household_id: 0,
     },
   ],
-  family: [{ family_id: 0 }],
-  tax_unit: [{ tax_unit_id: 0 }],
-  household: [
-    {
-      household_id: 0,
-      state_name: 'NY',
-    },
-  ],
+  family: {},
+  tax_unit: {},
+  household: {
+    state_name: 'NY',
+  },
 };
 
 // Mock Geographies

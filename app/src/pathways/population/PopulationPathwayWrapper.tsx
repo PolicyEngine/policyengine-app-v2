@@ -12,6 +12,7 @@ import { CURRENT_YEAR } from '@/constants';
 import { ReportYearProvider } from '@/contexts/ReportYearContext';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { usePathwayNavigation } from '@/hooks/usePathwayNavigation';
+import { useRegionsList } from '@/hooks/useStaticMetadata';
 import { Household } from '@/types/ingredients/Household';
 import { StandalonePopulationViewMode } from '@/types/pathwayModes/PopulationViewMode';
 import { PopulationStateProps } from '@/types/pathwayState';
@@ -33,6 +34,11 @@ export default function PopulationPathwayWrapper({ onComplete }: PopulationPathw
     geography: null,
   });
 
+  // Get metadata for views
+  const currentYear = parseInt(CURRENT_YEAR, 10);
+  const regionData = useRegionsList(countryId, currentYear);
+
+  // ========== NAVIGATION ==========
   const { currentMode, navigateToMode, goBack, canGoBack } = usePathwayNavigation(
     StandalonePopulationViewMode.LABEL
   );

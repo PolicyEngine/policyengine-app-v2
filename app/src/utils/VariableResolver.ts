@@ -4,11 +4,10 @@
  * Resolves which entity a variable belongs to using metadata, and provides
  * getters/setters that access the correct location in household data.
  *
- * Works with the v2 Alpha format (array-based, flat values).
+ * Works with the v2 Alpha format (single-dict entities, index-based people).
  */
 
-import { EntityType, Household } from '@/types/ingredients/Household';
-import * as HouseholdQueries from './HouseholdQueries';
+import { Household } from '@/types/ingredients/Household';
 
 export interface EntityInfo {
   entity: string; // e.g., "person", "tax_unit", "spm_unit"
@@ -88,10 +87,10 @@ export function getVariableInfo(variableName: string, metadata: any): VariableIn
 }
 
 /**
- * Get the entity type name used in the Household type from the plural name
+ * Map entity plural name to the Household field key
  */
-function pluralToEntityType(plural: string): EntityType {
-  const map: Record<string, EntityType> = {
+function pluralToHouseholdKey(plural: string): string {
+  const map: Record<string, string> = {
     people: 'person',
     tax_units: 'tax_unit',
     families: 'family',
@@ -100,7 +99,7 @@ function pluralToEntityType(plural: string): EntityType {
     households: 'household',
     benunits: 'benunit',
   };
-  return map[plural] ?? ('person' as EntityType);
+  return map[plural] ?? 'person';
 }
 
 /**
@@ -109,13 +108,13 @@ function pluralToEntityType(plural: string): EntityType {
  * @param household - The household data (v2 format)
  * @param variableName - Name of the variable (snake_case)
  * @param metadata - Country metadata
- * @param entityId - Entity ID (person_id for person variables, entity-specific ID for groups)
+ * @param entityIndex - For person variables: array index. For entities: ignored (single dict).
  */
 export function getValue(
   household: Household,
   variableName: string,
   metadata: any,
-  entityId?: number
+  entityIndex?: number
 ): any {
   const entityInfo = resolveEntity(variableName, metadata);
   if (!entityInfo) {
@@ -123,25 +122,15 @@ export function getValue(
     return null;
   }
 
-  const entityType = pluralToEntityType(entityInfo.plural);
-
   if (entityInfo.isPerson) {
-    if (entityId === undefined) {
-      // No specific person requested - return value from first person
-      const firstPerson = household.people[0];
-      return firstPerson?.[variableName] ?? null;
-    }
-    return HouseholdQueries.getPersonVariable(household, entityId, variableName) ?? null;
+    const index = entityIndex ?? 0;
+    return household.people[index]?.[variableName] ?? null;
   }
 
-  // For group entities, get the value from the entity
-  if (entityId === undefined) {
-    // Get value from first entity of this type
-    const entities = HouseholdQueries.getEntitiesByType(household, entityType);
-    return entities[0]?.[variableName] ?? null;
-  }
-
-  return HouseholdQueries.getEntityVariable(household, entityType, entityId, variableName) ?? null;
+  // For group entities, access the single dict directly
+  const entityKey = pluralToHouseholdKey(entityInfo.plural);
+  const entity = household[entityKey as keyof Household] as Record<string, any> | undefined;
+  return entity?.[variableName] ?? null;
 }
 
 /**
@@ -152,14 +141,14 @@ export function getValue(
  * @param variableName - Name of the variable (snake_case)
  * @param value - Value to set
  * @param metadata - Country metadata
- * @param entityId - Entity ID (person_id for person variables)
+ * @param entityIndex - For person variables: array index. For entities: ignored.
  */
 export function setValue(
   household: Household,
   variableName: string,
   value: any,
   metadata: any,
-  entityId?: number
+  entityIndex?: number
 ): Household {
   const entityInfo = resolveEntity(variableName, metadata);
   if (!entityInfo) {
@@ -168,22 +157,18 @@ export function setValue(
   }
 
   const newHousehold = JSON.parse(JSON.stringify(household)) as Household;
-  const entityType = pluralToEntityType(entityInfo.plural);
 
   if (entityInfo.isPerson) {
-    const targetId = entityId ?? 0;
-    const person = newHousehold.people.find((p) => p.person_id === targetId);
-    if (person) {
-      person[variableName] = value;
+    const index = entityIndex ?? 0;
+    if (newHousehold.people[index]) {
+      newHousehold.people[index][variableName] = value;
     }
     return newHousehold;
   }
 
-  // For group entities
-  const entities = HouseholdQueries.getEntitiesByType(newHousehold, entityType);
-  const targetId = entityId ?? 0;
-  const idField = `${entityType}_id`;
-  const entity = entities.find((e) => e[idField] === targetId);
+  // For group entities, set on the single dict
+  const entityKey = pluralToHouseholdKey(entityInfo.plural) as keyof Household;
+  const entity = newHousehold[entityKey] as Record<string, any> | undefined;
   if (entity) {
     entity[variableName] = value;
   }
@@ -194,11 +179,7 @@ export function setValue(
 /**
  * Add a variable to all applicable entity instances with default value
  */
-export function addVariable(
-  household: Household,
-  variableName: string,
-  metadata: any
-): Household {
+export function addVariable(household: Household, variableName: string, metadata: any): Household {
   const entityInfo = resolveEntity(variableName, metadata);
   const variableInfo = getVariableInfo(variableName, metadata);
 
@@ -207,7 +188,6 @@ export function addVariable(
   }
 
   const newHousehold = JSON.parse(JSON.stringify(household)) as Household;
-  const entityType = pluralToEntityType(entityInfo.plural);
 
   if (entityInfo.isPerson) {
     for (const person of newHousehold.people) {
@@ -216,11 +196,11 @@ export function addVariable(
       }
     }
   } else {
-    const entities = HouseholdQueries.getEntitiesByType(newHousehold, entityType);
-    for (const entity of entities) {
-      if (entity[variableName] === undefined) {
-        entity[variableName] = variableInfo.defaultValue;
-      }
+    // Set on the single entity dict
+    const entityKey = pluralToHouseholdKey(entityInfo.plural) as keyof Household;
+    const entity = newHousehold[entityKey] as Record<string, any> | undefined;
+    if (entity && entity[variableName] === undefined) {
+      entity[variableName] = variableInfo.defaultValue;
     }
   }
 
@@ -234,7 +214,7 @@ export function addVariableToEntity(
   household: Household,
   variableName: string,
   metadata: any,
-  entityId?: number
+  entityIndex?: number
 ): Household {
   const entityInfo = resolveEntity(variableName, metadata);
   const variableInfo = getVariableInfo(variableName, metadata);
@@ -244,19 +224,17 @@ export function addVariableToEntity(
   }
 
   const newHousehold = JSON.parse(JSON.stringify(household)) as Household;
-  const entityType = pluralToEntityType(entityInfo.plural);
 
   if (entityInfo.isPerson) {
-    const targetId = entityId ?? 0;
-    const person = newHousehold.people.find((p) => p.person_id === targetId);
+    const index = entityIndex ?? 0;
+    const person = newHousehold.people[index];
     if (person && person[variableName] === undefined) {
       person[variableName] = variableInfo.defaultValue;
     }
   } else {
-    const entities = HouseholdQueries.getEntitiesByType(newHousehold, entityType);
-    const targetId = entityId ?? 0;
-    const idField = `${entityType}_id`;
-    const entity = entities.find((e) => e[idField] === targetId);
+    // Set on the single entity dict
+    const entityKey = pluralToHouseholdKey(entityInfo.plural) as keyof Household;
+    const entity = newHousehold[entityKey] as Record<string, any> | undefined;
     if (entity && entity[variableName] === undefined) {
       entity[variableName] = variableInfo.defaultValue;
     }
@@ -280,15 +258,16 @@ export function removeVariable(
   }
 
   const newHousehold = JSON.parse(JSON.stringify(household)) as Household;
-  const entityType = pluralToEntityType(entityInfo.plural);
 
   if (entityInfo.isPerson) {
     for (const person of newHousehold.people) {
       delete person[variableName];
     }
   } else {
-    const entities = HouseholdQueries.getEntitiesByType(newHousehold, entityType);
-    for (const entity of entities) {
+    // Delete from the single entity dict
+    const entityKey = pluralToHouseholdKey(entityInfo.plural) as keyof Household;
+    const entity = newHousehold[entityKey] as Record<string, any> | undefined;
+    if (entity) {
       delete entity[variableName];
     }
   }

@@ -146,18 +146,23 @@ export default function MarginalTaxRatesSubPage({
 
   // Get MTR data (401-point arrays)
   // Use first person's MTR (matches V1 behavior) - MTR should not be aggregated across people
-  const firstPersonId = baselineVariation.people[0]?.person_id ?? 0;
+  const firstPersonIndex = 0;
 
   const baselineMTR = getValueFromHousehold(
     'marginal_tax_rate',
-    firstPersonId,
+    firstPersonIndex,
     baselineVariation,
     metadataContext
   );
 
   const reformMTR =
     reform && reformVariation
-      ? getValueFromHousehold('marginal_tax_rate', firstPersonId, reformVariation, metadataContext)
+      ? getValueFromHousehold(
+          'marginal_tax_rate',
+          firstPersonIndex,
+          reformVariation,
+          metadataContext
+        )
       : null;
 
   if (!Array.isArray(baselineMTR)) {
@@ -175,11 +180,9 @@ export default function MarginalTaxRatesSubPage({
   const reformMTRClipped = reformMTR ? clipMTR(reformMTR as number[]) : null;
 
   // Get current earnings for marker (first person only)
-  const firstPersonIdBaseline = baseline.people[0]?.person_id ?? 0;
-
   const currentEarnings = getValueFromHousehold(
     'employment_income',
-    firstPersonIdBaseline,
+    firstPersonIndex,
     baseline,
     metadataContext
   ) as number;
@@ -187,7 +190,7 @@ export default function MarginalTaxRatesSubPage({
   // Get current MTR (first person only)
   const currentMTR = getValueFromHousehold(
     'marginal_tax_rate',
-    firstPersonIdBaseline,
+    firstPersonIndex,
     baseline,
     metadataContext
   ) as number;

@@ -8,7 +8,6 @@
 
 import { useState } from 'react';
 import { Text } from '@mantine/core';
-import { HouseholdAdapter } from '@/adapters';
 import PathwayView from '@/components/common/PathwayView';
 import { MOCK_USER_ID } from '@/constants';
 import {

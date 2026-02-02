@@ -3,7 +3,7 @@ import { markReportCompleted } from '@/api/report';
 import { fetchSimulationById, markSimulationError, updateSimulationOutput } from '@/api/simulation';
 import { reportKeys, simulationKeys } from '@/libs/queryKeys';
 import type { HouseholdReportConfig, SimulationConfig } from '@/types/calculation/household';
-import type { HouseholdData } from '@/types/ingredients/Household';
+import type { Household } from '@/types/ingredients/Household';
 import type { Report } from '@/types/ingredients/Report';
 import { cacheMonitor } from '@/utils/cacheMonitor';
 import { HouseholdProgressCoordinator } from './HouseholdProgressCoordinator';
@@ -30,7 +30,7 @@ export class HouseholdReportOrchestrator {
 
   private queryClient: QueryClient;
   private activeCalculations: Set<string>; // Track which simulations are running
-  private simulationResults: Map<string, Map<string, HouseholdData>>; // reportId -> (simId -> result)
+  private simulationResults: Map<string, Map<string, Household>>; // reportId -> (simId -> result)
   private progressCoordinators: Map<
     string,
     { coordinator: HouseholdProgressCoordinator; timer: NodeJS.Timeout }
@@ -137,7 +137,7 @@ export class HouseholdReportOrchestrator {
       // Store result for report output aggregation
       const reportResults = this.simulationResults.get(reportId);
       if (reportResults) {
-        reportResults.set(simulationId, result as HouseholdData);
+        reportResults.set(simulationId, result as Household);
       }
 
       // Notify progress coordinator that this simulation completed

@@ -34,36 +34,22 @@ export const mockHouseholdMetadata: HouseholdMetadata = {
   id: '12345',
   household: {
     tax_benefit_model_name: 'policyengine_us',
-    year: parseInt(CURRENT_YEAR),
+    year: parseInt(CURRENT_YEAR, 10),
     people: [
       {
-        person_id: 0,
-        name: 'person1',
         age: 30,
         employment_income: 50000,
-        person_tax_unit_id: 0,
-        person_marital_unit_id: 0,
-        person_spm_unit_id: 0,
-        person_household_id: 0,
-        person_family_id: 0,
       },
       {
-        person_id: 1,
-        name: 'person2',
         age: 28,
         employment_income: 45000,
-        person_tax_unit_id: 0,
-        person_marital_unit_id: 0,
-        person_spm_unit_id: 0,
-        person_household_id: 0,
-        person_family_id: 0,
       },
     ],
-    tax_unit: [{ tax_unit_id: 0 }],
-    marital_unit: [{ marital_unit_id: 0 }],
-    spm_unit: [{ spm_unit_id: 0 }],
-    household: [{ household_id: 0 }],
-    family: [{ family_id: 0 }],
+    tax_unit: {},
+    marital_unit: {},
+    spm_unit: {},
+    household: {},
+    family: {},
   },
 };
 
@@ -71,16 +57,13 @@ export const mockHouseholdMetadataWithUnknownEntity: HouseholdMetadata = {
   id: '67890',
   household: {
     tax_benefit_model_name: 'policyengine_uk',
-    year: parseInt(CURRENT_YEAR),
+    year: parseInt(CURRENT_YEAR, 10),
     people: [
       {
-        person_id: 0,
-        name: 'person1',
         age: 40,
-        person_household_id: 0,
       },
     ],
-    household: [{ household_id: 0 }],
+    household: {},
   },
 };
 
@@ -89,72 +72,49 @@ export const mockHouseholdData: Household = {
   year: 2025,
   people: [
     {
-      person_id: 0,
-      name: 'person1',
       age: 30,
       employment_income: 50000,
-      person_tax_unit_id: 0,
-      person_marital_unit_id: 0,
     },
     {
-      person_id: 1,
-      name: 'person2',
       age: 28,
       employment_income: 45000,
-      person_tax_unit_id: 0,
-      person_marital_unit_id: 0,
     },
   ],
-  tax_unit: [{ tax_unit_id: 0 }],
-  marital_unit: [{ marital_unit_id: 0 }],
+  tax_unit: {},
+  marital_unit: {},
 };
 
 export const mockHouseholdDataWithMultipleEntities: Household = {
   tax_benefit_model_name: 'policyengine_us',
-  year: parseInt(CURRENT_YEAR),
+  year: parseInt(CURRENT_YEAR, 10),
   people: [
     {
-      person_id: 0,
-      name: 'person1',
       age: 25,
-      person_tax_unit_id: 0,
-      person_marital_unit_id: 0,
-      person_spm_unit_id: 0,
     },
     {
-      person_id: 1,
-      name: 'person2',
       age: 23,
-      person_tax_unit_id: 0,
-      person_marital_unit_id: 0,
-      person_spm_unit_id: 0,
     },
     {
-      person_id: 2,
-      name: 'person3',
       age: 5,
-      person_tax_unit_id: 0,
-      person_spm_unit_id: 0,
+      is_tax_unit_dependent: true,
     },
   ],
-  tax_unit: [{ tax_unit_id: 0 }],
-  marital_unit: [{ marital_unit_id: 0 }],
-  spm_unit: [{ spm_unit_id: 0 }],
+  tax_unit: {},
+  marital_unit: {},
+  spm_unit: {},
 };
 
 export const mockEmptyHouseholdData: Household = {
   tax_benefit_model_name: 'policyengine_us',
-  year: parseInt(CURRENT_YEAR),
+  year: parseInt(CURRENT_YEAR, 10),
   people: [],
 };
 
 export const mockHouseholdDataWithUnknownEntity: Household = {
   tax_benefit_model_name: 'policyengine_us',
-  year: parseInt(CURRENT_YEAR),
+  year: parseInt(CURRENT_YEAR, 10),
   people: [
     {
-      person_id: 0,
-      name: 'person1',
       age: 30,
     },
   ],

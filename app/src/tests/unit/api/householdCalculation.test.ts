@@ -1,11 +1,4 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-
-// Mock legacyConversion to isolate API layer from conversion logic
-vi.mock('@/api/legacyConversion', () => ({
-  v1ResponseToHousehold: vi.fn((data: any) => data),
-  householdToV1Request: vi.fn((data: any) => data),
-}));
-
 import { fetchHouseholdCalculation } from '@/api/householdCalculation';
 import { BASE_URL } from '@/constants';
 import {
@@ -22,6 +15,12 @@ import {
   TEST_HOUSEHOLD_IDS,
   TEST_POLICY_IDS,
 } from '@/tests/fixtures/api/householdCalculationMocks';
+
+// Mock legacyConversion to isolate API layer from conversion logic
+vi.mock('@/api/legacyConversion', () => ({
+  v1ResponseToHousehold: vi.fn((data: any) => data),
+  householdToV1Request: vi.fn((data: any) => data),
+}));
 
 global.fetch = vi.fn();
 
