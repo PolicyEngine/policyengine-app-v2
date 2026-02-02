@@ -60,8 +60,6 @@ describe('useStaticMetadata', () => {
         ({ year }) => useStaticMetadata(TEST_COUNTRIES.US, year),
         { initialProps: { year: 2024 } }
       );
-      const firstRegions = result.current.regions;
-
       // When
       rerender({ year: 2025 });
 

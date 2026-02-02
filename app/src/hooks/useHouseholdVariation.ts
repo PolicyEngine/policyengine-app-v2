@@ -14,7 +14,7 @@ import { fetchHouseholdVariation } from '@/api/householdVariation';
 import { v1ResponseToHousehold } from '@/api/legacyConversion';
 import { householdVariationKeys } from '@/libs/queryKeys';
 import type { Household } from '@/types/ingredients/Household';
-import { buildHouseholdVariationAxes, HouseholdWithAxes } from '@/utils/householdVariationAxes';
+import { buildHouseholdVariationAxes } from '@/utils/householdVariationAxes';
 
 interface UseHouseholdVariationParams {
   householdId: string;

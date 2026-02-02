@@ -1,4 +1,4 @@
-import type { HouseholdData } from '@/types/ingredients/Household';
+import type { Household } from '@/types/ingredients/Household';
 
 /**
  * Household report output structure
@@ -6,5 +6,5 @@ import type { HouseholdData } from '@/types/ingredients/Household';
  * Simulation IDs are sorted alphabetically
  */
 export interface HouseholdReportOutput {
-  [simulationId: string]: HouseholdData;
+  [simulationId: string]: Household;
 }

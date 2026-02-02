@@ -7,17 +7,7 @@
  * - Jobs store request_data (input) and result (output) as JSON
  */
 
-import {
-  Household,
-  HouseholdBenunit,
-  HouseholdFamily,
-  HouseholdMaritalUnit,
-  HouseholdPerson,
-  HouseholdSpmUnit,
-  HouseholdTaxUnit,
-  HouseholdUnit,
-  TaxBenefitModelName,
-} from '@/types/ingredients/Household';
+import { Household, HouseholdPerson, TaxBenefitModelName } from '@/types/ingredients/Household';
 
 // ============================================================================
 // API v2 Alpha Job Types
@@ -49,67 +39,20 @@ export interface HouseholdJobStatusResponse {
 }
 
 /**
- * The calculated output from a household simulation
- * Contains computed values for all entities
+ * The calculated output from a household simulation.
+ * Matches HouseholdCalculateResponse from API v2 Alpha:
+ * - person: array of dicts (one per person)
+ * - entity groups: array of dicts or null
+ * - household: single dict (NOT an array)
  */
 export interface HouseholdCalculationResult {
-  person: HouseholdPersonOutput[];
-  tax_unit?: HouseholdTaxUnitOutput[];
-  family?: HouseholdFamilyOutput[];
-  spm_unit?: HouseholdSpmUnitOutput[];
-  marital_unit?: HouseholdMaritalUnitOutput[];
-  household?: HouseholdUnitOutput[];
-  benunit?: HouseholdBenunitOutput[]; // UK only
-}
-
-/**
- * Calculated output for a person
- * Contains all computed variables for that person
- */
-export interface HouseholdPersonOutput {
-  [variableName: string]: number | boolean | string;
-}
-
-/**
- * Calculated output for a tax unit
- */
-export interface HouseholdTaxUnitOutput {
-  [variableName: string]: number | boolean | string;
-}
-
-/**
- * Calculated output for a family
- */
-export interface HouseholdFamilyOutput {
-  [variableName: string]: number | boolean | string;
-}
-
-/**
- * Calculated output for an SPM unit
- */
-export interface HouseholdSpmUnitOutput {
-  [variableName: string]: number | boolean | string;
-}
-
-/**
- * Calculated output for a marital unit
- */
-export interface HouseholdMaritalUnitOutput {
-  [variableName: string]: number | boolean | string;
-}
-
-/**
- * Calculated output for a household unit
- */
-export interface HouseholdUnitOutput {
-  [variableName: string]: number | boolean | string;
-}
-
-/**
- * Calculated output for a benefit unit (UK)
- */
-export interface HouseholdBenunitOutput {
-  [variableName: string]: number | boolean | string;
+  person: Record<string, any>[];
+  tax_unit?: Record<string, any>[] | null;
+  family?: Record<string, any>[] | null;
+  spm_unit?: Record<string, any>[] | null;
+  marital_unit?: Record<string, any>[] | null;
+  household?: Record<string, any>;
+  benunit?: Record<string, any>[] | null;
 }
 
 // ============================================================================
@@ -177,14 +120,4 @@ export interface HouseholdImpactDiff {
 // Re-exports for convenience
 // ============================================================================
 
-export type {
-  Household,
-  HouseholdPerson,
-  HouseholdTaxUnit,
-  HouseholdFamily,
-  HouseholdSpmUnit,
-  HouseholdMaritalUnit,
-  HouseholdUnit,
-  HouseholdBenunit,
-  TaxBenefitModelName,
-};
+export type { Household, HouseholdPerson, TaxBenefitModelName };

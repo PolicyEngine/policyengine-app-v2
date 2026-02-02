@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { createHousehold, fetchHouseholdById } from '@/api/household';
 import { BASE_URL, CURRENT_YEAR } from '@/constants';
-import { Household } from '@/types/ingredients/Household';
 import {
   ERROR_MESSAGES,
   EXISTING_HOUSEHOLD_ID,
@@ -17,6 +16,7 @@ import {
   NON_EXISTENT_HOUSEHOLD_ID,
   TEST_COUNTRIES,
 } from '@/tests/fixtures/api/householdMocks';
+import { Household } from '@/types/ingredients/Household';
 
 // Mock legacyConversion to isolate API layer from conversion logic
 const mockV1ResponseToHousehold = vi.fn();
@@ -39,8 +39,8 @@ const mockV1ApiResult = {
 // Expected v2 household returned by mocked conversion
 const mockConvertedHousehold: Household = {
   tax_benefit_model_name: 'policyengine_us',
-  year: parseInt(CURRENT_YEAR),
-  people: [{ person_id: 0, name: 'person1', age: 30 }],
+  year: parseInt(CURRENT_YEAR, 10),
+  people: [{ age: 30 }],
 };
 
 // Known v1 creation payload returned by mocked conversion

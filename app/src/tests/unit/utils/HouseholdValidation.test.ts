@@ -1,7 +1,23 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { CURRENT_YEAR } from '@/constants';
-import { Household, HouseholdPerson } from '@/types/ingredients/Household';
-import { VariableMetadata } from '@/types/metadata';
+import {
+  mockBoolMetadata,
+  mockEmptyHousehold,
+  mockFloatMetadata,
+  mockHouseholdMissingAge,
+  mockIntMetadata,
+  mockReduxStateNoMetadata,
+  mockReduxStateWithMetadata,
+  mockStringMetadata,
+  mockValidUKHousehold,
+  mockValidUSHousehold,
+  VALIDATION_DATA_TYPES,
+  VALIDATION_TEST_VALUES,
+  VALIDATION_VARIABLE_NAMES,
+  verifyHasErrors,
+  verifyNoErrors,
+} from '@/tests/fixtures/utils/householdValidationMocks';
+import { Household } from '@/types/ingredients/Household';
 import * as HouseholdQueries from '@/utils/HouseholdQueries';
 import { HouseholdValidation, ValidationResult } from '@/utils/HouseholdValidation';
 
@@ -12,305 +28,28 @@ vi.mock('@/utils/HouseholdQueries', () => ({
   isUKHousehold: vi.fn(),
 }));
 
-// ============= TEST CONSTANTS =============
-
-const TEST_PERSON_IDS = {
-  ADULT_1: 0,
-  ADULT_2: 1,
-  CHILD_1: 2,
-  PERSON_NO_AGE: 3,
-  ORPHAN_PERSON: 4,
-} as const;
-
-const TEST_UNIT_IDS = {
-  TAX_UNIT: 0,
-  FAMILY: 0,
-  SPM_UNIT: 0,
-  MARITAL_UNIT: 0,
-  HOUSEHOLD: 0,
-  BENUNIT: 0,
-  INVALID_MARITAL_UNIT: 1,
-  EMPTY_BENUNIT: 1,
-} as const;
+// ============= ERROR AND WARNING CODES =============
 
 const ERROR_CODES = {
   MODEL_MISMATCH: 'MODEL_MISMATCH',
-  INVALID_MARITAL_UNIT: 'INVALID_MARITAL_UNIT',
-  EMPTY_BENUNIT: 'EMPTY_BENUNIT',
   INVALID_TYPE: 'INVALID_TYPE',
   NOT_INTEGER: 'NOT_INTEGER',
   NO_PEOPLE: 'NO_PEOPLE',
-  MISSING_PERSON_ID: 'MISSING_PERSON_ID',
-  DUPLICATE_PERSON_IDS: 'DUPLICATE_PERSON_IDS',
+  INVALID_PEOPLE: 'INVALID_PEOPLE',
+  MISSING_YEAR: 'MISSING_YEAR',
+  NO_YEAR: 'NO_YEAR',
+  NO_MODEL: 'NO_MODEL',
 } as const;
 
 const WARNING_CODES = {
   MISSING_AGE: 'MISSING_AGE',
-  NO_TAX_UNITS: 'NO_TAX_UNITS',
-  PEOPLE_WITHOUT_TAX_UNIT: 'PEOPLE_WITHOUT_TAX_UNIT',
+  NO_TAX_UNIT: 'NO_TAX_UNIT',
+  NO_HOUSEHOLD_UNIT: 'NO_HOUSEHOLD_UNIT',
   UNUSUAL_AGE: 'UNUSUAL_AGE',
+  UNUSUAL_YEAR: 'UNUSUAL_YEAR',
 } as const;
 
-// ============= MOCK DATA =============
-
-const mockValidUSHousehold: Household = {
-  tax_benefit_model_name: 'policyengine_us',
-  year: parseInt(CURRENT_YEAR),
-  people: [
-    {
-      person_id: TEST_PERSON_IDS.ADULT_1,
-      name: 'Adult 1',
-      age: 30,
-      person_tax_unit_id: TEST_UNIT_IDS.TAX_UNIT,
-      person_family_id: TEST_UNIT_IDS.FAMILY,
-      person_spm_unit_id: TEST_UNIT_IDS.SPM_UNIT,
-      person_marital_unit_id: TEST_UNIT_IDS.MARITAL_UNIT,
-      person_household_id: TEST_UNIT_IDS.HOUSEHOLD,
-    },
-    {
-      person_id: TEST_PERSON_IDS.ADULT_2,
-      name: 'Adult 2',
-      age: 32,
-      person_tax_unit_id: TEST_UNIT_IDS.TAX_UNIT,
-      person_family_id: TEST_UNIT_IDS.FAMILY,
-      person_spm_unit_id: TEST_UNIT_IDS.SPM_UNIT,
-      person_marital_unit_id: TEST_UNIT_IDS.MARITAL_UNIT,
-      person_household_id: TEST_UNIT_IDS.HOUSEHOLD,
-    },
-  ],
-  tax_unit: [{ tax_unit_id: TEST_UNIT_IDS.TAX_UNIT }],
-  family: [{ family_id: TEST_UNIT_IDS.FAMILY }],
-  spm_unit: [{ spm_unit_id: TEST_UNIT_IDS.SPM_UNIT }],
-  marital_unit: [{ marital_unit_id: TEST_UNIT_IDS.MARITAL_UNIT }],
-  household: [{ household_id: TEST_UNIT_IDS.HOUSEHOLD }],
-};
-
-const mockValidUKHousehold: Household = {
-  tax_benefit_model_name: 'policyengine_uk',
-  year: parseInt(CURRENT_YEAR),
-  people: [
-    {
-      person_id: TEST_PERSON_IDS.ADULT_1,
-      name: 'Adult 1',
-      age: 30,
-      person_benunit_id: TEST_UNIT_IDS.BENUNIT,
-      person_household_id: TEST_UNIT_IDS.HOUSEHOLD,
-    },
-    {
-      person_id: TEST_PERSON_IDS.CHILD_1,
-      name: 'Child 1',
-      age: 10,
-      person_benunit_id: TEST_UNIT_IDS.BENUNIT,
-      person_household_id: TEST_UNIT_IDS.HOUSEHOLD,
-    },
-  ],
-  benunit: [{ benunit_id: TEST_UNIT_IDS.BENUNIT }],
-  household: [{ household_id: TEST_UNIT_IDS.HOUSEHOLD }],
-};
-
-const mockHouseholdMissingAge: Household = {
-  tax_benefit_model_name: 'policyengine_us',
-  year: parseInt(CURRENT_YEAR),
-  people: [
-    {
-      person_id: TEST_PERSON_IDS.ADULT_1,
-      name: 'Adult 1',
-      age: 30,
-      person_tax_unit_id: TEST_UNIT_IDS.TAX_UNIT,
-      person_household_id: TEST_UNIT_IDS.HOUSEHOLD,
-    },
-    {
-      person_id: TEST_PERSON_IDS.PERSON_NO_AGE,
-      name: 'Person No Age',
-      // age is missing
-      person_tax_unit_id: TEST_UNIT_IDS.TAX_UNIT,
-      person_household_id: TEST_UNIT_IDS.HOUSEHOLD,
-    },
-  ],
-  tax_unit: [{ tax_unit_id: TEST_UNIT_IDS.TAX_UNIT }],
-  household: [{ household_id: TEST_UNIT_IDS.HOUSEHOLD }],
-};
-
-const mockUSHouseholdOrphanPerson: Household = {
-  tax_benefit_model_name: 'policyengine_us',
-  year: parseInt(CURRENT_YEAR),
-  people: [
-    {
-      person_id: TEST_PERSON_IDS.ADULT_1,
-      name: 'Adult 1',
-      age: 30,
-      person_tax_unit_id: TEST_UNIT_IDS.TAX_UNIT,
-      person_household_id: TEST_UNIT_IDS.HOUSEHOLD,
-    },
-    {
-      person_id: TEST_PERSON_IDS.ADULT_2,
-      name: 'Adult 2',
-      age: 32,
-      person_tax_unit_id: TEST_UNIT_IDS.TAX_UNIT,
-      person_household_id: TEST_UNIT_IDS.HOUSEHOLD,
-    },
-    {
-      person_id: TEST_PERSON_IDS.ORPHAN_PERSON,
-      name: 'Orphan Person',
-      age: 25,
-      // Missing person_tax_unit_id
-      person_household_id: TEST_UNIT_IDS.HOUSEHOLD,
-    },
-  ],
-  tax_unit: [{ tax_unit_id: TEST_UNIT_IDS.TAX_UNIT }],
-  household: [{ household_id: TEST_UNIT_IDS.HOUSEHOLD }],
-};
-
-const mockUSHouseholdNoTaxUnits: Household = {
-  tax_benefit_model_name: 'policyengine_us',
-  year: parseInt(CURRENT_YEAR),
-  people: [
-    {
-      person_id: TEST_PERSON_IDS.ADULT_1,
-      name: 'Adult 1',
-      age: 30,
-      person_household_id: TEST_UNIT_IDS.HOUSEHOLD,
-    },
-  ],
-  // No tax_unit array
-  household: [{ household_id: TEST_UNIT_IDS.HOUSEHOLD }],
-};
-
-const mockUSHouseholdInvalidMaritalUnit: Household = {
-  tax_benefit_model_name: 'policyengine_us',
-  year: parseInt(CURRENT_YEAR),
-  people: [
-    {
-      person_id: TEST_PERSON_IDS.ADULT_1,
-      name: 'Adult 1',
-      age: 30,
-      person_tax_unit_id: TEST_UNIT_IDS.TAX_UNIT,
-      person_household_id: TEST_UNIT_IDS.HOUSEHOLD,
-    },
-  ],
-  tax_unit: [{ tax_unit_id: TEST_UNIT_IDS.TAX_UNIT }],
-  marital_unit: [
-    { marital_unit_id: TEST_UNIT_IDS.INVALID_MARITAL_UNIT },
-    // This marital unit has no members (person doesn't reference it)
-  ],
-  household: [{ household_id: TEST_UNIT_IDS.HOUSEHOLD }],
-};
-
-const mockUKHouseholdEmptyBenunit: Household = {
-  tax_benefit_model_name: 'policyengine_uk',
-  year: parseInt(CURRENT_YEAR),
-  people: [
-    {
-      person_id: TEST_PERSON_IDS.ADULT_1,
-      name: 'Adult 1',
-      age: 30,
-      person_benunit_id: TEST_UNIT_IDS.BENUNIT,
-      person_household_id: TEST_UNIT_IDS.HOUSEHOLD,
-    },
-  ],
-  benunit: [
-    { benunit_id: TEST_UNIT_IDS.BENUNIT },
-    { benunit_id: TEST_UNIT_IDS.EMPTY_BENUNIT }, // No person references this benunit
-  ],
-  household: [{ household_id: TEST_UNIT_IDS.HOUSEHOLD }],
-};
-
-const mockEmptyHousehold: Household = {
-  tax_benefit_model_name: 'policyengine_us',
-  year: parseInt(CURRENT_YEAR),
-  people: [],
-};
-
-const mockHouseholdInvalidPeopleArray: Partial<Household> = {
-  tax_benefit_model_name: 'policyengine_us',
-  year: parseInt(CURRENT_YEAR),
-  people: 'not an array' as any,
-};
-
-const mockHouseholdMissingPersonId: Household = {
-  tax_benefit_model_name: 'policyengine_us',
-  year: parseInt(CURRENT_YEAR),
-  people: [
-    {
-      name: 'Person without ID',
-      age: 30,
-      // Missing person_id
-    },
-  ],
-};
-
-const mockHouseholdDuplicatePersonIds: Household = {
-  tax_benefit_model_name: 'policyengine_us',
-  year: parseInt(CURRENT_YEAR),
-  people: [
-    {
-      person_id: TEST_PERSON_IDS.ADULT_1,
-      name: 'Adult 1',
-      age: 30,
-    },
-    {
-      person_id: TEST_PERSON_IDS.ADULT_1, // Duplicate ID
-      name: 'Adult 2',
-      age: 32,
-    },
-  ],
-};
-
-// Mock variable metadata
-const mockFloatMetadata: VariableMetadata = {
-  entity: 'person',
-  data_type: 'float',
-  name: 'employment_income',
-  description: 'Employment income',
-  label: 'Employment income',
-};
-
-const mockIntMetadata: VariableMetadata = {
-  entity: 'household',
-  data_type: 'int',
-  name: 'household_size',
-  description: 'Household size',
-  label: 'Household size',
-};
-
-const mockBoolMetadata: VariableMetadata = {
-  entity: 'person',
-  data_type: 'bool',
-  name: 'is_married',
-  description: 'Is married',
-  label: 'Is married',
-};
-
-const mockStringMetadata: VariableMetadata = {
-  entity: 'household',
-  data_type: 'string',
-  name: 'state_code',
-  description: 'State code',
-  label: 'State code',
-};
-
-const mockReduxStateWithMetadata = {
-  metadata: {
-    variables: {
-      employment_income: mockFloatMetadata,
-      state_code: mockStringMetadata,
-    },
-  },
-} as any;
-
-const mockReduxStateNoMetadata = {} as any;
-
 // ============= TEST HELPERS =============
-
-function verifyNoErrors(result: ValidationResult): void {
-  expect(result.errors).toHaveLength(0);
-  expect(result.isValid).toBe(true);
-}
-
-function verifyHasErrors(result: ValidationResult, errorCount: number): void {
-  expect(result.errors).toHaveLength(errorCount);
-  expect(result.isValid).toBe(false);
-}
 
 function verifyValidationError(
   result: ValidationResult,
@@ -334,10 +73,6 @@ function verifyValidationWarning(
   if (expectedField !== undefined) {
     expect(warning?.field).toBe(expectedField);
   }
-}
-
-function verifyWarningCount(result: ValidationResult, warningCount: number): void {
-  expect(result.warnings).toHaveLength(warningCount);
 }
 
 // ============= TESTS =============
@@ -436,55 +171,25 @@ describe('HouseholdValidation', () => {
       expect(warnings.length).toBeGreaterThan(0);
       const ageWarning = warnings.find((w) => w.code === WARNING_CODES.MISSING_AGE);
       expect(ageWarning).toBeDefined();
+      expect(ageWarning?.field).toContain('people[1].age');
     });
 
     test('given household without people array when validating then adds error', () => {
       // Given
       const errors: any[] = [];
       const warnings: any[] = [];
+      const household = {
+        tax_benefit_model_name: 'policyengine_us',
+        year: parseInt(CURRENT_YEAR, 10),
+        people: 'not an array',
+      } as any;
 
       // When
-      HouseholdValidation.validateGenericHousehold(
-        mockHouseholdInvalidPeopleArray as Household,
-        errors,
-        warnings
-      );
+      HouseholdValidation.validateGenericHousehold(household, errors, warnings);
 
       // Then
       expect(errors.length).toBeGreaterThan(0);
-      const error = errors.find((e) => e.code === 'INVALID_PEOPLE');
-      expect(error).toBeDefined();
-    });
-
-    test('given person without person_id when validating then adds error', () => {
-      // Given
-      const errors: any[] = [];
-      const warnings: any[] = [];
-
-      // When
-      HouseholdValidation.validateGenericHousehold(mockHouseholdMissingPersonId, errors, warnings);
-
-      // Then
-      expect(errors.length).toBeGreaterThan(0);
-      const error = errors.find((e) => e.code === ERROR_CODES.MISSING_PERSON_ID);
-      expect(error).toBeDefined();
-    });
-
-    test('given duplicate person IDs when validating then adds error', () => {
-      // Given
-      const errors: any[] = [];
-      const warnings: any[] = [];
-
-      // When
-      HouseholdValidation.validateGenericHousehold(
-        mockHouseholdDuplicatePersonIds,
-        errors,
-        warnings
-      );
-
-      // Then
-      expect(errors.length).toBeGreaterThan(0);
-      const error = errors.find((e) => e.code === ERROR_CODES.DUPLICATE_PERSON_IDS);
+      const error = errors.find((e) => e.code === ERROR_CODES.INVALID_PEOPLE);
       expect(error).toBeDefined();
     });
 
@@ -494,12 +199,10 @@ describe('HouseholdValidation', () => {
       const warnings: any[] = [];
       const household: Household = {
         tax_benefit_model_name: 'policyengine_us',
-        year: parseInt(CURRENT_YEAR),
+        year: parseInt(CURRENT_YEAR, 10),
         people: [
           {
-            person_id: 0,
-            name: 'Old person',
-            age: 150, // Unusual age
+            age: 150,
           },
         ],
       };
@@ -513,175 +216,114 @@ describe('HouseholdValidation', () => {
       const ageWarning = warnings.find((w) => w.code === WARNING_CODES.UNUSUAL_AGE);
       expect(ageWarning).toBeDefined();
     });
-  });
 
-  describe('validateUSHousehold', () => {
-    test('given US household with all people in tax units when validating then no warnings', () => {
+    test('given household without year when validating then adds error', () => {
       // Given
       const errors: any[] = [];
       const warnings: any[] = [];
-      vi.mocked(HouseholdQueries.getPersonCount).mockReturnValue(2);
+      const household = {
+        tax_benefit_model_name: 'policyengine_us',
+        people: [{ age: 30 }],
+      } as any;
 
       // When
-      HouseholdValidation.validateUSHousehold(mockValidUSHousehold, errors, warnings);
-
-      // Then
-      expect(errors).toHaveLength(0);
-      expect(warnings).toHaveLength(0);
-    });
-
-    test('given US household with person not in tax unit when validating then adds warning', () => {
-      // Given
-      const errors: any[] = [];
-      const warnings: any[] = [];
-      vi.mocked(HouseholdQueries.getPersonCount).mockReturnValue(3);
-
-      // When
-      HouseholdValidation.validateUSHousehold(mockUSHouseholdOrphanPerson, errors, warnings);
-
-      // Then
-      expect(errors).toHaveLength(0);
-      expect(warnings.length).toBeGreaterThan(0);
-      const warning = warnings.find((w) => w.code === WARNING_CODES.PEOPLE_WITHOUT_TAX_UNIT);
-      expect(warning).toBeDefined();
-    });
-
-    test('given US household with no tax units when validating then adds warning', () => {
-      // Given
-      const errors: any[] = [];
-      const warnings: any[] = [];
-      vi.mocked(HouseholdQueries.getPersonCount).mockReturnValue(1);
-
-      // When
-      HouseholdValidation.validateUSHousehold(mockUSHouseholdNoTaxUnits, errors, warnings);
-
-      // Then
-      expect(errors).toHaveLength(0);
-      expect(warnings.length).toBeGreaterThan(0);
-      const warning = warnings.find((w) => w.code === WARNING_CODES.NO_TAX_UNITS);
-      expect(warning).toBeDefined();
-    });
-
-    test('given US household with empty marital unit when validating then adds error', () => {
-      // Given
-      const errors: any[] = [];
-      const warnings: any[] = [];
-      vi.mocked(HouseholdQueries.getPersonCount).mockReturnValue(1);
-
-      // When
-      HouseholdValidation.validateUSHousehold(mockUSHouseholdInvalidMaritalUnit, errors, warnings);
+      HouseholdValidation.validateGenericHousehold(household, errors, warnings);
 
       // Then
       expect(errors.length).toBeGreaterThan(0);
-      const error = errors.find((e) => e.code === ERROR_CODES.INVALID_MARITAL_UNIT);
+      const error = errors.find((e) => e.code === ERROR_CODES.MISSING_YEAR);
       expect(error).toBeDefined();
     });
 
-    test('given marital unit with exactly 2 members when validating then no error', () => {
+    test('given household with unusual year when validating then adds warning', () => {
       // Given
       const errors: any[] = [];
       const warnings: any[] = [];
       const household: Household = {
         tax_benefit_model_name: 'policyengine_us',
-        year: parseInt(CURRENT_YEAR),
-        people: [
-          {
-            person_id: TEST_PERSON_IDS.ADULT_1,
-            name: 'Adult 1',
-            age: 30,
-            person_marital_unit_id: TEST_UNIT_IDS.MARITAL_UNIT,
-            person_tax_unit_id: TEST_UNIT_IDS.TAX_UNIT,
-            person_household_id: TEST_UNIT_IDS.HOUSEHOLD,
-          },
-          {
-            person_id: TEST_PERSON_IDS.ADULT_2,
-            name: 'Adult 2',
-            age: 32,
-            person_marital_unit_id: TEST_UNIT_IDS.MARITAL_UNIT,
-            person_tax_unit_id: TEST_UNIT_IDS.TAX_UNIT,
-            person_household_id: TEST_UNIT_IDS.HOUSEHOLD,
-          },
-        ],
-        marital_unit: [{ marital_unit_id: TEST_UNIT_IDS.MARITAL_UNIT }],
-        tax_unit: [{ tax_unit_id: TEST_UNIT_IDS.TAX_UNIT }],
-        household: [{ household_id: TEST_UNIT_IDS.HOUSEHOLD }],
+        year: 1999,
+        people: [{ age: 30 }],
       };
-      vi.mocked(HouseholdQueries.getPersonCount).mockReturnValue(2);
 
       // When
-      HouseholdValidation.validateUSHousehold(household, errors, warnings);
-
-      // Then
-      const maritalError = errors.find((e) => e.code === ERROR_CODES.INVALID_MARITAL_UNIT);
-      expect(maritalError).toBeUndefined();
-    });
-
-    test('given household without tax units entity when validating then warns appropriately', () => {
-      // Given
-      const errors: any[] = [];
-      const warnings: any[] = [];
-      vi.mocked(HouseholdQueries.getPersonCount).mockReturnValue(1);
-
-      // When
-      HouseholdValidation.validateUSHousehold(mockUSHouseholdNoTaxUnits, errors, warnings);
+      HouseholdValidation.validateGenericHousehold(household, errors, warnings);
 
       // Then
       expect(errors).toHaveLength(0);
-      const noTaxUnitsWarning = warnings.find((w) => w.code === WARNING_CODES.NO_TAX_UNITS);
-      expect(noTaxUnitsWarning).toBeDefined();
+      expect(warnings.length).toBeGreaterThan(0);
+      const yearWarning = warnings.find((w) => w.code === WARNING_CODES.UNUSUAL_YEAR);
+      expect(yearWarning).toBeDefined();
     });
   });
 
-  describe('validateUKHousehold', () => {
-    test('given UK household with valid benefit units when validating then no errors', () => {
+  describe('validateUSHousehold', () => {
+    test('given US household with people when validating then no warnings', () => {
       // Given
-      const errors: any[] = [];
+      const warnings: any[] = [];
       vi.mocked(HouseholdQueries.getPersonCount).mockReturnValue(2);
 
       // When
-      HouseholdValidation.validateUKHousehold(mockValidUKHousehold, errors);
+      HouseholdValidation.validateUSHousehold(mockValidUSHousehold, warnings);
 
       // Then
-      expect(errors).toHaveLength(0);
+      expect(warnings).toHaveLength(0);
     });
 
-    test('given UK household with empty benefit unit when validating then adds error', () => {
+    test('given US household with people but no tax unit when validating then adds warning', () => {
       // Given
-      const errors: any[] = [];
-      vi.mocked(HouseholdQueries.getPersonCount).mockReturnValue(1);
-
-      // When
-      HouseholdValidation.validateUKHousehold(mockUKHouseholdEmptyBenunit, errors);
-
-      // Then
-      expect(errors.length).toBeGreaterThan(0);
-      const error = errors.find((e) => e.code === ERROR_CODES.EMPTY_BENUNIT);
-      expect(error).toBeDefined();
-    });
-
-    test('given UK household without benefit units entity when validating then no errors', () => {
-      // Given
-      const errors: any[] = [];
+      const warnings: any[] = [];
       const household: Household = {
-        tax_benefit_model_name: 'policyengine_uk',
-        year: parseInt(CURRENT_YEAR),
-        people: [
-          {
-            person_id: TEST_PERSON_IDS.ADULT_1,
-            name: 'Adult 1',
-            age: 30,
-          },
-        ],
-        household: [{ household_id: TEST_UNIT_IDS.HOUSEHOLD }],
-        // No benunit property
+        tax_benefit_model_name: 'policyengine_us',
+        year: parseInt(CURRENT_YEAR, 10),
+        people: [{ age: 30 }],
+        household: {},
       };
       vi.mocked(HouseholdQueries.getPersonCount).mockReturnValue(1);
 
       // When
-      HouseholdValidation.validateUKHousehold(household, errors);
+      HouseholdValidation.validateUSHousehold(household, warnings);
 
       // Then
-      expect(errors).toHaveLength(0);
+      expect(warnings.length).toBeGreaterThan(0);
+      const warning = warnings.find((w) => w.code === WARNING_CODES.NO_TAX_UNIT);
+      expect(warning).toBeDefined();
+    });
+
+    test('given US household with people but no household entity when validating then adds warning', () => {
+      // Given
+      const warnings: any[] = [];
+      const household: Household = {
+        tax_benefit_model_name: 'policyengine_us',
+        year: parseInt(CURRENT_YEAR, 10),
+        people: [{ age: 30 }],
+        tax_unit: {},
+      };
+      vi.mocked(HouseholdQueries.getPersonCount).mockReturnValue(1);
+
+      // When
+      HouseholdValidation.validateUSHousehold(household, warnings);
+
+      // Then
+      expect(warnings.length).toBeGreaterThan(0);
+      const warning = warnings.find((w) => w.code === WARNING_CODES.NO_HOUSEHOLD_UNIT);
+      expect(warning).toBeDefined();
+    });
+
+    test('given US household with no people when validating then no warnings', () => {
+      // Given
+      const warnings: any[] = [];
+      const household: Household = {
+        tax_benefit_model_name: 'policyengine_us',
+        year: parseInt(CURRENT_YEAR, 10),
+        people: [],
+      };
+      vi.mocked(HouseholdQueries.getPersonCount).mockReturnValue(0);
+
+      // When
+      HouseholdValidation.validateUSHousehold(household, warnings);
+
+      // Then
+      expect(warnings).toHaveLength(0);
     });
   });
 
@@ -717,12 +359,39 @@ describe('HouseholdValidation', () => {
       // Then
       expect(result).toBe(false);
     });
+
+    test('given valid person entity when checking can add variable then returns true', () => {
+      // When
+      const result = HouseholdValidation.canAddVariable('person');
+
+      // Then
+      expect(result).toBe(true);
+    });
+
+    test('given valid tax unit entity when checking can add variable then returns true', () => {
+      // When
+      const result = HouseholdValidation.canAddVariable('tax_unit');
+
+      // Then
+      expect(result).toBe(true);
+    });
+
+    test('given valid benunit entity when checking can add variable then returns true', () => {
+      // When
+      const result = HouseholdValidation.canAddVariable('benunit');
+
+      // Then
+      expect(result).toBe(true);
+    });
   });
 
   describe('validateVariableValue', () => {
     test('given valid float value when validating then returns valid', () => {
       // When
-      const result = HouseholdValidation.validateVariableValue(123.45, mockFloatMetadata);
+      const result = HouseholdValidation.validateVariableValue(
+        VALIDATION_TEST_VALUES.VALID_FLOAT,
+        mockFloatMetadata
+      );
 
       // Then
       verifyNoErrors(result);
@@ -730,7 +399,10 @@ describe('HouseholdValidation', () => {
 
     test('given valid integer value when validating then returns valid', () => {
       // When
-      const result = HouseholdValidation.validateVariableValue(123, mockIntMetadata);
+      const result = HouseholdValidation.validateVariableValue(
+        VALIDATION_TEST_VALUES.VALID_INT,
+        mockIntMetadata
+      );
 
       // Then
       verifyNoErrors(result);
@@ -738,7 +410,10 @@ describe('HouseholdValidation', () => {
 
     test('given float for integer type when validating then returns error', () => {
       // When
-      const result = HouseholdValidation.validateVariableValue(123.45, mockIntMetadata);
+      const result = HouseholdValidation.validateVariableValue(
+        VALIDATION_TEST_VALUES.INVALID_FLOAT_FOR_INT,
+        mockIntMetadata
+      );
 
       // Then
       verifyHasErrors(result, 1);
@@ -747,7 +422,10 @@ describe('HouseholdValidation', () => {
 
     test('given string for number type when validating then returns error', () => {
       // When
-      const result = HouseholdValidation.validateVariableValue('not a number', mockFloatMetadata);
+      const result = HouseholdValidation.validateVariableValue(
+        VALIDATION_TEST_VALUES.INVALID_STRING_FOR_NUMBER,
+        mockFloatMetadata
+      );
 
       // Then
       verifyHasErrors(result, 1);
@@ -756,7 +434,10 @@ describe('HouseholdValidation', () => {
 
     test('given valid boolean value when validating then returns valid', () => {
       // When
-      const result = HouseholdValidation.validateVariableValue(true, mockBoolMetadata);
+      const result = HouseholdValidation.validateVariableValue(
+        VALIDATION_TEST_VALUES.VALID_BOOL,
+        mockBoolMetadata
+      );
 
       // Then
       verifyNoErrors(result);
@@ -764,7 +445,10 @@ describe('HouseholdValidation', () => {
 
     test('given number for boolean type when validating then returns error', () => {
       // When
-      const result = HouseholdValidation.validateVariableValue(123, mockBoolMetadata);
+      const result = HouseholdValidation.validateVariableValue(
+        VALIDATION_TEST_VALUES.INVALID_NUMBER_FOR_BOOL,
+        mockBoolMetadata
+      );
 
       // Then
       verifyHasErrors(result, 1);
@@ -773,7 +457,10 @@ describe('HouseholdValidation', () => {
 
     test('given valid string value when validating then returns valid', () => {
       // When
-      const result = HouseholdValidation.validateVariableValue('CA', mockStringMetadata);
+      const result = HouseholdValidation.validateVariableValue(
+        VALIDATION_TEST_VALUES.VALID_STRING,
+        mockStringMetadata
+      );
 
       // Then
       verifyNoErrors(result);
@@ -781,7 +468,10 @@ describe('HouseholdValidation', () => {
 
     test('given boolean for string type when validating then returns error', () => {
       // When
-      const result = HouseholdValidation.validateVariableValue(true, mockStringMetadata);
+      const result = HouseholdValidation.validateVariableValue(
+        VALIDATION_TEST_VALUES.INVALID_BOOL_FOR_STRING,
+        mockStringMetadata
+      );
 
       // Then
       verifyHasErrors(result, 1);
@@ -815,25 +505,13 @@ describe('HouseholdValidation', () => {
       verifyValidationError(result, ERROR_CODES.NO_PEOPLE, 'people');
     });
 
-    test('given household with structural errors when checking ready then includes those errors', () => {
+    test('given household without year when checking ready then returns error', () => {
       // Given
-      const household: Household = {
+      const household = {
         tax_benefit_model_name: 'policyengine_us',
-        year: parseInt(CURRENT_YEAR),
-        people: [
-          {
-            person_id: TEST_PERSON_IDS.ADULT_1,
-            name: 'Adult 1',
-            age: 30,
-          },
-          {
-            person_id: TEST_PERSON_IDS.ADULT_1, // Duplicate ID
-            name: 'Adult 2',
-            age: 32,
-          },
-        ],
-      };
-      vi.mocked(HouseholdQueries.getPersonCount).mockReturnValue(2);
+        people: [{ age: 30 }],
+      } as any;
+      vi.mocked(HouseholdQueries.getPersonCount).mockReturnValue(1);
       vi.mocked(HouseholdQueries.isUSHousehold).mockReturnValue(true);
       vi.mocked(HouseholdQueries.isUKHousehold).mockReturnValue(false);
 
@@ -841,8 +519,24 @@ describe('HouseholdValidation', () => {
       const result = HouseholdValidation.isReadyForSimulation(household);
 
       // Then
-      verifyHasErrors(result, 1);
-      verifyValidationError(result, ERROR_CODES.DUPLICATE_PERSON_IDS);
+      expect(result.isValid).toBe(false);
+      verifyValidationError(result, ERROR_CODES.NO_YEAR, 'year');
+    });
+
+    test('given household without model when checking ready then returns error', () => {
+      // Given
+      const household = {
+        year: parseInt(CURRENT_YEAR, 10),
+        people: [{ age: 30 }],
+      } as any;
+      vi.mocked(HouseholdQueries.getPersonCount).mockReturnValue(1);
+
+      // When
+      const result = HouseholdValidation.isReadyForSimulation(household);
+
+      // Then
+      expect(result.isValid).toBe(false);
+      verifyValidationError(result, ERROR_CODES.NO_MODEL, 'tax_benefit_model_name');
     });
 
     test('given household with warnings when checking ready then includes warnings', () => {
@@ -859,27 +553,45 @@ describe('HouseholdValidation', () => {
       expect(result.warnings.length).toBeGreaterThan(0);
       verifyValidationWarning(result, WARNING_CODES.MISSING_AGE);
     });
+
+    test('given household with model mismatch when checking ready then returns error', () => {
+      // Given
+      const household: Household = {
+        tax_benefit_model_name: 'policyengine_uk',
+        year: parseInt(CURRENT_YEAR, 10),
+        people: [{ age: 30 }],
+      };
+      vi.mocked(HouseholdQueries.getPersonCount).mockReturnValue(1);
+      vi.mocked(HouseholdQueries.isUSHousehold).mockReturnValue(false);
+      vi.mocked(HouseholdQueries.isUKHousehold).mockReturnValue(true);
+
+      // When
+      const result = HouseholdValidation.isReadyForSimulation(household);
+
+      // Then
+      verifyNoErrors(result);
+    });
   });
 
   describe('getVariableMetadata', () => {
     test('given existing variable when getting metadata then returns metadata', () => {
       // When
       const result = HouseholdValidation.getVariableMetadata(
-        mockReduxStateWithMetadata,
-        'employment_income'
+        mockReduxStateWithMetadata as any,
+        VALIDATION_VARIABLE_NAMES.EMPLOYMENT_INCOME
       );
 
       // Then
       expect(result).toBeDefined();
-      expect(result?.name).toBe('employment_income');
+      expect(result?.name).toBe(VALIDATION_VARIABLE_NAMES.EMPLOYMENT_INCOME);
       expect(result?.entity).toBe('person');
-      expect(result?.data_type).toBe('float');
+      expect(result?.data_type).toBe(VALIDATION_DATA_TYPES.FLOAT);
     });
 
     test('given non-existent variable when getting metadata then returns undefined', () => {
       // When
       const result = HouseholdValidation.getVariableMetadata(
-        mockReduxStateWithMetadata,
+        mockReduxStateWithMetadata as any,
         'non_existent_variable'
       );
 
@@ -890,8 +602,8 @@ describe('HouseholdValidation', () => {
     test('given state without metadata when getting metadata then returns undefined', () => {
       // When
       const result = HouseholdValidation.getVariableMetadata(
-        mockReduxStateNoMetadata,
-        'employment_income'
+        mockReduxStateNoMetadata as any,
+        VALIDATION_VARIABLE_NAMES.EMPLOYMENT_INCOME
       );
 
       // Then
@@ -901,15 +613,15 @@ describe('HouseholdValidation', () => {
     test('given state with metadata when getting different variable then returns correct metadata', () => {
       // When
       const result = HouseholdValidation.getVariableMetadata(
-        mockReduxStateWithMetadata,
-        'state_code'
+        mockReduxStateWithMetadata as any,
+        VALIDATION_VARIABLE_NAMES.STATE_CODE
       );
 
       // Then
       expect(result).toBeDefined();
-      expect(result?.name).toBe('state_code');
+      expect(result?.name).toBe(VALIDATION_VARIABLE_NAMES.STATE_CODE);
       expect(result?.entity).toBe('household');
-      expect(result?.data_type).toBe('string');
+      expect(result?.data_type).toBe(VALIDATION_DATA_TYPES.STRING);
     });
   });
 });

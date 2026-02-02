@@ -9,13 +9,9 @@ import LazyNestedMenu from '@/components/common/LazyNestedMenu';
 import {
   createMockGetChildren,
   createMockOnParameterClick,
-  MOCK_BENEFIT_CHILDREN,
   MOCK_EMPTY_NODES,
   MOCK_LEAF_NODES,
   MOCK_ROOT_NODES,
-  MOCK_SINGLE_BRANCH_NODE,
-  MOCK_SINGLE_LEAF_NODE,
-  MOCK_TAX_CHILDREN,
   TEST_NODE_LABELS,
   TEST_NODE_NAMES,
 } from '@/tests/fixtures/components/LazyNestedMenuMocks';

@@ -4,7 +4,7 @@ import {
   mockHouseholdResult,
   mockSocietyWideResult,
 } from '@/tests/fixtures/types/calculationFixtures';
-import { HouseholdData } from '@/types/ingredients/Household';
+import { Household } from '@/types/ingredients/Household';
 
 /**
  * Test constants for strategy timing and progress
@@ -67,7 +67,7 @@ export const mockSocietyWideErrorResponse = (): SocietyWideCalculationResponse =
  * Mock household API response (successful)
  * Note: Household API returns data directly, not a status object
  */
-export const mockHouseholdSuccessResponse = (): HouseholdData => mockHouseholdResult();
+export const mockHouseholdSuccessResponse = (): Household => mockHouseholdResult();
 
 /**
  * Mock fetch functions

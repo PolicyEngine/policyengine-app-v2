@@ -1,11 +1,12 @@
 /**
  * householdTableData - Table data extraction for API v2 Alpha household structure
  *
- * These functions extract household data for display in table format.
- * Works with the array-based household structure with flat values.
+ * People are identified by array index.
+ * Entity groups are single flat dicts (not arrays).
  */
 
-import { EntityType, Household, HouseholdPerson } from '@/types/ingredients/Household';
+import { EntityType, Household } from '@/types/ingredients/Household';
+import { getPersonDisplayNameInContext } from './householdIndividuals';
 import * as HouseholdQueries from './HouseholdQueries';
 
 export interface HouseholdInputRow {
@@ -14,7 +15,7 @@ export interface HouseholdInputRow {
   paramName: string;
   value: any;
   entityType: EntityType;
-  entityId: number;
+  entityId: number; // for person: array index; for entities: 0
 }
 
 /**
@@ -24,81 +25,78 @@ export function extractHouseholdInputs(household: Household): HouseholdInputRow[
   const rows: HouseholdInputRow[] = [];
 
   // Extract person-level inputs
-  for (const person of household.people) {
-    const personName = person.name ?? `Person ${(person.person_id ?? 0) + 1}`;
+  for (let index = 0; index < household.people.length; index++) {
+    const person = household.people[index];
+    const personName = getPersonDisplayNameInContext(household.people, index);
+    const capitalizedName = personName.charAt(0).toUpperCase() + personName.slice(1);
 
     for (const [paramName, value] of Object.entries(person)) {
-      // Skip ID fields, name, and undefined values
-      if (
-        paramName === 'person_id' ||
-        paramName === 'name' ||
-        paramName.startsWith('person_') ||
-        value === undefined
-      )
+      if (value === undefined) {
         continue;
+      }
 
       rows.push({
-        category: personName,
+        category: capitalizedName,
         label: formatParameterLabel(paramName),
         paramName,
         value,
         entityType: 'person',
-        entityId: person.person_id ?? 0,
+        entityId: index,
       });
     }
   }
 
-  // Extract household unit inputs
-  if (household.household) {
-    for (const unit of household.household) {
-      for (const [paramName, value] of Object.entries(unit)) {
-        if (paramName === 'household_id' || value === undefined) continue;
-
-        rows.push({
-          category: 'Household',
-          label: formatParameterLabel(paramName),
-          paramName,
-          value,
-          entityType: 'household',
-          entityId: unit.household_id ?? 0,
-        });
+  // Extract household unit inputs (single dict)
+  if (household.household && typeof household.household === 'object') {
+    for (const [paramName, value] of Object.entries(household.household)) {
+      if (value === undefined) {
+        continue;
       }
+
+      rows.push({
+        category: 'Household',
+        label: formatParameterLabel(paramName),
+        paramName,
+        value,
+        entityType: 'household',
+        entityId: 0,
+      });
     }
   }
 
-  // Extract tax unit inputs (US)
-  if (household.tax_unit) {
-    for (const unit of household.tax_unit) {
-      for (const [paramName, value] of Object.entries(unit)) {
-        if (paramName === 'tax_unit_id' || value === undefined) continue;
-
-        rows.push({
-          category: 'Tax unit',
-          label: formatParameterLabel(paramName),
-          paramName,
-          value,
-          entityType: 'tax_unit',
-          entityId: unit.tax_unit_id ?? 0,
-        });
+  // Extract tax unit inputs (US, single dict)
+  if (household.tax_unit && typeof household.tax_unit === 'object') {
+    for (const [paramName, value] of Object.entries(household.tax_unit)) {
+      if (value === undefined) {
+        continue;
       }
+
+      rows.push({
+        category: 'Tax unit',
+        label: formatParameterLabel(paramName),
+        paramName,
+        value,
+        entityType: 'tax_unit',
+        entityId: 0,
+      });
     }
   }
 
-  // Extract benefit unit inputs (UK)
-  if (household.benunit) {
-    for (const unit of household.benunit) {
-      for (const [paramName, value] of Object.entries(unit)) {
-        if (paramName === 'benunit_id' || value === undefined) continue;
-
-        rows.push({
-          category: 'Benefit unit',
-          label: formatParameterLabel(paramName),
-          paramName,
-          value,
-          entityType: 'benunit',
-          entityId: unit.benunit_id ?? 0,
-        });
+  // Extract benefit unit inputs (UK, single dict)
+  if (household.benunit && typeof household.benunit === 'object') {
+    for (const [paramName, value] of Object.entries(household.benunit)) {
+      if (value === undefined) {
+        continue;
       }
+
+      rows.push({
+        category: 'Benefit unit',
+        label: formatParameterLabel(paramName),
+        paramName,
+        value,
+        entityType: 'benunit',
+        entityId: 0,
+      });
     }
   }
 
@@ -182,9 +180,9 @@ export function extractPeopleRows(household: Household): Array<{
   age: number | undefined;
   isAdult: boolean;
 }> {
-  return household.people.map((person) => ({
-    id: person.person_id ?? 0,
-    name: person.name ?? `Person ${(person.person_id ?? 0) + 1}`,
+  return household.people.map((person, index) => ({
+    id: index,
+    name: getPersonDisplayNameInContext(household.people, index),
     age: person.age,
     isAdult: (person.age ?? 0) >= 18,
   }));

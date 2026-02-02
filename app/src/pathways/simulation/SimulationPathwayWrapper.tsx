@@ -6,7 +6,6 @@
  */
 
 import { useCallback, useState } from 'react';
-import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import StandardLayout from '@/components/StandardLayout';
 import { CURRENT_YEAR, MOCK_USER_ID } from '@/constants';
@@ -16,7 +15,6 @@ import { useCurrentLawId, useRegionsList } from '@/hooks/useStaticMetadata';
 import { useUserGeographics } from '@/hooks/useUserGeographic';
 import { useUserHouseholds } from '@/hooks/useUserHousehold';
 import { useUserPolicies } from '@/hooks/useUserPolicy';
-import { RootState } from '@/store';
 import { SimulationViewMode } from '@/types/pathwayModes/SimulationViewMode';
 import { SimulationStateProps } from '@/types/pathwayState';
 import {
@@ -62,7 +60,6 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
   });
 
   // Get metadata for population views
-  const metadata = useSelector((state: RootState) => state.metadata);
   const currentLawId = useCurrentLawId(countryId);
   const currentYear = parseInt(CURRENT_YEAR, 10);
   const regionData = useRegionsList(countryId, currentYear);

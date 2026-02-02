@@ -2,58 +2,40 @@ import { describe, expect, test } from 'vitest';
 import {
   createHouseholdWithPeople,
   createPersonWithAge,
+  createPersonWithVariable,
   mockEmptyHousehold,
   mockHouseholdTwoAdultsTwoChildren,
   mockUKHousehold,
   QUERY_AGES,
   QUERY_EXPECTED_COUNTS,
-  QUERY_PERSON_IDS,
-  QUERY_PERSON_NAMES,
+  QUERY_PERSON_INDICES,
   QUERY_VARIABLE_NAMES,
   QUERY_VARIABLE_VALUES,
 } from '@/tests/fixtures/utils/householdQueriesMocks';
 import {
+  avgPersonVariable,
   getAdultCount,
   getAdults,
   getAllPeople,
-  getBenunitById,
-  getBenunits,
   getChildCount,
   getChildren,
-  getDefaultHouseholdUnit,
-  getEntitiesByType,
+  getEntityByType,
   getEntityVariable,
-  getFamilies,
-  getFamilyById,
-  getHouseholdUnitById,
-  getHouseholdUnits,
-  getMaritalUnitById,
-  getMaritalUnits,
+  getHouseholdUnit,
   getModelName,
-  getPeopleInBenunit,
-  getPeopleInEntity,
-  getPeopleInFamily,
-  getPeopleInHouseholdUnit,
-  getPeopleInMaritalUnit,
-  getPeopleInSpmUnit,
-  getPeopleInTaxUnit,
-  getPersonById,
-  getPersonByName,
+  getPersonByIndex,
   getPersonCount,
-  getPersonTaxUnit,
   getPersonVariable,
   getRegion,
-  getSpmUnitById,
-  getSpmUnits,
   getStateCode,
   getStateFips,
-  getTaxUnitById,
-  getTaxUnits,
   getYear,
   hasPeople,
   isEmpty,
   isUKHousehold,
   isUSHousehold,
+  setPersonVariable,
+  sumPersonVariable,
 } from '@/utils/HouseholdQueries';
 
 describe('HouseholdQueries', () => {
@@ -72,73 +54,41 @@ describe('HouseholdQueries', () => {
 
       // Then
       expect(result).toHaveLength(QUERY_EXPECTED_COUNTS.TWO_ADULTS_TWO_CHILDREN.TOTAL);
-
-      // Verify people are returned
-      const names = result.map((p) => p.name);
-      expect(names).toContain(QUERY_PERSON_NAMES.ADULT_1);
-      expect(names).toContain(QUERY_PERSON_NAMES.ADULT_2);
-      expect(names).toContain(QUERY_PERSON_NAMES.CHILD_1);
-      expect(names).toContain(QUERY_PERSON_NAMES.CHILD_2);
+      expect(result[QUERY_PERSON_INDICES.ADULT_1].age).toBe(QUERY_AGES.ADULT_30);
+      expect(result[QUERY_PERSON_INDICES.ADULT_2].age).toBe(QUERY_AGES.ADULT_25);
+      expect(result[QUERY_PERSON_INDICES.CHILD_1].age).toBe(QUERY_AGES.CHILD_10);
+      expect(result[QUERY_PERSON_INDICES.CHILD_2].age).toBe(QUERY_AGES.CHILD_5);
     });
 
     test('given single person household when getting all then returns one person', () => {
       // Given
-      const household = createHouseholdWithPeople([
-        { person_id: 0, name: QUERY_PERSON_NAMES.ADULT_1, age: QUERY_AGES.ADULT_30 },
-      ]);
+      const household = createHouseholdWithPeople([createPersonWithAge(QUERY_AGES.ADULT_30)]);
 
       // When
       const result = getAllPeople(household);
 
       // Then
       expect(result).toHaveLength(QUERY_EXPECTED_COUNTS.ONE_ADULT.TOTAL);
-      expect(result[0].name).toBe(QUERY_PERSON_NAMES.ADULT_1);
       expect(result[0].age).toBe(QUERY_AGES.ADULT_30);
     });
   });
 
-  describe('getPersonById', () => {
-    test('given existing person ID when getting person then returns person', () => {
+  describe('getPersonByIndex', () => {
+    test('given existing person index when getting person then returns person', () => {
       // When
-      const result = getPersonById(mockHouseholdTwoAdultsTwoChildren, QUERY_PERSON_IDS.ADULT_1);
+      const result = getPersonByIndex(
+        mockHouseholdTwoAdultsTwoChildren,
+        QUERY_PERSON_INDICES.ADULT_1
+      );
 
       // Then
       expect(result).toBeDefined();
-      expect(result?.person_id).toBe(QUERY_PERSON_IDS.ADULT_1);
-      expect(result?.name).toBe(QUERY_PERSON_NAMES.ADULT_1);
-    });
-
-    test('given non-existent person ID when getting person then returns undefined', () => {
-      // When
-      const result = getPersonById(mockHouseholdTwoAdultsTwoChildren, 999);
-
-      // Then
-      expect(result).toBeUndefined();
-    });
-
-    test('given empty household when getting person then returns undefined', () => {
-      // When
-      const result = getPersonById(mockEmptyHousehold, QUERY_PERSON_IDS.ADULT_1);
-
-      // Then
-      expect(result).toBeUndefined();
-    });
-  });
-
-  describe('getPersonByName', () => {
-    test('given existing person name when getting person then returns person', () => {
-      // When
-      const result = getPersonByName(mockHouseholdTwoAdultsTwoChildren, QUERY_PERSON_NAMES.ADULT_1);
-
-      // Then
-      expect(result).toBeDefined();
-      expect(result?.name).toBe(QUERY_PERSON_NAMES.ADULT_1);
       expect(result?.age).toBe(QUERY_AGES.ADULT_30);
     });
 
-    test('given non-existent person name when getting person then returns undefined', () => {
+    test('given non-existent person index when getting person then returns undefined', () => {
       // When
-      const result = getPersonByName(mockHouseholdTwoAdultsTwoChildren, 'NonExistent');
+      const result = getPersonByIndex(mockHouseholdTwoAdultsTwoChildren, 999);
 
       // Then
       expect(result).toBeUndefined();
@@ -146,7 +96,7 @@ describe('HouseholdQueries', () => {
 
     test('given empty household when getting person then returns undefined', () => {
       // When
-      const result = getPersonByName(mockEmptyHousehold, QUERY_PERSON_NAMES.ADULT_1);
+      const result = getPersonByIndex(mockEmptyHousehold, QUERY_PERSON_INDICES.ADULT_1);
 
       // Then
       expect(result).toBeUndefined();
@@ -160,9 +110,8 @@ describe('HouseholdQueries', () => {
 
       // Then
       expect(result).toHaveLength(QUERY_EXPECTED_COUNTS.TWO_ADULTS_TWO_CHILDREN.ADULTS);
-      const names = result.map((p) => p.name);
-      expect(names).toContain(QUERY_PERSON_NAMES.ADULT_1);
-      expect(names).toContain(QUERY_PERSON_NAMES.ADULT_2);
+      expect(result[0].age).toBe(QUERY_AGES.ADULT_30);
+      expect(result[1].age).toBe(QUERY_AGES.ADULT_25);
     });
 
     test('given empty household when getting adults then returns empty array', () => {
@@ -176,16 +125,8 @@ describe('HouseholdQueries', () => {
     test('given household with only children when getting adults then returns empty array', () => {
       // Given
       const household = createHouseholdWithPeople([
-        createPersonWithAge(
-          QUERY_PERSON_IDS.CHILD_1,
-          QUERY_PERSON_NAMES.CHILD_1,
-          QUERY_AGES.CHILD_10
-        ),
-        createPersonWithAge(
-          QUERY_PERSON_IDS.CHILD_2,
-          QUERY_PERSON_NAMES.CHILD_2,
-          QUERY_AGES.CHILD_5
-        ),
+        createPersonWithAge(QUERY_AGES.CHILD_10),
+        createPersonWithAge(QUERY_AGES.CHILD_5),
       ]);
 
       // When
@@ -198,11 +139,7 @@ describe('HouseholdQueries', () => {
     test('given 18-year-old when getting adults then includes them', () => {
       // Given
       const household = createHouseholdWithPeople([
-        createPersonWithAge(
-          QUERY_PERSON_IDS.TEEN,
-          QUERY_PERSON_NAMES.TEEN,
-          QUERY_AGES.ADULT_EXACTLY_18
-        ),
+        createPersonWithAge(QUERY_AGES.ADULT_EXACTLY_18),
       ]);
 
       // When
@@ -210,7 +147,6 @@ describe('HouseholdQueries', () => {
 
       // Then
       expect(result).toHaveLength(1);
-      expect(result[0].name).toBe(QUERY_PERSON_NAMES.TEEN);
       expect(result[0].age).toBe(QUERY_AGES.ADULT_EXACTLY_18);
     });
   });
@@ -222,9 +158,8 @@ describe('HouseholdQueries', () => {
 
       // Then
       expect(result).toHaveLength(QUERY_EXPECTED_COUNTS.TWO_ADULTS_TWO_CHILDREN.CHILDREN);
-      const names = result.map((p) => p.name);
-      expect(names).toContain(QUERY_PERSON_NAMES.CHILD_1);
-      expect(names).toContain(QUERY_PERSON_NAMES.CHILD_2);
+      expect(result[0].age).toBe(QUERY_AGES.CHILD_10);
+      expect(result[1].age).toBe(QUERY_AGES.CHILD_5);
     });
 
     test('given empty household when getting children then returns empty array', () => {
@@ -238,16 +173,8 @@ describe('HouseholdQueries', () => {
     test('given household with only adults when getting children then returns empty array', () => {
       // Given
       const household = createHouseholdWithPeople([
-        createPersonWithAge(
-          QUERY_PERSON_IDS.ADULT_1,
-          QUERY_PERSON_NAMES.ADULT_1,
-          QUERY_AGES.ADULT_30
-        ),
-        createPersonWithAge(
-          QUERY_PERSON_IDS.ADULT_2,
-          QUERY_PERSON_NAMES.ADULT_2,
-          QUERY_AGES.ADULT_25
-        ),
+        createPersonWithAge(QUERY_AGES.ADULT_30),
+        createPersonWithAge(QUERY_AGES.ADULT_25),
       ]);
 
       // When
@@ -260,11 +187,7 @@ describe('HouseholdQueries', () => {
     test('given 17-year-old when getting children then includes them', () => {
       // Given
       const household = createHouseholdWithPeople([
-        createPersonWithAge(
-          QUERY_PERSON_IDS.TEEN,
-          QUERY_PERSON_NAMES.TEEN,
-          QUERY_AGES.CHILD_ALMOST_18
-        ),
+        createPersonWithAge(QUERY_AGES.CHILD_ALMOST_18),
       ]);
 
       // When
@@ -272,7 +195,6 @@ describe('HouseholdQueries', () => {
 
       // Then
       expect(result).toHaveLength(1);
-      expect(result[0].name).toBe(QUERY_PERSON_NAMES.TEEN);
       expect(result[0].age).toBe(QUERY_AGES.CHILD_ALMOST_18);
     });
   });
@@ -282,7 +204,7 @@ describe('HouseholdQueries', () => {
       // When
       const result = getPersonVariable(
         mockHouseholdTwoAdultsTwoChildren,
-        QUERY_PERSON_IDS.ADULT_1,
+        QUERY_PERSON_INDICES.ADULT_1,
         QUERY_VARIABLE_NAMES.EMPLOYMENT_INCOME
       );
 
@@ -306,7 +228,7 @@ describe('HouseholdQueries', () => {
       // When
       const result = getPersonVariable(
         mockHouseholdTwoAdultsTwoChildren,
-        QUERY_PERSON_IDS.ADULT_1,
+        QUERY_PERSON_INDICES.ADULT_1,
         QUERY_VARIABLE_NAMES.NON_EXISTENT
       );
 
@@ -318,12 +240,37 @@ describe('HouseholdQueries', () => {
       // When
       const result = getPersonVariable(
         mockHouseholdTwoAdultsTwoChildren,
-        QUERY_PERSON_IDS.CHILD_1,
+        QUERY_PERSON_INDICES.CHILD_1,
         QUERY_VARIABLE_NAMES.IS_TAX_UNIT_DEPENDENT
       );
 
       // Then
       expect(result).toBe(QUERY_VARIABLE_VALUES.BOOLEAN_TRUE);
+    });
+  });
+
+  describe('setPersonVariable', () => {
+    test('given existing person when setting variable then variable is updated', () => {
+      // Given
+      const household = createHouseholdWithPeople([createPersonWithAge(QUERY_AGES.ADULT_30)]);
+
+      // When
+      setPersonVariable(household, 0, QUERY_VARIABLE_NAMES.EMPLOYMENT_INCOME, 60000);
+
+      // Then
+      expect(household.people[0][QUERY_VARIABLE_NAMES.EMPLOYMENT_INCOME]).toBe(60000);
+    });
+
+    test('given non-existent person when setting variable then household is unchanged', () => {
+      // Given
+      const household = createHouseholdWithPeople([createPersonWithAge(QUERY_AGES.ADULT_30)]);
+      const beforeLength = household.people.length;
+
+      // When
+      setPersonVariable(household, 999, QUERY_VARIABLE_NAMES.EMPLOYMENT_INCOME, 60000);
+
+      // Then
+      expect(household.people.length).toBe(beforeLength);
     });
   });
 
@@ -346,13 +293,7 @@ describe('HouseholdQueries', () => {
 
     test('given single person household when counting then returns one', () => {
       // Given
-      const household = createHouseholdWithPeople([
-        createPersonWithAge(
-          QUERY_PERSON_IDS.ADULT_1,
-          QUERY_PERSON_NAMES.ADULT_1,
-          QUERY_AGES.ADULT_30
-        ),
-      ]);
+      const household = createHouseholdWithPeople([createPersonWithAge(QUERY_AGES.ADULT_30)]);
 
       // When
       const result = getPersonCount(household);
@@ -382,16 +323,8 @@ describe('HouseholdQueries', () => {
     test('given household with only children when counting adults then returns zero', () => {
       // Given
       const household = createHouseholdWithPeople([
-        createPersonWithAge(
-          QUERY_PERSON_IDS.CHILD_1,
-          QUERY_PERSON_NAMES.CHILD_1,
-          QUERY_AGES.CHILD_10
-        ),
-        createPersonWithAge(
-          QUERY_PERSON_IDS.CHILD_2,
-          QUERY_PERSON_NAMES.CHILD_2,
-          QUERY_AGES.CHILD_5
-        ),
+        createPersonWithAge(QUERY_AGES.CHILD_10),
+        createPersonWithAge(QUERY_AGES.CHILD_5),
       ]);
 
       // When
@@ -422,16 +355,8 @@ describe('HouseholdQueries', () => {
     test('given household with only adults when counting children then returns zero', () => {
       // Given
       const household = createHouseholdWithPeople([
-        createPersonWithAge(
-          QUERY_PERSON_IDS.ADULT_1,
-          QUERY_PERSON_NAMES.ADULT_1,
-          QUERY_AGES.ADULT_30
-        ),
-        createPersonWithAge(
-          QUERY_PERSON_IDS.ADULT_2,
-          QUERY_PERSON_NAMES.ADULT_2,
-          QUERY_AGES.ADULT_25
-        ),
+        createPersonWithAge(QUERY_AGES.ADULT_30),
+        createPersonWithAge(QUERY_AGES.ADULT_25),
       ]);
 
       // When
@@ -461,13 +386,7 @@ describe('HouseholdQueries', () => {
 
     test('given single person household when checking if empty then returns false', () => {
       // Given
-      const household = createHouseholdWithPeople([
-        createPersonWithAge(
-          QUERY_PERSON_IDS.ADULT_1,
-          QUERY_PERSON_NAMES.ADULT_1,
-          QUERY_AGES.ADULT_30
-        ),
-      ]);
+      const household = createHouseholdWithPeople([createPersonWithAge(QUERY_AGES.ADULT_30)]);
 
       // When
       const result = isEmpty(household);
@@ -495,492 +414,48 @@ describe('HouseholdQueries', () => {
     });
   });
 
-  describe('getTaxUnits', () => {
-    test('given household with tax units when getting tax units then returns all tax units', () => {
+  describe('getEntityByType', () => {
+    test('given household entity type when getting entity then returns household dict', () => {
       // When
-      const result = getTaxUnits(mockHouseholdTwoAdultsTwoChildren);
-
-      // Then
-      expect(result).toHaveLength(1);
-      expect(result[0].tax_unit_id).toBe(0);
-    });
-
-    test('given household without tax units when getting tax units then returns empty array', () => {
-      // When
-      const result = getTaxUnits(mockEmptyHousehold);
-
-      // Then
-      expect(result).toEqual([]);
-    });
-  });
-
-  describe('getTaxUnitById', () => {
-    test('given existing tax unit ID when getting tax unit then returns tax unit', () => {
-      // When
-      const result = getTaxUnitById(mockHouseholdTwoAdultsTwoChildren, 0);
+      const result = getEntityByType(mockHouseholdTwoAdultsTwoChildren, 'household');
 
       // Then
       expect(result).toBeDefined();
-      expect(result?.tax_unit_id).toBe(0);
+      expect(result?.state_fips).toBe(6);
     });
 
-    test('given non-existent tax unit ID when getting tax unit then returns undefined', () => {
+    test('given tax_unit entity type when getting entity then returns tax_unit dict', () => {
       // When
-      const result = getTaxUnitById(mockHouseholdTwoAdultsTwoChildren, 999);
-
-      // Then
-      expect(result).toBeUndefined();
-    });
-  });
-
-  describe('getPeopleInTaxUnit', () => {
-    test('given existing tax unit when getting people then returns all people in tax unit', () => {
-      // When
-      const result = getPeopleInTaxUnit(mockHouseholdTwoAdultsTwoChildren, 0);
-
-      // Then
-      expect(result).toHaveLength(4);
-      const names = result.map((p) => p.name);
-      expect(names).toContain(QUERY_PERSON_NAMES.ADULT_1);
-      expect(names).toContain(QUERY_PERSON_NAMES.ADULT_2);
-      expect(names).toContain(QUERY_PERSON_NAMES.CHILD_1);
-      expect(names).toContain(QUERY_PERSON_NAMES.CHILD_2);
-    });
-
-    test('given non-existent tax unit when getting people then returns empty array', () => {
-      // When
-      const result = getPeopleInTaxUnit(mockHouseholdTwoAdultsTwoChildren, 999);
-
-      // Then
-      expect(result).toEqual([]);
-    });
-  });
-
-  describe('getPersonTaxUnit', () => {
-    test('given person in tax unit when getting tax unit then returns tax unit', () => {
-      // When
-      const result = getPersonTaxUnit(mockHouseholdTwoAdultsTwoChildren, QUERY_PERSON_IDS.ADULT_1);
+      const result = getEntityByType(mockHouseholdTwoAdultsTwoChildren, 'tax_unit');
 
       // Then
       expect(result).toBeDefined();
-      expect(result?.tax_unit_id).toBe(0);
+      expect(result?.state_code).toBe(QUERY_VARIABLE_VALUES.STATE_CA);
     });
 
-    test('given person not in tax unit when getting tax unit then returns undefined', () => {
-      // Given
-      const household = createHouseholdWithPeople([
-        { person_id: 0, name: QUERY_PERSON_NAMES.ADULT_1, age: QUERY_AGES.ADULT_30 },
-      ]);
-
+    test('given person entity type when getting entity then returns undefined', () => {
       // When
-      const result = getPersonTaxUnit(household, 0);
+      const result = getEntityByType(mockHouseholdTwoAdultsTwoChildren, 'person');
 
       // Then
       expect(result).toBeUndefined();
     });
 
-    test('given non-existent person when getting tax unit then returns undefined', () => {
+    test('given benunit entity type when getting entity then returns benunit dict', () => {
       // When
-      const result = getPersonTaxUnit(mockHouseholdTwoAdultsTwoChildren, 999);
-
-      // Then
-      expect(result).toBeUndefined();
-    });
-  });
-
-  describe('getFamilies', () => {
-    test('given household with families when getting families then returns all families', () => {
-      // When
-      const result = getFamilies(mockHouseholdTwoAdultsTwoChildren);
-
-      // Then
-      expect(result).toHaveLength(1);
-      expect(result[0].family_id).toBe(0);
-    });
-
-    test('given household without families when getting families then returns empty array', () => {
-      // When
-      const result = getFamilies(mockEmptyHousehold);
-
-      // Then
-      expect(result).toEqual([]);
-    });
-  });
-
-  describe('getFamilyById', () => {
-    test('given existing family ID when getting family then returns family', () => {
-      // When
-      const result = getFamilyById(mockHouseholdTwoAdultsTwoChildren, 0);
+      const result = getEntityByType(mockUKHousehold, 'benunit');
 
       // Then
       expect(result).toBeDefined();
-      expect(result?.family_id).toBe(0);
-    });
-
-    test('given non-existent family ID when getting family then returns undefined', () => {
-      // When
-      const result = getFamilyById(mockHouseholdTwoAdultsTwoChildren, 999);
-
-      // Then
-      expect(result).toBeUndefined();
-    });
-  });
-
-  describe('getPeopleInFamily', () => {
-    test('given existing family when getting people then returns all people in family', () => {
-      // When
-      const result = getPeopleInFamily(mockHouseholdTwoAdultsTwoChildren, 0);
-
-      // Then
-      expect(result).toHaveLength(4);
-    });
-
-    test('given non-existent family when getting people then returns empty array', () => {
-      // When
-      const result = getPeopleInFamily(mockHouseholdTwoAdultsTwoChildren, 999);
-
-      // Then
-      expect(result).toEqual([]);
-    });
-  });
-
-  describe('getSpmUnits', () => {
-    test('given household with SPM units when getting SPM units then returns all SPM units', () => {
-      // When
-      const result = getSpmUnits(mockHouseholdTwoAdultsTwoChildren);
-
-      // Then
-      expect(result).toHaveLength(1);
-      expect(result[0].spm_unit_id).toBe(0);
-    });
-
-    test('given household without SPM units when getting SPM units then returns empty array', () => {
-      // When
-      const result = getSpmUnits(mockEmptyHousehold);
-
-      // Then
-      expect(result).toEqual([]);
-    });
-  });
-
-  describe('getSpmUnitById', () => {
-    test('given existing SPM unit ID when getting SPM unit then returns SPM unit', () => {
-      // When
-      const result = getSpmUnitById(mockHouseholdTwoAdultsTwoChildren, 0);
-
-      // Then
-      expect(result).toBeDefined();
-      expect(result?.spm_unit_id).toBe(0);
-    });
-
-    test('given non-existent SPM unit ID when getting SPM unit then returns undefined', () => {
-      // When
-      const result = getSpmUnitById(mockHouseholdTwoAdultsTwoChildren, 999);
-
-      // Then
-      expect(result).toBeUndefined();
-    });
-  });
-
-  describe('getPeopleInSpmUnit', () => {
-    test('given existing SPM unit when getting people then returns all people in SPM unit', () => {
-      // When
-      const result = getPeopleInSpmUnit(mockHouseholdTwoAdultsTwoChildren, 0);
-
-      // Then
-      expect(result).toHaveLength(4);
-    });
-
-    test('given non-existent SPM unit when getting people then returns empty array', () => {
-      // When
-      const result = getPeopleInSpmUnit(mockHouseholdTwoAdultsTwoChildren, 999);
-
-      // Then
-      expect(result).toEqual([]);
-    });
-  });
-
-  describe('getMaritalUnits', () => {
-    test('given household with marital units when getting marital units then returns all marital units', () => {
-      // When
-      const result = getMaritalUnits(mockHouseholdTwoAdultsTwoChildren);
-
-      // Then
-      expect(result).toHaveLength(1);
-      expect(result[0].marital_unit_id).toBe(0);
-    });
-
-    test('given household without marital units when getting marital units then returns empty array', () => {
-      // When
-      const result = getMaritalUnits(mockEmptyHousehold);
-
-      // Then
-      expect(result).toEqual([]);
-    });
-  });
-
-  describe('getMaritalUnitById', () => {
-    test('given existing marital unit ID when getting marital unit then returns marital unit', () => {
-      // When
-      const result = getMaritalUnitById(mockHouseholdTwoAdultsTwoChildren, 0);
-
-      // Then
-      expect(result).toBeDefined();
-      expect(result?.marital_unit_id).toBe(0);
-    });
-
-    test('given non-existent marital unit ID when getting marital unit then returns undefined', () => {
-      // When
-      const result = getMaritalUnitById(mockHouseholdTwoAdultsTwoChildren, 999);
-
-      // Then
-      expect(result).toBeUndefined();
-    });
-  });
-
-  describe('getPeopleInMaritalUnit', () => {
-    test('given existing marital unit when getting people then returns all people in marital unit', () => {
-      // When
-      const result = getPeopleInMaritalUnit(mockHouseholdTwoAdultsTwoChildren, 0);
-
-      // Then
-      expect(result).toHaveLength(2);
-      const names = result.map((p) => p.name);
-      expect(names).toContain(QUERY_PERSON_NAMES.ADULT_1);
-      expect(names).toContain(QUERY_PERSON_NAMES.ADULT_2);
-    });
-
-    test('given non-existent marital unit when getting people then returns empty array', () => {
-      // When
-      const result = getPeopleInMaritalUnit(mockHouseholdTwoAdultsTwoChildren, 999);
-
-      // Then
-      expect(result).toEqual([]);
-    });
-  });
-
-  describe('getHouseholdUnits', () => {
-    test('given household with household units when getting household units then returns all household units', () => {
-      // When
-      const result = getHouseholdUnits(mockHouseholdTwoAdultsTwoChildren);
-
-      // Then
-      expect(result).toHaveLength(1);
-      expect(result[0].household_id).toBe(0);
-    });
-
-    test('given household without household units when getting household units then returns empty array', () => {
-      // When
-      const result = getHouseholdUnits(mockEmptyHousehold);
-
-      // Then
-      expect(result).toEqual([]);
-    });
-  });
-
-  describe('getHouseholdUnitById', () => {
-    test('given existing household unit ID when getting household unit then returns household unit', () => {
-      // When
-      const result = getHouseholdUnitById(mockHouseholdTwoAdultsTwoChildren, 0);
-
-      // Then
-      expect(result).toBeDefined();
-      expect(result?.household_id).toBe(0);
-    });
-
-    test('given non-existent household unit ID when getting household unit then returns undefined', () => {
-      // When
-      const result = getHouseholdUnitById(mockHouseholdTwoAdultsTwoChildren, 999);
-
-      // Then
-      expect(result).toBeUndefined();
-    });
-  });
-
-  describe('getPeopleInHouseholdUnit', () => {
-    test('given existing household unit when getting people then returns all people in household unit', () => {
-      // When
-      const result = getPeopleInHouseholdUnit(mockHouseholdTwoAdultsTwoChildren, 0);
-
-      // Then
-      expect(result).toHaveLength(4);
-    });
-
-    test('given non-existent household unit when getting people then returns empty array', () => {
-      // When
-      const result = getPeopleInHouseholdUnit(mockHouseholdTwoAdultsTwoChildren, 999);
-
-      // Then
-      expect(result).toEqual([]);
-    });
-  });
-
-  describe('getDefaultHouseholdUnit', () => {
-    test('given household with household units when getting default then returns first household unit', () => {
-      // When
-      const result = getDefaultHouseholdUnit(mockHouseholdTwoAdultsTwoChildren);
-
-      // Then
-      expect(result).toBeDefined();
-      expect(result?.household_id).toBe(0);
-    });
-
-    test('given household without household units when getting default then returns undefined', () => {
-      // When
-      const result = getDefaultHouseholdUnit(mockEmptyHousehold);
-
-      // Then
-      expect(result).toBeUndefined();
-    });
-  });
-
-  describe('getBenunits', () => {
-    test('given UK household with benefit units when getting benefit units then returns all benefit units', () => {
-      // When
-      const result = getBenunits(mockUKHousehold);
-
-      // Then
-      expect(result).toHaveLength(1);
-      expect(result[0].benunit_id).toBe(0);
-    });
-
-    test('given household without benefit units when getting benefit units then returns empty array', () => {
-      // When
-      const result = getBenunits(mockEmptyHousehold);
-
-      // Then
-      expect(result).toEqual([]);
-    });
-  });
-
-  describe('getBenunitById', () => {
-    test('given existing benefit unit ID when getting benefit unit then returns benefit unit', () => {
-      // When
-      const result = getBenunitById(mockUKHousehold, 0);
-
-      // Then
-      expect(result).toBeDefined();
-      expect(result?.benunit_id).toBe(0);
-    });
-
-    test('given non-existent benefit unit ID when getting benefit unit then returns undefined', () => {
-      // When
-      const result = getBenunitById(mockUKHousehold, 999);
-
-      // Then
-      expect(result).toBeUndefined();
-    });
-  });
-
-  describe('getPeopleInBenunit', () => {
-    test('given existing benefit unit when getting people then returns all people in benefit unit', () => {
-      // When
-      const result = getPeopleInBenunit(mockUKHousehold, 0);
-
-      // Then
-      expect(result).toHaveLength(2);
-      const names = result.map((p) => p.name);
-      expect(names).toContain(QUERY_PERSON_NAMES.ADULT_1);
-      expect(names).toContain(QUERY_PERSON_NAMES.CHILD_1);
-    });
-
-    test('given non-existent benefit unit when getting people then returns empty array', () => {
-      // When
-      const result = getPeopleInBenunit(mockUKHousehold, 999);
-
-      // Then
-      expect(result).toEqual([]);
-    });
-  });
-
-  describe('getEntitiesByType', () => {
-    test('given person entity type when getting entities then returns people', () => {
-      // When
-      const result = getEntitiesByType(mockHouseholdTwoAdultsTwoChildren, 'person');
-
-      // Then
-      expect(result).toHaveLength(4);
-    });
-
-    test('given tax unit entity type when getting entities then returns tax units', () => {
-      // When
-      const result = getEntitiesByType(mockHouseholdTwoAdultsTwoChildren, 'tax_unit');
-
-      // Then
-      expect(result).toHaveLength(1);
-    });
-
-    test('given family entity type when getting entities then returns families', () => {
-      // When
-      const result = getEntitiesByType(mockHouseholdTwoAdultsTwoChildren, 'family');
-
-      // Then
-      expect(result).toHaveLength(1);
-    });
-
-    test('given household entity type when getting entities then returns households', () => {
-      // When
-      const result = getEntitiesByType(mockHouseholdTwoAdultsTwoChildren, 'household');
-
-      // Then
-      expect(result).toHaveLength(1);
-    });
-
-    test('given benunit entity type when getting entities then returns benunits', () => {
-      // When
-      const result = getEntitiesByType(mockUKHousehold, 'benunit');
-
-      // Then
-      expect(result).toHaveLength(1);
-    });
-  });
-
-  describe('getPeopleInEntity', () => {
-    test('given person entity type when getting people then returns single person', () => {
-      // When
-      const result = getPeopleInEntity(
-        mockHouseholdTwoAdultsTwoChildren,
-        'person',
-        QUERY_PERSON_IDS.ADULT_1
-      );
-
-      // Then
-      expect(result).toHaveLength(1);
-      expect(result[0].person_id).toBe(QUERY_PERSON_IDS.ADULT_1);
-    });
-
-    test('given tax unit entity type when getting people then returns people in tax unit', () => {
-      // When
-      const result = getPeopleInEntity(mockHouseholdTwoAdultsTwoChildren, 'tax_unit', 0);
-
-      // Then
-      expect(result).toHaveLength(4);
-    });
-
-    test('given family entity type when getting people then returns people in family', () => {
-      // When
-      const result = getPeopleInEntity(mockHouseholdTwoAdultsTwoChildren, 'family', 0);
-
-      // Then
-      expect(result).toHaveLength(4);
-    });
-
-    test('given household entity type when getting people then returns people in household', () => {
-      // When
-      const result = getPeopleInEntity(mockHouseholdTwoAdultsTwoChildren, 'household', 0);
-
-      // Then
-      expect(result).toHaveLength(4);
     });
   });
 
   describe('getEntityVariable', () => {
-    test('given existing tax unit and variable when getting variable then returns value', () => {
+    test('given existing tax_unit and variable when getting variable then returns value', () => {
       // When
       const result = getEntityVariable(
         mockHouseholdTwoAdultsTwoChildren,
         'tax_unit',
-        0,
         QUERY_VARIABLE_NAMES.STATE_CODE
       );
 
@@ -988,27 +463,56 @@ describe('HouseholdQueries', () => {
       expect(result).toBe(QUERY_VARIABLE_VALUES.STATE_CA);
     });
 
-    test('given non-existent entity when getting variable then returns undefined', () => {
+    test('given non-existent variable when getting variable then returns undefined', () => {
       // When
       const result = getEntityVariable(
         mockHouseholdTwoAdultsTwoChildren,
         'tax_unit',
-        999,
-        QUERY_VARIABLE_NAMES.STATE_CODE
+        QUERY_VARIABLE_NAMES.NON_EXISTENT
       );
 
       // Then
       expect(result).toBeUndefined();
     });
 
-    test('given non-existent variable when getting variable then returns undefined', () => {
+    test('given household entity type when getting variable then returns value', () => {
       // When
       const result = getEntityVariable(
         mockHouseholdTwoAdultsTwoChildren,
-        'tax_unit',
-        0,
-        QUERY_VARIABLE_NAMES.NON_EXISTENT
+        'household',
+        'state_fips'
       );
+
+      // Then
+      expect(result).toBe(6);
+    });
+
+    test('given person entity type when getting variable then returns value from first person', () => {
+      // When
+      const result = getEntityVariable(
+        mockHouseholdTwoAdultsTwoChildren,
+        'person',
+        QUERY_VARIABLE_NAMES.EMPLOYMENT_INCOME
+      );
+
+      // Then
+      expect(result).toBe(QUERY_VARIABLE_VALUES.INCOME_50K);
+    });
+  });
+
+  describe('getHouseholdUnit', () => {
+    test('given household with household dict when getting household unit then returns dict', () => {
+      // When
+      const result = getHouseholdUnit(mockHouseholdTwoAdultsTwoChildren);
+
+      // Then
+      expect(result).toBeDefined();
+      expect(result?.state_fips).toBe(6);
+    });
+
+    test('given household without household dict when getting household unit then returns undefined', () => {
+      // When
+      const result = getHouseholdUnit(mockEmptyHousehold);
 
       // Then
       expect(result).toBeUndefined();
@@ -1088,7 +592,7 @@ describe('HouseholdQueries', () => {
       expect(result).toBe(6);
     });
 
-    test('given household without household units when getting state FIPS then returns undefined', () => {
+    test('given household without household dict when getting state FIPS then returns undefined', () => {
       // When
       const result = getStateFips(mockEmptyHousehold);
 
@@ -1106,7 +610,7 @@ describe('HouseholdQueries', () => {
       expect(result).toBe(QUERY_VARIABLE_VALUES.STATE_CA);
     });
 
-    test('given household without tax units when getting state code then returns undefined', () => {
+    test('given household without tax_unit when getting state code then returns undefined', () => {
       // When
       const result = getStateCode(mockEmptyHousehold);
 
@@ -1124,12 +628,95 @@ describe('HouseholdQueries', () => {
       expect(result).toBe('LONDON');
     });
 
-    test('given household without household units when getting region then returns undefined', () => {
+    test('given household without household dict when getting region then returns undefined', () => {
       // When
       const result = getRegion(mockEmptyHousehold);
 
       // Then
       expect(result).toBeUndefined();
+    });
+  });
+
+  describe('sumPersonVariable', () => {
+    test('given household with income when summing employment income then returns total', () => {
+      // When
+      const result = sumPersonVariable(
+        mockHouseholdTwoAdultsTwoChildren,
+        QUERY_VARIABLE_NAMES.EMPLOYMENT_INCOME
+      );
+
+      // Then
+      expect(result).toBe(QUERY_VARIABLE_VALUES.INCOME_50K + QUERY_VARIABLE_VALUES.INCOME_75K);
+    });
+
+    test('given empty household when summing then returns zero', () => {
+      // When
+      const result = sumPersonVariable(mockEmptyHousehold, QUERY_VARIABLE_NAMES.EMPLOYMENT_INCOME);
+
+      // Then
+      expect(result).toBe(0);
+    });
+
+    test('given non-existent variable when summing then returns zero', () => {
+      // When
+      const result = sumPersonVariable(
+        mockHouseholdTwoAdultsTwoChildren,
+        QUERY_VARIABLE_NAMES.NON_EXISTENT
+      );
+
+      // Then
+      expect(result).toBe(0);
+    });
+
+    test('given household with mixed numeric and non-numeric values when summing then only sums numeric', () => {
+      // Given
+      const household = createHouseholdWithPeople([
+        createPersonWithVariable(QUERY_VARIABLE_NAMES.EMPLOYMENT_INCOME, 1000),
+        createPersonWithVariable(QUERY_VARIABLE_NAMES.EMPLOYMENT_INCOME, 2000),
+        createPersonWithVariable(QUERY_VARIABLE_NAMES.EMPLOYMENT_INCOME, undefined),
+      ]);
+
+      // When
+      const result = sumPersonVariable(household, QUERY_VARIABLE_NAMES.EMPLOYMENT_INCOME);
+
+      // Then
+      expect(result).toBe(3000);
+    });
+  });
+
+  describe('avgPersonVariable', () => {
+    test('given household with income when averaging employment income then returns average', () => {
+      // When
+      const result = avgPersonVariable(
+        mockHouseholdTwoAdultsTwoChildren,
+        QUERY_VARIABLE_NAMES.EMPLOYMENT_INCOME
+      );
+
+      // Then
+      const expectedAvg = (QUERY_VARIABLE_VALUES.INCOME_50K + QUERY_VARIABLE_VALUES.INCOME_75K) / 4;
+      expect(result).toBe(expectedAvg);
+    });
+
+    test('given empty household when averaging then returns zero', () => {
+      // When
+      const result = avgPersonVariable(mockEmptyHousehold, QUERY_VARIABLE_NAMES.EMPLOYMENT_INCOME);
+
+      // Then
+      expect(result).toBe(0);
+    });
+
+    test('given household with two people with values when averaging then calculates correctly', () => {
+      // Given
+      const household = createHouseholdWithPeople([
+        createPersonWithVariable(QUERY_VARIABLE_NAMES.EMPLOYMENT_INCOME, 1000),
+        createPersonWithVariable(QUERY_VARIABLE_NAMES.EMPLOYMENT_INCOME, 2000),
+      ]);
+
+      // When
+      const result = avgPersonVariable(household, QUERY_VARIABLE_NAMES.EMPLOYMENT_INCOME);
+
+      // Then
+      expect(result).toBe(1500);
     });
   });
 });

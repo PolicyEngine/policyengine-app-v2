@@ -35,37 +35,27 @@ export const mockHouseholdMetadata: HouseholdMetadata = {
   id: '12345',
   household: {
     tax_benefit_model_name: 'policyengine_us',
-    year: parseInt(CURRENT_YEAR),
+    year: parseInt(CURRENT_YEAR, 10),
     people: [
       {
-        person_id: 0,
-        name: 'person1',
         age: 30,
         employment_income: 50000,
-        person_tax_unit_id: 0,
-        person_household_id: 0,
       },
       {
-        person_id: 1,
-        name: 'person2',
         age: 28,
         employment_income: 45000,
-        person_tax_unit_id: 0,
-        person_household_id: 0,
       },
     ],
-    tax_unit: [{ tax_unit_id: 0 }],
-    household: [{ household_id: 0 }],
+    tax_unit: {},
+    household: {},
   },
 };
 
 export const mockHouseholdCalculatePayload: HouseholdCalculatePayload = {
   tax_benefit_model_name: 'policyengine_us',
-  year: parseInt(CURRENT_YEAR),
+  year: parseInt(CURRENT_YEAR, 10),
   people: [
     {
-      person_id: 0,
-      name: 'person1',
       age: 25,
     },
   ],
@@ -74,11 +64,9 @@ export const mockHouseholdCalculatePayload: HouseholdCalculatePayload = {
 // UK variant for testing different countries
 export const mockHouseholdCalculatePayloadUK: HouseholdCalculatePayload = {
   tax_benefit_model_name: 'policyengine_uk',
-  year: parseInt(CURRENT_YEAR),
+  year: parseInt(CURRENT_YEAR, 10),
   people: [
     {
-      person_id: 0,
-      name: 'person1',
       age: 25,
     },
   ],
@@ -87,36 +75,26 @@ export const mockHouseholdCalculatePayloadUK: HouseholdCalculatePayload = {
 // Large household payload for testing complex data handling
 export const mockLargeHouseholdPayload: HouseholdCalculatePayload = {
   tax_benefit_model_name: 'policyengine_us',
-  year: parseInt(CURRENT_YEAR),
+  year: parseInt(CURRENT_YEAR, 10),
   people: [
     {
-      person_id: 0,
-      name: 'person1',
       age: 30,
       employment_income: 50000,
-      person_tax_unit_id: 0,
     },
     {
-      person_id: 1,
-      name: 'person2',
       age: 28,
       employment_income: 45000,
-      person_tax_unit_id: 0,
     },
     {
-      person_id: 2,
-      name: 'person3',
       age: 5,
-      person_tax_unit_id: 0,
+      is_tax_unit_dependent: true,
     },
     {
-      person_id: 3,
-      name: 'person4',
       age: 3,
-      person_tax_unit_id: 0,
+      is_tax_unit_dependent: true,
     },
   ],
-  tax_unit: [{ tax_unit_id: 0 }],
+  tax_unit: {},
 };
 
 export const mockCreateHouseholdResponse = {

@@ -443,12 +443,7 @@ describe('shouldShowVariable', () => {
       ...MOCK_HOUSEHOLD_DATA,
       people: [
         {
-          person_id: 0,
           benefits: 0,
-          person_tax_unit_id: 0,
-          person_family_id: 0,
-          person_spm_unit_id: 0,
-          person_marital_unit_id: 0,
         },
       ],
     };

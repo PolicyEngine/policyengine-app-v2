@@ -6,6 +6,8 @@
  * - Individuals accordion with basic inputs (age, employment_income) + custom variables
  * - Household Variables accordion with basic inputs (state_name, etc.) + custom variables
  * - Inline search for adding custom variables per person or household-level
+ *
+ * People are identified by array index (no person_id or name fields).
  */
 
 import { useMemo, useState } from 'react';
@@ -13,7 +15,7 @@ import { IconInfoCircle, IconPlus } from '@tabler/icons-react';
 import { Accordion, Alert, Button, Divider, Group, Select, Stack, Text } from '@mantine/core';
 import { colors, spacing } from '@/designTokens';
 import { Household, HouseholdPerson } from '@/types/ingredients/Household';
-import { getPersonDisplayName, sortPeopleByOrder } from '@/utils/householdIndividuals';
+import { getPersonDisplayNameInContext, sortPeopleByOrder } from '@/utils/householdIndividuals';
 import {
   addVariable,
   addVariableToEntity,
@@ -54,7 +56,7 @@ export default function HouseholdBuilderForm({
   // State for custom variables
   const [selectedVariables, setSelectedVariables] = useState<string[]>([]);
 
-  // Search state for person variables (per person)
+  // Search state for person variables (per person, keyed by array index)
   const [activePersonSearch, setActivePersonSearch] = useState<number | null>(null);
   const [personSearchValue, setPersonSearchValue] = useState('');
   const [, setIsPersonSearchFocused] = useState(false);
@@ -70,7 +72,7 @@ export default function HouseholdBuilderForm({
   // Get all input variables from metadata
   const allInputVariables = useMemo(() => getInputVariables(metadata), [metadata]);
 
-  // Get list of people, sorted in display order (you, partner, dependents)
+  // Get list of people (already in order: adults first, dependents after)
   const sortedPeople = useMemo(() => sortPeopleByOrder(household.people || []), [household]);
 
   // Maximum number of results to display in dropdown for performance
@@ -133,8 +135,8 @@ export default function HouseholdBuilderForm({
   }, [selectedVariables, metadata, basicNonPersonFields]);
 
   // Handle opening person search
-  const handleOpenPersonSearch = (personId: number) => {
-    setActivePersonSearch(personId);
+  const handleOpenPersonSearch = (personIndex: number) => {
+    setActivePersonSearch(personIndex);
     setPersonSearchValue('');
     setIsPersonSearchFocused(true);
   };
@@ -142,7 +144,7 @@ export default function HouseholdBuilderForm({
   // Handle person variable selection
   const handlePersonVariableSelect = (
     variable: { name: string; label: string },
-    personId: number
+    personIndex: number
   ) => {
     const { isPerson } = getVariableEntityDisplayInfo(variable.name, metadata);
 
@@ -158,7 +160,7 @@ export default function HouseholdBuilderForm({
     }
 
     // addVariableToEntity handles routing to correct entity based on metadata
-    const newHousehold = addVariableToEntity(household, variable.name, metadata, personId);
+    const newHousehold = addVariableToEntity(household, variable.name, metadata, personIndex);
     onChange(newHousehold);
 
     if (!selectedVariables.includes(variable.name)) {
@@ -171,10 +173,10 @@ export default function HouseholdBuilderForm({
   };
 
   // Handle removing person variable
-  const handleRemovePersonVariable = (varName: string, personId: number) => {
+  const handleRemovePersonVariable = (varName: string, personIndex: number) => {
     // Remove the variable data from this person's household data
     const newHousehold = JSON.parse(JSON.stringify(household)) as Household;
-    const person = newHousehold.people.find((p) => p.person_id === personId);
+    const person = newHousehold.people[personIndex];
     if (person && person[varName] !== undefined) {
       delete person[varName];
     }
@@ -182,7 +184,7 @@ export default function HouseholdBuilderForm({
 
     // Check if any other person still has this variable
     const stillUsedByOthers = newHousehold.people.some(
-      (p) => p.person_id !== personId && p[varName] !== undefined
+      (p, i) => i !== personIndex && p[varName] !== undefined
     );
 
     // If no one else has it, remove from selectedVariables
@@ -216,7 +218,6 @@ export default function HouseholdBuilderForm({
     let newHousehold: Household;
     if (isPerson) {
       // For person-level variables selected from household, add to ALL people
-      // Always call addVariable to ensure new members get it too
       newHousehold = addVariable(household, variable.name, metadata);
     } else {
       // For non-person variables, only add if not already present
@@ -226,12 +227,7 @@ export default function HouseholdBuilderForm({
         setIsHouseholdSearchFocused(false);
         return;
       }
-      newHousehold = addVariableToEntity(
-        household,
-        variable.name,
-        metadata,
-        0 // Default entity ID
-      );
+      newHousehold = addVariableToEntity(household, variable.name, metadata);
     }
     onChange(newHousehold);
     if (!selectedVariables.includes(variable.name)) {
@@ -317,19 +313,18 @@ export default function HouseholdBuilderForm({
           </Accordion.Control>
           <Accordion.Panel>
             <Accordion
-              key={sortedPeople.map((p) => p.person_id).join(',')}
-              defaultValue={sortedPeople.map((p) => String(p.person_id ?? 0))}
+              key={sortedPeople.length}
+              defaultValue={sortedPeople.map((_, index) => String(index))}
               multiple
             >
-              {sortedPeople.map((person) => {
-                const personId = person.person_id ?? 0;
-                const displayName = getPersonDisplayName(person);
+              {sortedPeople.map((person, index) => {
+                const displayName = getPersonDisplayNameInContext(household.people, index);
                 const displayNameCapitalized =
                   displayName.charAt(0).toUpperCase() + displayName.slice(1);
                 const personVars = getPersonVariables(person);
 
                 return (
-                  <Accordion.Item key={personId} value={String(personId)}>
+                  <Accordion.Item key={index} value={String(index)}>
                     <Accordion.Control>
                       <Text fw={600} size="sm">
                         {displayNameCapitalized}
@@ -349,7 +344,7 @@ export default function HouseholdBuilderForm({
                               variable={variable}
                               household={household}
                               metadata={metadata}
-                              entityId={personId}
+                              entityId={index}
                               onChange={onChange}
                               disabled={disabled}
                               showRemoveColumn
@@ -369,23 +364,23 @@ export default function HouseholdBuilderForm({
                               variable={variable}
                               household={household}
                               metadata={metadata}
-                              entityId={personId}
+                              entityId={index}
                               onChange={onChange}
-                              onRemove={() => handleRemovePersonVariable(varName, personId)}
+                              onRemove={() => handleRemovePersonVariable(varName, index)}
                               disabled={disabled}
                             />
                           );
                         })}
 
                         {/* Add variable search or link */}
-                        {activePersonSearch === personId ? (
+                        {activePersonSearch === index ? (
                           <VariableSearchDropdown
                             searchValue={personSearchValue}
                             onSearchChange={setPersonSearchValue}
                             onFocusChange={setIsPersonSearchFocused}
                             filteredVariables={filteredPersonVariables.variables}
                             truncated={filteredPersonVariables.truncated}
-                            onSelect={(variable) => handlePersonVariableSelect(variable, personId)}
+                            onSelect={(variable) => handlePersonVariableSelect(variable, index)}
                             getEntityHint={(variable) => {
                               const { isPerson } = getVariableEntityDisplayInfo(
                                 variable.name,
@@ -402,11 +397,10 @@ export default function HouseholdBuilderForm({
                           />
                         ) : (
                           <Button
-                            // variant="default"
                             variant="subtle"
                             size="compact-sm"
                             leftSection={<IconPlus size={14} />}
-                            onClick={() => handleOpenPersonSearch(personId)}
+                            onClick={() => handleOpenPersonSearch(index)}
                             style={{ alignSelf: 'flex-start' }}
                           >
                             Add variable to {displayName}

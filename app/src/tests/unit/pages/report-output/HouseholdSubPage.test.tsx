@@ -82,8 +82,8 @@ describe('HouseholdSubPage - Design 4 Table Format', () => {
         />
       );
 
-      // Should display person identifiers and variable names
-      expect(screen.getByText(/person1/i)).toBeInTheDocument();
+      // Should display person display names and variable names
+      expect(screen.getByText(/^You$/i)).toBeInTheDocument();
       const ageElements = screen.getAllByText(/age/i);
       expect(ageElements.length).toBeGreaterThan(0);
       const incomeElements = screen.getAllByText(/employment income/i);
@@ -132,12 +132,12 @@ describe('HouseholdSubPage - Design 4 Table Format', () => {
       );
 
       // Should show inputs from both households
-      // Family of four has person1 and person2
-      const person1Matches = screen.getAllByText(/person1/i);
-      expect(person1Matches.length).toBeGreaterThan(0);
+      // Family of four has "You" and "Your partner"
+      const youMatches = screen.getAllByText(/^You$/i);
+      expect(youMatches.length).toBeGreaterThan(0);
 
-      const person2Matches = screen.getAllByText(/person2/i);
-      expect(person2Matches.length).toBeGreaterThan(0);
+      const partnerMatches = screen.getAllByText(/your partner/i);
+      expect(partnerMatches.length).toBeGreaterThan(0);
 
       // Should show both state values
       expect(screen.getByText('CA')).toBeInTheDocument();

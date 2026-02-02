@@ -2,7 +2,6 @@
  * Region resolver - returns the correct regions for a country and simulation year
  */
 
-import { MetadataRegionEntry } from '@/types/metadata';
 import { UK_REGIONS, US_REGIONS } from '../staticRegions';
 import { ResolvedRegions } from './types';
 import { UK_CONSTITUENCIES } from './uk/constituencies';

@@ -1,28 +1,13 @@
-import { CURRENT_YEAR } from '@/constants';
 import { Household, HouseholdPerson } from '@/types/ingredients/Household';
 
 // ============= TEST CONSTANTS =============
 
-// Person IDs (v2 uses numeric IDs)
-export const QUERY_PERSON_IDS = {
+// Person indices (v2 Alpha uses array index)
+export const QUERY_PERSON_INDICES = {
   ADULT_1: 0,
   ADULT_2: 1,
   CHILD_1: 2,
   CHILD_2: 3,
-  ADULT_3: 4,
-  TEEN: 0,
-  BABY: 0,
-} as const;
-
-// Person names
-export const QUERY_PERSON_NAMES = {
-  ADULT_1: 'John',
-  ADULT_2: 'Jane',
-  ADULT_3: 'Bob',
-  CHILD_1: 'Jack',
-  CHILD_2: 'Jill',
-  TEEN: 'Teen',
-  BABY: 'Baby',
 } as const;
 
 // Ages
@@ -44,7 +29,6 @@ export const QUERY_VARIABLE_NAMES = {
   IS_TAX_UNIT_DEPENDENT: 'is_tax_unit_dependent',
   STATE_CODE: 'state_code',
   NON_EXISTENT: 'non_existent_variable',
-  MULTI_YEAR: 'multi_year_variable',
 } as const;
 
 // Variable values
@@ -94,69 +78,37 @@ export const mockEmptyHousehold: Household = {
   people: [],
 };
 
-// Household with 2 adults and 2 children
+// Household with 2 adults and 2 children (v2 Alpha: no person_id/name, entity groups are dicts)
 export const mockHouseholdTwoAdultsTwoChildren: Household = {
   tax_benefit_model_name: 'policyengine_us',
   year: 2024,
   people: [
     {
-      person_id: 0,
-      name: QUERY_PERSON_NAMES.ADULT_1,
       age: QUERY_AGES.ADULT_30,
       [QUERY_VARIABLE_NAMES.EMPLOYMENT_INCOME]: QUERY_VARIABLE_VALUES.INCOME_50K,
-      person_household_id: 0,
-      person_family_id: 0,
-      person_tax_unit_id: 0,
-      person_spm_unit_id: 0,
-      person_marital_unit_id: 0,
     },
     {
-      person_id: 1,
-      name: QUERY_PERSON_NAMES.ADULT_2,
       age: QUERY_AGES.ADULT_25,
       [QUERY_VARIABLE_NAMES.EMPLOYMENT_INCOME]: QUERY_VARIABLE_VALUES.INCOME_75K,
-      person_household_id: 0,
-      person_family_id: 0,
-      person_tax_unit_id: 0,
-      person_spm_unit_id: 0,
-      person_marital_unit_id: 0,
     },
     {
-      person_id: 2,
-      name: QUERY_PERSON_NAMES.CHILD_1,
       age: QUERY_AGES.CHILD_10,
       [QUERY_VARIABLE_NAMES.IS_TAX_UNIT_DEPENDENT]: QUERY_VARIABLE_VALUES.BOOLEAN_TRUE,
-      person_household_id: 0,
-      person_family_id: 0,
-      person_tax_unit_id: 0,
-      person_spm_unit_id: 0,
     },
     {
-      person_id: 3,
-      name: QUERY_PERSON_NAMES.CHILD_2,
       age: QUERY_AGES.CHILD_5,
       [QUERY_VARIABLE_NAMES.IS_TAX_UNIT_DEPENDENT]: QUERY_VARIABLE_VALUES.BOOLEAN_TRUE,
-      person_household_id: 0,
-      person_family_id: 0,
-      person_tax_unit_id: 0,
-      person_spm_unit_id: 0,
     },
   ],
-  household: [
-    {
-      household_id: 0,
-      state_fips: 6, // California
-    },
-  ],
-  family: [{ family_id: 0 }],
-  tax_unit: [
-    {
-      tax_unit_id: 0,
-      [QUERY_VARIABLE_NAMES.STATE_CODE]: QUERY_VARIABLE_VALUES.STATE_CA,
-    },
-  ],
-  spm_unit: [{ spm_unit_id: 0 }],
-  marital_unit: [{ marital_unit_id: 0 }],
+  household: {
+    state_fips: 6, // California
+  },
+  family: {},
+  tax_unit: {
+    [QUERY_VARIABLE_NAMES.STATE_CODE]: QUERY_VARIABLE_VALUES.STATE_CA,
+  },
+  spm_unit: {},
+  marital_unit: {},
 };
 
 // UK household with benefit units
@@ -165,28 +117,17 @@ export const mockUKHousehold: Household = {
   year: 2024,
   people: [
     {
-      person_id: 0,
-      name: QUERY_PERSON_NAMES.ADULT_1,
       age: QUERY_AGES.ADULT_30,
       [QUERY_VARIABLE_NAMES.EMPLOYMENT_INCOME]: QUERY_VARIABLE_VALUES.INCOME_50K,
-      person_household_id: 0,
-      person_benunit_id: 0,
     },
     {
-      person_id: 1,
-      name: QUERY_PERSON_NAMES.CHILD_1,
       age: QUERY_AGES.CHILD_10,
-      person_household_id: 0,
-      person_benunit_id: 0,
     },
   ],
-  household: [
-    {
-      household_id: 0,
-      region: 'LONDON',
-    },
-  ],
-  benunit: [{ benunit_id: 0 }],
+  household: {
+    region: 'LONDON',
+  },
+  benunit: {},
 };
 
 // ============= TEST HELPERS =============
@@ -201,33 +142,24 @@ export const createHouseholdWithPeople = (
   tax_benefit_model_name: modelName,
   year: 2024,
   people,
-  household: [{ household_id: 0 }],
+  household: {},
 });
 
 /**
  * Helper to create a person with age
  */
-export const createPersonWithAge = (
-  personId: number,
-  name: string,
-  age: number
-): HouseholdPerson => ({
-  person_id: personId,
-  name,
+export const createPersonWithAge = (age: number): HouseholdPerson => ({
   age,
 });
 
 /**
- * Helper to create a person with variable
+ * Helper to create a person with a variable
  */
 export const createPersonWithVariable = (
-  personId: number,
-  name: string,
   variableName: string,
-  value: any
+  value: any,
+  age: number = QUERY_AGES.ADULT_30
 ): HouseholdPerson => ({
-  person_id: personId,
-  name,
-  age: QUERY_AGES.ADULT_30,
+  age,
   [variableName]: value,
 });

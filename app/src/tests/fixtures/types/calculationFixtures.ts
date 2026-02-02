@@ -1,6 +1,6 @@
 import { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { CalcError, CalcMetadata, CalcParams, CalcStatus } from '@/types/calculation';
-import { HouseholdData } from '@/types/ingredients/Household';
+import { Household } from '@/types/ingredients/Household';
 
 /**
  * Mock CalcError for testing
@@ -84,15 +84,11 @@ export const mockSocietyWideResult = (): SocietyWideReportOutput =>
 /**
  * Mock household calculation result
  */
-export const mockHouseholdResult = (): HouseholdData => ({
+export const mockHouseholdResult = (): Household => ({
   tax_benefit_model_name: 'policyengine_us',
   year: 2024,
-  people: [
-    { person_id: 0, age: 30, employment_income: 50000 },
-  ],
-  household: [
-    { household_id: 0, household_net_income: 45000 },
-  ],
+  people: [{ age: 30, employment_income: 50000 }],
+  household: { household_net_income: 45000 },
 });
 
 /**

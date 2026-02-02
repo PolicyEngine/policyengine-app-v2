@@ -113,55 +113,37 @@ export const POPULATION_ERRORS = {
 export const mockHouseholdData1: Household = {
   id: POPULATION_TEST_IDS.HOUSEHOLD_ID_1,
   tax_benefit_model_name: 'policyengine_us',
-  year: parseInt(CURRENT_YEAR),
+  year: parseInt(CURRENT_YEAR, 10),
   people: [
     {
-      person_id: 0,
-      name: 'person1',
       age: 30,
       employment_income: 50000,
-      person_family_id: 0,
-      person_tax_unit_id: 0,
-      person_spm_unit_id: 0,
-      person_household_id: 0,
-      person_marital_unit_id: 0,
     },
     {
-      person_id: 1,
-      name: 'person2',
       age: 28,
       employment_income: 45000,
-      person_family_id: 0,
-      person_household_id: 0,
-      person_marital_unit_id: 0,
     },
   ],
-  family: [{ family_id: 0 }],
-  tax_unit: [{ tax_unit_id: 0 }],
-  spm_unit: [{ spm_unit_id: 0 }],
-  household: [{ household_id: 0 }],
-  marital_unit: [{ marital_unit_id: 0 }],
+  family: {},
+  tax_unit: {},
+  spm_unit: {},
+  household: {},
+  marital_unit: {},
 };
 
 export const mockHouseholdData2: Household = {
   id: POPULATION_TEST_IDS.HOUSEHOLD_ID_2,
   tax_benefit_model_name: 'policyengine_us',
-  year: parseInt(CURRENT_YEAR),
+  year: parseInt(CURRENT_YEAR, 10),
   people: [
     {
-      person_id: 0,
-      name: 'person1',
       age: 45,
-      person_tax_unit_id: 0,
-      person_spm_unit_id: 0,
-      person_household_id: 0,
-      person_marital_unit_id: 0,
     },
   ],
-  tax_unit: [{ tax_unit_id: 0 }],
-  spm_unit: [{ spm_unit_id: 0 }],
-  household: [{ household_id: 0 }],
-  marital_unit: [{ marital_unit_id: 0 }],
+  tax_unit: {},
+  spm_unit: {},
+  household: {},
+  marital_unit: {},
 };
 
 // Mock household associations

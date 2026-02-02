@@ -19,14 +19,14 @@ describe('householdTableData', () => {
       // Should have 4 person inputs (2 people × 2 params each) + household inputs
       expect(rows.length).toBeGreaterThan(0);
 
-      // Check person-1 inputs
-      const person1Age = rows.find((r) => r.category === 'person-1' && r.paramName === 'age');
+      // Check "You" (person at index 0) inputs
+      const person1Age = rows.find((r) => r.category === 'You' && r.paramName === 'age');
       expect(person1Age).toBeDefined();
       expect(person1Age?.value).toBe(35);
       expect(person1Age?.label).toBe('Age');
 
       const person1Income = rows.find(
-        (r) => r.category === 'person-1' && r.paramName === 'employment_income'
+        (r) => r.category === 'You' && r.paramName === 'employment_income'
       );
       expect(person1Income).toBeDefined();
       expect(person1Income?.value).toBe(50000);
@@ -48,21 +48,23 @@ describe('householdTableData', () => {
       const rows = extractHouseholdInputs(MOCK_HOUSEHOLD_COMPLEX);
 
       // Should extract all person inputs
-      const adult1Age = rows.find((r) => r.category === 'adult1' && r.paramName === 'age');
-      expect(adult1Age?.value).toBe(45);
+      const youAge = rows.find((r) => r.category === 'You' && r.paramName === 'age');
+      expect(youAge?.value).toBe(45);
 
-      const adult1Employment = rows.find(
-        (r) => r.category === 'adult1' && r.paramName === 'employment_income'
+      const youEmployment = rows.find(
+        (r) => r.category === 'You' && r.paramName === 'employment_income'
       );
-      expect(adult1Employment?.value).toBe(75000);
+      expect(youEmployment?.value).toBe(75000);
 
-      const adult1SelfEmployment = rows.find(
-        (r) => r.category === 'adult1' && r.paramName === 'self_employment_income'
+      const youSelfEmployment = rows.find(
+        (r) => r.category === 'You' && r.paramName === 'self_employment_income'
       );
-      expect(adult1SelfEmployment?.value).toBe(10000);
+      expect(youSelfEmployment?.value).toBe(10000);
 
       // Check children
-      const child1Age = rows.find((r) => r.category === 'child1' && r.paramName === 'age');
+      const child1Age = rows.find(
+        (r) => r.category === 'Your first dependent' && r.paramName === 'age'
+      );
       expect(child1Age?.value).toBe(12);
 
       // Check household-level vars

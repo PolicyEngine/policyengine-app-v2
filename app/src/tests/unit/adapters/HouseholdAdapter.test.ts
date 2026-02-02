@@ -21,32 +21,20 @@ const mockUSHousehold: Household = {
   year: TEST_YEAR,
   people: [
     {
-      person_id: 0,
       age: 30,
       employment_income: 50000,
-      person_tax_unit_id: 0,
-      person_household_id: 0,
     },
     {
-      person_id: 1,
       age: 28,
       employment_income: 45000,
-      person_tax_unit_id: 0,
-      person_household_id: 0,
     },
   ],
-  tax_unit: [
-    {
-      tax_unit_id: 0,
-      state_code: 'CA',
-    },
-  ],
-  household: [
-    {
-      household_id: 0,
-      state_fips: 6,
-    },
-  ],
+  tax_unit: {
+    state_code: 'CA',
+  },
+  household: {
+    state_fips: 6,
+  },
 };
 
 const mockUKHousehold: Household = {
@@ -54,25 +42,16 @@ const mockUKHousehold: Household = {
   year: TEST_YEAR,
   people: [
     {
-      person_id: 0,
       age: 35,
       employment_income: 30000,
-      person_benunit_id: 0,
-      person_household_id: 0,
     },
   ],
-  benunit: [
-    {
-      benunit_id: 0,
-      is_married: false,
-    },
-  ],
-  household: [
-    {
-      household_id: 0,
-      region: 'london',
-    },
-  ],
+  benunit: {
+    is_married: false,
+  },
+  household: {
+    region: 'london',
+  },
 };
 
 const mockUSHouseholdWithLabel: Household = {
@@ -155,12 +134,12 @@ describe('HouseholdAdapter', () => {
       const householdWithAllEntities: Household = {
         tax_benefit_model_name: 'policyengine_us',
         year: TEST_YEAR,
-        people: [{ person_id: 0, age: 30 }],
-        tax_unit: [{ tax_unit_id: 0 }],
-        family: [{ family_id: 0 }],
-        spm_unit: [{ spm_unit_id: 0 }],
-        marital_unit: [{ marital_unit_id: 0 }],
-        household: [{ household_id: 0 }],
+        people: [{ age: 30 }],
+        tax_unit: {},
+        family: {},
+        spm_unit: {},
+        marital_unit: {},
+        household: {},
       };
 
       const metadata: HouseholdMetadata = {
@@ -236,12 +215,12 @@ describe('HouseholdAdapter', () => {
       const householdWithAllEntities: Household = {
         tax_benefit_model_name: 'policyengine_us',
         year: TEST_YEAR,
-        people: [{ person_id: 0 }],
-        tax_unit: [{ tax_unit_id: 0 }],
-        family: [{ family_id: 0 }],
-        spm_unit: [{ spm_unit_id: 0 }],
-        marital_unit: [{ marital_unit_id: 0 }],
-        household: [{ household_id: 0 }],
+        people: [{}],
+        tax_unit: {},
+        family: {},
+        spm_unit: {},
+        marital_unit: {},
+        household: {},
       };
 
       const result = HouseholdAdapter.toMetadata(householdWithAllEntities);
@@ -317,12 +296,12 @@ describe('HouseholdAdapter', () => {
       const householdWithAllEntities: Household = {
         tax_benefit_model_name: 'policyengine_us',
         year: TEST_YEAR,
-        people: [{ person_id: 0 }],
-        tax_unit: [{ tax_unit_id: 0 }],
-        family: [{ family_id: 0 }],
-        spm_unit: [{ spm_unit_id: 0 }],
-        marital_unit: [{ marital_unit_id: 0 }],
-        household: [{ household_id: 0 }],
+        people: [{}],
+        tax_unit: {},
+        family: {},
+        spm_unit: {},
+        marital_unit: {},
+        household: {},
       };
 
       const result = HouseholdAdapter.toCalculatePayload(householdWithAllEntities);
@@ -338,7 +317,7 @@ describe('HouseholdAdapter', () => {
       const minimalHousehold: Household = {
         tax_benefit_model_name: 'policyengine_us',
         year: TEST_YEAR,
-        people: [{ person_id: 0 }],
+        people: [{}],
       };
 
       const result = HouseholdAdapter.toCalculatePayload(minimalHousehold);
