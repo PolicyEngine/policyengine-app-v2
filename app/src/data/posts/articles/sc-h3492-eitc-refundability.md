@@ -1,4 +1,4 @@
-South Carolina's [House Bill 3492](https://www.scstatehouse.gov/sess126_2025-2026/prever/3492_20241205.htm) proposes to alter the state's Earned Income Tax Credit (EITC). Currently, South Carolina offers a 125% match of the federal EITC, the highest of any state in America. However, because the credit is entirely nonrefundable, filers with little or no tax obligation in the EITC range receive less savings than if the credit were refundable. H.3492 would make 25% of the excess credit (the portion exceeding taxes owed) refundable for all taxpayers in South Carolina.
+South Carolina's [House Bill 3492](https://www.scstatehouse.gov/sess126_2025-2026/prever/3492_20241205.htm) would make the state's Earned Income Tax Credit (EITC) partially refundable. South Carolina currently matches 125% of the federal EITC (the highest rate in the nation), but the credit is entirely nonrefundable, meaning filers who owe little or no state income tax cannot claim its full value. H.3492 would allow taxpayers to receive 25% of the credit that exceeds their tax liability as a refund.
 
 We at PolicyEngine have analyzed the effects of this proposed change on South Carolina and its residents.
 
@@ -31,7 +31,7 @@ H.3492 would provide an average benefit of $210 per South Carolina household. Ta
 
 <iframe src="https://policyengine.github.io/sc-h3492-eitc-calc/avg-benefit-by-decile.html" width="100%" height="500" frameborder="0"></iframe>
 
-We project that H.3492 would reduce poverty by 2.1% and child poverty by 4.8%. The larger child poverty reduction reflects the structure of the federal EITC, which provides greater benefits to families with children.
+We project that H.3492 would reduce poverty by 2.1% and child poverty by 4.8%. The larger child poverty reduction reflects the structure of the federal EITC, which provides a higher benefit amount to families with children.
 
 ## Conclusion
 
