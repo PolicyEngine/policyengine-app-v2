@@ -43,6 +43,9 @@ interface BaseApp {
 
   /** Optional: Author IDs for attribution */
   authors?: string[];
+
+  /** Optional: Whether this app should be featured on the Tools landing page */
+  isFeatured?: boolean;
 }
 
 /**
