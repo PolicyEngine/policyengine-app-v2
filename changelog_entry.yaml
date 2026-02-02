@@ -1,4 +1,4 @@
 - bump: patch
   changes:
-    changed:
-      - Move ads dashboard route into StaticLayout (shows PE header)
+    added:
+      - Add UK student loan deductions calculator to apps listing
