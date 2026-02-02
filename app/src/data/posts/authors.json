@@ -169,5 +169,11 @@
     "github": "https://github.com/juaristi22",
     "headshot": "maria-juaristi.jpeg",
     "title": "Data Scientist at PolicyEngine"
+  },
+  "ziming-hua": {
+    "name": "Ziming Hua",
+    "email": "ziming@policyengine.org",
+    "bio": "Ziming is a policy researcher at PolicyEngine.",
+    "title": "Policy Researcher at PolicyEngine"
   }
 }
