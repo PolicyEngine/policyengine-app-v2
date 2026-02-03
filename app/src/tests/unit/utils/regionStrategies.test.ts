@@ -10,19 +10,29 @@ import {
   mockUKRegions,
   mockUSRegions,
   TEST_REGIONS,
+  mockPlacePatersonNJ,
+  mockPlaceLasVegasNV,
+  mockPlaceNYC,
+  EXPECTED_PLACE_REGION_STRINGS,
+  INVALID_PLACE_REGION_STRINGS,
 } from '@/tests/fixtures/utils/regionStrategiesMocks';
 import { UK_REGION_TYPES, US_REGION_TYPES } from '@/types/regionTypes';
 import {
   createGeographyFromScope,
   extractRegionDisplayValue,
   filterDistrictsByState,
+  filterPlacesByState,
+  findPlaceFromRegionString,
   formatDistrictOptionsForDisplay,
+  getPlaceStateNames,
   getStateNameFromDistrict,
   getUKConstituencies,
   getUKCountries,
   getUKLocalAuthorities,
   getUSCongressionalDistricts,
   getUSStates,
+  parsePlaceRegionString,
+  placeToRegionString,
 } from '@/utils/regionStrategies';
 
 describe('regionStrategies', () => {
@@ -597,6 +607,349 @@ describe('regionStrategies', () => {
         scope: 'subnational',
         geographyId: 'ca', // Legacy format preserved
       });
+    });
+  });
+
+  describe('getPlaceStateNames', () => {
+    test('given US places data then returns unique sorted state names', () => {
+      // Given - The function uses the built-in US_PLACES_OVER_100K data
+
+      // When
+      const result = getPlaceStateNames();
+
+      // Then
+      expect(result.length).toBeGreaterThan(0);
+      expect(result[0]).toHaveProperty('value');
+      expect(result[0]).toHaveProperty('label');
+      // Should be sorted alphabetically
+      const values = result.map((r) => r.value);
+      const sorted = [...values].sort();
+      expect(values).toEqual(sorted);
+    });
+
+    test('given US places data then includes expected states', () => {
+      // Given - The function uses the built-in US_PLACES_OVER_100K data
+
+      // When
+      const result = getPlaceStateNames();
+      const stateNames = result.map((r) => r.value);
+
+      // Then - Should include states with large cities
+      expect(stateNames).toContain('California');
+      expect(stateNames).toContain('New York');
+      expect(stateNames).toContain('Texas');
+      expect(stateNames).toContain('Nevada');
+      expect(stateNames).toContain('New Jersey');
+    });
+
+    test('given US places data then value equals label', () => {
+      // Given - The function uses the built-in US_PLACES_OVER_100K data
+
+      // When
+      const result = getPlaceStateNames();
+
+      // Then
+      result.forEach((r) => {
+        expect(r.value).toBe(r.label);
+      });
+    });
+  });
+
+  describe('filterPlacesByState', () => {
+    test('given valid state name then returns places in that state', () => {
+      // Given
+      const stateName = 'Nevada';
+
+      // When
+      const result = filterPlacesByState(stateName);
+
+      // Then
+      expect(result.length).toBeGreaterThan(0);
+      result.forEach((place) => {
+        expect(place.stateName).toBe('Nevada');
+      });
+    });
+
+    test('given state name then includes expected place', () => {
+      // Given
+      const stateName = 'Nevada';
+
+      // When
+      const result = filterPlacesByState(stateName);
+      const placeNames = result.map((p) => p.name);
+
+      // Then
+      expect(placeNames).toContain('Las Vegas city');
+    });
+
+    test('given New Jersey then returns Paterson', () => {
+      // Given
+      const stateName = 'New Jersey';
+
+      // When
+      const result = filterPlacesByState(stateName);
+      const placeNames = result.map((p) => p.name);
+
+      // Then
+      expect(placeNames).toContain('Paterson city');
+    });
+
+    test('given empty state name then returns empty array', () => {
+      // Given
+      const stateName = '';
+
+      // When
+      const result = filterPlacesByState(stateName);
+
+      // Then
+      expect(result).toEqual([]);
+    });
+
+    test('given non-existent state name then returns empty array', () => {
+      // Given
+      const stateName = 'Nonexistent State';
+
+      // When
+      const result = filterPlacesByState(stateName);
+
+      // Then
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe('placeToRegionString', () => {
+    test('given Paterson NJ place then returns correct region string', () => {
+      // Given
+      const place = mockPlacePatersonNJ;
+
+      // When
+      const result = placeToRegionString(place);
+
+      // Then
+      expect(result).toBe(EXPECTED_PLACE_REGION_STRINGS.PATERSON_NJ);
+    });
+
+    test('given Las Vegas NV place then returns correct region string', () => {
+      // Given
+      const place = mockPlaceLasVegasNV;
+
+      // When
+      const result = placeToRegionString(place);
+
+      // Then
+      expect(result).toBe(EXPECTED_PLACE_REGION_STRINGS.LAS_VEGAS_NV);
+    });
+
+    test('given NYC place then returns correct region string', () => {
+      // Given
+      const place = mockPlaceNYC;
+
+      // When
+      const result = placeToRegionString(place);
+
+      // Then
+      expect(result).toBe(EXPECTED_PLACE_REGION_STRINGS.NYC);
+    });
+  });
+
+  describe('parsePlaceRegionString', () => {
+    test('given valid place region string then returns parsed components', () => {
+      // Given
+      const regionString = TEST_REGIONS.US_PLACE_PATERSON_NJ;
+
+      // When
+      const result = parsePlaceRegionString(regionString);
+
+      // Then
+      expect(result).toEqual({
+        stateAbbrev: 'NJ',
+        placeFips: '57000',
+      });
+    });
+
+    test('given Las Vegas region string then returns parsed components', () => {
+      // Given
+      const regionString = TEST_REGIONS.US_PLACE_LAS_VEGAS_NV;
+
+      // When
+      const result = parsePlaceRegionString(regionString);
+
+      // Then
+      expect(result).toEqual({
+        stateAbbrev: 'NV',
+        placeFips: '40000',
+      });
+    });
+
+    test('given region string missing place prefix then returns null', () => {
+      // Given
+      const regionString = INVALID_PLACE_REGION_STRINGS.MISSING_PREFIX;
+
+      // When
+      const result = parsePlaceRegionString(regionString);
+
+      // Then
+      expect(result).toBeNull();
+    });
+
+    test('given region string with wrong prefix then returns null', () => {
+      // Given
+      const regionString = INVALID_PLACE_REGION_STRINGS.WRONG_PREFIX;
+
+      // When
+      const result = parsePlaceRegionString(regionString);
+
+      // Then
+      expect(result).toBeNull();
+    });
+
+    test('given region string missing dash then returns null', () => {
+      // Given
+      const regionString = INVALID_PLACE_REGION_STRINGS.MISSING_DASH;
+
+      // When
+      const result = parsePlaceRegionString(regionString);
+
+      // Then
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('findPlaceFromRegionString', () => {
+    test('given valid Paterson region string then returns matching place', () => {
+      // Given
+      const regionString = TEST_REGIONS.US_PLACE_PATERSON_NJ;
+
+      // When
+      const result = findPlaceFromRegionString(regionString);
+
+      // Then
+      expect(result).toBeDefined();
+      expect(result?.name).toBe('Paterson city');
+      expect(result?.stateAbbrev).toBe('NJ');
+      expect(result?.placeFips).toBe('57000');
+    });
+
+    test('given valid Las Vegas region string then returns matching place', () => {
+      // Given
+      const regionString = TEST_REGIONS.US_PLACE_LAS_VEGAS_NV;
+
+      // When
+      const result = findPlaceFromRegionString(regionString);
+
+      // Then
+      expect(result).toBeDefined();
+      expect(result?.name).toBe('Las Vegas city');
+      expect(result?.stateAbbrev).toBe('NV');
+    });
+
+    test('given valid NYC region string then returns matching place', () => {
+      // Given
+      const regionString = TEST_REGIONS.US_PLACE_NYC;
+
+      // When
+      const result = findPlaceFromRegionString(regionString);
+
+      // Then
+      expect(result).toBeDefined();
+      expect(result?.name).toBe('New York city');
+      expect(result?.stateAbbrev).toBe('NY');
+    });
+
+    test('given non-existent place region string then returns undefined', () => {
+      // Given
+      const regionString = INVALID_PLACE_REGION_STRINGS.NONEXISTENT;
+
+      // When
+      const result = findPlaceFromRegionString(regionString);
+
+      // Then
+      expect(result).toBeUndefined();
+    });
+
+    test('given invalid region string then returns undefined', () => {
+      // Given
+      const regionString = INVALID_PLACE_REGION_STRINGS.MISSING_PREFIX;
+
+      // When
+      const result = findPlaceFromRegionString(regionString);
+
+      // Then
+      expect(result).toBeUndefined();
+    });
+  });
+
+  describe('extractRegionDisplayValue with places', () => {
+    test('given place region string then strips prefix', () => {
+      // Given
+      const fullValue = TEST_REGIONS.US_PLACE_PATERSON_NJ;
+
+      // When
+      const result = extractRegionDisplayValue(fullValue);
+
+      // Then
+      expect(result).toBe('NJ-57000');
+    });
+
+    test('given Las Vegas place region string then strips prefix', () => {
+      // Given
+      const fullValue = TEST_REGIONS.US_PLACE_LAS_VEGAS_NV;
+
+      // When
+      const result = extractRegionDisplayValue(fullValue);
+
+      // Then
+      expect(result).toBe('NV-40000');
+    });
+  });
+
+  describe('createGeographyFromScope with place', () => {
+    test('given place scope then stores full prefixed value', () => {
+      // Given
+      const scope = 'place' as const;
+      const countryId = 'us' as const;
+      const selectedRegion = TEST_REGIONS.US_PLACE_PATERSON_NJ;
+
+      // When
+      const result = createGeographyFromScope(scope, countryId, selectedRegion);
+
+      // Then
+      expect(result).toEqual({
+        id: 'us-NJ-57000',
+        countryId: 'us',
+        scope: 'subnational',
+        geographyId: TEST_REGIONS.US_PLACE_PATERSON_NJ,
+      });
+    });
+
+    test('given place scope with Las Vegas then stores full prefixed value', () => {
+      // Given
+      const scope = 'place' as const;
+      const countryId = 'us' as const;
+      const selectedRegion = TEST_REGIONS.US_PLACE_LAS_VEGAS_NV;
+
+      // When
+      const result = createGeographyFromScope(scope, countryId, selectedRegion);
+
+      // Then
+      expect(result).toEqual({
+        id: 'us-NV-40000',
+        countryId: 'us',
+        scope: 'subnational',
+        geographyId: TEST_REGIONS.US_PLACE_LAS_VEGAS_NV,
+      });
+    });
+
+    test('given place scope without selected region then returns null', () => {
+      // Given
+      const scope = 'place' as const;
+      const countryId = 'us' as const;
+
+      // When
+      const result = createGeographyFromScope(scope, countryId);
+
+      // Then
+      expect(result).toBeNull();
     });
   });
 });

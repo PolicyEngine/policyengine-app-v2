@@ -1,5 +1,6 @@
 import { MetadataRegionEntry } from '@/types/metadata';
 import { UK_REGION_TYPES, US_REGION_TYPES } from '@/types/regionTypes';
+import { PlaceOption } from '@/utils/regionStrategies';
 
 // Test region values
 export const TEST_REGIONS = {
@@ -18,6 +19,50 @@ export const TEST_REGIONS = {
   US_LEGACY_STATE_CODE: 'tx',
   US_LEGACY_CITY_CODE_NYC: 'nyc',
   US_LEGACY_STATE_CODE_CA: 'ca',
+  // Place region formats
+  US_PLACE_PATERSON_NJ: 'place/NJ-57000',
+  US_PLACE_LAS_VEGAS_NV: 'place/NV-40000',
+  US_PLACE_NYC: 'place/NY-51000',
+} as const;
+
+// Mock place data for testing
+export const mockPlacePatersonNJ: PlaceOption = {
+  placeFips: '57000',
+  name: 'Paterson city',
+  stateAbbrev: 'NJ',
+  stateName: 'New Jersey',
+};
+
+export const mockPlaceLasVegasNV: PlaceOption = {
+  placeFips: '40000',
+  name: 'Las Vegas city',
+  stateAbbrev: 'NV',
+  stateName: 'Nevada',
+};
+
+export const mockPlaceNYC: PlaceOption = {
+  placeFips: '51000',
+  name: 'New York city',
+  stateAbbrev: 'NY',
+  stateName: 'New York',
+};
+
+// Expected place region strings
+export const EXPECTED_PLACE_REGION_STRINGS = {
+  PATERSON_NJ: 'place/NJ-57000',
+  LAS_VEGAS_NV: 'place/NV-40000',
+  NYC: 'place/NY-51000',
+} as const;
+
+// Invalid place region strings for testing
+export const INVALID_PLACE_REGION_STRINGS = {
+  MISSING_PREFIX: 'NJ-57000',
+  WRONG_PREFIX: 'state/NJ-57000',
+  MISSING_DASH: 'place/NJ57000',
+  EMPTY_STATE: 'place/-57000',
+  EMPTY_FIPS: 'place/NJ-',
+  EMPTY_BOTH: 'place/-',
+  NONEXISTENT: 'place/XX-99999',
 } as const;
 
 // Mock metadata regions for UK
