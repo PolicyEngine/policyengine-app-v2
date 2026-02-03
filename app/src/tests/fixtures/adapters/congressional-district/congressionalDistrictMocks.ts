@@ -73,11 +73,6 @@ export const MOCK_REGIONS: MetadataRegionEntry[] = [
     state_abbreviation: 'TX',
     state_name: 'Texas',
   },
-  {
-    name: 'NYC',
-    label: 'New York City',
-    type: US_REGION_TYPES.CITY,
-  },
 ];
 
 /**

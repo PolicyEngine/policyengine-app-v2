@@ -58,11 +58,11 @@ export default function USPlaceSelector({ selectedPlace, onPlaceChange }: USPlac
   return (
     <>
       <Text size="sm" fw={500} mb={4}>
-        Select City
+        Select Municipality
       </Text>
       <Group gap="sm" align="flex-start">
         <Select
-          placeholder="Pick a state"
+          placeholder="Choose a state"
           data={stateNames}
           value={selectedStateName}
           onChange={handleStateChange}
@@ -71,7 +71,7 @@ export default function USPlaceSelector({ selectedPlace, onPlaceChange }: USPlac
         />
         {selectedStateName ? (
           <Select
-            placeholder="Pick a city"
+            placeholder="Choose a municipality"
             data={placeOptions}
             value={selectedPlace}
             onChange={(val) => onPlaceChange(val || '')}
