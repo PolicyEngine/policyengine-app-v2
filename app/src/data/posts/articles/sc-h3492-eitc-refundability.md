@@ -13,11 +13,17 @@ _[Use PolicyEngine](https://www.policyengine.org/us) to view the full results or
 
 ## Household impacts
 
-Making 25% of the excess EITC refundable could yield gains for families with little tax obligation. For example, a filer with $3,000 in taxes owed can only claim up to that amount from a nonrefundable EITC, even if they qualify for $5,000. Under the reform, they would obtain a refund of 25% of the remainder, or $500 ($2,000 x 25% = $500).
+Making 25% of the excess EITC refundable would benefit families with little or no state income tax liability. Many low-income South Carolinians owe no state income tax because the standard deduction, personal exemptions, and other provisions reduce their taxable income to zero before the EITC applies. Since the current SC EITC is nonrefundable, it can only reduce taxes owed. If a filer has no tax liability, they receive nothing from the credit, even if they qualify for thousands of dollars.
 
-Let's examine how H.3492 affects a single parent with one child in South Carolina. At $20,000 of earnings, they receive no savings from the nonrefundable EITC, despite qualifying for a credit of $5,533. However, under H.3492, their net income increases by $1,383 as they collect 25% of the surplus, in this case, 25% of their eligible amount. Figure 1 displays the change in net income for a single parent with one child as employment earnings rise from $0 to $200,000.
+Under H.3492, taxpayers would receive 25% of their unused EITC as a direct refund. This refundable portion bypasses the tax liability constraint entirely: it is calculated based on the gap between the filer's eligible EITC and their tax liability, then paid out regardless of other tax provisions.
 
-<iframe src="https://policyengine.github.io/sc-h3492-eitc-calc/net-income-change.html" width="100%" height="500" frameborder="0"></iframe>
+Consider a single parent with one child (age 5) earning $20,000. Under current law, South Carolina's standard deduction, dependent exemption, yound child exemption and 0% income bracket eliminates any state tax liability for this household until income exceeds roughly $37,500. Despite qualifying for a SC EITC of $5,533, they receive no benefit. Under H.3492, they would receive $1,383 (25% × $5,533) as a refund.
+
+As earnings rise above the $37,500, the household begins to benefit from the nonrefundable EITC. For instance, if the household would earn $45,000, they would owe $216 in state taxes. This reduces the "excess" credit available for refund, but net income still increases by $273, making their total EITC benefit $489 under House Bill 3492.
+
+Figure 1 displays the total SC EITC benefit that a single parent with one child would receive under current law and H.3492 as employment earnings rise.
+
+<iframe src="https://policyengine.github.io/sc-h3492-eitc-calc/eitc-benefit-comparison.html" width="100%" height="500" frameborder="0"></iframe>
 
 ## Statewide impacts
 
