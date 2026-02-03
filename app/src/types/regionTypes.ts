@@ -11,6 +11,7 @@ export const US_REGION_TYPES = {
   STATE: 'state',
   CONGRESSIONAL_DISTRICT: 'congressional_district',
   CITY: 'city',
+  PLACE: 'place',
 } as const;
 
 /**
