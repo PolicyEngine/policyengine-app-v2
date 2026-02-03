@@ -1,6 +1,5 @@
 import { vi } from 'vitest';
-import { US_REGION_TYPES } from '@/types/regionTypes';
-import { USScopeType } from '@/types/regionTypes';
+import { US_REGION_TYPES, USScopeType } from '@/types/regionTypes';
 
 // Mock state options
 export const MOCK_STATE_OPTIONS = [

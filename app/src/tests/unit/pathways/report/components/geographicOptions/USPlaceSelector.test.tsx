@@ -1,9 +1,8 @@
 import { render, screen, userEvent } from '@test-utils';
-import { describe, expect, test, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import USPlaceSelector from '@/pathways/report/components/geographicOptions/USPlaceSelector';
 import {
   createMockProps,
-  MOCK_STATE_NAMES,
   TEST_PLACE_REGIONS,
 } from '@/tests/fixtures/pathways/report/components/geographicOptions/USPlaceSelectorMocks';
 

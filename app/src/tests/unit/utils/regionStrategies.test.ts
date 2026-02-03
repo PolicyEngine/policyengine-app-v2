@@ -1,20 +1,20 @@
 import { describe, expect, test } from 'vitest';
 import {
+  EXPECTED_PLACE_REGION_STRINGS,
   expectedCaliforniaDistricts,
   expectedUKConstituencies,
   expectedUKCountries,
   expectedUKLocalAuthorities,
   expectedUSCongressionalDistricts,
   expectedUSStates,
+  INVALID_PLACE_REGION_STRINGS,
+  mockPlaceLasVegasNV,
+  mockPlaceNYC,
+  mockPlacePatersonNJ,
   mockSingleDistrictState,
   mockUKRegions,
   mockUSRegions,
   TEST_REGIONS,
-  mockPlacePatersonNJ,
-  mockPlaceLasVegasNV,
-  mockPlaceNYC,
-  EXPECTED_PLACE_REGION_STRINGS,
-  INVALID_PLACE_REGION_STRINGS,
 } from '@/tests/fixtures/utils/regionStrategiesMocks';
 import { UK_REGION_TYPES, US_REGION_TYPES } from '@/types/regionTypes';
 import {
