@@ -21,7 +21,7 @@ Under H.3492, taxpayers would receive 25% of their unused EITC as a direct refun
 
 Consider a single parent with one child (age 5) earning $20,000. Under current law, South Carolina's standard deduction, dependent exemption, young child exemption and 0% income bracket eliminate any state tax liability for this household until income exceeds roughly $37,870 (see Table 1 for breakdown of each parameter).[^1] Despite qualifying for a SC EITC of $5,533, they receive no benefit. Under H.3492, they would receive $1,383 (25% × $5,533) as a refund.
 
-[^1]: We project these 2026 values using inflation projections by the Congressional Budget Office (CBO).
+[^1]: We estimate these 2026 values using inflation projections by the Congressional Budget Office (CBO).
 
 **Table 1: SC tax provisions reducing liability for head of household filer with one young child**
 
