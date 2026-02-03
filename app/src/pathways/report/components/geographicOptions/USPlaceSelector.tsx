@@ -12,10 +12,7 @@ interface USPlaceSelectorProps {
   onPlaceChange: (place: string) => void;
 }
 
-export default function USPlaceSelector({
-  selectedPlace,
-  onPlaceChange,
-}: USPlaceSelectorProps) {
+export default function USPlaceSelector({ selectedPlace, onPlaceChange }: USPlaceSelectorProps) {
   const [selectedStateName, setSelectedStateName] = useState<string>('');
 
   // Get unique state names for the state dropdown
@@ -32,10 +29,7 @@ export default function USPlaceSelector({
   }, [selectedPlace, selectedStateName]);
 
   // Filter places based on selected state name
-  const filteredPlaces = useMemo(
-    () => filterPlacesByState(selectedStateName),
-    [selectedStateName]
-  );
+  const filteredPlaces = useMemo(() => filterPlacesByState(selectedStateName), [selectedStateName]);
 
   // Format places for the dropdown
   const placeOptions = useMemo(

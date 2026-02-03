@@ -86,10 +86,7 @@ export default function USGeographicOptions({
         />
         {scope === US_REGION_TYPES.PLACE && (
           <Box ml={24} mt="xs">
-            <USPlaceSelector
-              selectedPlace={selectedRegion}
-              onPlaceChange={onRegionChange}
-            />
+            <USPlaceSelector selectedPlace={selectedRegion} onPlaceChange={onRegionChange} />
           </Box>
         )}
       </Box>
