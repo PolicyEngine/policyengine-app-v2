@@ -28,7 +28,11 @@ import { ComposableMap, Geographies, Geography, ZoomableGroup } from 'react-simp
 import { Box, Center, Loader, Stack, Text } from '@mantine/core';
 import { ChartWatermark } from '@/components/charts';
 import { colors, spacing } from '@/designTokens';
-import type { GeoJSONFeatureCollection, USDistrictChoroplethMapProps } from './types';
+import type {
+  GeoJSONFeatureCollection,
+  MapVisualizationType,
+  USDistrictChoroplethMapProps,
+} from './types';
 import {
   calculateColorRange,
   createDataLookupMap,
@@ -40,8 +44,11 @@ import {
 /** GeoJSON cache to avoid re-fetching (keyed by path) */
 const geoJSONCache: Record<string, GeoJSONFeatureCollection> = {};
 
-/** Default path to GeoJSON file */
-const DEFAULT_GEOJSON_PATH = '/data/geojson/congressional_districts.geojson';
+/** GeoJSON paths for each visualization type */
+const GEOJSON_PATHS: Record<MapVisualizationType, string> = {
+  geographic: '/data/geojson/congressional_districts.geojson',
+  hex: '/data/geojson/congressional_districts_hex.geojson',
+};
 
 /** Default fill for districts without data */
 const NO_DATA_FILL = '#e0e0e0';
@@ -262,14 +269,18 @@ function ColorBar({
 export function USDistrictChoroplethMap({
   data,
   config = {},
-  geoDataPath = DEFAULT_GEOJSON_PATH,
+  geoDataPath,
   focusState,
+  visualizationType = 'geographic',
 }: USDistrictChoroplethMapProps) {
   const uniqueId = useId();
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // Determine GeoJSON path: explicit path takes precedence, otherwise use visualization type
+  const effectiveGeoDataPath = geoDataPath ?? GEOJSON_PATHS[visualizationType];
+
   // Load GeoJSON data
-  const { geoJSON, loading, error } = useGeoJSONLoader(geoDataPath);
+  const { geoJSON, loading, error } = useGeoJSONLoader(effectiveGeoDataPath);
 
   // Merge configuration with defaults
   const fullConfig = useMemo(() => mergeConfig(config), [config]);
