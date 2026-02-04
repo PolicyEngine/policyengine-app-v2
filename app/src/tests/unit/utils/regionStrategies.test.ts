@@ -852,7 +852,7 @@ describe('regionStrategies', () => {
 
       // Then
       expect(result).toBeDefined();
-      expect(result?.name).toBe('New York city');
+      expect(result?.name).toBe('New York City');
       expect(result?.stateAbbrev).toBe('NY');
     });
 

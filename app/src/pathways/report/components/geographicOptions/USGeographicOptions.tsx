@@ -76,11 +76,11 @@ export default function USGeographicOptions({
         )}
       </Box>
 
-      {/* Place (Municipality) option */}
+      {/* Place (community) option */}
       <Box>
         <Radio
           value={US_REGION_TYPES.PLACE}
-          label="All households in a municipality"
+          label="All households in a community"
           checked={scope === US_REGION_TYPES.PLACE}
           onChange={() => handleScopeChange(US_REGION_TYPES.PLACE)}
         />

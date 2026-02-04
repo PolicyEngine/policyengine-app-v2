@@ -31,6 +31,29 @@ export interface PlaceOption {
   stateName: string;
 }
 
+/**
+ * Get a clean display name for a place by removing designation suffixes
+ * like "city", "town", "CDP", etc.
+ *
+ * @param placeName - The full Census place name (e.g., "New York City", "Anchorage")
+ * @returns The display name without the designation (e.g., "New York City", "Anchorage")
+ */
+export function getPlaceDisplayName(placeName: string): string {
+  // Remove "(balance)" suffix first, which appears in consolidated government names
+  let name = placeName.replace(/\s*\(balance\)$/, '');
+
+  // Remove government type suffixes (must be done before "city" since some have "city (balance)")
+  name = name.replace(
+    /\s+(unified government|consolidated government|metro government|metropolitan government|urban county)$/,
+    ''
+  );
+
+  // Remove standard place type suffixes (case-sensitive to preserve proper names like "New York City")
+  name = name.replace(/\s+(city|town|CDP|municipality|borough|village)$/, '');
+
+  return name.trim();
+}
+
 // Source: US Census Bureau Population Estimates 2023
 // Places with population > 100,000
 // Total: 333 places
@@ -109,12 +132,8 @@ export const US_PLACES_OVER_100K: PlaceOption[] = [
   { placeFips: '64000', name: 'Sacramento city', stateAbbrev: 'CA', stateName: 'California' },
   { placeFips: '64224', name: 'Salinas city', stateAbbrev: 'CA', stateName: 'California' },
   { placeFips: '65000', name: 'San Bernardino city', stateAbbrev: 'CA', stateName: 'California' },
-  {
-    placeFips: '65042',
-    name: 'San Buenaventura (Ventura) city',
-    stateAbbrev: 'CA',
-    stateName: 'California',
-  },
+  // Note: Official Census name is "San Buenaventura (Ventura) city" but commonly known as Ventura
+  { placeFips: '65042', name: 'Ventura', stateAbbrev: 'CA', stateName: 'California' },
   { placeFips: '66000', name: 'San Diego city', stateAbbrev: 'CA', stateName: 'California' },
   { placeFips: '67000', name: 'San Francisco city', stateAbbrev: 'CA', stateName: 'California' },
   { placeFips: '68000', name: 'San Jose city', stateAbbrev: 'CA', stateName: 'California' },
@@ -291,7 +310,7 @@ export const US_PLACES_OVER_100K: PlaceOption[] = [
   { placeFips: '63460', name: 'Rio Rancho city', stateAbbrev: 'NM', stateName: 'New Mexico' },
   { placeFips: '01000', name: 'Albany city', stateAbbrev: 'NY', stateName: 'New York' },
   { placeFips: '11000', name: 'Buffalo city', stateAbbrev: 'NY', stateName: 'New York' },
-  { placeFips: '51000', name: 'New York city', stateAbbrev: 'NY', stateName: 'New York' },
+  { placeFips: '51000', name: 'New York City', stateAbbrev: 'NY', stateName: 'New York' },
   { placeFips: '63000', name: 'Rochester city', stateAbbrev: 'NY', stateName: 'New York' },
   { placeFips: '73000', name: 'Syracuse city', stateAbbrev: 'NY', stateName: 'New York' },
   { placeFips: '84000', name: 'Yonkers city', stateAbbrev: 'NY', stateName: 'New York' },

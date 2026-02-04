@@ -3,6 +3,7 @@ import { Group, Select, Text } from '@mantine/core';
 import {
   filterPlacesByState,
   findPlaceFromRegionString,
+  getPlaceDisplayName,
   getPlaceStateNames,
   placeToRegionString,
 } from '@/utils/regionStrategies';
@@ -31,13 +32,15 @@ export default function USPlaceSelector({ selectedPlace, onPlaceChange }: USPlac
   // Filter places based on selected state name
   const filteredPlaces = useMemo(() => filterPlacesByState(selectedStateName), [selectedStateName]);
 
-  // Format places for the dropdown
+  // Format places for the dropdown with clean display names, sorted alphabetically
   const placeOptions = useMemo(
     () =>
-      filteredPlaces.map((p) => ({
-        value: placeToRegionString(p),
-        label: p.name,
-      })),
+      filteredPlaces
+        .map((p) => ({
+          value: placeToRegionString(p),
+          label: getPlaceDisplayName(p.name),
+        }))
+        .sort((a, b) => a.label.localeCompare(b.label)),
     [filteredPlaces]
   );
 
@@ -56,32 +59,40 @@ export default function USPlaceSelector({ selectedPlace, onPlaceChange }: USPlac
   };
 
   return (
-    <>
-      <Text size="sm" fw={500} mb={4}>
-        Select Municipality
-      </Text>
-      <Group gap="sm" align="flex-start">
+    <Group gap="sm" align="flex-start">
+      <div style={{ flex: 1 }}>
+        <Text size="sm" fw={500} mb={4}>
+          Select state
+        </Text>
         <Select
           placeholder="Choose a state"
           data={stateNames}
           value={selectedStateName}
           onChange={handleStateChange}
           searchable
-          style={{ flex: 1 }}
         />
+      </div>
+      <div style={{ flex: 2 }}>
+        <Text size="sm" fw={500} mb={4}>
+          Select community
+        </Text>
         {selectedStateName ? (
           <Select
-            placeholder="Choose a municipality"
+            placeholder="Choose a community"
             data={placeOptions}
             value={selectedPlace}
-            onChange={(val) => onPlaceChange(val || '')}
+            onChange={(val) => {
+              // If user clicks the same option again (val is null), keep the current selection
+              if (val !== null) {
+                onPlaceChange(val);
+              }
+            }}
             searchable
-            style={{ flex: 2 }}
           />
         ) : (
-          <Select placeholder="--" data={[]} disabled style={{ flex: 2 }} />
+          <Select placeholder="--" data={[]} disabled />
         )}
-      </Group>
-    </>
+      </div>
+    </Group>
   );
 }

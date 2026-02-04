@@ -32,6 +32,7 @@ import {
 } from '@/types/ingredients/UserPopulation';
 import { UserReport } from '@/types/ingredients/UserReport';
 import { UserSimulation } from '@/types/ingredients/UserSimulation';
+import { findPlaceFromRegionString, getPlaceDisplayName } from '@/utils/regionStrategies';
 import { combineLoadingStates, extractUniqueIds, useParallelQueries } from './normalizedUtils';
 
 // Type for geography options from redux store
@@ -60,6 +61,10 @@ export function buildGeographiesFromSimulations(
       let name: string;
       if (isNational) {
         name = sim.countryId.toUpperCase();
+      } else if (sim.populationId.startsWith('place/')) {
+        // For US places (municipalities), use the place lookup function
+        const place = findPlaceFromRegionString(sim.populationId);
+        name = place ? getPlaceDisplayName(place.name) : sim.populationId;
       } else {
         // For subnational, extract the base geography ID and look up in metadata
         const parts = sim.populationId.split('-');

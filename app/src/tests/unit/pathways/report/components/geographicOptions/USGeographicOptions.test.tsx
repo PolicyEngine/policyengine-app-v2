@@ -31,7 +31,7 @@ describe('USGeographicOptions', () => {
       screen.getByLabelText('All households in a state or federal district')
     ).toBeInTheDocument();
     expect(screen.getByLabelText('All households in a congressional district')).toBeInTheDocument();
-    expect(screen.getByLabelText('All households in a municipality')).toBeInTheDocument();
+    expect(screen.getByLabelText('All households in a community')).toBeInTheDocument();
     expect(screen.getByLabelText('Custom household')).toBeInTheDocument();
   });
 
@@ -214,9 +214,9 @@ describe('USGeographicOptions', () => {
     expect(screen.queryByText('Select State')).not.toBeInTheDocument();
   });
 
-  // Place (Municipality) tests
-  describe('place (municipality) option', () => {
-    test('given component then renders municipality option with correct label', () => {
+  // Place (community) tests
+  describe('place (community) option', () => {
+    test('given component then renders community option with correct label', () => {
       // Given
       const onScopeChange = vi.fn();
       const onRegionChange = vi.fn();
@@ -234,7 +234,7 @@ describe('USGeographicOptions', () => {
       );
 
       // Then
-      expect(screen.getByLabelText('All households in a municipality')).toBeInTheDocument();
+      expect(screen.getByLabelText('All households in a community')).toBeInTheDocument();
     });
 
     test('given component then does not show city option label', () => {
@@ -276,7 +276,7 @@ describe('USGeographicOptions', () => {
       );
 
       // Then
-      expect(screen.getByLabelText('All households in a municipality')).toBeChecked();
+      expect(screen.getByLabelText('All households in a community')).toBeChecked();
     });
 
     test('given place scope then shows place selector', () => {
@@ -297,7 +297,7 @@ describe('USGeographicOptions', () => {
       );
 
       // Then
-      expect(screen.getByText('Select Municipality')).toBeInTheDocument();
+      expect(screen.getByText('Select community')).toBeInTheDocument();
     });
 
     test('given national scope then does not show place selector', () => {
@@ -318,7 +318,7 @@ describe('USGeographicOptions', () => {
       );
 
       // Then
-      expect(screen.queryByText('Select Municipality')).not.toBeInTheDocument();
+      expect(screen.queryByText('Select community')).not.toBeInTheDocument();
     });
 
     test('given user clicks place option then calls onScopeChange with place', async () => {
@@ -338,7 +338,7 @@ describe('USGeographicOptions', () => {
       );
 
       // When
-      await user.click(screen.getByLabelText('All households in a municipality'));
+      await user.click(screen.getByLabelText('All households in a community'));
 
       // Then
       expect(onRegionChange).toHaveBeenCalledWith('');
@@ -362,7 +362,7 @@ describe('USGeographicOptions', () => {
       );
 
       // When
-      await user.click(screen.getByLabelText('All households in a municipality'));
+      await user.click(screen.getByLabelText('All households in a community'));
 
       // Then
       expect(onRegionChange).toHaveBeenCalledWith('');

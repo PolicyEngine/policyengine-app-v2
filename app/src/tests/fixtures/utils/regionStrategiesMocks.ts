@@ -42,7 +42,7 @@ export const mockPlaceLasVegasNV: PlaceOption = {
 
 export const mockPlaceNYC: PlaceOption = {
   placeFips: '51000',
-  name: 'New York city',
+  name: 'New York City',
   stateAbbrev: 'NY',
   stateName: 'New York',
 };

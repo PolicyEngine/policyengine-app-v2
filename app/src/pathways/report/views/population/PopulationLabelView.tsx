@@ -10,7 +10,11 @@ import PathwayView from '@/components/common/PathwayView';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { PathwayMode } from '@/types/pathwayModes/PathwayMode';
 import { PopulationStateProps } from '@/types/pathwayState';
-import { extractRegionDisplayValue } from '@/utils/regionStrategies';
+import {
+  extractRegionDisplayValue,
+  findPlaceFromRegionString,
+  getPlaceDisplayName,
+} from '@/utils/regionStrategies';
 
 interface PopulationLabelViewProps {
   population: PopulationStateProps;
@@ -50,8 +54,18 @@ export default function PopulationLabelView({
       if (population.geography.scope === 'national') {
         return 'National Households';
       } else if (population.geography.geographyId) {
-        // Use display value (strip prefix for UK regions)
-        const displayValue = extractRegionDisplayValue(population.geography.geographyId);
+        const geographyId = population.geography.geographyId;
+
+        // Check if this is a US place (community)
+        if (geographyId.startsWith('place/')) {
+          const place = findPlaceFromRegionString(geographyId);
+          if (place) {
+            return `${getPlaceDisplayName(place.name)} Households`;
+          }
+        }
+
+        // Use display value (strip prefix for UK regions and other types)
+        const displayValue = extractRegionDisplayValue(geographyId);
         return `${displayValue} Households`;
       }
       return 'Regional Households';

@@ -20,6 +20,7 @@ import {
 } from '@/types/ingredients/UserPopulation';
 import { UserReport } from '@/types/ingredients/UserReport';
 import { UserSimulation } from '@/types/ingredients/UserSimulation';
+import { findPlaceFromRegionString, getPlaceDisplayName } from '@/utils/regionStrategies';
 import { householdKeys, policyKeys, reportKeys, simulationKeys } from '../libs/queryKeys';
 import { useGeographicAssociationsByUser } from './useUserGeographic';
 import { useHouseholdAssociationsByUser } from './useUserHousehold';
@@ -470,6 +471,11 @@ export const useUserReportById = (userReportId: string, options?: { enabled?: bo
       let name: string;
       if (isNational) {
         name = sim.countryId.toUpperCase();
+      } else if (sim.populationId.startsWith('place/')) {
+        // For US places (municipalities), use the place lookup function
+        // Import at top: import { findPlaceFromRegionString, getPlaceDisplayName } from '@/utils/regionStrategies';
+        const place = findPlaceFromRegionString(sim.populationId);
+        name = place ? getPlaceDisplayName(place.name) : sim.populationId;
       } else {
         // For subnational, extract the base geography ID and look up in metadata
         // e.g., "us-fl" -> "fl", "uk-scotland" -> "scotland"
