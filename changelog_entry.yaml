@@ -1,4 +1,4 @@
 - bump: patch
   changes:
-    changed:
-      - Move ads dashboard route into StaticLayout (shows PE header)
+    fixed:
+      - Update UK salary sacrifice cap blog post figures to match chart data (4.2-7.8bn range, 1,900/year top decile impact)
