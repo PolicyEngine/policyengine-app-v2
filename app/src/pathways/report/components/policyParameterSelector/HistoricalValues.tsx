@@ -44,8 +44,7 @@ export default function PolicyParameterSelectorHistoricalValues(
   } = props;
 
   return (
-    <Stack mt="xl">
-      <Text fw={700}>Historical values</Text>
+    <Stack gap="xs">
       <Text>{capitalize(param.label)} over time</Text>
       <ParameterOverTimeChart
         param={param}
@@ -308,7 +307,7 @@ export const ParameterOverTimeChart = memo((props: ParameterOverTimeChartProps) 
           plot_bgcolor: CHART_COLORS.PLOT_BACKGROUND,
         }}
         style={{
-          height: isMobile ? windowHeight * 0.5 : 400,
+          height: isMobile ? windowHeight * 0.5 : 320,
         }}
         config={{
           displayModeBar: false,
