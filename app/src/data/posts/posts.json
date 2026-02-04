@@ -1,14 +1,5 @@
 [
   {
-    "title": "Automating tax and benefit policy modeling with multi-agent AI",
-    "description": "How we built a system that transforms a policy request into a complete, tested pull request in 90 minutes.",
-    "date": "2026-02-02 12:00:00",
-    "tags": ["us", "technical"],
-    "authors": ["ziming-hua"],
-    "filename": "encode-policy-multi-agent-ai.md",
-    "image": "encode-policy-multi-agent-ai-cover.png"
-  },
-  {
     "title": "How PolicyEngine's CTC Calculator informed Rhode Island Governor McKee's Child Tax Credit design",
     "description": "PolicyEngine developed a Rhode Island Child Tax Credit Calculator to help policymakers analyze how different CTC reforms would impact the state and its families.",
     "date": "2026-01-29",

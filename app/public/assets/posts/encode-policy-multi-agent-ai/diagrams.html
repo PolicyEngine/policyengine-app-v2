@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Encode Policy Workflow Diagrams</title>
+    <title>Automating Tax and Benefit Policy Modeling with Multi-Agent AI</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap" rel="stylesheet">
@@ -33,26 +33,1509 @@
 
         body {
             font-family: 'Source Serif 4', Georgia, serif;
-            line-height: 1.8;
+            line-height: 1.9;
             color: #2d3748;
+            background: #f7f8fa;
+            padding: 40px 20px;
+        }
+
+        article {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 80px 120px;
+            box-shadow: 0 4px 40px rgba(0,0,0,0.06);
+            border-radius: 3px;
+        }
+
+        h1 {
+            font-family: 'Source Serif 4', Georgia, serif;
+            font-size: 3rem;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 20px;
+            line-height: 1.2;
+            letter-spacing: -0.02em;
+        }
+
+        .subtitle {
+            font-size: 1.4rem;
+            color: #64748b;
+            font-style: italic;
+            margin-bottom: 50px;
+            padding-bottom: 50px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        h2 {
+            font-family: 'Source Serif 4', Georgia, serif;
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1a202c;
+            margin-top: 70px;
+            margin-bottom: 30px;
+            letter-spacing: -0.01em;
+        }
+
+        h3 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-top: 40px;
+            margin-bottom: 20px;
+        }
+
+        p {
+            margin-bottom: 24px;
+            font-size: 1.2rem;
+            color: #4a5568;
+        }
+
+        ul, ol {
+            margin-bottom: 24px;
+            padding-left: 32px;
+        }
+
+        li {
+            margin-bottom: 12px;
+            font-size: 1.2rem;
+            color: #4a5568;
+        }
+
+        strong {
+            color: #1a202c;
+            font-weight: 600;
+        }
+
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            background: #f1f5f9;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            color: #0f766e;
+        }
+
+        pre {
+            background: #1e2d2f;
+            color: #e8f0f0;
+            padding: 28px 32px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin-bottom: 30px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1rem;
+            line-height: 1.7;
+            border: 1px solid #2d4244;
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+            color: inherit;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+
+        th {
+            background: #f8fafc;
+            padding: 16px 20px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid #e2e8f0;
+            color: #1a202c;
+        }
+
+        td {
+            padding: 16px 20px;
+            border-bottom: 1px solid #f1f5f9;
+            color: #4a5568;
+        }
+
+        tr:hover td {
+            background: #f8fafc;
+        }
+
+        hr {
+            border: none;
+            border-top: 1px solid #e2e8f0;
+            margin: 60px 0;
+        }
+
+        .quality-gate {
+            background: linear-gradient(90deg, rgba(0, 212, 170, 0.08) 0%, rgba(0, 212, 170, 0.02) 100%);
+            border-left: 3px solid var(--accent);
+            padding: 20px 24px;
+            margin-bottom: 30px;
+            border-radius: 0 6px 6px 0;
+        }
+
+        .quality-gate p {
+            margin: 0;
+            color: #0f766e;
+            font-size: 1.05rem;
+        }
+
+        .footer {
+            margin-top: 60px;
+            padding-top: 40px;
+            border-top: 1px solid #e2e8f0;
+            font-size: 1.1rem;
+            color: #64748b;
+            font-style: italic;
+        }
+
+        a {
+            color: #0f766e;
+            text-decoration: none;
+            border-bottom: 1px solid rgba(15, 118, 110, 0.3);
+            transition: border-color 0.2s;
+        }
+
+        a:hover {
+            border-color: #0f766e;
+        }
+
+        .stats-table {
+            background: #f8fafc;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .stats-table th {
+            background: #f1f5f9;
+        }
+
+        /* ══════════════════════════════════════════════════════════════
+           INTERACTIVE WORKFLOW DIAGRAM - Light Blueprint Aesthetic
+           ══════════════════════════════════════════════════════════════ */
+
+        .workflow-diagram {
+            background: var(--bg-diagram);
+            background-image:
+                radial-gradient(circle, var(--grid-color) 1px, transparent 1px);
+            background-size: 20px 20px;
+            border-radius: 12px;
+            padding: 60px 50px 50px;
+            margin: 50px 0;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.03);
+        }
+
+        .workflow-diagram::before {
+            content: 'WORKFLOW';
+            position: absolute;
+            top: 22px;
+            left: 28px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 0.2em;
+            color: var(--text-light);
+            text-transform: uppercase;
+        }
+
+        .workflow-diagram::after {
+            content: '';
+            position: absolute;
+            top: 22px;
+            right: 28px;
+            width: 10px;
+            height: 10px;
+            background: var(--accent);
+            border-radius: 50%;
+            animation: pulse 2.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.85); }
+        }
+
+        .orchestrator-box {
+            background: var(--bg-card);
+            border: 2px solid var(--accent);
+            border-radius: 10px;
+            padding: 24px 48px;
+            text-align: center;
+            max-width: 240px;
+            margin: 0 auto 40px;
+            position: relative;
+            box-shadow: 0 4px 20px rgba(13, 115, 119, 0.08);
+        }
+
+        .orchestrator-box .title {
+            color: var(--accent);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
+
+        .orchestrator-box .cmd {
+            color: var(--text-dark);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .connection-line {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 50px;
+            position: relative;
+        }
+
+        .connection-line::before {
+            content: '';
+            position: absolute;
+            width: 2px;
+            height: 100%;
+            background: var(--accent);
+        }
+
+        .connection-line::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            width: 0;
+            height: 0;
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-top: 8px solid var(--accent);
+        }
+
+        .phases-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .phase-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-width: 150px;
+            position: relative;
+        }
+
+        .phase-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
             background: transparent;
-            padding: 10px;
+            border-radius: 8px 8px 0 0;
+            transition: background 0.2s;
+        }
+
+        .phase-box:hover {
+            border-color: var(--border-accent);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(13, 115, 119, 0.12);
+        }
+
+        .phase-box:hover::before {
+            background: var(--accent);
+        }
+
+        .phase-box.active {
+            border-color: var(--accent);
+            background: var(--bg-card);
+            box-shadow: 0 6px 30px rgba(13, 115, 119, 0.15);
+        }
+
+        .phase-box.active::before {
+            background: var(--accent);
+        }
+
+        .phase-box .phase-num {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--text-light);
+            letter-spacing: 0.05em;
+            margin-bottom: 6px;
+            transition: color 0.2s;
+        }
+
+        .phase-box:hover .phase-num,
+        .phase-box.active .phase-num {
+            color: var(--accent);
+        }
+
+        .phase-box .phase-title {
+            color: var(--text-dark);
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .phase-connector {
+            color: var(--text-light);
+            font-size: 1.2rem;
+            padding: 0 4px;
+        }
+
+        .click-hint {
+            text-align: center;
+            color: var(--text-light);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            letter-spacing: 0.03em;
+            margin-top: 28px;
+            transition: opacity 0.3s;
+        }
+
+        /* Phase Detail Panels */
+        .phase-details {
+            margin-top: 28px;
+        }
+
+        .phase-detail {
+            display: none;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--accent);
+            border-radius: 0 8px 8px 0;
+            padding: 32px 36px;
+            position: relative;
+            animation: slideUp 0.3s ease;
+        }
+
+        .phase-detail.active {
+            display: block;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .phase-detail h4 {
+            color: var(--text-dark);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.05rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .phase-detail p {
+            color: var(--text-mid);
+            font-family: 'Source Serif 4', Georgia, serif;
+            font-size: 1.1rem;
+            margin-bottom: 16px;
+            line-height: 1.7;
+        }
+
+        .phase-detail ul {
+            color: var(--text-mid);
+            padding-left: 22px;
+            margin-bottom: 20px;
+        }
+
+        .phase-detail li {
+            font-family: 'Source Serif 4', Georgia, serif;
+            font-size: 1.05rem;
+            margin-bottom: 10px;
+            line-height: 1.6;
+            color: var(--text-mid);
+        }
+
+        .phase-detail li::marker {
+            color: var(--accent);
+        }
+
+        .phase-detail code {
+            background: var(--accent-light);
+            color: var(--accent);
+            border: none;
+            font-size: 0.85rem;
+            padding: 3px 8px;
+        }
+
+        .phase-detail strong {
+            color: var(--text-dark);
+            font-weight: 600;
+        }
+
+        .agent-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .agent-tag {
+            display: inline-flex;
+            align-items: center;
+            background: var(--accent-light);
+            border: 1px solid var(--accent-mid);
+            color: var(--accent);
+            padding: 6px 14px;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 500;
+        }
+
+        .agent-tag::before {
+            content: '›';
+            margin-right: 6px;
+            opacity: 0.7;
+        }
+
+        .quality-gate-inline {
+            background: var(--warning-bg);
+            border: 1px solid rgba(180, 83, 9, 0.2);
+            border-left: 4px solid var(--warning);
+            padding: 16px 20px;
+            margin: 20px 0;
+            border-radius: 0 6px 6px 0;
+        }
+
+        .quality-gate-inline p {
+            margin: 0;
+            color: #92400e;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+
+        .quality-gate-inline strong {
+            color: var(--warning);
+        }
+
+        @media (max-width: 1200px) {
+            article {
+                padding: 60px 60px;
+            }
+            h1 {
+                font-size: 2.4rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            article {
+                padding: 30px 25px;
+            }
+            h1 {
+                font-size: 1.8rem;
+            }
+            .workflow-diagram {
+                padding: 45px 20px 35px;
+            }
+            .phases-container {
+                flex-direction: column;
+                gap: 12px;
+            }
+            .phase-connector {
+                transform: rotate(90deg);
+            }
+            .phase-box {
+                width: 100%;
+                max-width: 200px;
+            }
+        }
+
+        /* ══════════════════════════════════════════════════════════════
+           ITERATION HORIZONTAL CARDS
+           ══════════════════════════════════════════════════════════════ */
+
+        .iteration-container {
+            margin: 30px 0;
+        }
+
+        .iteration-cards {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .iteration-card {
+            flex: 1;
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            padding: 16px 14px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            position: relative;
+        }
+
+        .iteration-card::after {
+            content: '';
+            position: absolute;
+            bottom: -12px;
+            left: 50%;
+            transform: translateX(-50%) scaleY(0);
+            width: 0;
+            height: 0;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-top: 10px solid var(--accent);
+            transition: transform 0.2s ease;
+            transform-origin: top;
+        }
+
+        .iteration-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(13, 115, 119, 0.15);
+        }
+
+        .iteration-card.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(13, 115, 119, 0.2);
+        }
+
+        .iteration-card.active::after {
+            transform: translateX(-50%) scaleY(1);
+        }
+
+        .iteration-num {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            background: var(--accent);
+            color: white;
+            border-radius: 50%;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1rem;
+            font-weight: 700;
+            margin: 0 auto 10px;
+        }
+
+        .iteration-card.active .iteration-num {
+            background: white;
+            color: var(--accent);
+        }
+
+        .iteration-title {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 4px;
+        }
+
+        .iteration-card.active .iteration-title {
+            color: white;
+        }
+
+        .iteration-subtitle {
+            font-family: 'Source Serif 4', Georgia, serif;
+            font-size: 0.8rem;
+            color: var(--text-light);
+            line-height: 1.3;
+        }
+
+        .iteration-card.active .iteration-subtitle {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .iteration-connector {
+            display: flex;
+            align-items: center;
+            color: var(--text-light);
+            font-size: 1.2rem;
+            padding: 0 2px;
+            margin-top: 20px;
+        }
+
+        .iteration-panel {
+            display: none;
+            background: var(--bg-diagram);
+            border: 2px solid var(--accent);
+            border-radius: 12px;
+            padding: 24px 32px;
+            animation: fadeSlideUp 0.3s ease;
+        }
+
+        .iteration-panel.active {
+            display: block;
+        }
+
+        @keyframes fadeSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .iteration-panel h4 {
+            color: var(--text-dark);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1rem;
+            font-weight: 600;
+            margin: 0 0 14px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--accent-mid);
+        }
+
+        .iteration-panel p {
+            margin: 10px 0;
+            line-height: 1.7;
+            font-size: 1.05rem;
+        }
+
+        .iteration-hint {
+            text-align: center;
+            color: var(--text-light);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            margin-bottom: 12px;
+        }
+
+        /* ══════════════════════════════════════════════════════════════
+           DESIGN PRINCIPLES GRID
+           ══════════════════════════════════════════════════════════════ */
+
+        .principles-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            margin: 40px 0;
+        }
+
+        .principles-grid .principle-card:nth-child(4),
+        .principles-grid .principle-card:nth-child(5) {
+            /* Center the last two cards */
+        }
+
+        .principle-card {
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 32px 28px;
+            transition: all 0.25s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .principle-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--accent);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.3s ease;
+        }
+
+        .principle-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-6px);
+            box-shadow: 0 12px 40px rgba(13, 115, 119, 0.12);
+        }
+
+        .principle-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .principle-icon {
+            width: 56px;
+            height: 56px;
+            background: var(--accent-light);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            color: var(--accent);
+        }
+
+        .principle-icon svg {
+            width: 28px;
+            height: 28px;
+        }
+
+        .principle-title {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 12px;
+        }
+
+        .principle-desc {
+            font-family: 'Source Serif 4', Georgia, serif;
+            font-size: 1.05rem;
+            color: var(--text-mid);
+            line-height: 1.7;
+            margin: 0;
+        }
+
+        /* Bottom row - 2 cards centered */
+        .principles-bottom {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+            max-width: 820px;
+            margin: 0 auto;
+        }
+
+        /* ══════════════════════════════════════════════════════════════
+           WORKFLOW PHASES - HORIZONTAL TIMELINE
+           ══════════════════════════════════════════════════════════════ */
+
+        .workflow-timeline {
+            background: var(--bg-diagram);
+            background-image: radial-gradient(circle, var(--grid-color) 1px, transparent 1px);
+            background-size: 20px 20px;
+            border-radius: 16px;
+            padding: 50px 40px;
+            margin: 40px 0;
+            border: 1px solid var(--border);
+        }
+
+        .workflow-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .workflow-command {
+            display: inline-block;
+            background: var(--accent);
+            color: white;
+            padding: 14px 32px;
+            border-radius: 10px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .workflow-command-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            margin-bottom: 10px;
+        }
+
+        .timeline-phases {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            position: relative;
+        }
+
+        .timeline-phases::before {
+            content: '';
+            position: absolute;
+            top: 45px;
+            left: 12%;
+            right: 12%;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent) 0%, var(--accent) 100%);
+            z-index: 0;
+        }
+
+        .timeline-phase {
+            position: relative;
+            z-index: 1;
+        }
+
+        .timeline-phase-header {
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .timeline-phase-num {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 50px;
+            height: 50px;
+            background: var(--accent);
+            color: white;
+            border-radius: 50%;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            box-shadow: 0 4px 15px rgba(13, 115, 119, 0.3);
+        }
+
+        .timeline-phase-title {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .timeline-phase-card {
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 24px 20px;
+            min-height: 280px;
+            transition: all 0.25s ease;
+        }
+
+        .timeline-phase-card:hover {
+            border-color: var(--accent);
+            box-shadow: 0 8px 30px rgba(13, 115, 119, 0.1);
+        }
+
+        .timeline-agents {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 16px;
+        }
+
+        .timeline-agent {
+            background: var(--accent-light);
+            color: var(--accent);
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            font-weight: 500;
+        }
+
+        .timeline-phase-desc {
+            font-size: 0.95rem;
+            color: var(--text-mid);
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        .timeline-phase-desc strong {
+            color: var(--text-dark);
+        }
+
+        .timeline-steps {
+            list-style: none;
+            padding: 0;
+            margin: 12px 0 0 0;
+        }
+
+        .timeline-steps li {
+            font-size: 0.9rem;
+            color: var(--text-mid);
+            padding: 4px 0 4px 18px;
+            position: relative;
+        }
+
+        .timeline-steps li::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: var(--accent);
+        }
+
+        /* ══════════════════════════════════════════════════════════════
+           RESULTS - STAT CARDS
+           ══════════════════════════════════════════════════════════════ */
+
+        .results-section {
+            margin: 40px 0;
+        }
+
+        .results-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, var(--accent) 0%, #0a5d60 100%);
+            border-radius: 16px;
+            padding: 36px 28px;
+            text-align: center;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+        }
+
+        .stat-number {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            position: relative;
+        }
+
+        .stat-label {
+            font-family: 'Source Serif 4', Georgia, serif;
+            font-size: 1.1rem;
+            opacity: 0.9;
+            position: relative;
+        }
+
+        .stat-detail {
+            font-size: 0.85rem;
+            opacity: 0.75;
+            margin-top: 8px;
+            position: relative;
+        }
+
+        .results-description {
+            background: var(--bg-diagram);
+            border-radius: 12px;
+            padding: 28px 32px;
+            border-left: 4px solid var(--accent);
+        }
+
+        .results-description p {
+            margin: 0;
+            font-size: 1.1rem;
+        }
+
+        /* ══════════════════════════════════════════════════════════════
+           TRY IT YOURSELF - TERMINAL STYLE
+           ══════════════════════════════════════════════════════════════ */
+
+        .terminal-container {
+            background: #1a1a2e;
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 30px 0;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+        }
+
+        .terminal-header {
+            background: #16162a;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .terminal-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .terminal-dot.red { background: #ff5f57; }
+        .terminal-dot.yellow { background: #febc2e; }
+        .terminal-dot.green { background: #28c840; }
+
+        .terminal-title {
+            margin-left: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .terminal-body {
+            padding: 24px 28px;
+        }
+
+        .terminal-body pre {
+            background: transparent;
+            border: none;
+            padding: 0;
+            margin: 0;
+            color: #e8f0f0;
+        }
+
+        .terminal-body code {
+            background: transparent;
+            color: inherit;
+            font-size: 1rem;
+        }
+
+        .terminal-comment {
+            color: #6b7280;
+        }
+
+        .terminal-command {
+            color: #10b981;
+        }
+
+        /* ══════════════════════════════════════════════════════════════
+           WHAT'S NEXT - SIDE BY SIDE CARDS
+           ══════════════════════════════════════════════════════════════ */
+
+        .next-cards {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 28px;
+            margin: 40px 0;
+        }
+
+        .next-card {
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 32px 28px;
+            position: relative;
+            transition: all 0.25s ease;
+        }
+
+        .next-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(13, 115, 119, 0.1);
+        }
+
+        .next-card-badge {
+            display: inline-block;
+            background: var(--accent-light);
+            color: var(--accent);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 16px;
+        }
+
+        .next-card-title {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 14px;
+        }
+
+        .next-card-desc {
+            font-size: 1.05rem;
+            color: var(--text-mid);
+            line-height: 1.7;
+            margin: 0;
+        }
+
+
+        /* ══════════════════════════════════════════════════════════════
+           AGENT FLOW DIAGRAM - PRESENTATION SIZE
+           ══════════════════════════════════════════════════════════════ */
+
+        .agent-flow-container {
+            background: var(--bg-diagram);
+            background-image:
+                radial-gradient(circle, var(--grid-color) 1px, transparent 1px);
+            background-size: 20px 20px;
+            border-radius: 12px;
+            padding: 60px 40px 50px;
+            margin: 50px 0;
+            position: relative;
+            border: 1px solid var(--border);
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.03);
+            overflow-x: auto;
+        }
+
+        .agent-flow-container::before {
+            content: 'AGENT FLOW';
+            position: absolute;
+            top: 18px;
+            left: 24px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 0.2em;
+            color: var(--text-light);
+            text-transform: uppercase;
+        }
+
+        .agent-flow-svg {
+            display: block;
+            margin: 0 auto;
+            max-width: 100%;
+            height: auto;
+        }
+
+        .agent-flow-svg .agent-node {
+            fill: var(--bg-card);
+            stroke: var(--border);
+            stroke-width: 1.5;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .agent-flow-svg .agent-node:hover {
+            stroke: var(--accent);
+            stroke-width: 2;
+            filter: drop-shadow(0 4px 8px rgba(13, 115, 119, 0.15));
+        }
+
+        .agent-flow-svg .agent-node.parallel {
+            stroke: var(--accent);
+            stroke-dasharray: 4 2;
+        }
+
+        .agent-flow-svg .agent-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            fill: var(--text-dark);
+            text-anchor: middle;
+            pointer-events: none;
+        }
+
+        .agent-flow-svg .agent-sublabel {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 9px;
+            fill: var(--text-light);
+            text-anchor: middle;
+            pointer-events: none;
+        }
+
+        .agent-flow-svg .flow-line {
+            stroke: var(--accent);
+            stroke-width: 2;
+            fill: none;
+        }
+
+        /* Build phase lines - static by default */
+        .agent-flow-svg .build-line {
+            stroke: var(--accent);
+            stroke-width: 2;
+            fill: none;
+            opacity: 0.4;
+            transition: opacity 0.3s;
+        }
+
+        /* Build phase lines - animated when active */
+        .agent-flow-svg.show-build .build-line {
+            stroke-width: 3;
+            stroke-dasharray: 8 4;
+            opacity: 1;
+            animation: flowDown 1s linear infinite;
+        }
+
+        @keyframes flowDown {
+            from { stroke-dashoffset: 24; }
+            to { stroke-dashoffset: 0; }
+        }
+
+        .agent-flow-svg .flow-arrow {
+            fill: var(--accent);
+        }
+
+        /* Fix cycle box - static by default */
+        .agent-flow-svg .fix-cycle-box {
+            stroke: #6366f1;
+            stroke-width: 2.5;
+            stroke-dasharray: 8 6;
+            fill: none;
+            opacity: 0.3;
+            transition: all 0.3s;
+        }
+
+        /* Fix cycle box - animated when active */
+        .agent-flow-svg.show-fix .fix-cycle-box {
+            stroke-width: 3;
+            fill: rgba(99, 102, 241, 0.05);
+            opacity: 1;
+            animation: marchingAnts 0.5s linear infinite;
+        }
+
+        @keyframes marchingAnts {
+            from { stroke-dashoffset: 0; }
+            to { stroke-dashoffset: -14; }
+        }
+
+        .agent-flow-svg .fix-cycle-arrow {
+            fill: #6366f1;
+        }
+
+        /* Review cycle box - static by default */
+        .agent-flow-svg .review-loop-box {
+            stroke: var(--warning);
+            stroke-width: 2.5;
+            stroke-dasharray: 8 6;
+            fill: none;
+            opacity: 0.3;
+            transition: all 0.3s;
+        }
+
+        /* Review cycle box - animated when active */
+        .agent-flow-svg.show-review .review-loop-box {
+            stroke-width: 3;
+            fill: rgba(180, 83, 9, 0.05);
+            opacity: 1;
+            animation: marchingAntsReview 0.5s linear infinite;
+        }
+
+        @keyframes marchingAntsReview {
+            from { stroke-dashoffset: 0; }
+            to { stroke-dashoffset: -14; }
+        }
+
+        .agent-flow-svg .loop-arrow {
+            fill: var(--warning);
+        }
+
+        .agent-flow-svg .loop-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            fill: var(--warning);
+            text-anchor: middle;
+            opacity: 0.5;
+            transition: opacity 0.3s;
+        }
+
+        .agent-flow-svg.show-review .loop-label {
+            opacity: 1;
+        }
+
+        .agent-flow-svg .fix-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            fill: #6366f1;
+            text-anchor: middle;
+            opacity: 0.5;
+            transition: opacity 0.3s;
+        }
+
+        .agent-flow-svg.show-fix .fix-label {
+            opacity: 1;
+        }
+
+        /* Clickable phase regions */
+        .agent-flow-svg .phase-region {
+            fill: transparent;
+            cursor: pointer;
+            transition: fill 0.2s;
+        }
+
+        .agent-flow-svg .phase-region:hover {
+            fill: rgba(13, 115, 119, 0.05);
+        }
+
+        .flow-diagram-hint {
+            text-align: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--text-light);
+            margin-top: 16px;
+        }
+
+        .agent-flow-svg .parallel-bracket {
+            stroke: var(--accent);
+            stroke-width: 1.5;
+            stroke-dasharray: 3 2;
+            fill: none;
+        }
+
+        .agent-flow-svg .parallel-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            fill: var(--accent);
+            font-style: italic;
+        }
+
+        .agent-flow-svg .specialist-pool {
+            stroke: #6366f1;
+            stroke-width: 2.5;
+            stroke-dasharray: 6 3;
+            fill: rgba(99, 102, 241, 0.04);
+            rx: 8;
+        }
+
+        .agent-flow-svg .pool-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            font-weight: 600;
+            fill: #6366f1;
+            letter-spacing: 0.1em;
+        }
+
+        .agent-flow-svg .delegation-arrow {
+            stroke: #6366f1;
+            stroke-width: 2.5;
+            fill: none;
+            stroke-dasharray: 4 2;
+        }
+
+        .agent-flow-svg .phase-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            fill: var(--text-light);
+            text-anchor: end;
+        }
+
+        .agent-flow-svg .flow-line.dashed {
+            stroke-dasharray: 6 4;
+        }
+
+        .agent-flow-svg .section-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 600;
+            fill: var(--text-light);
+            letter-spacing: 0.1em;
+        }
+
+        /* Network diagram styles */
+        .agent-flow-svg .network-line {
+            stroke: var(--text-mid);
+            stroke-width: 2.5;
+            stroke-dasharray: 6 4;
+            fill: none;
+        }
+
+        .agent-flow-svg .network-line.thick {
+            stroke-width: 3;
+        }
+
+        /* Network lines stay static - only ellipse animates */
+
+        @keyframes flowLine {
+            from { stroke-dashoffset: 20; }
+            to { stroke-dashoffset: 0; }
+        }
+
+        .agent-flow-svg .network-line.delegate {
+            stroke: #6366f1;
+            stroke-width: 2;
+            opacity: 0.7;
+        }
+
+        /* Delegate lines stay static */
+
+        @keyframes flowLineReverse {
+            from { stroke-dashoffset: 0; }
+            to { stroke-dashoffset: 20; }
+        }
+
+        .agent-flow-svg .network-node {
+            fill: var(--bg-card);
+            stroke: var(--accent);
+            stroke-width: 2.5;
+        }
+
+        .agent-flow-svg .network-node.specialist {
+            /* solid border, same as other nodes */
+        }
+
+        .agent-flow-svg .network-node.output {
+            /* solid border, same as other nodes */
+        }
+
+        .agent-flow-svg .network-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 15px;
+            fill: var(--text-mid);
+            text-anchor: middle;
+        }
+
+        .agent-flow-svg .node-icon {
+            font-size: 64px;
+            text-anchor: middle;
+            dominant-baseline: central;
+            pointer-events: none;
+        }
+
+        .agent-flow-svg .node-icon.large {
+            font-size: 76px;
+        }
+
+        .agent-flow-svg .node-icon.small {
+            font-size: 52px;
+        }
+
+        .agent-flow-svg .svg-icon {
+            color: var(--text-mid);
+            pointer-events: none;
+        }
+
+        .agent-flow-svg .delegate-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            fill: #6366f1;
+            text-anchor: middle;
+            font-style: italic;
+        }
+
+        .agent-flow-svg .loop-indicator {
+            fill: rgba(13, 115, 119, 0.03);
+            stroke: var(--accent);
+            stroke-width: 3;
+            stroke-dasharray: 12 6;
+            opacity: 0.7;
+        }
+
+        .agent-flow-svg .loop-indicator {
+            animation: rotateLoop 6s linear infinite;
+        }
+
+        @keyframes rotateLoop {
+            from { stroke-dashoffset: 0; }
+            to { stroke-dashoffset: -72; }
+        }
+
+        .agent-flow-svg .loop-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 15px;
+            font-weight: 600;
+            font-style: italic;
+            fill: #1a202c;
+            text-anchor: middle;
+            letter-spacing: 0.03em;
         }
 
         /* Diagram tabs */
         .diagram-tabs {
             display: flex;
-            gap: 8px;
-            margin-bottom: 20px;
+            gap: 10px;
+            margin-bottom: 24px;
         }
 
         .diagram-tab {
-            padding: 10px 20px;
+            padding: 12px 24px;
             border: 1px solid var(--border);
             background: var(--bg-card);
-            border-radius: 6px;
+            border-radius: 8px;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 0.85rem;
+            font-size: 0.95rem;
             color: var(--text-mid);
             cursor: pointer;
             transition: all 0.2s ease;
@@ -78,584 +1561,67 @@
         }
 
         .diagram-hint {
-            font-size: 0.95rem;
+            font-size: 1.1rem;
             color: var(--text-mid);
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
 
-        /* ══════════════════════════════════════════════════════════════
-           INTERACTIVE WORKFLOW DIAGRAM - Light Blueprint Aesthetic
-           ══════════════════════════════════════════════════════════════ */
-
-        .workflow-diagram {
-            background: var(--bg-diagram);
-            background-image:
-                radial-gradient(circle, var(--grid-color) 1px, transparent 1px);
-            background-size: 20px 20px;
-            border-radius: 8px;
-            padding: 50px 35px 40px;
-            margin: 0 0 20px;
-            position: relative;
-            overflow: hidden;
-            border: 1px solid var(--border);
-            box-shadow: inset 0 2px 8px rgba(0,0,0,0.03);
-        }
-
-        .workflow-diagram::before {
-            content: 'WORKFLOW';
-            position: absolute;
-            top: 18px;
-            left: 22px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.6rem;
-            font-weight: 600;
-            letter-spacing: 0.2em;
-            color: var(--text-light);
-            text-transform: uppercase;
-        }
-
-        .workflow-diagram::after {
-            content: '';
-            position: absolute;
-            top: 18px;
-            right: 22px;
-            width: 8px;
-            height: 8px;
-            background: var(--accent);
-            border-radius: 50%;
-            animation: pulse 2.5s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.5; transform: scale(0.85); }
-        }
-
-        .orchestrator-box {
-            background: var(--bg-card);
-            border: 2px solid var(--accent);
-            border-radius: 8px;
-            padding: 20px 40px;
-            text-align: center;
-            max-width: 200px;
-            margin: 0 auto 30px;
-            position: relative;
-            box-shadow: 0 4px 20px rgba(13, 115, 119, 0.08);
-        }
-
-        .orchestrator-box .title {
-            color: var(--accent);
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.7rem;
-            font-weight: 700;
-            letter-spacing: 0.1em;
-            margin-bottom: 4px;
-            text-transform: uppercase;
-        }
-
-        .orchestrator-box .cmd {
-            color: var(--text-dark);
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.95rem;
-            font-weight: 600;
-        }
-
-        .connection-line {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 40px;
-            position: relative;
-        }
-
-        .connection-line::before {
-            content: '';
-            position: absolute;
-            width: 2px;
-            height: 100%;
-            background: var(--accent);
-        }
-
-        .connection-line::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            width: 0;
-            height: 0;
-            border-left: 5px solid transparent;
-            border-right: 5px solid transparent;
-            border-top: 7px solid var(--accent);
-        }
-
-        .phases-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin-bottom: 10px;
-        }
-
-        .phase-box {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 16px 18px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            min-width: 120px;
-            position: relative;
-        }
-
-        .phase-box::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: transparent;
-            border-radius: 6px 6px 0 0;
-            transition: background 0.2s;
-        }
-
-        .phase-box:hover {
-            border-color: var(--border-accent);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(13, 115, 119, 0.1);
-        }
-
-        .phase-box:hover::before {
-            background: var(--accent);
-        }
-
-        .phase-box.active {
-            border-color: var(--accent);
-            background: var(--bg-card);
-            box-shadow: 0 4px 25px rgba(13, 115, 119, 0.12);
-        }
-
-        .phase-box.active::before {
-            background: var(--accent);
-        }
-
-        .phase-box .phase-num {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.6rem;
-            font-weight: 600;
-            color: var(--text-light);
-            letter-spacing: 0.05em;
-            margin-bottom: 5px;
-            transition: color 0.2s;
-        }
-
-        .phase-box:hover .phase-num,
-        .phase-box.active .phase-num {
-            color: var(--accent);
-        }
-
-        .phase-box .phase-title {
-            color: var(--text-dark);
-            font-family: 'JetBrains Mono', monospace;
-            font-weight: 600;
-            font-size: 0.8rem;
-        }
-
-        .phase-connector {
-            color: var(--text-light);
-            font-size: 1rem;
-            padding: 0 2px;
-        }
-
-        .click-hint {
-            text-align: center;
-            color: var(--text-light);
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.68rem;
-            letter-spacing: 0.03em;
-            margin-top: 22px;
-            transition: opacity 0.3s;
-        }
-
-        /* Phase Detail Panels */
-        .phase-details {
-            margin-top: 22px;
-        }
-
-        .phase-detail {
-            display: none;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-left: 3px solid var(--accent);
-            border-radius: 0 6px 6px 0;
-            padding: 24px 28px;
-            position: relative;
-            animation: slideUp 0.3s ease;
-        }
-
-        .phase-detail.active {
-            display: block;
-        }
-
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .phase-detail h4 {
-            color: var(--text-dark);
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.9rem;
-            font-weight: 600;
-            margin-bottom: 16px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .phase-detail p {
-            color: var(--text-mid);
-            font-family: 'Source Serif 4', Georgia, serif;
-            font-size: 0.95rem;
-            margin-bottom: 14px;
-            line-height: 1.7;
-        }
-
-        .phase-detail ul {
-            color: var(--text-mid);
-            padding-left: 18px;
-            margin-bottom: 16px;
-        }
-
-        .phase-detail li {
-            font-family: 'Source Serif 4', Georgia, serif;
-            font-size: 0.92rem;
-            margin-bottom: 8px;
-            line-height: 1.6;
-            color: var(--text-mid);
-        }
-
-        .phase-detail li::marker {
-            color: var(--accent);
-        }
-
-        .phase-detail code {
-            background: var(--accent-light);
-            color: var(--accent);
-            border: none;
-            font-size: 0.8rem;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-family: 'JetBrains Mono', monospace;
-        }
-
-        .phase-detail strong {
-            color: var(--text-dark);
-            font-weight: 600;
-        }
-
-        .agent-tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 16px;
-        }
-
-        .agent-tag {
-            display: inline-flex;
-            align-items: center;
-            background: var(--accent-light);
-            border: 1px solid var(--accent-mid);
-            color: var(--accent);
-            padding: 4px 10px;
-            border-radius: 4px;
-            font-size: 0.7rem;
-            font-family: 'JetBrains Mono', monospace;
-            font-weight: 500;
-        }
-
-        .agent-tag::before {
-            content: '>';
-            margin-right: 5px;
+        .agent-flow-svg:hover .loop-indicator {
             opacity: 0.7;
+            animation: loopRotate 10s linear infinite;
         }
 
-        .quality-gate-inline {
-            background: var(--warning-bg);
-            border: 1px solid rgba(180, 83, 9, 0.2);
-            border-left: 3px solid var(--warning);
-            padding: 12px 16px;
-            margin: 16px 0;
-            border-radius: 0 5px 5px 0;
+        @keyframes loopRotate {
+            from { stroke-dashoffset: 0; }
+            to { stroke-dashoffset: -108; }
         }
 
-        .quality-gate-inline p {
-            margin: 0;
-            color: #92400e;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.78rem;
-            line-height: 1.6;
-        }
-
-        .quality-gate-inline strong {
-            color: var(--warning);
-        }
-
-        /* ══════════════════════════════════════════════════════════════
-           AGENT FLOW DIAGRAM
-           ══════════════════════════════════════════════════════════════ */
-
-        .agent-flow-container {
-            background: var(--bg-diagram);
-            background-image:
-                radial-gradient(circle, var(--grid-color) 1px, transparent 1px);
-            background-size: 20px 20px;
-            border-radius: 8px;
-            padding: 40px 20px;
-            margin: 0;
-            position: relative;
-            border: 1px solid var(--border);
-            box-shadow: inset 0 2px 8px rgba(0,0,0,0.03);
+        /* Stage diagrams - COMPACT for iterations */
+        .stage-diagram {
+            padding: 35px 30px 25px;
+            margin: 20px auto;
+            max-width: 100%;
             overflow-x: auto;
         }
 
-        .agent-flow-container::before {
+        .stage-diagram::before {
             content: 'AGENT FLOW';
-            position: absolute;
-            top: 14px;
-            left: 18px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.6rem;
-            font-weight: 600;
-            letter-spacing: 0.2em;
-            color: var(--text-light);
-            text-transform: uppercase;
+            top: 12px;
+            left: 20px;
+            font-size: 0.55rem;
         }
 
-        .agent-flow-svg {
+        .skills-diagram::before {
+            content: 'AGENTS & SKILLS';
+        }
+
+        .composable-diagram::before {
+            content: 'COMPOSABLE PRIMITIVES';
+        }
+
+        .stage-diagram svg {
             display: block;
             margin: 0 auto;
-            max-width: 100%;
+            width: 100%;
             height: auto;
+            max-height: 280px;
         }
 
-        .agent-flow-svg .network-line {
-            stroke: var(--text-mid);
-            stroke-width: 2;
-            stroke-dasharray: 6 4;
-            fill: none;
+        .stage-diagram .flow-arrow {
+            fill: var(--accent);
         }
 
-        .agent-flow-svg .network-line.thick {
-            stroke-width: 2.5;
-        }
-
-        .agent-flow-svg .network-node {
-            fill: var(--bg-card);
-            stroke: var(--accent);
-            stroke-width: 2;
-        }
-
-        .agent-flow-svg .network-label {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 13px;
-            fill: var(--text-mid);
-            text-anchor: middle;
-        }
-
-        .agent-flow-svg .svg-icon {
-            color: var(--text-mid);
-            pointer-events: none;
-        }
-
-        .agent-flow-svg .loop-indicator {
-            fill: rgba(13, 115, 119, 0.03);
-            stroke: var(--accent);
-            stroke-width: 2.5;
-            stroke-dasharray: 12 6;
-            opacity: 0.7;
-            animation: rotateLoop 6s linear infinite;
-        }
-
-        @keyframes rotateLoop {
-            from { stroke-dashoffset: 0; }
-            to { stroke-dashoffset: -72; }
-        }
-
-        .agent-flow-svg .loop-label {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 13px;
-            font-weight: 600;
-            font-style: italic;
-            fill: #1a202c;
-            text-anchor: middle;
-            letter-spacing: 0.03em;
-        }
-
-        @media (max-width: 768px) {
-            .workflow-diagram {
-                padding: 45px 20px 35px;
-            }
-            .phases-container {
-                flex-direction: column;
-                gap: 12px;
-            }
-            .phase-connector {
-                transform: rotate(90deg);
-            }
-            .phase-box {
-                width: 100%;
-                max-width: 180px;
-            }
+        /* Allow complex diagrams to be taller */
+        .phase-detail .stage-diagram svg {
+            width: 100%;
+            max-width: none;
         }
     </style>
 </head>
 <body>
-    <!-- Tab buttons -->
-    <div class="diagram-tabs">
-        <button class="diagram-tab active" onclick="showDiagramTab('workflow')">Workflow phases</button>
-        <button class="diagram-tab" onclick="showDiagramTab('agentflow')">Agent flow</button>
-    </div>
-
-    <!-- Workflow Diagram Tab -->
-    <div class="diagram-panel active" id="panel-workflow">
-    <p class="diagram-hint">Click each phase below to explore:</p>
-    <!-- Interactive Workflow Diagram -->
-    <div class="workflow-diagram">
-        <div class="orchestrator-box">
-            <div class="title">Orchestrator</div>
-            <div class="cmd">encode-policy</div>
-        </div>
-
-        <div class="connection-line"></div>
-
-        <div class="phases-container">
-            <div class="phase-box" data-phase="setup" onclick="showPhase('setup')">
-                <div class="phase-num">PHASE 1</div>
-                <div class="phase-title">Setup</div>
-            </div>
-            <span class="phase-connector">-></span>
-            <div class="phase-box" data-phase="development" onclick="showPhase('development')">
-                <div class="phase-num">PHASE 2</div>
-                <div class="phase-title">Development</div>
-            </div>
-            <span class="phase-connector">-></span>
-            <div class="phase-box" data-phase="validation" onclick="showPhase('validation')">
-                <div class="phase-num">PHASE 3</div>
-                <div class="phase-title">Validation</div>
-            </div>
-            <span class="phase-connector">-></span>
-            <div class="phase-box" data-phase="complete" onclick="showPhase('complete')">
-                <div class="phase-num">PHASE 4</div>
-                <div class="phase-title">Review</div>
-            </div>
-        </div>
-
-        <p class="click-hint">Select a phase to inspect</p>
-
-        <div class="phase-details">
-            <!-- Phase 1: Setup -->
-            <div class="phase-detail" id="phase-setup">
-                <h4>Phase 1: Setup (Step 1)</h4>
-                <div class="agent-tags">
-                    <span class="agent-tag">issue-manager</span>
-                </div>
-                <p>The workflow begins by establishing coordination points:</p>
-                <ul>
-                    <li>Searches GitHub for existing issues to avoid duplicates</li>
-                    <li>Creates a new issue with a status template if none exists</li>
-                    <li>Creates a branch (<code>or-tanf</code>, <code>ia-tanf</code>)</li>
-                    <li>Opens a draft PR to the upstream repository</li>
-                </ul>
-                <p>Every subsequent agent references this issue and PR for coordination.</p>
-            </div>
-
-            <!-- Phase 2: Development -->
-            <div class="phase-detail" id="phase-development">
-                <h4>Phase 2: Development (Steps 2-3)</h4>
-                <div class="agent-tags">
-                    <span class="agent-tag">document-collector</span>
-                    <span class="agent-tag">parameter-architect</span>
-                    <span class="agent-tag">test-creator</span>
-                    <span class="agent-tag">rules-engineer</span>
-                    <span class="agent-tag">edge-case-generator</span>
-                </div>
-
-                <p><strong>Step 2: Research</strong> - The document-collector researches official sources: statutes, policy manuals, state plans, and benefit calculators. Output: <code>sources/working_references.md</code></p>
-
-                <div class="quality-gate-inline">
-                    <p><strong>Quality gate 1:</strong> Documentation must include the official program name, income limits, eligibility criteria, and legal citations.</p>
-                </div>
-
-                <p><strong>Step 3: Build</strong> - Three parallel tracks:</p>
-                <ul>
-                    <li><strong>Parameters:</strong> The parameter-architect creates YAML files with legal citations</li>
-                    <li><strong>Implementation:</strong> test-creator and rules-engineer work simultaneously from the same docs - neither sees the other's output</li>
-                    <li><strong>Edge cases:</strong> The edge-case-generator adds boundary tests</li>
-                </ul>
-
-                <div class="quality-gate-inline">
-                    <p><strong>Quality gates 2 & 3:</strong> Parameter values must match source documents. Implementation logic must match documented formulas.</p>
-                </div>
-            </div>
-
-            <!-- Phase 3: Validation -->
-            <div class="phase-detail" id="phase-validation">
-                <h4>Phase 3: Validation (Steps 4-6)</h4>
-                <div class="agent-tags">
-                    <span class="agent-tag">implementation-validator</span>
-                    <span class="agent-tag">reference-validator</span>
-                    <span class="agent-tag">ci-fixer</span>
-                    <span class="agent-tag">pr-pusher</span>
-                </div>
-
-                <p><strong>Step 4: Organization check</strong> - The validator loads 7 skills and checks naming conventions, file structure, metadata completeness, code patterns, and cross-references.</p>
-
-                <p><strong>Step 5: Validate and fix</strong> - First, the reference-validator checks that all parameters have proper citations. Then the ci-fixer runs tests locally (2-3 min vs 20-30 min on GitHub CI), analyzes failures, and delegates to specialists:</p>
-                <ul>
-                    <li>Calculation errors -> <code>rules-engineer</code></li>
-                    <li>Test expectation errors -> <code>test-creator</code></li>
-                    <li>Parameter value errors -> <code>parameter-architect</code></li>
-                </ul>
-                <p>This cycle repeats until all tests pass.</p>
-
-                <p><strong>Step 6: Format and push</strong> - The pr-pusher adds changelog, runs formatters (<code>black</code>, <code>isort</code>), and pushes.</p>
-            </div>
-
-            <!-- Phase 4: Review -->
-            <div class="phase-detail" id="phase-complete">
-                <h4>Phase 4: Review (Steps 7-8)</h4>
-                <div class="agent-tags">
-                    <span class="agent-tag">program-reviewer</span>
-                </div>
-
-                <p><strong>Step 7: Review</strong> - The program-reviewer researches regulations <em>before</em> reading code (preventing confirmation bias), then compares implementation against source documents. If discrepancies are found, findings are posted to the PR for human review.</p>
-
-                <p><strong>Step 8: Documentation</strong> - The reviewer updates the PR description with:</p>
-                <ul>
-                    <li>Regulatory authority citations</li>
-                    <li>Income eligibility tests with sources</li>
-                    <li>Benefit calculation formulas</li>
-                    <li>Files added and test coverage</li>
-                </ul>
-                <p>The PR remains a draft - <strong>humans make the final merge decision</strong>.</p>
-            </div>
-        </div>
-    </div>
-    </div>
-
-    <!-- Agent Flow Diagram Tab -->
-    <div class="diagram-panel" id="panel-agentflow">
-    <p class="diagram-hint">The diagram shows how agents connect. The ellipse represents the iteration loop - agents cycle until tests pass.</p>
-    <div class="agent-flow-container">
-        <svg class="agent-flow-svg" id="agentFlowSvg" viewBox="0 0 1130 580" width="1130" height="580">
-            <!-- Icon definitions -->
+    <article>
+        <!-- Hidden SVG for icon definitions -->
+        <svg style="display: none;">
             <defs>
                 <!-- Clipboard icon -->
                 <g id="icon-clipboard">
@@ -691,7 +1657,7 @@
                 </g>
                 <!-- Lambda icon -->
                 <g id="icon-lambda">
-                    <text x="0" y="8" font-family="Georgia, serif" font-size="40" font-weight="400" fill="currentColor" text-anchor="middle">&#955;</text>
+                    <text x="0" y="8" font-family="Georgia, serif" font-size="40" font-weight="400" fill="currentColor" text-anchor="middle">λ</text>
                 </g>
                 <!-- Lightning bolt icon -->
                 <g id="icon-lightning">
@@ -735,119 +1701,631 @@
                     <line x1="-5" y1="6" x2="9" y2="6" stroke="currentColor" stroke-width="2"/>
                     <line x1="-5" y1="12" x2="4" y2="12" stroke="currentColor" stroke-width="2"/>
                 </g>
+                <!-- Chat bubble icon -->
+                <g id="icon-chat">
+                    <path d="M-14,-10 L14,-10 C16,-10 16,-10 16,-8 L16,6 C16,8 16,8 14,8 L4,8 L-2,16 L-2,8 L-14,8 C-16,8 -16,8 -16,6 L-16,-8 C-16,-10 -16,-10 -14,-10 Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                    <circle cx="-7" cy="-1" r="2" fill="currentColor"/>
+                    <circle cx="0" cy="-1" r="2" fill="currentColor"/>
+                    <circle cx="7" cy="-1" r="2" fill="currentColor"/>
+                </g>
             </defs>
-
-            <!-- Loop indicator - ellipse around development/validation agents -->
-            <ellipse class="loop-indicator" cx="520" cy="290" rx="300" ry="250" />
-            <text class="loop-label" x="520" y="555">iterate until tests pass</text>
-
-            <!-- CONNECTIONS -->
-
-            <!-- Entry flow: issue-manager to document-collector -->
-            <line class="network-line" x1="100" y1="290" x2="118" y2="290" />
-
-            <!-- document-collector feeds into the development loop -->
-            <line class="network-line thick" x1="222" y1="260" x2="295" y2="140" />
-            <line class="network-line thick" x1="222" y1="290" x2="288" y2="290" />
-            <line class="network-line thick" x1="222" y1="320" x2="295" y2="440" />
-
-            <!-- Development to edge-case-gen (after parallel work completes) -->
-            <line class="network-line thick" x1="392" y1="310" x2="490" y2="360" />
-            <line class="network-line thick" x1="381" y1="448" x2="490" y2="360" />
-
-            <!-- Connections from test-creator to validators -->
-            <line class="network-line thick" x1="392" y1="290" x2="640" y2="100" />
-            <line class="network-line thick" x1="392" y1="290" x2="760" y2="290" />
-
-
-            <!-- parameter-architect to impl-validator -->
-            <line class="network-line thick" x1="392" y1="100" x2="640" y2="100" />
-
-            <!-- parameter-architect to ci-fixer -->
-            <line class="network-line thick" x1="387" y1="121" x2="760" y2="290" />
-
-            <!-- rules-engineer to ci-fixer -->
-            <line class="network-line thick" x1="392" y1="480" x2="790" y2="340" />
-
-            <!-- parameter-architect to reference-validator -->
-            <line class="network-line thick" x1="376" y1="138" x2="700" y2="475" />
-
-            <!-- rules-engineer to reference-validator -->
-            <line class="network-line thick" x1="392" y1="480" x2="700" y2="475" />
-
-            <!-- impl-validator to ci-fixer -->
-            <line class="network-line thick" x1="740" y1="140" x2="790" y2="240" />
-
-            <!-- reference-validator to ci-fixer -->
-            <line class="network-line thick" x1="700" y1="475" x2="790" y2="340" />
-
-            <!-- edge-case-gen to ci-fixer -->
-            <line class="network-line thick" x1="534" y1="360" x2="760" y2="290" />
-
-            <!-- Main flow through ci-fixer to exit -->
-            <line class="network-line" x1="880" y1="290" x2="888" y2="290" />
-            <line class="network-line" x1="952" y1="290" x2="968" y2="290" />
-            <line class="network-line" x1="1032" y1="290" x2="1048" y2="290" />
-
-            <!-- NODES -->
-
-            <!-- Entry (left) -->
-            <circle class="network-node" cx="55" cy="290" r="45" />
-            <g transform="translate(55,290) scale(1.4)"><use href="#icon-clipboard" class="svg-icon"/></g>
-            <text class="network-label" x="55" y="355">issue-manager</text>
-
-            <circle class="network-node" cx="170" cy="290" r="52" />
-            <g transform="translate(170,282) scale(1.6)"><use href="#icon-books" class="svg-icon"/></g>
-            <text class="network-label" x="170" y="362">document-</text>
-            <text class="network-label" x="170" y="378">collector</text>
-
-            <!-- Development (left side of circle) -->
-            <circle class="network-node specialist" cx="340" cy="100" r="52" />
-            <g transform="translate(340,100) scale(1.6)"><use href="#icon-gear" class="svg-icon"/></g>
-            <text class="network-label" x="340" y="35">parameter-architect</text>
-
-            <circle class="network-node specialist" cx="340" cy="290" r="52" />
-            <g transform="translate(340,290) scale(1.6)"><use href="#icon-flask" class="svg-icon"/></g>
-            <text class="network-label" x="340" y="362">test-creator</text>
-
-            <circle class="network-node specialist" cx="340" cy="480" r="52" />
-            <g transform="translate(340,488) scale(1.6)"><use href="#icon-lambda" class="svg-icon"/></g>
-            <text class="network-label" x="340" y="552">rules-engineer</text>
-
-            <circle class="network-node" cx="490" cy="360" r="44" />
-            <g transform="translate(490,360) scale(1.4)"><use href="#icon-lightning" class="svg-icon"/></g>
-            <text class="network-label" x="490" y="422">edge-case-gen</text>
-
-            <!-- Validation (center-right of circle) -->
-            <circle class="network-node" cx="700" cy="100" r="60" />
-            <g transform="translate(700,100) scale(1.8)"><use href="#icon-search" class="svg-icon"/></g>
-            <text class="network-label" x="700" y="35">impl-validator</text>
-
-            <circle class="network-node" cx="670" cy="507" r="44" />
-            <g transform="translate(670,507) scale(1.4)"><use href="#icon-link" class="svg-icon"/></g>
-            <text class="network-label" x="670" y="569">reference-validator</text>
-
-            <circle class="network-node" cx="820" cy="290" r="60" />
-            <g transform="translate(820,290) scale(1.8)"><use href="#icon-wrench" class="svg-icon"/></g>
-            <text class="network-label" x="820" y="370">ci-fixer</text>
-
-            <!-- Exit (right) - smaller nodes to emphasize the ellipse -->
-            <circle class="network-node" cx="920" cy="290" r="32" />
-            <g transform="translate(920,290) scale(1.0)"><use href="#icon-upload" class="svg-icon"/></g>
-            <text class="network-label" x="920" y="338">pr-pusher</text>
-
-            <circle class="network-node" cx="1000" cy="290" r="32" />
-            <g transform="translate(1000,290) scale(1.0)"><use href="#icon-book" class="svg-icon"/></g>
-            <text class="network-label" x="1000" y="338">program-</text>
-            <text class="network-label" x="1000" y="352">reviewer</text>
-
-            <circle class="network-node output" cx="1080" cy="290" r="32" />
-            <g transform="translate(1080,290) scale(1.0)"><use href="#icon-document" class="svg-icon"/></g>
-            <text class="network-label" x="1080" y="338">Draft PR</text>
-
         </svg>
-    </div>
-    </div>
+
+        <h1>Automating Tax and Benefit Policy Modeling with Multi-Agent AI</h1>
+        <p class="subtitle">How we built a multi-agent system that encodes policy into code</p>
+
+        <h2>The manual process</h2>
+        <p>When we add a new state benefit program to PolicyEngine, someone has to translate dozens of pages of legal language into working code. The process follows a predictable pattern: research official sources, extract eligibility rules and benefit formulas, write YAML parameters with legal citations, implement the calculation logic, create integration tests, validate against source documents, and handle multiple rounds of review.</p>
+        <p>Each state program requires approximately <strong>1,500 lines of code</strong> across multiple files. It typically takes 2-3 weeks. We built a system to do it in 90 minutes.</p>
+
+        <hr>
+
+        <h2>The evolution: from prompt to workflow</h2>
+        <p>Getting to 90 minutes with a single command took several iterations, each solving problems revealed by the previous.</p>
+
+        <!-- Interactive Iteration Cards - Horizontal -->
+        <div class="iteration-container">
+            <p class="iteration-hint">Click an iteration to explore</p>
+            <div class="iteration-cards">
+                <div class="iteration-card" data-iteration="iter1" onclick="toggleIteration('iter1')">
+                    <span class="iteration-num">1</span>
+                    <div class="iteration-title">Single prompt</div>
+                    <div class="iteration-subtitle">70% error rate</div>
+                </div>
+                <span class="iteration-connector">→</span>
+                <div class="iteration-card" data-iteration="iter2" onclick="toggleIteration('iter2')">
+                    <span class="iteration-num">2</span>
+                    <div class="iteration-title">Specialized agents</div>
+                    <div class="iteration-subtitle">Divided concerns</div>
+                </div>
+                <span class="iteration-connector">→</span>
+                <div class="iteration-card" data-iteration="iter3" onclick="toggleIteration('iter3')">
+                    <span class="iteration-num">3</span>
+                    <div class="iteration-title">Parallel execution</div>
+                    <div class="iteration-subtitle">40% error rate</div>
+                </div>
+                <span class="iteration-connector">→</span>
+                <div class="iteration-card" data-iteration="iter4" onclick="toggleIteration('iter4')">
+                    <span class="iteration-num">4</span>
+                    <div class="iteration-title">Modular skills</div>
+                    <div class="iteration-subtitle">15% error rate</div>
+                </div>
+                <span class="iteration-connector">→</span>
+                <div class="iteration-card" data-iteration="iter5" onclick="toggleIteration('iter5')">
+                    <span class="iteration-num">5</span>
+                    <div class="iteration-title">Composable</div>
+                    <div class="iteration-subtitle">Reusable primitives</div>
+                </div>
+            </div>
+
+            <!-- Iteration 1 Panel -->
+            <div class="iteration-panel" id="iteration-iter1">
+                    <p>The goal: a single <strong>command</strong> that a user invokes to produce a complete, working program. Type <code>/encode-policy</code>, get production-ready code with tests and citations. We started with a single prompt behind this command, asking Claude to implement a TANF program end-to-end.</p>
+                    <p>The results fell short—error rates exceeded 70%, parameters lacked citations, tests passed despite incorrect formulas, and variables hard-coded values. Too many concerns for one context to handle well.</p>
+
+                    <div class="agent-flow-container stage-diagram" style="margin-top: 15px;">
+                        <svg class="agent-flow-svg" viewBox="0 0 600 220" style="max-height: 160px;">
+                            <circle class="network-node" cx="150" cy="130" r="70" />
+                            <g transform="translate(150,130) scale(2)"><use href="#icon-chat" class="svg-icon"/></g>
+                            <text class="network-label" x="150" y="220">Single Prompt</text>
+                            <line class="network-line" x1="220" y1="130" x2="330" y2="130" />
+                            <polygon class="flow-arrow" points="330,124 344,130 330,136" />
+                            <circle class="network-node" cx="420" cy="130" r="58" style="stroke: #dc2626;" />
+                            <g transform="translate(420,130) scale(1.5)"><use href="#icon-document" class="svg-icon" style="color: #dc2626;"/></g>
+                            <text class="network-label" x="420" y="208">Output</text>
+                            <circle cx="465" cy="85" r="28" fill="#fef2f2" stroke="#dc2626" stroke-width="2.5"/>
+                            <text x="465" y="92" text-anchor="middle" font-family="JetBrains Mono" font-size="14" font-weight="600" fill="#dc2626">70%</text>
+                            <text x="465" y="108" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#dc2626">errors</text>
+                        </svg>
+                    </div>
+            </div>
+
+            <!-- Iteration 2 Panel -->
+            <div class="iteration-panel" id="iteration-iter2">
+                    <p>If one prompt couldn't handle everything, we needed to divide the work. We introduced <strong><a href="https://code.claude.com/docs/en/sub-agents">agents</a></strong>—specialized AI workers that each focus on a single concern. A document-collector gathers sources, a parameter-architect structures data, a rules-engineer implements logic, a test-creator writes validations. Each agent has its own prompt, tools, and narrow responsibility.</p>
+                    <p>But without a mechanism to share knowledge, prompts were long and redundant. The same patterns—naming conventions, file structure, code style—appeared in every agent's instructions, often inconsistently.</p>
+
+                    <div class="agent-flow-container stage-diagram" style="margin-top: 15px;">
+                        <svg class="agent-flow-svg" viewBox="0 0 900 280" style="max-height: 220px;">
+                            <circle class="network-node" cx="100" cy="150" r="52" />
+                            <g transform="translate(100,140) scale(1.5)"><use href="#icon-books" class="svg-icon"/></g>
+                            <text class="network-label" x="100" y="222">doc-collector</text>
+                            <line class="network-line" x1="152" y1="150" x2="198" y2="150" />
+                            <polygon class="flow-arrow" points="198,144 212,150 198,156" />
+                            <circle class="network-node" cx="260" cy="150" r="52" />
+                            <g transform="translate(260,150) scale(1.5)"><use href="#icon-gear" class="svg-icon"/></g>
+                            <text class="network-label" x="260" y="222">param-architect</text>
+                            <line class="network-line" x1="312" y1="150" x2="358" y2="150" />
+                            <polygon class="flow-arrow" points="358,144 372,150 358,156" />
+                            <circle class="network-node" cx="420" cy="150" r="52" />
+                            <g transform="translate(420,158) scale(1.5)"><use href="#icon-lambda" class="svg-icon"/></g>
+                            <text class="network-label" x="420" y="222">rules-engineer</text>
+                            <line class="network-line" x1="472" y1="150" x2="518" y2="150" />
+                            <polygon class="flow-arrow" points="518,144 532,150 518,156" />
+                            <circle class="network-node" cx="580" cy="150" r="52" />
+                            <g transform="translate(580,150) scale(1.5)"><use href="#icon-flask" class="svg-icon"/></g>
+                            <text class="network-label" x="580" y="222">test-creator</text>
+                            <line class="network-line" x1="632" y1="150" x2="678" y2="150" />
+                            <polygon class="flow-arrow" points="678,144 692,150 678,156" />
+                            <circle class="network-node" cx="740" cy="150" r="52" />
+                            <g transform="translate(740,150) scale(1.5)"><use href="#icon-document" class="svg-icon"/></g>
+                            <text class="network-label" x="740" y="222">output</text>
+                            <text x="450" y="50" text-anchor="middle" font-family="JetBrains Mono" font-size="16" font-weight="600" fill="var(--warning)" font-style="italic">each agent has redundant instructions</text>
+                        </svg>
+                    </div>
+            </div>
+
+            <!-- Iteration 3 Panel -->
+            <div class="iteration-panel" id="iteration-iter3">
+                    <p>Specialization helped with error rates, but a deeper problem emerged: <strong>tests designed to pass, not to verify</strong>. When test-creator sees rules-engineer's code and writes tests afterward, the tests validate what was built rather than what the regulation requires.</p>
+                    <p>We follow test-driven principles: tests should represent real-world scenarios—a family of four in Texas with $2,000 monthly income should receive exactly $X in benefits. These expected values come from regulations and official calculators, not from implementation code. Tests derived from code just mirror the code's assumptions. Tests derived independently from source documents represent ground truth.</p>
+                    <p>So we run test-creator and rules-engineer in parallel. Both read the same documentation, neither sees the other's output. When tests fail, it reveals actual discrepancies between what the code does and what the regulation requires. This principle of <strong>agent isolation</strong> became central to the workflow's reliability. Error rates dropped to 40%.</p>
+
+                    <div class="agent-flow-container stage-diagram" style="margin-top: 15px;">
+                        <svg class="agent-flow-svg" viewBox="0 0 950 520" style="max-height: 340px;">
+                            <!-- document-collector -->
+                            <circle class="network-node" cx="100" cy="260" r="62" />
+                            <g transform="translate(100,248) scale(1.7)"><use href="#icon-books" class="svg-icon"/></g>
+                            <text class="network-label" x="100" y="345">doc-collector</text>
+
+                            <!-- Lines to parallel agents -->
+                            <line class="network-line" x1="162" y1="210" x2="280" y2="100" />
+                            <line class="network-line" x1="162" y1="260" x2="280" y2="260" />
+                            <line class="network-line" x1="162" y1="310" x2="280" y2="420" />
+
+                            <!-- parameter-architect (top) -->
+                            <circle class="network-node" cx="340" cy="100" r="58" />
+                            <g transform="translate(340,100) scale(1.6)"><use href="#icon-gear" class="svg-icon"/></g>
+                            <text class="network-label" x="340" y="180">param-architect</text>
+
+                            <!-- test-creator (middle) -->
+                            <circle class="network-node" cx="340" cy="260" r="58" />
+                            <g transform="translate(340,260) scale(1.6)"><use href="#icon-flask" class="svg-icon"/></g>
+                            <text class="network-label" x="340" y="340">test-creator</text>
+
+                            <!-- rules-engineer (bottom) -->
+                            <circle class="network-node" cx="340" cy="420" r="58" />
+                            <g transform="translate(340,428) scale(1.6)"><use href="#icon-lambda" class="svg-icon"/></g>
+                            <text class="network-label" x="340" y="500">rules-engineer</text>
+
+                            <!-- Lines to impl-validator -->
+                            <line class="network-line" x1="398" y1="100" x2="520" y2="220" />
+                            <line class="network-line" x1="398" y1="260" x2="520" y2="260" />
+                            <line class="network-line" x1="398" y1="420" x2="520" y2="300" />
+
+                            <!-- impl-validator -->
+                            <circle class="network-node" cx="580" cy="260" r="58" />
+                            <g transform="translate(580,260) scale(1.6)"><use href="#icon-search" class="svg-icon"/></g>
+                            <text class="network-label" x="580" y="340">impl-validator</text>
+
+                            <!-- Line to output -->
+                            <line class="network-line" x1="638" y1="260" x2="720" y2="260" />
+                            <polygon class="flow-arrow" points="720,254 734,260 720,266" />
+
+                            <!-- output -->
+                            <circle class="network-node" cx="800" cy="260" r="62" />
+                            <g transform="translate(800,260) scale(1.7)"><use href="#icon-document" class="svg-icon"/></g>
+                            <text class="network-label" x="800" y="345">output</text>
+                        </svg>
+                    </div>
+            </div>
+
+            <!-- Iteration 4 Panel -->
+            <div class="iteration-panel" id="iteration-iter4">
+                    <p>Even with isolation, consistency issues persisted. Prompts had grown so long that agents "forgot" rules buried in pages of instructions. The same patterns—naming conventions, code style, testing rules—appeared in multiple agent prompts, often inconsistently.</p>
+                    <p>We introduced <strong><a href="https://code.claude.com/docs/en/skills">skills</a></strong>—reusable knowledge modules that agents load on demand. Instead of repeating the same instructions in every agent prompt, we extracted shared knowledge into focused documents. One skill, many agents—consistent patterns everywhere.</p>
+                    <p>This made scaling practical. We added edge-case-generator for boundary tests, validators for code and citations, ci-fixer for local test iteration. We re-engineered every agent around skills. Error rates dropped from 40% to 15%.</p>
+
+                    <div class="agent-flow-container stage-diagram skills-diagram" style="margin-top: 15px;">
+                        <svg class="agent-flow-svg" viewBox="0 0 800 340" style="max-height: 280px;">
+                            <!-- Row labels on left -->
+                            <text x="80" y="80" text-anchor="end" font-family="JetBrains Mono" font-size="14" fill="var(--text-mid)" font-weight="600">Agents</text>
+                            <text x="80" y="220" text-anchor="end" font-family="JetBrains Mono" font-size="14" fill="var(--text-mid)" font-weight="600">Skills</text>
+
+                            <!-- Agents row -->
+                            <circle class="network-node" cx="200" cy="75" r="38" />
+                            <g transform="translate(200,75) scale(1.1)"><use href="#icon-gear" class="svg-icon"/></g>
+
+                            <circle class="network-node" cx="330" cy="75" r="38" />
+                            <g transform="translate(330,75) scale(1.1)"><use href="#icon-flask" class="svg-icon"/></g>
+
+                            <circle class="network-node" cx="460" cy="75" r="38" />
+                            <g transform="translate(460,82) scale(1.1)"><use href="#icon-lambda" class="svg-icon"/></g>
+
+                            <circle class="network-node" cx="590" cy="75" r="38" />
+                            <g transform="translate(590,75) scale(1.1)"><use href="#icon-search" class="svg-icon"/></g>
+
+                            <text x="680" y="82" text-anchor="middle" font-family="JetBrains Mono" font-size="22" fill="var(--text-mid)">...</text>
+
+                            <!-- Lines from agents to skills -->
+                            <line x1="200" y1="113" x2="165" y2="185" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="4 2"/>
+                            <line x1="200" y1="113" x2="270" y2="185" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="4 2"/>
+                            <line x1="330" y1="113" x2="270" y2="185" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="4 2"/>
+                            <line x1="330" y1="113" x2="375" y2="185" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="4 2"/>
+                            <line x1="460" y1="113" x2="375" y2="185" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="4 2"/>
+                            <line x1="460" y1="113" x2="480" y2="185" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="4 2"/>
+                            <line x1="460" y1="113" x2="585" y2="185" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="4 2"/>
+                            <line x1="590" y1="113" x2="270" y2="185" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="4 2"/>
+                            <line x1="590" y1="113" x2="375" y2="185" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="4 2"/>
+
+                            <!-- Skills row -->
+                            <rect x="120" y="195" width="90" height="42" rx="5" fill="var(--accent-light)" stroke="var(--accent)" stroke-width="1.5"/>
+                            <text x="165" y="222" text-anchor="middle" font-family="JetBrains Mono" font-size="14" fill="var(--accent)">variable</text>
+
+                            <rect x="225" y="195" width="90" height="42" rx="5" fill="var(--accent-light)" stroke="var(--accent)" stroke-width="1.5"/>
+                            <text x="270" y="222" text-anchor="middle" font-family="JetBrains Mono" font-size="14" fill="var(--accent)">testing</text>
+
+                            <rect x="330" y="195" width="90" height="42" rx="5" fill="var(--accent-light)" stroke="var(--accent)" stroke-width="1.5"/>
+                            <text x="375" y="222" text-anchor="middle" font-family="JetBrains Mono" font-size="14" fill="var(--accent)">code-style</text>
+
+                            <rect x="435" y="195" width="90" height="42" rx="5" fill="var(--accent-light)" stroke="var(--accent)" stroke-width="1.5"/>
+                            <text x="480" y="222" text-anchor="middle" font-family="JetBrains Mono" font-size="14" fill="var(--accent)">parameter</text>
+
+                            <rect x="540" y="195" width="90" height="42" rx="5" fill="var(--accent-light)" stroke="var(--accent)" stroke-width="1.5"/>
+                            <text x="585" y="222" text-anchor="middle" font-family="JetBrains Mono" font-size="14" fill="var(--accent)">vectorize</text>
+
+                            <text x="665" y="222" text-anchor="middle" font-family="JetBrains Mono" font-size="20" fill="var(--accent)">...</text>
+
+                            <!-- Key insight -->
+                            <text x="400" y="295" text-anchor="middle" font-family="JetBrains Mono" font-size="14" font-weight="500" fill="var(--text-mid)" font-style="italic">Multiple agents load the same skills → consistent patterns</text>
+                        </svg>
+                    </div>
+            </div>
+
+            <!-- Iteration 5 Panel -->
+            <div class="iteration-panel" id="iteration-iter5">
+                    <p>With skills in place, the architecture stabilized—and users started asking for more. They wanted to review PRs created outside the workflow. They wanted to fix issues without re-running the entire pipeline.</p>
+                    <p>We realized the agents and skills we'd built for <code>/encode-policy</code> could be recomposed into new commands. <code>/review-pr</code> reuses the validators to review any PR. <code>/fix-pr</code> reuses the ci-fixer to iterate on failing tests. Same primitives, different workflows.</p>
+                    <p>This composability is the key insight: <strong>agents and skills are primitives, commands compose them into workflows</strong>.</p>
+
+                    <div class="agent-flow-container stage-diagram composable-diagram" style="margin-top: 15px;">
+                        <svg class="agent-flow-svg" viewBox="0 0 750 330" style="max-height: 260px;">
+                            <!-- Row labels on left -->
+                            <text x="80" y="38" text-anchor="end" font-family="JetBrains Mono" font-size="14" fill="var(--text-mid)" font-weight="600">Commands</text>
+                            <text x="80" y="130" text-anchor="end" font-family="JetBrains Mono" font-size="14" fill="var(--text-mid)" font-weight="600">Agents</text>
+                            <text x="80" y="235" text-anchor="end" font-family="JetBrains Mono" font-size="14" fill="var(--text-mid)" font-weight="600">Skills</text>
+
+                            <!-- Row 1: 3 Commands -->
+                            <rect x="245" y="15" width="115" height="44" rx="6" fill="var(--accent)" />
+                            <text x="302" y="43" text-anchor="middle" font-family="JetBrains Mono" font-size="14" fill="white" font-weight="600">/encode-policy</text>
+
+                            <rect x="375" y="15" width="105" height="44" rx="6" fill="var(--accent)" />
+                            <text x="427" y="43" text-anchor="middle" font-family="JetBrains Mono" font-size="14" fill="white" font-weight="600">/review-pr</text>
+
+                            <rect x="495" y="15" width="90" height="44" rx="6" fill="var(--accent)" />
+                            <text x="540" y="43" text-anchor="middle" font-family="JetBrains Mono" font-size="14" fill="white" font-weight="600">/fix-pr</text>
+
+                            <!-- Row 2: 4 Agents -->
+                            <circle class="network-node" cx="240" cy="125" r="36" />
+                            <g transform="translate(240,118) scale(1.0)"><use href="#icon-books" class="svg-icon"/></g>
+
+                            <circle class="network-node" cx="360" cy="125" r="36" />
+                            <g transform="translate(360,125) scale(1.0)"><use href="#icon-flask" class="svg-icon"/></g>
+
+                            <circle class="network-node" cx="480" cy="125" r="36" />
+                            <g transform="translate(480,132) scale(1.0)"><use href="#icon-lambda" class="svg-icon"/></g>
+
+                            <circle class="network-node" cx="600" cy="125" r="36" />
+                            <g transform="translate(600,125) scale(1.0)"><use href="#icon-wrench" class="svg-icon"/></g>
+                            <text x="680" y="132" text-anchor="middle" font-family="JetBrains Mono" font-size="22" fill="var(--text-mid)">...</text>
+
+                            <!-- Row 3: 5 Skills -->
+                            <rect x="135" y="208" width="90" height="42" rx="5" fill="var(--accent-light)" stroke="var(--accent)" stroke-width="1.5"/>
+                            <text x="180" y="235" text-anchor="middle" font-family="JetBrains Mono" font-size="14" fill="var(--accent)">variable</text>
+
+                            <rect x="255" y="208" width="90" height="42" rx="5" fill="var(--accent-light)" stroke="var(--accent)" stroke-width="1.5"/>
+                            <text x="300" y="235" text-anchor="middle" font-family="JetBrains Mono" font-size="14" fill="var(--accent)">testing</text>
+
+                            <rect x="375" y="208" width="90" height="42" rx="5" fill="var(--accent-light)" stroke="var(--accent)" stroke-width="1.5"/>
+                            <text x="420" y="235" text-anchor="middle" font-family="JetBrains Mono" font-size="14" fill="var(--accent)">code-style</text>
+
+                            <rect x="495" y="208" width="90" height="42" rx="5" fill="var(--accent-light)" stroke="var(--accent)" stroke-width="1.5"/>
+                            <text x="540" y="235" text-anchor="middle" font-family="JetBrains Mono" font-size="14" fill="var(--accent)">parameter</text>
+
+                            <rect x="615" y="208" width="90" height="42" rx="5" fill="var(--accent-light)" stroke="var(--accent)" stroke-width="1.5"/>
+                            <text x="660" y="235" text-anchor="middle" font-family="JetBrains Mono" font-size="14" fill="var(--accent)">vectorize</text>
+                            <text x="740" y="235" text-anchor="middle" font-family="JetBrains Mono" font-size="20" fill="var(--accent)">...</text>
+
+                            <!-- Labels -->
+                            <text x="420" y="280" text-anchor="middle" font-family="JetBrains Mono" font-size="13" fill="var(--text-light)">COMMANDS → AGENTS → SKILLS</text>
+                            <text x="420" y="302" text-anchor="middle" font-family="JetBrains Mono" font-size="14" font-weight="500" fill="var(--text-mid)" font-style="italic">primitives compose into workflows</text>
+                        </svg>
+                    </div>
+            </div>
+        </div>
+
+        <hr>
+
+        <h2>Design principles</h2>
+        <p>These principles emerged from the evolution:</p>
+
+        <div class="principles-grid">
+            <div class="principle-card">
+                <div class="principle-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                </div>
+                <div class="principle-title">Source authority</div>
+                <p class="principle-desc">Collect only primary sources. Anchor parameters to legal documents—statutes, regulations, state plans—and use forms and benefit calculators as supporting references.</p>
+            </div>
+
+            <div class="principle-card">
+                <div class="principle-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="14" width="7" height="7"></rect>
+                        <rect x="3" y="14" width="7" height="7"></rect>
+                    </svg>
+                </div>
+                <div class="principle-title">Isolation</div>
+                <p class="principle-desc">Certain agents operate in isolation to prevent confirmation bias. When agents cannot see each other's output, mismatches reveal actual bugs rather than shared misconceptions.</p>
+            </div>
+
+            <div class="principle-card">
+                <div class="principle-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                        <line x1="8" y1="7" x2="16" y2="7"></line>
+                        <line x1="8" y1="11" x2="14" y2="11"></line>
+                    </svg>
+                </div>
+                <div class="principle-title">Shared knowledge</div>
+                <p class="principle-desc">Domain expertise lives in reusable modules shared by agents throughout the workflow. No redundancy, no forgetting.</p>
+            </div>
+        </div>
+
+        <div class="principles-bottom">
+            <div class="principle-card">
+                <div class="principle-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"></path>
+                    </svg>
+                </div>
+                <div class="principle-title">Orchestrator pattern</div>
+                <p class="principle-desc">The orchestrator coordinates without implementing. It invokes specialized agents, checks quality gates, and manages workflow state—but never writes code itself.</p>
+            </div>
+
+            <div class="principle-card">
+                <div class="principle-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="16 18 22 12 16 6"></polyline>
+                        <polyline points="8 6 2 12 8 18"></polyline>
+                        <line x1="12" y1="2" x2="12" y2="22"></line>
+                    </svg>
+                </div>
+                <div class="principle-title">Composability</div>
+                <p class="principle-desc">Agents and skills are primitives that can be combined into different workflows. A validator agent works in <code>/encode-policy</code>, <code>/review-pr</code>, and <code>/fix-pr</code> alike.</p>
+            </div>
+        </div>
+
+        <hr>
+
+        <h2>The architecture today</h2>
+        <p>The <code>/encode-policy</code> command is the most comprehensive instantiation of these patterns—but <code>/review-pr</code> and <code>/fix-pr</code> use the same agents and skills for focused tasks. Here's how <code>/encode-policy</code> works in detail: it orchestrates specialized agents to transform a policy request like "Oregon TANF" into a complete pull request with parameters, variables, tests, and documentation. The orchestrator never writes code—it invokes specialized agents and checks quality gates between phases.</p>
+
+        <h3>Workflow phases</h3>
+
+        <!-- Horizontal Timeline Workflow -->
+        <div class="workflow-timeline">
+            <div class="workflow-header">
+                <div class="workflow-command-label">Orchestrator Command</div>
+                <div class="workflow-command">/encode-policy</div>
+            </div>
+
+            <div class="timeline-phases">
+                <!-- Phase 1 -->
+                <div class="timeline-phase">
+                    <div class="timeline-phase-header">
+                        <div class="timeline-phase-num">1</div>
+                        <div class="timeline-phase-title">Setup</div>
+                    </div>
+                    <div class="timeline-phase-card">
+                        <div class="timeline-agents">
+                            <span class="timeline-agent">issue-manager</span>
+                        </div>
+                        <p class="timeline-phase-desc">Establish coordination points for the workflow.</p>
+                        <ul class="timeline-steps">
+                            <li>Search for existing issues</li>
+                            <li>Create branch & draft PR</li>
+                            <li>Set up status tracking</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Phase 2 -->
+                <div class="timeline-phase">
+                    <div class="timeline-phase-header">
+                        <div class="timeline-phase-num">2</div>
+                        <div class="timeline-phase-title">Development</div>
+                    </div>
+                    <div class="timeline-phase-card">
+                        <div class="timeline-agents">
+                            <span class="timeline-agent">document-collector</span>
+                            <span class="timeline-agent">parameter-architect</span>
+                            <span class="timeline-agent">test-creator</span>
+                            <span class="timeline-agent">rules-engineer</span>
+                        </div>
+                        <p class="timeline-phase-desc"><strong>Research</strong> official sources, then <strong>build</strong> in parallel tracks.</p>
+                        <ul class="timeline-steps">
+                            <li>Collect legal citations</li>
+                            <li>Create YAML parameters</li>
+                            <li>Write tests & variables</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Phase 3 -->
+                <div class="timeline-phase">
+                    <div class="timeline-phase-header">
+                        <div class="timeline-phase-num">3</div>
+                        <div class="timeline-phase-title">Validation</div>
+                    </div>
+                    <div class="timeline-phase-card">
+                        <div class="timeline-agents">
+                            <span class="timeline-agent">impl-validator</span>
+                            <span class="timeline-agent">ref-validator</span>
+                            <span class="timeline-agent">ci-fixer</span>
+                        </div>
+                        <p class="timeline-phase-desc"><strong>Validate</strong> code patterns, then <strong>fix</strong> until tests pass.</p>
+                        <ul class="timeline-steps">
+                            <li>Check naming & structure</li>
+                            <li>Verify citations</li>
+                            <li>Run tests locally (2-3 min)</li>
+                            <li>Delegate fixes to specialists</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Phase 4 -->
+                <div class="timeline-phase">
+                    <div class="timeline-phase-header">
+                        <div class="timeline-phase-num">4</div>
+                        <div class="timeline-phase-title">Review</div>
+                    </div>
+                    <div class="timeline-phase-card">
+                        <div class="timeline-agents">
+                            <span class="timeline-agent">program-reviewer</span>
+                            <span class="timeline-agent">pr-pusher</span>
+                        </div>
+                        <p class="timeline-phase-desc"><strong>Review</strong> against regulations, then <strong>document</strong> the PR.</p>
+                        <ul class="timeline-steps">
+                            <li>Compare to source docs</li>
+                            <li>Update PR description</li>
+                            <li>Human makes merge decision</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h3>Full agent flow</h3>
+        <p>Here's the complete <code>/encode-policy</code> workflow showing all agents and the validation loop:</p>
+
+        <div class="agent-flow-container" style="margin: 40px 0;">
+            <svg class="agent-flow-svg" viewBox="0 0 1300 680">
+                <!-- Loop indicator - ellipse around development/validation agents -->
+                <ellipse class="loop-indicator" cx="600" cy="340" rx="350" ry="290" />
+                <text class="loop-label" x="600" y="650">iterate until tests pass</text>
+
+                <!-- CONNECTIONS -->
+                <line class="network-line" x1="115" y1="340" x2="138" y2="340" />
+                <line class="network-line thick" x1="262" y1="300" x2="345" y2="165" />
+                <line class="network-line thick" x1="262" y1="340" x2="338" y2="340" />
+                <line class="network-line thick" x1="262" y1="380" x2="345" y2="515" />
+                <line class="network-line thick" x1="462" y1="365" x2="570" y2="425" />
+                <line class="network-line thick" x1="449" y1="525" x2="570" y2="425" />
+                <line class="network-line thick" x1="462" y1="340" x2="735" y2="120" />
+                <line class="network-line thick" x1="462" y1="340" x2="880" y2="340" />
+                <line class="network-line thick" x1="462" y1="120" x2="735" y2="120" />
+                <line class="network-line thick" x1="455" y1="145" x2="880" y2="340" />
+                <line class="network-line thick" x1="462" y1="560" x2="915" y2="400" />
+                <line class="network-line thick" x1="444" y1="165" x2="805" y2="560" />
+                <line class="network-line thick" x1="462" y1="560" x2="805" y2="560" />
+                <line class="network-line thick" x1="855" y1="165" x2="915" y2="285" />
+                <line class="network-line thick" x1="805" y1="560" x2="915" y2="400" />
+                <line class="network-line thick" x1="614" y1="425" x2="880" y2="340" />
+                <line class="network-line" x1="1015" y1="340" x2="1028" y2="340" />
+                <line class="network-line" x1="1102" y1="340" x2="1118" y2="340" />
+                <line class="network-line" x1="1192" y1="340" x2="1208" y2="340" />
+
+                <!-- NODES -->
+                <circle class="network-node" cx="65" cy="340" r="55" />
+                <g transform="translate(65,340) scale(1.6)"><use href="#icon-clipboard" class="svg-icon"/></g>
+                <text class="network-label" x="65" y="418">issue-manager</text>
+
+                <circle class="network-node" cx="200" cy="340" r="62" />
+                <g transform="translate(200,330) scale(1.8)"><use href="#icon-books" class="svg-icon"/></g>
+                <text class="network-label" x="200" y="425">document-</text>
+                <text class="network-label" x="200" y="445">collector</text>
+
+                <circle class="network-node specialist" cx="400" cy="120" r="62" />
+                <g transform="translate(400,120) scale(1.8)"><use href="#icon-gear" class="svg-icon"/></g>
+                <text class="network-label" x="400" y="42">parameter-architect</text>
+
+                <circle class="network-node specialist" cx="400" cy="340" r="62" />
+                <g transform="translate(400,340) scale(1.8)"><use href="#icon-flask" class="svg-icon"/></g>
+                <text class="network-label" x="400" y="425">test-creator</text>
+
+                <circle class="network-node specialist" cx="400" cy="560" r="62" />
+                <g transform="translate(400,568) scale(1.8)"><use href="#icon-lambda" class="svg-icon"/></g>
+                <text class="network-label" x="400" y="645">rules-engineer</text>
+
+                <circle class="network-node" cx="570" cy="425" r="55" />
+                <g transform="translate(570,425) scale(1.6)"><use href="#icon-lightning" class="svg-icon"/></g>
+                <text class="network-label" x="570" y="503">edge-case-gen</text>
+
+                <circle class="network-node" cx="805" cy="120" r="72" />
+                <g transform="translate(805,120) scale(2.0)"><use href="#icon-search" class="svg-icon"/></g>
+                <text class="network-label" x="805" y="42">impl-validator</text>
+
+                <circle class="network-node" cx="770" cy="600" r="55" />
+                <g transform="translate(770,600) scale(1.6)"><use href="#icon-link" class="svg-icon"/></g>
+                <text class="network-label" x="770" y="678">reference-validator</text>
+
+                <circle class="network-node" cx="950" cy="340" r="72" />
+                <g transform="translate(950,340) scale(2.0)"><use href="#icon-wrench" class="svg-icon"/></g>
+                <text class="network-label" x="950" y="435">ci-fixer</text>
+
+                <circle class="network-node" cx="1065" cy="340" r="40" />
+                <g transform="translate(1065,340) scale(1.2)"><use href="#icon-upload" class="svg-icon"/></g>
+                <text class="network-label" x="1065" y="398">pr-pusher</text>
+
+                <circle class="network-node" cx="1155" cy="340" r="40" />
+                <g transform="translate(1155,340) scale(1.2)"><use href="#icon-book" class="svg-icon"/></g>
+                <text class="network-label" x="1155" y="398">program-</text>
+                <text class="network-label" x="1155" y="416">reviewer</text>
+
+                <circle class="network-node output" cx="1245" cy="340" r="40" />
+                <g transform="translate(1245,340) scale(1.2)"><use href="#icon-document" class="svg-icon"/></g>
+                <text class="network-label" x="1245" y="398">Draft PR</text>
+            </svg>
+        </div>
+
+        <hr>
+
+        <h2>Results</h2>
+
+        <div class="results-section">
+            <div class="results-stats">
+                <div class="stat-card">
+                    <div class="stat-number">90 min</div>
+                    <div class="stat-label">Per implementation</div>
+                    <div class="stat-detail">Down from 2-3 weeks</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">42</div>
+                    <div class="stat-label">States with TANF</div>
+                    <div class="stat-detail">Plus CCDF & Illinois programs</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">60K+</div>
+                    <div class="stat-label">Lines of code</div>
+                    <div class="stat-detail">Consistent patterns & quality</div>
+                </div>
+            </div>
+
+            <div class="results-description">
+                <p>Specialized agents handle the mechanical work—research, parameterization, testing, documentation—while humans review the final PR and make the merge decision. Our API partner <a href="https://www.myfriendben.org">MyFriendBen</a> uses the Illinois implementations to power their benefits screening tool.</p>
+            </div>
+        </div>
+
+        <hr>
+
+        <h2>Try it yourself</h2>
+        <p>The <code>/encode-policy</code> command is part of the <a href="https://github.com/PolicyEngine/policyengine-claude">policyengine-claude</a> repository. To implement a new benefit program:</p>
+
+        <div class="terminal-container">
+            <div class="terminal-header">
+                <span class="terminal-dot red"></span>
+                <span class="terminal-dot yellow"></span>
+                <span class="terminal-dot green"></span>
+                <span class="terminal-title">claude-code — zsh</span>
+            </div>
+            <div class="terminal-body">
+                <pre><code><span class="terminal-comment"># Add the marketplace</span>
+<span class="terminal-command">/plugin marketplace add PolicyEngine/policyengine-claude</span>
+
+<span class="terminal-comment"># Install the complete plugin (includes encode-policy command)</span>
+<span class="terminal-command">/plugin install complete@policyengine-claude</span>
+
+<span class="terminal-comment"># Run the workflow</span>
+<span class="terminal-command">/encode-policy "Iowa TANF"</span></code></pre>
+            </div>
+        </div>
+
+        <p>The workflow guides you through each phase, checks quality gates, and fixes issues automatically.</p>
+
+        <hr>
+
+        <h2>What's next</h2>
+        <p>The <code>/encode-policy</code> workflow handles individual programs. The next challenge is understanding how programs interact.</p>
+
+        <div class="next-cards">
+            <div class="next-card">
+                <span class="next-card-badge">In Progress</span>
+                <div class="next-card-title">Cross-program validation</div>
+                <p class="next-card-desc">Benefit programs form a connected system—SNAP benefits count as unearned income for TANF, Medicaid enrollment affects SSI calculations, and some programs are mutually exclusive. A cross-program validator would detect these interactions during implementation rather than in production.</p>
+            </div>
+
+            <div class="next-card">
+                <span class="next-card-badge">Exploring</span>
+                <div class="next-card-title">Historical implementations</div>
+                <p class="next-card-desc">Parameters support multiple effective dates, but program reforms often involve structural changes—eliminating deductions, adding eligibility categories, or restructuring formulas. We are testing approaches to handle these reforms across time.</p>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>PolicyEngine is a nonprofit building free, open-source tools for tax and benefit policy analysis. Learn more at <a href="https://policyengine.org">policyengine.org</a>.</p>
+        </div>
+    </article>
 
     <script>
         function showPhase(phase) {
@@ -871,6 +2349,21 @@
             document.querySelector('.click-hint').style.display = 'none';
         }
 
+        function showFlowPhase(phase) {
+            const svg = document.getElementById('agentFlowSvg');
+
+            // Remove all phase classes
+            svg.classList.remove('show-build', 'show-fix', 'show-review');
+
+            // Add the selected phase class
+            svg.classList.add('show-' + phase);
+
+            // Auto-reset after 5 seconds
+            setTimeout(() => {
+                svg.classList.remove('show-build', 'show-fix', 'show-review');
+            }, 5000);
+        }
+
         function showDiagramTab(tab) {
             // Remove active class from all tabs and panels
             document.querySelectorAll('.diagram-tab').forEach(t => t.classList.remove('active'));
@@ -880,6 +2373,29 @@
             event.target.classList.add('active');
             document.getElementById('panel-' + tab).classList.add('active');
         }
+
+        function toggleIteration(iteration) {
+            const card = document.querySelector(`.iteration-card[data-iteration="${iteration}"]`);
+            const panel = document.getElementById(`iteration-${iteration}`);
+            const isActive = card.classList.contains('active');
+
+            // Close all cards and panels first
+            document.querySelectorAll('.iteration-card').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.iteration-panel').forEach(p => p.classList.remove('active'));
+
+            // If clicking on an inactive card, open it
+            if (!isActive) {
+                card.classList.add('active');
+                panel.classList.add('active');
+
+                // Scroll panel into view smoothly
+                setTimeout(() => {
+                    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }, 100);
+            }
+            // If clicking on active card, it stays closed (toggle behavior)
+        }
+
     </script>
 </body>
 </html>
