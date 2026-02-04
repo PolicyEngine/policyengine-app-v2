@@ -1,5 +1,14 @@
 [
   {
+    "title": "Analysis of South Carolina H.3492: Making the state EITC partially refundable",
+    "description": "PolicyEngine projects the bill would lower state revenues by $402 million while reducing child poverty by 5.4% in 2026.",
+    "date": "2026-02-04",
+    "tags": ["us", "us-sc", "policy", "featured"],
+    "authors": ["david-trimmer"],
+    "filename": "sc-h3492-eitc-refundability.md",
+    "image": "sc-h3492-eitc-refundability.jpg"
+  },
+  {
     "title": "How PolicyEngine's CTC Calculator informed Rhode Island Governor McKee's Child Tax Credit design",
     "description": "PolicyEngine developed a Rhode Island Child Tax Credit Calculator to help policymakers analyze how different CTC reforms would impact the state and its families.",
     "date": "2026-01-29",
