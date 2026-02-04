@@ -19,7 +19,7 @@ Under H.3492, taxpayers would receive 25% of their unused EITC as a direct refun
 
 ## Household impacts
 
-Consider a single parent with one child (age 5) earning $20,000. Under current law, South Carolina's standard deduction, dependent exemption, young child exemption and 0% income bracket eliminate any state tax liability for this household until income exceeds $37,870 (see Table 1 for breakdown of each parameter).[^1] Despite qualifying for a SC EITC of $5,533, they receive no benefit. Under H.3492, they would receive $1,383 (25% × $5,533) as a refund.
+Consider a single parent with one child (age 5) earning $20,000. Under current law, South Carolina's standard deduction, dependent exemption, young child exemption, and 0% income bracket eliminate any state tax liability for this household until income exceeds $37,870 (see Table 1 for breakdown of each parameter).[^1] Despite qualifying for a SC EITC of $5,533, they receive no benefit. Under H.3492, they would receive $1,383 (25% × $5,533) as a refund.
 
 [^1]: We estimate these 2026 values using inflation projections by the Congressional Budget Office (CBO).
 
@@ -33,7 +33,7 @@ Consider a single parent with one child (age 5) earning $20,000. Under current l
 | 0% bracket threshold | $3,640 |
 | **Total** | **$37,870** |
 
-As earnings rise above $37,870, the household begins to benefit from the nonrefundable EITC. For instance, if the household earned $45,000, they would owe $219 in state taxes. This reduces the "excess" credit available for refund, but net income still increases by $272, making their total EITC benefit $491 under House Bill 3492. At roughly $50,000, the household's tax liability exceeds the EITC's value, meaning there is no longer any excess and the bill provides no additional value. The SC EITC fully phases out near $52,000 of earnings for this family. 
+As earnings rise above $37,870, the household begins to benefit from the nonrefundable EITC. For instance, if the household earned $45,000, they would owe $216 in state taxes. This reduces the "excess" credit available for refund, but net income still increases by $273, making their total EITC benefit $489 under House Bill 3492. At roughly $50,000, the household's tax liability exceeds the EITC's value, meaning there is no longer any excess and the bill provides no additional value. The SC EITC fully phases out near $52,000 of earnings for this family. 
 
 
 Figure 1 displays the total SC EITC benefit that a single parent with one child would receive under current law and H.3492 as employment earnings rise.
@@ -44,7 +44,7 @@ Figure 1 displays the total SC EITC benefit that a single parent with one child 
 
 For tax year 2026, H.3492 would [cost the state $402 million](https://app.policyengine.org/us/report-output/sur-mkr6zuakk0g9?share=eyJ1c2VyUmVwb3J0Ijp7InJlcG9ydElkIjoiNjE1IiwiY291bnRyeUlkIjoidXMiLCJsYWJlbCI6IlNvdXRoIENhcm9saW5hIFJlZnVuZGFibGUgRUlUQyIsImlzQ3JlYXRlZCI6dHJ1ZSwiaWQiOiJzdXItbWtyNnp1YWtrMGc5In0sInVzZXJTaW11bGF0aW9ucyI6W3sic2ltdWxhdGlvbklkIjoiNjEzIiwiY291bnRyeUlkIjoidXMiLCJsYWJlbCI6IlNvdXRoIENhcm9saW5hIFJlZnVuZGFibGUgRUlUQyBiYXNlbGluZSBzaW11bGF0aW9uIiwiaXNDcmVhdGVkIjp0cnVlLCJpZCI6InN1cy1ta3I2emE4bmhtaTkifSx7InNpbXVsYXRpb25JZCI6IjY3MCIsImNvdW50cnlJZCI6InVzIiwibGFiZWwiOiJTb3V0aCBDYXJvbGluYSBSZWZ1bmRhYmxlIEVJVEMgcmVmb3JtIHNpbXVsYXRpb24iLCJpc0NyZWF0ZWQiOnRydWUsImlkIjoic3VzLW1rcjZ6c3hnZDdrMCJ9XSwidXNlclBvbGljaWVzIjpbeyJwb2xpY3lJZCI6Ijk1NzYyIiwiY291bnRyeUlkIjoidXMiLCJsYWJlbCI6IlNvdXRoIENhcm9saW5hIFJlZnVuZGFibGUgRUlUQyByZWZvcm0gcG9saWN5IiwiaXNDcmVhdGVkIjp0cnVlLCJpZCI6InN1cC1ta3I2enI4MTNmZzYifV0sInVzZXJIb3VzZWhvbGRzIjpbXSwidXNlckdlb2dyYXBoaWVzIjpbeyJpZCI6ImFub255bW91cy0xNzY5MTkxNTU4MTE3IiwiY291bnRyeUlkIjoidXMiLCJnZW9ncmFwaHlJZCI6InN0YXRlL3NjIiwic2NvcGUiOiJzdWJuYXRpb25hbCIsImxhYmVsIjoic2MgSG91c2Vob2xkcyIsInR5cGUiOiJnZW9ncmFwaHkifV19) according to PolicyEngine's static modeling.
 
-The proposal would raise the net income of 25.1% of South Carolina residents, with gains concentrated among those in the bottom half of the state's income distribution. Additionally, 9.3% of residents would see an increase of over 5% in their net income, including 29% of those in the 2nd income decile.
+The proposal would raise the net income of 25.1% of South Carolina residents, with gains concentrated among those in the bottom half of the state's income distribution. Additionally, 9.4% of residents would see an increase of over 5% in their net income, including 29% of those in the 2nd income decile.
 
 <iframe src="https://policyengine.github.io/sc-h3492-eitc-calc/winners-by-decile.html" width="100%" height="500" frameborder="0"></iframe>
 
