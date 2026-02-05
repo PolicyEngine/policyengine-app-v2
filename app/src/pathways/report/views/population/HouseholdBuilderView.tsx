@@ -9,8 +9,10 @@ import { LoadingOverlay, Stack, Text } from '@mantine/core';
 import { countryIdToModelName } from '@/adapters/HouseholdAdapter';
 import PathwayView from '@/components/common/PathwayView';
 import HouseholdBuilderForm from '@/components/household/HouseholdBuilderForm';
+import { getTaxYears } from '@/data/static';
 import { useBasicInputFields } from '@/hooks/useBasicInputFields';
 import { useCreateHousehold } from '@/hooks/useCreateHousehold';
+import { useHouseholdMetadataContext } from '@/hooks/useMetadata';
 import { useReportYear } from '@/hooks/useReportYear';
 import { useEntities } from '@/hooks/useStaticMetadata';
 import { RootState } from '@/store';
@@ -24,6 +26,8 @@ interface HouseholdBuilderViewProps {
   countryId: string;
   onSubmitSuccess: (householdId: string, household: Household) => void;
   onBack?: () => void;
+  /** If provided, shows year selector (standalone mode). If not, uses year from context (report mode). */
+  onYearChange?: (year: string) => void;
 }
 
 export default function HouseholdBuilderView({
@@ -31,18 +35,18 @@ export default function HouseholdBuilderView({
   countryId,
   onSubmitSuccess,
   onBack,
+  onYearChange,
 }: HouseholdBuilderViewProps) {
   const { createHousehold, isPending } = useCreateHousehold(population?.label || '');
   const reportYear = useReportYear();
 
   // Get metadata-driven options
   const basicInputFields = useBasicInputFields(countryId);
-  const reduxMetadata = useSelector((state: RootState) => state.metadata);
-  const entities = useEntities(countryId);
-  const { loading, error } = reduxMetadata;
+  const metadata = useHouseholdMetadataContext();
+  const { loading, error } = useSelector((state: RootState) => state.metadata);
 
-  // Merge static entities into metadata so VariableResolver can resolve entity types
-  const metadata = useMemo(() => ({ ...reduxMetadata, entities }), [reduxMetadata, entities]);
+  // Get available years for standalone mode
+  const availableYears = getTaxYears(countryId);
 
   const modelName: TaxBenefitModelName = countryIdToModelName(countryId as 'us' | 'uk');
 
@@ -194,6 +198,7 @@ export default function HouseholdBuilderView({
       <HouseholdBuilderForm
         household={household}
         metadata={metadata}
+        countryId={countryId}
         maritalStatus={maritalStatus}
         numChildren={numChildren}
         basicPersonFields={basicInputFields.person || []}
@@ -202,6 +207,9 @@ export default function HouseholdBuilderView({
         onMaritalStatusChange={handleMaritalStatusChange}
         onNumChildrenChange={handleNumChildrenChange}
         disabled={loading || isPending}
+        year={reportYear}
+        availableYears={onYearChange ? availableYears : undefined}
+        onYearChange={onYearChange}
       />
     </Stack>
   );
