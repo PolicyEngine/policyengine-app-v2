@@ -28,7 +28,8 @@ describe('appTransformers', () => {
 
   test('all apps have valid source URLs', () => {
     apps.forEach((app) => {
-      expect(app.source).toMatch(/^https?:\/\//);
+      // Allow external URLs (https://) or local paths (/assets/)
+      expect(app.source).toMatch(/^(https?:\/\/|\/assets\/)/);
     });
   });
 
