@@ -26,6 +26,7 @@
   },
   "dependencies": {
     "@policyengine/design-system": "^0.1.0",
+    "@vercel/analytics": "^1.6.1",
     "concurrently": "^9.2.1"
   }
 }
