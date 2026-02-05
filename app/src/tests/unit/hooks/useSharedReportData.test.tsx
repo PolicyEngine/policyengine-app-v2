@@ -1,7 +1,7 @@
 import { QueryClient } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { fetchHouseholdById } from '@/api/household';
+import { fetchHouseholdByIdV2 } from '@/api/v2/households';
 import { fetchPolicyById } from '@/api/policy';
 import { fetchReportById } from '@/api/report';
 import { fetchSimulationById } from '@/api/simulation';
@@ -36,8 +36,8 @@ vi.mock('@/api/policy', () => ({
   fetchPolicyById: vi.fn(),
 }));
 
-vi.mock('@/api/household', () => ({
-  fetchHouseholdById: vi.fn(),
+vi.mock('@/api/v2/households', () => ({
+  fetchHouseholdByIdV2: vi.fn(),
 }));
 
 describe('useSharedReportData', () => {
@@ -99,7 +99,7 @@ describe('useSharedReportData', () => {
 
     // Fetches report using reportId from userReport
     expect(fetchReportById).toHaveBeenCalledWith('us', '308');
-    expect(fetchHouseholdById).not.toHaveBeenCalled();
+    expect(fetchHouseholdByIdV2).not.toHaveBeenCalled();
   });
 
   test('given valid shareData then returns user associations from ShareData', async () => {
@@ -170,7 +170,7 @@ describe('useSharedReportData', () => {
       population_id: 'hh-1',
     });
     vi.mocked(fetchPolicyById).mockResolvedValue(MOCK_POLICY_METADATA);
-    vi.mocked(fetchHouseholdById).mockResolvedValue(MOCK_HOUSEHOLD_METADATA);
+    vi.mocked(fetchHouseholdByIdV2).mockResolvedValue(MOCK_HOUSEHOLD_METADATA);
 
     // When
     const { result } = renderHook(() => useSharedReportData(MOCK_HOUSEHOLD_SHARE_DATA), {
@@ -182,7 +182,8 @@ describe('useSharedReportData', () => {
       expect(result.current.isLoading).toBe(false);
     });
 
-    expect(fetchHouseholdById).toHaveBeenCalledWith('uk', 'hh-1');
+    // v2 API doesn't need countryId
+    expect(fetchHouseholdByIdV2).toHaveBeenCalledWith('hh-1');
 
     // User household from ShareData
     expect(result.current.userHouseholds).toHaveLength(1);

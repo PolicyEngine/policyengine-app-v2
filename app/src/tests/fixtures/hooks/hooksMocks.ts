@@ -148,8 +148,26 @@ export const mockHouseholdCreationPayload: Household = {
   household: {},
 };
 
+// Response from the old wrapper - returns { householdId }
 export const mockCreateHouseholdResponse = {
   householdId: TEST_IDS.HOUSEHOLD_ID,
+};
+
+// Response from v2 API - returns full household with id
+export const mockCreateHouseholdV2Response: Household = {
+  id: TEST_IDS.HOUSEHOLD_ID,
+  tax_benefit_model_name: 'policyengine_us',
+  year: parseInt(CURRENT_YEAR, 10),
+  people: [
+    {
+      age: TEST_VALUES.AGE,
+    },
+  ],
+  tax_unit: {},
+  family: {},
+  spm_unit: {},
+  marital_unit: {},
+  household: {},
 };
 
 // ============= MOCK FUNCTIONS =============

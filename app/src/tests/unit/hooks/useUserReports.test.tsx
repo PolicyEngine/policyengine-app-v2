@@ -5,7 +5,7 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import * as householdApi from '@/api/household';
+import * as householdApi from '@/api/v2/households';
 import * as policyApi from '@/api/policy';
 import * as reportApi from '@/api/report';
 import * as simulationApi from '@/api/simulation';
@@ -163,7 +163,7 @@ describe('useUserReports', () => {
       return Promise.reject(new Error(ERROR_MESSAGES.POLICY_NOT_FOUND(id)));
     });
 
-    vi.spyOn(householdApi, 'fetchHouseholdById').mockImplementation((_country, id) => {
+    vi.spyOn(householdApi, 'fetchHouseholdByIdV2').mockImplementation((id) => {
       if (id === TEST_HOUSEHOLD_ID) {
         return Promise.resolve(mockHousehold1);
       }
@@ -590,7 +590,7 @@ describe('useUserReportById', () => {
       }
       return Promise.reject(new Error(ERROR_MESSAGES.POLICY_NOT_FOUND(id)));
     });
-    vi.spyOn(householdApi, 'fetchHouseholdById').mockResolvedValue(mockHousehold1);
+    vi.spyOn(householdApi, 'fetchHouseholdByIdV2').mockResolvedValue(mockHousehold1);
 
     // Setup association mocks
     (useSimulationAssociationsByUser as any).mockReturnValue({

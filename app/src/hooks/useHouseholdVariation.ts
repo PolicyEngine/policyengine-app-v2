@@ -4,12 +4,12 @@
  * Fetches household variation data across an earnings range using the
  * calculate-full endpoint with axes parameter to get 401-point arrays.
  *
- * Works with the v2 Alpha household format.
+ * Uses the v2 Alpha API directly.
  */
 
 import { useQuery } from '@tanstack/react-query';
 import { modelNameToCountryId } from '@/adapters/HouseholdAdapter';
-import { fetchHouseholdById } from '@/api/household';
+import { fetchHouseholdByIdV2 } from '@/api/v2/households';
 import { fetchHouseholdVariation } from '@/api/householdVariation';
 import { v1ResponseToHousehold } from '@/api/legacyConversion';
 import { householdVariationKeys } from '@/libs/queryKeys';
@@ -49,8 +49,8 @@ export function useHouseholdVariation({
   return useQuery({
     queryKey: householdVariationKeys.byParams(householdId, policyId, String(year), countryId),
     queryFn: async () => {
-      // Step 1: Fetch household from API (already in v2 format)
-      const household = await fetchHouseholdById(countryId, householdId);
+      // Step 1: Fetch household from API using v2 alpha
+      const household = await fetchHouseholdByIdV2(householdId);
 
       // Step 2: Build axes configuration for variation
       const householdWithAxes = buildHouseholdVariationAxes(household);

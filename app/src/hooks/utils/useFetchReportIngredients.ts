@@ -12,7 +12,7 @@
  */
 
 import { PolicyAdapter, ReportAdapter, SimulationAdapter } from '@/adapters';
-import { fetchHouseholdById } from '@/api/household';
+import { fetchHouseholdByIdV2 } from '@/api/v2/households';
 import { fetchPolicyById } from '@/api/policy';
 import { fetchReportById } from '@/api/report';
 import { fetchSimulationById } from '@/api/simulation';
@@ -217,7 +217,7 @@ export function useFetchReportIngredients(
 
   const householdResults = useParallelQueries<Household>(isEnabled ? householdIds : [], {
     queryKey: householdKeys.byId,
-    queryFn: (id) => fetchHouseholdById(country, id),
+    queryFn: (id) => fetchHouseholdByIdV2(id),
     enabled: isEnabled && householdIds.length > 0,
     staleTime: 5 * 60 * 1000,
   });
