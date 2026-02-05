@@ -1,18 +1,21 @@
 /**
- * Household - The canonical household data structure for API v2 Alpha
+ * Household - The canonical household data structure for API v2 Alpha storage
  *
- * This represents the household data structure used for simulations,
- * matching the API v2 Alpha format exactly:
+ * This represents the household data structure used for storage,
+ * matching the API v2 Alpha HouseholdCreate format:
  * - People are plain variable dicts (no person_id, name, or membership fields)
- * - Entity groups are single flat dicts (not arrays)
+ * - Entity groups are single flat dicts (one entity per type for storage)
  * - The API generates IDs and membership server-side during calculation
  * - People are identified by array position + is_tax_unit_dependent (US) or age (UK)
+ *
+ * Note: The /household/calculate endpoint uses arrays for entity groups to support
+ * batch processing. The conversion to arrays happens in HouseholdAdapter.toCalculatePayload().
  */
 
 export type TaxBenefitModelName = 'policyengine_uk' | 'policyengine_us';
 
 /**
- * Main Household interface matching API v2 Alpha HouseholdCalculateRequest
+ * Main Household interface matching API v2 Alpha HouseholdCreate (storage format)
  */
 export interface Household {
   /** Job ID from API v2 (only present after calculation) */

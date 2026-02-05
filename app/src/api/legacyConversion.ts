@@ -4,9 +4,9 @@
  * This module contains all conversion logic needed to communicate with the
  * still-live API v1 endpoints while the app uses v2 Alpha format internally.
  *
- * v2 Alpha format:
+ * v2 Alpha storage format:
  * - People are plain variable dicts (no person_id, name, or membership fields)
- * - Entity groups are single flat dicts (not arrays)
+ * - Entity groups are single flat dicts (one entity per type)
  * - People identified by array index
  *
  * v1 format:
@@ -62,7 +62,7 @@ export function v1ResponseToHousehold(
     household.people.push(person);
   }
 
-  // Convert entity groups: extract first entity as a single dict with flat values
+  // Convert entity groups: extract first entity as single dict with flat values
   if (countryId === 'us') {
     household.tax_unit = convertV1EntityToDict(data.tax_units, simulationYear);
     household.family = convertV1EntityToDict(data.families, simulationYear);
@@ -121,7 +121,7 @@ export function householdToV1Request(household: Household): Record<string, any> 
     result.people[personKey] = personData;
   }
 
-  // Convert entity groups: single dict → v1 named object with members
+  // Convert entity dicts → v1 named object with members
   if (countryId === 'us') {
     result.tax_units = convertDictToV1Entity(household.tax_unit, 'tax_unit', personNames, year);
     result.families = convertDictToV1Entity(household.family, 'family', personNames, year);
@@ -162,8 +162,8 @@ export function householdToV1CreationPayload(household: Household): {
 
 /**
  * Convert a v1 entity group to a single flat dict.
- * Takes the first entity (there's always only one in the app's usage),
- * extracts flat values (un-year-keyed), and drops members/id fields.
+ * Extracts flat values (un-year-keyed), and drops members/id fields.
+ * Uses the first entity if multiple exist in v1 format.
  */
 function convertV1EntityToDict(
   v1Group: Record<string, any> | undefined,
@@ -178,7 +178,7 @@ function convertV1EntityToDict(
     return {};
   }
 
-  // Take the first entity
+  // Convert first entity to a flat dict
   const v1Entity = entries[0] as Record<string, any>;
   const dict: Record<string, any> = {};
 
@@ -202,7 +202,7 @@ function convertV1EntityToDict(
 }
 
 /**
- * Convert a single dict entity to v1 format (named object with members).
+ * Convert an entity dict to v1 format (named object with members).
  * All people are members of every entity (server handles assignment).
  */
 function convertDictToV1Entity(
@@ -217,7 +217,7 @@ function convertDictToV1Entity(
     members: personNames,
   };
 
-  // Convert entity variables to year-keyed format
+  // Convert entity's variables to year-keyed format
   if (entity) {
     for (const [key, value] of Object.entries(entity)) {
       if (value === undefined) {

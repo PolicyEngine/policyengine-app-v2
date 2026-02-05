@@ -5,7 +5,7 @@
  * The main endpoint is POST /household/calculate which accepts the household
  * directly (no nested data wrapper).
  *
- * Entity groups are single flat dicts (not arrays).
+ * Entity groups are arrays of flat dicts (supporting multiple entities).
  */
 
 import { Household, HouseholdPerson, TaxBenefitModelName } from '@/types/ingredients/Household';
@@ -14,7 +14,7 @@ import { Household, HouseholdPerson, TaxBenefitModelName } from '@/types/ingredi
  * Payload for creating a household calculation job
  * POST /household/calculate
  *
- * Entity groups are single dicts matching API v2 Alpha HouseholdCalculateRequest.
+ * Entity groups are arrays of dicts matching API v2 Alpha HouseholdCalculateRequest.
  */
 export interface HouseholdCalculatePayload {
   /** Which country's tax-benefit model to use */
@@ -26,23 +26,23 @@ export interface HouseholdCalculatePayload {
   /** Array of people in the household */
   people: HouseholdPerson[];
 
-  /** US: Tax filing unit (single dict) */
-  tax_unit?: Record<string, any>;
+  /** US: Tax filing units (array of dicts) */
+  tax_unit?: Record<string, any>[];
 
-  /** US: Family unit (single dict) */
-  family?: Record<string, any>;
+  /** US: Family units (array of dicts) */
+  family?: Record<string, any>[];
 
-  /** US: SPM unit (single dict) */
-  spm_unit?: Record<string, any>;
+  /** US: SPM units (array of dicts) */
+  spm_unit?: Record<string, any>[];
 
-  /** US: Marital unit (single dict) */
-  marital_unit?: Record<string, any>;
+  /** US: Marital units (array of dicts) */
+  marital_unit?: Record<string, any>[];
 
-  /** Physical household unit (single dict) */
-  household?: Record<string, any>;
+  /** Physical household units (array of dicts) */
+  household?: Record<string, any>[];
 
-  /** UK: Benefit unit (single dict) */
-  benunit?: Record<string, any>;
+  /** UK: Benefit units (array of dicts) */
+  benunit?: Record<string, any>[];
 
   /** Optional policy ID for reform scenario */
   policy_id?: string;
@@ -61,7 +61,12 @@ export interface HouseholdImpactPayload extends HouseholdCalculatePayload {
 }
 
 /**
- * Convert a Household to an API calculation payload
+ * Convert a Household (storage format with single dicts) to an API calculation payload
+ * (calculation format with arrays).
+ *
+ * The /household/calculate endpoint expects arrays for entity groups to support
+ * batch processing of multiple households. For single household calculations,
+ * we wrap each entity dict in an array.
  */
 export function householdToCalculatePayload(
   household: Household,
@@ -74,24 +79,24 @@ export function householdToCalculatePayload(
     people: household.people,
   };
 
-  // Add entity dicts if present
+  // Wrap single entity dicts in arrays for the calculation endpoint
   if (household.tax_unit) {
-    payload.tax_unit = household.tax_unit;
+    payload.tax_unit = [household.tax_unit];
   }
   if (household.family) {
-    payload.family = household.family;
+    payload.family = [household.family];
   }
   if (household.spm_unit) {
-    payload.spm_unit = household.spm_unit;
+    payload.spm_unit = [household.spm_unit];
   }
   if (household.marital_unit) {
-    payload.marital_unit = household.marital_unit;
+    payload.marital_unit = [household.marital_unit];
   }
   if (household.household) {
-    payload.household = household.household;
+    payload.household = [household.household];
   }
   if (household.benunit) {
-    payload.benunit = household.benunit;
+    payload.benunit = [household.benunit];
   }
 
   // Add optional IDs

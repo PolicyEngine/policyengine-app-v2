@@ -1,7 +1,7 @@
 /**
  * HouseholdValidation - Validation utilities for API v2 Alpha household structure
  *
- * Entity groups are single flat dicts (not arrays).
+ * Entity groups are single flat dicts (one entity per type).
  * People are plain variable dicts (no person_id, name, or membership fields).
  * The API handles entity-to-person assignment server-side.
  */
@@ -130,14 +130,14 @@ export const HouseholdValidation = {
       if (!household.tax_unit) {
         warnings.push({
           code: 'NO_TAX_UNIT',
-          message: 'US households with people typically have a tax_unit dict',
+          message: 'US households with people typically have a tax_unit',
           field: 'tax_unit',
         });
       }
       if (!household.household) {
         warnings.push({
           code: 'NO_HOUSEHOLD_UNIT',
-          message: 'US households with people typically have a household dict',
+          message: 'US households with people typically have a household',
           field: 'household',
         });
       }
