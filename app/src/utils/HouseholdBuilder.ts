@@ -1,11 +1,14 @@
 /**
- * HouseholdBuilder - Fluent API for constructing households in API v2 Alpha format
+ * HouseholdBuilder - Fluent API for constructing households in API v2 Alpha storage format
  *
- * This builder creates households matching the API v2 Alpha HouseholdCalculateRequest:
+ * This builder creates households matching the API v2 Alpha HouseholdCreate (storage format):
  * - People are plain variable dicts (no person_id, name, or membership fields)
- * - Entity groups are single flat dicts (not arrays)
+ * - Entity groups are single flat dicts (one entity per type)
  * - The API generates IDs and membership server-side
  * - People are identified by array index
+ *
+ * Note: The /household/calculate endpoint uses arrays for entity groups. The conversion
+ * from single dicts to arrays happens in householdToCalculatePayload().
  *
  * Example usage:
  *   const builder = new HouseholdBuilder('policyengine_us', 2025);
@@ -184,7 +187,7 @@ export class HouseholdBuilder {
   ): HouseholdBuilder {
     const entity = this.household[entityType as keyof Household] as Record<string, any> | undefined;
     if (!entity || typeof entity !== 'object' || Array.isArray(entity)) {
-      throw new Error(`Entity ${entityType} not found or is not a dict`);
+      throw new Error(`Entity ${entityType} not found or is not an object`);
     }
     entity[variableName] = value;
     return this;

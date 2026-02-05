@@ -237,12 +237,13 @@ describe('HouseholdAdapter', () => {
     test('given household without policy or dynamic ids then creates basic payload', () => {
       const result = HouseholdAdapter.toCalculatePayload(mockUSHousehold);
 
+      // toCalculatePayload wraps single entity dicts in arrays for the calculation API
       expect(result).toEqual({
         tax_benefit_model_name: 'policyengine_us',
         year: TEST_YEAR,
         people: mockUSHousehold.people,
-        tax_unit: mockUSHousehold.tax_unit,
-        household: mockUSHousehold.household,
+        tax_unit: [mockUSHousehold.tax_unit],
+        household: [mockUSHousehold.household],
       });
       expect(result.policy_id).toBeUndefined();
       expect(result.dynamic_id).toBeUndefined();

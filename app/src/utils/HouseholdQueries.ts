@@ -1,7 +1,7 @@
 /**
  * HouseholdQueries - Query utilities for API v2 Alpha household structure
  *
- * Entity groups are single flat dicts (not arrays).
+ * Entity groups are single flat dicts (one entity per type).
  * People are identified by array index (no person_id or name).
  * All people belong to every entity group (server handles membership).
  */
@@ -126,7 +126,8 @@ export function setPersonVariable(
 
 /**
  * Get entity dict by entity type.
- * For 'person' returns the people array; for others returns the single dict.
+ * For 'person' returns undefined; callers should use getAllPeople.
+ * For others returns the entity dict.
  */
 export function getEntityByType(
   household: Household,
@@ -140,7 +141,22 @@ export function getEntityByType(
 }
 
 /**
- * Get a variable from an entity (single dict access, no entityId needed)
+ * Get all entities by entity type.
+ * For 'person' returns the people array; for others returns an array with the single entity.
+ */
+export function getAllEntitiesByType(
+  household: Household,
+  entityType: EntityType
+): Record<string, any>[] {
+  if (entityType === 'person') {
+    return household.people;
+  }
+  const entity = household[entityType as keyof Household] as Record<string, any> | undefined;
+  return entity ? [entity] : [];
+}
+
+/**
+ * Get a variable from an entity
  */
 export function getEntityVariable(
   household: Household,
@@ -195,21 +211,21 @@ export function isUKHousehold(household: Household): boolean {
 }
 
 /**
- * Get the state FIPS code (US only)
+ * Get the state FIPS code (US only) from household entity
  */
 export function getStateFips(household: Household): number | undefined {
   return household.household?.state_fips;
 }
 
 /**
- * Get the state code (US only)
+ * Get the state code (US only) from tax_unit entity
  */
 export function getStateCode(household: Household): string | undefined {
   return household.tax_unit?.state_code;
 }
 
 /**
- * Get the region (UK only)
+ * Get the region (UK only) from household entity
  */
 export function getRegion(household: Household): string | undefined {
   return household.household?.region;

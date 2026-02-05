@@ -73,6 +73,7 @@ export const mockHouseholdCalculatePayloadUK: HouseholdCalculatePayload = {
 };
 
 // Large household payload for testing complex data handling
+// Note: HouseholdCalculatePayload uses arrays for entity groups (calculation format)
 export const mockLargeHouseholdPayload: HouseholdCalculatePayload = {
   tax_benefit_model_name: 'policyengine_us',
   year: parseInt(CURRENT_YEAR, 10),
@@ -94,7 +95,7 @@ export const mockLargeHouseholdPayload: HouseholdCalculatePayload = {
       is_tax_unit_dependent: true,
     },
   ],
-  tax_unit: {},
+  tax_unit: [{}],
 };
 
 export const mockCreateHouseholdResponse = {

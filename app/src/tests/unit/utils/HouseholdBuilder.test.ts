@@ -348,7 +348,7 @@ describe('HouseholdBuilder', () => {
     test('given invalid entity when setEntityVariable then throws error', () => {
       // When/Then
       expect(() => builder.setEntityVariable('nonexistent', 'var', 'value')).toThrow(
-        'Entity nonexistent not found or is not a dict'
+        'Entity nonexistent not found or is not an object'
       );
     });
   });
