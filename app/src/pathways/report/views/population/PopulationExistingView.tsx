@@ -9,7 +9,7 @@
 import { useState } from 'react';
 import { Text } from '@mantine/core';
 import PathwayView from '@/components/common/PathwayView';
-import { MOCK_USER_ID } from '@/constants';
+import { useUserId } from '@/hooks/useUserId';
 import {
   isHouseholdMetadataWithAssociation,
   UserHouseholdMetadataWithAssociation,
@@ -33,7 +33,7 @@ export default function PopulationExistingView({
   onBack,
   onCancel,
 }: PopulationExistingViewProps) {
-  const userId = MOCK_USER_ID.toString();
+  const userId = useUserId();
 
   // Fetch household populations only
   // Geographic populations are no longer stored as user associations

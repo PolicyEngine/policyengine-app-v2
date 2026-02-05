@@ -8,14 +8,15 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { modelNameToCountryId } from '@/adapters/HouseholdAdapter';
 import { createHouseholdV2 } from '@/api/v2/households';
-import { MOCK_USER_ID } from '@/constants';
 import { householdKeys } from '@/libs/queryKeys';
 import { Household } from '@/types/ingredients/Household';
 import { useCreateHouseholdAssociation } from './useUserHousehold';
+import { useUserId } from './useUserId';
 
 export function useCreateHousehold(householdLabel?: string) {
   const queryClient = useQueryClient();
   const createAssociation = useCreateHouseholdAssociation();
+  const userId = useUserId();
 
   const mutation = useMutation({
     mutationFn: async (household: Household) => {
@@ -26,8 +27,6 @@ export function useCreateHousehold(householdLabel?: string) {
       try {
         queryClient.invalidateQueries({ queryKey: householdKeys.all });
 
-        // Create association with current user (or anonymous for session storage)
-        const userId = MOCK_USER_ID; // TODO: Replace with actual user ID retrieval logic
         const countryId = modelNameToCountryId(variables.tax_benefit_model_name);
 
         await createAssociation.mutateAsync({

@@ -28,8 +28,11 @@ vi.mock('@/api/v2/households', () => ({
 }));
 
 vi.mock('@/constants', () => ({
-  MOCK_USER_ID: 'test-user-123',
   CURRENT_YEAR: '2025',
+}));
+
+vi.mock('@/hooks/useUserId', () => ({
+  useUserId: () => 'test-user-123',
 }));
 
 vi.mock('@/libs/queryKeys', () => ({
