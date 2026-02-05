@@ -213,6 +213,44 @@ export const SAMPLE_RESPONSES = {
   PARAMETER_VALUES: createMockParameterValues(3),
 } as const;
 
+// Household factory types
+import type { HouseholdV2Response } from '@/api/v2/households';
+import type { Household } from '@/types/ingredients/Household';
+
+// Household factory - v2 API response format
+export function createMockHouseholdV2Response(
+  overrides: Partial<HouseholdV2Response> = {}
+): HouseholdV2Response {
+  return {
+    id: 'hh-test-uuid-12345',
+    tax_benefit_model_name: 'policyengine_us',
+    year: 2025,
+    label: null,
+    people: [{ age: 30, employment_income: 50000 }],
+    tax_unit: { state_code: 'CA' },
+    family: null,
+    spm_unit: null,
+    marital_unit: null,
+    household: { state_fips: 6 },
+    benunit: null,
+    created_at: '2025-01-15T10:00:00Z',
+    updated_at: '2025-01-15T10:00:00Z',
+    ...overrides,
+  };
+}
+
+// Household factory - app internal format
+export function createMockHousehold(overrides: Partial<Household> = {}): Household {
+  return {
+    tax_benefit_model_name: 'policyengine_us',
+    year: 2025,
+    people: [{ age: 30, employment_income: 50000 }],
+    tax_unit: { state_code: 'CA' },
+    household: { state_fips: 6 },
+    ...overrides,
+  };
+}
+
 // Expected API endpoints
 export const API_ENDPOINTS = {
   TAX_BENEFIT_MODELS: `${API_V2_BASE_URL}/tax-benefit-models/`,
@@ -225,4 +263,6 @@ export const API_ENDPOINTS = {
     `${API_V2_BASE_URL}/datasets/?tax_benefit_model_name=${modelName}`,
   PARAMETER_VALUES: (parameterId: string, policyId: string) =>
     `${API_V2_BASE_URL}/parameter-values/?parameter_id=${parameterId}&policy_id=${policyId}`,
+  HOUSEHOLDS: `${API_V2_BASE_URL}/households/`,
+  HOUSEHOLD_BY_ID: (id: string) => `${API_V2_BASE_URL}/households/${id}`,
 } as const;

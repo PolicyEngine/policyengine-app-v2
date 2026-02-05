@@ -24,3 +24,15 @@ export { fetchDatasets } from './datasets';
 
 // Regions
 export { fetchRegions, fetchRegionByCode, type V2RegionMetadata } from './regions';
+
+// Households (v2 Alpha CRUD)
+export {
+  createHouseholdV2,
+  fetchHouseholdByIdV2,
+  listHouseholdsV2,
+  deleteHouseholdV2,
+  householdToV2Request,
+  v2ResponseToHousehold,
+  type HouseholdV2Response,
+  type HouseholdV2CreateRequest,
+} from './households';
