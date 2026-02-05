@@ -10,9 +10,9 @@ import { Household } from '@/types/ingredients/Household';
  * Test constants for strategy timing and progress
  */
 export const STRATEGY_TEST_CONSTANTS = {
-  // Refetch intervals
+  // Refetch intervals (both strategies now use 1s polling)
   SOCIETY_WIDE_REFETCH_INTERVAL_MS: 1000,
-  HOUSEHOLD_REFETCH_INTERVAL_MS: 500,
+  HOUSEHOLD_REFETCH_INTERVAL_MS: 1000,
 
   // Duration estimates
   HOUSEHOLD_ESTIMATED_DURATION_MS: 60000,
@@ -73,10 +73,6 @@ export const mockHouseholdSuccessResponse = (): Household => mockHouseholdResult
  * Mock fetch functions
  */
 export const createMockFetchSocietyWideCalculation = () => {
-  return vi.fn();
-};
-
-export const createMockFetchHouseholdCalculation = () => {
   return vi.fn();
 };
 

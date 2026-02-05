@@ -1,5 +1,6 @@
 import { countryIds } from '@/libs/countries';
-import { fetchHouseholdCalculation } from './householdCalculation';
+import { calculateHouseholdV2Alpha } from './v2/householdCalculation';
+import { fetchHouseholdByIdV2 } from './v2/households';
 import {
   fetchSocietyWideCalculation,
   SocietyWideCalculationParams,
@@ -28,7 +29,9 @@ export async function fetchCalculationWithMeta(meta: CalculationMeta) {
   if (meta.type === 'household') {
     const policyId = meta.policyIds.reform || meta.policyIds.baseline;
     try {
-      const result = await fetchHouseholdCalculation(meta.countryId, meta.populationId, policyId);
+      // Fetch household then calculate using v2 alpha API
+      const household = await fetchHouseholdByIdV2(meta.populationId);
+      const result = await calculateHouseholdV2Alpha(household, policyId);
       return result;
     } catch (error) {
       console.error('[fetchCalculationWithMeta] Household calculation failed:', error);

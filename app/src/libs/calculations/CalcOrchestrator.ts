@@ -9,8 +9,7 @@ import { ResultPersister } from './ResultPersister';
  *
  * RESPONSIBILITY:
  * - Execute calculation query
- * - For household: Await result (no polling)
- * - For economy: Start polling for progress
+ * - Start polling for progress (both household and economy use async APIs)
  * - Persist result when complete
  * - Notify manager when done
  *
@@ -36,23 +35,17 @@ export class CalcOrchestrator {
   /**
    * Start a calculation
    *
-   * CRITICAL FLOW DIFFERENCE:
-   *
-   * HOUSEHOLD (synchronous):
-   *   1. Execute queryFn() → BLOCKS for 30-45s
-   *   2. Returns status='complete' immediately
-   *   3. Set in cache
-   *   4. Persist result
-   *   5. Cleanup (no polling needed)
-   *
-   * ECONOMY (asynchronous):
-   *   1. Execute queryFn() → Returns immediately
-   *   2. Returns status='computing'
-   *   3. Set in cache
-   *   4. Start polling (QueryObserver)
-   *   5. Poll every 2s until complete
+   * UNIFIED ASYNC FLOW (both household and economy):
+   *   1. Set initial 'pending' status in cache (for immediate UI feedback)
+   *   2. Execute queryFn() → Creates job, returns 'pending' status
+   *   3. Set result in cache
+   *   4. Start polling (QueryObserver) every ~1s
+   *   5. Poll until complete/error
    *   6. Persist result
    *   7. Cleanup
+   *
+   * Note: Both household (v2 alpha) and economy use async job-based APIs.
+   * The strategy handles job creation and status polling internally.
    */
   async startCalculation(config: CalcStartConfig): Promise<void> {
     // Build metadata and params
@@ -84,9 +77,9 @@ export class CalcOrchestrator {
     // Set result in cache
     this.queryClient.setQueryData(queryOptions.queryKey, initialStatus);
 
-    // CRITICAL DECISION POINT: Household vs Economy
+    // Check if calculation completed immediately (rare case)
     if (initialStatus.status === 'complete') {
-      // HOUSEHOLD CASE: Calculation completed synchronously
+      // Calculation completed synchronously (skip polling)
       await this.resultPersister.persist(initialStatus, config.countryId, config.year);
 
       // Notify manager to cleanup this orchestrator
@@ -97,15 +90,14 @@ export class CalcOrchestrator {
       return;
     }
 
-    // ECONOMY CASE: Start polling for progress
+    // Start polling for progress (both household and economy use async APIs)
     this.startPolling(queryOptions, metadata, config.countryId, config.calcId, config.year);
   }
 
   /**
    * Start polling for calculation updates
    *
-   * ⚠️  ONLY FOR ECONOMY CALCULATIONS
-   * Household calculations never reach this method because they return 'complete' immediately.
+   * Used by both household and economy calculations (both use async job APIs).
    *
    * @param queryOptions - Query configuration with refetchInterval
    * @param metadata - Calculation metadata
@@ -124,7 +116,7 @@ export class CalcOrchestrator {
   ): void {
     const { queryKey, queryFn, refetchInterval } = queryOptions;
 
-    // SAFETY CHECK: Should never happen since household returns 'complete' immediately
+    // SAFETY CHECK: Should never happen since both strategies now use polling
     if (refetchInterval === false) {
       console.error(
         '[CalcOrchestrator] Unexpected: startPolling() called with refetchInterval=false'
