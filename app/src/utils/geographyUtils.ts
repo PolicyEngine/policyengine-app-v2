@@ -1,6 +1,7 @@
 import type { Geography } from '@/types/ingredients/Geography';
 import { MetadataState } from '@/types/metadata';
 import { UK_REGION_TYPES } from '@/types/regionTypes';
+import { findPlaceFromRegionString, getPlaceDisplayName } from '@/utils/regionStrategies';
 
 /**
  * Extracts the UK region type from a Geography object based on its geographyId.
@@ -69,6 +70,16 @@ export function getCountryLabel(countryCode: string): string {
 }
 
 export function getRegionLabel(regionCode: string, metadata: MetadataState): string {
+  // Handle US place (city) format: "place/NY-51000"
+  if (regionCode.startsWith('place/')) {
+    const place = findPlaceFromRegionString(regionCode);
+    if (place) {
+      return getPlaceDisplayName(place.name);
+    }
+    // Fallback: return the code after the prefix
+    return regionCode.replace('place/', '');
+  }
+
   // regionCode now contains the FULL prefixed value for UK regions
   // e.g., "constituency/Sheffield Central" or "country/england"
   // For US: just the state code like "ca"
@@ -111,8 +122,13 @@ export function getRegionTypeLabel(
   regionCode: string,
   metadata: MetadataState
 ): string {
-  // US strategy: check metadata to determine if it's a state or congressional district
+  // US strategy: check metadata to determine if it's a state, congressional district, or place
   if (countryId === 'us') {
+    // Check for place (city) format first
+    if (regionCode.startsWith('place/')) {
+      return 'City';
+    }
+
     const region = metadata.economyOptions.region.find(
       (r) =>
         r.name === regionCode ||
