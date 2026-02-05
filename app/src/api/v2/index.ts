@@ -36,3 +36,16 @@ export {
   type HouseholdV2Response,
   type HouseholdV2CreateRequest,
 } from './households';
+
+// Household Calculation (v2 Alpha async jobs)
+export {
+  createHouseholdCalculationJobV2,
+  getHouseholdCalculationJobStatusV2,
+  pollHouseholdCalculationJobV2,
+  calculationResultToHousehold,
+  calculateHouseholdV2Alpha,
+  type HouseholdJobStatus,
+  type HouseholdJobResponse,
+  type HouseholdJobStatusResponse,
+  type HouseholdCalculationResult,
+} from './householdCalculation';
