@@ -1,48 +1,33 @@
 /**
  * Household API - CRUD operations for household data
  *
- * Internally uses v2 Alpha format (array-based with flat values).
- * Communicates with API v1 endpoints using conversion at the boundary.
+ * This module provides the public API for household CRUD operations.
+ * Internally uses API v2 Alpha endpoints directly.
  */
 
-import { HouseholdAdapter, modelNameToCountryId } from '@/adapters/HouseholdAdapter';
-import { BASE_URL } from '@/constants';
+import { HouseholdAdapter } from '@/adapters/HouseholdAdapter';
 import { Household } from '@/types/ingredients/Household';
 import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
 import { HouseholdCalculatePayload } from '@/types/payloads';
-import { householdToV1CreationPayload, v1ResponseToHousehold } from './legacyConversion';
+import {
+  createHouseholdV2,
+  deleteHouseholdV2,
+  fetchHouseholdByIdV2,
+  listHouseholdsV2,
+} from './v2/households';
 
 /**
  * Fetch a household by ID
- * Returns household in v2 format, converting from v1 API response
+ * Returns household in v2 format from API v2 Alpha
+ *
+ * Note: countryId parameter is kept for backward compatibility but is no longer
+ * needed since v2 alpha stores households with their model name.
  */
 export async function fetchHouseholdById(
-  countryId: string,
+  _countryId: string,
   householdId: string
 ): Promise<Household> {
-  const url = `${BASE_URL}/${countryId}/household/${householdId}`;
-
-  const res = await fetch(url, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-    },
-  });
-
-  if (!res.ok) {
-    throw new Error(`Failed to fetch household ${householdId}`);
-  }
-
-  const json = await res.json();
-  const result = json.result;
-
-  // v1 API returns { id, country_id, household_json, ... }
-  // Convert to v2 format
-  const household = v1ResponseToHousehold(result.household_json, countryId as 'us' | 'uk');
-  household.id = String(result.id);
-  household.label = result.label ?? undefined;
-  return household;
+  return fetchHouseholdByIdV2(householdId);
 }
 
 /**
@@ -58,45 +43,65 @@ export async function fetchHouseholdMetadataById(
 
 /**
  * Create a new household in the API
- * Accepts v2 format, converts to v1 for the current API
+ * Accepts Household format, creates via v2 alpha API
  */
 export async function createHousehold(household: Household): Promise<{ householdId: string }> {
-  const countryId = modelNameToCountryId(household.tax_benefit_model_name);
-  const url = `${BASE_URL}/${countryId}/household`;
-
-  const legacyPayload = householdToV1CreationPayload(household);
-
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(legacyPayload),
-  });
-
-  if (!res.ok) {
-    throw new Error('Failed to create household');
-  }
-
-  const json = await res.json();
-  return { householdId: String(json.result.household_id) };
+  const created = await createHouseholdV2(household);
+  return { householdId: created.id! };
 }
 
 /**
  * Create a household using payload format
+ * Converts HouseholdCalculatePayload to Household and creates via v2 alpha
+ *
+ * Note: HouseholdCalculatePayload uses arrays for entity groups, but the storage
+ * API uses single dicts. We extract the first element from each array.
  */
 export async function createHouseholdFromPayload(
   payload: HouseholdCalculatePayload
 ): Promise<{ householdId: string }> {
+  // Convert from calculation format (arrays) to storage format (single dicts)
   const household: Household = {
     tax_benefit_model_name: payload.tax_benefit_model_name,
     year: payload.year,
     people: payload.people,
-    tax_unit: payload.tax_unit,
-    family: payload.family,
-    spm_unit: payload.spm_unit,
-    marital_unit: payload.marital_unit,
-    household: payload.household,
-    benunit: payload.benunit,
+    tax_unit: payload.tax_unit?.[0],
+    family: payload.family?.[0],
+    spm_unit: payload.spm_unit?.[0],
+    marital_unit: payload.marital_unit?.[0],
+    household: payload.household?.[0],
+    benunit: payload.benunit?.[0],
   };
 
   return createHousehold(household);
+}
+
+/**
+ * List households with optional filtering
+ */
+export async function listHouseholds(options?: {
+  countryId?: string;
+  limit?: number;
+  offset?: number;
+}): Promise<Household[]> {
+  // Convert countryId to model name for v2 alpha API
+  let tax_benefit_model_name: 'policyengine_us' | 'policyengine_uk' | undefined;
+  if (options?.countryId === 'us') {
+    tax_benefit_model_name = 'policyengine_us';
+  } else if (options?.countryId === 'uk') {
+    tax_benefit_model_name = 'policyengine_uk';
+  }
+
+  return listHouseholdsV2({
+    tax_benefit_model_name,
+    limit: options?.limit,
+    offset: options?.offset,
+  });
+}
+
+/**
+ * Delete a household by ID
+ */
+export async function deleteHousehold(householdId: string): Promise<void> {
+  return deleteHouseholdV2(householdId);
 }
