@@ -1,5 +1,13 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { clearUserId, getUserId, STORAGE_KEYS } from '@/libs/userIdentity';
+
+import {
+  clearMigrationFlag,
+  clearUserId,
+  getUserId,
+  isMigrationComplete,
+  markMigrationComplete,
+  STORAGE_KEYS,
+} from '@/libs/userIdentity';
 
 describe('userIdentity', () => {
   beforeEach(() => {
@@ -79,10 +87,89 @@ describe('userIdentity', () => {
     });
   });
 
+  describe('isMigrationComplete', () => {
+    test('given no migration flag then returns false', () => {
+      // When
+      const result = isMigrationComplete();
+
+      // Then
+      expect(result).toBe(false);
+    });
+
+    test('given migration flag set to true then returns true', () => {
+      // Given
+      localStorage.setItem(STORAGE_KEYS.MIGRATION_COMPLETE, 'true');
+
+      // When
+      const result = isMigrationComplete();
+
+      // Then
+      expect(result).toBe(true);
+    });
+
+    test('given migration flag set to other value then returns false', () => {
+      // Given
+      localStorage.setItem(STORAGE_KEYS.MIGRATION_COMPLETE, 'false');
+
+      // When
+      const result = isMigrationComplete();
+
+      // Then
+      expect(result).toBe(false);
+    });
+  });
+
+  describe('markMigrationComplete', () => {
+    test('given migration not complete then sets flag to true', () => {
+      // When
+      markMigrationComplete();
+
+      // Then
+      expect(localStorage.getItem(STORAGE_KEYS.MIGRATION_COMPLETE)).toBe('true');
+    });
+
+    test('given migration already complete then flag remains true', () => {
+      // Given
+      localStorage.setItem(STORAGE_KEYS.MIGRATION_COMPLETE, 'true');
+
+      // When
+      markMigrationComplete();
+
+      // Then
+      expect(localStorage.getItem(STORAGE_KEYS.MIGRATION_COMPLETE)).toBe('true');
+    });
+  });
+
+  describe('clearMigrationFlag', () => {
+    test('given migration flag exists then removes it', () => {
+      // Given
+      localStorage.setItem(STORAGE_KEYS.MIGRATION_COMPLETE, 'true');
+
+      // When
+      clearMigrationFlag();
+
+      // Then
+      expect(localStorage.getItem(STORAGE_KEYS.MIGRATION_COMPLETE)).toBeNull();
+    });
+
+    test('given migration flag cleared then isMigrationComplete returns false', () => {
+      // Given
+      localStorage.setItem(STORAGE_KEYS.MIGRATION_COMPLETE, 'true');
+
+      // When
+      clearMigrationFlag();
+      const result = isMigrationComplete();
+
+      // Then
+      expect(result).toBe(false);
+    });
+  });
+
   describe('STORAGE_KEYS', () => {
     test('given STORAGE_KEYS then contains expected key names', () => {
       // Then
       expect(STORAGE_KEYS.USER_ID).toBe('policyengine_user_id');
+      expect(STORAGE_KEYS.MIGRATION_COMPLETE).toBe('policyengine_migration_v2_complete');
     });
   });
 });
