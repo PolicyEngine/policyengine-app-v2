@@ -72,8 +72,8 @@ describe('vercel.json configuration', () => {
   });
 
   test('given monorepo setup then root vercel.json exists for website project', () => {
-    // Given - Monorepo uses root vercel.json for policyengine-website project
-    // The policyengine-calculator project uses vercel.calculator.json
+    // Given - Monorepo uses root vercel.json for policyengine-app-v2 project (serves policyengine.org)
+    // The policyengine-calculator project uses calculator/vercel.json (serves app.policyengine.org)
     const rootVercelJsonPath = path.resolve(__dirname, '../../../../../vercel.json');
 
     // When
