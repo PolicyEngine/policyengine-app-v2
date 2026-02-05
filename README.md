@@ -6,8 +6,7 @@ A modern web application for policy analysis and simulation, built with React, T
 
 ### Prerequisites
 
-- Node.js 20 or higher
-- npm
+- Bun 1.0 or higher (https://bun.sh)
 
 ### Installation
 

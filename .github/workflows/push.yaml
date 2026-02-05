@@ -14,26 +14,22 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '24'
-          cache: 'npm'
-          cache-dependency-path: package-lock.json
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
 
       - name: Install dependencies
-        run: npm ci
+        run: bun install --frozen-lockfile
 
       - name: Build design system
-        run: npm run design-system:build
+        run: bun run design-system:build
 
       - name: Check formatting with Prettier
         working-directory: ./app
-        run: npm run prettier
+        run: bun run prettier
 
       - name: Run ESLint
         working-directory: ./app
-        run: npm run eslint
+        run: bun run eslint
 
   typecheck:
     name: Type checking
@@ -43,22 +39,18 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '24'
-          cache: 'npm'
-          cache-dependency-path: package-lock.json
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
 
       - name: Install dependencies
-        run: npm ci
+        run: bun install --frozen-lockfile
 
       - name: Build design system
-        run: npm run design-system:build
+        run: bun run design-system:build
 
       - name: Run TypeScript type checks
         working-directory: ./app
-        run: npm run typecheck
+        run: bun run typecheck
 
   test:
     name: Tests
@@ -68,25 +60,21 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '24'
-          cache: 'npm'
-          cache-dependency-path: package-lock.json
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
 
       - name: Install dependencies
-        run: npm ci
+        run: bun install --frozen-lockfile
 
       - name: Build design system
-        run: npm run design-system:build
+        run: bun run design-system:build
 
       - name: Run design system tests
-        run: npm test --workspace=@policyengine/design-system
+        run: bun run test --filter=@policyengine/design-system
 
       - name: Run app tests
         working-directory: ./app
-        run: npm test
+        run: bun run test
 
   build:
     name: Build
@@ -96,19 +84,15 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '24'
-          cache: 'npm'
-          cache-dependency-path: package-lock.json
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
 
       - name: Install dependencies
-        run: npm ci
+        run: bun install --frozen-lockfile
 
       - name: Build design system
-        run: npm run design-system:build
+        run: bun run design-system:build
 
       - name: Build application
         working-directory: ./app
-        run: npm run build
+        run: bun run build
