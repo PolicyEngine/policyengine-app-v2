@@ -12,7 +12,7 @@ describe('USPlaceSelector', () => {
   });
 
   describe('rendering', () => {
-    test('given no selection then renders select community label', () => {
+    test('given no selection then renders select city label', () => {
       // Given
       const props = createMockProps();
 
@@ -20,7 +20,7 @@ describe('USPlaceSelector', () => {
       render(<USPlaceSelector {...props} />);
 
       // Then
-      expect(screen.getByText('Select community')).toBeInTheDocument();
+      expect(screen.getByText('Select city')).toBeInTheDocument();
     });
 
     test('given no selection then renders state dropdown with placeholder', () => {
@@ -34,7 +34,7 @@ describe('USPlaceSelector', () => {
       expect(screen.getByPlaceholderText('Choose a state')).toBeInTheDocument();
     });
 
-    test('given no state selected then community dropdown is disabled', () => {
+    test('given no state selected then city dropdown is disabled', () => {
       // Given
       const props = createMockProps();
 
@@ -58,7 +58,7 @@ describe('USPlaceSelector', () => {
 
       // Then - The component should show the state selection
       // Since Paterson is in New Jersey, the state dropdown should show New Jersey
-      expect(await screen.findByText('Select community')).toBeInTheDocument();
+      expect(await screen.findByText('Select city')).toBeInTheDocument();
     });
   });
 
@@ -91,12 +91,12 @@ describe('USPlaceSelector', () => {
       render(<USPlaceSelector {...props} />);
 
       // Then - component renders with existing selection
-      expect(screen.getByText('Select community')).toBeInTheDocument();
+      expect(screen.getByText('Select city')).toBeInTheDocument();
     });
   });
 
-  describe('community selection', () => {
-    test('given state is selected then community dropdown becomes enabled', async () => {
+  describe('city selection', () => {
+    test('given state is selected then city dropdown becomes enabled', async () => {
       // Given
       const props = createMockProps({
         selectedPlace: TEST_PLACE_REGIONS.PATERSON_NJ,
@@ -105,8 +105,8 @@ describe('USPlaceSelector', () => {
       // When
       render(<USPlaceSelector {...props} />);
 
-      // Then - community dropdown should be available (not showing "--")
-      expect(screen.getByText('Select community')).toBeInTheDocument();
+      // Then - city dropdown should be available (not showing "--")
+      expect(screen.getByText('Select city')).toBeInTheDocument();
     });
   });
 
@@ -122,7 +122,7 @@ describe('USPlaceSelector', () => {
       expect(screen.getByPlaceholderText('Choose a state')).toBeInTheDocument();
     });
 
-    test('given component renders without state then shows disabled community dropdown', () => {
+    test('given component renders without state then shows disabled city dropdown', () => {
       // Given
       const props = createMockProps();
 
@@ -130,8 +130,8 @@ describe('USPlaceSelector', () => {
       render(<USPlaceSelector {...props} />);
 
       // Then - should show disabled dropdown with "--" placeholder
-      const communityPlaceholder = screen.getByPlaceholderText('--');
-      expect(communityPlaceholder).toBeInTheDocument();
+      const cityPlaceholder = screen.getByPlaceholderText('--');
+      expect(cityPlaceholder).toBeInTheDocument();
     });
   });
 });

@@ -74,11 +74,11 @@ export default function USPlaceSelector({ selectedPlace, onPlaceChange }: USPlac
       </div>
       <div style={{ flex: 2 }}>
         <Text size="sm" fw={500} mb={4}>
-          Select community
+          Select city
         </Text>
         {selectedStateName ? (
           <Select
-            placeholder="Choose a community"
+            placeholder="Choose a city"
             data={placeOptions}
             value={selectedPlace}
             onChange={(val) => {

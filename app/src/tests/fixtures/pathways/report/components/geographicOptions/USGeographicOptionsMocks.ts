@@ -63,6 +63,6 @@ export const RADIO_LABELS = {
   NATIONAL: 'All households nationally',
   STATE: 'All households in a state or federal district',
   CONGRESSIONAL_DISTRICT: 'All households in a congressional district',
-  PLACE: 'All households in a community',
+  PLACE: 'All households in a city',
   HOUSEHOLD: 'Custom household',
 } as const;

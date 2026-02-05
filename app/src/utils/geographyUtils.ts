@@ -70,7 +70,7 @@ export function getCountryLabel(countryCode: string): string {
 }
 
 export function getRegionLabel(regionCode: string, metadata: MetadataState): string {
-  // Handle US place (community) format: "place/NY-51000"
+  // Handle US place (city) format: "place/NY-51000"
   if (regionCode.startsWith('place/')) {
     const place = findPlaceFromRegionString(regionCode);
     if (place) {
@@ -124,9 +124,9 @@ export function getRegionTypeLabel(
 ): string {
   // US strategy: check metadata to determine if it's a state, congressional district, or place
   if (countryId === 'us') {
-    // Check for place (community) format first
+    // Check for place (city) format first
     if (regionCode.startsWith('place/')) {
-      return 'Community';
+      return 'City';
     }
 
     const region = metadata.economyOptions.region.find(

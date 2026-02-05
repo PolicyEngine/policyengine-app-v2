@@ -56,7 +56,7 @@ export default function PopulationLabelView({
       } else if (population.geography.geographyId) {
         const geographyId = population.geography.geographyId;
 
-        // Check if this is a US place (community)
+        // Check if this is a US place (city)
         if (geographyId.startsWith('place/')) {
           const place = findPlaceFromRegionString(geographyId);
           if (place) {
