@@ -43,19 +43,22 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Setup Node.js
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Setup Node.js for npm publish
         uses: actions/setup-node@v4
         with:
           node-version: "22"
 
       - name: Install dependencies
-        run: npm ci
+        run: bun install --frozen-lockfile
 
       - name: Build design system
-        run: npm run build --workspace=@policyengine/design-system
+        run: bun run build --filter=@policyengine/design-system
 
       - name: Run tests
-        run: npm run test --workspace=@policyengine/design-system
+        run: bun run test --filter=@policyengine/design-system
 
       - name: Release
         run: npx semantic-release

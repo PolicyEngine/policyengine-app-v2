@@ -77,6 +77,6 @@ const PolicyEngineLogo = '/assets/logos/policyengine/white.svg';
 
 ## Before Committing
 
-1. Run `cd app && npm run prettier -- --write .` to format
-2. Run `npm run lint` to check for errors
+1. Run `cd app && bun run prettier -- --write .` to format
+2. Run `bun run lint` to check for errors
 3. CI uses `--max-warnings 0` so fix all warnings

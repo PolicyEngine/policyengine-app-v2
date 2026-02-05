@@ -13,28 +13,28 @@ help:
 	@echo "  make deploy     - Build and deploy to GitHub Pages"
 
 install:
-	npm install
+	bun install
 
 dev:
-	npm run dev
+	bun run dev
 
 build:
-	cd app && npm run build-with-types
+	cd app && bun run build-with-types
 
 typecheck:
-	cd app && npm run typecheck
+	cd app && bun run typecheck
 
 test-all:
-	cd app && npm run test-all
+	cd app && bun run test-all
 
 test:
-	cd app && npm run test
+	cd app && bun run test
 
 lint:
-	cd app && npm run lint
+	cd app && bun run lint
 
 format:
-	cd app && npm run prettier:write
+	cd app && bun run prettier:write
 
 clean:
 	rm -rf app/dist app/node_modules node_modules packages/*/node_modules
