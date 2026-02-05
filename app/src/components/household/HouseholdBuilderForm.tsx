@@ -31,6 +31,7 @@ import VariableSearchDropdown from './VariableSearchDropdown';
 export interface HouseholdBuilderFormProps {
   household: Household;
   metadata: any;
+  countryId: string;
   maritalStatus: 'single' | 'married';
   numChildren: number;
   basicPersonFields: string[]; // Basic inputs for person entity (e.g., age, employment_income)
@@ -39,11 +40,18 @@ export interface HouseholdBuilderFormProps {
   onMaritalStatusChange: (status: 'single' | 'married') => void;
   onNumChildrenChange: (num: number) => void;
   disabled?: boolean;
+  /** Current year value */
+  year: string;
+  /** Available years for selection. If provided, shows year selector. */
+  availableYears?: { value: string; label: string }[];
+  /** Called when year changes. Only used when availableYears is provided. */
+  onYearChange?: (year: string) => void;
 }
 
 export default function HouseholdBuilderForm({
   household,
   metadata,
+  countryId,
   maritalStatus,
   numChildren,
   basicPersonFields,
@@ -52,6 +60,9 @@ export default function HouseholdBuilderForm({
   onMaritalStatusChange,
   onNumChildrenChange,
   disabled = false,
+  year,
+  availableYears,
+  onYearChange,
 }: HouseholdBuilderFormProps) {
   // State for custom variables
   const [selectedVariables, setSelectedVariables] = useState<string[]>([]);
@@ -272,8 +283,26 @@ export default function HouseholdBuilderForm({
 
       {/* Household Information */}
       <Stack gap="md">
-        {/* Marital Status and Children - side by side */}
+        {/* Year, Marital Status and Children - side by side */}
         <Group grow>
+          {availableYears && onYearChange ? (
+            <Select
+              label={countryId === 'uk' ? 'Year' : 'Tax year'}
+              value={year}
+              onChange={(val) => val && onYearChange(val)}
+              data={availableYears}
+              disabled={disabled}
+              searchable
+            />
+          ) : (
+            <Select
+              label={countryId === 'uk' ? 'Year' : 'Tax year'}
+              value={year}
+              data={[{ value: year, label: year }]}
+              disabled
+            />
+          )}
+
           <Select
             label="Marital status"
             value={maritalStatus}

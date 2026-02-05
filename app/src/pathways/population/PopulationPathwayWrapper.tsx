@@ -37,8 +37,11 @@ export default function PopulationPathwayWrapper({ onComplete }: PopulationPathw
     return initializePopulationState();
   });
 
+  // Year state for standalone mode (user-selectable)
+  const [selectedYear, setSelectedYear] = useState<string>(CURRENT_YEAR);
+
   // Get metadata for views
-  const currentYear = parseInt(CURRENT_YEAR, 10);
+  const currentYear = parseInt(selectedYear, 10);
   const regionData = useRegionsList(countryId, currentYear);
 
   // ========== NAVIGATION ==========
@@ -110,6 +113,7 @@ export default function PopulationPathwayWrapper({ onComplete }: PopulationPathw
           countryId={countryId}
           onSubmitSuccess={populationCallbacks.handleHouseholdSubmitSuccess}
           onBack={canGoBack ? goBack : undefined}
+          onYearChange={setSelectedYear}
         />
       );
       break;
@@ -130,7 +134,7 @@ export default function PopulationPathwayWrapper({ onComplete }: PopulationPathw
   }
 
   return (
-    <ReportYearProvider year={CURRENT_YEAR}>
+    <ReportYearProvider year={selectedYear}>
       <StandardLayout>{currentView}</StandardLayout>
     </ReportYearProvider>
   );
