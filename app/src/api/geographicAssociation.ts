@@ -1,3 +1,20 @@
+/**
+ * User Geographic Associations Store
+ *
+ * MIGRATION NOTE: When API v2 alpha adds user-geographic-association endpoints,
+ * this file should be migrated to use the v2 API. Follow the pattern established in:
+ * - householdAssociation.ts (ApiHouseholdStore)
+ * - v2/userHouseholdAssociations.ts (API functions)
+ *
+ * Key migration steps:
+ * 1. Create a new v2/userGeographicAssociations.ts module with:
+ *    - Type definitions for API request/response (snake_case)
+ *    - Conversion functions (toV2CreateRequest, fromV2Response)
+ *    - API functions (create, fetch, update, delete)
+ * 2. Update ApiGeographicStore to delegate to the v2 API functions
+ * 3. Add delete method to UserGeographicStore interface
+ * 4. Update the interface's update signature to use associationId instead of composite keys
+ */
 import { UserGeographicAdapter } from '@/adapters/UserGeographicAdapter';
 import { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
 

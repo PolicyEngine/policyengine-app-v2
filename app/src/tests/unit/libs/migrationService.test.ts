@@ -68,7 +68,7 @@ const MOCK_GEOGRAPHY = {
   createdAt: '2025-01-01T00:00:00.000Z',
 };
 
-const NEW_USER_ID = 'new-user-uuid-12345';
+const NEW_USER_ID = 'new-user-uuid-1234-5678-90ab-cdef12345678' as `${string}-${string}-${string}-${string}-${string}`;
 
 describe('migrationService', () => {
   beforeEach(() => {

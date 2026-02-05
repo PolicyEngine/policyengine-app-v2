@@ -1,3 +1,20 @@
+/**
+ * User Policy Associations Store
+ *
+ * MIGRATION NOTE: When API v2 alpha adds user-policy-association endpoints,
+ * this file should be migrated to use the v2 API. Follow the pattern established in:
+ * - householdAssociation.ts (ApiHouseholdStore)
+ * - v2/userHouseholdAssociations.ts (API functions)
+ *
+ * Key migration steps:
+ * 1. Create a new v2/userPolicyAssociations.ts module with:
+ *    - Type definitions for API request/response (snake_case)
+ *    - Conversion functions (toV2CreateRequest, fromV2Response)
+ *    - API functions (create, fetch, update, delete)
+ * 2. Update ApiPolicyStore to delegate to the v2 API functions
+ * 3. Add delete method to UserPolicyStore interface
+ * 4. Update the interface's update signature to use associationId instead of composite keys
+ */
 import { UserPolicyAdapter } from '@/adapters/UserPolicyAdapter';
 import { UserPolicyCreationPayload } from '@/types/payloads';
 import { UserPolicy } from '../types/ingredients/UserPolicy';
