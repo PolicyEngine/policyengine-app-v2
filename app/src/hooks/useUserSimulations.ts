@@ -1,7 +1,7 @@
 import { useQueryNormalizer } from '@normy/react-query';
 import { useQuery } from '@tanstack/react-query';
 import { PolicyAdapter, SimulationAdapter } from '@/adapters';
-import { fetchHouseholdById } from '@/api/household';
+import { fetchHouseholdByIdV2 } from '@/api/v2/households';
 import { fetchPolicyById } from '@/api/policy';
 import { fetchSimulationById } from '@/api/simulation';
 import { CURRENT_YEAR } from '@/constants';
@@ -128,10 +128,10 @@ export const useUserSimulations = (userId: string) => {
     staleTime: 5 * 60 * 1000,
   });
 
-  // Step 6: Fetch households (populations)
+  // Step 6: Fetch households (populations) using v2 API
   const householdResults = useParallelQueries<Household>(householdIds, {
     queryKey: householdKeys.byId,
-    queryFn: (id) => fetchHouseholdById(country, id),
+    queryFn: (id) => fetchHouseholdByIdV2(id),
     enabled: householdIds.length > 0,
     staleTime: 5 * 60 * 1000,
   });
@@ -292,7 +292,7 @@ export const useUserSimulationById = (userId: string, simulationId: string) => {
 
   const { data: household } = useQuery({
     queryKey: householdKeys.byId(populationId ?? ''),
-    queryFn: () => fetchHouseholdById(country, populationId!),
+    queryFn: () => fetchHouseholdByIdV2(populationId!),
     enabled: !!populationId,
     staleTime: 5 * 60 * 1000,
     retry: 1, // Only retry once if it's not a household

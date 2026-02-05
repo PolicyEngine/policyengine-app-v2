@@ -2,12 +2,12 @@
  * useCreateHousehold - Hook for creating households
  *
  * Creates a household in the API and stores an association for the user.
- * Works with the v2 Alpha household format.
+ * Uses the v2 Alpha API directly.
  */
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { modelNameToCountryId } from '@/adapters/HouseholdAdapter';
-import { createHousehold } from '@/api/household';
+import { createHouseholdV2 } from '@/api/v2/households';
 import { MOCK_USER_ID } from '@/constants';
 import { householdKeys } from '@/libs/queryKeys';
 import { Household } from '@/types/ingredients/Household';
@@ -18,7 +18,10 @@ export function useCreateHousehold(householdLabel?: string) {
   const createAssociation = useCreateHouseholdAssociation();
 
   const mutation = useMutation({
-    mutationFn: (household: Household) => createHousehold(household),
+    mutationFn: async (household: Household) => {
+      const created = await createHouseholdV2(household);
+      return { householdId: created.id! };
+    },
     onSuccess: async (data, variables) => {
       try {
         queryClient.invalidateQueries({ queryKey: householdKeys.all });

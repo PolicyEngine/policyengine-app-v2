@@ -5,7 +5,7 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { fetchHouseholdById } from '@/api/household';
+import { fetchHouseholdByIdV2 } from '@/api/v2/households';
 import { LocalStorageHouseholdStore } from '@/api/householdAssociation';
 import {
   useCreateHouseholdAssociation,
@@ -40,9 +40,9 @@ vi.mock('@/api/householdAssociation', () => {
   };
 });
 
-// Mock the household API
-vi.mock('@/api/household', () => ({
-  fetchHouseholdById: vi.fn(),
+// Mock the v2 household API
+vi.mock('@/api/v2/households', () => ({
+  fetchHouseholdByIdV2: vi.fn(),
 }));
 
 // Mock query config and keys
@@ -97,7 +97,7 @@ describe('useUserHousehold hooks', () => {
     mockStore.create.mockResolvedValue(mockUserHouseholdPopulation);
     mockStore.findByUser.mockResolvedValue(mockUserHouseholdPopulationList);
     mockStore.findById.mockResolvedValue(mockUserHouseholdPopulation);
-    (fetchHouseholdById as any).mockResolvedValue(mockHouseholdMetadata);
+    (fetchHouseholdByIdV2 as any).mockResolvedValue(mockHouseholdMetadata);
   });
 
   afterEach(() => {
@@ -322,7 +322,7 @@ describe('useUserHousehold hooks', () => {
       });
 
       expect(result.current.data).toEqual([]);
-      expect(fetchHouseholdById).not.toHaveBeenCalled();
+      expect(fetchHouseholdByIdV2).not.toHaveBeenCalled();
     });
 
     test('given association fetch fails when fetching then returns error', async () => {
@@ -344,7 +344,7 @@ describe('useUserHousehold hooks', () => {
 
     test('given household fetch fails when fetching then returns partial error', async () => {
       // Given
-      (fetchHouseholdById as any)
+      (fetchHouseholdByIdV2 as any)
         .mockResolvedValueOnce(mockHouseholdMetadata) // First succeeds
         .mockRejectedValueOnce(new Error('Household fetch failed')); // Second fails
 
@@ -366,7 +366,7 @@ describe('useUserHousehold hooks', () => {
       expect(result.current.data![1].isError).toBe(true);
     });
 
-    test('given different country in metadata then uses correct country for fetch', async () => {
+    test('given different country in metadata then fetches households correctly', async () => {
       // Given
       store = configureStore({
         reducer: {
@@ -396,10 +396,11 @@ describe('useUserHousehold hooks', () => {
         expect(result.current.isLoading).toBe(false);
       });
 
-      expect(fetchHouseholdById).toHaveBeenCalledWith(GEO_CONSTANTS.COUNTRY_UK, expect.any(String));
+      // v2 API doesn't need countryId - just verifies the household was fetched
+      expect(fetchHouseholdByIdV2).toHaveBeenCalledWith(expect.any(String));
     });
 
-    test('given no country in metadata then defaults to us', async () => {
+    test('given no country in metadata then fetches households correctly', async () => {
       // Given
       store = configureStore({
         reducer: {
@@ -429,7 +430,8 @@ describe('useUserHousehold hooks', () => {
         expect(result.current.isLoading).toBe(false);
       });
 
-      expect(fetchHouseholdById).toHaveBeenCalledWith(GEO_CONSTANTS.COUNTRY_US, expect.any(String));
+      // v2 API doesn't need countryId - just verifies the household was fetched
+      expect(fetchHouseholdByIdV2).toHaveBeenCalledWith(expect.any(String));
     });
 
     test('given associations without household IDs then filters them out', async () => {
@@ -451,13 +453,10 @@ describe('useUserHousehold hooks', () => {
 
       // Should only have one household in result (the one with ID)
       expect(result.current.data).toHaveLength(1);
-      // But fetchHouseholdById is called for both (including null)
-      expect(fetchHouseholdById).toHaveBeenCalledTimes(2);
-      expect(fetchHouseholdById).toHaveBeenCalledWith(
-        GEO_CONSTANTS.COUNTRY_US,
-        TEST_IDS.HOUSEHOLD_ID
-      );
-      expect(fetchHouseholdById).toHaveBeenCalledWith(GEO_CONSTANTS.COUNTRY_US, null);
+      // v2 API is called for both (including null)
+      expect(fetchHouseholdByIdV2).toHaveBeenCalledTimes(2);
+      expect(fetchHouseholdByIdV2).toHaveBeenCalledWith(TEST_IDS.HOUSEHOLD_ID);
+      expect(fetchHouseholdByIdV2).toHaveBeenCalledWith(null);
     });
   });
 });
