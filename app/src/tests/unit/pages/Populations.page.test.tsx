@@ -49,9 +49,13 @@ vi.mock('react-router-dom', async () => {
 
 // Mock the constants
 vi.mock('@/constants', () => ({
-  MOCK_USER_ID: 'test-user-123',
   BASE_URL: 'https://api.test.com',
   CURRENT_YEAR: '2025',
+}));
+
+// Mock useUserId hook
+vi.mock('@/hooks/useUserId', () => ({
+  useUserId: () => 'test-user-123',
 }));
 
 describe('PopulationsPage', () => {
