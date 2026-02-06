@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { colors } from '@/designTokens';
 
-const NODE_COUNT = 1500;
+const NODE_COUNT = 500;
 const EDGE_RADIUS = 70;
 const NODE_MIN_SIZE = 3;
 const NODE_MAX_SIZE = 7;
@@ -209,6 +209,8 @@ export default function HouseholdGraph({ nodes, edges, impact }: HouseholdGraphP
   const svgRef = useRef<SVGSVGElement>(null);
   const [dimensions, setDimensions] = useState({ width: 1200, height: 700 });
   const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null);
+  const rafRef = useRef<number>(0);
+  const pendingMouse = useRef<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     const svg = svgRef.current;
@@ -230,13 +232,23 @@ export default function HouseholdGraph({ nodes, edges, impact }: HouseholdGraphP
 
   const handleMouseMove = useCallback((e: React.MouseEvent<SVGSVGElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
-    setMousePos({
+    pendingMouse.current = {
       x: e.clientX - rect.left,
       y: e.clientY - rect.top,
-    });
+    };
+    if (!rafRef.current) {
+      rafRef.current = requestAnimationFrame(() => {
+        setMousePos(pendingMouse.current);
+        rafRef.current = 0;
+      });
+    }
   }, []);
 
   const handleMouseLeave = useCallback(() => {
+    if (rafRef.current) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = 0;
+    }
     setMousePos(null);
   }, []);
 
