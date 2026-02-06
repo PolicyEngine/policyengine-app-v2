@@ -45,7 +45,7 @@ export default function HeroSection() {
   const [impact, setImpact] = useState<ImpactState | null>(null);
   const impactTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
-  const { nodes, edges } = useMemo(() => generateGraph(), []);
+  const nodes = useMemo(() => generateGraph(), []);
 
   const handlePromptComplete = useCallback(
     (promptIndex: number, distribution: PromptData) => {
@@ -88,7 +88,7 @@ export default function HeroSection() {
         overflow: 'hidden',
       }}
     >
-      <HouseholdGraph nodes={nodes} edges={edges} impact={impact} />
+      <HouseholdGraph nodes={nodes} impact={impact} />
 
       {/* Headline */}
       <motion.h1

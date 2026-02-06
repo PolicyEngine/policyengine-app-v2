@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { colors } from '@/designTokens';
 
 const NODE_COUNT = 500;
-const EDGE_RADIUS = 70;
 const NODE_MIN_SIZE = 3;
 const NODE_MAX_SIZE = 7;
 const HOVER_RADIUS = 110;
@@ -22,11 +21,6 @@ interface Node {
   driftDuration: number;
   driftDelay: number;
   driftVariant: number; // which keyframe set (0-3)
-}
-
-interface Edge {
-  from: number;
-  to: number;
 }
 
 export interface NodeImpact {
@@ -128,7 +122,7 @@ export function generateImpactForPrompt(
   return impact;
 }
 
-export function generateGraph(): { nodes: Node[]; edges: Edge[] } {
+export function generateGraph(): Node[] {
   const nodes: Node[] = [];
 
   for (let i = 0; i < NODE_COUNT; i++) {
@@ -152,19 +146,7 @@ export function generateGraph(): { nodes: Node[]; edges: Edge[] } {
     });
   }
 
-  const edges: Edge[] = [];
-  for (let i = 0; i < nodes.length; i++) {
-    for (let j = i + 1; j < nodes.length; j++) {
-      const dx = (nodes[i].x - nodes[j].x) * 1000;
-      const dy = (nodes[i].y - nodes[j].y) * 1000;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      if (dist < EDGE_RADIUS && seededRandom(i * 1000 + j) < 0.1) {
-        edges.push({ from: i, to: j });
-      }
-    }
-  }
-
-  return { nodes, edges };
+  return nodes;
 }
 
 const GRAPH_KEYFRAMES = `
@@ -201,11 +183,10 @@ const GRAPH_KEYFRAMES = `
 
 interface HouseholdGraphProps {
   nodes: Node[];
-  edges: Edge[];
   impact: ImpactState | null;
 }
 
-export default function HouseholdGraph({ nodes, edges, impact }: HouseholdGraphProps) {
+export default function HouseholdGraph({ nodes, impact }: HouseholdGraphProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [dimensions, setDimensions] = useState({ width: 1200, height: 700 });
   const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null);
@@ -341,30 +322,6 @@ export default function HouseholdGraph({ nodes, edges, impact }: HouseholdGraphP
     [mousePos]
   );
 
-  const getEdgeOpacity = useCallback(
-    (edge: Edge) => {
-      const fromProx = mouseProximity.get(edge.from) ?? 0;
-      const toProx = mouseProximity.get(edge.to) ?? 0;
-      if (fromProx > 0 && toProx > 0) {
-        return 0.15 + Math.min(fromProx, toProx) * 0.2;
-      }
-      return 0.04;
-    },
-    [mouseProximity]
-  );
-
-  const getEdgeColor = useCallback(
-    (edge: Edge) => {
-      const fromProx = mouseProximity.get(edge.from) ?? 0;
-      const toProx = mouseProximity.get(edge.to) ?? 0;
-      if (fromProx > 0 && toProx > 0) {
-        return colors.primary[400];
-      }
-      return colors.gray[200];
-    },
-    [mouseProximity]
-  );
-
   const px = (n: Node) => n.x * dimensions.width;
   const py = (n: Node) => n.y * dimensions.height;
 
@@ -391,19 +348,6 @@ export default function HouseholdGraph({ nodes, edges, impact }: HouseholdGraphP
           pointerEvents: 'all',
         }}
       >
-        {edges.map((edge) => (
-          <line
-            key={`${edge.from}-${edge.to}`}
-            x1={px(nodes[edge.from])}
-            y1={py(nodes[edge.from])}
-            x2={px(nodes[edge.to])}
-            y2={py(nodes[edge.to])}
-            stroke={getEdgeColor(edge)}
-            strokeWidth={0.8}
-            opacity={getEdgeOpacity(edge)}
-            style={{ transition: 'opacity 0.5s ease, stroke 0.5s ease' }}
-          />
-        ))}
         {nodes.map((node) => {
           const s = getNodeSize(node);
           const popDelay = getPopDelay(node);
