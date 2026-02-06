@@ -8,12 +8,8 @@ vi.mock('@/hooks/useCurrentCountry', () => ({
 }));
 
 // Mock child components to test that HomePage renders them
-vi.mock('@/components/home/MainSection', () => ({
-  default: () => <div data-testid="main-section">Main Section</div>,
-}));
-
-vi.mock('@/components/home/ActionCards', () => ({
-  default: () => <div data-testid="action-cards">Action Cards</div>,
+vi.mock('@/components/home/HeroSection', () => ({
+  default: () => <div data-testid="hero-section">Hero Section</div>,
 }));
 
 vi.mock('@/components/home/OrgLogos', () => ({
@@ -30,8 +26,7 @@ describe('HomePage', () => {
     render(<HomePage />);
 
     // Then
-    expect(screen.getByTestId('main-section')).toBeInTheDocument();
-    expect(screen.getByTestId('action-cards')).toBeInTheDocument();
+    expect(screen.getByTestId('hero-section')).toBeInTheDocument();
     expect(screen.getByTestId('org-logos')).toBeInTheDocument();
   });
 
@@ -44,12 +39,7 @@ describe('HomePage', () => {
       el.getAttribute('data-testid')
     );
 
-    expect(sections).toEqual([
-      'downing-street-banner',
-      'main-section',
-      'action-cards',
-      'org-logos',
-    ]);
+    expect(sections).toEqual(['downing-street-banner', 'hero-section', 'org-logos']);
   });
 
   test('given page renders then passes orgData to OrgLogos component', () => {
