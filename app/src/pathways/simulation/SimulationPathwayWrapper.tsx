@@ -133,24 +133,20 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
 
   // ========== SPECIAL HANDLERS ==========
   // Handle "Use Current Law" selection for policy
+  // In V2 API, current law is represented by id = null
   const handleSelectCurrentLaw = useCallback(() => {
-    if (!currentLawId) {
-      console.error('[SimulationPathwayWrapper] No current law ID available');
-      return;
-    }
-
     setSimulationState((prev) => ({
       ...prev,
       policy: {
         ...prev.policy,
-        id: currentLawId.toString(),
+        id: null,
         label: 'Current law',
         parameters: [],
       },
     }));
 
     navigateToMode(SimulationViewMode.SETUP);
-  }, [currentLawId, navigateToMode]);
+  }, [navigateToMode]);
 
   // ========== VIEW RENDERING ==========
   let currentView: React.ReactElement;

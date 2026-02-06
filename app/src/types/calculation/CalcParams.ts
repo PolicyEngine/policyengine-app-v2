@@ -17,16 +17,20 @@ export interface CalcParams {
 
   /**
    * Policy IDs for the calculation
+   *
+   * In V2 API:
+   * - null → current law (baseline)
+   * - UUID string → reform policy
    */
   policyIds: {
     /**
-     * Baseline policy ID
+     * Baseline policy ID (null = current law in V2 API)
      */
-    baseline: string;
+    baseline: string | null;
     /**
      * Reform policy ID (optional - if omitted, only baseline is calculated)
      */
-    reform?: string;
+    reform?: string | null;
   };
 
   /**

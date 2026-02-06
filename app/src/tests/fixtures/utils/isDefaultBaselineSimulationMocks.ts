@@ -1,5 +1,6 @@
 // Test constants
-export const TEST_CURRENT_LAW_ID = 1;
+// In V2 API, current law is represented by policy_id = null
+export const TEST_CURRENT_LAW_ID = null;
 
 export const TEST_COUNTRIES = {
   US: 'us',
@@ -30,7 +31,7 @@ export const mockDefaultBaselineSimulation: any = {
   },
   simulation: {
     id: 'sim-123',
-    policyId: TEST_CURRENT_LAW_ID.toString(),
+    policyId: null, // Current law in V2 API
     label: EXPECTED_LABELS.US,
     isCreated: true,
     populationType: 'geography',
@@ -78,7 +79,7 @@ export const mockSubnationalSimulation: any = {
     label: 'test',
     isCreated: true,
     id: 'sim-789',
-    policyId: TEST_CURRENT_LAW_ID.toString(),
+    policyId: null, // Current law in V2 API
     populationType: 'geography',
     populationId: 'state/ca', // Subnational
   },
@@ -101,7 +102,7 @@ export const mockHouseholdSimulation: any = {
     label: 'test',
     isCreated: true,
     id: 'sim-101',
-    policyId: TEST_CURRENT_LAW_ID.toString(),
+    policyId: null, // Current law in V2 API
     populationType: 'household',
     populationId: 'household-123',
   },
@@ -120,7 +121,7 @@ export const mockWrongLabelSimulation: any = {
     label: 'test',
     isCreated: true,
     id: 'sim-202',
-    policyId: TEST_CURRENT_LAW_ID.toString(),
+    policyId: null, // Current law in V2 API
     populationType: 'geography',
     populationId: TEST_COUNTRIES.US,
   },
@@ -155,7 +156,7 @@ export const mockUKDefaultBaselineSimulation: any = {
     label: 'test',
     isCreated: true,
     id: 'sim-404',
-    policyId: TEST_CURRENT_LAW_ID.toString(),
+    policyId: null, // Current law in V2 API
     populationType: 'geography',
     populationId: TEST_COUNTRIES.UK,
   },

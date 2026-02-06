@@ -152,20 +152,21 @@ describe('useStaticMetadata', () => {
   });
 
   describe('useCurrentLawId', () => {
-    it('given US country then returns number', () => {
+    // In V2 API, current law is represented by null (no policy ID)
+    it('given US country then returns null', () => {
       // When
       const { result } = renderHook(() => useCurrentLawId(TEST_COUNTRIES.US));
 
       // Then
-      expect(typeof result.current).toBe('number');
+      expect(result.current).toBeNull();
     });
 
-    it('given UK country then returns number', () => {
+    it('given UK country then returns null', () => {
       // When
       const { result } = renderHook(() => useCurrentLawId(TEST_COUNTRIES.UK));
 
       // Then
-      expect(typeof result.current).toBe('number');
+      expect(result.current).toBeNull();
     });
   });
 });

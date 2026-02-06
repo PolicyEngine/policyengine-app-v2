@@ -70,7 +70,8 @@ export class HouseholdCalcStrategy implements CalcExecutionStrategy {
     try {
       // Fetch the household definition
       const household = await fetchHouseholdByIdV2(params.populationId);
-      const policyId = params.policyIds.reform || params.policyIds.baseline;
+      // Use reform if present, otherwise baseline. Convert null to undefined for API.
+      const policyId = (params.policyIds.reform ?? params.policyIds.baseline) ?? undefined;
 
       // Create calculation payload and job
       const payload = householdToCalculatePayload(household, policyId);

@@ -12,7 +12,7 @@ import { useUserPolicies } from '@/hooks/useUserPolicy';
 type SetupAction = 'createNew' | 'loadExisting' | 'selectCurrentLaw';
 
 interface SimulationPolicySetupViewProps {
-  currentLawId: number;
+  currentLawId: null;
   countryId: string;
   onSelectCurrentLaw: () => void;
   onCreateNew: () => void;

@@ -47,8 +47,8 @@ export interface StaticMetadata {
   timePeriods: TimePeriodOption[];
   /** Pre-configured policy options */
   modelledPolicies: ModelledPolicies;
-  /** ID of the current law baseline policy */
-  currentLawId: number;
+  /** ID of the current law baseline policy (null in V2 API) */
+  currentLawId: null;
 }
 
 /**
@@ -107,10 +107,11 @@ export function useModelledPolicies(countryId: string): ModelledPolicies {
 }
 
 /**
- * Get current law ID for a country
+ * Get current law ID for a country.
+ * Returns null (V2 API convention: policy_id=null means baseline).
  */
-export function useCurrentLawId(countryId: string): number {
-  return useMemo(() => getCurrentLawId(countryId), [countryId]);
+export function useCurrentLawId(_countryId: string): null {
+  return useMemo(() => getCurrentLawId(_countryId), [_countryId]);
 }
 
 // Re-export useRegions for convenience (it's defined in its own file)
