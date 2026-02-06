@@ -29,7 +29,11 @@ import Plot from 'react-plotly.js';
 import { Box, Center, Loader, Stack, Text } from '@mantine/core';
 import { colors, spacing } from '@/designTokens';
 import { DEFAULT_CHART_CONFIG } from '@/utils/chartUtils';
-import type { GeoJSONFeatureCollection, USDistrictChoroplethMapProps } from './types';
+import type {
+  GeoJSONFeatureCollection,
+  MapVisualizationType,
+  USDistrictChoroplethMapProps,
+} from './types';
 import {
   buildPlotDataAndLayout,
   calculateColorRange,
@@ -40,8 +44,11 @@ import {
 /** GeoJSON cache to avoid re-fetching (keyed by path) */
 const geoJSONCache: Record<string, GeoJSONFeatureCollection> = {};
 
-/** Default path to GeoJSON file */
-const DEFAULT_GEOJSON_PATH = '/data/geojson/congressional_districts.geojson';
+/** GeoJSON paths for each visualization type */
+const GEOJSON_PATHS: Record<MapVisualizationType, string> = {
+  geographic: '/data/geojson/congressional_districts.geojson',
+  hex: '/data/geojson/congressional_districts_hex.geojson',
+};
 
 /**
  * Custom hook for loading and caching GeoJSON data
@@ -106,11 +113,15 @@ function buildPlotConfig(): Partial<Config> {
 export function USDistrictChoroplethMap({
   data,
   config = {},
-  geoDataPath = DEFAULT_GEOJSON_PATH,
+  geoDataPath,
   focusState,
+  visualizationType = 'geographic',
 }: USDistrictChoroplethMapProps) {
+  // Determine GeoJSON path: explicit path takes precedence, otherwise use visualization type
+  const effectiveGeoDataPath = geoDataPath ?? GEOJSON_PATHS[visualizationType];
+
   // Load GeoJSON data
-  const { geoJSON, loading, error } = useGeoJSONLoader(geoDataPath);
+  const { geoJSON, loading, error } = useGeoJSONLoader(effectiveGeoDataPath);
 
   // Merge configuration with defaults
   const fullConfig = useMemo(() => mergeConfig(config), [config]);
@@ -129,8 +140,15 @@ export function USDistrictChoroplethMap({
     if (!geoJSON) {
       return { plotData: [], plotLayout: {} };
     }
-    return buildPlotDataAndLayout(geoJSON, dataMap, colorRange, fullConfig, focusState);
-  }, [geoJSON, dataMap, colorRange, fullConfig, focusState]);
+    return buildPlotDataAndLayout(
+      geoJSON,
+      dataMap,
+      colorRange,
+      fullConfig,
+      focusState,
+      visualizationType
+    );
+  }, [geoJSON, dataMap, colorRange, fullConfig, focusState, visualizationType]);
 
   // Build Plotly config
   const plotConfig = useMemo(() => buildPlotConfig(), []);

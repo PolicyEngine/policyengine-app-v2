@@ -5,6 +5,13 @@
 import type { Layout, PlotData } from 'plotly.js';
 
 /**
+ * Map visualization type
+ * - 'geographic': Natural geographic boundaries (Census Bureau)
+ * - 'hex': Equal-size hexagonal grid (each district same visual size)
+ */
+export type MapVisualizationType = 'geographic' | 'hex';
+
+/**
  * GeoJSON Feature interface for congressional districts
  */
 export interface GeoJSONFeature {
@@ -86,6 +93,8 @@ export interface USDistrictChoroplethMapProps {
   geoDataPath?: string;
   /** State code to focus/zoom on (e.g., 'ca', 'ny'). If provided, map will zoom to fit that state's districts. */
   focusState?: string;
+  /** Map visualization type: 'geographic' (natural boundaries) or 'hex' (equal-size hexagons). Defaults to 'geographic'. */
+  visualizationType?: MapVisualizationType;
 }
 
 /**
@@ -94,29 +103,31 @@ export interface USDistrictChoroplethMapProps {
  */
 export interface PlotlyGeoConfig {
   /** Geographic scope */
-  scope: 'usa' | 'world' | 'north america' | 'south america' | 'europe' | 'asia' | 'africa';
+  scope?: 'usa' | 'world' | 'north america' | 'south america' | 'europe' | 'asia' | 'africa';
   /** Map projection settings */
-  projection: {
+  projection?: {
     type: 'albers usa' | 'equirectangular' | 'mercator' | 'natural earth' | string;
   };
   /** Show lakes */
-  showlakes: boolean;
+  showlakes?: boolean;
   /** Lake color */
-  lakecolor: string;
+  lakecolor?: string;
   /** Background color */
-  bgcolor: string;
+  bgcolor?: string;
   /** Show land areas */
-  showland: boolean;
+  showland?: boolean;
   /** Show frame around map */
-  showframe: boolean;
+  showframe?: boolean;
   /** Show coastlines */
-  showcoastlines: boolean;
+  showcoastlines?: boolean;
   /** Show country borders */
-  showcountries: boolean;
+  showcountries?: boolean;
   /** Show subunit borders (states) */
-  showsubunits: boolean;
+  showsubunits?: boolean;
   /** Fit bounds mode for zooming */
   fitbounds?: 'locations' | 'geojson' | false;
+  /** Show/hide the base map (set false for hex maps) */
+  visible?: boolean;
 }
 
 /**

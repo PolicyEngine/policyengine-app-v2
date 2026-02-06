@@ -13,6 +13,7 @@ import type {
   ColorscaleEntry,
   GeoJSONFeature,
   GeoJSONFeatureCollection,
+  MapVisualizationType,
   PartialChoroplethMapConfig,
   PlotDataAndLayout,
   PlotlyGeoConfig,
@@ -143,9 +144,27 @@ export function processGeoJSONFeatures(
  * Build the geo configuration for Plotly.
  *
  * @param focusState - Optional state code to zoom to
+ * @param visualizationType - Map visualization type
  * @returns Plotly geo configuration object
  */
-export function buildGeoConfig(focusState?: string): PlotlyGeoConfig {
+export function buildGeoConfig(
+  focusState?: string,
+  visualizationType: MapVisualizationType = 'geographic'
+): PlotlyGeoConfig {
+  // Hex maps use synthetic coordinates - don't apply geographic projection
+  const isHexMap = visualizationType === 'hex';
+
+  if (isHexMap) {
+    // For hex maps: no projection, no base map, just fit to the GeoJSON
+    return {
+      bgcolor: colors.background.primary,
+      visible: false,
+      fitbounds: 'geojson',
+      showframe: false,
+    };
+  }
+
+  // Geographic maps use Albers USA projection
   const config: PlotlyGeoConfig = {
     scope: 'usa',
     projection: { type: 'albers usa' },
@@ -196,6 +215,7 @@ export function createGeoJSONWithIds(
  * @param colorscale - Plotly colorscale
  * @param colorRange - Min/max values for color mapping
  * @param config - Map configuration
+ * @param visualizationType - Map visualization type
  * @returns Plotly trace data
  */
 export function buildPlotData(
@@ -266,6 +286,7 @@ export function buildPlotLayout(geoConfig: PlotlyGeoConfig, height: number): Par
  * @param colorRange - Color range for the scale
  * @param config - Map configuration
  * @param focusState - Optional state to zoom to
+ * @param visualizationType - Map visualization type
  * @returns Plot data and layout
  */
 export function buildPlotDataAndLayout(
@@ -273,7 +294,8 @@ export function buildPlotDataAndLayout(
   dataMap: Map<string, ChoroplethDataPoint>,
   colorRange: ColorRange,
   config: ChoroplethMapConfig,
-  focusState?: string
+  focusState?: string,
+  visualizationType: MapVisualizationType = 'geographic'
 ): PlotDataAndLayout {
   // Process features to extract only those with data
   const processedData = processGeoJSONFeatures(geoJSON, dataMap, config.formatValue);
@@ -285,7 +307,7 @@ export function buildPlotDataAndLayout(
   const colorscale = buildDivergingColorscale();
 
   // Build geo config
-  const geoConfig = buildGeoConfig(focusState);
+  const geoConfig = buildGeoConfig(focusState, visualizationType);
 
   // Build plot data and layout
   const plotData = buildPlotData(geoJSONWithIds, processedData, colorscale, colorRange, config);

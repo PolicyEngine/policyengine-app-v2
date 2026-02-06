@@ -276,7 +276,7 @@ describe('buildGeoConfig', () => {
 
     // Then
     expect(result.scope).toBe('usa');
-    expect(result.projection.type).toBe('albers usa');
+    expect(result.projection?.type).toBe('albers usa');
     expect(result.fitbounds).toBeUndefined();
   });
 
