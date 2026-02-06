@@ -3,7 +3,8 @@ import { ReportStateProps, SimulationStateProps } from '@/types/pathwayState';
 export const TEST_REPORT_LABEL = 'Test Report 2025';
 export const TEST_SIMULATION_LABEL = 'Test Simulation';
 export const TEST_COUNTRY_ID = 'us';
-export const TEST_CURRENT_LAW_ID = 1;
+// In V2 API, current law is represented by policy_id = null
+export const TEST_CURRENT_LAW_ID = null;
 
 export const mockOnUpdateLabel = vi.fn();
 export const mockOnUpdateYear = vi.fn();

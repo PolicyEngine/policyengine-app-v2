@@ -5,14 +5,16 @@ import { EnhancedUserSimulation } from '@/hooks/useUserSimulations';
  * - Uses current law (no policy modifications)
  * - Uses nationwide geographic population
  * - Has the expected default baseline label
+ *
+ * In V2 API, current law is represented by policyId = null.
  */
 export function isDefaultBaselineSimulation(
   simulation: EnhancedUserSimulation,
   countryId: string,
-  currentLawId: number
+  _currentLawId: null
 ): boolean {
-  // Check policy is current law
-  const isCurrentLaw = simulation.simulation?.policyId === currentLawId.toString();
+  // Check policy is current law (null in V2 API)
+  const isCurrentLaw = simulation.simulation?.policyId === null;
 
   // Check population is nationwide geography (populationId === countryId for national)
   const isNationwideGeography =

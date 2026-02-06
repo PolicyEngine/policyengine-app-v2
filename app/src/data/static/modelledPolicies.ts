@@ -7,7 +7,7 @@
  */
 
 export interface PolicyInfo {
-  id: number;
+  id: string | null;
   label: string;
   description?: string;
 }
@@ -23,7 +23,7 @@ export interface ModelledPolicies {
 export const US_MODELLED_POLICIES: ModelledPolicies = {
   core: {
     baseline: {
-      id: 2,
+      id: null,
       label: 'Current law',
       description: 'The current US tax and benefit system',
     },
@@ -37,7 +37,7 @@ export const US_MODELLED_POLICIES: ModelledPolicies = {
 export const UK_MODELLED_POLICIES: ModelledPolicies = {
   core: {
     baseline: {
-      id: 1,
+      id: null,
       label: 'Current law',
       description: 'The current UK tax and benefit system',
     },
@@ -60,17 +60,16 @@ export function getModelledPolicies(countryId: string): ModelledPolicies {
 }
 
 /**
- * Current law IDs by country
- * US: 2, UK: 1
+ * Current law ID constant.
+ * In V2 API, current law is represented by policy_id = null.
+ * This is consistent across all countries.
  */
-export const CURRENT_LAW_IDS: Record<string, number> = {
-  us: 2,
-  uk: 1,
-};
+export const CURRENT_LAW_ID: null = null;
 
 /**
- * Get current law ID for a country
+ * Get current law ID for a country.
+ * Returns null for all countries (V2 API convention).
  */
-export function getCurrentLawId(countryId: string): number {
-  return CURRENT_LAW_IDS[countryId] ?? 1;
+export function getCurrentLawId(_countryId: string): null {
+  return null;
 }

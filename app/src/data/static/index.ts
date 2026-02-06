@@ -29,7 +29,7 @@ export { US_REGIONS, UK_REGIONS } from './staticRegions';
 export {
   getModelledPolicies,
   getCurrentLawId,
-  CURRENT_LAW_IDS,
+  CURRENT_LAW_ID,
   US_MODELLED_POLICIES,
   UK_MODELLED_POLICIES,
   type PolicyInfo,

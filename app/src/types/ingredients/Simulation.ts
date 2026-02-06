@@ -13,12 +13,17 @@ import { countryIds } from '@/libs/countries';
  *
  * Note: Frontend uses CalcStatus.status='computing' for ephemeral real-time tracking,
  * but Simulation.status uses 'pending' for the persistent database state.
+ *
+ * In V2 API:
+ * - policyId = null → current law (baseline)
+ * - policyId = UUID string → reform policy
+ * - policyId = undefined → not yet configured
  */
 export interface Simulation {
   id?: string; // Optional - only exists after API creation
   countryId?: (typeof countryIds)[number];
   apiVersion?: string;
-  policyId?: string;
+  policyId?: string | null; // null = current law (V2), string = reform, undefined = not set
   populationId?: string; // Can be either householdId or geographyId
   populationType?: 'household' | 'geography'; // Indicates the type of populationId
   label: string | null; // Always present, even if null

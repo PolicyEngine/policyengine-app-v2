@@ -57,17 +57,10 @@ describe('isDefaultBaselineSimulation', () => {
       expect(result).toBe(false);
     });
 
-    test('given different current law ID then returns false', () => {
-      // When
-      const result = isDefaultBaselineSimulation(
-        mockDefaultBaselineSimulation,
-        TEST_COUNTRIES.US,
-        999 // Different current law ID
-      );
-
-      // Then
-      expect(result).toBe(false);
-    });
+    // Note: "given different current law ID" test removed because
+    // in V2 API, current law is always represented by policyId = null.
+    // The previous test ("given custom policy then returns false")
+    // covers the case of a non-current-law policy.
   });
 
   describe('Non-matching geography', () => {

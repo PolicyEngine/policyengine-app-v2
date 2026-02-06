@@ -239,7 +239,8 @@ export class CalcOrchestrator {
       countryId: config.countryId as any,
       calcType,
       policyIds: {
-        baseline: sim1.policyId || '',
+        // null means current law in V2 API, undefined means not set
+        baseline: sim1.policyId ?? null,
         reform: sim2?.policyId,
       },
       populationId,
