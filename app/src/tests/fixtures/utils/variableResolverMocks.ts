@@ -11,7 +11,7 @@ export const MOCK_AGE_VARIABLE = {
   label: 'Age',
   entity: 'person',
   data_type: 'int',
-  defaultValue: 0,
+  default_value: 0,
   description: 'Age of the person',
 };
 
@@ -20,7 +20,7 @@ export const MOCK_EMPLOYMENT_INCOME_VARIABLE = {
   label: 'Employment income',
   entity: 'person',
   data_type: 'float',
-  defaultValue: 0,
+  default_value: 0,
   possible_values: null,
 };
 
@@ -29,7 +29,7 @@ export const MOCK_STATE_NAME_VARIABLE = {
   label: 'State',
   entity: 'household',
   data_type: 'Enum',
-  defaultValue: 'CA',
+  default_value: 'CA',
   possible_values: ['CA', 'NY', 'TX'],
 };
 
@@ -38,7 +38,7 @@ export const MOCK_TAX_UNIT_HEAD_VARIABLE = {
   label: 'Is tax unit head',
   entity: 'tax_unit',
   data_type: 'bool',
-  defaultValue: false,
+  default_value: false,
 };
 
 // Mock entity definitions matching V2 API metadata shape

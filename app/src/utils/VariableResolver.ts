@@ -80,7 +80,7 @@ export function getVariableInfo(variableName: string, metadata: any): VariableIn
     label: variable.label,
     entity: variable.entity,
     dataType: variable.data_type,
-    defaultValue: variable.defaultValue,
+    defaultValue: variable.default_value,
     possibleValues: variable.possible_values,
     description: variable.description,
   };
