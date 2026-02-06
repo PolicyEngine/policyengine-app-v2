@@ -1,6 +1,19 @@
 [
   {
     "type": "iframe",
+    "slug": "uk-student-loan-calculator",
+    "title": "Student loan deductions calculator",
+    "description": "Interactive tool to analyse student loan repayments, marginal tax rates, take-home pay, and lifetime costs for UK graduates",
+    "source": "https://uk-student-loan-calculator.vercel.app/",
+    "tags": ["uk", "featured", "policy"],
+    "countryId": "uk",
+    "displayWithResearch": true,
+    "image": "uk-student-loan-calculator.jpg",
+    "date": "2026-02-06 12:00:00",
+    "authors": ["vahid-ahmadi"]
+  },
+  {
+    "type": "iframe",
     "slug": "encode-policy-multi-agent-ai",
     "title": "Automating tax and benefit policy modeling with multi-agent AI",
     "description": "How we built a system that transforms a policy request into a complete, tested pull request in 90 minutes.",

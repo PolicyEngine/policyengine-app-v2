@@ -1,4 +1,4 @@
 - bump: patch
   changes:
-    changed:
-      - Convert from npm to bun for faster installs and builds
+    added:
+      - Add UK student loan deductions calculator to apps listing
