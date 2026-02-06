@@ -1,5 +1,14 @@
 [
   {
+    "title": "Analysis of South Carolina H.3492: Making the state EITC partially refundable",
+    "description": "PolicyEngine projects the bill would lower state revenues by $402 million while reducing child poverty by 5.4% in 2026.",
+    "date": "2026-02-04",
+    "tags": ["us", "us-sc", "policy", "featured"],
+    "authors": ["david-trimmer"],
+    "filename": "sc-h3492-eitc-refundability.md",
+    "image": "sc-h3492-eitc-refundability.jpg"
+  },
+  {
     "title": "How PolicyEngine's CTC Calculator informed Rhode Island Governor McKee's Child Tax Credit design",
     "description": "PolicyEngine developed a Rhode Island Child Tax Credit Calculator to help policymakers analyze how different CTC reforms would impact the state and its families.",
     "date": "2026-01-29",
@@ -138,7 +147,7 @@
   },
   {
     "title": "How a £2,000 salary sacrifice cap would affect workers",
-    "description": "Capping salary sacrifice pension contributions at £2,000 would raise £3.3-7.6 billion in 2029-30 depending on behavioural responses, with impacts concentrated on higher earners.",
+    "description": "Capping salary sacrifice pension contributions at £2,000 would raise £4.2-7.8 billion in 2029-30 depending on behavioural responses, with impacts concentrated on higher earners.",
     "date": "2025-11-27",
     "tags": ["uk", "policy"],
     "authors": ["max-ghenis", "vahid-ahmadi"],

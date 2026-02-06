@@ -21,6 +21,7 @@ yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
 .pnpm-debug.log*
+bun-debug.log*
 
 # Editor directories and files
 .vscode/*

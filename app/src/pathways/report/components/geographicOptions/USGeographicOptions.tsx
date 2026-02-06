@@ -2,6 +2,7 @@ import { Box, Radio } from '@mantine/core';
 import { USScopeType } from '@/types/regionTypes';
 import { RegionOption, US_REGION_TYPES } from '@/utils/regionStrategies';
 import USDistrictSelector from './USDistrictSelector';
+import USPlaceSelector from './USPlaceSelector';
 import USStateSelector from './USStateSelector';
 
 interface USGeographicOptionsProps {
@@ -71,6 +72,21 @@ export default function USGeographicOptions({
               selectedDistrict={selectedRegion}
               onDistrictChange={onRegionChange}
             />
+          </Box>
+        )}
+      </Box>
+
+      {/* Place (city) option */}
+      <Box>
+        <Radio
+          value={US_REGION_TYPES.PLACE}
+          label="All households in a city"
+          checked={scope === US_REGION_TYPES.PLACE}
+          onChange={() => handleScopeChange(US_REGION_TYPES.PLACE)}
+        />
+        {scope === US_REGION_TYPES.PLACE && (
+          <Box ml={24} mt="xs">
+            <USPlaceSelector selectedPlace={selectedRegion} onPlaceChange={onRegionChange} />
           </Box>
         )}
       </Box>

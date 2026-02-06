@@ -65,6 +65,7 @@ export default function PopulationScopeView({
     const needsRegion = [
       US_REGION_TYPES.STATE,
       US_REGION_TYPES.CONGRESSIONAL_DISTRICT,
+      US_REGION_TYPES.PLACE,
       UK_REGION_TYPES.COUNTRY,
       UK_REGION_TYPES.CONSTITUENCY,
       UK_REGION_TYPES.LOCAL_AUTHORITY,

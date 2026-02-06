@@ -1,5 +1,6 @@
 import { Box } from '@mantine/core';
 import ActionCards from '@/components/home/ActionCards';
+import HomeBlogPreview from '@/components/home/HomeBlogPreview';
 import MainSection from '@/components/home/MainSection';
 import OrgLogos from '@/components/home/OrgLogos';
 import DowningStreetBanner from '@/components/shared/DowningStreetBanner';
@@ -22,6 +23,7 @@ export default function HomePage() {
           <ActionCards />
         </Box>
         <OrgLogos />
+        <HomeBlogPreview />
       </Box>
     </>
   );

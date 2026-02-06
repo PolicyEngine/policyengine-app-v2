@@ -64,11 +64,11 @@ PolicyEngine's microsimulation estimates that 4.9 million people make pension co
 
 Under baseline policy, total salary sacrifice contributions amount to £22.7 billion. With the cap in place, £13.8 billion in excess contributions would shift to regular employee pension contributions.
 
-The policy is scheduled to take effect from April 2029. PolicyEngine estimates the cap would raise **£3.3 billion** in 2029-30 under our baseline assumptions (employers spread costs, employees maintain pension contributions), compared to the OBR's estimate of £4.9 billion (static) or £4.7 billion (post-behavioural). Revenue estimates vary significantly based on behavioural assumptions:
+The policy is scheduled to take effect from April 2029. PolicyEngine estimates the cap would raise **£4.2 billion** in 2029-30 under our baseline assumptions (employers spread costs, employees maintain pension contributions), compared to the OBR's estimate of £4.9 billion (static) or £4.7 billion (post-behavioural). Revenue estimates vary significantly based on behavioural assumptions:
 
 <iframe src="https://policyengine.github.io/uk-salary-sacrifice-analysis/revenue-by-year.html" width="100%" height="550" frameborder="0"></iframe>
 
-PolicyEngine's baseline estimate of £3.3 billion is 32% below the OBR's static estimate of £4.9 billion. This reflects differences in behavioural assumptions: PolicyEngine's baseline assumes employees maintain their pension contributions (shifting excess to regular schemes) and employers spread costs across all workers, while the OBR's post-behavioural estimate of £4.7 billion may assume greater take-up of taxable cash.
+PolicyEngine's baseline estimate of £4.2 billion is 14% below the OBR's static estimate of £4.9 billion. This reflects differences in behavioural assumptions: PolicyEngine's baseline assumes employees maintain their pension contributions (shifting excess to regular schemes) and employers spread costs across all workers, while the OBR's post-behavioural estimate of £4.7 billion may assume greater take-up of taxable cash.
 
 ## Distributional analysis
 
@@ -76,11 +76,11 @@ The cap is progressive: lower-income households are largely unaffected while hig
 
 <iframe src="https://policyengine.github.io/uk-salary-sacrifice-analysis/distributional-impact.html" width="100%" height="550" frameborder="0"></iframe>
 
-Under the baseline scenario (employers spread costs, employees maintain pension contributions), the top income decile experiences an average 0.65% reduction in disposable income (£200/year), while lower deciles see minimal impact. Toggle between scenarios to see how different behavioural assumptions affect the distributional pattern.
+Under the baseline scenario (employers spread costs, employees maintain pension contributions), the top income decile experiences an average reduction in disposable income of approximately £1,900/year, while lower deciles see minimal impact. Toggle between scenarios to see how different behavioural assumptions affect the distributional pattern.
 
 ## Conclusion
 
-The cap would raise approximately £3.3 billion annually when it takes effect in April 2029, affecting 3.3 million workers who currently contribute above £2,000. This compares to the OBR's estimates of £4.9 billion (static) or £4.7 billion (post-behavioural).
+The cap would raise approximately £4.2-7.8 billion annually when it takes effect in April 2029 depending on behavioural responses, affecting 3.3 million workers who currently contribute above £2,000. This compares to the OBR's estimates of £4.9 billion (static) or £4.7 billion (post-behavioural).
 
 The impact is progressive: higher earners experience larger reductions while lower-income households are largely unaffected.
 

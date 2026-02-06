@@ -13,6 +13,18 @@
     "authors": ["vahid-ahmadi"]
   },
   {
+    "slug": "encode-policy-multi-agent-ai",
+    "title": "Automating tax and benefit policy modeling with multi-agent AI",
+    "description": "How we built a system that transforms a policy request into a complete, tested pull request in 90 minutes.",
+    "source": "/assets/posts/encode-policy-multi-agent-ai/index.html",
+    "tags": ["us", "technical", "featured", "interactives"],
+    "countryId": "us",
+    "displayWithResearch": true,
+    "image": "encode-policy-multi-agent-ai-cover.png",
+    "date": "2026-02-02 12:00:00",
+    "authors": ["ziming-hua"]
+  },
+  {
     "type": "iframe",
     "slug": "scottish-budget-2026-27",
     "title": "Scottish Budget 2026-27",

@@ -66,12 +66,12 @@ TRIM3 does not document how it selects which non-reporters to assign UI or how i
 
 ## Summary
 
-| Model               | Method                         | Distribution            | Open source                                                          |
-| ------------------- | ------------------------------ | ----------------------- | -------------------------------------------------------------------- |
-| **PolicyEngine**    | QRF + reweight to SOI          | Nonparametric (learned) | [Yes](https://github.com/PolicyEngine/policyengine-us-data)          |
-| **Fed/JCT**         | Normal draw by percentile      | Normal(μ, σ)            | [Yes (Stata)](https://davidsplinter.com/CPS-UI-Imputation.txt)       |
-| **CBO**             | Probit → assign group averages | Point estimates         | [Partial](https://github.com/US-CBO/means_tested_transfer_imputations) |
-| **TRIM3**           | Adjust reported amounts        | Deterministic           | No                                                                   |
+| Model            | Method                         | Distribution            | Open source                                                            |
+| ---------------- | ------------------------------ | ----------------------- | ---------------------------------------------------------------------- |
+| **PolicyEngine** | QRF + reweight to SOI          | Nonparametric (learned) | [Yes](https://github.com/PolicyEngine/policyengine-us-data)            |
+| **Fed/JCT**      | Normal draw by percentile      | Normal(μ, σ)            | [Yes (Stata)](https://davidsplinter.com/CPS-UI-Imputation.txt)         |
+| **CBO**          | Probit → assign group averages | Point estimates         | [Partial](https://github.com/US-CBO/means_tested_transfer_imputations) |
+| **TRIM3**        | Adjust reported amounts        | Deterministic           | No                                                                     |
 
 ## Why methodology matters
 

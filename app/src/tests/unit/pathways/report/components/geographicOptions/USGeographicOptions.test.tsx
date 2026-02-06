@@ -31,6 +31,7 @@ describe('USGeographicOptions', () => {
       screen.getByLabelText('All households in a state or federal district')
     ).toBeInTheDocument();
     expect(screen.getByLabelText('All households in a congressional district')).toBeInTheDocument();
+    expect(screen.getByLabelText('All households in a city')).toBeInTheDocument();
     expect(screen.getByLabelText('Custom household')).toBeInTheDocument();
   });
 
@@ -211,5 +212,140 @@ describe('USGeographicOptions', () => {
 
     // Then
     expect(screen.queryByText('Select State')).not.toBeInTheDocument();
+  });
+
+  // Place (city) tests
+  describe('place (city) option', () => {
+    test('given component then renders city option with correct label', () => {
+      // Given
+      const onScopeChange = vi.fn();
+      const onRegionChange = vi.fn();
+
+      // When
+      render(
+        <USGeographicOptions
+          scope={US_REGION_TYPES.NATIONAL}
+          selectedRegion=""
+          stateOptions={mockUSStateOptions}
+          districtOptions={mockUSDistrictOptions}
+          onScopeChange={onScopeChange}
+          onRegionChange={onRegionChange}
+        />
+      );
+
+      // Then
+      expect(screen.getByLabelText('All households in a city')).toBeInTheDocument();
+    });
+
+    test('given place scope then place radio is checked', () => {
+      // Given
+      const onScopeChange = vi.fn();
+      const onRegionChange = vi.fn();
+
+      // When
+      render(
+        <USGeographicOptions
+          scope={US_REGION_TYPES.PLACE}
+          selectedRegion=""
+          stateOptions={mockUSStateOptions}
+          districtOptions={mockUSDistrictOptions}
+          onScopeChange={onScopeChange}
+          onRegionChange={onRegionChange}
+        />
+      );
+
+      // Then
+      expect(screen.getByLabelText('All households in a city')).toBeChecked();
+    });
+
+    test('given place scope then shows place selector', () => {
+      // Given
+      const onScopeChange = vi.fn();
+      const onRegionChange = vi.fn();
+
+      // When
+      render(
+        <USGeographicOptions
+          scope={US_REGION_TYPES.PLACE}
+          selectedRegion=""
+          stateOptions={mockUSStateOptions}
+          districtOptions={mockUSDistrictOptions}
+          onScopeChange={onScopeChange}
+          onRegionChange={onRegionChange}
+        />
+      );
+
+      // Then
+      expect(screen.getByText('Select city')).toBeInTheDocument();
+    });
+
+    test('given national scope then does not show place selector', () => {
+      // Given
+      const onScopeChange = vi.fn();
+      const onRegionChange = vi.fn();
+
+      // When
+      render(
+        <USGeographicOptions
+          scope={US_REGION_TYPES.NATIONAL}
+          selectedRegion=""
+          stateOptions={mockUSStateOptions}
+          districtOptions={mockUSDistrictOptions}
+          onScopeChange={onScopeChange}
+          onRegionChange={onRegionChange}
+        />
+      );
+
+      // Then
+      expect(screen.queryByText('Select city')).not.toBeInTheDocument();
+    });
+
+    test('given user clicks place option then calls onScopeChange with place', async () => {
+      // Given
+      const user = userEvent.setup();
+      const onScopeChange = vi.fn();
+      const onRegionChange = vi.fn();
+      render(
+        <USGeographicOptions
+          scope={US_REGION_TYPES.NATIONAL}
+          selectedRegion=""
+          stateOptions={mockUSStateOptions}
+          districtOptions={mockUSDistrictOptions}
+          onScopeChange={onScopeChange}
+          onRegionChange={onRegionChange}
+        />
+      );
+
+      // When
+      await user.click(screen.getByLabelText('All households in a city'));
+
+      // Then
+      expect(onRegionChange).toHaveBeenCalledWith('');
+      expect(onScopeChange).toHaveBeenCalledWith(US_REGION_TYPES.PLACE);
+    });
+
+    test('given user switches from state to place then clears selected region', async () => {
+      // Given
+      const user = userEvent.setup();
+      const onScopeChange = vi.fn();
+      const onRegionChange = vi.fn();
+      render(
+        <USGeographicOptions
+          scope={US_REGION_TYPES.STATE}
+          selectedRegion="state/ca"
+          stateOptions={mockUSStateOptions}
+          districtOptions={mockUSDistrictOptions}
+          onScopeChange={onScopeChange}
+          onRegionChange={onRegionChange}
+        />
+      );
+
+      // When
+      await user.click(screen.getByLabelText('All households in a city'));
+
+      // Then
+      expect(onRegionChange).toHaveBeenCalledWith('');
+      expect(onScopeChange).toHaveBeenCalledWith(US_REGION_TYPES.PLACE);
+    });
   });
 });
