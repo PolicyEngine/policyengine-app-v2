@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { colors } from '@/designTokens';
 
-const NODE_COUNT = 500;
+const NODE_COUNT = 800;
 const NODE_MIN_SIZE = 3;
 const NODE_MAX_SIZE = 7;
 const HOVER_RADIUS = 110;
