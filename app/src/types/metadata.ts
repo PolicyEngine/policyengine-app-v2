@@ -12,6 +12,7 @@ export interface V2VariableMetadata {
   description: string;
   data_type: string;
   possible_values: string[] | null;
+  default_value: string | number | boolean | null;
   tax_benefit_model_version_id: string;
   created_at: string;
 }
@@ -94,6 +95,7 @@ export interface VariableMetadata {
   description: string | null;
   data_type?: string;
   possible_values?: string[] | Record<string, string> | null;
+  default_value?: string | number | boolean | null;
   tax_benefit_model_version_id?: string;
   created_at?: string;
 

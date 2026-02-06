@@ -1,4 +1,4 @@
-export const API_V2_BASE_URL = 'https://v2.api.policyengine.org';
+export const API_V2_BASE_URL = 'http://localhost:8000';
 
 /**
  * Map country IDs to their API model names.
