@@ -1,50 +1,84 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { colors, spacing, typography } from '@/designTokens';
 
-const UK_PROMPTS = [
-  'the impact of raising the basic rate to 25p',
-  'how a £2,000 UBI would affect child poverty',
-  'who gains from abolishing the personal allowance',
-  'the cost of extending free school meals to all children',
-  'revenue from a 50p additional rate',
-  'how removing the benefit cap affects single parents',
-  'whether Universal Credit cuts push families into poverty',
-  'how flat tax at 30% compares to the current system',
-  'who loses from means-testing the state pension',
-  'how raising NI thresholds affects low-income workers',
-  'revenue from equalising capital gains and income tax',
-  'how a land value tax would affect homeowners',
-  'the marginal tax rate cliff at Universal Credit taper',
-  'the impact of raising corporation tax to 28%',
-  'the poverty impact of a £25/week child benefit increase',
-  'how scrapping the two-child limit affects large families',
-  'the cost of a citizens pension at £200/week',
-  'who benefits from tapering the higher rate threshold',
-  'the distributional impact of council tax reform',
-  'how raising the inheritance tax threshold affects wealth',
+export interface PromptData {
+  text: string;
+  winnerPct: number; // fraction of households that gain
+  loserPct: number; // fraction that lose (remainder are unaffected)
+}
+
+const UK_PROMPTS: PromptData[] = [
+  { text: 'the impact of raising the basic rate to 25p', winnerPct: 0, loserPct: 0.65 },
+  { text: 'how a £2,000 UBI would affect child poverty', winnerPct: 0.75, loserPct: 0.2 },
+  { text: 'who gains from abolishing the personal allowance', winnerPct: 0, loserPct: 0.85 },
+  { text: 'the cost of extending free school meals to all children', winnerPct: 0.25, loserPct: 0 },
+  { text: 'revenue from a 50p additional rate', winnerPct: 0, loserPct: 0.02 },
+  { text: 'how removing the benefit cap affects single parents', winnerPct: 0.05, loserPct: 0 },
+  { text: 'whether Universal Credit cuts push families into poverty', winnerPct: 0, loserPct: 0.3 },
+  { text: 'how flat tax at 30% compares to the current system', winnerPct: 0.35, loserPct: 0.45 },
+  { text: 'who loses from means-testing the state pension', winnerPct: 0, loserPct: 0.4 },
+  { text: 'how raising NI thresholds affects low-income workers', winnerPct: 0.45, loserPct: 0 },
+  { text: 'revenue from equalising capital gains and income tax', winnerPct: 0, loserPct: 0.08 },
+  { text: 'how a land value tax would affect homeowners', winnerPct: 0.3, loserPct: 0.5 },
+  { text: 'the marginal tax rate cliff at Universal Credit taper', winnerPct: 0, loserPct: 0.15 },
+  { text: 'the impact of raising corporation tax to 28%', winnerPct: 0, loserPct: 0.1 },
+  { text: 'the poverty impact of a £25/week child benefit increase', winnerPct: 0.35, loserPct: 0 },
+  {
+    text: 'how scrapping the two-child limit affects large families',
+    winnerPct: 0.08,
+    loserPct: 0,
+  },
+  { text: 'the cost of a citizens pension at £200/week', winnerPct: 0.55, loserPct: 0.3 },
+  { text: 'who benefits from tapering the higher rate threshold', winnerPct: 0, loserPct: 0.15 },
+  { text: 'the distributional impact of council tax reform', winnerPct: 0.4, loserPct: 0.4 },
+  {
+    text: 'how raising the inheritance tax threshold affects wealth',
+    winnerPct: 0.05,
+    loserPct: 0,
+  },
 ];
 
-const US_PROMPTS = [
-  'how tripling the standard deduction affects median income',
-  'the poverty impact of expanding the Child Tax Credit',
-  'the distributional impact of expanding the EITC',
-  'the impact of removing the SALT cap on high earners',
-  'the cost of a negative income tax at $15,000',
-  'the poverty impact of doubling SNAP benefits',
-  'how a flat tax at 25% compares to the current system',
-  'who gains from eliminating the payroll tax cap',
-  'the impact of a $15/hour minimum wage on poverty',
-  'how raising the top rate to 45% affects revenue',
-  'the cost of universal pre-K funded by income tax',
-  'who benefits from expanding the child care credit',
-  'the distributional impact of eliminating step-up in basis',
-  'how a carbon tax rebate would affect low-income households',
-  'the revenue impact of taxing capital gains at death',
-  'who loses from phasing out the mortgage interest deduction',
-  'the poverty impact of a $300/month child allowance',
-  'how capping itemized deductions at $50,000 affects revenue',
-  'the impact of restoring the expanded CTC permanently',
-  'who benefits from raising the estate tax exemption',
+const US_PROMPTS: PromptData[] = [
+  {
+    text: 'how tripling the standard deduction affects median income',
+    winnerPct: 0.7,
+    loserPct: 0,
+  },
+  { text: 'the poverty impact of expanding the Child Tax Credit', winnerPct: 0.35, loserPct: 0 },
+  { text: 'the distributional impact of expanding the EITC', winnerPct: 0.3, loserPct: 0 },
+  { text: 'the impact of removing the SALT cap on high earners', winnerPct: 0.15, loserPct: 0 },
+  { text: 'the cost of a negative income tax at $15,000', winnerPct: 0.6, loserPct: 0.35 },
+  { text: 'the poverty impact of doubling SNAP benefits', winnerPct: 0.2, loserPct: 0 },
+  { text: 'how a flat tax at 25% compares to the current system', winnerPct: 0.4, loserPct: 0.4 },
+  { text: 'who gains from eliminating the payroll tax cap', winnerPct: 0, loserPct: 0.06 },
+  { text: 'the impact of a $15/hour minimum wage on poverty', winnerPct: 0.25, loserPct: 0.05 },
+  { text: 'how raising the top rate to 45% affects revenue', winnerPct: 0, loserPct: 0.03 },
+  { text: 'the cost of universal pre-K funded by income tax', winnerPct: 0.2, loserPct: 0.5 },
+  { text: 'who benefits from expanding the child care credit', winnerPct: 0.25, loserPct: 0 },
+  {
+    text: 'the distributional impact of eliminating step-up in basis',
+    winnerPct: 0,
+    loserPct: 0.1,
+  },
+  {
+    text: 'how a carbon tax rebate would affect low-income households',
+    winnerPct: 0.55,
+    loserPct: 0.35,
+  },
+  { text: 'the revenue impact of taxing capital gains at death', winnerPct: 0, loserPct: 0.05 },
+  {
+    text: 'who loses from phasing out the mortgage interest deduction',
+    winnerPct: 0,
+    loserPct: 0.3,
+  },
+  { text: 'the poverty impact of a $300/month child allowance', winnerPct: 0.4, loserPct: 0 },
+  {
+    text: 'how capping itemized deductions at $50,000 affects revenue',
+    winnerPct: 0,
+    loserPct: 0.12,
+  },
+  { text: 'the impact of restoring the expanded CTC permanently', winnerPct: 0.35, loserPct: 0 },
+  { text: 'who benefits from raising the estate tax exemption', winnerPct: 0.02, loserPct: 0 },
 ];
 
 const TYPE_SPEED = 28; // ms per character
@@ -54,7 +88,7 @@ const PAUSE_AFTER_DELETE = 350; // ms pause before typing next
 
 interface TypewriterPromptProps {
   countryId: string;
-  onPromptComplete: (promptIndex: number) => void;
+  onPromptComplete: (promptIndex: number, distribution: PromptData) => void;
   onPromptClearing: () => void;
 }
 
@@ -70,7 +104,8 @@ export default function TypewriterPrompt({
   const charIndex = useRef(0);
   const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
-  const currentPrompt = prompts[promptIndex % prompts.length];
+  const currentPromptData = prompts[promptIndex % prompts.length];
+  const currentPrompt = currentPromptData.text;
 
   const clearTimer = useCallback(() => {
     if (timerRef.current) {
@@ -85,7 +120,7 @@ export default function TypewriterPrompt({
     }
     if (charIndex.current >= currentPrompt.length) {
       // Done typing, hold and show impact
-      onPromptComplete(promptIndex);
+      onPromptComplete(promptIndex, currentPromptData);
       timerRef.current = setTimeout(() => {
         setPhase('deleting');
         onPromptClearing();
@@ -101,6 +136,7 @@ export default function TypewriterPrompt({
     phase,
     displayText,
     currentPrompt,
+    currentPromptData,
     promptIndex,
     onPromptComplete,
     onPromptClearing,

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { colors } from '@/designTokens';
 
-const NODE_COUNT = 500;
+const NODE_COUNT = 1500;
 const EDGE_RADIUS = 70;
 const NODE_MIN_SIZE = 3;
 const NODE_MAX_SIZE = 7;
@@ -37,16 +37,36 @@ export interface NodeImpact {
 export type ImpactState = Map<number, NodeImpact>;
 
 /**
- * Generate clustered impact patterns. Picks 3-5 cluster centres,
- * each with a polarity (positive/negative), and affects nodes
- * near those centres. Magnitude scales with proximity to cluster centre.
+ * Generate clustered impact patterns that respect the specified
+ * winner/loser distribution for each prompt. Picks cluster centres
+ * and assigns polarity based on the target percentages, so the
+ * visualisation roughly matches the expected policy impact.
  */
 export function generateImpactForPrompt(
   promptIndex: number,
-  nodes: { id: number; x: number; y: number }[]
+  nodes: { id: number; x: number; y: number }[],
+  winnerPct: number,
+  loserPct: number
 ): ImpactState {
   const impact: ImpactState = new Map();
+  const totalAffected = winnerPct + loserPct;
+
+  // If nobody is affected, return all neutral
+  if (totalAffected === 0) {
+    for (const node of nodes) {
+      impact.set(node.id, { polarity: 'neutral', magnitude: 0 });
+    }
+    return impact;
+  }
+
+  // Determine how many clusters of each polarity we need
+  const winnerShare = winnerPct / totalAffected;
   const numClusters = 3 + Math.floor(seededRandom(promptIndex * 13) * 3); // 3-5
+  const numWinnerClusters = Math.max(winnerPct > 0 ? 1 : 0, Math.round(numClusters * winnerShare));
+  const numLoserClusters = Math.max(loserPct > 0 ? 1 : 0, numClusters - numWinnerClusters);
+
+  // Scale cluster radii based on how many nodes need to be affected
+  const baseRadius = 0.08 + totalAffected * 0.18;
 
   const clusters: {
     cx: number;
@@ -54,19 +74,35 @@ export function generateImpactForPrompt(
     radius: number;
     polarity: 'positive' | 'negative';
   }[] = [];
-  for (let c = 0; c < numClusters; c++) {
+
+  for (let c = 0; c < numWinnerClusters + numLoserClusters; c++) {
     const seed = promptIndex * 100 + c;
+    const polarity: 'positive' | 'negative' = c < numWinnerClusters ? 'positive' : 'negative';
     clusters.push({
       cx: 0.1 + seededRandom(seed) * 0.8,
       cy: 0.1 + seededRandom(seed + 1) * 0.8,
-      radius: 0.12 + seededRandom(seed + 2) * 0.15,
-      polarity: seededRandom(seed + 3) < 0.55 ? 'positive' : 'negative',
+      radius: baseRadius + seededRandom(seed + 2) * 0.08,
+      polarity,
     });
   }
+
+  // First pass: assign nodes to clusters with falloff
+  const targetWinners = Math.round(nodes.length * winnerPct);
+  const targetLosers = Math.round(nodes.length * loserPct);
+  let winnerCount = 0;
+  let loserCount = 0;
 
   for (const node of nodes) {
     let assigned = false;
     for (const cluster of clusters) {
+      // Check if we've already hit the target for this polarity
+      if (cluster.polarity === 'positive' && winnerCount >= targetWinners) {
+        continue;
+      }
+      if (cluster.polarity === 'negative' && loserCount >= targetLosers) {
+        continue;
+      }
+
       const dx = node.x - cluster.cx;
       const dy = node.y - cluster.cy;
       const dist = Math.sqrt(dx * dx + dy * dy);
@@ -74,6 +110,11 @@ export function generateImpactForPrompt(
         const falloff = 1 - dist / cluster.radius;
         if (seededRandom(promptIndex * 1000 + node.id) < falloff * 0.85 + 0.15) {
           impact.set(node.id, { polarity: cluster.polarity, magnitude: falloff });
+          if (cluster.polarity === 'positive') {
+            winnerCount++;
+          } else {
+            loserCount++;
+          }
           assigned = true;
           break;
         }
@@ -83,6 +124,7 @@ export function generateImpactForPrompt(
       impact.set(node.id, { polarity: 'neutral', magnitude: 0 });
     }
   }
+
   return impact;
 }
 

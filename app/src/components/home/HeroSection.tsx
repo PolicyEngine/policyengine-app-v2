@@ -8,7 +8,7 @@ import HouseholdGraph, {
   generateImpactForPrompt,
   ImpactState,
 } from './HouseholdGraph';
-import TypewriterPrompt from './TypewriterPrompt';
+import TypewriterPrompt, { PromptData } from './TypewriterPrompt';
 
 const fadeIn = {
   hidden: { opacity: 0, y: 20 },
@@ -48,9 +48,11 @@ export default function HeroSection() {
   const { nodes, edges } = useMemo(() => generateGraph(), []);
 
   const handlePromptComplete = useCallback(
-    (promptIndex: number) => {
+    (promptIndex: number, distribution: PromptData) => {
       impactTimer.current = setTimeout(() => {
-        setImpact(generateImpactForPrompt(promptIndex, nodes));
+        setImpact(
+          generateImpactForPrompt(promptIndex, nodes, distribution.winnerPct, distribution.loserPct)
+        );
       }, 500);
     },
     [nodes]
