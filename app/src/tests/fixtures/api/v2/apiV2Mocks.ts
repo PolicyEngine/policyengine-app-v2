@@ -35,6 +35,7 @@ export function createMockVariable(
     description: 'Test variable description',
     data_type: 'float',
     possible_values: null,
+    default_value: 0,
     tax_benefit_model_version_id: TEST_VERSIONS.US_VERSION_ID,
     created_at: '2024-01-01T00:00:00Z',
     ...overrides,
