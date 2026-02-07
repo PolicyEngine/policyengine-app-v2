@@ -77,6 +77,7 @@ export default function PopulationPathwayWrapper({ onComplete }: PopulationPathw
           countryId={countryId}
           onSubmitSuccess={handleHouseholdSubmitSuccess}
           onBack={canGoBack ? goBack : undefined}
+          onCancel={() => navigate(`/${countryId}/households`)}
           onYearChange={setSelectedYear}
         />
       );

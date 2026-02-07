@@ -26,6 +26,8 @@ interface HouseholdBuilderViewProps {
   countryId: string;
   onSubmitSuccess: (householdId: string, household: Household) => void;
   onBack?: () => void;
+  /** If provided, exit the pathway entirely (e.g., back to households list) */
+  onCancel?: () => void;
   /** If provided, shows year selector (standalone mode). If not, uses year from context (report mode). */
   onYearChange?: (year: string) => void;
 }
@@ -35,6 +37,7 @@ export default function HouseholdBuilderView({
   countryId,
   onSubmitSuccess,
   onBack,
+  onCancel,
   onYearChange,
 }: HouseholdBuilderViewProps) {
   const { createHousehold, isPending } = useCreateHousehold(population?.label || '');
@@ -220,6 +223,7 @@ export default function HouseholdBuilderView({
       content={content}
       primaryAction={primaryAction}
       backAction={onBack ? { onClick: onBack } : undefined}
+      cancelAction={onCancel ? { onClick: onCancel } : undefined}
     />
   );
 }
