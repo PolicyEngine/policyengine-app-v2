@@ -4,18 +4,18 @@ We at PolicyEngine have analyzed the effects of this proposed change.
 
 Key results:
 
-* Costs $14.6 billion over ten years (2026-2035)
-* Benefits 5.9% of Americans
-* Reduces child poverty by 0.4%
-* Lowers the Gini index of inequality by 0.024%
+- Costs $14.6 billion over ten years (2026-2035)
+- Benefits 5.9% of Americans
+- Reduces child poverty by 0.4%
+- Lowers the Gini index of inequality by 0.024%
 
-*[Use PolicyEngine](https://www.policyengine.org/us) to view the full results or calculate the effect on your household.*
+_[Use PolicyEngine](https://www.policyengine.org/us) to view the full results or calculate the effect on your household._
 
 ## Background
 
 The Child Tax Credit provides up to $2,200 per qualifying child, with up to $1,700 of that amount refundable as the Additional Child Tax Credit (ACTC) in 2026. The refundable portion phases in at 15% of earned income above $2,500, which means families with lower earnings may not receive the full refundable credit.
 
-The Stronger Start for Working Families Act would eliminate this $2,500 threshold, meaning families would begin receiving the refundable CTC from their first dollar of earned income. For example, a single parent with one child currently needs to earn $13,833 to receive the full $1,700 refundable credit ($1,700 ÷ 15% + $2,500 = $13,833). Under the reform, they would only need $11,333 of earnings to reach the maximum refundable amount ($1,700 ÷ 15% = $11,333). Figure 1 illustrates this phase-in pattern for current law and the proposed reform. 
+The Stronger Start for Working Families Act would eliminate this $2,500 threshold, meaning families would begin receiving the refundable CTC from their first dollar of earned income. For example, a single parent with one child currently needs to earn $13,833 to receive the full $1,700 refundable credit ($1,700 ÷ 15% + $2,500 = $13,833). Under the reform, they would only need $11,333 of earnings to reach the maximum refundable amount ($1,700 ÷ 15% = $11,333). Figure 1 illustrates this phase-in pattern for current law and the proposed reform.
 
 <iframe src="https://policyengine.github.io/stronger-start-calc/baseline-reform-comparison.html" width="100%" height="650" frameborder="0"></iframe>
 
@@ -25,7 +25,7 @@ The reform primarily benefits lower-income families with children who do not rec
 
 The maximum benefit any household can receive is $375, regardless of the number of children (15% × $2,500 = $375). Household benefits begins phasing out once families reach their maximum refundable credit amount. For the single parent with two children, this phase-out occurs between $22,667 and $25,167 of employment income. Since the credit phases in at a flat 15% rate rather than 15% per child, households with more children reach their maximum refundable amount at greater income levels, pushing the phase-out range higher. Figure 2 displays the change in net income for households as earnings rise, based on the number of children and filing status.[^1]
 
-[^1]: Household filing status does not affect net income under this reform, as the phase-in range is universal among households and net income is affected only by each household's number of children. 
+[^1]: Household filing status does not affect net income under this reform, as the phase-in range is universal among households and net income is affected only by each household's number of children.
 
 <iframe src="https://policyengine.github.io/stronger-start-calc/net-income-change.html" width="100%" height="650" frameborder="0"></iframe>
 

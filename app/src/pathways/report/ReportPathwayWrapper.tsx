@@ -8,7 +8,6 @@
  */
 
 import { useCallback, useState } from 'react';
-import { useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ReportAdapter } from '@/adapters';
 import StandardLayout from '@/components/StandardLayout';
@@ -21,7 +20,6 @@ import { useUserGeographics } from '@/hooks/useUserGeographic';
 import { useUserHouseholds } from '@/hooks/useUserHousehold';
 import { useUserSimulations } from '@/hooks/useUserSimulations';
 import { countryIds } from '@/libs/countries';
-import { RootState } from '@/store';
 import { Report } from '@/types/ingredients/Report';
 import { ReportViewMode } from '@/types/pathwayModes/ReportViewMode';
 import { ReportStateProps, SimulationStateProps } from '@/types/pathwayState';
@@ -90,7 +88,6 @@ export default function ReportPathwayWrapper({ onComplete }: ReportPathwayWrappe
   const { createReport, isPending: isSubmitting } = useCreateReport(reportState.label || undefined);
 
   // Get metadata for population views
-  const metadata = useSelector((state: RootState) => state.metadata);
   const currentLawId = useCurrentLawId(countryId);
   const reportYear = parseInt(reportState.year || '2025', 10);
   const regionData = useRegionsList(countryId, reportYear);

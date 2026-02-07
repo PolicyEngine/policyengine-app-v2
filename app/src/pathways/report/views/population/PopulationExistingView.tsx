@@ -6,9 +6,9 @@
 
 import { useState } from 'react';
 import { Text } from '@mantine/core';
-import { HouseholdAdapter } from '@/adapters';
 import PathwayView from '@/components/common/PathwayView';
-import { CURRENT_YEAR, MOCK_USER_ID } from '@/constants';
+import { CURRENT_YEAR } from '@/constants';
+import { useUserId } from '@/hooks/useUserId';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useRegionsList } from '@/hooks/useStaticMetadata';
 import {
@@ -42,7 +42,7 @@ export default function PopulationExistingView({
   onBack,
   onCancel,
 }: PopulationExistingViewProps) {
-  const userId = MOCK_USER_ID.toString();
+  const userId = useUserId();
   const countryId = useCurrentCountry();
   const currentYear = parseInt(CURRENT_YEAR, 10);
   const regions = useRegionsList(countryId, currentYear);
@@ -127,16 +127,8 @@ export default function PopulationExistingView({
       return;
     }
 
-    // Handle both API format (household_json) and transformed format (householdData)
-    // The cache might contain transformed data from useUserSimulations
-    let householdToSet;
-    if ('household_json' in localPopulation.household) {
-      // API format - needs transformation
-      householdToSet = HouseholdAdapter.fromMetadata(localPopulation.household);
-    } else {
-      // Already transformed format from cache
-      householdToSet = localPopulation.household as any;
-    }
+    // Household is already in v2 format (Household type)
+    const householdToSet = localPopulation.household;
 
     const label = localPopulation.association?.label || '';
     const householdId = householdToSet.id!;

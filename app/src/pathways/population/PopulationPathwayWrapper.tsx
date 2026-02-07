@@ -6,7 +6,6 @@
  */
 
 import { useState } from 'react';
-import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import StandardLayout from '@/components/StandardLayout';
 import { CURRENT_YEAR } from '@/constants';
@@ -14,7 +13,6 @@ import { ReportYearProvider } from '@/contexts/ReportYearContext';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { usePathwayNavigation } from '@/hooks/usePathwayNavigation';
 import { useRegionsList } from '@/hooks/useStaticMetadata';
-import { RootState } from '@/store';
 import { Household } from '@/types/ingredients/Household';
 import { StandalonePopulationViewMode } from '@/types/pathwayModes/PopulationViewMode';
 import { PopulationStateProps } from '@/types/pathwayState';
@@ -39,9 +37,11 @@ export default function PopulationPathwayWrapper({ onComplete }: PopulationPathw
     return initializePopulationState();
   });
 
+  // Year state for standalone mode (user-selectable)
+  const [selectedYear, setSelectedYear] = useState<string>(CURRENT_YEAR);
+
   // Get metadata for views
-  const metadata = useSelector((state: RootState) => state.metadata);
-  const currentYear = parseInt(CURRENT_YEAR, 10);
+  const currentYear = parseInt(selectedYear, 10);
   const regionData = useRegionsList(countryId, currentYear);
 
   // ========== NAVIGATION ==========
@@ -113,6 +113,8 @@ export default function PopulationPathwayWrapper({ onComplete }: PopulationPathw
           countryId={countryId}
           onSubmitSuccess={populationCallbacks.handleHouseholdSubmitSuccess}
           onBack={canGoBack ? goBack : undefined}
+          onCancel={() => navigate(`/${countryId}/households`)}
+          onYearChange={setSelectedYear}
         />
       );
       break;
@@ -133,7 +135,7 @@ export default function PopulationPathwayWrapper({ onComplete }: PopulationPathw
   }
 
   return (
-    <ReportYearProvider year={CURRENT_YEAR}>
+    <ReportYearProvider year={selectedYear}>
       <StandardLayout>{currentView}</StandardLayout>
     </ReportYearProvider>
   );

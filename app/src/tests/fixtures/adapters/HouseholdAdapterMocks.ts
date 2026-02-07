@@ -1,5 +1,5 @@
 import { CURRENT_YEAR } from '@/constants';
-import { HouseholdData } from '@/types/ingredients/Household';
+import { Household } from '@/types/ingredients/Household';
 import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
 
 export const mockEntityMetadata = {
@@ -32,123 +32,90 @@ export const mockEntityMetadata = {
 
 export const mockHouseholdMetadata: HouseholdMetadata = {
   id: '12345',
-  country_id: 'us',
-  household_json: {
-    people: {
-      person1: {
-        age: { [CURRENT_YEAR]: 30 },
-        employment_income: { [CURRENT_YEAR]: 50000 },
+  household: {
+    tax_benefit_model_name: 'policyengine_us',
+    year: parseInt(CURRENT_YEAR, 10),
+    people: [
+      {
+        age: 30,
+        employment_income: 50000,
       },
-      person2: {
-        age: { [CURRENT_YEAR]: 28 },
-        employment_income: { [CURRENT_YEAR]: 45000 },
+      {
+        age: 28,
+        employment_income: 45000,
       },
-    },
-    tax_units: {
-      tax_unit1: {
-        members: ['person1', 'person2'],
-      },
-    },
-    marital_units: {
-      marital_unit1: {
-        members: ['person1', 'person2'],
-      },
-    },
-    spm_units: {
-      spm_unit1: {
-        members: ['person1', 'person2'],
-      },
-    },
-    households: {
-      household1: {
-        members: ['person1', 'person2'],
-      },
-    },
-    families: {
-      family1: {
-        members: ['person1', 'person2'],
-      },
-    },
+    ],
+    tax_unit: {},
+    marital_unit: {},
+    spm_unit: {},
+    household: {},
+    family: {},
   },
-  api_version: 'v1',
-  household_hash: '<household_hash>',
 };
 
 export const mockHouseholdMetadataWithUnknownEntity: HouseholdMetadata = {
   id: '67890',
-  country_id: 'uk',
-  household_json: {
-    people: {
-      person1: {
-        age: { [CURRENT_YEAR]: 40 },
+  household: {
+    tax_benefit_model_name: 'policyengine_uk',
+    year: parseInt(CURRENT_YEAR, 10),
+    people: [
+      {
+        age: 40,
       },
-    },
-    // @ts-expect-error
-    unknown_entity: {
-      entity1: {
-        some_property: 'value',
-      },
-    },
+    ],
+    household: {},
   },
 };
 
-export const mockHouseholdData: HouseholdData = {
-  people: {
-    person1: {
-      age: { 2025: 30 },
-      employment_income: { 2025: 50000 },
+export const mockHouseholdData: Household = {
+  tax_benefit_model_name: 'policyengine_us',
+  year: 2025,
+  people: [
+    {
+      age: 30,
+      employment_income: 50000,
     },
-    person2: {
-      age: { 2025: 28 },
-      employment_income: { 2025: 45000 },
+    {
+      age: 28,
+      employment_income: 45000,
     },
-  },
-  taxUnits: {
-    tax_unit1: {
-      members: ['person1', 'person2'],
-      head: 'person1',
-    },
-  },
-  maritalUnits: {
-    marital_unit1: {
-      members: ['person1', 'person2'],
-    },
-  },
+  ],
+  tax_unit: {},
+  marital_unit: {},
 };
 
-export const mockHouseholdDataWithMultipleEntities: HouseholdData = {
-  people: {
-    person1: { age: { [CURRENT_YEAR]: 25 } },
-    person2: { age: { [CURRENT_YEAR]: 23 } },
-    person3: { age: { [CURRENT_YEAR]: 5 } },
-  },
-  taxUnits: {
-    tax_unit1: {
-      members: ['person1', 'person2', 'person3'],
-      head: 'person1',
+export const mockHouseholdDataWithMultipleEntities: Household = {
+  tax_benefit_model_name: 'policyengine_us',
+  year: parseInt(CURRENT_YEAR, 10),
+  people: [
+    {
+      age: 25,
     },
-  },
-  maritalUnits: {
-    marital_unit1: {
-      members: ['person1', 'person2'],
+    {
+      age: 23,
     },
-  },
-  spmUnits: {
-    spm_unit1: {
-      members: ['person1', 'person2', 'person3'],
+    {
+      age: 5,
+      is_tax_unit_dependent: true,
     },
-  },
+  ],
+  tax_unit: {},
+  marital_unit: {},
+  spm_unit: {},
 };
 
-export const mockEmptyHouseholdData: HouseholdData = {
-  people: {},
+export const mockEmptyHouseholdData: Household = {
+  tax_benefit_model_name: 'policyengine_us',
+  year: parseInt(CURRENT_YEAR, 10),
+  people: [],
 };
 
-export const mockHouseholdDataWithUnknownEntity: HouseholdData = {
-  people: {
-    person1: { age: { [CURRENT_YEAR]: 30 } },
-  },
-  customEntity: {
-    entity1: { custom_field: 'value' },
-  },
+export const mockHouseholdDataWithUnknownEntity: Household = {
+  tax_benefit_model_name: 'policyengine_us',
+  year: parseInt(CURRENT_YEAR, 10),
+  people: [
+    {
+      age: 30,
+    },
+  ],
 } as any;

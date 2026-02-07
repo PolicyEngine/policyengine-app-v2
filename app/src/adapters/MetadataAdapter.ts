@@ -33,6 +33,7 @@ export class MetadataAdapter {
       description: v2.description,
       data_type: v2.data_type,
       possible_values: v2.possible_values,
+      default_value: v2.default_value,
       tax_benefit_model_version_id: v2.tax_benefit_model_version_id,
       created_at: v2.created_at,
       // Auto-generate label from name (sentence case)

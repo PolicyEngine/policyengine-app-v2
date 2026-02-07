@@ -9,9 +9,14 @@ import { Parameter } from '@/types/subIngredients/parameter';
  *
  * Configuration state is determined by presence of `id` field.
  * Use `isPolicyConfigured()` utility to check if policy is ready for use.
+ *
+ * In V2 API:
+ * - id = null → current law (baseline)
+ * - id = UUID string → reform policy
+ * - id = undefined → not yet configured
  */
 export interface PolicyStateProps {
-  id?: string; // Populated after API creation, current law selection, or loading existing
+  id?: string | null; // null = current law (V2), string = reform, undefined = not set
   label: string | null; // Required field, can be null
   parameters: Parameter[]; // Always present, empty array if no params
 }

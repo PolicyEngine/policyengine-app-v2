@@ -30,11 +30,16 @@ export class SocietyWideCalcStrategy implements CalcExecutionStrategy {
       time_period: params.year,
     };
 
+    // Convert null to empty string for society-wide API (legacy v1 format)
+    // TODO: Update when society-wide calculations migrate to V2 API
+    const reformPolicy = (params.policyIds.reform ?? params.policyIds.baseline) || '';
+    const baselinePolicy = params.policyIds.baseline || '';
+
     // Call society-wide calculation API
     const response = await fetchSocietyWideCalculation(
       params.countryId,
-      params.policyIds.reform || params.policyIds.baseline,
-      params.policyIds.baseline,
+      reformPolicy,
+      baselinePolicy,
       apiParams
     );
 

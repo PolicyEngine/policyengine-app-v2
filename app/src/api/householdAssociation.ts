@@ -1,4 +1,10 @@
-import { UserHouseholdAdapter } from '@/adapters/UserHouseholdAdapter';
+import {
+  createUserHouseholdAssociationV2,
+  deleteUserHouseholdAssociationV2,
+  fetchUserHouseholdAssociationByIdV2,
+  fetchUserHouseholdAssociationsV2,
+  updateUserHouseholdAssociationV2,
+} from '@/api/v2/userHouseholdAssociations';
 import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 
 export interface UserHouseholdStore {
@@ -9,95 +15,34 @@ export interface UserHouseholdStore {
     userHouseholdId: string,
     updates: Partial<UserHouseholdPopulation>
   ) => Promise<UserHouseholdPopulation>;
-  // The below are not yet implemented, but keeping for future use
-  // delete(userId: string, householdId: string): Promise<void>;
+  delete: (associationId: string) => Promise<void>;
 }
 
 export class ApiHouseholdStore implements UserHouseholdStore {
-  // TODO: Modify value to match to-be-created API endpoint structure
-  private readonly BASE_URL = '/api/user-household-associations';
-
   async create(association: UserHouseholdPopulation): Promise<UserHouseholdPopulation> {
-    const payload = UserHouseholdAdapter.toCreationPayload(association);
-
-    const response = await fetch(`${this.BASE_URL}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to create household association');
-    }
-
-    const apiResponse = await response.json();
-    return UserHouseholdAdapter.fromApiResponse(apiResponse);
+    return createUserHouseholdAssociationV2(association);
   }
 
   async findByUser(userId: string, countryId?: string): Promise<UserHouseholdPopulation[]> {
-    const url = countryId
-      ? `${this.BASE_URL}/user/${userId}?country_id=${countryId}`
-      : `${this.BASE_URL}/user/${userId}`;
-
-    const response = await fetch(url, {
-      headers: { 'Content-Type': 'application/json' },
-    });
-    if (!response.ok) {
-      throw new Error('Failed to fetch user households');
-    }
-
-    const apiResponses = await response.json();
-    return apiResponses.map((apiData: any) => UserHouseholdAdapter.fromApiResponse(apiData));
+    return fetchUserHouseholdAssociationsV2(userId, countryId);
   }
 
   async findById(userId: string, householdId: string): Promise<UserHouseholdPopulation | null> {
-    const response = await fetch(`${this.BASE_URL}/${userId}/${householdId}`, {
-      headers: { 'Content-Type': 'application/json' },
-    });
-
-    if (response.status === 404) {
-      return null;
-    }
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch association');
-    }
-
-    const apiData = await response.json();
-    return UserHouseholdAdapter.fromApiResponse(apiData);
+    return fetchUserHouseholdAssociationByIdV2(userId, householdId);
   }
 
   async update(
-    _userHouseholdId: string,
-    _updates: Partial<UserHouseholdPopulation>
+    userHouseholdId: string,
+    updates: Partial<UserHouseholdPopulation>
   ): Promise<UserHouseholdPopulation> {
-    // TODO: Implement when backend API endpoint is available
-    // Expected endpoint: PUT /api/user-household-associations/:userHouseholdId
-    // Expected payload: UserHouseholdUpdatePayload (to be created)
-
-    console.warn(
-      '[ApiHouseholdStore.update] API endpoint not yet implemented. ' +
-        'This method will be activated when user authentication is added.'
-    );
-
-    throw new Error(
-      'Household updates via API are not yet supported. ' +
-        'Please ensure you are using localStorage mode.'
-    );
-  }
-
-  // Not yet implemented, but keeping for future use
-  /*
-  async delete(userId: string, householdId: string): Promise<void> {
-    const response = await fetch(`/api/user-population-households/${userId}/${householdId}`, {
-      method: 'DELETE',
+    return updateUserHouseholdAssociationV2(userHouseholdId, {
+      label: updates.label ?? null,
     });
-
-    if (!response.ok) {
-      throw new Error('Failed to delete association');
-    }
   }
-  */
+
+  async delete(associationId: string): Promise<void> {
+    return deleteUserHouseholdAssociationV2(associationId);
+  }
 }
 
 export class LocalStorageHouseholdStore implements UserHouseholdStore {
@@ -165,19 +110,16 @@ export class LocalStorageHouseholdStore implements UserHouseholdStore {
     return updated;
   }
 
-  // Not yet implemented, but keeping for future use
-  /*
-  async delete(userId: string, householdId: string): Promise<void> {
+  async delete(associationId: string): Promise<void> {
     const households = this.getStoredHouseholds();
-    const filtered = households.filter(a => !(a.userId === userId && a.householdId === householdId));
-    
+    const filtered = households.filter((h) => h.id !== associationId);
+
     if (filtered.length === households.length) {
-      throw new Error('Association not found');
+      throw new Error(`Association with id ${associationId} not found`);
     }
 
     this.setStoredHouseholds(filtered);
   }
-  */
 
   private getStoredHouseholds(): UserHouseholdPopulation[] {
     try {

@@ -82,7 +82,7 @@ export default function MarginalTaxRatesSubPage({
     householdId: simulations[0]?.populationId || 'baseline',
     policyId: simulations[0]?.policyId || 'baseline-policy',
     policyData: baselinePolicyData,
-    year: reportYear,
+    year: parseInt(reportYear, 10),
     countryId,
     enabled: !!simulations[0]?.populationId && !!baselinePolicy,
   });
@@ -96,7 +96,7 @@ export default function MarginalTaxRatesSubPage({
     householdId: simulations[1]?.populationId || 'reform',
     policyId: simulations[1]?.policyId || 'reform-policy',
     policyData: reformPolicyData,
-    year: reportYear,
+    year: parseInt(reportYear, 10),
     countryId,
     enabled: !!reform && !!simulations[1]?.populationId && !!reformPolicy,
   });
@@ -125,7 +125,7 @@ export default function MarginalTaxRatesSubPage({
   }
 
   // Verify baseline data exists and has required structure
-  if (!baselineVariation || !baselineVariation.householdData?.people) {
+  if (!baselineVariation || !baselineVariation.people?.length) {
     return (
       <Stack gap={spacing.md}>
         <Text c="red">No baseline variation data available</Text>
@@ -134,7 +134,7 @@ export default function MarginalTaxRatesSubPage({
   }
 
   // If reform exists, verify reform data has required structure
-  if (reform && reformVariation && !reformVariation.householdData?.people) {
+  if (reform && reformVariation && !reformVariation.people?.length) {
     return (
       <Stack gap={spacing.md}>
         <Text c="red">Invalid reform variation data</Text>
@@ -144,12 +144,11 @@ export default function MarginalTaxRatesSubPage({
 
   // Get MTR data (401-point arrays)
   // Use first person's MTR (matches V1 behavior) - MTR should not be aggregated across people
-  const firstPersonName = Object.keys(baselineVariation.householdData?.people || {})[0];
+  const firstPersonIndex = 0;
 
   const baselineMTR = getValueFromHousehold(
     'marginal_tax_rate',
-    reportYear,
-    firstPersonName,
+    firstPersonIndex,
     baselineVariation,
     metadataContext
   );
@@ -158,8 +157,7 @@ export default function MarginalTaxRatesSubPage({
     reform && reformVariation
       ? getValueFromHousehold(
           'marginal_tax_rate',
-          reportYear,
-          firstPersonName,
+          firstPersonIndex,
           reformVariation,
           metadataContext
         )
@@ -180,12 +178,9 @@ export default function MarginalTaxRatesSubPage({
   const reformMTRClipped = reformMTR ? clipMTR(reformMTR as number[]) : null;
 
   // Get current earnings for marker (first person only)
-  const firstPersonNameBaseline = Object.keys(baseline.householdData?.people || {})[0];
-
   const currentEarnings = getValueFromHousehold(
     'employment_income',
-    reportYear,
-    firstPersonNameBaseline,
+    firstPersonIndex,
     baseline,
     metadataContext
   ) as number;
@@ -193,8 +188,7 @@ export default function MarginalTaxRatesSubPage({
   // Get current MTR (first person only)
   const currentMTR = getValueFromHousehold(
     'marginal_tax_rate',
-    reportYear,
-    firstPersonNameBaseline,
+    firstPersonIndex,
     baseline,
     metadataContext
   ) as number;

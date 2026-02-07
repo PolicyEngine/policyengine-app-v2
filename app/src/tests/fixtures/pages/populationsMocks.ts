@@ -1,10 +1,10 @@
 import { vi } from 'vitest';
 import { CURRENT_YEAR } from '@/constants';
+import { Household } from '@/types/ingredients/Household';
 import {
   UserGeographyPopulation,
   UserHouseholdPopulation,
 } from '@/types/ingredients/UserPopulation';
-import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
 
 // ============= TEST CONSTANTS =============
 
@@ -109,84 +109,41 @@ export const POPULATION_ERRORS = {
 
 // ============= MOCK DATA OBJECTS =============
 
-// Mock household metadata
-export const mockHouseholdMetadata1: HouseholdMetadata = {
-  id: POPULATION_TEST_IDS.HOUSEHOLD_ID_1.split('-')[1],
-  country_id: POPULATION_GEO.COUNTRY_US,
-  household_json: {
-    people: {
-      person1: {
-        age: { [CURRENT_YEAR]: 30 },
-        employment_income: { [CURRENT_YEAR]: 50000 },
-      },
-      person2: {
-        age: { [CURRENT_YEAR]: 28 },
-        employment_income: { [CURRENT_YEAR]: 45000 },
-      },
+// Mock household data (v2 flat format)
+export const mockHouseholdData1: Household = {
+  id: POPULATION_TEST_IDS.HOUSEHOLD_ID_1,
+  tax_benefit_model_name: 'policyengine_us',
+  year: parseInt(CURRENT_YEAR, 10),
+  people: [
+    {
+      age: 30,
+      employment_income: 50000,
     },
-    families: {
-      family1: {
-        members: ['person1', 'person2'],
-      },
+    {
+      age: 28,
+      employment_income: 45000,
     },
-    tax_units: {
-      unit1: {
-        members: ['person1'],
-      },
-    },
-    spm_units: {
-      unit1: {
-        members: ['person1'],
-      },
-    },
-    households: {
-      household1: {
-        members: ['person1', 'person2'],
-      },
-    },
-    marital_units: {
-      unit1: {
-        members: ['person1', 'person2'],
-      },
-    },
-  },
-  api_version: 'v1',
-  household_hash: '<household_hash>',
+  ],
+  family: {},
+  tax_unit: {},
+  spm_unit: {},
+  household: {},
+  marital_unit: {},
 };
 
-export const mockHouseholdMetadata2: HouseholdMetadata = {
-  id: POPULATION_TEST_IDS.HOUSEHOLD_ID_2.split('-')[1],
-  country_id: POPULATION_GEO.COUNTRY_US,
-  household_json: {
-    people: {
-      person1: {
-        age: { [CURRENT_YEAR]: 45 },
-      },
+export const mockHouseholdData2: Household = {
+  id: POPULATION_TEST_IDS.HOUSEHOLD_ID_2,
+  tax_benefit_model_name: 'policyengine_us',
+  year: parseInt(CURRENT_YEAR, 10),
+  people: [
+    {
+      age: 45,
     },
-    families: {},
-    tax_units: {
-      unit1: {
-        members: ['person1'],
-      },
-    },
-    spm_units: {
-      unit1: {
-        members: ['person1'],
-      },
-    },
-    households: {
-      household1: {
-        members: ['person1', 'person2'],
-      },
-    },
-    marital_units: {
-      unit1: {
-        members: ['person1', 'person2'],
-      },
-    },
-  },
-  api_version: 'v1',
-  household_hash: '<household_hash>',
+  ],
+  tax_unit: {},
+  spm_unit: {},
+  household: {},
+  marital_unit: {},
 };
 
 // Mock household associations
@@ -241,13 +198,13 @@ export const mockGeographicAssociation2: UserGeographyPopulation = {
 export const mockUserHouseholdsData = [
   {
     association: mockHouseholdAssociation1,
-    household: mockHouseholdMetadata1,
+    household: mockHouseholdData1,
     isLoading: false,
     error: null,
   },
   {
     association: mockHouseholdAssociation2,
-    household: mockHouseholdMetadata2,
+    household: mockHouseholdData2,
     isLoading: false,
     error: null,
   },

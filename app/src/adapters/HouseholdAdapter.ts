@@ -1,140 +1,113 @@
-import { getEntities } from '@/data/static';
+/**
+ * HouseholdAdapter - Conversion utilities for v2 Alpha household data
+ *
+ * This adapter works exclusively with the v2 Alpha format.
+ * No legacy/v1 conversion logic belongs here.
+ * For v1 API boundary conversion, see api/legacyConversion.ts
+ */
+
 import { countryIds } from '@/libs/countries';
-import { store } from '@/store';
-import { Household, HouseholdData } from '@/types/ingredients/Household';
+import { Household, TaxBenefitModelName } from '@/types/ingredients/Household';
 import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
-import { HouseholdCreationPayload } from '@/types/payloads';
+import { HouseholdCalculatePayload, householdToCalculatePayload } from '@/types/payloads';
 
 /**
- * Get entity metadata from static data based on current country
- */
-function getEntityMetadata() {
-  const state = store.getState();
-  const countryId = state.metadata?.currentCountry || 'us';
-  return getEntities(countryId);
-}
-
-/**
- * Convert entity name from camelCase to snake_case plural form using metadata
- */
-function getEntityPluralKey(entityName: string): string | null {
-  const entities = getEntityMetadata();
-
-  // Special case for 'people' which is already plural
-  if (entityName === 'people') {
-    return 'people';
-  }
-
-  // Look for an entity whose plural matches the entityName
-  for (const [_key, entity] of Object.entries(entities)) {
-    if ((entity as any).plural === entityName) {
-      return entityName;
-    }
-  }
-
-  // Try to find by converting camelCase to snake_case
-  // e.g., 'taxUnits' -> 'tax_units', 'maritalUnits' -> 'marital_units'
-  const snakeCase = entityName.replace(/([A-Z])/g, '_$1').toLowerCase();
-  for (const [_key, entity] of Object.entries(entities)) {
-    if ((entity as any).plural === snakeCase) {
-      return snakeCase;
-    }
-  }
-
-  return null;
-}
-
-/**
- * Validate that an entity name exists in metadata
- */
-function validateEntityName(entityName: string): void {
-  if (entityName === 'people') {
-    return; // People is always valid
-  }
-
-  const pluralKey = getEntityPluralKey(entityName);
-  if (!pluralKey) {
-    const entities = getEntityMetadata();
-    const validEntities = Object.values(entities)
-      .map((e: any) => e.plural)
-      .join(', ');
-    throw new Error(`Unknown entity "${entityName}". Valid entities are: people, ${validEntities}`);
-  }
-}
-
-/**
- * Adapter to convert between API format (HouseholdMetadata) and internal format (Household)
+ * Adapter for converting between Household formats
  */
 export class HouseholdAdapter {
   /**
-   * Convert API response to internal Household format
-   * Dynamically handles all entity types based on metadata
+   * Extract Household from HouseholdMetadata (storage wrapper)
    */
   static fromMetadata(metadata: HouseholdMetadata): Household {
-    const householdData: HouseholdData = {
-      people: metadata.household_json.people as any,
-    };
-
-    // Iterate over all keys in household_json
-    for (const [key, value] of Object.entries(metadata.household_json)) {
-      if (key === 'people') {
-        continue; // Already handled
-      }
-
-      // Try to validate the entity exists in metadata
-      try {
-        validateEntityName(key);
-        // Convert snake_case to camelCase for internal representation
-        const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
-        householdData[camelKey] = value as any;
-      } catch {
-        // If entity not found in metadata, still include it but log warning
-        console.warn(`Entity "${key}" not found in metadata, including anyway`);
-        const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
-        householdData[camelKey] = value as any;
-      }
-    }
-
     return {
+      ...metadata.household,
       id: metadata.id,
-      countryId: metadata.country_id as (typeof countryIds)[number],
-      householdData,
+      label: metadata.label ?? undefined,
     };
   }
 
   /**
-   * Create a minimal Household for creation requests
-   * Dynamically handles all entity types based on metadata
+   * Create HouseholdMetadata wrapper for storage
    */
-  static toCreationPayload(
-    householdData: HouseholdData,
-    countryId: string
-  ): HouseholdCreationPayload {
-    const household_json: any = {
-      people: householdData.people as any,
-    };
-
-    // Iterate over all keys in householdData
-    for (const [key, value] of Object.entries(householdData)) {
-      if (key === 'people') {
-        continue; // Already handled
-      }
-
-      // Get the plural form from metadata
-      const pluralKey = getEntityPluralKey(key);
-      if (pluralKey) {
-        household_json[pluralKey] = value as any;
-      } else {
-        // If not found in metadata, try snake_case conversion
-        const snakeKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();
-        console.warn(`Entity "${key}" not found in metadata, using snake_case "${snakeKey}"`);
-        household_json[snakeKey] = value as any;
-      }
-    }
+  static toMetadata(household: Household, id?: string): HouseholdMetadata {
+    const householdCopy = { ...household };
+    delete householdCopy.id;
+    delete householdCopy.label;
 
     return {
-      country_id: countryId,
-      data: household_json,
+      id: id ?? household.id ?? generateHouseholdId(),
+      household: householdCopy as Household,
+      label: household.label,
+      created_at: new Date().toISOString(),
     };
   }
+
+  /**
+   * Convert Household to API calculation payload
+   */
+  static toCalculatePayload(
+    household: Household,
+    policyId?: string,
+    dynamicId?: string
+  ): HouseholdCalculatePayload {
+    return householdToCalculatePayload(household, policyId, dynamicId);
+  }
+
+  /**
+   * Get the country ID from a Household's tax_benefit_model_name
+   */
+  static getCountryId(household: Household): (typeof countryIds)[number] {
+    return modelNameToCountryId(household.tax_benefit_model_name);
+  }
+
+  /**
+   * Check if household is for US
+   */
+  static isUS(household: Household): boolean {
+    return household.tax_benefit_model_name === 'policyengine_us';
+  }
+
+  /**
+   * Check if household is for UK
+   */
+  static isUK(household: Household): boolean {
+    return household.tax_benefit_model_name === 'policyengine_uk';
+  }
+}
+
+// ============================================================================
+// Conversion Utilities
+// ============================================================================
+
+/**
+ * Convert country ID to tax_benefit_model_name
+ */
+export function countryIdToModelName(countryId: (typeof countryIds)[number]): TaxBenefitModelName {
+  switch (countryId) {
+    case 'uk':
+      return 'policyengine_uk';
+    case 'us':
+    default:
+      return 'policyengine_us';
+  }
+}
+
+/**
+ * Convert tax_benefit_model_name to country ID
+ */
+export function modelNameToCountryId(modelName: TaxBenefitModelName): (typeof countryIds)[number] {
+  switch (modelName) {
+    case 'policyengine_uk':
+      return 'uk';
+    case 'policyengine_us':
+    default:
+      return 'us';
+  }
+}
+
+/**
+ * Generate a unique household ID for local storage
+ */
+export function generateHouseholdId(): string {
+  return `hh-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
 }

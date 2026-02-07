@@ -33,14 +33,13 @@ export default function NetIncomeSubPage({ baseline, reform }: Props) {
   // Extract net income values
   const baselineValue = getValueFromHousehold(
     'household_net_income',
-    reportYear,
     null,
     baseline,
     metadataContext
   );
 
   const reformValue = reform
-    ? getValueFromHousehold('household_net_income', reportYear, null, reform, metadataContext)
+    ? getValueFromHousehold('household_net_income', null, reform, metadataContext)
     : null;
 
   // Calculate comparison

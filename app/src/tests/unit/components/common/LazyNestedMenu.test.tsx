@@ -3,19 +3,15 @@
  *
  * Tests the lazy-loading nested menu that fetches children on-demand.
  */
-import { describe, expect, test, vi, beforeEach } from 'vitest';
 import { render, screen, userEvent } from '@test-utils';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import LazyNestedMenu from '@/components/common/LazyNestedMenu';
 import {
   createMockGetChildren,
   createMockOnParameterClick,
-  MOCK_BENEFIT_CHILDREN,
   MOCK_EMPTY_NODES,
   MOCK_LEAF_NODES,
   MOCK_ROOT_NODES,
-  MOCK_SINGLE_BRANCH_NODE,
-  MOCK_SINGLE_LEAF_NODE,
-  MOCK_TAX_CHILDREN,
   TEST_NODE_LABELS,
   TEST_NODE_NAMES,
 } from '@/tests/fixtures/components/LazyNestedMenuMocks';
@@ -31,12 +27,7 @@ describe('LazyNestedMenu', () => {
       const getChildren = createMockGetChildren();
 
       // When
-      render(
-        <LazyNestedMenu
-          nodes={MOCK_ROOT_NODES}
-          getChildren={getChildren}
-        />
-      );
+      render(<LazyNestedMenu nodes={MOCK_ROOT_NODES} getChildren={getChildren} />);
 
       // Then
       expect(screen.getByText(TEST_NODE_LABELS.TAX)).toBeInTheDocument();
@@ -48,12 +39,7 @@ describe('LazyNestedMenu', () => {
       const getChildren = createMockGetChildren();
 
       // When
-      render(
-        <LazyNestedMenu
-          nodes={MOCK_EMPTY_NODES}
-          getChildren={getChildren}
-        />
-      );
+      render(<LazyNestedMenu nodes={MOCK_EMPTY_NODES} getChildren={getChildren} />);
 
       // Then - no NavLink items should be rendered
       expect(screen.queryByRole('link')).not.toBeInTheDocument();
@@ -65,12 +51,7 @@ describe('LazyNestedMenu', () => {
       const getChildren = createMockGetChildren();
 
       // When
-      render(
-        <LazyNestedMenu
-          nodes={MOCK_LEAF_NODES}
-          getChildren={getChildren}
-        />
-      );
+      render(<LazyNestedMenu nodes={MOCK_LEAF_NODES} getChildren={getChildren} />);
 
       // Then
       expect(screen.getByText('Parameter 1')).toBeInTheDocument();
@@ -83,12 +64,7 @@ describe('LazyNestedMenu', () => {
       // Given
       const user = userEvent.setup();
       const getChildren = createMockGetChildren();
-      render(
-        <LazyNestedMenu
-          nodes={MOCK_ROOT_NODES}
-          getChildren={getChildren}
-        />
-      );
+      render(<LazyNestedMenu nodes={MOCK_ROOT_NODES} getChildren={getChildren} />);
 
       // When
       await user.click(screen.getByText(TEST_NODE_LABELS.TAX));
@@ -104,12 +80,7 @@ describe('LazyNestedMenu', () => {
       // Given
       const user = userEvent.setup();
       const getChildren = createMockGetChildren();
-      render(
-        <LazyNestedMenu
-          nodes={MOCK_ROOT_NODES}
-          getChildren={getChildren}
-        />
-      );
+      render(<LazyNestedMenu nodes={MOCK_ROOT_NODES} getChildren={getChildren} />);
 
       // When - expand then collapse
       await user.click(screen.getByText(TEST_NODE_LABELS.TAX));
@@ -124,12 +95,7 @@ describe('LazyNestedMenu', () => {
       // Given
       const user = userEvent.setup();
       const getChildren = createMockGetChildren();
-      render(
-        <LazyNestedMenu
-          nodes={MOCK_ROOT_NODES}
-          getChildren={getChildren}
-        />
-      );
+      render(<LazyNestedMenu nodes={MOCK_ROOT_NODES} getChildren={getChildren} />);
 
       // When - expand both
       await user.click(screen.getByText(TEST_NODE_LABELS.TAX));
@@ -149,12 +115,7 @@ describe('LazyNestedMenu', () => {
       const getChildren = createMockGetChildren({
         [TEST_NODE_NAMES.INCOME_TAX]: grandchildren,
       });
-      render(
-        <LazyNestedMenu
-          nodes={MOCK_ROOT_NODES}
-          getChildren={getChildren}
-        />
-      );
+      render(<LazyNestedMenu nodes={MOCK_ROOT_NODES} getChildren={getChildren} />);
 
       // When - expand tax, then expand income tax
       await user.click(screen.getByText(TEST_NODE_LABELS.TAX));
@@ -232,12 +193,7 @@ describe('LazyNestedMenu', () => {
       // Given
       const user = userEvent.setup();
       const getChildren = createMockGetChildren();
-      render(
-        <LazyNestedMenu
-          nodes={MOCK_LEAF_NODES}
-          getChildren={getChildren}
-        />
-      );
+      render(<LazyNestedMenu nodes={MOCK_LEAF_NODES} getChildren={getChildren} />);
 
       // When/Then - should not throw
       await expect(user.click(screen.getByText('Parameter 1'))).resolves.not.toThrow();
@@ -249,12 +205,7 @@ describe('LazyNestedMenu', () => {
       // Given
       const user = userEvent.setup();
       const getChildren = createMockGetChildren();
-      render(
-        <LazyNestedMenu
-          nodes={MOCK_ROOT_NODES}
-          getChildren={getChildren}
-        />
-      );
+      render(<LazyNestedMenu nodes={MOCK_ROOT_NODES} getChildren={getChildren} />);
 
       // When
       await user.click(screen.getByText(TEST_NODE_LABELS.TAX));
@@ -268,12 +219,7 @@ describe('LazyNestedMenu', () => {
       // Given
       const user = userEvent.setup();
       const getChildren = createMockGetChildren();
-      render(
-        <LazyNestedMenu
-          nodes={MOCK_ROOT_NODES}
-          getChildren={getChildren}
-        />
-      );
+      render(<LazyNestedMenu nodes={MOCK_ROOT_NODES} getChildren={getChildren} />);
 
       // When - click tax, then click benefit
       await user.click(screen.getByText(TEST_NODE_LABELS.TAX));
@@ -294,12 +240,7 @@ describe('LazyNestedMenu', () => {
       const getChildren = createMockGetChildren();
 
       // When
-      render(
-        <LazyNestedMenu
-          nodes={MOCK_ROOT_NODES}
-          getChildren={getChildren}
-        />
-      );
+      render(<LazyNestedMenu nodes={MOCK_ROOT_NODES} getChildren={getChildren} />);
 
       // Then
       expect(getChildren).not.toHaveBeenCalled();
@@ -309,12 +250,7 @@ describe('LazyNestedMenu', () => {
       // Given
       const user = userEvent.setup();
       const getChildren = createMockGetChildren();
-      render(
-        <LazyNestedMenu
-          nodes={MOCK_ROOT_NODES}
-          getChildren={getChildren}
-        />
-      );
+      render(<LazyNestedMenu nodes={MOCK_ROOT_NODES} getChildren={getChildren} />);
 
       // When - expand, collapse, expand
       await user.click(screen.getByText(TEST_NODE_LABELS.TAX));

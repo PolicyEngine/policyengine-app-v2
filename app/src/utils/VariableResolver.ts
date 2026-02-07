@@ -3,6 +3,8 @@
  *
  * Resolves which entity a variable belongs to using metadata, and provides
  * getters/setters that access the correct location in household data.
+ *
+ * Works with the v2 Alpha format (single-dict entities, index-based people).
  */
 
 import { Household } from '@/types/ingredients/Household';
@@ -49,7 +51,6 @@ export function resolveEntity(variableName: string, metadata: any): EntityInfo |
 
 /**
  * Get simplified entity display info for a variable
- * Returns isPerson flag and a display label for the entity type
  */
 export function getVariableEntityDisplayInfo(
   variableName: string,
@@ -79,78 +80,41 @@ export function getVariableInfo(variableName: string, metadata: any): VariableIn
     label: variable.label,
     entity: variable.entity,
     dataType: variable.data_type,
-    defaultValue: variable.defaultValue,
+    defaultValue: variable.default_value,
     possibleValues: variable.possible_values,
     description: variable.description,
   };
 }
 
 /**
- * Get the group instance name for an entity type
- * Maps entity plural to the default instance name used in household data
- *
- * NOTE: These names must match the conventions from policyengine-app (the legacy app).
- * In particular, spm_units uses "your household" as the instance name (not "your spm unit"),
- * which is the same key used by the households entity. This is intentional and matches
- * the legacy app's defaultHouseholds.js structure.
+ * Map entity plural name to the Household field key
  */
-export function getGroupName(entityPlural: string, _personName?: string): string {
-  const groupNameMap: Record<string, string> = {
-    people: 'you', // Will be overridden by personName if provided
-    households: 'your household',
-    tax_units: 'your tax unit',
-    spm_units: 'your household', // Same as households - matches legacy policyengine-app
-    families: 'your family',
-    marital_units: 'your marital unit',
-    benunits: 'your benefit unit',
+function pluralToHouseholdKey(plural: string): string {
+  const map: Record<string, string> = {
+    people: 'person',
+    tax_units: 'tax_unit',
+    families: 'family',
+    spm_units: 'spm_unit',
+    marital_units: 'marital_unit',
+    households: 'household',
+    benunits: 'benunit',
   };
-
-  return groupNameMap[entityPlural] || entityPlural;
-}
-
-/**
- * Get the entity data object from household based on plural name
- */
-function getEntityData(household: Household, entityPlural: string): Record<string, any> | null {
-  const householdData = household.householdData;
-
-  switch (entityPlural) {
-    case 'people':
-      return householdData.people;
-    case 'households':
-      return householdData.households;
-    case 'tax_units':
-      // Handle both snake_case and camelCase (HouseholdBuilder uses camelCase)
-      return householdData.tax_units || householdData.taxUnits;
-    case 'spm_units':
-      return householdData.spm_units || householdData.spmUnits;
-    case 'families':
-      return householdData.families;
-    case 'marital_units':
-      return householdData.marital_units || householdData.maritalUnits;
-    case 'benunits':
-      return householdData.benunits;
-    default:
-      return null;
-  }
+  return map[plural] ?? 'person';
 }
 
 /**
  * Get value for a variable from the correct entity location
  *
- * @param household - The household data
+ * @param household - The household data (v2 format)
  * @param variableName - Name of the variable (snake_case)
  * @param metadata - Country metadata
- * @param year - Tax year
- * @param entityName - Specific entity instance name (e.g., "you", "your partner")
- *                     Required for person-level variables, optional for others
+ * @param entityIndex - For person variables: array index. For entities: ignored (single dict).
  */
 export function getValue(
   household: Household,
   variableName: string,
   metadata: any,
-  year: string,
-  entityName?: string
+  entityIndex?: number
 ): any {
   const entityInfo = resolveEntity(variableName, metadata);
   if (!entityInfo) {
@@ -158,56 +122,33 @@ export function getValue(
     return null;
   }
 
-  const entityData = getEntityData(household, entityInfo.plural);
-  if (!entityData) {
-    return null;
+  if (entityInfo.isPerson) {
+    const index = entityIndex ?? 0;
+    return household.people[index]?.[variableName] ?? null;
   }
 
-  // Determine which entity instance to read from
-  let instanceName: string;
-  if (entityName) {
-    instanceName = entityName;
-  } else if (entityInfo.isPerson) {
-    // For person-level variables without entityName, return null
-    // Caller should iterate over people
-    console.warn(`[VariableResolver] Person-level variable ${variableName} requires entityName`);
-    return null;
-  } else {
-    // For non-person entities, use the default instance name
-    instanceName = getGroupName(entityInfo.plural);
-  }
-
-  const instance = entityData[instanceName];
-  if (!instance) {
-    return null;
-  }
-
-  const variableData = instance[variableName];
-  if (!variableData) {
-    return null;
-  }
-
-  return variableData[year] ?? null;
+  // For group entities, access the single dict directly
+  const entityKey = pluralToHouseholdKey(entityInfo.plural);
+  const entity = household[entityKey as keyof Household] as Record<string, any> | undefined;
+  return entity?.[variableName] ?? null;
 }
 
 /**
  * Set value for a variable at the correct entity location
  * Returns a new household object (immutable update)
  *
- * @param household - The household data
+ * @param household - The household data (v2 format)
  * @param variableName - Name of the variable (snake_case)
  * @param value - Value to set
  * @param metadata - Country metadata
- * @param year - Tax year
- * @param entityName - Specific entity instance name (required for person-level)
+ * @param entityIndex - For person variables: array index. For entities: ignored.
  */
 export function setValue(
   household: Household,
   variableName: string,
   value: any,
   metadata: any,
-  year: string,
-  entityName?: string
+  entityIndex?: number
 ): Household {
   const entityInfo = resolveEntity(variableName, metadata);
   if (!entityInfo) {
@@ -215,53 +156,30 @@ export function setValue(
     return household;
   }
 
-  // Deep clone to maintain immutability
   const newHousehold = JSON.parse(JSON.stringify(household)) as Household;
-  const entityData = getEntityData(newHousehold, entityInfo.plural);
 
-  if (!entityData) {
-    console.warn(`[VariableResolver] Entity ${entityInfo.plural} not found in household`);
-    return household;
+  if (entityInfo.isPerson) {
+    const index = entityIndex ?? 0;
+    if (newHousehold.people[index]) {
+      newHousehold.people[index][variableName] = value;
+    }
+    return newHousehold;
   }
 
-  // Determine which entity instance to write to
-  let instanceName: string;
-  if (entityName) {
-    instanceName = entityName;
-  } else if (entityInfo.isPerson) {
-    console.warn(`[VariableResolver] Person-level variable ${variableName} requires entityName`);
-    return household;
-  } else {
-    instanceName = getGroupName(entityInfo.plural);
+  // For group entities, set on the single dict
+  const entityKey = pluralToHouseholdKey(entityInfo.plural) as keyof Household;
+  const entity = newHousehold[entityKey] as Record<string, any> | undefined;
+  if (entity) {
+    entity[variableName] = value;
   }
-
-  // Ensure instance exists
-  if (!entityData[instanceName]) {
-    console.warn(`[VariableResolver] Entity instance ${instanceName} not found`);
-    return household;
-  }
-
-  // Ensure variable object exists
-  if (!entityData[instanceName][variableName]) {
-    entityData[instanceName][variableName] = {};
-  }
-
-  // Set the value
-  entityData[instanceName][variableName][year] = value;
 
   return newHousehold;
 }
 
 /**
  * Add a variable to all applicable entity instances with default value
- * Note: Currently unused. Kept for potential future use if we add "Add variable to all members" functionality
  */
-export function addVariable(
-  household: Household,
-  variableName: string,
-  metadata: any,
-  year: string
-): Household {
+export function addVariable(household: Household, variableName: string, metadata: any): Household {
   const entityInfo = resolveEntity(variableName, metadata);
   const variableInfo = getVariableInfo(variableName, metadata);
 
@@ -270,18 +188,19 @@ export function addVariable(
   }
 
   const newHousehold = JSON.parse(JSON.stringify(household)) as Household;
-  const entityData = getEntityData(newHousehold, entityInfo.plural);
 
-  if (!entityData) {
-    return household;
-  }
-
-  // Add variable to all instances of this entity type
-  for (const instanceName of Object.keys(entityData)) {
-    if (!entityData[instanceName][variableName]) {
-      entityData[instanceName][variableName] = {
-        [year]: variableInfo.defaultValue,
-      };
+  if (entityInfo.isPerson) {
+    for (const person of newHousehold.people) {
+      if (person[variableName] === undefined) {
+        person[variableName] = variableInfo.defaultValue;
+      }
+    }
+  } else {
+    // Set on the single entity dict
+    const entityKey = pluralToHouseholdKey(entityInfo.plural) as keyof Household;
+    const entity = newHousehold[entityKey] as Record<string, any> | undefined;
+    if (entity && entity[variableName] === undefined) {
+      entity[variableName] = variableInfo.defaultValue;
     }
   }
 
@@ -290,14 +209,12 @@ export function addVariable(
 
 /**
  * Add a variable to a single specific entity instance with default value
- * Use this for per-person variable assignment
  */
 export function addVariableToEntity(
   household: Household,
   variableName: string,
   metadata: any,
-  year: string,
-  entityName: string
+  entityIndex?: number
 ): Household {
   const entityInfo = resolveEntity(variableName, metadata);
   const variableInfo = getVariableInfo(variableName, metadata);
@@ -307,17 +224,20 @@ export function addVariableToEntity(
   }
 
   const newHousehold = JSON.parse(JSON.stringify(household)) as Household;
-  const entityData = getEntityData(newHousehold, entityInfo.plural);
 
-  if (!entityData) {
-    return household;
-  }
-
-  // Add variable only to the specified entity instance
-  if (entityData[entityName] && !entityData[entityName][variableName]) {
-    entityData[entityName][variableName] = {
-      [year]: variableInfo.defaultValue,
-    };
+  if (entityInfo.isPerson) {
+    const index = entityIndex ?? 0;
+    const person = newHousehold.people[index];
+    if (person && person[variableName] === undefined) {
+      person[variableName] = variableInfo.defaultValue;
+    }
+  } else {
+    // Set on the single entity dict
+    const entityKey = pluralToHouseholdKey(entityInfo.plural) as keyof Household;
+    const entity = newHousehold[entityKey] as Record<string, any> | undefined;
+    if (entity && entity[variableName] === undefined) {
+      entity[variableName] = variableInfo.defaultValue;
+    }
   }
 
   return newHousehold;
@@ -338,15 +258,18 @@ export function removeVariable(
   }
 
   const newHousehold = JSON.parse(JSON.stringify(household)) as Household;
-  const entityData = getEntityData(newHousehold, entityInfo.plural);
 
-  if (!entityData) {
-    return household;
-  }
-
-  // Remove variable from all instances
-  for (const instanceName of Object.keys(entityData)) {
-    delete entityData[instanceName][variableName];
+  if (entityInfo.isPerson) {
+    for (const person of newHousehold.people) {
+      delete person[variableName];
+    }
+  } else {
+    // Delete from the single entity dict
+    const entityKey = pluralToHouseholdKey(entityInfo.plural) as keyof Household;
+    const entity = newHousehold[entityKey] as Record<string, any> | undefined;
+    if (entity) {
+      delete entity[variableName];
+    }
   }
 
   return newHousehold;
@@ -354,8 +277,6 @@ export function removeVariable(
 
 /**
  * Get all variables from metadata
- * Note: Previously filtered to isInputVariable only, now returns all variables
- * since V2 API doesn't distinguish input vs computed variables
  */
 export function getInputVariables(metadata: any): VariableInfo[] {
   if (!metadata.variables) {
@@ -371,4 +292,22 @@ export function getInputVariables(metadata: any): VariableInfo[] {
     possibleValues: v.possible_values,
     description: v.description,
   }));
+}
+
+/**
+ * Get the group instance name for an entity type
+ * Maps entity plural to the display name
+ */
+export function getGroupName(entityPlural: string): string {
+  const groupNameMap: Record<string, string> = {
+    people: 'you',
+    households: 'your household',
+    tax_units: 'your tax unit',
+    spm_units: 'your household',
+    families: 'your family',
+    marital_units: 'your marital unit',
+    benunits: 'your benefit unit',
+  };
+
+  return groupNameMap[entityPlural] || entityPlural;
 }

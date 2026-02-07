@@ -1,18 +1,13 @@
-import { CURRENT_YEAR } from '@/constants';
 import { Household, HouseholdPerson } from '@/types/ingredients/Household';
-import { PersonWithName } from '@/utils/HouseholdQueries';
 
 // ============= TEST CONSTANTS =============
 
-// Person names
-export const QUERY_PERSON_NAMES = {
-  ADULT_1: 'John',
-  ADULT_2: 'Jane',
-  ADULT_3: 'Bob',
-  CHILD_1: 'Jack',
-  CHILD_2: 'Jill',
-  TEEN: 'Teen',
-  BABY: 'Baby',
+// Person indices (v2 Alpha uses array index)
+export const QUERY_PERSON_INDICES = {
+  ADULT_1: 0,
+  ADULT_2: 1,
+  CHILD_1: 2,
+  CHILD_2: 3,
 } as const;
 
 // Ages
@@ -27,41 +22,6 @@ export const QUERY_AGES = {
   BABY_1: 1,
 } as const;
 
-// Countries
-export const QUERY_COUNTRIES = {
-  US: 'us',
-  UK: 'uk',
-  CA: 'ca',
-} as const;
-
-// Years
-export const QUERY_YEARS = {
-  CURRENT: CURRENT_YEAR,
-  PAST: '2023',
-  FUTURE: '2026',
-  NON_EXISTENT: '2027',
-} as const;
-
-// Entity names
-export const QUERY_ENTITY_NAMES = {
-  PEOPLE: 'people',
-  HOUSEHOLDS: 'households',
-  FAMILIES: 'families',
-  TAX_UNITS: 'taxUnits',
-  BEN_UNITS: 'benunits',
-  NON_EXISTENT: 'nonExistentEntity',
-} as const;
-
-// Group keys
-export const QUERY_GROUP_KEYS = {
-  DEFAULT_HOUSEHOLD: 'your household',
-  DEFAULT_FAMILY: 'your family',
-  DEFAULT_TAX_UNIT: 'your tax unit',
-  DEFAULT_BEN_UNIT: 'your benefit unit',
-  SECOND_HOUSEHOLD: 'second household',
-  NON_EXISTENT: 'nonExistentGroup',
-} as const;
-
 // Variable names
 export const QUERY_VARIABLE_NAMES = {
   EMPLOYMENT_INCOME: 'employment_income',
@@ -69,7 +29,6 @@ export const QUERY_VARIABLE_NAMES = {
   IS_TAX_UNIT_DEPENDENT: 'is_tax_unit_dependent',
   STATE_CODE: 'state_code',
   NON_EXISTENT: 'non_existent_variable',
-  MULTI_YEAR: 'multi_year_variable',
 } as const;
 
 // Variable values
@@ -112,299 +71,95 @@ export const QUERY_EXPECTED_COUNTS = {
 
 // ============= MOCK DATA OBJECTS =============
 
-// Mock person objects
-export const mockAdult30: HouseholdPerson = {
-  age: { [QUERY_YEARS.CURRENT]: QUERY_AGES.ADULT_30 },
-  [QUERY_VARIABLE_NAMES.EMPLOYMENT_INCOME]: {
-    [QUERY_YEARS.CURRENT]: QUERY_VARIABLE_VALUES.INCOME_50K,
-  },
-};
-
-export const mockAdult25: HouseholdPerson = {
-  age: { [QUERY_YEARS.CURRENT]: QUERY_AGES.ADULT_25 },
-  [QUERY_VARIABLE_NAMES.EMPLOYMENT_INCOME]: {
-    [QUERY_YEARS.CURRENT]: QUERY_VARIABLE_VALUES.INCOME_75K,
-  },
-};
-
-export const mockChild10: HouseholdPerson = {
-  age: { [QUERY_YEARS.CURRENT]: QUERY_AGES.CHILD_10 },
-  [QUERY_VARIABLE_NAMES.IS_TAX_UNIT_DEPENDENT]: {
-    [QUERY_YEARS.CURRENT]: QUERY_VARIABLE_VALUES.BOOLEAN_TRUE,
-  },
-};
-
-export const mockChild5: HouseholdPerson = {
-  age: { [QUERY_YEARS.CURRENT]: QUERY_AGES.CHILD_5 },
-  [QUERY_VARIABLE_NAMES.IS_TAX_UNIT_DEPENDENT]: {
-    [QUERY_YEARS.CURRENT]: QUERY_VARIABLE_VALUES.BOOLEAN_TRUE,
-  },
-};
-
-// Person with age changing over years
-export const mockPersonAgeChanging: HouseholdPerson = {
-  age: {
-    [QUERY_YEARS.PAST]: QUERY_AGES.CHILD_ALMOST_18,
-    [QUERY_YEARS.CURRENT]: QUERY_AGES.ADULT_EXACTLY_18,
-    [QUERY_YEARS.FUTURE]: QUERY_AGES.ADULT_25,
-  },
-};
-
-// Person with multi-year variables
-export const mockPersonMultiYear: HouseholdPerson = {
-  age: { [QUERY_YEARS.CURRENT]: QUERY_AGES.ADULT_30 },
-  [QUERY_VARIABLE_NAMES.MULTI_YEAR]: {
-    [QUERY_YEARS.PAST]: QUERY_VARIABLE_VALUES.NUMBER_VALUE,
-    [QUERY_YEARS.CURRENT]: QUERY_VARIABLE_VALUES.STRING_VALUE,
-    [QUERY_YEARS.FUTURE]: QUERY_VARIABLE_VALUES.BOOLEAN_TRUE,
-  },
-};
-
 // Empty household
 export const mockEmptyHousehold: Household = {
-  countryId: QUERY_COUNTRIES.US as any,
-  householdData: {
-    people: {},
-    households: {},
-  },
+  tax_benefit_model_name: 'policyengine_us',
+  year: 2024,
+  people: [],
 };
 
-// Household with 2 adults and 2 children
+// Household with 2 adults and 2 children (v2 Alpha: no person_id/name, entity groups are dicts)
 export const mockHouseholdTwoAdultsTwoChildren: Household = {
-  countryId: QUERY_COUNTRIES.US as any,
-  householdData: {
-    people: {
-      [QUERY_PERSON_NAMES.ADULT_1]: mockAdult30,
-      [QUERY_PERSON_NAMES.ADULT_2]: mockAdult25,
-      [QUERY_PERSON_NAMES.CHILD_1]: mockChild10,
-      [QUERY_PERSON_NAMES.CHILD_2]: mockChild5,
+  tax_benefit_model_name: 'policyengine_us',
+  year: 2024,
+  people: [
+    {
+      age: QUERY_AGES.ADULT_30,
+      [QUERY_VARIABLE_NAMES.EMPLOYMENT_INCOME]: QUERY_VARIABLE_VALUES.INCOME_50K,
     },
-    households: {
-      [QUERY_GROUP_KEYS.DEFAULT_HOUSEHOLD]: {
-        members: [
-          QUERY_PERSON_NAMES.ADULT_1,
-          QUERY_PERSON_NAMES.ADULT_2,
-          QUERY_PERSON_NAMES.CHILD_1,
-          QUERY_PERSON_NAMES.CHILD_2,
-        ],
-        [QUERY_VARIABLE_NAMES.STATE_CODE]: {
-          [QUERY_YEARS.CURRENT]: QUERY_VARIABLE_VALUES.STATE_CA,
-        },
-      },
+    {
+      age: QUERY_AGES.ADULT_25,
+      [QUERY_VARIABLE_NAMES.EMPLOYMENT_INCOME]: QUERY_VARIABLE_VALUES.INCOME_75K,
     },
-    families: {
-      [QUERY_GROUP_KEYS.DEFAULT_FAMILY]: {
-        members: [
-          QUERY_PERSON_NAMES.ADULT_1,
-          QUERY_PERSON_NAMES.ADULT_2,
-          QUERY_PERSON_NAMES.CHILD_1,
-          QUERY_PERSON_NAMES.CHILD_2,
-        ],
-      },
+    {
+      age: QUERY_AGES.CHILD_10,
+      [QUERY_VARIABLE_NAMES.IS_TAX_UNIT_DEPENDENT]: QUERY_VARIABLE_VALUES.BOOLEAN_TRUE,
     },
-    taxUnits: {
-      [QUERY_GROUP_KEYS.DEFAULT_TAX_UNIT]: {
-        members: [
-          QUERY_PERSON_NAMES.ADULT_1,
-          QUERY_PERSON_NAMES.ADULT_2,
-          QUERY_PERSON_NAMES.CHILD_1,
-          QUERY_PERSON_NAMES.CHILD_2,
-        ],
-      },
+    {
+      age: QUERY_AGES.CHILD_5,
+      [QUERY_VARIABLE_NAMES.IS_TAX_UNIT_DEPENDENT]: QUERY_VARIABLE_VALUES.BOOLEAN_TRUE,
     },
+  ],
+  household: {
+    state_fips: 6, // California
   },
-};
-
-// Household with person whose age changes (child to adult)
-export const mockHouseholdAgeTransition: Household = {
-  countryId: QUERY_COUNTRIES.US as any,
-  householdData: {
-    people: {
-      [QUERY_PERSON_NAMES.TEEN]: mockPersonAgeChanging,
-    },
-    households: {
-      [QUERY_GROUP_KEYS.DEFAULT_HOUSEHOLD]: {
-        members: [QUERY_PERSON_NAMES.TEEN],
-      },
-    },
+  family: {},
+  tax_unit: {
+    [QUERY_VARIABLE_NAMES.STATE_CODE]: QUERY_VARIABLE_VALUES.STATE_CA,
   },
-};
-
-// Household with multi-year variables
-export const mockHouseholdMultiYear: Household = {
-  countryId: QUERY_COUNTRIES.US as any,
-  householdData: {
-    people: {
-      [QUERY_PERSON_NAMES.ADULT_1]: mockPersonMultiYear,
-    },
-    households: {
-      [QUERY_GROUP_KEYS.DEFAULT_HOUSEHOLD]: {
-        members: [QUERY_PERSON_NAMES.ADULT_1],
-      },
-    },
-  },
-};
-
-// Household with multiple groups
-export const mockHouseholdMultipleGroups: Household = {
-  countryId: QUERY_COUNTRIES.US as any,
-  householdData: {
-    people: {
-      [QUERY_PERSON_NAMES.ADULT_1]: mockAdult30,
-      [QUERY_PERSON_NAMES.ADULT_2]: mockAdult25,
-      [QUERY_PERSON_NAMES.ADULT_3]: {
-        age: { [QUERY_YEARS.CURRENT]: QUERY_AGES.ADULT_65 },
-      },
-    },
-    households: {
-      [QUERY_GROUP_KEYS.DEFAULT_HOUSEHOLD]: {
-        members: [QUERY_PERSON_NAMES.ADULT_1, QUERY_PERSON_NAMES.ADULT_2],
-      },
-      [QUERY_GROUP_KEYS.SECOND_HOUSEHOLD]: {
-        members: [QUERY_PERSON_NAMES.ADULT_3],
-      },
-    },
-  },
+  spm_unit: {},
+  marital_unit: {},
 };
 
 // UK household with benefit units
 export const mockUKHousehold: Household = {
-  countryId: QUERY_COUNTRIES.UK as any,
-  householdData: {
-    people: {
-      [QUERY_PERSON_NAMES.ADULT_1]: mockAdult30,
-      [QUERY_PERSON_NAMES.CHILD_1]: mockChild10,
+  tax_benefit_model_name: 'policyengine_uk',
+  year: 2024,
+  people: [
+    {
+      age: QUERY_AGES.ADULT_30,
+      [QUERY_VARIABLE_NAMES.EMPLOYMENT_INCOME]: QUERY_VARIABLE_VALUES.INCOME_50K,
     },
-    households: {
-      [QUERY_GROUP_KEYS.DEFAULT_HOUSEHOLD]: {
-        members: [QUERY_PERSON_NAMES.ADULT_1, QUERY_PERSON_NAMES.CHILD_1],
-      },
+    {
+      age: QUERY_AGES.CHILD_10,
     },
-    benunits: {
-      [QUERY_GROUP_KEYS.DEFAULT_BEN_UNIT]: {
-        members: [QUERY_PERSON_NAMES.ADULT_1, QUERY_PERSON_NAMES.CHILD_1],
-      },
-    },
+  ],
+  household: {
+    region: 'LONDON',
   },
+  benunit: {},
 };
-
-// ============= EXPECTED RESULTS =============
-
-// Expected PersonWithName results
-export const expectedAdultWithName1: PersonWithName = {
-  name: QUERY_PERSON_NAMES.ADULT_1,
-  ...mockAdult30,
-};
-
-export const expectedAdultWithName2: PersonWithName = {
-  name: QUERY_PERSON_NAMES.ADULT_2,
-  ...mockAdult25,
-};
-
-export const expectedChildWithName1: PersonWithName = {
-  name: QUERY_PERSON_NAMES.CHILD_1,
-  ...mockChild10,
-};
-
-export const expectedChildWithName2: PersonWithName = {
-  name: QUERY_PERSON_NAMES.CHILD_2,
-  ...mockChild5,
-};
-
-export const expectedAllPeopleTwoAdultsTwoChildren: PersonWithName[] = [
-  expectedAdultWithName1,
-  expectedAdultWithName2,
-  expectedChildWithName1,
-  expectedChildWithName2,
-];
-
-export const expectedAdultsTwoAdultsTwoChildren: PersonWithName[] = [
-  expectedAdultWithName1,
-  expectedAdultWithName2,
-];
-
-export const expectedChildrenTwoAdultsTwoChildren: PersonWithName[] = [
-  expectedChildWithName1,
-  expectedChildWithName2,
-];
-
-// Expected group results
-export const expectedGroupsHouseholds = [
-  {
-    key: QUERY_GROUP_KEYS.DEFAULT_HOUSEHOLD,
-    members: [
-      QUERY_PERSON_NAMES.ADULT_1,
-      QUERY_PERSON_NAMES.ADULT_2,
-      QUERY_PERSON_NAMES.CHILD_1,
-      QUERY_PERSON_NAMES.CHILD_2,
-    ],
-  },
-];
-
-export const expectedGroupsMultiple = [
-  {
-    key: QUERY_GROUP_KEYS.DEFAULT_HOUSEHOLD,
-    members: [QUERY_PERSON_NAMES.ADULT_1, QUERY_PERSON_NAMES.ADULT_2],
-  },
-  {
-    key: QUERY_GROUP_KEYS.SECOND_HOUSEHOLD,
-    members: [QUERY_PERSON_NAMES.ADULT_3],
-  },
-];
 
 // ============= TEST HELPERS =============
 
-// Helper to create a household with specific people
+/**
+ * Helper to create a household with specific people
+ */
 export const createHouseholdWithPeople = (
-  people: Record<string, HouseholdPerson>,
-  countryId: string = QUERY_COUNTRIES.US
+  people: HouseholdPerson[],
+  modelName: 'policyengine_us' | 'policyengine_uk' = 'policyengine_us'
 ): Household => ({
-  countryId: countryId as any,
-  householdData: {
-    people,
-    households: {
-      [QUERY_GROUP_KEYS.DEFAULT_HOUSEHOLD]: {
-        members: Object.keys(people),
-      },
-    },
-  },
+  tax_benefit_model_name: modelName,
+  year: 2024,
+  people,
+  household: {},
 });
 
-// Helper to create a person with age
-export const createPersonWithAge = (
-  age: number,
-  year: string = QUERY_YEARS.CURRENT
-): HouseholdPerson => ({
-  age: { [year]: age },
+/**
+ * Helper to create a person with age
+ */
+export const createPersonWithAge = (age: number): HouseholdPerson => ({
+  age,
 });
 
-// Helper to create a person with variable
+/**
+ * Helper to create a person with a variable
+ */
 export const createPersonWithVariable = (
   variableName: string,
   value: any,
-  year: string = QUERY_YEARS.CURRENT
+  age: number = QUERY_AGES.ADULT_30
 ): HouseholdPerson => ({
-  age: { [year]: QUERY_AGES.ADULT_30 },
-  [variableName]: { [year]: value },
+  age,
+  [variableName]: value,
 });
-
-// Helper to verify PersonWithName
-export const verifyPersonWithName = (
-  actual: PersonWithName,
-  expectedName: string,
-  expectedAge?: number,
-  year: string = QUERY_YEARS.CURRENT
-): void => {
-  expect(actual.name).toBe(expectedName);
-  if (expectedAge !== undefined) {
-    expect(actual.age[year]).toBe(expectedAge);
-  }
-};
-
-// Helper to verify array of PersonWithName
-export const verifyPeopleArray = (actual: PersonWithName[], expectedNames: string[]): void => {
-  expect(actual).toHaveLength(expectedNames.length);
-  const actualNames = actual.map((p) => p.name).sort();
-  const sortedExpectedNames = [...expectedNames].sort();
-  expect(actualNames).toEqual(sortedExpectedNames);
-};

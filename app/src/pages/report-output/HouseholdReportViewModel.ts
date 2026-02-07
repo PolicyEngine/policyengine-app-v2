@@ -1,6 +1,6 @@
 import type { HouseholdReportOrchestrator } from '@/libs/calculations/household/HouseholdReportOrchestrator';
 import type { HouseholdReportConfig, SimulationConfig } from '@/types/calculation/household';
-import type { Household, HouseholdData } from '@/types/ingredients/Household';
+import type { Household } from '@/types/ingredients/Household';
 import type { Report } from '@/types/ingredients/Report';
 import type { Simulation } from '@/types/ingredients/Simulation';
 import type { UserPolicy } from '@/types/ingredients/UserPolicy';
@@ -108,11 +108,14 @@ export class HouseholdReportViewModel {
 
     return this.simulations
       .filter((sim) => sim.output)
-      .map((sim) => ({
-        id: sim.id,
-        countryId: this.report!.countryId,
-        householdData: sim.output as HouseholdData,
-      }));
+      .map((sim) => {
+        // sim.output is already a Household in v2 format
+        const output = sim.output as Household;
+        return {
+          ...output,
+          id: sim.id,
+        };
+      });
   }
 
   /**
