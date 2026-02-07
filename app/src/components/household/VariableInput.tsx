@@ -17,6 +17,8 @@ export interface VariableInputProps {
   entityId?: number; // Required for person-level variables
   onChange: (newHousehold: Household) => void;
   disabled?: boolean;
+  /** Hide the label on inputs (used when label is displayed separately) */
+  hideLabel?: boolean;
 }
 
 export default function VariableInput({
@@ -26,7 +28,9 @@ export default function VariableInput({
   entityId,
   onChange,
   disabled = false,
+  hideLabel = false,
 }: VariableInputProps) {
+  const displayLabel = hideLabel ? undefined : variable.label;
   const currentValue = getValue(household, variable.name, metadata, entityId);
 
   const handleChange = (value: any) => {
@@ -69,7 +73,7 @@ export default function VariableInput({
       ) {
         return (
           <Select
-            label={variable.label}
+            label={displayLabel}
             value={currentValue?.toString() || ''}
             onChange={(val) => handleChange(val)}
             data={variable.possibleValues.map((pv: string) => ({
@@ -85,7 +89,7 @@ export default function VariableInput({
       // Fall through to text input if no possibleValues
       return (
         <TextInput
-          label={variable.label}
+          label={displayLabel}
           value={currentValue?.toString() || ''}
           onChange={(e) => handleChange(e.currentTarget.value)}
           placeholder={`Enter ${variable.label}`}
@@ -97,7 +101,7 @@ export default function VariableInput({
     case 'int':
       return (
         <NumberInput
-          label={variable.label}
+          label={displayLabel}
           value={currentValue ?? variable.defaultValue ?? 0}
           onChange={(val) => handleChange(val)}
           placeholder={`Enter ${variable.label}`}
@@ -110,7 +114,7 @@ export default function VariableInput({
     default:
       return (
         <TextInput
-          label={variable.label}
+          label={displayLabel}
           value={currentValue?.toString() || ''}
           onChange={(e) => handleChange(e.currentTarget.value)}
           placeholder={`Enter ${variable.label}`}

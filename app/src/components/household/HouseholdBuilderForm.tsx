@@ -13,6 +13,7 @@
 import { useMemo, useState } from 'react';
 import { IconInfoCircle, IconPlus } from '@tabler/icons-react';
 import { Accordion, Alert, Button, Divider, Group, Select, Stack, Text } from '@mantine/core';
+import { useDebouncedValue } from '@mantine/hooks';
 import { colors, spacing } from '@/designTokens';
 import { Household, HouseholdPerson } from '@/types/ingredients/Household';
 import { getPersonDisplayNameInContext, sortPeopleByOrder } from '@/utils/householdIndividuals';
@@ -70,11 +71,13 @@ export default function HouseholdBuilderForm({
   // Search state for person variables (per person, keyed by array index)
   const [activePersonSearch, setActivePersonSearch] = useState<number | null>(null);
   const [personSearchValue, setPersonSearchValue] = useState('');
+  const [debouncedPersonSearch] = useDebouncedValue(personSearchValue, 150);
   const [, setIsPersonSearchFocused] = useState(false);
 
   // Search state for household variables
   const [isHouseholdSearchActive, setIsHouseholdSearchActive] = useState(false);
   const [householdSearchValue, setHouseholdSearchValue] = useState('');
+  const [debouncedHouseholdSearch] = useDebouncedValue(householdSearchValue, 150);
   const [, setIsHouseholdSearchFocused] = useState(false);
 
   // Warning message state (shown when variable added to different entity than expected)
@@ -107,16 +110,16 @@ export default function HouseholdBuilderForm({
     };
   };
 
-  // Memoized filtered variables for person search
+  // Memoized filtered variables for person search (uses debounced value for performance)
   const filteredPersonVariables = useMemo(
-    () => filterVariables(personSearchValue),
-    [personSearchValue, allInputVariables]
+    () => filterVariables(debouncedPersonSearch),
+    [debouncedPersonSearch, allInputVariables]
   );
 
-  // Memoized filtered variables for household search
+  // Memoized filtered variables for household search (uses debounced value for performance)
   const filteredHouseholdVariables = useMemo(
-    () => filterVariables(householdSearchValue),
-    [householdSearchValue, allInputVariables]
+    () => filterVariables(debouncedHouseholdSearch),
+    [debouncedHouseholdSearch, allInputVariables]
   );
 
   // Get variables for a specific person (custom only, not basic inputs)
@@ -383,7 +386,7 @@ export default function HouseholdBuilderForm({
 
                         {/* Custom variables for this person */}
                         {personVars.map((varName) => {
-                          const variable = allInputVariables.find((v) => v.name === varName);
+                          const variable = getVariableInfo(varName, metadata);
                           if (!variable) {
                             return null;
                           }
@@ -472,7 +475,7 @@ export default function HouseholdBuilderForm({
 
               {/* Custom household-level variables */}
               {householdLevelVariables.map(({ name: varName, entity }) => {
-                const variable = allInputVariables.find((v) => v.name === varName);
+                const variable = getVariableInfo(varName, metadata);
                 if (!variable) {
                   return null;
                 }

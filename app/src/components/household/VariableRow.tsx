@@ -56,12 +56,13 @@ export default function VariableRow({
       </Box>
       <Box style={{ flex: 1 }}>
         <VariableInput
-          variable={{ ...variable, label: '' }}
+          variable={variable}
           household={household}
           metadata={metadata}
           entityId={entityId}
           onChange={onChange}
           disabled={disabled}
+          hideLabel
         />
       </Box>
       {shouldShowColumn && (
