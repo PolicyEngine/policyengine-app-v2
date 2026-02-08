@@ -27,6 +27,15 @@
     "image": "ri-governor-mckee-ctc.webp"
   },
   {
+    "title": "Utah HB 15: Medicaid expansion repeal analysis",
+    "description": "If triggered, the bill would leave ~94,000 Utahns in the coverage gap while saving the state $99 million annually.",
+    "date": "2026-01-27",
+    "tags": ["us", "us-ut", "policy"],
+    "authors": ["daphne-hansell"],
+    "filename": "utah-hb15-medicaid-expansion-repeal.md",
+    "image": "ut-SB60.jpg"
+  },
+  {
     "title": "Validating unemployment insurance estimates",
     "description": "PolicyEngine corrects CPS underreporting of UI benefits using quantile regression forests and reweighting, matching administrative totals within 2-4%.",
     "date": "2026-01-25",
