@@ -1,6 +1,6 @@
 import { render, screen } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import AutumnBudgetBanner from '@/components/shared/AutumnBudgetBanner';
+import FeaturedResearchBanner from '@/components/shared/FeaturedResearchBanner';
 import {
   BANNER_CARD_TITLES,
   BANNER_DISMISSED_KEY,
@@ -9,13 +9,13 @@ import {
   MOCK_DATE_AFTER_BUDGET,
   MOCK_DATE_AFTER_END,
   MOCK_DATE_BEFORE_BUDGET,
-} from '@/tests/fixtures/components/shared/AutumnBudgetBannerMocks';
+} from '@/tests/fixtures/components/shared/FeaturedResearchBannerMocks';
 
 vi.mock('@/hooks/useCurrentCountry', () => ({
   useCurrentCountry: vi.fn(() => 'uk'),
 }));
 
-describe('AutumnBudgetBanner', () => {
+describe('FeaturedResearchBanner', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     sessionStorage.clear();
@@ -31,7 +31,7 @@ describe('AutumnBudgetBanner', () => {
     vi.setSystemTime(MOCK_DATE_BEFORE_BUDGET);
 
     // When
-    render(<AutumnBudgetBanner />);
+    render(<FeaturedResearchBanner />);
 
     // Then
     expect(screen.getByText(/The Autumn Budget 2025 is coming soon/i)).toBeInTheDocument();
@@ -42,7 +42,7 @@ describe('AutumnBudgetBanner', () => {
     vi.setSystemTime(MOCK_DATE_AFTER_END);
 
     // When
-    render(<AutumnBudgetBanner />);
+    render(<FeaturedResearchBanner />);
 
     // Then
     expect(screen.queryByText(/The Autumn Budget 2025/i)).not.toBeInTheDocument();
@@ -53,7 +53,7 @@ describe('AutumnBudgetBanner', () => {
     vi.setSystemTime(MOCK_DATE_BEFORE_BUDGET);
 
     // When
-    render(<AutumnBudgetBanner />);
+    render(<FeaturedResearchBanner />);
 
     // Then
     expect(screen.getByText('Days')).toBeInTheDocument();
@@ -67,7 +67,7 @@ describe('AutumnBudgetBanner', () => {
     vi.setSystemTime(MOCK_DATE_AFTER_BUDGET);
 
     // When
-    render(<AutumnBudgetBanner />);
+    render(<FeaturedResearchBanner />);
 
     // Then
     expect(screen.queryByText('Days')).not.toBeInTheDocument();
@@ -79,7 +79,7 @@ describe('AutumnBudgetBanner', () => {
     vi.setSystemTime(MOCK_DATE_AFTER_BUDGET);
 
     // When
-    render(<AutumnBudgetBanner />);
+    render(<FeaturedResearchBanner />);
 
     // Then
     expect(screen.getByText(BANNER_CARD_TITLES.TWO_CHILD_LIMIT)).toBeInTheDocument();
@@ -93,7 +93,7 @@ describe('AutumnBudgetBanner', () => {
     vi.setSystemTime(MOCK_DATE_AFTER_BUDGET);
 
     // When
-    render(<AutumnBudgetBanner />);
+    render(<FeaturedResearchBanner />);
 
     // Then
     const twoChildLink = screen.getByText(BANNER_CARD_TITLES.TWO_CHILD_LIMIT).closest('a');
@@ -112,7 +112,7 @@ describe('AutumnBudgetBanner', () => {
     vi.setSystemTime(MOCK_DATE_AFTER_BUDGET);
 
     // When
-    render(<AutumnBudgetBanner />);
+    render(<FeaturedResearchBanner />);
 
     // Then
     const twoChildLink = screen.getByText(BANNER_CARD_TITLES.TWO_CHILD_LIMIT).closest('a');
@@ -124,7 +124,7 @@ describe('AutumnBudgetBanner', () => {
     vi.setSystemTime(MOCK_DATE_BEFORE_BUDGET);
 
     // When
-    render(<AutumnBudgetBanner />);
+    render(<FeaturedResearchBanner />);
 
     // Then
     expect(screen.getByText(/Want custom analysis\?/i)).toBeInTheDocument();
@@ -135,7 +135,7 @@ describe('AutumnBudgetBanner', () => {
   test('given close button present then banner can be dismissed', () => {
     // Given
     vi.setSystemTime(MOCK_DATE_BEFORE_BUDGET);
-    render(<AutumnBudgetBanner />);
+    render(<FeaturedResearchBanner />);
 
     // Then
     const closeButton = screen.getByRole('button');
@@ -148,7 +148,7 @@ describe('AutumnBudgetBanner', () => {
     sessionStorage.setItem(BANNER_DISMISSED_KEY, 'true');
 
     // When
-    render(<AutumnBudgetBanner />);
+    render(<FeaturedResearchBanner />);
 
     // Then
     expect(screen.queryByText(/The Autumn Budget 2025/i)).not.toBeInTheDocument();
@@ -159,7 +159,7 @@ describe('AutumnBudgetBanner', () => {
     vi.setSystemTime(MOCK_DATE_BEFORE_BUDGET);
 
     // When
-    render(<AutumnBudgetBanner />);
+    render(<FeaturedResearchBanner />);
 
     // Then
     expect(screen.getByText('The Autumn Budget 2025 is coming soon')).toBeInTheDocument();
@@ -170,7 +170,7 @@ describe('AutumnBudgetBanner', () => {
     vi.setSystemTime(MOCK_DATE_AFTER_BUDGET);
 
     // When
-    render(<AutumnBudgetBanner />);
+    render(<FeaturedResearchBanner />);
 
     // Then
     expect(screen.getByText('The Autumn Budget 2025 has been released')).toBeInTheDocument();
