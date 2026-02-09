@@ -17,6 +17,11 @@ export default function HeaderNavigation() {
       hasDropdown: false,
     },
     {
+      label: 'Tools',
+      href: `${WEBSITE_URL}/${countryId}/tools`,
+      hasDropdown: false,
+    },
+    {
       label: 'About',
       hasDropdown: true,
       dropdownItems: [
