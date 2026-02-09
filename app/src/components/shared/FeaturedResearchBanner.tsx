@@ -202,7 +202,7 @@ export default function FeaturedResearchBanner() {
 
         {/* Autumn Budget Analysis Cards */}
         <Box>
-<Group
+          <Group
             justify="center"
             gap={spacing.xl}
             style={{

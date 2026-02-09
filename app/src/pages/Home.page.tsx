@@ -3,8 +3,8 @@ import ActionCards from '@/components/home/ActionCards';
 import HomeBlogPreview from '@/components/home/HomeBlogPreview';
 import MainSection from '@/components/home/MainSection';
 import OrgLogos from '@/components/home/OrgLogos';
-import FeaturedResearchBanner from '@/components/shared/FeaturedResearchBanner';
 import DowningStreetBanner from '@/components/shared/DowningStreetBanner';
+import FeaturedResearchBanner from '@/components/shared/FeaturedResearchBanner';
 import { colors, spacing, typography } from '@/designTokens';
 
 export default function HomePage() {
