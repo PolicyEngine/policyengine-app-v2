@@ -7,6 +7,9 @@ import AppLayout from './components/AppLayout';
 import StaticLayout from './components/StaticLayout';
 import AdsDashboardPage from './pages/AdsDashboard.page';
 import AIGrowthResearchPage from './pages/AIGrowthResearch.page';
+import AnalysisPage from './pages/Analysis.page';
+import AnalysisMixedPage from './pages/AnalysisMixed.page';
+import AnalysisToolsFirstPage from './pages/AnalysisToolsFirst.page';
 import AppPage from './pages/AppPage';
 import BlogPage from './pages/Blog.page';
 import BrandPage from './pages/Brand.page';
@@ -90,6 +93,18 @@ const router = createBrowserRouter(
             {
               path: 'tools',
               element: <ToolsPage />,
+            },
+            {
+              path: 'analysis',
+              element: <AnalysisPage />,
+            },
+            {
+              path: 'analysis/mixed',
+              element: <AnalysisMixedPage />,
+            },
+            {
+              path: 'analysis/tools-first',
+              element: <AnalysisToolsFirstPage />,
             },
             {
               path: 'brand',
