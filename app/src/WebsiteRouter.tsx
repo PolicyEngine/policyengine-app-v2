@@ -21,6 +21,7 @@ import ResearchPage from './pages/Research.page';
 import SupportersPage from './pages/Supporters.page';
 import TeamPage from './pages/Team.page';
 import TermsPage from './pages/Terms.page';
+import ToolsPage from './pages/Tools.page';
 import YearInReviewPage from './pages/YearInReview.page';
 import { CountryAppGuard } from './routing/guards/CountryAppGuard';
 import { CountryGuardSimple } from './routing/guards/CountryGuardSimple';
@@ -85,6 +86,10 @@ const router = createBrowserRouter(
             {
               path: 'research/:slug',
               element: <BlogPage />,
+            },
+            {
+              path: 'tools',
+              element: <ToolsPage />,
             },
             {
               path: 'brand',

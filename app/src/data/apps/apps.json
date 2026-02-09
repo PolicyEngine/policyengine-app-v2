@@ -27,11 +27,22 @@
   },
   {
     "type": "iframe",
+    "slug": "state-legislative-tracker",
+    "title": "2026 State legislative tracker",
+    "description": "Track tax legislation across all 50 US states. View active bills, legislative session statuses, and PolicyEngine research for each state.",
+    "source": "https://policyengine--state-legislative-tracker.modal.run",
+    "tags": ["us", "policy", "tracker"],
+    "countryId": "us",
+    "isFeatured": true,
+    "image": "css:state-map-dots"
+  },
+  {
+    "type": "iframe",
     "slug": "scottish-budget-2026-27",
     "title": "Scottish Budget 2026-27",
     "description": "Interactive dashboard analysing how the Scottish Budget 2026-27 measures affect living standards, poverty, and local areas across Scotland",
     "source": "https://post-scottish-budget-dashboard.vercel.app/",
-    "tags": ["uk", "featured", "policy", "scotland", "interactives"],
+    "tags": ["uk", "policy", "scotland", "interactives"],
     "countryId": "uk",
     "displayWithResearch": true,
     "image": "scottish-budget-2026.jpg",
@@ -44,7 +55,7 @@
     "title": "UK local areas dashboard",
     "description": "Explore how national policies affect different local areas across the UK, including parliamentary constituencies and local authorities",
     "source": "https://local-area.vercel.app/",
-    "tags": ["uk", "featured", "policy", "interactives"],
+    "tags": ["uk", "policy", "interactives"],
     "countryId": "uk",
     "displayWithResearch": true,
     "image": "uk-local-areas-dashboard.png",
@@ -57,7 +68,7 @@
     "title": "UK Autumn Budget 2025 analysis dashboard",
     "description": "Interactive tool to explore revenue and distributional impacts of UK Autumn Budget 2025 policies across income deciles, constituencies, and household types",
     "source": "https://uk-autumn-budget-dashboard.vercel.app/",
-    "tags": ["uk", "featured", "policy", "interactives"],
+    "tags": ["uk", "policy", "interactives"],
     "countryId": "uk",
     "displayWithResearch": true,
     "image": "autumn-2025-budget-dashboard.jpg",
@@ -70,7 +81,7 @@
     "title": "UK public services spending analysis dashboard",
     "description": "Explore how public services spending varies across demographic groups and regions in the UK, including NHS healthcare, education, and transport subsidies",
     "source": "https://uk-public-services-imputation.vercel.app",
-    "tags": ["uk", "featured", "policy", "interactives"],
+    "tags": ["uk", "policy", "interactives"],
     "countryId": "uk",
     "displayWithResearch": true,
     "image": "uk-public-services-spending.jpg",
@@ -83,7 +94,7 @@
     "title": "ACA Reforms Calculator",
     "description": "Compare how ACA policy changes like the IRA extension, 700% FPL bill, and CRFB reform proposals would affect your household's premium tax credits",
     "source": "https://aca-calc.vercel.app/?embedded=true",
-    "tags": ["us", "featured", "healthcare", "policy", "interactives"],
+    "tags": ["us", "healthcare", "policy", "interactives"],
     "countryId": "us"
   },
   {
@@ -101,7 +112,7 @@
     "title": "Citizens' Economic Council reform simulator",
     "description": "Interactive tool to simulate UK economic reforms",
     "source": "https://policyengine-cec-simulator.streamlit.app",
-    "tags": ["uk", "featured", "policy"],
+    "tags": ["uk", "policy"],
     "countryId": "uk"
   },
   {
@@ -119,7 +130,7 @@
     "title": "2024 Election CTC Comparison",
     "description": "Compare Vance vs Harris child tax credit proposals",
     "source": "https://vance-harris-ctc-comparison.streamlit.app",
-    "tags": ["us", "featured", "policy"],
+    "tags": ["us", "policy"],
     "countryId": "us"
   },
   {
@@ -137,7 +148,7 @@
     "title": "UK 2024 Manifestos Comparison",
     "description": "Compare UK party manifestos for 2024 election",
     "source": "https://manifestos.streamlit.app",
-    "tags": ["uk", "featured", "policy"],
+    "tags": ["uk", "policy"],
     "countryId": "uk"
   },
   {
@@ -164,7 +175,7 @@
     "title": "2024 Election Personal Impact Calculator",
     "description": "See how Trump vs Harris tax plans affect your household",
     "source": "https://trump-harris-tax.streamlit.app",
-    "tags": ["us", "featured", "policy"],
+    "tags": ["us", "policy"],
     "countryId": "us"
   },
   {
@@ -173,7 +184,7 @@
     "title": "OBBBA household impact explorer",
     "description": "Interactive scatter plot to explore household-level impacts of the One Big Beautiful Bill Act",
     "source": "https://obbba-household-explorer.streamlit.app",
-    "tags": ["us", "featured", "policy", "reconciliation"],
+    "tags": ["us", "policy", "reconciliation"],
     "countryId": "us"
   },
   {
@@ -191,7 +202,7 @@
     "title": "Two-child limit calculator",
     "description": "Explore policy reforms to the two-child benefit limit and their impacts on households, government spending, and child poverty.",
     "source": "https://uk-two-child-limit-app.vercel.app",
-    "tags": ["uk", "featured", "policy", "interactives"],
+    "tags": ["uk", "policy", "interactives"],
     "countryId": "uk",
     "displayWithResearch": true,
     "image": "young-child-exemption-two-child-limit.jpg",
@@ -213,7 +224,7 @@
     "title": "The One Big Beautiful Bill Act, household by household",
     "description": "Our latest interactive shows how the reconciliation bill affects each of 20,000 representative households across income levels, states, and provisions.",
     "source": "https://policyengine.github.io/obbba-household-by-household",
-    "tags": ["us", "policy", "featured", "reconciliation", "interactives"],
+    "tags": ["us", "policy", "reconciliation", "interactives"],
     "countryId": "us",
     "displayWithResearch": true,
     "image": "obbba-household-by-household.png",
@@ -226,7 +237,7 @@
     "title": "OBBBA scatter plot explorer",
     "description": "Interactive scatter plot visualization of OBBBA household impacts",
     "source": "https://policyengine.github.io/obbba-scatter",
-    "tags": ["us", "featured", "policy", "reconciliation"],
+    "tags": ["us", "policy", "reconciliation"],
     "countryId": "us"
   },
   {
