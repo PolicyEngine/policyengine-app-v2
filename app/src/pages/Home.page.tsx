@@ -3,6 +3,7 @@ import ActionCards from '@/components/home/ActionCards';
 import HomeBlogPreview from '@/components/home/HomeBlogPreview';
 import MainSection from '@/components/home/MainSection';
 import OrgLogos from '@/components/home/OrgLogos';
+import FeaturedResearchBanner from '@/components/shared/FeaturedResearchBanner';
 import DowningStreetBanner from '@/components/shared/DowningStreetBanner';
 import { colors, spacing, typography } from '@/designTokens';
 
@@ -10,6 +11,7 @@ export default function HomePage() {
   return (
     <>
       <DowningStreetBanner />
+      <FeaturedResearchBanner />
       <Box
         style={{
           backgroundImage: `linear-gradient(180deg, ${colors.primary[50]}, #f2fcfaff, ${colors.white})`,
