@@ -1,8 +1,8 @@
 /**
  * Fixtures for lazyParameterTree tests
  */
-import { ParameterMetadata } from '@/types/metadata';
 import { LazyParameterTreeNode, ParameterTreeCache } from '@/libs/lazyParameterTree';
+import { ParameterMetadata } from '@/types/metadata';
 
 // Test paths
 export const TEST_PATHS = {

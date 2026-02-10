@@ -227,9 +227,6 @@ export function getChildrenForPath(
 /**
  * Check if a path has children (without building them).
  */
-export function hasChildren(
-  parameters: Record<string, ParameterMetadata>,
-  path: string
-): boolean {
+export function hasChildren(parameters: Record<string, ParameterMetadata>, path: string): boolean {
   return !isLeafParameter(parameters, path);
 }
