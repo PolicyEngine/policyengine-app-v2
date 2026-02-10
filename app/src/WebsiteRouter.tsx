@@ -106,16 +106,16 @@ const router = createBrowserRouter(
               path: 'ads-dashboard',
               element: <AdsDashboardPage />,
             },
+            {
+              path: 'ai-inequality',
+              element: <AIGrowthResearchPage />,
+            },
           ],
         },
         // Full-page embeds - no layout wrapper
         {
           path: '2025-year-in-review',
           element: <YearInReviewPage />,
-        },
-        {
-          path: 'ai-inequality',
-          element: <AIGrowthResearchPage />,
         },
         // Embed routes - minimal layout for iframe embedding
         {
