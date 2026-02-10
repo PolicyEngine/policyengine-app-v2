@@ -1,20 +1,17 @@
 import { IconChevronDown } from '@tabler/icons-react';
+import { Link } from 'react-router-dom';
 import { Anchor, Group, Menu, Text, UnstyledButton } from '@mantine/core';
 import { colors, typography } from '@/designTokens';
 
 export interface DropdownItem {
   label: string;
-  /** For internal navigation (SPA) */
   onClick?: () => void;
-  /** For external links - renders as <a> tag */
   href?: string;
 }
 
 export interface NavItemSetup {
   label: string;
-  /** For internal navigation (SPA) */
   onClick?: () => void;
-  /** For external links - renders as <a> tag */
   href?: string;
   hasDropdown: boolean;
   dropdownItems?: DropdownItem[];
@@ -24,9 +21,28 @@ interface NavItemProps {
   setup: NavItemSetup;
 }
 
+const linkStyles = {
+  color: colors.text.inverse,
+  fontWeight: typography.fontWeight.medium,
+  fontSize: '18px',
+  fontFamily: typography.fontFamily.primary,
+  textDecoration: 'none',
+};
+
 /**
- * Reusable navigation item component
- * Can be either a simple link or a dropdown menu
+ * Check if href is a relative path (internal) vs absolute URL (external).
+ * Type guard that narrows href to string when true.
+ */
+function isInternalHref(href: string | undefined): href is string {
+  return !!href && href.startsWith('/');
+}
+
+/**
+ * Reusable navigation item component.
+ * Can be either a simple link or a dropdown menu.
+ *
+ * Automatically uses React Router's Link for relative paths (SPA navigation)
+ * and standard <a> tags for absolute URLs (cross-app navigation).
  */
 export default function NavItem({ setup }: NavItemProps) {
   const { label, onClick, href, hasDropdown, dropdownItems } = setup;
@@ -52,9 +68,15 @@ export default function NavItem({ setup }: NavItemProps) {
         <Menu.Dropdown>
           {dropdownItems.map((item) =>
             item.href ? (
-              <Menu.Item key={item.label} component="a" href={item.href}>
-                {item.label}
-              </Menu.Item>
+              isInternalHref(item.href) ? (
+                <Menu.Item key={item.label} component={Link} to={item.href}>
+                  {item.label}
+                </Menu.Item>
+              ) : (
+                <Menu.Item key={item.label} component="a" href={item.href}>
+                  {item.label}
+                </Menu.Item>
+              )
             ) : (
               <Menu.Item key={item.label} onClick={item.onClick}>
                 {item.label}
@@ -66,6 +88,16 @@ export default function NavItem({ setup }: NavItemProps) {
     );
   }
 
+  // Relative paths use React Router's Link for SPA behavior
+  if (isInternalHref(href)) {
+    return (
+      <Link to={href} style={linkStyles}>
+        {label}
+      </Link>
+    );
+  }
+
+  // Absolute URLs use standard anchor tag
   return (
     <Anchor
       c={colors.text.inverse}

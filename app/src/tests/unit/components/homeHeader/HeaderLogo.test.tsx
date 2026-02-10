@@ -21,21 +21,43 @@ describe('HeaderLogo', () => {
     expect(logo).toHaveStyle({ height: '24px' });
   });
 
-  test('given US country then logo links to US homepage', () => {
-    // When
-    renderWithCountry(<HeaderLogo />, TEST_COUNTRY_IDS.US);
-    const link = screen.getByRole('link');
+  describe('website app mode (same-app navigation)', () => {
+    test('given US country then logo links to relative US path', () => {
+      // When - website mode uses relative paths for SPA navigation
+      renderWithCountry(<HeaderLogo />, TEST_COUNTRY_IDS.US, '/us', 'website');
+      const link = screen.getByRole('link');
 
-    // Then - WEBSITE_URL defaults to https://policyengine.org
-    expect(link).toHaveAttribute('href', 'https://policyengine.org/us');
+      // Then
+      expect(link).toHaveAttribute('href', '/us');
+    });
+
+    test('given UK country then logo links to relative UK path', () => {
+      // When
+      renderWithCountry(<HeaderLogo />, TEST_COUNTRY_IDS.UK, '/uk', 'website');
+      const link = screen.getByRole('link');
+
+      // Then
+      expect(link).toHaveAttribute('href', '/uk');
+    });
   });
 
-  test('given UK country then logo links to UK homepage', () => {
-    // When
-    renderWithCountry(<HeaderLogo />, TEST_COUNTRY_IDS.UK);
-    const link = screen.getByRole('link');
+  describe('calculator app mode (cross-app navigation)', () => {
+    test('given US country then logo links to absolute website URL', () => {
+      // When - calculator mode uses absolute URLs to navigate to website
+      renderWithCountry(<HeaderLogo />, TEST_COUNTRY_IDS.US, '/us', 'calculator');
+      const link = screen.getByRole('link');
 
-    // Then
-    expect(link).toHaveAttribute('href', 'https://policyengine.org/uk');
+      // Then - WEBSITE_URL defaults to https://policyengine.org
+      expect(link).toHaveAttribute('href', 'https://policyengine.org/us');
+    });
+
+    test('given UK country then logo links to absolute website URL', () => {
+      // When
+      renderWithCountry(<HeaderLogo />, TEST_COUNTRY_IDS.UK, '/uk', 'calculator');
+      const link = screen.getByRole('link');
+
+      // Then
+      expect(link).toHaveAttribute('href', 'https://policyengine.org/uk');
+    });
   });
 });

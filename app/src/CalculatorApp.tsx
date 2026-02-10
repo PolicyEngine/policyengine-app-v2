@@ -11,6 +11,7 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { Provider } from 'react-redux';
 import { MantineProvider } from '@mantine/core';
 import { CalculatorRouter } from './CalculatorRouter';
+import { AppProvider } from './contexts/AppContext';
 import { CalcOrchestratorProvider } from './contexts/CalcOrchestratorContext';
 import { store } from './store';
 import { policyEngineTheme } from './theme';
@@ -28,22 +29,24 @@ cacheMonitor.init(queryClient);
 
 export default function CalculatorApp() {
   return (
-    <Provider store={store}>
-      <MantineProvider theme={policyEngineTheme}>
-        <QueryNormalizerProvider
-          queryClient={queryClient}
-          normalizerConfig={{
-            devLogging: import.meta.env.DEV,
-          }}
-        >
-          <QueryClientProvider client={queryClient}>
-            <CalcOrchestratorProvider>
-              <CalculatorRouter />
-              <ReactQueryDevtools initialIsOpen={false} />
-            </CalcOrchestratorProvider>
-          </QueryClientProvider>
-        </QueryNormalizerProvider>
-      </MantineProvider>
-    </Provider>
+    <AppProvider mode="calculator">
+      <Provider store={store}>
+        <MantineProvider theme={policyEngineTheme}>
+          <QueryNormalizerProvider
+            queryClient={queryClient}
+            normalizerConfig={{
+              devLogging: import.meta.env.DEV,
+            }}
+          >
+            <QueryClientProvider client={queryClient}>
+              <CalcOrchestratorProvider>
+                <CalculatorRouter />
+                <ReactQueryDevtools initialIsOpen={false} />
+              </CalcOrchestratorProvider>
+            </QueryClientProvider>
+          </QueryNormalizerProvider>
+        </MantineProvider>
+      </Provider>
+    </AppProvider>
   );
 }

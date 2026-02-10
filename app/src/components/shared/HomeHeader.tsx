@@ -1,37 +1,35 @@
 import { useDisclosure } from '@mantine/hooks';
 import HeaderContent from '@/components/homeHeader/HeaderContent';
 import { NavItemSetup } from '@/components/homeHeader/NavItem';
-import { WEBSITE_URL } from '@/constants';
 import { colors, spacing, typography } from '@/designTokens';
-import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useWebsitePath } from '@/hooks/useWebsitePath';
 
 export default function HeaderNavigation() {
   const [opened, { open, close }] = useDisclosure(false);
-  const countryId = useCurrentCountry();
+  const { getWebsitePath } = useWebsitePath();
 
-  // Nav items link to the website (policyengine.org), not the calculator
   const navItems: NavItemSetup[] = [
     {
       label: 'Research',
-      href: `${WEBSITE_URL}/${countryId}/research`,
+      href: getWebsitePath('/research'),
       hasDropdown: false,
     },
     {
       label: 'Model',
-      href: `${WEBSITE_URL}/${countryId}/model`,
+      href: getWebsitePath('/model'),
       hasDropdown: false,
     },
     {
       label: 'About',
       hasDropdown: true,
       dropdownItems: [
-        { label: 'Team', href: `${WEBSITE_URL}/${countryId}/team` },
-        { label: 'Supporters', href: `${WEBSITE_URL}/${countryId}/supporters` },
+        { label: 'Team', href: getWebsitePath('/team') },
+        { label: 'Supporters', href: getWebsitePath('/supporters') },
       ],
     },
     {
       label: 'Donate',
-      href: `${WEBSITE_URL}/${countryId}/donate`,
+      href: getWebsitePath('/donate'),
       hasDropdown: false,
     },
   ];

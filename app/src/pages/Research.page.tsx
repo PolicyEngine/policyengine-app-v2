@@ -8,7 +8,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Fuse from 'fuse.js';
 import { useParams, useSearchParams } from 'react-router-dom';
-import { Box, Container, Text } from '@mantine/core';
+import { Box, Container, Loader, Text } from '@mantine/core';
 import { BlogPostGrid } from '@/components/blog/BlogPostGrid';
 import { ResearchFilters } from '@/components/blog/ResearchFilters';
 import { useDisplayCategory } from '@/components/blog/useDisplayCategory';
@@ -16,6 +16,7 @@ import HeroSection from '@/components/shared/static/HeroSection';
 import StaticPageLayout from '@/components/shared/static/StaticPageLayout';
 import { getResearchItems } from '@/data/posts/postTransformers';
 import { colors, spacing } from '@/designTokens';
+import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 
 // Mock authors for now - in production, import from authors.json
 const mockAuthors = [
@@ -158,6 +159,23 @@ export default function ResearchPage() {
     return items;
   }, [allItems, selectedTypes, selectedTopics, selectedLocations, selectedAuthors, searchQuery]);
 
+  // Infinite scroll - show 8 items initially, load 8 more as user scrolls
+  const { visibleCount, sentinelRef, hasMore, reset } = useInfiniteScroll({
+    totalCount: filteredItems.length,
+    initialCount: 8,
+    incrementCount: 8,
+  });
+
+  // Reset infinite scroll when filters change
+  useEffect(() => {
+    reset();
+  }, [selectedTypes, selectedTopics, selectedLocations, selectedAuthors, searchQuery, reset]);
+
+  const visibleItems = useMemo(
+    () => filteredItems.slice(0, visibleCount),
+    [filteredItems, visibleCount]
+  );
+
   // Handle search submit (just triggers the useEffect via state change)
   const handleSearchSubmit = () => {
     // URL params are already synced via useEffect
@@ -214,7 +232,23 @@ export default function ResearchPage() {
             </Text>
 
             {filteredItems.length > 0 ? (
-              <BlogPostGrid items={filteredItems} countryId={countryId} />
+              <>
+                <BlogPostGrid items={visibleItems} countryId={countryId} />
+
+                {/* Sentinel element for infinite scroll */}
+                {hasMore && (
+                  <Box
+                    ref={sentinelRef}
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'center',
+                      padding: spacing.xl,
+                    }}
+                  >
+                    <Loader size="sm" color="teal" />
+                  </Box>
+                )}
+              </>
             ) : (
               <Box
                 style={{
