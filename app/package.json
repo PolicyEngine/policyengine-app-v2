@@ -18,6 +18,7 @@
     "stylelint": "stylelint '**/*.css' --cache",
     "prettier": "prettier --check \"**/*.{ts,tsx}\"",
     "prettier:write": "prettier --write \"**/*.{ts,tsx}\"",
+    "check": "bun run typecheck && bun run eslint && bun run prettier",
     "vitest": "vitest run",
     "vitest:watch": "vitest",
     "test-all": "bun run prettier && bun run eslint && bun run typecheck && bun run vitest && bun run build",

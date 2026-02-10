@@ -2,7 +2,7 @@ import { render as testingLibraryRender } from '@testing-library/react';
 import { Provider as ReduxProvider } from 'react-redux';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { MantineProvider } from '@mantine/core';
-import { AppProvider, AppMode } from '../src/contexts/AppContext';
+import { AppMode, AppProvider } from '../src/contexts/AppContext';
 import { store } from '../src/store';
 import { policyEngineTheme } from '../src/theme';
 

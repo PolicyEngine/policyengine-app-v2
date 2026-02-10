@@ -31,9 +31,7 @@ export function useWebsitePath() {
    * @returns Relative path for website app, absolute URL for calculator app
    */
   const getWebsitePath = (path: string): string => {
-    return appMode === 'website'
-      ? `/${countryId}${path}`
-      : `${WEBSITE_URL}/${countryId}${path}`;
+    return appMode === 'website' ? `/${countryId}${path}` : `${WEBSITE_URL}/${countryId}${path}`;
   };
 
   /**

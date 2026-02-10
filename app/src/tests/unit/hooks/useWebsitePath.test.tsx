@@ -1,7 +1,7 @@
 import { renderHook } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { describe, expect, test } from 'vitest';
-import { AppProvider, AppMode } from '@/contexts/AppContext';
+import { AppMode, AppProvider } from '@/contexts/AppContext';
 import { useWebsitePath } from '@/hooks/useWebsitePath';
 
 /**
@@ -89,9 +89,7 @@ describe('useWebsitePath', () => {
         const { result } = renderHook(() => useWebsitePath(), { wrapper });
 
         // Then
-        expect(result.current.getWebsitePath('/research')).toBe(
-          `${WEBSITE_URL}/us/research`
-        );
+        expect(result.current.getWebsitePath('/research')).toBe(`${WEBSITE_URL}/us/research`);
       });
 
       test('given calculator mode and UK country then returns absolute URL', () => {
@@ -102,9 +100,7 @@ describe('useWebsitePath', () => {
         const { result } = renderHook(() => useWebsitePath(), { wrapper });
 
         // Then
-        expect(result.current.getWebsitePath('/research')).toBe(
-          `${WEBSITE_URL}/uk/research`
-        );
+        expect(result.current.getWebsitePath('/research')).toBe(`${WEBSITE_URL}/uk/research`);
       });
 
       test('given calculator mode then returns absolute URL for team page', () => {
@@ -126,9 +122,7 @@ describe('useWebsitePath', () => {
         const { result } = renderHook(() => useWebsitePath(), { wrapper });
 
         // Then
-        expect(result.current.getWebsitePath('/supporters')).toBe(
-          `${WEBSITE_URL}/uk/supporters`
-        );
+        expect(result.current.getWebsitePath('/supporters')).toBe(`${WEBSITE_URL}/uk/supporters`);
       });
     });
   });
@@ -219,9 +213,7 @@ describe('useWebsitePath', () => {
       rerender();
 
       // Then - Functions should produce same results
-      expect(result.current.getWebsitePath('/research')).toBe(
-        initialGetWebsitePath('/research')
-      );
+      expect(result.current.getWebsitePath('/research')).toBe(initialGetWebsitePath('/research'));
       expect(result.current.getHomeHref()).toBe(initialGetHomeHref());
     });
   });
