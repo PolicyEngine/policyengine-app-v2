@@ -1,29 +1,41 @@
+import { Link } from 'react-router-dom';
 import { Box } from '@mantine/core';
-import { WEBSITE_URL } from '@/constants';
 import { spacing } from '@/designTokens';
-import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useWebsitePath } from '@/hooks/useWebsitePath';
 
 const PolicyEngineLogo = '/assets/logos/policyengine/white.svg';
 
-export default function HeaderLogo() {
-  const countryId = useCurrentCountry();
+const logoContainerStyles = {
+  display: 'flex',
+  alignItems: 'center',
+  cursor: 'pointer',
+};
 
+const logoImageStyles = {
+  height: '24px',
+  width: 'auto',
+  marginRight: 12,
+};
+
+export default function HeaderLogo() {
+  const { getHomeHref } = useWebsitePath();
+  const href = getHomeHref();
+
+  const logoImage = <img src={PolicyEngineLogo} alt="PolicyEngine" style={logoImageStyles} />;
+
+  // Relative paths use React Router Link for SPA behavior
+  if (href.startsWith('/')) {
+    return (
+      <Link to={href} style={{ ...logoContainerStyles, marginRight: spacing.md }}>
+        {logoImage}
+      </Link>
+    );
+  }
+
+  // Absolute URLs use standard anchor for cross-app navigation
   return (
-    <Box
-      component="a"
-      href={`${WEBSITE_URL}/${countryId}`}
-      mr={spacing.md}
-      style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}
-    >
-      <img
-        src={PolicyEngineLogo}
-        alt="PolicyEngine"
-        style={{
-          height: '24px',
-          width: 'auto',
-          marginRight: 12,
-        }}
-      />
+    <Box component="a" href={href} mr={spacing.md} style={logoContainerStyles}>
+      {logoImage}
     </Box>
   );
 }
