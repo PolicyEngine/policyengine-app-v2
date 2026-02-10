@@ -17,6 +17,11 @@ export default function HeaderNavigation() {
       hasDropdown: false,
     },
     {
+      label: 'Model',
+      href: `${WEBSITE_URL}/${countryId}/model`,
+      hasDropdown: false,
+    },
+    {
       label: 'About',
       hasDropdown: true,
       dropdownItems: [
