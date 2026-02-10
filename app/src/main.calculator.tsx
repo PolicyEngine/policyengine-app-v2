@@ -2,6 +2,8 @@
  * Entry point for Calculator app (app.policyengine.org)
  */
 import { StrictMode } from 'react';
+import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import { createRoot } from 'react-dom/client';
 import CalculatorApp from './CalculatorApp';
 
@@ -37,5 +39,7 @@ const rootErrorHandlers = {
 createRoot(document.getElementById('root')!, rootErrorHandlers).render(
   <StrictMode>
     <CalculatorApp />
+    <Analytics />
+    <SpeedInsights />
   </StrictMode>
 );
