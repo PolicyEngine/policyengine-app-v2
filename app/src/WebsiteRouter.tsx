@@ -16,6 +16,7 @@ import BrandWritingPage from './pages/BrandWriting.page';
 import DonatePage from './pages/Donate.page';
 import OrgLogosEmbedPage from './pages/embed/OrgLogosEmbed.page';
 import HomePage from './pages/Home.page';
+import ModelPage from './pages/Model.page';
 import PrivacyPage from './pages/Privacy.page';
 import ResearchPage from './pages/Research.page';
 import SupportersPage from './pages/Supporters.page';
@@ -72,7 +73,7 @@ const router = createBrowserRouter(
             },
             {
               path: 'methodology',
-              element: <div>Methodology page</div>,
+              element: <Navigate to="../model" replace />,
             },
             {
               path: 'support',
@@ -109,6 +110,10 @@ const router = createBrowserRouter(
             {
               path: 'ai-inequality',
               element: <AIGrowthResearchPage />,
+            },
+            {
+              path: 'model',
+              element: <ModelPage />,
             },
           ],
         },
