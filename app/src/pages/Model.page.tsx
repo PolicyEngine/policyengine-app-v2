@@ -2,8 +2,11 @@
  * Embeds the PolicyEngine Model overview from Vercel.
  * Inherits policyengine.org header/footer via StaticLayout.
  */
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+
 export default function ModelPage() {
-  const embedUrl = 'https://policyengine-model.vercel.app?embed';
+  const countryId = useCurrentCountry();
+  const embedUrl = `https://policyengine-model.vercel.app?embed&country=${countryId}`;
 
   return (
     <iframe
