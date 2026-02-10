@@ -1,36 +1,11 @@
 import { renderHook } from '@testing-library/react';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { describe, expect, test } from 'vitest';
-import { AppMode, AppProvider } from '@/contexts/AppContext';
 import { useWebsitePath } from '@/hooks/useWebsitePath';
-
-/**
- * Test constants
- */
-const TEST_COUNTRIES = {
-  US: 'us',
-  UK: 'uk',
-} as const;
-
-const WEBSITE_URL = 'https://policyengine.org';
-
-/**
- * Helper to create a wrapper with both AppContext and Router
- */
-function createWrapper(appMode: AppMode, countryId: string) {
-  return function Wrapper({ children }: { children: React.ReactNode }) {
-    return (
-      <AppProvider mode={appMode}>
-        <MemoryRouter initialEntries={[`/${countryId}`]}>
-          <Routes>
-            <Route path="/:countryId/*" element={children} />
-            <Route path="/:countryId" element={children} />
-          </Routes>
-        </MemoryRouter>
-      </AppProvider>
-    );
-  };
-}
+import {
+  createWrapper,
+  TEST_COUNTRIES,
+  WEBSITE_URL,
+} from '@/tests/fixtures/hooks/useWebsitePathMocks';
 
 describe('useWebsitePath', () => {
   describe('getWebsitePath', () => {
