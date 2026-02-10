@@ -1,6 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiGeographicStore, LocalStorageGeographicStore } from '@/api/geographicAssociation';
-import { CURRENT_YEAR } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useRegionsList } from '@/hooks/useStaticMetadata';
 import { queryConfig } from '@/libs/queryConfig';
@@ -133,8 +132,7 @@ export function isGeographicMetadataWithAssociation(
 export const useUserGeographics = (userId: string) => {
   // Get regions from static metadata for label lookups
   const countryId = useCurrentCountry();
-  const currentYear = parseInt(CURRENT_YEAR, 10);
-  const regions = useRegionsList(countryId, currentYear);
+  const regions = useRegionsList(countryId);
 
   // First, get the populations
   const {

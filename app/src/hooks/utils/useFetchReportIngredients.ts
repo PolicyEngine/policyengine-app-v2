@@ -16,7 +16,6 @@ import { fetchHouseholdById } from '@/api/household';
 import { fetchPolicyById } from '@/api/policy';
 import { fetchReportById } from '@/api/report';
 import { fetchSimulationById } from '@/api/simulation';
-import { CURRENT_YEAR } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useRegionsList } from '@/hooks/useStaticMetadata';
 import { householdKeys, policyKeys, reportKeys, simulationKeys } from '@/libs/queryKeys';
@@ -187,8 +186,7 @@ export function useFetchReportIngredients(
   const country = input?.userReport.countryId ?? currentCountry;
 
   // Get geography metadata for building Geography objects from static metadata
-  const currentYear = parseInt(CURRENT_YEAR, 10);
-  const geographyOptions = useRegionsList(country, currentYear);
+  const geographyOptions = useRegionsList(country);
 
   // Step 1: Fetch the base Report using reportId from userReport
   const reportId = input?.userReport.reportId;

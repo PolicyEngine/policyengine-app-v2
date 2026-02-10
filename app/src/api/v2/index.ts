@@ -21,3 +21,6 @@ export { fetchParameterValues, BASELINE_POLICY_ID } from './parameterValues';
 
 // Datasets
 export { fetchDatasets } from './datasets';
+
+// Regions
+export { fetchRegions, fetchRegionByCode, type V2RegionMetadata } from './regions';

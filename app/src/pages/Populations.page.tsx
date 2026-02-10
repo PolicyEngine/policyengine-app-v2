@@ -5,7 +5,7 @@ import { useDisclosure } from '@mantine/hooks';
 import { BulletsValue, ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
 import { RenameIngredientModal } from '@/components/common/RenameIngredientModal';
 import IngredientReadView from '@/components/IngredientReadView';
-import { CURRENT_YEAR, MOCK_USER_ID } from '@/constants';
+import { MOCK_USER_ID } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useRegionsList } from '@/hooks/useStaticMetadata';
 import {
@@ -23,8 +23,7 @@ export default function PopulationsPage() {
   const userId = MOCK_USER_ID.toString(); // TODO: Replace with actual user ID retrieval logic
   // TODO: Session storage hard-fixes "anonymous" as user ID; this should really just be anything
   const countryId = useCurrentCountry();
-  const currentYear = parseInt(CURRENT_YEAR, 10);
-  const regions = useRegionsList(countryId, currentYear);
+  const regions = useRegionsList(countryId);
 
   // Fetch household associations
   const {

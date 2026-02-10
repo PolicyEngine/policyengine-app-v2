@@ -41,8 +41,7 @@ export default function PopulationPathwayWrapper({ onComplete }: PopulationPathw
 
   // Get metadata for views
   const metadata = useSelector((state: RootState) => state.metadata);
-  const currentYear = parseInt(CURRENT_YEAR, 10);
-  const regionData = useRegionsList(countryId, currentYear);
+  const regionData = useRegionsList(countryId);
 
   // ========== NAVIGATION ==========
   const { currentMode, navigateToMode, goBack, canGoBack } = usePathwayNavigation(

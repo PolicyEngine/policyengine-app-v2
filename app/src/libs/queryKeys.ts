@@ -111,3 +111,10 @@ export const parameterValueKeys = {
   byPolicyAndParameter: (policyId: string, parameterId: string) =>
     [...parameterValueKeys.all, 'policy', policyId, 'parameter', parameterId] as const,
 };
+
+export const regionKeys = {
+  all: ['regions'] as const,
+  byCountry: (countryId: string) => [...regionKeys.all, 'country', countryId] as const,
+  byCountryAndType: (countryId: string, regionType: string) =>
+    [...regionKeys.all, 'country', countryId, 'type', regionType] as const,
+};

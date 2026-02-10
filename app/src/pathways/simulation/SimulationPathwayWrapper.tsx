@@ -9,7 +9,7 @@ import { useCallback, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import StandardLayout from '@/components/StandardLayout';
-import { CURRENT_YEAR, MOCK_USER_ID } from '@/constants';
+import { MOCK_USER_ID } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { usePathwayNavigation } from '@/hooks/usePathwayNavigation';
 import { useCurrentLawId, useRegionsList } from '@/hooks/useStaticMetadata';
@@ -64,8 +64,7 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
   // Get metadata for population views
   const metadata = useSelector((state: RootState) => state.metadata);
   const currentLawId = useCurrentLawId(countryId);
-  const currentYear = parseInt(CURRENT_YEAR, 10);
-  const regionData = useRegionsList(countryId, currentYear);
+  const regionData = useRegionsList(countryId);
 
   // ========== NAVIGATION ==========
   const { currentMode, navigateToMode, goBack, canGoBack } = usePathwayNavigation(

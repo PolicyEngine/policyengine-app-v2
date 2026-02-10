@@ -4,7 +4,6 @@ import { HouseholdAdapter, PolicyAdapter, SimulationAdapter } from '@/adapters';
 import { fetchHouseholdById } from '@/api/household';
 import { fetchPolicyById } from '@/api/policy';
 import { fetchSimulationById } from '@/api/simulation';
-import { CURRENT_YEAR } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
@@ -63,8 +62,7 @@ export const useUserSimulations = (userId: string) => {
   const queryNormalizer = useQueryNormalizer();
 
   // Get geography data from static metadata
-  const currentYear = parseInt(CURRENT_YEAR, 10);
-  const geographyOptions = useRegionsList(country, currentYear);
+  const geographyOptions = useRegionsList(country);
 
   // Step 1: Fetch all user associations in parallel
   const {

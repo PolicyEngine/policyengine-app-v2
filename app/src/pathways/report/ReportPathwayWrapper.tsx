@@ -92,8 +92,7 @@ export default function ReportPathwayWrapper({ onComplete }: ReportPathwayWrappe
   // Get metadata for population views
   const metadata = useSelector((state: RootState) => state.metadata);
   const currentLawId = useCurrentLawId(countryId);
-  const reportYear = parseInt(reportState.year || '2025', 10);
-  const regionData = useRegionsList(countryId, reportYear);
+  const regionData = useRegionsList(countryId);
 
   // ========== NAVIGATION ==========
   const { currentMode, navigateToMode, goBack, canGoBack } = usePathwayNavigation(

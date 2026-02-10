@@ -5,7 +5,6 @@ import { fetchHouseholdById } from '@/api/household';
 import { fetchPolicyById } from '@/api/policy';
 import { fetchReportById } from '@/api/report';
 import { fetchSimulationById } from '@/api/simulation';
-import { CURRENT_YEAR } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
@@ -76,8 +75,7 @@ export const useUserReports = (userId: string) => {
   const queryNormalizer = useQueryNormalizer();
 
   // Get geography data from static metadata
-  const currentYear = parseInt(CURRENT_YEAR, 10);
-  const geographyOptions = useRegionsList(country, currentYear);
+  const geographyOptions = useRegionsList(country);
 
   // Step 1: Fetch all user associations in parallel
   const {
@@ -347,7 +345,6 @@ export const useUserReportById = (userReportId: string, options?: { enabled?: bo
   const queryNormalizer = useQueryNormalizer();
   const country = useCurrentCountry();
   const isEnabled = options?.enabled !== false;
-  const currentYear = parseInt(CURRENT_YEAR, 10);
 
   // Step 1: Fetch UserReport by userReportId to get the base reportId
   const {
@@ -460,7 +457,7 @@ export const useUserReportById = (userReportId: string, options?: { enabled?: bo
   );
 
   // Step 7: Get geography data from simulations
-  const geographyOptions = useRegionsList(country, currentYear);
+  const geographyOptions = useRegionsList(country);
 
   const geographies: Geography[] = [];
   simulations.forEach((sim) => {
