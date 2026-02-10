@@ -16,7 +16,7 @@ export default function HeaderNavigation() {
     },
     {
       label: 'Model',
-      href: `${WEBSITE_URL}/${countryId}/model`,
+      href: getWebsitePath('/model'),
       hasDropdown: false,
     },
     {
