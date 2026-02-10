@@ -111,16 +111,16 @@ const router = createBrowserRouter(
               path: 'ai-inequality',
               element: <AIGrowthResearchPage />,
             },
+            {
+              path: 'model',
+              element: <ModelPage />,
+            },
           ],
         },
         // Full-page embeds - no layout wrapper
         {
           path: '2025-year-in-review',
           element: <YearInReviewPage />,
-        },
-        {
-          path: 'model',
-          element: <ModelPage />,
         },
         // Embed routes - minimal layout for iframe embedding
         {

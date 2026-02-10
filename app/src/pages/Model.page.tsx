@@ -1,9 +1,9 @@
 /**
- * Embeds the PolicyEngine Model overview from Vercel
- * Explains how the microsimulation model works: rules, data, and behavioral responses.
+ * Embeds the PolicyEngine Model overview from Vercel.
+ * Inherits policyengine.org header/footer via StaticLayout.
  */
 export default function ModelPage() {
-  const embedUrl = 'https://policyengine-model.vercel.app';
+  const embedUrl = 'https://policyengine-model.vercel.app?embed';
 
   return (
     <iframe
@@ -11,7 +11,7 @@ export default function ModelPage() {
       title="Model overview | PolicyEngine"
       style={{
         width: '100%',
-        height: '100vh',
+        minHeight: 'calc(100vh - 200px)',
         border: 'none',
       }}
     />
