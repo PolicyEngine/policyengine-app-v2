@@ -2,6 +2,7 @@ import {
   IconBook,
   IconBrandGithub,
   IconBrandSlack,
+  IconCpu,
   IconFileDescription,
   IconGitBranch,
   IconMail,
@@ -56,6 +57,12 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
       label: 'View research',
       icon: IconBook,
       path: `${WEBSITE_URL}/${countryId}/research`,
+      external: true,
+    },
+    {
+      label: 'Model overview',
+      icon: IconCpu,
+      path: `${WEBSITE_URL}/${countryId}/model`,
       external: true,
     },
   ];

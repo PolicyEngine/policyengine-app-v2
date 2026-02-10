@@ -75,7 +75,23 @@ const PolicyEngineLogo = '/assets/logos/policyengine/white.svg';
 - `app/public/` - Static assets served at exact URLs
 - `app/src/` - Source code processed by bundler
 
-## Before Committing
+## Embedded sites (GitHub Pages iframes)
+
+Several pages embed external sites from GitHub Pages via iframes in `app/src/pages/`:
+
+| Route | Component | Embed source |
+|-------|-----------|-------------|
+| `/:countryId/ai-inequality` | `AIGrowthResearch.page.tsx` | `policyengine.github.io/ai-inequality` |
+| `/:countryId/2025-year-in-review` | `YearInReview.page.tsx` | `policyengine.github.io/2025-year-in-review` |
+
+When renaming an embedded repo:
+1. Update the iframe `src` URL in the page component
+2. Update `PUBLIC_URL` in the embedded repo's CI workflow
+3. Search the org for other references: `gh api search/code?q=org:PolicyEngine+OLD_NAME`
+
+CI automatically checks these embed URLs on every push and PR (the `check-embeds` job in `pr.yaml` and `push.yaml`).
+
+## Before committing
 
 1. Run `cd app && bun run prettier -- --write .` to format
 2. Run `bun run lint` to check for errors
