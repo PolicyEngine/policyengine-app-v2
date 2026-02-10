@@ -77,6 +77,34 @@ jobs:
         working-directory: ./app
         run: bun run test
 
+  check-embeds:
+    name: Check embedded site URLs
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Verify GitHub Pages embed URLs return 200
+        run: |
+          FAILED=0
+          # Extract all policyengine.github.io URLs from page components,
+          # stripping template-literal expressions like ${countryId} and ?query params
+          for raw_url in $(grep -roh "https://policyengine\.github\.io/[^'\"]*" app/src/pages/ | sort -u); do
+            # Remove template expressions (${...}) and query strings for the health check
+            url=$(echo "$raw_url" | sed 's/\${[^}]*}//g' | sed 's/?.*//')
+            # Remove trailing slash for consistency
+            url=${url%/}
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$url")
+            if [ "$STATUS" != "200" ]; then
+              echo "BROKEN EMBED: $url returned $STATUS (from: $raw_url)"
+              FAILED=1
+            else
+              echo "OK: $url"
+            fi
+          done
+          if [ "$FAILED" = "1" ]; then exit 1; fi
+
   build:
     name: Build
     runs-on: ubuntu-latest
