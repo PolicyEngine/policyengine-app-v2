@@ -1,6 +1,19 @@
 [
   {
     "type": "iframe",
+    "slug": "state-legislative-tracker",
+    "title": "2026 state legislative tracker",
+    "description": "Track state-level legislation expected in 2026 across US states",
+    "source": "https://policyengine--state-legislative-tracker.modal.run/",
+    "tags": ["us", "featured", "policy", "interactives"],
+    "countryId": "us",
+    "displayWithResearch": true,
+    "image": "state-legislative-tracker.png",
+    "date": "2026-02-11 12:00:00",
+    "authors": ["pavel-makarchuk"]
+  },
+  {
+    "type": "iframe",
     "slug": "uk-salary-sacrifice-tool",
     "title": "Salary sacrifice cap analysis tool",
     "description": "Interactive tool to analyse the revenue and distributional impacts of capping NI-exempt pension salary sacrifice contributions",
