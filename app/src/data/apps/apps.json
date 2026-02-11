@@ -3,7 +3,7 @@
     "type": "iframe",
     "slug": "state-legislative-tracker",
     "title": "2026 state legislative tracker",
-    "description": "Track state-level legislation expected in 2026 across US states",
+    "description": "Interactive map of 2026 state legislative sessions and tax policy changes, with links to PolicyEngine analysis",
     "source": "https://policyengine--state-legislative-tracker.modal.run/",
     "tags": ["us", "featured", "policy", "interactives"],
     "countryId": "us",
