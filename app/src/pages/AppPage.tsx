@@ -5,13 +5,14 @@
  * Routes apps to appropriate embed component based on type.
  */
 
-import { useParams } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
 import IframeContent from '@/components/IframeContent';
 import { OBBBAIframeContent, StreamlitEmbed } from '@/components/interactive';
 import { apps } from '@/data/apps/appTransformers';
 
 export default function AppPage() {
   const { slug } = useParams<{ slug: string }>();
+  const location = useLocation();
 
   const app = apps.find((a) => a.slug === slug);
 
@@ -40,6 +41,9 @@ export default function AppPage() {
     return <OBBBAIframeContent url={app.source} title={app.title} />;
   }
 
+  // Forward hash fragment from the browser URL to the iframe (e.g. #NY)
+  const iframeUrl = location.hash ? `${app.source}${location.hash}` : app.source;
+
   // Default: standard iframe (for 'iframe' type and any other types)
-  return <IframeContent url={app.source} title={app.title} />;
+  return <IframeContent url={iframeUrl} title={app.title} />;
 }
