@@ -41,7 +41,10 @@ const PUBLIC_DIR = path.join(__dirname, '../public');
 function loadPosts(): PostMetadata[] {
   const postsPath = path.join(POSTS_DIR, 'posts.json');
   const content = fs.readFileSync(postsPath, 'utf-8');
-  return JSON.parse(content);
+  const posts: PostMetadata[] = JSON.parse(content);
+  // Sort by date descending so slicing gives the most recent posts
+  posts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  return posts;
 }
 
 function loadAuthors(): Record<string, Author> {
@@ -188,6 +191,10 @@ ${recentPosts.map((p) => `- [${p.title}](/research/${p.filename.replace(/\.(md|i
 - [US Research](/llms-research-us.txt): ${usCount} articles on US federal and state policy
 - [UK Research](/llms-research-uk.txt): ${ukCount} articles on UK tax and benefit policy
 
+## Recent Research (Full Text)
+
+- [Recent Articles](/llms-recent.txt): Last 50 articles with full text
+
 ## Full Archive
 
 - [All Research](/llms-full.txt): Complete archive of all PolicyEngine research articles
@@ -211,11 +218,14 @@ ${recentPosts.map((p) => `- [${p.title}](/research/${p.filename.replace(/\.(md|i
 function generateArticleFile(
   posts: PostMetadata[],
   authors: Record<string, Author>,
-  region?: 'us' | 'uk'
+  region?: 'us' | 'uk',
+  customHeader?: string
 ): string {
-  const header = region
-    ? `# PolicyEngine ${region.toUpperCase()} Research\n\n> ${region === 'us' ? 'US federal and state' : 'UK'} tax and benefit policy analysis.\n\n`
-    : `# PolicyEngine Research Archive\n\n> Complete archive of PolicyEngine research articles.\n\n`;
+  const header =
+    customHeader ||
+    (region
+      ? `# PolicyEngine ${region.toUpperCase()} Research\n\n> ${region === 'us' ? 'US federal and state' : 'UK'} tax and benefit policy analysis.\n\n`
+      : `# PolicyEngine Research Archive\n\n> Complete archive of PolicyEngine research articles.\n\n`);
 
   const filteredPosts = region ? posts.filter((p) => p.tags.includes(region)) : posts;
 
@@ -255,6 +265,17 @@ function main() {
   const ukContent = generateArticleFile(posts, authors, 'uk');
   fs.writeFileSync(path.join(PUBLIC_DIR, 'llms-research-uk.txt'), ukContent);
 
+  // Generate recent articles (last 50)
+  console.log('Generating llms-recent.txt...');
+  const recentPosts = posts.slice(0, 50);
+  const recentContent = generateArticleFile(
+    recentPosts,
+    authors,
+    undefined,
+    `# PolicyEngine Recent Research\n\n> The ${recentPosts.length} most recent PolicyEngine research articles.\n\n`
+  );
+  fs.writeFileSync(path.join(PUBLIC_DIR, 'llms-recent.txt'), recentContent);
+
   // Generate full archive
   console.log('Generating llms-full.txt...');
   const fullContent = generateArticleFile(posts, authors);
@@ -262,12 +283,16 @@ function main() {
 
   // Print stats
   const indexSize = Buffer.byteLength(index, 'utf8');
+  const recentSize = Buffer.byteLength(recentContent, 'utf8');
   const usSize = Buffer.byteLength(usContent, 'utf8');
   const ukSize = Buffer.byteLength(ukContent, 'utf8');
   const fullSize = Buffer.byteLength(fullContent, 'utf8');
 
   console.log('\nGenerated files:');
   console.log(`  llms.txt:             ${(indexSize / 1024).toFixed(1)} KB`);
+  console.log(
+    `  llms-recent.txt:      ${(recentSize / 1024).toFixed(1)} KB (${recentPosts.length} articles)`
+  );
   console.log(
     `  llms-research-us.txt: ${(usSize / 1024).toFixed(1)} KB (${usPosts.length} articles)`
   );
