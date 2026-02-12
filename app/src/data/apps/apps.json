@@ -1,6 +1,19 @@
 [
   {
     "type": "iframe",
+    "slug": "missouri-transitional-benefits",
+    "title": "How Missouri's Transitional Benefits Program reshapes cliffs",
+    "description": "Interactive analysis of how Missouri SB 82's transitional benefits program redistributes SNAP cliffs across the income distribution, with multi-year capitalization effects computed using PolicyEngine-US",
+    "source": "https://missouri-transitional-benefits.vercel.app",
+    "tags": ["us", "us-mo", "policy", "interactives"],
+    "countryId": "us",
+    "displayWithResearch": true,
+    "image": "missouri-transitional-benefits.png",
+    "date": "2026-02-12 12:00:00",
+    "authors": ["max-ghenis"]
+  },
+  {
+    "type": "iframe",
     "slug": "state-legislative-tracker",
     "title": "2026 state legislative tracker",
     "description": "Interactive map of 2026 state legislative sessions and tax policy changes, with links to PolicyEngine analysis",
