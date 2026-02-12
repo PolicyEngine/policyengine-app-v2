@@ -38,6 +38,10 @@ const POSTS_DIR = path.join(__dirname, '../src/data/posts');
 const ARTICLES_DIR = path.join(POSTS_DIR, 'articles');
 const PUBLIC_DIR = path.join(__dirname, '../public');
 
+function slugFromFilename(filename: string): string {
+  return filename.replace(/\.(md|ipynb)$/, '');
+}
+
 function loadPosts(): PostMetadata[] {
   const postsPath = path.join(POSTS_DIR, 'posts.json');
   const content = fs.readFileSync(postsPath, 'utf-8');
@@ -117,9 +121,7 @@ function transformArticleContent(content: string): string {
 
   // Handle plotly blocks without preceding captions
   const plotlyPattern = /```plotly\n([\s\S]*?)```/g;
-  result = result.replace(plotlyPattern, (_, json) => {
-    return extractChartSummary(json.trim());
-  });
+  result = result.replace(plotlyPattern, (_, json) => extractChartSummary(json.trim()));
 
   // Transform iframes to descriptions
   const iframePattern = /<iframe[^>]*src="([^"]*)"[^>]*(?:title="([^"]*)")?[^>]*><\/iframe>/g;
@@ -147,7 +149,7 @@ function formatArticle(
 ): string {
   const authorNames = post.authors.map((id) => authors[id]?.name || id).join(', ');
 
-  const slug = post.filename.replace(/\.(md|ipynb)$/, '');
+  const slug = slugFromFilename(post.filename);
   const transformedContent = transformArticleContent(content);
 
   return `---
@@ -184,7 +186,7 @@ PolicyEngine enables users to:
 
 ## Recent Research
 
-${recentPosts.map((p) => `- [${p.title}](/research/${p.filename.replace(/\.(md|ipynb)$/, '')}): ${p.description}`).join('\n')}
+${recentPosts.map((p) => `- [${p.title}](/research/${slugFromFilename(p.filename)}): ${p.description}`).join('\n')}
 
 ## Research by Region
 
@@ -221,11 +223,15 @@ function generateArticleFile(
   region?: 'us' | 'uk',
   customHeader?: string
 ): string {
-  const header =
-    customHeader ||
-    (region
-      ? `# PolicyEngine ${region.toUpperCase()} Research\n\n> ${region === 'us' ? 'US federal and state' : 'UK'} tax and benefit policy analysis.\n\n`
-      : `# PolicyEngine Research Archive\n\n> Complete archive of PolicyEngine research articles.\n\n`);
+  let header: string;
+  if (customHeader) {
+    header = customHeader;
+  } else if (region) {
+    const regionLabel = region === 'us' ? 'US federal and state' : 'UK';
+    header = `# PolicyEngine ${region.toUpperCase()} Research\n\n> ${regionLabel} tax and benefit policy analysis.\n\n`;
+  } else {
+    header = `# PolicyEngine Research Archive\n\n> Complete archive of PolicyEngine research articles.\n\n`;
+  }
 
   const filteredPosts = region ? posts.filter((p) => p.tags.includes(region)) : posts;
 
@@ -282,26 +288,20 @@ function main() {
   fs.writeFileSync(path.join(PUBLIC_DIR, 'llms-full.txt'), fullContent);
 
   // Print stats
-  const indexSize = Buffer.byteLength(index, 'utf8');
-  const recentSize = Buffer.byteLength(recentContent, 'utf8');
-  const usSize = Buffer.byteLength(usContent, 'utf8');
-  const ukSize = Buffer.byteLength(ukContent, 'utf8');
-  const fullSize = Buffer.byteLength(fullContent, 'utf8');
+  const stats: Array<{ name: string; content: string; count?: number }> = [
+    { name: 'llms.txt', content: index },
+    { name: 'llms-recent.txt', content: recentContent, count: recentPosts.length },
+    { name: 'llms-research-us.txt', content: usContent, count: usPosts.length },
+    { name: 'llms-research-uk.txt', content: ukContent, count: ukPosts.length },
+    { name: 'llms-full.txt', content: fullContent, count: posts.length },
+  ];
 
   console.log('\nGenerated files:');
-  console.log(`  llms.txt:             ${(indexSize / 1024).toFixed(1)} KB`);
-  console.log(
-    `  llms-recent.txt:      ${(recentSize / 1024).toFixed(1)} KB (${recentPosts.length} articles)`
-  );
-  console.log(
-    `  llms-research-us.txt: ${(usSize / 1024).toFixed(1)} KB (${usPosts.length} articles)`
-  );
-  console.log(
-    `  llms-research-uk.txt: ${(ukSize / 1024).toFixed(1)} KB (${ukPosts.length} articles)`
-  );
-  console.log(
-    `  llms-full.txt:        ${(fullSize / 1024).toFixed(1)} KB (${posts.length} articles)`
-  );
+  for (const { name, content: text, count } of stats) {
+    const sizeKB = (Buffer.byteLength(text, 'utf8') / 1024).toFixed(1);
+    const suffix = count !== undefined ? ` (${count} articles)` : '';
+    console.log(`  ${name.padEnd(22)} ${sizeKB} KB${suffix}`);
+  }
 }
 
 main();
