@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: white; }
+    #root { width: 100%; height: 100vh; padding: 20px; }
+    .chart-container { width: 100%; height: 100%; position: relative; }
+    .logo { position: absolute; bottom: 10px; right: 10px; height: 24px; opacity: 0.8; }
+    .title { text-align: center; font-size: 18px; font-weight: 600; color: #344054; margin-bottom: 20px; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="module">
+    import React from 'https://esm.sh/react@18';
+    import ReactDOM from 'https://esm.sh/react-dom@18/client';
+    import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ReferenceLine, ResponsiveContainer, LabelList } from 'https://esm.sh/recharts@2.12.7';
+
+    const data = [
+      {
+        name: 'Total Benefits',
+        'Raw CPS': 64,
+        'PolicyEngine': 98,
+        rawAbs: '$25.6B',
+        peAbs: '$39.1B',
+        adminAbs: '$40.0B'
+      },
+      {
+        name: 'Recipients',
+        'Raw CPS': 59,
+        'PolicyEngine': 104,
+        rawAbs: '3.2M',
+        peAbs: '5.6M',
+        adminAbs: '5.4M'
+      },
+    ];
+
+    const CustomTooltip = ({ active, payload, label }) => {
+      if (active && payload && payload.length) {
+        const dataPoint = data.find(d => d.name === label);
+        return React.createElement('div', {
+          style: {
+            background: 'white',
+            border: '1px solid #319795',
+            borderRadius: '8px',
+            padding: '12px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+          }
+        }, [
+          React.createElement('p', { key: 'label', style: { fontWeight: 600, marginBottom: '8px', color: '#344054' } }, label),
+          ...payload.map((entry, index) =>
+            React.createElement('p', { key: index, style: { color: entry.color, margin: '4px 0' } }, [
+              React.createElement('span', { key: 'name', style: { fontWeight: 500 } }, `${entry.name}: `),
+              `${entry.value}%`,
+              React.createElement('span', { key: 'abs', style: { color: '#666', marginLeft: '8px' } },
+                `(${entry.name === 'Raw CPS' ? dataPoint.rawAbs : dataPoint.peAbs})`
+              )
+            ])
+          ),
+          React.createElement('p', { key: 'admin', style: { color: '#344054', marginTop: '8px', fontSize: '13px' } },
+            `Admin total: ${dataPoint.adminAbs}`
+          )
+        ]);
+      }
+      return null;
+    };
+
+    const Chart = () => React.createElement('div', { className: 'chart-container' }, [
+      React.createElement('div', { key: 'title', className: 'title' }, 'UI Estimates as Percentage of Administrative Data (2024)'),
+      React.createElement(ResponsiveContainer, { key: 'chart', width: '100%', height: '85%' },
+        React.createElement(BarChart, { data, margin: { top: 30, right: 30, left: 20, bottom: 20 } }, [
+          React.createElement(CartesianGrid, { key: 'grid', strokeDasharray: '3 3', stroke: '#e5e7eb', vertical: false }),
+          React.createElement(XAxis, {
+            key: 'x',
+            dataKey: 'name',
+            tick: { fill: '#344054', fontSize: 14 },
+            axisLine: { stroke: '#e5e7eb' },
+            tickLine: false
+          }),
+          React.createElement(YAxis, {
+            key: 'y',
+            domain: [0, 125],
+            ticks: [25, 50, 75, 100, 125],
+            tick: { fill: '#344054', fontSize: 12 },
+            axisLine: { stroke: '#e5e7eb' },
+            tickLine: false,
+            label: { value: '% of Administrative Total', angle: -90, position: 'insideLeft', style: { fill: '#344054', fontSize: 13 } }
+          }),
+          React.createElement(Tooltip, { key: 'tooltip', content: React.createElement(CustomTooltip) }),
+          React.createElement(Legend, {
+            key: 'legend',
+            wrapperStyle: { paddingTop: '10px' },
+            formatter: (value) => React.createElement('span', { style: { color: '#344054' } }, value)
+          }),
+          React.createElement(ReferenceLine, {
+            key: 'ref',
+            y: 100,
+            stroke: '#344054',
+            strokeDasharray: '5 5',
+            strokeWidth: 1.5
+          }),
+          React.createElement(Bar, { key: 'cps', dataKey: 'Raw CPS', fill: '#94a3b8', radius: [4, 4, 0, 0] },
+            React.createElement(LabelList, { dataKey: 'Raw CPS', position: 'top', formatter: (v) => `${v}%`, style: { fill: '#344054', fontSize: 14, fontWeight: 500 } })
+          ),
+          React.createElement(Bar, { key: 'pe', dataKey: 'PolicyEngine', fill: '#319795', radius: [4, 4, 0, 0] },
+            React.createElement(LabelList, { dataKey: 'PolicyEngine', position: 'top', formatter: (v) => `${v}%`, style: { fill: '#344054', fontSize: 14, fontWeight: 500 } })
+          )
+        ])
+      ),
+      React.createElement('img', {
+        key: 'logo',
+        className: 'logo',
+        src: '../../assets/logos/policyengine/teal.png',
+        alt: 'PolicyEngine'
+      })
+    ]);
+
+    ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(Chart));
+  </script>
+</body>
+</html>
