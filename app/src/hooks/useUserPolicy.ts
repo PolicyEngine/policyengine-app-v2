@@ -3,6 +3,7 @@ import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/rea
 import { PolicyAdapter } from '@/adapters';
 import { fetchPolicyById } from '@/api/policy';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useTaxBenefitModelId } from '@/hooks/useTaxBenefitModel';
 import { Policy } from '@/types/ingredients/Policy';
 import { ApiPolicyStore, LocalStoragePolicyStore } from '../api/policyAssociation';
 import { queryConfig } from '../libs/queryConfig';
@@ -22,13 +23,15 @@ export const useUserPolicyStore = () => {
 export const usePolicyAssociationsByUser = (userId: string) => {
   const store = useUserPolicyStore();
   const countryId = useCurrentCountry();
+  const { taxBenefitModelId, isLoading: modelLoading } = useTaxBenefitModelId(countryId);
   const isLoggedIn = false; // TODO: Replace with actual auth check in future
   // TODO: Should we determine user ID from auth context here? Or pass as arg?
   const config = isLoggedIn ? queryConfig.api : queryConfig.localStorage;
 
   return useQuery({
-    queryKey: policyAssociationKeys.byUser(userId, countryId),
-    queryFn: () => store.findByUser(userId, countryId),
+    queryKey: policyAssociationKeys.byUser(userId, taxBenefitModelId ?? undefined),
+    queryFn: () => store.findByUser(userId, taxBenefitModelId ?? undefined),
+    enabled: !modelLoading && !!taxBenefitModelId,
     ...config,
   });
 };
@@ -174,8 +177,8 @@ export const useUserPolicies = (userId: string) => {
       queryKey: policyKeys.byId(policyId.toString()),
       queryFn: async () => {
         try {
-          const metadata = await fetchPolicyById(country, policyId.toString());
-          return PolicyAdapter.fromMetadata(metadata);
+          const response = await fetchPolicyById(policyId.toString());
+          return PolicyAdapter.fromV2Response(response);
         } catch (error) {
           // Add context to help debug which policy failed
           const message =
