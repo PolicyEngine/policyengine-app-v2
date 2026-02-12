@@ -41,7 +41,6 @@ export function getParamDefinitionDate(year?: string): string {
 
 /**
  * Mock user ID used for anonymous/unauthenticated users
- * In development with VITE_DEV_USER_ID set, uses that UUID for API testing
  * TODO: Replace with actual user ID from auth context when authentication is implemented
  */
-export const MOCK_USER_ID = import.meta.env.VITE_DEV_USER_ID || 'anonymous';
+export const MOCK_USER_ID = 'anonymous';
