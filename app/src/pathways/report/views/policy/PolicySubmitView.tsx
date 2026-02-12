@@ -4,7 +4,6 @@
  * Props-based instead of Redux-based
  */
 
-import { PolicyAdapter } from '@/adapters';
 import IngredientSubmissionView, {
   DateIntervalValue,
   TextListItem,
@@ -14,7 +13,6 @@ import { useCreatePolicy } from '@/hooks/useCreatePolicy';
 import { countryIds } from '@/libs/countries';
 import { Policy } from '@/types/ingredients/Policy';
 import { PolicyStateProps } from '@/types/pathwayState';
-import { PolicyCreationPayload } from '@/types/payloads';
 import { formatDate } from '@/utils/dateUtils';
 
 interface PolicySubmitViewProps {
@@ -32,7 +30,7 @@ export default function PolicySubmitView({
   onBack,
   onCancel,
 }: PolicySubmitViewProps) {
-  const { createPolicy, isPending } = useCreatePolicy(policy?.label || undefined);
+  const { createPolicy, isPending, isModelReady } = useCreatePolicy(policy?.label || undefined);
 
   // Convert state to Policy type structure
   const policyData: Partial<Policy> = {
@@ -45,14 +43,20 @@ export default function PolicySubmitView({
       return;
     }
 
-    const serializedPolicyCreationPayload: PolicyCreationPayload = PolicyAdapter.toCreationPayload(
-      policyData as Policy
+    if (!isModelReady) {
+      console.error('Tax benefit model not loaded yet');
+      return;
+    }
+
+    // Pass policy directly - hook handles conversion to v2 format
+    createPolicy(
+      { policy: policyData as Policy, name: policy.label || undefined },
+      {
+        onSuccess: (data) => {
+          onSubmitSuccess(data.id);
+        },
+      }
     );
-    createPolicy(serializedPolicyCreationPayload, {
-      onSuccess: (data) => {
-        onSubmitSuccess(data.result.policy_id);
-      },
-    });
   }
 
   // Helper function to format date range string (UTC timezone-agnostic)

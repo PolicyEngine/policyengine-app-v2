@@ -64,8 +64,8 @@ export const SOCIETY_WIDE_INPUT: ReportIngredientsInput = {
     { simulationId: TEST_IDS.SIMULATIONS.REFORM, countryId: TEST_COUNTRIES.US, label: 'Reform' },
   ],
   userPolicies: [
-    { policyId: TEST_IDS.POLICIES.CURRENT_LAW, countryId: TEST_COUNTRIES.US, label: 'Current Law' },
-    { policyId: TEST_IDS.POLICIES.REFORM, countryId: TEST_COUNTRIES.US, label: 'My Reform' },
+    { policyId: TEST_IDS.POLICIES.CURRENT_LAW, label: 'Current Law' },
+    { policyId: TEST_IDS.POLICIES.REFORM, label: 'My Reform' },
   ],
   userHouseholds: [],
   userGeographies: [
@@ -92,7 +92,7 @@ export const HOUSEHOLD_INPUT: ReportIngredientsInput = {
   userSimulations: [
     { simulationId: 'sim-hh-1', countryId: TEST_COUNTRIES.UK, label: 'Household Sim' },
   ],
-  userPolicies: [{ policyId: 'policy-hh-1', countryId: TEST_COUNTRIES.UK, label: 'HH Policy' }],
+  userPolicies: [{ policyId: 'policy-hh-1', label: 'HH Policy' }],
   userHouseholds: [
     {
       type: 'household',

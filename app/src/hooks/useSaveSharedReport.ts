@@ -84,7 +84,6 @@ export function useSaveSharedReport() {
         createPolicyAssociation.mutateAsync({
           userId,
           policyId: policy.policyId,
-          countryId: policy.countryId as CountryId,
           label: policy.label ?? undefined,
         })
       );

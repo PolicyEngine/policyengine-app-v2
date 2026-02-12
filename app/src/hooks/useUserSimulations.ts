@@ -122,8 +122,8 @@ export const useUserSimulations = (userId: string) => {
   const policyResults = useParallelQueries<Policy>(policyIds, {
     queryKey: policyKeys.byId,
     queryFn: async (id) => {
-      const metadata = await fetchPolicyById(country, id);
-      return PolicyAdapter.fromMetadata(metadata);
+      const response = await fetchPolicyById(id);
+      return PolicyAdapter.fromV2Response(response);
     },
     enabled: policyIds.length > 0,
     staleTime: 5 * 60 * 1000,
@@ -283,8 +283,8 @@ export const useUserSimulationById = (userId: string, simulationId: string) => {
   const { data: policy } = useQuery({
     queryKey: policyKeys.byId(finalSimulation?.policyId?.toString() ?? ''),
     queryFn: async () => {
-      const metadata = await fetchPolicyById(country, finalSimulation!.policyId!.toString());
-      return PolicyAdapter.fromMetadata(metadata);
+      const response = await fetchPolicyById(finalSimulation!.policyId!.toString());
+      return PolicyAdapter.fromV2Response(response);
     },
     enabled: !!finalSimulation?.policyId,
     staleTime: 5 * 60 * 1000,

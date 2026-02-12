@@ -1,4 +1,5 @@
 import { vi } from 'vitest';
+import { V2PolicyResponse } from '@/api/policy';
 import { Household } from '@/types/ingredients/Household';
 import { Policy } from '@/types/ingredients/Policy';
 import { Simulation } from '@/types/ingredients/Simulation';
@@ -147,6 +148,9 @@ export const mockSimulationMetadata2: SimulationMetadata = {
   policy_id: TEST_POLICY_ID_2, // policy-789
 };
 
+/**
+ * @deprecated Use mockV2PolicyResponse1 for v2 API
+ */
 export const mockPolicyMetadata1: PolicyMetadata = {
   id: TEST_POLICY_ID_1,
   country_id: TEST_COUNTRIES.US,
@@ -156,6 +160,9 @@ export const mockPolicyMetadata1: PolicyMetadata = {
   label: 'Test Policy 1',
 };
 
+/**
+ * @deprecated Use mockV2PolicyResponse2 for v2 API
+ */
 export const mockPolicyMetadata2: PolicyMetadata = {
   id: TEST_POLICY_ID_2,
   country_id: TEST_COUNTRIES.US,
@@ -163,6 +170,25 @@ export const mockPolicyMetadata2: PolicyMetadata = {
   policy_json: {},
   policy_hash: 'hash-789',
   label: 'Test Policy 2',
+};
+
+// V2 API Policy Responses
+export const mockV2PolicyResponse1: V2PolicyResponse = {
+  id: TEST_POLICY_ID_1,
+  name: 'Test Policy 1',
+  description: null,
+  tax_benefit_model_id: 'test-tbm-id',
+  created_at: '2025-01-01T00:00:00Z',
+  updated_at: '2025-01-01T00:00:00Z',
+};
+
+export const mockV2PolicyResponse2: V2PolicyResponse = {
+  id: TEST_POLICY_ID_2,
+  name: 'Test Policy 2',
+  description: null,
+  tax_benefit_model_id: 'test-tbm-id',
+  created_at: '2025-01-02T00:00:00Z',
+  updated_at: '2025-01-02T00:00:00Z',
 };
 
 export const mockHouseholdMetadata: HouseholdMetadata = {
