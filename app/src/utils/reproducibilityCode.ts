@@ -6,13 +6,15 @@
  * https://github.com/PolicyEngine/policyengine-app/blob/main/src/data/reformDefinitionCode.js
  */
 
+import { CURRENT_YEAR } from '@/constants';
+
 // Default datasets mapping (from v1 countries.js)
 const DEFAULT_DATASETS: Record<string, string> = {
   enhanced_cps_2024: 'hf://policyengine/policyengine-us-data/enhanced_cps_2024.h5',
 };
 
-// Default year fallback
-const DEFAULT_YEAR = 2024;
+// Default year fallback - use the app's current year constant
+const DEFAULT_YEAR = parseInt(CURRENT_YEAR, 10);
 
 /**
  * Utility function to sanitize a string and ensure that it's valid Python;
