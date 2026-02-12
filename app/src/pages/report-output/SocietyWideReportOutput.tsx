@@ -11,6 +11,7 @@ import type { Simulation } from '@/types/ingredients/Simulation';
 import type { UserPolicy } from '@/types/ingredients/UserPolicy';
 import type { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
 import type { UserSimulation } from '@/types/ingredients/UserSimulation';
+import { convertPoliciesToV1Format } from '@/utils/reproducibilityCode';
 import { getDisplayStatus } from '@/utils/statusMapping';
 import { ComparativeAnalysisPage } from './ComparativeAnalysisPage';
 import { ConstituencySubPage } from './ConstituencySubPage';
@@ -22,6 +23,85 @@ import NotFoundSubPage from './NotFoundSubPage';
 import OverviewSubPage from './OverviewSubPage';
 import PolicySubPage from './PolicySubPage';
 import PopulationSubPage from './PopulationSubPage';
+import PolicyReproducibility from './reproduce-in-python/PolicyReproducibility';
+
+/**
+ * Props available to input-only tabs (don't need calculation output)
+ */
+interface InputTabProps {
+  report: Report;
+  simulations?: Simulation[];
+  policies?: Policy[];
+  userPolicies?: UserPolicy[];
+  geographies?: Geography[];
+  userGeographies?: UserGeographyPopulation[];
+}
+
+/**
+ * Props available to output tabs (need calculation results)
+ */
+interface OutputTabProps extends InputTabProps {
+  output: SocietyWideOutput;
+  activeView?: string;
+}
+
+/**
+ * Input-only tabs - can render immediately after data loads, before calculation completes
+ * These tabs only need the INPUT data (policies, geographies, simulations metadata)
+ */
+const INPUT_ONLY_TABS: Record<string, (props: InputTabProps) => React.ReactElement> = {
+  policy: ({ policies, userPolicies }) => (
+    <PolicySubPage policies={policies} userPolicies={userPolicies} reportType="economy" />
+  ),
+
+  population: ({ simulations, geographies, userGeographies }) => (
+    <PopulationSubPage
+      baselineSimulation={simulations?.[0]}
+      reformSimulation={simulations?.[1]}
+      geographies={geographies}
+      userGeographies={userGeographies}
+    />
+  ),
+
+  dynamics: ({ policies, userPolicies }) => (
+    <DynamicsSubPage policies={policies} userPolicies={userPolicies} reportType="economy" />
+  ),
+
+  reproduce: ({ report, policies, simulations }) => {
+    const policyV1 = convertPoliciesToV1Format(policies);
+    return (
+      <PolicyReproducibility
+        countryId={report.countryId}
+        policy={policyV1}
+        region={simulations?.[0]?.populationId || report.countryId}
+        dataset={null}
+      />
+    );
+  },
+};
+
+/**
+ * Output tabs - require calculation results before rendering
+ * These tabs need the OUTPUT data (calculated society-wide impacts)
+ */
+const OUTPUT_TABS: Record<string, (props: OutputTabProps) => React.ReactElement> = {
+  overview: ({ output }) => <OverviewSubPage output={output} outputType="societyWide" />,
+
+  'comparative-analysis': ({ output, simulations, report, activeView }) => (
+    <ComparativeAnalysisPage
+      output={output}
+      view={activeView}
+      reformPolicyId={simulations?.[1]?.policyId}
+      baselinePolicyId={simulations?.[0]?.policyId}
+      year={report.year}
+      region={simulations?.[0]?.populationId}
+    />
+  ),
+
+  constituency: ({ output }) => <ConstituencySubPage output={output} />,
+
+  'local-authority': ({ output }) => <LocalAuthoritySubPage output={output} />,
+};
 
 interface SocietyWideReportOutputProps {
   reportId: string;
@@ -38,10 +118,12 @@ interface SocietyWideReportOutputProps {
 
 /**
  * Society-wide report output page
- * Uses existing society-wide calculation infrastructure (unchanged)
  *
- * This is the same as the societyWide branch of ReportOutput.page.tsx,
- * just isolated into its own component for clarity.
+ * ARCHITECTURE:
+ * - Tab Maps: Declarative configuration of which tabs need what data
+ * - Input-only tabs render immediately after data loads
+ * - Output tabs wait for calculation to complete
+ * - Hook: Orchestration side effects
  */
 export function SocietyWideReportOutput({
   reportId: _reportId,
@@ -111,88 +193,65 @@ export function SocietyWideReportOutput({
     isComplete: calcStatus.isComplete,
   });
 
-  // RENDER DECISIONS: Based on persistent Report.status (via calcStatus)
-  // PROGRESS DISPLAY: Enhanced with ephemeral CalcStatus when available
+  // ============================================================
+  // RENDER FLOW: Linear progression through data availability
+  // ============================================================
 
-  // Show error if no report data
+  // 1. Show error if no report data
   if (!report) {
     return <ErrorPage error={new Error('Report not found')} />;
   }
 
-  // Show loading if calculation status is still initializing
+  // 2. Data loaded - render input-only tabs immediately (no calculation needed)
+  const InputTabRenderer = INPUT_ONLY_TABS[subpage];
+  if (InputTabRenderer) {
+    return InputTabRenderer({
+      report,
+      simulations,
+      policies,
+      userPolicies,
+      geographies,
+      userGeographies,
+    });
+  }
+
+  // 3. Show loading if calculation status is still initializing
   if (calcStatus.isInitializing) {
     return <LoadingPage message="Loading calculation status..." />;
   }
 
-  // Show loading page if calculation is still running
-  // CalcStatus provides progress display if available (same session)
-  if (calcStatus.isPending) {
-    const displayStatusLabel = getDisplayStatus('pending');
-    const message = progressMessage || `${displayStatusLabel} society-wide impacts...`;
-
-    return <LoadingPage message={message} progress={hasCalcStatus ? displayProgress : undefined} />;
-  }
-
-  // Show error page if calculation failed
+  // 4. Show error page if calculation failed
   if (calcStatus.isError) {
     const errorMessage = calcStatus.error?.message || 'Calculation failed';
     return <ErrorPage error={new Error(errorMessage)} />;
   }
 
-  // Show results if complete
+  // 5. Show loading page if calculation is still running
+  if (calcStatus.isPending) {
+    const displayStatusLabel = getDisplayStatus('pending');
+    const message = progressMessage || `${displayStatusLabel} society-wide impacts...`;
+    return <LoadingPage message={message} progress={hasCalcStatus ? displayProgress : undefined} />;
+  }
+
+  // 6. Calculation complete - render output tabs
   if (calcStatus.isComplete && calcStatus.result) {
     const output = calcStatus.result as SocietyWideOutput;
 
-    // Route to appropriate SubPage based on subpage param
-    switch (subpage) {
-      case 'overview':
-        return <OverviewSubPage output={output} outputType="societyWide" />;
-
-      case 'policy':
-        return (
-          <PolicySubPage policies={policies} userPolicies={userPolicies} reportType="economy" />
-        );
-
-      case 'population':
-        return (
-          <PopulationSubPage
-            baselineSimulation={simulations?.[0]}
-            reformSimulation={simulations?.[1]}
-            geographies={geographies}
-            userGeographies={userGeographies}
-          />
-        );
-
-      case 'dynamics':
-        return (
-          <DynamicsSubPage policies={policies} userPolicies={userPolicies} reportType="economy" />
-        );
-
-      case 'comparative-analysis':
-        return (
-          <ComparativeAnalysisPage
-            output={output}
-            view={activeView}
-            reformPolicyId={simulations?.[1]?.policyId}
-            baselinePolicyId={simulations?.[0]?.policyId}
-            year={report.year}
-            region={simulations?.[0]?.populationId}
-          />
-        );
-
-      case 'constituency':
-        return <ConstituencySubPage output={output} />;
-
-      case 'local-authority':
-        return <LocalAuthoritySubPage output={output} />;
-
-      // Congressional districts are now under Comparative Analysis sidebar
-
-      default:
-        return <NotFoundSubPage />;
+    const OutputTabRenderer = OUTPUT_TABS[subpage];
+    if (OutputTabRenderer) {
+      return OutputTabRenderer({
+        report,
+        simulations,
+        policies,
+        userPolicies,
+        geographies,
+        userGeographies,
+        output,
+        activeView,
+      });
     }
   }
 
-  // No output yet
+  // 7. Unknown tab or no output
   return <NotFoundSubPage />;
 }
