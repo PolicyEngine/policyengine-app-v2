@@ -28,6 +28,16 @@ vi.mock('@/hooks/useCurrentCountry', () => ({
   useCurrentCountry: () => 'us',
 }));
 
+// Mock useRegions
+vi.mock('@/hooks/useRegions', () => ({
+  useRegions: vi.fn(() => ({
+    regions: [],
+    isLoading: false,
+    error: null,
+    rawRegions: [],
+  })),
+}));
+
 // Mock useNavigate
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async () => {

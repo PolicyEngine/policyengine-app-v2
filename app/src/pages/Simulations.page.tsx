@@ -7,15 +7,18 @@ import { RenameIngredientModal } from '@/components/common/RenameIngredientModal
 import IngredientReadView from '@/components/IngredientReadView';
 import { MOCK_USER_ID } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useRegions } from '@/hooks/useRegions';
 import { useUpdateSimulationAssociation } from '@/hooks/useUserSimulationAssociations';
 import { useUserSimulations } from '@/hooks/useUserSimulations';
 import { formatDate } from '@/utils/dateUtils';
+import { getRegionLabel, isNationalGeography, getCountryLabel } from '@/utils/geographyUtils';
 
 export default function SimulationsPage() {
   const userId = MOCK_USER_ID.toString(); // TODO: Replace with actual user ID retrieval logic
   const { data, isLoading, isError, error } = useUserSimulations(userId);
   const navigate = useNavigate();
   const countryId = useCurrentCountry();
+  const { regions } = useRegions(countryId);
 
   const [searchValue, setSearchValue] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -129,7 +132,11 @@ export default function SimulationsPage() {
       population: {
         text:
           item.userHousehold?.label ||
-          item.geography?.regionCode ||
+          (item.geography
+            ? isNationalGeography(item.geography)
+              ? getCountryLabel(item.geography.countryId)
+              : getRegionLabel(item.geography.regionCode, regions)
+            : null) ||
           (item.household ? `Household #${item.household.id}` : 'No population'),
       } as TextValue,
     })) || [];

@@ -2,8 +2,11 @@ import { useState } from 'react';
 import { Text } from '@mantine/core';
 import PathwayView from '@/components/common/PathwayView';
 import { MOCK_USER_ID } from '@/constants';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useRegions } from '@/hooks/useRegions';
 import { EnhancedUserSimulation, useUserSimulations } from '@/hooks/useUserSimulations';
 import { SimulationStateProps } from '@/types/pathwayState';
+import { getCountryLabel, getRegionLabel, isNationalGeography } from '@/utils/geographyUtils';
 import { arePopulationsCompatible } from '@/utils/populationCompatibility';
 
 interface ReportSimulationExistingViewProps {
@@ -24,9 +27,20 @@ export default function ReportSimulationExistingView({
   onCancel,
 }: ReportSimulationExistingViewProps) {
   const userId = MOCK_USER_ID.toString();
+  const countryId = useCurrentCountry();
+  const { regions } = useRegions(countryId);
 
   const { data, isLoading, isError, error } = useUserSimulations(userId);
   const [localSimulation, setLocalSimulation] = useState<EnhancedUserSimulation | null>(null);
+
+  // Helper to get geography display label
+  function getGeographyLabel(enhancedSim: EnhancedUserSimulation): string | undefined {
+    if (!enhancedSim.geography) return undefined;
+    if (isNationalGeography(enhancedSim.geography)) {
+      return getCountryLabel(enhancedSim.geography.countryId);
+    }
+    return getRegionLabel(enhancedSim.geography.regionCode, regions);
+  }
 
   function canProceed() {
     if (!localSimulation) {
@@ -129,7 +143,7 @@ export default function ReportSimulationExistingView({
     const policyLabel =
       enhancedSim.userPolicy?.label || enhancedSim.policy?.label || enhancedSim.policy?.id;
     const populationLabel =
-      enhancedSim.userHousehold?.label || enhancedSim.geography?.regionCode || simulation.populationId;
+      enhancedSim.userHousehold?.label || getGeographyLabel(enhancedSim) || simulation.populationId;
 
     if (policyLabel && populationLabel) {
       subtitle = subtitle

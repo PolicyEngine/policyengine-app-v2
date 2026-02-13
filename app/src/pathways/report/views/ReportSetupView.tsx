@@ -1,8 +1,12 @@
 import { useState } from 'react';
 import PathwayView from '@/components/common/PathwayView';
 import { MOCK_USER_ID } from '@/constants';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useRegions } from '@/hooks/useRegions';
 import { useUserHouseholds } from '@/hooks/useUserHousehold';
 import { ReportStateProps, SimulationStateProps } from '@/types/pathwayState';
+import { MetadataRegionEntry } from '@/types/metadata';
+import { getCountryLabel, getRegionLabel, isNationalGeography } from '@/utils/geographyUtils';
 import { isSimulationConfigured } from '@/utils/validation/ingredientValidation';
 
 type SimulationCard = 'simulation1' | 'simulation2';
@@ -34,6 +38,8 @@ export default function ReportSetupView({
   // Note: Geographic populations are no longer stored as user associations.
   // They are selected per-simulation.
   const userId = MOCK_USER_ID.toString();
+  const countryId = useCurrentCountry();
+  const { regions } = useRegions(countryId);
   const { data: householdData } = useUserHouseholds(userId);
 
   // Check if simulations are fully configured
@@ -70,7 +76,7 @@ export default function ReportSetupView({
   const setupConditionCards = [
     {
       title: getBaselineCardTitle(simulation1, simulation1Configured),
-      description: getBaselineCardDescription(simulation1, simulation1Configured),
+      description: getBaselineCardDescription(simulation1, simulation1Configured, regions),
       onClick: handleSimulation1Select,
       isSelected: selectedCard === 'simulation1',
       isFulfilled: simulation1Configured,
@@ -88,7 +94,8 @@ export default function ReportSetupView({
         simulation2Configured,
         simulation1Configured,
         isSimulation2Optional,
-        !isPopulationDataLoaded
+        !isPopulationDataLoaded,
+        regions
       ),
       onClick: handleSimulation2Select,
       isSelected: selectedCard === 'simulation2',
@@ -164,17 +171,37 @@ function getBaselineCardTitle(
 }
 
 /**
+ * Get population display label for a simulation
+ */
+function getPopulationLabel(
+  simulation: SimulationStateProps | null,
+  regions: MetadataRegionEntry[]
+): string {
+  if (simulation?.population.household?.id) {
+    return simulation.population.household.id;
+  }
+  if (simulation?.population.geography) {
+    const geo = simulation.population.geography;
+    if (isNationalGeography(geo)) {
+      return getCountryLabel(geo.countryId);
+    }
+    return getRegionLabel(geo.regionCode, regions);
+  }
+  return 'N/A';
+}
+
+/**
  * Get description for baseline simulation card
  */
 function getBaselineCardDescription(
   simulation: SimulationStateProps | null,
-  isConfigured: boolean
+  isConfigured: boolean,
+  regions: MetadataRegionEntry[]
 ): string {
   if (isConfigured) {
     const policyId = simulation?.policy.id || 'N/A';
-    const populationId =
-      simulation?.population.household?.id || simulation?.population.geography?.regionCode || 'N/A';
-    return `Policy #${policyId} • Household(s) ${populationId}`;
+    const populationLabel = getPopulationLabel(simulation, regions);
+    return `Policy #${policyId} • Household(s) ${populationLabel}`;
   }
   return 'Select your baseline simulation';
 }
@@ -214,14 +241,14 @@ function getComparisonCardDescription(
   isConfigured: boolean,
   baselineConfigured: boolean,
   isOptional: boolean,
-  dataLoading: boolean
+  dataLoading: boolean,
+  regions: MetadataRegionEntry[]
 ): string {
   // If configured, show simulation details
   if (isConfigured) {
     const policyId = simulation?.policy.id || 'N/A';
-    const populationId =
-      simulation?.population.household?.id || simulation?.population.geography?.regionCode || 'N/A';
-    return `Policy #${policyId} • Household(s) ${populationId}`;
+    const populationLabel = getPopulationLabel(simulation, regions);
+    return `Policy #${policyId} • Household(s) ${populationLabel}`;
   }
 
   // If baseline not configured yet, show waiting message

@@ -1,4 +1,5 @@
-import type { Geography, isNationalGeography } from '@/types/ingredients/Geography';
+import type { Geography } from '@/types/ingredients/Geography';
+import { isNationalGeography } from '@/types/ingredients/Geography';
 import { MetadataRegionEntry } from '@/types/metadata';
 import { UK_REGION_TYPES } from '@/types/regionTypes';
 

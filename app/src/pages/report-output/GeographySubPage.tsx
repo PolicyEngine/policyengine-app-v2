@@ -1,6 +1,8 @@
 import { Box, Table, Text } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
+import { useRegions } from '@/hooks/useRegions';
 import { Geography, isNationalGeography } from '@/types/ingredients/Geography';
+import { getCountryLabel, getRegionLabel, getRegionTypeLabel } from '@/utils/geographyUtils';
 
 interface GeographySubPageProps {
   baselineGeography?: Geography;
@@ -8,11 +10,24 @@ interface GeographySubPageProps {
 }
 
 /**
- * Get display scope (national/subnational) from geography
+ * Get display scope label from geography using V2 API metadata
  */
-function getGeographyScope(geography: Geography | undefined): string {
-  if (!geography) return '—';
-  return isNationalGeography(geography) ? 'National' : 'Subnational';
+function useGeographyDisplayInfo(geography: Geography | undefined, regions: ReturnType<typeof useRegions>['regions']) {
+  if (!geography) {
+    return { label: '—', scopeLabel: '—' };
+  }
+
+  if (isNationalGeography(geography)) {
+    return {
+      label: getCountryLabel(geography.countryId),
+      scopeLabel: 'National',
+    };
+  }
+
+  return {
+    label: getRegionLabel(geography.regionCode, regions),
+    scopeLabel: getRegionTypeLabel(geography.countryId, geography.regionCode, regions),
+  };
 }
 
 /**
@@ -20,36 +35,40 @@ function getGeographyScope(geography: Geography | undefined): string {
  *
  * Shows baseline and reform geographies side-by-side in a comparison table.
  * Collapses columns when both simulations use the same geography.
- *
- * TODO (Phase 6.2): Look up display labels from region metadata using regionCode
- * Currently displays regionCode directly as a fallback.
+ * Uses V2 API metadata to display human-readable region labels.
  */
 export default function GeographySubPage({
   baselineGeography,
   reformGeography,
 }: GeographySubPageProps) {
+  // Get country ID from either geography (they should be the same country)
+  const countryId = baselineGeography?.countryId || reformGeography?.countryId || 'us';
+
+  // Fetch regions from V2 API
+  const { regions, isLoading } = useRegions(countryId);
+
   if (!baselineGeography && !reformGeography) {
     return <div>No geography data available</div>;
   }
 
+  // Get display info for both geographies
+  const baselineInfo = useGeographyDisplayInfo(baselineGeography, regions);
+  const reformInfo = useGeographyDisplayInfo(reformGeography, regions);
+
   // Check if geographies are the same by comparing regionCode
   const geographiesAreSame = baselineGeography?.regionCode === reformGeography?.regionCode;
 
-  // Get labels - TODO (Phase 6.2): look up from region metadata
-  const baselineLabel = baselineGeography?.regionCode || 'Baseline';
-  const reformLabel = reformGeography?.regionCode || 'Reform';
-
-  // Define table rows
+  // Define table rows using labels from V2 API
   const rows = [
     {
       label: 'Geographic area',
-      baselineValue: baselineGeography?.regionCode || '—',
-      reformValue: reformGeography?.regionCode || '—',
+      baselineValue: isLoading ? '...' : baselineInfo.label,
+      reformValue: isLoading ? '...' : reformInfo.label,
     },
     {
       label: 'Type',
-      baselineValue: getGeographyScope(baselineGeography),
-      reformValue: getGeographyScope(reformGeography),
+      baselineValue: isLoading ? '...' : baselineInfo.scopeLabel,
+      reformValue: isLoading ? '...' : reformInfo.scopeLabel,
     },
   ];
 
@@ -99,7 +118,7 @@ export default function GeographySubPage({
                     padding: `${spacing.md} ${spacing.lg}`,
                   }}
                 >
-                  {baselineLabel.toUpperCase()} (BASELINE / REFORM)
+                  {baselineInfo.label.toUpperCase()} (BASELINE / REFORM)
                 </Table.Th>
               ) : (
                 <>
@@ -115,7 +134,7 @@ export default function GeographySubPage({
                       padding: `${spacing.md} ${spacing.lg}`,
                     }}
                   >
-                    {baselineLabel.toUpperCase()} (BASELINE)
+                    {baselineInfo.label.toUpperCase()} (BASELINE)
                   </Table.Th>
                   <Table.Th
                     style={{
@@ -129,7 +148,7 @@ export default function GeographySubPage({
                       padding: `${spacing.md} ${spacing.lg}`,
                     }}
                   >
-                    {reformLabel.toUpperCase()} (REFORM)
+                    {reformInfo.label.toUpperCase()} (REFORM)
                   </Table.Th>
                 </>
               )}
