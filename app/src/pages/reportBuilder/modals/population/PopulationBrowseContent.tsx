@@ -6,14 +6,26 @@
  * - Region grids (states, districts, etc.)
  * - Household list
  */
-import { Box, Group, Text, Stack, TextInput, ScrollArea, Paper, Button, Skeleton, UnstyledButton } from '@mantine/core';
-import { IconSearch, IconHome, IconChevronRight } from '@tabler/icons-react';
+import { IconChevronRight, IconHome, IconSearch } from '@tabler/icons-react';
+import {
+  Box,
+  Button,
+  Group,
+  Paper,
+  ScrollArea,
+  Skeleton,
+  Stack,
+  Text,
+  TextInput,
+  UnstyledButton,
+} from '@mantine/core';
+import { UKOutlineIcon, USOutlineIcon } from '@/components/icons/CountryOutlineIcons';
 import { colors, spacing } from '@/designTokens';
 import { RegionOption } from '@/utils/regionStrategies';
-import { USOutlineIcon, UKOutlineIcon } from '@/components/icons/CountryOutlineIcons';
 import { FONT_SIZES, INGREDIENT_COLORS } from '../../constants';
 import { PopulationCategory } from '../../types';
 import { StateDistrictSelector } from './StateDistrictSelector';
+import { StatePlaceSelector } from './StatePlaceSelector';
 
 interface HouseholdItem {
   id: string;
@@ -78,8 +90,9 @@ export function PopulationBrowseContent({
     },
   };
 
-  // StateDistrictSelector handles its own search and header
-  const showExternalSearchAndHeader = activeCategory !== 'national' && activeCategory !== 'districts';
+  // StateDistrictSelector and PlaceSelector handle their own search and header
+  const showExternalSearchAndHeader =
+    activeCategory !== 'national' && activeCategory !== 'districts' && activeCategory !== 'places';
 
   return (
     <Stack gap={spacing.lg} style={{ height: '100%' }}>
@@ -151,7 +164,8 @@ export function PopulationBrowseContent({
                     {countryId === 'uk' ? 'Households UK-wide' : 'Households nationwide'}
                   </Text>
                   <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
-                    Simulate policy effects across the entire {countryId === 'uk' ? 'United Kingdom' : 'United States'}
+                    Simulate policy effects across the entire{' '}
+                    {countryId === 'uk' ? 'United Kingdom' : 'United States'}
                   </Text>
                 </Stack>
                 <Button color="teal" rightSection={<IconChevronRight size={16} />}>
@@ -229,7 +243,8 @@ export function PopulationBrowseContent({
                           {household.label}
                         </Text>
                         <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
-                          {household.memberCount} {household.memberCount === 1 ? 'member' : 'members'}
+                          {household.memberCount}{' '}
+                          {household.memberCount === 1 ? 'member' : 'members'}
                         </Text>
                       </Stack>
                     </Group>
@@ -247,44 +262,49 @@ export function PopulationBrowseContent({
             setSearchQuery={setSearchQuery}
             onSelectDistrict={onSelectGeography}
           />
+        ) : activeCategory === 'places' ? (
+          // US Cities - use StatePlaceSelector grouped by state
+          <StatePlaceSelector
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            onSelectPlace={onSelectGeography}
+          />
+        ) : // Standard geography grid (states, countries, constituencies, local authorities)
+        filteredRegions.length === 0 ? (
+          <Box
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: spacing['4xl'],
+              gap: spacing.md,
+            }}
+          >
+            <Text fw={500} c={colors.gray[600]}>
+              No regions match your search
+            </Text>
+          </Box>
         ) : (
-          // Standard geography grid (states, countries, constituencies, local authorities)
-          filteredRegions.length === 0 ? (
-            <Box
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: spacing['4xl'],
-                gap: spacing.md,
-              }}
-            >
-              <Text fw={500} c={colors.gray[600]}>
-                No regions match your search
-              </Text>
-            </Box>
-          ) : (
-            <Box style={styles.regionGrid}>
-              {filteredRegions.map((region) => (
-                <UnstyledButton
-                  key={region.value}
-                  style={styles.regionChip}
-                  onClick={() => onSelectGeography(region)}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = colorConfig.border;
-                    e.currentTarget.style.background = colorConfig.bg;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = colors.border.light;
-                    e.currentTarget.style.background = colors.white;
-                  }}
-                >
-                  {region.label}
-                </UnstyledButton>
-              ))}
-            </Box>
-          )
+          <Box style={styles.regionGrid}>
+            {filteredRegions.map((region) => (
+              <UnstyledButton
+                key={region.value}
+                style={styles.regionChip}
+                onClick={() => onSelectGeography(region)}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = colorConfig.border;
+                  e.currentTarget.style.background = colorConfig.bg;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = colors.border.light;
+                  e.currentTarget.style.background = colors.white;
+                }}
+              >
+                {region.label}
+              </UnstyledButton>
+            ))}
+          </Box>
         )}
       </ScrollArea>
     </Stack>

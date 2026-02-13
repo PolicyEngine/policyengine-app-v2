@@ -2,10 +2,7 @@
  * Type definitions for ReportBuilder components
  */
 import { ReactNode } from 'react';
-import {
-  SimulationStateProps,
-  PopulationStateProps,
-} from '@/types/pathwayState';
+import { PopulationStateProps, SimulationStateProps } from '@/types/pathwayState';
 
 // ============================================================================
 // CORE STATE TYPES
@@ -270,6 +267,7 @@ export type PopulationCategory =
   | 'national'
   | 'states'
   | 'districts'
+  | 'places'
   | 'countries'
   | 'constituencies'
   | 'local-authorities'

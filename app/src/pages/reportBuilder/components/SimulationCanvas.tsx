@@ -15,6 +15,7 @@ import { HouseholdAdapter } from '@/adapters/HouseholdAdapter';
 import {
   getUSStates,
   getUSCongressionalDistricts,
+  getUSPlaces,
   getUKCountries,
   getUKConstituencies,
   getUKLocalAuthorities,
@@ -162,7 +163,7 @@ export function SimulationCanvas({
 
     const regions = regionOptions || [];
     const allRegions: RegionOption[] = countryId === 'us'
-      ? [...getUSStates(regions), ...getUSCongressionalDistricts(regions)]
+      ? [...getUSStates(regions), ...getUSCongressionalDistricts(regions), ...getUSPlaces()]
       : [...getUKCountries(regions), ...getUKConstituencies(regions), ...getUKLocalAuthorities(regions)];
 
     const recentGeoIds = geographyUsageStore.getRecentIds(10);
