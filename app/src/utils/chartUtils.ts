@@ -2,7 +2,6 @@
  * General chart utility functions
  */
 
-import type { CSSProperties } from 'react';
 import { typography } from '@/designTokens';
 
 /**
@@ -171,10 +170,10 @@ export const DEFAULT_RECHARTS_MARGIN = {
 /**
  * Font style applied to Recharts axis ticks and labels
  */
-export const RECHARTS_FONT_STYLE: CSSProperties = {
+export const RECHARTS_FONT_STYLE = {
   fontFamily: typography.fontFamily.primary,
   fontSize: 12,
-};
+} as const;
 
 /**
  * Logo watermark image path for Recharts charts
