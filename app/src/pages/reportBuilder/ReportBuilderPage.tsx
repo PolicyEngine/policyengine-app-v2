@@ -12,9 +12,8 @@
  */
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { IconLayoutColumns, IconPalette, IconRowInsertBottom } from '@tabler/icons-react';
-import { Link } from 'react-router-dom';
-import { Box, Group, Tabs, Text } from '@mantine/core';
+import { IconLayoutColumns, IconRowInsertBottom } from '@tabler/icons-react';
+import { Box, Tabs } from '@mantine/core';
 import { CURRENT_YEAR } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { initializeSimulationState } from '@/utils/pathwayState/initializeSimulationState';
@@ -132,35 +131,6 @@ export default function ReportBuilderPage() {
         setPickerState={setPickerState}
         viewMode={viewMode}
       />
-
-      {/* Dev tools - mockup links */}
-      <Box
-        style={{
-          marginTop: 48,
-          paddingTop: 24,
-          borderTop: '1px solid #E2E8F0',
-        }}
-      >
-        <Text size="xs" c="dimmed" mb="sm">
-          Development
-        </Text>
-        <Group gap="md">
-          <Link
-            to="../mockups"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-              fontSize: 13,
-              color: '#319795',
-              textDecoration: 'none',
-            }}
-          >
-            <IconPalette size={16} />
-            Parameter setter mockups
-          </Link>
-        </Group>
-      </Box>
     </Box>
   );
 }
