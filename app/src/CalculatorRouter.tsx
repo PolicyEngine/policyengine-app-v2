@@ -10,6 +10,14 @@ import PoliciesPage from './pages/Policies.page';
 import PopulationsPage from './pages/Populations.page';
 // Old monolithic file preserved but not used - see ./pages/ReportBuilder.page.tsx
 import ReportBuilderPage from './pages/reportBuilder/ReportBuilderPage';
+import {
+  PathwayVariationsHub,
+  NumberedStepsVariant,
+  GuidedFunnelVariant,
+  TimelineVariant,
+  ChecklistVariant,
+  FocusedFlowVariant,
+} from './pages/reportBuilder/pathwayVariations';
 import ReportOutputPage from './pages/ReportOutput.page';
 import ReportsPage from './pages/Reports.page';
 import SimulationsPage from './pages/Simulations.page';
@@ -124,6 +132,30 @@ const router = createBrowserRouter(
                 {
                   path: 'report-builder',
                   element: <ReportBuilderPage />,
+                },
+                {
+                  path: 'report-builder/variants',
+                  element: <PathwayVariationsHub />,
+                },
+                {
+                  path: 'report-builder/variants/numbered-steps',
+                  element: <NumberedStepsVariant />,
+                },
+                {
+                  path: 'report-builder/variants/guided-funnel',
+                  element: <GuidedFunnelVariant />,
+                },
+                {
+                  path: 'report-builder/variants/timeline',
+                  element: <TimelineVariant />,
+                },
+                {
+                  path: 'report-builder/variants/checklist',
+                  element: <ChecklistVariant />,
+                },
+                {
+                  path: 'report-builder/variants/focused-flow',
+                  element: <FocusedFlowVariant />,
                 },
                 {
                   path: 'account',

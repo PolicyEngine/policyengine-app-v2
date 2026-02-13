@@ -7,6 +7,7 @@ import {
   IconGitBranch,
   IconLayoutGrid,
   IconMail,
+  IconPalette,
   IconPlus,
   IconScale,
   IconSettings2,
@@ -34,6 +35,7 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
   const navItems = [
     { label: 'Reports', icon: IconFileDescription, path: `/${countryId}/reports` },
     { label: 'Report Builder', icon: IconLayoutGrid, path: `/${countryId}/report-builder` },
+    { label: 'Builder variants', icon: IconPalette, path: `/${countryId}/report-builder/variants` },
     { label: 'Simulations', icon: IconGitBranch, path: `/${countryId}/simulations` },
     { label: 'Policies', icon: IconScale, path: `/${countryId}/policies` },
     { label: 'Households', icon: IconUsers, path: `/${countryId}/households` },
