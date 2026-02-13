@@ -733,11 +733,9 @@ describe('useUserReportById', () => {
     expect(result.current.geographies).toBeDefined();
     expect(result.current.geographies.length).toBeGreaterThan(0);
 
-    const geography = result.current.geographies.find((g) => g.geographyId === 'state/ca');
+    const geography = result.current.geographies.find((g) => g.regionCode === 'state/ca');
     expect(geography).toBeDefined();
-    expect(geography?.name).toBe('California');
     expect(geography?.countryId).toBe('us');
-    expect(geography?.scope).toBe('subnational');
   });
 
   test('given geography simulation with no matching region data then geographies array is empty', async () => {
@@ -770,7 +768,7 @@ describe('useUserReportById', () => {
     // Should have an empty geographies array or no geography for the nonexistent region
     expect(result.current.geographies).toBeDefined();
     const nonexistentGeo = result.current.geographies.find(
-      (g) => g.geographyId === 'nonexistent-region'
+      (g) => g.regionCode === 'nonexistent-region'
     );
     expect(nonexistentGeo).toBeUndefined();
   });

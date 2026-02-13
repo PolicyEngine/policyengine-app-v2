@@ -11,7 +11,7 @@ import { Household } from '@/types/ingredients/Household';
  * Can contain either a Household or Geography, but not both.
  * The `type` field helps track which population type is being managed.
  *
- * Configuration state is determined by presence of `household.id` or `geography.id`.
+ * Configuration state is determined by presence of `household.id` or `geography.regionCode`.
  * Use `isPopulationConfigured()` utility to check if population is ready for use.
  */
 export interface PopulationStateProps {

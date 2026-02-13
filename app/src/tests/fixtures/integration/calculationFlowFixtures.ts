@@ -101,11 +101,8 @@ export const mockSocietyWideCalcConfig = (
     household1: null,
     household2: null,
     geography1: {
-      id: 'us-us',
       countryId: 'us',
-      scope: 'national',
-      geographyId: INTEGRATION_TEST_CONSTANTS.GEOGRAPHY_IDS.US_NATIONAL,
-      name: 'United States',
+      regionCode: INTEGRATION_TEST_CONSTANTS.GEOGRAPHY_IDS.US_NATIONAL,
     },
     geography2: null,
   },

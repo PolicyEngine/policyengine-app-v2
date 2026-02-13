@@ -34,8 +34,8 @@ export default function SimulationSubmitView({
     if (simulation.population.household?.id) {
       populationId = simulation.population.household.id;
       populationType = 'household';
-    } else if (simulation.population.geography?.id) {
-      populationId = simulation.population.geography.id;
+    } else if (simulation.population.geography?.regionCode) {
+      populationId = simulation.population.geography.regionCode;
       populationType = 'geography';
     }
 
@@ -57,16 +57,17 @@ export default function SimulationSubmitView({
   }
 
   // Create summary boxes based on the current simulation state
+  const populationIdentifier = simulation.population.household?.id || simulation.population.geography?.regionCode;
   const summaryBoxes: SummaryBoxItem[] = [
     {
       title: 'Population added',
       description:
         simulation.population.label ||
-        `Household #${simulation.population.household?.id || simulation.population.geography?.id}`,
-      isFulfilled: !!(simulation.population.household?.id || simulation.population.geography?.id),
+        `Household ${populationIdentifier}`,
+      isFulfilled: !!populationIdentifier,
       badge:
         simulation.population.label ||
-        `Household #${simulation.population.household?.id || simulation.population.geography?.id}`,
+        `Household ${populationIdentifier}`,
     },
     {
       title: 'Policy reform added',

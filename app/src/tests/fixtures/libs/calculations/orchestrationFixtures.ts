@@ -51,11 +51,8 @@ export const mockHousehold = (overrides?: Partial<Household>): Household => ({
  * Mock Geography
  */
 export const mockGeography = (overrides?: Partial<Geography>): Geography => ({
-  id: 'us-california',
   countryId: 'us',
-  scope: 'subnational',
-  geographyId: ORCHESTRATION_TEST_CONSTANTS.TEST_GEOGRAPHY_ID,
-  name: 'California',
+  regionCode: ORCHESTRATION_TEST_CONSTANTS.TEST_GEOGRAPHY_ID,
   ...overrides,
 });
 

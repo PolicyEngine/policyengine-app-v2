@@ -1,11 +1,18 @@
 import { Box, Table, Text } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
-import { Geography } from '@/types/ingredients/Geography';
-import { capitalize } from '@/utils/stringUtils';
+import { Geography, isNationalGeography } from '@/types/ingredients/Geography';
 
 interface GeographySubPageProps {
   baselineGeography?: Geography;
   reformGeography?: Geography;
+}
+
+/**
+ * Get display scope (national/subnational) from geography
+ */
+function getGeographyScope(geography: Geography | undefined): string {
+  if (!geography) return '—';
+  return isNationalGeography(geography) ? 'National' : 'Subnational';
 }
 
 /**
@@ -14,9 +21,8 @@ interface GeographySubPageProps {
  * Shows baseline and reform geographies side-by-side in a comparison table.
  * Collapses columns when both simulations use the same geography.
  *
- * Note: Geography names come directly from the Geography objects (constructed from
- * simulation data), not from user associations since geographies are no longer
- * stored as user associations.
+ * TODO (Phase 6.2): Look up display labels from region metadata using regionCode
+ * Currently displays regionCode directly as a fallback.
  */
 export default function GeographySubPage({
   baselineGeography,
@@ -26,24 +32,24 @@ export default function GeographySubPage({
     return <div>No geography data available</div>;
   }
 
-  // Check if geographies are the same
-  const geographiesAreSame = baselineGeography?.id === reformGeography?.id;
+  // Check if geographies are the same by comparing regionCode
+  const geographiesAreSame = baselineGeography?.regionCode === reformGeography?.regionCode;
 
-  // Get labels from geography names
-  const baselineLabel = baselineGeography?.name || 'Baseline';
-  const reformLabel = reformGeography?.name || 'Reform';
+  // Get labels - TODO (Phase 6.2): look up from region metadata
+  const baselineLabel = baselineGeography?.regionCode || 'Baseline';
+  const reformLabel = reformGeography?.regionCode || 'Reform';
 
   // Define table rows
   const rows = [
     {
       label: 'Geographic area',
-      baselineValue: baselineGeography?.name || '—',
-      reformValue: reformGeography?.name || '—',
+      baselineValue: baselineGeography?.regionCode || '—',
+      reformValue: reformGeography?.regionCode || '—',
     },
     {
       label: 'Type',
-      baselineValue: baselineGeography?.scope ? capitalize(baselineGeography.scope) : '—',
-      reformValue: reformGeography?.scope ? capitalize(reformGeography.scope) : '—',
+      baselineValue: getGeographyScope(baselineGeography),
+      reformValue: getGeographyScope(reformGeography),
     },
   ];
 

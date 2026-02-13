@@ -10,7 +10,7 @@ export type HouseholdPopulationRef = {
 
 export type GeographyPopulationRef = {
   type: 'geography';
-  geographyId: string;
+  regionCode: string;
 };
 
 export type PopulationRef = HouseholdPopulationRef | GeographyPopulationRef;
@@ -44,7 +44,7 @@ export const PopulationOps = {
   getId: (p: PopulationRef): string =>
     matchPopulation(p, {
       household: (h) => h.householdId,
-      geography: (g) => g.geographyId,
+      geography: (g) => g.regionCode,
     }),
 
   /**
@@ -53,7 +53,7 @@ export const PopulationOps = {
   getLabel: (p: PopulationRef): string =>
     matchPopulation(p, {
       household: (h) => `Household ${h.householdId}`,
-      geography: (g) => `All households in ${g.geographyId}`,
+      geography: (g) => `All households in ${g.regionCode}`,
     }),
 
   /**
@@ -77,8 +77,7 @@ export const PopulationOps = {
         }) as Record<string, any>,
       geography: (g) =>
         ({
-          geography_id: g.geographyId,
-          region: g.geographyId, // Some APIs might expect 'region' instead
+          region: g.regionCode, // V2 API uses 'region' parameter
         }) as Record<string, any>,
     }),
 
@@ -88,7 +87,7 @@ export const PopulationOps = {
   getCacheKey: (p: PopulationRef): string =>
     matchPopulation(p, {
       household: (h) => `household:${h.householdId}`,
-      geography: (g) => `geography:${g.geographyId}`,
+      geography: (g) => `geography:${g.regionCode}`,
     }),
 
   /**
@@ -97,7 +96,7 @@ export const PopulationOps = {
   isValid: (p: PopulationRef): boolean =>
     matchPopulation(p, {
       household: (h) => !!h.householdId && h.householdId.length > 0,
-      geography: (g) => !!g.geographyId && g.geographyId.length > 0,
+      geography: (g) => !!g.regionCode && g.regionCode.length > 0,
     }),
 
   /**
@@ -129,9 +128,9 @@ export const PopulationOps = {
   /**
    * Create a geography population reference
    */
-  geography: (geographyId: string): GeographyPopulationRef => ({
+  geography: (regionCode: string): GeographyPopulationRef => ({
     type: 'geography',
-    geographyId,
+    regionCode,
   }),
 };
 

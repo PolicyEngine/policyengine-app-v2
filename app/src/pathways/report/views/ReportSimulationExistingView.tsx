@@ -95,11 +95,10 @@ export default function ReportSimulationExistingView({
 
   // Get other simulation's population ID (base ingredient ID) for compatibility check
   // For household populations, use household.id
-  // For geography populations, use geography.geographyId (the base geography identifier)
+  // For geography populations, use geography.regionCode
   const otherPopulationId =
     otherSimulation?.population.household?.id ||
-    otherSimulation?.population.geography?.geographyId ||
-    otherSimulation?.population.geography?.id;
+    otherSimulation?.population.geography?.regionCode;
 
   // Sort simulations to show compatible first, then incompatible
   const sortedSimulations = [...filteredSimulations].sort((a, b) => {
@@ -130,7 +129,7 @@ export default function ReportSimulationExistingView({
     const policyLabel =
       enhancedSim.userPolicy?.label || enhancedSim.policy?.label || enhancedSim.policy?.id;
     const populationLabel =
-      enhancedSim.userHousehold?.label || enhancedSim.geography?.name || simulation.populationId;
+      enhancedSim.userHousehold?.label || enhancedSim.geography?.regionCode || simulation.populationId;
 
     if (policyLabel && populationLabel) {
       subtitle = subtitle

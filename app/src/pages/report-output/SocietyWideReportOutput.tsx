@@ -75,10 +75,8 @@ export function SocietyWideReportOutput({
     }
 
     const geography = {
-      id: `${report.countryId}-${simulation1.populationId}`,
       countryId: report.countryId,
-      scope: 'national' as const,
-      geographyId: simulation1.populationId || '',
+      regionCode: simulation1.populationId || report.countryId,
     };
 
     return [

@@ -117,17 +117,13 @@ export const mockHouseholdMetadata2 = {
 
 // Mock Geography objects (for use in simulations, not user associations)
 export const mockGeography1: Geography = {
-  id: TEST_GEOGRAPHY_ID_1,
-  countryId: 'us' as any,
-  scope: 'national',
-  geographyId: 'us',
+  countryId: 'us',
+  regionCode: 'us',
 };
 
 export const mockGeography2: Geography = {
-  id: TEST_GEOGRAPHY_ID_2,
-  countryId: 'us' as any,
-  scope: 'subnational',
-  geographyId: 'ca',
+  countryId: 'us',
+  regionCode: 'ca',
 };
 
 // Mock hook return values

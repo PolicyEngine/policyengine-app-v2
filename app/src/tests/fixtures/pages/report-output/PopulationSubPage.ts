@@ -15,8 +15,8 @@ export const TEST_HOUSEHOLD_IDS = {
 } as const;
 
 export const TEST_GEOGRAPHY_IDS = {
-  CALIFORNIA: 'geo-us-ca',
-  NEW_YORK: 'geo-us-ny',
+  CALIFORNIA: 'ca',
+  NEW_YORK: 'ny',
 } as const;
 
 export const TEST_SIMULATION_IDS = {
@@ -91,19 +91,13 @@ export const mockHouseholdSinglePerson: Household = {
 
 // Mock Geographies
 export const mockGeographyCalifornia: Geography = {
-  id: TEST_GEOGRAPHY_IDS.CALIFORNIA,
   countryId: 'us',
-  scope: 'subnational',
-  geographyId: 'ca',
-  name: 'California',
+  regionCode: 'ca',
 };
 
 export const mockGeographyNewYork: Geography = {
-  id: TEST_GEOGRAPHY_IDS.NEW_YORK,
   countryId: 'us',
-  scope: 'subnational',
-  geographyId: 'ny',
-  name: 'New York',
+  regionCode: 'ny',
 };
 
 // Mock Simulations

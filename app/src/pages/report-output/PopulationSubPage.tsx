@@ -55,13 +55,13 @@ export default function PopulationSubPage({
   // Handle geography population type
   // Note: Geographies are constructed from simulation data, not user associations
   if (populationType === 'geography') {
-    // Extract geography IDs from simulations
-    const baselineGeographyId = baselineSimulation?.populationId;
-    const reformGeographyId = reformSimulation?.populationId;
+    // Extract regionCodes from simulations (stored in populationId)
+    const baselineRegionCode = baselineSimulation?.populationId;
+    const reformRegionCode = reformSimulation?.populationId;
 
-    // Find the geographies - match by full id
-    const baselineGeography = geographies?.find((g) => g.id === baselineGeographyId);
-    const reformGeography = geographies?.find((g) => g.id === reformGeographyId);
+    // Find the geographies - match by regionCode
+    const baselineGeography = geographies?.find((g) => g.regionCode === baselineRegionCode);
+    const reformGeography = geographies?.find((g) => g.regionCode === reformRegionCode);
 
     return (
       <GeographySubPage

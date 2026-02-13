@@ -81,7 +81,7 @@ export default function SimulationSetupView({
       return `Household #${population.household.id}`;
     }
     if (population.geography) {
-      return `Household(s) #${population.geography.id}`;
+      return `Household(s) (${population.geography.regionCode})`;
     }
     return '';
   }
@@ -93,16 +93,16 @@ export default function SimulationSetupView({
 
     // In simulation 2 of a report, indicate population is inherited from baseline
     if (isSimulation2InReport) {
-      const popId = population.household?.id || population.geography?.id;
+      const popId = population.household?.id || population.geography?.regionCode;
       const popType = population.household ? 'Household' : 'Household collection';
-      return `${popType} #${popId} • Inherited from baseline simulation`;
+      return `${popType} ${popId} • Inherited from baseline simulation`;
     }
 
     if (population.label && population.household) {
       return `Household #${population.household.id}`;
     }
     if (population.label && population.geography) {
-      return `Household collection #${population.geography.id}`;
+      return `Household collection (${population.geography.regionCode})`;
     }
     return '';
   }

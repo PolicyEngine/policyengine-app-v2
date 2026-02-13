@@ -28,19 +28,17 @@ export function reconstructPopulationFromHousehold(
  * Reconstructs a PopulationStateProps object from a geography
  * Used when loading existing geographic populations in pathways
  *
- * @param geographyId - The geography ID
- * @param geography - The geography data
+ * @param geography - The geography data (contains countryId and regionCode)
  * @param label - The population label
  * @returns A fully-formed PopulationStateProps object
  */
 export function reconstructPopulationFromGeography(
-  geographyId: string,
   geography: Geography,
   label: string | null
 ): PopulationStateProps {
   return {
     household: null,
-    geography: { ...geography, id: geographyId },
+    geography,
     label,
     type: 'geography',
   };

@@ -159,24 +159,17 @@ export function createGeographyFromScope(
   scope: ScopeType,
   countryId: (typeof countryIds)[number],
   selectedRegion?: string
-): {
-  id: string;
-  countryId: (typeof countryIds)[number];
-  scope: 'national' | 'subnational';
-  geographyId: string;
-} | null {
+): { countryId: (typeof countryIds)[number]; regionCode: string } | null {
   // Household scope doesn't create geography
   if (scope === 'household') {
     return null;
   }
 
-  // National scope uses country ID
+  // National scope uses country ID as region code
   if (scope === US_REGION_TYPES.NATIONAL) {
     return {
-      id: countryId,
       countryId,
-      scope: 'national',
-      geographyId: countryId,
+      regionCode: countryId,
     };
   }
 
@@ -185,17 +178,11 @@ export function createGeographyFromScope(
     return null;
   }
 
-  // Store the full prefixed value for all regions
-  // For UK: selectedRegion is "constituency/Sheffield Central" or "country/england"
-  // For US: selectedRegion is "state/ca" or "congressional_district/CA-01"
-  // We store the FULL value with prefix
-
-  const displayValue = extractRegionDisplayValue(selectedRegion);
-
+  // Region code is the full prefixed value from V2 API
+  // For UK: "constituency/Sheffield Central", "country/england"
+  // For US: "state/ca", "congressional_district/CA-01"
   return {
-    id: `${countryId}-${displayValue}`, // ID uses display value for backward compat
     countryId,
-    scope: 'subnational',
-    geographyId: selectedRegion, // STORE FULL PREFIXED VALUE
+    regionCode: selectedRegion,
   };
 }

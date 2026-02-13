@@ -173,8 +173,8 @@ function getBaselineCardDescription(
   if (isConfigured) {
     const policyId = simulation?.policy.id || 'N/A';
     const populationId =
-      simulation?.population.household?.id || simulation?.population.geography?.id || 'N/A';
-    return `Policy #${policyId} • Household(s) #${populationId}`;
+      simulation?.population.household?.id || simulation?.population.geography?.regionCode || 'N/A';
+    return `Policy #${policyId} • Household(s) ${populationId}`;
   }
   return 'Select your baseline simulation';
 }
@@ -220,8 +220,8 @@ function getComparisonCardDescription(
   if (isConfigured) {
     const policyId = simulation?.policy.id || 'N/A';
     const populationId =
-      simulation?.population.household?.id || simulation?.population.geography?.id || 'N/A';
-    return `Policy #${policyId} • Household(s) #${populationId}`;
+      simulation?.population.household?.id || simulation?.population.geography?.regionCode || 'N/A';
+    return `Policy #${policyId} • Household(s) ${populationId}`;
   }
 
   // If baseline not configured yet, show waiting message

@@ -177,18 +177,11 @@ export const useUserSimulations = (userId: string) => {
               (ha) => ha.householdId === simulation.populationId
             );
           } else if (simulation.populationType === 'geography') {
-            // Treat as geography - create a Geography object from the ID
-            const regionData = geographyOptions?.find((r) => r.name === simulation.populationId);
-
-            if (regionData) {
-              geography = {
-                id: `${simulation.countryId}-${simulation.populationId}`,
-                countryId: simulation.countryId,
-                scope: 'subnational' as const,
-                geographyId: simulation.populationId,
-                name: regionData.label || regionData.name,
-              } as Geography;
-            }
+            // Create simplified Geography object from regionCode (populationId)
+            geography = {
+              countryId: simulation.countryId,
+              regionCode: simulation.populationId,
+            } as Geography;
           }
         }
 

@@ -1,10 +1,14 @@
 /**
  * GeographicConfirmationView - View for confirming geographic population selection
  * Users can select a geography for simulation without creating a user association
+ *
+ * Note: With Phase 2 changes, this view is typically skipped for geography selections.
+ * It remains for potential future use or edge cases.
  */
 
 import { Stack, Text } from '@mantine/core';
 import PathwayView from '@/components/common/PathwayView';
+import { isNationalGeography } from '@/types/ingredients/Geography';
 import { MetadataRegionEntry } from '@/types/metadata';
 import { PopulationStateProps } from '@/types/pathwayState';
 import { getCountryLabel, getRegionLabel, getRegionTypeLabel } from '@/utils/geographyUtils';
@@ -12,7 +16,7 @@ import { getCountryLabel, getRegionLabel, getRegionTypeLabel } from '@/utils/geo
 interface GeographicConfirmationViewProps {
   population: PopulationStateProps;
   regions: MetadataRegionEntry[];
-  onSubmitSuccess: (geographyId: string, label: string) => void;
+  onSubmitSuccess: (regionCode: string, label: string) => void;
   onBack?: () => void;
 }
 
@@ -27,9 +31,9 @@ export default function GeographicConfirmationView({
       return;
     }
 
-    const geographyId = population.geography.geographyId;
-    const label = population.geography.name || getRegionLabel(geographyId, regions);
-    onSubmitSuccess(geographyId, label);
+    const regionCode = population.geography.regionCode;
+    const label = getRegionLabel(regionCode, regions);
+    onSubmitSuccess(regionCode, label);
   };
 
   // Build display content based on geographic scope
@@ -43,8 +47,9 @@ export default function GeographicConfirmationView({
     }
 
     const geographyCountryId = population.geography.countryId;
+    const regionCode = population.geography.regionCode;
 
-    if (population.geography.scope === 'national') {
+    if (isNationalGeography(population.geography)) {
       return (
         <Stack gap="md">
           <Text fw={600} fz="lg">
@@ -61,7 +66,6 @@ export default function GeographicConfirmationView({
     }
 
     // Subnational
-    const regionCode = population.geography.geographyId;
     const regionLabel = getRegionLabel(regionCode, regions);
     const regionTypeName = getRegionTypeLabel(geographyCountryId, regionCode, regions);
 

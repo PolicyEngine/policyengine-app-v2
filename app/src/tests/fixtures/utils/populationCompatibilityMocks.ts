@@ -40,20 +40,14 @@ export function mockPopulationWithHousehold(householdId: string): Population {
 /**
  * Creates a mock population with a geography
  */
-export function mockPopulationWithGeography(
-  name: string | undefined,
-  geographyId: string
-): Population {
+export function mockPopulationWithGeography(regionCode: string): Population {
   return {
     label: null,
     isCreated: true,
     household: null,
     geography: {
-      id: geographyId,
       countryId: 'us',
-      scope: 'subnational',
-      geographyId,
-      name,
+      regionCode,
     },
   };
 }

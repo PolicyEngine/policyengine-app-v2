@@ -233,17 +233,11 @@ export const useUserReports = (userId: string) => {
                 reportHouseholds.push(household);
               }
             } else if (sim.populationType === 'geography') {
-              // Create Geography object from the ID
-              const regionData = geographyOptions?.find((r) => r.name === sim.populationId);
-              if (regionData) {
-                reportGeographies.push({
-                  id: `${sim.countryId}-${sim.populationId}`,
-                  countryId: sim.countryId,
-                  scope: 'subnational' as const,
-                  geographyId: sim.populationId,
-                  name: regionData.label || regionData.name,
-                } as Geography);
-              }
+              // Create Geography object from the regionCode (populationId)
+              reportGeographies.push({
+                countryId: sim.countryId,
+                regionCode: sim.populationId,
+              } as Geography);
             }
           }
         });
@@ -456,30 +450,10 @@ export const useUserReportById = (userReportId: string, options?: { enabled?: bo
   const geographies: Geography[] = [];
   simulations.forEach((sim) => {
     if (sim.populationType === 'geography' && sim.populationId && sim.countryId) {
-      // Use the simulation's populationId as-is for the Geography id
-      // The populationId is already in the correct format from createGeographyFromScope
-      const isNational = sim.populationId === sim.countryId;
-
-      let name: string;
-      if (isNational) {
-        name = sim.countryId.toUpperCase();
-      } else {
-        // For subnational, extract the base geography ID and look up in metadata
-        // e.g., "us-fl" -> "fl", "uk-scotland" -> "scotland"
-        const parts = sim.populationId.split('-');
-        const baseGeographyId = parts.length > 1 ? parts.slice(1).join('-') : sim.populationId;
-
-        // Try to find the label in metadata
-        const regionData = geographyOptions?.find((r) => r.name === baseGeographyId);
-        name = regionData?.label || sim.populationId;
-      }
-
+      // Create simplified Geography with regionCode from simulation's populationId
       const geography: Geography = {
-        id: sim.populationId,
         countryId: sim.countryId,
-        scope: isNational ? 'national' : 'subnational',
-        geographyId: sim.populationId,
-        name,
+        regionCode: sim.populationId,
       };
 
       geographies.push(geography);

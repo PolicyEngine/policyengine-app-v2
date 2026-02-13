@@ -129,7 +129,7 @@ export default function SimulationsPage() {
       population: {
         text:
           item.userHousehold?.label ||
-          item.geography?.name ||
+          item.geography?.regionCode ||
           (item.household ? `Household #${item.household.id}` : 'No population'),
       } as TextValue,
     })) || [];

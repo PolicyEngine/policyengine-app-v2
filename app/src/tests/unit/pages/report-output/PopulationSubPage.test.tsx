@@ -55,11 +55,9 @@ describe('PopulationSubPage - Design 4 Router', () => {
       const props = createPopulationSubPageProps.geographyDifferent();
       render(<PopulationSubPage {...props} />);
 
-      // Should display California (baseline)
-      expect(screen.getByText('California')).toBeInTheDocument();
-
-      // Should display New York (reform)
-      expect(screen.getByText('New York')).toBeInTheDocument();
+      // Should display regionCodes (note: Phase 6.2 will add proper name lookup)
+      expect(screen.getByText('ca')).toBeInTheDocument(); // Baseline
+      expect(screen.getByText('ny')).toBeInTheDocument(); // Reform
     });
 
     test('given missing household data then displays error in HouseholdSubPage', () => {

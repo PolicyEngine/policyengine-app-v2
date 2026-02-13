@@ -26,7 +26,7 @@ export function isPolicyConfigured(policy: PolicyStateProps | null | undefined):
  *
  * A population is considered configured if it has either:
  * - A household with an ID (from API creation)
- * - A geography with an ID (from scope selection via createGeographyFromScope)
+ * - A geography with a regionCode (from scope selection via createGeographyFromScope)
  */
 export function isPopulationConfigured(
   population: PopulationStateProps | null | undefined
@@ -34,7 +34,7 @@ export function isPopulationConfigured(
   if (!population) {
     return false;
   }
-  return !!(population.household?.id || population.geography?.id);
+  return !!(population.household?.id || population.geography?.regionCode);
 }
 
 /**

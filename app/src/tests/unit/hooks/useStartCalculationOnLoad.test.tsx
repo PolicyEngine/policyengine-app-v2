@@ -60,10 +60,8 @@ describe('useStartCalculationOnLoad', () => {
       household1: null,
       household2: null,
       geography1: {
-        id: 'us-us',
         countryId: CACHE_HYDRATION_TEST_CONSTANTS.COUNTRY_IDS.US,
-        scope: 'national',
-        geographyId: 'us',
+        regionCode: 'us',
       },
       geography2: null,
     },

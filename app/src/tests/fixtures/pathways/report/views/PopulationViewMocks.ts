@@ -1,3 +1,4 @@
+import { vi } from 'vitest';
 import { PopulationStateProps } from '@/types/pathwayState';
 
 export const TEST_POPULATION_LABEL = 'Test Population';
@@ -34,11 +35,8 @@ export const mockPopulationStateWithGeography: PopulationStateProps = {
   type: 'geography',
   household: null,
   geography: {
-    id: 'us-us',
     countryId: 'us',
-    geographyId: 'us',
-    scope: 'national',
-    name: 'United States',
+    regionCode: 'us',
   },
 };
 

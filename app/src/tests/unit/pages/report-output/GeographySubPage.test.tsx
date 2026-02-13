@@ -75,9 +75,9 @@ describe('GeographySubPage - Design 4 Table Format', () => {
       expect(screen.getByText(/geographic area/i)).toBeInTheDocument();
       expect(screen.getByText(/type/i)).toBeInTheDocument();
 
-      // Should display values
-      expect(screen.getByText('California')).toBeInTheDocument();
-      expect(screen.getByText('New York')).toBeInTheDocument();
+      // Should display regionCode values (Phase 6.2 will add proper name lookup)
+      expect(screen.getByText('ca')).toBeInTheDocument();
+      expect(screen.getByText('ny')).toBeInTheDocument();
       expect(screen.getAllByText('Subnational')).toHaveLength(2); // One for baseline, one for reform
     });
 
@@ -89,9 +89,9 @@ describe('GeographySubPage - Design 4 Table Format', () => {
         />
       );
 
-      // Should only show California once per row
-      const californiaElements = screen.getAllByText('California');
-      expect(californiaElements.length).toBe(1);
+      // Should only show regionCode once per row
+      const caElements = screen.getAllByText('ca');
+      expect(caElements.length).toBe(1);
     });
   });
 

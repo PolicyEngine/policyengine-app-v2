@@ -1,4 +1,4 @@
-import type { Geography } from '@/types/ingredients/Geography';
+import type { Geography, isNationalGeography } from '@/types/ingredients/Geography';
 import { MetadataRegionEntry } from '@/types/metadata';
 import { UK_REGION_TYPES } from '@/types/regionTypes';
 
@@ -32,8 +32,11 @@ const KNOWN_PREFIXES = [
   'local_authority',
 ];
 
+// Re-export for convenience
+export { isNationalGeography };
+
 /**
- * Extracts the UK region type from a Geography object based on its geographyId.
+ * Extracts the UK region type from a Geography object based on its regionCode.
  * Returns the region type constant or null if not a UK geography.
  *
  * @param geography - The Geography object to analyze
@@ -46,23 +49,23 @@ export function getUKRegionTypeFromGeography(
     return null;
   }
 
-  const { geographyId } = geography;
+  const { regionCode } = geography;
 
-  // National: geographyId equals country code
-  if (geographyId === 'uk') {
+  // National: regionCode equals country code
+  if (regionCode === 'uk') {
     return UK_REGION_TYPES.NATIONAL;
   }
 
   // Check prefixes for subnational types
-  if (geographyId.startsWith('country/')) {
+  if (regionCode.startsWith('country/')) {
     return UK_REGION_TYPES.COUNTRY;
   }
 
-  if (geographyId.startsWith('constituency/')) {
+  if (regionCode.startsWith('constituency/')) {
     return UK_REGION_TYPES.CONSTITUENCY;
   }
 
-  if (geographyId.startsWith('local_authority/')) {
+  if (regionCode.startsWith('local_authority/')) {
     return UK_REGION_TYPES.LOCAL_AUTHORITY;
   }
 

@@ -106,25 +106,14 @@ describe('populationCompatibility', () => {
       expect(result).toBe(`Household #${TEST_POPULATION_IDS.HOUSEHOLD_1}`);
     });
 
-    it('given population with geography name but no label then returns geography name', () => {
+    it('given population with geography but no label then returns regionCode', () => {
       // Given
-      const population = mockPopulationWithGeography('California', 'us-ca');
+      const population = mockPopulationWithGeography('us-ca');
 
       // When
       const result = getPopulationLabel(population);
 
-      // Then
-      expect(result).toBe('California');
-    });
-
-    it('given population with geography ID but no name then returns geography ID', () => {
-      // Given
-      const population = mockPopulationWithGeography(undefined, 'us-ca');
-
-      // When
-      const result = getPopulationLabel(population);
-
-      // Then
+      // Then - Note: With simplified Geography type, regionCode is returned as fallback
       expect(result).toBe('us-ca');
     });
 

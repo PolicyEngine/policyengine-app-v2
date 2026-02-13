@@ -79,10 +79,8 @@ export const MOCK_USER_POLICY: UserPolicy = {
  * Mock Geographies for SocietyWideReportOutput tests
  */
 export const MOCK_GEOGRAPHY: Geography = {
-  id: 'us-us',
   countryId: 'us',
-  scope: 'national',
-  geographyId: 'us',
+  regionCode: 'us',
 };
 
 /**

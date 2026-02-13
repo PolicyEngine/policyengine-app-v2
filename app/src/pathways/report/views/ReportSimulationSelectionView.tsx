@@ -36,19 +36,16 @@ function createCurrentLawPolicy(currentLawId: number): PolicyStateProps {
  */
 function createNationwidePopulation(
   countryId: string,
-  geographyId: string,
+  regionCode: string,
   countryName: string
 ): PopulationStateProps {
   return {
-    label: `${countryName} nationwide`,
+    label: `${countryName} households`,
     type: 'geography',
     household: null,
     geography: {
-      id: geographyId,
       countryId: countryId as any,
-      scope: 'national',
-      geographyId: countryId,
-      name: 'National',
+      regionCode,
     },
   };
 }
@@ -139,10 +136,10 @@ export default function ReportSimulationSelectionView({
     }
 
     const countryName = countryNames[countryId] || countryId.toUpperCase();
-    const geographyId = existingBaseline.geography?.geographyId || countryId;
+    const regionCode = existingBaseline.geography?.regionCode || countryId;
 
     const policy = createCurrentLawPolicy(currentLawId);
-    const population = createNationwidePopulation(countryId, geographyId, countryName);
+    const population = createNationwidePopulation(countryId, regionCode, countryName);
     const simulationState = createSimulationState(
       existingSimulationId,
       simulationLabel,
@@ -157,7 +154,7 @@ export default function ReportSimulationSelectionView({
   /**
    * Creates a new default baseline simulation
    * Note: Geographies are no longer stored as user associations. The geography
-   * is constructed from simulation data using the countryId as the geographyId.
+   * is constructed from simulation data using the countryId as the regionCode.
    */
   async function createNewBaseline() {
     if (!onSelectDefaultBaseline) {
@@ -166,12 +163,12 @@ export default function ReportSimulationSelectionView({
 
     setIsCreatingBaseline(true);
     const countryName = countryNames[countryId] || countryId.toUpperCase();
-    const geographyId = countryId; // National geography uses countryId
+    const regionCode = countryId; // National geography uses countryId as regionCode
 
     try {
       // Create simulation directly - geography is not stored as user association
       const simulationData: Partial<Simulation> = {
-        populationId: geographyId,
+        populationId: regionCode,
         policyId: currentLawId.toString(),
         populationType: 'geography',
       };
@@ -184,7 +181,7 @@ export default function ReportSimulationSelectionView({
           const simulationId = data.result.simulation_id;
 
           const policy = createCurrentLawPolicy(currentLawId);
-          const population = createNationwidePopulation(countryId, geographyId, countryName);
+          const population = createNationwidePopulation(countryId, regionCode, countryName);
           const simulationState = createSimulationState(
             simulationId,
             simulationLabel,

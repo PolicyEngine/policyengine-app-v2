@@ -119,10 +119,8 @@ export const mockSocietyWideCalcConfig = (
   },
   populations: {
     geography1: {
-      geographyId: TEST_POPULATION_IDS.US,
-      id: 'us-us',
       countryId: TEST_COUNTRIES.US,
-      scope: 'national' as const,
+      regionCode: TEST_POPULATION_IDS.US,
     },
   },
   ...overrides,

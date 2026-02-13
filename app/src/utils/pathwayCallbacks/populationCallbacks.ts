@@ -55,7 +55,7 @@ export function createPopulationCallbacks<TState, TMode>(
         // If custom completion handler is provided, use it (for standalone pathways)
         // Otherwise navigate to return mode (for report/simulation pathways)
         if (onPopulationComplete?.onGeographyComplete) {
-          onPopulationComplete.onGeographyComplete(geography.geographyId, label);
+          onPopulationComplete.onGeographyComplete(geography.regionCode, label);
         } else {
           navigateToMode(returnMode);
         }
@@ -91,11 +91,11 @@ export function createPopulationCallbacks<TState, TMode>(
   );
 
   const handleSelectExistingGeography = useCallback(
-    (geographyId: string, geography: Geography, label: string) => {
+    (regionCode: string, geography: Geography, label: string) => {
       setState((prev) =>
         populationUpdater(prev, {
           household: null,
-          geography: { ...geography, id: geographyId },
+          geography: { ...geography, regionCode },
           label,
           type: 'geography',
         })
@@ -133,20 +133,19 @@ export function createPopulationCallbacks<TState, TMode>(
   );
 
   const handleGeographicSubmitSuccess = useCallback(
-    (geographyId: string, label: string) => {
+    (regionCode: string, label: string) => {
       setState((prev) => {
         const population = populationSelector(prev);
         const updatedPopulation = { ...population };
-        if (updatedPopulation.geography) {
-          updatedPopulation.geography.id = geographyId;
-        }
+        // regionCode should already be set on the geography from handleScopeSelected
+        // Just update the label here
         updatedPopulation.label = label;
         return populationUpdater(prev, updatedPopulation);
       });
 
       // Use custom navigation if provided, otherwise use default
       if (onPopulationComplete?.onGeographyComplete) {
-        onPopulationComplete.onGeographyComplete(geographyId, label);
+        onPopulationComplete.onGeographyComplete(regionCode, label);
       } else {
         navigateToMode(returnMode);
       }

@@ -31,7 +31,7 @@ export default function ReportSubmitView({
     // Get population label - use label if available, otherwise fall back to ID
     const populationLabel =
       simulation.population.label ||
-      `Population #${simulation.population.household?.id || simulation.population.geography?.id}`;
+      `Population #${simulation.population.household?.id || simulation.population.geography?.regionCode}`;
 
     return `${policyLabel} • ${populationLabel}`;
   };
@@ -40,11 +40,11 @@ export default function ReportSubmitView({
   const isSimulation1Configured =
     !!simulation1?.id ||
     (!!simulation1?.policy?.id &&
-      !!(simulation1?.population?.household?.id || simulation1?.population?.geography?.id));
+      !!(simulation1?.population?.household?.id || simulation1?.population?.geography?.regionCode));
   const isSimulation2Configured =
     !!simulation2?.id ||
     (!!simulation2?.policy?.id &&
-      !!(simulation2?.population?.household?.id || simulation2?.population?.geography?.id));
+      !!(simulation2?.population?.household?.id || simulation2?.population?.geography?.regionCode));
 
   // Create summary boxes based on the simulations
   const summaryBoxes: SummaryBoxItem[] = [

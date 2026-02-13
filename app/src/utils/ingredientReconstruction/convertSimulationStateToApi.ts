@@ -35,8 +35,9 @@ export function convertSimulationStateToApi(
   if (population?.household?.id) {
     populationId = population.household.id;
     populationType = 'household';
-  } else if (population?.geography?.id) {
-    populationId = population.geography.id;
+  } else if (population?.geography?.regionCode) {
+    // For geography, use regionCode as the population identifier
+    populationId = population.geography.regionCode;
     populationType = 'geography';
   }
 
