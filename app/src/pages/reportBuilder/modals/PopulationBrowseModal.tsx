@@ -30,6 +30,7 @@ import {
   getUKCountries,
   getUKLocalAuthorities,
   getUSCongressionalDistricts,
+  getUSPlaces,
   getUSStates,
   RegionOption,
 } from '@/utils/regionStrategies';
@@ -137,6 +138,7 @@ export function PopulationBrowseModal({
     // US
     const usStates = getUSStates(regionOptions);
     const usDistricts = getUSCongressionalDistricts(regionOptions);
+    const usPlaces = getUSPlaces();
     return [
       {
         id: 'states' as const,
@@ -149,6 +151,12 @@ export function PopulationBrowseModal({
         label: 'Congressional districts',
         count: usDistricts.length,
         regions: usDistricts,
+      },
+      {
+        id: 'places' as const,
+        label: 'Cities',
+        count: usPlaces.length,
+        regions: usPlaces,
       },
     ];
   }, [countryId, regionOptions]);

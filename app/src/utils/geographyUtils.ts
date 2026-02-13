@@ -192,6 +192,14 @@ export function generateGeographyLabel(geography: Geography): string {
     return geography.countryId === 'uk' ? 'Households UK-wide' : 'Households nationwide';
   }
 
+  // Handle US place (city) format: "place/CA-44000"
+  if (geography.geographyId.startsWith('place/')) {
+    const place = findPlaceFromRegionString(geography.geographyId);
+    if (place) {
+      return `Households in ${getPlaceDisplayName(place.name)}`;
+    }
+  }
+
   const displayValue = extractRegionDisplayValue(geography.geographyId);
   return `Households in ${displayValue}`;
 }
