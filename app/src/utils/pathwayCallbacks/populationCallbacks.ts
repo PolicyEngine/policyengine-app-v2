@@ -38,18 +38,41 @@ export function createPopulationCallbacks<TState, TMode>(
   );
 
   const handleScopeSelected = useCallback(
-    (geography: Geography | null, _scopeType: string) => {
-      setState((prev) => {
-        const population = populationSelector(prev);
-        return populationUpdater(prev, {
-          ...population,
-          geography: geography || null,
-          type: geography ? 'geography' : 'household',
+    (geography: Geography | null, _scopeType: string, regionLabel?: string) => {
+      // If geography is selected, complete immediately with auto-generated label
+      if (geography) {
+        const label = regionLabel ? `${regionLabel} households` : 'Geographic households';
+        setState((prev) => {
+          const population = populationSelector(prev);
+          return populationUpdater(prev, {
+            ...population,
+            geography,
+            label,
+            type: 'geography',
+          });
         });
-      });
-      navigateToMode(labelMode);
+
+        // If custom completion handler is provided, use it (for standalone pathways)
+        // Otherwise navigate to return mode (for report/simulation pathways)
+        if (onPopulationComplete?.onGeographyComplete) {
+          onPopulationComplete.onGeographyComplete(geography.geographyId, label);
+        } else {
+          navigateToMode(returnMode);
+        }
+      } else {
+        // Household scope - navigate to label view as before
+        setState((prev) => {
+          const population = populationSelector(prev);
+          return populationUpdater(prev, {
+            ...population,
+            geography: null,
+            type: 'household',
+          });
+        });
+        navigateToMode(labelMode);
+      }
     },
-    [setState, populationSelector, populationUpdater, navigateToMode, labelMode]
+    [setState, populationSelector, populationUpdater, navigateToMode, labelMode, returnMode, onPopulationComplete]
   );
 
   const handleSelectExistingHousehold = useCallback(
