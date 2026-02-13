@@ -1,5 +1,14 @@
-import type { Layout } from 'plotly.js';
-import Plot from 'react-plotly.js';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  Cell,
+  CartesianGrid,
+  Label,
+} from 'recharts';
 import { useSelector } from 'react-redux';
 import { Stack, Text } from '@mantine/core';
 import { useMediaQuery, useViewportSize } from '@mantine/hooks';
@@ -10,13 +19,8 @@ import { spacing } from '@/designTokens/spacing';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import type { RootState } from '@/store';
 import { relativeChangeMessage } from '@/utils/chartMessages';
-import {
-  DEFAULT_CHART_CONFIG,
-  downloadCsv,
-  getChartLogoImage,
-  getClampedChartHeight,
-} from '@/utils/chartUtils';
-import { formatNumber, formatPercent, localeCode, precision } from '@/utils/formatters';
+import { downloadCsv, getClampedChartHeight, RECHARTS_WATERMARK, RECHARTS_FONT_STYLE } from '@/utils/chartUtils';
+import { formatNumber, formatPercent, precision } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
 
 interface Props {
@@ -122,40 +126,48 @@ export default function DeepPovertyImpactByGenderSubPage({ output }: Props) {
     downloadCsv(data, 'deep-poverty-impact-by-gender.csv');
   };
 
-  // Chart configuration
-  const chartData = [
-    {
-      x: povertyLabels,
-      y: povertyChanges,
-      type: 'bar' as const,
-      marker: {
-        color: povertyChanges.map((value) => (value < 0 ? colors.primary[500] : colors.gray[600])),
-      },
-      text: povertyChanges.map((value) => (value >= 0 ? '+' : '') + formatPer(value)) as any,
-      textangle: 0,
-      customdata: povertyLabels.map(hoverMessage) as any,
-      hovertemplate: '<b>%{x}</b><br><br>%{customdata}<extra></extra>',
-    },
-  ];
+  // Recharts data
+  const chartData = povertyLabels.map((label, i) => ({
+    name: label,
+    value: povertyChanges[i],
+    label: (povertyChanges[i] >= 0 ? '+' : '') + formatPer(povertyChanges[i]),
+    hoverText: hoverMessage(label),
+  }));
 
-  const layout = {
-    yaxis: {
-      title: { text: 'Relative change in deep poverty rate' },
-      tickformat: `+,.${ytickPrecision}%`,
-      fixedrange: true,
-    },
-    showlegend: false,
-    uniformtext: {
-      mode: 'hide',
-      minsize: 8,
-    },
-    margin: {
-      t: 0,
-      b: 100,
-      r: 0,
-    },
-    images: [getChartLogoImage()],
-  } as Partial<Layout>;
+  function BarLabel({ x, y, width, value, index }: any) {
+    const entry = chartData[index];
+    if (!entry) return null;
+    return (
+      <text
+        x={x + width / 2}
+        y={value >= 0 ? y - 4 : y + 16}
+        textAnchor="middle"
+        fontSize={12}
+        fill={colors.gray[700]}
+      >
+        {entry.label}
+      </text>
+    );
+  }
+
+  function CustomTooltip({ active, payload }: any) {
+    if (!active || !payload?.[0]) return null;
+    const data = payload[0].payload;
+    return (
+      <div
+        style={{
+          background: '#fff',
+          border: '1px solid #E2E8F0',
+          borderRadius: 6,
+          padding: '8px 12px',
+          maxWidth: 300,
+        }}
+      >
+        <p style={{ fontWeight: 600, margin: 0 }}>{data.name}</p>
+        <p style={{ margin: '4px 0 0', fontSize: 13, whiteSpace: 'pre-wrap' }}>{data.hoverText}</p>
+      </div>
+    );
+  }
 
   // Description text
   const getDescription = () => {
@@ -175,14 +187,41 @@ export default function DeepPovertyImpactByGenderSubPage({ output }: Props) {
   return (
     <ChartContainer title={getChartTitle()} onDownloadCsv={handleDownloadCsv}>
       <Stack gap={spacing.sm}>
-        <Plot
-          data={chartData}
-          layout={layout}
-          config={{
-            ...DEFAULT_CHART_CONFIG,
-            locale: localeCode(countryId),
+        <ResponsiveContainer width="100%" height={chartHeight}>
+          <BarChart data={chartData} margin={{ top: 5, right: 20, bottom: 60, left: 20 }}>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} />
+            <XAxis dataKey="name" tick={RECHARTS_FONT_STYLE} />
+            <YAxis
+              tickFormatter={(v: number) => `${(v * 100).toFixed(ytickPrecision)}%`}
+              tick={RECHARTS_FONT_STYLE}
+            >
+              <Label
+                value="Relative change in deep poverty rate"
+                angle={-90}
+                position="insideLeft"
+                style={{ textAnchor: 'middle', ...RECHARTS_FONT_STYLE }}
+              />
+            </YAxis>
+            <Tooltip content={<CustomTooltip />} />
+            <Bar dataKey="value" label={<BarLabel />}>
+              {chartData.map((entry, index) => (
+                <Cell
+                  key={index}
+                  fill={entry.value < 0 ? colors.primary[500] : colors.gray[600]}
+                />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+        <img
+          src={RECHARTS_WATERMARK.src}
+          alt=""
+          style={{
+            display: 'block',
+            marginLeft: 'auto',
+            width: RECHARTS_WATERMARK.width,
+            opacity: RECHARTS_WATERMARK.opacity,
           }}
-          style={{ width: '100%', height: chartHeight }}
         />
 
         <Text size="sm" c="dimmed">
