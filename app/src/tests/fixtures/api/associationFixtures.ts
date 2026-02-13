@@ -98,8 +98,6 @@ export const createMockReportAssociation = (overrides?: Partial<UserReport>): Us
 // Error messages
 export const ERROR_MESSAGES = {
   HOUSEHOLD_NOT_FOUND: (id: string) => `UserHousehold with id ${id} not found`,
-  GEOGRAPHY_NOT_FOUND: (userId: string, geographyId: string) =>
-    `UserGeography with userId ${userId} and geographyId ${geographyId} not found`,
   POLICY_NOT_FOUND: (id: string) => `UserPolicy with id ${id} not found`,
   SIMULATION_NOT_FOUND: (id: string) => `UserSimulation with id ${id} not found`,
   REPORT_NOT_FOUND: (id: string) => `UserReport with id ${id} not found`,

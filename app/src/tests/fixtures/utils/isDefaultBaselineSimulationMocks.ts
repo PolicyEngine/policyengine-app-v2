@@ -37,12 +37,8 @@ export const mockDefaultBaselineSimulation: any = {
     populationId: TEST_COUNTRIES.US,
   },
   geography: {
-    id: 'geo-1',
     countryId: TEST_COUNTRIES.US,
-    geographyId: TEST_COUNTRIES.US,
-    scope: 'national',
-    label: 'US nationwide',
-    createdAt: '2024-01-15T10:00:00Z',
+    regionCode: TEST_COUNTRIES.US,
   },
 };
 
@@ -64,12 +60,8 @@ export const mockCustomPolicySimulation: any = {
     populationId: TEST_COUNTRIES.US,
   },
   geography: {
-    id: 'geo-2',
     countryId: TEST_COUNTRIES.US,
-    geographyId: TEST_COUNTRIES.US,
-    scope: 'national',
-    label: 'US nationwide',
-    createdAt: '2024-01-15T11:00:00Z',
+    regionCode: TEST_COUNTRIES.US,
   },
 };
 
@@ -91,12 +83,8 @@ export const mockSubnationalSimulation: any = {
     populationId: 'state/ca', // Subnational
   },
   geography: {
-    id: 'geo-3',
     countryId: TEST_COUNTRIES.US,
-    geographyId: 'state/ca',
-    scope: 'subnational',
-    label: 'California',
-    createdAt: '2024-01-15T12:00:00Z',
+    regionCode: 'state/ca',
   },
 };
 
@@ -137,12 +125,8 @@ export const mockWrongLabelSimulation: any = {
     populationId: TEST_COUNTRIES.US,
   },
   geography: {
-    id: 'geo-5',
     countryId: TEST_COUNTRIES.US,
-    geographyId: TEST_COUNTRIES.US,
-    scope: 'national',
-    label: 'US nationwide',
-    createdAt: '2024-01-15T14:00:00Z',
+    regionCode: TEST_COUNTRIES.US,
   },
 };
 
@@ -176,11 +160,7 @@ export const mockUKDefaultBaselineSimulation: any = {
     populationId: TEST_COUNTRIES.UK,
   },
   geography: {
-    id: 'geo-7',
     countryId: TEST_COUNTRIES.UK,
-    geographyId: TEST_COUNTRIES.UK,
-    scope: 'national',
-    label: 'UK nationwide',
-    createdAt: '2024-01-15T16:00:00Z',
+    regionCode: TEST_COUNTRIES.UK,
   },
 };

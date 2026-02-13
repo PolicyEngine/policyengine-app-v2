@@ -37,7 +37,7 @@ type GeographyOption = { name: string; label: string };
  * Construct Geography objects from geography-type simulations
  *
  * Builds simplified Geography objects using regionCode from simulation's populationId.
- * Display names are looked up from region metadata at render time (Phase 6.2).
+ * Display names are looked up from region metadata at render time via useRegions().
  *
  * @param simulations - Array of simulations to extract geographies from
  * @param _geographyOptions - Deprecated: lookup now happens at display time

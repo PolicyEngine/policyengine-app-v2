@@ -47,8 +47,7 @@ export function getPopulationLabel(population: Population | null): string {
     return `Household #${population.household.id}`;
   }
 
-  // Third priority: geography region code
-  // TODO: Phase 6.2 will add proper lookup from region metadata
+  // Third priority: geography region code (fallback when region metadata unavailable)
   if (population.geography?.regionCode) {
     return population.geography.regionCode;
   }

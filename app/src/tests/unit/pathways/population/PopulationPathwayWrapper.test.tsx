@@ -29,10 +29,6 @@ vi.mock('@/hooks/useUserHousehold', () => ({
   useCreateHousehold: vi.fn(() => ({ createHousehold: vi.fn(), isPending: false })),
 }));
 
-vi.mock('@/hooks/useUserGeographic', () => ({
-  useCreateGeographicAssociation: vi.fn(() => ({ mutateAsync: vi.fn(), isPending: false })),
-}));
-
 vi.mock('@/hooks/usePathwayNavigation', () => ({
   usePathwayNavigation: vi.fn(() => ({
     mode: 'SCOPE',

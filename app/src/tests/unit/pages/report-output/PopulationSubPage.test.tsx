@@ -1,7 +1,23 @@
 import { render, screen } from '@test-utils';
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import PopulationSubPage from '@/pages/report-output/PopulationSubPage';
 import { createPopulationSubPageProps } from '@/tests/fixtures/pages/report-output/PopulationSubPage';
+import { MetadataRegionEntry } from '@/types/metadata';
+
+// Mock regions data for V2 API labels (used by GeographySubPage)
+const mockRegions: MetadataRegionEntry[] = [
+  { name: 'ca', label: 'California', type: 'state' },
+  { name: 'ny', label: 'New York', type: 'state' },
+];
+
+vi.mock('@/hooks/useRegions', () => ({
+  useRegions: vi.fn(() => ({
+    regions: mockRegions,
+    isLoading: false,
+    error: null,
+    rawRegions: [],
+  })),
+}));
 
 describe('PopulationSubPage - Design 4 Router', () => {
   describe('Routing logic', () => {
@@ -55,9 +71,9 @@ describe('PopulationSubPage - Design 4 Router', () => {
       const props = createPopulationSubPageProps.geographyDifferent();
       render(<PopulationSubPage {...props} />);
 
-      // Should display regionCodes (note: Phase 6.2 will add proper name lookup)
-      expect(screen.getByText('ca')).toBeInTheDocument(); // Baseline
-      expect(screen.getByText('ny')).toBeInTheDocument(); // Reform
+      // Should display human-readable labels from V2 API
+      expect(screen.getByText('California')).toBeInTheDocument(); // Baseline
+      expect(screen.getByText('New York')).toBeInTheDocument(); // Reform
     });
 
     test('given missing household data then displays error in HouseholdSubPage', () => {

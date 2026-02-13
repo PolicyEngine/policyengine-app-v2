@@ -40,7 +40,7 @@ export function isHousehold(obj: BaseIngredient): obj is Household {
  * Type guard to check if an object is a Geography
  */
 export function isGeography(obj: BaseIngredient): obj is Geography {
-  return 'scope' in obj && 'geographyId' in obj && !('householdData' in obj);
+  return 'regionCode' in obj && 'countryId' in obj && !('householdData' in obj);
 }
 
 /**
