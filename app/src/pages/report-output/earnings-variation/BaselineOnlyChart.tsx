@@ -1,25 +1,57 @@
-import type { Layout } from 'plotly.js';
-import Plot from 'react-plotly.js';
 import { useSelector } from 'react-redux';
+import {
+  CartesianGrid,
+  Label,
+  Legend,
+  Line,
+  LineChart,
+  ReferenceDot,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 import { useMediaQuery, useViewportSize } from '@mantine/hooks';
 import { colors } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import type { RootState } from '@/store';
 import type { Household } from '@/types/ingredients/Household';
-import {
-  DEFAULT_CHART_CONFIG,
-  DEFAULT_CHART_LAYOUT,
-  getChartLogoImage,
-  getClampedChartHeight,
-} from '@/utils/chartUtils';
-import { currencySymbol, localeCode } from '@/utils/formatters';
+import { getClampedChartHeight, RECHARTS_FONT_STYLE, RECHARTS_WATERMARK } from '@/utils/chartUtils';
+import { currencySymbol } from '@/utils/formatters';
 import { getValueFromHousehold } from '@/utils/householdValues';
+import * as styles from './earningsCharts.css';
 
 interface Props {
   baseline: Household;
   baselineVariation: Household;
   variableName: string;
   year: string;
+}
+
+function EarningsTooltip({ active, payload, label, symbol }: any) {
+  if (!active || !payload?.length) {
+    return null;
+  }
+  return (
+    <div
+      style={{
+        background: '#fff',
+        border: '1px solid #E2E8F0',
+        borderRadius: 6,
+        padding: '8px 12px',
+      }}
+    >
+      <p style={{ fontWeight: 600, margin: 0 }}>
+        Earnings: {symbol}
+        {Number(label).toLocaleString()}
+      </p>
+      {payload.map((p: any) => (
+        <p key={p.name} style={{ margin: '2px 0', fontSize: 13, color: p.stroke }}>
+          {p.name}: {p.value}
+        </p>
+      ))}
+    </div>
+  );
 }
 
 /**
@@ -73,64 +105,62 @@ export default function BaselineOnlyChart({
   const xValues = Array.from({ length: 401 }, (_, i) => (i * maxEarnings) / 400);
 
   const symbol = currencySymbol(countryId);
-  const chartData = [
-    {
-      x: xValues,
-      y: yValues,
-      type: 'scatter' as const,
-      mode: 'lines' as const,
-      line: { color: colors.primary[500], width: 2 },
-      name: 'Baseline',
-      hovertemplate: `<b>Earnings: %{x:${symbol},.0f}</b><br>%{y}<extra></extra>`,
-    },
-    {
-      x: [currentEarnings],
-      y: [currentValue],
-      type: 'scatter' as const,
-      mode: 'markers' as const,
-      marker: { color: colors.primary[500], size: 10 },
-      name: 'Current',
-      hovertemplate: `<b>Your current position</b><br>Earnings: %{x:${symbol},.0f}<br>%{y}<extra></extra>`,
-    },
-  ];
 
-  const layout = {
-    ...DEFAULT_CHART_LAYOUT,
-    xaxis: {
-      title: { text: 'Employment income' },
-      tickprefix: currencySymbol(countryId),
-      tickformat: ',.0f',
-      fixedrange: true,
-    },
-    yaxis: {
-      title: { text: variable.label },
-      fixedrange: true,
-    },
-    showlegend: true,
-    legend: {
-      x: 0.02,
-      y: 0.98,
-      xanchor: 'left' as const,
-      yanchor: 'top' as const,
-    },
-    margin: {
-      t: 20,
-      b: 80,
-      l: 80,
-      r: 20,
-    },
-    images: [getChartLogoImage()],
-  } as Partial<Layout>;
+  const chartData = xValues.map((x, i) => ({
+    earnings: x,
+    value: yValues[i],
+  }));
 
   return (
-    <Plot
-      data={chartData}
-      layout={layout}
-      config={{
-        ...DEFAULT_CHART_CONFIG,
-        locale: localeCode(countryId),
-      }}
-      style={{ width: '100%', height: chartHeight }}
-    />
+    <div className={styles.chartWrapper}>
+      <ResponsiveContainer width="100%" height={chartHeight}>
+        <LineChart data={chartData} margin={{ top: 20, right: 20, bottom: 80, left: 80 }}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis
+            dataKey="earnings"
+            tick={RECHARTS_FONT_STYLE}
+            tickFormatter={(v: number) => `${symbol}${v.toLocaleString()}`}
+          >
+            <Label
+              value="Employment income"
+              position="bottom"
+              offset={20}
+              style={RECHARTS_FONT_STYLE}
+            />
+          </XAxis>
+          <YAxis tick={RECHARTS_FONT_STYLE}>
+            <Label
+              value={variable.label}
+              angle={-90}
+              position="insideLeft"
+              style={{ textAnchor: 'middle', ...RECHARTS_FONT_STYLE }}
+            />
+          </YAxis>
+          <Tooltip content={<EarningsTooltip symbol={symbol} />} />
+          <Legend verticalAlign="top" align="left" />
+          <Line
+            type="monotone"
+            dataKey="value"
+            name="Baseline"
+            stroke={colors.primary[500]}
+            strokeWidth={2}
+            dot={false}
+          />
+          <ReferenceDot
+            x={currentEarnings}
+            y={currentValue}
+            r={5}
+            fill={colors.primary[500]}
+            stroke={colors.primary[500]}
+          />
+        </LineChart>
+      </ResponsiveContainer>
+      <img
+        src={RECHARTS_WATERMARK.src}
+        alt=""
+        className={styles.watermark}
+        style={{ width: RECHARTS_WATERMARK.width }}
+      />
+    </div>
   );
 }

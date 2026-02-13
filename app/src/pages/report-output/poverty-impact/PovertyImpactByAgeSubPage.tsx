@@ -1,15 +1,15 @@
+import { useSelector } from 'react-redux';
 import {
-  BarChart,
   Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Label,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  Cell,
-  CartesianGrid,
-  Label,
 } from 'recharts';
-import { useSelector } from 'react-redux';
 import { Stack, Text } from '@mantine/core';
 import { useMediaQuery, useViewportSize } from '@mantine/hooks';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
@@ -19,7 +19,12 @@ import { spacing } from '@/designTokens/spacing';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import type { RootState } from '@/store';
 import { relativeChangeMessage } from '@/utils/chartMessages';
-import { downloadCsv, getClampedChartHeight, RECHARTS_WATERMARK, RECHARTS_FONT_STYLE } from '@/utils/chartUtils';
+import {
+  downloadCsv,
+  getClampedChartHeight,
+  RECHARTS_FONT_STYLE,
+  RECHARTS_WATERMARK,
+} from '@/utils/chartUtils';
 import { formatNumber, formatPercent, precision } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
 
@@ -128,7 +133,9 @@ export default function PovertyImpactByAgeSubPage({ output }: Props) {
 
   function BarLabel({ x, y, width, value, index }: any) {
     const entry = chartData[index];
-    if (!entry) return null;
+    if (!entry) {
+      return null;
+    }
     return (
       <text
         x={x + width / 2}
@@ -143,7 +150,9 @@ export default function PovertyImpactByAgeSubPage({ output }: Props) {
   }
 
   function CustomTooltip({ active, payload }: any) {
-    if (!active || !payload?.[0]) return null;
+    if (!active || !payload?.[0]) {
+      return null;
+    }
     const data = payload[0].payload;
     return (
       <div
@@ -197,10 +206,7 @@ export default function PovertyImpactByAgeSubPage({ output }: Props) {
             <Tooltip content={<CustomTooltip />} />
             <Bar dataKey="value" label={<BarLabel />}>
               {chartData.map((entry, index) => (
-                <Cell
-                  key={index}
-                  fill={entry.value < 0 ? colors.primary[500] : colors.gray[600]}
-                />
+                <Cell key={index} fill={entry.value < 0 ? colors.primary[500] : colors.gray[600]} />
               ))}
             </Bar>
           </BarChart>

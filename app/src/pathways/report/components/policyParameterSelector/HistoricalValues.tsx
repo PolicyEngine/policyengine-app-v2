@@ -1,5 +1,14 @@
 import { memo, useMemo, useRef } from 'react';
-import Plot from 'react-plotly.js';
+import {
+  CartesianGrid,
+  Legend,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 import { Stack, Text } from '@mantine/core';
 import { CHART_COLORS } from '@/constants/chartColors';
 import { useChartWidth, useIsMobile, useWindowHeight } from '@/hooks/useChartDimensions';
@@ -8,12 +17,10 @@ import { ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
 import {
   extendForDisplay,
   filterInfiniteValues,
-  filterValidChartDates,
-  getAllChartDates,
   getChartBoundaryDates,
 } from '@/utils/chartDateUtils';
-import { getReformPolicyLabel } from '@/utils/chartUtils';
-import { formatParameterValue, getPlotlyAxisFormat } from '@/utils/chartValueUtils';
+import { getReformPolicyLabel, RECHARTS_FONT_STYLE } from '@/utils/chartUtils';
+import { formatParameterValue, getRechartsTickFormatter } from '@/utils/chartValueUtils';
 import { capitalize } from '@/utils/stringUtils';
 
 interface PolicyParameterSelectorHistoricalValuesProps {
@@ -58,12 +65,37 @@ export default function PolicyParameterSelectorHistoricalValues(
   );
 }
 
+function HistoricalTooltip({ active, payload, label, param }: any) {
+  if (!active || !payload?.length) {
+    return null;
+  }
+  const date = new Date(label);
+  const dateStr = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+  return (
+    <div
+      style={{
+        background: '#fff',
+        border: '1px solid #E2E8F0',
+        borderRadius: 6,
+        padding: '8px 12px',
+      }}
+    >
+      <p style={{ fontWeight: 600, margin: 0 }}>{dateStr}</p>
+      {payload.map((p: any) => (
+        <p key={p.name} style={{ margin: '2px 0', fontSize: 13, color: p.stroke }}>
+          {p.name}: {formatParameterValue(p.value, param?.unit, { decimalPlaces: 2 })}
+        </p>
+      ))}
+    </div>
+  );
+}
+
 export const ParameterOverTimeChart = memo((props: ParameterOverTimeChartProps) => {
   const { param, baseValuesCollection, reformValuesCollection, policyLabel, policyId } = props;
 
   // Responsive state
   const chartContainerRef = useRef<HTMLDivElement>(null);
-  const chartWidth = useChartWidth(chartContainerRef);
+  useChartWidth(chartContainerRef);
   const isMobile = useIsMobile();
   const windowHeight = useWindowHeight();
 
@@ -133,20 +165,12 @@ export const ParameterOverTimeChart = memo((props: ParameterOverTimeChartProps) 
     }
   }, [reformValuesCollection]);
 
-  // Memoize axis calculations with buffer space
-  const { xaxisFormat, yaxisFormat } = useMemo(() => {
+  // Memoize axis calculations
+  const { maxDate, yMin, yMax } = useMemo(() => {
     try {
-      let xaxisValues = getAllChartDates(x, reformedX);
-      xaxisValues = filterValidChartDates(xaxisValues);
-
-      const { minDate, maxDate } = getChartBoundaryDates();
-      xaxisValues.push(minDate);
-      xaxisValues.push(maxDate);
+      const { maxDate } = getChartBoundaryDates();
 
       const yaxisValues = reformValuesCollection ? [...y, ...reformedY] : y;
-
-      // Calculate x-axis range starting at 2013 (earliest display date, with 2-year buffer)
-      const EARLIEST_DISPLAY_DATE = '2013-01-01';
 
       // Calculate y-axis range with 10% buffer above and below
       const numericYValues = yaxisValues.map((v) => Number(v)).filter((v) => !isNaN(v));
@@ -164,49 +188,16 @@ export const ParameterOverTimeChart = memo((props: ParameterOverTimeChartProps) 
       const yRange = maxY - minY;
       const yBuffer = yRange * 0.1;
 
-      const xaxisFormatWithRange = {
-        ...getPlotlyAxisFormat('date', xaxisValues),
-        range: [EARLIEST_DISPLAY_DATE, maxDate],
-      };
-
-      const yaxisFormatWithRange = {
-        ...getPlotlyAxisFormat(param.unit || '', yaxisValues),
-        range: [minY - yBuffer, maxY + yBuffer],
-      };
-
       return {
-        xaxisFormat: xaxisFormatWithRange,
-        yaxisFormat: yaxisFormatWithRange,
+        maxDate,
+        yMin: minY - yBuffer,
+        yMax: maxY + yBuffer,
       };
     } catch (error) {
       console.error('ParameterOverTimeChart: Error calculating axis formats', error);
-      return {
-        xaxisFormat: { type: 'date' as const },
-        yaxisFormat: {},
-      };
+      return { maxDate: '2036-12-31', yMin: 0, yMax: 1 };
     }
   }, [x, y, reformedX, reformedY, reformValuesCollection, param.unit]);
-
-  // Memoize custom data for hover tooltips
-  const customData = useMemo(() => {
-    try {
-      return y.map((value) => formatParameterValue(value, param.unit, { decimalPlaces: 2 }));
-    } catch (error) {
-      console.error('ParameterOverTimeChart: Error formatting custom data', error);
-      return [];
-    }
-  }, [y, param.unit]);
-
-  const reformedCustomData = useMemo(() => {
-    try {
-      return reformedY.map((value) =>
-        formatParameterValue(value, param.unit, { decimalPlaces: 2 })
-      );
-    } catch (error) {
-      console.error('ParameterOverTimeChart: Error formatting reform custom data', error);
-      return [];
-    }
-  }, [reformedY, param.unit]);
 
   // Memoize reform label
   const reformLabel = useMemo(() => {
@@ -215,6 +206,44 @@ export const ParameterOverTimeChart = memo((props: ParameterOverTimeChartProps) 
 
   // Check if any infinite values were filtered
   const hasInfiniteValues = hasInfiniteBase || hasInfiniteReform;
+
+  const hasReform = reformValuesCollection && reformedX.length > 0 && reformedY.length > 0;
+
+  // Memoize chart data transformation
+  const chartData = useMemo(() => {
+    const data: Record<string, any>[] = x.map((date, i) => {
+      const point: Record<string, any> = {
+        date,
+        baseline: +y[i],
+      };
+      if (hasReform) {
+        const reformIdx = reformedX.indexOf(date);
+        if (reformIdx !== -1) {
+          point.reform = +reformedY[reformIdx];
+        }
+      }
+      return point;
+    });
+
+    // Merge any reform-only dates
+    if (hasReform) {
+      reformedX.forEach((date, i) => {
+        if (!data.find((d) => d.date === date)) {
+          data.push({ date, reform: +reformedY[i] });
+        }
+      });
+      data.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    }
+
+    return data;
+  }, [x, y, reformedX, reformedY, hasReform]);
+
+  // Memoize tick formatter
+  const yTickFormatter = useMemo(() => {
+    return getRechartsTickFormatter(param.unit || '', { decimalPlaces: 1 });
+  }, [param.unit]);
+
+  const EARLIEST_DISPLAY_DATE = '2013-01-01';
 
   // Early return if no valid data
   if (x.length === 0 || y.length === 0) {
@@ -229,92 +258,53 @@ export const ParameterOverTimeChart = memo((props: ParameterOverTimeChartProps) 
 
   return (
     <div ref={chartContainerRef}>
-      <Plot
-        data={[
-          ...(reformValuesCollection && reformedX.length > 0 && reformedY.length > 0
-            ? [
-                {
-                  x: reformedX,
-                  y: reformedY.map((y) => +y),
-                  type: 'line' as any,
-                  mode: 'lines+markers' as any,
-                  line: {
-                    shape: 'hv' as any,
-                    dash: 'dot' as any,
-                    color: CHART_COLORS.REFORM_LINE,
-                  },
-                  marker: {
-                    color: CHART_COLORS.REFORM_LINE,
-                    size: CHART_COLORS.MARKER_SIZE,
-                  },
-                  name: reformLabel,
-                  customdata: reformedCustomData,
-                  hovertemplate: '%{x|%b, %Y}: %{customdata}<extra></extra>',
-                },
-              ]
-            : []),
-          {
-            x,
-            y: y.map((y) => +y),
-            type: 'line' as any,
-            mode: 'lines+markers' as any,
-            line: {
-              shape: 'hv' as any,
-              color:
-                reformValuesCollection && reformedX.length > 0 && reformedY.length > 0
-                  ? CHART_COLORS.BASE_LINE_WITH_REFORM
-                  : CHART_COLORS.BASE_LINE_ALONE,
-            },
-            marker: {
-              color:
-                reformValuesCollection && reformedX.length > 0 && reformedY.length > 0
-                  ? CHART_COLORS.BASE_LINE_WITH_REFORM
-                  : CHART_COLORS.BASE_LINE_ALONE,
-              size: CHART_COLORS.MARKER_SIZE,
-            },
-            name: 'Current law',
-            customdata: customData,
-            hovertemplate: '%{x|%b, %Y}: %{customdata}<extra></extra>',
-          },
-        ].filter((x) => x)}
-        layout={{
-          xaxis: {
-            ...xaxisFormat,
-            color: CHART_COLORS.CHART_TEXT,
-            gridcolor: '#E5E7EB',
-          },
-          yaxis: {
-            ...yaxisFormat,
-            color: CHART_COLORS.CHART_TEXT,
-            gridcolor: '#E5E7EB',
-          },
-          legend: {
-            // Position above the plot
-            y: 1.2,
-            orientation: 'h' as any,
-            font: {
-              color: CHART_COLORS.CHART_TEXT,
-            },
-          },
-          margin: {
-            t: isMobile ? 80 : 60,
-            r: isMobile ? 50 : 40,
-            l: isMobile ? 50 : 60,
-            b: isMobile ? 30 : 50,
-          },
-          dragmode: isMobile ? (false as any) : ('zoom' as any),
-          width: chartWidth || undefined,
-          paper_bgcolor: CHART_COLORS.CHART_BACKGROUND,
-          plot_bgcolor: CHART_COLORS.PLOT_BACKGROUND,
-        }}
-        style={{
-          height: isMobile ? windowHeight * 0.5 : 400,
-        }}
-        config={{
-          displayModeBar: false,
-          responsive: true,
-        }}
-      />
+      <ResponsiveContainer width="100%" height={isMobile ? windowHeight * 0.5 : 400}>
+        <LineChart
+          data={chartData}
+          margin={{
+            top: isMobile ? 40 : 20,
+            right: isMobile ? 50 : 40,
+            bottom: isMobile ? 30 : 50,
+            left: isMobile ? 50 : 60,
+          }}
+        >
+          <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+          <XAxis
+            dataKey="date"
+            tick={RECHARTS_FONT_STYLE}
+            tickFormatter={(d: string) => {
+              const dt = new Date(d);
+              return dt.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+            }}
+            domain={[EARLIEST_DISPLAY_DATE, maxDate]}
+          />
+          <YAxis tick={RECHARTS_FONT_STYLE} tickFormatter={yTickFormatter} domain={[yMin, yMax]} />
+          <Tooltip content={<HistoricalTooltip param={param} />} />
+          <Legend verticalAlign="top" />
+          {hasReform && (
+            <Line
+              type="stepAfter"
+              dataKey="reform"
+              name={reformLabel}
+              stroke={CHART_COLORS.REFORM_LINE}
+              strokeDasharray="5 5"
+              dot={{ fill: CHART_COLORS.REFORM_LINE, r: 3 }}
+              connectNulls
+            />
+          )}
+          <Line
+            type="stepAfter"
+            dataKey="baseline"
+            name="Current law"
+            stroke={hasReform ? CHART_COLORS.BASE_LINE_WITH_REFORM : CHART_COLORS.BASE_LINE_ALONE}
+            dot={{
+              fill: hasReform ? CHART_COLORS.BASE_LINE_WITH_REFORM : CHART_COLORS.BASE_LINE_ALONE,
+              r: 3,
+            }}
+            connectNulls
+          />
+        </LineChart>
+      </ResponsiveContainer>
       {hasInfiniteValues && (
         <Text size="sm" c="gray.8" fs="italic" mt="xs">
           Note: Charts do not currently display parameters with values of positive or negative
