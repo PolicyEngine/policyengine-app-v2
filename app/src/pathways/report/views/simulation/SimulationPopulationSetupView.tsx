@@ -7,7 +7,6 @@
 import { useState } from 'react';
 import PathwayView from '@/components/common/PathwayView';
 import { MOCK_USER_ID } from '@/constants';
-import { useUserGeographics } from '@/hooks/useUserGeographic';
 import { useUserHouseholds } from '@/hooks/useUserHousehold';
 import { PopulationStateProps, SimulationStateProps } from '@/types/pathwayState';
 import { getPopulationLabel, getSimulationLabel } from '@/utils/populationCompatibility';
@@ -42,8 +41,9 @@ export default function SimulationPopulationSetupView({
 }: SimulationPopulationSetupViewProps) {
   const userId = MOCK_USER_ID.toString();
   const { data: userHouseholds } = useUserHouseholds(userId);
-  const { data: userGeographics } = useUserGeographics(userId);
-  const hasExistingPopulations = (userHouseholds?.length ?? 0) + (userGeographics?.length ?? 0) > 0;
+  // Note: Geographic populations are no longer stored as user associations.
+  // They are selected per-simulation. We only check for existing households.
+  const hasExistingPopulations = (userHouseholds?.length ?? 0) > 0;
 
   const [selectedAction, setSelectedAction] = useState<SetupAction | null>(null);
 

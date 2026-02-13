@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import PathwayView from '@/components/common/PathwayView';
 import { MOCK_USER_ID } from '@/constants';
-import { useUserGeographics } from '@/hooks/useUserGeographic';
 import { useUserHouseholds } from '@/hooks/useUserHousehold';
 import { ReportStateProps, SimulationStateProps } from '@/types/pathwayState';
 import { isSimulationConfigured } from '@/utils/validation/ingredientValidation';
@@ -32,16 +31,17 @@ export default function ReportSetupView({
   const simulation2 = reportState.simulations[1];
 
   // Fetch population data for pre-filling simulation 2
+  // Note: Geographic populations are no longer stored as user associations.
+  // They are selected per-simulation.
   const userId = MOCK_USER_ID.toString();
   const { data: householdData } = useUserHouseholds(userId);
-  const { data: geographicData } = useUserGeographics(userId);
 
   // Check if simulations are fully configured
   const simulation1Configured = isSimulationConfigured(simulation1);
   const simulation2Configured = isSimulationConfigured(simulation2);
 
-  // Check if population data is loaded (needed for simulation2 prefill)
-  const isPopulationDataLoaded = householdData !== undefined && geographicData !== undefined;
+  // Check if household population data is loaded (needed for simulation2 prefill)
+  const isPopulationDataLoaded = householdData !== undefined;
 
   // Determine if simulation2 is optional based on population type of simulation1
   const isHouseholdReport = simulation1?.population.type === 'household';

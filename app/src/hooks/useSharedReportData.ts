@@ -8,10 +8,7 @@
  */
 
 import { UserPolicy } from '@/types/ingredients/UserPolicy';
-import {
-  UserGeographyPopulation,
-  UserHouseholdPopulation,
-} from '@/types/ingredients/UserPopulation';
+import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { UserReport } from '@/types/ingredients/UserReport';
 import { UserSimulation } from '@/types/ingredients/UserSimulation';
 import {
@@ -33,7 +30,6 @@ interface UseSharedReportDataResult {
   userSimulations: UserSimulation[];
   userPolicies: UserPolicy[];
   userHouseholds: UserHouseholdPopulation[];
-  userGeographies: UserGeographyPopulation[];
 
   // Base ingredients (fetched from API)
   report: ReturnType<typeof useFetchReportIngredients>['report'];
@@ -74,9 +70,9 @@ export function useSharedReportData(
     userSimulations: expandedAssociations?.userSimulations ?? [],
     userPolicies: expandedAssociations?.userPolicies ?? [],
     userHouseholds: expandedAssociations?.userHouseholds ?? [],
-    userGeographies: expandedAssociations?.userGeographies ?? [],
 
     // Base ingredients from API
+    // Note: geographies are constructed from simulation data, not user associations
     report,
     simulations,
     policies,

@@ -9,7 +9,6 @@ import type { Policy } from '@/types/ingredients/Policy';
 import type { Report } from '@/types/ingredients/Report';
 import type { Simulation } from '@/types/ingredients/Simulation';
 import type { UserPolicy } from '@/types/ingredients/UserPolicy';
-import type { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
 import type { UserSimulation } from '@/types/ingredients/UserSimulation';
 import { getDisplayStatus } from '@/utils/statusMapping';
 import { ComparativeAnalysisPage } from './ComparativeAnalysisPage';
@@ -33,7 +32,6 @@ interface SocietyWideReportOutputProps {
   userPolicies?: UserPolicy[];
   policies?: Policy[];
   geographies?: Geography[];
-  userGeographies?: UserGeographyPopulation[];
 }
 
 /**
@@ -52,7 +50,6 @@ export function SocietyWideReportOutput({
   userPolicies,
   policies,
   geographies,
-  userGeographies,
 }: SocietyWideReportOutputProps) {
   // Get calculation status for report (for state decisions)
   const calcStatus = useCalculationStatus(report?.id || '', 'report');
@@ -159,7 +156,6 @@ export function SocietyWideReportOutput({
             baselineSimulation={simulations?.[0]}
             reformSimulation={simulations?.[1]}
             geographies={geographies}
-            userGeographies={userGeographies}
           />
         );
 

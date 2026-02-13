@@ -1,10 +1,7 @@
 import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
 import { Simulation } from '@/types/ingredients/Simulation';
-import {
-  UserGeographyPopulation,
-  UserHouseholdPopulation,
-} from '@/types/ingredients/UserPopulation';
+import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import GeographySubPage from './GeographySubPage';
 import HouseholdSubPage from './HouseholdSubPage';
 
@@ -14,7 +11,6 @@ interface PopulationSubPageProps {
   households?: Household[];
   geographies?: Geography[];
   userHouseholds?: UserHouseholdPopulation[];
-  userGeographies?: UserGeographyPopulation[];
 }
 
 /**
@@ -29,7 +25,6 @@ export default function PopulationSubPage({
   households,
   geographies,
   userHouseholds,
-  userGeographies,
 }: PopulationSubPageProps) {
   // Determine population type from simulations
   const populationType = baselineSimulation?.populationType || reformSimulation?.populationType;
@@ -58,6 +53,7 @@ export default function PopulationSubPage({
   }
 
   // Handle geography population type
+  // Note: Geographies are constructed from simulation data, not user associations
   if (populationType === 'geography') {
     // Extract geography IDs from simulations
     const baselineGeographyId = baselineSimulation?.populationId;
@@ -67,18 +63,10 @@ export default function PopulationSubPage({
     const baselineGeography = geographies?.find((g) => g.id === baselineGeographyId);
     const reformGeography = geographies?.find((g) => g.id === reformGeographyId);
 
-    // Find the user geography associations
-    const baselineUserGeography = userGeographies?.find(
-      (ug) => ug.geographyId === baselineGeographyId
-    );
-    const reformUserGeography = userGeographies?.find((ug) => ug.geographyId === reformGeographyId);
-
     return (
       <GeographySubPage
         baselineGeography={baselineGeography}
         reformGeography={reformGeography}
-        baselineUserGeography={baselineUserGeography}
-        reformUserGeography={reformUserGeography}
       />
     );
   }

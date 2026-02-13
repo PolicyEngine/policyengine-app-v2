@@ -30,7 +30,7 @@ describe('useFetchReportIngredients', () => {
       expect(result.userReport.userId).toBe(TEST_USER_IDS.CUSTOM);
       expect(result.userSimulations[0].userId).toBe(TEST_USER_IDS.CUSTOM);
       expect(result.userPolicies[0].userId).toBe(TEST_USER_IDS.CUSTOM);
-      expect(result.userGeographies[0].userId).toBe(TEST_USER_IDS.CUSTOM);
+      // Note: userGeographies no longer exist - geographies are not user associations
     });
 
     test('given input without userReport.id then falls back to reportId', () => {
@@ -62,7 +62,7 @@ describe('useFetchReportIngredients', () => {
       expect(result.userSimulations).toEqual([]);
       expect(result.userPolicies).toEqual([]);
       expect(result.userHouseholds).toEqual([]);
-      expect(result.userGeographies).toEqual([]);
+      // Note: userGeographies no longer exist - geographies are not user associations
     });
 
     test('given input then preserves all original fields', () => {
@@ -99,15 +99,7 @@ describe('useFetchReportIngredients', () => {
       expect(result.userPolicies[1].userId).toBe(TEST_USER_IDS.SHARED);
     });
 
-    test('given geography with all fields then preserves scope and type', () => {
-      // When
-      const result = expandUserAssociations(SOCIETY_WIDE_INPUT);
-
-      // Then
-      const geography = result.userGeographies[0];
-      expect(geography.type).toBe('geography');
-      expect(geography.scope).toBe('national');
-      expect(geography.geographyId).toBe(TEST_IDS.GEOGRAPHIES.NATIONAL);
-    });
+    // Note: geography test removed - userGeographies no longer exist
+    // Geographies are constructed from simulation data, not stored as user associations
   });
 });

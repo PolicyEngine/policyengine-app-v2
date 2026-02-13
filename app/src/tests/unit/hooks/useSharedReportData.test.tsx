@@ -138,7 +138,7 @@ describe('useSharedReportData', () => {
     });
   });
 
-  test('given valid shareData with geographyId then builds geography object', async () => {
+  test('given valid shareData with geographyId then builds geography object from simulation data', async () => {
     // Given
     vi.mocked(fetchReportById).mockResolvedValue(MOCK_REPORT_METADATA);
     vi.mocked(fetchSimulationById).mockResolvedValue(MOCK_SIMULATION_METADATA);
@@ -152,20 +152,14 @@ describe('useSharedReportData', () => {
       expect(result.current.isLoading).toBe(false);
     });
 
+    // Geography is constructed from simulation data
     expect(result.current.geographies).toHaveLength(1);
     expect(result.current.geographies[0]).toMatchObject({
       id: 'us',
       countryId: 'us',
       scope: 'national',
     });
-
-    // User geography from ShareData
-    expect(result.current.userGeographies).toHaveLength(1);
-    expect(result.current.userGeographies[0]).toMatchObject({
-      geographyId: 'us',
-      label: 'United States',
-      userId: 'shared',
-    });
+    // Note: userGeographies no longer returned - geographies are not user associations
   });
 
   test('given shareData with householdId then fetches household', async () => {

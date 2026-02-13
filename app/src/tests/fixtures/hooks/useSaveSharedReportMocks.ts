@@ -46,15 +46,6 @@ export const MOCK_SAVE_SHARE_DATA: ReportIngredientsInput = {
   ],
   userPolicies: [{ policyId: TEST_IDS.POLICY, label: 'My Policy' }],
   userHouseholds: [],
-  userGeographies: [
-    {
-      type: 'geography',
-      geographyId: TEST_IDS.GEOGRAPHY,
-      countryId: TEST_COUNTRIES.US,
-      scope: 'national',
-      label: 'United States',
-    },
-  ],
 };
 
 export const MOCK_SHARE_DATA_WITH_CURRENT_LAW: ReportIngredientsInput = {
@@ -75,7 +66,6 @@ export const MOCK_SHARE_DATA_WITH_HOUSEHOLD: ReportIngredientsInput = {
       label: 'My Household',
     },
   ],
-  userGeographies: [],
 };
 
 export const MOCK_SHARE_DATA_WITHOUT_LABEL: ReportIngredientsInput = {
@@ -87,7 +77,6 @@ export const MOCK_SHARE_DATA_WITHOUT_LABEL: ReportIngredientsInput = {
   userSimulations: [],
   userPolicies: [],
   userHouseholds: [],
-  userGeographies: [],
 };
 
 // ============================================================================

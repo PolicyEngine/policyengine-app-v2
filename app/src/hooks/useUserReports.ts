@@ -12,15 +12,11 @@ import { Policy } from '@/types/ingredients/Policy';
 import { Report } from '@/types/ingredients/Report';
 import { Simulation } from '@/types/ingredients/Simulation';
 import { UserPolicy } from '@/types/ingredients/UserPolicy';
-import {
-  UserGeographyPopulation,
-  UserHouseholdPopulation,
-} from '@/types/ingredients/UserPopulation';
+import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { UserReport } from '@/types/ingredients/UserReport';
 import { UserSimulation } from '@/types/ingredients/UserSimulation';
 import { householdKeys, policyKeys, reportKeys, simulationKeys } from '../libs/queryKeys';
 import { useRegionsList } from './useStaticMetadata';
-import { useGeographicAssociationsByUser } from './useUserGeographic';
 import { useHouseholdAssociationsByUser } from './useUserHousehold';
 import { usePolicyAssociationsByUser } from './useUserPolicy';
 import { useReportAssociationById, useReportAssociationsByUser } from './useUserReportAssociations';
@@ -52,7 +48,6 @@ export interface EnhancedUserReport {
   userSimulations?: UserSimulation[];
   userPolicies?: UserPolicy[];
   userHouseholds?: UserHouseholdPopulation[];
-  userGeographies?: UserGeographyPopulation[];
 
   // Status
   isLoading: boolean;
@@ -425,7 +420,6 @@ export const useUserReportById = (userReportId: string, options?: { enabled?: bo
 
   const { data: policyAssociations } = usePolicyAssociationsByUser(userId || '');
   const { data: householdAssociations } = useHouseholdAssociationsByUser(userId || '');
-  const { data: geographyAssociations } = useGeographicAssociationsByUser(userId || '');
 
   const userSimulations = simulationAssociations?.filter((sa) =>
     finalReport?.simulationIds?.includes(sa.simulationId)
@@ -492,11 +486,6 @@ export const useUserReportById = (userReportId: string, options?: { enabled?: bo
     }
   });
 
-  // Step 8: Filter geography associations for geographies used in this report
-  const userGeographies = geographyAssociations?.filter((ga) =>
-    geographies.some((g) => g.id === ga.geographyId)
-  );
-
   return {
     userReport,
     report: finalReport,
@@ -507,7 +496,6 @@ export const useUserReportById = (userReportId: string, options?: { enabled?: bo
     userSimulations,
     userPolicies,
     userHouseholds,
-    userGeographies,
     isLoading:
       userReportLoading ||
       repLoading ||

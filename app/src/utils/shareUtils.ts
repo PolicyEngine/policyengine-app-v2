@@ -14,10 +14,7 @@
 import { ReportIngredientsInput } from '@/hooks/utils/useFetchReportIngredients';
 import { CountryId, countryIds } from '@/libs/countries';
 import { UserPolicy } from '@/types/ingredients/UserPolicy';
-import {
-  UserGeographyPopulation,
-  UserHouseholdPopulation,
-} from '@/types/ingredients/UserPopulation';
+import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { UserReport } from '@/types/ingredients/UserReport';
 import { UserSimulation } from '@/types/ingredients/UserSimulation';
 
@@ -157,17 +154,6 @@ export function isValidShareData(data: unknown): data is ReportIngredientsInput 
     return false;
   }
 
-  if (
-    !isValidArrayWithStringOrNumberFields(
-      obj.userGeographies,
-      ['geographyId', 'countryId'],
-      (geo) => ['national', 'subnational'].includes(geo.scope as string)
-    )
-  ) {
-    console.error('[isValidShareData] userGeographies validation failed:', obj.userGeographies);
-    return false;
-  }
-
   return true;
 }
 
@@ -208,8 +194,7 @@ export function createShareData(
   userReport: UserReport,
   userSimulations: UserSimulation[],
   userPolicies: UserPolicy[],
-  userHouseholds: UserHouseholdPopulation[],
-  userGeographies: UserGeographyPopulation[]
+  userHouseholds: UserHouseholdPopulation[]
 ): ReportIngredientsInput | null {
   // userReport must have an id and reportId
   if (!userReport.id || !userReport.reportId) {
@@ -229,7 +214,6 @@ export function createShareData(
     userSimulations: userSimulations.map(stripUserFields),
     userPolicies: userPolicies.map(stripUserFields),
     userHouseholds: userHouseholds.map(stripUserFields),
-    userGeographies: userGeographies.map(stripUserFields),
   };
 }
 

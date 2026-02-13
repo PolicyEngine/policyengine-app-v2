@@ -25,10 +25,7 @@ import { Policy } from '@/types/ingredients/Policy';
 import { Report } from '@/types/ingredients/Report';
 import { Simulation } from '@/types/ingredients/Simulation';
 import { UserPolicy } from '@/types/ingredients/UserPolicy';
-import {
-  UserGeographyPopulation,
-  UserHouseholdPopulation,
-} from '@/types/ingredients/UserPopulation';
+import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { UserReport } from '@/types/ingredients/UserReport';
 import { UserSimulation } from '@/types/ingredients/UserSimulation';
 import { combineLoadingStates, extractUniqueIds, useParallelQueries } from './normalizedUtils';
@@ -96,10 +93,6 @@ export type ShareableUserHousehold = Omit<
   UserHouseholdPopulation,
   'userId' | 'createdAt' | 'updatedAt'
 >;
-export type ShareableUserGeography = Omit<
-  UserGeographyPopulation,
-  'userId' | 'createdAt' | 'updatedAt'
->;
 
 /**
  * Input for useFetchReportIngredients
@@ -110,7 +103,6 @@ export interface ReportIngredientsInput {
   userSimulations: ShareableUserSimulation[];
   userPolicies: ShareableUserPolicy[];
   userHouseholds: ShareableUserHousehold[];
-  userGeographies: ShareableUserGeography[];
 }
 
 /**
@@ -139,7 +131,6 @@ export function expandUserAssociations(
   userSimulations: UserSimulation[];
   userPolicies: UserPolicy[];
   userHouseholds: UserHouseholdPopulation[];
-  userGeographies: UserGeographyPopulation[];
 } {
   return {
     userReport: {
@@ -157,10 +148,6 @@ export function expandUserAssociations(
     })),
     userHouseholds: input.userHouseholds.map((h) => ({
       ...h,
-      userId,
-    })),
-    userGeographies: input.userGeographies.map((g) => ({
-      ...g,
       userId,
     })),
   };

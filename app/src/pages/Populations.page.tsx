@@ -7,39 +7,23 @@ import { RenameIngredientModal } from '@/components/common/RenameIngredientModal
 import IngredientReadView from '@/components/IngredientReadView';
 import { MOCK_USER_ID } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { useRegionsList } from '@/hooks/useStaticMetadata';
-import {
-  useGeographicAssociationsByUser,
-  useUpdateGeographicAssociation,
-} from '@/hooks/useUserGeographic';
 import { useUpdateHouseholdAssociation, useUserHouseholds } from '@/hooks/useUserHousehold';
-import { countryIds } from '@/libs/countries';
-import { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
 import { formatDate } from '@/utils/dateUtils';
-import { getCountryLabel } from '@/utils/geographyUtils';
-import { extractRegionDisplayValue } from '@/utils/regionStrategies';
 
 export default function PopulationsPage() {
   const userId = MOCK_USER_ID.toString(); // TODO: Replace with actual user ID retrieval logic
   // TODO: Session storage hard-fixes "anonymous" as user ID; this should really just be anything
   const countryId = useCurrentCountry();
-  const regions = useRegionsList(countryId);
 
   // Fetch household associations
+  // Note: Geographic populations are no longer stored as user associations.
+  // They are selected per-simulation and constructed from metadata.
   const {
     data: householdData,
-    isLoading: isHouseholdLoading,
-    isError: isHouseholdError,
-    error: householdError,
+    isLoading,
+    isError,
+    error,
   } = useUserHouseholds(userId);
-
-  // Fetch geographic associations
-  const {
-    data: geographicData,
-    isLoading: isGeographicLoading,
-    isError: isGeographicError,
-    error: geographicError,
-  } = useGeographicAssociationsByUser(userId);
 
   const navigate = useNavigate();
 
@@ -48,18 +32,10 @@ export default function PopulationsPage() {
 
   // Rename modal state
   const [renamingId, setRenamingId] = useState<string | null>(null);
-  const [renamingType, setRenamingType] = useState<'household' | 'geography' | null>(null);
-  const [renamingUserId, setRenamingUserId] = useState<string | null>(null);
   const [renameOpened, { open: openRename, close: closeRename }] = useDisclosure(false);
 
   // Rename mutation hooks
   const updateHouseholdAssociation = useUpdateHouseholdAssociation();
-  const updateGeographicAssociation = useUpdateGeographicAssociation();
-
-  // Combined loading and error states
-  const isLoading = isHouseholdLoading || isGeographicLoading;
-  const isError = isHouseholdError || isGeographicError;
-  const error = householdError || geographicError;
 
   const handleBuildPopulation = () => {
     navigate(`/${countryId}/households/create`);
@@ -74,134 +50,46 @@ export default function PopulationsPage() {
   const isSelected = (recordId: string) => selectedIds.includes(recordId);
 
   const handleOpenRename = (recordId: string) => {
-    // Determine type by looking up in the original data
-    // Households use their association.id, geographies use geographyId
+    // Find the household by its association id
     const household = householdData?.find(
       (item) => (item.association.id || item.association.householdId.toString()) === recordId
     );
-    const geography = geographicData?.find((item) => item.geographyId === recordId);
 
-    if (!household && !geography) {
+    if (!household) {
       return;
     }
 
-    const type: 'household' | 'geography' = household ? 'household' : 'geography';
-    const userIdValue = household ? household.association.userId : geography!.userId;
-
     setRenamingId(recordId);
-    setRenamingType(type);
-    setRenamingUserId(userIdValue);
     openRename();
   };
 
   const handleCloseRename = () => {
     closeRename();
     setRenamingId(null);
-    setRenamingType(null);
-    setRenamingUserId(null);
   };
 
   const handleRename = async (newLabel: string) => {
-    if (!renamingId || !renamingType || !renamingUserId) {
+    if (!renamingId) {
       return;
     }
 
     try {
-      if (renamingType === 'household') {
-        await updateHouseholdAssociation.mutateAsync({
-          userHouseholdId: renamingId,
-          updates: { label: newLabel },
-        });
-      } else {
-        // For geographies, renamingId is the geographyId
-        await updateGeographicAssociation.mutateAsync({
-          userId: renamingUserId,
-          geographyId: renamingId,
-          updates: { label: newLabel },
-        });
-      }
+      await updateHouseholdAssociation.mutateAsync({
+        userHouseholdId: renamingId,
+        updates: { label: newLabel },
+      });
       handleCloseRename();
-    } catch (error) {
-      console.error(`[PopulationsPage] Failed to rename ${renamingType}:`, error);
+    } catch (err) {
+      console.error(`[PopulationsPage] Failed to rename household:`, err);
     }
   };
 
   // Find the item being renamed for current label
   const renamingHousehold = householdData?.find((item) => item.association.id === renamingId);
-  const renamingGeography = geographicData?.find((item) => item.id === renamingId);
 
   const currentLabel =
-    renamingType === 'household'
-      ? renamingHousehold?.association.label ||
-        `Household #${renamingHousehold?.association.householdId}`
-      : renamingGeography?.label || '';
-
-  // Helper function to get geographic scope details
-  const getGeographicDetails = (geography: UserGeographyPopulation) => {
-    const details = [];
-
-    // Add geography scope
-    const typeLabel = geography.scope === 'national' ? 'National' : 'Subnational';
-    details.push({ text: typeLabel, badge: '' });
-
-    // Add region if subnational
-    if (geography.scope === 'subnational' && geography.geographyId) {
-      // geography.geographyId now contains FULL prefixed value for UK regions
-      // e.g., "constituency/Sheffield Central" or "country/england"
-      let regionLabel = geography.geographyId;
-      const fullRegionName = geography.geographyId; // Track the full name with prefix
-      if (regions.length > 0) {
-        // Try exact match first (handles prefixed UK values and US state codes)
-        const region = regions.find((r) => r.name === geography.geographyId);
-
-        if (region) {
-          regionLabel = region.label;
-        } else {
-          // Fallback: try adding prefixes for backward compatibility
-          const fallbackRegion = regions.find(
-            (r) =>
-              r.name === `state/${geography.geographyId}` ||
-              r.name === `constituency/${geography.geographyId}` ||
-              r.name === `country/${geography.geographyId}`
-          );
-          if (fallbackRegion) {
-            regionLabel = fallbackRegion.label;
-          }
-        }
-      }
-
-      // If still no label found, strip prefix for display
-      if (regionLabel === geography.geographyId) {
-        regionLabel = extractRegionDisplayValue(geography.geographyId);
-      }
-
-      // Determine region type based on country and prefix
-      let regionTypeLabel = 'Region';
-      if (geography.countryId === 'us') {
-        regionTypeLabel = 'State';
-      } else if (geography.countryId === 'uk') {
-        if (fullRegionName.startsWith('country/')) {
-          regionTypeLabel = 'Country';
-        } else if (fullRegionName.startsWith('constituency/')) {
-          regionTypeLabel = 'Constituency';
-        }
-      }
-
-      // For UK constituencies, show both country and constituency
-      if (geography.countryId === 'uk' && fullRegionName.startsWith('constituency/')) {
-        const countryLabel = getCountryLabel(geography.countryId);
-        details.push({ text: countryLabel, badge: '' });
-      }
-
-      details.push({ text: `${regionTypeLabel}: ${regionLabel}`, badge: '' });
-    } else {
-      // National scope - just show country
-      const countryLabel = getCountryLabel(geography.countryId);
-      details.push({ text: countryLabel, badge: '' });
-    }
-
-    return details;
-  };
+    renamingHousehold?.association.label ||
+    `Household #${renamingHousehold?.association.householdId}`;
 
   // Helper function to get household configuration details
   const getHouseholdDetails = (household: any) => {
@@ -250,7 +138,9 @@ export default function PopulationsPage() {
   ];
 
   // Transform household data
-  const householdRecords: IngredientRecord[] =
+  // Note: Geographic populations are no longer stored as user associations.
+  // They are selected per-simulation and don't appear in this list.
+  const transformedData: IngredientRecord[] =
     householdData?.map((item) => {
       const detailsItems = getHouseholdDetails(item.household);
 
@@ -276,38 +166,6 @@ export default function PopulationsPage() {
         } as BulletsValue,
       };
     }) || [];
-
-  // Transform geographic data
-  const geographicRecords: IngredientRecord[] =
-    geographicData?.map((association) => {
-      const detailsItems = getGeographicDetails(association);
-
-      return {
-        id: association.geographyId,
-        type: 'geography',
-        userId: association.userId,
-        geographyId: association.geographyId,
-        populationName: {
-          text: association.label,
-        } as TextValue,
-        dateCreated: {
-          text: association.createdAt
-            ? formatDate(
-                association.createdAt,
-                'short-month-day-year',
-                association?.countryId as (typeof countryIds)[number],
-                true
-              )
-            : '',
-        } as TextValue,
-        details: {
-          items: detailsItems,
-        } as BulletsValue,
-      };
-    }) || [];
-
-  // Combine both data sources
-  const transformedData: IngredientRecord[] = [...householdRecords, ...geographicRecords];
 
   return (
     <>
@@ -336,12 +194,8 @@ export default function PopulationsPage() {
         onClose={handleCloseRename}
         currentLabel={currentLabel}
         onRename={handleRename}
-        isLoading={
-          renamingType === 'household'
-            ? updateHouseholdAssociation.isPending
-            : updateGeographicAssociation.isPending
-        }
-        ingredientType={renamingType || 'household'}
+        isLoading={updateHouseholdAssociation.isPending}
+        ingredientType="household"
       />
     </>
   );

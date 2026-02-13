@@ -7,7 +7,7 @@ import { Population } from './Population';
 import { Report } from './Report';
 import { Simulation } from './Simulation';
 import { UserPolicy } from './UserPolicy';
-import { UserGeographyPopulation, UserHouseholdPopulation, UserPopulation } from './UserPopulation';
+import { UserHouseholdPopulation, UserPopulation } from './UserPopulation';
 import { UserReport } from './UserReport';
 import { UserSimulation } from './UserSimulation';
 
@@ -58,10 +58,10 @@ export function isUserPolicy(obj: UserIngredient): obj is UserPolicy {
 }
 
 /**
- * Type guard to check if an object is a UserPopulation
+ * Type guard to check if an object is a UserPopulation (household only)
  */
 export function isUserPopulation(obj: UserIngredient): obj is UserPopulation {
-  return 'type' in obj && ('householdId' in obj || 'geographyId' in obj);
+  return 'type' in obj && 'householdId' in obj;
 }
 
 /**
@@ -69,13 +69,6 @@ export function isUserPopulation(obj: UserIngredient): obj is UserPopulation {
  */
 export function isUserHouseholdPopulation(obj: UserPopulation): obj is UserHouseholdPopulation {
   return obj.type === 'household';
-}
-
-/**
- * Type guard to check if a UserPopulation is for geography
- */
-export function isUserGeographyPopulation(obj: UserPopulation): obj is UserGeographyPopulation {
-  return obj.type === 'geography';
 }
 
 /**
@@ -96,7 +89,6 @@ export function isUserReport(obj: UserIngredient): obj is UserReport {
 export type { Geography, Household, Policy, Population, Report, Simulation };
 export type {
   UserPolicy,
-  UserGeographyPopulation,
   UserHouseholdPopulation,
   UserPopulation,
   UserReport,

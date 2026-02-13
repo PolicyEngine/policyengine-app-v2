@@ -17,7 +17,6 @@ import { ReportYearProvider } from '@/contexts/ReportYearContext';
 import { useCreateReport } from '@/hooks/useCreateReport';
 import { usePathwayNavigation } from '@/hooks/usePathwayNavigation';
 import { useCurrentLawId, useRegionsList } from '@/hooks/useStaticMetadata';
-import { useUserGeographics } from '@/hooks/useUserGeographic';
 import { useUserHouseholds } from '@/hooks/useUserHousehold';
 import { useUserSimulations } from '@/hooks/useUserSimulations';
 import { countryIds } from '@/libs/countries';
@@ -103,10 +102,11 @@ export default function ReportPathwayWrapper({ onComplete }: ReportPathwayWrappe
   const userId = MOCK_USER_ID.toString();
   const { data: userSimulations } = useUserSimulations(userId);
   const { data: userHouseholds } = useUserHouseholds(userId);
-  const { data: userGeographics } = useUserGeographics(userId);
 
   const hasExistingSimulations = (userSimulations?.length ?? 0) > 0;
-  const hasExistingPopulations = (userHouseholds?.length ?? 0) + (userGeographics?.length ?? 0) > 0;
+  // Note: Geographic populations are no longer stored as user associations.
+  // They are selected per-simulation. We only check for existing households.
+  const hasExistingPopulations = (userHouseholds?.length ?? 0) > 0;
 
   // ========== HELPER: Get active simulation ==========
   const activeSimulation = reportState.simulations[activeSimulationIndex];

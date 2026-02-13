@@ -48,6 +48,10 @@ export const TEST_USER_IDS = {
 /**
  * Basic society-wide report input (geography-based, no households)
  */
+/**
+ * Society-wide report input (geography-based)
+ * Note: Geographies are constructed from simulation data, not stored as user associations
+ */
 export const SOCIETY_WIDE_INPUT: ReportIngredientsInput = {
   userReport: {
     id: TEST_IDS.REPORT.ID,
@@ -68,15 +72,6 @@ export const SOCIETY_WIDE_INPUT: ReportIngredientsInput = {
     { policyId: TEST_IDS.POLICIES.REFORM, label: 'My Reform' },
   ],
   userHouseholds: [],
-  userGeographies: [
-    {
-      type: 'geography',
-      geographyId: TEST_IDS.GEOGRAPHIES.NATIONAL,
-      countryId: TEST_COUNTRIES.US,
-      scope: 'national',
-      label: 'United States',
-    },
-  ],
 };
 
 /**
@@ -101,7 +96,6 @@ export const HOUSEHOLD_INPUT: ReportIngredientsInput = {
       label: 'My Household',
     },
   ],
-  userGeographies: [],
 };
 
 /**
@@ -118,7 +112,6 @@ export const INPUT_WITHOUT_ID: ReportIngredientsInput = {
   ],
   userPolicies: [],
   userHouseholds: [],
-  userGeographies: [],
 };
 
 /**
@@ -133,7 +126,6 @@ export const MINIMAL_INPUT: ReportIngredientsInput = {
   userSimulations: [],
   userPolicies: [],
   userHouseholds: [],
-  userGeographies: [],
 };
 
 // ============================================================================
@@ -177,16 +169,6 @@ export const createExpectedExpandedSocietyWide = (userId: string = TEST_USER_IDS
     },
   ],
   userHouseholds: [],
-  userGeographies: [
-    {
-      type: 'geography',
-      geographyId: TEST_IDS.GEOGRAPHIES.NATIONAL,
-      countryId: TEST_COUNTRIES.US,
-      scope: 'national',
-      label: 'United States',
-      userId,
-    },
-  ],
 });
 
 export const createExpectedExpandedWithoutId = (userId: string = TEST_USER_IDS.SHARED) => ({
@@ -207,7 +189,6 @@ export const createExpectedExpandedWithoutId = (userId: string = TEST_USER_IDS.S
   ],
   userPolicies: [],
   userHouseholds: [],
-  userGeographies: [],
 });
 
 // ============================================================================

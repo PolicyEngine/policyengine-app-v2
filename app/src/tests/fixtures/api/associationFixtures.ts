@@ -1,8 +1,5 @@
 import { UserPolicy } from '@/types/ingredients/UserPolicy';
-import {
-  UserGeographyPopulation,
-  UserHouseholdPopulation,
-} from '@/types/ingredients/UserPopulation';
+import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { UserReport } from '@/types/ingredients/UserReport';
 import { UserSimulation } from '@/types/ingredients/UserSimulation';
 
@@ -59,19 +56,7 @@ export const createMockHouseholdAssociation = (
   ...overrides,
 });
 
-// Mock UserGeographyPopulation
-export const createMockGeographyAssociation = (
-  overrides?: Partial<UserGeographyPopulation>
-): UserGeographyPopulation => ({
-  type: 'geography',
-  userId: TEST_IDS.USER_ID,
-  geographyId: TEST_IDS.GEOGRAPHY_ID,
-  countryId: TEST_COUNTRIES.US,
-  scope: 'subnational',
-  label: TEST_LABELS.GEOGRAPHY,
-  createdAt: TEST_TIMESTAMPS.CREATED_AT,
-  ...overrides,
-});
+// Note: UserGeographyPopulation removed - geographies are no longer stored as user associations
 
 // Mock UserPolicy
 export const createMockPolicyAssociation = (overrides?: Partial<UserPolicy>): UserPolicy => ({

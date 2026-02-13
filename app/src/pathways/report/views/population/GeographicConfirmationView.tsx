@@ -1,14 +1,10 @@
 /**
- * GeographicConfirmationView - View for confirming geographic population
- * Duplicated from GeographicConfirmationFrame
- * Props-based instead of Redux-based
+ * GeographicConfirmationView - View for confirming geographic population selection
+ * Users can select a geography for simulation without creating a user association
  */
 
 import { Stack, Text } from '@mantine/core';
 import PathwayView from '@/components/common/PathwayView';
-import { MOCK_USER_ID } from '@/constants';
-import { useCreateGeographicAssociation } from '@/hooks/useUserGeographic';
-import { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
 import { MetadataRegionEntry } from '@/types/metadata';
 import { PopulationStateProps } from '@/types/pathwayState';
 import { getCountryLabel, getRegionLabel, getRegionTypeLabel } from '@/utils/geographyUtils';
@@ -26,36 +22,14 @@ export default function GeographicConfirmationView({
   onSubmitSuccess,
   onBack,
 }: GeographicConfirmationViewProps) {
-  const { mutateAsync: createGeographicAssociation, isPending } = useCreateGeographicAssociation();
-  const currentUserId = MOCK_USER_ID;
-
-  // Build geographic population data from existing geography
-  const buildGeographicPopulation = (): Omit<UserGeographyPopulation, 'createdAt' | 'type'> => {
+  const handleSubmit = () => {
     if (!population?.geography) {
-      throw new Error('No geography found in population state');
+      return;
     }
 
-    const basePopulation = {
-      id: `${currentUserId}-${Date.now()}`,
-      userId: currentUserId,
-      countryId: population.geography.countryId,
-      geographyId: population.geography.geographyId,
-      scope: population.geography.scope,
-      label: population.label || population.geography.name || undefined,
-    };
-
-    return basePopulation;
-  };
-
-  const handleSubmit = async () => {
-    const populationData = buildGeographicPopulation();
-
-    try {
-      const result = await createGeographicAssociation(populationData);
-      onSubmitSuccess(result.geographyId, result.label || '');
-    } catch (err) {
-      // Error is handled by the mutation
-    }
+    const geographyId = population.geography.geographyId;
+    const label = population.geography.name || getRegionLabel(geographyId, regions);
+    onSubmitSuccess(geographyId, label);
   };
 
   // Build display content based on geographic scope
@@ -109,7 +83,6 @@ export default function GeographicConfirmationView({
   const primaryAction = {
     label: 'Create household collection',
     onClick: handleSubmit,
-    isLoading: isPending,
   };
 
   return (

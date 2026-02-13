@@ -1,10 +1,7 @@
 import { QueryClient } from '@tanstack/react-query';
 import { vi } from 'vitest';
 import { CURRENT_YEAR } from '@/constants';
-import {
-  UserGeographyPopulation,
-  UserHouseholdPopulation,
-} from '@/types/ingredients/UserPopulation';
+import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
 import { HouseholdCreationPayload } from '@/types/payloads';
 
@@ -144,26 +141,7 @@ export const mockUserHouseholdPopulationList: UserHouseholdPopulation[] = [
   },
 ];
 
-export const mockUserGeographicAssociation: UserGeographyPopulation = {
-  type: 'geography',
-  id: TEST_IDS.GEOGRAPHY_ID,
-  userId: TEST_IDS.USER_ID,
-  countryId: GEO_CONSTANTS.COUNTRY_US,
-  scope: GEO_CONSTANTS.TYPE_SUBNATIONAL,
-  geographyId: GEO_CONSTANTS.REGION_CA,
-  label: TEST_LABELS.GEOGRAPHY,
-  createdAt: TEST_IDS.TIMESTAMP,
-};
-
-export const mockUserGeographicAssociationList: UserGeographyPopulation[] = [
-  mockUserGeographicAssociation,
-  {
-    ...mockUserGeographicAssociation,
-    id: TEST_IDS.GEOGRAPHY_ID_2,
-    geographyId: GEO_CONSTANTS.REGION_NY,
-    label: TEST_LABELS.GEOGRAPHY_2,
-  },
-];
+// Note: UserGeographyPopulation mocks removed - geographies are no longer stored as user associations
 
 export const mockHouseholdCreationPayload: HouseholdCreationPayload = {
   country_id: GEO_CONSTANTS.COUNTRY_US,

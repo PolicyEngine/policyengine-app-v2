@@ -1,14 +1,11 @@
 import { Box, Table, Text } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
 import { Geography } from '@/types/ingredients/Geography';
-import { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
 import { capitalize } from '@/utils/stringUtils';
 
 interface GeographySubPageProps {
   baselineGeography?: Geography;
   reformGeography?: Geography;
-  baselineUserGeography?: UserGeographyPopulation;
-  reformUserGeography?: UserGeographyPopulation;
 }
 
 /**
@@ -16,12 +13,14 @@ interface GeographySubPageProps {
  *
  * Shows baseline and reform geographies side-by-side in a comparison table.
  * Collapses columns when both simulations use the same geography.
+ *
+ * Note: Geography names come directly from the Geography objects (constructed from
+ * simulation data), not from user associations since geographies are no longer
+ * stored as user associations.
  */
 export default function GeographySubPage({
   baselineGeography,
   reformGeography,
-  baselineUserGeography,
-  reformUserGeography,
 }: GeographySubPageProps) {
   if (!baselineGeography && !reformGeography) {
     return <div>No geography data available</div>;
@@ -30,9 +29,9 @@ export default function GeographySubPage({
   // Check if geographies are the same
   const geographiesAreSame = baselineGeography?.id === reformGeography?.id;
 
-  // Get labels from UserGeographyPopulation, fallback to geography names, then to generic labels
-  const baselineLabel = baselineUserGeography?.label || baselineGeography?.name || 'Baseline';
-  const reformLabel = reformUserGeography?.label || reformGeography?.name || 'Reform';
+  // Get labels from geography names
+  const baselineLabel = baselineGeography?.name || 'Baseline';
+  const reformLabel = reformGeography?.name || 'Reform';
 
   // Define table rows
   const rows = [
