@@ -39,6 +39,7 @@ export class PolicyAdapter {
   static fromV2Response(response: V2PolicyResponse): Policy {
     return {
       id: response.id,
+      taxBenefitModelId: response.tax_benefit_model_id,
       // Note: V2 response doesn't include parameter values directly
       // They would need to be fetched separately if needed
       parameters: [],

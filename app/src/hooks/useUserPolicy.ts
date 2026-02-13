@@ -158,9 +158,10 @@ export function isPolicyWithAssociation(obj: unknown): obj is UserPolicyWithAsso
 }
 
 export const useUserPolicies = (userId: string) => {
-  const country = useCurrentCountry();
+  const countryId = useCurrentCountry();
+  const { taxBenefitModelId, isLoading: modelLoading } = useTaxBenefitModelId(countryId);
 
-  // First, get the associations (filtered by current country)
+  // First, get the associations (localStorage doesn't filter, so we filter after fetching policies)
   const {
     data: associations,
     isLoading: associationsLoading,
@@ -195,12 +196,12 @@ export const useUserPolicies = (userId: string) => {
   });
 
   // Combine the results
-  const isLoading = associationsLoading || policyQueries.some((q) => q.isLoading);
+  const isLoading = modelLoading || associationsLoading || policyQueries.some((q) => q.isLoading);
   const error = associationsError || policyQueries.find((q) => q.error)?.error;
   const isError = !!error;
 
   // Simple index-based mapping since queries are in same order as associations
-  const policiesWithAssociations: UserPolicyWithAssociation[] | undefined = associations?.map(
+  const allPoliciesWithAssociations: UserPolicyWithAssociation[] | undefined = associations?.map(
     (association, index) => ({
       association,
       policy: policyQueries[index]?.data,
@@ -208,6 +209,13 @@ export const useUserPolicies = (userId: string) => {
       error: policyQueries[index]?.error ?? null,
       isError: !!error,
     })
+  );
+
+  // Filter by current country's tax benefit model
+  // TODO: Remove this filter when isLoggedIn = true - the API backend handles filtering,
+  // but localStorage mode requires post-fetch filtering since UserPolicy doesn't store model ID
+  const policiesWithAssociations = allPoliciesWithAssociations?.filter(
+    (item) => item.policy?.taxBenefitModelId === taxBenefitModelId
   );
 
   return {
