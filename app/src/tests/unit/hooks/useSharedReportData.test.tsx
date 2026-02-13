@@ -152,12 +152,11 @@ describe('useSharedReportData', () => {
       expect(result.current.isLoading).toBe(false);
     });
 
-    // Geography is constructed from simulation data
+    // Geography is constructed from simulation data using simplified format
     expect(result.current.geographies).toHaveLength(1);
     expect(result.current.geographies[0]).toMatchObject({
-      id: 'us',
       countryId: 'us',
-      scope: 'national',
+      regionCode: 'us',
     });
     // Note: userGeographies no longer returned - geographies are not user associations
   });

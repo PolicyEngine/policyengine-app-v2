@@ -14,21 +14,20 @@ describe('useStaticMetadata', () => {
   describe('useStaticMetadata (composite hook)', () => {
     it('given US country then returns complete static metadata', () => {
       // When
-      const { result } = renderHook(() => useStaticMetadata(TEST_COUNTRIES.US, TEST_YEAR));
+      const { result } = renderHook(() => useStaticMetadata(TEST_COUNTRIES.US));
 
       // Then
       expect(result.current).toHaveProperty('entities');
       expect(result.current).toHaveProperty('basicInputs');
       expect(result.current).toHaveProperty('timePeriods');
-      expect(result.current).toHaveProperty('regions');
-      expect(result.current).toHaveProperty('regionVersions');
       expect(result.current).toHaveProperty('modelledPolicies');
       expect(result.current).toHaveProperty('currentLawId');
+      // Note: regions are now fetched from V2 API via useRegions() hook
     });
 
     it('given US country then entities contains person entity', () => {
       // When
-      const { result } = renderHook(() => useStaticMetadata(TEST_COUNTRIES.US, TEST_YEAR));
+      const { result } = renderHook(() => useStaticMetadata(TEST_COUNTRIES.US));
 
       // Then
       expect(result.current.entities).toHaveProperty('person');
@@ -37,7 +36,7 @@ describe('useStaticMetadata', () => {
 
     it('given US country then basicInputs includes age and employment_income', () => {
       // When
-      const { result } = renderHook(() => useStaticMetadata(TEST_COUNTRIES.US, TEST_YEAR));
+      const { result } = renderHook(() => useStaticMetadata(TEST_COUNTRIES.US));
 
       // Then
       expect(result.current.basicInputs).toContain('age');
@@ -46,27 +45,12 @@ describe('useStaticMetadata', () => {
 
     it('given UK country then returns UK-specific entities', () => {
       // When
-      const { result } = renderHook(() => useStaticMetadata(TEST_COUNTRIES.UK, TEST_YEAR));
+      const { result } = renderHook(() => useStaticMetadata(TEST_COUNTRIES.UK));
 
       // Then
       expect(result.current.entities).toHaveProperty('person');
       expect(result.current.entities).toHaveProperty('benunit');
       expect(result.current.entities).not.toHaveProperty('tax_unit');
-    });
-
-    it('given year change then updates regions', () => {
-      // Given
-      const { result, rerender } = renderHook(
-        ({ year }) => useStaticMetadata(TEST_COUNTRIES.US, year),
-        { initialProps: { year: 2024 } }
-      );
-      const firstRegions = result.current.regions;
-
-      // When
-      rerender({ year: 2025 });
-
-      // Then - regions array reference should be stable if content is same
-      expect(result.current.regions).toBeDefined();
     });
   });
 
