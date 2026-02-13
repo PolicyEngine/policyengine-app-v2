@@ -12,7 +12,7 @@ import { getDefaultValueForParam } from '@/pathways/report/components/valueSette
 import { ValueInputBox } from '@/pathways/report/components/valueSetters/ValueInputBox';
 import { ValueSetterProps } from '@/pathways/report/components/valueSetters/ValueSetterProps';
 import { ValueInterval } from '@/types/subIngredients/valueInterval';
-import { fromISODateString, toISODateString } from '@/utils/dateUtils';
+import { fromLocalDateString, toLocalDateString } from '@/utils/dateUtils';
 
 export function DateValueSelectorV6(props: ValueSetterProps) {
   const {
@@ -63,11 +63,11 @@ export function DateValueSelectorV6(props: ValueSetterProps) {
   }, [startDate, endDate, paramValue, setIntervals]);
 
   function handleStartDateChange(value: Date | string | null) {
-    setStartDate(toISODateString(value));
+    setStartDate(toLocalDateString(value));
   }
 
   function handleEndDateChange(value: Date | string | null) {
-    setEndDate(toISODateString(value));
+    setEndDate(toLocalDateString(value));
   }
 
   // V6 Layout: Two rows - date row, then value row
@@ -81,9 +81,9 @@ export function DateValueSelectorV6(props: ValueSetterProps) {
           </Text>
           <DatePickerInput
             placeholder="From"
-            minDate={fromISODateString(minDate)}
-            maxDate={fromISODateString(maxDate)}
-            value={fromISODateString(startDate)}
+            minDate={fromLocalDateString(minDate)}
+            maxDate={fromLocalDateString(maxDate)}
+            value={fromLocalDateString(startDate)}
             onChange={handleStartDateChange}
             valueFormat="MMM. D, YYYY"
           />
@@ -94,9 +94,9 @@ export function DateValueSelectorV6(props: ValueSetterProps) {
           </Text>
           <DatePickerInput
             placeholder="To"
-            minDate={fromISODateString(minDate)}
-            maxDate={fromISODateString(maxDate)}
-            value={fromISODateString(endDate)}
+            minDate={fromLocalDateString(minDate)}
+            maxDate={fromLocalDateString(maxDate)}
+            value={fromLocalDateString(endDate)}
             onChange={handleEndDateChange}
             valueFormat="MMM. D, YYYY"
           />

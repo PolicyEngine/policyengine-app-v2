@@ -5,7 +5,7 @@
  * - Browse mode: PopulationBrowseContent for main content
  * - Creation mode: HouseholdCreationContent + PopulationStatusHeader
  */
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { IconFolder, IconHome, IconPlus, IconUsers } from '@tabler/icons-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
@@ -33,7 +33,7 @@ import {
   getUSStates,
   RegionOption,
 } from '@/utils/regionStrategies';
-import { INGREDIENT_COLORS } from '../constants';
+import { COUNTRY_CONFIG, INGREDIENT_COLORS } from '../constants';
 import { PopulationCategory } from '../types';
 import { BrowseModalTemplate, CreationModeFooter } from './BrowseModalTemplate';
 import {
@@ -55,13 +55,6 @@ export function PopulationBrowseModal({
   onSelect,
   onCreateNew,
 }: PopulationBrowseModalProps) {
-  const renderCount = useRef(0);
-  renderCount.current++;
-  const renderStart = performance.now();
-  console.log(
-    '[PopulationBrowseModal] Render #' + renderCount.current + ' START (isOpen=' + isOpen + ')'
-  );
-
   const countryId = useCurrentCountry() as 'us' | 'uk';
   const userId = MOCK_USER_ID.toString();
   const queryClient = useQueryClient();
@@ -204,6 +197,7 @@ export function PopulationBrowseModal({
 
   // Handle geography selection
   const handleSelectGeography = (region: RegionOption | null) => {
+    const countryConfig = COUNTRY_CONFIG[countryId];
     const geography: Geography = region
       ? {
           id: `${countryId}-${region.value}`,
@@ -212,10 +206,10 @@ export function PopulationBrowseModal({
           geographyId: region.value,
         }
       : {
-          id: countryId,
+          id: countryConfig.nationwideId,
           countryId,
           scope: 'national',
-          geographyId: countryId,
+          geographyId: countryConfig.geographyId,
         };
 
     geographyUsageStore.recordUsage(geography.geographyId);
@@ -512,13 +506,6 @@ export function PopulationBrowseModal({
       />
     );
   };
-
-  // ========== Render ==========
-
-  console.log(
-    '[PopulationBrowseModal] About to return JSX, took',
-    (performance.now() - renderStart).toFixed(2) + 'ms'
-  );
 
   return (
     <BrowseModalTemplate

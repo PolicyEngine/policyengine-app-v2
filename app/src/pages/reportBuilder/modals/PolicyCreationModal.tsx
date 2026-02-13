@@ -8,7 +8,7 @@
  */
 
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Box, Button, Group, Modal, Stack } from '@mantine/core';
 import { PolicyAdapter } from '@/adapters';
@@ -56,11 +56,6 @@ export function PolicyCreationModal({
   onPolicyCreated,
   simulationIndex,
 }: PolicyCreationModalProps) {
-  const renderCount = useRef(0);
-  renderCount.current++;
-  const renderStart = performance.now();
-  console.log(`[PolicyCreationModal] Render #${renderCount.current} START (isOpen=${isOpen})`);
-
   const countryId = useCurrentCountry() as 'us' | 'uk';
 
   // Get metadata from Redux state
@@ -270,11 +265,6 @@ export function PolicyCreationModal({
   };
 
   const { baseValues, reformValues } = getChartValues();
-
-  console.log(
-    '[PolicyCreationModal] About to return JSX, took',
-    `${(performance.now() - renderStart).toFixed(2)}ms`
-  );
 
   return (
     <Modal
