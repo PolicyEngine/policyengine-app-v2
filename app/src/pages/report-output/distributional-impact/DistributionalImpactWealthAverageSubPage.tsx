@@ -1,6 +1,15 @@
-import type { Layout } from 'plotly.js';
-import Plot from 'react-plotly.js';
 import { useSelector } from 'react-redux';
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Label,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 import { Stack, Text } from '@mantine/core';
 import { useMediaQuery, useViewportSize } from '@mantine/hooks';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
@@ -11,12 +20,12 @@ import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import type { RootState } from '@/store';
 import { absoluteChangeMessage } from '@/utils/chartMessages';
 import {
-  DEFAULT_CHART_CONFIG,
   downloadCsv,
-  getChartLogoImage,
   getClampedChartHeight,
+  RECHARTS_FONT_STYLE,
+  RECHARTS_WATERMARK,
 } from '@/utils/chartUtils';
-import { currencySymbol, formatCurrency, localeCode, ordinal, precision } from '@/utils/formatters';
+import { currencySymbol, formatCurrency, ordinal, precision } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
 
 interface Props {
@@ -42,7 +51,6 @@ export default function DistributionalImpactWealthAverageSubPage({ output }: Pro
   if (yvaluePrecision > 0) {
     yvaluePrecision = Math.max(2, yvaluePrecision);
   }
-  const ytickPrecision = precision(yArray.concat(0), 1);
 
   // Formatter for currency display
   const formatCur = (y: number) =>
@@ -88,58 +96,99 @@ export default function DistributionalImpactWealthAverageSubPage({ output }: Pro
     downloadCsv(csvData, 'distributional-impact-wealth-average.csv');
   };
 
-  // Chart configuration
-  const chartData = [
-    {
-      x: xArray,
-      y: yArray,
-      type: 'bar' as const,
-      marker: {
-        color: yArray.map((value) => (value < 0 ? colors.gray[600] : colors.primary[500])),
-      },
-      text: yArray.map(formatCur) as any,
-      textangle: 0,
-      customdata: xArray.map((x, i) => hoverMessage(x, yArray[i])) as any,
-      hovertemplate: '<b>Decile %{x}</b><br><br>%{customdata}<extra></extra>',
-    },
-  ];
+  // Transform data for Recharts
+  const chartData = xArray.map((x, i) => ({
+    name: x,
+    value: yArray[i],
+    label: formatCur(yArray[i]),
+    hoverText: hoverMessage(x, yArray[i]),
+  }));
 
-  const layout = {
-    xaxis: {
-      title: { text: 'Wealth decile' },
-      tickvals: Object.keys(decileAverage),
-      fixedrange: true,
-    },
-    yaxis: {
-      title: { text: 'Absolute change in net income' },
-      tickprefix: currencySymbol(countryId),
-      tickformat: `,.${ytickPrecision}f`,
-      fixedrange: true,
-    },
-    showlegend: false,
-    uniformtext: {
-      mode: 'hide',
-      minsize: 8,
-    },
-    margin: {
-      t: 0,
-      b: 80,
-      r: 0,
-    },
-    images: [getChartLogoImage()],
-  } as Partial<Layout>;
+  const prefix = currencySymbol(countryId);
+
+  function CustomTooltip({ active, payload }: any) {
+    if (!active || !payload?.[0]) {
+      return null;
+    }
+    const data = payload[0].payload;
+    return (
+      <div
+        style={{
+          background: '#fff',
+          border: '1px solid #E2E8F0',
+          borderRadius: 6,
+          padding: '8px 12px',
+          maxWidth: 300,
+        }}
+      >
+        <p style={{ fontWeight: 600, margin: 0 }}>Decile {data.name}</p>
+        <p style={{ margin: '4px 0 0', fontSize: 13, whiteSpace: 'pre-wrap' }}>{data.hoverText}</p>
+      </div>
+    );
+  }
+
+  function BarLabel({ x, y, width, value, index }: any) {
+    const entry = chartData[index];
+    if (!entry) {
+      return null;
+    }
+    return (
+      <text
+        x={x + width / 2}
+        y={value >= 0 ? y - 4 : y + 16}
+        textAnchor="middle"
+        fontSize={12}
+        fill={colors.gray[700]}
+      >
+        {entry.label}
+      </text>
+    );
+  }
 
   return (
     <ChartContainer title={getChartTitle()} onDownloadCsv={handleDownloadCsv}>
       <Stack gap={spacing.sm}>
-        <Plot
-          data={chartData}
-          layout={layout}
-          config={{
-            ...DEFAULT_CHART_CONFIG,
-            locale: localeCode(countryId),
+        <ResponsiveContainer width="100%" height={chartHeight}>
+          <BarChart data={chartData} margin={{ top: 20, right: 20, bottom: 30, left: 20 }}>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} />
+            <XAxis dataKey="name" tick={RECHARTS_FONT_STYLE} tickLine={false}>
+              <Label
+                value="Wealth decile"
+                position="bottom"
+                offset={10}
+                style={RECHARTS_FONT_STYLE}
+              />
+            </XAxis>
+            <YAxis
+              tick={RECHARTS_FONT_STYLE}
+              tickLine={false}
+              tickFormatter={(v: number) => `${prefix}${v.toLocaleString()}`}
+            >
+              <Label
+                value="Absolute change in net income"
+                angle={-90}
+                position="insideLeft"
+                offset={0}
+                style={{ ...RECHARTS_FONT_STYLE, textAnchor: 'middle' }}
+              />
+            </YAxis>
+            <Tooltip content={<CustomTooltip />} />
+            <Bar dataKey="value" label={<BarLabel />} isAnimationActive={false}>
+              {chartData.map((entry, index) => (
+                <Cell key={index} fill={entry.value < 0 ? colors.gray[600] : colors.primary[500]} />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+        <img
+          src={RECHARTS_WATERMARK.src}
+          alt=""
+          style={{
+            display: 'block',
+            marginLeft: 'auto',
+            width: RECHARTS_WATERMARK.width,
+            opacity: RECHARTS_WATERMARK.opacity,
           }}
-          style={{ width: '100%', height: chartHeight }}
         />
 
         <Text size="sm" c="dimmed">
