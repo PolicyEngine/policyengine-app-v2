@@ -64,6 +64,7 @@ export function PolicyCreationHeader({
                     onEditingChange(false);
                   }
                 }}
+                placeholder="Untitled policy"
                 autoFocus
                 size="xs"
                 style={{ width: 250 }}
@@ -85,13 +86,13 @@ export function PolicyCreationHeader({
                   style={{
                     fontFamily: typography.fontFamily.primary,
                     fontSize: FONT_SIZES.normal,
-                    color: colors.gray[800],
+                    color: policyLabel ? colors.gray[800] : colors.gray[400],
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',
                   }}
                 >
-                  {policyLabel || 'New policy'}
+                  {policyLabel || 'Untitled policy'}
                 </Text>
                 <ActionIcon
                   size="sm"

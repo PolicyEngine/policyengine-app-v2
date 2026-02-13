@@ -72,7 +72,7 @@ export function PolicyCreationModal({
   const { minDate, maxDate } = useSelector(getDateRange);
 
   // Local policy state
-  const [policyLabel, setPolicyLabel] = useState<string>('New policy');
+  const [policyLabel, setPolicyLabel] = useState<string>('');
   const [policyParameters, setPolicyParameters] = useState<Parameter[]>([]);
   const [isEditingLabel, setIsEditingLabel] = useState(false);
 
@@ -99,7 +99,7 @@ export function PolicyCreationModal({
   // Reset state when modal opens
   useEffect(() => {
     if (isOpen) {
-      setPolicyLabel('New policy');
+      setPolicyLabel('');
       setPolicyParameters([]);
       setSelectedParam(null);
       setExpandedMenuItems(new Set());
@@ -229,10 +229,6 @@ export function PolicyCreationModal({
 
   // Handle policy creation
   const handleCreatePolicy = useCallback(async () => {
-    if (!policyLabel.trim()) {
-      return;
-    }
-
     const policyData: Partial<Policy> = {
       parameters: policyParameters,
     };
@@ -243,7 +239,7 @@ export function PolicyCreationModal({
       const result = await createPolicy(payload);
       const createdPolicy: PolicyStateProps = {
         id: result.result.policy_id,
-        label: policyLabel,
+        label: policyLabel || null,
         parameters: policyParameters,
       };
       onPolicyCreated(createdPolicy);
