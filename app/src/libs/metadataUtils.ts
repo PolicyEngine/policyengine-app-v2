@@ -1,6 +1,15 @@
 import { createSelector } from '@reduxjs/toolkit';
 import { RootState } from '@/store';
 import { MetadataApiPayload, MetadataState } from '@/types/metadata';
+import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
+
+/** Parameter paths containing these substrings are excluded from search */
+const EXCLUDED_PARAMETER_PATTERNS = ['pycache'] as const;
+
+export interface SearchableParameter {
+  value: string; // Full parameter path (e.g., "gov.irs.credits.eitc.max")
+  label: string; // Leaf label (e.g., "Maximum amount")
+}
 
 // Memoized selectors to prevent unnecessary re-renders
 export const getTaxYears = createSelector(
@@ -162,6 +171,30 @@ export const getFieldLabel = (fieldName: string) => {
     labelMap[fieldName] || fieldName.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())
   );
 };
+
+/**
+ * Memoized selector for searchable parameters used in autocomplete components.
+ * Computed once when metadata loads, shared across all components.
+ */
+export const selectSearchableParameters = createSelector(
+  [(state: RootState) => state.metadata.parameters],
+  (parameters): SearchableParameter[] => {
+    if (!parameters) return [];
+
+    return Object.values(parameters)
+      .filter(
+        (param): param is ParameterMetadata =>
+          param.type === 'parameter' &&
+          !!param.label &&
+          !EXCLUDED_PARAMETER_PATTERNS.some((pattern) => param.parameter.includes(pattern))
+      )
+      .map((param) => ({
+        value: param.parameter,
+        label: param.label,
+      }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }
+);
 
 export function transformMetadataPayload(
   payload: MetadataApiPayload,
