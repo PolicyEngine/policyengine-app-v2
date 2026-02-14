@@ -4,6 +4,8 @@
 
 import { TOOLTIP_STYLE, type WaterfallDatum } from '@/components/charts';
 import { colors } from '@/designTokens/colors';
+import type { CountryId } from '@/libs/countries';
+import type { MetadataState } from '@/types/metadata';
 import { formatCurrencyAbbr } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
 
@@ -32,8 +34,8 @@ export function getBudgetFillColor(datum: WaterfallDatum, budgetaryImpact: numbe
 /** Generates the chart title describing the reform's budget impact. */
 export function getBudgetChartTitle(
   budgetaryImpact: number,
-  countryId: string,
-  metadata: { variables?: Record<string, any>; [key: string]: any }
+  countryId: CountryId,
+  metadata: MetadataState
 ): string {
   const region = regionName(metadata);
   const regionPhrase = region ? ` in ${region}` : '';
@@ -50,6 +52,6 @@ export function getBudgetChartTitle(
 }
 
 /** Formats a value in billions using the country's currency abbreviation. */
-export function formatBillions(value: number, countryId: string): string {
+export function formatBillions(value: number, countryId: CountryId): string {
   return formatCurrencyAbbr(value, countryId, { maximumFractionDigits: 1 });
 }

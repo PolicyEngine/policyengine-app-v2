@@ -18,7 +18,7 @@ vi.mock('recharts', async () => {
       height: number;
     }) => (
       <div style={{ width: 500, height: height || 400 }}>
-        {React.cloneElement(children, { width: 500, height: height || 400 })}
+        {React.cloneElement(children, { width: 500, height: height || 400 } as any)}
       </div>
     ),
   };
