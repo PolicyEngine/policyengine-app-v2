@@ -9,8 +9,10 @@ export const typography = {
     secondary: 'Public Sans, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
     body: 'Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
     mono: 'JetBrains Mono, "Fira Code", Consolas, monospace',
-    // Chart-specific font
-    chart: 'Roboto Serif, Georgia, "Times New Roman", serif',
+    // Chart labels and axes — same as primary UI font
+    chart: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    // Long-form written content (blog posts, research articles)
+    prose: 'Roboto Serif, Georgia, "Times New Roman", serif',
   },
 
   fontWeight: {
@@ -85,6 +87,7 @@ export const typography = {
 // Convenience exports for common fonts
 export const FONT_UI = typography.fontFamily.primary;
 export const FONT_CHART = typography.fontFamily.chart;
+export const FONT_PROSE = typography.fontFamily.prose;
 export const FONT_MONO = typography.fontFamily.mono;
 
 export type Typography = typeof typography;

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { typography, FONT_UI, FONT_CHART, FONT_MONO } from '../tokens/typography';
+import { typography, FONT_UI, FONT_CHART, FONT_PROSE, FONT_MONO } from '../tokens/typography';
 
 describe('typography', () => {
   describe('font families', () => {
@@ -7,8 +7,12 @@ describe('typography', () => {
       expect(typography.fontFamily.primary).toContain('Inter');
     });
 
-    it('should have chart font as Roboto Serif', () => {
-      expect(typography.fontFamily.chart).toContain('Roboto Serif');
+    it('should have chart font as Inter (same as primary)', () => {
+      expect(typography.fontFamily.chart).toContain('Inter');
+    });
+
+    it('should have prose font as Roboto Serif for long-form content', () => {
+      expect(typography.fontFamily.prose).toContain('Roboto Serif');
     });
 
     it('should have monospace font', () => {
@@ -21,7 +25,8 @@ describe('typography', () => {
       expect(typography.fontFamily.secondary).toContain('sans-serif');
       expect(typography.fontFamily.body).toContain('sans-serif');
       expect(typography.fontFamily.mono).toContain('monospace');
-      expect(typography.fontFamily.chart).toContain('serif');
+      expect(typography.fontFamily.chart).toContain('sans-serif');
+      expect(typography.fontFamily.prose).toContain('serif');
     });
   });
 
@@ -30,9 +35,14 @@ describe('typography', () => {
       expect(FONT_UI).toBe(typography.fontFamily.primary);
     });
 
-    it('should export FONT_CHART for Plotly charts', () => {
+    it('should export FONT_CHART as Inter for charts', () => {
       expect(FONT_CHART).toBe(typography.fontFamily.chart);
-      expect(FONT_CHART).toContain('Roboto Serif');
+      expect(FONT_CHART).toContain('Inter');
+    });
+
+    it('should export FONT_PROSE for long-form content', () => {
+      expect(FONT_PROSE).toBe(typography.fontFamily.prose);
+      expect(FONT_PROSE).toContain('Roboto Serif');
     });
 
     it('should export FONT_MONO for code', () => {
