@@ -1,7 +1,7 @@
 import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { screen, render as testRender } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { MantineProvider } from '@mantine/core';
 import { ReportOutputTypeCell } from '@/components/report/ReportOutputTypeCell';
 import { calculationKeys } from '@/libs/queryKeys';
@@ -15,9 +15,6 @@ import {
   createMockErrorStatus,
   createMockPendingStatus,
 } from '@/tests/fixtures/hooks/useCalcStatusSubscriptionMocks';
-
-// Mock Plotly
-vi.mock('react-plotly.js', () => ({ default: vi.fn(() => null) }));
 
 describe('ReportOutputTypeCell', () => {
   let queryClient: QueryClient;
