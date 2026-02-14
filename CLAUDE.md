@@ -5,7 +5,7 @@
 Detailed visual standards are documented in `.claude/skills/`. **These are mandatory for all UI code:**
 
 - `.claude/skills/design-tokens.md` - Color, spacing, typography tokens
-- `.claude/skills/chart-standards.md` - Plotly chart patterns
+- `.claude/skills/chart-standards.md` - Recharts + Plotly chart patterns
 - `.claude/skills/ingredient-patterns.md` - CRUD page patterns
 
 ### Critical Rules
@@ -16,6 +16,7 @@ Detailed visual standards are documented in `.claude/skills/`. **These are manda
    - Exceptions: Proper nouns (PolicyEngine, California), acronyms (IRS, UK), official program names (Child Tax Credit)
 
 2. **USE DESIGN TOKENS** - Never hardcode colors, spacing, or typography values.
+
    ```tsx
    // WRONG
    style={{ color: '#319795', marginBottom: '16px' }}
@@ -38,35 +39,41 @@ Detailed visual standards are documented in `.claude/skills/`. **These are manda
 ## Branding & Logos
 
 ### Color Palette
+
 - **Teal** is the current brand color (not blue)
 - Old blue assets from `policyengine-app` should be updated to teal
 
 ### Logo Assets Location
+
 All logos are in `app/public/assets/logos/policyengine/`:
 
-| File | Type | Description |
-|------|------|-------------|
-| `teal.png` | Wide | Teal "POLICY ENGINE" logo |
-| `teal.svg` | Wide | SVG version |
-| `teal-square.png` | Square | Teal PE icon (trimmed) |
-| `teal-square.svg` | Square | SVG version |
-| `white.png` | Wide | White logo (for dark backgrounds) |
-| `white.svg` | Wide | SVG version |
-| `white-square.svg` | Square | White PE icon SVG |
+| File               | Type   | Description                       |
+| ------------------ | ------ | --------------------------------- |
+| `teal.png`         | Wide   | Teal "POLICY ENGINE" logo         |
+| `teal.svg`         | Wide   | SVG version                       |
+| `teal-square.png`  | Square | Teal PE icon (trimmed)            |
+| `teal-square.svg`  | Square | SVG version                       |
+| `white.png`        | Wide   | White logo (for dark backgrounds) |
+| `white.svg`        | Wide   | SVG version                       |
+| `white-square.svg` | Square | White PE icon SVG                 |
 
 ### Favicon
+
 - Located at `app/src/favicon.svg`
 - Uses the teal-square logo
 
 ### Chart Watermarks in Research Posts
+
 - Posts reference logos via URL path (e.g., `/assets/logos/policyengine/teal-square.png`)
 - Chart watermarks need public URLs, so logos must be in `public/`
 - Legacy posts may use `/logo512.png` or GitHub raw URLs - these should be updated to the standard path
 
 ### Component Logo Usage
+
 Components reference logos from public path:
+
 ```tsx
-const PolicyEngineLogo = '/assets/logos/policyengine/white.svg';
+const PolicyEngineLogo = "/assets/logos/policyengine/white.svg";
 ```
 
 ## Project Structure
@@ -79,12 +86,13 @@ const PolicyEngineLogo = '/assets/logos/policyengine/white.svg';
 
 Several pages embed external sites from GitHub Pages via iframes in `app/src/pages/`:
 
-| Route | Component | Embed source |
-|-------|-----------|-------------|
-| `/:countryId/ai-inequality` | `AIGrowthResearch.page.tsx` | `policyengine.github.io/ai-inequality` |
-| `/:countryId/2025-year-in-review` | `YearInReview.page.tsx` | `policyengine.github.io/2025-year-in-review` |
+| Route                             | Component                   | Embed source                                 |
+| --------------------------------- | --------------------------- | -------------------------------------------- |
+| `/:countryId/ai-inequality`       | `AIGrowthResearch.page.tsx` | `policyengine.github.io/ai-inequality`       |
+| `/:countryId/2025-year-in-review` | `YearInReview.page.tsx`     | `policyengine.github.io/2025-year-in-review` |
 
 When renaming an embedded repo:
+
 1. Update the iframe `src` URL in the page component
 2. Update `PUBLIC_URL` in the embedded repo's CI workflow
 3. Search the org for other references: `gh api search/code?q=org:PolicyEngine+OLD_NAME`

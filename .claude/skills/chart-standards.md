@@ -1,161 +1,175 @@
 # Chart and Visualization Standards
 
-This skill ensures consistent chart styling across PolicyEngine visualizations using Plotly.js via `react-plotly.js`.
+This skill ensures consistent chart styling across PolicyEngine visualizations.
 
-## Required Imports
+## Chart libraries
+
+- **Recharts** (default) — used for all standard charts (bar, line, area, stacked bar)
+- **Plotly** (exceptions only) — choropleth maps, hexagonal maps, waterfall charts, blog/notebook embedded JSON
+
+## Recharts chart pattern
+
+### Required imports
 
 ```tsx
-import type { Layout } from 'plotly.js';
-import Plot from 'react-plotly.js';
-import { colors } from '@/designTokens/colors';
-import { spacing } from '@/designTokens/spacing';
-import { ChartContainer } from '@/components/ChartContainer';
-import { DEFAULT_CHART_CONFIG, getClampedChartHeight } from '@/utils/chartUtils';
+import {
+  Bar,
+  BarChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import { colors } from "@/designTokens/colors";
+import { spacing } from "@/designTokens/spacing";
+import { ChartContainer } from "@/components/ChartContainer";
+import {
+  ChartWatermark,
+  ImpactBarLabel,
+  ImpactTooltip,
+  TOOLTIP_STYLE,
+} from "@/components/charts";
+import {
+  downloadCsv,
+  getClampedChartHeight,
+  RECHARTS_FONT_STYLE,
+} from "@/utils/chartUtils";
 ```
 
-## Chart Container Pattern
+### Chart container pattern
 
 Always wrap charts in `ChartContainer` for consistent styling:
 
 ```tsx
 <ChartContainer title={getChartTitle()} onDownloadCsv={handleDownloadCsv}>
   <Stack gap={spacing.sm}>
-    <Plot
-      data={chartData}
-      layout={layout}
-      config={DEFAULT_CHART_CONFIG}
-      style={{ width: '100%', height: chartHeight }}
-    />
+    <ResponsiveContainer width="100%" height={chartHeight}>
+      <BarChart
+        data={chartData}
+        margin={{ top: 20, right: 20, bottom: 30, left: 20 }}
+      >
+        <XAxis dataKey="name" style={RECHARTS_FONT_STYLE} />
+        <YAxis style={RECHARTS_FONT_STYLE} />
+        <Tooltip content={<ImpactTooltip />} />
+        <Bar dataKey="value" label={<ImpactBarLabel data={chartData} />}>
+          {chartData.map((entry, i) => (
+            <Cell
+              key={i}
+              fill={entry.value < 0 ? colors.gray[600] : colors.primary[500]}
+            />
+          ))}
+        </Bar>
+      </BarChart>
+    </ResponsiveContainer>
+    <ChartWatermark />
     {description}
   </Stack>
 </ChartContainer>
 ```
 
-## Color Semantics
+### Shared chart components
 
-### Bar/Data Colors
-| Scenario | Color Token | Hex |
-|----------|-------------|-----|
-| Positive change (gains, winners) | `colors.primary[500]` | `#319795` (teal) |
-| Negative change (losses, losers) | `colors.gray[600]` | `#4B5563` |
-| Neutral/baseline | `colors.gray[300]` | `#D1D5DB` |
-| Error/warning states | `colors.error` | `#EF4444` |
-| Success states | `colors.success` | `#22C55E` |
+Located in `app/src/components/charts/`:
 
-### Dynamic Color Assignment
+| Component        | Purpose                             | Used by                                    |
+| ---------------- | ----------------------------------- | ------------------------------------------ |
+| `ChartWatermark` | PolicyEngine logo below chart       | All Recharts charts                        |
+| `ImpactTooltip`  | Tooltip with bold name + hover text | Poverty, inequality, distributional charts |
+| `ImpactBarLabel` | Formatted value above/below bars    | Poverty, inequality, distributional charts |
+| `TOOLTIP_STYLE`  | Shared tooltip container CSS        | All Recharts custom tooltips               |
+
+For charts with unique tooltip formats (earnings, MTR, winners/losers, historical), create a local tooltip component using `TOOLTIP_STYLE`:
+
 ```tsx
-marker: {
-  color: yArray.map((value) => (value < 0 ? colors.gray[600] : colors.primary[500])),
+function CustomTooltip({ active, payload }: any) {
+  if (!active || !payload?.length) return null;
+  const data = payload[0].payload;
+  return (
+    <div style={TOOLTIP_STYLE}>
+      <p style={{ fontWeight: 600, margin: 0 }}>{data.name}</p>
+      <p style={{ margin: "4px 0 0", fontSize: 13, whiteSpace: "pre-wrap" }}>
+        {data.detail}
+      </p>
+    </div>
+  );
 }
 ```
 
-### Multi-Series Colors
-Use the design system's series palette:
-```tsx
-import { chartColors } from '@policyengine/design-system/charts';
+### Recharts font style
 
-// Series order: teal, blue, dark teal, dark blue, gray
-chartColors.series[0]  // Primary teal
-chartColors.series[1]  // Blue accent
-chartColors.series[2]  // Dark teal
-chartColors.series[3]  // Dark blue
-chartColors.series[4]  // Gray
+Always apply `RECHARTS_FONT_STYLE` to axes for consistent typography:
+
+```tsx
+<XAxis dataKey="name" style={RECHARTS_FONT_STYLE} />
+<YAxis style={RECHARTS_FONT_STYLE} tickFormatter={formatValue} />
 ```
 
-## Chart Configuration
+### Responsive height
 
-### Default Config (Always Use)
 ```tsx
-import { DEFAULT_CHART_CONFIG } from '@/utils/chartUtils';
+import { useMediaQuery, useViewportSize } from "@mantine/hooks";
+import { getClampedChartHeight } from "@/utils/chartUtils";
 
-config={{
-  ...DEFAULT_CHART_CONFIG,
-  locale: localeCode(countryId),  // For currency/number formatting
-}}
-```
-
-This provides:
-- `displayModeBar: false` - Hides Plotly toolbar
-- `responsive: true` - Enables responsive sizing
-
-### Responsive Height
-```tsx
-import { useMediaQuery, useViewportSize } from '@mantine/hooks';
-import { getClampedChartHeight } from '@/utils/chartUtils';
-
-const mobile = useMediaQuery('(max-width: 768px)');
+const mobile = useMediaQuery("(max-width: 768px)");
 const { height: viewportHeight } = useViewportSize();
 const chartHeight = getClampedChartHeight(viewportHeight, mobile);
-
-// Use in style
-style={{ width: '100%', height: chartHeight }}
 ```
 
-## Standard Layout Properties
+## Color semantics
 
-### Base Layout
-```tsx
-const layout = {
-  xaxis: {
-    title: { text: 'X Axis Label' },
-    fixedrange: true,  // Disable zoom/pan
-  },
-  yaxis: {
-    title: { text: 'Y Axis Label' },
-    tickprefix: currencySymbol(countryId),  // For currency
-    tickformat: ',.0f',  // Number format
-    fixedrange: true,
-  },
-  showlegend: false,  // Or configure legend position
-  margin: {
-    t: 0,   // Top (usually 0, title is outside chart)
-    b: 80,  // Bottom (for x-axis labels)
-    l: 60,  // Left (for y-axis labels)
-    r: 20,  // Right
-  },
-} as Partial<Layout>;
-```
+### Bar/data colors
 
-### Text on Bars (Uniform Text)
-```tsx
-uniformtext: {
-  mode: 'hide' as const,  // Hide text that doesn't fit
-  minsize: mobile ? 4 : 8,
-},
-```
+| Scenario                         | Color Token           | Hex              |
+| -------------------------------- | --------------------- | ---------------- |
+| Positive change (gains, winners) | `colors.primary[500]` | `#319795` (teal) |
+| Negative change (losses, losers) | `colors.gray[600]`    | `#4B5563`        |
+| Neutral/baseline                 | `colors.gray[300]`    | `#D1D5DB`        |
+| Error/warning states             | `colors.error`        | `#EF4444`        |
+| Success states                   | `colors.success`      | `#22C55E`        |
 
-### Legend Position (When Needed)
-```tsx
-legend: {
-  orientation: 'h',
-  yanchor: 'bottom',
-  y: 1.02,
-  xanchor: 'right',
-  x: 1,
-},
-```
-
-## Hover Templates
-
-Use custom hover templates for rich tooltips:
+### Dynamic color assignment (Recharts)
 
 ```tsx
-{
-  customdata: xArray.map((x, i) => hoverMessage(x, yArray[i])),
-  hovertemplate: '<b>Decile %{x}</b><br><br>%{customdata}<extra></extra>',
-}
+import { Cell } from "recharts";
+
+<Bar dataKey="value">
+  {chartData.map((entry, i) => (
+    <Cell
+      key={i}
+      fill={entry.value < 0 ? colors.gray[600] : colors.primary[500]}
+    />
+  ))}
+</Bar>;
 ```
 
-The `<extra></extra>` hides the trace name box.
+## Hover text / tooltips
 
-## Chart Title Pattern
+### Recharts tooltips
+
+Use JSX tooltips with `white-space: pre-wrap` for line breaks. The `wordWrap` utility in `chartMessages.ts` returns `\n` characters.
+
+```tsx
+<p style={{ whiteSpace: "pre-wrap" }}>{data.hoverText}</p>
+```
+
+### Plotly hover templates (exceptions only)
+
+For the remaining Plotly charts, convert `\n` to `<br>` at point of use:
+
+```tsx
+customdata: labels.map((x, i) =>
+  hoverMessage(x, values[i]).replaceAll("\n", "<br>"),
+);
+```
+
+## Chart title pattern
 
 Generate dynamic titles that describe the reform's impact:
 
 ```tsx
 const getChartTitle = () => {
   const change = calculateChange();
-  const signTerm = change > 0 ? 'increase' : 'decrease';
+  const signTerm = change > 0 ? "increase" : "decrease";
 
   if (change === 0) {
     return `This reform would have no effect on ${metric}`;
@@ -164,23 +178,23 @@ const getChartTitle = () => {
 };
 ```
 
-## CSV Export Pattern
+## CSV export pattern
 
 Always provide CSV download functionality:
 
 ```tsx
-import { downloadCsv } from '@/utils/chartUtils';
+import { downloadCsv } from "@/utils/chartUtils";
 
 const handleDownloadCsv = () => {
   const csvData = Object.entries(dataObject).map(([key, value]) => [
     `Label ${key}`,
     value.toString(),
   ]);
-  downloadCsv(csvData, 'descriptive-filename.csv');
+  downloadCsv(csvData, "descriptive-filename.csv");
 };
 ```
 
-## Description Pattern
+## Description pattern
 
 Add explanatory text below charts:
 
@@ -192,125 +206,75 @@ const description = (
 );
 ```
 
-## Complete Chart Component Template
+## Plotly exceptions
+
+These charts remain on Plotly (`react-plotly.js`):
+
+| Chart                                 | Reason                                         |
+| ------------------------------------- | ---------------------------------------------- |
+| `USDistrictChoroplethMap.tsx`         | No Recharts geo support                        |
+| `HexagonalMap.tsx`                    | Custom scatter with hex markers                |
+| `BudgetaryImpactSubPage.tsx`          | Waterfall chart (no native Recharts waterfall) |
+| `BudgetaryImpactByProgramSubPage.tsx` | Waterfall chart                                |
+| `MarkdownFormatter.tsx`               | Blog posts embed native Plotly JSON            |
+| `NotebookRenderer.tsx`                | Notebooks embed native Plotly JSON             |
+
+For these files, continue using the Plotly patterns:
 
 ```tsx
-import type { Layout } from 'plotly.js';
-import Plot from 'react-plotly.js';
-import { Stack, Text } from '@mantine/core';
-import { useMediaQuery, useViewportSize } from '@mantine/hooks';
-import { ChartContainer } from '@/components/ChartContainer';
-import { colors } from '@/designTokens/colors';
-import { spacing } from '@/designTokens/spacing';
-import { DEFAULT_CHART_CONFIG, downloadCsv, getClampedChartHeight } from '@/utils/chartUtils';
+import type { Layout } from "plotly.js";
+import Plot from "react-plotly.js";
+import {
+  DEFAULT_CHART_CONFIG,
+  getClampedChartHeight,
+} from "@/utils/chartUtils";
 
-interface Props {
-  output: OutputType;
-}
-
-export default function ChartSubPage({ output }: Props) {
-  const mobile = useMediaQuery('(max-width: 768px)');
-  const countryId = useCurrentCountry();
-  const { height: viewportHeight } = useViewportSize();
-  const chartHeight = getClampedChartHeight(viewportHeight, mobile);
-
-  // Extract and prepare data
-  const xArray = Object.keys(output.data);
-  const yArray = Object.values(output.data);
-
-  // Generate title
-  const getChartTitle = () => {
-    // Dynamic title based on data
-  };
-
-  // CSV export
-  const handleDownloadCsv = () => {
-    const csvData = xArray.map((x, i) => [x, yArray[i].toString()]);
-    downloadCsv(csvData, 'chart-name.csv');
-  };
-
-  // Chart data
-  const chartData = [{
-    x: xArray,
-    y: yArray,
-    type: 'bar' as const,
-    marker: {
-      color: yArray.map((v) => (v < 0 ? colors.gray[600] : colors.primary[500])),
-    },
-  }];
-
-  // Layout
-  const layout = {
-    xaxis: { title: { text: 'X Label' }, fixedrange: true },
-    yaxis: { title: { text: 'Y Label' }, fixedrange: true },
-    showlegend: false,
-    margin: { t: 0, b: 80, l: 60, r: 20 },
-  } as Partial<Layout>;
-
-  return (
-    <ChartContainer title={getChartTitle()} onDownloadCsv={handleDownloadCsv}>
-      <Stack gap={spacing.sm}>
-        <Plot
-          data={chartData}
-          layout={layout}
-          config={DEFAULT_CHART_CONFIG}
-          style={{ width: '100%', height: chartHeight }}
-        />
-        <Text size="sm" c="dimmed">
-          Explanatory description...
-        </Text>
-      </Stack>
-    </ChartContainer>
-  );
-}
+<Plot
+  data={chartData}
+  layout={layout}
+  config={DEFAULT_CHART_CONFIG}
+  style={{ width: "100%", height: chartHeight }}
+/>;
 ```
 
-## Watermark (For Research/Blog Charts)
+## Anti-patterns
 
-When charts need PolicyEngine branding (research posts, exported images):
-
-```tsx
-import { chartLogo } from '@policyengine/design-system/charts';
-
-layout: {
-  images: [chartLogo],
-}
-```
-
-Logo source: `/assets/logos/policyengine/teal-square.png`
-
-## Anti-Patterns
-
-### Never Do This
 ```tsx
 // WRONG - Hardcoded colors
-marker: { color: '#319795' }
-marker: { color: value > 0 ? 'green' : 'red' }
+fill="#319795"
+fill={value > 0 ? 'green' : 'red'}
+
+// CORRECT - Token colors
+fill={colors.primary[500]}
+fill={entry.value < 0 ? colors.gray[600] : colors.primary[500]}
 
 // WRONG - Hardcoded dimensions
 style={{ height: 500 }}
 
-// WRONG - Missing config
-<Plot data={data} layout={layout} />
+// CORRECT - Responsive height
+<ResponsiveContainer width="100%" height={chartHeight}>
 
 // WRONG - No container
-<Plot ... />  // Charts should be in ChartContainer
-```
-
-### Always Do This
-```tsx
-// CORRECT - Token colors
-marker: { color: colors.primary[500] }
-marker: { color: value < 0 ? colors.gray[600] : colors.primary[500] }
-
-// CORRECT - Responsive height
-style={{ height: chartHeight }}
-
-// CORRECT - With config
-<Plot data={data} layout={layout} config={DEFAULT_CHART_CONFIG} />
+<BarChart ... />
 
 // CORRECT - With container
 <ChartContainer title={title} onDownloadCsv={handleCsv}>
-  <Plot ... />
+  <ResponsiveContainer ...>
+    <BarChart ... />
+  </ResponsiveContainer>
+  <ChartWatermark />
 </ChartContainer>
+
+// WRONG - Using <br> in Recharts tooltip text
+hoverText: message.replaceAll('\n', '<br>')
+
+// CORRECT - Use \n with pre-wrap
+<p style={{ whiteSpace: 'pre-wrap' }}>{data.hoverText}</p>
+
+// WRONG - Inline tooltip styles
+<div style={{ background: '#fff', border: '1px solid #E2E8F0', ... }}>
+
+// CORRECT - Use shared TOOLTIP_STYLE
+import { TOOLTIP_STYLE } from '@/components/charts';
+<div style={TOOLTIP_STYLE}>
 ```
