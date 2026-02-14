@@ -1,5 +1,4 @@
 import { resolve } from 'path';
-import { vanillaExtractPlugin } from '@vanilla-extract/vite-plugin';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 import tsconfigPaths from 'vite-tsconfig-paths';
@@ -83,7 +82,7 @@ if (calculatorUrl) {
 }
 
 export default defineConfig({
-  plugins: [vanillaExtractPlugin(), react(), tsconfigPaths(), spaFallbackPlugin()],
+  plugins: [react(), tsconfigPaths(), spaFallbackPlugin()],
   base: process.env.BASE_URL || '/',
   server: {
     // Use discovered ports in dev, defaults otherwise
