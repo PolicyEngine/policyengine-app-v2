@@ -191,7 +191,11 @@ export default function WinnersLosersIncomeDecileSubPage({ output }: Props) {
             >
               <XAxis type="number" hide />
               <YAxis type="category" dataKey="name" tick={RECHARTS_FONT_STYLE} width={40} />
-              <Tooltip content={<WinnersLosersTooltip countryId={countryId} />} />
+              <Tooltip
+                content={<WinnersLosersTooltip countryId={countryId} />}
+                allowEscapeViewBox={{ x: true, y: true }}
+                offset={20}
+              />
               {CATEGORIES.map((cat) => (
                 <Bar key={cat} dataKey={cat} stackId="a" fill={COLOR_MAP[cat]} />
               ))}
@@ -226,7 +230,11 @@ export default function WinnersLosersIncomeDecileSubPage({ output }: Props) {
                   style={{ textAnchor: 'middle', ...RECHARTS_FONT_STYLE }}
                 />
               </YAxis>
-              <Tooltip content={<WinnersLosersTooltip countryId={countryId} />} />
+              <Tooltip
+                content={<WinnersLosersTooltip countryId={countryId} />}
+                allowEscapeViewBox={{ x: true, y: true }}
+                offset={20}
+              />
               <Legend formatter={(value: string) => LEGEND_TEXT_MAP[value] || value} />
               {CATEGORIES.map((cat) => (
                 <Bar key={cat} dataKey={cat} stackId="a" fill={COLOR_MAP[cat]} />
