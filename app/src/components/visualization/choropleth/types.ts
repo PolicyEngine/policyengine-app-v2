@@ -2,8 +2,6 @@
  * Type definitions for US District Choropleth Map
  */
 
-import type { Layout, PlotData } from 'plotly.js';
-
 /**
  * GeoJSON Feature interface for congressional districts
  */
@@ -47,8 +45,8 @@ export interface ChoroplethDataPoint {
 export interface ColorScaleConfig {
   /** Array of colors for the scale */
   colors: string[];
-  /** Plotly tick format string */
-  tickFormat: string;
+  /** Format string for color bar tick labels (kept for API compatibility; not used by SVG renderer) */
+  tickFormat?: string;
   /** Whether to center the scale at zero */
   symmetric?: boolean;
 }
@@ -89,67 +87,9 @@ export interface USDistrictChoroplethMapProps {
 }
 
 /**
- * Plotly geo configuration interface
- * @see https://plotly.com/javascript/reference/layout/geo/
- */
-export interface PlotlyGeoConfig {
-  /** Geographic scope */
-  scope: 'usa' | 'world' | 'north america' | 'south america' | 'europe' | 'asia' | 'africa';
-  /** Map projection settings */
-  projection: {
-    type: 'albers usa' | 'equirectangular' | 'mercator' | 'natural earth' | string;
-  };
-  /** Show lakes */
-  showlakes: boolean;
-  /** Lake color */
-  lakecolor: string;
-  /** Background color */
-  bgcolor: string;
-  /** Show land areas */
-  showland: boolean;
-  /** Show frame around map */
-  showframe: boolean;
-  /** Show coastlines */
-  showcoastlines: boolean;
-  /** Show country borders */
-  showcountries: boolean;
-  /** Show subunit borders (states) */
-  showsubunits: boolean;
-  /** Fit bounds mode for zooming */
-  fitbounds?: 'locations' | 'geojson' | false;
-}
-
-/**
  * Color range for the visualization
  */
 export interface ColorRange {
   min: number;
   max: number;
 }
-
-/**
- * Processed feature data for Plotly
- */
-export interface ProcessedFeatureData {
-  /** District IDs (locations) */
-  locations: string[];
-  /** Values for each location */
-  values: number[];
-  /** Hover text for each location */
-  hoverText: string[];
-  /** GeoJSON features that have data */
-  features: GeoJSONFeature[];
-}
-
-/**
- * Plot data and layout result
- */
-export interface PlotDataAndLayout {
-  plotData: Partial<PlotData>[];
-  plotLayout: Partial<Layout>;
-}
-
-/**
- * Plotly colorscale entry (position, color)
- */
-export type ColorscaleEntry = [number, string];
