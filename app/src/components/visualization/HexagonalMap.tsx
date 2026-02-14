@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Box } from '@mantine/core';
+import { ChartWatermark } from '@/components/charts';
 import { colors, spacing } from '@/designTokens';
 import type { HexMapConfig } from '@/types/visualization/HexMapConfig';
 import type { HexMapDataPoint } from '@/types/visualization/HexMapDataPoint';
@@ -210,6 +211,10 @@ export function HexagonalMap({ data, config = {} }: HexagonalMapProps) {
           {tooltip.text}
         </div>
       )}
+      {/* PolicyEngine logo watermark */}
+      <div style={{ padding: `${spacing.xs}px ${spacing.sm}px` }}>
+        <ChartWatermark />
+      </div>
     </Box>
   );
 }

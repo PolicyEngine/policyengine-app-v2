@@ -36,12 +36,19 @@ interface ProgramBudgetItem {
 
 interface WaterfallDatum {
   name: string;
-  invisible: number;
-  visible: number;
+  /** Bottom of the visible bar (Y-axis data value) */
+  barBottom: number;
+  /** Top of the visible bar (Y-axis data value) */
+  barTop: number;
+  /** Actual value (signed) for labels/tooltips */
   value: number;
+  /** Pre-formatted label for display on bar */
   label: string;
+  /** Hover text */
   hoverText: string;
+  /** Whether this is the total bar */
   isTotal: boolean;
+  /** Fill color for the bar */
   fill: string;
 }
 
@@ -77,6 +84,22 @@ function WaterfallBarLabel({ x, y, width, height, index, data }: any) {
       {entry.label}
     </text>
   );
+}
+
+/**
+ * Compute the Y-axis domain for the waterfall chart, ensuring it includes
+ * the full range of bar positions (both barBottom and barTop of every entry)
+ * plus a small padding for visual breathing room.
+ */
+function getWaterfallDomain(chartData: WaterfallDatum[]): [number, number] {
+  let min = 0;
+  let max = 0;
+  for (const d of chartData) {
+    min = Math.min(min, d.barBottom, d.barTop);
+    max = Math.max(max, d.barBottom, d.barTop);
+  }
+  const pad = (max - min) * 0.1 || 0.1;
+  return [min - pad, max + pad];
 }
 
 export default function BudgetaryImpactByProgramSubPage({ output }: Props) {
@@ -192,11 +215,18 @@ export default function BudgetaryImpactByProgramSubPage({ output }: Props) {
     const value = valuesWithTotal[i];
     const isPositive = value >= 0;
 
-    let invisible: number;
+    let barBottom: number;
+    let barTop: number;
+
     if (isTotal) {
-      invisible = isPositive ? 0 : value;
+      barBottom = Math.min(0, value);
+      barTop = Math.max(0, value);
+    } else if (isPositive) {
+      barBottom = runningTotal;
+      barTop = runningTotal + value;
     } else {
-      invisible = isPositive ? runningTotal : runningTotal + value;
+      barBottom = runningTotal + value;
+      barTop = runningTotal;
     }
 
     const fill = isTotal
@@ -209,8 +239,8 @@ export default function BudgetaryImpactByProgramSubPage({ output }: Props) {
 
     chartData.push({
       name: labelsWithTotal[i],
-      invisible,
-      visible: Math.abs(value),
+      barBottom,
+      barTop,
       value,
       label: formatCur(value * 1e9),
       hoverText: hoverMessage(labelsWithTotal[i], value),
@@ -223,16 +253,26 @@ export default function BudgetaryImpactByProgramSubPage({ output }: Props) {
     }
   }
 
+  // Compute explicit Y-axis domain so Recharts includes the full bar range
+  const yDomain = getWaterfallDomain(chartData);
   const symbol = currencySymbol(countryId);
+
+  // Build Recharts-compatible data with invisible/visible keys
+  const rechartsData = chartData.map((d) => ({
+    ...d,
+    invisible: d.barBottom,
+    visible: d.barTop - d.barBottom,
+  }));
 
   return (
     <ChartContainer title={getChartTitle()} onDownloadCsv={handleDownloadCsv}>
       <Stack gap={spacing.sm}>
         <ResponsiveContainer width="100%" height={chartHeight}>
-          <BarChart data={chartData} margin={{ top: 20, right: 20, bottom: 30, left: 20 }}>
+          <BarChart data={rechartsData} margin={{ top: 20, right: 20, bottom: 30, left: 20 }}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} />
             <XAxis dataKey="name" tick={RECHARTS_FONT_STYLE} />
             <YAxis
+              domain={yDomain}
               tick={RECHARTS_FONT_STYLE}
               tickFormatter={(v: number) => `${symbol}${v.toFixed(1)}`}
             >
@@ -244,12 +284,15 @@ export default function BudgetaryImpactByProgramSubPage({ output }: Props) {
               />
             </YAxis>
             <Tooltip content={<WaterfallTooltip />} />
+            {/* Invisible base bar (transparent, no tooltip) */}
             <Bar
               dataKey="invisible"
               stackId="waterfall"
               fill="transparent"
               isAnimationActive={false}
+              tooltipType="none"
             />
+            {/* Visible bar with per-cell coloring */}
             <Bar
               dataKey="visible"
               stackId="waterfall"
