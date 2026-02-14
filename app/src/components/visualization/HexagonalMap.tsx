@@ -1,11 +1,9 @@
-import { useMemo } from 'react';
-import type { Config, Data, Layout } from 'plotly.js';
-import Plot from 'react-plotly.js';
+import { useMemo, useState } from 'react';
 import { Box } from '@mantine/core';
 import { colors, spacing } from '@/designTokens';
 import type { HexMapConfig } from '@/types/visualization/HexMapConfig';
 import type { HexMapDataPoint } from '@/types/visualization/HexMapDataPoint';
-import { getColorScale } from '@/utils/visualization/colorScales';
+import { getColorScale, interpolateColor } from '@/utils/visualization/colorScales';
 import {
   applyHexagonalPositioning,
   calculateSymmetricRange,
@@ -20,32 +18,30 @@ interface HexagonalMapProps {
   config?: Partial<HexMapConfig>;
 }
 
-/**
- * Generic hexagonal map visualization component
- *
- * Renders data points on a hexagonal grid using Plotly.
- * Supports diverging color scales, custom formatting, and responsive layout.
- *
- * @example
- * ```tsx
- * <HexagonalMap
- *   data={constituencyData}
- *   config={{
- *     colorScale: {
- *       colors: DIVERGING_GRAY_BLUE.colors,
- *       tickFormat: '£,.0f',
- *       symmetric: true
- *     },
- *     formatValue: (val) => formatParameterValue(val, 'currency-GBP', {
- *       decimalPlaces: 0,
- *       includeSymbol: true
- *     })
- *   }}
- * />
- * ```
- */
+/** Generate SVG polygon points for a flat-topped hexagon centered at (cx, cy) */
+function hexPoints(cx: number, cy: number, size: number): string {
+  const points: string[] = [];
+  for (let i = 0; i < 6; i++) {
+    const angle = (Math.PI / 3) * i;
+    const px = cx + size * Math.cos(angle);
+    const py = cy + size * Math.sin(angle);
+    points.push(`${px},${py}`);
+  }
+  return points.join(' ');
+}
+
+/** Color bar width in SVG units */
+const COLOR_BAR_WIDTH = 12;
+/** Color bar right margin */
+const COLOR_BAR_MARGIN = 60;
+
 export function HexagonalMap({ data, config = {} }: HexagonalMapProps) {
-  // Apply default configuration
+  const [tooltip, setTooltip] = useState<{
+    text: string;
+    x: number;
+    y: number;
+  } | null>(null);
+
   const fullConfig: HexMapConfig = useMemo(
     () => ({
       height: 380,
@@ -59,7 +55,6 @@ export function HexagonalMap({ data, config = {} }: HexagonalMapProps) {
         ...config.colorScale,
       },
       formatValue: config.formatValue || ((val) => val.toFixed(2)),
-      layoutOverrides: config.layoutOverrides || {},
       ...config,
     }),
     [config]
@@ -74,7 +69,6 @@ export function HexagonalMap({ data, config = {} }: HexagonalMapProps) {
       return hexPositioned;
     }
 
-    // Apply coordinate scaling - smaller scale = hexagons closer together
     return hexPositioned.map((point) => ({
       ...point,
       x: point.x * scale,
@@ -82,27 +76,27 @@ export function HexagonalMap({ data, config = {} }: HexagonalMapProps) {
     }));
   }, [data, fullConfig.coordinateScale]);
 
-  // Extract arrays for Plotly
-  const xValues = positionedData.map((p) => p.x);
-  const yValues = positionedData.map((p) => p.y);
-  const colorValues = positionedData.map((p) => p.value);
-  const hoverText = positionedData.map((p) => generateHoverText(p, fullConfig.formatValue!));
-
   // Calculate data bounds
   const dataBounds = useMemo(() => {
-    if (xValues.length === 0) {
+    if (positionedData.length === 0) {
       return { xMin: 0, xMax: 1, yMin: 0, yMax: 1 };
     }
+    const xs = positionedData.map((p) => p.x);
+    const ys = positionedData.map((p) => p.y);
     return {
-      xMin: Math.min(...xValues),
-      xMax: Math.max(...xValues),
-      yMin: Math.min(...yValues),
-      yMax: Math.max(...yValues),
+      xMin: Math.min(...xs),
+      xMax: Math.max(...xs),
+      yMin: Math.min(...ys),
+      yMax: Math.max(...ys),
     };
-  }, [xValues, yValues]);
+  }, [positionedData]);
 
   // Calculate color range
+  const colorValues = positionedData.map((p) => p.value);
   const colorRange = useMemo(() => {
+    if (colorValues.length === 0) {
+      return { min: 0, max: 1 };
+    }
     if (fullConfig.colorScale!.symmetric) {
       return calculateSymmetricRange(colorValues);
     }
@@ -112,81 +106,28 @@ export function HexagonalMap({ data, config = {} }: HexagonalMapProps) {
     };
   }, [colorValues, fullConfig.colorScale]);
 
-  // Plotly data configuration
-  const plotData: Partial<Data>[] = [
-    {
-      type: 'scatter',
-      mode: 'markers',
-      x: xValues,
-      y: yValues,
-      text: hoverText,
-      marker: {
-        color: colorValues,
-        symbol: 'hexagon',
-        size: fullConfig.hexSize,
-        coloraxis: 'coloraxis',
-      } as any,
-      showlegend: false,
-      hoverinfo: 'text',
-    },
-  ];
+  const scaleColors = fullConfig.colorScale!.colors;
+  const height = fullConfig.height ?? 380;
+  const hexSize = fullConfig.hexSize ?? 8;
 
-  const plotLayout = {
-    xaxis: {
-      domain: [0.02, 0.88],
-      range: [dataBounds.xMin - 1, dataBounds.xMax + 1],
-      scaleanchor: 'y',
-      scaleratio: 1.18,
-      constrain: 'domain',
-      constraintoward: 'center',
-      visible: false,
-      showgrid: false,
-      showline: false,
-    },
-    yaxis: {
-      domain: [0.02, 0.98],
-      range: [dataBounds.yMin - 1, dataBounds.yMax + 1],
-      scaleratio: 1,
-      constrain: 'domain',
-      constraintoward: 'middle',
-      visible: false,
-      showgrid: false,
-      showline: false,
-    },
-    height: fullConfig.height,
-    paper_bgcolor: colors.background.primary,
-    plot_bgcolor: colors.background.primary,
-    showlegend: false,
-    coloraxis: {
-      showscale: fullConfig.showColorBar,
-      cmin: colorRange.min,
-      cmax: colorRange.max,
-      colorbar: {
-        outlinewidth: 0,
-        thickness: 10,
-        tickformat: fullConfig.colorScale!.tickFormat,
-        x: 0.95, // Position colorbar at 95% (in the 85%-100% area outside plot domain)
-        len: 0.8, // Colorbar height as fraction of plot area
-      },
-      colorscale: fullConfig.colorScale!.colors.map((color, i, arr) => [
-        i / (arr.length - 1),
-        color,
-      ]),
-    },
-    margin: {
-      t: 10,
-      b: 40,
-      l: 20,
-      r: 100,
-    },
-    ...fullConfig.layoutOverrides,
-  } as Partial<Layout>;
+  // Compute SVG coordinate system
+  // We map data coordinates to SVG pixels with padding
+  const padding = hexSize * 2;
+  const colorBarSpace = fullConfig.showColorBar ? COLOR_BAR_MARGIN + COLOR_BAR_WIDTH + 40 : 0;
+  const svgWidth = 600; // Fixed width, responsive via CSS
 
-  // Plotly config
-  const plotConfig: Partial<Config> = {
-    displayModeBar: false,
-    responsive: true,
-  };
+  const dataWidth = dataBounds.xMax - dataBounds.xMin || 1;
+  const dataHeight = dataBounds.yMax - dataBounds.yMin || 1;
+
+  // Scale to fit within available area while maintaining aspect ratio
+  const availW = svgWidth - padding * 2 - colorBarSpace;
+  const availH = height - padding * 2;
+  const scale = Math.min(availW / dataWidth, availH / dataHeight);
+  const hexPixelSize = Math.min(hexSize * (scale / 20), scale * 0.45);
+
+  const toSvgX = (x: number) => padding + (x - dataBounds.xMin) * scale;
+  // Flip Y so higher grid-y values go upward
+  const toSvgY = (y: number) => height - padding - (y - dataBounds.yMin) * scale;
 
   return (
     <Box
@@ -195,14 +136,144 @@ export function HexagonalMap({ data, config = {} }: HexagonalMapProps) {
         borderRadius: spacing.sm,
         backgroundColor: colors.background.primary,
         overflow: 'hidden',
+        position: 'relative',
       }}
     >
-      <Plot
-        data={plotData}
-        layout={plotLayout}
-        config={plotConfig}
-        style={{ width: '100%', height: '100%' }}
-      />
+      <svg
+        width="100%"
+        height={height}
+        viewBox={`0 0 ${svgWidth} ${height}`}
+        style={{ display: 'block' }}
+      >
+        {/* Hexagon data points */}
+        {positionedData.map((point) => {
+          const cx = toSvgX(point.x);
+          const cy = toSvgY(point.y);
+          const fill = interpolateColor(point.value, colorRange.min, colorRange.max, scaleColors);
+          const hoverText = generateHoverText(point, fullConfig.formatValue!);
+
+          return (
+            <polygon
+              key={point.id}
+              points={hexPoints(cx, cy, hexPixelSize)}
+              fill={fill}
+              stroke={colors.background.primary}
+              strokeWidth={0.5}
+              style={{ cursor: 'pointer' }}
+              onMouseEnter={(e) => {
+                const rect = (
+                  e.currentTarget.ownerSVGElement as SVGSVGElement
+                ).getBoundingClientRect();
+                setTooltip({
+                  text: hoverText,
+                  x: e.clientX - rect.left,
+                  y: e.clientY - rect.top - 10,
+                });
+              }}
+              onMouseLeave={() => setTooltip(null)}
+            />
+          );
+        })}
+
+        {/* Color bar */}
+        {fullConfig.showColorBar && positionedData.length > 0 && (
+          <ColorBar
+            x={svgWidth - COLOR_BAR_MARGIN}
+            y={padding}
+            width={COLOR_BAR_WIDTH}
+            height={height - padding * 2}
+            min={colorRange.min}
+            max={colorRange.max}
+            scaleColors={scaleColors}
+          />
+        )}
+      </svg>
+
+      {/* Tooltip overlay */}
+      {tooltip && (
+        <div
+          style={{
+            position: 'absolute',
+            left: tooltip.x,
+            top: tooltip.y,
+            transform: 'translate(-50%, -100%)',
+            backgroundColor: 'rgba(0,0,0,0.85)',
+            color: '#fff',
+            padding: '4px 8px',
+            borderRadius: 4,
+            fontSize: 12,
+            whiteSpace: 'nowrap',
+            pointerEvents: 'none',
+            zIndex: 10,
+          }}
+        >
+          {tooltip.text}
+        </div>
+      )}
     </Box>
   );
+}
+
+/** Vertical color bar with gradient and tick labels */
+function ColorBar({
+  x,
+  y,
+  width,
+  height,
+  min,
+  max,
+  scaleColors,
+}: {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  min: number;
+  max: number;
+  scaleColors: string[];
+}) {
+  const gradientId = 'hex-color-bar-gradient';
+  const tickCount = 5;
+  const ticks: number[] = [];
+  for (let i = 0; i < tickCount; i++) {
+    ticks.push(min + (max - min) * (i / (tickCount - 1)));
+  }
+
+  return (
+    <g>
+      <defs>
+        <linearGradient id={gradientId} x1="0" y1="1" x2="0" y2="0">
+          {scaleColors.map((color, i) => (
+            <stop key={i} offset={`${(i / (scaleColors.length - 1)) * 100}%`} stopColor={color} />
+          ))}
+        </linearGradient>
+      </defs>
+      <rect x={x} y={y} width={width} height={height} fill={`url(#${gradientId})`} rx={2} />
+      {ticks.map((tick, i) => {
+        const ty = y + height - (i / (tickCount - 1)) * height;
+        return (
+          <text
+            key={i}
+            x={x + width + 4}
+            y={ty}
+            fontSize={9}
+            fill={colors.gray[600]}
+            dominantBaseline="central"
+          >
+            {formatTick(tick)}
+          </text>
+        );
+      })}
+    </g>
+  );
+}
+
+function formatTick(value: number): string {
+  if (Math.abs(value) >= 1000) {
+    return `${(value / 1000).toFixed(1)}k`;
+  }
+  if (Math.abs(value) >= 1) {
+    return value.toFixed(0);
+  }
+  return value.toFixed(2);
 }
