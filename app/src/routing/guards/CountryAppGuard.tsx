@@ -8,16 +8,16 @@ import { apps } from '@/data/apps/appTransformers';
 export function CountryAppGuard() {
   const { countryId, slug } = useParams<{ countryId: string; slug: string }>();
 
-  const app = apps.find((a) => a.slug === slug);
+  // Match by slug + countryId (some apps share a slug across countries)
+  const app = apps.find((a) => a.slug === slug && a.countryId === countryId);
 
-  // If app doesn't exist, let AppPage handle the 404
+  // If no match for this country, try any country and redirect
   if (!app) {
-    return <Outlet />;
-  }
-
-  // If country doesn't match, redirect to correct country
-  if (app.countryId !== countryId) {
-    return <Navigate to={`/${app.countryId}/${slug}`} replace />;
+    const fallback = apps.find((a) => a.slug === slug);
+    if (!fallback) {
+      return <Outlet />;
+    }
+    return <Navigate to={`/${fallback.countryId}/${slug}`} replace />;
   }
 
   return <Outlet />;

@@ -11,10 +11,12 @@ import { OBBBAIframeContent, StreamlitEmbed } from '@/components/interactive';
 import { apps } from '@/data/apps/appTransformers';
 
 export default function AppPage() {
-  const { slug } = useParams<{ slug: string }>();
+  const { slug, countryId } = useParams<{ slug: string; countryId: string }>();
   const location = useLocation();
 
-  const app = apps.find((a) => a.slug === slug);
+  const app =
+    apps.find((a) => a.slug === slug && a.countryId === countryId) ||
+    apps.find((a) => a.slug === slug);
 
   if (!app) {
     return (
@@ -42,7 +44,15 @@ export default function AppPage() {
   }
 
   // Forward hash fragment from the browser URL to the iframe (e.g. #NY)
-  const iframeUrl = location.hash ? `${app.source}${location.hash}` : app.source;
+  // If no hash exists but the route countryId differs from app default, seed it
+  let iframeUrl: string;
+  if (location.hash) {
+    iframeUrl = `${app.source}${location.hash}`;
+  } else if (countryId && countryId !== 'us') {
+    iframeUrl = `${app.source}#country=${countryId}`;
+  } else {
+    iframeUrl = app.source;
+  }
 
   // Default: standard iframe (for 'iframe' type and any other types)
   return <IframeContent url={iframeUrl} title={app.title} />;
