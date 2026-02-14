@@ -61,7 +61,7 @@ describe('chartMessages utilities', () => {
       expect(result).toContain('0.1%');
     });
 
-    test('given message then includes word wrapping with br tags', () => {
+    test('given long message then includes word wrapping with newlines', () => {
       const result = relativeChangeMessage(
         'This reform',
         'the income of households',
@@ -70,8 +70,8 @@ describe('chartMessages utilities', () => {
         'us'
       );
 
-      // Should have line breaks for word wrapping
-      expect(result).toContain('<br>');
+      // Should have newlines for word wrapping (consumers convert to <br> if needed)
+      expect(result).toContain('\n');
     });
   });
 });
