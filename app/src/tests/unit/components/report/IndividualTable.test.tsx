@@ -1,5 +1,5 @@
 import { render, screen } from '@test-utils';
-import { describe, expect, test, vi } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import IndividualTable from '@/components/report/IndividualTable';
 import {
   BASELINE_LABEL,
@@ -13,9 +13,6 @@ import {
   REFORM_LABEL,
   TABLE_HEADER_VARIABLE,
 } from '@/tests/fixtures/components/report/IndividualTable';
-
-// Mock Plotly
-vi.mock('react-plotly.js', () => ({ default: vi.fn(() => null) }));
 
 describe('IndividualTable', () => {
   describe('Single simulation mode', () => {

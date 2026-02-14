@@ -152,11 +152,13 @@
      };
      ```
 
-7. **Always mock Plotly**: Add to test file or setup
+7. **Mock LazyPlot when testing blog components**: Plotly is lazy-loaded via `LazyPlot`. Mock it in blog/notebook tests:
 
    ```typescript
-   vi.mock('react-plotly.js', () => ({ default: vi.fn(() => null) }));
+   vi.mock('@/components/blog/LazyPlot', () => ({ LazyPlot: vi.fn(() => null) }));
    ```
+
+   Note: Chart components use Recharts (not Plotly), so no Plotly mock is needed for chart tests.
 
 8. **Mock conventions**:
    - Use `vi` not `jest`

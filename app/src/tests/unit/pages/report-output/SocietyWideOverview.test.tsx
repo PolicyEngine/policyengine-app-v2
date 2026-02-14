@@ -3,9 +3,6 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import SocietyWideOverview from '@/pages/report-output/SocietyWideOverview';
 import { createMockSocietyWideOutput } from '@/tests/fixtures/pages/reportOutputMocks';
 
-// Mock Plotly
-vi.mock('react-plotly.js', () => ({ default: vi.fn(() => null) }));
-
 // Mock useCurrentCountry hook
 vi.mock('@/hooks/useCurrentCountry', () => ({
   useCurrentCountry: vi.fn(() => 'us'),

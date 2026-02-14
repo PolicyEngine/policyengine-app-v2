@@ -1,13 +1,10 @@
 import { render, screen } from '@test-utils';
-import { describe, expect, test, vi } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import { AbsoluteChangeByConstituency } from '@/pages/report-output/constituency/AbsoluteChangeByConstituency';
 import {
   MOCK_UK_REPORT_OUTPUT,
   MOCK_UK_REPORT_OUTPUT_NO_CONSTITUENCY,
 } from '@/tests/fixtures/pages/constituency/constituencyComponentMocks';
-
-// Mock Plotly
-vi.mock('react-plotly.js', () => ({ default: vi.fn(() => null) }));
 
 describe('AbsoluteChangeByConstituency', () => {
   test('given constituency data then renders component', () => {
