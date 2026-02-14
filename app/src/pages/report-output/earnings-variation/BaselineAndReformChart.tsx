@@ -15,12 +15,13 @@ import {
 } from 'recharts';
 import { Group, Radio, Stack } from '@mantine/core';
 import { useMediaQuery, useViewportSize } from '@mantine/hooks';
+import { ChartWatermark, TOOLTIP_STYLE } from '@/components/charts';
 import { colors } from '@/designTokens';
 import { spacing } from '@/designTokens/spacing';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import type { RootState } from '@/store';
 import type { Household } from '@/types/ingredients/Household';
-import { getClampedChartHeight, RECHARTS_FONT_STYLE, RECHARTS_WATERMARK } from '@/utils/chartUtils';
+import { getClampedChartHeight, RECHARTS_FONT_STYLE } from '@/utils/chartUtils';
 import { currencySymbol } from '@/utils/formatters';
 import { getValueFromHousehold } from '@/utils/householdValues';
 import * as styles from './earningsCharts.css';
@@ -41,14 +42,7 @@ function EarningsTooltip({ active, payload, label, symbol }: any) {
     return null;
   }
   return (
-    <div
-      style={{
-        background: '#fff',
-        border: '1px solid #E2E8F0',
-        borderRadius: 6,
-        padding: '8px 12px',
-      }}
-    >
+    <div style={TOOLTIP_STYLE}>
       <p style={{ fontWeight: 600, margin: 0 }}>
         Earnings: {symbol}
         {Number(label).toLocaleString()}
@@ -67,14 +61,7 @@ function PercentTooltip({ active, payload, label, symbol }: any) {
     return null;
   }
   return (
-    <div
-      style={{
-        background: '#fff',
-        border: '1px solid #E2E8F0',
-        borderRadius: 6,
-        padding: '8px 12px',
-      }}
-    >
+    <div style={TOOLTIP_STYLE}>
       <p style={{ fontWeight: 600, margin: 0 }}>
         Earnings: {symbol}
         {Number(label).toLocaleString()}
@@ -302,12 +289,7 @@ export default function BaselineAndReformChart({
 
       <div className={styles.chartWrapper}>
         {renderChart()}
-        <img
-          src={RECHARTS_WATERMARK.src}
-          alt=""
-          className={styles.watermark}
-          style={{ width: RECHARTS_WATERMARK.width }}
-        />
+        <ChartWatermark />
       </div>
     </Stack>
   );
