@@ -8,7 +8,7 @@
     "tags": ["us", "featured", "policy", "interactives"],
     "countryId": "us",
     "displayWithResearch": true,
-    "image": "us-marriage-incentive-calculator.png",
+    "image": "marriage-calculator.png",
     "date": "2026-02-13 12:00:00",
     "authors": ["daphne-hansell"]
   },
@@ -21,7 +21,7 @@
     "tags": ["uk", "policy", "interactives"],
     "countryId": "uk",
     "displayWithResearch": false,
-    "image": "us-marriage-incentive-calculator.png",
+    "image": "marriage-calculator.png",
     "date": "2026-02-13 12:00:00",
     "authors": ["daphne-hansell"]
   },
