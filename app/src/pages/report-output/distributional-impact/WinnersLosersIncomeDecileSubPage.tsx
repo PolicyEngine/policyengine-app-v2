@@ -188,6 +188,9 @@ export default function WinnersLosersIncomeDecileSubPage({ output }: Props) {
         msg: hoverMessage(x, yArray[i].toString(), category),
       })) as any,
       hovertemplate: '<b>%{customdata.title}</b><br><br>%{customdata.msg}<extra></extra>',
+      hoverlabel: {
+        align: 'left' as const,
+      },
     };
   };
 
@@ -238,6 +241,12 @@ export default function WinnersLosersIncomeDecileSubPage({ output }: Props) {
         text: 'Change in income<br />',
       },
       tracegroupgap: 10,
+    },
+    hoverlabel: {
+      bgcolor: '#fff',
+      bordercolor: '#E2E8F0',
+      font: { size: 13 },
+      align: 'left',
     },
     uniformtext: {
       mode: 'hide',
