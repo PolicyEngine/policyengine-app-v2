@@ -9,7 +9,6 @@
  */
 
 import { useMemo } from 'react';
-import Plot from 'react-plotly.js';
 import type { Notebook, NotebookCell as NotebookCellType, PlotlyData } from '@/types/blog';
 import {
   extractNotebookFootnotes,
@@ -17,6 +16,7 @@ import {
   parseJSONSafe,
 } from '@/utils/notebookUtils';
 import { blogColors, blogSpacing, blogTypography } from './blogStyles';
+import { LazyPlot } from './LazyPlot';
 import {
   FootnotesSection,
   HighlightedBlock,
@@ -284,7 +284,7 @@ function NotebookOutputPlotly({ data }: { data: PlotlyData }) {
           {title}
         </h5>
       )}
-      <Plot
+      <LazyPlot
         data={data.data}
         layout={{
           ...data.layout,
