@@ -4,6 +4,7 @@ import {
   Legend,
   Line,
   LineChart,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -159,19 +160,18 @@ export const ParameterOverTimeChart = memo((props: ParameterOverTimeChartProps) 
     }
   }, [reformValuesCollection]);
 
-  // Memoize axis calculations
-  const { maxDate, yMin, yMax } = useMemo(() => {
+  // Memoize axis calculations with nice ticks
+  const { maxDate, yMin, yMax, yTicks } = useMemo(() => {
     try {
       const { maxDate } = getChartBoundaryDates();
 
       const yaxisValues = reformValuesCollection ? [...y, ...reformedY] : y;
 
-      // Calculate y-axis range with 10% buffer above and below
       const numericYValues = yaxisValues.map((v) => Number(v)).filter((v) => !isNaN(v));
       let minY = Math.min(...numericYValues);
       let maxY = Math.max(...numericYValues);
 
-      // Ensure 0 is always visible for all value types
+      // Ensure 0 is always visible
       minY = Math.min(minY, 0);
 
       // For percentages, also ensure 100% is always visible
@@ -179,17 +179,47 @@ export const ParameterOverTimeChart = memo((props: ParameterOverTimeChartProps) 
         maxY = Math.max(maxY, 1);
       }
 
+      // Compute nice tick step
       const yRange = maxY - minY;
-      const yBuffer = yRange * 0.1;
+      const targetTicks = 5;
+      const rawStep = yRange / targetTicks;
+      if (rawStep <= 0) {
+        return { maxDate, yMin: 0, yMax: 1, yTicks: [0, 1] };
+      }
+      const magnitude = 10 ** Math.floor(Math.log10(rawStep));
+      const normalized = rawStep / magnitude;
+      let niceStep: number;
+      if (normalized <= 1) {
+        niceStep = 1 * magnitude;
+      } else if (normalized <= 2) {
+        niceStep = 2 * magnitude;
+      } else if (normalized <= 2.5) {
+        niceStep = 2.5 * magnitude;
+      } else if (normalized <= 5) {
+        niceStep = 5 * magnitude;
+      } else {
+        niceStep = 10 * magnitude;
+      }
+
+      // Round to nice boundaries (always include 0)
+      const niceMin = minY < 0 ? Math.floor(minY / niceStep) * niceStep : 0;
+      const niceMax = Math.ceil(maxY / niceStep) * niceStep;
+
+      // Generate tick array
+      const ticks: number[] = [];
+      for (let v = niceMin; v <= niceMax; v += niceStep) {
+        ticks.push(Math.round(v * 1e10) / 1e10);
+      }
 
       return {
         maxDate,
-        yMin: minY - yBuffer,
-        yMax: maxY + yBuffer,
+        yMin: niceMin,
+        yMax: niceMax,
+        yTicks: ticks,
       };
     } catch (error) {
       console.error('ParameterOverTimeChart: Error calculating axis formats', error);
-      return { maxDate: '2036-12-31', yMin: 0, yMax: 1 };
+      return { maxDate: '2036-12-31', yMin: 0, yMax: 1, yTicks: [0, 1] };
     }
   }, [x, y, reformedX, reformedY, reformValuesCollection, param.unit]);
 
@@ -272,7 +302,13 @@ export const ParameterOverTimeChart = memo((props: ParameterOverTimeChartProps) 
             }}
             domain={[EARLIEST_DISPLAY_DATE, maxDate]}
           />
-          <YAxis tick={RECHARTS_FONT_STYLE} tickFormatter={yTickFormatter} domain={[yMin, yMax]} />
+          <YAxis
+            tick={RECHARTS_FONT_STYLE}
+            tickFormatter={yTickFormatter}
+            domain={[yMin, yMax]}
+            ticks={yTicks}
+          />
+          <ReferenceLine y={0} stroke="#9CA3AF" strokeWidth={1} />
           <Tooltip content={<HistoricalTooltip param={param} />} />
           <Legend verticalAlign="top" />
           {hasReform && (
