@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+  }
+  .container {
+    position: relative;
+    width: 100%;
+    max-width: 700px;
+  }
+  svg {
+    width: 100%;
+    height: auto;
+  }
+  .node {
+    cursor: pointer;
+    transition: filter 0.2s;
+  }
+  .node:hover {
+    filter: drop-shadow(0 2px 8px rgba(0,0,0,0.2));
+  }
+  .node rect {
+    rx: 8;
+    ry: 8;
+    stroke-width: 2;
+  }
+  .node text {
+    font-size: 13px;
+    font-weight: 600;
+    fill: #fff;
+    text-anchor: middle;
+    dominant-baseline: central;
+    pointer-events: none;
+  }
+  .node .subtitle {
+    font-size: 10px;
+    font-weight: 400;
+    opacity: 0.85;
+  }
+  .edge {
+    fill: none;
+    stroke-width: 2.5;
+    marker-end: url(#arrowhead);
+    transition: opacity 0.3s;
+  }
+  .edge-label {
+    font-size: 10px;
+    fill: #666;
+    text-anchor: middle;
+  }
+  .pulse {
+    fill: none;
+    stroke-width: 3;
+    stroke-dasharray: 8 4;
+    animation: dash 1.5s linear infinite;
+  }
+  @keyframes dash {
+    to { stroke-dashoffset: -24; }
+  }
+  .tooltip {
+    position: absolute;
+    background: #1a202c;
+    color: #fff;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    line-height: 1.4;
+    max-width: 280px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+    z-index: 10;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  }
+  .tooltip.visible { opacity: 1; }
+  .legend {
+    display: flex;
+    gap: 16px;
+    margin-top: 12px;
+    font-size: 12px;
+    color: #666;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .legend-swatch {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+  }
+  .fix-label {
+    font-size: 11px;
+    font-weight: 700;
+    fill: #e53e3e;
+    text-anchor: middle;
+  }
+  .fix-line {
+    stroke: #e53e3e;
+    stroke-width: 2;
+    stroke-dasharray: 6 3;
+  }
+  .dimmed { opacity: 0.15; }
+  .highlighted { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="container">
+  <svg viewBox="0 0 700 520">
+    <defs>
+      <marker id="arrowhead" viewBox="0 0 10 7" refX="10" refY="3.5"
+        markerWidth="8" markerHeight="6" orient="auto-start-reverse">
+        <polygon points="0 0, 10 3.5, 0 7" fill="#718096"/>
+      </marker>
+      <marker id="arrowhead-red" viewBox="0 0 10 7" refX="10" refY="3.5"
+        markerWidth="8" markerHeight="6" orient="auto-start-reverse">
+        <polygon points="0 0, 10 3.5, 0 7" fill="#e53e3e"/>
+      </marker>
+      <marker id="arrowhead-pulse" viewBox="0 0 10 7" refX="10" refY="3.5"
+        markerWidth="8" markerHeight="6" orient="auto-start-reverse">
+        <polygon points="0 0, 10 3.5, 0 7" fill="#319795"/>
+      </marker>
+    </defs>
+
+    <!-- Title -->
+    <text x="350" y="24" text-anchor="middle" font-size="16" font-weight="700" fill="#1a202c">
+      Circular dependency in benefit calculations
+    </text>
+    <text x="350" y="42" text-anchor="middle" font-size="12" fill="#718096">
+      Click any node to highlight its connections
+    </text>
+
+    <!-- Edges (drawn first, under nodes) -->
+    <!-- tanf -> fl_tca -->
+    <path id="e-tanf-fltca" class="edge" stroke="#718096"
+      d="M 350,100 L 350,158"/>
+    <!-- fl_tca -> payment_standard -->
+    <path id="e-fltca-ps" class="edge" stroke="#718096"
+      d="M 350,198 L 350,258"/>
+    <!-- payment_standard -> housing_cost -->
+    <path id="e-ps-hc" class="edge" stroke="#718096"
+      d="M 350,298 L 350,358"/>
+    <!-- housing_cost -> rent -->
+    <path id="e-hc-rent" class="edge" stroke="#718096"
+      d="M 270,378 L 172,378"/>
+    <!-- rent -> housing_assistance -->
+    <path id="e-rent-ha" class="edge" stroke="#718096"
+      d="M 100,358 L 100,298"/>
+    <!-- housing_assistance -> hud_annual_income -->
+    <path id="e-ha-hud" class="edge" stroke="#718096"
+      d="M 100,258 L 100,198"/>
+    <!-- hud_annual_income -> tanf (the cycle-completing edge) -->
+    <path id="e-hud-tanf" class="edge" stroke="#e53e3e"
+      d="M 172,178 L 270,118" marker-end="url(#arrowhead-red)"/>
+
+    <!-- Animated pulse on cycle path -->
+    <path class="pulse" stroke="#319795"
+      d="M 350,100 L 350,178 L 350,278 L 350,378 L 200,378 L 100,378 L 100,278 L 100,178 L 270,118"
+      marker-end="url(#arrowhead-pulse)"/>
+
+    <!-- Edge labels -->
+    <text class="edge-label" x="370" y="132">sums state programs</text>
+    <text class="edge-label" x="382" y="232">calculates benefit</text>
+    <text class="edge-label" x="390" y="332">shelter obligation</text>
+    <text class="edge-label" x="220" y="396">includes rent</text>
+    <text class="edge-label" x="72" y="332">nets out subsidy</text>
+    <text class="edge-label" x="72" y="232">determines amount</text>
+    <text class="edge-label" x="192" y="140">counts as income</text>
+
+    <!-- Fix indicator -->
+    <line class="fix-line" x1="310" y1="332" x2="310" y2="310"/>
+    <text class="fix-label" x="310" y="302">FIX: use pre-subsidy rent</text>
+    <line class="fix-line" x1="310" y1="298" x2="310" y2="290"/>
+
+    <!-- Nodes -->
+    <!-- tanf (top center) -->
+    <g class="node" data-id="tanf" data-info="Federal TANF variable sums all state programs. HUD counts this as annual income, completing the cycle.">
+      <rect x="270" y="70" width="160" height="40" fill="#2b6cb0" stroke="#2c5282"/>
+      <text x="350" y="84" font-size="14">tanf</text>
+      <text x="350" y="100" class="subtitle">Federal aggregator</text>
+    </g>
+
+    <!-- fl_tca -->
+    <g class="node" data-id="fltca" data-info="Florida Temporary Cash Assistance. Benefit = payment standard minus countable income. One of 39 state TANF programs.">
+      <rect x="270" y="158" width="160" height="40" fill="#2b6cb0" stroke="#2c5282"/>
+      <text x="350" y="172" font-size="14">fl_tca</text>
+      <text x="350" y="188" class="subtitle">Florida TCA</text>
+    </g>
+
+    <!-- fl_tca_payment_standard -->
+    <g class="node" data-id="ps" data-info="FL determines payment tier (zero/low/high shelter) based on the household's shelter obligation. This is where the cycle enters housing variables.">
+      <rect x="268" y="258" width="164" height="40" fill="#38a169" stroke="#2f855a"/>
+      <text x="350" y="272" font-size="12">fl_tca_payment_standard</text>
+      <text x="350" y="288" class="subtitle">Shelter tier lookup</text>
+    </g>
+
+    <!-- housing_cost -->
+    <g class="node" data-id="hc" data-info="Total housing cost = rent + mortgage + taxes + insurance. The problem: 'rent' is post-subsidy, creating the dependency on housing_assistance.">
+      <rect x="270" y="358" width="160" height="40" fill="#d69e2e" stroke="#b7791f"/>
+      <text x="350" y="378" font-size="14">housing_cost</text>
+      <text x="350" y="393" class="subtitle" fill="#fff">Post-subsidy total</text>
+    </g>
+
+    <!-- rent -->
+    <g class="node" data-id="rent" data-info="Rent = pre_subsidy_rent minus housing_assistance. This subtraction creates the dependency on HUD housing programs.">
+      <rect x="28" y="358" width="144" height="40" fill="#d69e2e" stroke="#b7791f"/>
+      <text x="100" y="378" font-size="14">rent</text>
+      <text x="100" y="393" class="subtitle" fill="#fff">Net of subsidy</text>
+    </g>
+
+    <!-- housing_assistance -->
+    <g class="node" data-id="ha" data-info="HUD Section 8 / public housing assistance. Amount depends on HUD annual income, which counts TANF benefits.">
+      <rect x="28" y="258" width="144" height="40" fill="#805ad5" stroke="#6b46c1"/>
+      <text x="100" y="272" font-size="13">housing_assistance</text>
+      <text x="100" y="288" class="subtitle">HUD programs</text>
+    </g>
+
+    <!-- hud_annual_income -->
+    <g class="node" data-id="hud" data-info="HUD's definition of annual income includes market income, Social Security, SSI, and TANF. This is where TANF feeds back in.">
+      <rect x="24" y="158" width="152" height="40" fill="#805ad5" stroke="#6b46c1"/>
+      <text x="100" y="172" font-size="13">hud_annual_income</text>
+      <text x="100" y="188" class="subtitle">Includes TANF</text>
+    </g>
+
+    <!-- Right side: the fix explanation -->
+    <rect x="480" y="240" width="200" height="120" rx="8" fill="#fff5f5" stroke="#e53e3e" stroke-width="1.5"/>
+    <text x="580" y="262" text-anchor="middle" font-size="12" font-weight="700" fill="#e53e3e">Breaking the cycle</text>
+    <text x="490" y="282" font-size="11" fill="#4a5568">
+      <tspan x="490" dy="0">FL TCA now uses</tspan>
+      <tspan x="490" dy="16" font-weight="700">pre_subsidy_rent</tspan>
+      <tspan x="490" dy="16">instead of housing_cost.</tspan>
+      <tspan x="490" dy="22">This skips the rent</tspan>
+      <tspan x="490" dy="16">housing_assistance</tspan>
+      <tspan x="490" dy="16">hud_annual_income chain.</tspan>
+    </text>
+  </svg>
+
+  <div class="legend">
+    <div class="legend-item">
+      <div class="legend-swatch" style="background:#2b6cb0"></div>
+      TANF programs
+    </div>
+    <div class="legend-item">
+      <div class="legend-swatch" style="background:#38a169"></div>
+      FL TCA eligibility
+    </div>
+    <div class="legend-item">
+      <div class="legend-swatch" style="background:#d69e2e"></div>
+      Housing cost
+    </div>
+    <div class="legend-item">
+      <div class="legend-swatch" style="background:#805ad5"></div>
+      HUD programs
+    </div>
+    <div class="legend-item">
+      <div class="legend-swatch" style="background:#e53e3e"></div>
+      Cycle-completing edge
+    </div>
+  </div>
+
+  <div class="tooltip" id="tooltip"></div>
+</div>
+
+<script>
+const tooltip = document.getElementById('tooltip');
+const nodes = document.querySelectorAll('.node');
+const edges = document.querySelectorAll('.edge');
+
+// Edge connections: which edges connect to which nodes
+const edgeMap = {
+  'e-tanf-fltca': ['tanf', 'fltca'],
+  'e-fltca-ps': ['fltca', 'ps'],
+  'e-ps-hc': ['ps', 'hc'],
+  'e-hc-rent': ['hc', 'rent'],
+  'e-rent-ha': ['rent', 'ha'],
+  'e-ha-hud': ['ha', 'hud'],
+  'e-hud-tanf': ['hud', 'tanf'],
+};
+
+let activeNode = null;
+
+nodes.forEach(node => {
+  node.addEventListener('mouseenter', (e) => {
+    const info = node.dataset.info;
+    if (info) {
+      tooltip.textContent = info;
+      tooltip.classList.add('visible');
+    }
+  });
+
+  node.addEventListener('mousemove', (e) => {
+    const container = document.querySelector('.container');
+    const rect = container.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    tooltip.style.left = (x + 15) + 'px';
+    tooltip.style.top = (y - 10) + 'px';
+  });
+
+  node.addEventListener('mouseleave', () => {
+    tooltip.classList.remove('visible');
+  });
+
+  node.addEventListener('click', () => {
+    const id = node.dataset.id;
+    if (activeNode === id) {
+      // Deselect
+      activeNode = null;
+      nodes.forEach(n => n.classList.remove('dimmed', 'highlighted'));
+      edges.forEach(e => e.classList.remove('dimmed', 'highlighted'));
+      document.querySelectorAll('.edge-label').forEach(l => l.classList.remove('dimmed'));
+      return;
+    }
+    activeNode = id;
+    // Find connected edges and nodes
+    const connectedNodes = new Set([id]);
+    const connectedEdges = new Set();
+    Object.entries(edgeMap).forEach(([edgeId, [from, to]]) => {
+      if (from === id || to === id) {
+        connectedEdges.add(edgeId);
+        connectedNodes.add(from);
+        connectedNodes.add(to);
+      }
+    });
+    nodes.forEach(n => {
+      n.classList.toggle('dimmed', !connectedNodes.has(n.dataset.id));
+      n.classList.toggle('highlighted', connectedNodes.has(n.dataset.id));
+    });
+    edges.forEach(e => {
+      e.classList.toggle('dimmed', !connectedEdges.has(e.id));
+      e.classList.toggle('highlighted', connectedEdges.has(e.id));
+    });
+  });
+});
+
+// Click on background to deselect
+document.querySelector('svg').addEventListener('click', (e) => {
+  if (!e.target.closest('.node')) {
+    activeNode = null;
+    nodes.forEach(n => n.classList.remove('dimmed', 'highlighted'));
+    edges.forEach(e => e.classList.remove('dimmed', 'highlighted'));
+  }
+});
+</script>
+</body>
+</html>

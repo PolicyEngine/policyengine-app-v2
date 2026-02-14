@@ -1,5 +1,14 @@
 [
   {
+    "title": "Circular dependencies in benefit modeling: a case study from Florida TANF",
+    "description": "When Florida's TANF program depends on housing costs that depend on HUD income that depends on TANF, microsimulation models hit a wall. Here's how we fixed it.",
+    "date": "2026-02-14",
+    "tags": ["us", "us-fl", "technical"],
+    "authors": ["max-ghenis"],
+    "filename": "tanf-circular-dependency.md",
+    "image": "tanf-circular-dependency.svg"
+  },
+  {
     "title": "Analysis of South Carolina H.3492: Making the state EITC partially refundable",
     "description": "PolicyEngine projects the bill would lower state revenues by $402 million while reducing child poverty by 5.4% in 2026.",
     "date": "2026-02-04",

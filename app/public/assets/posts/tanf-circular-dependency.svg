@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" fill="none">
+  <rect width="1200" height="630" fill="#1a202c"/>
+
+  <!-- Circular arrow path -->
+  <circle cx="600" cy="315" r="180" stroke="#319795" stroke-width="3" stroke-dasharray="12 6" fill="none" opacity="0.3"/>
+  <circle cx="600" cy="315" r="180" stroke="#319795" stroke-width="3" stroke-dasharray="12 6" fill="none" opacity="0.6">
+    <animateTransform attributeName="transform" type="rotate" from="0 600 315" to="360 600 315" dur="20s" repeatCount="indefinite"/>
+  </circle>
+
+  <!-- Nodes on the circle -->
+  <!-- tanf (top) -->
+  <rect x="530" y="105" width="140" height="44" rx="8" fill="#2b6cb0"/>
+  <text x="600" y="132" text-anchor="middle" fill="white" font-family="system-ui" font-size="18" font-weight="600">tanf</text>
+
+  <!-- fl_tca (right) -->
+  <rect x="718" y="293" width="140" height="44" rx="8" fill="#2b6cb0"/>
+  <text x="788" y="320" text-anchor="middle" fill="white" font-family="system-ui" font-size="18" font-weight="600">fl_tca</text>
+
+  <!-- housing_cost (bottom) -->
+  <rect x="530" y="481" width="140" height="44" rx="8" fill="#d69e2e"/>
+  <text x="600" y="508" text-anchor="middle" fill="white" font-family="system-ui" font-size="16" font-weight="600">housing_cost</text>
+
+  <!-- hud_annual_income (left) -->
+  <rect x="310" y="293" width="172" height="44" rx="8" fill="#805ad5"/>
+  <text x="396" y="320" text-anchor="middle" fill="white" font-family="system-ui" font-size="15" font-weight="600">hud_annual_income</text>
+
+  <!-- Connecting arrows -->
+  <!-- tanf -> fl_tca -->
+  <path d="M 670 140 Q 750 200 745 293" stroke="#718096" stroke-width="2.5" marker-end="url(#arrow-w)"/>
+  <!-- fl_tca -> housing_cost -->
+  <path d="M 745 337 Q 750 430 670 490" stroke="#718096" stroke-width="2.5" marker-end="url(#arrow-w)"/>
+  <!-- housing_cost -> hud_annual_income -->
+  <path d="M 530 500 Q 450 430 482 337" stroke="#718096" stroke-width="2.5" marker-end="url(#arrow-w)"/>
+  <!-- hud_annual_income -> tanf (RED - cycle completing) -->
+  <path d="M 420 293 Q 450 200 530 145" stroke="#e53e3e" stroke-width="3" marker-end="url(#arrow-r)"/>
+
+  <!-- Break indicator -->
+  <text x="600" y="315" text-anchor="middle" fill="#e53e3e" font-family="system-ui" font-size="48" font-weight="700" opacity="0.2">CYCLE</text>
+
+  <defs>
+    <marker id="arrow-w" viewBox="0 0 10 7" refX="10" refY="3.5" markerWidth="10" markerHeight="7" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#718096"/>
+    </marker>
+    <marker id="arrow-r" viewBox="0 0 10 7" refX="10" refY="3.5" markerWidth="10" markerHeight="7" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#e53e3e"/>
+    </marker>
+  </defs>
+</svg>
