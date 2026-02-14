@@ -26,6 +26,7 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { ComposableMap, Geographies, Geography, ZoomableGroup } from 'react-simple-maps';
 import { Box, Center, Loader, Stack, Text } from '@mantine/core';
+import { ChartWatermark } from '@/components/charts';
 import { colors, spacing } from '@/designTokens';
 import type { GeoJSONFeatureCollection, USDistrictChoroplethMapProps } from './types';
 import {
@@ -492,6 +493,10 @@ export function USDistrictChoroplethMap({
           <div style={{ color: colors.gray[600] }}>{tooltip.value}</div>
         </div>
       )}
+      {/* PolicyEngine logo watermark */}
+      <div style={{ padding: `${spacing.xs}px ${spacing.sm}px` }}>
+        <ChartWatermark />
+      </div>
     </Box>
   );
 }

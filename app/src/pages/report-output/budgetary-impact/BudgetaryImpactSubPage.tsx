@@ -30,10 +30,10 @@ interface Props {
 
 interface WaterfallDatum {
   name: string;
-  /** Invisible bar base (transparent, stacks below visible) */
-  invisible: number;
-  /** Visible bar height (always positive) */
-  visible: number;
+  /** Bottom of the visible bar (Y-axis data value) */
+  barBottom: number;
+  /** Top of the visible bar (Y-axis data value) */
+  barTop: number;
   /** Actual value (signed) for labels/tooltips */
   value: number;
   /** Pre-formatted label for display on bar */
@@ -60,14 +60,14 @@ function WaterfallTooltip({ active, payload }: any) {
 }
 
 /**
- * Custom bar label that renders the formatted value inside/above the bar
+ * Custom bar label that renders the formatted value inside the visible bar.
+ * Receives y/height for the visible bar segment from Recharts stacking.
  */
 function WaterfallBarLabel({ x, y, width, height, index, data }: any) {
   const entry: WaterfallDatum | undefined = data?.[index];
   if (!entry || x === undefined || y === undefined || width === undefined) {
     return null;
   }
-  // Place label in the center of the visible bar
   const labelY = y + height / 2;
   return (
     <text
@@ -82,6 +82,23 @@ function WaterfallBarLabel({ x, y, width, height, index, data }: any) {
       {entry.label}
     </text>
   );
+}
+
+/**
+ * Compute the Y-axis domain for the waterfall chart, ensuring it includes
+ * the full range of bar positions (both barBottom and barTop of every entry)
+ * plus a small padding for visual breathing room.
+ */
+function getWaterfallDomain(chartData: WaterfallDatum[]): [number, number] {
+  let min = 0;
+  let max = 0;
+  for (const d of chartData) {
+    min = Math.min(min, d.barBottom, d.barTop);
+    max = Math.max(max, d.barBottom, d.barTop);
+  }
+  // Add 10% padding so bars don't touch the axis edges
+  const pad = (max - min) * 0.1 || 0.1;
+  return [min - pad, max + pad];
 }
 
 export default function BudgetaryImpactSubPage({ output }: Props) {
@@ -169,8 +186,17 @@ export default function BudgetaryImpactSubPage({ output }: Props) {
     return `This reform would ${signTerm} ${term2}${regionPhrase}`;
   };
 
-  // Build waterfall chart data
-  // Each bar has an invisible base + visible portion
+  // Build waterfall chart data using the stacked-bar pattern.
+  // Each datum has:
+  //   invisible: transparent base height (always >= 0)
+  //   visible:   coloured bar height   (always >= 0)
+  // The two are rendered as stacked bars so the visible portion sits at the
+  // correct position. For negative values, we set invisible to 0 and use a
+  // separate "negInvisible" that goes below zero, ensuring stacking is clean.
+  //
+  // Positions:
+  //   barBottom = bottom of the visible bar (data-space Y value)
+  //   barTop    = top of the visible bar
   const chartData: WaterfallDatum[] = [];
   let runningTotal = 0;
 
@@ -179,13 +205,18 @@ export default function BudgetaryImpactSubPage({ output }: Props) {
     const value = values[i];
     const isPositive = value >= 0;
 
-    let invisible: number;
+    let barBottom: number;
+    let barTop: number;
+
     if (isTotal) {
-      // Total bar starts from zero
-      invisible = isPositive ? 0 : value;
+      barBottom = Math.min(0, value);
+      barTop = Math.max(0, value);
+    } else if (isPositive) {
+      barBottom = runningTotal;
+      barTop = runningTotal + value;
     } else {
-      // Relative bars start from running total
-      invisible = isPositive ? runningTotal : runningTotal + value;
+      barBottom = runningTotal + value;
+      barTop = runningTotal;
     }
 
     const fill = isTotal
@@ -198,8 +229,8 @@ export default function BudgetaryImpactSubPage({ output }: Props) {
 
     chartData.push({
       name: labels[i],
-      invisible,
-      visible: Math.abs(value),
+      barBottom,
+      barTop,
       value,
       label: formatCur(value * 1e9),
       hoverText: hoverMessage(labels[i], value),
@@ -212,16 +243,26 @@ export default function BudgetaryImpactSubPage({ output }: Props) {
     }
   }
 
+  // Compute explicit Y-axis domain so Recharts includes the full bar range
+  const yDomain = getWaterfallDomain(chartData);
   const symbol = currencySymbol(countryId);
+
+  // Build Recharts-compatible data with invisible/visible keys
+  const rechartsData = chartData.map((d) => ({
+    ...d,
+    invisible: d.barBottom,
+    visible: d.barTop - d.barBottom,
+  }));
 
   return (
     <ChartContainer title={getChartTitle()} onDownloadCsv={handleDownloadCsv}>
       <Stack gap={spacing.sm}>
         <ResponsiveContainer width="100%" height={chartHeight}>
-          <BarChart data={chartData} margin={{ top: 20, right: 20, bottom: 30, left: 20 }}>
+          <BarChart data={rechartsData} margin={{ top: 20, right: 20, bottom: 30, left: 20 }}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} />
             <XAxis dataKey="name" tick={RECHARTS_FONT_STYLE} />
             <YAxis
+              domain={yDomain}
               tick={RECHARTS_FONT_STYLE}
               tickFormatter={(v: number) => `${symbol}${v.toFixed(1)}`}
             >
@@ -233,12 +274,13 @@ export default function BudgetaryImpactSubPage({ output }: Props) {
               />
             </YAxis>
             <Tooltip content={<WaterfallTooltip />} />
-            {/* Invisible base bar (transparent) */}
+            {/* Invisible base bar (transparent, no tooltip) */}
             <Bar
               dataKey="invisible"
               stackId="waterfall"
               fill="transparent"
               isAnimationActive={false}
+              tooltipType="none"
             />
             {/* Visible bar with per-cell coloring */}
             <Bar
