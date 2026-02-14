@@ -31,7 +31,6 @@ import { getClampedChartHeight, RECHARTS_FONT_STYLE } from '@/utils/chartUtils';
 import { currencySymbol } from '@/utils/formatters';
 import { getValueFromHousehold } from '@/utils/householdValues';
 import LoadingPage from '../LoadingPage';
-import * as styles from './mtrChart.css';
 
 interface Props {
   baseline: Household;
@@ -375,7 +374,7 @@ export default function MarginalTaxRatesSubPage({
         </Radio.Group>
       )}
 
-      <div className={styles.chartWrapper}>
+      <div style={{ width: '100%', position: 'relative' }}>
         {renderChart()}
         <ChartWatermark />
       </div>

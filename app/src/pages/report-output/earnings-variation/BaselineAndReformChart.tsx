@@ -24,7 +24,6 @@ import type { Household } from '@/types/ingredients/Household';
 import { getClampedChartHeight, RECHARTS_FONT_STYLE } from '@/utils/chartUtils';
 import { currencySymbol } from '@/utils/formatters';
 import { getValueFromHousehold } from '@/utils/householdValues';
-import * as styles from './earningsCharts.css';
 
 interface Props {
   baseline: Household;
@@ -287,7 +286,7 @@ export default function BaselineAndReformChart({
         </Group>
       </Radio.Group>
 
-      <div className={styles.chartWrapper}>
+      <div style={{ width: '100%', position: 'relative' }}>
         {renderChart()}
         <ChartWatermark />
       </div>

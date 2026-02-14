@@ -20,7 +20,6 @@ import type { Household } from '@/types/ingredients/Household';
 import { getClampedChartHeight, RECHARTS_FONT_STYLE } from '@/utils/chartUtils';
 import { currencySymbol } from '@/utils/formatters';
 import { getValueFromHousehold } from '@/utils/householdValues';
-import * as styles from './earningsCharts.css';
 
 interface Props {
   baseline: Household;
@@ -106,7 +105,7 @@ export default function BaselineOnlyChart({
   }));
 
   return (
-    <div className={styles.chartWrapper}>
+    <div style={{ width: '100%', position: 'relative' }}>
       <ResponsiveContainer width="100%" height={chartHeight}>
         <LineChart data={chartData} margin={{ top: 20, right: 20, bottom: 80, left: 80 }}>
           <CartesianGrid strokeDasharray="3 3" />
