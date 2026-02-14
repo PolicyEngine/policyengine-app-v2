@@ -152,3 +152,40 @@ export function getChartLogoImage(options?: ChartLogoOptions) {
     ...options,
   };
 }
+
+// ---------------------------------------------------------------------------
+// Recharts utilities
+// ---------------------------------------------------------------------------
+
+/**
+ * Default margin for Recharts charts
+ */
+export const DEFAULT_RECHARTS_MARGIN = {
+  top: 5,
+  right: 20,
+  bottom: 60,
+  left: 20,
+};
+
+/**
+ * Font style applied to Recharts axis ticks and labels
+ */
+export const RECHARTS_FONT_STYLE = {
+  fontFamily: typography.fontFamily.primary,
+  fontSize: 12,
+} as const;
+
+/**
+ * Logo watermark image path for Recharts charts
+ */
+export const RECHARTS_LOGO_SRC = '/assets/logos/policyengine/teal.png';
+
+/**
+ * Default watermark size and opacity for Recharts charts
+ */
+export const RECHARTS_WATERMARK = {
+  src: RECHARTS_LOGO_SRC,
+  width: 80,
+  height: 20,
+  opacity: 0.8,
+} as const;

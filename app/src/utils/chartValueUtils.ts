@@ -157,3 +157,91 @@ export function getPlotlyAxisFormat(
     range: [minValue, maxValue],
   };
 }
+
+// ---------------------------------------------------------------------------
+// Recharts formatters
+// ---------------------------------------------------------------------------
+
+/**
+ * Returns a tick formatter function for Recharts axes.
+ *
+ * @param unit - The unit type (e.g., 'currency-USD', '/1', 'bool')
+ * @param options - Additional formatting options
+ * @returns A function that formats tick values as strings
+ */
+export function getRechartsTickFormatter(
+  unit: string,
+  options: { decimalPlaces?: number; compact?: boolean } = {}
+): (value: number) => string {
+  const { decimalPlaces = 1, compact = false } = options;
+
+  if (unit === '/1') {
+    return (value: number) => `${(value * 100).toFixed(decimalPlaces)}%`;
+  }
+
+  const currencyUnits = ['currency-USD', 'currency_USD', 'USD'];
+  const gbpUnits = ['currency-GBP', 'currency_GBP', 'GBP'];
+
+  if (currencyUnits.includes(unit)) {
+    return (value: number) => {
+      if (compact) {
+        return `$${compactNumber(value)}`;
+      }
+      return `$${value.toLocaleString('en-US', { maximumFractionDigits: decimalPlaces })}`;
+    };
+  }
+
+  if (gbpUnits.includes(unit)) {
+    return (value: number) => {
+      if (compact) {
+        return `£${compactNumber(value)}`;
+      }
+      return `£${value.toLocaleString('en-GB', { maximumFractionDigits: decimalPlaces })}`;
+    };
+  }
+
+  if (unit === 'bool' || unit === 'abolition') {
+    return (value: number) => (value ? 'True' : 'False');
+  }
+
+  // Default numeric
+  return (value: number) => value.toLocaleString('en-US', { maximumFractionDigits: decimalPlaces });
+}
+
+/**
+ * Compact number display for large values (1K, 1M, 1B)
+ */
+function compactNumber(value: number): string {
+  const abs = Math.abs(value);
+  const sign = value < 0 ? '-' : '';
+  if (abs >= 1_000_000_000) {
+    return `${sign}${(abs / 1_000_000_000).toFixed(1)}B`;
+  }
+  if (abs >= 1_000_000) {
+    return `${sign}${(abs / 1_000_000).toFixed(1)}M`;
+  }
+  if (abs >= 1_000) {
+    return `${sign}${(abs / 1_000).toFixed(1)}K`;
+  }
+  return `${sign}${abs.toFixed(0)}`;
+}
+
+/**
+ * Returns a percent tick formatter for Recharts with configurable precision.
+ *
+ * @param precision - Number of decimal places
+ * @param signed - Whether to include +/- sign
+ * @returns Formatter function
+ */
+export function rechartsPercentFormatter(
+  precision: number = 1,
+  signed: boolean = false
+): (value: number) => string {
+  return (value: number) => {
+    const pct = (value * 100).toFixed(precision);
+    if (signed && value > 0) {
+      return `+${pct}%`;
+    }
+    return `${pct}%`;
+  };
+}

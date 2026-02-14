@@ -1,22 +1,16 @@
-import type { Layout } from 'plotly.js';
-import Plot from 'react-plotly.js';
 import { useSelector } from 'react-redux';
+import { Bar, BarChart, Label, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { Stack, Text } from '@mantine/core';
 import { useMediaQuery, useViewportSize } from '@mantine/hooks';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { ChartContainer } from '@/components/ChartContainer';
+import { TOOLTIP_STYLE } from '@/components/charts';
 import { colors } from '@/designTokens/colors';
 import { spacing } from '@/designTokens/spacing';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import type { RootState } from '@/store';
-import {
-  DEFAULT_CHART_CONFIG,
-  DEFAULT_CHART_LAYOUT,
-  downloadCsv,
-  getChartLogoImage,
-  getClampedChartHeight,
-} from '@/utils/chartUtils';
-import { formatPercent, localeCode, ordinal } from '@/utils/formatters';
+import { downloadCsv, getClampedChartHeight, RECHARTS_FONT_STYLE } from '@/utils/chartUtils';
+import { formatPercent, ordinal } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
 
 interface Props {
@@ -56,6 +50,37 @@ const LEGEND_TEXT_MAP: Record<string, string> = {
   'Lose more than 5%': 'Loss more than 5%',
 };
 
+function WinnersLosersTooltip({ active, payload, label, countryId }: any) {
+  if (!active || !payload?.length) {
+    return null;
+  }
+  const decileLabel = label === 'All' ? 'All households' : `Decile ${label}`;
+  return (
+    <div style={{ ...TOOLTIP_STYLE, maxWidth: 350 }}>
+      <p style={{ fontWeight: 600, margin: 0 }}>{decileLabel}</p>
+      {payload.map((p: any) => {
+        const pct = formatPercent(p.value, countryId, {
+          minimumFractionDigits: 1,
+          maximumFractionDigits: 1,
+        });
+        const term1 =
+          label === 'All'
+            ? 'Of all households,'
+            : `Of households in the ${ordinal(label as any)} decile,`;
+        const msg = `${term1} this reform would cause ${pct} of people to ${HOVER_TEXT_MAP[p.dataKey]} their net income.`;
+        return (
+          <p key={p.dataKey} style={{ margin: '2px 0', fontSize: 13 }}>
+            <span style={{ color: p.fill }}>{LEGEND_TEXT_MAP[p.dataKey]}</span>:{' '}
+            {(p.value * 100).toFixed(0)}%
+            <br />
+            <span style={{ fontSize: 11, color: '#666' }}>{msg}</span>
+          </p>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function WinnersLosersIncomeDecileSubPage({ output }: Props) {
   const mobile = useMediaQuery('(max-width: 768px)');
   const countryId = useCurrentCountry();
@@ -68,39 +93,26 @@ export default function WinnersLosersIncomeDecileSubPage({ output }: Props) {
   const all = output.intra_decile.all;
   const decileNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
-  // Generate hover message using wordwrap utility pattern
-  const wordWrap = (text: string, width: number = 50): string => {
-    // Simple word wrap - split by spaces and join with <br> when line gets too long
-    const words = text.split(' ');
-    const lines: string[] = [];
-    let currentLine = '';
+  // Transform data for Recharts
+  const decileData = decileNumbers.map((decile) => ({
+    name: decile.toString(),
+    'Gain more than 5%': deciles['Gain more than 5%'][decile - 1],
+    'Gain less than 5%': deciles['Gain less than 5%'][decile - 1],
+    'No change': deciles['No change'][decile - 1],
+    'Lose less than 5%': deciles['Lose less than 5%'][decile - 1],
+    'Lose more than 5%': deciles['Lose more than 5%'][decile - 1],
+  }));
 
-    words.forEach((word) => {
-      if (`${currentLine} ${word}`.length > width) {
-        if (currentLine) {
-          lines.push(currentLine);
-        }
-        currentLine = word;
-      } else {
-        currentLine = currentLine ? `${currentLine} ${word}` : word;
-      }
-    });
-    if (currentLine) {
-      lines.push(currentLine);
-    }
-    return lines.join('<br>');
-  };
-
-  const hoverMessage = (x: number, y: string, category: string) => {
-    const term1 =
-      y === 'All' ? 'Of all households,' : `Of households in the ${ordinal(y as any)} decile,`;
-    const term2 = formatPercent(x, countryId, {
-      minimumFractionDigits: 1,
-      maximumFractionDigits: 1,
-    });
-    const msg = `${term1} this reform would cause ${term2} of people to ${HOVER_TEXT_MAP[category]} their net income.`;
-    return wordWrap(msg, 50);
-  };
+  const allData = [
+    {
+      name: 'All',
+      'Gain more than 5%': all['Gain more than 5%'],
+      'Gain less than 5%': all['Gain less than 5%'],
+      'No change': all['No change'],
+      'Lose less than 5%': all['Lose less than 5%'],
+      'Lose more than 5%': all['Lose more than 5%'],
+    },
+  ];
 
   // Generate chart title
   const getChartTitle = () => {
@@ -157,101 +169,6 @@ export default function WinnersLosersIncomeDecileSubPage({ output }: Props) {
     downloadCsv(data, 'winners-losers-income-decile.csv');
   };
 
-  // Generate trace for a specific type and category
-  const createTrace = (type: 'all' | 'decile', category: string) => {
-    const hoverTitle = (y: string | number) => (y === 'All' ? 'All households' : `Decile ${y}`);
-
-    const xArray =
-      type === 'all'
-        ? [all[category as keyof typeof all]]
-        : deciles[category as keyof typeof deciles];
-    const yArray = type === 'all' ? ['All'] : decileNumbers;
-
-    return {
-      x: xArray,
-      y: yArray,
-      xaxis: type === 'all' ? 'x' : 'x2',
-      yaxis: type === 'all' ? 'y' : 'y2',
-      type: 'bar' as const,
-      name: LEGEND_TEXT_MAP[category],
-      legendgroup: category,
-      showlegend: type === 'decile',
-      marker: {
-        color: COLOR_MAP[category],
-      },
-      orientation: 'h' as const,
-      text: xArray.map((value: number) => `${(value * 100).toFixed(0)}%`) as any,
-      textposition: 'inside' as const,
-      textangle: 0,
-      customdata: xArray.map((x: number, i: number) => ({
-        title: hoverTitle(yArray[i]),
-        msg: hoverMessage(x, yArray[i].toString(), category),
-      })) as any,
-      hovertemplate: '<b>%{customdata.title}</b><br><br>%{customdata.msg}<extra></extra>',
-    };
-  };
-
-  // Generate all traces (cartesian product of types and categories)
-  const chartData = [];
-  for (const type of ['all', 'decile'] as const) {
-    for (const category of CATEGORIES) {
-      chartData.push(createTrace(type, category));
-    }
-  }
-
-  const layout = {
-    ...DEFAULT_CHART_LAYOUT,
-    barmode: 'stack',
-    grid: {
-      rows: 2,
-      columns: 1,
-    },
-    yaxis: {
-      title: { text: '' },
-      tickvals: ['All'],
-      domain: [0.91, 1] as [number, number],
-    },
-    xaxis: {
-      title: { text: '' },
-      tickformat: '.0%',
-      anchor: 'y',
-      matches: 'x2',
-      showgrid: false,
-      showticklabels: false,
-      fixedrange: true,
-    },
-    xaxis2: {
-      title: { text: 'Population share' },
-      tickformat: '.0%',
-      anchor: 'y2',
-      fixedrange: true,
-    },
-    yaxis2: {
-      title: { text: 'Income decile' },
-      tickvals: decileNumbers,
-      anchor: 'x2',
-      domain: [0, 0.85] as [number, number],
-    },
-    showlegend: true,
-    legend: {
-      title: {
-        text: 'Change in income<br />',
-      },
-      tracegroupgap: 10,
-    },
-    uniformtext: {
-      mode: 'hide',
-      minsize: mobile ? 7 : 10,
-    },
-    margin: {
-      t: 0,
-      b: 100,
-      l: 40,
-      r: 0,
-    },
-    images: [getChartLogoImage()],
-  } as Partial<Layout>;
-
   // Description text
   const description = (
     <Text size="sm" c="dimmed">
@@ -263,15 +180,68 @@ export default function WinnersLosersIncomeDecileSubPage({ output }: Props) {
   return (
     <ChartContainer title={getChartTitle()} onDownloadCsv={handleDownloadCsv}>
       <Stack gap={spacing.sm}>
-        <Plot
-          data={chartData}
-          layout={layout}
-          config={{
-            ...DEFAULT_CHART_CONFIG,
-            locale: localeCode(countryId),
-          }}
-          style={{ width: '100%', height: chartHeight }}
-        />
+        <Stack gap={0}>
+          {/* All households - small chart */}
+          <ResponsiveContainer width="100%" height={60}>
+            <BarChart
+              layout="vertical"
+              data={allData}
+              stackOffset="expand"
+              margin={{ top: 5, right: 20, bottom: 0, left: 40 }}
+            >
+              <XAxis type="number" hide />
+              <YAxis type="category" dataKey="name" tick={RECHARTS_FONT_STYLE} width={40} />
+              <Tooltip
+                content={<WinnersLosersTooltip countryId={countryId} />}
+                allowEscapeViewBox={{ x: true, y: true }}
+                offset={20}
+              />
+              {CATEGORIES.map((cat) => (
+                <Bar key={cat} dataKey={cat} stackId="a" fill={COLOR_MAP[cat]} />
+              ))}
+            </BarChart>
+          </ResponsiveContainer>
+
+          {/* Decile breakdown */}
+          <ResponsiveContainer width="100%" height={chartHeight - 80}>
+            <BarChart
+              layout="vertical"
+              data={decileData}
+              stackOffset="expand"
+              margin={{ top: 0, right: 20, bottom: 40, left: 40 }}
+            >
+              <XAxis
+                type="number"
+                tickFormatter={(v: number) => `${(v * 100).toFixed(0)}%`}
+                tick={RECHARTS_FONT_STYLE}
+              >
+                <Label
+                  value="Population share"
+                  position="bottom"
+                  offset={20}
+                  style={RECHARTS_FONT_STYLE}
+                />
+              </XAxis>
+              <YAxis type="category" dataKey="name" tick={RECHARTS_FONT_STYLE} width={40}>
+                <Label
+                  value="Income decile"
+                  angle={-90}
+                  position="insideLeft"
+                  style={{ textAnchor: 'middle', ...RECHARTS_FONT_STYLE }}
+                />
+              </YAxis>
+              <Tooltip
+                content={<WinnersLosersTooltip countryId={countryId} />}
+                allowEscapeViewBox={{ x: true, y: true }}
+                offset={20}
+              />
+              <Legend formatter={(value: string) => LEGEND_TEXT_MAP[value] || value} />
+              {CATEGORIES.map((cat) => (
+                <Bar key={cat} dataKey={cat} stackId="a" fill={COLOR_MAP[cat]} />
+              ))}
+            </BarChart>
+          </ResponsiveContainer>
+        </Stack>
 
         {description}
       </Stack>
