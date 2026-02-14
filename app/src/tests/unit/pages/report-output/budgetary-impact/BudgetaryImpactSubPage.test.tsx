@@ -10,8 +10,18 @@ import {
   MOCK_ZERO_IMPACT,
 } from '@/tests/fixtures/pages/report-output/budgetary-impact/BudgetaryImpactSubPageMocks';
 
-// Mock Plotly
-vi.mock('react-plotly.js', () => ({ default: vi.fn(() => null) }));
+// Mock Recharts to avoid rendering SVG in tests
+vi.mock('recharts', () => ({
+  Bar: vi.fn(() => null),
+  BarChart: vi.fn(({ children }) => children),
+  CartesianGrid: vi.fn(() => null),
+  Cell: vi.fn(() => null),
+  Label: vi.fn(() => null),
+  ResponsiveContainer: vi.fn(({ children }) => children),
+  Tooltip: vi.fn(() => null),
+  XAxis: vi.fn(() => null),
+  YAxis: vi.fn(() => null),
+}));
 
 // Mock hooks
 vi.mock('@/hooks/useCurrentCountry', () => ({
@@ -24,6 +34,8 @@ vi.mock('@/utils/chartUtils', () => ({
   downloadCsv: vi.fn(),
   getChartLogoImage: vi.fn(() => ({})),
   getClampedChartHeight: vi.fn(() => 500),
+  RECHARTS_FONT_STYLE: { fontFamily: 'Inter', fontSize: 12 },
+  RECHARTS_WATERMARK: { src: '/test.png', width: 80, opacity: 0.8 },
 }));
 
 describe('BudgetaryImpactSubPage', () => {

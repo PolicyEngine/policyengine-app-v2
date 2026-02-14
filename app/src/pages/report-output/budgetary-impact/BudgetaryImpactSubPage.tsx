@@ -1,26 +1,87 @@
-import type { Layout } from 'plotly.js';
-import Plot from 'react-plotly.js';
 import { useSelector } from 'react-redux';
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Label,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 import { Stack } from '@mantine/core';
 import { useMediaQuery, useViewportSize } from '@mantine/hooks';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { ChartContainer } from '@/components/ChartContainer';
+import { ChartWatermark, TOOLTIP_STYLE } from '@/components/charts';
 import { colors } from '@/designTokens/colors';
 import { spacing } from '@/designTokens/spacing';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import type { RootState } from '@/store';
 import { absoluteChangeMessage } from '@/utils/chartMessages';
-import {
-  DEFAULT_CHART_CONFIG,
-  downloadCsv,
-  getChartLogoImage,
-  getClampedChartHeight,
-} from '@/utils/chartUtils';
-import { currencySymbol, formatCurrencyAbbr, localeCode } from '@/utils/formatters';
+import { downloadCsv, getClampedChartHeight, RECHARTS_FONT_STYLE } from '@/utils/chartUtils';
+import { currencySymbol, formatCurrencyAbbr } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
 
 interface Props {
   output: SocietyWideReportOutput;
+}
+
+interface WaterfallDatum {
+  name: string;
+  /** Invisible bar base (transparent, stacks below visible) */
+  invisible: number;
+  /** Visible bar height (always positive) */
+  visible: number;
+  /** Actual value (signed) for labels/tooltips */
+  value: number;
+  /** Pre-formatted label for display on bar */
+  label: string;
+  /** Hover text */
+  hoverText: string;
+  /** Whether this is the total bar */
+  isTotal: boolean;
+  /** Fill color for the bar */
+  fill: string;
+}
+
+function WaterfallTooltip({ active, payload }: any) {
+  if (!active || !payload?.[0]) {
+    return null;
+  }
+  const data = payload[0].payload as WaterfallDatum;
+  return (
+    <div style={{ ...TOOLTIP_STYLE, maxWidth: 300 }}>
+      <p style={{ fontWeight: 600, margin: 0 }}>{data.name}</p>
+      <p style={{ margin: '4px 0 0', fontSize: 13, whiteSpace: 'pre-wrap' }}>{data.hoverText}</p>
+    </div>
+  );
+}
+
+/**
+ * Custom bar label that renders the formatted value inside/above the bar
+ */
+function WaterfallBarLabel({ x, y, width, height, index, data }: any) {
+  const entry: WaterfallDatum | undefined = data?.[index];
+  if (!entry || x === undefined || y === undefined || width === undefined) {
+    return null;
+  }
+  // Place label in the center of the visible bar
+  const labelY = y + height / 2;
+  return (
+    <text
+      x={x + width / 2}
+      y={labelY}
+      textAnchor="middle"
+      dominantBaseline="central"
+      fontSize={12}
+      fill="#fff"
+      fontWeight={500}
+    >
+      {entry.label}
+    </text>
+  );
 }
 
 export default function BudgetaryImpactSubPage({ output }: Props) {
@@ -108,77 +169,91 @@ export default function BudgetaryImpactSubPage({ output }: Props) {
     return `This reform would ${signTerm} ${term2}${regionPhrase}`;
   };
 
-  // Chart configuration
-  const chartData = [
-    {
-      x: labels,
-      y: values,
-      type: 'waterfall' as const,
-      orientation: 'v' as const,
-      // 'relative' for all but the last, which is 'total'
-      measure:
-        values.length > 1
-          ? Array(values.length - 1)
-              .fill('relative')
-              .concat(['total'])
-          : undefined,
-      text: values.map((value) => formatCur(value * 1e9)) as any,
-      textposition: 'inside' as const,
-      increasing: { marker: { color: colors.primary[500] } },
-      decreasing: { marker: { color: colors.gray[600] } },
-      totals: {
-        marker: {
-          color: budgetaryImpact < 0 ? colors.gray[600] : colors.primary[500],
-        },
-      },
-      connector: {
-        line: {
-          color: colors.gray[400],
-          width: 2,
-          dash: 'dot' as const,
-        },
-      },
-      customdata: labels.map((x, i) => hoverMessage(x, values[i]).replaceAll('\n', '<br>')) as any,
-      hovertemplate: '<b>%{x}</b><br><br>%{customdata}<extra></extra>',
-    },
-  ];
+  // Build waterfall chart data
+  // Each bar has an invisible base + visible portion
+  const chartData: WaterfallDatum[] = [];
+  let runningTotal = 0;
 
-  const layout = {
-    xaxis: {
-      title: { text: '' },
-      fixedrange: true,
-    },
-    yaxis: {
-      title: { text: 'Budgetary impact (bn)' },
-      tickprefix: currencySymbol(countryId),
-      tickformat: ',.1f',
-      fixedrange: true,
-    },
-    uniformtext: {
-      mode: 'hide' as const,
-      minsize: 12,
-    },
-    margin: {
-      t: 0,
-      b: 100,
-      l: 80,
-      r: 0,
-    },
-    images: [getChartLogoImage()],
-  } as Partial<Layout>;
+  for (let i = 0; i < values.length; i++) {
+    const isTotal = i === values.length - 1 && values.length > 1;
+    const value = values[i];
+    const isPositive = value >= 0;
+
+    let invisible: number;
+    if (isTotal) {
+      // Total bar starts from zero
+      invisible = isPositive ? 0 : value;
+    } else {
+      // Relative bars start from running total
+      invisible = isPositive ? runningTotal : runningTotal + value;
+    }
+
+    const fill = isTotal
+      ? budgetaryImpact < 0
+        ? colors.gray[600]
+        : colors.primary[500]
+      : isPositive
+        ? colors.primary[500]
+        : colors.gray[600];
+
+    chartData.push({
+      name: labels[i],
+      invisible,
+      visible: Math.abs(value),
+      value,
+      label: formatCur(value * 1e9),
+      hoverText: hoverMessage(labels[i], value),
+      isTotal,
+      fill,
+    });
+
+    if (!isTotal) {
+      runningTotal += value;
+    }
+  }
+
+  const symbol = currencySymbol(countryId);
 
   return (
     <ChartContainer title={getChartTitle()} onDownloadCsv={handleDownloadCsv}>
       <Stack gap={spacing.sm}>
-        <Plot
-          data={chartData}
-          layout={layout}
-          config={{
-            ...DEFAULT_CHART_CONFIG,
-            locale: localeCode(countryId),
-          }}
-          style={{ width: '100%', height: chartHeight }}
-        />
+        <ResponsiveContainer width="100%" height={chartHeight}>
+          <BarChart data={chartData} margin={{ top: 20, right: 20, bottom: 30, left: 20 }}>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} />
+            <XAxis dataKey="name" tick={RECHARTS_FONT_STYLE} />
+            <YAxis
+              tick={RECHARTS_FONT_STYLE}
+              tickFormatter={(v: number) => `${symbol}${v.toFixed(1)}`}
+            >
+              <Label
+                value="Budgetary impact (bn)"
+                angle={-90}
+                position="insideLeft"
+                style={{ textAnchor: 'middle', ...RECHARTS_FONT_STYLE }}
+              />
+            </YAxis>
+            <Tooltip content={<WaterfallTooltip />} />
+            {/* Invisible base bar (transparent) */}
+            <Bar
+              dataKey="invisible"
+              stackId="waterfall"
+              fill="transparent"
+              isAnimationActive={false}
+            />
+            {/* Visible bar with per-cell coloring */}
+            <Bar
+              dataKey="visible"
+              stackId="waterfall"
+              isAnimationActive={false}
+              label={<WaterfallBarLabel data={chartData} />}
+            >
+              {chartData.map((entry, index) => (
+                <Cell key={index} fill={entry.fill} />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+        <ChartWatermark />
       </Stack>
     </ChartContainer>
   );
