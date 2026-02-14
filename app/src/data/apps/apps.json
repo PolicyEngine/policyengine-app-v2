@@ -1,6 +1,19 @@
 [
   {
     "type": "iframe",
+    "slug": "us-marriage-incentive-calculator",
+    "title": "Marriage incentive calculator",
+    "description": "Interactive calculator showing how marriage affects taxes, benefits, and net income for US households across all states",
+    "source": "https://policyengine.github.io/us-marriage-incentive/",
+    "tags": ["us", "featured", "policy", "interactives"],
+    "countryId": "us",
+    "displayWithResearch": true,
+    "image": "us-marriage-incentive-calculator.png",
+    "date": "2026-02-13 12:00:00",
+    "authors": ["daphne-hansell"]
+  },
+  {
+    "type": "iframe",
     "slug": "state-legislative-tracker",
     "title": "2026 state legislative tracker",
     "description": "Interactive map of 2026 state legislative sessions and tax policy changes, with links to PolicyEngine analysis",

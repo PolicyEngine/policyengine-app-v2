@@ -1,4 +1,4 @@
-- bump: patch
+- bump: minor
   changes:
     added:
-      - Add salary sacrifice cap analysis tool to apps listing
+      - Add US marriage incentive calculator to apps listing
