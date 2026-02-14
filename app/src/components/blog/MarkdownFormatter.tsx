@@ -18,7 +18,6 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import ReactMarkdown, { type Components } from 'react-markdown';
-import Plot from 'react-plotly.js';
 import rehypeRaw from 'rehype-raw';
 import remarkGfm from 'remark-gfm';
 import type { MarkdownFormatterProps } from '@/types/blog';
@@ -30,6 +29,7 @@ import {
   blogSpacing,
   blogTypography,
 } from './blogStyles';
+import { LazyPlot } from './LazyPlot';
 import { useDisplayCategory } from './useDisplayCategory';
 
 // Import Google Fonts for Roboto Serif
@@ -229,7 +229,7 @@ export function PlotlyChartCode({
         marginBottom: 20,
       }}
     >
-      <Plot
+      <LazyPlot
         data={plotlyData.data}
         layout={{
           ...plotlyData.layout,
