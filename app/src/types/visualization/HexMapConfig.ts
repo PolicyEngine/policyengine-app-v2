@@ -1,5 +1,3 @@
-import type { Layout } from 'plotly.js';
-
 /**
  * Color scale configuration for hexagonal maps
  */
@@ -42,9 +40,6 @@ export interface HexMapConfig {
    * Scale factor for coordinates to control spacing between hexagons.
    * Values < 1 bring hexagons closer together, values > 1 spread them apart.
    * Default is 1 (no scaling).
-   *
-   * @example
-   * coordinateScale: 0.5 // Hexagons will be twice as close together
    */
   coordinateScale?: number;
 
@@ -56,7 +51,4 @@ export interface HexMapConfig {
 
   /** Function to format hover text values */
   formatValue?: (value: number) => string;
-
-  /** Additional layout overrides */
-  layoutOverrides?: Partial<Layout>;
 }
