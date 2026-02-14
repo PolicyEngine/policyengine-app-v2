@@ -10,6 +10,7 @@ import {
   YAxis,
 } from 'recharts';
 import { Stack, Text } from '@mantine/core';
+import { TOOLTIP_STYLE } from '@/components/charts';
 import { CHART_COLORS } from '@/constants/chartColors';
 import { useChartWidth, useIsMobile, useWindowHeight } from '@/hooks/useChartDimensions';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
@@ -72,14 +73,7 @@ function HistoricalTooltip({ active, payload, label, param }: any) {
   const date = new Date(label);
   const dateStr = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
   return (
-    <div
-      style={{
-        background: '#fff',
-        border: '1px solid #E2E8F0',
-        borderRadius: 6,
-        padding: '8px 12px',
-      }}
-    >
+    <div style={TOOLTIP_STYLE}>
       <p style={{ fontWeight: 600, margin: 0 }}>{dateStr}</p>
       {payload.map((p: any) => (
         <p key={p.name} style={{ margin: '2px 0', fontSize: 13, color: p.stroke }}>

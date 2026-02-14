@@ -4,6 +4,7 @@ import { Stack, Text } from '@mantine/core';
 import { useMediaQuery, useViewportSize } from '@mantine/hooks';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { ChartContainer } from '@/components/ChartContainer';
+import { TOOLTIP_STYLE } from '@/components/charts';
 import { colors } from '@/designTokens/colors';
 import { spacing } from '@/designTokens/spacing';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
@@ -55,15 +56,7 @@ function WinnersLosersTooltip({ active, payload, label, countryId }: any) {
   }
   const decileLabel = label === 'All' ? 'All households' : `Decile ${label}`;
   return (
-    <div
-      style={{
-        background: '#fff',
-        border: '1px solid #E2E8F0',
-        borderRadius: 6,
-        padding: '8px 12px',
-        maxWidth: 350,
-      }}
-    >
+    <div style={{ ...TOOLTIP_STYLE, maxWidth: 350 }}>
       <p style={{ fontWeight: 600, margin: 0 }}>{decileLabel}</p>
       {payload.map((p: any) => {
         const pct = formatPercent(p.value, countryId, {

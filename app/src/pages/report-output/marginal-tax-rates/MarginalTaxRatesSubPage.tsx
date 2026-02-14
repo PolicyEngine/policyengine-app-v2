@@ -17,6 +17,7 @@ import {
 import { Group, Radio, Stack, Text } from '@mantine/core';
 import { useMediaQuery, useViewportSize } from '@mantine/hooks';
 import { PolicyAdapter } from '@/adapters/PolicyAdapter';
+import { ChartWatermark, TOOLTIP_STYLE } from '@/components/charts';
 import { colors, spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useHouseholdVariation } from '@/hooks/useHouseholdVariation';
@@ -26,7 +27,7 @@ import type { Household } from '@/types/ingredients/Household';
 import type { Policy } from '@/types/ingredients/Policy';
 import type { Simulation } from '@/types/ingredients/Simulation';
 import type { UserPolicy } from '@/types/ingredients/UserPolicy';
-import { getClampedChartHeight, RECHARTS_FONT_STYLE, RECHARTS_WATERMARK } from '@/utils/chartUtils';
+import { getClampedChartHeight, RECHARTS_FONT_STYLE } from '@/utils/chartUtils';
 import { currencySymbol } from '@/utils/formatters';
 import { getValueFromHousehold } from '@/utils/householdValues';
 import LoadingPage from '../LoadingPage';
@@ -48,14 +49,7 @@ function MTRTooltip({ active, payload, label, symbol }: any) {
     return null;
   }
   return (
-    <div
-      style={{
-        background: '#fff',
-        border: '1px solid #E2E8F0',
-        borderRadius: 6,
-        padding: '8px 12px',
-      }}
-    >
+    <div style={TOOLTIP_STYLE}>
       <p style={{ fontWeight: 600, margin: 0 }}>
         Earnings: {symbol}
         {Number(label).toLocaleString()}
@@ -383,12 +377,7 @@ export default function MarginalTaxRatesSubPage({
 
       <div className={styles.chartWrapper}>
         {renderChart()}
-        <img
-          src={RECHARTS_WATERMARK.src}
-          alt=""
-          className={styles.watermark}
-          style={{ width: RECHARTS_WATERMARK.width }}
-        />
+        <ChartWatermark />
       </div>
     </Stack>
   );

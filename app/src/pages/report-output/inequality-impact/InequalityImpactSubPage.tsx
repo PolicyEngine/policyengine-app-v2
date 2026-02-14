@@ -14,17 +14,13 @@ import { Stack, Text } from '@mantine/core';
 import { useMediaQuery, useViewportSize } from '@mantine/hooks';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { ChartContainer } from '@/components/ChartContainer';
+import { ChartWatermark, ImpactBarLabel, ImpactTooltip } from '@/components/charts';
 import { colors } from '@/designTokens/colors';
 import { spacing } from '@/designTokens/spacing';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import type { RootState } from '@/store';
 import { relativeChangeMessage } from '@/utils/chartMessages';
-import {
-  downloadCsv,
-  getClampedChartHeight,
-  RECHARTS_FONT_STYLE,
-  RECHARTS_WATERMARK,
-} from '@/utils/chartUtils';
+import { downloadCsv, getClampedChartHeight, RECHARTS_FONT_STYLE } from '@/utils/chartUtils';
 import { formatPercent, precision } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
 
@@ -130,45 +126,6 @@ export default function InequalityImpactSubPage({ output }: Props) {
     hoverText: hoverMessage(label),
   }));
 
-  function BarLabel({ x, y, width, value, index }: any) {
-    const entry = chartData[index];
-    if (!entry) {
-      return null;
-    }
-    return (
-      <text
-        x={x + width / 2}
-        y={value >= 0 ? y - 4 : y + 16}
-        textAnchor="middle"
-        fontSize={12}
-        fill={colors.gray[700]}
-      >
-        {entry.label}
-      </text>
-    );
-  }
-
-  function CustomTooltip({ active, payload }: any) {
-    if (!active || !payload?.[0]) {
-      return null;
-    }
-    const data = payload[0].payload;
-    return (
-      <div
-        style={{
-          background: '#fff',
-          border: '1px solid #E2E8F0',
-          borderRadius: 6,
-          padding: '8px 12px',
-          maxWidth: 300,
-        }}
-      >
-        <p style={{ fontWeight: 600, margin: 0 }}>{data.name}</p>
-        <p style={{ margin: '4px 0 0', fontSize: 13, whiteSpace: 'pre-wrap' }}>{data.hoverText}</p>
-      </div>
-    );
-  }
-
   return (
     <ChartContainer title={getChartTitle()} onDownloadCsv={handleDownloadCsv}>
       <Stack gap={spacing.sm}>
@@ -187,24 +144,15 @@ export default function InequalityImpactSubPage({ output }: Props) {
                 style={{ textAnchor: 'middle', ...RECHARTS_FONT_STYLE }}
               />
             </YAxis>
-            <Tooltip content={<CustomTooltip />} />
-            <Bar dataKey="value" label={<BarLabel />}>
+            <Tooltip content={<ImpactTooltip />} />
+            <Bar dataKey="value" label={<ImpactBarLabel data={chartData} />}>
               {chartData.map((entry, index) => (
                 <Cell key={index} fill={entry.value < 0 ? colors.primary[500] : colors.gray[600]} />
               ))}
             </Bar>
           </BarChart>
         </ResponsiveContainer>
-        <img
-          src={RECHARTS_WATERMARK.src}
-          alt=""
-          style={{
-            display: 'block',
-            marginLeft: 'auto',
-            width: RECHARTS_WATERMARK.width,
-            opacity: RECHARTS_WATERMARK.opacity,
-          }}
-        />
+        <ChartWatermark />
 
         <Text size="sm" c="dimmed">
           PolicyEngine reports income inequality based on the distribution of net income after taxes

@@ -164,7 +164,7 @@ export default function BudgetaryImpactByProgramSubPage({ output }: Props) {
         },
       },
       customdata: labelsWithTotal.map((x, i) =>
-        hoverMessage(x, valuesWithTotal[i]).replaceAll('\n', '<br>'),
+        hoverMessage(x, valuesWithTotal[i]).replaceAll('\n', '<br>')
       ) as any,
       hovertemplate: '<b>%{x}</b><br><br>%{customdata}<extra></extra>',
     },
