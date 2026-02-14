@@ -8,11 +8,11 @@ import { apps } from '@/data/apps/appTransformers';
 export function CountryAppGuard() {
   const { countryId, slug } = useParams<{ countryId: string; slug: string }>();
 
-  // Match by slug + countryId (some apps share a slug across countries)
+  // Match by slug+countryId first, then fall back to slug-only
   const app = apps.find((a) => a.slug === slug && a.countryId === countryId);
 
-  // If no match for this country, try any country and redirect
   if (!app) {
+    // Try to find any app with this slug and redirect to its country
     const fallback = apps.find((a) => a.slug === slug);
     if (!fallback) {
       return <Outlet />;

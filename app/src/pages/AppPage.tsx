@@ -44,9 +44,13 @@ export default function AppPage() {
   }
 
   // Forward hash fragment from the browser URL to the iframe (e.g. #NY)
-  // If no hash exists but the route countryId differs from app default, seed it
+  // Always inject country for non-US routes (needed for shared links)
   let iframeUrl: string;
-  if (location.hash) {
+  if (location.hash && countryId && countryId !== 'us') {
+    const params = new URLSearchParams(location.hash.slice(1));
+    params.set('country', countryId);
+    iframeUrl = `${app.source}#${params.toString()}`;
+  } else if (location.hash) {
     iframeUrl = `${app.source}${location.hash}`;
   } else if (countryId && countryId !== 'us') {
     iframeUrl = `${app.source}#country=${countryId}`;
