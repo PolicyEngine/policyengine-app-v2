@@ -31,9 +31,9 @@ describe('charts', () => {
   });
 
   describe('chartLayout', () => {
-    it('should use Roboto Serif font for charts', () => {
+    it('should use Inter font for charts', () => {
       expect(chartLayout.font.family).toBe(typography.fontFamily.chart);
-      expect(chartLayout.font.family).toContain('Roboto Serif');
+      expect(chartLayout.font.family).toContain('Inter');
     });
 
     it('should have white background', () => {
