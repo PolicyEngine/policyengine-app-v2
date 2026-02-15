@@ -494,7 +494,13 @@ export function USDistrictChoroplethMap({
         </div>
       )}
       {/* PolicyEngine logo watermark */}
-      <div style={{ padding: `${spacing.xs}px ${spacing.sm}px` }}>
+      <div
+        style={{
+          position: 'absolute',
+          bottom: spacing.xs,
+          right: spacing.sm,
+        }}
+      >
         <ChartWatermark />
       </div>
     </Box>
