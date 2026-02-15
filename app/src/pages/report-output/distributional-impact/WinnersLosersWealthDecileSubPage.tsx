@@ -91,21 +91,13 @@ export default function WinnersLosersWealthDecileSubPage({ output }: Props) {
   // Transform data for Recharts
   const decileData = decileNumbers.map((decile) => ({
     name: decile.toString(),
-    'Gain more than 5%': (deciles as any)['Gain more than 5%']?.[decile - 1] || 0,
-    'Gain less than 5%': (deciles as any)['Gain less than 5%']?.[decile - 1] || 0,
-    'No change': (deciles as any)['No change']?.[decile - 1] || 0,
-    'Lose less than 5%': (deciles as any)['Lose less than 5%']?.[decile - 1] || 0,
-    'Lose more than 5%': (deciles as any)['Lose more than 5%']?.[decile - 1] || 0,
+    ...Object.fromEntries(CATEGORIES.map((cat) => [cat, (deciles as any)[cat]?.[decile - 1] || 0])),
   }));
 
   const allData = [
     {
       name: 'All',
-      'Gain more than 5%': all['Gain more than 5%'],
-      'Gain less than 5%': all['Gain less than 5%'],
-      'No change': all['No change'],
-      'Lose less than 5%': all['Lose less than 5%'],
-      'Lose more than 5%': all['Lose more than 5%'],
+      ...Object.fromEntries(CATEGORIES.map((cat) => [cat, all[cat]])),
     },
   ];
 

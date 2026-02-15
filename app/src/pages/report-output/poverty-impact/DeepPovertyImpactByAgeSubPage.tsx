@@ -135,19 +135,12 @@ export default function DeepPovertyImpactByAgeSubPage({ output }: Props) {
   const yTicks = getNiceTicks(yDomain);
 
   // Description text
-  const getDescription = () => {
-    const term1 = 'The deep poverty rate is ';
-    const term2 = `the population share in ${
-      countryId === 'uk' ? 'resource units' : 'households'
-    } with `;
-    const term3 = 'net income (after taxes and transfers) below half their poverty threshold.';
-    const more = term1 + term2 + term3;
-
-    if (countryId === 'uk') {
-      return `PolicyEngine reports the impact to absolute poverty before housing costs. ${more}`;
-    }
-    return `PolicyEngine reports the impact to the Supplemental Poverty Measure. ${more}`;
-  };
+  const povertyMeasure =
+    countryId === 'uk'
+      ? 'absolute poverty before housing costs'
+      : 'the Supplemental Poverty Measure';
+  const unitTerm = countryId === 'uk' ? 'resource units' : 'households';
+  const description = `PolicyEngine reports the impact to ${povertyMeasure}. The deep poverty rate is the population share in ${unitTerm} with net income (after taxes and transfers) below half their poverty threshold.`;
 
   return (
     <ChartContainer title={getChartTitle()} onDownloadCsv={handleDownloadCsv}>
@@ -180,7 +173,7 @@ export default function DeepPovertyImpactByAgeSubPage({ output }: Props) {
         <ChartWatermark />
 
         <Text size="sm" c="dimmed">
-          {getDescription()}
+          {description}
         </Text>
       </Stack>
     </ChartContainer>
