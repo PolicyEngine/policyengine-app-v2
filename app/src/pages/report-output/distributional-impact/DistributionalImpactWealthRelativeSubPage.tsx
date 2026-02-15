@@ -20,7 +20,12 @@ import { spacing } from '@/designTokens/spacing';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import type { RootState } from '@/store';
 import { relativeChangeMessage } from '@/utils/chartMessages';
-import { downloadCsv, getClampedChartHeight, RECHARTS_FONT_STYLE } from '@/utils/chartUtils';
+import {
+  downloadCsv,
+  getClampedChartHeight,
+  getNiceTicks,
+  RECHARTS_FONT_STYLE,
+} from '@/utils/chartUtils';
 import { formatPercent, ordinal, precision } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
 
@@ -95,6 +100,10 @@ export default function DistributionalImpactWealthRelativeSubPage({ output }: Pr
     hoverText: hoverMessage(x, yArray[i]),
   }));
 
+  const values = chartData.map((d) => d.value);
+  const yDomain: [number, number] = [Math.min(0, ...values), Math.max(0, ...values)];
+  const yTicks = getNiceTicks(yDomain);
+
   return (
     <ChartContainer title={getChartTitle()} onDownloadCsv={handleDownloadCsv}>
       <Stack gap={spacing.sm}>
@@ -110,6 +119,8 @@ export default function DistributionalImpactWealthRelativeSubPage({ output }: Pr
               />
             </XAxis>
             <YAxis
+              ticks={yTicks}
+              domain={[yTicks[0], yTicks[yTicks.length - 1]]}
               tick={RECHARTS_FONT_STYLE}
               tickLine={false}
               tickFormatter={(v: number) => `${v >= 0 ? '+' : ''}${(v * 100).toFixed(1)}%`}

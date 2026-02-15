@@ -21,7 +21,7 @@ import { spacing } from '@/designTokens/spacing';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import type { RootState } from '@/store';
 import type { Household } from '@/types/ingredients/Household';
-import { getClampedChartHeight, RECHARTS_FONT_STYLE } from '@/utils/chartUtils';
+import { getClampedChartHeight, getNiceTicks, RECHARTS_FONT_STYLE } from '@/utils/chartUtils';
 import { currencySymbol } from '@/utils/formatters';
 import { getValueFromHousehold } from '@/utils/householdValues';
 
@@ -143,6 +143,12 @@ export default function BaselineAndReformChart({
     relativeDiff: relativeDiff[i],
   }));
 
+  const xTicks = getNiceTicks([0, maxEarnings]);
+  const allBothValues = [...baselineYValues, ...reformYValues];
+  const bothYTicks = getNiceTicks([Math.min(...allBothValues), Math.max(...allBothValues)]);
+  const absDiffTicks = getNiceTicks([Math.min(...absoluteDiff), Math.max(...absoluteDiff)]);
+  const relDiffTicks = getNiceTicks([Math.min(...relativeDiff), Math.max(...relativeDiff)]);
+
   // Render different charts based on view mode
   const renderChart = () => {
     if (viewMode === 'both') {
@@ -152,6 +158,7 @@ export default function BaselineAndReformChart({
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis
               dataKey="earnings"
+              ticks={xTicks}
               tick={RECHARTS_FONT_STYLE}
               tickFormatter={(v: number) => `${symbol}${v.toLocaleString()}`}
             >
@@ -162,7 +169,11 @@ export default function BaselineAndReformChart({
                 style={RECHARTS_FONT_STYLE}
               />
             </XAxis>
-            <YAxis tick={RECHARTS_FONT_STYLE}>
+            <YAxis
+              ticks={bothYTicks}
+              domain={[bothYTicks[0], bothYTicks[bothYTicks.length - 1]]}
+              tick={RECHARTS_FONT_STYLE}
+            >
               <Label
                 value={variable.label}
                 angle={-90}
@@ -200,6 +211,7 @@ export default function BaselineAndReformChart({
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis
               dataKey="earnings"
+              ticks={xTicks}
               tick={RECHARTS_FONT_STYLE}
               tickFormatter={(v: number) => `${symbol}${v.toLocaleString()}`}
             >
@@ -210,7 +222,11 @@ export default function BaselineAndReformChart({
                 style={RECHARTS_FONT_STYLE}
               />
             </XAxis>
-            <YAxis tick={RECHARTS_FONT_STYLE}>
+            <YAxis
+              ticks={absDiffTicks}
+              domain={[absDiffTicks[0], absDiffTicks[absDiffTicks.length - 1]]}
+              tick={RECHARTS_FONT_STYLE}
+            >
               <Label
                 value={`Change in ${variable.label}`}
                 angle={-90}
@@ -240,6 +256,7 @@ export default function BaselineAndReformChart({
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis
             dataKey="earnings"
+            ticks={xTicks}
             tick={RECHARTS_FONT_STYLE}
             tickFormatter={(v: number) => `${symbol}${v.toLocaleString()}`}
           >
@@ -251,6 +268,8 @@ export default function BaselineAndReformChart({
             />
           </XAxis>
           <YAxis
+            ticks={relDiffTicks}
+            domain={[relDiffTicks[0], relDiffTicks[relDiffTicks.length - 1]]}
             tick={RECHARTS_FONT_STYLE}
             tickFormatter={(v: number) => `${(v * 100).toFixed(1)}%`}
           >

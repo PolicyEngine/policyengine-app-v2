@@ -27,7 +27,7 @@ import type { Household } from '@/types/ingredients/Household';
 import type { Policy } from '@/types/ingredients/Policy';
 import type { Simulation } from '@/types/ingredients/Simulation';
 import type { UserPolicy } from '@/types/ingredients/UserPolicy';
-import { getClampedChartHeight, RECHARTS_FONT_STYLE } from '@/utils/chartUtils';
+import { getClampedChartHeight, getNiceTicks, RECHARTS_FONT_STYLE } from '@/utils/chartUtils';
 import { currencySymbol } from '@/utils/formatters';
 import { getValueFromHousehold } from '@/utils/householdValues';
 import LoadingPage from '../LoadingPage';
@@ -246,6 +246,11 @@ export default function MarginalTaxRatesSubPage({
     ...(mtrDifference && { difference: mtrDifference[i] }),
   }));
 
+  const xTicks = getNiceTicks([0, maxEarnings]);
+  const mtrTicks = getNiceTicks([-2, 2]);
+  const diffValues = mtrDifference ? mtrDifference.filter((v) => v !== undefined) : [0];
+  const diffTicks = getNiceTicks([Math.min(0, ...diffValues), Math.max(0, ...diffValues)]);
+
   const renderChart = () => {
     if (!reform || !reformMTRClipped || viewMode === 'both') {
       return (
@@ -254,6 +259,7 @@ export default function MarginalTaxRatesSubPage({
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis
               dataKey="earnings"
+              ticks={xTicks}
               tick={RECHARTS_FONT_STYLE}
               tickFormatter={(v: number) => `${symbol}${v.toLocaleString()}`}
             >
@@ -266,6 +272,7 @@ export default function MarginalTaxRatesSubPage({
             </XAxis>
             <YAxis
               domain={[-2, 2]}
+              ticks={mtrTicks}
               tick={RECHARTS_FONT_STYLE}
               tickFormatter={(v: number) => `${(v * 100).toFixed(0)}%`}
             >
@@ -322,6 +329,7 @@ export default function MarginalTaxRatesSubPage({
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis
             dataKey="earnings"
+            ticks={xTicks}
             tick={RECHARTS_FONT_STYLE}
             tickFormatter={(v: number) => `${symbol}${v.toLocaleString()}`}
           >
@@ -333,6 +341,8 @@ export default function MarginalTaxRatesSubPage({
             />
           </XAxis>
           <YAxis
+            ticks={diffTicks}
+            domain={[diffTicks[0], diffTicks[diffTicks.length - 1]]}
             tick={RECHARTS_FONT_STYLE}
             tickFormatter={(v: number) => `${(v * 100).toFixed(1)}%`}
           >

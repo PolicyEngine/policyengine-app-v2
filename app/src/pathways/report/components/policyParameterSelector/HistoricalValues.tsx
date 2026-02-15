@@ -21,7 +21,7 @@ import {
   filterInfiniteValues,
   getChartBoundaryDates,
 } from '@/utils/chartDateUtils';
-import { getReformPolicyLabel, RECHARTS_FONT_STYLE } from '@/utils/chartUtils';
+import { getNiceTicks, getReformPolicyLabel, RECHARTS_FONT_STYLE } from '@/utils/chartUtils';
 import { formatParameterValue, getRechartsTickFormatter } from '@/utils/chartValueUtils';
 import { capitalize } from '@/utils/stringUtils';
 
@@ -179,42 +179,16 @@ export const ParameterOverTimeChart = memo((props: ParameterOverTimeChartProps) 
         maxY = Math.max(maxY, 1);
       }
 
-      // Compute nice tick step
-      const yRange = maxY - minY;
-      const targetTicks = 5;
-      const rawStep = yRange / targetTicks;
-      if (rawStep <= 0) {
+      if (minY === maxY) {
         return { maxDate, yMin: 0, yMax: 1, yTicks: [0, 1] };
       }
-      const magnitude = 10 ** Math.floor(Math.log10(rawStep));
-      const normalized = rawStep / magnitude;
-      let niceStep: number;
-      if (normalized <= 1) {
-        niceStep = 1 * magnitude;
-      } else if (normalized <= 2) {
-        niceStep = 2 * magnitude;
-      } else if (normalized <= 2.5) {
-        niceStep = 2.5 * magnitude;
-      } else if (normalized <= 5) {
-        niceStep = 5 * magnitude;
-      } else {
-        niceStep = 10 * magnitude;
-      }
 
-      // Round to nice boundaries (always include 0)
-      const niceMin = minY < 0 ? Math.floor(minY / niceStep) * niceStep : 0;
-      const niceMax = Math.ceil(maxY / niceStep) * niceStep;
-
-      // Generate tick array
-      const ticks: number[] = [];
-      for (let v = niceMin; v <= niceMax; v += niceStep) {
-        ticks.push(Math.round(v * 1e10) / 1e10);
-      }
+      const ticks = getNiceTicks([minY, maxY]);
 
       return {
         maxDate,
-        yMin: niceMin,
-        yMax: niceMax,
+        yMin: ticks[0],
+        yMax: ticks[ticks.length - 1],
         yTicks: ticks,
       };
     } catch (error) {

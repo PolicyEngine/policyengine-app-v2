@@ -20,7 +20,12 @@ import { spacing } from '@/designTokens/spacing';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import type { RootState } from '@/store';
 import { relativeChangeMessage } from '@/utils/chartMessages';
-import { downloadCsv, getClampedChartHeight, RECHARTS_FONT_STYLE } from '@/utils/chartUtils';
+import {
+  downloadCsv,
+  getClampedChartHeight,
+  getNiceTicks,
+  RECHARTS_FONT_STYLE,
+} from '@/utils/chartUtils';
 import { formatNumber, formatPercent, precision } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
 
@@ -128,6 +133,10 @@ export default function DeepPovertyImpactByAgeSubPage({ output }: Props) {
     hoverText: hoverMessage(label),
   }));
 
+  const values = chartData.map((d) => d.value);
+  const yDomain: [number, number] = [Math.min(0, ...values), Math.max(0, ...values)];
+  const yTicks = getNiceTicks(yDomain);
+
   // Description text
   const getDescription = () => {
     const term1 = 'The deep poverty rate is ';
@@ -151,6 +160,8 @@ export default function DeepPovertyImpactByAgeSubPage({ output }: Props) {
             <CartesianGrid strokeDasharray="3 3" vertical={false} />
             <XAxis dataKey="name" tick={RECHARTS_FONT_STYLE} />
             <YAxis
+              ticks={yTicks}
+              domain={[yTicks[0], yTicks[yTicks.length - 1]]}
               tickFormatter={(v: number) => `${(v * 100).toFixed(ytickPrecision)}%`}
               tick={RECHARTS_FONT_STYLE}
             >
