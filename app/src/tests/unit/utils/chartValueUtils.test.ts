@@ -26,7 +26,11 @@ import {
   UNITS,
   ZERO_VALUE,
 } from '@/tests/fixtures/utils/chartValueUtilsMocks';
-import { formatParameterValue, getPlotlyAxisFormat } from '@/utils/chartValueUtils';
+import {
+  formatParameterValue,
+  getPlotlyAxisFormat,
+  getRechartsTickFormatter,
+} from '@/utils/chartValueUtils';
 
 describe('chartValueUtils', () => {
   describe('formatParameterValue', () => {
@@ -316,6 +320,48 @@ describe('chartValueUtils', () => {
       it('should handle single value', () => {
         const result = getPlotlyAxisFormat(UNITS.NUMERIC, [42]);
         expect(result.range).toEqual([42, 42]);
+      });
+    });
+  });
+
+  describe('negative currency formatting', () => {
+    describe('formatParameterValue', () => {
+      it('should place negative sign before USD symbol', () => {
+        expect(formatParameterValue(-31, UNITS.USD, { decimalPlaces: 0 })).toBe('-$31');
+      });
+
+      it('should place negative sign before GBP symbol', () => {
+        expect(formatParameterValue(-500, UNITS.GBP, { decimalPlaces: 0 })).toBe('-£500');
+      });
+
+      it('should format positive USD normally', () => {
+        expect(formatParameterValue(31, UNITS.USD, { decimalPlaces: 0 })).toBe('$31');
+      });
+
+      it('should format zero USD without negative sign', () => {
+        expect(formatParameterValue(0, UNITS.USD, { decimalPlaces: 0 })).toBe('$0');
+      });
+    });
+
+    describe('getRechartsTickFormatter', () => {
+      it('should place negative sign before USD symbol', () => {
+        const formatter = getRechartsTickFormatter(UNITS.USD, { decimalPlaces: 0 });
+        expect(formatter(-31)).toBe('-$31');
+      });
+
+      it('should place negative sign before GBP symbol', () => {
+        const formatter = getRechartsTickFormatter(UNITS.GBP, { decimalPlaces: 0 });
+        expect(formatter(-500)).toBe('-£500');
+      });
+
+      it('should place negative sign before USD symbol in compact mode', () => {
+        const formatter = getRechartsTickFormatter(UNITS.USD, { compact: true });
+        expect(formatter(-1500)).toBe('-$1.5K');
+      });
+
+      it('should format positive USD normally in compact mode', () => {
+        const formatter = getRechartsTickFormatter(UNITS.USD, { compact: true });
+        expect(formatter(1500)).toBe('$1.5K');
       });
     });
   });

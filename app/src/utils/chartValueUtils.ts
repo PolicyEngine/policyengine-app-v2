@@ -52,19 +52,19 @@ export function formatParameterValue(
   const gbpUnits = ['currency-GBP', 'currency_GBP', 'GBP'];
 
   if (currencyUnits.includes(unit || '')) {
-    const symbol = includeSymbol ? '$' : '';
-    return `${symbol}${Number(value).toLocaleString('en-US', {
+    return Number(value).toLocaleString('en-US', {
+      ...(includeSymbol && { style: 'currency', currency: 'USD' }),
       minimumFractionDigits: decimalPlaces,
       maximumFractionDigits: decimalPlaces,
-    })}`;
+    });
   }
 
   if (gbpUnits.includes(unit || '')) {
-    const symbol = includeSymbol ? '£' : '';
-    return `${symbol}${Number(value).toLocaleString('en-GB', {
+    return Number(value).toLocaleString('en-GB', {
+      ...(includeSymbol && { style: 'currency', currency: 'GBP' }),
       minimumFractionDigits: decimalPlaces,
       maximumFractionDigits: decimalPlaces,
-    })}`;
+    });
   }
 
   // Default numeric formatting
@@ -185,18 +185,36 @@ export function getRechartsTickFormatter(
   if (currencyUnits.includes(unit)) {
     return (value: number) => {
       if (compact) {
-        return `$${compactNumber(value)}`;
+        return value.toLocaleString('en-US', {
+          style: 'currency',
+          currency: 'USD',
+          notation: 'compact',
+          maximumFractionDigits: decimalPlaces,
+        });
       }
-      return `$${value.toLocaleString('en-US', { maximumFractionDigits: decimalPlaces })}`;
+      return value.toLocaleString('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        maximumFractionDigits: decimalPlaces,
+      });
     };
   }
 
   if (gbpUnits.includes(unit)) {
     return (value: number) => {
       if (compact) {
-        return `£${compactNumber(value)}`;
+        return value.toLocaleString('en-GB', {
+          style: 'currency',
+          currency: 'GBP',
+          notation: 'compact',
+          maximumFractionDigits: decimalPlaces,
+        });
       }
-      return `£${value.toLocaleString('en-GB', { maximumFractionDigits: decimalPlaces })}`;
+      return value.toLocaleString('en-GB', {
+        style: 'currency',
+        currency: 'GBP',
+        maximumFractionDigits: decimalPlaces,
+      });
     };
   }
 
@@ -206,24 +224,6 @@ export function getRechartsTickFormatter(
 
   // Default numeric
   return (value: number) => value.toLocaleString('en-US', { maximumFractionDigits: decimalPlaces });
-}
-
-/**
- * Compact number display for large values (1K, 1M, 1B)
- */
-function compactNumber(value: number): string {
-  const abs = Math.abs(value);
-  const sign = value < 0 ? '-' : '';
-  if (abs >= 1_000_000_000) {
-    return `${sign}${(abs / 1_000_000_000).toFixed(1)}B`;
-  }
-  if (abs >= 1_000_000) {
-    return `${sign}${(abs / 1_000_000).toFixed(1)}M`;
-  }
-  if (abs >= 1_000) {
-    return `${sign}${(abs / 1_000).toFixed(1)}K`;
-  }
-  return `${sign}${abs.toFixed(0)}`;
 }
 
 /**

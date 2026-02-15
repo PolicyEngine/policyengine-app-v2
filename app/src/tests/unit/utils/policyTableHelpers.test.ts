@@ -158,20 +158,28 @@ describe('policyTableHelpers', () => {
     });
 
     describe('Negative numbers', () => {
-      test('given negative integer with currency then formats with one decimal place', () => {
+      test('given negative integer with currency then formats with sign before symbol', () => {
         // Given / When
         const result = formatParameterValue(-1000, 'currency-USD');
 
         // Then
-        expect(result).toBe('$-1,000.0');
+        expect(result).toBe('-$1,000.0');
       });
 
-      test('given negative decimal with currency then formats correctly', () => {
+      test('given negative decimal with currency then formats with sign before symbol', () => {
         // Given / When
         const result = formatParameterValue(-1234.5, 'currency-USD');
 
         // Then
-        expect(result).toBe('$-1,234.5');
+        expect(result).toBe('-$1,234.5');
+      });
+
+      test('given negative GBP value then formats with sign before symbol', () => {
+        // Given / When
+        const result = formatParameterValue(-500, 'currency-GBP');
+
+        // Then
+        expect(result).toBe('-£500.0');
       });
 
       test('given negative percentage then formats with one decimal place', () => {
