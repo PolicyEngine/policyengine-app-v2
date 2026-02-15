@@ -143,6 +143,21 @@ describe('computeWaterfallData', () => {
   it('returns empty array for empty input', () => {
     expect(computeWaterfallData([], fmt)).toEqual([]);
   });
+
+  it('includes waterfallRange tuple [barBottom, barTop] for Recharts range bars', () => {
+    const items: WaterfallItem[] = [
+      { name: 'A', value: 10 },
+      { name: 'B', value: -3 },
+      { name: 'Total', value: 7, isTotal: true },
+    ];
+
+    const result = computeWaterfallData(items, fmt);
+
+    // Recharts range bars require a data property (not a function) that is [low, high]
+    expect(result[0].waterfallRange).toEqual([0, 10]);
+    expect(result[1].waterfallRange).toEqual([7, 10]);
+    expect(result[2].waterfallRange).toEqual([0, 7]);
+  });
 });
 
 describe('getWaterfallDomain', () => {

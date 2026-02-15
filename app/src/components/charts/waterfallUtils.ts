@@ -22,6 +22,12 @@ export interface WaterfallDatum {
   barBottom: number;
   /** Top of the visible bar (data-space Y value) */
   barTop: number;
+  /**
+   * Range tuple `[barBottom, barTop]` for use as a Recharts Bar dataKey.
+   * Recharts renders range bars when a **string** dataKey points to a
+   * `[low, high]` array property. Function dataKeys do NOT support ranges.
+   */
+  waterfallRange: [number, number];
   /** Original signed value */
   value: number;
   /** Pre-formatted label for display inside bar */
@@ -70,6 +76,7 @@ export function computeWaterfallData(
       name,
       barBottom,
       barTop,
+      waterfallRange: [barBottom, barTop],
       value,
       label: formatValue(value),
       isTotal,

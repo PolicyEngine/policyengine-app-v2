@@ -55,3 +55,20 @@ export function getBudgetChartTitle(
 export function formatBillions(value: number, countryId: CountryId): string {
   return formatCurrencyAbbr(value, countryId, { maximumFractionDigits: 1 });
 }
+
+/**
+ * Creates a Y-axis tick formatter that adapts decimal precision to the data range.
+ * For narrow ranges (< 1bn) uses 2 decimals; otherwise uses 1 decimal.
+ * Avoids "-$0.0" by treating near-zero values as 0.
+ */
+export function makeBudgetTickFormatter(
+  symbol: string,
+  yDomain: [number, number]
+): (v: number) => string {
+  const range = yDomain[1] - yDomain[0];
+  const decimals = range < 1 ? 2 : 1;
+  return (v: number) => {
+    const display = Math.abs(v) < 1e-10 ? 0 : v;
+    return `${symbol}${display.toFixed(decimals)}`;
+  };
+}
