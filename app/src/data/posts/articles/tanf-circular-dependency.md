@@ -55,16 +55,63 @@ For the small share of households receiving both TANF and Section 8, this overst
 
 But in practice, this overlap is small. Section 8 waiting lists are [years long](https://www.cbpp.org/research/housing/long-waitlists-for-housing-vouchers-show-pressing-unmet-need-for-assistance), and most TANF recipients pay market rent. Among the 39 state TANF programs PolicyEngine models, only Florida routes through housing cost in a way that creates this cycle. The other 38 states compute payment standards based on family size, income, or fixed schedules that don't depend on housing.
 
-## A broader pattern
+## The SALT cycle: federal and state taxes
 
-This case illustrates a general challenge in microsimulation: benefit programs are interconnected in ways that can create computational cycles, even though they're administered sequentially in practice.
+The FL TANF case isn't unique. PolicyEngine's largest circular dependency workaround involves the interaction between federal and state income taxes.
 
-Common examples include:
+Six states — Alabama, Iowa, Louisiana, Missouri, Montana, and Oregon — allow taxpayers to [deduct federal income tax paid](https://taxfoundation.org/data/all/state/state-deduction-federal-income-taxes-2024/) from their state taxable income. Meanwhile, the federal tax code lets itemizers deduct state and local taxes (SALT) from federal taxable income. This creates a textbook cycle:
 
-- **TANF and housing**: TANF counts as income for HUD programs; HUD subsidies affect housing costs that some states use for TANF
-- **SNAP and taxes**: SNAP benefits aren't taxable, but SNAP eligibility depends on income that's affected by tax credits
-- **Medicaid and SSI**: SSI eligibility can depend on Medicaid costs, while Medicaid eligibility can depend on SSI income
+1. **State taxable income** depends on a deduction for federal income tax
+2. **Federal income tax** depends on itemized deductions including SALT
+3. **SALT** depends on state income tax paid
+4. Back to step 1
 
-Each of these requires a modeling choice about where to "break" the cycle. The right answer usually comes from understanding which program's determination happens first in practice, and using the pre-determination value for the other program's calculation.
+In practice, employers withhold estimated state taxes throughout the year, and taxpayers claim that withheld amount as their SALT deduction — not their final computed liability. The IRS doesn't recompute your state tax to verify SALT.
 
-In PolicyEngine's case, the full dependency graph across all programs needs to remain a directed acyclic graph (DAG). When adding new state programs — especially those that incorporate housing costs, medical expenses, or other amounts that themselves depend on benefit programs — checking for cycles is an essential part of validation.
+PolicyEngine mirrors this with a parallel set of **simplified "withheld" tax variables** for each state. Instead of SALT depending on the fully computed state income tax (which would create the cycle), it depends on `state_withheld_income_tax` — a rough estimate computed from AGI, the maximum standard deduction, and single filing rates:
+
+```python
+class al_withheld_income_tax(Variable):
+    def formula(person, period, parameters):
+        agi = person("adjusted_gross_income_person", period)
+        p = parameters(period).gov.states.al.tax.income
+        standard_deduction = p.deductions.standard.amount.max["SINGLE"]
+        reduced_agi = max_(agi - standard_deduction, 0)
+        return p.rates.single.calc(reduced_agi)
+```
+
+This is a deliberate simplification. The withheld estimate ignores the actual filing status, state-specific credits, and the federal tax deduction itself. But it breaks the cycle cleanly: the simplified estimate has no dependency on federal tax, so states like Alabama can deduct `income_tax_before_refundable_credits` without creating a loop.
+
+The CTC calculation has a related workaround. The non-refundable Child Tax Credit is limited by tax liability, which depends on taxable income, which depends on SALT. To avoid this becoming circular, PolicyEngine computes CTC-limiting liability on a [simulation branch](https://openfisca.org/doc/coding-the-legislation/40_legislation_evolutions.html) that zeros out the SALT deduction entirely — documented in the code as "an inaccuracy required to avoid circular dependencies."
+
+## Other cycles in the codebase
+
+The FL TANF and SALT cases are the most architecturally significant, but PolicyEngine handles several other cycles with similar techniques:
+
+| Cycle | Variables involved | Resolution |
+|---|---|---|
+| **SNAP ↔ childcare subsidies** | SNAP deductions → childcare expenses → childcare subsidies → income → SNAP | Use `pre_subsidy_childcare_expenses` |
+| **SNAP ↔ electricity subsidies** | Utility allowance → electricity expenses → LIHEAP → SNAP enrollment → utility allowance | Use `pre_subsidy_electricity_expense` |
+| **KS TANF ↔ childcare subsidies** | KS TANF earned income → dependent care deduction → childcare subsidies → income → TANF | Use `spm_unit_pre_subsidy_childcare_expenses` |
+| **Dependent income ↔ filing status** | Dependent gross income → taxable Social Security → filing status → dependent status → dependent income | Substitute pre-tax amounts (`social_security` for `taxable_social_security`) |
+| **MT itemization ↔ federal tax** | MT itemized deductions → federal itemization choice → SALT → MT state tax | Parallel "for_federal_itemization" variable set |
+| **VA/DE EITC refundability** | State EITC refundability → state tax liability → state credits → state EITC | Simulation branches that force refundable/non-refundable, compare outcomes |
+| **NY CTC ↔ federal CTC** | NY Empire State CTC → federal CTC under pre-TCJA rules → tax liability → state credits | Simulation branch with cloned parameters rewound to 2017 values |
+| **MD EITC ↔ age minimum** | MD EITC → federal EITC without age floor → federal EITC → tax liability → state credits | Disable cycle detection, delete and recompute cached values |
+| **Itemization choice** | Whether to itemize → tax liability if itemizing/not → income tax → deductions → whether to itemize | Two simulation branches force each choice, compare |
+
+These workarounds fall into three categories:
+
+1. **Pre-subsidy substitution** (SNAP childcare, SNAP electricity, FL TANF, KS TANF): Replace a post-subsidy amount with the pre-subsidy equivalent. Simple, low error, mirrors how agencies actually operate.
+
+2. **Simplified parallel variables** (SALT withholding, MT federal itemization, dependent income): Compute a rough approximation that avoids the dependency chain entirely. Moderate error — the simplified estimate diverges from the true value.
+
+3. **Simulation branches** (CTC/SALT, VA/DE EITC, NY CTC, itemization): Fork the computation, force specific assumptions in each branch, then compare or combine results. Most powerful but most complex — requires cloning simulation state and managing cache invalidation.
+
+## Implications for policy modeling
+
+Every circular dependency workaround introduces some inaccuracy. Using pre-subsidy rent for FL TANF overstates shelter costs for subsidized households. Using simplified withholding for SALT understates the deduction for some filers. Zeroing out SALT for CTC computation ignores a real interaction.
+
+These tradeoffs matter most at the margins — households near program thresholds where small differences in computed values flip eligibility. For aggregate estimates across millions of households, the errors tend to wash out. But for individual household calculators, users should understand that the model imposes an ordering on program determinations that real agencies handle case by case.
+
+The full dependency graph across all programs must remain a directed acyclic graph (DAG). When adding new state programs — especially those that incorporate housing costs, medical expenses, or other amounts that themselves depend on benefit programs — checking for cycles is an essential part of validation. PolicyEngine currently has at least twelve documented cycle-breaking workarounds across these three categories, each trading a modeling simplification for computational tractability.
