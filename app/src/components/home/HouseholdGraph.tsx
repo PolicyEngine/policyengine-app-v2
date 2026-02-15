@@ -130,7 +130,7 @@ export function generateGraph(): Node[] {
       x: Math.max(0.01, Math.min(0.99, gridX + jitterX)),
       y: Math.max(0.01, Math.min(0.99, gridY + jitterY)),
       size: NODE_MIN_SIZE + seededRandom(seed + 2) * (NODE_MAX_SIZE - NODE_MIN_SIZE),
-      baseOpacity: 0.3 + seededRandom(seed + 3) * 0.25,
+      baseOpacity: 0.15 + seededRandom(seed + 3) * 0.15,
       driftDuration: 10 + seededRandom(seed + 4) * 14,
       driftDelay: seededRandom(seed + 5) * -20,
       driftVariant: Math.floor(seededRandom(seed + 6) * 4),
