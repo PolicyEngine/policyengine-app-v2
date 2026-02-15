@@ -195,6 +195,7 @@ export default function WinnersLosersIncomeDecileSubPage({ output }: Props) {
                 content={<WinnersLosersTooltip countryId={countryId} />}
                 allowEscapeViewBox={{ x: true, y: true }}
                 offset={20}
+                wrapperStyle={{ zIndex: 1000 }}
               />
               {CATEGORIES.map((cat) => (
                 <Bar key={cat} dataKey={cat} stackId="a" fill={COLOR_MAP[cat]} />
@@ -222,7 +223,13 @@ export default function WinnersLosersIncomeDecileSubPage({ output }: Props) {
                   style={RECHARTS_FONT_STYLE}
                 />
               </XAxis>
-              <YAxis type="category" dataKey="name" tick={RECHARTS_FONT_STYLE} width={40}>
+              <YAxis
+                type="category"
+                dataKey="name"
+                tick={RECHARTS_FONT_STYLE}
+                width={40}
+                interval={0}
+              >
                 <Label
                   value="Income decile"
                   angle={-90}
@@ -234,6 +241,7 @@ export default function WinnersLosersIncomeDecileSubPage({ output }: Props) {
                 content={<WinnersLosersTooltip countryId={countryId} />}
                 allowEscapeViewBox={{ x: true, y: true }}
                 offset={20}
+                wrapperStyle={{ zIndex: 1000 }}
               />
               <Legend formatter={(value: string) => LEGEND_TEXT_MAP[value] || value} />
               {CATEGORIES.map((cat) => (
