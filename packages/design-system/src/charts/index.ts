@@ -154,3 +154,52 @@ export function formatCurrency(value: number): string {
 export function formatPercent(value: number, decimals: number = 0): string {
   return `${(value * 100).toFixed(decimals)}%`;
 }
+
+// ---------------------------------------------------------------------------
+// Nice tick generation (D3-style)
+// ---------------------------------------------------------------------------
+
+const NICE_STEPS = [1, 2, 2.5, 5, 10];
+
+/**
+ * Compute a "nice" step size for axis ticks by snapping to {1, 2, 2.5, 5}
+ * multiples at each order of magnitude.
+ */
+function niceStep(roughStep: number): number {
+  if (roughStep <= 0) {
+    return 1;
+  }
+  const exponent = Math.floor(Math.log10(roughStep));
+  const magnitude = 10 ** exponent;
+  const normalized = roughStep / magnitude;
+  const nice = NICE_STEPS.find((s) => s >= normalized - 1e-10) ?? 10;
+  return nice * magnitude;
+}
+
+/**
+ * Generate nice tick values for a given domain and approximate tick count.
+ * Ticks are rounded to human-friendly numbers (multiples of 1, 2, 2.5, 5).
+ *
+ * @param domain - [min, max] data range
+ * @param count - Approximate number of ticks desired (default: 5)
+ * @returns Array of tick values
+ */
+export function getNiceTicks(domain: [number, number], count = 5): number[] {
+  const [dMin, dMax] = domain;
+  if (dMin === dMax) {
+    return [dMin];
+  }
+
+  const rawStep = (dMax - dMin) / Math.max(count - 1, 1);
+  const step = niceStep(rawStep);
+  const start = Math.floor(dMin / step) * step;
+  const ticks: number[] = [];
+
+  for (let v = start; v <= dMax + step * 0.01; v += step) {
+    // Round to avoid floating-point noise and negative zero
+    const rounded = Math.round(v * 1e10) / 1e10 || 0;
+    ticks.push(rounded);
+  }
+
+  return ticks;
+}

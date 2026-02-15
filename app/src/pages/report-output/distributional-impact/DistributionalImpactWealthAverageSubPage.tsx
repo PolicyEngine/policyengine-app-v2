@@ -20,7 +20,12 @@ import { spacing } from '@/designTokens/spacing';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import type { RootState } from '@/store';
 import { absoluteChangeMessage } from '@/utils/chartMessages';
-import { downloadCsv, getClampedChartHeight, RECHARTS_FONT_STYLE } from '@/utils/chartUtils';
+import {
+  downloadCsv,
+  getClampedChartHeight,
+  getNiceTicks,
+  RECHARTS_FONT_STYLE,
+} from '@/utils/chartUtils';
 import { currencySymbol, formatCurrency, ordinal, precision } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
 
@@ -100,6 +105,10 @@ export default function DistributionalImpactWealthAverageSubPage({ output }: Pro
     hoverText: hoverMessage(x, yArray[i]),
   }));
 
+  const values = chartData.map((d) => d.value);
+  const yDomain: [number, number] = [Math.min(0, ...values), Math.max(0, ...values)];
+  const yTicks = getNiceTicks(yDomain);
+
   const prefix = currencySymbol(countryId);
 
   return (
@@ -117,6 +126,8 @@ export default function DistributionalImpactWealthAverageSubPage({ output }: Pro
               />
             </XAxis>
             <YAxis
+              ticks={yTicks}
+              domain={[yTicks[0], yTicks[yTicks.length - 1]]}
               tick={RECHARTS_FONT_STYLE}
               tickLine={false}
               tickFormatter={(v: number) => `${prefix}${v.toLocaleString()}`}

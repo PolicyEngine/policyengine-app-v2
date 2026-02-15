@@ -17,7 +17,7 @@ import { colors } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import type { RootState } from '@/store';
 import type { Household } from '@/types/ingredients/Household';
-import { getClampedChartHeight, RECHARTS_FONT_STYLE } from '@/utils/chartUtils';
+import { getClampedChartHeight, getNiceTicks, RECHARTS_FONT_STYLE } from '@/utils/chartUtils';
 import { currencySymbol } from '@/utils/formatters';
 import { getValueFromHousehold } from '@/utils/householdValues';
 
@@ -104,6 +104,10 @@ export default function BaselineOnlyChart({
     value: yValues[i],
   }));
 
+  const xTicks = getNiceTicks([0, maxEarnings]);
+  const yNumValues = chartData.map((d) => d.value);
+  const yTicks = getNiceTicks([Math.min(...yNumValues), Math.max(...yNumValues)]);
+
   return (
     <div style={{ width: '100%', position: 'relative' }}>
       <ResponsiveContainer width="100%" height={chartHeight}>
@@ -111,6 +115,7 @@ export default function BaselineOnlyChart({
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis
             dataKey="earnings"
+            ticks={xTicks}
             tick={RECHARTS_FONT_STYLE}
             tickFormatter={(v: number) => `${symbol}${v.toLocaleString()}`}
           >
@@ -121,7 +126,11 @@ export default function BaselineOnlyChart({
               style={RECHARTS_FONT_STYLE}
             />
           </XAxis>
-          <YAxis tick={RECHARTS_FONT_STYLE}>
+          <YAxis
+            ticks={yTicks}
+            domain={[yTicks[0], yTicks[yTicks.length - 1]]}
+            tick={RECHARTS_FONT_STYLE}
+          >
             <Label
               value={variable.label}
               angle={-90}
