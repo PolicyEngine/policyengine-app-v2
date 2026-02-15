@@ -26,7 +26,7 @@ import {
   getNiceTicks,
   RECHARTS_FONT_STYLE,
 } from '@/utils/chartUtils';
-import { formatNumber, formatPercent, precision } from '@/utils/formatters';
+import { formatNumber, formatPercent } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
 
 interface Props {
@@ -60,13 +60,10 @@ export default function DeepPovertyImpactByGenderSubPage({ output }: Props) {
     All: 'all',
   };
 
-  // Calculate precision for display
-  const yvaluePrecision = Math.max(1, precision(povertyChanges, 100));
-  const ytickPrecision = precision(povertyChanges.concat(0), 10);
-
   const formatPer = (n: number) =>
     formatPercent(n, countryId, {
-      minimumFractionDigits: yvaluePrecision,
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1,
     });
 
   // Generate hover message
@@ -169,7 +166,7 @@ export default function DeepPovertyImpactByGenderSubPage({ output }: Props) {
             <YAxis
               ticks={yTicks}
               domain={[yTicks[0], yTicks[yTicks.length - 1]]}
-              tickFormatter={(v: number) => `${(v * 100).toFixed(ytickPrecision)}%`}
+              tickFormatter={(v: number) => `${(v * 100).toFixed(1)}%`}
               tick={RECHARTS_FONT_STYLE}
             >
               <Label

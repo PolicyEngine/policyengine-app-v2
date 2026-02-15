@@ -10,7 +10,7 @@ import { spacing } from '@/designTokens/spacing';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import type { RootState } from '@/store';
 import { downloadCsv, getClampedChartHeight, RECHARTS_FONT_STYLE } from '@/utils/chartUtils';
-import { formatPercent, ordinal } from '@/utils/formatters';
+import { formatPercent } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
 
 interface Props {
@@ -34,14 +34,6 @@ const COLOR_MAP: Record<string, string> = {
   'Lose more than 5%': colors.gray[600],
 };
 
-const HOVER_TEXT_MAP: Record<string, string> = {
-  'Gain more than 5%': 'gain more than 5% of',
-  'Gain less than 5%': 'gain less than 5% of',
-  'No change': 'neither gain nor lose',
-  'Lose less than 5%': 'lose less than 5% of',
-  'Lose more than 5%': 'lose more than 5% of',
-};
-
 const LEGEND_TEXT_MAP: Record<string, string> = {
   'Gain more than 5%': 'Gain more than 5%',
   'Gain less than 5%': 'Gain less than 5%',
@@ -50,33 +42,30 @@ const LEGEND_TEXT_MAP: Record<string, string> = {
   'Lose more than 5%': 'Loss more than 5%',
 };
 
-function WinnersLosersTooltip({ active, payload, label, countryId }: any) {
+function WinnersLosersTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) {
     return null;
   }
   const decileLabel = label === 'All' ? 'All households' : `Decile ${label}`;
   return (
-    <div style={{ ...TOOLTIP_STYLE, maxWidth: 350 }}>
+    <div style={TOOLTIP_STYLE}>
       <p style={{ fontWeight: 600, margin: 0 }}>{decileLabel}</p>
-      {payload.map((p: any) => {
-        const pct = formatPercent(p.value, countryId, {
-          minimumFractionDigits: 1,
-          maximumFractionDigits: 1,
-        });
-        const term1 =
-          label === 'All'
-            ? 'Of all households,'
-            : `Of households in the ${ordinal(label as any)} wealth decile,`;
-        const msg = `${term1} this reform would cause ${pct} of people to ${HOVER_TEXT_MAP[p.dataKey]} their net income.`;
-        return (
-          <p key={p.dataKey} style={{ margin: '2px 0', fontSize: 13 }}>
-            <span style={{ color: p.fill }}>{LEGEND_TEXT_MAP[p.dataKey]}</span>:{' '}
-            {(p.value * 100).toFixed(0)}%
-            <br />
-            <span style={{ fontSize: 11, color: '#666' }}>{msg}</span>
-          </p>
-        );
-      })}
+      {payload.map((p: any) => (
+        <p key={p.dataKey} style={{ margin: '2px 0', fontSize: 13 }}>
+          <span
+            style={{
+              display: 'inline-block',
+              width: 10,
+              height: 10,
+              backgroundColor: p.fill,
+              borderRadius: 2,
+              marginRight: 6,
+              verticalAlign: 'middle',
+            }}
+          />
+          {LEGEND_TEXT_MAP[p.dataKey]}: {(p.value * 100).toFixed(1)}%
+        </p>
+      ))}
     </div>
   );
 }
@@ -171,7 +160,7 @@ export default function WinnersLosersWealthDecileSubPage({ output }: Props) {
               <XAxis type="number" hide />
               <YAxis type="category" dataKey="name" tick={RECHARTS_FONT_STYLE} width={40} />
               <Tooltip
-                content={<WinnersLosersTooltip countryId={countryId} />}
+                content={<WinnersLosersTooltip />}
                 allowEscapeViewBox={{ x: true, y: true }}
                 offset={20}
                 wrapperStyle={{ zIndex: 1000 }}
@@ -217,12 +206,15 @@ export default function WinnersLosersWealthDecileSubPage({ output }: Props) {
                 />
               </YAxis>
               <Tooltip
-                content={<WinnersLosersTooltip countryId={countryId} />}
+                content={<WinnersLosersTooltip />}
                 allowEscapeViewBox={{ x: true, y: true }}
                 offset={20}
                 wrapperStyle={{ zIndex: 1000 }}
               />
-              <Legend formatter={(value: string) => LEGEND_TEXT_MAP[value] || value} />
+              <Legend
+                verticalAlign="top"
+                formatter={(value: string) => LEGEND_TEXT_MAP[value] || value}
+              />
               {CATEGORIES.map((cat) => (
                 <Bar key={cat} dataKey={cat} stackId="a" fill={COLOR_MAP[cat]} />
               ))}
