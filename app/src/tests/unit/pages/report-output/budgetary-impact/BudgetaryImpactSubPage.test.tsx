@@ -34,6 +34,7 @@ vi.mock('@/utils/chartUtils', () => ({
   downloadCsv: vi.fn(),
   getChartLogoImage: vi.fn(() => ({})),
   getClampedChartHeight: vi.fn(() => 500),
+  getNiceTicks: vi.fn(() => [0, 5, 10]),
   RECHARTS_FONT_STYLE: { fontFamily: 'Inter', fontSize: 12 },
   RECHARTS_WATERMARK: { src: '/test.png', width: 80, opacity: 0.8 },
 }));
