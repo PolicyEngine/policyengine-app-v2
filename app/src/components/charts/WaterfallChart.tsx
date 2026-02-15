@@ -45,7 +45,9 @@ export interface WaterfallChartProps {
   yAxisLabel?: string;
   /** Y-axis tick formatter */
   yTickFormatter?: (value: number) => string;
-  /** Number of Y-axis ticks (default: 5) */
+  /** Explicit Y-axis tick values (overrides yTickCount when provided) */
+  yTicks?: number[];
+  /** Number of Y-axis ticks when yTicks not provided (default: 5) */
   yTickCount?: number;
   /** Fill color resolver — receives datum, returns CSS color string */
   fillColor: (datum: WaterfallDatum) => string;
@@ -108,6 +110,7 @@ export function WaterfallChart({
   yTickFormatter,
   fillColor,
   tooltipContent,
+  yTicks,
   yTickCount = 5,
   margin = { top: 20, right: 20, bottom: 30, left: 20 },
 }: WaterfallChartProps) {
@@ -119,7 +122,8 @@ export function WaterfallChart({
           <XAxis dataKey="name" tick={RECHARTS_FONT_STYLE} />
           <YAxis
             domain={yDomain}
-            tickCount={yTickCount}
+            ticks={yTicks}
+            tickCount={yTicks ? undefined : yTickCount}
             tick={RECHARTS_FONT_STYLE}
             tickFormatter={yTickFormatter}
           >

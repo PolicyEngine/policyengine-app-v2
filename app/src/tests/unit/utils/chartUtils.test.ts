@@ -15,7 +15,7 @@ import {
   SAMPLE_POLICY_LABEL_EMPTY_STRING,
   SAMPLE_POLICY_LABEL_SHORT,
 } from '@/tests/fixtures/utils/chartUtilsMocks';
-import { getChartLogoImage, getReformPolicyLabel } from '@/utils/chartUtils';
+import { getChartLogoImage, getNiceTicks, getReformPolicyLabel } from '@/utils/chartUtils';
 
 describe('chartUtils', () => {
   describe('getReformPolicyLabel', () => {
@@ -176,6 +176,32 @@ describe('chartUtils', () => {
       // Then
       expect(result.x).toBe(0.5);
       expect(result.y).toBe(0.5);
+    });
+  });
+
+  describe('getNiceTicks', () => {
+    it('given [0, 14] with 5 ticks then snaps to multiples of 5', () => {
+      expect(getNiceTicks([0, 14], 5)).toEqual([0, 5, 10]);
+    });
+
+    it('given [0, 20] with 5 ticks then returns clean multiples of 5', () => {
+      expect(getNiceTicks([0, 20], 5)).toEqual([0, 5, 10, 15, 20]);
+    });
+
+    it('given [-5, 5] with 5 ticks then returns multiples of 2.5', () => {
+      expect(getNiceTicks([-5, 5], 5)).toEqual([-5, -2.5, 0, 2.5, 5]);
+    });
+
+    it('given [0, 1] with 5 ticks then returns multiples of 0.25', () => {
+      expect(getNiceTicks([0, 1], 5)).toEqual([0, 0.25, 0.5, 0.75, 1]);
+    });
+
+    it('given [-0.3, 0.1] with 5 ticks then returns nice small values', () => {
+      expect(getNiceTicks([-0.3, 0.1], 5)).toEqual([-0.3, -0.2, -0.1, 0, 0.1]);
+    });
+
+    it('given equal domain then returns single tick', () => {
+      expect(getNiceTicks([5, 5], 5)).toEqual([5]);
     });
   });
 });
