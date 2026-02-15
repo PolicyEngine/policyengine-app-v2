@@ -85,21 +85,13 @@ export default function WinnersLosersIncomeDecileSubPage({ output }: Props) {
   // Transform data for Recharts
   const decileData = decileNumbers.map((decile) => ({
     name: decile.toString(),
-    'Gain more than 5%': deciles['Gain more than 5%'][decile - 1],
-    'Gain less than 5%': deciles['Gain less than 5%'][decile - 1],
-    'No change': deciles['No change'][decile - 1],
-    'Lose less than 5%': deciles['Lose less than 5%'][decile - 1],
-    'Lose more than 5%': deciles['Lose more than 5%'][decile - 1],
+    ...Object.fromEntries(CATEGORIES.map((cat) => [cat, deciles[cat][decile - 1]])),
   }));
 
   const allData = [
     {
       name: 'All',
-      'Gain more than 5%': all['Gain more than 5%'],
-      'Gain less than 5%': all['Gain less than 5%'],
-      'No change': all['No change'],
-      'Lose less than 5%': all['Lose less than 5%'],
-      'Lose more than 5%': all['Lose more than 5%'],
+      ...Object.fromEntries(CATEGORIES.map((cat) => [cat, all[cat]])),
     },
   ];
 
@@ -128,34 +120,15 @@ export default function WinnersLosersIncomeDecileSubPage({ output }: Props) {
 
   // CSV export handler
   const handleDownloadCsv = () => {
-    const header = [
-      'Decile',
-      'Gain more than 5%',
-      'Gain less than 5%',
-      'No change',
-      'Lose less than 5%',
-      'Lose more than 5%',
-    ];
-    const data = [
-      header,
-      ...decileNumbers.map((decile) => [
-        decile.toString(),
-        deciles['Gain more than 5%'][decile - 1].toString(),
-        deciles['Gain less than 5%'][decile - 1].toString(),
-        deciles['No change'][decile - 1].toString(),
-        deciles['Lose less than 5%'][decile - 1].toString(),
-        deciles['Lose more than 5%'][decile - 1].toString(),
+    const header = ['Decile', ...CATEGORIES];
+    const rows = [
+      ...decileNumbers.map((d) => [
+        d.toString(),
+        ...CATEGORIES.map((cat) => deciles[cat][d - 1].toString()),
       ]),
-      [
-        'All',
-        all['Gain more than 5%'].toString(),
-        all['Gain less than 5%'].toString(),
-        all['No change'].toString(),
-        all['Lose less than 5%'].toString(),
-        all['Lose more than 5%'].toString(),
-      ],
+      ['All', ...CATEGORIES.map((cat) => all[cat].toString())],
     ];
-    downloadCsv(data, 'winners-losers-income-decile.csv');
+    downloadCsv([header, ...rows], 'winners-losers-income-decile.csv');
   };
 
   // Description text
