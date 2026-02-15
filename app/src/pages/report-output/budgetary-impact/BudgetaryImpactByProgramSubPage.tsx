@@ -20,6 +20,7 @@ import {
   formatBillions,
   getBudgetChartTitle,
   getBudgetFillColor,
+  makeBudgetTickFormatter,
 } from './budgetChartUtils';
 
 interface Props {
@@ -119,6 +120,7 @@ export default function BudgetaryImpactByProgramSubPage({ output }: Props) {
 
   const yDomain = getWaterfallDomain(data);
   const symbol = currencySymbol(countryId);
+  const tickFormatter = makeBudgetTickFormatter(symbol, yDomain);
 
   return (
     <ChartContainer
@@ -130,7 +132,7 @@ export default function BudgetaryImpactByProgramSubPage({ output }: Props) {
         yDomain={yDomain}
         height={chartHeight}
         yAxisLabel="Budgetary impact (bn)"
-        yTickFormatter={(v: number) => `${symbol}${v.toFixed(1)}`}
+        yTickFormatter={tickFormatter}
         fillColor={(d) => getBudgetFillColor(d, budgetaryImpact)}
         tooltipContent={<BudgetWaterfallTooltip />}
       />

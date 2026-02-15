@@ -45,6 +45,8 @@ export interface WaterfallChartProps {
   yAxisLabel?: string;
   /** Y-axis tick formatter */
   yTickFormatter?: (value: number) => string;
+  /** Number of Y-axis ticks (default: 5) */
+  yTickCount?: number;
   /** Fill color resolver — receives datum, returns CSS color string */
   fillColor: (datum: WaterfallDatum) => string;
   /** Optional custom tooltip content */
@@ -98,14 +100,6 @@ function WaterfallTooltip({ active, payload }: any) {
 // Main component
 // ---------------------------------------------------------------------------
 
-/**
- * Accessor that returns [barBottom, barTop] for each datum, telling Recharts
- * to render a range bar spanning exactly those Y-axis values.
- */
-function waterfallRange(d: WaterfallDatum): [number, number] {
-  return [d.barBottom, d.barTop];
-}
-
 export function WaterfallChart({
   data,
   yDomain,
@@ -114,6 +108,7 @@ export function WaterfallChart({
   yTickFormatter,
   fillColor,
   tooltipContent,
+  yTickCount = 5,
   margin = { top: 20, right: 20, bottom: 30, left: 20 },
 }: WaterfallChartProps) {
   return (
@@ -122,7 +117,12 @@ export function WaterfallChart({
         <BarChart data={data} margin={margin}>
           <CartesianGrid strokeDasharray="3 3" vertical={false} />
           <XAxis dataKey="name" tick={RECHARTS_FONT_STYLE} />
-          <YAxis domain={yDomain} tick={RECHARTS_FONT_STYLE} tickFormatter={yTickFormatter}>
+          <YAxis
+            domain={yDomain}
+            tickCount={yTickCount}
+            tick={RECHARTS_FONT_STYLE}
+            tickFormatter={yTickFormatter}
+          >
             {yAxisLabel && (
               <Label
                 value={yAxisLabel}
@@ -134,7 +134,7 @@ export function WaterfallChart({
           </YAxis>
           <Tooltip content={tooltipContent ?? <WaterfallTooltip />} />
           <Bar
-            dataKey={waterfallRange as any}
+            dataKey="waterfallRange"
             isAnimationActive={false}
             label={<WaterfallBarLabel data={data} />}
           >
