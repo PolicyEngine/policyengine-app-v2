@@ -17,7 +17,7 @@
  *       colors: DIVERGING_GRAY_TEAL.colors,
  *       symmetric: true,
  *     },
- *     formatValue: (val) => `$${val.toFixed(0)}`,
+ *     formatValue: (val) => val.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }),
  *   }}
  * />
  * ```
