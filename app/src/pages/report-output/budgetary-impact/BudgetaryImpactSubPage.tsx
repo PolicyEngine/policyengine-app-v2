@@ -11,7 +11,7 @@ import {
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import type { RootState } from '@/store';
 import { absoluteChangeMessage } from '@/utils/chartMessages';
-import { downloadCsv, getClampedChartHeight } from '@/utils/chartUtils';
+import { downloadCsv, getClampedChartHeight, getNiceTicks } from '@/utils/chartUtils';
 import { currencySymbol } from '@/utils/formatters';
 import {
   BudgetWaterfallTooltip,
@@ -108,6 +108,7 @@ export default function BudgetaryImpactSubPage({ output }: Props) {
   }));
 
   const yDomain = getWaterfallDomain(data);
+  const yTicks = getNiceTicks(yDomain);
   const symbol = currencySymbol(countryId);
   const tickFormatter = makeBudgetTickFormatter(symbol, yDomain);
 
@@ -119,6 +120,7 @@ export default function BudgetaryImpactSubPage({ output }: Props) {
       <WaterfallChart
         data={dataWithHover}
         yDomain={yDomain}
+        yTicks={yTicks}
         height={chartHeight}
         yAxisLabel="Budgetary impact (bn)"
         yTickFormatter={tickFormatter}
