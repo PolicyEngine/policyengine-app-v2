@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { colors } from '@/designTokens';
 
 const NODE_COUNT = 800;
@@ -17,24 +17,21 @@ interface Node {
   y: number;
   size: number;
   baseOpacity: number;
-  // Ambient drift params (unique per node)
   driftDuration: number;
   driftDelay: number;
-  driftVariant: number; // which keyframe set (0-3)
+  driftVariant: number;
 }
 
 export interface NodeImpact {
   polarity: 'positive' | 'negative' | 'neutral';
-  magnitude: number; // 0-1, how strongly affected (used for scaling)
+  magnitude: number;
 }
 
 export type ImpactState = Map<number, NodeImpact>;
 
 /**
  * Generate clustered impact patterns that respect the specified
- * winner/loser distribution for each prompt. Picks cluster centres
- * and assigns polarity based on the target percentages, so the
- * visualisation roughly matches the expected policy impact.
+ * winner/loser distribution for each prompt.
  */
 export function generateImpactForPrompt(
   promptIndex: number,
@@ -45,7 +42,6 @@ export function generateImpactForPrompt(
   const impact: ImpactState = new Map();
   const totalAffected = winnerPct + loserPct;
 
-  // If nobody is affected, return all neutral
   if (totalAffected === 0) {
     for (const node of nodes) {
       impact.set(node.id, { polarity: 'neutral', magnitude: 0 });
@@ -53,13 +49,10 @@ export function generateImpactForPrompt(
     return impact;
   }
 
-  // Determine how many clusters of each polarity we need
   const winnerShare = winnerPct / totalAffected;
-  const numClusters = 3 + Math.floor(seededRandom(promptIndex * 13) * 3); // 3-5
+  const numClusters = 3 + Math.floor(seededRandom(promptIndex * 13) * 3);
   const numWinnerClusters = Math.max(winnerPct > 0 ? 1 : 0, Math.round(numClusters * winnerShare));
   const numLoserClusters = Math.max(loserPct > 0 ? 1 : 0, numClusters - numWinnerClusters);
-
-  // Scale cluster radii based on how many nodes need to be affected
   const baseRadius = 0.08 + totalAffected * 0.18;
 
   const clusters: {
@@ -80,7 +73,6 @@ export function generateImpactForPrompt(
     });
   }
 
-  // First pass: assign nodes to clusters with falloff
   const targetWinners = Math.round(nodes.length * winnerPct);
   const targetLosers = Math.round(nodes.length * loserPct);
   let winnerCount = 0;
@@ -89,7 +81,6 @@ export function generateImpactForPrompt(
   for (const node of nodes) {
     let assigned = false;
     for (const cluster of clusters) {
-      // Check if we've already hit the target for this polarity
       if (cluster.polarity === 'positive' && winnerCount >= targetWinners) {
         continue;
       }
@@ -140,8 +131,8 @@ export function generateGraph(): Node[] {
       y: Math.max(0.01, Math.min(0.99, gridY + jitterY)),
       size: NODE_MIN_SIZE + seededRandom(seed + 2) * (NODE_MAX_SIZE - NODE_MIN_SIZE),
       baseOpacity: 0.3 + seededRandom(seed + 3) * 0.25,
-      driftDuration: 10 + seededRandom(seed + 4) * 14, // 10-24s
-      driftDelay: seededRandom(seed + 5) * -20, // negative = start mid-animation
+      driftDuration: 10 + seededRandom(seed + 4) * 14,
+      driftDelay: seededRandom(seed + 5) * -20,
       driftVariant: Math.floor(seededRandom(seed + 6) * 4),
     });
   }
@@ -149,37 +140,80 @@ export function generateGraph(): Node[] {
   return nodes;
 }
 
-const GRAPH_KEYFRAMES = `
-  @keyframes drift0 {
-    0%, 100% { transform: translate(0, 0); }
-    25% { transform: translate(3px, -2px); }
-    50% { transform: translate(-1px, 3px); }
-    75% { transform: translate(-3px, -1px); }
+// --- Canvas renderer ---
+
+// Drift keyframe waypoints matching the original CSS animations
+const DRIFT_KEYFRAMES: [number, number][][] = [
+  [
+    [0, 0],
+    [3, -2],
+    [-1, 3],
+    [-3, -1],
+  ],
+  [
+    [0, 0],
+    [-2, 3],
+    [3, 1],
+    [1, -3],
+  ],
+  [
+    [0, 0],
+    [2, 2],
+    [-3, -1],
+    [1, -2],
+  ],
+  [
+    [0, 0],
+    [-1, -3],
+    [2, -1],
+    [-2, 2],
+  ],
+];
+
+function getDrift(variant: number, t: number): [number, number] {
+  const kf = DRIFT_KEYFRAMES[variant];
+  const n = kf.length;
+  const scaled = (((t % 1) + 1) % 1) * n; // ensure positive
+  const i = Math.floor(scaled) % n;
+  const frac = scaled - Math.floor(scaled);
+  const next = (i + 1) % n;
+  // Cosine ease between waypoints
+  const ease = (1 - Math.cos(frac * Math.PI)) * 0.5;
+  return [kf[i][0] + (kf[next][0] - kf[i][0]) * ease, kf[i][1] + (kf[next][1] - kf[i][1]) * ease];
+}
+
+function parseHex(hex: string): [number, number, number] {
+  if (hex.length === 4) {
+    return [
+      parseInt(hex[1] + hex[1], 16),
+      parseInt(hex[2] + hex[2], 16),
+      parseInt(hex[3] + hex[3], 16),
+    ];
   }
-  @keyframes drift1 {
-    0%, 100% { transform: translate(0, 0); }
-    25% { transform: translate(-2px, 3px); }
-    50% { transform: translate(3px, 1px); }
-    75% { transform: translate(1px, -3px); }
-  }
-  @keyframes drift2 {
-    0%, 100% { transform: translate(0, 0); }
-    25% { transform: translate(2px, 2px); }
-    50% { transform: translate(-3px, -1px); }
-    75% { transform: translate(1px, -2px); }
-  }
-  @keyframes drift3 {
-    0%, 100% { transform: translate(0, 0); }
-    25% { transform: translate(-1px, -3px); }
-    50% { transform: translate(2px, -1px); }
-    75% { transform: translate(-2px, 2px); }
-  }
-  @keyframes popIn {
-    0% { transform: scale(0); opacity: 0; }
-    60% { transform: scale(1.1); opacity: 1; }
-    100% { transform: scale(1); opacity: 1; }
-  }
-`;
+  return [
+    parseInt(hex.substring(1, 3), 16),
+    parseInt(hex.substring(3, 5), 16),
+    parseInt(hex.substring(5, 7), 16),
+  ];
+}
+
+// Precomputed colour RGB tuples
+const COLOR_GRAY: [number, number, number] = parseHex(colors.gray[300]);
+const COLOR_PRIMARY_500: [number, number, number] = parseHex(colors.primary[500]);
+const COLOR_PRIMARY_400: [number, number, number] = parseHex(colors.primary[400]);
+const COLOR_SUCCESS: [number, number, number] = parseHex(colors.success);
+const COLOR_ERROR: [number, number, number] = parseHex(colors.error);
+
+// Per-node mutable animation state (lives outside React)
+interface AnimState {
+  r: number;
+  g: number;
+  b: number;
+  opacity: number;
+  size: number;
+  // Wave delay for impact transitions (ms from centre)
+  waveDelay: number;
+}
 
 interface HouseholdGraphProps {
   nodes: Node[];
@@ -187,190 +221,216 @@ interface HouseholdGraphProps {
 }
 
 export default function HouseholdGraph({ nodes, impact }: HouseholdGraphProps) {
-  const svgRef = useRef<SVGSVGElement>(null);
-  const [dimensions, setDimensions] = useState({ width: 1200, height: 700 });
-  const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null);
-  const rafRef = useRef<number>(0);
-  const pendingMouse = useRef<{ x: number; y: number } | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const mouseRef = useRef<{ x: number; y: number } | null>(null);
+  const impactRef = useRef<ImpactState | null>(null);
+  const impactChangeTimeRef = useRef(0);
+  const prevImpactIdentityRef = useRef<ImpactState | null>(null);
 
-  useEffect(() => {
-    const svg = svgRef.current;
-    if (!svg) {
-      return;
-    }
-    const observer = new ResizeObserver((entries) => {
-      const entry = entries[0];
-      if (entry) {
-        setDimensions({
-          width: entry.contentRect.width,
-          height: entry.contentRect.height,
-        });
-      }
-    });
-    observer.observe(svg);
-    return () => observer.disconnect();
-  }, []);
+  // Update impact ref; track when it changes for wave timing
+  if (impact !== prevImpactIdentityRef.current) {
+    prevImpactIdentityRef.current = impact;
+    impactRef.current = impact;
+    impactChangeTimeRef.current = performance.now();
+  }
 
-  const handleMouseMove = useCallback((e: React.MouseEvent<SVGSVGElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    pendingMouse.current = {
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
-    };
-    if (!rafRef.current) {
-      rafRef.current = requestAnimationFrame(() => {
-        setMousePos(pendingMouse.current);
-        rafRef.current = 0;
-      });
-    }
-  }, []);
-
-  const handleMouseLeave = useCallback(() => {
-    if (rafRef.current) {
-      cancelAnimationFrame(rafRef.current);
-      rafRef.current = 0;
-    }
-    setMousePos(null);
-  }, []);
-
-  // Compute proximity factor for each node to the mouse (0 = far, 1 = on top)
-  const mouseProximity = useMemo(() => {
-    if (!mousePos) {
-      return new Map<number, number>();
-    }
-    const proximity = new Map<number, number>();
-    for (const node of nodes) {
-      const nx = node.x * dimensions.width;
-      const ny = node.y * dimensions.height;
-      const dx = nx - mousePos.x;
-      const dy = ny - mousePos.y;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      if (dist < HOVER_RADIUS) {
-        proximity.set(node.id, 1 - dist / HOVER_RADIUS);
-      }
-    }
-    return proximity;
-  }, [mousePos, nodes, dimensions]);
-
-  const getNodeColor = useCallback(
-    (node: Node) => {
-      const prox = mouseProximity.get(node.id);
-      if (prox && prox > 0.7) {
-        return colors.primary[500];
-      }
-      if (prox && prox > 0) {
-        return colors.primary[400];
-      }
-      if (impact) {
-        const info = impact.get(node.id);
-        if (info?.polarity === 'positive') {
-          return colors.success;
-        }
-        if (info?.polarity === 'negative') {
-          return colors.error;
-        }
-      }
-      return colors.gray[300];
-    },
-    [mouseProximity, impact]
-  );
-
-  const getNodeOpacity = useCallback(
-    (node: Node) => {
-      const prox = mouseProximity.get(node.id);
-      if (prox) {
-        return node.baseOpacity + prox * 0.5;
-      }
-      if (impact) {
-        const info = impact.get(node.id);
-        if (info && info.polarity !== 'neutral') {
-          return 0.5 + info.magnitude * 0.4;
-        }
-      }
-      return node.baseOpacity;
-    },
-    [mouseProximity, impact]
-  );
-
-  const getNodeSize = useCallback(
-    (node: Node) => {
-      const prox = mouseProximity.get(node.id);
-      // Mouse proximity scales the dot up smoothly
-      const mouseScale = prox ? 1 + prox * 0.8 : 1;
-      if (impact) {
-        const info = impact.get(node.id);
-        if (info && info.polarity !== 'neutral') {
-          return node.size * Math.max(mouseScale, 1 + info.magnitude * 0.8);
-        }
-      }
-      return node.size * mouseScale;
-    },
-    [mouseProximity, impact]
-  );
-
-  // Radial wave delay: nodes near centre of viewport change first
-  const getTransitionDelay = useCallback(
-    (node: Node) => {
-      if (mousePos) {
-        return '0s'; // instant feedback when mouse is active
-      }
+  // Build per-node animation state once and precompute wave delays
+  const animStates = useMemo(() => {
+    return nodes.map((node): AnimState => {
       const dx = node.x - 0.5;
       const dy = node.y - 0.5;
       const dist = Math.sqrt(dx * dx + dy * dy);
-      return `${(dist / 0.7) * 0.6}s`;
-    },
-    [mousePos]
-  );
+      return {
+        r: COLOR_GRAY[0],
+        g: COLOR_GRAY[1],
+        b: COLOR_GRAY[2],
+        opacity: 0, // start invisible for pop-in
+        size: 0,
+        waveDelay: (dist / 0.7) * 600, // 0-600ms radial wave
+      };
+    });
+  }, [nodes]);
 
-  const px = (n: Node) => n.x * dimensions.width;
-  const py = (n: Node) => n.y * dimensions.height;
+  // Pop-in start times (radial from centre)
+  const popStartTimes = useMemo(() => {
+    const base = performance.now();
+    return nodes.map((node) => {
+      const dx = node.x - 0.5;
+      const dy = node.y - 0.5;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      return base + (dist / 0.7) * 800;
+    });
+  }, [nodes]);
 
-  // Entrance delay: radial from centre, staggered over ~1s
-  const getPopDelay = useCallback((node: Node) => {
-    const dx = node.x - 0.5;
-    const dy = node.y - 0.5;
-    const dist = Math.sqrt(dx * dx + dy * dy);
-    return (dist / 0.7) * 0.8; // 0-0.8s based on distance from centre
+  // Main animation loop
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) {
+      return;
+    }
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      return;
+    }
+
+    let raf = 0;
+    let lastFrame = performance.now();
+    const startTime = performance.now();
+
+    // Resize handler with DPR support
+    const resize = () => {
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    };
+
+    const observer = new ResizeObserver(resize);
+    observer.observe(canvas);
+    resize();
+
+    const animate = (now: number) => {
+      const rect = canvas.getBoundingClientRect();
+      const w = rect.width;
+      const h = rect.height;
+      const dpr = window.devicePixelRatio || 1;
+
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, w, h);
+
+      // Frame-rate independent lerp factor
+      const dt = Math.min((now - lastFrame) / 16.667, 4);
+      lastFrame = now;
+      const lerpFast = 1 - 0.82 ** dt; // ~0.18 per frame, mouse hover
+      const lerpMedium = 1 - 0.92 ** dt; // ~0.08 per frame, impact colours
+
+      const elapsed = (now - startTime) / 1000;
+      const mouse = mouseRef.current;
+      const currentImpact = impactRef.current;
+      const impactAge = now - impactChangeTimeRef.current;
+
+      for (let i = 0; i < nodes.length; i++) {
+        const node = nodes[i];
+        const state = animStates[i];
+
+        // Pop-in: easeOutBack timing
+        const popElapsed = now - popStartTimes[i];
+        if (popElapsed <= 0) {
+          continue;
+        }
+        const popT = Math.min(popElapsed / 500, 1);
+        // easeOutBack with moderate overshoot
+        const c1 = 2.2;
+        const c3 = c1 + 1;
+        const popScale = popT >= 1 ? 1 : 1 + c3 * (popT - 1) ** 3 + c1 * (popT - 1) ** 2;
+
+        // Drift
+        const driftT = (elapsed - node.driftDelay) / node.driftDuration;
+        const [driftX, driftY] = getDrift(node.driftVariant, driftT);
+
+        const px = node.x * w + driftX;
+        const py = node.y * h + driftY;
+
+        // Determine target colour, opacity, and size
+        let tr = COLOR_GRAY[0];
+        let tg = COLOR_GRAY[1];
+        let tb = COLOR_GRAY[2];
+        let tOpacity = node.baseOpacity;
+        let tSize = node.size;
+        let useFastLerp = false;
+
+        // Impact colouring (with radial wave delay)
+        if (currentImpact && impactAge >= state.waveDelay) {
+          const info = currentImpact.get(node.id);
+          if (info?.polarity === 'positive') {
+            [tr, tg, tb] = COLOR_SUCCESS;
+            tOpacity = 0.5 + info.magnitude * 0.4;
+            tSize = node.size * (1 + info.magnitude * 0.8);
+          } else if (info?.polarity === 'negative') {
+            [tr, tg, tb] = COLOR_ERROR;
+            tOpacity = 0.5 + info.magnitude * 0.4;
+            tSize = node.size * (1 + info.magnitude * 0.8);
+          }
+        }
+
+        // Mouse proximity (overrides impact colours for nearby nodes)
+        if (mouse) {
+          const dx = px - mouse.x;
+          const dy = py - mouse.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < HOVER_RADIUS) {
+            const prox = 1 - dist / HOVER_RADIUS;
+            if (prox > 0.7) {
+              [tr, tg, tb] = COLOR_PRIMARY_500;
+            } else {
+              [tr, tg, tb] = COLOR_PRIMARY_400;
+            }
+            tOpacity = node.baseOpacity + prox * 0.5;
+            tSize = node.size * (1 + prox * 0.8);
+            useFastLerp = true;
+          }
+        }
+
+        // Lerp current values toward targets
+        const lf = useFastLerp ? lerpFast : lerpMedium;
+        state.r += (tr - state.r) * lf;
+        state.g += (tg - state.g) * lf;
+        state.b += (tb - state.b) * lf;
+        state.opacity += (tOpacity - state.opacity) * lf;
+        state.size += (tSize - state.size) * lf;
+
+        // Draw
+        const size = state.size * popScale;
+        if (size < 0.5) {
+          continue;
+        } // skip sub-pixel nodes
+        const half = size * 0.5;
+        const alpha = state.opacity * Math.min(popScale, 1);
+
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = `rgb(${state.r | 0},${state.g | 0},${state.b | 0})`;
+        ctx.beginPath();
+        ctx.roundRect(px - half, py - half, size, size, 1.5);
+        ctx.fill();
+      }
+
+      ctx.globalAlpha = 1;
+      raf = requestAnimationFrame(animate);
+    };
+
+    raf = requestAnimationFrame(animate);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      observer.disconnect();
+    };
+  }, [nodes, animStates, popStartTimes]);
+
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    mouseRef.current = {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+    };
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    mouseRef.current = null;
   }, []);
 
   return (
-    <>
-      <style>{GRAPH_KEYFRAMES}</style>
-      <svg
-        ref={svgRef}
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
-        style={{
-          position: 'absolute',
-          inset: 0,
-          width: '100%',
-          height: '100%',
-          pointerEvents: 'all',
-        }}
-      >
-        {nodes.map((node) => {
-          const s = getNodeSize(node);
-          const popDelay = getPopDelay(node);
-          return (
-            <rect
-              key={node.id}
-              x={px(node) - s / 2}
-              y={py(node) - s / 2}
-              width={s}
-              height={s}
-              rx={1.5}
-              ry={1.5}
-              fill={getNodeColor(node)}
-              opacity={getNodeOpacity(node)}
-              style={{
-                transformOrigin: `${px(node)}px ${py(node)}px`,
-                transition: `fill 0.5s ease ${getTransitionDelay(node)}, opacity 0.5s ease ${getTransitionDelay(node)}, width 0.3s ease, height 0.3s ease, x 0.3s ease, y 0.3s ease`,
-                animation: `popIn 0.5s ease-out ${popDelay}s both, drift${node.driftVariant} ${node.driftDuration}s ease-in-out ${popDelay + 0.5}s infinite`,
-              }}
-            />
-          );
-        })}
-      </svg>
-    </>
+    <canvas
+      ref={canvasRef}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      style={{
+        position: 'absolute',
+        inset: 0,
+        width: '100%',
+        height: '100%',
+        pointerEvents: 'all',
+      }}
+    />
   );
 }
