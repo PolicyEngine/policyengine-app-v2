@@ -1,6 +1,6 @@
 import { render } from '@test-utils';
-import { describe, expect, test, vi } from 'vitest';
 import { Tooltip, YAxis } from 'recharts';
+import { describe, expect, test, vi } from 'vitest';
 import WinnersLosersIncomeDecileSubPage from '@/pages/report-output/distributional-impact/WinnersLosersIncomeDecileSubPage';
 import { MOCK_WINNERS_LOSERS_OUTPUT } from '@/tests/fixtures/pages/report-output/distributional-impact/WinnersLosersDecileMocks';
 
