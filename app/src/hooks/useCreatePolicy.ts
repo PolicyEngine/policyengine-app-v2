@@ -50,6 +50,7 @@ export function useCreatePolicy(policyLabel?: string) {
         await createAssociation.mutateAsync({
           userId,
           policyId: data.id,
+          countryId,
           label: policyLabel,
           isCreated: true,
         });
