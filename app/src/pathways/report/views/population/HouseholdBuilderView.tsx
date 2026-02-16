@@ -4,7 +4,7 @@
  * Props-based instead of Redux-based
  */
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { LoadingOverlay, Stack, Text } from '@mantine/core';
 import { HouseholdAdapter } from '@/adapters/HouseholdAdapter';
@@ -13,6 +13,7 @@ import HouseholdBuilderForm from '@/components/household/HouseholdBuilderForm';
 import { useBasicInputFields } from '@/hooks/useBasicInputFields';
 import { useCreateHousehold } from '@/hooks/useCreateHousehold';
 import { useReportYear } from '@/hooks/useReportYear';
+import { useEntities } from '@/hooks/useStaticMetadata';
 import { RootState } from '@/store';
 import { Household } from '@/types/ingredients/Household';
 import { PopulationStateProps } from '@/types/pathwayState';
@@ -37,8 +38,15 @@ export default function HouseholdBuilderView({
 
   // Get metadata-driven options
   const basicInputFields = useBasicInputFields(countryId);
-  const metadata = useSelector((state: RootState) => state.metadata);
-  const { loading, error } = metadata;
+  const reduxMetadata = useSelector((state: RootState) => state.metadata);
+  const entities = useEntities(countryId);
+  const { loading, error } = reduxMetadata;
+
+  // Merge static entities into metadata so VariableResolver can resolve entity types
+  const metadata = useMemo(
+    () => ({ ...reduxMetadata, entities }),
+    [reduxMetadata, entities]
+  );
 
   // Get all basic non-person fields dynamically (country-agnostic)
   // This handles US entities (tax_unit, spm_unit, etc.) and UK entities (benunit) automatically

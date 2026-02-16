@@ -173,8 +173,8 @@ export default function PopulationsPage() {
         <IngredientReadView
           ingredient="household"
           title="Your saved households"
-          subtitle="Configure one or a collection of households to use in your simulation configurations."
-          buttonLabel="New household(s)"
+          subtitle="Configure one or more custom households to use in your simulation configurations."
+          buttonLabel="New custom household"
           onBuild={handleBuildPopulation}
           isLoading={isLoading}
           isError={isError}
