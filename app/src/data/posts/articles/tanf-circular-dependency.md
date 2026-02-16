@@ -1,8 +1,8 @@
-Microsimulation models compute government benefits simultaneously for every household. This works well when programs are independent, but breaks down when Program A's benefit depends on Program B, which depends on Program A. We recently encountered this exact problem when wiring up Florida's and Arizona's TANF programs, and the fix reveals something interesting about how benefit programs interact in practice.
+Microsimulation models compute government benefits simultaneously for every household. This works well when programs are independent, but breaks down when Program A's benefit depends on Program B, which depends on Program A. We recently encountered this problem across 25 state TANF programs — three through housing costs (Florida, Arizona, Vermont) and 22 through childcare expenses — and the fixes reveal something interesting about how benefit programs interact in practice.
 
 ## The dependency cycle
 
-PolicyEngine computes each household's TANF benefit by summing state-specific programs. When we added Florida's Temporary Cash Assistance (TCA) program, tests failed with a circular dependency error. Arizona's TANF program has the same cycle through its `az_tanf_payment_standard`, which reduces benefits by 37% for households without shelter costs.
+PolicyEngine computes each household's TANF benefit by summing state-specific programs. When we added Florida's Temporary Cash Assistance (TCA) program, tests failed with a circular dependency error. Arizona's TANF program has the same cycle through its `az_tanf_payment_standard`, which reduces benefits by 37% for households without shelter costs. Vermont's Reach Up program hits the same cycle through its housing allowance, which caps benefits at actual housing costs.
 
 Here's the cycle:
 
@@ -53,7 +53,31 @@ This breaks the cycle at the right conceptual point. The `pre_subsidy_rent` vari
 
 For the small share of households receiving both TANF and Section 8, this overstates their shelter obligation. Their actual out-of-pocket housing cost would be lower, potentially placing them in a lower shelter tier with a smaller payment standard.
 
-But in practice, this overlap is small. Section 8 waiting lists are [years long](https://www.cbpp.org/research/housing/long-waitlists-for-housing-vouchers-show-pressing-unmet-need-for-assistance), and most TANF recipients pay market rent. Among the 39 state TANF programs PolicyEngine models, only Florida and Arizona route through housing cost in a way that creates this cycle. Florida uses shelter tiers (zero, low, high) while Arizona reduces payment standards by 37% for households without shelter costs. The other 37 states compute payment standards based on family size, income, or fixed schedules that don't depend on housing.
+But in practice, this overlap is small. Section 8 waiting lists are [years long](https://www.cbpp.org/research/housing/long-waitlists-for-housing-vouchers-show-pressing-unmet-need-for-assistance), and most TANF recipients pay market rent. Among the 39 state TANF programs PolicyEngine models, three route through housing cost in a way that creates this cycle: Florida uses shelter tiers (zero, low, high), Arizona reduces payment standards by 37% for households without shelter costs, and Vermont caps its Reach Up housing allowance at actual housing costs. The other 36 states compute payment standards based on family size, income, or fixed schedules that don't depend on housing.
+
+## The childcare cycle: 22 states
+
+A separate circular dependency affects the 22 state TANF programs that deduct childcare expenses from countable income. The cycle runs:
+
+1. **tanf** sums all state TANF programs
+2. **State TANF** deducts `childcare_expenses` from earned income
+3. **childcare_expenses** subtracts state childcare subsidies (CO CCAP, CA, NE, MA) from pre-subsidy childcare costs
+4. **Childcare subsidies** count SNAP as income for eligibility
+5. **SNAP** counts TANF as unearned income
+
+And we're back to step 1. The affected states are Alabama, Alaska, Arizona, Delaware, DC, Georgia, Hawaii, Illinois, Kentucky, Maryland, Maine, Minnesota, Missouri, New Hampshire, New Mexico, Oklahoma, Rhode Island, Tennessee, Texas, Vermont, Virginia, and West Virginia.
+
+The fix mirrors the housing pattern: replace the post-subsidy `childcare_expenses` with `spm_unit_pre_subsidy_childcare_expenses` — a simple input variable that records what the household pays before any subsidies. Kansas already used this approach; we extended it to the remaining 22 states.
+
+```python
+# Before: created circular dependency
+childcare = spm_unit("childcare_expenses", period)
+
+# After: uses gross childcare obligation
+childcare = spm_unit("spm_unit_pre_subsidy_childcare_expenses", period)
+```
+
+This is accurate for the same reason the housing fix works. When a caseworker asks "what do you pay for childcare?", the applicant reports their actual expenses, not a computed amount net of subsidies they may or may not receive. The pre-subsidy amount is the operationally relevant figure.
 
 ## The SALT cycle: federal and state taxes
 
@@ -86,13 +110,13 @@ The CTC calculation has a related workaround. The non-refundable Child Tax Credi
 
 ## Other cycles in the codebase
 
-The FL/AZ TANF and SALT cases are the most architecturally significant, but PolicyEngine handles several other cycles with similar techniques:
+The FL/AZ/VT TANF housing, 22-state childcare, and SALT cases are the most architecturally significant, but PolicyEngine handles several other cycles with similar techniques:
 
 | Cycle | Variables involved | Resolution |
 |---|---|---|
 | **SNAP ↔ childcare subsidies** | SNAP deductions → childcare expenses → childcare subsidies → income → SNAP | Use `pre_subsidy_childcare_expenses` |
 | **SNAP ↔ electricity subsidies** | Utility allowance → electricity expenses → LIHEAP → SNAP enrollment → utility allowance | Use `pre_subsidy_electricity_expense` |
-| **KS TANF ↔ childcare subsidies** | KS TANF earned income → dependent care deduction → childcare subsidies → income → TANF | Use `spm_unit_pre_subsidy_childcare_expenses` |
+| **22 state TANF ↔ childcare subsidies** | State TANF earned income → childcare deduction → childcare subsidies → SNAP → TANF | Use `spm_unit_pre_subsidy_childcare_expenses` |
 | **Dependent income ↔ filing status** | Dependent gross income → taxable Social Security → filing status → dependent status → dependent income | Substitute pre-tax amounts (`social_security` for `taxable_social_security`) |
 | **MT itemization ↔ federal tax** | MT itemized deductions → federal itemization choice → SALT → MT state tax | Parallel "for_federal_itemization" variable set |
 | **VA/DE EITC refundability** | State EITC refundability → state tax liability → state credits → state EITC | Simulation branches that force refundable/non-refundable, compare outcomes |
@@ -102,7 +126,7 @@ The FL/AZ TANF and SALT cases are the most architecturally significant, but Poli
 
 These workarounds fall into three categories:
 
-1. **Pre-subsidy substitution** (SNAP childcare, SNAP electricity, FL/AZ TANF, KS TANF): Replace a post-subsidy amount with the pre-subsidy equivalent. Simple, low error, mirrors how agencies actually operate.
+1. **Pre-subsidy substitution** (SNAP childcare, SNAP electricity, FL/AZ/VT TANF housing, 22-state TANF childcare): Replace a post-subsidy amount with the pre-subsidy equivalent. Simple, low error, mirrors how agencies actually operate.
 
 2. **Simplified parallel variables** (SALT withholding, MT federal itemization, dependent income): Compute a rough approximation that avoids the dependency chain entirely. Moderate error — the simplified estimate diverges from the true value.
 
@@ -110,8 +134,8 @@ These workarounds fall into three categories:
 
 ## Implications for policy modeling
 
-Every circular dependency workaround introduces some inaccuracy. Using pre-subsidy rent for FL/AZ TANF overstates shelter costs for subsidized households. Using simplified withholding for SALT understates the deduction for some filers. Zeroing out SALT for CTC computation ignores a real interaction.
+Every circular dependency workaround introduces some inaccuracy. Using pre-subsidy rent for FL/AZ/VT TANF overstates shelter costs for subsidized households. Using pre-subsidy childcare for 22 state TANF programs overstates childcare expenses for households receiving subsidies. Using simplified withholding for SALT understates the deduction for some filers. Zeroing out SALT for CTC computation ignores a real interaction.
 
 These tradeoffs matter most at the margins — households near program thresholds where small differences in computed values flip eligibility. For aggregate estimates across millions of households, the errors tend to wash out. But for individual household calculators, users should understand that the model imposes an ordering on program determinations that real agencies handle case by case.
 
-The full dependency graph across all programs must remain a directed acyclic graph (DAG). When adding new state programs — especially those that incorporate housing costs, medical expenses, or other amounts that themselves depend on benefit programs — checking for cycles is an essential part of validation. PolicyEngine currently has at least twelve documented cycle-breaking workarounds across these three categories, each trading a modeling simplification for computational tractability.
+The full dependency graph across all programs must remain a directed acyclic graph (DAG). When adding new state programs — especially those that incorporate housing costs, childcare expenses, or other amounts that themselves depend on benefit programs — checking for cycles is an essential part of validation. PolicyEngine currently has at least fourteen documented cycle-breaking workarounds across these three categories, each trading a modeling simplification for computational tractability.
