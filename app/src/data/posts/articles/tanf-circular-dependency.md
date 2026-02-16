@@ -53,9 +53,9 @@ This breaks the cycle at the right conceptual point. The `pre_subsidy_rent` vari
 
 For the small share of households receiving both TANF and Section 8, this overstates their shelter obligation. Their actual out-of-pocket housing cost would be lower, potentially placing them in a lower shelter tier with a smaller payment standard.
 
-But in practice, this overlap is small. Section 8 waiting lists are [years long](https://www.cbpp.org/research/housing/long-waitlists-for-housing-vouchers-show-pressing-unmet-need-for-assistance), and most TANF recipients pay market rent. Among the 43 state TANF programs PolicyEngine models, three route through housing cost in a way that creates this cycle: Florida uses shelter tiers (zero, low, high), Arizona reduces payment standards by 37% for households without shelter costs, and Vermont caps its Reach Up housing allowance at actual housing costs. The other 40 states compute payment standards based on family size, income, or fixed schedules that don't depend on housing.
+But in practice, this overlap is small. Section 8 waiting lists are [years long](https://www.cbpp.org/research/housing/long-waitlists-for-housing-vouchers-show-pressing-unmet-need-for-assistance), and most TANF recipients pay market rent. Among the 51 state TANF programs PolicyEngine models (all US states plus DC), three route through housing cost in a way that creates this cycle: Florida uses shelter tiers (zero, low, high), Arizona reduces payment standards by 37% for households without shelter costs, and Vermont caps its Reach Up housing allowance at actual housing costs. The other 48 jurisdictions compute payment standards based on family size, income, or fixed schedules that don't depend on housing.
 
-## The childcare cycle: 22 states
+## The childcare cycle: 23 states
 
 A separate circular dependency affects the 23 state TANF programs that deduct childcare expenses from countable income. The cycle runs:
 
