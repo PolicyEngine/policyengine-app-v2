@@ -113,8 +113,8 @@ describe('populationCompatibility', () => {
       // When
       const result = getPopulationLabel(population);
 
-      // Then - Note: With simplified Geography type, regionCode is returned as fallback
-      expect(result).toBe('us-ca');
+      // Then - With "Households in" prefix format
+      expect(result).toBe('Households in us-ca');
     });
 
     it('given population with label prioritizes label over household ID', () => {
@@ -141,7 +141,7 @@ describe('populationCompatibility', () => {
       const result = getPopulationLabel(population);
 
       // Then
-      expect(result).toBe('Unknown Household(s)');
+      expect(result).toBe('Unknown household(s)');
     });
   });
 

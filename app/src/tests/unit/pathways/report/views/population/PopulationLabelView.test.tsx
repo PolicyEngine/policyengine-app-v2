@@ -9,6 +9,7 @@ import {
   mockPopulationStateEmpty,
   mockPopulationStateWithGeography,
   mockPopulationStateWithHousehold,
+  mockUseRegionsEmpty,
   resetAllMocks,
   TEST_COUNTRY_ID,
   TEST_POPULATION_LABEL,
@@ -16,6 +17,10 @@ import {
 
 vi.mock('@/hooks/useCurrentCountry', () => ({
   useCurrentCountry: vi.fn(),
+}));
+
+vi.mock('@/hooks/useRegions', () => ({
+  useRegions: vi.fn(() => mockUseRegionsEmpty),
 }));
 
 describe('PopulationLabelView', () => {
@@ -85,7 +90,7 @@ describe('PopulationLabelView', () => {
       );
 
       // Then
-      expect(screen.getByLabelText(/household label/i)).toHaveValue('National Households');
+      expect(screen.getByLabelText(/household label/i)).toHaveValue('Households nationwide');
     });
 
     test('given existing label then shows that label', () => {

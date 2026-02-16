@@ -31,7 +31,7 @@ export const mockPopulationStateWithHousehold: PopulationStateProps = {
 };
 
 export const mockPopulationStateWithGeography: PopulationStateProps = {
-  label: 'National Households',
+  label: null,
   type: 'geography',
   household: null,
   geography: {
@@ -44,6 +44,14 @@ export const mockRegionData: any[] = [
   { name: 'Alabama', code: 'al', geography_id: 'us_al' },
   { name: 'California', code: 'ca', geography_id: 'us_ca' },
 ];
+
+// Mock return value for useRegions hook (empty regions)
+export const mockUseRegionsEmpty = {
+  regions: [],
+  isLoading: false,
+  error: null,
+  rawRegions: [],
+};
 
 export function resetAllMocks() {
   mockOnUpdateLabel.mockClear();
