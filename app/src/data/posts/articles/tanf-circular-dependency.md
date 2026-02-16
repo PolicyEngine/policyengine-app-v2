@@ -1,8 +1,8 @@
-Microsimulation models compute government benefits simultaneously for every household. This works well when programs are independent, but breaks down when Program A's benefit depends on Program B, which depends on Program A. We recently encountered this exact problem when wiring up Florida's TANF program, and the fix reveals something interesting about how benefit programs interact in practice.
+Microsimulation models compute government benefits simultaneously for every household. This works well when programs are independent, but breaks down when Program A's benefit depends on Program B, which depends on Program A. We recently encountered this exact problem when wiring up Florida's and Arizona's TANF programs, and the fix reveals something interesting about how benefit programs interact in practice.
 
 ## The dependency cycle
 
-PolicyEngine computes each household's TANF benefit by summing state-specific programs. When we added Florida's Temporary Cash Assistance (TCA) program, tests failed with a circular dependency error.
+PolicyEngine computes each household's TANF benefit by summing state-specific programs. When we added Florida's Temporary Cash Assistance (TCA) program, tests failed with a circular dependency error. Arizona's TANF program has the same cycle through its `az_tanf_payment_standard`, which reduces benefits by 37% for households without shelter costs.
 
 Here's the cycle:
 
@@ -53,11 +53,11 @@ This breaks the cycle at the right conceptual point. The `pre_subsidy_rent` vari
 
 For the small share of households receiving both TANF and Section 8, this overstates their shelter obligation. Their actual out-of-pocket housing cost would be lower, potentially placing them in a lower shelter tier with a smaller payment standard.
 
-But in practice, this overlap is small. Section 8 waiting lists are [years long](https://www.cbpp.org/research/housing/long-waitlists-for-housing-vouchers-show-pressing-unmet-need-for-assistance), and most TANF recipients pay market rent. Among the 39 state TANF programs PolicyEngine models, only Florida routes through housing cost in a way that creates this cycle. The other 38 states compute payment standards based on family size, income, or fixed schedules that don't depend on housing.
+But in practice, this overlap is small. Section 8 waiting lists are [years long](https://www.cbpp.org/research/housing/long-waitlists-for-housing-vouchers-show-pressing-unmet-need-for-assistance), and most TANF recipients pay market rent. Among the 39 state TANF programs PolicyEngine models, only Florida and Arizona route through housing cost in a way that creates this cycle. Florida uses shelter tiers (zero, low, high) while Arizona reduces payment standards by 37% for households without shelter costs. The other 37 states compute payment standards based on family size, income, or fixed schedules that don't depend on housing.
 
 ## The SALT cycle: federal and state taxes
 
-The FL TANF case isn't unique. PolicyEngine's largest circular dependency workaround involves the interaction between federal and state income taxes.
+The FL/AZ TANF case isn't unique. PolicyEngine's largest circular dependency workaround involves the interaction between federal and state income taxes.
 
 Six states — Alabama, Iowa, Louisiana, Missouri, Montana, and Oregon — allow taxpayers to [deduct federal income tax paid](https://taxfoundation.org/data/all/state/state-deduction-federal-income-taxes-2024/) from their state taxable income. Meanwhile, the federal tax code lets itemizers deduct state and local taxes (SALT) from federal taxable income. This creates a textbook cycle:
 
@@ -86,7 +86,7 @@ The CTC calculation has a related workaround. The non-refundable Child Tax Credi
 
 ## Other cycles in the codebase
 
-The FL TANF and SALT cases are the most architecturally significant, but PolicyEngine handles several other cycles with similar techniques:
+The FL/AZ TANF and SALT cases are the most architecturally significant, but PolicyEngine handles several other cycles with similar techniques:
 
 | Cycle | Variables involved | Resolution |
 |---|---|---|
@@ -102,7 +102,7 @@ The FL TANF and SALT cases are the most architecturally significant, but PolicyE
 
 These workarounds fall into three categories:
 
-1. **Pre-subsidy substitution** (SNAP childcare, SNAP electricity, FL TANF, KS TANF): Replace a post-subsidy amount with the pre-subsidy equivalent. Simple, low error, mirrors how agencies actually operate.
+1. **Pre-subsidy substitution** (SNAP childcare, SNAP electricity, FL/AZ TANF, KS TANF): Replace a post-subsidy amount with the pre-subsidy equivalent. Simple, low error, mirrors how agencies actually operate.
 
 2. **Simplified parallel variables** (SALT withholding, MT federal itemization, dependent income): Compute a rough approximation that avoids the dependency chain entirely. Moderate error — the simplified estimate diverges from the true value.
 
@@ -110,7 +110,7 @@ These workarounds fall into three categories:
 
 ## Implications for policy modeling
 
-Every circular dependency workaround introduces some inaccuracy. Using pre-subsidy rent for FL TANF overstates shelter costs for subsidized households. Using simplified withholding for SALT understates the deduction for some filers. Zeroing out SALT for CTC computation ignores a real interaction.
+Every circular dependency workaround introduces some inaccuracy. Using pre-subsidy rent for FL/AZ TANF overstates shelter costs for subsidized households. Using simplified withholding for SALT understates the deduction for some filers. Zeroing out SALT for CTC computation ignores a real interaction.
 
 These tradeoffs matter most at the margins — households near program thresholds where small differences in computed values flip eligibility. For aggregate estimates across millions of households, the errors tend to wash out. But for individual household calculators, users should understand that the model imposes an ordering on program determinations that real agencies handle case by case.
 
