@@ -69,13 +69,13 @@ export default function SimulationSetupView({
 
   const canProceed: boolean = isPolicyConfigured(policy) && isPopulationConfigured(population);
 
-  // Helper to get geography display label
+  // Helper to get geography display label in "Households in {label}" format
   function getGeographyDisplayLabel(): string {
     if (!population.geography) return '';
-    if (isNationalGeography(population.geography)) {
-      return getCountryLabel(population.geography.countryId);
-    }
-    return getRegionLabel(population.geography.regionCode, regions);
+    const label = isNationalGeography(population.geography)
+      ? getCountryLabel(population.geography.countryId)
+      : getRegionLabel(population.geography.regionCode, regions);
+    return `Households in ${label}`;
   }
 
   function generatePopulationCardTitle() {
@@ -114,9 +114,6 @@ export default function SimulationSetupView({
 
     if (population.label && population.household) {
       return `Household #${population.household.id}`;
-    }
-    if (population.label && population.geography) {
-      return getGeographyDisplayLabel();
     }
     return '';
   }

@@ -65,10 +65,12 @@ export default function SimulationPopulationSetupView({
     if (otherPopulation?.household?.id) return `Household #${otherPopulation.household.id}`;
     if (otherPopulation?.geography) {
       const geo = otherPopulation.geography;
-      if (isNationalGeography(geo)) return getCountryLabel(geo.countryId);
-      return getRegionLabel(geo.regionCode, regions);
+      const label = isNationalGeography(geo)
+        ? getCountryLabel(geo.countryId)
+        : getRegionLabel(geo.regionCode, regions);
+      return `Households in ${label}`;
     }
-    return 'Unknown Household(s)';
+    return 'Unknown household(s)';
   }
 
   function handleClickCreateNew() {

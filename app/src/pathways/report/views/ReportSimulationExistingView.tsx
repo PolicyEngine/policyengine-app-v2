@@ -33,13 +33,13 @@ export default function ReportSimulationExistingView({
   const { data, isLoading, isError, error } = useUserSimulations(userId);
   const [localSimulation, setLocalSimulation] = useState<EnhancedUserSimulation | null>(null);
 
-  // Helper to get geography display label
+  // Helper to get geography display label in "Households in {label}" format
   function getGeographyLabel(enhancedSim: EnhancedUserSimulation): string | undefined {
     if (!enhancedSim.geography) return undefined;
-    if (isNationalGeography(enhancedSim.geography)) {
-      return getCountryLabel(enhancedSim.geography.countryId);
-    }
-    return getRegionLabel(enhancedSim.geography.regionCode, regions);
+    const label = isNationalGeography(enhancedSim.geography)
+      ? getCountryLabel(enhancedSim.geography.countryId)
+      : getRegionLabel(enhancedSim.geography.regionCode, regions);
+    return `Households in ${label}`;
   }
 
   function canProceed() {

@@ -41,7 +41,7 @@ export function createPopulationCallbacks<TState, TMode>(
     (geography: Geography | null, _scopeType: string, regionLabel?: string) => {
       // If geography is selected, complete immediately with auto-generated label
       if (geography) {
-        const label = regionLabel ? `${regionLabel} households` : 'Geographic households';
+        const label = regionLabel ? `Households in ${regionLabel}` : 'Geographic households';
         setState((prev) => {
           const population = populationSelector(prev);
           return populationUpdater(prev, {

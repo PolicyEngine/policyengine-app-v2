@@ -51,12 +51,12 @@ export default function PopulationLabelView({
     if (population?.geography) {
       // Geographic population
       if (isNationalGeography(population.geography)) {
-        return 'National Households';
+        return 'Households nationwide';
       } else if (population.geography.regionCode) {
         const label = getRegionLabel(population.geography.regionCode, regions);
-        return `${label} Households`;
+        return `Households in ${label}`;
       }
-      return 'Regional Households';
+      return 'Regional households';
     }
     // Household population
     return 'Custom Household';

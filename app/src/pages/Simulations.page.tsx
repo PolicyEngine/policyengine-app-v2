@@ -133,9 +133,7 @@ export default function SimulationsPage() {
         text:
           item.userHousehold?.label ||
           (item.geography
-            ? isNationalGeography(item.geography)
-              ? getCountryLabel(item.geography.countryId)
-              : getRegionLabel(item.geography.regionCode, regions)
+            ? `Households in ${isNationalGeography(item.geography) ? getCountryLabel(item.geography.countryId) : getRegionLabel(item.geography.regionCode, regions)}`
             : null) ||
           (item.household ? `Household #${item.household.id}` : 'No population'),
       } as TextValue,

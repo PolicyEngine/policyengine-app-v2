@@ -178,14 +178,14 @@ function getPopulationLabel(
   regions: MetadataRegionEntry[]
 ): string {
   if (simulation?.population.household?.id) {
-    return simulation.population.household.id;
+    return `Household #${simulation.population.household.id}`;
   }
   if (simulation?.population.geography) {
     const geo = simulation.population.geography;
-    if (isNationalGeography(geo)) {
-      return getCountryLabel(geo.countryId);
-    }
-    return getRegionLabel(geo.regionCode, regions);
+    const label = isNationalGeography(geo)
+      ? getCountryLabel(geo.countryId)
+      : getRegionLabel(geo.regionCode, regions);
+    return `Households in ${label}`;
   }
   return 'N/A';
 }

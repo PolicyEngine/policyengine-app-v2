@@ -49,10 +49,10 @@ export function getPopulationLabel(population: Population | null): string {
 
   // Third priority: geography region code (fallback when region metadata unavailable)
   if (population.geography?.regionCode) {
-    return population.geography.regionCode;
+    return `Households in ${population.geography.regionCode}`;
   }
 
-  return 'Unknown Household(s)';
+  return 'Unknown household(s)';
 }
 
 /**

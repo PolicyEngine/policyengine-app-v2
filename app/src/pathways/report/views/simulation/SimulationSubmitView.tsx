@@ -58,16 +58,16 @@ export default function SimulationSubmitView({
 
   // Create summary boxes based on the current simulation state
   const populationIdentifier = simulation.population.household?.id || simulation.population.geography?.regionCode;
+  const populationDisplay = simulation.population.label
+    || (simulation.population.household?.id ? `Household #${simulation.population.household.id}` : null)
+    || (simulation.population.geography?.regionCode ? `Households in ${simulation.population.geography.regionCode}` : null)
+    || 'No population';
   const summaryBoxes: SummaryBoxItem[] = [
     {
       title: 'Population added',
-      description:
-        simulation.population.label ||
-        `Household ${populationIdentifier}`,
+      description: populationDisplay,
       isFulfilled: !!populationIdentifier,
-      badge:
-        simulation.population.label ||
-        `Household ${populationIdentifier}`,
+      badge: populationDisplay,
     },
     {
       title: 'Policy reform added',

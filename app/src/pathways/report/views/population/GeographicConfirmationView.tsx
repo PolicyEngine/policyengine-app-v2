@@ -11,7 +11,7 @@ import PathwayView from '@/components/common/PathwayView';
 import { isNationalGeography } from '@/types/ingredients/Geography';
 import { MetadataRegionEntry } from '@/types/metadata';
 import { PopulationStateProps } from '@/types/pathwayState';
-import { getCountryLabel, getRegionLabel, getRegionTypeLabel } from '@/utils/geographyUtils';
+import { getCountryLabel, getRegionLabel } from '@/utils/geographyUtils';
 
 interface GeographicConfirmationViewProps {
   population: PopulationStateProps;
@@ -49,49 +49,27 @@ export default function GeographicConfirmationView({
     const geographyCountryId = population.geography.countryId;
     const regionCode = population.geography.regionCode;
 
-    if (isNationalGeography(population.geography)) {
-      return (
-        <Stack gap="md">
-          <Text fw={600} fz="lg">
-            Confirm household collection
-          </Text>
-          <Text>
-            <strong>Scope:</strong> National
-          </Text>
-          <Text>
-            <strong>Country:</strong> {getCountryLabel(geographyCountryId)}
-          </Text>
-        </Stack>
-      );
-    }
-
-    // Subnational
-    const regionLabel = getRegionLabel(regionCode, regions);
-    const regionTypeName = getRegionTypeLabel(geographyCountryId, regionCode, regions);
+    const label = isNationalGeography(population.geography)
+      ? getCountryLabel(geographyCountryId)
+      : getRegionLabel(regionCode, regions);
 
     return (
       <Stack gap="md">
         <Text fw={600} fz="lg">
-          Confirm household collection
-        </Text>
-        <Text>
-          <strong>Scope:</strong> {regionTypeName}
-        </Text>
-        <Text>
-          <strong>{regionTypeName}:</strong> {regionLabel}
+          Households in {label}
         </Text>
       </Stack>
     );
   };
 
   const primaryAction = {
-    label: 'Create household collection',
+    label: 'Confirm',
     onClick: handleSubmit,
   };
 
   return (
     <PathwayView
-      title="Confirm household collection"
+      title="Confirm geography"
       content={buildDisplayContent()}
       primaryAction={primaryAction}
       backAction={onBack ? { onClick: onBack } : undefined}
