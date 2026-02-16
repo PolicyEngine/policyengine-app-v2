@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiPolicyStore, LocalStoragePolicyStore } from '@/api/policyAssociation';
+import { API_V2_BASE_URL } from '@/api/v2/taxBenefitModels';
 import type { UserPolicy } from '@/types/ingredients/UserPolicy';
 
 // Mock fetch
@@ -11,6 +12,7 @@ describe('ApiPolicyStore', () => {
   const mockPolicyInput: Omit<UserPolicy, 'id' | 'createdAt'> = {
     userId: 'user-123',
     policyId: 'policy-456',
+    countryId: 'us',
     label: 'Test Policy',
     isCreated: true,
   };
@@ -19,6 +21,7 @@ describe('ApiPolicyStore', () => {
     id: 'user-policy-abc123',
     user_id: 'user-123',
     policy_id: 'policy-456',
+    country_id: 'us',
     label: 'Test Policy',
     created_at: '2025-01-01T00:00:00Z',
     updated_at: '2025-01-01T00:00:00Z',
@@ -46,7 +49,7 @@ describe('ApiPolicyStore', () => {
 
       // Then
       expect(fetch).toHaveBeenCalledWith(
-        '/user-policies/',
+        `${API_V2_BASE_URL}/user-policies/`,
         expect.objectContaining({
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -87,7 +90,7 @@ describe('ApiPolicyStore', () => {
 
       // Then
       expect(fetch).toHaveBeenCalledWith(
-        '/user-policies/?user_id=user-123',
+        `${API_V2_BASE_URL}/user-policies/?user_id=user-123`,
         expect.objectContaining({
           headers: { 'Content-Type': 'application/json' },
         })
@@ -96,8 +99,29 @@ describe('ApiPolicyStore', () => {
       expect(result[0]).toMatchObject({
         userId: 'user-123',
         policyId: 'policy-456',
+        countryId: 'us',
         label: 'Test Policy',
       });
+    });
+
+    it('given valid user ID and country ID then fetches filtered associations', async () => {
+      // Given
+      (global.fetch as any).mockResolvedValue({
+        ok: true,
+        json: async () => [mockApiResponse],
+      });
+
+      // When
+      const result = await store.findByUser('user-123', 'us');
+
+      // Then
+      expect(fetch).toHaveBeenCalledWith(
+        `${API_V2_BASE_URL}/user-policies/?user_id=user-123&country_id=us`,
+        expect.objectContaining({
+          headers: { 'Content-Type': 'application/json' },
+        })
+      );
+      expect(result).toHaveLength(1);
     });
 
     it('given API error then throws error', async () => {
@@ -128,7 +152,7 @@ describe('ApiPolicyStore', () => {
 
       // Then
       expect(fetch).toHaveBeenCalledWith(
-        '/user-policies/user-policy-abc123',
+        `${API_V2_BASE_URL}/user-policies/user-policy-abc123`,
         expect.objectContaining({
           headers: { 'Content-Type': 'application/json' },
         })
@@ -186,7 +210,7 @@ describe('ApiPolicyStore', () => {
 
       // Then
       expect(fetch).toHaveBeenCalledWith(
-        '/user-policies/user-policy-abc123',
+        `${API_V2_BASE_URL}/user-policies/user-policy-abc123`,
         expect.objectContaining({
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
@@ -222,7 +246,7 @@ describe('ApiPolicyStore', () => {
 
       // Then
       expect(fetch).toHaveBeenCalledWith(
-        '/user-policies/user-policy-abc123',
+        `${API_V2_BASE_URL}/user-policies/user-policy-abc123`,
         expect.objectContaining({
           method: 'DELETE',
         })
@@ -251,6 +275,7 @@ describe('LocalStoragePolicyStore', () => {
   const mockPolicyInput1: Omit<UserPolicy, 'id' | 'createdAt'> = {
     userId: 'user-123',
     policyId: 'policy-456',
+    countryId: 'us',
     label: 'Test Policy 1',
     isCreated: true,
   };
@@ -258,7 +283,16 @@ describe('LocalStoragePolicyStore', () => {
   const mockPolicyInput2: Omit<UserPolicy, 'id' | 'createdAt'> = {
     userId: 'user-123',
     policyId: 'policy-789',
+    countryId: 'us',
     label: 'Test Policy 2',
+    isCreated: true,
+  };
+
+  const mockPolicyInputUK: Omit<UserPolicy, 'id' | 'createdAt'> = {
+    userId: 'user-123',
+    policyId: 'policy-uk-001',
+    countryId: 'uk',
+    label: 'UK Policy',
     isCreated: true,
   };
 
@@ -293,6 +327,7 @@ describe('LocalStoragePolicyStore', () => {
       expect(result).toMatchObject({
         userId: 'user-123',
         policyId: 'policy-456',
+        countryId: 'us',
         label: 'Test Policy 1',
       });
       expect(result.id).toBeDefined();
@@ -313,6 +348,7 @@ describe('LocalStoragePolicyStore', () => {
       expect(second).toMatchObject({
         userId: 'user-123',
         policyId: 'policy-456',
+        countryId: 'us',
         label: 'Test Policy 1',
       });
       expect(second.id).toBeDefined();
@@ -322,18 +358,35 @@ describe('LocalStoragePolicyStore', () => {
   });
 
   describe('findByUser', () => {
-    it('given user with policies then returns all user policies', async () => {
+    it('given user with policies then returns all user policies when no country filter', async () => {
       // Given
       await store.create(mockPolicyInput1);
       await store.create(mockPolicyInput2);
+      await store.create(mockPolicyInputUK);
 
       // When
       const result = await store.findByUser('user-123');
 
       // Then
-      expect(result).toHaveLength(2);
-      expect(result[0].policyId).toBe('policy-456');
-      expect(result[1].policyId).toBe('policy-789');
+      expect(result).toHaveLength(3);
+    });
+
+    it('given user with policies then filters by country when country is provided', async () => {
+      // Given
+      await store.create(mockPolicyInput1);
+      await store.create(mockPolicyInput2);
+      await store.create(mockPolicyInputUK);
+
+      // When
+      const usResult = await store.findByUser('user-123', 'us');
+      const ukResult = await store.findByUser('user-123', 'uk');
+
+      // Then
+      expect(usResult).toHaveLength(2);
+      expect(usResult[0].countryId).toBe('us');
+      expect(usResult[1].countryId).toBe('us');
+      expect(ukResult).toHaveLength(1);
+      expect(ukResult[0].countryId).toBe('uk');
     });
 
     it('given user with no policies then returns empty array', async () => {

@@ -7,6 +7,7 @@ export interface UserPolicyMetadata {
   id: string;
   user_id: string;
   policy_id: string;
+  country_id: string;
   label: string | null;
   created_at: string;
   updated_at: string;
@@ -20,6 +21,7 @@ export interface UserPolicyMetadata {
 export interface UserPolicyCreationMetadata {
   user_id: string;
   policy_id: string;
+  country_id: string;
   label?: string | null;
 }
 
