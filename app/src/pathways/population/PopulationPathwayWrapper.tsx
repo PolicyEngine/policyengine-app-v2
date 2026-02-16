@@ -1,7 +1,7 @@
 /**
  * PopulationPathwayWrapper - Pathway orchestrator for standalone household creation
  *
- * Two-step flow: name the household, then build it.
+ * Two-step flow: LABEL (name the household) → HOUSEHOLD_BUILDER (configure members).
  * Geography selection is only available through the report/simulation pathways.
  */
 
