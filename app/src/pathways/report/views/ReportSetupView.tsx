@@ -201,7 +201,7 @@ function getBaselineCardDescription(
   if (isConfigured) {
     const policyId = simulation?.policy.id || 'N/A';
     const populationLabel = getPopulationLabel(simulation, regions);
-    return `Policy #${policyId} • Household(s) ${populationLabel}`;
+    return `Policy #${policyId} • ${populationLabel}`;
   }
   return 'Select your baseline simulation';
 }
@@ -248,7 +248,7 @@ function getComparisonCardDescription(
   if (isConfigured) {
     const policyId = simulation?.policy.id || 'N/A';
     const populationLabel = getPopulationLabel(simulation, regions);
-    return `Policy #${policyId} • Household(s) ${populationLabel}`;
+    return `Policy #${policyId} • ${populationLabel}`;
   }
 
   // If baseline not configured yet, show waiting message

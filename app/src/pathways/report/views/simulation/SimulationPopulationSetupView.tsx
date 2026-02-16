@@ -7,9 +7,12 @@
 import { useState } from 'react';
 import PathwayView from '@/components/common/PathwayView';
 import { MOCK_USER_ID } from '@/constants';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useRegions } from '@/hooks/useRegions';
 import { useUserHouseholds } from '@/hooks/useUserHousehold';
 import { PopulationStateProps, SimulationStateProps } from '@/types/pathwayState';
-import { getPopulationLabel, getSimulationLabel } from '@/utils/populationCompatibility';
+import { getCountryLabel, getRegionLabel, isNationalGeography } from '@/utils/geographyUtils';
+import { getSimulationLabel } from '@/utils/populationCompatibility';
 import {
   getPopulationLockConfig,
   getPopulationSelectionSubtitle,
@@ -40,6 +43,8 @@ export default function SimulationPopulationSetupView({
   onCancel,
 }: SimulationPopulationSetupViewProps) {
   const userId = MOCK_USER_ID.toString();
+  const countryId = useCurrentCountry();
+  const { regions } = useRegions(countryId);
   const { data: userHouseholds } = useUserHouseholds(userId);
   // Note: Geographic populations are no longer stored as user associations.
   // They are selected per-simulation. We only check for existing households.
@@ -54,6 +59,17 @@ export default function SimulationPopulationSetupView({
     otherSimulation as any, // TODO: Type compatibility
     otherPopulation as any
   );
+
+  function getOtherPopulationLabel(): string {
+    if (otherPopulation?.label) return otherPopulation.label;
+    if (otherPopulation?.household?.id) return `Household #${otherPopulation.household.id}`;
+    if (otherPopulation?.geography) {
+      const geo = otherPopulation.geography;
+      if (isNationalGeography(geo)) return getCountryLabel(geo.countryId);
+      return getRegionLabel(geo.regionCode, regions);
+    }
+    return 'Unknown Household(s)';
+  }
 
   function handleClickCreateNew() {
     setSelectedAction('createNew');
@@ -92,7 +108,7 @@ export default function SimulationPopulationSetupView({
     // Card 2: Use Population from Other Simulation (enabled)
     {
       title: `Use household(s) from ${getSimulationLabel(otherSimulation as any)}`,
-      description: `Household(s): ${getPopulationLabel(otherPopulation as any)}`,
+      description: `Household(s): ${getOtherPopulationLabel()}`,
       onClick: handleClickCopyExisting,
       isSelected: selectedAction === 'copyExisting',
       isDisabled: false,

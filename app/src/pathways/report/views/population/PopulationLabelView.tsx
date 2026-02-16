@@ -8,10 +8,11 @@ import { useState } from 'react';
 import { Stack, Text, TextInput } from '@mantine/core';
 import PathwayView from '@/components/common/PathwayView';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useRegions } from '@/hooks/useRegions';
 import { isNationalGeography } from '@/types/ingredients/Geography';
 import { PathwayMode } from '@/types/pathwayModes/PathwayMode';
 import { PopulationStateProps } from '@/types/pathwayState';
-import { extractRegionDisplayValue } from '@/utils/regionStrategies';
+import { getRegionLabel } from '@/utils/geographyUtils';
 
 interface PopulationLabelViewProps {
   population: PopulationStateProps;
@@ -38,6 +39,7 @@ export default function PopulationLabelView({
   }
 
   const countryId = useCurrentCountry();
+  const { regions } = useRegions(countryId);
   const initializeText = countryId === 'uk' ? 'Initialise' : 'Initialize';
 
   // Initialize with existing label or generate a default based on population type
@@ -51,9 +53,8 @@ export default function PopulationLabelView({
       if (isNationalGeography(population.geography)) {
         return 'National Households';
       } else if (population.geography.regionCode) {
-        // Use display value (strip prefix for UK regions)
-        const displayValue = extractRegionDisplayValue(population.geography.regionCode);
-        return `${displayValue} Households`;
+        const label = getRegionLabel(population.geography.regionCode, regions);
+        return `${label} Households`;
       }
       return 'Regional Households';
     }

@@ -95,8 +95,7 @@ export default function SimulationSetupView({
       return `Household #${population.household.id}`;
     }
     if (population.geography) {
-      const geoLabel = getGeographyDisplayLabel();
-      return `Household(s) (${geoLabel})`;
+      return getGeographyDisplayLabel();
     }
     return '';
   }
@@ -117,8 +116,7 @@ export default function SimulationSetupView({
       return `Household #${population.household.id}`;
     }
     if (population.label && population.geography) {
-      const geoLabel = getGeographyDisplayLabel();
-      return `Household collection (${geoLabel})`;
+      return getGeographyDisplayLabel();
     }
     return '';
   }
