@@ -4,8 +4,8 @@ import { MOCK_USER_ID } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useRegions } from '@/hooks/useRegions';
 import { useUserHouseholds } from '@/hooks/useUserHousehold';
-import { ReportStateProps, SimulationStateProps } from '@/types/pathwayState';
 import { MetadataRegionEntry } from '@/types/metadata';
+import { ReportStateProps, SimulationStateProps } from '@/types/pathwayState';
 import { getCountryLabel, getRegionLabel, isNationalGeography } from '@/utils/geographyUtils';
 import { isSimulationConfigured } from '@/utils/validation/ingredientValidation';
 

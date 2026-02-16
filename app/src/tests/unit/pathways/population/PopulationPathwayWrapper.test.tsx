@@ -5,9 +5,9 @@ import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import PopulationPathwayWrapper from '@/pathways/population/PopulationPathwayWrapper';
 import {
   mockNavigate,
+  mockUseParams,
   mockUsePathwayNavigationReturn,
   mockUseRegionsEmpty,
-  mockUseParams,
   resetAllMocks,
   TEST_COUNTRY_ID,
 } from '@/tests/fixtures/pathways/population/PopulationPathwayWrapperMocks';

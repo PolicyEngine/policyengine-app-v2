@@ -18,12 +18,7 @@ export default function PopulationsPage() {
   // Fetch household associations
   // Note: Geographic populations are no longer stored as user associations.
   // They are selected per-simulation and constructed from metadata.
-  const {
-    data: householdData,
-    isLoading,
-    isError,
-    error,
-  } = useUserHouseholds(userId);
+  const { data: householdData, isLoading, isError, error } = useUserHouseholds(userId);
 
   const navigate = useNavigate();
 

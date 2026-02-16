@@ -35,7 +35,9 @@ export default function ReportSimulationExistingView({
 
   // Helper to get geography display label in "Households in {label}" format
   function getGeographyLabel(enhancedSim: EnhancedUserSimulation): string | undefined {
-    if (!enhancedSim.geography) return undefined;
+    if (!enhancedSim.geography) {
+      return undefined;
+    }
     const label = isNationalGeography(enhancedSim.geography)
       ? getCountryLabel(enhancedSim.geography.countryId)
       : getRegionLabel(enhancedSim.geography.regionCode, regions);
@@ -111,8 +113,7 @@ export default function ReportSimulationExistingView({
   // For household populations, use household.id
   // For geography populations, use geography.regionCode
   const otherPopulationId =
-    otherSimulation?.population.household?.id ||
-    otherSimulation?.population.geography?.regionCode;
+    otherSimulation?.population.household?.id || otherSimulation?.population.geography?.regionCode;
 
   // Sort simulations to show compatible first, then incompatible
   const sortedSimulations = [...filteredSimulations].sort((a, b) => {

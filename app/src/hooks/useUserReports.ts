@@ -16,7 +16,6 @@ import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { UserReport } from '@/types/ingredients/UserReport';
 import { UserSimulation } from '@/types/ingredients/UserSimulation';
 import { householdKeys, policyKeys, reportKeys, simulationKeys } from '../libs/queryKeys';
-import { useRegionsList } from './useStaticMetadata';
 import { useHouseholdAssociationsByUser } from './useUserHousehold';
 import { usePolicyAssociationsByUser } from './useUserPolicy';
 import { useReportAssociationById, useReportAssociationsByUser } from './useUserReportAssociations';
@@ -68,9 +67,6 @@ export interface EnhancedUserReport {
 export const useUserReports = (userId: string) => {
   const country = useCurrentCountry();
   const queryNormalizer = useQueryNormalizer();
-
-  // Get geography data from static metadata
-  const geographyOptions = useRegionsList(country);
 
   // Step 1: Fetch all user associations in parallel
   const {
@@ -445,8 +441,6 @@ export const useUserReportById = (userReportId: string, options?: { enabled?: bo
   );
 
   // Step 7: Get geography data from simulations
-  const geographyOptions = useRegionsList(country);
-
   const geographies: Geography[] = [];
   simulations.forEach((sim) => {
     if (sim.populationType === 'geography' && sim.populationId && sim.countryId) {

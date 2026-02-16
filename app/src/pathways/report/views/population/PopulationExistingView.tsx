@@ -38,12 +38,7 @@ export default function PopulationExistingView({
 
   // Fetch household populations only
   // Geographic populations are no longer stored as user associations
-  const {
-    data: householdData,
-    isLoading,
-    isError,
-    error,
-  } = useUserHouseholds(userId);
+  const { data: householdData, isLoading, isError, error } = useUserHouseholds(userId);
 
   const [localPopulation, setLocalPopulation] =
     useState<UserHouseholdMetadataWithAssociation | null>(null);

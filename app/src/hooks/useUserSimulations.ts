@@ -14,7 +14,6 @@ import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { UserSimulation } from '@/types/ingredients/UserSimulation';
 import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
 import { householdKeys, policyKeys, simulationKeys } from '../libs/queryKeys';
-import { useRegionsList } from './useStaticMetadata';
 import { useHouseholdAssociationsByUser } from './useUserHousehold';
 import { usePolicyAssociationsByUser } from './useUserPolicy';
 import { useSimulationAssociationsByUser } from './useUserSimulationAssociations';
@@ -60,9 +59,6 @@ export interface EnhancedUserSimulation {
 export const useUserSimulations = (userId: string) => {
   const country = useCurrentCountry();
   const queryNormalizer = useQueryNormalizer();
-
-  // Get geography data from static metadata
-  const geographyOptions = useRegionsList(country);
 
   // Step 1: Fetch all user associations in parallel
   const {

@@ -12,7 +12,10 @@ interface GeographySubPageProps {
 /**
  * Get display scope label from geography using V2 API metadata
  */
-function useGeographyDisplayInfo(geography: Geography | undefined, regions: ReturnType<typeof useRegions>['regions']) {
+function useGeographyDisplayInfo(
+  geography: Geography | undefined,
+  regions: ReturnType<typeof useRegions>['regions']
+) {
   if (!geography) {
     return { label: '—', scopeLabel: '—' };
   }

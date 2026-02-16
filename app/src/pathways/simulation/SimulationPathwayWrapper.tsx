@@ -6,7 +6,6 @@
  */
 
 import { useCallback, useState } from 'react';
-import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import StandardLayout from '@/components/StandardLayout';
 import { MOCK_USER_ID } from '@/constants';
@@ -15,7 +14,6 @@ import { usePathwayNavigation } from '@/hooks/usePathwayNavigation';
 import { useCurrentLawId, useRegionsList } from '@/hooks/useStaticMetadata';
 import { useUserHouseholds } from '@/hooks/useUserHousehold';
 import { useUserPolicies } from '@/hooks/useUserPolicy';
-import { RootState } from '@/store';
 import { SimulationViewMode } from '@/types/pathwayModes/SimulationViewMode';
 import { SimulationStateProps } from '@/types/pathwayState';
 import {

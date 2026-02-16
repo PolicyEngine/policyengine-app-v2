@@ -72,7 +72,15 @@ export function createPopulationCallbacks<TState, TMode>(
         navigateToMode(labelMode);
       }
     },
-    [setState, populationSelector, populationUpdater, navigateToMode, labelMode, returnMode, onPopulationComplete]
+    [
+      setState,
+      populationSelector,
+      populationUpdater,
+      navigateToMode,
+      labelMode,
+      returnMode,
+      onPopulationComplete,
+    ]
   );
 
   const handleSelectExistingHousehold = useCallback(

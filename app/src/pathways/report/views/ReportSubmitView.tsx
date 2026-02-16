@@ -31,8 +31,12 @@ export default function ReportSubmitView({
     // Get population label - use label if available, otherwise fall back to ID
     const populationLabel =
       simulation.population.label ||
-      (simulation.population.household?.id ? `Household #${simulation.population.household.id}` : null) ||
-      (simulation.population.geography?.regionCode ? `Households in ${simulation.population.geography.regionCode}` : null) ||
+      (simulation.population.household?.id
+        ? `Household #${simulation.population.household.id}`
+        : null) ||
+      (simulation.population.geography?.regionCode
+        ? `Households in ${simulation.population.geography.regionCode}`
+        : null) ||
       'No population';
 
     return `${policyLabel} • ${populationLabel}`;

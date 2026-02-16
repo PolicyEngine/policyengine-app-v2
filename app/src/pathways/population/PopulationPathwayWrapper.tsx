@@ -11,10 +11,10 @@ import StandardLayout from '@/components/StandardLayout';
 import { CURRENT_YEAR } from '@/constants';
 import { ReportYearProvider } from '@/contexts/ReportYearContext';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { usePathwayNavigation } from '@/hooks/usePathwayNavigation';
 import { Household } from '@/types/ingredients/Household';
 import { StandalonePopulationViewMode } from '@/types/pathwayModes/PopulationViewMode';
 import { PopulationStateProps } from '@/types/pathwayState';
-import { usePathwayNavigation } from '@/hooks/usePathwayNavigation';
 import HouseholdBuilderView from '../report/views/population/HouseholdBuilderView';
 import PopulationLabelView from '../report/views/population/PopulationLabelView';
 

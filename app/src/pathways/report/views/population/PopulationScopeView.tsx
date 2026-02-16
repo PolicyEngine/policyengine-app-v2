@@ -33,7 +33,11 @@ import USGeographicOptions from '../../components/geographicOptions/USGeographic
 interface PopulationScopeViewProps {
   countryId: (typeof countryIds)[number];
   regionData: any[];
-  onScopeSelected: (geography: Geography | null, scopeType: ScopeType, regionLabel?: string) => void;
+  onScopeSelected: (
+    geography: Geography | null,
+    scopeType: ScopeType,
+    regionLabel?: string
+  ) => void;
   onBack?: () => void;
   onCancel?: () => void;
 }
@@ -70,10 +74,18 @@ export default function PopulationScopeView({
     }
 
     // For subnational scopes, find the region in the appropriate list
-    if (!selectedRegion) return '';
+    if (!selectedRegion) {
+      return '';
+    }
 
     // Check all region option lists for the selected value
-    const allOptions = [...usStates, ...usDistricts, ...ukCountries, ...ukConstituencies, ...ukLocalAuthorities];
+    const allOptions = [
+      ...usStates,
+      ...usDistricts,
+      ...ukCountries,
+      ...ukConstituencies,
+      ...ukLocalAuthorities,
+    ];
     const matchedRegion = allOptions.find((r) => r.value === selectedRegion);
     return matchedRegion?.label || '';
   }

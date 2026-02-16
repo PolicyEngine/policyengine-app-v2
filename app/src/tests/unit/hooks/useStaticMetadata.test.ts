@@ -8,7 +8,7 @@ import {
   useStaticMetadata,
   useTimePeriods,
 } from '@/hooks/useStaticMetadata';
-import { TEST_COUNTRIES, TEST_YEAR } from '@/tests/fixtures/hooks/metadataHooksMocks';
+import { TEST_COUNTRIES } from '@/tests/fixtures/hooks/metadataHooksMocks';
 
 describe('useStaticMetadata', () => {
   describe('useStaticMetadata (composite hook)', () => {

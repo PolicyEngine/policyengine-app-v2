@@ -11,7 +11,7 @@ import { useRegions } from '@/hooks/useRegions';
 import { useUpdateSimulationAssociation } from '@/hooks/useUserSimulationAssociations';
 import { useUserSimulations } from '@/hooks/useUserSimulations';
 import { formatDate } from '@/utils/dateUtils';
-import { getRegionLabel, isNationalGeography, getCountryLabel } from '@/utils/geographyUtils';
+import { getCountryLabel, getRegionLabel, isNationalGeography } from '@/utils/geographyUtils';
 
 export default function SimulationsPage() {
   const userId = MOCK_USER_ID.toString(); // TODO: Replace with actual user ID retrieval logic

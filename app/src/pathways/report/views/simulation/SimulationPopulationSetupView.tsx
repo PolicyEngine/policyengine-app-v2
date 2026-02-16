@@ -61,8 +61,12 @@ export default function SimulationPopulationSetupView({
   );
 
   function getOtherPopulationLabel(): string {
-    if (otherPopulation?.label) return otherPopulation.label;
-    if (otherPopulation?.household?.id) return `Household #${otherPopulation.household.id}`;
+    if (otherPopulation?.label) {
+      return otherPopulation.label;
+    }
+    if (otherPopulation?.household?.id) {
+      return `Household #${otherPopulation.household.id}`;
+    }
     if (otherPopulation?.geography) {
       const geo = otherPopulation.geography;
       const label = isNationalGeography(geo)

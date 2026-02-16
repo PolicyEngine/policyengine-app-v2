@@ -43,10 +43,7 @@ export default function HouseholdBuilderView({
   const { loading, error } = reduxMetadata;
 
   // Merge static entities into metadata so VariableResolver can resolve entity types
-  const metadata = useMemo(
-    () => ({ ...reduxMetadata, entities }),
-    [reduxMetadata, entities]
-  );
+  const metadata = useMemo(() => ({ ...reduxMetadata, entities }), [reduxMetadata, entities]);
 
   // Get all basic non-person fields dynamically (country-agnostic)
   // This handles US entities (tax_unit, spm_unit, etc.) and UK entities (benunit) automatically

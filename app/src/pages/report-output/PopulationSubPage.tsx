@@ -64,10 +64,7 @@ export default function PopulationSubPage({
     const reformGeography = geographies?.find((g) => g.regionCode === reformRegionCode);
 
     return (
-      <GeographySubPage
-        baselineGeography={baselineGeography}
-        reformGeography={reformGeography}
-      />
+      <GeographySubPage baselineGeography={baselineGeography} reformGeography={reformGeography} />
     );
   }
 

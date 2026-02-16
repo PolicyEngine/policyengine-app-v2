@@ -71,7 +71,9 @@ export default function SimulationSetupView({
 
   // Helper to get geography display label in "Households in {label}" format
   function getGeographyDisplayLabel(): string {
-    if (!population.geography) return '';
+    if (!population.geography) {
+      return '';
+    }
     const label = isNationalGeography(population.geography)
       ? getCountryLabel(population.geography.countryId)
       : getRegionLabel(population.geography.regionCode, regions);
