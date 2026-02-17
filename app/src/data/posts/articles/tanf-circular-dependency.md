@@ -1,14 +1,10 @@
-Microsimulation models compute government benefits simultaneously for every household. This works well when programs are independent, but breaks down when Program A's benefit depends on Program B, which depends on Program A. We recently encountered this problem across 26 state TANF programs — three through housing costs (Florida, Arizona, Vermont) and 23 through childcare expenses — and the fixes reveal something interesting about how benefit programs interact in practice.
+Microsimulation models compute government benefits simultaneously for every household. This works well when programs are independent, but breaks down when Program A's benefit depends on Program B, which depends on Program A. We recently encountered this problem across three state TANF programs — Florida, Arizona, and Vermont — where housing costs create a genuine circular dependency. Auditing other suspected cycles revealed that some were implementation artifacts rather than real policy interactions.
+
+<center><iframe src="/assets/posts/tanf-circular-dependency/cycle-diagram.html" width="100%" height="560" style="border:none;"></iframe></center>
 
 ## The dependency cycle
 
 PolicyEngine computes each household's TANF benefit by summing state-specific programs. When we added Florida's Temporary Cash Assistance (TCA) program, tests failed with a circular dependency error. Arizona's TANF program has the same cycle through its `az_tanf_payment_standard`, which reduces benefits by 37% for households without shelter costs. Vermont's Reach Up program hits the same cycle through its housing allowance, which caps benefits at actual housing costs.
-
-Here's the cycle:
-
-<center><iframe src="/assets/posts/tanf-circular-dependency/cycle-diagram.html" width="100%" height="580" style="border:none;"></iframe></center>
-
-Click any node to see its connections. The animated path traces the full cycle.
 
 The chain works like this:
 
@@ -55,29 +51,26 @@ For the small share of households receiving both TANF and Section 8, this overst
 
 But in practice, this overlap is small. Section 8 waiting lists are [years long](https://www.cbpp.org/research/housing/long-waitlists-for-housing-vouchers-show-pressing-unmet-need-for-assistance), and most TANF recipients pay market rent. Among the 51 state TANF programs PolicyEngine models (all US states plus DC), three route through housing cost in a way that creates this cycle: Florida uses shelter tiers (zero, low, high), Arizona reduces payment standards by 37% for households without shelter costs, and Vermont caps its Reach Up housing allowance at actual housing costs. The other 48 jurisdictions compute payment standards based on family size, income, or fixed schedules that don't depend on housing.
 
-## The childcare cycle: 23 states
+## The childcare cycle that wasn't
 
-A separate circular dependency affects the 23 state TANF programs that deduct childcare expenses from countable income. The cycle runs:
+We initially believed a separate circular dependency affected 24 state TANF programs that deduct childcare expenses from countable income. The suspected cycle ran: TANF → state TANF programs → childcare deduction → `childcare_expenses` → childcare subsidies (CO CCAP, CA, NE, MA) → SNAP → TANF.
 
-1. **tanf** sums all state TANF programs
-2. **State TANF** deducts `childcare_expenses` from earned income
-3. **childcare_expenses** subtracts state childcare subsidies (CO CCAP, CA, NE, MA) from pre-subsidy childcare costs
-4. **Childcare subsidies** count SNAP as income for eligibility
-5. **SNAP** counts TANF as unearned income
+To break this apparent cycle, we replaced `childcare_expenses` (post-subsidy) with `spm_unit_pre_subsidy_childcare_expenses` (pre-subsidy input) across all affected states. But an audit of the actual dependency chains revealed that **no real cycle existed**.
 
-And we're back to step 1. The affected states are Alabama, Alaska, Arizona, Delaware, DC, Georgia, Hawaii, Illinois, Kentucky, Maryland, Maine, Minnesota, Missouri, Montana, New Hampshire, New Mexico, Oklahoma, Rhode Island, Tennessee, Texas, Vermont, Virginia, and West Virginia.
-
-The fix mirrors the housing pattern: replace the post-subsidy `childcare_expenses` with `spm_unit_pre_subsidy_childcare_expenses` — a simple input variable that records what the household pays before any subsidies. Kansas already used this approach; we extended it to the remaining 23 states.
+The only path that could create a cycle ran through Colorado's Child Care Assistance Program (CO CCAP). Its `co_ccap_countable_income` variable used SNAP income as a placeholder for the program's actual income definition, with a TODO comment acknowledging the shortcut:
 
 ```python
-# Before: created circular dependency
-childcare = spm_unit("childcare_expenses", period)
-
-# After: uses gross childcare obligation
-childcare = spm_unit("spm_unit_pre_subsidy_childcare_expenses", period)
+# Before: placeholder creating a false cycle
+class co_ccap_countable_income(Variable):
+    adds = ["snap_earned_income", "snap_unearned_income"]
+    # TODO: Use income components from the manual.
 ```
 
-This is accurate for the same reason the housing fix works. When a caseworker asks "what do you pay for childcare?", the applicant reports their actual expenses, not a computed amount net of subsidies they may or may not receive. The pre-subsidy amount is the operationally relevant figure.
+We replaced this with the actual income sources specified in [8 CCR 1403-1 Section 7.105](https://www.sos.state.co.us/CCR/GenerateRulePdf.do?ruleVersionId=11042&fileName=8%20CCR%201403-1#page=22) — employment income, Social Security, pensions, child support, and other sources that don't depend on SNAP or TANF. The other three states with childcare subsidies (California, Nebraska, Massachusetts) never included SNAP in their income definitions, so they never contributed to a cycle.
+
+With the root cause fixed, all 24 state TANF programs now use `childcare_expenses` directly — the post-subsidy amount — which is more accurate than the pre-subsidy workaround. SNAP's dependent care deduction also switched from `pre_subsidy_childcare_expenses` to `childcare_expenses`, since no childcare subsidy program depends on SNAP income.
+
+The lesson: not every cycle in the static dependency graph represents a real policy interaction. OpenFisca builds its dependency graph from variable definitions at the code level. A variable like `co_ccap_countable_income` that references SNAP income creates a graph edge regardless of whether it's the correct income definition. Auditing the actual statutory requirements — not just the code — revealed the cycle was an implementation artifact.
 
 ## The SALT cycle: federal and state taxes
 
@@ -110,32 +103,31 @@ The CTC calculation has a related workaround. The non-refundable Child Tax Credi
 
 ## Other cycles in the codebase
 
-The FL/AZ/VT TANF housing, 22-state childcare, and SALT cases are the most architecturally significant, but PolicyEngine handles several other cycles with similar techniques:
+The FL/AZ/VT TANF housing and SALT cases are the most architecturally significant, but PolicyEngine handles several other cycles with similar techniques:
 
 | Cycle | Variables involved | Resolution |
 |---|---|---|
-| **SNAP ↔ childcare subsidies** | SNAP deductions → childcare expenses → childcare subsidies → income → SNAP | Use `pre_subsidy_childcare_expenses` |
-| **SNAP ↔ electricity subsidies** | Utility allowance → electricity expenses → LIHEAP → SNAP enrollment → utility allowance | Use `pre_subsidy_electricity_expense` |
-| **23 state TANF ↔ childcare subsidies** | State TANF earned income → childcare deduction → childcare subsidies → SNAP → TANF | Use `spm_unit_pre_subsidy_childcare_expenses` |
 | **Dependent income ↔ filing status** | Dependent gross income → taxable Social Security → filing status → dependent status → dependent income | Substitute pre-tax amounts (`social_security` for `taxable_social_security`) |
-| **MT itemization ↔ federal tax** | MT itemized deductions → federal itemization choice → SALT → MT state tax | Parallel "for_federal_itemization" variable set |
+| **MT itemization ↔ federal tax** | MT itemized deductions → federal itemization choice → SALT → MT state tax | Parallel MT deduction variables that avoid the federal tax dependency |
 | **VA/DE EITC refundability** | State EITC refundability → state tax liability → state credits → state EITC | Simulation branches that force refundable/non-refundable, compare outcomes |
-| **NY CTC ↔ federal CTC** | NY Empire State CTC → federal CTC under pre-TCJA rules → tax liability → state credits | Simulation branch with cloned parameters rewound to 2017 values |
+| **NY CTC ↔ federal CTC** | NY CTC → federal CTC under pre-TCJA rules → tax liability → state credits | Simulation branch with cloned parameters rewound to 2017 values |
 | **MD EITC ↔ age minimum** | MD EITC → federal EITC without age floor → federal EITC → tax liability → state credits | Disable cycle detection, delete and recompute cached values |
 | **Itemization choice** | Whether to itemize → tax liability if itemizing/not → income tax → deductions → whether to itemize | Two simulation branches force each choice, compare |
 
 These workarounds fall into three categories:
 
-1. **Pre-subsidy substitution** (SNAP childcare, SNAP electricity, FL/AZ/VT TANF housing, 23-state TANF childcare): Replace a post-subsidy amount with the pre-subsidy equivalent. Simple, low error, mirrors how agencies actually operate.
+1. **Pre-subsidy substitution** (FL/AZ/VT TANF housing): Replace a post-subsidy amount with the pre-subsidy equivalent. Simple, low error, mirrors how agencies actually operate.
 
 2. **Simplified parallel variables** (SALT withholding, MT federal itemization, dependent income): Compute a rough approximation that avoids the dependency chain entirely. Moderate error — the simplified estimate diverges from the true value.
 
-3. **Simulation branches** (CTC/SALT, VA/DE EITC, NY CTC, itemization): Fork the computation, force specific assumptions in each branch, then compare or combine results. Most powerful but most complex — requires cloning simulation state and managing cache invalidation.
+3. **Simulation branches** (CTC/SALT, VA/DE EITC, NY CTC, MD EITC, itemization): Fork the computation, force specific assumptions in each branch, then compare or combine results. Most powerful but most complex — requires cloning simulation state and managing cache invalidation.
 
 ## Implications for policy modeling
 
-Every circular dependency workaround introduces some inaccuracy. Using pre-subsidy rent for FL/AZ/VT TANF overstates shelter costs for subsidized households. Using pre-subsidy childcare for 23 state TANF programs overstates childcare expenses for households receiving subsidies. Using simplified withholding for SALT understates the deduction for some filers. Zeroing out SALT for CTC computation ignores a real interaction.
+Every circular dependency workaround introduces some inaccuracy. Using pre-subsidy rent for FL/AZ/VT TANF overstates shelter costs for subsidized households. Using simplified withholding for SALT understates the deduction for some filers. Zeroing out SALT for CTC computation ignores a real interaction.
+
+But not every workaround is necessary. The childcare "cycle" turned out to be an implementation artifact — a placeholder income definition in one state program created a false dependency chain in the static graph. Auditing the actual statutory requirements let us remove the workaround and use more accurate post-subsidy amounts. This suggests other workarounds may also be overly conservative.
 
 These tradeoffs matter most at the margins — households near program thresholds where small differences in computed values flip eligibility. For aggregate estimates across millions of households, the errors tend to wash out. But for individual household calculators, users should understand that the model imposes an ordering on program determinations that real agencies handle case by case.
 
-The full dependency graph across all programs must remain a directed acyclic graph (DAG). When adding new state programs — especially those that incorporate housing costs, childcare expenses, or other amounts that themselves depend on benefit programs — checking for cycles is an essential part of validation. PolicyEngine currently has at least fourteen documented cycle-breaking workarounds across these three categories, each trading a modeling simplification for computational tractability.
+The full dependency graph across all programs must remain a directed acyclic graph (DAG). When adding new state programs — especially those that incorporate housing costs or other amounts that themselves depend on benefit programs — checking for cycles is an essential part of validation. But it's equally important to audit whether a detected cycle reflects a real policy interaction or an implementation shortcut. PolicyEngine currently has about ten cycle-breaking workarounds across these three categories, each trading a modeling simplification for computational tractability.
