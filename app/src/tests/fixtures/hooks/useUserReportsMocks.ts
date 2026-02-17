@@ -1,4 +1,5 @@
 import { vi } from 'vitest';
+import { V2PolicyResponse } from '@/api/policy';
 import { Household } from '@/types/ingredients/Household';
 import { Policy } from '@/types/ingredients/Policy';
 import { Simulation } from '@/types/ingredients/Simulation';
@@ -7,9 +8,7 @@ import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { UserSimulation } from '@/types/ingredients/UserSimulation';
 import { MetadataState } from '@/types/metadata';
 import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
-import { PolicyMetadata } from '@/types/metadata/policyMetadata';
 import { SimulationMetadata } from '@/types/metadata/simulationMetadata';
-import { US_REGION_TYPES } from '@/types/regionTypes';
 import { mockReport } from '../adapters/reportMocks';
 import { TEST_USER_ID } from '../api/reportAssociationMocks';
 import { DEFAULT_LOADING_STATES } from '../reducers/metadataReducerMocks';
@@ -50,7 +49,7 @@ export const mockSimulation2: Simulation = {
   isCreated: true,
 };
 
-// Mock Policy entities (matching PolicyAdapter.fromMetadata structure)
+// Mock Policy entities (matching PolicyAdapter.fromV2Response structure)
 export const mockPolicy1: Policy = {
   id: TEST_POLICY_ID_1,
   countryId: TEST_COUNTRIES.US,
@@ -104,17 +103,17 @@ export const mockUserPolicies: UserPolicy[] = [
     id: 'user-pol-1',
     userId: TEST_USER_ID,
     policyId: TEST_POLICY_ID_1,
+    countryId: TEST_COUNTRIES.US,
     label: 'My Policy 1',
     createdAt: '2025-01-01T09:00:00Z',
-    countryId: 'us',
   },
   {
     id: 'user-pol-2',
     userId: TEST_USER_ID,
     policyId: TEST_POLICY_ID_2,
+    countryId: TEST_COUNTRIES.US,
     label: 'My Policy 2',
     createdAt: '2025-01-02T09:00:00Z',
-    countryId: 'us',
   },
 ];
 
@@ -149,22 +148,23 @@ export const mockSimulationMetadata2: SimulationMetadata = {
   policy_id: TEST_POLICY_ID_2, // policy-789
 };
 
-export const mockPolicyMetadata1: PolicyMetadata = {
+// V2 API Policy Responses
+export const mockV2PolicyResponse1: V2PolicyResponse = {
   id: TEST_POLICY_ID_1,
-  country_id: TEST_COUNTRIES.US,
-  api_version: 'v1',
-  policy_json: {},
-  policy_hash: 'hash-456',
-  label: 'Test Policy 1',
+  name: 'Test Policy 1',
+  description: null,
+  tax_benefit_model_id: 'test-tbm-id',
+  created_at: '2025-01-01T00:00:00Z',
+  updated_at: '2025-01-01T00:00:00Z',
 };
 
-export const mockPolicyMetadata2: PolicyMetadata = {
+export const mockV2PolicyResponse2: V2PolicyResponse = {
   id: TEST_POLICY_ID_2,
-  country_id: TEST_COUNTRIES.US,
-  api_version: 'v1',
-  policy_json: {},
-  policy_hash: 'hash-789',
-  label: 'Test Policy 2',
+  name: 'Test Policy 2',
+  description: null,
+  tax_benefit_model_id: 'test-tbm-id',
+  created_at: '2025-01-02T00:00:00Z',
+  updated_at: '2025-01-02T00:00:00Z',
 };
 
 export const mockHouseholdMetadata: HouseholdMetadata = {

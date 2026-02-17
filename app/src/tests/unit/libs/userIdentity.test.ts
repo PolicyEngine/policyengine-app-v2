@@ -1,0 +1,88 @@
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { clearUserId, getUserId, STORAGE_KEYS } from '@/libs/userIdentity';
+
+describe('userIdentity', () => {
+  beforeEach(() => {
+    // Clear localStorage before each test
+    localStorage.clear();
+
+    // Mock crypto.randomUUID
+    vi.spyOn(crypto, 'randomUUID').mockReturnValue('test-uuid-1234-5678-90ab-cdef12345678');
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    localStorage.clear();
+  });
+
+  describe('getUserId', () => {
+    test('given no existing user ID then generates and stores new UUID', () => {
+      // When
+      const userId = getUserId();
+
+      // Then
+      expect(userId).toBe('test-uuid-1234-5678-90ab-cdef12345678');
+      expect(localStorage.getItem(STORAGE_KEYS.USER_ID)).toBe(
+        'test-uuid-1234-5678-90ab-cdef12345678'
+      );
+      expect(crypto.randomUUID).toHaveBeenCalled();
+    });
+
+    test('given existing user ID then returns stored ID without generating new one', () => {
+      // Given
+      localStorage.setItem(STORAGE_KEYS.USER_ID, 'existing-user-id-12345');
+
+      // When
+      const userId = getUserId();
+
+      // Then
+      expect(userId).toBe('existing-user-id-12345');
+      expect(crypto.randomUUID).not.toHaveBeenCalled();
+    });
+
+    test('given multiple calls then returns same user ID', () => {
+      // When
+      const userId1 = getUserId();
+      const userId2 = getUserId();
+      const userId3 = getUserId();
+
+      // Then
+      expect(userId1).toBe(userId2);
+      expect(userId2).toBe(userId3);
+      expect(crypto.randomUUID).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('clearUserId', () => {
+    test('given user ID exists then removes it from localStorage', () => {
+      // Given
+      localStorage.setItem(STORAGE_KEYS.USER_ID, 'existing-user-id');
+
+      // When
+      clearUserId();
+
+      // Then
+      expect(localStorage.getItem(STORAGE_KEYS.USER_ID)).toBeNull();
+    });
+
+    test('given user ID cleared then next getUserId generates new ID', () => {
+      // Given
+      localStorage.setItem(STORAGE_KEYS.USER_ID, 'old-user-id');
+
+      // When
+      clearUserId();
+      const newUserId = getUserId();
+
+      // Then
+      expect(newUserId).toBe('test-uuid-1234-5678-90ab-cdef12345678');
+      expect(newUserId).not.toBe('old-user-id');
+    });
+  });
+
+  describe('STORAGE_KEYS', () => {
+    test('given STORAGE_KEYS then contains expected key names', () => {
+      // Then
+      expect(STORAGE_KEYS.USER_ID).toBe('policyengine_user_id');
+    });
+  });
+});

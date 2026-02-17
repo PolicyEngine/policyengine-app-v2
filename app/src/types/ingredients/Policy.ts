@@ -7,6 +7,7 @@ import { Parameter } from '@/types/subIngredients/parameter';
 export interface Policy {
   id?: string;
   countryId?: (typeof countryIds)[number];
+  taxBenefitModelId?: string; // UUID of the tax benefit model (v2 API)
   apiVersion?: string;
   parameters?: Parameter[];
   label?: string | null;

@@ -78,7 +78,6 @@ export const createMockPolicyAssociation = (overrides?: Partial<UserPolicy>): Us
   id: TEST_IDS.USER_POLICY_ID,
   userId: TEST_IDS.USER_ID,
   policyId: TEST_IDS.POLICY_ID,
-  countryId: TEST_COUNTRIES.US,
   label: TEST_LABELS.POLICY,
   createdAt: TEST_TIMESTAMPS.CREATED_AT,
   isCreated: true,

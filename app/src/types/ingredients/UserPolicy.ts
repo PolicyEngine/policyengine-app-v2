@@ -1,4 +1,4 @@
-import { countryIds } from '@/libs/countries';
+import { CountryId } from '@/libs/countries';
 
 /**
  * UserPolicy type containing mutable user-specific data
@@ -7,7 +7,7 @@ export interface UserPolicy {
   id?: string;
   userId: string;
   policyId: string;
-  countryId: (typeof countryIds)[number];
+  countryId: CountryId;
   label?: string;
   createdAt?: string;
   updatedAt?: string;

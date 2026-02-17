@@ -1,8 +1,8 @@
-// Import auth hook here in future; for now, mocked out below
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { PolicyAdapter } from '@/adapters';
 import { fetchPolicyById } from '@/api/policy';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useUserId } from '@/hooks/useUserId';
 import { Policy } from '@/types/ingredients/Policy';
 import { ApiPolicyStore, LocalStoragePolicyStore } from '../api/policyAssociation';
 import { queryConfig } from '../libs/queryConfig';
@@ -23,24 +23,25 @@ export const usePolicyAssociationsByUser = (userId: string) => {
   const store = useUserPolicyStore();
   const countryId = useCurrentCountry();
   const isLoggedIn = false; // TODO: Replace with actual auth check in future
-  // TODO: Should we determine user ID from auth context here? Or pass as arg?
   const config = isLoggedIn ? queryConfig.api : queryConfig.localStorage;
 
   return useQuery({
     queryKey: policyAssociationKeys.byUser(userId, countryId),
     queryFn: () => store.findByUser(userId, countryId),
+    enabled: !!countryId,
     ...config,
   });
 };
 
-export const usePolicyAssociation = (userId: string, policyId: string) => {
+export const usePolicyAssociation = (userPolicyId: string) => {
   const store = useUserPolicyStore();
   const isLoggedIn = false; // TODO: Replace with actual auth check in future
   const config = isLoggedIn ? queryConfig.api : queryConfig.localStorage;
 
   return useQuery({
-    queryKey: policyAssociationKeys.specific(userId, policyId),
-    queryFn: () => store.findById(userId, policyId),
+    queryKey: policyAssociationKeys.byId(userPolicyId),
+    queryFn: () => store.findById(userPolicyId),
+    enabled: !!userPolicyId,
     ...config,
   });
 };
@@ -54,21 +55,15 @@ export const useCreatePolicyAssociation = () => {
     onSuccess: (newAssociation) => {
       // Invalidate and refetch related queries
       queryClient.invalidateQueries({
-        queryKey: policyAssociationKeys.byUser(
-          newAssociation.userId.toString(),
-          newAssociation.countryId
-        ),
+        queryKey: policyAssociationKeys.byUser(newAssociation.userId, newAssociation.countryId),
       });
       queryClient.invalidateQueries({
-        queryKey: policyAssociationKeys.byPolicy(newAssociation.policyId.toString()),
+        queryKey: policyAssociationKeys.byPolicy(newAssociation.policyId),
       });
 
       // Update specific query cache
       queryClient.setQueryData(
-        policyAssociationKeys.specific(
-          newAssociation.userId.toString(),
-          newAssociation.policyId.toString()
-        ),
+        policyAssociationKeys.specific(newAssociation.userId, newAssociation.policyId),
         newAssociation
       );
     },
@@ -78,6 +73,7 @@ export const useCreatePolicyAssociation = () => {
 export const useUpdatePolicyAssociation = () => {
   const store = useUserPolicyStore();
   const queryClient = useQueryClient();
+  const userId = useUserId();
 
   return useMutation({
     mutationFn: ({
@@ -86,10 +82,9 @@ export const useUpdatePolicyAssociation = () => {
     }: {
       userPolicyId: string;
       updates: Partial<UserPolicy>;
-    }) => store.update(userPolicyId, updates),
+    }) => store.update(userPolicyId, updates, userId),
 
     onSuccess: (updatedAssociation) => {
-      // Invalidate all related queries to trigger refetch
       queryClient.invalidateQueries({
         queryKey: policyAssociationKeys.byUser(
           updatedAssociation.userId,
@@ -110,27 +105,23 @@ export const useUpdatePolicyAssociation = () => {
   });
 };
 
-// Not yet implemented, but keeping for future use
-/*
-export const useDeleteAssociation = () => {
+export const useDeletePolicyAssociation = () => {
   const store = useUserPolicyStore();
   const queryClient = useQueryClient();
+  const userId = useUserId();
 
   return useMutation({
-    mutationFn: ({ userId, policyId }: { userId: string; policyId: string; countryId?: string }) =>
-      store.delete(userId, policyId),
-    onSuccess: (_, { userId, policyId, countryId }) => {
-      queryClient.invalidateQueries({ queryKey: policyAssociationKeys.byUser(userId, countryId) });
+    mutationFn: ({ userPolicyId, policyId }: { userPolicyId: string; policyId: string }) =>
+      store.delete(userPolicyId, userId).then(() => ({ policyId })),
+    onSuccess: (_, { userPolicyId, policyId }) => {
+      queryClient.invalidateQueries({ queryKey: policyAssociationKeys.byUser(userId) });
       queryClient.invalidateQueries({ queryKey: policyAssociationKeys.byPolicy(policyId) });
 
-      queryClient.setQueryData(
-        policyAssociationKeys.specific(userId, policyId),
-        null
-      );
+      queryClient.setQueryData(policyAssociationKeys.specific(userId, policyId), null);
+      queryClient.removeQueries({ queryKey: policyAssociationKeys.byId(userPolicyId) });
     },
   });
 };
-*/
 
 // Type for the combined data structure
 export interface UserPolicyWithAssociation {
@@ -158,9 +149,7 @@ export function isPolicyWithAssociation(obj: unknown): obj is UserPolicyWithAsso
 }
 
 export const useUserPolicies = (userId: string) => {
-  const country = useCurrentCountry();
-
-  // First, get the associations (filtered by current country)
+  // First, get the associations (now filtered by countryId in both API and localStorage)
   const {
     data: associations,
     isLoading: associationsLoading,
@@ -174,11 +163,11 @@ export const useUserPolicies = (userId: string) => {
   // This ensures cache consistency with useUserReports and useUserSimulations
   const policyQueries = useQueries({
     queries: policyIds.map((policyId) => ({
-      queryKey: policyKeys.byId(policyId.toString()),
+      queryKey: policyKeys.byId(policyId),
       queryFn: async () => {
         try {
-          const metadata = await fetchPolicyById(country, policyId.toString());
-          return PolicyAdapter.fromMetadata(metadata);
+          const response = await fetchPolicyById(policyId);
+          return PolicyAdapter.fromV2Response(response);
         } catch (error) {
           // Add context to help debug which policy failed
           const message =
@@ -200,6 +189,7 @@ export const useUserPolicies = (userId: string) => {
   const isError = !!error;
 
   // Simple index-based mapping since queries are in same order as associations
+  // No post-fetch filter needed - both API and localStorage now filter by countryId
   const policiesWithAssociations: UserPolicyWithAssociation[] | undefined = associations?.map(
     (association, index) => ({
       association,

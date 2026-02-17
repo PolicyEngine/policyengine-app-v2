@@ -1,35 +1,34 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createPolicy, fetchPolicyById } from '@/api/policy';
-import { BASE_URL } from '@/constants';
+import { API_V2_BASE_URL } from '@/api/v2/taxBenefitModels';
 import {
   mockErrorFetchResponse,
-  mockPolicyCreateResponse,
-  mockPolicyData,
-  mockPolicyPayload,
   mockSuccessFetchResponse,
-  TEST_COUNTRIES,
+  mockV2PolicyPayload,
+  mockV2PolicyResponse,
   TEST_POLICY_IDS,
 } from '@/tests/fixtures/api/policyMocks';
 
 // Mock fetch
 global.fetch = vi.fn();
 
-describe('policy API', () => {
+describe('policy API (v2)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   describe('fetchPolicyById', () => {
-    it('given valid policy ID then fetches policy metadata', async () => {
+    it('given valid policy ID then fetches policy from v2 API', async () => {
       // Given
-      (global.fetch as any).mockResolvedValue(mockSuccessFetchResponse(mockPolicyData()));
+      const mockResponse = mockV2PolicyResponse();
+      (global.fetch as any).mockResolvedValue(mockSuccessFetchResponse(mockResponse));
 
       // When
-      const result = await fetchPolicyById(TEST_COUNTRIES.US, TEST_POLICY_IDS.POLICY_123);
+      const result = await fetchPolicyById(TEST_POLICY_IDS.POLICY_123);
 
       // Then
       expect(fetch).toHaveBeenCalledWith(
-        `${BASE_URL}/${TEST_COUNTRIES.US}/policy/${TEST_POLICY_IDS.POLICY_123}`,
+        `${API_V2_BASE_URL}/policies/${TEST_POLICY_IDS.POLICY_123}`,
         expect.objectContaining({
           method: 'GET',
           headers: {
@@ -38,7 +37,7 @@ describe('policy API', () => {
           },
         })
       );
-      expect(result).toEqual(mockPolicyData().result);
+      expect(result).toEqual(mockResponse);
     });
 
     it('given fetch error then throws error', async () => {
@@ -46,26 +45,26 @@ describe('policy API', () => {
       (global.fetch as any).mockResolvedValue(mockErrorFetchResponse(404));
 
       // When/Then
-      await expect(fetchPolicyById(TEST_COUNTRIES.US, TEST_POLICY_IDS.NONEXISTENT)).rejects.toThrow(
+      await expect(fetchPolicyById(TEST_POLICY_IDS.NONEXISTENT)).rejects.toThrow(
         `Failed to fetch policy ${TEST_POLICY_IDS.NONEXISTENT}`
       );
     });
   });
 
   describe('createPolicy', () => {
-    it('given valid policy data then creates policy', async () => {
+    it('given valid v2 payload then creates policy', async () => {
       // Given
-      const payload = mockPolicyPayload();
-      const response = mockPolicyCreateResponse();
+      const payload = mockV2PolicyPayload();
+      const response = mockV2PolicyResponse({ id: TEST_POLICY_IDS.POLICY_456 });
 
       (global.fetch as any).mockResolvedValue(mockSuccessFetchResponse(response));
 
       // When
-      const result = await createPolicy(TEST_COUNTRIES.US, payload);
+      const result = await createPolicy(payload);
 
       // Then
       expect(fetch).toHaveBeenCalledWith(
-        `${BASE_URL}/${TEST_COUNTRIES.US}/policy`,
+        `${API_V2_BASE_URL}/policies/`,
         expect.objectContaining({
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -75,16 +74,18 @@ describe('policy API', () => {
       expect(result).toEqual(response);
     });
 
-    it('given API error then throws error', async () => {
+    it('given API error then throws error with status', async () => {
       // Given
-      const payload = mockPolicyPayload();
+      const payload = mockV2PolicyPayload();
 
-      (global.fetch as any).mockResolvedValue(mockErrorFetchResponse(500));
+      (global.fetch as any).mockResolvedValue({
+        ok: false,
+        status: 500,
+        text: vi.fn().mockResolvedValue('Internal Server Error'),
+      });
 
       // When/Then
-      await expect(createPolicy(TEST_COUNTRIES.US, payload)).rejects.toThrow(
-        'Failed to create policy'
-      );
+      await expect(createPolicy(payload)).rejects.toThrow('Failed to create policy: 500');
     });
   });
 });

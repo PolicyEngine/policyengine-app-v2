@@ -1,5 +1,6 @@
 export const policyAssociationKeys = {
   all: ['policy-associations'] as const,
+  byId: (userPolicyId: string) => [...policyAssociationKeys.all, 'id', userPolicyId] as const,
   byUser: (userId: string, countryId?: string) =>
     countryId
       ? ([...policyAssociationKeys.all, 'user_id', userId, 'country', countryId] as const)

@@ -31,7 +31,6 @@ export const mockPolicyData: UserPolicyWithAssociation[] = [
       policyId: '101',
       label: 'Test Policy 1',
       createdAt: '2024-01-15T10:00:00Z',
-      countryId: 'us',
     },
     policy: {
       id: '101',
@@ -62,7 +61,6 @@ export const mockPolicyData: UserPolicyWithAssociation[] = [
       policyId: '102',
       label: 'Test Policy 2',
       createdAt: '2024-02-20T14:30:00Z',
-      countryId: 'us',
     },
     policy: {
       id: '102',

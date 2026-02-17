@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Group, Select, Stack, Text } from '@mantine/core';
-import { PolicyAdapter } from '@/adapters/PolicyAdapter';
+import { convertParametersToPolicyJson } from '@/adapters/conversionHelpers';
 import { spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useHouseholdVariation } from '@/hooks/useHouseholdVariation';
@@ -55,11 +55,13 @@ export default function EarningsVariationSubPage({
   const baselinePolicy = policies?.find((p) => p.id === simulations[0]?.policyId);
   const reformPolicy = simulations[1] && policies?.find((p) => p.id === simulations[1].policyId);
 
-  // Convert policies to API format
+  // Convert policies to API format for calculate-full endpoint
   const baselinePolicyData = baselinePolicy
-    ? PolicyAdapter.toCreationPayload(baselinePolicy).data
+    ? convertParametersToPolicyJson(baselinePolicy.parameters || [])
     : {};
-  const reformPolicyData = reformPolicy ? PolicyAdapter.toCreationPayload(reformPolicy).data : {};
+  const reformPolicyData = reformPolicy
+    ? convertParametersToPolicyJson(reformPolicy.parameters || [])
+    : {};
 
   // Fetch baseline variation
   const {

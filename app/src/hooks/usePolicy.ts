@@ -10,6 +10,6 @@ export function usePolicy(country?: string, policyId = '88713') {
   // hardcoded a default value until user policies integrated
   return useQuery({
     queryKey: ['policy', resolvedCountry, policyId],
-    queryFn: () => fetchPolicyById(resolvedCountry, policyId),
+    queryFn: () => fetchPolicyById(policyId),
   });
 }

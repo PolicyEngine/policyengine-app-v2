@@ -18,7 +18,7 @@ export const MOCK_SHARE_DATA: ReportIngredientsInput = {
     label: 'Test Report',
   },
   userSimulations: [{ simulationId: 'sim-1', countryId: 'us', label: 'Baseline Sim' }],
-  userPolicies: [{ policyId: 'policy-1', countryId: 'us', label: 'Test Policy' }],
+  userPolicies: [{ policyId: 'policy-1', label: 'Test Policy' }],
   userHouseholds: [],
   userGeographies: [
     {
@@ -39,7 +39,7 @@ export const MOCK_HOUSEHOLD_SHARE_DATA: ReportIngredientsInput = {
     label: 'Household Report',
   },
   userSimulations: [{ simulationId: 'sim-2', countryId: 'uk', label: 'HH Sim' }],
-  userPolicies: [{ policyId: 'policy-2', countryId: 'uk', label: 'HH Policy' }],
+  userPolicies: [{ policyId: 'policy-2', label: 'HH Policy' }],
   userHouseholds: [
     { type: 'household', householdId: 'hh-1', countryId: 'uk', label: 'My Household' },
   ],

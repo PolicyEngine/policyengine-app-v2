@@ -232,8 +232,8 @@ export function useFetchReportIngredients(
   const policyResults = useParallelQueries<Policy>(isEnabled ? policyIds : [], {
     queryKey: policyKeys.byId,
     queryFn: async (id) => {
-      const metadata = await fetchPolicyById(country, id);
-      return PolicyAdapter.fromMetadata(metadata);
+      const response = await fetchPolicyById(id);
+      return PolicyAdapter.fromV2Response(response);
     },
     enabled: isEnabled && policyIds.length > 0,
     staleTime: 5 * 60 * 1000,

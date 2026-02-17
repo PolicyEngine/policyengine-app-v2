@@ -72,7 +72,6 @@ export const MOCK_USER_POLICY: UserPolicy = {
   userId: 'user-123',
   policyId: 'policy-1',
   label: 'My Policy',
-  countryId: 'us',
   createdAt: '2024-01-01T00:00:00Z',
 };
 

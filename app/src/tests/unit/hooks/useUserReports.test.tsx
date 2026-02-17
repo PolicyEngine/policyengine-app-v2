@@ -34,14 +34,14 @@ import {
   mockHouseholdMetadata,
   mockMetadataInitialState,
   mockPolicy1,
-  mockPolicyMetadata1,
-  mockPolicyMetadata2,
   mockSimulation1,
   mockSimulationMetadata1,
   mockSimulationMetadata2,
   mockUserHouseholds,
   mockUserPolicies,
   mockUserSimulations,
+  mockV2PolicyResponse1,
+  mockV2PolicyResponse2,
   TEST_HOUSEHOLD_ID,
   TEST_POLICY_ID_1,
   TEST_POLICY_ID_2,
@@ -154,12 +154,12 @@ describe('useUserReports', () => {
       return Promise.reject(new Error(ERROR_MESSAGES.SIMULATION_NOT_FOUND(id)));
     });
 
-    vi.spyOn(policyApi, 'fetchPolicyById').mockImplementation((_country, id) => {
+    vi.spyOn(policyApi, 'fetchPolicyById').mockImplementation((id: string) => {
       if (id === TEST_POLICY_ID_1) {
-        return Promise.resolve(mockPolicyMetadata1);
+        return Promise.resolve(mockV2PolicyResponse1);
       }
       if (id === TEST_POLICY_ID_2) {
-        return Promise.resolve(mockPolicyMetadata2);
+        return Promise.resolve(mockV2PolicyResponse2);
       }
       return Promise.reject(new Error(ERROR_MESSAGES.POLICY_NOT_FOUND(id)));
     });
@@ -582,12 +582,12 @@ describe('useUserReportById', () => {
       }
       return Promise.reject(new Error(ERROR_MESSAGES.SIMULATION_NOT_FOUND(id)));
     });
-    vi.spyOn(policyApi, 'fetchPolicyById').mockImplementation((_country, id) => {
+    vi.spyOn(policyApi, 'fetchPolicyById').mockImplementation((id: string) => {
       if (id === TEST_POLICY_ID_1) {
-        return Promise.resolve(mockPolicyMetadata1);
+        return Promise.resolve(mockV2PolicyResponse1);
       }
       if (id === TEST_POLICY_ID_2) {
-        return Promise.resolve(mockPolicyMetadata2);
+        return Promise.resolve(mockV2PolicyResponse2);
       }
       return Promise.reject(new Error(ERROR_MESSAGES.POLICY_NOT_FOUND(id)));
     });

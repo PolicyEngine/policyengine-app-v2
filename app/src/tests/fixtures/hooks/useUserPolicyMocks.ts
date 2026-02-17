@@ -36,21 +36,6 @@ export const mockUserPolicyAssociation2: UserPolicy = {
 
 export const mockUserPolicyAssociations = [mockUserPolicyAssociation1, mockUserPolicyAssociation2];
 
-// Mock policy metadata (API response format)
-export const mockPolicyMetadata1 = {
-  id: 456,
-  country_id: TEST_COUNTRY_ID,
-  api_version: 'v1',
-  policy_json: {},
-};
-
-export const mockPolicyMetadata2 = {
-  id: 789,
-  country_id: TEST_COUNTRY_ID,
-  api_version: 'v1',
-  policy_json: {},
-};
-
 // Mock hook return values
 export const createMockAssociationsHookReturn = () => ({
   data: mockUserPolicyAssociations,

@@ -48,8 +48,8 @@ export const VALID_SHARE_DATA: ReportIngredientsInput = {
     { simulationId: 'sim-2', countryId: TEST_COUNTRIES.US, label: 'Reform' },
   ],
   userPolicies: [
-    { policyId: 'policy-1', countryId: TEST_COUNTRIES.US, label: 'Current Law' },
-    { policyId: 'policy-2', countryId: TEST_COUNTRIES.US, label: 'My Policy' },
+    { policyId: 'policy-1', label: 'Current Law' },
+    { policyId: 'policy-2', label: 'My Policy' },
   ],
   userHouseholds: [],
   userGeographies: [
@@ -77,7 +77,7 @@ export const VALID_HOUSEHOLD_SHARE_DATA: ReportIngredientsInput = {
   userSimulations: [
     { simulationId: 'sim-3', countryId: TEST_COUNTRIES.UK, label: 'My Simulation' },
   ],
-  userPolicies: [{ policyId: 'policy-3', countryId: TEST_COUNTRIES.UK, label: 'My Policy' }],
+  userPolicies: [{ policyId: 'policy-3', label: 'My Policy' }],
   userHouseholds: [
     {
       type: 'household',
@@ -114,7 +114,6 @@ export const MOCK_USER_POLICIES: UserPolicy[] = [
   {
     userId: 'anonymous',
     policyId: 'policy-1',
-    countryId: TEST_COUNTRIES.US,
     label: 'Policy Label',
   },
 ];

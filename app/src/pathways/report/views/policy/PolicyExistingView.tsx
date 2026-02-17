@@ -7,7 +7,7 @@
 import { useState } from 'react';
 import { Text } from '@mantine/core';
 import PathwayView from '@/components/common/PathwayView';
-import { MOCK_USER_ID } from '@/constants';
+import { useUserId } from '@/hooks/useUserId';
 import {
   isPolicyWithAssociation,
   UserPolicyWithAssociation,
@@ -26,7 +26,7 @@ export default function PolicyExistingView({
   onBack,
   onCancel,
 }: PolicyExistingViewProps) {
-  const userId = MOCK_USER_ID.toString();
+  const userId = useUserId();
 
   const { data, isLoading, isError, error } = useUserPolicies(userId);
   const [localPolicy, setLocalPolicy] = useState<UserPolicyWithAssociation | null>(null);
