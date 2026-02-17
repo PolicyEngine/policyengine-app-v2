@@ -28,7 +28,11 @@ import { ComposableMap, Geographies, Geography, ZoomableGroup } from 'react-simp
 import { Box, Center, Loader, Stack, Text } from '@mantine/core';
 import { ChartWatermark } from '@/components/charts';
 import { colors, spacing } from '@/designTokens';
-import type { GeoJSONFeatureCollection, USDistrictChoroplethMapProps } from './types';
+import type {
+  GeoJSONFeatureCollection,
+  MapVisualizationType,
+  USDistrictChoroplethMapProps,
+} from './types';
 import {
   calculateColorRange,
   createDataLookupMap,
@@ -40,8 +44,11 @@ import {
 /** GeoJSON cache to avoid re-fetching (keyed by path) */
 const geoJSONCache: Record<string, GeoJSONFeatureCollection> = {};
 
-/** Default path to GeoJSON file */
-const DEFAULT_GEOJSON_PATH = '/data/geojson/congressional_districts.geojson';
+/** GeoJSON paths for each visualization type */
+const GEOJSON_PATHS: Record<MapVisualizationType, string> = {
+  geographic: '/data/geojson/congressional_districts.geojson',
+  hex: '/data/geojson/congressional_districts_hex.geojson',
+};
 
 /** Default fill for districts without data */
 const NO_DATA_FILL = '#e0e0e0';
@@ -254,6 +261,91 @@ function ColorBar({
 }
 
 /**
+ * Compute the bounding box center and a scale that fits the GeoJSON
+ * within the given SVG viewport. Used for hex maps where geoAlbersUsa
+ * cannot be applied.
+ */
+function useGeoJSONFitProjection(
+  geoJSON: GeoJSONFeatureCollection | null,
+  enabled: boolean,
+  svgWidth: number,
+  svgHeight: number
+): { center: [number, number]; scale: number } | null {
+  return useMemo(() => {
+    if (!enabled || !geoJSON) {
+      return null;
+    }
+
+    let minLng = Infinity,
+      maxLng = -Infinity,
+      minLat = Infinity,
+      maxLat = -Infinity;
+
+    for (const feature of geoJSON.features) {
+      const geom = feature.geometry as {
+        type: string;
+        coordinates: number[][][] | number[][][][];
+      };
+      if (!geom?.coordinates) {
+        continue;
+      }
+
+      const rings =
+        geom.type === 'Polygon'
+          ? (geom.coordinates as number[][][])
+          : geom.type === 'MultiPolygon'
+            ? (geom.coordinates as number[][][][]).flat()
+            : [];
+
+      for (const ring of rings) {
+        for (const [lng, lat] of ring) {
+          if (lng < minLng) {
+            minLng = lng;
+          }
+          if (lng > maxLng) {
+            maxLng = lng;
+          }
+          if (lat < minLat) {
+            minLat = lat;
+          }
+          if (lat > maxLat) {
+            maxLat = lat;
+          }
+        }
+      }
+    }
+
+    if (!isFinite(minLng)) {
+      return null;
+    }
+
+    const center: [number, number] = [(minLng + maxLng) / 2, (minLat + maxLat) / 2];
+    const lonSpan = maxLng - minLng;
+    const latSpan = maxLat - minLat;
+
+    // geoEquirectangular maps degrees to pixels as: px = scale * radians
+    // Fit whichever dimension is tighter, with padding
+    const padding = 0.85;
+    const scaleForWidth = (svgWidth * padding) / ((lonSpan * Math.PI) / 180);
+    const scaleForHeight = (svgHeight * padding) / ((latSpan * Math.PI) / 180);
+    const scale = Math.min(scaleForWidth, scaleForHeight);
+
+    return { center, scale };
+  }, [enabled, geoJSON, svgWidth, svgHeight]);
+}
+
+/** SVG intrinsic width used for projection calculations */
+const SVG_WIDTH = 800;
+
+/**
+ * Default center for the US map. geoAlbersUsa returns null for coordinates
+ * outside the US (like [0,0]), which crashes ZoomableGroup. This center
+ * is safely within the lower-48 and is effectively a no-op for geoAlbersUsa
+ * since the projection is already centered on the US.
+ */
+const DEFAULT_US_CENTER: [number, number] = [-96, 38.5];
+
+/**
  * US Congressional District Choropleth Map Component
  *
  * Renders a geographic choropleth map of US congressional districts.
@@ -262,14 +354,19 @@ function ColorBar({
 export function USDistrictChoroplethMap({
   data,
   config = {},
-  geoDataPath = DEFAULT_GEOJSON_PATH,
+  geoDataPath,
   focusState,
+  visualizationType = 'geographic',
 }: USDistrictChoroplethMapProps) {
   const uniqueId = useId();
   const containerRef = useRef<HTMLDivElement>(null);
+  const isHexMap = visualizationType === 'hex';
+
+  // Determine GeoJSON path: explicit path takes precedence, otherwise use visualization type
+  const effectiveGeoDataPath = geoDataPath ?? GEOJSON_PATHS[visualizationType];
 
   // Load GeoJSON data
-  const { geoJSON, loading, error } = useGeoJSONLoader(geoDataPath);
+  const { geoJSON, loading, error } = useGeoJSONLoader(effectiveGeoDataPath);
 
   // Merge configuration with defaults
   const fullConfig = useMemo(() => mergeConfig(config), [config]);
@@ -282,6 +379,9 @@ export function USDistrictChoroplethMap({
     () => calculateColorRange(data, fullConfig.colorScale.symmetric ?? true),
     [data, fullConfig.colorScale.symmetric]
   );
+
+  // For hex maps, compute a flat projection that fits all features
+  const hexFit = useGeoJSONFitProjection(geoJSON, isHexMap, SVG_WIDTH, fullConfig.height);
 
   // Compute focus state view (center + zoom)
   const focusView = useFocusStateView(geoJSON, focusState);
@@ -406,13 +506,16 @@ export function USDistrictChoroplethMap({
       {/* Map */}
       <div style={{ flex: 1, minWidth: 0 }}>
         <ComposableMap
-          projection="geoAlbersUsa"
-          width={800}
+          projection={isHexMap ? 'geoEquirectangular' : 'geoAlbersUsa'}
+          projectionConfig={
+            isHexMap && hexFit ? { center: hexFit.center, scale: hexFit.scale } : undefined
+          }
+          width={SVG_WIDTH}
           height={fullConfig.height}
           style={{ width: '100%', height: '100%' }}
         >
           <ZoomableGroup
-            center={focusView?.center ?? [0, 0]}
+            center={focusView?.center ?? (isHexMap && hexFit ? hexFit.center : DEFAULT_US_CENTER)}
             zoom={focusView?.zoom ?? 1}
             minZoom={0.5}
             maxZoom={20}
