@@ -1,38 +1,11 @@
 import { V2PolicyCreatePayload, V2PolicyParameterValue, V2PolicyResponse } from '@/api/policy';
 import { Policy } from '@/types/ingredients/Policy';
 import { ParameterMetadata } from '@/types/metadata';
-import { PolicyMetadata } from '@/types/metadata/policyMetadata';
-import { PolicyCreationPayload } from '@/types/payloads';
-import { convertParametersToPolicyJson, convertPolicyJsonToParameters } from './conversionHelpers';
 
 /**
  * Adapter for converting between Policy and API formats
  */
 export class PolicyAdapter {
-  /**
-   * @deprecated Use fromV2Response for v2 API responses
-   * Converts PolicyMetadata from API GET response to Policy type
-   * Handles snake_case to camelCase conversion
-   */
-  static fromMetadata(metadata: PolicyMetadata): Policy {
-    return {
-      id: String(metadata.id),
-      countryId: metadata.country_id,
-      apiVersion: metadata.api_version,
-      parameters: convertPolicyJsonToParameters(metadata.policy_json),
-    };
-  }
-
-  /**
-   * @deprecated Use toV2CreationPayload for v2 API
-   * Converts Policy to format for API POST request (v1 format)
-   */
-  static toCreationPayload(policy: Policy): PolicyCreationPayload {
-    return {
-      data: convertParametersToPolicyJson(policy.parameters || []),
-    };
-  }
-
   /**
    * Converts V2 API response to Policy type
    */

@@ -1,105 +1,45 @@
-import { UserPolicyAdapter } from '@/adapters/UserPolicyAdapter';
-import { API_V2_BASE_URL } from '@/api/v2/taxBenefitModels';
-import { UserPolicyCreationMetadata } from '@/types/metadata/userPolicyMetadata';
 import { UserPolicy } from '../types/ingredients/UserPolicy';
+import {
+  createUserPolicyAssociationV2,
+  deleteUserPolicyAssociationV2,
+  fetchUserPolicyAssociationByIdV2,
+  fetchUserPolicyAssociationsV2,
+  updateUserPolicyAssociationV2,
+} from './v2/userPolicyAssociations';
 
 export interface UserPolicyStore {
   create: (policy: Omit<UserPolicy, 'id' | 'createdAt'>) => Promise<UserPolicy>;
   findByUser: (userId: string, countryId?: string) => Promise<UserPolicy[]>;
   findById: (userPolicyId: string) => Promise<UserPolicy | null>;
-  update: (userPolicyId: string, updates: Partial<UserPolicy>) => Promise<UserPolicy>;
-  delete: (userPolicyId: string) => Promise<void>;
+  update: (userPolicyId: string, updates: Partial<UserPolicy>, userId: string) => Promise<UserPolicy>;
+  delete: (userPolicyId: string, userId: string) => Promise<void>;
 }
 
 export class ApiPolicyStore implements UserPolicyStore {
-  private readonly BASE_URL = `${API_V2_BASE_URL}/user-policies`;
-
   async create(policy: Omit<UserPolicy, 'id' | 'createdAt'>): Promise<UserPolicy> {
-    const payload: UserPolicyCreationMetadata = UserPolicyAdapter.toCreationPayload(policy);
-
-    const response = await fetch(`${this.BASE_URL}/`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.detail || 'Failed to create policy association');
-    }
-
-    const apiResponse = await response.json();
-    return UserPolicyAdapter.fromApiResponse(apiResponse);
+    return createUserPolicyAssociationV2(policy);
   }
 
   async findByUser(userId: string, countryId?: string): Promise<UserPolicy[]> {
-    const params = new URLSearchParams({ user_id: userId });
-    if (countryId) {
-      params.append('country_id', countryId);
-    }
-
-    const response = await fetch(`${this.BASE_URL}/?${params}`, {
-      headers: { 'Content-Type': 'application/json' },
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch user associations');
-    }
-
-    const apiResponses = await response.json();
-    return apiResponses.map((apiData: any) => UserPolicyAdapter.fromApiResponse(apiData));
+    return fetchUserPolicyAssociationsV2(userId, countryId);
   }
 
   async findById(userPolicyId: string): Promise<UserPolicy | null> {
-    const response = await fetch(`${this.BASE_URL}/${userPolicyId}`, {
-      headers: { 'Content-Type': 'application/json' },
-    });
-
-    if (response.status === 404) {
-      return null;
-    }
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch association');
-    }
-
-    const apiData = await response.json();
-    return UserPolicyAdapter.fromApiResponse(apiData);
+    return fetchUserPolicyAssociationByIdV2(userPolicyId);
   }
 
-  async update(userPolicyId: string, updates: Partial<UserPolicy>): Promise<UserPolicy> {
-    const payload = UserPolicyAdapter.toUpdatePayload(updates);
-
-    const response = await fetch(`${this.BASE_URL}/${userPolicyId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
+  async update(
+    userPolicyId: string,
+    updates: Partial<UserPolicy>,
+    userId: string
+  ): Promise<UserPolicy> {
+    return updateUserPolicyAssociationV2(userPolicyId, userId, {
+      label: updates.label ?? null,
     });
-
-    if (response.status === 404) {
-      throw new Error('User-policy association not found');
-    }
-
-    if (!response.ok) {
-      throw new Error('Failed to update policy association');
-    }
-
-    const apiData = await response.json();
-    return UserPolicyAdapter.fromApiResponse(apiData);
   }
 
-  async delete(userPolicyId: string): Promise<void> {
-    const response = await fetch(`${this.BASE_URL}/${userPolicyId}`, {
-      method: 'DELETE',
-    });
-
-    if (response.status === 404) {
-      throw new Error('User-policy association not found');
-    }
-
-    if (!response.ok) {
-      throw new Error('Failed to delete association');
-    }
+  async delete(userPolicyId: string, userId: string): Promise<void> {
+    return deleteUserPolicyAssociationV2(userPolicyId, userId);
   }
 }
 
@@ -170,7 +110,11 @@ export class LocalStoragePolicyStore implements UserPolicyStore {
     localStorage.setItem(this.STORAGE_KEY, JSON.stringify(policies));
   }
 
-  async update(userPolicyId: string, updates: Partial<UserPolicy>): Promise<UserPolicy> {
+  async update(
+    userPolicyId: string,
+    updates: Partial<UserPolicy>,
+    _userId: string
+  ): Promise<UserPolicy> {
     const policies = this.getStoredPolicies();
 
     // Find by userPolicy.id (the "sup-" prefixed ID), NOT policyId
@@ -193,7 +137,7 @@ export class LocalStoragePolicyStore implements UserPolicyStore {
     return updated;
   }
 
-  async delete(userPolicyId: string): Promise<void> {
+  async delete(userPolicyId: string, _userId: string): Promise<void> {
     const policies = this.getStoredPolicies();
     const index = policies.findIndex((p) => p.id === userPolicyId);
 

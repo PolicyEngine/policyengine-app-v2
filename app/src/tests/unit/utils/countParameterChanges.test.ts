@@ -1,71 +1,67 @@
 import { describe, expect, test } from 'vitest';
-import {
-  mockPolicyWithEmptyParameter,
-  mockPolicyWithMultipleParameters,
-  mockPolicyWithNoJson,
-  mockPolicyWithNullParameter,
-  mockPolicyWithOneParameterMultipleRanges,
-  mockPolicyWithOneParameterOneRange,
-} from '@/tests/fixtures/utils/countParameterChangesMocks';
-import { countParameterChanges } from '@/utils/countParameterChanges';
+import { countPolicyModifications } from '@/utils/countParameterChanges';
 
-describe('countParameterChanges', () => {
+describe('countPolicyModifications', () => {
   test('given undefined policy then returns 0', () => {
-    // Given
-    const policy = undefined;
-
-    // When
-    const result = countParameterChanges(policy);
-
-    // Then
-    expect(result).toBe(0);
+    expect(countPolicyModifications(undefined)).toBe(0);
   });
 
-  test('given policy with no policy_json then returns 0', () => {
-    // When
-    const result = countParameterChanges(mockPolicyWithNoJson);
-
-    // Then
-    expect(result).toBe(0);
+  test('given null policy then returns 0', () => {
+    expect(countPolicyModifications(null)).toBe(0);
   });
 
-  test('given policy with one parameter and one date range then returns 1', () => {
-    // When
-    const result = countParameterChanges(mockPolicyWithOneParameterOneRange);
-
-    // Then
-    expect(result).toBe(1);
+  test('given policy with no parameters then returns 0', () => {
+    expect(countPolicyModifications({ parameters: undefined })).toBe(0);
   });
 
-  test('given policy with one parameter and multiple date ranges then returns count of date ranges', () => {
-    // When
-    const result = countParameterChanges(mockPolicyWithOneParameterMultipleRanges);
-
-    // Then
-    expect(result).toBe(3);
+  test('given policy with empty parameters then returns 0', () => {
+    expect(countPolicyModifications({ parameters: [] })).toBe(0);
   });
 
-  test('given policy with multiple parameters then returns sum of all date ranges', () => {
-    // When
-    const result = countParameterChanges(mockPolicyWithMultipleParameters);
-
-    // Then
-    expect(result).toBe(6); // 2 + 3 + 1
+  test('given policy with one parameter and one value interval then returns 1', () => {
+    const policy = {
+      parameters: [
+        {
+          name: 'tax_rate',
+          values: [{ startDate: '2024-01-01', endDate: '2024-12-31', value: 0.25 }],
+        },
+      ],
+    };
+    expect(countPolicyModifications(policy)).toBe(1);
   });
 
-  test('given policy with parameter having null values then handles gracefully', () => {
-    // When
-    const result = countParameterChanges(mockPolicyWithNullParameter);
-
-    // Then
-    expect(result).toBe(0);
+  test('given policy with one parameter and multiple value intervals then returns count', () => {
+    const policy = {
+      parameters: [
+        {
+          name: 'tax_rate',
+          values: [
+            { startDate: '2024-01-01', endDate: '2024-12-31', value: 0.25 },
+            { startDate: '2025-01-01', endDate: '2025-12-31', value: 0.27 },
+            { startDate: '2026-01-01', endDate: '2026-12-31', value: 0.3 },
+          ],
+        },
+      ],
+    };
+    expect(countPolicyModifications(policy)).toBe(3);
   });
 
-  test('given policy with empty parameter object then returns 0', () => {
-    // When
-    const result = countParameterChanges(mockPolicyWithEmptyParameter);
-
-    // Then
-    expect(result).toBe(0);
+  test('given policy with multiple parameters then returns sum of all value intervals', () => {
+    const policy = {
+      parameters: [
+        {
+          name: 'tax_rate',
+          values: [
+            { startDate: '2024-01-01', endDate: '2024-12-31', value: 0.25 },
+            { startDate: '2025-01-01', endDate: '2025-12-31', value: 0.27 },
+          ],
+        },
+        {
+          name: 'benefit_amount',
+          values: [{ startDate: '2024-01-01', endDate: '2024-12-31', value: 1000 }],
+        },
+      ],
+    };
+    expect(countPolicyModifications(policy)).toBe(3);
   });
 });

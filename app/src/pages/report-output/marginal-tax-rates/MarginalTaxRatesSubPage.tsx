@@ -3,7 +3,7 @@ import type { Layout } from 'plotly.js';
 import Plot from 'react-plotly.js';
 import { Group, Radio, Stack, Text } from '@mantine/core';
 import { useMediaQuery, useViewportSize } from '@mantine/hooks';
-import { PolicyAdapter } from '@/adapters/PolicyAdapter';
+import { convertParametersToPolicyJson } from '@/adapters/conversionHelpers';
 import { colors, spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useHouseholdVariation } from '@/hooks/useHouseholdVariation';
@@ -67,11 +67,13 @@ export default function MarginalTaxRatesSubPage({
   const baselinePolicy = policies?.find((p) => p.id === simulations[0]?.policyId);
   const reformPolicy = simulations[1] && policies?.find((p) => p.id === simulations[1].policyId);
 
-  // Convert policies to API format
+  // Convert policies to API format for calculate-full endpoint
   const baselinePolicyData = baselinePolicy
-    ? PolicyAdapter.toCreationPayload(baselinePolicy).data
+    ? convertParametersToPolicyJson(baselinePolicy.parameters || [])
     : {};
-  const reformPolicyData = reformPolicy ? PolicyAdapter.toCreationPayload(reformPolicy).data : {};
+  const reformPolicyData = reformPolicy
+    ? convertParametersToPolicyJson(reformPolicy.parameters || [])
+    : {};
 
   // Fetch baseline variation
   const {

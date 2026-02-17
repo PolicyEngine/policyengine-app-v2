@@ -1,9 +1,9 @@
 export const policyAssociationKeys = {
   all: ['policy-associations'] as const,
   byId: (userPolicyId: string) => [...policyAssociationKeys.all, 'id', userPolicyId] as const,
-  byUser: (userId: string, taxBenefitModelId?: string) =>
-    taxBenefitModelId
-      ? ([...policyAssociationKeys.all, 'user_id', userId, 'model', taxBenefitModelId] as const)
+  byUser: (userId: string, countryId?: string) =>
+    countryId
+      ? ([...policyAssociationKeys.all, 'user_id', userId, 'country', countryId] as const)
       : ([...policyAssociationKeys.all, 'user_id', userId] as const),
   byPolicy: (policyId: string) => [...policyAssociationKeys.all, 'policy_id', policyId] as const,
   specific: (userId: string, policyId: string) =>

@@ -1,8 +1,8 @@
-// Import auth hook here in future; for now, mocked out below
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { PolicyAdapter } from '@/adapters';
 import { fetchPolicyById } from '@/api/policy';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useUserId } from '@/hooks/useUserId';
 import { Policy } from '@/types/ingredients/Policy';
 import { ApiPolicyStore, LocalStoragePolicyStore } from '../api/policyAssociation';
 import { queryConfig } from '../libs/queryConfig';
@@ -23,7 +23,6 @@ export const usePolicyAssociationsByUser = (userId: string) => {
   const store = useUserPolicyStore();
   const countryId = useCurrentCountry();
   const isLoggedIn = false; // TODO: Replace with actual auth check in future
-  // TODO: Should we determine user ID from auth context here? Or pass as arg?
   const config = isLoggedIn ? queryConfig.api : queryConfig.localStorage;
 
   return useQuery({
@@ -55,20 +54,16 @@ export const useCreatePolicyAssociation = () => {
     mutationFn: (userPolicy: Omit<UserPolicy, 'id' | 'createdAt'>) => store.create(userPolicy),
     onSuccess: (newAssociation) => {
       // Invalidate and refetch related queries
-      // Note: country/model filtering now happens via Policy.tax_benefit_model_id, not UserPolicy
       queryClient.invalidateQueries({
-        queryKey: policyAssociationKeys.byUser(newAssociation.userId.toString()),
+        queryKey: policyAssociationKeys.byUser(newAssociation.userId, newAssociation.countryId),
       });
       queryClient.invalidateQueries({
-        queryKey: policyAssociationKeys.byPolicy(newAssociation.policyId.toString()),
+        queryKey: policyAssociationKeys.byPolicy(newAssociation.policyId),
       });
 
       // Update specific query cache
       queryClient.setQueryData(
-        policyAssociationKeys.specific(
-          newAssociation.userId.toString(),
-          newAssociation.policyId.toString()
-        ),
+        policyAssociationKeys.specific(newAssociation.userId, newAssociation.policyId),
         newAssociation
       );
     },
@@ -78,6 +73,7 @@ export const useCreatePolicyAssociation = () => {
 export const useUpdatePolicyAssociation = () => {
   const store = useUserPolicyStore();
   const queryClient = useQueryClient();
+  const userId = useUserId();
 
   return useMutation({
     mutationFn: ({
@@ -86,13 +82,14 @@ export const useUpdatePolicyAssociation = () => {
     }: {
       userPolicyId: string;
       updates: Partial<UserPolicy>;
-    }) => store.update(userPolicyId, updates),
+    }) => store.update(userPolicyId, updates, userId),
 
     onSuccess: (updatedAssociation) => {
-      // Invalidate all related queries to trigger refetch
-      // Note: country/model filtering now happens via Policy.tax_benefit_model_id, not UserPolicy
       queryClient.invalidateQueries({
-        queryKey: policyAssociationKeys.byUser(updatedAssociation.userId),
+        queryKey: policyAssociationKeys.byUser(
+          updatedAssociation.userId,
+          updatedAssociation.countryId
+        ),
       });
 
       queryClient.invalidateQueries({
@@ -108,27 +105,23 @@ export const useUpdatePolicyAssociation = () => {
   });
 };
 
-// Not yet implemented, but keeping for future use
-/*
-export const useDeleteAssociation = () => {
+export const useDeletePolicyAssociation = () => {
   const store = useUserPolicyStore();
   const queryClient = useQueryClient();
+  const userId = useUserId();
 
   return useMutation({
-    mutationFn: ({ userId, policyId }: { userId: string; policyId: string }) =>
-      store.delete(userId, policyId),
-    onSuccess: (_, { userId, policyId }) => {
+    mutationFn: ({ userPolicyId, policyId }: { userPolicyId: string; policyId: string }) =>
+      store.delete(userPolicyId, userId).then(() => ({ policyId })),
+    onSuccess: (_, { userPolicyId, policyId }) => {
       queryClient.invalidateQueries({ queryKey: policyAssociationKeys.byUser(userId) });
       queryClient.invalidateQueries({ queryKey: policyAssociationKeys.byPolicy(policyId) });
 
-      queryClient.setQueryData(
-        policyAssociationKeys.specific(userId, policyId),
-        null
-      );
+      queryClient.setQueryData(policyAssociationKeys.specific(userId, policyId), null);
+      queryClient.removeQueries({ queryKey: policyAssociationKeys.byId(userPolicyId) });
     },
   });
 };
-*/
 
 // Type for the combined data structure
 export interface UserPolicyWithAssociation {
@@ -170,10 +163,10 @@ export const useUserPolicies = (userId: string) => {
   // This ensures cache consistency with useUserReports and useUserSimulations
   const policyQueries = useQueries({
     queries: policyIds.map((policyId) => ({
-      queryKey: policyKeys.byId(policyId.toString()),
+      queryKey: policyKeys.byId(policyId),
       queryFn: async () => {
         try {
-          const response = await fetchPolicyById(policyId.toString());
+          const response = await fetchPolicyById(policyId);
           return PolicyAdapter.fromV2Response(response);
         } catch (error) {
           // Add context to help debug which policy failed

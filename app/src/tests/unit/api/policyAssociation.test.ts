@@ -52,7 +52,7 @@ describe('ApiPolicyStore', () => {
         `${API_V2_BASE_URL}/user-policies/`,
         expect.objectContaining({
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
         })
       );
       expect(result).toMatchObject({
@@ -67,7 +67,7 @@ describe('ApiPolicyStore', () => {
       (global.fetch as any).mockResolvedValue({
         ok: false,
         status: 500,
-        json: async () => ({}),
+        text: async () => 'Internal Server Error',
       });
 
       // When/Then
@@ -92,7 +92,7 @@ describe('ApiPolicyStore', () => {
       expect(fetch).toHaveBeenCalledWith(
         `${API_V2_BASE_URL}/user-policies/?user_id=user-123`,
         expect.objectContaining({
-          headers: { 'Content-Type': 'application/json' },
+          headers: { Accept: 'application/json' },
         })
       );
       expect(result).toHaveLength(1);
@@ -118,7 +118,7 @@ describe('ApiPolicyStore', () => {
       expect(fetch).toHaveBeenCalledWith(
         `${API_V2_BASE_URL}/user-policies/?user_id=user-123&country_id=us`,
         expect.objectContaining({
-          headers: { 'Content-Type': 'application/json' },
+          headers: { Accept: 'application/json' },
         })
       );
       expect(result).toHaveLength(1);
@@ -129,11 +129,12 @@ describe('ApiPolicyStore', () => {
       (global.fetch as any).mockResolvedValue({
         ok: false,
         status: 500,
+        text: async () => 'Internal Server Error',
       });
 
       // When/Then
       await expect(store.findByUser('user-123')).rejects.toThrow(
-        'Failed to fetch user associations'
+        'Failed to fetch user policy associations'
       );
     });
   });
@@ -154,7 +155,7 @@ describe('ApiPolicyStore', () => {
       expect(fetch).toHaveBeenCalledWith(
         `${API_V2_BASE_URL}/user-policies/user-policy-abc123`,
         expect.objectContaining({
-          headers: { 'Content-Type': 'application/json' },
+          headers: { Accept: 'application/json' },
         })
       );
       expect(result).toMatchObject({
@@ -183,11 +184,12 @@ describe('ApiPolicyStore', () => {
       (global.fetch as any).mockResolvedValue({
         ok: false,
         status: 500,
+        text: async () => 'Internal Server Error',
       });
 
       // When/Then
       await expect(store.findById('user-policy-abc123')).rejects.toThrow(
-        'Failed to fetch association'
+        'Failed to fetch policy association'
       );
     });
   });
@@ -206,14 +208,14 @@ describe('ApiPolicyStore', () => {
       });
 
       // When
-      const result = await store.update('user-policy-abc123', { label: 'Updated Label' });
+      const result = await store.update('user-policy-abc123', { label: 'Updated Label' }, 'user-123');
 
       // Then
       expect(fetch).toHaveBeenCalledWith(
-        `${API_V2_BASE_URL}/user-policies/user-policy-abc123`,
+        `${API_V2_BASE_URL}/user-policies/user-policy-abc123?user_id=user-123`,
         expect.objectContaining({
           method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
         })
       );
       expect(result.label).toBe('Updated Label');
@@ -224,10 +226,11 @@ describe('ApiPolicyStore', () => {
       (global.fetch as any).mockResolvedValue({
         ok: false,
         status: 500,
+        text: async () => 'Internal Server Error',
       });
 
       // When/Then
-      await expect(store.update('user-policy-abc123', { label: 'Updated Label' })).rejects.toThrow(
+      await expect(store.update('user-policy-abc123', { label: 'Updated Label' }, 'user-123')).rejects.toThrow(
         'Failed to update policy association'
       );
     });
@@ -242,11 +245,11 @@ describe('ApiPolicyStore', () => {
       });
 
       // When
-      await store.delete('user-policy-abc123');
+      await store.delete('user-policy-abc123', 'user-123');
 
       // Then
       expect(fetch).toHaveBeenCalledWith(
-        `${API_V2_BASE_URL}/user-policies/user-policy-abc123`,
+        `${API_V2_BASE_URL}/user-policies/user-policy-abc123?user_id=user-123`,
         expect.objectContaining({
           method: 'DELETE',
         })
@@ -258,11 +261,12 @@ describe('ApiPolicyStore', () => {
       (global.fetch as any).mockResolvedValue({
         ok: false,
         status: 500,
+        text: async () => 'Internal Server Error',
       });
 
       // When/Then
-      await expect(store.delete('user-policy-abc123')).rejects.toThrow(
-        'Failed to delete association'
+      await expect(store.delete('user-policy-abc123', 'user-123')).rejects.toThrow(
+        'Failed to delete policy association'
       );
     });
   });
@@ -428,7 +432,7 @@ describe('LocalStoragePolicyStore', () => {
       const created = await store.create(mockPolicyInput1);
 
       // When
-      const result = await store.update(created.id!, { label: 'Updated Label' });
+      const result = await store.update(created.id!, { label: 'Updated Label' }, 'user-123');
 
       // Then
       expect(result.label).toBe('Updated Label');
@@ -441,7 +445,7 @@ describe('LocalStoragePolicyStore', () => {
       // Given - no policy created
 
       // When & Then
-      await expect(store.update('sup-nonexistent', { label: 'Updated Label' })).rejects.toThrow(
+      await expect(store.update('sup-nonexistent', { label: 'Updated Label' }, 'user-123')).rejects.toThrow(
         'UserPolicy with id sup-nonexistent not found'
       );
     });
@@ -452,7 +456,7 @@ describe('LocalStoragePolicyStore', () => {
       const beforeUpdate = new Date().toISOString();
 
       // When
-      const result = await store.update(created.id!, { label: 'Updated Label' });
+      const result = await store.update(created.id!, { label: 'Updated Label' }, 'user-123');
 
       // Then
       expect(result.updatedAt).toBeDefined();
@@ -464,7 +468,7 @@ describe('LocalStoragePolicyStore', () => {
       const created = await store.create(mockPolicyInput1);
 
       // When
-      await store.update(created.id!, { label: 'Updated Label' });
+      await store.update(created.id!, { label: 'Updated Label' }, 'user-123');
 
       // Then
       const persisted = await store.findById(created.id!);
@@ -477,7 +481,7 @@ describe('LocalStoragePolicyStore', () => {
       const created2 = await store.create(mockPolicyInput2);
 
       // When
-      await store.update(created1.id!, { label: 'Updated Label' });
+      await store.update(created1.id!, { label: 'Updated Label' }, 'user-123');
 
       // Then
       const updated = await store.findById(created1.id!);
@@ -491,7 +495,7 @@ describe('LocalStoragePolicyStore', () => {
       const created = await store.create(mockPolicyInput1);
 
       // When
-      const result = await store.update(created.id!, { label: 'Updated Label' });
+      const result = await store.update(created.id!, { label: 'Updated Label' }, 'user-123');
 
       // Then
       expect(result.label).toBe('Updated Label');
