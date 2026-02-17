@@ -75,7 +75,7 @@ export default function SocietyWideOverview({ output }: SocietyWideOverviewProps
         p={spacing.xl}
         style={{
           background: `linear-gradient(135deg, ${colors.primary[50]} 0%, ${colors.background.primary} 100%)`,
-          borderRadius: spacing.md,
+          borderRadius: spacing.radius.container,
           border: `1px solid ${colors.primary[100]}`,
         }}
       >
@@ -88,7 +88,7 @@ export default function SocietyWideOverview({ output }: SocietyWideOverviewProps
               alignItems: 'center',
               justifyContent: 'center',
               backgroundColor: colors.primary[100],
-              borderRadius: spacing.sm,
+              borderRadius: spacing.radius.element,
               flexShrink: 0,
             }}
           >
@@ -113,7 +113,7 @@ export default function SocietyWideOverview({ output }: SocietyWideOverviewProps
           p={spacing.lg}
           style={{
             backgroundColor: colors.background.primary,
-            borderRadius: spacing.md,
+            borderRadius: spacing.radius.container,
             border: `1px solid ${colors.border.light}`,
           }}
         >
@@ -126,7 +126,7 @@ export default function SocietyWideOverview({ output }: SocietyWideOverviewProps
                 alignItems: 'center',
                 justifyContent: 'center',
                 backgroundColor: colors.gray[100],
-                borderRadius: spacing.xs,
+                borderRadius: spacing.radius.element,
                 flexShrink: 0,
               }}
             >
@@ -149,7 +149,7 @@ export default function SocietyWideOverview({ output }: SocietyWideOverviewProps
           p={spacing.lg}
           style={{
             backgroundColor: colors.background.primary,
-            borderRadius: spacing.md,
+            borderRadius: spacing.radius.container,
             border: `1px solid ${colors.border.light}`,
           }}
         >
@@ -162,7 +162,7 @@ export default function SocietyWideOverview({ output }: SocietyWideOverviewProps
                 alignItems: 'center',
                 justifyContent: 'center',
                 backgroundColor: colors.gray[100],
-                borderRadius: spacing.xs,
+                borderRadius: spacing.radius.element,
                 flexShrink: 0,
               }}
             >
@@ -185,7 +185,7 @@ export default function SocietyWideOverview({ output }: SocietyWideOverviewProps
                 style={{
                   display: 'flex',
                   height: 8,
-                  borderRadius: 4,
+                  borderRadius: spacing.radius.element,
                   overflow: 'hidden',
                   backgroundColor: colors.gray[200],
                 }}
@@ -223,7 +223,7 @@ export default function SocietyWideOverview({ output }: SocietyWideOverviewProps
                     style={{
                       width: 10,
                       height: 10,
-                      borderRadius: 2,
+                      borderRadius: spacing.radius.chip,
                       backgroundColor: colors.primary[500],
                       flexShrink: 0,
                     }}
@@ -237,7 +237,7 @@ export default function SocietyWideOverview({ output }: SocietyWideOverviewProps
                     style={{
                       width: 10,
                       height: 10,
-                      borderRadius: 2,
+                      borderRadius: spacing.radius.chip,
                       backgroundColor: colors.gray[300],
                       flexShrink: 0,
                     }}
@@ -251,7 +251,7 @@ export default function SocietyWideOverview({ output }: SocietyWideOverviewProps
                     style={{
                       width: 10,
                       height: 10,
-                      borderRadius: 2,
+                      borderRadius: spacing.radius.chip,
                       backgroundColor: colors.gray[500],
                       flexShrink: 0,
                     }}

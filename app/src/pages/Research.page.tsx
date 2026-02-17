@@ -255,7 +255,7 @@ export default function ResearchPage() {
                   textAlign: 'center',
                   padding: spacing['3xl'],
                   backgroundColor: colors.gray[50],
-                  borderRadius: spacing.radius.md,
+                  borderRadius: spacing.radius.container,
                 }}
               >
                 <Text c="dimmed">No results found. Try adjusting your filters.</Text>

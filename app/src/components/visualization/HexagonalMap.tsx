@@ -134,7 +134,7 @@ export function HexagonalMap({ data, config = {} }: HexagonalMapProps) {
     <Box
       style={{
         border: `1px solid ${colors.border.light}`,
-        borderRadius: spacing.sm,
+        borderRadius: spacing.radius.container,
         backgroundColor: colors.background.primary,
         overflow: 'hidden',
         position: 'relative',
@@ -201,7 +201,7 @@ export function HexagonalMap({ data, config = {} }: HexagonalMapProps) {
             backgroundColor: 'rgba(0,0,0,0.85)',
             color: '#fff',
             padding: '4px 8px',
-            borderRadius: 4,
+            borderRadius: spacing.radius.element,
             fontSize: 12,
             whiteSpace: 'nowrap',
             pointerEvents: 'none',

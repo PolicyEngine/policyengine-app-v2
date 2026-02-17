@@ -52,11 +52,11 @@ const spacingTokens = [
 ];
 
 const radiusTokens = [
-  { name: 'sm', value: spacing.radius.sm },
-  { name: 'md', value: spacing.radius.md },
-  { name: 'lg', value: spacing.radius.lg },
-  { name: 'xl', value: spacing.radius.xl },
-  { name: '2xl', value: spacing.radius['2xl'] },
+  { name: 'none', value: spacing.radius.none },
+  { name: 'chip', value: spacing.radius.chip },
+  { name: 'element', value: spacing.radius.element },
+  { name: 'container', value: spacing.radius.container },
+  { name: 'feature', value: spacing.radius.feature },
 ];
 
 function ColorSwatch({
@@ -77,7 +77,7 @@ function ColorSwatch({
           <UnstyledButton
             onClick={copy}
             style={{
-              borderRadius: spacing.radius.lg,
+              borderRadius: spacing.radius.container,
               overflow: 'hidden',
               background: colors.white,
               border: `1px solid ${colors.border.light}`,
@@ -150,7 +150,7 @@ function SectionTitle({ children, badge }: { children: string; badge?: string })
             padding: `${spacing.xs} ${spacing.sm}`,
             background: colors.primary[100],
             color: colors.primary[600],
-            borderRadius: spacing.radius.md,
+            borderRadius: spacing.radius.container,
             textTransform: 'uppercase',
             letterSpacing: '0.05em',
           }}
@@ -236,7 +236,7 @@ export default function BrandDesignPage() {
             style={{
               background: colors.white,
               border: `1px solid ${colors.border.light}`,
-              borderRadius: spacing.radius.lg,
+              borderRadius: spacing.radius.container,
               overflow: 'hidden',
             }}
           >
@@ -309,7 +309,7 @@ export default function BrandDesignPage() {
                     height: 24,
                     width: space.value,
                     background: colors.primary[500],
-                    borderRadius: spacing.radius.sm,
+                    borderRadius: spacing.radius.element,
                     opacity: 0.6,
                   }}
                 />
@@ -406,7 +406,7 @@ export default function BrandDesignPage() {
                 style={{
                   background: colors.white,
                   border: `1px solid ${colors.border.light}`,
-                  borderRadius: spacing.radius.md,
+                  borderRadius: spacing.radius.container,
                 }}
               >
                 <Icon size={24} color={colors.text.secondary} />
@@ -431,7 +431,7 @@ export default function BrandDesignPage() {
             p="xl"
             style={{
               background: colors.secondary[900],
-              borderRadius: spacing.radius.lg,
+              borderRadius: spacing.radius.container,
             }}
           >
             <Text
@@ -452,7 +452,7 @@ import { colors, spacing, typography } from '@/designTokens';
   style={{
     color: colors.primary[500],
     padding: spacing.lg,
-    borderRadius: spacing.radius.md,
+    borderRadius: spacing.radius.container,
     fontFamily: typography.fontFamily.primary,
   }}
 >

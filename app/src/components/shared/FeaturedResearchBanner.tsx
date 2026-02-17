@@ -157,7 +157,7 @@ export default function FeaturedResearchBanner() {
                 key={item.label}
                 style={{
                   backgroundColor: 'rgba(255, 255, 255, 0.25)',
-                  borderRadius: '16px',
+                  borderRadius: spacing.radius.feature,
                   padding: `${spacing.xl} ${spacing.xl}`,
                   minWidth: '120px',
                   backdropFilter: 'blur(10px)',
@@ -237,7 +237,7 @@ export default function FeaturedResearchBanner() {
                   alignItems: 'center',
                   justifyContent: 'center',
                   backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                  borderRadius: '12px',
+                  borderRadius: spacing.radius.feature,
                   padding: spacing.lg,
                   cursor: 'pointer',
                   transition: 'all 0.3s ease',

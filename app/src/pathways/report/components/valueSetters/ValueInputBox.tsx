@@ -1,4 +1,5 @@
 import { Group, NumberInput, Stack, Switch, Text } from '@mantine/core';
+import { spacing } from '@/designTokens';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import { coerceByUnit } from '@/utils/valueCoercion';
 
@@ -64,7 +65,7 @@ export function ValueInputBox(props: ValueInputBoxProps) {
           align="center"
           style={{
             border: '1px solid #ced4da',
-            borderRadius: '4px',
+            borderRadius: spacing.radius.element,
             padding: '6px 12px',
             height: '36px',
             backgroundColor: 'white',

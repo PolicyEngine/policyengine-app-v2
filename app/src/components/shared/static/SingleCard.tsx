@@ -43,7 +43,7 @@ export function SingleCard({
     <Card
       shadow="sm"
       padding={spacing['3xl']}
-      radius={spacing.radius.lg}
+      radius={spacing.radius.container}
       withBorder
       onClick={onClick}
       style={{
@@ -73,7 +73,7 @@ export function SingleCard({
           {tags.map((tag, idx) => (
             <Badge
               key={idx}
-              radius={spacing.xl}
+              radius={spacing.radius.container}
               c={background === 'green' ? colors.text.inverse : colors.text.primary}
               variant="filled"
               style={{
@@ -107,7 +107,7 @@ export function SingleCard({
             <Image
               src={image}
               style={{ width: '90%', height: 'auto', objectFit: 'cover', justifySelf: 'center' }}
-              radius={spacing.radius.lg}
+              radius={spacing.radius.container}
             />
           )}
           {footerText && (

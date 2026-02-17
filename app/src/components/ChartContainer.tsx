@@ -42,7 +42,7 @@ export function ChartContainer({ children, title, onDownloadCsv }: ChartContaine
         p={spacing.md}
         style={{
           border: `1px solid ${colors.border.light}`,
-          borderRadius: '8px',
+          borderRadius: spacing.radius.container,
           backgroundColor: colors.white,
         }}
       >

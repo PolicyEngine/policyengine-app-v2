@@ -43,7 +43,7 @@ export function BlogPostCard({ item, countryId }: BlogPostCardProps) {
     <Box
       style={{
         border: `1px solid ${colors.gray[300]}`,
-        borderRadius: spacing.radius.md,
+        borderRadius: spacing.radius.container,
         overflow: 'hidden',
         backgroundColor: colors.white,
         height: '100%',

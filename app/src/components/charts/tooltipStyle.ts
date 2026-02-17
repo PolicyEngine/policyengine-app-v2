@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { spacing } from '@/designTokens';
 
 /**
  * Shared tooltip container style for all Recharts custom tooltips.
@@ -6,6 +7,6 @@ import type { CSSProperties } from 'react';
 export const TOOLTIP_STYLE: CSSProperties = {
   background: '#fff',
   border: '1px solid #E2E8F0',
-  borderRadius: 6,
+  borderRadius: spacing.radius.element,
   padding: '8px 12px',
 };

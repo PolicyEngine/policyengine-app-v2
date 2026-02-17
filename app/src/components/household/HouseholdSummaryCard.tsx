@@ -72,7 +72,7 @@ export default function HouseholdSummaryCard({
       p={spacing.xl}
       style={{
         border: `1px solid ${colors.border.light}`,
-        borderRadius: spacing.sm,
+        borderRadius: spacing.radius.container,
         backgroundColor: colors.background.primary,
       }}
     >

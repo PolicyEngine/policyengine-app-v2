@@ -14,7 +14,7 @@ export default function ActionCards() {
           href={`${CALCULATOR_URL}/${countryId}/reports`}
           shadow="sm"
           p={spacing.xl}
-          radius={spacing.radius.md}
+          radius={spacing.radius.container}
           withBorder
           style={{
             backgroundColor: 'transparent',

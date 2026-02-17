@@ -58,7 +58,7 @@ export default function HeaderNavigation() {
         marginLeft: '0px',
         marginRight: '0px',
         width: '100%',
-        borderRadius: '0px',
+        borderRadius: spacing.radius.none,
       }}
     >
       <HeaderContent opened={opened} onOpen={open} onClose={close} navItems={navItems} />

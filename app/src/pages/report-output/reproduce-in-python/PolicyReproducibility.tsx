@@ -65,7 +65,7 @@ export default function PolicyReproducibility({
           p={spacing.lg}
           style={{
             backgroundColor: colors.background.primary,
-            borderRadius: spacing.md,
+            borderRadius: spacing.radius.container,
             border: `1px solid ${colors.border.light}`,
           }}
         >
@@ -78,7 +78,7 @@ export default function PolicyReproducibility({
                 alignItems: 'center',
                 justifyContent: 'center',
                 backgroundColor: colors.gray[100],
-                borderRadius: spacing.xs,
+                borderRadius: spacing.radius.element,
                 flexShrink: 0,
               }}
             >
@@ -112,7 +112,7 @@ export default function PolicyReproducibility({
         <Box
           style={{
             backgroundColor: colors.background.primary,
-            borderRadius: spacing.md,
+            borderRadius: spacing.radius.container,
             border: `1px solid ${colors.border.light}`,
             overflow: 'hidden',
           }}
