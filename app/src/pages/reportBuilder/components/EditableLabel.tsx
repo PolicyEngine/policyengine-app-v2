@@ -88,6 +88,7 @@ export function EditableLabel({
               }
             }}
             autoFocus
+            onBlur={handleSubmit}
             placeholder={placeholder}
             size="xs"
             style={{ width: inputWidth ? inputWidth + 8 : 'auto' }}
