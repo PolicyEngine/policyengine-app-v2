@@ -4,7 +4,7 @@
     "description": "AI-assisted workflows enabled nationwide coverage of Temporary Assistance for Needy Families, now available through the web app, Python package, and API.",
     "date": "2026-02-17",
     "tags": ["us", "technical", "ai", "featured"],
-    "authors": ["pavel-makarchuk"],
+    "authors": ["pavel-makarchuk", "ziming-hua"],
     "filename": "tanf-50-state-coverage.md",
     "image": "tanf-50-state-coverage.svg"
   },
