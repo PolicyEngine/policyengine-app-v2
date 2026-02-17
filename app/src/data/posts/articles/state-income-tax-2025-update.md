@@ -1,4 +1,4 @@
-PolicyEngine has updated its state income tax code for tax year 2025. This update ensures that our microsimulation models accurately reflect the latest tax parameters and policy changes across all 50 states, including New York City and the District of Columbia.
+This update ensures that our microsimulation models accurately reflect the latest tax parameters and policy changes across all 50 states, including New York City and the District of Columbia.
 
 ## What was updated?
 
