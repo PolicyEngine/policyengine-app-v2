@@ -1,10 +1,10 @@
 import { countryIds } from '@/libs/countries';
-import { calculateHouseholdV2Alpha } from './v2/householdCalculation';
-import { fetchHouseholdByIdV2 } from './v2/households';
 import {
   fetchSocietyWideCalculation,
   SocietyWideCalculationParams,
 } from './societyWideCalculation';
+import { calculateHouseholdV2Alpha } from './v2/householdCalculation';
+import { fetchHouseholdByIdV2 } from './v2/households';
 
 /**
  * Metadata needed to fetch a calculation
@@ -35,7 +35,7 @@ export interface CalculationMeta {
 export async function fetchCalculationWithMeta(meta: CalculationMeta) {
   if (meta.type === 'household') {
     // Use reform if present, otherwise baseline. Convert null to undefined for API.
-    const policyId = (meta.policyIds.reform ?? meta.policyIds.baseline) ?? undefined;
+    const policyId = meta.policyIds.reform ?? meta.policyIds.baseline ?? undefined;
     try {
       // Fetch household then calculate using v2 alpha API
       const household = await fetchHouseholdByIdV2(meta.populationId);

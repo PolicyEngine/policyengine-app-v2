@@ -24,13 +24,17 @@ describe('ApiHouseholdStore', () => {
   describe('create', () => {
     test('given valid household association then creates via v2 API', async () => {
       // Given
-      vi.mocked(v2Api.createUserHouseholdAssociationV2).mockResolvedValue(mockUserHouseholdPopulation);
+      vi.mocked(v2Api.createUserHouseholdAssociationV2).mockResolvedValue(
+        mockUserHouseholdPopulation
+      );
 
       // When
       const result = await store.create(mockUserHouseholdPopulation);
 
       // Then
-      expect(v2Api.createUserHouseholdAssociationV2).toHaveBeenCalledWith(mockUserHouseholdPopulation);
+      expect(v2Api.createUserHouseholdAssociationV2).toHaveBeenCalledWith(
+        mockUserHouseholdPopulation
+      );
       expect(result).toEqual(mockUserHouseholdPopulation);
     });
 
@@ -60,7 +64,9 @@ describe('ApiHouseholdStore', () => {
   describe('findByUser', () => {
     test('given valid user ID then fetches via v2 API', async () => {
       // Given
-      vi.mocked(v2Api.fetchUserHouseholdAssociationsV2).mockResolvedValue(mockUserHouseholdPopulationList);
+      vi.mocked(v2Api.fetchUserHouseholdAssociationsV2).mockResolvedValue(
+        mockUserHouseholdPopulationList
+      );
 
       // When
       const result = await store.findByUser('user-456');
@@ -93,7 +99,9 @@ describe('ApiHouseholdStore', () => {
 
     test('given countryId filter then passes to v2 API', async () => {
       // Given
-      vi.mocked(v2Api.fetchUserHouseholdAssociationsV2).mockResolvedValue(mockUserHouseholdPopulationList);
+      vi.mocked(v2Api.fetchUserHouseholdAssociationsV2).mockResolvedValue(
+        mockUserHouseholdPopulationList
+      );
 
       // When
       await store.findByUser('user-456', 'us');
@@ -106,13 +114,18 @@ describe('ApiHouseholdStore', () => {
   describe('findById', () => {
     test('given valid IDs then fetches via v2 API', async () => {
       // Given
-      vi.mocked(v2Api.fetchUserHouseholdAssociationByIdV2).mockResolvedValue(mockUserHouseholdPopulation);
+      vi.mocked(v2Api.fetchUserHouseholdAssociationByIdV2).mockResolvedValue(
+        mockUserHouseholdPopulation
+      );
 
       // When
       const result = await store.findById('user-456', 'household-123');
 
       // Then
-      expect(v2Api.fetchUserHouseholdAssociationByIdV2).toHaveBeenCalledWith('user-456', 'household-123');
+      expect(v2Api.fetchUserHouseholdAssociationByIdV2).toHaveBeenCalledWith(
+        'user-456',
+        'household-123'
+      );
       expect(result).toEqual(mockUserHouseholdPopulation);
     });
 

@@ -91,4 +91,3 @@ export type UKEntityType = 'person' | 'benunit' | 'household';
  * All possible entity types
  */
 export type EntityType = USEntityType | UKEntityType;
-

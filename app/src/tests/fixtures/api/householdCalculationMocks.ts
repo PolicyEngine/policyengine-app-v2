@@ -52,7 +52,8 @@ export const ERROR_MESSAGES = {
   // V2 alpha error messages
   CREATE_JOB_FAILED: (status: number, text: string) =>
     `Failed to create calculation job: ${status} ${text}`,
-  GET_STATUS_FAILED: (status: number, text: string) => `Failed to get job status: ${status} ${text}`,
+  GET_STATUS_FAILED: (status: number, text: string) =>
+    `Failed to get job status: ${status} ${text}`,
   JOB_NOT_FOUND: (jobId: string) => `Calculation job ${jobId} not found`,
   CALCULATION_FAILED: 'Calculation failed',
   CALCULATION_TIMEOUT: 'Calculation timed out after 4 minutes',

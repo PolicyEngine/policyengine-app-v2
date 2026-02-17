@@ -1,9 +1,9 @@
 import { useQueryNormalizer } from '@normy/react-query';
 import { useQuery } from '@tanstack/react-query';
 import { PolicyAdapter, SimulationAdapter } from '@/adapters';
-import { fetchHouseholdByIdV2 } from '@/api/v2/households';
 import { fetchPolicyById } from '@/api/policy';
 import { fetchSimulationById } from '@/api/simulation';
+import { fetchHouseholdByIdV2 } from '@/api/v2/households';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';

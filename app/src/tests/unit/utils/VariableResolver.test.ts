@@ -1,22 +1,22 @@
 import { describe, expect, test } from 'vitest';
 import {
-  resolveEntity,
-  getVariableEntityDisplayInfo,
-  getVariableInfo,
-  getValue,
-  setValue,
-  addVariable,
-  addVariableToEntity,
-  removeVariable,
-  getInputVariables,
-  getGroupName,
-} from '@/utils/VariableResolver';
-import { Household } from '@/types/ingredients/Household';
-import {
-  MOCK_RESOLVER_METADATA,
   MOCK_METADATA_MISSING_ENTITY,
   MOCK_RESOLVER_HOUSEHOLD,
+  MOCK_RESOLVER_METADATA,
 } from '@/tests/fixtures/utils/variableResolverMocks';
+import { Household } from '@/types/ingredients/Household';
+import {
+  addVariable,
+  addVariableToEntity,
+  getGroupName,
+  getInputVariables,
+  getValue,
+  getVariableEntityDisplayInfo,
+  getVariableInfo,
+  removeVariable,
+  resolveEntity,
+  setValue,
+} from '@/utils/VariableResolver';
 
 describe('VariableResolver', () => {
   describe('resolveEntity', () => {
@@ -113,7 +113,9 @@ describe('VariableResolver', () => {
     });
 
     test('given person variable at explicit index then reads from that person', () => {
-      expect(getValue(MOCK_RESOLVER_HOUSEHOLD, 'employment_income', MOCK_RESOLVER_METADATA, 1)).toBe(30000);
+      expect(
+        getValue(MOCK_RESOLVER_HOUSEHOLD, 'employment_income', MOCK_RESOLVER_METADATA, 1)
+      ).toBe(30000);
     });
 
     test('given household variable then reads from entity dict', () => {
@@ -121,7 +123,9 @@ describe('VariableResolver', () => {
     });
 
     test('given tax_unit variable then reads from tax_unit dict', () => {
-      expect(getValue(MOCK_RESOLVER_HOUSEHOLD, 'is_tax_unit_head', MOCK_RESOLVER_METADATA)).toBe(true);
+      expect(getValue(MOCK_RESOLVER_HOUSEHOLD, 'is_tax_unit_head', MOCK_RESOLVER_METADATA)).toBe(
+        true
+      );
     });
 
     test('given unknown variable then returns null', () => {
@@ -191,7 +195,11 @@ describe('VariableResolver', () => {
     });
 
     test('given person variable already set then does not overwrite', () => {
-      const result = addVariable(MOCK_RESOLVER_HOUSEHOLD, 'employment_income', MOCK_RESOLVER_METADATA);
+      const result = addVariable(
+        MOCK_RESOLVER_HOUSEHOLD,
+        'employment_income',
+        MOCK_RESOLVER_METADATA
+      );
 
       expect(result.people[0].employment_income).toBe(50000);
     });
@@ -228,7 +236,12 @@ describe('VariableResolver', () => {
     });
 
     test('given person variable already set then does not overwrite', () => {
-      const result = addVariableToEntity(MOCK_RESOLVER_HOUSEHOLD, 'employment_income', MOCK_RESOLVER_METADATA, 0);
+      const result = addVariableToEntity(
+        MOCK_RESOLVER_HOUSEHOLD,
+        'employment_income',
+        MOCK_RESOLVER_METADATA,
+        0
+      );
 
       expect(result.people[0].employment_income).toBe(50000);
     });
@@ -247,7 +260,11 @@ describe('VariableResolver', () => {
 
   describe('removeVariable', () => {
     test('given person variable then removes from all people', () => {
-      const result = removeVariable(MOCK_RESOLVER_HOUSEHOLD, 'employment_income', MOCK_RESOLVER_METADATA);
+      const result = removeVariable(
+        MOCK_RESOLVER_HOUSEHOLD,
+        'employment_income',
+        MOCK_RESOLVER_METADATA
+      );
 
       expect(result.people[0]).not.toHaveProperty('employment_income');
       expect(result.people[1]).not.toHaveProperty('employment_income');
@@ -261,7 +278,11 @@ describe('VariableResolver', () => {
     });
 
     test('given removeVariable then returns new object (immutable)', () => {
-      const result = removeVariable(MOCK_RESOLVER_HOUSEHOLD, 'employment_income', MOCK_RESOLVER_METADATA);
+      const result = removeVariable(
+        MOCK_RESOLVER_HOUSEHOLD,
+        'employment_income',
+        MOCK_RESOLVER_METADATA
+      );
 
       expect(result).not.toBe(MOCK_RESOLVER_HOUSEHOLD);
       expect(MOCK_RESOLVER_HOUSEHOLD.people[0].employment_income).toBe(50000);

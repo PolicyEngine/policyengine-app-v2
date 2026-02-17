@@ -5,17 +5,17 @@ import {
   v1ResponseToHousehold,
 } from '@/api/legacyConversion';
 import {
-  MOCK_V1_US_SINGLE_PERSON,
   MOCK_V1_UK_SINGLE_PERSON,
-  MOCK_V1_US_FAMILY,
-  MOCK_V1_US_YEAR_2025,
   MOCK_V1_US_EMPTY_ENTITIES,
-  MOCK_V2_US_SINGLE_PERSON,
-  MOCK_V2_US_COUPLE_WITH_CHILD,
+  MOCK_V1_US_FAMILY,
+  MOCK_V1_US_SINGLE_PERSON,
+  MOCK_V1_US_YEAR_2025,
   MOCK_V2_UK_SINGLE_PERSON,
+  MOCK_V2_US_COUPLE_WITH_CHILD,
   MOCK_V2_US_MULTIPLE_DEPENDENTS,
-  MOCK_V2_US_WITH_LABEL,
   MOCK_V2_US_ROUND_TRIP,
+  MOCK_V2_US_SINGLE_PERSON,
+  MOCK_V2_US_WITH_LABEL,
 } from '@/tests/fixtures/api/legacyConversionMocks';
 
 describe('legacyConversion', () => {
@@ -80,11 +80,7 @@ describe('legacyConversion', () => {
     test('given household with couple and child then generates correct v1 names', () => {
       const result = householdToV1Request(MOCK_V2_US_COUPLE_WITH_CHILD);
 
-      expect(Object.keys(result.people)).toEqual([
-        'you',
-        'your partner',
-        'your first dependent',
-      ]);
+      expect(Object.keys(result.people)).toEqual(['you', 'your partner', 'your first dependent']);
       expect(result.people.you.age).toEqual({ '2024': 35 });
       expect(result.people['your partner'].age).toEqual({ '2024': 33 });
       expect(result.people['your first dependent'].age).toEqual({ '2024': 8 });

@@ -1,14 +1,14 @@
 import { Query } from '@tanstack/react-query';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { CURRENT_YEAR } from '@/constants';
 import { HouseholdCalcStrategy } from '@/libs/calculations/strategies/HouseholdCalcStrategy';
-import { CalcMetadata } from '@/types/calculation';
 import {
   mockV2CalculationResult,
   TEST_JOB_IDS,
 } from '@/tests/fixtures/api/householdCalculationMocks';
 import { mockHouseholdCalcParams } from '@/tests/fixtures/types/calculationFixtures';
+import { CalcMetadata } from '@/types/calculation';
 import { Household } from '@/types/ingredients/Household';
-import { CURRENT_YEAR } from '@/constants';
 
 // Mock the v2 API modules
 vi.mock('@/api/v2/householdCalculation', () => ({

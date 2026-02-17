@@ -5,10 +5,9 @@ import { useDisclosure } from '@mantine/hooks';
 import { BulletsValue, ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
 import { RenameIngredientModal } from '@/components/common/RenameIngredientModal';
 import IngredientReadView from '@/components/IngredientReadView';
-import { CURRENT_YEAR } from '@/constants';
-import { useUserId } from '@/hooks/useUserId';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useUpdateHouseholdAssociation, useUserHouseholds } from '@/hooks/useUserHousehold';
+import { useUserId } from '@/hooks/useUserId';
 import { formatDate } from '@/utils/dateUtils';
 
 export default function PopulationsPage() {

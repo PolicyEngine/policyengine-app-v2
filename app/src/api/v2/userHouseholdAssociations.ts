@@ -13,7 +13,6 @@
  */
 
 import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
-
 import { API_V2_BASE_URL } from './taxBenefitModels';
 
 // ============================================================================
@@ -58,7 +57,10 @@ export interface UserHouseholdAssociationV2UpdateRequest {
  * Convert app format to v2 API create request
  */
 export function toV2CreateRequest(
-  association: Omit<UserHouseholdPopulation, 'id' | 'type' | 'createdAt' | 'updatedAt' | 'isCreated'>
+  association: Omit<
+    UserHouseholdPopulation,
+    'id' | 'type' | 'createdAt' | 'updatedAt' | 'isCreated'
+  >
 ): UserHouseholdAssociationV2CreateRequest {
   return {
     user_id: association.userId,
@@ -71,7 +73,9 @@ export function toV2CreateRequest(
 /**
  * Convert v2 API response to app format
  */
-export function fromV2Response(response: UserHouseholdAssociationV2Response): UserHouseholdPopulation {
+export function fromV2Response(
+  response: UserHouseholdAssociationV2Response
+): UserHouseholdPopulation {
   return {
     type: 'household',
     id: response.id,
@@ -96,7 +100,10 @@ const BASE_PATH = '/user-household-associations';
  * POST /user-household-associations/
  */
 export async function createUserHouseholdAssociationV2(
-  association: Omit<UserHouseholdPopulation, 'id' | 'type' | 'createdAt' | 'updatedAt' | 'isCreated'>
+  association: Omit<
+    UserHouseholdPopulation,
+    'id' | 'type' | 'createdAt' | 'updatedAt' | 'isCreated'
+  >
 ): Promise<UserHouseholdPopulation> {
   const url = `${API_V2_BASE_URL}${BASE_PATH}/`;
   const body = toV2CreateRequest(association);

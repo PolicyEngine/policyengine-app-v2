@@ -1,22 +1,22 @@
 import { describe, expect, test } from 'vitest';
 import {
+  MOCK_EMPTY_HOUSEHOLD,
+  MOCK_HOUSEHOLD_EMPTY_ENTITIES,
+  MOCK_HOUSEHOLD_WITH_ENTITIES,
+  MOCK_HOUSEHOLD_WITH_ENTITY_VARS,
+  MOCK_HOUSEHOLD_WITH_NAMES,
+  MOCK_MANY_DEPENDENTS_PEOPLE,
+  MOCK_UK_PARENT_CHILD_PEOPLE,
+  MOCK_US_FAMILY_PEOPLE,
+} from '@/tests/fixtures/utils/householdIndividualsMocks';
+import { HouseholdPerson } from '@/types/ingredients/Household';
+import {
   extractGroupEntities,
   getAllPersonDisplayNames,
   getPersonDisplayName,
   getPersonDisplayNameInContext,
   sortPeopleByOrder,
 } from '@/utils/householdIndividuals';
-import { HouseholdPerson } from '@/types/ingredients/Household';
-import {
-  MOCK_US_FAMILY_PEOPLE,
-  MOCK_UK_PARENT_CHILD_PEOPLE,
-  MOCK_MANY_DEPENDENTS_PEOPLE,
-  MOCK_HOUSEHOLD_WITH_NAMES,
-  MOCK_EMPTY_HOUSEHOLD,
-  MOCK_HOUSEHOLD_WITH_ENTITIES,
-  MOCK_HOUSEHOLD_WITH_ENTITY_VARS,
-  MOCK_HOUSEHOLD_EMPTY_ENTITIES,
-} from '@/tests/fixtures/utils/householdIndividualsMocks';
 
 describe('householdIndividuals', () => {
   describe('getPersonDisplayName', () => {
@@ -65,13 +65,21 @@ describe('householdIndividuals', () => {
     });
 
     test('given UK household with child by age then returns dependent', () => {
-      expect(getPersonDisplayNameInContext(MOCK_UK_PARENT_CHILD_PEOPLE, 1)).toBe('your first dependent');
+      expect(getPersonDisplayNameInContext(MOCK_UK_PARENT_CHILD_PEOPLE, 1)).toBe(
+        'your first dependent'
+      );
     });
 
     test('given many dependents then uses ordinals then falls back to Nth', () => {
-      expect(getPersonDisplayNameInContext(MOCK_MANY_DEPENDENTS_PEOPLE, 1)).toBe('your first dependent');
-      expect(getPersonDisplayNameInContext(MOCK_MANY_DEPENDENTS_PEOPLE, 10)).toBe('your tenth dependent');
-      expect(getPersonDisplayNameInContext(MOCK_MANY_DEPENDENTS_PEOPLE, 11)).toBe('your 11th dependent');
+      expect(getPersonDisplayNameInContext(MOCK_MANY_DEPENDENTS_PEOPLE, 1)).toBe(
+        'your first dependent'
+      );
+      expect(getPersonDisplayNameInContext(MOCK_MANY_DEPENDENTS_PEOPLE, 10)).toBe(
+        'your tenth dependent'
+      );
+      expect(getPersonDisplayNameInContext(MOCK_MANY_DEPENDENTS_PEOPLE, 11)).toBe(
+        'your 11th dependent'
+      );
     });
   });
 

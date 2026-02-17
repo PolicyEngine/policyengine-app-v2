@@ -1,18 +1,18 @@
 import { describe, expect, test } from 'vitest';
 import {
+  MOCK_BASE_HOUSEHOLD,
+  MOCK_EMPTY_PEOPLE_HOUSEHOLD,
+  MOCK_HIGH_INCOME_HOUSEHOLD,
+  MOCK_MULTI_INCOME_HOUSEHOLD,
+  MOCK_NO_INCOME_HOUSEHOLD,
+  MOCK_SELF_EMPLOYMENT_HOUSEHOLD,
+  MOCK_TWO_PERSON_HOUSEHOLD,
+} from '@/tests/fixtures/utils/householdVariationAxesMocks';
+import {
   buildHouseholdVariationAxes,
   buildMultiDimensionalAxes,
   buildVariationAxesForVariable,
 } from '@/utils/householdVariationAxes';
-import {
-  MOCK_BASE_HOUSEHOLD,
-  MOCK_HIGH_INCOME_HOUSEHOLD,
-  MOCK_NO_INCOME_HOUSEHOLD,
-  MOCK_TWO_PERSON_HOUSEHOLD,
-  MOCK_EMPTY_PEOPLE_HOUSEHOLD,
-  MOCK_SELF_EMPLOYMENT_HOUSEHOLD,
-  MOCK_MULTI_INCOME_HOUSEHOLD,
-} from '@/tests/fixtures/utils/householdVariationAxesMocks';
 
 describe('householdVariationAxes', () => {
   describe('buildHouseholdVariationAxes', () => {
@@ -92,9 +92,9 @@ describe('householdVariationAxes', () => {
     });
 
     test('given invalid person index then throws', () => {
-      expect(() =>
-        buildVariationAxesForVariable(MOCK_BASE_HOUSEHOLD, 'age', 5, 0, 100)
-      ).toThrow('Person at index 5 not found');
+      expect(() => buildVariationAxesForVariable(MOCK_BASE_HOUSEHOLD, 'age', 5, 0, 100)).toThrow(
+        'Person at index 5 not found'
+      );
     });
   });
 

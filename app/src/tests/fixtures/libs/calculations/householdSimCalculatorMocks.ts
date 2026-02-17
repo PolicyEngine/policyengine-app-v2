@@ -62,11 +62,13 @@ export const createMockQueryClient = () => ({
 // Default execution params
 // ============================================================================
 
-export const mockExecuteParams = (overrides?: Partial<{
-  countryId: string;
-  populationId: string;
-  policyId: string;
-}>) => ({
+export const mockExecuteParams = (
+  overrides?: Partial<{
+    countryId: string;
+    populationId: string;
+    policyId: string;
+  }>
+) => ({
   countryId: TEST_COUNTRIES.US,
   populationId: TEST_HOUSEHOLD_IDS.HOUSEHOLD_1,
   policyId: TEST_POLICY_IDS.REFORM,

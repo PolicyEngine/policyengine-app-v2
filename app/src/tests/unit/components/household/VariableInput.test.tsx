@@ -1,15 +1,15 @@
-import { describe, expect, test, vi, beforeEach } from 'vitest';
 import { render, screen } from '@test-utils';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import VariableInput from '@/components/household/VariableInput';
 import {
-  MOCK_FLOAT_VARIABLE,
-  MOCK_INT_VARIABLE,
+  createMockOnChange,
   MOCK_BOOL_VARIABLE,
   MOCK_ENUM_VARIABLE,
-  MOCK_STRING_VARIABLE,
-  MOCK_INPUT_METADATA,
+  MOCK_FLOAT_VARIABLE,
   MOCK_INPUT_HOUSEHOLD,
-  createMockOnChange,
+  MOCK_INPUT_METADATA,
+  MOCK_INT_VARIABLE,
+  MOCK_STRING_VARIABLE,
 } from '@/tests/fixtures/components/household/variableInputMocks';
 
 describe('VariableInput', () => {
@@ -50,7 +50,7 @@ describe('VariableInput', () => {
           metadata={MOCK_INPUT_METADATA}
           entityId={0}
           onChange={onChange}
-          hideLabel={true}
+          hideLabel
         />
       );
 
@@ -71,7 +71,7 @@ describe('VariableInput', () => {
           household={MOCK_INPUT_HOUSEHOLD}
           metadata={MOCK_INPUT_METADATA}
           onChange={onChange}
-          hideLabel={true}
+          hideLabel
         />
       );
 
@@ -194,7 +194,7 @@ describe('VariableInput', () => {
           metadata={MOCK_INPUT_METADATA}
           entityId={0}
           onChange={onChange}
-          disabled={true}
+          disabled
         />
       );
 

@@ -105,11 +105,7 @@ export const MOCK_V2_US_SINGLE_PERSON: Household = {
 export const MOCK_V2_US_COUPLE_WITH_CHILD: Household = {
   tax_benefit_model_name: 'policyengine_us',
   year: 2024,
-  people: [
-    { age: 35 },
-    { age: 33 },
-    { age: 8, is_tax_unit_dependent: true },
-  ],
+  people: [{ age: 35 }, { age: 33 }, { age: 8, is_tax_unit_dependent: true }],
   tax_unit: {},
   family: {},
   spm_unit: {},

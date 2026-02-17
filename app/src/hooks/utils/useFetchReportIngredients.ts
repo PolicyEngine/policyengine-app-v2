@@ -12,10 +12,10 @@
  */
 
 import { PolicyAdapter, ReportAdapter, SimulationAdapter } from '@/adapters';
-import { fetchHouseholdByIdV2 } from '@/api/v2/households';
 import { fetchPolicyById } from '@/api/policy';
 import { fetchReportById } from '@/api/report';
 import { fetchSimulationById } from '@/api/simulation';
+import { fetchHouseholdByIdV2 } from '@/api/v2/households';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useRegionsList } from '@/hooks/useStaticMetadata';
 import { householdKeys, policyKeys, reportKeys, simulationKeys } from '@/libs/queryKeys';

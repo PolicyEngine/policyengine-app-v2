@@ -1,13 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-  calculationResultToHousehold,
   calculateHouseholdV2Alpha,
+  calculationResultToHousehold,
   createHouseholdCalculationJobV2,
   getHouseholdCalculationJobStatusV2,
   pollHouseholdCalculationJobV2,
 } from '@/api/v2/householdCalculation';
 import { CURRENT_YEAR } from '@/constants';
-import { Household } from '@/types/ingredients/Household';
 import {
   API_V2_BASE_URL,
   ERROR_MESSAGES,
@@ -23,6 +22,7 @@ import {
   TEST_JOB_IDS,
   TEST_POLICY_IDS,
 } from '@/tests/fixtures/api/householdCalculationMocks';
+import { Household } from '@/types/ingredients/Household';
 
 describe('v2/householdCalculation', () => {
   const originalFetch = global.fetch;
@@ -46,9 +46,7 @@ describe('v2/householdCalculation', () => {
         tax_unit: [{ state_code: 'CA' }],
         household: [{ state_fips: 6 }],
       };
-      vi.mocked(global.fetch).mockResolvedValue(
-        mockSuccessResponse(mockJobCreatedResponse)
-      );
+      vi.mocked(global.fetch).mockResolvedValue(mockSuccessResponse(mockJobCreatedResponse));
 
       // When
       const result = await createHouseholdCalculationJobV2(payload);
@@ -74,9 +72,7 @@ describe('v2/householdCalculation', () => {
         people: [{ age: 30 }],
         policy_id: TEST_POLICY_IDS.REFORM,
       };
-      vi.mocked(global.fetch).mockResolvedValue(
-        mockSuccessResponse(mockJobCreatedResponse)
-      );
+      vi.mocked(global.fetch).mockResolvedValue(mockSuccessResponse(mockJobCreatedResponse));
 
       // When
       await createHouseholdCalculationJobV2(payload);
@@ -108,23 +104,18 @@ describe('v2/householdCalculation', () => {
     it('given valid job ID then returns job status', async () => {
       // Given
       const jobId = TEST_JOB_IDS.COMPLETED;
-      vi.mocked(global.fetch).mockResolvedValue(
-        mockSuccessResponse(mockJobCompletedResponse)
-      );
+      vi.mocked(global.fetch).mockResolvedValue(mockSuccessResponse(mockJobCompletedResponse));
 
       // When
       const result = await getHouseholdCalculationJobStatusV2(jobId);
 
       // Then
-      expect(global.fetch).toHaveBeenCalledWith(
-        `${API_V2_BASE_URL}/household/calculate/${jobId}`,
-        {
-          method: 'GET',
-          headers: {
-            Accept: 'application/json',
-          },
-        }
-      );
+      expect(global.fetch).toHaveBeenCalledWith(`${API_V2_BASE_URL}/household/calculate/${jobId}`, {
+        method: 'GET',
+        headers: {
+          Accept: 'application/json',
+        },
+      });
       expect(result.status).toBe('COMPLETED');
       expect(result.result).toBeDefined();
     });
@@ -145,9 +136,7 @@ describe('v2/householdCalculation', () => {
     it('given pending status then returns pending response', async () => {
       // Given
       const jobId = TEST_JOB_IDS.PENDING;
-      vi.mocked(global.fetch).mockResolvedValue(
-        mockSuccessResponse(mockJobPendingResponse)
-      );
+      vi.mocked(global.fetch).mockResolvedValue(mockSuccessResponse(mockJobPendingResponse));
 
       // When
       const result = await getHouseholdCalculationJobStatusV2(jobId);
@@ -160,9 +149,7 @@ describe('v2/householdCalculation', () => {
     it('given failed status then returns error message', async () => {
       // Given
       const jobId = TEST_JOB_IDS.FAILED;
-      vi.mocked(global.fetch).mockResolvedValue(
-        mockSuccessResponse(mockJobFailedResponse)
-      );
+      vi.mocked(global.fetch).mockResolvedValue(mockSuccessResponse(mockJobFailedResponse));
 
       // When
       const result = await getHouseholdCalculationJobStatusV2(jobId);
@@ -185,9 +172,7 @@ describe('v2/householdCalculation', () => {
     it('given job completes immediately then returns result', async () => {
       // Given
       const jobId = TEST_JOB_IDS.COMPLETED;
-      vi.mocked(global.fetch).mockResolvedValue(
-        mockSuccessResponse(mockJobCompletedResponse)
-      );
+      vi.mocked(global.fetch).mockResolvedValue(mockSuccessResponse(mockJobCompletedResponse));
 
       // When
       const result = await pollHouseholdCalculationJobV2(jobId);
@@ -199,9 +184,7 @@ describe('v2/householdCalculation', () => {
     it('given job fails then throws error with message', async () => {
       // Given
       const jobId = TEST_JOB_IDS.FAILED;
-      vi.mocked(global.fetch).mockResolvedValue(
-        mockSuccessResponse(mockJobFailedResponse)
-      );
+      vi.mocked(global.fetch).mockResolvedValue(mockSuccessResponse(mockJobFailedResponse));
 
       // When/Then
       await expect(pollHouseholdCalculationJobV2(jobId)).rejects.toThrow(
@@ -220,9 +203,7 @@ describe('v2/householdCalculation', () => {
       );
 
       // When/Then
-      await expect(pollHouseholdCalculationJobV2(jobId)).rejects.toThrow(
-        ERROR_MESSAGES.NO_RESULT
-      );
+      await expect(pollHouseholdCalculationJobV2(jobId)).rejects.toThrow(ERROR_MESSAGES.NO_RESULT);
     });
 
     it('given job takes multiple polls then waits and returns result', async () => {
@@ -254,9 +235,7 @@ describe('v2/householdCalculation', () => {
     it('given timeout exceeded then throws timeout error', async () => {
       // Given
       const jobId = TEST_JOB_IDS.PENDING;
-      vi.mocked(global.fetch).mockResolvedValue(
-        mockSuccessResponse(mockJobPendingResponse)
-      );
+      vi.mocked(global.fetch).mockResolvedValue(mockSuccessResponse(mockJobPendingResponse));
 
       // When - start polling with short timeout
       const pollPromise = pollHouseholdCalculationJobV2(jobId, {

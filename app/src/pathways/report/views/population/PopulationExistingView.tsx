@@ -9,12 +9,12 @@
 import { useState } from 'react';
 import { Text } from '@mantine/core';
 import PathwayView from '@/components/common/PathwayView';
-import { useUserId } from '@/hooks/useUserId';
 import {
   isHouseholdMetadataWithAssociation,
   UserHouseholdMetadataWithAssociation,
   useUserHouseholds,
 } from '@/hooks/useUserHousehold';
+import { useUserId } from '@/hooks/useUserId';
 import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
 import { isHouseholdAssociationReady } from '@/utils/validation/ingredientValidation';

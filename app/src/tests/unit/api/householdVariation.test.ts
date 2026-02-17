@@ -1,16 +1,16 @@
-import { describe, expect, test, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { fetchHouseholdVariation, fetchHouseholdVariationV2 } from '@/api/householdVariation';
-import { HouseholdWithAxes } from '@/utils/householdVariationAxes';
 import {
   MOCK_HOUSEHOLD_WITH_AXES,
   MOCK_POLICY_DATA,
   MOCK_VARIATION_SUCCESS_RESPONSE,
-  mockFetchSuccess,
-  mockFetchHttpError,
-  mockFetchApiError,
-  mockFetchNullResult,
   mockFetchAbort,
+  mockFetchApiError,
+  mockFetchHttpError,
+  mockFetchNullResult,
+  mockFetchSuccess,
 } from '@/tests/fixtures/api/householdVariationMocks';
+import { HouseholdWithAxes } from '@/utils/householdVariationAxes';
 
 describe('householdVariation', () => {
   beforeEach(() => {
@@ -22,7 +22,11 @@ describe('householdVariation', () => {
     test('given successful response then returns result data', async () => {
       mockFetchSuccess();
 
-      const result = await fetchHouseholdVariation('us', MOCK_HOUSEHOLD_WITH_AXES, MOCK_POLICY_DATA);
+      const result = await fetchHouseholdVariation(
+        'us',
+        MOCK_HOUSEHOLD_WITH_AXES,
+        MOCK_POLICY_DATA
+      );
 
       expect(result).toEqual(MOCK_VARIATION_SUCCESS_RESPONSE.result);
     });

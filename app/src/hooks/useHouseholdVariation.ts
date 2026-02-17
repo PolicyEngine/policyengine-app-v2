@@ -9,9 +9,9 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { modelNameToCountryId } from '@/adapters/HouseholdAdapter';
-import { fetchHouseholdByIdV2 } from '@/api/v2/households';
 import { fetchHouseholdVariation } from '@/api/householdVariation';
 import { v1ResponseToHousehold } from '@/api/legacyConversion';
+import { fetchHouseholdByIdV2 } from '@/api/v2/households';
 import { householdVariationKeys } from '@/libs/queryKeys';
 import type { Household } from '@/types/ingredients/Household';
 import { buildHouseholdVariationAxes } from '@/utils/householdVariationAxes';

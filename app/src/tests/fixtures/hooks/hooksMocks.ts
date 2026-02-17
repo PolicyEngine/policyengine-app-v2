@@ -1,6 +1,7 @@
 import { QueryClient } from '@tanstack/react-query';
 import { vi } from 'vitest';
 import { CURRENT_YEAR } from '@/constants';
+import { Household } from '@/types/ingredients/Household';
 import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
 

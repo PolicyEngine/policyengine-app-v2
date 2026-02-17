@@ -1,9 +1,9 @@
 import { vi } from 'vitest';
+import { HouseholdV2Response } from '@/api/v2/households';
 import { CURRENT_YEAR } from '@/constants';
 import { Household } from '@/types/ingredients/Household';
 import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
 import { HouseholdCalculatePayload } from '@/types/payloads';
-import { HouseholdV2Response } from '@/api/v2/households';
 
 // Test household IDs - descriptive names for clarity
 export const EXISTING_HOUSEHOLD_ID = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';

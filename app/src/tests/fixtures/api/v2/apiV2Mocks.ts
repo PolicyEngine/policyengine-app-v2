@@ -1,7 +1,11 @@
 /**
  * Fixtures for API v2 module tests
  */
+
+// Household factory types
+import type { HouseholdV2Response } from '@/api/v2/households';
 import type { TaxBenefitModel, TaxBenefitModelVersion } from '@/api/v2/taxBenefitModels';
+import type { Household } from '@/types/ingredients/Household';
 import type {
   V2DatasetMetadata,
   V2ParameterMetadata,
@@ -213,10 +217,6 @@ export const SAMPLE_RESPONSES = {
   DATASETS: createMockDatasets(3),
   PARAMETER_VALUES: createMockParameterValues(3),
 } as const;
-
-// Household factory types
-import type { HouseholdV2Response } from '@/api/v2/households';
-import type { Household } from '@/types/ingredients/Household';
 
 // Household factory - v2 API response format
 export function createMockHouseholdV2Response(

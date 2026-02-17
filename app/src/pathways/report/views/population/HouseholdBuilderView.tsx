@@ -3,7 +3,7 @@
  * Props-based instead of Redux-based
  */
 
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { LoadingOverlay, Stack, Text } from '@mantine/core';
 import { countryIdToModelName } from '@/adapters/HouseholdAdapter';
@@ -14,7 +14,6 @@ import { useBasicInputFields } from '@/hooks/useBasicInputFields';
 import { useCreateHousehold } from '@/hooks/useCreateHousehold';
 import { useHouseholdMetadataContext } from '@/hooks/useMetadata';
 import { useReportYear } from '@/hooks/useReportYear';
-import { useEntities } from '@/hooks/useStaticMetadata';
 import { RootState } from '@/store';
 import { Household, TaxBenefitModelName } from '@/types/ingredients/Household';
 import { PopulationStateProps } from '@/types/pathwayState';

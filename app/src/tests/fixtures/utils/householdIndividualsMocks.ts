@@ -34,11 +34,7 @@ export const MOCK_MANY_DEPENDENTS_PEOPLE: HouseholdPerson[] = [
 export const MOCK_HOUSEHOLD_WITH_NAMES: Household = {
   tax_benefit_model_name: 'policyengine_us',
   year: 2024,
-  people: [
-    { age: 35 },
-    { age: 33 },
-    { age: 10, is_tax_unit_dependent: true },
-  ],
+  people: [{ age: 35 }, { age: 33 }, { age: 10, is_tax_unit_dependent: true }],
 };
 
 // Empty household

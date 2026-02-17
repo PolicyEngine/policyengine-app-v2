@@ -71,7 +71,7 @@ export class HouseholdCalcStrategy implements CalcExecutionStrategy {
       // Fetch the household definition
       const household = await fetchHouseholdByIdV2(params.populationId);
       // Use reform if present, otherwise baseline. Convert null to undefined for API.
-      const policyId = (params.policyIds.reform ?? params.policyIds.baseline) ?? undefined;
+      const policyId = params.policyIds.reform ?? params.policyIds.baseline ?? undefined;
 
       // Create calculation payload and job
       const payload = householdToCalculatePayload(household, policyId);
@@ -92,7 +92,8 @@ export class HouseholdCalcStrategy implements CalcExecutionStrategy {
       this.jobRegistry.delete(calcId);
       console.error('[HouseholdCalcStrategy.createJob] Failed to create job:', error);
 
-      const errorMessage = error instanceof Error ? error.message : 'Failed to create calculation job';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Failed to create calculation job';
       return {
         status: 'error',
         error: {
@@ -180,7 +181,8 @@ export class HouseholdCalcStrategy implements CalcExecutionStrategy {
       if (errorCount >= HouseholdCalcStrategy.MAX_CONSECUTIVE_ERRORS) {
         this.cleanupCalc(calcId);
 
-        const errorMessage = error instanceof Error ? error.message : 'Failed to check calculation status';
+        const errorMessage =
+          error instanceof Error ? error.message : 'Failed to check calculation status';
         return {
           status: 'error',
           error: {

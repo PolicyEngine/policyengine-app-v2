@@ -1,13 +1,13 @@
-import { describe, expect, test, vi, beforeEach } from 'vitest';
 import { render, screen, userEvent } from '@test-utils';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import VariableRow from '@/components/household/VariableRow';
 import {
-  MOCK_FLOAT_VARIABLE,
-  MOCK_INT_VARIABLE,
-  MOCK_INPUT_METADATA,
-  MOCK_INPUT_HOUSEHOLD,
   createMockOnChange,
   createMockOnRemove,
+  MOCK_FLOAT_VARIABLE,
+  MOCK_INPUT_HOUSEHOLD,
+  MOCK_INPUT_METADATA,
+  MOCK_INT_VARIABLE,
 } from '@/tests/fixtures/components/household/variableRowMocks';
 
 describe('VariableRow', () => {
@@ -139,7 +139,7 @@ describe('VariableRow', () => {
           metadata={MOCK_INPUT_METADATA}
           entityId={0}
           onChange={onChange}
-          showRemoveColumn={true}
+          showRemoveColumn
         />
       );
 
@@ -163,7 +163,7 @@ describe('VariableRow', () => {
           metadata={MOCK_INPUT_METADATA}
           entityId={0}
           onChange={onChange}
-          disabled={true}
+          disabled
         />
       );
 
