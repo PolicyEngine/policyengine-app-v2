@@ -101,7 +101,7 @@ export default function IngredientSubmissionView({
                   )}
                 </Stack>
                 {item.badge && (
-                  <Badge size="sm" variant="light" color="blue" radius={spacing.radius.sm}>
+                  <Badge size="sm" variant="light" color="blue" radius={spacing.radius.element}>
                     {typeof item.badge === 'number' ? `${item.badge}` : item.badge}
                   </Badge>
                 )}
@@ -127,7 +127,7 @@ export default function IngredientSubmissionView({
                   {item.text}
                 </Text>
                 {item.badge && (
-                  <Badge size="xs" variant="light" color="gray" radius={spacing.radius.sm}>
+                  <Badge size="xs" variant="light" color="gray" radius={spacing.radius.element}>
                     {typeof item.badge === 'number' ? `${item.badge}` : item.badge}
                   </Badge>
                 )}

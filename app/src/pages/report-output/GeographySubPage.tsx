@@ -59,7 +59,7 @@ export default function GeographySubPage({
       <Box
         style={{
           border: `1px solid ${colors.border.light}`,
-          borderRadius: spacing.radius.lg,
+          borderRadius: spacing.radius.container,
           overflow: 'hidden',
           backgroundColor: colors.white,
           marginTop: spacing.xl,

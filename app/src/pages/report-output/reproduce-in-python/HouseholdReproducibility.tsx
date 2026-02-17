@@ -70,7 +70,7 @@ export default function HouseholdReproducibility({
           p={spacing.lg}
           style={{
             backgroundColor: colors.background.primary,
-            borderRadius: spacing.md,
+            borderRadius: spacing.radius.container,
             border: `1px solid ${colors.border.light}`,
           }}
         >
@@ -83,7 +83,7 @@ export default function HouseholdReproducibility({
                 alignItems: 'center',
                 justifyContent: 'center',
                 backgroundColor: colors.gray[100],
-                borderRadius: spacing.xs,
+                borderRadius: spacing.radius.element,
                 flexShrink: 0,
               }}
             >
@@ -129,7 +129,7 @@ export default function HouseholdReproducibility({
         <Box
           style={{
             backgroundColor: colors.background.primary,
-            borderRadius: spacing.md,
+            borderRadius: spacing.radius.container,
             border: `1px solid ${colors.border.light}`,
             overflow: 'hidden',
           }}

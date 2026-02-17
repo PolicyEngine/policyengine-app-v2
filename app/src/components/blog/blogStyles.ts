@@ -5,7 +5,7 @@
  * to the new Mantine-based design tokens
  */
 
-import { colors, typography } from '@/designTokens';
+import { colors, spacing, typography } from '@/designTokens';
 
 /**
  * Color palette for blog components
@@ -133,13 +133,13 @@ export const blogSpacing = {
 } as const;
 
 /**
- * Border radius values (in pixels)
+ * Border radius values — mapped from design tokens
  */
 export const blogRadius = {
-  none: 0,
-  sm: 2, // Links, code
-  md: 8, // Images, tables, footnotes
-  blockquote: '0 4px 4px 0', // Asymmetric for left-border effect
+  none: spacing.radius.none,
+  sm: spacing.radius.chip,
+  md: spacing.radius.container,
+  blockquote: `0 ${spacing.radius.element} ${spacing.radius.element} 0`,
 } as const;
 
 /**

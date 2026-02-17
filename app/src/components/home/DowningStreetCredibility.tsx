@@ -14,7 +14,7 @@ export default function DowningStreetCredibility() {
       <Box
         style={{
           backgroundColor: colors.primary[50],
-          borderRadius: spacing.radius.lg,
+          borderRadius: spacing.radius.container,
           padding: `${spacing.lg} ${spacing.xl}`,
           border: `1px solid ${colors.primary[100]}`,
         }}

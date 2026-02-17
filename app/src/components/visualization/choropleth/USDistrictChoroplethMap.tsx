@@ -395,7 +395,7 @@ export function USDistrictChoroplethMap({
       ref={containerRef}
       style={{
         border: `1px solid ${colors.border.light}`,
-        borderRadius: spacing.sm,
+        borderRadius: spacing.radius.container,
         backgroundColor: colors.background.primary,
         overflow: 'hidden',
         position: 'relative',
@@ -480,7 +480,7 @@ export function USDistrictChoroplethMap({
             top: tooltip.y - 30,
             background: 'white',
             border: `1px solid ${colors.border.light}`,
-            borderRadius: 4,
+            borderRadius: spacing.radius.element,
             padding: '6px 10px',
             fontSize: 12,
             pointerEvents: 'none',

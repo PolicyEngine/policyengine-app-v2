@@ -31,7 +31,7 @@ export default function TeamMemberCard({ member, variant = 'default' }: TeamMemb
           alt={member.name}
           h={250}
           w={250}
-          radius={spacing.md}
+          radius={spacing.radius.container}
           style={{
             objectFit: 'cover',
           }}

@@ -1,7 +1,7 @@
 import { IconExternalLink } from '@tabler/icons-react';
 import { Link } from 'react-router-dom';
 import { Group, Text, Tooltip, UnstyledButton } from '@mantine/core';
-import { colors } from '../../designTokens';
+import { colors, spacing } from '../../designTokens';
 
 interface SidebarNavItemProps {
   label: string;
@@ -48,7 +48,7 @@ export default function SidebarNavItem({
   const buttonStyles = {
     display: 'block',
     width: '100%',
-    borderRadius: 6,
+    borderRadius: spacing.radius.element,
     padding: '8px 12px',
     backgroundColor: isActive ? colors.gray[50] : 'transparent',
     textDecoration: 'none',

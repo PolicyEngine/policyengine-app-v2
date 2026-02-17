@@ -355,7 +355,7 @@ export const themeComponents = {
         return {
           table: {
             border: `1px solid ${colors.border.light}`,
-            borderRadius: spacing.radius.lg,
+            borderRadius: spacing.radius.container,
             overflow: 'hidden',
             backgroundColor: colors.white,
           },
