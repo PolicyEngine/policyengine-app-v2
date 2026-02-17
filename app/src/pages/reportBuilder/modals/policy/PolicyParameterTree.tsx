@@ -25,7 +25,7 @@ interface PolicyParameterTreeProps {
 
 export function PolicyParameterTree({
   parameterTree,
-  parameters,
+  parameters: _parameters,
   metadataLoading,
   selectedParam,
   expandedMenuItems,
@@ -58,7 +58,7 @@ export function PolicyParameterTree({
 
   // Memoize the rendered tree
   const renderedMenuTree = useMemo(() => {
-    if (metadataLoading || !parameterTree) return null;
+    if (metadataLoading || !parameterTree) {return null;}
     return renderMenuItems(parameterTree.children || []);
   }, [metadataLoading, parameterTree, renderMenuItems]);
 

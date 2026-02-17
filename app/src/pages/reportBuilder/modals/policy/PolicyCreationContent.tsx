@@ -2,7 +2,7 @@
  * PolicyCreationContent - Main content area for policy creation mode (V6 styled)
  */
 import { Dispatch, SetStateAction } from 'react';
-import { ActionIcon, Badge, Box, Button, Group, SegmentedControl, Stack, Text, Title, UnstyledButton } from '@mantine/core';
+import { ActionIcon, Badge, Box, Button, Group, SegmentedControl, Stack, Text, Title } from '@mantine/core';
 import { IconScale, IconTrash } from '@tabler/icons-react';
 import { colors, spacing } from '@/designTokens';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
@@ -62,7 +62,7 @@ export function PolicyCreationContent({
 }: PolicyCreationContentProps) {
   // Get base and reform values for chart
   const getChartValues = () => {
-    if (!selectedParam) return { baseValues: null, reformValues: null };
+    if (!selectedParam) {return { baseValues: null, reformValues: null };}
     const baseValues = new ValueIntervalCollection(selectedParam.values as ValuesList);
     const reformValues = new ValueIntervalCollection(baseValues);
     const paramToChart = policyParameters.find(p => p.name === selectedParam.parameter);
@@ -101,7 +101,7 @@ export function PolicyCreationContent({
 
   // Format a value for display
   const formatValue = (value: number | string | boolean): string => {
-    if (typeof value === 'boolean') return value ? 'Yes' : 'No';
+    if (typeof value === 'boolean') {return value ? 'Yes' : 'No';}
     if (typeof value === 'number') {
       if (selectedParam?.unit === '/1') {
         return `${(value * 100).toFixed(1)}%`;
@@ -113,7 +113,7 @@ export function PolicyCreationContent({
 
   // Remove a change from the current parameter
   const handleRemoveChange = (indexToRemove: number) => {
-    if (!selectedParam) return;
+    if (!selectedParam) {return;}
     const updatedParameters = policyParameters.map(param => {
       if (param.name === selectedParam.parameter) {
         return {

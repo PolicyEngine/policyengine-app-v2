@@ -5,16 +5,15 @@
  * - Browse mode: PolicyBrowseContent for main content
  * - Creation mode: PolicyCreationContent + PolicyParameterTree
  */
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { IconFolder, IconPlus, IconScale, IconUsers } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
-import { Box, Divider, Group, ScrollArea, Stack, Text, UnstyledButton } from '@mantine/core';
+import { Box, Group, Text } from '@mantine/core';
 import { EditableLabel } from '../components/EditableLabel';
 import { PolicyAdapter } from '@/adapters';
 import { MOCK_USER_ID } from '@/constants';
-import { colors, spacing, typography } from '@/designTokens';
+import { colors, spacing } from '@/designTokens';
 import { useCreatePolicy } from '@/hooks/useCreatePolicy';
-import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useUpdatePolicyAssociation, useUserPolicies } from '@/hooks/useUserPolicy';
 import { getDateRange } from '@/libs/metadataUtils';
 import { ValueSetterMode } from '@/pathways/report/components/valueSetters';
@@ -28,7 +27,6 @@ import { ValueInterval, ValueIntervalCollection } from '@/types/subIngredients/v
 import { countPolicyModifications } from '@/utils/countParameterChanges';
 import { formatLabelParts, getHierarchicalLabelsFromTree } from '@/utils/parameterLabels';
 import { FONT_SIZES, INGREDIENT_COLORS } from '../constants';
-import { modalStyles } from '../styles';
 import { BrowseModalTemplate, CreationModeFooter } from './BrowseModalTemplate';
 import {
   PolicyBrowseContent,
@@ -44,14 +42,6 @@ interface PolicyBrowseModalProps {
 }
 
 export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseModalProps) {
-  const renderCount = useRef(0);
-  renderCount.current++;
-  const renderStart = performance.now();
-  console.log(
-    '[PolicyBrowseModal] Render #' + renderCount.current + ' START (isOpen=' + isOpen + ')'
-  );
-
-  const countryId = useCurrentCountry() as 'us' | 'uk';
   const userId = MOCK_USER_ID.toString();
   const { data: policies, isLoading } = useUserPolicies(userId);
   const {
@@ -128,7 +118,7 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       result = result.filter((p) => {
-        if (p.label.toLowerCase().includes(query)) return true;
+        if (p.label.toLowerCase().includes(query)) {return true;}
         const paramDisplayNames = p.parameters
           .map((param) => {
             const hierarchicalLabels = getHierarchicalLabelsFromTree(param.name, parameterTree);
@@ -138,7 +128,7 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
           })
           .join(' ')
           .toLowerCase();
-        if (paramDisplayNames.includes(query)) return true;
+        if (paramDisplayNames.includes(query)) {return true;}
         return false;
       });
     }
@@ -147,7 +137,7 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
 
   // Get policies for current section
   const displayedPolicies = useMemo(() => {
-    if (activeSection === 'public') return [];
+    if (activeSection === 'public') {return [];}
     return filteredPolicies;
   }, [activeSection, filteredPolicies]);
 
@@ -204,7 +194,7 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
   const handleSearchSelect = useCallback(
     (paramName: string) => {
       const param = parameters[paramName];
-      if (!param || param.type !== 'parameter') return;
+      if (!param || param.type !== 'parameter') {return;}
       const pathParts = paramName.split('.');
       const newExpanded = new Set(expandedMenuItems);
       let currentPath = '';
@@ -245,7 +235,7 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
 
   // Handle value submission
   const handleValueSubmit = useCallback(() => {
-    if (!selectedParam || intervals.length === 0) return;
+    if (!selectedParam || intervals.length === 0) {return;}
     const updatedParameters = [...policyParameters];
     let existingParam = updatedParameters.find((p) => p.name === selectedParam.parameter);
     if (!existingParam) {
@@ -285,7 +275,7 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
 
   // Handle policy creation
   const handleCreatePolicy = useCallback(async () => {
-    if (!policyLabel.trim()) return;
+    if (!policyLabel.trim()) {return;}
     const policyData: Partial<Policy> = { parameters: policyParameters };
     const payload: PolicyCreationPayload = PolicyAdapter.toCreationPayload(policyData as Policy);
     try {
@@ -304,7 +294,7 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
 
   // Policy for drawer preview
   const drawerPolicy = useMemo(() => {
-    if (!drawerPolicyId) return null;
+    if (!drawerPolicyId) {return null;}
     return userPolicies.find((p) => p.id === drawerPolicyId) || null;
   }, [drawerPolicyId, userPolicies]);
 
@@ -441,11 +431,6 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
   };
 
   // ========== Render ==========
-
-  console.log(
-    '[PolicyBrowseModal] About to return JSX, took',
-    (performance.now() - renderStart).toFixed(2) + 'ms'
-  );
 
   // Custom header title for creation mode - just the editable label
   const creationModeHeaderTitle = (

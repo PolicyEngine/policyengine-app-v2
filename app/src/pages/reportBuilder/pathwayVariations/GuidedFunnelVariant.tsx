@@ -8,7 +8,7 @@
  * - Large "NEXT" indicator on current step
  */
 
-import { Box, Group, Paper, Text, Button } from '@mantine/core';
+import { Box, Group, Text, Button } from '@mantine/core';
 import {
   IconCheck,
   IconChevronDown,

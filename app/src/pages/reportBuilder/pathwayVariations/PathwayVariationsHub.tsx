@@ -11,6 +11,7 @@ import {
   IconChecklist,
   IconFocus2,
   IconExternalLink,
+  IconRefresh,
 } from '@tabler/icons-react';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { colors, spacing, typography } from '@/designTokens';
@@ -189,6 +190,18 @@ export function PathwayVariationsHub() {
       ],
       path: 'report-builder/variants/focused-flow',
       colorConfig: { primary: '#f59e0b', light: '#fef3c7' },
+    },
+    {
+      icon: <IconRefresh size={24} />,
+      title: 'Report configuration',
+      description: 'A re-run oriented view for modifying and re-running existing reports with small tweaks.',
+      keyChanges: [
+        'Pre-filled from previous report run',
+        'Edit icons on each configured ingredient',
+        '"Re-run" button instead of "Run"',
+      ],
+      path: 'report-builder/variants/report-config',
+      colorConfig: { primary: colors.primary[600], light: colors.primary[50] },
     },
   ];
 

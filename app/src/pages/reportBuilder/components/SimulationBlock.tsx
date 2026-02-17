@@ -9,7 +9,7 @@ import { colors, spacing, typography } from '@/designTokens';
 import type { PopulationStateProps, SimulationStateProps } from '@/types/pathwayState';
 import { FONT_SIZES } from '../constants';
 import { styles } from '../styles';
-import type { RecentPopulation, SavedPolicy, ViewMode } from '../types';
+import type { RecentPopulation, SavedPolicy } from '../types';
 import { IngredientSection } from './IngredientSection';
 
 interface SimulationBlockProps {
@@ -33,7 +33,6 @@ interface SimulationBlockProps {
   inheritedPopulation?: PopulationStateProps | null;
   savedPolicies: SavedPolicy[];
   recentPopulations: RecentPopulation[];
-  viewMode: ViewMode;
 }
 
 export function SimulationBlock({
@@ -56,7 +55,6 @@ export function SimulationBlock({
   inheritedPopulation,
   savedPolicies,
   recentPopulations,
-  viewMode,
 }: SimulationBlockProps) {
 
   const [isEditingLabel, setIsEditingLabel] = useState(false);
@@ -227,7 +225,7 @@ export function SimulationBlock({
         onCreateCustom={() => {}}
         onBrowseMore={onBrowseMorePolicies}
         savedPolicies={savedPolicies}
-        viewMode={viewMode}
+
       />
 
       <IngredientSection
@@ -242,14 +240,14 @@ export function SimulationBlock({
         isInherited={populationInherited}
         inheritedPopulationType={inheritedPopulationType}
         recentPopulations={recentPopulations}
-        viewMode={viewMode}
+
       />
 
       <IngredientSection
         type="dynamics"
         countryId={countryId}
         onCreateCustom={() => {}}
-        viewMode={viewMode}
+
       />
     </Paper>
   );

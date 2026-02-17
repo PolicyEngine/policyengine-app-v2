@@ -16,7 +16,6 @@ import {
   IconUsers,
   IconChartLine,
   IconChevronDown,
-  IconChevronUp,
   IconArrowRight,
   IconSparkles,
 } from '@tabler/icons-react';

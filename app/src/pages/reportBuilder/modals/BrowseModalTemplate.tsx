@@ -8,7 +8,6 @@
  * - Optional status header slot
  * - Optional footer slot
  */
-import { ReactNode } from 'react';
 import {
   Box,
   Group,

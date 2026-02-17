@@ -2,10 +2,9 @@
  * SimulationCanvas - Main orchestrator for simulation blocks
  */
 
-import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useSelector } from 'react-redux';
-import { Box, Skeleton, Stack, Group, Text } from '@mantine/core';
-import { IconScale, IconUsers } from '@tabler/icons-react';
+import { Box, Skeleton, Group } from '@mantine/core';
 
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useUserPolicies } from '@/hooks/useUserPolicy';
@@ -35,12 +34,11 @@ import type {
   ReportBuilderState,
   IngredientPickerState,
   IngredientType,
-  ViewMode,
   SavedPolicy,
   RecentPopulation,
   PolicyBrowseState,
 } from '../types';
-import { COUNTRY_CONFIG, getSamplePopulations } from '../constants';
+import { getSamplePopulations } from '../constants';
 import { styles } from '../styles';
 import { SimulationBlock } from './SimulationBlock';
 import { AddSimulationCard } from './AddSimulationCard';
@@ -51,7 +49,6 @@ interface SimulationCanvasProps {
   setReportState: React.Dispatch<React.SetStateAction<ReportBuilderState>>;
   pickerState: IngredientPickerState;
   setPickerState: React.Dispatch<React.SetStateAction<IngredientPickerState>>;
-  viewMode: ViewMode;
 }
 
 export function SimulationCanvas({
@@ -59,22 +56,8 @@ export function SimulationCanvas({
   setReportState,
   pickerState,
   setPickerState,
-  viewMode,
 }: SimulationCanvasProps) {
-  const renderCount = useRef(0);
-  const mountTime = useRef(performance.now());
-  renderCount.current++;
-
-  if (renderCount.current === 1) {
-    mountTime.current = performance.now();
-  }
-
-  console.log('[SimulationCanvas] Render #' + renderCount.current + ' START', {
-    timeSinceMount: (performance.now() - mountTime.current).toFixed(2) + 'ms',
-  });
-
   const countryId = useCurrentCountry() as 'us' | 'uk';
-  const countryConfig = COUNTRY_CONFIG[countryId] || COUNTRY_CONFIG.us;
   const userId = MOCK_USER_ID.toString();
   const { data: policies, isLoading: policiesLoading } = useUserPolicies(userId);
   const { data: households, isLoading: householdsLoading } = useUserHouseholds(userId);
@@ -86,35 +69,11 @@ export function SimulationCanvas({
   // 1. Policies/households are still loading (isLoading is true)
   // 2. Data is still undefined (hasn't resolved yet)
   // 3. Metadata is still loading (needed for regions)
+  // 4. Region options haven't loaded yet (race condition: metadata initial state
+  //    has loading=false but region=[], so we must also check for empty regions)
   const isInitialLoading = policiesLoading || householdsLoading || metadataLoading ||
-    policies === undefined || households === undefined;
-
-  // Debug logging for render cycle analysis
-  console.log('[SimulationCanvas] Data state:', {
-    timeSinceMount: (performance.now() - mountTime.current).toFixed(2) + 'ms',
-    policiesLoading,
-    householdsLoading,
-    metadataLoading,
-    policiesUndefined: policies === undefined,
-    householdsUndefined: households === undefined,
-    policiesCount: policies?.length ?? 'undefined',
-    householdsCount: households?.length ?? 'undefined',
-    isInitialLoading,
-    regionOptionsCount: regionOptions?.length ?? 0,
-  });
-
-  // Track when effects run
-  useEffect(() => {
-    console.log('[SimulationCanvas] useEffect (mount) ran', {
-      timeSinceMount: (performance.now() - mountTime.current).toFixed(2) + 'ms',
-    });
-    return () => {
-      console.log('[SimulationCanvas] useEffect (mount) cleanup');
-    };
-  }, []);
-
-  // Suppress unused variable
-  void countryConfig;
+    policies === undefined || households === undefined ||
+    regionOptions.length === 0;
 
   // State for modals
   const [policyBrowseState, setPolicyBrowseState] = useState<PolicyBrowseState>({
@@ -134,7 +93,6 @@ export function SimulationCanvas({
 
   // Transform policies data into SavedPolicy format
   const savedPolicies: SavedPolicy[] = useMemo(() => {
-    const start = performance.now();
     const result = (policies || [])
       .map((p) => {
         const policyId = p.association.policyId.toString();
@@ -152,13 +110,11 @@ export function SimulationCanvas({
         const bTime = b.updatedAt || b.createdAt || '';
         return bTime.localeCompare(aTime);
       });
-    console.log('[SimulationCanvas] useMemo savedPolicies took', (performance.now() - start).toFixed(2) + 'ms');
     return result;
   }, [policies]);
 
   // Build recent populations from usage tracking
   const recentPopulations: RecentPopulation[] = useMemo(() => {
-    const start = performance.now();
     const results: Array<RecentPopulation & { timestamp: string }> = [];
 
     const regions = regionOptions || [];
@@ -168,7 +124,7 @@ export function SimulationCanvas({
 
     const recentGeoIds = geographyUsageStore.getRecentIds(10);
     for (const geoId of recentGeoIds) {
-      if (geoId === 'us' || geoId === 'uk') continue;
+      if (geoId === 'us' || geoId === 'uk') {continue;}
 
       const timestamp = geographyUsageStore.getLastUsed(geoId) || '';
       const region = allRegions.find((r) => r.value === geoId);
@@ -222,12 +178,11 @@ export function SimulationCanvas({
       .sort((a, b) => b.timestamp.localeCompare(a.timestamp))
       .slice(0, 10)
       .map(({ timestamp: _t, ...rest }) => rest);
-    console.log('[SimulationCanvas] useMemo recentPopulations took', (performance.now() - start).toFixed(2) + 'ms');
     return result;
   }, [countryId, households, regionOptions]);
 
   const handleAddSimulation = useCallback(() => {
-    if (reportState.simulations.length >= 2) return;
+    if (reportState.simulations.length >= 2) {return;}
     const newSim = initializeSimulationState();
     newSim.label = 'Reform simulation';
     newSim.population = { ...reportState.simulations[0].population };
@@ -235,7 +190,7 @@ export function SimulationCanvas({
   }, [reportState.simulations, setReportState]);
 
   const handleRemoveSimulation = useCallback((index: number) => {
-    if (index === 0) return;
+    if (index === 0) {return;}
     setReportState((prev) => ({ ...prev, simulations: prev.simulations.filter((_, i) => i !== index) }));
   }, [setReportState]);
 
@@ -251,9 +206,9 @@ export function SimulationCanvas({
       const { simulationIndex, ingredientType } = pickerState;
       setReportState((prev) => {
         const newSimulations = prev.simulations.map((sim, i) => {
-          if (i !== simulationIndex) return sim;
-          if (ingredientType === 'policy') return { ...sim, policy: item as PolicyStateProps };
-          if (ingredientType === 'population') return { ...sim, population: item as PopulationStateProps };
+          if (i !== simulationIndex) {return sim;}
+          if (ingredientType === 'policy') {return { ...sim, policy: item as PolicyStateProps };}
+          if (ingredientType === 'population') {return { ...sim, population: item as PopulationStateProps };}
           return sim;
         });
         if (ingredientType === 'population' && simulationIndex === 0 && newSimulations.length > 1) {
@@ -321,7 +276,7 @@ export function SimulationCanvas({
       setReportState((prev) => {
         const newPopulation = { ...population };
 
-        let newSimulations = prev.simulations.map((sim, i) =>
+        const newSimulations = prev.simulations.map((sim, i) =>
           i === simulationIndex ? { ...sim, population: newPopulation } : sim
         );
 
@@ -336,7 +291,7 @@ export function SimulationCanvas({
   );
 
   const handleQuickSelectPopulation = useCallback(
-    (simulationIndex: number, populationType: 'nationwide') => {
+    (simulationIndex: number, _populationType: 'nationwide') => {
       const samplePopulations = getSamplePopulations(countryId);
       const populationState = samplePopulations.nationwide;
 
@@ -345,7 +300,7 @@ export function SimulationCanvas({
       }
 
       setReportState((prev) => {
-        let newSimulations = prev.simulations.map((sim, i) =>
+        const newSimulations = prev.simulations.map((sim, i) =>
           i === simulationIndex ? { ...sim, population: { ...populationState } } : sim
         );
 
@@ -370,7 +325,7 @@ export function SimulationCanvas({
       setReportState((prev) => {
         const newPopulation = { ...population };
 
-        let newSimulations = prev.simulations.map((sim, i) =>
+        const newSimulations = prev.simulations.map((sim, i) =>
           i === simulationIndex ? { ...sim, population: newPopulation } : sim
         );
 
@@ -401,7 +356,7 @@ export function SimulationCanvas({
   const handleDeselectPopulation = useCallback(
     (simulationIndex: number) => {
       setReportState((prev) => {
-        let newSimulations = prev.simulations.map((sim, i) =>
+        const newSimulations = prev.simulations.map((sim, i) =>
           i === simulationIndex
             ? { ...sim, population: initializePopulationState() }
             : sim
@@ -450,16 +405,6 @@ export function SimulationCanvas({
     },
     [setReportState]
   );
-
-  console.log('[SimulationCanvas] All hooks/callbacks defined', {
-    timeSinceMount: (performance.now() - mountTime.current).toFixed(2) + 'ms',
-    modalsState: {
-      policyBrowseOpen: policyBrowseState.isOpen,
-      policyCreationOpen: policyCreationState.isOpen,
-      populationBrowseOpen: populationBrowseState.isOpen,
-      pickerOpen: pickerState.isOpen,
-    },
-  });
 
   // Loading skeleton component
   const LoadingSkeleton = () => (
@@ -546,15 +491,8 @@ export function SimulationCanvas({
 
   // Show loading skeleton while fetching initial data
   if (isInitialLoading) {
-    console.log('[SimulationCanvas] Returning LoadingSkeleton', {
-      timeSinceMount: (performance.now() - mountTime.current).toFixed(2) + 'ms',
-    });
     return <LoadingSkeleton />;
   }
-
-  console.log('[SimulationCanvas] About to return full JSX (modals will mount)', {
-    timeSinceMount: (performance.now() - mountTime.current).toFixed(2) + 'ms',
-  });
 
   return (
     <>
@@ -578,7 +516,7 @@ export function SimulationCanvas({
             canRemove={false}
             savedPolicies={savedPolicies}
             recentPopulations={recentPopulations}
-            viewMode={viewMode}
+
           />
 
           {reportState.simulations.length > 1 ? (
@@ -599,11 +537,11 @@ export function SimulationCanvas({
               onRemove={() => handleRemoveSimulation(1)}
               canRemove={!isGeographySelected}
               isRequired={isGeographySelected}
-              populationInherited={true}
+              populationInherited
               inheritedPopulation={reportState.simulations[0].population}
               savedPolicies={savedPolicies}
               recentPopulations={recentPopulations}
-              viewMode={viewMode}
+  
             />
           ) : (
             <AddSimulationCard onClick={handleAddSimulation} disabled={false} />

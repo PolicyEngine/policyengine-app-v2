@@ -39,6 +39,9 @@ const ChecklistVariant = lazy(() =>
 const FocusedFlowVariant = lazy(() =>
   import('./pages/reportBuilder/pathwayVariations').then((m) => ({ default: m.FocusedFlowVariant }))
 );
+const ReportConfigVariant = lazy(() =>
+  import('./pages/reportBuilder/pathwayVariations').then((m) => ({ default: m.ReportConfigVariant }))
+);
 
 // Lazy-loaded pathway wrappers — heavy components with their own sub-routes
 const PolicyPathwayWrapper = lazy(() => import('./pathways/policy/PolicyPathwayWrapper'));
@@ -165,6 +168,10 @@ const router = createBrowserRouter(
                 {
                   path: 'report-builder/variants/focused-flow',
                   element: <FocusedFlowVariant />,
+                },
+                {
+                  path: 'report-builder/variants/report-config',
+                  element: <ReportConfigVariant />,
                 },
                 {
                   path: 'account',
