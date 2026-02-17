@@ -1,5 +1,8 @@
 /**
- * ReportMetaPanel - Floating dock for report title and year
+ * ReportMetaPanel - Segmented breadcrumb for report title and year
+ *
+ * Renders as three separate segments (icon, name, year) that flow
+ * directly into TopBar's flex layout via display: contents.
  */
 
 import React, { useLayoutEffect, useState } from 'react';
@@ -13,6 +16,18 @@ import { CURRENT_YEAR } from '@/constants';
 import { colors, spacing, typography } from '@/designTokens';
 import { FONT_SIZES } from '../constants';
 import type { ReportBuilderState } from '../types';
+
+const SEGMENT_HEIGHT = 44;
+
+const segmentBase: React.CSSProperties = {
+  height: SEGMENT_HEIGHT,
+  borderRadius: spacing.radius.lg,
+  background: colors.white,
+  border: `1px solid ${colors.primary[200]}`,
+  boxShadow: `0 2px 8px ${colors.shadow.light}`,
+  display: 'flex',
+  alignItems: 'center',
+};
 
 interface ReportMetaPanelProps {
   reportState: ReportBuilderState;
@@ -35,7 +50,6 @@ export function ReportMetaPanel({
 
   const defaultReportLabel = 'Untitled report';
 
-  // Measure text width for auto-sizing input
   useLayoutEffect(() => {
     if (measureRef.current && isEditingLabel) {
       const textToMeasure = labelInput || defaultReportLabel;
@@ -45,42 +59,55 @@ export function ReportMetaPanel({
   }, [labelInput, isEditingLabel]);
 
   return (
-    <Box
-      style={{
-        background: 'rgba(255, 255, 255, 0.92)',
-        backdropFilter: 'blur(20px) saturate(180%)',
-        WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-        borderRadius: spacing.radius.xl,
-        border: `1px solid ${colors.border.light}`,
-        boxShadow: `0 4px 24px ${colors.shadow.light}`,
-        padding: `${spacing.md} ${spacing.xl}`,
-        display: 'flex',
-        alignItems: 'center',
-        gap: spacing.md,
-        flex: 1,
-        minWidth: 0,
-      }}
-    >
-      {/* Document icon */}
+    <Box style={{ display: 'contents' }}>
+      {/* Icon segment */}
       <Box
         style={{
-          width: 32,
-          height: 32,
-          borderRadius: spacing.radius.md,
+          width: SEGMENT_HEIGHT,
+          height: SEGMENT_HEIGHT,
+          borderRadius: spacing.radius.lg,
           background: `linear-gradient(135deg, ${colors.primary[50]} 0%, ${colors.primary[100]} 100%)`,
+          border: `1px solid ${colors.primary[200]}`,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           flexShrink: 0,
         }}
       >
-        <IconFileDescription size={18} color={colors.primary[600]} />
+        <IconFileDescription size={20} color={colors.primary[600]} />
       </Box>
 
-      {/* Title with pencil icon */}
+      {/* Name segment */}
       <Box
-        style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: spacing.xs }}
+        style={{
+          ...segmentBase,
+          flex: 1,
+          minWidth: 0,
+          padding: `0 ${spacing.lg}`,
+          gap: spacing.sm,
+          cursor: isEditingLabel ? 'text' : 'pointer',
+          position: 'relative',
+        }}
+        onClick={() => {
+          if (!isEditingLabel) {
+            setLabelInput(reportState.label || '');
+            setIsEditingLabel(true);
+          }
+        }}
       >
+        <Text
+          c={colors.primary[500]}
+          fw={600}
+          style={{
+            fontSize: FONT_SIZES.tiny,
+            textTransform: 'uppercase',
+            letterSpacing: '0.05em',
+            flexShrink: 0,
+          }}
+        >
+          Name
+        </Text>
+
         {isEditingLabel ? (
           <>
             <span
@@ -98,10 +125,11 @@ export function ReportMetaPanel({
               value={labelInput}
               onChange={(e) => setLabelInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleLabelSubmit()}
+              onBlur={handleLabelSubmit}
               placeholder={defaultReportLabel}
               size="xs"
               autoFocus
-              style={{ width: inputWidth ? inputWidth + 8 : 'auto' }}
+              style={{ flex: 1, minWidth: 0, width: inputWidth ? inputWidth + 8 : 'auto' }}
               styles={{
                 input: {
                   fontFamily: typography.fontFamily.primary,
@@ -110,14 +138,19 @@ export function ReportMetaPanel({
                   border: 'none',
                   background: 'transparent',
                   padding: 0,
+                  minHeight: 'auto',
                 },
               }}
+              onClick={(e: React.MouseEvent) => e.stopPropagation()}
             />
             <ActionIcon
               size="sm"
               variant="subtle"
               color="teal"
-              onClick={handleLabelSubmit}
+              onClick={(e: React.MouseEvent) => {
+                e.stopPropagation();
+                handleLabelSubmit();
+              }}
               aria-label="Confirm report name"
               style={{ flexShrink: 0 }}
             >
@@ -135,64 +168,71 @@ export function ReportMetaPanel({
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
                 whiteSpace: 'nowrap',
-                marginRight: 8,
               }}
             >
-              {reportState.label || 'Untitled report'}
+              {reportState.label || defaultReportLabel}
             </Text>
-            <ActionIcon
-              size="sm"
-              variant="subtle"
-              color="gray"
-              onClick={() => {
-                setLabelInput(reportState.label || '');
-                setIsEditingLabel(true);
-              }}
-              aria-label="Edit report name"
-              style={{ flexShrink: 0 }}
-            >
-              <IconPencil size={14} />
-            </ActionIcon>
+            <IconPencil
+              size={12}
+              color={colors.gray[400]}
+              style={{ flexShrink: 0, marginLeft: 'auto' }}
+            />
           </>
         )}
       </Box>
 
-      {/* Divider */}
+      {/* Year segment */}
       <Box
         style={{
-          width: '1px',
-          height: '24px',
-          background: colors.gray[200],
-          margin: `0 ${spacing.xs}`,
+          ...segmentBase,
+          padding: `0 ${spacing.md}`,
+          gap: spacing.sm,
           flexShrink: 0,
+          position: 'relative',
         }}
-      />
-
-      {/* Year selector */}
-      <Select
-        aria-label="Report year"
-        value={reportState.year}
-        onChange={(value) =>
-          setReportState((prev) => ({ ...prev, year: value || CURRENT_YEAR }))
-        }
-        data={['2023', '2024', '2025', '2026']}
-        size="xs"
-        w={60}
-        variant="unstyled"
-        rightSection={null}
-        withCheckIcon={false}
-        styles={{
-          input: {
-            fontFamily: typography.fontFamily.primary,
-            fontSize: FONT_SIZES.normal,
-            fontWeight: 500,
-            color: colors.gray[600],
-            cursor: 'pointer',
-            padding: 0,
-            minHeight: 'auto',
-          },
-        }}
-      />
+      >
+        <Text
+          c={colors.primary[500]}
+          fw={600}
+          style={{
+            fontSize: FONT_SIZES.tiny,
+            textTransform: 'uppercase',
+            letterSpacing: '0.05em',
+            flexShrink: 0,
+            pointerEvents: 'none',
+          }}
+        >
+          Year
+        </Text>
+        <Select
+          aria-label="Report year"
+          value={reportState.year}
+          onChange={(value) =>
+            setReportState((prev) => ({ ...prev, year: value || CURRENT_YEAR }))
+          }
+          data={['2023', '2024', '2025', '2026']}
+          size="sm"
+          variant="unstyled"
+          withCheckIcon={false}
+          comboboxProps={{ width: 120, position: 'bottom-end' }}
+          styles={{
+            input: {
+              fontFamily: typography.fontFamily.primary,
+              fontSize: FONT_SIZES.normal,
+              fontWeight: 500,
+              color: colors.gray[700],
+              cursor: 'pointer',
+              paddingLeft: 0,
+              paddingRight: spacing.xl,
+              minHeight: 'auto',
+              height: 'auto',
+            },
+            root: {
+              width: 72,
+            },
+          }}
+        />
+      </Box>
     </Box>
   );
 }

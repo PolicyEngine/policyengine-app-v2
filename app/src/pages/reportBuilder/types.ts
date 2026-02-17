@@ -239,6 +239,21 @@ export interface PolicyCreationModalProps {
 }
 
 // ============================================================================
+// TOP BAR TYPES
+// ============================================================================
+
+export interface TopBarAction {
+  key: string;
+  label: string;
+  icon: ReactNode;
+  onClick: () => void;
+  variant: 'primary' | 'secondary';
+  disabled?: boolean;
+  loading?: boolean;
+  loadingLabel?: string;
+}
+
+// ============================================================================
 // CANVAS AND PAGE TYPES
 // ============================================================================
 

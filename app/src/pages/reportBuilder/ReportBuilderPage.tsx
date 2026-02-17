@@ -7,15 +7,14 @@
  * - Dynamics: Blue - forward-looking, data-driven
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { IconPlayerPlay } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { Box, Loader } from '@mantine/core';
+import { Box } from '@mantine/core';
 import { ReportAdapter, SimulationAdapter } from '@/adapters';
 import { createSimulation } from '@/api/simulation';
 import { CURRENT_YEAR } from '@/constants';
-import { colors, spacing, typography } from '@/designTokens';
 import { useCreateReport } from '@/hooks/useCreateReport';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { RootState } from '@/store';
@@ -24,10 +23,9 @@ import { Simulation } from '@/types/ingredients/Simulation';
 import { SimulationStateProps } from '@/types/pathwayState';
 import { initializeSimulationState } from '@/utils/pathwayState/initializeSimulationState';
 import { getReportOutputPath } from '@/utils/reportRouting';
-import { ReportMetaPanel, SimulationCanvas } from './components';
-import { FONT_SIZES } from './constants';
+import { ReportMetaPanel, SimulationCanvas, TopBar } from './components';
 import { styles } from './styles';
-import type { IngredientPickerState, ReportBuilderState } from './types';
+import type { IngredientPickerState, ReportBuilderState, TopBarAction } from './types';
 
 export default function ReportBuilderPage() {
   const countryId = useCurrentCountry() as 'us' | 'uk';
@@ -214,7 +212,18 @@ export default function ReportBuilderPage() {
     navigate,
   ]);
 
-  const runButtonEnabled = isReportConfigured && !isSubmitting;
+  const topBarActions: TopBarAction[] = useMemo(() => [
+    {
+      key: 'run',
+      label: 'Run',
+      icon: <IconPlayerPlay size={16} />,
+      onClick: handleRunReport,
+      variant: 'primary',
+      disabled: !isReportConfigured,
+      loading: isSubmitting,
+      loadingLabel: 'Running...',
+    },
+  ], [handleRunReport, isReportConfigured, isSubmitting]);
 
   return (
     <Box style={styles.pageContainer}>
@@ -222,54 +231,12 @@ export default function ReportBuilderPage() {
         <h1 style={styles.mainTitle}>Report builder</h1>
       </Box>
 
-      {/* Top bar: meta panel + run button */}
-      <Box style={{ display: 'flex', alignItems: 'center', gap: spacing.md, marginBottom: spacing.xl }}>
+      <TopBar actions={topBarActions}>
         <ReportMetaPanel
           reportState={reportState}
           setReportState={setReportState}
         />
-        <Box
-          component="button"
-          style={{
-            background: runButtonEnabled
-              ? `linear-gradient(135deg, ${colors.primary[500]} 0%, ${colors.primary[600]} 100%)`
-              : colors.gray[200],
-            color: runButtonEnabled ? 'white' : colors.gray[500],
-            border: 'none',
-            borderRadius: spacing.radius.lg,
-            padding: `${spacing.sm} ${spacing.lg}`,
-            fontFamily: typography.fontFamily.primary,
-            fontWeight: 600,
-            fontSize: FONT_SIZES.normal,
-            cursor: runButtonEnabled ? 'pointer' : 'not-allowed',
-            display: 'flex',
-            alignItems: 'center',
-            gap: spacing.xs,
-            transition: 'all 0.3s ease',
-            boxShadow: runButtonEnabled ? '0 4px 12px rgba(44, 122, 123, 0.3)' : 'none',
-            opacity: isSubmitting ? 0.7 : 1,
-            flexShrink: 0,
-            height: 40,
-          }}
-          onClick={handleRunReport}
-          disabled={!runButtonEnabled}
-          onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
-            if (runButtonEnabled) {
-              e.currentTarget.style.transform = 'scale(1.05)';
-              e.currentTarget.style.boxShadow = '0 6px 16px rgba(44, 122, 123, 0.4)';
-            }
-          }}
-          onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
-            e.currentTarget.style.transform = 'scale(1)';
-            e.currentTarget.style.boxShadow = runButtonEnabled
-              ? '0 4px 12px rgba(44, 122, 123, 0.3)'
-              : 'none';
-          }}
-        >
-          {isSubmitting ? <Loader size={16} color="gray" /> : <IconPlayerPlay size={16} />}
-          <span>{isSubmitting ? 'Running...' : 'Run'}</span>
-        </Box>
-      </Box>
+      </TopBar>
 
       <SimulationCanvas
         reportState={reportState}
