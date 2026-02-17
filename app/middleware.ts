@@ -33,6 +33,18 @@ export const CRAWLER_USER_AGENTS = [
   'Discordbot',
 ];
 
+// Search engine bots that render JS — proxy tracker HTML so they see
+// canonical policyengine.org URLs, structured data, and sitemap references
+const SEARCH_ENGINE_BOTS = ['Googlebot', 'bingbot', 'Baiduspider', 'YandexBot', 'DuckDuckBot'];
+
+function isSearchEngine(userAgent: string | null): boolean {
+  if (!userAgent) return false;
+  return SEARCH_ENGINE_BOTS.some((bot) => userAgent.includes(bot));
+}
+
+const TRACKER_PREFIX = '/us/state-legislative-tracker';
+const TRACKER_MODAL_ORIGIN = 'https://policyengine--state-legislative-tracker.modal.run';
+
 const DEFAULT_OG = {
   title: 'PolicyEngine',
   description:
@@ -251,11 +263,31 @@ export const config = {
 
 export default async function middleware(request: Request) {
   const userAgent = request.headers.get('user-agent');
+  const url = new URL(request.url);
+
+  // State legislative tracker: proxy crawlers to Modal for SEO
+  // (pre-rendered HTML with canonical policyengine.org URLs, structured data, sitemap)
+  // Regular users fall through to the catch-all rewrite → website.html → iframe
+  if (url.pathname.startsWith(TRACKER_PREFIX)) {
+    if (isCrawler(userAgent) || isSearchEngine(userAgent)) {
+      const trackerPath = url.pathname.slice(TRACKER_PREFIX.length) || '/';
+      const modalUrl = `${TRACKER_MODAL_ORIGIN}${trackerPath}`;
+      const response = await fetch(modalUrl);
+      return new Response(response.body, {
+        status: response.status,
+        headers: {
+          'Content-Type': response.headers.get('Content-Type') || 'text/html',
+          'Cache-Control': 'public, max-age=3600',
+        },
+      });
+    }
+    return;
+  }
+
   if (!isCrawler(userAgent)) {
     return;
   }
 
-  const url = new URL(request.url);
   const parts = parsePathParts(url.pathname);
   if (!parts) {
     return;
