@@ -308,7 +308,7 @@ export function NumberedStepsVariant() {
                 stepNumber={1}
                 title="Policy"
                 colorConfig={{ icon: colors.secondary[600], bg: colors.secondary[50], border: colors.secondary[200] }}
-                isComplete={true}
+                isComplete
                 isCurrent={false}
               >
                 <Box
@@ -331,7 +331,7 @@ export function NumberedStepsVariant() {
                 title="Population"
                 colorConfig={{ icon: colors.primary[600], bg: colors.primary[50], border: colors.primary[200] }}
                 isComplete={false}
-                isCurrent={true}
+                isCurrent
               />
 
               <IngredientSectionWithNumber

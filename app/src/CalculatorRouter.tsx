@@ -17,6 +17,7 @@ import {
   TimelineVariant,
   ChecklistVariant,
   FocusedFlowVariant,
+  ReportConfigVariant,
 } from './pages/reportBuilder/pathwayVariations';
 import ReportOutputPage from './pages/ReportOutput.page';
 import ReportsPage from './pages/Reports.page';
@@ -156,6 +157,10 @@ const router = createBrowserRouter(
                 {
                   path: 'report-builder/variants/focused-flow',
                   element: <FocusedFlowVariant />,
+                },
+                {
+                  path: 'report-builder/variants/report-config',
+                  element: <ReportConfigVariant />,
                 },
                 {
                   path: 'account',

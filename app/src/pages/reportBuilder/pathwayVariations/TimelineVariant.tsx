@@ -8,7 +8,7 @@
  * - Current step highlighted with expanded detail
  */
 
-import { Box, Group, Paper, Text, Stack } from '@mantine/core';
+import { Box, Group, Paper, Text } from '@mantine/core';
 import {
   IconCheck,
   IconScale,
@@ -330,7 +330,7 @@ export function TimelineVariant() {
           title="Population"
           description="Choose who you want to analyze: the entire nation, a specific region, or a custom household."
           colorConfig={{ primary: colors.primary[500], light: colors.primary[50] }}
-          isActive={true}
+          isActive
         />
 
         <DetailCard

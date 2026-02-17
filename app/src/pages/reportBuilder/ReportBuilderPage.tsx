@@ -5,41 +5,34 @@
  * - Policy: Secondary (slate) - authoritative, grounded
  * - Population: Primary (teal) - brand-focused, people
  * - Dynamics: Blue - forward-looking, data-driven
- *
- * Two view modes:
- * - Card view: 50/50 grid with square chips
- * - Row view: Stacked horizontal rows
  */
 
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { IconLayoutColumns, IconRowInsertBottom } from '@tabler/icons-react';
-import { Box, Tabs } from '@mantine/core';
+import { useCallback, useEffect, useState } from 'react';
+import { IconPlayerPlay } from '@tabler/icons-react';
+import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import { Box, Loader } from '@mantine/core';
+import { ReportAdapter, SimulationAdapter } from '@/adapters';
+import { createSimulation } from '@/api/simulation';
 import { CURRENT_YEAR } from '@/constants';
+import { colors, spacing, typography } from '@/designTokens';
+import { useCreateReport } from '@/hooks/useCreateReport';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { RootState } from '@/store';
+import { Report } from '@/types/ingredients/Report';
+import { Simulation } from '@/types/ingredients/Simulation';
+import { SimulationStateProps } from '@/types/pathwayState';
 import { initializeSimulationState } from '@/utils/pathwayState/initializeSimulationState';
+import { getReportOutputPath } from '@/utils/reportRouting';
 import { ReportMetaPanel, SimulationCanvas } from './components';
-import { COUNTRY_CONFIG } from './constants';
+import { FONT_SIZES } from './constants';
 import { styles } from './styles';
-import type { IngredientPickerState, ReportBuilderState, ViewMode } from './types';
+import type { IngredientPickerState, ReportBuilderState } from './types';
 
 export default function ReportBuilderPage() {
-  const renderCount = useRef(0);
-  const mountTime = useRef(performance.now());
-  renderCount.current++;
-
-  // Reset mount time on first render
-  if (renderCount.current === 1) {
-    mountTime.current = performance.now();
-  }
-
-  // Debug logging for page render cycle
-  console.log('[ReportBuilderPage] Render #' + renderCount.current, {
-    timeSinceMount: (performance.now() - mountTime.current).toFixed(2) + 'ms',
-  });
-
   const countryId = useCurrentCountry() as 'us' | 'uk';
-  const countryConfig = COUNTRY_CONFIG[countryId] || COUNTRY_CONFIG.us;
-  const [activeTab, setActiveTab] = useState<string | null>('cards');
+  const navigate = useNavigate();
+  const currentLawId = useSelector((state: RootState) => state.metadata.currentLawId);
 
   const initialSim = initializeSimulationState();
   initialSim.label = 'Baseline simulation';
@@ -56,31 +49,12 @@ export default function ReportBuilderPage() {
     ingredientType: 'policy',
   });
 
-  // Suppress unused variable
-  void countryConfig;
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const { createReport } = useCreateReport(reportState.label || undefined);
 
   // Any geography selection (nationwide or subnational) requires dual-simulation
-  // Only households allow single-simulation reports
   const isGeographySelected = !!reportState.simulations[0]?.population?.geography?.id;
-
-  // Debug: Track when effects run
-  useLayoutEffect(() => {
-    console.log('[ReportBuilderPage] useLayoutEffect START', {
-      timeSinceMount: (performance.now() - mountTime.current).toFixed(2) + 'ms',
-    });
-    return () => {
-      console.log('[ReportBuilderPage] useLayoutEffect CLEANUP');
-    };
-  });
-
-  useEffect(() => {
-    console.log('[ReportBuilderPage] useEffect (mount) START', {
-      timeSinceMount: (performance.now() - mountTime.current).toFixed(2) + 'ms',
-    });
-    return () => {
-      console.log('[ReportBuilderPage] useEffect (mount) CLEANUP');
-    };
-  }, []);
 
   useEffect(() => {
     if (isGeographySelected && reportState.simulations.length === 1) {
@@ -95,11 +69,152 @@ export default function ReportBuilderPage() {
     (sim) => !!sim.policy.id && !!(sim.population.household?.id || sim.population.geography?.id)
   );
 
-  const viewMode = (activeTab || 'cards') as ViewMode;
+  const convertToSimulation = useCallback(
+    (simState: SimulationStateProps, simulationId: string): Simulation | null => {
+      const policyId = simState.policy?.id;
+      if (!policyId) {
+        return null;
+      }
 
-  console.log('[ReportBuilderPage] About to return JSX', {
-    timeSinceMount: (performance.now() - mountTime.current).toFixed(2) + 'ms',
-  });
+      let populationId: string | undefined;
+      let populationType: 'household' | 'geography' | undefined;
+
+      if (simState.population?.household?.id) {
+        populationId = simState.population.household.id;
+        populationType = 'household';
+      } else if (simState.population?.geography?.geographyId) {
+        populationId = simState.population.geography.geographyId;
+        populationType = 'geography';
+      }
+
+      if (!populationId || !populationType) {
+        return null;
+      }
+
+      return {
+        id: simulationId,
+        countryId,
+        apiVersion: undefined,
+        policyId: policyId === 'current-law' ? currentLawId.toString() : policyId,
+        populationId,
+        populationType,
+        label: simState.label,
+        isCreated: true,
+        output: null,
+        status: 'pending',
+      };
+    },
+    [countryId, currentLawId]
+  );
+
+  const handleRunReport = useCallback(async () => {
+    if (!isReportConfigured || isSubmitting) {
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const simulationIds: string[] = [];
+      const simulations: (Simulation | null)[] = [];
+
+      for (const simState of reportState.simulations) {
+        const policyId =
+          simState.policy?.id === 'current-law' ? currentLawId.toString() : simState.policy?.id;
+
+        if (!policyId) {
+          console.error('[ReportBuilderPage] Simulation missing policy ID');
+          continue;
+        }
+
+        let populationId: string | undefined;
+        let populationType: 'household' | 'geography' | undefined;
+
+        if (simState.population?.household?.id) {
+          populationId = simState.population.household.id;
+          populationType = 'household';
+        } else if (simState.population?.geography?.geographyId) {
+          populationId = simState.population.geography.geographyId;
+          populationType = 'geography';
+        }
+
+        if (!populationId || !populationType) {
+          console.error('[ReportBuilderPage] Simulation missing population');
+          continue;
+        }
+
+        const simulationData: Partial<Simulation> = {
+          populationId,
+          policyId,
+          populationType,
+        };
+
+        const payload = SimulationAdapter.toCreationPayload(simulationData);
+        const result = await createSimulation(countryId, payload);
+        const simulationId = result.result.simulation_id;
+        simulationIds.push(simulationId);
+
+        const simulation = convertToSimulation(simState, simulationId);
+        simulations.push(simulation);
+      }
+
+      if (simulationIds.length === 0) {
+        console.error('[ReportBuilderPage] No simulations created');
+        setIsSubmitting(false);
+        return;
+      }
+
+      const reportData: Partial<Report> = {
+        countryId,
+        year: reportState.year,
+        simulationIds,
+        apiVersion: null,
+      };
+
+      const serializedPayload = ReportAdapter.toCreationPayload(reportData as Report);
+
+      await createReport(
+        {
+          countryId,
+          payload: serializedPayload,
+          simulations: {
+            simulation1: simulations[0],
+            simulation2: simulations[1] || null,
+          },
+          populations: {
+            household1: reportState.simulations[0]?.population?.household || null,
+            household2: reportState.simulations[1]?.population?.household || null,
+            geography1: reportState.simulations[0]?.population?.geography || null,
+            geography2: reportState.simulations[1]?.population?.geography || null,
+          },
+        },
+        {
+          onSuccess: (data) => {
+            const outputPath = getReportOutputPath(countryId, data.userReport.id);
+            navigate(outputPath);
+          },
+          onError: (error) => {
+            console.error('[ReportBuilderPage] Report creation failed:', error);
+            setIsSubmitting(false);
+          },
+        }
+      );
+    } catch (error) {
+      console.error('[ReportBuilderPage] Error running report:', error);
+      setIsSubmitting(false);
+    }
+  }, [
+    isReportConfigured,
+    isSubmitting,
+    reportState,
+    countryId,
+    currentLawId,
+    createReport,
+    convertToSimulation,
+    navigate,
+  ]);
+
+  const runButtonEnabled = isReportConfigured && !isSubmitting;
 
   return (
     <Box style={styles.pageContainer}>
@@ -107,29 +222,60 @@ export default function ReportBuilderPage() {
         <h1 style={styles.mainTitle}>Report builder</h1>
       </Box>
 
-      <ReportMetaPanel
-        reportState={reportState}
-        setReportState={setReportState}
-        isReportConfigured={isReportConfigured}
-      />
-
-      <Tabs value={activeTab} onChange={setActiveTab} mb="xl">
-        <Tabs.List>
-          <Tabs.Tab value="cards" leftSection={<IconLayoutColumns size={16} />}>
-            Card view
-          </Tabs.Tab>
-          <Tabs.Tab value="rows" leftSection={<IconRowInsertBottom size={16} />}>
-            Row view
-          </Tabs.Tab>
-        </Tabs.List>
-      </Tabs>
+      {/* Top bar: meta panel + run button */}
+      <Box style={{ display: 'flex', alignItems: 'center', gap: spacing.md, marginBottom: spacing.xl }}>
+        <ReportMetaPanel
+          reportState={reportState}
+          setReportState={setReportState}
+        />
+        <Box
+          component="button"
+          style={{
+            background: runButtonEnabled
+              ? `linear-gradient(135deg, ${colors.primary[500]} 0%, ${colors.primary[600]} 100%)`
+              : colors.gray[200],
+            color: runButtonEnabled ? 'white' : colors.gray[500],
+            border: 'none',
+            borderRadius: spacing.radius.lg,
+            padding: `${spacing.sm} ${spacing.lg}`,
+            fontFamily: typography.fontFamily.primary,
+            fontWeight: 600,
+            fontSize: FONT_SIZES.normal,
+            cursor: runButtonEnabled ? 'pointer' : 'not-allowed',
+            display: 'flex',
+            alignItems: 'center',
+            gap: spacing.xs,
+            transition: 'all 0.3s ease',
+            boxShadow: runButtonEnabled ? '0 4px 12px rgba(44, 122, 123, 0.3)' : 'none',
+            opacity: isSubmitting ? 0.7 : 1,
+            flexShrink: 0,
+            height: 40,
+          }}
+          onClick={handleRunReport}
+          disabled={!runButtonEnabled}
+          onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
+            if (runButtonEnabled) {
+              e.currentTarget.style.transform = 'scale(1.05)';
+              e.currentTarget.style.boxShadow = '0 6px 16px rgba(44, 122, 123, 0.4)';
+            }
+          }}
+          onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
+            e.currentTarget.style.transform = 'scale(1)';
+            e.currentTarget.style.boxShadow = runButtonEnabled
+              ? '0 4px 12px rgba(44, 122, 123, 0.3)'
+              : 'none';
+          }}
+        >
+          {isSubmitting ? <Loader size={16} color="gray" /> : <IconPlayerPlay size={16} />}
+          <span>{isSubmitting ? 'Running...' : 'Run'}</span>
+        </Box>
+      </Box>
 
       <SimulationCanvas
         reportState={reportState}
         setReportState={setReportState}
         pickerState={pickerState}
         setPickerState={setPickerState}
-        viewMode={viewMode}
       />
     </Box>
   );

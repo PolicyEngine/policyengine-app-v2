@@ -8,3 +8,4 @@ export { GuidedFunnelVariant } from './GuidedFunnelVariant';
 export { TimelineVariant } from './TimelineVariant';
 export { ChecklistVariant } from './ChecklistVariant';
 export { FocusedFlowVariant } from './FocusedFlowVariant';
+export { ReportConfigVariant } from './ReportConfigVariant';

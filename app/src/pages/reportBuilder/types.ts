@@ -15,7 +15,6 @@ export interface ReportBuilderState {
 }
 
 export type IngredientType = 'policy' | 'population' | 'dynamics';
-export type ViewMode = 'cards' | 'rows';
 
 export interface IngredientPickerState {
   isOpen: boolean;
@@ -171,7 +170,6 @@ export interface IngredientSectionProps {
   inheritedPopulationType?: 'household' | 'nationwide' | null;
   savedPolicies?: SavedPolicy[];
   recentPopulations?: RecentPopulation[];
-  viewMode: ViewMode;
 }
 
 export interface SimulationBlockProps {
@@ -195,7 +193,6 @@ export interface SimulationBlockProps {
   inheritedPopulation?: PopulationStateProps;
   savedPolicies: SavedPolicy[];
   recentPopulations: RecentPopulation[];
-  viewMode: ViewMode;
 }
 
 export interface AddSimulationCardProps {
@@ -250,13 +247,11 @@ export interface SimulationCanvasProps {
   setReportState: React.Dispatch<React.SetStateAction<ReportBuilderState>>;
   pickerState: IngredientPickerState;
   setPickerState: React.Dispatch<React.SetStateAction<IngredientPickerState>>;
-  viewMode: ViewMode;
 }
 
 export interface ReportMetaPanelProps {
   reportState: ReportBuilderState;
   setReportState: React.Dispatch<React.SetStateAction<ReportBuilderState>>;
-  isReportConfigured: boolean;
 }
 
 // ============================================================================

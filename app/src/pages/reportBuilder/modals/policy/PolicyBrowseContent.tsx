@@ -3,7 +3,7 @@
  */
 import { Box, Group, Text, Stack, TextInput, ScrollArea, Paper, Button, Skeleton, ActionIcon } from '@mantine/core';
 import { IconSearch, IconPlus, IconInfoCircle, IconChevronRight, IconFolder, IconUsers } from '@tabler/icons-react';
-import { colors, spacing, typography } from '@/designTokens';
+import { colors, spacing } from '@/designTokens';
 import { FONT_SIZES, INGREDIENT_COLORS } from '../../constants';
 
 interface PolicyItem {

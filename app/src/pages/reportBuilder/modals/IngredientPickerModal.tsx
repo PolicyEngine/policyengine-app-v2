@@ -1,4 +1,4 @@
-import { Fragment, useRef, useState } from 'react';
+import { Fragment, useState } from 'react';
 import {
   IconChartLine,
   IconChevronRight,
@@ -54,12 +54,6 @@ export function IngredientPickerModal({
   onSelect,
   onCreateNew,
 }: IngredientPickerModalProps) {
-  const renderCount = useRef(0);
-  renderCount.current++;
-  console.log(
-    '[IngredientPickerModal] Render #' + renderCount.current + ' (isOpen=' + isOpen + ')'
-  );
-
   const countryId = useCurrentCountry() as 'us' | 'uk';
   const countryConfig = COUNTRY_CONFIG[countryId] || COUNTRY_CONFIG.us;
   const userId = MOCK_USER_ID.toString();

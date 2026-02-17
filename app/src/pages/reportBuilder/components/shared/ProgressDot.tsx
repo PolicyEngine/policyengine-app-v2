@@ -1,5 +1,5 @@
 import { Box } from '@mantine/core';
-import { colors, spacing } from '@/designTokens';
+import { colors } from '@/designTokens';
 
 interface ProgressDotProps {
   filled: boolean;

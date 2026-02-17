@@ -57,7 +57,7 @@ function sortGroupsAlphabetically(groups: StateGroup[]): StateGroup[] {
 }
 
 function groupDistrictsByState(districts: RegionOption[]): StateGroup[] {
-  const groups: Map<string, StateGroup> = new Map();
+  const groups = new Map<string, StateGroup>();
 
   for (const district of districts) {
     const stateName = district.stateName || 'Unknown';
@@ -90,14 +90,14 @@ function buildDistrictCountLookup(groups: StateGroup[]): Map<string, number> {
 }
 
 function filterGroupsByQuery(groups: StateGroup[], query: string): StateGroup[] {
-  if (!query.trim()) return groups;
+  if (!query.trim()) {return groups;}
 
   const normalizedQuery = query.toLowerCase();
 
   return groups
     .map((group) => {
       const stateMatches = group.stateName.toLowerCase().includes(normalizedQuery);
-      if (stateMatches) return group;
+      if (stateMatches) {return group;}
 
       const matchingDistricts = group.districts.filter((d) =>
         d.label.toLowerCase().includes(normalizedQuery)
@@ -118,7 +118,7 @@ function getDistrictDisplayLabel(
   originalCounts: Map<string, number>
 ): string {
   const originalCount = originalCounts.get(stateName) || 0;
-  if (originalCount === 1) return 'At-large';
+  if (originalCount === 1) {return 'At-large';}
 
   const num = extractDistrictNumber(district.label);
   return num ? formatOrdinal(num) : district.label;
