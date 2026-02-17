@@ -1,22 +1,22 @@
 /**
- * GeographicConfirmationView - View for confirming geographic population
- * Duplicated from GeographicConfirmationFrame
- * Props-based instead of Redux-based
+ * GeographicConfirmationView - View for confirming geographic population selection
+ * Users can select a geography for simulation without creating a user association
+ *
+ * Note: With Phase 2 changes, this view is typically skipped for geography selections.
+ * It remains for potential future use or edge cases.
  */
 
 import { Stack, Text } from '@mantine/core';
 import PathwayView from '@/components/common/PathwayView';
-import { MOCK_USER_ID } from '@/constants';
-import { useCreateGeographicAssociation } from '@/hooks/useUserGeographic';
-import { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
+import { isNationalGeography } from '@/types/ingredients/Geography';
 import { MetadataRegionEntry } from '@/types/metadata';
 import { PopulationStateProps } from '@/types/pathwayState';
-import { getCountryLabel, getRegionLabel, getRegionTypeLabel } from '@/utils/geographyUtils';
+import { getCountryLabel, getRegionLabel } from '@/utils/geographyUtils';
 
 interface GeographicConfirmationViewProps {
   population: PopulationStateProps;
   regions: MetadataRegionEntry[];
-  onSubmitSuccess: (geographyId: string, label: string) => void;
+  onSubmitSuccess: (regionCode: string, label: string) => void;
   onBack?: () => void;
 }
 
@@ -26,36 +26,14 @@ export default function GeographicConfirmationView({
   onSubmitSuccess,
   onBack,
 }: GeographicConfirmationViewProps) {
-  const { mutateAsync: createGeographicAssociation, isPending } = useCreateGeographicAssociation();
-  const currentUserId = MOCK_USER_ID;
-
-  // Build geographic population data from existing geography
-  const buildGeographicPopulation = (): Omit<UserGeographyPopulation, 'createdAt' | 'type'> => {
+  const handleSubmit = () => {
     if (!population?.geography) {
-      throw new Error('No geography found in population state');
+      return;
     }
 
-    const basePopulation = {
-      id: `${currentUserId}-${Date.now()}`,
-      userId: currentUserId,
-      countryId: population.geography.countryId,
-      geographyId: population.geography.geographyId,
-      scope: population.geography.scope,
-      label: population.label || population.geography.name || undefined,
-    };
-
-    return basePopulation;
-  };
-
-  const handleSubmit = async () => {
-    const populationData = buildGeographicPopulation();
-
-    try {
-      const result = await createGeographicAssociation(populationData);
-      onSubmitSuccess(result.geographyId, result.label || '');
-    } catch (err) {
-      // Error is handled by the mutation
-    }
+    const regionCode = population.geography.regionCode;
+    const label = getRegionLabel(regionCode, regions);
+    onSubmitSuccess(regionCode, label);
   };
 
   // Build display content based on geographic scope
@@ -69,52 +47,29 @@ export default function GeographicConfirmationView({
     }
 
     const geographyCountryId = population.geography.countryId;
+    const regionCode = population.geography.regionCode;
 
-    if (population.geography.scope === 'national') {
-      return (
-        <Stack gap="md">
-          <Text fw={600} fz="lg">
-            Confirm household collection
-          </Text>
-          <Text>
-            <strong>Scope:</strong> National
-          </Text>
-          <Text>
-            <strong>Country:</strong> {getCountryLabel(geographyCountryId)}
-          </Text>
-        </Stack>
-      );
-    }
-
-    // Subnational
-    const regionCode = population.geography.geographyId;
-    const regionLabel = getRegionLabel(regionCode, regions);
-    const regionTypeName = getRegionTypeLabel(geographyCountryId, regionCode, regions);
+    const label = isNationalGeography(population.geography)
+      ? getCountryLabel(geographyCountryId)
+      : getRegionLabel(regionCode, regions);
 
     return (
       <Stack gap="md">
         <Text fw={600} fz="lg">
-          Confirm household collection
-        </Text>
-        <Text>
-          <strong>Scope:</strong> {regionTypeName}
-        </Text>
-        <Text>
-          <strong>{regionTypeName}:</strong> {regionLabel}
+          Households in {label}
         </Text>
       </Stack>
     );
   };
 
   const primaryAction = {
-    label: 'Create household collection',
+    label: 'Confirm',
     onClick: handleSubmit,
-    isLoading: isPending,
   };
 
   return (
     <PathwayView
-      title="Confirm household collection"
+      title="Confirm geography"
       content={buildDisplayContent()}
       primaryAction={primaryAction}
       backAction={onBack ? { onClick: onBack } : undefined}

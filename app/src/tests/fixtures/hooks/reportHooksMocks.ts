@@ -65,18 +65,14 @@ export const mockHousehold: Household = {
 
 // Mock Geography - National
 export const mockNationalGeography: Geography = {
-  id: 'us',
   countryId: 'us',
-  scope: 'national',
-  geographyId: 'us',
+  regionCode: 'us',
 };
 
 // Mock Geography - Subnational
 export const mockSubnationalGeography: Geography = {
-  id: 'california',
   countryId: 'us',
-  scope: 'subnational',
-  geographyId: 'california',
+  regionCode: 'california',
 };
 
 // Mock Simulations

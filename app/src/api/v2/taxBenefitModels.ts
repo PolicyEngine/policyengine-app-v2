@@ -1,5 +1,4 @@
-export const API_V2_BASE_URL =
-  import.meta.env.VITE_API_V2_URL || 'https://v2.api.policyengine.org';
+export const API_V2_BASE_URL = import.meta.env.VITE_API_V2_URL || 'https://v2.api.policyengine.org';
 
 /**
  * Map country IDs to their API model names.

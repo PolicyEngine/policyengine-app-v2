@@ -84,35 +84,23 @@ export const MOCK_SIMULATION_GEOGRAPHY_UK = {
 };
 
 export const MOCK_GEOGRAPHY_UK_NATIONAL: Geography = {
-  id: 'uk-uk',
   countryId: 'uk',
-  scope: 'national',
-  geographyId: 'uk',
-  name: 'United Kingdom',
+  regionCode: 'uk',
 };
 
 export const MOCK_GEOGRAPHY_UK_COUNTRY: Geography = {
-  id: 'uk-england',
   countryId: 'uk',
-  scope: 'subnational',
-  geographyId: 'country/england',
-  name: 'England',
+  regionCode: 'country/england',
 };
 
 export const MOCK_GEOGRAPHY_UK_CONSTITUENCY: Geography = {
-  id: 'uk-sheffield-central',
   countryId: 'uk',
-  scope: 'subnational',
-  geographyId: 'constituency/Sheffield Central',
-  name: 'Sheffield Central',
+  regionCode: 'constituency/Sheffield Central',
 };
 
 export const MOCK_GEOGRAPHY_UK_LOCAL_AUTHORITY: Geography = {
-  id: 'uk-manchester',
   countryId: 'uk',
-  scope: 'subnational',
-  geographyId: 'local_authority/Manchester',
-  name: 'Manchester',
+  regionCode: 'local_authority/Manchester',
 };
 
 export const MOCK_SOCIETY_WIDE_OUTPUT = {

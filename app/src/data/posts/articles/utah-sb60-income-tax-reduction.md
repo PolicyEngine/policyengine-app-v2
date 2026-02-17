@@ -4,12 +4,12 @@ We at PolicyEngine have analyzed the effects of this proposed change on the stat
 
 Key results for 2026:
 
-* Reduces state revenues by $83.6 million
-* Benefits 53.2% of Utah residents
-* Has no effect on the Supplemental Poverty Measure
-* Raises the Gini index of inequality by 0.01%
+- Reduces state revenues by $83.6 million
+- Benefits 53.2% of Utah residents
+- Has no effect on the Supplemental Poverty Measure
+- Raises the Gini index of inequality by 0.01%
 
-*[Use PolicyEngine](https://www.policyengine.org/us) to view the full results or calculate the effect on your household.*
+_[Use PolicyEngine](https://www.policyengine.org/us) to view the full results or calculate the effect on your household._
 
 ## Tax reform
 

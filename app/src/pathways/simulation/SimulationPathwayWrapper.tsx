@@ -6,17 +6,14 @@
  */
 
 import { useCallback, useState } from 'react';
-import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import StandardLayout from '@/components/StandardLayout';
-import { CURRENT_YEAR, MOCK_USER_ID } from '@/constants';
+import { MOCK_USER_ID } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { usePathwayNavigation } from '@/hooks/usePathwayNavigation';
 import { useCurrentLawId, useRegionsList } from '@/hooks/useStaticMetadata';
-import { useUserGeographics } from '@/hooks/useUserGeographic';
 import { useUserHouseholds } from '@/hooks/useUserHousehold';
 import { useUserPolicies } from '@/hooks/useUserPolicy';
-import { RootState } from '@/store';
 import { SimulationViewMode } from '@/types/pathwayModes/SimulationViewMode';
 import { SimulationStateProps } from '@/types/pathwayState';
 import {
@@ -62,10 +59,8 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
   });
 
   // Get metadata for population views
-  const metadata = useSelector((state: RootState) => state.metadata);
   const currentLawId = useCurrentLawId(countryId);
-  const currentYear = parseInt(CURRENT_YEAR, 10);
-  const regionData = useRegionsList(countryId, currentYear);
+  const regionData = useRegionsList(countryId);
 
   // ========== NAVIGATION ==========
   const { currentMode, navigateToMode, goBack, canGoBack } = usePathwayNavigation(
@@ -76,10 +71,11 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
   const userId = MOCK_USER_ID.toString();
   const { data: userPolicies } = useUserPolicies(userId);
   const { data: userHouseholds } = useUserHouseholds(userId);
-  const { data: userGeographics } = useUserGeographics(userId);
 
   const hasExistingPolicies = (userPolicies?.length ?? 0) > 0;
-  const hasExistingPopulations = (userHouseholds?.length ?? 0) + (userGeographics?.length ?? 0) > 0;
+  // Note: Geographic populations are no longer stored as user associations.
+  // They are selected per-simulation. We only check for existing households.
+  const hasExistingPopulations = (userHouseholds?.length ?? 0) > 0;
 
   // ========== CONDITIONAL NAVIGATION HANDLERS ==========
   // Skip selection view if user has no existing items

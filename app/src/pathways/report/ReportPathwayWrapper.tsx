@@ -8,7 +8,6 @@
  */
 
 import { useCallback, useState } from 'react';
-import { useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ReportAdapter } from '@/adapters';
 import StandardLayout from '@/components/StandardLayout';
@@ -17,11 +16,9 @@ import { ReportYearProvider } from '@/contexts/ReportYearContext';
 import { useCreateReport } from '@/hooks/useCreateReport';
 import { usePathwayNavigation } from '@/hooks/usePathwayNavigation';
 import { useCurrentLawId, useRegionsList } from '@/hooks/useStaticMetadata';
-import { useUserGeographics } from '@/hooks/useUserGeographic';
 import { useUserHouseholds } from '@/hooks/useUserHousehold';
 import { useUserSimulations } from '@/hooks/useUserSimulations';
 import { countryIds } from '@/libs/countries';
-import { RootState } from '@/store';
 import { Report } from '@/types/ingredients/Report';
 import { ReportViewMode } from '@/types/pathwayModes/ReportViewMode';
 import { ReportStateProps, SimulationStateProps } from '@/types/pathwayState';
@@ -89,11 +86,8 @@ export default function ReportPathwayWrapper({ onComplete }: ReportPathwayWrappe
 
   const { createReport, isPending: isSubmitting } = useCreateReport(reportState.label || undefined);
 
-  // Get metadata for population views
-  const metadata = useSelector((state: RootState) => state.metadata);
   const currentLawId = useCurrentLawId(countryId);
-  const reportYear = parseInt(reportState.year || '2025', 10);
-  const regionData = useRegionsList(countryId, reportYear);
+  const regionData = useRegionsList(countryId);
 
   // ========== NAVIGATION ==========
   const { currentMode, navigateToMode, goBack, canGoBack } = usePathwayNavigation(
@@ -104,10 +98,11 @@ export default function ReportPathwayWrapper({ onComplete }: ReportPathwayWrappe
   const userId = MOCK_USER_ID.toString();
   const { data: userSimulations } = useUserSimulations(userId);
   const { data: userHouseholds } = useUserHouseholds(userId);
-  const { data: userGeographics } = useUserGeographics(userId);
 
   const hasExistingSimulations = (userSimulations?.length ?? 0) > 0;
-  const hasExistingPopulations = (userHouseholds?.length ?? 0) + (userGeographics?.length ?? 0) > 0;
+  // Note: Geographic populations are no longer stored as user associations.
+  // They are selected per-simulation. We only check for existing households.
+  const hasExistingPopulations = (userHouseholds?.length ?? 0) > 0;
 
   // ========== HELPER: Get active simulation ==========
   const activeSimulation = reportState.simulations[activeSimulationIndex];

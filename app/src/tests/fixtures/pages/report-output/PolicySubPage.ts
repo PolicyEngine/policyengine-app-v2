@@ -153,6 +153,7 @@ export const mockUserBaselinePolicy: UserPolicy = {
   id: 'user-pol-baseline-123',
   userId: TEST_USER_ID,
   policyId: TEST_POLICY_IDS.BASELINE,
+  countryId: 'us',
   label: 'My Baseline Policy',
   createdAt: '2025-01-15T10:00:00Z',
 };
@@ -161,6 +162,7 @@ export const mockUserReformPolicy: UserPolicy = {
   id: 'user-pol-reform-456',
   userId: TEST_USER_ID,
   policyId: TEST_POLICY_IDS.REFORM,
+  countryId: 'us',
   label: 'My Reform Policy',
   createdAt: '2025-01-15T11:00:00Z',
 };

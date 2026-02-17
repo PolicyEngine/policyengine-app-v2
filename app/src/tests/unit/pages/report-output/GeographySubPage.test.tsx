@@ -1,10 +1,29 @@
 import { render, screen, within } from '@test-utils';
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import GeographySubPage from '@/pages/report-output/GeographySubPage';
 import {
   mockGeographyCalifornia,
   mockGeographyNewYork,
 } from '@/tests/fixtures/pages/report-output/PopulationSubPage';
+import { MetadataRegionEntry } from '@/types/metadata';
+
+// Mock regions data for V2 API labels
+const mockRegions: MetadataRegionEntry[] = [
+  { name: 'state/ca', label: 'California', type: 'state' },
+  { name: 'state/ny', label: 'New York', type: 'state' },
+  { name: 'ca', label: 'California', type: 'state' }, // Legacy format
+  { name: 'ny', label: 'New York', type: 'state' }, // Legacy format
+];
+
+// Mock useRegions hook
+vi.mock('@/hooks/useRegions', () => ({
+  useRegions: vi.fn(() => ({
+    regions: mockRegions,
+    isLoading: false,
+    error: null,
+    rawRegions: [],
+  })),
+}));
 
 describe('GeographySubPage - Design 4 Table Format', () => {
   describe('Empty and error states', () => {
@@ -63,7 +82,7 @@ describe('GeographySubPage - Design 4 Table Format', () => {
   });
 
   describe('Geography properties', () => {
-    test('given geography then displays all properties', () => {
+    test('given geography then displays all properties with V2 API labels', () => {
       render(
         <GeographySubPage
           baselineGeography={mockGeographyCalifornia}
@@ -75,10 +94,10 @@ describe('GeographySubPage - Design 4 Table Format', () => {
       expect(screen.getByText(/geographic area/i)).toBeInTheDocument();
       expect(screen.getByText(/type/i)).toBeInTheDocument();
 
-      // Should display values
+      // Should display human-readable labels from V2 API
       expect(screen.getByText('California')).toBeInTheDocument();
       expect(screen.getByText('New York')).toBeInTheDocument();
-      expect(screen.getAllByText('Subnational')).toHaveLength(2); // One for baseline, one for reform
+      expect(screen.getAllByText('State')).toHaveLength(2); // Region type label
     });
 
     test('given same geography then displays value once', () => {
@@ -89,9 +108,9 @@ describe('GeographySubPage - Design 4 Table Format', () => {
         />
       );
 
-      // Should only show California once per row
-      const californiaElements = screen.getAllByText('California');
-      expect(californiaElements.length).toBe(1);
+      // Should only show label once per row (merged column)
+      const caElements = screen.getAllByText('California');
+      expect(caElements.length).toBe(1);
     });
   });
 

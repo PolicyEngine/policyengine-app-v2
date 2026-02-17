@@ -25,9 +25,7 @@ export const TEST_NODE_LABELS = {
 } as const;
 
 // Factory to create mock menu node
-export function createMockNode(
-  overrides: Partial<LazyMenuNode> = {}
-): LazyMenuNode {
+export function createMockNode(overrides: Partial<LazyMenuNode> = {}): LazyMenuNode {
   return {
     name: 'gov.test',
     label: 'Test',

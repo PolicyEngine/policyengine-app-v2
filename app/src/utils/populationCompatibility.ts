@@ -24,7 +24,10 @@ export function arePopulationsCompatible(
 
 /**
  * Gets a human-readable label for a population.
- * Priority: population.label → household ID → geography name → 'Unknown Household(s)'
+ * Priority: population.label → household ID → geography regionCode → 'Unknown Household(s)'
+ *
+ * Note: For proper display of geography labels, use getRegionLabel() from geographyUtils
+ * with region metadata. This function is a fallback when metadata is not available.
  *
  * @param population - The population object
  * @returns A human-readable label
@@ -44,17 +47,12 @@ export function getPopulationLabel(population: Population | null): string {
     return `Household #${population.household.id}`;
   }
 
-  // Third priority: geography name
-  if (population.geography?.name) {
-    return population.geography.name;
+  // Third priority: geography region code (fallback when region metadata unavailable)
+  if (population.geography?.regionCode) {
+    return `Households in ${population.geography.regionCode}`;
   }
 
-  // Fourth priority: geography ID
-  if (population.geography?.id) {
-    return population.geography.id;
-  }
-
-  return 'Unknown Household(s)';
+  return 'Unknown household(s)';
 }
 
 /**

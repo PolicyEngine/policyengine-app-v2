@@ -6,7 +6,10 @@
 
 import { useState } from 'react';
 import PathwayView from '@/components/common/PathwayView';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useRegions } from '@/hooks/useRegions';
 import { SimulationStateProps } from '@/types/pathwayState';
+import { getCountryLabel, getRegionLabel, isNationalGeography } from '@/utils/geographyUtils';
 import {
   isPolicyConfigured,
   isPopulationConfigured,
@@ -36,6 +39,8 @@ export default function SimulationSetupView({
   onCancel,
 }: SimulationSetupViewProps) {
   const [selectedCard, setSelectedCard] = useState<SetupCard | null>(null);
+  const countryId = useCurrentCountry();
+  const { regions } = useRegions(countryId);
 
   const policy = simulation.policy;
   const population = simulation.population;
@@ -64,6 +69,17 @@ export default function SimulationSetupView({
 
   const canProceed: boolean = isPolicyConfigured(policy) && isPopulationConfigured(population);
 
+  // Helper to get geography display label in "Households in {label}" format
+  function getGeographyDisplayLabel(): string {
+    if (!population.geography) {
+      return '';
+    }
+    const label = isNationalGeography(population.geography)
+      ? getCountryLabel(population.geography.countryId)
+      : getRegionLabel(population.geography.regionCode, regions);
+    return `Households in ${label}`;
+  }
+
   function generatePopulationCardTitle() {
     if (!isPopulationConfigured(population)) {
       return 'Add household(s)';
@@ -81,7 +97,7 @@ export default function SimulationSetupView({
       return `Household #${population.household.id}`;
     }
     if (population.geography) {
-      return `Household(s) #${population.geography.id}`;
+      return getGeographyDisplayLabel();
     }
     return '';
   }
@@ -93,16 +109,13 @@ export default function SimulationSetupView({
 
     // In simulation 2 of a report, indicate population is inherited from baseline
     if (isSimulation2InReport) {
-      const popId = population.household?.id || population.geography?.id;
+      const popId = population.household?.id || getGeographyDisplayLabel();
       const popType = population.household ? 'Household' : 'Household collection';
-      return `${popType} #${popId} • Inherited from baseline simulation`;
+      return `${popType} ${popId} • Inherited from baseline simulation`;
     }
 
     if (population.label && population.household) {
       return `Household #${population.household.id}`;
-    }
-    if (population.label && population.geography) {
-      return `Household collection #${population.geography.id}`;
     }
     return '';
   }

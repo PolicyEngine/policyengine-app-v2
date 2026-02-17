@@ -25,20 +25,17 @@ export const SIMULATION_IDS = {
 
 // Test payloads
 export const mockSimulationPayload: SimulationCreationPayload = {
-  population_id: '123',
-  population_type: 'household',
+  household_id: '123',
   policy_id: 456,
 };
 
 export const mockSimulationPayloadGeography: SimulationCreationPayload = {
-  population_id: 'california',
-  population_type: 'geography',
+  region: 'california',
   policy_id: 789,
 };
 
 export const mockSimulationPayloadMinimal: SimulationCreationPayload = {
-  population_id: 'household-minimal',
-  population_type: 'household',
+  household_id: 'household-minimal',
   policy_id: 1,
 };
 
@@ -47,8 +44,8 @@ export const mockSimulationMetadata: SimulationMetadata = {
   id: parseInt(SIMULATION_IDS.VALID, 10),
   country_id: TEST_COUNTRIES.US,
   api_version: '1.0.0',
-  population_id: mockSimulationPayload.population_id,
-  population_type: mockSimulationPayload.population_type!,
+  population_id: mockSimulationPayload.household_id!,
+  population_type: 'household',
   policy_id: mockSimulationPayload.policy_id.toString(),
 };
 
@@ -58,8 +55,8 @@ export const mockCreateSimulationSuccessResponse = {
   result: {
     id: parseInt(SIMULATION_IDS.NEW, 10),
     country_id: TEST_COUNTRIES.US,
-    population_id: mockSimulationPayload.population_id,
-    population_type: mockSimulationPayload.population_type,
+    population_id: mockSimulationPayload.household_id,
+    population_type: 'household',
     policy_id: mockSimulationPayload.policy_id,
   },
 };

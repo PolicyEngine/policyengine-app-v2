@@ -18,17 +18,8 @@ export const MOCK_SHARE_DATA: ReportIngredientsInput = {
     label: 'Test Report',
   },
   userSimulations: [{ simulationId: 'sim-1', countryId: 'us', label: 'Baseline Sim' }],
-  userPolicies: [{ policyId: 'policy-1', label: 'Test Policy' }],
+  userPolicies: [{ policyId: 'policy-1', countryId: 'us', label: 'Test Policy' }],
   userHouseholds: [],
-  userGeographies: [
-    {
-      type: 'geography',
-      geographyId: 'us',
-      countryId: 'us',
-      scope: 'national',
-      label: 'United States',
-    },
-  ],
 };
 
 export const MOCK_HOUSEHOLD_SHARE_DATA: ReportIngredientsInput = {
@@ -39,11 +30,10 @@ export const MOCK_HOUSEHOLD_SHARE_DATA: ReportIngredientsInput = {
     label: 'Household Report',
   },
   userSimulations: [{ simulationId: 'sim-2', countryId: 'uk', label: 'HH Sim' }],
-  userPolicies: [{ policyId: 'policy-2', label: 'HH Policy' }],
+  userPolicies: [{ policyId: 'policy-2', countryId: 'uk', label: 'HH Policy' }],
   userHouseholds: [
     { type: 'household', householdId: 'hh-1', countryId: 'uk', label: 'My Household' },
   ],
-  userGeographies: [],
 };
 
 // API metadata fixtures (cast to any for test simplicity)

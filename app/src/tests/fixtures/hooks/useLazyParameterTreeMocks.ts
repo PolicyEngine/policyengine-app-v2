@@ -83,9 +83,9 @@ export const MOCK_METADATA_EMPTY: MetadataState = {
 };
 
 // Factory to create root state
-export function createMockRootState(
-  metadataOverrides: Partial<MetadataState> = {}
-): { metadata: MetadataState } {
+export function createMockRootState(metadataOverrides: Partial<MetadataState> = {}): {
+  metadata: MetadataState;
+} {
   return {
     metadata: {
       ...BASE_METADATA_STATE,

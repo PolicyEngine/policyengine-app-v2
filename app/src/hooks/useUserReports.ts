@@ -5,7 +5,6 @@ import { fetchHouseholdById } from '@/api/household';
 import { fetchPolicyById } from '@/api/policy';
 import { fetchReportById } from '@/api/report';
 import { fetchSimulationById } from '@/api/simulation';
-import { CURRENT_YEAR } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
@@ -13,15 +12,10 @@ import { Policy } from '@/types/ingredients/Policy';
 import { Report } from '@/types/ingredients/Report';
 import { Simulation } from '@/types/ingredients/Simulation';
 import { UserPolicy } from '@/types/ingredients/UserPolicy';
-import {
-  UserGeographyPopulation,
-  UserHouseholdPopulation,
-} from '@/types/ingredients/UserPopulation';
+import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { UserReport } from '@/types/ingredients/UserReport';
 import { UserSimulation } from '@/types/ingredients/UserSimulation';
 import { householdKeys, policyKeys, reportKeys, simulationKeys } from '../libs/queryKeys';
-import { useRegionsList } from './useStaticMetadata';
-import { useGeographicAssociationsByUser } from './useUserGeographic';
 import { useHouseholdAssociationsByUser } from './useUserHousehold';
 import { usePolicyAssociationsByUser } from './useUserPolicy';
 import { useReportAssociationById, useReportAssociationsByUser } from './useUserReportAssociations';
@@ -53,7 +47,6 @@ export interface EnhancedUserReport {
   userSimulations?: UserSimulation[];
   userPolicies?: UserPolicy[];
   userHouseholds?: UserHouseholdPopulation[];
-  userGeographies?: UserGeographyPopulation[];
 
   // Status
   isLoading: boolean;
@@ -74,10 +67,6 @@ export interface EnhancedUserReport {
 export const useUserReports = (userId: string) => {
   const country = useCurrentCountry();
   const queryNormalizer = useQueryNormalizer();
-
-  // Get geography data from static metadata
-  const currentYear = parseInt(CURRENT_YEAR, 10);
-  const geographyOptions = useRegionsList(country, currentYear);
 
   // Step 1: Fetch all user associations in parallel
   const {
@@ -240,17 +229,11 @@ export const useUserReports = (userId: string) => {
                 reportHouseholds.push(household);
               }
             } else if (sim.populationType === 'geography') {
-              // Create Geography object from the ID
-              const regionData = geographyOptions?.find((r) => r.name === sim.populationId);
-              if (regionData) {
-                reportGeographies.push({
-                  id: `${sim.countryId}-${sim.populationId}`,
-                  countryId: sim.countryId,
-                  scope: 'subnational' as const,
-                  geographyId: sim.populationId,
-                  name: regionData.label || regionData.name,
-                } as Geography);
-              }
+              // Create Geography object from the regionCode (populationId)
+              reportGeographies.push({
+                countryId: sim.countryId,
+                regionCode: sim.populationId,
+              } as Geography);
             }
           }
         });
@@ -347,7 +330,6 @@ export const useUserReportById = (userReportId: string, options?: { enabled?: bo
   const queryNormalizer = useQueryNormalizer();
   const country = useCurrentCountry();
   const isEnabled = options?.enabled !== false;
-  const currentYear = parseInt(CURRENT_YEAR, 10);
 
   // Step 1: Fetch UserReport by userReportId to get the base reportId
   const {
@@ -428,7 +410,6 @@ export const useUserReportById = (userReportId: string, options?: { enabled?: bo
 
   const { data: policyAssociations } = usePolicyAssociationsByUser(userId || '');
   const { data: householdAssociations } = useHouseholdAssociationsByUser(userId || '');
-  const { data: geographyAssociations } = useGeographicAssociationsByUser(userId || '');
 
   const userSimulations = simulationAssociations?.filter((sa) =>
     finalReport?.simulationIds?.includes(sa.simulationId)
@@ -460,45 +441,18 @@ export const useUserReportById = (userReportId: string, options?: { enabled?: bo
   );
 
   // Step 7: Get geography data from simulations
-  const geographyOptions = useRegionsList(country, currentYear);
-
   const geographies: Geography[] = [];
   simulations.forEach((sim) => {
     if (sim.populationType === 'geography' && sim.populationId && sim.countryId) {
-      // Use the simulation's populationId as-is for the Geography id
-      // The populationId is already in the correct format from createGeographyFromScope
-      const isNational = sim.populationId === sim.countryId;
-
-      let name: string;
-      if (isNational) {
-        name = sim.countryId.toUpperCase();
-      } else {
-        // For subnational, extract the base geography ID and look up in metadata
-        // e.g., "us-fl" -> "fl", "uk-scotland" -> "scotland"
-        const parts = sim.populationId.split('-');
-        const baseGeographyId = parts.length > 1 ? parts.slice(1).join('-') : sim.populationId;
-
-        // Try to find the label in metadata
-        const regionData = geographyOptions?.find((r) => r.name === baseGeographyId);
-        name = regionData?.label || sim.populationId;
-      }
-
+      // Create simplified Geography with regionCode from simulation's populationId
       const geography: Geography = {
-        id: sim.populationId,
         countryId: sim.countryId,
-        scope: isNational ? 'national' : 'subnational',
-        geographyId: sim.populationId,
-        name,
+        regionCode: sim.populationId,
       };
 
       geographies.push(geography);
     }
   });
-
-  // Step 8: Filter geography associations for geographies used in this report
-  const userGeographies = geographyAssociations?.filter((ga) =>
-    geographies.some((g) => g.id === ga.geographyId)
-  );
 
   return {
     userReport,
@@ -510,7 +464,6 @@ export const useUserReportById = (userReportId: string, options?: { enabled?: bo
     userSimulations,
     userPolicies,
     userHouseholds,
-    userGeographies,
     isLoading:
       userReportLoading ||
       repLoading ||

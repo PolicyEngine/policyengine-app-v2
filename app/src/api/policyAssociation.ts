@@ -11,7 +11,11 @@ export interface UserPolicyStore {
   create: (policy: Omit<UserPolicy, 'id' | 'createdAt'>) => Promise<UserPolicy>;
   findByUser: (userId: string, countryId?: string) => Promise<UserPolicy[]>;
   findById: (userPolicyId: string) => Promise<UserPolicy | null>;
-  update: (userPolicyId: string, updates: Partial<UserPolicy>, userId: string) => Promise<UserPolicy>;
+  update: (
+    userPolicyId: string,
+    updates: Partial<UserPolicy>,
+    userId: string
+  ) => Promise<UserPolicy>;
   delete: (userPolicyId: string, userId: string) => Promise<void>;
 }
 
@@ -71,9 +75,7 @@ export class LocalStoragePolicyStore implements UserPolicyStore {
 
   async findByUser(userId: string, countryId?: string): Promise<UserPolicy[]> {
     const policies = this.getStoredPolicies();
-    return policies.filter(
-      (p) => p.userId === userId && (!countryId || p.countryId === countryId)
-    );
+    return policies.filter((p) => p.userId === userId && (!countryId || p.countryId === countryId));
   }
 
   async findById(userPolicyId: string): Promise<UserPolicy | null> {

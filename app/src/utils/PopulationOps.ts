@@ -10,7 +10,7 @@ export type HouseholdPopulationRef = {
 
 export type GeographyPopulationRef = {
   type: 'geography';
-  geographyId: string;
+  regionCode: string;
 };
 
 export type PopulationRef = HouseholdPopulationRef | GeographyPopulationRef;
@@ -34,23 +34,6 @@ export function matchPopulation<T>(
 }
 
 /**
- * Helper function for UserPopulation pattern matching
- */
-export function matchUserPopulation<T>(
-  population: UserPopulation,
-  handlers: {
-    household: (p: Extract<UserPopulation, { type: 'household' }>) => T;
-    geography: (p: Extract<UserPopulation, { type: 'geography' }>) => T;
-  }
-): T {
-  if (population.type === 'household') {
-    return handlers.household(population as Extract<UserPopulation, { type: 'household' }>);
-  }
-
-  return handlers.geography(population as Extract<UserPopulation, { type: 'geography' }>);
-}
-
-/**
  * Centralized operations for working with population references
  * Eliminates the need for if/else checks throughout the codebase
  */
@@ -61,7 +44,7 @@ export const PopulationOps = {
   getId: (p: PopulationRef): string =>
     matchPopulation(p, {
       household: (h) => h.householdId,
-      geography: (g) => g.geographyId,
+      geography: (g) => g.regionCode,
     }),
 
   /**
@@ -70,7 +53,7 @@ export const PopulationOps = {
   getLabel: (p: PopulationRef): string =>
     matchPopulation(p, {
       household: (h) => `Household ${h.householdId}`,
-      geography: (g) => `All households in ${g.geographyId}`,
+      geography: (g) => `All households in ${g.regionCode}`,
     }),
 
   /**
@@ -94,8 +77,7 @@ export const PopulationOps = {
         }) as Record<string, any>,
       geography: (g) =>
         ({
-          geography_id: g.geographyId,
-          region: g.geographyId, // Some APIs might expect 'region' instead
+          region: g.regionCode, // V2 API uses 'region' parameter
         }) as Record<string, any>,
     }),
 
@@ -105,7 +87,7 @@ export const PopulationOps = {
   getCacheKey: (p: PopulationRef): string =>
     matchPopulation(p, {
       household: (h) => `household:${h.householdId}`,
-      geography: (g) => `geography:${g.geographyId}`,
+      geography: (g) => `geography:${g.regionCode}`,
     }),
 
   /**
@@ -114,18 +96,15 @@ export const PopulationOps = {
   isValid: (p: PopulationRef): boolean =>
     matchPopulation(p, {
       household: (h) => !!h.householdId && h.householdId.length > 0,
-      geography: (g) => !!g.geographyId && g.geographyId.length > 0,
+      geography: (g) => !!g.regionCode && g.regionCode.length > 0,
     }),
 
   /**
    * Create a population reference from a UserPopulation
+   * Note: UserPopulation is now only UserHouseholdPopulation (geography associations removed)
    */
   fromUserPopulation: (up: UserPopulation): PopulationRef => {
-    if (up.type === 'household') {
-      return { type: 'household', householdId: up.householdId };
-    }
-
-    return { type: 'geography', geographyId: up.geographyId };
+    return { type: 'household', householdId: up.householdId };
   },
 
   /**
@@ -149,35 +128,26 @@ export const PopulationOps = {
   /**
    * Create a geography population reference
    */
-  geography: (geographyId: string): GeographyPopulationRef => ({
+  geography: (regionCode: string): GeographyPopulationRef => ({
     type: 'geography',
-    geographyId,
+    regionCode,
   }),
 };
 
 /**
- * Operations specific to UserPopulation
+ * Operations specific to UserPopulation (which is now just UserHouseholdPopulation)
+ * Note: Geographic populations are no longer stored as user associations.
  */
 export const UserPopulationOps = {
   /**
    * Get the ID for a UserPopulation
    */
-  getId: (p: UserPopulation): string =>
-    matchUserPopulation(p, {
-      household: (h) => h.householdId,
-      geography: (g) => g.geographyId,
-    }),
+  getId: (p: UserPopulation): string => p.householdId,
 
   /**
    * Get a display label for a UserPopulation
    */
-  getLabel: (p: UserPopulation): string =>
-    p.label ||
-    matchUserPopulation(p, {
-      household: (h) => `Household ${h.householdId}`,
-      geography: (g) =>
-        `${g.scope === 'national' ? 'National households' : 'Households in'} ${g.geographyId}`,
-    }),
+  getLabel: (p: UserPopulation): string => p.label || `Household ${p.householdId}`,
 
   /**
    * Convert UserPopulation to PopulationRef for use in Simulation
@@ -187,9 +157,5 @@ export const UserPopulationOps = {
   /**
    * Check if a UserPopulation is valid
    */
-  isValid: (p: UserPopulation): boolean =>
-    matchUserPopulation(p, {
-      household: (h) => !!h.householdId && !!h.userId,
-      geography: (g) => !!g.geographyId && !!g.countryId,
-    }),
+  isValid: (p: UserPopulation): boolean => !!p.householdId && !!p.userId,
 };

@@ -1,51 +1,95 @@
 /**
- * Hook for accessing regions based on country and simulation year
+ * Hook for accessing regions from the V2 API
  *
- * Regions are derived data, not stored state. This hook computes the correct
- * set of regions based on the country and simulation year, supporting multiple
- * versions of dynamic regions (congressional districts, constituencies, etc.)
+ * Regions are fetched from the API based on country. This replaces the
+ * previous static data approach with dynamic API-driven region data.
  */
 
-import { useMemo } from 'react';
-import { ResolvedRegions, resolveRegions } from '@/data/static/regions';
+import { useQuery, UseQueryResult } from '@tanstack/react-query';
+import { RegionsAdapter } from '@/adapters';
+import { fetchRegions, V2RegionMetadata } from '@/api/v2';
+import { regionKeys } from '@/libs/queryKeys';
+import { MetadataRegionEntry } from '@/types/metadata';
 
 /**
- * Get regions for a country and simulation year
+ * Result type for useRegions hook
+ */
+export interface RegionsResult {
+  regions: MetadataRegionEntry[];
+  isLoading: boolean;
+  error: Error | null;
+  /**
+   * Raw V2 API region data for when you need filter_field, filter_value, etc.
+   */
+  rawRegions: V2RegionMetadata[];
+}
+
+/**
+ * Get regions for a country from the V2 API
  *
- * This hook returns the appropriate set of regions based on:
- * - countryId: 'us' or 'uk'
- * - year: The simulation year (determines which version of dynamic regions to use)
+ * This hook fetches and returns all regions for a country.
+ * Regions include states, cities, congressional districts, constituencies, etc.
  *
- * The returned regions include both static regions (states, countries) and
- * dynamic regions (congressional districts, constituencies, local authorities)
- * resolved to the correct version for the given year.
+ * @param countryId - Country to fetch regions for (e.g., 'us', 'uk')
  *
  * @example
  * ```tsx
  * function PopulationScopeView() {
  *   const countryId = useCurrentCountry();
- *   const simulationYear = useSelector(selectSimulationYear);
+ *   const { regions, isLoading, error } = useRegions(countryId);
  *
- *   const { regions, versions } = useRegions(countryId, simulationYear);
+ *   if (isLoading) return <Spinner />;
+ *   if (error) return <ErrorMessage error={error} />;
  *
  *   // Filter for specific region types
- *   const constituencies = getUKConstituencies(regions);
- *   const districts = getUSCongressionalDistricts(regions);
+ *   const states = regions.filter(r => r.type === 'state');
+ *   const districts = regions.filter(r => r.type === 'congressional_district');
  *
  *   return <RegionSelector regions={regions} />;
  * }
  * ```
  */
-export function useRegions(countryId: string, year: number): ResolvedRegions {
-  return useMemo(() => resolveRegions(countryId, year), [countryId, year]);
+export function useRegions(countryId: string): RegionsResult {
+  const query: UseQueryResult<V2RegionMetadata[], Error> = useQuery({
+    queryKey: regionKeys.byCountry(countryId),
+    queryFn: () => fetchRegions(countryId),
+    enabled: !!countryId,
+    staleTime: 5 * 60 * 1000, // 5 minutes - regions don't change often
+  });
+
+  return {
+    regions: query.data ? RegionsAdapter.regionsFromV2(query.data) : [],
+    isLoading: query.isLoading,
+    error: query.error,
+    rawRegions: query.data ?? [],
+  };
 }
 
 /**
- * Get just the regions array for a country and year
+ * Get just the regions array for a country
  *
- * Convenience wrapper when you don't need version information.
+ * Convenience wrapper when you don't need loading/error state.
  */
-export function useRegionsList(countryId: string, year: number): ResolvedRegions['regions'] {
-  const { regions } = useRegions(countryId, year);
+export function useRegionsList(countryId: string): MetadataRegionEntry[] {
+  const { regions } = useRegions(countryId);
   return regions;
+}
+
+/**
+ * Get a specific region by code
+ *
+ * @param countryId - Country ID (e.g., 'us', 'uk')
+ * @param regionCode - Region code (e.g., 'state/ca', 'us')
+ */
+export function useRegionByCode(
+  countryId: string,
+  regionCode: string | undefined
+): V2RegionMetadata | undefined {
+  const { rawRegions } = useRegions(countryId);
+
+  if (!regionCode) {
+    return undefined;
+  }
+
+  return rawRegions.find((r) => r.code === regionCode);
 }

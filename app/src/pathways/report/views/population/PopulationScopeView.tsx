@@ -33,7 +33,11 @@ import USGeographicOptions from '../../components/geographicOptions/USGeographic
 interface PopulationScopeViewProps {
   countryId: (typeof countryIds)[number];
   regionData: any[];
-  onScopeSelected: (geography: Geography | null, scopeType: ScopeType) => void;
+  onScopeSelected: (
+    geography: Geography | null,
+    scopeType: ScopeType,
+    regionLabel?: string
+  ) => void;
   onBack?: () => void;
   onCancel?: () => void;
 }
@@ -60,6 +64,32 @@ export default function PopulationScopeView({
     setSelectedRegion(''); // Clear selection when scope changes
   };
 
+  /**
+   * Get the display label for the selected region
+   */
+  function getRegionLabel(): string {
+    // National scope uses country name
+    if (scope === US_REGION_TYPES.NATIONAL) {
+      return countryId === 'us' ? 'US' : 'UK';
+    }
+
+    // For subnational scopes, find the region in the appropriate list
+    if (!selectedRegion) {
+      return '';
+    }
+
+    // Check all region option lists for the selected value
+    const allOptions = [
+      ...usStates,
+      ...usDistricts,
+      ...ukCountries,
+      ...ukConstituencies,
+      ...ukLocalAuthorities,
+    ];
+    const matchedRegion = allOptions.find((r) => r.value === selectedRegion);
+    return matchedRegion?.label || '';
+  }
+
   function submissionHandler() {
     // Validate that if a regional scope is selected, a region must be chosen
     const needsRegion = [
@@ -77,7 +107,10 @@ export default function PopulationScopeView({
     // Create geography from scope selection
     const geography = createGeographyFromScope(scope, countryId, selectedRegion);
 
-    onScopeSelected(geography as Geography | null, scope);
+    // Get the region label for display
+    const regionLabel = getRegionLabel();
+
+    onScopeSelected(geography as Geography | null, scope, regionLabel);
   }
 
   const formInputs = (

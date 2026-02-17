@@ -59,18 +59,6 @@ export const householdKeys = {
   byUser: (userId: string) => [...householdKeys.all, 'user_id', userId] as const,
 };
 
-export const geographicAssociationKeys = {
-  all: ['geographic-associations'] as const,
-  byUser: (userId: string, countryId?: string) =>
-    countryId
-      ? ([...geographicAssociationKeys.all, 'user', userId, 'country', countryId] as const)
-      : ([...geographicAssociationKeys.all, 'user', userId] as const),
-  byGeography: (geographyId: string) =>
-    [...geographicAssociationKeys.all, 'geography', geographyId] as const,
-  specific: (userId: string, geographyId: string) =>
-    [...geographicAssociationKeys.all, 'user', userId, 'geography', geographyId] as const,
-};
-
 export const simulationKeys = {
   all: ['simulations'] as const,
   byId: (simulationId: string) => [...simulationKeys.all, 'simulation_id', simulationId] as const,
@@ -110,4 +98,11 @@ export const parameterValueKeys = {
   /** Query key for values of a parameter under a specific policy */
   byPolicyAndParameter: (policyId: string, parameterId: string) =>
     [...parameterValueKeys.all, 'policy', policyId, 'parameter', parameterId] as const,
+};
+
+export const regionKeys = {
+  all: ['regions'] as const,
+  byCountry: (countryId: string) => [...regionKeys.all, 'country', countryId] as const,
+  byCountryAndType: (countryId: string, regionType: string) =>
+    [...regionKeys.all, 'country', countryId, 'type', regionType] as const,
 };

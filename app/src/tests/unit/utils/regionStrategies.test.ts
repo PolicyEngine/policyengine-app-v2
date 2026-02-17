@@ -413,10 +413,8 @@ describe('regionStrategies', () => {
 
       // Then
       expect(result).toEqual({
-        id: 'uk',
         countryId: 'uk',
-        scope: 'national',
-        geographyId: 'uk',
+        regionCode: 'uk',
       });
     });
 
@@ -430,10 +428,8 @@ describe('regionStrategies', () => {
 
       // Then
       expect(result).toEqual({
-        id: 'us',
         countryId: 'us',
-        scope: 'national',
-        geographyId: 'us',
+        regionCode: 'us',
       });
     });
 
@@ -448,10 +444,8 @@ describe('regionStrategies', () => {
 
       // Then
       expect(result).toEqual({
-        id: 'uk-Sheffield Central', // ID uses display value
         countryId: 'uk',
-        scope: 'subnational',
-        geographyId: TEST_REGIONS.UK_CONSTITUENCY_PREFIXED, // Stores FULL prefixed value
+        regionCode: TEST_REGIONS.UK_CONSTITUENCY_PREFIXED, // Stores FULL prefixed value
       });
     });
 
@@ -466,10 +460,8 @@ describe('regionStrategies', () => {
 
       // Then
       expect(result).toEqual({
-        id: 'uk-england', // ID uses display value
         countryId: 'uk',
-        scope: 'subnational',
-        geographyId: TEST_REGIONS.UK_COUNTRY_PREFIXED, // Stores FULL prefixed value
+        regionCode: TEST_REGIONS.UK_COUNTRY_PREFIXED, // Stores FULL prefixed value
       });
     });
 
@@ -484,10 +476,8 @@ describe('regionStrategies', () => {
 
       // Then
       expect(result).toEqual({
-        id: 'uk-Maidstone', // ID uses display value
         countryId: 'uk',
-        scope: 'subnational',
-        geographyId: TEST_REGIONS.UK_LOCAL_AUTHORITY_PREFIXED, // Stores FULL prefixed value
+        regionCode: TEST_REGIONS.UK_LOCAL_AUTHORITY_PREFIXED, // Stores FULL prefixed value
       });
     });
 
@@ -502,10 +492,8 @@ describe('regionStrategies', () => {
 
       // Then
       expect(result).toEqual({
-        id: 'us-ca', // ID uses display value
         countryId: 'us',
-        scope: 'subnational',
-        geographyId: TEST_REGIONS.US_STATE, // Stores FULL prefixed value
+        regionCode: TEST_REGIONS.US_STATE, // Stores FULL prefixed value
       });
     });
 
@@ -520,10 +508,8 @@ describe('regionStrategies', () => {
 
       // Then
       expect(result).toEqual({
-        id: 'us-CA-01', // ID uses display value
         countryId: 'us',
-        scope: 'subnational',
-        geographyId: TEST_REGIONS.US_CONGRESSIONAL_DISTRICT, // Stores FULL prefixed value
+        regionCode: TEST_REGIONS.US_CONGRESSIONAL_DISTRICT, // Stores FULL prefixed value
       });
     });
 
@@ -574,10 +560,8 @@ describe('regionStrategies', () => {
 
       // Then - Should still work with legacy format
       expect(result).toEqual({
-        id: 'us-tx',
         countryId: 'us',
-        scope: 'subnational',
-        geographyId: 'tx', // Legacy format preserved
+        regionCode: 'tx', // Legacy format preserved
       });
     });
 
@@ -592,10 +576,8 @@ describe('regionStrategies', () => {
 
       // Then
       expect(result).toEqual({
-        id: 'us-ca',
         countryId: 'us',
-        scope: 'subnational',
-        geographyId: 'ca', // Legacy format preserved
+        regionCode: 'ca', // Legacy format preserved
       });
     });
   });

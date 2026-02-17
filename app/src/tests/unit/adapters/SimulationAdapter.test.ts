@@ -105,8 +105,7 @@ describe('SimulationAdapter', () => {
 
       // Then
       expect(payload).toEqual({
-        population_id: TEST_POPULATION_IDS.HOUSEHOLD_1,
-        population_type: 'household',
+        household_id: TEST_POPULATION_IDS.HOUSEHOLD_1,
         policy_id: 1,
       });
     });
@@ -123,8 +122,7 @@ describe('SimulationAdapter', () => {
 
       // Then
       expect(payload).toEqual({
-        population_id: TEST_POPULATION_IDS.GEOGRAPHY_US,
-        population_type: 'geography',
+        region: TEST_POPULATION_IDS.GEOGRAPHY_US,
         policy_id: 1,
       });
     });

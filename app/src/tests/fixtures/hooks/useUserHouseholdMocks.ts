@@ -1,9 +1,7 @@
-// Fixtures for useUserHouseholds and useUserGeographics hooks
+// Fixtures for useUserHouseholds hooks
+// Note: useUserGeographics removed - geographies are no longer stored as user associations
 import { Geography } from '@/types/ingredients/Geography';
-import {
-  UserGeographyPopulation,
-  UserHouseholdPopulation,
-} from '@/types/ingredients/UserPopulation';
+import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
 
 // Test household IDs
@@ -115,57 +113,17 @@ export const mockHouseholdMetadata2 = {
   isError: false,
 };
 
-// Mock geographic metadata
+// Note: Geographic metadata mocks removed - geographies are no longer stored as user associations
+
+// Mock Geography objects (for use in simulations, not user associations)
 export const mockGeography1: Geography = {
-  id: TEST_GEOGRAPHY_ID_1,
-  countryId: 'us' as any,
-  scope: 'national',
-  geographyId: 'us',
-};
-
-export const mockGeographyAssociation1: UserGeographyPopulation = {
-  id: 'association-3',
-  type: 'geography',
-  userId: 'user-123',
-  label: TEST_GEOGRAPHY_LABEL,
   countryId: 'us',
-  scope: 'national',
-  geographyId: 'us',
-  createdAt: '2025-01-03T00:00:00Z',
-};
-
-export const mockGeographicMetadata = {
-  association: mockGeographyAssociation1,
-  geography: mockGeography1,
-  isLoading: false,
-  error: null,
-  isError: false,
+  regionCode: 'us',
 };
 
 export const mockGeography2: Geography = {
-  id: TEST_GEOGRAPHY_ID_2,
-  countryId: 'us' as any,
-  scope: 'subnational',
-  geographyId: 'ca',
-};
-
-export const mockGeographyAssociation2: UserGeographyPopulation = {
-  id: 'association-4',
-  type: 'geography',
-  userId: 'user-123',
-  label: 'California Population',
   countryId: 'us',
-  scope: 'subnational',
-  geographyId: 'ca',
-  createdAt: '2025-01-04T00:00:00Z',
-};
-
-export const mockGeographicMetadata2 = {
-  association: mockGeographyAssociation2,
-  geography: mockGeography2,
-  isLoading: false,
-  error: null,
-  isError: false,
+  regionCode: 'ca',
 };
 
 // Mock hook return values
@@ -193,26 +151,4 @@ export const mockUseUserHouseholdsEmpty = {
   associations: [],
 };
 
-export const mockUseUserGeographicsSuccess = {
-  data: [mockGeographicMetadata, mockGeographicMetadata2],
-  isLoading: false,
-  isError: false,
-  error: null,
-  associations: [mockGeographyAssociation1, mockGeographyAssociation2],
-};
-
-export const mockUseUserGeographicsLoading = {
-  data: undefined,
-  isLoading: true,
-  isError: false,
-  error: null,
-  associations: undefined,
-};
-
-export const mockUseUserGeographicsEmpty = {
-  data: [],
-  isLoading: false,
-  isError: false,
-  error: null,
-  associations: [],
-};
+// Note: useUserGeographics mocks removed - geographies are no longer stored as user associations

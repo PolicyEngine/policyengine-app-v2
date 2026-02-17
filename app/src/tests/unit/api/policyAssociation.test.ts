@@ -208,7 +208,11 @@ describe('ApiPolicyStore', () => {
       });
 
       // When
-      const result = await store.update('user-policy-abc123', { label: 'Updated Label' }, 'user-123');
+      const result = await store.update(
+        'user-policy-abc123',
+        { label: 'Updated Label' },
+        'user-123'
+      );
 
       // Then
       expect(fetch).toHaveBeenCalledWith(
@@ -230,9 +234,9 @@ describe('ApiPolicyStore', () => {
       });
 
       // When/Then
-      await expect(store.update('user-policy-abc123', { label: 'Updated Label' }, 'user-123')).rejects.toThrow(
-        'Failed to update policy association'
-      );
+      await expect(
+        store.update('user-policy-abc123', { label: 'Updated Label' }, 'user-123')
+      ).rejects.toThrow('Failed to update policy association');
     });
   });
 
@@ -445,9 +449,9 @@ describe('LocalStoragePolicyStore', () => {
       // Given - no policy created
 
       // When & Then
-      await expect(store.update('sup-nonexistent', { label: 'Updated Label' }, 'user-123')).rejects.toThrow(
-        'UserPolicy with id sup-nonexistent not found'
-      );
+      await expect(
+        store.update('sup-nonexistent', { label: 'Updated Label' }, 'user-123')
+      ).rejects.toThrow('UserPolicy with id sup-nonexistent not found');
     });
 
     it('given existing policy then updatedAt timestamp is set', async () => {

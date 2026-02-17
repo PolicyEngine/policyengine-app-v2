@@ -26,13 +26,6 @@ vi.mock('@/hooks/useCreateSimulation', () => ({
   })),
 }));
 
-vi.mock('@/hooks/useUserGeographic', () => ({
-  useCreateGeographicAssociation: vi.fn(() => ({
-    mutateAsync: vi.fn(),
-    isPending: false,
-  })),
-}));
-
 vi.mock('@/hooks/useUserHousehold', () => ({
   useUserHouseholds: vi.fn(() => ({ data: [], isLoading: false })),
 }));

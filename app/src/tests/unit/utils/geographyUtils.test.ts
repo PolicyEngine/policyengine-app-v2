@@ -272,10 +272,8 @@ describe('geographyUtils', () => {
     it('given UK national geography then returns national', () => {
       // Given
       const geography: Geography = {
-        id: 'uk-uk',
         countryId: 'uk',
-        scope: 'national',
-        geographyId: 'uk',
+        regionCode: 'uk',
       };
 
       // When
@@ -288,10 +286,8 @@ describe('geographyUtils', () => {
     it('given UK country-level geography then returns country', () => {
       // Given
       const geography: Geography = {
-        id: 'uk-england',
         countryId: 'uk',
-        scope: 'subnational',
-        geographyId: 'country/england',
+        regionCode: 'country/england',
       };
 
       // When
@@ -304,10 +300,8 @@ describe('geographyUtils', () => {
     it('given UK constituency geography then returns constituency', () => {
       // Given
       const geography: Geography = {
-        id: 'uk-sheffield-central',
         countryId: 'uk',
-        scope: 'subnational',
-        geographyId: 'constituency/Sheffield Central',
+        regionCode: 'constituency/Sheffield Central',
       };
 
       // When
@@ -320,10 +314,8 @@ describe('geographyUtils', () => {
     it('given UK local authority geography then returns local_authority', () => {
       // Given
       const geography: Geography = {
-        id: 'uk-manchester',
         countryId: 'uk',
-        scope: 'subnational',
-        geographyId: 'local_authority/Manchester',
+        regionCode: 'local_authority/Manchester',
       };
 
       // When
@@ -336,10 +328,8 @@ describe('geographyUtils', () => {
     it('given US geography then returns null', () => {
       // Given
       const geography: Geography = {
-        id: 'us-ca',
         countryId: 'us',
-        scope: 'subnational',
-        geographyId: 'state/ca',
+        regionCode: 'state/ca',
       };
 
       // When
@@ -352,10 +342,8 @@ describe('geographyUtils', () => {
     it('given UK geography with unknown prefix then returns null', () => {
       // Given
       const geography: Geography = {
-        id: 'uk-unknown',
         countryId: 'uk',
-        scope: 'subnational',
-        geographyId: 'unknown/region',
+        regionCode: 'unknown/region',
       };
 
       // When
@@ -370,10 +358,8 @@ describe('geographyUtils', () => {
     it('given UK national geography then returns false', () => {
       // Given
       const geography: Geography = {
-        id: 'uk-uk',
         countryId: 'uk',
-        scope: 'national',
-        geographyId: 'uk',
+        regionCode: 'uk',
       };
 
       // When
@@ -386,10 +372,8 @@ describe('geographyUtils', () => {
     it('given UK country-level geography then returns false', () => {
       // Given
       const geography: Geography = {
-        id: 'uk-england',
         countryId: 'uk',
-        scope: 'subnational',
-        geographyId: 'country/england',
+        regionCode: 'country/england',
       };
 
       // When
@@ -402,10 +386,8 @@ describe('geographyUtils', () => {
     it('given UK constituency geography then returns true', () => {
       // Given
       const geography: Geography = {
-        id: 'uk-sheffield-central',
         countryId: 'uk',
-        scope: 'subnational',
-        geographyId: 'constituency/Sheffield Central',
+        regionCode: 'constituency/Sheffield Central',
       };
 
       // When
@@ -418,10 +400,8 @@ describe('geographyUtils', () => {
     it('given UK local authority geography then returns true', () => {
       // Given
       const geography: Geography = {
-        id: 'uk-manchester',
         countryId: 'uk',
-        scope: 'subnational',
-        geographyId: 'local_authority/Manchester',
+        regionCode: 'local_authority/Manchester',
       };
 
       // When
@@ -434,10 +414,8 @@ describe('geographyUtils', () => {
     it('given US geography then returns false', () => {
       // Given
       const geography: Geography = {
-        id: 'us-ca',
         countryId: 'us',
-        scope: 'subnational',
-        geographyId: 'state/ca',
+        regionCode: 'state/ca',
       };
 
       // When

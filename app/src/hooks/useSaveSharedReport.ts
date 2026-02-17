@@ -13,7 +13,6 @@ import { ReportIngredientsInput } from '@/hooks/utils/useFetchReportIngredients'
 import { CountryId } from '@/libs/countries';
 import { UserReport } from '@/types/ingredients/UserReport';
 import { getShareDataUserReportId } from '@/utils/shareUtils';
-import { useCreateGeographicAssociation } from './useUserGeographic';
 import { useCreateHouseholdAssociation } from './useUserHousehold';
 import { useCreatePolicyAssociation } from './useUserPolicy';
 import { useCreateReportAssociation, useUserReportStore } from './useUserReportAssociations';
@@ -37,7 +36,6 @@ export function useSaveSharedReport() {
   const createSimulationAssociation = useCreateSimulationAssociation();
   const createPolicyAssociation = useCreatePolicyAssociation();
   const createHouseholdAssociation = useCreateHouseholdAssociation();
-  const createGeographicAssociation = useCreateGeographicAssociation();
   const reportStore = useUserReportStore();
 
   // Get currentLawId from static metadata to skip creating associations for current law policies
@@ -84,6 +82,7 @@ export function useSaveSharedReport() {
         createPolicyAssociation.mutateAsync({
           userId,
           policyId: policy.policyId,
+          countryId: policy.countryId,
           label: policy.label ?? undefined,
         })
       );
@@ -98,23 +97,14 @@ export function useSaveSharedReport() {
       })
     );
 
-    // Save geographies
-    const geographyPromises = shareData.userGeographies.map((geo) =>
-      createGeographicAssociation.mutateAsync({
-        userId,
-        geographyId: geo.geographyId,
-        countryId: geo.countryId as CountryId,
-        scope: geo.scope,
-        label: geo.label ?? undefined,
-      })
-    );
+    // Note: Geographies are no longer saved as user associations.
+    // They are constructed from simulation data when needed.
 
     // Run all ingredient saves in parallel (best-effort)
     const allResults = await Promise.allSettled([
       ...simPromises,
       ...policyPromises,
       ...householdPromises,
-      ...geographyPromises,
     ]);
 
     // Save the report (required)
@@ -158,8 +148,7 @@ export function useSaveSharedReport() {
     createReportAssociation.isPending ||
     createSimulationAssociation.isPending ||
     createPolicyAssociation.isPending ||
-    createHouseholdAssociation.isPending ||
-    createGeographicAssociation.isPending;
+    createHouseholdAssociation.isPending;
 
   return {
     saveSharedReport,

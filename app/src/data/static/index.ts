@@ -20,11 +20,6 @@ export {
 // Basic input fields
 export { getBasicInputs, US_BASIC_INPUTS, UK_BASIC_INPUTS } from './basicInputs';
 
-// Static region definitions (states and countries only)
-// For full regions including congressional districts, constituencies, etc.,
-// use the versioned regions module: import { resolveRegions } from '@/data/static/regions'
-export { US_REGIONS, UK_REGIONS } from './staticRegions';
-
 // Modelled policies
 export {
   getModelledPolicies,
@@ -48,11 +43,10 @@ export {
 export { getTaxYears, getDateRange } from './taxYears';
 
 /**
- * Get all static data for a country (excluding regions)
+ * Get all static data for a country
  *
- * Regions are handled separately via the versioned regions module
- * because they vary by simulation year. Use resolveRegions(countryId, year)
- * from '@/data/static/regions' for year-aware region resolution.
+ * Note: Regions are now fetched from the V2 API via useRegions() hook.
+ * See @/hooks/useRegions for region data.
  */
 export function getStaticData(countryId: string) {
   return {

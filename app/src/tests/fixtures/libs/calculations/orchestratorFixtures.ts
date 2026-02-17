@@ -36,10 +36,8 @@ export const createMockCalcConfig = (overrides?: Partial<CalcStartConfig>): Calc
     household1: null,
     household2: null,
     geography1: {
-      id: 'us-us',
       countryId: ORCHESTRATOR_TEST_CONSTANTS.COUNTRY_IDS.US,
-      scope: 'national',
-      geographyId: 'us',
+      regionCode: 'us',
     },
     geography2: null,
   },

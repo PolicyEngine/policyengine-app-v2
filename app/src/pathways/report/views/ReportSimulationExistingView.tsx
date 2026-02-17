@@ -2,8 +2,11 @@ import { useState } from 'react';
 import { Text } from '@mantine/core';
 import PathwayView from '@/components/common/PathwayView';
 import { MOCK_USER_ID } from '@/constants';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useRegions } from '@/hooks/useRegions';
 import { EnhancedUserSimulation, useUserSimulations } from '@/hooks/useUserSimulations';
 import { SimulationStateProps } from '@/types/pathwayState';
+import { getCountryLabel, getRegionLabel, isNationalGeography } from '@/utils/geographyUtils';
 import { arePopulationsCompatible } from '@/utils/populationCompatibility';
 
 interface ReportSimulationExistingViewProps {
@@ -24,9 +27,22 @@ export default function ReportSimulationExistingView({
   onCancel,
 }: ReportSimulationExistingViewProps) {
   const userId = MOCK_USER_ID.toString();
+  const countryId = useCurrentCountry();
+  const { regions } = useRegions(countryId);
 
   const { data, isLoading, isError, error } = useUserSimulations(userId);
   const [localSimulation, setLocalSimulation] = useState<EnhancedUserSimulation | null>(null);
+
+  // Helper to get geography display label in "Households in {label}" format
+  function getGeographyLabel(enhancedSim: EnhancedUserSimulation): string | undefined {
+    if (!enhancedSim.geography) {
+      return undefined;
+    }
+    const label = isNationalGeography(enhancedSim.geography)
+      ? getCountryLabel(enhancedSim.geography.countryId)
+      : getRegionLabel(enhancedSim.geography.regionCode, regions);
+    return `Households in ${label}`;
+  }
 
   function canProceed() {
     if (!localSimulation) {
@@ -95,11 +111,9 @@ export default function ReportSimulationExistingView({
 
   // Get other simulation's population ID (base ingredient ID) for compatibility check
   // For household populations, use household.id
-  // For geography populations, use geography.geographyId (the base geography identifier)
+  // For geography populations, use geography.regionCode
   const otherPopulationId =
-    otherSimulation?.population.household?.id ||
-    otherSimulation?.population.geography?.geographyId ||
-    otherSimulation?.population.geography?.id;
+    otherSimulation?.population.household?.id || otherSimulation?.population.geography?.regionCode;
 
   // Sort simulations to show compatible first, then incompatible
   const sortedSimulations = [...filteredSimulations].sort((a, b) => {
@@ -130,7 +144,7 @@ export default function ReportSimulationExistingView({
     const policyLabel =
       enhancedSim.userPolicy?.label || enhancedSim.policy?.label || enhancedSim.policy?.id;
     const populationLabel =
-      enhancedSim.userHousehold?.label || enhancedSim.geography?.name || simulation.populationId;
+      enhancedSim.userHousehold?.label || getGeographyLabel(enhancedSim) || simulation.populationId;
 
     if (policyLabel && populationLabel) {
       subtitle = subtitle

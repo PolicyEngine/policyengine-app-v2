@@ -16,7 +16,6 @@ import { fetchHouseholdById } from '@/api/household';
 import { fetchPolicyById } from '@/api/policy';
 import { fetchReportById } from '@/api/report';
 import { fetchSimulationById } from '@/api/simulation';
-import { CURRENT_YEAR } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useRegionsList } from '@/hooks/useStaticMetadata';
 import { householdKeys, policyKeys, reportKeys, simulationKeys } from '@/libs/queryKeys';
@@ -26,10 +25,7 @@ import { Policy } from '@/types/ingredients/Policy';
 import { Report } from '@/types/ingredients/Report';
 import { Simulation } from '@/types/ingredients/Simulation';
 import { UserPolicy } from '@/types/ingredients/UserPolicy';
-import {
-  UserGeographyPopulation,
-  UserHouseholdPopulation,
-} from '@/types/ingredients/UserPopulation';
+import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { UserReport } from '@/types/ingredients/UserReport';
 import { UserSimulation } from '@/types/ingredients/UserSimulation';
 import { combineLoadingStates, extractUniqueIds, useParallelQueries } from './normalizedUtils';
@@ -40,40 +36,25 @@ type GeographyOption = { name: string; label: string };
 /**
  * Construct Geography objects from geography-type simulations
  *
- * Extracts geography metadata from simulations and builds Geography objects.
- * For subnational regions, looks up display names from metadata.
+ * Builds simplified Geography objects using regionCode from simulation's populationId.
+ * Display names are looked up from region metadata at render time via useRegions().
  *
  * @param simulations - Array of simulations to extract geographies from
- * @param geographyOptions - Region metadata for name lookups
+ * @param _geographyOptions - Deprecated: lookup now happens at display time
  * @returns Array of Geography objects
  */
 export function buildGeographiesFromSimulations(
   simulations: Simulation[],
-  geographyOptions: GeographyOption[] | undefined
+  _geographyOptions: GeographyOption[] | undefined
 ): Geography[] {
   const geographies: Geography[] = [];
 
   simulations.forEach((sim) => {
     if (sim.populationType === 'geography' && sim.populationId && sim.countryId) {
-      const isNational = sim.populationId === sim.countryId;
-
-      let name: string;
-      if (isNational) {
-        name = sim.countryId.toUpperCase();
-      } else {
-        // For subnational, extract the base geography ID and look up in metadata
-        const parts = sim.populationId.split('-');
-        const baseGeographyId = parts.length > 1 ? parts.slice(1).join('-') : sim.populationId;
-        const regionData = geographyOptions?.find((r) => r.name === baseGeographyId);
-        name = regionData?.label || sim.populationId;
-      }
-
+      // Create simplified Geography object with regionCode from simulation's populationId
       geographies.push({
-        id: sim.populationId,
         countryId: sim.countryId,
-        scope: isNational ? 'national' : 'subnational',
-        geographyId: sim.populationId,
-        name,
+        regionCode: sim.populationId,
       });
     }
   });
@@ -97,10 +78,6 @@ export type ShareableUserHousehold = Omit<
   UserHouseholdPopulation,
   'userId' | 'createdAt' | 'updatedAt'
 >;
-export type ShareableUserGeography = Omit<
-  UserGeographyPopulation,
-  'userId' | 'createdAt' | 'updatedAt'
->;
 
 /**
  * Input for useFetchReportIngredients
@@ -111,7 +88,6 @@ export interface ReportIngredientsInput {
   userSimulations: ShareableUserSimulation[];
   userPolicies: ShareableUserPolicy[];
   userHouseholds: ShareableUserHousehold[];
-  userGeographies: ShareableUserGeography[];
 }
 
 /**
@@ -140,7 +116,6 @@ export function expandUserAssociations(
   userSimulations: UserSimulation[];
   userPolicies: UserPolicy[];
   userHouseholds: UserHouseholdPopulation[];
-  userGeographies: UserGeographyPopulation[];
 } {
   return {
     userReport: {
@@ -158,10 +133,6 @@ export function expandUserAssociations(
     })),
     userHouseholds: input.userHouseholds.map((h) => ({
       ...h,
-      userId,
-    })),
-    userGeographies: input.userGeographies.map((g) => ({
-      ...g,
       userId,
     })),
   };
@@ -187,8 +158,7 @@ export function useFetchReportIngredients(
   const country = input?.userReport.countryId ?? currentCountry;
 
   // Get geography metadata for building Geography objects from static metadata
-  const currentYear = parseInt(CURRENT_YEAR, 10);
-  const geographyOptions = useRegionsList(country, currentYear);
+  const geographyOptions = useRegionsList(country);
 
   // Step 1: Fetch the base Report using reportId from userReport
   const reportId = input?.userReport.reportId;

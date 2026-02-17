@@ -16,6 +16,20 @@ import {
   resetAllMocks,
 } from '@/tests/fixtures/pathways/report/views/ReportViewMocks';
 
+// Mock hooks for country context and regions
+vi.mock('@/hooks/useCurrentCountry', () => ({
+  useCurrentCountry: vi.fn(() => 'us'),
+}));
+
+vi.mock('@/hooks/useRegions', () => ({
+  useRegions: vi.fn(() => ({
+    regions: [],
+    isLoading: false,
+    error: null,
+    rawRegions: [],
+  })),
+}));
+
 vi.mock('@/hooks/useUserSimulations', () => ({
   useUserSimulations: vi.fn(),
 }));

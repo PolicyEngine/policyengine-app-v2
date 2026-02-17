@@ -1,8 +1,5 @@
 import { UserPolicy } from '@/types/ingredients/UserPolicy';
-import {
-  UserGeographyPopulation,
-  UserHouseholdPopulation,
-} from '@/types/ingredients/UserPopulation';
+import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { UserReport } from '@/types/ingredients/UserReport';
 import { UserSimulation } from '@/types/ingredients/UserSimulation';
 
@@ -59,25 +56,14 @@ export const createMockHouseholdAssociation = (
   ...overrides,
 });
 
-// Mock UserGeographyPopulation
-export const createMockGeographyAssociation = (
-  overrides?: Partial<UserGeographyPopulation>
-): UserGeographyPopulation => ({
-  type: 'geography',
-  userId: TEST_IDS.USER_ID,
-  geographyId: TEST_IDS.GEOGRAPHY_ID,
-  countryId: TEST_COUNTRIES.US,
-  scope: 'subnational',
-  label: TEST_LABELS.GEOGRAPHY,
-  createdAt: TEST_TIMESTAMPS.CREATED_AT,
-  ...overrides,
-});
+// Note: UserGeographyPopulation removed - geographies are no longer stored as user associations
 
 // Mock UserPolicy
 export const createMockPolicyAssociation = (overrides?: Partial<UserPolicy>): UserPolicy => ({
   id: TEST_IDS.USER_POLICY_ID,
   userId: TEST_IDS.USER_ID,
   policyId: TEST_IDS.POLICY_ID,
+  countryId: 'us',
   label: TEST_LABELS.POLICY,
   createdAt: TEST_TIMESTAMPS.CREATED_AT,
   isCreated: true,
@@ -113,8 +99,6 @@ export const createMockReportAssociation = (overrides?: Partial<UserReport>): Us
 // Error messages
 export const ERROR_MESSAGES = {
   HOUSEHOLD_NOT_FOUND: (id: string) => `UserHousehold with id ${id} not found`,
-  GEOGRAPHY_NOT_FOUND: (userId: string, geographyId: string) =>
-    `UserGeography with userId ${userId} and geographyId ${geographyId} not found`,
   POLICY_NOT_FOUND: (id: string) => `UserPolicy with id ${id} not found`,
   SIMULATION_NOT_FOUND: (id: string) => `UserSimulation with id ${id} not found`,
   REPORT_NOT_FOUND: (id: string) => `UserReport with id ${id} not found`,

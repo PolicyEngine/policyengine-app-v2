@@ -3,18 +3,16 @@
  *
  * Tests the React hook that provides on-demand parameter tree access with caching.
  */
-import { describe, expect, test, vi, beforeEach } from 'vitest';
 import { renderHook } from '@test-utils';
+import { useSelector } from 'react-redux';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { useLazyParameterTree } from '@/hooks/useLazyParameterTree';
 import {
   createMockRootState,
-  EXPECTED_GOV_CHILDREN,
-  EXPECTED_TAX_CHILDREN,
   MOCK_METADATA_EMPTY,
   MOCK_METADATA_ERROR,
   MOCK_METADATA_LOADED,
   MOCK_METADATA_LOADING,
-  MOCK_PARAMETERS_FOR_HOOK,
   TEST_ERROR_MESSAGE,
 } from '@/tests/fixtures/hooks/useLazyParameterTreeMocks';
 
@@ -26,8 +24,6 @@ vi.mock('react-redux', async () => {
     useSelector: vi.fn(),
   };
 });
-
-import { useSelector } from 'react-redux';
 
 describe('useLazyParameterTree', () => {
   beforeEach(() => {

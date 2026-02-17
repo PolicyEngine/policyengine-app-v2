@@ -44,13 +44,21 @@ export async function createSimulation(
 ): Promise<{ result: { simulation_id: string } }> {
   const url = `${BASE_URL}/${countryId}/simulation`;
 
+  // Translate V2-style payload to V1 wire format; note this is temporary
+  // until we migrate to v2 simulation in a future PR
+  const v1Payload = {
+    population_id: data.region ?? data.household_id,
+    population_type: data.region ? 'geography' : 'household',
+    policy_id: data.policy_id,
+  };
+
   const response = await fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Accept: 'application/json',
     },
-    body: JSON.stringify(data),
+    body: JSON.stringify(v1Payload),
   });
 
   if (!response.ok) {

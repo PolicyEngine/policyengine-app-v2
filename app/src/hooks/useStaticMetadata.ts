@@ -7,15 +7,17 @@
  * Usage:
  * ```typescript
  * // Get everything
- * const { entities, basicInputs, timePeriods, regions, modelledPolicies, currentLawId } =
- *   useStaticMetadata('us', 2025);
+ * const { entities, basicInputs, timePeriods, modelledPolicies, currentLawId } =
+ *   useStaticMetadata('us');
  *
  * // Or destructure just what you need
- * const { entities, basicInputs } = useStaticMetadata('us', 2025);
+ * const { entities, basicInputs } = useStaticMetadata('us');
  *
  * // Individual hooks are also available
  * const entities = useEntities('us');
- * const { regions, versions } = useRegions('us', 2025);
+ *
+ * // For regions, use the V2 API hook:
+ * const { regions, isLoading } = useRegions('us');
  * ```
  */
 
@@ -30,11 +32,11 @@ import {
   type ModelledPolicies,
   type TimePeriodOption,
 } from '@/data/static';
-import { resolveRegions, type ResolvedRegions } from '@/data/static/regions';
-import { MetadataRegionEntry } from '@/types/metadata';
 
 /**
  * All static metadata for a country
+ *
+ * Note: Regions are now fetched from the V2 API via useRegions() hook.
  */
 export interface StaticMetadata {
   /** Entity definitions (person, family, household, etc.) */
@@ -43,10 +45,6 @@ export interface StaticMetadata {
   basicInputs: string[];
   /** Available simulation years */
   timePeriods: TimePeriodOption[];
-  /** Geographic regions (states, districts, constituencies, etc.) */
-  regions: MetadataRegionEntry[];
-  /** Region version info (which boundary set is active) */
-  regionVersions: ResolvedRegions['versions'];
   /** Pre-configured policy options */
   modelledPolicies: ModelledPolicies;
   /** ID of the current law baseline policy */
@@ -54,28 +52,26 @@ export interface StaticMetadata {
 }
 
 /**
- * Get all static metadata for a country and simulation year
+ * Get all static metadata for a country
  *
  * This is the primary hook for accessing static metadata. It bundles
  * all static data into a single object for easy destructuring.
  *
+ * Note: Regions are not included here - use useRegions() from @/hooks/useRegions
+ * to fetch region data from the V2 API.
+ *
  * @param countryId - Country code ('us' or 'uk')
- * @param year - Simulation year (affects which region boundaries are used)
  */
-export function useStaticMetadata(countryId: string, year: number): StaticMetadata {
+export function useStaticMetadata(countryId: string): StaticMetadata {
   return useMemo(() => {
-    const { regions, versions } = resolveRegions(countryId, year);
-
     return {
       entities: getEntities(countryId),
       basicInputs: getBasicInputs(countryId),
       timePeriods: getTimePeriods(countryId),
-      regions,
-      regionVersions: versions,
       modelledPolicies: getModelledPolicies(countryId),
       currentLawId: getCurrentLawId(countryId),
     };
-  }, [countryId, year]);
+  }, [countryId]);
 }
 
 // ============================================================================

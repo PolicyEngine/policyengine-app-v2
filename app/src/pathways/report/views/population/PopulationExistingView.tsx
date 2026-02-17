@@ -1,21 +1,16 @@
 /**
- * PopulationExistingView - View for selecting existing population
- * Duplicated from SimulationSelectExistingPopulationFrame
- * Props-based instead of Redux-based
+ * PopulationExistingView - View for selecting existing household population
+ *
+ * Note: Geographic populations are no longer stored as user associations.
+ * Users select a geography per-simulation via the scope selection flow.
+ * This view now only shows household populations.
  */
 
 import { useState } from 'react';
 import { Text } from '@mantine/core';
 import { HouseholdAdapter } from '@/adapters';
 import PathwayView from '@/components/common/PathwayView';
-import { CURRENT_YEAR, MOCK_USER_ID } from '@/constants';
-import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { useRegionsList } from '@/hooks/useStaticMetadata';
-import {
-  isGeographicMetadataWithAssociation,
-  UserGeographicMetadataWithAssociation,
-  useUserGeographics,
-} from '@/hooks/useUserGeographic';
+import { MOCK_USER_ID } from '@/constants';
 import {
   isHouseholdMetadataWithAssociation,
   UserHouseholdMetadataWithAssociation,
@@ -23,14 +18,12 @@ import {
 } from '@/hooks/useUserHousehold';
 import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
-import { getCountryLabel, getRegionLabel } from '@/utils/geographyUtils';
-import {
-  isGeographicAssociationReady,
-  isHouseholdAssociationReady,
-} from '@/utils/validation/ingredientValidation';
+import { isHouseholdAssociationReady } from '@/utils/validation/ingredientValidation';
 
 interface PopulationExistingViewProps {
   onSelectHousehold: (householdId: string, household: Household, label: string) => void;
+  // Keep onSelectGeography for API compatibility, but it won't be called from this view
+  // since users now select geography via the scope flow, not from saved associations
   onSelectGeography: (geographyId: string, geography: Geography, label: string) => void;
   onBack?: () => void;
   onCancel?: () => void;
@@ -38,65 +31,27 @@ interface PopulationExistingViewProps {
 
 export default function PopulationExistingView({
   onSelectHousehold,
-  onSelectGeography,
   onBack,
   onCancel,
 }: PopulationExistingViewProps) {
   const userId = MOCK_USER_ID.toString();
-  const countryId = useCurrentCountry();
-  const currentYear = parseInt(CURRENT_YEAR, 10);
-  const regions = useRegionsList(countryId, currentYear);
 
-  // Fetch household populations
-  const {
-    data: householdData,
-    isLoading: isHouseholdLoading,
-    isError: isHouseholdError,
-    error: householdError,
-  } = useUserHouseholds(userId);
+  // Fetch household populations only
+  // Geographic populations are no longer stored as user associations
+  const { data: householdData, isLoading, isError, error } = useUserHouseholds(userId);
 
-  // Fetch geographic populations
-  const {
-    data: geographicData,
-    isLoading: isGeographicLoading,
-    isError: isGeographicError,
-    error: geographicError,
-  } = useUserGeographics(userId);
-
-  const [localPopulation, setLocalPopulation] = useState<
-    UserHouseholdMetadataWithAssociation | UserGeographicMetadataWithAssociation | null
-  >(null);
-
-  // Combined loading and error states
-  const isLoading = isHouseholdLoading || isGeographicLoading;
-  const isError = isHouseholdError || isGeographicError;
-  const error = householdError || geographicError;
+  const [localPopulation, setLocalPopulation] =
+    useState<UserHouseholdMetadataWithAssociation | null>(null);
 
   function canProceed() {
     if (!localPopulation) {
       return false;
     }
 
-    if (isHouseholdMetadataWithAssociation(localPopulation)) {
-      return isHouseholdAssociationReady(localPopulation);
-    }
-
-    if (isGeographicMetadataWithAssociation(localPopulation)) {
-      return isGeographicAssociationReady(localPopulation);
-    }
-
-    return false;
+    return isHouseholdAssociationReady(localPopulation);
   }
 
   function handleHouseholdPopulationSelect(association: UserHouseholdMetadataWithAssociation) {
-    if (!association) {
-      return;
-    }
-
-    setLocalPopulation(association);
-  }
-
-  function handleGeographicPopulationSelect(association: UserGeographicMetadataWithAssociation) {
     if (!association) {
       return;
     }
@@ -109,15 +64,11 @@ export default function PopulationExistingView({
       return;
     }
 
-    if (isHouseholdMetadataWithAssociation(localPopulation)) {
-      handleSubmitHouseholdPopulation();
-    } else if (isGeographicMetadataWithAssociation(localPopulation)) {
-      handleSubmitGeographicPopulation();
-    }
+    handleSubmitHouseholdPopulation();
   }
 
   function handleSubmitHouseholdPopulation() {
-    if (!localPopulation || !isHouseholdMetadataWithAssociation(localPopulation)) {
+    if (!localPopulation) {
       return;
     }
 
@@ -135,7 +86,7 @@ export default function PopulationExistingView({
       householdToSet = HouseholdAdapter.fromMetadata(localPopulation.household);
     } else {
       // Already transformed format from cache
-      householdToSet = localPopulation.household as any;
+      householdToSet = localPopulation.household as unknown as Household;
     }
 
     const label = localPopulation.association?.label || '';
@@ -145,21 +96,7 @@ export default function PopulationExistingView({
     onSelectHousehold(householdId, householdToSet, label);
   }
 
-  function handleSubmitGeographicPopulation() {
-    if (!localPopulation || !isGeographicMetadataWithAssociation(localPopulation)) {
-      return;
-    }
-
-    const label = localPopulation.association?.label || '';
-    const geography = localPopulation.geography!;
-    const geographyId = geography.id!;
-
-    // Call parent callback instead of dispatching to Redux
-    onSelectGeography(geographyId, geography, label);
-  }
-
   const householdPopulations = householdData || [];
-  const geographicPopulations = geographicData || [];
 
   if (isLoading) {
     return (
@@ -181,7 +118,7 @@ export default function PopulationExistingView({
     );
   }
 
-  if (householdPopulations.length === 0 && geographicPopulations.length === 0) {
+  if (householdPopulations.length === 0) {
     return (
       <PathwayView
         title="Select existing household(s)"
@@ -197,99 +134,38 @@ export default function PopulationExistingView({
     );
   }
 
-  // Filter household populations
+  // Filter valid household populations
   const filteredHouseholds = householdPopulations.filter((association) =>
     isHouseholdMetadataWithAssociation(association)
   );
 
-  // Combine all populations (pagination handled by PathwayView)
-  const allPopulations = [...filteredHouseholds, ...geographicPopulations];
+  // Build card list items from household populations
+  const cardListItems = filteredHouseholds.map((association) => {
+    const isReady = isHouseholdAssociationReady(association);
 
-  // Build card list items from ALL household populations
-  const householdCardItems = allPopulations
-    .filter((association) => isHouseholdMetadataWithAssociation(association))
-    .map((association) => {
-      const isReady = isHouseholdAssociationReady(association);
+    let title = '';
+    let subtitle = '';
 
-      let title = '';
-      let subtitle = '';
-
-      if (!isReady) {
-        // NOT LOADED YET - show loading indicator
-        title = '⏳ Loading...';
-        subtitle = 'Household data not loaded yet';
-      } else if ('label' in association.association && association.association.label) {
-        title = association.association.label;
-        subtitle = `Population #${association.household!.id}`;
-      } else {
-        title = `Population #${association.household!.id}`;
-        subtitle = '';
-      }
-
-      return {
-        id: association.association.id?.toString() || association.household?.id?.toString(), // Use association ID for unique key
-        title,
-        subtitle,
-        onClick: () => handleHouseholdPopulationSelect(association!),
-        isSelected:
-          isHouseholdMetadataWithAssociation(localPopulation) &&
-          localPopulation.household?.id === association.household?.id,
-      };
-    });
-
-  // Helper function to get geographic label from metadata
-  const getGeographicLabel = (geography: Geography) => {
-    if (!geography) {
-      return 'Unknown Location';
+    if (!isReady) {
+      // NOT LOADED YET - show loading indicator
+      title = '⏳ Loading...';
+      subtitle = 'Household data not loaded yet';
+    } else if ('label' in association.association && association.association.label) {
+      title = association.association.label;
+      subtitle = `Population #${association.household!.id}`;
+    } else {
+      title = `Population #${association.household!.id}`;
+      subtitle = '';
     }
 
-    // If it's a national scope, return the country name
-    if (geography.scope === 'national') {
-      return getCountryLabel(geography.countryId);
-    }
-
-    // For subnational, look up in regions
-    if (geography.scope === 'subnational') {
-      return getRegionLabel(geography.geographyId, regions);
-    }
-    return geography.name || geography.geographyId;
-  };
-
-  // Build card list items from ALL geographic populations
-  const geographicCardItems = allPopulations
-    .filter((association) => isGeographicMetadataWithAssociation(association))
-    .map((association) => {
-      let title = '';
-      let subtitle = '';
-
-      // Use the label if it exists, otherwise look it up from metadata
-      if ('label' in association.association && association.association.label) {
-        title = association.association.label;
-      } else {
-        title = getGeographicLabel(association.geography!);
-      }
-
-      // If user has defined a label, show the geography name as a subtitle (e.g., 'New York');
-      // if user has not defined label, we already show geography name above; show nothing
-      if ('label' in association.association && association.association.label) {
-        subtitle = getGeographicLabel(association.geography!);
-      } else {
-        subtitle = '';
-      }
-
-      return {
-        id: association.association.id?.toString() || association.geography?.id?.toString(), // Use association ID for unique key
-        title,
-        subtitle,
-        onClick: () => handleGeographicPopulationSelect(association!),
-        isSelected:
-          isGeographicMetadataWithAssociation(localPopulation) &&
-          localPopulation.geography?.id === association.geography!.id,
-      };
-    });
-
-  // Combine both types of populations
-  const cardListItems = [...householdCardItems, ...geographicCardItems];
+    return {
+      id: association.association.id?.toString() || association.household?.id?.toString(),
+      title,
+      subtitle,
+      onClick: () => handleHouseholdPopulationSelect(association),
+      isSelected: localPopulation?.household?.id === association.household?.id,
+    };
+  });
 
   const primaryAction = {
     label: 'Next',

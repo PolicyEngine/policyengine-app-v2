@@ -4,7 +4,6 @@ import { HouseholdAdapter, PolicyAdapter, SimulationAdapter } from '@/adapters';
 import { fetchHouseholdById } from '@/api/household';
 import { fetchPolicyById } from '@/api/policy';
 import { fetchSimulationById } from '@/api/simulation';
-import { CURRENT_YEAR } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
@@ -15,7 +14,6 @@ import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { UserSimulation } from '@/types/ingredients/UserSimulation';
 import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
 import { householdKeys, policyKeys, simulationKeys } from '../libs/queryKeys';
-import { useRegionsList } from './useStaticMetadata';
 import { useHouseholdAssociationsByUser } from './useUserHousehold';
 import { usePolicyAssociationsByUser } from './useUserPolicy';
 import { useSimulationAssociationsByUser } from './useUserSimulationAssociations';
@@ -61,10 +59,6 @@ export interface EnhancedUserSimulation {
 export const useUserSimulations = (userId: string) => {
   const country = useCurrentCountry();
   const queryNormalizer = useQueryNormalizer();
-
-  // Get geography data from static metadata
-  const currentYear = parseInt(CURRENT_YEAR, 10);
-  const geographyOptions = useRegionsList(country, currentYear);
 
   // Step 1: Fetch all user associations in parallel
   const {
@@ -179,18 +173,11 @@ export const useUserSimulations = (userId: string) => {
               (ha) => ha.householdId === simulation.populationId
             );
           } else if (simulation.populationType === 'geography') {
-            // Treat as geography - create a Geography object from the ID
-            const regionData = geographyOptions?.find((r) => r.name === simulation.populationId);
-
-            if (regionData) {
-              geography = {
-                id: `${simulation.countryId}-${simulation.populationId}`,
-                countryId: simulation.countryId,
-                scope: 'subnational' as const,
-                geographyId: simulation.populationId,
-                name: regionData.label || regionData.name,
-              } as Geography;
-            }
+            // Create simplified Geography object from regionCode (populationId)
+            geography = {
+              countryId: simulation.countryId,
+              regionCode: simulation.populationId,
+            } as Geography;
           }
         }
 

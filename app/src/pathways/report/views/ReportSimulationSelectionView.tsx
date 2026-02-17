@@ -5,7 +5,6 @@ import PathwayView from '@/components/common/PathwayView';
 import { ButtonPanelVariant } from '@/components/flowView';
 import { MOCK_USER_ID } from '@/constants';
 import { useCreateSimulation } from '@/hooks/useCreateSimulation';
-import { useCreateGeographicAssociation } from '@/hooks/useUserGeographic';
 import { useUserSimulations } from '@/hooks/useUserSimulations';
 import { Simulation } from '@/types/ingredients/Simulation';
 import { PolicyStateProps, PopulationStateProps, SimulationStateProps } from '@/types/pathwayState';
@@ -37,19 +36,16 @@ function createCurrentLawPolicy(currentLawId: number): PolicyStateProps {
  */
 function createNationwidePopulation(
   countryId: string,
-  geographyId: string,
+  regionCode: string,
   countryName: string
 ): PopulationStateProps {
   return {
-    label: `${countryName} nationwide`,
+    label: `${countryName} households`,
     type: 'geography',
     household: null,
     geography: {
-      id: geographyId,
       countryId: countryId as any,
-      scope: 'national',
-      geographyId: countryId,
-      name: 'National',
+      regionCode,
     },
   };
 }
@@ -106,7 +102,6 @@ export default function ReportSimulationSelectionView({
   const [selectedAction, setSelectedAction] = useState<SetupAction | null>(null);
   const [isCreatingBaseline, setIsCreatingBaseline] = useState(false);
 
-  const { mutateAsync: createGeographicAssociation } = useCreateGeographicAssociation();
   const simulationLabel = getDefaultBaselineLabel(countryId);
   const { createSimulation } = useCreateSimulation(simulationLabel);
 
@@ -141,10 +136,10 @@ export default function ReportSimulationSelectionView({
     }
 
     const countryName = countryNames[countryId] || countryId.toUpperCase();
-    const geographyId = existingBaseline.geography?.geographyId || countryId;
+    const regionCode = existingBaseline.geography?.regionCode || countryId;
 
     const policy = createCurrentLawPolicy(currentLawId);
-    const population = createNationwidePopulation(countryId, geographyId, countryName);
+    const population = createNationwidePopulation(countryId, regionCode, countryName);
     const simulationState = createSimulationState(
       existingSimulationId,
       simulationLabel,
@@ -158,6 +153,8 @@ export default function ReportSimulationSelectionView({
 
   /**
    * Creates a new default baseline simulation
+   * Note: Geographies are no longer stored as user associations. The geography
+   * is constructed from simulation data using the countryId as the regionCode.
    */
   async function createNewBaseline() {
     if (!onSelectDefaultBaseline) {
@@ -166,21 +163,12 @@ export default function ReportSimulationSelectionView({
 
     setIsCreatingBaseline(true);
     const countryName = countryNames[countryId] || countryId.toUpperCase();
+    const regionCode = countryId; // National geography uses countryId as regionCode
 
     try {
-      // Create geography association
-      const geographyResult = await createGeographicAssociation({
-        id: `${userId}-${Date.now()}`,
-        userId,
-        countryId: countryId as any,
-        geographyId: countryId,
-        scope: 'national',
-        label: `${countryName} nationwide`,
-      });
-
-      // Create simulation
+      // Create simulation directly - geography is not stored as user association
       const simulationData: Partial<Simulation> = {
-        populationId: geographyResult.geographyId,
+        populationId: regionCode,
         policyId: currentLawId.toString(),
         populationType: 'geography',
       };
@@ -193,11 +181,7 @@ export default function ReportSimulationSelectionView({
           const simulationId = data.result.simulation_id;
 
           const policy = createCurrentLawPolicy(currentLawId);
-          const population = createNationwidePopulation(
-            countryId,
-            geographyResult.geographyId,
-            countryName
-          );
+          const population = createNationwidePopulation(countryId, regionCode, countryName);
           const simulationState = createSimulationState(
             simulationId,
             simulationLabel,
@@ -216,10 +200,7 @@ export default function ReportSimulationSelectionView({
         },
       });
     } catch (error) {
-      console.error(
-        '[ReportSimulationSelectionView] Failed to create geographic association:',
-        error
-      );
+      console.error('[ReportSimulationSelectionView] Failed to create simulation:', error);
       setIsCreatingBaseline(false);
     }
   }

@@ -1,4 +1,3 @@
-import { UserGeographicMetadataWithAssociation } from '@/hooks/useUserGeographic';
 import { UserHouseholdMetadataWithAssociation } from '@/hooks/useUserHousehold';
 import { PolicyStateProps, PopulationStateProps, SimulationStateProps } from '@/types/pathwayState';
 
@@ -27,7 +26,7 @@ export function isPolicyConfigured(policy: PolicyStateProps | null | undefined):
  *
  * A population is considered configured if it has either:
  * - A household with an ID (from API creation)
- * - A geography with an ID (from scope selection via createGeographyFromScope)
+ * - A geography with a regionCode (from scope selection via createGeographyFromScope)
  */
 export function isPopulationConfigured(
   population: PopulationStateProps | null | undefined
@@ -35,7 +34,7 @@ export function isPopulationConfigured(
   if (!population) {
     return false;
   }
-  return !!(population.household?.id || population.geography?.id);
+  return !!(population.household?.id || population.geography?.regionCode);
 }
 
 /**
@@ -126,36 +125,6 @@ export function isHouseholdAssociationReady(
   );
 
   if (!hasHouseholdData) {
-    return false;
-  }
-
-  return true;
-}
-
-/**
- * Checks if a UserGeographicMetadataWithAssociation has fully loaded geography data
- *
- * A geographic association is considered "ready" when:
- * 1. The geography metadata exists (not undefined)
- * 2. The query is not still loading
- *
- * @param association - The geographic association to check
- * @returns true if geography data is fully loaded and ready to use
- */
-export function isGeographicAssociationReady(
-  association: UserGeographicMetadataWithAssociation | null | undefined
-): boolean {
-  if (!association) {
-    return false;
-  }
-
-  // Still loading individual geography data
-  if (association.isLoading) {
-    return false;
-  }
-
-  // Geography data not loaded
-  if (!association.geography) {
     return false;
   }
 

@@ -96,7 +96,6 @@ export default function ReportOutputPage() {
     userSimulations,
     userPolicies,
     userHouseholds,
-    userGeographies,
     isLoading: dataLoading,
     error: dataError,
   } = data;
@@ -187,12 +186,13 @@ export default function ReportOutputPage() {
     }
 
     // Create ShareData from user associations
+    // Note: Geographies are no longer stored as user associations - they're
+    // constructed from simulation data when needed
     const shareDataToEncode = createShareData(
       userReport,
       userSimulations ?? [],
       userPolicies ?? [],
-      userHouseholds ?? [],
-      userGeographies ?? []
+      userHouseholds ?? []
     );
 
     if (!shareDataToEncode) {
@@ -302,7 +302,6 @@ export default function ReportOutputPage() {
           userPolicies={userPolicies}
           policies={policies}
           geographies={geographies}
-          userGeographies={userGeographies}
         />
       );
     }

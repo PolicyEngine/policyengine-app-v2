@@ -14,7 +14,6 @@
 
 import { CountryId } from '@/libs/countries';
 import { UserPolicy } from '@/types/ingredients/UserPolicy';
-
 import { API_V2_BASE_URL } from './taxBenefitModels';
 
 // ============================================================================

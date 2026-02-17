@@ -76,9 +76,15 @@ export class SimulationAdapter {
       throw new Error('Simulation must have a populationType');
     }
 
+    // Map internal Simulation fields to V2-style payload
+    if (simulation.populationType === 'geography') {
+      return {
+        region: simulation.populationId,
+        policy_id: parseInt(simulation.policyId, 10),
+      };
+    }
     return {
-      population_id: simulation.populationId,
-      population_type: simulation.populationType,
+      household_id: simulation.populationId,
       policy_id: parseInt(simulation.policyId, 10),
     };
   }

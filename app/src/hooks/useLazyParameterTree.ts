@@ -10,9 +10,9 @@
 import { useCallback, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import {
+  hasChildren as checkHasChildren,
   createParameterTreeCache,
   getChildrenForPath,
-  hasChildren as checkHasChildren,
   LazyParameterTreeNode,
   ParameterTreeCache,
 } from '@/libs/lazyParameterTree';

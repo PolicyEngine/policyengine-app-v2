@@ -3,10 +3,14 @@ import { useParams } from 'react-router-dom';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import PopulationPathwayWrapper from '@/pathways/population/PopulationPathwayWrapper';
-
-const mockNavigate = vi.fn();
-const mockUseParams = { countryId: 'us' };
-const mockMetadata = { currentLawId: 1, economyOptions: { region: [] } };
+import {
+  mockNavigate,
+  mockUseParams,
+  mockUsePathwayNavigationReturn,
+  mockUseRegionsEmpty,
+  resetAllMocks,
+  TEST_COUNTRY_ID,
+} from '@/tests/fixtures/pathways/population/PopulationPathwayWrapperMocks';
 
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
@@ -17,48 +21,48 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
-vi.mock('react-redux', async () => {
-  const actual = await vi.importActual('react-redux');
-  return {
-    ...actual,
-    useSelector: vi.fn(() => mockMetadata),
-  };
-});
-
-vi.mock('@/hooks/useUserHousehold', () => ({
-  useCreateHousehold: vi.fn(() => ({ createHousehold: vi.fn(), isPending: false })),
-}));
-
-vi.mock('@/hooks/useUserGeographic', () => ({
-  useCreateGeographicAssociation: vi.fn(() => ({ mutateAsync: vi.fn(), isPending: false })),
-}));
-
 vi.mock('@/hooks/usePathwayNavigation', () => ({
-  usePathwayNavigation: vi.fn(() => ({
-    mode: 'SCOPE',
-    navigateToMode: vi.fn(),
-    goBack: vi.fn(),
-  })),
+  usePathwayNavigation: vi.fn(() => mockUsePathwayNavigationReturn),
 }));
 
 vi.mock('@/hooks/useCurrentCountry', () => ({
   useCurrentCountry: vi.fn(),
 }));
 
+vi.mock('@/hooks/useRegions', () => ({
+  useRegions: vi.fn(() => mockUseRegionsEmpty),
+}));
+
 describe('PopulationPathwayWrapper', () => {
   beforeEach(() => {
+    resetAllMocks();
     vi.clearAllMocks();
     vi.mocked(useParams).mockReturnValue(mockUseParams);
-    vi.mocked(useCurrentCountry).mockReturnValue('us');
+    vi.mocked(useCurrentCountry).mockReturnValue(TEST_COUNTRY_ID);
   });
 
-  test('given valid countryId then renders without error', () => {
+  test('given valid countryId then renders LABEL view', () => {
     // When
-    const { container } = render(<PopulationPathwayWrapper />);
+    render(<PopulationPathwayWrapper />);
+
+    // Then - PopulationLabelView renders with "Name your household(s)" heading
+    expect(screen.getByRole('heading', { name: /name your household/i })).toBeInTheDocument();
+  });
+
+  test('given LABEL view then displays household label input', () => {
+    // When
+    render(<PopulationPathwayWrapper />);
 
     // Then
-    expect(container).toBeInTheDocument();
-    expect(screen.queryByText(/error/i)).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/household label/i)).toBeInTheDocument();
+  });
+
+  test('given LABEL view then shows back button that navigates to households page', () => {
+    // When
+    render(<PopulationPathwayWrapper />);
+
+    // Then
+    expect(screen.getByRole('button', { name: /back/i })).toBeInTheDocument();
   });
 
   test('given missing countryId then throws error', () => {

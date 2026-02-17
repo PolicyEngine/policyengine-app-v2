@@ -6,7 +6,6 @@ import {
 } from '@/adapters/congressional-district/congressionalDistrictDataAdapter';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { USDistrictChoroplethMap } from '@/components/visualization/USDistrictChoroplethMap';
-import { CURRENT_YEAR } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useRegionsList } from '@/hooks/useStaticMetadata';
 import type { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
@@ -26,8 +25,7 @@ interface AbsoluteChangeByDistrictProps {
 export function AbsoluteChangeByDistrict({ output }: AbsoluteChangeByDistrictProps) {
   // Get district labels from static metadata
   const countryId = useCurrentCountry();
-  const currentYear = parseInt(CURRENT_YEAR, 10);
-  const regions = useRegionsList(countryId, currentYear);
+  const regions = useRegionsList(countryId);
 
   // Build label lookup from metadata (memoized)
   const labelLookup = useMemo(() => buildDistrictLabelLookup(regions), [regions]);

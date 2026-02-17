@@ -22,7 +22,6 @@ import {
 const mockCreateSimulation = createMockMutation();
 const mockCreatePolicy = createMockMutation();
 const mockCreateHousehold = createMockMutation();
-const mockCreateGeography = createMockMutation();
 const mockCreateReport = createMockMutation();
 const mockReportStore = createMockReportStore();
 
@@ -36,10 +35,6 @@ vi.mock('@/hooks/useUserPolicy', () => ({
 
 vi.mock('@/hooks/useUserHousehold', () => ({
   useCreateHouseholdAssociation: () => mockCreateHousehold,
-}));
-
-vi.mock('@/hooks/useUserGeographic', () => ({
-  useCreateGeographicAssociation: () => mockCreateGeography,
 }));
 
 vi.mock('@/hooks/useUserReportAssociations', () => ({
@@ -75,7 +70,6 @@ describe('useSaveSharedReport', () => {
     mockCreateSimulation.mutateAsync.mockResolvedValue({});
     mockCreatePolicy.mutateAsync.mockResolvedValue({});
     mockCreateHousehold.mutateAsync.mockResolvedValue({});
-    mockCreateGeography.mutateAsync.mockResolvedValue({});
     mockCreateReport.mutateAsync.mockResolvedValue(MOCK_SAVED_USER_REPORT);
     mockReportStore.findByUserReportId.mockResolvedValue(null);
   });
@@ -106,13 +100,7 @@ describe('useSaveSharedReport', () => {
       countryId: 'us',
       label: 'My Policy',
     });
-    expect(mockCreateGeography.mutateAsync).toHaveBeenCalledWith({
-      userId: 'anonymous',
-      geographyId: 'us',
-      countryId: 'us',
-      scope: 'national',
-      label: 'United States',
-    });
+    // Note: Geographies are no longer saved as user associations (constructed from simulation data)
     expect(mockCreateReport.mutateAsync).toHaveBeenCalled();
   });
 
@@ -178,7 +166,7 @@ describe('useSaveSharedReport', () => {
       countryId: 'uk',
       label: 'My Household',
     });
-    expect(mockCreateGeography.mutateAsync).not.toHaveBeenCalled();
+    // Note: Geographies are no longer saved as user associations
   });
 
   test('given shareData without label then generates default label', async () => {

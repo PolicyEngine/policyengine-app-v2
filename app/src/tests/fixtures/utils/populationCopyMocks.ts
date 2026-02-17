@@ -54,11 +54,8 @@ export function mockPopulationWithGeography(): Population {
     isCreated: true,
     household: null,
     geography: {
-      id: 'us-ca',
       countryId: 'us',
-      scope: 'subnational',
-      geographyId: 'ca',
-      name: 'California',
+      regionCode: 'ca',
     },
   };
 }

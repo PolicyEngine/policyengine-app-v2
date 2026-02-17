@@ -71,6 +71,7 @@ export const MOCK_USER_POLICY: UserPolicy = {
   id: 'user-policy-1',
   userId: 'user-123',
   policyId: 'policy-1',
+  countryId: 'us',
   label: 'My Policy',
   createdAt: '2024-01-01T00:00:00Z',
 };
@@ -79,10 +80,8 @@ export const MOCK_USER_POLICY: UserPolicy = {
  * Mock Geographies for SocietyWideReportOutput tests
  */
 export const MOCK_GEOGRAPHY: Geography = {
-  id: 'us-us',
   countryId: 'us',
-  scope: 'national',
-  geographyId: 'us',
+  regionCode: 'us',
 };
 
 /**

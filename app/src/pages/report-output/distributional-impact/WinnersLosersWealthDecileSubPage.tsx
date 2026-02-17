@@ -4,7 +4,6 @@ import { Stack, Text } from '@mantine/core';
 import { useMediaQuery, useViewportSize } from '@mantine/hooks';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { ChartContainer } from '@/components/ChartContainer';
-import { CURRENT_YEAR } from '@/constants';
 import { colors } from '@/designTokens/colors';
 import { spacing } from '@/designTokens/spacing';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
@@ -58,8 +57,7 @@ const LEGEND_TEXT_MAP: Record<string, string> = {
 export default function WinnersLosersWealthDecileSubPage({ output }: Props) {
   const mobile = useMediaQuery('(max-width: 768px)');
   const countryId = useCurrentCountry();
-  const currentYear = parseInt(CURRENT_YEAR, 10);
-  const regions = useRegionsList(countryId, currentYear);
+  const regions = useRegionsList(countryId);
   const { height: viewportHeight } = useViewportSize();
   const chartHeight = getClampedChartHeight(viewportHeight, mobile);
 

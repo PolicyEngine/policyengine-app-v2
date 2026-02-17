@@ -49,14 +49,18 @@ describe('createSimulation', () => {
     // When
     const result = await createSimulation(TEST_COUNTRIES.US, mockSimulationPayload);
 
-    // Then
+    // Then - payload is translated to V1 wire format
     expect(mockFetch).toHaveBeenCalledWith(`${BASE_URL}/${TEST_COUNTRIES.US}/simulation`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
       },
-      body: JSON.stringify(mockSimulationPayload),
+      body: JSON.stringify({
+        population_id: mockSimulationPayload.household_id,
+        population_type: 'household',
+        policy_id: mockSimulationPayload.policy_id,
+      }),
     });
     expect(result).toEqual({
       result: {
@@ -72,8 +76,8 @@ describe('createSimulation', () => {
       ...mockCreateSimulationSuccessResponse,
       result: {
         ...mockCreateSimulationSuccessResponse.result,
-        population_id: mockSimulationPayloadGeography.population_id,
-        population_type: mockSimulationPayloadGeography.population_type,
+        population_id: mockSimulationPayloadGeography.region,
+        population_type: 'geography',
       },
     };
     mockFetch.mockResolvedValueOnce(mockSuccessResponse(geographyResponse) as any);
@@ -81,14 +85,18 @@ describe('createSimulation', () => {
     // When
     const result = await createSimulation(TEST_COUNTRIES.US, mockSimulationPayloadGeography);
 
-    // Then
+    // Then - payload is translated to V1 wire format
     expect(mockFetch).toHaveBeenCalledWith(`${BASE_URL}/${TEST_COUNTRIES.US}/simulation`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
       },
-      body: JSON.stringify(mockSimulationPayloadGeography),
+      body: JSON.stringify({
+        population_id: mockSimulationPayloadGeography.region,
+        population_type: 'geography',
+        policy_id: mockSimulationPayloadGeography.policy_id,
+      }),
     });
     expect(result).toEqual({
       result: {
@@ -104,7 +112,7 @@ describe('createSimulation', () => {
       ...mockCreateSimulationSuccessResponse,
       result: {
         ...mockCreateSimulationSuccessResponse.result,
-        population_id: mockSimulationPayloadMinimal.population_id,
+        population_id: mockSimulationPayloadMinimal.household_id,
         policy_id: null,
       },
     };
@@ -113,14 +121,18 @@ describe('createSimulation', () => {
     // When
     const result = await createSimulation(TEST_COUNTRIES.US, mockSimulationPayloadMinimal);
 
-    // Then
+    // Then - payload is translated to V1 wire format
     expect(mockFetch).toHaveBeenCalledWith(`${BASE_URL}/${TEST_COUNTRIES.US}/simulation`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
       },
-      body: JSON.stringify(mockSimulationPayloadMinimal),
+      body: JSON.stringify({
+        population_id: mockSimulationPayloadMinimal.household_id,
+        population_type: 'household',
+        policy_id: mockSimulationPayloadMinimal.policy_id,
+      }),
     });
     expect(result).toEqual({
       result: {
