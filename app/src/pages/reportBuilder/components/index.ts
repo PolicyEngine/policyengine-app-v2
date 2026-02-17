@@ -19,3 +19,4 @@ export { SimulationBlock } from './SimulationBlock';
 export { AddSimulationCard } from './AddSimulationCard';
 export { ReportMetaPanel } from './ReportMetaPanel';
 export { SimulationCanvas } from './SimulationCanvas';
+export { TopBar } from './TopBar';

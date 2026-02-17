@@ -15,6 +15,7 @@ import {
 } from '@tabler/icons-react';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { colors, spacing, typography } from '@/designTokens';
+import { TopBarVariants } from './TopBarVariants';
 
 interface VariationCardProps {
   icon: React.ReactNode;
@@ -253,6 +254,47 @@ export function PathwayVariationsHub() {
             <VariationCard key={variation.path} {...variation} />
           ))}
         </SimpleGrid>
+      </Box>
+
+      {/* Top bar redesigns section */}
+      <Box style={{ maxWidth: 1200, margin: '0 auto', marginTop: spacing['3xl'] }}>
+        <Box style={{ marginBottom: spacing.xl }}>
+          <Badge
+            size="lg"
+            variant="light"
+            color="teal"
+            mb={spacing.md}
+            style={{ fontFamily: typography.fontFamily.primary }}
+          >
+            Component exploration
+          </Badge>
+          <Text
+            style={{
+              fontFamily: typography.fontFamily.primary,
+              fontSize: '28px',
+              fontWeight: 700,
+              color: colors.gray[900],
+              letterSpacing: '-0.02em',
+              lineHeight: 1.2,
+            }}
+          >
+            Top bar redesigns
+          </Text>
+          <Text size="md" c={colors.gray[600]} mt={spacing.sm} style={{ maxWidth: 600 }}>
+            Five approaches to button proportions and making report name and year feel clearly editable.
+          </Text>
+        </Box>
+
+        <Paper
+          style={{
+            padding: spacing['2xl'],
+            borderRadius: spacing.radius.xl,
+            border: `1px solid ${colors.border.light}`,
+            background: `linear-gradient(180deg, ${colors.gray[50]} 0%, ${colors.white} 100%)`,
+          }}
+        >
+          <TopBarVariants />
+        </Paper>
       </Box>
 
       {/* Footer note */}

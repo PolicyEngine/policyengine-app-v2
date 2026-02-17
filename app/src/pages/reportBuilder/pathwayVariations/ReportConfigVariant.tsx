@@ -13,19 +13,22 @@ import { Box, Group, Paper, Text } from '@mantine/core';
 import {
   IconCheck,
   IconChartLine,
+  IconCopy,
   IconFileDescription,
   IconHome,
   IconPencil,
   IconPlayerPlay,
   IconRefresh,
   IconScale,
+  IconSelector,
   IconSparkles,
   IconUsers,
 } from '@tabler/icons-react';
 import { colors, spacing, typography } from '@/designTokens';
 import { FONT_SIZES, INGREDIENT_COLORS } from '../constants';
 import { styles } from '../styles';
-import { CountryMapIcon } from '../components/shared';
+import { CountryMapIcon, TopBar } from '../components';
+import type { TopBarAction } from '../types';
 
 // Mock pre-filled data representing a previously-run report
 const MOCK_REPORT = {
@@ -309,9 +312,24 @@ function SimulationBlock({ simulation, index }: {
   );
 }
 
-export function ReportConfigVariant() {
-  const runButtonEnabled = true;
+const REPORT_CONFIG_ACTIONS: TopBarAction[] = [
+  {
+    key: 'rerun',
+    label: 'Re-run',
+    icon: <IconPlayerPlay size={16} />,
+    onClick: () => {},
+    variant: 'primary',
+  },
+  {
+    key: 'copy',
+    label: 'Copy report',
+    icon: <IconCopy size={16} />,
+    onClick: () => {},
+    variant: 'secondary',
+  },
+];
 
+export function ReportConfigVariant() {
   return (
     <Box style={styles.pageContainer}>
       <Box style={styles.headerSection}>
@@ -328,151 +346,136 @@ export function ReportConfigVariant() {
         </Text>
       </Box>
 
-      {/* Top bar: meta panel + re-run button */}
-      <Box style={{ display: 'flex', alignItems: 'center', gap: spacing.md, marginBottom: spacing.xl }}>
+      <TopBar actions={REPORT_CONFIG_ACTIONS}>
+        {/* Icon segment */}
         <Box
           style={{
-            background: 'rgba(255, 255, 255, 0.92)',
-            backdropFilter: 'blur(20px) saturate(180%)',
-            WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-            borderRadius: spacing.radius.xl,
+            width: 44,
+            height: 44,
+            borderRadius: spacing.radius.lg,
+            background: `linear-gradient(135deg, ${colors.primary[50]} 0%, ${colors.primary[100]} 100%)`,
             border: `1px solid ${colors.primary[200]}`,
-            boxShadow: '0 8px 32px rgba(44, 122, 123, 0.15), 0 2px 8px rgba(0, 0, 0, 0.08)',
-            padding: `${spacing.md} ${spacing.xl}`,
             display: 'flex',
             alignItems: 'center',
-            gap: spacing.md,
-            flex: 1,
-            minWidth: 0,
+            justifyContent: 'center',
+            flexShrink: 0,
           }}
         >
-          {/* Document icon */}
-          <Box
+          <IconFileDescription size={20} color={colors.primary[600]} />
+        </Box>
+
+        {/* Name segment */}
+        <Box
+          style={{
+            flex: 1,
+            minWidth: 0,
+            height: 44,
+            borderRadius: spacing.radius.lg,
+            background: colors.white,
+            border: `1px solid ${colors.primary[200]}`,
+            boxShadow: `0 2px 8px ${colors.shadow.light}`,
+            padding: `0 ${spacing.lg}`,
+            display: 'flex',
+            alignItems: 'center',
+            gap: spacing.sm,
+            cursor: 'pointer',
+          }}
+        >
+          <Text
+            c={colors.primary[500]}
+            fw={600}
             style={{
-              width: 32,
-              height: 32,
-              borderRadius: spacing.radius.md,
-              background: `linear-gradient(135deg, ${colors.primary[50]} 0%, ${colors.primary[100]} 100%)`,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
+              fontSize: FONT_SIZES.tiny,
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
               flexShrink: 0,
             }}
           >
-            <IconFileDescription size={18} color={colors.primary[600]} />
-          </Box>
-
-          {/* Title */}
-          <Box style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: spacing.xs }}>
-            <Text
-              fw={600}
-              style={{
-                fontFamily: typography.fontFamily.primary,
-                fontSize: FONT_SIZES.normal,
-                color: colors.gray[800],
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-                marginRight: 8,
-              }}
-            >
-              {MOCK_REPORT.label}
-            </Text>
-            <Box
-              style={{
-                width: 20,
-                height: 20,
-                borderRadius: spacing.radius.sm,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                color: colors.gray[400],
-                flexShrink: 0,
-              }}
-            >
-              <IconPencil size={14} />
-            </Box>
-          </Box>
-
-          {/* Divider */}
-          <Box
-            style={{
-              width: '1px',
-              height: '24px',
-              background: colors.gray[200],
-              margin: `0 ${spacing.xs}`,
-              flexShrink: 0,
-            }}
-          />
-
-          {/* Year */}
+            Name
+          </Text>
           <Text
+            fw={600}
             style={{
               fontFamily: typography.fontFamily.primary,
               fontSize: FONT_SIZES.normal,
-              fontWeight: 500,
-              color: colors.gray[600],
-              flexShrink: 0,
+              color: colors.gray[800],
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {MOCK_REPORT.label}
+          </Text>
+          <IconPencil size={12} color={colors.gray[400]} style={{ flexShrink: 0, marginLeft: 'auto' }} />
+        </Box>
+
+        {/* Year segment */}
+        <Box
+          style={{
+            height: 44,
+            borderRadius: spacing.radius.lg,
+            background: colors.white,
+            border: `1px solid ${colors.primary[200]}`,
+            boxShadow: `0 2px 8px ${colors.shadow.light}`,
+            padding: `0 ${spacing.lg}`,
+            display: 'flex',
+            alignItems: 'center',
+            gap: spacing.sm,
+            cursor: 'pointer',
+            flexShrink: 0,
+          }}
+        >
+          <Text
+            c={colors.primary[500]}
+            fw={600}
+            style={{
+              fontSize: FONT_SIZES.tiny,
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+            }}
+          >
+            Year
+          </Text>
+          <Text
+            fw={500}
+            style={{
+              fontFamily: typography.fontFamily.primary,
+              fontSize: FONT_SIZES.normal,
+              color: colors.gray[700],
             }}
           >
             {MOCK_REPORT.year}
           </Text>
-
-          {/* Divider */}
-          <Box
-            style={{
-              width: '1px',
-              height: '24px',
-              background: colors.gray[200],
-              margin: `0 ${spacing.xs}`,
-              flexShrink: 0,
-            }}
-          />
-
-          {/* Last run indicator */}
-          <Group gap={spacing.xs} style={{ flexShrink: 0 }}>
-            <IconRefresh size={14} color={colors.gray[400]} />
-            <Text
-              c={colors.gray[500]}
-              style={{
-                fontFamily: typography.fontFamily.primary,
-                fontSize: FONT_SIZES.small,
-              }}
-            >
-              Last run {MOCK_REPORT.lastRun}
-            </Text>
-          </Group>
+          <IconSelector size={12} color={colors.gray[400]} />
         </Box>
 
-        {/* Re-run button */}
+        {/* Last run segment */}
         <Box
-          component="button"
           style={{
-            background: runButtonEnabled
-              ? `linear-gradient(135deg, ${colors.primary[500]} 0%, ${colors.primary[600]} 100%)`
-              : colors.gray[200],
-            color: runButtonEnabled ? 'white' : colors.gray[500],
-            border: 'none',
+            height: 44,
             borderRadius: spacing.radius.lg,
-            padding: `${spacing.sm} ${spacing.lg}`,
-            fontFamily: typography.fontFamily.primary,
-            fontWeight: 600,
-            fontSize: FONT_SIZES.normal,
-            cursor: runButtonEnabled ? 'pointer' : 'not-allowed',
+            background: colors.gray[50],
+            border: `1px solid ${colors.gray[200]}`,
+            padding: `0 ${spacing.md}`,
             display: 'flex',
             alignItems: 'center',
             gap: spacing.xs,
-            transition: 'all 0.3s ease',
-            boxShadow: runButtonEnabled ? '0 4px 12px rgba(44, 122, 123, 0.3)' : 'none',
             flexShrink: 0,
-            height: 40,
           }}
         >
-          <IconPlayerPlay size={16} />
-          <span>Re-run</span>
+          <IconRefresh size={14} color={colors.gray[400]} />
+          <Text
+            c={colors.gray[500]}
+            style={{
+              fontFamily: typography.fontFamily.primary,
+              fontSize: FONT_SIZES.small,
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {MOCK_REPORT.lastRun}
+          </Text>
         </Box>
-      </Box>
+      </TopBar>
 
       {/* Canvas with simulation blocks */}
       <Box style={styles.canvasContainer}>
