@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #fff;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 10px 12px 8px;
+  }
+  .container { position: relative; width: 100%; max-width: 720px; }
+  .tab-bar {
+    display: flex; margin-bottom: 6px;
+    border-radius: 8px; overflow: hidden; border: 1.5px solid #e2e8f0;
+  }
+  .tab {
+    flex: 1; padding: 9px 16px; border: none; background: #fff;
+    color: #4a5568; font-size: 14px; font-weight: 600; cursor: pointer;
+    transition: all 0.2s ease; font-family: inherit;
+    border-right: 1px solid #e2e8f0;
+  }
+  .tab:last-child { border-right: none; }
+  .tab:hover:not(.active) { background: #f7fafc; color: #2d3748; }
+  .tab.active { background: #319795; color: #fff; }
+  .description {
+    text-align: center; font-size: 12px; color: #718096;
+    margin-bottom: 2px; min-height: 18px;
+  }
+  svg { width: 100%; height: auto; display: block; }
+  .node { cursor: pointer; transition: filter 0.2s, opacity 0.3s; }
+  .node:hover { filter: drop-shadow(0 2px 8px rgba(0,0,0,0.2)); }
+  .edge { fill: none; stroke-width: 2.5; transition: opacity 0.3s; }
+  .edge-label {
+    font-size: 10.5px; fill: #4a5568; pointer-events: none;
+    transition: opacity 0.3s;
+    stroke: #fff; stroke-width: 3.5; paint-order: stroke;
+  }
+  .pulse {
+    fill: none; stroke: #319795; stroke-width: 2.5;
+    stroke-dasharray: 8 4; opacity: 0.5;
+    animation: dash 2s linear infinite; pointer-events: none;
+  }
+  @keyframes dash { to { stroke-dashoffset: -24; } }
+  .tooltip {
+    position: absolute; background: #1a202c; color: #fff;
+    padding: 12px 14px; border-radius: 8px; font-size: 13px;
+    line-height: 1.5; max-width: 320px; pointer-events: none;
+    opacity: 0; transition: opacity 0.15s; z-index: 10;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  }
+  .tooltip.visible { opacity: 1; }
+  .tooltip .tt-step { opacity: 0.5; font-size: 11px; }
+  .tooltip .tt-name { font-weight: 700; font-size: 14px; margin-bottom: 6px; }
+  .tooltip .tt-code {
+    font-family: "JetBrains Mono", monospace; font-size: 11px;
+    background: rgba(255,255,255,0.08); padding: 5px 7px;
+    border-radius: 4px; margin: 6px 0; display: block;
+    line-height: 1.4; white-space: pre-wrap;
+  }
+  .tooltip .tt-desc { font-size: 12px; opacity: 0.85; }
+  .legend {
+    display: flex; gap: 14px; margin-top: 8px; font-size: 11.5px;
+    color: #4a5568; flex-wrap: wrap; justify-content: center;
+  }
+  .legend-item { display: flex; align-items: center; gap: 5px; }
+  .legend-swatch { width: 13px; height: 13px; border-radius: 3px; flex-shrink: 0; }
+  .dimmed { opacity: 0.12 !important; }
+  .highlighted { opacity: 1 !important; }
+  .cycle-group { opacity: 0; transition: opacity 0.3s ease; pointer-events: none; }
+  .cycle-group.active { opacity: 1; pointer-events: auto; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="tab-bar">
+    <button class="tab active" data-cycle="housing">Housing</button>
+    <button class="tab" data-cycle="salt">SALT</button>
+  </div>
+  <div class="description" id="description"></div>
+  <svg id="diagram" viewBox="0 0 700 420">
+    <defs>
+      <marker id="arr" viewBox="0 0 10 7" refX="10" refY="3.5" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
+        <polygon points="0 0, 10 3.5, 0 7" fill="#A0AEC0"/>
+      </marker>
+      <marker id="arr-red" viewBox="0 0 10 7" refX="10" refY="3.5" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
+        <polygon points="0 0, 10 3.5, 0 7" fill="#E53E3E"/>
+      </marker>
+      <marker id="arr-teal" viewBox="0 0 10 7" refX="10" refY="3.5" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
+        <polygon points="0 0, 10 3.5, 0 7" fill="#319795"/>
+      </marker>
+      <marker id="arr-green" viewBox="0 0 10 7" refX="10" refY="3.5" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
+        <polygon points="0 0, 10 3.5, 0 7" fill="#38A169"/>
+      </marker>
+    </defs>
+  </svg>
+  <div class="legend" id="legend"></div>
+  <div class="tooltip" id="tooltip"></div>
+</div>
+
+<script>
+const NS = 'http://www.w3.org/2000/svg';
+function el(tag, attrs) {
+  const e = document.createElementNS(NS, tag);
+  if (attrs) Object.entries(attrs).forEach(([k,v]) => e.setAttribute(k, String(v)));
+  return e;
+}
+function txt(tag, attrs, text) {
+  const e = el(tag, attrs);
+  e.textContent = text;
+  return e;
+}
+
+const TEAL = '#319795', TEAL_D = '#2C7A7B';
+const AMBER = '#D69E2E', AMBER_D = '#B7791F';
+const PURPLE = '#805AD5', PURPLE_D = '#6B46C1';
+const GREEN = '#38A169', GREEN_D = '#2F855A';
+const RED = '#E53E3E';
+const GRAY = '#A0AEC0';
+
+/*
+ * Layout: two columns at x≈175 (left) and x≈500 (right)
+ * Gap center ≈ 340. Vertical edge labels go into the gap.
+ * Housing: 4 rows (y=55,150,245,340). Childcare/SALT: 3 rows (y=70,190,310).
+ * Fix badges at bottom, below all nodes.
+ */
+const CYCLES = {
+  housing: {
+    desc: 'FL, AZ, VT TANF \u2192 housing_cost \u2192 HUD \u2192 tanf. Follow steps 1\u20137.',
+    nodes: [
+      {id:'tanf', step:1, label:'tanf', sub:'Federal aggregator',
+       x:500, y:55, w:160, h:42, fill:TEAL, stroke:TEAL_D,
+       code:'tanf = fl_tca + az_tanf + vt_reach_up + ...',
+       desc:'Sums all 39 state TANF programs into one federal variable.'},
+      {id:'fltca', step:2, label:'fl_tca', sub:'Florida TCA',
+       x:500, y:150, w:160, h:42, fill:TEAL, stroke:TEAL_D,
+       code:'benefit = payment_standard - countable_income',
+       desc:'Florida Temporary Cash Assistance. One of the 39 state programs.'},
+      {id:'ps', step:3, label:'fl_tca_payment_standard', sub:'Shelter tier lookup',
+       x:500, y:245, w:200, h:42, fill:TEAL, stroke:TEAL_D, labelSize:10.5,
+       code:'tier = "high" if housing_cost > 0\n      else "low" if has_other_shelter\n      else "zero"',
+       desc:'FL looks up a payment tier (zero/low/high) based on the household\u2019s housing cost. This is where the cycle enters housing variables.'},
+      {id:'hc', step:4, label:'housing_cost', sub:'Includes subsidized rent',
+       x:500, y:340, w:160, h:42, fill:AMBER, stroke:AMBER_D,
+       code:'housing_cost = rent + mortgage + taxes + insurance',
+       desc:'Total housing cost. The problem: rent is post-subsidy, pulling in housing_assistance.'},
+      {id:'rent', step:5, label:'rent', sub:'Net of subsidy',
+       x:175, y:340, w:130, h:42, fill:AMBER, stroke:AMBER_D,
+       code:'rent = pre_subsidy_rent - housing_assistance',
+       desc:'Out-of-pocket rent after housing vouchers. This subtraction creates the dependency.'},
+      {id:'ha', step:6, label:'housing_assistance', sub:'HUD Section 8',
+       x:175, y:245, w:178, h:42, fill:PURPLE, stroke:PURPLE_D, labelSize:11,
+       code:'assistance = hud_formula(hud_annual_income)',
+       desc:'HUD Section 8 voucher or public housing subsidy. Amount depends on household income.'},
+      {id:'hud', step:7, label:'hud_annual_income', sub:'Includes TANF',
+       x:175, y:150, w:178, h:42, fill:PURPLE, stroke:PURPLE_D, labelSize:11,
+       code:'hud_income = wages + social_security + tanf',
+       desc:'HUD\u2019s annual income definition (24 CFR 5.609) counts TANF benefits. Back to step 1 \u2192 cycle!'},
+    ],
+    edges: [
+      {from:'tanf', to:'fltca', fS:'bottom', tS:'top', label:'includes FL TCA'},
+      {from:'fltca', to:'ps', fS:'bottom', tS:'top', label:'payment standard'},
+      {from:'ps', to:'hc', fS:'bottom', tS:'top', label:'housing cost', cut:true},
+      {from:'hc', to:'rent', fS:'left', tS:'right', label:'includes rent'},
+      {from:'rent', to:'ha', fS:'top', tS:'bottom', label:'minus subsidy'},
+      {from:'ha', to:'hud', fS:'top', tS:'bottom', label:'based on income'},
+      {from:'hud', to:'tanf', fS:'right', tS:'left', label:'includes TANF', red:true},
+    ],
+    fix: {
+      cutX: 500, cutY: 293,
+      label: 'Fix: use pre_subsidy_rent',
+      labelX: 350, labelY: 390, labelW: 192
+    },
+    legend: [
+      {color:TEAL, label:'TANF programs'},
+      {color:AMBER, label:'Housing cost'},
+      {color:PURPLE, label:'HUD programs'},
+      {color:RED, label:'Cycle-completing edge'},
+    ]
+  },
+
+  childcare: {
+    desc: '23 state TANF \u2192 childcare_expenses \u2192 SNAP \u2192 tanf. Follow steps 1\u20136.',
+    nodes: [
+      {id:'tanf', step:1, label:'tanf', sub:'Federal aggregator',
+       x:500, y:70, w:160, h:42, fill:TEAL, stroke:TEAL_D,
+       code:'tanf = al_tanf + ak_tanf + ... + wv_tanf',
+       desc:'Sums all 39 state TANF programs.'},
+      {id:'st_tanf', step:2, label:'State TANF', sub:'23 state programs',
+       x:500, y:190, w:186, h:42, fill:TEAL, stroke:TEAL_D,
+       code:'countable_income = earned - childcare_deduction',
+       desc:'23 states let families deduct childcare costs from earned income, reducing countable income.'},
+      {id:'cc_ded', step:3, label:'childcare deduction', sub:'Earned income offset',
+       x:500, y:310, w:200, h:42, fill:TEAL, stroke:TEAL_D, labelSize:11,
+       code:'deduction = min(childcare_expenses, cap)',
+       desc:'The deduction equals actual childcare expenses (up to a cap). It looks up childcare_expenses \u2014 that\u2019s the problem.'},
+      {id:'cc_exp', step:4, label:'childcare_expenses', sub:'Post-subsidy amount',
+       x:175, y:310, w:186, h:42, fill:AMBER, stroke:AMBER_D, labelSize:11,
+       code:'expenses = pre_subsidy - co_ccap - ca_subsidy - ...',
+       desc:'Net childcare cost after subtracting state subsidies (CO CCAP, CA, NE, MA). This post-subsidy amount creates the dependency.'},
+      {id:'cc_sub', step:5, label:'childcare subsidies', sub:'CO CCAP, CA, NE, MA',
+       x:175, y:190, w:186, h:42, fill:PURPLE, stroke:PURPLE_D, labelSize:11,
+       code:'eligible = (income < threshold)\n# income includes snap benefit',
+       desc:'State childcare subsidies. Some use SNAP benefits as income for eligibility.'},
+      {id:'snap', step:6, label:'snap', sub:'Counts TANF as income',
+       x:175, y:70, w:130, h:42, fill:PURPLE, stroke:PURPLE_D,
+       code:'net_income = earnings + tanf + social_security\nsnap = max_allotment - 0.3 * net_income',
+       desc:'SNAP counts TANF as unearned income. Back to step 1 \u2192 cycle!'},
+    ],
+    edges: [
+      {from:'tanf', to:'st_tanf', fS:'bottom', tS:'top', label:'state programs'},
+      {from:'st_tanf', to:'cc_ded', fS:'bottom', tS:'top', label:'childcare deduct'},
+      {from:'cc_ded', to:'cc_exp', fS:'left', tS:'right', label:'looks up expenses', cut:true},
+      {from:'cc_exp', to:'cc_sub', fS:'top', tS:'bottom', label:'net of subsidies'},
+      {from:'cc_sub', to:'snap', fS:'top', tS:'bottom', label:'SNAP as income'},
+      {from:'snap', to:'tanf', fS:'right', tS:'left', label:'TANF as income', red:true},
+    ],
+    fix: {
+      cutX: 337, cutY: 310,
+      label: 'Fix: use pre_subsidy_childcare_expenses',
+      labelX: 350, labelY: 380, labelW: 270
+    },
+    legend: [
+      {color:TEAL, label:'TANF programs'},
+      {color:AMBER, label:'Childcare expenses'},
+      {color:PURPLE, label:'External programs'},
+      {color:RED, label:'Cycle-completing edge'},
+    ]
+  },
+
+  salt: {
+    desc: '6 states deduct federal tax \u2192 SALT \u2192 federal tax \u2192 state tax. Follow steps 1\u20136.',
+    nodes: [
+      {id:'sti', step:1, label:'state_taxable_income', sub:'State tax base',
+       x:500, y:70, w:204, h:42, fill:TEAL, stroke:TEAL_D, labelSize:10.5,
+       code:'state_taxable = agi - federal_tax_deduction - ...',
+       desc:'State taxable income. In AL, IA, LA, MO, MT, OR, this deducts federal tax paid.'},
+      {id:'sit', step:2, label:'state_income_tax', sub:'Full computed liability',
+       x:500, y:190, w:190, h:42, fill:TEAL, stroke:TEAL_D, labelSize:11,
+       code:'state_tax = al_rate_schedule(state_taxable_income)',
+       desc:'The fully computed state income tax. The SALT deduction claims this exact amount.'},
+      {id:'salt', step:3, label:'salt_deduction', sub:'Federal itemized deduction',
+       x:500, y:310, w:176, h:42, fill:AMBER, stroke:AMBER_D, labelSize:11,
+       code:'salt = state_income_tax + local_property_tax\n# capped at $10,000 under TCJA',
+       desc:'State and Local Tax deduction for federal itemizers. This is where the cycle bridges state \u2192 federal.'},
+      {id:'fti', step:4, label:'federal_taxable_income', sub:'Federal tax base',
+       x:175, y:310, w:200, h:42, fill:PURPLE, stroke:PURPLE_D, labelSize:10.5,
+       code:'fed_taxable = agi - max(standard_ded, itemized)\n# itemized includes SALT',
+       desc:'Federal taxable income, reduced by the SALT deduction for itemizers.'},
+      {id:'fit', step:5, label:'federal_income_tax', sub:'Computed federal liability',
+       x:175, y:190, w:196, h:42, fill:PURPLE, stroke:PURPLE_D, labelSize:11,
+       code:'fed_tax = rate_schedule(federal_taxable_income)',
+       desc:'Federal income tax, computed from federal taxable income.'},
+      {id:'ftd', step:6, label:'federal_tax_deduction', sub:'6 states deduct this',
+       x:175, y:70, w:204, h:42, fill:AMBER, stroke:AMBER_D, labelSize:10.5,
+       code:'# AL, IA, LA, MO, MT, OR\nstate_deduction = federal_income_tax',
+       desc:'6 states allow deducting federal income tax from state taxable income. Back to step 1 \u2192 cycle!'},
+    ],
+    edges: [
+      {from:'sti', to:'sit', fS:'bottom', tS:'top', label:'\u2192 state tax'},
+      {from:'sit', to:'salt', fS:'bottom', tS:'top', label:'claimed as SALT', cut:true},
+      {from:'salt', to:'fti', fS:'left', tS:'right', label:'\u2192 federal income'},
+      {from:'fti', to:'fit', fS:'top', tS:'bottom', label:'\u2192 federal tax'},
+      {from:'fit', to:'ftd', fS:'top', tS:'bottom', label:'6 states deduct'},
+      {from:'ftd', to:'sti', fS:'right', tS:'left', label:'\u2192 state income', red:true},
+    ],
+    fix: {
+      cutX: 500, cutY: 250,
+      label: 'Fix: use state_withheld_income_tax',
+      labelX: 350, labelY: 380, labelW: 240
+    },
+    legend: [
+      {color:TEAL, label:'State tax system'},
+      {color:AMBER, label:'Cross-system deductions'},
+      {color:PURPLE, label:'Federal tax system'},
+      {color:RED, label:'Cycle-completing edge'},
+    ]
+  }
+};
+
+/* ── Geometry ── */
+function side(n, s) {
+  const hw = n.w/2, hh = n.h/2;
+  switch(s) {
+    case 'top':    return {x:n.x, y:n.y-hh};
+    case 'bottom': return {x:n.x, y:n.y+hh};
+    case 'left':   return {x:n.x-hw, y:n.y};
+    case 'right':  return {x:n.x+hw, y:n.y};
+  }
+}
+function labelPos(x1,y1,x2,y2) {
+  const mx=(x1+x2)/2, my=(y1+y2)/2;
+  const dx=Math.abs(x2-x1), dy=Math.abs(y2-y1);
+  // Horizontal edges: label centered above
+  if (dy<5) return {x:mx, y:my-9, anchor:'middle'};
+  // Vertical edges: label in the gap between columns
+  // Left-column labels offset +12 y to avoid overlapping right-column labels at same row
+  if (dx<5) {
+    if (mx > 340) return {x:390, y:my, anchor:'end'};   // right col → label left into gap
+    return {x:280, y:my+12, anchor:'start'};              // left col → label right, shifted down
+  }
+  // Diagonal edges: centered well above
+  return {x:mx, y:my-18, anchor:'middle'};
+}
+
+/* ── Render ── */
+function renderCycle(key, cycle) {
+  const g = el('g', {id:'cycle-'+key, class: key==='housing' ? 'cycle-group active' : 'cycle-group'});
+  const nmap = {};
+  cycle.nodes.forEach(n => nmap[n.id] = n);
+
+  // Edges
+  cycle.edges.forEach(edge => {
+    const p1 = side(nmap[edge.from], edge.fS);
+    const p2 = side(nmap[edge.to], edge.tS);
+    g.appendChild(el('path', {
+      class:'edge',
+      d:'M '+p1.x+','+p1.y+' L '+p2.x+','+p2.y,
+      stroke: edge.red ? RED : GRAY,
+      'stroke-width': edge.red ? 3 : 2.5,
+      'marker-end': edge.red ? 'url(#arr-red)' : 'url(#arr)',
+      'data-from':edge.from, 'data-to':edge.to
+    }));
+    const lp = labelPos(p1.x,p1.y,p2.x,p2.y);
+    // Offset cut edge labels away from X mark
+    if (edge.cut) {
+      const isHorizontal = Math.abs(p1.y - p2.y) < 5;
+      if (isHorizontal) lp.y -= 8;  // extra space above horizontal cut
+      else lp.y -= 14;               // above vertical cut
+    }
+    g.appendChild(txt('text', {
+      class:'edge-label', x:lp.x, y:lp.y,
+      'text-anchor':lp.anchor, 'font-size':10.5
+    }, edge.label));
+  });
+
+  // Pulse
+  const pp = cycle.nodes.map(n => n.x+','+n.y).join(' L ');
+  g.appendChild(el('path', {
+    class:'pulse', d:'M '+pp+' L '+cycle.nodes[0].x+','+cycle.nodes[0].y
+  }));
+
+  // Nodes with step badges
+  cycle.nodes.forEach(node => {
+    const ng = el('g', {class:'node', 'data-id':node.id});
+    // Node rect
+    ng.appendChild(el('rect', {
+      x:node.x-node.w/2, y:node.y-node.h/2, width:node.w, height:node.h,
+      fill:node.fill, stroke:node.stroke, 'stroke-width':2, rx:8, ry:8
+    }));
+    // Label
+    ng.appendChild(txt('text', {
+      x:node.x, y: node.sub ? node.y-7 : node.y,
+      'text-anchor':'middle', 'dominant-baseline':'central',
+      'font-size': node.labelSize||13, 'font-weight':600, fill:'#fff',
+      'font-family':'"JetBrains Mono","Fira Code",monospace'
+    }, node.label));
+    // Subtitle
+    if (node.sub) {
+      ng.appendChild(txt('text', {
+        x:node.x, y:node.y+11,
+        'text-anchor':'middle', 'dominant-baseline':'central',
+        'font-size':10, fill:'#fff', opacity:0.85,
+        'font-family':'"Inter",sans-serif'
+      }, node.sub));
+    }
+    // Step badge
+    const bx = node.x - node.w/2 - 3;
+    const by = node.y - node.h/2 - 3;
+    ng.appendChild(el('circle', {
+      cx:bx, cy:by, r:11, fill:'#fff', stroke:node.stroke, 'stroke-width':1.5
+    }));
+    ng.appendChild(txt('text', {
+      x:bx, y:by, 'text-anchor':'middle', 'dominant-baseline':'central',
+      'font-size':11, 'font-weight':700, fill:node.fill,
+      'font-family':'"Inter",sans-serif'
+    }, String(node.step)));
+    g.appendChild(ng);
+  });
+
+  // Fix annotation: X mark + compact green label
+  if (cycle.fix) {
+    const f = cycle.fix;
+    const sz = 8;
+    // Red X
+    g.appendChild(el('line', {x1:f.cutX-sz, y1:f.cutY-sz, x2:f.cutX+sz, y2:f.cutY+sz, stroke:RED, 'stroke-width':3}));
+    g.appendChild(el('line', {x1:f.cutX+sz, y1:f.cutY-sz, x2:f.cutX-sz, y2:f.cutY+sz, stroke:RED, 'stroke-width':3}));
+    // Green label badge
+    const lw = f.labelW, lh = 22;
+    g.appendChild(el('rect', {
+      x:f.labelX - lw/2, y:f.labelY - lh/2, width:lw, height:lh,
+      rx:4, fill:'#F0FFF4', stroke:GREEN, 'stroke-width':1.5
+    }));
+    g.appendChild(txt('text', {
+      x:f.labelX, y:f.labelY,
+      'text-anchor':'middle', 'dominant-baseline':'central',
+      'font-size':10.5, 'font-weight':600, fill:GREEN_D,
+      'font-family':'"JetBrains Mono",monospace'
+    }, f.label));
+  }
+
+  return g;
+}
+
+/* ── Init ── */
+const svg = document.getElementById('diagram');
+const legendEl = document.getElementById('legend');
+const descEl = document.getElementById('description');
+const tooltip = document.getElementById('tooltip');
+
+Object.entries(CYCLES).forEach(([key, cycle]) => {
+  svg.appendChild(renderCycle(key, cycle));
+});
+
+function updateLegend(key) {
+  legendEl.innerHTML = CYCLES[key].legend.map(item =>
+    '<div class="legend-item"><div class="legend-swatch" style="background:'+item.color+'"></div>'+item.label+'</div>'
+  ).join('') + '<div class="legend-item"><div class="legend-swatch" style="background:#F0FFF4;border:1.5px solid #38A169"></div>Fix</div>';
+}
+function updateDesc(key) { descEl.textContent = CYCLES[key].desc; }
+
+updateLegend('housing');
+updateDesc('housing');
+
+/* ── Tab switching ── */
+let activeTab = 'housing';
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    const t = tab.dataset.cycle;
+    if (t === activeTab) return;
+    document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b.dataset.cycle===t));
+    document.querySelectorAll('.cycle-group').forEach(g => g.classList.toggle('active', g.id==='cycle-'+t));
+    resetHL(); updateLegend(t); updateDesc(t); activeTab = t;
+  });
+});
+
+/* ── Click highlight ── */
+let activeNode = null;
+svg.addEventListener('click', (e) => {
+  const nd = e.target.closest('.node');
+  const grp = document.querySelector('.cycle-group.active');
+  if (!grp) return;
+  if (!nd) { resetHL(); return; }
+  const id = nd.dataset.id;
+  if (!id || activeNode===id) { resetHL(); return; }
+  activeNode = id;
+  const conn = new Set([id]), connE = new Set();
+  grp.querySelectorAll('.edge').forEach(e => {
+    if (e.dataset.from===id || e.dataset.to===id) {
+      connE.add(e); conn.add(e.dataset.from); conn.add(e.dataset.to);
+    }
+  });
+  grp.querySelectorAll('.node[data-id]').forEach(n => {
+    n.classList.toggle('dimmed', !conn.has(n.dataset.id));
+    n.classList.toggle('highlighted', conn.has(n.dataset.id));
+  });
+  grp.querySelectorAll('.edge').forEach(e => {
+    e.classList.toggle('dimmed', !connE.has(e));
+    e.classList.toggle('highlighted', connE.has(e));
+  });
+  grp.querySelectorAll('.edge-label').forEach(l => l.classList.add('dimmed'));
+});
+function resetHL() {
+  activeNode = null;
+  const g = document.querySelector('.cycle-group.active');
+  if (g) g.querySelectorAll('.node,.edge,.edge-label').forEach(el => el.classList.remove('dimmed','highlighted'));
+}
+
+/* ── Tooltip with code ── */
+function findNode(id) {
+  return CYCLES[activeTab].nodes.find(n => n.id === id);
+}
+svg.addEventListener('mouseover', (e) => {
+  const nd = e.target.closest('.node[data-id]');
+  if (!nd) return;
+  const n = findNode(nd.dataset.id);
+  if (!n) return;
+  tooltip.innerHTML =
+    '<div class="tt-name"><span class="tt-step">Step '+n.step+'</span> '+n.label+'</div>' +
+    (n.code ? '<code class="tt-code">'+n.code.replace(/</g,'&lt;')+'</code>' : '') +
+    '<div class="tt-desc">'+n.desc+'</div>';
+  tooltip.classList.add('visible');
+});
+svg.addEventListener('mousemove', (e) => {
+  const r = document.querySelector('.container').getBoundingClientRect();
+  let x = e.clientX - r.left + 15;
+  let y = e.clientY - r.top - 10;
+  if (x + 320 > r.width) x = e.clientX - r.left - 330;
+  if (y < 0) y = 5;
+  tooltip.style.left = x+'px';
+  tooltip.style.top = y+'px';
+});
+svg.addEventListener('mouseout', (e) => {
+  if (e.target.closest('.node')) tooltip.classList.remove('visible');
+});
+</script>
+</body>
+</html>
