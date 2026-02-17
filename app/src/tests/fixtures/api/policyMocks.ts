@@ -30,7 +30,9 @@ export const mockV2PolicyResponse = (overrides?: Partial<V2PolicyResponse>): V2P
 /**
  * V2 Policy creation payload mock
  */
-export const mockV2PolicyPayload = (overrides?: Partial<V2PolicyCreatePayload>): V2PolicyCreatePayload => ({
+export const mockV2PolicyPayload = (
+  overrides?: Partial<V2PolicyCreatePayload>
+): V2PolicyCreatePayload => ({
   name: 'New Policy',
   tax_benefit_model_id: TEST_TAX_BENEFIT_MODEL_ID,
   parameter_values: [],
