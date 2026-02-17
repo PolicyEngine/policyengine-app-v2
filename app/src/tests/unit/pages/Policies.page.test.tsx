@@ -28,6 +28,11 @@ vi.mock('@/hooks/useCurrentCountry', () => ({
   useCurrentCountry: () => 'us',
 }));
 
+// Mock useUserId to return MOCK_USER_ID
+vi.mock('@/hooks/useUserId', () => ({
+  useUserId: () => MOCK_USER_ID.toString(),
+}));
+
 // Mock useNavigate
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async () => {
