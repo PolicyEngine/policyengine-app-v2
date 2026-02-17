@@ -2,14 +2,14 @@
  * SimulationBlock - A simulation configuration card
  */
 
-import { useLayoutEffect, useRef, useState } from 'react';
-import { IconCheck, IconPencil, IconTrash } from '@tabler/icons-react';
-import { ActionIcon, Box, Group, Paper, Text, TextInput, Tooltip } from '@mantine/core';
-import { colors, spacing, typography } from '@/designTokens';
+import { IconCheck, IconTrash } from '@tabler/icons-react';
+import { ActionIcon, Box, Group, Paper, Text, Tooltip } from '@mantine/core';
+import { colors, spacing } from '@/designTokens';
 import type { PopulationStateProps, SimulationStateProps } from '@/types/pathwayState';
 import { FONT_SIZES } from '../constants';
 import { styles } from '../styles';
 import type { RecentPopulation, SavedPolicy } from '../types';
+import { EditableLabel } from './EditableLabel';
 import { IngredientSection } from './IngredientSection';
 
 interface SimulationBlockProps {
@@ -57,11 +57,6 @@ export function SimulationBlock({
   recentPopulations,
 }: SimulationBlockProps) {
 
-  const [isEditingLabel, setIsEditingLabel] = useState(false);
-  const [labelInput, setLabelInput] = useState(simulation.label || '');
-  const [inputWidth, setInputWidth] = useState<number | null>(null);
-  const measureRef = useRef<HTMLSpanElement>(null);
-
   const isPolicyConfigured = !!simulation.policy.id;
   const effectivePopulation =
     populationInherited && inheritedPopulation ? inheritedPopulation : simulation.population;
@@ -70,21 +65,7 @@ export function SimulationBlock({
   );
   const isFullyConfigured = isPolicyConfigured && isPopulationConfigured;
 
-  const handleLabelSubmit = () => {
-    onLabelChange(labelInput || (index === 0 ? 'Baseline simulation' : 'Reform simulation'));
-    setIsEditingLabel(false);
-  };
-
   const defaultLabel = index === 0 ? 'Baseline simulation' : 'Reform simulation';
-
-  // Measure text width for auto-sizing input
-  useLayoutEffect(() => {
-    if (measureRef.current && isEditingLabel) {
-      const textToMeasure = labelInput || defaultLabel;
-      measureRef.current.textContent = textToMeasure;
-      setInputWidth(measureRef.current.offsetWidth);
-    }
-  }, [labelInput, defaultLabel, isEditingLabel]);
 
   const currentPolicyId = simulation.policy.id;
   const currentPopulationId =
@@ -124,64 +105,12 @@ export function SimulationBlock({
 
       {/* Header */}
       <Box style={styles.simulationHeader}>
-        <Group gap={spacing.sm}>
-          {isEditingLabel ? (
-            <>
-              {/* Hidden span for measuring text width */}
-              <span
-                ref={measureRef}
-                style={{
-                  position: 'absolute',
-                  visibility: 'hidden',
-                  whiteSpace: 'pre',
-                  fontWeight: typography.fontWeight.semibold,
-                  fontSize: FONT_SIZES.normal,
-                }}
-              />
-              <TextInput
-                value={labelInput}
-                onChange={(e) => setLabelInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleLabelSubmit()}
-                placeholder={defaultLabel}
-                size="sm"
-                autoFocus
-                style={{ width: inputWidth ? inputWidth + 8 : 'auto' }}
-                styles={{
-                  input: {
-                    fontWeight: typography.fontWeight.semibold,
-                    fontSize: FONT_SIZES.normal,
-                  },
-                }}
-              />
-              <ActionIcon
-                size="sm"
-                variant="subtle"
-                color="teal"
-                onClick={handleLabelSubmit}
-                aria-label="Confirm simulation name"
-              >
-                <IconCheck size={14} />
-              </ActionIcon>
-            </>
-          ) : (
-            <Group gap={spacing.xs}>
-              <Text style={{ ...styles.simulationTitle, marginRight: 8 }}>
-                {simulation.label || defaultLabel}
-              </Text>
-              <ActionIcon
-                size="xs"
-                variant="subtle"
-                color="gray"
-                onClick={() => {
-                  setLabelInput(simulation.label || defaultLabel);
-                  setIsEditingLabel(true);
-                }}
-              >
-                <IconPencil size={12} />
-              </ActionIcon>
-            </Group>
-          )}
-        </Group>
+        <EditableLabel
+          value={simulation.label || ''}
+          onChange={onLabelChange}
+          placeholder={defaultLabel}
+          emptyStateText={defaultLabel}
+        />
 
         <Group gap={spacing.xs}>
           {isRequired && (
