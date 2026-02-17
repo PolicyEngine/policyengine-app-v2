@@ -1,7 +1,7 @@
 [
   {
     "title": "PolicyEngine completes TANF modeling for all 50 states and DC",
-    "description": "AI-assisted workflows enabled nationwide coverage of Temporary Assistance for Needy Families, now available through the household API and microsimulation.",
+    "description": "AI-assisted workflows enabled nationwide coverage of Temporary Assistance for Needy Families, now available through the web app, Python package, and API.",
     "date": "2026-02-17",
     "tags": ["us", "technical", "ai", "featured"],
     "authors": ["pavel-makarchuk"],
