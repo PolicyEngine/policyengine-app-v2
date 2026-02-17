@@ -4,9 +4,9 @@ PolicyEngine now models Temporary Assistance for Needy Families (TANF) eligibili
 
 Each state administers TANF under its own rules, setting benefit levels, income disregards, asset limits, and eligibility criteria independently. Encoding 51 distinct policy configurations required a systematic approach.
 
-We used the [multi-agent AI workflow](multi-agent-workflows-policy-research) we described in an earlier post. Claude Code agents handled the repetitive components of the implementation: reading state policy manuals, structuring parameters, drafting variable logic, and generating test cases. Human reviewers validated each state's rules against official documentation and resolved cases where policy language was ambiguous or where program interactions required judgment.
+We used the multi-agent AI workflow we described in [this article](multi-agent-workflows-policy-research). Claude Code agents handled the repetitive components of the implementation: reading state policy manuals, structuring parameters, drafting variable logic, and generating test cases. Human reviewers validated each state's rules against official documentation and resolved cases where policy language was ambiguous or where program interactions required judgment.
 
-This workflow allowed us to maintain consistent code quality and documentation standards across all 51 implementations while reducing the time required for each additional state.
+This workflow allowed us to maintain consistent code quality and documentation standards across all 51 implementations while significantly reducing the time required for each additional state.
 
 ## What TANF covers
 
