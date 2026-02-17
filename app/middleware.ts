@@ -38,7 +38,9 @@ export const CRAWLER_USER_AGENTS = [
 const SEARCH_ENGINE_BOTS = ['Googlebot', 'bingbot', 'Baiduspider', 'YandexBot', 'DuckDuckBot'];
 
 function isSearchEngine(userAgent: string | null): boolean {
-  if (!userAgent) return false;
+  if (!userAgent) {
+    return false;
+  }
   return SEARCH_ENGINE_BOTS.some((bot) => userAgent.includes(bot));
 }
 
