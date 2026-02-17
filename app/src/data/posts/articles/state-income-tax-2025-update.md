@@ -4,13 +4,15 @@ This update ensures that our microsimulation models accurately reflect the lates
 
 State income tax systems vary significantly across the United States. Some states like California and New York have progressive rate structures with multiple brackets, while others like Texas and Florida have no state income tax at all. Each year, many states adjust their tax parameters for inflation or enact new legislation that changes tax rates, deductions, credits, and other income tax programs.
 
-For tax year 2025, we have updated:
+For tax year 2025, updates include:
 
 - **Income tax brackets and rates** - Updated thresholds for states with graduated income tax systems
 - **Standard deductions** - Adjusted values for states that offer standard deductions
 - **Personal exemptions** - Updated exemption amounts where applicable
 - **State-specific credits** - Earned Income Tax Credits (EITCs), Child Tax Credits (CTCs), and other refundable and nonrefundable credits
 - **Filing thresholds** - Updated income levels that trigger filing requirements
+
+among other provisions.
 
 ## Why does this matter?
 
