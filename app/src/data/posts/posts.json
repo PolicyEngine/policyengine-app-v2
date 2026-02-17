@@ -1,5 +1,14 @@
 [
   {
+    "title": "PolicyEngine completes TANF modeling for all 50 states and DC",
+    "description": "AI-assisted workflows enabled nationwide coverage of Temporary Assistance for Needy Families, now available through the household API and microsimulation.",
+    "date": "2026-02-17",
+    "tags": ["us", "technical", "ai", "featured"],
+    "authors": ["pavel-makarchuk"],
+    "filename": "tanf-50-state-coverage.md",
+    "image": "tanf-50-state-coverage.svg"
+  },
+  {
     "title": "Analysis of South Carolina H.3492: Making the state EITC partially refundable",
     "description": "PolicyEngine projects the bill would lower state revenues by $402 million while reducing child poverty by 5.4% in 2026.",
     "date": "2026-02-04",
