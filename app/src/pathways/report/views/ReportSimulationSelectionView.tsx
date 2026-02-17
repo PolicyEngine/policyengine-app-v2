@@ -21,11 +21,12 @@ import DefaultBaselineOption from '../components/DefaultBaselineOption';
  */
 
 /**
- * Creates a policy state for current law
+ * Creates a policy state for current law.
+ * In V2 API, current law is represented by id = null.
  */
-function createCurrentLawPolicy(currentLawId: number): PolicyStateProps {
+function createCurrentLawPolicy(_currentLawId: null): PolicyStateProps {
   return {
-    id: currentLawId.toString(),
+    id: null,
     label: 'Current law',
     parameters: [],
   };
@@ -77,7 +78,7 @@ type SetupAction = 'createNew' | 'loadExisting' | 'defaultBaseline';
 interface ReportSimulationSelectionViewProps {
   simulationIndex: 0 | 1;
   countryId: string;
-  currentLawId: number;
+  currentLawId: null;
   onCreateNew: () => void;
   onLoadExisting: () => void;
   onSelectDefaultBaseline?: (simulationState: SimulationStateProps, simulationId: string) => void;
@@ -167,9 +168,10 @@ export default function ReportSimulationSelectionView({
 
     try {
       // Create simulation directly - geography is not stored as user association
+      // In V2 API, current law is represented by null policyId
       const simulationData: Partial<Simulation> = {
         populationId: regionCode,
-        policyId: currentLawId.toString(),
+        policyId: null,
         populationType: 'geography',
       };
 

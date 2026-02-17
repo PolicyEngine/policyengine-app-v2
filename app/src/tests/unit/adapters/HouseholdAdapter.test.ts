@@ -1,289 +1,443 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { HouseholdAdapter } from '@/adapters/HouseholdAdapter';
-import { store } from '@/store';
 import {
-  mockEmptyHouseholdData,
-  mockEntityMetadata,
-  mockHouseholdData,
-  mockHouseholdDataWithMultipleEntities,
-  mockHouseholdDataWithUnknownEntity,
-  mockHouseholdMetadata,
-  mockHouseholdMetadataWithUnknownEntity,
-} from '@/tests/fixtures/adapters/HouseholdAdapterMocks';
+  countryIdToModelName,
+  generateHouseholdId,
+  HouseholdAdapter,
+  modelNameToCountryId,
+} from '@/adapters/HouseholdAdapter';
+import { Household } from '@/types/ingredients/Household';
+import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
 
-vi.mock('@/store', () => ({
-  store: {
-    getState: vi.fn(),
+// Test constants
+const TEST_HOUSEHOLD_ID = 'hh-12345';
+const TEST_LABEL = 'Test household';
+const TEST_YEAR = 2025;
+const TEST_POLICY_ID = 'policy-123';
+const TEST_DYNAMIC_ID = 'dynamic-456';
+
+// Mock household data
+const mockUSHousehold: Household = {
+  tax_benefit_model_name: 'policyengine_us',
+  year: TEST_YEAR,
+  people: [
+    {
+      age: 30,
+      employment_income: 50000,
+    },
+    {
+      age: 28,
+      employment_income: 45000,
+    },
+  ],
+  tax_unit: {
+    state_code: 'CA',
   },
-}));
+  household: {
+    state_fips: 6,
+  },
+};
+
+const mockUKHousehold: Household = {
+  tax_benefit_model_name: 'policyengine_uk',
+  year: TEST_YEAR,
+  people: [
+    {
+      age: 35,
+      employment_income: 30000,
+    },
+  ],
+  benunit: {
+    is_married: false,
+  },
+  household: {
+    region: 'london',
+  },
+};
+
+const mockUSHouseholdWithLabel: Household = {
+  ...mockUSHousehold,
+  id: TEST_HOUSEHOLD_ID,
+  label: TEST_LABEL,
+};
+
+const mockUSHouseholdMetadata: HouseholdMetadata = {
+  id: TEST_HOUSEHOLD_ID,
+  household: mockUSHousehold,
+  label: TEST_LABEL,
+  created_at: '2025-01-15T10:00:00Z',
+};
+
+const mockUSHouseholdMetadataNoLabel: HouseholdMetadata = {
+  id: TEST_HOUSEHOLD_ID,
+  household: mockUSHousehold,
+  label: null,
+  created_at: '2025-01-15T10:00:00Z',
+};
 
 describe('HouseholdAdapter', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.spyOn(console, 'warn').mockImplementation(() => {});
+  });
 
-    (store.getState as any).mockReturnValue({
-      metadata: {
-        entities: mockEntityMetadata,
-      },
+  describe('fromMetadata', () => {
+    test('given household metadata with label then extracts household and adds id and label', () => {
+      const result = HouseholdAdapter.fromMetadata(mockUSHouseholdMetadata);
+
+      expect(result).toEqual({
+        ...mockUSHousehold,
+        id: TEST_HOUSEHOLD_ID,
+        label: TEST_LABEL,
+      });
+    });
+
+    test('given household metadata without label then extracts household and adds id only', () => {
+      const result = HouseholdAdapter.fromMetadata(mockUSHouseholdMetadataNoLabel);
+
+      expect(result).toEqual({
+        ...mockUSHousehold,
+        id: TEST_HOUSEHOLD_ID,
+        label: undefined,
+      });
+    });
+
+    test('given household metadata with null label then extracts household with undefined label', () => {
+      const metadata: HouseholdMetadata = {
+        id: TEST_HOUSEHOLD_ID,
+        household: mockUSHousehold,
+        label: null,
+      };
+
+      const result = HouseholdAdapter.fromMetadata(metadata);
+
+      expect(result.label).toBeUndefined();
+    });
+
+    test('given UK household metadata then extracts household correctly', () => {
+      const metadata: HouseholdMetadata = {
+        id: 'uk-household-1',
+        household: mockUKHousehold,
+        label: 'UK test',
+      };
+
+      const result = HouseholdAdapter.fromMetadata(metadata);
+
+      expect(result).toEqual({
+        ...mockUKHousehold,
+        id: 'uk-household-1',
+        label: 'UK test',
+      });
+      expect(result.benunit).toBeDefined();
+      expect(result.tax_unit).toBeUndefined();
+    });
+
+    test('given household with all US entity types then preserves all entities', () => {
+      const householdWithAllEntities: Household = {
+        tax_benefit_model_name: 'policyengine_us',
+        year: TEST_YEAR,
+        people: [{ age: 30 }],
+        tax_unit: {},
+        family: {},
+        spm_unit: {},
+        marital_unit: {},
+        household: {},
+      };
+
+      const metadata: HouseholdMetadata = {
+        id: 'test-id',
+        household: householdWithAllEntities,
+      };
+
+      const result = HouseholdAdapter.fromMetadata(metadata);
+
+      expect(result.tax_unit).toBeDefined();
+      expect(result.family).toBeDefined();
+      expect(result.spm_unit).toBeDefined();
+      expect(result.marital_unit).toBeDefined();
+      expect(result.household).toBeDefined();
     });
   });
 
-  describe('fromAPI', () => {
-    test('given valid household metadata from API then converts to internal Household format', () => {
-      const result = HouseholdAdapter.fromMetadata(mockHouseholdMetadata);
+  describe('toMetadata', () => {
+    test('given household with id and label then creates metadata and strips id and label from household', () => {
+      const result = HouseholdAdapter.toMetadata(mockUSHouseholdWithLabel);
 
-      expect(result).toEqual({
-        id: '12345',
-        countryId: 'us',
-        householdData: {
-          people: mockHouseholdMetadata.household_json.people,
-          taxUnits: mockHouseholdMetadata.household_json.tax_units,
-          maritalUnits: mockHouseholdMetadata.household_json.marital_units,
-          spmUnits: mockHouseholdMetadata.household_json.spm_units,
-          households: mockHouseholdMetadata.household_json.households,
-          families: mockHouseholdMetadata.household_json.families,
-        },
-      });
+      expect(result.id).toBe(TEST_HOUSEHOLD_ID);
+      expect(result.label).toBe(TEST_LABEL);
+      expect(result.household).toEqual(mockUSHousehold);
+      expect(result.household).not.toHaveProperty('id');
+      expect(result.household).not.toHaveProperty('label');
+      expect(result.created_at).toBeDefined();
     });
 
-    test('given API response with snake_case entities then converts all to camelCase', () => {
-      const metadata = {
-        id: 123,
-        country_id: 'uk',
-        household_json: {
-          people: { person1: { age: { 2025: 30 } } },
-          tax_units: { unit1: { members: ['person1'] } },
-          marital_units: { unit1: { members: ['person1'] } },
-        },
+    test('given household without id then generates new id', () => {
+      const result = HouseholdAdapter.toMetadata(mockUSHousehold);
+
+      expect(result.id).toBeDefined();
+      expect(result.id).toMatch(/^hh-\d+-[a-z0-9]+$/);
+      expect(result.household).toEqual(mockUSHousehold);
+    });
+
+    test('given household with custom id parameter then uses provided id', () => {
+      const customId = 'custom-hh-id';
+      const result = HouseholdAdapter.toMetadata(mockUSHousehold, customId);
+
+      expect(result.id).toBe(customId);
+      expect(result.household).toEqual(mockUSHousehold);
+    });
+
+    test('given household without label then metadata label is undefined', () => {
+      const result = HouseholdAdapter.toMetadata(mockUSHousehold);
+
+      expect(result.label).toBeUndefined();
+    });
+
+    test('given household then sets created_at timestamp', () => {
+      const beforeTime = new Date();
+      const result = HouseholdAdapter.toMetadata(mockUSHousehold);
+      const afterTime = new Date();
+
+      expect(result.created_at).toBeDefined();
+      const resultTime = new Date(result.created_at!);
+      expect(resultTime.getTime()).toBeGreaterThanOrEqual(beforeTime.getTime());
+      expect(resultTime.getTime()).toBeLessThanOrEqual(afterTime.getTime());
+    });
+
+    test('given UK household then creates metadata correctly', () => {
+      const ukHouseholdWithLabel = { ...mockUKHousehold, label: 'UK Test' };
+      const result = HouseholdAdapter.toMetadata(ukHouseholdWithLabel);
+
+      expect(result.household.tax_benefit_model_name).toBe('policyengine_uk');
+      expect(result.household.benunit).toBeDefined();
+      expect(result.label).toBe('UK Test');
+    });
+
+    test('given household with all entity types then preserves all in metadata', () => {
+      const householdWithAllEntities: Household = {
+        tax_benefit_model_name: 'policyengine_us',
+        year: TEST_YEAR,
+        people: [{}],
+        tax_unit: {},
+        family: {},
+        spm_unit: {},
+        marital_unit: {},
+        household: {},
       };
 
-      const result = HouseholdAdapter.fromMetadata(metadata as any);
+      const result = HouseholdAdapter.toMetadata(householdWithAllEntities);
 
-      expect(result.householdData).toHaveProperty('taxUnits');
-      expect(result.householdData).toHaveProperty('maritalUnits');
-      expect(result.householdData.taxUnits).toEqual(metadata.household_json.tax_units);
-      expect(result.householdData.maritalUnits).toEqual(metadata.household_json.marital_units);
-    });
-
-    test('given entity not in metadata then logs warning but includes it anyway', () => {
-      const result = HouseholdAdapter.fromMetadata(mockHouseholdMetadataWithUnknownEntity);
-
-      expect(console.warn).toHaveBeenCalledWith(
-        'Entity "unknown_entity" not found in metadata, including anyway'
-      );
-      expect(result.householdData).toHaveProperty('unknownEntity');
-      expect(result.householdData.unknownEntity).toEqual(
-        // @ts-expect-error
-        mockHouseholdMetadataWithUnknownEntity.household_json.unknown_entity
-      );
-    });
-
-    test('given people entity then always includes it without validation', () => {
-      const metadata = {
-        id: 456,
-        country_id: 'us',
-        household_json: {
-          people: {
-            person1: { age: { 2025: 25 } },
-            person2: { age: { 2025: 30 } },
-          },
-        },
-      };
-
-      const result = HouseholdAdapter.fromMetadata(metadata as any);
-
-      expect(result.householdData.people).toEqual(metadata.household_json.people);
-      expect(console.warn).not.toHaveBeenCalled();
-    });
-
-    test('given empty household_json except people then returns only people', () => {
-      const metadata = {
-        id: 789,
-        country_id: 'ca',
-        household_json: {
-          people: {},
-        },
-      };
-
-      const result = HouseholdAdapter.fromMetadata(metadata as any);
-
-      expect(result).toEqual({
-        id: 789,
-        countryId: 'ca',
-        householdData: {
-          people: {},
-        },
-      });
+      expect(result.household.tax_unit).toBeDefined();
+      expect(result.household.family).toBeDefined();
+      expect(result.household.spm_unit).toBeDefined();
+      expect(result.household.marital_unit).toBeDefined();
+      expect(result.household.household).toBeDefined();
     });
   });
 
-  describe('toCreationPayload', () => {
-    test('given household data then creates proper payload structure', () => {
-      const result = HouseholdAdapter.toCreationPayload(mockHouseholdData, 'us');
+  describe('toCalculatePayload', () => {
+    test('given household without policy or dynamic ids then creates basic payload', () => {
+      const result = HouseholdAdapter.toCalculatePayload(mockUSHousehold);
 
+      // toCalculatePayload wraps single entity dicts in arrays for the calculation API
       expect(result).toEqual({
-        country_id: 'us',
-        data: {
-          people: mockHouseholdData.people,
-          tax_units: mockHouseholdData.taxUnits,
-          marital_units: mockHouseholdData.maritalUnits,
-        },
+        tax_benefit_model_name: 'policyengine_us',
+        year: TEST_YEAR,
+        people: mockUSHousehold.people,
+        tax_unit: [mockUSHousehold.tax_unit],
+        household: [mockUSHousehold.household],
       });
+      expect(result.policy_id).toBeUndefined();
+      expect(result.dynamic_id).toBeUndefined();
     });
 
-    test('given household data with tax_units then converts to snake_case in payload', () => {
-      const householdData = {
-        people: { person1: { age: { 2025: 30 } } },
-        taxUnits: { unit1: { members: ['person1'] } },
-      };
+    test('given household with policy id then includes policy_id in payload', () => {
+      const result = HouseholdAdapter.toCalculatePayload(mockUSHousehold, TEST_POLICY_ID);
 
-      const result = HouseholdAdapter.toCreationPayload(householdData as any, 'uk');
-
-      expect(result.data).toHaveProperty('tax_units');
-      expect(result.data.tax_units).toEqual(householdData.taxUnits);
+      expect(result.policy_id).toBe(TEST_POLICY_ID);
+      expect(result.dynamic_id).toBeUndefined();
     });
 
-    test('given camelCase taxUnits then converts to tax_units in payload', () => {
-      const householdData = {
-        people: {},
-        taxUnits: { unit1: { head: 'person1' } },
-      };
-
-      const result = HouseholdAdapter.toCreationPayload(householdData as any, 'us');
-
-      expect(result.data).toHaveProperty('tax_units');
-      expect(result.data).not.toHaveProperty('taxUnits');
-    });
-
-    test('given household data with multiple entities then payload includes all entities', () => {
-      const result = HouseholdAdapter.toCreationPayload(
-        mockHouseholdDataWithMultipleEntities,
-        'us'
+    test('given household with policy and dynamic ids then includes both in payload', () => {
+      const result = HouseholdAdapter.toCalculatePayload(
+        mockUSHousehold,
+        TEST_POLICY_ID,
+        TEST_DYNAMIC_ID
       );
 
-      expect(result.data).toHaveProperty('people');
-      expect(result.data).toHaveProperty('tax_units');
-      expect(result.data).toHaveProperty('marital_units');
-      expect(result.data).toHaveProperty('spm_units');
+      expect(result.policy_id).toBe(TEST_POLICY_ID);
+      expect(result.dynamic_id).toBe(TEST_DYNAMIC_ID);
     });
 
-    test('given empty household data then creates minimal payload with only people', () => {
-      const result = HouseholdAdapter.toCreationPayload(mockEmptyHouseholdData, 'ca');
-
-      expect(result).toEqual({
-        country_id: 'ca',
-        data: {
-          people: {},
-        },
-      });
-    });
-
-    test('given entity not in metadata then toCreationPayload logs warning and uses snake_case', () => {
-      const result = HouseholdAdapter.toCreationPayload(mockHouseholdDataWithUnknownEntity, 'uk');
-
-      expect(console.warn).toHaveBeenCalledWith(
-        'Entity "customEntity" not found in metadata, using snake_case "custom_entity"'
+    test('given household with only dynamic id then includes dynamic_id', () => {
+      const result = HouseholdAdapter.toCalculatePayload(
+        mockUSHousehold,
+        undefined,
+        TEST_DYNAMIC_ID
       );
-      expect(result.data).toHaveProperty('custom_entity');
-      // @ts-expect-error
-      expect(result.data.custom_entity).toEqual(mockHouseholdDataWithUnknownEntity.customEntity);
+
+      expect(result.policy_id).toBeUndefined();
+      expect(result.dynamic_id).toBe(TEST_DYNAMIC_ID);
     });
 
-    test('given people entity then treats it as special case without conversion', () => {
-      const householdData = {
-        people: {
-          person1: { age: { 2025: 40 } },
-          person2: { age: { 2025: 35 } },
-        },
-      };
+    test('given UK household then creates UK payload', () => {
+      const result = HouseholdAdapter.toCalculatePayload(mockUKHousehold);
 
-      const result = HouseholdAdapter.toCreationPayload(householdData as any, 'us');
-
-      expect(result.data.people).toEqual(householdData.people);
-      expect(console.warn).not.toHaveBeenCalled();
+      expect(result.tax_benefit_model_name).toBe('policyengine_uk');
+      expect(result.benunit).toBeDefined();
+      expect(result.tax_unit).toBeUndefined();
     });
 
-    test('given entity with matching plural in metadata then uses metadata plural form', () => {
-      const householdData = {
-        people: {},
-        maritalUnits: { unit1: { members: ['person1', 'person2'] } },
+    test('given household with id and label then excludes them from payload', () => {
+      const result = HouseholdAdapter.toCalculatePayload(mockUSHouseholdWithLabel);
+
+      expect(result).not.toHaveProperty('id');
+      expect(result).not.toHaveProperty('label');
+    });
+
+    test('given household with all entity types then includes all in payload', () => {
+      const householdWithAllEntities: Household = {
+        tax_benefit_model_name: 'policyengine_us',
+        year: TEST_YEAR,
+        people: [{}],
+        tax_unit: {},
+        family: {},
+        spm_unit: {},
+        marital_unit: {},
+        household: {},
       };
 
-      const result = HouseholdAdapter.toCreationPayload(householdData as any, 'uk');
+      const result = HouseholdAdapter.toCalculatePayload(householdWithAllEntities);
 
-      expect(result.data).toHaveProperty('marital_units');
-      expect(result.data.marital_units).toEqual(householdData.maritalUnits);
+      expect(result.tax_unit).toBeDefined();
+      expect(result.family).toBeDefined();
+      expect(result.spm_unit).toBeDefined();
+      expect(result.marital_unit).toBeDefined();
+      expect(result.household).toBeDefined();
+    });
+
+    test('given household with undefined entity types then excludes them from payload', () => {
+      const minimalHousehold: Household = {
+        tax_benefit_model_name: 'policyengine_us',
+        year: TEST_YEAR,
+        people: [{}],
+      };
+
+      const result = HouseholdAdapter.toCalculatePayload(minimalHousehold);
+
+      expect(result.people).toBeDefined();
+      expect(result.tax_unit).toBeUndefined();
+      expect(result.family).toBeUndefined();
+      expect(result.spm_unit).toBeUndefined();
+      expect(result.marital_unit).toBeUndefined();
     });
   });
 
-  describe('Edge cases and error handling', () => {
-    test('given metadata with no entities then still processes people', () => {
-      (store.getState as any).mockReturnValue({
-        metadata: { entities: {} },
-      });
+  describe('getCountryId', () => {
+    test('given US household then returns us', () => {
+      const result = HouseholdAdapter.getCountryId(mockUSHousehold);
 
-      const metadata = {
-        id: 999,
-        country_id: 'us',
-        household_json: {
-          people: { person1: { age: { 2025: 50 } } },
-        },
-      };
-
-      const result = HouseholdAdapter.fromMetadata(metadata as any);
-
-      expect(result.householdData.people).toEqual(metadata.household_json.people);
+      expect(result).toBe('us');
     });
 
-    test('given undefined metadata entities then handles gracefully', () => {
-      (store.getState as any).mockReturnValue({
-        metadata: {},
-      });
+    test('given UK household then returns uk', () => {
+      const result = HouseholdAdapter.getCountryId(mockUKHousehold);
 
-      const metadata = {
-        id: 111,
-        country_id: 'ca',
-        household_json: {
-          people: { person1: {} },
-          tax_units: { unit1: {} },
-        },
-      };
+      expect(result).toBe('uk');
+    });
+  });
 
-      const result = HouseholdAdapter.fromMetadata(metadata as any);
+  describe('isUS', () => {
+    test('given US household then returns true', () => {
+      const result = HouseholdAdapter.isUS(mockUSHousehold);
 
-      expect(result.householdData.people).toBeDefined();
-      expect(result.householdData.taxUnits).toBeDefined();
-      expect(console.warn).toHaveBeenCalled();
+      expect(result).toBe(true);
     });
 
-    test('given complex nested snake_case then converts correctly to camelCase', () => {
-      const metadata = {
-        id: 222,
-        country_id: 'uk',
-        household_json: {
-          people: {},
-          very_long_entity_name: { data: 'test' },
-        },
-      };
+    test('given UK household then returns false', () => {
+      const result = HouseholdAdapter.isUS(mockUKHousehold);
 
-      const result = HouseholdAdapter.fromMetadata(metadata as any);
+      expect(result).toBe(false);
+    });
+  });
 
-      expect(result.householdData).toHaveProperty('veryLongEntityName');
-      expect(result.householdData.veryLongEntityName).toEqual({ data: 'test' });
+  describe('isUK', () => {
+    test('given UK household then returns true', () => {
+      const result = HouseholdAdapter.isUK(mockUKHousehold);
+
+      expect(result).toBe(true);
     });
 
-    test('given complex camelCase then converts correctly to snake_case', () => {
-      const householdData = {
-        people: {},
-        veryLongEntityName: { data: 'test' },
-      };
+    test('given US household then returns false', () => {
+      const result = HouseholdAdapter.isUK(mockUSHousehold);
 
-      const result = HouseholdAdapter.toCreationPayload(householdData as any, 'us');
-
-      expect(result.data).toHaveProperty('very_long_entity_name');
-      // @ts-expect-error
-      expect(result.data.very_long_entity_name).toEqual({ data: 'test' });
+      expect(result).toBe(false);
     });
+  });
+});
+
+describe('countryIdToModelName', () => {
+  test('given us then returns policyengine_us', () => {
+    const result = countryIdToModelName('us');
+
+    expect(result).toBe('policyengine_us');
+  });
+
+  test('given uk then returns policyengine_uk', () => {
+    const result = countryIdToModelName('uk');
+
+    expect(result).toBe('policyengine_uk');
+  });
+
+  test('given ca then defaults to policyengine_us', () => {
+    const result = countryIdToModelName('ca' as any);
+
+    expect(result).toBe('policyengine_us');
+  });
+});
+
+describe('modelNameToCountryId', () => {
+  test('given policyengine_us then returns us', () => {
+    const result = modelNameToCountryId('policyengine_us');
+
+    expect(result).toBe('us');
+  });
+
+  test('given policyengine_uk then returns uk', () => {
+    const result = modelNameToCountryId('policyengine_uk');
+
+    expect(result).toBe('uk');
+  });
+});
+
+describe('generateHouseholdId', () => {
+  test('given no parameters then generates id with correct format', () => {
+    const result = generateHouseholdId();
+
+    expect(result).toMatch(/^hh-\d+-[a-z0-9]+$/);
+  });
+
+  test('given multiple calls then generates unique ids', () => {
+    const id1 = generateHouseholdId();
+    const id2 = generateHouseholdId();
+
+    expect(id1).not.toBe(id2);
+  });
+
+  test('given call then id starts with hh- prefix', () => {
+    const result = generateHouseholdId();
+
+    expect(result.startsWith('hh-')).toBe(true);
+  });
+
+  test('given call then id contains timestamp', () => {
+    const beforeTime = Date.now();
+    const result = generateHouseholdId();
+    const afterTime = Date.now();
+
+    const timestampMatch = result.match(/^hh-(\d+)-/);
+    expect(timestampMatch).not.toBeNull();
+
+    const timestamp = parseInt(timestampMatch![1], 10);
+    expect(timestamp).toBeGreaterThanOrEqual(beforeTime);
+    expect(timestamp).toBeLessThanOrEqual(afterTime);
   });
 });

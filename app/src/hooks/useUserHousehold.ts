@@ -1,9 +1,9 @@
 // Import auth hook here in future; for now, mocked out below
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
-import { fetchHouseholdById } from '@/api/household';
+import { fetchHouseholdByIdV2 } from '@/api/v2/households';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { Household } from '@/types/ingredients/Household';
 import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
-import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
 import { ApiHouseholdStore, LocalStorageHouseholdStore } from '../api/householdAssociation';
 import { queryConfig } from '../libs/queryConfig';
 import { householdAssociationKeys, householdKeys } from '../libs/queryKeys';
@@ -133,7 +133,7 @@ export const useDeleteAssociation = () => {
 // Type for the combined data structure
 export interface UserHouseholdMetadataWithAssociation {
   association: UserHouseholdPopulation;
-  household: HouseholdMetadata | undefined;
+  household: Household | undefined;
   isLoading: boolean;
   error: Error | null | undefined;
   isError?: boolean;
@@ -154,8 +154,6 @@ export function isHouseholdMetadataWithAssociation(
 }
 
 export const useUserHouseholds = (userId: string) => {
-  const country = useCurrentCountry();
-
   // First, get the associations
   const {
     data: associations,
@@ -166,11 +164,11 @@ export const useUserHouseholds = (userId: string) => {
   // Extract household IDs
   const householdIds = associations?.map((a) => a.householdId) ?? [];
 
-  // Fetch all households in parallel
+  // Fetch all households in parallel using v2 API
   const householdQueries = useQueries({
     queries: householdIds.map((householdId) => ({
       queryKey: householdKeys.byId(householdId),
-      queryFn: () => fetchHouseholdById(country, householdId),
+      queryFn: () => fetchHouseholdByIdV2(householdId),
       enabled: !!associations, // Only run when associations are loaded
       staleTime: 5 * 60 * 1000,
     })),

@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { fetchHouseholdCalculation } from '@/api/householdCalculation';
 import { fetchCalculationWithMeta } from '@/api/reportCalculations';
 import { fetchSocietyWideCalculation } from '@/api/societyWideCalculation';
+import { calculateHouseholdV2Alpha } from '@/api/v2/householdCalculation';
+import { fetchHouseholdByIdV2 } from '@/api/v2/households';
 import {
   mockEconomyCalcResult,
   mockEconomyMeta,
@@ -14,7 +15,8 @@ import {
 } from '@/tests/fixtures/api/reportCalculationsMocks';
 
 // Mock the calculation APIs
-vi.mock('@/api/householdCalculation');
+vi.mock('@/api/v2/householdCalculation');
+vi.mock('@/api/v2/households');
 vi.mock('@/api/societyWideCalculation');
 
 describe('reportCalculations', () => {
@@ -24,20 +26,22 @@ describe('reportCalculations', () => {
 
   describe('fetchCalculationWithMeta', () => {
     describe('household calculations', () => {
-      it('given household metadata then fetches household calculation', async () => {
+      it('given household metadata then fetches household and calculates', async () => {
         // Given
         const meta = mockHouseholdMeta();
+        const mockHousehold = { tax_benefit_model_name: 'policyengine_us', year: 2024, people: [] };
         const mockResult = mockHouseholdCalcResult();
 
-        (fetchHouseholdCalculation as any).mockResolvedValue(mockResult);
+        vi.mocked(fetchHouseholdByIdV2).mockResolvedValue(mockHousehold as any);
+        vi.mocked(calculateHouseholdV2Alpha).mockResolvedValue(mockResult as any);
 
         // When
         const result = await fetchCalculationWithMeta(meta);
 
         // Then
-        expect(fetchHouseholdCalculation).toHaveBeenCalledWith(
-          TEST_COUNTRIES.US,
-          TEST_POPULATION_IDS.HOUSEHOLD_123,
+        expect(fetchHouseholdByIdV2).toHaveBeenCalledWith(TEST_POPULATION_IDS.HOUSEHOLD_123);
+        expect(calculateHouseholdV2Alpha).toHaveBeenCalledWith(
+          mockHousehold,
           TEST_POLICY_IDS.POLICY_2 // Uses reform policy when available
         );
         expect(result).toEqual(mockResult);
@@ -46,26 +50,39 @@ describe('reportCalculations', () => {
       it('given no reform policy then uses baseline policy', async () => {
         // Given
         const meta = mockHouseholdMeta({ policyIds: { baseline: TEST_POLICY_IDS.POLICY_1 } });
+        const mockHousehold = { tax_benefit_model_name: 'policyengine_us', year: 2024, people: [] };
         const mockResult = mockHouseholdCalcResult();
 
-        (fetchHouseholdCalculation as any).mockResolvedValue(mockResult);
+        vi.mocked(fetchHouseholdByIdV2).mockResolvedValue(mockHousehold as any);
+        vi.mocked(calculateHouseholdV2Alpha).mockResolvedValue(mockResult as any);
 
         // When
         await fetchCalculationWithMeta(meta);
 
         // Then
-        expect(fetchHouseholdCalculation).toHaveBeenCalledWith(
-          TEST_COUNTRIES.US,
-          TEST_POPULATION_IDS.HOUSEHOLD_123,
+        expect(calculateHouseholdV2Alpha).toHaveBeenCalledWith(
+          mockHousehold,
           TEST_POLICY_IDS.POLICY_1 // Falls back to baseline
         );
       });
 
       it('given household fetch error then throws error', async () => {
         // Given
-        const meta = mockHouseholdMeta({ policyIds: { baseline: TEST_POLICY_IDS.POLICY_1 } });
+        const meta = mockHouseholdMeta();
 
-        (fetchHouseholdCalculation as any).mockRejectedValue(new Error('Calculation failed'));
+        vi.mocked(fetchHouseholdByIdV2).mockRejectedValue(new Error('Household not found'));
+
+        // When/Then
+        await expect(fetchCalculationWithMeta(meta)).rejects.toThrow('Household not found');
+      });
+
+      it('given calculation error then throws error', async () => {
+        // Given
+        const meta = mockHouseholdMeta();
+        const mockHousehold = { tax_benefit_model_name: 'policyengine_us', year: 2024, people: [] };
+
+        vi.mocked(fetchHouseholdByIdV2).mockResolvedValue(mockHousehold as any);
+        vi.mocked(calculateHouseholdV2Alpha).mockRejectedValue(new Error('Calculation failed'));
 
         // When/Then
         await expect(fetchCalculationWithMeta(meta)).rejects.toThrow('Calculation failed');
@@ -78,7 +95,7 @@ describe('reportCalculations', () => {
         const meta = mockEconomyMeta();
         const mockResult = mockEconomyCalcResult();
 
-        (fetchSocietyWideCalculation as any).mockResolvedValue(mockResult);
+        vi.mocked(fetchSocietyWideCalculation).mockResolvedValue(mockResult as any);
 
         // When
         const result = await fetchCalculationWithMeta(meta);
@@ -100,7 +117,7 @@ describe('reportCalculations', () => {
         // Given
         const meta = mockEconomyMeta({ region: undefined });
 
-        (fetchSocietyWideCalculation as any).mockResolvedValue({ status: 'complete' });
+        vi.mocked(fetchSocietyWideCalculation).mockResolvedValue({ status: 'complete' } as any);
 
         // When
         await fetchCalculationWithMeta(meta);
@@ -121,7 +138,7 @@ describe('reportCalculations', () => {
         // Given
         const meta = mockEconomyMeta({ policyIds: { baseline: TEST_POLICY_IDS.POLICY_1 } });
 
-        (fetchSocietyWideCalculation as any).mockResolvedValue({ status: 'complete' });
+        vi.mocked(fetchSocietyWideCalculation).mockResolvedValue({ status: 'complete' } as any);
 
         // When
         await fetchCalculationWithMeta(meta);
@@ -139,7 +156,7 @@ describe('reportCalculations', () => {
         // Given
         const meta = mockEconomyMeta({ policyIds: { baseline: TEST_POLICY_IDS.POLICY_1 } });
 
-        (fetchSocietyWideCalculation as any).mockRejectedValue(new Error('API error'));
+        vi.mocked(fetchSocietyWideCalculation).mockRejectedValue(new Error('API error'));
 
         // When/Then
         await expect(fetchCalculationWithMeta(meta)).rejects.toThrow('API error');

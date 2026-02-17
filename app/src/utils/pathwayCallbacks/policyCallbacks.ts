@@ -39,10 +39,10 @@ export function createPolicyCallbacks<TState, TMode>(
   );
 
   const handleSelectCurrentLaw = useCallback(
-    (currentLawId: number, label: string = 'Current law') => {
+    (_currentLawId: null, label: string = 'Current law') => {
       setState((prev) =>
         policyUpdater(prev, {
-          id: currentLawId.toString(),
+          id: null,
           label,
           parameters: [],
         })

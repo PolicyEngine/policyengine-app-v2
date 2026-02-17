@@ -28,10 +28,9 @@ export function mockPopulationWithHousehold(householdId: string): Population {
     isCreated: true,
     household: {
       id: householdId,
-      countryId: 'us',
-      householdData: {
-        people: {},
-      },
+      tax_benefit_model_name: 'policyengine_us',
+      year: 2025,
+      people: [],
     },
     geography: null,
   };

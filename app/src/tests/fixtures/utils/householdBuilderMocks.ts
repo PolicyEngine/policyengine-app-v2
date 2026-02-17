@@ -1,21 +1,7 @@
 import { CURRENT_YEAR } from '@/constants';
-import {
-  Household,
-  HouseholdData,
-  HouseholdGroupEntity,
-  HouseholdPerson,
-} from '@/types/ingredients/Household';
+import { Household, HouseholdPerson } from '@/types/ingredients/Household';
 
 // ============= TEST CONSTANTS =============
-
-// Person names and IDs
-export const PERSON_NAMES = {
-  ADULT_1: 'you',
-  ADULT_2: 'your partner',
-  CHILD_1: 'your first child',
-  CHILD_2: 'your second child',
-  CHILD_BASE: 'child',
-} as const;
 
 // Ages
 export const PERSON_AGES = {
@@ -46,31 +32,6 @@ export const YEARS = {
   INVALID_TEXT: 'year',
 } as const;
 
-// Entity names
-export const ENTITY_NAMES = {
-  PEOPLE: 'people',
-  HOUSEHOLDS: 'households',
-  FAMILIES: 'families',
-  TAX_UNITS: 'taxUnits',
-  SPM_UNITS: 'spmUnits',
-  MARITAL_UNITS: 'maritalUnits',
-  BEN_UNITS: 'benunits',
-} as const;
-
-// Group keys
-// NOTE: These names must match the conventions from policyengine-app (the legacy app).
-// In particular, spm_units uses "your household" as the instance name (not "your spm unit"),
-// which is the same key used by the households entity.
-export const GROUP_KEYS = {
-  DEFAULT_HOUSEHOLD: 'your household',
-  DEFAULT_FAMILY: 'your family',
-  DEFAULT_TAX_UNIT: 'your tax unit',
-  DEFAULT_SPM_UNIT: 'your household', // Same as DEFAULT_HOUSEHOLD - matches legacy policyengine-app
-  DEFAULT_MARITAL_UNIT: 'your marital unit',
-  DEFAULT_BEN_UNIT: 'your benefit unit',
-  CUSTOM_GROUP: 'custom group',
-} as const;
-
 // Variable names
 export const VARIABLE_NAMES = {
   EMPLOYMENT_INCOME: 'employment_income',
@@ -97,152 +58,101 @@ export const VARIABLE_VALUES = {
 export const ERROR_MESSAGES = {
   INVALID_YEAR: 'currentYear must be a four-digit year string',
   YEAR_FORMAT: 'Year must be a four-digit string',
-  PERSON_NOT_FOUND: (name: string) => `Person ${name} not found`,
-  GROUP_NOT_FOUND: (group: string, entity: string) => `Group ${group} not found in ${entity}`,
+  PERSON_NOT_FOUND: (index: number) => `Person at index ${index} not found`,
 } as const;
 
 // ============= MOCK DATA OBJECTS =============
 
-// Expected country default entities
-export const EXPECTED_COUNTRY_ENTITIES = {
-  us: ['people', 'families', 'taxUnits', 'spmUnits', 'households', 'maritalUnits'],
-  uk: ['people', 'benunits', 'households'],
-  ca: ['people', 'households'],
-  ng: ['people', 'households'],
-  il: ['people', 'households'],
-} as const;
-
-// Mock person data
+// Mock person data (no person_id, name, or person_*_id)
 export const mockAdultPerson: HouseholdPerson = {
-  age: { [YEARS.CURRENT]: PERSON_AGES.ADULT_DEFAULT },
+  age: PERSON_AGES.ADULT_DEFAULT,
 };
 
 export const mockAdultWithIncome: HouseholdPerson = {
-  age: { [YEARS.CURRENT]: PERSON_AGES.ADULT_DEFAULT },
-  [VARIABLE_NAMES.EMPLOYMENT_INCOME]: { [YEARS.CURRENT]: VARIABLE_VALUES.INCOME_DEFAULT },
+  age: PERSON_AGES.ADULT_DEFAULT,
+  [VARIABLE_NAMES.EMPLOYMENT_INCOME]: VARIABLE_VALUES.INCOME_DEFAULT,
 };
 
 export const mockChildPerson: HouseholdPerson = {
-  age: { [YEARS.CURRENT]: PERSON_AGES.CHILD_DEFAULT },
+  age: PERSON_AGES.CHILD_DEFAULT,
 };
 
 export const mockChildUSDependent: HouseholdPerson = {
-  age: { [YEARS.CURRENT]: PERSON_AGES.CHILD_DEFAULT },
-  [VARIABLE_NAMES.IS_TAX_UNIT_DEPENDENT]: { [YEARS.CURRENT]: VARIABLE_VALUES.BOOLEAN_TRUE },
+  age: PERSON_AGES.CHILD_DEFAULT,
+  [VARIABLE_NAMES.IS_TAX_UNIT_DEPENDENT]: VARIABLE_VALUES.BOOLEAN_TRUE,
 };
 
 // Mock household structures
-export const createEmptyHouseholdData = (countryId: string): HouseholdData => {
-  const data: HouseholdData = {
-    people: {},
+export const createEmptyHousehold = (countryId: string): Household => {
+  const modelName =
+    countryId === 'us'
+      ? 'policyengine_us'
+      : countryId === 'uk'
+        ? 'policyengine_uk'
+        : 'policyengine_us';
+
+  return {
+    tax_benefit_model_name: modelName as any,
+    year: parseInt(YEARS.CURRENT, 10),
+    people: [],
   };
-
-  const entities = EXPECTED_COUNTRY_ENTITIES[
-    countryId as keyof typeof EXPECTED_COUNTRY_ENTITIES
-  ] || ['people', 'households'];
-
-  for (const entity of entities) {
-    if (entity !== 'people') {
-      data[entity] = {};
-    }
-  }
-
-  return data;
 };
 
-export const createEmptyHousehold = (countryId: string): Household => ({
-  countryId: countryId as any,
-  householdData: createEmptyHouseholdData(countryId),
-});
-
-// Mock US household with one adult
+// Mock US household with one adult (entity groups are single dicts)
 export const mockUSHouseholdOneAdult: Household = {
-  countryId: COUNTRIES.US as any,
-  householdData: {
-    people: {
-      [PERSON_NAMES.ADULT_1]: mockAdultPerson,
+  tax_benefit_model_name: 'policyengine_us',
+  year: parseInt(YEARS.CURRENT, 10),
+  people: [
+    {
+      age: PERSON_AGES.ADULT_DEFAULT,
     },
-    families: {},
-    taxUnits: {
-      [GROUP_KEYS.DEFAULT_TAX_UNIT]: {
-        members: [PERSON_NAMES.ADULT_1],
-      },
-    },
-    spmUnits: {},
-    households: {
-      [GROUP_KEYS.DEFAULT_HOUSEHOLD]: {
-        members: [PERSON_NAMES.ADULT_1],
-      },
-    },
-    maritalUnits: {},
-  },
+  ],
+  tax_unit: {},
+  household: {},
 };
 
 // Mock UK household with one adult
 export const mockUKHouseholdOneAdult: Household = {
-  countryId: COUNTRIES.UK as any,
-  householdData: {
-    people: {
-      [PERSON_NAMES.ADULT_1]: mockAdultPerson,
+  tax_benefit_model_name: 'policyengine_uk',
+  year: parseInt(YEARS.CURRENT, 10),
+  people: [
+    {
+      age: PERSON_AGES.ADULT_DEFAULT,
     },
-    benunits: {
-      [GROUP_KEYS.DEFAULT_BEN_UNIT]: {
-        members: [PERSON_NAMES.ADULT_1],
-      },
-    },
-    households: {
-      [GROUP_KEYS.DEFAULT_HOUSEHOLD]: {
-        members: [PERSON_NAMES.ADULT_1],
-      },
-    },
-  },
+  ],
+  benunit: {},
+  household: {},
 };
 
 // Mock US household with married couple
 export const mockUSHouseholdMarried: Household = {
-  countryId: COUNTRIES.US as any,
-  householdData: {
-    people: {
-      [PERSON_NAMES.ADULT_1]: mockAdultPerson,
-      [PERSON_NAMES.ADULT_2]: mockAdultPerson,
+  tax_benefit_model_name: 'policyengine_us',
+  year: parseInt(YEARS.CURRENT, 10),
+  people: [
+    {
+      age: PERSON_AGES.ADULT_DEFAULT,
     },
-    families: {},
-    taxUnits: {
-      [GROUP_KEYS.DEFAULT_TAX_UNIT]: {
-        members: [PERSON_NAMES.ADULT_1, PERSON_NAMES.ADULT_2],
-      },
+    {
+      age: PERSON_AGES.ADULT_DEFAULT,
     },
-    spmUnits: {},
-    households: {
-      [GROUP_KEYS.DEFAULT_HOUSEHOLD]: {
-        members: [PERSON_NAMES.ADULT_1, PERSON_NAMES.ADULT_2],
-      },
-    },
-    maritalUnits: {
-      [GROUP_KEYS.DEFAULT_MARITAL_UNIT]: {
-        members: [PERSON_NAMES.ADULT_1, PERSON_NAMES.ADULT_2],
-      },
-    },
-  },
+  ],
+  tax_unit: {},
+  household: {},
+  marital_unit: {},
 };
 
 // Mock household with custom variables
 export const mockHouseholdWithVariables: Household = {
-  countryId: COUNTRIES.US as any,
-  householdData: {
-    people: {
-      [PERSON_NAMES.ADULT_1]: {
-        age: { [YEARS.CURRENT]: PERSON_AGES.ADULT_DEFAULT },
-        [VARIABLE_NAMES.EMPLOYMENT_INCOME]: { [YEARS.CURRENT]: VARIABLE_VALUES.INCOME_DEFAULT },
-        [VARIABLE_NAMES.STATE_CODE]: { [YEARS.CURRENT]: VARIABLE_VALUES.STATE_CA },
-      },
+  tax_benefit_model_name: 'policyengine_us',
+  year: parseInt(YEARS.CURRENT, 10),
+  people: [
+    {
+      age: PERSON_AGES.ADULT_DEFAULT,
+      [VARIABLE_NAMES.EMPLOYMENT_INCOME]: VARIABLE_VALUES.INCOME_DEFAULT,
     },
-    households: {
-      [GROUP_KEYS.DEFAULT_HOUSEHOLD]: {
-        members: [PERSON_NAMES.ADULT_1],
-        [VARIABLE_NAMES.STATE_CODE]: { [YEARS.CURRENT]: VARIABLE_VALUES.STATE_CA },
-      },
-    },
+  ],
+  household: {
+    [VARIABLE_NAMES.STATE_CODE]: VARIABLE_VALUES.STATE_CA,
   },
 };
 
@@ -250,101 +160,39 @@ export const mockHouseholdWithVariables: Household = {
 
 // Helper to verify household structure
 export const verifyHouseholdStructure = (household: Household, countryId: string): void => {
-  expect(household.countryId).toBe(countryId);
-  expect(household.householdData).toBeDefined();
-  expect(household.householdData.people).toBeDefined();
-
-  const expectedEntities =
-    EXPECTED_COUNTRY_ENTITIES[countryId as keyof typeof EXPECTED_COUNTRY_ENTITIES];
-  if (expectedEntities) {
-    for (const entity of expectedEntities) {
-      if (entity !== 'people') {
-        expect(household.householdData[entity]).toBeDefined();
-      }
-    }
-  }
+  const expectedModelName = countryId === 'us' ? 'policyengine_us' : 'policyengine_uk';
+  expect(household.tax_benefit_model_name).toBe(expectedModelName);
+  expect(household.people).toBeDefined();
+  expect(Array.isArray(household.people)).toBe(true);
 };
 
-// Helper to verify person exists in household
-export const verifyPersonExists = (
+// Helper to verify person exists at index with expected age
+export const verifyPersonAtIndex = (
   household: Household,
-  personName: string,
+  index: number,
   expectedAge?: number
 ): void => {
-  const person = household.householdData.people[personName];
+  const person = household.people[index];
   expect(person).toBeDefined();
 
-  if (expectedAge !== undefined) {
-    const ageValues = Object.values(person.age);
-    expect(ageValues[0]).toBe(expectedAge);
+  if (expectedAge !== undefined && person) {
+    expect(person.age).toBe(expectedAge);
   }
-};
-
-// Helper to verify person is in group
-export const verifyPersonInGroup = (
-  household: Household,
-  personName: string,
-  entityName: string,
-  groupKey: string
-): void => {
-  const entities = household.householdData[entityName] as Record<string, HouseholdGroupEntity>;
-  expect(entities).toBeDefined();
-  expect(entities[groupKey]).toBeDefined();
-  expect(entities[groupKey].members).toContain(personName);
-};
-
-// Helper to verify person not in any group
-export const verifyPersonNotInAnyGroup = (household: Household, personName: string): void => {
-  Object.keys(household.householdData).forEach((entityName) => {
-    if (entityName === 'people') {
-      return;
-    }
-
-    const entities = household.householdData[entityName] as Record<string, HouseholdGroupEntity>;
-    Object.values(entities).forEach((group) => {
-      if (group.members) {
-        expect(group.members).not.toContain(personName);
-      }
-    });
-  });
 };
 
 // Helper to verify variable value
 export const verifyVariableValue = (
   entity: any,
   variableName: string,
-  expectedValue: any,
-  year: string = YEARS.CURRENT
+  expectedValue: any
 ): void => {
   expect(entity[variableName]).toBeDefined();
-  expect(entity[variableName][year]).toBe(expectedValue);
+  expect(entity[variableName]).toBe(expectedValue);
 };
 
 // Helper to count people in household
 export const countPeople = (household: Household): number => {
-  return Object.keys(household.householdData.people).length;
-};
-
-// Helper to count members in group
-export const countGroupMembers = (
-  household: Household,
-  entityName: string,
-  groupKey: string
-): number => {
-  const entities = household.householdData[entityName] as Record<string, HouseholdGroupEntity>;
-  if (!entities || !entities[groupKey]) {
-    return 0;
-  }
-  return entities[groupKey].members?.length || 0;
-};
-
-// Helper to get all group keys for an entity
-export const getGroupKeys = (household: Household, entityName: string): string[] => {
-  const entities = household.householdData[entityName];
-  if (!entities || typeof entities !== 'object') {
-    return [];
-  }
-  return Object.keys(entities);
+  return household.people.length;
 };
 
 // Helper to create mock variables object
@@ -360,12 +208,4 @@ export const createMockVariables = (income?: number, state?: string): Record<str
   }
 
   return vars;
-};
-
-// Helper to create year-keyed value
-export const createYearKeyedValue = (
-  value: any,
-  year: string = YEARS.CURRENT
-): Record<string, any> => {
-  return { [year]: value };
 };

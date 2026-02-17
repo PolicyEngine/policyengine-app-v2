@@ -1,160 +1,283 @@
-import { Household, HouseholdGroupEntity, HouseholdPerson } from '@/types/ingredients/Household';
-
 /**
- * Extended person type with name (not ID - people don't have IDs)
+ * HouseholdQueries - Query utilities for API v2 Alpha household structure
+ *
+ * Entity groups are single flat dicts (one entity per type).
+ * People are identified by array index (no person_id or name).
+ * All people belong to every entity group (server handles membership).
  */
-export interface PersonWithName extends HouseholdPerson {
-  name: string;
-}
+
+import { EntityType, Household, HouseholdPerson } from '@/types/ingredients/Household';
+
+// ============================================================================
+// Person Queries
+// ============================================================================
 
 /**
  * Get all people in the household
  */
-export function getAllPeople(household: Household): PersonWithName[] {
-  return Object.entries(household.householdData.people).map(([name, person]) => ({
-    name,
-    ...person,
-  }));
+export function getAllPeople(household: Household): HouseholdPerson[] {
+  return household.people;
 }
 
 /**
- * Get all adults (age >= 18) for a specific year
- * Note: Year is required - no assumptions about current year
+ * Get a person by array index
  */
-export function getAdults(household: Household, year: string): PersonWithName[] {
-  return Object.entries(household.householdData.people)
-    .filter(([, person]) => {
-      const age = person.age?.[year];
-      return age !== undefined && age >= 18;
-    })
-    .map(([name, person]) => ({ name, ...person }));
+export function getPersonByIndex(household: Household, index: number): HouseholdPerson | undefined {
+  return household.people[index];
 }
 
 /**
- * Get all children (age < 18) for a specific year
- * Note: Year is required - no assumptions about current year
+ * Get all adults (age >= 18 or not a dependent)
  */
-export function getChildren(household: Household, year: string): PersonWithName[] {
-  return Object.entries(household.householdData.people)
-    .filter(([, person]) => {
-      const age = person.age?.[year];
-      return age !== undefined && age < 18;
-    })
-    .map(([name, person]) => ({ name, ...person }));
+export function getAdults(household: Household): HouseholdPerson[] {
+  return household.people.filter((p) => (p.age ?? 0) >= 18);
 }
 
 /**
- * Get variable value for a person
- * Year is required - no fallback to current year
+ * Get all children (age < 18)
  */
-export function getPersonVariable(
-  household: Household,
-  personName: string,
-  variableName: string,
-  year: string
-): any {
-  const person = household.householdData.people[personName];
-  if (!person) {
-    return undefined;
-  }
-
-  const variable = person[variableName];
-  if (typeof variable === 'object' && variable !== null && year in variable) {
-    return variable[year];
-  }
-  return undefined;
+export function getChildren(household: Household): HouseholdPerson[] {
+  return household.people.filter((p) => (p.age ?? 0) < 18);
 }
 
 /**
- * Get variable value for a group entity
- * Year is required - no fallback to current year
- */
-export function getGroupVariable(
-  household: Household,
-  entityName: string,
-  groupKey: string,
-  variableName: string,
-  year: string
-): any {
-  const entities = household.householdData[entityName] as
-    | Record<string, HouseholdGroupEntity>
-    | undefined;
-  if (!entities) {
-    return undefined;
-  }
-
-  const group = entities[groupKey];
-  if (!group) {
-    return undefined;
-  }
-
-  const variable = group[variableName];
-  if (typeof variable === 'object' && variable !== null && year in variable) {
-    return variable[year];
-  }
-  return undefined;
-}
-
-/**
- * Count total people in household
+ * Get the total number of people
  */
 export function getPersonCount(household: Household): number {
-  return Object.keys(household.householdData.people).length;
+  return household.people.length;
 }
 
 /**
- * Count adults in household for a specific year
+ * Get the number of adults
  */
-export function getAdultCount(household: Household, year: string): number {
-  return getAdults(household, year).length;
+export function getAdultCount(household: Household): number {
+  return getAdults(household).length;
 }
 
 /**
- * Count children in household for a specific year
+ * Get the number of children
  */
-export function getChildCount(household: Household, year: string): number {
-  return getChildren(household, year).length;
+export function getChildCount(household: Household): number {
+  return getChildren(household).length;
 }
 
 /**
  * Check if household has any people
  */
 export function isEmpty(household: Household): boolean {
-  return Object.keys(household.householdData.people).length === 0;
+  return household.people.length === 0;
 }
 
 /**
- * Get members of a specific group
+ * Check if household has people
  */
-export function getGroupMembers(
-  household: Household,
-  entityName: string,
-  groupKey: string
-): string[] {
-  const entities = household.householdData[entityName] as
-    | Record<string, HouseholdGroupEntity>
-    | undefined;
-  if (!entities) {
-    return [];
-  }
+export function hasPeople(household: Household): boolean {
+  return household.people.length > 0;
+}
 
-  const group = entities[groupKey];
-  return group?.members || [];
+// ============================================================================
+// Variable Access
+// ============================================================================
+
+/**
+ * Get a variable value for a person by array index
+ */
+export function getPersonVariable(
+  household: Household,
+  personIndex: number,
+  variableName: string
+): number | boolean | string | undefined {
+  const person = household.people[personIndex];
+  if (!person) {
+    return undefined;
+  }
+  return person[variableName];
 }
 
 /**
- * Get all groups of a specific entity type
+ * Get a variable value for all people
+ * Returns array of [index, value] pairs
  */
-export function getGroups(
+export function getPersonVariableAll(
   household: Household,
-  entityName: string
-): Array<{ key: string; members: string[] }> {
-  const entities = household.householdData[entityName] as
-    | Record<string, HouseholdGroupEntity>
-    | undefined;
-  if (!entities) {
-    return [];
-  }
+  variableName: string
+): Array<[number, number | boolean | string | undefined]> {
+  return household.people.map((p, index) => [index, p[variableName]]);
+}
 
-  return Object.entries(entities).map(([key, group]) => ({ key, members: group.members }));
+/**
+ * Set a variable on a person by array index (mutates household)
+ */
+export function setPersonVariable(
+  household: Household,
+  personIndex: number,
+  variableName: string,
+  value: number | boolean | string
+): void {
+  const person = household.people[personIndex];
+  if (person) {
+    person[variableName] = value;
+  }
+}
+
+// ============================================================================
+// Entity Queries - Single dict access
+// ============================================================================
+
+/**
+ * Get entity dict by entity type.
+ * For 'person' returns undefined; callers should use getAllPeople.
+ * For others returns the entity dict.
+ */
+export function getEntityByType(
+  household: Household,
+  entityType: EntityType
+): Record<string, any> | undefined {
+  if (entityType === 'person') {
+    // People are an array, not a single dict - callers should use getAllPeople
+    return undefined;
+  }
+  return household[entityType as keyof Household] as Record<string, any> | undefined;
+}
+
+/**
+ * Get all entities by entity type.
+ * For 'person' returns the people array; for others returns an array with the single entity.
+ */
+export function getAllEntitiesByType(
+  household: Household,
+  entityType: EntityType
+): Record<string, any>[] {
+  if (entityType === 'person') {
+    return household.people;
+  }
+  const entity = household[entityType as keyof Household] as Record<string, any> | undefined;
+  return entity ? [entity] : [];
+}
+
+/**
+ * Get a variable from an entity
+ */
+export function getEntityVariable(
+  household: Household,
+  entityType: EntityType,
+  variableName: string
+): number | boolean | string | undefined {
+  if (entityType === 'person') {
+    // For person, get from first person
+    return household.people[0]?.[variableName];
+  }
+  const entity = household[entityType as keyof Household] as Record<string, any> | undefined;
+  return entity?.[variableName];
+}
+
+/**
+ * Get the household unit dict
+ */
+export function getHouseholdUnit(household: Household): Record<string, any> | undefined {
+  return household.household;
+}
+
+// ============================================================================
+// Household-Level Queries
+// ============================================================================
+
+/**
+ * Get the simulation year
+ */
+export function getYear(household: Household): number {
+  return household.year;
+}
+
+/**
+ * Get the tax-benefit model name
+ */
+export function getModelName(household: Household): string {
+  return household.tax_benefit_model_name;
+}
+
+/**
+ * Check if this is a US household
+ */
+export function isUSHousehold(household: Household): boolean {
+  return household.tax_benefit_model_name === 'policyengine_us';
+}
+
+/**
+ * Check if this is a UK household
+ */
+export function isUKHousehold(household: Household): boolean {
+  return household.tax_benefit_model_name === 'policyengine_uk';
+}
+
+/**
+ * Get the state FIPS code (US only) from household entity
+ */
+export function getStateFips(household: Household): number | undefined {
+  return household.household?.state_fips;
+}
+
+/**
+ * Get the state code (US only) from tax_unit entity
+ */
+export function getStateCode(household: Household): string | undefined {
+  return household.tax_unit?.state_code;
+}
+
+/**
+ * Get the region (UK only) from household entity
+ */
+export function getRegion(household: Household): string | undefined {
+  return household.household?.region;
+}
+
+// ============================================================================
+// Summary/Aggregation Queries
+// ============================================================================
+
+/**
+ * Sum a numeric variable across all people
+ */
+export function sumPersonVariable(household: Household, variableName: string): number {
+  return household.people.reduce((sum, person) => {
+    const value = person[variableName];
+    return sum + (typeof value === 'number' ? value : 0);
+  }, 0);
+}
+
+/**
+ * Get the average of a numeric variable across all people
+ */
+export function avgPersonVariable(household: Household, variableName: string): number {
+  if (household.people.length === 0) {
+    return 0;
+  }
+  return sumPersonVariable(household, variableName) / household.people.length;
+}
+
+/**
+ * Get the minimum of a numeric variable across all people
+ */
+export function minPersonVariable(household: Household, variableName: string): number | undefined {
+  const values = household.people
+    .map((p) => p[variableName])
+    .filter((v): v is number => typeof v === 'number');
+  return values.length > 0 ? Math.min(...values) : undefined;
+}
+
+/**
+ * Get the maximum of a numeric variable across all people
+ */
+export function maxPersonVariable(household: Household, variableName: string): number | undefined {
+  const values = household.people
+    .map((p) => p[variableName])
+    .filter((v): v is number => typeof v === 'number');
+  return values.length > 0 ? Math.max(...values) : undefined;
+}
+
+/**
+ * Get total employment income across all people
+ */
+export function getTotalEmploymentIncome(household: Household): number {
+  return sumPersonVariable(household, 'employment_income');
 }

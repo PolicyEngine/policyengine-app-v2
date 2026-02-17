@@ -1,18 +1,17 @@
 import type { QueryClient } from '@tanstack/react-query';
-import { fetchHouseholdCalculation } from '@/api/householdCalculation';
+import { calculateHouseholdV2Alpha } from '@/api/v2/householdCalculation';
+import { fetchHouseholdByIdV2 } from '@/api/v2/households';
 import { calculationKeys } from '@/libs/queryKeys';
 import type { CalcStatus } from '@/types/calculation';
 
 /**
  * Executes a single household simulation calculation
  *
- * SIMPLIFIED: No progress tracking logic
- * Progress is handled by HouseholdProgressCoordinator at the report level
+ * Uses v2 alpha API directly:
+ * 1. Fetches household by ID
+ * 2. Runs calculation with policy (polls internally until complete)
  *
- * This class only:
- * - Makes the blocking API call
- * - Updates CalcStatus with pending/complete/error states
- * - Returns the result
+ * Progress is handled by HouseholdProgressCoordinator at the report level.
  *
  * USAGE:
  * Created by HouseholdReportOrchestrator for each simulation in a report.
@@ -56,13 +55,10 @@ export class HouseholdSimCalculator {
     this.queryClient.setQueryData(calcKey, initialStatus);
 
     try {
-      // Execute the LONG-RUNNING API call (30-50s)
-      // This blocks but that's OK - runs in background Promise
-      const result = await fetchHouseholdCalculation(
-        params.countryId,
-        params.populationId,
-        params.policyId
-      );
+      // Fetch household then calculate using v2 alpha API
+      // calculateHouseholdV2Alpha polls internally until complete
+      const household = await fetchHouseholdByIdV2(params.populationId);
+      const result = await calculateHouseholdV2Alpha(household, params.policyId);
 
       // Set final complete status
       const completeStatus: CalcStatus = {

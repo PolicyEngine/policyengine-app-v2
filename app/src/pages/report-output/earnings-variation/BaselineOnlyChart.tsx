@@ -17,19 +17,13 @@ interface Props {
   baseline: Household;
   baselineVariation: Household;
   variableName: string;
-  year: string;
 }
 
 /**
  * Chart showing baseline values across earnings range
  * Single line with marker at current earnings position
  */
-export default function BaselineOnlyChart({
-  baseline,
-  baselineVariation,
-  variableName,
-  year,
-}: Props) {
+export default function BaselineOnlyChart({ baseline, baselineVariation, variableName }: Props) {
   const mobile = useMediaQuery('(max-width: 768px)');
   const { height: viewportHeight } = useViewportSize();
   const countryId = useCurrentCountry();
@@ -42,13 +36,7 @@ export default function BaselineOnlyChart({
   }
 
   // Get variation data (401-point array)
-  const yValues = getValueFromHousehold(
-    variableName,
-    year,
-    null,
-    baselineVariation,
-    metadataContext
-  );
+  const yValues = getValueFromHousehold(variableName, null, baselineVariation, metadataContext);
 
   if (!Array.isArray(yValues)) {
     return <div>No variation data available</div>;
@@ -57,7 +45,6 @@ export default function BaselineOnlyChart({
   // Get current value at actual earnings
   const currentValue = getValueFromHousehold(
     variableName,
-    year,
     null,
     baseline,
     metadataContext
@@ -66,7 +53,6 @@ export default function BaselineOnlyChart({
   // Get current earnings to show marker position
   const currentEarnings = getValueFromHousehold(
     'employment_income',
-    year,
     null,
     baseline,
     metadataContext

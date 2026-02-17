@@ -12,8 +12,7 @@ export interface VariableRowProps {
   variable: VariableInfo;
   household: Household;
   metadata: any;
-  year: string;
-  entityName?: string;
+  entityId?: number;
   onChange: (household: Household) => void;
   onRemove?: () => void;
   disabled?: boolean;
@@ -42,8 +41,7 @@ export default function VariableRow({
   variable,
   household,
   metadata,
-  year,
-  entityName,
+  entityId,
   onChange,
   onRemove,
   disabled = false,
@@ -58,13 +56,13 @@ export default function VariableRow({
       </Box>
       <Box style={{ flex: 1 }}>
         <VariableInput
-          variable={{ ...variable, label: '' }}
+          variable={variable}
           household={household}
           metadata={metadata}
-          year={year}
-          entityName={entityName}
+          entityId={entityId}
           onChange={onChange}
           disabled={disabled}
+          hideLabel
         />
       </Box>
       {shouldShowColumn && (

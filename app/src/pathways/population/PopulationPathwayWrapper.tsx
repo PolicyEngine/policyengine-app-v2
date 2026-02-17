@@ -33,6 +33,10 @@ export default function PopulationPathwayWrapper({ onComplete }: PopulationPathw
     geography: null,
   });
 
+  // Year state for standalone mode (user-selectable)
+  const [selectedYear, setSelectedYear] = useState<string>(CURRENT_YEAR);
+
+  // ========== NAVIGATION ==========
   const { currentMode, navigateToMode, goBack, canGoBack } = usePathwayNavigation(
     StandalonePopulationViewMode.LABEL
   );
@@ -68,6 +72,8 @@ export default function PopulationPathwayWrapper({ onComplete }: PopulationPathw
           countryId={countryId}
           onSubmitSuccess={handleHouseholdSubmitSuccess}
           onBack={canGoBack ? goBack : undefined}
+          onCancel={() => navigate(`/${countryId}/households`)}
+          onYearChange={setSelectedYear}
         />
       );
       break;
@@ -77,7 +83,7 @@ export default function PopulationPathwayWrapper({ onComplete }: PopulationPathw
   }
 
   return (
-    <ReportYearProvider year={CURRENT_YEAR}>
+    <ReportYearProvider year={selectedYear}>
       <StandardLayout>{currentView}</StandardLayout>
     </ReportYearProvider>
   );

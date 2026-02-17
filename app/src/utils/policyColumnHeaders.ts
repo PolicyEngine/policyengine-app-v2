@@ -19,18 +19,19 @@ export function getPolicyLabel(policy: Policy | undefined, userPolicies?: UserPo
  * - Single policy: "Policy Name (BASELINE)"
  * - Merged column: "Policy Name (BASELINE / REFORM)"
  * - Current law policy: "Policy Name (CURRENT LAW / BASELINE)"
+ *
+ * In V2 API, current law is represented by policy_id = null.
  */
 export function buildColumnHeaderText(
   column: PolicyColumn,
   userPolicies?: UserPolicy[],
-  currentLawId?: number
+  _currentLawId?: null
 ): string {
   const policyNames = column.policies.map((p) => getPolicyLabel(p, userPolicies));
   const roleLabels = column.label.toUpperCase().split(' / ');
 
-  // Check if the first policy is current law
-  const isCurrentLaw =
-    currentLawId !== undefined && column.policies[0]?.id === String(currentLawId);
+  // Check if the first policy is current law (null in V2 API)
+  const isCurrentLaw = column.policies[0]?.id === null;
 
   // Build role text - prepend "CURRENT LAW / " to role if this policy is current law
   const roleText = isCurrentLaw

@@ -1,9 +1,9 @@
 import { useQueryNormalizer } from '@normy/react-query';
 import { useQuery } from '@tanstack/react-query';
-import { HouseholdAdapter, PolicyAdapter, SimulationAdapter } from '@/adapters';
-import { fetchHouseholdById } from '@/api/household';
+import { PolicyAdapter, SimulationAdapter } from '@/adapters';
 import { fetchPolicyById } from '@/api/policy';
 import { fetchSimulationById } from '@/api/simulation';
+import { fetchHouseholdByIdV2 } from '@/api/v2/households';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
@@ -12,7 +12,6 @@ import { Simulation } from '@/types/ingredients/Simulation';
 import { UserPolicy } from '@/types/ingredients/UserPolicy';
 import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { UserSimulation } from '@/types/ingredients/UserSimulation';
-import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
 import { householdKeys, policyKeys, simulationKeys } from '../libs/queryKeys';
 import { useHouseholdAssociationsByUser } from './useUserHousehold';
 import { usePolicyAssociationsByUser } from './useUserPolicy';
@@ -123,13 +122,10 @@ export const useUserSimulations = (userId: string) => {
     staleTime: 5 * 60 * 1000,
   });
 
-  // Step 6: Fetch households (populations)
+  // Step 6: Fetch households (populations) using v2 API
   const householdResults = useParallelQueries<Household>(householdIds, {
     queryKey: householdKeys.byId,
-    queryFn: async (id) => {
-      const metadata = await fetchHouseholdById(country, id);
-      return HouseholdAdapter.fromMetadata(metadata);
-    },
+    queryFn: (id) => fetchHouseholdByIdV2(id),
     enabled: householdIds.length > 0,
     staleTime: 5 * 60 * 1000,
   });
@@ -234,7 +230,7 @@ export const useUserSimulations = (userId: string) => {
       queryNormalizer.getObjectById(id) as Simulation | undefined,
     getNormalizedPolicy: (id: string) => queryNormalizer.getObjectById(id) as Policy | undefined,
     getNormalizedHousehold: (id: string) =>
-      queryNormalizer.getObjectById(id) as HouseholdMetadata | undefined,
+      queryNormalizer.getObjectById(id) as Household | undefined,
   };
 };
 
@@ -281,17 +277,13 @@ export const useUserSimulationById = (userId: string, simulationId: string) => {
   // Try to fetch as household first
   const populationId = finalSimulation?.populationId;
 
-  const { data: householdMetadata } = useQuery({
+  const { data: household } = useQuery({
     queryKey: householdKeys.byId(populationId ?? ''),
-    queryFn: () => fetchHouseholdById(country, populationId!),
+    queryFn: () => fetchHouseholdByIdV2(populationId!),
     enabled: !!populationId,
     staleTime: 5 * 60 * 1000,
     retry: 1, // Only retry once if it's not a household
   });
-
-  const household = householdMetadata
-    ? HouseholdAdapter.fromMetadata(householdMetadata)
-    : undefined;
 
   // Get user associations
   const { data: policyAssociations } = usePolicyAssociationsByUser(userId);

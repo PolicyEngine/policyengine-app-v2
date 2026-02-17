@@ -9,27 +9,11 @@ import { ValidationError, ValidationResult, ValidationWarning } from '@/utils/Ho
 // Validation codes
 export const VALIDATION_ERROR_CODES = {
   COUNTRY_MISMATCH: 'COUNTRY_MISMATCH',
-  INVALID_GROUP_STRUCTURE: 'INVALID_GROUP_STRUCTURE',
-  INVALID_MARITAL_UNIT: 'INVALID_MARITAL_UNIT',
-  EMPTY_BENUNIT: 'EMPTY_BENUNIT',
-  INVALID_TYPE: 'INVALID_TYPE',
-  NOT_INTEGER: 'NOT_INTEGER',
   NO_PEOPLE: 'NO_PEOPLE',
 } as const;
 
 export const VALIDATION_WARNING_CODES = {
   MISSING_AGE: 'MISSING_AGE',
-  NO_TAX_UNITS: 'NO_TAX_UNITS',
-  PERSON_NOT_IN_TAX_UNIT: 'PERSON_NOT_IN_TAX_UNIT',
-} as const;
-
-// Person names
-export const VALIDATION_PERSON_NAMES = {
-  ADULT_1: 'adult1',
-  ADULT_2: 'adult2',
-  CHILD_1: 'child1',
-  PERSON_NO_AGE: 'personNoAge',
-  PERSON_ORPHAN: 'orphanPerson',
 } as const;
 
 // Countries
@@ -46,27 +30,6 @@ export const VALIDATION_YEARS = {
   PAST: '2023',
   FUTURE: '2026',
   MISSING: '2027',
-} as const;
-
-// Entity names
-export const VALIDATION_ENTITY_NAMES = {
-  PEOPLE: 'people',
-  HOUSEHOLDS: 'households',
-  TAX_UNITS: 'taxUnits',
-  MARITAL_UNITS: 'maritalUnits',
-  BEN_UNITS: 'benunits',
-  FAMILIES: 'families',
-  SPM_UNITS: 'spmUnits',
-} as const;
-
-// Group keys
-export const VALIDATION_GROUP_KEYS = {
-  DEFAULT_HOUSEHOLD: 'household1',
-  DEFAULT_TAX_UNIT: 'taxUnit1',
-  DEFAULT_MARITAL_UNIT: 'maritalUnit1',
-  INVALID_MARITAL_UNIT: 'invalidMaritalUnit',
-  DEFAULT_BEN_UNIT: 'benUnit1',
-  EMPTY_BEN_UNIT: 'emptyBenUnit',
 } as const;
 
 // Variable names
@@ -102,205 +65,86 @@ export const VALIDATION_TEST_VALUES = {
 
 // ============= MOCK DATA OBJECTS =============
 
-// Mock persons
+// Mock persons (v2 Alpha: no person_id, name, or person_*_id)
 export const mockPersonWithAge: HouseholdPerson = {
-  age: { [VALIDATION_YEARS.DEFAULT]: VALIDATION_TEST_VALUES.VALID_AGE },
+  age: VALIDATION_TEST_VALUES.VALID_AGE,
 };
 
 export const mockPersonNoAge: HouseholdPerson = {
-  employment_income: { [VALIDATION_YEARS.DEFAULT]: VALIDATION_TEST_VALUES.VALID_INCOME },
+  employment_income: VALIDATION_TEST_VALUES.VALID_INCOME,
 };
 
-export const mockPersonMissingYear: HouseholdPerson = {
-  age: { [VALIDATION_YEARS.PAST]: VALIDATION_TEST_VALUES.VALID_AGE },
-};
-
-// Valid US household
+// Valid US household (entity groups are single dicts)
 export const mockValidUSHousehold: Household = {
-  countryId: VALIDATION_COUNTRIES.US,
-  householdData: {
-    people: {
-      [VALIDATION_PERSON_NAMES.ADULT_1]: mockPersonWithAge,
-      [VALIDATION_PERSON_NAMES.ADULT_2]: mockPersonWithAge,
+  tax_benefit_model_name: 'policyengine_us',
+  year: parseInt(VALIDATION_YEARS.DEFAULT, 10),
+  people: [
+    {
+      age: VALIDATION_TEST_VALUES.VALID_AGE,
     },
-    households: {
-      [VALIDATION_GROUP_KEYS.DEFAULT_HOUSEHOLD]: {
-        members: [VALIDATION_PERSON_NAMES.ADULT_1, VALIDATION_PERSON_NAMES.ADULT_2],
-      },
+    {
+      age: VALIDATION_TEST_VALUES.VALID_AGE,
     },
-    taxUnits: {
-      [VALIDATION_GROUP_KEYS.DEFAULT_TAX_UNIT]: {
-        members: [VALIDATION_PERSON_NAMES.ADULT_1, VALIDATION_PERSON_NAMES.ADULT_2],
-      },
-    },
-  },
-};
-
-// US household with orphan person (not in tax unit)
-export const mockUSHouseholdOrphanPerson: Household = {
-  countryId: VALIDATION_COUNTRIES.US,
-  householdData: {
-    people: {
-      [VALIDATION_PERSON_NAMES.ADULT_1]: mockPersonWithAge,
-      [VALIDATION_PERSON_NAMES.ADULT_2]: mockPersonWithAge,
-      [VALIDATION_PERSON_NAMES.PERSON_ORPHAN]: mockPersonWithAge,
-    },
-    households: {
-      [VALIDATION_GROUP_KEYS.DEFAULT_HOUSEHOLD]: {
-        members: [
-          VALIDATION_PERSON_NAMES.ADULT_1,
-          VALIDATION_PERSON_NAMES.ADULT_2,
-          VALIDATION_PERSON_NAMES.PERSON_ORPHAN,
-        ],
-      },
-    },
-    taxUnits: {
-      [VALIDATION_GROUP_KEYS.DEFAULT_TAX_UNIT]: {
-        members: [VALIDATION_PERSON_NAMES.ADULT_1, VALIDATION_PERSON_NAMES.ADULT_2],
-      },
-    },
-  },
-};
-
-// US household with no tax units
-export const mockUSHouseholdNoTaxUnits: Household = {
-  countryId: VALIDATION_COUNTRIES.US,
-  householdData: {
-    people: {
-      [VALIDATION_PERSON_NAMES.ADULT_1]: mockPersonWithAge,
-    },
-    households: {
-      [VALIDATION_GROUP_KEYS.DEFAULT_HOUSEHOLD]: {
-        members: [VALIDATION_PERSON_NAMES.ADULT_1],
-      },
-    },
-    taxUnits: {},
-  },
-};
-
-// US household with invalid marital unit (0 members - empty is invalid)
-export const mockUSHouseholdInvalidMaritalUnit: Household = {
-  countryId: VALIDATION_COUNTRIES.US,
-  householdData: {
-    people: {
-      [VALIDATION_PERSON_NAMES.ADULT_1]: mockPersonWithAge,
-    },
-    households: {
-      [VALIDATION_GROUP_KEYS.DEFAULT_HOUSEHOLD]: {
-        members: [VALIDATION_PERSON_NAMES.ADULT_1],
-      },
-    },
-    maritalUnits: {
-      [VALIDATION_GROUP_KEYS.INVALID_MARITAL_UNIT]: {
-        members: [], // Empty marital unit is invalid (must have 1 or 2 members)
-      },
-    },
-  },
+  ],
+  household: {},
+  tax_unit: {},
 };
 
 // Valid UK household
 export const mockValidUKHousehold: Household = {
-  countryId: VALIDATION_COUNTRIES.UK,
-  householdData: {
-    people: {
-      [VALIDATION_PERSON_NAMES.ADULT_1]: mockPersonWithAge,
-      [VALIDATION_PERSON_NAMES.CHILD_1]: mockPersonWithAge,
+  tax_benefit_model_name: 'policyengine_uk',
+  year: parseInt(VALIDATION_YEARS.DEFAULT, 10),
+  people: [
+    {
+      age: VALIDATION_TEST_VALUES.VALID_AGE,
     },
-    households: {
-      [VALIDATION_GROUP_KEYS.DEFAULT_HOUSEHOLD]: {
-        members: [VALIDATION_PERSON_NAMES.ADULT_1, VALIDATION_PERSON_NAMES.CHILD_1],
-      },
+    {
+      age: VALIDATION_TEST_VALUES.VALID_AGE,
     },
-    benunits: {
-      [VALIDATION_GROUP_KEYS.DEFAULT_BEN_UNIT]: {
-        members: [VALIDATION_PERSON_NAMES.ADULT_1, VALIDATION_PERSON_NAMES.CHILD_1],
-      },
-    },
-  },
-};
-
-// UK household with empty benefit unit
-export const mockUKHouseholdEmptyBenUnit: Household = {
-  countryId: VALIDATION_COUNTRIES.UK,
-  householdData: {
-    people: {
-      [VALIDATION_PERSON_NAMES.ADULT_1]: mockPersonWithAge,
-    },
-    households: {
-      [VALIDATION_GROUP_KEYS.DEFAULT_HOUSEHOLD]: {
-        members: [VALIDATION_PERSON_NAMES.ADULT_1],
-      },
-    },
-    benunits: {
-      [VALIDATION_GROUP_KEYS.DEFAULT_BEN_UNIT]: {
-        members: [VALIDATION_PERSON_NAMES.ADULT_1],
-      },
-      [VALIDATION_GROUP_KEYS.EMPTY_BEN_UNIT]: {
-        members: [],
-      },
-    },
-  },
+  ],
+  household: {},
+  benunit: {},
 };
 
 // Household with country mismatch
 export const mockHouseholdCountryMismatch: Household = {
-  countryId: VALIDATION_COUNTRIES.US,
-  householdData: {
-    people: {
-      [VALIDATION_PERSON_NAMES.ADULT_1]: mockPersonWithAge,
+  tax_benefit_model_name: 'policyengine_us',
+  year: parseInt(VALIDATION_YEARS.DEFAULT, 10),
+  people: [
+    {
+      age: VALIDATION_TEST_VALUES.VALID_AGE,
     },
-    households: {
-      [VALIDATION_GROUP_KEYS.DEFAULT_HOUSEHOLD]: {
-        members: [VALIDATION_PERSON_NAMES.ADULT_1],
-      },
-    },
-  },
+  ],
+  household: {},
 };
 
 // Household with missing age
 export const mockHouseholdMissingAge: Household = {
-  countryId: VALIDATION_COUNTRIES.US,
-  householdData: {
-    people: {
-      [VALIDATION_PERSON_NAMES.ADULT_1]: mockPersonWithAge,
-      [VALIDATION_PERSON_NAMES.PERSON_NO_AGE]: mockPersonNoAge,
+  tax_benefit_model_name: 'policyengine_us',
+  year: parseInt(VALIDATION_YEARS.DEFAULT, 10),
+  people: [
+    {
+      age: VALIDATION_TEST_VALUES.VALID_AGE,
     },
-    households: {
-      [VALIDATION_GROUP_KEYS.DEFAULT_HOUSEHOLD]: {
-        members: [VALIDATION_PERSON_NAMES.ADULT_1, VALIDATION_PERSON_NAMES.PERSON_NO_AGE],
-      },
+    {
+      employment_income: VALIDATION_TEST_VALUES.VALID_INCOME,
+      // No age property
     },
-  },
-};
-
-// Household with invalid group structure (missing members array)
-export const mockHouseholdInvalidGroupStructure: Household = {
-  countryId: VALIDATION_COUNTRIES.US,
-  householdData: {
-    people: {
-      [VALIDATION_PERSON_NAMES.ADULT_1]: mockPersonWithAge,
-    },
-    households: {
-      [VALIDATION_GROUP_KEYS.DEFAULT_HOUSEHOLD]: {
-        // Missing members array
-      } as any,
-    },
-  },
+  ],
+  household: {},
 };
 
 // Empty household
 export const mockEmptyHousehold: Household = {
-  countryId: VALIDATION_COUNTRIES.US,
-  householdData: {
-    people: {},
-    households: {},
-  },
+  tax_benefit_model_name: 'policyengine_us',
+  year: parseInt(VALIDATION_YEARS.DEFAULT, 10),
+  people: [],
 };
 
 // ============= MOCK VARIABLE METADATA =============
 
 export const mockFloatMetadata: VariableMetadata = {
-  entity: VALIDATION_ENTITY_NAMES.PEOPLE,
+  entity: 'person',
   data_type: VALIDATION_DATA_TYPES.FLOAT,
   name: VALIDATION_VARIABLE_NAMES.EMPLOYMENT_INCOME,
   description: 'Employment income',
@@ -308,7 +152,7 @@ export const mockFloatMetadata: VariableMetadata = {
 };
 
 export const mockIntMetadata: VariableMetadata = {
-  entity: VALIDATION_ENTITY_NAMES.HOUSEHOLDS,
+  entity: 'household',
   data_type: VALIDATION_DATA_TYPES.INT,
   name: VALIDATION_VARIABLE_NAMES.HOUSEHOLD_SIZE,
   description: 'Household size',
@@ -316,7 +160,7 @@ export const mockIntMetadata: VariableMetadata = {
 };
 
 export const mockBoolMetadata: VariableMetadata = {
-  entity: VALIDATION_ENTITY_NAMES.PEOPLE,
+  entity: 'person',
   data_type: VALIDATION_DATA_TYPES.BOOL,
   name: VALIDATION_VARIABLE_NAMES.IS_MARRIED,
   description: 'Is married',
@@ -324,7 +168,7 @@ export const mockBoolMetadata: VariableMetadata = {
 };
 
 export const mockStringMetadata: VariableMetadata = {
-  entity: VALIDATION_ENTITY_NAMES.HOUSEHOLDS,
+  entity: 'household',
   data_type: VALIDATION_DATA_TYPES.STRING,
   name: VALIDATION_VARIABLE_NAMES.STATE_CODE,
   description: 'State code',
@@ -337,14 +181,14 @@ export const mockReduxStateWithMetadata: Partial<RootState> = {
   metadata: {
     variables: {
       [VALIDATION_VARIABLE_NAMES.EMPLOYMENT_INCOME]: {
-        entity: VALIDATION_ENTITY_NAMES.PEOPLE,
+        entity: 'person',
         data_type: VALIDATION_DATA_TYPES.FLOAT,
         name: VALIDATION_VARIABLE_NAMES.EMPLOYMENT_INCOME,
         description: 'Employment income',
         label: 'Employment Income',
       },
       [VALIDATION_VARIABLE_NAMES.STATE_CODE]: {
-        entity: VALIDATION_ENTITY_NAMES.HOUSEHOLDS,
+        entity: 'household',
         data_type: VALIDATION_DATA_TYPES.STRING,
         name: VALIDATION_VARIABLE_NAMES.STATE_CODE,
         description: 'State code',
@@ -362,48 +206,6 @@ export const expectedValidResult: ValidationResult = {
   isValid: true,
   errors: [],
   warnings: [],
-};
-
-export const expectedCountryMismatchError: ValidationError = {
-  code: VALIDATION_ERROR_CODES.COUNTRY_MISMATCH,
-  message: `Household country ${VALIDATION_COUNTRIES.US} does not match expected ${VALIDATION_COUNTRIES.UK}`,
-  field: 'countryId',
-};
-
-export const expectedMissingAgeWarning: ValidationWarning = {
-  code: VALIDATION_WARNING_CODES.MISSING_AGE,
-  message: `Person ${VALIDATION_PERSON_NAMES.PERSON_NO_AGE} is missing age for year ${VALIDATION_YEARS.DEFAULT}`,
-  field: `people.${VALIDATION_PERSON_NAMES.PERSON_NO_AGE}.age`,
-};
-
-export const expectedNoTaxUnitsWarning: ValidationWarning = {
-  code: VALIDATION_WARNING_CODES.NO_TAX_UNITS,
-  message: 'US households with people typically have at least one tax unit',
-  field: 'taxUnits',
-};
-
-export const expectedOrphanPersonWarning: ValidationWarning = {
-  code: VALIDATION_WARNING_CODES.PERSON_NOT_IN_TAX_UNIT,
-  message: `Person ${VALIDATION_PERSON_NAMES.PERSON_ORPHAN} is not assigned to any tax unit`,
-  field: `people.${VALIDATION_PERSON_NAMES.PERSON_ORPHAN}`,
-};
-
-export const expectedInvalidMaritalUnitError: ValidationError = {
-  code: VALIDATION_ERROR_CODES.INVALID_MARITAL_UNIT,
-  message: `Marital unit ${VALIDATION_GROUP_KEYS.INVALID_MARITAL_UNIT} must have exactly 2 members`,
-  field: `maritalUnits.${VALIDATION_GROUP_KEYS.INVALID_MARITAL_UNIT}`,
-};
-
-export const expectedEmptyBenUnitError: ValidationError = {
-  code: VALIDATION_ERROR_CODES.EMPTY_BENUNIT,
-  message: `Benefit unit ${VALIDATION_GROUP_KEYS.EMPTY_BEN_UNIT} has no members`,
-  field: `benunits.${VALIDATION_GROUP_KEYS.EMPTY_BEN_UNIT}`,
-};
-
-export const expectedInvalidGroupStructureError: ValidationError = {
-  code: VALIDATION_ERROR_CODES.INVALID_GROUP_STRUCTURE,
-  message: `Group ${VALIDATION_GROUP_KEYS.DEFAULT_HOUSEHOLD} in households must have a members array`,
-  field: `households.${VALIDATION_GROUP_KEYS.DEFAULT_HOUSEHOLD}.members`,
 };
 
 export const expectedNoPeopleError: ValidationError = {

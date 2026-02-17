@@ -67,15 +67,9 @@ export const mockPolicy2: Policy = {
 // Mock Household entity
 export const mockHousehold1: Household = {
   id: TEST_HOUSEHOLD_ID,
-  countryId: TEST_COUNTRIES.US,
-  householdData: {
-    people: {},
-    families: {},
-    tax_units: {},
-    spm_units: {},
-    households: {},
-    marital_units: {},
-  },
+  tax_benefit_model_name: 'policyengine_us',
+  year: 2025,
+  people: [],
 };
 
 // Mock User Associations
@@ -169,17 +163,11 @@ export const mockV2PolicyResponse2: V2PolicyResponse = {
 
 export const mockHouseholdMetadata: HouseholdMetadata = {
   id: TEST_HOUSEHOLD_ID,
-  country_id: TEST_COUNTRIES.US,
-  api_version: 'v1',
-  household_json: {
-    people: {},
-    families: {},
-    tax_units: {},
-    spm_units: {},
-    households: {},
-    marital_units: {},
+  household: {
+    tax_benefit_model_name: 'policyengine_us',
+    year: 2025,
+    people: [],
   },
-  household_hash: 'hash-household-123',
   label: 'Test Household',
 };
 

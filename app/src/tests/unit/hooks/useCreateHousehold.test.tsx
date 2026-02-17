@@ -2,7 +2,7 @@ import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { createHousehold } from '@/api/household';
+import { createHouseholdV2 } from '@/api/v2/households';
 // Now import the actual implementations
 import { useCreateHousehold } from '@/hooks/useCreateHousehold';
 import { useCreateHouseholdAssociation } from '@/hooks/useUserHousehold';
@@ -14,6 +14,7 @@ import {
   mockCreateHousehold,
   mockCreateHouseholdAssociationMutateAsync,
   mockCreateHouseholdResponse,
+  mockCreateHouseholdV2Response,
   mockHouseholdCreationPayload,
   QUERY_KEY_PATTERNS,
   setupMockConsole,
@@ -22,13 +23,16 @@ import {
 } from '@/tests/fixtures/hooks/hooksMocks';
 
 // Mock the modules before importing them
-vi.mock('@/api/household', () => ({
-  createHousehold: vi.fn(),
+vi.mock('@/api/v2/households', () => ({
+  createHouseholdV2: vi.fn(),
 }));
 
 vi.mock('@/constants', () => ({
-  MOCK_USER_ID: 'test-user-123',
   CURRENT_YEAR: '2025',
+}));
+
+vi.mock('@/hooks/useUserId', () => ({
+  useUserId: () => 'test-user-123',
 }));
 
 vi.mock('@/libs/queryKeys', () => ({
@@ -52,13 +56,13 @@ describe('useCreateHousehold', () => {
     consoleMocks = setupMockConsole();
 
     // Set up the mocked functions
-    (createHousehold as any).mockImplementation(mockCreateHousehold);
+    (createHouseholdV2 as any).mockImplementation(mockCreateHousehold);
     (useCreateHouseholdAssociation as any).mockReturnValue({
       mutateAsync: mockCreateHouseholdAssociationMutateAsync,
     });
 
-    // Set default mock implementations
-    mockCreateHousehold.mockResolvedValue(mockCreateHouseholdResponse);
+    // Set default mock implementations - v2 API returns full household
+    mockCreateHousehold.mockResolvedValue(mockCreateHouseholdV2Response);
     mockCreateHouseholdAssociationMutateAsync.mockResolvedValue({
       userId: TEST_IDS.USER_ID,
       householdId: TEST_IDS.HOUSEHOLD_ID,
@@ -94,7 +98,7 @@ describe('useCreateHousehold', () => {
       expect(mockCreateHouseholdAssociationMutateAsync).toHaveBeenCalledWith({
         userId: TEST_IDS.USER_ID,
         householdId: TEST_IDS.HOUSEHOLD_ID,
-        countryId: mockHouseholdCreationPayload.country_id,
+        countryId: 'us', // derived from tax_benefit_model_name: 'policyengine_us'
         label: TEST_LABELS.HOUSEHOLD,
       });
 
@@ -118,7 +122,7 @@ describe('useCreateHousehold', () => {
       expect(mockCreateHouseholdAssociationMutateAsync).toHaveBeenCalledWith({
         userId: TEST_IDS.USER_ID,
         householdId: TEST_IDS.HOUSEHOLD_ID,
-        countryId: mockHouseholdCreationPayload.country_id,
+        countryId: 'us',
         label: undefined,
       });
     });
@@ -135,7 +139,7 @@ describe('useCreateHousehold', () => {
       expect(mockCreateHouseholdAssociationMutateAsync).toHaveBeenCalledWith({
         userId: TEST_IDS.USER_ID,
         householdId: TEST_IDS.HOUSEHOLD_ID,
-        countryId: mockHouseholdCreationPayload.country_id,
+        countryId: 'us',
         label: customLabel,
       });
     });
@@ -294,7 +298,7 @@ describe('useCreateHousehold', () => {
       expect(mockCreateHouseholdAssociationMutateAsync).toHaveBeenCalledWith({
         userId: TEST_IDS.USER_ID,
         householdId: undefined,
-        countryId: mockHouseholdCreationPayload.country_id,
+        countryId: 'us',
         label: TEST_LABELS.HOUSEHOLD,
       });
     });

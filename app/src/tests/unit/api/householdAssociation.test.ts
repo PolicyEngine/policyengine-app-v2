@@ -1,61 +1,48 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { ApiHouseholdStore, LocalStorageHouseholdStore } from '@/api/householdAssociation';
+import * as v2Api from '@/api/v2/userHouseholdAssociations';
 import {
-  mockApiResponse,
-  mockApiResponseList,
   mockUserHouseholdPopulation,
   mockUserHouseholdPopulationList,
 } from '@/tests/fixtures/api/householdAssociationMocks';
 
-global.fetch = vi.fn();
+// Mock the v2 API module
+vi.mock('@/api/v2/userHouseholdAssociations');
 
 describe('ApiHouseholdStore', () => {
   let store: ApiHouseholdStore;
 
   beforeEach(() => {
-    vi.clearAllMocks();
     store = new ApiHouseholdStore();
+    vi.clearAllMocks();
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
+    vi.resetAllMocks();
   });
 
   describe('create', () => {
-    test('given valid household association then creates successfully', async () => {
+    test('given valid household association then creates via v2 API', async () => {
       // Given
-      const mockResponse = {
-        ok: true,
-        json: vi.fn().mockResolvedValue(mockApiResponse),
-      };
-      (global.fetch as any).mockResolvedValue(mockResponse);
+      vi.mocked(v2Api.createUserHouseholdAssociationV2).mockResolvedValue(
+        mockUserHouseholdPopulation
+      );
 
       // When
       const result = await store.create(mockUserHouseholdPopulation);
 
       // Then
-      expect(global.fetch).toHaveBeenCalledWith(
-        '/api/user-household-associations',
-        expect.objectContaining({
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-        })
+      expect(v2Api.createUserHouseholdAssociationV2).toHaveBeenCalledWith(
+        mockUserHouseholdPopulation
       );
-      expect(result).toMatchObject({
-        householdId: '123',
-        userId: 'user-456',
-        countryId: 'us',
-        label: 'My Test Household',
-      });
+      expect(result).toEqual(mockUserHouseholdPopulation);
     });
 
     test('given API returns error then throws error', async () => {
       // Given
-      const mockResponse = {
-        ok: false,
-        status: 400,
-      };
-      (global.fetch as any).mockResolvedValue(mockResponse);
+      vi.mocked(v2Api.createUserHouseholdAssociationV2).mockRejectedValue(
+        new Error('Failed to create household association')
+      );
 
       // When/Then
       await expect(store.create(mockUserHouseholdPopulation)).rejects.toThrow(
@@ -65,8 +52,9 @@ describe('ApiHouseholdStore', () => {
 
     test('given network error then propagates error', async () => {
       // Given
-      const networkError = new Error('Network failure');
-      (global.fetch as any).mockRejectedValue(networkError);
+      vi.mocked(v2Api.createUserHouseholdAssociationV2).mockRejectedValue(
+        new Error('Network failure')
+      );
 
       // When/Then
       await expect(store.create(mockUserHouseholdPopulation)).rejects.toThrow('Network failure');
@@ -74,36 +62,26 @@ describe('ApiHouseholdStore', () => {
   });
 
   describe('findByUser', () => {
-    test('given valid user ID then returns list of households', async () => {
+    test('given valid user ID then fetches via v2 API', async () => {
       // Given
-      const userId = 'user-456';
-      const mockResponse = {
-        ok: true,
-        json: vi.fn().mockResolvedValue(mockApiResponseList),
-      };
-      (global.fetch as any).mockResolvedValue(mockResponse);
+      vi.mocked(v2Api.fetchUserHouseholdAssociationsV2).mockResolvedValue(
+        mockUserHouseholdPopulationList
+      );
 
       // When
-      const result = await store.findByUser(userId);
+      const result = await store.findByUser('user-456');
 
       // Then
-      expect(global.fetch).toHaveBeenCalledWith(`/api/user-household-associations/user/${userId}`, {
-        headers: { 'Content-Type': 'application/json' },
-      });
+      expect(v2Api.fetchUserHouseholdAssociationsV2).toHaveBeenCalledWith('user-456', undefined);
       expect(result).toEqual(mockUserHouseholdPopulationList);
     });
 
     test('given user with no households then returns empty array', async () => {
       // Given
-      const userId = 'user-with-no-households';
-      const mockResponse = {
-        ok: true,
-        json: vi.fn().mockResolvedValue([]),
-      };
-      (global.fetch as any).mockResolvedValue(mockResponse);
+      vi.mocked(v2Api.fetchUserHouseholdAssociationsV2).mockResolvedValue([]);
 
       // When
-      const result = await store.findByUser(userId);
+      const result = await store.findByUser('user-with-no-households');
 
       // Then
       expect(result).toEqual([]);
@@ -111,53 +89,52 @@ describe('ApiHouseholdStore', () => {
 
     test('given API returns error then throws error', async () => {
       // Given
-      const userId = 'user-456';
-      const mockResponse = {
-        ok: false,
-        status: 500,
-      };
-      (global.fetch as any).mockResolvedValue(mockResponse);
+      vi.mocked(v2Api.fetchUserHouseholdAssociationsV2).mockRejectedValue(
+        new Error('Failed to fetch user households')
+      );
 
       // When/Then
-      await expect(store.findByUser(userId)).rejects.toThrow('Failed to fetch user households');
+      await expect(store.findByUser('user-456')).rejects.toThrow('Failed to fetch user households');
+    });
+
+    test('given countryId filter then passes to v2 API', async () => {
+      // Given
+      vi.mocked(v2Api.fetchUserHouseholdAssociationsV2).mockResolvedValue(
+        mockUserHouseholdPopulationList
+      );
+
+      // When
+      await store.findByUser('user-456', 'us');
+
+      // Then
+      expect(v2Api.fetchUserHouseholdAssociationsV2).toHaveBeenCalledWith('user-456', 'us');
     });
   });
 
   describe('findById', () => {
-    test('given valid user and household IDs then returns household', async () => {
+    test('given valid IDs then fetches via v2 API', async () => {
       // Given
-      const userId = 'user-456';
-      const householdId = 'household-123';
-      const mockResponse = {
-        ok: true,
-        status: 200,
-        json: vi.fn().mockResolvedValue(mockApiResponse),
-      };
-      (global.fetch as any).mockResolvedValue(mockResponse);
+      vi.mocked(v2Api.fetchUserHouseholdAssociationByIdV2).mockResolvedValue(
+        mockUserHouseholdPopulation
+      );
 
       // When
-      const result = await store.findById(userId, householdId);
+      const result = await store.findById('user-456', 'household-123');
 
       // Then
-      expect(global.fetch).toHaveBeenCalledWith(
-        `/api/user-household-associations/${userId}/${householdId}`,
-        { headers: { 'Content-Type': 'application/json' } }
+      expect(v2Api.fetchUserHouseholdAssociationByIdV2).toHaveBeenCalledWith(
+        'user-456',
+        'household-123'
       );
       expect(result).toEqual(mockUserHouseholdPopulation);
     });
 
     test('given non-existent association then returns null', async () => {
       // Given
-      const userId = 'user-456';
-      const householdId = 'non-existent';
-      const mockResponse = {
-        ok: false,
-        status: 404,
-      };
-      (global.fetch as any).mockResolvedValue(mockResponse);
+      vi.mocked(v2Api.fetchUserHouseholdAssociationByIdV2).mockResolvedValue(null);
 
       // When
-      const result = await store.findById(userId, householdId);
+      const result = await store.findById('user-456', 'non-existent');
 
       // Then
       expect(result).toBeNull();
@@ -165,46 +142,68 @@ describe('ApiHouseholdStore', () => {
 
     test('given server error then throws error', async () => {
       // Given
-      const userId = 'user-456';
-      const householdId = 'household-123';
-      const mockResponse = {
-        ok: false,
-        status: 500,
-      };
-      (global.fetch as any).mockResolvedValue(mockResponse);
+      vi.mocked(v2Api.fetchUserHouseholdAssociationByIdV2).mockRejectedValue(
+        new Error('Failed to fetch association')
+      );
 
       // When/Then
-      await expect(store.findById(userId, householdId)).rejects.toThrow(
+      await expect(store.findById('user-456', 'household-123')).rejects.toThrow(
         'Failed to fetch association'
       );
     });
   });
 
   describe('update', () => {
-    test('given update called then throws not supported error', async () => {
-      // Given & When & Then
-      await expect(store.update('suh-abc123', { label: 'Updated Label' })).rejects.toThrow(
-        'Please ensure you are using localStorage mode'
-      );
-    });
-
-    test('given update called then logs warning', async () => {
+    test('given valid association ID then updates via v2 API', async () => {
       // Given
-      const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const updatedHousehold = { ...mockUserHouseholdPopulation, label: 'Updated Label' };
+      vi.mocked(v2Api.updateUserHouseholdAssociationV2).mockResolvedValue(updatedHousehold);
 
       // When
-      try {
-        await store.update('suh-abc123', { label: 'Updated Label' });
-      } catch {
-        // Expected to throw
-      }
+      const result = await store.update('suh-abc123', { label: 'Updated Label' });
 
       // Then
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('API endpoint not yet implemented')
+      expect(v2Api.updateUserHouseholdAssociationV2).toHaveBeenCalledWith('suh-abc123', {
+        label: 'Updated Label',
+      });
+      expect(result.label).toBe('Updated Label');
+    });
+
+    test('given API error then throws error', async () => {
+      // Given
+      vi.mocked(v2Api.updateUserHouseholdAssociationV2).mockRejectedValue(
+        new Error('Failed to update household association')
       );
 
-      consoleWarnSpy.mockRestore();
+      // When/Then
+      await expect(store.update('suh-abc123', { label: 'Updated Label' })).rejects.toThrow(
+        'Failed to update household association'
+      );
+    });
+  });
+
+  describe('delete', () => {
+    test('given valid association ID then deletes via v2 API', async () => {
+      // Given
+      vi.mocked(v2Api.deleteUserHouseholdAssociationV2).mockResolvedValue(undefined);
+
+      // When
+      await store.delete('suh-abc123');
+
+      // Then
+      expect(v2Api.deleteUserHouseholdAssociationV2).toHaveBeenCalledWith('suh-abc123');
+    });
+
+    test('given API error then throws error', async () => {
+      // Given
+      vi.mocked(v2Api.deleteUserHouseholdAssociationV2).mockRejectedValue(
+        new Error('Failed to delete household association')
+      );
+
+      // When/Then
+      await expect(store.delete('suh-abc123')).rejects.toThrow(
+        'Failed to delete household association'
+      );
     });
   });
 });

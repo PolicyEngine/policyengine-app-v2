@@ -1,9 +1,9 @@
 import { QueryClient } from '@tanstack/react-query';
 import { vi } from 'vitest';
 import { CURRENT_YEAR } from '@/constants';
+import { Household } from '@/types/ingredients/Household';
 import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
-import { HouseholdCreationPayload } from '@/types/payloads';
 
 // ============= TEST CONSTANTS =============
 
@@ -92,31 +92,22 @@ export const TEST_VALUES = {
 // ============= MOCK DATA OBJECTS =============
 
 export const mockHouseholdMetadata: HouseholdMetadata = {
-  id: TEST_IDS.HOUSEHOLD_ID.split('-')[1],
-  country_id: GEO_CONSTANTS.COUNTRY_US,
-  household_json: {
-    people: {
-      person1: {
-        age: { [CURRENT_YEAR]: TEST_VALUES.AGE },
-        employment_income: { [CURRENT_YEAR]: TEST_VALUES.INCOME },
+  id: TEST_IDS.HOUSEHOLD_ID,
+  household: {
+    tax_benefit_model_name: 'policyengine_us',
+    year: parseInt(CURRENT_YEAR, 10),
+    people: [
+      {
+        age: TEST_VALUES.AGE,
+        employment_income: TEST_VALUES.INCOME,
       },
-    },
-    tax_units: {
-      unit1: {
-        members: ['person1'],
-      },
-    },
-    spm_units: {
-      unit1: {
-        members: ['person1'],
-      },
-    },
-    households: {},
-    marital_units: {},
-    families: {},
+    ],
+    tax_unit: {},
+    family: {},
+    spm_unit: {},
+    marital_unit: {},
+    household: {},
   },
-  api_version: 'v1',
-  household_hash: '<household_hash>',
 };
 
 export const mockUserHouseholdPopulation: UserHouseholdPopulation = {
@@ -143,46 +134,41 @@ export const mockUserHouseholdPopulationList: UserHouseholdPopulation[] = [
 
 // Note: UserGeographyPopulation mocks removed - geographies are no longer stored as user associations
 
-export const mockHouseholdCreationPayload: HouseholdCreationPayload = {
-  country_id: GEO_CONSTANTS.COUNTRY_US,
-  data: {
-    people: {
-      person1: {
-        age: { [CURRENT_YEAR]: TEST_VALUES.AGE },
-      },
+export const mockHouseholdCreationPayload: Household = {
+  tax_benefit_model_name: 'policyengine_us',
+  year: parseInt(CURRENT_YEAR, 10),
+  people: [
+    {
+      age: TEST_VALUES.AGE,
     },
-    tax_units: {
-      unit1: {
-        members: ['person1'],
-      },
-    },
-    spm_units: {
-      unit1: {
-        members: ['person1'],
-      },
-    },
-    households: {
-      household1: {
-        members: ['person1', 'person2'],
-      },
-    },
-    marital_units: {
-      unit1: {
-        members: ['person1', 'person2'],
-      },
-    },
-    families: {
-      family1: {
-        members: ['person1', 'person2'],
-      },
-    },
-  },
+  ],
+  tax_unit: {},
+  family: {},
+  spm_unit: {},
+  marital_unit: {},
+  household: {},
 };
 
+// Response from the old wrapper - returns { householdId }
 export const mockCreateHouseholdResponse = {
-  result: {
-    household_id: TEST_IDS.HOUSEHOLD_ID,
-  },
+  householdId: TEST_IDS.HOUSEHOLD_ID,
+};
+
+// Response from v2 API - returns full household with id
+export const mockCreateHouseholdV2Response: Household = {
+  id: TEST_IDS.HOUSEHOLD_ID,
+  tax_benefit_model_name: 'policyengine_us',
+  year: parseInt(CURRENT_YEAR, 10),
+  people: [
+    {
+      age: TEST_VALUES.AGE,
+    },
+  ],
+  tax_unit: {},
+  family: {},
+  spm_unit: {},
+  marital_unit: {},
+  household: {},
 };
 
 // ============= MOCK FUNCTIONS =============

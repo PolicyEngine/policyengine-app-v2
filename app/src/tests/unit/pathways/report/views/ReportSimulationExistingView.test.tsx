@@ -212,8 +212,9 @@ describe('ReportSimulationExistingView', () => {
           ...mockSimulationState.population,
           household: {
             id: 'different-household-999',
-            countryId: 'us' as const,
-            householdData: { people: {} },
+            tax_benefit_model_name: 'policyengine_us' as const,
+            year: 2025,
+            people: [],
           },
         },
       };

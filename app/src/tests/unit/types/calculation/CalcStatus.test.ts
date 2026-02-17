@@ -72,7 +72,7 @@ describe('CalcStatus types', () => {
       const result: CalcResult = mockHouseholdResult();
 
       expect(result).toHaveProperty('people');
-      expect(result).toHaveProperty('households');
+      expect(result).toHaveProperty('household');
     });
   });
 

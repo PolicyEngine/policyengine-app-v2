@@ -7,7 +7,7 @@ export const HOUSEHOLD_LABEL = 'My Household';
 
 // Mock entity members
 export const MOCK_BASELINE_MEMBER: EntityMember = {
-  id: 'person_1',
+  id: 0,
   name: 'You',
   variables: [
     {
@@ -26,7 +26,7 @@ export const MOCK_BASELINE_MEMBER: EntityMember = {
 };
 
 export const MOCK_REFORM_MEMBER: EntityMember = {
-  id: 'person_1',
+  id: 0,
   name: 'You',
   variables: [
     {
@@ -45,7 +45,7 @@ export const MOCK_REFORM_MEMBER: EntityMember = {
 };
 
 export const MOCK_BASELINE_MEMBER_WITH_EXTRA_VARS: EntityMember = {
-  id: 'person_1',
+  id: 0,
   name: 'You',
   variables: [
     {
@@ -70,7 +70,7 @@ export const MOCK_BASELINE_MEMBER_WITH_EXTRA_VARS: EntityMember = {
 };
 
 export const MOCK_EMPTY_MEMBER: EntityMember = {
-  id: 'person_empty',
+  id: 99,
   name: 'Empty Person',
   variables: [],
 };

@@ -5,10 +5,10 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import * as householdApi from '@/api/household';
 import * as policyApi from '@/api/policy';
 import * as reportApi from '@/api/report';
 import * as simulationApi from '@/api/simulation';
+import * as householdApi from '@/api/v2/households';
 import { useHouseholdAssociationsByUser } from '@/hooks/useUserHousehold';
 import { usePolicyAssociationsByUser } from '@/hooks/useUserPolicy';
 import {
@@ -31,7 +31,6 @@ import {
   createNormalizedCacheMock,
   ERROR_MESSAGES,
   mockHousehold1,
-  mockHouseholdMetadata,
   mockMetadataInitialState,
   mockPolicy1,
   mockSimulation1,
@@ -164,9 +163,9 @@ describe('useUserReports', () => {
       return Promise.reject(new Error(ERROR_MESSAGES.POLICY_NOT_FOUND(id)));
     });
 
-    vi.spyOn(householdApi, 'fetchHouseholdById').mockImplementation((_country, id) => {
+    vi.spyOn(householdApi, 'fetchHouseholdByIdV2').mockImplementation((id) => {
       if (id === TEST_HOUSEHOLD_ID) {
-        return Promise.resolve(mockHouseholdMetadata);
+        return Promise.resolve(mockHousehold1);
       }
       return Promise.reject(new Error(ERROR_MESSAGES.HOUSEHOLD_NOT_FOUND(id)));
     });
@@ -591,7 +590,7 @@ describe('useUserReportById', () => {
       }
       return Promise.reject(new Error(ERROR_MESSAGES.POLICY_NOT_FOUND(id)));
     });
-    vi.spyOn(householdApi, 'fetchHouseholdById').mockResolvedValue(mockHouseholdMetadata);
+    vi.spyOn(householdApi, 'fetchHouseholdByIdV2').mockResolvedValue(mockHousehold1);
 
     // Setup association mocks
     (useSimulationAssociationsByUser as any).mockReturnValue({

@@ -156,15 +156,14 @@ export function getCurrentLawParameterValue(
 }
 
 /**
- * Checks if any policy in the list is the current law policy
+ * Checks if any policy in the list is the current law policy.
+ * In V2 API, current law is represented by policy_id = null.
  * @param policies - Array of policies to check
- * @param currentLawId - The ID that represents current law (from metadata)
- * @returns True if any policy matches current law ID
+ * @param _currentLawId - Unused (kept for API compatibility), current law is always null
+ * @returns True if any policy has id === null (current law)
  */
-export function hasCurrentLawPolicy(policies: Policy[], currentLawId: number): boolean {
-  // Convert numeric current law ID to string for comparison with policy IDs (which are strings)
-  const currentLawIdString = String(currentLawId);
-  return policies.some((policy) => policy.id === currentLawIdString);
+export function hasCurrentLawPolicy(policies: Policy[], _currentLawId: null): boolean {
+  return policies.some((policy) => policy.id === null);
 }
 
 /**

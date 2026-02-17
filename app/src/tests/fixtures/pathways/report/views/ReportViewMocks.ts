@@ -3,7 +3,8 @@ import { ReportStateProps, SimulationStateProps } from '@/types/pathwayState';
 export const TEST_REPORT_LABEL = 'Test Report 2025';
 export const TEST_SIMULATION_LABEL = 'Test Simulation';
 export const TEST_COUNTRY_ID = 'us';
-export const TEST_CURRENT_LAW_ID = 1;
+// In V2 API, current law is represented by policy_id = null
+export const TEST_CURRENT_LAW_ID = null;
 
 export const mockOnUpdateLabel = vi.fn();
 export const mockOnUpdateYear = vi.fn();
@@ -51,10 +52,9 @@ export const mockConfiguredSimulation: SimulationStateProps = {
     type: 'household',
     household: {
       id: '789',
-      countryId: 'us',
-      householdData: {
-        people: {},
-      },
+      tax_benefit_model_name: 'policyengine_us',
+      year: 2025,
+      people: [],
     },
     geography: null,
   },
@@ -108,7 +108,13 @@ export const mockEnhancedUserSimulation = {
   userPolicy: { id: 1, label: 'Test Policy', policy_id: '456', user_id: 1 },
   policy: { id: '456', label: 'Current Law', countryId: TEST_COUNTRY_ID },
   userHousehold: { id: 1, label: 'Test Household', household_id: '789', user_id: 1 },
-  household: { id: '789', label: 'My Household', people: {} },
+  household: {
+    id: '789',
+    label: 'My Household',
+    tax_benefit_model_name: 'policyengine_us' as const,
+    year: 2025,
+    people: [],
+  },
   geography: null,
 };
 

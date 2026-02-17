@@ -122,8 +122,9 @@ describe('populationCompatibility', () => {
       const population = mockPopulationWithLabel('Custom Label');
       population.household = {
         id: TEST_POPULATION_IDS.HOUSEHOLD_1,
-        countryId: 'us',
-        householdData: { people: {} },
+        tax_benefit_model_name: 'policyengine_us',
+        year: 2025,
+        people: [],
       };
 
       // When
