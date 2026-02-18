@@ -1,41 +1,20 @@
 /**
- * SimulationBlock - A simulation configuration card
+ * SimulationBlockFull - Simulation card with full-width ingredient sections
+ *
+ * Same structure as SimulationBlock but uses IngredientSectionFull
+ * for a layout where each ingredient fills its entire section.
  */
 
 import { IconCheck, IconTrash } from '@tabler/icons-react';
 import { ActionIcon, Box, Group, Paper, Text, Tooltip } from '@mantine/core';
 import { colors, spacing } from '@/designTokens';
-import type { PopulationStateProps, SimulationStateProps } from '@/types/pathwayState';
 import { FONT_SIZES } from '../constants';
 import { styles } from '../styles';
-import type { RecentPopulation, SavedPolicy } from '../types';
 import { EditableLabel } from './EditableLabel';
-import { IngredientSection } from './IngredientSection';
+import { IngredientSectionFull } from './IngredientSectionFull';
+import type { SimulationBlockProps } from './SimulationBlock';
 
-export interface SimulationBlockProps {
-  simulation: SimulationStateProps;
-  index: number;
-  countryId: 'us' | 'uk';
-  onLabelChange: (label: string) => void;
-  onQuickSelectPolicy: (policyType: 'current-law') => void;
-  onSelectSavedPolicy: (id: string, label: string, paramCount: number) => void;
-  onQuickSelectPopulation: (populationType: 'nationwide') => void;
-  onSelectRecentPopulation: (population: PopulationStateProps) => void;
-  onDeselectPolicy: () => void;
-  onDeselectPopulation: () => void;
-  onCreateCustomPolicy: () => void;
-  onBrowseMorePolicies: () => void;
-  onBrowseMorePopulations: () => void;
-  onRemove?: () => void;
-  canRemove: boolean;
-  isRequired?: boolean;
-  populationInherited?: boolean;
-  inheritedPopulation?: PopulationStateProps | null;
-  savedPolicies: SavedPolicy[];
-  recentPopulations: RecentPopulation[];
-}
-
-export function SimulationBlock({
+export function SimulationBlockFull({
   simulation,
   index,
   countryId,
@@ -71,7 +50,6 @@ export function SimulationBlock({
   const currentPopulationId =
     effectivePopulation?.household?.id || effectivePopulation?.geography?.id;
 
-  // Determine inherited population type for display
   const inheritedPopulationType =
     populationInherited && inheritedPopulation
       ? inheritedPopulation.household?.id
@@ -143,8 +121,8 @@ export function SimulationBlock({
         </Group>
       </Box>
 
-      {/* Panels - direct children for subgrid alignment */}
-      <IngredientSection
+      {/* Full-width ingredient sections */}
+      <IngredientSectionFull
         type="policy"
         currentId={currentPolicyId}
         countryId={countryId}
@@ -154,10 +132,9 @@ export function SimulationBlock({
         onCreateCustom={() => {}}
         onBrowseMore={onBrowseMorePolicies}
         savedPolicies={savedPolicies}
-
       />
 
-      <IngredientSection
+      <IngredientSectionFull
         type="population"
         currentId={currentPopulationId}
         countryId={countryId}
@@ -169,14 +146,12 @@ export function SimulationBlock({
         isInherited={populationInherited}
         inheritedPopulationType={inheritedPopulationType}
         recentPopulations={recentPopulations}
-
       />
 
-      <IngredientSection
+      <IngredientSectionFull
         type="dynamics"
         countryId={countryId}
         onCreateCustom={() => {}}
-
       />
     </Paper>
   );

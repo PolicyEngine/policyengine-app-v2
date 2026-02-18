@@ -9,7 +9,6 @@
 import { IconChevronRight, IconHome, IconSearch } from '@tabler/icons-react';
 import {
   Box,
-  Button,
   Group,
   Paper,
   ScrollArea,
@@ -19,7 +18,6 @@ import {
   TextInput,
   UnstyledButton,
 } from '@mantine/core';
-import { UKOutlineIcon, USOutlineIcon } from '@/components/icons/CountryOutlineIcons';
 import { colors, spacing } from '@/designTokens';
 import { RegionOption } from '@/utils/regionStrategies';
 import { FONT_SIZES, INGREDIENT_COLORS } from '../../constants';
@@ -49,7 +47,7 @@ interface PopulationBrowseContentProps {
 }
 
 export function PopulationBrowseContent({
-  countryId,
+  countryId: _countryId,
   activeCategory,
   searchQuery,
   setSearchQuery,
@@ -92,7 +90,7 @@ export function PopulationBrowseContent({
 
   // StateDistrictSelector and PlaceSelector handle their own search and header
   const showExternalSearchAndHeader =
-    activeCategory !== 'national' && activeCategory !== 'districts' && activeCategory !== 'places';
+    activeCategory !== 'districts' && activeCategory !== 'places';
 
   return (
     <Stack gap={spacing.lg} style={{ height: '100%' }}>
@@ -135,46 +133,7 @@ export function PopulationBrowseContent({
 
       {/* Content */}
       <ScrollArea style={{ flex: 1 }} offsetScrollbars>
-        {activeCategory === 'national' ? (
-          // National selection - single prominent option
-          <Box
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: spacing['2xl'],
-              gap: spacing.lg,
-            }}
-          >
-            <Paper
-              style={{
-                ...styles.householdCard,
-                width: '100%',
-                maxWidth: 400,
-                textAlign: 'center',
-                padding: spacing.xl,
-              }}
-              onClick={() => onSelectGeography(null)}
-            >
-              <Stack align="center" gap={spacing.md}>
-                {countryId === 'uk' ? <UKOutlineIcon size={48} /> : <USOutlineIcon size={48} />}
-                <Stack gap={spacing.xs}>
-                  <Text fw={600} style={{ fontSize: FONT_SIZES.normal }}>
-                    {countryId === 'uk' ? 'Households UK-wide' : 'Households nationwide'}
-                  </Text>
-                  <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
-                    Simulate policy effects across the entire{' '}
-                    {countryId === 'uk' ? 'United Kingdom' : 'United States'}
-                  </Text>
-                </Stack>
-                <Button color="teal" rightSection={<IconChevronRight size={16} />}>
-                  Select
-                </Button>
-              </Stack>
-            </Paper>
-          </Box>
-        ) : activeCategory === 'my-households' ? (
+        {activeCategory === 'my-households' ? (
           // Households list
           householdsLoading ? (
             <Stack gap={spacing.md}>

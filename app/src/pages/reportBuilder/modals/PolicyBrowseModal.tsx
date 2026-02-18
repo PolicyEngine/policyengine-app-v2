@@ -6,9 +6,9 @@
  * - Creation mode: PolicyCreationContent + PolicyParameterTree
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { IconFolder, IconPlus, IconScale, IconUsers } from '@tabler/icons-react';
+import { IconChevronRight, IconFolder, IconPlus, IconScale, IconStar, IconUsers } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
-import { Box, Group, Text } from '@mantine/core';
+import { Box, Group, Paper, Stack, Text } from '@mantine/core';
 import { EditableLabel } from '../components/EditableLabel';
 import { PolicyAdapter } from '@/adapters';
 import { MOCK_USER_ID } from '@/constants';
@@ -54,7 +54,7 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
 
   // Browse mode state
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeSection, setActiveSection] = useState<'my-policies' | 'public'>('my-policies');
+  const [activeSection, setActiveSection] = useState<'frequently-selected' | 'my-policies' | 'public'>('frequently-selected');
   const [selectedPolicyId, setSelectedPolicyId] = useState<string | null>(null);
   const [drawerPolicyId, setDrawerPolicyId] = useState<string | null>(null);
 
@@ -77,6 +77,7 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
   useEffect(() => {
     if (isOpen) {
       setSearchQuery('');
+      setActiveSection('frequently-selected');
       setSelectedPolicyId(null);
       setDrawerPolicyId(null);
       setIsCreationMode(false);
@@ -306,21 +307,16 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
   const browseSidebarSections = useMemo(
     () => [
       {
-        id: 'quick-select',
-        label: 'Quick select',
-        items: [
-          {
-            id: 'current-law',
-            label: 'Current law',
-            icon: <IconScale size={16} color={colorConfig.icon} />,
-            onClick: handleSelectCurrentLaw,
-          },
-        ],
-      },
-      {
         id: 'library',
         label: 'Library',
         items: [
+          {
+            id: 'frequently-selected',
+            label: 'Frequently selected',
+            icon: <IconStar size={16} />,
+            isActive: activeSection === 'frequently-selected',
+            onClick: () => setActiveSection('frequently-selected'),
+          },
           {
             id: 'my-policies',
             label: 'My policies',
@@ -346,14 +342,7 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
         ],
       },
     ],
-    [
-      activeSection,
-      userPolicies.length,
-      isCreationMode,
-      handleEnterCreationMode,
-      handleSelectCurrentLaw,
-      colorConfig.icon,
-    ]
+    [activeSection, userPolicies.length, isCreationMode, handleEnterCreationMode]
   );
 
   // Creation mode custom sidebar
@@ -394,6 +383,52 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
           setValueSetterMode={setValueSetterMode}
           onValueSubmit={handleValueSubmit}
         />
+      );
+    }
+
+    if (activeSection === 'frequently-selected') {
+      return (
+        <Stack gap={spacing.lg} style={{ height: '100%' }}>
+          <Text fw={600} style={{ fontSize: FONT_SIZES.normal, color: colors.gray[800] }}>
+            Frequently selected
+          </Text>
+          <Paper
+            style={{
+              background: colors.white,
+              border: `1px solid ${colors.border.light}`,
+              borderRadius: spacing.radius.lg,
+              padding: spacing.lg,
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              position: 'relative' as const,
+              overflow: 'hidden',
+              maxWidth: 340,
+            }}
+            onClick={handleSelectCurrentLaw}
+          >
+            <Box
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                height: 3,
+                background: `linear-gradient(90deg, ${colorConfig.accent}, ${colorConfig.icon})`,
+              }}
+            />
+            <Group justify="space-between" align="flex-start" wrap="nowrap">
+              <Stack gap={spacing.xs} style={{ flex: 1, minWidth: 0 }}>
+                <Text fw={600} style={{ fontSize: FONT_SIZES.normal, color: colors.gray[900] }}>
+                  Current law
+                </Text>
+                <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
+                  No parameter changes
+                </Text>
+              </Stack>
+              <IconChevronRight size={16} color={colors.gray[400]} />
+            </Group>
+          </Paper>
+        </Stack>
       );
     }
 

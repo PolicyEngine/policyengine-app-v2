@@ -23,7 +23,7 @@ import { Simulation } from '@/types/ingredients/Simulation';
 import { SimulationStateProps } from '@/types/pathwayState';
 import { initializeSimulationState } from '@/utils/pathwayState/initializeSimulationState';
 import { getReportOutputPath } from '@/utils/reportRouting';
-import { ReportMetaPanel, SimulationCanvas, TopBar } from './components';
+import { ReportMetaPanel, SimulationCanvas, SimulationBlockFull, TopBar } from './components';
 import { styles } from './styles';
 import type { IngredientPickerState, ReportBuilderState, TopBarAction } from './types';
 
@@ -243,6 +243,7 @@ export default function ReportBuilderPage() {
         setReportState={setReportState}
         pickerState={pickerState}
         setPickerState={setPickerState}
+        BlockComponent={SimulationBlockFull}
       />
     </Box>
   );

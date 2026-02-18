@@ -68,7 +68,7 @@ export interface SidebarItem {
 export interface BrowseModalSidebarSection {
   id: string;
   label: string;
-  items: SidebarItem[];
+  items?: SidebarItem[];
 }
 
 export interface BrowseModalTemplateProps {
@@ -274,7 +274,7 @@ export interface ReportMetaPanelProps {
 // ============================================================================
 
 export type PopulationCategory =
-  | 'national'
+  | 'frequently-selected'
   | 'states'
   | 'districts'
   | 'places'
