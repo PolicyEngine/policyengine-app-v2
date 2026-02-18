@@ -1,15 +1,28 @@
 Robert Jenrick, Reform UK's economy spokesperson, [announced](https://www.lbc.co.uk/article/reform-restore-two-child-benefit-cap-jenrick-5HjdSWh_2/) on 18 February 2026 that Reform UK would restore the two-child benefit cap. The cap, originally introduced in 2017, prevents parents from claiming Universal Credit or Child Tax Credit child elements for more than two children born after April 2017. Chancellor Rachel Reeves removed the cap from April 2026 as part of the [Autumn Budget 2025](https://www.gov.uk/government/news/chancellor-announces-autumn-budget-2025).
 
-In this analysis, we [examine](https://gist.github.com/vahid-ahmadi/f76a18836947582d020c36e0e3145dcd) the impact of restoring the two-child limit on government spending, income distribution, poverty rates, income inequality, and geographic variation across parliamentary constituencies.
+In this analysis, we [examine](https://gist.github.com/vahid-ahmadi/e1910e3120bbae130584dfcf221ec461) the impact of restoring the two-child limit on government spending, income distribution, poverty rates, income inequality, and geographic variation across parliamentary constituencies.
 
 ## Budgetary impact
 
-PolicyEngine [estimates](https://gist.github.com/vahid-ahmadi/f76a18836947582d020c36e0e3145dcd) that restoring the two-child limit would save the government £3.9 billion in 2029-30 and £4.1 billion in 2030-31.
+PolicyEngine [estimates](https://gist.github.com/vahid-ahmadi/e1910e3120bbae130584dfcf221ec461) that restoring the two-child limit would save the government £3.9 billion in 2029-30 and £4.1 billion in 2030-31.
+
+**Table 1: Budgetary impact**
 
 | Year    | Government savings |
 | ------- | ------------------ |
 | 2029-30 | £3.9bn             |
 | 2030-31 | £4.1bn             |
+
+## Affected households and children
+
+The reform would affect 713 thousand households and 2.5 million children (16.9% of all children) in 2029-30.
+
+**Table 2: Affected households and children**
+
+| Year    | Affected households | Affected children | Share of all children (%) |
+| ------- | ------------------- | ----------------- | --------------------- |
+| 2029-30 | 713k                | 2.5m              | 16.9%                 |
+| 2030-31 | 729k                | 2.5m              | 17.2%                 |
 
 ## Distributional impact
 
@@ -25,7 +38,7 @@ The losses decline for higher deciles, with deciles 8 to 10 seeing no change. By
 
 Restoring the two-child limit would increase absolute poverty rates, with the largest effect on children. We measure poverty both before housing costs (BHC) and after housing costs (AHC).
 
-**Table 1: Change in absolute child poverty rates**
+**Table 3: Change in absolute child poverty rates**
 
 | Year    | Measure | Baseline | Reform | Change (pp) |
 | ------- | ------- | -------- | ------ | ----------- |
@@ -34,7 +47,7 @@ Restoring the two-child limit would increase absolute poverty rates, with the la
 | 2030-31 | BHC     | 12.92%   | 15.13% | +2.21       |
 | 2030-31 | AHC     | 22.34%   | 26.55% | +4.21       |
 
-**Table 2: Change in absolute poverty rates (all people)**
+**Table 4: Change in absolute poverty rates (all people)**
 
 | Year    | Measure | Baseline | Reform | Change (pp) |
 | ------- | ------- | -------- | ------ | ----------- |
@@ -49,7 +62,7 @@ In 2029-30, absolute child poverty (BHC) would increase by 2.35 percentage point
 
 Restoring the two-child limit would increase income inequality. The Gini index would rise by 0.80% in 2029-30 and 0.81% in 2030-31.
 
-**Table 3: Change in Gini index**
+**Table 5: Change in Gini index**
 
 | Year    | Change |
 | ------- | ------ |
@@ -66,8 +79,6 @@ The impact of restoring the two-child limit varies across parliamentary constitu
 
 The constituencies experiencing the largest average income losses include Bradford East (£333), Birmingham Ladywood (£317), Bradford West (£316), Birmingham Hodge Hill and Solihull North (£293), and Nottingham South (£280).
 
-Some Scottish constituencies see small average gains due to interactions with the Scottish benefit system, including Lothian East (+£13), Caithness, Sutherland and Easter Ross (+£11), and Rutherglen (+£9).
-
 ## Conclusion
 
-PolicyEngine estimates that restoring the two-child benefit cap would save the government £3.9 billion in 2029-30, increase absolute child poverty (BHC) by 18.3%, and increase income inequality by 0.80%. The reform would reduce incomes for the lowest five income deciles, with the second decile losing 1.38% of household income on average.
+PolicyEngine estimates that restoring the two-child benefit cap would save the government £3.9 billion in 2029-30, affecting 713 thousand households and 2.5 million children (16.9% of all children). Absolute child poverty (BHC) would increase by 2.35 percentage points, from 12.79% to 15.13%, and the Gini index would rise by 0.80%. The reform would reduce incomes for the lowest five income deciles, with the second decile losing 1.38% of household income on average. Bradford East, Birmingham Ladywood, and Bradford West would be the most affected constituencies.
