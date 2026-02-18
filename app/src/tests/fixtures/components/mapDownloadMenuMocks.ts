@@ -46,6 +46,6 @@ export function createPopulatedRef(): React.RefObject<HTMLDivElement> {
 /**
  * Create a ref object with null current (no element attached)
  */
-export function createNullRef(): React.RefObject<HTMLDivElement> {
+export function createNullRef(): React.RefObject<HTMLDivElement | null> {
   return { current: null };
 }
