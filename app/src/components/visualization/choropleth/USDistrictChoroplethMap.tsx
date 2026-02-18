@@ -357,6 +357,7 @@ export function USDistrictChoroplethMap({
   geoDataPath,
   focusState,
   visualizationType = 'geographic',
+  exportRef,
 }: USDistrictChoroplethMapProps) {
   const uniqueId = useId();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -492,7 +493,14 @@ export function USDistrictChoroplethMap({
 
   return (
     <Box
-      ref={containerRef}
+      ref={(node: HTMLDivElement | null) => {
+        (containerRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+        if (typeof exportRef === 'function') {
+          exportRef(node);
+        } else if (exportRef) {
+          (exportRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+        }
+      }}
       style={{
         border: `1px solid ${colors.border.light}`,
         borderRadius: spacing.radius.container,
@@ -577,6 +585,7 @@ export function USDistrictChoroplethMap({
       {tooltip && (
         <div
           role="tooltip"
+          data-export-exclude
           style={{
             position: 'absolute',
             left: tooltip.x + 12,
