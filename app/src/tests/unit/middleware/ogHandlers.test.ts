@@ -8,8 +8,8 @@ import {
   TEST_URLS,
 } from '@/tests/fixtures/middleware/ogMocks';
 // Import after mocks
-// @ts-ignore - importing from root middleware file
-import middleware from '../../../../middleware';
+// @ts-ignore - importing from repo root middleware file
+import middleware from '../../../../../middleware';
 
 // Mock the JSON imports
 vi.mock('../../../../src/data/posts/posts.json', () => ({
