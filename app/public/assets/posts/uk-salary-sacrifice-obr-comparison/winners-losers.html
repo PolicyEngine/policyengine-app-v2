@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Serif:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Roboto Serif', Georgia, serif; background: #fff; }
+  </style>
+</head>
+<body>
+<div id="chart" style="width:100%;height:500px;"></div>
+<script>
+const deciles = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'All'];
+const losers =    [0.6, 9.9, 5.1, 9.0, 7.3, 11.9, 7.9, 24.9, 13.2, 21.6, 11.2];
+const noChange = losers.map(l => 100 - l);
+
+const font = 'Roboto Serif, Georgia, serif';
+
+const traceLosers = {
+  x: deciles,
+  y: losers,
+  name: 'Lose income',
+  type: 'bar',
+  marker: { color: '#616161' },
+  text: losers.map(v => v >= 5 ? v.toFixed(1) + '%' : ''),
+  textposition: 'inside',
+  textfont: { family: font, size: 11, color: '#fff' },
+  hovertemplate: '%{x}<br>Losers: %{y:.1f}%<extra></extra>',
+  hoverlabel: { font: { family: font, size: 13 }, bgcolor: '#fff', bordercolor: '#ccc' }
+};
+
+const traceNoChange = {
+  x: deciles,
+  y: noChange,
+  name: 'No change',
+  type: 'bar',
+  marker: { color: '#e8e8e8' },
+  hovertemplate: '%{x}<br>No change: %{y:.1f}%<extra></extra>',
+  hoverlabel: { font: { family: font, size: 13 }, bgcolor: '#fff', bordercolor: '#ccc' }
+};
+
+const layout = {
+  barmode: 'stack',
+  xaxis: {
+    title: { text: 'Income decile', font: { family: font, size: 13, color: '#555' }, standoff: 10 },
+    tickfont: { family: font, size: 12, color: '#444' },
+    dtick: 1
+  },
+  yaxis: {
+    title: { text: '% of people', font: { family: font, size: 12, color: '#555' } },
+    ticksuffix: '%',
+    tickfont: { family: font, size: 11, color: '#666' },
+    range: [0, 105],
+    gridcolor: '#eee'
+  },
+  legend: {
+    orientation: 'h',
+    x: 0.5,
+    xanchor: 'center',
+    y: 1.06,
+    font: { family: font, size: 12, color: '#444' },
+    tracegroupgap: 20
+  },
+  margin: { t: 40, b: 55, l: 55, r: 30 },
+  plot_bgcolor: '#fff',
+  paper_bgcolor: '#fff',
+  images: []
+};
+
+Plotly.newPlot('chart', [traceLosers, traceNoChange], layout, {responsive: true, displayModeBar: false});
+</script>
+</body>
+</html>
