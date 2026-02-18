@@ -11,7 +11,15 @@ import { OBBBAIframeContent, StreamlitEmbed } from '@/components/interactive';
 import { apps } from '@/data/apps/appTransformers';
 
 export default function AppPage() {
-  const { slug, countryId } = useParams<{ slug: string; countryId: string }>();
+  const {
+    slug,
+    countryId,
+    '*': subPath,
+  } = useParams<{
+    slug: string;
+    countryId: string;
+    '*': string;
+  }>();
   const location = useLocation();
 
   const app =
@@ -43,19 +51,20 @@ export default function AppPage() {
     return <OBBBAIframeContent url={app.source} title={app.title} />;
   }
 
-  // Forward hash fragment from the browser URL to the iframe (e.g. #NY)
-  // Always inject country for non-US routes (needed for shared links)
+  // Build iframe URL from app source, sub-path, and hash fragment
+  const base = subPath ? `${app.source.replace(/\/$/, '')}/${subPath}` : app.source;
+
   let iframeUrl: string;
   if (location.hash && countryId && countryId !== 'us') {
     const params = new URLSearchParams(location.hash.slice(1));
     params.set('country', countryId);
-    iframeUrl = `${app.source}#${params.toString()}`;
+    iframeUrl = `${base}#${params.toString()}`;
   } else if (location.hash) {
-    iframeUrl = `${app.source}${location.hash}`;
+    iframeUrl = `${base}${location.hash}`;
   } else if (countryId && countryId !== 'us') {
-    iframeUrl = `${app.source}#country=${countryId}`;
+    iframeUrl = `${base}#country=${countryId}`;
   } else {
-    iframeUrl = app.source;
+    iframeUrl = base;
   }
 
   // Default: standard iframe (for 'iframe' type and any other types)
