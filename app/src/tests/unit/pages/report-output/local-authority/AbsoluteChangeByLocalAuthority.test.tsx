@@ -1,13 +1,10 @@
 import { render, screen } from '@test-utils';
-import { describe, expect, test, vi } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import { AbsoluteChangeByLocalAuthority } from '@/pages/report-output/local-authority/AbsoluteChangeByLocalAuthority';
 import {
   MOCK_UK_REPORT_OUTPUT_NO_LA_DATA,
   MOCK_UK_REPORT_OUTPUT_WITH_LA,
 } from '@/tests/fixtures/pages/local-authority/localAuthorityComponentMocks';
-
-// Mock Plotly
-vi.mock('react-plotly.js', () => ({ default: vi.fn(() => null) }));
 
 describe('AbsoluteChangeByLocalAuthority', () => {
   test('given local authority data then renders component', () => {

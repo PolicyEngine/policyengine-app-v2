@@ -23,7 +23,7 @@ const TwoColumnView = ({ title, leftColumn, rightColumn, backgroundColor }: TwoC
     <Paper
       bg={getBackgroundColor()}
       p={spacing.container.lg}
-      radius={spacing.radius.lg}
+      radius={spacing.radius.container}
       style={{ minHeight: '400px' }}
     >
       <Title

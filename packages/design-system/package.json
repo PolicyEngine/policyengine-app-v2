@@ -31,7 +31,8 @@
       "import": "./dist/charts/index.js",
       "types": "./dist/charts/index.d.ts"
     },
-    "./tokens.json": "./dist/tokens.json"
+    "./tokens.json": "./dist/tokens.json",
+    "./tokens.css": "./dist/tokens.css"
   },
   "files": [
     "dist",
@@ -40,12 +41,13 @@
     "!src/__tests__"
   ],
   "scripts": {
-    "build": "tsc && npm run generate-json",
+    "build": "tsc && npm run generate-json && npm run generate-css",
     "dev": "tsc --watch",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src --ext .ts,.tsx",
     "format": "prettier --write \"src/**/*.{ts,tsx}\"",
     "generate-json": "tsx scripts/generate-json.ts",
+    "generate-css": "tsx scripts/generate-css.ts",
     "test": "vitest run"
   },
   "peerDependencies": {

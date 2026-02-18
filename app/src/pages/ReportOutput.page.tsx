@@ -390,6 +390,7 @@ function getTabsForOutputType(
       { value: 'policy', label: 'Policy' },
       { value: 'population', label: 'Population' },
       { value: 'dynamics', label: 'Dynamics' },
+      { value: 'reproduce', label: 'Reproduce in Python' },
     ];
 
     // Only show constituencies and local authorities for UK national or country-level reports
@@ -412,6 +413,7 @@ function getTabsForOutputType(
       { value: 'policy', label: 'Policy' },
       { value: 'population', label: 'Population' },
       { value: 'dynamics', label: 'Dynamics' },
+      { value: 'reproduce', label: 'Reproduce in Python' },
     ];
   }
 

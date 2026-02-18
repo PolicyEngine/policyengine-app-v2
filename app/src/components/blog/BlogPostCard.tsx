@@ -43,7 +43,7 @@ export function BlogPostCard({ item, countryId }: BlogPostCardProps) {
     <Box
       style={{
         border: `1px solid ${colors.gray[300]}`,
-        borderRadius: spacing.radius.md,
+        borderRadius: spacing.radius.container,
         overflow: 'hidden',
         backgroundColor: colors.white,
         height: '100%',
@@ -70,6 +70,7 @@ export function BlogPostCard({ item, countryId }: BlogPostCardProps) {
           <img
             src={item.image.startsWith('http') ? item.image : `/assets/posts/${item.image}`}
             alt={item.title}
+            loading="lazy"
             style={{
               width: '100%',
               height: '100%',

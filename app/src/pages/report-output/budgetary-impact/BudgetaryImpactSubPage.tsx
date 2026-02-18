@@ -1,23 +1,25 @@
-import type { Layout } from 'plotly.js';
-import Plot from 'react-plotly.js';
 import { useSelector } from 'react-redux';
-import { Stack } from '@mantine/core';
 import { useMediaQuery, useViewportSize } from '@mantine/hooks';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { ChartContainer } from '@/components/ChartContainer';
-import { colors } from '@/designTokens/colors';
-import { spacing } from '@/designTokens/spacing';
+import {
+  computeWaterfallData,
+  getWaterfallDomain,
+  WaterfallChart,
+  type WaterfallItem,
+} from '@/components/charts';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import type { RootState } from '@/store';
 import { absoluteChangeMessage } from '@/utils/chartMessages';
+import { downloadCsv, getClampedChartHeight, getNiceTicks } from '@/utils/chartUtils';
+import { currencySymbol } from '@/utils/formatters';
 import {
-  DEFAULT_CHART_CONFIG,
-  downloadCsv,
-  getChartLogoImage,
-  getClampedChartHeight,
-} from '@/utils/chartUtils';
-import { currencySymbol, formatCurrencyAbbr, localeCode } from '@/utils/formatters';
-import { regionName } from '@/utils/impactChartUtils';
+  BudgetWaterfallTooltip,
+  formatBillions,
+  getBudgetChartTitle,
+  getBudgetFillColor,
+  makeBudgetTickFormatter,
+} from './budgetChartUtils';
 
 interface Props {
   output: SocietyWideReportOutput;
@@ -36,20 +38,20 @@ export default function BudgetaryImpactSubPage({ output }: Props) {
   const stateTaxImpact = output.budget.state_tax_revenue_impact;
   const taxImpact = output.budget.tax_revenue_impact - stateTaxImpact;
 
-  // Labels - different for US vs other countries, and desktop vs mobile
+  // Labels differ for US vs other countries, and desktop vs mobile
+  const isUS = countryId === 'us';
   const desktopLabels = [
-    'Federal tax revenues',
+    isUS ? 'Federal tax revenues' : 'Tax revenues',
     'State and local income tax revenues',
     'Benefit spending',
     'Net impact',
   ];
-  const mobileLabels = ['Federal taxes', 'State and local income taxes', 'Benefits', 'Net'];
-
-  if (countryId !== 'us') {
-    desktopLabels[0] = 'Tax revenues';
-    mobileLabels[0] = 'Taxes';
-  }
-
+  const mobileLabels = [
+    isUS ? 'Federal taxes' : 'Taxes',
+    'State and local income taxes',
+    'Benefits',
+    'Net',
+  ];
   const labelsBeforeFilter = mobile ? mobileLabels : desktopLabels;
 
   // Values in billions
@@ -61,8 +63,8 @@ export default function BudgetaryImpactSubPage({ output }: Props) {
   ];
 
   // Filter out zero values
-  const values = valuesBeforeFilter.filter((value) => value !== 0);
-  const labels = labelsBeforeFilter.filter((_label, index) => valuesBeforeFilter[index] !== 0);
+  const values = valuesBeforeFilter.filter((v) => v !== 0);
+  const labels = labelsBeforeFilter.filter((_label, i) => valuesBeforeFilter[i] !== 0);
 
   // CSV export handler
   const handleDownloadCsv = () => {
@@ -70,116 +72,61 @@ export default function BudgetaryImpactSubPage({ output }: Props) {
     downloadCsv(csvData, 'budgetary-impact.csv');
   };
 
-  // Format currency for display on bars
-  const formatCur = (x: number) =>
-    formatCurrencyAbbr(x, countryId, {
-      maximumFractionDigits: 1,
-    });
-
   // Generate hover message
-  const hoverMessage = (x: string, y: number) => {
-    let yValue = y * 1e9;
-    // If not tax revenues, negate
-    if (!x.toLowerCase().includes('tax')) {
-      yValue = -yValue;
+  const hoverMessage = (name: string, valueBn: number) => {
+    const nameLower = name.toLowerCase();
+    const isTax = nameLower.includes('tax');
+    const yValue = isTax ? valueBn * 1e9 : -(valueBn * 1e9);
+
+    let obj: string;
+    if (isTax) {
+      obj = nameLower;
+    } else if (nameLower.includes('benefit')) {
+      obj = 'benefit spending';
+    } else {
+      obj = 'the budget deficit';
     }
-    const obj = x.toLowerCase().includes('tax')
-      ? x.toLowerCase()
-      : x.toLowerCase().includes('benefit')
-        ? 'benefit spending'
-        : 'the budget deficit';
-    return absoluteChangeMessage('This reform', obj, yValue, 0, formatCur);
+
+    return absoluteChangeMessage('This reform', obj, yValue, 0, (v) =>
+      formatBillions(v, countryId)
+    );
   };
 
-  // Generate chart title
-  const getChartTitle = () => {
-    const term1 = 'the budget';
-    const term2 = formatCurrencyAbbr(Math.abs(budgetaryImpact), countryId, {
-      maximumFractionDigits: 1,
-    });
-    const signTerm = budgetaryImpact > 0 ? 'raise' : 'cost';
+  // Build waterfall items
+  const items: WaterfallItem[] = values.map((value, i) => ({
+    name: labels[i],
+    value,
+    isTotal: i === values.length - 1 && values.length > 1,
+  }));
 
-    const region = regionName(metadata);
-    const regionPhrase = region ? ` in ${region}` : '';
+  const data = computeWaterfallData(items, (v) => formatBillions(v * 1e9, countryId));
 
-    if (budgetaryImpact === 0) {
-      return `This reform would have no effect on ${term1}${regionPhrase}`;
-    }
-    return `This reform would ${signTerm} ${term2}${regionPhrase}`;
-  };
+  // Attach hover text to each datum for the tooltip
+  const dataWithHover = data.map((d) => ({
+    ...d,
+    hoverText: hoverMessage(d.name, d.value),
+  }));
 
-  // Chart configuration
-  const chartData = [
-    {
-      x: labels,
-      y: values,
-      type: 'waterfall' as const,
-      orientation: 'v' as const,
-      // 'relative' for all but the last, which is 'total'
-      measure:
-        values.length > 1
-          ? Array(values.length - 1)
-              .fill('relative')
-              .concat(['total'])
-          : undefined,
-      text: values.map((value) => formatCur(value * 1e9)) as any,
-      textposition: 'inside' as const,
-      increasing: { marker: { color: colors.primary[500] } },
-      decreasing: { marker: { color: colors.gray[600] } },
-      totals: {
-        marker: {
-          color: budgetaryImpact < 0 ? colors.gray[600] : colors.primary[500],
-        },
-      },
-      connector: {
-        line: {
-          color: colors.gray[400],
-          width: 2,
-          dash: 'dot' as const,
-        },
-      },
-      customdata: labels.map((x, i) => hoverMessage(x, values[i])) as any,
-      hovertemplate: '<b>%{x}</b><br><br>%{customdata}<extra></extra>',
-    },
-  ];
-
-  const layout = {
-    xaxis: {
-      title: { text: '' },
-      fixedrange: true,
-    },
-    yaxis: {
-      title: { text: 'Budgetary impact (bn)' },
-      tickprefix: currencySymbol(countryId),
-      tickformat: ',.1f',
-      fixedrange: true,
-    },
-    uniformtext: {
-      mode: 'hide' as const,
-      minsize: 12,
-    },
-    margin: {
-      t: 0,
-      b: 100,
-      l: 80,
-      r: 0,
-    },
-    images: [getChartLogoImage()],
-  } as Partial<Layout>;
+  const yDomain = getWaterfallDomain(data);
+  const yTicks = getNiceTicks(yDomain);
+  const symbol = currencySymbol(countryId);
+  const tickFormatter = makeBudgetTickFormatter(symbol, yDomain);
 
   return (
-    <ChartContainer title={getChartTitle()} onDownloadCsv={handleDownloadCsv}>
-      <Stack gap={spacing.sm}>
-        <Plot
-          data={chartData}
-          layout={layout}
-          config={{
-            ...DEFAULT_CHART_CONFIG,
-            locale: localeCode(countryId),
-          }}
-          style={{ width: '100%', height: chartHeight }}
-        />
-      </Stack>
+    <ChartContainer
+      title={getBudgetChartTitle(budgetaryImpact, countryId, metadata)}
+      onDownloadCsv={handleDownloadCsv}
+    >
+      <WaterfallChart
+        data={dataWithHover}
+        yDomain={yDomain}
+        yTicks={yTicks}
+        height={chartHeight}
+        yAxisLabel="Budgetary impact (bn)"
+        yTickFormatter={tickFormatter}
+        fillColor={(d) => getBudgetFillColor(d, budgetaryImpact)}
+        tooltipContent={<BudgetWaterfallTooltip />}
+      />
     </ChartContainer>
   );
 }

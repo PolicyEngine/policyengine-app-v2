@@ -21,7 +21,7 @@ function BrandCard({ to, title, description, meta }: BrandCardProps) {
         padding: spacing['2xl'],
         background: colors.white,
         border: `1px solid ${colors.border.light}`,
-        borderRadius: spacing.radius.lg,
+        borderRadius: spacing.radius.container,
         textDecoration: 'none',
         transition: 'all 0.2s ease',
       }}

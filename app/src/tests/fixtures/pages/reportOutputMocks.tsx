@@ -144,9 +144,6 @@ export const createMockNotFoundSubPage = () =>
  * Setup function for all mocks
  */
 export function setupReportOutputMocks(vi: any) {
-  // Mock Plotly
-  vi.mock('react-plotly.js', () => ({ default: vi.fn(() => null) }));
-
   // Mock subpage components
   vi.mock('@/pages/report-output/OverviewSubPage', () => ({
     default: createMockOverviewSubPage(),

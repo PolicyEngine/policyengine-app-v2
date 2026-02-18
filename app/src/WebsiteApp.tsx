@@ -10,6 +10,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { Provider } from 'react-redux';
 import { MantineProvider } from '@mantine/core';
+import { AppProvider } from './contexts/AppContext';
 import { store } from './store';
 import { policyEngineTheme } from './theme';
 import { cacheMonitor } from './utils/cacheMonitor';
@@ -28,20 +29,22 @@ cacheMonitor.init(queryClient);
 
 export default function WebsiteApp() {
   return (
-    <Provider store={store}>
-      <MantineProvider theme={policyEngineTheme}>
-        <QueryNormalizerProvider
-          queryClient={queryClient}
-          normalizerConfig={{
-            devLogging: true,
-          }}
-        >
-          <QueryClientProvider client={queryClient}>
-            <WebsiteRouter />
-            <ReactQueryDevtools initialIsOpen={false} />
-          </QueryClientProvider>
-        </QueryNormalizerProvider>
-      </MantineProvider>
-    </Provider>
+    <AppProvider mode="website">
+      <Provider store={store}>
+        <MantineProvider theme={policyEngineTheme}>
+          <QueryNormalizerProvider
+            queryClient={queryClient}
+            normalizerConfig={{
+              devLogging: true,
+            }}
+          >
+            <QueryClientProvider client={queryClient}>
+              <WebsiteRouter />
+              <ReactQueryDevtools initialIsOpen={false} />
+            </QueryClientProvider>
+          </QueryNormalizerProvider>
+        </MantineProvider>
+      </Provider>
+    </AppProvider>
   );
 }

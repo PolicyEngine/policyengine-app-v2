@@ -8,9 +8,6 @@ import {
   MOCK_US_REPORT_OUTPUT_NO_DISTRICT,
 } from '@/tests/fixtures/pages/congressional-district/congressionalDistrictComponentMocks';
 
-// Mock Plotly
-vi.mock('react-plotly.js', () => ({ default: vi.fn(() => null) }));
-
 // Mock react-redux to provide region data from metadata
 vi.mock('react-redux', async () => {
   const actual = await vi.importActual('react-redux');

@@ -11,7 +11,9 @@ export function getPostImageUrl(post: BlogPost): string {
 }
 
 export function formatPostDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('en-US', {
+  // Append T12:00:00 to date-only strings to avoid UTC midnight timezone shift
+  const normalized = /^\d{4}-\d{2}-\d{2}$/.test(dateStr) ? `${dateStr}T12:00:00` : dateStr;
+  return new Date(normalized).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',

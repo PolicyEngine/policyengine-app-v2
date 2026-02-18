@@ -1,16 +1,24 @@
 /**
  * PolicyEngine typography system
  * Source of truth for fonts, sizes, and text styles
+ *
+ * Two font families only: Inter (everything) + JetBrains Mono (code).
+ * Legacy aliases (secondary, body, chart, prose) all resolve to the
+ * primary Inter stack for backward compatibility.
  */
+
+const INTER = 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
 
 export const typography = {
   fontFamily: {
-    primary: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-    secondary: 'Public Sans, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-    body: 'Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+    primary: INTER,
+    // Legacy aliases — all resolve to Inter
+    secondary: INTER,
+    body: INTER,
+    chart: INTER,
+    prose: INTER,
+    // Code
     mono: 'JetBrains Mono, "Fira Code", Consolas, monospace',
-    // Chart-specific font
-    chart: 'Roboto Serif, Georgia, "Times New Roman", serif',
   },
 
   fontWeight: {
@@ -47,7 +55,7 @@ export const typography = {
     '24': '24px',
   },
 
-  // Pre-defined text styles
+  // Pre-defined text styles — all use Inter
   textStyles: {
     'sm-medium': {
       fontFamily: 'Inter',
@@ -62,19 +70,19 @@ export const typography = {
       lineHeight: '20px',
     },
     'md-normal': {
-      fontFamily: 'Public Sans',
+      fontFamily: 'Inter',
       fontSize: '16px',
       fontWeight: 400,
       lineHeight: '24px',
     },
     'body-regular': {
-      fontFamily: 'Roboto',
+      fontFamily: 'Inter',
       fontSize: '14px',
       fontWeight: 400,
       lineHeight: '22px',
     },
     'h5-regular': {
-      fontFamily: 'Roboto',
+      fontFamily: 'Inter',
       fontSize: '16px',
       fontWeight: 400,
       lineHeight: '24px',
@@ -85,6 +93,7 @@ export const typography = {
 // Convenience exports for common fonts
 export const FONT_UI = typography.fontFamily.primary;
 export const FONT_CHART = typography.fontFamily.chart;
+export const FONT_PROSE = typography.fontFamily.prose;
 export const FONT_MONO = typography.fontFamily.mono;
 
 export type Typography = typeof typography;

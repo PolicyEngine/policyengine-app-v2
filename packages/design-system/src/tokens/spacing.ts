@@ -84,16 +84,13 @@ export const spacing = {
     '2xl': '80px',
   },
 
-  // Border radius scale
+  // Border radius — semantic scale
   radius: {
-    xs: '2px',
-    sm: '4px',
-    md: '6px',
-    lg: '8px',
-    xl: '12px',
-    '2xl': '16px',
-    '3xl': '24px',
-    '4xl': '32px',
+    none: '0px',
+    chip: '2px',
+    element: '4px',
+    container: '8px',
+    feature: '12px',
   },
 } as const;
 

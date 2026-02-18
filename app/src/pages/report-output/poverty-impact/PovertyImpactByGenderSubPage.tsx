@@ -1,22 +1,32 @@
-import type { Layout } from 'plotly.js';
-import Plot from 'react-plotly.js';
 import { useSelector } from 'react-redux';
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Label,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 import { Stack, Text } from '@mantine/core';
 import { useMediaQuery, useViewportSize } from '@mantine/hooks';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { ChartContainer } from '@/components/ChartContainer';
+import { ChartWatermark, ImpactBarLabel, ImpactTooltip } from '@/components/charts';
 import { colors } from '@/designTokens/colors';
 import { spacing } from '@/designTokens/spacing';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import type { RootState } from '@/store';
 import { relativeChangeMessage } from '@/utils/chartMessages';
 import {
-  DEFAULT_CHART_CONFIG,
   downloadCsv,
-  getChartLogoImage,
   getClampedChartHeight,
+  getNiceTicks,
+  RECHARTS_FONT_STYLE,
 } from '@/utils/chartUtils';
-import { formatNumber, formatPercent, localeCode, precision } from '@/utils/formatters';
+import { formatNumber, formatPercent } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
 
 interface Props {
@@ -50,13 +60,10 @@ export default function PovertyImpactByGenderSubPage({ output }: Props) {
     All: 'all',
   };
 
-  // Calculate precision for display
-  const yvaluePrecision = Math.max(1, precision(povertyChanges, 100));
-  const ytickPrecision = precision(povertyChanges.concat(0), 10);
-
   const formatPer = (n: number) =>
     formatPercent(n, countryId, {
-      minimumFractionDigits: yvaluePrecision,
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1,
     });
 
   // Generate hover message
@@ -122,71 +129,58 @@ export default function PovertyImpactByGenderSubPage({ output }: Props) {
     downloadCsv(data, 'poverty-impact-by-gender.csv');
   };
 
-  // Chart configuration
-  const chartData = [
-    {
-      x: povertyLabels,
-      y: povertyChanges,
-      type: 'bar' as const,
-      marker: {
-        color: povertyChanges.map((value) => (value < 0 ? colors.primary[500] : colors.gray[600])),
-      },
-      text: povertyChanges.map((value) => (value >= 0 ? '+' : '') + formatPer(value)) as any,
-      textangle: 0,
-      customdata: povertyLabels.map(hoverMessage) as any,
-      hovertemplate: '<b>%{x}</b><br><br>%{customdata}<extra></extra>',
-    },
-  ];
+  // Recharts data
+  const chartData = povertyLabels.map((label, i) => ({
+    name: label,
+    value: povertyChanges[i],
+    label: (povertyChanges[i] >= 0 ? '+' : '') + formatPer(povertyChanges[i]),
+    hoverText: hoverMessage(label),
+  }));
 
-  const layout = {
-    yaxis: {
-      title: { text: 'Relative change in poverty rate' },
-      tickformat: `+,.${ytickPrecision}%`,
-      fixedrange: true,
-    },
-    showlegend: false,
-    uniformtext: {
-      mode: 'hide',
-      minsize: 8,
-    },
-    margin: {
-      t: 0,
-      b: 100,
-      r: 0,
-    },
-    images: [getChartLogoImage()],
-  } as Partial<Layout>;
+  const values = chartData.map((d) => d.value);
+  const yDomain: [number, number] = [Math.min(0, ...values), Math.max(0, ...values)];
+  const yTicks = getNiceTicks(yDomain);
 
   // Description text
-  const getDescription = () => {
-    const term1 = 'The poverty rate is ';
-    const term2 = `the population share in ${
-      countryId === 'uk' ? 'resource units' : 'households'
-    } with `;
-    const term3 = 'net income (after taxes and transfers) below their poverty threshold.';
-    const more = term1 + term2 + term3;
-
-    if (countryId === 'uk') {
-      return `PolicyEngine reports the impact to absolute poverty before housing costs. ${more}`;
-    }
-    return `PolicyEngine reports the impact to the Supplemental Poverty Measure. ${more}`;
-  };
+  const povertyMeasure =
+    countryId === 'uk'
+      ? 'absolute poverty before housing costs'
+      : 'the Supplemental Poverty Measure';
+  const unitTerm = countryId === 'uk' ? 'resource units' : 'households';
+  const description = `PolicyEngine reports the impact to ${povertyMeasure}. The poverty rate is the population share in ${unitTerm} with net income (after taxes and transfers) below their poverty threshold.`;
 
   return (
     <ChartContainer title={getChartTitle()} onDownloadCsv={handleDownloadCsv}>
       <Stack gap={spacing.sm}>
-        <Plot
-          data={chartData}
-          layout={layout}
-          config={{
-            ...DEFAULT_CHART_CONFIG,
-            locale: localeCode(countryId),
-          }}
-          style={{ width: '100%', height: chartHeight }}
-        />
+        <ResponsiveContainer width="100%" height={chartHeight}>
+          <BarChart data={chartData} margin={{ top: 5, right: 20, bottom: 60, left: 20 }}>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} />
+            <XAxis dataKey="name" tick={RECHARTS_FONT_STYLE} />
+            <YAxis
+              ticks={yTicks}
+              domain={[yTicks[0], yTicks[yTicks.length - 1]]}
+              tickFormatter={(v: number) => `${(v * 100).toFixed(1)}%`}
+              tick={RECHARTS_FONT_STYLE}
+            >
+              <Label
+                value="Relative change in poverty rate"
+                angle={-90}
+                position="insideLeft"
+                style={{ textAnchor: 'middle', ...RECHARTS_FONT_STYLE }}
+              />
+            </YAxis>
+            <Tooltip content={<ImpactTooltip />} />
+            <Bar dataKey="value" label={<ImpactBarLabel data={chartData} />}>
+              {chartData.map((entry, index) => (
+                <Cell key={index} fill={entry.value < 0 ? colors.primary[500] : colors.gray[600]} />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+        <ChartWatermark />
 
         <Text size="sm" c="dimmed">
-          {getDescription()}
+          {description}
         </Text>
       </Stack>
     </ChartContainer>

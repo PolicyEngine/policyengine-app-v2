@@ -23,10 +23,6 @@ import {
 vi.mock('@/hooks/useCalculationStatus');
 vi.mock('@/hooks/useReportProgressDisplay');
 vi.mock('@/hooks/useStartCalculationOnLoad');
-
-// Mock Plotly
-vi.mock('react-plotly.js', () => ({ default: vi.fn(() => null) }));
-
 // Mock subpage components with inline mocks to avoid hoisting issues
 vi.mock('@/pages/report-output/LoadingPage', () => ({
   default: vi.fn(({ message }: { message?: string; progress?: number }) => (

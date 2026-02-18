@@ -1,6 +1,8 @@
 # Congressional District Geographic Data
 
-## Current File
+## Current Files
+
+### Geographic Boundaries (Natural)
 
 - **File:** `congressional_districts.geojson`
 - **Format:** GeoJSON (direct from Census cartographic boundary files)
@@ -8,6 +10,31 @@
 - **Source:** [US Census Bureau Cartographic Boundary Files](https://www2.census.gov/geo/tiger/GENZ2024/shp/)
 - **Resolution:** 1:20,000,000 (20m) - simplified for web visualization (~729 KB)
 - **Coverage:** 50 US states + DC + Puerto Rico (437 districts)
+
+### Hexagonal Grid (Equal-Size)
+
+- **File:** `congressional_districts_hex.geojson`
+- **Format:** GeoJSON with hexagonal polygon geometries
+- **Congress:** 119th (compatible - district IDs match)
+- **Source:** [PolicyEngine/snap-district-map](https://github.com/PolicyEngine/snap-district-map) (based on Daily Kos/The Downballot hex layout v3.1)
+- **Coverage:** 50 US states + DC (436 districts, excludes PR)
+- **Purpose:** Equal visual representation for each district regardless of geographic size
+
+**Note:** The hex positions are based on the number of districts per state, not internal boundaries. Since the 5 states that redistricted for the 119th Congress (AL, GA, LA, NY, NC) kept the same number of districts, the hex map positions remain valid. All district IDs match the 119th Congress natural boundaries.
+
+The hex map shows each congressional district as an equal-area shape, arranged in a recognizable US shape. This eliminates the visual distortion where large rural districts dominate the map while densely-populated urban districts are barely visible.
+
+### Why Irregular "Blob" Shapes Instead of Uniform Hexagons?
+
+The hex map uses irregular polygon shapes (blobs) rather than uniform hexagons **by design**. This is because:
+
+1. **The artistic arrangement requires it.** The Daily Kos/Downballot map arranges 436 districts to form a recognizable US shape. In dense areas (urban districts in NY, CA, etc.), districts are packed tightly together.
+
+2. **Uniform hexagons would overlap.** Analysis of the centroid positions shows some district pairs are only 0.5 units apart (e.g., KS-01 & KS-04). Uniform hexagons would need ~1.0 unit spacing to avoid overlap.
+
+3. **The blobs are designed to tessellate.** The irregular shapes fit together like puzzle pieces, ensuring no overlap while maintaining the overall US shape.
+
+**Comparison with UK constituencies hex map:** The UK map uses uniform hexagons because it was designed from scratch on a perfect grid. The US map was designed as an artistic cartogram where visual shape takes priority over geometric uniformity.
 
 ## Why GeoJSON?
 

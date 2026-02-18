@@ -1,22 +1,32 @@
-import type { Layout } from 'plotly.js';
-import Plot from 'react-plotly.js';
 import { useSelector } from 'react-redux';
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Label,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 import { Stack, Text } from '@mantine/core';
 import { useMediaQuery, useViewportSize } from '@mantine/hooks';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { ChartContainer } from '@/components/ChartContainer';
+import { ChartWatermark, ImpactBarLabel, ImpactTooltip } from '@/components/charts';
 import { colors } from '@/designTokens/colors';
 import { spacing } from '@/designTokens/spacing';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import type { RootState } from '@/store';
 import { relativeChangeMessage } from '@/utils/chartMessages';
 import {
-  DEFAULT_CHART_CONFIG,
   downloadCsv,
-  getChartLogoImage,
   getClampedChartHeight,
+  getNiceTicks,
+  RECHARTS_FONT_STYLE,
 } from '@/utils/chartUtils';
-import { formatPercent, localeCode, ordinal, precision } from '@/utils/formatters';
+import { formatPercent, ordinal, precision } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
 
 interface Props {
@@ -39,7 +49,6 @@ export default function DistributionalImpactWealthRelativeSubPage({ output }: Pr
 
   // Calculate precision for value display
   const yvaluePrecision = Math.max(1, precision(yArray, 100));
-  const ytickPrecision = precision(yArray.concat(0), 10);
 
   // Formatter for percentage display
   const formatPer = (n: number) =>
@@ -83,59 +92,60 @@ export default function DistributionalImpactWealthRelativeSubPage({ output }: Pr
     downloadCsv(csvData, 'distributional-impact-wealth-relative.csv');
   };
 
-  // Chart configuration
-  const chartData = [
-    {
-      x: xArray,
-      y: yArray,
-      type: 'bar' as const,
-      marker: {
-        color: yArray.map((value) => (value < 0 ? colors.gray[600] : colors.primary[500])),
-      },
-      text: yArray.map((value) => (value >= 0 ? '+' : '') + formatPer(value)) as any,
-      textangle: 0,
-      customdata: xArray.map((x, i) => hoverMessage(x, yArray[i])) as any,
-      hovertemplate: '<b>Decile %{x}</b><br><br>%{customdata}<extra></extra>',
-    },
-  ];
+  // Transform data for Recharts
+  const chartData = xArray.map((x, i) => ({
+    name: x,
+    value: yArray[i],
+    label: (yArray[i] >= 0 ? '+' : '') + formatPer(yArray[i]),
+    hoverText: hoverMessage(x, yArray[i]),
+  }));
 
-  const layout = {
-    xaxis: {
-      title: { text: 'Wealth decile' },
-      tickvals: Object.keys(decileRelative),
-      fixedrange: true,
-    },
-    yaxis: {
-      title: { text: 'Relative change in net income' },
-      tickformat: `+,.${ytickPrecision}%`,
-      fixedrange: true,
-    },
-    showlegend: false,
-    uniformtext: {
-      mode: 'hide',
-      minsize: 8,
-    },
-    margin: {
-      t: 0,
-      b: 80,
-      l: 80,
-      r: 0,
-    },
-    images: [getChartLogoImage()],
-  } as Partial<Layout>;
+  const values = chartData.map((d) => d.value);
+  const yDomain: [number, number] = [Math.min(0, ...values), Math.max(0, ...values)];
+  const yTicks = getNiceTicks(yDomain);
 
   return (
     <ChartContainer title={getChartTitle()} onDownloadCsv={handleDownloadCsv}>
       <Stack gap={spacing.sm}>
-        <Plot
-          data={chartData}
-          layout={layout}
-          config={{
-            ...DEFAULT_CHART_CONFIG,
-            locale: localeCode(countryId),
-          }}
-          style={{ width: '100%', height: chartHeight }}
-        />
+        <ResponsiveContainer width="100%" height={chartHeight}>
+          <BarChart data={chartData} margin={{ top: 20, right: 20, bottom: 30, left: 30 }}>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} />
+            <XAxis dataKey="name" tick={RECHARTS_FONT_STYLE} tickLine={false}>
+              <Label
+                value="Wealth decile"
+                position="bottom"
+                offset={10}
+                style={RECHARTS_FONT_STYLE}
+              />
+            </XAxis>
+            <YAxis
+              ticks={yTicks}
+              domain={[yTicks[0], yTicks[yTicks.length - 1]]}
+              tick={RECHARTS_FONT_STYLE}
+              tickLine={false}
+              tickFormatter={(v: number) => `${v >= 0 ? '+' : ''}${(v * 100).toFixed(1)}%`}
+            >
+              <Label
+                value="Relative change in net income"
+                angle={-90}
+                position="insideLeft"
+                offset={0}
+                style={{ ...RECHARTS_FONT_STYLE, textAnchor: 'middle' }}
+              />
+            </YAxis>
+            <Tooltip content={<ImpactTooltip />} />
+            <Bar
+              dataKey="value"
+              label={<ImpactBarLabel data={chartData} />}
+              isAnimationActive={false}
+            >
+              {chartData.map((entry, index) => (
+                <Cell key={index} fill={entry.value < 0 ? colors.gray[600] : colors.primary[500]} />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+        <ChartWatermark />
 
         <Text size="sm" c="dimmed">
           PolicyEngine reports net income as the income a household takes home in a year, after

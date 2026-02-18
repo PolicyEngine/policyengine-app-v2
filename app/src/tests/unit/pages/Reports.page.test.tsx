@@ -12,9 +12,6 @@ import {
   mockMixedStatusHookReturn,
 } from '@/tests/fixtures/pages/reportsMocks';
 
-// Mock Plotly
-vi.mock('react-plotly.js', () => ({ default: vi.fn(() => null) }));
-
 // Mock the hooks
 vi.mock('@/hooks/useUserReports', () => ({
   useUserReports: vi.fn(),

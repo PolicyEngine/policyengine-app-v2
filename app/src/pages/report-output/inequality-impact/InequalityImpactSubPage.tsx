@@ -1,22 +1,32 @@
-import type { Layout } from 'plotly.js';
-import Plot from 'react-plotly.js';
 import { useSelector } from 'react-redux';
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Label,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 import { Stack, Text } from '@mantine/core';
 import { useMediaQuery, useViewportSize } from '@mantine/hooks';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { ChartContainer } from '@/components/ChartContainer';
+import { ChartWatermark, ImpactBarLabel, ImpactTooltip } from '@/components/charts';
 import { colors } from '@/designTokens/colors';
 import { spacing } from '@/designTokens/spacing';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import type { RootState } from '@/store';
 import { relativeChangeMessage } from '@/utils/chartMessages';
 import {
-  DEFAULT_CHART_CONFIG,
   downloadCsv,
-  getChartLogoImage,
   getClampedChartHeight,
+  getNiceTicks,
+  RECHARTS_FONT_STYLE,
 } from '@/utils/chartUtils';
-import { formatPercent, localeCode, precision } from '@/utils/formatters';
+import { formatPercent, precision } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
 
 interface Props {
@@ -85,9 +95,6 @@ export default function InequalityImpactSubPage({ output }: Props) {
 
   // Generate chart title
   const getChartTitle = () => {
-    // Impact is ambiguous if all three metrics are not the same sign (sign can be
-    // -ive, zero or +ive). Impact is positive if all three metrics are +ive.
-    // Impact is negative if all three metrics are -ive.
     const signTerm =
       metricChanges[0] > 0 && metricChanges[1] > 0 && metricChanges[2] > 0
         ? 'increase'
@@ -116,56 +123,47 @@ export default function InequalityImpactSubPage({ output }: Props) {
     downloadCsv(data, 'inequality-impact.csv');
   };
 
-  // Chart configuration
-  const chartData = [
-    {
-      x: labels,
-      y: metricChanges,
-      type: 'bar' as const,
-      marker: {
-        color: metricChanges.map((value) => (value < 0 ? colors.primary[500] : colors.gray[600])),
-      },
-      text: metricChanges.map((value) => (value >= 0 ? '+' : '') + formatPer(value)) as any,
-      textangle: 0,
-      customdata: labels.map(hoverMessage) as any,
-      hovertemplate: '<b>%{x}</b><br><br>%{customdata}<extra></extra>',
-    },
-  ];
+  // Recharts data
+  const chartData = labels.map((label, i) => ({
+    name: label,
+    value: metricChanges[i],
+    label: (metricChanges[i] >= 0 ? '+' : '') + formatPer(metricChanges[i]),
+    hoverText: hoverMessage(label),
+  }));
 
-  const layout = {
-    xaxis: {
-      title: { text: '' },
-    },
-    yaxis: {
-      title: { text: 'Relative change' },
-      tickformat: `,.${ytickPrecision}%`,
-      fixedrange: true,
-    },
-    showlegend: false,
-    uniformtext: {
-      mode: 'hide',
-      minsize: 12,
-    },
-    margin: {
-      t: 0,
-      b: 100,
-      r: 0,
-    },
-    images: [getChartLogoImage()],
-  } as Partial<Layout>;
+  const values = chartData.map((d) => d.value);
+  const yDomain: [number, number] = [Math.min(0, ...values), Math.max(0, ...values)];
+  const yTicks = getNiceTicks(yDomain);
 
   return (
     <ChartContainer title={getChartTitle()} onDownloadCsv={handleDownloadCsv}>
       <Stack gap={spacing.sm}>
-        <Plot
-          data={chartData}
-          layout={layout}
-          config={{
-            ...DEFAULT_CHART_CONFIG,
-            locale: localeCode(countryId),
-          }}
-          style={{ width: '100%', height: chartHeight }}
-        />
+        <ResponsiveContainer width="100%" height={chartHeight}>
+          <BarChart data={chartData} margin={{ top: 5, right: 20, bottom: 60, left: 20 }}>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} />
+            <XAxis dataKey="name" tick={RECHARTS_FONT_STYLE} />
+            <YAxis
+              ticks={yTicks}
+              domain={[yTicks[0], yTicks[yTicks.length - 1]]}
+              tickFormatter={(v: number) => `${(v * 100).toFixed(ytickPrecision)}%`}
+              tick={RECHARTS_FONT_STYLE}
+            >
+              <Label
+                value="Relative change"
+                angle={-90}
+                position="insideLeft"
+                style={{ textAnchor: 'middle', ...RECHARTS_FONT_STYLE }}
+              />
+            </YAxis>
+            <Tooltip content={<ImpactTooltip />} />
+            <Bar dataKey="value" label={<ImpactBarLabel data={chartData} />}>
+              {chartData.map((entry, index) => (
+                <Cell key={index} fill={entry.value < 0 ? colors.primary[500] : colors.gray[600]} />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+        <ChartWatermark />
 
         <Text size="sm" c="dimmed">
           PolicyEngine reports income inequality based on the distribution of net income after taxes

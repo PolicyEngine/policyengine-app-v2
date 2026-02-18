@@ -5,15 +5,18 @@
  * Routes apps to appropriate embed component based on type.
  */
 
-import { useParams } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
 import IframeContent from '@/components/IframeContent';
 import { OBBBAIframeContent, StreamlitEmbed } from '@/components/interactive';
 import { apps } from '@/data/apps/appTransformers';
 
 export default function AppPage() {
-  const { slug } = useParams<{ slug: string }>();
+  const { slug, countryId } = useParams<{ slug: string; countryId: string }>();
+  const location = useLocation();
 
-  const app = apps.find((a) => a.slug === slug);
+  const app =
+    apps.find((a) => a.slug === slug && a.countryId === countryId) ||
+    apps.find((a) => a.slug === slug);
 
   if (!app) {
     return (
@@ -40,6 +43,21 @@ export default function AppPage() {
     return <OBBBAIframeContent url={app.source} title={app.title} />;
   }
 
+  // Forward hash fragment from the browser URL to the iframe (e.g. #NY)
+  // Always inject country for non-US routes (needed for shared links)
+  let iframeUrl: string;
+  if (location.hash && countryId && countryId !== 'us') {
+    const params = new URLSearchParams(location.hash.slice(1));
+    params.set('country', countryId);
+    iframeUrl = `${app.source}#${params.toString()}`;
+  } else if (location.hash) {
+    iframeUrl = `${app.source}${location.hash}`;
+  } else if (countryId && countryId !== 'us') {
+    iframeUrl = `${app.source}#country=${countryId}`;
+  } else {
+    iframeUrl = app.source;
+  }
+
   // Default: standard iframe (for 'iframe' type and any other types)
-  return <IframeContent url={app.source} title={app.title} />;
+  return <IframeContent url={iframeUrl} title={app.title} />;
 }

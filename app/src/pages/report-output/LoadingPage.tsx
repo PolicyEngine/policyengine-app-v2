@@ -93,7 +93,7 @@ export default function LoadingPage({
               p={spacing.xl}
               style={{
                 border: `1px solid ${colors.border.light}`,
-                borderRadius: spacing.sm,
+                borderRadius: spacing.radius.container,
               }}
             >
               <Stack gap={spacing.md}>
@@ -116,7 +116,7 @@ export default function LoadingPage({
         style={{
           backgroundColor: colors.blue[50],
           border: `1px solid ${colors.border.light}`,
-          borderRadius: spacing.sm,
+          borderRadius: spacing.radius.container,
         }}
       >
         <Text size="sm" c={colors.gray[700]}>

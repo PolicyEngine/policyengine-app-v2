@@ -1,4 +1,4 @@
-- bump: patch
+- bump: minor
   changes:
     added:
-      - Add UK student loan deductions calculator to apps listing
+      - Add US marriage incentive calculator to apps listing

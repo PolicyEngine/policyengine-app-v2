@@ -6,8 +6,9 @@
  * use AdvancedIframeContent or StreamlitEmbed respectively.
  */
 
-import { useState } from 'react';
-import { colors } from '@/designTokens';
+import { useEffect, useMemo, useState } from 'react';
+import { useLocation } from 'react-router-dom';
+import { colors, spacing } from '@/designTokens';
 import type { IframeContentProps } from '@/types/apps';
 
 export default function IframeContent({
@@ -18,6 +19,31 @@ export default function IframeContent({
 }: IframeContentProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
+  const location = useLocation();
+
+  // Derive allowed origin from iframe URL for postMessage validation
+  const iframeOrigin = useMemo(() => {
+    try {
+      return new URL(url).origin;
+    } catch {
+      return '';
+    }
+  }, [url]);
+
+  // Listen for hash change messages from iframe and sync to parent URL bar
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.origin !== iframeOrigin) {
+        return;
+      }
+      if (event.data?.type === 'hashchange' && typeof event.data.hash === 'string') {
+        const hash = event.data.hash || '';
+        window.history.replaceState(null, '', `${location.pathname}${hash}`);
+      }
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [location.pathname, iframeOrigin]);
 
   const iframeHeight = height || 'calc(100vh - var(--header-height, 58px))';
   const iframeWidth = width || '100%';
@@ -93,7 +119,7 @@ export default function IframeContent({
                 backgroundColor: colors.primary[600],
                 color: colors.white,
                 textDecoration: 'none',
-                borderRadius: '4px',
+                borderRadius: spacing.radius.element,
               }}
             >
               Open Calculator in New Tab

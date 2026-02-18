@@ -40,9 +40,6 @@ vi.mock('@/hooks/useUserHousehold', () => ({
 vi.mock('@/hooks/useUserPolicy', () => ({
   useUserPolicies: vi.fn(() => ({ data: [], isLoading: false })),
 }));
-
-vi.mock('react-plotly.js', () => ({ default: vi.fn(() => null) }));
-
 describe('ReportSimulationSelectionView', () => {
   beforeEach(() => {
     resetAllMocks();
