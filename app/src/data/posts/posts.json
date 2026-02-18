@@ -1,5 +1,14 @@
 [
   {
+    "title": "Comparing PolicyEngine and OBR salary sacrifice cap estimates",
+    "description": "We compare PolicyEngine's salary sacrifice cap estimates with the OBR's supplementary forecast and explain the modelling factors behind the differences.",
+    "date": "2026-02-18",
+    "tags": ["uk", "policy", "technical"],
+    "authors": ["vahid-ahmadi"],
+    "filename": "uk-salary-sacrifice-obr-comparison.md",
+    "image": "uk-salary-sacrifice-cap/cover.jpg"
+  },
+  {
     "title": "Analysis of South Carolina H.3492: Making the state EITC partially refundable",
     "description": "PolicyEngine projects the bill would lower state revenues by $402 million while reducing child poverty by 5.4% in 2026.",
     "date": "2026-02-04",
