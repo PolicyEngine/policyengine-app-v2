@@ -11,7 +11,11 @@ import { OBBBAIframeContent, StreamlitEmbed } from '@/components/interactive';
 import { apps } from '@/data/apps/appTransformers';
 
 export default function AppPage() {
-  const { slug, countryId, '*': subPath } = useParams<{
+  const {
+    slug,
+    countryId,
+    '*': subPath,
+  } = useParams<{
     slug: string;
     countryId: string;
     '*': string;
