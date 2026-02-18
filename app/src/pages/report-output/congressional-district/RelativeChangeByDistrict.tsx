@@ -107,10 +107,7 @@ export function RelativeChangeByDistrict({ output }: RelativeChangeByDistrictPro
         <Group gap="xs" wrap="nowrap">
           <MapTypeToggle value={mapType} onChange={setMapType} />
           {mapData.length > 0 && (
-            <MapDownloadMenu
-              mapRef={mapRef}
-              filename="relative-change-by-congressional-district"
-            />
+            <MapDownloadMenu mapRef={mapRef} filename="relative-change-by-congressional-district" />
           )}
         </Group>
       </Group>
