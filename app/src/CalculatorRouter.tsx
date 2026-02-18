@@ -19,29 +19,7 @@ const ReportOutputPage = lazy(() => import('./pages/ReportOutput.page'));
 const ReportsPage = lazy(() => import('./pages/Reports.page'));
 const SimulationsPage = lazy(() => import('./pages/Simulations.page'));
 const ReportBuilderPage = lazy(() => import('./pages/reportBuilder/ReportBuilderPage'));
-
-// Lazy-loaded pathway variation components
-const PathwayVariationsHub = lazy(() =>
-  import('./pages/reportBuilder/pathwayVariations').then((m) => ({ default: m.PathwayVariationsHub }))
-);
-const NumberedStepsVariant = lazy(() =>
-  import('./pages/reportBuilder/pathwayVariations').then((m) => ({ default: m.NumberedStepsVariant }))
-);
-const GuidedFunnelVariant = lazy(() =>
-  import('./pages/reportBuilder/pathwayVariations').then((m) => ({ default: m.GuidedFunnelVariant }))
-);
-const TimelineVariant = lazy(() =>
-  import('./pages/reportBuilder/pathwayVariations').then((m) => ({ default: m.TimelineVariant }))
-);
-const ChecklistVariant = lazy(() =>
-  import('./pages/reportBuilder/pathwayVariations').then((m) => ({ default: m.ChecklistVariant }))
-);
-const FocusedFlowVariant = lazy(() =>
-  import('./pages/reportBuilder/pathwayVariations').then((m) => ({ default: m.FocusedFlowVariant }))
-);
-const ReportConfigVariant = lazy(() =>
-  import('./pages/reportBuilder/pathwayVariations').then((m) => ({ default: m.ReportConfigVariant }))
-);
+const ModifyReportDemoPage = lazy(() => import('./pages/ModifyReportDemo.page'));
 
 // Lazy-loaded pathway wrappers — heavy components with their own sub-routes
 const PolicyPathwayWrapper = lazy(() => import('./pathways/policy/PolicyPathwayWrapper'));
@@ -146,32 +124,8 @@ const router = createBrowserRouter(
                   element: <ReportBuilderPage />,
                 },
                 {
-                  path: 'report-builder/variants',
-                  element: <PathwayVariationsHub />,
-                },
-                {
-                  path: 'report-builder/variants/numbered-steps',
-                  element: <NumberedStepsVariant />,
-                },
-                {
-                  path: 'report-builder/variants/guided-funnel',
-                  element: <GuidedFunnelVariant />,
-                },
-                {
-                  path: 'report-builder/variants/timeline',
-                  element: <TimelineVariant />,
-                },
-                {
-                  path: 'report-builder/variants/checklist',
-                  element: <ChecklistVariant />,
-                },
-                {
-                  path: 'report-builder/variants/focused-flow',
-                  element: <FocusedFlowVariant />,
-                },
-                {
-                  path: 'report-builder/variants/report-config',
-                  element: <ReportConfigVariant />,
+                  path: 'modify-report-demo',
+                  element: <ModifyReportDemoPage />,
                 },
                 {
                   path: 'account',

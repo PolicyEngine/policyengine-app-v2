@@ -54,30 +54,30 @@ export function BrowseModalTemplate({
             {sectionIndex > 0 && <Divider mb={spacing.lg} />}
             <Box style={modalStyles.sidebarSection}>
               <Text style={modalStyles.sidebarLabel}>{section.label}</Text>
-              {section.items.map((item) => (
-                <UnstyledButton
-                  key={item.id}
-                  style={{
-                    ...modalStyles.sidebarItem,
-                    background: item.isActive ? colorConfig.bg : 'transparent',
-                    color: item.isActive ? colorConfig.icon : colors.gray[700],
-                  }}
-                  onClick={item.onClick}
-                >
-                  {item.icon}
-                  <Text style={{ fontSize: FONT_SIZES.small, flex: 1 }}>
-                    {item.label}
-                  </Text>
-                  {item.badge !== undefined && (
-                    <Text
-                      fw={700}
-                      style={{ fontSize: FONT_SIZES.small, color: colors.gray[500] }}
+              {section.items?.map((item) => (
+                    <UnstyledButton
+                      key={item.id}
+                      style={{
+                        ...modalStyles.sidebarItem,
+                        background: item.isActive ? colorConfig.bg : 'transparent',
+                        color: item.isActive ? colorConfig.icon : colors.gray[700],
+                      }}
+                      onClick={item.onClick}
                     >
-                      {item.badge}
-                    </Text>
-                  )}
-                </UnstyledButton>
-              ))}
+                      {item.icon}
+                      <Text style={{ fontSize: FONT_SIZES.small, flex: 1 }}>
+                        {item.label}
+                      </Text>
+                      {item.badge !== undefined && (
+                        <Text
+                          fw={700}
+                          style={{ fontSize: FONT_SIZES.small, color: colors.gray[500] }}
+                        >
+                          {item.badge}
+                        </Text>
+                      )}
+                    </UnstyledButton>
+                  ))}
             </Box>
           </Box>
         ))}

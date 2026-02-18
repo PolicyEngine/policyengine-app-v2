@@ -6,9 +6,10 @@
  * - Creation mode: HouseholdCreationContent + PopulationStatusHeader
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { IconFolder, IconHome, IconPlus, IconUsers } from '@tabler/icons-react';
+import { IconChevronRight, IconFolder, IconHome, IconPlus, IconStar, IconUsers } from '@tabler/icons-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
+import { Box, Group, Paper, Stack, Text } from '@mantine/core';
 import { HouseholdAdapter } from '@/adapters/HouseholdAdapter';
 import { geographyUsageStore, householdUsageStore } from '@/api/usageTracking';
 import { UKOutlineIcon, USOutlineIcon } from '@/components/icons/CountryOutlineIcons';
@@ -33,7 +34,8 @@ import {
   getUSStates,
   RegionOption,
 } from '@/utils/regionStrategies';
-import { COUNTRY_CONFIG, INGREDIENT_COLORS } from '../constants';
+import { colors, spacing } from '@/designTokens';
+import { COUNTRY_CONFIG, FONT_SIZES, INGREDIENT_COLORS } from '../constants';
 import { PopulationCategory } from '../types';
 import { BrowseModalTemplate, CreationModeFooter } from './BrowseModalTemplate';
 import {
@@ -65,7 +67,7 @@ export function PopulationBrowseModal({
 
   // State
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeCategory, setActiveCategory] = useState<PopulationCategory>('national');
+  const [activeCategory, setActiveCategory] = useState<PopulationCategory>('frequently-selected');
 
   // Creation mode state
   const [isCreationMode, setIsCreationMode] = useState(false);
@@ -100,12 +102,12 @@ export function PopulationBrowseModal({
   useEffect(() => {
     if (isOpen) {
       setSearchQuery('');
-      setActiveCategory('national');
+      setActiveCategory('frequently-selected');
       setIsCreationMode(false);
       setHouseholdLabel('');
       setHouseholdDraft(null);
     }
-  }, [isOpen]);
+  }, [isOpen, countryId]);
 
   // Get geography categories based on country
   const geographyCategories = useMemo(() => {
@@ -377,7 +379,6 @@ export function PopulationBrowseModal({
 
   // Get section title
   const getSectionTitle = () => {
-    if (activeCategory === 'national') {return countryId === 'uk' ? 'UK-wide' : 'Nationwide';}
     if (activeCategory === 'my-households') {return 'My households';}
     const category = geographyCategories.find((c) => c.id === activeCategory);
     return category?.label || 'Regions';
@@ -385,45 +386,42 @@ export function PopulationBrowseModal({
 
   // Get item count for display
   const getItemCount = () => {
-    if (activeCategory === 'national') {return 1;}
     if (activeCategory === 'my-households') {return filteredHouseholds.length;}
     return filteredRegions.length;
   };
 
   // ========== Sidebar Sections ==========
 
+  const countryConfig = COUNTRY_CONFIG[countryId];
+
   const browseSidebarSections = useMemo(
     () => [
       {
-        id: 'quick-select',
-        label: 'Quick select',
+        id: 'geographies',
+        label: 'Geographies',
         items: [
           {
-            id: 'national',
-            label: countryId === 'uk' ? 'UK-wide' : 'Nationwide',
-            icon: countryId === 'uk' ? <UKOutlineIcon size={16} /> : <USOutlineIcon size={16} />,
-            isActive: activeCategory === 'national' && !isCreationMode,
+            id: 'frequently-selected',
+            label: 'Frequently selected',
+            icon: <IconStar size={16} />,
+            isActive: activeCategory === 'frequently-selected' && !isCreationMode,
             onClick: () => {
-              setActiveCategory('national');
+              setActiveCategory('frequently-selected');
               setIsCreationMode(false);
             },
           },
+          ...geographyCategories.map((category) => ({
+            id: category.id,
+            label: category.label,
+            icon: <IconFolder size={16} />,
+            badge: category.count,
+            isActive: activeCategory === category.id && !isCreationMode,
+            onClick: () => {
+              setActiveCategory(category.id);
+              setIsCreationMode(false);
+            },
+          })),
         ],
-      },
-      {
-        id: 'geographies',
-        label: 'Geographies',
-        items: geographyCategories.map((category) => ({
-          id: category.id,
-          label: category.label,
-          icon: <IconFolder size={16} />,
-          badge: category.count,
-          isActive: activeCategory === category.id && !isCreationMode,
-          onClick: () => {
-            setActiveCategory(category.id);
-            setIsCreationMode(false);
-          },
-        })),
       },
       {
         id: 'households',
@@ -450,14 +448,7 @@ export function PopulationBrowseModal({
         ],
       },
     ],
-    [
-      countryId,
-      activeCategory,
-      isCreationMode,
-      geographyCategories,
-      sortedHouseholds.length,
-      handleEnterCreationMode,
-    ]
+    [activeCategory, isCreationMode, geographyCategories, sortedHouseholds.length, handleEnterCreationMode]
   );
 
   // ========== Main Content Rendering ==========
@@ -478,6 +469,55 @@ export function PopulationBrowseModal({
           onMaritalStatusChange={handleMaritalStatusChange}
           onNumChildrenChange={handleNumChildrenChange}
         />
+      );
+    }
+
+    if (activeCategory === 'frequently-selected') {
+      return (
+        <Stack gap={spacing.lg} style={{ height: '100%' }}>
+          <Text fw={600} style={{ fontSize: FONT_SIZES.normal, color: colors.gray[800] }}>
+            Frequently selected
+          </Text>
+          <Paper
+            style={{
+              background: colors.white,
+              border: `1px solid ${colors.border.light}`,
+              borderRadius: spacing.radius.lg,
+              padding: spacing.lg,
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              maxWidth: 340,
+            }}
+            onClick={() => handleSelectGeography(null)}
+          >
+            <Group justify="space-between" align="center" wrap="nowrap">
+              <Group gap={spacing.md} wrap="nowrap">
+                <Box
+                  style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: spacing.radius.md,
+                    background: colorConfig.bg,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  {countryId === 'uk' ? <UKOutlineIcon size={20} /> : <USOutlineIcon size={20} />}
+                </Box>
+                <Stack gap={2}>
+                  <Text fw={600} style={{ fontSize: FONT_SIZES.normal, color: colors.gray[900] }}>
+                    {countryConfig.nationwideTitle}
+                  </Text>
+                  <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
+                    {countryConfig.nationwideSubtitle}
+                  </Text>
+                </Stack>
+              </Group>
+              <IconChevronRight size={16} color={colors.gray[400]} />
+            </Group>
+          </Paper>
+        </Stack>
       );
     }
 
