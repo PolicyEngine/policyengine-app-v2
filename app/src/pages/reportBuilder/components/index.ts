@@ -22,3 +22,4 @@ export { AddSimulationCard } from './AddSimulationCard';
 export { ReportMetaPanel } from './ReportMetaPanel';
 export { SimulationCanvas } from './SimulationCanvas';
 export { TopBar } from './TopBar';
+export { ReportBuilderShell } from './ReportBuilderShell';

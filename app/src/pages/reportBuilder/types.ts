@@ -9,6 +9,7 @@ import { PopulationStateProps, SimulationStateProps } from '@/types/pathwayState
 // ============================================================================
 
 export interface ReportBuilderState {
+  id?: string;
   label: string | null;
   year: string;
   simulations: SimulationStateProps[];
