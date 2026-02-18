@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Serif:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Roboto Serif', serif; background: white; }
+    .controls {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 32px;
+      padding: 16px 0 0;
+      flex-wrap: wrap;
+    }
+    .toggle-group {
+      display: flex;
+      background: #f3f4f6;
+      border-radius: 8px;
+      padding: 3px;
+    }
+    .toggle-btn {
+      padding: 8px 20px;
+      border: none;
+      background: transparent;
+      font-family: 'Roboto Serif', serif;
+      font-size: 13px;
+      font-weight: 500;
+      color: #6B7280;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+    .toggle-btn.active {
+      background: #6B7280;
+      color: white;
+    }
+    .year-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .year-label {
+      font-size: 13px;
+      font-weight: 500;
+      color: #374151;
+    }
+    .year-btn {
+      padding: 6px 14px;
+      border: 1px solid #d1d5db;
+      background: transparent;
+      font-family: 'Roboto Serif', serif;
+      font-size: 12px;
+      font-weight: 500;
+      color: #6B7280;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+    .year-btn.active {
+      background: #6B7280;
+      color: white;
+      border-color: #6B7280;
+    }
+    #chart { width: 100%; }
+  </style>
+</head>
+<body>
+  <div class="controls">
+    <div class="toggle-group">
+      <button class="toggle-btn active" data-mode="relative">Relative (%)</button>
+      <button class="toggle-btn" data-mode="absolute">Absolute (£)</button>
+    </div>
+    <div class="year-group">
+      <span class="year-label">Year:</span>
+      <button class="year-btn active" data-year="0">2029-30</button>
+      <button class="year-btn" data-year="1">2030-31</button>
+    </div>
+  </div>
+  <div id="chart"></div>
+  <script>
+    const data = {
+      relative: {
+        "2029-30": {
+          y: [-0.44, -1.38, -0.74, -0.40, -0.25, -0.02, -0.03, 0, 0, 0],
+          text: ["-0.44%", "-1.38%", "-0.74%", "-0.40%", "-0.25%", "-0.02%", "-0.03%", "0.00%", "0.00%", "0.00%"]
+        },
+        "2030-31": {
+          y: [-0.50, -1.39, -0.76, -0.42, -0.20, -0.06, -0.03, 0, 0, 0],
+          text: ["-0.50%", "-1.39%", "-0.76%", "-0.42%", "-0.20%", "-0.06%", "-0.03%", "0.00%", "0.00%", "0.00%"]
+        }
+      },
+      absolute: {
+        "2029-30": {
+          y: [-95.64, -470.44, -265.25, -171.92, -126.15, -9.45, -19.57, 0, 0, 0],
+          text: ["-£95.64", "-£470.44", "-£265.25", "-£171.92", "-£126.15", "-£9.45", "-£19.57", "£0.00", "£0.00", "£0.00"]
+        },
+        "2030-31": {
+          y: [-111.15, -482.29, -273.47, -183.51, -104.84, -31.76, -20.18, 0, 0, 0],
+          text: ["-£111.15", "-£482.29", "-£273.47", "-£183.51", "-£104.84", "-£31.76", "-£20.18", "£0.00", "£0.00", "£0.00"]
+        }
+      }
+    };
+
+    const years = ["2029-30", "2030-31"];
+    let currentMode = "relative";
+    let currentYearIdx = 0;
+
+    function getLayout(mode) {
+      const isRel = mode === "relative";
+      return {
+        xaxis: {
+          title: { text: "Income decile", font: { family: "Roboto Serif", size: 14 } },
+          tickfont: { family: "Roboto Serif", size: 12 },
+          tickmode: "array",
+          tickvals: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+          showgrid: true,
+          gridcolor: "#e0e0e0"
+        },
+        yaxis: {
+          title: {
+            text: isRel ? "Relative change in household income (%)" : "Absolute change in household income (£/year)",
+            font: { family: "Roboto Serif", size: 13 }
+          },
+          tickfont: { family: "Roboto Serif", size: 12 },
+          ticksuffix: isRel ? "%" : "",
+          tickprefix: isRel ? "" : "£",
+          showgrid: true,
+          gridcolor: "#e0e0e0",
+          range: isRel ? [-1.8, 0.3] : [-570, 50]
+        },
+        height: 460,
+        margin: { l: 80, r: 30, b: 60, t: 20, pad: 4 },
+        plot_bgcolor: "white",
+        paper_bgcolor: "white",
+        font: { family: "Roboto Serif" }
+      };
+    }
+
+    function getTrace(mode, year) {
+      const d = data[mode][year];
+      return {
+        x: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        y: d.y,
+        type: "bar",
+        marker: { color: "#6B7280" },
+        hovertemplate: mode === "relative"
+          ? "Decile %{x}<br>Change: %{y:.2f}%<extra></extra>"
+          : "Decile %{x}<br>Change: £%{y:,.2f}<extra></extra>",
+        text: d.text,
+        textposition: "outside",
+        textfont: { family: "Roboto Serif", size: 11 }
+      };
+    }
+
+    function render() {
+      const year = years[currentYearIdx];
+      const trace = getTrace(currentMode, year);
+      const layout = getLayout(currentMode);
+      Plotly.react("chart", [trace], layout, { responsive: true, displayModeBar: false });
+    }
+
+    // Toggle buttons
+    document.querySelectorAll(".toggle-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".toggle-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        currentMode = btn.dataset.mode;
+        render();
+      });
+    });
+
+    // Year buttons
+    document.querySelectorAll(".year-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".year-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        currentYearIdx = parseInt(btn.dataset.year);
+        render();
+      });
+    });
+
+    render();
+  </script>
+</body>
+</html>
