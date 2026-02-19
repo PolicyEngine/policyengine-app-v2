@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Group, Progress, Stack, Text, Title } from '@mantine/core';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
+import { MapDownloadMenu } from '@/components/MapDownloadMenu';
 import {
   MapTypeToggle,
   USDistrictChoroplethMap,
@@ -27,6 +28,7 @@ interface RelativeChangeByDistrictProps {
 export function RelativeChangeByDistrict({ output }: RelativeChangeByDistrictProps) {
   // Map visualization type state (default to geographic)
   const [mapType, setMapType] = useState<MapVisualizationType>('geographic');
+  const mapRef = useRef<HTMLDivElement>(null);
 
   // Get shared district data from context
   const {
@@ -98,9 +100,16 @@ export function RelativeChangeByDistrict({ output }: RelativeChangeByDistrictPro
 
   return (
     <Stack gap="md">
-      <Group justify="space-between" align="center">
-        <Title order={3}>Relative household income change by congressional district</Title>
-        <MapTypeToggle value={mapType} onChange={setMapType} />
+      <Group justify="space-between" align="center" wrap="nowrap">
+        <Title order={3} style={{ flex: 1 }}>
+          Relative household income change by congressional district
+        </Title>
+        <Group gap="xs" wrap="nowrap">
+          <MapTypeToggle value={mapType} onChange={setMapType} />
+          {mapData.length > 0 && (
+            <MapDownloadMenu mapRef={mapRef} filename="relative-change-by-congressional-district" />
+          )}
+        </Group>
       </Group>
 
       {/* Show progress while loading */}
@@ -123,6 +132,7 @@ export function RelativeChangeByDistrict({ output }: RelativeChangeByDistrictPro
           }}
           focusState={stateCode ?? undefined}
           visualizationType={mapType}
+          exportRef={mapRef}
         />
       )}
     </Stack>

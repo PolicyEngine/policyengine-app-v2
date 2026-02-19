@@ -1,7 +1,8 @@
-import { useMemo } from 'react';
-import { Stack, Text, Title } from '@mantine/core';
+import { useMemo, useRef } from 'react';
+import { Group, Stack, Text, Title } from '@mantine/core';
 import { transformConstituencyAbsoluteChange } from '@/adapters/constituency/constituencyDataAdapter';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
+import { MapDownloadMenu } from '@/components/MapDownloadMenu';
 import { HexagonalMap } from '@/components/visualization/HexagonalMap';
 import type { ReportOutputSocietyWideUK } from '@/types/metadata/ReportOutputSocietyWideUK';
 import { formatParameterValue } from '@/utils/chartValueUtils';
@@ -18,6 +19,7 @@ interface AbsoluteChangeByConstituencyProps {
  * for each UK parliamentary constituency in currency terms.
  */
 export function AbsoluteChangeByConstituency({ output }: AbsoluteChangeByConstituencyProps) {
+  const mapRef = useRef<HTMLDivElement>(null);
   // Transform API data to hexagonal map format
   const hexMapData = useMemo(() => {
     // Type guard to ensure output is UK report with constituency data
@@ -42,9 +44,12 @@ export function AbsoluteChangeByConstituency({ output }: AbsoluteChangeByConstit
 
   return (
     <Stack gap="md">
-      <div>
-        <Title order={3}>Absolute household income change by constituency</Title>
-      </div>
+      <Group justify="space-between" align="flex-start" wrap="nowrap">
+        <Title order={3} style={{ flex: 1 }}>
+          Absolute household income change by constituency
+        </Title>
+        <MapDownloadMenu mapRef={mapRef} filename="absolute-change-by-constituency" />
+      </Group>
 
       <HexagonalMap
         data={hexMapData}
@@ -60,6 +65,7 @@ export function AbsoluteChangeByConstituency({ output }: AbsoluteChangeByConstit
               includeSymbol: true,
             }),
         }}
+        exportRef={mapRef}
       />
     </Stack>
   );

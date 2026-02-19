@@ -17,6 +17,9 @@ interface HexagonalMapProps {
 
   /** Configuration for the map */
   config?: Partial<HexMapConfig>;
+
+  /** Optional ref to the map container for image export */
+  exportRef?: React.Ref<HTMLDivElement>;
 }
 
 /** Generate SVG polygon points for a flat-topped hexagon centered at (cx, cy) */
@@ -36,7 +39,7 @@ const COLOR_BAR_WIDTH = 12;
 /** Color bar right margin */
 const COLOR_BAR_MARGIN = 60;
 
-export function HexagonalMap({ data, config = {} }: HexagonalMapProps) {
+export function HexagonalMap({ data, config = {}, exportRef }: HexagonalMapProps) {
   const [tooltip, setTooltip] = useState<{
     text: string;
     x: number;
@@ -132,6 +135,7 @@ export function HexagonalMap({ data, config = {} }: HexagonalMapProps) {
 
   return (
     <Box
+      ref={exportRef}
       style={{
         border: `1px solid ${colors.border.light}`,
         borderRadius: spacing.radius.container,
@@ -193,6 +197,7 @@ export function HexagonalMap({ data, config = {} }: HexagonalMapProps) {
       {/* Tooltip overlay */}
       {tooltip && (
         <div
+          data-export-exclude
           style={{
             position: 'absolute',
             left: tooltip.x,
