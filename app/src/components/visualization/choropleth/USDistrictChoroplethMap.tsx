@@ -373,7 +373,7 @@ export function USDistrictChoroplethMap({
         (exportRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
       }
     },
-    [exportRef],
+    [exportRef]
   );
 
   // Determine GeoJSON path: explicit path takes precedence, otherwise use visualization type
