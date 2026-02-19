@@ -1,6 +1,6 @@
 # Simulation & Report V2 Migration Progress
 
-## Current: Phase 1, Task 7
+## Current: Phase 1, Task 8
 
 ## Branch Strategy
 
@@ -61,10 +61,10 @@ _(Updated as branches are created)_
   - [x] API: `/simulations/economy` — create Simulation record, return pending status
   - [x] API: Validate region against `regions` table for economy sims
   - [x] API: 19 tests pass
-- [ ] 7. Create missing Modal functions (`household_impact_uk`, `household_impact_us`)
-  - [ ] API: Implement `household_impact_uk` in `modal_app.py`
-  - [ ] API: Implement `household_impact_us` in `modal_app.py`
-  - [ ] API: Verify `household_analysis.py` can invoke them
+- [x] 7. Create missing Modal functions (`household_impact_uk`, `household_impact_us`) (2026-02-19)
+  - [x] API: Implement `household_impact_uk` in `modal_app.py`
+  - [x] API: Implement `household_impact_us` in `modal_app.py`
+  - [x] API: Verify `household_analysis.py` can invoke them (function names match caller)
 - [ ] 8. Create `_run_local_economy_comparison_us` local fallback
   - [ ] API: Implement in `analysis.py` (following `_run_local_economy_comparison_uk` pattern)
   - [ ] API: Update `_trigger_economy_comparison()` to use it instead of falling back to Modal
