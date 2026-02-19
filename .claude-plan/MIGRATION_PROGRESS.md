@@ -1,6 +1,6 @@
 # Simulation & Report V2 Migration Progress
 
-## Current: Phase 2, Task 1
+## Current: Phase 2, Task 2
 
 ## Branch Strategy
 
@@ -24,8 +24,8 @@ _(Updated as branches are created)_
 
 | Repo | Current branch | Created | Status |
 |---|---|---|---|
-| policyengine.py | — | — | Not started |
-| policyengine-api-v2-alpha | `feat/sim-report-migration/phase-1` | 2026-02-18 | Active |
+| policyengine.py | `feat/sim-report-migration/phase-2` | 2026-02-19 | Active |
+| policyengine-api-v2-alpha | `feat/sim-report-migration/phase-2` | 2026-02-19 | Active |
 | policyengine-app-v2 | — | — | Not started |
 
 ---
@@ -74,14 +74,15 @@ _(Updated as branches are created)_
 
 ## Phase 2: V1 Output Parity (API v2 alpha + .py)
 
-- [ ] 1. Wire up poverty computation (overall) in economy comparison
-  - [ ] .py: Verify `calculate_us_poverty_rates()` and `calculate_uk_poverty_rates()` work
-  - [ ] API (local): Call poverty functions in `_run_local_economy_comparison_uk`, store in `poverty` table
-  - [ ] API (local): Create `_run_local_economy_comparison_us` poverty section (if not already done)
-  - [ ] API (Modal): Extend `economy_comparison_uk` to compute and store poverty
-  - [ ] API (Modal): Extend `economy_comparison_us` to compute and store poverty
-  - [ ] API: Add `poverty` to `EconomicImpactResponse` and `_build_response()`
-  - [ ] API: pytest passes
+- [x] 1. Wire up poverty computation (overall) in economy comparison (2026-02-19)
+  - [x] .py: Add `poverty_type` field to `Poverty` class, harmonize with API types
+  - [x] .py: Update `calculate_uk_poverty_rates()` and `calculate_us_poverty_rates()` to populate `poverty_type`
+  - [x] API (local): Call poverty functions in `_run_local_economy_comparison_uk`, store in `poverty` table
+  - [x] API (local): Call poverty functions in `_run_local_economy_comparison_us`, store in `poverty` table
+  - [x] API (Modal): Extend `economy_comparison_uk` to compute and store poverty
+  - [x] API (Modal): Extend `economy_comparison_us` to compute and store poverty
+  - [x] API: Add `poverty` to `EconomicImpactResponse` and `_build_response()`
+  - [x] API: pytest passes (219 passed, 57 pre-existing failures)
 - [ ] 2. Wire up inequality computation
   - [ ] .py: Verify `calculate_us_inequality()` and `calculate_uk_inequality()` work
   - [ ] API (local): Call inequality functions, store in `inequality` table
