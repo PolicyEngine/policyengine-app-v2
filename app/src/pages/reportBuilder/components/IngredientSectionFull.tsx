@@ -38,7 +38,8 @@ export function IngredientSectionFull({
   onDeselectPolicy,
   onBrowseMore,
   isInherited,
-  inheritedPopulationType,
+  inheritedPopulationType: _inheritedPopulationType,
+  inheritedPopulationLabel: _inheritedPopulationLabel,
   savedPolicies = [],
   recentPopulations = [],
   currentLabel,
@@ -170,58 +171,17 @@ export function IngredientSectionFull({
             </Text>
           </Group>
         </Box>
-      ) : isInherited && inheritedPopulationType ? (
-        /* Inherited population - read-only full-width */
-        <Box
-          style={{
-            padding: `${spacing.md} ${spacing.lg}`,
-            borderRadius: spacing.radius.md,
-            background: colors.gray[50],
-            border: `1px solid ${colors.gray[200]}`,
-            display: 'flex',
-            alignItems: 'center',
-            gap: spacing.md,
-            opacity: 0.7,
-          }}
-        >
-          <Box
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: spacing.radius.md,
-              background: colors.gray[200],
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-            }}
-          >
-            {inheritedPopulationType === 'household' ? (
-              <IconHome size={18} color={colors.gray[500]} />
-            ) : (
-              <CountryMapIcon countryId={countryId} size={18} color={colors.gray[500]} />
-            )}
-          </Box>
-          <Box style={{ flex: 1 }}>
-            <Text fw={600} c={colors.gray[600]} style={{ fontSize: FONT_SIZES.normal }}>
-              {inheritedPopulationType === 'household'
-                ? 'Household'
-                : countryConfig.nationwideTitle}
-            </Text>
-            <Text c={colors.gray[400]} style={{ fontSize: FONT_SIZES.small }}>
-              Inherited from baseline
-            </Text>
-          </Box>
-        </Box>
       ) : hasSelection ? (
         /* Selected item - full-width card */
         <Box
           style={{
             padding: `${spacing.md} ${spacing.lg}`,
             borderRadius: spacing.radius.md,
-            background: colorConfig.bg,
-            border: `2px solid ${colorConfig.border}`,
-            boxShadow: `0 0 0 2px ${colorConfig.bg}`,
+            background: isInherited ? colors.gray[50] : colorConfig.bg,
+            border: isInherited
+              ? `1px solid ${colors.gray[200]}`
+              : `2px solid ${colorConfig.border}`,
+            boxShadow: isInherited ? undefined : `0 0 0 2px ${colorConfig.bg}`,
             display: 'flex',
             alignItems: 'center',
             gap: spacing.md,
@@ -266,57 +226,59 @@ export function IngredientSectionFull({
               </Text>
             )}
           </Box>
-          <Box
-            style={{
-              display: 'flex',
-              gap: spacing.xs,
-              flexShrink: 0,
-            }}
-          >
+          {!isInherited && (
             <Box
-              component="button"
-              onClick={(e: React.MouseEvent) => {
-                e.stopPropagation();
-                onBrowseMore?.();
-              }}
               style={{
-                background: colors.white,
-                border: `1px solid ${colorConfig.border}`,
-                borderRadius: spacing.radius.sm,
-                padding: `${spacing.xs} ${spacing.sm}`,
-                cursor: 'pointer',
                 display: 'flex',
-                alignItems: 'center',
-                gap: 4,
-                fontSize: FONT_SIZES.small,
-                fontWeight: 500,
-                color: colorConfig.icon,
+                gap: spacing.xs,
+                flexShrink: 0,
               }}
             >
-              Change
+              <Box
+                component="button"
+                onClick={(e: React.MouseEvent) => {
+                  e.stopPropagation();
+                  onBrowseMore?.();
+                }}
+                style={{
+                  background: colors.white,
+                  border: `1px solid ${colorConfig.border}`,
+                  borderRadius: spacing.radius.sm,
+                  padding: `${spacing.xs} ${spacing.sm}`,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  fontSize: FONT_SIZES.small,
+                  fontWeight: 500,
+                  color: colorConfig.icon,
+                }}
+              >
+                Change
+              </Box>
+              <Box
+                component="button"
+                onClick={(e: React.MouseEvent) => {
+                  e.stopPropagation();
+                  handleDeselect();
+                }}
+                style={{
+                  background: 'transparent',
+                  border: `1px solid ${colors.gray[300]}`,
+                  borderRadius: spacing.radius.sm,
+                  width: 28,
+                  height: 28,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: colors.gray[400],
+                }}
+              >
+                <IconX size={14} />
+              </Box>
             </Box>
-            <Box
-              component="button"
-              onClick={(e: React.MouseEvent) => {
-                e.stopPropagation();
-                handleDeselect();
-              }}
-              style={{
-                background: 'transparent',
-                border: `1px solid ${colors.gray[300]}`,
-                borderRadius: spacing.radius.sm,
-                width: 28,
-                height: 28,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: colors.gray[400],
-              }}
-            >
-              <IconX size={14} />
-            </Box>
-          </Box>
+          )}
         </Box>
       ) : (
         /* Empty state - clickable area to add ingredient */

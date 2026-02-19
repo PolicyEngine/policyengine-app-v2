@@ -56,9 +56,16 @@ export function SimulationBlockFull({
       ? inheritedPopulation.household?.id
         ? 'household'
         : inheritedPopulation.geography?.id
-          ? 'nationwide'
+          ? inheritedPopulation.geography.scope === 'subnational'
+            ? 'subnational'
+            : 'nationwide'
           : null
       : null;
+
+  const inheritedPopulationLabel =
+    populationInherited && inheritedPopulation
+      ? inheritedPopulation.label || inheritedPopulation.geography?.name || undefined
+      : undefined;
 
   return (
     <Paper
@@ -148,6 +155,7 @@ export function SimulationBlockFull({
         onBrowseMore={onBrowseMorePopulations}
         isInherited={populationInherited}
         inheritedPopulationType={inheritedPopulationType}
+        inheritedPopulationLabel={inheritedPopulationLabel}
         recentPopulations={recentPopulations}
       />
 

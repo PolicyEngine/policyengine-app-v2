@@ -1,14 +1,11 @@
 import { Box, Table, Text } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
 import { Geography } from '@/types/ingredients/Geography';
-import { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
 import { capitalize } from '@/utils/stringUtils';
 
 interface GeographySubPageProps {
   baselineGeography?: Geography;
   reformGeography?: Geography;
-  baselineUserGeography?: UserGeographyPopulation;
-  reformUserGeography?: UserGeographyPopulation;
 }
 
 /**
@@ -20,8 +17,6 @@ interface GeographySubPageProps {
 export default function GeographySubPage({
   baselineGeography,
   reformGeography,
-  baselineUserGeography,
-  reformUserGeography,
 }: GeographySubPageProps) {
   if (!baselineGeography && !reformGeography) {
     return <div>No geography data available</div>;
@@ -30,9 +25,9 @@ export default function GeographySubPage({
   // Check if geographies are the same
   const geographiesAreSame = baselineGeography?.id === reformGeography?.id;
 
-  // Get labels from UserGeographyPopulation, fallback to geography names, then to generic labels
-  const baselineLabel = baselineUserGeography?.label || baselineGeography?.name || 'Baseline';
-  const reformLabel = reformUserGeography?.label || reformGeography?.name || 'Reform';
+  // Get labels from geography metadata
+  const baselineLabel = baselineGeography?.name || 'Baseline';
+  const reformLabel = reformGeography?.name || 'Reform';
 
   // Define table rows
   const rows = [

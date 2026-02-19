@@ -9,7 +9,6 @@ import type { Policy } from '@/types/ingredients/Policy';
 import type { Report } from '@/types/ingredients/Report';
 import type { Simulation } from '@/types/ingredients/Simulation';
 import type { UserPolicy } from '@/types/ingredients/UserPolicy';
-import type { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
 import type { UserSimulation } from '@/types/ingredients/UserSimulation';
 import { convertPoliciesToV1Format } from '@/utils/reproducibilityCode';
 import { getDisplayStatus } from '@/utils/statusMapping';
@@ -34,7 +33,6 @@ interface InputTabProps {
   policies?: Policy[];
   userPolicies?: UserPolicy[];
   geographies?: Geography[];
-  userGeographies?: UserGeographyPopulation[];
 }
 
 /**
@@ -54,12 +52,11 @@ const INPUT_ONLY_TABS: Record<string, (props: InputTabProps) => React.ReactEleme
     <PolicySubPage policies={policies} userPolicies={userPolicies} reportType="economy" />
   ),
 
-  population: ({ simulations, geographies, userGeographies }) => (
+  population: ({ simulations, geographies }) => (
     <PopulationSubPage
       baselineSimulation={simulations?.[0]}
       reformSimulation={simulations?.[1]}
       geographies={geographies}
-      userGeographies={userGeographies}
     />
   ),
 
@@ -113,7 +110,6 @@ interface SocietyWideReportOutputProps {
   userPolicies?: UserPolicy[];
   policies?: Policy[];
   geographies?: Geography[];
-  userGeographies?: UserGeographyPopulation[];
 }
 
 /**
@@ -134,7 +130,6 @@ export function SocietyWideReportOutput({
   userPolicies,
   policies,
   geographies,
-  userGeographies,
 }: SocietyWideReportOutputProps) {
   // Get calculation status for report (for state decisions)
   const calcStatus = useCalculationStatus(report?.id || '', 'report');
@@ -211,7 +206,6 @@ export function SocietyWideReportOutput({
       policies,
       userPolicies,
       geographies,
-      userGeographies,
     });
   }
 
@@ -245,7 +239,6 @@ export function SocietyWideReportOutput({
         policies,
         userPolicies,
         geographies,
-        userGeographies,
         output,
         activeView,
       });
