@@ -29,7 +29,9 @@ export default function AppPage() {
     apps.find((a) => a.slug === slug);
 
   useEffect(() => {
-    if (!app) return;
+    if (!app) {
+      return;
+    }
     const timer = setTimeout(() => {
       trackToolEngaged({ toolSlug: app.slug, toolTitle: app.title });
     }, 15000);
