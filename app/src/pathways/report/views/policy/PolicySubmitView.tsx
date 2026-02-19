@@ -12,10 +12,10 @@ import IngredientSubmissionView, {
 } from '@/components/IngredientSubmissionView';
 import { useCreatePolicy } from '@/hooks/useCreatePolicy';
 import { countryIds } from '@/libs/countries';
-import { trackPolicyCreated } from '@/utils/analytics';
 import { Policy } from '@/types/ingredients/Policy';
 import { PolicyStateProps } from '@/types/pathwayState';
 import { PolicyCreationPayload } from '@/types/payloads';
+import { trackPolicyCreated } from '@/utils/analytics';
 import { formatDate } from '@/utils/dateUtils';
 
 interface PolicySubmitViewProps {
