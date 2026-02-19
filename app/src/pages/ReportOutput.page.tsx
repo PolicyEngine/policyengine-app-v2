@@ -319,7 +319,6 @@ export default function ReportOutputPage() {
           userPolicies={userPolicies}
           policies={policies}
           geographies={geographies}
-          userGeographies={userGeographies}
         />
       );
     }

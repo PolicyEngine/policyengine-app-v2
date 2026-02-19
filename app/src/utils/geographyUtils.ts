@@ -195,6 +195,11 @@ export function generateGeographyLabel(geography: Geography): string {
     return geography.countryId === 'uk' ? 'Households UK-wide' : 'Households nationwide';
   }
 
+  // Use the human-readable name when available
+  if (geography.name) {
+    return `Households in ${geography.name}`;
+  }
+
   // Handle US place (city) format: "place/CA-44000"
   if (geography.geographyId.startsWith('place/')) {
     const place = findPlaceFromRegionString(geography.geographyId);

@@ -38,7 +38,6 @@ export function hydrateReportBuilderState({
   userSimulations,
   userPolicies,
   userHouseholds,
-  userGeographies,
   currentLawId,
 }: HydrateArgs): ReportBuilderState {
   const hydratedSimulations: SimulationStateProps[] = simulations.map((sim, index) => {
@@ -74,9 +73,8 @@ export function hydrateReportBuilderState({
       const geography = geographies.find(
         (g) => g.id === sim.populationId || g.geographyId === sim.populationId
       );
-      const userGeography = userGeographies?.find((ug) => ug.geographyId === sim.populationId);
       populationState = {
-        label: userGeography?.label || geography?.name || null,
+        label: geography?.name || null,
         type: 'geography' as const,
         household: null,
         geography: geography || null,

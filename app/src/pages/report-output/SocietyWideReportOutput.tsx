@@ -67,12 +67,11 @@ const INPUT_ONLY_TABS: Record<string, (props: InputTabProps) => React.ReactEleme
     <PolicySubPage policies={policies} userPolicies={userPolicies} reportType="economy" />
   ),
 
-  population: ({ simulations, geographies, userGeographies }) => (
+  population: ({ simulations, geographies }) => (
     <PopulationSubPage
       baselineSimulation={simulations?.[0]}
       reformSimulation={simulations?.[1]}
       geographies={geographies}
-      userGeographies={userGeographies}
     />
   ),
 
@@ -129,7 +128,6 @@ interface SocietyWideReportOutputProps {
   userPolicies?: UserPolicy[];
   policies?: Policy[];
   geographies?: Geography[];
-  userGeographies?: UserGeographyPopulation[];
 }
 
 /**
@@ -150,7 +148,6 @@ export function SocietyWideReportOutput({
   userPolicies,
   policies,
   geographies,
-  userGeographies,
 }: SocietyWideReportOutputProps) {
   // Read datasets from metadata for the reproduce tab
   const datasets = useSelector((state: RootState) => state.metadata.economyOptions?.datasets);
@@ -265,7 +262,6 @@ export function SocietyWideReportOutput({
         policies,
         userPolicies,
         geographies,
-        userGeographies,
         output,
         activeView,
       });

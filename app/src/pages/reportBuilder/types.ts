@@ -168,7 +168,8 @@ export interface IngredientSectionProps {
   onCreateCustom: () => void;
   onBrowseMore?: () => void;
   isInherited?: boolean;
-  inheritedPopulationType?: 'household' | 'nationwide' | null;
+  inheritedPopulationType?: 'household' | 'nationwide' | 'subnational' | null;
+  inheritedPopulationLabel?: string;
   savedPolicies?: SavedPolicy[];
   recentPopulations?: RecentPopulation[];
   currentLabel?: string;

@@ -32,7 +32,8 @@ export function IngredientSection({
   onDeselectPolicy,
   onBrowseMore,
   isInherited,
-  inheritedPopulationType,
+  inheritedPopulationType: _inheritedPopulationType,
+  inheritedPopulationLabel: _inheritedPopulationLabel,
   savedPolicies = [],
   recentPopulations = [],
 }: IngredientSectionProps) {
@@ -82,206 +83,155 @@ export function IngredientSection({
       </Box>
 
       {/* Chips container */}
-      {isInherited && inheritedPopulationType ? (
-        <Box style={styles.chipGridSquare}>
-          <Box
-            style={{
-              ...styles.chipSquare,
-              opacity: 0.6,
-              cursor: 'not-allowed',
-              background: colors.gray[100],
-              borderColor: colors.gray[200],
-            }}
-          >
-            <Box
-              style={{
-                width: 28,
-                height: 28,
-                borderRadius: spacing.radius.sm,
-                background: colors.gray[200],
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
+      <Box style={styles.chipGridSquare}>
+        {type === 'policy' && onQuickSelectPolicy && (
+          <>
+            {/* Current law - always first */}
+            <OptionChipSquare
+              icon={
+                <IconScale
+                  size={iconSize}
+                  color={isCurrentLaw(currentId) ? colorConfig.icon : colors.gray[500]}
+                />
+              }
+              label="Current law"
+              description="No changes"
+              isSelected={isCurrentLaw(currentId)}
+              onClick={() => {
+                if (isCurrentLaw(currentId) && onDeselectPolicy) {
+                  onDeselectPolicy();
+                } else {
+                  onQuickSelectPolicy();
+                }
               }}
-            >
-              {inheritedPopulationType === 'household' ? (
-                <IconHome size={16} color={colors.gray[500]} />
-              ) : (
-                <CountryMapIcon countryId={countryId} size={16} color={colors.gray[500]} />
-              )}
-            </Box>
-            <Text
-              ta="center"
-              fw={600}
-              c={colors.gray[500]}
-              style={{ fontSize: FONT_SIZES.small, lineHeight: 1.2 }}
-            >
-              {inheritedPopulationType === 'household'
-                ? 'Household'
-                : countryConfig.nationwideTitle}
-            </Text>
-            <Text
-              ta="center"
-              c={colors.gray[400]}
-              style={{ fontSize: FONT_SIZES.tiny, lineHeight: 1.2 }}
-            >
-              {inheritedPopulationType === 'household'
-                ? 'Inherited'
-                : countryConfig.nationwideSubtitle}
-            </Text>
-          </Box>
-        </Box>
-      ) : (
-        <Box style={styles.chipGridSquare}>
-          {type === 'policy' && onQuickSelectPolicy && (
-            <>
-              {/* Current law - always first */}
+              colorConfig={colorConfig}
+            />
+            {/* Saved policies - up to 3 shown (total 4 with Current law) */}
+            {savedPolicies.slice(0, 3).map((policy) => (
               <OptionChipSquare
+                key={policy.id}
                 icon={
-                  <IconScale
+                  <IconFileDescription
                     size={iconSize}
-                    color={isCurrentLaw(currentId) ? colorConfig.icon : colors.gray[500]}
+                    color={currentId === policy.id ? colorConfig.icon : colors.gray[500]}
                   />
                 }
-                label="Current law"
-                description="No changes"
-                isSelected={isCurrentLaw(currentId)}
+                label={policy.label}
+                description={`${policy.paramCount} param${policy.paramCount !== 1 ? 's' : ''} changed`}
+                isSelected={currentId === policy.id}
                 onClick={() => {
-                  if (isCurrentLaw(currentId) && onDeselectPolicy) {
+                  if (currentId === policy.id && onDeselectPolicy) {
                     onDeselectPolicy();
                   } else {
-                    onQuickSelectPolicy();
+                    onSelectSavedPolicy?.(policy.id, policy.label, policy.paramCount);
                   }
                 }}
                 colorConfig={colorConfig}
               />
-              {/* Saved policies - up to 3 shown (total 4 with Current law) */}
-              {savedPolicies.slice(0, 3).map((policy) => (
-                <OptionChipSquare
-                  key={policy.id}
-                  icon={
-                    <IconFileDescription
-                      size={iconSize}
-                      color={currentId === policy.id ? colorConfig.icon : colors.gray[500]}
-                    />
-                  }
-                  label={policy.label}
-                  description={`${policy.paramCount} param${policy.paramCount !== 1 ? 's' : ''} changed`}
-                  isSelected={currentId === policy.id}
-                  onClick={() => {
-                    if (currentId === policy.id && onDeselectPolicy) {
-                      onDeselectPolicy();
-                    } else {
-                      onSelectSavedPolicy?.(policy.id, policy.label, policy.paramCount);
-                    }
-                  }}
-                  colorConfig={colorConfig}
-                />
-              ))}
-              {/* More options - always shown for searching/browsing all policies */}
-              {onBrowseMore && (
-                <BrowseMoreChip
-                  label="More options"
-                  description="View all your policies"
-                  onClick={onBrowseMore}
-                  variant="square"
-                  colorConfig={colorConfig}
-                />
-              )}
-            </>
-          )}
+            ))}
+            {/* More options - always shown for searching/browsing all policies */}
+            {onBrowseMore && (
+              <BrowseMoreChip
+                label="More options"
+                description="View all your policies"
+                onClick={onBrowseMore}
+                variant="square"
+                colorConfig={colorConfig}
+              />
+            )}
+          </>
+        )}
 
-          {type === 'population' && onQuickSelectPopulation && (
-            <>
-              {/* Nationwide - always first */}
-              <OptionChipSquare
-                icon={
-                  <CountryMapIcon
-                    countryId={countryId}
-                    size={iconSize}
-                    color={
-                      currentId === countryConfig.geographyId ? colorConfig.icon : colors.gray[500]
-                    }
-                  />
+        {type === 'population' && onQuickSelectPopulation && (
+          <>
+            {/* Nationwide - always first */}
+            <OptionChipSquare
+              icon={
+                <CountryMapIcon
+                  countryId={countryId}
+                  size={iconSize}
+                  color={
+                    currentId === countryConfig.geographyId ? colorConfig.icon : colors.gray[500]
+                  }
+                />
+              }
+              label={countryConfig.nationwideTitle}
+              description={countryConfig.nationwideSubtitle}
+              isSelected={currentId === countryConfig.geographyId}
+              onClick={() => {
+                if (currentId === countryConfig.geographyId && onDeselectPopulation) {
+                  onDeselectPopulation();
+                } else {
+                  onQuickSelectPopulation('nationwide');
                 }
-                label={countryConfig.nationwideTitle}
-                description={countryConfig.nationwideSubtitle}
-                isSelected={currentId === countryConfig.geographyId}
+              }}
+              colorConfig={colorConfig}
+            />
+            {/* Recent populations - up to 4 shown */}
+            {recentPopulations.slice(0, 4).map((pop) => (
+              <OptionChipSquare
+                key={pop.id}
+                icon={
+                  pop.type === 'household' ? (
+                    <IconHome
+                      size={iconSize}
+                      color={currentId === pop.id ? colorConfig.icon : colors.gray[500]}
+                    />
+                  ) : (
+                    <IconFolder
+                      size={iconSize}
+                      color={currentId === pop.id ? colorConfig.icon : colors.gray[500]}
+                    />
+                  )
+                }
+                label={pop.label}
+                description={pop.type === 'household' ? 'Household' : 'Geography'}
+                isSelected={currentId === pop.id}
                 onClick={() => {
-                  if (currentId === countryConfig.geographyId && onDeselectPopulation) {
+                  if (currentId === pop.id && onDeselectPopulation) {
                     onDeselectPopulation();
                   } else {
-                    onQuickSelectPopulation('nationwide');
+                    onSelectRecentPopulation?.(pop.population);
                   }
                 }}
                 colorConfig={colorConfig}
               />
-              {/* Recent populations - up to 4 shown */}
-              {recentPopulations.slice(0, 4).map((pop) => (
-                <OptionChipSquare
-                  key={pop.id}
-                  icon={
-                    pop.type === 'household' ? (
-                      <IconHome
-                        size={iconSize}
-                        color={currentId === pop.id ? colorConfig.icon : colors.gray[500]}
-                      />
-                    ) : (
-                      <IconFolder
-                        size={iconSize}
-                        color={currentId === pop.id ? colorConfig.icon : colors.gray[500]}
-                      />
-                    )
-                  }
-                  label={pop.label}
-                  description={pop.type === 'household' ? 'Household' : 'Geography'}
-                  isSelected={currentId === pop.id}
-                  onClick={() => {
-                    if (currentId === pop.id && onDeselectPopulation) {
-                      onDeselectPopulation();
-                    } else {
-                      onSelectRecentPopulation?.(pop.population);
-                    }
-                  }}
-                  colorConfig={colorConfig}
-                />
-              ))}
-              {/* More options - always shown for searching/browsing all populations */}
-              {onBrowseMore && (
-                <BrowseMoreChip
-                  label="More options"
-                  description="Search all"
-                  onClick={onBrowseMore}
-                  variant="square"
-                  colorConfig={colorConfig}
-                />
-              )}
-            </>
-          )}
+            ))}
+            {/* More options - always shown for searching/browsing all populations */}
+            {onBrowseMore && (
+              <BrowseMoreChip
+                label="More options"
+                description="Search all"
+                onClick={onBrowseMore}
+                variant="square"
+                colorConfig={colorConfig}
+              />
+            )}
+          </>
+        )}
 
-          {type === 'dynamics' && (
-            <Box
-              style={{
-                padding: spacing.md,
-                background: colors.white,
-                borderRadius: spacing.radius.md,
-                border: `1px dashed ${colorConfig.border}`,
-                gridColumn: '1 / -1',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Group gap={spacing.sm}>
-                <IconSparkles size={18} color={colorConfig.accent} />
-                <Text c={colorConfig.icon} style={{ fontSize: FONT_SIZES.normal }}>
-                  Dynamics coming soon
-                </Text>
-              </Group>
-            </Box>
-          )}
-        </Box>
-      )}
+        {type === 'dynamics' && (
+          <Box
+            style={{
+              padding: spacing.md,
+              background: colors.white,
+              borderRadius: spacing.radius.md,
+              border: `1px dashed ${colorConfig.border}`,
+              gridColumn: '1 / -1',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Group gap={spacing.sm}>
+              <IconSparkles size={18} color={colorConfig.accent} />
+              <Text c={colorConfig.icon} style={{ fontSize: FONT_SIZES.normal }}>
+                Dynamics coming soon
+              </Text>
+            </Group>
+          </Box>
+        )}
+      </Box>
     </Box>
   );
 }

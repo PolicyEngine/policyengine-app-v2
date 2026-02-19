@@ -228,6 +228,7 @@ export function PopulationBrowseModal({
           countryId,
           scope: 'subnational',
           geographyId: region.value,
+          name: region.label,
         }
       : {
           id: countryConfig.geographyId,
