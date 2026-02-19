@@ -363,6 +363,19 @@ export function USDistrictChoroplethMap({
   const containerRef = useRef<HTMLDivElement>(null);
   const isHexMap = visualizationType === 'hex';
 
+  /** Callback ref that writes to both containerRef (for tooltips) and exportRef (for image export) */
+  const mergedRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      (containerRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+      if (typeof exportRef === 'function') {
+        exportRef(node);
+      } else if (exportRef) {
+        (exportRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+      }
+    },
+    [exportRef],
+  );
+
   // Determine GeoJSON path: explicit path takes precedence, otherwise use visualization type
   const effectiveGeoDataPath = geoDataPath ?? GEOJSON_PATHS[visualizationType];
 
@@ -493,14 +506,7 @@ export function USDistrictChoroplethMap({
 
   return (
     <Box
-      ref={(node: HTMLDivElement | null) => {
-        (containerRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
-        if (typeof exportRef === 'function') {
-          exportRef(node);
-        } else if (exportRef) {
-          (exportRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
-        }
-      }}
+      ref={mergedRef}
       style={{
         border: `1px solid ${colors.border.light}`,
         borderRadius: spacing.radius.container,
