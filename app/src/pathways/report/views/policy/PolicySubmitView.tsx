@@ -15,6 +15,7 @@ import { countryIds } from '@/libs/countries';
 import { Policy } from '@/types/ingredients/Policy';
 import { PolicyStateProps } from '@/types/pathwayState';
 import { PolicyCreationPayload } from '@/types/payloads';
+import { trackPolicyCreated } from '@/utils/analytics';
 import { formatDate } from '@/utils/dateUtils';
 
 interface PolicySubmitViewProps {
@@ -53,6 +54,7 @@ export default function PolicySubmitView({
     );
     createPolicy(serializedPolicyCreationPayload, {
       onSuccess: (data) => {
+        trackPolicyCreated();
         onSubmitSuccess(data.result.policy_id);
       },
     });

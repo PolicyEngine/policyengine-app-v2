@@ -5,10 +5,12 @@
  * Routes apps to appropriate embed component based on type.
  */
 
+import { useEffect } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
 import IframeContent from '@/components/IframeContent';
 import { OBBBAIframeContent, StreamlitEmbed } from '@/components/interactive';
 import { apps } from '@/data/apps/appTransformers';
+import { trackToolEngaged } from '@/utils/analytics';
 
 export default function AppPage() {
   const {
@@ -25,6 +27,16 @@ export default function AppPage() {
   const app =
     apps.find((a) => a.slug === slug && a.countryId === countryId) ||
     apps.find((a) => a.slug === slug);
+
+  useEffect(() => {
+    if (!app) {
+      return;
+    }
+    const timer = setTimeout(() => {
+      trackToolEngaged({ toolSlug: app.slug, toolTitle: app.title });
+    }, 15000);
+    return () => clearTimeout(timer);
+  }, [app]);
 
   if (!app) {
     return (

@@ -3,6 +3,7 @@ import { IconDownload } from '@tabler/icons-react';
 import { ActionIcon, Box, Group, Stack, Text, Tooltip } from '@mantine/core';
 import { colors } from '@/designTokens/colors';
 import { spacing } from '@/designTokens/spacing';
+import { trackChartCsvDownloaded } from '@/utils/analytics';
 
 interface ChartContainerProps {
   children: ReactNode;
@@ -29,7 +30,10 @@ export function ChartContainer({ children, title, onDownloadCsv }: ChartContaine
           <ActionIcon
             variant="subtle"
             size="md"
-            onClick={onDownloadCsv}
+            onClick={() => {
+              trackChartCsvDownloaded();
+              onDownloadCsv();
+            }}
             aria-label="Download CSV"
             style={{ flexShrink: 0 }}
           >
