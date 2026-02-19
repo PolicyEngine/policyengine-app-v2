@@ -1,6 +1,6 @@
 # Simulation & Report V2 Migration Progress
 
-## Current: Phase 1, Task 8
+## Current: Phase 2, Task 1
 
 ## Branch Strategy
 
@@ -65,10 +65,10 @@ _(Updated as branches are created)_
   - [x] API: Implement `household_impact_uk` in `modal_app.py`
   - [x] API: Implement `household_impact_us` in `modal_app.py`
   - [x] API: Verify `household_analysis.py` can invoke them (function names match caller)
-- [ ] 8. Create `_run_local_economy_comparison_us` local fallback
-  - [ ] API: Implement in `analysis.py` (following `_run_local_economy_comparison_uk` pattern)
-  - [ ] API: Update `_trigger_economy_comparison()` to use it instead of falling back to Modal
-  - [ ] API: pytest passes
+- [x] 8. Create `_run_local_economy_comparison_us` local fallback (2026-02-19)
+  - [x] API: Implement in `analysis.py` (following `_run_local_economy_comparison_uk` pattern)
+  - [x] API: Update `_trigger_economy_comparison()` to use it instead of falling back to Modal
+  - [x] API: pytest passes (219 passed, 57 pre-existing failures)
 
 ---
 
