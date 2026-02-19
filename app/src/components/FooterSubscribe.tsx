@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Button, Stack, Text, TextInput } from '@mantine/core';
 import { colors, typography } from '@/designTokens';
+import { trackNewsletterSignup } from '@/utils/analytics';
 import { submitToMailchimp } from '@/utils/mailchimpSubscription';
 
 export default function FooterSubscribe() {
@@ -21,6 +22,7 @@ export default function FooterSubscribe() {
     try {
       const result = await submitToMailchimp(email);
       if (result.isSuccessful) {
+        trackNewsletterSignup();
         setStatus('success');
         setMessage(result.message);
         setEmail('');

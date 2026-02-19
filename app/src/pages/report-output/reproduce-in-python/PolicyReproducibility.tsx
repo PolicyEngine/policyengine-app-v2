@@ -9,6 +9,7 @@ import { IconClipboard, IconClipboardCheck, IconCode, IconExternalLink } from '@
 import { ActionIcon, Anchor, Box, Code, Group, Stack, Text, Tooltip } from '@mantine/core';
 import { colors, spacing } from '@/designTokens';
 import { useReportYear } from '@/hooks/useReportYear';
+import { trackPythonCodeCopied } from '@/utils/analytics';
 import { getColabLink, getReproducibilityCodeBlock } from '@/utils/reproducibilityCode';
 
 interface PolicyData {
@@ -48,6 +49,7 @@ export default function PolicyReproducibility({
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(codeText);
+      trackPythonCodeCopied();
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {

@@ -12,6 +12,7 @@ import type { CountryId } from '@/api/report';
 import FooterSubscribe from '@/components/FooterSubscribe';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { trackContactClicked } from '@/utils/analytics';
 
 const PolicyEngineLogo = '/assets/logos/policyengine/white.svg';
 
@@ -108,7 +109,12 @@ export default function Footer() {
             <Stack gap="md">
               <Group gap="md">
                 {SOCIAL_LINKS.map(({ icon: Icon, href }, index) => (
-                  <Anchor key={index} href={href} target="_blank">
+                  <Anchor
+                    key={index}
+                    href={href}
+                    target="_blank"
+                    onClick={href.startsWith('mailto:') ? trackContactClicked : undefined}
+                  >
                     <Icon size={24} color={colors.white} />
                   </Anchor>
                 ))}

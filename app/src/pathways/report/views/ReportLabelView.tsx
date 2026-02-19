@@ -4,6 +4,7 @@ import { Select, TextInput } from '@mantine/core';
 import PathwayView from '@/components/common/PathwayView';
 import { CURRENT_YEAR } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { trackReportStarted } from '@/utils/analytics';
 import { getTaxYears } from '@/libs/metadataUtils';
 
 interface ReportLabelViewProps {
@@ -45,6 +46,7 @@ export default function ReportLabelView({
   }
 
   function submissionHandler() {
+    trackReportStarted();
     onUpdateLabel(localLabel);
     onUpdateYear(localYear);
     onNext();

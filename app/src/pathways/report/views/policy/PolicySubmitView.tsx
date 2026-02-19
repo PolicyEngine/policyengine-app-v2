@@ -12,6 +12,7 @@ import IngredientSubmissionView, {
 } from '@/components/IngredientSubmissionView';
 import { useCreatePolicy } from '@/hooks/useCreatePolicy';
 import { countryIds } from '@/libs/countries';
+import { trackPolicyCreated } from '@/utils/analytics';
 import { Policy } from '@/types/ingredients/Policy';
 import { PolicyStateProps } from '@/types/pathwayState';
 import { PolicyCreationPayload } from '@/types/payloads';
@@ -53,6 +54,7 @@ export default function PolicySubmitView({
     );
     createPolicy(serializedPolicyCreationPayload, {
       onSuccess: (data) => {
+        trackPolicyCreated();
         onSubmitSuccess(data.result.policy_id);
       },
     });
