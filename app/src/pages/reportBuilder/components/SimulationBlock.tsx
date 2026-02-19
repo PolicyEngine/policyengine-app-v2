@@ -17,7 +17,7 @@ export interface SimulationBlockProps {
   index: number;
   countryId: 'us' | 'uk';
   onLabelChange: (label: string) => void;
-  onQuickSelectPolicy: (policyType: 'current-law') => void;
+  onQuickSelectPolicy: () => void;
   onSelectSavedPolicy: (id: string, label: string, paramCount: number) => void;
   onQuickSelectPopulation: (populationType: 'nationwide') => void;
   onSelectRecentPopulation: (population: PopulationStateProps) => void;

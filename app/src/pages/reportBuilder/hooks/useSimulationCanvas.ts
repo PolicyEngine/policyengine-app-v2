@@ -36,6 +36,7 @@ import {
   RegionOption,
 } from '@/utils/regionStrategies';
 import { getSamplePopulations } from '../constants';
+import { createCurrentLawPolicy } from '../currentLaw';
 import type {
   IngredientPickerState,
   IngredientType,
@@ -275,7 +276,7 @@ export function useSimulationCanvas({
 
   const handleQuickSelectPolicy = useCallback(
     (simulationIndex: number) => {
-      updatePolicy(simulationIndex, { id: 'current-law', label: 'Current law', parameters: [] });
+      updatePolicy(simulationIndex, createCurrentLawPolicy());
     },
     [updatePolicy]
   );

@@ -1,27 +1,22 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { IconDeviceFloppy, IconPlayerPlay, IconRefresh, IconX } from '@tabler/icons-react';
-import { useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Container, Stack, Text } from '@mantine/core';
 import { spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { useUserReportById } from '@/hooks/useUserReports';
-import { RootState } from '@/store';
 import { getReportOutputPath } from '@/utils/reportRouting';
 import { ReportBuilderShell, SimulationBlockFull } from './components';
+import { useReportBuilderState } from './hooks/useReportBuilderState';
 import type { IngredientPickerState, ReportBuilderState, TopBarAction } from './types';
-import { hydrateReportBuilderState } from './utils/hydrateReportBuilderState';
 
 export default function ModifyReportPage() {
   const { userReportId } = useParams<{ userReportId: string }>();
   const countryId = useCurrentCountry() as 'us' | 'uk';
   const navigate = useNavigate();
-  const currentLawId = useSelector((state: RootState) => state.metadata.currentLawId);
 
-  const data = useUserReportById(userReportId ?? '');
-
-  const [reportState, setReportState] = useState<ReportBuilderState | null>(null);
-  const originalStateRef = useRef<ReportBuilderState | null>(null);
+  const { reportState, setReportState, originalState, isLoading, error } = useReportBuilderState(
+    userReportId ?? ''
+  );
 
   const [pickerState, setPickerState] = useState<IngredientPickerState>({
     isOpen: false,
@@ -29,60 +24,16 @@ export default function ModifyReportPage() {
     ingredientType: 'policy',
   });
 
-  // Hydrate once data loads
-  useEffect(() => {
-    if (
-      !data.isLoading &&
-      !data.error &&
-      data.userReport &&
-      data.report &&
-      data.simulations.length > 0 &&
-      reportState === null
-    ) {
-      const hydrated = hydrateReportBuilderState({
-        userReport: data.userReport,
-        report: data.report,
-        simulations: data.simulations,
-        policies: data.policies,
-        households: data.households,
-        geographies: data.geographies,
-        userSimulations: data.userSimulations,
-        userPolicies: data.userPolicies,
-        userHouseholds: data.userHouseholds,
-        userGeographies: data.userGeographies,
-        currentLawId,
-      });
-      setReportState(hydrated);
-      originalStateRef.current = hydrated;
-    }
-  }, [
-    data.isLoading,
-    data.error,
-    data.userReport,
-    data.report,
-    data.simulations,
-    data.policies,
-    data.households,
-    data.geographies,
-    data.userSimulations,
-    data.userPolicies,
-    data.userHouseholds,
-    data.userGeographies,
-    currentLawId,
-    reportState,
-  ]);
-
   // Change detection (exclude label)
   const hasSubstantiveChanges = useMemo(() => {
-    if (!originalStateRef.current || !reportState) {
+    if (!originalState || !reportState) {
       return false;
     }
-    const orig = originalStateRef.current;
     return (
-      orig.year !== reportState.year ||
-      JSON.stringify(orig.simulations) !== JSON.stringify(reportState.simulations)
+      originalState.year !== reportState.year ||
+      JSON.stringify(originalState.simulations) !== JSON.stringify(reportState.simulations)
     );
-  }, [reportState]);
+  }, [reportState, originalState]);
 
   // Dynamic toolbar actions
   const topBarActions: TopBarAction[] = useMemo(() => {
@@ -123,7 +74,7 @@ export default function ModifyReportPage() {
     ];
   }, [hasSubstantiveChanges, countryId, userReportId, navigate]);
 
-  if (data.isLoading || !reportState) {
+  if (isLoading || !reportState) {
     return (
       <Container size="xl" px={spacing.xl}>
         <Stack gap={spacing.xl}>
@@ -133,11 +84,11 @@ export default function ModifyReportPage() {
     );
   }
 
-  if (data.error) {
+  if (error) {
     return (
       <Container size="xl" px={spacing.xl}>
         <Stack gap={spacing.xl}>
-          <Text c="red">Error loading report: {data.error.message}</Text>
+          <Text c="red">Error loading report: {error.message}</Text>
         </Stack>
       </Container>
     );

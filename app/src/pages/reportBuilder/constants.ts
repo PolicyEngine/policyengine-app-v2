@@ -52,15 +52,13 @@ export const COUNTRY_CONFIG = {
   us: {
     nationwideTitle: 'United States',
     nationwideSubtitle: 'Nationwide',
-    nationwideLabel: 'United States', // Used for geography name
-    nationwideId: 'us-nationwide',
+    nationwideLabel: 'United States',
     geographyId: 'us',
   },
   uk: {
     nationwideTitle: 'United Kingdom',
     nationwideSubtitle: 'UK-wide',
-    nationwideLabel: 'United Kingdom', // Used for geography name
-    nationwideId: 'uk-nationwide',
+    nationwideLabel: 'United Kingdom',
     geographyId: 'uk',
   },
 } as const;
@@ -87,7 +85,7 @@ export const getSamplePopulations = (countryId: 'us' | 'uk') => {
       type: 'geography' as const,
       household: null,
       geography: {
-        id: config.nationwideId,
+        id: config.geographyId,
         countryId,
         scope: 'national' as const,
         geographyId: config.geographyId,

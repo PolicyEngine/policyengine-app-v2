@@ -48,6 +48,8 @@ export function SimulationBlockFull({
   const currentPolicyId = simulation.policy.id;
   const currentPopulationId =
     effectivePopulation?.household?.id || effectivePopulation?.geography?.id;
+  const populationLabel =
+    effectivePopulation?.label || effectivePopulation?.geography?.name || undefined;
 
   const inheritedPopulationType =
     populationInherited && inheritedPopulation
@@ -124,6 +126,7 @@ export function SimulationBlockFull({
       <IngredientSectionFull
         type="policy"
         currentId={currentPolicyId}
+        currentLabel={simulation.policy.label || undefined}
         countryId={countryId}
         onQuickSelectPolicy={onQuickSelectPolicy}
         onSelectSavedPolicy={onSelectSavedPolicy}
@@ -136,6 +139,7 @@ export function SimulationBlockFull({
       <IngredientSectionFull
         type="population"
         currentId={currentPopulationId}
+        currentLabel={populationLabel}
         countryId={countryId}
         onQuickSelectPopulation={onQuickSelectPopulation}
         onSelectRecentPopulation={onSelectRecentPopulation}

@@ -230,7 +230,7 @@ export function PopulationBrowseModal({
           geographyId: region.value,
         }
       : {
-          id: countryConfig.nationwideId,
+          id: countryConfig.geographyId,
           countryId,
           scope: 'national',
           geographyId: countryConfig.geographyId,

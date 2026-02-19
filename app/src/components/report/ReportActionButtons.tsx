@@ -43,9 +43,14 @@ export function ReportActionButtons({
 
   return (
     <>
-      <Button variant="ghost" size="icon" aria-label="Edit report name" onClick={onEdit}>
-        <IconPencil size={18} />
-      </Button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button variant="ghost" size="icon" aria-label="Rename report" onClick={onEdit}>
+            <IconPencil size={18} />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="bottom">Rename report</TooltipContent>
+      </Tooltip>
       <Tooltip>
         <TooltipTrigger asChild>
           <Button variant="ghost" size="icon" aria-label="Modify report" onClick={onModify}>
@@ -54,9 +59,14 @@ export function ReportActionButtons({
         </TooltipTrigger>
         <TooltipContent side="bottom">Modify report</TooltipContent>
       </Tooltip>
-      <Button variant="ghost" size="icon" aria-label="Share report" onClick={onShare}>
-        <IconShare size={18} />
-      </Button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button variant="ghost" size="icon" aria-label="Share report" onClick={onShare}>
+            <IconShare size={18} />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="bottom">Share report</TooltipContent>
+      </Tooltip>
     </>
   );
 }

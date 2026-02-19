@@ -14,6 +14,7 @@ import {
 import { Box, Group, Text } from '@mantine/core';
 import { colors, spacing } from '@/designTokens';
 import { COUNTRY_CONFIG, FONT_SIZES, INGREDIENT_COLORS } from '../constants';
+import { isCurrentLaw } from '../currentLaw';
 import { styles } from '../styles';
 import type { IngredientSectionProps } from '../types';
 import { BrowseMoreChip, OptionChipSquare } from './chips';
@@ -139,17 +140,17 @@ export function IngredientSection({
                 icon={
                   <IconScale
                     size={iconSize}
-                    color={currentId === 'current-law' ? colorConfig.icon : colors.gray[500]}
+                    color={isCurrentLaw(currentId) ? colorConfig.icon : colors.gray[500]}
                   />
                 }
                 label="Current law"
                 description="No changes"
-                isSelected={currentId === 'current-law'}
+                isSelected={isCurrentLaw(currentId)}
                 onClick={() => {
-                  if (currentId === 'current-law' && onDeselectPolicy) {
+                  if (isCurrentLaw(currentId) && onDeselectPolicy) {
                     onDeselectPolicy();
                   } else {
-                    onQuickSelectPolicy('current-law');
+                    onQuickSelectPolicy();
                   }
                 }}
                 colorConfig={colorConfig}
@@ -199,15 +200,15 @@ export function IngredientSection({
                     countryId={countryId}
                     size={iconSize}
                     color={
-                      currentId === countryConfig.nationwideId ? colorConfig.icon : colors.gray[500]
+                      currentId === countryConfig.geographyId ? colorConfig.icon : colors.gray[500]
                     }
                   />
                 }
                 label={countryConfig.nationwideTitle}
                 description={countryConfig.nationwideSubtitle}
-                isSelected={currentId === countryConfig.nationwideId}
+                isSelected={currentId === countryConfig.geographyId}
                 onClick={() => {
-                  if (currentId === countryConfig.nationwideId && onDeselectPopulation) {
+                  if (currentId === countryConfig.geographyId && onDeselectPopulation) {
                     onDeselectPopulation();
                   } else {
                     onQuickSelectPopulation('nationwide');

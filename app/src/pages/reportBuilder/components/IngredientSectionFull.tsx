@@ -21,6 +21,7 @@ import {
 import { Box, Group, Text } from '@mantine/core';
 import { colors, spacing } from '@/designTokens';
 import { COUNTRY_CONFIG, FONT_SIZES, INGREDIENT_COLORS } from '../constants';
+import { CURRENT_LAW_LABEL, isCurrentLaw } from '../currentLaw';
 import { styles } from '../styles';
 import type { IngredientSectionProps } from '../types';
 import { CountryMapIcon } from './shared';
@@ -40,6 +41,7 @@ export function IngredientSectionFull({
   inheritedPopulationType,
   savedPolicies = [],
   recentPopulations = [],
+  currentLabel,
 }: IngredientSectionProps) {
   const countryConfig = COUNTRY_CONFIG[countryId] || COUNTRY_CONFIG.us;
   const colorConfig = INGREDIENT_COLORS[type];
@@ -60,8 +62,8 @@ export function IngredientSectionFull({
     if (type !== 'policy' || !currentId) {
       return null;
     }
-    if (currentId === 'current-law') {
-      return { label: 'Current law', description: 'No changes' };
+    if (isCurrentLaw(currentId)) {
+      return { label: CURRENT_LAW_LABEL, description: 'No changes' };
     }
     const saved = savedPolicies.find((p) => p.id === currentId);
     if (saved) {
@@ -70,7 +72,7 @@ export function IngredientSectionFull({
         description: `${saved.paramCount} param${saved.paramCount !== 1 ? 's' : ''} changed`,
       };
     }
-    return { label: `Policy #${currentId}`, description: '' };
+    return { label: currentLabel || `Policy #${currentId}`, description: '' };
   })();
 
   // Determine what's currently selected for population
@@ -78,7 +80,7 @@ export function IngredientSectionFull({
     if (type !== 'population' || !currentId) {
       return null;
     }
-    if (currentId === countryConfig.nationwideId) {
+    if (currentId === countryConfig.geographyId) {
       return {
         label: countryConfig.nationwideTitle,
         description: countryConfig.nationwideSubtitle,
@@ -93,7 +95,11 @@ export function IngredientSectionFull({
         populationType: recent.type,
       };
     }
-    return { label: `Population #${currentId}`, description: '', populationType: 'geography' };
+    return {
+      label: currentLabel || `Population #${currentId}`,
+      description: '',
+      populationType: 'geography',
+    };
   })();
 
   const hasSelection =
@@ -234,7 +240,7 @@ export function IngredientSectionFull({
             }}
           >
             {type === 'policy' &&
-              (currentId === 'current-law' ? (
+              (isCurrentLaw(currentId) ? (
                 <IconScale size={18} color={colorConfig.icon} />
               ) : (
                 <IconFileDescription size={18} color={colorConfig.icon} />
