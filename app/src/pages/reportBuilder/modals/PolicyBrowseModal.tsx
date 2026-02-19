@@ -34,6 +34,7 @@ import { countPolicyModifications } from '@/utils/countParameterChanges';
 import { formatLabelParts, getHierarchicalLabelsFromTree } from '@/utils/parameterLabels';
 import { EditableLabel } from '../components/EditableLabel';
 import { FONT_SIZES, INGREDIENT_COLORS } from '../constants';
+import { createCurrentLawPolicy } from '../currentLaw';
 import { BrowseModalTemplate, CreationModeFooter } from './BrowseModalTemplate';
 import {
   PolicyBrowseContent,
@@ -188,7 +189,7 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
 
   // Handle current law selection
   const handleSelectCurrentLaw = () => {
-    onSelect({ id: 'current-law', label: 'Current law', parameters: [] });
+    onSelect(createCurrentLawPolicy());
     onClose();
   };
 

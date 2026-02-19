@@ -11,6 +11,7 @@ import type {
 import type { UserReport } from '@/types/ingredients/UserReport';
 import type { UserSimulation } from '@/types/ingredients/UserSimulation';
 import type { SimulationStateProps } from '@/types/pathwayState';
+import { CURRENT_LAW_LABEL, fromApiPolicyId, isCurrentLaw } from '../currentLaw';
 import type { ReportBuilderState } from '../types';
 
 interface HydrateArgs {
@@ -46,13 +47,15 @@ export function hydrateReportBuilderState({
     const label = userSim?.label || `Simulation #${index + 1}`;
 
     // Hydrate policy
-    const isCurrentLaw = sim.policyId === currentLawId.toString();
+    const resolvedPolicyId = sim.policyId ? fromApiPolicyId(sim.policyId, currentLawId) : undefined;
     const policy = policies.find((p) => p.id === sim.policyId);
     const userPolicy = userPolicies?.find((up) => up.policyId === sim.policyId);
 
     const policyState = {
-      id: isCurrentLaw ? 'current-law' : sim.policyId,
-      label: isCurrentLaw ? 'Current law' : userPolicy?.label || policy?.label || null,
+      id: resolvedPolicyId,
+      label: isCurrentLaw(resolvedPolicyId)
+        ? CURRENT_LAW_LABEL
+        : userPolicy?.label || policy?.label || null,
       parameters: policy?.parameters || [],
     };
 

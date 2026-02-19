@@ -51,15 +51,26 @@ export function ReportActionButtons({
 
   return (
     <>
-      <ActionIcon
-        variant="subtle"
-        color="gray"
-        size="lg"
-        aria-label="Edit report name"
-        onClick={onEdit}
+      <Tooltip
+        label="Rename report"
+        position="bottom"
+        styles={{
+          tooltip: {
+            backgroundColor: colors.gray[700],
+            fontSize: typography.fontSize.xs,
+          },
+        }}
       >
-        <IconPencil size={18} />
-      </ActionIcon>
+        <ActionIcon
+          variant="subtle"
+          color="gray"
+          size="lg"
+          aria-label="Edit report name"
+          onClick={onEdit}
+        >
+          <IconPencil size={18} />
+        </ActionIcon>
+      </Tooltip>
       <Tooltip
         label="Modify report"
         position="bottom"
@@ -80,15 +91,26 @@ export function ReportActionButtons({
           <IconSettings size={18} />
         </ActionIcon>
       </Tooltip>
-      <ActionIcon
-        variant="subtle"
-        color="gray"
-        size="lg"
-        aria-label="Share report"
-        onClick={onShare}
+      <Tooltip
+        label="Share report"
+        position="bottom"
+        styles={{
+          tooltip: {
+            backgroundColor: colors.gray[700],
+            fontSize: typography.fontSize.xs,
+          },
+        }}
       >
-        <IconShare size={18} />
-      </ActionIcon>
+        <ActionIcon
+          variant="subtle"
+          color="gray"
+          size="lg"
+          aria-label="Share report"
+          onClick={onShare}
+        >
+          <IconShare size={18} />
+        </ActionIcon>
+      </Tooltip>
     </>
   );
 }

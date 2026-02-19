@@ -19,6 +19,7 @@ import { RootState } from '@/store';
 import { Report } from '@/types/ingredients/Report';
 import { Simulation } from '@/types/ingredients/Simulation';
 import { SimulationStateProps } from '@/types/pathwayState';
+import { toApiPolicyId } from '../currentLaw';
 import { ReportBuilderState } from '../types';
 
 interface UseReportSubmissionArgs {
@@ -63,7 +64,7 @@ function convertToSimulation(
     id: simulationId,
     countryId,
     apiVersion: undefined,
-    policyId: policyId === 'current-law' ? currentLawId.toString() : policyId,
+    policyId: toApiPolicyId(policyId, currentLawId),
     populationId,
     populationType,
     label: simState.label,
@@ -98,8 +99,9 @@ export function useReportSubmission({
       const simulations: (Simulation | null)[] = [];
 
       for (const simState of reportState.simulations) {
-        const policyId =
-          simState.policy?.id === 'current-law' ? currentLawId.toString() : simState.policy?.id;
+        const policyId = simState.policy?.id
+          ? toApiPolicyId(simState.policy.id, currentLawId)
+          : undefined;
 
         if (!policyId) {
           console.error('[useReportSubmission] Simulation missing policy ID');

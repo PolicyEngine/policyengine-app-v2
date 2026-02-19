@@ -37,6 +37,7 @@ import { formatLabelParts, getHierarchicalLabels } from '@/utils/parameterLabels
 import { formatParameterValue } from '@/utils/policyTableHelpers';
 import { CountryMapIcon } from '../components/shared/CountryMapIcon';
 import { COUNTRY_CONFIG, FONT_SIZES, INGREDIENT_COLORS } from '../constants';
+import { createCurrentLawPolicy } from '../currentLaw';
 import { IngredientType } from '../types';
 
 interface IngredientPickerModalProps {
@@ -92,7 +93,7 @@ export function IngredientPickerModal({
   };
 
   const handleSelectCurrentLaw = () => {
-    onSelect({ id: 'current-law', label: 'Current law', parameters: [] });
+    onSelect(createCurrentLawPolicy());
     onClose();
   };
 
@@ -479,7 +480,7 @@ export function IngredientPickerModal({
               style={{ cursor: 'pointer' }}
               onClick={() =>
                 handleSelectGeography(
-                  countryConfig.nationwideId,
+                  countryConfig.geographyId,
                   countryConfig.nationwideLabel,
                   'national'
                 )

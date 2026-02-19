@@ -159,7 +159,7 @@ export interface IngredientSectionProps {
   type: IngredientType;
   currentId?: string;
   countryId?: 'us' | 'uk';
-  onQuickSelectPolicy?: (type: 'current-law') => void;
+  onQuickSelectPolicy?: () => void;
   onSelectSavedPolicy?: (id: string, label: string, paramCount: number) => void;
   onQuickSelectPopulation?: (type: 'nationwide') => void;
   onSelectRecentPopulation?: (population: PopulationStateProps) => void;
@@ -171,6 +171,7 @@ export interface IngredientSectionProps {
   inheritedPopulationType?: 'household' | 'nationwide' | null;
   savedPolicies?: SavedPolicy[];
   recentPopulations?: RecentPopulation[];
+  currentLabel?: string;
 }
 
 export interface SimulationBlockProps {
