@@ -19,7 +19,10 @@ export const FONT_SIZES = {
 // INGREDIENT COLORS
 // ============================================================================
 
-export const INGREDIENT_COLORS: Record<'policy' | 'population' | 'dynamics', IngredientColorConfig> = {
+export const INGREDIENT_COLORS: Record<
+  'policy' | 'population' | 'dynamics',
+  IngredientColorConfig
+> = {
   policy: {
     icon: colors.secondary[600],
     bg: colors.secondary[50],

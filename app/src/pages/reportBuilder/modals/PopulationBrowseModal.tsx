@@ -6,7 +6,14 @@
  * - Creation mode: HouseholdCreationContent + PopulationStatusHeader
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { IconChevronRight, IconFolder, IconHome, IconPlus, IconStar, IconUsers } from '@tabler/icons-react';
+import {
+  IconChevronRight,
+  IconFolder,
+  IconHome,
+  IconPlus,
+  IconStar,
+  IconUsers,
+} from '@tabler/icons-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
 import { Box, Group, Paper, Stack, Text } from '@mantine/core';
@@ -14,6 +21,7 @@ import { HouseholdAdapter } from '@/adapters/HouseholdAdapter';
 import { geographyUsageStore, householdUsageStore } from '@/api/usageTracking';
 import { UKOutlineIcon, USOutlineIcon } from '@/components/icons/CountryOutlineIcons';
 import { CURRENT_YEAR, MOCK_USER_ID } from '@/constants';
+import { colors, spacing } from '@/designTokens';
 import { useCreateHousehold } from '@/hooks/useCreateHousehold';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useUserHouseholds } from '@/hooks/useUserHousehold';
@@ -34,7 +42,6 @@ import {
   getUSStates,
   RegionOption,
 } from '@/utils/regionStrategies';
-import { colors, spacing } from '@/designTokens';
 import { COUNTRY_CONFIG, FONT_SIZES, INGREDIENT_COLORS } from '../constants';
 import { PopulationCategory } from '../types';
 import { BrowseModalTemplate, CreationModeFooter } from './BrowseModalTemplate';
@@ -91,7 +98,9 @@ export function PopulationBrowseModal({
 
   // Derive marital status and number of children from household draft
   const householdPeople = useMemo(() => {
-    if (!householdDraft) {return [];}
+    if (!householdDraft) {
+      return [];
+    }
     return Object.keys(householdDraft.householdData.people || {});
   }, [householdDraft]);
 
@@ -170,7 +179,9 @@ export function PopulationBrowseModal({
 
   // Transform households with usage tracking sort
   const sortedHouseholds = useMemo(() => {
-    if (!households) {return [];}
+    if (!households) {
+      return [];
+    }
 
     return [...households]
       .map((h) => {
@@ -193,13 +204,17 @@ export function PopulationBrowseModal({
 
   // Filter regions/households based on search
   const filteredRegions = useMemo(() => {
-    if (!searchQuery.trim()) {return activeRegions;}
+    if (!searchQuery.trim()) {
+      return activeRegions;
+    }
     const query = searchQuery.toLowerCase();
     return activeRegions.filter((r) => r.label.toLowerCase().includes(query));
   }, [activeRegions, searchQuery]);
 
   const filteredHouseholds = useMemo(() => {
-    if (!searchQuery.trim()) {return sortedHouseholds;}
+    if (!searchQuery.trim()) {
+      return sortedHouseholds;
+    }
     const query = searchQuery.toLowerCase();
     return sortedHouseholds.filter((h) => h.label.toLowerCase().includes(query));
   }, [sortedHouseholds, searchQuery]);
@@ -279,7 +294,9 @@ export function PopulationBrowseModal({
   // Handle marital status change
   const handleMaritalStatusChange = useCallback(
     (newStatus: 'single' | 'married') => {
-      if (!householdDraft) {return;}
+      if (!householdDraft) {
+        return;
+      }
 
       const builder = new HouseholdBuilder(countryId as 'us' | 'uk', reportYear);
       builder.loadHousehold(householdDraft);
@@ -301,7 +318,9 @@ export function PopulationBrowseModal({
   // Handle number of children change
   const handleNumChildrenChange = useCallback(
     (newCount: number) => {
-      if (!householdDraft) {return;}
+      if (!householdDraft) {
+        return;
+      }
 
       const builder = new HouseholdBuilder(countryId as 'us' | 'uk', reportYear);
       builder.loadHousehold(householdDraft);
@@ -379,14 +398,18 @@ export function PopulationBrowseModal({
 
   // Get section title
   const getSectionTitle = () => {
-    if (activeCategory === 'my-households') {return 'My households';}
+    if (activeCategory === 'my-households') {
+      return 'My households';
+    }
     const category = geographyCategories.find((c) => c.id === activeCategory);
     return category?.label || 'Regions';
   };
 
   // Get item count for display
   const getItemCount = () => {
-    if (activeCategory === 'my-households') {return filteredHouseholds.length;}
+    if (activeCategory === 'my-households') {
+      return filteredHouseholds.length;
+    }
     return filteredRegions.length;
   };
 
@@ -448,7 +471,13 @@ export function PopulationBrowseModal({
         ],
       },
     ],
-    [activeCategory, isCreationMode, geographyCategories, sortedHouseholds.length, handleEnterCreationMode]
+    [
+      activeCategory,
+      isCreationMode,
+      geographyCategories,
+      sortedHouseholds.length,
+      handleEnterCreationMode,
+    ]
   );
 
   // ========== Main Content Rendering ==========

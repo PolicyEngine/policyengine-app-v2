@@ -81,7 +81,9 @@ export function EditableLabel({
             value={inputValue}
             onChange={(e) => setInputValue(e.currentTarget.value)}
             onKeyDown={(e) => {
-              if (e.key === 'Enter') {handleSubmit();}
+              if (e.key === 'Enter') {
+                handleSubmit();
+              }
               if (e.key === 'Escape') {
                 setInputValue(value);
                 setIsEditing(false);

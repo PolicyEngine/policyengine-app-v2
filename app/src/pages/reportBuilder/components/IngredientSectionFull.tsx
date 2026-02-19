@@ -8,23 +8,21 @@
  * Same props interface as IngredientSection for drop-in replacement.
  */
 
-import { Box, Group, Text } from '@mantine/core';
 import {
-  IconScale,
-  IconUsers,
   IconChartLine,
-  IconHome,
   IconFileDescription,
-  IconSparkles,
+  IconHome,
   IconPlus,
+  IconScale,
+  IconSparkles,
+  IconUsers,
   IconX,
 } from '@tabler/icons-react';
-
+import { Box, Group, Text } from '@mantine/core';
 import { colors, spacing } from '@/designTokens';
-
-import type { IngredientSectionProps } from '../types';
-import { FONT_SIZES, INGREDIENT_COLORS, COUNTRY_CONFIG } from '../constants';
+import { COUNTRY_CONFIG, FONT_SIZES, INGREDIENT_COLORS } from '../constants';
 import { styles } from '../styles';
+import type { IngredientSectionProps } from '../types';
 import { CountryMapIcon } from './shared';
 
 export function IngredientSectionFull({
@@ -59,8 +57,12 @@ export function IngredientSectionFull({
 
   // Determine what's currently selected for policy
   const selectedPolicyLabel = (() => {
-    if (type !== 'policy' || !currentId) {return null;}
-    if (currentId === 'current-law') {return { label: 'Current law', description: 'No changes' };}
+    if (type !== 'policy' || !currentId) {
+      return null;
+    }
+    if (currentId === 'current-law') {
+      return { label: 'Current law', description: 'No changes' };
+    }
     const saved = savedPolicies.find((p) => p.id === currentId);
     if (saved) {
       return {
@@ -73,18 +75,29 @@ export function IngredientSectionFull({
 
   // Determine what's currently selected for population
   const selectedPopulationLabel = (() => {
-    if (type !== 'population' || !currentId) {return null;}
+    if (type !== 'population' || !currentId) {
+      return null;
+    }
     if (currentId === countryConfig.nationwideId) {
-      return { label: countryConfig.nationwideTitle, description: countryConfig.nationwideSubtitle, populationType: 'geography' };
+      return {
+        label: countryConfig.nationwideTitle,
+        description: countryConfig.nationwideSubtitle,
+        populationType: 'geography',
+      };
     }
     const recent = recentPopulations.find((p) => p.id === currentId);
     if (recent) {
-      return { label: recent.label, description: recent.type === 'household' ? 'Household' : 'Geography', populationType: recent.type };
+      return {
+        label: recent.label,
+        description: recent.type === 'household' ? 'Household' : 'Geography',
+        populationType: recent.type,
+      };
     }
     return { label: `Population #${currentId}`, description: '', populationType: 'geography' };
   })();
 
-  const hasSelection = type === 'policy' ? !!currentId : type === 'population' ? !!currentId : false;
+  const hasSelection =
+    type === 'policy' ? !!currentId : type === 'population' ? !!currentId : false;
 
   const handleEmptyClick = () => {
     if (type === 'policy') {
@@ -121,12 +134,14 @@ export function IngredientSectionFull({
         >
           <IconComponent size={16} color={colorConfig.icon} stroke={2} />
         </Box>
-        <Text fw={600} c={colorConfig.icon} style={{ fontSize: FONT_SIZES.normal, userSelect: 'none' }}>
+        <Text
+          fw={600}
+          c={colorConfig.icon}
+          style={{ fontSize: FONT_SIZES.normal, userSelect: 'none' }}
+        >
           {typeLabels[type]}
         </Text>
-        {isInherited && (
-          <Text style={styles.inheritedBadge}>(inherited from baseline)</Text>
-        )}
+        {isInherited && <Text style={styles.inheritedBadge}>(inherited from baseline)</Text>}
       </Box>
 
       {/* Content area */}
@@ -183,7 +198,9 @@ export function IngredientSectionFull({
           </Box>
           <Box style={{ flex: 1 }}>
             <Text fw={600} c={colors.gray[600]} style={{ fontSize: FONT_SIZES.normal }}>
-              {inheritedPopulationType === 'household' ? 'Household' : countryConfig.nationwideTitle}
+              {inheritedPopulationType === 'household'
+                ? 'Household'
+                : countryConfig.nationwideTitle}
             </Text>
             <Text c={colors.gray[400]} style={{ fontSize: FONT_SIZES.small }}>
               Inherited from baseline
@@ -216,24 +233,30 @@ export function IngredientSectionFull({
               flexShrink: 0,
             }}
           >
-            {type === 'policy' && (
-              currentId === 'current-law'
-                ? <IconScale size={18} color={colorConfig.icon} />
-                : <IconFileDescription size={18} color={colorConfig.icon} />
-            )}
-            {type === 'population' && (
-              selectedPopulationLabel?.populationType === 'household'
-                ? <IconHome size={18} color={colorConfig.icon} />
-                : <CountryMapIcon countryId={countryId} size={18} color={colorConfig.icon} />
-            )}
+            {type === 'policy' &&
+              (currentId === 'current-law' ? (
+                <IconScale size={18} color={colorConfig.icon} />
+              ) : (
+                <IconFileDescription size={18} color={colorConfig.icon} />
+              ))}
+            {type === 'population' &&
+              (selectedPopulationLabel?.populationType === 'household' ? (
+                <IconHome size={18} color={colorConfig.icon} />
+              ) : (
+                <CountryMapIcon countryId={countryId} size={18} color={colorConfig.icon} />
+              ))}
           </Box>
           <Box style={{ flex: 1, minWidth: 0 }}>
             <Text fw={600} c={colorConfig.icon} style={{ fontSize: FONT_SIZES.normal }}>
               {type === 'policy' ? selectedPolicyLabel?.label : selectedPopulationLabel?.label}
             </Text>
-            {(type === 'policy' ? selectedPolicyLabel?.description : selectedPopulationLabel?.description) && (
+            {(type === 'policy'
+              ? selectedPolicyLabel?.description
+              : selectedPopulationLabel?.description) && (
               <Text c={colors.gray[500]} style={{ fontSize: FONT_SIZES.small }}>
-                {type === 'policy' ? selectedPolicyLabel?.description : selectedPopulationLabel?.description}
+                {type === 'policy'
+                  ? selectedPolicyLabel?.description
+                  : selectedPopulationLabel?.description}
               </Text>
             )}
           </Box>

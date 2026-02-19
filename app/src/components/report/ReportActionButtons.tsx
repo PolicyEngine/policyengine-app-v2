@@ -1,4 +1,4 @@
-import { IconBookmark, IconPencil, IconShare } from '@tabler/icons-react';
+import { IconBookmark, IconPencil, IconSettings, IconShare } from '@tabler/icons-react';
 import { ActionIcon, Tooltip } from '@mantine/core';
 import { colors, typography } from '@/designTokens';
 
@@ -7,6 +7,7 @@ interface ReportActionButtonsProps {
   onShare?: () => void;
   onSave?: () => void;
   onEdit?: () => void;
+  onModify?: () => void;
 }
 
 /**
@@ -21,6 +22,7 @@ export function ReportActionButtons({
   onShare,
   onSave,
   onEdit,
+  onModify,
 }: ReportActionButtonsProps) {
   if (isSharedView) {
     return (
@@ -58,6 +60,26 @@ export function ReportActionButtons({
       >
         <IconPencil size={18} />
       </ActionIcon>
+      <Tooltip
+        label="Modify report"
+        position="bottom"
+        styles={{
+          tooltip: {
+            backgroundColor: colors.gray[700],
+            fontSize: typography.fontSize.xs,
+          },
+        }}
+      >
+        <ActionIcon
+          variant="subtle"
+          color="gray"
+          size="lg"
+          aria-label="Modify report"
+          onClick={onModify}
+        >
+          <IconSettings size={18} />
+        </ActionIcon>
+      </Tooltip>
       <ActionIcon
         variant="subtle"
         color="gray"

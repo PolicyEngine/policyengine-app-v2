@@ -3,14 +3,12 @@
  */
 
 import { useState } from 'react';
-import { Box, Text } from '@mantine/core';
 import { IconPlus } from '@tabler/icons-react';
-
+import { Box, Text } from '@mantine/core';
 import { colors } from '@/designTokens';
-
-import type { AddSimulationCardProps } from '../types';
 import { FONT_SIZES } from '../constants';
 import { styles } from '../styles';
+import type { AddSimulationCardProps } from '../types';
 
 export function AddSimulationCard({ onClick, disabled }: AddSimulationCardProps) {
   const [isHovered, setIsHovered] = useState(false);
@@ -52,11 +50,7 @@ export function AddSimulationCard({ onClick, disabled }: AddSimulationCardProps)
       >
         Add reform simulation
       </Text>
-      <Text
-        c="dimmed"
-        ta="center"
-        style={{ fontSize: FONT_SIZES.small, maxWidth: 200 }}
-      >
+      <Text c="dimmed" ta="center" style={{ fontSize: FONT_SIZES.small, maxWidth: 200 }}>
         Compare policy changes against your baseline
       </Text>
     </Box>

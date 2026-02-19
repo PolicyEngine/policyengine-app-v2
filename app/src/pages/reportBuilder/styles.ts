@@ -2,7 +2,7 @@
  * Shared styles for ReportBuilder components
  */
 import { colors, spacing, typography } from '@/designTokens';
-import { FONT_SIZES, BROWSE_MODAL_CONFIG } from './constants';
+import { BROWSE_MODAL_CONFIG, FONT_SIZES } from './constants';
 
 // ============================================================================
 // PAGE STYLES

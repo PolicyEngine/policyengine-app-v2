@@ -5,12 +5,12 @@
  * Accepts all logic via props so different modes (setup, modify) can compose it.
  */
 import { Box } from '@mantine/core';
-import type { SimulationBlockProps } from './SimulationBlock';
-import type { IngredientPickerState, ReportBuilderState, TopBarAction } from '../types';
 import { styles } from '../styles';
+import type { IngredientPickerState, ReportBuilderState, TopBarAction } from '../types';
 import { ReportMetaPanel } from './ReportMetaPanel';
-import { SimulationCanvas } from './SimulationCanvas';
+import type { SimulationBlockProps } from './SimulationBlock';
 import { SimulationBlockFull } from './SimulationBlockFull';
+import { SimulationCanvas } from './SimulationCanvas';
 import { TopBar } from './TopBar';
 
 interface ReportBuilderShellProps {

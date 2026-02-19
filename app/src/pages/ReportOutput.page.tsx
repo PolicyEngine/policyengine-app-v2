@@ -231,6 +231,13 @@ export default function ReportOutputPage() {
     }
   };
 
+  // Handle modify button click - navigate to report builder with this report
+  const handleModify = () => {
+    if (userReportId) {
+      navigate(`/${countryId}/report-builder/${userReportId}`);
+    }
+  };
+
   // Show loading state while fetching data
   if (dataLoading) {
     return (
@@ -349,6 +356,7 @@ export default function ReportOutputPage() {
         isSharedView={isSharedView}
         onShare={handleShare}
         onSave={handleSave}
+        onModify={!isSharedView ? handleModify : undefined}
       >
         <ErrorBoundary
           fallback={(error, errorInfo) => (

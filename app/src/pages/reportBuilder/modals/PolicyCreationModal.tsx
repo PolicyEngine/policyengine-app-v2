@@ -7,7 +7,6 @@
  * - Policy creation with API integration
  */
 
-
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Box, Button, Group, Modal, Stack } from '@mantine/core';

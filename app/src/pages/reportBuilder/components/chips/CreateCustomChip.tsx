@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { Box, Text } from '@mantine/core';
 import { IconPlus } from '@tabler/icons-react';
+import { Box, Text } from '@mantine/core';
 import { colors } from '@/designTokens';
-import { chipStyles } from '../../styles';
 import { FONT_SIZES } from '../../constants';
+import { chipStyles } from '../../styles';
 import { CreateCustomChipProps } from '../../types';
 
 export function CreateCustomChip({ label, onClick, variant, colorConfig }: CreateCustomChipProps) {
@@ -21,10 +21,7 @@ export function CreateCustomChip({ label, onClick, variant, colorConfig }: Creat
         onMouseLeave={() => setIsHovered(false)}
         onClick={onClick}
       >
-        <IconPlus
-          size={20}
-          color={isHovered ? colorConfig.icon : colors.gray[400]}
-        />
+        <IconPlus size={20} color={isHovered ? colorConfig.icon : colors.gray[400]} />
         <Text
           ta="center"
           fw={600}

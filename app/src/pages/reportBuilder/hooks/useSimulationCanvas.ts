@@ -10,42 +10,40 @@
  * The component that consumes this hook is responsible only for rendering.
  */
 
-import { useState, useMemo, useCallback } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
-
-import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { useUserPolicies } from '@/hooks/useUserPolicy';
-import { useUserHouseholds } from '@/hooks/useUserHousehold';
-import { RootState } from '@/store';
 import { HouseholdAdapter } from '@/adapters/HouseholdAdapter';
-import {
-  getUSStates,
-  getUSCongressionalDistricts,
-  getUSPlaces,
-  getUKCountries,
-  getUKConstituencies,
-  getUKLocalAuthorities,
-  RegionOption,
-} from '@/utils/regionStrategies';
-import { generateGeographyLabel } from '@/utils/geographyUtils';
 import { geographyUsageStore, householdUsageStore } from '@/api/usageTracking';
-import { countPolicyModifications } from '@/utils/countParameterChanges';
-import { initializeSimulationState } from '@/utils/pathwayState/initializeSimulationState';
-import { initializePolicyState } from '@/utils/pathwayState/initializePolicyState';
-import { initializePopulationState } from '@/utils/pathwayState/initializePopulationState';
+import { MOCK_USER_ID } from '@/constants';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useUserHouseholds } from '@/hooks/useUserHousehold';
+import { useUserPolicies } from '@/hooks/useUserPolicy';
+import { RootState } from '@/store';
 import { Geography } from '@/types/ingredients/Geography';
 import { PolicyStateProps, PopulationStateProps } from '@/types/pathwayState';
-import { MOCK_USER_ID } from '@/constants';
-
+import { countPolicyModifications } from '@/utils/countParameterChanges';
+import { generateGeographyLabel } from '@/utils/geographyUtils';
+import { initializePolicyState } from '@/utils/pathwayState/initializePolicyState';
+import { initializePopulationState } from '@/utils/pathwayState/initializePopulationState';
+import { initializeSimulationState } from '@/utils/pathwayState/initializeSimulationState';
+import {
+  getUKConstituencies,
+  getUKCountries,
+  getUKLocalAuthorities,
+  getUSCongressionalDistricts,
+  getUSPlaces,
+  getUSStates,
+  RegionOption,
+} from '@/utils/regionStrategies';
+import { getSamplePopulations } from '../constants';
 import type {
-  ReportBuilderState,
   IngredientPickerState,
   IngredientType,
-  SavedPolicy,
-  RecentPopulation,
   PolicyBrowseState,
+  RecentPopulation,
+  ReportBuilderState,
+  SavedPolicy,
 } from '../types';
-import { getSamplePopulations } from '../constants';
 
 interface UseSimulationCanvasArgs {
   reportState: ReportBuilderState;
@@ -71,8 +69,12 @@ export function useSimulationCanvas({
   // Show loading skeleton until all data sources have resolved.
   // Region options check guards against a race condition where metadata initial
   // state has loading=false but region=[] before the actual data arrives.
-  const isInitialLoading = policiesLoading || householdsLoading || metadataLoading ||
-    policies === undefined || households === undefined ||
+  const isInitialLoading =
+    policiesLoading ||
+    householdsLoading ||
+    metadataLoading ||
+    policies === undefined ||
+    households === undefined ||
     regionOptions.length === 0;
 
   // ---------------------------------------------------------------------------
@@ -121,15 +123,24 @@ export function useSimulationCanvas({
     const results: Array<RecentPopulation & { timestamp: string }> = [];
 
     const regions = regionOptions || [];
-    const allRegions: RegionOption[] = countryId === 'us'
-      ? [...getUSStates(regions), ...getUSCongressionalDistricts(regions), ...getUSPlaces()]
-      : [...getUKCountries(regions), ...getUKConstituencies(regions), ...getUKLocalAuthorities(regions)];
+    const allRegions: RegionOption[] =
+      countryId === 'us'
+        ? [...getUSStates(regions), ...getUSCongressionalDistricts(regions), ...getUSPlaces()]
+        : [
+            ...getUKCountries(regions),
+            ...getUKConstituencies(regions),
+            ...getUKLocalAuthorities(regions),
+          ];
 
     for (const geoId of geographyUsageStore.getRecentIds(10)) {
-      if (geoId === 'us' || geoId === 'uk') { continue; }
+      if (geoId === 'us' || geoId === 'uk') {
+        continue;
+      }
 
       const region = allRegions.find((r) => r.value === geoId);
-      if (!region) { continue; }
+      if (!region) {
+        continue;
+      }
 
       const geographyId = `${countryId}-${geoId}`;
       const geography: Geography = {
@@ -153,8 +164,12 @@ export function useSimulationCanvas({
     }
 
     for (const householdId of householdUsageStore.getRecentIds(10)) {
-      const householdData = households?.find((h) => String(h.association.householdId) === householdId);
-      if (!householdData?.household) { continue; }
+      const householdData = households?.find(
+        (h) => String(h.association.householdId) === householdId
+      );
+      if (!householdData?.household) {
+        continue;
+      }
 
       const household = HouseholdAdapter.fromMetadata(householdData.household);
       const resolvedId = household.id || householdId;
@@ -201,7 +216,7 @@ export function useSimulationCanvas({
         return { ...prev, simulations: newSimulations };
       });
     },
-    [setReportState],
+    [setReportState]
   );
 
   /** Update a single simulation's policy at `index`. */
@@ -214,7 +229,7 @@ export function useSimulationCanvas({
         ),
       }));
     },
-    [setReportState],
+    [setReportState]
   );
 
   // ---------------------------------------------------------------------------
@@ -222,24 +237,37 @@ export function useSimulationCanvas({
   // ---------------------------------------------------------------------------
 
   const handleAddSimulation = useCallback(() => {
-    if (reportState.simulations.length >= 2) { return; }
+    if (reportState.simulations.length >= 2) {
+      return;
+    }
     const newSim = initializeSimulationState();
     newSim.label = 'Reform simulation';
     newSim.population = { ...reportState.simulations[0].population };
     setReportState((prev) => ({ ...prev, simulations: [...prev.simulations, newSim] }));
   }, [reportState.simulations, setReportState]);
 
-  const handleRemoveSimulation = useCallback((index: number) => {
-    if (index === 0) { return; }
-    setReportState((prev) => ({ ...prev, simulations: prev.simulations.filter((_, i) => i !== index) }));
-  }, [setReportState]);
+  const handleRemoveSimulation = useCallback(
+    (index: number) => {
+      if (index === 0) {
+        return;
+      }
+      setReportState((prev) => ({
+        ...prev,
+        simulations: prev.simulations.filter((_, i) => i !== index),
+      }));
+    },
+    [setReportState]
+  );
 
-  const handleSimulationLabelChange = useCallback((index: number, label: string) => {
-    setReportState((prev) => ({
-      ...prev,
-      simulations: prev.simulations.map((sim, i) => i === index ? { ...sim, label } : sim),
-    }));
-  }, [setReportState]);
+  const handleSimulationLabelChange = useCallback(
+    (index: number, label: string) => {
+      setReportState((prev) => ({
+        ...prev,
+        simulations: prev.simulations.map((sim, i) => (i === index ? { ...sim, label } : sim)),
+      }));
+    },
+    [setReportState]
+  );
 
   // ---------------------------------------------------------------------------
   // Policy actions
@@ -249,35 +277,36 @@ export function useSimulationCanvas({
     (simulationIndex: number) => {
       updatePolicy(simulationIndex, { id: 'current-law', label: 'Current law', parameters: [] });
     },
-    [updatePolicy],
+    [updatePolicy]
   );
 
   const handleSelectSavedPolicy = useCallback(
     (simulationIndex: number, policyId: string, label: string, paramCount: number) => {
-      updatePolicy(simulationIndex, { id: policyId, label, parameters: Array(paramCount).fill({}) });
+      updatePolicy(simulationIndex, {
+        id: policyId,
+        label,
+        parameters: Array(paramCount).fill({}),
+      });
     },
-    [updatePolicy],
+    [updatePolicy]
   );
 
   const handleDeselectPolicy = useCallback(
     (simulationIndex: number) => {
       updatePolicy(simulationIndex, initializePolicyState());
     },
-    [updatePolicy],
+    [updatePolicy]
   );
 
-  const handleBrowseMorePolicies = useCallback(
-    (simulationIndex: number) => {
-      setPolicyBrowseState({ isOpen: true, simulationIndex });
-    },
-    [],
-  );
+  const handleBrowseMorePolicies = useCallback((simulationIndex: number) => {
+    setPolicyBrowseState({ isOpen: true, simulationIndex });
+  }, []);
 
   const handlePolicySelectFromBrowse = useCallback(
     (policy: PolicyStateProps) => {
       updatePolicy(policyBrowseState.simulationIndex, policy);
     },
-    [policyBrowseState.simulationIndex, updatePolicy],
+    [policyBrowseState.simulationIndex, updatePolicy]
   );
 
   const handlePolicyCreated = useCallback(
@@ -288,7 +317,7 @@ export function useSimulationCanvas({
         parameters: policy.parameters,
       });
     },
-    [updatePolicy],
+    [updatePolicy]
   );
 
   // ---------------------------------------------------------------------------
@@ -305,7 +334,7 @@ export function useSimulationCanvas({
 
       updatePopulationWithInheritance(simulationIndex, populationState);
     },
-    [countryId, updatePopulationWithInheritance],
+    [countryId, updatePopulationWithInheritance]
   );
 
   const handleSelectRecentPopulation = useCallback(
@@ -318,28 +347,25 @@ export function useSimulationCanvas({
 
       updatePopulationWithInheritance(simulationIndex, population);
     },
-    [updatePopulationWithInheritance],
+    [updatePopulationWithInheritance]
   );
 
   const handleDeselectPopulation = useCallback(
     (simulationIndex: number) => {
       updatePopulationWithInheritance(simulationIndex, initializePopulationState());
     },
-    [updatePopulationWithInheritance],
+    [updatePopulationWithInheritance]
   );
 
-  const handleBrowseMorePopulations = useCallback(
-    (simulationIndex: number) => {
-      setPopulationBrowseState({ isOpen: true, simulationIndex });
-    },
-    [],
-  );
+  const handleBrowseMorePopulations = useCallback((simulationIndex: number) => {
+    setPopulationBrowseState({ isOpen: true, simulationIndex });
+  }, []);
 
   const handlePopulationSelectFromBrowse = useCallback(
     (population: PopulationStateProps) => {
       updatePopulationWithInheritance(populationBrowseState.simulationIndex, population);
     },
-    [populationBrowseState.simulationIndex, updatePopulationWithInheritance],
+    [populationBrowseState.simulationIndex, updatePopulationWithInheritance]
   );
 
   // ---------------------------------------------------------------------------
@@ -355,7 +381,7 @@ export function useSimulationCanvas({
         updatePopulationWithInheritance(simulationIndex, item as PopulationStateProps);
       }
     },
-    [pickerState, updatePolicy, updatePopulationWithInheritance],
+    [pickerState, updatePolicy, updatePopulationWithInheritance]
   );
 
   const handleCreateCustom = useCallback(
@@ -366,7 +392,7 @@ export function useSimulationCanvas({
         window.location.href = `/${countryId}/households/create`;
       }
     },
-    [countryId],
+    [countryId]
   );
 
   // ---------------------------------------------------------------------------
@@ -375,22 +401,22 @@ export function useSimulationCanvas({
 
   const closePolicyBrowse = useCallback(
     () => setPolicyBrowseState((prev) => ({ ...prev, isOpen: false })),
-    [],
+    []
   );
 
   const closePolicyCreation = useCallback(
     () => setPolicyCreationState((prev) => ({ ...prev, isOpen: false })),
-    [],
+    []
   );
 
   const closePopulationBrowse = useCallback(
     () => setPopulationBrowseState((prev) => ({ ...prev, isOpen: false })),
-    [],
+    []
   );
 
   const closeIngredientPicker = useCallback(
     () => setPickerState((prev) => ({ ...prev, isOpen: false })),
-    [setPickerState],
+    [setPickerState]
   );
 
   // ---------------------------------------------------------------------------

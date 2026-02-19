@@ -9,7 +9,6 @@ import {
   IconMail,
   IconPlus,
   IconScale,
-  IconSettings,
   IconSettings2,
   IconUsers,
 } from '@tabler/icons-react';
@@ -35,7 +34,6 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
   const navItems = [
     { label: 'Reports', icon: IconFileDescription, path: `/${countryId}/reports` },
     { label: 'Report builder', icon: IconLayoutGrid, path: `/${countryId}/report-builder` },
-    { label: 'Modify demo', icon: IconSettings, path: `/${countryId}/modify-report-demo` },
     { label: 'Simulations', icon: IconGitBranch, path: `/${countryId}/simulations` },
     { label: 'Policies', icon: IconScale, path: `/${countryId}/policies` },
     { label: 'Households', icon: IconUsers, path: `/${countryId}/households` },

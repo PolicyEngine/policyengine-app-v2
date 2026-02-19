@@ -20,6 +20,7 @@ import {
 } from '@/types/ingredients/UserPopulation';
 import { UserReport } from '@/types/ingredients/UserReport';
 import { UserSimulation } from '@/types/ingredients/UserSimulation';
+import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
 import { findPlaceFromRegionString, getPlaceDisplayName } from '@/utils/regionStrategies';
 import { householdKeys, policyKeys, reportKeys, simulationKeys } from '../libs/queryKeys';
 import { useGeographicAssociationsByUser } from './useUserGeographic';
@@ -442,17 +443,16 @@ export const useUserReportById = (userReportId: string, options?: { enabled?: bo
   const householdSimulations = simulations.filter((s) => s.populationType === 'household');
   const householdIds = extractUniqueIds(householdSimulations, 'populationId');
 
-  const householdResults = useParallelQueries<Household>(householdIds, {
+  const householdResults = useParallelQueries<HouseholdMetadata>(householdIds, {
     queryKey: householdKeys.byId,
-    queryFn: async (id) => {
-      const metadata = await fetchHouseholdById(country, id);
-      return HouseholdAdapter.fromMetadata(metadata);
-    },
+    queryFn: async (id) => fetchHouseholdById(country, id),
     enabled: isEnabled && householdIds.length > 0,
     staleTime: 5 * 60 * 1000,
   });
 
-  const households = householdResults.queries.map((q) => q.data).filter((h): h is Household => !!h);
+  const households = householdResults.queries
+    .map((q) => (q.data ? HouseholdAdapter.fromMetadata(q.data) : undefined))
+    .filter((h): h is Household => !!h);
 
   const userHouseholds = householdAssociations?.filter((ha) =>
     households.some((h) => h.id === ha.householdId)

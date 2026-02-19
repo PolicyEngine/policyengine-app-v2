@@ -2,9 +2,9 @@
  * PolicyParameterTree - Parameter tree navigation for policy creation mode
  */
 import { useCallback, useMemo } from 'react';
-import { useSelector } from 'react-redux';
-import { Box, Text, Stack, Skeleton, NavLink, Autocomplete, ScrollArea } from '@mantine/core';
 import { IconSearch } from '@tabler/icons-react';
+import { useSelector } from 'react-redux';
+import { Autocomplete, Box, NavLink, ScrollArea, Skeleton, Stack, Text } from '@mantine/core';
 import { colors, spacing } from '@/designTokens';
 import { selectSearchableParameters } from '@/libs/metadataUtils';
 import { ParameterTreeNode } from '@/types/metadata';
@@ -38,27 +38,32 @@ export function PolicyParameterTree({
   const searchableParameters = useSelector(selectSearchableParameters);
 
   // Render nested menu recursively
-  const renderMenuItems = useCallback((items: ParameterTreeNode[]): React.ReactNode => {
-    return items
-      .filter(item => !item.name.includes('pycache'))
-      .map(item => (
-        <NavLink
-          key={item.name}
-          label={item.label}
-          active={selectedParam?.parameter === item.name}
-          opened={expandedMenuItems.has(item.name)}
-          onClick={() => onMenuItemClick(item.name)}
-          childrenOffset={16}
-          style={{ borderRadius: spacing.radius.sm }}
-        >
-          {item.children && expandedMenuItems.has(item.name) && renderMenuItems(item.children)}
-        </NavLink>
-      ));
-  }, [selectedParam?.parameter, expandedMenuItems, onMenuItemClick]);
+  const renderMenuItems = useCallback(
+    (items: ParameterTreeNode[]): React.ReactNode => {
+      return items
+        .filter((item) => !item.name.includes('pycache'))
+        .map((item) => (
+          <NavLink
+            key={item.name}
+            label={item.label}
+            active={selectedParam?.parameter === item.name}
+            opened={expandedMenuItems.has(item.name)}
+            onClick={() => onMenuItemClick(item.name)}
+            childrenOffset={16}
+            style={{ borderRadius: spacing.radius.sm }}
+          >
+            {item.children && expandedMenuItems.has(item.name) && renderMenuItems(item.children)}
+          </NavLink>
+        ));
+    },
+    [selectedParam?.parameter, expandedMenuItems, onMenuItemClick]
+  );
 
   // Memoize the rendered tree
   const renderedMenuTree = useMemo(() => {
-    if (metadataLoading || !parameterTree) {return null;}
+    if (metadataLoading || !parameterTree) {
+      return null;
+    }
     return renderMenuItems(parameterTree.children || []);
   }, [metadataLoading, parameterTree, renderMenuItems]);
 
@@ -74,7 +79,10 @@ export function PolicyParameterTree({
       }}
     >
       <Box style={{ padding: spacing.md, borderBottom: `1px solid ${colors.border.light}` }}>
-        <Text fw={600} style={{ fontSize: FONT_SIZES.small, color: colors.gray[600], marginBottom: spacing.sm }}>
+        <Text
+          fw={600}
+          style={{ fontSize: FONT_SIZES.small, color: colors.gray[600], marginBottom: spacing.sm }}
+        >
           PARAMETERS
         </Text>
         <Autocomplete

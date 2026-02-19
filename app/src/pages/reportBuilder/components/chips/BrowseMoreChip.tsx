@@ -1,12 +1,18 @@
 import { useState } from 'react';
-import { Box, Text, Stack } from '@mantine/core';
 import { IconSearch } from '@tabler/icons-react';
+import { Box, Stack, Text } from '@mantine/core';
 import { colors } from '@/designTokens';
-import { chipStyles } from '../../styles';
 import { FONT_SIZES } from '../../constants';
+import { chipStyles } from '../../styles';
 import { BrowseMoreChipProps } from '../../types';
 
-export function BrowseMoreChip({ label, description, onClick, variant, colorConfig }: BrowseMoreChipProps) {
+export function BrowseMoreChip({
+  label,
+  description,
+  onClick,
+  variant,
+  colorConfig,
+}: BrowseMoreChipProps) {
   const [isHovered, setIsHovered] = useState(false);
 
   if (variant === 'square') {
@@ -21,10 +27,7 @@ export function BrowseMoreChip({ label, description, onClick, variant, colorConf
         onMouseLeave={() => setIsHovered(false)}
         onClick={onClick}
       >
-        <IconSearch
-          size={20}
-          color={isHovered ? colorConfig.icon : colors.gray[400]}
-        />
+        <IconSearch size={20} color={isHovered ? colorConfig.icon : colors.gray[400]} />
         <Text
           ta="center"
           fw={600}

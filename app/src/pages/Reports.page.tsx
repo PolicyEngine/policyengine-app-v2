@@ -128,10 +128,16 @@ export default function ReportsPage() {
       key: 'actions',
       header: '',
       type: 'menu',
-      actions: [{ label: 'Rename', action: 'rename' }],
+      actions: [
+        { label: 'Rename', action: 'rename' },
+        { label: 'Modify', action: 'modify' },
+      ],
       onAction: (action: string, recordId: string) => {
         if (action === 'rename') {
           handleOpenRename(recordId);
+        }
+        if (action === 'modify') {
+          navigate(`/${countryId}/report-builder/${recordId}`);
         }
       },
     },

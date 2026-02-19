@@ -6,10 +6,16 @@
  * - Creation mode: PolicyCreationContent + PolicyParameterTree
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { IconChevronRight, IconFolder, IconPlus, IconScale, IconStar, IconUsers } from '@tabler/icons-react';
+import {
+  IconChevronRight,
+  IconFolder,
+  IconPlus,
+  IconScale,
+  IconStar,
+  IconUsers,
+} from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import { Box, Group, Paper, Stack, Text } from '@mantine/core';
-import { EditableLabel } from '../components/EditableLabel';
 import { PolicyAdapter } from '@/adapters';
 import { MOCK_USER_ID } from '@/constants';
 import { colors, spacing } from '@/designTokens';
@@ -26,6 +32,7 @@ import { Parameter } from '@/types/subIngredients/parameter';
 import { ValueInterval, ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
 import { countPolicyModifications } from '@/utils/countParameterChanges';
 import { formatLabelParts, getHierarchicalLabelsFromTree } from '@/utils/parameterLabels';
+import { EditableLabel } from '../components/EditableLabel';
 import { FONT_SIZES, INGREDIENT_COLORS } from '../constants';
 import { BrowseModalTemplate, CreationModeFooter } from './BrowseModalTemplate';
 import {
@@ -54,7 +61,9 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
 
   // Browse mode state
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeSection, setActiveSection] = useState<'frequently-selected' | 'my-policies' | 'public'>('frequently-selected');
+  const [activeSection, setActiveSection] = useState<
+    'frequently-selected' | 'my-policies' | 'public'
+  >('frequently-selected');
   const [selectedPolicyId, setSelectedPolicyId] = useState<string | null>(null);
   const [drawerPolicyId, setDrawerPolicyId] = useState<string | null>(null);
 
@@ -119,7 +128,9 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       result = result.filter((p) => {
-        if (p.label.toLowerCase().includes(query)) {return true;}
+        if (p.label.toLowerCase().includes(query)) {
+          return true;
+        }
         const paramDisplayNames = p.parameters
           .map((param) => {
             const hierarchicalLabels = getHierarchicalLabelsFromTree(param.name, parameterTree);
@@ -129,7 +140,9 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
           })
           .join(' ')
           .toLowerCase();
-        if (paramDisplayNames.includes(query)) {return true;}
+        if (paramDisplayNames.includes(query)) {
+          return true;
+        }
         return false;
       });
     }
@@ -138,7 +151,9 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
 
   // Get policies for current section
   const displayedPolicies = useMemo(() => {
-    if (activeSection === 'public') {return [];}
+    if (activeSection === 'public') {
+      return [];
+    }
     return filteredPolicies;
   }, [activeSection, filteredPolicies]);
 
@@ -195,7 +210,9 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
   const handleSearchSelect = useCallback(
     (paramName: string) => {
       const param = parameters[paramName];
-      if (!param || param.type !== 'parameter') {return;}
+      if (!param || param.type !== 'parameter') {
+        return;
+      }
       const pathParts = paramName.split('.');
       const newExpanded = new Set(expandedMenuItems);
       let currentPath = '';
@@ -236,7 +253,9 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
 
   // Handle value submission
   const handleValueSubmit = useCallback(() => {
-    if (!selectedParam || intervals.length === 0) {return;}
+    if (!selectedParam || intervals.length === 0) {
+      return;
+    }
     const updatedParameters = [...policyParameters];
     let existingParam = updatedParameters.find((p) => p.name === selectedParam.parameter);
     if (!existingParam) {
@@ -276,7 +295,9 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
 
   // Handle policy creation
   const handleCreatePolicy = useCallback(async () => {
-    if (!policyLabel.trim()) {return;}
+    if (!policyLabel.trim()) {
+      return;
+    }
     const policyData: Partial<Policy> = { parameters: policyParameters };
     const payload: PolicyCreationPayload = PolicyAdapter.toCreationPayload(policyData as Policy);
     try {
@@ -295,7 +316,9 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
 
   // Policy for drawer preview
   const drawerPolicy = useMemo(() => {
-    if (!drawerPolicyId) {return null;}
+    if (!drawerPolicyId) {
+      return null;
+    }
     return userPolicies.find((p) => p.id === drawerPolicyId) || null;
   }, [drawerPolicyId, userPolicies]);
 
@@ -495,9 +518,7 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
           </Text>
         </>
       ) : (
-        <Text style={{ fontSize: FONT_SIZES.small, color: colors.gray[400] }}>
-          No changes yet
-        </Text>
+        <Text style={{ fontSize: FONT_SIZES.small, color: colors.gray[400] }}>No changes yet</Text>
       )}
     </Group>
   );

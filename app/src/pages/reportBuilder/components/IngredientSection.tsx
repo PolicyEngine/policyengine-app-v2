@@ -2,23 +2,21 @@
  * IngredientSection - A section displaying policy, population, or dynamics options
  */
 
-import { Box, Group, Text } from '@mantine/core';
 import {
-  IconScale,
-  IconUsers,
   IconChartLine,
-  IconHome,
-  IconFolder,
   IconFileDescription,
+  IconFolder,
+  IconHome,
+  IconScale,
   IconSparkles,
+  IconUsers,
 } from '@tabler/icons-react';
-
+import { Box, Group, Text } from '@mantine/core';
 import { colors, spacing } from '@/designTokens';
-
-import type { IngredientSectionProps } from '../types';
-import { FONT_SIZES, INGREDIENT_COLORS, COUNTRY_CONFIG } from '../constants';
+import { COUNTRY_CONFIG, FONT_SIZES, INGREDIENT_COLORS } from '../constants';
 import { styles } from '../styles';
-import { OptionChipSquare, BrowseMoreChip } from './chips';
+import type { IngredientSectionProps } from '../types';
+import { BrowseMoreChip, OptionChipSquare } from './chips';
 import { CountryMapIcon } from './shared';
 
 export function IngredientSection({
@@ -72,12 +70,14 @@ export function IngredientSection({
         >
           <IconComponent size={16} color={colorConfig.icon} stroke={2} />
         </Box>
-        <Text fw={600} c={colorConfig.icon} style={{ fontSize: FONT_SIZES.normal, userSelect: 'none' }}>
+        <Text
+          fw={600}
+          c={colorConfig.icon}
+          style={{ fontSize: FONT_SIZES.normal, userSelect: 'none' }}
+        >
           {typeLabels[type]}
         </Text>
-        {isInherited && (
-          <Text style={styles.inheritedBadge}>(inherited from baseline)</Text>
-        )}
+        {isInherited && <Text style={styles.inheritedBadge}>(inherited from baseline)</Text>}
       </Box>
 
       {/* Chips container */}
@@ -115,14 +115,18 @@ export function IngredientSection({
               c={colors.gray[500]}
               style={{ fontSize: FONT_SIZES.small, lineHeight: 1.2 }}
             >
-              {inheritedPopulationType === 'household' ? 'Household' : countryConfig.nationwideTitle}
+              {inheritedPopulationType === 'household'
+                ? 'Household'
+                : countryConfig.nationwideTitle}
             </Text>
             <Text
               ta="center"
               c={colors.gray[400]}
               style={{ fontSize: FONT_SIZES.tiny, lineHeight: 1.2 }}
             >
-              {inheritedPopulationType === 'household' ? 'Inherited' : countryConfig.nationwideSubtitle}
+              {inheritedPopulationType === 'household'
+                ? 'Inherited'
+                : countryConfig.nationwideSubtitle}
             </Text>
           </Box>
         </Box>
@@ -132,7 +136,12 @@ export function IngredientSection({
             <>
               {/* Current law - always first */}
               <OptionChipSquare
-                icon={<IconScale size={iconSize} color={currentId === 'current-law' ? colorConfig.icon : colors.gray[500]} />}
+                icon={
+                  <IconScale
+                    size={iconSize}
+                    color={currentId === 'current-law' ? colorConfig.icon : colors.gray[500]}
+                  />
+                }
                 label="Current law"
                 description="No changes"
                 isSelected={currentId === 'current-law'}
@@ -149,7 +158,12 @@ export function IngredientSection({
               {savedPolicies.slice(0, 3).map((policy) => (
                 <OptionChipSquare
                   key={policy.id}
-                  icon={<IconFileDescription size={iconSize} color={currentId === policy.id ? colorConfig.icon : colors.gray[500]} />}
+                  icon={
+                    <IconFileDescription
+                      size={iconSize}
+                      color={currentId === policy.id ? colorConfig.icon : colors.gray[500]}
+                    />
+                  }
                   label={policy.label}
                   description={`${policy.paramCount} param${policy.paramCount !== 1 ? 's' : ''} changed`}
                   isSelected={currentId === policy.id}
@@ -180,7 +194,15 @@ export function IngredientSection({
             <>
               {/* Nationwide - always first */}
               <OptionChipSquare
-                icon={<CountryMapIcon countryId={countryId} size={iconSize} color={currentId === countryConfig.nationwideId ? colorConfig.icon : colors.gray[500]} />}
+                icon={
+                  <CountryMapIcon
+                    countryId={countryId}
+                    size={iconSize}
+                    color={
+                      currentId === countryConfig.nationwideId ? colorConfig.icon : colors.gray[500]
+                    }
+                  />
+                }
                 label={countryConfig.nationwideTitle}
                 description={countryConfig.nationwideSubtitle}
                 isSelected={currentId === countryConfig.nationwideId}
@@ -197,9 +219,18 @@ export function IngredientSection({
               {recentPopulations.slice(0, 4).map((pop) => (
                 <OptionChipSquare
                   key={pop.id}
-                  icon={pop.type === 'household'
-                    ? <IconHome size={iconSize} color={currentId === pop.id ? colorConfig.icon : colors.gray[500]} />
-                    : <IconFolder size={iconSize} color={currentId === pop.id ? colorConfig.icon : colors.gray[500]} />
+                  icon={
+                    pop.type === 'household' ? (
+                      <IconHome
+                        size={iconSize}
+                        color={currentId === pop.id ? colorConfig.icon : colors.gray[500]}
+                      />
+                    ) : (
+                      <IconFolder
+                        size={iconSize}
+                        color={currentId === pop.id ? colorConfig.icon : colors.gray[500]}
+                      />
+                    )
                   }
                   label={pop.label}
                   description={pop.type === 'household' ? 'Household' : 'Geography'}

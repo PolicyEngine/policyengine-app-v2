@@ -1,8 +1,11 @@
 import type { Geography } from '@/types/ingredients/Geography';
 import { MetadataState } from '@/types/metadata';
 import { UK_REGION_TYPES } from '@/types/regionTypes';
-import { findPlaceFromRegionString, getPlaceDisplayName } from '@/utils/regionStrategies';
-import { extractRegionDisplayValue } from '@/utils/regionStrategies';
+import {
+  extractRegionDisplayValue,
+  findPlaceFromRegionString,
+  getPlaceDisplayName,
+} from '@/utils/regionStrategies';
 
 /**
  * Extracts the UK region type from a Geography object based on its geographyId.

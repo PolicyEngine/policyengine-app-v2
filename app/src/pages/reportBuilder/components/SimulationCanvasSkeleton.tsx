@@ -2,7 +2,7 @@
  * SimulationCanvasSkeleton - Loading placeholder for the simulation canvas
  */
 
-import { Box, Skeleton, Group } from '@mantine/core';
+import { Box, Group, Skeleton } from '@mantine/core';
 import { colors, spacing } from '@/designTokens';
 import { styles } from '../styles';
 
@@ -29,7 +29,13 @@ export function SimulationCanvasSkeleton() {
             <Skeleton height={20} width={20} radius="sm" />
           </Group>
 
-          <Box style={{ padding: spacing.lg, background: colors.gray[50], borderRadius: spacing.radius.md }}>
+          <Box
+            style={{
+              padding: spacing.lg,
+              background: colors.gray[50],
+              borderRadius: spacing.radius.md,
+            }}
+          >
             <Group gap={spacing.xs} mb={spacing.md}>
               <Skeleton height={32} width={32} radius="md" />
               <Skeleton height={16} width={60} radius="sm" />
@@ -41,7 +47,13 @@ export function SimulationCanvasSkeleton() {
             </Group>
           </Box>
 
-          <Box style={{ padding: spacing.lg, background: colors.gray[50], borderRadius: spacing.radius.md }}>
+          <Box
+            style={{
+              padding: spacing.lg,
+              background: colors.gray[50],
+              borderRadius: spacing.radius.md,
+            }}
+          >
             <Group gap={spacing.xs} mb={spacing.md}>
               <Skeleton height={32} width={32} radius="md" />
               <Skeleton height={16} width={80} radius="sm" />
@@ -53,7 +65,13 @@ export function SimulationCanvasSkeleton() {
             </Group>
           </Box>
 
-          <Box style={{ padding: spacing.lg, background: colors.gray[50], borderRadius: spacing.radius.md }}>
+          <Box
+            style={{
+              padding: spacing.lg,
+              background: colors.gray[50],
+              borderRadius: spacing.radius.md,
+            }}
+          >
             <Group gap={spacing.xs} mb={spacing.md}>
               <Skeleton height={32} width={32} radius="md" />
               <Skeleton height={16} width={70} radius="sm" />

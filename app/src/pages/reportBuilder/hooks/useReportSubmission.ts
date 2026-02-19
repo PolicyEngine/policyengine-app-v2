@@ -181,7 +181,15 @@ export function useReportSubmission({
       console.error('[useReportSubmission] Error running report:', error);
       setIsSubmitting(false);
     }
-  }, [isReportConfigured, isSubmitting, reportState, countryId, currentLawId, createReport, onSuccess]);
+  }, [
+    isReportConfigured,
+    isSubmitting,
+    reportState,
+    countryId,
+    currentLawId,
+    createReport,
+    onSuccess,
+  ]);
 
   return { handleSubmit, isSubmitting, isReportConfigured };
 }
