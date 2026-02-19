@@ -1,6 +1,6 @@
 # Simulation & Report V2 Migration Progress
 
-## Current: Phase 2, Task 2
+## Current: Phase 2, Task 3
 
 ## Branch Strategy
 
@@ -83,12 +83,12 @@ _(Updated as branches are created)_
   - [x] API (Modal): Extend `economy_comparison_us` to compute and store poverty
   - [x] API: Add `poverty` to `EconomicImpactResponse` and `_build_response()`
   - [x] API: pytest passes (219 passed, 57 pre-existing failures)
-- [ ] 2. Wire up inequality computation
-  - [ ] .py: Verify `calculate_us_inequality()` and `calculate_uk_inequality()` work
-  - [ ] API (local): Call inequality functions, store in `inequality` table
-  - [ ] API (Modal): Extend both economy comparison functions to compute inequality
-  - [ ] API: Add `inequality` to `EconomicImpactResponse` and `_build_response()`
-  - [ ] API: pytest passes
+- [x] 2. Wire up inequality computation (2026-02-19)
+  - [x] .py: Verified `calculate_us_inequality()` and `calculate_uk_inequality()` exist with matching fields
+  - [x] API (local): Call inequality functions in both UK and US local comparison, store in `inequality` table
+  - [x] API (Modal): Extend both economy comparison functions to compute inequality
+  - [x] API: Add `inequality` to `EconomicImpactResponse` and `_build_response()`
+  - [x] API: pytest passes (219 passed, 57 pre-existing failures)
 - [ ] 3. Add poverty by age group
   - [ ] .py: Create convenience functions (`calculate_us_poverty_by_age()`, `calculate_uk_poverty_by_age()`)
   - [ ] .py: pytest passes
