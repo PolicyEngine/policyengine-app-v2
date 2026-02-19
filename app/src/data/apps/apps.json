@@ -1,6 +1,19 @@
 [
   {
     "type": "iframe",
+    "slug": "uk-two-child-limit-reintroduction",
+    "title": "How restoring the two-child benefit limit would affect the UK",
+    "description": "PolicyEngine estimates restoring the two-child limit would affect 713 thousand households, save the government £3.9 billion in 2029-30, and increase absolute child poverty by 2.35 percentage points.",
+    "source": "https://uk-two-child-limit-reintroduction.vercel.app/",
+    "tags": ["uk", "featured", "policy", "interactives"],
+    "countryId": "uk",
+    "displayWithResearch": true,
+    "image": "uk-two-child-limit-reintroduction.jpg",
+    "date": "2026-02-18",
+    "authors": ["vahid-ahmadi"]
+  },
+  {
+    "type": "iframe",
     "slug": "marriage",
     "title": "Marriage incentive calculator",
     "description": "Interactive calculator showing how marriage affects taxes, benefits, and net income for US households across all states",
