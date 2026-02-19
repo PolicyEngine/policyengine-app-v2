@@ -234,6 +234,13 @@ export default function ReportOutputPage() {
     }
   };
 
+  // Handle modify button click - navigate to report builder with this report
+  const handleModify = () => {
+    if (userReportId) {
+      navigate(`/${countryId}/report-builder/${userReportId}`);
+    }
+  };
+
   // Show loading state while fetching data
   if (import.meta.env.DEV && dataLoading) {
     (window as any).__journeyProfiler?.markEvent('report-output-data-loading', 'render');
@@ -361,6 +368,7 @@ export default function ReportOutputPage() {
         isSharedView={isSharedView}
         onShare={handleShare}
         onSave={handleSave}
+        onModify={!isSharedView ? handleModify : undefined}
       >
         <ErrorBoundary
           fallback={(error, errorInfo) => (

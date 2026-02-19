@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { Box, Text, Stack } from '@mantine/core';
 import { IconCheck } from '@tabler/icons-react';
+import { Box, Stack, Text } from '@mantine/core';
 import { colors } from '@/designTokens';
-import { chipStyles } from '../../styles';
 import { FONT_SIZES } from '../../constants';
+import { chipStyles } from '../../styles';
 import { OptionChipRowProps } from '../../types';
 
 export function OptionChipRow({
@@ -21,7 +21,7 @@ export function OptionChipRow({
       style={{
         ...chipStyles.chipRow,
         borderColor: isSelected ? colorConfig.accent : colors.border.light,
-        background: isSelected ? colorConfig.bg : (isHovered ? colors.gray[50] : colors.white),
+        background: isSelected ? colorConfig.bg : isHovered ? colors.gray[50] : colors.white,
         ...(isSelected ? chipStyles.chipRowSelected : {}),
       }}
       onMouseEnter={() => setIsHovered(true)}
@@ -50,9 +50,7 @@ export function OptionChipRow({
           </Text>
         )}
       </Stack>
-      {isSelected && (
-        <IconCheck size={18} color={colorConfig.accent} stroke={2.5} />
-      )}
+      {isSelected && <IconCheck size={18} color={colorConfig.accent} stroke={2.5} />}
     </Box>
   );
 }

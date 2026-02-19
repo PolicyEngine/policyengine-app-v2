@@ -35,7 +35,6 @@ export function SimulationBlockFull({
   savedPolicies,
   recentPopulations,
 }: SimulationBlockProps) {
-
   const isPolicyConfigured = !!simulation.policy.id;
   const effectivePopulation =
     populationInherited && inheritedPopulation ? inheritedPopulation : simulation.population;
@@ -148,11 +147,7 @@ export function SimulationBlockFull({
         recentPopulations={recentPopulations}
       />
 
-      <IngredientSectionFull
-        type="dynamics"
-        countryId={countryId}
-        onCreateCustom={() => {}}
-      />
+      <IngredientSectionFull type="dynamics" countryId={countryId} onCreateCustom={() => {}} />
     </Paper>
   );
 }

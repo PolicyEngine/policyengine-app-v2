@@ -89,8 +89,7 @@ export function PopulationBrowseContent({
   };
 
   // StateDistrictSelector and PlaceSelector handle their own search and header
-  const showExternalSearchAndHeader =
-    activeCategory !== 'districts' && activeCategory !== 'places';
+  const showExternalSearchAndHeader = activeCategory !== 'districts' && activeCategory !== 'places';
 
   return (
     <Stack gap={spacing.lg} style={{ height: '100%' }}>

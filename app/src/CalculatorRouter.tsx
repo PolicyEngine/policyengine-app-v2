@@ -19,7 +19,7 @@ const ReportOutputPage = lazy(() => import('./pages/ReportOutput.page'));
 const ReportsPage = lazy(() => import('./pages/Reports.page'));
 const SimulationsPage = lazy(() => import('./pages/Simulations.page'));
 const ReportBuilderPage = lazy(() => import('./pages/reportBuilder/ReportBuilderPage'));
-const ModifyReportDemoPage = lazy(() => import('./pages/ModifyReportDemo.page'));
+const ModifyReportPage = lazy(() => import('./pages/reportBuilder/ModifyReportPage'));
 
 // Lazy-loaded pathway wrappers — heavy components with their own sub-routes
 const PolicyPathwayWrapper = lazy(() => import('./pathways/policy/PolicyPathwayWrapper'));
@@ -124,8 +124,8 @@ const router = createBrowserRouter(
                   element: <ReportBuilderPage />,
                 },
                 {
-                  path: 'modify-report-demo',
-                  element: <ModifyReportDemoPage />,
+                  path: 'report-builder/:userReportId',
+                  element: <ModifyReportPage />,
                 },
                 {
                   path: 'account',

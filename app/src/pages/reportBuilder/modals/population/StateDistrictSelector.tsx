@@ -6,8 +6,8 @@
  * single-district states.
  */
 import { useMemo } from 'react';
-import { Box, Text, Stack, UnstyledButton, Group, TextInput } from '@mantine/core';
 import { IconSearch } from '@tabler/icons-react';
+import { Box, Group, Stack, Text, TextInput, UnstyledButton } from '@mantine/core';
 import { colors, spacing } from '@/designTokens';
 import { RegionOption } from '@/utils/regionStrategies';
 import { FONT_SIZES, INGREDIENT_COLORS } from '../../constants';
@@ -90,14 +90,18 @@ function buildDistrictCountLookup(groups: StateGroup[]): Map<string, number> {
 }
 
 function filterGroupsByQuery(groups: StateGroup[], query: string): StateGroup[] {
-  if (!query.trim()) {return groups;}
+  if (!query.trim()) {
+    return groups;
+  }
 
   const normalizedQuery = query.toLowerCase();
 
   return groups
     .map((group) => {
       const stateMatches = group.stateName.toLowerCase().includes(normalizedQuery);
-      if (stateMatches) {return group;}
+      if (stateMatches) {
+        return group;
+      }
 
       const matchingDistricts = group.districts.filter((d) =>
         d.label.toLowerCase().includes(normalizedQuery)
@@ -118,7 +122,9 @@ function getDistrictDisplayLabel(
   originalCounts: Map<string, number>
 ): string {
   const originalCount = originalCounts.get(stateName) || 0;
-  if (originalCount === 1) {return 'At-large';}
+  if (originalCount === 1) {
+    return 'At-large';
+  }
 
   const num = extractDistrictNumber(district.label);
   return num ? formatOrdinal(num) : district.label;
@@ -171,13 +177,7 @@ const styles = {
 // Sub-components
 // ============================================================================
 
-function SearchBar({
-  value,
-  onChange,
-}: {
-  value: string;
-  onChange: (value: string) => void;
-}) {
+function SearchBar({ value, onChange }: { value: string; onChange: (value: string) => void }) {
   return (
     <TextInput
       placeholder="Search states or districts..."
@@ -222,13 +222,23 @@ function EmptyState() {
   );
 }
 
-function StateHeader({ stateName, stateAbbreviation }: { stateName: string; stateAbbreviation: string }) {
+function StateHeader({
+  stateName,
+  stateAbbreviation,
+}: {
+  stateName: string;
+  stateAbbreviation: string;
+}) {
   return (
     <Box style={styles.stateHeader}>
       <Text fw={600} style={{ fontSize: FONT_SIZES.normal, color: colors.gray[700] }}>
         {stateName}
         {stateAbbreviation && (
-          <Text component="span" c="dimmed" style={{ fontSize: FONT_SIZES.small, marginLeft: spacing.xs }}>
+          <Text
+            component="span"
+            c="dimmed"
+            style={{ fontSize: FONT_SIZES.small, marginLeft: spacing.xs }}
+          >
             ({stateAbbreviation})
           </Text>
         )}
@@ -237,13 +247,7 @@ function StateHeader({ stateName, stateAbbreviation }: { stateName: string; stat
   );
 }
 
-function DistrictChip({
-  label,
-  onClick,
-}: {
-  label: string;
-  onClick: () => void;
-}) {
+function DistrictChip({ label, onClick }: { label: string; onClick: () => void }) {
   return (
     <UnstyledButton
       style={styles.districtChip}

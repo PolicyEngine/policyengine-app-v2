@@ -8,22 +8,22 @@
  * - Optional status header slot
  * - Optional footer slot
  */
+import { IconChevronLeft } from '@tabler/icons-react';
 import {
   Box,
-  Group,
-  Text,
-  Modal,
-  UnstyledButton,
-  Stack,
-  Divider,
-  ScrollArea,
   Button,
+  Divider,
+  Group,
+  Modal,
+  ScrollArea,
+  Stack,
+  Text,
+  UnstyledButton,
 } from '@mantine/core';
-import { IconChevronLeft } from '@tabler/icons-react';
 import { colors, spacing } from '@/designTokens';
-import { FONT_SIZES, BROWSE_MODAL_CONFIG } from '../constants';
+import { BROWSE_MODAL_CONFIG, FONT_SIZES } from '../constants';
 import { modalStyles } from '../styles';
-import { BrowseModalTemplateProps, BrowseModalSidebarSection } from '../types';
+import { BrowseModalSidebarSection, BrowseModalTemplateProps } from '../types';
 
 /**
  * A reusable template for browse modals (PolicyBrowseModal, PopulationBrowseModal).
@@ -55,29 +55,24 @@ export function BrowseModalTemplate({
             <Box style={modalStyles.sidebarSection}>
               <Text style={modalStyles.sidebarLabel}>{section.label}</Text>
               {section.items?.map((item) => (
-                    <UnstyledButton
-                      key={item.id}
-                      style={{
-                        ...modalStyles.sidebarItem,
-                        background: item.isActive ? colorConfig.bg : 'transparent',
-                        color: item.isActive ? colorConfig.icon : colors.gray[700],
-                      }}
-                      onClick={item.onClick}
-                    >
-                      {item.icon}
-                      <Text style={{ fontSize: FONT_SIZES.small, flex: 1 }}>
-                        {item.label}
-                      </Text>
-                      {item.badge !== undefined && (
-                        <Text
-                          fw={700}
-                          style={{ fontSize: FONT_SIZES.small, color: colors.gray[500] }}
-                        >
-                          {item.badge}
-                        </Text>
-                      )}
-                    </UnstyledButton>
-                  ))}
+                <UnstyledButton
+                  key={item.id}
+                  style={{
+                    ...modalStyles.sidebarItem,
+                    background: item.isActive ? colorConfig.bg : 'transparent',
+                    color: item.isActive ? colorConfig.icon : colors.gray[700],
+                  }}
+                  onClick={item.onClick}
+                >
+                  {item.icon}
+                  <Text style={{ fontSize: FONT_SIZES.small, flex: 1 }}>{item.label}</Text>
+                  {item.badge !== undefined && (
+                    <Text fw={700} style={{ fontSize: FONT_SIZES.small, color: colors.gray[500] }}>
+                      {item.badge}
+                    </Text>
+                  )}
+                </UnstyledButton>
+              ))}
             </Box>
           </Box>
         ))}
@@ -166,7 +161,9 @@ export function BrowseModalTemplate({
             overflow: 'hidden',
           }}
         >
-          {renderSidebar ? renderSidebar() : (sidebarSections && renderStandardSidebar(sidebarSections))}
+          {renderSidebar
+            ? renderSidebar()
+            : sidebarSections && renderStandardSidebar(sidebarSections)}
         </Box>
 
         {/* Main Content Area */}
@@ -237,12 +234,7 @@ export function CreationModeFooter({
       >
         {backLabel}
       </Button>
-      <Button
-        color="teal"
-        onClick={onSubmit}
-        loading={isLoading}
-        disabled={submitDisabled}
-      >
+      <Button color="teal" onClick={onSubmit} loading={isLoading} disabled={submitDisabled}>
         {submitLabel}
       </Button>
     </Group>

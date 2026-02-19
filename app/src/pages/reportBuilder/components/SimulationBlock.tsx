@@ -56,7 +56,6 @@ export function SimulationBlock({
   savedPolicies,
   recentPopulations,
 }: SimulationBlockProps) {
-
   const isPolicyConfigured = !!simulation.policy.id;
   const effectivePopulation =
     populationInherited && inheritedPopulation ? inheritedPopulation : simulation.population;
@@ -154,7 +153,6 @@ export function SimulationBlock({
         onCreateCustom={() => {}}
         onBrowseMore={onBrowseMorePolicies}
         savedPolicies={savedPolicies}
-
       />
 
       <IngredientSection
@@ -169,15 +167,9 @@ export function SimulationBlock({
         isInherited={populationInherited}
         inheritedPopulationType={inheritedPopulationType}
         recentPopulations={recentPopulations}
-
       />
 
-      <IngredientSection
-        type="dynamics"
-        countryId={countryId}
-        onCreateCustom={() => {}}
-
-      />
+      <IngredientSection type="dynamics" countryId={countryId} onCreateCustom={() => {}} />
     </Paper>
   );
 }

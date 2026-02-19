@@ -6,14 +6,18 @@
  */
 
 import { Box } from '@mantine/core';
-
-import type { ReportBuilderState, IngredientPickerState } from '../types';
-import { styles } from '../styles';
 import { useSimulationCanvas } from '../hooks/useSimulationCanvas';
+import {
+  IngredientPickerModal,
+  PolicyBrowseModal,
+  PolicyCreationModal,
+  PopulationBrowseModal,
+} from '../modals';
+import { styles } from '../styles';
+import type { IngredientPickerState, ReportBuilderState } from '../types';
+import { AddSimulationCard } from './AddSimulationCard';
 import { SimulationBlock, type SimulationBlockProps } from './SimulationBlock';
 import { SimulationCanvasSkeleton } from './SimulationCanvasSkeleton';
-import { AddSimulationCard } from './AddSimulationCard';
-import { IngredientPickerModal, PolicyBrowseModal, PopulationBrowseModal, PolicyCreationModal } from '../modals';
 
 interface SimulationCanvasProps {
   reportState: ReportBuilderState;
@@ -47,7 +51,9 @@ export function SimulationCanvas({
             countryId={canvas.countryId}
             onLabelChange={(label) => canvas.handleSimulationLabelChange(0, label)}
             onQuickSelectPolicy={() => canvas.handleQuickSelectPolicy(0)}
-            onSelectSavedPolicy={(id, label, paramCount) => canvas.handleSelectSavedPolicy(0, id, label, paramCount)}
+            onSelectSavedPolicy={(id, label, paramCount) =>
+              canvas.handleSelectSavedPolicy(0, id, label, paramCount)
+            }
             onQuickSelectPopulation={() => canvas.handleQuickSelectPopulation(0, 'nationwide')}
             onSelectRecentPopulation={(pop) => canvas.handleSelectRecentPopulation(0, pop)}
             onDeselectPolicy={() => canvas.handleDeselectPolicy(0)}
@@ -67,7 +73,9 @@ export function SimulationCanvas({
               countryId={canvas.countryId}
               onLabelChange={(label) => canvas.handleSimulationLabelChange(1, label)}
               onQuickSelectPolicy={() => canvas.handleQuickSelectPolicy(1)}
-              onSelectSavedPolicy={(id, label, paramCount) => canvas.handleSelectSavedPolicy(1, id, label, paramCount)}
+              onSelectSavedPolicy={(id, label, paramCount) =>
+                canvas.handleSelectSavedPolicy(1, id, label, paramCount)
+              }
               onQuickSelectPopulation={() => canvas.handleQuickSelectPopulation(1, 'nationwide')}
               onSelectRecentPopulation={(pop) => canvas.handleSelectRecentPopulation(1, pop)}
               onDeselectPolicy={() => canvas.handleDeselectPolicy(1)}
@@ -94,7 +102,12 @@ export function SimulationCanvas({
         onClose={canvas.closeIngredientPicker}
         type={canvas.pickerState.ingredientType}
         onSelect={canvas.handleIngredientSelect}
-        onCreateNew={() => canvas.handleCreateCustom(canvas.pickerState.simulationIndex, canvas.pickerState.ingredientType)}
+        onCreateNew={() =>
+          canvas.handleCreateCustom(
+            canvas.pickerState.simulationIndex,
+            canvas.pickerState.ingredientType
+          )
+        }
       />
 
       <PolicyBrowseModal
@@ -107,13 +120,17 @@ export function SimulationCanvas({
         isOpen={canvas.populationBrowseState.isOpen}
         onClose={canvas.closePopulationBrowse}
         onSelect={canvas.handlePopulationSelectFromBrowse}
-        onCreateNew={() => canvas.handleCreateCustom(canvas.populationBrowseState.simulationIndex, 'population')}
+        onCreateNew={() =>
+          canvas.handleCreateCustom(canvas.populationBrowseState.simulationIndex, 'population')
+        }
       />
 
       <PolicyCreationModal
         isOpen={canvas.policyCreationState.isOpen}
         onClose={canvas.closePolicyCreation}
-        onPolicyCreated={(policy) => canvas.handlePolicyCreated(canvas.policyCreationState.simulationIndex, policy)}
+        onPolicyCreated={(policy) =>
+          canvas.handlePolicyCreated(canvas.policyCreationState.simulationIndex, policy)
+        }
         simulationIndex={canvas.policyCreationState.simulationIndex}
       />
     </>

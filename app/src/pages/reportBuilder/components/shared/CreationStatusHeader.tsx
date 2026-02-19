@@ -1,5 +1,5 @@
-import { Box, Group, Text, TextInput, ActionIcon } from '@mantine/core';
 import { IconPencil } from '@tabler/icons-react';
+import { ActionIcon, Box, Group, Text, TextInput } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
 import { FONT_SIZES } from '../../constants';
 import { CreationStatusHeaderProps } from '../../types';

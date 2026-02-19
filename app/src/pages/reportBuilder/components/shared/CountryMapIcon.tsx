@@ -1,7 +1,4 @@
-import {
-  USOutlineIcon,
-  UKOutlineIcon,
-} from '@/components/icons/CountryOutlineIcons';
+import { UKOutlineIcon, USOutlineIcon } from '@/components/icons/CountryOutlineIcons';
 
 interface CountryMapIconProps {
   countryId: string;

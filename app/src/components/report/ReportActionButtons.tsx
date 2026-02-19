@@ -1,4 +1,4 @@
-import { IconBookmark, IconPencil, IconShare } from '@tabler/icons-react';
+import { IconBookmark, IconPencil, IconSettings, IconShare } from '@tabler/icons-react';
 import { Button, Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui';
 
 interface ReportActionButtonsProps {
@@ -6,6 +6,7 @@ interface ReportActionButtonsProps {
   onShare?: () => void;
   onSave?: () => void;
   onEdit?: () => void;
+  onModify?: () => void;
 }
 
 /**
@@ -20,6 +21,7 @@ export function ReportActionButtons({
   onShare,
   onSave,
   onEdit,
+  onModify,
 }: ReportActionButtonsProps) {
   if (isSharedView) {
     return (
@@ -44,6 +46,14 @@ export function ReportActionButtons({
       <Button variant="ghost" size="icon" aria-label="Edit report name" onClick={onEdit}>
         <IconPencil size={18} />
       </Button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button variant="ghost" size="icon" aria-label="Modify report" onClick={onModify}>
+            <IconSettings size={18} />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="bottom">Modify report</TooltipContent>
+      </Tooltip>
       <Button variant="ghost" size="icon" aria-label="Share report" onClick={onShare}>
         <IconShare size={18} />
       </Button>

@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Box, Text } from '@mantine/core';
 import { colors, spacing } from '@/designTokens';
-import { chipStyles } from '../../styles';
 import { FONT_SIZES } from '../../constants';
+import { chipStyles } from '../../styles';
 import { OptionChipSquareProps } from '../../types';
 
 export function OptionChipSquare({
@@ -20,7 +20,7 @@ export function OptionChipSquare({
       style={{
         ...chipStyles.chipSquare,
         borderColor: isSelected ? colorConfig.accent : colors.border.light,
-        background: isSelected ? colorConfig.bg : (isHovered ? colors.gray[50] : colors.white),
+        background: isSelected ? colorConfig.bg : isHovered ? colors.gray[50] : colors.white,
         ...(isSelected
           ? {
               ...chipStyles.chipSquareSelected,
@@ -54,11 +54,7 @@ export function OptionChipSquare({
         {label}
       </Text>
       {description && (
-        <Text
-          ta="center"
-          c="dimmed"
-          style={{ fontSize: FONT_SIZES.tiny, lineHeight: 1.2 }}
-        >
+        <Text ta="center" c="dimmed" style={{ fontSize: FONT_SIZES.tiny, lineHeight: 1.2 }}>
           {description}
         </Text>
       )}

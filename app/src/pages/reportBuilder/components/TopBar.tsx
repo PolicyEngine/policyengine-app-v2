@@ -44,7 +44,9 @@ function getButtonStyles(action: TopBarAction): React.CSSProperties {
 
 function handleMouseEnter(e: React.MouseEvent<HTMLButtonElement>, action: TopBarAction) {
   const enabled = !action.disabled && !action.loading;
-  if (!enabled) {return;}
+  if (!enabled) {
+    return;
+  }
 
   if (action.variant === 'primary') {
     e.currentTarget.style.transform = 'scale(1.03)';
@@ -59,9 +61,7 @@ function handleMouseLeave(e: React.MouseEvent<HTMLButtonElement>, action: TopBar
 
   if (action.variant === 'primary') {
     const enabled = !action.disabled && !action.loading;
-    e.currentTarget.style.boxShadow = enabled
-      ? '0 4px 12px rgba(44, 122, 123, 0.3)'
-      : 'none';
+    e.currentTarget.style.boxShadow = enabled ? '0 4px 12px rgba(44, 122, 123, 0.3)' : 'none';
   } else {
     e.currentTarget.style.background = colors.secondary[100];
   }
@@ -112,13 +112,15 @@ export function TopBar({ children, actions }: TopBarProps) {
                 }}
                 onClick={action.onClick}
                 disabled={action.disabled || action.loading}
-                onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => handleMouseEnter(e, action)}
-                onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => handleMouseLeave(e, action)}
+                onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) =>
+                  handleMouseEnter(e, action)
+                }
+                onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) =>
+                  handleMouseLeave(e, action)
+                }
               >
-                {action.loading
-                  ? <Loader size={16} color="gray" />
-                  : action.icon}
-                <span>{action.loading ? (action.loadingLabel || action.label) : action.label}</span>
+                {action.loading ? <Loader size={16} color="gray" /> : action.icon}
+                <span>{action.loading ? action.loadingLabel || action.label : action.label}</span>
               </Box>
             ))}
           </Box>

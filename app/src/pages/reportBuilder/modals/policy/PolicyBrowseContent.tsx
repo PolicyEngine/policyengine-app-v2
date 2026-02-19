@@ -1,8 +1,26 @@
 /**
  * PolicyBrowseContent - Browse mode content (search bar + policy grid)
  */
-import { Box, Group, Text, Stack, TextInput, ScrollArea, Paper, Button, Skeleton, ActionIcon } from '@mantine/core';
-import { IconSearch, IconPlus, IconInfoCircle, IconChevronRight, IconFolder, IconUsers } from '@tabler/icons-react';
+import {
+  IconChevronRight,
+  IconFolder,
+  IconInfoCircle,
+  IconPlus,
+  IconSearch,
+  IconUsers,
+} from '@tabler/icons-react';
+import {
+  ActionIcon,
+  Box,
+  Button,
+  Group,
+  Paper,
+  ScrollArea,
+  Skeleton,
+  Stack,
+  Text,
+  TextInput,
+} from '@mantine/core';
 import { colors, spacing } from '@/designTokens';
 import { FONT_SIZES, INGREDIENT_COLORS } from '../../constants';
 
@@ -124,7 +142,9 @@ export function PolicyBrowseContent({
             >
               <IconUsers size={28} color={colors.gray[400]} />
             </Box>
-            <Text fw={500} c={colors.gray[600]}>Coming soon</Text>
+            <Text fw={500} c={colors.gray[600]}>
+              Coming soon
+            </Text>
             <Text c="dimmed" ta="center" maw={300} style={{ fontSize: FONT_SIZES.small }}>
               Search and browse policies created by other PolicyEngine users.
             </Text>
@@ -202,7 +222,10 @@ export function PolicyBrowseContent({
                   />
                   <Group justify="space-between" align="flex-start" wrap="nowrap">
                     <Stack gap={spacing.xs} style={{ flex: 1, minWidth: 0 }}>
-                      <Text fw={600} style={{ fontSize: FONT_SIZES.normal, color: colors.gray[900] }}>
+                      <Text
+                        fw={600}
+                        style={{ fontSize: FONT_SIZES.normal, color: colors.gray[900] }}
+                      >
                         {policy.label}
                       </Text>
                       <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>

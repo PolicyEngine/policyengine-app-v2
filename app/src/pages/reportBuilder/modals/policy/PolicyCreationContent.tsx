@@ -2,17 +2,31 @@
  * PolicyCreationContent - Main content area for policy creation mode (V6 styled)
  */
 import { Dispatch, SetStateAction } from 'react';
-import { ActionIcon, Badge, Box, Button, Group, SegmentedControl, Stack, Text, Title } from '@mantine/core';
 import { IconScale, IconTrash } from '@tabler/icons-react';
+import {
+  ActionIcon,
+  Badge,
+  Box,
+  Button,
+  Group,
+  SegmentedControl,
+  Stack,
+  Text,
+  Title,
+} from '@mantine/core';
 import { colors, spacing } from '@/designTokens';
+import HistoricalValues from '@/pathways/report/components/policyParameterSelector/HistoricalValues';
+import { ValueSetterMode } from '@/pathways/report/components/valueSetters';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import { PolicyStateProps } from '@/types/pathwayState';
-import { ValueInterval, ValueIntervalCollection, ValuesList } from '@/types/subIngredients/valueInterval';
-import { capitalize } from '@/utils/stringUtils';
-import { ValueSetterMode } from '@/pathways/report/components/valueSetters';
-import HistoricalValues from '@/pathways/report/components/policyParameterSelector/HistoricalValues';
-import { FONT_SIZES } from '../../constants';
 import { Parameter } from '@/types/subIngredients/parameter';
+import {
+  ValueInterval,
+  ValueIntervalCollection,
+  ValuesList,
+} from '@/types/subIngredients/valueInterval';
+import { capitalize } from '@/utils/stringUtils';
+import { FONT_SIZES } from '../../constants';
 import { ValueSetterComponentsV6 } from '../policyCreation/valueSelectors';
 
 // Mode selector options for SegmentedControl
@@ -62,10 +76,12 @@ export function PolicyCreationContent({
 }: PolicyCreationContentProps) {
   // Get base and reform values for chart
   const getChartValues = () => {
-    if (!selectedParam) {return { baseValues: null, reformValues: null };}
+    if (!selectedParam) {
+      return { baseValues: null, reformValues: null };
+    }
     const baseValues = new ValueIntervalCollection(selectedParam.values as ValuesList);
     const reformValues = new ValueIntervalCollection(baseValues);
-    const paramToChart = policyParameters.find(p => p.name === selectedParam.parameter);
+    const paramToChart = policyParameters.find((p) => p.name === selectedParam.parameter);
     if (paramToChart && paramToChart.values && paramToChart.values.length > 0) {
       const userIntervals = new ValueIntervalCollection(paramToChart.values as ValuesList);
       for (const interval of userIntervals.getIntervals()) {
@@ -80,7 +96,7 @@ export function PolicyCreationContent({
 
   // Get changes for the current parameter
   const currentParamChanges = selectedParam
-    ? policyParameters.find(p => p.name === selectedParam.parameter)?.values || []
+    ? policyParameters.find((p) => p.name === selectedParam.parameter)?.values || []
     : [];
 
   // Format a date range for display
@@ -101,28 +117,38 @@ export function PolicyCreationContent({
 
   // Format a value for display
   const formatValue = (value: number | string | boolean): string => {
-    if (typeof value === 'boolean') {return value ? 'Yes' : 'No';}
+    if (typeof value === 'boolean') {
+      return value ? 'Yes' : 'No';
+    }
     if (typeof value === 'number') {
       if (selectedParam?.unit === '/1') {
         return `${(value * 100).toFixed(1)}%`;
       }
-      return value.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+      return value.toLocaleString('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        maximumFractionDigits: 0,
+      });
     }
     return String(value);
   };
 
   // Remove a change from the current parameter
   const handleRemoveChange = (indexToRemove: number) => {
-    if (!selectedParam) {return;}
-    const updatedParameters = policyParameters.map(param => {
-      if (param.name === selectedParam.parameter) {
-        return {
-          ...param,
-          values: param.values.filter((_, i) => i !== indexToRemove),
-        };
-      }
-      return param;
-    }).filter(param => param.values.length > 0);
+    if (!selectedParam) {
+      return;
+    }
+    const updatedParameters = policyParameters
+      .map((param) => {
+        if (param.name === selectedParam.parameter) {
+          return {
+            ...param,
+            values: param.values.filter((_, i) => i !== indexToRemove),
+          };
+        }
+        return param;
+      })
+      .filter((param) => param.values.length > 0);
     setPolicyParameters(updatedParameters);
   };
 
@@ -152,7 +178,10 @@ export function PolicyCreationContent({
           >
             <IconScale size={32} color={colors.gray[400]} />
           </Box>
-          <Text ta="center" style={{ fontSize: FONT_SIZES.normal, color: colors.gray[600], maxWidth: 400 }}>
+          <Text
+            ta="center"
+            style={{ fontSize: FONT_SIZES.normal, color: colors.gray[600], maxWidth: 400 }}
+          >
             Select a parameter from the menu to modify its value for your policy reform.
           </Text>
         </Stack>

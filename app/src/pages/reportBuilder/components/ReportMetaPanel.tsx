@@ -6,11 +6,7 @@
  */
 
 import React, { useLayoutEffect, useState } from 'react';
-import {
-  IconCheck,
-  IconFileDescription,
-  IconPencil,
-} from '@tabler/icons-react';
+import { IconCheck, IconFileDescription, IconPencil } from '@tabler/icons-react';
 import { ActionIcon, Box, Select, Text, TextInput } from '@mantine/core';
 import { CURRENT_YEAR } from '@/constants';
 import { colors, spacing, typography } from '@/designTokens';
@@ -34,10 +30,7 @@ interface ReportMetaPanelProps {
   setReportState: React.Dispatch<React.SetStateAction<ReportBuilderState>>;
 }
 
-export function ReportMetaPanel({
-  reportState,
-  setReportState,
-}: ReportMetaPanelProps) {
+export function ReportMetaPanel({ reportState, setReportState }: ReportMetaPanelProps) {
   const [isEditingLabel, setIsEditingLabel] = useState(false);
   const [labelInput, setLabelInput] = useState('');
   const [inputWidth, setInputWidth] = useState<number | null>(null);
@@ -207,9 +200,7 @@ export function ReportMetaPanel({
         <Select
           aria-label="Report year"
           value={reportState.year}
-          onChange={(value) =>
-            setReportState((prev) => ({ ...prev, year: value || CURRENT_YEAR }))
-          }
+          onChange={(value) => setReportState((prev) => ({ ...prev, year: value || CURRENT_YEAR }))}
           data={['2023', '2024', '2025', '2026']}
           size="sm"
           variant="unstyled"
