@@ -6,12 +6,10 @@
  */
 
 import { useEffect } from 'react';
-import { useEffect } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
 import IframeContent from '@/components/IframeContent';
 import { OBBBAIframeContent, StreamlitEmbed } from '@/components/interactive';
 import { apps } from '@/data/apps/appTransformers';
-import { trackToolEngaged } from '@/utils/analytics';
 import { trackToolEngaged } from '@/utils/analytics';
 
 export default function AppPage() {
