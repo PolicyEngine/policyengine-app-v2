@@ -20,7 +20,6 @@ import {
   mockCreateSimulation,
   mockCreateSimulationAssociationMutateAsync,
   mockResponseWithoutId,
-  QUERY_KEY_PATTERNS,
   setupConsoleSpies,
   setupDefaultMocks,
   TEST_LABELS,

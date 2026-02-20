@@ -15,7 +15,6 @@ import {
   mockCreateHouseholdAssociationMutateAsync,
   mockCreateHouseholdResponse,
   mockHouseholdCreationPayload,
-  QUERY_KEY_PATTERNS,
   setupMockConsole,
   TEST_IDS,
   TEST_LABELS,
