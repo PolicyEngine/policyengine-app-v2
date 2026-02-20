@@ -117,6 +117,8 @@ export const ingredientStyles = {
     borderRadius: spacing.radius.lg,
     border: `1px solid`,
     background: 'white',
+    minWidth: 0,
+    overflow: 'hidden',
   },
 
   ingredientSectionHeader: {

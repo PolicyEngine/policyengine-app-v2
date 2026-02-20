@@ -3,7 +3,7 @@ import {
   IconChevronLeft,
   IconDeviceFloppy,
   IconPencil,
-  IconRefresh,
+  IconReplace,
   IconX,
 } from '@tabler/icons-react';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -62,42 +62,22 @@ export default function ModifyReportPage() {
     if (!isEditing) {
       return [
         {
+          key: 'back',
+          label: 'Back',
+          icon: <IconChevronLeft size={16} />,
+          onClick: () => navigate(getReportOutputPath(countryId, userReportId!)),
+          variant: 'secondary' as const,
+        },
+        {
           key: 'edit',
           label: 'Edit report',
           icon: <IconPencil size={16} />,
           onClick: () => setIsEditing(true),
           variant: 'primary' as const,
         },
-        {
-          key: 'back',
-          label: 'Back to report',
-          icon: <IconChevronLeft size={16} />,
-          onClick: () => navigate(getReportOutputPath(countryId, userReportId!)),
-          variant: 'secondary' as const,
-        },
       ];
     }
     return [
-      {
-        key: 'save-new',
-        label: 'Save as new report',
-        icon: <IconDeviceFloppy size={16} />,
-        onClick: handleSaveAsNewClick,
-        variant: 'primary' as const,
-        loading: isSavingNew,
-        loadingLabel: 'Creating report...',
-        disabled: isReplacing,
-      },
-      {
-        key: 'replace',
-        label: 'Update existing report',
-        icon: <IconRefresh size={16} />,
-        onClick: handleReplace,
-        variant: 'secondary' as const,
-        loading: isReplacing,
-        loadingLabel: 'Updating report...',
-        disabled: isSavingNew,
-      },
       {
         key: 'cancel',
         label: 'Cancel',
@@ -110,6 +90,26 @@ export default function ModifyReportPage() {
         },
         variant: 'secondary' as const,
         disabled: isEitherSubmitting,
+      },
+      {
+        key: 'replace',
+        label: 'Update existing report',
+        icon: <IconReplace size={16} />,
+        onClick: handleReplace,
+        variant: 'secondary' as const,
+        loading: isReplacing,
+        loadingLabel: 'Updating report...',
+        disabled: isSavingNew,
+      },
+      {
+        key: 'save-new',
+        label: 'Save as new report',
+        icon: <IconDeviceFloppy size={16} />,
+        onClick: handleSaveAsNewClick,
+        variant: 'primary' as const,
+        loading: isSavingNew,
+        loadingLabel: 'Creating report...',
+        disabled: isReplacing,
       },
     ];
   }, [

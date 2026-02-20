@@ -12,7 +12,7 @@ import {
   IconFolder,
   IconPencil,
   IconPlus,
-  IconRefresh,
+  IconReplace,
   IconScale,
   IconStar,
   IconUsers,
@@ -877,7 +877,7 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
                     <Button
                       variant="light"
                       color="teal"
-                      leftSection={<IconRefresh size={16} />}
+                      leftSection={<IconReplace size={16} />}
                       onClick={() => console.info('[PolicyBrowseModal] Update existing policy')}
                     >
                       Update existing policy
