@@ -2,9 +2,9 @@
  * Router for the Calculator app (app.policyengine.org)
  * Contains only the interactive calculator functionality
  */
-import { createBrowserRouter, Outlet, RouterProvider } from 'react-router-dom';
+import { createBrowserRouter, Navigate, Outlet, RouterProvider } from 'react-router-dom';
 import StandardLayout from './components/StandardLayout';
-import DashboardPage from './pages/Dashboard.page';
+import NotFoundPage from './pages/NotFound.page';
 import PoliciesPage from './pages/Policies.page';
 import PopulationsPage from './pages/Populations.page';
 import ReportOutputPage from './pages/ReportOutput.page';
@@ -84,11 +84,7 @@ const router = createBrowserRouter(
               children: [
                 {
                   index: true,
-                  element: <DashboardPage />,
-                },
-                {
-                  path: 'dashboard',
-                  element: <DashboardPage />,
+                  element: <Navigate to="reports" replace />,
                 },
                 {
                   path: 'reports',
@@ -113,6 +109,11 @@ const router = createBrowserRouter(
               ],
             },
           ],
+        },
+        // Catch-all 404 - outside AppShell, no metadata required
+        {
+          path: '*',
+          element: <NotFoundPage />,
         },
       ],
     },
