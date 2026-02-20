@@ -38,4 +38,4 @@ The impact of restoring the two-child limit varies across parliamentary constitu
 
 ## Conclusion
 
-<iframe src="https://uk-two-child-limit-reintroduction.vercel.app/embed-conclusion.html" width="100%" height="350" frameborder="0"></iframe>
+<iframe src="https://uk-two-child-limit-reintroduction.vercel.app/embed-conclusion.html" width="100%" height="800" frameborder="0"></iframe>
