@@ -9,6 +9,7 @@ import { IconClipboard, IconClipboardCheck, IconCode, IconExternalLink } from '@
 import { ActionIcon, Anchor, Box, Code, Group, Stack, Text, Tooltip } from '@mantine/core';
 import { colors, spacing } from '@/designTokens';
 import { useReportYear } from '@/hooks/useReportYear';
+import { trackPythonCodeCopied } from '@/utils/analytics';
 import { getColabLink, getReproducibilityCodeBlock } from '@/utils/reproducibilityCode';
 
 interface PolicyData {
@@ -48,6 +49,7 @@ export default function PolicyReproducibility({
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(codeText);
+      trackPythonCodeCopied();
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
@@ -65,7 +67,7 @@ export default function PolicyReproducibility({
           p={spacing.lg}
           style={{
             backgroundColor: colors.background.primary,
-            borderRadius: spacing.md,
+            borderRadius: spacing.radius.container,
             border: `1px solid ${colors.border.light}`,
           }}
         >
@@ -78,7 +80,7 @@ export default function PolicyReproducibility({
                 alignItems: 'center',
                 justifyContent: 'center',
                 backgroundColor: colors.gray[100],
-                borderRadius: spacing.xs,
+                borderRadius: spacing.radius.element,
                 flexShrink: 0,
               }}
             >
@@ -112,7 +114,7 @@ export default function PolicyReproducibility({
         <Box
           style={{
             backgroundColor: colors.background.primary,
-            borderRadius: spacing.md,
+            borderRadius: spacing.radius.container,
             border: `1px solid ${colors.border.light}`,
             overflow: 'hidden',
           }}

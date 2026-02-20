@@ -1,7 +1,12 @@
-import { useEffect, useMemo } from 'react';
-import { Progress, Stack, Text, Title } from '@mantine/core';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Group, Progress, Stack, Text, Title } from '@mantine/core';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
-import { USDistrictChoroplethMap } from '@/components/visualization/USDistrictChoroplethMap';
+import { MapDownloadMenu } from '@/components/MapDownloadMenu';
+import {
+  MapTypeToggle,
+  USDistrictChoroplethMap,
+  type MapVisualizationType,
+} from '@/components/visualization/choropleth';
 import { useCongressionalDistrictData } from '@/contexts/CongressionalDistrictDataContext';
 import type { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
 import { formatParameterValue } from '@/utils/chartValueUtils';
@@ -21,6 +26,10 @@ interface RelativeChangeByDistrictProps {
  * switching between absolute and relative views doesn't trigger re-fetching.
  */
 export function RelativeChangeByDistrict({ output }: RelativeChangeByDistrictProps) {
+  // Map visualization type state (default to geographic)
+  const [mapType, setMapType] = useState<MapVisualizationType>('geographic');
+  const mapRef = useRef<HTMLDivElement>(null);
+
   // Get shared district data from context
   const {
     stateResponses,
@@ -91,9 +100,17 @@ export function RelativeChangeByDistrict({ output }: RelativeChangeByDistrictPro
 
   return (
     <Stack gap="md">
-      <div>
-        <Title order={3}>Relative household income change by congressional district</Title>
-      </div>
+      <Group justify="space-between" align="center" wrap="nowrap">
+        <Title order={3} style={{ flex: 1 }}>
+          Relative household income change by congressional district
+        </Title>
+        <Group gap="xs" wrap="nowrap">
+          <MapTypeToggle value={mapType} onChange={setMapType} />
+          {mapData.length > 0 && (
+            <MapDownloadMenu mapRef={mapRef} filename="relative-change-by-congressional-district" />
+          )}
+        </Group>
+      </Group>
 
       {/* Show progress while loading */}
       {isLoading && <Progress value={progressPercent} size="sm" />}
@@ -114,6 +131,8 @@ export function RelativeChangeByDistrict({ output }: RelativeChangeByDistrictPro
               }),
           }}
           focusState={stateCode ?? undefined}
+          visualizationType={mapType}
+          exportRef={mapRef}
         />
       )}
     </Stack>

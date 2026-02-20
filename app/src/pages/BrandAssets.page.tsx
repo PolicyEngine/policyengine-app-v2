@@ -35,7 +35,7 @@ function LogoCard({
       style={{
         background: colors.white,
         border: `1px solid ${colors.border.light}`,
-        borderRadius: spacing.radius.lg,
+        borderRadius: spacing.radius.container,
         overflow: 'hidden',
       }}
     >
@@ -85,7 +85,7 @@ function UsageCard({ type, items }: { type: 'do' | 'dont'; items: string[] }) {
       style={{
         background: isDo ? `${colors.success}08` : `${colors.error}08`,
         border: `1px solid ${isDo ? colors.success : colors.error}20`,
-        borderRadius: spacing.radius.md,
+        borderRadius: spacing.radius.container,
       }}
     >
       <Text
@@ -117,7 +117,7 @@ function ColorSwatch({ name, value }: { name: string; value: string }) {
   return (
     <Box
       style={{
-        borderRadius: spacing.radius.md,
+        borderRadius: spacing.radius.container,
         overflow: 'hidden',
         border: `1px solid ${colors.border.light}`,
       }}
@@ -284,7 +284,7 @@ export default function BrandAssetsPage() {
             style={{
               background: colors.white,
               border: `1px solid ${colors.border.light}`,
-              borderRadius: spacing.radius.lg,
+              borderRadius: spacing.radius.container,
               display: 'flex',
               justifyContent: 'center',
             }}
@@ -294,7 +294,7 @@ export default function BrandAssetsPage() {
                 position: 'relative',
                 padding: spacing['2xl'],
                 border: `2px dashed ${colors.primary[300]}`,
-                borderRadius: spacing.radius.md,
+                borderRadius: spacing.radius.container,
               }}
             >
               <img

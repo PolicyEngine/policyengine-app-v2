@@ -3,6 +3,13 @@
  */
 
 /**
+ * Map visualization type
+ * - 'geographic': Natural geographic boundaries (Census Bureau)
+ * - 'hex': Equal-size hexagonal grid (each district same visual size)
+ */
+export type MapVisualizationType = 'geographic' | 'hex';
+
+/**
  * GeoJSON Feature interface for congressional districts
  */
 export interface GeoJSONFeature {
@@ -84,6 +91,10 @@ export interface USDistrictChoroplethMapProps {
   geoDataPath?: string;
   /** State code to focus/zoom on (e.g., 'ca', 'ny'). If provided, map will zoom to fit that state's districts. */
   focusState?: string;
+  /** Map visualization type: 'geographic' (natural boundaries) or 'hex' (equal-size hexagons). Defaults to 'geographic'. */
+  visualizationType?: MapVisualizationType;
+  /** Optional ref to the map container for image export */
+  exportRef?: React.Ref<HTMLDivElement>;
 }
 
 /**

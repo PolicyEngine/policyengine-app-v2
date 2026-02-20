@@ -58,7 +58,7 @@ function WinnersLosersTooltip({ active, payload, label }: any) {
               width: 10,
               height: 10,
               backgroundColor: p.fill,
-              borderRadius: 2,
+              borderRadius: spacing.radius.chip,
               marginRight: 6,
               verticalAlign: 'middle',
             }}

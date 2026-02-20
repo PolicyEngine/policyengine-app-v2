@@ -20,7 +20,7 @@ export default function SecondaryCard({ post, countryId }: SecondaryCardProps) {
     >
       <Box
         style={{
-          borderRadius: spacing.radius.xl,
+          borderRadius: spacing.radius.feature,
           overflow: 'hidden',
           backgroundColor: colors.white,
           border: `1px solid ${colors.border.light}`,

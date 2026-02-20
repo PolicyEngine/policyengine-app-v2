@@ -45,7 +45,7 @@ export default function GiveCalcBanner() {
         root: {
           backgroundColor: '#fef3c7',
           borderBottom: `1px solid #fcd34d`,
-          borderRadius: 0,
+          borderRadius: spacing.radius.none,
           padding: `${spacing.sm} ${spacing.md}`,
           fontFamily: typography.fontFamily.primary,
         },

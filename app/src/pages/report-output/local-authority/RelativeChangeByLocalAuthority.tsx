@@ -1,7 +1,8 @@
-import { useMemo } from 'react';
-import { Stack, Text, Title } from '@mantine/core';
+import { useMemo, useRef } from 'react';
+import { Group, Stack, Text, Title } from '@mantine/core';
 import { transformLocalAuthorityRelativeChange } from '@/adapters/local-authority/localAuthorityDataAdapter';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
+import { MapDownloadMenu } from '@/components/MapDownloadMenu';
 import { HexagonalMap } from '@/components/visualization/HexagonalMap';
 import type { ReportOutputSocietyWideUK } from '@/types/metadata/ReportOutputSocietyWideUK';
 import { formatParameterValue } from '@/utils/chartValueUtils';
@@ -18,6 +19,7 @@ interface RelativeChangeByLocalAuthorityProps {
  * for each UK local authority as a percentage.
  */
 export function RelativeChangeByLocalAuthority({ output }: RelativeChangeByLocalAuthorityProps) {
+  const mapRef = useRef<HTMLDivElement>(null);
   // Transform API data to hexagonal map format
   const hexMapData = useMemo(() => {
     // Type guard to ensure output is UK report with local authority data
@@ -42,9 +44,12 @@ export function RelativeChangeByLocalAuthority({ output }: RelativeChangeByLocal
 
   return (
     <Stack gap="md">
-      <div>
-        <Title order={3}>Relative household income change by local authority</Title>
-      </div>
+      <Group justify="space-between" align="flex-start" wrap="nowrap">
+        <Title order={3} style={{ flex: 1 }}>
+          Relative household income change by local authority
+        </Title>
+        <MapDownloadMenu mapRef={mapRef} filename="relative-change-by-local-authority" />
+      </Group>
 
       <HexagonalMap
         data={hexMapData}
@@ -61,6 +66,7 @@ export function RelativeChangeByLocalAuthority({ output }: RelativeChangeByLocal
               includeSymbol: true,
             }),
         }}
+        exportRef={mapRef}
       />
     </Stack>
   );

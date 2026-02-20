@@ -1,5 +1,5 @@
 import { Box, Image, Text } from '@mantine/core';
-import { colors, typography } from '@/designTokens';
+import { colors, spacing, typography } from '@/designTokens';
 import SupportedProject, { SupportedProject as SupportedProjectType } from './SupportedProject';
 
 export interface Supporter {
@@ -22,7 +22,7 @@ export default function SupporterCard({ supporter, projects }: SupporterCardProp
         marginBottom: 48,
         padding: 24,
         border: `1px solid ${colors.border.light}`,
-        borderRadius: 4,
+        borderRadius: spacing.radius.element,
         boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
       }}
     >

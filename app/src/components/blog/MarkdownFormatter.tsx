@@ -526,7 +526,7 @@ export function MarkdownFormatter({
               backgroundColor: blogColors.primary,
               color: 'white',
               padding: '12px 24px',
-              borderRadius: '6px',
+              borderRadius: blogRadius.md,
               textDecoration: 'none',
               fontWeight: blogFontWeights.semiBold,
               fontFamily: blogTypography.bodyFont,

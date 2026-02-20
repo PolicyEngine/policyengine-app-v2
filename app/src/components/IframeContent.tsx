@@ -8,7 +8,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { colors } from '@/designTokens';
+import { colors, spacing } from '@/designTokens';
 import type { IframeContentProps } from '@/types/apps';
 
 export default function IframeContent({
@@ -38,7 +38,13 @@ export default function IframeContent({
       }
       if (event.data?.type === 'hashchange' && typeof event.data.hash === 'string') {
         const hash = event.data.hash || '';
-        window.history.replaceState(null, '', `${location.pathname}${hash}`);
+        if (hash && !hash.startsWith('#')) {
+          // Path-based deep link: ensure slash separator
+          const subPath = hash.startsWith('/') ? hash : `/${hash}`;
+          window.history.replaceState(null, '', `${location.pathname}${subPath}`);
+        } else {
+          window.history.replaceState(null, '', `${location.pathname}${hash}`);
+        }
       }
     };
     window.addEventListener('message', handleMessage);
@@ -119,7 +125,7 @@ export default function IframeContent({
                 backgroundColor: colors.primary[600],
                 color: colors.white,
                 textDecoration: 'none',
-                borderRadius: '4px',
+                borderRadius: spacing.radius.element,
               }}
             >
               Open Calculator in New Tab

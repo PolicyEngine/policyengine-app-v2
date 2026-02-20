@@ -94,7 +94,7 @@ export default function StreamlitEmbed({
               style={{
                 backgroundColor: '#ffffff',
                 border: '1px solid #d9d9d9',
-                borderRadius: '4px',
+                borderRadius: spacing.radius.element,
                 padding: '2px 12px',
                 fontSize: '12px',
                 color: '#595959',

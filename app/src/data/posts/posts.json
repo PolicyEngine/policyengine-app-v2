@@ -9,6 +9,15 @@
     "image": "tanf-50-state-coverage.svg"
   },
   {
+    "title": "PolicyEngine's state income tax model updated for tax year 2025",
+    "description": "PolicyEngine has updated state income tax brackets, deductions, exemptions, and credits across all 50 states for accurate tax year 2025 calculations.",
+    "date": "2026-02-17",
+    "tags": ["us", "featured", "technical"],
+    "authors": ["david-trimmer", "pavel-makarchuk", "ziming-hua"],
+    "filename": "state-income-tax-2025-update.md",
+    "image": "state-updates-2025.webp"
+  },
+  {
     "title": "Analysis of South Carolina H.3492: Making the state EITC partially refundable",
     "description": "PolicyEngine projects the bill would lower state revenues by $402 million while reducing child poverty by 5.4% in 2026.",
     "date": "2026-02-04",

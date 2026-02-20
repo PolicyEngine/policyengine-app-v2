@@ -63,7 +63,7 @@ function ExampleBox({ type, children }: { type: 'good' | 'bad'; children: React.
       style={{
         background: isGood ? `${colors.success}10` : `${colors.error}10`,
         border: `1px solid ${isGood ? colors.success : colors.error}30`,
-        borderRadius: spacing.radius.md,
+        borderRadius: spacing.radius.container,
       }}
     >
       <Text
@@ -103,7 +103,7 @@ function TermItem({ term, definition }: { term: string; definition: string }) {
       style={{
         background: colors.white,
         border: `1px solid ${colors.border.light}`,
-        borderRadius: spacing.radius.md,
+        borderRadius: spacing.radius.container,
       }}
     >
       <Text
@@ -137,7 +137,7 @@ function TipBox({ children }: { children: React.ReactNode }) {
       style={{
         background: `${colors.primary[500]}08`,
         border: `1px solid ${colors.primary[500]}20`,
-        borderRadius: spacing.radius.md,
+        borderRadius: spacing.radius.container,
       }}
     >
       <Text

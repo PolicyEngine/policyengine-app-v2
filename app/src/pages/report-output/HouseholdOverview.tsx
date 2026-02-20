@@ -97,7 +97,7 @@ export default function HouseholdOverview({ outputs, policyLabels }: HouseholdOv
         p={spacing.xl}
         style={{
           background: `linear-gradient(135deg, ${colors.primary[50]} 0%, ${colors.background.primary} 100%)`,
-          borderRadius: spacing.md,
+          borderRadius: spacing.radius.container,
           border: `1px solid ${colors.primary[100]}`,
         }}
       >
@@ -110,7 +110,7 @@ export default function HouseholdOverview({ outputs, policyLabels }: HouseholdOv
               alignItems: 'center',
               justifyContent: 'center',
               backgroundColor: colors.primary[100],
-              borderRadius: spacing.sm,
+              borderRadius: spacing.radius.element,
               flexShrink: 0,
             }}
           >
@@ -132,7 +132,7 @@ export default function HouseholdOverview({ outputs, policyLabels }: HouseholdOv
       <Box
         style={{
           backgroundColor: colors.background.primary,
-          borderRadius: spacing.md,
+          borderRadius: spacing.radius.container,
           border: `1px solid ${colors.border.light}`,
           overflow: 'hidden',
         }}

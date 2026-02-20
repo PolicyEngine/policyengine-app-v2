@@ -77,7 +77,7 @@ export default function DynamicsSubPage({ policies, userPolicies }: DynamicsSubP
         <Box
           style={{
             border: `1px solid ${colors.border.light}`,
-            borderRadius: spacing.radius.lg,
+            borderRadius: spacing.radius.container,
             padding: spacing['2xl'],
             backgroundColor: colors.white,
             marginTop: spacing.xl,

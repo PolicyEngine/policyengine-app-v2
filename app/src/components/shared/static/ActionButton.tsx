@@ -74,7 +74,7 @@ export default function ActionButton({
             backgroundColor: buttonStyle.backgroundColor,
             color: buttonStyle.color,
             border: buttonStyle.border,
-            borderRadius: spacing.md,
+            borderRadius: spacing.radius.container,
             fontSize: typography.fontSize.lg,
             fontWeight: typography.fontWeight.semibold,
             fontFamily: typography.fontFamily.primary,

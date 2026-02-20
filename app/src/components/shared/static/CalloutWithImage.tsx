@@ -1,5 +1,5 @@
 import { Button, Container, Grid, Image, Stack, Text, Title } from '@mantine/core';
-import { colors, typography } from '@/designTokens';
+import { colors, spacing, typography } from '@/designTokens';
 
 export interface CalloutWithImageProps {
   title: string;
@@ -51,7 +51,7 @@ export default function CalloutWithImage({
                 color={colors.primary[400]}
                 onClick={onButtonClick}
                 style={{
-                  borderRadius: 0,
+                  borderRadius: spacing.radius.none,
                   alignSelf: 'flex-start',
                   marginTop: '14px',
                 }}

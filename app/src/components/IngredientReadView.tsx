@@ -85,7 +85,7 @@ export default function IngredientReadView({
 
       {/* Content Section */}
       <Paper
-        radius={spacing.radius.lg}
+        radius={spacing.radius.container}
         style={{
           border: `1px solid ${colors.border.light}`,
           overflow: 'hidden',

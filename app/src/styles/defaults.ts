@@ -7,11 +7,11 @@ export const themeDefaults = {
     size: 'md',
   },
   Card: {
-    radius: 'lg',
+    radius: 'md',
     shadow: 'xs',
   },
   Input: {
-    radius: 'md',
+    radius: 'sm',
     size: 'md',
   },
   Text: {
@@ -19,7 +19,7 @@ export const themeDefaults = {
     lineHeight: '24',
   },
   Badge: {
-    radius: 'xl',
+    radius: 'lg',
     size: 'md',
   },
   ActionIcon: {

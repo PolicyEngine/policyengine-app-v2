@@ -65,6 +65,12 @@ jobs:
         working-directory: packages/design-system
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # react-simple-maps@3 declares peer deps for React 16-18 but works
+          # fine with React 19. The library is abandoned (last commit Jul 2023).
+          # semantic-release uses npm internally, and npm 10 strict peer dep
+          # checking causes ERESOLVE during `npm version`. This env var scopes
+          # the workaround to this step only.
+          npm_config_legacy_peer_deps: "true"
 
       - name: Summary
         run: |
