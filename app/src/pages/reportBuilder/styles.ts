@@ -97,6 +97,8 @@ export const simulationStyles = {
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: spacing.lg,
+    minWidth: 0,
+    overflow: 'hidden',
   },
 
   simulationTitle: {
