@@ -54,6 +54,9 @@ export function useCreateReport(reportLabel?: string) {
       simulations,
       populations,
     }: CreateReportAndBeginCalculationParams): Promise<ExtendedCreateReportResult> => {
+      if (import.meta.env.DEV) {
+        (window as any).__journeyProfiler?.markStart('report-api-call', 'api-call');
+      }
       // Call the combined API function
       const result = await createReportAndAssociateWithUser({
         countryId: countryId as any,
@@ -62,6 +65,9 @@ export function useCreateReport(reportLabel?: string) {
         label: reportLabel,
       });
 
+      if (import.meta.env.DEV) {
+        (window as any).__journeyProfiler?.markEnd('report-api-call', 'api-call');
+      }
       // Attach simulations and populations for use in onSuccess
       return {
         ...result,
@@ -71,6 +77,9 @@ export function useCreateReport(reportLabel?: string) {
     },
 
     onSuccess: async (result) => {
+      if (import.meta.env.DEV) {
+        (window as any).__journeyProfiler?.markStart('report-onSuccess', 'render');
+      }
       try {
         const { report, simulations, populations } = result;
         const reportIdStr = String(report.id);
@@ -164,6 +173,10 @@ export function useCreateReport(reportLabel?: string) {
         }
       } catch (error) {
         console.error('[useCreateReport] Post-creation tasks failed:', error);
+      } finally {
+        if (import.meta.env.DEV) {
+          (window as any).__journeyProfiler?.markEnd('report-onSuccess', 'render');
+        }
       }
     },
   });
