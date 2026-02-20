@@ -5,7 +5,7 @@
  * name editing behavior with auto-sizing input and checkmark confirmation.
  */
 
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useLayoutEffect, useState } from 'react';
 import { IconCheck, IconPencil } from '@tabler/icons-react';
 import { ActionIcon, Box, Text, TextInput } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
@@ -30,8 +30,6 @@ export function EditableLabel({
 }: EditableLabelProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [inputValue, setInputValue] = useState(value);
-  const [inputWidth, setInputWidth] = useState<number | null>(null);
-  const measureRef = useRef<HTMLSpanElement>(null);
 
   // Sync inputValue with value prop when not editing
   useLayoutEffect(() => {
@@ -39,15 +37,6 @@ export function EditableLabel({
       setInputValue(value);
     }
   }, [value, isEditing]);
-
-  // Measure text width for auto-sizing input
-  useLayoutEffect(() => {
-    if (measureRef.current && isEditing) {
-      const textToMeasure = inputValue || placeholder;
-      measureRef.current.textContent = textToMeasure;
-      setInputWidth(measureRef.current.offsetWidth);
-    }
-  }, [inputValue, isEditing, placeholder]);
 
   const handleSubmit = () => {
     onChange(inputValue || placeholder);
@@ -62,21 +51,9 @@ export function EditableLabel({
   const displayText = value || emptyStateText || placeholder;
 
   return (
-    <Box style={{ display: 'flex', alignItems: 'center', gap: spacing.xs }}>
+    <Box style={{ display: 'flex', alignItems: 'center', gap: spacing.xs, minWidth: 0, flex: 1 }}>
       {isEditing ? (
         <>
-          {/* Hidden span for measuring text width */}
-          <span
-            ref={measureRef}
-            style={{
-              position: 'absolute',
-              visibility: 'hidden',
-              whiteSpace: 'pre',
-              fontFamily: typography.fontFamily.primary,
-              fontWeight: 600,
-              fontSize: FONT_SIZES.normal,
-            }}
-          />
           <TextInput
             value={inputValue}
             onChange={(e) => setInputValue(e.currentTarget.value)}
@@ -93,7 +70,7 @@ export function EditableLabel({
             onBlur={handleSubmit}
             placeholder={placeholder}
             size="xs"
-            style={{ width: inputWidth ? inputWidth + 8 : 'auto' }}
+            style={{ flex: 1, minWidth: 0 }}
             styles={{
               input: {
                 fontFamily: typography.fontFamily.primary,
