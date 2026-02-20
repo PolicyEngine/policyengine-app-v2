@@ -4,7 +4,12 @@ import { NavItemSetup } from '@/components/homeHeader/NavItem';
 import { colors, spacing, typography } from '@/designTokens';
 import { useWebsitePath } from '@/hooks/useWebsitePath';
 
-export default function HeaderNavigation() {
+interface HeaderNavigationProps {
+  navbarOpened?: boolean;
+  onToggleNavbar?: () => void;
+}
+
+export default function HeaderNavigation({ navbarOpened, onToggleNavbar }: HeaderNavigationProps) {
   const [opened, { open, close }] = useDisclosure(false);
   const { getWebsitePath } = useWebsitePath();
 
@@ -61,7 +66,14 @@ export default function HeaderNavigation() {
         borderRadius: spacing.radius.none,
       }}
     >
-      <HeaderContent opened={opened} onOpen={open} onClose={close} navItems={navItems} />
+      <HeaderContent
+        opened={opened}
+        onOpen={open}
+        onClose={close}
+        navItems={navItems}
+        navbarOpened={navbarOpened}
+        onToggleNavbar={onToggleNavbar}
+      />
     </div>
   );
 }

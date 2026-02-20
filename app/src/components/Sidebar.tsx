@@ -88,13 +88,10 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
 
   return (
     <Stack
-      h="100vh"
+      h="100%"
       bg="white"
       style={{
         borderRight: `1px solid ${colors.border.light}`,
-        width: parseInt(spacing.appShell.navbar.width, 10),
-        left: 0,
-        top: 0,
         overflowY: 'auto',
       }}
       gap={0}
