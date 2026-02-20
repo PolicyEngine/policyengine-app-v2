@@ -264,8 +264,8 @@ export function IngredientSectionFull({
                       background: colors.white,
                       border: `1px solid ${colorConfig.border}`,
                       borderRadius: spacing.radius.sm,
-                      width: 28,
-                      height: 28,
+                      width: 34,
+                      height: 34,
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
@@ -277,7 +277,7 @@ export function IngredientSectionFull({
                   </Box>
                 </Tooltip>
               )}
-              <Tooltip label={`Change ${type}`} position="bottom" withArrow>
+              <Tooltip label={`Swap ${type}`} position="bottom" withArrow>
                 <Box
                   component="button"
                   onClick={(e: React.MouseEvent) => {
@@ -288,8 +288,8 @@ export function IngredientSectionFull({
                     background: colors.white,
                     border: `1px solid ${colorConfig.border}`,
                     borderRadius: spacing.radius.sm,
-                    width: 28,
-                    height: 28,
+                    width: 34,
+                    height: 34,
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
@@ -311,8 +311,8 @@ export function IngredientSectionFull({
                     background: 'transparent',
                     border: `1px solid ${colors.gray[300]}`,
                     borderRadius: spacing.radius.sm,
-                    width: 28,
-                    height: 28,
+                    width: 34,
+                    height: 34,
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',

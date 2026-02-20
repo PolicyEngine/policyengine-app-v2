@@ -2,6 +2,7 @@
 export * from './types';
 
 // Export column components
+export { ActionsColumn } from './ActionsColumn';
 export { ColumnRenderer } from './ColumnRenderer';
 export { TextColumn } from './TextColumn';
 export { LinkColumn } from './LinkColumn';

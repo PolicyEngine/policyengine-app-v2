@@ -48,12 +48,24 @@ export interface SplitMenuColumnConfig extends BaseColumnConfig {
   onAction: (action: string, recordId: string) => void;
 }
 
+export interface ActionsColumnConfig extends BaseColumnConfig {
+  type: 'actions';
+  actions: Array<{
+    action: string;
+    tooltip: string;
+    icon: React.ReactNode;
+    color?: string;
+  }>;
+  onAction: (action: string, recordId: string) => void;
+}
+
 export type ColumnConfig =
   | TextColumnConfig
   | LinkColumnConfig
   | BulletsColumnConfig
   | MenuColumnConfig
-  | SplitMenuColumnConfig;
+  | SplitMenuColumnConfig
+  | ActionsColumnConfig;
 
 // Data value interfaces
 export interface TextValue {
