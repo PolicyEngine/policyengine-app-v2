@@ -1,6 +1,6 @@
 # Simulation & Report V2 Migration Progress
 
-## Current: Phase 2, Task 3
+## Current: Phase 3, Task 7
 
 ## Branch Strategy
 
@@ -24,8 +24,8 @@ _(Updated as branches are created)_
 
 | Repo | Current branch | Created | Status |
 |---|---|---|---|
-| policyengine.py | `feat/sim-report-migration/phase-2` | 2026-02-19 | Active |
-| policyengine-api-v2-alpha | `feat/sim-report-migration/phase-2` | 2026-02-19 | Active |
+| policyengine.py | `feat/sim-report-migration/phase-3` | 2026-02-20 | Active |
+| policyengine-api-v2-alpha | `feat/sim-report-migration/phase-3` | 2026-02-20 | Active |
 | policyengine-app-v2 | — | — | Not started |
 
 ---
@@ -89,83 +89,106 @@ _(Updated as branches are created)_
   - [x] API (Modal): Extend both economy comparison functions to compute inequality
   - [x] API: Add `inequality` to `EconomicImpactResponse` and `_build_response()`
   - [x] API: pytest passes (219 passed, 57 pre-existing failures)
-- [ ] 3. Add poverty by age group
-  - [ ] .py: Create convenience functions (`calculate_us_poverty_by_age()`, `calculate_uk_poverty_by_age()`)
-  - [ ] .py: pytest passes
-  - [ ] API: Call age-group poverty functions, store as `poverty` records with `filter_variable`
-  - [ ] API (Modal): Same in Modal functions
-  - [ ] API: pytest passes
-- [ ] 4. Add poverty by gender
-  - [ ] .py: Add gender variable to US `entity_variables` (UK already has it)
-  - [ ] .py: Create gender poverty convenience functions
-  - [ ] .py: pytest passes
-  - [ ] API: Wire gender poverty into economy comparison
-  - [ ] API (Modal): Same in Modal functions
-  - [ ] API: pytest passes
-- [ ] 5. Add poverty by race
-  - [ ] .py: Add race variables to US `entity_variables`
-  - [ ] .py: Create racial poverty convenience functions
-  - [ ] .py: pytest passes
-  - [ ] API: Wire racial poverty into economy comparison
-  - [ ] API (Modal): Same in Modal functions
-  - [ ] API: pytest passes
-- [ ] 6. Add budget summary
-  - [ ] API: Derive net budgetary impact from ProgramStatistics (sum tax changes → revenue, benefit changes → spending)
-  - [ ] API: Add `budget` section to response (matching V1 shape)
-  - [ ] API: pytest passes
-- [ ] 7. Add intra-decile breakdown (5-category threshold classification)
-  - [ ] .py: Extend DecileImpact or create new output class for 5-category classification
-  - [ ] .py: pytest passes
-  - [ ] API: Create new output table or extend response with intra-decile data
-  - [ ] API (Modal): Compute intra-decile in both economy comparison functions
-  - [ ] API: pytest passes
-- [ ] 8. Add detailed budget / per-program breakdown
-  - [ ] API: Format ProgramStatistics into V1's `detailed_budget` structure in response
-  - [ ] API: pytest passes
-- [ ] 9. Create `/analysis/economy` and `/analysis/household` endpoints with full output structures
-  - [ ] API: Create `/analysis/economy` (or rename existing `/analysis/economic-impact`)
-  - [ ] API: Create `/analysis/household` (or rename existing `/analysis/household-impact`)
-  - [ ] API: Full response structures matching V1 parity
-  - [ ] API: pytest passes
+- [x] 3. Add poverty by age group (2026-02-19)
+  - [x] .py: Create convenience functions (`calculate_us_poverty_by_age()`, `calculate_uk_poverty_by_age()`)
+  - [x] .py: pytest passes (219 passed, 57 pre-existing failures)
+  - [x] API: Call age-group poverty functions, store as `poverty` records with `filter_variable`
+  - [x] API (Modal): Same in Modal functions
+  - [x] API: pytest passes (219 passed, 57 pre-existing failures)
+- [x] 4. Add poverty by gender (2026-02-19)
+  - [x] .py: Add `is_male` to both UK and US `entity_variables`
+  - [x] .py: Create gender poverty convenience functions
+  - [x] .py: pytest passes (219 passed, 57 pre-existing failures)
+  - [x] API: Wire gender poverty into economy comparison
+  - [x] API (Modal): Same in Modal functions
+  - [x] API: pytest passes (219 passed, 57 pre-existing failures)
+- [x] 5. Add poverty by race (2026-02-20)
+  - [x] .py: Add `race` to US `entity_variables`
+  - [x] .py: Create `calculate_us_poverty_by_race()` convenience function
+  - [x] .py: pytest passes (219 passed, 57 pre-existing failures)
+  - [x] API: Wire racial poverty into US economy comparison
+  - [x] API (Modal): Same in US Modal function
+  - [x] API: pytest passes (219 passed, 57 pre-existing failures)
+- [x] 6. Add budget summary (2026-02-20)
+  - [x] .py: Add `household_state_income_tax` to US tax_unit entity_variables
+  - [x] API: Create `budget_summary` table (BudgetSummary model + Alembic migration)
+  - [x] API: Compute budget aggregates in UK/US local comparison (Aggregate for monetary vars, raw numpy for household count)
+  - [x] API (Modal): Same in UK/US Modal functions
+  - [x] API: Add `budget_summary` to EconomicImpactResponse and `_build_response()`
+  - [x] API: pytest passes (218 passed, 47 pre-existing failures)
+- [x] 7. Add intra-decile breakdown (5-category threshold classification) (2026-02-20)
+  - [x] .py: Add `household_income_decile` and `household_count_people` to UK and US entity_variables
+  - [x] API: Create `intra_decile_impacts` table (IntraDecileImpact model + Alembic migration)
+  - [x] API: Create `intra_decile.py` helper with two formula functions (V1 original + corrected) and strategy selector
+  - [x] API: Wire intra-decile computation into UK/US local and Modal functions
+  - [x] API: Add `intra_decile` to EconomicImpactResponse and `_build_response()`
+  - [x] API: pytest passes (29/29 analysis tests)
+- [x] 8. Add detailed budget / per-program breakdown (2026-02-20)
+  - [x] API: Add `detailed_budget` dict to `EconomicImpactResponse`, derived from ProgramStatistics
+  - [x] API: Expand UK local program list from 4 to 10 (matching Modal)
+  - [x] API: pytest passes (29/29 analysis tests)
+- [x] 9. Create `/analysis/economy` and `/analysis/household` endpoints with full output structures (2026-02-20)
+  - [x] API: Existing `/analysis/economic-impact` and `/analysis/household-impact` names kept (user decision)
+  - [x] API: Full response structures already complete from Tasks 1-8 (remaining fields are Phase 3)
+  - [x] API: pytest passes (29/29 analysis tests)
+- [x] 10. Write tests for Phase 2 changes (`/write-tests`) (2026-02-20)
+  - [x] .py: Tests for convenience functions (poverty by age/gender/race) — 16 tests
+  - [x] API: Tests for intra-decile computation (formula variants, edge cases) — 20 tests
+  - [x] API: Tests for _build_response (poverty, inequality, budget_summary, intra_decile, program_statistics, detailed_budget) — 32 tests
+  - [x] All 68 new tests pass
 
 ---
 
 ## Phase 3: Expensive Computations (.py + API v2 alpha)
 
-- [ ] 1. Congressional district impact (US)
-  - [ ] .py: Create per-district analysis function or batched aggregate approach
-  - [ ] .py: pytest passes
-  - [ ] API: Create dedicated Modal function or batching strategy for 435 districts
-  - [ ] API: Add `congressional_district_impact` to economy response
-  - [ ] API: pytest passes
-- [ ] 2. UK constituency impact
-  - [ ] .py: Create per-constituency analysis function
-  - [ ] .py: pytest passes
-  - [ ] API: Wire into UK economy comparison
-  - [ ] API: pytest passes
-- [ ] 3. UK local authority impact
-  - [ ] .py: Create per-local-authority analysis function
-  - [ ] .py: pytest passes
-  - [ ] API: Wire into UK economy comparison
-  - [ ] API: pytest passes
-- [ ] 4. Labor supply response
+- [x] 1. Congressional district impact (US) (2026-02-20)
+  - [x] .py: Add `congressional_district_geoid` to US household entity_variables
+  - [x] .py: Create `CongressionalDistrictImpact` output class + `compute_us_congressional_district_impacts()`
+  - [x] .py: pytest passes (92 tests)
+  - [x] API: Create `congressional_district_impacts` table (model + Alembic migration)
+  - [x] API: Wire computation into `_run_local_economy_comparison_us` and Modal `economy_comparison_us`
+  - [x] API: Add `congressional_district_impact` to `EconomicImpactResponse` and `_build_response()`
+  - [x] API: pytest passes (83 analysis tests)
+- [x] 2. UK constituency impact (2026-02-20)
+  - [x] .py: Create `ConstituencyImpact` output class + `compute_uk_constituency_impacts()` (weight matrix reweighting)
+  - [x] .py: pytest passes (92 tests)
+  - [x] API: Create `constituency_impacts` table (model + Alembic migration)
+  - [x] API: Wire computation into `_run_local_economy_comparison_uk` and Modal `economy_comparison_uk`
+  - [x] API: Add `constituency_impact` to `EconomicImpactResponse` and `_build_response()`
+  - [x] API: pytest passes (29 analysis tests)
+- [x] 3. UK local authority impact (2026-02-20)
+  - [x] .py: Create `LocalAuthorityImpact` output class + `compute_uk_local_authority_impacts()` (weight matrix reweighting)
+  - [x] .py: pytest passes (92 tests)
+  - [x] API: Create `local_authority_impacts` table (model + Alembic migration)
+  - [x] API: Wire computation into `_run_local_economy_comparison_uk` and Modal `economy_comparison_uk`
+  - [x] API: Add `local_authority_impact` to `EconomicImpactResponse` and `_build_response()`
+  - [x] API: pytest passes (29 analysis tests)
+- [ ] 4. Labor supply response — **DEFERRED** (complex, needs design decisions; detailed plan written 2026-02-20)
   - [ ] .py: Build LSR computation (income/substitution effects, hours, revenue change)
   - [ ] .py: pytest passes
   - [ ] API: Wire into economy comparison (both local and Modal)
   - [ ] API: Add `labor_supply_response` to economy response
   - [ ] API: pytest passes
-- [ ] 5. Cliff impact
+- [ ] 5. Cliff impact — **DEFERRED** (expensive computation, needs design decisions; detailed plan written 2026-02-20)
   - [ ] .py: Build cliff rate/gap analysis
   - [ ] .py: pytest passes
   - [ ] API: Wire into economy comparison
   - [ ] API: Add `cliff_impact` to economy response
   - [ ] API: pytest passes
-- [ ] 6. Wealth decile impact (UK)
-  - [ ] .py: Create wealth-based decile output class
-  - [ ] .py: pytest passes
-  - [ ] API: Wire into UK economy comparison
-  - [ ] API: Add `wealth_decile` and `intra_wealth_decile` to economy response
-  - [ ] API: pytest passes
+- [x] 6. Wealth decile impact (UK) + refactor intra-decile to policyengine.py (2026-02-20)
+  - [x] .py: Add `decile_variable` param to `DecileImpact` for pre-computed groupings
+  - [x] .py: Create `IntraDecileImpact` output class + `compute_intra_decile_impacts()` (qcut by default)
+  - [x] .py: Add `household_wealth_decile` to UK entity_variables
+  - [x] .py: pytest passes (239 tests)
+  - [x] API: Migrate all intra-decile computation (UK+US, local+Modal) from `api/intra_decile.py` to policyengine.py
+  - [x] API: Add `decile_type` column to `intra_decile_impacts` table (Alembic migration)
+  - [x] API: Wire wealth decile + intra-wealth-decile into UK economy comparison (local + Modal)
+  - [x] API: Add `wealth_decile` and `intra_wealth_decile` to `EconomicImpactResponse` and `_build_response()`
+  - [x] API: pytest passes (29 passed, 2 skipped)
+- [ ] 7. Write tests for Phase 3 changes (`/write-tests`)
+  - [ ] .py: Tests for new computation functions
+  - [ ] API: Tests for new response fields and computation wiring
+  - [ ] All new tests pass
 
 ---
 
@@ -186,6 +209,61 @@ _(Updated as branches are created)_
   - [ ] API: Extract module computation into callable units
   - [ ] API: `/analysis/economy` calls all modules; `/analysis/economy-custom` calls selected ones
   - [ ] API: pytest passes
+- [ ] 5. Write tests for Phase 4 changes (`/write-tests`)
+  - [ ] API: Tests for module registry, `/analysis/options`, `/analysis/economy-custom`
+  - [ ] All new tests pass
+
+---
+
+## Phase 4a: Lazy Metadata Loading (API v2 alpha + app v2)
+
+_Full spec: `.claude-plan/LAZY_METADATA_SPEC.md`_
+
+- [ ] 1. Add batch parameter endpoint (`POST /parameters/batch`)
+  - [ ] API: New endpoint accepting `{ names: string[], tax_benefit_model_name: string }`
+  - [ ] API: Return `ParameterRead[]` matching the given names
+  - [ ] API: pytest passes
+- [ ] 2. Add parameter children endpoint (`GET /parameters/children`)
+  - [ ] API: Accept `parent_path` and `tax_benefit_model_name` query params
+  - [ ] API: Return structured children (nodes with child_count + leaf parameters)
+  - [ ] API: pytest passes
+- [ ] 3. Add batch variable endpoint (`POST /variables/batch`)
+  - [ ] API: New endpoint accepting `{ names: string[], tax_benefit_model_name: string }`
+  - [ ] API: Return `VariableRead[]` matching the given names
+  - [ ] API: pytest passes
+- [ ] 4. Add model-by-country endpoint (`GET /tax-benefit-models/by-country/{country_id}`)
+  - [ ] API: Return model + latest version in one call
+  - [ ] API: pytest passes
+- [ ] 5. Write tests for Phase 4a API changes (`/write-tests`)
+  - [ ] API: Tests for batch parameter, children, batch variable, model-by-country
+  - [ ] All new tests pass
+- [ ] 6. Create app v2 API modules for lazy loading
+  - [ ] App: `api/v2/parameterTree.ts` with `fetchParameterChildren()`, `fetchParametersBatch()`
+  - [ ] App: `api/v2/variablesBatch.ts` with `fetchVariablesBatch()`
+  - [ ] App: Update `api/v2/taxBenefitModels.ts` with `fetchModelByCountry()`
+  - [ ] App: typecheck + lint + prettier pass
+- [ ] 7. Create TanStack Query hooks for lazy loading
+  - [ ] App: `useParameterChildren(parentPath, countryId)`
+  - [ ] App: `usePolicyParameters(policy)`
+  - [ ] App: `useModelVersion(countryId)`
+  - [ ] App: typecheck + lint + prettier pass
+- [ ] 8. Add localStorage caching layer
+  - [ ] App: `libs/metadataCache.ts` — read/write/invalidate, version comparison
+  - [ ] App: Hydrate TanStack Query from localStorage on load
+  - [ ] App: Write-through: persist new API responses to localStorage
+  - [ ] App: typecheck + lint + prettier pass
+- [ ] 9. Replace bulk parameter fetch with lazy tree loading
+  - [ ] App: Remove `fetchParameters()` from `fetchMetadataThunk`
+  - [ ] App: Update `useLazyParameterTree` to use API-backed `useParameterChildren`
+  - [ ] App: Loading states per tree level
+  - [ ] App: typecheck + lint + prettier + tests pass
+- [ ] 10. Replace bulk variable fetch with cached/background fetch
+  - [ ] App: Move variable fetch out of critical path (background or cache-first)
+  - [ ] App: Household builder search works with cached variables
+  - [ ] App: typecheck + lint + prettier + tests pass
+- [ ] 11. Write tests for Phase 4a app changes (`/write-tests`)
+  - [ ] App: Tests for new hooks, API modules, cache layer
+  - [ ] All new tests pass
 
 ---
 
@@ -231,6 +309,9 @@ _(Updated as branches are created)_
   - [ ] App: Remove or mark deprecated: `api/simulation.ts`, `api/report.ts`, `api/societyWideCalculation.ts`, `api/reportCalculations.ts`
   - [ ] App: Remove v1-specific adapter methods
   - [ ] App: typecheck + lint + prettier + tests pass
+- [ ] 9. Write tests for Phase 5 changes (`/write-tests`)
+  - [ ] App: Tests for v2 API modules, adapters, strategies, hooks
+  - [ ] All new tests pass
 
 ---
 
