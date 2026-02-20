@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { IconCursorText, IconPencil } from '@tabler/icons-react';
 import { useNavigate } from 'react-router-dom';
 import { Stack } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
@@ -8,6 +9,8 @@ import IngredientReadView from '@/components/IngredientReadView';
 import { MOCK_USER_ID } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useUpdatePolicyAssociation, useUserPolicies } from '@/hooks/useUserPolicy';
+import { PolicyCreationModal } from '@/pages/reportBuilder/modals/PolicyCreationModal';
+import { PolicyStateProps } from '@/types/pathwayState';
 import { countPolicyModifications } from '@/utils/countParameterChanges';
 import { formatDate } from '@/utils/dateUtils';
 
@@ -18,12 +21,15 @@ export default function PoliciesPage() {
   const countryId = useCurrentCountry();
 
   const [searchValue, setSearchValue] = useState('');
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   // Rename modal state
   const [renamingPolicyId, setRenamingPolicyId] = useState<string | null>(null);
   const [renameOpened, { open: openRename, close: closeRename }] = useDisclosure(false);
   const [renameError, setRenameError] = useState<string | null>(null);
+
+  // Policy editor modal state
+  const [editingPolicy, setEditingPolicy] = useState<PolicyStateProps | null>(null);
+  const [editorOpened, { open: openEditor, close: closeEditor }] = useDisclosure(false);
 
   // Rename mutation hook
   const updateAssociation = useUpdatePolicyAssociation();
@@ -32,13 +38,17 @@ export default function PoliciesPage() {
     navigate(`/${countryId}/policies/create`);
   };
 
-  const handleSelectionChange = (recordId: string, selected: boolean) => {
-    setSelectedIds((prev) =>
-      selected ? [...prev, recordId] : prev.filter((id) => id !== recordId)
-    );
+  const handleOpenEditor = (recordId: string) => {
+    const item = data?.find((p) => p.association.id?.toString() === recordId);
+    if (item) {
+      setEditingPolicy({
+        id: item.association.policyId.toString(),
+        label: item.association.label || `Policy #${item.association.policyId}`,
+        parameters: item.policy?.parameters || [],
+      });
+      openEditor();
+    }
   };
-
-  const isSelected = (recordId: string) => selectedIds.includes(recordId);
 
   const handleOpenRename = (userPolicyId: string) => {
     setRenamingPolicyId(userPolicyId);
@@ -94,11 +104,17 @@ export default function PoliciesPage() {
     {
       key: 'actions',
       header: '',
-      type: 'menu',
-      actions: [{ label: 'Rename', action: 'rename' }],
+      type: 'actions',
+      actions: [
+        { action: 'rename', tooltip: 'Rename', icon: <IconCursorText size={16} /> },
+        { action: 'edit', tooltip: 'Edit policy', icon: <IconPencil size={16} /> },
+      ],
       onAction: (action: string, recordId: string) => {
         if (action === 'rename') {
           handleOpenRename(recordId);
+        }
+        if (action === 'edit') {
+          handleOpenEditor(recordId);
         }
       },
     },
@@ -145,9 +161,6 @@ export default function PoliciesPage() {
           columns={policyColumns}
           searchValue={searchValue}
           onSearchChange={setSearchValue}
-          enableSelection
-          isSelected={isSelected}
-          onSelectionChange={handleSelectionChange}
         />
       </Stack>
 
@@ -159,6 +172,20 @@ export default function PoliciesPage() {
         isLoading={updateAssociation.isPending}
         ingredientType="policy"
         submissionError={renameError}
+      />
+
+      <PolicyCreationModal
+        isOpen={editorOpened}
+        onClose={() => {
+          closeEditor();
+          setEditingPolicy(null);
+        }}
+        onPolicyCreated={() => {
+          closeEditor();
+          setEditingPolicy(null);
+        }}
+        simulationIndex={0}
+        initialPolicy={editingPolicy ?? undefined}
       />
     </>
   );

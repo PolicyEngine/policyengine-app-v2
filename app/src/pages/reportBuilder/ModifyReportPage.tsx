@@ -6,7 +6,7 @@ import {
   IconReplace,
   IconX,
 } from '@tabler/icons-react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Button, Container, Group, Modal, Stack, Text } from '@mantine/core';
 import { spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
@@ -20,6 +20,8 @@ export default function ModifyReportPage() {
   const { userReportId } = useParams<{ userReportId: string }>();
   const countryId = useCurrentCountry() as 'us' | 'uk';
   const navigate = useNavigate();
+  const location = useLocation();
+  const startInEditMode = (location.state as { edit?: boolean } | null)?.edit === true;
 
   const { reportState, setReportState, originalState, isLoading, error } = useReportBuilderState(
     userReportId ?? ''
@@ -41,7 +43,7 @@ export default function ModifyReportPage() {
   });
 
   // View/edit mode state
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(startInEditMode);
   const [showSameNameWarning, setShowSameNameWarning] = useState(false);
 
   const isEitherSubmitting = isSavingNew || isReplacing;

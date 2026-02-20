@@ -1,5 +1,5 @@
 import { IconPlus } from '@tabler/icons-react';
-import { Box, Button, Checkbox, Flex, Loader, Paper, Table, Text, Title } from '@mantine/core';
+import { Box, Button, Flex, Loader, Paper, Table, Text, Title } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
 import { ColumnConfig, ColumnRenderer, IngredientRecord } from './columns';
 import EmptyState from './common/EmptyState';
@@ -19,9 +19,6 @@ interface IngredientReadViewProps {
   searchValue?: string;
   onSearchChange?: (value: string) => void;
   onMoreFilters?: () => void;
-  enableSelection?: boolean;
-  isSelected?: (recordId: string) => boolean;
-  onSelectionChange?: (recordId: string, selected: boolean) => void;
 }
 
 export default function IngredientReadView({
@@ -38,9 +35,6 @@ export default function IngredientReadView({
   searchValue: _searchValue = '',
   onSearchChange: _onSearchChange,
   onMoreFilters: _onMoreFilters,
-  enableSelection = true,
-  isSelected = () => false,
-  onSelectionChange,
 }: IngredientReadViewProps) {
   return (
     <Box>
@@ -115,16 +109,6 @@ export default function IngredientReadView({
               <Table>
                 <Table.Thead style={{ backgroundColor: colors.gray[50] }}>
                   <Table.Tr>
-                    {enableSelection && (
-                      <Table.Th
-                        style={{
-                          width: '48px',
-                          padding: `${spacing.md} ${spacing.lg}`,
-                        }}
-                      >
-                        {/* Optional: Add "select all" checkbox here in the future */}
-                      </Table.Th>
-                    )}
                     {columns.map((column) => (
                       <Table.Th
                         key={column.key}
@@ -143,49 +127,18 @@ export default function IngredientReadView({
                   </Table.Tr>
                 </Table.Thead>
                 <Table.Tbody>
-                  {data.map((record) => {
-                    const selected = isSelected(record.id);
-                    return (
-                      <Table.Tr
-                        key={record.id}
-                        style={{
-                          backgroundColor: selected ? colors.blue[50] : 'transparent',
-                          borderLeft: selected
-                            ? `3px solid ${colors.primary[500]}`
-                            : '3px solid transparent',
-                          cursor: enableSelection ? 'pointer' : 'default',
-                        }}
-                        onClick={() => {
-                          if (enableSelection && onSelectionChange) {
-                            onSelectionChange(record.id, !selected);
-                          }
-                        }}
-                      >
-                        {enableSelection && (
-                          <Table.Td style={{ padding: `${spacing.md} ${spacing.lg}` }}>
-                            <Checkbox
-                              checked={selected}
-                              onChange={(event) => {
-                                event.stopPropagation();
-                                if (onSelectionChange) {
-                                  onSelectionChange(record.id, event.currentTarget.checked);
-                                }
-                              }}
-                              size="sm"
-                            />
-                          </Table.Td>
-                        )}
-                        {columns.map((column) => (
-                          <Table.Td
-                            key={column.key}
-                            style={{ padding: `${spacing.md} ${spacing.lg}` }}
-                          >
-                            <ColumnRenderer config={column} record={record} />
-                          </Table.Td>
-                        ))}
-                      </Table.Tr>
-                    );
-                  })}
+                  {data.map((record) => (
+                    <Table.Tr key={record.id}>
+                      {columns.map((column) => (
+                        <Table.Td
+                          key={column.key}
+                          style={{ padding: `${spacing.md} ${spacing.lg}` }}
+                        >
+                          <ColumnRenderer config={column} record={record} />
+                        </Table.Td>
+                      ))}
+                    </Table.Tr>
+                  ))}
                 </Table.Tbody>
               </Table>
             )}

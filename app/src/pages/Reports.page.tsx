@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { IconCursorText, IconPencil, IconSearch } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { Stack } from '@mantine/core';
@@ -37,7 +38,6 @@ export default function ReportsPage() {
   }, [data]);
 
   const [searchValue, setSearchValue] = useState('');
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   // Rename modal state
   const [renamingReportId, setRenamingReportId] = useState<string | null>(null);
@@ -50,14 +50,6 @@ export default function ReportsPage() {
     const targetPath = `/${countryId}/reports/create`;
     navigate(targetPath);
   };
-
-  const handleSelectionChange = (recordId: string, selected: boolean) => {
-    setSelectedIds((prev) =>
-      selected ? [...prev, recordId] : prev.filter((id) => id !== recordId)
-    );
-  };
-
-  const isSelected = (recordId: string) => selectedIds.includes(recordId);
 
   const handleOpenRename = (userReportId: string) => {
     setRenamingReportId(userReportId);
@@ -131,17 +123,21 @@ export default function ReportsPage() {
     {
       key: 'actions',
       header: '',
-      type: 'menu',
+      type: 'actions',
       actions: [
-        { label: 'Rename', action: 'rename' },
-        { label: 'Modify', action: 'modify' },
+        { action: 'rename', tooltip: 'Rename', icon: <IconCursorText size={16} /> },
+        { action: 'view', tooltip: 'View report', icon: <IconSearch size={16} /> },
+        { action: 'edit', tooltip: 'Edit report', icon: <IconPencil size={16} /> },
       ],
       onAction: (action: string, recordId: string) => {
         if (action === 'rename') {
           handleOpenRename(recordId);
         }
-        if (action === 'modify') {
+        if (action === 'view') {
           navigate(`/${countryId}/report-builder/${recordId}`);
+        }
+        if (action === 'edit') {
+          navigate(`/${countryId}/report-builder/${recordId}`, { state: { edit: true } });
         }
       },
     },
@@ -240,9 +236,6 @@ export default function ReportsPage() {
           columns={reportColumns}
           searchValue={searchValue}
           onSearchChange={setSearchValue}
-          enableSelection
-          isSelected={isSelected}
-          onSelectionChange={handleSelectionChange}
         />
       </Stack>
 

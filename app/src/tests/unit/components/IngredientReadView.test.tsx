@@ -127,47 +127,4 @@ describe('IngredientReadView', () => {
     expect(onBuild).toHaveBeenCalled();
   });
 
-  test('given selection enabled then displays checkboxes', () => {
-    // When
-    render(
-      <IngredientReadView
-        ingredient={MOCK_INGREDIENT.NAME}
-        title={MOCK_INGREDIENT.TITLE}
-        isLoading={false}
-        isError={false}
-        data={MOCK_DATA}
-        columns={MOCK_COLUMNS}
-        enableSelection
-      />
-    );
-
-    // Then
-    const checkboxes = screen.getAllByRole('checkbox');
-    expect(checkboxes).toHaveLength(2); // One for each record
-  });
-
-  test('given user clicks checkbox then selection callback is invoked', async () => {
-    // Given
-    const user = userEvent.setup();
-    const onSelectionChange = vi.fn();
-
-    // When
-    render(
-      <IngredientReadView
-        ingredient={MOCK_INGREDIENT.NAME}
-        title={MOCK_INGREDIENT.TITLE}
-        isLoading={false}
-        isError={false}
-        data={MOCK_DATA}
-        columns={MOCK_COLUMNS}
-        enableSelection
-        onSelectionChange={onSelectionChange}
-      />
-    );
-    const checkboxes = screen.getAllByRole('checkbox');
-    await user.click(checkboxes[0]);
-
-    // Then
-    expect(onSelectionChange).toHaveBeenCalledWith('1', true);
-  });
 });

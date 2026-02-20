@@ -89,8 +89,15 @@ export function ParameterSidebar({
             <UnstyledButton
               style={{
                 ...modalStyles.sidebarItem,
-                background: activeTab === 'overview' ? colorConfig.bg : 'transparent',
-                color: activeTab === 'overview' ? colorConfig.icon : colors.gray[700],
+                width: '100%',
+                background:
+                  activeTab === 'overview'
+                    ? 'var(--mantine-color-primary-light)'
+                    : 'transparent',
+                color:
+                  activeTab === 'overview'
+                    ? 'var(--mantine-color-primary-light-color)'
+                    : colors.gray[700],
               }}
               onClick={() => onTabChange('overview')}
             >

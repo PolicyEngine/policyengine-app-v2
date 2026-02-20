@@ -45,7 +45,6 @@ export default function PopulationsPage() {
   const navigate = useNavigate();
 
   const [searchValue, setSearchValue] = useState('');
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   // Rename modal state
   const [renamingId, setRenamingId] = useState<string | null>(null);
@@ -65,14 +64,6 @@ export default function PopulationsPage() {
   const handleBuildPopulation = () => {
     navigate(`/${countryId}/households/create`);
   };
-
-  const handleSelectionChange = (recordId: string, selected: boolean) => {
-    setSelectedIds((prev) =>
-      selected ? [...prev, recordId] : prev.filter((id) => id !== recordId)
-    );
-  };
-
-  const isSelected = (recordId: string) => selectedIds.includes(recordId);
 
   const handleOpenRename = (recordId: string) => {
     // Determine type by looking up in the original data
@@ -326,9 +317,6 @@ export default function PopulationsPage() {
           columns={populationColumns}
           searchValue={searchValue}
           onSearchChange={setSearchValue}
-          enableSelection
-          isSelected={isSelected}
-          onSelectionChange={handleSelectionChange}
         />
       </Stack>
 

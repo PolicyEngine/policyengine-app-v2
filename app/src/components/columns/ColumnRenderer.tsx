@@ -1,11 +1,13 @@
 import { Text } from '@mantine/core';
 import { colors } from '@/designTokens';
+import { ActionsColumn } from './ActionsColumn';
 import { BulletsColumn } from './BulletsColumn';
 import { LinkColumn } from './LinkColumn';
 import { MenuColumn } from './MenuColumn';
 import { SplitMenuColumn } from './SplitMenuColumn';
 import { TextColumn } from './TextColumn';
 import {
+  ActionsColumnConfig,
   BulletsColumnConfig,
   BulletsValue,
   ColumnConfig,
@@ -28,7 +30,12 @@ interface ColumnRendererProps {
 export function ColumnRenderer({ config, record }: ColumnRendererProps) {
   const value = record[config.key] as ColumnValue;
 
-  if (!value && config.type !== 'menu' && config.type !== 'split-menu') {
+  if (
+    !value &&
+    config.type !== 'menu' &&
+    config.type !== 'split-menu' &&
+    config.type !== 'actions'
+  ) {
     return (
       <Text size="sm" c={colors.text.secondary}>
         —
@@ -56,6 +63,9 @@ export function ColumnRenderer({ config, record }: ColumnRendererProps) {
 
     case 'split-menu':
       return <SplitMenuColumn config={config as SplitMenuColumnConfig} record={record} />;
+
+    case 'actions':
+      return <ActionsColumn config={config as ActionsColumnConfig} record={record} />;
 
     default:
       return <Text size="sm">{String(value)}</Text>;
