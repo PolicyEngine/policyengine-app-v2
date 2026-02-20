@@ -165,6 +165,7 @@ export interface IngredientSectionProps {
   onSelectRecentPopulation?: (population: PopulationStateProps) => void;
   onDeselectPopulation?: () => void;
   onDeselectPolicy?: () => void;
+  onEditPolicy?: () => void;
   onCreateCustom: () => void;
   onBrowseMore?: () => void;
   isInherited?: boolean;
@@ -186,6 +187,7 @@ export interface SimulationBlockProps {
   onSelectRecentPopulation: (population: PopulationStateProps) => void;
   onDeselectPolicy: () => void;
   onDeselectPopulation: () => void;
+  onEditPolicy: () => void;
   onCreateCustomPolicy: () => void;
   onBrowseMorePolicies: () => void;
   onBrowseMorePopulations: () => void;
@@ -218,6 +220,7 @@ export interface IngredientPickerModalProps {
 export interface PolicyBrowseState {
   isOpen: boolean;
   simulationIndex: number;
+  initialPolicy?: import('@/types/pathwayState').PolicyStateProps;
 }
 
 export interface PolicyBrowseModalProps {

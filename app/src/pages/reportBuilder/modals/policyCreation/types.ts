@@ -9,6 +9,9 @@ import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import { PolicyStateProps } from '@/types/pathwayState';
 import { ValueInterval, ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
 
+/** Which sidebar tab is active — controls the main content area */
+export type SidebarTab = 'overview' | 'parameters';
+
 /**
  * Modified parameter with formatted changes for display
  */
@@ -34,6 +37,10 @@ export interface ParameterSidebarProps {
   onSearchChange: (value: string) => void;
   onSearchSelect: (paramName: string) => void;
   onMenuItemClick: (paramName: string) => void;
+  /** Active sidebar tab — when provided, renders tab buttons above search */
+  activeTab?: SidebarTab;
+  /** Called when the user clicks a tab */
+  onTabChange?: (tab: SidebarTab) => void;
 }
 
 /**

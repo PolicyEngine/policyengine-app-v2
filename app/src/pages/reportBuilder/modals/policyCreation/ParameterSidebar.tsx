@@ -1,13 +1,27 @@
 /**
  * ParameterSidebar - Left sidebar with parameter search and tree navigation
+ *
+ * When activeTab / onTabChange are provided, renders a "Policy overview"
+ * menu item above the search box. The item controls the main content
+ * area — the sidebar itself always shows the parameter search + tree.
  */
 
 import React, { useCallback, useMemo } from 'react';
-import { IconSearch } from '@tabler/icons-react';
-import { Autocomplete, Box, NavLink, ScrollArea, Skeleton, Stack, Text } from '@mantine/core';
+import { IconListDetails, IconSearch } from '@tabler/icons-react';
+import {
+  Autocomplete,
+  Box,
+  NavLink,
+  ScrollArea,
+  Skeleton,
+  Stack,
+  Text,
+  UnstyledButton,
+} from '@mantine/core';
 import { colors, spacing } from '@/designTokens';
 import { ParameterTreeNode } from '@/types/metadata';
-import { FONT_SIZES } from '../../constants';
+import { FONT_SIZES, INGREDIENT_COLORS } from '../../constants';
+import { modalStyles } from '../../styles';
 import { ParameterSidebarProps } from './types';
 
 export function ParameterSidebar({
@@ -20,7 +34,12 @@ export function ParameterSidebar({
   onSearchChange,
   onSearchSelect,
   onMenuItemClick,
+  activeTab,
+  onTabChange,
 }: ParameterSidebarProps) {
+  const hasOverview = activeTab !== undefined && onTabChange !== undefined;
+  const colorConfig = INGREDIENT_COLORS.policy;
+
   // Render nested menu recursively
   const renderMenuItems = useCallback(
     (items: ParameterTreeNode[]): React.ReactNode => {
@@ -64,17 +83,37 @@ export function ParameterSidebar({
       }}
     >
       <Box style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        {/* Policy overview menu item (optional) */}
+        {hasOverview && (
+          <Box style={{ padding: `${spacing.sm} ${spacing.sm} 0` }}>
+            <UnstyledButton
+              style={{
+                ...modalStyles.sidebarItem,
+                background: activeTab === 'overview' ? colorConfig.bg : 'transparent',
+                color: activeTab === 'overview' ? colorConfig.icon : colors.gray[700],
+              }}
+              onClick={() => onTabChange('overview')}
+            >
+              <IconListDetails size={16} />
+              <Text style={{ fontSize: FONT_SIZES.small, flex: 1 }}>Policy overview</Text>
+            </UnstyledButton>
+          </Box>
+        )}
+
+        {/* Search + tree — always visible */}
         <Box style={{ padding: spacing.md, borderBottom: `1px solid ${colors.border.light}` }}>
-          <Text
-            fw={600}
-            style={{
-              fontSize: FONT_SIZES.small,
-              color: colors.gray[600],
-              marginBottom: spacing.sm,
-            }}
-          >
-            PARAMETERS
-          </Text>
+          {!hasOverview && (
+            <Text
+              fw={600}
+              style={{
+                fontSize: FONT_SIZES.small,
+                color: colors.gray[600],
+                marginBottom: spacing.sm,
+              }}
+            >
+              PARAMETERS
+            </Text>
+          )}
           <Autocomplete
             placeholder="Search parameters..."
             value={parameterSearch}

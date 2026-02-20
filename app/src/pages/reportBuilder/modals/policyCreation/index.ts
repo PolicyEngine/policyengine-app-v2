@@ -12,6 +12,7 @@ export { EmptyParameterState } from './EmptyParameterState';
 
 export type {
   ModifiedParam,
+  SidebarTab,
   ParameterSidebarProps,
   PolicyCreationHeaderProps,
   ParameterHeaderCardProps,

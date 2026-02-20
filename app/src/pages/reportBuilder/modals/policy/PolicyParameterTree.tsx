@@ -1,15 +1,30 @@
 /**
  * PolicyParameterTree - Parameter tree navigation for policy creation mode
+ *
+ * When activeTab / onTabChange are provided, renders a "Policy overview"
+ * menu item above the search box. The item controls the main content
+ * area — the sidebar itself always shows the parameter search + tree.
  */
 import { useCallback, useMemo } from 'react';
-import { IconSearch } from '@tabler/icons-react';
+import { IconListDetails, IconSearch } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
-import { Autocomplete, Box, NavLink, ScrollArea, Skeleton, Stack, Text } from '@mantine/core';
+import {
+  Autocomplete,
+  Box,
+  NavLink,
+  ScrollArea,
+  Skeleton,
+  Stack,
+  Text,
+  UnstyledButton,
+} from '@mantine/core';
 import { colors, spacing } from '@/designTokens';
 import { selectSearchableParameters } from '@/libs/metadataUtils';
 import { ParameterTreeNode } from '@/types/metadata';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
-import { FONT_SIZES } from '../../constants';
+import { FONT_SIZES, INGREDIENT_COLORS } from '../../constants';
+import { modalStyles } from '../../styles';
+import type { SidebarTab } from '../policyCreation/types';
 
 interface PolicyParameterTreeProps {
   parameterTree: ParameterTreeNode | null;
@@ -21,6 +36,10 @@ interface PolicyParameterTreeProps {
   setParameterSearch: (search: string) => void;
   onMenuItemClick: (paramName: string) => void;
   onSearchSelect: (paramName: string) => void;
+  /** Active sidebar tab — when provided, renders tab buttons above search */
+  activeTab?: SidebarTab;
+  /** Called when the user clicks a tab */
+  onTabChange?: (tab: SidebarTab) => void;
 }
 
 export function PolicyParameterTree({
@@ -33,7 +52,12 @@ export function PolicyParameterTree({
   setParameterSearch,
   onMenuItemClick,
   onSearchSelect,
+  activeTab,
+  onTabChange,
 }: PolicyParameterTreeProps) {
+  const hasOverview = activeTab !== undefined && onTabChange !== undefined;
+  const colorConfig = INGREDIENT_COLORS.policy;
+
   // Get searchable parameters from memoized selector (computed once when metadata loads)
   const searchableParameters = useSelector(selectSearchableParameters);
 
@@ -78,13 +102,37 @@ export function PolicyParameterTree({
         marginRight: 0,
       }}
     >
+      {/* Policy overview menu item (optional) */}
+      {hasOverview && (
+        <Box style={{ padding: `${spacing.sm} ${spacing.sm} 0` }}>
+          <UnstyledButton
+            style={{
+              ...modalStyles.sidebarItem,
+              background: activeTab === 'overview' ? colorConfig.bg : 'transparent',
+              color: activeTab === 'overview' ? colorConfig.icon : colors.gray[700],
+            }}
+            onClick={() => onTabChange('overview')}
+          >
+            <IconListDetails size={16} />
+            <Text style={{ fontSize: FONT_SIZES.small, flex: 1 }}>Policy overview</Text>
+          </UnstyledButton>
+        </Box>
+      )}
+
+      {/* Search + tree — always visible */}
       <Box style={{ padding: spacing.md, borderBottom: `1px solid ${colors.border.light}` }}>
-        <Text
-          fw={600}
-          style={{ fontSize: FONT_SIZES.small, color: colors.gray[600], marginBottom: spacing.sm }}
-        >
-          PARAMETERS
-        </Text>
+        {!hasOverview && (
+          <Text
+            fw={600}
+            style={{
+              fontSize: FONT_SIZES.small,
+              color: colors.gray[600],
+              marginBottom: spacing.sm,
+            }}
+          >
+            PARAMETERS
+          </Text>
+        )}
         <Autocomplete
           placeholder="Search parameters..."
           value={parameterSearch}

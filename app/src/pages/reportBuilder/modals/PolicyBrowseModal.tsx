@@ -5,17 +5,19 @@
  * - Browse mode: PolicyBrowseContent for main content
  * - Creation mode: PolicyCreationContent + PolicyParameterTree
  */
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import {
   IconChevronRight,
+  IconDeviceFloppy,
   IconFolder,
   IconPlus,
+  IconRefresh,
   IconScale,
   IconStar,
   IconUsers,
 } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
-import { Box, Group, Paper, Stack, Text } from '@mantine/core';
+import { Box, Button, Group, Paper, Stack, Text, Tooltip } from '@mantine/core';
 import { PolicyAdapter } from '@/adapters';
 import { MOCK_USER_ID } from '@/constants';
 import { colors, spacing } from '@/designTokens';
@@ -31,7 +33,13 @@ import { PolicyCreationPayload } from '@/types/payloads';
 import { Parameter } from '@/types/subIngredients/parameter';
 import { ValueInterval, ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
 import { countPolicyModifications } from '@/utils/countParameterChanges';
-import { formatLabelParts, getHierarchicalLabelsFromTree } from '@/utils/parameterLabels';
+import { formatPeriod } from '@/utils/dateUtils';
+import {
+  formatLabelParts,
+  getHierarchicalLabels,
+  getHierarchicalLabelsFromTree,
+} from '@/utils/parameterLabels';
+import { formatParameterValue } from '@/utils/policyTableHelpers';
 import { EditableLabel } from '../components/EditableLabel';
 import { FONT_SIZES, INGREDIENT_COLORS } from '../constants';
 import { createCurrentLawPolicy } from '../currentLaw';
@@ -42,6 +50,7 @@ import {
   PolicyDetailsDrawer,
   PolicyParameterTree,
 } from './policy';
+import type { ModifiedParam, SidebarTab } from './policyCreation/types';
 
 interface PolicyBrowseModalProps {
   isOpen: boolean;
@@ -70,6 +79,7 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
 
   // Creation mode state
   const [isCreationMode, setIsCreationMode] = useState(false);
+  const [activeTab, setActiveTab] = useState<SidebarTab>('overview');
   const [policyLabel, setPolicyLabel] = useState<string>('');
   const [policyParameters, setPolicyParameters] = useState<Parameter[]>([]);
   const [selectedParam, setSelectedParam] = useState<ParameterMetadata | null>(null);
@@ -91,6 +101,7 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
       setSelectedPolicyId(null);
       setDrawerPolicyId(null);
       setIsCreationMode(false);
+      setActiveTab('overview');
       setPolicyLabel('');
       setPolicyParameters([]);
       setSelectedParam(null);
@@ -207,6 +218,23 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
   // Count modifications
   const modificationCount = countPolicyModifications(localPolicy);
 
+  // Get modified parameter data for the overview tab grid
+  const modifiedParams: ModifiedParam[] = useMemo(() => {
+    return policyParameters.map((p) => {
+      const metadata = parameters[p.name];
+      const hierarchicalLabels = getHierarchicalLabels(p.name, parameters);
+      const displayLabel =
+        hierarchicalLabels.length > 0
+          ? formatLabelParts(hierarchicalLabels)
+          : p.name.split('.').pop() || p.name;
+      const changes = p.values.map((interval) => ({
+        period: formatPeriod(interval.startDate, interval.endDate),
+        value: formatParameterValue(interval.value, metadata?.unit),
+      }));
+      return { paramName: p.name, label: displayLabel, changes };
+    });
+  }, [policyParameters, parameters]);
+
   // Handle search selection
   const handleSearchSelect = useCallback(
     (paramName: string) => {
@@ -226,6 +254,7 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
       setIntervals([]);
       setValueSetterMode(ValueSetterMode.DEFAULT);
       setParameterSearch('');
+      setActiveTab('parameters');
     },
     [parameters, expandedMenuItems]
   );
@@ -238,6 +267,7 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
         setSelectedParam(param);
         setIntervals([]);
         setValueSetterMode(ValueSetterMode.DEFAULT);
+        setActiveTab('parameters');
       }
       setExpandedMenuItems((prev) => {
         const newSet = new Set(prev);
@@ -280,6 +310,7 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
     setExpandedMenuItems(new Set());
     setIntervals([]);
     setParameterSearch('');
+    setActiveTab('overview');
     setIsCreationMode(true);
   }, []);
 
@@ -381,13 +412,263 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
       setParameterSearch={setParameterSearch}
       onMenuItemClick={handleMenuItemClick}
       onSearchSelect={handleSearchSelect}
+      activeTab={activeTab}
+      onTabChange={setActiveTab}
     />
   );
 
   // ========== Main Content Rendering ==========
 
+  // Overview content for creation mode — naming, param grid, action buttons
+  const renderOverviewContent = () => (
+    <Box style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <Box style={{ flex: 1, overflow: 'auto', padding: spacing.lg }}>
+        <Stack gap={spacing.lg}>
+          {/* Naming card — mirrors PopulationStatusHeader */}
+          <Box
+            style={{
+              background: 'rgba(255, 255, 255, 0.95)',
+              backdropFilter: 'blur(20px) saturate(180%)',
+              WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+              borderRadius: spacing.radius.lg,
+              border: `1px solid ${modificationCount > 0 ? colorConfig.border : colors.border.light}`,
+              boxShadow:
+                modificationCount > 0
+                  ? `0 4px 20px rgba(0, 0, 0, 0.08), 0 0 0 1px ${colorConfig.border}`
+                  : `0 2px 12px rgba(0, 0, 0, 0.04)`,
+              padding: `${spacing.sm} ${spacing.lg}`,
+              transition: 'all 0.3s ease',
+            }}
+          >
+            <Group justify="space-between" align="center" wrap="nowrap">
+              <Group gap={spacing.md} align="center" wrap="nowrap" style={{ minWidth: 0 }}>
+                <Box
+                  style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: spacing.radius.md,
+                    background: `linear-gradient(135deg, ${colorConfig.bg} 0%, ${colors.white} 100%)`,
+                    border: `1px solid ${colorConfig.border}`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                  }}
+                >
+                  <IconScale size={18} color={colorConfig.icon} />
+                </Box>
+                <EditableLabel
+                  value={policyLabel}
+                  onChange={setPolicyLabel}
+                  placeholder="Enter policy name..."
+                  emptyStateText="Click to name your policy..."
+                />
+              </Group>
+              <Group gap={spacing.xs} style={{ flexShrink: 0 }}>
+                {modificationCount > 0 ? (
+                  <>
+                    <Box
+                      style={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: '50%',
+                        background: colors.primary[500],
+                      }}
+                    />
+                    <Text style={{ fontSize: FONT_SIZES.small, color: colors.gray[600] }}>
+                      {modificationCount} parameter{modificationCount !== 1 ? 's' : ''} modified
+                    </Text>
+                  </>
+                ) : (
+                  <Text style={{ fontSize: FONT_SIZES.small, color: colors.gray[400] }}>
+                    No changes yet
+                  </Text>
+                )}
+              </Group>
+            </Group>
+          </Box>
+
+          {/* Parameter / Period / Value grid */}
+          {modifiedParams.length === 0 ? (
+            <Box
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: spacing.xl,
+                gap: spacing.sm,
+              }}
+            >
+              <Text style={{ fontSize: FONT_SIZES.small, color: colors.gray[400] }}>
+                No parameter changes yet
+              </Text>
+              <Text
+                ta="center"
+                style={{ fontSize: FONT_SIZES.tiny, color: colors.gray[400], maxWidth: 280 }}
+              >
+                Switch to the Parameters tab to start modifying values.
+              </Text>
+            </Box>
+          ) : (
+            <Box
+              style={{
+                background: colors.white,
+                borderRadius: spacing.radius.lg,
+                border: `1px solid ${colors.border.light}`,
+                overflow: 'hidden',
+              }}
+            >
+              <Box
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr auto auto',
+                  gap: 0,
+                }}
+              >
+                <Text
+                  fw={600}
+                  style={{
+                    fontSize: FONT_SIZES.tiny,
+                    color: colors.gray[500],
+                    padding: `${spacing.sm} ${spacing.md}`,
+                    borderBottom: `1px solid ${colors.gray[200]}`,
+                    background: colors.gray[50],
+                  }}
+                >
+                  Parameter
+                </Text>
+                <Text
+                  fw={600}
+                  style={{
+                    fontSize: FONT_SIZES.tiny,
+                    color: colors.gray[500],
+                    padding: `${spacing.sm} ${spacing.md}`,
+                    borderBottom: `1px solid ${colors.gray[200]}`,
+                    background: colors.gray[50],
+                    textAlign: 'right',
+                  }}
+                >
+                  Period
+                </Text>
+                <Text
+                  fw={600}
+                  style={{
+                    fontSize: FONT_SIZES.tiny,
+                    color: colors.gray[500],
+                    padding: `${spacing.sm} ${spacing.md}`,
+                    borderBottom: `1px solid ${colors.gray[200]}`,
+                    background: colors.gray[50],
+                    textAlign: 'right',
+                  }}
+                >
+                  Value
+                </Text>
+                {modifiedParams.map((param) => (
+                  <Fragment key={param.paramName}>
+                    <Box
+                      style={{
+                        padding: `${spacing.sm} ${spacing.md}`,
+                        borderBottom: `1px solid ${colors.gray[100]}`,
+                      }}
+                    >
+                      <Tooltip label={param.paramName} multiline w={300} withArrow>
+                        <Text
+                          style={{
+                            fontSize: FONT_SIZES.small,
+                            color: colors.gray[700],
+                            lineHeight: 1.4,
+                          }}
+                        >
+                          {param.label}
+                        </Text>
+                      </Tooltip>
+                    </Box>
+                    <Box
+                      style={{
+                        padding: `${spacing.sm} ${spacing.md}`,
+                        borderBottom: `1px solid ${colors.gray[100]}`,
+                        textAlign: 'right',
+                      }}
+                    >
+                      {param.changes.map((c, i) => (
+                        <Text
+                          key={i}
+                          style={{
+                            fontSize: FONT_SIZES.small,
+                            color: colors.gray[500],
+                            lineHeight: 1.4,
+                          }}
+                        >
+                          {c.period}
+                        </Text>
+                      ))}
+                    </Box>
+                    <Box
+                      style={{
+                        padding: `${spacing.sm} ${spacing.md}`,
+                        borderBottom: `1px solid ${colors.gray[100]}`,
+                        textAlign: 'right',
+                      }}
+                    >
+                      {param.changes.map((c, i) => (
+                        <Text
+                          key={i}
+                          fw={500}
+                          style={{
+                            fontSize: FONT_SIZES.small,
+                            color: colorConfig.icon,
+                            lineHeight: 1.4,
+                          }}
+                        >
+                          {c.value}
+                        </Text>
+                      ))}
+                    </Box>
+                  </Fragment>
+                ))}
+              </Box>
+            </Box>
+          )}
+        </Stack>
+      </Box>
+
+      {/* Action buttons — pinned to bottom */}
+      <Box
+        style={{
+          padding: `${spacing.md} ${spacing.lg}`,
+          borderTop: `1px solid ${colors.border.light}`,
+          background: colors.white,
+          flexShrink: 0,
+        }}
+      >
+        <Group gap={spacing.sm}>
+          <Button
+            variant="filled"
+            color="teal"
+            leftSection={<IconDeviceFloppy size={16} />}
+            onClick={handleCreatePolicy}
+            loading={isCreating}
+          >
+            Save as new policy
+          </Button>
+          <Button
+            variant="default"
+            leftSection={<IconRefresh size={16} />}
+            onClick={() => console.info('[PolicyBrowseModal] Replace existing policy')}
+          >
+            Replace existing policy
+          </Button>
+        </Group>
+      </Box>
+    </Box>
+  );
+
   const renderMainContent = () => {
     if (isCreationMode) {
+      if (activeTab === 'overview') {
+        return renderOverviewContent();
+      }
       return (
         <PolicyCreationContent
           selectedParam={selectedParam}
@@ -491,38 +772,8 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
 
   // ========== Render ==========
 
-  // Custom header title for creation mode - just the editable label
-  const creationModeHeaderTitle = (
-    <EditableLabel
-      value={policyLabel}
-      onChange={setPolicyLabel}
-      placeholder="Enter policy name..."
-      emptyStateText="Click to name your policy..."
-    />
-  );
-
-  // Modification count for right side of header
-  const creationModeHeaderRight = (
-    <Group gap={spacing.xs} style={{ flexShrink: 0 }}>
-      {modificationCount > 0 ? (
-        <>
-          <Box
-            style={{
-              width: 8,
-              height: 8,
-              borderRadius: '50%',
-              background: colors.primary[500],
-            }}
-          />
-          <Text style={{ fontSize: FONT_SIZES.small, color: colors.gray[600] }}>
-            {modificationCount} parameter{modificationCount !== 1 ? 's' : ''} modified
-          </Text>
-        </>
-      ) : (
-        <Text style={{ fontSize: FONT_SIZES.small, color: colors.gray[400] }}>No changes yet</Text>
-      )}
-    </Group>
-  );
+  // Simple header title for creation mode (naming moved to overview content area)
+  const creationModeHeaderTitle = 'Policy editor';
 
   return (
     <BrowseModalTemplate
@@ -531,7 +782,6 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
       headerIcon={<IconScale size={20} color={colorConfig.icon} />}
       headerTitle={isCreationMode ? creationModeHeaderTitle : 'Select policy'}
       headerSubtitle={isCreationMode ? undefined : 'Choose an existing policy or create a new one'}
-      headerRightContent={isCreationMode ? creationModeHeaderRight : undefined}
       colorConfig={colorConfig}
       sidebarSections={isCreationMode ? undefined : browseSidebarSections}
       renderSidebar={isCreationMode ? renderCreationSidebar : undefined}

@@ -2,14 +2,16 @@
  * PolicyCreationModal - Standalone policy creation modal
  *
  * This modal provides:
- * - Parameter tree navigation
- * - Value setter components
+ * - Parameter tree navigation (sidebar) with "Policy overview" menu item
+ *   - Overview shows naming, param grid, and action buttons in main area
+ *   - Selecting a parameter shows the value setter / chart editor in main area
  * - Policy creation with API integration
  */
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
+import { IconDeviceFloppy, IconRefresh, IconScale, IconX } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
-import { Box, Button, Group, Modal, Stack } from '@mantine/core';
+import { ActionIcon, Box, Button, Group, Modal, Stack, Text, Tooltip } from '@mantine/core';
 import { PolicyAdapter } from '@/adapters';
 import { colors, spacing } from '@/designTokens';
 import { useCreatePolicy } from '@/hooks/useCreatePolicy';
@@ -31,6 +33,8 @@ import { countPolicyModifications } from '@/utils/countParameterChanges';
 import { formatPeriod } from '@/utils/dateUtils';
 import { formatLabelParts, getHierarchicalLabels } from '@/utils/parameterLabels';
 import { formatParameterValue } from '@/utils/policyTableHelpers';
+import { EditableLabel } from '../components/EditableLabel';
+import { FONT_SIZES, INGREDIENT_COLORS } from '../constants';
 import {
   ChangesCard,
   EmptyParameterState,
@@ -38,7 +42,7 @@ import {
   ModifiedParam,
   ParameterHeaderCard,
   ParameterSidebar,
-  PolicyCreationHeader,
+  SidebarTab,
   ValueSetterCard,
 } from './policyCreation';
 
@@ -47,6 +51,7 @@ interface PolicyCreationModalProps {
   onClose: () => void;
   onPolicyCreated: (policy: PolicyStateProps) => void;
   simulationIndex: number;
+  initialPolicy?: PolicyStateProps;
 }
 
 export function PolicyCreationModal({
@@ -54,6 +59,7 @@ export function PolicyCreationModal({
   onClose,
   onPolicyCreated,
   simulationIndex,
+  initialPolicy,
 }: PolicyCreationModalProps) {
   const countryId = useCurrentCountry() as 'us' | 'uk';
 
@@ -68,7 +74,9 @@ export function PolicyCreationModal({
   // Local policy state
   const [policyLabel, setPolicyLabel] = useState<string>('');
   const [policyParameters, setPolicyParameters] = useState<Parameter[]>([]);
-  const [isEditingLabel, setIsEditingLabel] = useState(false);
+
+  // Sidebar tab state — controls main content area
+  const [activeTab, setActiveTab] = useState<SidebarTab>('overview');
 
   // Parameter selection state
   const [selectedParam, setSelectedParam] = useState<ParameterMetadata | null>(null);
@@ -90,17 +98,21 @@ export function PolicyCreationModal({
   void countryId;
   void simulationIndex;
 
-  // Reset state when modal opens
+  const isEditMode = !!initialPolicy;
+  const colorConfig = INGREDIENT_COLORS.policy;
+
+  // Reset state when modal opens; pre-populate from initialPolicy when editing
   useEffect(() => {
     if (isOpen) {
-      setPolicyLabel('');
-      setPolicyParameters([]);
+      setPolicyLabel(initialPolicy?.label || '');
+      setPolicyParameters(initialPolicy?.parameters || []);
+      setActiveTab('overview');
       setSelectedParam(null);
       setExpandedMenuItems(new Set());
       setIntervals([]);
       setParameterSearch('');
     }
-  }, [isOpen]);
+  }, [isOpen]); // initialPolicy intentionally not in deps — only read on open transition
 
   // Create local policy state object for components
   const localPolicy: PolicyStateProps = useMemo(
@@ -160,6 +172,8 @@ export function PolicyCreationModal({
       setIntervals([]);
       setValueSetterMode(ValueSetterMode.DEFAULT);
       setParameterSearch('');
+      // Auto-switch to parameters tab when selecting from search
+      setActiveTab('parameters');
     },
     [parameters, expandedMenuItems]
   );
@@ -172,6 +186,8 @@ export function PolicyCreationModal({
         setSelectedParam(param);
         setIntervals([]);
         setValueSetterMode(ValueSetterMode.DEFAULT);
+        // Auto-switch to parameters tab when selecting a parameter
+        setActiveTab('parameters');
       }
       setExpandedMenuItems((prev) => {
         const newSet = new Set(prev);
@@ -265,6 +281,310 @@ export function PolicyCreationModal({
 
   const { baseValues, reformValues } = getChartValues();
 
+  // =========================================================================
+  // OVERVIEW CONTENT — shown when "Policy overview" tab is active
+  // =========================================================================
+
+  const renderOverviewContent = () => (
+    <Box style={{ flex: 1, display: 'flex', flexDirection: 'column', background: colors.gray[50] }}>
+      <Box style={{ flex: 1, overflow: 'auto', padding: spacing.xl }}>
+        <Stack gap={spacing.lg}>
+          {/* Naming card — mirrors PopulationStatusHeader */}
+          <Box
+            style={{
+              background: 'rgba(255, 255, 255, 0.95)',
+              backdropFilter: 'blur(20px) saturate(180%)',
+              WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+              borderRadius: spacing.radius.lg,
+              border: `1px solid ${modificationCount > 0 ? colorConfig.border : colors.border.light}`,
+              boxShadow:
+                modificationCount > 0
+                  ? `0 4px 20px rgba(0, 0, 0, 0.08), 0 0 0 1px ${colorConfig.border}`
+                  : `0 2px 12px rgba(0, 0, 0, 0.04)`,
+              padding: `${spacing.sm} ${spacing.lg}`,
+              transition: 'all 0.3s ease',
+            }}
+          >
+            <Group justify="space-between" align="center" wrap="nowrap">
+              <Group gap={spacing.md} align="center" wrap="nowrap" style={{ minWidth: 0 }}>
+                <Box
+                  style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: spacing.radius.md,
+                    background: `linear-gradient(135deg, ${colorConfig.bg} 0%, ${colors.white} 100%)`,
+                    border: `1px solid ${colorConfig.border}`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                  }}
+                >
+                  <IconScale size={18} color={colorConfig.icon} />
+                </Box>
+                <EditableLabel
+                  value={policyLabel}
+                  onChange={setPolicyLabel}
+                  placeholder="Enter policy name..."
+                  emptyStateText="Click to name your policy..."
+                />
+              </Group>
+              <Group gap={spacing.xs} style={{ flexShrink: 0 }}>
+                {modificationCount > 0 ? (
+                  <>
+                    <Box
+                      style={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: '50%',
+                        background: colors.primary[500],
+                      }}
+                    />
+                    <Text style={{ fontSize: FONT_SIZES.small, color: colors.gray[600] }}>
+                      {modificationCount} parameter{modificationCount !== 1 ? 's' : ''} modified
+                    </Text>
+                  </>
+                ) : (
+                  <Text style={{ fontSize: FONT_SIZES.small, color: colors.gray[400] }}>
+                    No changes yet
+                  </Text>
+                )}
+              </Group>
+            </Group>
+          </Box>
+
+          {/* Parameter / Period / Value grid */}
+          {modifiedParams.length === 0 ? (
+            <Box
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: spacing.xl,
+                gap: spacing.sm,
+              }}
+            >
+              <Text style={{ fontSize: FONT_SIZES.small, color: colors.gray[400] }}>
+                No parameter changes yet
+              </Text>
+              <Text
+                ta="center"
+                style={{ fontSize: FONT_SIZES.tiny, color: colors.gray[400], maxWidth: 280 }}
+              >
+                Switch to the Parameters tab to start modifying values.
+              </Text>
+            </Box>
+          ) : (
+            <Box
+              style={{
+                background: colors.white,
+                borderRadius: spacing.radius.lg,
+                border: `1px solid ${colors.border.light}`,
+                overflow: 'hidden',
+              }}
+            >
+              <Box
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr auto auto',
+                  gap: 0,
+                }}
+              >
+                {/* Column headers */}
+                <Text
+                  fw={600}
+                  style={{
+                    fontSize: FONT_SIZES.tiny,
+                    color: colors.gray[500],
+                    padding: `${spacing.sm} ${spacing.md}`,
+                    borderBottom: `1px solid ${colors.gray[200]}`,
+                    background: colors.gray[50],
+                  }}
+                >
+                  Parameter
+                </Text>
+                <Text
+                  fw={600}
+                  style={{
+                    fontSize: FONT_SIZES.tiny,
+                    color: colors.gray[500],
+                    padding: `${spacing.sm} ${spacing.md}`,
+                    borderBottom: `1px solid ${colors.gray[200]}`,
+                    background: colors.gray[50],
+                    textAlign: 'right',
+                  }}
+                >
+                  Period
+                </Text>
+                <Text
+                  fw={600}
+                  style={{
+                    fontSize: FONT_SIZES.tiny,
+                    color: colors.gray[500],
+                    padding: `${spacing.sm} ${spacing.md}`,
+                    borderBottom: `1px solid ${colors.gray[200]}`,
+                    background: colors.gray[50],
+                    textAlign: 'right',
+                  }}
+                >
+                  Value
+                </Text>
+
+                {modifiedParams.map((param) => (
+                  <Fragment key={param.paramName}>
+                    <Box
+                      style={{
+                        padding: `${spacing.sm} ${spacing.md}`,
+                        borderBottom: `1px solid ${colors.gray[100]}`,
+                      }}
+                    >
+                      <Tooltip label={param.paramName} multiline w={300} withArrow>
+                        <Text
+                          style={{
+                            fontSize: FONT_SIZES.small,
+                            color: colors.gray[700],
+                            lineHeight: 1.4,
+                          }}
+                        >
+                          {param.label}
+                        </Text>
+                      </Tooltip>
+                    </Box>
+                    <Box
+                      style={{
+                        padding: `${spacing.sm} ${spacing.md}`,
+                        borderBottom: `1px solid ${colors.gray[100]}`,
+                        textAlign: 'right',
+                      }}
+                    >
+                      {param.changes.map((c, i) => (
+                        <Text
+                          key={i}
+                          style={{
+                            fontSize: FONT_SIZES.small,
+                            color: colors.gray[500],
+                            lineHeight: 1.4,
+                          }}
+                        >
+                          {c.period}
+                        </Text>
+                      ))}
+                    </Box>
+                    <Box
+                      style={{
+                        padding: `${spacing.sm} ${spacing.md}`,
+                        borderBottom: `1px solid ${colors.gray[100]}`,
+                        textAlign: 'right',
+                      }}
+                    >
+                      {param.changes.map((c, i) => (
+                        <Text
+                          key={i}
+                          fw={500}
+                          style={{
+                            fontSize: FONT_SIZES.small,
+                            color: colorConfig.icon,
+                            lineHeight: 1.4,
+                          }}
+                        >
+                          {c.value}
+                        </Text>
+                      ))}
+                    </Box>
+                  </Fragment>
+                ))}
+              </Box>
+            </Box>
+          )}
+        </Stack>
+      </Box>
+
+      {/* Action buttons — pinned to bottom */}
+      <Box
+        style={{
+          padding: `${spacing.md} ${spacing.xl}`,
+          borderTop: `1px solid ${colors.border.light}`,
+          background: colors.white,
+          flexShrink: 0,
+        }}
+      >
+        <Group gap={spacing.sm}>
+          <Button
+            variant="filled"
+            color="teal"
+            leftSection={<IconDeviceFloppy size={16} />}
+            onClick={handleCreatePolicy}
+            loading={isCreating}
+          >
+            Save as new policy
+          </Button>
+          <Button
+            variant="default"
+            leftSection={<IconRefresh size={16} />}
+            onClick={() => console.info('[PolicyCreationModal] Replace existing policy')}
+          >
+            Replace existing policy
+          </Button>
+        </Group>
+      </Box>
+    </Box>
+  );
+
+  // =========================================================================
+  // PARAMETERS CONTENT — shown when "Parameters" tab is active
+  // =========================================================================
+
+  const renderParametersContent = () => (
+    <Box style={{ flex: 1, overflow: 'auto', background: colors.gray[50] }}>
+      {!selectedParam ? (
+        <EmptyParameterState />
+      ) : (
+        <Box style={{ padding: spacing.xl }}>
+          <Stack gap={spacing.lg}>
+            <ParameterHeaderCard
+              label={selectedParam.label || ''}
+              description={selectedParam.description ?? undefined}
+            />
+            <Group gap={spacing.lg} align="flex-start" wrap="nowrap">
+              <Stack gap={spacing.lg} style={{ flex: 1, minWidth: 0 }}>
+                <ValueSetterCard
+                  selectedParam={selectedParam}
+                  localPolicy={localPolicy}
+                  minDate={minDate}
+                  maxDate={maxDate}
+                  valueSetterMode={valueSetterMode}
+                  intervals={intervals}
+                  startDate={startDate}
+                  endDate={endDate}
+                  onModeChange={setValueSetterMode}
+                  onIntervalsChange={setIntervals}
+                  onStartDateChange={setStartDate}
+                  onEndDateChange={setEndDate}
+                  onSubmit={handleValueSubmit}
+                />
+                <ChangesCard
+                  modifiedParams={modifiedParams.filter(
+                    (p) => p.paramName === selectedParam?.parameter
+                  )}
+                  modificationCount={modificationCount}
+                  selectedParamName={selectedParam?.parameter}
+                  onSelectParam={handleSelectParam}
+                />
+              </Stack>
+              <HistoricalValuesCard
+                selectedParam={selectedParam}
+                baseValues={baseValues}
+                reformValues={reformValues}
+                policyLabel={policyLabel}
+              />
+            </Group>
+          </Stack>
+        </Box>
+      )}
+    </Box>
+  );
+
   return (
     <Modal
       opened={isOpen}
@@ -298,19 +618,36 @@ export function PolicyCreationModal({
         },
       }}
       title={
-        <PolicyCreationHeader
-          policyLabel={policyLabel}
-          isEditingLabel={isEditingLabel}
-          modificationCount={modificationCount}
-          onLabelChange={setPolicyLabel}
-          onEditingChange={setIsEditingLabel}
-          onClose={onClose}
-        />
+        <Group justify="space-between" align="center" wrap="nowrap" style={{ width: '100%' }}>
+          <Group gap={spacing.md} align="center" wrap="nowrap">
+            <Box
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: spacing.radius.md,
+                background: `linear-gradient(135deg, ${colorConfig.bg} 0%, ${colors.white} 100%)`,
+                border: `1px solid ${colorConfig.border}`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}
+            >
+              <IconScale size={18} color={colorConfig.icon} />
+            </Box>
+            <Text fw={600} style={{ fontSize: FONT_SIZES.normal, color: colors.gray[800] }}>
+              {isEditMode ? 'Edit policy' : 'Policy editor'}
+            </Text>
+          </Group>
+          <ActionIcon variant="subtle" color="gray" onClick={onClose} style={{ flexShrink: 0 }}>
+            <IconX size={18} />
+          </ActionIcon>
+        </Group>
       }
     >
       {/* Main content area */}
       <Group align="stretch" gap={0} style={{ flex: 1, overflow: 'hidden' }} wrap="nowrap">
-        {/* Left Sidebar - Parameter Tree */}
+        {/* Left Sidebar - Parameter Tree with tabs */}
         <ParameterSidebar
           parameterTree={parameterTree}
           metadataLoading={metadataLoading}
@@ -321,63 +658,12 @@ export function PolicyCreationModal({
           onSearchChange={setParameterSearch}
           onSearchSelect={handleSearchSelect}
           onMenuItemClick={handleMenuItemClick}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
         />
 
-        {/* Main Content - Parameter Editor */}
-        <Box style={{ flex: 1, overflow: 'auto', background: colors.gray[50] }}>
-          {!selectedParam ? (
-            <EmptyParameterState />
-          ) : (
-            <Box style={{ padding: spacing.xl }}>
-              <Stack gap={spacing.lg}>
-                {/* Parameter Header Card */}
-                <ParameterHeaderCard
-                  label={selectedParam.label || ''}
-                  description={selectedParam.description ?? undefined}
-                />
-
-                {/* 50/50 Split Content */}
-                <Group gap={spacing.lg} align="flex-start" wrap="nowrap">
-                  {/* Left Column: Setter + Changes */}
-                  <Stack gap={spacing.lg} style={{ flex: 1, minWidth: 0 }}>
-                    {/* Value Setter Card */}
-                    <ValueSetterCard
-                      selectedParam={selectedParam}
-                      localPolicy={localPolicy}
-                      minDate={minDate}
-                      maxDate={maxDate}
-                      valueSetterMode={valueSetterMode}
-                      intervals={intervals}
-                      startDate={startDate}
-                      endDate={endDate}
-                      onModeChange={setValueSetterMode}
-                      onIntervalsChange={setIntervals}
-                      onStartDateChange={setStartDate}
-                      onEndDateChange={setEndDate}
-                      onSubmit={handleValueSubmit}
-                    />
-
-                    {/* Changes Card */}
-                    <ChangesCard
-                      modifiedParams={modifiedParams}
-                      modificationCount={modificationCount}
-                      selectedParamName={selectedParam?.parameter}
-                      onSelectParam={handleSelectParam}
-                    />
-                  </Stack>
-
-                  {/* Right Column: Chart */}
-                  <HistoricalValuesCard
-                    selectedParam={selectedParam}
-                    baseValues={baseValues}
-                    reformValues={reformValues}
-                    policyLabel={policyLabel}
-                  />
-                </Group>
-              </Stack>
-            </Box>
-          )}
-        </Box>
+        {/* Main Content — switches based on active tab */}
+        {activeTab === 'overview' ? renderOverviewContent() : renderParametersContent()}
       </Group>
 
       {/* Footer */}
@@ -396,7 +682,7 @@ export function PolicyCreationModal({
               Cancel
             </Button>
             <Button color="teal" onClick={handleCreatePolicy} loading={isCreating}>
-              Create policy
+              {isEditMode ? 'Save as new policy' : 'Create policy'}
             </Button>
           </Group>
         </Group>

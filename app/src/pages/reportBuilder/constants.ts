@@ -10,9 +10,9 @@ import { IngredientColorConfig } from './types';
 
 export const FONT_SIZES = {
   title: '28px',
-  normal: '14px',
-  small: '12px',
-  tiny: '10px',
+  normal: '16px',
+  small: '14px',
+  tiny: '12px',
 };
 
 // ============================================================================

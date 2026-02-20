@@ -12,6 +12,7 @@ import {
   IconChartLine,
   IconFileDescription,
   IconHome,
+  IconPencil,
   IconPlus,
   IconScale,
   IconSparkles,
@@ -32,6 +33,7 @@ export function IngredientSectionFull({
   countryId = 'us',
   onQuickSelectPolicy: _onQuickSelectPolicy,
   onSelectSavedPolicy: _onSelectSavedPolicy,
+  onEditPolicy,
   onQuickSelectPopulation: _onQuickSelectPopulation,
   onSelectRecentPopulation: _onSelectRecentPopulation,
   onDeselectPopulation,
@@ -234,6 +236,31 @@ export function IngredientSectionFull({
                 flexShrink: 0,
               }}
             >
+              {type === 'policy' && !isCurrentLaw(currentId) && onEditPolicy && (
+                <Box
+                  component="button"
+                  onClick={(e: React.MouseEvent) => {
+                    e.stopPropagation();
+                    onEditPolicy();
+                  }}
+                  style={{
+                    background: colors.white,
+                    border: `1px solid ${colorConfig.border}`,
+                    borderRadius: spacing.radius.sm,
+                    padding: `${spacing.xs} ${spacing.sm}`,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 4,
+                    fontSize: FONT_SIZES.small,
+                    fontWeight: 500,
+                    color: colorConfig.icon,
+                  }}
+                >
+                  <IconPencil size={12} />
+                  Edit
+                </Box>
+              )}
               <Box
                 component="button"
                 onClick={(e: React.MouseEvent) => {
