@@ -9,7 +9,7 @@
  */
 
 import React, { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
-import { IconDeviceFloppy, IconPencil, IconRefresh, IconScale, IconX } from '@tabler/icons-react';
+import { IconDeviceFloppy, IconPencil, IconReplace, IconScale, IconX } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import { ActionIcon, Box, Button, Group, Modal, Stack, Text, Tooltip } from '@mantine/core';
 import { PolicyAdapter } from '@/adapters';
@@ -721,7 +721,7 @@ export function PolicyCreationModal({
                 <Button
                   variant="light"
                   color="teal"
-                  leftSection={<IconRefresh size={16} />}
+                  leftSection={<IconReplace size={16} />}
                   onClick={() => console.info('[PolicyCreationModal] Update existing policy')}
                 >
                   Update existing policy

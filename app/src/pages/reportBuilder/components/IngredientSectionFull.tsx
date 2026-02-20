@@ -191,6 +191,8 @@ export function IngredientSectionFull({
             display: 'flex',
             alignItems: 'center',
             gap: spacing.md,
+            minWidth: 0,
+            overflow: 'hidden',
           }}
         >
           <Box
@@ -218,8 +220,17 @@ export function IngredientSectionFull({
                 <CountryMapIcon countryId={countryId} size={18} color={colorConfig.icon} />
               ))}
           </Box>
-          <Box style={{ flex: 1, minWidth: 0 }}>
-            <Text fw={600} c={colorConfig.icon} style={{ fontSize: FONT_SIZES.normal }}>
+          <Box style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+            <Text
+              fw={600}
+              c={colorConfig.icon}
+              style={{
+                fontSize: FONT_SIZES.normal,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}
+            >
               {type === 'policy' ? selectedPolicyLabel?.label : selectedPopulationLabel?.label}
             </Text>
             {(type === 'policy'

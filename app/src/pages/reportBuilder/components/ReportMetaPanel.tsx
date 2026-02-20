@@ -209,20 +209,21 @@ export function ReportMetaPanel({ reportState, setReportState, isReadOnly }: Rep
           variant="unstyled"
           withCheckIcon={false}
           disabled={isReadOnly}
+          rightSection={isReadOnly ? <span /> : undefined}
           comboboxProps={{ width: 120, position: 'bottom-end' }}
           styles={{
             input: {
               fontFamily: typography.fontFamily.primary,
               fontSize: FONT_SIZES.small,
               fontWeight: 500,
-              color: `${colors.gray[700]}`,
-              opacity: 1,
+              color: colors.gray[700],
               cursor: isReadOnly ? 'default' : 'pointer',
               paddingLeft: 0,
               paddingRight: isReadOnly ? 0 : spacing.xl,
               minHeight: 'auto',
               height: 'auto',
               WebkitTextFillColor: colors.gray[700],
+              background: 'transparent',
             },
             root: {
               width: isReadOnly ? 'auto' : 72,
