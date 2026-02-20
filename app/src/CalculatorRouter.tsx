@@ -2,34 +2,57 @@
  * Router for the Calculator app (app.policyengine.org)
  * Contains only the interactive calculator functionality
  */
+import { lazy, Suspense } from 'react';
 import { createBrowserRouter, Outlet, RouterProvider } from 'react-router-dom';
 import PathwayLayout from './components/PathwayLayout';
 import StandardLayout from './components/StandardLayout';
-import DashboardPage from './pages/Dashboard.page';
-import PoliciesPage from './pages/Policies.page';
-import PopulationsPage from './pages/Populations.page';
-import ReportOutputPage from './pages/ReportOutput.page';
-import ReportsPage from './pages/Reports.page';
-import SimulationsPage from './pages/Simulations.page';
-import PolicyPathwayWrapper from './pathways/policy/PolicyPathwayWrapper';
-import PopulationPathwayWrapper from './pathways/population/PopulationPathwayWrapper';
-import ReportPathwayWrapper from './pathways/report/ReportPathwayWrapper';
-import SimulationPathwayWrapper from './pathways/simulation/SimulationPathwayWrapper';
 import { CountryGuard } from './routing/guards/CountryGuard';
 import { MetadataGuard } from './routing/guards/MetadataGuard';
 import { MetadataLazyLoader } from './routing/guards/MetadataLazyLoader';
 import { RedirectToCountry } from './routing/RedirectToCountry';
 
+// Lazy-loaded pages
+const DashboardPage = lazy(() => import('./pages/Dashboard.page'));
+const PoliciesPage = lazy(() => import('./pages/Policies.page'));
+const PopulationsPage = lazy(() => import('./pages/Populations.page'));
+const ReportOutputPage = lazy(() => import('./pages/ReportOutput.page'));
+const ReportsPage = lazy(() => import('./pages/Reports.page'));
+const SimulationsPage = lazy(() => import('./pages/Simulations.page'));
+
+// Lazy-loaded pathway wrappers
+const PolicyPathwayWrapper = lazy(() => import('./pathways/policy/PolicyPathwayWrapper'));
+const PopulationPathwayWrapper = lazy(
+  () => import('./pathways/population/PopulationPathwayWrapper')
+);
+const ReportPathwayWrapper = lazy(() => import('./pathways/report/ReportPathwayWrapper'));
+const SimulationPathwayWrapper = lazy(
+  () => import('./pathways/simulation/SimulationPathwayWrapper')
+);
+
 /**
  * Layout wrapper that renders StandardLayout with Outlet for nested routes.
  * This allows the app shell (header, sidebar) to remain visible while
  * child guards like MetadataGuard show their loading states.
+ * Suspense boundary catches lazy-loaded page components.
  */
 function StandardLayoutOutlet() {
   return (
     <StandardLayout>
-      <Outlet />
+      <Suspense fallback={null}>
+        <Outlet />
+      </Suspense>
     </StandardLayout>
+  );
+}
+
+/**
+ * Suspense wrapper for pathway routes rendered inside PathwayLayout's Outlet.
+ */
+function SuspenseOutlet() {
+  return (
+    <Suspense fallback={null}>
+      <Outlet />
+    </Suspense>
   );
 }
 
@@ -69,20 +92,25 @@ const router = createBrowserRouter(
               element: <PathwayLayout />,
               children: [
                 {
-                  path: 'reports/create',
-                  element: <ReportPathwayWrapper />,
-                },
-                {
-                  path: 'simulations/create',
-                  element: <SimulationPathwayWrapper />,
-                },
-                {
-                  path: 'households/create',
-                  element: <PopulationPathwayWrapper />,
-                },
-                {
-                  path: 'policies/create',
-                  element: <PolicyPathwayWrapper />,
+                  element: <SuspenseOutlet />,
+                  children: [
+                    {
+                      path: 'reports/create',
+                      element: <ReportPathwayWrapper />,
+                    },
+                    {
+                      path: 'simulations/create',
+                      element: <SimulationPathwayWrapper />,
+                    },
+                    {
+                      path: 'households/create',
+                      element: <PopulationPathwayWrapper />,
+                    },
+                    {
+                      path: 'policies/create',
+                      element: <PolicyPathwayWrapper />,
+                    },
+                  ],
                 },
               ],
             },

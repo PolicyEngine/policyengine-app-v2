@@ -75,11 +75,7 @@ export function useCreateReport(reportLabel?: string) {
         const { report, simulations, populations } = result;
         const reportIdStr = String(report.id);
 
-        // Invalidate queries
-        // WHY: We need to invalidate BOTH reports AND report associations
-        // - reportKeys.all: Invalidates individual report queries
-        // - reportAssociationKeys.all: Invalidates user→report mappings (critical for Reports page)
-        queryClient.invalidateQueries({ queryKey: reportKeys.all });
+        // Invalidate report association queries so the Reports page picks up the new report
         queryClient.invalidateQueries({ queryKey: reportAssociationKeys.all });
 
         // Cache the report data using consistent key structure

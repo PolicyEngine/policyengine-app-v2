@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Box, Container, Group, SimpleGrid, Text } from '@mantine/core';
-import { posts } from '@/data/posts/postTransformers';
+import { getPosts } from '@/data/posts/postTransformers';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import type { BlogPost } from '@/types/blog';
@@ -19,7 +19,7 @@ export default function HomeBlogPreview() {
   const countryId = useCurrentCountry();
 
   // Get posts relevant to this country (or global), newest first
-  const relevantPosts = posts
+  const relevantPosts = getPosts()
     .filter((post: BlogPost) => post.tags.includes(countryId) || post.tags.includes('global'))
     .sort((a: BlogPost, b: BlogPost) => b.date.localeCompare(a.date))
     .slice(0, TOTAL_POSTS);

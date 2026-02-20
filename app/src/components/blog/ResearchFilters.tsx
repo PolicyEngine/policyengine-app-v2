@@ -9,10 +9,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { Box, Button, Checkbox, Group, Stack, Text, TextInput } from '@mantine/core';
 import {
+  getLocationTags,
   getTopicLabel,
+  getTopicTags,
   locationLabels,
-  locationTags,
-  topicTags,
 } from '@/data/posts/postTransformers';
 
 interface ResearchFiltersProps {
@@ -135,7 +135,7 @@ export function ResearchFilters({
   // Render the tags for a section
   const renderTopicTags = () => (
     <Stack gap={4}>
-      {topicTags.map((tag) => (
+      {getTopicTags().map((tag) => (
         <Checkbox
           key={tag}
           label={getTopicLabel(tag, countryId)}
@@ -149,8 +149,9 @@ export function ResearchFilters({
 
   const renderLocationTags = () => {
     // Separate countries from US states
-    const countries = locationTags.filter((tag) => !tag.startsWith('us-'));
-    const usStates = locationTags.filter((tag) => tag.startsWith('us-'));
+    const allLocationTags = getLocationTags();
+    const countries = allLocationTags.filter((tag) => !tag.startsWith('us-'));
+    const usStates = allLocationTags.filter((tag) => tag.startsWith('us-'));
 
     return (
       <Stack gap={4}>

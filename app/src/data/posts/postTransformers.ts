@@ -14,28 +14,56 @@ import postsData from './posts.json';
 // Type assertion for imported JSON (Vite handles this)
 const postsRaw = postsData as BlogPost[];
 
-// Sort posts by date (newest first)
-const postsSorted = [...postsRaw].sort((a, b) => (a.date < b.date ? 1 : -1));
+// Lazy-initialized processed data — deferred until first access to avoid
+// blocking app startup with sorting/slug-generation for all blog posts
+let _postsSorted: BlogPost[] | null = null;
+let _uniqueTags: string[] | null = null;
+let _locationTags: string[] | null = null;
+let _topicTags: string[] | null = null;
 
-// Generate slugs for all posts
-for (const post of postsSorted) {
-  // Extract slug from filename (remove extension)
-  const filenameWithoutExt = post.filename.substring(0, post.filename.indexOf('.'));
-  post.slug = filenameWithoutExt.toLowerCase().replace(/_/g, '-'); // Replace underscores with hyphens
-}
-
-// Extract all tags from all posts
-const tags = postsSorted.map((post) => post.tags);
-const uniqueTags = [...new Set(tags.flat())].sort();
-
-// Categorize tags into locations and topics
 const COUNTRY_IDS = ['us', 'uk', 'ng', 'ca', 'global'] as const;
 
-const locationTags = uniqueTags.filter((tag) =>
-  COUNTRY_IDS.some((countryId) => tag.startsWith(`${countryId}-`) || tag === countryId)
-);
+function initPosts() {
+  if (_postsSorted) {
+    return;
+  }
 
-const topicTags = uniqueTags.filter((tag) => !locationTags.includes(tag)).sort();
+  _postsSorted = [...postsRaw].sort((a, b) => (a.date < b.date ? 1 : -1));
+
+  for (const post of _postsSorted) {
+    const filenameWithoutExt = post.filename.substring(0, post.filename.indexOf('.'));
+    post.slug = filenameWithoutExt.toLowerCase().replace(/_/g, '-');
+  }
+
+  const tags = _postsSorted.map((post) => post.tags);
+  _uniqueTags = [...new Set(tags.flat())].sort();
+
+  _locationTags = _uniqueTags.filter((tag) =>
+    COUNTRY_IDS.some((countryId) => tag.startsWith(`${countryId}-`) || tag === countryId)
+  );
+
+  _topicTags = _uniqueTags.filter((tag) => !_locationTags!.includes(tag)).sort();
+}
+
+function getPostsSorted(): BlogPost[] {
+  initPosts();
+  return _postsSorted!;
+}
+
+function getUniqueTags(): string[] {
+  initPosts();
+  return _uniqueTags!;
+}
+
+function getLocationTags(): string[] {
+  initPosts();
+  return _locationTags!;
+}
+
+function getTopicTags(): string[] {
+  initPosts();
+  return _topicTags!;
+}
 
 // Topic labels for display (base labels - use getTopicLabel for country-specific spelling)
 const topicLabels: TagLabels = {
@@ -170,7 +198,7 @@ const locationLabels: TagLabels = {
  */
 export function getResearchItems(): ResearchItem[] {
   // Convert posts to ResearchItem format
-  const postItems: ResearchItem[] = postsSorted.map((post) => ({
+  const postItems: ResearchItem[] = getPostsSorted().map((post) => ({
     title: post.title,
     description: post.description,
     date: post.date,
@@ -202,15 +230,22 @@ export function getResearchItems(): ResearchItem[] {
   return [...postItems, ...appItems].sort((a, b) => (a.date < b.date ? 1 : -1));
 }
 
-// Export processed data
-export { postsSorted as posts, locationTags, uniqueTags, topicTags, locationLabels, topicLabels };
+// Export processed data (lazy — initialized on first call)
+export {
+  getPostsSorted as getPosts,
+  getLocationTags,
+  getUniqueTags,
+  getTopicTags,
+  locationLabels,
+  topicLabels,
+};
 
 // Export default for convenience
 export default {
-  posts: postsSorted,
-  locationTags,
-  uniqueTags,
-  topicTags,
+  getPosts: getPostsSorted,
+  getLocationTags,
+  getUniqueTags,
+  getTopicTags,
   locationLabels,
   topicLabels,
   getResearchItems,

@@ -19,9 +19,9 @@ export default function HouseholdBreakdown({
   reform,
   borderColor,
 }: HouseholdBreakdownProps) {
-  const metadata = useSelector((state: RootState) => state.metadata);
+  const variables = useSelector((state: RootState) => state.metadata.variables);
 
-  const rootVariable = metadata.variables.household_net_income;
+  const rootVariable = variables.household_net_income;
   if (!rootVariable) {
     return null;
   }

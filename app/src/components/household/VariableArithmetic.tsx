@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { IconCircleMinus, IconCirclePlus, IconTriangleFilled } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import { ActionIcon, Box, Group, Text } from '@mantine/core';
@@ -6,6 +6,7 @@ import { spacing, typography } from '@/designTokens';
 import { useReportYear } from '@/hooks/useReportYear';
 import { RootState } from '@/store';
 import { Household } from '@/types/ingredients/Household';
+import { MetadataState } from '@/types/metadata';
 import { calculateVariableComparison } from '@/utils/householdComparison';
 import { getDisplayStyleConfig } from '@/utils/householdDisplayStyles';
 import { getVariableDisplayText } from '@/utils/householdDisplayText';
@@ -40,9 +41,15 @@ export default function VariableArithmetic({
 }: VariableArithmeticProps) {
   const [expanded, setExpanded] = useState(defaultExpanded);
   const reportYear = useReportYear();
-  const metadata = useSelector((state: RootState) => state.metadata);
+  const variables = useSelector((state: RootState) => state.metadata.variables);
+  const parameters = useSelector((state: RootState) => state.metadata.parameters);
+  const entities = useSelector((state: RootState) => state.metadata.entities);
+  const metadata = useMemo(
+    () => ({ variables, parameters, entities }) as MetadataState,
+    [variables, parameters, entities]
+  );
 
-  const variable = metadata.variables[variableName];
+  const variable = variables[variableName];
   if (!variable) {
     return null;
   }
@@ -58,7 +65,7 @@ export default function VariableArithmetic({
   if (variable.adds) {
     if (typeof variable.adds === 'string') {
       // It's a parameter name - resolve it
-      const parameter = metadata.parameters[variable.adds];
+      const parameter = parameters[variable.adds];
       if (parameter) {
         addsArray = getParameterAtInstant(parameter, `${reportYear}-01-01`) || [];
       }
@@ -70,7 +77,7 @@ export default function VariableArithmetic({
   if (variable.subtracts) {
     if (typeof variable.subtracts === 'string') {
       // It's a parameter name - resolve it
-      const parameter = metadata.parameters[variable.subtracts];
+      const parameter = parameters[variable.subtracts];
       if (parameter) {
         subtractsArray = getParameterAtInstant(parameter, `${reportYear}-01-01`) || [];
       }

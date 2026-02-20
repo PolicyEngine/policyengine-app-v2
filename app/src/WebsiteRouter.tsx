@@ -2,30 +2,33 @@
  * Router for the Website (policyengine.org)
  * Contains homepage, blog, team, and embedded apps
  */
+import { lazy, Suspense } from 'react';
 import { createBrowserRouter, Navigate, RouterProvider, useParams } from 'react-router-dom';
 import AppLayout from './components/AppLayout';
 import StaticLayout from './components/StaticLayout';
-import AdsDashboardPage from './pages/AdsDashboard.page';
-import AIGrowthResearchPage from './pages/AIGrowthResearch.page';
-import AppPage from './pages/AppPage';
-import BlogPage from './pages/Blog.page';
-import BrandPage from './pages/Brand.page';
-import BrandAssetsPage from './pages/BrandAssets.page';
-import BrandDesignPage from './pages/BrandDesign.page';
-import BrandWritingPage from './pages/BrandWriting.page';
-import DonatePage from './pages/Donate.page';
-import OrgLogosEmbedPage from './pages/embed/OrgLogosEmbed.page';
-import HomePage from './pages/Home.page';
-import ModelPage from './pages/Model.page';
-import PrivacyPage from './pages/Privacy.page';
-import ResearchPage from './pages/Research.page';
-import SupportersPage from './pages/Supporters.page';
-import TeamPage from './pages/Team.page';
-import TermsPage from './pages/Terms.page';
-import YearInReviewPage from './pages/YearInReview.page';
 import { CountryAppGuard } from './routing/guards/CountryAppGuard';
 import { CountryGuardSimple } from './routing/guards/CountryGuardSimple';
 import { RedirectToCountry } from './routing/RedirectToCountry';
+
+// Lazy-loaded pages
+const AdsDashboardPage = lazy(() => import('./pages/AdsDashboard.page'));
+const AIGrowthResearchPage = lazy(() => import('./pages/AIGrowthResearch.page'));
+const AppPage = lazy(() => import('./pages/AppPage'));
+const BlogPage = lazy(() => import('./pages/Blog.page'));
+const BrandPage = lazy(() => import('./pages/Brand.page'));
+const BrandAssetsPage = lazy(() => import('./pages/BrandAssets.page'));
+const BrandDesignPage = lazy(() => import('./pages/BrandDesign.page'));
+const BrandWritingPage = lazy(() => import('./pages/BrandWriting.page'));
+const DonatePage = lazy(() => import('./pages/Donate.page'));
+const OrgLogosEmbedPage = lazy(() => import('./pages/embed/OrgLogosEmbed.page'));
+const HomePage = lazy(() => import('./pages/Home.page'));
+const ModelPage = lazy(() => import('./pages/Model.page'));
+const PrivacyPage = lazy(() => import('./pages/Privacy.page'));
+const ResearchPage = lazy(() => import('./pages/Research.page'));
+const SupportersPage = lazy(() => import('./pages/Supporters.page'));
+const TeamPage = lazy(() => import('./pages/Team.page'));
+const TermsPage = lazy(() => import('./pages/Terms.page'));
+const YearInReviewPage = lazy(() => import('./pages/YearInReview.page'));
 
 // Redirect component for legacy /blog/:postName URLs
 function BlogRedirect() {
@@ -49,27 +52,51 @@ const router = createBrowserRouter(
           children: [
             {
               index: true,
-              element: <HomePage />,
+              element: (
+                <Suspense fallback={null}>
+                  <HomePage />
+                </Suspense>
+              ),
             },
             {
               path: 'donate',
-              element: <DonatePage />,
+              element: (
+                <Suspense fallback={null}>
+                  <DonatePage />
+                </Suspense>
+              ),
             },
             {
               path: 'supporters',
-              element: <SupportersPage />,
+              element: (
+                <Suspense fallback={null}>
+                  <SupportersPage />
+                </Suspense>
+              ),
             },
             {
               path: 'team',
-              element: <TeamPage />,
+              element: (
+                <Suspense fallback={null}>
+                  <TeamPage />
+                </Suspense>
+              ),
             },
             {
               path: 'privacy',
-              element: <PrivacyPage />,
+              element: (
+                <Suspense fallback={null}>
+                  <PrivacyPage />
+                </Suspense>
+              ),
             },
             {
               path: 'terms',
-              element: <TermsPage />,
+              element: (
+                <Suspense fallback={null}>
+                  <TermsPage />
+                </Suspense>
+              ),
             },
             {
               path: 'methodology',
@@ -81,53 +108,97 @@ const router = createBrowserRouter(
             },
             {
               path: 'research',
-              element: <ResearchPage />,
+              element: (
+                <Suspense fallback={null}>
+                  <ResearchPage />
+                </Suspense>
+              ),
             },
             {
               path: 'research/:slug',
-              element: <BlogPage />,
+              element: (
+                <Suspense fallback={null}>
+                  <BlogPage />
+                </Suspense>
+              ),
             },
             {
               path: 'brand',
-              element: <BrandPage />,
+              element: (
+                <Suspense fallback={null}>
+                  <BrandPage />
+                </Suspense>
+              ),
             },
             {
               path: 'brand/design',
-              element: <BrandDesignPage />,
+              element: (
+                <Suspense fallback={null}>
+                  <BrandDesignPage />
+                </Suspense>
+              ),
             },
             {
               path: 'brand/writing',
-              element: <BrandWritingPage />,
+              element: (
+                <Suspense fallback={null}>
+                  <BrandWritingPage />
+                </Suspense>
+              ),
             },
             {
               path: 'brand/assets',
-              element: <BrandAssetsPage />,
+              element: (
+                <Suspense fallback={null}>
+                  <BrandAssetsPage />
+                </Suspense>
+              ),
             },
             {
               path: 'ads-dashboard',
-              element: <AdsDashboardPage />,
+              element: (
+                <Suspense fallback={null}>
+                  <AdsDashboardPage />
+                </Suspense>
+              ),
             },
             {
               path: 'ai-inequality',
-              element: <AIGrowthResearchPage />,
+              element: (
+                <Suspense fallback={null}>
+                  <AIGrowthResearchPage />
+                </Suspense>
+              ),
             },
             {
               path: 'model',
-              element: <ModelPage />,
+              element: (
+                <Suspense fallback={null}>
+                  <ModelPage />
+                </Suspense>
+              ),
             },
           ],
         },
         // Full-page embeds - no layout wrapper
         {
           path: '2025-year-in-review',
-          element: <YearInReviewPage />,
+          element: (
+            <Suspense fallback={null}>
+              <YearInReviewPage />
+            </Suspense>
+          ),
         },
         // Embed routes - minimal layout for iframe embedding
         {
           children: [
             {
               path: 'embed/org-logos',
-              element: <OrgLogosEmbedPage />,
+              element: (
+                <Suspense fallback={null}>
+                  <OrgLogosEmbedPage />
+                </Suspense>
+              ),
             },
           ],
         },
@@ -140,7 +211,11 @@ const router = createBrowserRouter(
               children: [
                 {
                   path: ':slug/*',
-                  element: <AppPage />,
+                  element: (
+                    <Suspense fallback={null}>
+                      <AppPage />
+                    </Suspense>
+                  ),
                 },
               ],
             },
