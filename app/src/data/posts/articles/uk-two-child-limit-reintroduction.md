@@ -12,7 +12,7 @@ In this analysis, we [examine](https://github.com/PolicyEngine/uk-two-child-limi
 
 ## Distributional impact
 
-<iframe src="https://uk-two-child-limit-reintroduction.vercel.app/embed-distributional-text.html" width="100%" height="350" frameborder="0"></iframe>
+<iframe src="https://uk-two-child-limit-reintroduction.vercel.app/embed-distributional-text.html" width="100%" height="250" frameborder="0"></iframe>
 
 **Figure 1: Change in household income by income decile**
 
