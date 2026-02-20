@@ -15,7 +15,13 @@
       "permanent": true
     }
   ],
-  "rewrites": [{ "source": "/(.*)", "destination": "/website.html" }],
+  "rewrites": [
+    {
+      "source": "/_tracker/:path*",
+      "destination": "https://policyengine--state-legislative-tracker.modal.run/_tracker/:path*"
+    },
+    { "source": "/(.*)", "destination": "/website.html" }
+  ],
   "headers": [
     {
       "source": "/assets/(.*)",
