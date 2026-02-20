@@ -11,6 +11,7 @@ export { HistoricalValuesCard } from './HistoricalValuesCard';
 export { EmptyParameterState } from './EmptyParameterState';
 
 export type {
+  EditorMode,
   ModifiedParam,
   SidebarTab,
   ParameterSidebarProps,

@@ -10,16 +10,16 @@ describe('ReportActionButtons', () => {
     // Then
     expect(screen.getByRole('button', { name: /save report to my reports/i })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /share report/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /edit report name/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /view\/edit report/i })).not.toBeInTheDocument();
   });
 
-  test('given isSharedView=false then renders share and edit buttons', () => {
+  test('given isSharedView=false then renders view/edit and share buttons', () => {
     // Given
-    render(<ReportActionButtons isSharedView={false} onShare={vi.fn()} onEdit={vi.fn()} />);
+    render(<ReportActionButtons isSharedView={false} onShare={vi.fn()} onModify={vi.fn()} />);
 
     // Then
     expect(screen.getByRole('button', { name: /share report/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /edit report name/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /view\/edit report/i })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /save report/i })).not.toBeInTheDocument();
   });
 
@@ -49,16 +49,16 @@ describe('ReportActionButtons', () => {
     expect(handleShare).toHaveBeenCalledOnce();
   });
 
-  test('given onEdit callback then calls it when edit clicked', async () => {
+  test('given onModify callback then calls it when view/edit clicked', async () => {
     // Given
     const user = userEvent.setup();
-    const handleEdit = vi.fn();
-    render(<ReportActionButtons isSharedView={false} onEdit={handleEdit} />);
+    const handleModify = vi.fn();
+    render(<ReportActionButtons isSharedView={false} onModify={handleModify} />);
 
     // When
-    await user.click(screen.getByRole('button', { name: /edit report name/i }));
+    await user.click(screen.getByRole('button', { name: /view\/edit report/i }));
 
     // Then
-    expect(handleEdit).toHaveBeenCalledOnce();
+    expect(handleModify).toHaveBeenCalledOnce();
   });
 });

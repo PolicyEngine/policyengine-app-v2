@@ -1,8 +1,13 @@
-import { useEffect, useMemo, useState } from 'react';
-import { IconDeviceFloppy, IconPlayerPlay, IconRefresh, IconX } from '@tabler/icons-react';
+import { useCallback, useMemo, useState } from 'react';
+import {
+  IconChevronLeft,
+  IconDeviceFloppy,
+  IconPencil,
+  IconRefresh,
+  IconX,
+} from '@tabler/icons-react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Button, Container, Grid, Modal, Stack, Text, TextInput } from '@mantine/core';
-import { useDisclosure } from '@mantine/hooks';
+import { Button, Container, Group, Modal, Stack, Text } from '@mantine/core';
 import { spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { getReportOutputPath } from '@/utils/reportRouting';
@@ -35,51 +40,40 @@ export default function ModifyReportPage() {
     },
   });
 
-  // "Save as new" naming modal
-  const [saveModalOpened, { open: openSaveModal, close: closeSaveModal }] = useDisclosure(false);
-  const [newReportLabel, setNewReportLabel] = useState('');
-
-  // Pre-fill modal label when opened
-  useEffect(() => {
-    if (saveModalOpened) {
-      const base = reportState?.label || 'Untitled report';
-      setNewReportLabel(`${base} (modified)`);
-    }
-  }, [saveModalOpened, reportState?.label]);
-
-  const handleSaveModalSubmit = () => {
-    const trimmed = newReportLabel.trim();
-    if (!trimmed) {
-      return;
-    }
-    handleSaveAsNew(trimmed);
-    closeSaveModal();
-  };
-
-  // Change detection (exclude label)
-  const hasSubstantiveChanges = useMemo(() => {
-    if (!originalState || !reportState) {
-      return false;
-    }
-    return (
-      originalState.year !== reportState.year ||
-      JSON.stringify(originalState.simulations) !== JSON.stringify(reportState.simulations)
-    );
-  }, [reportState, originalState]);
+  // View/edit mode state
+  const [isEditing, setIsEditing] = useState(false);
+  const [showSameNameWarning, setShowSameNameWarning] = useState(false);
 
   const isEitherSubmitting = isSavingNew || isReplacing;
 
+  // Same-name guard for "Save as new report"
+  const handleSaveAsNewClick = useCallback(() => {
+    const currentName = (reportState?.label || '').trim();
+    const origName = (originalState?.label || '').trim();
+    if (currentName && currentName === origName) {
+      setShowSameNameWarning(true);
+    } else {
+      handleSaveAsNew(reportState?.label || 'Untitled report');
+    }
+  }, [reportState?.label, originalState?.label, handleSaveAsNew]);
+
   // Dynamic toolbar actions
   const topBarActions: TopBarAction[] = useMemo(() => {
-    if (!hasSubstantiveChanges) {
+    if (!isEditing) {
       return [
         {
-          key: 'already-run',
-          label: 'Already run',
-          icon: <IconPlayerPlay size={16} />,
-          onClick: () => {},
+          key: 'edit',
+          label: 'Edit report',
+          icon: <IconPencil size={16} />,
+          onClick: () => setIsEditing(true),
           variant: 'primary' as const,
-          disabled: true,
+        },
+        {
+          key: 'back',
+          label: 'Back to report',
+          icon: <IconChevronLeft size={16} />,
+          onClick: () => navigate(getReportOutputPath(countryId, userReportId!)),
+          variant: 'secondary' as const,
         },
       ];
     }
@@ -88,7 +82,7 @@ export default function ModifyReportPage() {
         key: 'save-new',
         label: 'Save as new report',
         icon: <IconDeviceFloppy size={16} />,
-        onClick: openSaveModal,
+        onClick: handleSaveAsNewClick,
         variant: 'primary' as const,
         loading: isSavingNew,
         loadingLabel: 'Creating report...',
@@ -96,29 +90,34 @@ export default function ModifyReportPage() {
       },
       {
         key: 'replace',
-        label: 'Replace existing report',
+        label: 'Update existing report',
         icon: <IconRefresh size={16} />,
         onClick: handleReplace,
         variant: 'secondary' as const,
         loading: isReplacing,
-        loadingLabel: 'Replacing report...',
+        loadingLabel: 'Updating report...',
         disabled: isSavingNew,
       },
       {
         key: 'cancel',
         label: 'Cancel',
         icon: <IconX size={16} />,
-        onClick: () => navigate(getReportOutputPath(countryId, userReportId!)),
+        onClick: () => {
+          if (originalState) {
+            setReportState(structuredClone(originalState) as ReportBuilderState);
+          }
+          setIsEditing(false);
+        },
         variant: 'secondary' as const,
         disabled: isEitherSubmitting,
       },
     ];
   }, [
-    hasSubstantiveChanges,
+    isEditing,
     countryId,
     userReportId,
     navigate,
-    openSaveModal,
+    handleSaveAsNewClick,
     handleReplace,
     isSavingNew,
     isReplacing,
@@ -148,54 +147,42 @@ export default function ModifyReportPage() {
   return (
     <>
       <ReportBuilderShell
-        title="Modify report"
+        title={isEditing ? 'Edit report' : 'View report'}
         actions={topBarActions}
         reportState={reportState}
         setReportState={setReportState as React.Dispatch<React.SetStateAction<ReportBuilderState>>}
         pickerState={pickerState}
         setPickerState={setPickerState}
         BlockComponent={SimulationBlockFull}
+        isReadOnly={!isEditing}
       />
 
       <Modal
-        opened={saveModalOpened}
-        onClose={closeSaveModal}
-        title={<strong>Save as new report</strong>}
+        opened={showSameNameWarning}
+        onClose={() => setShowSameNameWarning(false)}
+        title="Same name"
         centered
+        size="sm"
       >
         <Stack gap={spacing.md}>
-          <TextInput
-            label="Report name"
-            placeholder="Enter report name"
-            value={newReportLabel}
-            onChange={(e) => setNewReportLabel(e.currentTarget.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                handleSaveModalSubmit();
-              }
-            }}
-            disabled={isSavingNew}
-            data-autofocus
-          />
-
-          <Grid mt={spacing.md}>
-            <Grid.Col span={6}>
-              <Button onClick={closeSaveModal} variant="default" disabled={isSavingNew} fullWidth>
-                Cancel
-              </Button>
-            </Grid.Col>
-            <Grid.Col span={6}>
-              <Button
-                onClick={handleSaveModalSubmit}
-                variant="filled"
-                loading={isSavingNew}
-                disabled={!newReportLabel.trim()}
-                fullWidth
-              >
-                Save
-              </Button>
-            </Grid.Col>
-          </Grid>
+          <Text size="sm">
+            Both the original and new report will have the name &quot;
+            {(reportState?.label || '').trim()}&quot;. Are you sure you want to save?
+          </Text>
+          <Group justify="flex-end" gap={spacing.sm}>
+            <Button variant="subtle" color="gray" onClick={() => setShowSameNameWarning(false)}>
+              Cancel
+            </Button>
+            <Button
+              color="teal"
+              onClick={() => {
+                setShowSameNameWarning(false);
+                handleSaveAsNew(reportState?.label || 'Untitled report');
+              }}
+            >
+              Save anyway
+            </Button>
+          </Group>
         </Stack>
       </Modal>
     </>

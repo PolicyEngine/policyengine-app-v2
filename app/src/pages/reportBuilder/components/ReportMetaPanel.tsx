@@ -13,7 +13,7 @@ import { colors, spacing, typography } from '@/designTokens';
 import { FONT_SIZES } from '../constants';
 import type { ReportBuilderState } from '../types';
 
-const SEGMENT_HEIGHT = 44;
+const SEGMENT_HEIGHT = 38;
 
 const segmentBase: React.CSSProperties = {
   height: SEGMENT_HEIGHT,
@@ -28,9 +28,10 @@ const segmentBase: React.CSSProperties = {
 interface ReportMetaPanelProps {
   reportState: ReportBuilderState;
   setReportState: React.Dispatch<React.SetStateAction<ReportBuilderState>>;
+  isReadOnly?: boolean;
 }
 
-export function ReportMetaPanel({ reportState, setReportState }: ReportMetaPanelProps) {
+export function ReportMetaPanel({ reportState, setReportState, isReadOnly }: ReportMetaPanelProps) {
   const [isEditingLabel, setIsEditingLabel] = useState(false);
   const [labelInput, setLabelInput] = useState('');
   const [inputWidth, setInputWidth] = useState<number | null>(null);
@@ -78,11 +79,11 @@ export function ReportMetaPanel({ reportState, setReportState }: ReportMetaPanel
           minWidth: 0,
           padding: `0 ${spacing.lg}`,
           gap: spacing.sm,
-          cursor: isEditingLabel ? 'text' : 'pointer',
+          cursor: isReadOnly ? 'default' : isEditingLabel ? 'text' : 'pointer',
           position: 'relative',
         }}
         onClick={() => {
-          if (!isEditingLabel) {
+          if (!isReadOnly && !isEditingLabel) {
             setLabelInput(reportState.label || '');
             setIsEditingLabel(true);
           }
@@ -111,7 +112,7 @@ export function ReportMetaPanel({ reportState, setReportState }: ReportMetaPanel
                 whiteSpace: 'pre',
                 fontFamily: typography.fontFamily.primary,
                 fontWeight: 600,
-                fontSize: FONT_SIZES.normal,
+                fontSize: FONT_SIZES.small,
               }}
             />
             <TextInput
@@ -127,7 +128,7 @@ export function ReportMetaPanel({ reportState, setReportState }: ReportMetaPanel
                 input: {
                   fontFamily: typography.fontFamily.primary,
                   fontWeight: 600,
-                  fontSize: FONT_SIZES.normal,
+                  fontSize: FONT_SIZES.small,
                   border: 'none',
                   background: 'transparent',
                   padding: 0,
@@ -156,7 +157,7 @@ export function ReportMetaPanel({ reportState, setReportState }: ReportMetaPanel
               fw={600}
               style={{
                 fontFamily: typography.fontFamily.primary,
-                fontSize: FONT_SIZES.normal,
+                fontSize: FONT_SIZES.small,
                 color: colors.gray[800],
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
@@ -165,11 +166,13 @@ export function ReportMetaPanel({ reportState, setReportState }: ReportMetaPanel
             >
               {reportState.label || defaultReportLabel}
             </Text>
-            <IconPencil
-              size={12}
-              color={colors.gray[400]}
-              style={{ flexShrink: 0, marginLeft: 'auto' }}
-            />
+            {!isReadOnly && (
+              <IconPencil
+                size={12}
+                color={colors.gray[400]}
+                style={{ flexShrink: 0, marginLeft: 'auto' }}
+              />
+            )}
           </>
         )}
       </Box>
@@ -205,21 +208,24 @@ export function ReportMetaPanel({ reportState, setReportState }: ReportMetaPanel
           size="sm"
           variant="unstyled"
           withCheckIcon={false}
+          disabled={isReadOnly}
           comboboxProps={{ width: 120, position: 'bottom-end' }}
           styles={{
             input: {
               fontFamily: typography.fontFamily.primary,
-              fontSize: FONT_SIZES.normal,
+              fontSize: FONT_SIZES.small,
               fontWeight: 500,
-              color: colors.gray[700],
-              cursor: 'pointer',
+              color: `${colors.gray[700]}`,
+              opacity: 1,
+              cursor: isReadOnly ? 'default' : 'pointer',
               paddingLeft: 0,
-              paddingRight: spacing.xl,
+              paddingRight: isReadOnly ? 0 : spacing.xl,
               minHeight: 'auto',
               height: 'auto',
+              WebkitTextFillColor: colors.gray[700],
             },
             root: {
-              width: 72,
+              width: isReadOnly ? 'auto' : 72,
             },
           }}
         />

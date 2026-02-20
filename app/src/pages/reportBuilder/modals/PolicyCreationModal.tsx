@@ -9,7 +9,7 @@
  */
 
 import React, { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
-import { IconDeviceFloppy, IconRefresh, IconScale, IconX } from '@tabler/icons-react';
+import { IconDeviceFloppy, IconPencil, IconRefresh, IconScale, IconX } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import { ActionIcon, Box, Button, Group, Modal, Stack, Text, Tooltip } from '@mantine/core';
 import { PolicyAdapter } from '@/adapters';
@@ -37,6 +37,7 @@ import { EditableLabel } from '../components/EditableLabel';
 import { FONT_SIZES, INGREDIENT_COLORS } from '../constants';
 import {
   ChangesCard,
+  EditorMode,
   EmptyParameterState,
   HistoricalValuesCard,
   ModifiedParam,
@@ -90,6 +91,7 @@ export function PolicyCreationModal({
 
   // Parameter search state
   const [parameterSearch, setParameterSearch] = useState('');
+  const [hoveredParamName, setHoveredParamName] = useState<string | null>(null);
 
   // API hook for creating policy
   const { createPolicy, isPending: isCreating } = useCreatePolicy(policyLabel || undefined);
@@ -98,7 +100,9 @@ export function PolicyCreationModal({
   void countryId;
   void simulationIndex;
 
-  const isEditMode = !!initialPolicy;
+  // Editor mode: create (new policy), display (read-only existing), edit (modifying existing)
+  const [editorMode, setEditorMode] = useState<EditorMode>(initialPolicy ? 'edit' : 'create');
+  const isReadOnly = editorMode === 'display';
   const colorConfig = INGREDIENT_COLORS.policy;
 
   // Reset state when modal opens; pre-populate from initialPolicy when editing
@@ -106,6 +110,7 @@ export function PolicyCreationModal({
     if (isOpen) {
       setPolicyLabel(initialPolicy?.label || '');
       setPolicyParameters(initialPolicy?.parameters || []);
+      setEditorMode(initialPolicy ? 'edit' : 'create');
       setActiveTab('overview');
       setSelectedParam(null);
       setExpandedMenuItems(new Set());
@@ -259,6 +264,19 @@ export function PolicyCreationModal({
     }
   }, [policyLabel, policyParameters, createPolicy, onPolicyCreated, onClose]);
 
+  // Same-name warning for "Save as new" when name matches original
+  const [showSameNameWarning, setShowSameNameWarning] = useState(false);
+
+  const handleSaveAsNewPolicy = useCallback(() => {
+    const currentName = (policyLabel || '').trim();
+    const originalName = (initialPolicy?.label || '').trim();
+    if (editorMode === 'edit' && currentName && currentName === originalName) {
+      setShowSameNameWarning(true);
+    } else {
+      handleCreatePolicy();
+    }
+  }, [policyLabel, initialPolicy?.label, editorMode, handleCreatePolicy]);
+
   // Get base and reform values for chart
   const getChartValues = () => {
     if (!selectedParam) {
@@ -305,51 +323,34 @@ export function PolicyCreationModal({
               transition: 'all 0.3s ease',
             }}
           >
-            <Group justify="space-between" align="center" wrap="nowrap">
-              <Group gap={spacing.md} align="center" wrap="nowrap" style={{ minWidth: 0 }}>
-                <Box
-                  style={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: spacing.radius.md,
-                    background: `linear-gradient(135deg, ${colorConfig.bg} 0%, ${colors.white} 100%)`,
-                    border: `1px solid ${colorConfig.border}`,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0,
-                  }}
-                >
-                  <IconScale size={18} color={colorConfig.icon} />
-                </Box>
+            <Group gap={spacing.md} align="center" wrap="nowrap">
+              <Box
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: spacing.radius.md,
+                  background: `linear-gradient(135deg, ${colorConfig.bg} 0%, ${colors.white} 100%)`,
+                  border: `1px solid ${colorConfig.border}`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                }}
+              >
+                <IconScale size={18} color={colorConfig.icon} />
+              </Box>
+              {isReadOnly ? (
+                <Text fw={600} style={{ fontSize: FONT_SIZES.normal, color: colors.gray[800] }}>
+                  {policyLabel || 'Untitled policy'}
+                </Text>
+              ) : (
                 <EditableLabel
                   value={policyLabel}
                   onChange={setPolicyLabel}
                   placeholder="Enter policy name..."
                   emptyStateText="Click to name your policy..."
                 />
-              </Group>
-              <Group gap={spacing.xs} style={{ flexShrink: 0 }}>
-                {modificationCount > 0 ? (
-                  <>
-                    <Box
-                      style={{
-                        width: 8,
-                        height: 8,
-                        borderRadius: '50%',
-                        background: colors.primary[500],
-                      }}
-                    />
-                    <Text style={{ fontSize: FONT_SIZES.small, color: colors.gray[600] }}>
-                      {modificationCount} parameter{modificationCount !== 1 ? 's' : ''} modified
-                    </Text>
-                  </>
-                ) : (
-                  <Text style={{ fontSize: FONT_SIZES.small, color: colors.gray[400] }}>
-                    No changes yet
-                  </Text>
-                )}
-              </Group>
+              )}
             </Group>
           </Box>
 
@@ -366,14 +367,16 @@ export function PolicyCreationModal({
               }}
             >
               <Text style={{ fontSize: FONT_SIZES.small, color: colors.gray[400] }}>
-                No parameter changes yet
+                No parameter changes{isReadOnly ? '' : ' yet'}
               </Text>
-              <Text
-                ta="center"
-                style={{ fontSize: FONT_SIZES.tiny, color: colors.gray[400], maxWidth: 280 }}
-              >
-                Switch to the Parameters tab to start modifying values.
-              </Text>
+              {!isReadOnly && (
+                <Text
+                  ta="center"
+                  style={{ fontSize: FONT_SIZES.tiny, color: colors.gray[400], maxWidth: 280 }}
+                >
+                  Select a parameter from the sidebar to start modifying values.
+                </Text>
+              )}
             </Box>
           ) : (
             <Box
@@ -431,102 +434,88 @@ export function PolicyCreationModal({
                   Value
                 </Text>
 
-                {modifiedParams.map((param) => (
-                  <Fragment key={param.paramName}>
-                    <Box
-                      style={{
-                        padding: `${spacing.sm} ${spacing.md}`,
-                        borderBottom: `1px solid ${colors.gray[100]}`,
-                      }}
-                    >
-                      <Tooltip label={param.paramName} multiline w={300} withArrow>
-                        <Text
-                          style={{
-                            fontSize: FONT_SIZES.small,
-                            color: colors.gray[700],
-                            lineHeight: 1.4,
-                          }}
-                        >
-                          {param.label}
-                        </Text>
-                      </Tooltip>
-                    </Box>
-                    <Box
-                      style={{
-                        padding: `${spacing.sm} ${spacing.md}`,
-                        borderBottom: `1px solid ${colors.gray[100]}`,
-                        textAlign: 'right',
-                      }}
-                    >
-                      {param.changes.map((c, i) => (
-                        <Text
-                          key={i}
-                          style={{
-                            fontSize: FONT_SIZES.small,
-                            color: colors.gray[500],
-                            lineHeight: 1.4,
-                          }}
-                        >
-                          {c.period}
-                        </Text>
-                      ))}
-                    </Box>
-                    <Box
-                      style={{
-                        padding: `${spacing.sm} ${spacing.md}`,
-                        borderBottom: `1px solid ${colors.gray[100]}`,
-                        textAlign: 'right',
-                      }}
-                    >
-                      {param.changes.map((c, i) => (
-                        <Text
-                          key={i}
-                          fw={500}
-                          style={{
-                            fontSize: FONT_SIZES.small,
-                            color: colorConfig.icon,
-                            lineHeight: 1.4,
-                          }}
-                        >
-                          {c.value}
-                        </Text>
-                      ))}
-                    </Box>
-                  </Fragment>
-                ))}
+                {modifiedParams.map((param) => {
+                  const isHovered = hoveredParamName === param.paramName;
+                  const rowHandlers = {
+                    onClick: () => handleSearchSelect(param.paramName),
+                    onMouseEnter: () => setHoveredParamName(param.paramName),
+                    onMouseLeave: () => setHoveredParamName(null),
+                  };
+                  return (
+                    <Fragment key={param.paramName}>
+                      <Box
+                        {...rowHandlers}
+                        style={{
+                          padding: `${spacing.sm} ${spacing.md}`,
+                          borderBottom: `1px solid ${colors.gray[100]}`,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <Tooltip label={param.paramName} multiline w={300} withArrow>
+                          <Text
+                            style={{
+                              fontSize: FONT_SIZES.small,
+                              color: isHovered ? colors.primary[500] : colors.gray[700],
+                              lineHeight: 1.4,
+                              transition: 'color 0.15s ease',
+                            }}
+                          >
+                            {param.label}
+                          </Text>
+                        </Tooltip>
+                      </Box>
+                      <Box
+                        {...rowHandlers}
+                        style={{
+                          padding: `${spacing.sm} ${spacing.md}`,
+                          borderBottom: `1px solid ${colors.gray[100]}`,
+                          textAlign: 'right',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        {param.changes.map((c, i) => (
+                          <Text
+                            key={i}
+                            style={{
+                              fontSize: FONT_SIZES.small,
+                              color: colors.gray[500],
+                              lineHeight: 1.4,
+                            }}
+                          >
+                            {c.period}
+                          </Text>
+                        ))}
+                      </Box>
+                      <Box
+                        {...rowHandlers}
+                        style={{
+                          padding: `${spacing.sm} ${spacing.md}`,
+                          borderBottom: `1px solid ${colors.gray[100]}`,
+                          textAlign: 'right',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        {param.changes.map((c, i) => (
+                          <Text
+                            key={i}
+                            fw={500}
+                            style={{
+                              fontSize: FONT_SIZES.small,
+                              color: colorConfig.icon,
+                              lineHeight: 1.4,
+                            }}
+                          >
+                            {c.value}
+                          </Text>
+                        ))}
+                      </Box>
+                    </Fragment>
+                  );
+                })}
               </Box>
             </Box>
           )}
         </Stack>
-      </Box>
-
-      {/* Action buttons — pinned to bottom */}
-      <Box
-        style={{
-          padding: `${spacing.md} ${spacing.xl}`,
-          borderTop: `1px solid ${colors.border.light}`,
-          background: colors.white,
-          flexShrink: 0,
-        }}
-      >
-        <Group gap={spacing.sm}>
-          <Button
-            variant="filled"
-            color="teal"
-            leftSection={<IconDeviceFloppy size={16} />}
-            onClick={handleCreatePolicy}
-            loading={isCreating}
-          >
-            Save as new policy
-          </Button>
-          <Button
-            variant="default"
-            leftSection={<IconRefresh size={16} />}
-            onClick={() => console.info('[PolicyCreationModal] Replace existing policy')}
-          >
-            Replace existing policy
-          </Button>
-        </Group>
       </Box>
     </Box>
   );
@@ -538,7 +527,9 @@ export function PolicyCreationModal({
   const renderParametersContent = () => (
     <Box style={{ flex: 1, overflow: 'auto', background: colors.gray[50] }}>
       {!selectedParam ? (
-        <EmptyParameterState />
+        <EmptyParameterState
+          message={isReadOnly ? 'Select a parameter from the menu to view its details.' : undefined}
+        />
       ) : (
         <Box style={{ padding: spacing.xl }}>
           <Stack gap={spacing.lg}>
@@ -548,21 +539,23 @@ export function PolicyCreationModal({
             />
             <Group gap={spacing.lg} align="flex-start" wrap="nowrap">
               <Stack gap={spacing.lg} style={{ flex: 1, minWidth: 0 }}>
-                <ValueSetterCard
-                  selectedParam={selectedParam}
-                  localPolicy={localPolicy}
-                  minDate={minDate}
-                  maxDate={maxDate}
-                  valueSetterMode={valueSetterMode}
-                  intervals={intervals}
-                  startDate={startDate}
-                  endDate={endDate}
-                  onModeChange={setValueSetterMode}
-                  onIntervalsChange={setIntervals}
-                  onStartDateChange={setStartDate}
-                  onEndDateChange={setEndDate}
-                  onSubmit={handleValueSubmit}
-                />
+                {!isReadOnly && (
+                  <ValueSetterCard
+                    selectedParam={selectedParam}
+                    localPolicy={localPolicy}
+                    minDate={minDate}
+                    maxDate={maxDate}
+                    valueSetterMode={valueSetterMode}
+                    intervals={intervals}
+                    startDate={startDate}
+                    endDate={endDate}
+                    onModeChange={setValueSetterMode}
+                    onIntervalsChange={setIntervals}
+                    onStartDateChange={setStartDate}
+                    onEndDateChange={setEndDate}
+                    onSubmit={handleValueSubmit}
+                  />
+                )}
                 <ChangesCard
                   modifiedParams={modifiedParams.filter(
                     (p) => p.paramName === selectedParam?.parameter
@@ -636,7 +629,11 @@ export function PolicyCreationModal({
               <IconScale size={18} color={colorConfig.icon} />
             </Box>
             <Text fw={600} style={{ fontSize: FONT_SIZES.normal, color: colors.gray[800] }}>
-              {isEditMode ? 'Edit policy' : 'Policy editor'}
+              {editorMode === 'display'
+                ? 'Policy details'
+                : editorMode === 'edit'
+                  ? 'Edit policy'
+                  : 'Policy editor'}
             </Text>
           </Group>
           <ActionIcon variant="subtle" color="gray" onClick={onClose} style={{ flexShrink: 0 }}>
@@ -666,7 +663,7 @@ export function PolicyCreationModal({
         {activeTab === 'overview' ? renderOverviewContent() : renderParametersContent()}
       </Group>
 
-      {/* Footer */}
+      {/* Footer — unified mode bar */}
       <Box
         style={{
           borderTop: `1px solid ${colors.border.light}`,
@@ -676,17 +673,102 @@ export function PolicyCreationModal({
           background: colors.white,
         }}
       >
-        <Group justify="flex-end">
-          <Group gap={spacing.sm}>
-            <Button variant="default" onClick={onClose}>
+        <Box
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'auto 1fr auto',
+            alignItems: 'center',
+            width: '100%',
+          }}
+        >
+          <Button variant="subtle" color="gray" onClick={onClose}>
+            Cancel
+          </Button>
+          <Box style={{ textAlign: 'center' }}>
+            {modificationCount > 0 && (
+              <Group gap={spacing.xs} justify="center">
+                <Box
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: '50%',
+                    background: colors.primary[500],
+                  }}
+                />
+                <Text style={{ fontSize: FONT_SIZES.small, color: colors.gray[600] }}>
+                  {modificationCount} parameter{modificationCount !== 1 ? 's' : ''} modified
+                </Text>
+              </Group>
+            )}
+          </Box>
+          <Group gap={spacing.sm} justify="flex-end">
+            {editorMode === 'create' && (
+              <Button color="teal" onClick={handleCreatePolicy} loading={isCreating}>
+                Create policy
+              </Button>
+            )}
+            {editorMode === 'display' && (
+              <Button
+                color="teal"
+                leftSection={<IconPencil size={16} />}
+                onClick={() => setEditorMode('edit')}
+              >
+                Edit this policy
+              </Button>
+            )}
+            {editorMode === 'edit' && (
+              <>
+                <Button
+                  variant="light"
+                  color="teal"
+                  leftSection={<IconRefresh size={16} />}
+                  onClick={() => console.info('[PolicyCreationModal] Update existing policy')}
+                >
+                  Update existing policy
+                </Button>
+                <Button
+                  color="teal"
+                  leftSection={<IconDeviceFloppy size={16} />}
+                  onClick={handleSaveAsNewPolicy}
+                  loading={isCreating}
+                >
+                  Save as new policy
+                </Button>
+              </>
+            )}
+          </Group>
+        </Box>
+      </Box>
+
+      {/* Same-name warning modal */}
+      <Modal
+        opened={showSameNameWarning}
+        onClose={() => setShowSameNameWarning(false)}
+        title={<strong>Same name</strong>}
+        centered
+        size="sm"
+      >
+        <Stack gap={spacing.md}>
+          <Text size="sm">
+            Both the original and new policy will have the name &ldquo;
+            {policyLabel}&rdquo;. Are you sure you want to save?
+          </Text>
+          <Group justify="flex-end" gap={spacing.sm}>
+            <Button variant="subtle" color="gray" onClick={() => setShowSameNameWarning(false)}>
               Cancel
             </Button>
-            <Button color="teal" onClick={handleCreatePolicy} loading={isCreating}>
-              {isEditMode ? 'Save as new policy' : 'Create policy'}
+            <Button
+              color="teal"
+              onClick={() => {
+                setShowSameNameWarning(false);
+                handleCreatePolicy();
+              }}
+            >
+              Save anyway
             </Button>
           </Group>
-        </Group>
-      </Box>
+        </Stack>
+      </Modal>
     </Modal>
   );
 }

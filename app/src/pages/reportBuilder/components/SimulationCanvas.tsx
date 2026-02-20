@@ -25,6 +25,7 @@ interface SimulationCanvasProps {
   pickerState: IngredientPickerState;
   setPickerState: React.Dispatch<React.SetStateAction<IngredientPickerState>>;
   BlockComponent?: React.ComponentType<SimulationBlockProps>;
+  isReadOnly?: boolean;
 }
 
 export function SimulationCanvas({
@@ -33,6 +34,7 @@ export function SimulationCanvas({
   pickerState,
   setPickerState,
   BlockComponent = SimulationBlock,
+  isReadOnly,
 }: SimulationCanvasProps) {
   const canvas = useSimulationCanvas({ reportState, setReportState, pickerState, setPickerState });
 
@@ -65,6 +67,7 @@ export function SimulationCanvas({
             canRemove={false}
             savedPolicies={canvas.savedPolicies}
             recentPopulations={canvas.recentPopulations}
+            isReadOnly={isReadOnly}
           />
 
           {reportState.simulations.length > 1 ? (
@@ -92,6 +95,7 @@ export function SimulationCanvas({
               inheritedPopulation={reportState.simulations[0].population}
               savedPolicies={canvas.savedPolicies}
               recentPopulations={canvas.recentPopulations}
+              isReadOnly={isReadOnly}
             />
           ) : (
             <AddSimulationCard onClick={canvas.handleAddSimulation} disabled={false} />

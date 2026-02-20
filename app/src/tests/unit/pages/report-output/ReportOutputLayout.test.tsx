@@ -238,7 +238,6 @@ describe('ReportOutputLayout', () => {
         onTabChange={vi.fn()}
         isSharedView={false}
         onShare={vi.fn()}
-        onEditName={vi.fn()}
       >
         <div>Content</div>
       </ReportOutputLayout>
@@ -247,6 +246,6 @@ describe('ReportOutputLayout', () => {
     // Then
     expect(screen.queryByTestId('shared-report-tag')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /share report/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /edit report name/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /view\/edit report/i })).toBeInTheDocument();
   });
 });

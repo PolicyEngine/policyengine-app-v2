@@ -2,7 +2,7 @@
  * PolicyDetailsDrawer - Sliding panel showing policy parameter details
  */
 import { Fragment } from 'react';
-import { IconChevronRight, IconX } from '@tabler/icons-react';
+import { IconChevronRight, IconPencil, IconX } from '@tabler/icons-react';
 import {
   ActionIcon,
   Box,
@@ -35,6 +35,7 @@ interface PolicyDetailsDrawerProps {
   parameterTree: ParameterTreeNode | null | undefined;
   onClose: () => void;
   onSelect: () => void;
+  onEdit?: () => void;
 }
 
 export function PolicyDetailsDrawer({
@@ -43,6 +44,7 @@ export function PolicyDetailsDrawer({
   parameterTree,
   onClose,
   onSelect,
+  onEdit,
 }: PolicyDetailsDrawerProps) {
   const colorConfig = INGREDIENT_COLORS.policy;
 
@@ -238,14 +240,26 @@ export function PolicyDetailsDrawer({
                   </ScrollArea>
                 </Box>
                 <Box style={{ padding: spacing.lg, borderTop: `1px solid ${colors.gray[200]}` }}>
-                  <Button
-                    color="teal"
-                    fullWidth
-                    onClick={onSelect}
-                    rightSection={<IconChevronRight size={16} />}
-                  >
-                    Select this policy
-                  </Button>
+                  <Stack gap={spacing.sm}>
+                    <Button
+                      color="teal"
+                      fullWidth
+                      onClick={onSelect}
+                      rightSection={<IconChevronRight size={16} />}
+                    >
+                      Select this policy
+                    </Button>
+                    {onEdit && (
+                      <Button
+                        variant="default"
+                        fullWidth
+                        onClick={onEdit}
+                        leftSection={<IconPencil size={16} />}
+                      >
+                        Edit policy
+                      </Button>
+                    )}
+                  </Stack>
                 </Box>
               </>
             )}

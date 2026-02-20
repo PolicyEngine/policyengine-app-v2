@@ -1,4 +1,4 @@
-import { IconBookmark, IconPencil, IconSettings, IconShare } from '@tabler/icons-react';
+import { IconBookmark, IconSettings, IconShare } from '@tabler/icons-react';
 import { ActionIcon, Tooltip } from '@mantine/core';
 import { colors, typography } from '@/designTokens';
 
@@ -6,7 +6,6 @@ interface ReportActionButtonsProps {
   isSharedView: boolean;
   onShare?: () => void;
   onSave?: () => void;
-  onEdit?: () => void;
   onModify?: () => void;
 }
 
@@ -14,14 +13,13 @@ interface ReportActionButtonsProps {
  * ReportActionButtons - Action buttons for report output header
  *
  * Renders different buttons based on view type:
- * - Normal view: Share + Edit buttons
+ * - Normal view: View/edit + Share buttons
  * - Shared view: Save button with tooltip
  */
 export function ReportActionButtons({
   isSharedView,
   onShare,
   onSave,
-  onEdit,
   onModify,
 }: ReportActionButtonsProps) {
   if (isSharedView) {
@@ -52,7 +50,7 @@ export function ReportActionButtons({
   return (
     <>
       <Tooltip
-        label="Rename report"
+        label="View/edit report"
         position="bottom"
         styles={{
           tooltip: {
@@ -65,27 +63,7 @@ export function ReportActionButtons({
           variant="subtle"
           color="gray"
           size="lg"
-          aria-label="Edit report name"
-          onClick={onEdit}
-        >
-          <IconPencil size={18} />
-        </ActionIcon>
-      </Tooltip>
-      <Tooltip
-        label="Modify report"
-        position="bottom"
-        styles={{
-          tooltip: {
-            backgroundColor: colors.gray[700],
-            fontSize: typography.fontSize.xs,
-          },
-        }}
-      >
-        <ActionIcon
-          variant="subtle"
-          color="gray"
-          size="lg"
-          aria-label="Modify report"
+          aria-label="View/edit report"
           onClick={onModify}
         >
           <IconSettings size={18} />
