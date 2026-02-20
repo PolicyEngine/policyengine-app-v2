@@ -5,6 +5,9 @@
 import { useEffect, useState } from 'react';
 import { useMantineTheme } from '@mantine/core';
 
+/** Media query string for mobile breakpoint — matches Mantine 'sm' (48em / 768px) */
+export const MOBILE_BREAKPOINT_QUERY = '(max-width: 48em)';
+
 /**
  * Hook to track chart container width using ResizeObserver
  * @param containerRef - Reference to the container element

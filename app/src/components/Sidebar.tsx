@@ -15,7 +15,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Box, Button, Stack } from '@mantine/core';
 import { WEBSITE_URL } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { colors, spacing, typography } from '../designTokens';
+import { colors, typography } from '../designTokens';
 import SidebarDivider from './sidebar/SidebarDivider';
 import SidebarNavItem from './sidebar/SidebarNavItem';
 import SidebarSection from './sidebar/SidebarSection';

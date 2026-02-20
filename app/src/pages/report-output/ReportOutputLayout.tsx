@@ -116,6 +116,8 @@ export default function ReportOutputLayout({
               display: 'flex',
               position: 'relative',
               borderBottom: `1px solid ${colors.border.light}`,
+              overflowX: 'auto',
+              WebkitOverflowScrolling: 'touch',
             }}
           >
             {tabs.map((tab, index) => (
@@ -133,6 +135,7 @@ export default function ReportOutputLayout({
                   alignItems: 'center',
                   gap: spacing.xs,
                   position: 'relative',
+                  whiteSpace: 'nowrap',
                   borderRight:
                     index < tabs.length - 1 ? `1px solid ${colors.border.light}` : 'none',
                   marginBottom: '-1px',

@@ -84,6 +84,7 @@ export function ReportSidebar({ tree, activeView, onNavigate }: ReportSidebarPro
   return (
     <Box
       bg="gray.0"
+      visibleFrom="sm"
       style={{
         width: 250,
         padding: spacing.md,
@@ -93,7 +94,7 @@ export function ReportSidebar({ tree, activeView, onNavigate }: ReportSidebarPro
         alignSelf: 'flex-start',
       }}
     >
-      <ScrollArea.Autosize mah="calc(100vh - 250px)" type="auto" offsetScrollbars>
+      <ScrollArea.Autosize mah="calc(100dvh - 250px)" type="auto" offsetScrollbars>
         {tree.map((node) => renderNode(node))}
       </ScrollArea.Autosize>
     </Box>

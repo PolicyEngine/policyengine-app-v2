@@ -20,7 +20,7 @@ export function ImpactTooltip({ active, payload }: ImpactTooltipProps) {
   }
   const data = payload[0].payload;
   return (
-    <div style={{ ...TOOLTIP_STYLE, maxWidth: 300 }}>
+    <div style={{ ...TOOLTIP_STYLE, maxWidth: 'min(300px, 90vw)' }}>
       <p style={{ fontWeight: 600, margin: 0 }}>{data.name}</p>
       <p style={{ margin: '4px 0 0', fontSize: 13, whiteSpace: 'pre-wrap' }}>{data.hoverText}</p>
     </div>

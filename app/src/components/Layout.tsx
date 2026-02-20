@@ -33,7 +33,6 @@ export default function Layout() {
   return (
     <AppShell
       layout="default"
-      padding={{ base: 12, sm: parseInt(spacing.appShell.main.padding, 10) }}
       header={{ height: parseInt(spacing.appShell.header.height, 10) }}
       navbar={{
         width: parseInt(spacing.appShell.navbar.width, 10),

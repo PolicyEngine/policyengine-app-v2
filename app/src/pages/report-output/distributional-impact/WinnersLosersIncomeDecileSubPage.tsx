@@ -7,6 +7,7 @@ import { ChartContainer } from '@/components/ChartContainer';
 import { TOOLTIP_STYLE } from '@/components/charts';
 import { colors } from '@/designTokens/colors';
 import { spacing } from '@/designTokens/spacing';
+import { MOBILE_BREAKPOINT_QUERY } from '@/hooks/useChartDimensions';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import type { RootState } from '@/store';
 import { downloadCsv, getClampedChartHeight, RECHARTS_FONT_STYLE } from '@/utils/chartUtils';
@@ -71,7 +72,7 @@ function WinnersLosersTooltip({ active, payload, label }: any) {
 }
 
 export default function WinnersLosersIncomeDecileSubPage({ output }: Props) {
-  const mobile = useMediaQuery('(max-width: 768px)');
+  const mobile = useMediaQuery(MOBILE_BREAKPOINT_QUERY);
   const countryId = useCurrentCountry();
   const metadata = useSelector((state: RootState) => state.metadata);
   const { height: viewportHeight } = useViewportSize();
