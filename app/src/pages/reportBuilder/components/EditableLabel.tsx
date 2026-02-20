@@ -6,7 +6,7 @@
  */
 
 import { useLayoutEffect, useState } from 'react';
-import { IconCheck, IconPencil } from '@tabler/icons-react';
+import { IconCheck, IconCursorText } from '@tabler/icons-react';
 import { ActionIcon, Box, Text, TextInput } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
 import { FONT_SIZES } from '../constants';
@@ -118,7 +118,7 @@ export function EditableLabel({
             onClick={handleStartEditing}
             style={{ flexShrink: 0 }}
           >
-            <IconPencil size={14} />
+            <IconCursorText size={14} />
           </ActionIcon>
         </>
       )}

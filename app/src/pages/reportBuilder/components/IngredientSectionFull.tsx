@@ -9,6 +9,7 @@
  */
 
 import {
+  IconArrowsExchange,
   IconChartLine,
   IconFileDescription,
   IconHome,
@@ -19,7 +20,7 @@ import {
   IconUsers,
   IconX,
 } from '@tabler/icons-react';
-import { Box, Group, Text } from '@mantine/core';
+import { Box, Group, Text, Tooltip } from '@mantine/core';
 import { colors, spacing } from '@/designTokens';
 import { COUNTRY_CONFIG, FONT_SIZES, INGREDIENT_COLORS } from '../constants';
 import { CURRENT_LAW_LABEL, isCurrentLaw } from '../currentLaw';
@@ -252,73 +253,76 @@ export function IngredientSectionFull({
               }}
             >
               {type === 'policy' && !isCurrentLaw(currentId) && onEditPolicy && (
+                <Tooltip label="Edit policy" position="bottom" withArrow>
+                  <Box
+                    component="button"
+                    onClick={(e: React.MouseEvent) => {
+                      e.stopPropagation();
+                      onEditPolicy();
+                    }}
+                    style={{
+                      background: colors.white,
+                      border: `1px solid ${colorConfig.border}`,
+                      borderRadius: spacing.radius.sm,
+                      width: 28,
+                      height: 28,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: colorConfig.icon,
+                    }}
+                  >
+                    <IconPencil size={14} />
+                  </Box>
+                </Tooltip>
+              )}
+              <Tooltip label={`Change ${type}`} position="bottom" withArrow>
                 <Box
                   component="button"
                   onClick={(e: React.MouseEvent) => {
                     e.stopPropagation();
-                    onEditPolicy();
+                    onBrowseMore?.();
                   }}
                   style={{
                     background: colors.white,
                     border: `1px solid ${colorConfig.border}`,
                     borderRadius: spacing.radius.sm,
-                    padding: `${spacing.xs} ${spacing.sm}`,
+                    width: 28,
+                    height: 28,
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: 4,
-                    fontSize: FONT_SIZES.small,
-                    fontWeight: 500,
+                    justifyContent: 'center',
                     color: colorConfig.icon,
                   }}
                 >
-                  <IconPencil size={12} />
-                  Edit
+                  <IconArrowsExchange size={14} />
                 </Box>
-              )}
-              <Box
-                component="button"
-                onClick={(e: React.MouseEvent) => {
-                  e.stopPropagation();
-                  onBrowseMore?.();
-                }}
-                style={{
-                  background: colors.white,
-                  border: `1px solid ${colorConfig.border}`,
-                  borderRadius: spacing.radius.sm,
-                  padding: `${spacing.xs} ${spacing.sm}`,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 4,
-                  fontSize: FONT_SIZES.small,
-                  fontWeight: 500,
-                  color: colorConfig.icon,
-                }}
-              >
-                Change
-              </Box>
-              <Box
-                component="button"
-                onClick={(e: React.MouseEvent) => {
-                  e.stopPropagation();
-                  handleDeselect();
-                }}
-                style={{
-                  background: 'transparent',
-                  border: `1px solid ${colors.gray[300]}`,
-                  borderRadius: spacing.radius.sm,
-                  width: 28,
-                  height: 28,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: colors.gray[400],
-                }}
-              >
-                <IconX size={14} />
-              </Box>
+              </Tooltip>
+              <Tooltip label="Remove" position="bottom" withArrow>
+                <Box
+                  component="button"
+                  onClick={(e: React.MouseEvent) => {
+                    e.stopPropagation();
+                    handleDeselect();
+                  }}
+                  style={{
+                    background: 'transparent',
+                    border: `1px solid ${colors.gray[300]}`,
+                    borderRadius: spacing.radius.sm,
+                    width: 28,
+                    height: 28,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: colors.gray[400],
+                  }}
+                >
+                  <IconX size={14} />
+                </Box>
+              </Tooltip>
             </Box>
           )}
         </Box>
