@@ -123,9 +123,8 @@ describe('useCreateSimulation', () => {
           simulation_id: SIMULATION_IDS.NEW,
         },
       });
-      expect(queryClient.invalidateQueries).toHaveBeenCalledWith({
-        queryKey: QUERY_KEY_PATTERNS.SIMULATION_ALL,
-      });
+      // Query invalidation is handled by the association hook, not this hook
+      expect(queryClient.invalidateQueries).not.toHaveBeenCalled();
     });
 
     test('given geography payload when createSimulation called then creates geography simulation', async () => {
@@ -277,10 +276,8 @@ describe('useCreateSimulation', () => {
 
       // Simulation creation should succeed
       expect(createSimulation).toHaveBeenCalledWith(TEST_COUNTRIES.US, mockSimulationPayload);
-      // Queries should still be invalidated
-      expect(queryClient.invalidateQueries).toHaveBeenCalledWith({
-        queryKey: QUERY_KEY_PATTERNS.SIMULATION_ALL,
-      });
+      // Query invalidation is handled by the association hook, not this hook
+      expect(queryClient.invalidateQueries).not.toHaveBeenCalled();
     });
   });
 
@@ -336,18 +333,16 @@ describe('useCreateSimulation', () => {
   });
 
   describe('query invalidation', () => {
-    test('given successful creation then invalidates simulation queries', async () => {
+    test('given successful creation then does not broadly invalidate simulation queries', async () => {
       // Given
       const { result } = renderHook(() => useCreateSimulation(TEST_LABELS.SIMULATION), { wrapper });
 
       // When
       await result.current.createSimulation(mockSimulationPayload);
 
-      // Then
+      // Then - invalidation is handled by the association hook, not this hook
       await waitFor(() => {
-        expect(queryClient.invalidateQueries).toHaveBeenCalledWith({
-          queryKey: ['simulations'],
-        });
+        expect(queryClient.invalidateQueries).not.toHaveBeenCalled();
       });
     });
 
