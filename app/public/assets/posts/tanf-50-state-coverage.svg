@@ -1,0 +1,121 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#F7FAFC"/>
+
+  <!-- Row 0 -->
+  <rect x="291" y="110" width="46" height="46" rx="4" fill="#2C6E6A"/>
+  <text x="314" y="133" text-anchor="middle" dominant-baseline="central" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600">AK</text>
+  <rect x="811" y="110" width="46" height="46" rx="4" fill="#2C6E6A"/>
+  <text x="834" y="133" text-anchor="middle" dominant-baseline="central" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600">ME</text>
+
+  <!-- Row 1 -->
+  <rect x="759" y="162" width="46" height="46" rx="4" fill="#2C6E6A"/>
+  <text x="782" y="185" text-anchor="middle" dominant-baseline="central" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600">VT</text>
+  <rect x="811" y="162" width="46" height="46" rx="4" fill="#2C6E6A"/>
+  <text x="834" y="185" text-anchor="middle" dominant-baseline="central" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600">NH</text>
+
+  <!-- Row 2 -->
+  <rect x="291" y="214" width="46" height="46" rx="4" fill="#2C6E6A"/>
+  <text x="314" y="237" text-anchor="middle" dominant-baseline="central" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600">WA</text>
+  <rect x="343" y="214" width="46" height="46" rx="4" fill="#2C6E6A"/>
+  <text x="366" y="237" text-anchor="middle" dominant-baseline="central" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600">ID</text>
+  <rect x="395" y="214" width="46" height="46" rx="4" fill="#2C6E6A"/>
+  <text x="418" y="237" text-anchor="middle" dominant-baseline="central" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600">MT</text>
+  <rect x="447" y="214" width="46" height="46" rx="4" fill="#2C6E6A"/>
+  <text x="470" y="237" text-anchor="middle" dominant-baseline="central" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600">ND</text>
+  <rect x="499" y="214" width="46" height="46" rx="4" fill="#2C6E6A"/>
+  <text x="522" y="237" text-anchor="middle" dominant-baseline="central" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600">MN</text>
+  <rect x="603" y="214" width="46" height="46" rx="4" fill="#2C6E6A"/>
+  <text x="626" y="237" text-anchor="middle" dominant-baseline="central" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600">WI</text>
+  <rect x="655" y="214" width="46" height="46" rx="4" fill="#2C6E6A"/>
+  <text x="678" y="237" text-anchor="middle" dominant-baseline="central" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600">MI</text>
+  <rect x="707" y="214" width="46" height="46" rx="4" fill="#2C6E6A"/>
+  <text x="730" y="237" text-anchor="middle" dominant-baseline="central" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600">NY</text>
+  <rect x="759" y="214" width="46" height="46" rx="4" fill="#2C6E6A"/>
+  <text x="782" y="237" text-anchor="middle" dominant-baseline="central" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600">MA</text>
+  <rect x="811" y="214" width="46" height="46" rx="4" fill="#2C6E6A"/>
+  <text x="834" y="237" text-anchor="middle" dominant-baseline="central" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600">CT</text>
+  <rect x="863" y="214" width="46" height="46" rx="4" fill="#2C6E6A"/>
+  <text x="886" y="237" text-anchor="middle" dominant-baseline="central" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600">RI</text>
+
+  <!-- Row 3 -->
+  <rect x="291" y="266" width="46" height="46" rx="4" fill="#2C6E6A"/>
+  <text x="314" y="289" text-anchor="middle" dominant-baseline="central" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600">OR</text>
+  <rect x="343" y="266" width="46" height="46" rx="4" fill="#2C6E6A"/>
+  <text x="366" y="289" text-anchor="middle" dominant-baseline="central" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600">NV</text>
+  <rect x="395" y="266" width="46" height="46" rx="4" fill="#2C6E6A"/>
+  <text x="418" y="289" text-anchor="middle" dominant-baseline="central" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600">WY</text>
+  <rect x="447" y="266" width="46" height="46" rx="4" fill="#2C6E6A"/>
+  <text x="470" y="289" text-anchor="middle" dominant-baseline="central" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600">SD</text>
+  <rect x="499" y="266" width="46" height="46" rx="4" fill="#2C6E6A"/>
+  <text x="522" y="289" text-anchor="middle" dominant-baseline="central" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600">IA</text>
+  <rect x="551" y="266" width="46" height="46" rx="4" fill="#2C6E6A"/>
+  <text x="574" y="289" text-anchor="middle" dominant-baseline="central" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600">IL</text>
+  <rect x="603" y="266" width="46" height="46" rx="4" fill="#2C6E6A"/>
+  <text x="626" y="289" text-anchor="middle" dominant-baseline="central" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600">IN</text>
+  <rect x="655" y="266" width="46" height="46" rx="4" fill="#2C6E6A"/>
+  <text x="678" y="289" text-anchor="middle" dominant-baseline="central" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600">OH</text>
+  <rect x="707" y="266" width="46" height="46" rx="4" fill="#2C6E6A"/>
+  <text x="730" y="289" text-anchor="middle" dominant-baseline="central" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600">PA</text>
+  <rect x="759" y="266" width="46" height="46" rx="4" fill="#2C6E6A"/>
+  <text x="782" y="289" text-anchor="middle" dominant-baseline="central" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600">NJ</text>
+
+  <!-- Row 4 -->
+  <rect x="291" y="318" width="46" height="46" rx="4" fill="#2C6E6A"/>
+  <text x="314" y="341" text-anchor="middle" dominant-baseline="central" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600">CA</text>
+  <rect x="343" y="318" width="46" height="46" rx="4" fill="#2C6E6A"/>
+  <text x="366" y="341" text-anchor="middle" dominant-baseline="central" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600">UT</text>
+  <rect x="395" y="318" width="46" height="46" rx="4" fill="#2C6E6A"/>
+  <text x="418" y="341" text-anchor="middle" dominant-baseline="central" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600">CO</text>
+  <rect x="447" y="318" width="46" height="46" rx="4" fill="#2C6E6A"/>
+  <text x="470" y="341" text-anchor="middle" dominant-baseline="central" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600">NE</text>
+  <rect x="499" y="318" width="46" height="46" rx="4" fill="#2C6E6A"/>
+  <text x="522" y="341" text-anchor="middle" dominant-baseline="central" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600">KS</text>
+  <rect x="551" y="318" width="46" height="46" rx="4" fill="#2C6E6A"/>
+  <text x="574" y="341" text-anchor="middle" dominant-baseline="central" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600">MO</text>
+  <rect x="603" y="318" width="46" height="46" rx="4" fill="#2C6E6A"/>
+  <text x="626" y="341" text-anchor="middle" dominant-baseline="central" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600">KY</text>
+  <rect x="655" y="318" width="46" height="46" rx="4" fill="#2C6E6A"/>
+  <text x="678" y="341" text-anchor="middle" dominant-baseline="central" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600">WV</text>
+  <rect x="707" y="318" width="46" height="46" rx="4" fill="#2C6E6A"/>
+  <text x="730" y="341" text-anchor="middle" dominant-baseline="central" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600">VA</text>
+  <rect x="759" y="318" width="46" height="46" rx="4" fill="#2C6E6A"/>
+  <text x="782" y="341" text-anchor="middle" dominant-baseline="central" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600">MD</text>
+  <rect x="811" y="318" width="46" height="46" rx="4" fill="#2C6E6A"/>
+  <text x="834" y="341" text-anchor="middle" dominant-baseline="central" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600">DE</text>
+
+  <!-- Row 5 -->
+  <rect x="343" y="370" width="46" height="46" rx="4" fill="#2C6E6A"/>
+  <text x="366" y="393" text-anchor="middle" dominant-baseline="central" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600">AZ</text>
+  <rect x="395" y="370" width="46" height="46" rx="4" fill="#2C6E6A"/>
+  <text x="418" y="393" text-anchor="middle" dominant-baseline="central" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600">NM</text>
+  <rect x="447" y="370" width="46" height="46" rx="4" fill="#2C6E6A"/>
+  <text x="470" y="393" text-anchor="middle" dominant-baseline="central" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600">OK</text>
+  <rect x="499" y="370" width="46" height="46" rx="4" fill="#2C6E6A"/>
+  <text x="522" y="393" text-anchor="middle" dominant-baseline="central" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600">AR</text>
+  <rect x="551" y="370" width="46" height="46" rx="4" fill="#2C6E6A"/>
+  <text x="574" y="393" text-anchor="middle" dominant-baseline="central" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600">TN</text>
+  <rect x="603" y="370" width="46" height="46" rx="4" fill="#2C6E6A"/>
+  <text x="626" y="393" text-anchor="middle" dominant-baseline="central" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600">NC</text>
+  <rect x="655" y="370" width="46" height="46" rx="4" fill="#2C6E6A"/>
+  <text x="678" y="393" text-anchor="middle" dominant-baseline="central" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600">SC</text>
+  <rect x="759" y="370" width="46" height="46" rx="4" fill="#2C6E6A"/>
+  <text x="782" y="393" text-anchor="middle" dominant-baseline="central" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600">DC</text>
+
+  <!-- Row 6 -->
+  <rect x="447" y="422" width="46" height="46" rx="4" fill="#2C6E6A"/>
+  <text x="470" y="445" text-anchor="middle" dominant-baseline="central" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600">TX</text>
+  <rect x="499" y="422" width="46" height="46" rx="4" fill="#2C6E6A"/>
+  <text x="522" y="445" text-anchor="middle" dominant-baseline="central" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600">LA</text>
+  <rect x="551" y="422" width="46" height="46" rx="4" fill="#2C6E6A"/>
+  <text x="574" y="445" text-anchor="middle" dominant-baseline="central" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600">MS</text>
+  <rect x="603" y="422" width="46" height="46" rx="4" fill="#2C6E6A"/>
+  <text x="626" y="445" text-anchor="middle" dominant-baseline="central" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600">AL</text>
+  <rect x="655" y="422" width="46" height="46" rx="4" fill="#2C6E6A"/>
+  <text x="678" y="445" text-anchor="middle" dominant-baseline="central" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600">GA</text>
+
+  <!-- Row 7 -->
+  <rect x="291" y="474" width="46" height="46" rx="4" fill="#2C6E6A"/>
+  <text x="314" y="497" text-anchor="middle" dominant-baseline="central" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600">HI</text>
+  <rect x="707" y="474" width="46" height="46" rx="4" fill="#2C6E6A"/>
+  <text x="730" y="497" text-anchor="middle" dominant-baseline="central" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600">FL</text>
+</svg>
