@@ -1,19 +1,6 @@
 [
   {
     "type": "iframe",
-    "slug": "uk-two-child-limit-reintroduction",
-    "title": "How restoring the two-child benefit limit would affect the UK",
-    "description": "Explore how restoring the two-child benefit limit would affect household incomes, government spending, poverty, and inequality across the UK.",
-    "source": "https://uk-two-child-limit-reintroduction.vercel.app/",
-    "tags": ["uk", "featured", "policy", "interactives"],
-    "countryId": "uk",
-    "displayWithResearch": true,
-    "image": "uk-two-child-limit-reintroduction.jpg",
-    "date": "2026-02-18",
-    "authors": ["vahid-ahmadi"]
-  },
-  {
-    "type": "iframe",
     "slug": "marriage",
     "title": "Marriage incentive calculator",
     "description": "Interactive calculator showing how marriage affects taxes, benefits, and net income for US households across all states",
