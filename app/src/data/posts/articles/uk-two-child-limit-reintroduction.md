@@ -1,4 +1,6 @@
-<iframe src="https://uk-two-child-limit-reintroduction.vercel.app/embed-intro.html" width="100%" height="250" frameborder="0"></iframe>
+Robert Jenrick, Reform UK's economy spokesperson, [announced](https://www.lbc.co.uk/article/reform-restore-two-child-benefit-cap-jenrick-5HjdSWh_2/) on 18 February 2026 that Reform UK would restore the two-child benefit cap, citing an estimated cost of around £3 billion a year by 2029. The cap, originally introduced in 2017, limits Universal Credit and Child Tax Credit child elements to a family's first two children born after April 2017. Chancellor Rachel Reeves removed the cap from April 2026 as part of the [Autumn Budget 2025](https://www.policyengine.org/uk/autumn-budget-2025).
+
+In this analysis, we [examine](https://github.com/PolicyEngine/uk-two-child-limit-reintroduction) the impact of restoring the two-child limit on government spending, income distribution, poverty rates, income inequality, and geographic variation across parliamentary constituencies.
 
 ## Budgetary impact
 
