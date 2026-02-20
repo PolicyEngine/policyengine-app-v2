@@ -23,6 +23,7 @@ export default function MainSection() {
           style={{
             lineHeight: typography.lineHeight.tight,
             fontFamily: typography.fontFamily.primary,
+            fontSize: 'clamp(28px, 5vw, 48px)',
           }}
         >
           Start simulating

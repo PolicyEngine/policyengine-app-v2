@@ -19,6 +19,7 @@ import { useMediaQuery, useViewportSize } from '@mantine/hooks';
 import { PolicyAdapter } from '@/adapters/PolicyAdapter';
 import { ChartWatermark, TOOLTIP_STYLE } from '@/components/charts';
 import { colors, spacing } from '@/designTokens';
+import { MOBILE_BREAKPOINT_QUERY } from '@/hooks/useChartDimensions';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useHouseholdVariation } from '@/hooks/useHouseholdVariation';
 import { useReportYear } from '@/hooks/useReportYear';
@@ -76,7 +77,7 @@ export default function MarginalTaxRatesSubPage({
   households: _households,
 }: Props) {
   const [viewMode, setViewMode] = useState<ViewMode>('both');
-  const mobile = useMediaQuery('(max-width: 768px)');
+  const mobile = useMediaQuery(MOBILE_BREAKPOINT_QUERY);
   const { height: viewportHeight } = useViewportSize();
   const countryId = useCurrentCountry();
   const reportYear = useReportYear();

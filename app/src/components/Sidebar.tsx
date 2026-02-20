@@ -15,7 +15,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Box, Button, Stack } from '@mantine/core';
 import { WEBSITE_URL } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { colors, spacing, typography } from '../designTokens';
+import { colors, typography } from '../designTokens';
 import SidebarDivider from './sidebar/SidebarDivider';
 import SidebarNavItem from './sidebar/SidebarNavItem';
 import SidebarSection from './sidebar/SidebarSection';
@@ -88,13 +88,10 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
 
   return (
     <Stack
-      h="100vh"
+      h="100%"
       bg="white"
       style={{
         borderRight: `1px solid ${colors.border.light}`,
-        width: parseInt(spacing.appShell.navbar.width, 10),
-        left: 0,
-        top: 0,
         overflowY: 'auto',
       }}
       gap={0}

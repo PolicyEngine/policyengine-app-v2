@@ -1,4 +1,5 @@
-import { Container, Group } from '@mantine/core';
+import { Burger, Container, Group } from '@mantine/core';
+import { colors } from '@/designTokens';
 import DesktopNavigation from './DesktopNavigation';
 import HeaderActionButtons from './HeaderActionButtons';
 import HeaderLogo from './HeaderLogo';
@@ -10,9 +11,18 @@ interface HeaderContentProps {
   onOpen: () => void;
   onClose: () => void;
   navItems: NavItemSetup[];
+  navbarOpened?: boolean;
+  onToggleNavbar?: () => void;
 }
 
-export default function HeaderContent({ opened, onOpen, onClose, navItems }: HeaderContentProps) {
+export default function HeaderContent({
+  opened,
+  onOpen,
+  onClose,
+  navItems,
+  navbarOpened,
+  onToggleNavbar,
+}: HeaderContentProps) {
   return (
     <Container
       h="100%"
@@ -27,6 +37,16 @@ export default function HeaderContent({ opened, onOpen, onClose, navItems }: Hea
     >
       <Group justify="space-between" h="100%">
         <Group>
+          {onToggleNavbar && (
+            <Burger
+              opened={navbarOpened}
+              onClick={onToggleNavbar}
+              hiddenFrom="sm"
+              size="sm"
+              color={colors.text.inverse}
+              aria-label="Toggle sidebar"
+            />
+          )}
           <HeaderLogo />
           <DesktopNavigation navItems={navItems} />
         </Group>

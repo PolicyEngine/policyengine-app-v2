@@ -286,7 +286,7 @@ export default function HouseholdBuilderForm({
             position: 'fixed',
             top: `calc(${spacing.appShell.header.height} + ${spacing.xl})`,
             right: spacing.xl,
-            maxWidth: 400,
+            maxWidth: 'min(400px, calc(100vw - 40px))',
             zIndex: 1000,
             opacity: 1,
             backgroundColor: colors.white,

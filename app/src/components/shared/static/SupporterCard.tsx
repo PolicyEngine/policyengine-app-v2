@@ -30,22 +30,19 @@ export default function SupporterCard({ supporter, projects }: SupporterCardProp
       <Box
         style={{
           display: 'flex',
+          flexWrap: 'wrap',
           alignItems: 'center',
+          gap: spacing.lg,
           marginBottom: 24,
         }}
       >
         {supporter.logoUrl && (
-          <a
-            href={supporter.websiteUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ marginRight: 24 }}
-          >
+          <a href={supporter.websiteUrl} target="_blank" rel="noopener noreferrer">
             <Image
               src={supporter.logoUrl}
               alt={`${supporter.name} logo`}
-              w={200}
-              h={80}
+              w={{ base: 150, sm: 200 }}
+              h={{ base: 60, sm: 80 }}
               fit="contain"
               style={{
                 objectPosition: 'left center',

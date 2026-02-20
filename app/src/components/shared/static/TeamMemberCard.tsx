@@ -25,12 +25,12 @@ export default function TeamMemberCard({ member, variant = 'default' }: TeamMemb
       gutter="5vw"
       align="stretch"
     >
-      <Grid.Col span="content">
+      <Grid.Col span={{ base: 12, sm: 'content' }}>
         <Image
           src={member.image}
           alt={member.name}
-          h={250}
-          w={250}
+          h={{ base: 180, sm: 250 }}
+          w={{ base: 180, sm: 250 }}
           radius={spacing.radius.container}
           style={{
             objectFit: 'cover',
@@ -38,7 +38,7 @@ export default function TeamMemberCard({ member, variant = 'default' }: TeamMemb
         />
       </Grid.Col>
 
-      <Grid.Col span="auto">
+      <Grid.Col span={{ base: 12, sm: 'auto' }}>
         <Box
           style={{
             borderBottom: `1px solid ${borderColor}`,
