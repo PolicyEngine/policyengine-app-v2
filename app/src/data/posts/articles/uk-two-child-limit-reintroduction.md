@@ -2,7 +2,7 @@
 
 ## Budgetary impact
 
-<iframe src="https://uk-two-child-limit-reintroduction.vercel.app/embed-budget.html" width="100%" height="250" frameborder="0"></iframe>
+<iframe src="https://uk-two-child-limit-reintroduction.vercel.app/embed-budget.html" width="100%" height="80" frameborder="0"></iframe>
 
 ## Affected households and children
 
