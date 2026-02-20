@@ -174,6 +174,7 @@ export interface IngredientSectionProps {
   savedPolicies?: SavedPolicy[];
   recentPopulations?: RecentPopulation[];
   currentLabel?: string;
+  isReadOnly?: boolean;
 }
 
 export interface SimulationBlockProps {
@@ -198,6 +199,7 @@ export interface SimulationBlockProps {
   inheritedPopulation?: PopulationStateProps;
   savedPolicies: SavedPolicy[];
   recentPopulations: RecentPopulation[];
+  isReadOnly?: boolean;
 }
 
 export interface AddSimulationCardProps {
@@ -273,6 +275,7 @@ export interface SimulationCanvasProps {
 export interface ReportMetaPanelProps {
   reportState: ReportBuilderState;
   setReportState: React.Dispatch<React.SetStateAction<ReportBuilderState>>;
+  isReadOnly?: boolean;
 }
 
 // ============================================================================

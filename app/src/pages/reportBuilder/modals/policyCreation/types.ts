@@ -12,6 +12,9 @@ import { ValueInterval, ValueIntervalCollection } from '@/types/subIngredients/v
 /** Which sidebar tab is active — controls the main content area */
 export type SidebarTab = 'overview' | 'parameters';
 
+/** Controls the editor's behavior: create (new), display (read-only), edit (modifying existing) */
+export type EditorMode = 'create' | 'display' | 'edit';
+
 /**
  * Modified parameter with formatted changes for display
  */

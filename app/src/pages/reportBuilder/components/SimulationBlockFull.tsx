@@ -35,6 +35,7 @@ export function SimulationBlockFull({
   inheritedPopulation,
   savedPolicies,
   recentPopulations,
+  isReadOnly,
 }: SimulationBlockProps) {
   const isPolicyConfigured = !!simulation.policy.id;
   const effectivePopulation =
@@ -92,12 +93,18 @@ export function SimulationBlockFull({
 
       {/* Header */}
       <Box style={styles.simulationHeader}>
-        <EditableLabel
-          value={simulation.label || ''}
-          onChange={onLabelChange}
-          placeholder={defaultLabel}
-          emptyStateText={defaultLabel}
-        />
+        {isReadOnly ? (
+          <Text fw={600} style={{ fontSize: FONT_SIZES.normal, color: colors.gray[800] }}>
+            {simulation.label || defaultLabel}
+          </Text>
+        ) : (
+          <EditableLabel
+            value={simulation.label || ''}
+            onChange={onLabelChange}
+            placeholder={defaultLabel}
+            emptyStateText={defaultLabel}
+          />
+        )}
 
         <Group gap={spacing.xs}>
           {isRequired && (
@@ -122,7 +129,7 @@ export function SimulationBlockFull({
               </Box>
             </Tooltip>
           )}
-          {canRemove && (
+          {canRemove && !isReadOnly && (
             <ActionIcon size="sm" variant="subtle" color="red" onClick={onRemove}>
               <IconTrash size={14} />
             </ActionIcon>
@@ -143,6 +150,7 @@ export function SimulationBlockFull({
         onCreateCustom={() => {}}
         onBrowseMore={onBrowseMorePolicies}
         savedPolicies={savedPolicies}
+        isReadOnly={isReadOnly}
       />
 
       <IngredientSectionFull
@@ -159,9 +167,15 @@ export function SimulationBlockFull({
         inheritedPopulationType={inheritedPopulationType}
         inheritedPopulationLabel={inheritedPopulationLabel}
         recentPopulations={recentPopulations}
+        isReadOnly={isReadOnly}
       />
 
-      <IngredientSectionFull type="dynamics" countryId={countryId} onCreateCustom={() => {}} />
+      <IngredientSectionFull
+        type="dynamics"
+        countryId={countryId}
+        onCreateCustom={() => {}}
+        isReadOnly={isReadOnly}
+      />
     </Paper>
   );
 }

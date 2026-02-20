@@ -34,6 +34,7 @@ export interface SimulationBlockProps {
   inheritedPopulation?: PopulationStateProps | null;
   savedPolicies: SavedPolicy[];
   recentPopulations: RecentPopulation[];
+  isReadOnly?: boolean;
 }
 
 export function SimulationBlock({

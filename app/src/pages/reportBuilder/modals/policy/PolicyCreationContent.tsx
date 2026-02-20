@@ -54,6 +54,7 @@ interface PolicyCreationContentProps {
   valueSetterMode: ValueSetterMode;
   setValueSetterMode: (mode: ValueSetterMode) => void;
   onValueSubmit: () => void;
+  isReadOnly?: boolean;
 }
 
 export function PolicyCreationContent({
@@ -73,6 +74,7 @@ export function PolicyCreationContent({
   valueSetterMode,
   setValueSetterMode,
   onValueSubmit,
+  isReadOnly = false,
 }: PolicyCreationContentProps) {
   // Get base and reform values for chart
   const getChartValues = () => {
@@ -182,7 +184,9 @@ export function PolicyCreationContent({
             ta="center"
             style={{ fontSize: FONT_SIZES.normal, color: colors.gray[600], maxWidth: 400 }}
           >
-            Select a parameter from the menu to modify its value for your policy reform.
+            {isReadOnly
+              ? 'Select a parameter from the menu to view its details.'
+              : 'Select a parameter from the menu to modify its value for your policy reform.'}
           </Text>
         </Stack>
       </Box>
@@ -215,64 +219,66 @@ export function PolicyCreationContent({
         <Group gap={spacing.lg} align="flex-start" wrap="nowrap">
           {/* Left Column: Setter + Changes */}
           <Stack gap={spacing.lg} style={{ flex: 1, minWidth: 0 }}>
-            {/* Value Setter Card */}
-            <Box
-              style={{
-                background: colors.white,
-                borderRadius: spacing.radius.lg,
-                padding: spacing.lg,
-                border: `1px solid ${colors.border.light}`,
-              }}
-            >
-              <Stack gap={spacing.md}>
-                <Text fw={600} style={{ fontSize: FONT_SIZES.normal, color: colors.gray[700] }}>
-                  Set new value
-                </Text>
+            {/* Value Setter Card — hidden in read-only mode */}
+            {!isReadOnly && (
+              <Box
+                style={{
+                  background: colors.white,
+                  borderRadius: spacing.radius.lg,
+                  padding: spacing.lg,
+                  border: `1px solid ${colors.border.light}`,
+                }}
+              >
+                <Stack gap={spacing.md}>
+                  <Text fw={600} style={{ fontSize: FONT_SIZES.normal, color: colors.gray[700] }}>
+                    Set new value
+                  </Text>
 
-                {/* Mode selector - SegmentedControl per V6 mockup */}
-                <SegmentedControl
-                  value={valueSetterMode}
-                  onChange={(value) => {
-                    setIntervals([]);
-                    setValueSetterMode(value as ValueSetterMode);
-                  }}
-                  size="xs"
-                  data={MODE_OPTIONS}
-                  styles={{
-                    root: {
-                      background: colors.gray[100],
-                      borderRadius: spacing.radius.md,
-                    },
-                    indicator: {
-                      background: colors.white,
-                      boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-                    },
-                  }}
-                />
+                  {/* Mode selector - SegmentedControl per V6 mockup */}
+                  <SegmentedControl
+                    value={valueSetterMode}
+                    onChange={(value) => {
+                      setIntervals([]);
+                      setValueSetterMode(value as ValueSetterMode);
+                    }}
+                    size="xs"
+                    data={MODE_OPTIONS}
+                    styles={{
+                      root: {
+                        background: colors.gray[100],
+                        borderRadius: spacing.radius.md,
+                      },
+                      indicator: {
+                        background: colors.white,
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                      },
+                    }}
+                  />
 
-                <ValueSetterToRender
-                  minDate={minDate}
-                  maxDate={maxDate}
-                  param={selectedParam}
-                  policy={localPolicy}
-                  intervals={intervals}
-                  setIntervals={setIntervals}
-                  startDate={startDate}
-                  setStartDate={setStartDate}
-                  endDate={endDate}
-                  setEndDate={setEndDate}
-                />
+                  <ValueSetterToRender
+                    minDate={minDate}
+                    maxDate={maxDate}
+                    param={selectedParam}
+                    policy={localPolicy}
+                    intervals={intervals}
+                    setIntervals={setIntervals}
+                    startDate={startDate}
+                    setStartDate={setStartDate}
+                    endDate={endDate}
+                    setEndDate={setEndDate}
+                  />
 
-                <Button
-                  onClick={onValueSubmit}
-                  disabled={intervals.length === 0}
-                  color="teal"
-                  fullWidth
-                >
-                  Add change
-                </Button>
-              </Stack>
-            </Box>
+                  <Button
+                    onClick={onValueSubmit}
+                    disabled={intervals.length === 0}
+                    color="teal"
+                    fullWidth
+                  >
+                    Add change
+                  </Button>
+                </Stack>
+              </Box>
+            )}
 
             {/* Changes for this parameter */}
             {currentParamChanges.length > 0 && (
@@ -310,14 +316,16 @@ export function PolicyCreationContent({
                         <Text size="xs" fw={600} style={{ color: colors.primary[700] }}>
                           {formatValue(change.value)}
                         </Text>
-                        <ActionIcon
-                          size="xs"
-                          variant="subtle"
-                          color="gray"
-                          onClick={() => handleRemoveChange(i)}
-                        >
-                          <IconTrash size={12} />
-                        </ActionIcon>
+                        {!isReadOnly && (
+                          <ActionIcon
+                            size="xs"
+                            variant="subtle"
+                            color="gray"
+                            onClick={() => handleRemoveChange(i)}
+                          >
+                            <IconTrash size={12} />
+                          </ActionIcon>
+                        )}
                       </Group>
                     </Group>
                   ))}

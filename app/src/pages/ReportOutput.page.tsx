@@ -3,7 +3,6 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { SocietyWideReportOutput as SocietyWideOutput } from '@/api/societyWideCalculation';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { FloatingAlert } from '@/components/common/FloatingAlert';
-import { RenameIngredientModal } from '@/components/common/RenameIngredientModal';
 import { ReportErrorFallback } from '@/components/report/ReportErrorFallback';
 import { Container, Stack, Text } from '@/components/ui';
 import { CALCULATOR_URL } from '@/constants';
@@ -13,7 +12,6 @@ import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useDisclosure } from '@/hooks/useDisclosure';
 import { useSaveSharedReport } from '@/hooks/useSaveSharedReport';
 import { useSharedReportData } from '@/hooks/useSharedReportData';
-import { useUpdateReportAssociation } from '@/hooks/useUserReportAssociations';
 import { useUserReportById } from '@/hooks/useUserReports';
 import type { Geography } from '@/types/ingredients/Geography';
 import { formatReportTimestamp } from '@/utils/dateUtils';
@@ -158,29 +156,6 @@ export default function ReportOutputPage() {
 
   // Format the report creation timestamp using the current country's locale
   const timestamp = formatReportTimestamp(userReport?.createdAt, countryId);
-
-  // Add modal state for rename
-  const [renameOpened, { open: openRename, close: closeRename }] = useDisclosure(false);
-
-  // Add mutation hook for rename
-  const updateAssociation = useUpdateReportAssociation();
-
-  // Add rename handler
-  const handleRename = async (newLabel: string) => {
-    if (!userReportId) {
-      return;
-    }
-
-    try {
-      await updateAssociation.mutateAsync({
-        userReportId,
-        updates: { label: newLabel },
-      });
-      closeRename();
-    } catch (error) {
-      console.error('[ReportOutputPage] Failed to rename report:', error);
-    }
-  };
 
   // Hook for saving shared reports with all ingredients
   const { saveSharedReport, saveResult, setSaveResult } = useSaveSharedReport();
@@ -359,7 +334,6 @@ export default function ReportOutputPage() {
         tabs={tabs}
         activeTab={activeTab}
         onTabChange={handleTabClick}
-        onEditName={openRename}
         showSidebar={showSidebar}
         outputType={outputType}
         activeView={activeView}
@@ -377,15 +351,6 @@ export default function ReportOutputPage() {
           {renderContent()}
         </ErrorBoundary>
       </ReportOutputLayout>
-
-      <RenameIngredientModal
-        opened={renameOpened}
-        onClose={closeRename}
-        currentLabel={userReport?.label || `Report #${userReportId}`}
-        onRename={handleRename}
-        isLoading={updateAssociation.isPending}
-        ingredientType="report"
-      />
     </ReportYearProvider>
   );
 }

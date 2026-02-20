@@ -45,6 +45,7 @@ export function IngredientSectionFull({
   savedPolicies = [],
   recentPopulations = [],
   currentLabel,
+  isReadOnly,
 }: IngredientSectionProps) {
   const countryConfig = COUNTRY_CONFIG[countryId] || COUNTRY_CONFIG.us;
   const colorConfig = INGREDIENT_COLORS[type];
@@ -109,6 +110,9 @@ export function IngredientSectionFull({
     type === 'policy' ? !!currentId : type === 'population' ? !!currentId : false;
 
   const handleEmptyClick = () => {
+    if (isReadOnly) {
+      return;
+    }
     if (type === 'policy') {
       onBrowseMore?.();
     } else if (type === 'population') {
@@ -228,7 +232,7 @@ export function IngredientSectionFull({
               </Text>
             )}
           </Box>
-          {!isInherited && (
+          {!isInherited && !isReadOnly && (
             <Box
               style={{
                 display: 'flex',
@@ -320,7 +324,7 @@ export function IngredientSectionFull({
             alignItems: 'center',
             justifyContent: 'center',
             gap: spacing.md,
-            cursor: 'pointer',
+            cursor: isReadOnly ? 'default' : 'pointer',
             transition: 'all 0.15s ease',
             opacity: 0.8,
           }}

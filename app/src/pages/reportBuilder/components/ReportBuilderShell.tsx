@@ -21,6 +21,7 @@ interface ReportBuilderShellProps {
   pickerState: IngredientPickerState;
   setPickerState: React.Dispatch<React.SetStateAction<IngredientPickerState>>;
   BlockComponent?: React.ComponentType<SimulationBlockProps>;
+  isReadOnly?: boolean;
 }
 
 export function ReportBuilderShell({
@@ -31,6 +32,7 @@ export function ReportBuilderShell({
   pickerState,
   setPickerState,
   BlockComponent = SimulationBlockFull,
+  isReadOnly,
 }: ReportBuilderShellProps) {
   return (
     <Box style={styles.pageContainer}>
@@ -39,7 +41,11 @@ export function ReportBuilderShell({
       </Box>
 
       <TopBar actions={actions}>
-        <ReportMetaPanel reportState={reportState} setReportState={setReportState} />
+        <ReportMetaPanel
+          reportState={reportState}
+          setReportState={setReportState}
+          isReadOnly={isReadOnly}
+        />
       </TopBar>
 
       <SimulationCanvas
@@ -48,6 +54,7 @@ export function ReportBuilderShell({
         pickerState={pickerState}
         setPickerState={setPickerState}
         BlockComponent={BlockComponent}
+        isReadOnly={isReadOnly}
       />
     </Box>
   );

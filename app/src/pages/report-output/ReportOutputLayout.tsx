@@ -36,7 +36,6 @@ interface ReportOutputLayoutProps {
   tabs: Array<{ value: string; label: string }>;
   activeTab: string;
   onTabChange: (tabValue: string) => void;
-  onEditName?: () => void;
   showSidebar?: boolean;
   outputType?: 'household' | 'societyWide';
   activeView?: string;
@@ -85,7 +84,6 @@ export default function ReportOutputLayout({
   tabs,
   activeTab,
   onTabChange,
-  onEditName,
   showSidebar = false,
   outputType = 'societyWide',
   activeView = '',
@@ -141,7 +139,6 @@ export default function ReportOutputLayout({
               isSharedView={isSharedView}
               onShare={onShare}
               onSave={onSave}
-              onEdit={onEditName}
               onModify={onModify}
             />
           </Group>

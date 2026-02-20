@@ -82,6 +82,8 @@ export const simulationStyles = {
     display: 'grid',
     gridRow: 'span 4', // span all 4 rows (header + 3 panels)
     gridTemplateRows: 'subgrid',
+    minWidth: 0,
+    overflow: 'hidden',
     gap: spacing.sm,
   },
 

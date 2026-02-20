@@ -21,12 +21,10 @@ function getButtonStyles(action: TopBarAction): React.CSSProperties {
 
   if (action.variant === 'primary') {
     return {
-      background: enabled
-        ? `linear-gradient(135deg, ${colors.primary[500]} 0%, ${colors.primary[600]} 100%)`
-        : colors.gray[200],
+      background: enabled ? colors.primary[500] : colors.gray[200],
       color: enabled ? 'white' : colors.gray[500],
       border: 'none',
-      boxShadow: enabled ? '0 4px 12px rgba(44, 122, 123, 0.3)' : 'none',
+      boxShadow: 'none',
       cursor: enabled ? 'pointer' : 'not-allowed',
       opacity: action.loading ? 0.7 : 1,
     };
@@ -49,19 +47,16 @@ function handleMouseEnter(e: React.MouseEvent<HTMLButtonElement>, action: TopBar
   }
 
   if (action.variant === 'primary') {
-    e.currentTarget.style.transform = 'scale(1.03)';
-    e.currentTarget.style.boxShadow = '0 6px 16px rgba(44, 122, 123, 0.4)';
+    e.currentTarget.style.background = colors.primary[600];
   } else {
     e.currentTarget.style.background = colors.secondary[200];
   }
 }
 
 function handleMouseLeave(e: React.MouseEvent<HTMLButtonElement>, action: TopBarAction) {
-  e.currentTarget.style.transform = 'scale(1)';
-
   if (action.variant === 'primary') {
     const enabled = !action.disabled && !action.loading;
-    e.currentTarget.style.boxShadow = enabled ? '0 4px 12px rgba(44, 122, 123, 0.3)' : 'none';
+    e.currentTarget.style.background = enabled ? colors.primary[500] : colors.gray[200];
   } else {
     e.currentTarget.style.background = colors.secondary[100];
   }
@@ -96,12 +91,12 @@ export function TopBar({ children, actions }: TopBarProps) {
                 component="button"
                 style={{
                   ...getButtonStyles(action),
-                  height: 44,
+                  height: 38,
                   borderRadius: spacing.radius.lg,
-                  padding: `0 ${spacing.lg}`,
+                  padding: `0 ${spacing.md}`,
                   fontFamily: typography.fontFamily.primary,
                   fontWeight: 600,
-                  fontSize: FONT_SIZES.normal,
+                  fontSize: FONT_SIZES.small,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
