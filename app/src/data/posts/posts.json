@@ -9,6 +9,15 @@
     "image": "uk-two-child-limit-reintroduction.jpg"
   },
   {
+    "title": "PolicyEngine completes TANF modeling for all 50 states and DC",
+    "description": "AI-assisted workflows enabled nationwide coverage of Temporary Assistance for Needy Families, now available through the web app, Python package, and API.",
+    "date": "2026-02-17",
+    "tags": ["us", "technical", "ai", "featured"],
+    "authors": ["pavel-makarchuk", "ziming-hua"],
+    "filename": "tanf-50-state-coverage.md",
+    "image": "tanf-50-state-coverage.svg"
+  },
+  {
     "title": "PolicyEngine's state income tax model updated for tax year 2025",
     "description": "PolicyEngine has updated state income tax brackets, deductions, exemptions, and credits across all 50 states for accurate tax year 2025 calculations.",
     "date": "2026-02-17",
