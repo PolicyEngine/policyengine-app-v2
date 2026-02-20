@@ -13,14 +13,14 @@ import {
 import { Stack, Text } from '@mantine/core';
 import { TOOLTIP_STYLE } from '@/components/charts';
 import { CHART_COLORS } from '@/constants/chartColors';
+import {
+  CHART_DISPLAY_EXTENSION_DATE,
+  YEARS_INTO_FUTURE_FOR_CHART,
+} from '@/constants/chartConstants';
 import { useChartWidth, useIsMobile, useWindowHeight } from '@/hooks/useChartDimensions';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import { ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
-import {
-  extendForDisplay,
-  filterInfiniteValues,
-  getChartBoundaryDates,
-} from '@/utils/chartDateUtils';
+import { extendForDisplay, filterInfiniteValues } from '@/utils/chartDateUtils';
 import { getNiceTicks, getReformPolicyLabel, RECHARTS_FONT_STYLE } from '@/utils/chartUtils';
 import { formatParameterValue, getRechartsTickFormatter } from '@/utils/chartValueUtils';
 import { capitalize } from '@/utils/stringUtils';
@@ -71,8 +71,7 @@ function HistoricalTooltip({ active, payload, label, param }: any) {
   if (!active || !payload?.length) {
     return null;
   }
-  const date = new Date(label);
-  const dateStr = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+  const dateStr = new Date(label).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
   return (
     <div style={TOOLTIP_STYLE}>
       <p style={{ fontWeight: 600, margin: 0 }}>{dateStr}</p>
@@ -163,7 +162,21 @@ export const ParameterOverTimeChart = memo((props: ParameterOverTimeChartProps) 
   // Memoize axis calculations with nice ticks
   const { maxDate, yMin, yMax, yTicks } = useMemo(() => {
     try {
-      const { maxDate } = getChartBoundaryDates();
+      // Compute display end date:
+      // - Default: current year + 10
+      // - If any real data point (excluding the 2099 extension) goes beyond that,
+      //   extend to that point's year + 5
+      const currentYear = new Date().getFullYear();
+      const defaultEndYear = currentYear + YEARS_INTO_FUTURE_FOR_CHART;
+
+      const allRealDates = [...x, ...reformedX].filter((d) => d !== CHART_DISPLAY_EXTENSION_DATE);
+      const latestRealYear =
+        allRealDates.length > 0
+          ? Math.max(...allRealDates.map((d) => new Date(d).getFullYear()))
+          : currentYear;
+
+      const endYear = latestRealYear > defaultEndYear ? latestRealYear + 5 : defaultEndYear;
+      const maxDate = `${endYear}-12-31`;
 
       const yaxisValues = reformValuesCollection ? [...y, ...reformedY] : y;
 
@@ -207,11 +220,17 @@ export const ParameterOverTimeChart = memo((props: ParameterOverTimeChartProps) 
 
   const hasReform = reformValuesCollection && reformedX.length > 0 && reformedY.length > 0;
 
-  // Memoize chart data transformation
+  const EARLIEST_DISPLAY_DATE = '2013-01-01';
+
+  // Memoize chart data transformation (dates stored as timestamps for proper time scaling)
+  // The 2099 extension point is kept in the data so the stepAfter line extends beyond
+  // the visible domain — the domain clamp hides it from view
+  const displayStartTs = new Date(EARLIEST_DISPLAY_DATE).getTime();
+
   const chartData = useMemo(() => {
     const data: Record<string, any>[] = x.map((date, i) => {
       const point: Record<string, any> = {
-        date,
+        date: new Date(date).getTime(),
         baseline: +y[i],
       };
       if (hasReform) {
@@ -226,22 +245,60 @@ export const ParameterOverTimeChart = memo((props: ParameterOverTimeChartProps) 
     // Merge any reform-only dates
     if (hasReform) {
       reformedX.forEach((date, i) => {
-        if (!data.find((d) => d.date === date)) {
-          data.push({ date, reform: +reformedY[i] });
+        const ts = new Date(date).getTime();
+        if (!data.find((d) => d.date === ts)) {
+          data.push({ date: ts, reform: +reformedY[i] });
         }
       });
-      data.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      data.sort((a, b) => a.date - b.date);
+    }
+
+    // If all data points are before the display start (e.g. year 0 or 1),
+    // the chart would appear empty. Find the value in effect at the display
+    // start date and insert a synthetic point so the line begins at the left edge.
+    const hasVisiblePoint = data.some(
+      (d) => d.date >= displayStartTs && d.date !== new Date(CHART_DISPLAY_EXTENSION_DATE).getTime()
+    );
+    if (!hasVisiblePoint && data.length > 0) {
+      // Find the latest point before the display start (the value in effect)
+      const priorPoints = data.filter((d) => d.date < displayStartTs);
+      if (priorPoints.length > 0) {
+        const latest = priorPoints[priorPoints.length - 1];
+        const syntheticPoint: Record<string, any> = {
+          date: displayStartTs,
+          baseline: latest.baseline,
+        };
+        if (hasReform && latest.reform !== undefined) {
+          syntheticPoint.reform = latest.reform;
+        }
+        data.push(syntheticPoint);
+        data.sort((a, b) => a.date - b.date);
+      }
     }
 
     return data;
-  }, [x, y, reformedX, reformedY, hasReform]);
+  }, [x, y, reformedX, reformedY, hasReform, displayStartTs]);
 
   // Memoize tick formatter
   const yTickFormatter = useMemo(() => {
     return getRechartsTickFormatter(param.unit || '', { decimalPlaces: 1 });
   }, [param.unit]);
 
-  const EARLIEST_DISPLAY_DATE = '2013-01-01';
+  // Generate x-axis ticks at years divisible by 5 (or 10 if range > 40 years)
+  const xTicks = useMemo(() => {
+    const startYear = new Date(EARLIEST_DISPLAY_DATE).getFullYear();
+    const endYear = new Date(maxDate).getFullYear();
+    const range = endYear - startYear;
+    const interval = range > 40 ? 10 : 5;
+
+    const ticks: number[] = [];
+    // Start from the first year divisible by interval at or after startYear
+    const firstTick = Math.ceil(startYear / interval) * interval;
+    for (let year = firstTick; year <= endYear; year += interval) {
+      ticks.push(new Date(`${year}-01-01`).getTime());
+    }
+    return ticks;
+  }, [maxDate]);
 
   // Early return if no valid data
   if (x.length === 0 || y.length === 0) {
@@ -269,12 +326,13 @@ export const ParameterOverTimeChart = memo((props: ParameterOverTimeChartProps) 
           <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
           <XAxis
             dataKey="date"
+            type="number"
+            scale="time"
+            allowDataOverflow
             tick={RECHARTS_FONT_STYLE}
-            tickFormatter={(d: string) => {
-              const dt = new Date(d);
-              return dt.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-            }}
-            domain={[EARLIEST_DISPLAY_DATE, maxDate]}
+            ticks={xTicks}
+            tickFormatter={(ts: number) => String(new Date(ts).getFullYear())}
+            domain={[new Date(EARLIEST_DISPLAY_DATE).getTime(), new Date(maxDate).getTime()]}
           />
           <YAxis
             tick={RECHARTS_FONT_STYLE}

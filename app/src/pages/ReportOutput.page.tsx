@@ -48,6 +48,9 @@ export type ReportOutputType = 'household' | 'societyWide';
  */
 
 export default function ReportOutputPage() {
+  if (import.meta.env.DEV) {
+    (window as any).__journeyProfiler?.markEvent('report-output-render', 'render');
+  }
   const navigate = useNavigate();
   const countryId = useCurrentCountry();
   const [searchParams] = useSearchParams();
@@ -232,6 +235,9 @@ export default function ReportOutputPage() {
   };
 
   // Show loading state while fetching data
+  if (import.meta.env.DEV && dataLoading) {
+    (window as any).__journeyProfiler?.markEvent('report-output-data-loading', 'render');
+  }
   if (dataLoading) {
     return (
       <Container size="xl" px={spacing.xl}>
@@ -311,6 +317,10 @@ export default function ReportOutputPage() {
 
     return <Text c="red">Unknown report type</Text>;
   };
+
+  if (import.meta.env.DEV) {
+    (window as any).__journeyProfiler?.markEvent('report-output-ready', 'render');
+  }
 
   return (
     <ReportYearProvider year={report?.year ?? null}>

@@ -15,7 +15,6 @@ import {
   mockCreateHouseholdAssociationMutateAsync,
   mockCreateHouseholdResponse,
   mockHouseholdCreationPayload,
-  QUERY_KEY_PATTERNS,
   setupMockConsole,
   TEST_IDS,
   TEST_LABELS,
@@ -102,10 +101,8 @@ describe('useCreateHousehold', () => {
       // Verify response
       expect(response).toEqual(mockCreateHouseholdResponse);
 
-      // Verify query invalidation
-      expect(queryClient.invalidateQueries).toHaveBeenCalledWith({
-        queryKey: QUERY_KEY_PATTERNS.HOUSEHOLD_ALL,
-      });
+      // Query invalidation is handled by the association hook, not this hook
+      expect(queryClient.invalidateQueries).not.toHaveBeenCalled();
     });
 
     test('given no label when createHousehold called then passes undefined label to association', async () => {
@@ -232,18 +229,16 @@ describe('useCreateHousehold', () => {
   });
 
   describe('query invalidation', () => {
-    test('given successful creation then invalidates household queries', async () => {
+    test('given successful creation then does not broadly invalidate household queries', async () => {
       // Given
       const { result } = renderHook(() => useCreateHousehold(TEST_LABELS.HOUSEHOLD), { wrapper });
 
       // When
       await result.current.createHousehold(mockHouseholdCreationPayload);
 
-      // Then
+      // Then - invalidation is handled by the association hook, not this hook
       await waitFor(() => {
-        expect(queryClient.invalidateQueries).toHaveBeenCalledWith({
-          queryKey: QUERY_KEY_PATTERNS.HOUSEHOLD_ALL,
-        });
+        expect(queryClient.invalidateQueries).not.toHaveBeenCalled();
       });
     });
 

@@ -39,6 +39,17 @@ export function MetadataGuard() {
 
   const metadata = useSelector((state: RootState) => state.metadata);
 
+  if (import.meta.env.DEV) {
+    const state = metadata.loading
+      ? 'loading'
+      : metadata.error
+        ? 'error'
+        : !metadata.version
+          ? 'no-version'
+          : 'ready';
+    (window as any).__journeyProfiler?.markEvent(`metadata-guard:${state}`, 'render');
+  }
+
   // Show loading experience while metadata is being fetched
   if (metadata.loading) {
     return <MetadataLoadingExperience countryId={countryId} />;

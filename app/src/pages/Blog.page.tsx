@@ -15,11 +15,11 @@ import { useDisplayCategory } from '@/components/blog/useDisplayCategory';
 import StaticPageLayout from '@/components/shared/static/StaticPageLayout';
 import authorsData from '@/data/posts/authors.json';
 import {
+  getLocationTags,
+  getPosts,
+  getTopicTags,
   locationLabels,
-  locationTags,
-  posts,
   topicLabels,
-  topicTags,
 } from '@/data/posts/postTransformers';
 import { colors } from '@/designTokens';
 import type { AuthorsCollection, BlogPost, Notebook } from '@/types/blog';
@@ -48,7 +48,7 @@ export default function BlogPage() {
   const [error, setError] = useState<string | null>(null);
 
   // Find the post by slug
-  const post = posts.find((p: BlogPost) => p.slug === slug);
+  const post = getPosts().find((p: BlogPost) => p.slug === slug);
 
   // Handle old dated URL format (YYYY-MM-DD-slug)
   const YYYYMMDDFormat = /^\d{4}-\d{2}-\d{2}-/;
@@ -514,9 +514,9 @@ function AuthorSection({ post, countryId }: { post: BlogPost; countryId: string 
 // More On section
 function MoreOn({ post, countryId }: { post: BlogPost; countryId: string }) {
   const categoryLinks = post.tags
-    .filter((tag) => locationTags.includes(tag) || topicTags.includes(tag))
+    .filter((tag) => getLocationTags().includes(tag) || getTopicTags().includes(tag))
     .map((tag) => {
-      const isLocation = locationTags.includes(tag);
+      const isLocation = getLocationTags().includes(tag);
       const label = isLocation ? locationLabels[tag] : topicLabels[tag];
       if (!label) {
         return null;
