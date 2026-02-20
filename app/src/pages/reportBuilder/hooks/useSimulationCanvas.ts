@@ -168,7 +168,7 @@ export function useSimulationCanvas({
       const householdData = households?.find(
         (h) => String(h.association.householdId) === householdId
       );
-      if (!householdData?.household) {
+      if (!householdData?.household?.household_json) {
         continue;
       }
 
@@ -321,6 +321,39 @@ export function useSimulationCanvas({
     [updatePolicy]
   );
 
+  const handleEditPolicy = useCallback(
+    (simulationIndex: number) => {
+      const currentPolicy = reportState.simulations[simulationIndex]?.policy;
+      if (!currentPolicy?.id) {
+        return;
+      }
+
+      // Resolve full parameters: in-session policies have real params,
+      // saved policies have placeholder Array(n).fill({})
+      let resolvedPolicy = currentPolicy;
+      const hasRealParams =
+        currentPolicy.parameters.length > 0 && !!currentPolicy.parameters[0]?.name;
+      if (!hasRealParams && currentPolicy.id) {
+        const fullPolicy = policies?.find(
+          (p) => p.association.policyId.toString() === currentPolicy.id
+        );
+        if (fullPolicy?.policy?.parameters) {
+          resolvedPolicy = {
+            ...currentPolicy,
+            parameters: fullPolicy.policy.parameters,
+          };
+        }
+      }
+
+      setPolicyCreationState({
+        isOpen: true,
+        simulationIndex,
+        initialPolicy: resolvedPolicy,
+      });
+    },
+    [reportState.simulations, policies]
+  );
+
   // ---------------------------------------------------------------------------
   // Population actions
   // ---------------------------------------------------------------------------
@@ -442,6 +475,7 @@ export function useSimulationCanvas({
     handleQuickSelectPolicy,
     handleSelectSavedPolicy,
     handleDeselectPolicy,
+    handleEditPolicy,
     handleBrowseMorePolicies,
     handlePolicySelectFromBrowse,
     handlePolicyCreated,

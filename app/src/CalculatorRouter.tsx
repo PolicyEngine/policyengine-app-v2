@@ -7,6 +7,8 @@ import PathwayLayout from './components/PathwayLayout';
 import StandardLayout from './components/StandardLayout';
 import DashboardPage from './pages/Dashboard.page';
 import PoliciesPage from './pages/Policies.page';
+import PolicyEditingConceptPage from './pages/policyEditingConcepts/PolicyEditingConceptPage';
+import PolicyEditingConceptsPage from './pages/policyEditingConcepts/PolicyEditingConcepts.page';
 import PopulationsPage from './pages/Populations.page';
 import ModifyReportPage from './pages/reportBuilder/ModifyReportPage';
 // Old monolithic file preserved but not used - see ./pages/ReportBuilder.page.tsx
@@ -129,6 +131,14 @@ const router = createBrowserRouter(
                 {
                   path: 'report-builder/:userReportId',
                   element: <ModifyReportPage />,
+                },
+                {
+                  path: 'policy-editing-concepts',
+                  element: <PolicyEditingConceptsPage />,
+                },
+                {
+                  path: 'policy-editing-concepts/:conceptId',
+                  element: <PolicyEditingConceptPage />,
                 },
                 {
                   path: 'account',

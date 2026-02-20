@@ -23,6 +23,7 @@ export interface SimulationBlockProps {
   onSelectRecentPopulation: (population: PopulationStateProps) => void;
   onDeselectPolicy: () => void;
   onDeselectPopulation: () => void;
+  onEditPolicy: () => void;
   onCreateCustomPolicy: () => void;
   onBrowseMorePolicies: () => void;
   onBrowseMorePopulations: () => void;
@@ -44,6 +45,7 @@ export function SimulationBlock({
   onSelectSavedPolicy,
   onQuickSelectPopulation,
   onSelectRecentPopulation,
+  onEditPolicy,
   onDeselectPolicy,
   onDeselectPopulation,
   onBrowseMorePolicies,
@@ -156,6 +158,7 @@ export function SimulationBlock({
         countryId={countryId}
         onQuickSelectPolicy={onQuickSelectPolicy}
         onSelectSavedPolicy={onSelectSavedPolicy}
+        onEditPolicy={onEditPolicy}
         onDeselectPolicy={onDeselectPolicy}
         onCreateCustom={() => {}}
         onBrowseMore={onBrowseMorePolicies}

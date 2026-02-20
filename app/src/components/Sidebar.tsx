@@ -7,6 +7,7 @@ import {
   IconGitBranch,
   IconLayoutGrid,
   IconMail,
+  IconPencil,
   IconPlus,
   IconScale,
   IconSettings2,
@@ -37,6 +38,11 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
     { label: 'Simulations', icon: IconGitBranch, path: `/${countryId}/simulations` },
     { label: 'Policies', icon: IconScale, path: `/${countryId}/policies` },
     { label: 'Households', icon: IconUsers, path: `/${countryId}/households` },
+    {
+      label: 'Policy editing concepts',
+      icon: IconPencil,
+      path: `/${countryId}/policy-editing-concepts`,
+    },
   ];
 
   const resourceItems = [

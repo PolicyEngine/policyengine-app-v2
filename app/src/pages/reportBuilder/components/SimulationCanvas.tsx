@@ -58,6 +58,7 @@ export function SimulationCanvas({
             onSelectRecentPopulation={(pop) => canvas.handleSelectRecentPopulation(0, pop)}
             onDeselectPolicy={() => canvas.handleDeselectPolicy(0)}
             onDeselectPopulation={() => canvas.handleDeselectPopulation(0)}
+            onEditPolicy={() => canvas.handleEditPolicy(0)}
             onCreateCustomPolicy={() => canvas.handleCreateCustom(0, 'policy')}
             onBrowseMorePolicies={() => canvas.handleBrowseMorePolicies(0)}
             onBrowseMorePopulations={() => canvas.handleBrowseMorePopulations(0)}
@@ -80,6 +81,7 @@ export function SimulationCanvas({
               onSelectRecentPopulation={(pop) => canvas.handleSelectRecentPopulation(1, pop)}
               onDeselectPolicy={() => canvas.handleDeselectPolicy(1)}
               onDeselectPopulation={() => canvas.handleDeselectPopulation(1)}
+              onEditPolicy={() => canvas.handleEditPolicy(1)}
               onCreateCustomPolicy={() => canvas.handleCreateCustom(1, 'policy')}
               onBrowseMorePolicies={() => canvas.handleBrowseMorePolicies(1)}
               onBrowseMorePopulations={() => canvas.handleBrowseMorePopulations(1)}
@@ -132,6 +134,7 @@ export function SimulationCanvas({
           canvas.handlePolicyCreated(canvas.policyCreationState.simulationIndex, policy)
         }
         simulationIndex={canvas.policyCreationState.simulationIndex}
+        initialPolicy={canvas.policyCreationState.initialPolicy}
       />
     </>
   );

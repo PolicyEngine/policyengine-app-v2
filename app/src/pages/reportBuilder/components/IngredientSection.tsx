@@ -26,6 +26,7 @@ export function IngredientSection({
   countryId = 'us',
   onQuickSelectPolicy,
   onSelectSavedPolicy,
+  onEditPolicy: _onEditPolicy,
   onQuickSelectPopulation,
   onSelectRecentPopulation,
   onDeselectPopulation,
