@@ -20,7 +20,7 @@ In this analysis, we [examine](https://github.com/PolicyEngine/uk-two-child-limi
 
 ## Poverty impact
 
-<iframe src="https://uk-two-child-limit-reintroduction.vercel.app/embed-poverty.html" width="100%" height="700" frameborder="0"></iframe>
+<iframe src="https://uk-two-child-limit-reintroduction.vercel.app/embed-poverty.html" width="100%" height="900" frameborder="0"></iframe>
 
 ## Inequality impact
 
