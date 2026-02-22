@@ -19,6 +19,7 @@ import HomePage from './pages/Home.page';
 import ModelPage from './pages/Model.page';
 import PrivacyPage from './pages/Privacy.page';
 import ResearchPage from './pages/Research.page';
+import SlidesPage from './pages/Slides.page';
 import SupportersPage from './pages/Supporters.page';
 import TeamPage from './pages/Team.page';
 import TermsPage from './pages/Terms.page';
@@ -110,6 +111,10 @@ const router = createBrowserRouter(
             {
               path: 'ai-inequality',
               element: <AIGrowthResearchPage />,
+            },
+            {
+              path: 'slides',
+              element: <SlidesPage />,
             },
             {
               path: 'model',
