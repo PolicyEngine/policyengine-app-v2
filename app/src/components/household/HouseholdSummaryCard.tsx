@@ -67,10 +67,10 @@ export default function HouseholdSummaryCard({
   }
 
   // Determine border color based on mode and direction
-  let borderColor = colors.primary[700];
-  if (isComparisonMode && comparison.direction !== 'increase') {
-    borderColor = colors.text.secondary;
-  }
+  const borderColor: string =
+    isComparisonMode && comparison.direction !== 'increase'
+      ? colors.text.secondary
+      : colors.primary[700];
 
   return (
     <div
