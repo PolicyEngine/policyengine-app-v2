@@ -34,11 +34,11 @@ This analysis uses projected 2027 FPL values, estimated by applying historical i
 
 Key results for 2027:
 
-- ~121,000 people would lose Medicaid enrollment
-- ~94,000 (78%) would fall into the "coverage gap" (not eligible for ACA subsidies)
-- ~27,000 (22%) would gain ACA Premium Tax Credit eligibility
-- Utah would save ~$99 million/year
-- Federal government would save ~$729 million/year (net of increased ACA costs)
+- ~84,000 people would lose Medicaid enrollment
+- ~73,000 (86.5%) would fall into the "coverage gap" (not eligible for ACA subsidies)
+- ~11,000 (13.5%) would gain ACA Premium Tax Credit eligibility
+- Utah would save ~$73 million/year
+- Federal government would save ~$575 million/year (net of increased ACA costs)
 
 _[Use PolicyEngine](https://www.policyengine.org/us) to calculate the effect on your household._
 
@@ -100,20 +100,20 @@ For tax year 2027, HB 15 would generate the following fiscal impacts (all figure
 
 | Category | Amount |
 |----------|--------|
-| Total Medicaid spending reduction | $988 million |
-| Federal share (90%) | $889 million |
-| State share (10%) | $99 million |
-| Increased federal ACA spending | $160 million |
-| **Net federal spending reduction** | **$729 million** |
-| **Net state spending reduction** | **$99 million** |
+| Total Medicaid spending reduction | $734 million |
+| Federal share (90%) | $660 million |
+| State share (10%) | $73 million |
+| Increased federal ACA spending | $85 million |
+| **Net federal spending reduction** | **$575 million** |
+| **Net state spending reduction** | **$73 million** |
 
 ## Who is affected?
 
-Of the ~121,000 people losing Medicaid enrollment:
+Of the ~84,000 people losing Medicaid enrollment:
 
-- **78% fall into the coverage gap**: These individuals earn below 100% FPL and would not qualify for ACA subsidies.
+- **86.5% fall into the coverage gap**: These individuals earn below 100% FPL and would not qualify for ACA subsidies.
 
-- **22% can transition to ACA**: These individuals earn between 100-138% FPL and can obtain marketplace coverage with premium subsidies.
+- **13.5% can transition to ACA**: These individuals earn between 100-138% FPL and can obtain marketplace coverage with premium subsidies.
 
 Children's coverage is unaffected by HB 15—they remain eligible for Medicaid up to 136% FPL and CHIP up to 205% FPL regardless of the expansion repeal. Only adult coverage under the expansion category is affected.
 
@@ -123,24 +123,24 @@ The table below summarizes the demographic profile of those who would lose Medic
 
 | Characteristic | All Affected | Coverage Gap | ACA Transition |
 |----------------|--------------|--------------|----------------|
-| Number of people | 121,000 | 94,000 | 27,000 |
-| Average age | 34 years | 33 years | 35 years |
-| Average household income | $62,500 | $64,200 | $56,300 |
-| Average FPL | 81% | 70% | 116% |
+| Number of people | 84,000 | 73,000 | 11,000 |
+| Average age | 30 years | 30 years | 31 years |
+| Average household income | $49,400 | $50,170 | $44,483 |
+| Average FPL | 65% | 58% | 114% |
 
 The chart below shows the distribution of affected individuals by household income decile. Those in lower deciles are more likely to fall into the coverage gap, while those in higher deciles can transition to ACA coverage.
 
 **Figure 3: Affected population by household income decile**
 <iframe src="https://policyengine.github.io/utah-hb15-charts/income-distribution.html" width="100%" height="500" frameborder="0"></iframe>
 
-**Age distribution**: The affected population skews young—36% are young adults (18-25), and 24% are ages 26-34. The average age is 34 years.
+**Age distribution**: The affected population skews young—43% are young adults (18-25), and 33% are ages 26-34. The average age is 30 years.
 
 **Figure 4: Affected population by age group**
 <iframe src="https://policyengine.github.io/utah-hb15-charts/age-distribution.html" width="100%" height="500" frameborder="0"></iframe>
 
 ## Conclusion
 
-Utah HB 15 creates a contingent repeal of Medicaid expansion that would take effect if federal matching drops below 85%. If enacted, the policy would reduce state Medicaid spending by ~$99 million annually. Approximately 94,000 adults earning below 100% FPL would lose coverage and would not qualify for ACA subsidies, while ~27,000 adults at 100-138% FPL could transition to ACA marketplace plans.
+Utah HB 15 creates a contingent repeal of Medicaid expansion that would take effect if federal matching drops below 85%. If enacted, the policy would reduce state Medicaid spending by ~$73 million annually. Approximately 73,000 adults earning below 100% FPL would lose coverage and would not qualify for ACA subsidies, while ~11,000 adults at 100-138% FPL could transition to ACA marketplace plans.
 
 Analytical tools like PolicyEngine can help evaluate the impacts of reforms like this on diverse household compositions and state budgets.
 
