@@ -126,7 +126,7 @@ export function PolicyCreationModal({
       setIntervals([]);
       setParameterSearch('');
     }
-  }, [isOpen]); // initialPolicy intentionally not in deps — only read on open transition
+  }, [isOpen, initialEditorMode]); // initialPolicy intentionally not in deps — only read on open transition
 
   // Create local policy state object for components
   const localPolicy: PolicyStateProps = useMemo(
