@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { IconCursorText, IconPencil } from '@tabler/icons-react';
+import { IconPencil, IconStatusChange } from '@tabler/icons-react';
 import { useNavigate } from 'react-router-dom';
 import { Stack } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
@@ -106,8 +106,8 @@ export default function PoliciesPage() {
       header: '',
       type: 'actions',
       actions: [
-        { action: 'rename', tooltip: 'Rename', icon: <IconCursorText size={16} /> },
-        { action: 'edit', tooltip: 'Edit policy', icon: <IconPencil size={16} /> },
+        { action: 'rename', tooltip: 'Rename', icon: <IconPencil size={16} /> },
+        { action: 'edit', tooltip: 'Edit policy', icon: <IconStatusChange size={16} /> },
       ],
       onAction: (action: string, recordId: string) => {
         if (action === 'rename') {

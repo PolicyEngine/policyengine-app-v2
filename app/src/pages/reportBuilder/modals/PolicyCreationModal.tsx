@@ -9,10 +9,15 @@
  */
 
 import React, { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
-import { IconDeviceFloppy, IconPencil, IconReplace, IconScale, IconX } from '@tabler/icons-react';
+import { IconScale, IconX } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import { ActionIcon, Box, Button, Group, Modal, Stack, Text, Tooltip } from '@mantine/core';
 import { PolicyAdapter } from '@/adapters';
+import {
+  EditAndSaveNewButton,
+  EditAndUpdateButton,
+  EditDefaultButton,
+} from '@/components/common/ActionButtons';
 import { colors, spacing } from '@/designTokens';
 import { useCreatePolicy } from '@/hooks/useCreatePolicy';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
@@ -708,32 +713,27 @@ export function PolicyCreationModal({
               </Button>
             )}
             {editorMode === 'display' && (
-              <Button
+              <EditDefaultButton
+                label="Edit this policy"
                 color="teal"
-                leftSection={<IconPencil size={16} />}
+                variant="filled"
                 onClick={() => setEditorMode('edit')}
-              >
-                Edit this policy
-              </Button>
+              />
             )}
             {editorMode === 'edit' && (
               <>
-                <Button
+                <EditAndUpdateButton
+                  label="Update existing policy"
                   variant="light"
-                  color="teal"
-                  leftSection={<IconReplace size={16} />}
                   onClick={() => console.info('[PolicyCreationModal] Update existing policy')}
-                >
-                  Update existing policy
-                </Button>
-                <Button
+                />
+                <EditAndSaveNewButton
+                  label="Save as new policy"
                   color="teal"
-                  leftSection={<IconDeviceFloppy size={16} />}
+                  variant="filled"
                   onClick={handleSaveAsNewPolicy}
                   loading={isCreating}
-                >
-                  Save as new policy
-                </Button>
+                />
               </>
             )}
           </Group>

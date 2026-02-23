@@ -205,10 +205,17 @@ export default function ReportOutputPage() {
     }
   };
 
-  // Handle modify button click - navigate to report builder with this report
-  const handleModify = () => {
+  // Handle view button click - navigate to report builder in view mode
+  const handleView = () => {
     if (userReportId) {
       navigate(`/${countryId}/report-builder/${userReportId}`);
+    }
+  };
+
+  // Handle edit button click - navigate to report builder in edit mode
+  const handleEdit = () => {
+    if (userReportId) {
+      navigate(`/${countryId}/report-builder/${userReportId}`, { state: { edit: true } });
     }
   };
 
@@ -328,7 +335,8 @@ export default function ReportOutputPage() {
         isSharedView={isSharedView}
         onShare={handleShare}
         onSave={handleSave}
-        onModify={!isSharedView ? handleModify : undefined}
+        onView={!isSharedView ? handleView : undefined}
+        onEdit={!isSharedView ? handleEdit : undefined}
       >
         <ErrorBoundary
           fallback={(error, errorInfo) => (

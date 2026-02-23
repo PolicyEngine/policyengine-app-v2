@@ -1,9 +1,9 @@
 import { useCallback, useMemo, useState } from 'react';
 import {
   IconChevronLeft,
-  IconDeviceFloppy,
+  IconNewSection,
   IconPencil,
-  IconReplace,
+  IconStatusChange,
   IconX,
 } from '@tabler/icons-react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
@@ -96,7 +96,7 @@ export default function ModifyReportPage() {
       {
         key: 'replace',
         label: 'Update existing report',
-        icon: <IconReplace size={16} />,
+        icon: <IconStatusChange size={16} />,
         onClick: handleReplace,
         variant: 'secondary' as const,
         loading: isReplacing,
@@ -106,7 +106,7 @@ export default function ModifyReportPage() {
       {
         key: 'save-new',
         label: 'Save as new report',
-        icon: <IconDeviceFloppy size={16} />,
+        icon: <IconNewSection size={16} />,
         onClick: handleSaveAsNewClick,
         variant: 'primary' as const,
         loading: isSavingNew,

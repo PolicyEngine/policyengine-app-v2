@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { IconCursorText, IconPencil, IconSearch } from '@tabler/icons-react';
+import { IconInfoCircle, IconPencil, IconStatusChange } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { Stack } from '@mantine/core';
@@ -125,9 +125,9 @@ export default function ReportsPage() {
       header: '',
       type: 'actions',
       actions: [
-        { action: 'rename', tooltip: 'Rename', icon: <IconCursorText size={16} /> },
-        { action: 'view', tooltip: 'View report', icon: <IconSearch size={16} /> },
-        { action: 'edit', tooltip: 'Edit report', icon: <IconPencil size={16} /> },
+        { action: 'rename', tooltip: 'Rename', icon: <IconPencil size={16} /> },
+        { action: 'view', tooltip: 'View report', icon: <IconInfoCircle size={16} /> },
+        { action: 'edit', tooltip: 'Edit report', icon: <IconStatusChange size={16} /> },
       ],
       onAction: (action: string, recordId: string) => {
         if (action === 'rename') {

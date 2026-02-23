@@ -126,5 +126,4 @@ describe('IngredientReadView', () => {
     // Then
     expect(onBuild).toHaveBeenCalled();
   });
-
 });
