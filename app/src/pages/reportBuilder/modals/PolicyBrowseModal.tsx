@@ -8,11 +8,8 @@
 import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import {
   IconChevronRight,
-  IconDeviceFloppy,
   IconFolder,
-  IconPencil,
   IconPlus,
-  IconReplace,
   IconScale,
   IconStar,
   IconUsers,
@@ -20,6 +17,11 @@ import {
 import { useSelector } from 'react-redux';
 import { Box, Button, Group, Modal, Paper, Stack, Text, Tooltip } from '@mantine/core';
 import { PolicyAdapter } from '@/adapters';
+import {
+  EditAndSaveNewButton,
+  EditAndUpdateButton,
+  EditDefaultButton,
+} from '@/components/common/ActionButtons';
 import { MOCK_USER_ID } from '@/constants';
 import { colors, spacing } from '@/designTokens';
 import { useCreatePolicy } from '@/hooks/useCreatePolicy';
@@ -864,32 +866,27 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
                   </Button>
                 )}
                 {editorMode === 'display' && (
-                  <Button
+                  <EditDefaultButton
+                    label="Edit this policy"
                     color="teal"
-                    leftSection={<IconPencil size={16} />}
+                    variant="filled"
                     onClick={() => setEditorMode('edit')}
-                  >
-                    Edit this policy
-                  </Button>
+                  />
                 )}
                 {editorMode === 'edit' && (
                   <>
-                    <Button
+                    <EditAndUpdateButton
+                      label="Update existing policy"
                       variant="light"
-                      color="teal"
-                      leftSection={<IconReplace size={16} />}
                       onClick={() => console.info('[PolicyBrowseModal] Update existing policy')}
-                    >
-                      Update existing policy
-                    </Button>
-                    <Button
+                    />
+                    <EditAndSaveNewButton
+                      label="Save as new policy"
                       color="teal"
-                      leftSection={<IconDeviceFloppy size={16} />}
+                      variant="filled"
                       onClick={handleSaveAsNewPolicy}
                       loading={isCreating}
-                    >
-                      Save as new policy
-                    </Button>
+                    />
                   </>
                 )}
               </Group>

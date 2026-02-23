@@ -91,9 +91,7 @@ export function ParameterSidebar({
                 ...modalStyles.sidebarItem,
                 width: '100%',
                 background:
-                  activeTab === 'overview'
-                    ? 'var(--mantine-color-primary-light)'
-                    : 'transparent',
+                  activeTab === 'overview' ? 'var(--mantine-color-primary-light)' : 'transparent',
                 color:
                   activeTab === 'overview'
                     ? 'var(--mantine-color-primary-light-color)'

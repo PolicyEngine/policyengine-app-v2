@@ -9,14 +9,14 @@
  */
 
 import {
-  IconArrowsExchange,
   IconChartLine,
   IconFileDescription,
   IconHome,
-  IconPencil,
   IconPlus,
   IconScale,
   IconSparkles,
+  IconPencil,
+  IconTransfer,
   IconUsers,
   IconX,
 } from '@tabler/icons-react';
@@ -277,7 +277,7 @@ export function IngredientSectionFull({
                   </Box>
                 </Tooltip>
               )}
-              <Tooltip label={`Swap ${type}`} position="bottom" withArrow>
+              <Tooltip label={`Swap ${type === 'population' ? 'household(s)' : type}`} position="bottom" withArrow>
                 <Box
                   component="button"
                   onClick={(e: React.MouseEvent) => {
@@ -297,7 +297,7 @@ export function IngredientSectionFull({
                     color: colorConfig.icon,
                   }}
                 >
-                  <IconArrowsExchange size={14} />
+                  <IconTransfer size={14} />
                 </Box>
               </Tooltip>
               <Tooltip label="Remove" position="bottom" withArrow>

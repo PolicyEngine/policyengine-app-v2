@@ -225,7 +225,7 @@ describe('ReportOutputLayout', () => {
     expect(screen.getByRole('button', { name: /save report to my reports/i })).toBeInTheDocument();
   });
 
-  test('given isSharedView=false then shows share and edit buttons', () => {
+  test('given isSharedView=false then shows view, edit, and share buttons', () => {
     // Given
     render(
       <ReportOutputLayout
@@ -238,6 +238,8 @@ describe('ReportOutputLayout', () => {
         onTabChange={vi.fn()}
         isSharedView={false}
         onShare={vi.fn()}
+        onView={vi.fn()}
+        onEdit={vi.fn()}
       >
         <div>Content</div>
       </ReportOutputLayout>
@@ -245,7 +247,8 @@ describe('ReportOutputLayout', () => {
 
     // Then
     expect(screen.queryByTestId('shared-report-tag')).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /share report/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /view\/edit report/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /share/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /view/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /edit/i })).toBeInTheDocument();
   });
 });

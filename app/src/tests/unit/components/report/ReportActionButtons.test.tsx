@@ -9,17 +9,25 @@ describe('ReportActionButtons', () => {
 
     // Then
     expect(screen.getByRole('button', { name: /save report to my reports/i })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /share report/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /view\/edit report/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /share/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /view/i })).not.toBeInTheDocument();
   });
 
-  test('given isSharedView=false then renders view/edit and share buttons', () => {
+  test('given isSharedView=false then renders view, edit, and share buttons', () => {
     // Given
-    render(<ReportActionButtons isSharedView={false} onShare={vi.fn()} onModify={vi.fn()} />);
+    render(
+      <ReportActionButtons
+        isSharedView={false}
+        onShare={vi.fn()}
+        onView={vi.fn()}
+        onEdit={vi.fn()}
+      />
+    );
 
     // Then
-    expect(screen.getByRole('button', { name: /share report/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /view\/edit report/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /share/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /view/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /edit/i })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /save report/i })).not.toBeInTheDocument();
   });
 
@@ -43,22 +51,35 @@ describe('ReportActionButtons', () => {
     render(<ReportActionButtons isSharedView={false} onShare={handleShare} />);
 
     // When
-    await user.click(screen.getByRole('button', { name: /share report/i }));
+    await user.click(screen.getByRole('button', { name: /share/i }));
 
     // Then
     expect(handleShare).toHaveBeenCalledOnce();
   });
 
-  test('given onModify callback then calls it when view/edit clicked', async () => {
+  test('given onView callback then calls it when view clicked', async () => {
     // Given
     const user = userEvent.setup();
-    const handleModify = vi.fn();
-    render(<ReportActionButtons isSharedView={false} onModify={handleModify} />);
+    const handleView = vi.fn();
+    render(<ReportActionButtons isSharedView={false} onView={handleView} />);
 
     // When
-    await user.click(screen.getByRole('button', { name: /view\/edit report/i }));
+    await user.click(screen.getByRole('button', { name: /view/i }));
 
     // Then
-    expect(handleModify).toHaveBeenCalledOnce();
+    expect(handleView).toHaveBeenCalledOnce();
+  });
+
+  test('given onEdit callback then calls it when edit clicked', async () => {
+    // Given
+    const user = userEvent.setup();
+    const handleEdit = vi.fn();
+    render(<ReportActionButtons isSharedView={false} onEdit={handleEdit} />);
+
+    // When
+    await user.click(screen.getByRole('button', { name: /edit/i }));
+
+    // Then
+    expect(handleEdit).toHaveBeenCalledOnce();
   });
 });
