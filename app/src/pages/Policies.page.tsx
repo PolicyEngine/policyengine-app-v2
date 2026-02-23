@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { IconPencil, IconStatusChange } from '@tabler/icons-react';
+import { IconInfoCircle, IconPencil } from '@tabler/icons-react';
 import { useNavigate } from 'react-router-dom';
 import { Stack } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
@@ -10,6 +10,7 @@ import { MOCK_USER_ID } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useUpdatePolicyAssociation, useUserPolicies } from '@/hooks/useUserPolicy';
 import { PolicyCreationModal } from '@/pages/reportBuilder/modals/PolicyCreationModal';
+import type { EditorMode } from '@/pages/reportBuilder/modals/policyCreation/types';
 import { PolicyStateProps } from '@/types/pathwayState';
 import { countPolicyModifications } from '@/utils/countParameterChanges';
 import { formatDate } from '@/utils/dateUtils';
@@ -29,6 +30,7 @@ export default function PoliciesPage() {
 
   // Policy editor modal state
   const [editingPolicy, setEditingPolicy] = useState<PolicyStateProps | null>(null);
+  const [editorMode, setEditorMode] = useState<EditorMode>('edit');
   const [editorOpened, { open: openEditor, close: closeEditor }] = useDisclosure(false);
 
   // Rename mutation hook
@@ -38,7 +40,7 @@ export default function PoliciesPage() {
     navigate(`/${countryId}/policies/create`);
   };
 
-  const handleOpenEditor = (recordId: string) => {
+  const handleOpenEditor = (recordId: string, mode: EditorMode = 'edit') => {
     const item = data?.find((p) => p.association.id?.toString() === recordId);
     if (item) {
       setEditingPolicy({
@@ -46,6 +48,7 @@ export default function PoliciesPage() {
         label: item.association.label || `Policy #${item.association.policyId}`,
         parameters: item.policy?.parameters || [],
       });
+      setEditorMode(mode);
       openEditor();
     }
   };
@@ -106,15 +109,15 @@ export default function PoliciesPage() {
       header: '',
       type: 'actions',
       actions: [
-        { action: 'rename', tooltip: 'Rename', icon: <IconPencil size={16} /> },
-        { action: 'edit', tooltip: 'Edit policy', icon: <IconStatusChange size={16} /> },
+        { action: 'view', tooltip: 'View policy', icon: <IconInfoCircle size={16} /> },
+        { action: 'edit', tooltip: 'Edit policy', icon: <IconPencil size={16} /> },
       ],
       onAction: (action: string, recordId: string) => {
-        if (action === 'rename') {
-          handleOpenRename(recordId);
+        if (action === 'view') {
+          handleOpenEditor(recordId, 'display');
         }
         if (action === 'edit') {
-          handleOpenEditor(recordId);
+          handleOpenEditor(recordId, 'edit');
         }
       },
     },
@@ -186,6 +189,7 @@ export default function PoliciesPage() {
         }}
         simulationIndex={0}
         initialPolicy={editingPolicy ?? undefined}
+        initialEditorMode={editorMode}
       />
     </>
   );
