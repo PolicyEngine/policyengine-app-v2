@@ -62,9 +62,6 @@ export {
 } from './householdCalculation';
 
 // User Household Associations (v2 Alpha)
-// NOTE: Other user association types (policy, simulation, report, geographic)
-// are not yet available in API v2 alpha. When they are added, follow the
-// pattern established here for userHouseholdAssociations.
 export {
   createUserHouseholdAssociationV2,
   fetchUserHouseholdAssociationsV2,
@@ -75,3 +72,96 @@ export {
   type UserHouseholdAssociationV2CreateRequest,
   type UserHouseholdAssociationV2UpdateRequest,
 } from './userHouseholdAssociations';
+
+// Simulations (v2 Alpha — household + economy)
+export {
+  createHouseholdSimulation,
+  getHouseholdSimulation,
+  pollHouseholdSimulation,
+  createEconomySimulation,
+  getEconomySimulation,
+  pollEconomySimulation,
+  fromHouseholdSimulationResponse,
+  fromEconomySimulationResponse,
+  type SimulationStatus,
+  type HouseholdSimulationRequest,
+  type HouseholdSimulationResponse,
+  type EconomySimulationRequest,
+  type EconomySimulationResponse,
+  type RegionInfo,
+} from './simulations';
+
+// Economy Analysis (v2 Alpha — baseline vs reform comparison)
+export {
+  createEconomyAnalysis,
+  getEconomyAnalysis,
+  pollEconomyAnalysis,
+  createEconomyCustomAnalysis,
+  getEconomyCustomAnalysis,
+  fromEconomicImpactResponse,
+  type ReportStatus,
+  type EconomicImpactRequest,
+  type EconomicImpactResponse,
+  type EconomyCustomRequest,
+  type SimulationInfo,
+  type AnalysisRegionInfo,
+  type DecileImpactData,
+  type ProgramStatisticsData,
+  type PovertyData,
+  type InequalityData,
+  type BudgetSummaryData,
+  type IntraDecileData,
+  type CongressionalDistrictData,
+  type ConstituencyData,
+  type LocalAuthorityData,
+} from './economyAnalysis';
+
+// Household Analysis (v2 Alpha — baseline vs reform comparison)
+export {
+  createHouseholdAnalysis,
+  getHouseholdAnalysis,
+  pollHouseholdAnalysis,
+  fromHouseholdImpactResponse,
+  type HouseholdImpactRequest,
+  type HouseholdImpactResponse,
+  type HouseholdSimulationInfo,
+} from './householdAnalysis';
+
+// Analysis Options (v2 Alpha — available economy modules)
+export { fetchAnalysisOptions, type ModuleOption } from './analysisOptions';
+
+// User Policy Associations (v2 Alpha)
+export {
+  createUserPolicyAssociationV2,
+  fetchUserPolicyAssociationsV2,
+  fetchUserPolicyAssociationByIdV2,
+  updateUserPolicyAssociationV2,
+  deleteUserPolicyAssociationV2,
+  type UserPolicyAssociationV2Response,
+  type UserPolicyAssociationV2CreateRequest,
+  type UserPolicyAssociationV2UpdateRequest,
+} from './userPolicyAssociations';
+
+// User Simulation Associations (v2 Alpha)
+export {
+  createUserSimulationAssociationV2,
+  fetchUserSimulationAssociationsV2,
+  fetchUserSimulationAssociationByIdV2,
+  updateUserSimulationAssociationV2,
+  deleteUserSimulationAssociationV2,
+  type UserSimulationAssociationV2Response,
+  type UserSimulationAssociationV2CreateRequest,
+  type UserSimulationAssociationV2UpdateRequest,
+} from './userSimulationAssociations';
+
+// User Report Associations (v2 Alpha)
+export {
+  createUserReportAssociationV2,
+  fetchUserReportAssociationsV2,
+  fetchUserReportAssociationByIdV2,
+  updateUserReportAssociationV2,
+  deleteUserReportAssociationV2,
+  type UserReportAssociationV2Response,
+  type UserReportAssociationV2CreateRequest,
+  type UserReportAssociationV2UpdateRequest,
+} from './userReportAssociations';
