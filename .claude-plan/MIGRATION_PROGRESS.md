@@ -1,6 +1,6 @@
 # Simulation & Report V2 Migration Progress
 
-## Current: Phase 4a — Task 8
+## Current: Phase 5 — Task 4
 
 ## Branch Strategy
 
@@ -25,8 +25,8 @@ _(Updated as branches are created)_
 | Repo | Current branch | Created | Status |
 |---|---|---|---|
 | policyengine.py | `feat/sim-report-migration/phase-4` | 2026-02-20 | Phase 4 complete |
-| policyengine-api-v2-alpha | `feat/sim-report-migration/phase-4a` | 2026-02-23 | Active |
-| policyengine-app-v2 | `feat/sim-report-migration/phase-4a` | 2026-02-23 | Active |
+| policyengine-api-v2-alpha | `feat/sim-report-migration/phase-4a` | 2026-02-23 | Phase 4a complete |
+| policyengine-app-v2 | `feat/sim-report-migration/phase-5` | 2026-02-23 | Active |
 
 ---
 
@@ -98,9 +98,9 @@ _Full spec: `.claude-plan/LAZY_METADATA_SPEC.md`_
 
 ## Phase 5: App Migration (app v2)
 
-- [ ] 1. Create v2 API modules
-- [ ] 2. Create v2 adapters
-- [ ] 3. Rewrite `SocietyWideCalcStrategy` for v2
+- [x] 1. Create v2 API modules (2026-02-23)
+- [x] 2. Create v2 adapters (2026-02-23)
+- [x] 3. Rewrite `SocietyWideCalcStrategy` for v2 (2026-02-23)
 - [ ] 4. Update `HouseholdCalcStrategy` for v2 analysis endpoint
 - [ ] 5. Update `ResultPersister` for v2
 - [ ] 6. Wire up association stores to v2 API
