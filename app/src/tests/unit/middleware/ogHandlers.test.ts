@@ -396,6 +396,32 @@ describe('middleware route handlers', () => {
       expect(response).toBeUndefined();
     });
 
+    test('given Googlebot requesting /sitemap.xml then passes through', async () => {
+      // Given
+      const request = new Request('https://policyengine.org/sitemap.xml', {
+        headers: { 'User-Agent': 'Googlebot' },
+      });
+
+      // When
+      const response = await middleware(request);
+
+      // Then
+      expect(response).toBeUndefined();
+    });
+
+    test('given Googlebot requesting /robots.txt then passes through', async () => {
+      // Given
+      const request = new Request('https://policyengine.org/robots.txt', {
+        headers: { 'User-Agent': 'Googlebot' },
+      });
+
+      // When
+      const response = await middleware(request);
+
+      // Then
+      expect(response).toBeUndefined();
+    });
+
     test('given cache control header then has correct max-age', async () => {
       // Given
       const request = new Request(TEST_URLS.BLOG_POST, {

@@ -351,6 +351,11 @@ export default async function middleware(request: Request) {
   const userAgent = request.headers.get("user-agent");
   const url = new URL(request.url);
 
+  // Let static files (sitemap, robots, etc.) pass through to Vercel's file serving
+  if (url.pathname === "/sitemap.xml" || url.pathname === "/robots.txt") {
+    return;
+  }
+
   // State legislative tracker: proxy crawlers to Modal for SEO
   // (pre-rendered HTML with canonical policyengine.org URLs, structured data, sitemap)
   // Regular users fall through to the catch-all rewrite → website.html → iframe
