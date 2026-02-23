@@ -76,7 +76,7 @@ export function MultiYearValueSelector(props: ValueSetterProps) {
 
   return (
     <Box>
-      <SimpleGrid cols={2} spacing="md">
+      <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
         <Stack>
           {leftColumn.map((year) => (
             <Group key={year}>

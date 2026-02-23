@@ -2,7 +2,12 @@ import { createRef } from 'react';
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MantineProvider } from '@mantine/core';
-import { useChartWidth, useIsMobile, useWindowHeight } from '@/hooks/useChartDimensions';
+import {
+  MOBILE_BREAKPOINT_QUERY,
+  useChartWidth,
+  useIsMobile,
+  useWindowHeight,
+} from '@/hooks/useChartDimensions';
 import {
   EXPECTED_MOBILE_AT_375,
   EXPECTED_MOBILE_AT_768,
@@ -95,6 +100,13 @@ describe('useChartDimensions', () => {
 
   afterEach(() => {
     vi.clearAllMocks();
+  });
+
+  describe('MOBILE_BREAKPOINT_QUERY', () => {
+    it('given constant then matches Mantine sm breakpoint in em units', () => {
+      // Then
+      expect(MOBILE_BREAKPOINT_QUERY).toBe('(max-width: 48em)');
+    });
   });
 
   describe('useChartWidth', () => {

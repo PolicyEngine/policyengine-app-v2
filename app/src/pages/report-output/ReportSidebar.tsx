@@ -7,12 +7,19 @@ interface ReportSidebarProps {
   tree: TreeNode[];
   activeView: string;
   onNavigate: (view: string) => void;
+  /** When true, hides on mobile via Mantine visibleFrom="sm". Defaults to true. */
+  hideOnMobile?: boolean;
 }
 
 /**
  * Left sidebar menu for tabs with nested subviews (e.g., Comparative Analysis).
  */
-export function ReportSidebar({ tree, activeView, onNavigate }: ReportSidebarProps) {
+export function ReportSidebar({
+  tree,
+  activeView,
+  onNavigate,
+  hideOnMobile = true,
+}: ReportSidebarProps) {
   // Track which item is currently active (clicked)
   const [active, setActive] = useState<string | null>(activeView);
 
@@ -84,6 +91,7 @@ export function ReportSidebar({ tree, activeView, onNavigate }: ReportSidebarPro
   return (
     <Box
       bg="gray.0"
+      visibleFrom={hideOnMobile ? 'sm' : undefined}
       style={{
         width: 250,
         padding: spacing.md,
@@ -93,7 +101,7 @@ export function ReportSidebar({ tree, activeView, onNavigate }: ReportSidebarPro
         alignSelf: 'flex-start',
       }}
     >
-      <ScrollArea.Autosize mah="calc(100vh - 250px)" type="auto" offsetScrollbars>
+      <ScrollArea.Autosize mah="calc(100dvh - 250px)" type="auto" offsetScrollbars>
         {tree.map((node) => renderNode(node))}
       </ScrollArea.Autosize>
     </Box>

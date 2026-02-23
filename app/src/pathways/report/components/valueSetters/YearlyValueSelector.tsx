@@ -1,6 +1,6 @@
 import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
-import { Group } from '@mantine/core';
+import { Flex } from '@mantine/core';
 import { YearPickerInput } from '@mantine/dates';
 import { ValueInterval } from '@/types/subIngredients/valueInterval';
 import { fromLocalDateString, toLocalDateString } from '@/utils/dateUtils';
@@ -71,7 +71,12 @@ export function YearlyValueSelector(props: ValueSetterProps) {
   }
 
   return (
-    <Group align="flex-end" style={{ flex: 1 }}>
+    <Flex
+      align={{ base: 'stretch', sm: 'flex-end' }}
+      direction={{ base: 'column', sm: 'row' }}
+      gap="sm"
+      style={{ flex: 1 }}
+    >
       <YearPickerInput
         placeholder="Pick a year"
         label="From"
@@ -91,6 +96,6 @@ export function YearlyValueSelector(props: ValueSetterProps) {
         style={{ flex: 1 }}
       />
       <ValueInputBox param={param} value={paramValue} onChange={setParamValue} />
-    </Group>
+    </Flex>
   );
 }

@@ -36,4 +36,13 @@ describe('MainSection', () => {
     expect(screen.getByText(/free, open-source tax and benefit analysis/i)).toBeInTheDocument();
     expect(screen.getByText(/benefit access tools/i)).toBeInTheDocument();
   });
+
+  test('given component renders then hero title uses responsive font size', () => {
+    // When
+    renderWithCountry(<MainSection />, TEST_COUNTRY_IDS.US);
+
+    // Then
+    const heading = screen.getByRole('heading', { name: /start simulating/i });
+    expect(heading.style.fontSize).toBe('clamp(28px, 5vw, 48px)');
+  });
 });

@@ -38,11 +38,11 @@ export default function MultiButtonFooter(props: MultiButtonFooterProps) {
   // New layout: Grid with equal spacing - Cancel left, Pagination center, Back/Next right
   if (cancelAction || backAction || primaryAction) {
     return (
-      <SimpleGrid cols={3} spacing="md">
+      <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="md">
         {/* Left side: Cancel button */}
         <Box style={{ display: 'flex', justifyContent: 'flex-start' }}>
           {cancelAction && (
-            <Button variant="outline" onClick={cancelAction.onClick}>
+            <Button variant="outline" onClick={cancelAction.onClick} fullWidth>
               {cancelAction.label}
             </Button>
           )}
@@ -55,12 +55,13 @@ export default function MultiButtonFooter(props: MultiButtonFooterProps) {
 
         {/* Right side: Back and Primary buttons */}
         <Box style={{ display: 'flex', justifyContent: 'flex-end' }}>
-          <Group gap="sm" wrap="nowrap">
+          <Group gap="sm" wrap="nowrap" style={{ width: '100%' }}>
             {backAction && (
               <Button
                 variant="outline"
                 onClick={backAction.onClick}
                 leftSection={<IconChevronLeft size={16} />}
+                fullWidth
               >
                 {backAction.label}
               </Button>
@@ -72,6 +73,7 @@ export default function MultiButtonFooter(props: MultiButtonFooterProps) {
                 loading={primaryAction.isLoading}
                 disabled={primaryAction.isDisabled}
                 rightSection={<IconChevronRight size={16} />}
+                fullWidth
               >
                 {primaryAction.label}
               </Button>

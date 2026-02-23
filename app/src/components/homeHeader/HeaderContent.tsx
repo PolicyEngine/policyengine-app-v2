@@ -1,4 +1,6 @@
-import { Container, Group } from '@mantine/core';
+import { IconDotsVertical } from '@tabler/icons-react';
+import { ActionIcon, Container, Group } from '@mantine/core';
+import { colors } from '@/designTokens';
 import DesktopNavigation from './DesktopNavigation';
 import HeaderActionButtons from './HeaderActionButtons';
 import HeaderLogo from './HeaderLogo';
@@ -10,9 +12,18 @@ interface HeaderContentProps {
   onOpen: () => void;
   onClose: () => void;
   navItems: NavItemSetup[];
+  navbarOpened?: boolean;
+  onToggleNavbar?: () => void;
 }
 
-export default function HeaderContent({ opened, onOpen, onClose, navItems }: HeaderContentProps) {
+export default function HeaderContent({
+  opened,
+  onOpen,
+  onClose,
+  navItems,
+  navbarOpened: _navbarOpened,
+  onToggleNavbar,
+}: HeaderContentProps) {
   return (
     <Container
       h="100%"
@@ -27,6 +38,17 @@ export default function HeaderContent({ opened, onOpen, onClose, navItems }: Hea
     >
       <Group justify="space-between" h="100%">
         <Group>
+          {onToggleNavbar && (
+            <ActionIcon
+              variant="subtle"
+              color={colors.text.inverse}
+              onClick={onToggleNavbar}
+              hiddenFrom="sm"
+              aria-label="Toggle sidebar"
+            >
+              <IconDotsVertical size={20} />
+            </ActionIcon>
+          )}
           <HeaderLogo />
           <DesktopNavigation navItems={navItems} />
         </Group>

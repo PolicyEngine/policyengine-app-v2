@@ -92,7 +92,7 @@ function WaterfallTooltip({ active, payload }: any) {
   }
   const data = payload[0].payload as WaterfallDatum;
   return (
-    <div style={{ ...TOOLTIP_STYLE, maxWidth: 300 }}>
+    <div style={{ ...TOOLTIP_STYLE, maxWidth: 'min(300px, 90vw)' }}>
       <p style={{ fontWeight: 600, margin: 0 }}>{data.name}</p>
     </div>
   );

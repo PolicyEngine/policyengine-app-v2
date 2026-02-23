@@ -78,4 +78,21 @@ describe('Sidebar', () => {
     // Then
     expect(await screen.findByText('Under development')).toBeInTheDocument();
   });
+
+  test('given isOpen=false then sidebar content is not rendered', () => {
+    // When
+    render(<Sidebar isOpen={false} />);
+
+    // Then
+    expect(screen.queryByRole('button', { name: /new report/i })).not.toBeInTheDocument();
+  });
+
+  test('given sidebar renders then root element uses 100% height', () => {
+    // When
+    const { container } = render(<Sidebar />);
+
+    // Then — should use 100% (not 100vh) for AppShell compatibility
+    const root = container.firstChild as HTMLElement;
+    expect(root.style.height).not.toBe('100vh');
+  });
 });

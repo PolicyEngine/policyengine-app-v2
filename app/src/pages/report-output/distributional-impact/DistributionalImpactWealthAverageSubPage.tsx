@@ -17,6 +17,7 @@ import { ChartContainer } from '@/components/ChartContainer';
 import { ChartWatermark, ImpactBarLabel, ImpactTooltip } from '@/components/charts';
 import { colors } from '@/designTokens/colors';
 import { spacing } from '@/designTokens/spacing';
+import { MOBILE_BREAKPOINT_QUERY } from '@/hooks/useChartDimensions';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import type { RootState } from '@/store';
 import { absoluteChangeMessage } from '@/utils/chartMessages';
@@ -34,7 +35,7 @@ interface Props {
 }
 
 export default function DistributionalImpactWealthAverageSubPage({ output }: Props) {
-  const mobile = useMediaQuery('(max-width: 768px)');
+  const mobile = useMediaQuery(MOBILE_BREAKPOINT_QUERY);
   const countryId = useCurrentCountry();
   const metadata = useSelector((state: RootState) => state.metadata);
   const { height: viewportHeight } = useViewportSize();

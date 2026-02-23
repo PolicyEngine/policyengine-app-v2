@@ -9,7 +9,7 @@
 
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Button, Container, Divider, Group, Stack, Text } from '@mantine/core';
+import { Button, Container, Divider, Flex, Group, Stack, Text } from '@mantine/core';
 import { CURRENT_YEAR } from '@/constants';
 import { getDateRange } from '@/libs/metadataUtils';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
@@ -81,11 +81,20 @@ export default function PolicyParameterSelectorValueSetter({
       <Stack>
         <Text fw={700}>Current value</Text>
         <Divider style={{ padding: 0 }} />
-        <Group align="flex-end" w="100%">
+        <Flex
+          align={{ base: 'stretch', sm: 'flex-end' }}
+          direction={{ base: 'column', sm: 'row' }}
+          gap="sm"
+          w="100%"
+        >
           <ValueSetterToRender {...valueSetterProps} />
-          <ModeSelectorButton setMode={handleModeChange} />
-          <Button onClick={handleSubmit}>Add parameter</Button>
-        </Group>
+          <Group gap="sm" align="flex-end">
+            <ModeSelectorButton setMode={handleModeChange} />
+            <Button onClick={handleSubmit} style={{ flex: 1 }}>
+              Add parameter
+            </Button>
+          </Group>
+        </Flex>
       </Stack>
     </Container>
   );

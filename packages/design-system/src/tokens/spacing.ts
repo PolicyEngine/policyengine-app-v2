@@ -70,7 +70,7 @@ export const spacing = {
     },
     main: {
       padding: '24px',
-      minHeight: '100vh',
+      minHeight: '100dvh',
     },
   },
 
