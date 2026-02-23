@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Button } from '@mantine/core';
+import { Button } from '@/components/ui';
 import { Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 
@@ -54,38 +54,28 @@ export default function ActionButton({
 
   return (
     <div className="tw:flex tw:flex-col tw:items-center tw:text-center">
-      <Button
+      <a
         ref={buttonRef}
-        component="a"
         href={href}
         target="_blank"
         rel="noopener noreferrer"
-        size="lg"
-        px={spacing.xl}
-        py={spacing.lg}
-        styles={{
-          root: {
-            backgroundColor: buttonStyle.backgroundColor,
-            color: buttonStyle.color,
-            border: buttonStyle.border,
-            borderRadius: spacing.radius.container,
-            fontSize: typography.fontSize.lg,
-            fontWeight: typography.fontWeight.semibold,
-            fontFamily: typography.fontFamily.primary,
-            transition: 'all 0.2s ease',
-            whiteSpace: multiline ? 'pre-line' : 'normal',
-            height: 'auto',
-            minHeight: '48px',
-            '&:hover': {
-              backgroundColor: buttonStyle.hoverBackground,
-              borderColor: buttonStyle.hoverBorder,
-              transform: 'translateY(-2px)',
-            },
-          },
+        className="tw:no-underline tw:inline-flex tw:items-center tw:justify-center tw:transition-all tw:duration-200 hover:tw:-translate-y-0.5"
+        style={{
+          backgroundColor: buttonStyle.backgroundColor,
+          color: buttonStyle.color,
+          border: buttonStyle.border,
+          borderRadius: spacing.radius.container,
+          fontSize: typography.fontSize.lg,
+          fontWeight: typography.fontWeight.semibold,
+          fontFamily: typography.fontFamily.primary,
+          whiteSpace: multiline ? 'pre-line' : 'normal',
+          height: 'auto',
+          minHeight: '48px',
+          padding: `${spacing.lg} ${spacing.xl}`,
         }}
       >
         {text}
-      </Button>
+      </a>
       {caption && (
         <div
           style={{

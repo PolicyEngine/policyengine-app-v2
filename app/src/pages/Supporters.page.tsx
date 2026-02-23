@@ -1,5 +1,5 @@
 import { useParams } from 'react-router-dom';
-import { Text } from '@mantine/core';
+import { Text } from '@/components/ui';
 import ContentSection from '@/components/shared/static/ContentSection';
 import HeroSection from '@/components/shared/static/HeroSection';
 import StaticPageLayout from '@/components/shared/static/StaticPageLayout';

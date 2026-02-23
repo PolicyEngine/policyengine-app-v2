@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, Card } from '@mantine/core';
+import { Button, Card, CardContent } from '@/components/ui';
 import { Group, Stack, Text, Title } from '@/components/ui';
 import { colors } from '@/designTokens';
 
@@ -45,47 +45,64 @@ export function TitleCardWithHeader({
     <div>
       <Title order={2}>{title}</Title>
 
-      <Card radius="lg" p="xl" bg={resolvedBackgroundColor}>
-        <Stack gap="md">
-          {sections.map((section, idx) => (
-            <React.Fragment key={idx}>
-              <Title order={3} style={{ textAlign: 'left' }}>
-                {section.heading}
-              </Title>
-              {Array.isArray(section.body) ? (
-                section.body.map((para, pIdx) => (
+      <Card className="tw:rounded-lg" style={{ backgroundColor: resolvedBackgroundColor }}>
+        <CardContent className="tw:p-6">
+          <Stack gap="md">
+            {sections.map((section, idx) => (
+              <React.Fragment key={idx}>
+                <Title order={3} style={{ textAlign: 'left' }}>
+                  {section.heading}
+                </Title>
+                {Array.isArray(section.body) ? (
+                  section.body.map((para, pIdx) => (
+                    <Text
+                      key={pIdx}
+                      size="md"
+                      style={{
+                        color: textColor,
+                        lineHeight: 1.5,
+                        textAlign: 'left',
+                        marginBottom: '4px',
+                      }}
+                    >
+                      {para}
+                    </Text>
+                  ))
+                ) : (
                   <Text
-                    key={pIdx}
                     size="md"
-                    c={textColor}
-                    style={{ lineHeight: 1.5, textAlign: 'left', marginBottom: '4px' }}
+                    style={{ color: textColor, lineHeight: 1.5, textAlign: 'left' }}
                   >
-                    {para}
+                    {section.body}
                   </Text>
-                ))
-              ) : (
-                <Text size="md" c={textColor} style={{ lineHeight: 1.5, textAlign: 'left' }}>
-                  {section.body}
-                </Text>
-              )}
-            </React.Fragment>
-          ))}
-
-          {buttonLabel &&
-            (Array.isArray(buttonLabel) ? (
-              <Group gap="md" className="tw:mt-3">
-                {buttonLabel.map((label, idx) => (
-                  <Button key={idx} onClick={() => onButtonClick?.(label)} variant="default">
-                    {label}
-                  </Button>
-                ))}
-              </Group>
-            ) : (
-              <Button onClick={() => onButtonClick?.(buttonLabel)} variant="default" mt="md">
-                {buttonLabel}
-              </Button>
+                )}
+              </React.Fragment>
             ))}
-        </Stack>
+
+            {buttonLabel &&
+              (Array.isArray(buttonLabel) ? (
+                <Group gap="md" className="tw:mt-3">
+                  {buttonLabel.map((label, idx) => (
+                    <Button
+                      key={idx}
+                      onClick={() => onButtonClick?.(label)}
+                      variant="outline"
+                    >
+                      {label}
+                    </Button>
+                  ))}
+                </Group>
+              ) : (
+                <Button
+                  onClick={() => onButtonClick?.(buttonLabel)}
+                  variant="outline"
+                  className="tw:mt-3"
+                >
+                  {buttonLabel}
+                </Button>
+              ))}
+          </Stack>
+        </CardContent>
       </Card>
     </div>
   );

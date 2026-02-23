@@ -1,4 +1,4 @@
-import { Button } from '@mantine/core';
+import { Button } from '@/components/ui';
 import { Container, Stack, Text, Title } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 
@@ -47,12 +47,9 @@ export default function CalloutWithImage({
           </Text>
           {buttonLabel && (
             <Button
-              size="lg"
-              radius="md"
-              color={colors.primary[400]}
               onClick={onButtonClick}
               style={{
-                borderRadius: spacing.radius.none,
+                backgroundColor: colors.primary[400],
                 alignSelf: 'flex-start',
                 marginTop: '14px',
               }}
