@@ -10,11 +10,7 @@ describe('ReportSidebar', () => {
   test('given tree then renders all top-level labels', () => {
     // When
     render(
-      <ReportSidebar
-        tree={TEST_SIDEBAR_TREE}
-        activeView={ACTIVE_LEAF_VIEW}
-        onNavigate={vi.fn()}
-      />
+      <ReportSidebar tree={TEST_SIDEBAR_TREE} activeView={ACTIVE_LEAF_VIEW} onNavigate={vi.fn()} />
     );
 
     // Then
@@ -45,11 +41,7 @@ describe('ReportSidebar', () => {
   test('given active child view then parent is auto-expanded with children visible', () => {
     // Given — activeView is a child of 'budgetaryImpact', so parent auto-expands
     render(
-      <ReportSidebar
-        tree={TEST_SIDEBAR_TREE}
-        activeView={ACTIVE_LEAF_VIEW}
-        onNavigate={vi.fn()}
-      />
+      <ReportSidebar tree={TEST_SIDEBAR_TREE} activeView={ACTIVE_LEAF_VIEW} onNavigate={vi.fn()} />
     );
 
     // Then — children are visible because parent auto-expanded
@@ -81,11 +73,7 @@ describe('ReportSidebar', () => {
   test('given sidebar renders then it is hidden on mobile via visibleFrom class', () => {
     // When
     const { container } = render(
-      <ReportSidebar
-        tree={TEST_SIDEBAR_TREE}
-        activeView={ACTIVE_LEAF_VIEW}
-        onNavigate={vi.fn()}
-      />
+      <ReportSidebar tree={TEST_SIDEBAR_TREE} activeView={ACTIVE_LEAF_VIEW} onNavigate={vi.fn()} />
     );
 
     // Then — Mantine applies mantine-visible-from-sm class to the sidebar Box
