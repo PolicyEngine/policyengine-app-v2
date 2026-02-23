@@ -1,6 +1,7 @@
 import { IconCheck } from '@tabler/icons-react';
 import { Badge, Card, CardContent, Container, Stack, Text, Title } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
+import { cn } from '@/lib/utils';
 import MultiButtonFooter, { ButtonConfig } from './common/MultiButtonFooter';
 
 // Interfaces for different content types
@@ -72,13 +73,12 @@ export default function IngredientSubmissionView({
           {summaryBoxes.map((item, index) => (
             <Card
               key={index}
-              className={`tw:border ${
-                item.isDisabled
-                  ? 'tw:opacity-50'
-                  : item.isFulfilled
-                    ? 'tw:border-primary-500'
-                    : 'tw:border-border-light'
-              }`}
+              className={cn(
+                'tw:border',
+                item.isDisabled && 'tw:opacity-50',
+                !item.isDisabled && item.isFulfilled && 'tw:border-primary-500',
+                !item.isDisabled && !item.isFulfilled && 'tw:border-border-light'
+              )}
             >
               <CardContent className="tw:p-4">
                 <div className="tw:flex tw:items-center tw:gap-2">
@@ -102,7 +102,7 @@ export default function IngredientSubmissionView({
                   </Stack>
                   {item.badge && (
                     <Badge variant="secondary" style={{ borderRadius: spacing.radius.element }}>
-                      {typeof item.badge === 'number' ? `${item.badge}` : item.badge}
+                      {item.badge}
                     </Badge>
                   )}
                 </div>
@@ -129,7 +129,7 @@ export default function IngredientSubmissionView({
                 </Text>
                 {item.badge && (
                   <Badge variant="secondary" style={{ borderRadius: spacing.radius.element }}>
-                    {typeof item.badge === 'number' ? `${item.badge}` : item.badge}
+                    {item.badge}
                   </Badge>
                 )}
               </div>
@@ -206,29 +206,27 @@ export default function IngredientSubmissionView({
       };
 
   return (
-    <>
-      <Container>
-        <Title order={2}>{title}</Title>
-        {subtitle && (
-          <Text style={{ color: colors.text.secondary, marginBottom: spacing.sm }}>{subtitle}</Text>
-        )}
-        <hr className="tw:my-2 tw:border-border-light" />
-        {warningMessage && (
-          <Text
-            style={{
-              color: colors.text.warning,
-              fontWeight: typography.fontWeight.medium,
-              marginBottom: spacing.md,
-            }}
-          >
-            {warningMessage}
-          </Text>
-        )}
-        <Stack gap="md" className="tw:pb-4">
-          {renderContent()}
-        </Stack>
-        <MultiButtonFooter {...footerProps} />
-      </Container>
-    </>
+    <Container>
+      <Title order={2}>{title}</Title>
+      {subtitle && (
+        <Text style={{ color: colors.text.secondary, marginBottom: spacing.sm }}>{subtitle}</Text>
+      )}
+      <hr className="tw:my-2 tw:border-border-light" />
+      {warningMessage && (
+        <Text
+          style={{
+            color: colors.text.warning,
+            fontWeight: typography.fontWeight.medium,
+            marginBottom: spacing.md,
+          }}
+        >
+          {warningMessage}
+        </Text>
+      )}
+      <Stack gap="md" className="tw:pb-4">
+        {renderContent()}
+      </Stack>
+      <MultiButtonFooter {...footerProps} />
+    </Container>
   );
 }

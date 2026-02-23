@@ -21,10 +21,8 @@ interface MultiSimReportOutputTypeCellProps {
  */
 export const MultiSimOutputTypeCell = React.memo(
   ({ simulationIds, simulations: _simulations, report }: MultiSimReportOutputTypeCellProps) => {
-    // Subscribe to CalcStatus for this report's simulations
     const { isCalculating, progress } = useMultiSimulationCalcStatus(simulationIds);
 
-    // Show calculating state with spinner and progress
     if (isCalculating) {
       return (
         <div className="tw:flex tw:items-center tw:gap-xs">
@@ -34,9 +32,9 @@ export const MultiSimOutputTypeCell = React.memo(
       );
     }
 
-    // Show status text
     const status = report?.status || 'initializing';
     const formattedStatus = status.charAt(0).toUpperCase() + status.slice(1);
     return <span className="tw:text-sm">{formattedStatus}</span>;
   }
 );
+MultiSimOutputTypeCell.displayName = 'MultiSimOutputTypeCell';

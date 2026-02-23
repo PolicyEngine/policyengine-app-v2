@@ -89,13 +89,7 @@ export default function MultiButtonFooter(props: MultiButtonFooterProps) {
       {buttons.map((button, index) => (
         <Button
           key={index}
-          variant={
-            button.variant === 'disabled'
-              ? 'outline'
-              : button.variant === 'filled'
-                ? 'default'
-                : 'outline'
-          }
+          variant={button.variant === 'filled' ? 'default' : 'outline'}
           disabled={button.variant === 'disabled' || button.isLoading}
           onClick={button.onClick}
         >

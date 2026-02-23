@@ -8,8 +8,8 @@ interface TwoColumnViewProps {
   backgroundColor?: 'primary' | 'secondary';
 }
 
-const TwoColumnView = ({ title, leftColumn, rightColumn, backgroundColor }: TwoColumnViewProps) => {
-  const getBackgroundColor = () => {
+function TwoColumnView({ title, leftColumn, rightColumn, backgroundColor }: TwoColumnViewProps) {
+  function getBackgroundColor(): string {
     if (backgroundColor === 'primary') {
       return colors.primary[100];
     }
@@ -17,7 +17,7 @@ const TwoColumnView = ({ title, leftColumn, rightColumn, backgroundColor }: TwoC
       return colors.secondary[100];
     }
     return colors.white;
-  };
+  }
 
   return (
     <div
@@ -50,6 +50,6 @@ const TwoColumnView = ({ title, leftColumn, rightColumn, backgroundColor }: TwoC
       </div>
     </div>
   );
-};
+}
 
 export default TwoColumnView;

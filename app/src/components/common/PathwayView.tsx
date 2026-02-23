@@ -172,8 +172,8 @@ export default function PathwayView({
     footerProps.backAction ||
     footerProps.primaryAction;
 
-  const containerContent = (
-    <>
+  return (
+    <Container>
       <Title order={2}>{title}</Title>
       {subtitle && (
         <Text className="tw:mb-sm" style={{ color: '#868e96' }}>
@@ -187,10 +187,8 @@ export default function PathwayView({
       </Stack>
 
       {hasFooter && <MultiButtonFooter {...footerProps} />}
-    </>
+    </Container>
   );
-
-  return <Container>{containerContent}</Container>;
 }
 
 export type { PathwayViewProps, ButtonConfig };

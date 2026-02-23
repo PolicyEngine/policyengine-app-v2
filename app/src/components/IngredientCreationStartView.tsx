@@ -28,19 +28,13 @@ export default function IngredientCreationStartView({
   ];
 
   return (
-    <>
-      <Container>
-        <Title order={2}>{title}</Title>
-        <hr className="tw:my-2 tw:border-border-light" />
-        {/*TODO: subtitle?*/}
-        {/*break*/}
-        {/*form labels and inputs*/}
-        <Stack gap="md" className="tw:pb-4">
-          {formInputs}
-        </Stack>
-        {/*button panel: Cancel and Create X*/}
-        <MultiButtonFooter buttons={buttonConfig} />
-      </Container>
-    </>
+    <Container>
+      <Title order={2}>{title}</Title>
+      <hr className="tw:my-2 tw:border-border-light" />
+      <Stack gap="md" className="tw:pb-4">
+        {formInputs}
+      </Stack>
+      <MultiButtonFooter buttons={buttonConfig} />
+    </Container>
   );
 }

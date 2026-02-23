@@ -15,10 +15,7 @@ export default function HeaderBar({ title, children, showLogo = false }: HeaderB
       className="tw:flex tw:items-center tw:justify-between"
       style={{
         backgroundColor: colors.primary[900],
-        paddingLeft: spacing.appShell.header.padding.split(' ')[1],
-        paddingRight: spacing.appShell.header.padding.split(' ')[1],
-        paddingTop: spacing.appShell.header.padding.split(' ')[0],
-        paddingBottom: spacing.appShell.header.padding.split(' ')[0],
+        padding: spacing.appShell.header.padding,
         minHeight: spacing.appShell.header.height,
       }}
     >

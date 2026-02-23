@@ -21,7 +21,6 @@ function BrandCard({ to, title, description, meta }: BrandCardProps) {
         background: colors.white,
         border: `1px solid ${colors.border.light}`,
         borderRadius: spacing.radius.container,
-        textDecoration: 'none',
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.borderColor = colors.primary[500];

@@ -56,7 +56,6 @@ export default function SidebarNavItem({
     cursor: disabled ? 'not-allowed' : 'pointer',
     opacity: disabled ? 0.6 : 1,
     border: 'none',
-    background: isActive ? colors.gray[50] : 'transparent',
   };
 
   if (disabled) {
