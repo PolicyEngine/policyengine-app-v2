@@ -1,6 +1,6 @@
 # Simulation & Report V2 Migration Progress
 
-## Current: Phase 4a — Task 4
+## Current: Phase 4a — Task 5
 
 ## Branch Strategy
 
@@ -88,7 +88,7 @@ _Full spec: `.claude-plan/LAZY_METADATA_SPEC.md`_
 - [x] 1. `POST /parameters/by-name` — fetch specific parameters by name list (2026-02-23)
 - [x] 2. `GET /parameters/children` — fetch direct children of a parameter path (2026-02-23)
 - [x] 3. `POST /variables/by-name` — fetch specific variables by name list (2026-02-23)
-- [ ] 4. `GET /tax-benefit-models/by-country/{country_id}` — model + latest version
+- [x] 4. `GET /tax-benefit-models/by-country/{country_id}` — model + latest version (2026-02-23)
 - [ ] 5. Replace bulk parameter fetch with lazy tree loading
 - [ ] 6. Batch-fetch policy parameters on demand
 - [ ] 7. Add localStorage caching keyed on model version
