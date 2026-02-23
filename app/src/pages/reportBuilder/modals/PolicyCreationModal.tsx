@@ -58,6 +58,7 @@ interface PolicyCreationModalProps {
   onPolicyCreated: (policy: PolicyStateProps) => void;
   simulationIndex: number;
   initialPolicy?: PolicyStateProps;
+  initialEditorMode?: EditorMode;
 }
 
 export function PolicyCreationModal({
@@ -66,6 +67,7 @@ export function PolicyCreationModal({
   onPolicyCreated,
   simulationIndex,
   initialPolicy,
+  initialEditorMode,
 }: PolicyCreationModalProps) {
   const countryId = useCurrentCountry() as 'us' | 'uk';
 
@@ -106,7 +108,9 @@ export function PolicyCreationModal({
   void simulationIndex;
 
   // Editor mode: create (new policy), display (read-only existing), edit (modifying existing)
-  const [editorMode, setEditorMode] = useState<EditorMode>(initialPolicy ? 'edit' : 'create');
+  const [editorMode, setEditorMode] = useState<EditorMode>(
+    initialEditorMode || (initialPolicy ? 'edit' : 'create')
+  );
   const isReadOnly = editorMode === 'display';
   const colorConfig = INGREDIENT_COLORS.policy;
 
@@ -115,7 +119,7 @@ export function PolicyCreationModal({
     if (isOpen) {
       setPolicyLabel(initialPolicy?.label || '');
       setPolicyParameters(initialPolicy?.parameters || []);
-      setEditorMode(initialPolicy ? 'edit' : 'create');
+      setEditorMode(initialEditorMode || (initialPolicy ? 'edit' : 'create'));
       setActiveTab('overview');
       setSelectedParam(null);
       setExpandedMenuItems(new Set());
