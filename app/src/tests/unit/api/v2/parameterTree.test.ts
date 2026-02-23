@@ -6,10 +6,10 @@ import {
   MOCK_EMPTY_CHILDREN_RESPONSE,
   MOCK_PARAM_NAMES,
   MOCK_PARAMETER_DATA,
-  PARENT_PATHS,
-  TEST_COUNTRIES,
   mockFetchError,
   mockFetchSuccess,
+  PARENT_PATHS,
+  TEST_COUNTRIES,
 } from '@/tests/fixtures/api/v2/parameterTreeMocks';
 
 describe('parameterTree API', () => {
@@ -36,7 +36,7 @@ describe('parameterTree API', () => {
 
       // Then
       expect(fetchSpy).toHaveBeenCalledWith(
-        API_ENDPOINTS.CHILDREN(PARENT_PATHS.GOV, TEST_COUNTRIES.US),
+        API_ENDPOINTS.CHILDREN(PARENT_PATHS.GOV, TEST_COUNTRIES.US)
       );
       expect(result).toEqual(MOCK_CHILDREN_RESPONSE);
     });
@@ -44,7 +44,7 @@ describe('parameterTree API', () => {
     it('given empty children then returns empty array', async () => {
       // Given
       vi.spyOn(globalThis, 'fetch').mockResolvedValue(
-        mockFetchSuccess(MOCK_EMPTY_CHILDREN_RESPONSE),
+        mockFetchSuccess(MOCK_EMPTY_CHILDREN_RESPONSE)
       );
 
       // When
@@ -59,9 +59,9 @@ describe('parameterTree API', () => {
       vi.spyOn(globalThis, 'fetch').mockResolvedValue(mockFetchError(500));
 
       // When / Then
-      await expect(
-        fetchParameterChildren(PARENT_PATHS.GOV, TEST_COUNTRIES.US),
-      ).rejects.toThrow(`Failed to fetch parameter children for path "${PARENT_PATHS.GOV}"`);
+      await expect(fetchParameterChildren(PARENT_PATHS.GOV, TEST_COUNTRIES.US)).rejects.toThrow(
+        `Failed to fetch parameter children for path "${PARENT_PATHS.GOV}"`
+      );
     });
 
     it('given 404 error then throws', async () => {
@@ -69,9 +69,9 @@ describe('parameterTree API', () => {
       vi.spyOn(globalThis, 'fetch').mockResolvedValue(mockFetchError(404));
 
       // When / Then
-      await expect(
-        fetchParameterChildren(PARENT_PATHS.GOV_IRS, TEST_COUNTRIES.US),
-      ).rejects.toThrow(`Failed to fetch parameter children for path "${PARENT_PATHS.GOV_IRS}"`);
+      await expect(fetchParameterChildren(PARENT_PATHS.GOV_IRS, TEST_COUNTRIES.US)).rejects.toThrow(
+        `Failed to fetch parameter children for path "${PARENT_PATHS.GOV_IRS}"`
+      );
     });
 
     it('given network failure then propagates error', async () => {
@@ -79,9 +79,9 @@ describe('parameterTree API', () => {
       vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('Network error'));
 
       // When / Then
-      await expect(
-        fetchParameterChildren(PARENT_PATHS.GOV, TEST_COUNTRIES.US),
-      ).rejects.toThrow('Network error');
+      await expect(fetchParameterChildren(PARENT_PATHS.GOV, TEST_COUNTRIES.US)).rejects.toThrow(
+        'Network error'
+      );
     });
   });
 
@@ -127,9 +127,9 @@ describe('parameterTree API', () => {
       vi.spyOn(globalThis, 'fetch').mockResolvedValue(mockFetchError(500));
 
       // When / Then
-      await expect(
-        fetchParametersByName([...MOCK_PARAM_NAMES], TEST_COUNTRIES.US),
-      ).rejects.toThrow('Failed to fetch parameters by name');
+      await expect(fetchParametersByName([...MOCK_PARAM_NAMES], TEST_COUNTRIES.US)).rejects.toThrow(
+        'Failed to fetch parameters by name'
+      );
     });
 
     it('given network failure then propagates error', async () => {
@@ -137,9 +137,9 @@ describe('parameterTree API', () => {
       vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('Network error'));
 
       // When / Then
-      await expect(
-        fetchParametersByName([...MOCK_PARAM_NAMES], TEST_COUNTRIES.US),
-      ).rejects.toThrow('Network error');
+      await expect(fetchParametersByName([...MOCK_PARAM_NAMES], TEST_COUNTRIES.US)).rejects.toThrow(
+        'Network error'
+      );
     });
   });
 });

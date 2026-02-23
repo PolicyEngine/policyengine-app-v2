@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { calculationKeys, parameterTreeKeys, parameterValueKeys } from '@/libs/queryKeys';
-import { TEST_POLICY_IDS, TEST_COUNTRIES } from '@/tests/fixtures/api/v2/apiV2Mocks';
+import { TEST_COUNTRIES, TEST_POLICY_IDS } from '@/tests/fixtures/api/v2/apiV2Mocks';
 
 describe('calculationKeys', () => {
   describe('all', () => {

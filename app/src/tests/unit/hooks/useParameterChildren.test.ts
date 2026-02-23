@@ -51,7 +51,7 @@ describe('useParameterChildren', () => {
       // When
       const { result } = renderHook(
         () => useParameterChildren(PARENT_PATHS.GOV, TEST_COUNTRIES.US),
-        { wrapper },
+        { wrapper }
       );
 
       await waitFor(() => {
@@ -70,7 +70,7 @@ describe('useParameterChildren', () => {
       // When
       const { result } = renderHook(
         () => useParameterChildren(PARENT_PATHS.GOV_IRS_CREDITS, TEST_COUNTRIES.US),
-        { wrapper },
+        { wrapper }
       );
 
       await waitFor(() => {
@@ -88,10 +88,7 @@ describe('useParameterChildren', () => {
   describe('disabled states', () => {
     it('given empty countryId then does not fetch', () => {
       // When
-      const { result } = renderHook(
-        () => useParameterChildren(PARENT_PATHS.GOV, ''),
-        { wrapper },
-      );
+      const { result } = renderHook(() => useParameterChildren(PARENT_PATHS.GOV, ''), { wrapper });
 
       // Then
       expect(fetchParameterChildren).not.toHaveBeenCalled();
@@ -102,7 +99,7 @@ describe('useParameterChildren', () => {
       // When
       const { result } = renderHook(
         () => useParameterChildren(PARENT_PATHS.GOV, TEST_COUNTRIES.US, false),
-        { wrapper },
+        { wrapper }
       );
 
       // Then
@@ -123,7 +120,7 @@ describe('useParameterChildren', () => {
       // When
       const { result } = renderHook(
         () => useParameterChildren(PARENT_PATHS.GOV, TEST_COUNTRIES.US),
-        { wrapper },
+        { wrapper }
       );
 
       await waitFor(() => {
@@ -151,7 +148,7 @@ describe('useParameterChildren', () => {
       // When
       const { result } = renderHook(
         () => useParameterChildren(PARENT_PATHS.GOV, TEST_COUNTRIES.US),
-        { wrapper },
+        { wrapper }
       );
 
       // Then
@@ -176,7 +173,7 @@ describe('useParameterChildren', () => {
       // When — first call
       const { result: result1 } = renderHook(
         () => useParameterChildren(PARENT_PATHS.GOV, TEST_COUNTRIES.US),
-        { wrapper },
+        { wrapper }
       );
 
       await waitFor(() => {
@@ -186,7 +183,7 @@ describe('useParameterChildren', () => {
       // When — second call with same params
       const { result: result2 } = renderHook(
         () => useParameterChildren(PARENT_PATHS.GOV, TEST_COUNTRIES.US),
-        { wrapper },
+        { wrapper }
       );
 
       // Then — only one fetch

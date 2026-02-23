@@ -46,7 +46,11 @@ describe('metadataCache', () => {
 
     it('given fresh cached version then returns it', () => {
       // Given
-      setCachedModelVersion(TEST_COUNTRIES.US, TEST_VERSIONS.US_VERSION_ID, TEST_VERSIONS.US_VERSION);
+      setCachedModelVersion(
+        TEST_COUNTRIES.US,
+        TEST_VERSIONS.US_VERSION_ID,
+        TEST_VERSIONS.US_VERSION
+      );
 
       // When
       const result = getCachedModelVersion(TEST_COUNTRIES.US);
@@ -65,7 +69,7 @@ describe('metadataCache', () => {
           versionId: TEST_VERSIONS.US_VERSION_ID,
           version: TEST_VERSIONS.US_VERSION,
           fetchedAt: TIMESTAMPS.STALE,
-        }),
+        })
       );
 
       // When
@@ -88,7 +92,11 @@ describe('metadataCache', () => {
 
     it('given different country then returns null', () => {
       // Given
-      setCachedModelVersion(TEST_COUNTRIES.US, TEST_VERSIONS.US_VERSION_ID, TEST_VERSIONS.US_VERSION);
+      setCachedModelVersion(
+        TEST_COUNTRIES.US,
+        TEST_VERSIONS.US_VERSION_ID,
+        TEST_VERSIONS.US_VERSION
+      );
 
       // When
       const result = getCachedModelVersion(TEST_COUNTRIES.UK);
@@ -101,7 +109,11 @@ describe('metadataCache', () => {
   describe('setCachedModelVersion', () => {
     it('given version data then writes to localStorage with timestamp', () => {
       // When
-      setCachedModelVersion(TEST_COUNTRIES.US, TEST_VERSIONS.US_VERSION_ID, TEST_VERSIONS.US_VERSION);
+      setCachedModelVersion(
+        TEST_COUNTRIES.US,
+        TEST_VERSIONS.US_VERSION_ID,
+        TEST_VERSIONS.US_VERSION
+      );
 
       // Then
       const raw = localStorage.getItem(STORAGE_KEYS.MODEL_VERSION(TEST_COUNTRIES.US));
@@ -142,7 +154,7 @@ describe('metadataCache', () => {
             data: MOCK_CHILDREN_RESPONSE,
             fetchedAt: TIMESTAMPS.STALE,
           },
-        }),
+        })
       );
 
       // When
@@ -225,7 +237,7 @@ describe('metadataCache', () => {
         JSON.stringify({
           data: MOCK_PARAMETERS_RECORD,
           fetchedAt: TIMESTAMPS.STALE,
-        }),
+        })
       );
 
       // When
@@ -284,7 +296,7 @@ describe('metadataCache', () => {
         JSON.stringify({
           data: MOCK_VARIABLES_RECORD,
           fetchedAt: TIMESTAMPS.STALE,
-        }),
+        })
       );
 
       // When
@@ -315,7 +327,11 @@ describe('metadataCache', () => {
   describe('clearMetadataCache', () => {
     it('given cached data for country then removes all keys', () => {
       // Given
-      setCachedModelVersion(TEST_COUNTRIES.US, TEST_VERSIONS.US_VERSION_ID, TEST_VERSIONS.US_VERSION);
+      setCachedModelVersion(
+        TEST_COUNTRIES.US,
+        TEST_VERSIONS.US_VERSION_ID,
+        TEST_VERSIONS.US_VERSION
+      );
       setCachedParameterChildren(TEST_COUNTRIES.US, MOCK_PARENT_PATH, MOCK_CHILDREN_RESPONSE);
       setCachedParameters(TEST_COUNTRIES.US, MOCK_PARAMETERS_RECORD);
       setCachedVariables(TEST_COUNTRIES.US, MOCK_VARIABLES_RECORD);
@@ -332,8 +348,16 @@ describe('metadataCache', () => {
 
     it('given data for another country then does not clear it', () => {
       // Given
-      setCachedModelVersion(TEST_COUNTRIES.US, TEST_VERSIONS.US_VERSION_ID, TEST_VERSIONS.US_VERSION);
-      setCachedModelVersion(TEST_COUNTRIES.UK, TEST_VERSIONS.UK_VERSION_ID, TEST_VERSIONS.UK_VERSION);
+      setCachedModelVersion(
+        TEST_COUNTRIES.US,
+        TEST_VERSIONS.US_VERSION_ID,
+        TEST_VERSIONS.US_VERSION
+      );
+      setCachedModelVersion(
+        TEST_COUNTRIES.UK,
+        TEST_VERSIONS.UK_VERSION_ID,
+        TEST_VERSIONS.UK_VERSION
+      );
 
       // When
       clearMetadataCache(TEST_COUNTRIES.US);
@@ -355,7 +379,7 @@ describe('metadataCache', () => {
           versionId: TEST_VERSIONS.US_VERSION_ID,
           version: TEST_VERSIONS.US_VERSION,
           fetchedAt: TIMESTAMPS.NOW - CACHE_TTL_MS, // exactly at boundary
-        }),
+        })
       );
 
       // When
@@ -373,7 +397,7 @@ describe('metadataCache', () => {
           versionId: TEST_VERSIONS.US_VERSION_ID,
           version: TEST_VERSIONS.US_VERSION,
           fetchedAt: TIMESTAMPS.NOW - CACHE_TTL_MS - 1,
-        }),
+        })
       );
 
       // When
@@ -396,7 +420,11 @@ describe('metadataCache', () => {
 
       // When / Then — no throw
       expect(() =>
-        setCachedModelVersion(TEST_COUNTRIES.US, TEST_VERSIONS.US_VERSION_ID, TEST_VERSIONS.US_VERSION),
+        setCachedModelVersion(
+          TEST_COUNTRIES.US,
+          TEST_VERSIONS.US_VERSION_ID,
+          TEST_VERSIONS.US_VERSION
+        )
       ).not.toThrow();
     });
 

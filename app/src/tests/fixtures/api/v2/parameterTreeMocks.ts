@@ -59,10 +59,7 @@ export const MOCK_EMPTY_CHILDREN_RESPONSE: ParameterChildrenResponse = {
 // Parameters by name
 // ---------------------------------------------------------------------------
 
-export const MOCK_PARAM_NAMES = [
-  'gov.irs.credits.eitc.max',
-  'gov.irs.credits.ctc.amount',
-] as const;
+export const MOCK_PARAM_NAMES = ['gov.irs.credits.eitc.max', 'gov.irs.credits.ctc.amount'] as const;
 
 export const MOCK_PARAMETER_DATA: V2ParameterData[] = [
   {

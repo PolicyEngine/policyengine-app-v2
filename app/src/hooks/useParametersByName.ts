@@ -15,10 +15,7 @@
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { fetchParametersByName, V2ParameterData } from '@/api/v2';
-import {
-  getCachedParameters,
-  setCachedParameters,
-} from '@/libs/metadataCache';
+import { getCachedParameters, setCachedParameters } from '@/libs/metadataCache';
 import { parameterTreeKeys } from '@/libs/queryKeys';
 import { ParameterMetadata } from '@/types/metadata';
 
@@ -72,7 +69,7 @@ export interface UseParametersByNameResult {
 export function useParametersByName(
   names: string[],
   countryId: string,
-  enabled: boolean = true,
+  enabled: boolean = true
 ): UseParametersByNameResult {
   const expandedNames = useMemo(() => expandWithAncestors(names), [names]);
 

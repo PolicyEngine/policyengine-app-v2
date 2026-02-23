@@ -7,8 +7,8 @@
 
 import { useState } from 'react';
 import { Loader, NavLink } from '@mantine/core';
-import { useParameterChildren } from '@/hooks/useParameterChildren';
 import type { ParameterChildNode } from '@/api/v2';
+import { useParameterChildren } from '@/hooks/useParameterChildren';
 
 export interface LazyNestedMenuProps {
   /** Country ID for API calls (e.g., 'us', 'uk') */

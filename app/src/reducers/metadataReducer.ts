@@ -85,7 +85,7 @@ const metadataSlice = createSlice({
     },
     hydrateVariables(
       state,
-      action: PayloadAction<{ variables: Record<string, VariableMetadata>; countryId: string }>,
+      action: PayloadAction<{ variables: Record<string, VariableMetadata>; countryId: string }>
     ) {
       const { variables, countryId } = action.payload;
       if (countryId === state.currentCountry || !state.currentCountry) {

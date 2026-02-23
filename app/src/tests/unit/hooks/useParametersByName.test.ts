@@ -52,11 +52,8 @@ describe('useParametersByName', () => {
 
       // When
       renderHook(
-        () => useParametersByName(
-          [...ANCESTOR_TEST_CASES.SIMPLE.input],
-          TEST_COUNTRIES.US,
-        ),
-        { wrapper },
+        () => useParametersByName([...ANCESTOR_TEST_CASES.SIMPLE.input], TEST_COUNTRIES.US),
+        { wrapper }
       );
 
       await waitFor(() => {
@@ -78,11 +75,12 @@ describe('useParametersByName', () => {
 
       // When
       renderHook(
-        () => useParametersByName(
-          [...ANCESTOR_TEST_CASES.MULTIPLE_OVERLAPPING.input],
-          TEST_COUNTRIES.US,
-        ),
-        { wrapper },
+        () =>
+          useParametersByName(
+            [...ANCESTOR_TEST_CASES.MULTIPLE_OVERLAPPING.input],
+            TEST_COUNTRIES.US
+          ),
+        { wrapper }
       );
 
       await waitFor(() => {
@@ -101,11 +99,8 @@ describe('useParametersByName', () => {
 
       // When
       renderHook(
-        () => useParametersByName(
-          [...ANCESTOR_TEST_CASES.SHORT_PATH.input],
-          TEST_COUNTRIES.US,
-        ),
-        { wrapper },
+        () => useParametersByName([...ANCESTOR_TEST_CASES.SHORT_PATH.input], TEST_COUNTRIES.US),
+        { wrapper }
       );
 
       await waitFor(() => {
@@ -128,11 +123,8 @@ describe('useParametersByName', () => {
 
       // When
       const { result } = renderHook(
-        () => useParametersByName(
-          [MOCK_V2_PARAM_EITC.name],
-          TEST_COUNTRIES.US,
-        ),
-        { wrapper },
+        () => useParametersByName([MOCK_V2_PARAM_EITC.name], TEST_COUNTRIES.US),
+        { wrapper }
       );
 
       await waitFor(() => {
@@ -156,11 +148,8 @@ describe('useParametersByName', () => {
 
       // When
       const { result } = renderHook(
-        () => useParametersByName(
-          [MOCK_V2_PARAM_NO_LABEL.name],
-          TEST_COUNTRIES.US,
-        ),
-        { wrapper },
+        () => useParametersByName([MOCK_V2_PARAM_NO_LABEL.name], TEST_COUNTRIES.US),
+        { wrapper }
       );
 
       await waitFor(() => {
@@ -178,11 +167,9 @@ describe('useParametersByName', () => {
 
       // When
       const { result } = renderHook(
-        () => useParametersByName(
-          [MOCK_V2_PARAM_EITC.name, MOCK_V2_PARAM_CTC.name],
-          TEST_COUNTRIES.US,
-        ),
-        { wrapper },
+        () =>
+          useParametersByName([MOCK_V2_PARAM_EITC.name, MOCK_V2_PARAM_CTC.name], TEST_COUNTRIES.US),
+        { wrapper }
       );
 
       await waitFor(() => {
@@ -201,10 +188,7 @@ describe('useParametersByName', () => {
   describe('disabled states', () => {
     it('given empty names then does not fetch', () => {
       // When
-      const { result } = renderHook(
-        () => useParametersByName([], TEST_COUNTRIES.US),
-        { wrapper },
-      );
+      const { result } = renderHook(() => useParametersByName([], TEST_COUNTRIES.US), { wrapper });
 
       // Then
       expect(fetchParametersByName).not.toHaveBeenCalled();
@@ -213,10 +197,7 @@ describe('useParametersByName', () => {
 
     it('given empty countryId then does not fetch', () => {
       // When
-      renderHook(
-        () => useParametersByName(['gov.irs.credits.eitc.max'], ''),
-        { wrapper },
-      );
+      renderHook(() => useParametersByName(['gov.irs.credits.eitc.max'], ''), { wrapper });
 
       // Then
       expect(fetchParametersByName).not.toHaveBeenCalled();
@@ -226,7 +207,7 @@ describe('useParametersByName', () => {
       // When
       renderHook(
         () => useParametersByName(['gov.irs.credits.eitc.max'], TEST_COUNTRIES.US, false),
-        { wrapper },
+        { wrapper }
       );
 
       // Then
@@ -246,7 +227,7 @@ describe('useParametersByName', () => {
       // When
       const { result } = renderHook(
         () => useParametersByName(['gov.irs.credits.eitc.max'], TEST_COUNTRIES.US),
-        { wrapper },
+        { wrapper }
       );
 
       await waitFor(() => {
@@ -274,7 +255,7 @@ describe('useParametersByName', () => {
       // When
       const { result } = renderHook(
         () => useParametersByName(['gov.irs.credits.eitc.max'], TEST_COUNTRIES.US),
-        { wrapper },
+        { wrapper }
       );
 
       // Then

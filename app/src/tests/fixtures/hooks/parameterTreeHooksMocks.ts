@@ -52,12 +52,7 @@ export const MOCK_V2_PARAMS = [MOCK_V2_PARAM_EITC, MOCK_V2_PARAM_CTC];
 export const ANCESTOR_TEST_CASES = {
   SIMPLE: {
     input: ['gov.irs.credits.eitc.max'],
-    expected: [
-      'gov.irs',
-      'gov.irs.credits',
-      'gov.irs.credits.eitc',
-      'gov.irs.credits.eitc.max',
-    ],
+    expected: ['gov.irs', 'gov.irs.credits', 'gov.irs.credits.eitc', 'gov.irs.credits.eitc.max'],
   },
   WITH_INDEX: {
     input: ['gov.irs.credits.eitc.max[0].rate'],

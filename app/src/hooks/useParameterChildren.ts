@@ -13,11 +13,8 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { fetchParameterChildren, ParameterChildNode } from '@/api/v2';
+import { getCachedParameterChildren, setCachedParameterChildren } from '@/libs/metadataCache';
 import { parameterTreeKeys } from '@/libs/queryKeys';
-import {
-  getCachedParameterChildren,
-  setCachedParameterChildren,
-} from '@/libs/metadataCache';
 
 export interface UseParameterChildrenResult {
   children: ParameterChildNode[];
@@ -28,7 +25,7 @@ export interface UseParameterChildrenResult {
 export function useParameterChildren(
   parentPath: string,
   countryId: string,
-  enabled: boolean = true,
+  enabled: boolean = true
 ): UseParameterChildrenResult {
   const query = useQuery({
     queryKey: parameterTreeKeys.children(countryId, parentPath),
