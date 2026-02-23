@@ -30,9 +30,6 @@
     "storybook:build": "storybook build"
   },
   "dependencies": {
-    "@mantine/core": "8.1.2",
-    "@mantine/dates": "^8.1.2",
-    "@mantine/hooks": "8.1.2",
     "@normy/react-query": "^0.20.0",
     "@policyengine/design-system": "*",
     "@reduxjs/toolkit": "^2.8.2",
@@ -91,13 +88,11 @@
     "@vitejs/plugin-react": "^4.5.2",
     "concurrently": "^9.1.2",
     "eslint": "^9.29.0",
-    "eslint-config-mantine": "^4.0.3",
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "eslint-plugin-react": "^7.37.5",
     "identity-obj-proxy": "^3.0.0",
     "jsdom": "^26.1.0",
     "postcss": "^8.5.5",
-    "postcss-preset-mantine": "1.17.0",
     "postcss-simple-vars": "^7.0.1",
     "prettier": "^3.5.3",
     "prop-types": "^15.8.1",

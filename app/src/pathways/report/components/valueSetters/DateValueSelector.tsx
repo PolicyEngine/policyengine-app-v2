@@ -1,8 +1,8 @@
 import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
-import { DatePickerInput } from '@mantine/dates';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { ValueInterval } from '@/types/subIngredients/valueInterval';
-import { fromLocalDateString, toLocalDateString } from '@/utils/dateUtils';
 import { getDefaultValueForParam } from './getDefaultValueForParam';
 import { ValueInputBox } from './ValueInputBox';
 import { ValueSetterProps } from './ValueSetterProps';
@@ -55,34 +55,38 @@ export function DateValueSelector(props: ValueSetterProps) {
     }
   }, [startDate, endDate, paramValue, setIntervals]);
 
-  function handleStartDateChange(value: Date | string | null) {
-    setStartDate(toLocalDateString(value));
+  function handleStartDateChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setStartDate(e.target.value);
   }
 
-  function handleEndDateChange(value: Date | string | null) {
-    setEndDate(toLocalDateString(value));
+  function handleEndDateChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setEndDate(e.target.value);
   }
 
   return (
     <div className="tw:flex tw:flex-col sm:tw:flex-row tw:items-stretch sm:tw:items-end tw:gap-sm tw:flex-1">
-      <DatePickerInput
-        placeholder="Pick a start date"
-        label="From"
-        minDate={fromLocalDateString(minDate)}
-        maxDate={fromLocalDateString(maxDate)}
-        value={fromLocalDateString(startDate)}
-        onChange={handleStartDateChange}
-        style={{ flex: 1 }}
-      />
-      <DatePickerInput
-        placeholder="Pick an end date"
-        label="To"
-        minDate={fromLocalDateString(minDate)}
-        maxDate={fromLocalDateString(maxDate)}
-        value={fromLocalDateString(endDate)}
-        onChange={handleEndDateChange}
-        style={{ flex: 1 }}
-      />
+      <div className="tw:flex tw:flex-col tw:gap-1 tw:flex-1">
+        <Label>From</Label>
+        <Input
+          type="date"
+          placeholder="Pick a start date"
+          min={minDate}
+          max={maxDate}
+          value={startDate ?? ''}
+          onChange={handleStartDateChange}
+        />
+      </div>
+      <div className="tw:flex tw:flex-col tw:gap-1 tw:flex-1">
+        <Label>To</Label>
+        <Input
+          type="date"
+          placeholder="Pick an end date"
+          min={minDate}
+          max={maxDate}
+          value={endDate ?? ''}
+          onChange={handleEndDateChange}
+        />
+      </div>
       <ValueInputBox param={param} value={paramValue} onChange={setParamValue} />
     </div>
   );
