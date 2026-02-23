@@ -46,6 +46,24 @@ export function getModelName(countryId: string): string {
   return modelName;
 }
 
+export interface ModelByCountryResponse {
+  model: TaxBenefitModel;
+  latest_version: TaxBenefitModelVersion;
+}
+
+/**
+ * Fetch model + latest version for a country in a single call.
+ */
+export async function fetchModelByCountry(countryId: string): Promise<ModelByCountryResponse> {
+  const res = await fetch(`${API_V2_BASE_URL}/tax-benefit-models/by-country/${countryId}`);
+
+  if (!res.ok) {
+    throw new Error(`Failed to fetch model for country: ${countryId}`);
+  }
+
+  return res.json();
+}
+
 /**
  * Fetch the current version for a country's model
  */

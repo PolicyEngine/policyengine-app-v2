@@ -1,6 +1,6 @@
 import { Box, Divider, ScrollArea, Stack, Text } from '@mantine/core';
 import LazyNestedMenu from '@/components/common/LazyNestedMenu';
-import { useLazyParameterTree } from '@/hooks/useLazyParameterTree';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 
 interface PolicyParameterSelectorMenuProps {
   setSelectedParamLabel: (param: string) => void;
@@ -9,10 +9,7 @@ interface PolicyParameterSelectorMenuProps {
 export default function PolicyParameterSelectorMenu({
   setSelectedParamLabel,
 }: PolicyParameterSelectorMenuProps) {
-  const { getChildren } = useLazyParameterTree();
-
-  // Get root level children (direct children of 'gov')
-  const rootNodes = getChildren('gov');
+  const countryId = useCurrentCountry();
 
   return (
     <Stack h="100%">
@@ -23,8 +20,8 @@ export default function PolicyParameterSelectorMenu({
 
       <ScrollArea flex={1} type="scroll">
         <LazyNestedMenu
-          nodes={rootNodes}
-          getChildren={getChildren}
+          countryId={countryId}
+          rootPath="gov"
           onParameterClick={setSelectedParamLabel}
         />
       </ScrollArea>

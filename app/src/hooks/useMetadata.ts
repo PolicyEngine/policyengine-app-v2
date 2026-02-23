@@ -1,8 +1,14 @@
 import { useEffect, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useModelVersion } from '@/hooks/useModelVersion';
 import { useEntities } from '@/hooks/useStaticMetadata';
-import { fetchMetadataThunk } from '@/reducers/metadataReducer';
+import { getCachedVariables } from '@/libs/metadataCache';
+import {
+  fetchMetadataThunk,
+  fetchVariablesThunk,
+  hydrateVariables,
+} from '@/reducers/metadataReducer';
 import { AppDispatch, RootState } from '@/store';
 import { HouseholdMetadataContext } from '@/utils/householdValues';
 
@@ -19,15 +25,26 @@ export function selectMetadataState(state: RootState) {
 }
 
 /**
- * Hook that fetches all metadata (variables, datasets, parameters) for a country.
+ * Hook that fetches metadata (datasets, version) for a country and loads
+ * variables via a cache-first background strategy.
  *
- * This is the V2 unified loading approach - loads all metadata in a single fetch.
+ * Loading flow:
+ * 1. Hydrate variables from localStorage cache (instant — consumers have data immediately)
+ * 2. Fetch datasets + version (fast — sets loaded: true so MetadataGuard passes)
+ * 3. Fetch variables from API in background (updates Redux + localStorage when done)
+ *
+ * Also checks the model version for localStorage cache invalidation.
  *
  * @param countryId - Country to fetch metadata for (e.g., 'us', 'uk')
  */
 export function useFetchMetadata(countryId: string): void {
   const dispatch = useDispatch<AppDispatch>();
   const { loading, loaded, currentCountry } = useSelector(selectMetadataState);
+
+  // Check model version and invalidate localStorage cache if it changed.
+  // This runs alongside the Redux metadata fetch so parameter tree hooks
+  // that read from localStorage will have stale data cleared promptly.
+  useModelVersion(countryId);
 
   useEffect(() => {
     // Fetch if:
@@ -36,7 +53,17 @@ export function useFetchMetadata(countryId: string): void {
     const needsFetch = !loading && (!loaded || countryId !== currentCountry);
 
     if (needsFetch && countryId) {
+      // 1. Hydrate variables from localStorage cache immediately
+      const cached = getCachedVariables(countryId);
+      if (cached) {
+        dispatch(hydrateVariables({ variables: cached, countryId }));
+      }
+
+      // 2. Fetch datasets + version (fast, sets loaded: true)
       dispatch(fetchMetadataThunk(countryId));
+
+      // 3. Fetch variables from API in background (updates Redux + cache)
+      dispatch(fetchVariablesThunk(countryId));
     }
   }, [countryId, loading, loaded, currentCountry, dispatch]);
 }

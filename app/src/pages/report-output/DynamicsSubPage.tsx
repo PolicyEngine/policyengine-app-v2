@@ -1,14 +1,13 @@
 import { useMemo } from 'react';
-import { useSelector } from 'react-redux';
-import { Box, Text } from '@mantine/core';
+import { Box, Loader, Text } from '@mantine/core';
 import ParameterTable from '@/components/report/ParameterTable';
 import { getParamDefinitionDate } from '@/constants';
 import { colors, spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useParametersByName } from '@/hooks/useParametersByName';
 import { useBaselineValuesForParameters } from '@/hooks/useParameterValues';
 import { useReportYear } from '@/hooks/useReportYear';
 import { useCurrentLawId } from '@/hooks/useStaticMetadata';
-import { RootState } from '@/store';
 import { Policy } from '@/types/ingredients/Policy';
 import { UserPolicy } from '@/types/ingredients/UserPolicy';
 import { buildColumnHeaderText } from '@/utils/policyColumnHeaders';
@@ -57,7 +56,6 @@ function collectDynamicsParameterNames(policies: Policy[], countryId: string): s
  */
 export default function DynamicsSubPage({ policies, userPolicies }: DynamicsSubPageProps) {
   const countryId = useCurrentCountry();
-  const parameters = useSelector((state: RootState) => state.metadata.parameters);
   const currentLawId = useCurrentLawId(countryId);
   const reportYear = useReportYear();
   const reportDate = getParamDefinitionDate(reportYear ?? undefined);
@@ -68,11 +66,18 @@ export default function DynamicsSubPage({ policies, userPolicies }: DynamicsSubP
     [policies, countryId]
   );
 
+  // Batch-fetch parameter metadata for the dynamics parameters
+  const { parameters, isLoading: isParamsLoading } = useParametersByName(paramList, countryId);
+
   // Fetch baseline values for all dynamics parameters from V2 API
   const { baselineValuesMap } = useBaselineValuesForParameters(paramList, parameters);
 
   if (!policies || policies.length === 0) {
     return <div>No policy data available</div>;
+  }
+
+  if (isParamsLoading) {
+    return <Loader size="sm" m="md" />;
   }
 
   // Extract baseline and reform from policies array

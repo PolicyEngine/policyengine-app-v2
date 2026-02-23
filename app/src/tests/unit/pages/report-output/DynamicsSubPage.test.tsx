@@ -4,12 +4,31 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import DynamicsSubPage from '@/pages/report-output/DynamicsSubPage';
 import {
   createMockStore,
+  MOCK_PARAMETER_METADATA,
   MOCK_POLICY_BASELINE,
   MOCK_POLICY_REFORM,
 } from '@/tests/fixtures/pages/report-output/DynamicsSubPage';
 
 vi.mock('@/hooks/useCurrentCountry', () => ({
   useCurrentCountry: vi.fn(() => 'us'),
+}));
+
+// Mock useParametersByName to return fixture metadata without actual API calls
+vi.mock('@/hooks/useParametersByName', () => ({
+  useParametersByName: () => ({
+    parameters: MOCK_PARAMETER_METADATA,
+    isLoading: false,
+    error: null,
+  }),
+}));
+
+// Mock useParameterValues to avoid actual API calls
+vi.mock('@/hooks/useParameterValues', () => ({
+  useBaselineValuesForParameters: () => ({
+    baselineValuesMap: {},
+    isLoading: false,
+    isError: false,
+  }),
 }));
 
 describe('DynamicsSubPage', () => {

@@ -22,6 +22,15 @@ vi.mock('@/hooks/useReportYear', () => ({
   useReportYear: () => 2024,
 }));
 
+// Mock useParametersByName to return fixture metadata without actual API calls
+vi.mock('@/hooks/useParametersByName', () => ({
+  useParametersByName: () => ({
+    parameters: mockParameterMetadata,
+    isLoading: false,
+    error: null,
+  }),
+}));
+
 // Mock useBaselineValuesForParameters to avoid actual API calls in tests
 vi.mock('@/hooks/useParameterValues', () => ({
   useBaselineValuesForParameters: () => ({

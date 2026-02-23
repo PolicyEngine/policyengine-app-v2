@@ -106,3 +106,11 @@ export const regionKeys = {
   byCountryAndType: (countryId: string, regionType: string) =>
     [...regionKeys.all, 'country', countryId, 'type', regionType] as const,
 };
+
+export const parameterTreeKeys = {
+  all: ['parameter-tree'] as const,
+  children: (countryId: string, parentPath: string) =>
+    [...parameterTreeKeys.all, 'children', countryId, parentPath] as const,
+  byName: (countryId: string, names: string[]) =>
+    [...parameterTreeKeys.all, 'by-name', countryId, ...names.sort()] as const,
+};

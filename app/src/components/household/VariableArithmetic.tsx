@@ -1,20 +1,13 @@
 import { useState } from 'react';
 import { IconCircleMinus, IconCirclePlus, IconTriangleFilled } from '@tabler/icons-react';
-import { useSelector } from 'react-redux';
 import { ActionIcon, Box, Group, Text } from '@mantine/core';
 import { spacing, typography } from '@/designTokens';
 import { useHouseholdMetadataContext } from '@/hooks/useMetadata';
-import { useReportYear } from '@/hooks/useReportYear';
-import { RootState } from '@/store';
 import { Household } from '@/types/ingredients/Household';
 import { calculateVariableComparison } from '@/utils/householdComparison';
 import { getDisplayStyleConfig } from '@/utils/householdDisplayStyles';
 import { getVariableDisplayText } from '@/utils/householdDisplayText';
-import {
-  formatVariableValue,
-  getParameterAtInstant,
-  shouldShowVariable,
-} from '@/utils/householdValues';
+import { formatVariableValue, shouldShowVariable } from '@/utils/householdValues';
 
 interface VariableArithmeticProps {
   variableName: string;
@@ -40,9 +33,7 @@ export default function VariableArithmetic({
   childrenOnly = false,
 }: VariableArithmeticProps) {
   const [expanded, setExpanded] = useState(defaultExpanded);
-  const reportYear = useReportYear();
   const metadataContext = useHouseholdMetadataContext();
-  const parameters = useSelector((state: RootState) => state.metadata.parameters);
 
   const variable = metadataContext.variables[variableName];
   if (!variable) {
@@ -54,32 +45,10 @@ export default function VariableArithmetic({
   const comparison = calculateVariableComparison(variableName, baseline, reform, metadataContext);
 
   // Get child variables (adds and subtracts)
-  let addsArray: string[] = [];
-  let subtractsArray: string[] = [];
-
-  if (variable.adds) {
-    if (typeof variable.adds === 'string') {
-      // It's a parameter name - resolve it
-      const parameter = parameters[variable.adds];
-      if (parameter) {
-        addsArray = getParameterAtInstant(parameter, `${reportYear}-01-01`) || [];
-      }
-    } else if (Array.isArray(variable.adds)) {
-      addsArray = variable.adds;
-    }
-  }
-
-  if (variable.subtracts) {
-    if (typeof variable.subtracts === 'string') {
-      // It's a parameter name - resolve it
-      const parameter = parameters[variable.subtracts];
-      if (parameter) {
-        subtractsArray = getParameterAtInstant(parameter, `${reportYear}-01-01`) || [];
-      }
-    } else if (Array.isArray(variable.subtracts)) {
-      subtractsArray = variable.subtracts;
-    }
-  }
+  // Note: In V2, adds/subtracts are always arrays (or undefined).
+  // The string case (parameter name reference) is not populated by the V2 API.
+  const addsArray: string[] = Array.isArray(variable.adds) ? variable.adds : [];
+  const subtractsArray: string[] = Array.isArray(variable.subtracts) ? variable.subtracts : [];
 
   // Filter child variables to only show non-zero ones
   const visibleAdds = addsArray.filter((v) =>

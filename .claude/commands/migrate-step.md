@@ -85,30 +85,22 @@ If the task involves multiple repos, complete all sub-tasks for one repo before 
 
 ## Step 7: Verify
 
-After implementation, run verification for each repo that was touched:
+After implementation, run **only the new/changed tests** for this task — NOT the full test suite.
 
-**policyengine.py:**
+**IMPORTANT:** Do NOT run the full test suite, ESLint, Prettier, ruff, or any other linting/formatting tools at this stage. Those are all handled in a separate final step at the end of the entire phase.
+
+For example, if you created `tests/test_module_registry.py`, run just that file:
 ```bash
-cd ~/Documents/PolicyEngine/policyengine.py && python -m pytest
+cd ~/Documents/PolicyEngine/policyengine-api-v2-alpha && python -m pytest tests/test_module_registry.py -v
 ```
 
-**policyengine-api-v2-alpha:**
-```bash
-cd ~/Documents/PolicyEngine/policyengine-api-v2-alpha && python -m pytest
-```
-
-**policyengine-app-v2:**
-```bash
-cd ~/Documents/PolicyEngine/policyengine-app-v2/app && npx tsc --noEmit && npm run lint && npx prettier --check . && npm test
-```
-
-If any verification fails:
+If the new tests fail:
 1. Show me the errors
 2. Fix them
-3. Re-run verification
-4. Repeat until all pass
+3. Re-run the failing tests
+4. Repeat until they pass
 
-Do NOT proceed past this step until verification passes.
+Do NOT proceed past this step until the new tests pass.
 
 ## Step 8: Present for approval
 
@@ -147,6 +139,30 @@ After I approve:
 - Create a pull request
 
 If I ask you to push, confirm which repo and remote before doing so.
+
+## Step 10: Full test suite, lint, and format (end of phase only)
+
+This step runs **only once at the end of the entire phase**, after ALL implementation tasks AND test writing are complete. Do NOT run the full test suite, ESLint, Prettier, ruff, or any other linting/formatting tools during individual task work.
+
+When the user explicitly requests it (typically after all phase tasks and tests are done):
+
+**1. Full test suites:**
+
+```bash
+cd ~/Documents/PolicyEngine/policyengine.py && python -m pytest
+cd ~/Documents/PolicyEngine/policyengine-api-v2-alpha && python -m pytest
+cd ~/Documents/PolicyEngine/policyengine-app-v2/app && npx tsc --noEmit && npm test
+```
+
+**2. Lint and format:**
+
+```bash
+cd ~/Documents/PolicyEngine/policyengine.py && ruff check --fix . && ruff format .
+cd ~/Documents/PolicyEngine/policyengine-api-v2-alpha && ruff check --fix . && ruff format .
+cd ~/Documents/PolicyEngine/policyengine-app-v2/app && npm run lint -- --fix && npx prettier --write .
+```
+
+Commit any formatting fixes separately from feature commits.
 
 ## Important rules
 

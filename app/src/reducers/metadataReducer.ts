@@ -1,7 +1,8 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { MetadataAdapter } from '@/adapters';
-import { fetchDatasets, fetchModelVersion, fetchParameters, fetchVariables } from '@/api/v2';
-import { MetadataState } from '@/types/metadata';
+import { fetchDatasets, fetchModelVersion, fetchVariables } from '@/api/v2';
+import { setCachedVariables } from '@/libs/metadataCache';
+import { MetadataState, VariableMetadata } from '@/types/metadata';
 
 /**
  * Initial state for API-driven metadata
@@ -25,21 +26,34 @@ const initialState: MetadataState = {
   version: null,
 };
 
-// Fetch all metadata (variables, datasets, parameters) directly from API
+// Fetch datasets + model version (fast). Variables are loaded separately.
 export const fetchMetadataThunk = createAsyncThunk(
   'metadata/fetch',
   async (countryId: string, { rejectWithValue }) => {
     try {
-      const [variables, datasets, parameters, version] = await Promise.all([
-        fetchVariables(countryId),
+      const [datasets, version] = await Promise.all([
         fetchDatasets(countryId),
-        fetchParameters(countryId),
         fetchModelVersion(countryId),
       ]);
       return {
-        data: { variables, datasets, parameters, version },
+        data: { datasets, version },
         countryId,
       };
+    } catch (error) {
+      return rejectWithValue(error instanceof Error ? error.message : 'Unknown error');
+    }
+  }
+);
+
+// Fetch variables in the background. Writes to Redux + localStorage cache.
+export const fetchVariablesThunk = createAsyncThunk(
+  'metadata/fetchVariables',
+  async (countryId: string, { rejectWithValue }) => {
+    try {
+      const raw = await fetchVariables(countryId);
+      const variables = MetadataAdapter.variablesFromV2(raw);
+      setCachedVariables(countryId, variables);
+      return { variables, countryId };
     } catch (error) {
       return rejectWithValue(error instanceof Error ? error.message : 'Unknown error');
     }
@@ -69,6 +83,15 @@ const metadataSlice = createSlice({
     clearMetadata(state) {
       return { ...initialState, currentCountry: state.currentCountry };
     },
+    hydrateVariables(
+      state,
+      action: PayloadAction<{ variables: Record<string, VariableMetadata>; countryId: string }>
+    ) {
+      const { variables, countryId } = action.payload;
+      if (countryId === state.currentCountry || !state.currentCountry) {
+        state.variables = variables;
+      }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -86,20 +109,24 @@ const metadataSlice = createSlice({
         state.version = data.version;
 
         // Convert V2 API data to frontend format using adapters
-        state.variables = MetadataAdapter.variablesFromV2(data.variables);
         state.datasets = MetadataAdapter.datasetsFromV2(data.datasets);
-        state.parameters = MetadataAdapter.parametersFromV2(data.parameters);
-
-        // Parameter tree is now built lazily on-demand via useLazyParameterTree hook.
-        // Static data (entities, basicInputs, etc.) is accessed via @/hooks/useStaticMetadata.
+        // Parameters are no longer bulk-fetched. They are loaded on-demand via
+        // useParametersByName (batch endpoint) and useParameterChildren (tree navigation).
+        // Variables are loaded separately via fetchVariablesThunk (background, cache-first).
       })
       .addCase(fetchMetadataThunk.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
+      })
+      .addCase(fetchVariablesThunk.fulfilled, (state, action) => {
+        const { variables, countryId } = action.payload;
+        if (countryId === state.currentCountry) {
+          state.variables = variables;
+        }
       });
   },
 });
 
-export const { setCurrentCountry, clearMetadata } = metadataSlice.actions;
+export const { setCurrentCountry, clearMetadata, hydrateVariables } = metadataSlice.actions;
 
 export default metadataSlice.reducer;

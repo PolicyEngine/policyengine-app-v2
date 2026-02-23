@@ -4,10 +4,12 @@ export {
   COUNTRY_TO_MODEL_NAME,
   getModelName,
   fetchTaxBenefitModels,
+  fetchModelByCountry,
   fetchModelVersion,
   fetchModelVersionId,
   type TaxBenefitModel,
   type TaxBenefitModelVersion,
+  type ModelByCountryResponse,
 } from './taxBenefitModels';
 
 // Variables
@@ -15,6 +17,15 @@ export { fetchVariables } from './variables';
 
 // Parameters
 export { fetchParameters } from './parameters';
+
+// Parameter tree (lazy loading)
+export {
+  fetchParameterChildren,
+  fetchParametersByName,
+  type ParameterChildNode,
+  type ParameterChildrenResponse,
+  type V2ParameterData,
+} from './parameterTree';
 
 // Parameter values (on-demand fetching)
 export { fetchParameterValues, BASELINE_POLICY_ID } from './parameterValues';

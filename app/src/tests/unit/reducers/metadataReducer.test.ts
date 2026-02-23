@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import metadataReducer, {
   clearMetadata,
   fetchMetadataThunk,
+  fetchVariablesThunk,
+  hydrateVariables,
   setCurrentCountry,
 } from '@/reducers/metadataReducer';
 import {
@@ -13,6 +15,7 @@ import {
   expectErrorState,
   expectLoadingState,
   expectStateToEqual,
+  MOCK_VARIABLES,
   TEST_COUNTRY_CA,
   TEST_COUNTRY_UK,
   TEST_COUNTRY_US,
@@ -26,6 +29,11 @@ vi.mock('@/api/v2', () => ({
   fetchDatasets: vi.fn(),
   fetchParameters: vi.fn(),
   fetchModelVersion: vi.fn(),
+}));
+
+// Mock metadataCache (used by fetchVariablesThunk)
+vi.mock('@/libs/metadataCache', () => ({
+  setCachedVariables: vi.fn(),
 }));
 
 describe('metadataReducer', () => {
@@ -108,20 +116,15 @@ describe('metadataReducer', () => {
       expect(state.error).toBeNull();
     });
 
-    test('given fulfilled action then updates all metadata fields', () => {
+    test('given fulfilled action then updates datasets and version (not variables)', () => {
       const initialState = { ...EXPECTED_INITIAL_STATE, loading: true };
-      const mockVariables = [{ id: '1', name: 'income', entity: 'person', description: 'Income' }];
       const mockDatasets = [{ id: '1', name: 'cps_2024', description: 'CPS 2024' }];
-      const mockParameters = [{ id: 'p1', name: 'tax.rate', label: 'Tax Rate' }];
       const action = {
         type: fetchMetadataThunk.fulfilled.type,
         payload: {
           data: {
-            variables: mockVariables,
             datasets: mockDatasets,
-            parameters: mockParameters,
             version: TEST_VERSION,
-            versionId: 'version-123',
           },
           countryId: TEST_COUNTRY_US,
         },
@@ -134,17 +137,10 @@ describe('metadataReducer', () => {
       expect(state.error).toBeNull();
       expect(state.currentCountry).toBe(TEST_COUNTRY_US);
       expect(state.version).toBe(TEST_VERSION);
-      // Reducer transforms variables by adding label and other fields
-      expect(state.variables.income).toBeDefined();
-      expect(state.variables.income.name).toBe('income');
-      expect(state.variables.income.entity).toBe('person');
-      expect(state.variables.income.label).toBe('Income'); // Generated from name
       expect(state.datasets).toHaveLength(1);
       expect(state.datasets[0].name).toBe('cps_2024');
-      expect(state.parameters['tax.rate']).toBeDefined();
-      // Parameter values are fetched on-demand, not prefetched
-      expect(state.parameters['tax.rate']?.values).toEqual({});
-      // Parameter tree is built lazily on-demand via useLazyParameterTree hook
+      // Variables are NOT set by fetchMetadataThunk — they load via fetchVariablesThunk
+      expect(state.variables).toEqual({});
     });
 
     test('given rejected action then sets error state', () => {
@@ -171,16 +167,13 @@ describe('metadataReducer', () => {
       state = metadataReducer(state, { type: fetchMetadataThunk.pending.type });
       expect(state.loading).toBe(true);
 
-      // Receive data
+      // Receive datasets + version
       state = metadataReducer(state, {
         type: fetchMetadataThunk.fulfilled.type,
         payload: {
           data: {
-            variables: [{ id: '1', name: 'test', entity: 'person' }],
             datasets: [],
-            parameters: [],
             version: TEST_VERSION,
-            versionId: 'v1',
           },
           countryId: TEST_COUNTRY_US,
         },
@@ -192,6 +185,92 @@ describe('metadataReducer', () => {
       state = metadataReducer(state, setCurrentCountry(TEST_COUNTRY_UK));
       expectCurrentCountry(state, TEST_COUNTRY_UK);
       expect(state.loaded).toBe(false);
+    });
+  });
+
+  describe('hydrateVariables action', () => {
+    test('given matching country then sets variables immediately', () => {
+      // Given
+      const state = createMockStateWithData({ currentCountry: TEST_COUNTRY_US, variables: {} });
+
+      // When
+      const action = hydrateVariables({ variables: MOCK_VARIABLES, countryId: TEST_COUNTRY_US });
+      const result = metadataReducer(state, action);
+
+      // Then
+      expect(result.variables).toEqual(MOCK_VARIABLES);
+    });
+
+    test('given null currentCountry then sets variables (first load)', () => {
+      // Given
+      const state = { ...EXPECTED_INITIAL_STATE, currentCountry: null };
+
+      // When
+      const action = hydrateVariables({ variables: MOCK_VARIABLES, countryId: TEST_COUNTRY_US });
+      const result = metadataReducer(state, action);
+
+      // Then
+      expect(result.variables).toEqual(MOCK_VARIABLES);
+    });
+
+    test('given different country then does not set variables', () => {
+      // Given
+      const state = createMockStateWithData({ currentCountry: TEST_COUNTRY_US, variables: {} });
+
+      // When
+      const action = hydrateVariables({ variables: MOCK_VARIABLES, countryId: TEST_COUNTRY_UK });
+      const result = metadataReducer(state, action);
+
+      // Then
+      expect(result.variables).toEqual({});
+    });
+  });
+
+  describe('fetchVariablesThunk', () => {
+    test('given fulfilled action with matching country then sets variables', () => {
+      // Given
+      const state = createMockStateWithData({ currentCountry: TEST_COUNTRY_US, variables: {} });
+
+      // When
+      const action = {
+        type: fetchVariablesThunk.fulfilled.type,
+        payload: { variables: MOCK_VARIABLES, countryId: TEST_COUNTRY_US },
+      };
+      const result = metadataReducer(state, action);
+
+      // Then
+      expect(result.variables).toEqual(MOCK_VARIABLES);
+    });
+
+    test('given fulfilled action with different country then does not set variables', () => {
+      // Given
+      const state = createMockStateWithData({ currentCountry: TEST_COUNTRY_US, variables: {} });
+
+      // When
+      const action = {
+        type: fetchVariablesThunk.fulfilled.type,
+        payload: { variables: MOCK_VARIABLES, countryId: TEST_COUNTRY_UK },
+      };
+      const result = metadataReducer(state, action);
+
+      // Then
+      expect(result.variables).toEqual({});
+    });
+
+    test('given fulfilled action then does not affect loading/loaded state', () => {
+      // Given — loaded is already true from fetchMetadataThunk
+      const state = createMockStateWithData({ loaded: true, loading: false });
+
+      // When
+      const action = {
+        type: fetchVariablesThunk.fulfilled.type,
+        payload: { variables: MOCK_VARIABLES, countryId: TEST_COUNTRY_US },
+      };
+      const result = metadataReducer(state, action);
+
+      // Then — loading/loaded unchanged
+      expect(result.loaded).toBe(true);
+      expect(result.loading).toBe(false);
     });
   });
 });
