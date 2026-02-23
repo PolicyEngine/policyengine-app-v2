@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { MetadataAdapter } from '@/adapters';
-import { fetchDatasets, fetchModelVersion, fetchParameters, fetchVariables } from '@/api/v2';
+import { fetchDatasets, fetchModelVersion, fetchVariables } from '@/api/v2';
 import { MetadataState } from '@/types/metadata';
 
 /**
@@ -30,14 +30,13 @@ export const fetchMetadataThunk = createAsyncThunk(
   'metadata/fetch',
   async (countryId: string, { rejectWithValue }) => {
     try {
-      const [variables, datasets, parameters, version] = await Promise.all([
+      const [variables, datasets, version] = await Promise.all([
         fetchVariables(countryId),
         fetchDatasets(countryId),
-        fetchParameters(countryId),
         fetchModelVersion(countryId),
       ]);
       return {
-        data: { variables, datasets, parameters, version },
+        data: { variables, datasets, version },
         countryId,
       };
     } catch (error) {
@@ -88,10 +87,8 @@ const metadataSlice = createSlice({
         // Convert V2 API data to frontend format using adapters
         state.variables = MetadataAdapter.variablesFromV2(data.variables);
         state.datasets = MetadataAdapter.datasetsFromV2(data.datasets);
-        state.parameters = MetadataAdapter.parametersFromV2(data.parameters);
-
-        // Parameter tree is now built lazily on-demand via useLazyParameterTree hook.
-        // Static data (entities, basicInputs, etc.) is accessed via @/hooks/useStaticMetadata.
+        // Parameters are no longer bulk-fetched. They are loaded on-demand via
+        // useParametersByName (batch endpoint) and useParameterChildren (tree navigation).
       })
       .addCase(fetchMetadataThunk.rejected, (state, action) => {
         state.loading = false;
