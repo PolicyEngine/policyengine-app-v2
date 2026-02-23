@@ -1,5 +1,6 @@
 import { useSelector } from 'react-redux';
-import { useMediaQuery, useViewportSize } from '@mantine/hooks';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { useViewportSize } from '@/hooks/useViewportSize';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { ChartContainer } from '@/components/ChartContainer';
 import {

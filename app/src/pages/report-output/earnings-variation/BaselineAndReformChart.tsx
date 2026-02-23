@@ -13,8 +13,9 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { Group, Radio, Stack } from '@mantine/core';
-import { useMediaQuery, useViewportSize } from '@mantine/hooks';
+import { Label, RadioGroup, RadioGroupItem, Stack } from '@/components/ui';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { useViewportSize } from '@/hooks/useViewportSize';
 import { ChartWatermark, TOOLTIP_STYLE } from '@/components/charts';
 import { colors } from '@/designTokens';
 import { spacing } from '@/designTokens/spacing';
@@ -298,13 +299,22 @@ export default function BaselineAndReformChart({
 
   return (
     <Stack gap={spacing.md}>
-      <Radio.Group value={viewMode} onChange={(value) => setViewMode(value as ViewMode)}>
-        <Group gap={spacing.md}>
-          <Radio value="both" label="Baseline and Reform" />
-          <Radio value="absolute" label="Absolute Change" />
-          <Radio value="relative" label="Relative Change" />
-        </Group>
-      </Radio.Group>
+      <RadioGroup value={viewMode} onValueChange={(value) => setViewMode(value as ViewMode)}>
+        <div className="tw:flex tw:gap-md tw:items-center">
+          <div className="tw:flex tw:items-center tw:gap-xs">
+            <RadioGroupItem value="both" id="ev-both" />
+            <Label htmlFor="ev-both">Baseline and reform</Label>
+          </div>
+          <div className="tw:flex tw:items-center tw:gap-xs">
+            <RadioGroupItem value="absolute" id="ev-absolute" />
+            <Label htmlFor="ev-absolute">Absolute change</Label>
+          </div>
+          <div className="tw:flex tw:items-center tw:gap-xs">
+            <RadioGroupItem value="relative" id="ev-relative" />
+            <Label htmlFor="ev-relative">Relative change</Label>
+          </div>
+        </div>
+      </RadioGroup>
 
       <div style={{ width: '100%', position: 'relative' }}>
         {renderChart()}

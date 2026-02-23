@@ -1,5 +1,5 @@
 import { useMemo, useRef } from 'react';
-import { Group, Stack, Text, Title } from '@mantine/core';
+import { Group, Stack, Text, Title } from '@/components/ui';
 import { transformConstituencyAbsoluteChange } from '@/adapters/constituency/constituencyDataAdapter';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { MapDownloadMenu } from '@/components/MapDownloadMenu';

@@ -10,8 +10,9 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { Stack, Text } from '@mantine/core';
-import { useMediaQuery, useViewportSize } from '@mantine/hooks';
+import { Stack, Text } from '@/components/ui';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { useViewportSize } from '@/hooks/useViewportSize';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { ChartContainer } from '@/components/ChartContainer';
 import { ChartWatermark, ImpactBarLabel, ImpactTooltip } from '@/components/charts';

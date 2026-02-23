@@ -1,4 +1,4 @@
-import { Box, Divider, ScrollArea, Stack, Text } from '@mantine/core';
+import { Separator } from '@/components/ui';
 import NestedMenu from '@/components/common/NestedMenu';
 import { ParameterTreeNode } from '@/types/metadata';
 
@@ -15,24 +15,24 @@ export default function PolicyParameterSelectorMenu({
   const menuOptions = parameterTree.children || [];
 
   return (
-    <Stack h="100%">
-      <Box>
+    <div className="tw:flex tw:flex-col tw:h-full">
+      <div>
         <SelectorMenuHeader />
-        <Divider my="xs" />
-      </Box>
+        <Separator className="tw:my-xs" />
+      </div>
 
-      <ScrollArea flex={1} type="scroll">
+      <div className="tw:flex-1 tw:overflow-auto">
         <NestedMenu menuOptions={menuOptions} onItemClick={setSelectedParamLabel} />
-      </ScrollArea>
-    </Stack>
+      </div>
+    </div>
   );
 }
 
 function SelectorMenuHeader() {
   return (
-    <Box>
-      <Text fw={700}>Select parameters</Text>
-      <Text fw={400}>Make changes and add provisions to your policy</Text>
-    </Box>
+    <div>
+      <p className="tw:font-bold">Select parameters</p>
+      <p>Make changes and add provisions to your policy</p>
+    </div>
   );
 }

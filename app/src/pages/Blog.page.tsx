@@ -7,7 +7,7 @@
 
 import { useEffect, useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
-import { Box, Center, Container, Loader, Text } from '@mantine/core';
+import { Container, Spinner, Text } from '@/components/ui';
 import { blogSpacing } from '@/components/blog/blogStyles';
 import { MarkdownFormatter } from '@/components/blog/MarkdownFormatter';
 import { NotebookRenderer } from '@/components/blog/NotebookRenderer';
@@ -117,9 +117,9 @@ export default function BlogPage() {
   if (loading) {
     return (
       <StaticPageLayout title={post.title}>
-        <Center py="xl" style={{ minHeight: '50vh' }}>
-          <Loader size="lg" />
-        </Center>
+        <div className="tw:flex tw:items-center tw:justify-center tw:py-xl" style={{ minHeight: '50vh' }}>
+          <Spinner size="lg" />
+        </div>
       </StaticPageLayout>
     );
   }
@@ -127,9 +127,9 @@ export default function BlogPage() {
   if (error) {
     return (
       <StaticPageLayout title="Error">
-        <Center py="xl">
-          <Text c="red">{error}</Text>
-        </Center>
+        <div className="tw:flex tw:items-center tw:justify-center tw:py-xl">
+          <Text style={{ color: 'red' }}>{error}</Text>
+        </div>
       </StaticPageLayout>
     );
   }
@@ -137,8 +137,8 @@ export default function BlogPage() {
   return (
     <StaticPageLayout title={post.title}>
       {/* Header Section */}
-      <Box style={{ backgroundColor: colors.gray[50] }}>
-        <Container size="xl" py={post.hideHeaderImage ? 40 : 80}>
+      <div style={{ backgroundColor: colors.gray[50] }}>
+        <Container size="xl" style={{ paddingTop: post.hideHeaderImage ? 40 : 80, paddingBottom: post.hideHeaderImage ? 40 : 80 }}>
           <PostHeadingSection
             post={post}
             markdown={content}
@@ -147,10 +147,10 @@ export default function BlogPage() {
             displayCategory={displayCategory}
           />
         </Container>
-      </Box>
+      </div>
 
       {/* Body Section */}
-      <Container size="xl" py="xl">
+      <Container size="xl" className="tw:py-xl">
         <PostBodySection
           post={post}
           markdown={content}
@@ -200,12 +200,12 @@ function PostHeadingSection({
       <div style={{ display: 'flex' }}>
         {/* Left sidebar */}
         <div style={{ flex: 1, paddingRight: 30 }}>
-          <Text size="md" tt="uppercase" fw={600} mb="sm" style={{ letterSpacing: '0.05em' }}>
+          <Text size="md" fw={600} className="tw:mb-sm tw:uppercase" style={{ letterSpacing: '0.05em' }}>
             {postDate}
           </Text>
           <Authorship post={post} countryId={countryId} />
           <div style={{ marginBottom: 60 }} />
-          <Text size="md" c="dimmed" tt="uppercase" style={{ letterSpacing: '0.05em' }}>
+          <Text size="md" className="tw:uppercase" style={{ letterSpacing: '0.05em', color: colors.gray[500] }}>
             {readingTime}
           </Text>
           <div style={{ marginTop: 60 }} />
@@ -222,7 +222,7 @@ function PostHeadingSection({
           >
             {post.title}
           </Text>
-          <Text size="lg" c="dimmed" style={{ marginTop: 30, fontSize: '1.25rem' }}>
+          <Text size="lg" style={{ marginTop: 30, fontSize: '1.25rem', color: colors.gray[500] }}>
             {post.description}
           </Text>
           {imageUrl && !post.hideHeaderImage && (
@@ -252,11 +252,11 @@ function PostHeadingSection({
         size="xl"
         fw={700}
         style={{ fontSize: displayCategory === 'mobile' ? '1.75rem' : '2rem', lineHeight: 1.2 }}
-        mb="md"
+        className="tw:mb-md"
       >
         {post.title}
       </Text>
-      <Text size="lg" c="dimmed" mb="lg">
+      <Text size="lg" className="tw:mb-lg" style={{ color: colors.gray[500] }}>
         {post.description}
       </Text>
       <div
@@ -270,10 +270,10 @@ function PostHeadingSection({
         }}
       >
         <Authorship post={post} countryId={countryId} />
-        <Text size="md" tt="uppercase" fw={600} style={{ letterSpacing: '0.05em' }}>
+        <Text size="md" fw={600} className="tw:uppercase" style={{ letterSpacing: '0.05em' }}>
           {postDate}
         </Text>
-        <Text size="md" c="dimmed" tt="uppercase" style={{ letterSpacing: '0.05em' }}>
+        <Text size="md" className="tw:uppercase" style={{ letterSpacing: '0.05em', color: colors.gray[500] }}>
           {readingTime}
         </Text>
       </div>
@@ -324,9 +324,8 @@ function PostBodySection({
           <div style={{ position: 'sticky', top: 150, marginTop: blogSpacing.marginTop.paragraph }}>
             <Text
               size="sm"
-              tt="uppercase"
               fw={600}
-              mb="xs"
+              className="tw:uppercase tw:mb-xs"
               style={{ letterSpacing: '0.1em', color: colors.primary[600] }}
             >
               Contents
@@ -359,9 +358,8 @@ function PostBodySection({
           <div style={{ position: 'sticky', top: 150 }}>
             <Text
               size="sm"
-              tt="uppercase"
               fw={600}
-              mb="xs"
+              className="tw:uppercase tw:mb-xs"
               style={{ letterSpacing: '0.1em', color: colors.primary[600] }}
             >
               Contents
@@ -385,9 +383,8 @@ function PostBodySection({
       <div style={{ marginBottom: 20 }}>
         <Text
           size="sm"
-          tt="uppercase"
           fw={600}
-          mb="xs"
+          className="tw:uppercase tw:mb-xs"
           style={{ letterSpacing: '0.1em', color: colors.primary[600] }}
         >
           Contents
@@ -449,7 +446,7 @@ function Authorship({ post, countryId }: { post: BlogPost; countryId: string }) 
   }
 
   return (
-    <Text size="md" tt="uppercase" fw={600} style={{ letterSpacing: '0.05em' }}>
+    <Text size="md" fw={600} className="tw:uppercase" style={{ letterSpacing: '0.05em' }}>
       {content}
     </Text>
   );
@@ -489,7 +486,7 @@ function AuthorSection({ post, countryId }: { post: BlogPost; countryId: string 
               />
             )}
             <div style={{ paddingTop: 5 }}>
-              <Text size="sm" tt="uppercase" fw={600} style={{ letterSpacing: '0.05em' }}>
+              <Text size="sm" fw={600} className="tw:uppercase" style={{ letterSpacing: '0.05em' }}>
                 <Link
                   to={`/${countryId}/research?authors=${authorId}`}
                   style={{ color: colors.primary[600], textDecoration: 'none' }}
@@ -500,7 +497,7 @@ function AuthorSection({ post, countryId }: { post: BlogPost; countryId: string 
                     .join(' ')}
                 </Link>
               </Text>
-              <Text size="xs" c="dimmed">
+              <Text size="xs" style={{ color: colors.gray[500] }}>
                 {author.title}
               </Text>
             </div>
@@ -555,9 +552,8 @@ function MoreOn({ post, countryId }: { post: BlogPost; countryId: string }) {
     <>
       <Text
         size="sm"
-        tt="uppercase"
         fw={600}
-        mb="xs"
+        className="tw:uppercase tw:mb-xs"
         style={{ letterSpacing: '0.1em', color: colors.primary[600] }}
       >
         More on
@@ -604,7 +600,7 @@ function ShareLinks({ post, displayCategory }: { post: BlogPost; displayCategory
       }}
     >
       {desktop && (
-        <Text size="sm" tt="uppercase" fw={600} style={{ letterSpacing: '0.1em' }}>
+        <Text size="sm" fw={600} className="tw:uppercase" style={{ letterSpacing: '0.1em' }}>
           Share
         </Text>
       )}

@@ -1,5 +1,5 @@
 import { IconCheck } from '@tabler/icons-react';
-import { Badge, Card, Container, Divider, Group, Stack, Text, Title } from '@mantine/core';
+import { Badge, Card, CardContent, Container, Stack, Text, Title } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import MultiButtonFooter, { ButtonConfig } from './common/MultiButtonFooter';
 
@@ -72,40 +72,44 @@ export default function IngredientSubmissionView({
           {summaryBoxes.map((item, index) => (
             <Card
               key={index}
-              withBorder
-              variant={
+              className={`tw:border ${
                 item.isDisabled
-                  ? 'setupCondition--disabled'
+                  ? 'tw:opacity-50'
                   : item.isFulfilled
-                    ? 'setupCondition--fulfilled'
-                    : 'setupCondition--unfulfilled'
-              }
+                    ? 'tw:border-primary-500'
+                    : 'tw:border-border-light'
+              }`}
             >
-              <Group gap={spacing.sm} align="center">
-                {item.isFulfilled && (
-                  <IconCheck
-                    size={20}
-                    style={{
-                      color: 'var(--mantine-color-primary-6)',
-                      marginTop: '2px',
-                      flexShrink: 0,
-                    }}
-                  />
-                )}
-                <Stack gap={spacing.xs} style={{ flex: 1 }}>
-                  <Text fw={700}>{item.title}</Text>
-                  {item.description && (
-                    <Text size="sm" c="dimmed">
-                      {item.description}
-                    </Text>
+              <CardContent className="tw:p-4">
+                <div className="tw:flex tw:items-center tw:gap-2">
+                  {item.isFulfilled && (
+                    <IconCheck
+                      size={20}
+                      style={{
+                        color: colors.primary[500],
+                        marginTop: '2px',
+                        flexShrink: 0,
+                      }}
+                    />
                   )}
-                </Stack>
-                {item.badge && (
-                  <Badge size="sm" variant="light" color="blue" radius={spacing.radius.element}>
-                    {typeof item.badge === 'number' ? `${item.badge}` : item.badge}
-                  </Badge>
-                )}
-              </Group>
+                  <Stack gap="xs" className="tw:flex-1">
+                    <Text fw={700}>{item.title}</Text>
+                    {item.description && (
+                      <Text size="sm" style={{ color: colors.text.secondary }}>
+                        {item.description}
+                      </Text>
+                    )}
+                  </Stack>
+                  {item.badge && (
+                    <Badge
+                      variant="secondary"
+                      style={{ borderRadius: spacing.radius.element }}
+                    >
+                      {typeof item.badge === 'number' ? `${item.badge}` : item.badge}
+                    </Badge>
+                  )}
+                </div>
+              </CardContent>
             </Card>
           ))}
         </Stack>
@@ -114,30 +118,33 @@ export default function IngredientSubmissionView({
 
     if (textList && textList.length > 0) {
       return (
-        <Stack gap={spacing.md}>
+        <Stack gap="md">
           {textList.map((item, index) => (
-            <Stack key={index} gap={spacing.xs}>
+            <Stack key={index} gap="xs">
               {/* Main item with optional header styling */}
-              <Group gap={spacing.xs} align="center">
+              <div className="tw:flex tw:items-center tw:gap-1">
                 <Text
                   size={item.isHeader ? 'lg' : 'sm'}
                   fw={item.isHeader ? 700 : 600}
-                  style={{ flex: 1 }}
+                  className="tw:flex-1"
                 >
                   {item.text}
                 </Text>
                 {item.badge && (
-                  <Badge size="xs" variant="light" color="gray" radius={spacing.radius.element}>
+                  <Badge
+                    variant="secondary"
+                    style={{ borderRadius: spacing.radius.element }}
+                  >
                     {typeof item.badge === 'number' ? `${item.badge}` : item.badge}
                   </Badge>
                 )}
-              </Group>
+              </div>
 
               {/* Sub-items with parameter names and date intervals */}
               {item.subItems && item.subItems.length > 0 && (
-                <Stack gap={spacing.md} ml={spacing.md}>
+                <Stack gap="md" className="tw:ml-3">
                   {item.subItems.map((subItem, subIndex) => (
-                    <Stack key={subIndex} gap={spacing.xs}>
+                    <Stack key={subIndex} gap="xs">
                       {/* Parameter name */}
                       <Text size="sm" fw={500}>
                         {subItem.label}
@@ -145,14 +152,21 @@ export default function IngredientSubmissionView({
 
                       {/* Date intervals in two columns */}
                       {subItem.dateIntervals && subItem.dateIntervals.length > 0 && (
-                        <Stack gap={spacing.xs} ml={spacing.sm}>
+                        <Stack gap="xs" className="tw:ml-2">
                           {subItem.dateIntervals.map((interval, intervalIndex) => (
-                            <Group key={intervalIndex} gap={spacing.sm} align="center">
-                              <Text size="sm" c={colors.text.secondary} style={{ flex: 1 }}>
+                            <div
+                              key={intervalIndex}
+                              className="tw:flex tw:items-center tw:gap-2"
+                            >
+                              <Text
+                                size="sm"
+                                className="tw:flex-1"
+                                style={{ color: colors.text.secondary }}
+                              >
                                 {interval.dateRange}
                               </Text>
                               <Text size="sm">{interval.value}</Text>
-                            </Group>
+                            </div>
                           ))}
                         </Stack>
                       )}
@@ -207,17 +221,23 @@ export default function IngredientSubmissionView({
           {title}
         </Title>
         {subtitle && (
-          <Text c="dimmed" mb="sm">
+          <Text style={{ color: colors.text.secondary, marginBottom: spacing.sm }}>
             {subtitle}
           </Text>
         )}
-        <Divider my="sm" />
+        <hr className="tw:my-2 tw:border-border-light" />
         {warningMessage && (
-          <Text c={colors.text.warning} fw={typography.fontWeight.medium} mb="md">
+          <Text
+            style={{
+              color: colors.text.warning,
+              fontWeight: typography.fontWeight.medium,
+              marginBottom: spacing.md,
+            }}
+          >
             {warningMessage}
           </Text>
         )}
-        <Stack gap="md" pb="lg">
+        <Stack gap="md" className="tw:pb-4">
           {renderContent()}
         </Stack>
         <MultiButtonFooter {...footerProps} />

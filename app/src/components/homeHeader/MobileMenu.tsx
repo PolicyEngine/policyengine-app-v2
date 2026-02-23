@@ -1,4 +1,5 @@
-import { Anchor, Box, Burger, Drawer, Group, Stack, Text } from '@mantine/core';
+import { IconMenu2 } from '@tabler/icons-react';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import CountrySelector from './CountrySelector';
 import { NavItemSetup } from './NavItem';
@@ -14,75 +15,88 @@ export default function MobileMenu({ opened, onOpen, onClose, navItems }: Mobile
   return (
     <>
       {/* Mobile Burger Menu with Country Selector */}
-      <Group hiddenFrom="lg" gap={spacing.md}>
+      <div className="tw:flex lg:tw:hidden tw:items-center" style={{ gap: spacing.md }}>
         <CountrySelector />
-        <Burger opened={opened} onClick={onOpen} color={colors.text.inverse} size="sm" />
-      </Group>
+        <button
+          className="tw:p-1 tw:rounded tw:bg-transparent tw:border-none tw:cursor-pointer"
+          onClick={onOpen}
+          aria-label="Toggle navigation"
+        >
+          <IconMenu2 size={24} color={colors.text.inverse} />
+        </button>
+      </div>
 
-      {/* Mobile Drawer */}
-      <Drawer
-        opened={opened}
-        onClose={onClose}
-        position="right"
-        size="sm"
-        styles={{
-          content: { backgroundColor: colors.primary[600] },
-          header: { backgroundColor: colors.primary[600], borderBottom: 'none' },
-        }}
-        closeButtonProps={{ style: { color: colors.text.inverse }, size: 'md' }}
-      >
-        <Stack gap={spacing.lg} p={spacing.lg}>
-          {navItems.map((item) =>
-            item.hasDropdown && item.dropdownItems ? (
-              // Render dropdown as a section
-              <Box key={item.label}>
-                <Text
-                  c={colors.text.inverse}
-                  fw={typography.fontWeight.medium}
-                  size="sm"
-                  mb={spacing.xs}
-                  style={{ fontFamily: typography.fontFamily.primary }}
+      {/* Mobile Sheet */}
+      <Sheet open={opened} onOpenChange={(open) => !open && onClose()}>
+        <SheetContent
+          side="right"
+          className="tw:w-[300px]"
+          style={{ backgroundColor: colors.primary[600] }}
+        >
+          <SheetHeader>
+            <SheetTitle className="tw:text-white">Menu</SheetTitle>
+          </SheetHeader>
+          <div className="tw:flex tw:flex-col" style={{ gap: spacing.lg, padding: spacing.lg }}>
+            {navItems.map((item) =>
+              item.hasDropdown && item.dropdownItems ? (
+                // Render dropdown as a section
+                <div key={item.label}>
+                  <span
+                    style={{
+                      color: colors.text.inverse,
+                      fontWeight: typography.fontWeight.medium,
+                      fontSize: typography.fontSize.sm,
+                      marginBottom: spacing.xs,
+                      display: 'block',
+                      fontFamily: typography.fontFamily.primary,
+                    }}
+                  >
+                    {item.label}
+                  </span>
+                  <div
+                    className="tw:flex tw:flex-col"
+                    style={{ gap: spacing.xs, paddingLeft: spacing.md }}
+                  >
+                    {item.dropdownItems.map((dropdownItem) => (
+                      <a
+                        key={dropdownItem.label}
+                        href={dropdownItem.href}
+                        onClick={dropdownItem.href ? undefined : dropdownItem.onClick}
+                        style={{
+                          color: colors.text.inverse,
+                          textDecoration: 'none',
+                          fontWeight: typography.fontWeight.normal,
+                          fontSize: typography.fontSize.sm,
+                          fontFamily: typography.fontFamily.primary,
+                        }}
+                      >
+                        {dropdownItem.label}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                // Render regular link
+                <a
+                  key={item.label}
+                  href={item.href}
+                  onClick={item.href ? undefined : item.onClick}
+                  style={{
+                    color: colors.text.inverse,
+                    textDecoration: 'none',
+                    fontWeight: typography.fontWeight.medium,
+                    fontSize: typography.fontSize.sm,
+                    fontFamily: typography.fontFamily.primary,
+                    display: 'block',
+                  }}
                 >
                   {item.label}
-                </Text>
-                <Stack gap={spacing.xs} pl={spacing.md}>
-                  {item.dropdownItems.map((dropdownItem) => (
-                    <Anchor
-                      key={dropdownItem.label}
-                      c={colors.text.inverse}
-                      variant="subtle"
-                      td="none"
-                      fw={typography.fontWeight.normal}
-                      size="sm"
-                      href={dropdownItem.href}
-                      onClick={dropdownItem.href ? undefined : dropdownItem.onClick}
-                      style={{ fontFamily: typography.fontFamily.primary }}
-                    >
-                      {dropdownItem.label}
-                    </Anchor>
-                  ))}
-                </Stack>
-              </Box>
-            ) : (
-              // Render regular link
-              <Anchor
-                key={item.label}
-                c={colors.text.inverse}
-                variant="subtle"
-                td="none"
-                fw={typography.fontWeight.medium}
-                size="sm"
-                href={item.href}
-                onClick={item.href ? undefined : item.onClick}
-                style={{ fontFamily: typography.fontFamily.primary }}
-                display="block"
-              >
-                {item.label}
-              </Anchor>
-            )
-          )}
-        </Stack>
-      </Drawer>
+                </a>
+              )
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
     </>
   );
 }

@@ -1,4 +1,4 @@
-import { Box, Group, Loader, Progress, Skeleton, Stack, Text } from '@mantine/core';
+import { Group, Progress, Skeleton, Spinner, Stack, Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 
 interface LoadingPageProps {
@@ -37,94 +37,93 @@ export default function LoadingPage({
   const estimatedTime = formatTime(estimatedTimeRemaining);
 
   return (
-    <Stack gap={spacing.xl}>
+    <Stack className="tw:gap-xl">
       {/* Progress Bar with Status */}
-      <Box>
-        <Group justify="space-between" align="center" mb={spacing.xs}>
-          <Text fw={typography.fontWeight.medium} c={colors.text.primary}>
+      <div>
+        <Group className="tw:justify-between tw:items-center tw:mb-xs">
+          <Text style={{ fontWeight: typography.fontWeight.medium, color: colors.text.primary }}>
             {message ||
               (queuePosition ? `Queue position: ${queuePosition}` : 'Processing calculation...')}
           </Text>
-          <Group gap={spacing.xs}>
-            <Loader size="sm" />
-            <Text size="sm" c="dimmed">
+          <Group className="tw:gap-xs">
+            <Spinner size="sm" />
+            <Text className="tw:text-sm tw:text-gray-500">
               {Math.round(progressValue)}%
             </Text>
           </Group>
         </Group>
-        <Progress value={progressValue} size="lg" radius="md" animated color="teal" />
+        <Progress value={progressValue} className="tw:h-3" />
         {estimatedTime && (
-          <Text size="sm" c="dimmed" mt={spacing.xs}>
+          <Text className="tw:text-sm tw:text-gray-500 tw:mt-xs">
             Estimated time remaining: {estimatedTime}
           </Text>
         )}
-      </Box>
+      </div>
 
       {/* Skeleton Preview of Report Structure */}
-      <Box>
-        <Box
+      <div>
+        <div
           style={{
             borderTop: `1px solid ${colors.border.light}`,
             paddingTop: spacing.md,
           }}
         >
           {/* Skeleton Tabs */}
-          <Box
+          <div
+            className="tw:flex tw:pb-xs"
             style={{
-              display: 'flex',
               gap: spacing.xs,
               borderBottom: `1px solid ${colors.border.light}`,
-              paddingBottom: spacing.xs,
             }}
           >
-            <Skeleton height={32} width={100} radius="sm" />
-            <Skeleton height={32} width={160} radius="sm" />
-            <Skeleton height={32} width={200} radius="sm" />
-            <Skeleton height={32} width={120} radius="sm" />
-            <Skeleton height={32} width={100} radius="sm" />
-          </Box>
+            <Skeleton className="tw:h-8 tw:w-[100px] tw:rounded-sm" />
+            <Skeleton className="tw:h-8 tw:w-[160px] tw:rounded-sm" />
+            <Skeleton className="tw:h-8 tw:w-[200px] tw:rounded-sm" />
+            <Skeleton className="tw:h-8 tw:w-[120px] tw:rounded-sm" />
+            <Skeleton className="tw:h-8 tw:w-[100px] tw:rounded-sm" />
+          </div>
 
           {/* Skeleton Content Area */}
-          <Stack gap={spacing.lg} mt={spacing.xl}>
-            <Skeleton height={40} width="60%" />
-            <Skeleton height={20} width="40%" />
+          <Stack className="tw:gap-lg tw:mt-xl">
+            <Skeleton className="tw:h-10 tw:w-[60%]" />
+            <Skeleton className="tw:h-5 tw:w-[40%]" />
 
-            <Box
-              p={spacing.xl}
+            <div
+              className="tw:p-xl"
               style={{
                 border: `1px solid ${colors.border.light}`,
                 borderRadius: spacing.radius.container,
               }}
             >
-              <Stack gap={spacing.md}>
-                <Skeleton height={24} width="30%" />
-                <Skeleton height={120} />
-                <Group gap={spacing.md}>
-                  <Skeleton height={80} style={{ flex: 1 }} />
-                  <Skeleton height={80} style={{ flex: 1 }} />
-                  <Skeleton height={80} style={{ flex: 1 }} />
+              <Stack className="tw:gap-md">
+                <Skeleton className="tw:h-6 tw:w-[30%]" />
+                <Skeleton className="tw:h-[120px]" />
+                <Group className="tw:gap-md">
+                  <Skeleton className="tw:h-20 tw:flex-1" />
+                  <Skeleton className="tw:h-20 tw:flex-1" />
+                  <Skeleton className="tw:h-20 tw:flex-1" />
                 </Group>
               </Stack>
-            </Box>
+            </div>
           </Stack>
-        </Box>
-      </Box>
+        </div>
+      </div>
 
       {/* Info Message */}
-      <Box
-        p={spacing.md}
+      <div
+        className="tw:p-md"
         style={{
           backgroundColor: colors.blue[50],
           border: `1px solid ${colors.border.light}`,
           borderRadius: spacing.radius.container,
         }}
       >
-        <Text size="sm" c={colors.gray[700]}>
+        <Text className="tw:text-sm" style={{ color: colors.gray[700] }}>
           {queuePosition
             ? `Your report is queued at position ${queuePosition}. The page will automatically update when ready.`
             : 'Your report is being calculated. This may take a few moments for complex analyses. The page will automatically update when ready.'}
         </Text>
-      </Box>
+      </div>
     </Stack>
   );
 }

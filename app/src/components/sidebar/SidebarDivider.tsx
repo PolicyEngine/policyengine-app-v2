@@ -1,6 +1,5 @@
-import { Divider } from '@mantine/core';
 import { colors } from '../../designTokens';
 
 export default function SidebarDivider() {
-  return <Divider mx={16} color={colors.border.light} />;
+  return <hr className="tw:mx-4" style={{ borderColor: colors.border.light }} />;
 }

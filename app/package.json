@@ -49,6 +49,8 @@
     "fuse.js": "^7.0.0",
     "html-to-image": "^1.11.13",
     "jsonp": "^0.2.1",
+    "lucide-react": "^0.575.0",
+    "radix-ui": "^1.4.3",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-markdown": "^9.0.0",

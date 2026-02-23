@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Stack, Text } from '@mantine/core';
+import { Stack, Text } from '@/components/ui';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { SidebarTabs, type SidebarTab } from '@/components/SidebarTabs';
 import { AbsoluteChangeByLocalAuthority } from './local-authority/AbsoluteChangeByLocalAuthority';

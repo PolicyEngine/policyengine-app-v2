@@ -1,5 +1,5 @@
 import React from 'react';
-import { Group, Loader, Text } from '@mantine/core';
+import { Spinner } from '@/components/ui';
 import { useReportCalculationStatus } from '@/hooks/useCalcStatusSubscription';
 import type { Report } from '@/types/ingredients/Report';
 
@@ -26,16 +26,16 @@ export const ReportOutputTypeCell = React.memo(
     // Show calculating state with spinner and progress
     if (isCalculating) {
       return (
-        <Group gap="xs">
-          <Loader size="sm" color="teal" />
-          <Text size="sm">{displayText}</Text>
-        </Group>
+        <div className="tw:flex tw:items-center tw:gap-xs">
+          <Spinner className="tw:h-4 tw:w-4" />
+          <span className="tw:text-sm">{displayText}</span>
+        </div>
       );
     }
 
     // Show status text
     const status = report?.status || 'initializing';
     const formattedStatus = status.charAt(0).toUpperCase() + status.slice(1);
-    return <Text size="sm">{formattedStatus}</Text>;
+    return <span className="tw:text-sm">{formattedStatus}</span>;
   }
 );

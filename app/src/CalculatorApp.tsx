@@ -11,6 +11,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { Provider } from 'react-redux';
 import { MantineProvider } from '@mantine/core';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import { CalculatorRouter } from './CalculatorRouter';
 import { AppProvider } from './contexts/AppContext';
 import { CalcOrchestratorProvider } from './contexts/CalcOrchestratorContext';
@@ -40,10 +41,12 @@ export default function CalculatorApp() {
             }}
           >
             <QueryClientProvider client={queryClient}>
-              <CalcOrchestratorProvider>
-                <CalculatorRouter />
-                <ReactQueryDevtools initialIsOpen={false} />
-              </CalcOrchestratorProvider>
+              <TooltipProvider>
+                <CalcOrchestratorProvider>
+                  <CalculatorRouter />
+                  <ReactQueryDevtools initialIsOpen={false} />
+                </CalcOrchestratorProvider>
+              </TooltipProvider>
             </QueryClientProvider>
           </QueryNormalizerProvider>
         </MantineProvider>

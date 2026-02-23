@@ -11,7 +11,8 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { useMediaQuery, useViewportSize } from '@mantine/hooks';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { useViewportSize } from '@/hooks/useViewportSize';
 import { ChartWatermark, TOOLTIP_STYLE } from '@/components/charts';
 import { colors } from '@/designTokens';
 import { MOBILE_BREAKPOINT_QUERY } from '@/hooks/useChartDimensions';

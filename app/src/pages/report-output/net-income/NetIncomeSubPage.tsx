@@ -1,5 +1,5 @@
 import { useSelector } from 'react-redux';
-import { Stack, Text, Title } from '@mantine/core';
+import { Stack, Text, Title } from '@/components/ui';
 import VariableArithmetic from '@/components/household/VariableArithmetic';
 import { spacing } from '@/designTokens';
 import { useReportYear } from '@/hooks/useReportYear';

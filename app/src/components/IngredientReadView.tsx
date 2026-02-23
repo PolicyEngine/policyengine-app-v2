@@ -1,5 +1,17 @@
 import { IconPlus } from '@tabler/icons-react';
-import { Box, Button, Checkbox, Flex, Loader, Paper, Table, Text, Title } from '@mantine/core';
+import {
+  Button,
+  Checkbox,
+  Spinner,
+  ShadcnTable as Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+  Title,
+  Text,
+} from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import { ColumnConfig, ColumnRenderer, IngredientRecord } from './columns';
 import EmptyState from './common/EmptyState';
@@ -43,96 +55,98 @@ export default function IngredientReadView({
   onSelectionChange,
 }: IngredientReadViewProps) {
   return (
-    <Box>
+    <div>
       {/* Header Section */}
-      <Box mb={spacing['2xl']}>
-        <Flex
-          justify="space-between"
-          align="flex-start"
-          mb={spacing.lg}
-          direction={{ base: 'column', sm: 'row' }}
-          gap={spacing.md}
+      <div style={{ marginBottom: spacing['2xl'] }}>
+        <div
+          className="tw:flex tw:flex-col sm:tw:flex-row tw:justify-between tw:items-start"
+          style={{ marginBottom: spacing.lg, gap: spacing.md }}
         >
-          <Box>
+          <div>
             <Title
               order={1}
-              size="2xl"
-              fw={typography.fontWeight.semibold}
-              c={colors.text.title}
-              mb={spacing.sm}
+              style={{
+                fontSize: typography.fontSize['2xl'],
+                fontWeight: typography.fontWeight.semibold,
+                color: colors.text.title,
+                marginBottom: spacing.sm,
+              }}
             >
               {title}
             </Title>
-            <Text size="md" c={colors.text.secondary} style={{ maxWidth: '600px' }}>
+            <Text size="md" style={{ color: colors.text.secondary, maxWidth: '600px' }}>
               {subtitle}
             </Text>
-          </Box>
+          </div>
 
           {onBuild && (
-            <Button rightSection={<IconPlus size={16} />} onClick={onBuild} variant="filled">
+            <Button onClick={onBuild}>
               {buttonLabel || `New ${ingredient.toLowerCase()}`}
+              <IconPlus size={16} />
             </Button>
           )}
-        </Flex>
-      </Box>
+        </div>
+      </div>
 
       {/* Title Section */}
-      <Box mb={spacing.xl}>
+      <div style={{ marginBottom: spacing.xl }}>
         <Title
           order={2}
-          size="lg"
-          fw={typography.fontWeight.semibold}
-          c={colors.text.title}
-          mb={spacing.lg}
+          style={{
+            fontSize: typography.fontSize.lg,
+            fontWeight: typography.fontWeight.semibold,
+            color: colors.text.title,
+            marginBottom: spacing.lg,
+          }}
         >
           {title}
         </Title>
-      </Box>
+      </div>
 
       {/* Content Section */}
-      <Paper
-        radius={spacing.radius.container}
+      <div
         style={{
+          borderRadius: spacing.radius.container,
           border: `1px solid ${colors.border.light}`,
           overflow: 'hidden',
         }}
       >
         {isLoading && (
-          <Box p={spacing['3xl']} ta="center">
-            <Loader />
-          </Box>
+          <div className="tw:flex tw:justify-center" style={{ padding: spacing['3xl'] }}>
+            <Spinner />
+          </div>
         )}
 
         {isError && (
-          <Box p={spacing['3xl']}>
-            <Text c="red" ta="center">
+          <div style={{ padding: spacing['3xl'] }}>
+            <Text style={{ color: 'red', textAlign: 'center' }}>
               Error: {(error as Error)?.message || 'Something went wrong.'}
             </Text>
-          </Box>
+          </div>
         )}
 
         {!isLoading && !isError && (
           <>
             {data.length === 0 ? (
-              <Box p={spacing['3xl']}>
+              <div style={{ padding: spacing['3xl'] }}>
                 <EmptyState ingredient={ingredient} />
-              </Box>
+              </div>
             ) : (
               <Table>
-                <Table.Thead style={{ backgroundColor: colors.gray[50] }}>
-                  <Table.Tr>
+                <TableHeader>
+                  <TableRow style={{ backgroundColor: colors.gray[50] }}>
                     {enableSelection && (
-                      <Table.Th
+                      <TableHead
                         style={{
                           width: '48px',
                           padding: `${spacing.md} ${spacing.lg}`,
                         }}
                       >
                         {/* Optional: Add "select all" checkbox here in the future */}
-                      </Table.Th>
+                      </TableHead>
                     )}
                     {columns.map((column) => (
-                      <Table.Th
+                      <TableHead
                         key={column.key}
                         style={{
                           fontSize: typography.fontSize.xs,
@@ -144,15 +158,15 @@ export default function IngredientReadView({
                         }}
                       >
                         {column.header}
-                      </Table.Th>
+                      </TableHead>
                     ))}
-                  </Table.Tr>
-                </Table.Thead>
-                <Table.Tbody>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {data.map((record) => {
                     const selected = isSelected(record.id);
                     return (
-                      <Table.Tr
+                      <TableRow
                         key={record.id}
                         style={{
                           backgroundColor: selected ? colors.blue[50] : 'transparent',
@@ -168,36 +182,35 @@ export default function IngredientReadView({
                         }}
                       >
                         {enableSelection && (
-                          <Table.Td style={{ padding: `${spacing.md} ${spacing.lg}` }}>
+                          <TableCell style={{ padding: `${spacing.md} ${spacing.lg}` }}>
                             <Checkbox
                               checked={selected}
-                              onChange={(event) => {
-                                event.stopPropagation();
+                              onCheckedChange={(checked) => {
                                 if (onSelectionChange) {
-                                  onSelectionChange(record.id, event.currentTarget.checked);
+                                  onSelectionChange(record.id, !!checked);
                                 }
                               }}
-                              size="sm"
+                              onClick={(e) => e.stopPropagation()}
                             />
-                          </Table.Td>
+                          </TableCell>
                         )}
                         {columns.map((column) => (
-                          <Table.Td
+                          <TableCell
                             key={column.key}
                             style={{ padding: `${spacing.md} ${spacing.lg}` }}
                           >
                             <ColumnRenderer config={column} record={record} />
-                          </Table.Td>
+                          </TableCell>
                         ))}
-                      </Table.Tr>
+                      </TableRow>
                     );
                   })}
-                </Table.Tbody>
+                </TableBody>
               </Table>
             )}
           </>
         )}
-      </Paper>
-    </Box>
+      </div>
+    </div>
   );
 }

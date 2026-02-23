@@ -1,5 +1,3 @@
-import { Box, Text } from '@mantine/core';
-import { colors, spacing, typography } from '@/designTokens';
 import { GroupEntity } from '@/utils/householdIndividuals';
 import EntityInstanceDisplay from './EntityInstanceDisplay';
 
@@ -38,16 +36,11 @@ export default function GroupEntityDisplay({
   const showInstanceHeaders = sortedInstanceIds.length > 1;
 
   return (
-    <Box style={{ marginTop: spacing['3xl'] }}>
+    <div className="tw:mt-3xl">
       {/* Entity type header (e.g., "Your household") */}
-      <Text
-        size="xl"
-        fw={typography.fontWeight.bold}
-        c={colors.text.primary}
-        style={{ marginBottom: spacing.lg }}
-      >
+      <h3 className="tw:text-xl tw:font-bold tw:text-gray-900 tw:mb-lg">
         {entityTypeName}
-      </Text>
+      </h3>
 
       {sortedInstanceIds.map((instanceId) => {
         // Find this instance in baseline and reform
@@ -67,6 +60,6 @@ export default function GroupEntityDisplay({
           />
         );
       })}
-    </Box>
+    </div>
   );
 }

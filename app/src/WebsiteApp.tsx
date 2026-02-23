@@ -11,6 +11,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { Provider } from 'react-redux';
 import { MantineProvider } from '@mantine/core';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import { AppProvider } from './contexts/AppContext';
 import { store } from './store';
 import { policyEngineTheme } from './theme';
@@ -40,7 +41,9 @@ export default function WebsiteApp() {
             }}
           >
             <QueryClientProvider client={queryClient}>
-              <WebsiteRouter />
+              <TooltipProvider>
+                <WebsiteRouter />
+              </TooltipProvider>
               <ReactQueryDevtools initialIsOpen={false} />
             </QueryClientProvider>
           </QueryNormalizerProvider>

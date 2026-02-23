@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Group, Select, Stack, Text } from '@mantine/core';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Stack, Text } from '@/components/ui';
 import { PolicyAdapter } from '@/adapters/PolicyAdapter';
 import { spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
@@ -151,19 +151,23 @@ export default function EarningsVariationSubPage({
 
   return (
     <Stack gap={spacing.lg}>
-      <Group align="flex-end" gap={spacing.md}>
-        <Text fw={500} size="sm" style={{ whiteSpace: 'nowrap', paddingBottom: '8px' }}>
+      <div className="tw:flex tw:items-end tw:gap-md">
+        <Text className="tw:font-medium tw:text-sm tw:whitespace-nowrap tw:pb-2">
           Select variable to display:
         </Text>
-        <Select
-          placeholder="Choose a variable"
-          data={variableOptions}
-          value={selectedVariable}
-          onChange={(value) => value && setSelectedVariable(value)}
-          searchable
-          style={{ flex: 1 }}
-        />
-      </Group>
+        <Select value={selectedVariable} onValueChange={(value) => setSelectedVariable(value)}>
+          <SelectTrigger className="tw:flex-1">
+            <SelectValue placeholder="Choose a variable" />
+          </SelectTrigger>
+          <SelectContent>
+            {variableOptions.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>
+                {opt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
       {reform && reformVariation ? (
         <BaselineAndReformChart

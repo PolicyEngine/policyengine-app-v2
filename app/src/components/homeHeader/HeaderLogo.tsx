@@ -1,17 +1,16 @@
 import { Link } from 'react-router-dom';
-import { Box } from '@mantine/core';
 import { spacing } from '@/designTokens';
 import { useWebsitePath } from '@/hooks/useWebsitePath';
 
 const PolicyEngineLogo = '/assets/logos/policyengine/white.svg';
 
-const logoContainerStyles = {
+const logoContainerStyles: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   cursor: 'pointer',
 };
 
-const logoImageStyles = {
+const logoImageStyles: React.CSSProperties = {
   height: '24px',
   width: 'auto',
   marginRight: 12,
@@ -34,8 +33,8 @@ export default function HeaderLogo() {
 
   // Absolute URLs use standard anchor for cross-app navigation
   return (
-    <Box component="a" href={href} mr={spacing.md} style={logoContainerStyles}>
+    <a href={href} style={{ ...logoContainerStyles, marginRight: spacing.md }}>
       {logoImage}
-    </Box>
+    </a>
   );
 }

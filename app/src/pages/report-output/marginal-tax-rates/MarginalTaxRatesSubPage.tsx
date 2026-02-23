@@ -14,8 +14,9 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { Group, Radio, Stack, Text } from '@mantine/core';
-import { useMediaQuery, useViewportSize } from '@mantine/hooks';
+import { Label, RadioGroup, RadioGroupItem, Stack, Text } from '@/components/ui';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { useViewportSize } from '@/hooks/useViewportSize';
 import { PolicyAdapter } from '@/adapters/PolicyAdapter';
 import { ChartWatermark, TOOLTIP_STYLE } from '@/components/charts';
 import { colors, spacing } from '@/designTokens';
@@ -377,12 +378,18 @@ export default function MarginalTaxRatesSubPage({
       </Text>
 
       {reform && (
-        <Radio.Group value={viewMode} onChange={(value) => setViewMode(value as ViewMode)}>
-          <Group gap={spacing.md}>
-            <Radio value="both" label="Baseline and Reform" />
-            <Radio value="difference" label="Difference" />
-          </Group>
-        </Radio.Group>
+        <RadioGroup value={viewMode} onValueChange={(value) => setViewMode(value as ViewMode)}>
+          <div className="tw:flex tw:gap-md tw:items-center">
+            <div className="tw:flex tw:items-center tw:gap-xs">
+              <RadioGroupItem value="both" id="mtr-both" />
+              <Label htmlFor="mtr-both">Baseline and reform</Label>
+            </div>
+            <div className="tw:flex tw:items-center tw:gap-xs">
+              <RadioGroupItem value="difference" id="mtr-difference" />
+              <Label htmlFor="mtr-difference">Difference</Label>
+            </div>
+          </div>
+        </RadioGroup>
       )}
 
       <div style={{ width: '100%', position: 'relative' }}>

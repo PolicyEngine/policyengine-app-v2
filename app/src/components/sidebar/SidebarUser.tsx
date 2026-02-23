@@ -1,4 +1,3 @@
-import { Avatar, Group, Text } from '@mantine/core';
 import { colors } from '../../designTokens';
 
 interface SidebarUserProps {
@@ -8,32 +7,28 @@ interface SidebarUserProps {
 
 export default function SidebarUser({ name, initials }: SidebarUserProps) {
   return (
-    <Group gap={12}>
-      <Avatar
-        size={32}
-        radius="xl"
-        bg={colors.gray[100]}
-        c={colors.gray[700]}
-        styles={{
-          root: {
-            fontSize: 12,
-            fontWeight: 600,
-          },
+    <div className="tw:flex tw:items-center tw:gap-3">
+      <div
+        className="tw:w-8 tw:h-8 tw:rounded-full tw:flex tw:items-center tw:justify-center"
+        style={{
+          backgroundColor: colors.gray[100],
+          color: colors.gray[700],
+          fontSize: 12,
+          fontWeight: 600,
         }}
       >
         {initials}
-      </Avatar>
-      <Text
-        size="sm"
-        c={colors.gray[900]}
-        fw={500}
+      </div>
+      <span
         style={{
           fontSize: 14,
           lineHeight: '20px',
+          fontWeight: 500,
+          color: colors.gray[900],
         }}
       >
         {name}
-      </Text>
-    </Group>
+      </span>
+    </div>
   );
 }

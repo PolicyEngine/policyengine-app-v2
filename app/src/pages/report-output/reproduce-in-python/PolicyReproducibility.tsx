@@ -6,7 +6,15 @@
  */
 import { useState } from 'react';
 import { IconClipboard, IconClipboardCheck, IconCode, IconExternalLink } from '@tabler/icons-react';
-import { ActionIcon, Anchor, Box, Code, Group, Stack, Text, Tooltip } from '@mantine/core';
+import {
+  Button,
+  Group,
+  Stack,
+  Text,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui';
 import { colors, spacing } from '@/designTokens';
 import { useReportYear } from '@/hooks/useReportYear';
 import { trackPythonCodeCopied } from '@/utils/analytics';
@@ -61,113 +69,111 @@ export default function PolicyReproducibility({
     <div>
       <h2>Reproduce these results</h2>
 
-      <Stack gap={spacing.lg}>
+      <Stack className="tw:gap-lg">
         {/* Instructions card */}
-        <Box
-          p={spacing.lg}
+        <div
+          className="tw:p-lg"
           style={{
             backgroundColor: colors.background.primary,
             borderRadius: spacing.radius.container,
             border: `1px solid ${colors.border.light}`,
           }}
         >
-          <Group gap={spacing.md} align="center">
-            <Box
+          <Group className="tw:gap-md tw:items-center">
+            <div
+              className="tw:flex tw:items-center tw:justify-center tw:shrink-0"
               style={{
                 width: 36,
                 height: 36,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
                 backgroundColor: colors.gray[100],
                 borderRadius: spacing.radius.element,
-                flexShrink: 0,
               }}
             >
               <IconCode size={20} color={colors.gray[600]} stroke={1.5} />
-            </Box>
-            <Text size="sm" c={colors.text.primary}>
+            </div>
+            <Text className="tw:text-sm" style={{ color: colors.text.primary }}>
               Run the code below in a{' '}
               {colabLink ? (
-                <Anchor
+                <a
                   href={colabLink}
                   target="_blank"
                   rel="noreferrer"
-                  size="sm"
-                  style={{ color: colors.primary[600] }}
+                  className="tw:text-primary-600 tw:hover:underline tw:text-sm"
                 >
                   Python notebook
                   <IconExternalLink
                     size={12}
                     style={{ marginLeft: 3, verticalAlign: 'middle', display: 'inline' }}
                   />
-                </Anchor>
+                </a>
               ) : (
                 'Python notebook'
               )}{' '}
               to reproduce the microsimulation results.
             </Text>
           </Group>
-        </Box>
+        </div>
 
         {/* Code block card */}
-        <Box
+        <div
+          className="tw:overflow-hidden"
           style={{
             backgroundColor: colors.background.primary,
             borderRadius: spacing.radius.container,
             border: `1px solid ${colors.border.light}`,
-            overflow: 'hidden',
           }}
         >
           {/* Header with copy button */}
           <Group
-            justify="space-between"
-            align="center"
-            px={spacing.lg}
-            py={spacing.sm}
+            className="tw:justify-between tw:items-center tw:px-lg tw:py-sm"
             style={{
               borderBottom: `1px solid ${colors.border.light}`,
               backgroundColor: colors.gray[50],
             }}
           >
-            <Text size="sm" c={colors.text.secondary}>
+            <Text className="tw:text-sm" style={{ color: colors.text.secondary }}>
               Python
             </Text>
-            <Tooltip label={copied ? 'Copied!' : 'Copy to clipboard'} position="left">
-              <ActionIcon
-                variant="subtle"
-                size="sm"
-                onClick={handleCopy}
-                aria-label="Copy code to clipboard"
-              >
-                {copied ? (
-                  <IconClipboardCheck size={16} color={colors.primary[600]} />
-                ) : (
-                  <IconClipboard size={16} color={colors.text.secondary} />
-                )}
-              </ActionIcon>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleCopy}
+                  aria-label="Copy code to clipboard"
+                  className="tw:h-8 tw:w-8"
+                >
+                  {copied ? (
+                    <IconClipboardCheck size={16} color={colors.primary[600]} />
+                  ) : (
+                    <IconClipboard size={16} color={colors.text.secondary} />
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="left">
+                {copied ? 'Copied!' : 'Copy to clipboard'}
+              </TooltipContent>
             </Tooltip>
           </Group>
 
           {/* Code content */}
-          <Box p={spacing.lg} style={{ backgroundColor: colors.white }}>
-            <Code
-              block
+          <div className="tw:p-lg" style={{ backgroundColor: colors.white }}>
+            <code
+              className="tw:bg-transparent tw:block tw:text-sm tw:font-mono"
               style={{
                 whiteSpace: 'pre',
                 overflow: 'auto',
                 maxHeight: '400px',
                 fontSize: '13px',
                 lineHeight: 1.6,
-                backgroundColor: 'transparent',
                 border: 'none',
                 padding: 0,
               }}
             >
               {codeText}
-            </Code>
-          </Box>
-        </Box>
+            </code>
+          </div>
+        </div>
       </Stack>
     </div>
   );

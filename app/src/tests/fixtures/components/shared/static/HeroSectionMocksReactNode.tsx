@@ -1,4 +1,4 @@
-import { Text } from '@mantine/core';
+import { Text } from '@/components/ui';
 import { HeroSectionProps } from '@/components/shared/static/HeroSection';
 
 export const MOCK_HERO_PROPS_WITH_REACT_NODE: HeroSectionProps = {
