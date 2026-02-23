@@ -1,5 +1,3 @@
-import { Box, Image, Text } from '@mantine/core';
-import { colors, spacing, typography } from '@/designTokens';
 import SupportedProject, { SupportedProject as SupportedProjectType } from './SupportedProject';
 
 export interface Supporter {
@@ -17,71 +15,42 @@ export interface SupporterCardProps {
 
 export default function SupporterCard({ supporter, projects }: SupporterCardProps) {
   return (
-    <Box
-      style={{
-        marginBottom: 48,
-        padding: 24,
-        border: `1px solid ${colors.border.light}`,
-        borderRadius: spacing.radius.element,
-        boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
-      }}
-    >
-      {/* Header with logo and description */}
-      <Box
-        style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          alignItems: 'center',
-          gap: spacing.lg,
-          marginBottom: 24,
-        }}
-      >
+    <div className="tw:mb-4xl tw:p-2xl tw:border tw:border-border-light tw:rounded-element tw:shadow-[0_2px_4px_rgba(0,0,0,0.05)]">
+      <div className="tw:flex tw:flex-wrap tw:items-center tw:gap-lg tw:mb-2xl">
         {supporter.logoUrl && (
-          <a href={supporter.websiteUrl} target="_blank" rel="noopener noreferrer">
-            <Image
+          <a
+            href={supporter.websiteUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="tw:shrink-0"
+          >
+            <img
               src={supporter.logoUrl}
               alt={`${supporter.name} logo`}
-              w={{ base: 150, sm: 200 }}
-              h={{ base: 60, sm: 80 }}
-              fit="contain"
-              style={{
-                objectPosition: 'left center',
-              }}
+              className="tw:w-[150px] sm:tw:w-[200px] tw:h-[60px] sm:tw:h-[80px] tw:object-contain tw:object-left-center"
             />
           </a>
         )}
-        <Text
-          style={{
-            margin: 0,
-            fontSize: typography.fontSize.base,
-            fontFamily: typography.fontFamily.body,
-            lineHeight: typography.lineHeight.relaxed,
-          }}
-        >
+        <p className="tw:text-base tw:leading-relaxed">
           {supporter.websiteUrl ? (
             <a
               href={supporter.websiteUrl}
               target="_blank"
               rel="noopener noreferrer"
-              style={{
-                color: colors.blue[700],
-                fontWeight: typography.fontWeight.bold,
-                textDecoration: 'none',
-              }}
+              className="tw:text-blue-700 tw:font-bold tw:no-underline tw:hover:underline"
             >
               {supporter.name}
             </a>
           ) : (
-            <span style={{ fontWeight: typography.fontWeight.bold }}>{supporter.name}</span>
+            <span className="tw:font-bold">{supporter.name}</span>
           )}{' '}
-          — {supporter.description}
-        </Text>
-      </Box>
+          &mdash; {supporter.description}
+        </p>
+      </div>
 
-      {/* Projects */}
       {projects.map((project, index) => (
         <SupportedProject key={index} project={project} />
       ))}
-    </Box>
+    </div>
   );
 }

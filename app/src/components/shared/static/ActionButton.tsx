@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { Box, Button, Text } from '@mantine/core';
+import { Button } from '@mantine/core';
+import { Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 
 export interface ActionButtonProps {
@@ -52,14 +53,7 @@ export default function ActionButton({
   const buttonStyle = styles[variant];
 
   return (
-    <Box
-      style={{
-        textAlign: 'center',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-      }}
-    >
+    <div className="tw:flex tw:flex-col tw:items-center tw:text-center">
       <Button
         ref={buttonRef}
         component="a"
@@ -93,9 +87,9 @@ export default function ActionButton({
         {text}
       </Button>
       {caption && (
-        <Box
-          mt={spacing.lg}
+        <div
           style={{
+            marginTop: spacing.lg,
             width: buttonWidth ? `${buttonWidth}px` : 'auto',
           }}
         >
@@ -109,8 +103,8 @@ export default function ActionButton({
           >
             {caption}
           </Text>
-        </Box>
+        </div>
       )}
-    </Box>
+    </div>
   );
 }

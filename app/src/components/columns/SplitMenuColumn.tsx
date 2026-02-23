@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { IconChevronDown } from '@tabler/icons-react';
-import { Button, Group, Menu, rem } from '@mantine/core';
+import { Button, Menu, rem } from '@mantine/core';
+import { Group } from '@/components/ui';
 import { colors, spacing } from '@/designTokens';
 import { IngredientRecord, SplitMenuColumnConfig } from './types';
 
@@ -28,7 +29,7 @@ export function SplitMenuColumn({ config, record }: SplitMenuColumnProps) {
   };
 
   return (
-    <Group gap={0} style={{ width: 'fit-content' }}>
+    <Group gap="xs" style={{ width: 'fit-content' }} className="tw:flex-nowrap tw:gap-0">
       {/* Primary Button */}
       <Button
         variant="outline"

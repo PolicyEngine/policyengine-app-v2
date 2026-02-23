@@ -1,4 +1,5 @@
-import { Badge, Group, Stack, Text } from '@mantine/core';
+import { Badge } from '@mantine/core';
+import { Group, Stack, Text } from '@/components/ui';
 import { colors, spacing } from '@/designTokens';
 import { BulletsColumnConfig, BulletsValue } from './types';
 
@@ -9,9 +10,9 @@ interface BulletsColumnProps {
 
 export function BulletsColumn({ value }: BulletsColumnProps) {
   return (
-    <Stack gap={spacing.xs}>
+    <Stack gap="xs">
       {value.items.map((item, idx) => (
-        <Group key={idx} gap={spacing.xs} wrap="nowrap">
+        <Group key={idx} gap="xs" wrap="nowrap">
           <Text size="sm" c={colors.text.primary}>
             • {item.text}
           </Text>

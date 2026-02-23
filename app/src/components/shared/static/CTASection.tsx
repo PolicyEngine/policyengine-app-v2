@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import { Box, Container, Flex, Title } from '@mantine/core';
+import { Container, Title } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import ActionButton, { ActionButtonProps } from './ActionButton';
 
@@ -33,55 +33,42 @@ export default function CTASection({
   const isInverted = variant === 'accent';
 
   return (
-    <Box
-      py={spacing['4xl']}
+    <div
       style={{
+        paddingTop: spacing['4xl'],
+        paddingBottom: spacing['4xl'],
         backgroundColor: backgrounds[variant],
         borderBottom: `1px solid ${colors.border.dark}`,
         paddingLeft: '6.125%',
         paddingRight: '6.125%',
       }}
     >
-      <Container size="xl" px={0}>
+      <Container size="xl" className="tw:px-0">
         {title && (
           <Title
             order={2}
-            mb="xl"
             style={{
               fontSize: typography.fontSize['3xl'],
               fontWeight: typography.fontWeight.semibold,
               fontFamily: typography.fontFamily.primary,
               color: textColors[variant],
+              marginBottom: spacing.xl,
             }}
           >
             {title}
           </Title>
         )}
-        <Flex
-          direction={{ base: 'column', md: 'row' }}
-          align={{ base: 'stretch', md: 'center' }}
-          gap={{ base: 'xl', md: '4xl' }}
-        >
-          <Box flex={{ base: 1, md: 1.5 }} style={{ color: textColors[variant] }}>
-            {content}
-          </Box>
-          <Box
-            flex={1}
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              alignItems: 'center',
-            }}
-          >
+        <div className="tw:flex tw:flex-col md:tw:flex-row tw:items-stretch md:tw:items-center tw:gap-6 md:tw:gap-12">
+          <div style={{ flex: 1.5, color: textColors[variant] }}>{content}</div>
+          <div className="tw:flex tw:flex-1 tw:flex-col tw:items-center tw:justify-center">
             <ActionButton
               {...cta}
               variant={isInverted ? 'inverted' : 'primary'}
               caption={caption}
             />
-          </Box>
-        </Flex>
+          </div>
+        </div>
       </Container>
-    </Box>
+    </div>
   );
 }

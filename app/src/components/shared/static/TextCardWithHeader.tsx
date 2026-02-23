@@ -1,5 +1,7 @@
-import { Box, Button, Card, Group, Stack, Text, Title } from '@mantine/core';
-import { colors } from '../../../designTokens';
+import React from 'react';
+import { Button, Card } from '@mantine/core';
+import { Group, Stack, Text, Title } from '@/components/ui';
+import { colors } from '@/designTokens';
 
 interface Section {
   heading?: string;
@@ -14,13 +16,13 @@ interface TitleCardWithHeaderProps {
   onButtonClick?: (label: string) => void;
 }
 
-export const TitleCardWithHeader: React.FC<TitleCardWithHeaderProps> = ({
+export function TitleCardWithHeader({
   title,
   sections = [],
   backgroundColor = 'white',
   buttonLabel,
   onButtonClick,
-}) => {
+}: TitleCardWithHeaderProps) {
   let resolvedBackgroundColor: string;
   let textColor: string;
   switch (backgroundColor) {
@@ -40,45 +42,38 @@ export const TitleCardWithHeader: React.FC<TitleCardWithHeaderProps> = ({
   }
 
   return (
-    <Box>
-      {/* Title */}
-      <Title order={2} variant="colored">
-        {title}
-      </Title>
+    <div>
+      <Title order={2}>{title}</Title>
 
-      {/* Card with content */}
       <Card radius="lg" p="xl" bg={resolvedBackgroundColor}>
         <Stack gap="md">
           {sections.map((section, idx) => (
-            <>
-              <Title key={`title-${idx}`} order={3} variant="colored" ta="left">
+            <React.Fragment key={idx}>
+              <Title order={3} style={{ textAlign: 'left' }}>
                 {section.heading}
               </Title>
               {Array.isArray(section.body) ? (
                 section.body.map((para, pIdx) => (
                   <Text
-                    key={`body-${idx}-${pIdx}`}
+                    key={pIdx}
                     size="md"
                     c={textColor}
-                    lh={1.5}
-                    ta="left"
-                    mb="xs"
+                    style={{ lineHeight: 1.5, textAlign: 'left', marginBottom: '4px' }}
                   >
                     {para}
                   </Text>
                 ))
               ) : (
-                <Text key={`body-${idx}`} size="md" c={textColor} lh={1.5} ta="left">
+                <Text size="md" c={textColor} style={{ lineHeight: 1.5, textAlign: 'left' }}>
                   {section.body}
                 </Text>
               )}
-            </>
+            </React.Fragment>
           ))}
 
-          {/* Buttons */}
           {buttonLabel &&
             (Array.isArray(buttonLabel) ? (
-              <Group mt="md">
+              <Group gap="md" className="tw:mt-3">
                 {buttonLabel.map((label, idx) => (
                   <Button key={idx} onClick={() => onButtonClick?.(label)} variant="default">
                     {label}
@@ -92,6 +87,6 @@ export const TitleCardWithHeader: React.FC<TitleCardWithHeaderProps> = ({
             ))}
         </Stack>
       </Card>
-    </Box>
+    </div>
   );
-};
+}

@@ -1,11 +1,3 @@
-/**
- * BlogPostGrid Component
- *
- * Grid layout for displaying blog post cards.
- * Responsive: 2 columns on desktop, 1 on mobile/tablet.
- */
-
-import { SimpleGrid } from '@mantine/core';
 import type { ResearchItem } from '@/types/blog';
 import { BlogPostCard } from './BlogPostCard';
 
@@ -16,7 +8,7 @@ interface BlogPostGridProps {
 
 export function BlogPostGrid({ items, countryId }: BlogPostGridProps) {
   return (
-    <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="lg">
+    <div className="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 tw:gap-4">
       {items.map((item) => (
         <BlogPostCard
           key={`${item.isApp ? 'app' : 'post'}-${item.slug}`}
@@ -24,6 +16,6 @@ export function BlogPostGrid({ items, countryId }: BlogPostGridProps) {
           countryId={countryId}
         />
       ))}
-    </SimpleGrid>
+    </div>
   );
 }

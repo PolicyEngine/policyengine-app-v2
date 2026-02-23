@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Badge, Box, Card, Flex, Group, Image, Text } from '@mantine/core';
+import { Badge, Card } from '@mantine/core';
+import { Group, Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 
 export interface CardProps {
@@ -56,20 +57,26 @@ export function SingleCard({
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      {icon && <Box mb={spacing.sm}>{icon}</Box>}
+      {icon && <div style={{ marginBottom: spacing.sm }}>{icon}</div>}
 
       <Text
         fw={typography.fontWeight.medium}
-        fz={typography.fontSize['2xl']}
-        lh={typography.lineHeight.normal}
         c={background === 'green' ? colors.text.inverse : colors.text.primary}
-        style={{ fontFamily: typography.fontFamily.primary }}
+        style={{
+          fontFamily: typography.fontFamily.primary,
+          fontSize: typography.fontSize['2xl'],
+          lineHeight: typography.lineHeight.normal,
+        }}
       >
         {title}
       </Text>
 
       {tags.length > 0 && (
-        <Group mb={spacing.lg} align="left" style={{ flexWrap: 'wrap' }} mt={spacing.md}>
+        <Group
+          wrap="wrap"
+          align="start"
+          style={{ marginBottom: spacing.lg, marginTop: spacing.md }}
+        >
           {tags.map((tag, idx) => (
             <Badge
               key={idx}
@@ -87,42 +94,51 @@ export function SingleCard({
       )}
 
       <Text
-        fz={typography.fontSize.lg}
-        lh={typography.lineHeight.relaxed}
         c={background === 'green' ? colors.text.inverse : colors.text.secondary}
-        style={{ fontFamily: typography.fontFamily.body }}
+        style={{
+          fontFamily: typography.fontFamily.body,
+          fontSize: typography.fontSize.lg,
+          lineHeight: typography.lineHeight.relaxed,
+        }}
       >
         {description}
       </Text>
 
       {(footerText || image) && (
-        <Flex
-          mt={spacing.lg}
-          align="left"
-          gap="xl"
-          direction="column"
-          style={{ cursor: onClick ? 'pointer' : 'default' }}
+        <div
+          className="tw:flex tw:flex-col tw:gap-5"
+          style={{
+            marginTop: spacing.lg,
+            cursor: onClick ? 'pointer' : 'default',
+            alignItems: 'flex-start',
+          }}
         >
           {image && (
-            <Image
+            <img
               src={image}
-              style={{ width: '90%', height: 'auto', objectFit: 'cover', justifySelf: 'center' }}
-              radius={spacing.radius.container}
+              alt=""
+              style={{
+                width: '90%',
+                height: 'auto',
+                objectFit: 'cover',
+                justifySelf: 'center',
+                borderRadius: spacing.radius.container,
+              }}
             />
           )}
           {footerText && (
             <Text
-              fz={typography.fontSize.base}
               c={background === 'green' ? colors.text.inverse : colors.text.primary}
               style={{
                 textDecoration: 'underline',
+                fontSize: typography.fontSize.base,
               }}
               onClick={onClick}
             >
               {footerText}
             </Text>
           )}
-        </Flex>
+        </div>
       )}
     </Card>
   );

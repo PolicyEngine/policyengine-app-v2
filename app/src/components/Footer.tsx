@@ -7,10 +7,9 @@ import {
   IconBrandYoutube,
   IconMail,
 } from '@tabler/icons-react';
-import { Anchor, Box, Container, Group, SimpleGrid, Stack, Text } from '@mantine/core';
 import type { CountryId } from '@/api/report';
 import FooterSubscribe from '@/components/FooterSubscribe';
-import { colors, spacing, typography } from '@/designTokens';
+import { Container, Stack } from '@/components/ui';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { trackContactClicked } from '@/utils/analytics';
 
@@ -21,114 +20,77 @@ const getContactLinks = (countryId: CountryId) => ({
   donate: `/${countryId}/donate`,
   privacy: `/${countryId}/privacy`,
   terms: `/${countryId}/terms`,
-  // TODO: Add developer-tools page once it's built out
-  // developerTools: `/${countryId}/developer-tools`,
 });
 
 const SOCIAL_LINKS = [
-  { icon: IconMail, href: 'mailto:hello@policyengine.org' },
-  { icon: IconBrandTwitter, href: 'https://twitter.com/ThePolicyEngine' },
-  { icon: IconBrandFacebook, href: 'https://www.facebook.com/PolicyEngine' },
-  { icon: IconBrandLinkedin, href: 'https://www.linkedin.com/company/thepolicyengine' },
-  { icon: IconBrandYoutube, href: 'https://www.youtube.com/@policyengine' },
-  { icon: IconBrandInstagram, href: 'https://www.instagram.com/PolicyEngine/' },
-  { icon: IconBrandGithub, href: 'https://github.com/PolicyEngine' },
+  { icon: IconMail, href: 'mailto:hello@policyengine.org', label: 'Email' },
+  { icon: IconBrandTwitter, href: 'https://twitter.com/ThePolicyEngine', label: 'Twitter' },
+  { icon: IconBrandFacebook, href: 'https://www.facebook.com/PolicyEngine', label: 'Facebook' },
+  {
+    icon: IconBrandLinkedin,
+    href: 'https://www.linkedin.com/company/thepolicyengine',
+    label: 'LinkedIn',
+  },
+  { icon: IconBrandYoutube, href: 'https://www.youtube.com/@policyengine', label: 'YouTube' },
+  {
+    icon: IconBrandInstagram,
+    href: 'https://www.instagram.com/PolicyEngine/',
+    label: 'Instagram',
+  },
+  { icon: IconBrandGithub, href: 'https://github.com/PolicyEngine', label: 'GitHub' },
 ];
 
 export default function Footer() {
   const countryId = useCurrentCountry();
   const CONTACT_LINKS = getContactLinks(countryId);
   return (
-    <Box
-      component="footer"
-      w="100%"
-      style={{ backgroundColor: colors.primary[900], padding: '3rem 4rem' }}
-    >
-      <Container size="2xl">
-        <img
-          src={PolicyEngineLogo}
-          alt="PolicyEngine"
-          style={{
-            height: 52,
-            width: 'auto',
-          }}
-        />
-        <SimpleGrid cols={{ base: 1, md: 2 }} spacing={spacing['4xl']} mt="2rem">
-          {/* Left Section */}
-          <Stack gap="2xl" align="flex-start">
+    <footer className="tw:w-full tw:bg-primary-900 tw:py-4xl tw:px-4xl">
+      <Container size="xl">
+        <img src={PolicyEngineLogo} alt="PolicyEngine" className="tw:h-[52px] tw:w-auto" />
+        <div className="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4xl tw:mt-3xl">
+          <Stack gap="xl" align="start">
             <Stack gap="xs">
-              <Anchor
-                href={CONTACT_LINKS.about}
-                c={colors.white}
-                fz="md"
-                underline="never"
-                ff={typography.fontFamily.primary}
-              >
-                About us
-              </Anchor>
-              <Anchor
-                href={CONTACT_LINKS.donate}
-                c={colors.white}
-                fz="md"
-                underline="never"
-                ff={typography.fontFamily.primary}
-              >
-                Donate
-              </Anchor>
-              <Anchor
-                href={CONTACT_LINKS.privacy}
-                c={colors.white}
-                fz="md"
-                underline="never"
-                ff={typography.fontFamily.primary}
-              >
-                Privacy policy
-              </Anchor>
-              <Anchor
-                href={CONTACT_LINKS.terms}
-                c={colors.white}
-                fz="md"
-                underline="never"
-                ff={typography.fontFamily.primary}
-              >
-                Terms and conditions
-              </Anchor>
-              {/* TODO: Uncomment when developer-tools page is built
-              <Anchor
-                href={CONTACT_LINKS.developerTools}
-                c={colors.white}
-                fz="md"
-                underline="never"
-                ff={typography.fontFamily.primary}
-              >
-                Developer tools
-              </Anchor>
-              */}
+              {[
+                { href: CONTACT_LINKS.about, text: 'About us' },
+                { href: CONTACT_LINKS.donate, text: 'Donate' },
+                { href: CONTACT_LINKS.privacy, text: 'Privacy policy' },
+                { href: CONTACT_LINKS.terms, text: 'Terms and conditions' },
+              ].map(({ href, text }) => (
+                <a
+                  key={href}
+                  href={href}
+                  className="tw:text-white tw:text-base tw:no-underline tw:transition-colors tw:duration-200 tw:hover:text-primary-200"
+                >
+                  {text}
+                </a>
+              ))}
             </Stack>
 
             <Stack gap="md">
-              <Group gap="md">
-                {SOCIAL_LINKS.map(({ icon: Icon, href }, index) => (
-                  <Anchor
-                    key={index}
+              <div className="tw:flex tw:flex-row tw:items-center tw:gap-md">
+                {SOCIAL_LINKS.map(({ icon: Icon, href, label }) => (
+                  <a
+                    key={href}
                     href={href}
                     target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={label}
+                    className="tw:text-white tw:transition-all tw:duration-200 tw:hover:text-primary-200 tw:hover:scale-110"
                     onClick={href.startsWith('mailto:') ? trackContactClicked : undefined}
                   >
-                    <Icon size={24} color={colors.white} />
-                  </Anchor>
+                    <Icon size={24} />
+                  </a>
                 ))}
-              </Group>
-              <Text fz="xs" c={colors.white} ff={typography.fontFamily.primary}>
-                © {new Date().getFullYear()} PolicyEngine. All rights reserved.
-              </Text>
+              </div>
+              <p className="tw:text-xs tw:text-white">
+                &copy; {new Date().getFullYear()} PolicyEngine. All rights reserved.
+              </p>
             </Stack>
           </Stack>
 
-          {/* Right Section */}
           <FooterSubscribe />
-        </SimpleGrid>
+        </div>
       </Container>
-    </Box>
+    </footer>
   );
 }

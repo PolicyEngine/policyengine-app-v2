@@ -1,13 +1,6 @@
-/**
- * ResearchFilters Component
- *
- * Sidebar filters for the Research page.
- * Includes search, topics, locations, and authors.
- * Filter menu extends to bottom of viewport with scroll in expanded section.
- */
-
 import { useEffect, useRef, useState } from 'react';
-import { Box, Button, Checkbox, Group, Stack, Text, TextInput } from '@mantine/core';
+import { Button, Checkbox, TextInput } from '@mantine/core';
+import { Group, Stack, Text } from '@/components/ui';
 import {
   getLocationTags,
   getTopicLabel,
@@ -85,41 +78,23 @@ export function ResearchFilters({
     setExpandedSection(expandedSection === section ? null : section);
   };
 
-  const handleTopicToggle = (tag: string) => {
-    if (selectedTopics.includes(tag)) {
-      onTopicsChange(selectedTopics.filter((t) => t !== tag));
+  function toggleItem(item: string, selected: string[], onChange: (items: string[]) => void) {
+    if (selected.includes(item)) {
+      onChange(selected.filter((s) => s !== item));
     } else {
-      onTopicsChange([...selectedTopics, tag]);
+      onChange([...selected, item]);
     }
-  };
+  }
 
-  const handleLocationToggle = (tag: string) => {
-    if (selectedLocations.includes(tag)) {
-      onLocationsChange(selectedLocations.filter((t) => t !== tag));
-    } else {
-      onLocationsChange([...selectedLocations, tag]);
-    }
-  };
-
-  const handleAuthorToggle = (key: string) => {
-    if (selectedAuthors.includes(key)) {
-      onAuthorsChange(selectedAuthors.filter((a) => a !== key));
-    } else {
-      onAuthorsChange([...selectedAuthors, key]);
-    }
-  };
-
-  const handleTypeToggle = (type: string) => {
-    if (selectedTypes.includes(type)) {
-      onTypesChange(selectedTypes.filter((t) => t !== type));
-    } else {
-      onTypesChange([...selectedTypes, type]);
-    }
-  };
+  const handleTopicToggle = (tag: string) => toggleItem(tag, selectedTopics, onTopicsChange);
+  const handleLocationToggle = (tag: string) =>
+    toggleItem(tag, selectedLocations, onLocationsChange);
+  const handleAuthorToggle = (key: string) => toggleItem(key, selectedAuthors, onAuthorsChange);
+  const handleTypeToggle = (type: string) => toggleItem(type, selectedTypes, onTypesChange);
 
   // Render type options
   const renderTypeOptions = () => (
-    <Stack gap={4}>
+    <Stack gap="xs" style={{ gap: 4 }}>
       {typeOptions.map((option) => (
         <Checkbox
           key={option.value}
@@ -134,7 +109,7 @@ export function ResearchFilters({
 
   // Render the tags for a section
   const renderTopicTags = () => (
-    <Stack gap={4}>
+    <Stack gap="xs" style={{ gap: 4 }}>
       {getTopicTags().map((tag) => (
         <Checkbox
           key={tag}
@@ -154,10 +129,10 @@ export function ResearchFilters({
     const usStates = allLocationTags.filter((tag) => tag.startsWith('us-'));
 
     return (
-      <Stack gap={4}>
+      <Stack gap="xs" style={{ gap: 4 }}>
         {/* Show countries */}
         {countries.map((tag) => (
-          <Box key={tag}>
+          <div key={tag}>
             {tag === 'us' ? (
               // US with expandable +/-
               <Checkbox
@@ -191,7 +166,7 @@ export function ResearchFilters({
                 size="sm"
               />
             )}
-          </Box>
+          </div>
         ))}
         {/* US States - only show when expanded */}
         {usStatesExpanded &&
@@ -210,7 +185,7 @@ export function ResearchFilters({
   };
 
   const renderAuthorTags = () => (
-    <Stack gap={4}>
+    <Stack gap="xs" style={{ gap: 4 }}>
       {availableAuthors.map((author) => (
         <Checkbox
           key={author.key}
@@ -224,9 +199,9 @@ export function ResearchFilters({
   );
 
   return (
-    <Box style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <div className="tw:flex tw:flex-col tw:h-full">
       {/* Search - fixed at top */}
-      <Box mb="lg" style={{ flexShrink: 0 }}>
+      <div className="tw:flex-shrink-0 tw:mb-4">
         <TextInput
           placeholder="Search posts..."
           value={searchQuery}
@@ -241,26 +216,22 @@ export function ResearchFilters({
         <Button fullWidth variant="outline" onClick={onSearchSubmit}>
           Search
         </Button>
-      </Box>
+      </div>
 
       {/* Filter sections container - extends to bottom of viewport */}
-      <Box
+      <div
         ref={filterContainerRef}
+        className="tw:flex tw:flex-col tw:min-h-0 tw:overflow-hidden"
         style={{
           flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          minHeight: 0, // Important for flex child scrolling
           maxHeight: availableHeight,
-          overflow: 'hidden',
         }}
       >
         {/* Type Header */}
         <Group
           justify="space-between"
           onClick={() => toggleSection('type')}
-          style={{ cursor: 'pointer', flexShrink: 0 }}
-          py="xs"
+          className="tw:cursor-pointer tw:flex-shrink-0 tw:py-1"
         >
           <Text fw={600} size="sm">
             Type
@@ -272,7 +243,7 @@ export function ResearchFilters({
 
         {/* Type Content */}
         {expandedSection === 'type' && (
-          <Box
+          <div
             style={{
               overflowY: 'auto',
               minHeight: 0,
@@ -281,15 +252,14 @@ export function ResearchFilters({
             }}
           >
             {renderTypeOptions()}
-          </Box>
+          </div>
         )}
 
         {/* Topics Header */}
         <Group
           justify="space-between"
           onClick={() => toggleSection('topics')}
-          style={{ cursor: 'pointer', flexShrink: 0 }}
-          py="xs"
+          className="tw:cursor-pointer tw:flex-shrink-0 tw:py-1"
         >
           <Text fw={600} size="sm">
             Topic
@@ -301,7 +271,7 @@ export function ResearchFilters({
 
         {/* Topics Content */}
         {expandedSection === 'topics' && (
-          <Box
+          <div
             style={{
               overflowY: 'auto',
               minHeight: 0,
@@ -310,15 +280,14 @@ export function ResearchFilters({
             }}
           >
             {renderTopicTags()}
-          </Box>
+          </div>
         )}
 
         {/* Locations Header */}
         <Group
           justify="space-between"
           onClick={() => toggleSection('locations')}
-          style={{ cursor: 'pointer', flexShrink: 0 }}
-          py="xs"
+          className="tw:cursor-pointer tw:flex-shrink-0 tw:py-1"
         >
           <Text fw={600} size="sm">
             Location
@@ -330,7 +299,7 @@ export function ResearchFilters({
 
         {/* Locations Content */}
         {expandedSection === 'locations' && (
-          <Box
+          <div
             style={{
               overflowY: 'auto',
               minHeight: 0,
@@ -339,15 +308,14 @@ export function ResearchFilters({
             }}
           >
             {renderLocationTags()}
-          </Box>
+          </div>
         )}
 
         {/* Authors Header */}
         <Group
           justify="space-between"
           onClick={() => toggleSection('authors')}
-          style={{ cursor: 'pointer', flexShrink: 0 }}
-          py="xs"
+          className="tw:cursor-pointer tw:flex-shrink-0 tw:py-1"
         >
           <Text fw={600} size="sm">
             Author
@@ -359,7 +327,7 @@ export function ResearchFilters({
 
         {/* Authors Content */}
         {expandedSection === 'authors' && (
-          <Box
+          <div
             style={{
               overflowY: 'auto',
               minHeight: 0,
@@ -368,9 +336,9 @@ export function ResearchFilters({
             }}
           >
             {renderAuthorTags()}
-          </Box>
+          </div>
         )}
-      </Box>
-    </Box>
+      </div>
+    </div>
   );
 }

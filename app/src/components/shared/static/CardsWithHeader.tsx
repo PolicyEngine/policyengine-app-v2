@@ -1,4 +1,4 @@
-import { Box, SimpleGrid, Title } from '@mantine/core';
+import { Title } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import { CardProps, SingleCard } from './SingleCard';
 
@@ -9,7 +9,7 @@ interface CardsContainerProps {
 
 export function CardsWithHeader({ containerTitle, cards }: CardsContainerProps) {
   return (
-    <Box
+    <div
       style={{
         paddingLeft: spacing.container.xl,
         paddingRight: spacing.container.xl,
@@ -18,16 +18,19 @@ export function CardsWithHeader({ containerTitle, cards }: CardsContainerProps) 
       }}
     >
       <Title
-        size={typography.fontSize['4xl']}
-        fw={typography.fontWeight.semibold}
-        c={colors.text.title}
-        mb={spacing['2xl']}
-        style={{ fontFamily: typography.fontFamily.primary }}
+        order={2}
+        style={{
+          fontSize: typography.fontSize['4xl'],
+          fontWeight: typography.fontWeight.semibold,
+          color: colors.text.title,
+          marginBottom: spacing['2xl'],
+          fontFamily: typography.fontFamily.primary,
+        }}
       >
         {containerTitle}
       </Title>
 
-      <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="3xl">
+      <div className="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-3 tw:gap-8">
         {cards.map((card, idx) => (
           <SingleCard
             key={idx}
@@ -41,7 +44,7 @@ export function CardsWithHeader({ containerTitle, cards }: CardsContainerProps) 
             image={card.image}
           />
         ))}
-      </SimpleGrid>
-    </Box>
+      </div>
+    </div>
   );
 }

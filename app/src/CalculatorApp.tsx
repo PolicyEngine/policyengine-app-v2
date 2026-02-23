@@ -4,6 +4,7 @@
  */
 import '@mantine/core/styles.css';
 import '@mantine/dates/styles.css';
+import './app.css';
 
 import { QueryNormalizerProvider } from '@normy/react-query';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
