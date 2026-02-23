@@ -6,7 +6,7 @@ Medicaid is a joint federal-state program providing health coverage to low-incom
 
 The ACA expanded Medicaid eligibility to all adults under 65 with household income at or below 138% of the Federal Poverty Level (FPL). The federal government initially covered 100% of expansion costs, phasing down to 90% by 2020—higher than the standard FMAP of about 70% for traditional Medicaid in Utah.
 
-HB 15 would repeal expansion if federal matching drops below 85%, reflecting concerns that Congress could further reduce the enhanced FMAP and shift more costs to states.
+HB 15 defines its own calculation for the effective federal matching rate and would repeal expansion if that rate falls below 85%. This provision is particularly relevant in light of the federal One Big Beautiful Bill Act (HR 1), which reduces the enhanced FMAP for expansion populations from 90% to 80% starting in 2026 and introduces per-capita caps and work requirements that could further reduce effective federal contributions.
 
 ### Utah's Medicaid expansion history
 
@@ -48,11 +48,11 @@ The "coverage gap" refers to individuals whose earnings exceed traditional Medic
 
 ## Single adult household
 
-Consider a single adult in Utah. Under current law, adults earning up to 138% FPL (~$22,500/year) qualify for Medicaid expansion, receiving approximately $8,000 in annual benefits.
+Consider a single adult in Utah. Under current law, adults earning up to 138% FPL (~$22,500/year) qualify for Medicaid expansion, receiving $8,000 in annual benefits per the PolicyEngine model.
 
-At $12,000/year (75% FPL), this adult currently receives Medicaid coverage. Under HB 15, they would lose this coverage and fall into the coverage gap—earning too little for ACA subsidies but no longer qualifying for Medicaid.
+At $12,000/year (75% FPL), this adult currently receives Medicaid coverage. Under HB 15, they would lose coverage entirely—a single childless adult has no other Medicaid eligibility pathway in Utah, and at 75% FPL they earn too little for ACA subsidies.
 
-At $18,000/year (110% FPL), that same adult could transition to ACA coverage, receiving premium tax credits.
+At $18,000/year (110% FPL), that same adult could transition to ACA coverage, receiving premium tax credits worth $11,544. While the PTC amount exceeds the Medicaid benefit value, this reflects the higher cost of private insurance premiums compared to Medicaid's per-person cost to the government.
 
 **Table 1: Health Benefits for Single Adult in Utah (2027)**
 
@@ -115,7 +115,7 @@ Of the ~84,000 people losing Medicaid enrollment:
 
 - **13.5% can transition to ACA**: These individuals earn between 100-138% FPL and can obtain marketplace coverage with premium subsidies.
 
-Children's coverage is unaffected by HB 15—they remain eligible for Medicaid up to 136% FPL and CHIP up to 205% FPL regardless of the expansion repeal. Only adult coverage under the expansion category is affected.
+Children's coverage is largely unaffected by HB 15—they remain eligible for Medicaid up to 136% FPL and CHIP up to 205% FPL regardless of the expansion repeal. However, children in households where a parent loses Medicaid may experience indirect effects if their parent forgoes care due to loss of coverage. Only adult coverage under the expansion category is directly affected.
 
 ### Demographics of affected population
 
