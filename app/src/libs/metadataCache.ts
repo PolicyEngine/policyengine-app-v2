@@ -13,13 +13,14 @@
  * - pe_model_version_${countryId} → version info + fetchedAt timestamp
  * - pe_param_children_${countryId} → Record<parentPath, ParameterChildrenResponse>
  * - pe_params_${countryId} → Record<paramName, ParameterMetadata>
+ * - pe_variables_${countryId} → Record<varName, VariableMetadata>
  *
  * All caches have a 2-week TTL. When the model version changes,
  * clearMetadataCache() wipes all cached data for that country.
  */
 
 import type { ParameterChildrenResponse } from '@/api/v2';
-import type { ParameterMetadata } from '@/types/metadata';
+import type { ParameterMetadata, VariableMetadata } from '@/types/metadata';
 
 const CACHE_TTL_MS = 14 * 24 * 60 * 60 * 1000; // 2 weeks
 
@@ -139,6 +140,30 @@ export function setCachedParameters(
 }
 
 // ---------------------------------------------------------------------------
+// Variables (full variable catalog)
+// ---------------------------------------------------------------------------
+
+type VariablesCache = { data: Record<string, VariableMetadata>; fetchedAt: number };
+
+export function getCachedVariables(
+  countryId: string,
+): Record<string, VariableMetadata> | null {
+  const cache = readJSON<VariablesCache>(`pe_variables_${countryId}`);
+  if (!cache || isCacheStale(cache.fetchedAt)) return null;
+  return cache.data;
+}
+
+export function setCachedVariables(
+  countryId: string,
+  data: Record<string, VariableMetadata>,
+): void {
+  writeJSON(`pe_variables_${countryId}`, {
+    data,
+    fetchedAt: Date.now(),
+  });
+}
+
+// ---------------------------------------------------------------------------
 // Cache invalidation
 // ---------------------------------------------------------------------------
 
@@ -147,6 +172,7 @@ export function clearMetadataCache(countryId: string): void {
     localStorage.removeItem(`pe_model_version_${countryId}`);
     localStorage.removeItem(`pe_param_children_${countryId}`);
     localStorage.removeItem(`pe_params_${countryId}`);
+    localStorage.removeItem(`pe_variables_${countryId}`);
   } catch {
     // Silently ignore access errors
   }

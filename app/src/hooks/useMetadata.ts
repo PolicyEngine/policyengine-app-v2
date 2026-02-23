@@ -3,7 +3,12 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useModelVersion } from '@/hooks/useModelVersion';
 import { useEntities } from '@/hooks/useStaticMetadata';
-import { fetchMetadataThunk } from '@/reducers/metadataReducer';
+import { getCachedVariables } from '@/libs/metadataCache';
+import {
+  fetchMetadataThunk,
+  fetchVariablesThunk,
+  hydrateVariables,
+} from '@/reducers/metadataReducer';
 import { AppDispatch, RootState } from '@/store';
 import { HouseholdMetadataContext } from '@/utils/householdValues';
 
@@ -20,8 +25,15 @@ export function selectMetadataState(state: RootState) {
 }
 
 /**
- * Hook that fetches all metadata (variables, datasets) for a country
- * and checks the model version for localStorage cache invalidation.
+ * Hook that fetches metadata (datasets, version) for a country and loads
+ * variables via a cache-first background strategy.
+ *
+ * Loading flow:
+ * 1. Hydrate variables from localStorage cache (instant — consumers have data immediately)
+ * 2. Fetch datasets + version (fast — sets loaded: true so MetadataGuard passes)
+ * 3. Fetch variables from API in background (updates Redux + localStorage when done)
+ *
+ * Also checks the model version for localStorage cache invalidation.
  *
  * @param countryId - Country to fetch metadata for (e.g., 'us', 'uk')
  */
@@ -41,7 +53,17 @@ export function useFetchMetadata(countryId: string): void {
     const needsFetch = !loading && (!loaded || countryId !== currentCountry);
 
     if (needsFetch && countryId) {
+      // 1. Hydrate variables from localStorage cache immediately
+      const cached = getCachedVariables(countryId);
+      if (cached) {
+        dispatch(hydrateVariables({ variables: cached, countryId }));
+      }
+
+      // 2. Fetch datasets + version (fast, sets loaded: true)
       dispatch(fetchMetadataThunk(countryId));
+
+      // 3. Fetch variables from API in background (updates Redux + cache)
+      dispatch(fetchVariablesThunk(countryId));
     }
   }, [countryId, loading, loaded, currentCountry, dispatch]);
 }
