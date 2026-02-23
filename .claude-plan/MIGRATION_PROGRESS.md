@@ -1,6 +1,6 @@
 # Simulation & Report V2 Migration Progress
 
-## Current: Phase 4a — Task 5
+## Current: Phase 4a — Task 6
 
 ## Branch Strategy
 
@@ -26,7 +26,7 @@ _(Updated as branches are created)_
 |---|---|---|---|
 | policyengine.py | `feat/sim-report-migration/phase-4` | 2026-02-20 | Phase 4 complete |
 | policyengine-api-v2-alpha | `feat/sim-report-migration/phase-4a` | 2026-02-23 | Active |
-| policyengine-app-v2 | — | — | Not started |
+| policyengine-app-v2 | `feat/sim-report-migration/phase-4a` | 2026-02-23 | Active |
 
 ---
 
@@ -89,7 +89,7 @@ _Full spec: `.claude-plan/LAZY_METADATA_SPEC.md`_
 - [x] 2. `GET /parameters/children` — fetch direct children of a parameter path (2026-02-23)
 - [x] 3. `POST /variables/by-name` — fetch specific variables by name list (2026-02-23)
 - [x] 4. `GET /tax-benefit-models/by-country/{country_id}` — model + latest version (2026-02-23)
-- [ ] 5. Replace bulk parameter fetch with lazy tree loading
+- [x] 5. Replace bulk parameter fetch with lazy tree loading (2026-02-23)
 - [ ] 6. Batch-fetch policy parameters on demand
 - [ ] 7. Add localStorage caching keyed on model version
 - [ ] 8. Move variable fetch to background/cache-first
