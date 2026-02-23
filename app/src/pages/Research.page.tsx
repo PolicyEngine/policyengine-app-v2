@@ -8,7 +8,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Fuse from 'fuse.js';
 import { useParams, useSearchParams } from 'react-router-dom';
-import { Box, Container, Loader, Text } from '@mantine/core';
+import { Container, Spinner, Text } from '@/components/ui';
 import { BlogPostGrid } from '@/components/blog/BlogPostGrid';
 import { ResearchFilters } from '@/components/blog/ResearchFilters';
 import { useDisplayCategory } from '@/components/blog/useDisplayCategory';
@@ -190,8 +190,8 @@ export default function ResearchPage() {
       />
 
       {/* Content */}
-      <Container size="xl" py="xl">
-        <Box
+      <Container size="xl" className="tw:py-xl">
+        <div
           style={{
             display: 'flex',
             flexDirection: displayCategory === 'desktop' ? 'row' : 'column',
@@ -199,7 +199,7 @@ export default function ResearchPage() {
           }}
         >
           {/* Sidebar Filters */}
-          <Box
+          <div
             style={{
               flex: displayCategory === 'desktop' ? '0 0 250px' : '1',
               position: displayCategory === 'desktop' ? 'sticky' : 'static',
@@ -223,11 +223,11 @@ export default function ResearchPage() {
               availableAuthors={mockAuthors}
               countryId={countryId}
             />
-          </Box>
+          </div>
 
           {/* Results */}
-          <Box style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
-            <Text size="sm" c="dimmed" mb="md">
+          <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+            <Text size="sm" className="tw:mb-md" style={{ color: colors.gray[500] }}>
               {filteredItems.length} {filteredItems.length === 1 ? 'result' : 'results'}
             </Text>
 
@@ -237,32 +237,29 @@ export default function ResearchPage() {
 
                 {/* Sentinel element for infinite scroll */}
                 {hasMore && (
-                  <Box
+                  <div
                     ref={sentinelRef}
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'center',
-                      padding: spacing.xl,
-                    }}
+                    className="tw:flex tw:justify-center"
+                    style={{ padding: spacing.xl }}
                   >
-                    <Loader size="sm" color="teal" />
-                  </Box>
+                    <Spinner size="sm" />
+                  </div>
                 )}
               </>
             ) : (
-              <Box
+              <div
+                className="tw:text-center"
                 style={{
-                  textAlign: 'center',
                   padding: spacing['3xl'],
                   backgroundColor: colors.gray[50],
                   borderRadius: spacing.radius.container,
                 }}
               >
-                <Text c="dimmed">No results found. Try adjusting your filters.</Text>
-              </Box>
+                <Text style={{ color: colors.gray[500] }}>No results found. Try adjusting your filters.</Text>
+              </div>
             )}
-          </Box>
-        </Box>
+          </div>
+        </div>
       </Container>
     </StaticPageLayout>
   );

@@ -1,18 +1,18 @@
 import { useState, type ReactElement } from 'react';
-import { IconCalendar, IconChevronUp, IconClock } from '@tabler/icons-react';
+import { IconCalendar, IconChevronDown, IconChevronRight, IconChevronUp, IconClock } from '@tabler/icons-react';
 import {
-  Box,
   Button,
   Container,
-  Drawer,
   Group,
-  NavLink,
   ScrollArea,
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
   Stack,
   Text,
   Title,
-} from '@mantine/core';
-import { useDisclosure } from '@mantine/hooks';
+} from '@/components/ui';
 import { ReportActionButtons } from '@/components/report/ReportActionButtons';
 import { SharedReportTag } from '@/components/report/SharedReportTag';
 import { colors, spacing, typography } from '@/designTokens';
@@ -90,7 +90,7 @@ export default function ReportOutputLayout({
 }: ReportOutputLayoutProps) {
   const countryId = useCurrentCountry();
   const isMobile = useIsMobile();
-  const [drawerOpened, { open: openDrawer, close: closeDrawer }] = useDisclosure();
+  const [drawerOpened, setDrawerOpened] = useState(false);
 
   // Get the appropriate tree based on output type
   const sidebarTree =
@@ -104,22 +104,24 @@ export default function ReportOutputLayout({
   function handleMobileNavigate(view: string) {
     if (onSidebarNavigate) {
       onSidebarNavigate(view);
-      closeDrawer();
+      setDrawerOpened(false);
     }
   }
 
   return (
-    <Container size="xl" px={spacing.xl}>
-      <Stack gap={spacing.xl} pb={showMobileDrawer ? 60 : undefined}>
+    <Container size="xl" className="tw:px-xl">
+      <Stack className="tw:gap-xl" style={{ paddingBottom: showMobileDrawer ? 60 : undefined }}>
         {/* Header Section */}
-        <Box>
+        <div>
           {/* Title row with actions */}
-          <Group gap={spacing.xs} align="center" mb={spacing.xs}>
+          <Group className="tw:gap-xs tw:items-center tw:mb-xs">
             <Title
               order={1}
-              variant="colored"
-              fw={typography.fontWeight.semibold}
-              fz={typography.fontSize['3xl']}
+              style={{
+                fontWeight: typography.fontWeight.semibold,
+                fontSize: typography.fontSize['3xl'],
+                color: colors.primary[700],
+              }}
             >
               {reportLabel || reportId}
             </Title>
@@ -133,33 +135,33 @@ export default function ReportOutputLayout({
           </Group>
 
           {/* Timestamp and View All */}
-          <Group gap={spacing.xs} align="center">
+          <Group className="tw:gap-xs tw:items-center">
             {reportYear && (
               <>
                 <IconCalendar size={16} color={colors.text.secondary} />
-                <Text size="sm" c="dimmed">
+                <Text className="tw:text-sm" style={{ color: colors.text.secondary }}>
                   Year: {reportYear}
                 </Text>
-                <Text size="sm" c="dimmed">
+                <Text className="tw:text-sm" style={{ color: colors.text.secondary }}>
                   •
                 </Text>
               </>
             )}
             <IconClock size={16} color={colors.text.secondary} />
-            <Text size="sm" c="dimmed">
+            <Text className="tw:text-sm" style={{ color: colors.text.secondary }}>
               {timestamp}
             </Text>
           </Group>
-        </Box>
+        </div>
 
         {/* Navigation Tabs */}
-        <Box
+        <div
           style={{
             borderTop: `1px solid ${colors.border.light}`,
             paddingTop: spacing.md,
           }}
         >
-          <Box
+          <div
             style={{
               display: 'flex',
               position: 'relative',
@@ -169,15 +171,15 @@ export default function ReportOutputLayout({
             }}
           >
             {tabs.map((tab, index) => (
-              <Box
+              <div
                 key={tab.value}
                 onClick={() => onTabChange(tab.value)}
+                className="tw:cursor-pointer"
                 style={{
                   paddingLeft: spacing.sm,
                   paddingRight: spacing.sm,
                   paddingBottom: spacing.xs,
                   paddingTop: spacing.xs,
-                  cursor: 'pointer',
                   transition: 'color 0.2s ease',
                   display: 'flex',
                   alignItems: 'center',
@@ -191,7 +193,7 @@ export default function ReportOutputLayout({
               >
                 <Text
                   span
-                  variant="tab"
+                  className="tw:text-sm"
                   style={{
                     color: activeTab === tab.value ? colors.text.primary : colors.gray[700],
                     fontWeight:
@@ -203,7 +205,7 @@ export default function ReportOutputLayout({
                   {tab.label}
                 </Text>
                 {activeTab === tab.value && (
-                  <Box
+                  <div
                     style={{
                       position: 'absolute',
                       bottom: 0,
@@ -214,20 +216,20 @@ export default function ReportOutputLayout({
                     }}
                   />
                 )}
-              </Box>
+              </div>
             ))}
-          </Box>
-        </Box>
+          </div>
+        </div>
 
         {/* Content Area with optional sidebar */}
         {showDesktopSidebar ? (
-          <Group align="flex-start" gap={spacing.lg}>
+          <Group className="tw:items-start tw:gap-lg">
             <ReportSidebar
               tree={sidebarTree}
               activeView={activeView}
               onNavigate={onSidebarNavigate}
             />
-            <Box style={{ flex: 1 }}>{children}</Box>
+            <div className="tw:flex-1">{children}</div>
           </Group>
         ) : (
           children
@@ -236,7 +238,7 @@ export default function ReportOutputLayout({
 
       {/* Mobile bottom bar for comparative analysis navigation */}
       {showMobileDrawer && (
-        <Box
+        <div
           style={{
             position: 'fixed',
             bottom: 0,
@@ -248,45 +250,42 @@ export default function ReportOutputLayout({
             zIndex: 200,
           }}
         >
-          <Group justify="space-between" align="center" gap="sm" wrap="nowrap">
+          <Group className="tw:justify-between tw:items-center tw:gap-sm tw:flex-nowrap">
             <Button
-              variant="default"
+              variant="outline"
               size="sm"
-              onClick={openDrawer}
-              leftSection={
-                <IconChevronUp
-                  size={16}
-                  style={{
-                    transform: drawerOpened ? 'rotate(180deg)' : 'rotate(0deg)',
-                    transition: 'transform 150ms ease',
-                  }}
-                />
-              }
+              onClick={() => setDrawerOpened(true)}
+              className="tw:flex tw:items-center tw:gap-xs"
             >
+              <IconChevronUp
+                size={16}
+                style={{
+                  transform: drawerOpened ? 'rotate(180deg)' : 'rotate(0deg)',
+                  transition: 'transform 150ms ease',
+                }}
+              />
               {activeViewLabel || 'Select view'}
             </Button>
           </Group>
-        </Box>
+        </div>
       )}
 
       {/* Mobile bottom drawer for sidebar navigation */}
       {showMobileDrawer && (
-        <Drawer
-          opened={drawerOpened}
-          onClose={closeDrawer}
-          position="bottom"
-          size="70%"
-          title="Comparative analysis"
-          zIndex={300}
-        >
-          <ScrollArea style={{ height: '100%' }} type="auto">
-            <MobileTreeNav
-              tree={sidebarTree}
-              activeView={activeView}
-              onNavigate={handleMobileNavigate}
-            />
-          </ScrollArea>
-        </Drawer>
+        <Sheet open={drawerOpened} onOpenChange={setDrawerOpened}>
+          <SheetContent side="bottom" className="tw:h-[70vh]" style={{ zIndex: 300 }}>
+            <SheetHeader>
+              <SheetTitle>Comparative analysis</SheetTitle>
+            </SheetHeader>
+            <ScrollArea className="tw:flex-1">
+              <MobileTreeNav
+                tree={sidebarTree}
+                activeView={activeView}
+                onNavigate={handleMobileNavigate}
+              />
+            </ScrollArea>
+          </SheetContent>
+        </Sheet>
       )}
     </Container>
   );
@@ -294,7 +293,7 @@ export default function ReportOutputLayout({
 
 /**
  * Full-width tree navigation for the mobile bottom drawer.
- * Renders the same NavLink tree as ReportSidebar but without
+ * Renders the same tree as ReportSidebar but without
  * desktop-specific styles (fixed width, border, sticky positioning).
  */
 function MobileTreeNav({
@@ -340,20 +339,41 @@ function MobileTreeNav({
     }
   }
 
-  function renderNode(node: TreeNode): ReactElement {
+  function renderNode(node: TreeNode, depth: number = 0): ReactElement {
     const hasChildren = Boolean(node.children?.length);
     const isExpanded = expandedSet.has(node.name);
+    const isActive = active === node.name;
+
     return (
-      <NavLink
-        key={node.name}
-        label={node.label}
-        active={active === node.name}
-        opened={hasChildren ? isExpanded : undefined}
-        onClick={() => handleClick(node.name, hasChildren)}
-        disabled={node.disabled}
-      >
-        {hasChildren && isExpanded && node.children?.map((child) => renderNode(child))}
-      </NavLink>
+      <div key={node.name}>
+        <button
+          className="tw:w-full tw:text-left tw:border-none tw:cursor-pointer tw:flex tw:items-center tw:gap-1 tw:text-sm tw:rounded"
+          style={{
+            padding: `${spacing.xs} ${spacing.sm}`,
+            paddingLeft: `calc(${spacing.sm} + ${depth * 12}px)`,
+            backgroundColor: isActive ? colors.primary[50] : 'transparent',
+            color: node.disabled
+              ? colors.text.tertiary
+              : isActive
+                ? colors.primary[700]
+                : colors.text.primary,
+            fontWeight: isActive ? 500 : 400,
+            opacity: node.disabled ? 0.6 : 1,
+            pointerEvents: node.disabled ? 'none' : 'auto',
+          }}
+          onClick={() => handleClick(node.name, hasChildren)}
+          disabled={node.disabled}
+        >
+          {hasChildren &&
+            (isExpanded ? (
+              <IconChevronDown size={14} style={{ flexShrink: 0 }} />
+            ) : (
+              <IconChevronRight size={14} style={{ flexShrink: 0 }} />
+            ))}
+          {node.label}
+        </button>
+        {hasChildren && isExpanded && node.children?.map((child) => renderNode(child, depth + 1))}
+      </div>
     );
   }
 

@@ -1,5 +1,5 @@
 import { Link, useParams } from 'react-router-dom';
-import { Button, Container, Divider, Stack, Text, Title } from '@mantine/core';
+import { Button, Container, Stack, Text, Title } from '@/components/ui';
 import { colors } from '@/designTokens';
 
 export default function NotFoundPage() {
@@ -10,20 +10,22 @@ export default function NotFoundPage() {
       <Title order={2} variant="colored">
         Page not found
       </Title>
-      <Text c="dimmed" mb="sm">
+      <Text className="tw:mb-sm" style={{ color: colors.gray[500] }}>
         The page you're looking for doesn't exist or has been moved.
       </Text>
-      <Divider my="sm" />
+      <hr className="tw:border-border-light tw:my-sm" />
 
-      <Stack align="center" justify="center" py={80}>
-        <Text size="72px" fw={700} c={colors.primary[500]} style={{ lineHeight: 1 }}>
+      <Stack className="tw:items-center tw:justify-center tw:py-20">
+        <Text size="xl" fw={700} style={{ fontSize: '72px', lineHeight: 1, color: colors.primary[500] }}>
           404
         </Text>
-        <Text size="sm" c="dimmed" mt="md">
+        <Text size="sm" className="tw:mt-md" style={{ color: colors.gray[500] }}>
           Check the URL or head back to your reports.
         </Text>
-        <Button component={Link} to={`/${countryId || 'us'}/reports`} mt="md" color="teal">
-          Go to reports
+        <Button className="tw:mt-md" asChild>
+          <Link to={`/${countryId || 'us'}/reports`}>
+            Go to reports
+          </Link>
         </Button>
       </Stack>
     </Container>

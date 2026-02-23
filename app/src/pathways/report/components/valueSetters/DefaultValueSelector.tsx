@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { Box, Flex, Text } from '@mantine/core';
 import { YearPickerInput } from '@mantine/dates';
 import { FOREVER } from '@/constants';
 import { ValueInterval } from '@/types/subIngredients/valueInterval';
@@ -58,12 +57,7 @@ export function DefaultValueSelector(props: ValueSetterProps) {
   }
 
   return (
-    <Flex
-      align={{ base: 'stretch', sm: 'flex-end' }}
-      direction={{ base: 'column', sm: 'row' }}
-      gap="sm"
-      style={{ flex: 1 }}
-    >
+    <div className="tw:flex tw:flex-col sm:tw:flex-row tw:items-stretch sm:tw:items-end tw:gap-sm tw:flex-1">
       <YearPickerInput
         placeholder="Pick a year"
         label="From"
@@ -73,14 +67,14 @@ export function DefaultValueSelector(props: ValueSetterProps) {
         onChange={handleStartDateChange}
         style={{ flex: 1 }}
       />
-      <Box style={{ flex: 1, display: 'flex', alignItems: 'center', height: '36px' }}>
-        <Text size="sm" fw={500}>
+      <div className="tw:flex tw:items-center tw:flex-1" style={{ height: '36px' }}>
+        <span className="tw:text-sm tw:font-medium">
           onward:
-        </Text>
-      </Box>
-      <Box style={{ flex: 1 }}>
+        </span>
+      </div>
+      <div className="tw:flex-1">
         <ValueInputBox param={param} value={paramValue} onChange={setParamValue} />
-      </Box>
-    </Flex>
+      </div>
+    </div>
   );
 }

@@ -8,7 +8,7 @@
  */
 
 import { useState } from 'react';
-import { Stack } from '@mantine/core';
+import { Stack } from '@/components/ui';
 import PathwayView from '@/components/common/PathwayView';
 import { countryIds } from '@/libs/countries';
 import { Geography } from '@/types/ingredients/Geography';

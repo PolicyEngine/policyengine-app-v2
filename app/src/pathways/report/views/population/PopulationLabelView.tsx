@@ -5,7 +5,7 @@
  */
 
 import { useState } from 'react';
-import { Stack, Text, TextInput } from '@mantine/core';
+import { Input, Stack } from '@/components/ui';
 import PathwayView from '@/components/common/PathwayView';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { PathwayMode } from '@/types/pathwayModes/PathwayMode';
@@ -95,26 +95,29 @@ export default function PopulationLabelView({
 
   const formInputs = (
     <Stack>
-      <Text size="sm" c="dimmed">
+      <p className="tw:text-sm tw:text-gray-500">
         Give your household(s) a descriptive name.
-      </Text>
+      </p>
 
-      <TextInput
-        label="Household Label"
-        placeholder="e.g., My Family 2025, All California Households, UK National Households"
-        value={label}
-        onChange={(event) => {
-          setLabel(event.currentTarget.value);
-          setError(''); // Clear error when user types
-        }}
-        error={error}
-        required
-        maxLength={100}
-      />
+      <div className="tw:flex tw:flex-col tw:gap-xs">
+        <label className="tw:text-sm tw:font-medium">
+          Household Label <span className="tw:text-red-500">*</span>
+        </label>
+        <Input
+          placeholder="e.g., My Family 2025, All California Households, UK National Households"
+          value={label}
+          onChange={(event) => {
+            setLabel(event.currentTarget.value);
+            setError(''); // Clear error when user types
+          }}
+          maxLength={100}
+        />
+        {error && <p className="tw:text-sm tw:text-red-500">{error}</p>}
+      </div>
 
-      <Text size="xs" c="dimmed">
+      <p className="tw:text-xs tw:text-gray-500">
         This label will help you identify this household(s) when creating simulations.
-      </Text>
+      </p>
     </Stack>
   );
 

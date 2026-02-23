@@ -6,7 +6,7 @@
 
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
-import { LoadingOverlay, Stack, Text } from '@mantine/core';
+import { Spinner, Stack } from '@/components/ui';
 import { HouseholdAdapter } from '@/adapters/HouseholdAdapter';
 import PathwayView from '@/components/common/PathwayView';
 import HouseholdBuilderForm from '@/components/household/HouseholdBuilderForm';
@@ -52,14 +52,14 @@ export default function HouseholdBuilderView({
       <PathwayView
         title="Create household"
         content={
-          <Stack align="center" gap="md" p="xl">
-            <Text c="red" fw={600}>
+          <Stack align="center" gap="md" className="tw:p-xl">
+            <p className="tw:text-red-600 tw:font-semibold">
               Configuration Error
-            </Text>
-            <Text c="dimmed" ta="center">
+            </p>
+            <p className="tw:text-gray-500 tw:text-center">
               No report year available. Please return to the report creation page and select a year
               before creating a household.
-            </Text>
+            </p>
           </Stack>
         }
         buttonPreset="cancel-only"
@@ -136,13 +136,13 @@ export default function HouseholdBuilderView({
       <PathwayView
         title="Create household"
         content={
-          <Stack align="center" gap="md" p="xl">
-            <Text c="red" fw={600}>
+          <Stack align="center" gap="md" className="tw:p-xl">
+            <p className="tw:text-red-600 tw:font-semibold">
               Failed to Load Required Data
-            </Text>
-            <Text c="dimmed" ta="center">
+            </p>
+            <p className="tw:text-gray-500 tw:text-center">
               Unable to load household configuration data. Please refresh the page and try again.
-            </Text>
+            </p>
           </Stack>
         }
         buttonPreset="cancel-only"
@@ -181,8 +181,12 @@ export default function HouseholdBuilderView({
   };
 
   const content = (
-    <Stack gap="lg" pos="relative">
-      <LoadingOverlay visible={loading || isPending} />
+    <Stack gap="lg" className="tw:relative">
+      {(loading || isPending) && (
+        <div className="tw:absolute tw:inset-0 tw:bg-white/80 tw:flex tw:items-center tw:justify-center tw:z-50">
+          <Spinner />
+        </div>
+      )}
 
       <HouseholdBuilderForm
         household={household}

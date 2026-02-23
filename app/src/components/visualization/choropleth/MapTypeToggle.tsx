@@ -2,7 +2,7 @@
  * Toggle component for switching between map visualization types
  */
 
-import { SegmentedControl } from '@mantine/core';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui';
 import type { MapVisualizationType } from './types';
 
 interface MapTypeToggleProps {
@@ -25,14 +25,11 @@ interface MapTypeToggleProps {
  */
 export function MapTypeToggle({ value, onChange }: MapTypeToggleProps) {
   return (
-    <SegmentedControl
-      value={value}
-      onChange={(val) => onChange(val as MapVisualizationType)}
-      data={[
-        { label: 'Geographic', value: 'geographic' },
-        { label: 'Hex grid', value: 'hex' },
-      ]}
-      size="xs"
-    />
+    <Tabs value={value} onValueChange={(val) => onChange(val as MapVisualizationType)}>
+      <TabsList>
+        <TabsTrigger value="geographic">Geographic</TabsTrigger>
+        <TabsTrigger value="hex">Hex grid</TabsTrigger>
+      </TabsList>
+    </Tabs>
   );
 }

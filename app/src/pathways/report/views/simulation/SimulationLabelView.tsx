@@ -5,7 +5,7 @@
  */
 
 import { useState } from 'react';
-import { TextInput } from '@mantine/core';
+import { Input } from '@/components/ui';
 import PathwayView from '@/components/common/PathwayView';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { PathwayMode } from '@/types/pathwayModes/PathwayMode';
@@ -63,12 +63,14 @@ export default function SimulationLabelView({
   }
 
   const formInputs = (
-    <TextInput
-      label="Simulation name"
-      placeholder="Enter simulation name"
-      value={localLabel}
-      onChange={(e) => handleLocalLabelChange(e.currentTarget.value)}
-    />
+    <div className="tw:flex tw:flex-col tw:gap-xs">
+      <label className="tw:text-sm tw:font-medium">Simulation name</label>
+      <Input
+        placeholder="Enter simulation name"
+        value={localLabel}
+        onChange={(e) => handleLocalLabelChange(e.currentTarget.value)}
+      />
+    </div>
   );
 
   const primaryAction = {

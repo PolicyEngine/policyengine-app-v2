@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { IconCircleMinus, IconCirclePlus, IconTriangleFilled } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
-import { ActionIcon, Box, Group, Text } from '@mantine/core';
+import { Button, Text } from '@/components/ui';
 import { spacing, typography } from '@/designTokens';
 import { useReportYear } from '@/hooks/useReportYear';
 import { RootState } from '@/store';
@@ -142,16 +142,16 @@ export default function VariableArithmetic({
   ) : null;
 
   return (
-    <Box>
-      <Box
-        p={spacing.md}
-        onClick={() => expandable && setExpanded(!expanded)}
+    <div>
+      <div
         style={{
+          padding: spacing.md,
           borderLeft: `3px solid ${styleConfig.borderColor}`,
           paddingLeft: spacing.lg,
           cursor: expandable ? 'pointer' : 'default',
           transition: 'background-color 0.2s ease',
         }}
+        onClick={() => expandable && setExpanded(!expanded)}
         onMouseEnter={(e) => {
           if (expandable) {
             e.currentTarget.style.backgroundColor = '#f8f9fa';
@@ -161,35 +161,35 @@ export default function VariableArithmetic({
           e.currentTarget.style.backgroundColor = 'transparent';
         }}
       >
-        <Group justify="space-between" align="center">
-          <Group gap={spacing.sm}>
-            <Text size="md" fw={typography.fontWeight.normal} c="dimmed">
+        <div className="tw:flex tw:justify-between tw:items-center">
+          <div className="tw:flex tw:items-center" style={{ gap: spacing.sm }}>
+            <Text size="md" fw={typography.fontWeight.normal} style={{ color: '#868e96' }}>
               {displayText}
             </Text>
             {Arrow}
-            <Text size="md" fw={typography.fontWeight.semibold} c={styleConfig.valueColor}>
+            <Text size="md" fw={typography.fontWeight.semibold} style={{ color: styleConfig.valueColor }}>
               {formatVariableValue(variable, comparison.displayValue, 0)}
             </Text>
-          </Group>
+          </div>
           {expandable && (
-            <ActionIcon variant="subtle" color="gray" size="sm">
+            <Button variant="ghost" size="icon" className="tw:h-6 tw:w-6">
               {expanded ? <IconCircleMinus size={20} /> : <IconCirclePlus size={20} />}
-            </ActionIcon>
+            </Button>
           )}
-        </Group>
-      </Box>
+        </div>
+      </div>
 
       {/* Render children when expanded */}
       {expanded && expandable && (
-        <Box
-          ml={spacing.md}
+        <div
           style={{
+            marginLeft: spacing.md,
             borderLeft: `2px solid ${styleConfig.borderColor}`,
           }}
         >
           {childNodes}
-        </Box>
+        </div>
       )}
-    </Box>
+    </div>
   );
 }

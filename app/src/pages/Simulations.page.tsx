@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Stack } from '@mantine/core';
-import { useDisclosure } from '@mantine/hooks';
+import { Stack } from '@/components/ui';
+import { useDisclosure } from '@/hooks/useDisclosure';
 import { ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
 import { RenameIngredientModal } from '@/components/common/RenameIngredientModal';
 import IngredientReadView from '@/components/IngredientReadView';

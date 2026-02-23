@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Stack } from '@mantine/core';
-import { useDisclosure } from '@mantine/hooks';
+import { Stack } from '@/components/ui';
+import { useDisclosure } from '@/hooks/useDisclosure';
 import {
   BulletsValue,
   ColumnConfig,
@@ -138,7 +138,6 @@ export default function ReportsPage() {
   ];
 
   // Transform the data to match the new structure
-  // Use useMemo to prevent unnecessary re-creation of data objects
   const transformedData: IngredientRecord[] = useMemo(
     () =>
       data?.map((item) => {

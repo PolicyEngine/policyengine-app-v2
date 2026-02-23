@@ -1,4 +1,4 @@
-import { Group, NumberInput, Stack, Switch, Text } from '@mantine/core';
+import { Input, Switch } from '@/components/ui';
 import { spacing } from '@/designTokens';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import { coerceByUnit } from '@/utils/valueCoercion';
@@ -28,12 +28,13 @@ export function ValueInputBox(props: ValueInputBoxProps) {
 
   if (param.type !== 'parameter') {
     console.error("ValueInputBox expects a parameter type of 'parameter', got:", param.type);
-    return <NumberInput disabled value={0} />;
+    return <Input type="number" disabled value={0} />;
   }
 
-  const handleChange = (newValue: unknown) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (onChange) {
-      // Coerce to proper type - Mantine NumberInput can return strings
+      const newValue = e.target.value === '' ? 0 : parseFloat(e.target.value);
+      // Coerce to proper type
       const coerced = coerceByUnit(newValue, param.unit);
       // Convert percentage display value (0-100) to decimal (0-1) for storage
       const valueToStore = isPercentage ? (coerced as number) / 100 : coerced;
@@ -54,15 +55,14 @@ export function ValueInputBox(props: ValueInputBoxProps) {
 
   if (isBool) {
     return (
-      <Stack gap="xs" style={{ flex: 1 }}>
+      <div className="tw:flex tw:flex-col tw:gap-xs tw:flex-1">
         {label && (
-          <Text size="sm" fw={500}>
+          <label className="tw:text-sm tw:font-medium">
             {label}
-          </Text>
+          </label>
         )}
-        <Group
-          justify="space-between"
-          align="center"
+        <div
+          className="tw:flex tw:justify-between tw:items-center"
           style={{
             border: '1px solid #ced4da',
             borderRadius: spacing.radius.element,
@@ -71,33 +71,45 @@ export function ValueInputBox(props: ValueInputBoxProps) {
             backgroundColor: 'white',
           }}
         >
-          <Text size="sm" c={value ? 'dimmed' : 'dark'} fw={value ? 400 : 600}>
+          <span className={`tw:text-sm ${value ? 'tw:text-gray-400' : 'tw:text-gray-900 tw:font-semibold'}`}>
             False
-          </Text>
+          </span>
           <Switch
             checked={value || false}
-            onChange={(event) => handleBoolChange(event.currentTarget.checked)}
-            size="md"
+            onCheckedChange={handleBoolChange}
           />
-          <Text size="sm" c={value ? 'dark' : 'dimmed'} fw={value ? 600 : 400}>
+          <span className={`tw:text-sm ${value ? 'tw:text-gray-900 tw:font-semibold' : 'tw:text-gray-400'}`}>
             True
-          </Text>
-        </Group>
-      </Stack>
+          </span>
+        </div>
+      </div>
     );
   }
 
   return (
-    <NumberInput
-      label={label}
-      placeholder="Enter value"
-      min={0}
-      prefix={prefix}
-      suffix={isPercentage ? '%' : ''}
-      value={displayValue}
-      onChange={handleChange}
-      thousandSeparator=","
-      style={{ flex: 1 }}
-    />
+    <div className="tw:flex tw:flex-col tw:gap-xs tw:flex-1">
+      {label && (
+        <label className="tw:text-sm tw:font-medium">
+          {label}
+        </label>
+      )}
+      <div className="tw:relative tw:flex tw:items-center">
+        {prefix && (
+          <span className="tw:absolute tw:left-3 tw:text-sm tw:text-gray-500">{prefix}</span>
+        )}
+        <Input
+          type="number"
+          placeholder="Enter value"
+          min={0}
+          value={displayValue}
+          onChange={handleChange}
+          className={prefix ? 'tw:pl-7' : ''}
+          style={{ flex: 1 }}
+        />
+        {isPercentage && (
+          <span className="tw:absolute tw:right-3 tw:text-sm tw:text-gray-500">%</span>
+        )}
+      </div>
+    </div>
   );
 }

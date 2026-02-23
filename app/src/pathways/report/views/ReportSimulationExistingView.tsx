@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Text } from '@mantine/core';
 import PathwayView from '@/components/common/PathwayView';
 import { MOCK_USER_ID } from '@/constants';
 import { EnhancedUserSimulation, useUserSimulations } from '@/hooks/useUserSimulations';
@@ -58,7 +57,7 @@ export default function ReportSimulationExistingView({
     return (
       <PathwayView
         title="Select an existing simulation"
-        content={<Text>Loading simulations...</Text>}
+        content={<p>Loading simulations...</p>}
         buttonPreset="none"
       />
     );
@@ -68,7 +67,7 @@ export default function ReportSimulationExistingView({
     return (
       <PathwayView
         title="Select an existing simulation"
-        content={<Text c="red">Error: {(error as Error)?.message || 'Something went wrong.'}</Text>}
+        content={<p className="tw:text-red-600">Error: {(error as Error)?.message || 'Something went wrong.'}</p>}
         buttonPreset="none"
       />
     );
@@ -78,7 +77,7 @@ export default function ReportSimulationExistingView({
     return (
       <PathwayView
         title="Select an existing simulation"
-        content={<Text>No simulations available. Please create a new simulation.</Text>}
+        content={<p>No simulations available. Please create a new simulation.</p>}
         primaryAction={{
           label: 'Next',
           onClick: () => {},

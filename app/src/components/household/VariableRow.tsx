@@ -3,7 +3,7 @@
  */
 
 import { IconX } from '@tabler/icons-react';
-import { ActionIcon, Box, Group, Text, Tooltip } from '@mantine/core';
+import { Button, Tooltip, TooltipContent, TooltipTrigger, Text } from '@/components/ui';
 import { Household } from '@/types/ingredients/Household';
 import { VariableInfo } from '@/utils/VariableResolver';
 import VariableInput from './VariableInput';
@@ -52,11 +52,11 @@ export default function VariableRow({
   const shouldShowColumn = onRemove || showRemoveColumn;
 
   return (
-    <Group gap="xs" align="center" wrap="nowrap">
-      <Box style={{ flex: 1 }}>
+    <div className="tw:flex tw:items-center tw:gap-1 tw:flex-nowrap">
+      <div className="tw:flex-1">
         <Text size="sm">{sentenceCaseLabel(variable.label)}</Text>
-      </Box>
-      <Box style={{ flex: 1 }}>
+      </div>
+      <div className="tw:flex-1">
         <VariableInput
           variable={{ ...variable, label: '' }}
           household={household}
@@ -66,25 +66,28 @@ export default function VariableRow({
           onChange={onChange}
           disabled={disabled}
         />
-      </Box>
+      </div>
       {shouldShowColumn && (
-        <Box style={{ width: REMOVE_COLUMN_SIDE, height: REMOVE_COLUMN_SIDE }}>
+        <div style={{ width: REMOVE_COLUMN_SIDE, height: REMOVE_COLUMN_SIDE }}>
           {onRemove && (
-            <Tooltip label="Remove variable">
-              <ActionIcon
-                size="sm"
-                variant="subtle"
-                color="gray"
-                onClick={onRemove}
-                disabled={disabled}
-                style={{ width: REMOVE_COLUMN_SIDE, height: REMOVE_COLUMN_SIDE }}
-              >
-                <IconX size={16} />
-              </ActionIcon>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={onRemove}
+                  disabled={disabled}
+                  style={{ width: REMOVE_COLUMN_SIDE, height: REMOVE_COLUMN_SIDE }}
+                  className="tw:p-0"
+                >
+                  <IconX size={16} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Remove variable</TooltipContent>
             </Tooltip>
           )}
-        </Box>
+        </div>
       )}
-    </Group>
+    </div>
   );
 }

@@ -1,6 +1,5 @@
 import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
-import { Flex } from '@mantine/core';
 import { DatePickerInput } from '@mantine/dates';
 import { ValueInterval } from '@/types/subIngredients/valueInterval';
 import { fromLocalDateString, toLocalDateString } from '@/utils/dateUtils';
@@ -65,12 +64,7 @@ export function DateValueSelector(props: ValueSetterProps) {
   }
 
   return (
-    <Flex
-      align={{ base: 'stretch', sm: 'flex-end' }}
-      direction={{ base: 'column', sm: 'row' }}
-      gap="sm"
-      style={{ flex: 1 }}
-    >
+    <div className="tw:flex tw:flex-col sm:tw:flex-row tw:items-stretch sm:tw:items-end tw:gap-sm tw:flex-1">
       <DatePickerInput
         placeholder="Pick a start date"
         label="From"
@@ -90,6 +84,6 @@ export function DateValueSelector(props: ValueSetterProps) {
         style={{ flex: 1 }}
       />
       <ValueInputBox param={param} value={paramValue} onChange={setParamValue} />
-    </Flex>
+    </div>
   );
 }
