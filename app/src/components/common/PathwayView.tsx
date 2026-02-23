@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Container, Divider, Stack, Text, Title } from '@mantine/core';
+import { Container, Stack, Text, Title } from '@/components/ui';
 import {
   ButtonPanelVariant,
   CardListVariant,
@@ -178,13 +178,13 @@ export default function PathwayView({
         {title}
       </Title>
       {subtitle && (
-        <Text c="dimmed" mb="sm">
+        <Text className="tw:mb-sm" style={{ color: '#868e96' }}>
           {subtitle}
         </Text>
       )}
-      <Divider my="sm" />
+      <hr className="tw:border-border-light tw:my-sm" />
 
-      <Stack gap="md" pb="lg">
+      <Stack gap="md" className="tw:pb-lg">
         {renderContent()}
       </Stack>
 

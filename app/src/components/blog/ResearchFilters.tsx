@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Button, Checkbox, TextInput } from '@mantine/core';
+import { Button, Checkbox, Input } from '@/components/ui';
 import { Group, Stack, Text } from '@/components/ui';
 import {
   getLocationTags,
@@ -96,13 +96,16 @@ export function ResearchFilters({
   const renderTypeOptions = () => (
     <Stack gap="xs" style={{ gap: 4 }}>
       {typeOptions.map((option) => (
-        <Checkbox
-          key={option.value}
-          label={option.label}
-          checked={selectedTypes.includes(option.value)}
-          onChange={() => handleTypeToggle(option.value)}
-          size="sm"
-        />
+        <div key={option.value} className="tw:flex tw:items-center tw:gap-xs">
+          <Checkbox
+            id={`type-${option.value}`}
+            checked={selectedTypes.includes(option.value)}
+            onCheckedChange={() => handleTypeToggle(option.value)}
+          />
+          <label htmlFor={`type-${option.value}`} className="tw:text-sm tw:cursor-pointer">
+            {option.label}
+          </label>
+        </div>
       ))}
     </Stack>
   );
@@ -111,13 +114,16 @@ export function ResearchFilters({
   const renderTopicTags = () => (
     <Stack gap="xs" style={{ gap: 4 }}>
       {getTopicTags().map((tag) => (
-        <Checkbox
-          key={tag}
-          label={getTopicLabel(tag, countryId)}
-          checked={selectedTopics.includes(tag)}
-          onChange={() => handleTopicToggle(tag)}
-          size="sm"
-        />
+        <div key={tag} className="tw:flex tw:items-center tw:gap-xs">
+          <Checkbox
+            id={`topic-${tag}`}
+            checked={selectedTopics.includes(tag)}
+            onCheckedChange={() => handleTopicToggle(tag)}
+          />
+          <label htmlFor={`topic-${tag}`} className="tw:text-sm tw:cursor-pointer">
+            {getTopicLabel(tag, countryId)}
+          </label>
+        </div>
       ))}
     </Stack>
   );
@@ -135,50 +141,55 @@ export function ResearchFilters({
           <div key={tag}>
             {tag === 'us' ? (
               // US with expandable +/-
-              <Checkbox
-                label={
-                  <span>
-                    {locationLabels[tag] || tag}
-                    <Text
-                      component="span"
-                      size="sm"
-                      c="dimmed"
-                      style={{ cursor: 'pointer', userSelect: 'none', marginLeft: 12 }}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setUsStatesExpanded(!usStatesExpanded);
-                      }}
-                    >
-                      {usStatesExpanded ? '−' : '+'}
-                    </Text>
-                  </span>
-                }
-                checked={selectedLocations.includes(tag)}
-                onChange={() => handleLocationToggle(tag)}
-                size="sm"
-              />
+              <div className="tw:flex tw:items-center tw:gap-xs">
+                <Checkbox
+                  id={`location-${tag}`}
+                  checked={selectedLocations.includes(tag)}
+                  onCheckedChange={() => handleLocationToggle(tag)}
+                />
+                <label htmlFor={`location-${tag}`} className="tw:text-sm tw:cursor-pointer">
+                  {locationLabels[tag] || tag}
+                </label>
+                <Text
+                  component="span"
+                  size="sm"
+                  style={{ cursor: 'pointer', userSelect: 'none', marginLeft: 12, color: '#868e96' }}
+                  onClick={(e: React.MouseEvent) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setUsStatesExpanded(!usStatesExpanded);
+                  }}
+                >
+                  {usStatesExpanded ? '−' : '+'}
+                </Text>
+              </div>
             ) : (
-              <Checkbox
-                label={locationLabels[tag] || tag}
-                checked={selectedLocations.includes(tag)}
-                onChange={() => handleLocationToggle(tag)}
-                size="sm"
-              />
+              <div className="tw:flex tw:items-center tw:gap-xs">
+                <Checkbox
+                  id={`location-${tag}`}
+                  checked={selectedLocations.includes(tag)}
+                  onCheckedChange={() => handleLocationToggle(tag)}
+                />
+                <label htmlFor={`location-${tag}`} className="tw:text-sm tw:cursor-pointer">
+                  {locationLabels[tag] || tag}
+                </label>
+              </div>
             )}
           </div>
         ))}
         {/* US States - only show when expanded */}
         {usStatesExpanded &&
           usStates.map((tag) => (
-            <Checkbox
-              key={tag}
-              label={locationLabels[tag] || tag}
-              checked={selectedLocations.includes(tag)}
-              onChange={() => handleLocationToggle(tag)}
-              size="sm"
-              ml="md"
-            />
+            <div key={tag} className="tw:flex tw:items-center tw:gap-xs tw:ml-md">
+              <Checkbox
+                id={`location-${tag}`}
+                checked={selectedLocations.includes(tag)}
+                onCheckedChange={() => handleLocationToggle(tag)}
+              />
+              <label htmlFor={`location-${tag}`} className="tw:text-sm tw:cursor-pointer">
+                {locationLabels[tag] || tag}
+              </label>
+            </div>
           ))}
       </Stack>
     );
@@ -187,13 +198,16 @@ export function ResearchFilters({
   const renderAuthorTags = () => (
     <Stack gap="xs" style={{ gap: 4 }}>
       {availableAuthors.map((author) => (
-        <Checkbox
-          key={author.key}
-          label={author.name}
-          checked={selectedAuthors.includes(author.key)}
-          onChange={() => handleAuthorToggle(author.key)}
-          size="sm"
-        />
+        <div key={author.key} className="tw:flex tw:items-center tw:gap-xs">
+          <Checkbox
+            id={`author-${author.key}`}
+            checked={selectedAuthors.includes(author.key)}
+            onCheckedChange={() => handleAuthorToggle(author.key)}
+          />
+          <label htmlFor={`author-${author.key}`} className="tw:text-sm tw:cursor-pointer">
+            {author.name}
+          </label>
+        </div>
       ))}
     </Stack>
   );
@@ -202,7 +216,7 @@ export function ResearchFilters({
     <div className="tw:flex tw:flex-col tw:h-full">
       {/* Search - fixed at top */}
       <div className="tw:flex-shrink-0 tw:mb-4">
-        <TextInput
+        <Input
           placeholder="Search posts..."
           value={searchQuery}
           onChange={(e) => onSearchChange(e.currentTarget.value)}
@@ -211,9 +225,9 @@ export function ResearchFilters({
               onSearchSubmit();
             }
           }}
-          mb="xs"
+          className="tw:mb-xs"
         />
-        <Button fullWidth variant="outline" onClick={onSearchSubmit}>
+        <Button variant="outline" onClick={onSearchSubmit} className="tw:w-full">
           Search
         </Button>
       </div>
@@ -236,7 +250,7 @@ export function ResearchFilters({
           <Text fw={600} size="sm">
             Type
           </Text>
-          <Text size="sm" c="dimmed">
+          <Text size="sm" style={{ color: '#868e96' }}>
             {expandedSection === 'type' ? '−' : '+'}
           </Text>
         </Group>
@@ -264,7 +278,7 @@ export function ResearchFilters({
           <Text fw={600} size="sm">
             Topic
           </Text>
-          <Text size="sm" c="dimmed">
+          <Text size="sm" style={{ color: '#868e96' }}>
             {expandedSection === 'topics' ? '−' : '+'}
           </Text>
         </Group>
@@ -292,7 +306,7 @@ export function ResearchFilters({
           <Text fw={600} size="sm">
             Location
           </Text>
-          <Text size="sm" c="dimmed">
+          <Text size="sm" style={{ color: '#868e96' }}>
             {expandedSection === 'locations' ? '−' : '+'}
           </Text>
         </Group>
@@ -320,7 +334,7 @@ export function ResearchFilters({
           <Text fw={600} size="sm">
             Author
           </Text>
-          <Text size="sm" c="dimmed">
+          <Text size="sm" style={{ color: '#868e96' }}>
             {expandedSection === 'authors' ? '−' : '+'}
           </Text>
         </Group>

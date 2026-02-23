@@ -1,6 +1,7 @@
 import { IconCheck } from '@tabler/icons-react';
-import { Card, Group, Stack, Text } from '@mantine/core';
-import { spacing } from '@/designTokens';
+import { Group, Stack, Text } from '@/components/ui';
+import { cn } from '@/lib/utils';
+import { colors, spacing } from '@/designTokens';
 
 export interface SetupConditionCard {
   title: string;
@@ -23,41 +24,40 @@ export default function SetupConditionsVariant({ cards }: SetupConditionsVariant
   return (
     <Stack>
       {cards.map((card: SetupConditionCard, index: number) => (
-        <Card
+        <button
           key={index}
-          withBorder
-          component="button"
           onClick={card.onClick}
           disabled={card.isDisabled}
-          variant={
+          className={cn(
+            'tw:w-full tw:text-left tw:rounded-element tw:border tw:p-md tw:transition-colors',
             card.isDisabled
-              ? 'setupCondition--disabled'
+              ? 'tw:opacity-60 tw:cursor-not-allowed tw:border-gray-200 tw:bg-gray-50'
               : card.isSelected
-                ? 'setupCondition--active'
+                ? 'tw:border-primary-500 tw:bg-primary-50 tw:cursor-pointer'
                 : card.isFulfilled
-                  ? 'setupCondition--fulfilled'
-                  : 'setupCondition--unfulfilled'
-          }
+                  ? 'tw:border-green-300 tw:bg-green-50 tw:cursor-pointer'
+                  : 'tw:border-gray-200 tw:bg-white tw:cursor-pointer hover:tw:border-primary-300',
+          )}
         >
-          <Group gap={spacing.sm} align="center">
+          <Group gap="sm" className="tw:items-center">
             {card.isFulfilled && (
               <IconCheck
                 size={20}
                 style={{
-                  color: 'var(--mantine-color-primary-6)',
+                  color: colors.primary[600],
                   marginTop: '2px',
                   flexShrink: 0,
                 }}
               />
             )}
-            <Stack gap={spacing.xs} style={{ flex: 1 }}>
+            <Stack gap="xs" style={{ flex: 1 }}>
               <Text fw={700}>{card.title}</Text>
-              <Text size="sm" c="dimmed">
+              <Text size="sm" style={{ color: '#868e96' }}>
                 {card.description}
               </Text>
             </Stack>
           </Group>
-        </Card>
+        </button>
       ))}
     </Stack>
   );

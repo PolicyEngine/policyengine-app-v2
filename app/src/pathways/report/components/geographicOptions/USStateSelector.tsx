@@ -1,4 +1,11 @@
-import { Select } from '@mantine/core';
+import {
+  Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui';
 import { RegionOption } from '@/utils/regionStrategies';
 
 interface USStateSelectorProps {
@@ -13,13 +20,20 @@ export default function USStateSelector({
   onStateChange,
 }: USStateSelectorProps) {
   return (
-    <Select
-      label="Select State"
-      placeholder="Pick a state"
-      data={stateOptions}
-      value={selectedState}
-      onChange={(val) => onStateChange(val || '')}
-      searchable
-    />
+    <div>
+      <Label className="tw:text-sm tw:font-medium tw:mb-1 tw:block">Select state</Label>
+      <Select value={selectedState} onValueChange={(val) => onStateChange(val)}>
+        <SelectTrigger className="tw:w-full">
+          <SelectValue placeholder="Pick a state" />
+        </SelectTrigger>
+        <SelectContent>
+          {stateOptions.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
   );
 }

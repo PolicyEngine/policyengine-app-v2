@@ -23,7 +23,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { Stack } from '@mantine/core';
+import { Stack } from '@/components/ui';
 import { spacing } from '@/designTokens/spacing';
 import { RECHARTS_FONT_STYLE } from '@/utils/chartUtils';
 import { ChartWatermark } from './ChartWatermark';
@@ -115,7 +115,7 @@ export function WaterfallChart({
   margin = { top: 20, right: 20, bottom: 30, left: 20 },
 }: WaterfallChartProps) {
   return (
-    <Stack gap={spacing.sm}>
+    <Stack gap="sm">
       <ResponsiveContainer width="100%" height={height}>
         <BarChart data={data} margin={margin}>
           <CartesianGrid strokeDasharray="3 3" vertical={false} />

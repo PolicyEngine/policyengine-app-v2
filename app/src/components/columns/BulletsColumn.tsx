@@ -1,5 +1,4 @@
-import { Badge } from '@mantine/core';
-import { Group, Stack, Text } from '@/components/ui';
+import { Badge, Group, Stack, Text } from '@/components/ui';
 import { colors, spacing } from '@/designTokens';
 import { BulletsColumnConfig, BulletsValue } from './types';
 
@@ -12,12 +11,12 @@ export function BulletsColumn({ value }: BulletsColumnProps) {
   return (
     <Stack gap="xs">
       {value.items.map((item, idx) => (
-        <Group key={idx} gap="xs" wrap="nowrap">
+        <Group key={idx} gap="xs" className="tw:flex-nowrap">
           <Text size="sm" c={colors.text.primary}>
             • {item.text}
           </Text>
           {item.badge && (
-            <Badge size="xs" variant="light" color="gray" radius={spacing.radius.element}>
+            <Badge variant="secondary" className="tw:text-xs">
               {typeof item.badge === 'number' ? `+${item.badge}` : item.badge}
             </Badge>
           )}
