@@ -23,13 +23,13 @@ Because PolicyEngine computes the full tax-benefit system simultaneously, intera
 
 Before applying the cap, PolicyEngine's baseline simulation for 2029-30 identifies:
 
-| Metric | PolicyEngine | OBR (ASHE) | Relative error |
-| :--- | ---: | ---: | ---: |
-| Salary sacrifice contributors | 8.4 million | 7.7 million | +9% |
-| Workers above £2,000 cap | 3.6 million | 3.3 million | +11% |
-| Total excess above cap | £10.2 billion | £14.3 billion | -28% |
-| Average excess per affected worker | £2,809 | £4,333 | -35% |
-| Total wages and salaries | £1,376 billion | £1,410 billion | -2% |
+| Metric                             |   PolicyEngine |     OBR (ASHE) | Relative error |
+| :--------------------------------- | -------------: | -------------: | -------------: |
+| Salary sacrifice contributors      |    8.4 million |    7.7 million |            +9% |
+| Workers above £2,000 cap           |    3.6 million |    3.3 million |           +11% |
+| Total excess above cap             |  £10.2 billion |  £14.3 billion |           -28% |
+| Average excess per affected worker |         £2,809 |         £4,333 |           -35% |
+| Total wages and salaries           | £1,376 billion | £1,410 billion |            -2% |
 
 PolicyEngine has 9% more salary sacrifice users than the OBR but a 28% lower tax base. The gap is driven by lower average excess per worker (-35%): PolicyEngine's FRS-based data underestimates the right tail of the salary sacrifice distribution, likely because high earners with large contributions (£10,000+) are either under-represented in the FRS or their salary sacrifice values are under-imputed.
 
@@ -39,13 +39,13 @@ Economy-wide wages are well aligned (within 2.5%), confirming that the differenc
 
 The cap's revenue impact depends on two key behavioural assumptions: whether employers pass their increased NI costs through to workers, and whether employees redirect their excess contributions to maintain pension saving. PolicyEngine models five scenarios:
 
-| Scenario | Revenue |
-| :--- | ---: |
-| Absorb cost + maintain pension | £3.50 billion |
-| OBR 76% pass-through + maintain pension | £2.96 billion |
+| Scenario                                           |       Revenue |
+| :------------------------------------------------- | ------------: |
+| Absorb cost + maintain pension                     | £3.50 billion |
+| OBR 76% pass-through + maintain pension            | £2.96 billion |
 | Spread cost (100% pass-through) + maintain pension | £2.79 billion |
-| Absorb cost + take cash | £5.89 billion |
-| Spread cost + take cash | £5.19 billion |
+| Absorb cost + take cash                            | £5.89 billion |
+| Spread cost + take cash                            | £5.19 billion |
 
 PolicyEngine's "absorb cost + maintain pension" scenario (£3.50 billion) is the closest analogue to a static yield. The "76% pass-through + maintain pension" scenario (£2.96 billion) uses the pass-through rate the [OBR derived](https://obr.uk/supplementary-forecast-information-on-salary-sacrifice-pension-contributions-and-send-spending/) from elasticities in the economic literature.
 
@@ -53,27 +53,29 @@ PolicyEngine's "absorb cost + maintain pension" scenario (£3.50 billion) is the
 
 Breaking down PolicyEngine's £3.50 billion static estimate by tax component:
 
-| Component | PolicyEngine | OBR (salary sacrifice only) |
-| :--- | ---: | ---: |
-| Income tax | +£1.68 billion | £0 (relief assumed) |
-| Employee NICs | +£0.36 billion | +£0.39 billion |
-| Employer NICs | +£1.45 billion | +£2.15 billion |
-| **NICs subtotal** | **+£1.80 billion** | **+£2.50 billion** |
-| **Total** | **+£3.50 billion** | **+£2.50 billion** |
+| Component         |       PolicyEngine | OBR (salary sacrifice only) |
+| :---------------- | -----------------: | --------------------------: |
+| Income tax        |     +£1.68 billion |         £0 (relief assumed) |
+| Employee NICs     |     +£0.36 billion |              +£0.39 billion |
+| Employer NICs     |     +£1.45 billion |              +£2.15 billion |
+| **NICs subtotal** | **+£1.80 billion** |          **+£2.50 billion** |
+| **Total**         | **+£3.50 billion** |          **+£2.50 billion** |
 
 ### NICs comparison
 
 On a NICs-only basis, PolicyEngine's £1.80 billion is 72% of the OBR's £2.50 billion. This ratio matches the tax base ratio (also 72%), confirming that the NICs gap is driven by the smaller tax base in PolicyEngine's FRS data, not by differences in NICs rates or calculations.
 
-### Income tax: a finding unique to PolicyEngine
+### Income tax: a modeling limitation
 
-PolicyEngine produces +£1.68 billion in income tax revenue, where the [OBR records zero](https://obr.uk/supplementary-forecast-information-on-salary-sacrifice-pension-contributions-and-send-spending/) (assuming pension relief fully offsets the reclassified income). PolicyEngine models the pension tax system mechanically and finds that relief does not fully offset, for two reasons:
+PolicyEngine produces +£1.68 billion in income tax revenue, where the [OBR records zero](https://obr.uk/supplementary-forecast-information-on-salary-sacrifice-pension-contributions-and-send-spending/) (assuming pension relief fully offsets the reclassified income). However, this finding is driven by a known limitation in PolicyEngine's pension modeling.
 
-1. **Annual Allowance constraints** (+£0.61 billion): Under salary sacrifice, contributions are classified as employer contributions, which are exempt from the pension Annual Allowance (AA) tax charge. When reclassified as employee contributions, they push some workers over the £40,000 AA limit, triggering additional tax.
+PolicyEngine's Annual Allowance (AA) calculation currently only counts employee and personal pension contributions, excluding employer contributions (including salary sacrifice). Under [HMRC rules](https://www.gov.uk/tax-on-your-private-pension/annual-allowance), all contributions — employee, employer, and salary sacrifice — count toward the Annual Allowance. Because the model excludes employer contributions from the AA test in the baseline, reclassifying salary sacrifice excess as employee contributions creates an artificial AA interaction:
 
-2. **Incomplete pension relief** (+£1.07 billion): Employment income rises by £10.25 billion (the excess), but pension contributions relief only rises by £8.88 billion. The £1.36 billion shortfall occurs because relief is capped at the Annual Allowance: workers already near the limit cannot claim full relief on the redirected amount.
+1. **Annual Allowance constraints** (+£0.61 billion): Because the model does not count salary sacrifice contributions against the AA in the baseline, reclassifying them as employee contributions appears to push workers over the £40,000 AA limit. In practice, these contributions should already count toward the AA regardless of classification, so this effect is overstated.
 
-This finding suggests that assuming full income tax neutrality may overstate the effectiveness of pension relief. Whether this income tax effect materialises in practice depends on how the policy is implemented, for example whether HMRC provides specific Annual Allowance exemptions for redirected contributions.
+2. **Incomplete pension relief** (+£1.07 billion): The model shows employment income rising by £10.25 billion but pension relief only rising by £8.88 billion. This shortfall is partly a consequence of the same AA limitation: the model understates baseline AA usage because it excludes employer contributions, making relief appear more constrained under the reform than it would be with correct AA modeling.
+
+The OBR's assumption of full income tax neutrality is likely closer to the correct treatment under current law. Fixing the Annual Allowance calculation in `policyengine-uk` to include all contribution types would reduce or eliminate this income tax effect. Until then, readers should focus on the NICs comparison (£1.80 billion vs £2.50 billion), which is unaffected by this limitation.
 
 ## Bonus sacrifice
 
@@ -83,13 +85,13 @@ PolicyEngine does not model bonus sacrifice, as there is no bonus sacrifice vari
 
 PolicyEngine models pass-through directly: at a 76% pass-through rate, revenue falls from £3.50 billion to £2.96 billion, a £0.53 billion offset. The remaining behavioural responses require off-model analysis:
 
-| Adjustment | OBR estimate | PolicyEngine coverage |
-| :--- | ---: | :---: |
-| Pass-through to lower wages and profits | -£0.7 billion | Modelled directly (£0.53 billion at 76%) |
-| Employers switching to ordinary pension contributions | -£0.5 billion | Not modelled |
-| Employees switching to relief-at-source schemes | +£1.6 billion | Not modelled |
-| Other (reduced DC contributions, forestalling) | -£0.5 billion | Not modelled |
-| **Net behavioural** | **+£0.1 billion** | |
+| Adjustment                                            |      OBR estimate |          PolicyEngine coverage           |
+| :---------------------------------------------------- | ----------------: | :--------------------------------------: |
+| Pass-through to lower wages and profits               |     -£0.7 billion | Modelled directly (£0.53 billion at 76%) |
+| Employers switching to ordinary pension contributions |     -£0.5 billion |               Not modelled               |
+| Employees switching to relief-at-source schemes       |     +£1.6 billion |               Not modelled               |
+| Other (reduced DC contributions, forestalling)        |     -£0.5 billion |               Not modelled               |
+| **Net behavioural**                                   | **+£0.1 billion** |                                          |
 
 PolicyEngine's pass-through offset (£0.53 billion) is lower than the OBR's (£0.7 billion) because the OBR's elasticity-based calculations also account for profit pass-through (reducing corporation tax), which PolicyEngine does not model.
 
@@ -115,4 +117,4 @@ In the bottom decile, 0.6% of people are affected. The eighth decile has the hig
 
 ## Conclusion
 
-PolicyEngine estimates the £2,000 salary sacrifice cap would raise £3.50 billion in 2029-30 under static assumptions. The key finding is a £1.68 billion income tax effect from Annual Allowance constraints that does not appear in the OBR's costing. NICs revenue (£1.80 billion) is 28% below the OBR's, reflecting a smaller tax base in the FRS data. The cap is progressive, with 11.2% of the population affected and losses concentrated in upper income deciles.
+PolicyEngine estimates the £2,000 salary sacrifice cap would raise £3.50 billion in 2029-30 under static assumptions, though £1.68 billion of this is an income tax effect driven by a known limitation in PolicyEngine's Annual Allowance modeling (which excludes employer contributions from the AA test, contrary to HMRC rules). The more reliable NICs comparison shows PolicyEngine at £1.80 billion versus the OBR's £2.50 billion, with the 28% gap attributable to a smaller tax base in the FRS data. The cap is progressive, with 11.2% of the population affected and losses concentrated in upper income deciles.
