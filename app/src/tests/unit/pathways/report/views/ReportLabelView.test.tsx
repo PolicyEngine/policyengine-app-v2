@@ -53,13 +53,14 @@ describe('ReportLabelView', () => {
         />
       );
 
-      // Then
-      expect(screen.getByLabelText(/report name/i)).toBeInTheDocument();
+      // Then - label text is visible, input is a sibling (not connected via htmlFor)
+      expect(screen.getByText(/report name/i)).toBeInTheDocument();
+      expect(screen.getByRole('textbox')).toBeInTheDocument();
     });
 
     test('given component renders then displays year select', () => {
       // When
-      const { container } = render(
+      render(
         <ReportLabelView
           label={null}
           year="2025"
@@ -69,9 +70,9 @@ describe('ReportLabelView', () => {
         />
       );
 
-      // Then - Year select exists as a searchable input
-      const yearInput = container.querySelector('input[aria-haspopup="listbox"]');
-      expect(yearInput).toBeInTheDocument();
+      // Then - Year select is a shadcn Select with combobox role
+      const combobox = screen.getByRole('combobox');
+      expect(combobox).toBeInTheDocument();
     });
   });
 
@@ -131,7 +132,7 @@ describe('ReportLabelView', () => {
       );
 
       // Then
-      expect(screen.getByLabelText(/report name/i)).toHaveValue(TEST_REPORT_LABEL);
+      expect(screen.getByRole('textbox')).toHaveValue(TEST_REPORT_LABEL);
     });
 
     test('given null label then input is empty', () => {
@@ -147,7 +148,7 @@ describe('ReportLabelView', () => {
       );
 
       // Then
-      expect(screen.getByLabelText(/report name/i)).toHaveValue('');
+      expect(screen.getByRole('textbox')).toHaveValue('');
     });
   });
 
@@ -164,7 +165,7 @@ describe('ReportLabelView', () => {
           onNext={mockOnNext}
         />
       );
-      const input = screen.getByLabelText(/report name/i);
+      const input = screen.getByRole('textbox');
 
       // When
       await user.type(input, 'New Report Name');
@@ -185,7 +186,7 @@ describe('ReportLabelView', () => {
           onNext={mockOnNext}
         />
       );
-      const input = screen.getByLabelText(/report name/i);
+      const input = screen.getByRole('textbox');
       const submitButton = screen.getByRole('button', { name: /initialize report/i });
 
       // When

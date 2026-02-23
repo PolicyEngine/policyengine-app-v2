@@ -46,9 +46,9 @@ describe('DefaultBaselineOption', () => {
       expect(screen.getByText(DEFAULT_BASELINE_LABELS.UK)).toBeInTheDocument();
     });
 
-    test('given component renders then displays card as button', () => {
+    test('given component renders then displays clickable card', () => {
       // When
-      render(
+      const { container } = render(
         <DefaultBaselineOption
           countryId={TEST_COUNTRIES.US}
           isSelected={false}
@@ -56,10 +56,10 @@ describe('DefaultBaselineOption', () => {
         />
       );
 
-      // Then
-      const button = screen.getByRole('button');
-      expect(button).toBeInTheDocument();
-      expect(button).not.toBeDisabled();
+      // Then - Card is now a div with cursor-pointer class, not a button
+      const card = container.querySelector('[data-slot="card"]');
+      expect(card).toBeInTheDocument();
+      expect(card).toHaveClass('tw:cursor-pointer');
     });
 
     test('given component renders then displays chevron icon', () => {
@@ -79,7 +79,7 @@ describe('DefaultBaselineOption', () => {
   });
 
   describe('Selection state', () => {
-    test('given isSelected is false then shows inactive variant', () => {
+    test('given isSelected is false then shows inactive styling', () => {
       // When
       const { container } = render(
         <DefaultBaselineOption
@@ -89,30 +89,33 @@ describe('DefaultBaselineOption', () => {
         />
       );
 
-      // Then
-      const button = container.querySelector('[data-variant="buttonPanel--inactive"]');
-      expect(button).toBeInTheDocument();
+      // Then - Card uses border-gray-200 when not selected
+      const card = container.querySelector('[data-slot="card"]');
+      expect(card).toBeInTheDocument();
+      expect(card).toHaveClass('tw:border-gray-200');
     });
 
-    test('given isSelected is true then shows active variant', () => {
+    test('given isSelected is true then shows active styling', () => {
       // When
       const { container } = render(
         <DefaultBaselineOption countryId={TEST_COUNTRIES.US} isSelected onClick={mockOnClick} />
       );
 
-      // Then
-      const button = container.querySelector('[data-variant="buttonPanel--active"]');
-      expect(button).toBeInTheDocument();
+      // Then - Card uses border-primary-500 and bg-primary-50 when selected
+      const card = container.querySelector('[data-slot="card"]');
+      expect(card).toBeInTheDocument();
+      expect(card).toHaveClass('tw:border-primary-500');
+      expect(card).toHaveClass('tw:bg-primary-50');
     });
   });
 
   describe('User interactions', () => {
-    test('given button is clicked then onClick callback is invoked', async () => {
+    test('given card is clicked then onClick callback is invoked', async () => {
       // Given
       const user = userEvent.setup();
       const mockCallback = vi.fn();
 
-      render(
+      const { container } = render(
         <DefaultBaselineOption
           countryId={TEST_COUNTRIES.US}
           isSelected={false}
@@ -120,21 +123,21 @@ describe('DefaultBaselineOption', () => {
         />
       );
 
-      const button = screen.getByRole('button');
+      const card = container.querySelector('[data-slot="card"]')!;
 
       // When
-      await user.click(button);
+      await user.click(card);
 
       // Then
       expect(mockCallback).toHaveBeenCalledOnce();
     });
 
-    test('given button is clicked multiple times then onClick is called each time', async () => {
+    test('given card is clicked multiple times then onClick is called each time', async () => {
       // Given
       const user = userEvent.setup();
       const mockCallback = vi.fn();
 
-      render(
+      const { container } = render(
         <DefaultBaselineOption
           countryId={TEST_COUNTRIES.US}
           isSelected={false}
@@ -142,12 +145,12 @@ describe('DefaultBaselineOption', () => {
         />
       );
 
-      const button = screen.getByRole('button');
+      const card = container.querySelector('[data-slot="card"]')!;
 
       // When
-      await user.click(button);
-      await user.click(button);
-      await user.click(button);
+      await user.click(card);
+      await user.click(card);
+      await user.click(card);
 
       // Then
       expect(mockCallback).toHaveBeenCalledTimes(3);

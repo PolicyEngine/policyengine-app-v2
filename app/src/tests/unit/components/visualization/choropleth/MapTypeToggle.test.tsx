@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@test-utils';
+import { render, screen, userEvent } from '@test-utils';
 import { describe, expect, it, vi } from 'vitest';
 import { MapTypeToggle } from '@/components/visualization/choropleth/MapTypeToggle';
 import type { MapVisualizationType } from '@/components/visualization/choropleth/types';
@@ -16,43 +16,45 @@ describe('MapTypeToggle', () => {
     const onChange = vi.fn();
     render(<MapTypeToggle value="geographic" onChange={onChange} />);
 
-    const geographicLabel = screen.getByText('Geographic');
-    // The selected option should have the active class from SegmentedControl
-    expect(geographicLabel.closest('[data-active="true"]')).toBeInTheDocument();
+    // Radix Tabs uses data-state="active" for the selected trigger
+    const geographicTrigger = screen.getByRole('tab', { name: 'Geographic' });
+    expect(geographicTrigger).toHaveAttribute('data-state', 'active');
   });
 
   it('shows hex grid as selected when value is hex', () => {
     const onChange = vi.fn();
     render(<MapTypeToggle value="hex" onChange={onChange} />);
 
-    const hexLabel = screen.getByText('Hex grid');
-    expect(hexLabel.closest('[data-active="true"]')).toBeInTheDocument();
+    const hexTrigger = screen.getByRole('tab', { name: 'Hex grid' });
+    expect(hexTrigger).toHaveAttribute('data-state', 'active');
   });
 
-  it('calls onChange with hex when hex grid is clicked', () => {
+  it('calls onChange with hex when hex grid is clicked', async () => {
+    const user = userEvent.setup();
     const onChange = vi.fn();
     render(<MapTypeToggle value="geographic" onChange={onChange} />);
 
-    fireEvent.click(screen.getByText('Hex grid'));
+    await user.click(screen.getByRole('tab', { name: 'Hex grid' }));
     expect(onChange).toHaveBeenCalledWith('hex');
   });
 
-  it('calls onChange with geographic when geographic is clicked', () => {
+  it('calls onChange with geographic when geographic is clicked', async () => {
+    const user = userEvent.setup();
     const onChange = vi.fn();
     render(<MapTypeToggle value="hex" onChange={onChange} />);
 
-    fireEvent.click(screen.getByText('Geographic'));
+    await user.click(screen.getByRole('tab', { name: 'Geographic' }));
     expect(onChange).toHaveBeenCalledWith('geographic');
   });
 
-  it('maintains correct type for onChange callback', () => {
+  it('maintains correct type for onChange callback', async () => {
+    const user = userEvent.setup();
     const onChange = vi.fn<(value: MapVisualizationType) => void>();
     render(<MapTypeToggle value="geographic" onChange={onChange} />);
 
-    fireEvent.click(screen.getByText('Hex grid'));
+    await user.click(screen.getByRole('tab', { name: 'Hex grid' }));
 
-    // Verify the callback receives the correct type
-    const callArg = onChange.mock.calls[0][0];
-    expect(callArg === 'geographic' || callArg === 'hex').toBe(true);
+    // Verify the callback was called with a valid MapVisualizationType
+    expect(onChange).toHaveBeenCalledWith('hex');
   });
 });

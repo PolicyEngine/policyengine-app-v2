@@ -1,8 +1,14 @@
 import type { ReactNode } from 'react';
 import { IconDownload } from '@tabler/icons-react';
-import { ActionIcon, Box, Group, Stack, Text, Tooltip } from '@mantine/core';
-import { colors } from '@/designTokens/colors';
-import { spacing } from '@/designTokens/spacing';
+import {
+  Button,
+  Group,
+  Stack,
+  Text,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui';
 import { trackChartCsvDownloaded } from '@/utils/analytics';
 
 interface ChartContainerProps {
@@ -21,37 +27,33 @@ interface ChartContainerProps {
  */
 export function ChartContainer({ children, title, onDownloadCsv }: ChartContainerProps) {
   return (
-    <Stack gap={spacing.sm}>
+    <Stack gap="sm">
       <Group justify="space-between" align="flex-start" wrap="nowrap">
-        <Text size="lg" fw={500} style={{ flex: 1, wordWrap: 'break-word' }}>
+        <Text size="lg" fw={500} className="tw:flex-1 tw:break-words">
           {title}
         </Text>
-        <Tooltip label="Download CSV" position="left">
-          <ActionIcon
-            variant="subtle"
-            size="md"
-            onClick={() => {
-              trackChartCsvDownloaded();
-              onDownloadCsv();
-            }}
-            aria-label="Download CSV"
-            style={{ flexShrink: 0 }}
-          >
-            <IconDownload size={18} />
-          </ActionIcon>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="tw:shrink-0"
+              onClick={() => {
+                trackChartCsvDownloaded();
+                onDownloadCsv();
+              }}
+              aria-label="Download CSV"
+            >
+              <IconDownload size={18} />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="left">Download CSV</TooltipContent>
         </Tooltip>
       </Group>
 
-      <Box
-        p={spacing.md}
-        style={{
-          border: `1px solid ${colors.border.light}`,
-          borderRadius: spacing.radius.container,
-          backgroundColor: colors.white,
-        }}
-      >
+      <div className="tw:p-md tw:border tw:border-border-light tw:rounded-container tw:bg-white">
         {children}
-      </Box>
+      </div>
     </Stack>
   );
 }

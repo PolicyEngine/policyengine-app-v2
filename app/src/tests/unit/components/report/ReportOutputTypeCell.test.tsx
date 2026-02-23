@@ -2,7 +2,6 @@ import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { screen, render as testRender } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { MantineProvider } from '@mantine/core';
 import { ReportOutputTypeCell } from '@/components/report/ReportOutputTypeCell';
 import { calculationKeys } from '@/libs/queryKeys';
 import {
@@ -32,7 +31,7 @@ describe('ReportOutputTypeCell', () => {
   const render = (component: React.ReactElement) => {
     return testRender(
       <QueryClientProvider client={queryClient}>
-        <MantineProvider>{component}</MantineProvider>
+        {component}
       </QueryClientProvider>
     );
   };
@@ -52,9 +51,8 @@ describe('ReportOutputTypeCell', () => {
 
     // Then
     expect(screen.getByText('42%')).toBeInTheDocument();
-    // Spinner is rendered via Mantine Loader component (it's a span, not a role)
-    const loader = document.querySelector('.mantine-Loader-root');
-    expect(loader).toBeInTheDocument();
+    // Spinner component renders with role="status"
+    expect(screen.getByRole('status')).toBeInTheDocument();
   });
 
   it('given pending calculation with no progress then displays spinner without percentage', () => {
@@ -70,9 +68,8 @@ describe('ReportOutputTypeCell', () => {
     // When
     render(<ReportOutputTypeCell reportId={TEST_REPORT_IDS.REPORT_456} />);
 
-    // Then
-    const loader = document.querySelector('.mantine-Loader-root');
-    expect(loader).toBeInTheDocument();
+    // Then — Spinner component renders with role="status"
+    expect(screen.getByRole('status')).toBeInTheDocument();
     expect(screen.queryByText(/%/)).not.toBeInTheDocument();
   });
 

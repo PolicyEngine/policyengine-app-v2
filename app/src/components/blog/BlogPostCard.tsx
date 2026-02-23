@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Badge } from '@mantine/core';
-import { Group, Text } from '@/components/ui';
+import { Badge, Group, Text } from '@/components/ui';
 import { locationLabels, topicLabels } from '@/data/posts/postTransformers';
 import { cn } from '@/lib/utils';
 import type { ResearchItem } from '@/types/blog';
@@ -54,7 +53,16 @@ export function BlogPostCard({ item, countryId }: BlogPostCardProps) {
           <Group justify="space-between" className="tw:mb-xs">
             <Group gap="xs">
               {displayTags.map((tag) => (
-                <Badge key={tag} size="xs" variant="light" color={item.isApp ? 'teal' : 'blue'}>
+                <Badge
+                  key={tag}
+                  variant="secondary"
+                  className={cn(
+                    'tw:text-[10px] tw:px-1.5 tw:py-0',
+                    item.isApp
+                      ? 'tw:bg-primary-100 tw:text-primary-700'
+                      : 'tw:bg-blue-100 tw:text-blue-700'
+                  )}
+                >
                   {tag}
                 </Badge>
               ))}
