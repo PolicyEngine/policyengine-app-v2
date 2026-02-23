@@ -90,7 +90,7 @@ export default function FeaturedResearchBanner() {
       <button
         type="button"
         onClick={handleClose}
-        className="tw:absolute tw:bg-transparent tw:border-none tw:cursor-pointer tw:p-2 tw:rounded hover:tw:bg-white/15 tw:z-10"
+        className="tw:absolute tw:bg-transparent tw:border-none tw:cursor-pointer tw:p-2 tw:rounded tw:hover:bg-white/15 tw:z-10"
         style={{
           top: spacing.lg,
           right: spacing.lg,
@@ -204,7 +204,7 @@ export default function FeaturedResearchBanner() {
               <a
                 key={card.href}
                 href={card.href}
-                className="tw:no-underline tw:transition-all tw:duration-300 hover:tw:-translate-y-1 hover:tw:shadow-lg"
+                className="tw:no-underline tw:transition-all tw:duration-300 tw:hover:-translate-y-1 tw:hover:shadow-lg"
                 style={{
                   flex: '0 0 380px',
                   minHeight: '120px',
@@ -257,7 +257,7 @@ export default function FeaturedResearchBanner() {
             Want custom analysis?{' '}
             <a
               href="mailto:hello@policyengine.org"
-              className="tw:underline tw:transition-opacity tw:duration-200 hover:tw:opacity-80"
+              className="tw:underline tw:transition-opacity tw:duration-200 tw:hover:opacity-80"
               style={{
                 color: colors.white,
                 fontWeight: typography.fontWeight.semibold,

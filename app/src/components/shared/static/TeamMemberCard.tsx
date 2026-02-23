@@ -15,11 +15,11 @@ export default function TeamMemberCard({ member, variant = 'default' }: TeamMemb
   const isInverted = variant === 'inverted';
 
   return (
-    <div className="tw:grid tw:grid-cols-1 sm:tw:grid-cols-[auto_1fr] tw:items-stretch tw:gap-[5vw] tw:mt-[50px]">
+    <div className="tw:grid tw:grid-cols-1 tw:sm:grid-cols-[auto_1fr] tw:items-stretch tw:gap-[5vw] tw:mt-[50px]">
       <img
         src={member.image}
         alt={member.name}
-        className="tw:h-[180px] tw:w-[180px] sm:tw:h-[250px] sm:tw:w-[250px] tw:object-cover tw:rounded-container"
+        className="tw:h-[180px] tw:w-[180px] tw:sm:h-[250px] tw:sm:w-[250px] tw:object-cover tw:rounded-container"
       />
 
       <div

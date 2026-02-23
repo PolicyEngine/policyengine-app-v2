@@ -27,7 +27,7 @@ export default function SupporterCard({ supporter, projects }: SupporterCardProp
             <img
               src={supporter.logoUrl}
               alt={`${supporter.name} logo`}
-              className="tw:w-[150px] sm:tw:w-[200px] tw:h-[60px] sm:tw:h-[80px] tw:object-contain tw:object-left-center"
+              className="tw:w-[150px] tw:sm:w-[200px] tw:h-[60px] tw:sm:h-[80px] tw:object-contain tw:object-left-center"
             />
           </a>
         )}

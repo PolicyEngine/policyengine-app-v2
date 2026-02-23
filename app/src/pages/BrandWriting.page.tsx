@@ -240,7 +240,7 @@ export default function BrandWritingPage() {
               Capitalize only the first word of a heading and any proper nouns. Everything else
               stays lowercase.
             </RuleDescription>
-            <div className="tw:flex tw:flex-col sm:tw:flex-row tw:gap-md">
+            <div className="tw:flex tw:flex-col tw:sm:flex-row tw:gap-md">
               <div className="tw:flex-1">
                 <ExampleBox type="good">
                   How tax reform affects families
@@ -271,7 +271,7 @@ export default function BrandWritingPage() {
             <RuleDescription>
               Brand names, acronyms, and proper nouns keep their capitalization.
             </RuleDescription>
-            <div className="tw:flex tw:flex-col sm:tw:flex-row tw:gap-md">
+            <div className="tw:flex tw:flex-col tw:sm:flex-row tw:gap-md">
               <div className="tw:flex-1">
                 <ExampleBox type="good">
                   How AI affects income distribution
@@ -333,7 +333,7 @@ export default function BrandWritingPage() {
             <RuleDescription>
               Write in active voice. The subject should perform the action, not receive it.
             </RuleDescription>
-            <div className="tw:flex tw:flex-col sm:tw:flex-row tw:gap-md">
+            <div className="tw:flex tw:flex-col tw:sm:flex-row tw:gap-md">
               <div className="tw:flex-1">
                 <ExampleBox type="good">
                   The policy increases benefits by $1,200/year.
@@ -360,7 +360,7 @@ export default function BrandWritingPage() {
             <RuleDescription>
               Get to the point. Avoid filler words and unnecessary qualifiers.
             </RuleDescription>
-            <div className="tw:flex tw:flex-col sm:tw:flex-row tw:gap-md">
+            <div className="tw:flex tw:flex-col tw:sm:flex-row tw:gap-md">
               <div className="tw:flex-1">
                 <ExampleBox type="good">The reform costs $50 billion annually.</ExampleBox>
               </div>
@@ -377,7 +377,7 @@ export default function BrandWritingPage() {
             <RuleDescription>
               Use specific numbers and concrete examples. Avoid vague claims.
             </RuleDescription>
-            <div className="tw:flex tw:flex-col sm:tw:flex-row tw:gap-md">
+            <div className="tw:flex tw:flex-col tw:sm:flex-row tw:gap-md">
               <div className="tw:flex-1">
                 <ExampleBox type="good">The policy affects 42 million households.</ExampleBox>
               </div>
@@ -393,7 +393,7 @@ export default function BrandWritingPage() {
               When presenting results from PolicyEngine, let the data speak for itself. Avoid
               adjectives or adverbs that aren't backed by the numbers themselves.
             </RuleDescription>
-            <div className="tw:flex tw:flex-col sm:tw:flex-row tw:gap-md">
+            <div className="tw:flex tw:flex-col tw:sm:flex-row tw:gap-md">
               <div className="tw:flex-1">
                 <ExampleBox type="good">
                   The policy reduces poverty by 15%.

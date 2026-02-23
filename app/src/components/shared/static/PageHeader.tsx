@@ -18,8 +18,8 @@ export default function PageHeader({ title, description }: PageHeaderProps) {
         paddingRight: spacing.container.md,
       }}
     >
-      <div className="tw:flex tw:flex-col md:tw:flex-row tw:items-stretch md:tw:items-center tw:gap-3 md:tw:gap-5">
-        <div className="tw:w-full md:tw:w-[300px]">
+      <div className="tw:flex tw:flex-col tw:md:flex-row tw:items-stretch tw:md:items-center tw:gap-3 tw:md:gap-5">
+        <div className="tw:w-full tw:md:w-[300px]">
           <Title
             order={1}
             style={{
@@ -34,19 +34,19 @@ export default function PageHeader({ title, description }: PageHeaderProps) {
 
         {/* Horizontal divider - visible below md */}
         <hr
-          className="md:tw:hidden"
+          className="tw:md:hidden"
           style={{ borderColor: colors.border.light, borderWidth: '0.5px' }}
         />
 
         {/* Vertical divider - visible at md and above */}
         <div
-          className="tw:hidden md:tw:block tw:self-stretch"
+          className="tw:hidden tw:md:block tw:self-stretch"
           style={{
             borderLeft: `1px solid ${colors.border.light}`,
           }}
         />
 
-        <div className="tw:w-full md:tw:w-auto">
+        <div className="tw:w-full tw:md:w-auto">
           <Text
             style={{
               color: colors.text.primary,

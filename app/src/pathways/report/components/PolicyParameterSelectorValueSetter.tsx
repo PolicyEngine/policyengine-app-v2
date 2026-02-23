@@ -81,7 +81,7 @@ export default function PolicyParameterSelectorValueSetter({
       <div className="tw:flex tw:flex-col tw:gap-sm">
         <p className="tw:font-bold">Current value</p>
         <Separator />
-        <div className="tw:flex tw:flex-col sm:tw:flex-row tw:items-stretch sm:tw:items-end tw:gap-sm tw:w-full">
+        <div className="tw:flex tw:flex-col tw:sm:flex-row tw:items-stretch tw:sm:items-end tw:gap-sm tw:w-full">
           <ValueSetterToRender {...valueSetterProps} />
           <div className="tw:flex tw:items-end tw:gap-sm">
             <ModeSelectorButton setMode={handleModeChange} />

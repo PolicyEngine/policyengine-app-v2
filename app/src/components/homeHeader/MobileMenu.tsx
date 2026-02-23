@@ -15,7 +15,7 @@ export default function MobileMenu({ opened, onOpen, onClose, navItems }: Mobile
   return (
     <>
       {/* Mobile Burger Menu with Country Selector */}
-      <div className="tw:flex lg:tw:hidden tw:items-center" style={{ gap: spacing.md }}>
+      <div className="tw:flex tw:lg:hidden tw:items-center" style={{ gap: spacing.md }}>
         <CountrySelector />
         <button
           type="button"

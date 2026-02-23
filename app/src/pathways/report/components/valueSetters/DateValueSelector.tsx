@@ -64,7 +64,7 @@ export function DateValueSelector(props: ValueSetterProps) {
   }
 
   return (
-    <div className="tw:flex tw:flex-col sm:tw:flex-row tw:items-stretch sm:tw:items-end tw:gap-sm tw:flex-1">
+    <div className="tw:flex tw:flex-col tw:sm:flex-row tw:items-stretch tw:sm:items-end tw:gap-sm tw:flex-1">
       <div className="tw:flex tw:flex-col tw:gap-1 tw:flex-1">
         <Label>From</Label>
         <Input

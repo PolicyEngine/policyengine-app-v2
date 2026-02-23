@@ -20,8 +20,8 @@ export default function HeroSection({ title, description, variant = 'default' }:
         isDark ? 'tw:bg-primary-700' : 'tw:bg-[#F7FEFE]'
       )}
     >
-      <div className="tw:flex tw:flex-col md:tw:flex-row tw:items-stretch md:tw:items-center tw:gap-3 md:tw:gap-5">
-        <div className="tw:w-full md:tw:w-[300px]">
+      <div className="tw:flex tw:flex-col tw:md:flex-row tw:items-stretch tw:md:items-center tw:gap-3 tw:md:gap-5">
+        <div className="tw:w-full tw:md:w-[300px]">
           <h1
             className={cn(
               'tw:text-4xl tw:font-semibold',
@@ -33,13 +33,13 @@ export default function HeroSection({ title, description, variant = 'default' }:
         </div>
 
         <hr
-          className={cn('md:tw:hidden', isDark ? 'tw:border-white' : 'tw:border-border-dark')}
+          className={cn('tw:md:hidden', isDark ? 'tw:border-white' : 'tw:border-border-dark')}
           style={{ borderWidth: '0.5px' }}
         />
 
         <div
           className={cn(
-            'tw:hidden md:tw:block tw:self-stretch tw:border-l',
+            'tw:hidden tw:md:block tw:self-stretch tw:border-l',
             isDark ? 'tw:border-white' : 'tw:border-border-dark'
           )}
         />

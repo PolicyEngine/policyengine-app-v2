@@ -69,7 +69,7 @@ export default function HomeBlogPreview() {
         </Group>
 
         {/* Two-column layout: 2 left (stacked), 3 right (stacked) */}
-        <div className="tw:grid tw:grid-cols-1 md:tw:grid-cols-2" style={{ gap: spacing['2xl'] }}>
+        <div className="tw:grid tw:grid-cols-1 tw:md:grid-cols-2" style={{ gap: spacing['2xl'] }}>
           {/* Left column: 2 posts stacked, filling equal height */}
           <div className="tw:flex tw:flex-col" style={{ gap: spacing['2xl'] }}>
             {leftPosts.map((post: BlogPost) => (

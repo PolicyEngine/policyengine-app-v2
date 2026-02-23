@@ -45,7 +45,7 @@ export default function DowningStreetBanner() {
       href={GOV_UK_ARTICLE_URL}
       target="_blank"
       rel="noopener noreferrer"
-      className="tw:block tw:relative tw:no-underline tw:cursor-pointer tw:transition-opacity tw:duration-200 hover:tw:opacity-95"
+      className="tw:block tw:relative tw:no-underline tw:cursor-pointer tw:transition-opacity tw:duration-200 tw:hover:opacity-95"
       style={{
         background: `linear-gradient(135deg, #0F172A 0%, #1E293B 50%, ${colors.primary[700]} 100%)`,
         padding: `${spacing.md} ${spacing.xl}`,
@@ -102,7 +102,7 @@ export default function DowningStreetBanner() {
           e.stopPropagation();
           handleClose();
         }}
-        className="tw:absolute tw:top-1/2 tw:bg-transparent tw:border-none tw:cursor-pointer tw:p-1 tw:rounded hover:tw:bg-white/10"
+        className="tw:absolute tw:top-1/2 tw:bg-transparent tw:border-none tw:cursor-pointer tw:p-1 tw:rounded tw:hover:bg-white/10"
         style={{
           right: spacing.lg,
           transform: 'translateY(-50%)',

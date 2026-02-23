@@ -17,7 +17,7 @@ export function LinkColumn({ config, value }: LinkColumnProps) {
   return (
     <Link
       to={value.url || `${config.urlPrefix || '#'}${value.text}`}
-      className="tw:no-underline hover:tw:underline"
+      className="tw:no-underline tw:hover:underline"
       style={{
         color: config.color || colors.blue[600],
         fontSize: fontSizeMap[config.size || 'sm'],

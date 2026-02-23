@@ -15,7 +15,7 @@ function BrandCard({ to, title, description, meta }: BrandCardProps) {
   return (
     <Link
       to={to}
-      className="tw:block tw:no-underline tw:transition-all tw:duration-200 hover:tw:-translate-y-0.5"
+      className="tw:block tw:no-underline tw:transition-all tw:duration-200 tw:hover:-translate-y-0.5"
       style={{
         padding: spacing['2xl'],
         background: colors.white,
@@ -96,7 +96,7 @@ export default function BrandPage() {
       />
 
       <div
-        className="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-3 tw:gap-xl"
+        className="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:md:grid-cols-3 tw:gap-xl"
         style={{
           paddingTop: spacing['4xl'],
           paddingBottom: spacing['4xl'],

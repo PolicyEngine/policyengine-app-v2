@@ -39,9 +39,9 @@ export default function Layout() {
         <nav
           className={cn(
             'tw:w-[250px] tw:border-r tw:border-border-light tw:overflow-y-auto tw:bg-white tw:shrink-0',
-            'tw:hidden sm:tw:block',
+            'tw:hidden tw:sm:block',
             navbarOpened &&
-              'tw:fixed tw:inset-0 tw:z-40 tw:block sm:tw:relative sm:tw:z-auto tw:top-0'
+              'tw:fixed tw:inset-0 tw:z-40 tw:block tw:sm:relative tw:sm:z-auto tw:top-0'
           )}
         >
           <Sidebar />

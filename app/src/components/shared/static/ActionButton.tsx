@@ -58,7 +58,7 @@ export default function ActionButton({
         href={href}
         target="_blank"
         rel="noopener noreferrer"
-        className="tw:no-underline tw:inline-flex tw:items-center tw:justify-center tw:transition-all tw:duration-200 hover:tw:-translate-y-0.5"
+        className="tw:no-underline tw:inline-flex tw:items-center tw:justify-center tw:transition-all tw:duration-200 tw:hover:-translate-y-0.5"
         style={{
           backgroundColor: buttonStyle.backgroundColor,
           color: buttonStyle.color,

@@ -37,7 +37,7 @@ export default function SetupConditionsVariant({ cards }: SetupConditionsVariant
                 ? 'tw:border-primary-500 tw:bg-primary-50 tw:cursor-pointer'
                 : card.isFulfilled
                   ? 'tw:border-green-300 tw:bg-green-50 tw:cursor-pointer'
-                  : 'tw:border-gray-200 tw:bg-white tw:cursor-pointer hover:tw:border-primary-300'
+                  : 'tw:border-gray-200 tw:bg-white tw:cursor-pointer tw:hover:border-primary-300'
           )}
         >
           <Group gap="sm" className="tw:items-center">

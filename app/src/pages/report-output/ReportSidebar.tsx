@@ -111,7 +111,7 @@ export function ReportSidebar({
 
   return (
     <div
-      className={hideOnMobile ? 'tw:hidden sm:tw:block' : undefined}
+      className={hideOnMobile ? 'tw:hidden tw:sm:block' : undefined}
       style={{
         width: 250,
         padding: spacing.md,

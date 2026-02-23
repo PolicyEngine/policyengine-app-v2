@@ -43,7 +43,7 @@ export default function CardListVariant({
               ? 'tw:opacity-60 tw:cursor-not-allowed tw:border-gray-200 tw:bg-gray-50'
               : item.isSelected
                 ? 'tw:border-primary-500 tw:bg-primary-50 tw:cursor-pointer'
-                : 'tw:border-gray-200 tw:bg-white tw:cursor-pointer hover:tw:border-primary-300'
+                : 'tw:border-gray-200 tw:bg-white tw:cursor-pointer tw:hover:border-primary-300'
           )}
         >
           <Stack gap="xs">

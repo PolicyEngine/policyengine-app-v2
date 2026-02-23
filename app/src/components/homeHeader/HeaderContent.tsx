@@ -33,7 +33,7 @@ export default function HeaderContent({
               variant="ghost"
               size="icon"
               onClick={onToggleNavbar}
-              className="sm:tw:hidden"
+              className="tw:sm:hidden"
               aria-label="Toggle sidebar"
               style={{ color: colors.text.inverse }}
             >
@@ -44,7 +44,7 @@ export default function HeaderContent({
           <DesktopNavigation navItems={navItems} />
         </div>
 
-        <div className="tw:hidden lg:tw:flex tw:items-center">
+        <div className="tw:hidden tw:lg:flex tw:items-center">
           <HeaderActionButtons />
         </div>
 

@@ -38,7 +38,7 @@ export default function MultiButtonFooter(props: MultiButtonFooterProps) {
   // New layout: Grid with equal spacing - Cancel left, Pagination center, Back/Next right
   if (cancelAction || backAction || primaryAction) {
     return (
-      <div className="tw:grid tw:grid-cols-1 sm:tw:grid-cols-3 tw:gap-md">
+      <div className="tw:grid tw:grid-cols-1 tw:sm:grid-cols-3 tw:gap-md">
         {/* Left side: Cancel button */}
         <div className="tw:flex tw:justify-start">
           {cancelAction && (

@@ -135,7 +135,7 @@ export default function BrandDesignPage() {
         {/* Colors */}
         <div className="tw:mb-4xl">
           <SectionTitle badge={`${colorTokens.length} tokens`}>Colors</SectionTitle>
-          <div className="tw:grid tw:grid-cols-2 sm:tw:grid-cols-3 md:tw:grid-cols-4 lg:tw:grid-cols-6 tw:gap-md">
+          <div className="tw:grid tw:grid-cols-2 tw:sm:grid-cols-3 tw:md:grid-cols-4 tw:lg:grid-cols-6 tw:gap-md">
             {colorTokens.map((color) => (
               <ColorSwatch key={color.name} {...color} />
             ))}
@@ -229,7 +229,7 @@ export default function BrandDesignPage() {
             . Import from <code className="tw:font-mono tw:text-sm">@tabler/icons-react</code>.
           </p>
 
-          <div className="tw:grid tw:grid-cols-4 sm:tw:grid-cols-5 md:tw:grid-cols-10 tw:gap-md">
+          <div className="tw:grid tw:grid-cols-4 tw:sm:grid-cols-5 tw:md:grid-cols-10 tw:gap-md">
             {[
               { icon: IconSearch, name: 'Search' },
               { icon: IconCheck, name: 'Check' },

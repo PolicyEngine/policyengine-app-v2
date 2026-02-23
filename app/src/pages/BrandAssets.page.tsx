@@ -222,7 +222,7 @@ export default function BrandAssetsPage() {
           >
             Full logo
           </Text>
-          <div className="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 tw:gap-lg tw:mb-xl">
+          <div className="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:gap-lg tw:mb-xl">
             <LogoCard
               variant="Teal on white"
               background={colors.white}
@@ -245,7 +245,7 @@ export default function BrandAssetsPage() {
           >
             Square mark
           </Text>
-          <div className="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 tw:gap-lg">
+          <div className="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:gap-lg">
             <LogoCard
               variant="Teal square"
               background={colors.white}
@@ -322,7 +322,7 @@ export default function BrandAssetsPage() {
         {/* Usage guidelines */}
         <div style={{ marginBottom: spacing['4xl'] }}>
           <SectionTitle>Usage guidelines</SectionTitle>
-          <div className="tw:flex tw:flex-col sm:tw:flex-row tw:gap-lg">
+          <div className="tw:flex tw:flex-col tw:sm:flex-row tw:gap-lg">
             <div className="tw:flex-1">
               <UsageCard
                 type="do"
@@ -361,7 +361,7 @@ export default function BrandAssetsPage() {
             Primary brand colors for use alongside the PolicyEngine logo.
           </Text>
 
-          <div className="tw:grid tw:grid-cols-2 sm:tw:grid-cols-4 tw:gap-md">
+          <div className="tw:grid tw:grid-cols-2 tw:sm:grid-cols-4 tw:gap-md">
             <ColorSwatch name="Primary teal" value={colors.primary[500]} />
             <ColorSwatch name="Primary dark" value={colors.primary[700]} />
             <ColorSwatch name="Gray" value={colors.secondary[700]} />

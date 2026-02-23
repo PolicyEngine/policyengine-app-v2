@@ -76,7 +76,7 @@ export function MultiYearValueSelector(props: ValueSetterProps) {
 
   return (
     <div>
-      <div className="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 tw:gap-md">
+      <div className="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:gap-md">
         <Stack>
           {leftColumn.map((year) => (
             <div key={year} className="tw:flex tw:items-center tw:gap-sm">

@@ -76,7 +76,7 @@ describe('ReportSidebar', () => {
       <ReportSidebar tree={TEST_SIDEBAR_TREE} activeView={ACTIVE_LEAF_VIEW} onNavigate={vi.fn()} />
     );
 
-    // Then — Tailwind responsive classes hide on mobile: tw:hidden sm:tw:block
+    // Then — Tailwind responsive classes hide on mobile: tw:hidden tw:sm:block
     // Find the sidebar element by its style (has width: 250px)
     const sidebarEl = container.querySelector('[style*="width"]') as HTMLElement;
     expect(sidebarEl).toBeInTheDocument();

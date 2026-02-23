@@ -58,7 +58,7 @@ export default function CTASection({
             {title}
           </Title>
         )}
-        <div className="tw:flex tw:flex-col md:tw:flex-row tw:items-stretch md:tw:items-center tw:gap-6 md:tw:gap-12">
+        <div className="tw:flex tw:flex-col tw:md:flex-row tw:items-stretch tw:md:items-center tw:gap-6 tw:md:gap-12">
           <div style={{ flex: 1.5, color: textColors[variant] }}>{content}</div>
           <div className="tw:flex tw:flex-1 tw:flex-col tw:items-center tw:justify-center">
             <ActionButton

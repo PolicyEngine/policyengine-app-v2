@@ -24,7 +24,7 @@ export default function CalloutWithImage({
 }: CalloutWithImageProps) {
   return (
     <Container size="xl" className="tw:px-2 tw:py-12">
-      <div className="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-8 tw:items-center">
+      <div className="tw:grid tw:grid-cols-1 tw:md:grid-cols-2 tw:gap-8 tw:items-center">
         {/* Left Column */}
         <Stack gap="md">
           <Title

@@ -59,7 +59,7 @@ export default function IngredientReadView({
       {/* Header Section */}
       <div style={{ marginBottom: spacing['2xl'] }}>
         <div
-          className="tw:flex tw:flex-col sm:tw:flex-row tw:justify-between tw:items-start"
+          className="tw:flex tw:flex-col tw:sm:flex-row tw:justify-between tw:items-start"
           style={{ marginBottom: spacing.lg, gap: spacing.md }}
         >
           <div>

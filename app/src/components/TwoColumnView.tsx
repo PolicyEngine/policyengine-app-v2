@@ -42,7 +42,7 @@ function TwoColumnView({ title, leftColumn, rightColumn, backgroundColor }: TwoC
         {title}
       </Title>
       <div
-        className="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 tw:items-center"
+        className="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:items-center"
         style={{ gap: spacing['3xl'] }}
       >
         <div>{leftColumn}</div>

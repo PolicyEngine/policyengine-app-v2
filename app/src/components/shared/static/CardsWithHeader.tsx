@@ -30,7 +30,7 @@ export function CardsWithHeader({ containerTitle, cards }: CardsContainerProps) 
         {containerTitle}
       </Title>
 
-      <div className="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 md:tw:grid-cols-3 tw:gap-8">
+      <div className="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:md:grid-cols-3 tw:gap-8">
         {cards.map((card, idx) => (
           <SingleCard
             key={idx}

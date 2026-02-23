@@ -77,7 +77,7 @@ export default function HomeTrackerPreview() {
               e.currentTarget.style.transform = 'translateY(0)';
             }}
           >
-            <div className="tw:grid tw:grid-cols-1 md:tw:grid-cols-2">
+            <div className="tw:grid tw:grid-cols-1 tw:md:grid-cols-2">
               {/* Left: Image */}
               <div
                 style={{

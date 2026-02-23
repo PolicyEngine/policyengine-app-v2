@@ -104,7 +104,7 @@ export default function SocietyWideOverview({ output }: SocietyWideOverviewProps
       </div>
 
       {/* Secondary Metrics Grid */}
-      <div className="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2 tw:gap-lg">
+      <div className="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:gap-lg">
         {/* Poverty Impact */}
         <div
           className="tw:p-lg"
