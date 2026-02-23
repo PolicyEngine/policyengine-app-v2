@@ -46,7 +46,13 @@ export default function IngredientReadView({
     <Box>
       {/* Header Section */}
       <Box mb={spacing['2xl']}>
-        <Flex justify="space-between" align="flex-start" mb={spacing.lg}>
+        <Flex
+          justify="space-between"
+          align="flex-start"
+          mb={spacing.lg}
+          direction={{ base: 'column', sm: 'row' }}
+          gap={spacing.md}
+        >
           <Box>
             <Title
               order={1}
