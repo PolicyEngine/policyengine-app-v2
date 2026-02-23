@@ -56,7 +56,11 @@ export default function FooterSubscribe() {
           onChange={(event) => setEmail(event.currentTarget.value)}
           disabled={status === 'loading'}
         />
-        <Button onClick={handleSubscribe} disabled={status === 'loading'}>
+        <Button
+          onClick={handleSubscribe}
+          disabled={status === 'loading'}
+          className="tw:bg-primary-500 tw:text-white tw:hover:bg-primary-600 tw:w-full tw:font-semibold tw:tracking-wider"
+        >
           {status === 'loading' ? <Spinner size="sm" /> : null}
           SUBSCRIBE
         </Button>
