@@ -70,6 +70,7 @@ export function fromV2Response(response: UserReportAssociationV2Response): UserR
     reportId: response.report_id,
     countryId: response.country_id as CountryId,
     label: response.label ?? undefined,
+    lastRunAt: response.last_run_at ?? undefined,
     createdAt: response.created_at,
     updatedAt: response.updated_at ?? undefined,
     isCreated: true,

@@ -60,6 +60,7 @@ export default function SimulationsPage() {
     try {
       await updateAssociation.mutateAsync({
         userSimulationId: renamingSimulationId,
+        userId,
         updates: { label: newLabel },
       });
       handleCloseRename();

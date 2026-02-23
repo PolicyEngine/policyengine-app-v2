@@ -88,11 +88,13 @@ export const useUpdateSimulationAssociation = () => {
   return useMutation({
     mutationFn: ({
       userSimulationId,
+      userId,
       updates,
     }: {
       userSimulationId: string;
+      userId: string;
       updates: Partial<UserSimulation>;
-    }) => store.update(userSimulationId, updates),
+    }) => store.update(userSimulationId, userId, updates),
 
     onSuccess: (updatedAssociation) => {
       // Invalidate all related queries to trigger refetch
@@ -119,24 +121,24 @@ export const useUpdateSimulationAssociation = () => {
   });
 };
 
-// Not yet implemented, but keeping for future use
-/*
-export const useDeleteAssociation = () => {
+export const useDeleteSimulationAssociation = () => {
   const store = useUserSimulationStore();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ userId, simulationId }: { userId: string; simulationId: string; countryId?: string }) =>
-      store.delete(userId, simulationId),
-    onSuccess: (_, { userId, simulationId, countryId }) => {
-      queryClient.invalidateQueries({ queryKey: simulationAssociationKeys.byUser(userId, countryId) });
-      queryClient.invalidateQueries({ queryKey: simulationAssociationKeys.bySimulation(simulationId) });
-      
-      queryClient.setQueryData(
-        simulationAssociationKeys.specific(userId, simulationId),
-        null
-      );
+    mutationFn: ({
+      userSimulationId,
+      userId,
+      countryId,
+    }: {
+      userSimulationId: string;
+      userId: string;
+      countryId?: string;
+    }) => store.delete(userSimulationId, userId),
+    onSuccess: (_, { userId, countryId }) => {
+      queryClient.invalidateQueries({
+        queryKey: simulationAssociationKeys.byUser(userId, countryId),
+      });
     },
   });
 };
-*/

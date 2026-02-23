@@ -5,7 +5,7 @@ import { useDisclosure } from '@mantine/hooks';
 import { SocietyWideReportOutput as SocietyWideOutput } from '@/api/societyWideCalculation';
 import { FloatingAlert } from '@/components/common/FloatingAlert';
 import { RenameIngredientModal } from '@/components/common/RenameIngredientModal';
-import { CALCULATOR_URL } from '@/constants';
+import { CALCULATOR_URL, MOCK_USER_ID } from '@/constants';
 import { ReportYearProvider } from '@/contexts/ReportYearContext';
 import { spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
@@ -168,6 +168,7 @@ export default function ReportOutputPage() {
     try {
       await updateAssociation.mutateAsync({
         userReportId,
+        userId: MOCK_USER_ID.toString(),
         updates: { label: newLabel },
       });
       closeRename();

@@ -9,6 +9,7 @@ export interface UserReport {
   reportId: string;
   countryId: (typeof countryIds)[number];
   label?: string;
+  lastRunAt?: string;
   createdAt?: string;
   updatedAt?: string;
   isCreated?: boolean;

@@ -117,11 +117,13 @@ export const useUpdateReportAssociation = () => {
   return useMutation({
     mutationFn: ({
       userReportId,
+      userId,
       updates,
     }: {
       userReportId: string;
+      userId: string;
       updates: Partial<UserReport>;
-    }) => store.update(userReportId, updates),
+    }) => store.update(userReportId, userId, updates),
 
     onSuccess: (updatedAssociation) => {
       // Invalidate all related queries to trigger refetch
@@ -155,24 +157,27 @@ export const useUpdateReportAssociation = () => {
   });
 };
 
-// Not yet implemented, but keeping for future use
-/*
 export const useDeleteReportAssociation = () => {
   const store = useUserReportStore();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ userId, reportId }: { userId: string; reportId: string; countryId?: string }) =>
-      store.delete(userId, reportId),
-    onSuccess: (_, { userId, reportId, countryId }) => {
-      queryClient.invalidateQueries({ queryKey: reportAssociationKeys.byUser(userId, countryId) });
-      queryClient.invalidateQueries({ queryKey: reportAssociationKeys.byReport(reportId) });
-
-      queryClient.setQueryData(
-        reportAssociationKeys.specific(userId, reportId),
-        null
-      );
+    mutationFn: ({
+      userReportId,
+      userId,
+      countryId,
+    }: {
+      userReportId: string;
+      userId: string;
+      countryId?: string;
+    }) => store.delete(userReportId, userId),
+    onSuccess: (_, { userId, countryId, userReportId }) => {
+      queryClient.invalidateQueries({
+        queryKey: reportAssociationKeys.byUser(userId, countryId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: reportAssociationKeys.byUserReportId(userReportId),
+      });
     },
   });
 };
-*/

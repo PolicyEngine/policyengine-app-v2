@@ -73,6 +73,7 @@ export default function ReportsPage() {
     try {
       await updateAssociation.mutateAsync({
         userReportId: renamingReportId,
+        userId,
         updates: { label: newLabel },
       });
       handleCloseRename();
