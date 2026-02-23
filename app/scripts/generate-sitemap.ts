@@ -126,7 +126,9 @@ function generateSitemap(): string {
   const seen = new Set<string>();
   for (const app of apps) {
     const key = `${app.countryId}/${app.slug}`;
-    if (seen.has(key)) continue;
+    if (seen.has(key)) {
+      continue;
+    }
     seen.add(key);
 
     entries.push({
