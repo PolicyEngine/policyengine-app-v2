@@ -1,77 +1,119 @@
 /**
- * LazyNestedMenu - Renders a nested menu with on-demand child loading.
+ * LazyNestedMenu - Renders a nested parameter menu with API-backed lazy loading.
  *
- * Unlike NestedMenu which expects pre-populated children arrays,
- * this component fetches children via a callback when a node is expanded.
+ * Each expanded node fetches its children from the API via useParameterChildren.
+ * Children are cached by TanStack Query so re-expanding a node is instant.
  */
 
 import { useState } from 'react';
-import { NavLink } from '@mantine/core';
+import { Loader, NavLink } from '@mantine/core';
+import { useParameterChildren } from '@/hooks/useParameterChildren';
+import type { ParameterChildNode } from '@/api/v2';
 
-export interface LazyMenuNode {
-  name: string;
-  label: string;
-  type: 'parameterNode' | 'parameter';
-}
-
-interface LazyNestedMenuProps {
-  /** Initial nodes to display (root level) */
-  nodes: LazyMenuNode[];
-  /** Callback to get children for a path */
-  getChildren: (path: string) => LazyMenuNode[];
-  /** Callback when a leaf node (parameter) is clicked */
+export interface LazyNestedMenuProps {
+  /** Country ID for API calls (e.g., 'us', 'uk') */
+  countryId: string;
+  /** Parent path whose children are the root nodes (e.g., 'gov') */
+  rootPath: string;
+  /** Callback when a leaf parameter is clicked */
   onParameterClick?: (name: string) => void;
 }
 
 export default function LazyNestedMenu({
-  nodes,
-  getChildren,
+  countryId,
+  rootPath,
   onParameterClick,
 }: LazyNestedMenuProps) {
-  const [expandedPaths, setExpandedPaths] = useState<Set<string>>(new Set());
-  const [activePath, setActivePath] = useState<string | null>(null);
+  const { children, isLoading } = useParameterChildren(rootPath, countryId);
 
-  function toggleExpanded(path: string) {
-    setExpandedPaths((prev) => {
-      const next = new Set(prev);
-      if (next.has(path)) {
-        next.delete(path);
-      } else {
-        next.add(path);
-      }
-      return next;
-    });
+  if (isLoading) {
+    return <Loader size="sm" m="md" />;
   }
 
-  function handleClick(node: LazyMenuNode) {
-    setActivePath(node.name);
+  return (
+    <>
+      {children.map((node) => (
+        <LazyMenuNodeItem
+          key={node.path}
+          node={node}
+          countryId={countryId}
+          onParameterClick={onParameterClick}
+        />
+      ))}
+    </>
+  );
+}
 
-    if (node.type === 'parameter') {
-      onParameterClick?.(node.name);
+// ---------------------------------------------------------------------------
+// Internal components
+// ---------------------------------------------------------------------------
+
+function LazyMenuNodeItem({
+  node,
+  countryId,
+  onParameterClick,
+}: {
+  node: ParameterChildNode;
+  countryId: string;
+  onParameterClick?: (name: string) => void;
+}) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [isActive, setIsActive] = useState(false);
+  const isLeaf = node.type === 'parameter';
+
+  function handleClick() {
+    setIsActive(true);
+    if (isLeaf) {
+      onParameterClick?.(node.path);
     } else {
-      toggleExpanded(node.name);
+      setIsExpanded((prev) => !prev);
     }
   }
 
-  function renderNodes(nodeList: LazyMenuNode[]): React.ReactNode {
-    return nodeList.map((node) => {
-      const isExpanded = expandedPaths.has(node.name);
-      const isLeaf = node.type === 'parameter';
+  return (
+    <NavLink
+      label={node.label}
+      active={isActive}
+      onClick={handleClick}
+      opened={isExpanded}
+      childrenOffset={16}
+    >
+      {!isLeaf && isExpanded && (
+        <LazyMenuChildren
+          parentPath={node.path}
+          countryId={countryId}
+          onParameterClick={onParameterClick}
+        />
+      )}
+    </NavLink>
+  );
+}
 
-      return (
-        <NavLink
-          key={node.name}
-          label={node.label}
-          active={activePath === node.name}
-          onClick={() => handleClick(node)}
-          opened={isExpanded}
-          childrenOffset={16}
-        >
-          {!isLeaf && isExpanded && renderNodes(getChildren(node.name))}
-        </NavLink>
-      );
-    });
+function LazyMenuChildren({
+  parentPath,
+  countryId,
+  onParameterClick,
+}: {
+  parentPath: string;
+  countryId: string;
+  onParameterClick?: (name: string) => void;
+}) {
+  const { children, isLoading } = useParameterChildren(parentPath, countryId);
+
+  if (isLoading) {
+    return <Loader size="xs" m="xs" />;
   }
 
-  return <>{renderNodes(nodes)}</>;
+  return (
+    <>
+      {children.map((node) => (
+        <LazyMenuNodeItem
+          key={node.path}
+          node={node}
+          countryId={countryId}
+          onParameterClick={onParameterClick}
+        />
+      ))}
+    </>
+  );
 }
