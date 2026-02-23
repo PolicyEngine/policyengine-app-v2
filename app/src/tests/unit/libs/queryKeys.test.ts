@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { calculationKeys, parameterValueKeys } from '@/libs/queryKeys';
-import { TEST_POLICY_IDS } from '@/tests/fixtures/api/v2/apiV2Mocks';
+import { calculationKeys, parameterTreeKeys, parameterValueKeys } from '@/libs/queryKeys';
+import { TEST_POLICY_IDS, TEST_COUNTRIES } from '@/tests/fixtures/api/v2/apiV2Mocks';
 
 describe('calculationKeys', () => {
   describe('all', () => {
@@ -158,6 +158,68 @@ describe('parameterValueKeys', () => {
       // Then - TypeScript should infer the exact tuple type
       const _typeCheck: readonly ['parameter-values', 'policy', string, 'parameter', string] = key;
       expect(_typeCheck).toBeDefined();
+    });
+  });
+});
+
+describe('parameterTreeKeys', () => {
+  describe('all', () => {
+    it('given base key then returns parameter-tree array', () => {
+      expect(parameterTreeKeys.all).toEqual(['parameter-tree']);
+    });
+  });
+
+  describe('children', () => {
+    it('given countryId and parentPath then returns correct key', () => {
+      // When
+      const key = parameterTreeKeys.children(TEST_COUNTRIES.US, 'gov.irs');
+
+      // Then
+      expect(key).toEqual(['parameter-tree', 'children', TEST_COUNTRIES.US, 'gov.irs']);
+    });
+
+    it('given different parentPath then generates unique key', () => {
+      // When
+      const key1 = parameterTreeKeys.children(TEST_COUNTRIES.US, 'gov.irs');
+      const key2 = parameterTreeKeys.children(TEST_COUNTRIES.US, 'gov.hmrc');
+
+      // Then
+      expect(key1).not.toEqual(key2);
+    });
+  });
+
+  describe('byName', () => {
+    it('given countryId and names then returns correct key', () => {
+      // When
+      const key = parameterTreeKeys.byName(TEST_COUNTRIES.US, ['gov.irs.credits.eitc.max']);
+
+      // Then
+      expect(key).toEqual([
+        'parameter-tree',
+        'by-name',
+        TEST_COUNTRIES.US,
+        'gov.irs.credits.eitc.max',
+      ]);
+    });
+
+    it('given unsorted names then sorts them for consistent keys', () => {
+      // When
+      const key1 = parameterTreeKeys.byName(TEST_COUNTRIES.US, ['b.param', 'a.param']);
+      const key2 = parameterTreeKeys.byName(TEST_COUNTRIES.US, ['a.param', 'b.param']);
+
+      // Then — same key regardless of input order
+      expect(key1).toEqual(key2);
+      expect(key1[3]).toBe('a.param');
+      expect(key1[4]).toBe('b.param');
+    });
+
+    it('given different countries then generates unique keys', () => {
+      // When
+      const usKey = parameterTreeKeys.byName(TEST_COUNTRIES.US, ['gov.irs']);
+      const ukKey = parameterTreeKeys.byName(TEST_COUNTRIES.UK, ['gov.irs']);
+
+      // Then
+      expect(usKey).not.toEqual(ukKey);
     });
   });
 });
