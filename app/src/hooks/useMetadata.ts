@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useModelVersion } from '@/hooks/useModelVersion';
 import { useEntities } from '@/hooks/useStaticMetadata';
 import { fetchMetadataThunk } from '@/reducers/metadataReducer';
 import { AppDispatch, RootState } from '@/store';
@@ -19,15 +20,19 @@ export function selectMetadataState(state: RootState) {
 }
 
 /**
- * Hook that fetches all metadata (variables, datasets, parameters) for a country.
- *
- * This is the V2 unified loading approach - loads all metadata in a single fetch.
+ * Hook that fetches all metadata (variables, datasets) for a country
+ * and checks the model version for localStorage cache invalidation.
  *
  * @param countryId - Country to fetch metadata for (e.g., 'us', 'uk')
  */
 export function useFetchMetadata(countryId: string): void {
   const dispatch = useDispatch<AppDispatch>();
   const { loading, loaded, currentCountry } = useSelector(selectMetadataState);
+
+  // Check model version and invalidate localStorage cache if it changed.
+  // This runs alongside the Redux metadata fetch so parameter tree hooks
+  // that read from localStorage will have stale data cleared promptly.
+  useModelVersion(countryId);
 
   useEffect(() => {
     // Fetch if:

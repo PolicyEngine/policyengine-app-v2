@@ -2,7 +2,8 @@
  * Hook for fetching parameter tree children from the API.
  *
  * Each call fetches one level of the parameter tree on demand.
- * Results are cached by TanStack Query for the session.
+ * Results are cached by TanStack Query for the session and
+ * persisted to localStorage for cross-session reuse.
  *
  * @example
  * ```tsx
@@ -13,6 +14,10 @@
 import { useQuery } from '@tanstack/react-query';
 import { fetchParameterChildren, ParameterChildNode } from '@/api/v2';
 import { parameterTreeKeys } from '@/libs/queryKeys';
+import {
+  getCachedParameterChildren,
+  setCachedParameterChildren,
+} from '@/libs/metadataCache';
 
 export interface UseParameterChildrenResult {
   children: ParameterChildNode[];
@@ -27,7 +32,12 @@ export function useParameterChildren(
 ): UseParameterChildrenResult {
   const query = useQuery({
     queryKey: parameterTreeKeys.children(countryId, parentPath),
-    queryFn: () => fetchParameterChildren(parentPath, countryId),
+    queryFn: async () => {
+      const data = await fetchParameterChildren(parentPath, countryId);
+      setCachedParameterChildren(countryId, parentPath, data);
+      return data;
+    },
+    initialData: () => getCachedParameterChildren(countryId, parentPath) ?? undefined,
     enabled: enabled && !!countryId,
     staleTime: 10 * 60 * 1000, // 10 minutes
   });

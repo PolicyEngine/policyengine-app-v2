@@ -8,11 +8,17 @@
  * Automatically expands parameter names to include ancestor path segments
  * so that getHierarchicalLabels can resolve labels for intermediate nodes
  * that happen to be parameters themselves.
+ *
+ * Results are persisted to localStorage for cross-session reuse.
  */
 
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { fetchParametersByName, V2ParameterData } from '@/api/v2';
+import {
+  getCachedParameters,
+  setCachedParameters,
+} from '@/libs/metadataCache';
 import { parameterTreeKeys } from '@/libs/queryKeys';
 import { ParameterMetadata } from '@/types/metadata';
 
@@ -78,8 +84,10 @@ export function useParametersByName(
       for (const p of data) {
         record[p.name] = toParameterMetadata(p);
       }
+      setCachedParameters(countryId, record);
       return record;
     },
+    initialData: () => getCachedParameters(countryId, expandedNames) ?? undefined,
     enabled: enabled && !!countryId && expandedNames.length > 0,
     staleTime: 10 * 60 * 1000, // 10 minutes
   });

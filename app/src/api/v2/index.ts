@@ -4,10 +4,12 @@ export {
   COUNTRY_TO_MODEL_NAME,
   getModelName,
   fetchTaxBenefitModels,
+  fetchModelByCountry,
   fetchModelVersion,
   fetchModelVersionId,
   type TaxBenefitModel,
   type TaxBenefitModelVersion,
+  type ModelByCountryResponse,
 } from './taxBenefitModels';
 
 // Variables
