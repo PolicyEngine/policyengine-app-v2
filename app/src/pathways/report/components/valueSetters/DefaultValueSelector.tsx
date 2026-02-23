@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Box, Group, Text } from '@mantine/core';
+import { Box, Flex, Text } from '@mantine/core';
 import { YearPickerInput } from '@mantine/dates';
 import { FOREVER } from '@/constants';
 import { ValueInterval } from '@/types/subIngredients/valueInterval';
@@ -58,7 +58,12 @@ export function DefaultValueSelector(props: ValueSetterProps) {
   }
 
   return (
-    <Group align="flex-end" style={{ flex: 1 }}>
+    <Flex
+      align={{ base: 'stretch', sm: 'flex-end' }}
+      direction={{ base: 'column', sm: 'row' }}
+      gap="sm"
+      style={{ flex: 1 }}
+    >
       <YearPickerInput
         placeholder="Pick a year"
         label="From"
@@ -76,6 +81,6 @@ export function DefaultValueSelector(props: ValueSetterProps) {
       <Box style={{ flex: 1 }}>
         <ValueInputBox param={param} value={paramValue} onChange={setParamValue} />
       </Box>
-    </Group>
+    </Flex>
   );
 }
