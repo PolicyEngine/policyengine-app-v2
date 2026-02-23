@@ -20,6 +20,10 @@ vi.mock('../../../../src/data/apps/apps.json', () => ({
   default: [MOCK_APP_WITH_IMAGE, MOCK_APP_WITHOUT_IMAGE],
 }));
 
+vi.mock('../../../../src/data/posts/authors.json', () => ({
+  default: { 'test-author': { name: 'Test Author' } },
+}));
+
 describe('middleware route handlers', () => {
   beforeEach(() => {
     vi.clearAllMocks();
