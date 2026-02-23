@@ -17,7 +17,6 @@ import {
   Text,
 } from '@/components/ui';
 import { Household } from '@/types/ingredients/Household';
-import { getInputFormattingProps } from '@/utils/householdValues';
 import { coerceByValueType } from '@/utils/valueCoercion';
 import { getValue, setValue, VariableInfo } from '@/utils/VariableResolver';
 
@@ -46,12 +45,6 @@ export default function VariableInput({
     const newHousehold = setValue(household, variable.name, value, metadata, year, entityName);
     onChange(newHousehold);
   };
-
-  // Get formatting props for number inputs
-  const formattingProps = getInputFormattingProps({
-    valueType: variable.valueType,
-    unit: variable.unit,
-  });
 
   // Render based on valueType
   switch (variable.valueType) {
