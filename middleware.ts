@@ -1,8 +1,10 @@
-// Vercel Edge Middleware for social media preview support
-// This intercepts requests from social media crawlers and returns proper OG tags
+// Vercel Edge Middleware for SEO and social media preview support
+// Intercepts requests from search engine bots and social crawlers to return
+// proper meta tags, structured data (JSON-LD), and canonical URLs
 
 import appsData from "./app/src/data/apps/apps.json";
 import postsData from "./app/src/data/posts/posts.json";
+import authorsData from "./app/src/data/posts/authors.json";
 
 // Types
 type PathParts = {
@@ -16,6 +18,8 @@ type OgMetadata = {
   description: string;
   image: string;
   type: "article" | "website";
+  datePublished?: string;
+  authors?: string[];
 };
 
 // Constants
@@ -113,11 +117,66 @@ function escapeHtml(str: string): string {
     .replace(/"/g, "&quot;");
 }
 
+type JsonLd = Record<string, unknown>;
+
+function generateJsonLd(metadata: OgMetadata, url: string): JsonLd {
+  if (metadata.type === "article") {
+    return {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      headline: metadata.title,
+      description: metadata.description,
+      image: metadata.image,
+      url,
+      publisher: {
+        "@type": "Organization",
+        name: "PolicyEngine",
+        url: BASE_URL,
+        logo: {
+          "@type": "ImageObject",
+          url: `${BASE_URL}/assets/logos/policyengine/teal.png`,
+        },
+      },
+      ...(metadata.datePublished && {
+        datePublished: metadata.datePublished,
+      }),
+      ...(metadata.authors &&
+        metadata.authors.length > 0 && {
+          author: metadata.authors.map((name) => ({
+            "@type": "Person",
+            name,
+          })),
+        }),
+    };
+  }
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    name: metadata.title,
+    description: metadata.description,
+    url,
+    applicationCategory: "FinanceApplication",
+    operatingSystem: "Any",
+    offers: {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "USD",
+    },
+    provider: {
+      "@type": "Organization",
+      name: "PolicyEngine",
+      url: BASE_URL,
+    },
+  };
+}
+
 function generateOgHtml(metadata: OgMetadata, url: string): string {
   const siteName = "PolicyEngine";
   const twitterHandle = "@ThePolicyEngine";
   const safeTitle = escapeHtml(metadata.title);
   const safeDescription = escapeHtml(metadata.description);
+  const jsonLd = generateJsonLd(metadata, url);
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -126,6 +185,7 @@ function generateOgHtml(metadata: OgMetadata, url: string): string {
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>${safeTitle} | ${siteName}</title>
   <meta name="description" content="${safeDescription}" />
+  <link rel="canonical" href="${url}" />
 
   <!-- Open Graph -->
   <meta property="og:title" content="${safeTitle}" />
@@ -141,6 +201,9 @@ function generateOgHtml(metadata: OgMetadata, url: string): string {
   <meta name="twitter:title" content="${safeTitle}" />
   <meta name="twitter:description" content="${safeDescription}" />
   <meta name="twitter:image" content="${metadata.image}" />
+
+  <!-- Structured Data -->
+  <script type="application/ld+json">${JSON.stringify(jsonLd)}</script>
 </head>
 <body>
   <h1>${safeTitle}</h1>
@@ -184,6 +247,11 @@ function findAppBySlugAndCountry(slug: string, countryId: string): any {
   );
 }
 
+function resolveAuthorNames(authorIds: string[]): string[] {
+  const authors = authorsData as Record<string, { name?: string }>;
+  return authorIds.map((id) => authors[id]?.name || id);
+}
+
 function handleBlogPost(parts: PathParts, fullUrl: string): Response | null {
   if (parts.section !== "research" || !parts.slug) {
     return null;
@@ -199,6 +267,8 @@ function handleBlogPost(parts: PathParts, fullUrl: string): Response | null {
     description: post.description,
     image: getImageUrl(post.image),
     type: "article",
+    datePublished: post.date,
+    authors: post.authors ? resolveAuthorNames(post.authors) : undefined,
   };
 
   return createOgResponse(generateOgHtml(metadata, fullUrl));
@@ -307,7 +377,7 @@ export default async function middleware(request: Request) {
     return;
   }
 
-  if (!isCrawler(userAgent)) {
+  if (!isCrawler(userAgent) && !isSearchEngine(userAgent)) {
     return;
   }
 

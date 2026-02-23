@@ -17,6 +17,14 @@
   ],
   "rewrites": [
     {
+      "source": "/robots.txt",
+      "destination": "/robots.txt"
+    },
+    {
+      "source": "/sitemap.xml",
+      "destination": "/sitemap.xml"
+    },
+    {
       "source": "/_tracker/:path*",
       "destination": "https://policyengine--state-legislative-tracker.modal.run/_tracker/:path*"
     },
