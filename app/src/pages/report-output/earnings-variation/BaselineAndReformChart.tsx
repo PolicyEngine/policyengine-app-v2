@@ -13,14 +13,13 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { Label, RadioGroup, RadioGroupItem, Stack } from '@/components/ui';
-import { useMediaQuery } from '@/hooks/useMediaQuery';
-import { useViewportSize } from '@/hooks/useViewportSize';
 import { ChartWatermark, TOOLTIP_STYLE } from '@/components/charts';
+import { RadioGroup, RadioGroupItem, Stack } from '@/components/ui';
 import { colors } from '@/designTokens';
-import { spacing } from '@/designTokens/spacing';
 import { MOBILE_BREAKPOINT_QUERY } from '@/hooks/useChartDimensions';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { useViewportSize } from '@/hooks/useViewportSize';
 import type { RootState } from '@/store';
 import type { Household } from '@/types/ingredients/Household';
 import { getClampedChartHeight, getNiceTicks, RECHARTS_FONT_STYLE } from '@/utils/chartUtils';
@@ -298,20 +297,20 @@ export default function BaselineAndReformChart({
   };
 
   return (
-    <Stack gap={spacing.md}>
+    <Stack gap="md">
       <RadioGroup value={viewMode} onValueChange={(value) => setViewMode(value as ViewMode)}>
         <div className="tw:flex tw:gap-md tw:items-center">
           <div className="tw:flex tw:items-center tw:gap-xs">
             <RadioGroupItem value="both" id="ev-both" />
-            <Label htmlFor="ev-both">Baseline and reform</Label>
+            <label htmlFor="ev-both">Baseline and reform</label>
           </div>
           <div className="tw:flex tw:items-center tw:gap-xs">
             <RadioGroupItem value="absolute" id="ev-absolute" />
-            <Label htmlFor="ev-absolute">Absolute change</Label>
+            <label htmlFor="ev-absolute">Absolute change</label>
           </div>
           <div className="tw:flex tw:items-center tw:gap-xs">
             <RadioGroupItem value="relative" id="ev-relative" />
-            <Label htmlFor="ev-relative">Relative change</Label>
+            <label htmlFor="ev-relative">Relative change</label>
           </div>
         </div>
       </RadioGroup>

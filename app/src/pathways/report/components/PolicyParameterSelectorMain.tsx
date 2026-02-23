@@ -52,7 +52,7 @@ export default function PolicyParameterSelectorMain({
   }
 
   return (
-    <Container variant="guttered">
+    <Container>
       <Title order={3} className="tw:pb-xl">
         {capitalize(param.label || 'Label unavailable')}
       </Title>

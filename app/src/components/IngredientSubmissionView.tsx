@@ -207,10 +207,8 @@ export default function IngredientSubmissionView({
 
   return (
     <>
-      <Container variant="guttered">
-        <Title order={2} variant="colored">
-          {title}
-        </Title>
+      <Container>
+        <Title order={2}>{title}</Title>
         {subtitle && (
           <Text style={{ color: colors.text.secondary, marginBottom: spacing.sm }}>{subtitle}</Text>
         )}

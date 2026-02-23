@@ -141,8 +141,8 @@ export default function WinnersLosersWealthDecileSubPage({ output }: Props) {
 
   return (
     <ChartContainer title={getChartTitle()} onDownloadCsv={handleDownloadCsv}>
-      <Stack gap={spacing.sm}>
-        <Stack gap={0}>
+      <Stack gap="sm">
+        <Stack className="tw:gap-0">
           {/* All households - small chart */}
           <ResponsiveContainer width="100%" height={60}>
             <BarChart

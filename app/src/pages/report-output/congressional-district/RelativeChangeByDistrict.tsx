@@ -92,7 +92,7 @@ export function RelativeChangeByDistrict({ output }: RelativeChangeByDistrictPro
   // No data and not loading
   if (!mapData.length && !isLoading && !hasStarted) {
     return (
-      <Stack align="center" justify="center" h={400}>
+      <Stack align="center" justify="center" style={{ height: 400 }}>
         <Text c="dimmed">No congressional district data available</Text>
       </Stack>
     );
@@ -113,7 +113,7 @@ export function RelativeChangeByDistrict({ output }: RelativeChangeByDistrictPro
       </Group>
 
       {/* Show progress while loading */}
-      {isLoading && <Progress value={progressPercent} size="sm" />}
+      {isLoading && <Progress value={progressPercent} />}
 
       {/* Show map if we have any data */}
       {mapData.length > 0 && (

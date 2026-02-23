@@ -15,10 +15,8 @@ export function MetadataLoadingExperience({ countryId }: MetadataLoadingExperien
   const countryName = countryId === 'uk' ? 'United Kingdom' : 'United States';
 
   return (
-    <Container variant="guttered">
-      <Title order={2} variant="colored">
-        Loading
-      </Title>
+    <Container>
+      <Title order={2}>Loading</Title>
       <Text className="tw:mb-sm" style={{ color: '#868e96' }}>
         Fetching {countryName} policy data
       </Text>

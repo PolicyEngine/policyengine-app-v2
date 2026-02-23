@@ -15,7 +15,6 @@ import { ChartContainer } from '@/components/ChartContainer';
 import { ChartWatermark, ImpactBarLabel, ImpactTooltip } from '@/components/charts';
 import { Stack, Text } from '@/components/ui';
 import { colors } from '@/designTokens/colors';
-import { spacing } from '@/designTokens/spacing';
 import { MOBILE_BREAKPOINT_QUERY } from '@/hooks/useChartDimensions';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
@@ -116,7 +115,7 @@ export default function DistributionalImpactIncomeRelativeSubPage({ output }: Pr
 
   return (
     <ChartContainer title={getChartTitle()} onDownloadCsv={handleDownloadCsv}>
-      <Stack gap={spacing.sm}>
+      <Stack gap="sm">
         <ResponsiveContainer width="100%" height={chartHeight}>
           <BarChart data={chartData} margin={{ top: 20, right: 20, bottom: 30, left: 30 }}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} />

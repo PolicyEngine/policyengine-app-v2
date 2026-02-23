@@ -174,9 +174,7 @@ export default function PathwayView({
 
   const containerContent = (
     <>
-      <Title order={2} variant="colored">
-        {title}
-      </Title>
+      <Title order={2}>{title}</Title>
       {subtitle && (
         <Text className="tw:mb-sm" style={{ color: '#868e96' }}>
           {subtitle}
@@ -192,7 +190,7 @@ export default function PathwayView({
     </>
   );
 
-  return <Container variant="guttered">{containerContent}</Container>;
+  return <Container>{containerContent}</Container>;
 }
 
 export type { PathwayViewProps, ButtonConfig };

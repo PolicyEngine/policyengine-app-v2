@@ -131,7 +131,7 @@ export default function VariableInput({
             }
             placeholder={`Enter ${variable.label}`}
             disabled={disabled}
-            step={variable.valueType === 'int' ? 1 : formattingProps?.step}
+            step={variable.valueType === 'int' ? 1 : 'any'}
           />
         </div>
       );

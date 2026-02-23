@@ -10,7 +10,6 @@ import {
   Stack,
   Text,
 } from '@/components/ui';
-import { spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useHouseholdVariation } from '@/hooks/useHouseholdVariation';
 import { useReportYear } from '@/hooks/useReportYear';
@@ -54,7 +53,7 @@ export default function EarningsVariationSubPage({
   // Early return if no report year available (shouldn't happen in report output context)
   if (!reportYear) {
     return (
-      <Stack gap={spacing.md}>
+      <Stack gap="md">
         <Text c="red">Error: Report year not available</Text>
       </Stack>
     );
@@ -107,7 +106,7 @@ export default function EarningsVariationSubPage({
 
   if (baselineError) {
     return (
-      <Stack gap={spacing.md}>
+      <Stack gap="md">
         <Text c="red">Error loading baseline variation: {baselineError.message}</Text>
       </Stack>
     );
@@ -115,7 +114,7 @@ export default function EarningsVariationSubPage({
 
   if (reform && reformError) {
     return (
-      <Stack gap={spacing.md}>
+      <Stack gap="md">
         <Text c="red">Error loading reform variation: {reformError.message}</Text>
       </Stack>
     );
@@ -124,7 +123,7 @@ export default function EarningsVariationSubPage({
   // Verify baseline data exists and has required structure
   if (!baselineVariation || !baselineVariation.householdData?.people) {
     return (
-      <Stack gap={spacing.md}>
+      <Stack gap="md">
         <Text c="red">No baseline variation data available</Text>
       </Stack>
     );
@@ -133,7 +132,7 @@ export default function EarningsVariationSubPage({
   // If reform exists, verify reform data has required structure
   if (reform && reformVariation && !reformVariation.householdData?.people) {
     return (
-      <Stack gap={spacing.md}>
+      <Stack gap="md">
         <Text c="red">Invalid reform variation data</Text>
       </Stack>
     );
@@ -158,7 +157,7 @@ export default function EarningsVariationSubPage({
     }));
 
   return (
-    <Stack gap={spacing.lg}>
+    <Stack gap="lg">
       <div className="tw:flex tw:items-end tw:gap-md">
         <Text className="tw:font-medium tw:text-sm tw:whitespace-nowrap tw:pb-2">
           Select variable to display:

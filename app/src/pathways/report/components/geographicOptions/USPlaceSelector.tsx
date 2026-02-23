@@ -74,9 +74,9 @@ export default function USPlaceSelector({ selectedPlace, onPlaceChange }: USPlac
             <SelectValue placeholder="Choose a state" />
           </SelectTrigger>
           <SelectContent>
-            {stateNames.map((name) => (
-              <SelectItem key={name} value={name}>
-                {name}
+            {stateNames.map((state) => (
+              <SelectItem key={state.value} value={state.value}>
+                {state.label}
               </SelectItem>
             ))}
           </SelectContent>

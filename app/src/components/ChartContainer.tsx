@@ -28,7 +28,7 @@ interface ChartContainerProps {
 export function ChartContainer({ children, title, onDownloadCsv }: ChartContainerProps) {
   return (
     <Stack gap="sm">
-      <Group justify="space-between" align="flex-start" wrap="nowrap">
+      <Group justify="space-between" align="start" wrap="nowrap">
         <Text size="lg" fw={500} className="tw:flex-1 tw:break-words">
           {title}
         </Text>

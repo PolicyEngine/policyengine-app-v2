@@ -29,10 +29,8 @@ export default function IngredientCreationStartView({
 
   return (
     <>
-      <Container variant="guttered">
-        <Title order={2} variant="colored">
-          {title}
-        </Title>
+      <Container>
+        <Title order={2}>{title}</Title>
         <hr className="tw:my-2 tw:border-border-light" />
         {/*TODO: subtitle?*/}
         {/*break*/}

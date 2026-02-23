@@ -1,7 +1,6 @@
 import { useSelector } from 'react-redux';
 import VariableArithmetic from '@/components/household/VariableArithmetic';
 import { Stack, Text, Title } from '@/components/ui';
-import { spacing } from '@/designTokens';
 import { useReportYear } from '@/hooks/useReportYear';
 import type { RootState } from '@/store';
 import type { Household } from '@/types/ingredients/Household';
@@ -25,7 +24,7 @@ export default function NetIncomeSubPage({ baseline, reform }: Props) {
   const netIncomeVariable = metadata.variables.household_net_income;
   if (!netIncomeVariable) {
     return (
-      <Stack gap={spacing.md}>
+      <Stack gap="md">
         <Text c="red">Error: household_net_income variable not found in metadata</Text>
       </Stack>
     );
@@ -69,7 +68,7 @@ export default function NetIncomeSubPage({ baseline, reform }: Props) {
   };
 
   return (
-    <Stack gap={spacing.lg}>
+    <Stack gap="lg">
       <Title order={3}>{getTitle()}</Title>
 
       <Text size="sm" c="dimmed">

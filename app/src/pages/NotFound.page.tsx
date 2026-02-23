@@ -6,10 +6,8 @@ export default function NotFoundPage() {
   const { countryId } = useParams<{ countryId: string }>();
 
   return (
-    <Container variant="guttered">
-      <Title order={2} variant="colored">
-        Page not found
-      </Title>
+    <Container>
+      <Title order={2}>Page not found</Title>
       <Text className="tw:mb-sm" style={{ color: colors.gray[500] }}>
         The page you're looking for doesn't exist or has been moved.
       </Text>

@@ -29,7 +29,7 @@ export function LocalAuthoritySubPage({ output }: LocalAuthoritySubPageProps) {
   // Type guard: only UK reports have constituency data (proxy for UK report check)
   if (!('local_authority_impact' in output)) {
     return (
-      <Stack align="center" justify="center" h={400}>
+      <Stack align="center" justify="center" style={{ height: 400 }}>
         <Text c="dimmed">Local authority analysis not available for this region</Text>
       </Stack>
     );
