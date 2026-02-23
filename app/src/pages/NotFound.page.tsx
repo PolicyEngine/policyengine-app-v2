@@ -16,16 +16,18 @@ export default function NotFoundPage() {
       <hr className="tw:border-border-light tw:my-sm" />
 
       <Stack className="tw:items-center tw:justify-center tw:py-20">
-        <Text size="xl" fw={700} style={{ fontSize: '72px', lineHeight: 1, color: colors.primary[500] }}>
+        <Text
+          size="xl"
+          fw={700}
+          style={{ fontSize: '72px', lineHeight: 1, color: colors.primary[500] }}
+        >
           404
         </Text>
         <Text size="sm" className="tw:mt-md" style={{ color: colors.gray[500] }}>
           Check the URL or head back to your reports.
         </Text>
         <Button className="tw:mt-md" asChild>
-          <Link to={`/${countryId || 'us'}/reports`}>
-            Go to reports
-          </Link>
+          <Link to={`/${countryId || 'us'}/reports`}>Go to reports</Link>
         </Button>
       </Stack>
     </Container>

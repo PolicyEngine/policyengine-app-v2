@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { Stack } from '@/components/ui';
-import { useDisclosure } from '@/hooks/useDisclosure';
 import { BulletsValue, ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
 import { RenameIngredientModal } from '@/components/common/RenameIngredientModal';
 import IngredientReadView from '@/components/IngredientReadView';
+import { Stack } from '@/components/ui';
 import { MOCK_USER_ID } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useDisclosure } from '@/hooks/useDisclosure';
 import {
   useGeographicAssociationsByUser,
   useUpdateGeographicAssociation,

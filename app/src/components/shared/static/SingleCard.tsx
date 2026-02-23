@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { Badge, Card, CardContent } from '@/components/ui';
-import { Group, Text } from '@/components/ui';
+import { Badge, Card, CardContent, Group, Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 
 export interface CardProps {

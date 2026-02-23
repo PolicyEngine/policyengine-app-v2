@@ -4,8 +4,8 @@
  * Props-based instead of Redux-based
  */
 
-import { Stack } from '@/components/ui';
 import PathwayView from '@/components/common/PathwayView';
+import { Stack } from '@/components/ui';
 import { MOCK_USER_ID } from '@/constants';
 import { useCreateGeographicAssociation } from '@/hooks/useUserGeographic';
 import { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
@@ -72,9 +72,7 @@ export default function GeographicConfirmationView({
     if (population.geography.scope === 'national') {
       return (
         <Stack gap="md">
-          <p className="tw:font-semibold tw:text-lg">
-            Confirm household collection
-          </p>
+          <p className="tw:font-semibold tw:text-lg">Confirm household collection</p>
           <p>
             <strong>Scope:</strong> National
           </p>
@@ -92,9 +90,7 @@ export default function GeographicConfirmationView({
 
     return (
       <Stack gap="md">
-        <p className="tw:font-semibold tw:text-lg">
-          Confirm household collection
-        </p>
+        <p className="tw:font-semibold tw:text-lg">Confirm household collection</p>
         <p>
           <strong>Scope:</strong> {regionTypeName}
         </p>

@@ -18,6 +18,7 @@ export default function MobileMenu({ opened, onOpen, onClose, navItems }: Mobile
       <div className="tw:flex lg:tw:hidden tw:items-center" style={{ gap: spacing.md }}>
         <CountrySelector />
         <button
+          type="button"
           className="tw:p-1 tw:rounded tw:bg-transparent tw:border-none tw:cursor-pointer"
           onClick={onOpen}
           aria-label="Toggle navigation"

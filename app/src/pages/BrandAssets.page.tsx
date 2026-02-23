@@ -1,7 +1,7 @@
 import { IconCheck, IconX } from '@tabler/icons-react';
 import { Link } from 'react-router-dom';
-import { Button, Text, Title } from '@/components/ui';
 import StaticPageLayout from '@/components/shared/static/StaticPageLayout';
+import { Button, Text, Title } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 
 function SectionTitle({ children }: { children: string }) {
@@ -92,9 +92,13 @@ function UsageCard({ type, items }: { type: 'do' | 'dont'; items: string[] }) {
           {isDo ? 'Do' : "Don't"}
         </span>
       </Text>
-      <ul style={{ color: colors.text.secondary, fontSize: typography.fontSize.sm, paddingLeft: 20 }}>
+      <ul
+        style={{ color: colors.text.secondary, fontSize: typography.fontSize.sm, paddingLeft: 20 }}
+      >
         {items.map((item, i) => (
-          <li key={i} style={{ marginBottom: spacing.xs }}>{item}</li>
+          <li key={i} style={{ marginBottom: spacing.xs }}>
+            {item}
+          </li>
         ))}
       </ul>
     </div>

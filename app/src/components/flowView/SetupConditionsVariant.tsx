@@ -1,7 +1,7 @@
 import { IconCheck } from '@tabler/icons-react';
 import { Group, Stack, Text } from '@/components/ui';
+import { colors } from '@/designTokens';
 import { cn } from '@/lib/utils';
-import { colors, spacing } from '@/designTokens';
 
 export interface SetupConditionCard {
   title: string;
@@ -25,6 +25,7 @@ export default function SetupConditionsVariant({ cards }: SetupConditionsVariant
     <Stack>
       {cards.map((card: SetupConditionCard, index: number) => (
         <button
+          type="button"
           key={index}
           onClick={card.onClick}
           disabled={card.isDisabled}
@@ -36,7 +37,7 @@ export default function SetupConditionsVariant({ cards }: SetupConditionsVariant
                 ? 'tw:border-primary-500 tw:bg-primary-50 tw:cursor-pointer'
                 : card.isFulfilled
                   ? 'tw:border-green-300 tw:bg-green-50 tw:cursor-pointer'
-                  : 'tw:border-gray-200 tw:bg-white tw:cursor-pointer hover:tw:border-primary-300',
+                  : 'tw:border-gray-200 tw:bg-white tw:cursor-pointer hover:tw:border-primary-300'
           )}
         >
           <Group gap="sm" className="tw:items-center">

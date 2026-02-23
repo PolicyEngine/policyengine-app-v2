@@ -78,7 +78,8 @@ export default function MetricCard({
           <div
             className={`tw:flex tw:items-center tw:justify-center tw:rounded-full ${hero ? 'tw:w-8 tw:h-8' : 'tw:w-6 tw:h-6'}`}
             style={{
-              backgroundColor: trend === 'positive' ? `${colors.primary[100]}` : `${colors.gray[100]}`,
+              backgroundColor:
+                trend === 'positive' ? `${colors.primary[100]}` : `${colors.gray[100]}`,
               color: trend === 'positive' ? colors.primary[600] : colors.gray[600],
             }}
           >
@@ -99,11 +100,7 @@ export default function MetricCard({
       </div>
 
       {/* Subtext */}
-      {subtext && (
-        <p className="tw:text-sm tw:text-gray-500 tw:mt-xs">
-          {subtext}
-        </p>
-      )}
+      {subtext && <p className="tw:text-sm tw:text-gray-500 tw:mt-xs">{subtext}</p>}
 
       {/* Description */}
       {description && (

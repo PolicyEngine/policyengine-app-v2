@@ -68,9 +68,7 @@ export function DefaultValueSelector(props: ValueSetterProps) {
         style={{ flex: 1 }}
       />
       <div className="tw:flex tw:items-center tw:flex-1" style={{ height: '36px' }}>
-        <span className="tw:text-sm tw:font-medium">
-          onward:
-        </span>
+        <span className="tw:text-sm tw:font-medium">onward:</span>
       </div>
       <div className="tw:flex-1">
         <ValueInputBox param={param} value={paramValue} onChange={setParamValue} />

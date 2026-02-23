@@ -96,6 +96,7 @@ export default function DowningStreetBanner() {
       </div>
 
       <button
+        type="button"
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();

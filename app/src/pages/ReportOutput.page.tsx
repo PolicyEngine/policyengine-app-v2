@@ -1,16 +1,16 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { Container, Stack, Text } from '@/components/ui';
-import { useDisclosure } from '@/hooks/useDisclosure';
 import { SocietyWideReportOutput as SocietyWideOutput } from '@/api/societyWideCalculation';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { FloatingAlert } from '@/components/common/FloatingAlert';
 import { RenameIngredientModal } from '@/components/common/RenameIngredientModal';
 import { ReportErrorFallback } from '@/components/report/ReportErrorFallback';
+import { Container, Stack, Text } from '@/components/ui';
 import { CALCULATOR_URL } from '@/constants';
 import { ReportYearProvider } from '@/contexts/ReportYearContext';
 import { spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useDisclosure } from '@/hooks/useDisclosure';
 import { useSaveSharedReport } from '@/hooks/useSaveSharedReport';
 import { useSharedReportData } from '@/hooks/useSharedReportData';
 import { useUpdateReportAssociation } from '@/hooks/useUserReportAssociations';
@@ -253,7 +253,9 @@ export default function ReportOutputPage() {
     return (
       <Container size="xl" style={{ paddingLeft: spacing.xl, paddingRight: spacing.xl }}>
         <Stack gap="xl">
-          <Text style={{ color: 'red' }}>Error loading report: {dataError?.message || 'Report not found'}</Text>
+          <Text style={{ color: 'red' }}>
+            Error loading report: {dataError?.message || 'Report not found'}
+          </Text>
         </Stack>
       </Container>
     );

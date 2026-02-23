@@ -5,8 +5,8 @@
  */
 
 import { useState } from 'react';
-import { Input, Stack } from '@/components/ui';
 import PathwayView from '@/components/common/PathwayView';
+import { Input, Stack } from '@/components/ui';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { PathwayMode } from '@/types/pathwayModes/PathwayMode';
 import { PopulationStateProps } from '@/types/pathwayState';
@@ -95,9 +95,7 @@ export default function PopulationLabelView({
 
   const formInputs = (
     <Stack>
-      <p className="tw:text-sm tw:text-gray-500">
-        Give your household(s) a descriptive name.
-      </p>
+      <p className="tw:text-sm tw:text-gray-500">Give your household(s) a descriptive name.</p>
 
       <div className="tw:flex tw:flex-col tw:gap-xs">
         <label className="tw:text-sm tw:font-medium">

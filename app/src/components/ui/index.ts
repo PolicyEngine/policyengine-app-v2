@@ -35,23 +35,11 @@ export {
   DropdownMenuSubTrigger,
   DropdownMenuRadioGroup,
 } from './dropdown-menu';
-export {
-  Accordion,
-  AccordionItem,
-  AccordionTrigger,
-  AccordionContent,
-} from './accordion';
+export { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from './accordion';
 export { Alert, AlertTitle, AlertDescription } from './alert';
 export { Badge, badgeVariants } from './badge';
 export { Button, buttonVariants } from './button';
-export {
-  Card,
-  CardHeader,
-  CardFooter,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from './card';
+export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent } from './card';
 export { Checkbox } from './checkbox';
 export {
   Dialog,
@@ -109,9 +97,4 @@ export {
 } from './table';
 export { Tabs, TabsList, TabsTrigger, TabsContent } from './tabs';
 export { Textarea } from './textarea';
-export {
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
-  TooltipProvider,
-} from './tooltip';
+export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from './tooltip';

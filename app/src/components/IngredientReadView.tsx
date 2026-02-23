@@ -9,8 +9,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-  Title,
   Text,
+  Title,
 } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import { ColumnConfig, ColumnRenderer, IngredientRecord } from './columns';

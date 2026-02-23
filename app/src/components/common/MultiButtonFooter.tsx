@@ -57,11 +57,7 @@ export default function MultiButtonFooter(props: MultiButtonFooterProps) {
         <div className="tw:flex tw:justify-end">
           <div className="tw:flex tw:gap-sm tw:flex-nowrap tw:w-full">
             {backAction && (
-              <Button
-                variant="outline"
-                onClick={backAction.onClick}
-                className="tw:w-full"
-              >
+              <Button variant="outline" onClick={backAction.onClick} className="tw:w-full">
                 <IconChevronLeft size={16} />
                 {backAction.label}
               </Button>
@@ -93,7 +89,13 @@ export default function MultiButtonFooter(props: MultiButtonFooterProps) {
       {buttons.map((button, index) => (
         <Button
           key={index}
-          variant={button.variant === 'disabled' ? 'outline' : button.variant === 'filled' ? 'default' : 'outline'}
+          variant={
+            button.variant === 'disabled'
+              ? 'outline'
+              : button.variant === 'filled'
+                ? 'default'
+                : 'outline'
+          }
           disabled={button.variant === 'disabled' || button.isLoading}
           onClick={button.onClick}
         >

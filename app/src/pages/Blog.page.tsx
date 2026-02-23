@@ -7,12 +7,12 @@
 
 import { useEffect, useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
-import { Container, Spinner, Text } from '@/components/ui';
 import { blogSpacing } from '@/components/blog/blogStyles';
 import { MarkdownFormatter } from '@/components/blog/MarkdownFormatter';
 import { NotebookRenderer } from '@/components/blog/NotebookRenderer';
 import { useDisplayCategory } from '@/components/blog/useDisplayCategory';
 import StaticPageLayout from '@/components/shared/static/StaticPageLayout';
+import { Container, Spinner, Text } from '@/components/ui';
 import authorsData from '@/data/posts/authors.json';
 import {
   getLocationTags,
@@ -117,7 +117,10 @@ export default function BlogPage() {
   if (loading) {
     return (
       <StaticPageLayout title={post.title}>
-        <div className="tw:flex tw:items-center tw:justify-center tw:py-xl" style={{ minHeight: '50vh' }}>
+        <div
+          className="tw:flex tw:items-center tw:justify-center tw:py-xl"
+          style={{ minHeight: '50vh' }}
+        >
           <Spinner size="lg" />
         </div>
       </StaticPageLayout>
@@ -138,7 +141,13 @@ export default function BlogPage() {
     <StaticPageLayout title={post.title}>
       {/* Header Section */}
       <div style={{ backgroundColor: colors.gray[50] }}>
-        <Container size="xl" style={{ paddingTop: post.hideHeaderImage ? 40 : 80, paddingBottom: post.hideHeaderImage ? 40 : 80 }}>
+        <Container
+          size="xl"
+          style={{
+            paddingTop: post.hideHeaderImage ? 40 : 80,
+            paddingBottom: post.hideHeaderImage ? 40 : 80,
+          }}
+        >
           <PostHeadingSection
             post={post}
             markdown={content}
@@ -200,12 +209,21 @@ function PostHeadingSection({
       <div style={{ display: 'flex' }}>
         {/* Left sidebar */}
         <div style={{ flex: 1, paddingRight: 30 }}>
-          <Text size="md" fw={600} className="tw:mb-sm tw:uppercase" style={{ letterSpacing: '0.05em' }}>
+          <Text
+            size="md"
+            fw={600}
+            className="tw:mb-sm tw:uppercase"
+            style={{ letterSpacing: '0.05em' }}
+          >
             {postDate}
           </Text>
           <Authorship post={post} countryId={countryId} />
           <div style={{ marginBottom: 60 }} />
-          <Text size="md" className="tw:uppercase" style={{ letterSpacing: '0.05em', color: colors.gray[500] }}>
+          <Text
+            size="md"
+            className="tw:uppercase"
+            style={{ letterSpacing: '0.05em', color: colors.gray[500] }}
+          >
             {readingTime}
           </Text>
           <div style={{ marginTop: 60 }} />
@@ -273,7 +291,11 @@ function PostHeadingSection({
         <Text size="md" fw={600} className="tw:uppercase" style={{ letterSpacing: '0.05em' }}>
           {postDate}
         </Text>
-        <Text size="md" className="tw:uppercase" style={{ letterSpacing: '0.05em', color: colors.gray[500] }}>
+        <Text
+          size="md"
+          className="tw:uppercase"
+          style={{ letterSpacing: '0.05em', color: colors.gray[500] }}
+        >
           {readingTime}
         </Text>
       </div>

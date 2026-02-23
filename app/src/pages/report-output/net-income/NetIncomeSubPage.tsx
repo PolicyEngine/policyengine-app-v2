@@ -1,6 +1,6 @@
 import { useSelector } from 'react-redux';
-import { Stack, Text, Title } from '@/components/ui';
 import VariableArithmetic from '@/components/household/VariableArithmetic';
+import { Stack, Text, Title } from '@/components/ui';
 import { spacing } from '@/designTokens';
 import { useReportYear } from '@/hooks/useReportYear';
 import type { RootState } from '@/store';

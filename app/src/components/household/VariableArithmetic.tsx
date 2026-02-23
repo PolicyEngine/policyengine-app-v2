@@ -144,6 +144,8 @@ export default function VariableArithmetic({
   return (
     <div>
       <div
+        role={expandable ? 'button' : undefined}
+        tabIndex={expandable ? 0 : undefined}
         style={{
           padding: spacing.md,
           borderLeft: `3px solid ${styleConfig.borderColor}`,
@@ -152,6 +154,12 @@ export default function VariableArithmetic({
           transition: 'background-color 0.2s ease',
         }}
         onClick={() => expandable && setExpanded(!expanded)}
+        onKeyDown={(e) => {
+          if (expandable && (e.key === 'Enter' || e.key === ' ')) {
+            e.preventDefault();
+            setExpanded(!expanded);
+          }
+        }}
         onMouseEnter={(e) => {
           if (expandable) {
             e.currentTarget.style.backgroundColor = '#f8f9fa';
@@ -167,7 +175,11 @@ export default function VariableArithmetic({
               {displayText}
             </Text>
             {Arrow}
-            <Text size="md" fw={typography.fontWeight.semibold} style={{ color: styleConfig.valueColor }}>
+            <Text
+              size="md"
+              fw={typography.fontWeight.semibold}
+              style={{ color: styleConfig.valueColor }}
+            >
               {formatVariableValue(variable, comparison.displayValue, 0)}
             </Text>
           </div>

@@ -41,9 +41,7 @@ export function ReportErrorFallback({ error, errorInfo }: ReportErrorFallbackPro
 
         {/* Error message */}
         <div>
-          <p className="tw:text-sm tw:font-medium tw:mb-xs">
-            Error message
-          </p>
+          <p className="tw:text-sm tw:font-medium tw:mb-xs">Error message</p>
           <code
             className="tw:block tw:bg-gray-100 tw:px-sm tw:py-sm tw:rounded-md tw:text-xs tw:font-mono"
             style={{

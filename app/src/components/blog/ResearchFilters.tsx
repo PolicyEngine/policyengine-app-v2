@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Button, Checkbox, Input } from '@/components/ui';
-import { Group, Stack, Text } from '@/components/ui';
+import { Button, Checkbox, Group, Input, Stack, Text } from '@/components/ui';
 import {
   getLocationTags,
   getTopicLabel,
@@ -153,7 +152,12 @@ export function ResearchFilters({
                 <Text
                   component="span"
                   size="sm"
-                  style={{ cursor: 'pointer', userSelect: 'none', marginLeft: 12, color: '#868e96' }}
+                  style={{
+                    cursor: 'pointer',
+                    userSelect: 'none',
+                    marginLeft: 12,
+                    color: '#868e96',
+                  }}
                   onClick={(e: React.MouseEvent) => {
                     e.preventDefault();
                     e.stopPropagation();

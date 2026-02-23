@@ -5,13 +5,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { IconChevronDown, IconSearch, IconX } from '@tabler/icons-react';
-import {
-  Button,
-  Spinner,
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui';
+import { Button, Spinner, Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui';
 import { cn } from '@/lib/utils';
 import { VariableInfo } from '@/utils/VariableResolver';
 
@@ -142,7 +136,10 @@ export default function VariableSearchDropdown({
     <div className="tw:flex tw:items-center tw:gap-xs tw:flex-nowrap">
       <div className="tw:flex-1 tw:relative">
         <div className="tw:relative">
-          <IconSearch size={16} className="tw:absolute tw:left-2.5 tw:top-1/2 tw:-translate-y-1/2 tw:text-gray-400 tw:pointer-events-none" />
+          <IconSearch
+            size={16}
+            className="tw:absolute tw:left-2.5 tw:top-1/2 tw:-translate-y-1/2 tw:text-gray-400 tw:pointer-events-none"
+          />
           <input
             ref={inputRef}
             className={cn(
@@ -168,7 +165,10 @@ export default function VariableSearchDropdown({
             disabled={disabled}
             autoFocus
           />
-          <IconChevronDown size={14} className="tw:absolute tw:right-2.5 tw:top-1/2 tw:-translate-y-1/2 tw:text-gray-400 tw:pointer-events-none" />
+          <IconChevronDown
+            size={14}
+            className="tw:absolute tw:right-2.5 tw:top-1/2 tw:-translate-y-1/2 tw:text-gray-400 tw:pointer-events-none"
+          />
         </div>
 
         {isOpen && (
@@ -188,11 +188,12 @@ export default function VariableSearchDropdown({
                     <div
                       key={variable.name}
                       data-option
+                      role="option"
+                      tabIndex={-1}
+                      aria-selected={index === selectedIndex}
                       className={cn(
                         'tw:px-sm tw:py-xs tw:cursor-pointer tw:text-sm',
-                        index === selectedIndex
-                          ? 'tw:bg-primary-100'
-                          : 'tw:hover:bg-gray-50'
+                        index === selectedIndex ? 'tw:bg-primary-100' : 'tw:hover:bg-gray-50'
                       )}
                       onMouseDown={(e) => {
                         e.preventDefault();

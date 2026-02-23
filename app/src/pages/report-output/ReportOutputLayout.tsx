@@ -1,5 +1,13 @@
 import { useState, type ReactElement } from 'react';
-import { IconCalendar, IconChevronDown, IconChevronRight, IconChevronUp, IconClock } from '@tabler/icons-react';
+import {
+  IconCalendar,
+  IconChevronDown,
+  IconChevronRight,
+  IconChevronUp,
+  IconClock,
+} from '@tabler/icons-react';
+import { ReportActionButtons } from '@/components/report/ReportActionButtons';
+import { SharedReportTag } from '@/components/report/SharedReportTag';
 import {
   Button,
   Container,
@@ -13,8 +21,6 @@ import {
   Text,
   Title,
 } from '@/components/ui';
-import { ReportActionButtons } from '@/components/report/ReportActionButtons';
-import { SharedReportTag } from '@/components/report/SharedReportTag';
 import { colors, spacing, typography } from '@/designTokens';
 import { useIsMobile } from '@/hooks/useChartDimensions';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
@@ -171,10 +177,11 @@ export default function ReportOutputLayout({
             }}
           >
             {tabs.map((tab, index) => (
-              <div
+              <button
+                type="button"
                 key={tab.value}
                 onClick={() => onTabChange(tab.value)}
-                className="tw:cursor-pointer"
+                className="tw:cursor-pointer tw:bg-transparent tw:border-none tw:p-0"
                 style={{
                   paddingLeft: spacing.sm,
                   paddingRight: spacing.sm,
@@ -216,7 +223,7 @@ export default function ReportOutputLayout({
                     }}
                   />
                 )}
-              </div>
+              </button>
             ))}
           </div>
         </div>
@@ -347,6 +354,7 @@ function MobileTreeNav({
     return (
       <div key={node.name}>
         <button
+          type="button"
           className="tw:w-full tw:text-left tw:border-none tw:cursor-pointer tw:flex tw:items-center tw:gap-1 tw:text-sm tw:rounded"
           style={{
             padding: `${spacing.xs} ${spacing.sm}`,

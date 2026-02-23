@@ -10,8 +10,8 @@
 
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { useDisclosure } from '@/hooks/useDisclosure';
 import { LayoutProvider, useIsInsideLayout } from '@/contexts/LayoutContext';
+import { useDisclosure } from '@/hooks/useDisclosure';
 import { cn } from '@/lib/utils';
 import GiveCalcBanner from './shared/GiveCalcBanner';
 import HeaderNavigation from './shared/HomeHeader';

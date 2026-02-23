@@ -1,6 +1,6 @@
 import { useSelector } from 'react-redux';
-import { Text } from '@/components/ui';
 import ParameterTable from '@/components/report/ParameterTable';
+import { Text } from '@/components/ui';
 import { getParamDefinitionDate } from '@/constants';
 import { colors, spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';

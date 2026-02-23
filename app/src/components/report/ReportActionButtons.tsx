@@ -41,20 +41,10 @@ export function ReportActionButtons({
 
   return (
     <>
-      <Button
-        variant="ghost"
-        size="icon"
-        aria-label="Edit report name"
-        onClick={onEdit}
-      >
+      <Button variant="ghost" size="icon" aria-label="Edit report name" onClick={onEdit}>
         <IconPencil size={18} />
       </Button>
-      <Button
-        variant="ghost"
-        size="icon"
-        aria-label="Share report"
-        onClick={onShare}
-      >
+      <Button variant="ghost" size="icon" aria-label="Share report" onClick={onShare}>
         <IconShare size={18} />
       </Button>
     </>

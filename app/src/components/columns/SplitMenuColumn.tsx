@@ -3,12 +3,12 @@ import { IconChevronDown } from '@tabler/icons-react';
 import {
   Button,
   DropdownMenu,
-  DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuTrigger,
   Group,
+  Separator,
 } from '@/components/ui';
-import { Separator } from '@/components/ui';
 import { colors, spacing } from '@/designTokens';
 import { IngredientRecord, SplitMenuColumnConfig } from './types';
 
@@ -57,10 +57,7 @@ export function SplitMenuColumn({ config, record }: SplitMenuColumnProps) {
       </Button>
 
       {/* Dropdown Button */}
-      <DropdownMenu
-        open={opened}
-        onOpenChange={setOpened}
-      >
+      <DropdownMenu open={opened} onOpenChange={setOpened}>
         <DropdownMenuTrigger asChild>
           <Button
             variant="outline"

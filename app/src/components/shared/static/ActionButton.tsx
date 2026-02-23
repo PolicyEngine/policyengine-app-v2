@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { Button } from '@/components/ui';
 import { Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 

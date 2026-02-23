@@ -1,7 +1,6 @@
 import { IconChevronRight } from '@tabler/icons-react';
 import { Group, Stack, Text } from '@/components/ui';
 import { cn } from '@/lib/utils';
-import { spacing } from '@/designTokens';
 
 export interface ButtonPanelCard {
   title: string;
@@ -24,6 +23,7 @@ export default function ButtonPanelVariant({ cards }: ButtonPanelVariantProps) {
     <Stack>
       {cards.map((card: ButtonPanelCard, index: number) => (
         <button
+          type="button"
           key={index}
           onClick={card.isDisabled ? undefined : card.onClick}
           disabled={card.isDisabled}
@@ -33,7 +33,7 @@ export default function ButtonPanelVariant({ cards }: ButtonPanelVariantProps) {
               ? 'tw:opacity-60 tw:cursor-not-allowed tw:border-gray-200 tw:bg-gray-50'
               : card.isSelected
                 ? 'tw:border-primary-500 tw:bg-primary-50 tw:cursor-pointer'
-                : 'tw:border-gray-200 tw:bg-white tw:cursor-pointer hover:tw:border-primary-300',
+                : 'tw:border-gray-200 tw:bg-white tw:cursor-pointer hover:tw:border-primary-300'
           )}
         >
           <Group className="tw:justify-between tw:items-center">

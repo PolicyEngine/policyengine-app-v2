@@ -67,7 +67,11 @@ export default function ReportSimulationExistingView({
     return (
       <PathwayView
         title="Select an existing simulation"
-        content={<p className="tw:text-red-600">Error: {(error as Error)?.message || 'Something went wrong.'}</p>}
+        content={
+          <p className="tw:text-red-600">
+            Error: {(error as Error)?.message || 'Something went wrong.'}
+          </p>
+        }
         buttonPreset="none"
       />
     );

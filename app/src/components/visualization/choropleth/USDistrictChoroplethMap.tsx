@@ -25,8 +25,8 @@
 
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { ComposableMap, Geographies, Geography, ZoomableGroup } from 'react-simple-maps';
-import { Spinner, Stack, Text } from '@/components/ui';
 import { ChartWatermark } from '@/components/charts';
+import { Spinner, Stack, Text } from '@/components/ui';
 import { colors, spacing } from '@/designTokens';
 import type {
   GeoJSONFeatureCollection,
@@ -153,10 +153,18 @@ function useFocusStateView(
       for (const ring of rings) {
         for (const coord of ring) {
           const [lng, lat] = coord;
-          if (lng < minLng) {minLng = lng;}
-          if (lng > maxLng) {maxLng = lng;}
-          if (lat < minLat) {minLat = lat;}
-          if (lat > maxLat) {maxLat = lat;}
+          if (lng < minLng) {
+            minLng = lng;
+          }
+          if (lng > maxLng) {
+            maxLng = lng;
+          }
+          if (lat < minLat) {
+            minLat = lat;
+          }
+          if (lat > maxLat) {
+            maxLat = lat;
+          }
         }
       }
     }
@@ -269,10 +277,18 @@ function useGeoJSONFitProjection(
 
       for (const ring of rings) {
         for (const [lng, lat] of ring) {
-          if (lng < minLng) {minLng = lng;}
-          if (lng > maxLng) {maxLng = lng;}
-          if (lat < minLat) {minLat = lat;}
-          if (lat > maxLat) {maxLat = lat;}
+          if (lng < minLng) {
+            minLng = lng;
+          }
+          if (lng > maxLng) {
+            maxLng = lng;
+          }
+          if (lat < minLat) {
+            minLat = lat;
+          }
+          if (lat > maxLat) {
+            maxLat = lat;
+          }
         }
       }
     }
@@ -361,10 +377,14 @@ export function USDistrictChoroplethMap({
   const handleMouseEnter = useCallback(
     (event: React.MouseEvent, districtId: string) => {
       const dataPoint = dataMap.get(districtId);
-      if (!dataPoint) {return;}
+      if (!dataPoint) {
+        return;
+      }
 
       const rect = containerRef.current?.getBoundingClientRect();
-      if (!rect) {return;}
+      if (!rect) {
+        return;
+      }
 
       setTooltip({
         x: event.clientX - rect.left,
@@ -378,9 +398,13 @@ export function USDistrictChoroplethMap({
 
   const handleMouseMove = useCallback(
     (event: React.MouseEvent) => {
-      if (!tooltip) {return;}
+      if (!tooltip) {
+        return;
+      }
       const rect = containerRef.current?.getBoundingClientRect();
-      if (!rect) {return;}
+      if (!rect) {
+        return;
+      }
       setTooltip((prev) =>
         prev
           ? {

@@ -64,6 +64,7 @@ export default function SidebarNavItem({
       <Tooltip>
         <TooltipTrigger asChild>
           <button
+            type="button"
             style={buttonStyles}
             onClick={(e) => e.preventDefault()}
             className="tw:hover:bg-gray-50"

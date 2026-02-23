@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { IconX } from '@tabler/icons-react';
-import { Card, CardContent, Stack, Text, Title } from '@/components/ui';
+import { Text, Title } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 
@@ -88,6 +88,7 @@ export default function FeaturedResearchBanner() {
 
       {/* Close Button */}
       <button
+        type="button"
         onClick={handleClose}
         className="tw:absolute tw:bg-transparent tw:border-none tw:cursor-pointer tw:p-2 tw:rounded hover:tw:bg-white/15 tw:z-10"
         style={{
@@ -182,10 +183,7 @@ export default function FeaturedResearchBanner() {
 
         {/* Autumn Budget Analysis Cards */}
         <div>
-          <div
-            className="tw:flex tw:justify-center tw:flex-wrap"
-            style={{ gap: spacing.xl }}
-          >
+          <div className="tw:flex tw:justify-center tw:flex-wrap" style={{ gap: spacing.xl }}>
             {[
               {
                 href: '/uk/uk-salary-sacrifice-tool',

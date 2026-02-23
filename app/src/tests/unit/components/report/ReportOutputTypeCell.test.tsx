@@ -29,11 +29,7 @@ describe('ReportOutputTypeCell', () => {
   });
 
   const render = (component: React.ReactElement) => {
-    return testRender(
-      <QueryClientProvider client={queryClient}>
-        {component}
-      </QueryClientProvider>
-    );
+    return testRender(<QueryClientProvider client={queryClient}>{component}</QueryClientProvider>);
   };
 
   it('given pending calculation then displays spinner and progress percentage', () => {

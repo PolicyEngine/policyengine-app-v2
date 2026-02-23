@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { colors } from '@/designTokens';
 import {
   ShadcnTable as Table,
   TableBody,
@@ -8,6 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui';
+import { colors } from '@/designTokens';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import {
   buildCompactLabel,
@@ -96,9 +96,17 @@ export default function ParameterTable({
                         <span key={i}>
                           {part === '...' ? (
                             <span
+                              role="button"
+                              tabIndex={0}
                               className="tw:cursor-pointer"
                               style={{ color: colors.primary[700] }}
                               onClick={() => toggleExpanded(paramName)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                  e.preventDefault();
+                                  toggleExpanded(paramName);
+                                }
+                              }}
                             >
                               ...
                             </span>
@@ -109,9 +117,7 @@ export default function ParameterTable({
                         </span>
                       ))}
                     </p>
-                    <p className="tw:text-xs tw:text-gray-500">
-                      {paramName}
-                    </p>
+                    <p className="tw:text-xs tw:text-gray-500">{paramName}</p>
                   </div>
                 </TableCell>
                 {needsCurrentLawColumn && (

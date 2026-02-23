@@ -1,6 +1,5 @@
 import React from 'react';
-import { Button, Card, CardContent } from '@/components/ui';
-import { Group, Stack, Text, Title } from '@/components/ui';
+import { Button, Card, CardContent, Group, Stack, Text, Title } from '@/components/ui';
 import { colors } from '@/designTokens';
 
 interface Section {
@@ -69,10 +68,7 @@ export function TitleCardWithHeader({
                     </Text>
                   ))
                 ) : (
-                  <Text
-                    size="md"
-                    style={{ color: textColor, lineHeight: 1.5, textAlign: 'left' }}
-                  >
+                  <Text size="md" style={{ color: textColor, lineHeight: 1.5, textAlign: 'left' }}>
                     {section.body}
                   </Text>
                 )}
@@ -83,11 +79,7 @@ export function TitleCardWithHeader({
               (Array.isArray(buttonLabel) ? (
                 <Group gap="md" className="tw:mt-3">
                   {buttonLabel.map((label, idx) => (
-                    <Button
-                      key={idx}
-                      onClick={() => onButtonClick?.(label)}
-                      variant="outline"
-                    >
+                    <Button key={idx} onClick={() => onButtonClick?.(label)} variant="outline">
                       {label}
                     </Button>
                   ))}

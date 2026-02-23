@@ -1,10 +1,10 @@
 import { useParams } from 'react-router-dom';
-import { Text } from '@/components/ui';
 import ContentSection from '@/components/shared/static/ContentSection';
 import HeroSection from '@/components/shared/static/HeroSection';
 import StaticPageLayout from '@/components/shared/static/StaticPageLayout';
 import { SupportedProject } from '@/components/shared/static/SupportedProject';
 import SupporterCard, { Supporter } from '@/components/shared/static/SupporterCard';
+import { Text } from '@/components/ui';
 
 const supporters: Supporter[] = [
   {

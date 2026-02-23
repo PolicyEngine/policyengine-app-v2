@@ -101,10 +101,7 @@ export default function IngredientSubmissionView({
                     )}
                   </Stack>
                   {item.badge && (
-                    <Badge
-                      variant="secondary"
-                      style={{ borderRadius: spacing.radius.element }}
-                    >
+                    <Badge variant="secondary" style={{ borderRadius: spacing.radius.element }}>
                       {typeof item.badge === 'number' ? `${item.badge}` : item.badge}
                     </Badge>
                   )}
@@ -131,10 +128,7 @@ export default function IngredientSubmissionView({
                   {item.text}
                 </Text>
                 {item.badge && (
-                  <Badge
-                    variant="secondary"
-                    style={{ borderRadius: spacing.radius.element }}
-                  >
+                  <Badge variant="secondary" style={{ borderRadius: spacing.radius.element }}>
                     {typeof item.badge === 'number' ? `${item.badge}` : item.badge}
                   </Badge>
                 )}
@@ -154,10 +148,7 @@ export default function IngredientSubmissionView({
                       {subItem.dateIntervals && subItem.dateIntervals.length > 0 && (
                         <Stack gap="xs" className="tw:ml-2">
                           {subItem.dateIntervals.map((interval, intervalIndex) => (
-                            <div
-                              key={intervalIndex}
-                              className="tw:flex tw:items-center tw:gap-2"
-                            >
+                            <div key={intervalIndex} className="tw:flex tw:items-center tw:gap-2">
                               <Text
                                 size="sm"
                                 className="tw:flex-1"
@@ -221,9 +212,7 @@ export default function IngredientSubmissionView({
           {title}
         </Title>
         {subtitle && (
-          <Text style={{ color: colors.text.secondary, marginBottom: spacing.sm }}>
-            {subtitle}
-          </Text>
+          <Text style={{ color: colors.text.secondary, marginBottom: spacing.sm }}>{subtitle}</Text>
         )}
         <hr className="tw:my-2 tw:border-border-light" />
         {warningMessage && (

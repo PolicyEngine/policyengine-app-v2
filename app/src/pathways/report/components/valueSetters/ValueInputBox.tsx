@@ -56,11 +56,7 @@ export function ValueInputBox(props: ValueInputBoxProps) {
   if (isBool) {
     return (
       <div className="tw:flex tw:flex-col tw:gap-xs tw:flex-1">
-        {label && (
-          <label className="tw:text-sm tw:font-medium">
-            {label}
-          </label>
-        )}
+        {label && <label className="tw:text-sm tw:font-medium">{label}</label>}
         <div
           className="tw:flex tw:justify-between tw:items-center"
           style={{
@@ -71,14 +67,15 @@ export function ValueInputBox(props: ValueInputBoxProps) {
             backgroundColor: 'white',
           }}
         >
-          <span className={`tw:text-sm ${value ? 'tw:text-gray-400' : 'tw:text-gray-900 tw:font-semibold'}`}>
+          <span
+            className={`tw:text-sm ${value ? 'tw:text-gray-400' : 'tw:text-gray-900 tw:font-semibold'}`}
+          >
             False
           </span>
-          <Switch
-            checked={value || false}
-            onCheckedChange={handleBoolChange}
-          />
-          <span className={`tw:text-sm ${value ? 'tw:text-gray-900 tw:font-semibold' : 'tw:text-gray-400'}`}>
+          <Switch checked={value || false} onCheckedChange={handleBoolChange} />
+          <span
+            className={`tw:text-sm ${value ? 'tw:text-gray-900 tw:font-semibold' : 'tw:text-gray-400'}`}
+          >
             True
           </span>
         </div>
@@ -88,11 +85,7 @@ export function ValueInputBox(props: ValueInputBoxProps) {
 
   return (
     <div className="tw:flex tw:flex-col tw:gap-xs tw:flex-1">
-      {label && (
-        <label className="tw:text-sm tw:font-medium">
-          {label}
-        </label>
-      )}
+      {label && <label className="tw:text-sm tw:font-medium">{label}</label>}
       <div className="tw:relative tw:flex tw:items-center">
         {prefix && (
           <span className="tw:absolute tw:left-3 tw:text-sm tw:text-gray-500">{prefix}</span>

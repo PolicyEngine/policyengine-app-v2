@@ -1,5 +1,5 @@
 import { Badge, Group, Stack, Text } from '@/components/ui';
-import { colors, spacing } from '@/designTokens';
+import { colors } from '@/designTokens';
 import { BulletsColumnConfig, BulletsValue } from './types';
 
 interface BulletsColumnProps {

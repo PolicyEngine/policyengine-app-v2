@@ -21,9 +21,7 @@ export default function UKLocalAuthoritySelector({
 }: UKLocalAuthoritySelectorProps) {
   return (
     <div>
-      <Label className="tw:text-sm tw:font-medium tw:mb-1 tw:block">
-        Select local authority
-      </Label>
+      <Label className="tw:text-sm tw:font-medium tw:mb-1 tw:block">Select local authority</Label>
       <Select value={selectedLocalAuthority} onValueChange={(val) => onLocalAuthorityChange(val)}>
         <SelectTrigger className="tw:w-full">
           <SelectValue placeholder="Pick a local authority" />

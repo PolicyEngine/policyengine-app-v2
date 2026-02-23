@@ -4,7 +4,6 @@ import {
   IconArrowUp,
   IconCheck,
   IconChevronRight,
-  IconCopy,
   IconDownload,
   IconInfoCircle,
   IconPlus,
@@ -13,8 +12,8 @@ import {
   IconX,
 } from '@tabler/icons-react';
 import { Link } from 'react-router-dom';
-import { Button, Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui';
 import StaticPageLayout from '@/components/shared/static/StaticPageLayout';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 
 // Color tokens to display
@@ -52,14 +51,7 @@ const radiusTokens = [
   { name: 'feature', value: spacing.radius.feature },
 ];
 
-function ColorSwatch({
-  value,
-  label,
-}: {
-  name: string;
-  value: string;
-  label: string;
-}) {
+function ColorSwatch({ value, label }: { name: string; value: string; label: string }) {
   const [copied, setCopied] = useState(false);
   const isLight = value === colors.white || value === colors.primary[100];
 
@@ -73,6 +65,7 @@ function ColorSwatch({
     <Tooltip>
       <TooltipTrigger asChild>
         <button
+          type="button"
           onClick={handleCopy}
           className="tw:bg-transparent tw:border tw:border-border-light tw:rounded-container tw:overflow-hidden tw:cursor-pointer tw:p-0 tw:transition-all tw:duration-150 tw:hover:-translate-y-0.5 tw:hover:shadow-md"
         >
@@ -233,8 +226,7 @@ export default function BrandDesignPage() {
             >
               Tabler Icons
             </a>
-            . Import from{' '}
-            <code className="tw:font-mono tw:text-sm">@tabler/icons-react</code>.
+            . Import from <code className="tw:font-mono tw:text-sm">@tabler/icons-react</code>.
           </p>
 
           <div className="tw:grid tw:grid-cols-4 sm:tw:grid-cols-5 md:tw:grid-cols-10 tw:gap-md">
@@ -268,7 +260,10 @@ export default function BrandDesignPage() {
             className="tw:p-xl tw:rounded-container"
             style={{ background: colors.secondary[900] }}
           >
-            <pre className="tw:font-mono tw:text-sm tw:m-0 tw:overflow-auto" style={{ color: colors.secondary[300] }}>
+            <pre
+              className="tw:font-mono tw:text-sm tw:m-0 tw:overflow-auto"
+              style={{ color: colors.secondary[300] }}
+            >
               {`// Import design tokens
 import { colors, spacing, typography } from '@/designTokens';
 

@@ -84,9 +84,7 @@ export default function GeographySubPage({
         <Table>
           <TableHeader style={{ backgroundColor: colors.gray[50] }}>
             <TableRow>
-              <TableHead style={{ ...thStyle, width: `${labelColumnWidth}%` }}>
-                Property
-              </TableHead>
+              <TableHead style={{ ...thStyle, width: `${labelColumnWidth}%` }}>Property</TableHead>
               {geographiesAreSame ? (
                 <TableHead
                   style={{ ...thStyle, width: `${valueColumnWidth}%`, textAlign: 'right' }}
@@ -114,10 +112,7 @@ export default function GeographySubPage({
             {rows.map((row) => (
               <TableRow key={row.label}>
                 <TableCell style={{ padding: `${spacing.md} ${spacing.lg}` }}>
-                  <Text
-                    className="tw:text-sm"
-                    style={{ fontWeight: typography.fontWeight.medium }}
-                  >
+                  <Text className="tw:text-sm" style={{ fontWeight: typography.fontWeight.medium }}>
                     {row.label}
                   </Text>
                 </TableCell>

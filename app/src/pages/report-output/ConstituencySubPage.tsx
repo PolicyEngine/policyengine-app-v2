@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Stack, Text } from '@/components/ui';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { SidebarTabs, type SidebarTab } from '@/components/SidebarTabs';
+import { Stack, Text } from '@/components/ui';
 import { AbsoluteChangeByConstituency } from './constituency/AbsoluteChangeByConstituency';
 import { RelativeChangeByConstituency } from './constituency/RelativeChangeByConstituency';
 

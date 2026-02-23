@@ -32,7 +32,9 @@ export default function HouseholdSummaryCard({
   if (!rootVariable) {
     return (
       <div>
-        <Text style={{ color: 'red' }}>Error: household_net_income variable not found in metadata</Text>
+        <Text style={{ color: 'red' }}>
+          Error: household_net_income variable not found in metadata
+        </Text>
       </div>
     );
   }

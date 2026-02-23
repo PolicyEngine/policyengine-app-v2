@@ -123,12 +123,8 @@ export default function IndividualTable({
             return (
               <tr key={paramName}>
                 <td style={{ padding: `${spacing.md} ${spacing.lg}` }}>
-                  <p className="tw:text-sm tw:font-medium">
-                    {label}
-                  </p>
-                  <p className="tw:text-xs tw:text-gray-500">
-                    {paramName}
-                  </p>
+                  <p className="tw:text-sm tw:font-medium">{label}</p>
+                  <p className="tw:text-xs tw:text-gray-500">{paramName}</p>
                 </td>
                 {isSameHousehold ? (
                   <td style={{ textAlign: 'right', padding: `${spacing.md} ${spacing.lg}` }}>

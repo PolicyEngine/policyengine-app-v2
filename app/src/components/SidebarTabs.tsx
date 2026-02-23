@@ -43,17 +43,16 @@ interface SidebarTabsProps {
  */
 export function SidebarTabs({ tabs, activeTab, onTabChange, children }: SidebarTabsProps) {
   return (
-    <div
-      className="tw:flex tw:items-start tw:flex-nowrap"
-      style={{ gap: spacing.xl }}
-    >
+    <div className="tw:flex tw:items-start tw:flex-nowrap" style={{ gap: spacing.xl }}>
       {/* Left sidebar with vertical tabs */}
       <div style={{ paddingRight: spacing.xl }}>
         <div className="tw:flex tw:flex-col tw:gap-1">
           {tabs.map((tab) => (
-            <div
+            <button
+              type="button"
               key={tab.value}
               onClick={() => onTabChange(tab.value)}
+              className="tw:border-none tw:bg-transparent tw:w-full tw:text-left tw:p-0"
               style={{
                 padding: `${spacing.sm} ${spacing.md}`,
                 cursor: 'pointer',
@@ -77,7 +76,7 @@ export function SidebarTabs({ tabs, activeTab, onTabChange, children }: SidebarT
               >
                 {tab.label}
               </span>
-            </div>
+            </button>
           ))}
         </div>
       </div>

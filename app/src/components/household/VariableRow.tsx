@@ -3,7 +3,7 @@
  */
 
 import { IconX } from '@tabler/icons-react';
-import { Button, Tooltip, TooltipContent, TooltipTrigger, Text } from '@/components/ui';
+import { Button, Text, Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui';
 import { Household } from '@/types/ingredients/Household';
 import { VariableInfo } from '@/utils/VariableResolver';
 import VariableInput from './VariableInput';

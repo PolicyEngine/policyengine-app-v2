@@ -132,9 +132,7 @@ describe('SimulationLabelView', () => {
       );
 
       // Then
-      expect(screen.getByRole('textbox')).toHaveValue(
-        'My Report baseline simulation'
-      );
+      expect(screen.getByRole('textbox')).toHaveValue('My Report baseline simulation');
     });
   });
 

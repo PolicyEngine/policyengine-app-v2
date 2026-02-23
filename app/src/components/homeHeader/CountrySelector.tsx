@@ -35,6 +35,7 @@ export default function CountrySelector() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button
+          type="button"
           className="tw:bg-transparent tw:border-none tw:cursor-pointer tw:p-0 tw:leading-none"
           aria-label="Country selector"
         >

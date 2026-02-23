@@ -24,7 +24,6 @@ import {
   YAxis,
 } from 'recharts';
 import { Stack } from '@/components/ui';
-import { spacing } from '@/designTokens/spacing';
 import { RECHARTS_FONT_STYLE } from '@/utils/chartUtils';
 import { ChartWatermark } from './ChartWatermark';
 import { TOOLTIP_STYLE } from './tooltipStyle';

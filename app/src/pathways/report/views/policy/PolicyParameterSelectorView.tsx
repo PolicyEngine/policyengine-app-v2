@@ -7,18 +7,12 @@
 import { useState } from 'react';
 import { IconChevronRight, IconChevronUp } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
-import {
-  Button,
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui';
-import { useDisclosure } from '@/hooks/useDisclosure';
 import HeaderNavigation from '@/components/shared/HomeHeader';
+import { Button, Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui';
 import { spacing } from '@/designTokens';
 import { colors } from '@/designTokens/colors';
 import { useIsMobile } from '@/hooks/useChartDimensions';
+import { useDisclosure } from '@/hooks/useDisclosure';
 import { RootState } from '@/store';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import { PolicyStateProps } from '@/types/pathwayState';
@@ -159,11 +153,7 @@ export default function PolicyParameterSelectorView({
           style={{ borderTop: `1px solid ${colors.border.light}` }}
         >
           <div className="tw:flex tw:justify-between tw:items-center tw:gap-sm tw:flex-nowrap">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={toggleMobile}
-            >
+            <Button variant="outline" size="sm" onClick={toggleMobile}>
               <IconChevronUp
                 size={16}
                 style={{

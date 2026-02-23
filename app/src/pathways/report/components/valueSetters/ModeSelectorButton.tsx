@@ -26,10 +26,14 @@ export function ModeSelectorButton(props: { setMode: (mode: ValueSetterMode) => 
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent>
-        <DropdownMenuItem onClick={() => setMode(ValueSetterMode.DEFAULT)}>Default</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setMode(ValueSetterMode.DEFAULT)}>
+          Default
+        </DropdownMenuItem>
         <DropdownMenuItem onClick={() => setMode(ValueSetterMode.YEARLY)}>Yearly</DropdownMenuItem>
         <DropdownMenuItem onClick={() => setMode(ValueSetterMode.DATE)}>Advanced</DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setMode(ValueSetterMode.MULTI_YEAR)}>Multi-year</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setMode(ValueSetterMode.MULTI_YEAR)}>
+          Multi-year
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

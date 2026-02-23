@@ -222,7 +222,7 @@ describe('UKGeographicOptions', () => {
 
   test('given user selects country from dropdown then calls onRegionChange', async () => {
     // Given
-    const user = userEvent.setup();
+    userEvent.setup();
     const onScopeChange = vi.fn();
     const onRegionChange = vi.fn();
     render(

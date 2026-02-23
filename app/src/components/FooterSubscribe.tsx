@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, Input, Spinner, Stack, Text } from '@/components/ui';
+import { Button, Input, Spinner, Stack } from '@/components/ui';
 import { cn } from '@/lib/utils';
 import { trackNewsletterSignup } from '@/utils/analytics';
 import { submitToMailchimp } from '@/utils/mailchimpSubscription';
@@ -56,10 +56,7 @@ export default function FooterSubscribe() {
           onChange={(event) => setEmail(event.currentTarget.value)}
           disabled={status === 'loading'}
         />
-        <Button
-          onClick={handleSubscribe}
-          disabled={status === 'loading'}
-        >
+        <Button onClick={handleSubscribe} disabled={status === 'loading'}>
           {status === 'loading' ? <Spinner size="sm" /> : null}
           SUBSCRIBE
         </Button>

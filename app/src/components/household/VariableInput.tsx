@@ -60,7 +60,10 @@ export default function VariableInput({
       const isChecked = Boolean(currentValue);
       return (
         <div className="tw:flex tw:items-center tw:gap-1 tw:justify-start">
-          <Text size="sm" style={{ color: isChecked ? '#868e96' : '#212529', fontWeight: isChecked ? 400 : 600 }}>
+          <Text
+            size="sm"
+            style={{ color: isChecked ? '#868e96' : '#212529', fontWeight: isChecked ? 400 : 600 }}
+          >
             False
           </Text>
           <Switch
@@ -68,7 +71,10 @@ export default function VariableInput({
             onCheckedChange={(checked) => handleChange(checked)}
             disabled={disabled}
           />
-          <Text size="sm" style={{ color: isChecked ? '#212529' : '#868e96', fontWeight: isChecked ? 600 : 400 }}>
+          <Text
+            size="sm"
+            style={{ color: isChecked ? '#212529' : '#868e96', fontWeight: isChecked ? 600 : 400 }}
+          >
             True
           </Text>
         </div>
@@ -120,7 +126,9 @@ export default function VariableInput({
           <Input
             type="number"
             value={currentValue ?? variable.defaultValue ?? 0}
-            onChange={(e) => handleChange(coerceByValueType(e.target.valueAsNumber || 0, variable.valueType))}
+            onChange={(e) =>
+              handleChange(coerceByValueType(e.target.valueAsNumber || 0, variable.valueType))
+            }
             placeholder={`Enter ${variable.label}`}
             disabled={disabled}
             step={variable.valueType === 'int' ? 1 : formattingProps?.step}

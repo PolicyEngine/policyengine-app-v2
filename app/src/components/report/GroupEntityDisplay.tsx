@@ -38,9 +38,7 @@ export default function GroupEntityDisplay({
   return (
     <div className="tw:mt-3xl">
       {/* Entity type header (e.g., "Your household") */}
-      <h3 className="tw:text-xl tw:font-bold tw:text-gray-900 tw:mb-lg">
-        {entityTypeName}
-      </h3>
+      <h3 className="tw:text-xl tw:font-bold tw:text-gray-900 tw:mb-lg">{entityTypeName}</h3>
 
       {sortedInstanceIds.map((instanceId) => {
         // Find this instance in baseline and reform

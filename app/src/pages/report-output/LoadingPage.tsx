@@ -47,9 +47,7 @@ export default function LoadingPage({
           </Text>
           <Group className="tw:gap-xs">
             <Spinner size="sm" />
-            <Text className="tw:text-sm tw:text-gray-500">
-              {Math.round(progressValue)}%
-            </Text>
+            <Text className="tw:text-sm tw:text-gray-500">{Math.round(progressValue)}%</Text>
           </Group>
         </Group>
         <Progress value={progressValue} className="tw:h-3" />

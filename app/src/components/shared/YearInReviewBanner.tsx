@@ -89,6 +89,7 @@ export default function YearInReviewBanner() {
       </div>
 
       <button
+        type="button"
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();

@@ -109,7 +109,7 @@ describe('USPlaceSelector', () => {
       // Given
       const onPlaceChange = vi.fn();
       const props = createMockProps({ onPlaceChange });
-      const user = userEvent.setup();
+      userEvent.setup();
 
       // When
       render(<USPlaceSelector {...props} />);

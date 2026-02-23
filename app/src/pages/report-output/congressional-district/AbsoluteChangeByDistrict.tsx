@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Group, Progress, Stack, Text, Title } from '@/components/ui';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { MapDownloadMenu } from '@/components/MapDownloadMenu';
+import { Group, Progress, Stack, Text, Title } from '@/components/ui';
 import {
   MapTypeToggle,
   USDistrictChoroplethMap,

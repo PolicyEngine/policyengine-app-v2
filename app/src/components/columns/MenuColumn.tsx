@@ -2,9 +2,9 @@ import { IconDots } from '@tabler/icons-react';
 import {
   Button,
   DropdownMenu,
-  DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuTrigger,
 } from '@/components/ui';
 import { IngredientRecord, MenuColumnConfig } from './types';
 

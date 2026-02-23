@@ -57,6 +57,7 @@ export default function NavItem({ setup }: NavItemProps) {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button
+            type="button"
             onClick={onClick}
             className="tw:bg-transparent tw:border-none tw:cursor-pointer tw:p-0"
           >

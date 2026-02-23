@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Container, Stack, Text, Title } from '@/components/ui';
 import {
   ButtonPanelVariant,
   CardListVariant,
@@ -8,6 +7,7 @@ import {
   type CardListItem,
   type SetupConditionCard,
 } from '@/components/flowView';
+import { Container, Stack, Text, Title } from '@/components/ui';
 import MultiButtonFooter, { ButtonConfig } from './MultiButtonFooter';
 
 interface PathwayViewProps {

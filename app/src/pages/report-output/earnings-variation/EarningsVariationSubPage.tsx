@@ -1,7 +1,15 @@
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Stack, Text } from '@/components/ui';
 import { PolicyAdapter } from '@/adapters/PolicyAdapter';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Stack,
+  Text,
+} from '@/components/ui';
 import { spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useHouseholdVariation } from '@/hooks/useHouseholdVariation';

@@ -8,7 +8,10 @@ type AlertType = 'success' | 'info' | 'warning' | 'error';
 const alertConfig: Record<AlertType, { icon: ReactNode; className: string }> = {
   success: { icon: <IconCheck size={16} />, className: 'tw:border-green-500 tw:text-green-700' },
   info: { icon: <IconInfoCircle size={16} />, className: 'tw:border-blue-500 tw:text-blue-700' },
-  warning: { icon: <IconAlertTriangle size={16} />, className: 'tw:border-yellow-500 tw:text-yellow-700' },
+  warning: {
+    icon: <IconAlertTriangle size={16} />,
+    className: 'tw:border-yellow-500 tw:text-yellow-700',
+  },
   error: { icon: <IconX size={16} />, className: 'tw:border-red-500 tw:text-red-700' },
 };
 
@@ -42,6 +45,7 @@ export function FloatingAlert({ type = 'success', children, onClose }: FloatingA
         <span className="tw:flex-shrink-0 tw:mt-0.5">{icon}</span>
         <AlertDescription className="tw:flex-1">{children}</AlertDescription>
         <button
+          type="button"
           onClick={onClose}
           className="tw:bg-transparent tw:border-none tw:cursor-pointer tw:p-0 tw:flex-shrink-0"
           aria-label="Close"

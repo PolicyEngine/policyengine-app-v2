@@ -3,14 +3,14 @@ import {
   Button,
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
   Input,
   Label,
+  Spinner,
   Stack,
 } from '@/components/ui';
-import { Spinner } from '@/components/ui';
 
 interface RenameIngredientModalProps {
   opened: boolean;
@@ -99,9 +99,7 @@ export function RenameIngredientModal({
               disabled={isLoading}
               autoFocus
             />
-            {displayError && (
-              <p className="tw:text-sm tw:text-red-500 tw:mt-xs">{displayError}</p>
-            )}
+            {displayError && <p className="tw:text-sm tw:text-red-500 tw:mt-xs">{displayError}</p>}
           </div>
         </Stack>
         <DialogFooter>

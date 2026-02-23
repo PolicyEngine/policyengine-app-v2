@@ -134,8 +134,8 @@ describe('ReportSetupView', () => {
       // Then - The primary action button contains "Configure baseline simulation"
       // and is rendered by MultiButtonFooter with disabled state
       const buttons = screen.getAllByRole('button');
-      const primaryButton = buttons.find(
-        (btn) => btn.textContent?.includes('Configure baseline simulation')
+      const primaryButton = buttons.find((btn) =>
+        btn.textContent?.includes('Configure baseline simulation')
       );
       expect(primaryButton).toBeDisabled();
     });

@@ -303,9 +303,7 @@ export const ParameterOverTimeChart = memo((props: ParameterOverTimeChartProps) 
   if (x.length === 0 || y.length === 0) {
     return (
       <div ref={chartContainerRef}>
-        <p className="tw:text-gray-500 tw:text-center tw:py-xl">
-          No data available to display
-        </p>
+        <p className="tw:text-gray-500 tw:text-center tw:py-xl">No data available to display</p>
       </div>
     );
   }

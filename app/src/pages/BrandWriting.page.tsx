@@ -1,7 +1,7 @@
 import { IconCheck, IconX } from '@tabler/icons-react';
 import { Link } from 'react-router-dom';
-import { Text, Title } from '@/components/ui';
 import StaticPageLayout from '@/components/shared/static/StaticPageLayout';
+import { Text, Title } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 
 function SectionTitle({ children }: { children: string }) {

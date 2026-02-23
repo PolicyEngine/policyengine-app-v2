@@ -5,8 +5,8 @@
  */
 
 import { useState } from 'react';
-import { Input } from '@/components/ui';
 import PathwayView from '@/components/common/PathwayView';
+import { Input } from '@/components/ui';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { PathwayMode } from '@/types/pathwayModes/PathwayMode';
 

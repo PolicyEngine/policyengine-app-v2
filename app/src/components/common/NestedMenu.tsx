@@ -44,24 +44,31 @@ export default function NestedMenu({ menuOptions, onItemClick }: NestedMenuProps
       return (
         <div key={item.name}>
           <button
+            type="button"
             className={cn(
               'tw:w-full tw:text-left tw:px-md tw:py-xs tw:border-none tw:bg-transparent tw:cursor-pointer tw:text-sm tw:rounded-sm tw:transition-colors',
-              isActive ? 'tw:bg-primary-50 tw:text-primary-700 tw:font-medium' : 'tw:text-gray-700 hover:tw:bg-gray-50',
+              isActive
+                ? 'tw:bg-primary-50 tw:text-primary-700 tw:font-medium'
+                : 'tw:text-gray-700 hover:tw:bg-gray-50'
             )}
             style={{ paddingLeft: `${12 + depth * 16}px` }}
             onClick={() => handleClick(item.name)}
           >
             {hasChildren && (
-              <span className="tw:mr-xs tw:inline-block" style={{ transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 150ms ease' }}>
+              <span
+                className="tw:mr-xs tw:inline-block"
+                style={{
+                  transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
+                  transition: 'transform 150ms ease',
+                }}
+              >
                 &#9656;
               </span>
             )}
             {item.label}
           </button>
           {item.children && isExpanded && (
-            <div>
-              {mapOverOneParamLevel(item.children, depth + 1)}
-            </div>
+            <div>{mapOverOneParamLevel(item.children, depth + 1)}</div>
           )}
         </div>
       );

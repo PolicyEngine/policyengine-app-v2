@@ -34,7 +34,9 @@ export default function HouseholdOverview({ outputs, policyLabels }: HouseholdOv
   if (!rootVariable) {
     return (
       <div>
-        <Text style={{ color: 'red' }}>Error: household_net_income variable not found in metadata</Text>
+        <Text style={{ color: 'red' }}>
+          Error: household_net_income variable not found in metadata
+        </Text>
       </div>
     );
   }
@@ -136,6 +138,7 @@ export default function HouseholdOverview({ outputs, policyLabels }: HouseholdOv
       >
         {/* Header */}
         <button
+          type="button"
           onClick={() => setBreakdownOpen(!breakdownOpen)}
           className="tw:bg-transparent tw:border-none tw:cursor-pointer tw:p-lg tw:w-full tw:block"
           style={{ transition: 'background-color 0.15s ease' }}
@@ -153,7 +156,9 @@ export default function HouseholdOverview({ outputs, policyLabels }: HouseholdOv
               ) : (
                 <IconChevronRight size={20} color={colors.text.secondary} />
               )}
-              <Text style={{ fontWeight: typography.fontWeight.medium, color: colors.text.primary }}>
+              <Text
+                style={{ fontWeight: typography.fontWeight.medium, color: colors.text.primary }}
+              >
                 Detailed breakdown
               </Text>
             </Group>
@@ -169,10 +174,7 @@ export default function HouseholdOverview({ outputs, policyLabels }: HouseholdOv
             className="tw:px-lg tw:pb-lg"
             style={{ borderTop: `1px solid ${colors.border.light}` }}
           >
-            <div
-              className="tw:mt-md"
-              style={{ borderLeft: `3px solid ${borderColor}` }}
-            >
+            <div className="tw:mt-md" style={{ borderLeft: `3px solid ${borderColor}` }}>
               <HouseholdBreakdown baseline={baseline} reform={reform} borderColor={borderColor} />
             </div>
 

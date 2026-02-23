@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { Stack } from '@/components/ui';
 import { SimulationAdapter } from '@/adapters';
 import PathwayView from '@/components/common/PathwayView';
 import { ButtonPanelVariant } from '@/components/flowView';
+import { Stack } from '@/components/ui';
 import { MOCK_USER_ID } from '@/constants';
 import { useCreateSimulation } from '@/hooks/useCreateSimulation';
 import { useCreateGeographicAssociation } from '@/hooks/useUserGeographic';

@@ -62,7 +62,7 @@ describe('USStateSelector', () => {
 
   test('given user clicks select trigger then combobox is accessible', async () => {
     // Given
-    const user = userEvent.setup();
+    userEvent.setup();
     const onStateChange = vi.fn();
     render(
       <USStateSelector

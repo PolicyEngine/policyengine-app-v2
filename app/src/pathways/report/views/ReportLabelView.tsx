@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
+import PathwayView from '@/components/common/PathwayView';
 import {
   Input,
   Select,
@@ -8,7 +9,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui';
-import PathwayView from '@/components/common/PathwayView';
 import { CURRENT_YEAR } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { getTaxYears } from '@/libs/metadataUtils';

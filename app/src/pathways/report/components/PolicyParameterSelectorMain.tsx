@@ -58,9 +58,7 @@ export default function PolicyParameterSelectorMain({
       </Title>
       {param.description && (
         <>
-          <p className="tw:font-semibold tw:pb-xs">
-            Description
-          </p>
+          <p className="tw:font-semibold tw:pb-xs">Description</p>
           <p className="tw:pb-sm">{param.description}</p>
         </>
       )}

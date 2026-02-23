@@ -305,6 +305,7 @@ export default function HouseholdBuilderForm({
           <IconInfoCircle size={16} />
           <AlertDescription>{warningMessage}</AlertDescription>
           <button
+            type="button"
             onClick={() => setWarningMessage(null)}
             className="tw:absolute tw:top-2 tw:right-2 tw:bg-transparent tw:border-none tw:cursor-pointer tw:p-1"
           >
@@ -321,7 +322,9 @@ export default function HouseholdBuilderForm({
             <Label>Marital status</Label>
             <Select
               value={maritalStatus}
-              onValueChange={(val) => onMaritalStatusChange((val || 'single') as 'single' | 'married')}
+              onValueChange={(val) =>
+                onMaritalStatusChange((val || 'single') as 'single' | 'married')
+              }
               disabled={disabled}
             >
               <SelectTrigger>

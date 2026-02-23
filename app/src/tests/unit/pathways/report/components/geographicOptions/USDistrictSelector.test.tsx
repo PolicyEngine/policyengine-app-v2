@@ -1,4 +1,4 @@
-import { render, screen, userEvent, waitFor } from '@test-utils';
+import { render, screen, userEvent } from '@test-utils';
 import { describe, expect, test, vi } from 'vitest';
 import USDistrictSelector from '@/pathways/report/components/geographicOptions/USDistrictSelector';
 import {
@@ -47,7 +47,7 @@ describe('USDistrictSelector', () => {
 
   test('given user selects state then auto-selects first district', async () => {
     // Given
-    const user = userEvent.setup();
+    userEvent.setup();
     const onDistrictChange = vi.fn();
     render(
       <USDistrictSelector
@@ -64,7 +64,7 @@ describe('USDistrictSelector', () => {
 
   test('given single district state then shows At-large label', async () => {
     // Given
-    const user = userEvent.setup();
+    userEvent.setup();
     const onDistrictChange = vi.fn();
     render(
       <USDistrictSelector
@@ -99,7 +99,7 @@ describe('USDistrictSelector', () => {
 
   test('given user changes to different state then auto-selects first district of new state', async () => {
     // Given
-    const user = userEvent.setup();
+    userEvent.setup();
     const onDistrictChange = vi.fn();
     render(
       <USDistrictSelector

@@ -1,6 +1,5 @@
-import { Button } from '@/components/ui';
-import { Container, Stack, Text, Title } from '@/components/ui';
-import { colors, spacing, typography } from '@/designTokens';
+import { Button, Container, Stack, Text, Title } from '@/components/ui';
+import { colors, typography } from '@/designTokens';
 
 export interface CalloutWithImageProps {
   title: string;

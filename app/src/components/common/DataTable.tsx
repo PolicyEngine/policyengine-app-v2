@@ -1,10 +1,10 @@
 import {
   ShadcnTable as Table,
-  TableHeader,
   TableBody,
-  TableRow,
-  TableHead,
   TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from '@/components/ui';
 
 interface DataTableProps<T> {

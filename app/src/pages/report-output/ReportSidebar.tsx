@@ -78,6 +78,7 @@ export function ReportSidebar({
     return (
       <div key={node.name}>
         <button
+          type="button"
           className="tw:w-full tw:text-left tw:border-none tw:cursor-pointer tw:flex tw:items-center tw:gap-1 tw:text-sm tw:rounded"
           style={{
             padding: `${spacing.xs} ${spacing.sm}`,

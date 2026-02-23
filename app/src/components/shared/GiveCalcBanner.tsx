@@ -46,11 +46,9 @@ export default function GiveCalcBanner() {
         fontFamily: typography.fontFamily.primary,
       }}
     >
-      <span
-        className="tw:text-center"
-        style={{ fontSize: '14px', color: colors.gray[800] }}
-      >
-        Last day to make tax-deductible donations in 2025! See how much your giving saves on taxes at{' '}
+      <span className="tw:text-center" style={{ fontSize: '14px', color: colors.gray[800] }}>
+        Last day to make tax-deductible donations in 2025! See how much your giving saves on taxes
+        at{' '}
         <a
           href="https://givecalc.org"
           target="_blank"
@@ -65,6 +63,7 @@ export default function GiveCalcBanner() {
         </a>
       </span>
       <button
+        type="button"
         onClick={handleClose}
         aria-label="Dismiss banner"
         className="tw:absolute tw:right-2 tw:bg-transparent tw:border-none tw:cursor-pointer tw:p-1"

@@ -8,12 +8,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import Fuse from 'fuse.js';
 import { useParams, useSearchParams } from 'react-router-dom';
-import { Container, Spinner, Text } from '@/components/ui';
 import { BlogPostGrid } from '@/components/blog/BlogPostGrid';
 import { ResearchFilters } from '@/components/blog/ResearchFilters';
 import { useDisplayCategory } from '@/components/blog/useDisplayCategory';
 import HeroSection from '@/components/shared/static/HeroSection';
 import StaticPageLayout from '@/components/shared/static/StaticPageLayout';
+import { Container, Spinner, Text } from '@/components/ui';
 import { getResearchItems } from '@/data/posts/postTransformers';
 import { colors, spacing } from '@/designTokens';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
@@ -255,7 +255,9 @@ export default function ResearchPage() {
                   borderRadius: spacing.radius.container,
                 }}
               >
-                <Text style={{ color: colors.gray[500] }}>No results found. Try adjusting your filters.</Text>
+                <Text style={{ color: colors.gray[500] }}>
+                  No results found. Try adjusting your filters.
+                </Text>
               </div>
             )}
           </div>

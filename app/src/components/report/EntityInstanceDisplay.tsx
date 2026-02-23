@@ -42,9 +42,7 @@ export default function EntityInstanceDisplay({
     <div className={showInstanceHeader ? 'tw:mt-lg' : ''}>
       {/* Instance header - shown when there are multiple instances */}
       {showInstanceHeader && (
-        <h4 className="tw:text-lg tw:font-semibold tw:text-gray-900 tw:mb-md">
-          {instanceName}
-        </h4>
+        <h4 className="tw:text-lg tw:font-semibold tw:text-gray-900 tw:mb-md">{instanceName}</h4>
       )}
 
       {/* For non-people entities: Display entity-level variables */}

@@ -1,5 +1,5 @@
-import { Separator } from '@/components/ui';
 import NestedMenu from '@/components/common/NestedMenu';
+import { Separator } from '@/components/ui';
 import { ParameterTreeNode } from '@/types/metadata';
 
 interface PolicyParameterSelectorMenuProps {

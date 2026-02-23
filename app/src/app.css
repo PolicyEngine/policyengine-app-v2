@@ -56,15 +56,15 @@
   --color-info: #1890ff;
 
   /* Background colors */
-  --color-bg-primary: #ffffff;
+  --color-bg-primary: #fff;
   --color-bg-secondary: #f5f9ff;
   --color-bg-tertiary: #f1f5f9;
 
   /* Text colors */
-  --color-text-primary: #000000;
+  --color-text-primary: #000;
   --color-text-secondary: #5a5a5a;
   --color-text-tertiary: #9ca3af;
-  --color-text-inverse: #ffffff;
+  --color-text-inverse: #fff;
 
   /* Border colors */
   --color-border-light: #e2e8f0;
