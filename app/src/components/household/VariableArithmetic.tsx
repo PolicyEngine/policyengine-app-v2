@@ -3,7 +3,6 @@ import { IconCircleMinus, IconCirclePlus, IconTriangleFilled } from '@tabler/ico
 import { ActionIcon, Box, Group, Text } from '@mantine/core';
 import { spacing, typography } from '@/designTokens';
 import { useHouseholdMetadataContext } from '@/hooks/useMetadata';
-import { useReportYear } from '@/hooks/useReportYear';
 import { Household } from '@/types/ingredients/Household';
 import { calculateVariableComparison } from '@/utils/householdComparison';
 import { getDisplayStyleConfig } from '@/utils/householdDisplayStyles';

@@ -37,7 +37,9 @@ interface CachedModelVersion {
 function readJSON<T>(key: string): T | null {
   try {
     const raw = localStorage.getItem(key);
-    if (!raw) return null;
+    if (!raw) {
+      return null;
+    }
     return JSON.parse(raw) as T;
   } catch {
     return null;
@@ -62,15 +64,13 @@ function isCacheStale(fetchedAt: number): boolean {
 
 export function getCachedModelVersion(countryId: string): CachedModelVersion | null {
   const cached = readJSON<CachedModelVersion>(`pe_model_version_${countryId}`);
-  if (!cached || isCacheStale(cached.fetchedAt)) return null;
+  if (!cached || isCacheStale(cached.fetchedAt)) {
+    return null;
+  }
   return cached;
 }
 
-export function setCachedModelVersion(
-  countryId: string,
-  versionId: string,
-  version: string,
-): void {
+export function setCachedModelVersion(countryId: string, versionId: string, version: string): void {
   writeJSON(`pe_model_version_${countryId}`, {
     versionId,
     version,
@@ -86,19 +86,23 @@ type ChildrenCache = Record<string, { data: ParameterChildrenResponse; fetchedAt
 
 export function getCachedParameterChildren(
   countryId: string,
-  parentPath: string,
+  parentPath: string
 ): ParameterChildrenResponse | null {
   const cache = readJSON<ChildrenCache>(`pe_param_children_${countryId}`);
-  if (!cache) return null;
+  if (!cache) {
+    return null;
+  }
   const entry = cache[parentPath];
-  if (!entry || isCacheStale(entry.fetchedAt)) return null;
+  if (!entry || isCacheStale(entry.fetchedAt)) {
+    return null;
+  }
   return entry.data;
 }
 
 export function setCachedParameterChildren(
   countryId: string,
   parentPath: string,
-  data: ParameterChildrenResponse,
+  data: ParameterChildrenResponse
 ): void {
   const cache = readJSON<ChildrenCache>(`pe_param_children_${countryId}`) ?? {};
   cache[parentPath] = { data, fetchedAt: Date.now() };
@@ -113,15 +117,19 @@ type ParamsCache = { data: Record<string, ParameterMetadata>; fetchedAt: number 
 
 export function getCachedParameters(
   countryId: string,
-  names: string[],
+  names: string[]
 ): Record<string, ParameterMetadata> | null {
   const cache = readJSON<ParamsCache>(`pe_params_${countryId}`);
-  if (!cache || isCacheStale(cache.fetchedAt)) return null;
+  if (!cache || isCacheStale(cache.fetchedAt)) {
+    return null;
+  }
 
   // Check that ALL requested names exist in the cache
   const result: Record<string, ParameterMetadata> = {};
   for (const name of names) {
-    if (!cache.data[name]) return null; // cache miss
+    if (!cache.data[name]) {
+      return null;
+    } // cache miss
     result[name] = cache.data[name];
   }
   return result;
@@ -129,7 +137,7 @@ export function getCachedParameters(
 
 export function setCachedParameters(
   countryId: string,
-  data: Record<string, ParameterMetadata>,
+  data: Record<string, ParameterMetadata>
 ): void {
   const cache = readJSON<ParamsCache>(`pe_params_${countryId}`);
   const existing = cache && !isCacheStale(cache.fetchedAt) ? cache.data : {};
@@ -145,17 +153,17 @@ export function setCachedParameters(
 
 type VariablesCache = { data: Record<string, VariableMetadata>; fetchedAt: number };
 
-export function getCachedVariables(
-  countryId: string,
-): Record<string, VariableMetadata> | null {
+export function getCachedVariables(countryId: string): Record<string, VariableMetadata> | null {
   const cache = readJSON<VariablesCache>(`pe_variables_${countryId}`);
-  if (!cache || isCacheStale(cache.fetchedAt)) return null;
+  if (!cache || isCacheStale(cache.fetchedAt)) {
+    return null;
+  }
   return cache.data;
 }
 
 export function setCachedVariables(
   countryId: string,
-  data: Record<string, VariableMetadata>,
+  data: Record<string, VariableMetadata>
 ): void {
   writeJSON(`pe_variables_${countryId}`, {
     data,

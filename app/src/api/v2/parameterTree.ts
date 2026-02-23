@@ -45,7 +45,7 @@ export interface V2ParameterData {
  */
 export async function fetchParameterChildren(
   parentPath: string,
-  countryId: string,
+  countryId: string
 ): Promise<ParameterChildrenResponse> {
   const params = new URLSearchParams({
     country_id: countryId,
@@ -66,9 +66,11 @@ export async function fetchParameterChildren(
  */
 export async function fetchParametersByName(
   names: string[],
-  countryId: string,
+  countryId: string
 ): Promise<V2ParameterData[]> {
-  if (names.length === 0) return [];
+  if (names.length === 0) {
+    return [];
+  }
 
   const res = await fetch(`${API_V2_BASE_URL}/parameters/by-name`, {
     method: 'POST',

@@ -30,7 +30,9 @@ export function useModelVersion(countryId: string) {
   });
 
   useEffect(() => {
-    if (!query.data || hasCheckedVersion.current) return;
+    if (!query.data || hasCheckedVersion.current) {
+      return;
+    }
     hasCheckedVersion.current = true;
 
     const { latest_version } = query.data;

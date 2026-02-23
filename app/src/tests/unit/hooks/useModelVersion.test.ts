@@ -14,7 +14,6 @@ import {
   MOCK_CACHED_VERSION_MATCHING,
   MOCK_CACHED_VERSION_STALE,
   MOCK_MODEL_BY_COUNTRY_RESPONSE,
-  MOCK_UPDATED_MODEL_RESPONSE,
   TEST_COUNTRIES,
   TEST_VERSIONS,
 } from '@/tests/fixtures/hooks/modelVersionMocks';
@@ -62,10 +61,7 @@ describe('useModelVersion', () => {
       vi.mocked(getCachedModelVersion).mockReturnValue(null);
 
       // When
-      const { result } = renderHook(
-        () => useModelVersion(TEST_COUNTRIES.US),
-        { wrapper },
-      );
+      const { result } = renderHook(() => useModelVersion(TEST_COUNTRIES.US), { wrapper });
 
       await waitFor(() => {
         expect(result.current.model).not.toBeNull();
@@ -79,10 +75,7 @@ describe('useModelVersion', () => {
 
     it('given empty countryId then does not fetch', () => {
       // When
-      const { result } = renderHook(
-        () => useModelVersion(''),
-        { wrapper },
-      );
+      const { result } = renderHook(() => useModelVersion(''), { wrapper });
 
       // Then
       expect(fetchModelByCountry).not.toHaveBeenCalled();
@@ -113,7 +106,7 @@ describe('useModelVersion', () => {
       expect(setCachedModelVersion).toHaveBeenCalledWith(
         TEST_COUNTRIES.US,
         TEST_VERSIONS.US_VERSION_ID,
-        TEST_VERSIONS.US_VERSION,
+        TEST_VERSIONS.US_VERSION
       );
     });
   });
@@ -162,7 +155,7 @@ describe('useModelVersion', () => {
       expect(setCachedModelVersion).toHaveBeenCalledWith(
         TEST_COUNTRIES.US,
         TEST_VERSIONS.US_VERSION_ID,
-        TEST_VERSIONS.US_VERSION,
+        TEST_VERSIONS.US_VERSION
       );
     });
   });
@@ -177,10 +170,7 @@ describe('useModelVersion', () => {
       vi.mocked(getCachedModelVersion).mockReturnValue(null);
 
       // When
-      const { result } = renderHook(
-        () => useModelVersion(TEST_COUNTRIES.US),
-        { wrapper },
-      );
+      const { result } = renderHook(() => useModelVersion(TEST_COUNTRIES.US), { wrapper });
 
       await waitFor(() => {
         expect(result.current.error).not.toBeNull();
@@ -206,10 +196,7 @@ describe('useModelVersion', () => {
       vi.mocked(getCachedModelVersion).mockReturnValue(null);
 
       // When
-      const { result } = renderHook(
-        () => useModelVersion(TEST_COUNTRIES.US),
-        { wrapper },
-      );
+      const { result } = renderHook(() => useModelVersion(TEST_COUNTRIES.US), { wrapper });
 
       // Then
       expect(result.current.isLoading).toBe(true);
