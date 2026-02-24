@@ -49,10 +49,11 @@ export function ParameterSidebar({
           <NavLink
             key={item.name}
             label={item.label}
-            active={selectedParam?.parameter === item.name}
+            active={activeTab !== 'overview' && selectedParam?.parameter === item.name}
             opened={expandedMenuItems.has(item.name)}
             onClick={() => onMenuItemClick(item.name)}
             childrenOffset={16}
+            color="primary"
             style={{
               borderRadius: spacing.radius.sm,
             }}
@@ -61,7 +62,7 @@ export function ParameterSidebar({
           </NavLink>
         ));
     },
-    [selectedParam?.parameter, expandedMenuItems, onMenuItemClick]
+    [activeTab, selectedParam?.parameter, expandedMenuItems, onMenuItemClick]
   );
 
   // Memoize the rendered tree

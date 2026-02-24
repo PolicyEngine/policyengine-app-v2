@@ -70,17 +70,18 @@ export function PolicyParameterTree({
           <NavLink
             key={item.name}
             label={item.label}
-            active={selectedParam?.parameter === item.name}
+            active={activeTab !== 'overview' && selectedParam?.parameter === item.name}
             opened={expandedMenuItems.has(item.name)}
             onClick={() => onMenuItemClick(item.name)}
             childrenOffset={16}
+            color="primary"
             style={{ borderRadius: spacing.radius.sm }}
           >
             {item.children && expandedMenuItems.has(item.name) && renderMenuItems(item.children)}
           </NavLink>
         ));
     },
-    [selectedParam?.parameter, expandedMenuItems, onMenuItemClick]
+    [activeTab, selectedParam?.parameter, expandedMenuItems, onMenuItemClick]
   );
 
   // Memoize the rendered tree
@@ -108,8 +109,13 @@ export function PolicyParameterTree({
           <UnstyledButton
             style={{
               ...modalStyles.sidebarItem,
-              background: activeTab === 'overview' ? colorConfig.bg : 'transparent',
-              color: activeTab === 'overview' ? colorConfig.icon : colors.gray[700],
+              width: '100%',
+              background:
+                activeTab === 'overview' ? 'var(--mantine-color-primary-light)' : 'transparent',
+              color:
+                activeTab === 'overview'
+                  ? 'var(--mantine-color-primary-light-color)'
+                  : colors.gray[700],
             }}
             onClick={() => onTabChange('overview')}
           >

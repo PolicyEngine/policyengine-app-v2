@@ -208,14 +208,14 @@ export default function ReportOutputPage() {
   // Handle view button click - navigate to report builder in view mode
   const handleView = () => {
     if (userReportId) {
-      navigate(`/${countryId}/report-builder/${userReportId}`);
+      navigate(`/${countryId}/reports/create/${userReportId}`);
     }
   };
 
   // Handle edit button click - navigate to report builder in edit mode
   const handleEdit = () => {
     if (userReportId) {
-      navigate(`/${countryId}/report-builder/${userReportId}`, { state: { edit: true } });
+      navigate(`/${countryId}/reports/create/${userReportId}`, { state: { edit: true } });
     }
   };
 

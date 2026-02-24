@@ -18,7 +18,6 @@ import ReportsPage from './pages/Reports.page';
 import SimulationsPage from './pages/Simulations.page';
 import PolicyPathwayWrapper from './pathways/policy/PolicyPathwayWrapper';
 import PopulationPathwayWrapper from './pathways/population/PopulationPathwayWrapper';
-import ReportPathwayWrapper from './pathways/report/ReportPathwayWrapper';
 import SimulationPathwayWrapper from './pathways/simulation/SimulationPathwayWrapper';
 import { CountryGuard } from './routing/guards/CountryGuard';
 import { MetadataGuard } from './routing/guards/MetadataGuard';
@@ -74,10 +73,6 @@ const router = createBrowserRouter(
               element: <PathwayLayout />,
               children: [
                 {
-                  path: 'reports/create',
-                  element: <ReportPathwayWrapper />,
-                },
-                {
                   path: 'simulations/create',
                   element: <SimulationPathwayWrapper />,
                 },
@@ -125,11 +120,11 @@ const router = createBrowserRouter(
                   element: <PoliciesPage />,
                 },
                 {
-                  path: 'report-builder',
+                  path: 'reports/create',
                   element: <ReportBuilderPage />,
                 },
                 {
-                  path: 'report-builder/:userReportId',
+                  path: 'reports/create/:userReportId',
                   element: <ModifyReportPage />,
                 },
                 {

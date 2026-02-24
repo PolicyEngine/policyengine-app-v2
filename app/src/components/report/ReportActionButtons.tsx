@@ -52,7 +52,7 @@ export function ReportActionButtons({
 
   return (
     <Group gap="xs" ml={6}>
-      <ViewButton tooltip="View configuration" onClick={onView} />
+      <ViewButton tooltip="View report setup" onClick={onView} />
       <EditDefaultButton onClick={onEdit} />
       <ShareButton onClick={onShare} />
     </Group>

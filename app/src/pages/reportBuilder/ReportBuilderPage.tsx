@@ -79,7 +79,7 @@ export default function ReportBuilderPage() {
 
   return (
     <ReportBuilderShell
-      title="Report builder"
+      title="Create new report"
       actions={topBarActions}
       reportState={reportState}
       setReportState={setReportState}
