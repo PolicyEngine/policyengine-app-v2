@@ -30,6 +30,12 @@ export default function IframeContent({
     }
   }, [url]);
 
+  // Base path is /:countryId/:slug — deep link sub-paths append after this
+  const basePath = useMemo(() => {
+    const segments = location.pathname.split('/').filter(Boolean);
+    return `/${segments.slice(0, 2).join('/')}`;
+  }, [location.pathname]);
+
   // Listen for hash change messages from iframe and sync to parent URL bar
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
@@ -39,17 +45,17 @@ export default function IframeContent({
       if (event.data?.type === 'hashchange' && typeof event.data.hash === 'string') {
         const hash = event.data.hash || '';
         if (hash && !hash.startsWith('#')) {
-          // Path-based deep link: ensure slash separator
+          // Path-based deep link: replace sub-path after the base route
           const subPath = hash.startsWith('/') ? hash : `/${hash}`;
-          window.history.replaceState(null, '', `${location.pathname}${subPath}`);
+          window.history.replaceState(null, '', `${basePath}${subPath}`);
         } else {
-          window.history.replaceState(null, '', `${location.pathname}${hash}`);
+          window.history.replaceState(null, '', `${basePath}${hash}`);
         }
       }
     };
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [location.pathname, iframeOrigin]);
+  }, [basePath, iframeOrigin]);
 
   const iframeHeight = height || 'calc(100vh - var(--header-height, 58px))';
   const iframeWidth = width || '100%';
