@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 import {
   Box,
   Button,
@@ -7,387 +8,477 @@ import {
   SimpleGrid,
   Text,
   Title,
-  Stack,
   Badge,
-  Code,
 } from '@mantine/core';
-import ContentSection from '@/components/shared/static/ContentSection';
-import CTASection from '@/components/shared/static/CTASection';
-import RichTextBlock from '@/components/shared/static/RichTextBlock';
 import StaticPageLayout from '@/components/shared/static/StaticPageLayout';
 import { colors, spacing, typography } from '@/designTokens';
 
-const RADIUS = 'md';
+/* ─── animation hook ─── */
 
-/* ---------- terminal block ---------- */
+function useInView(threshold = 0.15) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect(); } },
+      { threshold },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [threshold]);
+  return { ref, visible };
+}
 
-function TerminalBlock({ lines }: { lines: { type: 'prompt' | 'output'; text: string }[] }) {
+/* ─── terminal chrome ─── */
+
+const TERM_BG = '#0d1117';
+const TERM_RADIUS = '10px';
+
+function WindowDots({ size = 10 }: { size?: number }) {
   return (
-    <Box
-      style={{
-        backgroundColor: '#1a1b26',
-        borderRadius: '6px',
-        padding: '14px 16px',
-        fontFamily: "'SF Mono', 'Fira Code', 'Fira Mono', Menlo, monospace",
-        fontSize: '12.5px',
-        lineHeight: 1.6,
-        overflow: 'hidden',
-      }}
-      mt="md"
-    >
-      <Flex gap={6} mb={10}>
-        <Box style={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: '#ff5f57' }} />
-        <Box style={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: '#febc2e' }} />
-        <Box style={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: '#28c840' }} />
-      </Flex>
-      {lines.map((line, i) => (
-        <Box key={i} style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-          {line.type === 'prompt' ? (
-            <Text component="span" style={{ color: '#7dcfff', fontFamily: 'inherit', fontSize: 'inherit' }}>
-              {'> '}
-              <Text component="span" style={{ color: '#c0caf5', fontFamily: 'inherit', fontSize: 'inherit' }}>
-                {line.text}
-              </Text>
-            </Text>
-          ) : (
-            <Text component="span" style={{ color: '#565f89', fontFamily: 'inherit', fontSize: 'inherit' }}>
-              {line.text}
-            </Text>
-          )}
-        </Box>
-      ))}
+    <Flex gap={6}>
+      <Box style={{ width: size, height: size, borderRadius: '50%', backgroundColor: '#ff5f57' }} />
+      <Box style={{ width: size, height: size, borderRadius: '50%', backgroundColor: '#febc2e' }} />
+      <Box style={{ width: size, height: size, borderRadius: '50%', backgroundColor: '#28c840' }} />
+    </Flex>
+  );
+}
+
+function TerminalLine({ type, text }: { type: 'comment' | 'command' | 'prompt' | 'output' | 'success'; text: string }) {
+  const styles: Record<string, { prefix: string; prefixColor: string; textColor: string }> = {
+    comment: { prefix: '', prefixColor: '', textColor: '#545d6c' },
+    command: { prefix: '$ ', prefixColor: '#79c0ff', textColor: '#e6edf3' },
+    prompt:  { prefix: '> ', prefixColor: '#56d4b1', textColor: '#e6edf3' },
+    output:  { prefix: '  ', prefixColor: '', textColor: '#7d8590' },
+    success: { prefix: '  ', prefixColor: '', textColor: '#56d4b1' },
+  };
+  const s = styles[type];
+  return (
+    <Box style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+      {s.prefix && (
+        <Text component="span" style={{ color: s.prefixColor, fontFamily: 'inherit', fontSize: 'inherit' }}>
+          {s.prefix}
+        </Text>
+      )}
+      <Text component="span" style={{ color: s.textColor, fontFamily: 'inherit', fontSize: 'inherit' }}>
+        {text}
+      </Text>
     </Box>
   );
 }
 
-/* ---------- data ---------- */
+function TerminalBlock({ lines, compact }: { lines: { type: 'comment' | 'command' | 'prompt' | 'output' | 'success'; text: string }[]; compact?: boolean }) {
+  return (
+    <Box
+      style={{
+        backgroundColor: TERM_BG,
+        borderRadius: compact ? '8px' : TERM_RADIUS,
+        padding: compact ? '12px 14px' : '20px 24px',
+        fontFamily: "'JetBrains Mono', 'Fira Code', Menlo, monospace",
+        fontSize: compact ? '11.5px' : '13px',
+        lineHeight: compact ? 1.7 : 1.9,
+        overflow: 'hidden',
+      }}
+    >
+      <Box mb={compact ? 8 : 14}>
+        <WindowDots size={compact ? 8 : 10} />
+      </Box>
+      {lines.map((l, i) => <TerminalLine key={i} {...l} />)}
+    </Box>
+  );
+}
+
+/* ─── animated section wrapper ─── */
+
+function FadeInSection({ children, delay = 0, ...boxProps }: { children: React.ReactNode; delay?: number } & Record<string, unknown>) {
+  const { ref, visible } = useInView(0.08);
+  return (
+    <Box
+      ref={ref}
+      style={{
+        opacity: visible ? 1 : 0,
+        transform: visible ? 'translateY(0)' : 'translateY(24px)',
+        transition: `opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1) ${delay}ms, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1) ${delay}ms`,
+      }}
+      {...boxProps}
+    >
+      {children}
+    </Box>
+  );
+}
+
+/* ─── data ─── */
 
 const useCases = [
   {
     title: 'Model a reform',
-    description: 'Full microsimulation with budgetary and distributional impacts from plain English.',
+    description: 'Budgetary and distributional impacts from plain English.',
     terminal: [
       { type: 'prompt' as const, text: 'What if we raised the standard deduction to $20,000?' },
       { type: 'output' as const, text: 'Running microsimulation on 2024 CPS...' },
-      { type: 'output' as const, text: 'Cost: $142B | Winners: 68% | Gini: -0.003' },
+      { type: 'success' as const, text: 'Cost: $142B · Winners: 68% · Gini: -0.003' },
     ],
   },
   {
     title: 'Analyze historical policy',
-    description: 'Backdate parameters to study how programs have changed over time.',
+    description: 'Study how programs have changed over time.',
     terminal: [
       { type: 'prompt' as const, text: 'How has the EITC changed since 2000?' },
       { type: 'output' as const, text: 'Fetching historical parameters...' },
-      { type: 'output' as const, text: 'Max credit: $2,353 (2000) → $7,830 (2024)' },
-    ],
-  },
-  {
-    title: 'Build interactive dashboards',
-    description: 'Streamlit apps and Plotly charts for stakeholder exploration.',
-    terminal: [
-      { type: 'prompt' as const, text: 'Build a dashboard comparing flat tax rates' },
-      { type: 'output' as const, text: 'Creating Streamlit app with Plotly charts...' },
-      { type: 'output' as const, text: '✓ app.py written → streamlit run app.py' },
+      { type: 'success' as const, text: 'Max credit: $2,353 (2000) → $7,830 (2024)' },
     ],
   },
   {
     title: 'Create household calculators',
-    description: 'Show how a specific household is affected by a policy change.',
+    description: 'Show how a specific household is affected.',
     terminal: [
       { type: 'prompt' as const, text: 'Show CTC impact for a family of 4 earning $55k' },
-      { type: 'output' as const, text: 'Current CTC: $4,000 | Reformed: $6,000' },
-      { type: 'output' as const, text: 'Net change: +$2,000/yr (+$167/mo)' },
+      { type: 'output' as const, text: 'Current CTC: $4,000 · Reformed: $6,000' },
+      { type: 'success' as const, text: 'Net change: +$2,000/yr (+$167/mo)' },
+    ],
+  },
+  {
+    title: 'Build interactive dashboards',
+    description: 'Let stakeholders explore reform scenarios.',
+    terminal: [
+      { type: 'prompt' as const, text: 'Build a dashboard comparing flat tax rates' },
+      { type: 'output' as const, text: 'Creating interactive app with charts...' },
+      { type: 'success' as const, text: '✓ app.py written → ready to run' },
     ],
   },
   {
     title: 'Write policy briefs',
-    description: 'Research-quality analysis with charts, tables, and methodology.',
+    description: 'Research-quality analysis with charts and tables.',
     terminal: [
       { type: 'prompt' as const, text: 'Write a brief on eliminating the SALT cap' },
       { type: 'output' as const, text: 'Drafting with distributional tables...' },
-      { type: 'output' as const, text: '✓ salt_cap_brief.md (2,400 words + 3 charts)' },
+      { type: 'success' as const, text: '✓ salt_cap_brief.md (2,400 words + 3 charts)' },
     ],
   },
   {
     title: 'Congressional district analysis',
-    description: 'Map reform impacts to every district using geographic microdata.',
+    description: 'Map reform impacts to every district.',
     terminal: [
       { type: 'prompt' as const, text: 'Map this reform across all 435 districts' },
       { type: 'output' as const, text: 'Loading HuggingFace geographic data...' },
-      { type: 'output' as const, text: '✓ 435 districts analyzed → choropleth ready' },
+      { type: 'success' as const, text: '✓ 435 districts analyzed → choropleth ready' },
     ],
   },
 ];
 
 const microsimFeatures = [
-  { title: 'Cost & revenue estimates', description: 'Budgetary impact of any reform' },
-  { title: 'Winners & losers', description: 'Who gains and who loses' },
-  { title: 'Distributional analysis', description: 'Decile impacts, Gini changes' },
-  { title: 'Poverty effects', description: 'Poverty rate and depth changes' },
-  { title: 'Congressional districts', description: 'Per-district geographic impacts' },
-  { title: '50-state analysis', description: 'State-by-state breakdowns' },
-];
-
-const bundles = [
-  { name: 'analysis-tools', audience: 'Policy researchers', recommended: true },
-  { name: 'country-models', audience: 'Policy modelers', recommended: false },
-  { name: 'data-science', audience: 'Data scientists', recommended: false },
-  { name: 'app-development', audience: 'Frontend developers', recommended: false },
-  { name: 'api-development', audience: 'Backend developers', recommended: false },
-  { name: 'content', audience: 'Content creators', recommended: false },
+  { title: 'Cost & revenue', desc: 'Budgetary impact of any reform' },
+  { title: 'Winners & losers', desc: 'Who gains and who loses' },
+  { title: 'Distributional', desc: 'Decile impacts, Gini changes' },
+  { title: 'Poverty effects', desc: 'Rate and depth changes' },
+  { title: 'Congressional', desc: 'Per-district geographic impacts' },
+  { title: '50-state', desc: 'State-by-state breakdowns' },
 ];
 
 const stats = [
-  { number: '42', label: 'Skills' },
-  { number: '21', label: 'Agents' },
-  { number: '9', label: 'Commands' },
-  { number: '3', label: 'Hook types' },
-  { number: '7', label: 'Bundles' },
+  { value: '24', label: 'Skills' },
+  { value: '21', label: 'Agents' },
+  { value: '4', label: 'Commands' },
+  { value: '7', label: 'Bundles' },
 ];
 
-/* ---------- component ---------- */
+/* ─── shared section padding ─── */
+
+const SECTION_PX = { paddingLeft: '6.125%', paddingRight: '6.125%' };
+
+/* ─── page ─── */
 
 export default function ClaudePluginsPage() {
   return (
     <StaticPageLayout title="Claude Plugins">
-      {/* ── Hero + Install (unified dark section) ── */}
+      {/* ━━━ HERO ━━━ */}
       <Box
-        py={spacing['4xl']}
+        py={80}
         style={{
-          backgroundColor: colors.primary[700],
-          paddingLeft: '6.125%',
-          paddingRight: '6.125%',
+          backgroundColor: colors.white,
+          ...SECTION_PX,
+          borderBottom: `1px solid ${colors.border.light}`,
+          overflow: 'hidden',
         }}
       >
         <Container size="xl" px={0}>
-          {/* Hero content */}
-          <Box maw={720} mb={spacing['3xl']}>
-            <Title
-              style={{
-                fontSize: typography.fontSize['4xl'],
-                fontWeight: typography.fontWeight.bold,
-                fontFamily: typography.fontFamily.primary,
-                color: colors.white,
-                lineHeight: 1.15,
-              }}
-              mb="md"
-            >
-              AI-powered policy analysis
-            </Title>
-            <Text
-              style={{
-                color: 'rgba(255,255,255,0.8)',
-                fontSize: typography.fontSize.lg,
-                lineHeight: typography.lineHeight.relaxed,
-                fontFamily: typography.fontFamily.body,
-              }}
-              mb={spacing.xl}
-            >
-              Use Claude and PolicyEngine together to run microsimulations, model
-              reforms, analyze distributional impacts, and build interactive
-              dashboards — all from your terminal.
-            </Text>
-
-            {/* CTA buttons */}
-            <Flex gap="md" wrap="wrap">
-              <Button
-                component="a"
-                href="https://github.com/PolicyEngine/policyengine-claude"
-                target="_blank"
-                rel="noopener noreferrer"
-                size="md"
-                styles={{
-                  root: {
-                    backgroundColor: colors.white,
-                    color: colors.primary[700],
-                    fontFamily: typography.fontFamily.primary,
-                    fontWeight: typography.fontWeight.semibold,
-                    fontSize: typography.fontSize.base,
-                    border: 'none',
-                    borderRadius: spacing.md,
-                    padding: '10px 24px',
-                    height: 'auto',
-                    '&:hover': {
-                      backgroundColor: colors.gray[100],
-                      transform: 'translateY(-1px)',
-                    },
-                  },
-                }}
-              >
-                View on GitHub
-              </Button>
-              <Button
-                component="a"
-                href="https://policyengine.github.io/plugin-blog/"
-                target="_blank"
-                rel="noopener noreferrer"
-                size="md"
-                styles={{
-                  root: {
-                    backgroundColor: 'transparent',
-                    color: colors.white,
-                    fontFamily: typography.fontFamily.primary,
-                    fontWeight: typography.fontWeight.semibold,
-                    fontSize: typography.fontSize.base,
-                    border: '1.5px solid rgba(255,255,255,0.4)',
-                    borderRadius: spacing.md,
-                    padding: '10px 24px',
-                    height: 'auto',
-                    '&:hover': {
-                      backgroundColor: 'rgba(255,255,255,0.1)',
-                      borderColor: 'rgba(255,255,255,0.7)',
-                      transform: 'translateY(-1px)',
-                    },
-                  },
-                }}
-              >
-                Read the blog post
-              </Button>
-            </Flex>
-          </Box>
-
-          {/* Install steps — terminal style, inline */}
-          <Box
-            style={{
-              backgroundColor: '#1a1b26',
-              borderRadius: '8px',
-              padding: '20px 24px',
-              fontFamily: "'SF Mono', 'Fira Code', 'Fira Mono', Menlo, monospace",
-              fontSize: '14px',
-              lineHeight: 2,
-              maxWidth: 620,
-            }}
+          <Flex
+            direction={{ base: 'column', md: 'row' }}
+            gap={{ base: 32, md: 56 }}
+            align={{ base: 'stretch', md: 'center' }}
           >
-            <Flex gap={6} mb={14}>
-              <Box style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#ff5f57' }} />
-              <Box style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#febc2e' }} />
-              <Box style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#28c840' }} />
-            </Flex>
-            <Box style={{ color: '#565f89' }}>
-              <Text component="span" style={{ color: '#565f89', fontFamily: 'inherit', fontSize: 'inherit' }}>
-                # 1. Install Claude Code{'\n'}
-              </Text>
+            {/* Left — copy */}
+            <Box flex={1} maw={500}>
+              <FadeInSection>
+                <Text
+                  component="span"
+                  style={{
+                    display: 'inline-block',
+                    fontSize: '11px',
+                    fontWeight: typography.fontWeight.semibold,
+                    fontFamily: typography.fontFamily.primary,
+                    letterSpacing: '1.8px',
+                    textTransform: 'uppercase' as const,
+                    color: colors.primary[500],
+                    marginBottom: 20,
+                  }}
+                >
+                  Claude Code Plugin
+                </Text>
+              </FadeInSection>
+
+              <FadeInSection delay={80}>
+                <Title
+                  order={1}
+                  style={{
+                    fontSize: 'clamp(32px, 4.5vw, 48px)',
+                    fontWeight: typography.fontWeight.bold,
+                    fontFamily: typography.fontFamily.primary,
+                    color: colors.gray[900],
+                    lineHeight: 1.08,
+                    letterSpacing: '-0.03em',
+                  }}
+                  mb="lg"
+                >
+                  AI-powered{'\n'}policy analysis
+                </Title>
+              </FadeInSection>
+
+              <FadeInSection delay={160}>
+                <Text
+                  style={{
+                    color: colors.text.secondary,
+                    fontSize: typography.fontSize.lg,
+                    lineHeight: typography.lineHeight.relaxed,
+                    fontFamily: typography.fontFamily.body,
+                    maxWidth: 420,
+                  }}
+                  mb={28}
+                >
+                  Run microsimulations, model reforms, analyze distributional
+                  impacts, and build dashboards — all from your terminal.
+                </Text>
+              </FadeInSection>
+
+              <FadeInSection delay={240}>
+                <Button
+                  component="a"
+                  href="https://github.com/PolicyEngine/policyengine-claude"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  size="md"
+                  styles={{
+                    root: {
+                      backgroundColor: colors.primary[500],
+                      color: colors.white,
+                      fontFamily: typography.fontFamily.primary,
+                      fontWeight: typography.fontWeight.semibold,
+                      fontSize: typography.fontSize.sm,
+                      border: 'none',
+                      borderRadius: spacing.sm,
+                      padding: '11px 28px',
+                      height: 'auto',
+                      transition: 'all 0.2s ease',
+                      '&:hover': {
+                        backgroundColor: colors.primary[600],
+                        transform: 'translateY(-1px)',
+                        boxShadow: `0 4px 14px ${colors.primary.alpha[40]}`,
+                      },
+                    },
+                  }}
+                >
+                  View on GitHub
+                </Button>
+              </FadeInSection>
             </Box>
-            <Box>
-              <Text component="span" style={{ color: '#7dcfff', fontFamily: 'inherit', fontSize: 'inherit' }}>{'$ '}</Text>
-              <Text component="span" style={{ color: '#c0caf5', fontFamily: 'inherit', fontSize: 'inherit' }}>
-                npm install -g @anthropic-ai/claude-code
-              </Text>
-            </Box>
-            <Box mt={4} style={{ color: '#565f89' }}>
-              <Text component="span" style={{ color: '#565f89', fontFamily: 'inherit', fontSize: 'inherit' }}>
-                # 2. Add the plugin{'\n'}
-              </Text>
-            </Box>
-            <Box>
-              <Text component="span" style={{ color: '#7dcfff', fontFamily: 'inherit', fontSize: 'inherit' }}>{'$ '}</Text>
-              <Text component="span" style={{ color: '#c0caf5', fontFamily: 'inherit', fontSize: 'inherit' }}>
-                claude plugins add PolicyEngine/policyengine-claude
-              </Text>
-            </Box>
-            <Box mt={4} style={{ color: '#565f89' }}>
-              <Text component="span" style={{ color: '#565f89', fontFamily: 'inherit', fontSize: 'inherit' }}>
-                # 3. Open any PolicyEngine repo — auto-detects the right tools{'\n'}
-              </Text>
-            </Box>
-            <Box>
-              <Text component="span" style={{ color: '#7dcfff', fontFamily: 'inherit', fontSize: 'inherit' }}>{'$ '}</Text>
-              <Text component="span" style={{ color: '#c0caf5', fontFamily: 'inherit', fontSize: 'inherit' }}>
-                cd policyengine-us && claude
-              </Text>
-            </Box>
-          </Box>
+
+            {/* Right — terminal */}
+            <FadeInSection delay={200} style={{ flex: 1, maxWidth: 560, width: '100%' }}>
+              <Box
+                style={{
+                  backgroundColor: TERM_BG,
+                  borderRadius: '14px',
+                  padding: '22px 26px',
+                  fontFamily: "'JetBrains Mono', 'Fira Code', Menlo, monospace",
+                  fontSize: '13px',
+                  lineHeight: 2,
+                  boxShadow: `0 24px 80px -12px rgba(0,0,0,0.18), 0 0 0 1px rgba(255,255,255,0.04) inset`,
+                  position: 'relative',
+                  overflow: 'hidden',
+                }}
+              >
+                {/* subtle glow */}
+                <Box
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: '1px',
+                    background: 'linear-gradient(90deg, transparent, rgba(86,212,177,0.3), transparent)',
+                  }}
+                />
+                <Box mb={14}><WindowDots size={11} /></Box>
+                <TerminalLine type="comment" text="# 1. Install Claude Code" />
+                <TerminalLine type="command" text="npm install -g @anthropic-ai/claude-code" />
+                <Box mt={6} />
+                <TerminalLine type="comment" text="# 2. Add the plugin" />
+                <TerminalLine type="command" text="claude plugins add PolicyEngine/policyengine-claude" />
+                <Box mt={6} />
+                <TerminalLine type="comment" text="# 3. Analyze" />
+                <TerminalLine type="prompt" text="What is the budgetary impact of doubling the standard deduction?" />
+              </Box>
+            </FadeInSection>
+          </Flex>
         </Container>
       </Box>
 
-      {/* ── What you can do ── */}
-      <ContentSection title="What you can do" variant="primary">
-        <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="lg">
-          {useCases.map((uc) => (
-            <Card
-              key={uc.title}
-              padding="xl"
-              radius={RADIUS}
-              withBorder
+      {/* ━━━ WHAT YOU CAN DO ━━━ */}
+      <Box
+        py={spacing['4xl']}
+        style={{
+          backgroundColor: colors.gray[50],
+          ...SECTION_PX,
+          borderBottom: `1px solid ${colors.border.light}`,
+        }}
+      >
+        <Container size="xl" px={0}>
+          <FadeInSection>
+            <Title
+              order={2}
+              mb={spacing['3xl']}
               style={{
-                borderColor: colors.border.light,
-                transition: 'all 0.2s ease',
-                display: 'flex',
-                flexDirection: 'column',
-              }}
-              styles={{
-                root: {
-                  '&:hover': {
-                    transform: 'translateY(-3px)',
-                    borderColor: colors.primary[500],
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-                  },
-                },
+                fontSize: typography.fontSize['3xl'],
+                fontWeight: typography.fontWeight.semibold,
+                fontFamily: typography.fontFamily.primary,
+                color: colors.text.primary,
               }}
             >
-              <Title
-                order={3}
-                mb={6}
-                style={{
-                  fontSize: typography.fontSize.lg,
-                  fontWeight: typography.fontWeight.semibold,
-                  fontFamily: typography.fontFamily.primary,
-                  color: colors.primary[600],
-                }}
-              >
-                {uc.title}
-              </Title>
-              <Text
-                style={{
-                  fontSize: typography.fontSize.sm,
-                  color: colors.text.secondary,
-                  fontFamily: typography.fontFamily.body,
-                  lineHeight: typography.lineHeight.relaxed,
-                }}
-              >
-                {uc.description}
-              </Text>
-              <Box style={{ marginTop: 'auto' }}>
-                <TerminalBlock lines={uc.terminal} />
-              </Box>
-            </Card>
-          ))}
-        </SimpleGrid>
-      </ContentSection>
-
-      {/* ── Microsimulation capabilities ── */}
-      <ContentSection title="Population-level policy analysis" variant="secondary">
-        <Flex
-          direction={{ base: 'column', md: 'row' }}
-          gap={{ base: spacing.xl, md: spacing['3xl'] }}
-        >
-          <Box flex={1}>
-            <Text
-              style={{
-                fontSize: typography.fontSize.lg,
-                lineHeight: typography.lineHeight.relaxed,
-                fontFamily: typography.fontFamily.body,
-                color: colors.text.secondary,
-              }}
-            >
-              The analysis-tools plugin turns Claude into a microsimulation
-              analyst. Point it at any tax or benefit reform and it runs
-              population-level analysis using PolicyEngine&apos;s weighted survey
-              data — covering income, demographics, and household structure for
-              the entire US population.
-            </Text>
-          </Box>
-          <Box flex={1}>
-            <SimpleGrid cols={2} spacing="md">
-              {microsimFeatures.map((f) => (
+              What you can do
+            </Title>
+          </FadeInSection>
+          <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="lg">
+            {useCases.map((uc, i) => (
+              <FadeInSection key={uc.title} delay={i * 60}>
                 <Card
-                  key={f.title}
-                  padding="md"
-                  radius={RADIUS}
+                  padding="xl"
+                  radius="md"
                   withBorder
                   style={{
                     borderColor: colors.border.light,
+                    transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    height: '100%',
                     backgroundColor: colors.white,
+                  }}
+                  styles={{
+                    root: {
+                      '&:hover': {
+                        transform: 'translateY(-4px)',
+                        borderColor: colors.primary[300],
+                        boxShadow: `0 12px 32px -8px ${colors.shadow.medium}`,
+                      },
+                    },
+                  }}
+                >
+                  <Title
+                    order={3}
+                    mb={4}
+                    style={{
+                      fontSize: typography.fontSize.base,
+                      fontWeight: typography.fontWeight.semibold,
+                      fontFamily: typography.fontFamily.primary,
+                      color: colors.text.primary,
+                    }}
+                  >
+                    {uc.title}
+                  </Title>
+                  <Text
+                    style={{
+                      fontSize: typography.fontSize.sm,
+                      color: colors.text.secondary,
+                      fontFamily: typography.fontFamily.body,
+                      lineHeight: typography.lineHeight.normal,
+                    }}
+                  >
+                    {uc.description}
+                  </Text>
+                  <Box style={{ marginTop: 'auto', paddingTop: 12 }}>
+                    <TerminalBlock lines={uc.terminal} compact />
+                  </Box>
+                </Card>
+              </FadeInSection>
+            ))}
+          </SimpleGrid>
+        </Container>
+      </Box>
+
+      {/* ━━━ MICROSIMULATION — light with teal accents ━━━ */}
+      <Box
+        py={spacing['4xl']}
+        style={{
+          backgroundColor: colors.white,
+          ...SECTION_PX,
+          borderBottom: `1px solid ${colors.border.light}`,
+        }}
+      >
+        <Container size="xl" px={0}>
+          <FadeInSection>
+            <Text
+              component="span"
+              style={{
+                display: 'inline-block',
+                fontSize: '11px',
+                fontWeight: typography.fontWeight.semibold,
+                fontFamily: typography.fontFamily.primary,
+                letterSpacing: '1.8px',
+                textTransform: 'uppercase' as const,
+                color: colors.primary[500],
+                marginBottom: 12,
+              }}
+            >
+              Microsimulation
+            </Text>
+            <Title
+              order={2}
+              mb="sm"
+              style={{
+                fontFamily: typography.fontFamily.primary,
+                fontWeight: typography.fontWeight.bold,
+                fontSize: typography.fontSize['3xl'],
+                color: colors.text.primary,
+              }}
+            >
+              Population-level policy analysis
+            </Title>
+            <Text
+              style={{
+                fontSize: typography.fontSize.base,
+                lineHeight: typography.lineHeight.relaxed,
+                fontFamily: typography.fontFamily.body,
+                color: colors.text.secondary,
+                maxWidth: 540,
+              }}
+              mb={spacing['3xl']}
+            >
+              The analysis-tools plugin turns Claude into a microsimulation
+              analyst. Point it at any tax or benefit reform and it runs
+              full population analysis using PolicyEngine&apos;s weighted survey
+              data.
+            </Text>
+          </FadeInSection>
+
+          <SimpleGrid cols={{ base: 2, sm: 3, md: 6 }} spacing="sm">
+            {microsimFeatures.map((f, i) => (
+              <FadeInSection key={f.title} delay={i * 50}>
+                <Box
+                  py="lg"
+                  px="md"
+                  style={{
+                    borderLeft: `2px solid ${colors.primary[200]}`,
                   }}
                 >
                   <Text
@@ -403,139 +494,192 @@ export default function ClaudePluginsPage() {
                   </Text>
                   <Text
                     style={{
-                      fontSize: typography.fontSize.sm,
-                      color: colors.text.secondary,
+                      fontSize: '12px',
+                      color: colors.text.tertiary,
                       fontFamily: typography.fontFamily.body,
                       lineHeight: typography.lineHeight.normal,
                     }}
                   >
-                    {f.description}
+                    {f.desc}
                   </Text>
-                </Card>
-              ))}
-            </SimpleGrid>
-          </Box>
-        </Flex>
-      </ContentSection>
+                </Box>
+              </FadeInSection>
+            ))}
+          </SimpleGrid>
+        </Container>
+      </Box>
 
-      {/* ── Plugin bundles ── */}
-      <ContentSection title="Choose your plugin bundle" variant="primary">
-        <Text
-          mb="xl"
+      {/* ━━━ DARK CLOSING — stats + read more ━━━ */}
+      <Box
+        py={spacing['4xl']}
+        style={{
+          backgroundColor: colors.gray[900],
+          ...SECTION_PX,
+          position: 'relative',
+          overflow: 'hidden',
+        }}
+      >
+        <Box
           style={{
-            fontSize: typography.fontSize.lg,
-            color: colors.text.secondary,
-            fontFamily: typography.fontFamily.body,
+            position: 'absolute',
+            top: '-20%',
+            right: '-10%',
+            width: 500,
+            height: 500,
+            borderRadius: '50%',
+            background: `radial-gradient(circle, ${colors.primary[500]}12, transparent 70%)`,
+            pointerEvents: 'none',
           }}
-        >
-          Most policy researchers want analysis-tools.
-        </Text>
-        <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="lg">
-          {bundles.map((b) => (
-            <Card
-              key={b.name}
-              padding="xl"
-              radius={RADIUS}
-              withBorder
-              style={{
-                borderColor: b.recommended ? colors.primary[500] : colors.border.light,
-                borderWidth: b.recommended ? 2 : 1,
-                backgroundColor: b.recommended ? 'rgba(45,139,135,0.03)' : colors.white,
-              }}
-            >
-              <Flex justify="space-between" align="center" mb="sm">
-                <Code
-                  style={{
-                    backgroundColor: 'rgba(45,139,135,0.08)',
-                    color: colors.primary[600],
-                    border: '1px solid rgba(45,139,135,0.3)',
-                    fontSize: typography.fontSize.base,
-                    fontWeight: typography.fontWeight.medium,
-                    padding: '2px 8px',
-                  }}
-                >
-                  {b.name}
-                </Code>
-                {b.recommended && (
-                  <Badge size="sm" variant="filled" color="teal">
-                    Recommended
-                  </Badge>
-                )}
-              </Flex>
-              <Text
-                style={{
-                  fontSize: typography.fontSize.base,
-                  color: colors.text.secondary,
-                  fontFamily: typography.fontFamily.body,
-                }}
-              >
-                {b.audience}
-              </Text>
-            </Card>
-          ))}
-        </SimpleGrid>
-      </ContentSection>
-
-      {/* ── By the numbers ── */}
-      <ContentSection variant="secondary">
-        <SimpleGrid cols={{ base: 2, sm: 3, md: 5 }} spacing={0}>
-          {stats.map((s) => (
-            <Box
-              key={s.label}
-              py="xl"
+        />
+        <Container size="xl" px={0} style={{ position: 'relative' }}>
+          {/* Read more */}
+          <FadeInSection>
+            <Text
               style={{
                 textAlign: 'center',
-                borderRight: `1px solid ${colors.border.light}`,
+                fontSize: '11px',
+                fontWeight: typography.fontWeight.semibold,
+                fontFamily: typography.fontFamily.primary,
+                letterSpacing: '1.8px',
+                textTransform: 'uppercase' as const,
+                color: 'rgba(255,255,255,0.35)',
+                marginBottom: 8,
               }}
             >
-              <Text
-                style={{
-                  fontFamily: typography.fontFamily.primary,
-                  fontSize: '2.5rem',
-                  fontWeight: typography.fontWeight.bold,
-                  color: colors.primary[600],
-                  lineHeight: 1,
-                }}
-                mb="xs"
-              >
-                {s.number}
-              </Text>
-              <Text
-                style={{
-                  fontFamily: typography.fontFamily.primary,
-                  fontSize: typography.fontSize.sm,
-                  textTransform: 'uppercase' as const,
-                  letterSpacing: '1.5px',
-                  color: colors.text.secondary,
-                  fontWeight: typography.fontWeight.medium,
-                }}
-              >
-                {s.label}
-              </Text>
-            </Box>
-          ))}
-        </SimpleGrid>
-      </ContentSection>
+              Further reading
+            </Text>
+            <Title
+              order={2}
+              mb={spacing['3xl']}
+              style={{
+                fontFamily: typography.fontFamily.primary,
+                fontWeight: typography.fontWeight.bold,
+                fontSize: typography.fontSize['3xl'],
+                color: colors.white,
+                textAlign: 'center',
+              }}
+            >
+              Read more
+            </Title>
+          </FadeInSection>
+          <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="lg" maw={760} mx="auto">
+            {([
+              {
+                href: 'https://policyengine.github.io/plugin-blog/',
+                external: true,
+                badge: 'Engineering',
+                badgeColor: 'teal',
+                title: 'How we built the plugin',
+                desc: 'The story of turning a general-purpose AI into a policy expert — failures, ideas, and the journey to 24 skills and 21 agents.',
+              },
+              {
+                href: '/us/research/multi-agent-workflows-policy-research',
+                external: false,
+                badge: 'Research',
+                badgeColor: 'blue',
+                title: 'Testing multi-agent AI workflows',
+                desc: 'A multi-agent Claude Code system on distributional analysis and benefit interactions — insights that informed the plugin.',
+              },
+            ] as const).map((post, i) => (
+              <FadeInSection key={post.title} delay={i * 100}>
+                <Card
+                  component="a"
+                  href={post.href}
+                  target={post.external ? '_blank' : undefined}
+                  rel={post.external ? 'noopener noreferrer' : undefined}
+                  padding="xl"
+                  radius="md"
+                  style={{
+                    backgroundColor: 'rgba(255,255,255,0.03)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    textDecoration: 'none',
+                    cursor: 'pointer',
+                    transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+                    height: '100%',
+                  }}
+                  styles={{
+                    root: {
+                      '&:hover': {
+                        backgroundColor: 'rgba(255,255,255,0.06)',
+                        borderColor: 'rgba(255,255,255,0.15)',
+                        transform: 'translateY(-3px)',
+                        boxShadow: '0 12px 40px -10px rgba(0,0,0,0.3)',
+                      },
+                    },
+                  }}
+                >
+                  <Badge
+                    size="xs"
+                    variant="light"
+                    color={post.badgeColor}
+                    mb="sm"
+                    styles={{ root: { textTransform: 'none' } }}
+                  >
+                    {post.badge}
+                  </Badge>
+                  <Title
+                    order={3}
+                    mb="xs"
+                    style={{
+                      fontFamily: typography.fontFamily.primary,
+                      fontWeight: typography.fontWeight.semibold,
+                      fontSize: typography.fontSize.base,
+                      color: colors.white,
+                    }}
+                  >
+                    {post.title}
+                  </Title>
+                  <Text
+                    style={{
+                      fontSize: typography.fontSize.sm,
+                      color: 'rgba(255,255,255,0.45)',
+                      fontFamily: typography.fontFamily.body,
+                      lineHeight: typography.lineHeight.relaxed,
+                    }}
+                  >
+                    {post.desc}
+                  </Text>
+                </Card>
+              </FadeInSection>
+            ))}
+          </SimpleGrid>
 
-      {/* ── Story CTA ── */}
-      <CTASection
-        title="The full story"
-        variant="accent"
-        content={
-          <RichTextBlock variant="inverted">
-            <p>
-              Read about how we turned a general-purpose AI into a domain expert — the
-              failures that taught us, the ideas that worked, and the engineering journey from
-              first experiments to a production plugin with 42 skills and 21 specialized agents.
-            </p>
-          </RichTextBlock>
-        }
-        cta={{
-          text: 'Read the blog post',
-          href: 'https://policyengine.github.io/plugin-blog/',
-        }}
-        caption="View on GitHub"
-      />
+          {/* Stats */}
+          <FadeInSection>
+            <Flex justify="center" gap={{ base: 32, sm: 56, md: 80 }} wrap="wrap" mt={64}>
+              {stats.map((s) => (
+                <Box key={s.label} style={{ textAlign: 'center' }}>
+                  <Text
+                    component="span"
+                    style={{
+                      fontFamily: typography.fontFamily.primary,
+                      fontSize: 'clamp(28px, 3vw, 36px)',
+                      fontWeight: typography.fontWeight.bold,
+                      color: colors.primary[300],
+                      lineHeight: 1,
+                    }}
+                  >
+                    {s.value}
+                  </Text>
+                  <Text
+                    style={{
+                      fontFamily: typography.fontFamily.primary,
+                      fontSize: '11px',
+                      textTransform: 'uppercase' as const,
+                      letterSpacing: '1.8px',
+                      color: 'rgba(255,255,255,0.4)',
+                      fontWeight: typography.fontWeight.medium,
+                      marginTop: 4,
+                    }}
+                  >
+                    {s.label}
+                  </Text>
+                </Box>
+              ))}
+            </Flex>
+          </FadeInSection>
+        </Container>
+      </Box>
     </StaticPageLayout>
   );
 }
