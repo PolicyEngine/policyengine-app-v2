@@ -16,6 +16,7 @@ import BrandWritingPage from './pages/BrandWriting.page';
 import DonatePage from './pages/Donate.page';
 import OrgLogosEmbedPage from './pages/embed/OrgLogosEmbed.page';
 import HomePage from './pages/Home.page';
+import ClaudePluginsPage from './pages/ClaudePlugins.page';
 import ModelPage from './pages/Model.page';
 import PrivacyPage from './pages/Privacy.page';
 import ResearchPage from './pages/Research.page';
@@ -114,6 +115,10 @@ const router = createBrowserRouter(
             {
               path: 'model',
               element: <ModelPage />,
+            },
+            {
+              path: 'claude-plugins',
+              element: <ClaudePluginsPage />,
             },
           ],
         },
