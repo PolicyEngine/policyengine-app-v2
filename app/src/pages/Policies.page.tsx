@@ -9,8 +9,8 @@ import IngredientReadView from '@/components/IngredientReadView';
 import { MOCK_USER_ID } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useUpdatePolicyAssociation, useUserPolicies } from '@/hooks/useUserPolicy';
-import { PolicyCreationModal } from '@/pages/reportBuilder/modals/PolicyCreationModal';
 import type { EditorMode } from '@/pages/reportBuilder/modals/policyCreation/types';
+import { PolicyCreationModal } from '@/pages/reportBuilder/modals/PolicyCreationModal';
 import { PolicyStateProps } from '@/types/pathwayState';
 import { countPolicyModifications } from '@/utils/countParameterChanges';
 import { formatDate } from '@/utils/dateUtils';
@@ -30,6 +30,7 @@ export default function PoliciesPage() {
 
   // Policy editor modal state
   const [editingPolicy, setEditingPolicy] = useState<PolicyStateProps | null>(null);
+  const [editingAssociationId, setEditingAssociationId] = useState<string | null>(null);
   const [editorMode, setEditorMode] = useState<EditorMode>('edit');
   const [editorOpened, { open: openEditor, close: closeEditor }] = useDisclosure(false);
 
@@ -48,6 +49,7 @@ export default function PoliciesPage() {
         label: item.association.label || `Policy #${item.association.policyId}`,
         parameters: item.policy?.parameters || [],
       });
+      setEditingAssociationId(recordId);
       setEditorMode(mode);
       openEditor();
     }
@@ -182,14 +184,17 @@ export default function PoliciesPage() {
         onClose={() => {
           closeEditor();
           setEditingPolicy(null);
+          setEditingAssociationId(null);
         }}
         onPolicyCreated={() => {
           closeEditor();
           setEditingPolicy(null);
+          setEditingAssociationId(null);
         }}
         simulationIndex={0}
         initialPolicy={editingPolicy ?? undefined}
         initialEditorMode={editorMode}
+        initialAssociationId={editingAssociationId ?? undefined}
       />
     </>
   );

@@ -13,6 +13,7 @@ import { IconScale, IconX } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import { ActionIcon, Box, Button, Group, Modal, Stack, Text } from '@mantine/core';
 import { PolicyAdapter } from '@/adapters';
+import { createPolicy as createPolicyApi } from '@/api/policy';
 import {
   EditAndSaveNewButton,
   EditAndUpdateButton,
@@ -21,6 +22,7 @@ import {
 import { colors, spacing } from '@/designTokens';
 import { useCreatePolicy } from '@/hooks/useCreatePolicy';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useUpdatePolicyAssociation } from '@/hooks/useUserPolicy';
 import { getDateRange, selectSearchableParameters } from '@/libs/metadataUtils';
 import { ValueSetterMode } from '@/pathways/report/components/valueSetters';
 import { RootState } from '@/store';
@@ -59,6 +61,7 @@ interface PolicyCreationModalProps {
   simulationIndex: number;
   initialPolicy?: PolicyStateProps;
   initialEditorMode?: EditorMode;
+  initialAssociationId?: string;
 }
 
 export function PolicyCreationModal({
@@ -68,8 +71,9 @@ export function PolicyCreationModal({
   simulationIndex,
   initialPolicy,
   initialEditorMode,
+  initialAssociationId,
 }: PolicyCreationModalProps) {
-  const countryId = useCurrentCountry() as 'us' | 'uk';
+  const countryId = useCurrentCountry();
 
   // Get metadata from Redux state
   const {
@@ -101,11 +105,12 @@ export function PolicyCreationModal({
   const [hoveredParamName, setHoveredParamName] = useState<string | null>(null);
   const [footerHovered, setFooterHovered] = useState(false);
 
-  // API hook for creating policy
+  // API hooks
   const { createPolicy, isPending: isCreating } = useCreatePolicy(policyLabel || undefined);
+  const updatePolicyAssociation = useUpdatePolicyAssociation();
+  const [isUpdating, setIsUpdating] = useState(false);
 
-  // Suppress unused variable warnings
-  void countryId;
+  // Suppress unused variable warning
   void simulationIndex;
 
   // Editor mode: create (new policy), display (read-only existing), edit (modifying existing)
@@ -286,6 +291,45 @@ export function PolicyCreationModal({
       handleCreatePolicy();
     }
   }, [policyLabel, initialPolicy?.label, editorMode, handleCreatePolicy]);
+
+  // Handle updating an existing policy (create new base policy, update association)
+  const handleUpdateExistingPolicy = useCallback(async () => {
+    if (!policyLabel.trim() || !initialAssociationId) {
+      return;
+    }
+    setIsUpdating(true);
+
+    const policyData: Partial<Policy> = { parameters: policyParameters };
+    const payload: PolicyCreationPayload = PolicyAdapter.toCreationPayload(policyData as Policy);
+
+    try {
+      const result = await createPolicyApi(countryId, payload);
+      const newPolicyId = result.result.policy_id;
+
+      await updatePolicyAssociation.mutateAsync({
+        userPolicyId: initialAssociationId,
+        updates: { policyId: newPolicyId, label: policyLabel },
+      });
+
+      onPolicyCreated({
+        id: newPolicyId,
+        label: policyLabel || null,
+        parameters: policyParameters,
+      });
+      onClose();
+    } catch (error) {
+      console.error('Failed to update policy:', error);
+      setIsUpdating(false);
+    }
+  }, [
+    policyLabel,
+    policyParameters,
+    initialAssociationId,
+    countryId,
+    updatePolicyAssociation,
+    onPolicyCreated,
+    onClose,
+  ]);
 
   // Get base and reform values for chart
   const getChartValues = () => {
@@ -741,7 +785,9 @@ export function PolicyCreationModal({
                 <EditAndUpdateButton
                   label="Update existing policy"
                   variant="light"
-                  onClick={() => console.info('[PolicyCreationModal] Update existing policy')}
+                  onClick={handleUpdateExistingPolicy}
+                  loading={isUpdating}
+                  disabled={!policyLabel.trim() || isCreating}
                 />
                 <EditAndSaveNewButton
                   label="Save as new policy"
@@ -749,6 +795,7 @@ export function PolicyCreationModal({
                   variant="filled"
                   onClick={handleSaveAsNewPolicy}
                   loading={isCreating}
+                  disabled={isUpdating}
                 />
               </>
             )}
