@@ -211,6 +211,11 @@ export default function FeaturedResearchBanner() {
           >
             {[
               {
+                href: '/uk/research/uk-two-child-limit-reintroduction',
+                title: 'Two-child limit reintroduction',
+                desc: 'Budgetary, distributional, poverty, and inequality impacts across the UK',
+              },
+              {
                 href: '/uk/uk-salary-sacrifice-tool',
                 title: 'Salary sacrifice cap analysis tool',
                 desc: 'Revenue and distributional impacts of capping pension salary sacrifice',
@@ -225,18 +230,14 @@ export default function FeaturedResearchBanner() {
                 title: 'Scottish Budget 2026-27',
                 desc: 'Living standards, poverty, and local area impacts across Scotland',
               },
-              {
-                href: '/uk/research/uk-two-child-limit-reintroduction',
-                title: 'Two-child limit reintroduction',
-                desc: 'Budgetary, distributional, poverty, and inequality impacts across the UK',
-              },
             ].map((card) => (
               <Card
                 key={card.href}
                 component="a"
                 href={card.href}
                 style={{
-                  flex: '0 0 380px',
+                  flex: '1 1 0',
+                  maxWidth: '320px',
                   minHeight: '120px',
                   display: 'flex',
                   alignItems: 'center',
