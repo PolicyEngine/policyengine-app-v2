@@ -3,6 +3,7 @@
  */
 
 export { ParameterSidebar } from './ParameterSidebar';
+export { PolicyOverviewContent } from './PolicyOverviewContent';
 export { PolicyCreationHeader } from './PolicyCreationHeader';
 export { ParameterHeaderCard } from './ParameterHeaderCard';
 export { ValueSetterCard } from './ValueSetterCard';
