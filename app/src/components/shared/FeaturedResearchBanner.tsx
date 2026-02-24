@@ -225,6 +225,11 @@ export default function FeaturedResearchBanner() {
                 title: 'Scottish Budget 2026-27',
                 desc: 'Living standards, poverty, and local area impacts across Scotland',
               },
+              {
+                href: '/uk/research/uk-two-child-limit-reintroduction',
+                title: 'Two-child limit reintroduction',
+                desc: 'Budgetary, distributional, poverty, and inequality impacts across the UK',
+              },
             ].map((card) => (
               <Card
                 key={card.href}
