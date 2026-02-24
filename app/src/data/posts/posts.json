@@ -1,5 +1,14 @@
 [
   {
+    "title": "How reintroducing the two-child benefit limit would affect the UK",
+    "description": "PolicyEngine estimates the budgetary, distributional, poverty, and inequality impacts of reintroducing the two-child benefit limit across the UK.",
+    "date": "2026-02-24",
+    "tags": ["uk", "policy", "featured"],
+    "authors": ["vahid-ahmadi"],
+    "filename": "uk-two-child-limit-reintroduction.md",
+    "image": "uk-two-child-limit-reintroduction.jpg"
+  },
+  {
     "title": "PolicyEngine completes TANF modeling for all 50 states and DC",
     "description": "AI-assisted workflows enabled nationwide coverage of Temporary Assistance for Needy Families, now available through the web app, Python package, and API.",
     "date": "2026-02-17",
