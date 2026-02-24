@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Badge, Box, Button, Card, Container, Flex, SimpleGrid, Text, Title } from '@mantine/core';
+import { Box, Button, Card, Container, Flex, SimpleGrid, Text, Title } from '@mantine/core';
 import StaticPageLayout from '@/components/shared/static/StaticPageLayout';
 import { colors, spacing, typography } from '@/designTokens';
 
@@ -652,26 +652,20 @@ export default function ClaudePluginsPage() {
                 {
                   href: 'https://policyengine.github.io/plugin-blog/',
                   external: true,
-                  badge: 'Engineering',
-                  badgeColor: 'teal',
                   title: 'How we built the plugin',
                   desc: 'From first experiments to 24 skills and 21 agents.',
                 },
                 {
-                  href: '/us/research/multi-agent-workflows-policy-research',
-                  external: false,
-                  badge: 'Research',
-                  badgeColor: 'blue',
-                  title: 'Multi-agent AI workflows',
-                  desc: 'Distributional analysis and benefit interactions.',
-                },
-                {
                   href: '/us/encode-policy-multi-agent-ai',
                   external: false,
-                  badge: 'Research',
-                  badgeColor: 'blue',
                   title: 'Encode policy with AI',
                   desc: 'Legal text to tested code with multi-agent pipelines.',
+                },
+                {
+                  href: '/us/research/multi-agent-workflows-policy-research',
+                  external: false,
+                  title: 'Multi-agent AI workflows',
+                  desc: 'Distributional analysis and benefit interactions.',
                 },
               ] as const
             ).map((post, i) => (
@@ -702,22 +696,6 @@ export default function ClaudePluginsPage() {
                     },
                   }}
                 >
-                  <Badge
-                    size="xs"
-                    variant="filled"
-                    color={post.badgeColor}
-                    mb="xs"
-                    styles={{
-                      root: {
-                        textTransform: 'none',
-                        fontWeight: typography.fontWeight.medium,
-                        fontSize: '10px',
-                        letterSpacing: '0.5px',
-                      },
-                    }}
-                  >
-                    {post.badge}
-                  </Badge>
                   <Text
                     fw={typography.fontWeight.semibold}
                     mb={4}
