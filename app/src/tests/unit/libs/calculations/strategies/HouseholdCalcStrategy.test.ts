@@ -1,38 +1,85 @@
 import { Query } from '@tanstack/react-query';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { CURRENT_YEAR } from '@/constants';
+import { HouseholdImpactResponse } from '@/api/v2/householdAnalysis';
 import { HouseholdCalcStrategy } from '@/libs/calculations/strategies/HouseholdCalcStrategy';
-import {
-  mockV2CalculationResult,
-  TEST_JOB_IDS,
-} from '@/tests/fixtures/api/householdCalculationMocks';
 import { mockHouseholdCalcParams } from '@/tests/fixtures/types/calculationFixtures';
 import { CalcMetadata } from '@/types/calculation';
-import { Household } from '@/types/ingredients/Household';
 
-// Mock the v2 API modules
-vi.mock('@/api/v2/householdCalculation', () => ({
-  createHouseholdCalculationJobV2: vi.fn(),
-  getHouseholdCalculationJobStatusV2: vi.fn(),
-  calculationResultToHousehold: vi.fn(),
+// Mock the v2 analysis API module
+vi.mock('@/api/v2/householdAnalysis', () => ({
+  createHouseholdAnalysis: vi.fn(),
+  getHouseholdAnalysis: vi.fn(),
 }));
 
-vi.mock('@/api/v2/households', () => ({
-  fetchHouseholdByIdV2: vi.fn(),
-}));
+// ---------------------------------------------------------------------------
+// Test fixtures
+// ---------------------------------------------------------------------------
+
+const TEST_REPORT_IDS = {
+  PENDING: 'hh-report-pending-123',
+  RUNNING: 'hh-report-running-456',
+  COMPLETED: 'hh-report-completed-789',
+  FAILED: 'hh-report-failed-000',
+} as const;
+
+const mockHouseholdPendingResponse = (
+  overrides?: Partial<HouseholdImpactResponse>
+): HouseholdImpactResponse => ({
+  report_id: TEST_REPORT_IDS.PENDING,
+  report_type: 'household',
+  status: 'pending',
+  baseline_simulation: { id: 'sim-baseline', status: 'pending', error_message: null },
+  reform_simulation: { id: 'sim-reform', status: 'pending', error_message: null },
+  baseline_result: null,
+  reform_result: null,
+  impact: null,
+  error_message: null,
+  ...overrides,
+});
+
+const mockHouseholdRunningResponse = (
+  overrides?: Partial<HouseholdImpactResponse>
+): HouseholdImpactResponse => ({
+  ...mockHouseholdPendingResponse(),
+  report_id: TEST_REPORT_IDS.RUNNING,
+  status: 'running',
+  baseline_simulation: { id: 'sim-baseline', status: 'completed', error_message: null },
+  reform_simulation: { id: 'sim-reform', status: 'running', error_message: null },
+  ...overrides,
+});
+
+const mockHouseholdCompletedResponse = (
+  overrides?: Partial<HouseholdImpactResponse>
+): HouseholdImpactResponse => ({
+  ...mockHouseholdPendingResponse(),
+  report_id: TEST_REPORT_IDS.COMPLETED,
+  status: 'completed',
+  baseline_simulation: { id: 'sim-baseline', status: 'completed', error_message: null },
+  reform_simulation: { id: 'sim-reform', status: 'completed', error_message: null },
+  baseline_result: { person: [{ net_income: 42000 }], household: [{ size: 2 }] },
+  reform_result: { person: [{ net_income: 44000 }], household: [{ size: 2 }] },
+  impact: { person: [{ net_income: 2000 }] },
+  ...overrides,
+});
+
+const mockHouseholdFailedResponse = (
+  overrides?: Partial<HouseholdImpactResponse>
+): HouseholdImpactResponse => ({
+  ...mockHouseholdPendingResponse(),
+  report_id: TEST_REPORT_IDS.FAILED,
+  status: 'failed',
+  error_message: 'Household analysis calculation error',
+  ...overrides,
+});
+
+// ---------------------------------------------------------------------------
+// Tests
+// ---------------------------------------------------------------------------
 
 describe('HouseholdCalcStrategy', () => {
   let strategy: HouseholdCalcStrategy;
-  let mockCreateJob: any;
-  let mockGetJobStatus: any;
-  let mockFetchHousehold: any;
-  let mockResultToHousehold: any;
-
-  const mockHousehold: Household = {
-    tax_benefit_model_name: 'policyengine_us',
-    year: parseInt(CURRENT_YEAR, 10),
-    people: [{ age: 30, employment_income: 50000 }],
-  };
+  let mockCreateHouseholdAnalysis: any;
+  let mockGetHouseholdAnalysis: any;
 
   const mockMetadata: CalcMetadata = {
     calcId: 'test-calc-id',
@@ -42,219 +89,162 @@ describe('HouseholdCalcStrategy', () => {
   };
 
   beforeEach(async () => {
-    // Create fresh strategy instance to clear job registry
     strategy = new HouseholdCalcStrategy();
 
-    // Get mock functions from modules
-    const householdCalcModule = await import('@/api/v2/householdCalculation');
-    const householdsModule = await import('@/api/v2/households');
-
-    mockCreateJob = householdCalcModule.createHouseholdCalculationJobV2;
-    mockGetJobStatus = householdCalcModule.getHouseholdCalculationJobStatusV2;
-    mockResultToHousehold = householdCalcModule.calculationResultToHousehold;
-    mockFetchHousehold = householdsModule.fetchHouseholdByIdV2;
+    const analysisModule = await import('@/api/v2/householdAnalysis');
+    mockCreateHouseholdAnalysis = analysisModule.createHouseholdAnalysis;
+    mockGetHouseholdAnalysis = analysisModule.getHouseholdAnalysis;
 
     vi.clearAllMocks();
   });
 
   describe('execute (first call - job creation)', () => {
-    it('given first call then fetches household and creates job', async () => {
-      // Given
-      const params = mockHouseholdCalcParams();
-      mockFetchHousehold.mockResolvedValue(mockHousehold);
-      mockCreateJob.mockResolvedValue({
-        job_id: TEST_JOB_IDS.PENDING,
-        status: 'PENDING',
-      });
-
-      // When
-      const result = await strategy.execute(params, mockMetadata);
-
-      // Then
-      expect(mockFetchHousehold).toHaveBeenCalledWith(params.populationId);
-      expect(mockCreateJob).toHaveBeenCalled();
-      expect(result.status).toBe('pending');
-      expect(result.progress).toBe(0);
-      expect(result.message).toBe('Starting household calculation...');
-    });
-
-    it('given reform policy then includes it in job creation', async () => {
-      // Given
+    it('given first call then creates household analysis with correct request', async () => {
       const params = mockHouseholdCalcParams({
+        populationId: 'household-abc',
         policyIds: { baseline: 'baseline-id', reform: 'reform-id' },
       });
-      mockFetchHousehold.mockResolvedValue(mockHousehold);
-      mockCreateJob.mockResolvedValue({
-        job_id: TEST_JOB_IDS.PENDING,
-        status: 'PENDING',
-      });
+      mockCreateHouseholdAnalysis.mockResolvedValue(mockHouseholdPendingResponse());
 
-      // When
+      const result = await strategy.execute(params, mockMetadata);
+
+      expect(mockCreateHouseholdAnalysis).toHaveBeenCalledWith({
+        household_id: 'household-abc',
+        policy_id: 'reform-id',
+      });
+      expect(result.status).toBe('pending');
+      expect(result.progress).toBe(0);
+      expect(result.message).toBe('Starting household analysis...');
+    });
+
+    it('given no reform policy then uses baseline as policy_id', async () => {
+      const params = mockHouseholdCalcParams({
+        populationId: 'household-abc',
+        policyIds: { baseline: 'baseline-id' },
+      });
+      mockCreateHouseholdAnalysis.mockResolvedValue(mockHouseholdPendingResponse());
+
       await strategy.execute(params, mockMetadata);
 
-      // Then
-      const createJobCall = mockCreateJob.mock.calls[0][0];
-      expect(createJobCall.policy_id).toBe('reform-id');
+      expect(mockCreateHouseholdAnalysis).toHaveBeenCalledWith(
+        expect.objectContaining({ policy_id: 'baseline-id' })
+      );
+    });
+
+    it('given null policies then sends null policy_id', async () => {
+      const params = mockHouseholdCalcParams({
+        policyIds: { baseline: null },
+      });
+      mockCreateHouseholdAnalysis.mockResolvedValue(mockHouseholdPendingResponse());
+
+      await strategy.execute(params, mockMetadata);
+
+      expect(mockCreateHouseholdAnalysis).toHaveBeenCalledWith(
+        expect.objectContaining({ policy_id: null })
+      );
     });
 
     it('given job creation fails then returns error status', async () => {
-      // Given
       const params = mockHouseholdCalcParams();
-      mockFetchHousehold.mockResolvedValue(mockHousehold);
-      mockCreateJob.mockRejectedValue(new Error('Job creation failed'));
+      mockCreateHouseholdAnalysis.mockRejectedValue(new Error('Job creation failed'));
 
-      // When
       const result = await strategy.execute(params, mockMetadata);
 
-      // Then
       expect(result.status).toBe('error');
       expect(result.error).toEqual({
-        code: 'HOUSEHOLD_CALC_FAILED',
+        code: 'HOUSEHOLD_ANALYSIS_FAILED',
         message: 'Job creation failed',
         retryable: true,
       });
-    });
-
-    it('given household fetch fails then returns error status', async () => {
-      // Given
-      const params = mockHouseholdCalcParams();
-      mockFetchHousehold.mockRejectedValue(new Error('Household not found'));
-
-      // When
-      const result = await strategy.execute(params, mockMetadata);
-
-      // Then
-      expect(result.status).toBe('error');
-      expect(result.error?.message).toBe('Household not found');
-      expect(mockCreateJob).not.toHaveBeenCalled();
     });
   });
 
   describe('execute (subsequent calls - polling)', () => {
     beforeEach(async () => {
-      // Set up a job in the registry first
+      // Set up a job in the registry
       const params = mockHouseholdCalcParams();
-      mockFetchHousehold.mockResolvedValue(mockHousehold);
-      mockCreateJob.mockResolvedValue({
-        job_id: TEST_JOB_IDS.PENDING,
-        status: 'PENDING',
-      });
+      mockCreateHouseholdAnalysis.mockResolvedValue(
+        mockHouseholdPendingResponse({ report_id: TEST_REPORT_IDS.PENDING })
+      );
       await strategy.execute(params, mockMetadata);
-
-      // Clear mocks for subsequent call tests
       vi.clearAllMocks();
     });
 
     it('given pending status then returns pending with progress', async () => {
-      // Given
       const params = mockHouseholdCalcParams();
-      mockGetJobStatus.mockResolvedValue({
-        job_id: TEST_JOB_IDS.PENDING,
-        status: 'PENDING',
-        result: null,
-        error_message: null,
-      });
+      mockGetHouseholdAnalysis.mockResolvedValue(mockHouseholdPendingResponse());
 
-      // When
       const result = await strategy.execute(params, mockMetadata);
 
-      // Then
       expect(result.status).toBe('pending');
       expect(result.message).toBe('Waiting in queue...');
-      expect(mockCreateJob).not.toHaveBeenCalled(); // Should not create new job
+      expect(mockCreateHouseholdAnalysis).not.toHaveBeenCalled();
     });
 
     it('given running status then returns pending with running message', async () => {
-      // Given
       const params = mockHouseholdCalcParams();
-      mockGetJobStatus.mockResolvedValue({
-        job_id: TEST_JOB_IDS.RUNNING,
-        status: 'RUNNING',
-        result: null,
-        error_message: null,
-      });
+      mockGetHouseholdAnalysis.mockResolvedValue(mockHouseholdRunningResponse());
 
-      // When
       const result = await strategy.execute(params, mockMetadata);
 
-      // Then
       expect(result.status).toBe('pending');
-      expect(result.message).toBe('Running household calculation...');
+      expect(result.message).toBe('Running household analysis...');
     });
 
-    it('given completed status then returns complete with result', async () => {
-      // Given
+    it('given completed status then returns complete with response as result', async () => {
       const params = mockHouseholdCalcParams();
-      const convertedResult = { ...mockHousehold, household: { net_income: 42000 } };
-      mockGetJobStatus.mockResolvedValue({
-        job_id: TEST_JOB_IDS.COMPLETED,
-        status: 'COMPLETED',
-        result: mockV2CalculationResult,
-        error_message: null,
-      });
-      mockResultToHousehold.mockReturnValue(convertedResult);
+      const completedResponse = mockHouseholdCompletedResponse();
+      mockGetHouseholdAnalysis.mockResolvedValue(completedResponse);
 
-      // When
       const result = await strategy.execute(params, mockMetadata);
 
-      // Then
       expect(result.status).toBe('complete');
-      expect(result.result).toEqual(convertedResult);
-      expect(mockResultToHousehold).toHaveBeenCalledWith(
-        mockV2CalculationResult,
-        expect.objectContaining({
-          tax_benefit_model_name: 'policyengine_us',
-        })
-      );
+      expect(result.result).toEqual(completedResponse);
     });
 
     it('given failed status then returns error', async () => {
-      // Given
       const params = mockHouseholdCalcParams();
-      mockGetJobStatus.mockResolvedValue({
-        job_id: TEST_JOB_IDS.FAILED,
-        status: 'FAILED',
-        result: null,
-        error_message: 'Calculation error occurred',
-      });
+      mockGetHouseholdAnalysis.mockResolvedValue(mockHouseholdFailedResponse());
 
-      // When
       const result = await strategy.execute(params, mockMetadata);
 
-      // Then
       expect(result.status).toBe('error');
       expect(result.error).toEqual({
-        code: 'HOUSEHOLD_CALC_FAILED',
-        message: 'Calculation error occurred',
+        code: 'HOUSEHOLD_ANALYSIS_FAILED',
+        message: 'Household analysis calculation error',
         retryable: true,
       });
     });
 
-    it('given single poll error then returns pending to retry', async () => {
-      // Given
+    it('given failed status with no message then uses default error message', async () => {
       const params = mockHouseholdCalcParams();
-      mockGetJobStatus.mockRejectedValue(new Error('Network error'));
+      mockGetHouseholdAnalysis.mockResolvedValue(
+        mockHouseholdFailedResponse({ error_message: null })
+      );
 
-      // When
       const result = await strategy.execute(params, mockMetadata);
 
-      // Then
-      // Should return pending (not error) to allow retry
+      expect(result.error?.message).toBe('Household analysis failed');
+    });
+
+    it('given single poll error then returns pending to retry', async () => {
+      const params = mockHouseholdCalcParams();
+      mockGetHouseholdAnalysis.mockRejectedValue(new Error('Network error'));
+
+      const result = await strategy.execute(params, mockMetadata);
+
       expect(result.status).toBe('pending');
       expect(result.message).toBe('Retrying status check...');
     });
 
     it('given max consecutive poll errors then returns error status', async () => {
-      // Given
       const params = mockHouseholdCalcParams();
-      mockGetJobStatus.mockRejectedValue(new Error('Persistent network error'));
+      mockGetHouseholdAnalysis.mockRejectedValue(new Error('Persistent network error'));
 
-      // When - execute 3 times (MAX_CONSECUTIVE_ERRORS)
       await strategy.execute(params, mockMetadata); // Error 1
       await strategy.execute(params, mockMetadata); // Error 2
-      const result = await strategy.execute(params, mockMetadata); // Error 3 - should fail
+      const result = await strategy.execute(params, mockMetadata); // Error 3
 
-      // Then
       expect(result.status).toBe('error');
       expect(result.error?.code).toBe('POLL_FAILED');
       expect(result.error?.message).toContain('failed after 3 attempts');
@@ -262,124 +252,125 @@ describe('HouseholdCalcStrategy', () => {
     });
 
     it('given successful poll after errors then resets error count', async () => {
-      // Given
       const params = mockHouseholdCalcParams();
 
-      // First two calls fail
-      mockGetJobStatus
+      mockGetHouseholdAnalysis
         .mockRejectedValueOnce(new Error('Network error'))
         .mockRejectedValueOnce(new Error('Network error'))
-        // Third call succeeds
-        .mockResolvedValueOnce({
-          job_id: TEST_JOB_IDS.RUNNING,
-          status: 'RUNNING',
-          result: null,
-          error_message: null,
-        })
-        // Fourth call fails again (should be error count 1, not 3)
+        .mockResolvedValueOnce(mockHouseholdRunningResponse())
         .mockRejectedValueOnce(new Error('Network error'));
 
-      // When
       await strategy.execute(params, mockMetadata); // Error 1
       await strategy.execute(params, mockMetadata); // Error 2
-      await strategy.execute(params, mockMetadata); // Success - resets count
+      await strategy.execute(params, mockMetadata); // Success - resets
       const result = await strategy.execute(params, mockMetadata); // Error 1 (reset)
 
-      // Then - should still be pending, not error (count was reset)
       expect(result.status).toBe('pending');
       expect(result.message).toBe('Retrying status check...');
+    });
+
+    it('given pending status then shows synthetic progress based on elapsed time', async () => {
+      const params = mockHouseholdCalcParams();
+      const metadataWithOldStart: CalcMetadata = {
+        ...mockMetadata,
+        startedAt: Date.now() - 30000, // Started 30 seconds ago
+      };
+
+      mockGetHouseholdAnalysis.mockResolvedValue(mockHouseholdPendingResponse());
+
+      const result = await strategy.execute(params, metadataWithOldStart);
+
+      expect(result.status).toBe('pending');
+      expect(result.progress).toBeDefined();
+      // 30s elapsed / 60s estimate = 50%
+      expect(result.progress).toBeCloseTo(50, 0);
+    });
+
+    it('given long-running calculation then caps progress at 95%', async () => {
+      const params = mockHouseholdCalcParams();
+      const metadataWithOldStart: CalcMetadata = {
+        ...mockMetadata,
+        startedAt: Date.now() - 300000, // Started 5 minutes ago
+      };
+
+      mockGetHouseholdAnalysis.mockResolvedValue(mockHouseholdPendingResponse());
+
+      const result = await strategy.execute(params, metadataWithOldStart);
+
+      expect(result.progress).toBe(95);
     });
   });
 
   describe('getRefetchConfig', () => {
     it('given pending status then returns 1 second poll interval', () => {
-      // Given
       const config = strategy.getRefetchConfig();
       const mockQuery = {
         state: { data: { status: 'pending' } },
       } as unknown as Query;
 
-      // When
       const interval =
         typeof config.refetchInterval === 'function'
           ? config.refetchInterval(mockQuery)
           : config.refetchInterval;
 
-      // Then
       expect(interval).toBe(1000);
     });
 
     it('given complete status then returns false (stop polling)', () => {
-      // Given
       const config = strategy.getRefetchConfig();
       const mockQuery = {
         state: { data: { status: 'complete' } },
       } as unknown as Query;
 
-      // When
       const interval =
         typeof config.refetchInterval === 'function'
           ? config.refetchInterval(mockQuery)
           : config.refetchInterval;
 
-      // Then
       expect(interval).toBe(false);
     });
 
     it('given error status then returns false (stop polling)', () => {
-      // Given
       const config = strategy.getRefetchConfig();
       const mockQuery = {
         state: { data: { status: 'error' } },
       } as unknown as Query;
 
-      // When
       const interval =
         typeof config.refetchInterval === 'function'
           ? config.refetchInterval(mockQuery)
           : config.refetchInterval;
 
-      // Then
       expect(interval).toBe(false);
     });
 
     it('given no data then returns false', () => {
-      // Given
       const config = strategy.getRefetchConfig();
       const mockQuery = {
         state: { data: undefined },
       } as unknown as Query;
 
-      // When
       const interval =
         typeof config.refetchInterval === 'function'
           ? config.refetchInterval(mockQuery)
           : config.refetchInterval;
 
-      // Then
       expect(interval).toBe(false);
     });
 
     it('given config then returns infinite stale time', () => {
-      // When
       const config = strategy.getRefetchConfig();
-
-      // Then
       expect(config.staleTime).toBe(Infinity);
     });
   });
 
   describe('transformResponse', () => {
-    it('given household data then transforms to complete CalcStatus', () => {
-      // Given
-      const householdData = mockHousehold;
+    it('given response data then transforms to complete CalcStatus', () => {
+      const data = { some: 'result' };
+      const result = strategy.transformResponse(data);
 
-      // When
-      const result = strategy.transformResponse(householdData);
-
-      // Then
       expect(result.status).toBe('complete');
-      expect(result.result).toEqual(householdData);
+      expect(result.result).toEqual(data);
       expect(result.metadata.calcType).toBe('household');
       expect(result.metadata.targetType).toBe('simulation');
     });
@@ -387,68 +378,47 @@ describe('HouseholdCalcStrategy', () => {
 
   describe('job registry management', () => {
     it('given new calculation then has no active job', () => {
-      // When
-      const hasJob = strategy.hasActiveJob('new-calc-id');
-
-      // Then
-      expect(hasJob).toBe(false);
+      expect(strategy.hasActiveJob('new-calc-id')).toBe(false);
     });
 
     it('given job created then has active job', async () => {
-      // Given
       const params = mockHouseholdCalcParams();
-      mockFetchHousehold.mockResolvedValue(mockHousehold);
-      mockCreateJob.mockResolvedValue({
-        job_id: TEST_JOB_IDS.PENDING,
-        status: 'PENDING',
-      });
+      mockCreateHouseholdAnalysis.mockResolvedValue(mockHouseholdPendingResponse());
 
-      // When
       await strategy.execute(params, mockMetadata);
 
-      // Then
       expect(strategy.hasActiveJob(mockMetadata.calcId)).toBe(true);
     });
 
     it('given cleanupJob called then removes job from registry', async () => {
-      // Given
       const params = mockHouseholdCalcParams();
-      mockFetchHousehold.mockResolvedValue(mockHousehold);
-      mockCreateJob.mockResolvedValue({
-        job_id: TEST_JOB_IDS.PENDING,
-        status: 'PENDING',
-      });
+      mockCreateHouseholdAnalysis.mockResolvedValue(mockHouseholdPendingResponse());
       await strategy.execute(params, mockMetadata);
 
-      // When
       strategy.cleanupJob(mockMetadata.calcId);
 
-      // Then
       expect(strategy.hasActiveJob(mockMetadata.calcId)).toBe(false);
     });
 
     it('given completed job then removes from registry', async () => {
-      // Given
       const params = mockHouseholdCalcParams();
-      mockFetchHousehold.mockResolvedValue(mockHousehold);
-      mockCreateJob.mockResolvedValue({
-        job_id: TEST_JOB_IDS.PENDING,
-        status: 'PENDING',
-      });
+      mockCreateHouseholdAnalysis.mockResolvedValue(mockHouseholdPendingResponse());
       await strategy.execute(params, mockMetadata);
 
-      mockGetJobStatus.mockResolvedValue({
-        job_id: TEST_JOB_IDS.COMPLETED,
-        status: 'COMPLETED',
-        result: mockV2CalculationResult,
-        error_message: null,
-      });
-      mockResultToHousehold.mockReturnValue(mockHousehold);
-
-      // When
+      mockGetHouseholdAnalysis.mockResolvedValue(mockHouseholdCompletedResponse());
       await strategy.execute(params, mockMetadata);
 
-      // Then
+      expect(strategy.hasActiveJob(mockMetadata.calcId)).toBe(false);
+    });
+
+    it('given failed job then removes from registry', async () => {
+      const params = mockHouseholdCalcParams();
+      mockCreateHouseholdAnalysis.mockResolvedValue(mockHouseholdPendingResponse());
+      await strategy.execute(params, mockMetadata);
+
+      mockGetHouseholdAnalysis.mockResolvedValue(mockHouseholdFailedResponse());
+      await strategy.execute(params, mockMetadata);
+
       expect(strategy.hasActiveJob(mockMetadata.calcId)).toBe(false);
     });
   });
