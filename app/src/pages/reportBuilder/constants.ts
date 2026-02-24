@@ -1,7 +1,7 @@
 /**
  * Constants for ReportBuilder components
  */
-import { colors } from '@/designTokens';
+import { colors, typography } from '@/designTokens';
 import { IngredientColorConfig } from './types';
 
 // ============================================================================
@@ -9,10 +9,10 @@ import { IngredientColorConfig } from './types';
 // ============================================================================
 
 export const FONT_SIZES = {
-  title: '28px',
-  normal: '16px',
-  small: '14px',
-  tiny: '12px',
+  title: typography.fontSize['3xl'], // 28px
+  normal: typography.fontSize.base, // 16px
+  small: typography.fontSize.sm, // 14px
+  tiny: typography.fontSize.xs, // 12px
 };
 
 // ============================================================================
