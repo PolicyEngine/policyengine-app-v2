@@ -101,49 +101,6 @@ export const mockNonJsonResponse = () => ({
   json: vi.fn().mockRejectedValue(new SyntaxError('Unexpected token < in JSON')),
 });
 
-// Mock output data for completed simulations
-export const mockSimulationOutput = {
-  earnings: {
-    '2024': 50000,
-    '2025': 52000,
-  },
-  household_net_income: {
-    '2024': 45000,
-    '2025': 47000,
-  },
-};
-
-export const mockSimulationMetadataWithOutput: SimulationMetadata = {
-  ...mockSimulationMetadata,
-  output: mockSimulationOutput,
-  status: 'complete',
-};
-
-export const mockSimulationMetadataError: SimulationMetadata = {
-  ...mockSimulationMetadata,
-  output: null,
-  status: 'error',
-};
-
-// API responses for output updates
-export const mockUpdateSimulationOutputSuccessResponse = {
-  status: 'ok',
-  message: 'Simulation updated successfully',
-  result: mockSimulationMetadataWithOutput,
-};
-
-export const mockMarkSimulationErrorSuccessResponse = {
-  status: 'ok',
-  message: 'Simulation marked as error',
-  result: mockSimulationMetadataError,
-};
-
-export const mockUpdateSimulationOutputErrorResponse = {
-  status: 'error',
-  message: 'Failed to update simulation output',
-  result: null,
-};
-
 // Error messages that match the implementation
 export const ERROR_MESSAGES = {
   CREATE_FAILED: 'Failed to create simulation',
@@ -153,10 +110,4 @@ export const ERROR_MESSAGES = {
   FETCH_FAILED: (id: string) => `Failed to fetch simulation ${id}`,
   FETCH_FAILED_WITH_STATUS: (id: string, status: number, statusText: string) =>
     `Failed to fetch simulation ${id}: ${status} ${statusText}`,
-  UPDATE_FAILED: (id: string) => `Failed to update simulation ${id}`,
-  UPDATE_FAILED_WITH_STATUS: (id: string, status: number, statusText: string) =>
-    `Failed to update simulation ${id}: ${status} ${statusText}`,
-  MARK_ERROR_FAILED: (id: string) => `Failed to mark simulation ${id} as error`,
-  MARK_ERROR_FAILED_WITH_STATUS: (id: string, status: number, statusText: string) =>
-    `Failed to mark simulation ${id} as error: ${status} ${statusText}`,
 } as const;

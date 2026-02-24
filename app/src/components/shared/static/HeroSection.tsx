@@ -4,25 +4,17 @@ import { colors, spacing, typography } from '@/designTokens';
 export interface HeroSectionProps {
   title: string;
   description: string | React.ReactNode;
-  /**
-   * @deprecated 'light' variant is deprecated. Use 'default' instead.
-   * @deprecated 'accent' variant is deprecated. Use 'dark' instead.
-   */
-  variant?: 'light' | 'default' | 'accent' | 'dark';
+  variant?: 'default' | 'dark';
 }
 
 export default function HeroSection({ title, description, variant = 'default' }: HeroSectionProps) {
   const backgrounds = {
-    light: '#F7FEFE', // Deprecated, kept for backwards compatibility
     default: '#F7FEFE',
-    accent: colors.primary[700], // Deprecated, kept for backwards compatibility
     dark: colors.primary[700],
   };
 
   const textColors = {
-    light: colors.text.primary,
     default: colors.text.primary,
-    accent: colors.text.inverse, // Deprecated, kept for backwards compatibility
     dark: colors.text.inverse,
   };
 
@@ -58,7 +50,7 @@ export default function HeroSection({ title, description, variant = 'default' }:
           orientation="horizontal"
           size="xs"
           color={
-            variant === 'accent' || variant === 'dark' ? colors.text.inverse : colors.border.dark
+            variant === 'dark' ? colors.text.inverse : colors.border.dark
           }
           hiddenFrom="md"
         />
@@ -67,7 +59,7 @@ export default function HeroSection({ title, description, variant = 'default' }:
           orientation="vertical"
           size="xs"
           color={
-            variant === 'accent' || variant === 'dark' ? colors.text.inverse : colors.border.dark
+            variant === 'dark' ? colors.text.inverse : colors.border.dark
           }
           visibleFrom="md"
         />

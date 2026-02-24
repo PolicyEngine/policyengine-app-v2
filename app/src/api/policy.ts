@@ -73,20 +73,3 @@ export async function createPolicy(payload: V2PolicyCreatePayload): Promise<V2Po
   return res.json();
 }
 
-/**
- * List all policies, optionally filtered by tax benefit model
- */
-export async function listPolicies(taxBenefitModelId?: string): Promise<V2PolicyResponse[]> {
-  let url = `${API_V2_BASE_URL}/policies/`;
-  if (taxBenefitModelId) {
-    url += `?tax_benefit_model_id=${taxBenefitModelId}`;
-  }
-
-  const res = await fetch(url);
-
-  if (!res.ok) {
-    throw new Error('Failed to list policies');
-  }
-
-  return res.json();
-}
