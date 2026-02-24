@@ -17,6 +17,7 @@ import {
 import { useSelector } from 'react-redux';
 import { Box, Button, Group, Modal, Paper, Stack, Text } from '@mantine/core';
 import { PolicyAdapter } from '@/adapters';
+import { createPolicy as createPolicyApi } from '@/api/policy';
 import {
   EditAndSaveNewButton,
   EditAndUpdateButton,
@@ -25,6 +26,7 @@ import {
 import { MOCK_USER_ID } from '@/constants';
 import { colors, spacing } from '@/designTokens';
 import { useCreatePolicy } from '@/hooks/useCreatePolicy';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useUpdatePolicyAssociation, useUserPolicies } from '@/hooks/useUserPolicy';
 import { getDateRange } from '@/libs/metadataUtils';
 import { ValueSetterMode } from '@/pathways/report/components/valueSetters';
@@ -62,6 +64,7 @@ interface PolicyBrowseModalProps {
 }
 
 export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseModalProps) {
+  const countryId = useCurrentCountry();
   const userId = MOCK_USER_ID.toString();
   const { data: policies, isLoading } = useUserPolicies(userId);
   const {
@@ -83,7 +86,8 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
   // Creation/editor mode state
   const [isCreationMode, setIsCreationMode] = useState(false);
   const [editorMode, setEditorMode] = useState<EditorMode>('create');
-  const [editingPolicyId, setEditingPolicyId] = useState<string | null>(null);
+  const [editingAssociationId, setEditingAssociationId] = useState<string | null>(null);
+  const [isUpdating, setIsUpdating] = useState(false);
   const [activeTab, setActiveTab] = useState<SidebarTab>('overview');
   const [policyLabel, setPolicyLabel] = useState<string>('');
   const [policyParameters, setPolicyParameters] = useState<Parameter[]>([]);
@@ -104,8 +108,8 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
 
   const isReadOnly = editorMode === 'display';
 
-  // editingPolicyId tracked for future "Replace existing policy" API integration
-  void editingPolicyId;
+  // editingAssociationId tracks the UserPolicy association being edited
+  // for "Update existing policy" functionality
 
   // Reset state on mount
   useEffect(() => {
@@ -116,7 +120,9 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
       setDrawerPolicyId(null);
       setIsCreationMode(false);
       setEditorMode('create');
-      setEditingPolicyId(null);
+
+      setEditingAssociationId(null);
+      setIsUpdating(false);
       setActiveTab('overview');
       setPolicyLabel('');
       setPolicyParameters([]);
@@ -328,13 +334,14 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
     setParameterSearch('');
     setActiveTab('overview');
     setEditorMode('create');
-    setEditingPolicyId(null);
+    setEditingAssociationId(null);
+    setIsUpdating(false);
     setIsCreationMode(true);
   }, []);
 
   // Handle opening an existing policy in the editor (display mode)
   const handleOpenInEditor = useCallback(
-    (policy: { id: string; label: string; parameters: Parameter[] }) => {
+    (policy: { id: string; associationId?: string; label: string; parameters: Parameter[] }) => {
       setDrawerPolicyId(null);
       setPolicyLabel(policy.label);
       setOriginalLabel(policy.label);
@@ -345,7 +352,7 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
       setParameterSearch('');
       setActiveTab('overview');
       setEditorMode('display');
-      setEditingPolicyId(policy.id);
+      setEditingAssociationId(policy.associationId || null);
       setIsCreationMode(true);
     },
     []
@@ -361,7 +368,9 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
     setIntervals([]);
     setParameterSearch('');
     setEditorMode('create');
-    setEditingPolicyId(null);
+
+    setEditingAssociationId(null);
+    setIsUpdating(false);
   }, []);
 
   // Handle policy creation
@@ -395,6 +404,45 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
       handleCreatePolicy();
     }
   }, [policyLabel, originalLabel, editorMode, handleCreatePolicy]);
+
+  // Handle updating an existing policy (create new base policy, update association)
+  const handleUpdateExistingPolicy = useCallback(async () => {
+    if (!policyLabel.trim() || !editingAssociationId) {
+      return;
+    }
+    setIsUpdating(true);
+
+    const policyData: Partial<Policy> = { parameters: policyParameters };
+    const payload: PolicyCreationPayload = PolicyAdapter.toCreationPayload(policyData as Policy);
+
+    try {
+      const result = await createPolicyApi(countryId, payload);
+      const newPolicyId = result.result.policy_id;
+
+      await updatePolicyAssociation.mutateAsync({
+        userPolicyId: editingAssociationId,
+        updates: { policyId: newPolicyId, label: policyLabel },
+      });
+
+      onSelect({
+        id: newPolicyId,
+        label: policyLabel,
+        parameters: policyParameters,
+      });
+      onClose();
+    } catch (error) {
+      console.error('Failed to update policy:', error);
+      setIsUpdating(false);
+    }
+  }, [
+    policyLabel,
+    policyParameters,
+    editingAssociationId,
+    countryId,
+    updatePolicyAssociation,
+    onSelect,
+    onClose,
+  ]);
 
   // Policy for drawer preview
   const drawerPolicy = useMemo(() => {
@@ -890,7 +938,9 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
                     <EditAndUpdateButton
                       label="Update existing policy"
                       variant="light"
-                      onClick={() => console.info('[PolicyBrowseModal] Update existing policy')}
+                      onClick={handleUpdateExistingPolicy}
+                      loading={isUpdating}
+                      disabled={!policyLabel.trim() || isCreating}
                     />
                     <EditAndSaveNewButton
                       label="Save as new policy"
@@ -898,6 +948,7 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
                       variant="filled"
                       onClick={handleSaveAsNewPolicy}
                       loading={isCreating}
+                      disabled={isUpdating}
                     />
                   </>
                 )}

@@ -12,10 +12,10 @@ import {
   IconChartLine,
   IconFileDescription,
   IconHome,
+  IconPencil,
   IconPlus,
   IconScale,
   IconSparkles,
-  IconPencil,
   IconTransfer,
   IconUsers,
   IconX,
@@ -277,7 +277,11 @@ export function IngredientSectionFull({
                   </Box>
                 </Tooltip>
               )}
-              <Tooltip label={`Swap ${type === 'population' ? 'household(s)' : type}`} position="bottom" withArrow>
+              <Tooltip
+                label={`Swap ${type === 'population' ? 'household(s)' : type}`}
+                position="bottom"
+                withArrow
+              >
                 <Box
                   component="button"
                   onClick={(e: React.MouseEvent) => {
