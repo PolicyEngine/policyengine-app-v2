@@ -446,6 +446,90 @@ export default function ClaudePluginsPage() {
         </Container>
       </Box>
 
+      {/* ━━━ VIDEO ━━━ */}
+      <Box
+        py={spacing['4xl']}
+        style={{
+          backgroundColor: colors.white,
+          ...SECTION_PX,
+          borderBottom: `1px solid ${colors.border.light}`,
+        }}
+      >
+        <Container size="xl" px={0}>
+          <FadeInSection>
+            <Title
+              order={2}
+              mb="lg"
+              style={{
+                fontFamily: typography.fontFamily.primary,
+                fontWeight: typography.fontWeight.semibold,
+                fontSize: typography.fontSize['3xl'],
+                color: colors.text.primary,
+              }}
+            >
+              Demo
+            </Title>
+          </FadeInSection>
+          <FadeInSection delay={100}>
+            <Text
+              style={{
+                fontSize: typography.fontSize.base,
+                lineHeight: typography.lineHeight.relaxed,
+                fontFamily: typography.fontFamily.body,
+                color: colors.text.secondary,
+                maxWidth: 600,
+              }}
+              mb="xl"
+            >
+              Watch how the plugin examines the impact of TANF on a household in LA County — from
+              a plain-English prompt to a full household-level analysis.
+            </Text>
+            <Box style={{ maxWidth: 800 }}>
+              <Box
+                style={{
+                  position: 'relative',
+                  width: '100%',
+                  borderRadius: '12px',
+                  overflow: 'hidden',
+                  boxShadow: '0 8px 32px -4px rgba(0,0,0,0.12)',
+                }}
+              >
+                {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+                <video
+                  src="/assets/demo-clip.mp4"
+                  controls
+                  preload="metadata"
+                  style={{
+                    display: 'block',
+                    width: '100%',
+                    height: 'auto',
+                    borderRadius: '12px',
+                  }}
+                />
+              </Box>
+              <Text
+                mt="sm"
+                style={{
+                  fontSize: typography.fontSize.xs,
+                  color: colors.text.tertiary,
+                  fontFamily: typography.fontFamily.body,
+                }}
+              >
+                From our June 2025 launch video ·{' '}
+                <a
+                  href="https://www.youtube.com/watch?v=Ke_J3pOdL8k"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: colors.primary[500], textDecoration: 'none' }}
+                >
+                  Watch full video
+                </a>
+              </Text>
+            </Box>
+          </FadeInSection>
+        </Container>
+      </Box>
+
       {/* ━━━ MICROSIMULATION — light with teal accents ━━━ */}
       <Box
         py={spacing['4xl']}
@@ -457,21 +541,6 @@ export default function ClaudePluginsPage() {
       >
         <Container size="xl" px={0}>
           <FadeInSection>
-            <Text
-              component="span"
-              style={{
-                display: 'inline-block',
-                fontSize: '11px',
-                fontWeight: typography.fontWeight.semibold,
-                fontFamily: typography.fontFamily.primary,
-                letterSpacing: '1.8px',
-                textTransform: 'uppercase' as const,
-                color: colors.primary[500],
-                marginBottom: 12,
-              }}
-            >
-              Microsimulation
-            </Text>
             <Title
               order={2}
               mb="sm"
@@ -563,20 +632,6 @@ export default function ClaudePluginsPage() {
         <Container size="xl" px={0} style={{ position: 'relative' }}>
           {/* Read more */}
           <FadeInSection>
-            <Text
-              style={{
-                textAlign: 'center',
-                fontSize: '11px',
-                fontWeight: typography.fontWeight.semibold,
-                fontFamily: typography.fontFamily.primary,
-                letterSpacing: '1.8px',
-                textTransform: 'uppercase' as const,
-                color: 'rgba(255,255,255,0.35)',
-                marginBottom: 8,
-              }}
-            >
-              Further reading
-            </Text>
             <Title
               order={2}
               mb={spacing['3xl']}
@@ -591,7 +646,7 @@ export default function ClaudePluginsPage() {
               Read more
             </Title>
           </FadeInSection>
-          <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="lg" maw={760} mx="auto">
+          <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="md" maw={900} mx="auto">
             {(
               [
                 {
@@ -600,25 +655,33 @@ export default function ClaudePluginsPage() {
                   badge: 'Engineering',
                   badgeColor: 'teal',
                   title: 'How we built the plugin',
-                  desc: 'The story of turning a general-purpose AI into a policy expert — failures, ideas, and the journey to 24 skills and 21 agents.',
+                  desc: 'From first experiments to 24 skills and 21 agents.',
                 },
                 {
                   href: '/us/research/multi-agent-workflows-policy-research',
                   external: false,
                   badge: 'Research',
                   badgeColor: 'blue',
-                  title: 'Testing multi-agent AI workflows',
-                  desc: 'A multi-agent Claude Code system on distributional analysis and benefit interactions — insights that informed the plugin.',
+                  title: 'Multi-agent AI workflows',
+                  desc: 'Distributional analysis and benefit interactions.',
+                },
+                {
+                  href: '/us/encode-policy-multi-agent-ai',
+                  external: false,
+                  badge: 'Research',
+                  badgeColor: 'blue',
+                  title: 'Encode policy with AI',
+                  desc: 'Legal text to tested code with multi-agent pipelines.',
                 },
               ] as const
             ).map((post, i) => (
-              <FadeInSection key={post.title} delay={i * 100}>
+              <FadeInSection key={post.title} delay={i * 80}>
                 <Card
                   component="a"
                   href={post.href}
                   target={post.external ? '_blank' : undefined}
                   rel={post.external ? 'noopener noreferrer' : undefined}
-                  padding="xl"
+                  padding="lg"
                   radius="md"
                   style={{
                     backgroundColor: 'rgba(255,255,255,0.03)',
@@ -641,31 +704,37 @@ export default function ClaudePluginsPage() {
                 >
                   <Badge
                     size="xs"
-                    variant="light"
+                    variant="filled"
                     color={post.badgeColor}
-                    mb="sm"
-                    styles={{ root: { textTransform: 'none' } }}
+                    mb="xs"
+                    styles={{
+                      root: {
+                        textTransform: 'none',
+                        fontWeight: typography.fontWeight.medium,
+                        fontSize: '10px',
+                        letterSpacing: '0.5px',
+                      },
+                    }}
                   >
                     {post.badge}
                   </Badge>
-                  <Title
-                    order={3}
-                    mb="xs"
+                  <Text
+                    fw={typography.fontWeight.semibold}
+                    mb={4}
                     style={{
                       fontFamily: typography.fontFamily.primary,
-                      fontWeight: typography.fontWeight.semibold,
-                      fontSize: typography.fontSize.base,
+                      fontSize: typography.fontSize.sm,
                       color: colors.white,
                     }}
                   >
                     {post.title}
-                  </Title>
+                  </Text>
                   <Text
                     style={{
-                      fontSize: typography.fontSize.sm,
-                      color: 'rgba(255,255,255,0.45)',
+                      fontSize: typography.fontSize.xs,
+                      color: 'rgba(255,255,255,0.4)',
                       fontFamily: typography.fontFamily.body,
-                      lineHeight: typography.lineHeight.relaxed,
+                      lineHeight: typography.lineHeight.normal,
                     }}
                   >
                     {post.desc}
