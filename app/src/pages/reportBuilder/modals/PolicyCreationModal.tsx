@@ -11,7 +11,7 @@
 import React, { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import { IconScale, IconX } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
-import { ActionIcon, Box, Button, Group, Modal, Stack, Text, Tooltip } from '@mantine/core';
+import { ActionIcon, Box, Button, Group, Modal, Stack, Text } from '@mantine/core';
 import { PolicyAdapter } from '@/adapters';
 import {
   EditAndSaveNewButton,
@@ -99,6 +99,7 @@ export function PolicyCreationModal({
   // Parameter search state
   const [parameterSearch, setParameterSearch] = useState('');
   const [hoveredParamName, setHoveredParamName] = useState<string | null>(null);
+  const [footerHovered, setFooterHovered] = useState(false);
 
   // API hook for creating policy
   const { createPolicy, isPending: isCreating } = useCreatePolicy(policyLabel || undefined);
@@ -460,18 +461,16 @@ export function PolicyCreationModal({
                           cursor: 'pointer',
                         }}
                       >
-                        <Tooltip label={param.paramName} multiline w={300} withArrow>
-                          <Text
-                            style={{
-                              fontSize: FONT_SIZES.small,
-                              color: isHovered ? colors.primary[500] : colors.gray[700],
-                              lineHeight: 1.4,
-                              transition: 'color 0.15s ease',
-                            }}
-                          >
-                            {param.label}
-                          </Text>
-                        </Tooltip>
+                        <Text
+                          style={{
+                            fontSize: FONT_SIZES.small,
+                            color: isHovered ? colors.primary[600] : colors.gray[700],
+                            lineHeight: 1.4,
+                            transition: 'color 0.15s ease',
+                          }}
+                        >
+                          {param.label}
+                        </Text>
                       </Box>
                       <Box
                         {...rowHandlers}
@@ -695,7 +694,14 @@ export function PolicyCreationModal({
           </Button>
           <Box style={{ textAlign: 'center' }}>
             {modificationCount > 0 && (
-              <Group gap={spacing.xs} justify="center">
+              <Group
+                gap={spacing.xs}
+                justify="center"
+                style={{ cursor: 'pointer' }}
+                onClick={() => setActiveTab('overview')}
+                onMouseEnter={() => setFooterHovered(true)}
+                onMouseLeave={() => setFooterHovered(false)}
+              >
                 <Box
                   style={{
                     width: 8,
@@ -704,7 +710,13 @@ export function PolicyCreationModal({
                     background: colors.primary[500],
                   }}
                 />
-                <Text style={{ fontSize: FONT_SIZES.small, color: colors.gray[600] }}>
+                <Text
+                  style={{
+                    fontSize: FONT_SIZES.small,
+                    color: footerHovered ? colors.primary[600] : colors.gray[600],
+                    transition: 'color 0.15s ease',
+                  }}
+                >
                   {modificationCount} parameter{modificationCount !== 1 ? 's' : ''} modified
                 </Text>
               </Group>

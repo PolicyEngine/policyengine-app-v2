@@ -149,7 +149,7 @@ export default function ModifyReportPage() {
   return (
     <>
       <ReportBuilderShell
-        title={isEditing ? 'Edit report' : 'View report'}
+        title={isEditing ? 'Edit report' : 'View report setup'}
         actions={topBarActions}
         reportState={reportState}
         setReportState={setReportState as React.Dispatch<React.SetStateAction<ReportBuilderState>>}

@@ -4,6 +4,7 @@
  */
 import { lazy } from 'react';
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
+import PathwayLayout from './components/PathwayLayout';
 import StandardLayout from './components/StandardLayout';
 import NotFoundPage from './pages/NotFound.page';
 import { CountryGuard } from './routing/guards/CountryGuard';
@@ -32,7 +33,6 @@ const PolicyPathwayWrapper = lazy(() => import('./pathways/policy/PolicyPathwayW
 const PopulationPathwayWrapper = lazy(
   () => import('./pathways/population/PopulationPathwayWrapper')
 );
-const ReportPathwayWrapper = lazy(() => import('./pathways/report/ReportPathwayWrapper'));
 const SimulationPathwayWrapper = lazy(
   () => import('./pathways/simulation/SimulationPathwayWrapper')
 );
@@ -76,12 +76,8 @@ const router = createBrowserRouter(
             },
             // Pathway routes - pathways manage their own layouts
             {
-              element: <SuspenseOutlet />,
+              element: <PathwayLayout />,
               children: [
-                {
-                  path: 'reports/create',
-                  element: <ReportPathwayWrapper />,
-                },
                 {
                   path: 'simulations/create',
                   element: <SimulationPathwayWrapper />,
@@ -126,11 +122,11 @@ const router = createBrowserRouter(
                   element: <PoliciesPage />,
                 },
                 {
-                  path: 'report-builder',
+                  path: 'reports/create',
                   element: <ReportBuilderPage />,
                 },
                 {
-                  path: 'report-builder/:userReportId',
+                  path: 'reports/create/:userReportId',
                   element: <ModifyReportPage />,
                 },
                 {

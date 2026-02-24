@@ -109,7 +109,7 @@ export default function PoliciesPage() {
       header: '',
       type: 'actions',
       actions: [
-        { action: 'view', tooltip: 'View policy', icon: <IconInfoCircle size={16} /> },
+        { action: 'view', tooltip: 'View policy setup', icon: <IconInfoCircle size={16} /> },
         { action: 'edit', tooltip: 'Edit policy', icon: <IconPencil size={16} /> },
       ],
       onAction: (action: string, recordId: string) => {

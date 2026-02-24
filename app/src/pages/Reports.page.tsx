@@ -125,15 +125,15 @@ export default function ReportsPage() {
       header: '',
       type: 'actions',
       actions: [
-        { action: 'view', tooltip: 'View report', icon: <IconInfoCircle size={16} /> },
+        { action: 'view', tooltip: 'View report setup', icon: <IconInfoCircle size={16} /> },
         { action: 'edit', tooltip: 'Edit report', icon: <IconPencil size={16} /> },
       ],
       onAction: (action: string, recordId: string) => {
         if (action === 'view') {
-          navigate(`/${countryId}/report-builder/${recordId}`);
+          navigate(`/${countryId}/reports/create/${recordId}`);
         }
         if (action === 'edit') {
-          navigate(`/${countryId}/report-builder/${recordId}`, { state: { edit: true } });
+          navigate(`/${countryId}/reports/create/${recordId}`, { state: { edit: true } });
         }
       },
     },
