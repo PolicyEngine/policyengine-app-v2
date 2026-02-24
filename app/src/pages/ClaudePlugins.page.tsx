@@ -1,6 +1,8 @@
 import {
   Box,
+  Button,
   Card,
+  Container,
   Flex,
   SimpleGrid,
   Text,
@@ -11,14 +13,13 @@ import {
 } from '@mantine/core';
 import ContentSection from '@/components/shared/static/ContentSection';
 import CTASection from '@/components/shared/static/CTASection';
-import HeroSection from '@/components/shared/static/HeroSection';
 import RichTextBlock from '@/components/shared/static/RichTextBlock';
 import StaticPageLayout from '@/components/shared/static/StaticPageLayout';
 import { colors, spacing, typography } from '@/designTokens';
 
 const RADIUS = 'md';
 
-/* ---------- terminal style block ---------- */
+/* ---------- terminal block ---------- */
 
 function TerminalBlock({ lines }: { lines: { type: 'prompt' | 'output'; text: string }[] }) {
   return (
@@ -34,7 +35,6 @@ function TerminalBlock({ lines }: { lines: { type: 'prompt' | 'output'; text: st
       }}
       mt="md"
     >
-      {/* Window dots */}
       <Flex gap={6} mb={10}>
         <Box style={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: '#ff5f57' }} />
         <Box style={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: '#febc2e' }} />
@@ -44,7 +44,10 @@ function TerminalBlock({ lines }: { lines: { type: 'prompt' | 'output'; text: st
         <Box key={i} style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
           {line.type === 'prompt' ? (
             <Text component="span" style={{ color: '#7dcfff', fontFamily: 'inherit', fontSize: 'inherit' }}>
-              {'> '}<Text component="span" style={{ color: '#c0caf5', fontFamily: 'inherit', fontSize: 'inherit' }}>{line.text}</Text>
+              {'> '}
+              <Text component="span" style={{ color: '#c0caf5', fontFamily: 'inherit', fontSize: 'inherit' }}>
+                {line.text}
+              </Text>
             </Text>
           ) : (
             <Text component="span" style={{ color: '#565f89', fontFamily: 'inherit', fontSize: 'inherit' }}>
@@ -59,38 +62,10 @@ function TerminalBlock({ lines }: { lines: { type: 'prompt' | 'output'; text: st
 
 /* ---------- data ---------- */
 
-const microsimFeatures = [
-  {
-    title: 'Cost and revenue estimates',
-    description: 'Calculate the budgetary impact of any policy reform',
-  },
-  {
-    title: 'Winners and losers',
-    description: 'See who gains and who loses under a proposed change',
-  },
-  {
-    title: 'Distributional analysis',
-    description: 'Decile-level impacts, Gini coefficient changes',
-  },
-  {
-    title: 'Poverty effects',
-    description: 'Measure changes in poverty rates and depth of poverty',
-  },
-  {
-    title: 'Congressional district analysis',
-    description: 'Per-district impacts using geographic microdata',
-  },
-  {
-    title: '50-state analysis',
-    description: 'State-by-state breakdowns for any federal reform',
-  },
-];
-
 const useCases = [
   {
     title: 'Model a reform',
-    description:
-      'Describe a policy change in plain English and get a full microsimulation with budgetary and distributional impacts.',
+    description: 'Full microsimulation with budgetary and distributional impacts from plain English.',
     terminal: [
       { type: 'prompt' as const, text: 'What if we raised the standard deduction to $20,000?' },
       { type: 'output' as const, text: 'Running microsimulation on 2024 CPS...' },
@@ -99,8 +74,7 @@ const useCases = [
   },
   {
     title: 'Analyze historical policy',
-    description:
-      'Backdate policy parameters to study how programs have changed over time and their evolving impacts.',
+    description: 'Backdate parameters to study how programs have changed over time.',
     terminal: [
       { type: 'prompt' as const, text: 'How has the EITC changed since 2000?' },
       { type: 'output' as const, text: 'Fetching historical parameters...' },
@@ -109,8 +83,7 @@ const useCases = [
   },
   {
     title: 'Build interactive dashboards',
-    description:
-      'Generate Streamlit apps and Plotly visualizations that let stakeholders explore reform scenarios.',
+    description: 'Streamlit apps and Plotly charts for stakeholder exploration.',
     terminal: [
       { type: 'prompt' as const, text: 'Build a dashboard comparing flat tax rates' },
       { type: 'output' as const, text: 'Creating Streamlit app with Plotly charts...' },
@@ -119,8 +92,7 @@ const useCases = [
   },
   {
     title: 'Create household calculators',
-    description:
-      'Build tools that show how a specific household is affected by a policy change.',
+    description: 'Show how a specific household is affected by a policy change.',
     terminal: [
       { type: 'prompt' as const, text: 'Show CTC impact for a family of 4 earning $55k' },
       { type: 'output' as const, text: 'Current CTC: $4,000 | Reformed: $6,000' },
@@ -129,8 +101,7 @@ const useCases = [
   },
   {
     title: 'Write policy briefs',
-    description:
-      'Draft research-quality analysis with charts, tables, and properly cited methodology.',
+    description: 'Research-quality analysis with charts, tables, and methodology.',
     terminal: [
       { type: 'prompt' as const, text: 'Write a brief on eliminating the SALT cap' },
       { type: 'output' as const, text: 'Drafting with distributional tables...' },
@@ -139,8 +110,7 @@ const useCases = [
   },
   {
     title: 'Congressional district analysis',
-    description:
-      'Map reform impacts to every congressional district using geographic microdata.',
+    description: 'Map reform impacts to every district using geographic microdata.',
     terminal: [
       { type: 'prompt' as const, text: 'Map this reform across all 435 districts' },
       { type: 'output' as const, text: 'Loading HuggingFace geographic data...' },
@@ -149,55 +119,22 @@ const useCases = [
   },
 ];
 
-const setupSteps = [
-  {
-    step: 1,
-    title: 'Install Claude Code',
-    code: 'npm install -g @anthropic-ai/claude-code',
-  },
-  {
-    step: 2,
-    title: 'Add the plugin',
-    code: 'claude plugins add PolicyEngine/policyengine-claude',
-  },
-  {
-    step: 3,
-    title: 'Open any PolicyEngine repo',
-    description: 'Auto-detects and loads the right tools',
-  },
+const microsimFeatures = [
+  { title: 'Cost & revenue estimates', description: 'Budgetary impact of any reform' },
+  { title: 'Winners & losers', description: 'Who gains and who loses' },
+  { title: 'Distributional analysis', description: 'Decile impacts, Gini changes' },
+  { title: 'Poverty effects', description: 'Poverty rate and depth changes' },
+  { title: 'Congressional districts', description: 'Per-district geographic impacts' },
+  { title: '50-state analysis', description: 'State-by-state breakdowns' },
 ];
 
 const bundles = [
-  {
-    name: 'analysis-tools',
-    audience: 'Policy researchers',
-    recommended: true,
-  },
-  {
-    name: 'country-models',
-    audience: 'Policy modelers',
-    recommended: false,
-  },
-  {
-    name: 'data-science',
-    audience: 'Data scientists',
-    recommended: false,
-  },
-  {
-    name: 'app-development',
-    audience: 'Frontend developers',
-    recommended: false,
-  },
-  {
-    name: 'api-development',
-    audience: 'Backend developers',
-    recommended: false,
-  },
-  {
-    name: 'content',
-    audience: 'Content creators',
-    recommended: false,
-  },
+  { name: 'analysis-tools', audience: 'Policy researchers', recommended: true },
+  { name: 'country-models', audience: 'Policy modelers', recommended: false },
+  { name: 'data-science', audience: 'Data scientists', recommended: false },
+  { name: 'app-development', audience: 'Frontend developers', recommended: false },
+  { name: 'api-development', audience: 'Backend developers', recommended: false },
+  { name: 'content', audience: 'Content creators', recommended: false },
 ];
 
 const stats = [
@@ -213,77 +150,157 @@ const stats = [
 export default function ClaudePluginsPage() {
   return (
     <StaticPageLayout title="Claude Plugins">
-      {/* Section 1 — Hero */}
-      <HeroSection
-        title="AI-powered policy analysis"
-        description="Use Claude and PolicyEngine together to run microsimulations, model reforms, analyze distributional impacts, and build interactive dashboards — all from your terminal."
-      />
+      {/* ── Hero + Install (unified dark section) ── */}
+      <Box
+        py={spacing['4xl']}
+        style={{
+          backgroundColor: colors.primary[700],
+          paddingLeft: '6.125%',
+          paddingRight: '6.125%',
+        }}
+      >
+        <Container size="xl" px={0}>
+          {/* Hero content */}
+          <Box maw={720} mb={spacing['3xl']}>
+            <Title
+              style={{
+                fontSize: typography.fontSize['4xl'],
+                fontWeight: typography.fontWeight.bold,
+                fontFamily: typography.fontFamily.primary,
+                color: colors.white,
+                lineHeight: 1.15,
+              }}
+              mb="md"
+            >
+              AI-powered policy analysis
+            </Title>
+            <Text
+              style={{
+                color: 'rgba(255,255,255,0.8)',
+                fontSize: typography.fontSize.lg,
+                lineHeight: typography.lineHeight.relaxed,
+                fontFamily: typography.fontFamily.body,
+              }}
+              mb={spacing.xl}
+            >
+              Use Claude and PolicyEngine together to run microsimulations, model
+              reforms, analyze distributional impacts, and build interactive
+              dashboards — all from your terminal.
+            </Text>
 
-      {/* Section 2 — Quick start (right after hero) */}
-      <ContentSection title="Get started in 3 steps" variant="accent" centerTitle>
-        <Stack gap="lg" maw={600} mx="auto">
-          {setupSteps.map((s) => (
-            <Flex key={s.step} gap="md" align="flex-start">
-              <Box
-                style={{
-                  flexShrink: 0,
-                  width: 36,
-                  height: 36,
-                  borderRadius: '50%',
-                  backgroundColor: colors.white,
-                  color: colors.primary[600],
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontWeight: typography.fontWeight.bold,
-                  fontFamily: typography.fontFamily.primary,
-                  fontSize: typography.fontSize.lg,
+            {/* CTA buttons */}
+            <Flex gap="md" wrap="wrap">
+              <Button
+                component="a"
+                href="https://github.com/PolicyEngine/policyengine-claude"
+                target="_blank"
+                rel="noopener noreferrer"
+                size="md"
+                styles={{
+                  root: {
+                    backgroundColor: colors.white,
+                    color: colors.primary[700],
+                    fontFamily: typography.fontFamily.primary,
+                    fontWeight: typography.fontWeight.semibold,
+                    fontSize: typography.fontSize.base,
+                    border: 'none',
+                    borderRadius: spacing.md,
+                    padding: '10px 24px',
+                    height: 'auto',
+                    '&:hover': {
+                      backgroundColor: colors.gray[100],
+                      transform: 'translateY(-1px)',
+                    },
+                  },
                 }}
               >
-                {s.step}
-              </Box>
-              <Box>
-                <Text
-                  fw={typography.fontWeight.semibold}
-                  style={{
+                View on GitHub
+              </Button>
+              <Button
+                component="a"
+                href="https://policyengine.github.io/plugin-blog/"
+                target="_blank"
+                rel="noopener noreferrer"
+                size="md"
+                styles={{
+                  root: {
+                    backgroundColor: 'transparent',
                     color: colors.white,
                     fontFamily: typography.fontFamily.primary,
-                    fontSize: typography.fontSize.lg,
-                  }}
-                  mb={4}
-                >
-                  {s.title}
-                </Text>
-                {s.code ? (
-                  <Code
-                    style={{
+                    fontWeight: typography.fontWeight.semibold,
+                    fontSize: typography.fontSize.base,
+                    border: '1.5px solid rgba(255,255,255,0.4)',
+                    borderRadius: spacing.md,
+                    padding: '10px 24px',
+                    height: 'auto',
+                    '&:hover': {
                       backgroundColor: 'rgba(255,255,255,0.1)',
-                      color: colors.white,
-                      border: '1px solid rgba(255,255,255,0.2)',
-                      fontSize: typography.fontSize.sm,
-                      padding: '4px 10px',
-                    }}
-                  >
-                    {s.code}
-                  </Code>
-                ) : (
-                  <Text
-                    style={{
-                      color: 'rgba(255,255,255,0.75)',
-                      fontFamily: typography.fontFamily.body,
-                      fontSize: typography.fontSize.base,
-                    }}
-                  >
-                    {s.description}
-                  </Text>
-                )}
-              </Box>
+                      borderColor: 'rgba(255,255,255,0.7)',
+                      transform: 'translateY(-1px)',
+                    },
+                  },
+                }}
+              >
+                Read the blog post
+              </Button>
             </Flex>
-          ))}
-        </Stack>
-      </ContentSection>
+          </Box>
 
-      {/* Section 3 — What you can do (with terminal examples) */}
+          {/* Install steps — terminal style, inline */}
+          <Box
+            style={{
+              backgroundColor: '#1a1b26',
+              borderRadius: '8px',
+              padding: '20px 24px',
+              fontFamily: "'SF Mono', 'Fira Code', 'Fira Mono', Menlo, monospace",
+              fontSize: '14px',
+              lineHeight: 2,
+              maxWidth: 620,
+            }}
+          >
+            <Flex gap={6} mb={14}>
+              <Box style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#ff5f57' }} />
+              <Box style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#febc2e' }} />
+              <Box style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#28c840' }} />
+            </Flex>
+            <Box style={{ color: '#565f89' }}>
+              <Text component="span" style={{ color: '#565f89', fontFamily: 'inherit', fontSize: 'inherit' }}>
+                # 1. Install Claude Code{'\n'}
+              </Text>
+            </Box>
+            <Box>
+              <Text component="span" style={{ color: '#7dcfff', fontFamily: 'inherit', fontSize: 'inherit' }}>{'$ '}</Text>
+              <Text component="span" style={{ color: '#c0caf5', fontFamily: 'inherit', fontSize: 'inherit' }}>
+                npm install -g @anthropic-ai/claude-code
+              </Text>
+            </Box>
+            <Box mt={4} style={{ color: '#565f89' }}>
+              <Text component="span" style={{ color: '#565f89', fontFamily: 'inherit', fontSize: 'inherit' }}>
+                # 2. Add the plugin{'\n'}
+              </Text>
+            </Box>
+            <Box>
+              <Text component="span" style={{ color: '#7dcfff', fontFamily: 'inherit', fontSize: 'inherit' }}>{'$ '}</Text>
+              <Text component="span" style={{ color: '#c0caf5', fontFamily: 'inherit', fontSize: 'inherit' }}>
+                claude plugins add PolicyEngine/policyengine-claude
+              </Text>
+            </Box>
+            <Box mt={4} style={{ color: '#565f89' }}>
+              <Text component="span" style={{ color: '#565f89', fontFamily: 'inherit', fontSize: 'inherit' }}>
+                # 3. Open any PolicyEngine repo — auto-detects the right tools{'\n'}
+              </Text>
+            </Box>
+            <Box>
+              <Text component="span" style={{ color: '#7dcfff', fontFamily: 'inherit', fontSize: 'inherit' }}>{'$ '}</Text>
+              <Text component="span" style={{ color: '#c0caf5', fontFamily: 'inherit', fontSize: 'inherit' }}>
+                cd policyengine-us && claude
+              </Text>
+            </Box>
+          </Box>
+        </Container>
+      </Box>
+
+      {/* ── What you can do ── */}
       <ContentSection title="What you can do" variant="primary">
         <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="lg">
           {useCases.map((uc) => (
@@ -338,7 +355,7 @@ export default function ClaudePluginsPage() {
         </SimpleGrid>
       </ContentSection>
 
-      {/* Section 4 — Microsimulation showcase */}
+      {/* ── Microsimulation capabilities ── */}
       <ContentSection title="Population-level policy analysis" variant="secondary">
         <Flex
           direction={{ base: 'column', md: 'row' }}
@@ -365,7 +382,7 @@ export default function ClaudePluginsPage() {
               {microsimFeatures.map((f) => (
                 <Card
                   key={f.title}
-                  padding="lg"
+                  padding="md"
                   radius={RADIUS}
                   withBorder
                   style={{
@@ -377,10 +394,10 @@ export default function ClaudePluginsPage() {
                     fw={typography.fontWeight.semibold}
                     style={{
                       fontFamily: typography.fontFamily.primary,
-                      fontSize: typography.fontSize.base,
+                      fontSize: typography.fontSize.sm,
                       color: colors.text.primary,
                     }}
-                    mb={4}
+                    mb={2}
                   >
                     {f.title}
                   </Text>
@@ -401,7 +418,7 @@ export default function ClaudePluginsPage() {
         </Flex>
       </ContentSection>
 
-      {/* Section 5 — Plugin bundles */}
+      {/* ── Plugin bundles ── */}
       <ContentSection title="Choose your plugin bundle" variant="primary">
         <Text
           mb="xl"
@@ -459,7 +476,7 @@ export default function ClaudePluginsPage() {
         </SimpleGrid>
       </ContentSection>
 
-      {/* Section 6 — By the numbers */}
+      {/* ── By the numbers ── */}
       <ContentSection variant="secondary">
         <SimpleGrid cols={{ base: 2, sm: 3, md: 5 }} spacing={0}>
           {stats.map((s) => (
@@ -500,7 +517,7 @@ export default function ClaudePluginsPage() {
         </SimpleGrid>
       </ContentSection>
 
-      {/* Section 7 — Story link + CTA */}
+      {/* ── Story CTA ── */}
       <CTASection
         title="The full story"
         variant="accent"
