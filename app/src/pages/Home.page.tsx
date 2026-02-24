@@ -11,7 +11,6 @@ export default function HomePage() {
   return (
     <>
       <DowningStreetBanner />
-      <FeaturedResearchBanner />
       <HeroSection />
       <Box
         style={{
@@ -19,6 +18,7 @@ export default function HomePage() {
         }}
       >
         <OrgLogos />
+        <FeaturedResearchBanner />
         <HomeBlogPreview />
         <HomeTrackerPreview />
       </Box>

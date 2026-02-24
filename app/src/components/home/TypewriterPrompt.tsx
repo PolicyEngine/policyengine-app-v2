@@ -166,7 +166,7 @@ export default function TypewriterPrompt({
           display: 'inline-block',
           background: `${colors.white}e6`,
           backdropFilter: 'blur(8px)',
-          borderRadius: spacing.radius.lg,
+          borderRadius: spacing.radius.container,
           padding: `${spacing['2xl']} ${spacing['3xl']}`,
           boxShadow: `0 1px 3px ${colors.shadow.light}`,
           border: `1px solid ${colors.border.light}`,
