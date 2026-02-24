@@ -1,15 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import {
-  Box,
-  Button,
-  Card,
-  Container,
-  Flex,
-  SimpleGrid,
-  Text,
-  Title,
-  Badge,
-} from '@mantine/core';
+import { Badge, Box, Button, Card, Container, Flex, SimpleGrid, Text, Title } from '@mantine/core';
 import StaticPageLayout from '@/components/shared/static/StaticPageLayout';
 import { colors, spacing, typography } from '@/designTokens';
 
@@ -20,10 +10,17 @@ function useInView(threshold = 0.15) {
   const [visible, setVisible] = useState(false);
   useEffect(() => {
     const el = ref.current;
-    if (!el) { return; }
+    if (!el) {
+      return;
+    }
     const obs = new IntersectionObserver(
-      ([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect(); } },
-      { threshold },
+      ([e]) => {
+        if (e.isIntersecting) {
+          setVisible(true);
+          obs.disconnect();
+        }
+      },
+      { threshold }
     );
     obs.observe(el);
     return () => obs.disconnect();
@@ -46,30 +43,48 @@ function WindowDots({ size = 10 }: { size?: number }) {
   );
 }
 
-function TerminalLine({ type, text }: { type: 'comment' | 'command' | 'prompt' | 'output' | 'success'; text: string }) {
+function TerminalLine({
+  type,
+  text,
+}: {
+  type: 'comment' | 'command' | 'prompt' | 'output' | 'success';
+  text: string;
+}) {
   const styles: Record<string, { prefix: string; prefixColor: string; textColor: string }> = {
     comment: { prefix: '', prefixColor: '', textColor: '#545d6c' },
     command: { prefix: '$ ', prefixColor: '#79c0ff', textColor: '#e6edf3' },
-    prompt:  { prefix: '> ', prefixColor: '#56d4b1', textColor: '#e6edf3' },
-    output:  { prefix: '  ', prefixColor: '', textColor: '#7d8590' },
+    prompt: { prefix: '> ', prefixColor: '#56d4b1', textColor: '#e6edf3' },
+    output: { prefix: '  ', prefixColor: '', textColor: '#7d8590' },
     success: { prefix: '  ', prefixColor: '', textColor: '#56d4b1' },
   };
   const s = styles[type];
   return (
     <Box style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
       {s.prefix && (
-        <Text component="span" style={{ color: s.prefixColor, fontFamily: 'inherit', fontSize: 'inherit' }}>
+        <Text
+          component="span"
+          style={{ color: s.prefixColor, fontFamily: 'inherit', fontSize: 'inherit' }}
+        >
           {s.prefix}
         </Text>
       )}
-      <Text component="span" style={{ color: s.textColor, fontFamily: 'inherit', fontSize: 'inherit' }}>
+      <Text
+        component="span"
+        style={{ color: s.textColor, fontFamily: 'inherit', fontSize: 'inherit' }}
+      >
         {text}
       </Text>
     </Box>
   );
 }
 
-function TerminalBlock({ lines, compact }: { lines: { type: 'comment' | 'command' | 'prompt' | 'output' | 'success'; text: string }[]; compact?: boolean }) {
+function TerminalBlock({
+  lines,
+  compact,
+}: {
+  lines: { type: 'comment' | 'command' | 'prompt' | 'output' | 'success'; text: string }[];
+  compact?: boolean;
+}) {
   return (
     <Box
       style={{
@@ -85,14 +100,20 @@ function TerminalBlock({ lines, compact }: { lines: { type: 'comment' | 'command
       <Box mb={compact ? 8 : 14}>
         <WindowDots size={compact ? 8 : 10} />
       </Box>
-      {lines.map((l, i) => <TerminalLine key={i} {...l} />)}
+      {lines.map((l, i) => (
+        <TerminalLine key={i} {...l} />
+      ))}
     </Box>
   );
 }
 
 /* ─── animated section wrapper ─── */
 
-function FadeInSection({ children, delay = 0, ...boxProps }: { children: React.ReactNode; delay?: number } & Record<string, unknown>) {
+function FadeInSection({
+  children,
+  delay = 0,
+  ...boxProps
+}: { children: React.ReactNode; delay?: number } & Record<string, unknown>) {
   const { ref, visible } = useInView(0.08);
   return (
     <Box
@@ -257,8 +278,8 @@ export default function ClaudePluginsPage() {
                   }}
                   mb={28}
                 >
-                  Run microsimulations, model reforms, analyze distributional
-                  impacts, and build dashboards — all from your terminal.
+                  Run microsimulations, model reforms, analyze distributional impacts, and build
+                  dashboards — all from your terminal.
                 </Text>
               </FadeInSection>
 
@@ -317,18 +338,27 @@ export default function ClaudePluginsPage() {
                     left: 0,
                     right: 0,
                     height: '1px',
-                    background: 'linear-gradient(90deg, transparent, rgba(86,212,177,0.3), transparent)',
+                    background:
+                      'linear-gradient(90deg, transparent, rgba(86,212,177,0.3), transparent)',
                   }}
                 />
-                <Box mb={14}><WindowDots size={11} /></Box>
+                <Box mb={14}>
+                  <WindowDots size={11} />
+                </Box>
                 <TerminalLine type="comment" text="# 1. Install Claude Code" />
                 <TerminalLine type="command" text="npm install -g @anthropic-ai/claude-code" />
                 <Box mt={6} />
                 <TerminalLine type="comment" text="# 2. Add the plugin" />
-                <TerminalLine type="command" text="claude plugins add PolicyEngine/policyengine-claude" />
+                <TerminalLine
+                  type="command"
+                  text="claude plugins add PolicyEngine/policyengine-claude"
+                />
                 <Box mt={6} />
                 <TerminalLine type="comment" text="# 3. Analyze" />
-                <TerminalLine type="prompt" text="What is the budgetary impact of doubling the standard deduction?" />
+                <TerminalLine
+                  type="prompt"
+                  text="What is the budgetary impact of doubling the standard deduction?"
+                />
               </Box>
             </FadeInSection>
           </Flex>
@@ -464,10 +494,9 @@ export default function ClaudePluginsPage() {
               }}
               mb={spacing['3xl']}
             >
-              The analysis-tools plugin turns Claude into a microsimulation
-              analyst. Point it at any tax or benefit reform and it runs
-              full population analysis using PolicyEngine&apos;s weighted survey
-              data.
+              The analysis-tools plugin turns Claude into a microsimulation analyst. Point it at any
+              tax or benefit reform and it runs full population analysis using PolicyEngine&apos;s
+              weighted survey data.
             </Text>
           </FadeInSection>
 
@@ -563,24 +592,26 @@ export default function ClaudePluginsPage() {
             </Title>
           </FadeInSection>
           <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="lg" maw={760} mx="auto">
-            {([
-              {
-                href: 'https://policyengine.github.io/plugin-blog/',
-                external: true,
-                badge: 'Engineering',
-                badgeColor: 'teal',
-                title: 'How we built the plugin',
-                desc: 'The story of turning a general-purpose AI into a policy expert — failures, ideas, and the journey to 24 skills and 21 agents.',
-              },
-              {
-                href: '/us/research/multi-agent-workflows-policy-research',
-                external: false,
-                badge: 'Research',
-                badgeColor: 'blue',
-                title: 'Testing multi-agent AI workflows',
-                desc: 'A multi-agent Claude Code system on distributional analysis and benefit interactions — insights that informed the plugin.',
-              },
-            ] as const).map((post, i) => (
+            {(
+              [
+                {
+                  href: 'https://policyengine.github.io/plugin-blog/',
+                  external: true,
+                  badge: 'Engineering',
+                  badgeColor: 'teal',
+                  title: 'How we built the plugin',
+                  desc: 'The story of turning a general-purpose AI into a policy expert — failures, ideas, and the journey to 24 skills and 21 agents.',
+                },
+                {
+                  href: '/us/research/multi-agent-workflows-policy-research',
+                  external: false,
+                  badge: 'Research',
+                  badgeColor: 'blue',
+                  title: 'Testing multi-agent AI workflows',
+                  desc: 'A multi-agent Claude Code system on distributional analysis and benefit interactions — insights that informed the plugin.',
+                },
+              ] as const
+            ).map((post, i) => (
               <FadeInSection key={post.title} delay={i * 100}>
                 <Card
                   component="a"
