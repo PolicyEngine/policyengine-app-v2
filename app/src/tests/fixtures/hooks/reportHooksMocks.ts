@@ -8,7 +8,7 @@ import { Simulation } from '@/types/ingredients/Simulation';
 import { UserReport } from '@/types/ingredients/UserReport';
 
 // Re-export from adapters/reportMocks
-export { mockReport, mockReportCreationPayload } from '@/tests/fixtures/adapters/reportMocks';
+export { mockReport } from '@/tests/fixtures/adapters/reportMocks';
 
 // Re-export from api/reportAssociationMocks
 export { TEST_USER_ID } from '@/tests/fixtures/api/reportAssociationMocks';

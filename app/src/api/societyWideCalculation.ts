@@ -1,7 +1,7 @@
-import { BASE_URL } from '@/constants';
 import { ReportOutputSocietyWideUK } from '@/types/metadata/ReportOutputSocietyWideUK';
 import { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
 
+/** Union type for v1 economy report output. Used by report output pages. */
 export type SocietyWideReportOutput = ReportOutputSocietyWideUS | ReportOutputSocietyWideUK;
 
 /**
@@ -20,65 +20,4 @@ export function getDatasetForRegion(countryId: string, region: string): string |
   }
   // Return undefined for all other cases (UK, US states, etc.)
   return undefined;
-}
-
-// NOTE: Need to add other params at later point
-export interface SocietyWideCalculationParams {
-  region: string; // Must include a region; "us" for US nationwide, two-letter state code for US states
-  time_period: string; // Four-digit year
-  dataset?: string; // Optional dataset parameter; defaults to API's default dataset
-  include_district_breakdowns?: boolean; // Enable congressional district breakdowns (US nationwide only)
-}
-
-export interface SocietyWideCalculationResponse {
-  status: 'computing' | 'ok' | 'error';
-  queue_position?: number;
-  average_time?: number;
-  result: SocietyWideReportOutput | null;
-  error?: string;
-}
-
-export async function fetchSocietyWideCalculation(
-  countryId: string,
-  reformPolicyId: string,
-  baselinePolicyId: string,
-  params: SocietyWideCalculationParams
-): Promise<SocietyWideCalculationResponse> {
-  // Automatically set dataset for US nationwide if not explicitly provided
-  const dataset = params.dataset ?? getDatasetForRegion(countryId, params.region);
-  const paramsWithDataset = dataset ? { ...params, dataset } : params;
-
-  const queryParams = new URLSearchParams();
-
-  Object.entries(paramsWithDataset).forEach(([key, value]) => {
-    if (value !== undefined) {
-      queryParams.append(key, String(value));
-    }
-  });
-
-  // Enable congressional district breakdowns for US nationwide simulations
-  if (countryId === 'us' && params.region === 'us') {
-    queryParams.append('include_district_breakdowns', 'true');
-  }
-
-  const queryString = queryParams.toString();
-  const url = `${BASE_URL}/${countryId}/economy/${reformPolicyId}/over/${baselinePolicyId}${queryString ? `?${queryString}` : ''}`;
-
-  const response = await fetch(url, {
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
-
-  if (!response.ok) {
-    console.error(
-      '[fetchSocietyWideCalculation] Failed with status:',
-      response.status,
-      response.statusText
-    );
-    throw new Error(`Society-wide calculation failed: ${response.statusText}`);
-  }
-
-  const data = await response.json();
-  return data;
 }

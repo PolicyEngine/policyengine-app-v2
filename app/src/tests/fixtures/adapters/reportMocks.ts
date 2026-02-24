@@ -1,8 +1,6 @@
 import { Report } from '@/types/ingredients/Report';
 import { ReportMetadata } from '@/types/metadata/reportMetadata';
 import { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
-import { ReportCreationPayload } from '@/types/payloads/ReportCreationPayload';
-import { ReportSetOutputPayload } from '@/types/payloads/ReportSetOutputPayload';
 
 export const mockReportOutput: ReportOutputSocietyWideUS = {
   budget: {
@@ -159,20 +157,3 @@ export const mockReportMetadataSingleSimulation: ReportMetadata = {
   output: null,
 };
 
-export const mockReportCreationPayload: ReportCreationPayload = {
-  simulation_1_id: 456,
-  simulation_2_id: 789,
-  year: '2024',
-};
-
-export const mockCompletedReportPayload: ReportSetOutputPayload = {
-  id: 123,
-  status: 'complete',
-  output: JSON.stringify(mockReportOutput),
-};
-
-export const mockErrorReportPayload: ReportSetOutputPayload = {
-  id: 2,
-  status: 'error',
-  output: null,
-};

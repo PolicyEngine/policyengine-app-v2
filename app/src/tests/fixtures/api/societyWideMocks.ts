@@ -1,5 +1,4 @@
 import { vi } from 'vitest';
-import { SocietyWideCalculationResponse } from '@/api/societyWideCalculation';
 import { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
 
 // Test IDs and constants
@@ -1188,29 +1187,3 @@ export const mockUSReportOutput: ReportOutputSocietyWideUS = {
   },
 };
 
-// Computing response (API returns 'computing' for society-wide calculations)
-export const mockPendingResponse: SocietyWideCalculationResponse = {
-  status: 'computing',
-  queue_position: 5,
-  average_time: 120,
-  result: null,
-};
-
-// Completed response
-export const mockCompletedResponse: SocietyWideCalculationResponse = {
-  status: 'ok',
-  result: mockUSReportOutput,
-};
-
-// Error response
-export const mockErrorCalculationResponse: SocietyWideCalculationResponse = {
-  status: 'error',
-  result: null,
-  error: 'Calculation failed due to invalid parameters',
-};
-
-// Network error
-export const mockNetworkError = new Error(ERROR_MESSAGES.NETWORK_ERROR);
-
-// Fetch error
-export const mockFetchError = new Error(ERROR_MESSAGES.FAILED_TO_FETCH);
