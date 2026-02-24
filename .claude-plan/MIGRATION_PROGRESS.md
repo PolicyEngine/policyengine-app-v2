@@ -1,6 +1,6 @@
 # Simulation & Report V2 Migration Progress
 
-## Current: Phase 5 — Task 6
+## Current: Phase 5 — Task 7
 
 ## Branch Strategy
 
@@ -103,7 +103,7 @@ _Full spec: `.claude-plan/LAZY_METADATA_SPEC.md`_
 - [x] 3. Rewrite `SocietyWideCalcStrategy` for v2 (2026-02-23)
 - [x] 4. Update `HouseholdCalcStrategy` for v2 analysis endpoint (2026-02-24)
 - [x] 5. Update `ResultPersister` for v2 (2026-02-24)
-- [ ] 6. Wire up association stores to v2 API
+- [x] 6. Wire up association stores to v2 API (2026-02-23)
 - [ ] 7. Update hooks
 - [ ] 8. Deprecate v1 API files
 
