@@ -1,8 +1,6 @@
 import { QueryClient } from '@tanstack/react-query';
-import {
-  mockHouseholdResult,
-  mockSocietyWideResult,
-} from '@/tests/fixtures/types/calculationFixtures';
+import type { EconomicImpactResponse } from '@/api/v2/economyAnalysis';
+import type { HouseholdImpactResponse } from '@/api/v2/householdAnalysis';
 import type { CalcStatus } from '@/types/calculation';
 
 /**
@@ -30,6 +28,14 @@ export const TEST_YEARS = {
 } as const;
 
 /**
+ * Test v2 report IDs (UUIDs from analysis API)
+ */
+export const TEST_V2_REPORT_IDS = {
+  ECONOMY: 'v2-economy-report-abc',
+  HOUSEHOLD: 'v2-household-report-def',
+} as const;
+
+/**
  * Create a test QueryClient
  */
 export const createTestQueryClient = () =>
@@ -40,11 +46,47 @@ export const createTestQueryClient = () =>
   });
 
 /**
- * Mock complete CalcStatus for society-wide report
+ * Mock v2 economy analysis result (EconomicImpactResponse)
  */
-export const mockCompleteSocietyWideStatus = (overrides?: Partial<CalcStatus>): CalcStatus => ({
+export const mockEconomyAnalysisResult = (
+  overrides?: Partial<EconomicImpactResponse>
+): EconomicImpactResponse =>
+  ({
+    report_id: TEST_V2_REPORT_IDS.ECONOMY,
+    report_type: 'economy_comparison',
+    status: 'completed',
+    baseline_simulation: { id: 'sim-baseline', status: 'completed', error_message: null },
+    reform_simulation: { id: 'sim-reform', status: 'completed', error_message: null },
+    budget: { budgetary_impact: -25000 },
+    decile: { average: {}, relative: {} },
+    error_message: null,
+    ...overrides,
+  }) as EconomicImpactResponse;
+
+/**
+ * Mock v2 household analysis result (HouseholdImpactResponse)
+ */
+export const mockHouseholdAnalysisResult = (
+  overrides?: Partial<HouseholdImpactResponse>
+): HouseholdImpactResponse => ({
+  report_id: TEST_V2_REPORT_IDS.HOUSEHOLD,
+  report_type: 'household',
+  status: 'completed',
+  baseline_simulation: { id: 'sim-baseline', status: 'completed', error_message: null },
+  reform_simulation: { id: 'sim-reform', status: 'completed', error_message: null },
+  baseline_result: { person: [{ net_income: 42000 }] },
+  reform_result: { person: [{ net_income: 44000 }] },
+  impact: { person: [{ net_income: 2000 }] },
+  error_message: null,
+  ...overrides,
+});
+
+/**
+ * Mock complete CalcStatus for v2 economy analysis
+ */
+export const mockCompleteEconomyStatus = (overrides?: Partial<CalcStatus>): CalcStatus => ({
   status: 'complete',
-  result: mockSocietyWideResult(),
+  result: mockEconomyAnalysisResult(),
   metadata: {
     calcId: TEST_CALC_IDS.REPORT_123,
     targetType: 'report',
@@ -55,11 +97,11 @@ export const mockCompleteSocietyWideStatus = (overrides?: Partial<CalcStatus>): 
 });
 
 /**
- * Mock complete CalcStatus for household simulation
+ * Mock complete CalcStatus for v2 household analysis
  */
 export const mockCompleteHouseholdStatus = (overrides?: Partial<CalcStatus>): CalcStatus => ({
   status: 'complete',
-  result: mockHouseholdResult(),
+  result: mockHouseholdAnalysisResult(),
   metadata: {
     calcId: TEST_CALC_IDS.SIM_456,
     targetType: 'simulation',
@@ -67,36 +109,4 @@ export const mockCompleteHouseholdStatus = (overrides?: Partial<CalcStatus>): Ca
     startedAt: Date.now(),
   },
   ...overrides,
-});
-
-/**
- * Mock complete CalcStatus for household simulation with reportId
- */
-export const mockCompleteHouseholdStatusWithReport = (
-  simId: string,
-  overrides?: Partial<CalcStatus>
-): CalcStatus => ({
-  status: 'complete',
-  result: mockHouseholdResult(),
-  metadata: {
-    calcId: simId,
-    targetType: 'simulation',
-    calcType: 'household',
-    reportId: TEST_CALC_IDS.REPORT_123,
-    startedAt: Date.now(),
-  },
-  ...overrides,
-});
-
-/**
- * Mock pending CalcStatus
- */
-export const mockPendingStatus = (simId: string): CalcStatus => ({
-  status: 'pending',
-  metadata: {
-    calcId: simId,
-    targetType: 'simulation',
-    calcType: 'household',
-    startedAt: Date.now(),
-  },
 });
