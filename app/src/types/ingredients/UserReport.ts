@@ -8,6 +8,9 @@ export interface UserReport {
   userId: string;
   reportId: string;
   countryId: (typeof countryIds)[number];
+  outputType?: 'household' | 'economy';
+  simulationIds?: string[];
+  year?: string;
   label?: string;
   lastRunAt?: string;
   createdAt?: string;
