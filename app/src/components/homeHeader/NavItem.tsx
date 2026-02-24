@@ -1,5 +1,5 @@
 import { IconChevronDown } from '@tabler/icons-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -51,6 +51,7 @@ function isInternalHref(href: string | undefined): href is string {
  */
 export default function NavItem({ setup }: NavItemProps) {
   const { label, onClick, href, hasDropdown, dropdownItems } = setup;
+  const navigate = useNavigate();
 
   if (hasDropdown && dropdownItems) {
     return (
@@ -76,24 +77,26 @@ export default function NavItem({ setup }: NavItemProps) {
             </div>
           </button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="tw:w-[200px] tw:z-[1001]">
-          {dropdownItems.map((item) =>
-            item.href ? (
-              isInternalHref(item.href) ? (
-                <DropdownMenuItem key={item.label} asChild>
-                  <Link to={item.href}>{item.label}</Link>
-                </DropdownMenuItem>
-              ) : (
-                <DropdownMenuItem key={item.label} asChild>
-                  <a href={item.href}>{item.label}</a>
-                </DropdownMenuItem>
-              )
-            ) : (
-              <DropdownMenuItem key={item.label} onClick={item.onClick}>
-                {item.label}
-              </DropdownMenuItem>
-            )
-          )}
+        <DropdownMenuContent className="tw:w-[200px] tw:z-[1001] tw:bg-white">
+          {dropdownItems.map((item) => (
+            <DropdownMenuItem
+              key={item.label}
+              className="tw:cursor-pointer"
+              onSelect={() => {
+                if (item.href) {
+                  if (isInternalHref(item.href)) {
+                    navigate(item.href);
+                  } else {
+                    window.location.href = item.href;
+                  }
+                } else if (item.onClick) {
+                  item.onClick();
+                }
+              }}
+            >
+              {item.label}
+            </DropdownMenuItem>
+          ))}
         </DropdownMenuContent>
       </DropdownMenu>
     );

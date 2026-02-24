@@ -44,12 +44,12 @@ export default function Footer() {
   const countryId = useCurrentCountry();
   const CONTACT_LINKS = getContactLinks(countryId);
   return (
-    <footer className="tw:w-full tw:bg-primary-900 tw:py-4xl tw:px-4xl">
+    <footer className="tw:w-full tw:bg-primary-900 tw:py-4xl tw:px-3xl tw:md:px-4xl">
       <Container size="xl">
         <img src={PolicyEngineLogo} alt="PolicyEngine" className="tw:h-[52px] tw:w-auto" />
-        <div className="tw:grid tw:grid-cols-1 tw:md:grid-cols-2 tw:gap-4xl tw:mt-3xl">
+        <div className="tw:grid tw:grid-cols-1 tw:md:grid-cols-2 tw:gap-3xl tw:md:gap-4xl tw:mt-2xl">
           <Stack gap="xl" align="start">
-            <Stack gap="xs">
+            <Stack gap="sm">
               {[
                 { href: CONTACT_LINKS.about, text: 'About us' },
                 { href: CONTACT_LINKS.donate, text: 'Donate' },
@@ -59,7 +59,7 @@ export default function Footer() {
                 <a
                   key={href}
                   href={href}
-                  className="tw:text-white tw:text-base tw:no-underline tw:transition-colors tw:duration-200 tw:hover:text-primary-200"
+                  className="tw:text-white/90 tw:text-sm tw:no-underline tw:transition-colors tw:duration-200 tw:hover:text-white"
                 >
                   {text}
                 </a>
@@ -67,7 +67,7 @@ export default function Footer() {
             </Stack>
 
             <Stack gap="md">
-              <div className="tw:flex tw:flex-row tw:items-center tw:gap-md">
+              <div className="tw:flex tw:flex-row tw:items-center tw:gap-3">
                 {SOCIAL_LINKS.map(({ icon: Icon, href, label }) => (
                   <a
                     key={href}
@@ -75,14 +75,14 @@ export default function Footer() {
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label={label}
-                    className="tw:text-white tw:transition-all tw:duration-200 tw:hover:text-primary-200 tw:hover:scale-110"
+                    className="tw:text-white/80 tw:transition-all tw:duration-200 tw:hover:text-white tw:hover:scale-110"
                     onClick={href.startsWith('mailto:') ? trackContactClicked : undefined}
                   >
-                    <Icon size={24} />
+                    <Icon size={22} />
                   </a>
                 ))}
               </div>
-              <p className="tw:text-xs tw:text-white">
+              <p className="tw:text-xs tw:text-white/60 tw:m-0">
                 &copy; {new Date().getFullYear()} PolicyEngine. All rights reserved.
               </p>
             </Stack>
