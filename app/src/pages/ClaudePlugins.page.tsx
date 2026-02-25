@@ -186,7 +186,7 @@ const useCases = [
     description: 'Map reform impacts to every district.',
     terminal: [
       { type: 'prompt' as const, text: 'Map this reform across all 435 districts' },
-      { type: 'output' as const, text: 'Loading HuggingFace geographic data...' },
+      { type: 'output' as const, text: 'Loading district-level microdata...' },
       { type: 'success' as const, text: '✓ 435 districts analyzed → choropleth ready' },
     ],
   },
