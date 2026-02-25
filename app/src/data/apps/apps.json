@@ -1,6 +1,19 @@
 [
   {
     "type": "iframe",
+    "slug": "student-loan-visualisation",
+    "title": "The distributional impact of student loan reform",
+    "description": "PolicyEngine models how cancelling the threshold freeze and capping interest at RPI affect graduate repayments across the income distribution",
+    "source": "https://student-loan-visualisation.vercel.app/",
+    "tags": ["uk", "featured", "policy"],
+    "countryId": "uk",
+    "displayWithResearch": true,
+    "image": "student-loan-visualisation.png",
+    "date": "2026-02-25 12:00:00",
+    "authors": ["vahid-ahmadi"]
+  },
+  {
+    "type": "iframe",
     "slug": "marriage",
     "title": "Marriage incentive calculator",
     "description": "Interactive calculator showing how marriage affects taxes, benefits, and net income for US households across all states",
