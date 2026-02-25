@@ -8,7 +8,6 @@ import {
   IconMail,
   IconPlus,
   IconScale,
-  IconSettings2,
   IconUsers,
 } from '@tabler/icons-react';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -73,12 +72,6 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
       icon: IconMail,
       path: 'mailto:hello@policyengine.org',
       external: true,
-    },
-    {
-      label: 'Account settings',
-      icon: IconSettings2,
-      path: `/${countryId}/account`,
-      disabled: true,
     },
   ];
 
