@@ -8,7 +8,6 @@ import {
   IconMail,
   IconPlus,
   IconScale,
-  IconSettings2,
   IconUsers,
 } from '@tabler/icons-react';
 import { useLocation, useNavigate } from 'react-router-dom';

@@ -335,7 +335,7 @@ export function IngredientSectionFull({
         <Box
           onClick={handleEmptyClick}
           style={{
-            padding: `${spacing.xl} ${spacing.lg}`,
+            padding: `${spacing.md} ${spacing.lg}`,
             borderRadius: spacing.radius.md,
             border: `2px dashed ${colorConfig.border}`,
             background: colorConfig.bg,
