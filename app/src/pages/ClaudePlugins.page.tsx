@@ -653,7 +653,7 @@ export default function ClaudePluginsPage() {
             {(
               [
                 {
-                  href: 'https://policyengine.org/plugin-blog/',
+                  href: 'https://policyengine.github.io/plugin-blog/',
                   external: true,
                   title: 'How we built the plugin',
                   desc: 'From first experiments to 24 skills and 21 agents.',
