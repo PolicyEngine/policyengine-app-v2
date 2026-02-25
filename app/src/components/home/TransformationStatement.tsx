@@ -1,5 +1,4 @@
-import { Center, Container, Text } from '@mantine/core';
-import { spacing, typography } from '@/designTokens';
+import { Container } from '@/components/ui';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 
 export default function TransformationStatement() {
@@ -11,18 +10,8 @@ export default function TransformationStatement() {
       : 'Free, open-source, and trusted by NBER, the Federal Reserve, and benefit access tools nationwide.';
 
   return (
-    <Container size="xl" py={spacing['4xl']} mt={spacing['2xl']}>
-      <Center>
-        <Text
-          size="xl"
-          fw={typography.fontWeight.semibold}
-          c="#132F46"
-          ta="center"
-          style={{ fontFamily: typography.fontFamily.primary }}
-        >
-          {statement}
-        </Text>
-      </Center>
+    <Container size="xl" className="tw:py-4xl tw:mt-2xl">
+      <p className="tw:text-xl tw:font-semibold tw:text-center tw:text-[#132F46]">{statement}</p>
     </Container>
   );
 }

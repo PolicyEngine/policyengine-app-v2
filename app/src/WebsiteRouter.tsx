@@ -19,6 +19,7 @@ import HomePage from './pages/Home.page';
 import ModelPage from './pages/Model.page';
 import PrivacyPage from './pages/Privacy.page';
 import ResearchPage from './pages/Research.page';
+import SlidesPage from './pages/Slides.page';
 import SupportersPage from './pages/Supporters.page';
 import TeamPage from './pages/Team.page';
 import TermsPage from './pages/Terms.page';
@@ -38,6 +39,21 @@ const router = createBrowserRouter(
     {
       path: '/',
       element: <RedirectToCountry />,
+    },
+    // Top-level slides route (no country slug)
+    {
+      path: '/slides',
+      element: <StaticLayout />,
+      children: [
+        {
+          index: true,
+          element: <SlidesPage />,
+        },
+        {
+          path: '*',
+          element: <SlidesPage />,
+        },
+      ],
     },
     {
       path: '/:countryId',

@@ -9,7 +9,7 @@
 
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Button, Container, Divider, Flex, Group, Stack, Text } from '@mantine/core';
+import { Button, Separator } from '@/components/ui';
 import { CURRENT_YEAR } from '@/constants';
 import { getDateRange } from '@/libs/metadataUtils';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
@@ -77,25 +77,20 @@ export default function PolicyParameterSelectorValueSetter({
   };
 
   return (
-    <Container bg="gray.0" bd="1px solid gray.2" m="0" p="lg">
-      <Stack>
-        <Text fw={700}>Current value</Text>
-        <Divider style={{ padding: 0 }} />
-        <Flex
-          align={{ base: 'stretch', sm: 'flex-end' }}
-          direction={{ base: 'column', sm: 'row' }}
-          gap="sm"
-          w="100%"
-        >
+    <div className="tw:bg-gray-50 tw:border tw:border-gray-200 tw:m-0 tw:p-lg">
+      <div className="tw:flex tw:flex-col tw:gap-sm">
+        <p className="tw:font-bold">Current value</p>
+        <Separator />
+        <div className="tw:flex tw:flex-col tw:sm:flex-row tw:items-stretch tw:sm:items-end tw:gap-sm tw:w-full">
           <ValueSetterToRender {...valueSetterProps} />
-          <Group gap="sm" align="flex-end">
+          <div className="tw:flex tw:items-end tw:gap-sm">
             <ModeSelectorButton setMode={handleModeChange} />
-            <Button onClick={handleSubmit} style={{ flex: 1 }}>
+            <Button onClick={handleSubmit} className="tw:flex-1">
               Add parameter
             </Button>
-          </Group>
-        </Flex>
-      </Stack>
-    </Container>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

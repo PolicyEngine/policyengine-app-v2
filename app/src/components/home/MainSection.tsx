@@ -1,44 +1,17 @@
-import { Container, Stack, Text, Title } from '@mantine/core';
-import { colors, spacing, typography } from '@/designTokens';
+import { Container } from '@/components/ui';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 
 export default function MainSection() {
   const countryId = useCurrentCountry();
 
   return (
-    <Container size="xl" py={spacing['5xl']}>
-      <Stack
-        align="center"
-        gap={spacing['3xl']}
-        style={{
-          margin: '0 auto',
-          maxWidth: spacing.layout.container,
-        }}
-      >
-        <Title
-          size={48}
-          fw={typography.fontWeight.bold}
-          ta="center"
-          c={colors.primary[800]}
-          style={{
-            lineHeight: typography.lineHeight.tight,
-            fontFamily: typography.fontFamily.primary,
-            fontSize: 'clamp(28px, 5vw, 48px)',
-          }}
-        >
+    <Container size="xl" className="tw:py-5xl">
+      <div className="tw:flex tw:flex-col tw:items-center tw:mx-auto tw:max-w-[976px] tw:gap-3xl">
+        <h1 className="tw:text-[clamp(28px,5vw,48px)] tw:font-bold tw:text-center tw:text-primary-800 tw:leading-tight">
           Start simulating
-        </Title>
+        </h1>
 
-        <Text
-          size={typography.fontSize['2xl']}
-          c="#132F46"
-          ta="center"
-          fw={typography.fontWeight.normal}
-          style={{
-            lineHeight: typography.lineHeight.normal,
-            fontFamily: typography.fontFamily.primary,
-          }}
-        >
+        <p className="tw:text-2xl tw:text-center tw:leading-normal tw:text-[#132F46]">
           Free, open-source tax and benefit analysis.
           <br />
           {countryId === 'uk'
@@ -46,8 +19,8 @@ export default function MainSection() {
             : 'Model policy reforms across all 50 states.'}
           <br />
           Power benefit access tools with accurate rules.
-        </Text>
-      </Stack>
+        </p>
+      </div>
     </Container>
   );
 }

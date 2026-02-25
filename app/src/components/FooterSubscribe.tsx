@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Button, Stack, Text, TextInput } from '@mantine/core';
-import { colors, typography } from '@/designTokens';
+import { Button, Input, Spinner, Stack } from '@/components/ui';
+import { cn } from '@/lib/utils';
 import { trackNewsletterSignup } from '@/utils/analytics';
 import { submitToMailchimp } from '@/utils/mailchimpSubscription';
 
@@ -41,44 +41,38 @@ export default function FooterSubscribe() {
   };
 
   return (
-    <Stack gap="xs" pl="2xl">
-      <Text fw={600} fz="h2" c={colors.white} ff={typography.fontFamily.primary}>
+    <Stack gap="xs">
+      <p className="tw:font-semibold tw:text-2xl tw:text-white tw:font-sans tw:m-0">
         Subscribe to PolicyEngine
-      </Text>
-      <Text fz="h5" c={colors.white} ff={typography.fontFamily.primary}>
+      </p>
+      <p className="tw:text-base tw:text-white/80 tw:font-sans tw:m-0">
         Get the latest posts delivered right to your inbox.
-      </Text>
-      <Stack gap="sm" w="80%" mt="20px">
-        <TextInput
+      </p>
+      <Stack gap="sm" className="tw:mt-4 tw:max-w-md">
+        <Input
           placeholder="Enter your email address"
-          size="md"
-          ff={typography.fontFamily.primary}
+          className="tw:bg-white tw:h-10"
           value={email}
           onChange={(event) => setEmail(event.currentTarget.value)}
-          styles={{
-            input: { backgroundColor: colors.white, flex: 1 },
-          }}
           disabled={status === 'loading'}
         />
         <Button
-          color={colors.primary[500]}
-          size="md"
-          ff={typography.fontFamily.primary}
           onClick={handleSubscribe}
-          loading={status === 'loading'}
           disabled={status === 'loading'}
+          className="tw:bg-primary-500 tw:text-white tw:hover:bg-primary-400 tw:w-full tw:h-10 tw:font-semibold tw:tracking-wider"
         >
+          {status === 'loading' ? <Spinner size="sm" /> : null}
           SUBSCRIBE
         </Button>
         {message && (
-          <Text
-            fz="sm"
-            c={status === 'success' ? colors.success : colors.error}
-            ff={typography.fontFamily.primary}
-            ta="center"
+          <p
+            className={cn(
+              'tw:text-sm tw:text-center tw:font-sans tw:m-0',
+              status === 'success' ? 'tw:text-green-400' : 'tw:text-red-400'
+            )}
           >
             {message}
-          </Text>
+          </p>
         )}
       </Stack>
     </Stack>

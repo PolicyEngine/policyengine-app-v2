@@ -1,5 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Group, Select, Text } from '@mantine/core';
+import {
+  Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui';
 import {
   filterPlacesByState,
   findPlaceFromRegionString,
@@ -45,8 +52,8 @@ export default function USPlaceSelector({ selectedPlace, onPlaceChange }: USPlac
   );
 
   // Handle state change for place selection
-  const handleStateChange = (stateName: string | null) => {
-    setSelectedStateName(stateName || '');
+  const handleStateChange = (stateName: string) => {
+    setSelectedStateName(stateName);
     // Auto-select the first place when a state is chosen
     if (stateName) {
       const statePlaces = filterPlacesByState(stateName);
@@ -59,40 +66,48 @@ export default function USPlaceSelector({ selectedPlace, onPlaceChange }: USPlac
   };
 
   return (
-    <Group gap="sm" align="flex-start">
-      <div style={{ flex: 1 }}>
-        <Text size="sm" fw={500} mb={4}>
-          Select state
-        </Text>
-        <Select
-          placeholder="Choose a state"
-          data={stateNames}
-          value={selectedStateName}
-          onChange={handleStateChange}
-          searchable
-        />
+    <div className="tw:flex tw:items-start tw:gap-sm">
+      <div className="tw:flex-1">
+        <Label className="tw:text-sm tw:font-medium tw:mb-1 tw:block">Select state</Label>
+        <Select value={selectedStateName} onValueChange={handleStateChange}>
+          <SelectTrigger className="tw:w-full">
+            <SelectValue placeholder="Choose a state" />
+          </SelectTrigger>
+          <SelectContent>
+            {stateNames.map((state) => (
+              <SelectItem key={state.value} value={state.value}>
+                {state.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
-      <div style={{ flex: 2 }}>
-        <Text size="sm" fw={500} mb={4}>
-          Select city
-        </Text>
+      <div className="tw:flex-[2]">
+        <Label className="tw:text-sm tw:font-medium tw:mb-1 tw:block">Select city</Label>
         {selectedStateName ? (
-          <Select
-            placeholder="Choose a city"
-            data={placeOptions}
-            value={selectedPlace}
-            onChange={(val) => {
-              // If user clicks the same option again (val is null), keep the current selection
-              if (val !== null) {
-                onPlaceChange(val);
-              }
-            }}
-            searchable
-          />
+          <Select value={selectedPlace} onValueChange={onPlaceChange}>
+            <SelectTrigger className="tw:w-full">
+              <SelectValue placeholder="Choose a city" />
+            </SelectTrigger>
+            <SelectContent>
+              {placeOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         ) : (
-          <Select placeholder="--" data={[]} disabled />
+          <Select disabled>
+            <SelectTrigger className="tw:w-full">
+              <SelectValue placeholder="--" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="--">--</SelectItem>
+            </SelectContent>
+          </Select>
         )}
       </div>
-    </Group>
+    </div>
   );
 }

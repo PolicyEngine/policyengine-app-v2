@@ -1,5 +1,5 @@
 import { IconDotsVertical } from '@tabler/icons-react';
-import { ActionIcon, Container, Group } from '@mantine/core';
+import { Button } from '@/components/ui';
 import { colors } from '@/designTokens';
 import DesktopNavigation from './DesktopNavigation';
 import HeaderActionButtons from './HeaderActionButtons';
@@ -25,40 +25,31 @@ export default function HeaderContent({
   onToggleNavbar,
 }: HeaderContentProps) {
   return (
-    <Container
-      h="100%"
-      p={0}
-      m={0}
-      style={{
-        width: '100%',
-        maxWidth: '100%',
-        marginInlineStart: 0,
-        marginInlineEnd: 0,
-      }}
-    >
-      <Group justify="space-between" h="100%">
-        <Group>
+    <div className="tw:h-full tw:w-full tw:p-0 tw:m-0">
+      <div className="tw:flex tw:justify-between tw:items-center tw:h-full">
+        <div className="tw:flex tw:items-center">
           {onToggleNavbar && (
-            <ActionIcon
-              variant="subtle"
-              color={colors.text.inverse}
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={onToggleNavbar}
-              hiddenFrom="sm"
+              className="tw:sm:hidden"
               aria-label="Toggle sidebar"
+              style={{ color: colors.text.inverse }}
             >
               <IconDotsVertical size={20} />
-            </ActionIcon>
+            </Button>
           )}
           <HeaderLogo />
           <DesktopNavigation navItems={navItems} />
-        </Group>
+        </div>
 
-        <Group visibleFrom="lg">
+        <div className="tw:hidden tw:lg:flex tw:items-center">
           <HeaderActionButtons />
-        </Group>
+        </div>
 
         <MobileMenu opened={opened} onOpen={onOpen} onClose={onClose} navItems={navItems} />
-      </Group>
-    </Container>
+      </div>
+    </div>
   );
 }

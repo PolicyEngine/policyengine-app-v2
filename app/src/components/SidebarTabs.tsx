@@ -1,5 +1,4 @@
 import { ReactNode } from 'react';
-import { Box, Group, Stack, Text } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
 
 export interface SidebarTab {
@@ -44,21 +43,18 @@ interface SidebarTabsProps {
  */
 export function SidebarTabs({ tabs, activeTab, onTabChange, children }: SidebarTabsProps) {
   return (
-    <Group align="flex-start" gap={spacing.xl} style={{ flexWrap: 'nowrap' }}>
+    <div className="tw:flex tw:items-start tw:flex-nowrap" style={{ gap: spacing.xl }}>
       {/* Left sidebar with vertical tabs */}
-      <Box
-        style={{
-          paddingRight: spacing.xl,
-        }}
-      >
-        <Stack gap={4}>
+      <div style={{ paddingRight: spacing.xl }}>
+        <div className="tw:flex tw:flex-col tw:gap-1">
           {tabs.map((tab) => (
-            <Box
+            <button
+              type="button"
               key={tab.value}
               onClick={() => onTabChange(tab.value)}
-              py={spacing.sm}
-              px={spacing.md}
+              className="tw:border-none tw:bg-transparent tw:w-full tw:text-left tw:p-0"
               style={{
+                padding: `${spacing.sm} ${spacing.md}`,
                 cursor: 'pointer',
                 backgroundColor: activeTab === tab.value ? colors.gray[50] : 'transparent',
                 borderLeft:
@@ -68,24 +64,25 @@ export function SidebarTabs({ tabs, activeTab, onTabChange, children }: SidebarT
                 transition: 'all 0.15s ease',
               }}
             >
-              <Text
-                size="sm"
-                fw={
-                  activeTab === tab.value
-                    ? typography.fontWeight.medium
-                    : typography.fontWeight.normal
-                }
-                c={activeTab === tab.value ? colors.text.primary : colors.text.secondary}
+              <span
+                className="tw:text-sm"
+                style={{
+                  fontWeight:
+                    activeTab === tab.value
+                      ? typography.fontWeight.medium
+                      : typography.fontWeight.normal,
+                  color: activeTab === tab.value ? colors.text.primary : colors.text.secondary,
+                }}
               >
                 {tab.label}
-              </Text>
-            </Box>
+              </span>
+            </button>
           ))}
-        </Stack>
-      </Box>
+        </div>
+      </div>
 
       {/* Right content area */}
-      <Box style={{ flex: 1 }}>{children}</Box>
-    </Group>
+      <div className="tw:flex-1">{children}</div>
+    </div>
   );
 }

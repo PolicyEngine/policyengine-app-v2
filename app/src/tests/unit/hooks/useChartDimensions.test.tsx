@@ -1,7 +1,6 @@
 import { createRef } from 'react';
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { MantineProvider } from '@mantine/core';
 import {
   MOBILE_BREAKPOINT_QUERY,
   useChartWidth,
@@ -191,10 +190,6 @@ describe('useChartDimensions', () => {
   });
 
   describe('useIsMobile', () => {
-    const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <MantineProvider>{children}</MantineProvider>
-    );
-
     it('given desktop width then returns false', () => {
       // Given
       Object.defineProperty(window, 'innerWidth', {
@@ -204,7 +199,7 @@ describe('useChartDimensions', () => {
       });
 
       // When
-      const { result } = renderHook(() => useIsMobile(), { wrapper });
+      const { result } = renderHook(() => useIsMobile());
 
       // Then
       expect(result.current).toBe(EXPECTED_MOBILE_AT_1920);
@@ -219,7 +214,7 @@ describe('useChartDimensions', () => {
       });
 
       // When
-      const { result } = renderHook(() => useIsMobile(), { wrapper });
+      const { result } = renderHook(() => useIsMobile());
 
       // Need to wait for the effect to run
       await act(async () => {
@@ -239,7 +234,7 @@ describe('useChartDimensions', () => {
       });
 
       // When
-      const { result } = renderHook(() => useIsMobile(), { wrapper });
+      const { result } = renderHook(() => useIsMobile());
 
       // Then
       expect(result.current).toBe(EXPECTED_MOBILE_AT_768);
@@ -252,7 +247,7 @@ describe('useChartDimensions', () => {
         configurable: true,
         value: MOCK_DESKTOP_WIDTH,
       });
-      const { result } = renderHook(() => useIsMobile(), { wrapper });
+      const { result } = renderHook(() => useIsMobile());
 
       // When - Resize to mobile
       await act(async () => {
@@ -276,7 +271,7 @@ describe('useChartDimensions', () => {
         configurable: true,
         value: MOCK_MOBILE_WIDTH,
       });
-      const { result } = renderHook(() => useIsMobile(), { wrapper });
+      const { result } = renderHook(() => useIsMobile());
 
       // When - Resize to desktop
       act(() => {

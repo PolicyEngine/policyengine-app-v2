@@ -10,7 +10,6 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { Stack, Text } from '@mantine/core';
 import { TOOLTIP_STYLE } from '@/components/charts';
 import { CHART_COLORS } from '@/constants/chartColors';
 import {
@@ -53,9 +52,9 @@ export default function PolicyParameterSelectorHistoricalValues(
   } = props;
 
   return (
-    <Stack mt="xl">
-      <Text fw={700}>Historical values</Text>
-      <Text>{capitalize(param.label)} over time</Text>
+    <div className="tw:flex tw:flex-col tw:gap-sm tw:mt-xl">
+      <p className="tw:font-bold">Historical values</p>
+      <p>{capitalize(param.label)} over time</p>
       <ParameterOverTimeChart
         param={param}
         baseValuesCollection={baseValues}
@@ -63,7 +62,7 @@ export default function PolicyParameterSelectorHistoricalValues(
         policyLabel={policyLabel}
         policyId={policyId}
       />
-    </Stack>
+    </div>
   );
 }
 
@@ -304,9 +303,7 @@ export const ParameterOverTimeChart = memo((props: ParameterOverTimeChartProps) 
   if (x.length === 0 || y.length === 0) {
     return (
       <div ref={chartContainerRef}>
-        <Text c="dimmed" ta="center" py="xl">
-          No data available to display
-        </Text>
+        <p className="tw:text-gray-500 tw:text-center tw:py-xl">No data available to display</p>
       </div>
     );
   }
@@ -368,10 +365,10 @@ export const ParameterOverTimeChart = memo((props: ParameterOverTimeChartProps) 
         </LineChart>
       </ResponsiveContainer>
       {hasInfiniteValues && (
-        <Text size="sm" c="gray.8" fs="italic" mt="xs">
+        <p className="tw:text-sm tw:text-gray-600 tw:italic tw:mt-xs">
           Note: Charts do not currently display parameters with values of positive or negative
           infinity.
-        </Text>
+        </p>
       )}
     </div>
   );

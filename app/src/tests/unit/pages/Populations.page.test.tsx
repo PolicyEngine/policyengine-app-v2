@@ -215,9 +215,8 @@ describe('PopulationsPage', () => {
       // When
       renderPage();
 
-      // Then - Look for the Loader component by its role or test the loading state
-      const loaderElement = document.querySelector('.mantine-Loader-root');
-      expect(loaderElement).toBeInTheDocument();
+      // Then — Spinner component renders with role="status"
+      expect(screen.getByRole('status')).toBeInTheDocument();
     });
 
     test('given geographic data loading then shows loading state', () => {
@@ -229,9 +228,8 @@ describe('PopulationsPage', () => {
       // When
       renderPage();
 
-      // Then - Look for the Loader component
-      const loaderElement = document.querySelector('.mantine-Loader-root');
-      expect(loaderElement).toBeInTheDocument();
+      // Then — Spinner component renders with role="status"
+      expect(screen.getByRole('status')).toBeInTheDocument();
     });
 
     test('given both loading then shows single loading state', () => {
@@ -243,8 +241,8 @@ describe('PopulationsPage', () => {
       // When
       renderPage();
 
-      // Then - Check for single loader
-      const loaderElements = document.querySelectorAll('.mantine-Loader-root');
+      // Then — Check for single Spinner (role="status")
+      const loaderElements = screen.getAllByRole('status');
       expect(loaderElements).toHaveLength(1);
     });
   });
