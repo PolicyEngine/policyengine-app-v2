@@ -20,7 +20,7 @@ Spin up the full local PolicyEngine stack for manual integration testing. Follow
 
 ## Step 1: Pre-flight checks
 
-Run `docker info` to verify Docker is running. If it fails, tell the user "Docker is not running. Please start Docker Desktop and try again." and **STOP immediately** — do not proceed to any other step.
+Run `docker info` to verify Docker is running. **IMPORTANT:** Do NOT truncate the output (no `head`, `tail`, or piping). The Docker client header always prints even when the daemon is down — you must see the full output and check the exit code. A non-zero exit code means Docker is not running. If it fails, tell the user "Docker is not running. Please start Docker Desktop and try again." and **STOP immediately** — do not proceed to any other step.
 
 ## Step 2: Branch management
 
