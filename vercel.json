@@ -28,14 +28,6 @@
       "source": "/_tracker/:path*",
       "destination": "https://policyengine--state-legislative-tracker.modal.run/_tracker/:path*"
     },
-    {
-      "source": "/slides",
-      "destination": "https://policyengine-slides.vercel.app/slides"
-    },
-    {
-      "source": "/slides/:path*",
-      "destination": "https://policyengine-slides.vercel.app/slides/:path*"
-    },
     { "source": "/(.*)", "destination": "/website.html" }
   ],
   "headers": [
