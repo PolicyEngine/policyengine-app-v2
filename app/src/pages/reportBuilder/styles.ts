@@ -58,7 +58,7 @@ export const canvasStyles = {
   simulationsGrid: {
     display: 'grid',
     gridTemplateColumns: '1fr 1fr',
-    gridTemplateRows: 'auto auto auto auto', // header, policy, population, dynamics
+    gridTemplateRows: 'auto auto auto', // header, policy, population
     gap: `${spacing.sm} ${spacing['2xl']}`,
     position: 'relative' as const,
     zIndex: 1,
