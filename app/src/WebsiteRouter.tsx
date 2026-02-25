@@ -40,20 +40,14 @@ const router = createBrowserRouter(
       path: '/',
       element: <RedirectToCountry />,
     },
-    // Top-level slides route (no country slug)
+    // Top-level slides route (no country slug, no layout — fullscreen iframe)
     {
       path: '/slides',
-      element: <StaticLayout />,
-      children: [
-        {
-          index: true,
-          element: <SlidesPage />,
-        },
-        {
-          path: '*',
-          element: <SlidesPage />,
-        },
-      ],
+      element: <SlidesPage />,
+    },
+    {
+      path: '/slides/*',
+      element: <SlidesPage />,
     },
     {
       path: '/:countryId',

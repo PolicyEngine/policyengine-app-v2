@@ -15,7 +15,7 @@ export default function SlidesPage() {
       title="Presentations | PolicyEngine"
       style={{
         width: '100%',
-        height: 'calc(100vh - 120px)',
+        height: '100vh',
         border: 'none',
       }}
     />
