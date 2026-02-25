@@ -36,6 +36,14 @@
       "source": "/slides/:path*",
       "destination": "https://policyengine-slides.vercel.app/slides/:path*"
     },
+    {
+      "source": "/plugin-blog",
+      "destination": "https://policyengine.github.io/plugin-blog/"
+    },
+    {
+      "source": "/plugin-blog/:path*",
+      "destination": "https://policyengine.github.io/plugin-blog/:path*"
+    },
     { "source": "/(.*)", "destination": "/website.html" }
   ],
   "headers": [
