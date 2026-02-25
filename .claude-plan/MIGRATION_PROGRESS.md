@@ -1,6 +1,6 @@
 # Simulation & Report V2 Migration Progress
 
-## Current: Phase 5 — Task 7 complete, next Task 8
+## Current: Phase 5 — COMPLETE (all 44 tasks done)
 
 ## Branch Strategy
 
@@ -92,7 +92,7 @@ _Full spec: `.claude-plan/LAZY_METADATA_SPEC.md`_
 - [x] 5. Replace bulk parameter fetch with lazy tree loading (2026-02-23)
 - [x] 6. Batch-fetch policy parameters on demand (2026-02-23)
 - [x] 7. Add localStorage caching keyed on model version (2026-02-23)
-- [ ] 8. Move variable fetch to background/cache-first
+- [x] 8. Move variable fetch to background/cache-first (2026-02-23)
 
 ---
 
@@ -107,7 +107,7 @@ _Full spec: `.claude-plan/LAZY_METADATA_SPEC.md`_
 - [x] 7. Update hooks (2026-02-24)
   - [x] Stage 1: Unify household report output with CalcOrchestrator
   - [x] Stage 2: Migrate report creation + data loading to v2 analysis endpoints
-- [ ] 8. Deprecate v1 API files
+- [x] 8. Deprecate v1 API files (2026-02-24)
 
 ---
 
