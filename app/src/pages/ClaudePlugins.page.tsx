@@ -138,26 +138,26 @@ const useCases = [
     description: 'Budgetary and distributional impacts from plain English.',
     terminal: [
       { type: 'prompt' as const, text: 'What if we raised the standard deduction to $20,000?' },
-      { type: 'output' as const, text: 'Running microsimulation on 2024 CPS...' },
-      { type: 'success' as const, text: 'Cost: $142B · Winners: 68% · Gini: -0.003' },
+      { type: 'output' as const, text: 'Running microsimulation on 2024 Enhanced CPS...' },
+      { type: 'success' as const, text: 'Cost: $236B · Winners: 62% · Gini: -0.001' },
     ],
   },
   {
     title: 'Analyze historical policy',
     description: 'Study how programs have changed over time.',
     terminal: [
-      { type: 'prompt' as const, text: 'How has the EITC changed since 2000?' },
-      { type: 'output' as const, text: 'Fetching historical parameters...' },
-      { type: 'success' as const, text: 'Max credit: $2,353 (2000) → $7,830 (2024)' },
+      { type: 'prompt' as const, text: 'How has the EITC max credit changed?' },
+      { type: 'output' as const, text: 'Reading gov.irs.credits.eitc.max...' },
+      { type: 'success' as const, text: '3+ kids: $6,660 (2020) → $8,231 (2026)' },
     ],
   },
   {
     title: 'Create household calculators',
     description: 'Show how a specific household is affected.',
     terminal: [
-      { type: 'prompt' as const, text: 'Show CTC impact for a family of 4 earning $55k' },
-      { type: 'output' as const, text: 'Current CTC: $4,000 · Reformed: $6,000' },
-      { type: 'success' as const, text: 'Net change: +$2,000/yr (+$167/mo)' },
+      { type: 'prompt' as const, text: 'Raise the CTC to $3k. Impact on a family of 4 earning $55k?' },
+      { type: 'output' as const, text: 'CTC: $4,400 → $6,000' },
+      { type: 'success' as const, text: 'Net change: +$1,280/yr (+$107/mo)' },
     ],
   },
   {
@@ -174,8 +174,8 @@ const useCases = [
     description: 'Research-quality analysis with charts and tables.',
     terminal: [
       { type: 'prompt' as const, text: 'Write a brief on eliminating the SALT cap' },
-      { type: 'output' as const, text: 'Drafting with distributional tables...' },
-      { type: 'success' as const, text: '✓ salt_cap_brief.md (2,400 words + 3 charts)' },
+      { type: 'output' as const, text: 'Cost: $214B · 97% goes to top decile' },
+      { type: 'success' as const, text: '✓ salt_cap_brief.md written with 3 charts' },
     ],
   },
   {
