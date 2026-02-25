@@ -139,7 +139,7 @@ const useCases = [
     terminal: [
       { type: 'prompt' as const, text: 'What if we raised the standard deduction to $20,000?' },
       { type: 'output' as const, text: 'Running microsimulation on 2024 Enhanced CPS...' },
-      { type: 'success' as const, text: 'Cost: $236B · Winners: 62% · Gini: -0.001' },
+      { type: 'success' as const, text: 'Cost: $80B · Winners: 62% · Gini: -0.001' },
     ],
   },
   {
@@ -177,7 +177,7 @@ const useCases = [
     description: 'Research-quality analysis with charts and tables.',
     terminal: [
       { type: 'prompt' as const, text: 'Write a brief on eliminating the SALT cap' },
-      { type: 'output' as const, text: 'Cost: $214B · 97% goes to top decile' },
+      { type: 'output' as const, text: 'Cost: $69B · 98% goes to top decile' },
       { type: 'success' as const, text: '✓ salt_cap_brief.md written with 3 charts' },
     ],
   },
