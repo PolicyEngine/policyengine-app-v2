@@ -6,11 +6,11 @@ Medicaid is a joint federal-state program providing health coverage to low-incom
 
 The ACA expanded Medicaid eligibility to all adults under 65 with household income at or below 138% of the Federal Poverty Level (FPL). The federal government initially covered 100% of expansion costs, phasing down to 90% by 2020—higher than the standard FMAP of about 70% for traditional Medicaid in Utah.
 
-HB 15 defines its own calculation for the effective federal matching rate and would repeal expansion if that rate falls below 85%. While the federal One Big Beautiful Bill Act (HR 1) does not directly reduce the 90% enhanced FMAP for expansion populations, its work requirements, provider tax restrictions, and other provisions could increase state administrative costs and reduce effective federal support, making HB 15's repeal condition more relevant.
+HB 15 defines its own calculation for the effective federal matching rate and would repeal expansion if that rate falls below 85%, reflecting concerns that Congress could further reduce the enhanced FMAP and shift more costs to states.
 
 ### Utah's Medicaid expansion history
 
-Utah voters approved Medicaid expansion via [Proposition 3](https://ballotpedia.org/Utah_Proposition_3,_Medicaid_Expansion_Initiative_(2018)) in November 2018, and full expansion took effect in 2020. As of 2024, approximately 72,000 Utahns were enrolled in expansion Medicaid; our model projects approximately 84,000 enrollees in 2027 after accounting for population growth and a 93% takeup rate.[^1]
+Utah voters approved Medicaid expansion via [Proposition 3](https://ballotpedia.org/Utah_Proposition_3,_Medicaid_Expansion_Initiative_(2018)) in November 2018, and full expansion took effect in 2020.[^1]
 
 [^1]: HB 15 would also repeal the 0.15% state sales tax that funds Utah's share of expansion costs. This analysis does not model the sales tax repeal.
 
@@ -140,7 +140,7 @@ The chart below shows the distribution of affected individuals by household inco
 
 ## Conclusion
 
-Utah HB 15 creates a contingent repeal of Medicaid expansion that would take effect if federal matching drops below 85%. If enacted, the policy would reduce state Medicaid spending by ~$73 million annually. Approximately 73,000 adults earning below 100% FPL would lose coverage and would not qualify for ACA subsidies, while ~11,000 adults at 100-138% FPL could transition to ACA marketplace plans. With the federal One Big Beautiful Bill Act introducing new administrative requirements for expansion states, HB 15's repeal condition has become increasingly relevant to Utah's coverage landscape.
+Utah HB 15 creates a contingent repeal of Medicaid expansion that would take effect if federal matching drops below 85%. If enacted, the policy would reduce state Medicaid spending by ~$73 million annually. Approximately 73,000 adults earning below 100% FPL would lose coverage and would not qualify for ACA subsidies, while ~11,000 adults at 100-138% FPL could transition to ACA marketplace plans.
 
 PolicyEngine can help evaluate the impacts of reforms like this on diverse household compositions and state budgets.
 
