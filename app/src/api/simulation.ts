@@ -9,6 +9,10 @@ import { SimulationCreationPayload } from '@/types/payloads';
  * @deprecated Use v2 simulation endpoints (getHouseholdSimulation / getEconomySimulation)
  * instead. This remains for backward compatibility with simulations created before the
  * v2 migration. V2 reports fetch simulations via the typed v2 endpoints.
+ *
+ * **Backward-compat note**: Users' existing v1 simulations remain in the v1 API
+ * and are read through this path. Will be removed once v1 API endpoints are
+ * decommissioned.
  */
 export async function fetchSimulationById(
   countryId: (typeof countryIds)[number],
@@ -50,6 +54,9 @@ export async function fetchSimulationById(
  * @deprecated Used only by the default baseline simulation shortcut in
  * ReportSimulationSelectionView. New report creation uses v2 analysis endpoints
  * which create simulations server-side.
+ *
+ * **Backward-compat note**: This v1 creation path is still used for the baseline
+ * simulation shortcut. Will be removed once that shortcut uses v2 endpoints.
  */
 export async function createSimulation(
   countryId: (typeof countryIds)[number],

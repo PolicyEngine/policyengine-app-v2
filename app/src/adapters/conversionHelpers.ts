@@ -44,7 +44,13 @@ export function convertParametersToPolicyJson(parameters: Parameter[]): PolicyMe
 }
 
 /**
- * Converts JSON string from ReportMetadata to ReportOutput format
+ * Converts JSON string from ReportMetadata to ReportOutput format.
+ *
+ * @deprecated Used only by the v1 report read path (ReportAdapter.fromMetadata).
+ *
+ * **Backward-compat note**: Users' existing v1 report outputs are stored as JSON
+ * strings in the v1 API. This parser is needed to display them. Will be removed
+ * once v1 API endpoints are decommissioned.
  */
 export function convertJsonToReportOutput(jsonString: string | null): ReportOutput | null {
   if (jsonString === null) {

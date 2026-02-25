@@ -21,6 +21,10 @@ export class SimulationAdapter {
    * @deprecated Use v2 simulation conversion functions (fromHouseholdSimulationResponse /
    * fromEconomySimulationResponse) instead. This remains for backward compatibility
    * with simulations created before the v2 migration.
+   *
+   * **Backward-compat note**: Users' existing v1 simulations remain in the v1 API
+   * and are read through this path. Will be removed once v1 API endpoints are
+   * decommissioned.
    */
   static fromMetadata(metadata: SimulationMetadata): Simulation {
     if (!metadata.population_id) {
@@ -70,6 +74,9 @@ export class SimulationAdapter {
    * @deprecated Used only by the default baseline simulation shortcut in
    * ReportSimulationSelectionView. New report creation uses v2 analysis endpoints
    * which create simulations server-side.
+   *
+   * **Backward-compat note**: This v1 creation path is still used for the baseline
+   * simulation shortcut. Will be removed once that shortcut uses v2 endpoints.
    */
   static toCreationPayload(simulation: Partial<Simulation>): SimulationCreationPayload {
     if (!simulation.populationId) {

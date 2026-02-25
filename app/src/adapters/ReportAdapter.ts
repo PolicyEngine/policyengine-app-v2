@@ -29,6 +29,10 @@ export class ReportAdapter {
    * @deprecated Use v2 analysis endpoints instead. V2 reports construct their
    * Report object from UserReport metadata. This remains for backward compatibility
    * with reports created before the v2 migration.
+   *
+   * **Backward-compat note**: Users' existing v1 reports remain in the v1 API
+   * and are read through this path. Will be removed once v1 API endpoints are
+   * decommissioned.
    */
   static fromMetadata(metadata: ReportMetadata): Report {
     // Convert simulation IDs from individual fields to array

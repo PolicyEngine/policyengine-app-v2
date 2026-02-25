@@ -3,6 +3,7 @@ import { PolicyAdapter } from '@/adapters';
 import { fetchPolicyById } from '@/api/policy';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useUserId } from '@/hooks/useUserId';
+import { getStoreBackend } from '@/libs/storeBackend';
 import { Policy } from '@/types/ingredients/Policy';
 import { ApiPolicyStore, LocalStoragePolicyStore } from '../api/policyAssociation';
 import { queryConfig } from '../libs/queryConfig';
@@ -13,8 +14,8 @@ const apiPolicyStore = new ApiPolicyStore();
 const localPolicyStore = new LocalStoragePolicyStore();
 
 export const useUserPolicyStore = () => {
-  const isLoggedIn = false; // TODO: Replace with actual auth check in future
-  return isLoggedIn ? apiPolicyStore : localPolicyStore;
+  const backend = getStoreBackend();
+  return backend === 'api' ? apiPolicyStore : localPolicyStore;
 };
 
 // This fetches only the user-policy associations; see
@@ -22,8 +23,8 @@ export const useUserPolicyStore = () => {
 export const usePolicyAssociationsByUser = (userId: string) => {
   const store = useUserPolicyStore();
   const countryId = useCurrentCountry();
-  const isLoggedIn = false; // TODO: Replace with actual auth check in future
-  const config = isLoggedIn ? queryConfig.api : queryConfig.localStorage;
+  const backend = getStoreBackend();
+  const config = backend === 'api' ? queryConfig.api : queryConfig.localStorage;
 
   return useQuery({
     queryKey: policyAssociationKeys.byUser(userId, countryId),
@@ -35,8 +36,8 @@ export const usePolicyAssociationsByUser = (userId: string) => {
 
 export const usePolicyAssociation = (userPolicyId: string) => {
   const store = useUserPolicyStore();
-  const isLoggedIn = false; // TODO: Replace with actual auth check in future
-  const config = isLoggedIn ? queryConfig.api : queryConfig.localStorage;
+  const backend = getStoreBackend();
+  const config = backend === 'api' ? queryConfig.api : queryConfig.localStorage;
 
   return useQuery({
     queryKey: policyAssociationKeys.byId(userPolicyId),

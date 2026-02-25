@@ -8,6 +8,10 @@ import { ReportMetadata } from '@/types/metadata/reportMetadata';
  * @deprecated Use v2 analysis endpoints instead. This remains for backward
  * compatibility with reports created before the v2 migration. V2 reports
  * construct their Report object from UserReport metadata and never call this.
+ *
+ * **Backward-compat note**: Users' existing v1 reports remain in the v1 API
+ * and are read through this path. Will be removed once v1 API endpoints are
+ * decommissioned.
  */
 export async function fetchReportById(
   countryId: (typeof countryIds)[number],

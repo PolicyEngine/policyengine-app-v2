@@ -1,6 +1,6 @@
-// Import auth hook here in future; for now, mocked out below
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { getStoreBackend } from '@/libs/storeBackend';
 import { ApiSimulationStore, LocalStorageSimulationStore } from '../api/simulationAssociation';
 import { queryConfig } from '../libs/queryConfig';
 import { simulationAssociationKeys } from '../libs/queryKeys';
@@ -10,8 +10,8 @@ const apiSimulationStore = new ApiSimulationStore();
 const localSimulationStore = new LocalStorageSimulationStore();
 
 export const useUserSimulationStore = () => {
-  const isLoggedIn = false; // TODO: Replace with actual auth check in future
-  return isLoggedIn ? apiSimulationStore : localSimulationStore;
+  const backend = getStoreBackend();
+  return backend === 'api' ? apiSimulationStore : localSimulationStore;
 };
 
 /**
@@ -27,9 +27,8 @@ export const useUserSimulationStore = () => {
 export const useSimulationAssociationsByUser = (userId: string) => {
   const store = useUserSimulationStore();
   const countryId = useCurrentCountry();
-  const isLoggedIn = false; // TODO: Replace with actual auth check in future
-  // TODO: Should we determine user ID from auth context here? Or pass as arg?
-  const config = isLoggedIn ? queryConfig.api : queryConfig.localStorage;
+  const backend = getStoreBackend();
+  const config = backend === 'api' ? queryConfig.api : queryConfig.localStorage;
 
   return useQuery({
     queryKey: simulationAssociationKeys.byUser(userId, countryId),
@@ -40,8 +39,8 @@ export const useSimulationAssociationsByUser = (userId: string) => {
 
 export const useSimulationAssociation = (userId: string, simulationId: string) => {
   const store = useUserSimulationStore();
-  const isLoggedIn = false; // TODO: Replace with actual auth check in future
-  const config = isLoggedIn ? queryConfig.api : queryConfig.localStorage;
+  const backend = getStoreBackend();
+  const config = backend === 'api' ? queryConfig.api : queryConfig.localStorage;
 
   return useQuery({
     queryKey: simulationAssociationKeys.specific(userId, simulationId),
