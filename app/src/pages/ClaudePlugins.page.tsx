@@ -155,7 +155,10 @@ const useCases = [
     title: 'Create household calculators',
     description: 'Show how a specific household is affected.',
     terminal: [
-      { type: 'prompt' as const, text: 'Raise the CTC to $3k. Impact on a family of 4 earning $55k?' },
+      {
+        type: 'prompt' as const,
+        text: 'Raise the CTC to $3k. Impact on a family of 4 earning $55k?',
+      },
       { type: 'output' as const, text: 'CTC: $4,400 → $6,000' },
       { type: 'success' as const, text: 'Net change: +$1,280/yr (+$107/mo)' },
     ],
@@ -481,8 +484,8 @@ export default function ClaudePluginsPage() {
               }}
               mb="xl"
             >
-              Watch how the plugin examines the impact of TANF on a household in LA County — from
-              a plain-English prompt to a full household-level analysis.
+              Watch how the plugin examines the impact of TANF on a household in LA County — from a
+              plain-English prompt to a full household-level analysis.
             </Text>
             <Box style={{ maxWidth: 800 }}>
               <Box
