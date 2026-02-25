@@ -10,7 +10,7 @@ import { TEST_COUNTRIES } from '@/tests/fixtures/constants';
 
 vi.mock('@/api/v2/taxBenefitModels', () => ({
   API_V2_BASE_URL: 'https://test-api.example.com',
-  getModelName: (countryId: string) => 'policyengine-' + countryId,
+  getModelName: (countryId: string) => `policyengine-${countryId}`,
 }));
 
 describe('analysisOptions', () => {

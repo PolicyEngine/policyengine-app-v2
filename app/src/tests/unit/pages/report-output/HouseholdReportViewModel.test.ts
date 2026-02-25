@@ -34,7 +34,11 @@ describe('HouseholdReportViewModel', () => {
 
     test('given simulations with undefined IDs then filters them out', () => {
       const simWithNoId = { ...MOCK_SIMULATION_BASELINE, id: undefined as unknown as string };
-      const vm = new HouseholdReportViewModel(MOCK_REPORT, [simWithNoId, MOCK_SIMULATION_REFORM], []);
+      const vm = new HouseholdReportViewModel(
+        MOCK_REPORT,
+        [simWithNoId, MOCK_SIMULATION_REFORM],
+        []
+      );
 
       expect(vm.simulationIds).toEqual(['sim-2']);
     });
@@ -176,11 +180,7 @@ describe('HouseholdReportViewModel', () => {
     });
 
     test('given no user policies then returns empty array', () => {
-      const vm = new HouseholdReportViewModel(
-        MOCK_REPORT,
-        [MOCK_SIMULATION_BASELINE],
-        undefined
-      );
+      const vm = new HouseholdReportViewModel(MOCK_REPORT, [MOCK_SIMULATION_BASELINE], undefined);
 
       expect(vm.getPolicyLabels()).toEqual([]);
     });

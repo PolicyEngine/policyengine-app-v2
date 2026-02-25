@@ -1,18 +1,13 @@
 import { vi } from 'vitest';
 import type {
   AnalysisRegionInfo,
-  BudgetSummaryData,
   DecileImpactData,
   EconomicImpactRequest,
   EconomicImpactResponse,
   EconomyCustomRequest,
-  InequalityData,
-  IntraDecileData,
-  PovertyData,
   SimulationInfo,
 } from '@/api/v2/economyAnalysis';
 import { TEST_POLICY_IDS, TEST_REPORT_IDS } from '@/tests/fixtures/constants';
-import { TEST_DATASET_IDS } from './simulationMocks';
 
 export const TEST_BASELINE_SIM_ID = 'baseline-sim-001';
 export const TEST_REFORM_SIM_ID = 'reform-sim-001';

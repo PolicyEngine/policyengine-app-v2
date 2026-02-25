@@ -142,7 +142,9 @@ export const useUserReports = (userId: string) => {
   const v2SimOutputType = new Map<string, 'household' | 'economy'>();
   v2Associations.forEach((a) => {
     a.simulationIds?.forEach((simId) => {
-      if (a.outputType) v2SimOutputType.set(simId, a.outputType);
+      if (a.outputType) {
+        v2SimOutputType.set(simId, a.outputType);
+      }
     });
   });
 
@@ -154,13 +156,13 @@ export const useUserReports = (userId: string) => {
       if (simType === 'household') {
         const response = await getHouseholdSimulation(id);
         return fromHouseholdSimulationResponse(response);
-      } else if (simType === 'economy') {
+      }
+      if (simType === 'economy') {
         const response = await getEconomySimulation(id);
         return fromEconomySimulationResponse(response);
-      } else {
-        const metadata = await fetchSimulationById(country, id);
-        return SimulationAdapter.fromMetadata(metadata);
       }
+      const metadata = await fetchSimulationById(country, id);
+      return SimulationAdapter.fromMetadata(metadata);
     },
     enabled: simulationIds.length > 0,
     staleTime: Infinity,
@@ -421,13 +423,13 @@ export const useUserReportById = (userReportId: string, options?: { enabled?: bo
       if (isV2Report && outputType === 'household') {
         const response = await getHouseholdSimulation(id);
         return fromHouseholdSimulationResponse(response);
-      } else if (isV2Report && outputType === 'economy') {
+      }
+      if (isV2Report && outputType === 'economy') {
         const response = await getEconomySimulation(id);
         return fromEconomySimulationResponse(response);
-      } else {
-        const metadata = await fetchSimulationById(country, id);
-        return SimulationAdapter.fromMetadata(metadata);
       }
+      const metadata = await fetchSimulationById(country, id);
+      return SimulationAdapter.fromMetadata(metadata);
     },
     enabled: isEnabled && simulationIds.length > 0,
     staleTime: Infinity,
@@ -479,9 +481,7 @@ export const useUserReportById = (userReportId: string, options?: { enabled?: bo
     staleTime: 5 * 60 * 1000,
   });
 
-  const households = householdResults.queries
-    .map((q) => q.data)
-    .filter((h): h is Household => !!h);
+  const households = householdResults.queries.map((q) => q.data).filter((h): h is Household => !!h);
 
   const userHouseholds = householdAssociations?.filter((ha) =>
     households.some((h) => h.id === ha.householdId)

@@ -164,7 +164,6 @@ export const useDeleteReportAssociation = () => {
     mutationFn: ({
       userReportId,
       userId,
-      countryId,
     }: {
       userReportId: string;
       userId: string;

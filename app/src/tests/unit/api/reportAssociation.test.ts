@@ -1,6 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiReportStore, LocalStorageReportStore } from '@/api/reportAssociation';
 import {
+  createUserReportAssociationV2,
+  deleteUserReportAssociationV2,
+  fetchUserReportAssociationByIdV2,
+  fetchUserReportAssociationsV2,
+  updateUserReportAssociationV2,
+} from '@/api/v2/userReportAssociations';
+import {
   mockMultiCountryReportList,
   mockReport,
   mockReportInput,
@@ -20,14 +27,6 @@ vi.mock('@/api/v2/userReportAssociations', () => ({
   updateUserReportAssociationV2: vi.fn(),
   deleteUserReportAssociationV2: vi.fn(),
 }));
-
-import {
-  createUserReportAssociationV2,
-  fetchUserReportAssociationsV2,
-  fetchUserReportAssociationByIdV2,
-  updateUserReportAssociationV2,
-  deleteUserReportAssociationV2,
-} from '@/api/v2/userReportAssociations';
 
 describe('ApiReportStore', () => {
   let store: ApiReportStore;
@@ -78,10 +77,7 @@ describe('ApiReportStore', () => {
 
       const result = await store.findByUser(TEST_USER_IDS.USER_123);
 
-      expect(fetchUserReportAssociationsV2).toHaveBeenCalledWith(
-        TEST_USER_IDS.USER_123,
-        undefined
-      );
+      expect(fetchUserReportAssociationsV2).toHaveBeenCalledWith(TEST_USER_IDS.USER_123, undefined);
       expect(result).toEqual(expected);
     });
 
@@ -380,9 +376,9 @@ describe('LocalStorageReportStore', () => {
     });
 
     it('given nonexistent report then throws error', async () => {
-      await expect(
-        store.delete('sur-nonexistent', TEST_USER_IDS.USER_123)
-      ).rejects.toThrow('Association with id sur-nonexistent not found');
+      await expect(store.delete('sur-nonexistent', TEST_USER_IDS.USER_123)).rejects.toThrow(
+        'Association with id sur-nonexistent not found'
+      );
     });
   });
 

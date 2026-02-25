@@ -85,7 +85,7 @@ describe('HouseholdReportOutput', () => {
       <HouseholdReportOutput
         report={MOCK_REPORT}
         simulations={[MOCK_SIMULATION_BASELINE]}
-        isLoading={true}
+        isLoading
         error={null}
       />
     );

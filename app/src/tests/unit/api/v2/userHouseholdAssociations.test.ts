@@ -21,7 +21,7 @@ import { TEST_COUNTRIES, TEST_TIMESTAMPS, TEST_USER_IDS } from '@/tests/fixtures
 
 vi.mock('@/api/v2/taxBenefitModels', () => ({
   API_V2_BASE_URL: 'https://test-api.example.com',
-  getModelName: (countryId: string) => 'policyengine-' + countryId,
+  getModelName: (countryId: string) => `policyengine-${countryId}`,
 }));
 
 describe('userHouseholdAssociations', () => {

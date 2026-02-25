@@ -15,11 +15,7 @@ import {
 import { MOCK_USER_ID } from '@/constants';
 import { useCalcOrchestratorManager } from '@/contexts/CalcOrchestratorContext';
 import { countryIds } from '@/libs/countries';
-import {
-  reportAssociationKeys,
-  reportKeys,
-  simulationAssociationKeys,
-} from '@/libs/queryKeys';
+import { reportAssociationKeys, reportKeys, simulationAssociationKeys } from '@/libs/queryKeys';
 import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
 import { Report } from '@/types/ingredients/Report';
@@ -180,8 +176,7 @@ export function useCreateReport(reportLabel?: string) {
         // There's no single v2 report for a multi-simulation household report.
         reportId = crypto.randomUUID();
       } else {
-        const region =
-          populations.geography1?.regionCode || simulation1.populationId || countryId;
+        const region = populations.geography1?.regionCode || simulation1.populationId || countryId;
         const reformPolicyId = simulation2?.policyId ?? simulation1.policyId ?? null;
 
         const result = await createEconomyReportV2(countryId, region, reformPolicyId);
@@ -278,7 +273,9 @@ export function useCreateReport(reportLabel?: string) {
           );
 
           for (const sim of allSims) {
-            if (!sim.id) continue;
+            if (!sim.id) {
+              continue;
+            }
 
             manager
               .startCalculation({

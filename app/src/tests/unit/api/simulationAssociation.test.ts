@@ -1,6 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiSimulationStore, LocalStorageSimulationStore } from '@/api/simulationAssociation';
 import {
+  createUserSimulationAssociationV2,
+  deleteUserSimulationAssociationV2,
+  fetchUserSimulationAssociationsV2,
+  updateUserSimulationAssociationV2,
+} from '@/api/v2/userSimulationAssociations';
+import {
   mockSimulation,
   mockSimulationInput,
   TEST_LABELS,
@@ -15,13 +21,6 @@ vi.mock('@/api/v2/userSimulationAssociations', () => ({
   updateUserSimulationAssociationV2: vi.fn(),
   deleteUserSimulationAssociationV2: vi.fn(),
 }));
-
-import {
-  createUserSimulationAssociationV2,
-  fetchUserSimulationAssociationsV2,
-  updateUserSimulationAssociationV2,
-  deleteUserSimulationAssociationV2,
-} from '@/api/v2/userSimulationAssociations';
 
 describe('ApiSimulationStore', () => {
   let store: ApiSimulationStore;
@@ -292,9 +291,9 @@ describe('LocalStorageSimulationStore', () => {
     });
 
     it('given nonexistent simulation then throws error', async () => {
-      await expect(
-        store.delete('sus-nonexistent', TEST_USER_IDS.USER_123)
-      ).rejects.toThrow('Association with id sus-nonexistent not found');
+      await expect(store.delete('sus-nonexistent', TEST_USER_IDS.USER_123)).rejects.toThrow(
+        'Association with id sus-nonexistent not found'
+      );
     });
   });
 

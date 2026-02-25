@@ -1,6 +1,4 @@
 import { describe, expect, test } from 'vitest';
-import type { UserPolicy } from '@/types/ingredients/UserPolicy';
-import type { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import type { UserReport } from '@/types/ingredients/UserReport';
 import type { UserSimulation } from '@/types/ingredients/UserSimulation';
 import {

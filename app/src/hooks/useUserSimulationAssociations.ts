@@ -128,7 +128,6 @@ export const useDeleteSimulationAssociation = () => {
     mutationFn: ({
       userSimulationId,
       userId,
-      countryId,
     }: {
       userSimulationId: string;
       userId: string;

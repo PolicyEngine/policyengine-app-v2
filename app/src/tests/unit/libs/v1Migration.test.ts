@@ -1,10 +1,26 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import {
+  createUserHouseholdAssociationV2,
+  fetchUserHouseholdAssociationsV2,
+} from '@/api/v2/userHouseholdAssociations';
+import {
+  createUserPolicyAssociationV2,
+  fetchUserPolicyAssociationsV2,
+} from '@/api/v2/userPolicyAssociations';
+import {
+  createUserReportAssociationV2,
+  fetchUserReportAssociationsV2,
+} from '@/api/v2/userReportAssociations';
+import {
+  createUserSimulationAssociationV2,
+  fetchUserSimulationAssociationsV2,
+} from '@/api/v2/userSimulationAssociations';
+import {
   hasLocalStorageData,
   isMigrationComplete,
   LS_KEYS,
-  MIGRATION_FLAG_KEY,
   migrateV1AssociationsToV2,
+  MIGRATION_FLAG_KEY,
 } from '@/libs/v1Migration';
 
 // Mock all 4 v2 API modules
@@ -27,23 +43,6 @@ vi.mock('@/api/v2/userHouseholdAssociations', () => ({
   createUserHouseholdAssociationV2: vi.fn().mockResolvedValue({}),
   fetchUserHouseholdAssociationsV2: vi.fn().mockResolvedValue([]),
 }));
-
-import {
-  createUserReportAssociationV2,
-  fetchUserReportAssociationsV2,
-} from '@/api/v2/userReportAssociations';
-import {
-  createUserSimulationAssociationV2,
-  fetchUserSimulationAssociationsV2,
-} from '@/api/v2/userSimulationAssociations';
-import {
-  createUserPolicyAssociationV2,
-  fetchUserPolicyAssociationsV2,
-} from '@/api/v2/userPolicyAssociations';
-import {
-  createUserHouseholdAssociationV2,
-  fetchUserHouseholdAssociationsV2,
-} from '@/api/v2/userHouseholdAssociations';
 
 const TEST_USER_ID = 'test-user-123';
 
@@ -268,7 +267,12 @@ describe('v1Migration', () => {
     });
 
     test('given multiple reports then migrates each one', async () => {
-      const report2 = { ...mockReport, id: 'sur-def456', reportId: 'report-2', label: 'Second report' };
+      const report2 = {
+        ...mockReport,
+        id: 'sur-def456',
+        reportId: 'report-2',
+        label: 'Second report',
+      };
       localStorage.setItem(LS_KEYS.reports, JSON.stringify([mockReport, report2]));
 
       await migrateV1AssociationsToV2(TEST_USER_ID);

@@ -22,14 +22,18 @@ export function useV1Migration(): void {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    if (isMigrationComplete()) return;
-    if (!hasLocalStorageData()) return;
+    if (isMigrationComplete()) {
+      return;
+    }
+    if (!hasLocalStorageData()) {
+      return;
+    }
 
     migrateV1AssociationsToV2(userId)
       .then((success) => {
         if (success) {
           queryClient.invalidateQueries();
-          console.log('[v1Migration] Migration complete, queries invalidated');
+          console.info('[v1Migration] Migration complete, queries invalidated');
         }
       })
       .catch((err) => {

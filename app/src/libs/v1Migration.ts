@@ -11,6 +11,14 @@
  */
 
 import {
+  createUserHouseholdAssociationV2,
+  fetchUserHouseholdAssociationsV2,
+} from '@/api/v2/userHouseholdAssociations';
+import {
+  createUserPolicyAssociationV2,
+  fetchUserPolicyAssociationsV2,
+} from '@/api/v2/userPolicyAssociations';
+import {
   createUserReportAssociationV2,
   fetchUserReportAssociationsV2,
 } from '@/api/v2/userReportAssociations';
@@ -18,18 +26,10 @@ import {
   createUserSimulationAssociationV2,
   fetchUserSimulationAssociationsV2,
 } from '@/api/v2/userSimulationAssociations';
-import {
-  createUserPolicyAssociationV2,
-  fetchUserPolicyAssociationsV2,
-} from '@/api/v2/userPolicyAssociations';
-import {
-  createUserHouseholdAssociationV2,
-  fetchUserHouseholdAssociationsV2,
-} from '@/api/v2/userHouseholdAssociations';
-import type { UserReport } from '@/types/ingredients/UserReport';
-import type { UserSimulation } from '@/types/ingredients/UserSimulation';
 import type { UserPolicy } from '@/types/ingredients/UserPolicy';
 import type { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
+import type { UserReport } from '@/types/ingredients/UserReport';
+import type { UserSimulation } from '@/types/ingredients/UserSimulation';
 
 const LOG_PREFIX = '[v1Migration]';
 
@@ -49,7 +49,9 @@ export function isMigrationComplete(): boolean {
 export function hasLocalStorageData(): boolean {
   return Object.values(LS_KEYS).some((key) => {
     const stored = localStorage.getItem(key);
-    if (!stored) return false;
+    if (!stored) {
+      return false;
+    }
     try {
       const parsed = JSON.parse(stored);
       return Array.isArray(parsed) && parsed.length > 0;
@@ -66,7 +68,9 @@ function setMigrationComplete(): void {
 function parseLocalStorage<T>(key: string): T[] {
   try {
     const stored = localStorage.getItem(key);
-    if (!stored) return [];
+    if (!stored) {
+      return [];
+    }
     const parsed = JSON.parse(stored);
     return Array.isArray(parsed) ? parsed : [];
   } catch {
@@ -76,10 +80,10 @@ function parseLocalStorage<T>(key: string): T[] {
 }
 
 async function migrateReports(userId: string): Promise<boolean> {
-  const local = parseLocalStorage<UserReport>(LS_KEYS.reports).filter(
-    (r) => r.userId === userId
-  );
-  if (local.length === 0) return true;
+  const local = parseLocalStorage<UserReport>(LS_KEYS.reports).filter((r) => r.userId === userId);
+  if (local.length === 0) {
+    return true;
+  }
 
   try {
     const existing = await fetchUserReportAssociationsV2(userId);
@@ -88,7 +92,7 @@ async function migrateReports(userId: string): Promise<boolean> {
     let allSucceeded = true;
     for (const report of local) {
       if (existingReportIds.has(report.reportId)) {
-        console.log(`${LOG_PREFIX} Report ${report.reportId} already exists in v2, skipping`);
+        console.info(`${LOG_PREFIX} Report ${report.reportId} already exists in v2, skipping`);
         continue;
       }
       try {
@@ -98,7 +102,8 @@ async function migrateReports(userId: string): Promise<boolean> {
           countryId: report.countryId,
           label: report.label,
         });
-        console.log(`${LOG_PREFIX} Migrated report ${report.reportId}`);
+
+        console.info(`${LOG_PREFIX} Migrated report ${report.reportId}`);
       } catch (err) {
         console.error(`${LOG_PREFIX} Failed to migrate report ${report.reportId}:`, err);
         allSucceeded = false;
@@ -115,7 +120,9 @@ async function migrateSimulations(userId: string): Promise<boolean> {
   const local = parseLocalStorage<UserSimulation>(LS_KEYS.simulations).filter(
     (s) => s.userId === userId
   );
-  if (local.length === 0) return true;
+  if (local.length === 0) {
+    return true;
+  }
 
   try {
     const existing = await fetchUserSimulationAssociationsV2(userId);
@@ -124,7 +131,7 @@ async function migrateSimulations(userId: string): Promise<boolean> {
     let allSucceeded = true;
     for (const sim of local) {
       if (existingSimIds.has(sim.simulationId)) {
-        console.log(`${LOG_PREFIX} Simulation ${sim.simulationId} already exists in v2, skipping`);
+        console.info(`${LOG_PREFIX} Simulation ${sim.simulationId} already exists in v2, skipping`);
         continue;
       }
       try {
@@ -134,7 +141,8 @@ async function migrateSimulations(userId: string): Promise<boolean> {
           countryId: sim.countryId,
           label: sim.label,
         });
-        console.log(`${LOG_PREFIX} Migrated simulation ${sim.simulationId}`);
+
+        console.info(`${LOG_PREFIX} Migrated simulation ${sim.simulationId}`);
       } catch (err) {
         console.error(`${LOG_PREFIX} Failed to migrate simulation ${sim.simulationId}:`, err);
         allSucceeded = false;
@@ -148,10 +156,10 @@ async function migrateSimulations(userId: string): Promise<boolean> {
 }
 
 async function migratePolicies(userId: string): Promise<boolean> {
-  const local = parseLocalStorage<UserPolicy>(LS_KEYS.policies).filter(
-    (p) => p.userId === userId
-  );
-  if (local.length === 0) return true;
+  const local = parseLocalStorage<UserPolicy>(LS_KEYS.policies).filter((p) => p.userId === userId);
+  if (local.length === 0) {
+    return true;
+  }
 
   try {
     const existing = await fetchUserPolicyAssociationsV2(userId);
@@ -160,7 +168,7 @@ async function migratePolicies(userId: string): Promise<boolean> {
     let allSucceeded = true;
     for (const policy of local) {
       if (existingPolicyIds.has(policy.policyId)) {
-        console.log(`${LOG_PREFIX} Policy ${policy.policyId} already exists in v2, skipping`);
+        console.info(`${LOG_PREFIX} Policy ${policy.policyId} already exists in v2, skipping`);
         continue;
       }
       try {
@@ -170,7 +178,8 @@ async function migratePolicies(userId: string): Promise<boolean> {
           countryId: policy.countryId,
           label: policy.label,
         });
-        console.log(`${LOG_PREFIX} Migrated policy ${policy.policyId}`);
+
+        console.info(`${LOG_PREFIX} Migrated policy ${policy.policyId}`);
       } catch (err) {
         console.error(`${LOG_PREFIX} Failed to migrate policy ${policy.policyId}:`, err);
         allSucceeded = false;
@@ -187,7 +196,9 @@ async function migrateHouseholds(userId: string): Promise<boolean> {
   const local = parseLocalStorage<UserHouseholdPopulation>(LS_KEYS.households).filter(
     (h) => h.userId === userId
   );
-  if (local.length === 0) return true;
+  if (local.length === 0) {
+    return true;
+  }
 
   try {
     const existing = await fetchUserHouseholdAssociationsV2(userId);
@@ -196,7 +207,7 @@ async function migrateHouseholds(userId: string): Promise<boolean> {
     let allSucceeded = true;
     for (const household of local) {
       if (existingHouseholdIds.has(household.householdId)) {
-        console.log(
+        console.info(
           `${LOG_PREFIX} Household ${household.householdId} already exists in v2, skipping`
         );
         continue;
@@ -208,7 +219,8 @@ async function migrateHouseholds(userId: string): Promise<boolean> {
           countryId: household.countryId,
           label: household.label,
         });
-        console.log(`${LOG_PREFIX} Migrated household ${household.householdId}`);
+
+        console.info(`${LOG_PREFIX} Migrated household ${household.householdId}`);
       } catch (err) {
         console.error(`${LOG_PREFIX} Failed to migrate household ${household.householdId}:`, err);
         allSucceeded = false;
@@ -230,7 +242,7 @@ async function migrateHouseholds(userId: string): Promise<boolean> {
  * @returns true if migration completed successfully
  */
 export async function migrateV1AssociationsToV2(userId: string): Promise<boolean> {
-  console.log(`${LOG_PREFIX} Starting migration for user ${userId}`);
+  console.info(`${LOG_PREFIX} Starting migration for user ${userId}`);
 
   const [reportsOk, simulationsOk, policiesOk, householdsOk] = await Promise.all([
     migrateReports(userId),
@@ -243,7 +255,8 @@ export async function migrateV1AssociationsToV2(userId: string): Promise<boolean
 
   if (allOk) {
     setMigrationComplete();
-    console.log(`${LOG_PREFIX} All associations migrated successfully`);
+
+    console.info(`${LOG_PREFIX} All associations migrated successfully`);
   } else {
     console.warn(`${LOG_PREFIX} Some associations failed to migrate, will retry on next load`);
   }

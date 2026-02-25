@@ -72,4 +72,3 @@ export async function createPolicy(payload: V2PolicyCreatePayload): Promise<V2Po
 
   return res.json();
 }
-

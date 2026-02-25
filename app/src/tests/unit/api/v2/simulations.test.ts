@@ -24,9 +24,8 @@ import {
   mockSuccessResponse,
   SIMULATION_ERROR_MESSAGES,
   TEST_DATASET_IDS,
-  TEST_HOUSEHOLD_IDS,
 } from '@/tests/fixtures/api/v2/simulationMocks';
-import { TEST_POLICY_IDS, TEST_SIMULATION_IDS } from '@/tests/fixtures/constants';
+import { TEST_SIMULATION_IDS } from '@/tests/fixtures/constants';
 
 vi.mock('@/api/v2/taxBenefitModels', () => ({
   API_V2_BASE_URL: 'https://test-api.example.com',

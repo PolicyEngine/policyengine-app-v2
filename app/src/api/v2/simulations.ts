@@ -85,9 +85,7 @@ function toAppStatus(status: SimulationStatus): Simulation['status'] {
 }
 
 /** Convert household simulation response to app Simulation */
-export function fromHouseholdSimulationResponse(
-  response: HouseholdSimulationResponse
-): Simulation {
+export function fromHouseholdSimulationResponse(response: HouseholdSimulationResponse): Simulation {
   return {
     id: response.id,
     policyId: response.policy_id,

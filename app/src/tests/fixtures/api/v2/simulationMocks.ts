@@ -6,7 +6,7 @@ import type {
   HouseholdSimulationResponse,
   RegionInfo,
 } from '@/api/v2/simulations';
-import { TEST_COUNTRIES, TEST_POLICY_IDS, TEST_SIMULATION_IDS } from '@/tests/fixtures/constants';
+import { TEST_POLICY_IDS, TEST_SIMULATION_IDS } from '@/tests/fixtures/constants';
 
 // IDs
 export const TEST_HOUSEHOLD_IDS = {

@@ -1,11 +1,11 @@
 import type { HouseholdImpactResponse } from '@/api/v2/householdAnalysis';
 import type { AggregatedCalcStatus } from '@/hooks/useAggregatedCalculationStatus';
+import type { CalcStatus } from '@/types/calculation';
 import type { Household } from '@/types/ingredients/Household';
 import type { Policy } from '@/types/ingredients/Policy';
 import type { Report } from '@/types/ingredients/Report';
 import type { Simulation } from '@/types/ingredients/Simulation';
 import type { UserPolicy } from '@/types/ingredients/UserPolicy';
-import type { CalcStatus } from '@/types/calculation';
 
 /**
  * Mock Report for HouseholdReportOutput tests

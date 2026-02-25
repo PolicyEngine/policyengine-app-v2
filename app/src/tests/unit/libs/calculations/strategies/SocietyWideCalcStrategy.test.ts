@@ -21,7 +21,9 @@ vi.mock('@/api/v2/economyAnalysis', () => ({
 // Mock getDatasetForRegion (pure utility kept in v1 module)
 vi.mock('@/api/societyWideCalculation', () => ({
   getDatasetForRegion: vi.fn((countryId: string, region: string) => {
-    if (countryId === 'us' && region === 'us') return 'enhanced_cps';
+    if (countryId === 'us' && region === 'us') {
+      return 'enhanced_cps';
+    }
     return undefined;
   }),
 }));
@@ -228,9 +230,7 @@ describe('SocietyWideCalcStrategy', () => {
 
     it('given failed status with no message then uses default error message', async () => {
       const params = mockSocietyWideCalcParams();
-      mockGetEconomyAnalysis.mockResolvedValue(
-        mockEconomyFailedResponse({ error_message: null })
-      );
+      mockGetEconomyAnalysis.mockResolvedValue(mockEconomyFailedResponse({ error_message: null }));
 
       const result = await strategy.execute(params, mockMetadata);
 

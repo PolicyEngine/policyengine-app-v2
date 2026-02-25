@@ -49,18 +49,14 @@ export default function HeroSection({ title, description, variant = 'default' }:
         <Divider
           orientation="horizontal"
           size="xs"
-          color={
-            variant === 'dark' ? colors.text.inverse : colors.border.dark
-          }
+          color={variant === 'dark' ? colors.text.inverse : colors.border.dark}
           hiddenFrom="md"
         />
 
         <Divider
           orientation="vertical"
           size="xs"
-          color={
-            variant === 'dark' ? colors.text.inverse : colors.border.dark
-          }
+          color={variant === 'dark' ? colors.text.inverse : colors.border.dark}
           visibleFrom="md"
         />
 

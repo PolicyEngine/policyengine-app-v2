@@ -11,7 +11,6 @@ import {
   mockFetchSuccess,
 } from '@/tests/fixtures/api/householdVariationMocks';
 
-
 describe('householdVariation', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -100,5 +99,4 @@ describe('householdVariation', () => {
       ).rejects.toThrow('timed out after 10 minutes');
     });
   });
-
 });

@@ -156,4 +156,3 @@ export const mockReportMetadataSingleSimulation: ReportMetadata = {
   status: 'pending',
   output: null,
 };
-

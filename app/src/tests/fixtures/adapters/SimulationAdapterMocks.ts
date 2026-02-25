@@ -71,4 +71,3 @@ export const mockSimulation = (overrides?: Partial<Simulation>): Simulation => (
   status: 'complete',
   ...overrides,
 });
-
