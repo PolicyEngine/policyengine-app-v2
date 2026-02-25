@@ -134,7 +134,7 @@ export function SimulationBlock({
                   width: 20,
                   height: 20,
                   borderRadius: '50%',
-                  background: colors.success,
+                  background: colors.primary[500],
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -180,8 +180,6 @@ export function SimulationBlock({
         inheritedPopulationLabel={inheritedPopulationLabel}
         recentPopulations={recentPopulations}
       />
-
-      <IngredientSection type="dynamics" countryId={countryId} onCreateCustom={() => {}} />
     </Paper>
   );
 }

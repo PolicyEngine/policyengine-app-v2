@@ -6,14 +6,7 @@
  * - Creation mode: PolicyCreationContent + PolicyParameterTree
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  IconChevronRight,
-  IconFolder,
-  IconPlus,
-  IconScale,
-  IconStar,
-  IconUsers,
-} from '@tabler/icons-react';
+import { IconChevronRight, IconFolder, IconPlus, IconScale, IconStar } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import { Box, Button, Group, Modal, Paper, Stack, Text } from '@mantine/core';
 import { PolicyAdapter } from '@/adapters';
@@ -77,9 +70,9 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
 
   // Browse mode state
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeSection, setActiveSection] = useState<
-    'frequently-selected' | 'my-policies' | 'public'
-  >('frequently-selected');
+  const [activeSection, setActiveSection] = useState<'frequently-selected' | 'my-policies'>(
+    'frequently-selected'
+  );
   const [selectedPolicyId, setSelectedPolicyId] = useState<string | null>(null);
   const [drawerPolicyId, setDrawerPolicyId] = useState<string | null>(null);
 
@@ -185,19 +178,14 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
 
   // Get policies for current section
   const displayedPolicies = useMemo(() => {
-    if (activeSection === 'public') {
-      return [];
-    }
     return filteredPolicies;
-  }, [activeSection, filteredPolicies]);
+  }, [filteredPolicies]);
 
   // Get section title
   const getSectionTitle = () => {
     switch (activeSection) {
       case 'my-policies':
         return 'My policies';
-      case 'public':
-        return 'User-created policies';
       default:
         return 'Policies';
     }
@@ -477,13 +465,6 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
             badge: userPolicies.length,
             isActive: activeSection === 'my-policies',
             onClick: () => setActiveSection('my-policies'),
-          },
-          {
-            id: 'public',
-            label: 'User-created policies',
-            icon: <IconUsers size={16} />,
-            isActive: activeSection === 'public',
-            onClick: () => setActiveSection('public'),
           },
           {
             id: 'create-new',

@@ -16,6 +16,8 @@ import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { initializeSimulationState } from '@/utils/pathwayState/initializeSimulationState';
 import { getReportOutputPath } from '@/utils/reportRouting';
 import { ReportBuilderShell, SimulationBlockFull } from './components';
+import { getSamplePopulations } from './constants';
+import { createCurrentLawPolicy } from './currentLaw';
 import { useReportSubmission } from './hooks/useReportSubmission';
 import type { IngredientPickerState, ReportBuilderState, TopBarAction } from './types';
 
@@ -23,9 +25,11 @@ export default function ReportBuilderPage() {
   const countryId = useCurrentCountry() as 'us' | 'uk';
   const navigate = useNavigate();
 
-  // State initialization (setup mode: blank)
+  // State initialization (setup mode: defaults to Current law + nationwide)
   const initialSim = initializeSimulationState();
   initialSim.label = 'Baseline simulation';
+  initialSim.policy = createCurrentLawPolicy();
+  initialSim.population = getSamplePopulations(countryId).nationwide;
 
   const [reportState, setReportState] = useState<ReportBuilderState>({
     label: null,

@@ -24,16 +24,16 @@ export const INGREDIENT_COLORS: Record<
   IngredientColorConfig
 > = {
   policy: {
-    icon: colors.secondary[600],
-    bg: colors.secondary[50],
-    border: colors.secondary[200],
-    accent: colors.secondary[500],
-  },
-  population: {
     icon: colors.primary[600],
     bg: colors.primary[50],
     border: colors.primary[200],
     accent: colors.primary[500],
+  },
+  population: {
+    icon: colors.secondary[600],
+    bg: colors.secondary[50],
+    border: colors.secondary[200],
+    accent: colors.secondary[500],
   },
   dynamics: {
     // Muted gray-green for dynamics (distinct from teal and slate)

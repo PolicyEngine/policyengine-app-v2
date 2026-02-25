@@ -119,7 +119,7 @@ export function SimulationBlockFull({
                   width: 20,
                   height: 20,
                   borderRadius: '50%',
-                  background: colors.success,
+                  background: colors.primary[500],
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -167,13 +167,6 @@ export function SimulationBlockFull({
         inheritedPopulationType={inheritedPopulationType}
         inheritedPopulationLabel={inheritedPopulationLabel}
         recentPopulations={recentPopulations}
-        isReadOnly={isReadOnly}
-      />
-
-      <IngredientSectionFull
-        type="dynamics"
-        countryId={countryId}
-        onCreateCustom={() => {}}
         isReadOnly={isReadOnly}
       />
     </Paper>
