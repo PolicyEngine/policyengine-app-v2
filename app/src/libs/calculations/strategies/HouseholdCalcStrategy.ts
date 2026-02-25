@@ -1,103 +1,90 @@
 import { Query } from '@tanstack/react-query';
 import {
-  calculationResultToHousehold,
-  createHouseholdCalculationJobV2,
-  getHouseholdCalculationJobStatusV2,
-} from '@/api/v2/householdCalculation';
-import { fetchHouseholdByIdV2 } from '@/api/v2/households';
+  createHouseholdAnalysis,
+  getHouseholdAnalysis,
+  HouseholdImpactRequest,
+  HouseholdReportStatus,
+} from '@/api/v2/householdAnalysis';
 import { HOUSEHOLD_DURATION_MS } from '@/constants/calculationDurations';
 import { CalcMetadata, CalcParams, CalcStatus } from '@/types/calculation';
-import { TaxBenefitModelName } from '@/types/ingredients/Household';
-import { householdToCalculatePayload } from '@/types/payloads';
 import { CalcExecutionStrategy, RefetchConfig } from './types';
 
 /**
- * Strategy for executing household calculations using v2 alpha API
+ * Strategy for executing household calculations using v2 analysis API
  *
- * Uses async job pattern similar to society-wide calculations:
- * 1. First execute() call: Fetch household → Create job → Return pending
- * 2. Subsequent execute() calls: Check job status → Return pending/complete/error
+ * Uses async job pattern:
+ * 1. First execute() call: POST /analysis/household-impact -> returns report_id
+ * 2. Subsequent execute() calls: GET /analysis/household-impact/{report_id} -> poll status
  *
- * This integrates with CalcOrchestrator's polling infrastructure to provide
- * real-time progress updates during calculation.
+ * The analysis endpoint runs both baseline and reform simulations server-side
+ * and returns the full comparison (baseline_result, reform_result, impact).
  */
 export class HouseholdCalcStrategy implements CalcExecutionStrategy {
   /**
    * Maximum consecutive poll errors before failing the calculation
-   * Allows resilience to transient network issues while preventing infinite polling
    */
   private static readonly MAX_CONSECUTIVE_ERRORS = 3;
 
   /**
-   * Registry mapping calcId → jobId for tracking active calculations
-   * Enables polling without storing job_id in query cache
+   * Registry mapping calcId -> report_id for tracking active analyses
    */
   private jobRegistry = new Map<string, string>();
 
   /**
    * Tracks consecutive poll errors per calcId
-   * Reset on successful poll, incremented on error
    */
   private errorCounts = new Map<string, number>();
 
   /**
    * Execute a household calculation
    *
-   * On first call: Creates a calculation job and returns pending status
+   * On first call: Creates a household analysis job and returns pending status
    * On subsequent calls: Polls job status and returns current state
    */
   async execute(params: CalcParams, metadata: CalcMetadata): Promise<CalcStatus> {
     const calcId = metadata.calcId;
+    const reportId = this.jobRegistry.get(calcId);
 
-    // Check if we already have a job for this calculation
-    const jobId = this.jobRegistry.get(calcId);
-
-    if (!jobId) {
-      // First call - create the job
+    if (!reportId) {
       return this.createJob(params, metadata);
     }
 
-    // Subsequent call - check job status
-    return this.checkJobStatus(jobId, params, metadata);
+    return this.checkJobStatus(reportId, params, metadata);
   }
 
   /**
-   * Create a new calculation job
+   * Create a new household analysis job
    */
   private async createJob(params: CalcParams, metadata: CalcMetadata): Promise<CalcStatus> {
     const calcId = metadata.calcId;
 
     try {
-      // Fetch the household definition
-      const household = await fetchHouseholdByIdV2(params.populationId);
-      // Use reform if present, otherwise baseline. Convert null to undefined for API.
-      const policyId = params.policyIds.reform ?? params.policyIds.baseline ?? undefined;
+      const request: HouseholdImpactRequest = {
+        household_id: params.populationId,
+        policy_id: params.policyIds.reform ?? params.policyIds.baseline ?? null,
+      };
 
-      // Create calculation payload and job
-      const payload = householdToCalculatePayload(household, policyId);
-      const job = await createHouseholdCalculationJobV2(payload);
+      const response = await createHouseholdAnalysis(request);
 
-      // Store job ID for polling
-      this.jobRegistry.set(calcId, job.job_id);
+      // Store report_id for polling
+      this.jobRegistry.set(calcId, response.report_id);
 
-      // Return pending status
       return {
         status: 'pending',
         progress: 0,
-        message: 'Starting household calculation...',
+        message: 'Starting household analysis...',
         metadata,
       };
     } catch (error) {
-      // Clean up on error
       this.jobRegistry.delete(calcId);
       console.error('[HouseholdCalcStrategy.createJob] Failed to create job:', error);
 
       const errorMessage =
-        error instanceof Error ? error.message : 'Failed to create calculation job';
+        error instanceof Error ? error.message : 'Failed to create household analysis job';
       return {
         status: 'error',
         error: {
-          code: 'HOUSEHOLD_CALC_FAILED',
+          code: 'HOUSEHOLD_ANALYSIS_FAILED',
           message: errorMessage,
           retryable: true,
         },
@@ -107,68 +94,56 @@ export class HouseholdCalcStrategy implements CalcExecutionStrategy {
   }
 
   /**
-   * Check the status of an existing calculation job
+   * Check the status of an existing household analysis job
    */
   private async checkJobStatus(
-    jobId: string,
-    params: CalcParams,
+    reportId: string,
+    _params: CalcParams,
     metadata: CalcMetadata
   ): Promise<CalcStatus> {
     const calcId = metadata.calcId;
 
     try {
-      const jobStatus = await getHouseholdCalculationJobStatusV2(jobId);
+      const response = await getHouseholdAnalysis(reportId);
 
       // Reset error count on successful poll
       this.errorCounts.delete(calcId);
 
-      if (jobStatus.status === 'COMPLETED') {
-        // Clean up all tracking state
+      if (response.status === 'completed') {
         this.cleanupCalc(calcId);
-
-        // Convert result to Household format
-        const modelName = this.countryIdToModelName(params.countryId);
-        const year = parseInt(params.year, 10);
-        const result = calculationResultToHousehold(jobStatus.result!, {
-          tax_benefit_model_name: modelName,
-          year,
-          people: [], // Will be replaced by result
-        });
 
         return {
           status: 'complete',
-          result,
+          result: response,
           metadata,
         };
       }
 
-      if (jobStatus.status === 'FAILED') {
+      if (response.status === 'failed') {
         this.cleanupCalc(calcId);
 
         return {
           status: 'error',
           error: {
-            code: 'HOUSEHOLD_CALC_FAILED',
-            message: jobStatus.error_message || 'Calculation failed',
+            code: 'HOUSEHOLD_ANALYSIS_FAILED',
+            message: response.error_message || 'Household analysis failed',
             retryable: true,
           },
           metadata,
         };
       }
 
-      // Still running (PENDING or RUNNING)
+      // Still running (pending or running)
       const elapsed = Date.now() - metadata.startedAt;
       const progress = Math.min((elapsed / HOUSEHOLD_DURATION_MS) * 100, 95);
-      const message = this.getStatusMessage(jobStatus.status);
 
       return {
         status: 'pending',
         progress,
-        message,
+        message: this.getStatusMessage(response.status),
         metadata,
       };
     } catch (error) {
-      // Track consecutive errors
       const errorCount = (this.errorCounts.get(calcId) || 0) + 1;
       this.errorCounts.set(calcId, errorCount);
 
@@ -177,24 +152,23 @@ export class HouseholdCalcStrategy implements CalcExecutionStrategy {
         error
       );
 
-      // After too many consecutive errors, fail the calculation
       if (errorCount >= HouseholdCalcStrategy.MAX_CONSECUTIVE_ERRORS) {
         this.cleanupCalc(calcId);
 
         const errorMessage =
-          error instanceof Error ? error.message : 'Failed to check calculation status';
+          error instanceof Error ? error.message : 'Failed to check analysis status';
         return {
           status: 'error',
           error: {
             code: 'POLL_FAILED',
-            message: `Calculation status check failed after ${errorCount} attempts: ${errorMessage}`,
+            message: `Analysis status check failed after ${errorCount} attempts: ${errorMessage}`,
             retryable: true,
           },
           metadata,
         };
       }
 
-      // Still under threshold - return pending to retry on next poll
+      // Under threshold — return pending to retry on next poll
       const elapsed = Date.now() - metadata.startedAt;
       const progress = Math.min((elapsed / HOUSEHOLD_DURATION_MS) * 100, 95);
 
@@ -216,45 +190,35 @@ export class HouseholdCalcStrategy implements CalcExecutionStrategy {
   }
 
   /**
-   * Get human-readable message for job status
+   * Get human-readable message for v2 API job status
    */
-  private getStatusMessage(status: string): string {
+  private getStatusMessage(status: HouseholdReportStatus): string {
     switch (status) {
-      case 'PENDING':
+      case 'pending':
         return 'Waiting in queue...';
-      case 'RUNNING':
-        return 'Running household calculation...';
+      case 'running':
+        return 'Running household analysis...';
       default:
         return 'Processing...';
     }
   }
 
   /**
-   * Convert country ID to tax benefit model name
-   */
-  private countryIdToModelName(countryId: string): TaxBenefitModelName {
-    return `policyengine_${countryId}` as TaxBenefitModelName;
-  }
-
-  /**
    * Get refetch configuration for household calculations
-   *
    * Polls every 1 second while pending, stops when complete/error
-   * Matches the society-wide calculation polling pattern
    */
   getRefetchConfig(): RefetchConfig {
     return {
       refetchInterval: (query: Query) => {
         const data = query.state.data as CalcStatus | undefined;
-        // Continue polling only if status is pending
         return data?.status === 'pending' ? 1000 : false;
       },
-      staleTime: Infinity, // Results don't go stale
+      staleTime: Infinity,
     };
   }
 
   /**
-   * Transform household API response to unified CalcStatus
+   * Transform API response to unified CalcStatus
    * Kept for interface compatibility
    */
   transformResponse(apiResponse: unknown): CalcStatus {

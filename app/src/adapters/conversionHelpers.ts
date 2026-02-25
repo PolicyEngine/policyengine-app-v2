@@ -28,21 +28,6 @@ export function convertDateRangeMapToValueIntervals(
 }
 
 /**
- * Converts PolicyMetadata.policy_json into Parameter[] format
- * Copied from src/libs/policyParameterTransform.ts
- */
-export function convertPolicyJsonToParameters(policyJson: PolicyMetadataParams): Parameter[] {
-  return Object.entries(policyJson).map(([paramName, dateValueMap]) => {
-    const valueIntervals = convertDateRangeMapToValueIntervals(dateValueMap);
-
-    return {
-      name: paramName,
-      values: valueIntervals,
-    };
-  });
-}
-
-/**
  * Converts Parameter[] to PolicyMetadataParams format for API payloads
  */
 export function convertParametersToPolicyJson(parameters: Parameter[]): PolicyMetadataParams {
@@ -59,39 +44,17 @@ export function convertParametersToPolicyJson(parameters: Parameter[]): PolicyMe
 }
 
 /**
- * Serializer for ReportOutput to JSON string
- * TODO: Placeholder for custom serialization logic when report structure is finalized
- */
-function reportOutputSerializer(_key: string, value: any): any {
-  // Placeholder: currently performs default serialization
-  return value;
-}
-
-/**
- * Deserializer for JSON string to ReportOutput
- * TODO: Placeholder for custom deserialization logic when report structure is finalized
- */
-function reportOutputDeserializer(_key: string, value: any): any {
-  // Placeholder: currently performs default deserialization
-  return value;
-}
-
-/**
- * Converts ReportOutput to JSON string format for ReportMetadata
- */
-export function convertReportOutputToJson(output: ReportOutput | null): string | null {
-  if (output === null) {
-    return null;
-  }
-  return JSON.stringify(output, reportOutputSerializer);
-}
-
-/**
- * Converts JSON string from ReportMetadata to ReportOutput format
+ * Converts JSON string from ReportMetadata to ReportOutput format.
+ *
+ * @deprecated Used only by the v1 report read path (ReportAdapter.fromMetadata).
+ *
+ * **Backward-compat note**: Users' existing v1 report outputs are stored as JSON
+ * strings in the v1 API. This parser is needed to display them. Will be removed
+ * once v1 API endpoints are decommissioned.
  */
 export function convertJsonToReportOutput(jsonString: string | null): ReportOutput | null {
   if (jsonString === null) {
     return null;
   }
-  return JSON.parse(jsonString, reportOutputDeserializer);
+  return JSON.parse(jsonString);
 }

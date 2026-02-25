@@ -1,5 +1,8 @@
 import { useMemo } from 'react';
-import { useSimulationProgressDisplay } from '@/hooks/household';
+import type { AggregatedCalcStatus } from '@/hooks/useAggregatedCalculationStatus';
+import { useCalculationStatus } from '@/hooks/useCalculationStatus';
+import { useStartCalculationOnLoad } from '@/hooks/useStartCalculationOnLoad';
+import type { CalcStartConfig } from '@/types/calculation';
 import type { Household } from '@/types/ingredients/Household';
 import type { Policy } from '@/types/ingredients/Policy';
 import type { Report } from '@/types/ingredients/Report';
@@ -17,7 +20,6 @@ import NotFoundSubPage from './NotFoundSubPage';
 import OverviewSubPage from './OverviewSubPage';
 import PolicySubPage from './PolicySubPage';
 import PopulationSubPage from './PopulationSubPage';
-import { useHouseholdCalculations } from './useHouseholdCalculations';
 
 interface HouseholdReportOutputProps {
   report: Report | undefined;
@@ -37,14 +39,16 @@ interface HouseholdReportOutputProps {
  * Household report output page
  *
  * ARCHITECTURE:
- * - ViewModel: Data transformation and business logic
- * - Hook: Orchestration side effects
+ * - ViewModel: Data transformation (extract outputs from CalcStatus, policy labels)
+ * - CalcOrchestrator + HouseholdCalcStrategy: Async job management and polling
+ * - useStartCalculationOnLoad: Ensures calculations run on direct URL loads
+ * - useCalculationStatus: Aggregated status across all per-simulation calculations
  * - Component: Presentation only
  */
 export function HouseholdReportOutput({
   report,
   simulations,
-  userSimulations,
+  userSimulations: _userSimulations,
   userPolicies,
   policies,
   households,
@@ -56,25 +60,54 @@ export function HouseholdReportOutput({
 }: HouseholdReportOutputProps) {
   // Build view model (memoized - recomputes only when props change)
   const viewModel = useMemo(
-    () => new HouseholdReportViewModel(report, simulations, userSimulations, userPolicies),
-    [report, simulations, userSimulations, userPolicies]
+    () => new HouseholdReportViewModel(report, simulations, userPolicies),
+    [report, simulations, userPolicies]
   );
 
-  // Handle calculation orchestration
-  useHouseholdCalculations(viewModel);
+  const simulationIds = viewModel.simulationIds;
 
-  // Get real-time progress display (for UI enhancement only)
-  const {
-    displayProgress,
-    hasCalcStatus,
-    message: progressMessage,
-  } = useSimulationProgressDisplay(viewModel.simulationIds);
+  // Get aggregated CalcStatus across all simulations
+  const calcStatus = useCalculationStatus(simulationIds, 'simulation') as AggregatedCalcStatus;
 
-  // Extract states from view model
-  const { isPending, isComplete, isError } = viewModel.simulationStates;
+  // Build CalcStartConfig for each simulation (for direct URL loads)
+  // Each simulation gets its own CalcOrchestrator → HouseholdCalcStrategy,
+  // matching the pattern used by useCreateReport for household reports
+  const calcConfigs = useMemo(() => {
+    if (!report || !simulations?.length) {
+      return null;
+    }
 
-  // RENDER DECISIONS: Based on persistent Simulation.status
-  // PROGRESS DISPLAY: Enhanced with ephemeral CalcStatus when available
+    return simulations
+      .filter((sim) => sim.id && sim.populationId)
+      .map(
+        (sim): CalcStartConfig => ({
+          calcId: sim.id!,
+          targetType: 'simulation',
+          countryId: report.countryId,
+          year: report.year,
+          reportId: report.id,
+          simulations: {
+            simulation1: sim,
+            simulation2: null,
+          },
+          populations: {
+            household1: households?.find((h) => h.id === sim.populationId) || null,
+            household2: null,
+            geography1: null,
+            geography2: null,
+          },
+        })
+      );
+  }, [report, simulations, households]);
+
+  // Auto-start calculations if needed (direct URL loads)
+  useStartCalculationOnLoad({
+    enabled: !!report && !!calcConfigs,
+    configs: calcConfigs || [],
+    isComplete: calcStatus.isComplete,
+  });
+
+  // RENDER DECISIONS: Based on aggregated CalcStatus across all simulations
 
   // Show loading state while fetching data
   if (dataLoading) {
@@ -86,23 +119,27 @@ export function HouseholdReportOutput({
     return <ErrorPage error={dataError || new Error('Report not found')} />;
   }
 
-  // Show error if any simulation has error status (persistent)
-  if (isError) {
-    return <ErrorPage error={new Error(viewModel.getErrorMessage())} />;
+  // Show loading if calculation status is still initializing
+  if (calcStatus.isInitializing) {
+    return <LoadingPage message="Loading calculation status..." />;
   }
 
-  // Show loading if pending (needs calculation OR currently calculating)
-  // CalcStatus provides progress display if available (same session)
-  if (isPending) {
+  // Show error if any simulation calculation failed
+  if (calcStatus.isError) {
+    return <ErrorPage error={new Error(viewModel.getErrorMessage(calcStatus.error))} />;
+  }
+
+  // Show loading if any simulation calculation is still running
+  if (calcStatus.isPending) {
     const displayStatusLabel = getDisplayStatus('pending');
-    const message = progressMessage || `${displayStatusLabel} household simulations...`;
+    const message = calcStatus.message || `${displayStatusLabel} household simulations...`;
 
-    return <LoadingPage message={message} progress={hasCalcStatus ? displayProgress : undefined} />;
+    return <LoadingPage message={message} progress={calcStatus.progress} />;
   }
 
-  // Show results if all simulations complete (persistent status)
-  if (isComplete) {
-    const output = viewModel.getFormattedOutput();
+  // Show results if all simulations complete
+  if (calcStatus.isComplete) {
+    const output = viewModel.getFormattedOutput(calcStatus.calculations);
     const policyLabels = viewModel.getPolicyLabels();
 
     if (!output) {

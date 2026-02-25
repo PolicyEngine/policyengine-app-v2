@@ -1,12 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { SimulationAdapter } from '@/adapters/SimulationAdapter';
 import {
-  mockErrorMessage,
   mockSimulation,
   mockSimulationMetadata,
   mockSimulationMetadataGeography,
   mockSimulationMetadataStringifiedOutput,
-  mockSimulationOutput,
   TEST_COUNTRIES,
   TEST_POLICY_IDS,
   TEST_POPULATION_IDS,
@@ -155,118 +153,6 @@ describe('SimulationAdapter', () => {
       expect(() => SimulationAdapter.toCreationPayload(simulation)).toThrow(
         'Simulation must have a populationType'
       );
-    });
-  });
-
-  describe('toUpdatePayload', () => {
-    it('given simulation with output then creates update payload', () => {
-      // Given
-      const output = mockSimulationOutput();
-
-      // When
-      const payload = SimulationAdapter.toUpdatePayload(
-        TEST_SIMULATION_IDS.SIM_123,
-        output,
-        'complete'
-      );
-
-      // Then
-      expect(payload).toEqual({
-        id: TEST_SIMULATION_IDS.SIM_123,
-        output: JSON.stringify(output),
-        status: 'complete',
-      });
-    });
-
-    it('given null output then includes null in payload', () => {
-      // When
-      const payload = SimulationAdapter.toUpdatePayload(
-        TEST_SIMULATION_IDS.SIM_123,
-        null,
-        'pending'
-      );
-
-      // Then
-      expect(payload).toEqual({
-        id: TEST_SIMULATION_IDS.SIM_123,
-        output: null,
-        status: 'pending',
-      });
-    });
-
-    it('given error status then creates payload', () => {
-      // When
-      const payload = SimulationAdapter.toUpdatePayload(TEST_SIMULATION_IDS.SIM_123, null, 'error');
-
-      // Then
-      expect(payload).toEqual({
-        id: TEST_SIMULATION_IDS.SIM_123,
-        output: null,
-        status: 'error',
-      });
-    });
-  });
-
-  describe('toCompletedPayload', () => {
-    it('given output then creates completed payload', () => {
-      // Given
-      const output = mockSimulationOutput();
-
-      // When
-      const payload = SimulationAdapter.toCompletedPayload(TEST_SIMULATION_IDS.SIM_123, output);
-
-      // Then
-      expect(payload).toEqual({
-        id: TEST_SIMULATION_IDS.SIM_123,
-        output: JSON.stringify(output),
-        status: 'complete',
-      });
-    });
-  });
-
-  describe('toErrorPayload', () => {
-    it('given error message then creates error payload', () => {
-      // Given
-      const errorMessage = mockErrorMessage();
-
-      // When
-      const payload = SimulationAdapter.toErrorPayload(TEST_SIMULATION_IDS.SIM_123, errorMessage);
-
-      // Then
-      expect(payload).toEqual({
-        id: TEST_SIMULATION_IDS.SIM_123,
-        output: null,
-        status: 'error',
-        error_message: errorMessage,
-      });
-    });
-
-    it('given no error message then omits error_message field', () => {
-      // When
-      const payload = SimulationAdapter.toErrorPayload(TEST_SIMULATION_IDS.SIM_123);
-
-      // Then
-      expect(payload).toEqual({
-        id: TEST_SIMULATION_IDS.SIM_123,
-        output: null,
-        status: 'error',
-      });
-    });
-  });
-
-  describe('toEconomyPlaceholderPayload', () => {
-    it('given no params then creates economy placeholder payload', () => {
-      // When
-      const payload = SimulationAdapter.toEconomyPlaceholderPayload(TEST_SIMULATION_IDS.SIM_123);
-
-      // Then
-      expect(payload).toEqual({
-        id: TEST_SIMULATION_IDS.SIM_123,
-        output: JSON.stringify({
-          message: 'Economy-wide reports do not save simulation-level results at this time',
-        }),
-        status: 'complete',
-      });
     });
   });
 });

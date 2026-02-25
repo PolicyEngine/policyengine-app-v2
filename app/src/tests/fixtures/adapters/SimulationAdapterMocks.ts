@@ -71,10 +71,3 @@ export const mockSimulation = (overrides?: Partial<Simulation>): Simulation => (
   status: 'complete',
   ...overrides,
 });
-
-export const mockSimulationOutput = () => ({
-  household_net_income: { 2024: 50000 },
-  household_benefits: { 2024: 10000 },
-});
-
-export const mockErrorMessage = () => 'Calculation failed due to invalid parameters';

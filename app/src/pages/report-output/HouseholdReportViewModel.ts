@@ -1,22 +1,23 @@
-import type { HouseholdReportOrchestrator } from '@/libs/calculations/household/HouseholdReportOrchestrator';
-import type { HouseholdReportConfig, SimulationConfig } from '@/types/calculation/household';
+import type { HouseholdImpactResponse } from '@/api/v2/householdAnalysis';
+import type { CalcStatus } from '@/types/calculation';
 import type { Household } from '@/types/ingredients/Household';
 import type { Report } from '@/types/ingredients/Report';
 import type { Simulation } from '@/types/ingredients/Simulation';
 import type { UserPolicy } from '@/types/ingredients/UserPolicy';
-import type { UserSimulation } from '@/types/ingredients/UserSimulation';
 
 /**
  * View Model for HouseholdReportOutput
  *
- * Encapsulates all data transformation and business logic for household report display.
+ * Encapsulates data transformation and business logic for household report display.
  * Pure data class - no side effects, easy to test.
+ *
+ * Calculation orchestration is handled by CalcOrchestrator + HouseholdCalcStrategy,
+ * accessed via useStartCalculationOnLoad and useCalculationStatus hooks.
  */
 export class HouseholdReportViewModel {
   constructor(
     private report: Report | undefined,
     private simulations: Simulation[] | undefined,
-    private userSimulations: UserSimulation[] | undefined,
     private userPolicies: UserPolicy[] | undefined
   ) {}
 
@@ -28,94 +29,38 @@ export class HouseholdReportViewModel {
   }
 
   /**
-   * Derive simulation states from persistent status
-   * Source of truth for rendering decisions
+   * Extract household outputs from completed CalcStatus results.
+   *
+   * Each CalcStatus.result is a HouseholdImpactResponse from the v2 analysis endpoint.
+   * For single-policy analysis (policy_id=null): only baseline_result is populated.
+   * For comparison analysis (policy_id=reform): both baseline_result and reform_result exist.
+   *
+   * We extract the "primary" result for each simulation:
+   * - If reform_result exists, this is a comparison — use reform_result
+   * - Otherwise, use baseline_result (single-policy / current law)
    */
-  get simulationStates() {
-    if (!this.simulations || this.simulations.length === 0) {
-      return { isPending: false, isComplete: false, isError: false };
-    }
-
-    return {
-      // 'pending' means: needs calculation OR currently calculating
-      // Also check for undefined/null status (defensive)
-      isPending: this.simulations.some((s) => !s.status || s.status === 'pending'),
-      isComplete: this.simulations.every((s) => s.status === 'complete'),
-      isError: this.simulations.some((s) => s.status === 'error'),
-    };
+  getOutputsFromCalcResults(calculations: CalcStatus[]): Household[] {
+    return calculations
+      .filter((calc) => calc.status === 'complete' && calc.result)
+      .map((calc) => {
+        const response = calc.result as HouseholdImpactResponse;
+        return (response.reform_result || response.baseline_result) as unknown as Household;
+      })
+      .filter((h): h is Household => !!h);
   }
 
   /**
-   * Build calculation config for orchestrator
+   * Format household outputs for sub-pages.
+   * Returns single Household for single-sim reports, array for comparisons.
    */
-  buildCalculationConfig(): HouseholdReportConfig | null {
-    if (!this.report?.id) {
+  getFormattedOutput(calculations: CalcStatus[]): Household | Household[] | null {
+    const outputs = this.getOutputsFromCalcResults(calculations);
+
+    if (outputs.length === 0) {
       return null;
     }
 
-    const configs: SimulationConfig[] = (this.simulations || [])
-      .filter((sim) => sim.id && sim.populationId && sim.policyId)
-      .map((sim) => ({
-        simulationId: sim.id!,
-        populationId: sim.populationId!,
-        policyId: sim.policyId!,
-      }));
-
-    return {
-      reportId: this.report.id,
-      report: this.report,
-      simulationConfigs: configs,
-      countryId: this.report.countryId,
-    };
-  }
-
-  /**
-   * Determine if calculations should be started
-   */
-  shouldStartCalculations(orchestrator: HouseholdReportOrchestrator): boolean {
-    if (!this.report?.id || !this.simulations || this.simulations.length === 0) {
-      return false;
-    }
-
-    if (!this.simulationStates.isPending) {
-      return false;
-    }
-
-    // Don't start if any simulation is already calculating
-    return !this.simulations.some((sim) => orchestrator.isCalculating(sim.id!));
-  }
-
-  /**
-   * Get error message for failed simulations
-   */
-  getErrorMessage(): string {
-    const errorSims = this.simulations?.filter((s) => s.status === 'error') || [];
-
-    if (errorSims.length === 0) {
-      return 'Calculation failed';
-    }
-
-    return errorSims.map((s) => `Simulation ${s.id}: Failed to calculate`).join('\n');
-  }
-
-  /**
-   * Extract household outputs from completed simulations
-   */
-  getHouseholdOutputs(): Household[] {
-    if (!this.report || !this.simulations) {
-      return [];
-    }
-
-    return this.simulations
-      .filter((sim) => sim.output)
-      .map((sim) => {
-        // sim.output is already a Household in v2 format
-        const output = sim.output as Household;
-        return {
-          ...output,
-          id: sim.id,
-        };
-      });
+    return outputs.length > 1 ? outputs : outputs[0];
   }
 
   /**
@@ -126,25 +71,16 @@ export class HouseholdReportViewModel {
       return [];
     }
 
-    return this.simulations
-      .filter((sim) => sim.output)
-      .map((sim) => {
-        const userPolicy = this.userPolicies!.find((up) => up.policyId === sim.policyId);
-        return userPolicy?.label || `Policy ${sim.policyId}`;
-      });
+    return this.simulations.map((sim) => {
+      const userPolicy = this.userPolicies!.find((up) => up.policyId === sim.policyId);
+      return userPolicy?.label || `Policy ${sim.policyId}`;
+    });
   }
 
   /**
-   * Format household outputs for OverviewSubPage
-   * Returns single household for single-sim reports, array for comparisons
+   * Get error message from CalcStatus error
    */
-  getFormattedOutput(): Household | Household[] | null {
-    const outputs = this.getHouseholdOutputs();
-
-    if (outputs.length === 0) {
-      return null;
-    }
-
-    return outputs.length > 1 ? outputs : outputs[0];
+  getErrorMessage(error?: CalcStatus['error']): string {
+    return error?.message || 'Calculation failed';
   }
 }

@@ -5,6 +5,12 @@ import { fetchPolicyById } from '@/api/policy';
 import { fetchReportById } from '@/api/report';
 import { fetchSimulationById } from '@/api/simulation';
 import { fetchHouseholdByIdV2 } from '@/api/v2/households';
+import {
+  fromEconomySimulationResponse,
+  fromHouseholdSimulationResponse,
+  getEconomySimulation,
+  getHouseholdSimulation,
+} from '@/api/v2/simulations';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
@@ -93,45 +99,73 @@ export const useUserReports = (userId: string) => {
     error: housAssocError,
   } = useHouseholdAssociationsByUser(userId);
 
-  // Step 2: Extract report IDs for fetching
-  const reportIds = reportAssociations?.map((a) => a.reportId).filter(Boolean) ?? [];
+  // Step 2: Separate v2 reports (have outputType + simulationIds) from v1 reports
+  const v2Associations =
+    reportAssociations?.filter((a) => a.outputType && a.simulationIds?.length) ?? [];
+  const v1Associations =
+    reportAssociations?.filter((a) => !a.outputType || !a.simulationIds?.length) ?? [];
 
-  // Step 3: Fetch reports using parallel queries utility
-  const reportResults = useParallelQueries<Report>(reportIds, {
+  // Construct Report objects from v2 UserReport metadata (no API call needed)
+  const v2Reports: Report[] = v2Associations.map((a) => ({
+    id: a.reportId,
+    countryId: a.countryId,
+    year: a.year || new Date().getFullYear().toString(),
+    apiVersion: 'v2' as const,
+    simulationIds: a.simulationIds!,
+    status: 'pending' as const,
+    outputType: a.outputType,
+  }));
+
+  // Step 3: Fetch v1 reports only (v2 reports are constructed above)
+  const v1ReportIds = v1Associations.map((a) => a.reportId).filter(Boolean);
+
+  const reportResults = useParallelQueries<Report>(v1ReportIds, {
     queryKey: reportKeys.byId,
     queryFn: async (id) => {
       const metadata = await fetchReportById(country, id);
       return ReportAdapter.fromMetadata(metadata);
     },
-    enabled: !!reportAssociations && reportAssociations.length > 0,
+    enabled: v1ReportIds.length > 0,
     staleTime: 5 * 60 * 1000,
   });
 
-  // Step 4: Extract simulation IDs from fetched reports
-  const reports = reportResults.queries.map((q) => q.data).filter((r): r is Report => !!r);
+  // Step 4: Merge v1 fetched reports with v2 constructed reports
+  const v1Reports = reportResults.queries.map((q) => q.data).filter((r): r is Report => !!r);
+  const reports = [...v2Reports, ...v1Reports];
 
-  // Collect all simulation IDs from reports (each report has 1 or 2 simulations)
+  // Collect all simulation IDs from all reports
   const simulationIds = reports
     .flatMap((r) => r.simulationIds)
     .filter((id, index, self) => self.indexOf(id) === index);
 
-  // Step 5: Fetch simulations
+  // Build a lookup: simId → outputType from v2 associations for routing to the right endpoint
+  const v2SimOutputType = new Map<string, 'household' | 'economy'>();
+  v2Associations.forEach((a) => {
+    a.simulationIds?.forEach((simId) => {
+      if (a.outputType) {
+        v2SimOutputType.set(simId, a.outputType);
+      }
+    });
+  });
+
+  // Step 5: Fetch simulations (v2 via typed endpoints, v1 via legacy)
   const simulationResults = useParallelQueries<Simulation>(simulationIds, {
     queryKey: simulationKeys.byId,
     queryFn: async (id) => {
+      const simType = v2SimOutputType.get(id);
+      if (simType === 'household') {
+        const response = await getHouseholdSimulation(id);
+        return fromHouseholdSimulationResponse(response);
+      }
+      if (simType === 'economy') {
+        const response = await getEconomySimulation(id);
+        return fromEconomySimulationResponse(response);
+      }
       const metadata = await fetchSimulationById(country, id);
-      const transformed = SimulationAdapter.fromMetadata(metadata);
-      return transformed;
+      return SimulationAdapter.fromMetadata(metadata);
     },
     enabled: simulationIds.length > 0,
-    // staleTime: Infinity - Never auto-refetch, rely on invalidateQueries() for targeted refetching
-    // When orchestrator calls invalidateQueries({ queryKey: simulationKeys.byId(simId) }),
-    // that specific simulation will be marked stale and refetch on next mount
-    // All other simulations remain fresh and use cached data (fast navigation)
     staleTime: Infinity,
-    // gcTime: 0 - Delete from cache immediately when no components are using this data
-    // Prevents memory bloat from accumulating unused simulation data
-    // When navigating away from Reports page, unused simulations are garbage collected
     gcTime: 0,
   });
 
@@ -339,14 +373,32 @@ export const useUserReportById = (userReportId: string, options?: { enabled?: bo
   const baseReportId = userReport?.reportId;
   const userId = userReport?.userId;
 
+  // Determine if this is a v2 report (has outputType + simulationIds from useCreateReport)
+  const isV2Report = !!(userReport?.outputType && userReport?.simulationIds?.length);
+  const outputType = userReport?.outputType;
+
+  // For v2: construct Report from UserReport metadata (no v1 fetch needed)
+  const v2Report: Report | undefined =
+    isV2Report && userReport
+      ? {
+          id: userReport.reportId,
+          countryId: userReport.countryId,
+          year: userReport.year || new Date().getFullYear().toString(),
+          apiVersion: 'v2',
+          simulationIds: userReport.simulationIds!,
+          status: 'pending',
+          outputType: userReport.outputType,
+        }
+      : undefined;
+
   // Try to get base report from normalized cache first
   const cachedReport = baseReportId
     ? (queryNormalizer.getObjectById(baseReportId) as Report | undefined)
     : undefined;
 
-  // Step 2: Fetch base report (query always enabled to allow invalidation)
+  // Step 2: Fetch base report via v1 (disabled for v2 reports)
   const {
-    data: report,
+    data: v1Report,
     isLoading: repLoading,
     error: repError,
   } = useQuery({
@@ -355,31 +407,32 @@ export const useUserReportById = (userReportId: string, options?: { enabled?: bo
       const metadata = await fetchReportById(country, baseReportId!);
       return ReportAdapter.fromMetadata(metadata);
     },
-    enabled: isEnabled && !!baseReportId, // Removed && !cachedReport to allow invalidation
+    enabled: isEnabled && !!baseReportId && !isV2Report,
     staleTime: 5 * 60 * 1000,
   });
 
-  const finalReport = cachedReport || report;
+  const finalReport = v2Report || cachedReport || v1Report;
 
   // Step 3: Fetch simulations for the report
+  // For v2, simulationIds come from UserReport; for v1 they come from fetched Report
   const simulationIds = finalReport?.simulationIds ?? [];
 
   const simulationResults = useParallelQueries<Simulation>(simulationIds, {
     queryKey: simulationKeys.byId,
     queryFn: async (id) => {
+      if (isV2Report && outputType === 'household') {
+        const response = await getHouseholdSimulation(id);
+        return fromHouseholdSimulationResponse(response);
+      }
+      if (isV2Report && outputType === 'economy') {
+        const response = await getEconomySimulation(id);
+        return fromEconomySimulationResponse(response);
+      }
       const metadata = await fetchSimulationById(country, id);
-      const transformed = SimulationAdapter.fromMetadata(metadata);
-      return transformed;
+      return SimulationAdapter.fromMetadata(metadata);
     },
     enabled: isEnabled && simulationIds.length > 0,
-    // staleTime: Infinity - Never auto-refetch, rely on invalidateQueries() for targeted refetching
-    // When orchestrator calls invalidateQueries({ queryKey: simulationKeys.byId(simId) }),
-    // that specific simulation will be marked stale and refetch on next mount
-    // All other simulations remain fresh and use cached data (fast navigation)
     staleTime: Infinity,
-    // gcTime: 0 - Delete from cache immediately when no components are using this data
-    // Prevents memory bloat from accumulating unused simulation data
-    // When navigating away from report output, unused simulations are garbage collected
     gcTime: 0,
   });
 
@@ -438,7 +491,6 @@ export const useUserReportById = (userReportId: string, options?: { enabled?: bo
   const geographies: Geography[] = [];
   simulations.forEach((sim) => {
     if (sim.populationType === 'geography' && sim.populationId && sim.countryId) {
-      // Create simplified Geography with regionCode from simulation's populationId
       const geography: Geography = {
         countryId: sim.countryId,
         regionCode: sim.populationId,

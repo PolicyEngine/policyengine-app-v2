@@ -9,7 +9,6 @@
 
 import { useCallback, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ReportAdapter } from '@/adapters';
 import StandardLayout from '@/components/StandardLayout';
 import { MOCK_USER_ID } from '@/constants';
 import { ReportYearProvider } from '@/contexts/ReportYearContext';
@@ -19,10 +18,8 @@ import { useCurrentLawId, useRegionsList } from '@/hooks/useStaticMetadata';
 import { useUserHouseholds } from '@/hooks/useUserHousehold';
 import { useUserSimulations } from '@/hooks/useUserSimulations';
 import { countryIds } from '@/libs/countries';
-import { Report } from '@/types/ingredients/Report';
 import { ReportViewMode } from '@/types/pathwayModes/ReportViewMode';
 import { ReportStateProps, SimulationStateProps } from '@/types/pathwayState';
-import { ReportCreationPayload } from '@/types/payloads';
 import { convertSimulationStateToApi } from '@/utils/ingredientReconstruction';
 import {
   createPolicyCallbacks,
@@ -231,28 +228,7 @@ export default function ReportPathwayWrapper({ onComplete }: ReportPathwayWrappe
 
   // ========== REPORT SUBMISSION ==========
   const handleSubmitReport = useCallback(() => {
-    const sim1Id = reportState.simulations[0]?.id;
-    const sim2Id = reportState.simulations[1]?.id;
-
-    // Validation
-    if (!sim1Id) {
-      console.error('[ReportPathwayWrapper] Cannot submit: no baseline simulation');
-      return;
-    }
-
-    // Prepare report data
-    const reportData: Partial<Report> = {
-      countryId: reportState.countryId,
-      year: reportState.year,
-      simulationIds: [sim1Id, sim2Id].filter(Boolean) as string[],
-      apiVersion: reportState.apiVersion,
-    };
-
-    const serializedPayload: ReportCreationPayload = ReportAdapter.toCreationPayload(
-      reportData as Report
-    );
-
-    // Convert SimulationStateProps to Simulation format for CalcOrchestrator
+    // Convert SimulationStateProps to Simulation format for v2 analysis
     const simulation1Api = convertSimulationStateToApi(reportState.simulations[0]);
     const simulation2Api = convertSimulationStateToApi(reportState.simulations[1]);
 
@@ -261,11 +237,11 @@ export default function ReportPathwayWrapper({ onComplete }: ReportPathwayWrappe
       return;
     }
 
-    // Submit report
+    // Submit report via v2 analysis endpoints
     createReport(
       {
         countryId: reportState.countryId,
-        payload: serializedPayload,
+        year: reportState.year,
         simulations: {
           simulation1: simulation1Api,
           simulation2: simulation2Api,

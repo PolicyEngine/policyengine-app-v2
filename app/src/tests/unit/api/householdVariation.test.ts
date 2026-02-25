@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { fetchHouseholdVariation, fetchHouseholdVariationV2 } from '@/api/householdVariation';
+import { fetchHouseholdVariation } from '@/api/householdVariation';
 import {
   MOCK_HOUSEHOLD_WITH_AXES,
   MOCK_POLICY_DATA,
@@ -10,7 +10,6 @@ import {
   mockFetchNullResult,
   mockFetchSuccess,
 } from '@/tests/fixtures/api/householdVariationMocks';
-import { HouseholdWithAxes } from '@/utils/householdVariationAxes';
 
 describe('householdVariation', () => {
   beforeEach(() => {
@@ -98,35 +97,6 @@ describe('householdVariation', () => {
       await expect(
         fetchHouseholdVariation('us', MOCK_HOUSEHOLD_WITH_AXES, MOCK_POLICY_DATA)
       ).rejects.toThrow('timed out after 10 minutes');
-    });
-  });
-
-  describe('fetchHouseholdVariationV2', () => {
-    test('given US household then extracts country id and delegates', async () => {
-      const fetchSpy = mockFetchSuccess();
-
-      await fetchHouseholdVariationV2(MOCK_HOUSEHOLD_WITH_AXES, MOCK_POLICY_DATA);
-
-      expect(fetchSpy).toHaveBeenCalledWith(
-        expect.stringContaining('/us/calculate-full'),
-        expect.any(Object)
-      );
-    });
-
-    test('given UK household then uses uk country id', async () => {
-      const ukHousehold: HouseholdWithAxes = {
-        ...MOCK_HOUSEHOLD_WITH_AXES,
-        tax_benefit_model_name: 'policyengine_uk',
-      };
-
-      const fetchSpy = mockFetchSuccess();
-
-      await fetchHouseholdVariationV2(ukHousehold, MOCK_POLICY_DATA);
-
-      expect(fetchSpy).toHaveBeenCalledWith(
-        expect.stringContaining('/uk/calculate-full'),
-        expect.any(Object)
-      );
     });
   });
 });

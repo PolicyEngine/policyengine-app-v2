@@ -1,9 +1,6 @@
 import { vi } from 'vitest';
-import { SocietyWideCalculationResponse } from '@/api/societyWideCalculation';
-import {
-  mockHouseholdResult,
-  mockSocietyWideResult,
-} from '@/tests/fixtures/types/calculationFixtures';
+import { EconomicImpactResponse } from '@/api/v2/economyAnalysis';
+import { mockHouseholdResult } from '@/tests/fixtures/types/calculationFixtures';
 import { Household } from '@/types/ingredients/Household';
 
 /**
@@ -33,48 +30,99 @@ export const STRATEGY_TEST_CONSTANTS = {
 } as const;
 
 /**
- * Mock society-wide API response - computing state
+ * Test report IDs for economy analysis
  */
-export const mockSocietyWideComputingResponse = (): SocietyWideCalculationResponse => ({
-  status: 'computing',
-  queue_position: STRATEGY_TEST_CONSTANTS.TEST_QUEUE_POSITION,
-  average_time: STRATEGY_TEST_CONSTANTS.SOCIETY_WIDE_AVERAGE_TIME_SECONDS,
-  result: null,
+export const TEST_REPORT_IDS = {
+  PENDING: 'report-pending-123',
+  RUNNING: 'report-running-456',
+  COMPLETED: 'report-completed-789',
+  FAILED: 'report-failed-000',
+} as const;
+
+/**
+ * Mock v2 EconomicImpactResponse — pending state
+ */
+export const mockEconomyPendingResponse = (
+  overrides?: Partial<EconomicImpactResponse>
+): EconomicImpactResponse => ({
+  report_id: TEST_REPORT_IDS.PENDING,
+  status: 'pending',
+  baseline_simulation: { id: 'sim-baseline', status: 'pending', error_message: null },
+  reform_simulation: { id: 'sim-reform', status: 'pending', error_message: null },
+  region: null,
+  error_message: null,
+  decile_impacts: null,
+  program_statistics: null,
+  poverty: null,
+  inequality: null,
+  budget_summary: null,
+  intra_decile: null,
+  detailed_budget: null,
+  congressional_district_impact: null,
+  constituency_impact: null,
+  local_authority_impact: null,
+  wealth_decile: null,
+  intra_wealth_decile: null,
+  ...overrides,
 });
 
 /**
- * Mock society-wide API response - complete state
+ * Mock v2 EconomicImpactResponse — running state
  */
-export const mockSocietyWideCompleteResponse = (): SocietyWideCalculationResponse => ({
-  status: 'ok',
-  result: mockSocietyWideResult(),
-  queue_position: undefined,
-  average_time: undefined,
+export const mockEconomyRunningResponse = (
+  overrides?: Partial<EconomicImpactResponse>
+): EconomicImpactResponse => ({
+  ...mockEconomyPendingResponse(),
+  report_id: TEST_REPORT_IDS.RUNNING,
+  status: 'running',
+  baseline_simulation: { id: 'sim-baseline', status: 'completed', error_message: null },
+  reform_simulation: { id: 'sim-reform', status: 'running', error_message: null },
+  ...overrides,
 });
 
 /**
- * Mock society-wide API response - error state
+ * Mock v2 EconomicImpactResponse — completed state
  */
-export const mockSocietyWideErrorResponse = (): SocietyWideCalculationResponse => ({
-  status: 'error',
-  error: 'Calculation failed due to invalid parameters',
-  result: null,
-  queue_position: undefined,
-  average_time: undefined,
+export const mockEconomyCompletedResponse = (
+  overrides?: Partial<EconomicImpactResponse>
+): EconomicImpactResponse => ({
+  ...mockEconomyPendingResponse(),
+  report_id: TEST_REPORT_IDS.COMPLETED,
+  status: 'completed',
+  baseline_simulation: { id: 'sim-baseline', status: 'completed', error_message: null },
+  reform_simulation: { id: 'sim-reform', status: 'completed', error_message: null },
+  budget_summary: [
+    {
+      id: 'bs-1',
+      report_id: TEST_REPORT_IDS.COMPLETED,
+      tax_revenue_impact: 15000,
+      benefit_spending_impact: 50000,
+      net_budget_impact: -25000,
+      state_tax_revenue_impact: 10000,
+      household_count: 1000,
+      baseline_net_income: 1000000,
+    },
+  ],
+  ...overrides,
+});
+
+/**
+ * Mock v2 EconomicImpactResponse — failed state
+ */
+export const mockEconomyFailedResponse = (
+  overrides?: Partial<EconomicImpactResponse>
+): EconomicImpactResponse => ({
+  ...mockEconomyPendingResponse(),
+  report_id: TEST_REPORT_IDS.FAILED,
+  status: 'failed',
+  error_message: 'Calculation failed due to invalid parameters',
+  ...overrides,
 });
 
 /**
  * Mock household API response (successful)
- * Note: Household API returns data directly, not a status object
  */
 export const mockHouseholdSuccessResponse = (): Household => mockHouseholdResult();
-
-/**
- * Mock fetch functions
- */
-export const createMockFetchSocietyWideCalculation = () => {
-  return vi.fn();
-};
 
 /**
  * Mock ProgressTracker

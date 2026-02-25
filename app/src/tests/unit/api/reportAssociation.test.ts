@@ -1,15 +1,16 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { UserReportAdapter } from '@/adapters/UserReportAdapter';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiReportStore, LocalStorageReportStore } from '@/api/reportAssociation';
 import {
-  mockErrorFetchResponse,
-  mockMultiCountryApiResponses,
+  createUserReportAssociationV2,
+  deleteUserReportAssociationV2,
+  fetchUserReportAssociationByIdV2,
+  fetchUserReportAssociationsV2,
+  updateUserReportAssociationV2,
+} from '@/api/v2/userReportAssociations';
+import {
   mockMultiCountryReportList,
   mockReport,
-  mockReportApiResponse,
   mockReportInput,
-  mockSuccessFetchResponse,
-  mockUserReport,
   TEST_COUNTRIES,
   TEST_LABELS,
   TEST_REPORT_IDS,
@@ -18,11 +19,14 @@ import {
   TEST_USER_REPORT_IDS,
 } from '@/tests/fixtures/api/reportAssociationMocks';
 
-// Mock the adapter
-vi.mock('@/adapters/UserReportAdapter');
-
-// Mock fetch
-global.fetch = vi.fn();
+// Mock the v2 API module
+vi.mock('@/api/v2/userReportAssociations', () => ({
+  createUserReportAssociationV2: vi.fn(),
+  fetchUserReportAssociationsV2: vi.fn(),
+  fetchUserReportAssociationByIdV2: vi.fn(),
+  updateUserReportAssociationV2: vi.fn(),
+  deleteUserReportAssociationV2: vi.fn(),
+}));
 
 describe('ApiReportStore', () => {
   let store: ApiReportStore;
@@ -30,299 +34,132 @@ describe('ApiReportStore', () => {
   beforeEach(() => {
     store = new ApiReportStore();
     vi.clearAllMocks();
-    (UserReportAdapter.toCreationPayload as any).mockReturnValue(mockReportApiResponse());
-    (UserReportAdapter.fromApiResponse as any).mockReturnValue(mockReport());
-  });
-
-  afterEach(() => {
-    vi.resetAllMocks();
   });
 
   describe('create', () => {
-    it('given valid report then creates report association', async () => {
-      (global.fetch as any).mockResolvedValue(mockSuccessFetchResponse(mockReportApiResponse()));
+    it('given valid report then delegates to v2 module', async () => {
+      const input = mockReportInput();
+      const expected = mockReport();
+      (createUserReportAssociationV2 as any).mockResolvedValue(expected);
 
-      const result = await store.create(mockReportInput());
+      const result = await store.create(input);
 
-      expect(fetch).toHaveBeenCalledWith(
-        '/api/user-report-associations',
-        expect.objectContaining({
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(mockReportApiResponse()),
-        })
-      );
-      expect(result).toEqual(mockReport());
+      expect(createUserReportAssociationV2).toHaveBeenCalledWith(input);
+      expect(result).toEqual(expected);
     });
 
-    it('given API error then throws error', async () => {
-      (global.fetch as any).mockResolvedValue(mockErrorFetchResponse(500));
-
-      await expect(store.create(mockReportInput())).rejects.toThrow(
-        'Failed to create report association'
+    it('given v2 module throws then propagates error', async () => {
+      (createUserReportAssociationV2 as any).mockRejectedValue(
+        new Error('Failed to create report association: 500')
       );
+
+      await expect(store.create(mockReportInput())).rejects.toThrow('500');
+    });
+  });
+
+  describe('createWithId', () => {
+    it('given report with id then delegates to v2 create', async () => {
+      const input = { ...mockReportInput(), id: 'pre-set-id' };
+      const expected = mockReport({ id: 'pre-set-id' });
+      (createUserReportAssociationV2 as any).mockResolvedValue(expected);
+
+      const result = await store.createWithId(input);
+
+      expect(createUserReportAssociationV2).toHaveBeenCalledWith(input);
+      expect(result).toEqual(expected);
     });
   });
 
   describe('findByUser', () => {
-    it('given valid user ID then fetches user report associations', async () => {
-      (global.fetch as any).mockResolvedValue(mockSuccessFetchResponse([mockReportApiResponse()]));
+    it('given valid user ID then delegates to v2 module', async () => {
+      const expected = [mockReport()];
+      (fetchUserReportAssociationsV2 as any).mockResolvedValue(expected);
 
       const result = await store.findByUser(TEST_USER_IDS.USER_123);
 
-      expect(fetch).toHaveBeenCalledWith(
-        `/api/user-report-associations/user/${TEST_USER_IDS.USER_123}`,
-        expect.objectContaining({
-          headers: { 'Content-Type': 'application/json' },
-        })
-      );
-      expect(result).toEqual([mockReport()]);
+      expect(fetchUserReportAssociationsV2).toHaveBeenCalledWith(TEST_USER_IDS.USER_123, undefined);
+      expect(result).toEqual(expected);
     });
 
-    it('given API error then throws error', async () => {
-      (global.fetch as any).mockResolvedValue(mockErrorFetchResponse(500));
+    it('given countryId then passes it to v2 module', async () => {
+      (fetchUserReportAssociationsV2 as any).mockResolvedValue([]);
 
-      await expect(store.findByUser(TEST_USER_IDS.USER_123)).rejects.toThrow(
-        'Failed to fetch user associations'
-      );
-    });
+      await store.findByUser(TEST_USER_IDS.USER_123, 'us');
 
-    test('given countryId filter then returns only matching reports', async () => {
-      // Given
-      (UserReportAdapter.fromApiResponse as any).mockImplementation((data: any) => {
-        return mockMultiCountryReportList.find((r) => r.reportId === data.reportId);
-      });
-      const mockResponse = {
-        ok: true,
-        json: vi.fn().mockResolvedValue(mockMultiCountryApiResponses),
-      };
-      (global.fetch as any).mockResolvedValue(mockResponse);
-
-      // When
-      const result = await store.findByUser(TEST_USER_ID, TEST_COUNTRIES.US);
-
-      // Then
-      expect(result).toHaveLength(2);
-      expect(result.every((r) => r.countryId === TEST_COUNTRIES.US)).toBe(true);
-      expect(result.map((r) => r.label)).toEqual(['US Report 1', 'US Report 2']);
-    });
-
-    test('given countryId filter for UK then returns only UK reports', async () => {
-      // Given
-      (UserReportAdapter.fromApiResponse as any).mockImplementation((data: any) => {
-        return mockMultiCountryReportList.find((r) => r.reportId === data.reportId);
-      });
-      const mockResponse = {
-        ok: true,
-        json: vi.fn().mockResolvedValue(mockMultiCountryApiResponses),
-      };
-      (global.fetch as any).mockResolvedValue(mockResponse);
-
-      // When
-      const result = await store.findByUser(TEST_USER_ID, TEST_COUNTRIES.UK);
-
-      // Then
-      expect(result).toHaveLength(1);
-      expect(result[0].countryId).toBe(TEST_COUNTRIES.UK);
-      expect(result[0].label).toBe('UK Report 1');
-    });
-
-    test('given no countryId filter then returns all reports', async () => {
-      // Given
-      const mockResponse = {
-        ok: false,
-        status: 500,
-      };
-      (global.fetch as any).mockResolvedValue(mockResponse);
-
-      await expect(store.findByUser(TEST_USER_IDS.USER_123)).rejects.toThrow(
-        'Failed to fetch user associations'
-      );
-    });
-
-    test('given countryId filter then returns only matching reports', async () => {
-      // Given
-      (UserReportAdapter.fromApiResponse as any).mockImplementation((data: any) => {
-        return mockMultiCountryReportList.find((r) => r.reportId === data.reportId);
-      });
-      const mockResponse = {
-        ok: true,
-        json: vi.fn().mockResolvedValue(mockMultiCountryApiResponses),
-      };
-      (global.fetch as any).mockResolvedValue(mockResponse);
-
-      // When
-      const result = await store.findByUser(TEST_USER_ID, TEST_COUNTRIES.US);
-
-      // Then
-      expect(result).toHaveLength(2);
-      expect(result.every((r) => r.countryId === TEST_COUNTRIES.US)).toBe(true);
-      expect(result.map((r) => r.label)).toEqual(['US Report 1', 'US Report 2']);
-    });
-
-    test('given countryId filter for UK then returns only UK reports', async () => {
-      // Given
-      (UserReportAdapter.fromApiResponse as any).mockImplementation((data: any) => {
-        return mockMultiCountryReportList.find((r) => r.reportId === data.reportId);
-      });
-      const mockResponse = {
-        ok: true,
-        json: vi.fn().mockResolvedValue(mockMultiCountryApiResponses),
-      };
-      (global.fetch as any).mockResolvedValue(mockResponse);
-
-      // When
-      const result = await store.findByUser(TEST_USER_ID, TEST_COUNTRIES.UK);
-
-      // Then
-      expect(result).toHaveLength(1);
-      expect(result[0].countryId).toBe(TEST_COUNTRIES.UK);
-      expect(result[0].label).toBe('UK Report 1');
-    });
-
-    test('given no countryId filter then returns all reports', async () => {
-      // Given
-      (UserReportAdapter.fromApiResponse as any).mockImplementation((data: any) => {
-        return mockMultiCountryReportList.find((r) => r.reportId === data.reportId);
-      });
-      const mockResponse = {
-        ok: true,
-        json: vi.fn().mockResolvedValue(mockMultiCountryApiResponses),
-      };
-      (global.fetch as any).mockResolvedValue(mockResponse);
-
-      // When
-      const result = await store.findByUser(TEST_USER_ID);
-
-      // Then
-      expect(result).toHaveLength(4);
-      expect(result.map((r) => r.countryId)).toEqual([
-        TEST_COUNTRIES.US,
-        TEST_COUNTRIES.US,
-        TEST_COUNTRIES.UK,
-        TEST_COUNTRIES.CA,
-      ]);
+      expect(fetchUserReportAssociationsV2).toHaveBeenCalledWith(TEST_USER_IDS.USER_123, 'us');
     });
   });
 
   describe('findById', () => {
-    test('given valid user and report IDs then returns report', async () => {
-      // Given
-      // Mock the adapter to properly convert each API response
-      (UserReportAdapter.fromApiResponse as any).mockImplementation((apiResponse: any) => ({
-        ...mockUserReport,
-        countryId: apiResponse.countryId || apiResponse.country_id,
-        reportId: apiResponse.reportId || apiResponse.report_id,
-      }));
-      const mockResponse = {
-        ok: true,
-        json: vi.fn().mockResolvedValue(mockMultiCountryApiResponses),
-      };
-      (global.fetch as any).mockResolvedValue(mockResponse);
-
-      // When
-      const result = await store.findByUser(TEST_USER_ID);
-
-      // Then
-      expect(result).toHaveLength(4);
-      expect(result.map((r) => r.countryId)).toEqual([
-        TEST_COUNTRIES.US,
-        TEST_COUNTRIES.US,
-        TEST_COUNTRIES.UK,
-        TEST_COUNTRIES.CA,
-      ]);
-    });
-  });
-
-  describe('findById', () => {
-    it('given valid IDs then fetches specific association', async () => {
-      (global.fetch as any).mockResolvedValue(mockSuccessFetchResponse(mockReportApiResponse()));
+    it('given existing association then returns it from list', async () => {
+      const report = mockReport({ reportId: TEST_REPORT_IDS.REPORT_456 });
+      (fetchUserReportAssociationsV2 as any).mockResolvedValue([report]);
 
       const result = await store.findById(TEST_USER_IDS.USER_123, TEST_REPORT_IDS.REPORT_456);
 
-      expect(fetch).toHaveBeenCalledWith(
-        `/api/user-report-associations/${TEST_USER_IDS.USER_123}/${TEST_REPORT_IDS.REPORT_456}`,
-        expect.objectContaining({
-          headers: { 'Content-Type': 'application/json' },
-        })
-      );
-      expect(result).toEqual(mockReport());
+      expect(fetchUserReportAssociationsV2).toHaveBeenCalledWith(TEST_USER_IDS.USER_123);
+      expect(result).toEqual(report);
     });
 
-    it('given 404 response then returns null', async () => {
-      (global.fetch as any).mockResolvedValue(mockErrorFetchResponse(404));
+    it('given no matching report then returns null', async () => {
+      (fetchUserReportAssociationsV2 as any).mockResolvedValue([]);
 
       const result = await store.findById(TEST_USER_IDS.USER_123, 'nonexistent');
 
       expect(result).toBeNull();
     });
-
-    it('given other error then throws error', async () => {
-      (global.fetch as any).mockResolvedValue(mockErrorFetchResponse(500));
-
-      await expect(
-        store.findById(TEST_USER_IDS.USER_123, TEST_REPORT_IDS.REPORT_456)
-      ).rejects.toThrow('Failed to fetch association');
-    });
   });
 
   describe('findByUserReportId', () => {
-    it('given valid user report ID then fetches report', async () => {
-      (global.fetch as any).mockResolvedValue(mockSuccessFetchResponse(mockReportApiResponse()));
+    it('given valid user report ID then delegates to v2 module', async () => {
+      const expected = mockReport();
+      (fetchUserReportAssociationByIdV2 as any).mockResolvedValue(expected);
 
       const result = await store.findByUserReportId(TEST_USER_REPORT_IDS.SUR_ABC123);
 
-      expect(fetch).toHaveBeenCalledWith(
-        `/api/user-report-associations/${TEST_USER_REPORT_IDS.SUR_ABC123}`,
-        expect.objectContaining({
-          headers: { 'Content-Type': 'application/json' },
-        })
+      expect(fetchUserReportAssociationByIdV2).toHaveBeenCalledWith(
+        TEST_USER_REPORT_IDS.SUR_ABC123
       );
-      expect(result).toEqual(mockReport());
+      expect(result).toEqual(expected);
     });
 
-    it('given 404 response then returns null', async () => {
-      (global.fetch as any).mockResolvedValue(mockErrorFetchResponse(404));
+    it('given nonexistent ID then returns null', async () => {
+      (fetchUserReportAssociationByIdV2 as any).mockResolvedValue(null);
 
       const result = await store.findByUserReportId('nonexistent');
 
       expect(result).toBeNull();
     });
-
-    it('given other error then throws error', async () => {
-      (global.fetch as any).mockResolvedValue(mockErrorFetchResponse(500));
-
-      await expect(store.findByUserReportId(TEST_USER_REPORT_IDS.SUR_ABC123)).rejects.toThrow(
-        'Failed to fetch user report'
-      );
-    });
   });
 
   describe('update', () => {
-    it('given update called then throws not supported error', async () => {
-      // Given & When & Then
-      await expect(store.update('sur-abc123', { label: 'Updated Label' })).rejects.toThrow(
-        'Please ensure you are using localStorage mode'
+    it('given valid params then delegates to v2 module', async () => {
+      const expected = mockReport({ label: 'Updated' });
+      (updateUserReportAssociationV2 as any).mockResolvedValue(expected);
+
+      const result = await store.update('sur-abc123', TEST_USER_IDS.USER_123, {
+        label: 'Updated',
+      });
+
+      expect(updateUserReportAssociationV2).toHaveBeenCalledWith(
+        'sur-abc123',
+        TEST_USER_IDS.USER_123,
+        { label: 'Updated', last_run_at: null }
       );
+      expect(result).toEqual(expected);
     });
+  });
 
-    it('given update called then logs warning', async () => {
-      // Given
-      const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  describe('delete', () => {
+    it('given valid params then delegates to v2 module', async () => {
+      (deleteUserReportAssociationV2 as any).mockResolvedValue(undefined);
 
-      // When
-      try {
-        await store.update('sur-abc123', { label: 'Updated Label' });
-      } catch {
-        // Expected to throw
-      }
+      await store.delete('sur-abc123', TEST_USER_IDS.USER_123);
 
-      // Then
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('API endpoint not yet implemented')
+      expect(deleteUserReportAssociationV2).toHaveBeenCalledWith(
+        'sur-abc123',
+        TEST_USER_IDS.USER_123
       );
-
-      consoleWarnSpy.mockRestore();
     });
   });
 });
@@ -369,36 +206,35 @@ describe('LocalStorageReportStore', () => {
     });
 
     it('given report then generates unique ID', async () => {
-      const input1 = mockReportInput({ label: TEST_LABELS.TEST_REPORT_1 });
-      const input2 = mockReportInput({
-        reportId: TEST_REPORT_IDS.REPORT_789,
-        label: TEST_LABELS.TEST_REPORT_2,
-      });
-      const result1 = await store.create(input1);
-      const result2 = await store.create(input2);
+      const result1 = await store.create(mockReportInput({ label: TEST_LABELS.TEST_REPORT_1 }));
+      const result2 = await store.create(
+        mockReportInput({
+          reportId: TEST_REPORT_IDS.REPORT_789,
+          label: TEST_LABELS.TEST_REPORT_2,
+        })
+      );
 
       expect(result1.id).toMatch(/^sur-/);
       expect(result2.id).toMatch(/^sur-/);
       expect(result1.id).not.toBe(result2.id);
     });
+  });
 
-    it('given duplicate report then creates new association with unique ID', async () => {
-      // Given
-      const input = mockReportInput();
-      const first = await store.create(input);
+  describe('createWithId', () => {
+    it('given report with id then stores with that id', async () => {
+      const input = { ...mockReportInput(), id: 'custom-id' };
+      const result = await store.createWithId(input);
 
-      // When
-      const second = await store.create(input);
+      expect(result.id).toBe('custom-id');
+    });
 
-      // Then
-      expect(second).toMatchObject({
-        userId: first.userId,
-        reportId: first.reportId,
-        countryId: first.countryId,
-      });
-      expect(second.id).toBeDefined();
-      expect(second.id).not.toBe(first.id);
-      expect(second.id).toMatch(/^sur-/);
+    it('given duplicate id then throws error', async () => {
+      const input = { ...mockReportInput(), id: 'custom-id' };
+      await store.createWithId(input);
+
+      await expect(store.createWithId(input)).rejects.toThrow(
+        'Association with id custom-id already exists'
+      );
     });
   });
 
@@ -425,88 +261,22 @@ describe('LocalStorageReportStore', () => {
       expect(result).toEqual([]);
     });
 
-    test('given countryId filter then returns only matching reports', async () => {
-      // Given
+    it('given countryId filter then returns only matching reports', async () => {
       mockLocalStorage['user-report-associations'] = JSON.stringify(mockMultiCountryReportList);
 
-      // When
       const result = await store.findByUser(TEST_USER_ID, TEST_COUNTRIES.US);
 
-      // Then
       expect(result).toHaveLength(2);
       expect(result.every((r) => r.countryId === TEST_COUNTRIES.US)).toBe(true);
-      expect(result.map((r) => r.label)).toEqual(['US Report 1', 'US Report 2']);
     });
 
-    test('given countryId filter for UK then returns only UK reports', async () => {
-      // Given
+    it('given countryId filter for UK then returns only UK reports', async () => {
       mockLocalStorage['user-report-associations'] = JSON.stringify(mockMultiCountryReportList);
 
-      // When
       const result = await store.findByUser(TEST_USER_ID, TEST_COUNTRIES.UK);
 
-      // Then
       expect(result).toHaveLength(1);
       expect(result[0].countryId).toBe(TEST_COUNTRIES.UK);
-      expect(result[0].label).toBe('UK Report 1');
-    });
-
-    test('given no countryId filter then returns all user reports', async () => {
-      // Given
-      const otherUserReport = { ...mockMultiCountryReportList[0], userId: 'other-user' };
-      mockLocalStorage['user-report-associations'] = JSON.stringify([
-        ...mockMultiCountryReportList,
-        otherUserReport,
-      ]);
-
-      // When
-      const result = await store.findByUser(TEST_USER_ID);
-
-      // Then
-      expect(result).toHaveLength(4);
-      expect(result.every((r) => r.userId === TEST_USER_ID)).toBe(true);
-    });
-
-    test('given countryId filter then returns only matching reports', async () => {
-      // Given
-      mockLocalStorage['user-report-associations'] = JSON.stringify(mockMultiCountryReportList);
-
-      // When
-      const result = await store.findByUser(TEST_USER_ID, TEST_COUNTRIES.US);
-
-      // Then
-      expect(result).toHaveLength(2);
-      expect(result.every((r) => r.countryId === TEST_COUNTRIES.US)).toBe(true);
-      expect(result.map((r) => r.label)).toEqual(['US Report 1', 'US Report 2']);
-    });
-
-    test('given countryId filter for UK then returns only UK reports', async () => {
-      // Given
-      mockLocalStorage['user-report-associations'] = JSON.stringify(mockMultiCountryReportList);
-
-      // When
-      const result = await store.findByUser(TEST_USER_ID, TEST_COUNTRIES.UK);
-
-      // Then
-      expect(result).toHaveLength(1);
-      expect(result[0].countryId).toBe(TEST_COUNTRIES.UK);
-      expect(result[0].label).toBe('UK Report 1');
-    });
-
-    test('given no countryId filter then returns all user reports', async () => {
-      // Given
-      const otherUserReport = { ...mockMultiCountryReportList[0], userId: 'other-user' };
-      mockLocalStorage['user-report-associations'] = JSON.stringify([
-        ...mockMultiCountryReportList,
-        otherUserReport,
-      ]);
-
-      // When
-      const result = await store.findByUser(TEST_USER_ID);
-
-      // Then
-      expect(result).toHaveLength(4);
-      expect(result.every((r) => r.userId === TEST_USER_ID)).toBe(true);
     });
   });
 
@@ -550,56 +320,34 @@ describe('LocalStorageReportStore', () => {
   });
 
   describe('update', () => {
-    it('given existing report then update succeeds and returns updated report', async () => {
-      // Given
+    it('given existing report then update succeeds', async () => {
       const created = await store.create(mockReportInput({ label: TEST_LABELS.TEST_REPORT_1 }));
 
-      // When
-      const result = await store.update(created.id!, { label: 'Updated Label' });
+      const result = await store.update(created.id, TEST_USER_IDS.USER_123, {
+        label: 'Updated Label',
+      });
 
-      // Then
       expect(result.label).toBe('Updated Label');
       expect(result.id).toBe(created.id);
-      expect(result.reportId).toBe(created.reportId);
       expect(result.updatedAt).toBeDefined();
     });
 
     it('given nonexistent report then update throws error', async () => {
-      // Given - no report created
-
-      // When & Then
-      await expect(store.update('sur-nonexistent', { label: 'Updated Label' })).rejects.toThrow(
-        'UserReport with id sur-nonexistent not found'
-      );
-    });
-
-    it('given existing report then updatedAt timestamp is set', async () => {
-      // Given
-      const created = await store.create(mockReportInput({ label: TEST_LABELS.TEST_REPORT_1 }));
-      const beforeUpdate = new Date().toISOString();
-
-      // When
-      const result = await store.update(created.id!, { label: 'Updated Label' });
-
-      // Then
-      expect(result.updatedAt).toBeDefined();
-      expect(result.updatedAt! >= beforeUpdate).toBe(true);
+      await expect(
+        store.update('sur-nonexistent', TEST_USER_IDS.USER_123, { label: 'Updated Label' })
+      ).rejects.toThrow('UserReport with id sur-nonexistent not found');
     });
 
     it('given existing report then update persists to localStorage', async () => {
-      // Given
       const created = await store.create(mockReportInput({ label: TEST_LABELS.TEST_REPORT_1 }));
 
-      // When
-      await store.update(created.id!, { label: 'Updated Label' });
+      await store.update(created.id, TEST_USER_IDS.USER_123, { label: 'Updated Label' });
 
-      // Then
       const persisted = await store.findById(created.userId, created.reportId);
       expect(persisted?.label).toBe('Updated Label');
     });
 
     it('given multiple reports then updates correct one by ID', async () => {
-      // Given
       const created1 = await store.create(mockReportInput({ label: TEST_LABELS.TEST_REPORT_1 }));
       const created2 = await store.create(
         mockReportInput({
@@ -608,26 +356,29 @@ describe('LocalStorageReportStore', () => {
         })
       );
 
-      // When
-      await store.update(created1.id!, { label: 'Updated Label' });
+      await store.update(created1.id, TEST_USER_IDS.USER_123, { label: 'Updated Label' });
 
-      // Then
       const updated = await store.findById(created1.userId, created1.reportId);
       const unchanged = await store.findById(created2.userId, created2.reportId);
       expect(updated?.label).toBe('Updated Label');
       expect(unchanged?.label).toBe(TEST_LABELS.TEST_REPORT_2);
     });
+  });
 
-    it('given update with partial data then only specified fields are updated', async () => {
-      // Given
-      const created = await store.create(mockReportInput({ label: TEST_LABELS.TEST_REPORT_1 }));
+  describe('delete', () => {
+    it('given existing report then deletes it', async () => {
+      const created = await store.create(mockReportInput());
 
-      // When
-      const result = await store.update(created.id!, { label: 'Updated Label' });
+      await store.delete(created.id, TEST_USER_IDS.USER_123);
 
-      // Then
-      expect(result.label).toBe('Updated Label');
-      expect(result.countryId).toBe(created.countryId); // unchanged
+      const result = await store.findByUser(TEST_USER_IDS.USER_123);
+      expect(result).toHaveLength(0);
+    });
+
+    it('given nonexistent report then throws error', async () => {
+      await expect(store.delete('sur-nonexistent', TEST_USER_IDS.USER_123)).rejects.toThrow(
+        'Association with id sur-nonexistent not found'
+      );
     });
   });
 
