@@ -1,4 +1,4 @@
-import { IconCalendar, IconChevronRight, IconClock } from '@tabler/icons-react';
+import { IconCalendar, IconChevronLeft, IconClock } from '@tabler/icons-react';
 import { useNavigate } from 'react-router-dom';
 import { ReportActionButtons } from '@/components/report/ReportActionButtons';
 import { SharedReportTag } from '@/components/report/SharedReportTag';
@@ -47,18 +47,15 @@ export default function ReportOutputLayout({
   return (
     <Container size="xl" className="tw:px-xl">
       <Stack className="tw:gap-xl">
-        {/* Breadcrumb */}
-        <Group className="tw:gap-1 tw:items-center" style={{ marginBottom: `-${spacing.md}` }}>
-          <Text
-            className="tw:text-sm tw:cursor-pointer"
-            style={{ color: colors.text.tertiary }}
-            onClick={() => navigate(`/${countryId}/reports`)}
-          >
-            Reports
-          </Text>
-          <IconChevronRight size={12} color={colors.gray[400]} />
-          <Text className="tw:text-sm" style={{ color: colors.text.primary }}>
-            {reportLabel || reportId}
+        {/* Back breadcrumb */}
+        <Group
+          className="tw:gap-xs tw:items-center tw:cursor-pointer"
+          style={{ marginBottom: `-${spacing.md}` }}
+          onClick={() => navigate(`/${countryId}/reports`)}
+        >
+          <IconChevronLeft size={14} color={colors.gray[500]} />
+          <Text className="tw:text-sm" style={{ color: colors.text.tertiary }}>
+            Back to reports
           </Text>
         </Group>
 

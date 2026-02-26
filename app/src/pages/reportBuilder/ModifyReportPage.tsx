@@ -144,7 +144,6 @@ export default function ModifyReportPage() {
     <>
       <ReportBuilderShell
         title={isEditing ? 'Edit report' : 'View report setup'}
-        breadcrumbLabel={reportState?.label || undefined}
         backPath={cameFromReportOutput ? reportOutputPath : undefined}
         backLabel={cameFromReportOutput ? reportState?.label || 'Report output' : undefined}
         actions={topBarActions}
