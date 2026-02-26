@@ -7,6 +7,7 @@ const sizeMap = {
   md: 'tw:max-w-screen-md',
   lg: 'tw:max-w-screen-lg',
   xl: 'tw:max-w-screen-xl',
+  '2xl': 'tw:max-w-screen-2xl',
 } as const;
 
 interface ContainerProps extends React.HTMLAttributes<HTMLDivElement> {

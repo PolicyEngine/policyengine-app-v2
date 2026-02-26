@@ -27,7 +27,7 @@ export default function HomeTrackerPreview() {
     >
       <Container size="xl">
         {/* Section header */}
-        <Group justify="space-between" align="start" style={{ marginBottom: spacing['3xl'] }}>
+        <Group justify="space-between" align="baseline" style={{ marginBottom: spacing['3xl'] }}>
           <Text
             fw={typography.fontWeight.bold}
             style={{

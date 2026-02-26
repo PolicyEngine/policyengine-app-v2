@@ -6,7 +6,7 @@ interface DesktopNavigationProps {
 
 export default function DesktopNavigation({ navItems }: DesktopNavigationProps) {
   return (
-    <div className="tw:hidden tw:lg:flex tw:items-center tw:gap-8">
+    <div className="tw:hidden tw:lg:flex tw:items-center tw:gap-6">
       {navItems.map((item) => (
         <NavItem key={item.label} setup={item} />
       ))}

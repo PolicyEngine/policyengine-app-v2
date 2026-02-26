@@ -7,6 +7,10 @@ const gapMap = {
   md: 'tw:gap-3',
   lg: 'tw:gap-4',
   xl: 'tw:gap-5',
+  '2xl': 'tw:gap-6',
+  '3xl': 'tw:gap-8',
+  '4xl': 'tw:gap-12',
+  '5xl': 'tw:gap-16',
 } as const;
 
 const justifyMap = {
@@ -22,6 +26,7 @@ const alignMap = {
   center: 'tw:items-center',
   end: 'tw:items-end',
   stretch: 'tw:items-stretch',
+  baseline: 'tw:items-baseline',
 } as const;
 
 interface GroupProps extends React.HTMLAttributes<HTMLDivElement> {

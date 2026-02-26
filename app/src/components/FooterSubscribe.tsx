@@ -41,17 +41,21 @@ export default function FooterSubscribe() {
   };
 
   return (
-    <Stack gap="xs">
-      <p className="tw:font-semibold tw:text-2xl tw:text-white tw:font-sans tw:m-0">
+    <Stack gap="xs" className="tw:pl-6">
+      <p
+        className="tw:font-semibold tw:text-white tw:font-sans tw:m-0"
+        style={{ fontSize: '1.625rem' }}
+      >
         Subscribe to PolicyEngine
       </p>
-      <p className="tw:text-base tw:text-white/80 tw:font-sans tw:m-0">
+      <p className="tw:text-lg tw:text-white tw:font-sans tw:m-0">
         Get the latest posts delivered right to your inbox.
       </p>
-      <Stack gap="sm" className="tw:mt-4 tw:w-4/5">
+      <Stack gap="sm" className="tw:mt-5" style={{ width: '80%' }}>
         <Input
           placeholder="Enter your email address"
-          className="tw:bg-white tw:h-10 tw:w-full"
+          className="tw:bg-white tw:w-full"
+          style={{ height: '42px' }}
           value={email}
           onChange={(event) => setEmail(event.currentTarget.value)}
           disabled={status === 'loading'}
@@ -61,6 +65,7 @@ export default function FooterSubscribe() {
           disabled={status === 'loading'}
           size="lg"
           className="tw:bg-primary-500 tw:text-white tw:hover:bg-primary-400 tw:w-full tw:font-semibold tw:tracking-wider"
+          style={{ height: '42px' }}
         >
           {status === 'loading' ? <Spinner size="sm" /> : null}
           SUBSCRIBE

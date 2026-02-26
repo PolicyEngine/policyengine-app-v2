@@ -44,12 +44,12 @@ export default function Footer() {
   const countryId = useCurrentCountry();
   const CONTACT_LINKS = getContactLinks(countryId);
   return (
-    <footer className="tw:w-full tw:bg-primary-900 tw:py-4xl tw:px-3xl tw:md:px-4xl">
-      <Container size="xl">
+    <footer className="tw:w-full tw:bg-primary-900" style={{ padding: '3rem 4rem' }}>
+      <Container size="2xl">
         <img src={PolicyEngineLogo} alt="PolicyEngine" className="tw:h-[52px] tw:w-auto" />
-        <div className="tw:grid tw:grid-cols-1 tw:md:grid-cols-2 tw:gap-3xl tw:md:gap-4xl tw:mt-2xl">
-          <Stack gap="xl" align="start">
-            <Stack gap="sm">
+        <div className="tw:grid tw:grid-cols-1 tw:md:grid-cols-2 tw:mt-8" style={{ gap: '48px' }}>
+          <Stack gap="2xl" align="start">
+            <Stack gap="xs">
               {[
                 { href: CONTACT_LINKS.about, text: 'About us' },
                 { href: CONTACT_LINKS.donate, text: 'Donate' },
@@ -59,7 +59,7 @@ export default function Footer() {
                 <a
                   key={href}
                   href={href}
-                  className="tw:text-white/90 tw:text-sm tw:no-underline tw:transition-colors tw:duration-200 tw:hover:text-white"
+                  className="tw:text-white tw:text-base tw:no-underline tw:font-sans"
                 >
                   {text}
                 </a>
@@ -75,14 +75,14 @@ export default function Footer() {
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label={label}
-                    className="tw:text-white/80 tw:transition-all tw:duration-200 tw:hover:text-white tw:hover:scale-110"
+                    className="tw:text-white"
                     onClick={href.startsWith('mailto:') ? trackContactClicked : undefined}
                   >
-                    <Icon size={22} />
+                    <Icon size={24} />
                   </a>
                 ))}
               </div>
-              <p className="tw:text-xs tw:text-white/60 tw:m-0">
+              <p className="tw:text-xs tw:text-white tw:m-0 tw:font-sans">
                 &copy; {new Date().getFullYear()} PolicyEngine. All rights reserved.
               </p>
             </Stack>

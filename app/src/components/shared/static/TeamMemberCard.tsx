@@ -34,7 +34,9 @@ export default function TeamMemberCard({ member, variant = 'default' }: TeamMemb
             isInverted ? 'tw:text-text-inverse' : 'tw:text-text-primary'
           )}
         >
-          <span className="tw:font-semibold tw:uppercase tw:tracking-wide">{member.name}</span>{' '}
+          <span className="tw:font-semibold tw:uppercase" style={{ letterSpacing: '0.05em' }}>
+            {member.name}
+          </span>{' '}
           {member.bio}
         </p>
       </div>

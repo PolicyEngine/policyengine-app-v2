@@ -107,6 +107,7 @@
   --breakpoint-md: 62rem;
   --breakpoint-lg: 75rem;
   --breakpoint-xl: 88rem;
+  --breakpoint-2xl: 96rem;
 
   /* Layout */
   --spacing-sidebar: 79px;
