@@ -28,16 +28,8 @@ jobs:
       - name: Build design system
         run: bun run design-system:build
 
-      - name: Run Chromatic (PR)
-        if: github.event_name == 'pull_request'
+      - name: Run Chromatic
         working-directory: ./app
-        run: bunx chromatic --only-changed --build-script-name="storybook:build" --project-token=${{ secrets.CHROMATIC_PROJECT_TOKEN }}
-        env:
-          VITE_APP_MODE: website
-
-      - name: Run Chromatic (push to main)
-        if: github.event_name == 'push'
-        working-directory: ./app
-        run: bunx chromatic --only-changed --auto-accept-changes --build-script-name="storybook:build" --project-token=${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+        run: bunx chromatic --only-changed ${{ github.event_name == 'push' && '--auto-accept-changes' || '' }} --build-script-name="storybook:build" --project-token=${{ secrets.CHROMATIC_PROJECT_TOKEN }}
         env:
           VITE_APP_MODE: website
