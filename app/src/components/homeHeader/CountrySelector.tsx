@@ -36,23 +36,11 @@ export default function CountrySelector() {
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className="tw:bg-transparent tw:border tw:border-white/30 tw:rounded tw:cursor-pointer tw:p-1.5 tw:leading-none tw:hover:bg-white/10 tw:transition-colors"
+          className="tw:bg-transparent tw:border-none tw:cursor-pointer tw:p-0 tw:leading-none"
           aria-label="Country selector"
+          style={{ lineHeight: 1 }}
         >
-          <div className="tw:flex tw:items-center tw:gap-1">
-            <IconWorld size={18} color={colors.text.inverse} />
-            <span
-              style={{
-                color: colors.text.inverse,
-                fontSize: typography.fontSize.xs,
-                fontFamily: typography.fontFamily.primary,
-                textTransform: 'uppercase',
-                fontWeight: typography.fontWeight.medium,
-              }}
-            >
-              {countryId}
-            </span>
-          </div>
+          <IconWorld size={18} color={colors.text.inverse} />
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="tw:w-[200px] tw:z-[1001] tw:bg-white">

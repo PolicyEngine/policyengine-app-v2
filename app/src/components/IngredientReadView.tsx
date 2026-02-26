@@ -66,7 +66,7 @@ export default function IngredientReadView({
             <Title
               order={1}
               style={{
-                fontSize: typography.fontSize['2xl'],
+                fontSize: typography.fontSize.base,
                 fontWeight: typography.fontWeight.semibold,
                 color: colors.text.title,
                 marginBottom: spacing.sm,
@@ -86,6 +86,21 @@ export default function IngredientReadView({
             </Button>
           )}
         </div>
+      </div>
+
+      {/* Title Section */}
+      <div style={{ marginBottom: spacing.xl }}>
+        <Title
+          order={2}
+          style={{
+            fontSize: typography.fontSize.lg,
+            fontWeight: typography.fontWeight.semibold,
+            color: colors.text.title,
+            marginBottom: spacing.lg,
+          }}
+        >
+          {title}
+        </Title>
       </div>
 
       {/* Content Section */}
