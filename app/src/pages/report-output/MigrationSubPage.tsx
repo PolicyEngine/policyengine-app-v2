@@ -24,10 +24,14 @@ import { formatParameterValue } from '@/utils/chartValueUtils';
 import { isUKLocalLevelGeography } from '@/utils/geographyUtils';
 import { DIVERGING_GRAY_TEAL } from '@/utils/visualization/colorScales';
 import BudgetaryImpactSubPage from './budgetary-impact/BudgetaryImpactSubPage';
+import BudgetaryImpactByProgramSubPage from './budgetary-impact/BudgetaryImpactByProgramSubPage';
 import { ConstituencySubPage } from './ConstituencySubPage';
 import DistributionalImpactIncomeAverageSubPage from './distributional-impact/DistributionalImpactIncomeAverageSubPage';
 import DistributionalImpactIncomeRelativeSubPage from './distributional-impact/DistributionalImpactIncomeRelativeSubPage';
+import DistributionalImpactWealthAverageSubPage from './distributional-impact/DistributionalImpactWealthAverageSubPage';
+import DistributionalImpactWealthRelativeSubPage from './distributional-impact/DistributionalImpactWealthRelativeSubPage';
 import WinnersLosersIncomeDecileSubPage from './distributional-impact/WinnersLosersIncomeDecileSubPage';
+import WinnersLosersWealthDecileSubPage from './distributional-impact/WinnersLosersWealthDecileSubPage';
 import InequalityImpactSubPage from './inequality-impact/InequalityImpactSubPage';
 import { LocalAuthoritySubPage } from './LocalAuthoritySubPage';
 import DeepPovertyImpactByAgeSubPage from './poverty-impact/DeepPovertyImpactByAgeSubPage';
@@ -310,6 +314,7 @@ export default function MigrationSubPage({
 }: MigrationSubPageProps) {
   const countryId = useCurrentCountry();
   const [distributionalMode, setDistributionalMode] = useState<DistributionalMode>('absolute');
+  const [wealthMode, setWealthMode] = useState<DistributionalMode>('absolute');
   const [povertyDepth, setPovertyDepth] = useState<PovertyDepth>('regular');
   const [povertyBreakdown, setPovertyBreakdown] = useState<PovertyBreakdown>('by-age');
   const breakdownOptions = getBreakdownOptions(povertyDepth, countryId);
@@ -345,6 +350,12 @@ export default function MigrationSubPage({
         <BudgetaryImpactSubPage output={output} />
       </CollapsibleSection>
 
+      {countryId === 'uk' && (
+        <CollapsibleSection label="Budgetary impact by program">
+          <BudgetaryImpactByProgramSubPage output={output} />
+        </CollapsibleSection>
+      )}
+
       <CollapsibleSection
         label="Distributional analysis"
         right={
@@ -367,6 +378,31 @@ export default function MigrationSubPage({
           <WinnersLosersIncomeDecileSubPage output={output} />
         )}
       </CollapsibleSection>
+
+      {countryId === 'uk' && (
+        <CollapsibleSection
+          label="Wealth distributional analysis"
+          right={
+            <SegmentedControl
+              value={wealthMode}
+              onChange={(value) => setWealthMode(value as DistributionalMode)}
+              size="xs"
+              data={DISTRIBUTIONAL_MODE_OPTIONS}
+              styles={segmentedControlStyles}
+            />
+          }
+        >
+          {wealthMode === 'absolute' && (
+            <DistributionalImpactWealthAverageSubPage output={output} />
+          )}
+          {wealthMode === 'relative' && (
+            <DistributionalImpactWealthRelativeSubPage output={output} />
+          )}
+          {wealthMode === 'intra-decile' && (
+            <WinnersLosersWealthDecileSubPage output={output} />
+          )}
+        </CollapsibleSection>
+      )}
 
       <CollapsibleSection
         label="Poverty impact"

@@ -27,8 +27,6 @@ const PolicyEditingConceptsPage = lazy(
 const PolicyEditingConceptPage = lazy(
   () => import('./pages/policyEditingConcepts/PolicyEditingConceptPage')
 );
-const ReportOutputMockupPage = lazy(() => import('./pages/ReportOutputMockup.page'));
-
 // Lazy-loaded pathway wrappers — heavy components with their own sub-routes
 const PolicyPathwayWrapper = lazy(() => import('./pathways/policy/PolicyPathwayWrapper'));
 const PopulationPathwayWrapper = lazy(
@@ -129,10 +127,6 @@ const router = createBrowserRouter(
                 {
                   path: 'reports/create/:userReportId',
                   element: <ModifyReportPage />,
-                },
-                {
-                  path: 'report-mockups',
-                  element: <ReportOutputMockupPage />,
                 },
                 {
                   path: 'policy-editing-concepts',
