@@ -205,9 +205,9 @@ const ukUseCases: UseCase[] = [
     title: 'Model a reform',
     description: 'Budgetary and distributional impacts from plain English.',
     terminal: [
-      { type: 'prompt', text: 'What if we raised the personal allowance to £15,000?' },
+      { type: 'prompt', text: 'What if we raised the personal allowance to £13,500?' },
       { type: 'output', text: 'Running microsimulation on Family Resources Survey...' },
-      { type: 'success', text: 'Cost: £8B · Winners: 58% · Gini: -0.002' },
+      { type: 'success', text: 'Cost: £8B · Winners: 54% · Gini: -0.001' },
     ],
   },
   {
@@ -216,7 +216,7 @@ const ukUseCases: UseCase[] = [
     terminal: [
       { type: 'prompt', text: 'How has the Universal Credit standard allowance changed?' },
       { type: 'output', text: 'Reading gov.dwp.universal_credit.standard_allowance...' },
-      { type: 'success', text: 'Single 25+: £324/mo (2020) → £393/mo (2026)' },
+      { type: 'success', text: 'Single 25+: £318/mo (2015) → £400/mo (2025)' },
     ],
   },
   {
@@ -225,10 +225,10 @@ const ukUseCases: UseCase[] = [
     terminal: [
       {
         type: 'prompt',
-        text: 'Raise Child Benefit to £30/wk. Impact on a family of 4 earning £35k?',
+        text: 'Set Child Benefit to £30/wk per child. Impact on a family of 4 earning £35k?',
       },
-      { type: 'output', text: 'Child Benefit: £2,213 → £3,120/yr' },
-      { type: 'success', text: 'Net change: +£907/yr (+£76/mo)' },
+      { type: 'output', text: 'Child Benefit: £2,251 → £3,120/yr' },
+      { type: 'success', text: 'Net change: +£869/yr (+£72/mo)' },
     ],
   },
   {
@@ -245,7 +245,7 @@ const ukUseCases: UseCase[] = [
     description: 'Research-quality analysis with charts and tables.',
     terminal: [
       { type: 'prompt', text: 'Write a brief on abolishing the two-child limit' },
-      { type: 'output', text: 'Cost: £1.3B · 90% goes to bottom 3 deciles' },
+      { type: 'output', text: 'Cost: £2.3B · 90% goes to bottom 3 deciles' },
       { type: 'success', text: '✓ two_child_limit_brief.md written with 3 charts' },
     ],
   },
@@ -298,7 +298,7 @@ export default function ClaudePluginsPage() {
   const useCases = isUK ? ukUseCases : usUseCases;
   const microsimFeatures = isUK ? ukMicrosimFeatures : usMicrosimFeatures;
   const heroPrompt = isUK
-    ? 'What is the budgetary impact of raising the personal allowance to £15,000?'
+    ? 'What is the budgetary impact of raising the personal allowance to £13,500?'
     : 'What is the budgetary impact of doubling the standard deduction?';
   const heroDataset = isUK ? 'Family Resources Survey' : '2024 Enhanced CPS';
 
