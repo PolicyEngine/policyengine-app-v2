@@ -24,6 +24,7 @@ export interface SimulationBlockProps {
   onDeselectPolicy: () => void;
   onDeselectPopulation: () => void;
   onEditPolicy: () => void;
+  onViewPolicy: () => void;
   onCreateCustomPolicy: () => void;
   onBrowseMorePolicies: () => void;
   onBrowseMorePopulations: () => void;
@@ -47,6 +48,7 @@ export function SimulationBlock({
   onQuickSelectPopulation,
   onSelectRecentPopulation,
   onEditPolicy,
+  onViewPolicy: _onViewPolicy,
   onDeselectPolicy,
   onDeselectPopulation,
   onBrowseMorePolicies,

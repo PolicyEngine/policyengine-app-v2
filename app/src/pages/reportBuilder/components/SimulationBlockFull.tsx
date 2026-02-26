@@ -24,6 +24,7 @@ export function SimulationBlockFull({
   onQuickSelectPopulation,
   onSelectRecentPopulation,
   onEditPolicy,
+  onViewPolicy,
   onDeselectPolicy,
   onDeselectPopulation,
   onBrowseMorePolicies,
@@ -146,6 +147,7 @@ export function SimulationBlockFull({
         onQuickSelectPolicy={onQuickSelectPolicy}
         onSelectSavedPolicy={onSelectSavedPolicy}
         onEditPolicy={onEditPolicy}
+        onViewPolicy={onViewPolicy}
         onDeselectPolicy={onDeselectPolicy}
         onCreateCustom={() => {}}
         onBrowseMore={onBrowseMorePolicies}

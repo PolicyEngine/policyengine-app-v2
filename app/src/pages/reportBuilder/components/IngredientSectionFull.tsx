@@ -12,9 +12,9 @@ import {
   IconChartLine,
   IconFileDescription,
   IconHome,
-  IconPencil,
   IconPlus,
   IconScale,
+  IconSettings,
   IconSparkles,
   IconTransfer,
   IconUsers,
@@ -47,6 +47,7 @@ export function IngredientSectionFull({
   recentPopulations = [],
   currentLabel,
   isReadOnly,
+  onViewPolicy,
 }: IngredientSectionProps) {
   const countryConfig = COUNTRY_CONFIG[countryId] || COUNTRY_CONFIG.us;
   const colorConfig = INGREDIENT_COLORS[type];
@@ -128,6 +129,10 @@ export function IngredientSectionFull({
       onDeselectPopulation?.();
     }
   };
+
+  // Show view/edit gear button for non-current-law policies (in any mode)
+  const showViewEditPolicyButton =
+    type === 'policy' && !isCurrentLaw(currentId) && !!currentId && onViewPolicy;
 
   return (
     <Box
@@ -244,49 +249,21 @@ export function IngredientSectionFull({
               </Text>
             )}
           </Box>
-          {!isInherited && !isReadOnly && (
-            <Box
-              style={{
-                display: 'flex',
-                gap: spacing.xs,
-                flexShrink: 0,
-              }}
-            >
-              {type === 'policy' && !isCurrentLaw(currentId) && onEditPolicy && (
-                <Tooltip label="Edit policy" position="bottom" withArrow>
-                  <Box
-                    component="button"
-                    onClick={(e: React.MouseEvent) => {
-                      e.stopPropagation();
-                      onEditPolicy();
-                    }}
-                    style={{
-                      background: colors.white,
-                      border: `1px solid ${colorConfig.border}`,
-                      borderRadius: spacing.radius.sm,
-                      width: 34,
-                      height: 34,
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: colorConfig.icon,
-                    }}
-                  >
-                    <IconPencil size={14} />
-                  </Box>
-                </Tooltip>
-              )}
-              <Tooltip
-                label={`Swap ${type === 'population' ? 'household(s)' : type}`}
-                position="bottom"
-                withArrow
-              >
+          <Box
+            style={{
+              display: 'flex',
+              gap: spacing.xs,
+              flexShrink: 0,
+            }}
+          >
+            {/* View/edit policy gear — visible in both view and edit modes */}
+            {showViewEditPolicyButton && (
+              <Tooltip label="View/edit policy" position="bottom" withArrow>
                 <Box
                   component="button"
                   onClick={(e: React.MouseEvent) => {
                     e.stopPropagation();
-                    onBrowseMore?.();
+                    onViewPolicy();
                   }}
                   style={{
                     background: colors.white,
@@ -301,34 +278,66 @@ export function IngredientSectionFull({
                     color: colorConfig.icon,
                   }}
                 >
-                  <IconTransfer size={14} />
+                  <IconSettings size={14} />
                 </Box>
               </Tooltip>
-              <Tooltip label="Remove" position="bottom" withArrow>
-                <Box
-                  component="button"
-                  onClick={(e: React.MouseEvent) => {
-                    e.stopPropagation();
-                    handleDeselect();
-                  }}
-                  style={{
-                    background: 'transparent',
-                    border: `1px solid ${colors.gray[300]}`,
-                    borderRadius: spacing.radius.sm,
-                    width: 34,
-                    height: 34,
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: colors.gray[400],
-                  }}
+            )}
+            {/* Swap and remove — only in edit mode */}
+            {!isInherited && !isReadOnly && (
+              <>
+                <Tooltip
+                  label={`Swap ${type === 'population' ? 'household(s)' : type}`}
+                  position="bottom"
+                  withArrow
                 >
-                  <IconX size={14} />
-                </Box>
-              </Tooltip>
-            </Box>
-          )}
+                  <Box
+                    component="button"
+                    onClick={(e: React.MouseEvent) => {
+                      e.stopPropagation();
+                      onBrowseMore?.();
+                    }}
+                    style={{
+                      background: colors.white,
+                      border: `1px solid ${colorConfig.border}`,
+                      borderRadius: spacing.radius.sm,
+                      width: 34,
+                      height: 34,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: colorConfig.icon,
+                    }}
+                  >
+                    <IconTransfer size={14} />
+                  </Box>
+                </Tooltip>
+                <Tooltip label="Remove" position="bottom" withArrow>
+                  <Box
+                    component="button"
+                    onClick={(e: React.MouseEvent) => {
+                      e.stopPropagation();
+                      handleDeselect();
+                    }}
+                    style={{
+                      background: 'transparent',
+                      border: `1px solid ${colors.gray[300]}`,
+                      borderRadius: spacing.radius.sm,
+                      width: 34,
+                      height: 34,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: colors.gray[400],
+                    }}
+                  >
+                    <IconX size={14} />
+                  </Box>
+                </Tooltip>
+              </>
+            )}
+          </Box>
         </Box>
       ) : (
         /* Empty state - clickable area to add ingredient */

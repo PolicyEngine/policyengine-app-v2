@@ -4,10 +4,10 @@
  * Renders the page layout: header + TopBar (with ReportMetaPanel + actions) + SimulationCanvas.
  * Accepts all logic via props so different modes (setup, modify) can compose it.
  */
-import { IconChevronRight } from '@tabler/icons-react';
+import { IconChevronLeft } from '@tabler/icons-react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Group, Text } from '@mantine/core';
-import { colors } from '@/designTokens';
+import { colors, spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { styles } from '../styles';
 import type { IngredientPickerState, ReportBuilderState, TopBarAction } from '../types';
@@ -26,7 +26,6 @@ interface ReportBuilderShellProps {
   setPickerState: React.Dispatch<React.SetStateAction<IngredientPickerState>>;
   BlockComponent?: React.ComponentType<SimulationBlockProps>;
   isReadOnly?: boolean;
-  breadcrumbLabel?: string;
   backPath?: string;
   backLabel?: string;
 }
@@ -40,7 +39,6 @@ export function ReportBuilderShell({
   setPickerState,
   BlockComponent = SimulationBlockFull,
   isReadOnly,
-  breadcrumbLabel,
   backPath,
   backLabel,
 }: ReportBuilderShellProps) {
@@ -49,19 +47,17 @@ export function ReportBuilderShell({
 
   return (
     <Box style={styles.pageContainer}>
-      {/* Breadcrumb */}
-      <Group gap={4} align="center" mb={8}>
-        <Text
-          size="sm"
-          c="dimmed"
-          style={{ cursor: 'pointer' }}
-          onClick={() => navigate(backPath || `/${countryId}/reports`)}
-        >
-          {backLabel || 'Reports'}
-        </Text>
-        <IconChevronRight size={12} color={colors.gray[400]} />
-        <Text size="sm" c={colors.text.primary}>
-          {breadcrumbLabel || title}
+      {/* Back breadcrumb */}
+      <Group
+        gap={spacing.xs}
+        align="center"
+        mb={8}
+        style={{ cursor: 'pointer' }}
+        onClick={() => navigate(backPath || `/${countryId}/reports`)}
+      >
+        <IconChevronLeft size={14} color={colors.gray[500]} />
+        <Text size="sm" c="dimmed">
+          {backLabel ? `Back to ${backLabel}` : 'Back to reports'}
         </Text>
       </Group>
 

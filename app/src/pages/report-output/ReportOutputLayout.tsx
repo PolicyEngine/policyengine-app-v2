@@ -1,4 +1,4 @@
-import { IconCalendar, IconChevronRight, IconClock } from '@tabler/icons-react';
+import { IconCalendar, IconChevronLeft, IconClock } from '@tabler/icons-react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Container, Group, Stack, Text, Title } from '@mantine/core';
 import { ReportActionButtons } from '@/components/report/ReportActionButtons';
@@ -47,19 +47,16 @@ export default function ReportOutputLayout({
   return (
     <Container size="xl" px={spacing.xl}>
       <Stack gap={spacing.xl}>
-        {/* Breadcrumb */}
-        <Group gap={4} align="center" style={{ marginBottom: `-${spacing.md}` }}>
-          <Text
-            size="sm"
-            c="dimmed"
-            style={{ cursor: 'pointer' }}
-            onClick={() => navigate(`/${countryId}/reports`)}
-          >
-            Reports
-          </Text>
-          <IconChevronRight size={12} color={colors.gray[400]} />
-          <Text size="sm" c={colors.text.primary}>
-            {reportLabel || reportId}
+        {/* Back breadcrumb */}
+        <Group
+          gap={spacing.xs}
+          align="center"
+          style={{ cursor: 'pointer', marginBottom: `-${spacing.md}` }}
+          onClick={() => navigate(`/${countryId}/reports`)}
+        >
+          <IconChevronLeft size={14} color={colors.gray[500]} />
+          <Text size="sm" c="dimmed">
+            Back to reports
           </Text>
         </Group>
 

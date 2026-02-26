@@ -175,6 +175,7 @@ export interface IngredientSectionProps {
   recentPopulations?: RecentPopulation[];
   currentLabel?: string;
   isReadOnly?: boolean;
+  onViewPolicy?: () => void;
 }
 
 export interface SimulationBlockProps {
@@ -189,6 +190,7 @@ export interface SimulationBlockProps {
   onDeselectPolicy: () => void;
   onDeselectPopulation: () => void;
   onEditPolicy: () => void;
+  onViewPolicy: () => void;
   onCreateCustomPolicy: () => void;
   onBrowseMorePolicies: () => void;
   onBrowseMorePopulations: () => void;
@@ -223,6 +225,7 @@ export interface PolicyBrowseState {
   isOpen: boolean;
   simulationIndex: number;
   initialPolicy?: import('@/types/pathwayState').PolicyStateProps;
+  initialEditorMode?: 'create' | 'display' | 'edit';
 }
 
 export interface PolicyBrowseModalProps {
