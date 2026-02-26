@@ -89,11 +89,6 @@ const STATIC_PAGES: Record<string, { title: string; description: string }> = {
     description:
       "AI-powered policy analysis with Claude Code. Run microsimulations, model reforms, and build dashboards from your terminal.",
   },
-  taxsim: {
-    title: "TAXSIM Emulator",
-    description:
-      "A TAXSIM-compatible tax calculator powered by PolicyEngine. Drop-in replacement for NBER TAXSIM with full US tax system coverage.",
-  },
 };
 
 // Helper functions
