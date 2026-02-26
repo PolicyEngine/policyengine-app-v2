@@ -137,20 +137,6 @@ export default function ReportOutputPage() {
     shareDataUserReportId,
   ]);
 
-  // Determine which tabs to show based on output type, country, and geography scope
-  const tabs = outputType ? getTabsForOutputType(outputType) : [];
-
-  // Handle tab navigation (absolute path, preserve search params for shared views)
-  const handleTabClick = (tabValue: string) => {
-    if (isSharedView && shareDataUserReportId) {
-      navigate(
-        `/${countryId}/report-output/${shareDataUserReportId}/${tabValue}?${searchParams.toString()}`
-      );
-    } else {
-      navigate(`/${countryId}/report-output/${userReportId}/${tabValue}`);
-    }
-  };
-
   // Format the report creation timestamp using the current country's locale
   const timestamp = formatReportTimestamp(userReport?.createdAt, countryId);
 
@@ -253,20 +239,6 @@ export default function ReportOutputPage() {
     );
   }
 
-  // Determine if sidebar should be shown
-  const showSidebar = activeTab === 'comparative-analysis';
-
-  // Handle sidebar navigation (absolute path, preserve search params for shared views)
-  const handleSidebarNavigate = (viewName: string) => {
-    if (isSharedView && shareDataUserReportId) {
-      navigate(
-        `/${countryId}/report-output/${shareDataUserReportId}/comparative-analysis/${viewName}?${searchParams.toString()}`
-      );
-    } else {
-      navigate(`/${countryId}/report-output/${userReportId}/comparative-analysis/${viewName}`);
-    }
-  };
-
   // Determine the display label and ID for the report
   const displayLabel = userReport?.label;
   const displayReportId = isSharedView ? shareDataUserReportId : userReportId;
@@ -337,13 +309,6 @@ export default function ReportOutputPage() {
         reportLabel={displayLabel ?? undefined}
         reportYear={report?.year}
         timestamp={timestamp}
-        tabs={tabs}
-        activeTab={activeTab}
-        onTabChange={handleTabClick}
-        showSidebar={showSidebar}
-        outputType={outputType}
-        activeView={activeView}
-        onSidebarNavigate={handleSidebarNavigate}
         isSharedView={isSharedView}
         onShare={handleShare}
         onSave={handleSave}
@@ -360,37 +325,6 @@ export default function ReportOutputPage() {
       </ReportOutputLayout>
     </ReportYearProvider>
   );
-}
-
-/**
- * Determine which tabs to display based on output type and content
- *
- * Uses a common tabs structure that can be easily extended with
- * type-specific tabs in the future (e.g., regional breakdown for
- * society-wide, family structure for household).
- */
-function getTabsForOutputType(
-  outputType: ReportOutputType
-): Array<{ value: string; label: string }> {
-  if (outputType === 'societyWide') {
-    return [
-      { value: 'migration', label: 'Migration' },
-      { value: 'comparative-analysis', label: 'Comparative analysis' },
-      { value: 'policy', label: 'Policy' },
-      { value: 'population', label: 'Population' },
-    ];
-  }
-
-  if (outputType === 'household') {
-    return [
-      { value: 'overview', label: 'Overview' },
-      { value: 'comparative-analysis', label: 'Comparative analysis' },
-      { value: 'policy', label: 'Policy' },
-      { value: 'population', label: 'Population' },
-    ];
-  }
-
-  return [{ value: 'overview', label: 'Overview' }];
 }
 
 /**

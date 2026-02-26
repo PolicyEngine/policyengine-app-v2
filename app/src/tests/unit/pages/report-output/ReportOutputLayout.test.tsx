@@ -5,7 +5,6 @@ import {
   MOCK_REPORT_ID,
   MOCK_REPORT_LABEL,
   MOCK_REPORT_YEAR,
-  MOCK_TABS,
   MOCK_TIMESTAMP,
 } from '@/tests/fixtures/pages/report-output/ReportOutputLayoutMocks';
 
@@ -26,9 +25,6 @@ describe('ReportOutputLayout', () => {
         reportLabel={MOCK_REPORT_LABEL}
         reportYear={MOCK_REPORT_YEAR}
         timestamp={MOCK_TIMESTAMP}
-        tabs={MOCK_TABS}
-        activeTab="overview"
-        onTabChange={vi.fn()}
       >
         <div>Test Content</div>
       </ReportOutputLayout>
@@ -45,9 +41,6 @@ describe('ReportOutputLayout', () => {
         reportId={MOCK_REPORT_ID}
         reportLabel={MOCK_REPORT_LABEL}
         timestamp={MOCK_TIMESTAMP}
-        tabs={MOCK_TABS}
-        activeTab="overview"
-        onTabChange={vi.fn()}
       >
         <div>Test Content</div>
       </ReportOutputLayout>
@@ -65,9 +58,6 @@ describe('ReportOutputLayout', () => {
         reportLabel={MOCK_REPORT_LABEL}
         reportYear={MOCK_REPORT_YEAR}
         timestamp={MOCK_TIMESTAMP}
-        tabs={MOCK_TABS}
-        activeTab="overview"
-        onTabChange={vi.fn()}
       >
         <div>Test Content</div>
       </ReportOutputLayout>
@@ -86,9 +76,6 @@ describe('ReportOutputLayout', () => {
         reportLabel={MOCK_REPORT_LABEL}
         reportYear={MOCK_REPORT_YEAR}
         timestamp={MOCK_TIMESTAMP}
-        tabs={MOCK_TABS}
-        activeTab="overview"
-        onTabChange={vi.fn()}
       >
         <div>Test Content</div>
       </ReportOutputLayout>
@@ -105,9 +92,6 @@ describe('ReportOutputLayout', () => {
         reportId={MOCK_REPORT_ID}
         reportYear={MOCK_REPORT_YEAR}
         timestamp={MOCK_TIMESTAMP}
-        tabs={MOCK_TABS}
-        activeTab="overview"
-        onTabChange={vi.fn()}
       >
         <div>Test Content</div>
       </ReportOutputLayout>
@@ -125,9 +109,6 @@ describe('ReportOutputLayout', () => {
         reportLabel={MOCK_REPORT_LABEL}
         reportYear={MOCK_REPORT_YEAR}
         timestamp={MOCK_TIMESTAMP}
-        tabs={MOCK_TABS}
-        activeTab="overview"
-        onTabChange={vi.fn()}
       >
         <div>Test Content</div>
       </ReportOutputLayout>
@@ -135,50 +116,6 @@ describe('ReportOutputLayout', () => {
 
     // Then
     expect(screen.getByText(MOCK_TIMESTAMP)).toBeInTheDocument();
-  });
-
-  test('given tabs then all tabs are rendered', () => {
-    // Given
-    render(
-      <ReportOutputLayout
-        reportId={MOCK_REPORT_ID}
-        reportLabel={MOCK_REPORT_LABEL}
-        reportYear={MOCK_REPORT_YEAR}
-        timestamp={MOCK_TIMESTAMP}
-        tabs={MOCK_TABS}
-        activeTab="overview"
-        onTabChange={vi.fn()}
-      >
-        <div>Test Content</div>
-      </ReportOutputLayout>
-    );
-
-    // Then
-    MOCK_TABS.forEach((tab) => {
-      expect(screen.getByText(tab.label)).toBeInTheDocument();
-    });
-  });
-
-  test('given active tab then tab is highlighted', () => {
-    // Given
-    const activeTab = 'comparative-analysis';
-    render(
-      <ReportOutputLayout
-        reportId={MOCK_REPORT_ID}
-        reportLabel={MOCK_REPORT_LABEL}
-        reportYear={MOCK_REPORT_YEAR}
-        timestamp={MOCK_TIMESTAMP}
-        tabs={MOCK_TABS}
-        activeTab={activeTab}
-        onTabChange={vi.fn()}
-      >
-        <div>Test Content</div>
-      </ReportOutputLayout>
-    );
-
-    // Then
-    const activeTabElement = screen.getByText('Comparative analysis');
-    expect(activeTabElement).toBeInTheDocument();
   });
 
   test('given children then children are rendered', () => {
@@ -190,9 +127,6 @@ describe('ReportOutputLayout', () => {
         reportLabel={MOCK_REPORT_LABEL}
         reportYear={MOCK_REPORT_YEAR}
         timestamp={MOCK_TIMESTAMP}
-        tabs={MOCK_TABS}
-        activeTab="overview"
-        onTabChange={vi.fn()}
       >
         <div>{testContent}</div>
       </ReportOutputLayout>
@@ -210,9 +144,6 @@ describe('ReportOutputLayout', () => {
         reportLabel={MOCK_REPORT_LABEL}
         reportYear={MOCK_REPORT_YEAR}
         timestamp={MOCK_TIMESTAMP}
-        tabs={MOCK_TABS}
-        activeTab="overview"
-        onTabChange={vi.fn()}
         isSharedView
         onSave={vi.fn()}
       >
@@ -233,9 +164,6 @@ describe('ReportOutputLayout', () => {
         reportLabel={MOCK_REPORT_LABEL}
         reportYear={MOCK_REPORT_YEAR}
         timestamp={MOCK_TIMESTAMP}
-        tabs={MOCK_TABS}
-        activeTab="overview"
-        onTabChange={vi.fn()}
         isSharedView={false}
         onShare={vi.fn()}
         onView={vi.fn()}
