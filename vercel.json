@@ -44,6 +44,14 @@
       "source": "/plugin-blog/:path*",
       "destination": "https://policyengine.github.io/plugin-blog/:path*"
     },
+    {
+      "source": "/us/taxsim",
+      "destination": "https://cps-dashboard-pied.vercel.app/us/taxsim"
+    },
+    {
+      "source": "/us/taxsim/:path*",
+      "destination": "https://cps-dashboard-pied.vercel.app/us/taxsim/:path*"
+    },
     { "source": "/(.*)", "destination": "/website.html" }
   ],
   "headers": [
