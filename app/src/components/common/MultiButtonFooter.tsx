@@ -38,9 +38,9 @@ export default function MultiButtonFooter(props: MultiButtonFooterProps) {
   // New layout: Grid with equal spacing - Cancel left, Pagination center, Back/Next right
   if (cancelAction || backAction || primaryAction) {
     return (
-      <div className="tw:grid tw:grid-cols-1 tw:sm:grid-cols-3 tw:gap-md">
+      <div className="tw:grid tw:grid-cols-1 tw:sm:grid-cols-3 tw:gap-md tw:overflow-hidden">
         {/* Left side: Cancel button */}
-        <div className="tw:flex tw:justify-start">
+        <div className="tw:flex tw:justify-start tw:min-w-0">
           {cancelAction && (
             <Button variant="outline" onClick={cancelAction.onClick} className="tw:w-full">
               {cancelAction.label}
@@ -49,15 +49,19 @@ export default function MultiButtonFooter(props: MultiButtonFooterProps) {
         </div>
 
         {/* Center: Pagination controls (if provided) */}
-        <div className="tw:flex tw:justify-center">
+        <div className="tw:flex tw:justify-center tw:min-w-0">
           {pagination && <PaginationControls pagination={pagination} />}
         </div>
 
         {/* Right side: Back and Primary buttons */}
-        <div className="tw:flex tw:justify-end">
-          <div className="tw:flex tw:gap-sm tw:flex-nowrap tw:w-full">
+        <div className="tw:flex tw:justify-end tw:min-w-0">
+          <div className="tw:flex tw:gap-sm tw:w-full tw:min-w-0">
             {backAction && (
-              <Button variant="outline" onClick={backAction.onClick} className="tw:w-full">
+              <Button
+                variant="outline"
+                onClick={backAction.onClick}
+                className="tw:w-full tw:min-w-0 tw:truncate"
+              >
                 <IconChevronLeft size={16} />
                 {backAction.label}
               </Button>
@@ -66,7 +70,7 @@ export default function MultiButtonFooter(props: MultiButtonFooterProps) {
               <Button
                 onClick={primaryAction.onClick}
                 disabled={primaryAction.isDisabled || primaryAction.isLoading}
-                className="tw:w-full"
+                className="tw:w-full tw:min-w-0 tw:truncate"
               >
                 {primaryAction.isLoading && <Spinner size="sm" />}
                 {primaryAction.label}
