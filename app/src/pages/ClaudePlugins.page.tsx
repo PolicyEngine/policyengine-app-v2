@@ -300,7 +300,7 @@ export default function ClaudePluginsPage() {
   const heroPrompt = isUK
     ? 'What is the budgetary impact of raising the personal allowance to £13,500?'
     : 'What is the budgetary impact of doubling the standard deduction?';
-  const heroDataset = isUK ? 'Family Resources Survey' : '2024 Enhanced CPS';
+
 
   return (
     <StaticPageLayout title="Claude Plugins">
