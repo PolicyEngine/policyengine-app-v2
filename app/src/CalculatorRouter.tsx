@@ -14,6 +14,7 @@ import ModifyReportPage from './pages/reportBuilder/ModifyReportPage';
 // Old monolithic file preserved but not used - see ./pages/ReportBuilder.page.tsx
 import ReportBuilderPage from './pages/reportBuilder/ReportBuilderPage';
 import ReportOutputPage from './pages/ReportOutput.page';
+import ReportOutputMockupPage from './pages/ReportOutputMockup.page';
 import ReportsPage from './pages/Reports.page';
 import SimulationsPage from './pages/Simulations.page';
 import PolicyPathwayWrapper from './pathways/policy/PolicyPathwayWrapper';
@@ -126,6 +127,10 @@ const router = createBrowserRouter(
                 {
                   path: 'reports/create/:userReportId',
                   element: <ModifyReportPage />,
+                },
+                {
+                  path: 'report-mockups',
+                  element: <ReportOutputMockupPage />,
                 },
                 {
                   path: 'policy-editing-concepts',

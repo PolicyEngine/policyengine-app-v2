@@ -2,6 +2,7 @@ import {
   IconBook,
   IconBrandGithub,
   IconBrandSlack,
+  IconChartBar,
   IconCpu,
   IconFileDescription,
   IconGitBranch,
@@ -34,6 +35,7 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
     { label: 'Simulations', icon: IconGitBranch, path: `/${countryId}/simulations` },
     { label: 'Policies', icon: IconScale, path: `/${countryId}/policies` },
     { label: 'Households', icon: IconUsers, path: `/${countryId}/households` },
+    { label: 'Report mock-ups', icon: IconChartBar, path: `/${countryId}/report-mockups` },
   ];
 
   const resourceItems = [

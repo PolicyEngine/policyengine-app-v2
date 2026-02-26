@@ -1,11 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
-import {
-  IconChevronLeft,
-  IconNewSection,
-  IconPencil,
-  IconStatusChange,
-  IconX,
-} from '@tabler/icons-react';
+import { IconNewSection, IconPencil, IconStatusChange, IconX } from '@tabler/icons-react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Button, Container, Group, Modal, Stack, Text } from '@mantine/core';
 import { spacing } from '@/designTokens';
@@ -21,7 +15,14 @@ export default function ModifyReportPage() {
   const countryId = useCurrentCountry() as 'us' | 'uk';
   const navigate = useNavigate();
   const location = useLocation();
-  const startInEditMode = (location.state as { edit?: boolean } | null)?.edit === true;
+  const locationState = location.state as {
+    edit?: boolean;
+    from?: string;
+    reportPath?: string;
+  } | null;
+  const startInEditMode = locationState?.edit === true;
+  const cameFromReportOutput = locationState?.from === 'report-output';
+  const reportOutputPath = locationState?.reportPath;
 
   const { reportState, setReportState, originalState, isLoading, error } = useReportBuilderState(
     userReportId ?? ''
@@ -63,13 +64,6 @@ export default function ModifyReportPage() {
   const topBarActions: TopBarAction[] = useMemo(() => {
     if (!isEditing) {
       return [
-        {
-          key: 'back',
-          label: 'Back',
-          icon: <IconChevronLeft size={16} />,
-          onClick: () => navigate(getReportOutputPath(countryId, userReportId!)),
-          variant: 'secondary' as const,
-        },
         {
           key: 'edit',
           label: 'Edit report',
@@ -150,6 +144,9 @@ export default function ModifyReportPage() {
     <>
       <ReportBuilderShell
         title={isEditing ? 'Edit report' : 'View report setup'}
+        breadcrumbLabel={reportState?.label || undefined}
+        backPath={cameFromReportOutput ? reportOutputPath : undefined}
+        backLabel={cameFromReportOutput ? reportState?.label || 'Report output' : undefined}
         actions={topBarActions}
         reportState={reportState}
         setReportState={setReportState as React.Dispatch<React.SetStateAction<ReportBuilderState>>}

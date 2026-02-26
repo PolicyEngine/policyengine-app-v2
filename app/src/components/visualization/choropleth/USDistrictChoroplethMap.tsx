@@ -158,15 +158,6 @@ export function USDistrictChoroplethMap({
     );
   }
 
-  // No data state
-  if (!data.length) {
-    return (
-      <Center h={fullConfig.height}>
-        <Text c="dimmed">No district data available</Text>
-      </Center>
-    );
-  }
-
   return (
     <Box
       style={{

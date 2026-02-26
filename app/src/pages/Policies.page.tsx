@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { IconSettings2 } from '@tabler/icons-react';
+import { IconSettings } from '@tabler/icons-react';
 import { useNavigate } from 'react-router-dom';
 import { Stack } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
@@ -25,7 +25,7 @@ export default function PoliciesPage() {
 
   // Rename modal state
   const [renamingPolicyId, setRenamingPolicyId] = useState<string | null>(null);
-  const [renameOpened, { open: openRename, close: closeRename }] = useDisclosure(false);
+  const [renameOpened, { close: closeRename }] = useDisclosure(false);
   const [renameError, setRenameError] = useState<string | null>(null);
 
   // Policy editor modal state
@@ -53,12 +53,6 @@ export default function PoliciesPage() {
       setEditorMode(mode);
       openEditor();
     }
-  };
-
-  const handleOpenRename = (userPolicyId: string) => {
-    setRenamingPolicyId(userPolicyId);
-    setRenameError(null); // Clear any previous error
-    openRename();
   };
 
   const handleCloseRename = () => {
@@ -110,10 +104,10 @@ export default function PoliciesPage() {
       key: 'actions',
       header: '',
       type: 'actions',
-      actions: [{ action: 'edit', tooltip: 'View/edit policy', icon: <IconSettings2 size={16} /> }],
+      actions: [{ action: 'edit', tooltip: 'View/edit policy', icon: <IconSettings size={16} /> }],
       onAction: (action: string, recordId: string) => {
         if (action === 'edit') {
-          handleOpenEditor(recordId, 'edit');
+          handleOpenEditor(recordId, 'display');
         }
       },
     },

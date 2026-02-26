@@ -239,7 +239,7 @@ describe('ReportOutputLayout', () => {
         isSharedView={false}
         onShare={vi.fn()}
         onView={vi.fn()}
-        onEdit={vi.fn()}
+        onReproduce={vi.fn()}
       >
         <div>Content</div>
       </ReportOutputLayout>
@@ -247,8 +247,8 @@ describe('ReportOutputLayout', () => {
 
     // Then
     expect(screen.queryByTestId('shared-report-tag')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /reproduce in python/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /share/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /view/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /edit/i })).toBeInTheDocument();
   });
 });

@@ -140,6 +140,54 @@ export function processGeoJSONFeatures(
 }
 
 /**
+ * Build a background outline trace showing ALL district boundaries.
+ * White fill with light gray outlines, no hover, no colorbar.
+ * This trace is rendered beneath the data trace so all outlines
+ * are always visible even before data arrives.
+ */
+export function buildBackgroundTrace(
+  geoJSON: GeoJSONFeatureCollection
+): Partial<PlotData> {
+  const locations: string[] = [];
+  const features: GeoJSONFeature[] = [];
+
+  geoJSON.features.forEach((feature: GeoJSONFeature) => {
+    const districtId = feature.properties?.DISTRICT_ID as string;
+    if (!districtId) return;
+    locations.push(districtId);
+    features.push(feature);
+  });
+
+  const bgGeoJSON: GeoJSONFeatureCollection = {
+    ...geoJSON,
+    features: features.map((f, i) => ({ ...f, id: locations[i] })),
+  };
+
+  return {
+    type: 'choropleth',
+    geojson: bgGeoJSON,
+    locations,
+    z: locations.map(() => 0),
+    featureidkey: 'id',
+    locationmode: 'geojson-id',
+    colorscale: [
+      [0, colors.background.primary],
+      [1, colors.background.primary],
+    ] as ColorscaleEntry[],
+    zmin: 0,
+    zmax: 1,
+    showscale: false,
+    hoverinfo: 'skip',
+    marker: {
+      line: {
+        color: colors.gray[300],
+        width: 0.5,
+      },
+    },
+  } as Partial<PlotData>;
+}
+
+/**
  * Build the geo configuration for Plotly.
  *
  * @param focusState - Optional state code to zoom to
@@ -275,6 +323,9 @@ export function buildPlotDataAndLayout(
   config: ChoroplethMapConfig,
   focusState?: string
 ): PlotDataAndLayout {
+  // Background trace: all district outlines (white fill, gray borders)
+  const backgroundTrace = buildBackgroundTrace(geoJSON);
+
   // Process features to extract only those with data
   const processedData = processGeoJSONFeatures(geoJSON, dataMap, config.formatValue);
 
@@ -287,9 +338,9 @@ export function buildPlotDataAndLayout(
   // Build geo config
   const geoConfig = buildGeoConfig(focusState);
 
-  // Build plot data and layout
-  const plotData = buildPlotData(geoJSONWithIds, processedData, colorscale, colorRange, config);
+  // Build data trace (colored fills for districts with data)
+  const dataTraces = buildPlotData(geoJSONWithIds, processedData, colorscale, colorRange, config);
   const plotLayout = buildPlotLayout(geoConfig, config.height);
 
-  return { plotData, plotLayout };
+  return { plotData: [backgroundTrace, ...dataTraces], plotLayout };
 }

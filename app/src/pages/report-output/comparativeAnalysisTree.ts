@@ -8,47 +8,40 @@ export interface TreeNode {
 /**
  * Get the tree structure for Comparative Analysis submenu
  * Based on V1 tree structure but adapted for V2
+ *
+ * Charts migrated to the Migration tab are excluded:
+ * - budgetary-impact-overall
+ * - distributional-impact-income-relative
+ * - distributional-impact-income-average
+ * - winners-losers-income-decile
+ * - poverty-impact-age, poverty-impact-gender, poverty-impact-race
+ * - deep-poverty-impact-age, deep-poverty-impact-gender
+ * - inequality-impact
  */
 export function getComparativeAnalysisTree(countryId: string): TreeNode[] {
   return [
-    {
-      name: 'budgetaryImpact',
-      label: 'Budgetary impact',
-      children: [
-        {
-          name: 'budgetary-impact-overall',
-          label: 'Overall',
-        },
-        ...(countryId === 'uk'
-          ? [
+    // Budgetary impact: only UK has remaining children (by-program)
+    ...(countryId === 'uk'
+      ? [
+          {
+            name: 'budgetaryImpact',
+            label: 'Budgetary impact',
+            children: [
               {
                 name: 'budgetary-impact-by-program',
                 label: 'By program',
               },
-            ]
-          : []),
-      ],
-    },
-    {
-      name: 'distributionalImpact',
-      label: 'Distributional impact',
-      children: [
-        {
-          name: 'distributionalImpact.incomeDecile',
-          label: 'By income decile',
-          children: [
-            {
-              name: 'distributional-impact-income-relative',
-              label: 'Relative',
-            },
-            {
-              name: 'distributional-impact-income-average',
-              label: 'Absolute',
-            },
-          ],
-        },
-        ...(countryId === 'uk'
-          ? [
+            ],
+          },
+        ]
+      : []),
+    // Distributional impact: only UK has remaining children (wealth-decile)
+    ...(countryId === 'uk'
+      ? [
+          {
+            name: 'distributionalImpact',
+            label: 'Distributional impact',
+            children: [
               {
                 name: 'distributionalImpact.wealthDecile',
                 label: 'By wealth decile',
@@ -63,74 +56,26 @@ export function getComparativeAnalysisTree(countryId: string): TreeNode[] {
                   },
                 ],
               },
-            ]
-          : []),
-      ],
-    },
-    {
-      name: 'winnersAndLosers',
-      label: 'Winners and losers',
-      children: [
-        {
-          name: 'winners-losers-income-decile',
-          label: 'By income decile',
-        },
-        ...(countryId === 'uk'
-          ? [
+            ],
+          },
+        ]
+      : []),
+    // Winners and losers: only UK has remaining children (wealth-decile)
+    ...(countryId === 'uk'
+      ? [
+          {
+            name: 'winnersAndLosers',
+            label: 'Winners and losers',
+            children: [
               {
                 name: 'winners-losers-wealth-decile',
                 label: 'By wealth decile',
               },
-            ]
-          : []),
-      ],
-    },
-    {
-      name: 'povertyImpact',
-      label: 'Poverty impact',
-      children: [
-        {
-          name: 'povertyImpact.regular',
-          label: 'Regular poverty',
-          children: [
-            {
-              name: 'poverty-impact-age',
-              label: 'By age',
-            },
-            {
-              name: 'poverty-impact-gender',
-              label: 'By gender',
-            },
-            ...(countryId === 'us'
-              ? [
-                  {
-                    name: 'poverty-impact-race',
-                    label: 'By race',
-                  },
-                ]
-              : []),
-          ],
-        },
-        {
-          name: 'povertyImpact.deep',
-          label: 'Deep poverty',
-          children: [
-            {
-              name: 'deep-poverty-impact-age',
-              label: 'By age',
-            },
-            {
-              name: 'deep-poverty-impact-gender',
-              label: 'By gender',
-            },
-          ],
-        },
-      ],
-    },
-    {
-      name: 'inequality-impact',
-      label: 'Inequality impact',
-    },
+            ],
+          },
+        ]
+      : []),
+    // Poverty impact: all charts migrated to Migration tab
     ...(countryId === 'us'
       ? [
           {

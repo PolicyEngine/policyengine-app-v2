@@ -84,6 +84,7 @@ export default function ReportBuilderPage() {
   return (
     <ReportBuilderShell
       title="Create new report"
+      breadcrumbLabel="New report"
       actions={topBarActions}
       reportState={reportState}
       setReportState={setReportState}

@@ -74,7 +74,7 @@ export function ComparativeAnalysisPage({
   year,
   region,
 }: Props) {
-  // If no view specified, use default view
+  // If no view specified, use a fallback (sidebar auto-navigates to first leaf)
   const effectiveView = view || 'budgetary-impact-overall';
 
   // Look up component in map

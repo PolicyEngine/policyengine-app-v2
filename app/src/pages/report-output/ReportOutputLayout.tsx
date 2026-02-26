@@ -1,4 +1,4 @@
-import { IconCalendar, IconChevronLeft, IconClock } from '@tabler/icons-react';
+import { IconCalendar, IconChevronRight, IconClock } from '@tabler/icons-react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Container, Group, Stack, Text, Title } from '@mantine/core';
 import { ReportActionButtons } from '@/components/report/ReportActionButtons';
@@ -25,7 +25,7 @@ interface ReportOutputLayoutProps {
   onShare?: () => void;
   onSave?: () => void;
   onView?: () => void;
-  onEdit?: () => void;
+  onReproduce?: () => void;
   children: React.ReactNode;
 }
 
@@ -55,7 +55,7 @@ export default function ReportOutputLayout({
   onShare,
   onSave,
   onView,
-  onEdit,
+  onReproduce,
   children,
 }: ReportOutputLayoutProps) {
   const countryId = useCurrentCountry();
@@ -67,38 +67,50 @@ export default function ReportOutputLayout({
   return (
     <Container size="xl" px={spacing.xl}>
       <Stack gap={spacing.xl}>
-        {/* Back navigation */}
-        <Group
-          gap={spacing.xs}
-          align="center"
-          style={{ cursor: 'pointer', marginBottom: `-${spacing.md}` }}
-          onClick={() => navigate(`/${countryId}/reports`)}
-        >
-          <IconChevronLeft size={14} color={colors.gray[500]} />
-          <Text size="sm" c="dimmed">
-            Back to reports
+        {/* Breadcrumb */}
+        <Group gap={4} align="center" style={{ marginBottom: `-${spacing.md}` }}>
+          <Text
+            size="sm"
+            c="dimmed"
+            style={{ cursor: 'pointer' }}
+            onClick={() => navigate(`/${countryId}/reports`)}
+          >
+            Reports
+          </Text>
+          <IconChevronRight size={12} color={colors.gray[400]} />
+          <Text size="sm" c={colors.text.primary}>
+            {reportLabel || reportId}
           </Text>
         </Group>
 
         {/* Header Section */}
         <Box>
           {/* Title row with actions */}
-          <Group gap={spacing.xs} align="center" mb={spacing.xs}>
-            <Title
-              order={1}
-              variant="colored"
-              fw={typography.fontWeight.semibold}
-              fz={typography.fontSize['3xl']}
-            >
-              {reportLabel || reportId}
-            </Title>
-            {isSharedView && <SharedReportTag />}
+          <Group
+            gap={spacing.xs}
+            align="center"
+            mb={spacing.xs}
+            justify="space-between"
+            wrap="nowrap"
+          >
+            <Group gap={spacing.xs} align="center" wrap="nowrap" style={{ minWidth: 0 }}>
+              <Title
+                order={1}
+                variant="colored"
+                fw={typography.fontWeight.semibold}
+                fz={typography.fontSize['3xl']}
+                style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+              >
+                {reportLabel || reportId}
+              </Title>
+              {isSharedView && <SharedReportTag />}
+            </Group>
             <ReportActionButtons
               isSharedView={isSharedView}
               onShare={onShare}
               onSave={onSave}
               onView={onView}
-              onEdit={onEdit}
+              onReproduce={onReproduce}
             />
           </Group>
 
