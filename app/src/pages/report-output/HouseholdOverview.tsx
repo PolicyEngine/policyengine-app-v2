@@ -1,9 +1,9 @@
-import { useState } from 'react';
 import { IconChevronDown, IconChevronRight, IconWallet } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
+import { Box, Collapse, Group, Stack, Text, UnstyledButton } from '@mantine/core';
+import { useDisclosure } from '@mantine/hooks';
 import HouseholdBreakdown from '@/components/household/HouseholdBreakdown';
 import MetricCard from '@/components/report/MetricCard';
-import { Group, Stack, Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import { RootState } from '@/store';
 import { Household } from '@/types/ingredients/Household';
@@ -27,17 +27,15 @@ const HERO_ICON_SIZE = 48;
  * - Clear visual indicators for positive/negative changes
  */
 export default function HouseholdOverview({ outputs, policyLabels }: HouseholdOverviewProps) {
-  const [breakdownOpen, setBreakdownOpen] = useState(false);
+  const [breakdownOpen, { toggle: toggleBreakdown }] = useDisclosure(false);
   const metadata = useSelector((state: RootState) => state.metadata);
 
   const rootVariable = metadata.variables.household_net_income;
   if (!rootVariable) {
     return (
-      <div>
-        <Text style={{ color: 'red' }}>
-          Error: household_net_income variable not found in metadata
-        </Text>
-      </div>
+      <Box>
+        <Text c="red">Error: household_net_income variable not found in metadata</Text>
+      </Box>
     );
   }
 
@@ -93,29 +91,32 @@ export default function HouseholdOverview({ outputs, policyLabels }: HouseholdOv
     : colors.primary[700];
 
   return (
-    <Stack className="tw:gap-xl">
+    <Stack gap={spacing.xl}>
       {/* Hero Section - Net Income */}
-      <div
-        className="tw:p-xl"
+      <Box
+        p={spacing.xl}
         style={{
           background: `linear-gradient(135deg, ${colors.primary[50]} 0%, ${colors.background.primary} 100%)`,
           borderRadius: spacing.radius.container,
           border: `1px solid ${colors.primary[100]}`,
         }}
       >
-        <Group className="tw:gap-md tw:items-start">
-          <div
-            className="tw:flex tw:items-center tw:justify-center tw:shrink-0"
+        <Group gap={spacing.md} align="flex-start">
+          <Box
             style={{
               width: HERO_ICON_SIZE,
               height: HERO_ICON_SIZE,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
               backgroundColor: colors.primary[100],
               borderRadius: spacing.radius.element,
+              flexShrink: 0,
             }}
           >
             <IconWallet size={28} color={colors.primary[700]} stroke={1.5} />
-          </div>
-          <div className="tw:flex-1">
+          </Box>
+          <Box style={{ flex: 1 }}>
             <MetricCard
               label={heroLabel}
               value={formattedValue}
@@ -123,12 +124,12 @@ export default function HouseholdOverview({ outputs, policyLabels }: HouseholdOv
               trend={trend}
               hero
             />
-          </div>
+          </Box>
         </Group>
-      </div>
+      </Box>
 
       {/* Expandable Breakdown Section */}
-      <div
+      <Box
         style={{
           backgroundColor: colors.background.primary,
           borderRadius: spacing.radius.container,
@@ -137,11 +138,14 @@ export default function HouseholdOverview({ outputs, policyLabels }: HouseholdOv
         }}
       >
         {/* Header */}
-        <button
-          type="button"
-          onClick={() => setBreakdownOpen(!breakdownOpen)}
-          className="tw:bg-transparent tw:border-none tw:cursor-pointer tw:p-lg tw:w-full tw:block"
-          style={{ transition: 'background-color 0.15s ease' }}
+        <UnstyledButton
+          onClick={toggleBreakdown}
+          p={spacing.lg}
+          style={{
+            width: '100%',
+            display: 'block',
+            transition: 'background-color 0.15s ease',
+          }}
           onMouseEnter={(e) => {
             e.currentTarget.style.backgroundColor = colors.gray[50];
           }}
@@ -149,45 +153,48 @@ export default function HouseholdOverview({ outputs, policyLabels }: HouseholdOv
             e.currentTarget.style.backgroundColor = 'transparent';
           }}
         >
-          <Group className="tw:justify-between tw:items-center">
-            <Group className="tw:gap-sm">
+          <Group justify="space-between" align="center">
+            <Group gap={spacing.sm}>
               {breakdownOpen ? (
                 <IconChevronDown size={20} color={colors.text.secondary} />
               ) : (
                 <IconChevronRight size={20} color={colors.text.secondary} />
               )}
-              <Text
-                style={{ fontWeight: typography.fontWeight.medium, color: colors.text.primary }}
-              >
+              <Text fw={typography.fontWeight.medium} c={colors.text.primary}>
                 Detailed breakdown
               </Text>
             </Group>
-            <Text className="tw:text-sm" style={{ color: colors.text.tertiary }}>
+            <Text size="sm" c={colors.text.tertiary}>
               {breakdownOpen ? 'Click to collapse' : 'Click to expand'}
             </Text>
           </Group>
-        </button>
+        </UnstyledButton>
 
         {/* Collapsible Content */}
-        {breakdownOpen && (
-          <div
-            className="tw:px-lg tw:pb-lg"
-            style={{ borderTop: `1px solid ${colors.border.light}` }}
+        <Collapse in={breakdownOpen}>
+          <Box
+            px={spacing.lg}
+            pb={spacing.lg}
+            style={{
+              borderTop: `1px solid ${colors.border.light}`,
+            }}
           >
-            <div className="tw:mt-md" style={{ borderLeft: `3px solid ${borderColor}` }}>
+            <Box
+              mt={spacing.md}
+              style={{
+                borderLeft: `3px solid ${borderColor}`,
+              }}
+            >
               <HouseholdBreakdown baseline={baseline} reform={reform} borderColor={borderColor} />
-            </div>
+            </Box>
 
             {/* Helper text */}
-            <Text
-              className="tw:text-xs tw:mt-md tw:text-center"
-              style={{ color: colors.text.tertiary }}
-            >
+            <Text size="xs" c={colors.text.tertiary} mt={spacing.md} ta="center">
               Click on any item to see its detailed breakdown
             </Text>
-          </div>
-        )}
-      </div>
+          </Box>
+        </Collapse>
+      </Box>
     </Stack>
   );
 }

@@ -102,19 +102,18 @@ describe('RenameIngredientModal', () => {
       // Given & When
       render(<RenameIngredientModal {...createDefaultModalProps()} />);
 
-      // Then — native autoFocus is set on the input
+      // Then
       const input = screen.getByRole('textbox', { name: /report name/i });
-      expect(input).toHaveFocus();
+      expect(input).toHaveAttribute('data-autofocus', 'true');
     });
 
     test('given loading state then rename button has loading indicator', () => {
       // Given & When
       render(<RenameIngredientModal {...createLoadingModalProps()} />);
 
-      // Then — loading state renders a Spinner (role="status") inside the button
+      // Then
       const button = screen.getByRole('button', { name: /rename/i });
-      const spinner = button.querySelector('[role="status"]');
-      expect(spinner).toBeInTheDocument();
+      expect(button).toHaveAttribute('data-loading', 'true');
     });
 
     test('given loading state then rename button is disabled', () => {
@@ -246,8 +245,9 @@ describe('RenameIngredientModal', () => {
       await user.type(input, TEST_LABELS.TOO_LONG);
       await user.click(screen.getByRole('button', { name: /^rename$/i }));
 
-      // Then — error is shown as visible text below the input
-      expect(screen.getByText(/must be 100 characters or less/i)).toBeInTheDocument();
+      // Then
+      expect(input).toHaveAttribute('aria-invalid', 'true');
+      expect(input).toHaveAccessibleDescription(/must be 100 characters or less/i);
       expect(props.onRename).not.toHaveBeenCalled();
     });
 
@@ -310,8 +310,9 @@ describe('RenameIngredientModal', () => {
       rerender(<RenameIngredientModal {...props} opened={false} />);
       rerender(<RenameIngredientModal {...props} opened />);
 
-      // Then — no error message should be visible
-      expect(screen.queryByText(/must be|cannot be|failed/i)).not.toBeInTheDocument();
+      // Then
+      const input = screen.getByRole('textbox', { name: /report name/i });
+      expect(input).toHaveAttribute('aria-invalid', 'false');
     });
   });
 
@@ -320,8 +321,10 @@ describe('RenameIngredientModal', () => {
       // Given & When
       render(<RenameIngredientModal {...createModalPropsWithSubmissionError()} />);
 
-      // Then — error is shown as visible text below the input
-      expect(screen.getByText(SUBMISSION_ERRORS.API_FAILURE)).toBeInTheDocument();
+      // Then
+      const input = screen.getByRole('textbox', { name: /report name/i });
+      expect(input).toHaveAttribute('aria-invalid', 'true');
+      expect(input).toHaveAccessibleDescription(SUBMISSION_ERRORS.API_FAILURE);
     });
 
     test('given submission error then user can still type to clear validation error only', async () => {
@@ -329,27 +332,28 @@ describe('RenameIngredientModal', () => {
       const user = userEvent.setup();
       const props = createModalPropsWithSubmissionError();
       render(<RenameIngredientModal {...props} />);
+      const input = screen.getByRole('textbox', { name: /report name/i });
 
       // When - user types (which should NOT clear submission error, only validation errors)
-      const input = screen.getByRole('textbox', { name: /report name/i });
       await user.clear(input);
       await user.type(input, TEST_LABELS.NEW);
 
       // Then - submission error should still be displayed (parent controls it)
-      expect(screen.getByText(SUBMISSION_ERRORS.API_FAILURE)).toBeInTheDocument();
+      expect(input).toHaveAttribute('aria-invalid', 'true');
     });
 
     test('given submission error cleared by parent then error no longer displays', () => {
       // Given
       const props = createModalPropsWithSubmissionError();
       const { rerender } = render(<RenameIngredientModal {...props} />);
-      expect(screen.getByText(SUBMISSION_ERRORS.API_FAILURE)).toBeInTheDocument();
+      const input = screen.getByRole('textbox', { name: /report name/i });
+      expect(input).toHaveAttribute('aria-invalid', 'true');
 
       // When - parent clears the submission error
       rerender(<RenameIngredientModal {...props} submissionError={null} />);
 
       // Then
-      expect(screen.queryByText(SUBMISSION_ERRORS.API_FAILURE)).not.toBeInTheDocument();
+      expect(input).toHaveAttribute('aria-invalid', 'false');
     });
 
     test('given validation error takes precedence when both exist', async () => {
@@ -364,16 +368,17 @@ describe('RenameIngredientModal', () => {
       await user.type(input, TEST_LABELS.TOO_LONG);
       await user.click(screen.getByRole('button', { name: /^rename$/i }));
 
-      // Then - validation error should be shown as visible text (validation takes precedence)
-      expect(screen.getByText(/must be 100 characters or less/i)).toBeInTheDocument();
+      // Then - validation error should be shown (validation takes precedence)
+      expect(input).toHaveAccessibleDescription(/must be 100 characters or less/i);
     });
 
     test('given no submission error and no validation error then input is valid', () => {
       // Given & When
       render(<RenameIngredientModal {...createDefaultModalProps()} />);
 
-      // Then — no error message should be visible
-      expect(screen.queryByText(/must be|cannot be|failed|please try/i)).not.toBeInTheDocument();
+      // Then
+      const input = screen.getByRole('textbox', { name: /report name/i });
+      expect(input).toHaveAttribute('aria-invalid', 'false');
     });
   });
 });

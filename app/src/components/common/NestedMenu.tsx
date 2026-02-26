@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { cn } from '@/lib/utils';
+import { NavLink } from '@mantine/core';
 
 interface NestedMenuOptions {
   name: string;
@@ -35,42 +35,19 @@ export default function NestedMenu({ menuOptions, onItemClick }: NestedMenuProps
     });
   }
 
-  function mapOverOneParamLevel(list: NestedMenuOptions[], depth = 0) {
+  function mapOverOneParamLevel(list: NestedMenuOptions[]) {
     return list.map((item: NestedMenuOptions) => {
-      const isActive = active === item.name;
-      const isExpanded = selectedSet.has(item.name);
-      const hasChildren = !!item.children;
-
       return (
-        <div key={item.name}>
-          <button
-            type="button"
-            className={cn(
-              'tw:w-full tw:text-left tw:px-md tw:py-xs tw:border-none tw:bg-transparent tw:cursor-pointer tw:text-sm tw:rounded-sm tw:transition-colors',
-              isActive
-                ? 'tw:bg-primary-50 tw:text-primary-700 tw:font-medium'
-                : 'tw:text-gray-700 tw:hover:bg-gray-50'
-            )}
-            style={{ paddingLeft: `${12 + depth * 16}px` }}
-            onClick={() => handleClick(item.name)}
-          >
-            {hasChildren && (
-              <span
-                className="tw:mr-xs tw:inline-block"
-                style={{
-                  transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
-                  transition: 'transform 150ms ease',
-                }}
-              >
-                &#9656;
-              </span>
-            )}
-            {item.label}
-          </button>
-          {item.children && isExpanded && (
-            <div>{mapOverOneParamLevel(item.children, depth + 1)}</div>
-          )}
-        </div>
+        <NavLink
+          key={item.name}
+          // href={`#${item.name}`} TODO: Do we need href?
+          label={item.label}
+          active={active === item.name}
+          onClick={() => handleClick(item.name)}
+          opened={selectedSet.has(item.name)}
+        >
+          {item.children && selectedSet.has(item.name) && mapOverOneParamLevel(item.children)}
+        </NavLink>
       );
     });
   }

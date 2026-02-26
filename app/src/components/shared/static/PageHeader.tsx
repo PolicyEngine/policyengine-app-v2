@@ -1,4 +1,4 @@
-import { Text, Title } from '@/components/ui';
+import { Box, Divider, Flex, Text, Title } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
 
 export interface PageHeaderProps {
@@ -8,20 +8,22 @@ export interface PageHeaderProps {
 
 export default function PageHeader({ title, description }: PageHeaderProps) {
   return (
-    <div
+    <Box
+      py={spacing['4xl']}
+      px={{ base: spacing.container.md, md: spacing.container.lg }}
       style={{
-        paddingTop: spacing['4xl'],
-        paddingBottom: spacing['4xl'],
         backgroundColor: colors.background.secondary,
         borderBottom: `1px solid ${colors.border.dark}`,
-        paddingLeft: spacing.container.md,
-        paddingRight: spacing.container.md,
       }}
     >
-      <div className="tw:flex tw:flex-col tw:md:flex-row tw:items-stretch tw:md:items-center tw:gap-3 tw:md:gap-5">
-        <div className="tw:w-full tw:md:w-[300px]">
+      <Flex
+        direction={{ base: 'column', md: 'row' }}
+        align={{ base: 'stretch', md: 'center' }}
+        gap={{ base: 'md', md: 'xl' }}
+      >
+        <Box w={{ base: '100%', md: 300 }}>
           <Title
-            order={1}
+            variant="colored"
             style={{
               fontSize: typography.fontSize['4xl'],
               fontWeight: typography.fontWeight.semibold,
@@ -30,36 +32,26 @@ export default function PageHeader({ title, description }: PageHeaderProps) {
           >
             {title}
           </Title>
-        </div>
+        </Box>
 
-        {/* Horizontal divider - visible below md */}
-        <hr
-          className="tw:md:hidden"
-          style={{ borderColor: colors.border.light, borderWidth: '0.5px' }}
-        />
+        <Divider orientation="horizontal" size="xs" color={colors.border.light} hiddenFrom="md" />
 
-        {/* Vertical divider - visible at md and above */}
-        <div
-          className="tw:hidden tw:md:block tw:self-stretch"
-          style={{
-            borderLeft: `1px solid ${colors.border.light}`,
-          }}
-        />
+        <Divider orientation="vertical" size="xs" color={colors.border.light} visibleFrom="md" />
 
-        <div className="tw:w-full tw:md:w-auto">
+        <Box w={{ base: '100%', md: 'auto' }}>
           <Text
             style={{
               color: colors.text.primary,
               fontSize: typography.fontSize.lg,
               lineHeight: typography.lineHeight.relaxed,
               fontFamily: typography.fontFamily.body,
-              textAlign: 'left',
             }}
+            ta={{ base: 'left', md: 'center' }}
           >
             {description}
           </Text>
-        </div>
-      </div>
-    </div>
+        </Box>
+      </Flex>
+    </Box>
   );
 }

@@ -1,3 +1,5 @@
+import { Box, Text } from '@mantine/core';
+import { colors, spacing, typography } from '@/designTokens';
 import { GroupEntityInstance } from '@/utils/householdIndividuals';
 import IndividualTable from './IndividualTable';
 
@@ -39,15 +41,22 @@ export default function EntityInstanceDisplay({
     (baselineInstance?.variables?.length ?? 0) > 0 || (reformInstance?.variables?.length ?? 0) > 0;
 
   return (
-    <div className={showInstanceHeader ? 'tw:mt-lg' : ''}>
+    <Box style={{ marginTop: showInstanceHeader ? spacing.lg : 0 }}>
       {/* Instance header - shown when there are multiple instances */}
       {showInstanceHeader && (
-        <h4 className="tw:text-lg tw:font-semibold tw:text-gray-900 tw:mb-md">{instanceName}</h4>
+        <Text
+          size="lg"
+          fw={typography.fontWeight.semibold}
+          c={colors.text.primary}
+          style={{ marginBottom: spacing.md }}
+        >
+          {instanceName}
+        </Text>
       )}
 
       {/* For non-people entities: Display entity-level variables */}
       {hasEntityVariables && entityType !== 'people' && (
-        <div className="tw:mt-md">
+        <Box style={{ marginTop: spacing.md }}>
           <IndividualTable
             baselineMember={
               baselineInstance?.variables
@@ -71,7 +80,7 @@ export default function EntityInstanceDisplay({
             reformLabel={reformLabel}
             isSameHousehold={isSameHousehold}
           />
-        </div>
+        </Box>
       )}
 
       {/* For people entity: Display each person */}
@@ -88,11 +97,16 @@ export default function EntityInstanceDisplay({
           const showMemberHeader = sortedMemberIds.length > 1;
 
           return (
-            <div key={memberId} className="tw:mt-md">
+            <Box key={memberId} style={{ marginTop: spacing.md }}>
               {showMemberHeader && (
-                <p className="tw:text-base tw:font-medium tw:text-gray-500 tw:mb-sm">
+                <Text
+                  size="md"
+                  fw={typography.fontWeight.medium}
+                  c={colors.text.secondary}
+                  style={{ marginBottom: spacing.sm }}
+                >
                   {memberName}
-                </p>
+                </Text>
               )}
 
               <IndividualTable
@@ -102,9 +116,9 @@ export default function EntityInstanceDisplay({
                 reformLabel={reformLabel}
                 isSameHousehold={isSameHousehold}
               />
-            </div>
+            </Box>
           );
         })}
-    </div>
+    </Box>
   );
 }

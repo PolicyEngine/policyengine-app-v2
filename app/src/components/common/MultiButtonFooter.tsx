@@ -1,5 +1,5 @@
 import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
-import { Button, Group, Spinner } from '@/components/ui';
+import { Box, Button, Group, SimpleGrid } from '@mantine/core';
 import PaginationControls, { PaginationConfig } from './PaginationControls';
 
 export interface ButtonConfig {
@@ -38,44 +38,49 @@ export default function MultiButtonFooter(props: MultiButtonFooterProps) {
   // New layout: Grid with equal spacing - Cancel left, Pagination center, Back/Next right
   if (cancelAction || backAction || primaryAction) {
     return (
-      <div className="tw:grid tw:grid-cols-1 tw:sm:grid-cols-3 tw:gap-md">
+      <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="md">
         {/* Left side: Cancel button */}
-        <div className="tw:flex tw:justify-start">
+        <Box style={{ display: 'flex', justifyContent: 'flex-start' }}>
           {cancelAction && (
-            <Button variant="outline" onClick={cancelAction.onClick} className="tw:w-full">
+            <Button variant="outline" onClick={cancelAction.onClick} fullWidth>
               {cancelAction.label}
             </Button>
           )}
-        </div>
+        </Box>
 
         {/* Center: Pagination controls (if provided) */}
-        <div className="tw:flex tw:justify-center">
+        <Box style={{ display: 'flex', justifyContent: 'center' }}>
           {pagination && <PaginationControls pagination={pagination} />}
-        </div>
+        </Box>
 
         {/* Right side: Back and Primary buttons */}
-        <div className="tw:flex tw:justify-end">
-          <div className="tw:flex tw:gap-sm tw:flex-nowrap tw:w-full">
+        <Box style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <Group gap="sm" wrap="nowrap" style={{ width: '100%' }}>
             {backAction && (
-              <Button variant="outline" onClick={backAction.onClick} className="tw:w-full">
-                <IconChevronLeft size={16} />
+              <Button
+                variant="outline"
+                onClick={backAction.onClick}
+                leftSection={<IconChevronLeft size={16} />}
+                fullWidth
+              >
                 {backAction.label}
               </Button>
             )}
             {primaryAction && (
               <Button
+                variant="filled"
                 onClick={primaryAction.onClick}
-                disabled={primaryAction.isDisabled || primaryAction.isLoading}
-                className="tw:w-full"
+                loading={primaryAction.isLoading}
+                disabled={primaryAction.isDisabled}
+                rightSection={<IconChevronRight size={16} />}
+                fullWidth
               >
-                {primaryAction.isLoading && <Spinner size="sm" />}
                 {primaryAction.label}
-                <IconChevronRight size={16} />
               </Button>
             )}
-          </div>
-        </div>
-      </div>
+          </Group>
+        </Box>
+      </SimpleGrid>
     );
   }
 
@@ -85,15 +90,15 @@ export default function MultiButtonFooter(props: MultiButtonFooterProps) {
   }
 
   return (
-    <Group className="tw:justify-end" gap="sm">
+    <Group justify="flex-end" gap="sm">
       {buttons.map((button, index) => (
         <Button
           key={index}
-          variant={button.variant === 'filled' ? 'default' : 'outline'}
-          disabled={button.variant === 'disabled' || button.isLoading}
+          variant={button.variant === 'disabled' ? 'outline' : button.variant}
+          disabled={button.variant === 'disabled'}
           onClick={button.onClick}
+          loading={button.isLoading}
         >
-          {button.isLoading && <Spinner size="sm" />}
           {button.label}
         </Button>
       ))}

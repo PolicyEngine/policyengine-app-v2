@@ -1,11 +1,4 @@
-import {
-  ShadcnTable as Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui';
+import { Box, Table } from '@mantine/core';
 
 interface DataTableProps<T> {
   data: T[];
@@ -14,25 +7,25 @@ interface DataTableProps<T> {
 
 export default function DataTable<T>({ data, columns }: DataTableProps<T>) {
   return (
-    <div className="tw:overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
-      <Table style={{ minWidth: 700 }}>
-        <TableHeader>
-          <TableRow>
+    <Box style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+      <Table miw={700}>
+        <Table.Thead>
+          <Table.Tr>
             {columns.map((col) => (
-              <TableHead key={String(col.key)}>{col.header}</TableHead>
+              <th key={String(col.key)}>{col.header}</th>
             ))}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
+          </Table.Tr>
+        </Table.Thead>
+        <Table.Tbody>
           {data.map((row, i) => (
-            <TableRow key={i} className="tw:text-center">
+            <Table.Tr key={i} ta="center">
               {columns.map((col) => (
-                <TableCell key={String(col.key)}>{String(row[col.key])}</TableCell>
+                <td key={String(col.key)}>{String(row[col.key])}</td>
               ))}
-            </TableRow>
+            </Table.Tr>
           ))}
-        </TableBody>
+        </Table.Tbody>
       </Table>
-    </div>
+    </Box>
   );
 }

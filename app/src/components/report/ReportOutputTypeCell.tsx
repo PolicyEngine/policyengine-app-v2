@@ -1,5 +1,5 @@
 import React from 'react';
-import { Spinner } from '@/components/ui';
+import { Group, Loader, Text } from '@mantine/core';
 import { useReportCalculationStatus } from '@/hooks/useCalcStatusSubscription';
 import type { Report } from '@/types/ingredients/Report';
 
@@ -18,21 +18,24 @@ interface ReportOutputTypeCellProps {
  */
 export const ReportOutputTypeCell = React.memo(
   ({ reportId, report }: ReportOutputTypeCellProps) => {
+    // Subscribe to CalcStatus for this report
     const { isCalculating, progress } = useReportCalculationStatus(reportId);
 
+    const displayText = progress ? `${Math.round(progress)}%` : '';
+
+    // Show calculating state with spinner and progress
     if (isCalculating) {
-      const displayText = progress ? `${Math.round(progress)}%` : '';
       return (
-        <div className="tw:flex tw:items-center tw:gap-xs">
-          <Spinner className="tw:h-4 tw:w-4" />
-          <span className="tw:text-sm">{displayText}</span>
-        </div>
+        <Group gap="xs">
+          <Loader size="sm" color="teal" />
+          <Text size="sm">{displayText}</Text>
+        </Group>
       );
     }
 
+    // Show status text
     const status = report?.status || 'initializing';
     const formattedStatus = status.charAt(0).toUpperCase() + status.slice(1);
-    return <span className="tw:text-sm">{formattedStatus}</span>;
+    return <Text size="sm">{formattedStatus}</Text>;
   }
 );
-ReportOutputTypeCell.displayName = 'ReportOutputTypeCell';

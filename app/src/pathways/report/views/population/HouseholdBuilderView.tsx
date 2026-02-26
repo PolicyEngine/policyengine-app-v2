@@ -6,10 +6,10 @@
 
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
+import { LoadingOverlay, Stack, Text } from '@mantine/core';
 import { HouseholdAdapter } from '@/adapters/HouseholdAdapter';
 import PathwayView from '@/components/common/PathwayView';
 import HouseholdBuilderForm from '@/components/household/HouseholdBuilderForm';
-import { Spinner, Stack } from '@/components/ui';
 import { useCreateHousehold } from '@/hooks/useCreateHousehold';
 import { useReportYear } from '@/hooks/useReportYear';
 import { getBasicInputFields } from '@/libs/metadataUtils';
@@ -52,12 +52,14 @@ export default function HouseholdBuilderView({
       <PathwayView
         title="Create household"
         content={
-          <Stack align="center" gap="md" className="tw:p-xl">
-            <p className="tw:text-red-600 tw:font-semibold">Configuration Error</p>
-            <p className="tw:text-gray-500 tw:text-center">
+          <Stack align="center" gap="md" p="xl">
+            <Text c="red" fw={600}>
+              Configuration Error
+            </Text>
+            <Text c="dimmed" ta="center">
               No report year available. Please return to the report creation page and select a year
               before creating a household.
-            </p>
+            </Text>
           </Stack>
         }
         buttonPreset="cancel-only"
@@ -134,11 +136,13 @@ export default function HouseholdBuilderView({
       <PathwayView
         title="Create household"
         content={
-          <Stack align="center" gap="md" className="tw:p-xl">
-            <p className="tw:text-red-600 tw:font-semibold">Failed to Load Required Data</p>
-            <p className="tw:text-gray-500 tw:text-center">
+          <Stack align="center" gap="md" p="xl">
+            <Text c="red" fw={600}>
+              Failed to Load Required Data
+            </Text>
+            <Text c="dimmed" ta="center">
               Unable to load household configuration data. Please refresh the page and try again.
-            </p>
+            </Text>
           </Stack>
         }
         buttonPreset="cancel-only"
@@ -177,12 +181,8 @@ export default function HouseholdBuilderView({
   };
 
   const content = (
-    <Stack gap="lg" className="tw:relative">
-      {(loading || isPending) && (
-        <div className="tw:absolute tw:inset-0 tw:bg-white/80 tw:flex tw:items-center tw:justify-center tw:z-50">
-          <Spinner />
-        </div>
-      )}
+    <Stack gap="lg" pos="relative">
+      <LoadingOverlay visible={loading || isPending} />
 
       <HouseholdBuilderForm
         household={household}

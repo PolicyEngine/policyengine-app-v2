@@ -24,7 +24,7 @@ Accurate state income tax modeling is essential for:
 
 ## How to use the updated model
 
-You can explore the updated state income tax parameters in PolicyEngine by visiting [policyengine.org/us](https://policyengine.org/us) using our report builder. Users can see how the new updates affect specific households across all U.S. states and build custom reforms to compare against the updated baseline.
+You can explore the updated state income tax parameters in PolicyEngine by visiting [policyengine.org/us](https://policyengine.org/us) using our report builder. Users can see how the new updates affect specific households across all U.S. states and build custom reforms to compare against the updated baseline. 
 
 ## Technical details
 

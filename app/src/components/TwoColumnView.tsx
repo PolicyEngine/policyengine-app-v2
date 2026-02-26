@@ -1,4 +1,4 @@
-import { Title } from '@/components/ui';
+import { Grid, Paper, Title } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
 
 interface TwoColumnViewProps {
@@ -8,8 +8,8 @@ interface TwoColumnViewProps {
   backgroundColor?: 'primary' | 'secondary';
 }
 
-function TwoColumnView({ title, leftColumn, rightColumn, backgroundColor }: TwoColumnViewProps) {
-  function getBackgroundColor(): string {
+const TwoColumnView = ({ title, leftColumn, rightColumn, backgroundColor }: TwoColumnViewProps) => {
+  const getBackgroundColor = () => {
     if (backgroundColor === 'primary') {
       return colors.primary[100];
     }
@@ -17,39 +17,33 @@ function TwoColumnView({ title, leftColumn, rightColumn, backgroundColor }: TwoC
       return colors.secondary[100];
     }
     return colors.white;
-  }
+  };
 
   return (
-    <div
-      style={{
-        backgroundColor: getBackgroundColor(),
-        padding: spacing.container.lg,
-        borderRadius: spacing.radius.container,
-        minHeight: '400px',
-      }}
+    <Paper
+      bg={getBackgroundColor()}
+      p={spacing.container.lg}
+      radius={spacing.radius.container}
+      style={{ minHeight: '400px' }}
     >
       <Title
         order={2}
-        style={{
-          fontFamily: typography.fontFamily.primary,
-          fontSize: typography.fontSize['3xl'],
-          fontWeight: typography.fontWeight.bold,
-          color: colors.text.title,
-          marginBottom: spacing['3xl'],
-          textAlign: 'left',
-        }}
+        variant="colored"
+        ff={typography.fontFamily.primary}
+        size={typography.fontSize['3xl']}
+        fw={typography.fontWeight.bold}
+        c={colors.text.title}
+        mb={spacing['3xl']}
+        ta="left"
       >
         {title}
       </Title>
-      <div
-        className="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:items-center"
-        style={{ gap: spacing['3xl'] }}
-      >
-        <div>{leftColumn}</div>
-        <div>{rightColumn}</div>
-      </div>
-    </div>
+      <Grid gutter={spacing['3xl']} align="center">
+        <Grid.Col span={{ base: 12, sm: 6 }}>{leftColumn}</Grid.Col>
+        <Grid.Col span={{ base: 12, sm: 6 }}>{rightColumn}</Grid.Col>
+      </Grid>
+    </Paper>
   );
-}
+};
 
 export default TwoColumnView;

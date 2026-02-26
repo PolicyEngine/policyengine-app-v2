@@ -1,4 +1,4 @@
-import { Text } from '@/components/ui';
+import { Box, List, Text } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
 
 export interface BulletItem {
@@ -15,12 +15,22 @@ export default function BulletList({ items, variant = 'default' }: BulletListPro
   const textColor = variant === 'inverted' ? colors.text.inverse : colors.text.primary;
 
   return (
-    <ul className="tw:flex tw:flex-col tw:gap-4 tw:list-disc tw:pl-6">
+    <List
+      spacing="lg"
+      styles={{
+        itemWrapper: {
+          width: '100%',
+        },
+        itemLabel: {
+          marginTop: spacing.xs,
+        },
+      }}
+    >
       {items.map((item, index) => (
-        <li key={index} className="tw:w-full">
-          <div style={{ marginTop: spacing.xs }}>
+        <List.Item key={index}>
+          <Box>
             <Text
-              weight="bold"
+              fw="bold"
               style={{
                 fontFamily: typography.fontFamily.body,
                 fontSize: typography.fontSize.lg,
@@ -40,9 +50,9 @@ export default function BulletList({ items, variant = 'default' }: BulletListPro
             >
               {item.description}
             </Text>
-          </div>
-        </li>
+          </Box>
+        </List.Item>
       ))}
-    </ul>
+    </List>
   );
 }

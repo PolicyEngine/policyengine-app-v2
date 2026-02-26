@@ -1,12 +1,6 @@
 import { IconWorld } from '@tabler/icons-react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  Text,
-} from '@/components/ui';
+import { Group, Menu, Text, UnstyledButton } from '@mantine/core';
 import { colors, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 
@@ -32,32 +26,17 @@ export default function CountrySelector() {
   };
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <button
-          type="button"
-          className="tw:bg-transparent tw:border tw:border-white/30 tw:rounded tw:cursor-pointer tw:p-1.5 tw:leading-none tw:hover:bg-white/10 tw:transition-colors"
-          aria-label="Country selector"
-        >
-          <div className="tw:flex tw:items-center tw:gap-1">
+    <Menu shadow="md" width={200} zIndex={1001} position="bottom-end" offset={10}>
+      <Menu.Target>
+        <UnstyledButton aria-label="Country selector" style={{ lineHeight: 1 }}>
+          <Group gap={4} align="center">
             <IconWorld size={18} color={colors.text.inverse} />
-            <span
-              style={{
-                color: colors.text.inverse,
-                fontSize: typography.fontSize.xs,
-                fontFamily: typography.fontFamily.primary,
-                textTransform: 'uppercase',
-                fontWeight: typography.fontWeight.medium,
-              }}
-            >
-              {countryId}
-            </span>
-          </div>
-        </button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="tw:w-[200px] tw:z-[1001] tw:bg-white">
+          </Group>
+        </UnstyledButton>
+      </Menu.Target>
+      <Menu.Dropdown>
         {countries.map((country) => (
-          <DropdownMenuItem
+          <Menu.Item
             key={country.id}
             onClick={() => handleCountryChange(country.id)}
             style={{
@@ -74,9 +53,9 @@ export default function CountrySelector() {
             >
               {country.label}
             </Text>
-          </DropdownMenuItem>
+          </Menu.Item>
         ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+      </Menu.Dropdown>
+    </Menu>
   );
 }

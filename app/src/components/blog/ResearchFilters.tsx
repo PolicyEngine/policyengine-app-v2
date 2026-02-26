@@ -1,5 +1,13 @@
+/**
+ * ResearchFilters Component
+ *
+ * Sidebar filters for the Research page.
+ * Includes search, topics, locations, and authors.
+ * Filter menu extends to bottom of viewport with scroll in expanded section.
+ */
+
 import { useEffect, useRef, useState } from 'react';
-import { Button, Checkbox, Group, Input, Stack, Text } from '@/components/ui';
+import { Box, Button, Checkbox, Group, Stack, Text, TextInput } from '@mantine/core';
 import {
   getLocationTags,
   getTopicLabel,
@@ -77,52 +85,64 @@ export function ResearchFilters({
     setExpandedSection(expandedSection === section ? null : section);
   };
 
-  function toggleItem(item: string, selected: string[], onChange: (items: string[]) => void) {
-    if (selected.includes(item)) {
-      onChange(selected.filter((s) => s !== item));
+  const handleTopicToggle = (tag: string) => {
+    if (selectedTopics.includes(tag)) {
+      onTopicsChange(selectedTopics.filter((t) => t !== tag));
     } else {
-      onChange([...selected, item]);
+      onTopicsChange([...selectedTopics, tag]);
     }
-  }
+  };
 
-  const handleTopicToggle = (tag: string) => toggleItem(tag, selectedTopics, onTopicsChange);
-  const handleLocationToggle = (tag: string) =>
-    toggleItem(tag, selectedLocations, onLocationsChange);
-  const handleAuthorToggle = (key: string) => toggleItem(key, selectedAuthors, onAuthorsChange);
-  const handleTypeToggle = (type: string) => toggleItem(type, selectedTypes, onTypesChange);
+  const handleLocationToggle = (tag: string) => {
+    if (selectedLocations.includes(tag)) {
+      onLocationsChange(selectedLocations.filter((t) => t !== tag));
+    } else {
+      onLocationsChange([...selectedLocations, tag]);
+    }
+  };
+
+  const handleAuthorToggle = (key: string) => {
+    if (selectedAuthors.includes(key)) {
+      onAuthorsChange(selectedAuthors.filter((a) => a !== key));
+    } else {
+      onAuthorsChange([...selectedAuthors, key]);
+    }
+  };
+
+  const handleTypeToggle = (type: string) => {
+    if (selectedTypes.includes(type)) {
+      onTypesChange(selectedTypes.filter((t) => t !== type));
+    } else {
+      onTypesChange([...selectedTypes, type]);
+    }
+  };
 
   // Render type options
   const renderTypeOptions = () => (
-    <Stack gap="xs" style={{ gap: 4 }}>
+    <Stack gap={4}>
       {typeOptions.map((option) => (
-        <div key={option.value} className="tw:flex tw:items-center tw:gap-xs">
-          <Checkbox
-            id={`type-${option.value}`}
-            checked={selectedTypes.includes(option.value)}
-            onCheckedChange={() => handleTypeToggle(option.value)}
-          />
-          <label htmlFor={`type-${option.value}`} className="tw:text-sm tw:cursor-pointer">
-            {option.label}
-          </label>
-        </div>
+        <Checkbox
+          key={option.value}
+          label={option.label}
+          checked={selectedTypes.includes(option.value)}
+          onChange={() => handleTypeToggle(option.value)}
+          size="sm"
+        />
       ))}
     </Stack>
   );
 
   // Render the tags for a section
   const renderTopicTags = () => (
-    <Stack gap="xs" style={{ gap: 4 }}>
+    <Stack gap={4}>
       {getTopicTags().map((tag) => (
-        <div key={tag} className="tw:flex tw:items-center tw:gap-xs">
-          <Checkbox
-            id={`topic-${tag}`}
-            checked={selectedTopics.includes(tag)}
-            onCheckedChange={() => handleTopicToggle(tag)}
-          />
-          <label htmlFor={`topic-${tag}`} className="tw:text-sm tw:cursor-pointer">
-            {getTopicLabel(tag, countryId)}
-          </label>
-        </div>
+        <Checkbox
+          key={tag}
+          label={getTopicLabel(tag, countryId)}
+          checked={selectedTopics.includes(tag)}
+          onChange={() => handleTopicToggle(tag)}
+          size="sm"
+        />
       ))}
     </Stack>
   );
@@ -134,93 +154,80 @@ export function ResearchFilters({
     const usStates = allLocationTags.filter((tag) => tag.startsWith('us-'));
 
     return (
-      <Stack gap="xs" style={{ gap: 4 }}>
+      <Stack gap={4}>
         {/* Show countries */}
         {countries.map((tag) => (
-          <div key={tag}>
+          <Box key={tag}>
             {tag === 'us' ? (
               // US with expandable +/-
-              <div className="tw:flex tw:items-center tw:gap-xs">
-                <Checkbox
-                  id={`location-${tag}`}
-                  checked={selectedLocations.includes(tag)}
-                  onCheckedChange={() => handleLocationToggle(tag)}
-                />
-                <label htmlFor={`location-${tag}`} className="tw:text-sm tw:cursor-pointer">
-                  {locationLabels[tag] || tag}
-                </label>
-                <Text
-                  component="span"
-                  size="sm"
-                  style={{
-                    cursor: 'pointer',
-                    userSelect: 'none',
-                    marginLeft: 12,
-                    color: '#868e96',
-                  }}
-                  onClick={(e: React.MouseEvent) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setUsStatesExpanded(!usStatesExpanded);
-                  }}
-                >
-                  {usStatesExpanded ? '−' : '+'}
-                </Text>
-              </div>
+              <Checkbox
+                label={
+                  <span>
+                    {locationLabels[tag] || tag}
+                    <Text
+                      component="span"
+                      size="sm"
+                      c="dimmed"
+                      style={{ cursor: 'pointer', userSelect: 'none', marginLeft: 12 }}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setUsStatesExpanded(!usStatesExpanded);
+                      }}
+                    >
+                      {usStatesExpanded ? '−' : '+'}
+                    </Text>
+                  </span>
+                }
+                checked={selectedLocations.includes(tag)}
+                onChange={() => handleLocationToggle(tag)}
+                size="sm"
+              />
             ) : (
-              <div className="tw:flex tw:items-center tw:gap-xs">
-                <Checkbox
-                  id={`location-${tag}`}
-                  checked={selectedLocations.includes(tag)}
-                  onCheckedChange={() => handleLocationToggle(tag)}
-                />
-                <label htmlFor={`location-${tag}`} className="tw:text-sm tw:cursor-pointer">
-                  {locationLabels[tag] || tag}
-                </label>
-              </div>
+              <Checkbox
+                label={locationLabels[tag] || tag}
+                checked={selectedLocations.includes(tag)}
+                onChange={() => handleLocationToggle(tag)}
+                size="sm"
+              />
             )}
-          </div>
+          </Box>
         ))}
         {/* US States - only show when expanded */}
         {usStatesExpanded &&
           usStates.map((tag) => (
-            <div key={tag} className="tw:flex tw:items-center tw:gap-xs tw:ml-md">
-              <Checkbox
-                id={`location-${tag}`}
-                checked={selectedLocations.includes(tag)}
-                onCheckedChange={() => handleLocationToggle(tag)}
-              />
-              <label htmlFor={`location-${tag}`} className="tw:text-sm tw:cursor-pointer">
-                {locationLabels[tag] || tag}
-              </label>
-            </div>
+            <Checkbox
+              key={tag}
+              label={locationLabels[tag] || tag}
+              checked={selectedLocations.includes(tag)}
+              onChange={() => handleLocationToggle(tag)}
+              size="sm"
+              ml="md"
+            />
           ))}
       </Stack>
     );
   };
 
   const renderAuthorTags = () => (
-    <Stack gap="xs" style={{ gap: 4 }}>
+    <Stack gap={4}>
       {availableAuthors.map((author) => (
-        <div key={author.key} className="tw:flex tw:items-center tw:gap-xs">
-          <Checkbox
-            id={`author-${author.key}`}
-            checked={selectedAuthors.includes(author.key)}
-            onCheckedChange={() => handleAuthorToggle(author.key)}
-          />
-          <label htmlFor={`author-${author.key}`} className="tw:text-sm tw:cursor-pointer">
-            {author.name}
-          </label>
-        </div>
+        <Checkbox
+          key={author.key}
+          label={author.name}
+          checked={selectedAuthors.includes(author.key)}
+          onChange={() => handleAuthorToggle(author.key)}
+          size="sm"
+        />
       ))}
     </Stack>
   );
 
   return (
-    <div className="tw:flex tw:flex-col tw:h-full">
+    <Box style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* Search - fixed at top */}
-      <div className="tw:flex-shrink-0 tw:mb-4">
-        <Input
+      <Box mb="lg" style={{ flexShrink: 0 }}>
+        <TextInput
           placeholder="Search posts..."
           value={searchQuery}
           onChange={(e) => onSearchChange(e.currentTarget.value)}
@@ -229,39 +236,43 @@ export function ResearchFilters({
               onSearchSubmit();
             }
           }}
-          className="tw:mb-xs"
+          mb="xs"
         />
-        <Button variant="outline" onClick={onSearchSubmit} className="tw:w-full">
+        <Button fullWidth variant="outline" onClick={onSearchSubmit}>
           Search
         </Button>
-      </div>
+      </Box>
 
       {/* Filter sections container - extends to bottom of viewport */}
-      <div
+      <Box
         ref={filterContainerRef}
-        className="tw:flex tw:flex-col tw:min-h-0 tw:overflow-hidden"
         style={{
           flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          minHeight: 0, // Important for flex child scrolling
           maxHeight: availableHeight,
+          overflow: 'hidden',
         }}
       >
         {/* Type Header */}
         <Group
           justify="space-between"
           onClick={() => toggleSection('type')}
-          className="tw:cursor-pointer tw:flex-shrink-0 tw:py-1"
+          style={{ cursor: 'pointer', flexShrink: 0 }}
+          py="xs"
         >
           <Text fw={600} size="sm">
             Type
           </Text>
-          <Text size="sm" style={{ color: '#868e96' }}>
+          <Text size="sm" c="dimmed">
             {expandedSection === 'type' ? '−' : '+'}
           </Text>
         </Group>
 
         {/* Type Content */}
         {expandedSection === 'type' && (
-          <div
+          <Box
             style={{
               overflowY: 'auto',
               minHeight: 0,
@@ -270,26 +281,27 @@ export function ResearchFilters({
             }}
           >
             {renderTypeOptions()}
-          </div>
+          </Box>
         )}
 
         {/* Topics Header */}
         <Group
           justify="space-between"
           onClick={() => toggleSection('topics')}
-          className="tw:cursor-pointer tw:flex-shrink-0 tw:py-1"
+          style={{ cursor: 'pointer', flexShrink: 0 }}
+          py="xs"
         >
           <Text fw={600} size="sm">
             Topic
           </Text>
-          <Text size="sm" style={{ color: '#868e96' }}>
+          <Text size="sm" c="dimmed">
             {expandedSection === 'topics' ? '−' : '+'}
           </Text>
         </Group>
 
         {/* Topics Content */}
         {expandedSection === 'topics' && (
-          <div
+          <Box
             style={{
               overflowY: 'auto',
               minHeight: 0,
@@ -298,26 +310,27 @@ export function ResearchFilters({
             }}
           >
             {renderTopicTags()}
-          </div>
+          </Box>
         )}
 
         {/* Locations Header */}
         <Group
           justify="space-between"
           onClick={() => toggleSection('locations')}
-          className="tw:cursor-pointer tw:flex-shrink-0 tw:py-1"
+          style={{ cursor: 'pointer', flexShrink: 0 }}
+          py="xs"
         >
           <Text fw={600} size="sm">
             Location
           </Text>
-          <Text size="sm" style={{ color: '#868e96' }}>
+          <Text size="sm" c="dimmed">
             {expandedSection === 'locations' ? '−' : '+'}
           </Text>
         </Group>
 
         {/* Locations Content */}
         {expandedSection === 'locations' && (
-          <div
+          <Box
             style={{
               overflowY: 'auto',
               minHeight: 0,
@@ -326,26 +339,27 @@ export function ResearchFilters({
             }}
           >
             {renderLocationTags()}
-          </div>
+          </Box>
         )}
 
         {/* Authors Header */}
         <Group
           justify="space-between"
           onClick={() => toggleSection('authors')}
-          className="tw:cursor-pointer tw:flex-shrink-0 tw:py-1"
+          style={{ cursor: 'pointer', flexShrink: 0 }}
+          py="xs"
         >
           <Text fw={600} size="sm">
             Author
           </Text>
-          <Text size="sm" style={{ color: '#868e96' }}>
+          <Text size="sm" c="dimmed">
             {expandedSection === 'authors' ? '−' : '+'}
           </Text>
         </Group>
 
         {/* Authors Content */}
         {expandedSection === 'authors' && (
-          <div
+          <Box
             style={{
               overflowY: 'auto',
               minHeight: 0,
@@ -354,9 +368,9 @@ export function ResearchFilters({
             }}
           >
             {renderAuthorTags()}
-          </div>
+          </Box>
         )}
-      </div>
-    </div>
+      </Box>
+    </Box>
   );
 }

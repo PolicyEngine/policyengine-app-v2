@@ -12,7 +12,7 @@ import {
   IconUsers,
 } from '@tabler/icons-react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui';
+import { Box, Button, Stack } from '@mantine/core';
 import { WEBSITE_URL } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { colors, typography } from '../designTokens';
@@ -87,28 +87,38 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
   }
 
   return (
-    <div
-      className="tw:h-full tw:bg-white tw:flex tw:flex-col tw:overflow-y-auto"
+    <Stack
+      h="100%"
+      bg="white"
       style={{
         borderRight: `1px solid ${colors.border.light}`,
+        overflowY: 'auto',
       }}
+      gap={0}
     >
-      <div className="tw:px-4 tw:py-4">
-        <Button
-          className="tw:w-full"
-          style={{
-            backgroundColor: colors.primary[600],
-            fontSize: typography.fontSize.sm,
-            fontWeight: typography.fontWeight.medium,
-          }}
-          onClick={() => navigate(`/${countryId}/reports/create`)}
-        >
-          New report
-          <IconPlus size={16} />
-        </Button>
-      </div>
+      <Stack gap={0}>
+        <Box px={16} py={16}>
+          <Button
+            rightSection={<IconPlus size={16} />}
+            fullWidth
+            variant="filled"
+            size="sm"
+            h={36}
+            styles={{
+              root: {
+                backgroundColor: colors.primary[600],
+                fontSize: typography.fontSize.sm,
+                fontWeight: typography.fontWeight.medium,
+              },
+            }}
+            onClick={() => navigate(`/${countryId}/reports/create`)}
+          >
+            New report
+          </Button>
+        </Box>
+      </Stack>
 
-      <div className="tw:flex tw:flex-col tw:flex-1">
+      <Stack gap={0} style={{ flex: 1 }}>
         <SidebarSection>
           {navItems.map((item) => (
             <SidebarNavItem key={item.path} {...item} isActive={location.pathname === item.path} />
@@ -134,7 +144,7 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
             <SidebarNavItem key={item.path} {...item} isActive={location.pathname === item.path} />
           ))}
         </SidebarSection>
-      </div>
-    </div>
+      </Stack>
+    </Stack>
   );
 }

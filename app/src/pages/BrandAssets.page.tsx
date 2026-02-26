@@ -1,14 +1,14 @@
 import { IconCheck, IconX } from '@tabler/icons-react';
 import { Link } from 'react-router-dom';
+import { Box, Button, Flex, List, SimpleGrid, Text, Title } from '@mantine/core';
 import StaticPageLayout from '@/components/shared/static/StaticPageLayout';
-import { Button, Text, Title } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 
 function SectionTitle({ children }: { children: string }) {
   return (
     <Title
       order={2}
-      className="tw:mb-lg"
+      mb="lg"
       style={{
         fontSize: typography.fontSize['2xl'],
         fontWeight: typography.fontWeight.semibold,
@@ -31,7 +31,7 @@ function LogoCard({
   logoSrc: string;
 }) {
   return (
-    <div
+    <Box
       style={{
         background: colors.white,
         border: `1px solid ${colors.border.light}`,
@@ -39,40 +39,49 @@ function LogoCard({
         overflow: 'hidden',
       }}
     >
-      <div
-        className="tw:flex tw:items-center tw:justify-center tw:p-xl"
+      <Flex
+        align="center"
+        justify="center"
+        p="xl"
         style={{
           background,
           minHeight: 120,
         }}
       >
         <img src={logoSrc} alt={`PolicyEngine logo - ${variant}`} style={{ height: 48 }} />
-      </div>
-      <div className="tw:p-md">
+      </Flex>
+      <Box p="md">
         <Text
-          className="tw:mb-sm tw:text-center"
+          mb="sm"
           style={{
             fontSize: typography.fontSize.sm,
             color: colors.text.secondary,
+            textAlign: 'center',
           }}
         >
           {variant}
         </Text>
-        <Button variant="outline" className="tw:w-full" asChild>
-          <a href={logoSrc} download>
-            Download PNG
-          </a>
+        <Button
+          component="a"
+          href={logoSrc}
+          download
+          variant="outline"
+          fullWidth
+          size="sm"
+          color="teal"
+        >
+          Download PNG
         </Button>
-      </div>
-    </div>
+      </Box>
+    </Box>
   );
 }
 
 function UsageCard({ type, items }: { type: 'do' | 'dont'; items: string[] }) {
   const isDo = type === 'do';
   return (
-    <div
-      className="tw:p-lg"
+    <Box
+      p="lg"
       style={{
         background: isDo ? `${colors.success}08` : `${colors.error}08`,
         border: `1px solid ${isDo ? colors.success : colors.error}20`,
@@ -80,42 +89,41 @@ function UsageCard({ type, items }: { type: 'do' | 'dont'; items: string[] }) {
       }}
     >
       <Text
-        className="tw:mb-md"
+        mb="md"
         style={{
           fontSize: typography.fontSize.sm,
           fontWeight: typography.fontWeight.semibold,
           color: isDo ? colors.success : colors.error,
         }}
       >
-        <span className="tw:flex tw:items-center tw:gap-1">
+        <Flex align="center" gap={4}>
           {isDo ? <IconCheck size={14} /> : <IconX size={14} />}
           {isDo ? 'Do' : "Don't"}
-        </span>
+        </Flex>
       </Text>
-      <ul
-        style={{ color: colors.text.secondary, fontSize: typography.fontSize.sm, paddingLeft: 20 }}
+      <List
+        style={{ color: colors.text.secondary, fontSize: typography.fontSize.sm }}
+        styles={{ itemWrapper: { marginBottom: spacing.xs } }}
       >
         {items.map((item, i) => (
-          <li key={i} style={{ marginBottom: spacing.xs }}>
-            {item}
-          </li>
+          <List.Item key={i}>{item}</List.Item>
         ))}
-      </ul>
-    </div>
+      </List>
+    </Box>
   );
 }
 
 function ColorSwatch({ name, value }: { name: string; value: string }) {
   return (
-    <div
+    <Box
       style={{
         borderRadius: spacing.radius.container,
         overflow: 'hidden',
         border: `1px solid ${colors.border.light}`,
       }}
     >
-      <div style={{ height: 60, background: value }} />
-      <div className="tw:p-sm" style={{ background: colors.white }}>
+      <Box style={{ height: 60, background: value }} />
+      <Box p="sm" style={{ background: colors.white }}>
         <Text
           style={{
             fontSize: typography.fontSize.sm,
@@ -134,8 +142,8 @@ function ColorSwatch({ name, value }: { name: string; value: string }) {
         >
           {value}
         </Text>
-      </div>
-    </div>
+      </Box>
+    </Box>
   );
 }
 
@@ -143,10 +151,9 @@ export default function BrandAssetsPage() {
   return (
     <StaticPageLayout title="Assets">
       {/* Hero */}
-      <div
+      <Box
+        py={spacing['4xl']}
         style={{
-          paddingTop: spacing['4xl'],
-          paddingBottom: spacing['4xl'],
           backgroundColor: '#F7FEFE',
           borderBottom: `1px solid ${colors.border.dark}`,
           paddingLeft: '6.125%',
@@ -186,23 +193,22 @@ export default function BrandAssetsPage() {
         >
           Logo files, usage guidelines, and brand resources for partners and press.
         </Text>
-      </div>
+      </Box>
 
       {/* Content */}
-      <div
+      <Box
+        py={spacing['4xl']}
         style={{
-          paddingTop: spacing['4xl'],
-          paddingBottom: spacing['4xl'],
           paddingLeft: '6.125%',
           paddingRight: '6.125%',
           maxWidth: 1000,
         }}
       >
         {/* Logos */}
-        <div style={{ marginBottom: spacing['4xl'] }}>
+        <Box mb={spacing['4xl']}>
           <SectionTitle>Logos</SectionTitle>
           <Text
-            className="tw:mb-xl"
+            mb="xl"
             style={{
               fontSize: typography.fontSize.base,
               color: colors.text.secondary,
@@ -213,7 +219,7 @@ export default function BrandAssetsPage() {
           </Text>
 
           <Text
-            className="tw:mb-md"
+            mb="md"
             style={{
               fontSize: typography.fontSize.base,
               fontWeight: typography.fontWeight.semibold,
@@ -222,7 +228,7 @@ export default function BrandAssetsPage() {
           >
             Full logo
           </Text>
-          <div className="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:gap-lg tw:mb-xl">
+          <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="lg" mb="xl">
             <LogoCard
               variant="Teal on white"
               background={colors.white}
@@ -233,10 +239,10 @@ export default function BrandAssetsPage() {
               background={colors.primary[700]}
               logoSrc="/assets/logos/policyengine/white.png"
             />
-          </div>
+          </SimpleGrid>
 
           <Text
-            className="tw:mb-md"
+            mb="md"
             style={{
               fontSize: typography.fontSize.base,
               fontWeight: typography.fontWeight.semibold,
@@ -245,7 +251,7 @@ export default function BrandAssetsPage() {
           >
             Square mark
           </Text>
-          <div className="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:gap-lg">
+          <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="lg">
             <LogoCard
               variant="Teal square"
               background={colors.white}
@@ -256,14 +262,14 @@ export default function BrandAssetsPage() {
               background={colors.gray[100]}
               logoSrc="/assets/logos/policyengine/teal-square-transparent.png"
             />
-          </div>
-        </div>
+          </SimpleGrid>
+        </Box>
 
         {/* Clear space */}
-        <div style={{ marginBottom: spacing['4xl'] }}>
+        <Box mb={spacing['4xl']}>
           <SectionTitle>Clear space</SectionTitle>
           <Text
-            className="tw:mb-xl"
+            mb="xl"
             style={{
               fontSize: typography.fontSize.base,
               color: colors.text.secondary,
@@ -272,15 +278,18 @@ export default function BrandAssetsPage() {
             Maintain clear space around the logo equal to at least half the height of the logomark.
           </Text>
 
-          <div
-            className="tw:flex tw:justify-center tw:p-xl tw:mb-md"
+          <Box
+            p="xl"
+            mb="md"
             style={{
               background: colors.white,
               border: `1px solid ${colors.border.light}`,
               borderRadius: spacing.radius.container,
+              display: 'flex',
+              justifyContent: 'center',
             }}
           >
-            <div
+            <Box
               style={{
                 position: 'relative',
                 padding: spacing['2xl'],
@@ -306,10 +315,10 @@ export default function BrandAssetsPage() {
               >
                 0.5x
               </Text>
-            </div>
-          </div>
+            </Box>
+          </Box>
           <Text
-            className="tw:text-center"
+            ta="center"
             style={{
               fontSize: typography.fontSize.sm,
               color: colors.text.tertiary,
@@ -317,13 +326,13 @@ export default function BrandAssetsPage() {
           >
             Minimum clear space around logo
           </Text>
-        </div>
+        </Box>
 
         {/* Usage guidelines */}
-        <div style={{ marginBottom: spacing['4xl'] }}>
+        <Box mb={spacing['4xl']}>
           <SectionTitle>Usage guidelines</SectionTitle>
-          <div className="tw:flex tw:flex-col tw:sm:flex-row tw:gap-lg">
-            <div className="tw:flex-1">
+          <Flex gap="lg" direction={{ base: 'column', sm: 'row' }}>
+            <Box flex={1}>
               <UsageCard
                 type="do"
                 items={[
@@ -333,8 +342,8 @@ export default function BrandAssetsPage() {
                   'Scale proportionally',
                 ]}
               />
-            </div>
-            <div className="tw:flex-1">
+            </Box>
+            <Box flex={1}>
               <UsageCard
                 type="dont"
                 items={[
@@ -344,15 +353,15 @@ export default function BrandAssetsPage() {
                   'Place on busy backgrounds',
                 ]}
               />
-            </div>
-          </div>
-        </div>
+            </Box>
+          </Flex>
+        </Box>
 
         {/* Brand colors */}
-        <div>
+        <Box>
           <SectionTitle>Brand colors</SectionTitle>
           <Text
-            className="tw:mb-xl"
+            mb="xl"
             style={{
               fontSize: typography.fontSize.base,
               color: colors.text.secondary,
@@ -361,14 +370,14 @@ export default function BrandAssetsPage() {
             Primary brand colors for use alongside the PolicyEngine logo.
           </Text>
 
-          <div className="tw:grid tw:grid-cols-2 tw:sm:grid-cols-4 tw:gap-md">
+          <SimpleGrid cols={{ base: 2, sm: 4 }} spacing="md">
             <ColorSwatch name="Primary teal" value={colors.primary[500]} />
             <ColorSwatch name="Primary dark" value={colors.primary[700]} />
             <ColorSwatch name="Gray" value={colors.secondary[700]} />
             <ColorSwatch name="White" value={colors.white} />
-          </div>
-        </div>
-      </div>
+          </SimpleGrid>
+        </Box>
+      </Box>
     </StaticPageLayout>
   );
 }

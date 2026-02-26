@@ -1,9 +1,10 @@
 import { render as testingLibraryRender } from '@testing-library/react';
 import { Provider as ReduxProvider } from 'react-redux';
 import { MemoryRouter } from 'react-router-dom';
-import { TooltipProvider } from '../src/components/ui/tooltip';
+import { MantineProvider } from '@mantine/core';
 import { AppProvider } from '../src/contexts/AppContext';
 import { store } from '../src/store';
+import { policyEngineTheme } from '../src/theme';
 
 export function render(ui: React.ReactNode) {
   return testingLibraryRender(ui, {
@@ -11,7 +12,9 @@ export function render(ui: React.ReactNode) {
       <AppProvider mode="website">
         <ReduxProvider store={store}>
           <MemoryRouter>
-            <TooltipProvider>{children}</TooltipProvider>
+            <MantineProvider theme={policyEngineTheme} env="test">
+              {children}
+            </MantineProvider>
           </MemoryRouter>
         </ReduxProvider>
       </AppProvider>

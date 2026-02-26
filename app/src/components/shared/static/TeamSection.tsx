@@ -1,4 +1,4 @@
-import { Container, Title } from '@/components/ui';
+import { Box, Container, Title } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
 import TeamMemberCard, { TeamMember } from './TeamMemberCard';
 
@@ -24,17 +24,16 @@ export default function TeamSection({ title, members, variant = 'primary' }: Tea
   const cardVariant = variant === 'accent' ? 'inverted' : 'default';
 
   return (
-    <div
+    <Box
+      py={spacing['4xl']}
       style={{
-        paddingTop: spacing['4xl'],
-        paddingBottom: spacing['4xl'],
         backgroundColor: backgrounds[variant],
         borderBottom: `1px solid ${colors.border.dark}`,
         paddingLeft: '6.125%',
         paddingRight: '6.125%',
       }}
     >
-      <Container size="xl" className="tw:px-0">
+      <Container size="xl" px={0}>
         <Title
           order={2}
           style={{
@@ -47,12 +46,12 @@ export default function TeamSection({ title, members, variant = 'primary' }: Tea
           {title}
         </Title>
 
-        <div>
+        <Box>
           {members.map((member, index) => (
             <TeamMemberCard key={index} member={member} variant={cardVariant} />
           ))}
-        </div>
+        </Box>
       </Container>
-    </div>
+    </Box>
   );
 }

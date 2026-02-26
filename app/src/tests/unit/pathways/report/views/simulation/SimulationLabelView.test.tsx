@@ -50,9 +50,8 @@ describe('SimulationLabelView', () => {
         />
       );
 
-      // Then - label text is visible, input is a sibling (not connected via htmlFor)
-      expect(screen.getByText(/simulation name/i)).toBeInTheDocument();
-      expect(screen.getByRole('textbox')).toBeInTheDocument();
+      // Then
+      expect(screen.getByLabelText(/simulation name/i)).toBeInTheDocument();
     });
 
     test('given standalone mode and null label then shows default My simulation', () => {
@@ -67,7 +66,7 @@ describe('SimulationLabelView', () => {
       );
 
       // Then
-      expect(screen.getByRole('textbox')).toHaveValue('My simulation');
+      expect(screen.getByLabelText(/simulation name/i)).toHaveValue('My simulation');
     });
   });
 
@@ -99,7 +98,7 @@ describe('SimulationLabelView', () => {
       );
 
       // Then
-      expect(screen.getByRole('textbox')).toHaveValue('Baseline simulation');
+      expect(screen.getByLabelText(/simulation name/i)).toHaveValue('Baseline simulation');
     });
 
     test('given report mode reform then shows reform simulation default label', () => {
@@ -115,7 +114,7 @@ describe('SimulationLabelView', () => {
       );
 
       // Then
-      expect(screen.getByRole('textbox')).toHaveValue('Reform simulation');
+      expect(screen.getByLabelText(/simulation name/i)).toHaveValue('Reform simulation');
     });
 
     test('given report label then incorporates into default label', () => {
@@ -132,7 +131,9 @@ describe('SimulationLabelView', () => {
       );
 
       // Then
-      expect(screen.getByRole('textbox')).toHaveValue('My Report baseline simulation');
+      expect(screen.getByLabelText(/simulation name/i)).toHaveValue(
+        'My Report baseline simulation'
+      );
     });
   });
 
@@ -148,7 +149,7 @@ describe('SimulationLabelView', () => {
           onNext={mockOnNext}
         />
       );
-      const input = screen.getByRole('textbox');
+      const input = screen.getByLabelText(/simulation name/i);
 
       // When
       await user.clear(input);
@@ -169,7 +170,7 @@ describe('SimulationLabelView', () => {
           onNext={mockOnNext}
         />
       );
-      const input = screen.getByRole('textbox');
+      const input = screen.getByLabelText(/simulation name/i);
       const submitButton = screen.getByRole('button', { name: /initialize simulation/i });
 
       // When

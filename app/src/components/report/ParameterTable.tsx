@@ -1,13 +1,6 @@
 import { useState } from 'react';
-import {
-  ShadcnTable as Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui';
-import { colors } from '@/designTokens';
+import { Box, Table, Text } from '@mantine/core';
+import { colors, spacing, typography } from '@/designTokens';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import {
   buildCompactLabel,
@@ -15,6 +8,42 @@ import {
   getHierarchicalLabels,
 } from '@/utils/parameterLabels';
 import { PolicyColumn } from '@/utils/policyTableHelpers';
+
+interface TableHeaderProps {
+  width: string;
+  align?: 'left' | 'right';
+  children: React.ReactNode;
+}
+
+function TableHeader({ width, align = 'left', children }: TableHeaderProps) {
+  return (
+    <Table.Th
+      style={{
+        width,
+        textAlign: align,
+      }}
+    >
+      {children}
+    </Table.Th>
+  );
+}
+
+interface TableCellProps {
+  align?: 'left' | 'right';
+  children: React.ReactNode;
+}
+
+function TableCell({ align = 'left', children }: TableCellProps) {
+  return (
+    <Table.Td
+      style={{
+        textAlign: align,
+      }}
+    >
+      {children}
+    </Table.Td>
+  );
+}
 
 interface ParameterTableProps {
   parameterNames: string[];
@@ -60,25 +89,29 @@ export default function ParameterTable({
   };
 
   return (
-    <div className="tw:mt-xl">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead style={{ width: `${labelColumnWidth}%` }}>Parameter</TableHead>
+    <Box
+      style={{
+        marginTop: spacing.xl,
+      }}
+    >
+      <Table variant="parameterTable">
+        <Table.Thead>
+          <Table.Tr>
+            <TableHeader width={`${labelColumnWidth}%`}>Parameter</TableHeader>
             {needsCurrentLawColumn && (
-              <TableHead style={{ width: `${valueColumnWidth}%`, textAlign: 'right' }}>
+              <TableHeader width={`${valueColumnWidth}%`} align="right">
                 CURRENT LAW
-              </TableHead>
+              </TableHeader>
             )}
             {columns.map((column, idx) => (
-              <TableHead key={idx} style={{ width: `${valueColumnWidth}%`, textAlign: 'right' }}>
+              <TableHeader key={idx} width={`${valueColumnWidth}%`} align="right">
                 {renderColumnHeader(column, idx)}
-              </TableHead>
+              </TableHeader>
             ))}
-          </TableRow>
-        </TableHeader>
+          </Table.Tr>
+        </Table.Thead>
 
-        <TableBody>
+        <Table.Tbody>
           {parameterNames.map((paramName: string) => {
             // Build hierarchical label with chaining
             const hierarchicalLabels = getHierarchicalLabels(paramName, parameters);
@@ -88,57 +121,51 @@ export default function ParameterTable({
             const displayLabel = formatLabelParts(finalParts);
 
             return (
-              <TableRow key={paramName}>
+              <Table.Tr key={paramName}>
                 <TableCell>
-                  <div>
-                    <p className="tw:text-sm tw:font-medium">
+                  <Box>
+                    <Text size="sm" fw={typography.fontWeight.medium}>
                       {displayLabel.split(' → ').map((part, i, arr) => (
                         <span key={i}>
                           {part === '...' ? (
-                            <span
-                              role="button"
-                              tabIndex={0}
-                              className="tw:cursor-pointer"
-                              style={{ color: colors.primary[700] }}
+                            <Text
+                              span
+                              style={{ cursor: 'pointer', color: colors.primary[700] }}
                               onClick={() => toggleExpanded(paramName)}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter' || e.key === ' ') {
-                                  e.preventDefault();
-                                  toggleExpanded(paramName);
-                                }
-                              }}
                             >
                               ...
-                            </span>
+                            </Text>
                           ) : (
                             part
                           )}
                           {i < arr.length - 1 && ' → '}
                         </span>
                       ))}
-                    </p>
-                    <p className="tw:text-xs tw:text-gray-500">{paramName}</p>
-                  </div>
+                    </Text>
+                    <Text size="xs" c={colors.text.secondary}>
+                      {paramName}
+                    </Text>
+                  </Box>
                 </TableCell>
                 {needsCurrentLawColumn && (
-                  <TableCell style={{ textAlign: 'right' }}>
-                    <span className="tw:text-sm tw:font-medium tw:text-gray-900">
+                  <TableCell align="right">
+                    <Text size="sm" fw={typography.fontWeight.medium} c={colors.text.primary}>
                       {renderCurrentLawValue(paramName)}
-                    </span>
+                    </Text>
                   </TableCell>
                 )}
                 {columns.map((column, idx) => (
-                  <TableCell key={idx} style={{ textAlign: 'right' }}>
-                    <span className="tw:text-sm tw:font-medium tw:text-gray-900">
+                  <TableCell key={idx} align="right">
+                    <Text size="sm" fw={typography.fontWeight.medium} c={colors.text.primary}>
                       {renderColumnValue(column, paramName)}
-                    </span>
+                    </Text>
                   </TableCell>
                 ))}
-              </TableRow>
+              </Table.Tr>
             );
           })}
-        </TableBody>
+        </Table.Tbody>
       </Table>
-    </div>
+    </Box>
   );
 }

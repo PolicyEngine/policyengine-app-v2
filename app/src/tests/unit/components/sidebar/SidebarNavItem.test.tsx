@@ -39,8 +39,8 @@ describe('SidebarNavItem', () => {
     render(<SidebarNavItem {...MOCK_NAV_ITEMS.DISABLED} />);
     await user.hover(screen.getByText('Account settings'));
 
-    // Then — Radix Tooltip renders content with role="tooltip"
-    expect(screen.getByRole('tooltip', { name: /under development/i })).toBeInTheDocument();
+    // Then
+    expect(await screen.findByText('Under development')).toBeInTheDocument();
   });
 
   test('given disabled item then prevents navigation on click', async () => {

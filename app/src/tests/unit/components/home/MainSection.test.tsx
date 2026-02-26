@@ -41,8 +41,8 @@ describe('MainSection', () => {
     // When
     renderWithCountry(<MainSection />, TEST_COUNTRY_IDS.US);
 
-    // Then — responsive font size is applied via Tailwind class, not inline style
+    // Then
     const heading = screen.getByRole('heading', { name: /start simulating/i });
-    expect(heading.className).toContain('text-[clamp(28px,5vw,48px)]');
+    expect(heading.style.fontSize).toBe('clamp(28px, 5vw, 48px)');
   });
 });

@@ -1,12 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import {
-  Label,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui';
+import { Group, Select, Text } from '@mantine/core';
 import {
   filterDistrictsByState,
   formatDistrictOptionsForDisplay,
@@ -58,8 +51,8 @@ export default function USDistrictSelector({
   );
 
   // Handle state change for district selection
-  const handleStateChange = (stateName: string) => {
-    setSelectedStateName(stateName);
+  const handleStateChange = (stateName: string | null) => {
+    setSelectedStateName(stateName || '');
     // Auto-select the first district when a state is chosen
     if (stateName) {
       const stateDistricts = filterDistrictsByState(districtOptions, stateName);
@@ -73,52 +66,31 @@ export default function USDistrictSelector({
 
   return (
     <>
-      <Label className="tw:text-sm tw:font-medium tw:mb-1 tw:block">
-        Select congressional district
-      </Label>
-      <div className="tw:flex tw:items-start tw:gap-sm">
-        <div className="tw:flex-1">
-          <Select value={selectedStateName} onValueChange={handleStateChange}>
-            <SelectTrigger className="tw:w-full">
-              <SelectValue placeholder="Pick a state" />
-            </SelectTrigger>
-            <SelectContent>
-              {stateNamesForDistricts.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+      <Text size="sm" fw={500} mb={4}>
+        Select Congressional District
+      </Text>
+      <Group gap="sm" align="flex-start">
+        <Select
+          placeholder="Pick a state"
+          data={stateNamesForDistricts}
+          value={selectedStateName}
+          onChange={handleStateChange}
+          searchable
+          style={{ flex: 1 }}
+        />
         {selectedStateName ? (
-          <div style={{ width: 120 }}>
-            <Select value={selectedDistrict} onValueChange={(val) => onDistrictChange(val)}>
-              <SelectTrigger className="tw:w-full">
-                <SelectValue placeholder="Pick a district" />
-              </SelectTrigger>
-              <SelectContent>
-                {districtOptionsWithLabels.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <Select
+            placeholder="Pick a district"
+            data={districtOptionsWithLabels}
+            value={selectedDistrict}
+            onChange={(val) => onDistrictChange(val || '')}
+            searchable
+            style={{ width: 120 }}
+          />
         ) : (
-          <div style={{ width: 120 }}>
-            <Select disabled>
-              <SelectTrigger className="tw:w-full">
-                <SelectValue placeholder="—" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="--">--</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <Select placeholder="—" data={[]} disabled style={{ width: 120 }} />
         )}
-      </div>
+      </Group>
     </>
   );
 }

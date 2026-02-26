@@ -70,16 +70,14 @@ describe('ReportSidebar', () => {
     expect(screen.queryByText('Overall')).not.toBeInTheDocument();
   });
 
-  test('given sidebar renders then it is hidden on mobile via responsive class', () => {
+  test('given sidebar renders then it is hidden on mobile via visibleFrom class', () => {
     // When
     const { container } = render(
       <ReportSidebar tree={TEST_SIDEBAR_TREE} activeView={ACTIVE_LEAF_VIEW} onNavigate={vi.fn()} />
     );
 
-    // Then — Tailwind responsive classes hide on mobile: tw:hidden tw:sm:block
-    // Find the sidebar element by its style (has width: 250px)
-    const sidebarEl = container.querySelector('[style*="width"]') as HTMLElement;
-    expect(sidebarEl).toBeInTheDocument();
-    expect(sidebarEl.className).toContain('hidden');
+    // Then — Mantine applies mantine-visible-from-sm class to the sidebar Box
+    const sidebarBox = container.querySelector('.mantine-visible-from-sm');
+    expect(sidebarBox).toBeInTheDocument();
   });
 });

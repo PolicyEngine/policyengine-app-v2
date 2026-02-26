@@ -52,9 +52,8 @@ describe('PopulationLabelView', () => {
         />
       );
 
-      // Then - label text is visible, input is a sibling (not connected via htmlFor)
-      expect(screen.getByText(/household label/i)).toBeInTheDocument();
-      expect(screen.getByRole('textbox')).toBeInTheDocument();
+      // Then
+      expect(screen.getByLabelText(/household label/i)).toBeInTheDocument();
     });
   });
 
@@ -71,7 +70,7 @@ describe('PopulationLabelView', () => {
       );
 
       // Then
-      expect(screen.getByRole('textbox')).toHaveValue('Custom Household');
+      expect(screen.getByLabelText(/household label/i)).toHaveValue('Custom Household');
     });
 
     test('given geography population then shows geography-based label', () => {
@@ -86,7 +85,7 @@ describe('PopulationLabelView', () => {
       );
 
       // Then
-      expect(screen.getByRole('textbox')).toHaveValue('National Households');
+      expect(screen.getByLabelText(/household label/i)).toHaveValue('National Households');
     });
 
     test('given existing label then shows that label', () => {
@@ -101,7 +100,7 @@ describe('PopulationLabelView', () => {
       );
 
       // Then
-      expect(screen.getByRole('textbox')).toHaveValue('My Household');
+      expect(screen.getByLabelText(/household label/i)).toHaveValue('My Household');
     });
   });
 
@@ -149,7 +148,7 @@ describe('PopulationLabelView', () => {
           onNext={mockOnNext}
         />
       );
-      const input = screen.getByRole('textbox');
+      const input = screen.getByLabelText(/household label/i);
 
       // When
       await user.clear(input);
@@ -170,7 +169,7 @@ describe('PopulationLabelView', () => {
           onNext={mockOnNext}
         />
       );
-      const input = screen.getByRole('textbox');
+      const input = screen.getByLabelText(/household label/i);
       const submitButton = screen.getByRole('button', { name: /initialize household/i });
 
       // When
@@ -194,7 +193,7 @@ describe('PopulationLabelView', () => {
           onNext={mockOnNext}
         />
       );
-      const input = screen.getByRole('textbox');
+      const input = screen.getByLabelText(/household label/i);
       const submitButton = screen.getByRole('button', { name: /initialize household/i });
 
       // When

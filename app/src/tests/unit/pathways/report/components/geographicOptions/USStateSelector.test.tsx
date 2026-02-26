@@ -20,8 +20,8 @@ describe('USStateSelector', () => {
       />
     );
 
-    // Then - text is now sentence case
-    expect(screen.getByText('Select state')).toBeInTheDocument();
+    // Then
+    expect(screen.getByText('Select State')).toBeInTheDocument();
   });
 
   test('given state options then displays placeholder when no state selected', () => {
@@ -37,9 +37,8 @@ describe('USStateSelector', () => {
       />
     );
 
-    // Then - shadcn Select trigger shows placeholder text
-    const trigger = screen.getByRole('combobox');
-    expect(trigger).toHaveTextContent('Pick a state');
+    // Then
+    expect(screen.getByPlaceholderText('Pick a state')).toBeInTheDocument();
   });
 
   test('given selected state then displays state label', () => {
@@ -55,14 +54,14 @@ describe('USStateSelector', () => {
       />
     );
 
-    // Then - shadcn Select trigger shows selected value as text content
-    const trigger = screen.getByRole('combobox');
-    expect(trigger).toHaveTextContent('California');
+    // Then
+    const input = screen.getByRole('textbox');
+    expect(input).toHaveValue('California');
   });
 
-  test('given user clicks select trigger then combobox is accessible', async () => {
+  test('given user selects state then calls onStateChange with value', async () => {
     // Given
-    userEvent.setup();
+    const user = userEvent.setup();
     const onStateChange = vi.fn();
     render(
       <USStateSelector
@@ -72,11 +71,12 @@ describe('USStateSelector', () => {
       />
     );
 
-    // Then - verify the trigger renders correctly
-    // (Radix Select portal interaction is unreliable in jsdom)
-    const trigger = screen.getByRole('combobox');
-    expect(trigger).toBeInTheDocument();
-    expect(trigger).toHaveTextContent('Pick a state');
+    // When
+    await user.click(screen.getByRole('textbox'));
+    await user.click(screen.getByText('California'));
+
+    // Then
+    expect(onStateChange).toHaveBeenCalledWith(TEST_VALUES.CALIFORNIA_STATE);
   });
 
   test('given empty state options then renders empty select', () => {
@@ -86,7 +86,7 @@ describe('USStateSelector', () => {
     // When
     render(<USStateSelector stateOptions={[]} selectedState="" onStateChange={onStateChange} />);
 
-    // Then - text is now sentence case
-    expect(screen.getByText('Select state')).toBeInTheDocument();
+    // Then
+    expect(screen.getByText('Select State')).toBeInTheDocument();
   });
 });

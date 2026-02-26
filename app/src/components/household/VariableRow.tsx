@@ -3,7 +3,7 @@
  */
 
 import { IconX } from '@tabler/icons-react';
-import { Button, Text, Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui';
+import { ActionIcon, Box, Group, Text, Tooltip } from '@mantine/core';
 import { Household } from '@/types/ingredients/Household';
 import { VariableInfo } from '@/utils/VariableResolver';
 import VariableInput from './VariableInput';
@@ -52,11 +52,11 @@ export default function VariableRow({
   const shouldShowColumn = onRemove || showRemoveColumn;
 
   return (
-    <div className="tw:flex tw:items-center tw:gap-1 tw:flex-nowrap">
-      <div className="tw:flex-1">
+    <Group gap="xs" align="center" wrap="nowrap">
+      <Box style={{ flex: 1 }}>
         <Text size="sm">{sentenceCaseLabel(variable.label)}</Text>
-      </div>
-      <div className="tw:flex-1">
+      </Box>
+      <Box style={{ flex: 1 }}>
         <VariableInput
           variable={{ ...variable, label: '' }}
           household={household}
@@ -66,28 +66,25 @@ export default function VariableRow({
           onChange={onChange}
           disabled={disabled}
         />
-      </div>
+      </Box>
       {shouldShowColumn && (
-        <div style={{ width: REMOVE_COLUMN_SIDE, height: REMOVE_COLUMN_SIDE }}>
+        <Box style={{ width: REMOVE_COLUMN_SIDE, height: REMOVE_COLUMN_SIDE }}>
           {onRemove && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={onRemove}
-                  disabled={disabled}
-                  style={{ width: REMOVE_COLUMN_SIDE, height: REMOVE_COLUMN_SIDE }}
-                  className="tw:p-0"
-                >
-                  <IconX size={16} />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Remove variable</TooltipContent>
+            <Tooltip label="Remove variable">
+              <ActionIcon
+                size="sm"
+                variant="subtle"
+                color="gray"
+                onClick={onRemove}
+                disabled={disabled}
+                style={{ width: REMOVE_COLUMN_SIDE, height: REMOVE_COLUMN_SIDE }}
+              >
+                <IconX size={16} />
+              </ActionIcon>
             </Tooltip>
           )}
-        </div>
+        </Box>
       )}
-    </div>
+    </Group>
   );
 }

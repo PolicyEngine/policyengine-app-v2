@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Stack } from '@mantine/core';
+import { useDisclosure } from '@mantine/hooks';
 import {
   BulletsValue,
   ColumnConfig,
@@ -11,10 +13,8 @@ import { RenameIngredientModal } from '@/components/common/RenameIngredientModal
 import IngredientReadView from '@/components/IngredientReadView';
 import { MultiSimOutputTypeCell } from '@/components/report/MultiSimReportOutputTypeCell';
 import { ReportOutputTypeCell } from '@/components/report/ReportOutputTypeCell';
-import { Stack } from '@/components/ui';
 import { MOCK_USER_ID } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { useDisclosure } from '@/hooks/useDisclosure';
 import { useUpdateReportAssociation } from '@/hooks/useUserReportAssociations';
 import { useUserReports } from '@/hooks/useUserReports';
 import { useCacheMonitor } from '@/utils/cacheMonitor';
@@ -138,6 +138,7 @@ export default function ReportsPage() {
   ];
 
   // Transform the data to match the new structure
+  // Use useMemo to prevent unnecessary re-creation of data objects
   const transformedData: IngredientRecord[] = useMemo(
     () =>
       data?.map((item) => {

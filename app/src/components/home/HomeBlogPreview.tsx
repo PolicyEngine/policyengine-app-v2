@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Container, Group, Text } from '@/components/ui';
+import { Box, Container, Group, SimpleGrid, Text } from '@mantine/core';
 import { getPosts } from '@/data/posts/postTransformers';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
@@ -32,7 +32,7 @@ export default function HomeBlogPreview() {
   const rightPosts = relevantPosts.slice(LEFT_COUNT, TOTAL_POSTS);
 
   return (
-    <div
+    <Box
       style={{
         backgroundColor: colors.gray[50],
         paddingTop: spacing['5xl'],
@@ -41,7 +41,7 @@ export default function HomeBlogPreview() {
     >
       <Container size="xl">
         {/* Section header */}
-        <Group justify="space-between" align="start" style={{ marginBottom: spacing['3xl'] }}>
+        <Group justify="space-between" align="baseline" mb={spacing['3xl']}>
           <Text
             fw={typography.fontWeight.bold}
             style={{
@@ -69,22 +69,22 @@ export default function HomeBlogPreview() {
         </Group>
 
         {/* Two-column layout: 2 left (stacked), 3 right (stacked) */}
-        <div className="tw:grid tw:grid-cols-1 tw:md:grid-cols-2" style={{ gap: spacing['2xl'] }}>
+        <SimpleGrid cols={{ base: 1, md: 2 }} spacing={spacing['2xl']}>
           {/* Left column: 2 posts stacked, filling equal height */}
-          <div className="tw:flex tw:flex-col" style={{ gap: spacing['2xl'] }}>
+          <Box style={{ display: 'flex', flexDirection: 'column', gap: spacing['2xl'] }}>
             {leftPosts.map((post: BlogPost) => (
               <PrimaryCard key={post.slug} post={post} countryId={countryId} flex={1} />
             ))}
-          </div>
+          </Box>
 
           {/* Right column: 3 smaller posts stacked */}
-          <div className="tw:flex tw:flex-col" style={{ gap: spacing['2xl'] }}>
+          <Box style={{ display: 'flex', flexDirection: 'column', gap: spacing['2xl'] }}>
             {rightPosts.map((post: BlogPost) => (
               <SecondaryCard key={post.slug} post={post} countryId={countryId} />
             ))}
-          </div>
-        </div>
+          </Box>
+        </SimpleGrid>
       </Container>
-    </div>
+    </Box>
   );
 }

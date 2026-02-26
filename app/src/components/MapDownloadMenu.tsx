@@ -1,15 +1,6 @@
 import { useCallback, useState } from 'react';
 import { IconDownload } from '@tabler/icons-react';
-import {
-  Button,
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui';
+import { ActionIcon, Menu, Tooltip } from '@mantine/core';
 import { downloadMapAsPng, downloadMapAsSvg } from '@/utils/mapExportUtils';
 
 interface MapDownloadMenuProps {
@@ -45,27 +36,24 @@ export function MapDownloadMenu({ mapRef, filename }: MapDownloadMenuProps) {
   }, [mapRef, filename]);
 
   return (
-    <DropdownMenu>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              disabled={loading}
-              aria-label="Download map"
-              className="tw:shrink-0"
-            >
-              <IconDownload size={18} />
-            </Button>
-          </DropdownMenuTrigger>
-        </TooltipTrigger>
-        <TooltipContent side="left">Download map</TooltipContent>
-      </Tooltip>
-      <DropdownMenuContent align="end" className="tw:w-40">
-        <DropdownMenuItem onClick={handlePng}>Download PNG</DropdownMenuItem>
-        <DropdownMenuItem onClick={handleSvg}>Download SVG</DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <Menu shadow="sm" width={160} position="bottom-end">
+      <Menu.Target>
+        <Tooltip label="Download map" position="left">
+          <ActionIcon
+            variant="subtle"
+            size="md"
+            loading={loading}
+            aria-label="Download map"
+            style={{ flexShrink: 0 }}
+          >
+            <IconDownload size={18} />
+          </ActionIcon>
+        </Tooltip>
+      </Menu.Target>
+      <Menu.Dropdown>
+        <Menu.Item onClick={handlePng}>Download PNG</Menu.Item>
+        <Menu.Item onClick={handleSvg}>Download SVG</Menu.Item>
+      </Menu.Dropdown>
+    </Menu>
   );
 }
