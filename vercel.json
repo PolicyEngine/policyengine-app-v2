@@ -36,6 +36,14 @@
       "source": "/slides/:path*",
       "destination": "https://policyengine-slides.vercel.app/slides/:path*"
     },
+    {
+      "source": "/us/taxsim",
+      "destination": "https://cps-dashboard-pied.vercel.app/us/taxsim"
+    },
+    {
+      "source": "/us/taxsim/:path*",
+      "destination": "https://cps-dashboard-pied.vercel.app/us/taxsim/:path*"
+    },
     { "source": "/(.*)", "destination": "/website.html" }
   ],
   "headers": [
