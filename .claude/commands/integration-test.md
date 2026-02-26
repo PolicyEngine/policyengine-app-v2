@@ -111,9 +111,10 @@ Print a summary like this:
 ```
 Integration test stack is running:
 
-  API:  http://localhost:8000      (PID: <pid>)
-  Docs: http://localhost:8000/docs
-  App:  http://localhost:5173      (PID: <pid>)
+  API:        http://localhost:8000      (PID: <pid>)
+  API docs:   http://localhost:8000/docs
+  Website:    http://localhost:3002      (PID: <pid>)
+  Calculator: http://localhost:3003      (same process)
 
   Supabase Studio: http://localhost:54323
 
