@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Stack } from '@mantine/core';
+import { Alert, Button, Progress, Stack, Text } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   BulletsValue,
   ColumnConfig,
@@ -17,6 +18,8 @@ import { MOCK_USER_ID } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useUpdateReportAssociation } from '@/hooks/useUserReportAssociations';
 import { useUserReports } from '@/hooks/useUserReports';
+import { reportAssociationKeys } from '@/libs/queryKeys';
+import type { MigrationProgress } from '@/libs/v1ReportMigration';
 import { useCacheMonitor } from '@/utils/cacheMonitor';
 import { formatDate } from '@/utils/dateUtils';
 
@@ -26,6 +29,7 @@ export default function ReportsPage() {
   const cacheMonitor = useCacheMonitor();
   const navigate = useNavigate();
   const countryId = useCurrentCountry();
+  const queryClient = useQueryClient();
 
   // Log cache state when component mounts and when data changes
   useEffect(() => {
@@ -34,6 +38,43 @@ export default function ReportsPage() {
 
   const [searchValue, setSearchValue] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+  // V1 migration state
+  const [showMigration, setShowMigration] = useState(false);
+  const [v1ReportCount, setV1ReportCount] = useState(0);
+  const [isMigrating, setIsMigrating] = useState(false);
+  const [migrationProgress, setMigrationProgress] = useState<MigrationProgress | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function checkV1Reports() {
+      const { hasV1ReportsToMigrate, getV1ReportCount } = await import(
+        '@/libs/v1ReportMigration'
+      );
+      const hasReports = await hasV1ReportsToMigrate(userId, countryId);
+      const count = await getV1ReportCount(userId, countryId);
+      if (!cancelled) {
+        setShowMigration(hasReports);
+        setV1ReportCount(count);
+      }
+    }
+    checkV1Reports();
+    return () => {
+      cancelled = true;
+    };
+  }, [userId, countryId]);
+
+  const handleMigrate = useCallback(async () => {
+    setIsMigrating(true);
+    setMigrationProgress(null);
+    const { migrateV1Reports } = await import('@/libs/v1ReportMigration');
+    const result = await migrateV1Reports(userId, countryId, setMigrationProgress);
+    setIsMigrating(false);
+    queryClient.invalidateQueries({ queryKey: reportAssociationKeys.all });
+    if (result.succeeded.length > 0) {
+      setShowMigration(false);
+    }
+  }, [userId, countryId, queryClient]);
 
   // Rename modal state
   const [renamingReportId, setRenamingReportId] = useState<string | null>(null);
@@ -197,6 +238,35 @@ export default function ReportsPage() {
   return (
     <>
       <Stack gap="md">
+        {showMigration && (
+          <Alert variant="light" color="blue" title="V1 reports available for migration">
+            <Text size="sm">
+              You have {v1ReportCount} report(s) saved in local storage from the previous API.
+              Migrate them to the v2 API to keep them accessible.
+            </Text>
+            {isMigrating ? (
+              <Progress
+                value={
+                  migrationProgress
+                    ? (migrationProgress.current / migrationProgress.total) * 100
+                    : 0
+                }
+                mt="sm"
+              />
+            ) : (
+              <Button onClick={handleMigrate} mt="sm" size="sm">
+                Migrate my reports to v2 API
+              </Button>
+            )}
+            {migrationProgress && !isMigrating && (
+              <Text size="sm" mt="sm" c="green">
+                Migrated {migrationProgress.succeeded.length}/{migrationProgress.total} reports.
+                {migrationProgress.failed.length > 0 &&
+                  ` ${migrationProgress.failed.length} failed.`}
+              </Text>
+            )}
+          </Alert>
+        )}
         <IngredientReadView
           ingredient="report"
           title="Your saved reports"
