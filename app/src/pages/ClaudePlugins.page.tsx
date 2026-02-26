@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import StaticPageLayout from '@/components/shared/static/StaticPageLayout';
 import { colors, spacing, typography } from '@/designTokens';
+import { trackLandingPageViewed } from '@/utils/analytics';
 
 /* ─── animation hook ─── */
 
@@ -297,6 +298,11 @@ const CONTAINER: React.CSSProperties = { maxWidth: 1200, marginLeft: 'auto', mar
 
 export default function ClaudePluginsPage() {
   const { countryId } = useParams<{ countryId: string }>();
+
+  useEffect(() => {
+    trackLandingPageViewed({ page: 'claude-plugin', countryId: countryId || 'us' });
+  }, [countryId]);
+
   const isUK = countryId === 'uk';
   const useCases = isUK ? ukUseCases : usUseCases;
   const microsimFeatures = isUK ? ukMicrosimFeatures : usMicrosimFeatures;
