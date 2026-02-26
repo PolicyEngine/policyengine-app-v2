@@ -1,6 +1,9 @@
 name: Chromatic
 
 on:
+  push:
+    branches:
+      - main
   pull_request:
     branches:
       - main
@@ -25,8 +28,16 @@ jobs:
       - name: Build design system
         run: bun run design-system:build
 
-      - name: Run Chromatic
+      - name: Run Chromatic (PR)
+        if: github.event_name == 'pull_request'
         working-directory: ./app
-        run: bunx chromatic --only-changed --exit-zero-on-changes --build-script-name="storybook:build" --project-token=${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+        run: bunx chromatic --only-changed --build-script-name="storybook:build" --project-token=${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+        env:
+          VITE_APP_MODE: website
+
+      - name: Run Chromatic (push to main)
+        if: github.event_name == 'push'
+        working-directory: ./app
+        run: bunx chromatic --only-changed --auto-accept-changes --build-script-name="storybook:build" --project-token=${{ secrets.CHROMATIC_PROJECT_TOKEN }}
         env:
           VITE_APP_MODE: website
