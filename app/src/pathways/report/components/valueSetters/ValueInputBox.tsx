@@ -1,5 +1,5 @@
 import { Input, Switch } from '@/components/ui';
-import { spacing } from '@/designTokens';
+import { colors, spacing } from '@/designTokens';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import { coerceByUnit } from '@/utils/valueCoercion';
 
@@ -60,7 +60,7 @@ export function ValueInputBox(props: ValueInputBoxProps) {
         <div
           className="tw:flex tw:justify-between tw:items-center"
           style={{
-            border: '1px solid #ced4da',
+            border: `1px solid ${colors.border.light}`,
             borderRadius: spacing.radius.element,
             padding: '6px 12px',
             height: '36px',

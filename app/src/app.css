@@ -71,6 +71,45 @@
   --color-border-medium: #cbd5e1;
   --color-border-dark: #94a3b8;
 
+  /*
+   * =========================================================
+   * shadcn/ui semantic color tokens
+   * =========================================================
+   * These are REQUIRED by all shadcn/ui components (Button,
+   * Badge, Table, Input, Dialog, etc.). They use classes like
+   * tw:bg-primary, tw:text-foreground, tw:border-border which
+   * resolve to these CSS variables.
+   * =========================================================
+   */
+
+  /* Core foreground/background */
+  --color-background: #fff;
+  --color-foreground: #101828;
+
+  /* Primary action color (buttons, links, badges) */
+  --color-primary: #319795;
+  --color-primary-foreground: #fff;
+
+  /* Secondary (muted buttons, secondary badges) */
+  --color-secondary: #f2f4f7;
+  --color-secondary-foreground: #101828;
+
+  /* Muted (subtle backgrounds, disabled states) */
+  --color-muted: #f2f4f7;
+  --color-muted-foreground: #6b7280;
+
+  /* Accent (hover highlights, active states) */
+  --color-accent: #f2f4f7;
+  --color-accent-foreground: #101828;
+
+  /* Destructive (delete buttons, error states) */
+  --color-destructive: #ef4444;
+
+  /* Border, input, ring (form controls) */
+  --color-border: #e2e8f0;
+  --color-input: #e2e8f0;
+  --color-ring: #319795;
+
   /* Typography */
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
@@ -101,6 +140,12 @@
   --radius-container: 8px;
   --radius-feature: 12px;
 
+  /* shadcn radius tokens */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+
   /* Breakpoints matching Mantine */
   --breakpoint-xs: 36rem;
   --breakpoint-sm: 48rem;
@@ -115,4 +160,95 @@
   --spacing-header: 58px;
   --spacing-content: 1361px;
   --spacing-container: 976px;
+}
+
+/*
+ * =========================================================
+ * Base styles
+ * =========================================================
+ * Tailwind Preflight resets all HTML elements to a blank
+ * slate (removes margins, makes headings unstyled, etc.).
+ * These base styles restore sensible defaults matching the
+ * Mantine theme that was previously provided by
+ * MantineProvider + @mantine/core/styles.css.
+ * =========================================================
+ */
+@layer base {
+  html {
+    font-family: var(--font-sans);
+    font-size: var(--font-size-base);
+    line-height: 1.55;
+    color: var(--color-foreground);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    color: var(--color-foreground);
+    background-color: var(--color-background);
+  }
+
+  /* Heading hierarchy matching Mantine defaults */
+  h1 {
+    font-size: var(--font-size-4xl);
+    font-weight: 700;
+    line-height: 1.3;
+  }
+
+  h2 {
+    font-size: var(--font-size-3xl);
+    font-weight: 700;
+    line-height: 1.35;
+  }
+
+  h3 {
+    font-size: var(--font-size-2xl);
+    font-weight: 600;
+    line-height: 1.4;
+  }
+
+  h4 {
+    font-size: var(--font-size-xl);
+    font-weight: 600;
+    line-height: 1.45;
+  }
+
+  h5 {
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    line-height: 1.5;
+  }
+
+  h6 {
+    font-size: var(--font-size-base);
+    font-weight: 600;
+    line-height: 1.5;
+  }
+
+  /* Links */
+  a {
+    color: inherit;
+    text-decoration: inherit;
+  }
+
+  /* Tables - restore basic structure that Preflight strips */
+  table {
+    border-collapse: collapse;
+    width: 100%;
+  }
+
+  th {
+    text-align: left;
+    font-weight: 600;
+  }
+
+  /* Form elements */
+  button,
+  input,
+  select,
+  textarea {
+    font-family: inherit;
+    font-size: inherit;
+  }
 }

@@ -88,21 +88,6 @@ export default function IngredientReadView({
         </div>
       </div>
 
-      {/* Title Section */}
-      <div style={{ marginBottom: spacing.xl }}>
-        <Title
-          order={2}
-          style={{
-            fontSize: typography.fontSize.lg,
-            fontWeight: typography.fontWeight.semibold,
-            color: colors.text.title,
-            marginBottom: spacing.lg,
-          }}
-        >
-          {title}
-        </Title>
-      </div>
-
       {/* Content Section */}
       <div
         style={{

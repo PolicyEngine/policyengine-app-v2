@@ -2,6 +2,11 @@ import React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
+// Mantine color aliases — "dimmed" was the most common
+const COLOR_ALIASES: Record<string, string> = {
+  dimmed: '#9CA3AF',
+};
+
 const textVariants = cva('', {
   variants: {
     size: {
@@ -34,7 +39,7 @@ const Text = React.forwardRef<HTMLElement, TextProps>(
   ({ className, size, weight, span, fw, c, component, style, children, ...props }, ref) => {
     const Component = component || (span ? 'span' : 'p');
     const fontWeightStyle = fw ? { fontWeight: fw } : undefined;
-    const colorStyle = c ? { color: c } : undefined;
+    const colorStyle = c ? { color: COLOR_ALIASES[c] || c } : undefined;
 
     return (
       <Component
