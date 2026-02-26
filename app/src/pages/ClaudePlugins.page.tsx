@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { Box, Button, Card, Container, Flex, SimpleGrid, Text, Title } from '@mantine/core';
 import StaticPageLayout from '@/components/shared/static/StaticPageLayout';
 import { colors, spacing, typography } from '@/designTokens';
 
@@ -35,11 +34,11 @@ const TERM_RADIUS = '10px';
 
 function WindowDots({ size = 10 }: { size?: number }) {
   return (
-    <Flex gap={6}>
-      <Box style={{ width: size, height: size, borderRadius: '50%', backgroundColor: '#ff5f57' }} />
-      <Box style={{ width: size, height: size, borderRadius: '50%', backgroundColor: '#febc2e' }} />
-      <Box style={{ width: size, height: size, borderRadius: '50%', backgroundColor: '#28c840' }} />
-    </Flex>
+    <div style={{ display: 'flex', gap: 6 }}>
+      <div style={{ width: size, height: size, borderRadius: '50%', backgroundColor: '#ff5f57' }} />
+      <div style={{ width: size, height: size, borderRadius: '50%', backgroundColor: '#febc2e' }} />
+      <div style={{ width: size, height: size, borderRadius: '50%', backgroundColor: '#28c840' }} />
+    </div>
   );
 }
 
@@ -59,22 +58,14 @@ function TerminalLine({
   };
   const s = styles[type];
   return (
-    <Box style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+    <div style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
       {s.prefix && (
-        <Text
-          component="span"
-          style={{ color: s.prefixColor, fontFamily: 'inherit', fontSize: 'inherit' }}
-        >
+        <span style={{ color: s.prefixColor, fontFamily: 'inherit', fontSize: 'inherit' }}>
           {s.prefix}
-        </Text>
+        </span>
       )}
-      <Text
-        component="span"
-        style={{ color: s.textColor, fontFamily: 'inherit', fontSize: 'inherit' }}
-      >
-        {text}
-      </Text>
-    </Box>
+      <span style={{ color: s.textColor, fontFamily: 'inherit', fontSize: 'inherit' }}>{text}</span>
+    </div>
   );
 }
 
@@ -86,7 +77,7 @@ function TerminalBlock({
   compact?: boolean;
 }) {
   return (
-    <Box
+    <div
       style={{
         backgroundColor: TERM_BG,
         borderRadius: compact ? '8px' : TERM_RADIUS,
@@ -97,13 +88,13 @@ function TerminalBlock({
         overflow: 'hidden',
       }}
     >
-      <Box mb={compact ? 8 : 14}>
+      <div style={{ marginBottom: compact ? 8 : 14 }}>
         <WindowDots size={compact ? 8 : 10} />
-      </Box>
+      </div>
       {lines.map((l, i) => (
         <TerminalLine key={i} {...l} />
       ))}
-    </Box>
+    </div>
   );
 }
 
@@ -112,21 +103,27 @@ function TerminalBlock({
 function FadeInSection({
   children,
   delay = 0,
-  ...boxProps
-}: { children: React.ReactNode; delay?: number } & Record<string, unknown>) {
+  style,
+  ...rest
+}: {
+  children: React.ReactNode;
+  delay?: number;
+  style?: React.CSSProperties;
+} & Omit<React.HTMLAttributes<HTMLDivElement>, 'style'>) {
   const { ref, visible } = useInView(0.08);
   return (
-    <Box
+    <div
       ref={ref}
       style={{
         opacity: visible ? 1 : 0,
         transform: visible ? 'translateY(0)' : 'translateY(24px)',
         transition: `opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1) ${delay}ms, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1) ${delay}ms`,
+        ...style,
       }}
-      {...boxProps}
+      {...rest}
     >
       {children}
-    </Box>
+    </div>
   );
 }
 
@@ -210,7 +207,8 @@ const stats = [
 
 /* ─── shared section padding ─── */
 
-const SECTION_PX = { paddingLeft: '6.125%', paddingRight: '6.125%' };
+const SECTION_PX: React.CSSProperties = { paddingLeft: '6.125%', paddingRight: '6.125%' };
+const CONTAINER: React.CSSProperties = { maxWidth: 1200, marginLeft: 'auto', marginRight: 'auto' };
 
 /* ─── page ─── */
 
@@ -218,44 +216,46 @@ export default function ClaudePluginsPage() {
   return (
     <StaticPageLayout title="Claude Plugins">
       {/* ━━━ HERO ━━━ */}
-      <Box
-        py={80}
+      <div
         style={{
+          paddingTop: 80,
+          paddingBottom: 80,
           backgroundColor: colors.white,
           ...SECTION_PX,
           borderBottom: `1px solid ${colors.border.light}`,
           overflow: 'hidden',
         }}
       >
-        <Container size="xl" px={0}>
-          <Flex
-            direction={{ base: 'column', md: 'row' }}
-            gap={{ base: 32, md: 56 }}
-            align={{ base: 'stretch', md: 'center' }}
+        <div style={CONTAINER}>
+          <div
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: 56,
+              alignItems: 'center',
+            }}
           >
             {/* Left — copy */}
-            <Box flex={1} maw={500}>
+            <div style={{ flex: '1 1 400px', maxWidth: 500 }}>
               <FadeInSection>
-                <Text
-                  component="span"
+                <span
                   style={{
                     display: 'inline-block',
                     fontSize: '11px',
                     fontWeight: typography.fontWeight.semibold,
                     fontFamily: typography.fontFamily.primary,
                     letterSpacing: '1.8px',
-                    textTransform: 'uppercase' as const,
+                    textTransform: 'uppercase',
                     color: colors.primary[500],
                     marginBottom: 20,
                   }}
                 >
                   Claude Code Plugin
-                </Text>
+                </span>
               </FadeInSection>
 
               <FadeInSection delay={80}>
-                <Title
-                  order={1}
+                <h1
                   style={{
                     fontSize: 'clamp(32px, 4.5vw, 48px)',
                     fontWeight: typography.fontWeight.bold,
@@ -263,64 +263,56 @@ export default function ClaudePluginsPage() {
                     color: colors.gray[900],
                     lineHeight: 1.08,
                     letterSpacing: '-0.03em',
+                    marginBottom: spacing.lg,
                   }}
-                  mb="lg"
                 >
                   AI-powered{'\n'}policy analysis
-                </Title>
+                </h1>
               </FadeInSection>
 
               <FadeInSection delay={160}>
-                <Text
+                <p
                   style={{
                     color: colors.text.secondary,
                     fontSize: typography.fontSize.lg,
                     lineHeight: typography.lineHeight.relaxed,
                     fontFamily: typography.fontFamily.body,
                     maxWidth: 420,
+                    marginBottom: 28,
                   }}
-                  mb={28}
                 >
                   Run microsimulations, model reforms, analyze distributional impacts, and build
                   dashboards — all from your terminal.
-                </Text>
+                </p>
               </FadeInSection>
 
               <FadeInSection delay={240}>
-                <Button
-                  component="a"
+                <a
                   href="https://github.com/PolicyEngine/policyengine-claude"
                   target="_blank"
                   rel="noopener noreferrer"
-                  size="md"
-                  styles={{
-                    root: {
-                      backgroundColor: colors.primary[500],
-                      color: colors.white,
-                      fontFamily: typography.fontFamily.primary,
-                      fontWeight: typography.fontWeight.semibold,
-                      fontSize: typography.fontSize.sm,
-                      border: 'none',
-                      borderRadius: spacing.sm,
-                      padding: '11px 28px',
-                      height: 'auto',
-                      transition: 'all 0.2s ease',
-                      '&:hover': {
-                        backgroundColor: colors.primary[600],
-                        transform: 'translateY(-1px)',
-                        boxShadow: `0 4px 14px ${colors.primary.alpha[40]}`,
-                      },
-                    },
+                  style={{
+                    display: 'inline-block',
+                    backgroundColor: colors.primary[500],
+                    color: colors.white,
+                    fontFamily: typography.fontFamily.primary,
+                    fontWeight: typography.fontWeight.semibold,
+                    fontSize: typography.fontSize.sm,
+                    border: 'none',
+                    borderRadius: spacing.sm,
+                    padding: '11px 28px',
+                    textDecoration: 'none',
+                    transition: 'all 0.2s ease',
                   }}
                 >
                   View on GitHub
-                </Button>
+                </a>
               </FadeInSection>
-            </Box>
+            </div>
 
             {/* Right — terminal */}
-            <FadeInSection delay={200} style={{ flex: 1, maxWidth: 560, width: '100%' }}>
-              <Box
+            <FadeInSection delay={200} style={{ flex: '1 1 400px', maxWidth: 560, width: '100%' }}>
+              <div
                 style={{
                   backgroundColor: TERM_BG,
                   borderRadius: '14px',
@@ -334,7 +326,7 @@ export default function ClaudePluginsPage() {
                 }}
               >
                 {/* subtle glow */}
-                <Box
+                <div
                   style={{
                     position: 'absolute',
                     top: 0,
@@ -345,150 +337,146 @@ export default function ClaudePluginsPage() {
                       'linear-gradient(90deg, transparent, rgba(86,212,177,0.3), transparent)',
                   }}
                 />
-                <Box mb={14}>
+                <div style={{ marginBottom: 14 }}>
                   <WindowDots size={11} />
-                </Box>
+                </div>
                 <TerminalLine type="comment" text="# 1. Install Claude Code" />
                 <TerminalLine type="command" text="npm install -g @anthropic-ai/claude-code" />
-                <Box mt={6} />
+                <div style={{ marginTop: 6 }} />
                 <TerminalLine type="comment" text="# 2. Add the plugin" />
                 <TerminalLine
                   type="command"
                   text="claude plugins add PolicyEngine/policyengine-claude"
                 />
-                <Box mt={6} />
+                <div style={{ marginTop: 6 }} />
                 <TerminalLine type="comment" text="# 3. Analyze" />
                 <TerminalLine
                   type="prompt"
                   text="What is the budgetary impact of doubling the standard deduction?"
                 />
-              </Box>
+              </div>
             </FadeInSection>
-          </Flex>
-        </Container>
-      </Box>
+          </div>
+        </div>
+      </div>
 
       {/* ━━━ WHAT YOU CAN DO ━━━ */}
-      <Box
-        py={spacing['4xl']}
+      <div
         style={{
+          paddingTop: spacing['4xl'],
+          paddingBottom: spacing['4xl'],
           backgroundColor: colors.gray[50],
           ...SECTION_PX,
           borderBottom: `1px solid ${colors.border.light}`,
         }}
       >
-        <Container size="xl" px={0}>
+        <div style={CONTAINER}>
           <FadeInSection>
-            <Title
-              order={2}
-              mb={spacing['3xl']}
+            <h2
               style={{
                 fontSize: typography.fontSize['3xl'],
                 fontWeight: typography.fontWeight.semibold,
                 fontFamily: typography.fontFamily.primary,
                 color: colors.text.primary,
+                marginBottom: spacing['3xl'],
               }}
             >
               What you can do
-            </Title>
+            </h2>
           </FadeInSection>
-          <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="lg">
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+              gap: spacing.lg,
+            }}
+          >
             {useCases.map((uc, i) => (
               <FadeInSection key={uc.title} delay={i * 60}>
-                <Card
-                  padding="xl"
-                  radius="md"
-                  withBorder
+                <div
                   style={{
-                    borderColor: colors.border.light,
-                    transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+                    border: `1px solid ${colors.border.light}`,
+                    borderRadius: spacing.md,
+                    padding: spacing.xl,
+                    backgroundColor: colors.white,
                     display: 'flex',
                     flexDirection: 'column',
                     height: '100%',
-                    backgroundColor: colors.white,
-                  }}
-                  styles={{
-                    root: {
-                      '&:hover': {
-                        transform: 'translateY(-4px)',
-                        borderColor: colors.primary[300],
-                        boxShadow: `0 12px 32px -8px ${colors.shadow.medium}`,
-                      },
-                    },
+                    transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
                   }}
                 >
-                  <Title
-                    order={3}
-                    mb={4}
+                  <h3
                     style={{
                       fontSize: typography.fontSize.base,
                       fontWeight: typography.fontWeight.semibold,
                       fontFamily: typography.fontFamily.primary,
                       color: colors.text.primary,
+                      marginBottom: 4,
                     }}
                   >
                     {uc.title}
-                  </Title>
-                  <Text
+                  </h3>
+                  <p
                     style={{
                       fontSize: typography.fontSize.sm,
                       color: colors.text.secondary,
                       fontFamily: typography.fontFamily.body,
                       lineHeight: typography.lineHeight.normal,
+                      margin: 0,
                     }}
                   >
                     {uc.description}
-                  </Text>
-                  <Box style={{ marginTop: 'auto', paddingTop: 12 }}>
+                  </p>
+                  <div style={{ marginTop: 'auto', paddingTop: 12 }}>
                     <TerminalBlock lines={uc.terminal} compact />
-                  </Box>
-                </Card>
+                  </div>
+                </div>
               </FadeInSection>
             ))}
-          </SimpleGrid>
-        </Container>
-      </Box>
+          </div>
+        </div>
+      </div>
 
       {/* ━━━ VIDEO ━━━ */}
-      <Box
-        py={spacing['4xl']}
+      <div
         style={{
+          paddingTop: spacing['4xl'],
+          paddingBottom: spacing['4xl'],
           backgroundColor: colors.white,
           ...SECTION_PX,
           borderBottom: `1px solid ${colors.border.light}`,
         }}
       >
-        <Container size="xl" px={0}>
+        <div style={CONTAINER}>
           <FadeInSection>
-            <Title
-              order={2}
-              mb="lg"
+            <h2
               style={{
                 fontFamily: typography.fontFamily.primary,
                 fontWeight: typography.fontWeight.semibold,
                 fontSize: typography.fontSize['3xl'],
                 color: colors.text.primary,
+                marginBottom: spacing.lg,
               }}
             >
               Demo
-            </Title>
+            </h2>
           </FadeInSection>
           <FadeInSection delay={100}>
-            <Text
+            <p
               style={{
                 fontSize: typography.fontSize.base,
                 lineHeight: typography.lineHeight.relaxed,
                 fontFamily: typography.fontFamily.body,
                 color: colors.text.secondary,
                 maxWidth: 600,
+                marginBottom: spacing.xl,
               }}
-              mb="xl"
             >
               Watch how the plugin examines the impact of TANF on a household in LA County — from a
               plain-English prompt to a full household-level analysis.
-            </Text>
-            <Box style={{ maxWidth: 800 }}>
-              <Box
+            </p>
+            <div style={{ maxWidth: 800 }}>
+              <div
                 style={{
                   position: 'relative',
                   width: '100%',
@@ -509,13 +497,13 @@ export default function ClaudePluginsPage() {
                     borderRadius: '12px',
                   }}
                 />
-              </Box>
-              <Text
-                mt="sm"
+              </div>
+              <p
                 style={{
                   fontSize: typography.fontSize.xs,
                   color: colors.text.tertiary,
                   fontFamily: typography.fontFamily.body,
+                  marginTop: spacing.sm,
                 }}
               >
                 From our June 2025 launch video ·{' '}
@@ -527,73 +515,81 @@ export default function ClaudePluginsPage() {
                 >
                   Watch full video
                 </a>
-              </Text>
-            </Box>
+              </p>
+            </div>
           </FadeInSection>
-        </Container>
-      </Box>
+        </div>
+      </div>
 
-      {/* ━━━ MICROSIMULATION — light with teal accents ━━━ */}
-      <Box
-        py={spacing['4xl']}
+      {/* ━━━ MICROSIMULATION ━━━ */}
+      <div
         style={{
+          paddingTop: spacing['4xl'],
+          paddingBottom: spacing['4xl'],
           backgroundColor: colors.white,
           ...SECTION_PX,
           borderBottom: `1px solid ${colors.border.light}`,
         }}
       >
-        <Container size="xl" px={0}>
+        <div style={CONTAINER}>
           <FadeInSection>
-            <Title
-              order={2}
-              mb="sm"
+            <h2
               style={{
                 fontFamily: typography.fontFamily.primary,
                 fontWeight: typography.fontWeight.bold,
                 fontSize: typography.fontSize['3xl'],
                 color: colors.text.primary,
+                marginBottom: spacing.sm,
               }}
             >
               Population-level policy analysis
-            </Title>
-            <Text
+            </h2>
+            <p
               style={{
                 fontSize: typography.fontSize.base,
                 lineHeight: typography.lineHeight.relaxed,
                 fontFamily: typography.fontFamily.body,
                 color: colors.text.secondary,
                 maxWidth: 540,
+                marginBottom: spacing['3xl'],
               }}
-              mb={spacing['3xl']}
             >
               The analysis-tools plugin turns Claude into a microsimulation analyst. Point it at any
               tax or benefit reform and it runs full population analysis using PolicyEngine&apos;s
               weighted survey data.
-            </Text>
+            </p>
           </FadeInSection>
 
-          <SimpleGrid cols={{ base: 2, sm: 3, md: 6 }} spacing="sm">
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))',
+              gap: spacing.sm,
+            }}
+          >
             {microsimFeatures.map((f, i) => (
               <FadeInSection key={f.title} delay={i * 50}>
-                <Box
-                  py="lg"
-                  px="md"
+                <div
                   style={{
+                    paddingTop: spacing.lg,
+                    paddingBottom: spacing.lg,
+                    paddingLeft: spacing.md,
+                    paddingRight: spacing.md,
                     borderLeft: `2px solid ${colors.primary[200]}`,
                   }}
                 >
-                  <Text
-                    fw={typography.fontWeight.semibold}
+                  <div
                     style={{
+                      fontWeight: typography.fontWeight.semibold,
                       fontFamily: typography.fontFamily.primary,
                       fontSize: typography.fontSize.sm,
                       color: colors.text.primary,
+                      marginBottom: 2,
                     }}
-                    mb={2}
                   >
                     {f.title}
-                  </Text>
-                  <Text
+                  </div>
+                  <div
                     style={{
                       fontSize: '12px',
                       color: colors.text.tertiary,
@@ -602,25 +598,26 @@ export default function ClaudePluginsPage() {
                     }}
                   >
                     {f.desc}
-                  </Text>
-                </Box>
+                  </div>
+                </div>
               </FadeInSection>
             ))}
-          </SimpleGrid>
-        </Container>
-      </Box>
+          </div>
+        </div>
+      </div>
 
       {/* ━━━ DARK CLOSING — stats + read more ━━━ */}
-      <Box
-        py={spacing['4xl']}
+      <div
         style={{
+          paddingTop: spacing['4xl'],
+          paddingBottom: spacing['4xl'],
           backgroundColor: colors.gray[900],
           ...SECTION_PX,
           position: 'relative',
           overflow: 'hidden',
         }}
       >
-        <Box
+        <div
           style={{
             position: 'absolute',
             top: '-20%',
@@ -632,24 +629,32 @@ export default function ClaudePluginsPage() {
             pointerEvents: 'none',
           }}
         />
-        <Container size="xl" px={0} style={{ position: 'relative' }}>
+        <div style={{ ...CONTAINER, position: 'relative' }}>
           {/* Read more */}
           <FadeInSection>
-            <Title
-              order={2}
-              mb={spacing['3xl']}
+            <h2
               style={{
                 fontFamily: typography.fontFamily.primary,
                 fontWeight: typography.fontWeight.bold,
                 fontSize: typography.fontSize['3xl'],
                 color: colors.white,
                 textAlign: 'center',
+                marginBottom: spacing['3xl'],
               }}
             >
               Read more
-            </Title>
+            </h2>
           </FadeInSection>
-          <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md" maw={700} mx="auto">
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+              gap: spacing.md,
+              maxWidth: 700,
+              marginLeft: 'auto',
+              marginRight: 'auto',
+            }}
+          >
             {(
               [
                 {
@@ -667,44 +672,34 @@ export default function ClaudePluginsPage() {
               ] as const
             ).map((post, i) => (
               <FadeInSection key={post.title} delay={i * 80}>
-                <Card
-                  component="a"
+                <a
                   href={post.href}
                   target={post.external ? '_blank' : undefined}
                   rel={post.external ? 'noopener noreferrer' : undefined}
-                  padding="lg"
-                  radius="md"
                   style={{
+                    display: 'block',
                     backgroundColor: 'rgba(255,255,255,0.03)',
                     border: '1px solid rgba(255,255,255,0.08)',
+                    borderRadius: spacing.md,
+                    padding: spacing.lg,
                     textDecoration: 'none',
                     cursor: 'pointer',
                     transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
                     height: '100%',
                   }}
-                  styles={{
-                    root: {
-                      '&:hover': {
-                        backgroundColor: 'rgba(255,255,255,0.06)',
-                        borderColor: 'rgba(255,255,255,0.15)',
-                        transform: 'translateY(-3px)',
-                        boxShadow: '0 12px 40px -10px rgba(0,0,0,0.3)',
-                      },
-                    },
-                  }}
                 >
-                  <Text
-                    fw={typography.fontWeight.semibold}
-                    mb={4}
+                  <div
                     style={{
+                      fontWeight: typography.fontWeight.semibold,
                       fontFamily: typography.fontFamily.primary,
                       fontSize: typography.fontSize.sm,
                       color: colors.white,
+                      marginBottom: 4,
                     }}
                   >
                     {post.title}
-                  </Text>
-                  <Text
+                  </div>
+                  <div
                     style={{
                       fontSize: typography.fontSize.xs,
                       color: 'rgba(255,255,255,0.4)',
@@ -713,19 +708,26 @@ export default function ClaudePluginsPage() {
                     }}
                   >
                     {post.desc}
-                  </Text>
-                </Card>
+                  </div>
+                </a>
               </FadeInSection>
             ))}
-          </SimpleGrid>
+          </div>
 
           {/* Stats */}
           <FadeInSection>
-            <Flex justify="center" gap={{ base: 32, sm: 56, md: 80 }} wrap="wrap" mt={64}>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'center',
+                gap: 56,
+                flexWrap: 'wrap',
+                marginTop: 64,
+              }}
+            >
               {stats.map((s) => (
-                <Box key={s.label} style={{ textAlign: 'center' }}>
-                  <Text
-                    component="span"
+                <div key={s.label} style={{ textAlign: 'center' }}>
+                  <span
                     style={{
                       fontFamily: typography.fontFamily.primary,
                       fontSize: 'clamp(28px, 3vw, 36px)',
@@ -735,12 +737,12 @@ export default function ClaudePluginsPage() {
                     }}
                   >
                     {s.value}
-                  </Text>
-                  <Text
+                  </span>
+                  <div
                     style={{
                       fontFamily: typography.fontFamily.primary,
                       fontSize: '11px',
-                      textTransform: 'uppercase' as const,
+                      textTransform: 'uppercase',
                       letterSpacing: '1.8px',
                       color: 'rgba(255,255,255,0.4)',
                       fontWeight: typography.fontWeight.medium,
@@ -748,13 +750,13 @@ export default function ClaudePluginsPage() {
                     }}
                   >
                     {s.label}
-                  </Text>
-                </Box>
+                  </div>
+                </div>
               ))}
-            </Flex>
+            </div>
           </FadeInSection>
-        </Container>
-      </Box>
+        </div>
+      </div>
     </StaticPageLayout>
   );
 }
