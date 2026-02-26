@@ -193,7 +193,7 @@ const usUseCases: UseCase[] = [
     title: 'Congressional district analysis',
     description: 'Map reform impacts to every district.',
     terminal: [
-      { type: 'prompt', text: 'Map this reform across all 435 districts' },
+      { type: 'prompt', text: 'Map the SALT cap repeal across all 435 districts' },
       { type: 'output', text: 'Loading district-level microdata...' },
       { type: 'success', text: '✓ 435 districts analyzed → choropleth ready' },
     ],
@@ -235,7 +235,7 @@ const ukUseCases: UseCase[] = [
     title: 'Build interactive dashboards',
     description: 'Let stakeholders explore reform scenarios.',
     terminal: [
-      { type: 'prompt', text: 'Build a dashboard comparing basic rate changes' },
+      { type: 'prompt', text: 'Build a dashboard showing the impact of cutting the basic rate by 1p' },
       { type: 'output', text: 'Creating interactive app with charts...' },
       { type: 'success', text: '✓ app.py written → ready to run' },
     ],
@@ -253,7 +253,7 @@ const ukUseCases: UseCase[] = [
     title: 'Constituency analysis',
     description: 'Map reform impacts to every constituency.',
     terminal: [
-      { type: 'prompt', text: 'Map this reform across all 650 constituencies' },
+      { type: 'prompt', text: 'Map the two-child limit repeal across all 650 constituencies' },
       { type: 'output', text: 'Loading constituency-level microdata...' },
       { type: 'success', text: '✓ 650 constituencies analyzed → choropleth ready' },
     ],
