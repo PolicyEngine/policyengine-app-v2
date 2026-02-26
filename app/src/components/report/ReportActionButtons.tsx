@@ -59,17 +59,6 @@ export function ReportActionButtons({
 
   return (
     <Group gap="xs" ml={6}>
-      <Tooltip label="Reproduce in Python" position="bottom" styles={tooltipStyles} withArrow>
-        <ActionIcon
-          variant="light"
-          color="gray"
-          size="lg"
-          aria-label="Reproduce in Python"
-          onClick={onReproduce}
-        >
-          <IconCode size={18} />
-        </ActionIcon>
-      </Tooltip>
       <Tooltip label="View/edit report" position="bottom" styles={tooltipStyles} withArrow>
         <ActionIcon
           variant="light"
@@ -79,6 +68,17 @@ export function ReportActionButtons({
           onClick={onView}
         >
           <IconSettings size={18} />
+        </ActionIcon>
+      </Tooltip>
+      <Tooltip label="Reproduce in Python" position="bottom" styles={tooltipStyles} withArrow>
+        <ActionIcon
+          variant="light"
+          color="gray"
+          size="lg"
+          aria-label="Reproduce in Python"
+          onClick={onReproduce}
+        >
+          <IconCode size={18} />
         </ActionIcon>
       </Tooltip>
       <ShareButton onClick={onShare} />
