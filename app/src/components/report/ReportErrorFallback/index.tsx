@@ -1,6 +1,5 @@
 import { IconAlertTriangle } from '@tabler/icons-react';
-import { Box, Code, Group, Paper, Stack, Text, Title } from '@mantine/core';
-import { colors, spacing, typography } from '@/designTokens';
+import { colors } from '@/designTokens';
 import { CodeBlock } from './CodeBlock';
 import type { ReportErrorFallbackProps } from './types';
 
@@ -15,52 +14,44 @@ export type { ReportErrorFallbackProps } from './types';
  */
 export function ReportErrorFallback({ error, errorInfo }: ReportErrorFallbackProps) {
   return (
-    <Paper
-      p={spacing.xl}
-      radius="md"
+    <div
+      className="tw:p-xl tw:rounded-md"
       style={{
         backgroundColor: colors.gray[50],
         border: `1px solid ${colors.gray[200]}`,
       }}
     >
-      <Stack gap={spacing.lg}>
+      <div className="tw:flex tw:flex-col tw:gap-lg">
         {/* Header */}
-        <Group gap={spacing.md} align="flex-start">
+        <div className="tw:flex tw:items-start tw:gap-md">
           <IconAlertTriangle
             size={32}
             color={colors.gray[600]}
             style={{ flexShrink: 0, marginTop: 4 }}
           />
-          <Box>
-            <Title
-              order={3}
-              fw={typography.fontWeight.semibold}
-              c={colors.text.primary}
-              mb={spacing.xs}
-            >
+          <div>
+            <h3 className="tw:text-lg tw:font-semibold tw:text-gray-900 tw:mb-xs">
               Something went wrong
-            </Title>
-            <Text size="sm" c={colors.text.secondary}>
+            </h3>
+            <p className="tw:text-sm tw:text-gray-500">
               We encountered an error while loading this report.
-            </Text>
-          </Box>
-        </Group>
+            </p>
+          </div>
+        </div>
 
         {/* Error message */}
-        <Box>
-          <Text size="sm" fw={typography.fontWeight.medium} mb={spacing.xs}>
-            Error message
-          </Text>
-          <Code
-            block
+        <div>
+          <p className="tw:text-sm tw:font-medium tw:mb-xs">Error message</p>
+          <code
+            className="tw:block tw:bg-gray-100 tw:px-sm tw:py-sm tw:rounded-md tw:text-xs tw:font-mono"
             style={{
               whiteSpace: 'pre-wrap',
               wordBreak: 'break-word',
             }}
           >
             {error.message || 'Unknown error'}
-          </Code>
-        </Box>
+          </code>
+        </div>
 
         {/* Stack trace */}
         {error.stack && <CodeBlock title="Stack trace" content={error.stack} maxHeight="200px" />}
@@ -69,7 +60,7 @@ export function ReportErrorFallback({ error, errorInfo }: ReportErrorFallbackPro
         {errorInfo?.componentStack && (
           <CodeBlock title="Component stack" content={errorInfo.componentStack} maxHeight="200px" />
         )}
-      </Stack>
-    </Paper>
+      </div>
+    </div>
   );
 }

@@ -1,16 +1,16 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { Container, Stack, Text } from '@mantine/core';
-import { useDisclosure } from '@mantine/hooks';
 import { SocietyWideReportOutput as SocietyWideOutput } from '@/api/societyWideCalculation';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { FloatingAlert } from '@/components/common/FloatingAlert';
 import { RenameIngredientModal } from '@/components/common/RenameIngredientModal';
 import { ReportErrorFallback } from '@/components/report/ReportErrorFallback';
+import { Container, Stack, Text } from '@/components/ui';
 import { CALCULATOR_URL } from '@/constants';
 import { ReportYearProvider } from '@/contexts/ReportYearContext';
 import { spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useDisclosure } from '@/hooks/useDisclosure';
 import { useSaveSharedReport } from '@/hooks/useSaveSharedReport';
 import { useSharedReportData } from '@/hooks/useSharedReportData';
 import { useUpdateReportAssociation } from '@/hooks/useUserReportAssociations';
@@ -75,9 +75,9 @@ export default function ReportOutputPage() {
   // If no userReportId and not a shared view, show error
   if (!userReportId && !isSharedView) {
     return (
-      <Container size="xl" px={spacing.xl}>
-        <Stack gap={spacing.xl}>
-          <Text c="red">Error: Report ID is required</Text>
+      <Container size="xl" style={{ paddingLeft: spacing.xl, paddingRight: spacing.xl }}>
+        <Stack gap="xl">
+          <Text style={{ color: 'red' }}>Error: Report ID is required</Text>
         </Stack>
       </Container>
     );
@@ -240,8 +240,8 @@ export default function ReportOutputPage() {
   }
   if (dataLoading) {
     return (
-      <Container size="xl" px={spacing.xl}>
-        <Stack gap={spacing.xl}>
+      <Container size="xl" style={{ paddingLeft: spacing.xl, paddingRight: spacing.xl }}>
+        <Stack gap="xl">
           <Text>Loading report...</Text>
         </Stack>
       </Container>
@@ -251,9 +251,11 @@ export default function ReportOutputPage() {
   // Show error if data failed to load
   if (dataError || !report) {
     return (
-      <Container size="xl" px={spacing.xl}>
-        <Stack gap={spacing.xl}>
-          <Text c="red">Error loading report: {dataError?.message || 'Report not found'}</Text>
+      <Container size="xl" style={{ paddingLeft: spacing.xl, paddingRight: spacing.xl }}>
+        <Stack gap="xl">
+          <Text style={{ color: 'red' }}>
+            Error loading report: {dataError?.message || 'Report not found'}
+          </Text>
         </Stack>
       </Container>
     );
@@ -315,7 +317,7 @@ export default function ReportOutputPage() {
       );
     }
 
-    return <Text c="red">Unknown report type</Text>;
+    return <Text style={{ color: 'red' }}>Unknown report type</Text>;
   };
 
   if (import.meta.env.DEV) {
@@ -383,10 +385,6 @@ export default function ReportOutputPage() {
 
 /**
  * Determine which tabs to display based on output type and content
- *
- * Uses a common tabs structure that can be easily extended with
- * type-specific tabs in the future (e.g., regional breakdown for
- * society-wide, family structure for household).
  */
 function getTabsForOutputType(
   outputType: ReportOutputType,
@@ -403,15 +401,11 @@ function getTabsForOutputType(
       { value: 'reproduce', label: 'Reproduce in Python' },
     ];
 
-    // Only show constituencies and local authorities for UK national or country-level reports
-    // Hide these tabs for constituency-level or local authority-level reports
     const hasLocalLevelGeography = geographies?.some((g) => isUKLocalLevelGeography(g));
     if (countryId === 'uk' && !hasLocalLevelGeography) {
       tabs.push({ value: 'constituency', label: 'Constituencies' });
       tabs.push({ value: 'local-authority', label: 'Local authorities' });
     }
-
-    // Congressional districts are now under Comparative Analysis sidebar for US
 
     return tabs;
   }

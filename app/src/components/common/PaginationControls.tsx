@@ -1,5 +1,5 @@
 import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
-import { ActionIcon, Group, Text } from '@mantine/core';
+import { Button, Group, Text } from '@/components/ui';
 
 export interface PaginationConfig {
   currentPage: number;
@@ -19,20 +19,22 @@ export default function PaginationControls({ pagination }: PaginationControlsPro
   }
 
   return (
-    <Group gap="xs" wrap="nowrap">
-      <ActionIcon
-        variant="default"
+    <Group gap="xs" className="tw:flex-nowrap">
+      <Button
+        variant="outline"
+        size="icon"
         onClick={() => pagination.onPageChange(Math.max(1, pagination.currentPage - 1))}
         disabled={pagination.currentPage === 1}
         aria-label="Previous page"
       >
         <IconChevronLeft size={18} />
-      </ActionIcon>
+      </Button>
       <Text size="sm">
         {pagination.currentPage} / {pagination.totalPages}
       </Text>
-      <ActionIcon
-        variant="default"
+      <Button
+        variant="outline"
+        size="icon"
         onClick={() =>
           pagination.onPageChange(Math.min(pagination.totalPages, pagination.currentPage + 1))
         }
@@ -40,7 +42,7 @@ export default function PaginationControls({ pagination }: PaginationControlsPro
         aria-label="Next page"
       >
         <IconChevronRight size={18} />
-      </ActionIcon>
+      </Button>
     </Group>
   );
 }

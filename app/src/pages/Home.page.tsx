@@ -1,4 +1,3 @@
-import { Box } from '@mantine/core';
 import ActionCards from '@/components/home/ActionCards';
 import HomeBlogPreview from '@/components/home/HomeBlogPreview';
 import HomeTrackerPreview from '@/components/home/HomeTrackerPreview';
@@ -13,7 +12,7 @@ export default function HomePage() {
     <>
       <DowningStreetBanner />
       <FeaturedResearchBanner />
-      <Box
+      <div
         style={{
           backgroundImage: `linear-gradient(180deg, ${colors.primary[50]}, #f2fcfaff, ${colors.white})`,
           minHeight: '100vh',
@@ -21,14 +20,14 @@ export default function HomePage() {
           position: 'relative',
         }}
       >
-        <Box pt={spacing['4xl']}>
+        <div style={{ paddingTop: spacing['4xl'] }}>
           <MainSection />
           <ActionCards />
-        </Box>
+        </div>
         <OrgLogos />
         <HomeBlogPreview />
         <HomeTrackerPreview />
-      </Box>
+      </div>
     </>
   );
 }

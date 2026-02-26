@@ -1,4 +1,5 @@
 import { resolve } from 'path';
+import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 import tsconfigPaths from 'vite-tsconfig-paths';
@@ -82,7 +83,7 @@ if (calculatorUrl) {
 }
 
 export default defineConfig({
-  plugins: [react(), tsconfigPaths(), spaFallbackPlugin()],
+  plugins: [tailwindcss(), react(), tsconfigPaths(), spaFallbackPlugin()],
   base: process.env.BASE_URL || '/',
   server: {
     // Use discovered ports in dev, defaults otherwise

@@ -40,6 +40,7 @@ const router = createBrowserRouter(
       path: '/',
       element: <RedirectToCountry />,
     },
+    // /slides is handled by Vercel rewrites (server-side proxy to slides app)
     {
       path: '/:countryId',
       element: <CountryGuardSimple />,

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Box, Group, SimpleGrid, Stack, Text } from '@mantine/core';
+import { Stack } from '@/components/ui';
 import { CURRENT_YEAR } from '@/constants';
 import { getTaxYears } from '@/libs/metadataUtils';
 import { RootState } from '@/store';
@@ -75,37 +75,37 @@ export function MultiYearValueSelector(props: ValueSetterProps) {
   const rightColumn = years.slice(midpoint);
 
   return (
-    <Box>
-      <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
+    <div>
+      <div className="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:gap-md">
         <Stack>
           {leftColumn.map((year) => (
-            <Group key={year}>
-              <Text fw={500} style={{ minWidth: '50px' }}>
+            <div key={year} className="tw:flex tw:items-center tw:gap-sm">
+              <span className="tw:font-medium" style={{ minWidth: '50px' }}>
                 {year}
-              </Text>
+              </span>
               <ValueInputBox
                 param={param}
                 value={yearValues[year]}
                 onChange={(value) => handleYearValueChange(year, value)}
               />
-            </Group>
+            </div>
           ))}
         </Stack>
         <Stack>
           {rightColumn.map((year) => (
-            <Group key={year}>
-              <Text fw={500} style={{ minWidth: '50px' }}>
+            <div key={year} className="tw:flex tw:items-center tw:gap-sm">
+              <span className="tw:font-medium" style={{ minWidth: '50px' }}>
                 {year}
-              </Text>
+              </span>
               <ValueInputBox
                 param={param}
                 value={yearValues[year]}
                 onChange={(value) => handleYearValueChange(year, value)}
               />
-            </Group>
+            </div>
           ))}
         </Stack>
-      </SimpleGrid>
-    </Box>
+      </div>
+    </div>
   );
 }

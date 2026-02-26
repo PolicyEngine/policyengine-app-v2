@@ -9,8 +9,7 @@
  */
 
 import { IconChevronRight } from '@tabler/icons-react';
-import { Card, Group, Stack, Text } from '@mantine/core';
-import { spacing } from '@/designTokens';
+import { Card, CardContent } from '@/components/ui';
 import { getDefaultBaselineLabel } from '@/utils/isDefaultBaselineSimulation';
 
 interface DefaultBaselineOptionProps {
@@ -28,30 +27,24 @@ export default function DefaultBaselineOption({
 
   return (
     <Card
-      withBorder
-      component="button"
+      className={`tw:cursor-pointer tw:border ${isSelected ? 'tw:border-primary-500 tw:bg-primary-50' : 'tw:border-gray-200'}`}
       onClick={onClick}
-      variant={isSelected ? 'buttonPanel--active' : 'buttonPanel--inactive'}
-      style={{
-        cursor: 'pointer',
-      }}
     >
-      <Group justify="space-between" align="center">
-        <Stack gap={spacing.xs} style={{ flex: 1 }}>
-          <Text fw={700}>{simulationLabel}</Text>
-          <Text size="sm" c="dimmed">
-            Use current law with all households nationwide as baseline
-          </Text>
-        </Stack>
-        <IconChevronRight
-          size={20}
-          style={{
-            color: 'var(--mantine-color-gray-6)',
-            marginTop: '2px',
-            flexShrink: 0,
-          }}
-        />
-      </Group>
+      <CardContent className="tw:p-lg">
+        <div className="tw:flex tw:justify-between tw:items-center">
+          <div className="tw:flex tw:flex-col tw:gap-xs tw:flex-1">
+            <span className="tw:font-bold">{simulationLabel}</span>
+            <span className="tw:text-sm tw:text-gray-500">
+              Use current law with all households nationwide as baseline
+            </span>
+          </div>
+          <IconChevronRight
+            size={20}
+            className="tw:text-gray-400 tw:shrink-0"
+            style={{ marginTop: '2px' }}
+          />
+        </div>
+      </CardContent>
     </Card>
   );
 }
