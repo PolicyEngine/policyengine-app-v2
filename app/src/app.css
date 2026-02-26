@@ -180,6 +180,14 @@
  * All var() references in hand-written CSS must use --tw- prefix.
  */
 @layer base {
+  /* Default border color — Tailwind Preflight uses currentColor (black)
+     unless overridden. This makes all border utilities light gray by default. */
+  *,
+  ::before,
+  ::after {
+    border-color: var(--tw-color-border);
+  }
+
   html {
     font-family: var(--tw-font-sans);
     font-size: var(--tw-font-size-base);
