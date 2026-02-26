@@ -39,16 +39,16 @@ export default function StandardLayout({ children }: StandardLayoutProps) {
 
   return (
     <LayoutProvider>
-      <div className="tw:min-h-screen tw:flex tw:flex-col">
-        <header className="tw:sticky tw:top-0 tw:z-50">
+      <div className="tw:h-screen tw:overflow-hidden tw:flex tw:flex-col">
+        <header className="tw:sticky tw:top-0 tw:z-50 tw:shrink-0">
           <HeaderNavigation navbarOpened={navbarOpened} onToggleNavbar={toggleNavbar} />
           <GiveCalcBanner />
         </header>
 
-        <div className="tw:flex tw:flex-1">
+        <div className="tw:flex tw:flex-1 tw:min-h-0">
           <nav
             className={cn(
-              'tw:w-[250px] tw:border-r tw:border-border-light tw:overflow-y-auto tw:bg-white tw:shrink-0',
+              'tw:w-[300px] tw:shrink-0 tw:border-r tw:border-border-light tw:overflow-y-auto tw:bg-white',
               'tw:hidden tw:sm:block',
               navbarOpened &&
                 'tw:fixed tw:inset-0 tw:z-40 tw:block tw:sm:relative tw:sm:z-auto tw:top-0'
@@ -56,7 +56,9 @@ export default function StandardLayout({ children }: StandardLayoutProps) {
           >
             <Sidebar />
           </nav>
-          <main className="tw:flex-1 tw:overflow-auto">{children}</main>
+          <main className="tw:flex-1 tw:min-w-0 tw:overflow-auto tw:p-[24px]">
+            {children}
+          </main>
         </div>
       </div>
     </LayoutProvider>
