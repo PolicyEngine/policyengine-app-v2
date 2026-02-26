@@ -28,6 +28,7 @@ The TANF models are available through multiple channels, each supporting both ho
 - **[Python package](https://github.com/PolicyEngine/policyengine-us).** Run household or microsimulation analyses programmatically, with full access to TANF variables and parameters for custom research.
 - **[API](https://policyengine.org/api).** Integrate TANF calculations into external applications for benefits screening, policy design, or other tools.
 
+
 ## Looking ahead
 
 With TANF coverage complete, PolicyEngine's US model now includes state-level rules for income taxes, SNAP, Medicaid, CHIP, ACA subsidies, and TANF across all 50 states and D.C. A full list of covered programs is available on our [model documentation page](https://policyengine.org/us/model). We are applying the same approach to encode the Child Care and Development Fund (CCDF), SSI State Supplements, and the Low Income Home Energy Assistance Program (LIHEAP) across all states. We also continue to validate our calculations against other microsimulation models through our partnerships with [NBER](policyengine-nber-mou-taxsim) and the [Federal Reserve Bank of Atlanta](policyengine-atlanta-fed-mou-prd).

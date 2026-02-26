@@ -11,12 +11,11 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+import { useMediaQuery, useViewportSize } from '@mantine/hooks';
 import { ChartWatermark, TOOLTIP_STYLE } from '@/components/charts';
 import { colors } from '@/designTokens';
 import { MOBILE_BREAKPOINT_QUERY } from '@/hooks/useChartDimensions';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { useMediaQuery } from '@/hooks/useMediaQuery';
-import { useViewportSize } from '@/hooks/useViewportSize';
 import type { RootState } from '@/store';
 import type { Household } from '@/types/ingredients/Household';
 import { getClampedChartHeight, getNiceTicks, RECHARTS_FONT_STYLE } from '@/utils/chartUtils';

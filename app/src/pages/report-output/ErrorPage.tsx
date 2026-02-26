@@ -1,6 +1,7 @@
 import { IconAlertCircle } from '@tabler/icons-react';
 import { useNavigate } from 'react-router-dom';
-import { Alert, AlertDescription, AlertTitle, Button, Stack } from '@/components/ui';
+import { Alert, Button, Stack } from '@mantine/core';
+import { spacing } from '@/designTokens';
 
 interface ErrorPageProps {
   error?: any;
@@ -13,19 +14,20 @@ export default function ErrorPage({ error }: ErrorPageProps) {
   const navigate = useNavigate();
 
   return (
-    <Stack className="tw:gap-md">
-      <Alert variant="destructive">
-        <IconAlertCircle size={20} />
-        <AlertTitle>Calculation failed</AlertTitle>
-        <AlertDescription>
-          {typeof error === 'string'
-            ? error
-            : error?.message || 'An unexpected error occurred during calculation.'}
-        </AlertDescription>
+    <Stack gap={spacing.md}>
+      <Alert
+        icon={<IconAlertCircle size={20} />}
+        title="Calculation Failed"
+        color="red"
+        variant="light"
+      >
+        {typeof error === 'string'
+          ? error
+          : error?.message || 'An unexpected error occurred during calculation.'}
       </Alert>
 
-      <Button variant="outline" onClick={() => navigate(-1)} className="tw:w-full">
-        Go back
+      <Button variant="default" onClick={() => navigate(-1)} fullWidth>
+        Go Back
       </Button>
     </Stack>
   );

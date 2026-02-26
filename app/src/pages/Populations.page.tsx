@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import { Stack } from '@mantine/core';
+import { useDisclosure } from '@mantine/hooks';
 import { BulletsValue, ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
 import { RenameIngredientModal } from '@/components/common/RenameIngredientModal';
 import IngredientReadView from '@/components/IngredientReadView';
-import { Stack } from '@/components/ui';
 import { MOCK_USER_ID } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { useDisclosure } from '@/hooks/useDisclosure';
 import {
   useGeographicAssociationsByUser,
   useUpdateGeographicAssociation,
@@ -147,14 +147,18 @@ export default function PopulationsPage() {
 
     // Add region if subnational
     if (geography.scope === 'subnational' && geography.geographyId) {
+      // geography.geographyId now contains FULL prefixed value for UK regions
+      // e.g., "constituency/Sheffield Central" or "country/england"
       let regionLabel = geography.geographyId;
-      const fullRegionName = geography.geographyId;
+      const fullRegionName = geography.geographyId; // Track the full name with prefix
       if (metadata.economyOptions?.region) {
+        // Try exact match first (handles prefixed UK values and US state codes)
         const region = metadata.economyOptions.region.find((r) => r.name === geography.geographyId);
 
         if (region) {
           regionLabel = region.label;
         } else {
+          // Fallback: try adding prefixes for backward compatibility
           const fallbackRegion = metadata.economyOptions.region.find(
             (r) =>
               r.name === `state/${geography.geographyId}` ||
@@ -167,10 +171,12 @@ export default function PopulationsPage() {
         }
       }
 
+      // If still no label found, strip prefix for display
       if (regionLabel === geography.geographyId) {
         regionLabel = extractRegionDisplayValue(geography.geographyId);
       }
 
+      // Determine region type based on country and prefix
       let regionTypeLabel = 'Region';
       if (geography.countryId === 'us') {
         regionTypeLabel = 'State';
@@ -182,6 +188,7 @@ export default function PopulationsPage() {
         }
       }
 
+      // For UK constituencies, show both country and constituency
       if (geography.countryId === 'uk' && fullRegionName.startsWith('constituency/')) {
         const countryLabel = getCountryLabel(geography.countryId);
         details.push({ text: countryLabel, badge: '' });
@@ -189,6 +196,7 @@ export default function PopulationsPage() {
 
       details.push({ text: `${regionTypeLabel}: ${regionLabel}`, badge: '' });
     } else {
+      // National scope - just show country
       const countryLabel = getCountryLabel(geography.countryId);
       details.push({ text: countryLabel, badge: '' });
     }

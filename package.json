@@ -20,7 +20,7 @@
     "jsdom": "^26.1.0",
     "turbo": "^2.5.3"
   },
-  "packageManager": "bun@1.2.21",
+  "packageManager": "bun@1.2.0",
   "engines": {
     "node": ">=22.0.0"
   },

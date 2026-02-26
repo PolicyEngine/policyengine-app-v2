@@ -1,12 +1,22 @@
 /**
  * VariableSearchDropdown - Search input with dropdown results for adding variables
- * Uses Popover + custom list for canonical dropdown behavior
+ * Uses Mantine Combobox for canonical dropdown behavior
  */
 
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { IconChevronDown, IconSearch, IconX } from '@tabler/icons-react';
-import { Button, Spinner, Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui';
-import { cn } from '@/lib/utils';
+import { useEffect, useMemo } from 'react';
+import { IconSearch, IconX } from '@tabler/icons-react';
+import {
+  ActionIcon,
+  Box,
+  Center,
+  Combobox,
+  Group,
+  InputBase,
+  Loader,
+  Text,
+  Tooltip,
+  useCombobox,
+} from '@mantine/core';
 import { VariableInfo } from '@/utils/VariableResolver';
 
 export interface VariableSearchDropdownProps {
@@ -54,10 +64,15 @@ export default function VariableSearchDropdown({
   loading = false,
   onClose,
 }: VariableSearchDropdownProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [selectedIndex, setSelectedIndex] = useState(-1);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const listRef = useRef<HTMLDivElement>(null);
+  const combobox = useCombobox({
+    onDropdownClose: () => {
+      combobox.resetSelectedOption();
+      onFocusChange(false);
+    },
+    onDropdownOpen: () => {
+      onFocusChange(true);
+    },
+  });
 
   // Sort so matching-context variables appear first
   const sortedVariables = useMemo(() => {
@@ -76,182 +91,119 @@ export default function VariableSearchDropdown({
     return [...matching, ...different];
   }, [filteredVariables, getEntityHint]);
 
-  // Reset selected index when list changes
+  // Update selected option index when filtered list changes
   useEffect(() => {
-    setSelectedIndex(-1);
-  }, [sortedVariables]);
+    combobox.updateSelectedOptionIndex();
+  }, [sortedVariables, combobox]);
 
-  const openDropdown = () => {
-    setIsOpen(true);
-    onFocusChange(true);
-  };
-
-  const closeDropdown = () => {
-    setIsOpen(false);
-    setSelectedIndex(-1);
-    onFocusChange(false);
-  };
-
-  const handleSelect = (variable: VariableInfo) => {
-    onSelect(variable);
-    closeDropdown();
+  const handleOptionSubmit = (value: string) => {
+    const variable = sortedVariables.find((v) => v.name === value);
+    if (variable) {
+      onSelect(variable);
+    }
+    combobox.closeDropdown();
   };
 
   const handleClose = () => {
-    closeDropdown();
+    combobox.closeDropdown();
     onClose?.();
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') {
-      handleClose();
-      return;
-    }
-    if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      setSelectedIndex((prev) => Math.min(prev + 1, sortedVariables.length - 1));
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      setSelectedIndex((prev) => Math.max(prev - 1, 0));
-    } else if (e.key === 'Enter' && selectedIndex >= 0) {
-      e.preventDefault();
-      handleSelect(sortedVariables[selectedIndex]);
-    }
-  };
-
-  // Scroll selected option into view
-  useEffect(() => {
-    if (selectedIndex >= 0 && listRef.current) {
-      const items = listRef.current.querySelectorAll('[data-option]');
-      items[selectedIndex]?.scrollIntoView({ block: 'nearest' });
-    }
-  }, [selectedIndex]);
-
-  // Auto-focus input
-  useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
-
-  return (
-    <div className="tw:flex tw:items-center tw:gap-xs tw:flex-nowrap">
-      <div className="tw:flex-1 tw:relative">
-        <div className="tw:relative">
-          <IconSearch
-            size={16}
-            className="tw:absolute tw:left-2.5 tw:top-1/2 tw:-translate-y-1/2 tw:text-gray-400 tw:pointer-events-none"
-          />
-          <input
-            ref={inputRef}
-            className={cn(
-              'tw:w-full tw:h-9 tw:pl-8 tw:pr-8 tw:rounded-element tw:border tw:border-gray-300',
-              'tw:text-sm tw:outline-none tw:focus:border-primary-500 tw:focus:ring-1 tw:focus:ring-primary-500',
-              disabled && 'tw:opacity-50 tw:cursor-not-allowed'
-            )}
-            placeholder={placeholder}
-            value={searchValue}
-            onChange={(e) => {
-              onSearchChange(e.currentTarget.value);
-              if (!isOpen) {
-                openDropdown();
-              }
-            }}
-            onClick={openDropdown}
-            onFocus={openDropdown}
-            onBlur={() => {
-              // Delay to allow click on option
-              setTimeout(closeDropdown, 150);
-            }}
-            onKeyDown={handleKeyDown}
-            disabled={disabled}
-            autoFocus
-          />
-          <IconChevronDown
-            size={14}
-            className="tw:absolute tw:right-2.5 tw:top-1/2 tw:-translate-y-1/2 tw:text-gray-400 tw:pointer-events-none"
-          />
-        </div>
-
-        {isOpen && (
-          <div
-            ref={listRef}
-            className="tw:absolute tw:z-50 tw:w-full tw:mt-1 tw:bg-white tw:border tw:border-gray-200 tw:rounded-element tw:shadow-lg tw:max-h-[200px] tw:overflow-y-auto"
-          >
-            {loading ? (
-              <div className="tw:flex tw:items-center tw:justify-center tw:p-md">
-                <Spinner size="sm" />
-              </div>
-            ) : sortedVariables.length > 0 ? (
-              <>
-                {sortedVariables.map((variable, index) => {
-                  const entityHint = getEntityHint?.(variable);
-                  return (
-                    <div
-                      key={variable.name}
-                      data-option
-                      role="option"
-                      tabIndex={-1}
-                      aria-selected={index === selectedIndex}
-                      className={cn(
-                        'tw:px-sm tw:py-xs tw:cursor-pointer tw:text-sm',
-                        index === selectedIndex ? 'tw:bg-primary-100' : 'tw:hover:bg-gray-50'
-                      )}
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        handleSelect(variable);
-                      }}
-                    >
-                      <div className="tw:flex tw:items-start tw:gap-xs tw:justify-between tw:flex-nowrap">
-                        <div className="tw:flex-1 tw:min-w-0">
-                          <p className="tw:text-sm tw:truncate">
-                            {sentenceCaseLabel(variable.label)}
-                          </p>
-                          {variable.documentation && (
-                            <p className="tw:text-xs tw:text-gray-500 tw:line-clamp-1">
-                              {variable.documentation}
-                            </p>
-                          )}
-                        </div>
-                        {entityHint?.show && (
-                          <span className="tw:text-xs tw:text-gray-500 tw:italic tw:shrink-0">
-                            {entityHint.label}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-                {truncated && (
-                  <p className="tw:text-xs tw:text-gray-500 tw:p-xs tw:text-center">
-                    Type to search more variables...
-                  </p>
-                )}
-              </>
-            ) : (
-              <p className="tw:text-sm tw:text-gray-500 tw:p-md tw:text-center">
-                No variables found
-              </p>
+  const options = sortedVariables.map((variable) => {
+    const entityHint = getEntityHint?.(variable);
+    return (
+      <Combobox.Option value={variable.name} key={variable.name}>
+        <Group gap="xs" justify="space-between" wrap="nowrap">
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <Text size="sm" truncate>
+              {sentenceCaseLabel(variable.label)}
+            </Text>
+            {variable.documentation && (
+              <Text size="xs" c="dimmed" lineClamp={1}>
+                {variable.documentation}
+              </Text>
             )}
           </div>
-        )}
-      </div>
+          {entityHint?.show && (
+            <Text size="xs" c="dimmed" fs="italic" style={{ flexShrink: 0 }}>
+              {entityHint.label}
+            </Text>
+          )}
+        </Group>
+      </Combobox.Option>
+    );
+  });
+
+  return (
+    <Group gap="xs" align="center" wrap="nowrap">
+      <Box style={{ flex: 1 }}>
+        <Combobox store={combobox} onOptionSubmit={handleOptionSubmit} withinPortal={false}>
+          <Combobox.Target>
+            <InputBase
+              placeholder={placeholder}
+              value={searchValue}
+              onChange={(e) => {
+                onSearchChange(e.currentTarget.value);
+                combobox.updateSelectedOptionIndex();
+              }}
+              onClick={() => {
+                combobox.openDropdown();
+              }}
+              onFocus={() => combobox.openDropdown()}
+              onBlur={() => {
+                combobox.closeDropdown();
+              }}
+              leftSection={<IconSearch size={16} />}
+              rightSection={<Combobox.Chevron />}
+              rightSectionPointerEvents="none"
+              disabled={disabled}
+              autoFocus
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') {
+                  handleClose();
+                }
+              }}
+            />
+          </Combobox.Target>
+
+          <Combobox.Dropdown>
+            <Combobox.Options mah={200} style={{ overflowY: 'auto' }}>
+              {loading ? (
+                <Center p="md">
+                  <Loader size="sm" />
+                </Center>
+              ) : options.length > 0 ? (
+                <>
+                  {options}
+                  {truncated && (
+                    <Text size="xs" c="dimmed" p="xs" ta="center">
+                      Type to search more variables...
+                    </Text>
+                  )}
+                </>
+              ) : (
+                <Combobox.Empty>No variables found</Combobox.Empty>
+              )}
+            </Combobox.Options>
+          </Combobox.Dropdown>
+        </Combobox>
+      </Box>
       {onClose && (
-        <div style={{ width: CLOSE_COLUMN_WIDTH, height: CLOSE_COLUMN_WIDTH }}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon-xs"
-                onClick={handleClose}
-                disabled={disabled}
-                style={{ width: CLOSE_COLUMN_WIDTH, height: CLOSE_COLUMN_WIDTH }}
-              >
-                <IconX size={16} />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Cancel</TooltipContent>
+        <Box style={{ width: CLOSE_COLUMN_WIDTH, height: CLOSE_COLUMN_WIDTH }}>
+          <Tooltip label="Cancel">
+            <ActionIcon
+              size="sm"
+              variant="subtle"
+              color="gray"
+              onClick={handleClose}
+              disabled={disabled}
+              style={{ width: CLOSE_COLUMN_WIDTH, height: CLOSE_COLUMN_WIDTH }}
+            >
+              <IconX size={16} />
+            </ActionIcon>
           </Tooltip>
-        </div>
+        </Box>
       )}
-    </div>
+    </Group>
   );
 }

@@ -1,8 +1,9 @@
 import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Flex } from '@mantine/core';
+import { YearPickerInput } from '@mantine/dates';
 import { ValueInterval } from '@/types/subIngredients/valueInterval';
+import { fromLocalDateString, toLocalDateString } from '@/utils/dateUtils';
 import { getDefaultValueForParam } from './getDefaultValueForParam';
 import { ValueInputBox } from './ValueInputBox';
 import { ValueSetterProps } from './ValueSetterProps';
@@ -55,51 +56,46 @@ export function YearlyValueSelector(props: ValueSetterProps) {
     }
   }, [startDate, endDate, paramValue, setIntervals]);
 
-  function handleStartYearChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const year = e.target.value;
-    if (year && year.length === 4) {
-      setStartDate(`${year}-01-01`);
-    }
+  function handleStartDateChange(value: Date | string | null) {
+    setStartDate(toLocalDateString(value));
   }
 
-  function handleEndYearChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const year = e.target.value;
-    if (year && year.length === 4) {
-      const endOfYearDate = dayjs(`${year}-01-01`).endOf('year').format('YYYY-MM-DD');
+  function handleEndDateChange(value: Date | string | null) {
+    const isoString = toLocalDateString(value);
+    if (isoString) {
+      const endOfYearDate = dayjs(isoString).endOf('year').format('YYYY-MM-DD');
       setEndDate(endOfYearDate);
+    } else {
+      setEndDate('');
     }
   }
-
-  const minYear = minDate ? parseInt(minDate.substring(0, 4), 10) : undefined;
-  const maxYear = maxDate ? parseInt(maxDate.substring(0, 4), 10) : undefined;
-  const startYear = startDate ? parseInt(startDate.substring(0, 4), 10) : undefined;
-  const endYear = endDate ? parseInt(endDate.substring(0, 4), 10) : undefined;
 
   return (
-    <div className="tw:flex tw:flex-col tw:sm:flex-row tw:items-stretch tw:sm:items-end tw:gap-sm tw:flex-1">
-      <div className="tw:flex tw:flex-col tw:gap-1 tw:flex-1">
-        <Label>From</Label>
-        <Input
-          type="number"
-          placeholder="Pick a year"
-          min={minYear}
-          max={maxYear}
-          value={startYear ?? ''}
-          onChange={handleStartYearChange}
-        />
-      </div>
-      <div className="tw:flex tw:flex-col tw:gap-1 tw:flex-1">
-        <Label>To</Label>
-        <Input
-          type="number"
-          placeholder="Pick a year"
-          min={minYear}
-          max={maxYear}
-          value={endYear ?? ''}
-          onChange={handleEndYearChange}
-        />
-      </div>
+    <Flex
+      align={{ base: 'stretch', sm: 'flex-end' }}
+      direction={{ base: 'column', sm: 'row' }}
+      gap="sm"
+      style={{ flex: 1 }}
+    >
+      <YearPickerInput
+        placeholder="Pick a year"
+        label="From"
+        minDate={fromLocalDateString(minDate)}
+        maxDate={fromLocalDateString(maxDate)}
+        value={fromLocalDateString(startDate)}
+        onChange={handleStartDateChange}
+        style={{ flex: 1 }}
+      />
+      <YearPickerInput
+        placeholder="Pick a year"
+        label="To"
+        minDate={fromLocalDateString(minDate)}
+        maxDate={fromLocalDateString(maxDate)}
+        value={fromLocalDateString(endDate)}
+        onChange={handleEndDateChange}
+        style={{ flex: 1 }}
+      />
       <ValueInputBox param={param} value={paramValue} onChange={setParamValue} />
-    </div>
+    </Flex>
   );
 }

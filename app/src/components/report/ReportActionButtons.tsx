@@ -1,5 +1,6 @@
 import { IconBookmark, IconPencil, IconShare } from '@tabler/icons-react';
-import { Button, Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui';
+import { ActionIcon, Tooltip } from '@mantine/core';
+import { colors, typography } from '@/designTokens';
 
 interface ReportActionButtonsProps {
   isSharedView: boolean;
@@ -23,30 +24,49 @@ export function ReportActionButtons({
 }: ReportActionButtonsProps) {
   if (isSharedView) {
     return (
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label="Save report to my reports"
-            onClick={onSave}
-          >
-            <IconBookmark size={18} />
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent side="right">Save to my reports</TooltipContent>
+      <Tooltip
+        label="Save to my reports"
+        position="right"
+        styles={{
+          tooltip: {
+            backgroundColor: colors.gray[700],
+            fontSize: typography.fontSize.xs,
+          },
+        }}
+      >
+        <ActionIcon
+          variant="subtle"
+          color="gray"
+          size="lg"
+          aria-label="Save report to my reports"
+          onClick={onSave}
+        >
+          <IconBookmark size={18} />
+        </ActionIcon>
       </Tooltip>
     );
   }
 
   return (
     <>
-      <Button variant="ghost" size="icon" aria-label="Edit report name" onClick={onEdit}>
+      <ActionIcon
+        variant="subtle"
+        color="gray"
+        size="lg"
+        aria-label="Edit report name"
+        onClick={onEdit}
+      >
         <IconPencil size={18} />
-      </Button>
-      <Button variant="ghost" size="icon" aria-label="Share report" onClick={onShare}>
+      </ActionIcon>
+      <ActionIcon
+        variant="subtle"
+        color="gray"
+        size="lg"
+        aria-label="Share report"
+        onClick={onShare}
+      >
         <IconShare size={18} />
-      </Button>
+      </ActionIcon>
     </>
   );
 }

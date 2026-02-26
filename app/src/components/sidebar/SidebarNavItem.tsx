@@ -1,6 +1,6 @@
 import { IconExternalLink } from '@tabler/icons-react';
 import { Link } from 'react-router-dom';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui';
+import { Group, Text, Tooltip, UnstyledButton } from '@mantine/core';
 import { colors, spacing } from '../../designTokens';
 
 interface SidebarNavItemProps {
@@ -21,21 +21,20 @@ export default function SidebarNavItem({
   disabled,
 }: SidebarNavItemProps) {
   const content = (
-    <div className="tw:flex tw:items-center tw:gap-5 tw:flex-nowrap">
+    <Group gap={20} wrap="nowrap">
       <Icon
         size={20}
         stroke={1.5}
         color={disabled ? colors.gray[400] : isActive ? colors.gray[700] : colors.text.secondary}
       />
-      <span
-        className="tw:flex-1 tw:text-sm"
-        style={{
-          fontWeight: isActive ? 500 : 400,
-          color: disabled ? colors.gray[400] : isActive ? colors.gray[900] : colors.gray[700],
-        }}
+      <Text
+        size="sm"
+        fw={isActive ? 500 : 400}
+        c={disabled ? colors.gray[400] : isActive ? colors.gray[900] : colors.gray[700]}
+        style={{ flex: 1 }}
       >
         {label}
-      </span>
+      </Text>
       {external && (
         <IconExternalLink
           size={14}
@@ -43,10 +42,10 @@ export default function SidebarNavItem({
           color={disabled ? colors.gray[400] : colors.text.secondary}
         />
       )}
-    </div>
+    </Group>
   );
 
-  const buttonStyles: React.CSSProperties = {
+  const buttonStyles = {
     display: 'block',
     width: '100%',
     borderRadius: spacing.radius.element,
@@ -55,44 +54,38 @@ export default function SidebarNavItem({
     textDecoration: 'none',
     cursor: disabled ? 'not-allowed' : 'pointer',
     opacity: disabled ? 0.6 : 1,
-    border: 'none',
+    '&:hover': {
+      backgroundColor: disabled ? 'transparent' : colors.gray[50],
+    },
   };
 
   if (disabled) {
     return (
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <button
-            type="button"
-            style={buttonStyles}
-            onClick={(e) => e.preventDefault()}
-            className="tw:hover:bg-gray-50"
-          >
-            {content}
-          </button>
-        </TooltipTrigger>
-        <TooltipContent side="right">Under development</TooltipContent>
+      <Tooltip label="Under development" position="right" withArrow style={{ padding: '8px' }}>
+        <UnstyledButton style={buttonStyles} onClick={(e) => e.preventDefault()}>
+          {content}
+        </UnstyledButton>
       </Tooltip>
     );
   }
 
   if (external) {
     return (
-      <a
+      <UnstyledButton
+        component="a"
         href={path}
         target="_blank"
         rel="noopener noreferrer"
         style={buttonStyles}
-        className="tw:hover:bg-gray-50"
       >
         {content}
-      </a>
+      </UnstyledButton>
     );
   }
 
   return (
-    <Link to={path} style={buttonStyles} className="tw:hover:bg-gray-50">
+    <UnstyledButton component={Link} to={path} style={buttonStyles}>
       {content}
-    </Link>
+    </UnstyledButton>
   );
 }

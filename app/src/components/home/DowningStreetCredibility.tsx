@@ -1,5 +1,5 @@
 import { IconBuildingCastle } from '@tabler/icons-react';
-import { Container, Group, Text } from '@/components/ui';
+import { Anchor, Box, Container, Group, Text } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
 
 const GOV_UK_ARTICLE_URL = 'https://fellows.ai.gov.uk/articles/nikhil-woodruff-micro-simulation';
@@ -10,8 +10,8 @@ const GOV_UK_ARTICLE_URL = 'https://fellows.ai.gov.uk/articles/nikhil-woodruff-m
  */
 export default function DowningStreetCredibility() {
   return (
-    <Container size="xl" style={{ paddingTop: spacing.xl, paddingBottom: spacing.xl }}>
-      <div
+    <Container size="xl" py={spacing.xl}>
+      <Box
         style={{
           backgroundColor: colors.primary[50],
           borderRadius: spacing.radius.container,
@@ -19,7 +19,7 @@ export default function DowningStreetCredibility() {
           border: `1px solid ${colors.primary[100]}`,
         }}
       >
-        <Group justify="center" align="center" gap="md" wrap="wrap">
+        <Group justify="center" align="center" gap={spacing.md} wrap="wrap">
           <IconBuildingCastle
             size={24}
             color={colors.primary[600]}
@@ -27,29 +27,27 @@ export default function DowningStreetCredibility() {
             aria-hidden="true"
           />
           <Text
+            size={typography.fontSize.base}
             c={colors.gray[700]}
-            style={{
-              fontSize: typography.fontSize.base,
-              textAlign: 'center',
-              fontFamily: typography.fontFamily.primary,
-            }}
+            ta="center"
+            style={{ fontFamily: typography.fontFamily.primary }}
           >
             Our technology supports policy analysis at 10 Downing Street.{' '}
-            <a
+            <Anchor
               href={GOV_UK_ARTICLE_URL}
               target="_blank"
               rel="noopener noreferrer"
+              size="sm"
               style={{
                 color: colors.primary[600],
                 fontWeight: typography.fontWeight.medium,
-                fontSize: typography.fontSize.sm,
               }}
             >
               Learn more
-            </a>
+            </Anchor>
           </Text>
         </Group>
-      </div>
+      </Box>
     </Container>
   );
 }

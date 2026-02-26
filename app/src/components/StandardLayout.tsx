@@ -1,5 +1,5 @@
 /**
- * StandardLayout - Standard application layout
+ * StandardLayout - Standard application layout with AppShell
  *
  * Extracted from Layout component to be reusable by pathways.
  * Provides header, navbar, and main content area.
@@ -10,9 +10,10 @@
 
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { AppShell } from '@mantine/core';
+import { useDisclosure } from '@mantine/hooks';
 import { LayoutProvider, useIsInsideLayout } from '@/contexts/LayoutContext';
-import { useDisclosure } from '@/hooks/useDisclosure';
-import { cn } from '@/lib/utils';
+import { spacing } from '@/designTokens';
 import GiveCalcBanner from './shared/GiveCalcBanner';
 import HeaderNavigation from './shared/HomeHeader';
 import Sidebar from './Sidebar';
@@ -39,26 +40,26 @@ export default function StandardLayout({ children }: StandardLayoutProps) {
 
   return (
     <LayoutProvider>
-      <div className="tw:min-h-screen tw:flex tw:flex-col">
-        <header className="tw:sticky tw:top-0 tw:z-50">
+      <AppShell
+        layout="default"
+        header={{ height: parseInt(spacing.appShell.header.height, 10) }}
+        navbar={{
+          width: parseInt(spacing.appShell.navbar.width, 10),
+          breakpoint: spacing.appShell.navbar.breakpoint,
+          collapsed: { mobile: !navbarOpened },
+        }}
+      >
+        <AppShell.Header p={0}>
           <HeaderNavigation navbarOpened={navbarOpened} onToggleNavbar={toggleNavbar} />
           <GiveCalcBanner />
-        </header>
+        </AppShell.Header>
 
-        <div className="tw:flex tw:flex-1">
-          <nav
-            className={cn(
-              'tw:w-[250px] tw:border-r tw:border-border-light tw:overflow-y-auto tw:bg-white tw:shrink-0',
-              'tw:hidden tw:sm:block',
-              navbarOpened &&
-                'tw:fixed tw:inset-0 tw:z-40 tw:block tw:sm:relative tw:sm:z-auto tw:top-0'
-            )}
-          >
-            <Sidebar />
-          </nav>
-          <main className="tw:flex-1 tw:overflow-auto">{children}</main>
-        </div>
-      </div>
+        <AppShell.Navbar>
+          <Sidebar />
+        </AppShell.Navbar>
+
+        <AppShell.Main>{children}</AppShell.Main>
+      </AppShell>
     </LayoutProvider>
   );
 }

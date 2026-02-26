@@ -1,6 +1,6 @@
 import { IconChevronRight } from '@tabler/icons-react';
-import { Group, Stack, Text } from '@/components/ui';
-import { cn } from '@/lib/utils';
+import { Card, Group, Stack, Text } from '@mantine/core';
+import { spacing } from '@/designTokens';
 
 export interface ButtonPanelCard {
   title: string;
@@ -21,39 +21,49 @@ export default function ButtonPanelVariant({ cards }: ButtonPanelVariantProps) {
 
   return (
     <Stack>
-      {cards.map((card: ButtonPanelCard, index: number) => (
-        <button
-          type="button"
-          key={index}
-          onClick={card.isDisabled ? undefined : card.onClick}
-          disabled={card.isDisabled}
-          className={cn(
-            'tw:w-full tw:text-left tw:rounded-element tw:border tw:p-md tw:transition-colors',
-            card.isDisabled
-              ? 'tw:opacity-60 tw:cursor-not-allowed tw:border-gray-200 tw:bg-gray-50'
-              : card.isSelected
-                ? 'tw:border-primary-500 tw:bg-primary-50 tw:cursor-pointer'
-                : 'tw:border-gray-200 tw:bg-white tw:cursor-pointer tw:hover:border-primary-300'
-          )}
-        >
-          <Group className="tw:justify-between tw:items-center">
-            <Stack gap="xs" style={{ flex: 1 }}>
-              <Text fw={700}>{card.title}</Text>
-              <Text size="sm" style={{ color: '#868e96' }}>
-                {card.description}
-              </Text>
-            </Stack>
-            <IconChevronRight
-              size={20}
-              style={{
-                color: card.isDisabled ? '#ced4da' : '#868e96',
-                marginTop: '2px',
-                flexShrink: 0,
-              }}
-            />
-          </Group>
-        </button>
-      ))}
+      {cards.map((card: ButtonPanelCard, index: number) => {
+        // Determine variant based on selection and disabled state
+        let variant = 'buttonPanel--inactive';
+        if (card.isDisabled) {
+          variant = 'buttonPanel--disabled';
+        } else if (card.isSelected) {
+          variant = 'buttonPanel--active';
+        }
+
+        return (
+          <Card
+            key={index}
+            withBorder
+            component="button"
+            onClick={card.isDisabled ? undefined : card.onClick}
+            disabled={card.isDisabled}
+            variant={variant}
+            style={{
+              cursor: card.isDisabled ? 'not-allowed' : 'pointer',
+              opacity: card.isDisabled ? 0.6 : 1,
+            }}
+          >
+            <Group justify="space-between" align="center">
+              <Stack gap={spacing.xs} style={{ flex: 1 }}>
+                <Text fw={700}>{card.title}</Text>
+                <Text size="sm" c="dimmed">
+                  {card.description}
+                </Text>
+              </Stack>
+              <IconChevronRight
+                size={20}
+                style={{
+                  color: card.isDisabled
+                    ? 'var(--mantine-color-gray-4)'
+                    : 'var(--mantine-color-gray-6)',
+                  marginTop: '2px',
+                  flexShrink: 0,
+                }}
+              />
+            </Group>
+          </Card>
+        );
+      })}
     </Stack>
   );
 }

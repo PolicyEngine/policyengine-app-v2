@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Box, Flex, Text } from '@mantine/core';
+import { YearPickerInput } from '@mantine/dates';
 import { FOREVER } from '@/constants';
 import { ValueInterval } from '@/types/subIngredients/valueInterval';
+import { fromLocalDateString, toLocalDateString } from '@/utils/dateUtils';
 import { getDefaultValueForParam } from './getDefaultValueForParam';
 import { ValueInputBox } from './ValueInputBox';
 import { ValueSetterProps } from './ValueSetterProps';
@@ -52,36 +53,34 @@ export function DefaultValueSelector(props: ValueSetterProps) {
     }
   }, [startDate, endDate, paramValue, setIntervals]);
 
-  function handleStartYearChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const year = e.target.value;
-    if (year && year.length === 4) {
-      setStartDate(`${year}-01-01`);
-    }
+  function handleStartDateChange(value: Date | string | null) {
+    setStartDate(toLocalDateString(value));
   }
 
-  const minYear = minDate ? parseInt(minDate.substring(0, 4), 10) : undefined;
-  const maxYear = maxDate ? parseInt(maxDate.substring(0, 4), 10) : undefined;
-  const startYear = startDate ? parseInt(startDate.substring(0, 4), 10) : undefined;
-
   return (
-    <div className="tw:flex tw:flex-col tw:sm:flex-row tw:items-stretch tw:sm:items-end tw:gap-sm tw:flex-1">
-      <div className="tw:flex tw:flex-col tw:gap-1 tw:flex-1">
-        <Label>From</Label>
-        <Input
-          type="number"
-          placeholder="Pick a year"
-          min={minYear}
-          max={maxYear}
-          value={startYear ?? ''}
-          onChange={handleStartYearChange}
-        />
-      </div>
-      <div className="tw:flex tw:items-center tw:flex-1" style={{ height: '36px' }}>
-        <span className="tw:text-sm tw:font-medium">onward:</span>
-      </div>
-      <div className="tw:flex-1">
+    <Flex
+      align={{ base: 'stretch', sm: 'flex-end' }}
+      direction={{ base: 'column', sm: 'row' }}
+      gap="sm"
+      style={{ flex: 1 }}
+    >
+      <YearPickerInput
+        placeholder="Pick a year"
+        label="From"
+        minDate={fromLocalDateString(minDate)}
+        maxDate={fromLocalDateString(maxDate)}
+        value={fromLocalDateString(startDate)}
+        onChange={handleStartDateChange}
+        style={{ flex: 1 }}
+      />
+      <Box style={{ flex: 1, display: 'flex', alignItems: 'center', height: '36px' }}>
+        <Text size="sm" fw={500}>
+          onward:
+        </Text>
+      </Box>
+      <Box style={{ flex: 1 }}>
         <ValueInputBox param={param} value={paramValue} onChange={setParamValue} />
-      </div>
-    </div>
+      </Box>
+    </Flex>
   );
 }

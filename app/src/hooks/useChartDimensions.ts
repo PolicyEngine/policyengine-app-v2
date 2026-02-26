@@ -3,8 +3,9 @@
  */
 
 import { useEffect, useState } from 'react';
+import { useMantineTheme } from '@mantine/core';
 
-/** Media query string for mobile breakpoint — matches 'sm' (48em / 768px) */
+/** Media query string for mobile breakpoint — matches Mantine 'sm' (48em / 768px) */
 export const MOBILE_BREAKPOINT_QUERY = '(max-width: 48em)';
 
 /**
@@ -35,23 +36,26 @@ export function useChartWidth(containerRef: React.RefObject<HTMLDivElement | nul
 }
 
 /**
- * Hook to detect mobile viewport based on standard breakpoints
- * @returns true if viewport is mobile (< 768px), false otherwise
+ * Hook to detect mobile viewport based on Mantine theme breakpoints
+ * @returns true if viewport is mobile (< sm breakpoint), false otherwise
  */
 export function useIsMobile(): boolean {
+  const theme = useMantineTheme();
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     const checkMobile = () => {
-      // sm breakpoint = 48em = 768px
-      setIsMobile(window.innerWidth < 768);
+      // Convert em to pixels (1em = 16px by default)
+      const smBreakpoint = String(theme.breakpoints.sm);
+      const smInPixels = parseFloat(smBreakpoint) * 16;
+      setIsMobile(window.innerWidth < smInPixels);
     };
 
     checkMobile();
     window.addEventListener('resize', checkMobile);
 
     return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+  }, [theme.breakpoints.sm]);
 
   return isMobile;
 }

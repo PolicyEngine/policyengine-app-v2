@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Container, Group, Text } from '@/components/ui';
+import { Box, Container, Group, Image, SimpleGrid, Text } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 
@@ -18,7 +18,7 @@ export default function HomeTrackerPreview() {
   }
 
   return (
-    <div
+    <Box
       style={{
         backgroundColor: colors.primary[50],
         paddingTop: spacing['5xl'],
@@ -27,7 +27,7 @@ export default function HomeTrackerPreview() {
     >
       <Container size="xl">
         {/* Section header */}
-        <Group justify="space-between" align="start" style={{ marginBottom: spacing['3xl'] }}>
+        <Group justify="space-between" align="baseline" mb={spacing['3xl']}>
           <Text
             fw={typography.fontWeight.bold}
             style={{
@@ -59,7 +59,7 @@ export default function HomeTrackerPreview() {
           to={`/${countryId}/state-legislative-tracker`}
           style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}
         >
-          <div
+          <Box
             style={{
               borderRadius: spacing.radius.feature,
               overflow: 'hidden',
@@ -77,16 +77,16 @@ export default function HomeTrackerPreview() {
               e.currentTarget.style.transform = 'translateY(0)';
             }}
           >
-            <div className="tw:grid tw:grid-cols-1 tw:md:grid-cols-2">
+            <SimpleGrid cols={{ base: 1, md: 2 }} spacing={0}>
               {/* Left: Image */}
-              <div
+              <Box
                 style={{
                   minHeight: '280px',
                   position: 'relative',
                   overflow: 'hidden',
                 }}
               >
-                <img
+                <Image
                   src="/assets/posts/state-legislative-tracker.png"
                   alt="2026 State Legislative Tracker showing US map with state session statuses"
                   style={{
@@ -98,19 +98,23 @@ export default function HomeTrackerPreview() {
                     left: 0,
                   }}
                 />
-              </div>
+              </Box>
 
               {/* Right: Content */}
-              <div
-                className="tw:flex tw:flex-col tw:justify-center"
-                style={{ padding: spacing['3xl'] }}
+              <Box
+                style={{
+                  padding: spacing['3xl'],
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                }}
               >
                 <Text
+                  size={typography.fontSize.xs}
                   c={colors.primary[600]}
                   fw={typography.fontWeight.semibold}
+                  tt="uppercase"
                   style={{
-                    fontSize: typography.fontSize.xs,
-                    textTransform: 'uppercase',
                     letterSpacing: '0.06em',
                     fontFamily: typography.fontFamily.primary,
                     marginBottom: spacing.sm,
@@ -133,8 +137,8 @@ export default function HomeTrackerPreview() {
                 </Text>
 
                 <Text
+                  size={typography.fontSize.base}
                   style={{
-                    fontSize: typography.fontSize.base,
                     color: colors.text.secondary,
                     lineHeight: typography.lineHeight.relaxed,
                     fontFamily: typography.fontFamily.primary,
@@ -147,20 +151,20 @@ export default function HomeTrackerPreview() {
                 </Text>
 
                 <Text
+                  size={typography.fontSize.sm}
                   fw={typography.fontWeight.semibold}
                   style={{
-                    fontSize: typography.fontSize.sm,
                     color: colors.primary[600],
                     fontFamily: typography.fontFamily.primary,
                   }}
                 >
                   Explore the tracker &rarr;
                 </Text>
-              </div>
-            </div>
-          </div>
+              </Box>
+            </SimpleGrid>
+          </Box>
         </Link>
       </Container>
-    </div>
+    </Box>
   );
 }

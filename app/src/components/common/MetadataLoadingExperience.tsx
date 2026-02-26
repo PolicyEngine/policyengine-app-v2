@@ -1,4 +1,4 @@
-import { Container, Spinner, Stack, Text, Title } from '@/components/ui';
+import { Container, Divider, Loader, Stack, Text, Title } from '@mantine/core';
 
 interface MetadataLoadingExperienceProps {
   /** Country code (us or uk) */
@@ -15,16 +15,18 @@ export function MetadataLoadingExperience({ countryId }: MetadataLoadingExperien
   const countryName = countryId === 'uk' ? 'United Kingdom' : 'United States';
 
   return (
-    <Container>
-      <Title order={2}>Loading</Title>
-      <Text className="tw:mb-sm" style={{ color: '#868e96' }}>
+    <Container variant="guttered">
+      <Title order={2} variant="colored">
+        Loading
+      </Title>
+      <Text c="dimmed" mb="sm">
         Fetching {countryName} policy data
       </Text>
-      <hr className="tw:border-border-light tw:my-sm" />
+      <Divider my="sm" />
 
-      <Stack className="tw:items-center tw:justify-center tw:py-20">
-        <Spinner size="lg" />
-        <Text size="sm" className="tw:mt-md" style={{ color: '#868e96' }}>
+      <Stack align="center" justify="center" py={80}>
+        <Loader size={48} color="teal" />
+        <Text size="sm" c="dimmed" mt="md">
           This may take a moment for first-time loads
         </Text>
       </Stack>

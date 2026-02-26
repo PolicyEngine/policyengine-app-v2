@@ -75,8 +75,8 @@ describe('Sidebar', () => {
     const accountSettings = screen.getByText('Account settings');
     await user.hover(accountSettings);
 
-    // Then — Radix Tooltip renders content with role="tooltip"
-    expect(screen.getByRole('tooltip', { name: /under development/i })).toBeInTheDocument();
+    // Then
+    expect(await screen.findByText('Under development')).toBeInTheDocument();
   });
 
   test('given isOpen=false then sidebar content is not rendered', () => {

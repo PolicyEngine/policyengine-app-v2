@@ -1,11 +1,5 @@
 import { IconSettings } from '@tabler/icons-react';
-import {
-  Button,
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui';
+import { ActionIcon, Menu } from '@mantine/core';
 
 enum ValueSetterMode {
   DEFAULT = 'default',
@@ -19,22 +13,18 @@ export { ValueSetterMode };
 export function ModeSelectorButton(props: { setMode: (mode: ValueSetterMode) => void }) {
   const { setMode } = props;
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="icon" aria-label="Select value setter mode">
+    <Menu>
+      <Menu.Target>
+        <ActionIcon aria-label="Select value setter mode" variant="default">
           <IconSettings />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent>
-        <DropdownMenuItem onClick={() => setMode(ValueSetterMode.DEFAULT)}>
-          Default
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setMode(ValueSetterMode.YEARLY)}>Yearly</DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setMode(ValueSetterMode.DATE)}>Advanced</DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setMode(ValueSetterMode.MULTI_YEAR)}>
-          Multi-year
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+        </ActionIcon>
+      </Menu.Target>
+      <Menu.Dropdown>
+        <Menu.Item onClick={() => setMode(ValueSetterMode.DEFAULT)}>Default</Menu.Item>
+        <Menu.Item onClick={() => setMode(ValueSetterMode.YEARLY)}>Yearly</Menu.Item>
+        <Menu.Item onClick={() => setMode(ValueSetterMode.DATE)}>Advanced</Menu.Item>
+        <Menu.Item onClick={() => setMode(ValueSetterMode.MULTI_YEAR)}>Multi-year</Menu.Item>
+      </Menu.Dropdown>
+    </Menu>
   );
 }

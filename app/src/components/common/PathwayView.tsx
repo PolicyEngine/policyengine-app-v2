@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Container, Divider, Stack, Text, Title } from '@mantine/core';
 import {
   ButtonPanelVariant,
   CardListVariant,
@@ -7,7 +8,6 @@ import {
   type CardListItem,
   type SetupConditionCard,
 } from '@/components/flowView';
-import { Container, Stack, Text, Title } from '@/components/ui';
 import MultiButtonFooter, { ButtonConfig } from './MultiButtonFooter';
 
 interface PathwayViewProps {
@@ -172,23 +172,27 @@ export default function PathwayView({
     footerProps.backAction ||
     footerProps.primaryAction;
 
-  return (
-    <Container>
-      <Title order={2}>{title}</Title>
+  const containerContent = (
+    <>
+      <Title order={2} variant="colored">
+        {title}
+      </Title>
       {subtitle && (
-        <Text className="tw:mb-sm" style={{ color: '#868e96' }}>
+        <Text c="dimmed" mb="sm">
           {subtitle}
         </Text>
       )}
-      <hr className="tw:border-border-light tw:my-sm" />
+      <Divider my="sm" />
 
-      <Stack gap="md" className="tw:pb-lg">
+      <Stack gap="md" pb="lg">
         {renderContent()}
       </Stack>
 
       {hasFooter && <MultiButtonFooter {...footerProps} />}
-    </Container>
+    </>
   );
+
+  return <Container variant="guttered">{containerContent}</Container>;
 }
 
 export type { PathwayViewProps, ButtonConfig };

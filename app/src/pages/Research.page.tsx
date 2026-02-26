@@ -8,12 +8,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import Fuse from 'fuse.js';
 import { useParams, useSearchParams } from 'react-router-dom';
+import { Box, Container, Loader, Text } from '@mantine/core';
 import { BlogPostGrid } from '@/components/blog/BlogPostGrid';
 import { ResearchFilters } from '@/components/blog/ResearchFilters';
 import { useDisplayCategory } from '@/components/blog/useDisplayCategory';
 import HeroSection from '@/components/shared/static/HeroSection';
 import StaticPageLayout from '@/components/shared/static/StaticPageLayout';
-import { Container, Spinner, Text } from '@/components/ui';
 import { getResearchItems } from '@/data/posts/postTransformers';
 import { colors, spacing } from '@/designTokens';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
@@ -190,8 +190,8 @@ export default function ResearchPage() {
       />
 
       {/* Content */}
-      <Container size="xl" className="tw:py-xl">
-        <div
+      <Container size="xl" py="xl">
+        <Box
           style={{
             display: 'flex',
             flexDirection: displayCategory === 'desktop' ? 'row' : 'column',
@@ -199,7 +199,7 @@ export default function ResearchPage() {
           }}
         >
           {/* Sidebar Filters */}
-          <div
+          <Box
             style={{
               flex: displayCategory === 'desktop' ? '0 0 250px' : '1',
               position: displayCategory === 'desktop' ? 'sticky' : 'static',
@@ -223,11 +223,11 @@ export default function ResearchPage() {
               availableAuthors={mockAuthors}
               countryId={countryId}
             />
-          </div>
+          </Box>
 
           {/* Results */}
-          <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
-            <Text size="sm" className="tw:mb-md" style={{ color: colors.gray[500] }}>
+          <Box style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+            <Text size="sm" c="dimmed" mb="md">
               {filteredItems.length} {filteredItems.length === 1 ? 'result' : 'results'}
             </Text>
 
@@ -237,31 +237,32 @@ export default function ResearchPage() {
 
                 {/* Sentinel element for infinite scroll */}
                 {hasMore && (
-                  <div
+                  <Box
                     ref={sentinelRef}
-                    className="tw:flex tw:justify-center"
-                    style={{ padding: spacing.xl }}
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'center',
+                      padding: spacing.xl,
+                    }}
                   >
-                    <Spinner size="sm" />
-                  </div>
+                    <Loader size="sm" color="teal" />
+                  </Box>
                 )}
               </>
             ) : (
-              <div
-                className="tw:text-center"
+              <Box
                 style={{
+                  textAlign: 'center',
                   padding: spacing['3xl'],
                   backgroundColor: colors.gray[50],
                   borderRadius: spacing.radius.container,
                 }}
               >
-                <Text style={{ color: colors.gray[500] }}>
-                  No results found. Try adjusting your filters.
-                </Text>
-              </div>
+                <Text c="dimmed">No results found. Try adjusting your filters.</Text>
+              </Box>
             )}
-          </div>
-        </div>
+          </Box>
+        </Box>
       </Container>
     </StaticPageLayout>
   );

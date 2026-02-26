@@ -1,14 +1,13 @@
 import { useEffect, useState, type ReactElement } from 'react';
-import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
-import { ScrollArea } from '@/components/ui';
-import { colors, spacing } from '@/designTokens';
+import { Box, NavLink, ScrollArea } from '@mantine/core';
+import { spacing } from '@/designTokens';
 import type { TreeNode } from './comparativeAnalysisTree';
 
 interface ReportSidebarProps {
   tree: TreeNode[];
   activeView: string;
   onNavigate: (view: string) => void;
-  /** When true, hides on mobile. Defaults to true. */
+  /** When true, hides on mobile via Mantine visibleFrom="sm". Defaults to true. */
   hideOnMobile?: boolean;
 }
 
@@ -70,62 +69,42 @@ export function ReportSidebar({
     }
   }
 
-  function renderNode(node: TreeNode, depth: number = 0): ReactElement {
+  function renderNode(node: TreeNode): ReactElement {
     const hasChildren = Boolean(node.children && node.children.length > 0);
     const isExpanded = selectedSet.has(node.name);
     const isActive = active === node.name;
 
     return (
-      <div key={node.name}>
-        <button
-          type="button"
-          className="tw:w-full tw:text-left tw:border-none tw:cursor-pointer tw:flex tw:items-center tw:gap-1 tw:text-sm tw:rounded"
-          style={{
-            padding: `${spacing.xs} ${spacing.sm}`,
-            paddingLeft: `calc(${spacing.sm} + ${depth * 12}px)`,
-            backgroundColor: isActive ? colors.primary[50] : 'transparent',
-            color: node.disabled
-              ? colors.text.tertiary
-              : isActive
-                ? colors.primary[700]
-                : colors.text.primary,
-            fontWeight: isActive ? 500 : 400,
-            opacity: node.disabled ? 0.6 : 1,
-            pointerEvents: node.disabled ? 'none' : 'auto',
-          }}
-          onClick={() => handleClick(node.name, hasChildren)}
-          disabled={node.disabled}
-        >
-          {hasChildren &&
-            (isExpanded ? (
-              <IconChevronDown size={14} style={{ flexShrink: 0 }} />
-            ) : (
-              <IconChevronRight size={14} style={{ flexShrink: 0 }} />
-            ))}
-          {node.label}
-        </button>
-        {hasChildren && isExpanded && node.children?.map((child) => renderNode(child, depth + 1))}
-      </div>
+      <NavLink
+        key={node.name}
+        label={node.label}
+        active={isActive}
+        opened={hasChildren ? isExpanded : undefined}
+        onClick={() => handleClick(node.name, hasChildren)}
+        disabled={node.disabled}
+      >
+        {hasChildren && isExpanded && node.children?.map((child) => renderNode(child))}
+      </NavLink>
     );
   }
 
   return (
-    <div
-      className={hideOnMobile ? 'tw:hidden tw:sm:block' : undefined}
+    <Box
+      bg="gray.0"
+      visibleFrom={hideOnMobile ? 'sm' : undefined}
       style={{
         width: 250,
         padding: spacing.md,
-        borderRight: `1px solid ${colors.border.light}`,
+        borderRight: '1px solid var(--mantine-color-gray-3)',
         position: 'sticky',
         top: spacing.xl,
         alignSelf: 'flex-start',
-        backgroundColor: colors.gray[50],
       }}
     >
-      <ScrollArea className="tw:max-h-[calc(100dvh-250px)]">
+      <ScrollArea.Autosize mah="calc(100dvh - 250px)" type="auto" offsetScrollbars>
         {tree.map((node) => renderNode(node))}
-      </ScrollArea>
-    </div>
+      </ScrollArea.Autosize>
+    </Box>
   );
 }
 

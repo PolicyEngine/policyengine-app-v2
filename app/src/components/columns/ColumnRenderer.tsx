@@ -1,4 +1,4 @@
-import { Text } from '@/components/ui';
+import { Text } from '@mantine/core';
 import { colors } from '@/designTokens';
 import { BulletsColumn } from './BulletsColumn';
 import { LinkColumn } from './LinkColumn';

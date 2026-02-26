@@ -1,4 +1,4 @@
-import { Label, RadioGroup, RadioGroupItem } from '@/components/ui';
+import { Box, Radio } from '@mantine/core';
 import { USScopeType } from '@/types/regionTypes';
 import { RegionOption, US_REGION_TYPES } from '@/utils/regionStrategies';
 import USDistrictSelector from './USDistrictSelector';
@@ -23,71 +23,81 @@ export default function USGeographicOptions({
   onRegionChange,
 }: USGeographicOptionsProps) {
   // Handle scope change - clear region when switching scopes
-  const handleScopeChange = (newScope: string) => {
+  const handleScopeChange = (newScope: USScopeType) => {
     onRegionChange('');
-    onScopeChange(newScope as USScopeType);
+    onScopeChange(newScope);
   };
 
   return (
-    <RadioGroup value={scope} onValueChange={handleScopeChange}>
+    <>
       {/* National option */}
-      <div className="tw:flex tw:items-center tw:gap-2">
-        <RadioGroupItem value={US_REGION_TYPES.NATIONAL} id="scope-national" />
-        <Label htmlFor="scope-national">All households nationally</Label>
-      </div>
+      <Radio
+        value={US_REGION_TYPES.NATIONAL}
+        label="All households nationally"
+        checked={scope === US_REGION_TYPES.NATIONAL}
+        onChange={() => handleScopeChange(US_REGION_TYPES.NATIONAL)}
+      />
 
       {/* State option */}
-      <div>
-        <div className="tw:flex tw:items-center tw:gap-2">
-          <RadioGroupItem value={US_REGION_TYPES.STATE} id="scope-state" />
-          <Label htmlFor="scope-state">All households in a state or federal district</Label>
-        </div>
+      <Box>
+        <Radio
+          value={US_REGION_TYPES.STATE}
+          label="All households in a state or federal district"
+          checked={scope === US_REGION_TYPES.STATE}
+          onChange={() => handleScopeChange(US_REGION_TYPES.STATE)}
+        />
         {scope === US_REGION_TYPES.STATE && stateOptions.length > 0 && (
-          <div className="tw:ml-6 tw:mt-xs">
+          <Box ml={24} mt="xs">
             <USStateSelector
               stateOptions={stateOptions}
               selectedState={selectedRegion}
               onStateChange={onRegionChange}
             />
-          </div>
+          </Box>
         )}
-      </div>
+      </Box>
 
       {/* Congressional District option */}
-      <div>
-        <div className="tw:flex tw:items-center tw:gap-2">
-          <RadioGroupItem value={US_REGION_TYPES.CONGRESSIONAL_DISTRICT} id="scope-district" />
-          <Label htmlFor="scope-district">All households in a congressional district</Label>
-        </div>
+      <Box>
+        <Radio
+          value={US_REGION_TYPES.CONGRESSIONAL_DISTRICT}
+          label="All households in a congressional district"
+          checked={scope === US_REGION_TYPES.CONGRESSIONAL_DISTRICT}
+          onChange={() => handleScopeChange(US_REGION_TYPES.CONGRESSIONAL_DISTRICT)}
+        />
         {scope === US_REGION_TYPES.CONGRESSIONAL_DISTRICT && districtOptions.length > 0 && (
-          <div className="tw:ml-6 tw:mt-xs">
+          <Box ml={24} mt="xs">
             <USDistrictSelector
               districtOptions={districtOptions}
               selectedDistrict={selectedRegion}
               onDistrictChange={onRegionChange}
             />
-          </div>
+          </Box>
         )}
-      </div>
+      </Box>
 
       {/* Place (city) option */}
-      <div>
-        <div className="tw:flex tw:items-center tw:gap-2">
-          <RadioGroupItem value={US_REGION_TYPES.PLACE} id="scope-place" />
-          <Label htmlFor="scope-place">All households in a city</Label>
-        </div>
+      <Box>
+        <Radio
+          value={US_REGION_TYPES.PLACE}
+          label="All households in a city"
+          checked={scope === US_REGION_TYPES.PLACE}
+          onChange={() => handleScopeChange(US_REGION_TYPES.PLACE)}
+        />
         {scope === US_REGION_TYPES.PLACE && (
-          <div className="tw:ml-6 tw:mt-xs">
+          <Box ml={24} mt="xs">
             <USPlaceSelector selectedPlace={selectedRegion} onPlaceChange={onRegionChange} />
-          </div>
+          </Box>
         )}
-      </div>
+      </Box>
 
       {/* Household option */}
-      <div className="tw:flex tw:items-center tw:gap-2">
-        <RadioGroupItem value="household" id="scope-household" />
-        <Label htmlFor="scope-household">Custom household</Label>
-      </div>
-    </RadioGroup>
+      <Radio
+        value="household"
+        label="Custom household"
+        checked={scope === 'household'}
+        onChange={() => handleScopeChange('household')}
+      />
+    </>
   );
 }

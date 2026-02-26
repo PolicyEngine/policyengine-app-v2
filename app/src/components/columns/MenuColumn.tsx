@@ -1,11 +1,5 @@
 import { IconDots } from '@tabler/icons-react';
-import {
-  Button,
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui';
+import { ActionIcon, Menu } from '@mantine/core';
 import { IngredientRecord, MenuColumnConfig } from './types';
 
 interface MenuColumnProps {
@@ -15,23 +9,23 @@ interface MenuColumnProps {
 
 export function MenuColumn({ config, record }: MenuColumnProps) {
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon">
+    <Menu shadow="md" width={200}>
+      <Menu.Target>
+        <ActionIcon variant="subtle" color="gray">
           <IconDots size={16} />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent style={{ width: 200 }}>
+        </ActionIcon>
+      </Menu.Target>
+      <Menu.Dropdown>
         {config.actions.map((action) => (
-          <DropdownMenuItem
+          <Menu.Item
             key={action.action}
+            color={action.color}
             onClick={() => config.onAction(action.action, record.id)}
-            className={action.color === 'red' ? 'tw:text-red-500' : ''}
           >
             {action.label}
-          </DropdownMenuItem>
+          </Menu.Item>
         ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+      </Menu.Dropdown>
+    </Menu>
   );
 }

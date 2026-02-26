@@ -3,20 +3,23 @@
  * Access at /:countryId/embed/org-logos
  */
 
+import { Box } from '@mantine/core';
 import OrgLogos from '@/components/home/OrgLogos';
 
 export default function OrgLogosEmbedPage() {
   return (
-    <div
-      className="tw:flex tw:items-center tw:justify-center"
+    <Box
       style={{
         backgroundColor: 'white',
         minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
         padding: 0,
         margin: 0,
       }}
     >
       <OrgLogos />
-    </div>
+    </Box>
   );
 }

@@ -4,7 +4,7 @@
  * Manages parameter display and modification without Redux
  */
 
-import { Container, Title } from '@/components/ui';
+import { Container, Text, Title } from '@mantine/core';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import { PolicyStateProps } from '@/types/pathwayState';
 import { getParameterByName } from '@/types/subIngredients/parameter';
@@ -52,14 +52,16 @@ export default function PolicyParameterSelectorMain({
   }
 
   return (
-    <Container>
-      <Title order={3} className="tw:pb-xl">
+    <Container variant="guttered">
+      <Title order={3} pb="xl">
         {capitalize(param.label || 'Label unavailable')}
       </Title>
       {param.description && (
         <>
-          <p className="tw:font-semibold tw:pb-xs">Description</p>
-          <p className="tw:pb-sm">{param.description}</p>
+          <Text fw={600} pb="xs">
+            Description
+          </Text>
+          <Text pb="sm">{param.description}</Text>
         </>
       )}
       <PolicyParameterSelectorValueSetter

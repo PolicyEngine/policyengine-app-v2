@@ -1,4 +1,4 @@
-import { Text } from '@/components/ui';
+import { Box, Text } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
 
 export interface SupportedProject {
@@ -24,7 +24,7 @@ function formatDate(dateStr: string): string {
 
 export default function SupportedProject({ project }: SupportedProjectProps) {
   return (
-    <div
+    <Box
       style={{
         margin: '16px 0',
         padding: '16px',
@@ -59,9 +59,10 @@ export default function SupportedProject({ project }: SupportedProjectProps) {
         )}
       </Text>
 
-      <div
-        className="tw:flex tw:flex-wrap"
+      <Box
         style={{
+          display: 'flex',
+          flexWrap: 'wrap',
           gap: spacing.lg,
           marginBottom: spacing.sm,
         }}
@@ -83,7 +84,7 @@ export default function SupportedProject({ project }: SupportedProjectProps) {
         >
           <strong>Date:</strong> {formatDate(project.awardDate)}
         </Text>
-      </div>
+      </Box>
 
       <Text
         style={{
@@ -95,6 +96,6 @@ export default function SupportedProject({ project }: SupportedProjectProps) {
       >
         {project.description}
       </Text>
-    </div>
+    </Box>
   );
 }
