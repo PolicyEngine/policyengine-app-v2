@@ -78,7 +78,7 @@ describe('UKGeographicOptions', () => {
     );
 
     // Then
-    expect(screen.getByText('Select country')).toBeInTheDocument();
+    expect(screen.getByText('Select Country')).toBeInTheDocument();
   });
 
   test('given national scope then does not show country selector', () => {
@@ -100,7 +100,7 @@ describe('UKGeographicOptions', () => {
     );
 
     // Then
-    expect(screen.queryByText('Select country')).not.toBeInTheDocument();
+    expect(screen.queryByText('Select Country')).not.toBeInTheDocument();
   });
 
   test('given constituency scope then shows constituency selector', () => {
@@ -122,7 +122,7 @@ describe('UKGeographicOptions', () => {
     );
 
     // Then
-    expect(screen.getByText('Select parliamentary constituency')).toBeInTheDocument();
+    expect(screen.getByText('Select Parliamentary Constituency')).toBeInTheDocument();
   });
 
   test('given user clicks country option then calls onScopeChange', async () => {
@@ -215,14 +215,14 @@ describe('UKGeographicOptions', () => {
       />
     );
 
-    // Then - shadcn Select trigger shows selected value as text content
-    const trigger = screen.getByRole('combobox');
-    expect(trigger).toHaveTextContent('England');
+    // Then
+    const input = screen.getByRole('textbox');
+    expect(input).toHaveValue('England');
   });
 
   test('given user selects country from dropdown then calls onRegionChange', async () => {
     // Given
-    userEvent.setup();
+    const user = userEvent.setup();
     const onScopeChange = vi.fn();
     const onRegionChange = vi.fn();
     render(
@@ -237,11 +237,12 @@ describe('UKGeographicOptions', () => {
       />
     );
 
-    // Then - verify the select trigger renders (Radix Select portal interaction
-    // is unreliable in jsdom, so we verify the component renders correctly)
-    const trigger = screen.getByRole('combobox');
-    expect(trigger).toBeInTheDocument();
-    expect(trigger).toHaveTextContent('Pick a country');
+    // When
+    await user.click(screen.getByRole('textbox'));
+    await user.click(screen.getByText('England'));
+
+    // Then
+    expect(onRegionChange).toHaveBeenCalledWith(TEST_VALUES.ENGLAND_COUNTRY);
   });
 
   test('given empty country options then does not show country selector even when country scope', () => {
@@ -263,6 +264,6 @@ describe('UKGeographicOptions', () => {
     );
 
     // Then
-    expect(screen.queryByText('Select country')).not.toBeInTheDocument();
+    expect(screen.queryByText('Select Country')).not.toBeInTheDocument();
   });
 });

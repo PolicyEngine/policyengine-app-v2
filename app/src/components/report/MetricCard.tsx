@@ -1,5 +1,6 @@
 import { IconArrowDown, IconArrowUp, IconMinus } from '@tabler/icons-react';
-import { colors } from '@/designTokens';
+import { Box, Group, Text, ThemeIcon } from '@mantine/core';
+import { colors, spacing, typography } from '@/designTokens';
 
 type MetricTrend = 'positive' | 'negative' | 'neutral';
 
@@ -64,50 +65,56 @@ export default function MetricCard({
   const trendColor = getTrendColor();
 
   return (
-    <div>
+    <Box>
       {/* Label */}
-      <p
-        className={`tw:font-medium tw:text-gray-500 tw:uppercase tw:tracking-widest ${hero ? 'tw:text-sm' : 'tw:text-xs'}`}
+      <Text
+        size={hero ? 'sm' : 'xs'}
+        fw={typography.fontWeight.medium}
+        c={colors.text.secondary}
+        tt="uppercase"
+        style={{ letterSpacing: '0.05em' }}
       >
         {label}
-      </p>
+      </Text>
 
       {/* Value with trend indicator */}
-      <div className="tw:flex tw:items-center tw:gap-sm tw:mt-xs">
+      <Group gap={spacing.sm} align="center" mt={spacing.xs}>
         {trend !== 'neutral' && (
-          <div
-            className={`tw:flex tw:items-center tw:justify-center tw:rounded-full ${hero ? 'tw:w-8 tw:h-8' : 'tw:w-6 tw:h-6'}`}
-            style={{
-              backgroundColor:
-                trend === 'positive' ? `${colors.primary[100]}` : `${colors.gray[100]}`,
-              color: trend === 'positive' ? colors.primary[600] : colors.gray[600],
-            }}
+          <ThemeIcon
+            size={hero ? 32 : 24}
+            radius="xl"
+            variant="light"
+            color={trend === 'positive' ? 'teal' : 'gray'}
           >
             {getTrendIcon()}
-          </div>
+          </ThemeIcon>
         )}
-        <span
-          className="tw:font-bold"
+        <Text
+          fw={typography.fontWeight.bold}
+          c={trendColor}
           style={{
-            color: trendColor,
             fontSize: hero ? '2.5rem' : '1.75rem',
             lineHeight: 1.1,
             letterSpacing: '-0.02em',
           }}
         >
           {value}
-        </span>
-      </div>
+        </Text>
+      </Group>
 
       {/* Subtext */}
-      {subtext && <p className="tw:text-sm tw:text-gray-500 tw:mt-xs">{subtext}</p>}
+      {subtext && (
+        <Text size="sm" c={colors.text.secondary} mt={spacing.xs}>
+          {subtext}
+        </Text>
+      )}
 
       {/* Description */}
       {description && (
-        <p className="tw:text-xs tw:text-gray-400 tw:mt-sm" style={{ lineHeight: 1.5 }}>
+        <Text size="xs" c={colors.text.tertiary} mt={spacing.sm} style={{ lineHeight: 1.5 }}>
           {description}
-        </p>
+        </Text>
       )}
-    </div>
+    </Box>
   );
 }

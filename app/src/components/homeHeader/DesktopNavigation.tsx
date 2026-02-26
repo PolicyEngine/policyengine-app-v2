@@ -1,3 +1,5 @@
+import { Group } from '@mantine/core';
+import { spacing } from '@/designTokens';
 import NavItem, { NavItemSetup } from './NavItem';
 
 interface DesktopNavigationProps {
@@ -6,10 +8,10 @@ interface DesktopNavigationProps {
 
 export default function DesktopNavigation({ navItems }: DesktopNavigationProps) {
   return (
-    <div className="tw:hidden tw:lg:flex tw:items-center tw:gap-8">
+    <Group gap={spacing['3xl']} visibleFrom="lg" align="center">
       {navItems.map((item) => (
         <NavItem key={item.label} setup={item} />
       ))}
-    </div>
+    </Group>
   );
 }

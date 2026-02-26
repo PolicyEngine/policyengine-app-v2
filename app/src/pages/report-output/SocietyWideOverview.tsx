@@ -1,7 +1,7 @@
 import { IconCoin, IconHome, IconUsers } from '@tabler/icons-react';
+import { Box, Group, SimpleGrid, Stack, Text } from '@mantine/core';
 import { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import MetricCard from '@/components/report/MetricCard';
-import { Group, Stack, Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { formatBudgetaryImpact } from '@/utils/formatPowers';
@@ -69,29 +69,32 @@ export default function SocietyWideOverview({ output }: SocietyWideOverviewProps
   const unchangedPercent = decileOverview['No change'];
 
   return (
-    <Stack className="tw:gap-xl">
+    <Stack gap={spacing.xl}>
       {/* Hero Section - Budgetary Impact */}
-      <div
-        className="tw:p-xl"
+      <Box
+        p={spacing.xl}
         style={{
           background: `linear-gradient(135deg, ${colors.primary[50]} 0%, ${colors.background.primary} 100%)`,
           borderRadius: spacing.radius.container,
           border: `1px solid ${colors.primary[100]}`,
         }}
       >
-        <Group className="tw:gap-md tw:items-start">
-          <div
-            className="tw:flex tw:items-center tw:justify-center tw:shrink-0"
+        <Group gap={spacing.md} align="flex-start">
+          <Box
             style={{
               width: HERO_ICON_SIZE,
               height: HERO_ICON_SIZE,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
               backgroundColor: colors.primary[100],
               borderRadius: spacing.radius.element,
+              flexShrink: 0,
             }}
           >
             <IconCoin size={28} color={colors.primary[700]} stroke={1.5} />
-          </div>
-          <div className="tw:flex-1">
+          </Box>
+          <Box style={{ flex: 1 }}>
             <MetricCard
               label="Budgetary Impact"
               value={budgetValue}
@@ -99,34 +102,37 @@ export default function SocietyWideOverview({ output }: SocietyWideOverviewProps
               trend={budgetaryImpact === 0 ? 'neutral' : budgetIsPositive ? 'positive' : 'negative'}
               hero
             />
-          </div>
+          </Box>
         </Group>
-      </div>
+      </Box>
 
       {/* Secondary Metrics Grid */}
-      <div className="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:gap-lg">
+      <SimpleGrid cols={{ base: 1, sm: 2 }} spacing={spacing.lg}>
         {/* Poverty Impact */}
-        <div
-          className="tw:p-lg"
+        <Box
+          p={spacing.lg}
           style={{
             backgroundColor: colors.background.primary,
             borderRadius: spacing.radius.container,
             border: `1px solid ${colors.border.light}`,
           }}
         >
-          <Group className="tw:gap-md tw:items-start">
-            <div
-              className="tw:flex tw:items-center tw:justify-center tw:shrink-0"
+          <Group gap={spacing.md} align="flex-start">
+            <Box
               style={{
                 width: SECONDARY_ICON_SIZE,
                 height: SECONDARY_ICON_SIZE,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
                 backgroundColor: colors.gray[100],
                 borderRadius: spacing.radius.element,
+                flexShrink: 0,
               }}
             >
               <IconHome size={20} color={colors.gray[600]} stroke={1.5} />
-            </div>
-            <div className="tw:flex-1">
+            </Box>
+            <Box style={{ flex: 1 }}>
               <MetricCard
                 label="Poverty Impact"
                 value={povertyValue}
@@ -134,53 +140,57 @@ export default function SocietyWideOverview({ output }: SocietyWideOverviewProps
                 trend={povertyTrend as 'positive' | 'negative' | 'neutral'}
                 invertArrow
               />
-            </div>
+            </Box>
           </Group>
-        </div>
+        </Box>
 
         {/* Winners and Losers */}
-        <div
-          className="tw:p-lg"
+        <Box
+          p={spacing.lg}
           style={{
             backgroundColor: colors.background.primary,
             borderRadius: spacing.radius.container,
             border: `1px solid ${colors.border.light}`,
           }}
         >
-          <Group className="tw:gap-md tw:items-start">
-            <div
-              className="tw:flex tw:items-center tw:justify-center tw:shrink-0"
+          <Group gap={spacing.md} align="flex-start">
+            <Box
               style={{
                 width: SECONDARY_ICON_SIZE,
                 height: SECONDARY_ICON_SIZE,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
                 backgroundColor: colors.gray[100],
                 borderRadius: spacing.radius.element,
+                flexShrink: 0,
               }}
             >
               <IconUsers size={20} color={colors.gray[600]} stroke={1.5} />
-            </div>
-            <div className="tw:flex-1">
+            </Box>
+            <Box style={{ flex: 1 }}>
               <Text
-                className="tw:text-xs tw:uppercase"
-                style={{
-                  fontWeight: typography.fontWeight.medium,
-                  color: colors.text.secondary,
-                  letterSpacing: '0.05em',
-                }}
+                size="xs"
+                fw={typography.fontWeight.medium}
+                c={colors.text.secondary}
+                tt="uppercase"
+                style={{ letterSpacing: '0.05em' }}
               >
                 Winners and losers
               </Text>
 
               {/* Distribution Bar */}
-              <div
-                className="tw:flex tw:mt-md tw:overflow-hidden"
+              <Box
+                mt={spacing.md}
                 style={{
+                  display: 'flex',
                   height: 8,
                   borderRadius: spacing.radius.element,
+                  overflow: 'hidden',
                   backgroundColor: colors.gray[200],
                 }}
               >
-                <div
+                <Box
                   style={{
                     width: `${winnersPercent * 100}%`,
                     height: '100%',
@@ -188,7 +198,7 @@ export default function SocietyWideOverview({ output }: SocietyWideOverviewProps
                     transition: 'width 0.3s ease',
                   }}
                 />
-                <div
+                <Box
                   style={{
                     width: `${unchangedPercent * 100}%`,
                     height: '100%',
@@ -196,7 +206,7 @@ export default function SocietyWideOverview({ output }: SocietyWideOverviewProps
                     transition: 'width 0.3s ease',
                   }}
                 />
-                <div
+                <Box
                   style={{
                     width: `${losersPercent * 100}%`,
                     height: '100%',
@@ -204,57 +214,57 @@ export default function SocietyWideOverview({ output }: SocietyWideOverviewProps
                     transition: 'width 0.3s ease',
                   }}
                 />
-              </div>
+              </Box>
 
               {/* Legend */}
-              <Group className="tw:gap-lg tw:mt-sm tw:flex-wrap">
-                <Group className="tw:gap-xs">
-                  <div
-                    className="tw:shrink-0"
+              <Group gap={spacing.lg} mt={spacing.sm} wrap="wrap">
+                <Group gap={spacing.xs}>
+                  <Box
                     style={{
                       width: 10,
                       height: 10,
                       borderRadius: spacing.radius.chip,
                       backgroundColor: colors.primary[500],
+                      flexShrink: 0,
                     }}
                   />
-                  <Text className="tw:text-xs" style={{ color: colors.text.secondary }}>
+                  <Text size="xs" c={colors.text.secondary}>
                     Gain: {(winnersPercent * 100).toFixed(1)}%
                   </Text>
                 </Group>
-                <Group className="tw:gap-xs">
-                  <div
-                    className="tw:shrink-0"
+                <Group gap={spacing.xs}>
+                  <Box
                     style={{
                       width: 10,
                       height: 10,
                       borderRadius: spacing.radius.chip,
                       backgroundColor: colors.gray[300],
+                      flexShrink: 0,
                     }}
                   />
-                  <Text className="tw:text-xs" style={{ color: colors.text.secondary }}>
+                  <Text size="xs" c={colors.text.secondary}>
                     No change: {(unchangedPercent * 100).toFixed(1)}%
                   </Text>
                 </Group>
-                <Group className="tw:gap-xs">
-                  <div
-                    className="tw:shrink-0"
+                <Group gap={spacing.xs}>
+                  <Box
                     style={{
                       width: 10,
                       height: 10,
                       borderRadius: spacing.radius.chip,
                       backgroundColor: colors.gray[500],
+                      flexShrink: 0,
                     }}
                   />
-                  <Text className="tw:text-xs" style={{ color: colors.text.secondary }}>
+                  <Text size="xs" c={colors.text.secondary}>
                     Lose: {(losersPercent * 100).toFixed(1)}%
                   </Text>
                 </Group>
               </Group>
-            </div>
+            </Box>
           </Group>
-        </div>
-      </div>
+        </Box>
+      </SimpleGrid>
     </Stack>
   );
 }

@@ -195,58 +195,21 @@ export const resetAllMocks = () => {
 
 // Mock the MultiButtonFooter component
 vi.mock('@/components/common/MultiButtonFooter', () => ({
-  default: vi.fn(
-    ({
-      buttons,
-      cancelAction,
-      backAction,
-      primaryAction,
-    }: {
-      buttons: ButtonConfig[];
-      cancelAction?: { label: string; onClick: () => void };
-      backAction?: { label: string; onClick: () => void };
-      primaryAction?: {
-        label: string;
-        onClick: () => void;
-        isLoading?: boolean;
-        isDisabled?: boolean;
-      };
-    }) => (
-      <div data-testid="multi-button-footer">
-        {cancelAction && (
-          <button type="button" onClick={cancelAction.onClick}>
-            {cancelAction.label}
-          </button>
-        )}
-        {backAction && (
-          <button type="button" onClick={backAction.onClick}>
-            {backAction.label}
-          </button>
-        )}
-        {primaryAction && (
-          <button
-            type="button"
-            onClick={primaryAction.onClick}
-            disabled={primaryAction.isDisabled || primaryAction.isLoading}
-            data-loading={primaryAction.isLoading || undefined}
-          >
-            {primaryAction.label}
-          </button>
-        )}
-        {buttons.map((button, index) => (
-          <button
-            key={index}
-            type="button"
-            onClick={button.onClick}
-            disabled={button.variant === BUTTON_VARIANTS.DISABLED}
-            data-loading={button.isLoading}
-          >
-            {button.label}
-          </button>
-        ))}
-      </div>
-    )
-  ),
+  default: vi.fn(({ buttons }: { buttons: ButtonConfig[] }) => (
+    <div data-testid="multi-button-footer">
+      {buttons.map((button, index) => (
+        <button
+          key={index}
+          type="button"
+          onClick={button.onClick}
+          disabled={button.variant === BUTTON_VARIANTS.DISABLED}
+          data-loading={button.isLoading}
+        >
+          {button.label}
+        </button>
+      ))}
+    </div>
+  )),
 }));
 
 // Test data generators

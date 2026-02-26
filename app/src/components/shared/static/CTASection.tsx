@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import { Container, Title } from '@/components/ui';
+import { Box, Container, Flex, Title } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
 import ActionButton, { ActionButtonProps } from './ActionButton';
 
@@ -33,42 +33,55 @@ export default function CTASection({
   const isInverted = variant === 'accent';
 
   return (
-    <div
+    <Box
+      py={spacing['4xl']}
       style={{
-        paddingTop: spacing['4xl'],
-        paddingBottom: spacing['4xl'],
         backgroundColor: backgrounds[variant],
         borderBottom: `1px solid ${colors.border.dark}`,
         paddingLeft: '6.125%',
         paddingRight: '6.125%',
       }}
     >
-      <Container size="xl" className="tw:px-0">
+      <Container size="xl" px={0}>
         {title && (
           <Title
             order={2}
+            mb="xl"
             style={{
               fontSize: typography.fontSize['3xl'],
               fontWeight: typography.fontWeight.semibold,
               fontFamily: typography.fontFamily.primary,
               color: textColors[variant],
-              marginBottom: spacing.xl,
             }}
           >
             {title}
           </Title>
         )}
-        <div className="tw:flex tw:flex-col tw:md:flex-row tw:items-stretch tw:md:items-center tw:gap-6 tw:md:gap-12">
-          <div style={{ flex: 1.5, color: textColors[variant] }}>{content}</div>
-          <div className="tw:flex tw:flex-1 tw:flex-col tw:items-center tw:justify-center">
+        <Flex
+          direction={{ base: 'column', md: 'row' }}
+          align={{ base: 'stretch', md: 'center' }}
+          gap={{ base: 'xl', md: '4xl' }}
+        >
+          <Box flex={{ base: 1, md: 1.5 }} style={{ color: textColors[variant] }}>
+            {content}
+          </Box>
+          <Box
+            flex={1}
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}
+          >
             <ActionButton
               {...cta}
               variant={isInverted ? 'inverted' : 'primary'}
               caption={caption}
             />
-          </div>
-        </div>
+          </Box>
+        </Flex>
       </Container>
-    </div>
+    </Box>
   );
 }

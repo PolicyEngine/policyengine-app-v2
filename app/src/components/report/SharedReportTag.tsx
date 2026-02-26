@@ -5,11 +5,11 @@
  * Non-intrusive styling that doesn't distract from the report content.
  */
 
-import { Badge } from '@/components/ui';
+import { Badge } from '@mantine/core';
 
 export function SharedReportTag() {
   return (
-    <Badge variant="secondary" className="tw:text-xs">
+    <Badge size="sm" variant="light" color="gray" radius="sm">
       Shared
     </Badge>
   );

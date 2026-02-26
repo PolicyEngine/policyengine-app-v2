@@ -109,8 +109,7 @@ describe('PathwayView', () => {
       const card = screen.getByRole('button', {
         name: new RegExp(PATHWAY_VIEW_STRINGS.SETUP_CARD_1_TITLE),
       });
-      // Active state is now applied via Tailwind classes (border-primary-500 and bg-primary-50)
-      expect(card.className).toContain('border-primary-500');
+      expect(card).toHaveAttribute('data-variant', 'setupCondition--active');
     });
 
     test('given disabled condition then disables card', () => {
@@ -180,8 +179,7 @@ describe('PathwayView', () => {
       const card = screen.getByRole('button', {
         name: new RegExp(PATHWAY_VIEW_STRINGS.PANEL_CARD_1_TITLE),
       });
-      // Active state is now applied via Tailwind classes (border-primary-500 and bg-primary-50)
-      expect(card.className).toContain('border-primary-500');
+      expect(card).toHaveAttribute('data-variant', 'buttonPanel--active');
     });
 
     test('given user clicks panel card then calls onClick handler', async () => {
@@ -250,8 +248,7 @@ describe('PathwayView', () => {
       const card = screen.getByRole('button', {
         name: new RegExp(PATHWAY_VIEW_STRINGS.LIST_ITEM_1_TITLE),
       });
-      // Active state is now applied via Tailwind classes (border-primary-500 and bg-primary-50)
-      expect(card.className).toContain('border-primary-500');
+      expect(card).toHaveAttribute('data-variant', 'cardList--active');
     });
 
     test('given disabled item then disables card', () => {
@@ -365,12 +362,8 @@ describe('PathwayView', () => {
         />
       );
 
-      // Loading state disables the button and renders a Spinner inside it
-      // The Spinner's sr-only text "Loading..." is part of the accessible name
-      const submitButton = screen.getByRole('button', {
-        name: new RegExp(PATHWAY_VIEW_STRINGS.SUBMIT_BUTTON),
-      });
-      expect(submitButton).toBeDisabled();
+      const submitButton = screen.getByRole('button', { name: PATHWAY_VIEW_STRINGS.SUBMIT_BUTTON });
+      expect(submitButton).toHaveAttribute('data-loading', 'true');
     });
 
     test('given cancel button then renders as disabled', () => {

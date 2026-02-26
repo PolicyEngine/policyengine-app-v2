@@ -1,8 +1,8 @@
 import { useMemo, useRef } from 'react';
+import { Group, Stack, Text, Title } from '@mantine/core';
 import { transformConstituencyRelativeChange } from '@/adapters/constituency/constituencyDataAdapter';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { MapDownloadMenu } from '@/components/MapDownloadMenu';
-import { Group, Stack, Text, Title } from '@/components/ui';
 import { HexagonalMap } from '@/components/visualization/HexagonalMap';
 import type { ReportOutputSocietyWideUK } from '@/types/metadata/ReportOutputSocietyWideUK';
 import { formatParameterValue } from '@/utils/chartValueUtils';
@@ -36,7 +36,7 @@ export function RelativeChangeByConstituency({ output }: RelativeChangeByConstit
 
   if (!hexMapData.length) {
     return (
-      <Stack align="center" justify="center" style={{ height: 400 }}>
+      <Stack align="center" justify="center" h={400}>
         <Text c="dimmed">No constituency data available</Text>
       </Stack>
     );
@@ -44,7 +44,7 @@ export function RelativeChangeByConstituency({ output }: RelativeChangeByConstit
 
   return (
     <Stack gap="md">
-      <Group justify="space-between" align="start" wrap="nowrap">
+      <Group justify="space-between" align="flex-start" wrap="nowrap">
         <Title order={3} style={{ flex: 1 }}>
           Relative household income change by constituency
         </Title>

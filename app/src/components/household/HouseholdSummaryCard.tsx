@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useSelector } from 'react-redux';
-import { Stack, Text } from '@/components/ui';
+import { Box, Stack, Text } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
 import { RootState } from '@/store';
 import { Household } from '@/types/ingredients/Household';
@@ -31,11 +31,9 @@ export default function HouseholdSummaryCard({
   const rootVariable = variables.household_net_income;
   if (!rootVariable) {
     return (
-      <div>
-        <Text style={{ color: 'red' }}>
-          Error: household_net_income variable not found in metadata
-        </Text>
-      </div>
+      <Box>
+        <Text c="red">Error: household_net_income variable not found in metadata</Text>
+      </Box>
     );
   }
 
@@ -67,44 +65,41 @@ export default function HouseholdSummaryCard({
   }
 
   // Determine border color based on mode and direction
-  const borderColor: string =
-    isComparisonMode && comparison.direction !== 'increase'
-      ? colors.text.secondary
-      : colors.primary[700];
+  const borderColor = isComparisonMode
+    ? comparison.direction === 'increase'
+      ? colors.primary[700]
+      : colors.text.secondary
+    : colors.primary[700];
 
   return (
-    <div
+    <Box
+      p={spacing.xl}
       style={{
-        padding: spacing.xl,
         border: `1px solid ${colors.border.light}`,
         borderRadius: spacing.radius.container,
         backgroundColor: colors.background.primary,
       }}
     >
-      <Stack gap="lg">
+      <Stack gap={spacing.lg}>
         {/* Main Title */}
-        <div>
-          <Text
-            size="xl"
-            fw={typography.fontWeight.semibold}
-            style={{ color: colors.primary[700] }}
-          >
+        <Box>
+          <Text size="xl" fw={typography.fontWeight.semibold} c={colors.primary[700]}>
             {titleText}
           </Text>
-        </div>
+        </Box>
 
         {/* Recursive Breakdown */}
         <HouseholdBreakdown baseline={baseline} reform={reform} borderColor={borderColor} />
 
         {/* Description */}
-        <div className="tw:text-center" style={{ marginTop: spacing.sm }}>
-          <Text size="sm" style={{ color: colors.text.secondary }}>
+        <Box ta="center" mt={spacing.sm}>
+          <Text size="sm" c={colors.text.secondary}>
             {isComparisonMode
               ? "Here's how the policy change affected your household's net income. Click to expand a section and see the breakdown."
               : "Here's how we calculated your household's net income. Click to expand a section and see the breakdown."}
           </Text>
-        </div>
+        </Box>
       </Stack>
-    </div>
+    </Box>
   );
 }

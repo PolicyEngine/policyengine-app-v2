@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
-import { IconX } from '@tabler/icons-react';
-import { Text, Title } from '@/components/ui';
+import { Box, Card, CloseButton, Group, Text, Title } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 
@@ -66,55 +65,68 @@ export default function FeaturedResearchBanner() {
   const isBeforeBudget = currentDate < budgetDate;
 
   return (
-    <div
-      className="tw:relative tw:overflow-hidden"
+    <Box
       style={{
+        position: 'relative',
         background: `linear-gradient(135deg, ${colors.primary[600]} 0%, ${colors.primary[500]} 50%, #2a9d8f 100%)`,
         borderBottom: `3px solid ${colors.primary[700]}`,
         padding: `${spacing.xl} ${spacing.xl}`,
         fontFamily: typography.fontFamily.primary,
         boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)',
+        overflow: 'hidden',
       }}
     >
       {/* Decorative Background Pattern */}
-      <div
-        className="tw:absolute tw:inset-0 tw:pointer-events-none"
+      <Box
         style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
           opacity: 0.05,
           backgroundImage: `radial-gradient(circle at 20% 50%, ${colors.white} 1px, transparent 1px), radial-gradient(circle at 80% 80%, ${colors.white} 1px, transparent 1px)`,
           backgroundSize: '50px 50px',
+          pointerEvents: 'none',
         }}
       />
 
       {/* Close Button */}
-      <button
-        type="button"
+      <CloseButton
         onClick={handleClose}
-        className="tw:absolute tw:bg-transparent tw:border-none tw:cursor-pointer tw:p-2 tw:rounded tw:hover:bg-white/15 tw:z-10"
+        size="lg"
         style={{
+          position: 'absolute',
           top: spacing.lg,
           right: spacing.lg,
           color: colors.white,
+          zIndex: 10,
         }}
-      >
-        <IconX size={20} />
-      </button>
+        styles={{
+          root: {
+            '&:hover': {
+              backgroundColor: 'rgba(255, 255, 255, 0.15)',
+            },
+          },
+        }}
+      />
 
-      <div
-        className="tw:relative tw:z-[1]"
+      <Box
         style={{
           maxWidth: '1400px',
           margin: '0 auto',
+          position: 'relative',
+          zIndex: 1,
         }}
       >
         {/* Main Title */}
         <Title
           order={1}
+          size={typography.fontSize['3xl']}
+          fw={typography.fontWeight.bold}
+          c={colors.white}
+          mb={spacing.xl}
           style={{
-            fontSize: typography.fontSize['3xl'],
-            fontWeight: typography.fontWeight.bold,
-            color: colors.white,
-            marginBottom: spacing.xl,
             textAlign: 'center',
             textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
           }}
@@ -122,13 +134,17 @@ export default function FeaturedResearchBanner() {
           Explore our latest research and tools
         </Title>
 
+        {/* Dashboard link hidden for now */}
+
         {/* Countdown Timer - Only show before budget */}
         {isBeforeBudget && timeRemaining && (
-          <div
-            className="tw:flex tw:justify-center tw:flex-wrap"
+          <Box
+            mb={spacing['2xl']}
             style={{
-              marginBottom: spacing['2xl'],
+              display: 'flex',
+              justifyContent: 'center',
               gap: spacing.xl,
+              flexWrap: 'wrap',
             }}
           >
             {[
@@ -137,9 +153,8 @@ export default function FeaturedResearchBanner() {
               { label: 'Minutes', value: timeRemaining.minutes },
               { label: 'Seconds', value: timeRemaining.seconds },
             ].map((item) => (
-              <div
+              <Box
                 key={item.label}
-                className="tw:flex tw:flex-col tw:items-center tw:justify-center"
                 style={{
                   backgroundColor: 'rgba(255, 255, 255, 0.25)',
                   borderRadius: spacing.radius.feature,
@@ -148,13 +163,17 @@ export default function FeaturedResearchBanner() {
                   backdropFilter: 'blur(10px)',
                   border: '2px solid rgba(255, 255, 255, 0.3)',
                   boxShadow: '0 8px 16px rgba(0, 0, 0, 0.1)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                 }}
               >
                 <Text
+                  size={typography.fontSize['3xl']}
+                  fw={typography.fontWeight.bold}
+                  c={colors.white}
                   style={{
-                    fontSize: typography.fontSize['3xl'],
-                    fontWeight: typography.fontWeight.bold,
-                    color: colors.white,
                     lineHeight: 1,
                     textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
                     textAlign: 'center',
@@ -163,11 +182,11 @@ export default function FeaturedResearchBanner() {
                   {String(item.value).padStart(2, '0')}
                 </Text>
                 <Text
+                  size={typography.fontSize.sm}
+                  c={colors.white}
+                  fw={typography.fontWeight.medium}
+                  mt={spacing.xs}
                   style={{
-                    fontSize: typography.fontSize.sm,
-                    color: colors.white,
-                    fontWeight: typography.fontWeight.medium,
-                    marginTop: spacing.xs,
                     opacity: 0.95,
                     letterSpacing: '0.5px',
                     textTransform: 'uppercase',
@@ -176,14 +195,20 @@ export default function FeaturedResearchBanner() {
                 >
                   {item.label}
                 </Text>
-              </div>
+              </Box>
             ))}
-          </div>
+          </Box>
         )}
 
         {/* Autumn Budget Analysis Cards */}
-        <div>
-          <div className="tw:flex tw:justify-center tw:flex-wrap" style={{ gap: spacing.xl }}>
+        <Box>
+          <Group
+            justify="center"
+            gap={spacing.xl}
+            style={{
+              flexWrap: 'wrap',
+            }}
+          >
             {[
               {
                 href: '/uk/research/uk-two-child-limit-reintroduction',
@@ -206,10 +231,10 @@ export default function FeaturedResearchBanner() {
                 desc: 'Living standards, poverty, and local area impacts across Scotland',
               },
             ].map((card) => (
-              <a
+              <Card
                 key={card.href}
+                component="a"
                 href={card.href}
-                className="tw:no-underline tw:transition-all tw:duration-300 tw:hover:-translate-y-1 tw:hover:shadow-lg"
                 style={{
                   flex: '1 1 0',
                   maxWidth: '320px',
@@ -221,60 +246,90 @@ export default function FeaturedResearchBanner() {
                   borderRadius: spacing.radius.feature,
                   padding: spacing.lg,
                   cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  textDecoration: 'none',
                   border: `2px solid ${colors.white}`,
                   boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
                 }}
+                onMouseEnter={(e: React.MouseEvent<HTMLAnchorElement>) => {
+                  const el = e.currentTarget;
+                  el.style.transform = 'translateY(-4px)';
+                  el.style.boxShadow = '0 12px 32px rgba(0, 0, 0, 0.25)';
+                  el.style.backgroundColor = 'rgba(255, 255, 255, 0.35)';
+                  el.style.backdropFilter = 'blur(16px)';
+                  el.style.border = 'none';
+                }}
+                onMouseLeave={(e: React.MouseEvent<HTMLAnchorElement>) => {
+                  const el = e.currentTarget;
+                  el.style.transform = '';
+                  el.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.1)';
+                  el.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
+                  el.style.backdropFilter = '';
+                  el.style.border = `2px solid ${colors.white}`;
+                }}
               >
-                <div className="tw:flex tw:flex-col tw:items-center tw:justify-center tw:text-center tw:h-full">
+                <Box
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    height: '100%',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    textAlign: 'center',
+                  }}
+                >
                   <Text
-                    style={{
-                      fontSize: typography.fontSize.lg,
-                      fontWeight: typography.fontWeight.bold,
-                      color: colors.primary[700],
-                      marginBottom: spacing.sm,
-                    }}
+                    size={typography.fontSize.lg}
+                    fw={typography.fontWeight.bold}
+                    c={colors.primary[700]}
+                    mb={spacing.sm}
                   >
                     {card.title}
                   </Text>
                   <Text
-                    style={{
-                      fontSize: typography.fontSize.sm,
-                      color: colors.gray[700],
-                      lineHeight: 1.4,
-                    }}
+                    size={typography.fontSize.sm}
+                    c={colors.gray[700]}
+                    style={{ lineHeight: 1.4 }}
                   >
                     {card.desc}
                   </Text>
-                </div>
-              </a>
+                </Box>
+              </Card>
             ))}
-          </div>
-        </div>
+          </Group>
+        </Box>
 
         {/* Contact CTA */}
-        <div className="tw:text-center" style={{ marginTop: spacing.xl }}>
-          <Text
-            style={{
-              fontSize: typography.fontSize.lg,
-              color: colors.white,
-              fontWeight: typography.fontWeight.semibold,
-            }}
-          >
+        <Box
+          mt={spacing.xl}
+          style={{
+            textAlign: 'center',
+          }}
+        >
+          <Text size={typography.fontSize.lg} c={colors.white} fw={typography.fontWeight.semibold}>
             Want custom analysis?{' '}
-            <a
+            <Text
+              component="a"
               href="mailto:hello@policyengine.org"
-              className="tw:underline tw:transition-opacity tw:duration-200 tw:hover:opacity-80"
               style={{
                 color: colors.white,
+                textDecoration: 'underline',
                 fontWeight: typography.fontWeight.semibold,
                 cursor: 'pointer',
+                transition: 'opacity 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.opacity = '0.8';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.opacity = '1';
               }}
             >
               Contact us
-            </a>
+            </Text>
           </Text>
-        </div>
-      </div>
-    </div>
+        </Box>
+      </Box>
+    </Box>
   );
 }

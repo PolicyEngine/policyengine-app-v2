@@ -1,5 +1,5 @@
-import { Stack, Text } from '@/components/ui';
-import { cn } from '@/lib/utils';
+import { Card, Stack, Text } from '@mantine/core';
+import { spacing } from '@/designTokens';
 
 export interface CardListItem {
   id?: string; // Unique identifier for React key
@@ -31,31 +31,35 @@ export default function CardListVariant({
 
   return (
     <Stack>
-      {paginatedItems.map((item: CardListItem, index: number) => (
-        <button
-          type="button"
-          key={item.id || index}
-          onClick={item.isDisabled ? undefined : item.onClick}
-          disabled={item.isDisabled}
-          className={cn(
-            'tw:w-full tw:text-left tw:rounded-element tw:border tw:p-md tw:transition-colors',
-            item.isDisabled
-              ? 'tw:opacity-60 tw:cursor-not-allowed tw:border-gray-200 tw:bg-gray-50'
-              : item.isSelected
-                ? 'tw:border-primary-500 tw:bg-primary-50 tw:cursor-pointer'
-                : 'tw:border-gray-200 tw:bg-white tw:cursor-pointer tw:hover:border-primary-300'
-          )}
-        >
-          <Stack gap="xs">
-            <Text fw={600}>{item.title}</Text>
-            {item.subtitle && (
-              <Text size="sm" style={{ color: '#868e96' }}>
-                {item.subtitle}
-              </Text>
-            )}
-          </Stack>
-        </button>
-      ))}
+      {paginatedItems.map((item: CardListItem, index: number) => {
+        // Determine variant based on disabled state first, then selection
+        let variant = 'cardList--inactive';
+        if (item.isDisabled) {
+          variant = 'cardList--disabled';
+        } else if (item.isSelected) {
+          variant = 'cardList--active';
+        }
+
+        return (
+          <Card
+            key={item.id || index}
+            withBorder
+            component="button"
+            onClick={item.isDisabled ? undefined : item.onClick}
+            disabled={item.isDisabled}
+            variant={variant}
+          >
+            <Stack gap={spacing.xs}>
+              <Text fw={600}>{item.title}</Text>
+              {item.subtitle && (
+                <Text size="sm" c="dimmed">
+                  {item.subtitle}
+                </Text>
+              )}
+            </Stack>
+          </Card>
+        );
+      })}
     </Stack>
   );
 }

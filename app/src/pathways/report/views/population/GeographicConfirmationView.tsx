@@ -4,8 +4,8 @@
  * Props-based instead of Redux-based
  */
 
+import { Stack, Text } from '@mantine/core';
 import PathwayView from '@/components/common/PathwayView';
-import { Stack } from '@/components/ui';
 import { MOCK_USER_ID } from '@/constants';
 import { useCreateGeographicAssociation } from '@/hooks/useUserGeographic';
 import { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
@@ -62,7 +62,7 @@ export default function GeographicConfirmationView({
     if (!population?.geography) {
       return (
         <Stack gap="md">
-          <p className="tw:text-red-600">No geography selected</p>
+          <Text c="red">No geography selected</Text>
         </Stack>
       );
     }
@@ -72,13 +72,15 @@ export default function GeographicConfirmationView({
     if (population.geography.scope === 'national') {
       return (
         <Stack gap="md">
-          <p className="tw:font-semibold tw:text-lg">Confirm household collection</p>
-          <p>
+          <Text fw={600} fz="lg">
+            Confirm household collection
+          </Text>
+          <Text>
             <strong>Scope:</strong> National
-          </p>
-          <p>
+          </Text>
+          <Text>
             <strong>Country:</strong> {getCountryLabel(geographyCountryId)}
-          </p>
+          </Text>
         </Stack>
       );
     }
@@ -90,13 +92,15 @@ export default function GeographicConfirmationView({
 
     return (
       <Stack gap="md">
-        <p className="tw:font-semibold tw:text-lg">Confirm household collection</p>
-        <p>
+        <Text fw={600} fz="lg">
+          Confirm household collection
+        </Text>
+        <Text>
           <strong>Scope:</strong> {regionTypeName}
-        </p>
-        <p>
+        </Text>
+        <Text>
           <strong>{regionTypeName}:</strong> {regionLabel}
-        </p>
+        </Text>
       </Stack>
     );
   };

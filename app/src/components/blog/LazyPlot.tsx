@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react';
-import { Spinner } from '@/components/ui';
+import { Center, Loader } from '@mantine/core';
+import { colors } from '@/designTokens';
 
 const PlotComponent = lazy(() =>
   import('react-plotly.js').then((mod) => ({ default: mod.default }))
@@ -14,9 +15,9 @@ export function LazyPlot(props: React.ComponentProps<typeof PlotComponent>) {
   return (
     <Suspense
       fallback={
-        <div className="tw:flex tw:items-center tw:justify-center" style={{ height: 400 }}>
-          <Spinner size="md" />
-        </div>
+        <Center h={400}>
+          <Loader size="md" color={colors.primary[500]} />
+        </Center>
       }
     >
       <PlotComponent {...props} />

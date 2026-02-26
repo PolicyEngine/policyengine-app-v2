@@ -1,11 +1,4 @@
-import {
-  Label,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui';
+import { Select } from '@mantine/core';
 import { RegionOption } from '@/utils/regionStrategies';
 
 interface UKLocalAuthoritySelectorProps {
@@ -20,20 +13,13 @@ export default function UKLocalAuthoritySelector({
   onLocalAuthorityChange,
 }: UKLocalAuthoritySelectorProps) {
   return (
-    <div>
-      <Label className="tw:text-sm tw:font-medium tw:mb-1 tw:block">Select local authority</Label>
-      <Select value={selectedLocalAuthority} onValueChange={(val) => onLocalAuthorityChange(val)}>
-        <SelectTrigger className="tw:w-full">
-          <SelectValue placeholder="Pick a local authority" />
-        </SelectTrigger>
-        <SelectContent>
-          {localAuthorityOptions.map((option) => (
-            <SelectItem key={option.value} value={option.value}>
-              {option.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
+    <Select
+      label="Select Local Authority"
+      placeholder="Pick a local authority"
+      data={localAuthorityOptions}
+      value={selectedLocalAuthority}
+      onChange={(val) => onLocalAuthorityChange(val || '')}
+      searchable
+    />
   );
 }

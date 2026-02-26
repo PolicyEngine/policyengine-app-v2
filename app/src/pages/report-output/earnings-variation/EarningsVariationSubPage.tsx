@@ -1,15 +1,8 @@
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
+import { Group, Select, Stack, Text } from '@mantine/core';
 import { PolicyAdapter } from '@/adapters/PolicyAdapter';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Stack,
-  Text,
-} from '@/components/ui';
+import { spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useHouseholdVariation } from '@/hooks/useHouseholdVariation';
 import { useReportYear } from '@/hooks/useReportYear';
@@ -53,7 +46,7 @@ export default function EarningsVariationSubPage({
   // Early return if no report year available (shouldn't happen in report output context)
   if (!reportYear) {
     return (
-      <Stack gap="md">
+      <Stack gap={spacing.md}>
         <Text c="red">Error: Report year not available</Text>
       </Stack>
     );
@@ -106,7 +99,7 @@ export default function EarningsVariationSubPage({
 
   if (baselineError) {
     return (
-      <Stack gap="md">
+      <Stack gap={spacing.md}>
         <Text c="red">Error loading baseline variation: {baselineError.message}</Text>
       </Stack>
     );
@@ -114,7 +107,7 @@ export default function EarningsVariationSubPage({
 
   if (reform && reformError) {
     return (
-      <Stack gap="md">
+      <Stack gap={spacing.md}>
         <Text c="red">Error loading reform variation: {reformError.message}</Text>
       </Stack>
     );
@@ -123,7 +116,7 @@ export default function EarningsVariationSubPage({
   // Verify baseline data exists and has required structure
   if (!baselineVariation || !baselineVariation.householdData?.people) {
     return (
-      <Stack gap="md">
+      <Stack gap={spacing.md}>
         <Text c="red">No baseline variation data available</Text>
       </Stack>
     );
@@ -132,7 +125,7 @@ export default function EarningsVariationSubPage({
   // If reform exists, verify reform data has required structure
   if (reform && reformVariation && !reformVariation.householdData?.people) {
     return (
-      <Stack gap="md">
+      <Stack gap={spacing.md}>
         <Text c="red">Invalid reform variation data</Text>
       </Stack>
     );
@@ -157,24 +150,20 @@ export default function EarningsVariationSubPage({
     }));
 
   return (
-    <Stack gap="lg">
-      <div className="tw:flex tw:items-end tw:gap-md">
-        <Text className="tw:font-medium tw:text-sm tw:whitespace-nowrap tw:pb-2">
+    <Stack gap={spacing.lg}>
+      <Group align="flex-end" gap={spacing.md}>
+        <Text fw={500} size="sm" style={{ whiteSpace: 'nowrap', paddingBottom: '8px' }}>
           Select variable to display:
         </Text>
-        <Select value={selectedVariable} onValueChange={(value) => setSelectedVariable(value)}>
-          <SelectTrigger className="tw:flex-1">
-            <SelectValue placeholder="Choose a variable" />
-          </SelectTrigger>
-          <SelectContent>
-            {variableOptions.map((opt) => (
-              <SelectItem key={opt.value} value={opt.value}>
-                {opt.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+        <Select
+          placeholder="Choose a variable"
+          data={variableOptions}
+          value={selectedVariable}
+          onChange={(value) => value && setSelectedVariable(value)}
+          searchable
+          style={{ flex: 1 }}
+        />
+      </Group>
 
       {reform && reformVariation ? (
         <BaselineAndReformChart

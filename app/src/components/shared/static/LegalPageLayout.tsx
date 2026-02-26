@@ -1,4 +1,4 @@
-import { Container, Title } from '@/components/ui';
+import { Box, Container, Title } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
 import StaticPageLayout from './StaticPageLayout';
 
@@ -15,45 +15,44 @@ export interface LegalPageLayoutProps {
 export default function LegalPageLayout({ title, sections }: LegalPageLayoutProps) {
   return (
     <StaticPageLayout title={title}>
-      <div
+      <Box
+        py={spacing['4xl']}
         style={{
-          paddingTop: spacing['4xl'],
-          paddingBottom: spacing['4xl'],
           backgroundColor: colors.white,
           paddingLeft: '6.125%',
           paddingRight: '6.125%',
         }}
       >
-        <Container size="md" className="tw:px-0">
+        <Container size="md" px={0}>
           <Title
             order={1}
+            mb={spacing['3xl']}
             style={{
               fontSize: typography.fontSize['4xl'],
               fontWeight: typography.fontWeight.semibold,
               fontFamily: typography.fontFamily.primary,
               color: colors.text.primary,
-              marginBottom: spacing['3xl'],
             }}
           >
             {title}
           </Title>
 
           {sections.map((section, index) => (
-            <div key={index} style={{ marginBottom: spacing['2xl'] }}>
+            <Box key={index} mb={spacing['2xl']}>
               <Title
                 order={2}
+                mb={spacing.lg}
                 style={{
                   fontSize: typography.fontSize['2xl'],
                   fontWeight: typography.fontWeight.semibold,
                   fontFamily: typography.fontFamily.primary,
                   color: colors.text.primary,
-                  marginBottom: spacing.lg,
                 }}
               >
                 {section.heading}
               </Title>
 
-              <div
+              <Box
                 className="legal-content"
                 style={{
                   fontSize: typography.fontSize.base,
@@ -93,11 +92,11 @@ export default function LegalPageLayout({ title, sections }: LegalPageLayoutProp
                   }
                 `}</style>
                 {section.content}
-              </div>
-            </div>
+              </Box>
+            </Box>
           ))}
         </Container>
-      </div>
+      </Box>
     </StaticPageLayout>
   );
 }

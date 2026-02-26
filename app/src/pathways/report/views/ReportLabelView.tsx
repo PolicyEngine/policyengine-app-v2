@@ -1,14 +1,7 @@
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
+import { Select, TextInput } from '@mantine/core';
 import PathwayView from '@/components/common/PathwayView';
-import {
-  Input,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui';
 import { CURRENT_YEAR } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { getTaxYears } from '@/libs/metadataUtils';
@@ -47,7 +40,7 @@ export default function ReportLabelView({
     setLocalLabel(value);
   }
 
-  function handleYearChange(value: string) {
+  function handleYearChange(value: string | null) {
     const newYear = value || CURRENT_YEAR;
     setLocalYear(newYear);
   }
@@ -61,29 +54,20 @@ export default function ReportLabelView({
 
   const formInputs = (
     <>
-      <div className="tw:flex tw:flex-col tw:gap-xs">
-        <label className="tw:text-sm tw:font-medium">Report name</label>
-        <Input
-          placeholder="Enter report name"
-          value={localLabel}
-          onChange={(e) => handleLocalLabelChange(e.currentTarget.value)}
-        />
-      </div>
-      <div className="tw:flex tw:flex-col tw:gap-xs">
-        <label className="tw:text-sm tw:font-medium">Year</label>
-        <Select value={localYear} onValueChange={handleYearChange}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select year" />
-          </SelectTrigger>
-          <SelectContent>
-            {availableYears.map((y) => (
-              <SelectItem key={y.value} value={y.value}>
-                {y.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      <TextInput
+        label="Report name"
+        placeholder="Enter report name"
+        value={localLabel}
+        onChange={(e) => handleLocalLabelChange(e.currentTarget.value)}
+      />
+      <Select
+        label="Year"
+        placeholder="Select year"
+        data={availableYears}
+        value={localYear}
+        onChange={handleYearChange}
+        searchable
+      />
     </>
   );
 

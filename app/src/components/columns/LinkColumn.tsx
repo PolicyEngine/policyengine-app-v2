@@ -1,12 +1,7 @@
 import { Link } from 'react-router-dom';
+import { Anchor } from '@mantine/core';
 import { colors } from '@/designTokens';
 import { LinkColumnConfig, LinkValue } from './types';
-
-const fontSizeMap: Record<string, string> = {
-  xs: '0.75rem',
-  sm: '0.875rem',
-  md: '1rem',
-};
 
 interface LinkColumnProps {
   config: LinkColumnConfig;
@@ -15,16 +10,15 @@ interface LinkColumnProps {
 
 export function LinkColumn({ config, value }: LinkColumnProps) {
   return (
-    <Link
+    <Anchor
+      component={Link}
       to={value.url || `${config.urlPrefix || '#'}${value.text}`}
-      className="tw:no-underline tw:hover:underline"
-      style={{
-        color: config.color || colors.blue[600],
-        fontSize: fontSizeMap[config.size || 'sm'],
-      }}
+      size={config.size || 'sm'}
+      c={config.color || colors.blue[600]}
+      td="none"
       onClick={(e) => e.stopPropagation()}
     >
       {value.text}
-    </Link>
+    </Anchor>
   );
 }

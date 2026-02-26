@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import { Container, Title } from '@/components/ui';
+import { Box, Container, Title } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
 
 export interface ContentSectionProps {
@@ -28,40 +28,39 @@ export default function ContentSection({
   };
 
   return (
-    <div
+    <Box
+      py={spacing['4xl']}
       style={{
-        paddingTop: spacing['4xl'],
-        paddingBottom: spacing['4xl'],
         backgroundColor: backgrounds[variant],
         borderBottom: `1px solid ${colors.border.dark}`,
         paddingLeft: '6.125%',
         paddingRight: '6.125%',
       }}
     >
-      <Container size="xl" className="tw:px-0">
+      <Container size="xl" px={0}>
         {title && (
           <Title
             order={2}
+            mb="xl"
             style={{
               fontSize: typography.fontSize['3xl'],
               fontWeight: typography.fontWeight.semibold,
               fontFamily: typography.fontFamily.primary,
               color: textColors[variant],
               textAlign: centerTitle ? 'center' : 'left',
-              marginBottom: spacing.xl,
             }}
           >
             {title}
           </Title>
         )}
-        <div
+        <Box
           style={{
             color: textColors[variant],
           }}
         >
           {children}
-        </div>
+        </Box>
       </Container>
-    </div>
+    </Box>
   );
 }
