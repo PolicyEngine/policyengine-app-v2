@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import type { ParameterMetadata } from '@/types/metadata/parameterMetadata';
+import type { Policy } from '@/types/ingredients/Policy';
 import type { PolicyColumn } from '@/utils/policyTableHelpers';
 import ParameterTable from './ParameterTable';
 
@@ -82,22 +83,34 @@ const mockParameters: Record<string, ParameterMetadata> = {
 
 const parameterNames = Object.keys(mockParameters);
 
+const mockPolicy: Policy = {
+  id: 'policy-1',
+  label: 'Expand CTC to $4,000',
+  countryId: 'us',
+};
+
+const mockPolicy2: Policy = {
+  id: 'policy-2',
+  label: 'Flat tax at 25%',
+  countryId: 'us',
+};
+
 const singleColumn: PolicyColumn = {
-  type: 'reform',
-  policyLabel: 'Expand CTC to $4,000',
-  policyIndex: 0,
+  policies: [mockPolicy],
+  label: 'Reform',
+  policyLabels: ['Expand CTC to $4,000'],
 };
 
 const twoColumns: PolicyColumn[] = [
   {
-    type: 'reform',
-    policyLabel: 'Expand CTC to $4,000',
-    policyIndex: 0,
+    policies: [mockPolicy],
+    label: 'Reform 1',
+    policyLabels: ['Expand CTC to $4,000'],
   },
   {
-    type: 'reform',
-    policyLabel: 'Flat tax at 25%',
-    policyIndex: 1,
+    policies: [mockPolicy2],
+    label: 'Reform 2',
+    policyLabels: ['Flat tax at 25%'],
   },
 ];
 
@@ -134,10 +147,10 @@ export const SinglePolicy: Story = {
     needsCurrentLawColumn: true,
     labelColumnWidth: 50,
     valueColumnWidth: 25,
-    renderColumnHeader: (col: PolicyColumn) => col.policyLabel,
+    renderColumnHeader: (col: PolicyColumn) => col.policyLabels[0],
     renderCurrentLawValue: (paramName: string) => currentLawValues[paramName] ?? '—',
     renderColumnValue: (col: PolicyColumn, paramName: string) =>
-      reformValues[col.policyLabel]?.[paramName] ?? '—',
+      reformValues[col.policyLabels[0]]?.[paramName] ?? '—',
   },
 };
 
@@ -149,10 +162,10 @@ export const TwoPolicies: Story = {
     needsCurrentLawColumn: true,
     labelColumnWidth: 40,
     valueColumnWidth: 20,
-    renderColumnHeader: (col: PolicyColumn) => col.policyLabel,
+    renderColumnHeader: (col: PolicyColumn) => col.policyLabels[0],
     renderCurrentLawValue: (paramName: string) => currentLawValues[paramName] ?? '—',
     renderColumnValue: (col: PolicyColumn, paramName: string) =>
-      reformValues[col.policyLabel]?.[paramName] ?? '—',
+      reformValues[col.policyLabels[0]]?.[paramName] ?? '—',
   },
 };
 
@@ -165,7 +178,7 @@ export const IdenticalValues: Story = {
     needsCurrentLawColumn: true,
     labelColumnWidth: 50,
     valueColumnWidth: 25,
-    renderColumnHeader: (col: PolicyColumn) => col.policyLabel,
+    renderColumnHeader: (col: PolicyColumn) => col.policyLabels[0],
     renderCurrentLawValue: (paramName: string) => currentLawValues[paramName] ?? '—',
     renderColumnValue: (_col: PolicyColumn, paramName: string) =>
       currentLawValues[paramName] ?? '—',
