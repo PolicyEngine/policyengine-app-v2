@@ -12,12 +12,13 @@ export default meta;
 type Story = StoryObj<typeof HexagonalMap>;
 
 // Simple deterministic pseudo-random number generator (mulberry32)
-function seededRandom(seed: number): () => number {
+function seededRandom(initialSeed: number): () => number {
+  let s = initialSeed;
   return function () {
-    seed |= 0;
-    seed = (seed + 0x6d2b79f5) | 0;
-    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    s |= 0;
+    s = (s + 0x6d2b79f5) | 0;
+    let t = Math.imul(s ^ (s >>> 15), 1 | s);
+    t ^= t + Math.imul(t ^ (t >>> 7), 61 | t);
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 }
