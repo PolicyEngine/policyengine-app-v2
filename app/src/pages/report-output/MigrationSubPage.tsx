@@ -270,13 +270,6 @@ function CongressionalDistrictSection({
       label="Congressional district impact"
       right={
         <Group gap={spacing.lg}>
-          <SegmentedControl
-            value={mode}
-            onChange={(value) => setMode(value as CongressionalMode)}
-            size="xs"
-            data={CONGRESSIONAL_MODE_OPTIONS}
-            styles={segmentedControlStyles}
-          />
           {!hasStarted && !existingDistricts && (
             <Button
               variant="light"
@@ -288,6 +281,13 @@ function CongressionalDistrictSection({
               Compute congressional impacts
             </Button>
           )}
+          <SegmentedControl
+            value={mode}
+            onChange={(value) => setMode(value as CongressionalMode)}
+            size="xs"
+            data={CONGRESSIONAL_MODE_OPTIONS}
+            styles={segmentedControlStyles}
+          />
         </Group>
       }
     >
