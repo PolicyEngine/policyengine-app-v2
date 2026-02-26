@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import type { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import type { Policy } from '@/types/ingredients/Policy';
+import type { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import type { PolicyColumn } from '@/utils/policyTableHelpers';
 import ParameterTable from './ParameterTable';
 
