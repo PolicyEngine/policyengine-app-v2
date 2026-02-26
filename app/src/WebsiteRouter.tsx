@@ -40,10 +40,6 @@ const router = createBrowserRouter(
       path: '/',
       element: <RedirectToCountry />,
     },
-    {
-      path: '/claude-plugin',
-      element: <ClaudePluginsPage />,
-    },
     // /slides is handled by Vercel rewrites (server-side proxy to slides app)
     {
       path: '/:countryId',
@@ -120,6 +116,10 @@ const router = createBrowserRouter(
             {
               path: 'model',
               element: <ModelPage />,
+            },
+            {
+              path: 'claude-plugin',
+              element: <ClaudePluginsPage />,
             },
           ],
         },
