@@ -38,46 +38,41 @@ export default function MultiButtonFooter(props: MultiButtonFooterProps) {
   // New layout: Grid with equal spacing - Cancel left, Pagination center, Back/Next right
   if (cancelAction || backAction || primaryAction) {
     return (
-      <div className="tw:grid tw:grid-cols-1 tw:sm:grid-cols-3 tw:gap-md tw:overflow-hidden">
-        {/* Left side: Cancel button */}
-        <div className="tw:flex tw:justify-start tw:min-w-0">
+      <div className="tw:flex tw:flex-wrap tw:justify-between tw:items-center tw:gap-md">
+        {/* Left: Cancel */}
+        <div className="tw:flex">
           {cancelAction && (
-            <Button variant="outline" onClick={cancelAction.onClick} className="tw:w-full">
+            <Button variant="outline" onClick={cancelAction.onClick}>
               {cancelAction.label}
             </Button>
           )}
         </div>
 
-        {/* Center: Pagination controls (if provided) */}
-        <div className="tw:flex tw:justify-center tw:min-w-0">
-          {pagination && <PaginationControls pagination={pagination} />}
-        </div>
-
-        {/* Right side: Back and Primary buttons */}
-        <div className="tw:flex tw:justify-end tw:min-w-0">
-          <div className="tw:flex tw:gap-sm tw:w-full tw:min-w-0">
-            {backAction && (
-              <Button
-                variant="outline"
-                onClick={backAction.onClick}
-                className="tw:w-full tw:min-w-0 tw:truncate"
-              >
-                <IconChevronLeft size={16} />
-                {backAction.label}
-              </Button>
-            )}
-            {primaryAction && (
-              <Button
-                onClick={primaryAction.onClick}
-                disabled={primaryAction.isDisabled || primaryAction.isLoading}
-                className="tw:w-full tw:min-w-0 tw:truncate"
-              >
-                {primaryAction.isLoading && <Spinner size="sm" />}
-                {primaryAction.label}
-                <IconChevronRight size={16} />
-              </Button>
-            )}
+        {/* Center: Pagination (if provided) */}
+        {pagination && (
+          <div className="tw:flex tw:justify-center">
+            <PaginationControls pagination={pagination} />
           </div>
+        )}
+
+        {/* Right: Back + Primary */}
+        <div className="tw:flex tw:gap-sm">
+          {backAction && (
+            <Button variant="outline" onClick={backAction.onClick}>
+              <IconChevronLeft size={16} />
+              {backAction.label}
+            </Button>
+          )}
+          {primaryAction && (
+            <Button
+              onClick={primaryAction.onClick}
+              disabled={primaryAction.isDisabled || primaryAction.isLoading}
+            >
+              {primaryAction.isLoading && <Spinner size="sm" />}
+              {primaryAction.label}
+              <IconChevronRight size={16} />
+            </Button>
+          )}
         </div>
       </div>
     );
