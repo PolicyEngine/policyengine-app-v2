@@ -241,7 +241,7 @@ export function SocietyWideReportOutput({
   if (calcStatus.isComplete && calcStatus.result) {
     const output = calcStatus.result as SocietyWideOutput;
 
-    const OutputTabRenderer = OUTPUT_TABS[subpage];
+    const OutputTabRenderer = OUTPUT_TABS[subpage || 'migration'];
     if (OutputTabRenderer) {
       return OutputTabRenderer({
         report,

@@ -268,6 +268,7 @@ function CongressionalDistrictSection({
   return (
     <CollapsibleSection
       label="Congressional district impact"
+      defaultOpen={false}
       right={
         <Group gap={spacing.lg}>
           {!hasStarted && !existingDistricts && (
@@ -344,20 +345,23 @@ export default function MigrationSubPage({
 
   return (
     <Stack gap={spacing.xl}>
-      <SocietyWideOverview output={output} />
+      <CollapsibleSection label="Overview">
+        <SocietyWideOverview output={output} />
+      </CollapsibleSection>
 
-      <CollapsibleSection label="Budgetary impact">
+      <CollapsibleSection label="Budgetary impact" defaultOpen={false}>
         <BudgetaryImpactSubPage output={output} />
       </CollapsibleSection>
 
       {countryId === 'uk' && (
-        <CollapsibleSection label="Budgetary impact by program">
+        <CollapsibleSection label="Budgetary impact by program" defaultOpen={false}>
           <BudgetaryImpactByProgramSubPage output={output} />
         </CollapsibleSection>
       )}
 
       <CollapsibleSection
         label="Distributional analysis"
+        defaultOpen={false}
         right={
           <SegmentedControl
             value={distributionalMode}
@@ -382,6 +386,7 @@ export default function MigrationSubPage({
       {countryId === 'uk' && (
         <CollapsibleSection
           label="Wealth distributional analysis"
+          defaultOpen={false}
           right={
             <SegmentedControl
               value={wealthMode}
@@ -406,6 +411,7 @@ export default function MigrationSubPage({
 
       <CollapsibleSection
         label="Poverty impact"
+        defaultOpen={false}
         right={
           <Group gap={spacing.lg}>
             <SegmentedControl
@@ -428,7 +434,7 @@ export default function MigrationSubPage({
         <PovertyChart output={output} depth={povertyDepth} breakdown={povertyBreakdown} />
       </CollapsibleSection>
 
-      <CollapsibleSection label="Inequality impact">
+      <CollapsibleSection label="Inequality impact" defaultOpen={false}>
         <InequalityImpactSubPage output={output} />
       </CollapsibleSection>
 
@@ -445,11 +451,11 @@ export default function MigrationSubPage({
 
       {showUKGeographySections && (
         <>
-          <CollapsibleSection label="Constituency impact">
+          <CollapsibleSection label="Constituency impact" defaultOpen={false}>
             <ConstituencySubPage output={output} />
           </CollapsibleSection>
 
-          <CollapsibleSection label="Local authority impact">
+          <CollapsibleSection label="Local authority impact" defaultOpen={false}>
             <LocalAuthoritySubPage output={output} />
           </CollapsibleSection>
         </>

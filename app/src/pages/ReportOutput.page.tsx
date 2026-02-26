@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Container, Stack, Text } from '@mantine/core';
 import { SocietyWideReportOutput as SocietyWideOutput } from '@/api/societyWideCalculation';
@@ -106,36 +106,9 @@ export default function ReportOutputPage() {
         ? 'societyWide'
         : undefined;
 
-  // Default landing page depends on output type
-  const defaultPage = outputType === 'societyWide' ? 'migration' : 'overview';
-  const activeTab = subpage || defaultPage;
+  // Active subpage and view from URL params
+  const activeTab = subpage || '';
   const activeView = view || '';
-
-  // Redirect to default page if no subpage is specified and data is ready
-  // For shared views, preserve the share param in the URL
-  useEffect(() => {
-    if (!subpage && report && simulations && outputType) {
-      if (isSharedView && shareDataUserReportId) {
-        navigate(
-          `/${countryId}/report-output/${shareDataUserReportId}/${defaultPage}?${searchParams.toString()}`
-        );
-      } else if (userReportId) {
-        navigate(`/${countryId}/report-output/${userReportId}/${defaultPage}`);
-      }
-    }
-  }, [
-    subpage,
-    navigate,
-    report,
-    simulations,
-    outputType,
-    defaultPage,
-    countryId,
-    userReportId,
-    isSharedView,
-    searchParams,
-    shareDataUserReportId,
-  ]);
 
   // Format the report creation timestamp using the current country's locale
   const timestamp = formatReportTimestamp(userReport?.createdAt, countryId);
@@ -198,7 +171,7 @@ export default function ReportOutputPage() {
       navigate(`/${countryId}/reports/create/${userReportId}`, {
         state: {
           from: 'report-output',
-          reportPath: `/${countryId}/report-output/${userReportId}/${activeTab}`,
+          reportPath: `/${countryId}/report-output/${userReportId}`,
         },
       });
     }
