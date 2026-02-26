@@ -235,7 +235,10 @@ const ukUseCases: UseCase[] = [
     title: 'Build interactive dashboards',
     description: 'Let stakeholders explore reform scenarios.',
     terminal: [
-      { type: 'prompt', text: 'Build a dashboard showing the impact of cutting the basic rate by 1p' },
+      {
+        type: 'prompt',
+        text: 'Build a dashboard showing the impact of cutting the basic rate by 1p',
+      },
       { type: 'output', text: 'Creating interactive app with charts...' },
       { type: 'success', text: '✓ app.py written → ready to run' },
     ],
@@ -300,7 +303,6 @@ export default function ClaudePluginsPage() {
   const heroPrompt = isUK
     ? 'What is the budgetary impact of raising the personal allowance to £13,500?'
     : 'What is the budgetary impact of doubling the standard deduction?';
-
 
   return (
     <StaticPageLayout title="Claude Plugins">
