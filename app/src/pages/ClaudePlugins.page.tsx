@@ -649,15 +649,9 @@ export default function ClaudePluginsPage() {
               Read more
             </Title>
           </FadeInSection>
-          <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="md" maw={900} mx="auto">
+          <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md" maw={700} mx="auto">
             {(
               [
-                {
-                  href: 'https://policyengine.github.io/plugin-blog/',
-                  external: true,
-                  title: 'How we built the plugin',
-                  desc: 'From first experiments to 24 skills and 21 agents.',
-                },
                 {
                   href: '/us/encode-policy-multi-agent-ai',
                   external: false,
