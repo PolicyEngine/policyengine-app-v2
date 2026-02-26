@@ -91,6 +91,7 @@ export function MultiYearValueSelectorV6(props: ValueSetterProps) {
               param={param}
               value={yearValues[year]}
               onChange={(value) => handleYearValueChange(year, value)}
+              onSubmit={props.onSubmit}
             />
           </Group>
         ))}
@@ -105,6 +106,7 @@ export function MultiYearValueSelectorV6(props: ValueSetterProps) {
               param={param}
               value={yearValues[year]}
               onChange={(value) => handleYearValueChange(year, value)}
+              onSubmit={props.onSubmit}
             />
           </Group>
         ))}

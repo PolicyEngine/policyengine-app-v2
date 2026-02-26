@@ -82,6 +82,7 @@ export function ValueSetterCard({
           setStartDate={onStartDateChange}
           endDate={endDate}
           setEndDate={onEndDateChange}
+          onSubmit={onSubmit}
         />
 
         <Button onClick={onSubmit} disabled={intervals.length === 0} color="teal" fullWidth>

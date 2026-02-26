@@ -1,4 +1,5 @@
-import { IconCalendar, IconClock } from '@tabler/icons-react';
+import { IconCalendar, IconChevronLeft, IconClock } from '@tabler/icons-react';
+import { useNavigate } from 'react-router-dom';
 import { Box, Container, Group, Stack, Text, Title } from '@mantine/core';
 import { ReportActionButtons } from '@/components/report/ReportActionButtons';
 import { SharedReportTag } from '@/components/report/SharedReportTag';
@@ -58,6 +59,7 @@ export default function ReportOutputLayout({
   children,
 }: ReportOutputLayoutProps) {
   const countryId = useCurrentCountry();
+  const navigate = useNavigate();
 
   // Get the appropriate tree based on output type
   const sidebarTree =
@@ -65,6 +67,19 @@ export default function ReportOutputLayout({
   return (
     <Container size="xl" px={spacing.xl}>
       <Stack gap={spacing.xl}>
+        {/* Back navigation */}
+        <Group
+          gap={spacing.xs}
+          align="center"
+          style={{ cursor: 'pointer', marginBottom: `-${spacing.md}` }}
+          onClick={() => navigate(`/${countryId}/reports`)}
+        >
+          <IconChevronLeft size={14} color={colors.gray[500]} />
+          <Text size="sm" c="dimmed">
+            Back to reports
+          </Text>
+        </Group>
+
         {/* Header Section */}
         <Box>
           {/* Title row with actions */}

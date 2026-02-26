@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { IconInfoCircle, IconPencil } from '@tabler/icons-react';
+import { IconSettings2 } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { Stack } from '@mantine/core';
@@ -124,14 +124,8 @@ export default function ReportsPage() {
       key: 'actions',
       header: '',
       type: 'actions',
-      actions: [
-        { action: 'view', tooltip: 'View report setup', icon: <IconInfoCircle size={16} /> },
-        { action: 'edit', tooltip: 'Edit report', icon: <IconPencil size={16} /> },
-      ],
+      actions: [{ action: 'edit', tooltip: 'View/edit report', icon: <IconSettings2 size={16} /> }],
       onAction: (action: string, recordId: string) => {
-        if (action === 'view') {
-          navigate(`/${countryId}/reports/create/${recordId}`);
-        }
         if (action === 'edit') {
           navigate(`/${countryId}/reports/create/${recordId}`, { state: { edit: true } });
         }
