@@ -2,7 +2,6 @@ import { useState, type ReactElement } from 'react';
 import {
   IconCalendar,
   IconChevronDown,
-  IconChevronLeft,
   IconChevronRight,
   IconChevronUp,
   IconClock,
@@ -46,7 +45,7 @@ interface ReportOutputLayoutProps {
   onShare?: () => void;
   onSave?: () => void;
   onView?: () => void;
-  onEdit?: () => void;
+  onReproduce?: () => void;
   children: React.ReactNode;
 }
 
@@ -95,7 +94,7 @@ export default function ReportOutputLayout({
   onShare,
   onSave,
   onView,
-  onEdit,
+  onReproduce,
   children,
 }: ReportOutputLayoutProps) {
   const countryId = useCurrentCountry();
@@ -125,39 +124,47 @@ export default function ReportOutputLayout({
         className="tw:gap-xl"
         style={{ paddingBottom: showMobileDrawer ? spacing['5xl'] : undefined }}
       >
-        {/* Back navigation */}
-        <Group
-          className="tw:gap-xs tw:items-center tw:cursor-pointer"
-          style={{ marginBottom: `-${spacing.md}` }}
-          onClick={() => navigate(`/${countryId}/reports`)}
-        >
-          <IconChevronLeft size={14} color={colors.gray[500]} />
-          <Text className="tw:text-sm" style={{ color: colors.text.tertiary }}>
-            Back to reports
+        {/* Breadcrumb */}
+        <Group className="tw:gap-1 tw:items-center" style={{ marginBottom: `-${spacing.md}` }}>
+          <Text
+            className="tw:text-sm tw:cursor-pointer"
+            style={{ color: colors.text.tertiary }}
+            onClick={() => navigate(`/${countryId}/reports`)}
+          >
+            Reports
+          </Text>
+          <IconChevronRight size={12} color={colors.gray[400]} />
+          <Text className="tw:text-sm" style={{ color: colors.text.primary }}>
+            {reportLabel || reportId}
           </Text>
         </Group>
 
         {/* Header Section */}
         <div>
           {/* Title row with actions */}
-          <Group className="tw:gap-xs tw:items-center tw:mb-xs">
-            <Title
-              order={1}
-              style={{
-                fontWeight: typography.fontWeight.semibold,
-                fontSize: typography.fontSize['3xl'],
-                color: colors.primary[700],
-              }}
-            >
-              {reportLabel || reportId}
-            </Title>
-            {isSharedView && <SharedReportTag />}
+          <Group className="tw:gap-xs tw:items-center tw:mb-xs tw:justify-between tw:flex-nowrap">
+            <Group className="tw:gap-xs tw:items-center tw:flex-nowrap" style={{ minWidth: 0 }}>
+              <Title
+                order={1}
+                style={{
+                  fontWeight: typography.fontWeight.semibold,
+                  fontSize: typography.fontSize['3xl'],
+                  color: colors.primary[700],
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {reportLabel || reportId}
+              </Title>
+              {isSharedView && <SharedReportTag />}
+            </Group>
             <ReportActionButtons
               isSharedView={isSharedView}
               onShare={onShare}
               onSave={onSave}
               onView={onView}
-              onEdit={onEdit}
+              onReproduce={onReproduce}
             />
           </Group>
 

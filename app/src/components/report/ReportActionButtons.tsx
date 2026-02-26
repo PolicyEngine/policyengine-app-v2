@@ -1,4 +1,4 @@
-import { IconBookmark, IconSettings2 } from '@tabler/icons-react';
+import { IconBookmark, IconCode, IconSettings } from '@tabler/icons-react';
 import { ActionIcon, Group, Tooltip } from '@mantine/core';
 import { ShareButton } from '@/components/common/ActionButtons';
 import { colors, typography } from '@/designTokens';
@@ -8,14 +8,14 @@ interface ReportActionButtonsProps {
   onShare?: () => void;
   onSave?: () => void;
   onView?: () => void;
-  onEdit?: () => void;
+  onReproduce?: () => void;
 }
 
 /**
  * ReportActionButtons - Action buttons for report output header
  *
  * Renders different buttons based on view type:
- * - Normal view: View + Edit + Share buttons
+ * - Normal view: Reproduce + View/edit + Share buttons
  * - Shared view: Save button with tooltip
  */
 export function ReportActionButtons({
@@ -23,7 +23,7 @@ export function ReportActionButtons({
   onShare,
   onSave,
   onView,
-  onEdit,
+  onReproduce,
 }: ReportActionButtonsProps) {
   if (isSharedView) {
     return (
@@ -50,20 +50,35 @@ export function ReportActionButtons({
     );
   }
 
+  const tooltipStyles = {
+    tooltip: {
+      backgroundColor: colors.gray[700],
+      fontSize: typography.fontSize.xs,
+    },
+  };
+
   return (
     <Group gap="xs" ml={6}>
-      <Tooltip
-        label="View/edit report"
-        position="bottom"
-        styles={{
-          tooltip: {
-            backgroundColor: colors.gray[700],
-            fontSize: typography.fontSize.xs,
-          },
-        }}
-      >
-        <ActionIcon variant="subtle" color="gray" size="lg" onClick={onEdit}>
-          <IconSettings2 size={18} />
+      <Tooltip label="Reproduce in Python" position="bottom" styles={tooltipStyles} withArrow>
+        <ActionIcon
+          variant="light"
+          color="gray"
+          size="lg"
+          aria-label="Reproduce in Python"
+          onClick={onReproduce}
+        >
+          <IconCode size={18} />
+        </ActionIcon>
+      </Tooltip>
+      <Tooltip label="View/edit report" position="bottom" styles={tooltipStyles} withArrow>
+        <ActionIcon
+          variant="light"
+          color="gray"
+          size="lg"
+          aria-label="View/edit report"
+          onClick={onView}
+        >
+          <IconSettings size={18} />
         </ActionIcon>
       </Tooltip>
       <ShareButton onClick={onShare} />

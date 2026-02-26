@@ -466,6 +466,7 @@ export function USDistrictChoroplethMap({
   const geoSource = filteredGeoJSON ?? geoJSON;
   const gradientId = `choropleth-gradient-${uniqueId.replace(/:/g, '')}`;
 
+
   return (
     <div
       ref={mergedRef}

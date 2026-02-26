@@ -21,6 +21,7 @@ import DynamicsSubPage from './DynamicsSubPage';
 import ErrorPage from './ErrorPage';
 import LoadingPage from './LoadingPage';
 import { LocalAuthoritySubPage } from './LocalAuthoritySubPage';
+import MigrationSubPage from './MigrationSubPage';
 import NotFoundSubPage from './NotFoundSubPage';
 import OverviewSubPage from './OverviewSubPage';
 import PolicySubPage from './PolicySubPage';
@@ -100,6 +101,15 @@ const INPUT_ONLY_TABS: Record<string, (props: InputTabProps) => React.ReactEleme
  * These tabs need the OUTPUT data (calculated society-wide impacts)
  */
 const OUTPUT_TABS: Record<string, (props: OutputTabProps) => React.ReactElement> = {
+  migration: ({ output, report, simulations, geographies }) => (
+    <MigrationSubPage
+      output={output}
+      report={report}
+      simulations={simulations}
+      geographies={geographies}
+    />
+  ),
+
   overview: ({ output }) => <OverviewSubPage output={output} outputType="societyWide" />,
 
   'comparative-analysis': ({ output, simulations, report, activeView }) => (

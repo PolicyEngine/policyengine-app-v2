@@ -13,21 +13,21 @@ describe('ReportActionButtons', () => {
     expect(screen.queryByRole('button', { name: /view/i })).not.toBeInTheDocument();
   });
 
-  test('given isSharedView=false then renders view, edit, and share buttons', () => {
+  test('given isSharedView=false then renders reproduce, view, and share buttons', () => {
     // Given
     render(
       <ReportActionButtons
         isSharedView={false}
         onShare={vi.fn()}
         onView={vi.fn()}
-        onEdit={vi.fn()}
+        onReproduce={vi.fn()}
       />
     );
 
     // Then
+    expect(screen.getByRole('button', { name: /reproduce in python/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /share/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /view/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /edit/i })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /save report/i })).not.toBeInTheDocument();
   });
 
@@ -57,6 +57,19 @@ describe('ReportActionButtons', () => {
     expect(handleShare).toHaveBeenCalledOnce();
   });
 
+  test('given onReproduce callback then calls it when reproduce clicked', async () => {
+    // Given
+    const user = userEvent.setup();
+    const handleReproduce = vi.fn();
+    render(<ReportActionButtons isSharedView={false} onReproduce={handleReproduce} />);
+
+    // When
+    await user.click(screen.getByRole('button', { name: /reproduce in python/i }));
+
+    // Then
+    expect(handleReproduce).toHaveBeenCalledOnce();
+  });
+
   test('given onView callback then calls it when view clicked', async () => {
     // Given
     const user = userEvent.setup();
@@ -68,18 +81,5 @@ describe('ReportActionButtons', () => {
 
     // Then
     expect(handleView).toHaveBeenCalledOnce();
-  });
-
-  test('given onEdit callback then calls it when edit clicked', async () => {
-    // Given
-    const user = userEvent.setup();
-    const handleEdit = vi.fn();
-    render(<ReportActionButtons isSharedView={false} onEdit={handleEdit} />);
-
-    // When
-    await user.click(screen.getByRole('button', { name: /edit/i }));
-
-    // Then
-    expect(handleEdit).toHaveBeenCalledOnce();
   });
 });

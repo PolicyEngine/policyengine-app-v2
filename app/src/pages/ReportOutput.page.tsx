@@ -13,9 +13,7 @@ import { useDisclosure } from '@/hooks/useDisclosure';
 import { useSaveSharedReport } from '@/hooks/useSaveSharedReport';
 import { useSharedReportData } from '@/hooks/useSharedReportData';
 import { useUserReportById } from '@/hooks/useUserReports';
-import type { Geography } from '@/types/ingredients/Geography';
 import { formatReportTimestamp } from '@/utils/dateUtils';
-import { isUKLocalLevelGeography } from '@/utils/geographyUtils';
 import {
   buildSharePath,
   createShareData,
@@ -112,20 +110,21 @@ export default function ReportOutputPage() {
         ? 'societyWide'
         : undefined;
 
-  const DEFAULT_PAGE = 'overview';
-  const activeTab = subpage || DEFAULT_PAGE;
+  // Default landing page depends on output type
+  const defaultPage = outputType === 'societyWide' ? 'migration' : 'overview';
+  const activeTab = subpage || defaultPage;
   const activeView = view || '';
 
-  // Redirect to overview if no subpage is specified and data is ready
+  // Redirect to default page if no subpage is specified and data is ready
   // For shared views, preserve the share param in the URL
   useEffect(() => {
-    if (!subpage && report && simulations) {
+    if (!subpage && report && simulations && outputType) {
       if (isSharedView && shareDataUserReportId) {
         navigate(
-          `/${countryId}/report-output/${shareDataUserReportId}/${DEFAULT_PAGE}?${searchParams.toString()}`
+          `/${countryId}/report-output/${shareDataUserReportId}/${defaultPage}?${searchParams.toString()}`
         );
       } else if (userReportId) {
-        navigate(`/${countryId}/report-output/${userReportId}/${DEFAULT_PAGE}`);
+        navigate(`/${countryId}/report-output/${userReportId}/${defaultPage}`);
       }
     }
   }, [
@@ -133,6 +132,8 @@ export default function ReportOutputPage() {
     navigate,
     report,
     simulations,
+    outputType,
+    defaultPage,
     countryId,
     userReportId,
     isSharedView,
@@ -141,7 +142,7 @@ export default function ReportOutputPage() {
   ]);
 
   // Determine which tabs to show based on output type, country, and geography scope
-  const tabs = outputType ? getTabsForOutputType(outputType, report?.countryId, geographies) : [];
+  const tabs = outputType ? getTabsForOutputType(outputType) : [];
 
   // Handle tab navigation (absolute path, preserve search params for shared views)
   const handleTabClick = (tabValue: string) => {
@@ -212,14 +213,25 @@ export default function ReportOutputPage() {
   // Handle view button click - navigate to report builder in view mode
   const handleView = () => {
     if (userReportId) {
-      navigate(`/${countryId}/reports/create/${userReportId}`);
+      navigate(`/${countryId}/reports/create/${userReportId}`, {
+        state: {
+          from: 'report-output',
+          reportPath: `/${countryId}/report-output/${userReportId}/${activeTab}`,
+        },
+      });
     }
   };
 
-  // Handle edit button click - navigate to report builder in edit mode
-  const handleEdit = () => {
-    if (userReportId) {
-      navigate(`/${countryId}/reports/create/${userReportId}`, { state: { edit: true } });
+  // Handle reproduce button click - navigate to reproduce in Python content
+  const handleReproduce = () => {
+    const id = isSharedView ? shareDataUserReportId : userReportId;
+    if (id) {
+      const basePath = `/${countryId}/report-output/${id}/reproduce`;
+      if (isSharedView) {
+        navigate(`${basePath}?${searchParams.toString()}`);
+      } else {
+        navigate(basePath);
+      }
     }
   };
 
@@ -349,7 +361,7 @@ export default function ReportOutputPage() {
         onShare={handleShare}
         onSave={handleSave}
         onView={!isSharedView ? handleView : undefined}
-        onEdit={!isSharedView ? handleEdit : undefined}
+        onReproduce={handleReproduce}
       >
         <ErrorBoundary
           fallback={(error, errorInfo) => (
@@ -367,19 +379,16 @@ export default function ReportOutputPage() {
  * Determine which tabs to display based on output type and content
  */
 function getTabsForOutputType(
-  outputType: ReportOutputType,
-  countryId?: string,
-  geographies?: Geography[]
+  outputType: ReportOutputType
 ): Array<{ value: string; label: string }> {
   if (outputType === 'societyWide') {
-    const tabs = [
-      { value: 'overview', label: 'Overview' },
+    return [
+      { value: 'migration', label: 'Migration' },
       { value: 'comparative-analysis', label: 'Comparative analysis' },
       { value: 'policy', label: 'Policy' },
       { value: 'population', label: 'Population' },
-      { value: 'dynamics', label: 'Dynamics' },
-      { value: 'reproduce', label: 'Reproduce in Python' },
     ];
+
 
     const hasLocalLevelGeography = geographies?.some((g) => isUKLocalLevelGeography(g));
     if (countryId === 'uk' && !hasLocalLevelGeography) {
@@ -396,8 +405,6 @@ function getTabsForOutputType(
       { value: 'comparative-analysis', label: 'Comparative analysis' },
       { value: 'policy', label: 'Policy' },
       { value: 'population', label: 'Population' },
-      { value: 'dynamics', label: 'Dynamics' },
-      { value: 'reproduce', label: 'Reproduce in Python' },
     ];
   }
 
