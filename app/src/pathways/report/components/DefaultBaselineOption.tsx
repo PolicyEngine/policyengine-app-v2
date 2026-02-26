@@ -9,7 +9,9 @@
  */
 
 import { IconChevronRight } from '@tabler/icons-react';
-import { Card, CardContent } from '@/components/ui';
+import { Group, Stack, Text } from '@/components/ui';
+import { colors, typography } from '@/designTokens';
+import { cn } from '@/lib/utils';
 import { getDefaultBaselineLabel } from '@/utils/isDefaultBaselineSimulation';
 
 interface DefaultBaselineOptionProps {
@@ -26,25 +28,32 @@ export default function DefaultBaselineOption({
   const simulationLabel = getDefaultBaselineLabel(countryId);
 
   return (
-    <Card
-      className={`tw:cursor-pointer tw:border ${isSelected ? 'tw:border-primary-500 tw:bg-primary-50' : 'tw:border-gray-200'}`}
+    <button
+      type="button"
       onClick={onClick}
+      className={cn(
+        'tw:w-full tw:text-left tw:rounded-element tw:border tw:p-md tw:transition-all',
+        isSelected
+          ? 'tw:border-primary-500 tw:bg-secondary-100 tw:cursor-pointer tw:hover:bg-secondary-200 tw:hover:border-primary-600'
+          : 'tw:border-border-light tw:bg-white tw:cursor-pointer tw:hover:bg-gray-50 tw:hover:border-border-medium'
+      )}
     >
-      <CardContent className="tw:p-lg">
-        <div className="tw:flex tw:justify-between tw:items-center">
-          <div className="tw:flex tw:flex-col tw:gap-xs tw:flex-1">
-            <span className="tw:font-bold">{simulationLabel}</span>
-            <span className="tw:text-sm tw:text-gray-500">
-              Use current law with all households nationwide as baseline
-            </span>
-          </div>
-          <IconChevronRight
-            size={20}
-            className="tw:text-gray-400 tw:shrink-0"
-            style={{ marginTop: '2px' }}
-          />
-        </div>
-      </CardContent>
-    </Card>
+      <Group className="tw:justify-between tw:items-center">
+        <Stack gap="xs" style={{ flex: 1 }}>
+          <Text fw={typography.fontWeight.bold}>{simulationLabel}</Text>
+          <Text size="sm" style={{ color: colors.gray[600] }}>
+            Use current law with all households nationwide as baseline
+          </Text>
+        </Stack>
+        <IconChevronRight
+          size={20}
+          style={{
+            color: colors.gray[600],
+            marginTop: '2px',
+            flexShrink: 0,
+          }}
+        />
+      </Group>
+    </button>
   );
 }
