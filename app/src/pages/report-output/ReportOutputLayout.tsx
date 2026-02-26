@@ -2,10 +2,12 @@ import { useState, type ReactElement } from 'react';
 import {
   IconCalendar,
   IconChevronDown,
+  IconChevronLeft,
   IconChevronRight,
   IconChevronUp,
   IconClock,
 } from '@tabler/icons-react';
+import { useNavigate } from 'react-router-dom';
 import { ReportActionButtons } from '@/components/report/ReportActionButtons';
 import { SharedReportTag } from '@/components/report/SharedReportTag';
 import {
@@ -97,6 +99,7 @@ export default function ReportOutputLayout({
   children,
 }: ReportOutputLayoutProps) {
   const countryId = useCurrentCountry();
+  const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [drawerOpened, setDrawerOpened] = useState(false);
 
@@ -122,6 +125,18 @@ export default function ReportOutputLayout({
         className="tw:gap-xl"
         style={{ paddingBottom: showMobileDrawer ? spacing['5xl'] : undefined }}
       >
+        {/* Back navigation */}
+        <Group
+          className="tw:gap-xs tw:items-center tw:cursor-pointer"
+          style={{ marginBottom: `-${spacing.md}` }}
+          onClick={() => navigate(`/${countryId}/reports`)}
+        >
+          <IconChevronLeft size={14} color={colors.gray[500]} />
+          <Text className="tw:text-sm" style={{ color: colors.text.tertiary }}>
+            Back to reports
+          </Text>
+        </Group>
+
         {/* Header Section */}
         <div>
           {/* Title row with actions */}

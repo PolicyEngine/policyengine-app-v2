@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { IconInfoCircle, IconPencil } from '@tabler/icons-react';
+import { IconSettings2 } from '@tabler/icons-react';
 import { useNavigate } from 'react-router-dom';
 import { ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
 import { RenameIngredientModal } from '@/components/common/RenameIngredientModal';
@@ -110,14 +110,8 @@ export default function PoliciesPage() {
       key: 'actions',
       header: '',
       type: 'actions',
-      actions: [
-        { action: 'view', tooltip: 'View policy setup', icon: <IconInfoCircle size={16} /> },
-        { action: 'edit', tooltip: 'Edit policy', icon: <IconPencil size={16} /> },
-      ],
+      actions: [{ action: 'edit', tooltip: 'View/edit policy', icon: <IconSettings2 size={16} /> }],
       onAction: (action: string, recordId: string) => {
-        if (action === 'view') {
-          handleOpenEditor(recordId, 'display');
-        }
         if (action === 'edit') {
           handleOpenEditor(recordId, 'edit');
         }

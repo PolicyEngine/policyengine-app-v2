@@ -112,7 +112,12 @@ export function YearlyValueSelectorV6(props: ValueSetterProps) {
         <Text size="xs" c={colors.gray[600]} mb={4}>
           Value
         </Text>
-        <ValueInputBox param={param} value={paramValue} onChange={setParamValue} />
+        <ValueInputBox
+          param={param}
+          value={paramValue}
+          onChange={setParamValue}
+          onSubmit={props.onSubmit}
+        />
       </Box>
     </Stack>
   );

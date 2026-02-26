@@ -106,22 +106,6 @@ export default function LoadingPage({
           </Stack>
         </div>
       </div>
-
-      {/* Info Message */}
-      <div
-        className="tw:p-md"
-        style={{
-          backgroundColor: colors.blue[50],
-          border: `1px solid ${colors.border.light}`,
-          borderRadius: spacing.radius.container,
-        }}
-      >
-        <Text className="tw:text-sm" style={{ color: colors.gray[700] }}>
-          {queuePosition
-            ? `Your report is queued at position ${queuePosition}. The page will automatically update when ready.`
-            : 'Your report is being calculated. This may take a few moments for complex analyses. The page will automatically update when ready.'}
-        </Text>
-      </div>
     </Stack>
   );
 }

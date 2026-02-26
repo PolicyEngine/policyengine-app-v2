@@ -1,6 +1,6 @@
-import { IconBookmark } from '@tabler/icons-react';
+import { IconBookmark, IconSettings2 } from '@tabler/icons-react';
 import { ActionIcon, Group, Tooltip } from '@mantine/core';
-import { EditDefaultButton, ShareButton, ViewButton } from '@/components/common/ActionButtons';
+import { ShareButton } from '@/components/common/ActionButtons';
 import { colors, typography } from '@/designTokens';
 
 interface ReportActionButtonsProps {
@@ -52,8 +52,20 @@ export function ReportActionButtons({
 
   return (
     <Group gap="xs" ml={6}>
-      <ViewButton tooltip="View report setup" onClick={onView} />
-      <EditDefaultButton onClick={onEdit} />
+      <Tooltip
+        label="View/edit report"
+        position="bottom"
+        styles={{
+          tooltip: {
+            backgroundColor: colors.gray[700],
+            fontSize: typography.fontSize.xs,
+          },
+        }}
+      >
+        <ActionIcon variant="subtle" color="gray" size="lg" onClick={onEdit}>
+          <IconSettings2 size={18} />
+        </ActionIcon>
+      </Tooltip>
       <ShareButton onClick={onShare} />
     </Group>
   );
