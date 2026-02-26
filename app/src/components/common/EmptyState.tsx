@@ -1,4 +1,5 @@
 import { Stack, Text } from '@/components/ui';
+import { colors } from '@/designTokens';
 
 interface EmptyStateProps {
   ingredient: string; // e.g., "Policy"
@@ -8,7 +9,7 @@ interface EmptyStateProps {
 export default function EmptyState({ ingredient }: EmptyStateProps) {
   return (
     <Stack className="tw:items-center tw:justify-center tw:p-xl">
-      <Text size="lg" style={{ color: '#868e96' }}>
+      <Text size="lg" style={{ color: colors.gray[600] }}>
         No {ingredient.toLowerCase()} found.
       </Text>
     </Stack>

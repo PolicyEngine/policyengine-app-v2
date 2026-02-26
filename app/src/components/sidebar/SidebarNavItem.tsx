@@ -1,7 +1,7 @@
 import { IconExternalLink } from '@tabler/icons-react';
 import { Link } from 'react-router-dom';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui';
-import { colors, spacing } from '../../designTokens';
+import { colors, spacing, typography } from '../../designTokens';
 
 interface SidebarNavItemProps {
   label: string;
@@ -30,7 +30,7 @@ export default function SidebarNavItem({
       <span
         className="tw:flex-1 tw:text-sm"
         style={{
-          fontWeight: isActive ? 500 : 400,
+          fontWeight: isActive ? typography.fontWeight.medium : typography.fontWeight.normal,
           color: disabled ? colors.gray[400] : isActive ? colors.gray[900] : colors.gray[700],
         }}
       >
@@ -50,7 +50,7 @@ export default function SidebarNavItem({
     display: 'block',
     width: '100%',
     borderRadius: spacing.radius.element,
-    padding: '8px 12px',
+    padding: `${spacing.sm} ${spacing.md}`,
     backgroundColor: isActive ? colors.gray[50] : 'transparent',
     textDecoration: 'none',
     cursor: disabled ? 'not-allowed' : 'pointer',

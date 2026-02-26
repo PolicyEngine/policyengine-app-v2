@@ -16,6 +16,7 @@ import {
   Switch,
   Text,
 } from '@/components/ui';
+import { colors, typography } from '@/designTokens';
 import { Household } from '@/types/ingredients/Household';
 import { coerceByValueType } from '@/utils/valueCoercion';
 import { getValue, setValue, VariableInfo } from '@/utils/VariableResolver';
@@ -55,7 +56,10 @@ export default function VariableInput({
         <div className="tw:flex tw:items-center tw:gap-1 tw:justify-start">
           <Text
             size="sm"
-            style={{ color: isChecked ? '#868e96' : '#212529', fontWeight: isChecked ? 400 : 600 }}
+            style={{
+              color: isChecked ? colors.gray[600] : colors.gray[900],
+              fontWeight: isChecked ? typography.fontWeight.normal : typography.fontWeight.semibold,
+            }}
           >
             False
           </Text>
@@ -66,7 +70,10 @@ export default function VariableInput({
           />
           <Text
             size="sm"
-            style={{ color: isChecked ? '#212529' : '#868e96', fontWeight: isChecked ? 600 : 400 }}
+            style={{
+              color: isChecked ? colors.gray[900] : colors.gray[600],
+              fontWeight: isChecked ? typography.fontWeight.semibold : typography.fontWeight.normal,
+            }}
           >
             True
           </Text>

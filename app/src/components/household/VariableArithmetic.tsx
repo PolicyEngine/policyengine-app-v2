@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { IconCircleMinus, IconCirclePlus, IconTriangleFilled } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import { Button, Text } from '@/components/ui';
-import { spacing, typography } from '@/designTokens';
+import { colors, spacing, typography } from '@/designTokens';
 import { useReportYear } from '@/hooks/useReportYear';
 import { RootState } from '@/store';
 import { Household } from '@/types/ingredients/Household';
@@ -162,7 +162,7 @@ export default function VariableArithmetic({
         }}
         onMouseEnter={(e) => {
           if (expandable) {
-            e.currentTarget.style.backgroundColor = '#f8f9fa';
+            e.currentTarget.style.backgroundColor = colors.gray[50];
           }
         }}
         onMouseLeave={(e) => {
@@ -171,7 +171,7 @@ export default function VariableArithmetic({
       >
         <div className="tw:flex tw:justify-between tw:items-center">
           <div className="tw:flex tw:items-center" style={{ gap: spacing.sm }}>
-            <Text size="md" fw={typography.fontWeight.normal} style={{ color: '#868e96' }}>
+            <Text size="md" fw={typography.fontWeight.normal} style={{ color: colors.gray[600] }}>
               {displayText}
             </Text>
             {Arrow}

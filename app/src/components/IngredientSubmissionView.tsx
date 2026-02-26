@@ -93,7 +93,7 @@ export default function IngredientSubmissionView({
                     />
                   )}
                   <Stack gap="xs" className="tw:flex-1">
-                    <Text fw={700}>{item.title}</Text>
+                    <Text fw={typography.fontWeight.bold}>{item.title}</Text>
                     {item.description && (
                       <Text size="sm" style={{ color: colors.text.secondary }}>
                         {item.description}
@@ -122,7 +122,7 @@ export default function IngredientSubmissionView({
               <div className="tw:flex tw:items-center tw:gap-1">
                 <Text
                   size={item.isHeader ? 'lg' : 'sm'}
-                  fw={item.isHeader ? 700 : 600}
+                  fw={item.isHeader ? typography.fontWeight.bold : typography.fontWeight.semibold}
                   className="tw:flex-1"
                 >
                   {item.text}
@@ -140,7 +140,7 @@ export default function IngredientSubmissionView({
                   {item.subItems.map((subItem, subIndex) => (
                     <Stack key={subIndex} gap="xs">
                       {/* Parameter name */}
-                      <Text size="sm" fw={500}>
+                      <Text size="sm" fw={typography.fontWeight.medium}>
                         {subItem.label}
                       </Text>
 

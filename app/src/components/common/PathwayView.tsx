@@ -8,6 +8,7 @@ import {
   type SetupConditionCard,
 } from '@/components/flowView';
 import { Container, Stack, Text, Title } from '@/components/ui';
+import { colors } from '@/designTokens';
 import MultiButtonFooter, { ButtonConfig } from './MultiButtonFooter';
 
 interface PathwayViewProps {
@@ -176,7 +177,7 @@ export default function PathwayView({
     <Container>
       <Title order={2}>{title}</Title>
       {subtitle && (
-        <Text className="tw:mb-sm" style={{ color: '#868e96' }}>
+        <Text className="tw:mb-sm" style={{ color: colors.gray[600] }}>
           {subtitle}
         </Text>
       )}

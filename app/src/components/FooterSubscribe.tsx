@@ -48,10 +48,10 @@ export default function FooterSubscribe() {
       <p className="tw:text-base tw:text-white/80 tw:font-sans tw:m-0">
         Get the latest posts delivered right to your inbox.
       </p>
-      <Stack gap="sm" className="tw:mt-4 tw:max-w-md">
+      <Stack gap="sm" className="tw:mt-4 tw:w-4/5">
         <Input
           placeholder="Enter your email address"
-          className="tw:bg-white tw:h-10"
+          className="tw:bg-white tw:h-10 tw:w-full"
           value={email}
           onChange={(event) => setEmail(event.currentTarget.value)}
           disabled={status === 'loading'}
@@ -59,7 +59,8 @@ export default function FooterSubscribe() {
         <Button
           onClick={handleSubscribe}
           disabled={status === 'loading'}
-          className="tw:bg-primary-500 tw:text-white tw:hover:bg-primary-400 tw:w-full tw:h-10 tw:font-semibold tw:tracking-wider"
+          size="lg"
+          className="tw:bg-primary-500 tw:text-white tw:hover:bg-primary-400 tw:w-full tw:font-semibold tw:tracking-wider"
         >
           {status === 'loading' ? <Spinner size="sm" /> : null}
           SUBSCRIBE

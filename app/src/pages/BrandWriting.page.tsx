@@ -167,7 +167,7 @@ export default function BrandWritingPage() {
         style={{
           paddingTop: spacing['4xl'],
           paddingBottom: spacing['4xl'],
-          backgroundColor: '#F7FEFE',
+          backgroundColor: colors.primary[50],
           borderBottom: `1px solid ${colors.border.dark}`,
           paddingLeft: '6.125%',
           paddingRight: '6.125%',

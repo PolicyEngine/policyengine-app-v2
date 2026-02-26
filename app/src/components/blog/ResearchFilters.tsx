@@ -6,6 +6,7 @@ import {
   getTopicTags,
   locationLabels,
 } from '@/data/posts/postTransformers';
+import { colors, typography } from '@/designTokens';
 
 interface ResearchFiltersProps {
   searchQuery: string;
@@ -93,7 +94,7 @@ export function ResearchFilters({
 
   // Render type options
   const renderTypeOptions = () => (
-    <Stack gap="xs" style={{ gap: 4 }}>
+    <Stack gap="xs">
       {typeOptions.map((option) => (
         <div key={option.value} className="tw:flex tw:items-center tw:gap-xs">
           <Checkbox
@@ -111,7 +112,7 @@ export function ResearchFilters({
 
   // Render the tags for a section
   const renderTopicTags = () => (
-    <Stack gap="xs" style={{ gap: 4 }}>
+    <Stack gap="xs">
       {getTopicTags().map((tag) => (
         <div key={tag} className="tw:flex tw:items-center tw:gap-xs">
           <Checkbox
@@ -134,7 +135,7 @@ export function ResearchFilters({
     const usStates = allLocationTags.filter((tag) => tag.startsWith('us-'));
 
     return (
-      <Stack gap="xs" style={{ gap: 4 }}>
+      <Stack gap="xs">
         {/* Show countries */}
         {countries.map((tag) => (
           <div key={tag}>
@@ -156,7 +157,7 @@ export function ResearchFilters({
                     cursor: 'pointer',
                     userSelect: 'none',
                     marginLeft: 12,
-                    color: '#868e96',
+                    color: colors.text.tertiary,
                   }}
                   onClick={(e: React.MouseEvent) => {
                     e.preventDefault();
@@ -200,7 +201,7 @@ export function ResearchFilters({
   };
 
   const renderAuthorTags = () => (
-    <Stack gap="xs" style={{ gap: 4 }}>
+    <Stack gap="xs">
       {availableAuthors.map((author) => (
         <div key={author.key} className="tw:flex tw:items-center tw:gap-xs">
           <Checkbox
@@ -251,10 +252,10 @@ export function ResearchFilters({
           onClick={() => toggleSection('type')}
           className="tw:cursor-pointer tw:flex-shrink-0 tw:py-1"
         >
-          <Text fw={600} size="sm">
+          <Text fw={typography.fontWeight.semibold} size="sm">
             Type
           </Text>
-          <Text size="sm" style={{ color: '#868e96' }}>
+          <Text size="sm" style={{ color: colors.text.tertiary }}>
             {expandedSection === 'type' ? '−' : '+'}
           </Text>
         </Group>
@@ -279,10 +280,10 @@ export function ResearchFilters({
           onClick={() => toggleSection('topics')}
           className="tw:cursor-pointer tw:flex-shrink-0 tw:py-1"
         >
-          <Text fw={600} size="sm">
+          <Text fw={typography.fontWeight.semibold} size="sm">
             Topic
           </Text>
-          <Text size="sm" style={{ color: '#868e96' }}>
+          <Text size="sm" style={{ color: colors.text.tertiary }}>
             {expandedSection === 'topics' ? '−' : '+'}
           </Text>
         </Group>
@@ -307,10 +308,10 @@ export function ResearchFilters({
           onClick={() => toggleSection('locations')}
           className="tw:cursor-pointer tw:flex-shrink-0 tw:py-1"
         >
-          <Text fw={600} size="sm">
+          <Text fw={typography.fontWeight.semibold} size="sm">
             Location
           </Text>
-          <Text size="sm" style={{ color: '#868e96' }}>
+          <Text size="sm" style={{ color: colors.text.tertiary }}>
             {expandedSection === 'locations' ? '−' : '+'}
           </Text>
         </Group>
@@ -335,10 +336,10 @@ export function ResearchFilters({
           onClick={() => toggleSection('authors')}
           className="tw:cursor-pointer tw:flex-shrink-0 tw:py-1"
         >
-          <Text fw={600} size="sm">
+          <Text fw={typography.fontWeight.semibold} size="sm">
             Author
           </Text>
-          <Text size="sm" style={{ color: '#868e96' }}>
+          <Text size="sm" style={{ color: colors.text.tertiary }}>
             {expandedSection === 'authors' ? '−' : '+'}
           </Text>
         </Group>

@@ -1,4 +1,4 @@
-import { colors } from '../../designTokens';
+import { colors, typography } from '../../designTokens';
 
 interface SidebarSectionProps {
   title?: string;
@@ -12,10 +12,9 @@ export default function SidebarSection({ title, children }: SidebarSectionProps)
         <span
           className="tw:px-3 tw:pb-1"
           style={{
-            fontSize: 12,
-            lineHeight: '18px',
-            letterSpacing: 0,
-            fontWeight: 500,
+            fontSize: typography.fontSize.xs,
+            lineHeight: 1.5,
+            fontWeight: typography.fontWeight.medium,
             color: colors.text.secondary,
           }}
         >

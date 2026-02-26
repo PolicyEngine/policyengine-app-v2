@@ -27,7 +27,7 @@ import {
   Stack,
   Text,
 } from '@/components/ui';
-import { colors, spacing } from '@/designTokens';
+import { colors, spacing, typography } from '@/designTokens';
 import { Household } from '@/types/ingredients/Household';
 import { sortPeopleKeys } from '@/utils/householdIndividuals';
 import {
@@ -367,7 +367,7 @@ export default function HouseholdBuilderForm({
         {/* Individuals / Members Section */}
         <AccordionItem value="individuals">
           <AccordionTrigger>
-            <Text fw={500}>Individuals</Text>
+            <Text fw={typography.fontWeight.medium}>Individuals</Text>
           </AccordionTrigger>
           <AccordionContent>
             <Accordion type="multiple" key={people.join(',')} defaultValue={people}>
@@ -377,7 +377,7 @@ export default function HouseholdBuilderForm({
                 return (
                   <AccordionItem key={person} value={person}>
                     <AccordionTrigger>
-                      <Text fw={600} size="sm">
+                      <Text fw={typography.fontWeight.semibold} size="sm">
                         {getPersonDisplayNameCapitalized(person)}
                       </Text>
                     </AccordionTrigger>
@@ -471,7 +471,7 @@ export default function HouseholdBuilderForm({
         {/* Household Variables Section */}
         <AccordionItem value="household-vars">
           <AccordionTrigger>
-            <Text fw={500}>Household</Text>
+            <Text fw={typography.fontWeight.medium}>Household</Text>
           </AccordionTrigger>
           <AccordionContent>
             <Stack gap="md">

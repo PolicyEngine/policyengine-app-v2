@@ -1,4 +1,5 @@
 import { Container, Spinner, Stack, Text, Title } from '@/components/ui';
+import { colors } from '@/designTokens';
 
 interface MetadataLoadingExperienceProps {
   /** Country code (us or uk) */
@@ -17,14 +18,14 @@ export function MetadataLoadingExperience({ countryId }: MetadataLoadingExperien
   return (
     <Container>
       <Title order={2}>Loading</Title>
-      <Text className="tw:mb-sm" style={{ color: '#868e96' }}>
+      <Text className="tw:mb-sm" style={{ color: colors.gray[600] }}>
         Fetching {countryName} policy data
       </Text>
       <hr className="tw:border-border-light tw:my-sm" />
 
       <Stack className="tw:items-center tw:justify-center tw:py-20">
         <Spinner size="lg" />
-        <Text size="sm" className="tw:mt-md" style={{ color: '#868e96' }}>
+        <Text size="sm" className="tw:mt-md" style={{ color: colors.gray[600] }}>
           This may take a moment for first-time loads
         </Text>
       </Stack>

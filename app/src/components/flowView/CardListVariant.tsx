@@ -1,4 +1,5 @@
 import { Stack, Text } from '@/components/ui';
+import { colors, typography } from '@/designTokens';
 import { cn } from '@/lib/utils';
 
 export interface CardListItem {
@@ -47,9 +48,9 @@ export default function CardListVariant({
           )}
         >
           <Stack gap="xs">
-            <Text fw={600}>{item.title}</Text>
+            <Text fw={typography.fontWeight.semibold}>{item.title}</Text>
             {item.subtitle && (
-              <Text size="sm" style={{ color: '#868e96' }}>
+              <Text size="sm" style={{ color: colors.gray[600] }}>
                 {item.subtitle}
               </Text>
             )}

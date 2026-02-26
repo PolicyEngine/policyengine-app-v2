@@ -1,6 +1,7 @@
 import { useSelector } from 'react-redux';
 import ParameterTable from '@/components/report/ParameterTable';
 import { getParamDefinitionDate } from '@/constants';
+import { colors } from '@/designTokens';
 import { useReportYear } from '@/hooks/useReportYear';
 import { RootState } from '@/store';
 import { Policy } from '@/types/ingredients/Policy';
@@ -64,7 +65,7 @@ export default function PolicySubPage({ policies, userPolicies }: PolicySubPageP
       <h2>Policy information</h2>
 
       {hasNoPolicyChanges && (
-        <p style={{ fontStyle: 'italic', color: 'var(--mantine-color-dimmed)' }}>
+        <p style={{ fontStyle: 'italic', color: colors.text.tertiary }}>
           No policy changes for this report
         </p>
       )}

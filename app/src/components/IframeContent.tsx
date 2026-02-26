@@ -67,7 +67,7 @@ export default function IframeContent({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            backgroundColor: '#f9fafb',
+            backgroundColor: colors.gray[50],
             zIndex: 1,
           }}
         >
@@ -98,7 +98,7 @@ export default function IframeContent({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            backgroundColor: '#f9fafb',
+            backgroundColor: colors.gray[50],
             zIndex: 1,
           }}
         >

@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Badge, Group, Text } from '@/components/ui';
 import { locationLabels, topicLabels } from '@/data/posts/postTransformers';
+import { colors } from '@/designTokens';
 import { cn } from '@/lib/utils';
 import type { ResearchItem } from '@/types/blog';
 
@@ -57,7 +58,7 @@ export function BlogPostCard({ item, countryId }: BlogPostCardProps) {
                   key={tag}
                   variant="secondary"
                   className={cn(
-                    'tw:text-[10px] tw:px-1.5 tw:py-0',
+                    'tw:text-xs tw:px-2.5 tw:py-0.5 tw:font-medium',
                     item.isApp
                       ? 'tw:bg-primary-100 tw:text-primary-700'
                       : 'tw:bg-blue-100 tw:text-blue-700'
@@ -67,7 +68,7 @@ export function BlogPostCard({ item, countryId }: BlogPostCardProps) {
                 </Badge>
               ))}
             </Group>
-            <Text size="xs" c="dimmed" className="tw:uppercase" span>
+            <Text size="xs" c={colors.text.tertiary} className="tw:uppercase" span>
               {formattedDate}
             </Text>
           </Group>
@@ -76,7 +77,7 @@ export function BlogPostCard({ item, countryId }: BlogPostCardProps) {
             {item.title}
           </p>
 
-          <Text size="sm" c="dimmed" className="tw:flex-1 tw:line-clamp-3">
+          <Text size="sm" c={colors.text.tertiary} className="tw:flex-1 tw:line-clamp-3">
             {item.description}
           </Text>
 

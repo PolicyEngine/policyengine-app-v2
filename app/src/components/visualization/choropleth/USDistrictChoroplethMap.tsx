@@ -27,7 +27,7 @@ import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 import { ComposableMap, Geographies, Geography, ZoomableGroup } from 'react-simple-maps';
 import { ChartWatermark } from '@/components/charts';
 import { Spinner, Stack, Text } from '@/components/ui';
-import { colors, spacing } from '@/designTokens';
+import { colors, spacing, typography } from '@/designTokens';
 import type {
   GeoJSONFeatureCollection,
   MapVisualizationType,
@@ -560,15 +560,15 @@ export function USDistrictChoroplethMap({
             background: 'white',
             border: `1px solid ${colors.border.light}`,
             borderRadius: spacing.radius.element,
-            padding: '6px 10px',
-            fontSize: 12,
+            padding: `${spacing.xs} ${spacing.sm}`,
+            fontSize: typography.fontSize.xs,
             pointerEvents: 'none',
             zIndex: 10,
             boxShadow: '0 2px 6px rgba(0,0,0,0.12)',
             whiteSpace: 'nowrap',
           }}
         >
-          <div style={{ fontWeight: 600 }}>{tooltip.label}</div>
+          <div style={{ fontWeight: typography.fontWeight.semibold }}>{tooltip.label}</div>
           <div style={{ color: colors.gray[600] }}>{tooltip.value}</div>
         </div>
       )}

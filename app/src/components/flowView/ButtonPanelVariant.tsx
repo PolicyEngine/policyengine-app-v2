@@ -1,5 +1,6 @@
 import { IconChevronRight } from '@tabler/icons-react';
 import { Group, Stack, Text } from '@/components/ui';
+import { colors, typography } from '@/designTokens';
 import { cn } from '@/lib/utils';
 
 export interface ButtonPanelCard {
@@ -38,15 +39,15 @@ export default function ButtonPanelVariant({ cards }: ButtonPanelVariantProps) {
         >
           <Group className="tw:justify-between tw:items-center">
             <Stack gap="xs" style={{ flex: 1 }}>
-              <Text fw={700}>{card.title}</Text>
-              <Text size="sm" style={{ color: '#868e96' }}>
+              <Text fw={typography.fontWeight.bold}>{card.title}</Text>
+              <Text size="sm" style={{ color: colors.gray[600] }}>
                 {card.description}
               </Text>
             </Stack>
             <IconChevronRight
               size={20}
               style={{
-                color: card.isDisabled ? '#ced4da' : '#868e96',
+                color: card.isDisabled ? colors.gray[300] : colors.gray[600],
                 marginTop: '2px',
                 flexShrink: 0,
               }}

@@ -41,7 +41,7 @@ export default function GiveCalcBanner() {
       className="tw:relative tw:flex tw:items-center tw:justify-center"
       style={{
         backgroundColor: '#fef3c7',
-        borderBottom: `1px solid #fcd34d`,
+        borderBottom: '1px solid #fcd34d',
         padding: `${spacing.sm} ${spacing.md}`,
         fontFamily: typography.fontFamily.primary,
       }}

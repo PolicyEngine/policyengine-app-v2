@@ -1,6 +1,6 @@
 import { IconCheck } from '@tabler/icons-react';
 import { Group, Stack, Text } from '@/components/ui';
-import { colors } from '@/designTokens';
+import { colors, typography } from '@/designTokens';
 import { cn } from '@/lib/utils';
 
 export interface SetupConditionCard {
@@ -52,8 +52,8 @@ export default function SetupConditionsVariant({ cards }: SetupConditionsVariant
               />
             )}
             <Stack gap="xs" style={{ flex: 1 }}>
-              <Text fw={700}>{card.title}</Text>
-              <Text size="sm" style={{ color: '#868e96' }}>
+              <Text fw={typography.fontWeight.bold}>{card.title}</Text>
+              <Text size="sm" style={{ color: colors.gray[600] }}>
                 {card.description}
               </Text>
             </Stack>

@@ -24,6 +24,7 @@ import {
   YAxis,
 } from 'recharts';
 import { Stack } from '@/components/ui';
+import { typography } from '@/designTokens';
 import { RECHARTS_FONT_STYLE } from '@/utils/chartUtils';
 import { ChartWatermark } from './ChartWatermark';
 import { TOOLTIP_STYLE } from './tooltipStyle';
@@ -72,9 +73,9 @@ function WaterfallBarLabel({ x, y, width, height, index, data }: any) {
       y={labelY}
       textAnchor="middle"
       dominantBaseline="central"
-      fontSize={12}
+      fontSize={typography.fontSize.xs}
       fill="#fff"
-      fontWeight={500}
+      fontWeight={typography.fontWeight.medium}
     >
       {entry.label}
     </text>
@@ -92,7 +93,7 @@ function WaterfallTooltip({ active, payload }: any) {
   const data = payload[0].payload as WaterfallDatum;
   return (
     <div style={{ ...TOOLTIP_STYLE, maxWidth: 'min(300px, 90vw)' }}>
-      <p style={{ fontWeight: 600, margin: 0 }}>{data.name}</p>
+      <p style={{ fontWeight: typography.fontWeight.semibold, margin: 0 }}>{data.name}</p>
     </div>
   );
 }

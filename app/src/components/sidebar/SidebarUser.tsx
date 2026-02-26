@@ -1,4 +1,4 @@
-import { colors } from '../../designTokens';
+import { colors, typography } from '../../designTokens';
 
 interface SidebarUserProps {
   name: string;
@@ -13,17 +13,17 @@ export default function SidebarUser({ name, initials }: SidebarUserProps) {
         style={{
           backgroundColor: colors.gray[100],
           color: colors.gray[700],
-          fontSize: 12,
-          fontWeight: 600,
+          fontSize: typography.fontSize.xs,
+          fontWeight: typography.fontWeight.semibold,
         }}
       >
         {initials}
       </div>
       <span
         style={{
-          fontSize: 14,
-          lineHeight: '20px',
-          fontWeight: 500,
+          fontSize: typography.fontSize.sm,
+          lineHeight: 1.43,
+          fontWeight: typography.fontWeight.medium,
           color: colors.gray[900],
         }}
       >

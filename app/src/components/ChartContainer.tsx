@@ -9,6 +9,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui';
+import { typography } from '@/designTokens';
 import { trackChartCsvDownloaded } from '@/utils/analytics';
 
 interface ChartContainerProps {
@@ -29,7 +30,7 @@ export function ChartContainer({ children, title, onDownloadCsv }: ChartContaine
   return (
     <Stack gap="sm">
       <Group justify="space-between" align="start" wrap="nowrap">
-        <Text size="lg" fw={500} className="tw:flex-1 tw:break-words">
+        <Text size="lg" fw={typography.fontWeight.medium} className="tw:flex-1 tw:break-words">
           {title}
         </Text>
         <Tooltip>
