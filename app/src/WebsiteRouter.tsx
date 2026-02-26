@@ -117,7 +117,7 @@ const router = createBrowserRouter(
               element: <ModelPage />,
             },
             {
-              path: 'claude-plugins',
+              path: 'claude-plugin',
               element: <ClaudePluginsPage />,
             },
           ],
