@@ -69,13 +69,13 @@ export default function PolicyParameterSelectorView({
   }
 
   return (
-    <div className="tw:flex tw:flex-col tw:min-h-screen">
+    <div className="tw:flex tw:flex-col tw:h-screen tw:overflow-hidden">
       {/* Header */}
       <div style={{ height: headerHeight }} className="tw:shrink-0">
         <HeaderNavigation />
       </div>
 
-      <div className="tw:flex tw:flex-1">
+      <div className="tw:flex tw:flex-1 tw:min-h-0">
         {/* Navbar - desktop only */}
         {!isMobile && (
           <div
@@ -92,7 +92,7 @@ export default function PolicyParameterSelectorView({
 
         {/* Main content */}
         <div
-          className="tw:flex-1 tw:bg-gray-50 tw:p-md"
+          className="tw:flex-1 tw:min-w-0 tw:bg-gray-50 tw:p-md tw:overflow-auto"
           style={isMobile ? { paddingBottom: footerHeight } : undefined}
         >
           {loading || !parameterTree ? (
@@ -110,7 +110,7 @@ export default function PolicyParameterSelectorView({
         </div>
       </div>
 
-      {/* Desktop footer */}
+      {/* Desktop footer - fixed at bottom like Mantine AppShell.Footer */}
       {!isMobile && (
         <div
           className="tw:p-md tw:border-t tw:border-gray-200 tw:bg-white tw:shrink-0"

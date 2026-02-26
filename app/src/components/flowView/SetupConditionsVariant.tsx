@@ -30,14 +30,12 @@ export default function SetupConditionsVariant({ cards }: SetupConditionsVariant
           onClick={card.onClick}
           disabled={card.isDisabled}
           className={cn(
-            'tw:w-full tw:text-left tw:rounded-element tw:border tw:p-md tw:transition-colors',
+            'tw:w-full tw:text-left tw:rounded-element tw:border tw:p-md tw:transition-all',
             card.isDisabled
-              ? 'tw:opacity-60 tw:cursor-not-allowed tw:border-gray-200 tw:bg-gray-50'
+              ? 'tw:opacity-60 tw:cursor-not-allowed tw:border-border-light tw:bg-gray-50 tw:pointer-events-none'
               : card.isSelected
-                ? 'tw:border-primary-500 tw:bg-primary-50 tw:cursor-pointer'
-                : card.isFulfilled
-                  ? 'tw:border-green-300 tw:bg-green-50 tw:cursor-pointer'
-                  : 'tw:border-gray-200 tw:bg-white tw:cursor-pointer tw:hover:border-primary-300'
+                ? 'tw:border-primary-500 tw:bg-secondary-100 tw:cursor-pointer tw:hover:bg-secondary-200 tw:hover:border-primary-600'
+                : 'tw:border-border-light tw:bg-white tw:cursor-pointer tw:hover:bg-gray-50 tw:hover:border-border-medium'
           )}
         >
           <Group gap="sm" className="tw:items-center">

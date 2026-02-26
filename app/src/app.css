@@ -87,7 +87,8 @@
   --color-foreground: #101828;
 
   /* Primary action color (buttons, links, badges) */
-  --color-primary: #319795;
+  /* Uses primary-600 shade to match Mantine's filled button default (primaryShade: 6) */
+  --color-primary: #2c7a7b;
   --color-primary-foreground: #fff;
 
   /* Secondary (muted buttons, secondary badges) */
@@ -218,5 +219,16 @@
   textarea {
     font-family: inherit;
     font-size: inherit;
+  }
+
+  /* Hide native number input spinners — prevents overlap with suffix icons */
+  input[type='number']::-webkit-inner-spin-button,
+  input[type='number']::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  input[type='number'] {
+    -moz-appearance: textfield;
   }
 }

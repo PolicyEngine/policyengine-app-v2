@@ -97,7 +97,6 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
         <Button
           className="tw:w-full"
           style={{
-            backgroundColor: colors.primary[600],
             fontSize: typography.fontSize.sm,
             fontWeight: typography.fontWeight.medium,
           }}

@@ -1,5 +1,6 @@
 import { Input, Switch } from '@/components/ui';
 import { colors, spacing } from '@/designTokens';
+import { cn } from '@/lib/utils';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import { coerceByUnit } from '@/utils/valueCoercion';
 
@@ -96,11 +97,13 @@ export function ValueInputBox(props: ValueInputBoxProps) {
           min={0}
           value={displayValue}
           onChange={handleChange}
-          className={prefix ? 'tw:pl-7' : ''}
+          className={cn(prefix ? 'tw:pl-7' : '', isPercentage ? 'tw:pr-7' : '')}
           style={{ flex: 1 }}
         />
         {isPercentage && (
-          <span className="tw:absolute tw:right-3 tw:text-sm tw:text-gray-500">%</span>
+          <span className="tw:absolute tw:right-3 tw:text-sm tw:text-gray-500 tw:pointer-events-none">
+            %
+          </span>
         )}
       </div>
     </div>

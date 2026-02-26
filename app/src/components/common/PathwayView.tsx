@@ -174,8 +174,10 @@ export default function PathwayView({
     footerProps.primaryAction;
 
   return (
-    <Container>
-      <Title order={2}>{title}</Title>
+    <Container variant="guttered">
+      <Title order={2} style={{ color: colors.primary[700] }}>
+        {title}
+      </Title>
       {subtitle && (
         <Text className="tw:mb-sm" style={{ color: colors.gray[600] }}>
           {subtitle}
