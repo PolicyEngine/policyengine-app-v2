@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import StaticPageLayout from '@/components/shared/static/StaticPageLayout';
 import { colors, spacing, typography } from '@/designTokens';
 
@@ -129,23 +130,93 @@ function FadeInSection({
 
 /* ─── data ─── */
 
-const useCases = [
+type LineType = 'comment' | 'command' | 'prompt' | 'output' | 'success';
+
+interface UseCase {
+  title: string;
+  description: string;
+  terminal: { type: LineType; text: string }[];
+}
+
+interface MicrosimFeature {
+  title: string;
+  desc: string;
+}
+
+const usUseCases: UseCase[] = [
   {
     title: 'Model a reform',
     description: 'Budgetary and distributional impacts from plain English.',
     terminal: [
-      { type: 'prompt' as const, text: 'What if we raised the standard deduction to $20,000?' },
-      { type: 'output' as const, text: 'Running microsimulation on 2024 Enhanced CPS...' },
-      { type: 'success' as const, text: 'Cost: $80B · Winners: 62% · Gini: -0.001' },
+      { type: 'prompt', text: 'What if we raised the standard deduction to $20,000?' },
+      { type: 'output', text: 'Running microsimulation on 2024 Enhanced CPS...' },
+      { type: 'success', text: 'Cost: $80B · Winners: 62% · Gini: -0.001' },
     ],
   },
   {
     title: 'Analyze historical policy',
     description: 'Study how programs have changed over time.',
     terminal: [
-      { type: 'prompt' as const, text: 'How has the EITC max credit changed?' },
-      { type: 'output' as const, text: 'Reading gov.irs.credits.eitc.max...' },
-      { type: 'success' as const, text: '3+ kids: $6,660 (2020) → $8,231 (2026)' },
+      { type: 'prompt', text: 'How has the EITC max credit changed?' },
+      { type: 'output', text: 'Reading gov.irs.credits.eitc.max...' },
+      { type: 'success', text: '3+ kids: $6,660 (2020) → $8,231 (2026)' },
+    ],
+  },
+  {
+    title: 'Create household calculators',
+    description: 'Show how a specific household is affected.',
+    terminal: [
+      { type: 'prompt', text: 'Raise the CTC to $3k. Impact on a family of 4 earning $55k?' },
+      { type: 'output', text: 'CTC: $4,400 → $6,000' },
+      { type: 'success', text: 'Net change: +$1,280/yr (+$107/mo)' },
+    ],
+  },
+  {
+    title: 'Build interactive dashboards',
+    description: 'Let stakeholders explore reform scenarios.',
+    terminal: [
+      { type: 'prompt', text: 'Build a dashboard comparing flat tax rates' },
+      { type: 'output', text: 'Creating interactive app with charts...' },
+      { type: 'success', text: '✓ app.py written → ready to run' },
+    ],
+  },
+  {
+    title: 'Write policy briefs',
+    description: 'Research-quality analysis with charts and tables.',
+    terminal: [
+      { type: 'prompt', text: 'Write a brief on eliminating the SALT cap' },
+      { type: 'output', text: 'Cost: $69B · 98% goes to top decile' },
+      { type: 'success', text: '✓ salt_cap_brief.md written with 3 charts' },
+    ],
+  },
+  {
+    title: 'Congressional district analysis',
+    description: 'Map reform impacts to every district.',
+    terminal: [
+      { type: 'prompt', text: 'Map the SALT cap repeal across all 435 districts' },
+      { type: 'output', text: 'Loading district-level microdata...' },
+      { type: 'success', text: '✓ 435 districts analyzed → choropleth ready' },
+    ],
+  },
+];
+
+const ukUseCases: UseCase[] = [
+  {
+    title: 'Model a reform',
+    description: 'Budgetary and distributional impacts from plain English.',
+    terminal: [
+      { type: 'prompt', text: 'What if we raised the personal allowance to £13,500?' },
+      { type: 'output', text: 'Running microsimulation on Family Resources Survey...' },
+      { type: 'success', text: 'Cost: £8B · Winners: 54% · Gini: -0.001' },
+    ],
+  },
+  {
+    title: 'Analyze historical policy',
+    description: 'Study how programs have changed over time.',
+    terminal: [
+      { type: 'prompt', text: 'How has the Universal Credit standard allowance changed?' },
+      { type: 'output', text: 'Reading gov.dwp.universal_credit.standard_allowance...' },
+      { type: 'success', text: 'Single 25+: £318/mo (2015) → £400/mo (2025)' },
     ],
   },
   {
@@ -153,49 +224,61 @@ const useCases = [
     description: 'Show how a specific household is affected.',
     terminal: [
       {
-        type: 'prompt' as const,
-        text: 'Raise the CTC to $3k. Impact on a family of 4 earning $55k?',
+        type: 'prompt',
+        text: 'Set Child Benefit to £30/wk per child. Impact on a family of 4 earning £35k?',
       },
-      { type: 'output' as const, text: 'CTC: $4,400 → $6,000' },
-      { type: 'success' as const, text: 'Net change: +$1,280/yr (+$107/mo)' },
+      { type: 'output', text: 'Child Benefit: £2,251 → £3,120/yr' },
+      { type: 'success', text: 'Net change: +£869/yr (+£72/mo)' },
     ],
   },
   {
     title: 'Build interactive dashboards',
     description: 'Let stakeholders explore reform scenarios.',
     terminal: [
-      { type: 'prompt' as const, text: 'Build a dashboard comparing flat tax rates' },
-      { type: 'output' as const, text: 'Creating interactive app with charts...' },
-      { type: 'success' as const, text: '✓ app.py written → ready to run' },
+      {
+        type: 'prompt',
+        text: 'Build a dashboard showing the impact of cutting the basic rate by 1p',
+      },
+      { type: 'output', text: 'Creating interactive app with charts...' },
+      { type: 'success', text: '✓ app.py written → ready to run' },
     ],
   },
   {
     title: 'Write policy briefs',
     description: 'Research-quality analysis with charts and tables.',
     terminal: [
-      { type: 'prompt' as const, text: 'Write a brief on eliminating the SALT cap' },
-      { type: 'output' as const, text: 'Cost: $69B · 98% goes to top decile' },
-      { type: 'success' as const, text: '✓ salt_cap_brief.md written with 3 charts' },
+      { type: 'prompt', text: 'Write a brief on abolishing the two-child limit' },
+      { type: 'output', text: 'Cost: £2.3B · 90% goes to bottom 3 deciles' },
+      { type: 'success', text: '✓ two_child_limit_brief.md written with 3 charts' },
     ],
   },
   {
-    title: 'Congressional district analysis',
-    description: 'Map reform impacts to every district.',
+    title: 'Constituency analysis',
+    description: 'Map reform impacts to every constituency.',
     terminal: [
-      { type: 'prompt' as const, text: 'Map this reform across all 435 districts' },
-      { type: 'output' as const, text: 'Loading district-level microdata...' },
-      { type: 'success' as const, text: '✓ 435 districts analyzed → choropleth ready' },
+      { type: 'prompt', text: 'Map the two-child limit repeal across all 650 constituencies' },
+      { type: 'output', text: 'Loading constituency-level microdata...' },
+      { type: 'success', text: '✓ 650 constituencies analyzed → choropleth ready' },
     ],
   },
 ];
 
-const microsimFeatures = [
+const usMicrosimFeatures: MicrosimFeature[] = [
   { title: 'Cost & revenue', desc: 'Budgetary impact of any reform' },
   { title: 'Winners & losers', desc: 'Who gains and who loses' },
   { title: 'Distributional', desc: 'Decile impacts, Gini changes' },
   { title: 'Poverty effects', desc: 'Rate and depth changes' },
   { title: 'Congressional', desc: 'Per-district geographic impacts' },
   { title: '50-state', desc: 'State-by-state breakdowns' },
+];
+
+const ukMicrosimFeatures: MicrosimFeature[] = [
+  { title: 'Cost & revenue', desc: 'Budgetary impact of any reform' },
+  { title: 'Winners & losers', desc: 'Who gains and who loses' },
+  { title: 'Distributional', desc: 'Decile impacts, Gini changes' },
+  { title: 'Poverty effects', desc: 'Rate and depth changes' },
+  { title: 'Constituency', desc: 'Per-constituency geographic impacts' },
+  { title: 'Regional', desc: 'Country and region breakdowns' },
 ];
 
 const stats = [
@@ -213,6 +296,14 @@ const CONTAINER: React.CSSProperties = { maxWidth: 1200, marginLeft: 'auto', mar
 /* ─── page ─── */
 
 export default function ClaudePluginsPage() {
+  const { countryId } = useParams<{ countryId: string }>();
+  const isUK = countryId === 'uk';
+  const useCases = isUK ? ukUseCases : usUseCases;
+  const microsimFeatures = isUK ? ukMicrosimFeatures : usMicrosimFeatures;
+  const heroPrompt = isUK
+    ? 'What is the budgetary impact of raising the personal allowance to £13,500?'
+    : 'What is the budgetary impact of doubling the standard deduction?';
+
   return (
     <StaticPageLayout title="Claude Plugins">
       {/* ━━━ HERO ━━━ */}
@@ -350,10 +441,7 @@ export default function ClaudePluginsPage() {
                 />
                 <div style={{ marginTop: 6 }} />
                 <TerminalLine type="comment" text="# 3. Analyze" />
-                <TerminalLine
-                  type="prompt"
-                  text="What is the budgetary impact of doubling the standard deduction?"
-                />
+                <TerminalLine type="prompt" text={heroPrompt} />
               </div>
             </FadeInSection>
           </div>
