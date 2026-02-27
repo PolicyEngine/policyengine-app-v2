@@ -66,17 +66,12 @@ describe('Sidebar', () => {
     );
   });
 
-  test('given disabled link then shows tooltip on hover', async () => {
-    // Given
-    const user = userEvent.setup();
+  test('given sidebar renders then displays contact support in My account section', () => {
+    // When
     render(<Sidebar />);
 
-    // When
-    const accountSettings = screen.getByText('Account settings');
-    await user.hover(accountSettings);
-
-    // Then — Radix Tooltip renders content with role="tooltip"
-    expect(screen.getByRole('tooltip', { name: /under development/i })).toBeInTheDocument();
+    // Then
+    expect(screen.getByText('Contact support')).toBeInTheDocument();
   });
 
   test('given isOpen=false then sidebar content is not rendered', () => {
