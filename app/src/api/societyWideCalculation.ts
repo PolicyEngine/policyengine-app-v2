@@ -1,84 +1,32 @@
-import { BASE_URL } from '@/constants';
+import { fetchRegionByCode } from '@/api/v2/regions';
 import { ReportOutputSocietyWideUK } from '@/types/metadata/ReportOutputSocietyWideUK';
 import { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
 
+/** Union type for v1 economy report output. Used by report output pages. */
 export type SocietyWideReportOutput = ReportOutputSocietyWideUS | ReportOutputSocietyWideUK;
 
 /**
- * Determines the dataset to use for a society-wide calculation.
- * Returns 'enhanced_cps' for US nationwide calculations, undefined otherwise.
- * This ensures Enhanced CPS is only used for US nationwide impacts, not for UK or US state-level calculations.
+ * Looks up the dataset UUID for a region from the v2 API.
+ *
+ * Each region in the v2 API has a `dataset_id` field linking it to
+ * the correct dataset. This replaces the old hardcoded string-based
+ * lookup (e.g., 'enhanced_cps') with a proper UUID lookup.
  *
  * @param countryId - The country ID (e.g., 'us', 'uk')
- * @param region - The region (e.g., 'us', 'ca', 'uk')
- * @returns The dataset name or undefined to use API default
+ * @param regionCode - The region code (e.g., 'us', 'uk', 'state/ca')
+ * @returns The dataset UUID, or null if lookup fails (lets API use default)
  */
-export function getDatasetForRegion(countryId: string, region: string): string | undefined {
-  // Only use enhanced_cps for US nationwide
-  if (countryId === 'us' && region === 'us') {
-    return 'enhanced_cps';
-  }
-  // Return undefined for all other cases (UK, US states, etc.)
-  return undefined;
-}
-
-// NOTE: Need to add other params at later point
-export interface SocietyWideCalculationParams {
-  region: string; // Must include a region; "us" for US nationwide, two-letter state code for US states
-  time_period: string; // Four-digit year
-  dataset?: string; // Optional dataset parameter; defaults to API's default dataset
-  include_district_breakdowns?: boolean; // Enable congressional district breakdowns (US nationwide only)
-}
-
-export interface SocietyWideCalculationResponse {
-  status: 'computing' | 'ok' | 'error';
-  queue_position?: number;
-  average_time?: number;
-  result: SocietyWideReportOutput | null;
-  error?: string;
-}
-
-export async function fetchSocietyWideCalculation(
+export async function getDatasetIdForRegion(
   countryId: string,
-  reformPolicyId: string,
-  baselinePolicyId: string,
-  params: SocietyWideCalculationParams
-): Promise<SocietyWideCalculationResponse> {
-  // Automatically set dataset for US nationwide if not explicitly provided
-  const dataset = params.dataset ?? getDatasetForRegion(countryId, params.region);
-  const paramsWithDataset = dataset ? { ...params, dataset } : params;
-
-  const queryParams = new URLSearchParams();
-
-  Object.entries(paramsWithDataset).forEach(([key, value]) => {
-    if (value !== undefined) {
-      queryParams.append(key, String(value));
-    }
-  });
-
-  // Enable congressional district breakdowns for US nationwide simulations
-  if (countryId === 'us' && params.region === 'us') {
-    queryParams.append('include_district_breakdowns', 'true');
-  }
-
-  const queryString = queryParams.toString();
-  const url = `${BASE_URL}/${countryId}/economy/${reformPolicyId}/over/${baselinePolicyId}${queryString ? `?${queryString}` : ''}`;
-
-  const response = await fetch(url, {
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
-
-  if (!response.ok) {
-    console.error(
-      '[fetchSocietyWideCalculation] Failed with status:',
-      response.status,
-      response.statusText
+  regionCode: string
+): Promise<string | null> {
+  try {
+    const region = await fetchRegionByCode(countryId, regionCode);
+    return region.dataset_id;
+  } catch {
+    console.warn(
+      `[getDatasetIdForRegion] Could not resolve dataset for ${countryId}/${regionCode}, using API default`
     );
-    throw new Error(`Society-wide calculation failed: ${response.statusText}`);
+    return null;
   }
-
-  const data = await response.json();
-  return data;
 }

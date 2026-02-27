@@ -39,34 +39,6 @@ export const mockV2PolicyPayload = (
   ...overrides,
 });
 
-/**
- * @deprecated Use mockV2PolicyResponse for v2 API
- */
-export const mockPolicyData = (overrides?: any) => ({
-  result: {
-    id: TEST_POLICY_IDS.POLICY_123,
-    label: 'Test Policy',
-    data: { param1: 100 },
-    ...overrides,
-  },
-});
-
-/**
- * @deprecated Use mockV2PolicyPayload for v2 API
- */
-export const mockPolicyPayload = (overrides?: any) => ({
-  data: { param1: 100, param2: 200 },
-  label: 'New Policy',
-  ...overrides,
-});
-
-/**
- * @deprecated Use mockV2PolicyResponse for v2 API
- */
-export const mockPolicyCreateResponse = (policyId = TEST_POLICY_IDS.POLICY_456) => ({
-  result: { policy_id: policyId },
-});
-
 export const mockSuccessFetchResponse = (data: any) => ({
   ok: true,
   json: vi.fn().mockResolvedValue(data),

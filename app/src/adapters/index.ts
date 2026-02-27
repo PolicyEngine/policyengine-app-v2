@@ -15,6 +15,5 @@ export { UserHouseholdAdapter } from './UserHouseholdAdapter';
 // Conversion Helpers
 export {
   convertDateRangeMapToValueIntervals,
-  convertPolicyJsonToParameters,
   convertParametersToPolicyJson,
 } from './conversionHelpers';

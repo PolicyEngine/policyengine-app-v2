@@ -1,7 +1,7 @@
-// Import auth hook here in future; for now, mocked out below
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { fetchHouseholdByIdV2 } from '@/api/v2/households';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { getStoreBackend } from '@/libs/storeBackend';
 import { Household } from '@/types/ingredients/Household';
 import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { ApiHouseholdStore, LocalStorageHouseholdStore } from '../api/householdAssociation';
@@ -12,8 +12,8 @@ const apiHouseholdStore = new ApiHouseholdStore();
 const localHouseholdStore = new LocalStorageHouseholdStore();
 
 export const useUserHouseholdStore = () => {
-  const isLoggedIn = false; // TODO: Replace with actual auth check in future
-  return isLoggedIn ? apiHouseholdStore : localHouseholdStore;
+  const backend = getStoreBackend();
+  return backend === 'api' ? apiHouseholdStore : localHouseholdStore;
 };
 
 // This fetches only the user-household associations; see
@@ -21,9 +21,8 @@ export const useUserHouseholdStore = () => {
 export const useHouseholdAssociationsByUser = (userId: string) => {
   const store = useUserHouseholdStore();
   const countryId = useCurrentCountry();
-  const isLoggedIn = false; // TODO: Replace with actual auth check in future
-  // TODO: Should we determine user ID from auth context here? Or pass as arg?
-  const config = isLoggedIn ? queryConfig.api : queryConfig.localStorage;
+  const backend = getStoreBackend();
+  const config = backend === 'api' ? queryConfig.api : queryConfig.localStorage;
 
   return useQuery({
     queryKey: householdAssociationKeys.byUser(userId, countryId),
@@ -34,8 +33,8 @@ export const useHouseholdAssociationsByUser = (userId: string) => {
 
 export const useHouseholdAssociation = (userId: string, householdId: string) => {
   const store = useUserHouseholdStore();
-  const isLoggedIn = false; // TODO: Replace with actual auth check in future
-  const config = isLoggedIn ? queryConfig.api : queryConfig.localStorage;
+  const backend = getStoreBackend();
+  const config = backend === 'api' ? queryConfig.api : queryConfig.localStorage;
 
   return useQuery({
     queryKey: householdAssociationKeys.specific(userId, householdId),

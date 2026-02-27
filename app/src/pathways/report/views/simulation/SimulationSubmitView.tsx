@@ -1,15 +1,14 @@
 /**
- * SimulationSubmitView - View for reviewing and submitting simulation
- * Duplicated from SimulationSubmitFrame
- * Props-based instead of Redux-based
+ * SimulationSubmitView - View for reviewing and confirming simulation configuration
+ *
+ * In v2, simulations are NOT pre-created via API. The v2 analysis endpoints
+ * (POST /analysis/economy or /analysis/household-impact) create simulations
+ * server-side when the report is submitted. This view validates the config
+ * and generates a temporary local ID to mark the simulation as "configured."
  */
 
-import { SimulationAdapter } from '@/adapters';
 import IngredientSubmissionView, { SummaryBoxItem } from '@/components/IngredientSubmissionView';
-import { useCreateSimulation } from '@/hooks/useCreateSimulation';
-import { Simulation } from '@/types/ingredients/Simulation';
 import { SimulationStateProps } from '@/types/pathwayState';
-import { SimulationCreationPayload } from '@/types/payloads';
 
 interface SimulationSubmitViewProps {
   simulation: SimulationStateProps;
@@ -24,36 +23,12 @@ export default function SimulationSubmitView({
   onBack,
   onCancel,
 }: SimulationSubmitViewProps) {
-  const { createSimulation, isPending } = useCreateSimulation(simulation?.label || undefined);
-
   function handleSubmit() {
-    // Determine population ID and type based on what's set
-    let populationId: string | undefined;
-    let populationType: 'household' | 'geography' | undefined;
-
-    if (simulation.population.household?.id) {
-      populationId = simulation.population.household.id;
-      populationType = 'household';
-    } else if (simulation.population.geography?.regionCode) {
-      populationId = simulation.population.geography.regionCode;
-      populationType = 'geography';
-    }
-
-    // Convert state to partial Simulation for adapter
-    const simulationData: Partial<Simulation> = {
-      populationId,
-      policyId: simulation.policy.id,
-      populationType,
-    };
-
-    const serializedSimulationCreationPayload: SimulationCreationPayload =
-      SimulationAdapter.toCreationPayload(simulationData);
-
-    createSimulation(serializedSimulationCreationPayload, {
-      onSuccess: (data) => {
-        onSubmitSuccess(data.result.simulation_id);
-      },
-    });
+    // Generate a temporary local ID to mark this simulation as configured.
+    // The real v2 simulation ID will be assigned by the analysis endpoint
+    // when the report is created (useCreateReport).
+    const tempId = crypto.randomUUID();
+    onSubmitSuccess(tempId);
   }
 
   // Create summary boxes based on the current simulation state
@@ -90,7 +65,7 @@ export default function SimulationSubmitView({
       summaryBoxes={summaryBoxes}
       submitButtonText="Create simulation"
       submissionHandler={handleSubmit}
-      submitButtonLoading={isPending}
+      submitButtonLoading={false}
       onBack={onBack}
       onCancel={onCancel}
     />

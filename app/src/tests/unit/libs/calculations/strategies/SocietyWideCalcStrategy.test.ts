@@ -1,453 +1,462 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { Query } from '@tanstack/react-query';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SocietyWideCalcStrategy } from '@/libs/calculations/economy/SocietyWideCalcStrategy';
 import {
-  mockSocietyWideCompleteResponse,
-  mockSocietyWideComputingResponse,
-  mockSocietyWideErrorResponse,
+  mockEconomyCompletedResponse,
+  mockEconomyFailedResponse,
+  mockEconomyPendingResponse,
+  mockEconomyRunningResponse,
   STRATEGY_TEST_CONSTANTS,
+  TEST_REPORT_IDS,
 } from '@/tests/fixtures/libs/calculations/strategyFixtures';
 import { mockSocietyWideCalcParams } from '@/tests/fixtures/types/calculationFixtures';
+import { CalcMetadata } from '@/types/calculation';
 
-// Mock the societyWide API
+// Mock the v2 API module
+vi.mock('@/api/v2/economyAnalysis', () => ({
+  createEconomyAnalysis: vi.fn(),
+  getEconomyAnalysis: vi.fn(),
+}));
+
+// Mock getDatasetIdForRegion (async region-based dataset UUID lookup)
 vi.mock('@/api/societyWideCalculation', () => ({
-  fetchSocietyWideCalculation: vi.fn(),
-  SocietyWideCalculationParams: {},
-  SocietyWideCalculationResponse: {},
+  getDatasetIdForRegion: vi.fn(() => Promise.resolve('00000000-0000-4000-a000-000000000001')),
 }));
 
 describe('SocietyWideCalcStrategy', () => {
   let strategy: SocietyWideCalcStrategy;
-  let mockFetchSocietyWideCalculation: any;
+  let mockCreateEconomyAnalysis: any;
+  let mockGetEconomyAnalysis: any;
+
+  const mockMetadata: CalcMetadata = {
+    calcId: 'test-calc-id',
+    calcType: 'societyWide',
+    targetType: 'report',
+    startedAt: Date.now(),
+  };
 
   beforeEach(async () => {
     strategy = new SocietyWideCalcStrategy();
-    const societyWideModule = await import('@/api/societyWideCalculation');
-    mockFetchSocietyWideCalculation = societyWideModule.fetchSocietyWideCalculation as any;
+
+    const economyModule = await import('@/api/v2/economyAnalysis');
+    mockCreateEconomyAnalysis = economyModule.createEconomyAnalysis;
+    mockGetEconomyAnalysis = economyModule.getEconomyAnalysis;
+
     vi.clearAllMocks();
   });
 
-  afterEach(() => {
-    vi.clearAllMocks();
-  });
-
-  describe('execute', () => {
-    it('given valid params then calls API with correct parameters', async () => {
-      // Given
+  describe('execute (first call - job creation)', () => {
+    it('given first call then creates economy analysis with correct request', async () => {
       const params = mockSocietyWideCalcParams();
-      mockFetchSocietyWideCalculation.mockResolvedValue(mockSocietyWideComputingResponse());
-
-      // When
-      await strategy.execute(params, {
-        calcId: 'test',
-        calcType: 'household',
-        targetType: 'simulation',
-        startedAt: Date.now(),
-      });
-
-      // Then
-      expect(mockFetchSocietyWideCalculation).toHaveBeenCalledWith(
-        params.countryId,
-        params.policyIds.reform,
-        params.policyIds.baseline,
-        expect.objectContaining({
-          region: params.region,
-          time_period: expect.any(String),
-        })
+      mockCreateEconomyAnalysis.mockResolvedValue(
+        mockEconomyPendingResponse({ report_id: TEST_REPORT_IDS.PENDING })
       );
-    });
 
-    it('given computing response then returns computing status', async () => {
-      // Given
-      const params = mockSocietyWideCalcParams();
-      const apiResponse = mockSocietyWideComputingResponse();
-      mockFetchSocietyWideCalculation.mockResolvedValue(apiResponse);
+      const result = await strategy.execute(params, mockMetadata);
 
-      // When
-      const result = await strategy.execute(params, {
-        calcId: 'test',
-        calcType: 'household',
-        targetType: 'simulation',
-        startedAt: Date.now(),
+      expect(mockCreateEconomyAnalysis).toHaveBeenCalledWith({
+        tax_benefit_model_name: 'policyengine_us',
+        region: 'us',
+        policy_id: '2', // reform takes precedence
+        dataset_id: '00000000-0000-4000-a000-000000000001',
       });
-
-      // Then
       expect(result.status).toBe('pending');
-      expect(result.queuePosition).toBe(STRATEGY_TEST_CONSTANTS.TEST_QUEUE_POSITION);
-      expect(result.message).toContain(`position ${STRATEGY_TEST_CONSTANTS.TEST_QUEUE_POSITION}`);
+      expect(result.progress).toBe(0);
+      expect(result.message).toBe('Starting economy analysis...');
     });
 
-    it('given complete response then returns complete status', async () => {
-      // Given
-      const params = mockSocietyWideCalcParams();
-      const apiResponse = mockSocietyWideCompleteResponse();
-      mockFetchSocietyWideCalculation.mockResolvedValue(apiResponse);
-
-      // When
-      const result = await strategy.execute(params, {
-        calcId: 'test',
-        calcType: 'household',
-        targetType: 'simulation',
-        startedAt: Date.now(),
+    it('given no reform policy then uses baseline policy_id', async () => {
+      const params = mockSocietyWideCalcParams({
+        policyIds: { baseline: 'baseline-id' },
       });
+      mockCreateEconomyAnalysis.mockResolvedValue(mockEconomyPendingResponse());
 
-      // Then
-      expect(result.status).toBe('complete');
-      expect(result.result).toBeDefined();
-      expect(result.error).toBeUndefined();
-    });
+      await strategy.execute(params, mockMetadata);
 
-    it('given error response then returns error status', async () => {
-      // Given
-      const params = mockSocietyWideCalcParams();
-      const apiResponse = mockSocietyWideErrorResponse();
-      mockFetchSocietyWideCalculation.mockResolvedValue(apiResponse);
-
-      // When
-      const result = await strategy.execute(params, {
-        calcId: 'test',
-        calcType: 'household',
-        targetType: 'simulation',
-        startedAt: Date.now(),
-      });
-
-      // Then
-      expect(result.status).toBe('error');
-      expect(result.error).toBeDefined();
-      expect(result.error?.code).toBe('SOCIETY_WIDE_CALC_ERROR');
-      expect(result.error?.retryable).toBe(true);
-    });
-
-    it('given no region then uses countryId as region', async () => {
-      // Given
-      const params = mockSocietyWideCalcParams({ region: undefined });
-      mockFetchSocietyWideCalculation.mockResolvedValue(mockSocietyWideComputingResponse());
-
-      // When
-      await strategy.execute(params, {
-        calcId: 'test',
-        calcType: 'household',
-        targetType: 'simulation',
-        startedAt: Date.now(),
-      });
-
-      // Then
-      expect(mockFetchSocietyWideCalculation).toHaveBeenCalledWith(
-        params.countryId,
-        expect.any(String),
-        expect.any(String),
-        expect.objectContaining({
-          region: params.countryId,
-        })
+      expect(mockCreateEconomyAnalysis).toHaveBeenCalledWith(
+        expect.objectContaining({ policy_id: 'baseline-id' })
       );
     });
 
-    it('given UK constituency with prefix then passes prefixed value to API', async () => {
-      // Given
+    it('given null policies then sends null policy_id', async () => {
+      const params = mockSocietyWideCalcParams({
+        policyIds: { baseline: null },
+      });
+      mockCreateEconomyAnalysis.mockResolvedValue(mockEconomyPendingResponse());
+
+      await strategy.execute(params, mockMetadata);
+
+      expect(mockCreateEconomyAnalysis).toHaveBeenCalledWith(
+        expect.objectContaining({ policy_id: null })
+      );
+    });
+
+    it('given UK region then resolves dataset_id from API', async () => {
       const params = mockSocietyWideCalcParams({
         countryId: 'uk',
-        region: 'constituency/Sheffield Central',
+        region: 'uk',
       });
-      mockFetchSocietyWideCalculation.mockResolvedValue(mockSocietyWideComputingResponse());
+      mockCreateEconomyAnalysis.mockResolvedValue(mockEconomyPendingResponse());
 
-      // When
-      await strategy.execute(params, {
-        calcId: 'test',
-        calcType: 'societyWide',
-        targetType: 'report',
-        startedAt: Date.now(),
-      });
+      await strategy.execute(params, mockMetadata);
 
-      // Then
-      expect(mockFetchSocietyWideCalculation).toHaveBeenCalledWith(
-        'uk',
-        expect.any(String),
-        expect.any(String),
+      expect(mockCreateEconomyAnalysis).toHaveBeenCalledWith(
         expect.objectContaining({
-          region: 'constituency/Sheffield Central', // Passes PREFIXED value
+          tax_benefit_model_name: 'policyengine_uk',
+          region: 'uk',
+          dataset_id: '00000000-0000-4000-a000-000000000001',
         })
       );
     });
 
-    it('given UK country with prefix then passes prefixed value to API', async () => {
-      // Given
-      const params = mockSocietyWideCalcParams({
-        countryId: 'uk',
-        region: 'country/england',
-      });
-      mockFetchSocietyWideCalculation.mockResolvedValue(mockSocietyWideComputingResponse());
-
-      // When
-      await strategy.execute(params, {
-        calcId: 'test',
-        calcType: 'societyWide',
-        targetType: 'report',
-        startedAt: Date.now(),
-      });
-
-      // Then
-      expect(mockFetchSocietyWideCalculation).toHaveBeenCalledWith(
-        'uk',
-        expect.any(String),
-        expect.any(String),
-        expect.objectContaining({
-          region: 'country/england', // Passes PREFIXED value
-        })
-      );
-    });
-
-    it('given US state without prefix then passes value as-is to API', async () => {
-      // Given
+    it('given US state region then resolves dataset_id from API', async () => {
       const params = mockSocietyWideCalcParams({
         countryId: 'us',
         region: 'ca',
       });
-      mockFetchSocietyWideCalculation.mockResolvedValue(mockSocietyWideComputingResponse());
+      mockCreateEconomyAnalysis.mockResolvedValue(mockEconomyPendingResponse());
 
-      // When
-      await strategy.execute(params, {
-        calcId: 'test',
-        calcType: 'societyWide',
-        targetType: 'report',
-        startedAt: Date.now(),
-      });
+      await strategy.execute(params, mockMetadata);
 
-      // Then
-      expect(mockFetchSocietyWideCalculation).toHaveBeenCalledWith(
-        'us',
-        expect.any(String),
-        expect.any(String),
+      expect(mockCreateEconomyAnalysis).toHaveBeenCalledWith(
         expect.objectContaining({
-          region: 'ca', // No prefix for US
+          region: 'ca',
+          dataset_id: '00000000-0000-4000-a000-000000000001',
         })
       );
+    });
+
+    it('given no region then uses countryId as region', async () => {
+      const params = mockSocietyWideCalcParams({ region: undefined });
+      mockCreateEconomyAnalysis.mockResolvedValue(mockEconomyPendingResponse());
+
+      await strategy.execute(params, mockMetadata);
+
+      expect(mockCreateEconomyAnalysis).toHaveBeenCalledWith(
+        expect.objectContaining({ region: 'us' })
+      );
+    });
+
+    it('given UK constituency with prefix then passes prefixed region', async () => {
+      const params = mockSocietyWideCalcParams({
+        countryId: 'uk',
+        region: 'constituency/Sheffield Central',
+      });
+      mockCreateEconomyAnalysis.mockResolvedValue(mockEconomyPendingResponse());
+
+      await strategy.execute(params, mockMetadata);
+
+      expect(mockCreateEconomyAnalysis).toHaveBeenCalledWith(
+        expect.objectContaining({ region: 'constituency/Sheffield Central' })
+      );
+    });
+
+    it('given job creation fails then returns error status', async () => {
+      const params = mockSocietyWideCalcParams();
+      mockCreateEconomyAnalysis.mockRejectedValue(new Error('Job creation failed'));
+
+      const result = await strategy.execute(params, mockMetadata);
+
+      expect(result.status).toBe('error');
+      expect(result.error).toEqual({
+        code: 'ECONOMY_ANALYSIS_FAILED',
+        message: 'Job creation failed',
+        retryable: true,
+      });
+    });
+  });
+
+  describe('execute (subsequent calls - polling)', () => {
+    beforeEach(async () => {
+      // Set up a job in the registry
+      const params = mockSocietyWideCalcParams();
+      mockCreateEconomyAnalysis.mockResolvedValue(
+        mockEconomyPendingResponse({ report_id: TEST_REPORT_IDS.PENDING })
+      );
+      await strategy.execute(params, mockMetadata);
+      vi.clearAllMocks();
+    });
+
+    it('given pending status then returns pending with progress', async () => {
+      const params = mockSocietyWideCalcParams();
+      mockGetEconomyAnalysis.mockResolvedValue(mockEconomyPendingResponse());
+
+      const result = await strategy.execute(params, mockMetadata);
+
+      expect(result.status).toBe('pending');
+      expect(result.message).toBe('Waiting in queue...');
+      expect(mockCreateEconomyAnalysis).not.toHaveBeenCalled();
+    });
+
+    it('given running status then returns pending with running message', async () => {
+      const params = mockSocietyWideCalcParams();
+      mockGetEconomyAnalysis.mockResolvedValue(mockEconomyRunningResponse());
+
+      const result = await strategy.execute(params, mockMetadata);
+
+      expect(result.status).toBe('pending');
+      expect(result.message).toBe('Running economy analysis...');
+    });
+
+    it('given completed status then returns complete with response as result', async () => {
+      const params = mockSocietyWideCalcParams();
+      const completedResponse = mockEconomyCompletedResponse();
+      mockGetEconomyAnalysis.mockResolvedValue(completedResponse);
+
+      const result = await strategy.execute(params, mockMetadata);
+
+      expect(result.status).toBe('complete');
+      expect(result.result).toEqual(completedResponse);
+    });
+
+    it('given failed status then returns error', async () => {
+      const params = mockSocietyWideCalcParams();
+      mockGetEconomyAnalysis.mockResolvedValue(mockEconomyFailedResponse());
+
+      const result = await strategy.execute(params, mockMetadata);
+
+      expect(result.status).toBe('error');
+      expect(result.error).toEqual({
+        code: 'ECONOMY_ANALYSIS_FAILED',
+        message: 'Calculation failed due to invalid parameters',
+        retryable: true,
+      });
+    });
+
+    it('given failed status with no message then uses default error message', async () => {
+      const params = mockSocietyWideCalcParams();
+      mockGetEconomyAnalysis.mockResolvedValue(mockEconomyFailedResponse({ error_message: null }));
+
+      const result = await strategy.execute(params, mockMetadata);
+
+      expect(result.error?.message).toBe('Economy analysis failed');
+    });
+
+    it('given single poll error then returns pending to retry', async () => {
+      const params = mockSocietyWideCalcParams();
+      mockGetEconomyAnalysis.mockRejectedValue(new Error('Network error'));
+
+      const result = await strategy.execute(params, mockMetadata);
+
+      expect(result.status).toBe('pending');
+      expect(result.message).toBe('Retrying status check...');
+    });
+
+    it('given max consecutive poll errors then returns error status', async () => {
+      const params = mockSocietyWideCalcParams();
+      mockGetEconomyAnalysis.mockRejectedValue(new Error('Persistent network error'));
+
+      await strategy.execute(params, mockMetadata); // Error 1
+      await strategy.execute(params, mockMetadata); // Error 2
+      const result = await strategy.execute(params, mockMetadata); // Error 3
+
+      expect(result.status).toBe('error');
+      expect(result.error?.code).toBe('POLL_FAILED');
+      expect(result.error?.message).toContain('failed after 3 attempts');
+      expect(result.error?.message).toContain('Persistent network error');
+    });
+
+    it('given successful poll after errors then resets error count', async () => {
+      const params = mockSocietyWideCalcParams();
+
+      mockGetEconomyAnalysis
+        .mockRejectedValueOnce(new Error('Network error'))
+        .mockRejectedValueOnce(new Error('Network error'))
+        .mockResolvedValueOnce(mockEconomyRunningResponse())
+        .mockRejectedValueOnce(new Error('Network error'));
+
+      await strategy.execute(params, mockMetadata); // Error 1
+      await strategy.execute(params, mockMetadata); // Error 2
+      await strategy.execute(params, mockMetadata); // Success - resets
+      const result = await strategy.execute(params, mockMetadata); // Error 1 (reset)
+
+      expect(result.status).toBe('pending');
+      expect(result.message).toBe('Retrying status check...');
+    });
+
+    it('given pending status then shows synthetic progress based on elapsed time', async () => {
+      const params = mockSocietyWideCalcParams();
+      const metadataWithOldStart: CalcMetadata = {
+        ...mockMetadata,
+        startedAt: Date.now() - 60000, // Started 1 minute ago
+      };
+
+      mockGetEconomyAnalysis.mockResolvedValue(mockEconomyPendingResponse());
+
+      const result = await strategy.execute(params, metadataWithOldStart);
+
+      expect(result.status).toBe('pending');
+      expect(result.progress).toBeDefined();
+      expect(result.progress).toBeGreaterThan(0);
+      // 1 minute elapsed / 6 minute US estimate = ~16.67%
+      expect(result.progress).toBeCloseTo(16.67, 0);
+    });
+
+    it('given long-running calculation then caps progress at 95%', async () => {
+      const params = mockSocietyWideCalcParams();
+      const metadataWithOldStart: CalcMetadata = {
+        ...mockMetadata,
+        startedAt: Date.now() - 600000, // Started 10 minutes ago
+      };
+
+      mockGetEconomyAnalysis.mockResolvedValue(mockEconomyPendingResponse());
+
+      const result = await strategy.execute(params, metadataWithOldStart);
+
+      expect(result.progress).toBe(STRATEGY_TEST_CONSTANTS.MAX_SYNTHETIC_PROGRESS);
+    });
+
+    it('given UK country then uses UK duration estimate for progress', async () => {
+      // Need a fresh strategy with UK job
+      const ukStrategy = new SocietyWideCalcStrategy();
+      const ukParams = mockSocietyWideCalcParams({ countryId: 'uk', region: 'uk' });
+
+      mockCreateEconomyAnalysis.mockResolvedValue(
+        mockEconomyPendingResponse({ report_id: 'uk-report' })
+      );
+      await ukStrategy.execute(ukParams, mockMetadata);
+      vi.clearAllMocks();
+
+      const metadataWithOldStart: CalcMetadata = {
+        ...mockMetadata,
+        startedAt: Date.now() - 90000, // Started 1.5 minutes ago
+      };
+      mockGetEconomyAnalysis.mockResolvedValue(mockEconomyRunningResponse());
+
+      const result = await ukStrategy.execute(ukParams, metadataWithOldStart);
+
+      // 1.5 minutes elapsed / 3 minute UK estimate = 50%
+      expect(result.progress).toBeCloseTo(50, 0);
     });
   });
 
   describe('getRefetchConfig', () => {
-    it('given config requested then returns valid refetch configuration', () => {
-      // When
-      const config = strategy.getRefetchConfig();
-
-      // Then
-      expect(config).toHaveProperty('refetchInterval');
-      expect(config).toHaveProperty('staleTime');
-      expect(config.staleTime).toBe(Infinity);
-    });
-
-    it('given computing status then refetch interval is 1000ms', () => {
-      // Given
+    it('given pending status then returns 1 second poll interval', () => {
       const config = strategy.getRefetchConfig();
       const mockQuery = {
-        state: {
-          data: { status: 'pending' },
-        },
-      } as any;
+        state: { data: { status: 'pending' } },
+      } as unknown as Query;
 
-      // When
       const interval =
         typeof config.refetchInterval === 'function'
           ? config.refetchInterval(mockQuery)
           : config.refetchInterval;
 
-      // Then
       expect(interval).toBe(STRATEGY_TEST_CONSTANTS.SOCIETY_WIDE_REFETCH_INTERVAL_MS);
     });
 
-    it('given complete status then refetch interval is false', () => {
-      // Given
+    it('given complete status then returns false (stop polling)', () => {
       const config = strategy.getRefetchConfig();
       const mockQuery = {
-        state: {
-          data: { status: 'complete' },
-        },
-      } as any;
+        state: { data: { status: 'complete' } },
+      } as unknown as Query;
 
-      // When
       const interval =
         typeof config.refetchInterval === 'function'
           ? config.refetchInterval(mockQuery)
           : config.refetchInterval;
 
-      // Then
       expect(interval).toBe(false);
+    });
+
+    it('given error status then returns false (stop polling)', () => {
+      const config = strategy.getRefetchConfig();
+      const mockQuery = {
+        state: { data: { status: 'error' } },
+      } as unknown as Query;
+
+      const interval =
+        typeof config.refetchInterval === 'function'
+          ? config.refetchInterval(mockQuery)
+          : config.refetchInterval;
+
+      expect(interval).toBe(false);
+    });
+
+    it('given no data then returns false', () => {
+      const config = strategy.getRefetchConfig();
+      const mockQuery = {
+        state: { data: undefined },
+      } as unknown as Query;
+
+      const interval =
+        typeof config.refetchInterval === 'function'
+          ? config.refetchInterval(mockQuery)
+          : config.refetchInterval;
+
+      expect(interval).toBe(false);
+    });
+
+    it('given config then returns infinite stale time', () => {
+      const config = strategy.getRefetchConfig();
+      expect(config.staleTime).toBe(Infinity);
     });
   });
 
   describe('transformResponse', () => {
-    it('given computing response then transforms to CalcStatus correctly', () => {
-      // Given
-      const apiResponse = mockSocietyWideComputingResponse();
+    it('given response data then transforms to complete CalcStatus', () => {
+      const data = { some: 'result' };
+      const result = strategy.transformResponse(data);
 
-      // When
-      const result = strategy.transformResponse(apiResponse);
-
-      // Then
-      expect(result.status).toBe('pending');
-      expect(result.queuePosition).toBe(apiResponse.queue_position);
-      expect(result.metadata.calcType).toBe('societyWide');
-    });
-
-    it('given complete response then transforms to CalcStatus correctly', () => {
-      // Given
-      const apiResponse = mockSocietyWideCompleteResponse();
-
-      // When
-      const result = strategy.transformResponse(apiResponse);
-
-      // Then
       expect(result.status).toBe('complete');
-      expect(result.result).toBeDefined();
-    });
-
-    it('given error response then transforms to CalcStatus correctly', () => {
-      // Given
-      const apiResponse = mockSocietyWideErrorResponse();
-
-      // When
-      const result = strategy.transformResponse(apiResponse);
-
-      // Then
-      expect(result.status).toBe('error');
-      expect(result.error).toBeDefined();
+      expect(result.result).toEqual(data);
+      expect(result.metadata.calcType).toBe('societyWide');
+      expect(result.metadata.targetType).toBe('report');
     });
   });
 
-  describe('transformResponseWithMetadata', () => {
-    it('given computing response with US country then includes synthetic progress', () => {
-      // Given
-      const apiResponse = mockSocietyWideComputingResponse();
-      const metadata = {
-        calcId: 'test-report',
-        calcType: 'societyWide' as const,
-        targetType: 'report' as const,
-        startedAt: Date.now() - 60000, // Started 1 minute ago
-      };
-
-      // When
-      const result = strategy.transformResponseWithMetadata(apiResponse, metadata, 'us');
-
-      // Then
-      expect(result.status).toBe('pending');
-      expect(result.progress).toBeDefined();
-      expect(result.progress).toBeGreaterThan(0);
-      // 1 minute elapsed / 6 minute estimate = 16.67%
-      expect(result.progress).toBeCloseTo(16.67, 0);
+  describe('job registry management', () => {
+    it('given new calculation then has no active job', () => {
+      expect(strategy.hasActiveJob('new-calc-id')).toBe(false);
     });
 
-    it('given computing response with UK country then uses UK duration estimate', () => {
-      // Given
-      const apiResponse = mockSocietyWideComputingResponse();
-      const metadata = {
-        calcId: 'test-report',
-        calcType: 'societyWide' as const,
-        targetType: 'report' as const,
-        startedAt: Date.now() - 90000, // Started 1.5 minutes ago
-      };
+    it('given job created then has active job', async () => {
+      const params = mockSocietyWideCalcParams();
+      mockCreateEconomyAnalysis.mockResolvedValue(
+        mockEconomyPendingResponse({ report_id: TEST_REPORT_IDS.PENDING })
+      );
 
-      // When
-      const result = strategy.transformResponseWithMetadata(apiResponse, metadata, 'uk');
+      await strategy.execute(params, mockMetadata);
 
-      // Then
-      expect(result.status).toBe('pending');
-      expect(result.progress).toBeDefined();
-      // 1.5 minutes elapsed / 3 minute estimate = 50%
-      expect(result.progress).toBeCloseTo(50, 0);
+      expect(strategy.hasActiveJob(mockMetadata.calcId)).toBe(true);
     });
 
-    it('given computing response with unknown country then uses default duration', () => {
-      // Given
-      const apiResponse = mockSocietyWideComputingResponse();
-      const metadata = {
-        calcId: 'test-report',
-        calcType: 'societyWide' as const,
-        targetType: 'report' as const,
-        startedAt: Date.now() - 60000, // Started 1 minute ago
-      };
+    it('given cleanupJob called then removes job from registry', async () => {
+      const params = mockSocietyWideCalcParams();
+      mockCreateEconomyAnalysis.mockResolvedValue(
+        mockEconomyPendingResponse({ report_id: TEST_REPORT_IDS.PENDING })
+      );
+      await strategy.execute(params, mockMetadata);
 
-      // When
-      const result = strategy.transformResponseWithMetadata(apiResponse, metadata, 'ca');
+      strategy.cleanupJob(mockMetadata.calcId);
 
-      // Then
-      expect(result.status).toBe('pending');
-      expect(result.progress).toBeDefined();
-      // Uses default (6 minutes for US): 1 minute / 6 minutes = 16.67%
-      expect(result.progress).toBeCloseTo(16.67, 0);
+      expect(strategy.hasActiveJob(mockMetadata.calcId)).toBe(false);
     });
 
-    it('given computing response with no country then uses default duration', () => {
-      // Given
-      const apiResponse = mockSocietyWideComputingResponse();
-      const metadata = {
-        calcId: 'test-report',
-        calcType: 'societyWide' as const,
-        targetType: 'report' as const,
-        startedAt: Date.now() - 150000, // Started 2.5 minutes ago
-      };
+    it('given completed job then removes from registry', async () => {
+      const params = mockSocietyWideCalcParams();
+      mockCreateEconomyAnalysis.mockResolvedValue(
+        mockEconomyPendingResponse({ report_id: TEST_REPORT_IDS.PENDING })
+      );
+      await strategy.execute(params, mockMetadata);
 
-      // When
-      const result = strategy.transformResponseWithMetadata(apiResponse, metadata);
+      mockGetEconomyAnalysis.mockResolvedValue(mockEconomyCompletedResponse());
+      await strategy.execute(params, mockMetadata);
 
-      // Then
-      expect(result.status).toBe('pending');
-      expect(result.progress).toBeDefined();
-      // Uses default (6 minutes for US): 2.5 minutes / 6 minutes = 41.67%
-      expect(result.progress).toBeCloseTo(41.67, 0);
+      expect(strategy.hasActiveJob(mockMetadata.calcId)).toBe(false);
     });
 
-    it('given long-running calculation then caps progress at 95%', () => {
-      // Given
-      const apiResponse = mockSocietyWideComputingResponse();
-      const metadata = {
-        calcId: 'test-report',
-        calcType: 'societyWide' as const,
-        targetType: 'report' as const,
-        startedAt: Date.now() - 600000, // Started 10 minutes ago (longer than estimate)
-      };
+    it('given failed job then removes from registry', async () => {
+      const params = mockSocietyWideCalcParams();
+      mockCreateEconomyAnalysis.mockResolvedValue(
+        mockEconomyPendingResponse({ report_id: TEST_REPORT_IDS.PENDING })
+      );
+      await strategy.execute(params, mockMetadata);
 
-      // When
-      const result = strategy.transformResponseWithMetadata(apiResponse, metadata, 'us');
+      mockGetEconomyAnalysis.mockResolvedValue(mockEconomyFailedResponse());
+      await strategy.execute(params, mockMetadata);
 
-      // Then
-      expect(result.status).toBe('pending');
-      expect(result.progress).toBe(95);
-    });
-
-    it('given just-started calculation then shows low progress', () => {
-      // Given
-      const apiResponse = mockSocietyWideComputingResponse();
-      const metadata = {
-        calcId: 'test-report',
-        calcType: 'societyWide' as const,
-        targetType: 'report' as const,
-        startedAt: Date.now() - 1000, // Started 1 second ago
-      };
-
-      // When
-      const result = strategy.transformResponseWithMetadata(apiResponse, metadata, 'us');
-
-      // Then
-      expect(result.status).toBe('pending');
-      expect(result.progress).toBeDefined();
-      expect(result.progress).toBeLessThan(1);
-    });
-
-    it('given complete response then returns complete status without progress', () => {
-      // Given
-      const apiResponse = mockSocietyWideCompleteResponse();
-      const metadata = {
-        calcId: 'test-report',
-        calcType: 'societyWide' as const,
-        targetType: 'report' as const,
-        startedAt: Date.now() - 60000,
-      };
-
-      // When
-      const result = strategy.transformResponseWithMetadata(apiResponse, metadata, 'us');
-
-      // Then
-      expect(result.status).toBe('complete');
-      expect(result.progress).toBeUndefined();
-      expect(result.result).toBeDefined();
+      expect(strategy.hasActiveJob(mockMetadata.calcId)).toBe(false);
     });
   });
 });

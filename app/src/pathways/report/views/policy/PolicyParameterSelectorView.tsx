@@ -6,13 +6,12 @@
 
 import { useState } from 'react';
 import { IconChevronRight } from '@tabler/icons-react';
-import { useSelector } from 'react-redux';
 import { AppShell, Box, Button, Group, Text } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
+import type { ParameterChildNode } from '@/api/v2';
 import HeaderNavigation from '@/components/shared/HomeHeader';
 import { spacing } from '@/designTokens';
 import { colors } from '@/designTokens/colors';
-import { RootState } from '@/store';
 import { ParameterMetadata } from '@/types/metadata';
 import { PolicyStateProps } from '@/types/pathwayState';
 import { countPolicyModifications } from '@/utils/countParameterChanges';
@@ -36,31 +35,31 @@ export default function PolicyParameterSelectorView({
   const [selectedLeafParam, setSelectedLeafParam] = useState<ParameterMetadata | null>(null);
   const [mobileOpened, { toggle: toggleMobile }] = useDisclosure();
 
-  // Get metadata from Redux state
-  const { parameters, loading, error } = useSelector((state: RootState) => state.metadata);
-  const hasParameters = Object.keys(parameters).length > 0;
-
   // Count modifications from policy prop
   const modificationCount = countPolicyModifications(policy);
 
-  // Show error if metadata failed to load
-  if (error) {
-    return (
-      <div>
-        <Text c="red">Error loading parameters: {error}</Text>
-        <Text>Please try refreshing the page.</Text>
-      </div>
-    );
-  }
+  function handleMenuItemClick(node: ParameterChildNode) {
+    if (node.type !== 'parameter' || !node.parameter) {
+      return;
+    }
 
-  function handleMenuItemClick(paramLabel: string) {
-    const param: ParameterMetadata | null = parameters[paramLabel] || null;
-    if (param && param.type === 'parameter') {
-      setSelectedLeafParam(param);
-      // Close mobile menu when item is selected
-      if (mobileOpened) {
-        toggleMobile();
-      }
+    // Map ParameterChildNode to ParameterMetadata
+    const param: ParameterMetadata = {
+      id: node.parameter.id,
+      name: node.parameter.name,
+      label: node.parameter.label ?? node.label,
+      description: node.parameter.description,
+      unit: node.parameter.unit,
+      data_type: node.parameter.data_type ?? undefined,
+      tax_benefit_model_version_id: node.parameter.tax_benefit_model_version_id,
+      created_at: node.parameter.created_at,
+      type: 'parameter',
+      parameter: node.path,
+    };
+
+    setSelectedLeafParam(param);
+    if (mobileOpened) {
+      toggleMobile();
     }
   }
 
@@ -109,17 +108,11 @@ export default function PolicyParameterSelectorView({
       </AppShell.Header>
 
       <AppShell.Navbar p="md" bg="gray.0">
-        {loading || !hasParameters ? (
-          <div>Loading parameters...</div>
-        ) : (
-          <Menu setSelectedParamLabel={handleMenuItemClick} />
-        )}
+        <Menu setSelectedParamLabel={handleMenuItemClick} />
       </AppShell.Navbar>
 
       <AppShell.Main bg="gray.0">
-        {loading || !hasParameters ? (
-          <MainEmpty />
-        ) : selectedLeafParam ? (
+        {selectedLeafParam ? (
           <PolicyParameterSelectorMain
             key={selectedLeafParam.parameter}
             param={selectedLeafParam}

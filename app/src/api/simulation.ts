@@ -1,9 +1,19 @@
-import { SimulationAdapter } from '@/adapters/SimulationAdapter';
 import { BASE_URL } from '@/constants';
 import { countryIds } from '@/libs/countries';
 import { SimulationMetadata } from '@/types/metadata/simulationMetadata';
 import { SimulationCreationPayload } from '@/types/payloads';
 
+/**
+ * Fetch a simulation by ID from the v1 API.
+ *
+ * @deprecated Use v2 simulation endpoints (getHouseholdSimulation / getEconomySimulation)
+ * instead. This remains for backward compatibility with simulations created before the
+ * v2 migration. V2 reports fetch simulations via the typed v2 endpoints.
+ *
+ * **Backward-compat note**: Users' existing v1 simulations remain in the v1 API
+ * and are read through this path. Will be removed once v1 API endpoints are
+ * decommissioned.
+ */
 export async function fetchSimulationById(
   countryId: (typeof countryIds)[number],
   simulationId: string
@@ -38,14 +48,23 @@ export async function fetchSimulationById(
   return json.result;
 }
 
+/**
+ * Create a simulation via the v1 API.
+ *
+ * @deprecated Used only by the default baseline simulation shortcut in
+ * ReportSimulationSelectionView. New report creation uses v2 analysis endpoints
+ * which create simulations server-side.
+ *
+ * **Backward-compat note**: This v1 creation path is still used for the baseline
+ * simulation shortcut. Will be removed once that shortcut uses v2 endpoints.
+ */
 export async function createSimulation(
   countryId: (typeof countryIds)[number],
   data: SimulationCreationPayload
 ): Promise<{ result: { simulation_id: string } }> {
   const url = `${BASE_URL}/${countryId}/simulation`;
 
-  // Translate V2-style payload to V1 wire format; note this is temporary
-  // until we migrate to v2 simulation in a future PR
+  // Translate V2-style payload to V1 wire format
   const v1Payload = {
     population_id: data.region ?? data.household_id,
     population_type: data.region ? 'geography' : 'household',
@@ -76,95 +95,9 @@ export async function createSimulation(
     throw new Error(json.message || 'Failed to create simulation');
   }
 
-  // Transform response to match existing interface
   return {
     result: {
       simulation_id: String(json.result.id),
     },
   };
-}
-
-/**
- * Update simulation output after calculation completes
- * Note: Simulation PATCH uses ID in body, not URL (same as reports)
- */
-export async function updateSimulationOutput(
-  countryId: (typeof countryIds)[number],
-  simulationId: string,
-  output: unknown
-): Promise<SimulationMetadata> {
-  const url = `${BASE_URL}/${countryId}/simulation`;
-
-  const payload = SimulationAdapter.toCompletedPayload(parseInt(simulationId, 10), output);
-
-  const response = await fetch(url, {
-    method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-    },
-    body: JSON.stringify(payload),
-  });
-
-  if (!response.ok) {
-    throw new Error(
-      `Failed to update simulation ${simulationId}: ${response.status} ${response.statusText}`
-    );
-  }
-
-  const json = await response.json();
-
-  if (json.status !== 'ok') {
-    throw new Error(json.message || `Failed to update simulation ${simulationId}`);
-  }
-
-  return json.result;
-}
-
-/**
- * Mark a simulation as completed with its output
- * Convenience wrapper around updateSimulationOutput
- */
-export async function markSimulationCompleted(
-  countryId: (typeof countryIds)[number],
-  simulationId: string,
-  output: unknown
-): Promise<SimulationMetadata> {
-  return updateSimulationOutput(countryId, simulationId, output);
-}
-
-/**
- * Mark a simulation as errored
- * Note: Simulation PATCH uses ID in body, not URL (same as reports)
- */
-export async function markSimulationError(
-  countryId: (typeof countryIds)[number],
-  simulationId: string
-): Promise<SimulationMetadata> {
-  const url = `${BASE_URL}/${countryId}/simulation`;
-
-  const payload = SimulationAdapter.toErrorPayload(parseInt(simulationId, 10));
-
-  const response = await fetch(url, {
-    method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-    },
-    body: JSON.stringify(payload),
-  });
-
-  if (!response.ok) {
-    throw new Error(
-      `Failed to mark simulation ${simulationId} as error: ${response.status} ${response.statusText}`
-    );
-  }
-
-  const json = await response.json();
-
-  if (json.status !== 'ok') {
-    throw new Error(json.message || `Failed to mark simulation ${simulationId} as error`);
-  }
-
-  return json.result;
 }

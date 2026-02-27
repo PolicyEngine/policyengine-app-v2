@@ -6,6 +6,7 @@ import { SocietyWideReportOutput as SocietyWideOutput } from '@/api/societyWideC
 import { FloatingAlert } from '@/components/common/FloatingAlert';
 import { RenameIngredientModal } from '@/components/common/RenameIngredientModal';
 import { CALCULATOR_URL } from '@/constants';
+import { useUserId } from '@/hooks/useUserId';
 import { ReportYearProvider } from '@/contexts/ReportYearContext';
 import { spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
@@ -48,6 +49,7 @@ export type ReportOutputType = 'household' | 'societyWide';
 export default function ReportOutputPage() {
   const navigate = useNavigate();
   const countryId = useCurrentCountry();
+  const userId = useUserId();
   const [searchParams] = useSearchParams();
   const {
     reportId: userReportId,
@@ -168,6 +170,7 @@ export default function ReportOutputPage() {
     try {
       await updateAssociation.mutateAsync({
         userReportId,
+        userId,
         updates: { label: newLabel },
       });
       closeRename();

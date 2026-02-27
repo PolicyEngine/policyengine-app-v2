@@ -1,6 +1,6 @@
 import { Simulation } from '@/types/ingredients/Simulation';
 import { SimulationMetadata } from '@/types/metadata/simulationMetadata';
-import { SimulationCreationPayload, SimulationSetOutputPayload } from '@/types/payloads';
+import { SimulationCreationPayload } from '@/types/payloads';
 
 /**
  * Adapter for converting between Simulation and API formats
@@ -16,7 +16,15 @@ import { SimulationCreationPayload, SimulationSetOutputPayload } from '@/types/p
  */
 export class SimulationAdapter {
   /**
-   * Converts SimulationMetadata from API GET response to Simulation type
+   * Converts SimulationMetadata from API GET response to Simulation type.
+   *
+   * @deprecated Use v2 simulation conversion functions (fromHouseholdSimulationResponse /
+   * fromEconomySimulationResponse) instead. This remains for backward compatibility
+   * with simulations created before the v2 migration.
+   *
+   * **Backward-compat note**: Users' existing v1 simulations remain in the v1 API
+   * and are read through this path. Will be removed once v1 API endpoints are
+   * decommissioned.
    */
   static fromMetadata(metadata: SimulationMetadata): Simulation {
     if (!metadata.population_id) {
@@ -61,7 +69,14 @@ export class SimulationAdapter {
   }
 
   /**
-   * Converts Simulation to format for API POST request
+   * Converts Simulation to format for v1 API POST request.
+   *
+   * @deprecated Used only by the default baseline simulation shortcut in
+   * ReportSimulationSelectionView. New report creation uses v2 analysis endpoints
+   * which create simulations server-side.
+   *
+   * **Backward-compat note**: This v1 creation path is still used for the baseline
+   * simulation shortcut. Will be removed once that shortcut uses v2 endpoints.
    */
   static toCreationPayload(simulation: Partial<Simulation>): SimulationCreationPayload {
     if (!simulation.populationId) {
@@ -86,64 +101,6 @@ export class SimulationAdapter {
     return {
       household_id: simulation.populationId,
       policy_id: parseInt(simulation.policyId, 10),
-    };
-  }
-
-  /**
-   * Creates payload for updating a simulation's output (PATCH request)
-   * Note: ID is in body, not URL path (same as report PATCH format)
-   * Note: Output is NOT stringified here - it's stringified when the entire payload is JSON.stringified
-   */
-  static toUpdatePayload(
-    id: number,
-    output: unknown,
-    status: 'pending' | 'complete' | 'error'
-  ): SimulationSetOutputPayload {
-    return {
-      id,
-      output: typeof output === 'string' ? output : output ? JSON.stringify(output) : null,
-      status,
-    };
-  }
-
-  /**
-   * Creates payload for marking a simulation as completed with output
-   * Note: Output is NOT stringified here - it's stringified when the entire payload is JSON.stringified
-   */
-  static toCompletedPayload(id: number, output: unknown): SimulationSetOutputPayload {
-    return {
-      id,
-      output: typeof output === 'string' ? output : JSON.stringify(output),
-      status: 'complete',
-    };
-  }
-
-  /**
-   * Creates payload for marking a simulation as errored
-   */
-  static toErrorPayload(id: number, errorMessage?: string): SimulationSetOutputPayload {
-    const payload: SimulationSetOutputPayload = {
-      id,
-      output: null,
-      status: 'error',
-    };
-    if (errorMessage) {
-      payload.error_message = errorMessage;
-    }
-    return payload;
-  }
-
-  /**
-   * Creates payload for marking an economy simulation as complete with placeholder output
-   * Economy simulations don't store individual outputs (only the report has aggregated output)
-   */
-  static toEconomyPlaceholderPayload(id: number): SimulationSetOutputPayload {
-    return {
-      id,
-      output: JSON.stringify({
-        message: 'Economy-wide reports do not save simulation-level results at this time',
-      }),
-      status: 'complete',
     };
   }
 }

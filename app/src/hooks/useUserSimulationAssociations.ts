@@ -1,6 +1,6 @@
-// Import auth hook here in future; for now, mocked out below
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { getStoreBackend } from '@/libs/storeBackend';
 import { ApiSimulationStore, LocalStorageSimulationStore } from '../api/simulationAssociation';
 import { queryConfig } from '../libs/queryConfig';
 import { simulationAssociationKeys } from '../libs/queryKeys';
@@ -10,8 +10,8 @@ const apiSimulationStore = new ApiSimulationStore();
 const localSimulationStore = new LocalStorageSimulationStore();
 
 export const useUserSimulationStore = () => {
-  const isLoggedIn = false; // TODO: Replace with actual auth check in future
-  return isLoggedIn ? apiSimulationStore : localSimulationStore;
+  const backend = getStoreBackend();
+  return backend === 'api' ? apiSimulationStore : localSimulationStore;
 };
 
 /**
@@ -27,9 +27,8 @@ export const useUserSimulationStore = () => {
 export const useSimulationAssociationsByUser = (userId: string) => {
   const store = useUserSimulationStore();
   const countryId = useCurrentCountry();
-  const isLoggedIn = false; // TODO: Replace with actual auth check in future
-  // TODO: Should we determine user ID from auth context here? Or pass as arg?
-  const config = isLoggedIn ? queryConfig.api : queryConfig.localStorage;
+  const backend = getStoreBackend();
+  const config = backend === 'api' ? queryConfig.api : queryConfig.localStorage;
 
   return useQuery({
     queryKey: simulationAssociationKeys.byUser(userId, countryId),
@@ -40,8 +39,8 @@ export const useSimulationAssociationsByUser = (userId: string) => {
 
 export const useSimulationAssociation = (userId: string, simulationId: string) => {
   const store = useUserSimulationStore();
-  const isLoggedIn = false; // TODO: Replace with actual auth check in future
-  const config = isLoggedIn ? queryConfig.api : queryConfig.localStorage;
+  const backend = getStoreBackend();
+  const config = backend === 'api' ? queryConfig.api : queryConfig.localStorage;
 
   return useQuery({
     queryKey: simulationAssociationKeys.specific(userId, simulationId),
@@ -88,11 +87,13 @@ export const useUpdateSimulationAssociation = () => {
   return useMutation({
     mutationFn: ({
       userSimulationId,
+      userId,
       updates,
     }: {
       userSimulationId: string;
+      userId: string;
       updates: Partial<UserSimulation>;
-    }) => store.update(userSimulationId, updates),
+    }) => store.update(userSimulationId, userId, updates),
 
     onSuccess: (updatedAssociation) => {
       // Invalidate all related queries to trigger refetch
@@ -119,24 +120,23 @@ export const useUpdateSimulationAssociation = () => {
   });
 };
 
-// Not yet implemented, but keeping for future use
-/*
-export const useDeleteAssociation = () => {
+export const useDeleteSimulationAssociation = () => {
   const store = useUserSimulationStore();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ userId, simulationId }: { userId: string; simulationId: string; countryId?: string }) =>
-      store.delete(userId, simulationId),
-    onSuccess: (_, { userId, simulationId, countryId }) => {
-      queryClient.invalidateQueries({ queryKey: simulationAssociationKeys.byUser(userId, countryId) });
-      queryClient.invalidateQueries({ queryKey: simulationAssociationKeys.bySimulation(simulationId) });
-      
-      queryClient.setQueryData(
-        simulationAssociationKeys.specific(userId, simulationId),
-        null
-      );
+    mutationFn: ({
+      userSimulationId,
+      userId,
+    }: {
+      userSimulationId: string;
+      userId: string;
+      countryId?: string;
+    }) => store.delete(userSimulationId, userId),
+    onSuccess: (_, { userId, countryId }) => {
+      queryClient.invalidateQueries({
+        queryKey: simulationAssociationKeys.byUser(userId, countryId),
+      });
     },
   });
 };
-*/

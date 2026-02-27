@@ -35,9 +35,9 @@ vi.mock('@/hooks/useUserSimulationAssociations', () => ({
   useCreateSimulationAssociation: vi.fn(),
 }));
 
-vi.mock('@/constants', () => ({
-  MOCK_USER_ID: 'anonymous',
-  CURRENT_YEAR: '2025',
+const TEST_USER_ID = 'test-user-uuid-123';
+vi.mock('@/hooks/useUserId', () => ({
+  useUserId: () => TEST_USER_ID,
 }));
 
 vi.mock('@/libs/queryKeys', () => ({
@@ -112,7 +112,7 @@ describe('useCreateSimulation', () => {
       // Then
       expect(createSimulation).toHaveBeenCalledWith(TEST_COUNTRIES.US, mockSimulationPayload);
       expect(mockCreateSimulationAssociationMutateAsync).toHaveBeenCalledWith({
-        userId: 'anonymous',
+        userId: TEST_USER_ID,
         simulationId: SIMULATION_IDS.NEW,
         label: TEST_LABELS.SIMULATION,
         isCreated: true,
@@ -152,7 +152,7 @@ describe('useCreateSimulation', () => {
 
       // Then
       expect(mockCreateSimulationAssociationMutateAsync).toHaveBeenCalledWith({
-        userId: 'anonymous',
+        userId: TEST_USER_ID,
         simulationId: SIMULATION_IDS.NEW,
         label: undefined,
         isCreated: true,
@@ -169,7 +169,7 @@ describe('useCreateSimulation', () => {
 
       // Then
       expect(mockCreateSimulationAssociationMutateAsync).toHaveBeenCalledWith({
-        userId: 'anonymous',
+        userId: TEST_USER_ID,
         simulationId: SIMULATION_IDS.NEW,
         label: TEST_LABELS.CUSTOM,
         isCreated: true,
@@ -397,7 +397,7 @@ describe('useCreateSimulation', () => {
 
       // Then
       expect(mockCreateSimulationAssociationMutateAsync).toHaveBeenCalledWith({
-        userId: 'anonymous',
+        userId: TEST_USER_ID,
         simulationId: undefined,
         label: TEST_LABELS.SIMULATION,
         isCreated: true,

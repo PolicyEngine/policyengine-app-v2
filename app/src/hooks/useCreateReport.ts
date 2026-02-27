@@ -1,22 +1,39 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { createReportAndAssociateWithUser, CreateReportWithAssociationResult } from '@/api/report';
-import { MOCK_USER_ID } from '@/constants';
+import { LocalStorageReportStore } from '@/api/reportAssociation';
+import { LocalStorageSimulationStore } from '@/api/simulationAssociation';
+import { getDatasetIdForRegion } from '@/api/societyWideCalculation';
+import {
+  createEconomyAnalysis,
+  EconomicImpactRequest,
+  EconomicImpactResponse,
+} from '@/api/v2/economyAnalysis';
+import {
+  createHouseholdAnalysis,
+  HouseholdImpactRequest,
+  HouseholdImpactResponse,
+} from '@/api/v2/householdAnalysis';
 import { useCalcOrchestratorManager } from '@/contexts/CalcOrchestratorContext';
+import { useUserId } from '@/hooks/useUserId';
 import { countryIds } from '@/libs/countries';
-import { reportAssociationKeys, reportKeys } from '@/libs/queryKeys';
+import { reportAssociationKeys, reportKeys, simulationAssociationKeys } from '@/libs/queryKeys';
 import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
+import { Report } from '@/types/ingredients/Report';
 import { Simulation } from '@/types/ingredients/Simulation';
-import { ReportCreationPayload } from '@/types/payloads';
+import { UserReport } from '@/types/ingredients/UserReport';
 
-interface CreateReportAndBeginCalculationParams {
+// ============================================================================
+// Types
+// ============================================================================
+
+interface CreateReportParams {
   countryId: (typeof countryIds)[number];
-  payload: ReportCreationPayload;
-  simulations?: {
-    simulation1?: Simulation | null;
+  year: string;
+  simulations: {
+    simulation1: Simulation;
     simulation2?: Simulation | null;
   };
-  populations?: {
+  populations: {
     household1?: Household | null;
     household2?: Household | null;
     geography1?: Geography | null;
@@ -24,13 +41,14 @@ interface CreateReportAndBeginCalculationParams {
   };
 }
 
-// Extended result type that includes simulations and populations for onSuccess
-interface ExtendedCreateReportResult extends CreateReportWithAssociationResult {
-  simulations?: {
-    simulation1?: Simulation | null;
+interface CreateReportResult {
+  report: Report;
+  userReport: UserReport;
+  simulations: {
+    simulation1: Simulation;
     simulation2?: Simulation | null;
   };
-  populations?: {
+  populations: {
     household1?: Household | null;
     household2?: Household | null;
     geography1?: Geography | null;
@@ -38,34 +56,187 @@ interface ExtendedCreateReportResult extends CreateReportWithAssociationResult {
   };
 }
 
-// Note: Much of this code's complexity is due to mapping v2 concepts (simulations, populations)
-// to the v1 API, which cannot run reports as subsets of simulations. This should be simplified
-// with the creation of API v2, where we can merely pass simulation IDs to create a report.
+// ============================================================================
+// Helpers
+// ============================================================================
+
+/**
+ * Call v2 household analysis endpoint per simulation and extract simulation IDs.
+ * Each simulation gets its own analysis call. The v2 API is idempotent —
+ * same inputs always return the same report_id and simulation IDs.
+ */
+async function createHouseholdReportV2(
+  householdId: string,
+  allSimulations: Simulation[]
+): Promise<{
+  v2Simulations: Simulation[];
+  responses: HouseholdImpactResponse[];
+}> {
+  const v2Simulations: Simulation[] = [];
+  const responses: HouseholdImpactResponse[] = [];
+
+  for (const sim of allSimulations) {
+    const request: HouseholdImpactRequest = {
+      household_id: householdId,
+      policy_id: sim.policyId ?? null,
+    };
+    const response = await createHouseholdAnalysis(request);
+    responses.push(response);
+
+    // Extract the primary simulation ID for this analysis:
+    // - If reform_simulation exists (policy_id was set), use reform_simulation.id
+    // - Otherwise use baseline_simulation.id (baseline-only / current law)
+    const primarySimId = response.reform_simulation?.id || response.baseline_simulation?.id;
+
+    if (primarySimId) {
+      v2Simulations.push({
+        id: primarySimId,
+        policyId: sim.policyId,
+        populationId: householdId,
+        populationType: 'household',
+        label: sim.label,
+        isCreated: true,
+      });
+    }
+  }
+
+  return { v2Simulations, responses };
+}
+
+/**
+ * Call v2 economy analysis endpoint and extract report + simulation IDs.
+ */
+async function createEconomyReportV2(
+  countryId: string,
+  region: string,
+  reformPolicyId: string | null
+): Promise<{
+  response: EconomicImpactResponse;
+  reportId: string;
+  v2SimulationIds: string[];
+}> {
+  const datasetId = await getDatasetIdForRegion(countryId, region);
+
+  const request: EconomicImpactRequest = {
+    tax_benefit_model_name: `policyengine_${countryId}`,
+    region,
+    policy_id: reformPolicyId,
+    dataset_id: datasetId,
+  };
+
+  const response = await createEconomyAnalysis(request);
+  const v2SimulationIds = [response.baseline_simulation.id, response.reform_simulation.id];
+
+  return { response, reportId: response.report_id, v2SimulationIds };
+}
+
+// ============================================================================
+// Hook
+// ============================================================================
+
+/**
+ * Creates a report using v2 analysis endpoints.
+ *
+ * Flow:
+ * 1. Call v2 analysis endpoint (economy or household) to get report_id + simulation IDs
+ * 2. Create UserReport association with v2 IDs
+ * 3. Create UserSimulation associations for each v2 simulation
+ * 4. Start CalcOrchestrators for polling (idempotent — re-uses existing v2 jobs)
+ */
 export function useCreateReport(reportLabel?: string) {
   const queryClient = useQueryClient();
   const manager = useCalcOrchestratorManager();
+  const userId = useUserId();
 
-  const userId = MOCK_USER_ID;
+  // TODO: Replace with actual auth check
+  const reportStore = new LocalStorageReportStore();
+  const simulationStore = new LocalStorageSimulationStore();
 
   const mutation = useMutation({
-    mutationFn: async ({
-      countryId,
-      payload,
-      simulations,
-      populations,
-    }: CreateReportAndBeginCalculationParams): Promise<ExtendedCreateReportResult> => {
-      // Call the combined API function
-      const result = await createReportAndAssociateWithUser({
-        countryId: countryId as any,
-        payload,
-        userId,
+    mutationFn: async (params: CreateReportParams): Promise<CreateReportResult> => {
+      const { countryId, year, simulations, populations } = params;
+      const { simulation1, simulation2 } = simulations;
+
+      const isHouseholdReport = simulation1.populationType === 'household';
+      const outputType: 'household' | 'economy' = isHouseholdReport ? 'household' : 'economy';
+
+      let reportId: string;
+      let v2SimulationIds: string[];
+      let v2Simulations: Simulation[] | undefined;
+
+      if (isHouseholdReport) {
+        const householdId = populations.household1?.id || simulation1.populationId || '';
+        const allSims = [simulation1, simulation2].filter(
+          (sim): sim is Simulation => sim !== null && sim !== undefined
+        );
+
+        const result = await createHouseholdReportV2(householdId, allSims);
+        v2Simulations = result.v2Simulations;
+        v2SimulationIds = v2Simulations.map((s) => s.id!);
+
+        // For household, use a local UUID as the container report ID.
+        // There's no single v2 report for a multi-simulation household report.
+        reportId = crypto.randomUUID();
+      } else {
+        const region = populations.geography1?.regionCode || simulation1.populationId || countryId;
+        const reformPolicyId = simulation2?.policyId ?? simulation1.policyId ?? null;
+
+        const result = await createEconomyReportV2(countryId, region, reformPolicyId);
+        reportId = result.reportId;
+        v2SimulationIds = result.v2SimulationIds;
+      }
+
+      // Create UserReport association
+      const userReport = await reportStore.create({
+        userId: String(userId),
+        reportId,
+        countryId,
+        outputType,
+        simulationIds: v2SimulationIds,
+        year,
         label: reportLabel,
+        isCreated: true,
       });
 
-      // Attach simulations and populations for use in onSuccess
+      // Create UserSimulation associations for each v2 simulation
+      for (const simId of v2SimulationIds) {
+        try {
+          await simulationStore.create({
+            userId: String(userId),
+            simulationId: simId,
+            countryId,
+            label: undefined,
+            isCreated: true,
+          });
+        } catch (error) {
+          console.warn(
+            `[useCreateReport] Failed to create simulation association for ${simId}:`,
+            error
+          );
+        }
+      }
+
+      // Build app Report
+      const report: Report = {
+        id: reportId,
+        countryId,
+        year,
+        apiVersion: 'v2',
+        simulationIds: v2SimulationIds,
+        status: 'pending',
+        outputType,
+      };
+
       return {
-        ...result,
-        simulations,
+        report,
+        userReport,
+        // Pass through v2 simulations for household, original simulations for economy
+        simulations: v2Simulations
+          ? {
+              simulation1: v2Simulations[0],
+              simulation2: v2Simulations[1] || null,
+            }
+          : simulations,
         populations,
       };
     },
@@ -76,57 +247,47 @@ export function useCreateReport(reportLabel?: string) {
         const reportIdStr = String(report.id);
 
         // Invalidate queries
-        // WHY: We need to invalidate BOTH reports AND report associations
-        // - reportKeys.all: Invalidates individual report queries
-        // - reportAssociationKeys.all: Invalidates user→report mappings (critical for Reports page)
         queryClient.invalidateQueries({ queryKey: reportKeys.all });
         queryClient.invalidateQueries({ queryKey: reportAssociationKeys.all });
+        queryClient.invalidateQueries({ queryKey: simulationAssociationKeys.all });
 
-        // Cache the report data using consistent key structure
+        // Cache the report data
         queryClient.setQueryData(reportKeys.byId(reportIdStr), report);
 
-        // Determine calculation type from simulation
-        const simulation1 = simulations?.simulation1;
-        const simulation2 = simulations?.simulation2;
-        const household = populations?.household1;
-        const geography = populations?.geography1;
+        const simulation1 = simulations.simulation1;
+        const simulation2 = simulations.simulation2;
+        const household = populations.household1;
+        const geography = populations.geography1;
 
         if (!simulation1) {
           console.warn('[useCreateReport] No simulation1 provided, cannot start calculation');
           return;
         }
 
-        const isHouseholdReport = simulation1.populationType === 'household';
+        const isHouseholdReport = report.outputType === 'household';
 
         if (isHouseholdReport) {
-          // Household reports: Start separate calculation for EACH simulation
-          // WHY: Each simulation needs its own API call to calculate household results
-          // for a specific policy. A report with N simulations = N calculations.
-          // Results are stored at simulation level and compared in the UI.
-          //
-          // CRITICAL: We do NOT await these calls. The household API takes 30-60s per
-          // simulation, but we want the UI to navigate immediately and show progress.
-          // TanStack Query will handle waiting for the response in the background.
-
-          const allSimulations = [simulation1, simulation2].filter(
+          // Household: Start CalcOrchestrator per v2 simulation
+          // The v2 analysis endpoints are idempotent, so calling again just returns
+          // the existing job. CalcOrchestrator will pick up and poll from there.
+          const allSims = [simulation1, simulation2].filter(
             (sim): sim is Simulation => sim !== null && sim !== undefined
           );
 
-          for (const sim of allSimulations) {
+          for (const sim of allSims) {
             if (!sim.id) {
-              console.warn('[useCreateReport] Simulation missing ID, skipping');
               continue;
             }
 
-            // Fire and forget - don't await, let TanStack Query handle the waiting
             manager
               .startCalculation({
-                calcId: sim.id, // Each simulation uses its own ID
-                targetType: 'simulation', // Simulation-level calculation
+                calcId: sim.id,
+                targetType: 'simulation',
                 countryId: report.countryId,
                 year: report.year,
+                reportId: reportIdStr,
                 simulations: {
-                  simulation1: sim, // Only this specific simulation
+                  simulation1: sim,
                   simulation2: null,
                 },
                 populations: {
@@ -137,18 +298,14 @@ export function useCreateReport(reportLabel?: string) {
                 },
               })
               .catch((error) => {
-                // Log errors but don't block the flow
                 console.error(
-                  `[useCreateReport] Failed to start calculation for simulation ${sim.id}:`,
+                  `[useCreateReport] Failed to start calculation for sim ${sim.id}:`,
                   error
                 );
               });
           }
         } else {
-          // Economy reports: Single calculation at report level
-          // WHY: Economy calculations operate on the entire geography and compare
-          // all policies in a single API call. Results stored at report level.
-
+          // Economy: Single CalcOrchestrator at report level
           await manager.startCalculation({
             calcId: reportIdStr,
             targetType: 'report',

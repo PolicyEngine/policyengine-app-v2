@@ -1,9 +1,10 @@
 import { Box, Divider, ScrollArea, Stack, Text } from '@mantine/core';
+import type { ParameterChildNode } from '@/api/v2';
 import LazyNestedMenu from '@/components/common/LazyNestedMenu';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 
 interface PolicyParameterSelectorMenuProps {
-  setSelectedParamLabel: (param: string) => void;
+  setSelectedParamLabel: (node: ParameterChildNode) => void;
 }
 
 export default function PolicyParameterSelectorMenu({

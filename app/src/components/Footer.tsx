@@ -8,10 +8,10 @@ import {
   IconMail,
 } from '@tabler/icons-react';
 import { Anchor, Box, Container, Group, SimpleGrid, Stack, Text } from '@mantine/core';
-import type { CountryId } from '@/api/report';
 import FooterSubscribe from '@/components/FooterSubscribe';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import type { CountryId } from '@/libs/countries';
 
 const PolicyEngineLogo = '/assets/logos/policyengine/white.svg';
 

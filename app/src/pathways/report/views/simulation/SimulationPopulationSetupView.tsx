@@ -6,8 +6,8 @@
 
 import { useState } from 'react';
 import PathwayView from '@/components/common/PathwayView';
-import { MOCK_USER_ID } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useUserId } from '@/hooks/useUserId';
 import { useRegions } from '@/hooks/useRegions';
 import { useUserHouseholds } from '@/hooks/useUserHousehold';
 import { PopulationStateProps, SimulationStateProps } from '@/types/pathwayState';
@@ -42,7 +42,7 @@ export default function SimulationPopulationSetupView({
   onBack,
   onCancel,
 }: SimulationPopulationSetupViewProps) {
-  const userId = MOCK_USER_ID.toString();
+  const userId = useUserId();
   const countryId = useCurrentCountry();
   const { regions } = useRegions(countryId);
   const { data: userHouseholds } = useUserHouseholds(userId);

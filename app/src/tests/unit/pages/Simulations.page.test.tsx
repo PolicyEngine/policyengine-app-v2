@@ -1,6 +1,5 @@
 import { render, screen, userEvent } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { MOCK_USER_ID } from '@/constants';
 import { useUserSimulations } from '@/hooks/useUserSimulations';
 import SimulationsPage from '@/pages/Simulations.page';
 import {
@@ -26,6 +25,12 @@ vi.mock('@/hooks/useUserSimulationAssociations', () => ({
 // Mock useCurrentCountry
 vi.mock('@/hooks/useCurrentCountry', () => ({
   useCurrentCountry: () => 'us',
+}));
+
+// Mock useUserId
+const TEST_USER_ID = 'test-user-uuid-123';
+vi.mock('@/hooks/useUserId', () => ({
+  useUserId: () => TEST_USER_ID,
 }));
 
 // Mock useRegions
@@ -181,12 +186,12 @@ describe('SimulationsPage', () => {
     expect(searchInput).toHaveValue('Test Simulation');
   });
 
-  test('given hook returns correct user ID then uses MOCK_USER_ID', () => {
+  test('given hook returns correct user ID then uses useUserId value', () => {
     // When
     render(<SimulationsPage />);
 
     // Then
-    expect(useUserSimulations).toHaveBeenCalledWith(MOCK_USER_ID.toString());
+    expect(useUserSimulations).toHaveBeenCalledWith(TEST_USER_ID);
   });
 
   test('given population column then displays as text not link', () => {

@@ -13,12 +13,12 @@ import { mockReport } from '../adapters/reportMocks';
 import { TEST_USER_ID } from '../api/reportAssociationMocks';
 import { DEFAULT_LOADING_STATES } from '../reducers/metadataReducerMocks';
 
-// Test ID constants
-export const TEST_SIMULATION_ID_1 = 'sim-456';
-export const TEST_SIMULATION_ID_2 = 'sim-789';
-export const TEST_POLICY_ID_1 = 'policy-456'; // Changed to avoid ID collision with simulations
-export const TEST_POLICY_ID_2 = 'policy-789'; // Changed to avoid ID collision with simulations
-export const TEST_HOUSEHOLD_ID = 'household-123';
+// Test ID constants (UUIDs to pass isV2EntityId checks in hooks)
+export const TEST_SIMULATION_ID_1 = '00000000-0000-4000-a000-000000000456';
+export const TEST_SIMULATION_ID_2 = '00000000-0000-4000-a000-000000000789';
+export const TEST_POLICY_ID_1 = '00000000-0000-4000-b000-000000000456';
+export const TEST_POLICY_ID_2 = '00000000-0000-4000-b000-000000000789';
+export const TEST_HOUSEHOLD_ID = '00000000-0000-4000-c000-000000000123';
 export const TEST_GEOGRAPHY_ID = 'state/ca';
 export const TEST_COUNTRIES = {
   US: 'us',
@@ -124,22 +124,24 @@ export const mockUserHouseholds: UserHouseholdPopulation[] = [
 ];
 
 // Mock API Metadata responses
+// Note: SimulationMetadata.id is number (v1 API shape), but the UUID fields
+// (policy_id, population_id) are what matter for isV2EntityId filtering
 export const mockSimulationMetadata1: SimulationMetadata = {
-  id: parseInt(TEST_SIMULATION_ID_1.replace('sim-', ''), 10),
+  id: 456,
   country_id: TEST_COUNTRIES.US,
-  api_version: 'v1',
+  api_version: 'v2',
   population_id: TEST_HOUSEHOLD_ID,
   population_type: 'household' as const,
-  policy_id: TEST_POLICY_ID_1, // policy-456
+  policy_id: TEST_POLICY_ID_1,
 };
 
 export const mockSimulationMetadata2: SimulationMetadata = {
-  id: parseInt(TEST_SIMULATION_ID_2.replace('sim-', ''), 10),
+  id: 789,
   country_id: TEST_COUNTRIES.US,
-  api_version: 'v1',
+  api_version: 'v2',
   population_id: TEST_GEOGRAPHY_ID,
   population_type: 'geography' as const,
-  policy_id: TEST_POLICY_ID_2, // policy-789
+  policy_id: TEST_POLICY_ID_2,
 };
 
 // V2 API Policy Responses

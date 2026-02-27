@@ -4,6 +4,7 @@ import { PolicyAdapter, SimulationAdapter } from '@/adapters';
 import { fetchPolicyById } from '@/api/policy';
 import { fetchSimulationById } from '@/api/simulation';
 import { fetchHouseholdByIdV2 } from '@/api/v2/households';
+import { fetchSimulationByIdV2 } from '@/api/v2/simulations';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
@@ -19,6 +20,7 @@ import { useSimulationAssociationsByUser } from './useUserSimulationAssociations
 import {
   combineLoadingStates,
   extractUniqueIds,
+  isV2EntityId,
   useParallelQueries,
 } from './utils/normalizedUtils';
 
@@ -82,9 +84,13 @@ export const useUserSimulations = (userId: string) => {
   const simulationIds = simulationAssociations?.map((a) => a.simulationId).filter(Boolean) ?? [];
 
   // Step 3: Fetch simulations using parallel queries utility
+  // Route to v2 API for UUID IDs, v1 API for integer IDs
   const simulationResults = useParallelQueries<Simulation>(simulationIds, {
     queryKey: simulationKeys.byId,
     queryFn: async (id) => {
+      if (isV2EntityId(id)) {
+        return fetchSimulationByIdV2(id);
+      }
       const metadata = await fetchSimulationById(country, id);
       return SimulationAdapter.fromMetadata(metadata);
     },
@@ -97,13 +103,16 @@ export const useUserSimulations = (userId: string) => {
     .map((q) => q.data)
     .filter((s): s is Simulation => !!s);
 
-  const policyIds = extractUniqueIds(simulations, 'policyId');
+  // Only fetch v2 (UUID) policy IDs — v1 integer IDs can't be resolved via v2 API
+  const policyIds = extractUniqueIds(simulations, 'policyId').filter(isV2EntityId);
 
   // Separate household and geography IDs based on populationType
+  // Only include v2 (UUID) IDs — v1 integer IDs can't be resolved via v2 API
   const householdIds = simulations
     .filter((s) => s.populationType === 'household' && s.populationId)
     .map((s) => s.populationId as string)
-    .filter((id, index, self) => self.indexOf(id) === index);
+    .filter((id, index, self) => self.indexOf(id) === index)
+    .filter(isV2EntityId);
 
   // Geography IDs for future use when we need to fetch geography data
   // const geographyIds = simulations
@@ -245,7 +254,7 @@ export const useUserSimulationById = (userId: string, simulationId: string) => {
   // Try to get from normalized cache first
   const cachedSimulation = queryNormalizer.getObjectById(simulationId) as Simulation | undefined;
 
-  // Fetch if not in cache
+  // Fetch if not in cache — route to v2 API for UUID IDs
   const {
     data: simulation,
     isLoading: simLoading,
@@ -253,6 +262,9 @@ export const useUserSimulationById = (userId: string, simulationId: string) => {
   } = useQuery({
     queryKey: simulationKeys.byId(simulationId),
     queryFn: async () => {
+      if (isV2EntityId(simulationId)) {
+        return fetchSimulationByIdV2(simulationId);
+      }
       const metadata = await fetchSimulationById(country, simulationId);
       return SimulationAdapter.fromMetadata(metadata);
     },
@@ -263,24 +275,29 @@ export const useUserSimulationById = (userId: string, simulationId: string) => {
   const finalSimulation = cachedSimulation || simulation;
 
   // Fetch related entities if we have a simulation
+  // Only fetch v2 (UUID) policy IDs — v1 integer IDs can't be resolved via v2 API
+  const policyIdStr = finalSimulation?.policyId?.toString() ?? '';
+  const canFetchPolicy = !!finalSimulation?.policyId && isV2EntityId(policyIdStr);
+
   const { data: policy } = useQuery({
-    queryKey: policyKeys.byId(finalSimulation?.policyId?.toString() ?? ''),
+    queryKey: policyKeys.byId(policyIdStr),
     queryFn: async () => {
-      const response = await fetchPolicyById(finalSimulation!.policyId!.toString());
+      const response = await fetchPolicyById(policyIdStr);
       return PolicyAdapter.fromV2Response(response);
     },
-    enabled: !!finalSimulation?.policyId,
+    enabled: canFetchPolicy,
     staleTime: 5 * 60 * 1000,
   });
 
   // Determine if populationId is a household or geography
-  // Try to fetch as household first
+  // Only fetch v2 (UUID) IDs — v1 integer IDs can't be resolved via v2 API
   const populationId = finalSimulation?.populationId;
+  const canFetchHousehold = !!populationId && isV2EntityId(populationId);
 
   const { data: household } = useQuery({
     queryKey: householdKeys.byId(populationId ?? ''),
     queryFn: () => fetchHouseholdByIdV2(populationId!),
-    enabled: !!populationId,
+    enabled: canFetchHousehold,
     staleTime: 5 * 60 * 1000,
     retry: 1, // Only retry once if it's not a household
   });

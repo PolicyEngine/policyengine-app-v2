@@ -4,7 +4,6 @@
  * Internally uses v2 Alpha format. Communicates with API v1 endpoints.
  */
 
-import { modelNameToCountryId } from '@/adapters/HouseholdAdapter';
 import { BASE_URL } from '@/constants';
 import { HouseholdWithAxes } from '@/utils/householdVariationAxes';
 import { householdToV1Request } from './legacyConversion';
@@ -77,15 +76,4 @@ export async function fetchHouseholdVariation(
 
     throw error;
   }
-}
-
-/**
- * Convenience wrapper that extracts countryId from household
- */
-export async function fetchHouseholdVariationV2(
-  householdWithAxes: HouseholdWithAxes,
-  policyData: any
-): Promise<any> {
-  const countryId = modelNameToCountryId(householdWithAxes.tax_benefit_model_name);
-  return fetchHouseholdVariation(countryId, householdWithAxes, policyData);
 }

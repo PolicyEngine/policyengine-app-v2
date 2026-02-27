@@ -5,8 +5,8 @@ import { useDisclosure } from '@mantine/hooks';
 import { ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
 import { RenameIngredientModal } from '@/components/common/RenameIngredientModal';
 import IngredientReadView from '@/components/IngredientReadView';
-import { MOCK_USER_ID } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useUserId } from '@/hooks/useUserId';
 import { useRegions } from '@/hooks/useRegions';
 import { useUpdateSimulationAssociation } from '@/hooks/useUserSimulationAssociations';
 import { useUserSimulations } from '@/hooks/useUserSimulations';
@@ -14,7 +14,7 @@ import { formatDate } from '@/utils/dateUtils';
 import { getCountryLabel, getRegionLabel, isNationalGeography } from '@/utils/geographyUtils';
 
 export default function SimulationsPage() {
-  const userId = MOCK_USER_ID.toString(); // TODO: Replace with actual user ID retrieval logic
+  const userId = useUserId();
   const { data, isLoading, isError, error } = useUserSimulations(userId);
   const navigate = useNavigate();
   const countryId = useCurrentCountry();
@@ -60,6 +60,7 @@ export default function SimulationsPage() {
     try {
       await updateAssociation.mutateAsync({
         userSimulationId: renamingSimulationId,
+        userId,
         updates: { label: newLabel },
       });
       handleCloseRename();

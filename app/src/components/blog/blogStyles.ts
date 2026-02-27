@@ -44,18 +44,6 @@ export const blogColors = {
 
   // Anchor link colors (heading permalinks)
   anchorLink: colors.gray[400], // Subtle anchor links
-
-  // Legacy color mappings (from old app - DEPRECATED, use semantic names above)
-  /** @deprecated Use textHeading instead */
-  blue: colors.primary[600],
-  /** @deprecated Use textPrimary instead */
-  darkGray: colors.gray[800],
-  /** @deprecated Use textSecondary instead */
-  gray: colors.gray[600],
-  /** @deprecated Use backgroundCode or backgroundSecondary instead */
-  lightGray: colors.gray[100],
-  /** @deprecated Use anchorLink instead */
-  mediumLightGray: colors.gray[400],
 } as const;
 
 /**

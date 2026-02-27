@@ -9,6 +9,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Provider } from 'react-redux';
 import { ReportIngredientsInput } from '@/hooks/utils/useFetchReportIngredients';
 
+// UUID constants for test IDs (must pass isV2EntityId checks)
+const TEST_HOUSEHOLD_UUID = '00000000-0000-4000-c000-000000000001';
+
 // ReportIngredientsInput fixtures - using Omit<> types which include all fields except userId/timestamps
 export const MOCK_SHARE_DATA: ReportIngredientsInput = {
   userReport: {
@@ -32,7 +35,12 @@ export const MOCK_HOUSEHOLD_SHARE_DATA: ReportIngredientsInput = {
   userSimulations: [{ simulationId: 'sim-2', countryId: 'uk', label: 'HH Sim' }],
   userPolicies: [{ policyId: 'policy-2', countryId: 'uk', label: 'HH Policy' }],
   userHouseholds: [
-    { type: 'household', householdId: 'hh-1', countryId: 'uk', label: 'My Household' },
+    {
+      type: 'household',
+      householdId: TEST_HOUSEHOLD_UUID,
+      countryId: 'uk',
+      label: 'My Household',
+    },
   ],
 };
 
@@ -69,7 +77,7 @@ export const MOCK_POLICY_METADATA: any = {
 };
 
 export const MOCK_HOUSEHOLD_METADATA: any = {
-  id: 'hh-1',
+  id: TEST_HOUSEHOLD_UUID,
   country_id: 'uk',
   label: 'Test Household',
   household_json: {},
