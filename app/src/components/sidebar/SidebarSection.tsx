@@ -13,7 +13,7 @@ export default function SidebarSection({ title, children }: SidebarSectionProps)
           className="tw:px-3 tw:pb-1"
           style={{
             fontSize: typography.fontSize.xs,
-            lineHeight: 1.5,
+            lineHeight: typography.lineHeight.normal,
             fontWeight: typography.fontWeight.medium,
             color: colors.text.secondary,
           }}

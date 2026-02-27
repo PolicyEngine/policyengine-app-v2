@@ -8,7 +8,7 @@ import { ReportErrorFallback } from '@/components/report/ReportErrorFallback';
 import { Container, Stack, Text } from '@/components/ui';
 import { CALCULATOR_URL } from '@/constants';
 import { ReportYearProvider } from '@/contexts/ReportYearContext';
-import { spacing } from '@/designTokens';
+import { colors, spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useDisclosure } from '@/hooks/useDisclosure';
 import { useSaveSharedReport } from '@/hooks/useSaveSharedReport';
@@ -77,7 +77,7 @@ export default function ReportOutputPage() {
     return (
       <Container size="xl" style={{ paddingLeft: spacing.xl, paddingRight: spacing.xl }}>
         <Stack gap="xl">
-          <Text style={{ color: 'red' }}>Error: Report ID is required</Text>
+          <Text style={{ color: colors.error }}>Error: Report ID is required</Text>
         </Stack>
       </Container>
     );
@@ -253,7 +253,7 @@ export default function ReportOutputPage() {
     return (
       <Container size="xl" style={{ paddingLeft: spacing.xl, paddingRight: spacing.xl }}>
         <Stack gap="xl">
-          <Text style={{ color: 'red' }}>
+          <Text style={{ color: colors.error }}>
             Error loading report: {dataError?.message || 'Report not found'}
           </Text>
         </Stack>
@@ -317,7 +317,7 @@ export default function ReportOutputPage() {
       );
     }
 
-    return <Text style={{ color: 'red' }}>Unknown report type</Text>;
+    return <Text style={{ color: colors.error }}>Unknown report type</Text>;
   };
 
   if (import.meta.env.DEV) {

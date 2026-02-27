@@ -9,7 +9,7 @@ import { IconChevronRight, IconChevronUp } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import HeaderNavigation from '@/components/shared/HomeHeader';
 import { Button, Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui';
-import { spacing } from '@/designTokens';
+import { spacing, typography } from '@/designTokens';
 import { colors } from '@/designTokens/colors';
 import { useIsMobile } from '@/hooks/useChartDimensions';
 import { useDisclosure } from '@/hooks/useDisclosure';
@@ -170,7 +170,7 @@ export default function PolicyParameterSelectorView({
                     height: '18px',
                     backgroundColor: colors.primary[600],
                     fontSize: '11px',
-                    fontWeight: 700,
+                    fontWeight: typography.fontWeight.bold,
                   }}
                 >
                   {modificationCount}

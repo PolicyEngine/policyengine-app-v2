@@ -87,7 +87,10 @@ export default function ParameterTable({
               </TableHead>
             )}
             {columns.map((column, idx) => (
-              <TableHead key={idx} style={{ ...thStyle, width: `${valueColumnWidth}%`, textAlign: 'right' }}>
+              <TableHead
+                key={idx}
+                style={{ ...thStyle, width: `${valueColumnWidth}%`, textAlign: 'right' }}
+              >
                 {renderColumnHeader(column, idx)}
               </TableHead>
             ))}
@@ -144,7 +147,10 @@ export default function ParameterTable({
                   </TableCell>
                 )}
                 {columns.map((column, idx) => (
-                  <TableCell key={idx} style={{ textAlign: 'right', padding: `${spacing.md} ${spacing.lg}` }}>
+                  <TableCell
+                    key={idx}
+                    style={{ textAlign: 'right', padding: `${spacing.md} ${spacing.lg}` }}
+                  >
                     <span className="tw:text-sm tw:font-medium tw:text-gray-900">
                       {renderColumnValue(column, paramName)}
                     </span>

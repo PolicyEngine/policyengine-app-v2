@@ -83,7 +83,9 @@ export default function IframeContent({
                 animation: 'spin 1s linear infinite',
               }}
             />
-            <p style={{ color: colors.gray[500], fontSize: typography.fontSize.sm }}>Loading calculator...</p>
+            <p style={{ color: colors.gray[500], fontSize: typography.fontSize.sm }}>
+              Loading calculator...
+            </p>
           </div>
         </div>
       )}

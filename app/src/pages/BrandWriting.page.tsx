@@ -300,7 +300,13 @@ export default function BrandWritingPage() {
           <div>
             <RuleTitle>Where this applies</RuleTitle>
             <RuleDescription>Use sentence case consistently across all content:</RuleDescription>
-            <ul style={{ color: colors.text.secondary, lineHeight: 1.8, paddingLeft: 20 }}>
+            <ul
+              style={{
+                color: colors.text.secondary,
+                lineHeight: typography.lineHeight.relaxed,
+                paddingLeft: spacing.xl,
+              }}
+            >
               <li style={{ marginBottom: spacing.xs }}>Page titles and headings</li>
               <li style={{ marginBottom: spacing.xs }}>Navigation labels</li>
               <li style={{ marginBottom: spacing.xs }}>Button text</li>

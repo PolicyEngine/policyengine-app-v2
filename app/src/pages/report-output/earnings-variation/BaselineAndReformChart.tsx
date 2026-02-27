@@ -15,7 +15,7 @@ import {
 } from 'recharts';
 import { ChartWatermark, TOOLTIP_STYLE } from '@/components/charts';
 import { RadioGroup, RadioGroupItem, Stack } from '@/components/ui';
-import { colors } from '@/designTokens';
+import { colors, typography } from '@/designTokens';
 import { MOBILE_BREAKPOINT_QUERY } from '@/hooks/useChartDimensions';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
@@ -43,12 +43,15 @@ function EarningsTooltip({ active, payload, label, symbol }: any) {
   }
   return (
     <div style={TOOLTIP_STYLE}>
-      <p style={{ fontWeight: 600, margin: 0 }}>
+      <p style={{ fontWeight: typography.fontWeight.semibold, margin: 0 }}>
         Earnings: {symbol}
         {Number(label).toLocaleString()}
       </p>
       {payload.map((p: any) => (
-        <p key={p.name} style={{ margin: '2px 0', fontSize: 13, color: p.stroke }}>
+        <p
+          key={p.name}
+          style={{ margin: '2px 0', fontSize: typography.fontSize.sm, color: p.stroke }}
+        >
           {p.name}: {p.value}
         </p>
       ))}
@@ -62,12 +65,15 @@ function PercentTooltip({ active, payload, label, symbol }: any) {
   }
   return (
     <div style={TOOLTIP_STYLE}>
-      <p style={{ fontWeight: 600, margin: 0 }}>
+      <p style={{ fontWeight: typography.fontWeight.semibold, margin: 0 }}>
         Earnings: {symbol}
         {Number(label).toLocaleString()}
       </p>
       {payload.map((p: any) => (
-        <p key={p.name} style={{ margin: '2px 0', fontSize: 13, color: p.stroke }}>
+        <p
+          key={p.name}
+          style={{ margin: '2px 0', fontSize: typography.fontSize.sm, color: p.stroke }}
+        >
           {p.name}: {(Number(p.value) * 100).toFixed(1)}%
         </p>
       ))}

@@ -116,7 +116,10 @@ export default function ReportOutputLayout({
 
   return (
     <Container size="xl" className="tw:px-xl">
-      <Stack className="tw:gap-xl" style={{ paddingBottom: showMobileDrawer ? 60 : undefined }}>
+      <Stack
+        className="tw:gap-xl"
+        style={{ paddingBottom: showMobileDrawer ? spacing['5xl'] : undefined }}
+      >
         {/* Header Section */}
         <div>
           {/* Title row with actions */}

@@ -1,5 +1,5 @@
 import { Text } from '@/components/ui';
-import { colors, spacing } from '@/designTokens';
+import { colors, spacing, typography } from '@/designTokens';
 
 const PolicyEngineLogo = '/assets/logos/policyengine/white.svg';
 
@@ -32,7 +32,7 @@ export default function HeaderBar({ title, children, showLogo = false }: HeaderB
           />
         )}
         {title && (
-          <Text style={{ color: 'white', fontWeight: 700 }} size="md">
+          <Text style={{ color: colors.white, fontWeight: typography.fontWeight.bold }} size="md">
             {title}
           </Text>
         )}

@@ -22,7 +22,7 @@ export default function SidebarUser({ name, initials }: SidebarUserProps) {
       <span
         style={{
           fontSize: typography.fontSize.sm,
-          lineHeight: 1.43,
+          lineHeight: typography.lineHeight.snug,
           fontWeight: typography.fontWeight.medium,
           color: colors.gray[900],
         }}

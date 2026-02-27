@@ -45,10 +45,16 @@ export default function Footer() {
   const countryId = useCurrentCountry();
   const CONTACT_LINKS = getContactLinks(countryId);
   return (
-    <footer className="tw:w-full tw:bg-primary-900" style={{ padding: `${spacing['4xl']} ${spacing['5xl']}` }}>
+    <footer
+      className="tw:w-full tw:bg-primary-900"
+      style={{ padding: `${spacing['4xl']} ${spacing['5xl']}` }}
+    >
       <Container size="2xl">
         <img src={PolicyEngineLogo} alt="PolicyEngine" className="tw:h-[52px] tw:w-auto" />
-        <div className="tw:grid tw:grid-cols-1 tw:md:grid-cols-2 tw:mt-8" style={{ gap: spacing['4xl'] }}>
+        <div
+          className="tw:grid tw:grid-cols-1 tw:md:grid-cols-2 tw:mt-8"
+          style={{ gap: spacing['4xl'] }}
+        >
           <Stack gap="2xl" align="start">
             <Stack gap="xs">
               {[
