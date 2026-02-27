@@ -6,7 +6,7 @@ import {
   getTopicTags,
   locationLabels,
 } from '@/data/posts/postTransformers';
-import { colors, typography } from '@/designTokens';
+import { colors, spacing, typography } from '@/designTokens';
 
 interface ResearchFiltersProps {
   searchQuery: string;
@@ -156,7 +156,7 @@ export function ResearchFilters({
                   style={{
                     cursor: 'pointer',
                     userSelect: 'none',
-                    marginLeft: 12,
+                    marginLeft: spacing.md,
                     color: colors.text.tertiary,
                   }}
                   onClick={(e: React.MouseEvent) => {
@@ -267,7 +267,7 @@ export function ResearchFilters({
               overflowY: 'auto',
               minHeight: 0,
               maxHeight: availableHeight - 16,
-              paddingBottom: 8,
+              paddingBottom: spacing.sm,
             }}
           >
             {renderTypeOptions()}
@@ -295,7 +295,7 @@ export function ResearchFilters({
               overflowY: 'auto',
               minHeight: 0,
               maxHeight: availableHeight - 16,
-              paddingBottom: 8,
+              paddingBottom: spacing.sm,
             }}
           >
             {renderTopicTags()}
@@ -323,7 +323,7 @@ export function ResearchFilters({
               overflowY: 'auto',
               minHeight: 0,
               maxHeight: availableHeight - 16,
-              paddingBottom: 8,
+              paddingBottom: spacing.sm,
             }}
           >
             {renderLocationTags()}
@@ -351,7 +351,7 @@ export function ResearchFilters({
               overflowY: 'auto',
               minHeight: 0,
               maxHeight: availableHeight - 16,
-              paddingBottom: 8,
+              paddingBottom: spacing.sm,
             }}
           >
             {renderAuthorTags()}

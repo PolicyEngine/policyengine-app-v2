@@ -16,7 +16,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui';
-import { colors, spacing } from '@/designTokens';
+import { colors, spacing, typography } from '@/designTokens';
 import { useReportYear } from '@/hooks/useReportYear';
 import { trackPythonCodeCopied } from '@/utils/analytics';
 import { getColabLink, getReproducibilityCodeBlock } from '@/utils/reproducibilityCode';
@@ -110,7 +110,7 @@ export default function HouseholdReproducibility({
                     Python notebook
                     <IconExternalLink
                       size={12}
-                      style={{ marginLeft: 3, verticalAlign: 'middle', display: 'inline' }}
+                      style={{ marginLeft: spacing.xs, verticalAlign: 'middle', display: 'inline' }}
                     />
                   </a>
                 ) : (
@@ -181,8 +181,8 @@ export default function HouseholdReproducibility({
                 whiteSpace: 'pre',
                 overflow: 'auto',
                 maxHeight: '400px',
-                fontSize: '13px',
-                lineHeight: 1.6,
+                fontSize: typography.fontSize.sm,
+                lineHeight: typography.lineHeight.relaxed,
                 border: 'none',
                 padding: 0,
               }}

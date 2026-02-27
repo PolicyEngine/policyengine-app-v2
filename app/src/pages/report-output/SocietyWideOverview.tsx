@@ -175,7 +175,7 @@ export default function SocietyWideOverview({ output }: SocietyWideOverviewProps
               <div
                 className="tw:flex tw:mt-md tw:overflow-hidden"
                 style={{
-                  height: 8,
+                  height: spacing.sm,
                   borderRadius: spacing.radius.element,
                   backgroundColor: colors.gray[200],
                 }}

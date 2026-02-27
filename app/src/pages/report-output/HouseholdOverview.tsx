@@ -34,7 +34,7 @@ export default function HouseholdOverview({ outputs, policyLabels }: HouseholdOv
   if (!rootVariable) {
     return (
       <div>
-        <Text style={{ color: 'red' }}>
+        <Text style={{ color: colors.error }}>
           Error: household_net_income variable not found in metadata
         </Text>
       </div>
