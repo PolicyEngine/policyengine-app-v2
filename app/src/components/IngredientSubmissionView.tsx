@@ -1,5 +1,5 @@
 import { IconCheck } from '@tabler/icons-react';
-import { Badge, Card, CardContent, Container, Stack, Text, Title } from '@/components/ui';
+import { Badge, Container, Group, Stack, Text, Title } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import { cn } from '@/lib/utils';
 import MultiButtonFooter, { ButtonConfig } from './common/MultiButtonFooter';
@@ -71,43 +71,41 @@ export default function IngredientSubmissionView({
       return (
         <Stack gap="md">
           {summaryBoxes.map((item, index) => (
-            <Card
+            <div
               key={index}
               className={cn(
-                'tw:border',
-                item.isDisabled && 'tw:opacity-50',
-                !item.isDisabled && item.isFulfilled && 'tw:border-primary-500',
-                !item.isDisabled && !item.isFulfilled && 'tw:border-border-light'
+                'tw:w-full tw:text-left tw:rounded-element tw:border tw:p-md tw:transition-all',
+                item.isDisabled
+                  ? 'tw:opacity-60 tw:border-border-light tw:bg-gray-50 tw:pointer-events-none'
+                  : 'tw:border-border-light tw:bg-white tw:hover:bg-gray-50 tw:hover:border-border-medium'
               )}
             >
-              <CardContent className="tw:p-4">
-                <div className="tw:flex tw:items-center tw:gap-2">
-                  {item.isFulfilled && (
-                    <IconCheck
-                      size={20}
-                      style={{
-                        color: colors.primary[500],
-                        marginTop: '2px',
-                        flexShrink: 0,
-                      }}
-                    />
+              <Group gap="sm" className="tw:items-center">
+                {item.isFulfilled && (
+                  <IconCheck
+                    size={20}
+                    style={{
+                      color: colors.primary[600],
+                      marginTop: '2px',
+                      flexShrink: 0,
+                    }}
+                  />
+                )}
+                <Stack gap="xs" style={{ flex: 1 }}>
+                  <Text fw={typography.fontWeight.bold}>{item.title}</Text>
+                  {item.description && (
+                    <Text size="sm" style={{ color: colors.text.secondary }}>
+                      {item.description}
+                    </Text>
                   )}
-                  <Stack gap="xs" className="tw:flex-1">
-                    <Text fw={typography.fontWeight.bold}>{item.title}</Text>
-                    {item.description && (
-                      <Text size="sm" style={{ color: colors.text.secondary }}>
-                        {item.description}
-                      </Text>
-                    )}
-                  </Stack>
-                  {item.badge && (
-                    <Badge variant="secondary" style={{ borderRadius: spacing.radius.element }}>
-                      {item.badge}
-                    </Badge>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+                </Stack>
+                {item.badge && (
+                  <Badge variant="secondary" style={{ borderRadius: spacing.radius.element }}>
+                    {item.badge}
+                  </Badge>
+                )}
+              </Group>
+            </div>
           ))}
         </Stack>
       );
@@ -206,8 +204,10 @@ export default function IngredientSubmissionView({
       };
 
   return (
-    <Container>
-      <Title order={2}>{title}</Title>
+    <Container variant="guttered">
+      <Title order={2} style={{ color: colors.primary[700] }}>
+        {title}
+      </Title>
       {subtitle && (
         <Text style={{ color: colors.text.secondary, marginBottom: spacing.sm }}>{subtitle}</Text>
       )}
