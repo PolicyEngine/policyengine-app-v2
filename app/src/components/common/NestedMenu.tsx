@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { IconChevronRight } from '@tabler/icons-react';
+import { colors } from '@/designTokens';
 import { cn } from '@/lib/utils';
 
 interface NestedMenuOptions {
@@ -9,27 +11,24 @@ interface NestedMenuOptions {
 
 interface NestedMenuProps {
   menuOptions: NestedMenuOptions[];
-  onItemClick?: (name: string) => void; // Optional callback for item click
+  onItemClick?: (name: string) => void;
 }
 
 export default function NestedMenu({ menuOptions, onItemClick }: NestedMenuProps) {
   const [active, setActive] = useState<string | null>(null);
-
-  // Manually control what's been selected so that we render deeper menu levels
-  // on demand; vastly improves runtime for larger menu sets, e.g., US policy params
   const [selectedSet, setSelectedSet] = useState<Set<string>>(new Set());
 
   function handleClick(name: string) {
     if (onItemClick) {
-      onItemClick(name); // Call the optional callback if provided
+      onItemClick(name);
     }
     setActive(name);
     setSelectedSet((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(name)) {
-        newSet.delete(name); // If already selected, remove it
+        newSet.delete(name);
       } else {
-        newSet.add(name); // If not selected, add it
+        newSet.add(name);
       }
       return newSet;
     });
@@ -46,26 +45,31 @@ export default function NestedMenu({ menuOptions, onItemClick }: NestedMenuProps
           <button
             type="button"
             className={cn(
-              'tw:w-full tw:text-left tw:px-md tw:py-xs tw:border-none tw:bg-transparent tw:cursor-pointer tw:text-sm tw:rounded-sm tw:transition-colors',
+              'tw:w-full tw:text-left tw:border-none tw:cursor-pointer tw:text-sm tw:flex tw:items-center tw:gap-1.5 tw:rounded-sm tw:transition-colors',
               isActive
                 ? 'tw:bg-primary-50 tw:text-primary-700 tw:font-medium'
-                : 'tw:text-gray-700 tw:hover:bg-gray-50'
+                : 'tw:bg-transparent tw:text-gray-700 tw:hover:bg-gray-100'
             )}
-            style={{ paddingLeft: `${12 + depth * 16}px` }}
+            style={{
+              padding: '6px 12px',
+              paddingLeft: `${12 + depth * 20}px`,
+              borderLeft: isActive ? `3px solid ${colors.primary[500]}` : '3px solid transparent',
+            }}
             onClick={() => handleClick(item.name)}
           >
             {hasChildren && (
-              <span
-                className="tw:mr-xs tw:inline-block"
+              <IconChevronRight
+                size={14}
+                stroke={1.5}
+                className="tw:shrink-0"
                 style={{
                   transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
                   transition: 'transform 150ms ease',
+                  color: isActive ? colors.primary[600] : colors.gray[500],
                 }}
-              >
-                &#9656;
-              </span>
+              />
             )}
-            {item.label}
+            <span className="tw:leading-tight">{item.label}</span>
           </button>
           {item.children && isExpanded && (
             <div>{mapOverOneParamLevel(item.children, depth + 1)}</div>
