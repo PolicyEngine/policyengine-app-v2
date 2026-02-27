@@ -18,14 +18,9 @@ vi.mock('@/api/v2/economyAnalysis', () => ({
   getEconomyAnalysis: vi.fn(),
 }));
 
-// Mock getDatasetForRegion (pure utility kept in v1 module)
+// Mock getDatasetIdForRegion (async region-based dataset UUID lookup)
 vi.mock('@/api/societyWideCalculation', () => ({
-  getDatasetForRegion: vi.fn((countryId: string, region: string) => {
-    if (countryId === 'us' && region === 'us') {
-      return 'enhanced_cps';
-    }
-    return undefined;
-  }),
+  getDatasetIdForRegion: vi.fn(() => Promise.resolve('00000000-0000-4000-a000-000000000001')),
 }));
 
 describe('SocietyWideCalcStrategy', () => {
@@ -63,7 +58,7 @@ describe('SocietyWideCalcStrategy', () => {
         tax_benefit_model_name: 'policyengine_us',
         region: 'us',
         policy_id: '2', // reform takes precedence
-        dataset_id: 'enhanced_cps', // US nationwide gets enhanced CPS
+        dataset_id: '00000000-0000-4000-a000-000000000001',
       });
       expect(result.status).toBe('pending');
       expect(result.progress).toBe(0);
@@ -96,7 +91,7 @@ describe('SocietyWideCalcStrategy', () => {
       );
     });
 
-    it('given UK region then does not set dataset_id', async () => {
+    it('given UK region then resolves dataset_id from API', async () => {
       const params = mockSocietyWideCalcParams({
         countryId: 'uk',
         region: 'uk',
@@ -109,12 +104,12 @@ describe('SocietyWideCalcStrategy', () => {
         expect.objectContaining({
           tax_benefit_model_name: 'policyengine_uk',
           region: 'uk',
-          dataset_id: null,
+          dataset_id: '00000000-0000-4000-a000-000000000001',
         })
       );
     });
 
-    it('given US state region then does not set enhanced_cps dataset', async () => {
+    it('given US state region then resolves dataset_id from API', async () => {
       const params = mockSocietyWideCalcParams({
         countryId: 'us',
         region: 'ca',
@@ -126,7 +121,7 @@ describe('SocietyWideCalcStrategy', () => {
       expect(mockCreateEconomyAnalysis).toHaveBeenCalledWith(
         expect.objectContaining({
           region: 'ca',
-          dataset_id: null,
+          dataset_id: '00000000-0000-4000-a000-000000000001',
         })
       );
     });

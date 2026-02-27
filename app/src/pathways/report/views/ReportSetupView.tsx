@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import PathwayView from '@/components/common/PathwayView';
-import { MOCK_USER_ID } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useUserId } from '@/hooks/useUserId';
 import { useRegions } from '@/hooks/useRegions';
 import { useUserHouseholds } from '@/hooks/useUserHousehold';
 import { MetadataRegionEntry } from '@/types/metadata';
@@ -37,7 +37,7 @@ export default function ReportSetupView({
   // Fetch population data for pre-filling simulation 2
   // Note: Geographic populations are no longer stored as user associations.
   // They are selected per-simulation.
-  const userId = MOCK_USER_ID.toString();
+  const userId = useUserId();
   const countryId = useCurrentCountry();
   const { regions } = useRegions(countryId);
   const { data: householdData } = useUserHouseholds(userId);

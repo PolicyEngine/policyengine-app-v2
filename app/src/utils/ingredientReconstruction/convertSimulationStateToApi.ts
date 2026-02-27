@@ -21,8 +21,9 @@ export function convertSimulationStateToApi(
   }
 
   // Extract policyId from nested policy object
+  // In v2, current law = null (intentional), undefined = not yet set
   const policyId = stateProps.policy?.id;
-  if (!policyId) {
+  if (policyId === undefined) {
     console.warn('[convertSimulationStateToApi] Simulation missing policy.id:', stateProps);
     return null;
   }

@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { LocalStorageReportStore } from '@/api/reportAssociation';
 import { LocalStorageSimulationStore } from '@/api/simulationAssociation';
-import { getDatasetForRegion } from '@/api/societyWideCalculation';
+import { getDatasetIdForRegion } from '@/api/societyWideCalculation';
 import {
   createEconomyAnalysis,
   EconomicImpactRequest,
@@ -12,8 +12,8 @@ import {
   HouseholdImpactRequest,
   HouseholdImpactResponse,
 } from '@/api/v2/householdAnalysis';
-import { MOCK_USER_ID } from '@/constants';
 import { useCalcOrchestratorManager } from '@/contexts/CalcOrchestratorContext';
+import { useUserId } from '@/hooks/useUserId';
 import { countryIds } from '@/libs/countries';
 import { reportAssociationKeys, reportKeys, simulationAssociationKeys } from '@/libs/queryKeys';
 import { Geography } from '@/types/ingredients/Geography';
@@ -115,11 +115,13 @@ async function createEconomyReportV2(
   reportId: string;
   v2SimulationIds: string[];
 }> {
+  const datasetId = await getDatasetIdForRegion(countryId, region);
+
   const request: EconomicImpactRequest = {
     tax_benefit_model_name: `policyengine_${countryId}`,
     region,
     policy_id: reformPolicyId,
-    dataset_id: getDatasetForRegion(countryId, region) ?? null,
+    dataset_id: datasetId,
   };
 
   const response = await createEconomyAnalysis(request);
@@ -144,7 +146,7 @@ async function createEconomyReportV2(
 export function useCreateReport(reportLabel?: string) {
   const queryClient = useQueryClient();
   const manager = useCalcOrchestratorManager();
-  const userId = MOCK_USER_ID;
+  const userId = useUserId();
 
   // TODO: Replace with actual auth check
   const reportStore = new LocalStorageReportStore();

@@ -29,6 +29,7 @@ import { useSimulationAssociationsByUser } from './useUserSimulationAssociations
 import {
   combineLoadingStates,
   extractUniqueIds,
+  isV2EntityId,
   useParallelQueries,
 } from './utils/normalizedUtils';
 
@@ -174,13 +175,18 @@ export const useUserReports = (userId: string) => {
     .map((q) => q.data)
     .filter((s): s is Simulation => !!s);
 
-  const policyIds = extractUniqueIds(simulations, 'policyId');
+  // Only fetch v2 (UUID) policy IDs from the v2 API.
+  // V1 simulations have integer policy IDs (e.g. "2" for current law)
+  // which cannot be resolved through the v2 API.
+  const policyIds = extractUniqueIds(simulations, 'policyId').filter(isV2EntityId);
 
   // Separate household and geography IDs based on populationType
+  // Only include v2 (UUID) IDs — v1 integer IDs can't be resolved via v2 API
   const householdIds = simulations
     .filter((s) => s.populationType === 'household' && s.populationId)
     .map((s) => s.populationId as string)
-    .filter((id, index, self) => self.indexOf(id) === index);
+    .filter((id, index, self) => self.indexOf(id) === index)
+    .filter(isV2EntityId);
 
   // Step 7: Fetch policies
   const policyResults = useParallelQueries<Policy>(policyIds, {
@@ -441,7 +447,8 @@ export const useUserReportById = (userReportId: string, options?: { enabled?: bo
     .filter((s): s is Simulation => !!s);
 
   // Step 4: Extract policy IDs from simulations and fetch policies
-  const policyIds = extractUniqueIds(simulations, 'policyId');
+  // Only fetch v2 (UUID) policy IDs — v1 integer IDs can't be resolved via v2 API
+  const policyIds = extractUniqueIds(simulations, 'policyId').filter(isV2EntityId);
 
   const policyResults = useParallelQueries<Policy>(policyIds, {
     queryKey: policyKeys.byId,
@@ -471,8 +478,9 @@ export const useUserReportById = (userReportId: string, options?: { enabled?: bo
 
   // Step 6: Extract households from simulations and fetch them
   // Filter for household simulations, then extract unique population IDs
+  // Only include v2 (UUID) IDs — v1 integer IDs can't be resolved via v2 API
   const householdSimulations = simulations.filter((s) => s.populationType === 'household');
-  const householdIds = extractUniqueIds(householdSimulations, 'populationId');
+  const householdIds = extractUniqueIds(householdSimulations, 'populationId').filter(isV2EntityId);
 
   const householdResults = useParallelQueries<Household>(householdIds, {
     queryKey: householdKeys.byId,

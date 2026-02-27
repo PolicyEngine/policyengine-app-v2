@@ -10,7 +10,7 @@
 import { useCallback, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import StandardLayout from '@/components/StandardLayout';
-import { MOCK_USER_ID } from '@/constants';
+import { useUserId } from '@/hooks/useUserId';
 import { ReportYearProvider } from '@/contexts/ReportYearContext';
 import { useCreateReport } from '@/hooks/useCreateReport';
 import { usePathwayNavigation } from '@/hooks/usePathwayNavigation';
@@ -93,7 +93,7 @@ export default function ReportPathwayWrapper({ onComplete }: ReportPathwayWrappe
   );
 
   // ========== FETCH USER DATA FOR CONDITIONAL NAVIGATION ==========
-  const userId = MOCK_USER_ID.toString();
+  const userId = useUserId();
   const { data: userSimulations } = useUserSimulations(userId);
   const { data: userHouseholds } = useUserHouseholds(userId);
 

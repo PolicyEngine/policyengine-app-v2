@@ -1,38 +1,58 @@
-import { describe, expect, test } from 'vitest';
-import { getDatasetForRegion } from '@/api/societyWideCalculation';
+import { describe, expect, test, vi, beforeEach } from 'vitest';
+import { getDatasetIdForRegion } from '@/api/societyWideCalculation';
+
+const MOCK_DATASET_UUID = '00000000-0000-4000-a000-000000000001';
+
+vi.mock('@/api/v2/regions', () => ({
+  fetchRegionByCode: vi.fn(),
+}));
+
+import { fetchRegionByCode } from '@/api/v2/regions';
+
+const mockFetchRegionByCode = vi.mocked(fetchRegionByCode);
 
 describe('societyWide API', () => {
-  describe('getDatasetForRegion', () => {
-    test('given US country and US region then returns enhanced_cps', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  describe('getDatasetIdForRegion', () => {
+    test('given region exists then returns its dataset_id', async () => {
+      // Given
+      mockFetchRegionByCode.mockResolvedValue({
+        id: 'region-1',
+        code: 'us',
+        label: 'United States',
+        region_type: 'country',
+        requires_filter: false,
+        filter_field: null,
+        filter_value: null,
+        parent_code: null,
+        state_code: null,
+        state_name: null,
+        dataset_id: MOCK_DATASET_UUID,
+        tax_benefit_model_id: 'model-1',
+        created_at: '2024-01-01T00:00:00Z',
+        updated_at: '2024-01-01T00:00:00Z',
+      });
+
       // When
-      const result = getDatasetForRegion('us', 'us');
+      const result = await getDatasetIdForRegion('us', 'us');
 
       // Then
-      expect(result).toBe('enhanced_cps');
+      expect(result).toBe(MOCK_DATASET_UUID);
+      expect(mockFetchRegionByCode).toHaveBeenCalledWith('us', 'us');
     });
 
-    test('given US country and state region then returns undefined', () => {
+    test('given region lookup fails then returns null', async () => {
+      // Given
+      mockFetchRegionByCode.mockRejectedValue(new Error('Region not found'));
+
       // When
-      const result = getDatasetForRegion('us', 'ca');
+      const result = await getDatasetIdForRegion('us', 'unknown');
 
       // Then
-      expect(result).toBeUndefined();
-    });
-
-    test('given UK country then returns undefined', () => {
-      // When
-      const result = getDatasetForRegion('uk', 'uk');
-
-      // Then
-      expect(result).toBeUndefined();
-    });
-
-    test('given CA country then returns undefined', () => {
-      // When
-      const result = getDatasetForRegion('ca', 'ca');
-
-      // Then
-      expect(result).toBeUndefined();
+      expect(result).toBeNull();
     });
   });
 });

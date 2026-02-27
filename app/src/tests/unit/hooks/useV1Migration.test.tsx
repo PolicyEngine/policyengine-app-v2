@@ -17,6 +17,7 @@ vi.mock('@/libs/v1Migration', () => ({
   isMigrationComplete: () => mockIsMigrationComplete(),
   hasLocalStorageData: () => mockHasLocalStorageData(),
   migrateV1AssociationsToV2: (...args: any[]) => mockMigrate(...args),
+  migrateLocalStorageUserId: vi.fn(),
 }));
 
 function createWrapper() {

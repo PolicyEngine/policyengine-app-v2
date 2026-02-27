@@ -8,6 +8,7 @@
 
 import { useCallback, useRef, useState } from 'react';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useUserId } from '@/hooks/useUserId';
 import { useCurrentLawId } from '@/hooks/useStaticMetadata';
 import { ReportIngredientsInput } from '@/hooks/utils/useFetchReportIngredients';
 import { CountryId } from '@/libs/countries';
@@ -41,6 +42,7 @@ export function useSaveSharedReport() {
   // Get currentLawId from static metadata to skip creating associations for current law policies
   const countryId = useCurrentCountry();
   const currentLawId = useCurrentLawId(countryId);
+  const userId = useUserId();
 
   const [saveResult, setSaveResult] = useState<SaveResult>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -55,7 +57,6 @@ export function useSaveSharedReport() {
   }, []);
 
   const saveSharedReport = async (shareData: ReportIngredientsInput): Promise<UserReport> => {
-    const userId = 'anonymous'; // TODO: Replace with auth context
     const userReportId = getShareDataUserReportId(shareData);
 
     // Idempotency check: see if this report is already saved

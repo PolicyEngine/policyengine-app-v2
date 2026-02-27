@@ -164,10 +164,11 @@ describe('useSharedReportData', () => {
   test('given shareData with householdId then fetches household', async () => {
     // Given
     vi.mocked(fetchReportById).mockResolvedValue({ ...MOCK_REPORT_METADATA, country_id: 'uk' });
+    const TEST_HOUSEHOLD_UUID = '00000000-0000-4000-c000-000000000001';
     vi.mocked(fetchSimulationById).mockResolvedValue({
       ...MOCK_SIMULATION_METADATA,
       population_type: 'household',
-      population_id: 'hh-1',
+      population_id: TEST_HOUSEHOLD_UUID,
     });
     vi.mocked(fetchPolicyById).mockResolvedValue(MOCK_POLICY_METADATA);
     vi.mocked(fetchHouseholdByIdV2).mockResolvedValue(MOCK_HOUSEHOLD_METADATA);
@@ -183,12 +184,12 @@ describe('useSharedReportData', () => {
     });
 
     // v2 API doesn't need countryId
-    expect(fetchHouseholdByIdV2).toHaveBeenCalledWith('hh-1');
+    expect(fetchHouseholdByIdV2).toHaveBeenCalledWith(TEST_HOUSEHOLD_UUID);
 
     // User household from ShareData
     expect(result.current.userHouseholds).toHaveLength(1);
     expect(result.current.userHouseholds[0]).toMatchObject({
-      householdId: 'hh-1',
+      householdId: TEST_HOUSEHOLD_UUID,
       label: 'My Household',
       userId: 'shared',
     });

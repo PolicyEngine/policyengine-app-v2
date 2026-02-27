@@ -51,6 +51,11 @@ vi.mock('@/hooks/useStaticMetadata', () => ({
   useCurrentLawId: vi.fn(() => CURRENT_LAW_ID),
 }));
 
+const TEST_USER_ID = 'test-user-uuid-123';
+vi.mock('@/hooks/useUserId', () => ({
+  useUserId: () => TEST_USER_ID,
+}));
+
 describe('useSaveSharedReport', () => {
   let queryClient: QueryClient;
 
@@ -89,13 +94,13 @@ describe('useSaveSharedReport', () => {
     // Then
     expect(savedReport).toEqual(MOCK_SAVED_USER_REPORT);
     expect(mockCreateSimulation.mutateAsync).toHaveBeenCalledWith({
-      userId: 'anonymous',
+      userId: TEST_USER_ID,
       simulationId: TEST_IDS.SIMULATION,
       countryId: 'us',
       label: 'Baseline',
     });
     expect(mockCreatePolicy.mutateAsync).toHaveBeenCalledWith({
-      userId: 'anonymous',
+      userId: TEST_USER_ID,
       policyId: TEST_IDS.POLICY,
       countryId: 'us',
       label: 'My Policy',
@@ -161,7 +166,7 @@ describe('useSaveSharedReport', () => {
 
     // Then
     expect(mockCreateHousehold.mutateAsync).toHaveBeenCalledWith({
-      userId: 'anonymous',
+      userId: TEST_USER_ID,
       householdId: TEST_IDS.HOUSEHOLD,
       countryId: 'uk',
       label: 'My Household',

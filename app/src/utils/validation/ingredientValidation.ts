@@ -12,13 +12,16 @@ import { PolicyStateProps, PopulationStateProps, SimulationStateProps } from '@/
 /**
  * Checks if a policy is fully configured and ready for use in a simulation
  *
- * A policy is considered configured if it has an ID, which happens when:
- * - User creates custom policy and submits to API
- * - User selects current law (ID = currentLawId)
- * - User loads existing policy from database
+ * A policy is considered configured when its id is NOT undefined:
+ * - id = null → current law (baseline) — configured
+ * - id = UUID string → reform policy — configured
+ * - id = undefined → not yet set — NOT configured
  */
 export function isPolicyConfigured(policy: PolicyStateProps | null | undefined): boolean {
-  return !!policy?.id;
+  if (!policy) {
+    return false;
+  }
+  return policy.id !== undefined;
 }
 
 /**

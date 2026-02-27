@@ -16,6 +16,7 @@ import { fetchPolicyById } from '@/api/policy';
 import { fetchReportById } from '@/api/report';
 import { fetchSimulationById } from '@/api/simulation';
 import { fetchHouseholdByIdV2 } from '@/api/v2/households';
+import { fetchSimulationByIdV2 } from '@/api/v2/simulations';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useRegionsList } from '@/hooks/useStaticMetadata';
 import { householdKeys, policyKeys, reportKeys, simulationKeys } from '@/libs/queryKeys';
@@ -28,7 +29,12 @@ import { UserPolicy } from '@/types/ingredients/UserPolicy';
 import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { UserReport } from '@/types/ingredients/UserReport';
 import { UserSimulation } from '@/types/ingredients/UserSimulation';
-import { combineLoadingStates, extractUniqueIds, useParallelQueries } from './normalizedUtils';
+import {
+  combineLoadingStates,
+  extractUniqueIds,
+  isV2EntityId,
+  useParallelQueries,
+} from './normalizedUtils';
 
 // Type for geography options from redux store
 type GeographyOption = { name: string; label: string };
@@ -181,9 +187,13 @@ export function useFetchReportIngredients(
   // simulations belong to it
   const simulationIds = report?.simulationIds ?? [];
 
+  // Route to v2 API for UUID IDs, v1 API for integer IDs
   const simulationResults = useParallelQueries<Simulation>(isEnabled ? simulationIds : [], {
     queryKey: simulationKeys.byId,
     queryFn: async (id) => {
+      if (isV2EntityId(id)) {
+        return fetchSimulationByIdV2(id);
+      }
       const metadata = await fetchSimulationById(country, id);
       return SimulationAdapter.fromMetadata(metadata);
     },
@@ -197,7 +207,8 @@ export function useFetchReportIngredients(
     .filter((s): s is Simulation => !!s);
 
   // Step 3: Fetch Policies using policyIds from Simulations
-  const policyIds = extractUniqueIds(simulations, 'policyId');
+  // Only fetch v2 (UUID) policy IDs — v1 integer IDs can't be resolved via v2 API
+  const policyIds = extractUniqueIds(simulations, 'policyId').filter(isV2EntityId);
 
   const policyResults = useParallelQueries<Policy>(isEnabled ? policyIds : [], {
     queryKey: policyKeys.byId,
@@ -212,8 +223,9 @@ export function useFetchReportIngredients(
   const policies = policyResults.queries.map((q) => q.data).filter((p): p is Policy => !!p);
 
   // Step 4: Fetch Households for household-type simulations
+  // Only include v2 (UUID) IDs — v1 integer IDs can't be resolved via v2 API
   const householdSimulations = simulations.filter((s) => s.populationType === 'household');
-  const householdIds = extractUniqueIds(householdSimulations, 'populationId');
+  const householdIds = extractUniqueIds(householdSimulations, 'populationId').filter(isV2EntityId);
 
   const householdResults = useParallelQueries<Household>(isEnabled ? householdIds : [], {
     queryKey: householdKeys.byId,

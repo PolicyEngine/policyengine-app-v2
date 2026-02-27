@@ -15,12 +15,13 @@ describe('storeBackend', () => {
       expect(result).toBe('localStorage');
     });
 
-    test('given migration flag is set then returns api', () => {
+    test('given migration flag is set then still returns localStorage', () => {
       localStorage.setItem(MIGRATION_FLAG_KEY, 'true');
 
       const result = getStoreBackend();
 
-      expect(result).toBe('api');
+      // localStorage is forced until real auth is implemented
+      expect(result).toBe('localStorage');
     });
 
     test('given migration flag has unexpected value then returns localStorage', () => {

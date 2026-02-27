@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createSimulation } from '@/api/simulation';
-import { MOCK_USER_ID } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useUserId } from '@/hooks/useUserId';
 import { simulationKeys } from '@/libs/queryKeys';
 import { SimulationCreationPayload } from '@/types/payloads';
 import { useCreateSimulationAssociation } from './useUserSimulationAssociations';
@@ -9,7 +9,7 @@ import { useCreateSimulationAssociation } from './useUserSimulationAssociations'
 export function useCreateSimulation(simulationLabel?: string) {
   const queryClient = useQueryClient();
   const country = useCurrentCountry();
-  // const user = MOCK_USER_ID; // TODO: Replace with actual user context or auth hook in future
+  const userId = useUserId();
   const createAssociation = useCreateSimulationAssociation();
 
   const mutation = useMutation({
@@ -19,7 +19,7 @@ export function useCreateSimulation(simulationLabel?: string) {
         queryClient.invalidateQueries({ queryKey: simulationKeys.all });
 
         // Create association with current user (or anonymous for session storage)
-        const userId = MOCK_USER_ID; // TODO: Replace with actual user ID retrieval logic and add conditional logic to access user ID
+        // userId comes from useUserId() at hook level
 
         await createAssociation.mutateAsync({
           userId,

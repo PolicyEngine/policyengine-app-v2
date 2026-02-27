@@ -1,6 +1,5 @@
 import { render, screen, userEvent } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { MOCK_USER_ID } from '@/constants';
 import { useUserReports } from '@/hooks/useUserReports';
 import ReportsPage from '@/pages/Reports.page';
 import {
@@ -30,6 +29,12 @@ vi.mock('@/hooks/useUserReportAssociations', () => ({
 // Mock useCurrentCountry
 vi.mock('@/hooks/useCurrentCountry', () => ({
   useCurrentCountry: () => 'us',
+}));
+
+// Mock useUserId
+const TEST_USER_ID = 'test-user-uuid-123';
+vi.mock('@/hooks/useUserId', () => ({
+  useUserId: () => TEST_USER_ID,
 }));
 
 // Mock navigate
@@ -185,12 +190,12 @@ describe('ReportsPage', () => {
     expect(searchInput).toHaveValue('Test Report');
   });
 
-  test('given hook returns correct user ID then uses MOCK_USER_ID', () => {
+  test('given hook returns correct user ID then uses useUserId value', () => {
     // When
     render(<ReportsPage />);
 
     // Then
-    expect(useUserReports).toHaveBeenCalledWith(MOCK_USER_ID.toString());
+    expect(useUserReports).toHaveBeenCalledWith(TEST_USER_ID);
   });
 
   test('given reports with different statuses then formats status correctly', () => {

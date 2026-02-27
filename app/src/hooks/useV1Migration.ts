@@ -14,12 +14,16 @@ import { useUserId } from '@/hooks/useUserId';
 import {
   hasLocalStorageData,
   isMigrationComplete,
+  migrateLocalStorageUserId,
   migrateV1AssociationsToV2,
 } from '@/libs/v1Migration';
 
 export function useV1Migration(): void {
   const userId = useUserId();
   const queryClient = useQueryClient();
+
+  // Rewrite legacy 'anonymous' userIds to the real UUID before any queries run
+  migrateLocalStorageUserId();
 
   useEffect(() => {
     if (isMigrationComplete()) {

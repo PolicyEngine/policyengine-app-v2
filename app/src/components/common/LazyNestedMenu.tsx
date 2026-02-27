@@ -16,7 +16,7 @@ export interface LazyNestedMenuProps {
   /** Parent path whose children are the root nodes (e.g., 'gov') */
   rootPath: string;
   /** Callback when a leaf parameter is clicked */
-  onParameterClick?: (name: string) => void;
+  onParameterClick?: (node: ParameterChildNode) => void;
 }
 
 export default function LazyNestedMenu({
@@ -55,7 +55,7 @@ function LazyMenuNodeItem({
 }: {
   node: ParameterChildNode;
   countryId: string;
-  onParameterClick?: (name: string) => void;
+  onParameterClick?: (node: ParameterChildNode) => void;
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isActive, setIsActive] = useState(false);
@@ -64,7 +64,7 @@ function LazyMenuNodeItem({
   function handleClick() {
     setIsActive(true);
     if (isLeaf) {
-      onParameterClick?.(node.path);
+      onParameterClick?.(node);
     } else {
       setIsExpanded((prev) => !prev);
     }
@@ -96,7 +96,7 @@ function LazyMenuChildren({
 }: {
   parentPath: string;
   countryId: string;
-  onParameterClick?: (name: string) => void;
+  onParameterClick?: (node: ParameterChildNode) => void;
 }) {
   const { children, isLoading } = useParameterChildren(parentPath, countryId);
 

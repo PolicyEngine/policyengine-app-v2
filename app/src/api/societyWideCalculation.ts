@@ -1,3 +1,4 @@
+import { fetchRegionByCode } from '@/api/v2/regions';
 import { ReportOutputSocietyWideUK } from '@/types/metadata/ReportOutputSocietyWideUK';
 import { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
 
@@ -5,19 +6,27 @@ import { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyW
 export type SocietyWideReportOutput = ReportOutputSocietyWideUS | ReportOutputSocietyWideUK;
 
 /**
- * Determines the dataset to use for a society-wide calculation.
- * Returns 'enhanced_cps' for US nationwide calculations, undefined otherwise.
- * This ensures Enhanced CPS is only used for US nationwide impacts, not for UK or US state-level calculations.
+ * Looks up the dataset UUID for a region from the v2 API.
+ *
+ * Each region in the v2 API has a `dataset_id` field linking it to
+ * the correct dataset. This replaces the old hardcoded string-based
+ * lookup (e.g., 'enhanced_cps') with a proper UUID lookup.
  *
  * @param countryId - The country ID (e.g., 'us', 'uk')
- * @param region - The region (e.g., 'us', 'ca', 'uk')
- * @returns The dataset name or undefined to use API default
+ * @param regionCode - The region code (e.g., 'us', 'uk', 'state/ca')
+ * @returns The dataset UUID, or null if lookup fails (lets API use default)
  */
-export function getDatasetForRegion(countryId: string, region: string): string | undefined {
-  // Only use enhanced_cps for US nationwide
-  if (countryId === 'us' && region === 'us') {
-    return 'enhanced_cps';
+export async function getDatasetIdForRegion(
+  countryId: string,
+  regionCode: string
+): Promise<string | null> {
+  try {
+    const region = await fetchRegionByCode(countryId, regionCode);
+    return region.dataset_id;
+  } catch {
+    console.warn(
+      `[getDatasetIdForRegion] Could not resolve dataset for ${countryId}/${regionCode}, using API default`
+    );
+    return null;
   }
-  // Return undefined for all other cases (UK, US states, etc.)
-  return undefined;
 }

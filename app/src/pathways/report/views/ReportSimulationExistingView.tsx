@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Text } from '@mantine/core';
 import PathwayView from '@/components/common/PathwayView';
-import { MOCK_USER_ID } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useUserId } from '@/hooks/useUserId';
 import { useRegions } from '@/hooks/useRegions';
 import { EnhancedUserSimulation, useUserSimulations } from '@/hooks/useUserSimulations';
 import { SimulationStateProps } from '@/types/pathwayState';
@@ -26,7 +26,7 @@ export default function ReportSimulationExistingView({
   onBack,
   onCancel,
 }: ReportSimulationExistingViewProps) {
-  const userId = MOCK_USER_ID.toString();
+  const userId = useUserId();
   const countryId = useCurrentCountry();
   const { regions } = useRegions(countryId);
 

@@ -8,7 +8,7 @@
 import { useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import StandardLayout from '@/components/StandardLayout';
-import { MOCK_USER_ID } from '@/constants';
+import { useUserId } from '@/hooks/useUserId';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { usePathwayNavigation } from '@/hooks/usePathwayNavigation';
 import { useCurrentLawId, useRegionsList } from '@/hooks/useStaticMetadata';
@@ -68,7 +68,7 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
   );
 
   // ========== FETCH USER DATA FOR CONDITIONAL NAVIGATION ==========
-  const userId = MOCK_USER_ID.toString();
+  const userId = useUserId();
   const { data: userPolicies } = useUserPolicies(userId);
   const { data: userHouseholds } = useUserHouseholds(userId);
 

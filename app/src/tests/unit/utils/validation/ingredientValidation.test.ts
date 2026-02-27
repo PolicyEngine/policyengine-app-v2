@@ -9,19 +9,23 @@ import {
 } from '@/utils/validation/ingredientValidation';
 
 describe('isPolicyConfigured', () => {
-  test('given policy with id then returns true', () => {
+  test('given policy with string id then returns true', () => {
     expect(isPolicyConfigured({ id: 'policy-1' } as any)).toBe(true);
   });
 
-  test('given policy without id then returns false', () => {
+  test('given policy with null id (current law) then returns true', () => {
+    expect(isPolicyConfigured({ id: null, label: 'Current law', parameters: [] })).toBe(true);
+  });
+
+  test('given policy without id (undefined) then returns false', () => {
     expect(isPolicyConfigured({} as any)).toBe(false);
   });
 
-  test('given null then returns false', () => {
+  test('given null policy then returns false', () => {
     expect(isPolicyConfigured(null)).toBe(false);
   });
 
-  test('given undefined then returns false', () => {
+  test('given undefined policy then returns false', () => {
     expect(isPolicyConfigured(undefined)).toBe(false);
   });
 });
@@ -86,6 +90,15 @@ describe('isSimulationReadyToSubmit', () => {
       isSimulationReadyToSubmit({
         policy: { id: 'p-1' },
         population: { household: { id: 'h-1' } },
+      } as any)
+    ).toBe(true);
+  });
+
+  test('given current law policy (id=null) and population then returns true', () => {
+    expect(
+      isSimulationReadyToSubmit({
+        policy: { id: null, label: 'Current law', parameters: [] },
+        population: { geography: { regionCode: 'us' } },
       } as any)
     ).toBe(true);
   });

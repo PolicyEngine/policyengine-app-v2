@@ -26,6 +26,7 @@ import {
   createUserSimulationAssociationV2,
   fetchUserSimulationAssociationsV2,
 } from '@/api/v2/userSimulationAssociations';
+import { getUserId } from '@/libs/userIdentity';
 import type { UserPolicy } from '@/types/ingredients/UserPolicy';
 import type { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import type { UserReport } from '@/types/ingredients/UserReport';
@@ -34,6 +35,7 @@ import type { UserSimulation } from '@/types/ingredients/UserSimulation';
 const LOG_PREFIX = '[v1Migration]';
 
 export const MIGRATION_FLAG_KEY = 'policyengine_v1_migrated';
+const LS_USERID_MIGRATED_KEY = 'policyengine_ls_userid_migrated';
 
 export const LS_KEYS = {
   reports: 'user-report-associations',
@@ -63,6 +65,45 @@ export function hasLocalStorageData(): boolean {
 
 function setMigrationComplete(): void {
   localStorage.setItem(MIGRATION_FLAG_KEY, 'true');
+}
+
+/**
+ * One-time rewrite of localStorage association records from
+ * userId='anonymous' (legacy MOCK_USER_ID) to the real UUID
+ * from getUserId(). This must run before any queries so that
+ * localStorage.findByUser(uuid) finds the existing records.
+ */
+export function migrateLocalStorageUserId(): void {
+  if (localStorage.getItem(LS_USERID_MIGRATED_KEY) === 'true') {
+    return;
+  }
+
+  const realUserId = getUserId();
+
+  for (const key of Object.values(LS_KEYS)) {
+    const stored = localStorage.getItem(key);
+    if (!stored) {
+      continue;
+    }
+    try {
+      const items = JSON.parse(stored);
+      if (!Array.isArray(items)) {
+        continue;
+      }
+      const updated = items.map((item: Record<string, unknown>) => ({
+        ...item,
+        userId: item.userId === 'anonymous' ? realUserId : item.userId,
+      }));
+      localStorage.setItem(key, JSON.stringify(updated));
+    } catch {
+      // skip malformed data
+    }
+  }
+
+  // Clear stale migration flag — localStorage is the source of truth
+  localStorage.removeItem(MIGRATION_FLAG_KEY);
+  localStorage.setItem(LS_USERID_MIGRATED_KEY, 'true');
+  console.info(`${LOG_PREFIX} Rewrote localStorage userId from 'anonymous' to ${realUserId}`);
 }
 
 function parseLocalStorage<T>(key: string): T[] {

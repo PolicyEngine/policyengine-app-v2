@@ -12,16 +12,9 @@ import { Provider } from 'react-redux';
 import { MantineProvider } from '@mantine/core';
 import { CalculatorRouter } from './CalculatorRouter';
 import { CalcOrchestratorProvider } from './contexts/CalcOrchestratorContext';
-import { useV1Migration } from './hooks/useV1Migration';
 import { store } from './store';
 import { policyEngineTheme } from './theme';
 import { cacheMonitor } from './utils/cacheMonitor';
-
-/** Runs v1→v2 association migration in the background on app startup */
-function MigrationRunner() {
-  useV1Migration();
-  return null;
-}
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -45,7 +38,6 @@ export default function CalculatorApp() {
         >
           <QueryClientProvider client={queryClient}>
             <CalcOrchestratorProvider>
-              <MigrationRunner />
               <CalculatorRouter />
               <ReactQueryDevtools initialIsOpen={false} />
             </CalcOrchestratorProvider>

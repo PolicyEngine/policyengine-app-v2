@@ -36,7 +36,7 @@ vi.mock('@/api/v2/economyAnalysis', () => ({
 
 // Mock dataset lookup
 vi.mock('@/api/societyWideCalculation', () => ({
-  getDatasetForRegion: vi.fn(() => 'enhanced_cps_2024'),
+  getDatasetIdForRegion: vi.fn(() => Promise.resolve('00000000-0000-4000-a000-000000000001')),
 }));
 
 // Mock report association store
@@ -67,6 +67,12 @@ vi.mock('@/libs/queryKeys', () => ({
   simulationAssociationKeys: {
     all: ['simulation-associations'],
   },
+}));
+
+// Mock useUserId
+const TEST_USER_ID = 'test-user-uuid-123';
+vi.mock('@/hooks/useUserId', () => ({
+  useUserId: () => TEST_USER_ID,
 }));
 
 // Mock CalcOrchestratorContext
@@ -214,7 +220,7 @@ describe('useCreateReport', () => {
       // Then
       expect(mockReportStoreCreate).toHaveBeenCalledWith(
         expect.objectContaining({
-          userId: 'anonymous',
+          userId: TEST_USER_ID,
           countryId: TEST_COUNTRY_ID,
           outputType: 'household',
           simulationIds: [TEST_V2_REFORM_SIM_ID],
@@ -247,7 +253,7 @@ describe('useCreateReport', () => {
       // Then — should create association for the reform sim ID (extracted as primary)
       expect(mockSimulationStoreCreate).toHaveBeenCalledWith(
         expect.objectContaining({
-          userId: 'anonymous',
+          userId: TEST_USER_ID,
           simulationId: TEST_V2_REFORM_SIM_ID,
           countryId: TEST_COUNTRY_ID,
           isCreated: true,
@@ -306,7 +312,7 @@ describe('useCreateReport', () => {
         tax_benefit_model_name: 'policyengine_us',
         region: 'us',
         policy_id: 'policy-reform',
-        dataset_id: 'enhanced_cps_2024',
+        dataset_id: '00000000-0000-4000-a000-000000000001',
       });
     });
 

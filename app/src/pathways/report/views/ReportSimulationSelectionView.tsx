@@ -1,14 +1,11 @@
 import { useState } from 'react';
 import { Stack } from '@mantine/core';
-import { SimulationAdapter } from '@/adapters';
 import PathwayView from '@/components/common/PathwayView';
 import { ButtonPanelVariant } from '@/components/flowView';
-import { MOCK_USER_ID } from '@/constants';
-import { useCreateSimulation } from '@/hooks/useCreateSimulation';
+import { createEconomySimulation } from '@/api/v2/simulations';
+import { useUserId } from '@/hooks/useUserId';
 import { useUserSimulations } from '@/hooks/useUserSimulations';
-import { Simulation } from '@/types/ingredients/Simulation';
 import { PolicyStateProps, PopulationStateProps, SimulationStateProps } from '@/types/pathwayState';
-import { SimulationCreationPayload } from '@/types/payloads';
 import {
   countryNames,
   getDefaultBaselineLabel,
@@ -96,7 +93,7 @@ export default function ReportSimulationSelectionView({
   onBack,
   onCancel,
 }: ReportSimulationSelectionViewProps) {
-  const userId = MOCK_USER_ID.toString();
+  const userId = useUserId();
   const { data: userSimulations } = useUserSimulations(userId);
   const hasExistingSimulations = (userSimulations?.length ?? 0) > 0;
 
@@ -104,7 +101,6 @@ export default function ReportSimulationSelectionView({
   const [isCreatingBaseline, setIsCreatingBaseline] = useState(false);
 
   const simulationLabel = getDefaultBaselineLabel(countryId);
-  const { createSimulation } = useCreateSimulation(simulationLabel);
 
   // Find existing default baseline simulation for this country
   const existingBaseline = userSimulations?.find((sim) =>
@@ -153,9 +149,8 @@ export default function ReportSimulationSelectionView({
   }
 
   /**
-   * Creates a new default baseline simulation
-   * Note: Geographies are no longer stored as user associations. The geography
-   * is constructed from simulation data using the countryId as the regionCode.
+   * Creates a new default baseline simulation via v2 economy simulation endpoint.
+   * In v2, current law = null policy_id. The API creates the simulation server-side.
    */
   async function createNewBaseline() {
     if (!onSelectDefaultBaseline) {
@@ -167,40 +162,25 @@ export default function ReportSimulationSelectionView({
     const regionCode = countryId; // National geography uses countryId as regionCode
 
     try {
-      // Create simulation directly - geography is not stored as user association
-      // In V2 API, current law is represented by null policyId
-      const simulationData: Partial<Simulation> = {
-        populationId: regionCode,
-        policyId: null,
-        populationType: 'geography',
-      };
-
-      const serializedPayload: SimulationCreationPayload =
-        SimulationAdapter.toCreationPayload(simulationData);
-
-      createSimulation(serializedPayload, {
-        onSuccess: (data) => {
-          const simulationId = data.result.simulation_id;
-
-          const policy = createCurrentLawPolicy(currentLawId);
-          const population = createNationwidePopulation(countryId, regionCode, countryName);
-          const simulationState = createSimulationState(
-            simulationId,
-            simulationLabel,
-            countryId,
-            policy,
-            population
-          );
-
-          if (onSelectDefaultBaseline) {
-            onSelectDefaultBaseline(simulationState, simulationId);
-          }
-        },
-        onError: (error) => {
-          console.error('[ReportSimulationSelectionView] Failed to create simulation:', error);
-          setIsCreatingBaseline(false);
-        },
+      const response = await createEconomySimulation({
+        tax_benefit_model_name: `policyengine_${countryId}`,
+        region: regionCode,
+        policy_id: null, // current law
       });
+
+      const simulationId = response.id;
+
+      const policy = createCurrentLawPolicy(currentLawId);
+      const population = createNationwidePopulation(countryId, regionCode, countryName);
+      const simulationState = createSimulationState(
+        simulationId,
+        simulationLabel,
+        countryId,
+        policy,
+        population
+      );
+
+      onSelectDefaultBaseline(simulationState, simulationId);
     } catch (error) {
       console.error('[ReportSimulationSelectionView] Failed to create simulation:', error);
       setIsCreatingBaseline(false);

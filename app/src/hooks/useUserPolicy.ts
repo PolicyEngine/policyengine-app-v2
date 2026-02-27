@@ -3,6 +3,7 @@ import { PolicyAdapter } from '@/adapters';
 import { fetchPolicyById } from '@/api/policy';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useUserId } from '@/hooks/useUserId';
+import { isV2EntityId } from '@/hooks/utils/normalizedUtils';
 import { getStoreBackend } from '@/libs/storeBackend';
 import { Policy } from '@/types/ingredients/Policy';
 import { ApiPolicyStore, LocalStoragePolicyStore } from '../api/policyAssociation';
@@ -157,8 +158,9 @@ export const useUserPolicies = (userId: string) => {
     error: associationsError,
   } = usePolicyAssociationsByUser(userId);
 
-  // Extract policy IDs
-  const policyIds = associations?.map((a) => a.policyId) ?? [];
+  // Extract policy IDs — only fetch v2 (UUID) IDs from v2 API
+  // V1 integer IDs (e.g. "2" for current law) can't be resolved via v2 API
+  const policyIds = (associations?.map((a) => a.policyId) ?? []).filter(isV2EntityId);
 
   // Fetch all policies in parallel and transform to internal Policy type
   // This ensures cache consistency with useUserReports and useUserSimulations
