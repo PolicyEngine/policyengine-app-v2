@@ -1,5 +1,4 @@
 import { useEffect, useState, type ReactElement } from 'react';
-import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
 import { ScrollArea } from '@/components/ui';
 import { colors, spacing } from '@/designTokens';
 import type { TreeNode } from './comparativeAnalysisTree';
@@ -79,7 +78,7 @@ export function ReportSidebar({
       <div key={node.name}>
         <button
           type="button"
-          className="tw:w-full tw:text-left tw:border-none tw:cursor-pointer tw:flex tw:items-center tw:gap-1 tw:text-sm tw:rounded"
+          className="tw:w-full tw:text-left tw:border-none tw:cursor-pointer tw:flex tw:items-center tw:rounded"
           style={{
             padding: `${spacing.xs} ${spacing.sm}`,
             paddingLeft: `calc(${spacing.sm} + ${depth * 12}px)`,
@@ -96,12 +95,6 @@ export function ReportSidebar({
           onClick={() => handleClick(node.name, hasChildren)}
           disabled={node.disabled}
         >
-          {hasChildren &&
-            (isExpanded ? (
-              <IconChevronDown size={14} style={{ flexShrink: 0 }} />
-            ) : (
-              <IconChevronRight size={14} style={{ flexShrink: 0 }} />
-            ))}
           {node.label}
         </button>
         {hasChildren && isExpanded && node.children?.map((child) => renderNode(child, depth + 1))}
@@ -119,7 +112,7 @@ export function ReportSidebar({
         position: 'sticky',
         top: spacing.xl,
         alignSelf: 'flex-start',
-        backgroundColor: colors.gray[50],
+        backgroundColor: colors.white,
       }}
     >
       <ScrollArea className="tw:max-h-[calc(100dvh-250px)]">
