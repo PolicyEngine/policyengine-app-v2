@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Container, Stack, Text } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
+import { rerunReport } from '@/api/v2/economyAnalysis';
 import { FloatingAlert } from '@/components/common/FloatingAlert';
 import { RenameIngredientModal } from '@/components/common/RenameIngredientModal';
 import { CALCULATOR_URL } from '@/constants';
+import { useCalcOrchestratorManager } from '@/contexts/CalcOrchestratorContext';
 import { ReportYearProvider } from '@/contexts/ReportYearContext';
 import { spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
@@ -13,6 +16,7 @@ import { useSharedReportData } from '@/hooks/useSharedReportData';
 import { useUserId } from '@/hooks/useUserId';
 import { useUpdateReportAssociation } from '@/hooks/useUserReportAssociations';
 import { useUserReportById } from '@/hooks/useUserReports';
+import { calculationKeys } from '@/libs/queryKeys';
 import type { Geography } from '@/types/ingredients/Geography';
 import { formatReportTimestamp } from '@/utils/dateUtils';
 import { isUKLocalLevelGeography } from '@/utils/geographyUtils';
@@ -49,6 +53,8 @@ export default function ReportOutputPage() {
   const navigate = useNavigate();
   const countryId = useCurrentCountry();
   const userId = useUserId();
+  const queryClient = useQueryClient();
+  const manager = useCalcOrchestratorManager();
   const [searchParams] = useSearchParams();
   const {
     reportId: userReportId,
@@ -231,6 +237,27 @@ export default function ReportOutputPage() {
     }
   };
 
+  // Handle rerun button click - force-rerun the report from scratch
+  const handleRerun = async () => {
+    const v2ReportId = report?.id;
+    if (!v2ReportId) {
+      return;
+    }
+
+    try {
+      await rerunReport(v2ReportId);
+
+      // Clear stale orchestrator + cached calculation status
+      manager.cleanup(v2ReportId);
+      queryClient.removeQueries({ queryKey: calculationKeys.byReportId(v2ReportId) });
+
+      // Re-fetch report data → status=pending → useStartCalculationOnLoad kicks in
+      queryClient.invalidateQueries({ queryKey: ['report-full', v2ReportId] });
+    } catch (error) {
+      console.error('[ReportOutputPage] Failed to rerun report:', error);
+    }
+  };
+
   // Show loading state while fetching data
   if (dataLoading) {
     return (
@@ -348,6 +375,7 @@ export default function ReportOutputPage() {
         isSharedView={isSharedView}
         onShare={handleShare}
         onSave={handleSave}
+        onRerun={!isSharedView ? handleRerun : undefined}
       >
         {renderContent()}
       </ReportOutputLayout>

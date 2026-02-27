@@ -1,4 +1,4 @@
-import { IconBookmark, IconPencil, IconShare } from '@tabler/icons-react';
+import { IconBookmark, IconPencil, IconRefresh, IconShare } from '@tabler/icons-react';
 import { ActionIcon, Tooltip } from '@mantine/core';
 import { colors, typography } from '@/designTokens';
 
@@ -7,13 +7,14 @@ interface ReportActionButtonsProps {
   onShare?: () => void;
   onSave?: () => void;
   onEdit?: () => void;
+  onRerun?: () => void;
 }
 
 /**
  * ReportActionButtons - Action buttons for report output header
  *
  * Renders different buttons based on view type:
- * - Normal view: Share + Edit buttons
+ * - Normal view: Rerun + Edit + Share buttons
  * - Shared view: Save button with tooltip
  */
 export function ReportActionButtons({
@@ -21,6 +22,7 @@ export function ReportActionButtons({
   onShare,
   onSave,
   onEdit,
+  onRerun,
 }: ReportActionButtonsProps) {
   if (isSharedView) {
     return (
@@ -49,6 +51,27 @@ export function ReportActionButtons({
 
   return (
     <>
+      {onRerun && (
+        <Tooltip
+          label="Rerun report"
+          styles={{
+            tooltip: {
+              backgroundColor: colors.gray[700],
+              fontSize: typography.fontSize.xs,
+            },
+          }}
+        >
+          <ActionIcon
+            variant="subtle"
+            color="gray"
+            size="lg"
+            aria-label="Rerun report"
+            onClick={onRerun}
+          >
+            <IconRefresh size={18} />
+          </ActionIcon>
+        </Tooltip>
+      )}
       <ActionIcon
         variant="subtle"
         color="gray"

@@ -349,3 +349,23 @@ export async function getEconomyCustomAnalysis(
 
   return res.json();
 }
+
+/**
+ * Force-rerun a report from scratch.
+ * POST /analysis/rerun/{report_id}
+ */
+export async function rerunReport(
+  reportId: string
+): Promise<{ report_id: string; status: string }> {
+  const res = await fetch(`${API_V2_BASE_URL}/analysis/rerun/${reportId}`, {
+    method: 'POST',
+    headers: { Accept: 'application/json' },
+  });
+
+  if (!res.ok) {
+    const errorText = await res.text();
+    throw new Error(`Failed to rerun report: ${res.status} ${errorText}`);
+  }
+
+  return res.json();
+}

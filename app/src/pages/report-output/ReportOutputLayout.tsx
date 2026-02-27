@@ -24,6 +24,7 @@ interface ReportOutputLayoutProps {
   isSharedView?: boolean;
   onShare?: () => void;
   onSave?: () => void;
+  onRerun?: () => void;
   children: React.ReactNode;
 }
 
@@ -53,6 +54,7 @@ export default function ReportOutputLayout({
   isSharedView = false,
   onShare,
   onSave,
+  onRerun,
   children,
 }: ReportOutputLayoutProps) {
   const countryId = useCurrentCountry();
@@ -81,6 +83,7 @@ export default function ReportOutputLayout({
               onShare={onShare}
               onSave={onSave}
               onEdit={onEditName}
+              onRerun={onRerun}
             />
           </Group>
 
