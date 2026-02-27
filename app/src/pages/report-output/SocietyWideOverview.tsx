@@ -1,11 +1,16 @@
+import { useState } from 'react';
 import { IconCoin, IconHome, IconUsers } from '@tabler/icons-react';
-import { Box, Group, SimpleGrid, Stack, Text } from '@mantine/core';
+import { Box, Group, SimpleGrid, Text } from '@mantine/core';
 import { SocietyWideReportOutput } from '@/api/societyWideCalculation';
+import DashboardCard from '@/components/report/DashboardCard';
 import MetricCard from '@/components/report/MetricCard';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { formatBudgetaryImpact } from '@/utils/formatPowers';
 import { currencySymbol } from '@/utils/formatters';
+import BudgetaryImpactSubPage from './budgetary-impact/BudgetaryImpactSubPage';
+import WinnersLosersIncomeDecileSubPage from './distributional-impact/WinnersLosersIncomeDecileSubPage';
+import PovertyImpactByAgeSubPage from './poverty-impact/PovertyImpactByAgeSubPage';
 
 interface SocietyWideOverviewProps {
   output: SocietyWideReportOutput;
@@ -15,18 +20,21 @@ interface SocietyWideOverviewProps {
 const HERO_ICON_SIZE = 48;
 const SECONDARY_ICON_SIZE = 36;
 
-/**
- * Overview page for society-wide reports
- *
- * Features:
- * - Hero metric for budgetary impact (most important number)
- * - Secondary metrics for poverty and income distribution
- * - Clean visual hierarchy with trend indicators
- * - Progressive disclosure for details
- */
+const GRID_GAP = 16;
+
+type CardKey = 'budget' | 'poverty' | 'winners';
+
 export default function SocietyWideOverview({ output }: SocietyWideOverviewProps) {
   const countryId = useCurrentCountry();
   const symbol = currencySymbol(countryId);
+  const [expandedCard, setExpandedCard] = useState<CardKey | null>(null);
+
+  const toggle = (key: CardKey) => {
+    setExpandedCard((prev) => (prev === key ? null : key));
+  };
+
+  const modeOf = (key: CardKey) => (expandedCard === key ? 'expanded' : 'shrunken');
+  const zOf = (key: CardKey) => (expandedCard === key ? 10 : 1);
 
   // Calculate budgetary impact
   const budgetaryImpact = output.budget.budgetary_impact;
@@ -51,8 +59,6 @@ export default function SocietyWideOverview({ output }: SocietyWideOverviewProps
       : (povertyOverview.reform - povertyOverview.baseline) / povertyOverview.baseline;
   const povertyAbsChange = Math.abs(povertyRateChange) * 100;
   const povertyValue = povertyRateChange === 0 ? 'No change' : `${povertyAbsChange.toFixed(1)}%`;
-  // For poverty: decrease is good (positive), increase is bad (negative)
-  // Arrow direction should match the actual change direction for clarity
   const povertyTrend =
     povertyRateChange === 0 ? 'neutral' : povertyRateChange < 0 ? 'positive' : 'negative';
   const povertySubtext =
@@ -69,54 +75,57 @@ export default function SocietyWideOverview({ output }: SocietyWideOverviewProps
   const unchangedPercent = decileOverview['No change'];
 
   return (
-    <Stack gap={spacing.xl}>
-      {/* Hero Section - Budgetary Impact */}
-      <Box
-        p={spacing.xl}
-        style={{
-          background: `linear-gradient(135deg, ${colors.primary[50]} 0%, ${colors.background.primary} 100%)`,
-          borderRadius: spacing.md,
-          border: `1px solid ${colors.primary[100]}`,
-        }}
-      >
-        <Group gap={spacing.md} align="flex-start">
-          <Box
-            style={{
-              width: HERO_ICON_SIZE,
-              height: HERO_ICON_SIZE,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: colors.primary[100],
-              borderRadius: spacing.sm,
-              flexShrink: 0,
-            }}
-          >
-            <IconCoin size={28} color={colors.primary[700]} stroke={1.5} />
-          </Box>
-          <Box style={{ flex: 1 }}>
-            <MetricCard
-              label="Budgetary Impact"
-              value={budgetValue}
-              subtext={budgetSubtext}
-              trend={budgetaryImpact === 0 ? 'neutral' : budgetIsPositive ? 'positive' : 'negative'}
-              hero
-            />
-          </Box>
-        </Group>
-      </Box>
+    <SimpleGrid cols={{ base: 1, sm: 2 }} spacing={GRID_GAP}>
+      {/* Budgetary Impact — full width hero */}
+      <DashboardCard
+        mode={modeOf('budget')}
+        zIndex={zOf('budget')}
+        expandDirection="down-right"
+        gridGap={GRID_GAP}
+        colSpan={2}
+        shrunkenBackground={`linear-gradient(135deg, ${colors.primary[50]} 0%, ${colors.background.primary} 100%)`}
+        shrunkenBorderColor={colors.primary[100]}
+        padding={spacing.xl}
+        shrunkenContent={
+          <Group gap={spacing.md} align="flex-start">
+            <Box
+              style={{
+                width: HERO_ICON_SIZE,
+                height: HERO_ICON_SIZE,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: colors.primary[100],
+                borderRadius: spacing.sm,
+                flexShrink: 0,
+              }}
+            >
+              <IconCoin size={28} color={colors.primary[700]} stroke={1.5} />
+            </Box>
+            <Box style={{ flex: 1 }}>
+              <MetricCard
+                label="Budgetary impact"
+                value={budgetValue}
+                subtext={budgetSubtext}
+                trend={
+                  budgetaryImpact === 0 ? 'neutral' : budgetIsPositive ? 'positive' : 'negative'
+                }
+                hero
+              />
+            </Box>
+          </Group>
+        }
+        expandedContent={<BudgetaryImpactSubPage output={output} />}
+        onToggleMode={() => toggle('budget')}
+      />
 
-      {/* Secondary Metrics Grid */}
-      <SimpleGrid cols={{ base: 1, sm: 2 }} spacing={spacing.lg}>
-        {/* Poverty Impact */}
-        <Box
-          p={spacing.lg}
-          style={{
-            backgroundColor: colors.background.primary,
-            borderRadius: spacing.md,
-            border: `1px solid ${colors.border.light}`,
-          }}
-        >
+      {/* Poverty Impact */}
+      <DashboardCard
+        mode={modeOf('poverty')}
+        zIndex={zOf('poverty')}
+        expandDirection="up-right"
+        gridGap={GRID_GAP}
+        shrunkenContent={
           <Group gap={spacing.md} align="flex-start">
             <Box
               style={{
@@ -134,7 +143,7 @@ export default function SocietyWideOverview({ output }: SocietyWideOverviewProps
             </Box>
             <Box style={{ flex: 1 }}>
               <MetricCard
-                label="Poverty Impact"
+                label="Poverty impact"
                 value={povertyValue}
                 subtext={povertySubtext}
                 trend={povertyTrend as 'positive' | 'negative' | 'neutral'}
@@ -142,17 +151,18 @@ export default function SocietyWideOverview({ output }: SocietyWideOverviewProps
               />
             </Box>
           </Group>
-        </Box>
+        }
+        expandedContent={<PovertyImpactByAgeSubPage output={output} />}
+        onToggleMode={() => toggle('poverty')}
+      />
 
-        {/* Winners and Losers */}
-        <Box
-          p={spacing.lg}
-          style={{
-            backgroundColor: colors.background.primary,
-            borderRadius: spacing.md,
-            border: `1px solid ${colors.border.light}`,
-          }}
-        >
+      {/* Winners and Losers */}
+      <DashboardCard
+        mode={modeOf('winners')}
+        zIndex={zOf('winners')}
+        expandDirection="up-left"
+        gridGap={GRID_GAP}
+        shrunkenContent={
           <Group gap={spacing.md} align="flex-start">
             <Box
               style={{
@@ -263,8 +273,10 @@ export default function SocietyWideOverview({ output }: SocietyWideOverviewProps
               </Group>
             </Box>
           </Group>
-        </Box>
-      </SimpleGrid>
-    </Stack>
+        }
+        expandedContent={<WinnersLosersIncomeDecileSubPage output={output} />}
+        onToggleMode={() => toggle('winners')}
+      />
+    </SimpleGrid>
   );
 }

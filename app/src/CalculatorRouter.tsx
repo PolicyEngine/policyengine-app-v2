@@ -6,6 +6,7 @@ import { createBrowserRouter, Outlet, RouterProvider } from 'react-router-dom';
 import PathwayLayout from './components/PathwayLayout';
 import StandardLayout from './components/StandardLayout';
 import DashboardPage from './pages/Dashboard.page';
+import PlaygroundPage from './pages/playground/PlaygroundPage';
 import PoliciesPage from './pages/Policies.page';
 import PolicyEditingConceptPage from './pages/policyEditingConcepts/PolicyEditingConceptPage';
 import PolicyEditingConceptsPage from './pages/policyEditingConcepts/PolicyEditingConcepts.page';
@@ -134,6 +135,10 @@ const router = createBrowserRouter(
                 {
                   path: 'policy-editing-concepts/:conceptId',
                   element: <PolicyEditingConceptPage />,
+                },
+                {
+                  path: 'playground',
+                  element: <PlaygroundPage />,
                 },
                 {
                   path: 'account',

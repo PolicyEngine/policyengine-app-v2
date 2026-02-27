@@ -145,9 +145,7 @@ export function processGeoJSONFeatures(
  * This trace is rendered beneath the data trace so all outlines
  * are always visible even before data arrives.
  */
-export function buildBackgroundTrace(
-  geoJSON: GeoJSONFeatureCollection
-): Partial<PlotData> {
+export function buildBackgroundTrace(geoJSON: GeoJSONFeatureCollection): Partial<PlotData> {
   const locations: string[] = [];
   const features: GeoJSONFeature[] = [];
 

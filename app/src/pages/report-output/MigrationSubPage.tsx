@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
 import {
   Box,
   Button,
@@ -11,20 +12,23 @@ import {
   UnstyledButton,
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { USDistrictChoroplethMap } from '@/components/visualization/USDistrictChoroplethMap';
+import {
+  CongressionalDistrictDataProvider,
+  useCongressionalDistrictData,
+} from '@/contexts/CongressionalDistrictDataContext';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import type { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
 import type { Geography } from '@/types/ingredients/Geography';
 import type { Report } from '@/types/ingredients/Report';
 import type { Simulation } from '@/types/ingredients/Simulation';
+import type { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
 import { formatParameterValue } from '@/utils/chartValueUtils';
 import { isUKLocalLevelGeography } from '@/utils/geographyUtils';
 import { DIVERGING_GRAY_TEAL } from '@/utils/visualization/colorScales';
-import BudgetaryImpactSubPage from './budgetary-impact/BudgetaryImpactSubPage';
 import BudgetaryImpactByProgramSubPage from './budgetary-impact/BudgetaryImpactByProgramSubPage';
+import BudgetaryImpactSubPage from './budgetary-impact/BudgetaryImpactSubPage';
 import { ConstituencySubPage } from './ConstituencySubPage';
 import DistributionalImpactIncomeAverageSubPage from './distributional-impact/DistributionalImpactIncomeAverageSubPage';
 import DistributionalImpactIncomeRelativeSubPage from './distributional-impact/DistributionalImpactIncomeRelativeSubPage';
@@ -40,11 +44,6 @@ import PovertyImpactByAgeSubPage from './poverty-impact/PovertyImpactByAgeSubPag
 import PovertyImpactByGenderSubPage from './poverty-impact/PovertyImpactByGenderSubPage';
 import PovertyImpactByRaceSubPage from './poverty-impact/PovertyImpactByRaceSubPage';
 import SocietyWideOverview from './SocietyWideOverview';
-
-import {
-  CongressionalDistrictDataProvider,
-  useCongressionalDistrictData,
-} from '@/contexts/CongressionalDistrictDataContext';
 
 interface MigrationSubPageProps {
   output: SocietyWideReportOutput;
@@ -180,11 +179,7 @@ function PovertyChart({
  * Districts fill in progressively as state-by-state data arrives.
  * Must be rendered inside a CongressionalDistrictDataProvider.
  */
-function CongressionalDistrictSection({
-  output,
-}: {
-  output: SocietyWideReportOutput;
-}) {
+function CongressionalDistrictSection({ output }: { output: SocietyWideReportOutput }) {
   const {
     stateResponses,
     completedCount,
@@ -259,8 +254,7 @@ function CongressionalDistrictSection({
   );
 
   // Progress
-  const progressPercent =
-    totalStates > 0 ? Math.round((completedCount / totalStates) * 100) : 0;
+  const progressPercent = totalStates > 0 ? Math.round((completedCount / totalStates) * 100) : 0;
   const progressMessage = isLoading
     ? `Computing district impacts (${completedCount} of ${totalStates} states)...`
     : undefined;
@@ -272,13 +266,7 @@ function CongressionalDistrictSection({
       right={
         <Group gap={spacing.lg}>
           {!hasStarted && !existingDistricts && (
-            <Button
-              variant="light"
-              color="gray"
-              size="xs"
-              onClick={startFetch}
-              maw={250}
-            >
+            <Button variant="light" color="gray" size="xs" onClick={startFetch} maw={250}>
               Compute congressional impacts
             </Button>
           )}
@@ -345,9 +333,7 @@ export default function MigrationSubPage({
 
   return (
     <Stack gap={spacing.xl}>
-      <CollapsibleSection label="Overview">
-        <SocietyWideOverview output={output} />
-      </CollapsibleSection>
+      <SocietyWideOverview output={output} />
 
       <CollapsibleSection label="Budgetary impact" defaultOpen={false}>
         <BudgetaryImpactSubPage output={output} />
@@ -403,9 +389,7 @@ export default function MigrationSubPage({
           {wealthMode === 'relative' && (
             <DistributionalImpactWealthRelativeSubPage output={output} />
           )}
-          {wealthMode === 'intra-decile' && (
-            <WinnersLosersWealthDecileSubPage output={output} />
-          )}
+          {wealthMode === 'intra-decile' && <WinnersLosersWealthDecileSubPage output={output} />}
         </CollapsibleSection>
       )}
 

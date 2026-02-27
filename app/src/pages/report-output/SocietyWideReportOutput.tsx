@@ -20,7 +20,6 @@ import LoadingPage from './LoadingPage';
 import { LocalAuthoritySubPage } from './LocalAuthoritySubPage';
 import MigrationSubPage from './MigrationSubPage';
 import NotFoundSubPage from './NotFoundSubPage';
-import OverviewSubPage from './OverviewSubPage';
 import PolicySubPage from './PolicySubPage';
 import PopulationSubPage from './PopulationSubPage';
 import PolicyReproducibility from './reproduce-in-python/PolicyReproducibility';
@@ -92,8 +91,6 @@ const OUTPUT_TABS: Record<string, (props: OutputTabProps) => React.ReactElement>
     />
   ),
 
-  overview: ({ output }) => <OverviewSubPage output={output} outputType="societyWide" />,
-
   'comparative-analysis': ({ output, simulations, report, activeView }) => (
     <ComparativeAnalysisPage
       output={output}
@@ -133,7 +130,7 @@ interface SocietyWideReportOutputProps {
  */
 export function SocietyWideReportOutput({
   reportId: _reportId,
-  subpage = 'overview',
+  subpage = 'migration',
   activeView,
   report,
   simulations,

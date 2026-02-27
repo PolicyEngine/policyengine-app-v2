@@ -56,13 +56,18 @@ export default function ReportBuilderPage() {
   const isGeographySelected = !!reportState.simulations[0]?.population?.geography?.id;
 
   useEffect(() => {
-    if (!reportState.id && isGeographySelected && reportState.simulations.length === 1) {
-      const newSim = initializeSimulationState();
-      newSim.label = 'Reform simulation';
-      newSim.population = { ...reportState.simulations[0].population };
-      setReportState((prev) => ({ ...prev, simulations: [...prev.simulations, newSim] }));
+    if (!reportState.id && isGeographySelected) {
+      setReportState((prev) => {
+        if (prev.simulations.length !== 1) {
+          return prev;
+        }
+        const newSim = initializeSimulationState();
+        newSim.label = 'Reform simulation';
+        newSim.population = { ...prev.simulations[0].population };
+        return { ...prev, simulations: [...prev.simulations, newSim] };
+      });
     }
-  }, [reportState.id, isGeographySelected, reportState.simulations]);
+  }, [reportState.id, isGeographySelected, setReportState]);
 
   // Top bar actions (setup mode: just "Run")
   const topBarActions: TopBarAction[] = useMemo(
