@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { IconChevronRight } from '@tabler/icons-react';
 import { colors } from '@/designTokens';
 import { cn } from '@/lib/utils';
 
@@ -38,7 +37,6 @@ export default function NestedMenu({ menuOptions, onItemClick }: NestedMenuProps
     return list.map((item: NestedMenuOptions) => {
       const isActive = active === item.name;
       const isExpanded = selectedSet.has(item.name);
-      const hasChildren = !!item.children;
 
       return (
         <div key={item.name}>
@@ -57,18 +55,6 @@ export default function NestedMenu({ menuOptions, onItemClick }: NestedMenuProps
             }}
             onClick={() => handleClick(item.name)}
           >
-            {hasChildren && (
-              <IconChevronRight
-                size={14}
-                stroke={1.5}
-                className="tw:shrink-0"
-                style={{
-                  transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
-                  transition: 'transform 150ms ease',
-                  color: isActive ? colors.primary[600] : colors.gray[500],
-                }}
-              />
-            )}
             <span className="tw:leading-tight">{item.label}</span>
           </button>
           {item.children && isExpanded && (
