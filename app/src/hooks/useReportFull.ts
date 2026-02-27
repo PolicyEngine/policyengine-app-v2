@@ -79,7 +79,7 @@ function mapFullResponse(
     simulations.push({
       id: fullResponse.baseline_simulation.id,
       policyId: null, // baseline = current law
-      populationId: fullResponse.household?.id ?? fullResponse.region?.code,
+      populationId: fullResponse.household?.id ?? fullResponse.region?.code ?? userReport.countryId,
       populationType: fullResponse.household ? 'household' : 'geography',
       label: null,
       isCreated: true,
@@ -90,7 +90,7 @@ function mapFullResponse(
     simulations.push({
       id: fullResponse.reform_simulation.id,
       policyId: fullResponse.reform_policy?.id ?? null,
-      populationId: fullResponse.household?.id ?? fullResponse.region?.code,
+      populationId: fullResponse.household?.id ?? fullResponse.region?.code ?? userReport.countryId,
       populationType: fullResponse.household ? 'household' : 'geography',
       label: null,
       isCreated: true,
@@ -128,12 +128,17 @@ function mapFullResponse(
     });
   }
 
-  // Build geographies
+  // Build geographies — null region means nationwide (use countryId)
   const geographies: Geography[] = [];
   if (fullResponse.region) {
     geographies.push({
       countryId: userReport.countryId,
       regionCode: fullResponse.region.code,
+    });
+  } else if (!fullResponse.household) {
+    geographies.push({
+      countryId: userReport.countryId,
+      regionCode: userReport.countryId,
     });
   }
 
