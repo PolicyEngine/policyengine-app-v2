@@ -6,6 +6,7 @@ import { lazy } from 'react';
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
 import PathwayLayout from './components/PathwayLayout';
 import StandardLayout from './components/StandardLayout';
+import DashboardPage from './pages/Dashboard.page';
 import NotFoundPage from './pages/NotFound.page';
 import { CountryGuard } from './routing/guards/CountryGuard';
 import { MetadataGuard } from './routing/guards/MetadataGuard';
@@ -27,6 +28,8 @@ const PolicyEditingConceptsPage = lazy(
 const PolicyEditingConceptPage = lazy(
   () => import('./pages/policyEditingConcepts/PolicyEditingConceptPage')
 );
+const PlaygroundPage = lazy(() => import('./pages/playground/PlaygroundPage'));
+
 // Lazy-loaded pathway wrappers — heavy components with their own sub-routes
 const PolicyPathwayWrapper = lazy(() => import('./pathways/policy/PolicyPathwayWrapper'));
 const PopulationPathwayWrapper = lazy(
@@ -135,6 +138,10 @@ const router = createBrowserRouter(
                 {
                   path: 'policy-editing-concepts/:conceptId',
                   element: <PolicyEditingConceptPage />,
+                },
+                {
+                  path: 'playground',
+                  element: <PlaygroundPage />,
                 },
                 {
                   path: 'account',

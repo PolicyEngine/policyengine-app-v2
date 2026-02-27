@@ -8,6 +8,7 @@ import {
   IconMail,
   IconPlus,
   IconScale,
+  IconTestPipe,
   IconUsers,
 } from '@tabler/icons-react';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -34,6 +35,7 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
     { label: 'Simulations', icon: IconGitBranch, path: `/${countryId}/simulations` },
     { label: 'Policies', icon: IconScale, path: `/${countryId}/policies` },
     { label: 'Households', icon: IconUsers, path: `/${countryId}/households` },
+    { label: 'Playground', icon: IconTestPipe, path: `/${countryId}/playground` },
   ];
 
   const resourceItems = [

@@ -238,14 +238,16 @@ export function useSimulationCanvas({
   // ---------------------------------------------------------------------------
 
   const handleAddSimulation = useCallback(() => {
-    if (reportState.simulations.length >= 2) {
-      return;
-    }
-    const newSim = initializeSimulationState();
-    newSim.label = 'Reform simulation';
-    newSim.population = { ...reportState.simulations[0].population };
-    setReportState((prev) => ({ ...prev, simulations: [...prev.simulations, newSim] }));
-  }, [reportState.simulations, setReportState]);
+    setReportState((prev) => {
+      if (prev.simulations.length >= 2) {
+        return prev;
+      }
+      const newSim = initializeSimulationState();
+      newSim.label = 'Reform simulation';
+      newSim.population = { ...prev.simulations[0].population };
+      return { ...prev, simulations: [...prev.simulations, newSim] };
+    });
+  }, [setReportState]);
 
   const handleRemoveSimulation = useCallback(
     (index: number) => {

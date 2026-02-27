@@ -282,6 +282,9 @@ export function PolicyCreationModal({
   // Same-name warning for "Save as new" when name matches original
   const [showSameNameWarning, setShowSameNameWarning] = useState(false);
 
+  // Unnamed-policy warning for creating/saving without a name
+  const [showUnnamedWarning, setShowUnnamedWarning] = useState(false);
+
   const handleSaveAsNewPolicy = useCallback(() => {
     const currentName = (policyLabel || '').trim();
     const originalName = (initialPolicy?.label || '').trim();
@@ -570,7 +573,17 @@ export function PolicyCreationModal({
           </Box>
           <Group gap={spacing.sm} justify="flex-end">
             {editorMode === 'create' && (
-              <Button color="teal" onClick={handleCreatePolicy} loading={isCreating}>
+              <Button
+                color="teal"
+                onClick={() => {
+                  if (!policyLabel.trim()) {
+                    setShowUnnamedWarning(true);
+                  } else {
+                    handleCreatePolicy();
+                  }
+                }}
+                loading={isCreating}
+              >
                 Create policy
               </Button>
             )}
@@ -595,7 +608,13 @@ export function PolicyCreationModal({
                   label="Save as new policy"
                   color="teal"
                   variant="filled"
-                  onClick={handleSaveAsNewPolicy}
+                  onClick={() => {
+                    if (!policyLabel.trim()) {
+                      setShowUnnamedWarning(true);
+                    } else {
+                      handleSaveAsNewPolicy();
+                    }
+                  }}
                   loading={isCreating}
                   disabled={isUpdating}
                 />
@@ -626,6 +645,35 @@ export function PolicyCreationModal({
               color="teal"
               onClick={() => {
                 setShowSameNameWarning(false);
+                handleCreatePolicy();
+              }}
+            >
+              Save anyway
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
+
+      {/* Unnamed policy warning modal */}
+      <Modal
+        opened={showUnnamedWarning}
+        onClose={() => setShowUnnamedWarning(false)}
+        title={<strong>Unnamed policy</strong>}
+        centered
+        size="sm"
+      >
+        <Stack gap={spacing.md}>
+          <Text size="sm">
+            This policy has no name. Are you sure you want to save it without a name?
+          </Text>
+          <Group justify="flex-end" gap={spacing.sm}>
+            <Button variant="subtle" color="gray" onClick={() => setShowUnnamedWarning(false)}>
+              Cancel
+            </Button>
+            <Button
+              color="teal"
+              onClick={() => {
+                setShowUnnamedWarning(false);
                 handleCreatePolicy();
               }}
             >
