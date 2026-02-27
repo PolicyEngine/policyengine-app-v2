@@ -266,3 +266,63 @@ export async function pollEconomySimulation(
 
   throw new Error('Economy simulation timed out');
 }
+
+// ============================================================================
+// Generic V2 Simulation Fetch
+// ============================================================================
+
+/** Response from GET /simulations/{id} (generic endpoint) */
+interface GenericSimulationResponse {
+  id: string;
+  simulation_type: 'household' | 'economy';
+  status: SimulationStatus;
+  dataset_id: string | null;
+  household_id: string | null;
+  policy_id: string | null;
+  output_dataset_id: string | null;
+  filter_field: string | null;
+  filter_value: string | null;
+  household_result: Record<string, any> | null;
+  error_message: string | null;
+}
+
+/**
+ * Fetch a v2 simulation by ID using the generic endpoint.
+ * GET /simulations/{id} returns `simulation_type` so we can convert
+ * to the correct app domain type in a single request.
+ */
+export async function fetchSimulationByIdV2(simulationId: string): Promise<Simulation> {
+  const res = await fetch(`${API_V2_BASE_URL}/simulations/${simulationId}`, {
+    headers: { Accept: 'application/json' },
+  });
+
+  if (!res.ok) {
+    const errorText = await res.text();
+    throw new Error(`Failed to get simulation: ${res.status} ${errorText}`);
+  }
+
+  const response: GenericSimulationResponse = await res.json();
+
+  if (response.simulation_type === 'household') {
+    return fromHouseholdSimulationResponse({
+      id: response.id,
+      status: response.status,
+      household_id: response.household_id,
+      policy_id: response.policy_id,
+      household_result: response.household_result,
+      error_message: response.error_message,
+    });
+  }
+
+  return fromEconomySimulationResponse({
+    id: response.id,
+    status: response.status,
+    dataset_id: response.dataset_id,
+    policy_id: response.policy_id,
+    output_dataset_id: response.output_dataset_id,
+    filter_field: response.filter_field,
+    filter_value: response.filter_value,
+    region: null,
+    error_message: response.error_message,
+  });
+}
