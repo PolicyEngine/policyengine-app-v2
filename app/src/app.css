@@ -217,10 +217,17 @@
     text-decoration: inherit;
   }
 
-  /* Tables - restore basic structure that Preflight strips */
+  /* Tables - restore basic structure that Preflight strips.
+     The table container and rows get a solid white background so
+     they stand out against the gray page background (gray-50). */
   table {
     border-collapse: collapse;
     width: 100%;
+  }
+
+  [data-slot='table-container'],
+  tr {
+    background-color: var(--tw-color-bg-primary);
   }
 
   th {
