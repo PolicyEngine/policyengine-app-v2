@@ -38,6 +38,7 @@ export default function ButtonPanelVariant({ cards }: ButtonPanelVariantProps) {
           )}
         >
           <Group className="tw:justify-between tw:items-center">
+            <div className="tw:w-5 tw:shrink-0" />
             <Stack gap="xs" style={{ flex: 1 }}>
               <Text fw={typography.fontWeight.bold}>{card.title}</Text>
               <Text size="sm" style={{ color: colors.gray[600] }}>

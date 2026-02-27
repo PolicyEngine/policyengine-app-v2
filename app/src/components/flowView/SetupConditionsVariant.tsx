@@ -39,16 +39,16 @@ export default function SetupConditionsVariant({ cards }: SetupConditionsVariant
           )}
         >
           <Group gap="sm" className="tw:items-center">
-            {card.isFulfilled && (
-              <IconCheck
-                size={20}
-                style={{
-                  color: colors.primary[600],
-                  marginTop: '2px',
-                  flexShrink: 0,
-                }}
-              />
-            )}
+            <div className="tw:w-5 tw:shrink-0" style={{ marginTop: '2px' }}>
+              {card.isFulfilled && (
+                <IconCheck
+                  size={20}
+                  style={{
+                    color: colors.primary[600],
+                  }}
+                />
+              )}
+            </div>
             <Stack gap="xs" style={{ flex: 1 }}>
               <Text fw={typography.fontWeight.bold}>{card.title}</Text>
               <Text size="sm" style={{ color: colors.gray[600] }}>

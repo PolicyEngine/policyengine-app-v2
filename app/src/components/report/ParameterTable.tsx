@@ -7,7 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui';
-import { colors } from '@/designTokens';
+import { colors, spacing, typography } from '@/designTokens';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import {
   buildCompactLabel,
@@ -45,6 +45,15 @@ export default function ParameterTable({
   renderCurrentLawValue,
   renderColumnValue,
 }: ParameterTableProps) {
+  const thStyle = {
+    fontSize: typography.fontSize.xs,
+    fontWeight: typography.fontWeight.medium,
+    color: colors.text.secondary,
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.05em',
+    padding: `${spacing.md} ${spacing.lg}`,
+  };
+
   const [expandedParams, setExpandedParams] = useState<Set<string>>(new Set());
 
   const toggleExpanded = (paramName: string) => {
@@ -60,18 +69,25 @@ export default function ParameterTable({
   };
 
   return (
-    <div className="tw:mt-xl">
+    <div
+      className="tw:mt-xl tw:overflow-hidden"
+      style={{
+        border: `1px solid ${colors.border.light}`,
+        borderRadius: spacing.radius.container,
+        backgroundColor: colors.white,
+      }}
+    >
       <Table>
-        <TableHeader>
+        <TableHeader style={{ backgroundColor: colors.gray[50] }}>
           <TableRow>
-            <TableHead style={{ width: `${labelColumnWidth}%` }}>Parameter</TableHead>
+            <TableHead style={{ ...thStyle, width: `${labelColumnWidth}%` }}>Parameter</TableHead>
             {needsCurrentLawColumn && (
-              <TableHead style={{ width: `${valueColumnWidth}%`, textAlign: 'right' }}>
+              <TableHead style={{ ...thStyle, width: `${valueColumnWidth}%`, textAlign: 'right' }}>
                 CURRENT LAW
               </TableHead>
             )}
             {columns.map((column, idx) => (
-              <TableHead key={idx} style={{ width: `${valueColumnWidth}%`, textAlign: 'right' }}>
+              <TableHead key={idx} style={{ ...thStyle, width: `${valueColumnWidth}%`, textAlign: 'right' }}>
                 {renderColumnHeader(column, idx)}
               </TableHead>
             ))}
@@ -89,7 +105,7 @@ export default function ParameterTable({
 
             return (
               <TableRow key={paramName}>
-                <TableCell>
+                <TableCell style={{ padding: `${spacing.md} ${spacing.lg}` }}>
                   <div>
                     <p className="tw:text-sm tw:font-medium">
                       {displayLabel.split(' → ').map((part, i, arr) => (
@@ -121,14 +137,14 @@ export default function ParameterTable({
                   </div>
                 </TableCell>
                 {needsCurrentLawColumn && (
-                  <TableCell style={{ textAlign: 'right' }}>
+                  <TableCell style={{ textAlign: 'right', padding: `${spacing.md} ${spacing.lg}` }}>
                     <span className="tw:text-sm tw:font-medium tw:text-gray-900">
                       {renderCurrentLawValue(paramName)}
                     </span>
                   </TableCell>
                 )}
                 {columns.map((column, idx) => (
-                  <TableCell key={idx} style={{ textAlign: 'right' }}>
+                  <TableCell key={idx} style={{ textAlign: 'right', padding: `${spacing.md} ${spacing.lg}` }}>
                     <span className="tw:text-sm tw:font-medium tw:text-gray-900">
                       {renderColumnValue(column, paramName)}
                     </span>

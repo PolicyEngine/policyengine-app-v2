@@ -71,7 +71,7 @@ export default function GeographySubPage({
 
   return (
     <div>
-      <h2>Population information</h2>
+      <h2 className="tw:text-2xl tw:font-bold tw:text-gray-900 tw:mb-md">Population information</h2>
 
       <div
         className="tw:mt-xl tw:overflow-hidden"

@@ -62,7 +62,7 @@ export default function PolicySubPage({ policies, userPolicies }: PolicySubPageP
 
   return (
     <div>
-      <h2>Policy information</h2>
+      <h2 className="tw:text-2xl tw:font-bold tw:text-gray-900 tw:mb-md">Policy information</h2>
 
       {hasNoPolicyChanges && (
         <p style={{ fontStyle: 'italic', color: colors.text.tertiary }}>

@@ -73,7 +73,7 @@ export default function DynamicsSubPage({ policies, userPolicies }: DynamicsSubP
   if (paramList.length === 0) {
     return (
       <div>
-        <h2>Dynamics information</h2>
+        <h2 className="tw:text-2xl tw:font-bold tw:text-gray-900 tw:mb-md">Dynamics information</h2>
         <div
           className="tw:mt-xl tw:text-center"
           style={{
@@ -103,7 +103,7 @@ export default function DynamicsSubPage({ policies, userPolicies }: DynamicsSubP
 
   return (
     <div>
-      <h2>Dynamics information</h2>
+      <h2 className="tw:text-2xl tw:font-bold tw:text-gray-900 tw:mb-md">Dynamics information</h2>
 
       <ParameterTable
         parameterNames={paramList}
