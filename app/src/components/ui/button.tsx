@@ -4,17 +4,17 @@ import { Slot } from 'radix-ui';
 import { cn } from '@/lib/utils';
 
 const buttonVariants = cva(
-  'tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:whitespace-nowrap tw:rounded-md tw:text-sm tw:font-medium tw:transition-all tw:disabled:pointer-events-none tw:disabled:opacity-50 tw:[&_svg]:pointer-events-none tw:[&_svg:not([class*=size-])]:size-4 tw:shrink-0 tw:[&_svg]:shrink-0 tw:outline-none tw:focus-visible:border-ring tw:focus-visible:ring-ring/50 tw:focus-visible:ring-[3px] tw:aria-invalid:ring-destructive/20 tw:dark:aria-invalid:ring-destructive/40 tw:aria-invalid:border-destructive',
+  'tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:whitespace-nowrap tw:rounded-md tw:text-sm tw:font-medium tw:transition-all tw:disabled:pointer-events-none tw:disabled:opacity-50 tw:[&_svg]:pointer-events-none tw:[&_svg:not([class*=size-])]:size-4 tw:shrink-0 tw:[&_svg]:shrink-0 tw:outline-none tw:focus-visible:border-ring tw:focus-visible:ring-ring/50 tw:focus-visible:ring-[3px] tw:aria-invalid:ring-destructive/20 tw:aria-invalid:border-destructive',
   {
     variants: {
       variant: {
         default: 'tw:bg-primary tw:text-primary-foreground tw:hover:bg-primary/90',
         destructive:
-          'tw:bg-destructive tw:text-white tw:hover:bg-destructive/90 tw:focus-visible:ring-destructive/20 tw:dark:focus-visible:ring-destructive/40 tw:dark:bg-destructive/60',
+          'tw:bg-destructive tw:text-white tw:hover:bg-destructive/90 tw:focus-visible:ring-destructive/20',
         outline:
-          'tw:border tw:bg-background tw:shadow-xs tw:hover:bg-accent tw:hover:text-accent-foreground tw:dark:bg-input/30 tw:dark:border-input tw:dark:hover:bg-input/50',
+          'tw:border tw:bg-background tw:shadow-xs tw:hover:bg-accent tw:hover:text-accent-foreground',
         secondary: 'tw:bg-secondary tw:text-secondary-foreground tw:hover:bg-secondary/80',
-        ghost: 'tw:hover:bg-accent tw:hover:text-accent-foreground tw:dark:hover:bg-accent/50',
+        ghost: 'tw:hover:bg-accent tw:hover:text-accent-foreground',
         link: 'tw:text-primary tw:underline-offset-4 tw:hover:underline',
       },
       size: {

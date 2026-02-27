@@ -228,21 +228,16 @@
     font-weight: 600;
   }
 
-  /* Form elements */
+  /* Form elements — inherit font and use solid white background so they
+     stand out against the gray page background (colors.gray[50]).
+     Tailwind utility classes (e.g. tw:bg-primary on filled buttons)
+     are in @layer utilities and override this base rule. */
   button,
   input,
   select,
   textarea {
     font-family: inherit;
     font-size: inherit;
-  }
-
-  /* Form inputs should always have a solid white background so they
-     stand out against the gray page background (colors.gray[50]).
-     Uses the bg-primary design token (#fff). */
-  input,
-  select,
-  textarea {
     background-color: var(--tw-color-bg-primary);
   }
 
