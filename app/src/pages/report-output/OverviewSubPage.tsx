@@ -1,11 +1,11 @@
-import { SocietyWideReportOutput } from '@/api/societyWideCalculation';
+import type { EconomicImpactResponse } from '@/api/v2/economyAnalysis';
 import { Household } from '@/types/ingredients/Household';
 import { ReportOutputType } from '../ReportOutput.page';
 import HouseholdOverview from './HouseholdOverview';
 import SocietyWideOverview from './SocietyWideOverview';
 
 interface OverviewSubPageProps {
-  output: SocietyWideReportOutput | Household | Household[];
+  output: EconomicImpactResponse | Household | Household[];
   outputType: ReportOutputType;
   policyLabels?: string[];
 }
@@ -20,7 +20,7 @@ export default function OverviewSubPage({
   policyLabels,
 }: OverviewSubPageProps) {
   if (outputType === 'societyWide') {
-    return <SocietyWideOverview output={output as SocietyWideReportOutput} />;
+    return <SocietyWideOverview output={output as EconomicImpactResponse} />;
   }
 
   // Household output can be single or array (for multiple simulations)

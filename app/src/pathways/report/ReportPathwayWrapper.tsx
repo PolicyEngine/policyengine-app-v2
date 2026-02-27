@@ -10,12 +10,12 @@
 import { useCallback, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import StandardLayout from '@/components/StandardLayout';
-import { useUserId } from '@/hooks/useUserId';
 import { ReportYearProvider } from '@/contexts/ReportYearContext';
 import { useCreateReport } from '@/hooks/useCreateReport';
 import { usePathwayNavigation } from '@/hooks/usePathwayNavigation';
 import { useCurrentLawId, useRegionsList } from '@/hooks/useStaticMetadata';
 import { useUserHouseholds } from '@/hooks/useUserHousehold';
+import { useUserId } from '@/hooks/useUserId';
 import { useUserSimulations } from '@/hooks/useUserSimulations';
 import { countryIds } from '@/libs/countries';
 import { ReportViewMode } from '@/types/pathwayModes/ReportViewMode';

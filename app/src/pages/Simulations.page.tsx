@@ -6,8 +6,8 @@ import { ColumnConfig, IngredientRecord, TextValue } from '@/components/columns'
 import { RenameIngredientModal } from '@/components/common/RenameIngredientModal';
 import IngredientReadView from '@/components/IngredientReadView';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { useUserId } from '@/hooks/useUserId';
 import { useRegions } from '@/hooks/useRegions';
+import { useUserId } from '@/hooks/useUserId';
 import { useUpdateSimulationAssociation } from '@/hooks/useUserSimulationAssociations';
 import { useUserSimulations } from '@/hooks/useUserSimulations';
 import { formatDate } from '@/utils/dateUtils';

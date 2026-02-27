@@ -1,9 +1,4 @@
 import { fetchRegionByCode } from '@/api/v2/regions';
-import { ReportOutputSocietyWideUK } from '@/types/metadata/ReportOutputSocietyWideUK';
-import { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
-
-/** Union type for v1 economy report output. Used by report output pages. */
-export type SocietyWideReportOutput = ReportOutputSocietyWideUS | ReportOutputSocietyWideUK;
 
 /**
  * Looks up the dataset UUID for a region from the v2 API.

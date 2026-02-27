@@ -2,7 +2,7 @@ import type { Layout } from 'plotly.js';
 import Plot from 'react-plotly.js';
 import { Stack, Text } from '@mantine/core';
 import { useMediaQuery, useViewportSize } from '@mantine/hooks';
-import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
+import type { EconomicImpactResponse } from '@/api/v2/economyAnalysis';
 import { ChartContainer } from '@/components/ChartContainer';
 import { colors } from '@/designTokens/colors';
 import { spacing } from '@/designTokens/spacing';
@@ -10,11 +10,12 @@ import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useRegionsList } from '@/hooks/useStaticMetadata';
 import { relativeChangeMessage } from '@/utils/chartMessages';
 import { DEFAULT_CHART_CONFIG, downloadCsv, getClampedChartHeight } from '@/utils/chartUtils';
+import { getDerivedBudget, getWealthDecileImpacts } from '@/utils/economicImpactAccessors';
 import { formatPercent, localeCode, ordinal, precision } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
 
 interface Props {
-  output: SocietyWideReportOutput;
+  output: EconomicImpactResponse;
 }
 
 export default function DistributionalImpactWealthRelativeSubPage({ output }: Props) {
@@ -24,12 +25,10 @@ export default function DistributionalImpactWealthRelativeSubPage({ output }: Pr
   const { height: viewportHeight } = useViewportSize();
   const chartHeight = getClampedChartHeight(viewportHeight, mobile);
 
-  // Extract data - object with keys "1", "2", ..., "10"
-  const decileRelative = output.wealth_decile?.relative || {};
-
-  // Convert to arrays for plotting
-  const xArray = Object.keys(decileRelative);
-  const yArray = Object.values(decileRelative);
+  // Extract data from v2 API response
+  const decileData = getWealthDecileImpacts(output);
+  const xArray = decileData.map((d) => d.decile.toString());
+  const yArray = decileData.map((d) => d.relative_change ?? 0);
 
   // Calculate precision for value display
   const yvaluePrecision = Math.max(1, precision(yArray, 100));
@@ -49,7 +48,8 @@ export default function DistributionalImpactWealthRelativeSubPage({ output }: Pr
 
   // Generate chart title
   const getChartTitle = () => {
-    const relativeChange = -output.budget.budgetary_impact / output.budget.baseline_net_income;
+    const budget = getDerivedBudget(output);
+    const relativeChange = -budget.budgetaryImpact / budget.baselineNetIncome;
     const term1 = 'the net income of households';
     const term2 = formatPercent(Math.abs(relativeChange), countryId, {
       maximumFractionDigits: 1,
@@ -69,10 +69,7 @@ export default function DistributionalImpactWealthRelativeSubPage({ output }: Pr
   const handleDownloadCsv = () => {
     const csvData = [
       ['Wealth decile', 'Relative change'],
-      ...Object.entries(decileRelative).map(([decile, relativeChange]) => [
-        decile,
-        relativeChange.toString(),
-      ]),
+      ...decileData.map((d) => [d.decile.toString(), (d.relative_change ?? 0).toString()]),
     ];
     downloadCsv(csvData, 'distributional-impact-wealth-relative.csv');
   };
@@ -96,7 +93,7 @@ export default function DistributionalImpactWealthRelativeSubPage({ output }: Pr
   const layout = {
     xaxis: {
       title: { text: 'Wealth decile' },
-      tickvals: Object.keys(decileRelative),
+      tickvals: decileData.map((d) => d.decile.toString()),
       fixedrange: true,
     },
     yaxis: {

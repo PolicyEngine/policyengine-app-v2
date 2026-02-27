@@ -2,7 +2,7 @@ import type { Layout } from 'plotly.js';
 import Plot from 'react-plotly.js';
 import { Stack, Text } from '@mantine/core';
 import { useMediaQuery, useViewportSize } from '@mantine/hooks';
-import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
+import type { EconomicImpactResponse } from '@/api/v2/economyAnalysis';
 import { ChartContainer } from '@/components/ChartContainer';
 import { colors } from '@/designTokens/colors';
 import { spacing } from '@/designTokens/spacing';
@@ -10,11 +10,17 @@ import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useRegionsList } from '@/hooks/useStaticMetadata';
 import { relativeChangeMessage } from '@/utils/chartMessages';
 import { DEFAULT_CHART_CONFIG, downloadCsv, getClampedChartHeight } from '@/utils/chartUtils';
+import {
+  getDefaultPovertyType,
+  getPovertyByAge,
+  getPovertyByGender,
+  getPovertyRates,
+} from '@/utils/economicImpactAccessors';
 import { formatNumber, formatPercent, localeCode, precision } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
 
 interface Props {
-  output: SocietyWideReportOutput;
+  output: EconomicImpactResponse;
 }
 
 export default function PovertyImpactByGenderSubPage({ output }: Props) {
@@ -25,23 +31,25 @@ export default function PovertyImpactByGenderSubPage({ output }: Props) {
   const chartHeight = getClampedChartHeight(viewportHeight, mobile);
 
   // Extract data
-  const genderImpact = output.poverty_by_gender?.poverty || {
-    male: { baseline: 0, reform: 0 },
-    female: { baseline: 0, reform: 0 },
-  };
-  const allImpact = output.poverty.poverty;
+  const povertyType = getDefaultPovertyType(countryId);
+  const genderPoverty = getPovertyByGender(output, povertyType);
+  const maleRates = getPovertyRates(genderPoverty.male);
+  const femaleRates = getPovertyRates(genderPoverty.female);
+  const allRates = getPovertyRates(getPovertyByAge(output, povertyType).all);
 
   // Calculate changes for each gender
-  const malePovertyChange = genderImpact.male.reform / genderImpact.male.baseline - 1;
-  const femalePovertyChange = genderImpact.female.reform / genderImpact.female.baseline - 1;
-  const totalPovertyChange = allImpact.all.reform / allImpact.all.baseline - 1;
+  const malePovertyChange =
+    maleRates.baseline === 0 ? 0 : maleRates.reform / maleRates.baseline - 1;
+  const femalePovertyChange =
+    femaleRates.baseline === 0 ? 0 : femaleRates.reform / femaleRates.baseline - 1;
+  const totalPovertyChange = allRates.baseline === 0 ? 0 : allRates.reform / allRates.baseline - 1;
 
   const povertyChanges = [malePovertyChange, femalePovertyChange, totalPovertyChange];
   const povertyLabels = ['Male', 'Female', 'All'];
-  const labelToKey: Record<string, 'male' | 'female' | 'all'> = {
-    Male: 'male',
-    Female: 'female',
-    All: 'all',
+  const ratesByLabel: Record<string, { baseline: number; reform: number }> = {
+    Male: maleRates,
+    Female: femaleRates,
+    All: allRates,
   };
 
   // Calculate precision for display
@@ -59,12 +67,8 @@ export default function PovertyImpactByGenderSubPage({ output }: Props) {
     const obj = `the percentage of ${
       x === 'All' ? 'people' : genderMap[x.toLowerCase()]
     } in poverty`;
-    const key = labelToKey[x];
-    const baseline =
-      x === 'All' ? allImpact.all.baseline : genderImpact[key as 'male' | 'female'].baseline;
-    const reform =
-      x === 'All' ? allImpact.all.reform : genderImpact[key as 'male' | 'female'].reform;
-    const change = reform / baseline - 1;
+    const { baseline, reform } = ratesByLabel[x];
+    const change = baseline === 0 ? 0 : reform / baseline - 1;
     return relativeChangeMessage('This reform', obj, change, 0.001, countryId, {
       baseline,
       reform,
@@ -74,9 +78,8 @@ export default function PovertyImpactByGenderSubPage({ output }: Props) {
 
   // Generate chart title
   const getChartTitle = () => {
-    const baseline = allImpact.all.baseline;
-    const reform = allImpact.all.reform;
-    const relativeChange = reform / baseline - 1;
+    const { baseline, reform } = allRates;
+    const relativeChange = baseline === 0 ? 0 : reform / baseline - 1;
     const absoluteChange = Math.round(Math.abs(reform - baseline) * 1000) / 10;
     const objectTerm = 'the poverty rate';
     const relTerm = formatPercent(Math.abs(relativeChange), countryId, {
@@ -102,14 +105,8 @@ export default function PovertyImpactByGenderSubPage({ output }: Props) {
     const data = [
       header,
       ...povertyLabels.map((label) => {
-        const key = labelToKey[label];
-        const baseline =
-          label === 'All'
-            ? allImpact.all.baseline
-            : genderImpact[key as 'male' | 'female'].baseline;
-        const reform =
-          label === 'All' ? allImpact.all.reform : genderImpact[key as 'male' | 'female'].reform;
-        const change = reform / baseline - 1;
+        const { baseline, reform } = ratesByLabel[label];
+        const change = baseline === 0 ? 0 : reform / baseline - 1;
         return [label, baseline.toString(), reform.toString(), change.toString()];
       }),
     ];

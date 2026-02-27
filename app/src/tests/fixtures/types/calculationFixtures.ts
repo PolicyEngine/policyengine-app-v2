@@ -1,4 +1,8 @@
-import { SocietyWideReportOutput } from '@/api/societyWideCalculation';
+import type { EconomicImpactResponse } from '@/api/v2/economyAnalysis';
+import {
+  createMockBudgetSummary,
+  createMockEconomicImpactResponse,
+} from '@/tests/fixtures/v2MockFactory';
 import { CalcError, CalcMetadata, CalcParams, CalcStatus } from '@/types/calculation';
 import { Household } from '@/types/ingredients/Household';
 
@@ -56,30 +60,18 @@ export const mockHouseholdCalcParams = (overrides?: Partial<CalcParams>): CalcPa
 });
 
 /**
- * Mock society-wide calculation result
- * Note: This is a minimal mock for testing - not a complete SocietyWideReportOutput
+ * Mock society-wide calculation result (v2 EconomicImpactResponse)
  */
-export const mockSocietyWideResult = (): SocietyWideReportOutput =>
-  ({
-    budget: {
-      baseline_net_income: 1000000,
-      benefit_spending_impact: 50000,
-      budgetary_impact: -25000,
-      households: 1000,
-      state_tax_revenue_impact: 10000,
-      tax_revenue_impact: 15000,
-    },
-    decile: {
-      average: {},
-      relative: {},
-    },
-    poverty: {
-      baseline: {},
-      reform: {},
-    },
-    poverty_by_race: null,
-    data_version: '2024.1.0',
-  }) as any as SocietyWideReportOutput;
+export const mockSocietyWideResult = (): EconomicImpactResponse =>
+  createMockEconomicImpactResponse({
+    budget_summary: createMockBudgetSummary({
+      taxRevenue: 15000,
+      stateTaxRevenue: 10000,
+      benefitSpending: 50000,
+      countPeople: 1000,
+      netIncome: 1000000,
+    }),
+  });
 
 /**
  * Mock household calculation result

@@ -2,7 +2,7 @@ import type { Layout } from 'plotly.js';
 import Plot from 'react-plotly.js';
 import { Stack, Text } from '@mantine/core';
 import { useMediaQuery, useViewportSize } from '@mantine/hooks';
-import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
+import type { EconomicImpactResponse } from '@/api/v2/economyAnalysis';
 import { ChartContainer } from '@/components/ChartContainer';
 import { colors } from '@/designTokens/colors';
 import { spacing } from '@/designTokens/spacing';
@@ -10,11 +10,12 @@ import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useRegionsList } from '@/hooks/useStaticMetadata';
 import { relativeChangeMessage } from '@/utils/chartMessages';
 import { DEFAULT_CHART_CONFIG, downloadCsv, getClampedChartHeight } from '@/utils/chartUtils';
+import { getDerivedInequality } from '@/utils/economicImpactAccessors';
 import { formatPercent, localeCode, precision } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
 
 interface Props {
-  output: SocietyWideReportOutput;
+  output: EconomicImpactResponse;
 }
 
 export default function InequalityImpactSubPage({ output }: Props) {
@@ -25,15 +26,16 @@ export default function InequalityImpactSubPage({ output }: Props) {
   const chartHeight = getClampedChartHeight(viewportHeight, mobile);
 
   // Extract data
-  const giniImpact = output.inequality.gini;
-  const top10Impact = output.inequality.top_10_pct_share;
-  const top1Impact = output.inequality.top_1_pct_share;
+  const inequality = getDerivedInequality(output);
+  const giniImpact = inequality?.gini ?? { baseline: 0, reform: 0 };
+  const top10Impact = inequality?.top10PctShare ?? { baseline: 0, reform: 0 };
+  const top1Impact = inequality?.top1PctShare ?? { baseline: 0, reform: 0 };
 
   const labels = ['Gini index', 'Top 10% share', 'Top 1% share'];
   const metricChanges = [
-    giniImpact.reform / giniImpact.baseline - 1,
-    top10Impact.reform / top10Impact.baseline - 1,
-    top1Impact.reform / top1Impact.baseline - 1,
+    giniImpact.baseline === 0 ? 0 : giniImpact.reform / giniImpact.baseline - 1,
+    top10Impact.baseline === 0 ? 0 : top10Impact.reform / top10Impact.baseline - 1,
+    top1Impact.baseline === 0 ? 0 : top1Impact.reform / top1Impact.baseline - 1,
   ];
 
   // Calculate precision for display
@@ -69,7 +71,7 @@ export default function InequalityImpactSubPage({ output }: Props) {
       formatter = formatPer;
     }
 
-    const change = reform / baseline - 1;
+    const change = baseline === 0 ? 0 : reform / baseline - 1;
     return relativeChangeMessage('This reform', obj, change, 0.001, countryId, {
       baseline,
       reform,
@@ -103,7 +105,7 @@ export default function InequalityImpactSubPage({ output }: Props) {
       ...labels.map((label, index) => {
         const baseline = baselineValues[index];
         const reform = reformValues[index];
-        const change = reform / baseline - 1;
+        const change = baseline === 0 ? 0 : reform / baseline - 1;
         return [label, baseline.toString(), reform.toString(), change.toString()];
       }),
     ];

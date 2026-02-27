@@ -1,4 +1,3 @@
-import { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { EconomicImpactResponse } from '@/api/v2/economyAnalysis';
 import { HouseholdImpactResponse } from '@/api/v2/householdAnalysis';
 import { Household } from '@/types/ingredients/Household';
@@ -8,16 +7,11 @@ import { CalcMetadata } from './CalcMetadata';
 /**
  * Union type for all possible calculation results
  *
- * - SocietyWideReportOutput: v1 economy calculation result (legacy)
  * - EconomicImpactResponse: v2 economy calculation result
  * - HouseholdImpactResponse: v2 household analysis result
  * - Household: household calculation result (legacy, per-simulation)
  */
-export type CalcResult =
-  | SocietyWideReportOutput
-  | EconomicImpactResponse
-  | HouseholdImpactResponse
-  | Household;
+export type CalcResult = EconomicImpactResponse | HouseholdImpactResponse | Household;
 
 /**
  * Calculation status values

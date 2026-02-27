@@ -1,14 +1,13 @@
 import { useMemo } from 'react';
 import { Stack, Text, Title } from '@mantine/core';
 import { transformConstituencyRelativeChange } from '@/adapters/constituency/constituencyDataAdapter';
-import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
+import type { EconomicImpactResponse } from '@/api/v2/economyAnalysis';
 import { HexagonalMap } from '@/components/visualization/HexagonalMap';
-import type { ReportOutputSocietyWideUK } from '@/types/metadata/ReportOutputSocietyWideUK';
 import { formatParameterValue } from '@/utils/chartValueUtils';
 import { DIVERGING_GRAY_TEAL } from '@/utils/visualization/colorScales';
 
 interface RelativeChangeByConstituencyProps {
-  output: SocietyWideReportOutput;
+  output: EconomicImpactResponse;
 }
 
 /**
@@ -20,13 +19,8 @@ interface RelativeChangeByConstituencyProps {
 export function RelativeChangeByConstituency({ output }: RelativeChangeByConstituencyProps) {
   // Transform API data to hexagonal map format
   const hexMapData = useMemo(() => {
-    // Type guard to ensure output is UK report with constituency data
-    if (!('constituency_impact' in output)) {
-      return [];
-    }
-    const constituencyData = (output as ReportOutputSocietyWideUK).constituency_impact
-      ?.by_constituency;
-    if (!constituencyData) {
+    const constituencyData = output.constituency_impact;
+    if (!constituencyData?.length) {
       return [];
     }
     return transformConstituencyRelativeChange(constituencyData);

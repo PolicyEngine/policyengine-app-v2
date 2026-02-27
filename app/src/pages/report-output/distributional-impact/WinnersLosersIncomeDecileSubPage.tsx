@@ -2,7 +2,7 @@ import type { Layout } from 'plotly.js';
 import Plot from 'react-plotly.js';
 import { Stack, Text } from '@mantine/core';
 import { useMediaQuery, useViewportSize } from '@mantine/hooks';
-import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
+import type { EconomicImpactResponse } from '@/api/v2/economyAnalysis';
 import { ChartContainer } from '@/components/ChartContainer';
 import { colors } from '@/designTokens/colors';
 import { spacing } from '@/designTokens/spacing';
@@ -14,21 +14,18 @@ import {
   downloadCsv,
   getClampedChartHeight,
 } from '@/utils/chartUtils';
+import {
+  getIntraDecileAll,
+  getIntraDecileByDecile,
+  getIntraDecileValue,
+  INTRA_DECILE_CATEGORIES,
+} from '@/utils/economicImpactAccessors';
 import { formatPercent, localeCode, ordinal } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
 
 interface Props {
-  output: SocietyWideReportOutput;
+  output: EconomicImpactResponse;
 }
-
-// Category definitions and styling
-const CATEGORIES = [
-  'Gain more than 5%',
-  'Gain less than 5%',
-  'No change',
-  'Lose less than 5%',
-  'Lose more than 5%',
-] as const;
 
 const COLOR_MAP: Record<string, string> = {
   'Gain more than 5%': colors.primary[700],
@@ -62,8 +59,8 @@ export default function WinnersLosersIncomeDecileSubPage({ output }: Props) {
   const chartHeight = getClampedChartHeight(viewportHeight, mobile);
 
   // Extract data
-  const deciles = output.intra_decile.deciles;
-  const all = output.intra_decile.all;
+  const allRow = getIntraDecileAll(output);
+  const decileRows = getIntraDecileByDecile(output);
   const decileNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
   // Generate hover message using wordwrap utility pattern
@@ -102,8 +99,12 @@ export default function WinnersLosersIncomeDecileSubPage({ output }: Props) {
 
   // Generate chart title
   const getChartTitle = () => {
-    const totalAhead = all['Gain more than 5%'] + all['Gain less than 5%'];
-    const totalBehind = all['Lose more than 5%'] + all['Lose less than 5%'];
+    const totalAhead =
+      getIntraDecileValue(allRow, 'Gain more than 5%') +
+      getIntraDecileValue(allRow, 'Gain less than 5%');
+    const totalBehind =
+      getIntraDecileValue(allRow, 'Lose more than 5%') +
+      getIntraDecileValue(allRow, 'Lose less than 5%');
     const percent = (n: number) => formatPercent(n, countryId, { maximumFractionDigits: 0 });
     const totalAheadTerm = percent(totalAhead);
     const totalBehindTerm = percent(totalBehind);
@@ -125,32 +126,16 @@ export default function WinnersLosersIncomeDecileSubPage({ output }: Props) {
 
   // CSV export handler
   const handleDownloadCsv = () => {
-    const header = [
-      'Decile',
-      'Gain more than 5%',
-      'Gain less than 5%',
-      'No change',
-      'Lose less than 5%',
-      'Lose more than 5%',
-    ];
+    const header = ['Decile', ...INTRA_DECILE_CATEGORIES];
     const data = [
       header,
       ...decileNumbers.map((decile) => [
         decile.toString(),
-        deciles['Gain more than 5%'][decile - 1].toString(),
-        deciles['Gain less than 5%'][decile - 1].toString(),
-        deciles['No change'][decile - 1].toString(),
-        deciles['Lose less than 5%'][decile - 1].toString(),
-        deciles['Lose more than 5%'][decile - 1].toString(),
+        ...INTRA_DECILE_CATEGORIES.map((cat) =>
+          getIntraDecileValue(decileRows[decile - 1] ?? null, cat).toString()
+        ),
       ]),
-      [
-        'All',
-        all['Gain more than 5%'].toString(),
-        all['Gain less than 5%'].toString(),
-        all['No change'].toString(),
-        all['Lose less than 5%'].toString(),
-        all['Lose more than 5%'].toString(),
-      ],
+      ['All', ...INTRA_DECILE_CATEGORIES.map((cat) => getIntraDecileValue(allRow, cat).toString())],
     ];
     downloadCsv(data, 'winners-losers-income-decile.csv');
   };
@@ -161,8 +146,8 @@ export default function WinnersLosersIncomeDecileSubPage({ output }: Props) {
 
     const xArray =
       type === 'all'
-        ? [all[category as keyof typeof all]]
-        : deciles[category as keyof typeof deciles];
+        ? [getIntraDecileValue(allRow, category)]
+        : decileRows.map((row) => getIntraDecileValue(row, category));
     const yArray = type === 'all' ? ['All'] : decileNumbers;
 
     return {
@@ -192,7 +177,7 @@ export default function WinnersLosersIncomeDecileSubPage({ output }: Props) {
   // Generate all traces (cartesian product of types and categories)
   const chartData = [];
   for (const type of ['all', 'decile'] as const) {
-    for (const category of CATEGORIES) {
+    for (const category of INTRA_DECILE_CATEGORIES) {
       chartData.push(createTrace(type, category));
     }
   }

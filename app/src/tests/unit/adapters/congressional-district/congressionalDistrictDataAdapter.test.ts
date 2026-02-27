@@ -168,7 +168,7 @@ describe('congressionalDistrictDataAdapter', () => {
 
       // Then
       expect(result[0].label).toBe("Alabama's 1st congressional district"); // Found in metadata
-      expect(result[1].label).toBe('District ZZ-99'); // Fallback for unknown district
+      expect(result[1].label).toBe('District 99-99'); // Fallback for unknown district (FIPS 99)
     });
   });
 

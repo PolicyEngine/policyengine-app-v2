@@ -1,13 +1,12 @@
-import { describe, expect, test, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { getDatasetIdForRegion } from '@/api/societyWideCalculation';
+import { fetchRegionByCode } from '@/api/v2/regions';
 
 const MOCK_DATASET_UUID = '00000000-0000-4000-a000-000000000001';
 
 vi.mock('@/api/v2/regions', () => ({
   fetchRegionByCode: vi.fn(),
 }));
-
-import { fetchRegionByCode } from '@/api/v2/regions';
 
 const mockFetchRegionByCode = vi.mocked(fetchRegionByCode);
 

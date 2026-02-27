@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import type { SocietyWideReportOutput as SocietyWideOutput } from '@/api/societyWideCalculation';
+import type { EconomicImpactResponse } from '@/api/v2/economyAnalysis';
 import { useCalculationStatus } from '@/hooks/useCalculationStatus';
 import { useReportProgressDisplay } from '@/hooks/useReportProgressDisplay';
 import { useStartCalculationOnLoad } from '@/hooks/useStartCalculationOnLoad';
@@ -136,7 +136,7 @@ export function SocietyWideReportOutput({
 
   // Show results if complete
   if (calcStatus.isComplete && calcStatus.result) {
-    const output = calcStatus.result as SocietyWideOutput;
+    const output = calcStatus.result as EconomicImpactResponse;
 
     // Route to appropriate SubPage based on subpage param
     switch (subpage) {

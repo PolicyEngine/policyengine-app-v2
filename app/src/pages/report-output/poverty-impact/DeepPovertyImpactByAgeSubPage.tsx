@@ -2,7 +2,7 @@ import type { Layout } from 'plotly.js';
 import Plot from 'react-plotly.js';
 import { Stack, Text } from '@mantine/core';
 import { useMediaQuery, useViewportSize } from '@mantine/hooks';
-import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
+import type { EconomicImpactResponse } from '@/api/v2/economyAnalysis';
 import { ChartContainer } from '@/components/ChartContainer';
 import { colors } from '@/designTokens/colors';
 import { spacing } from '@/designTokens/spacing';
@@ -10,11 +10,16 @@ import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useRegionsList } from '@/hooks/useStaticMetadata';
 import { relativeChangeMessage } from '@/utils/chartMessages';
 import { DEFAULT_CHART_CONFIG, downloadCsv, getClampedChartHeight } from '@/utils/chartUtils';
+import {
+  getDefaultDeepPovertyType,
+  getPovertyByAge,
+  getPovertyRates,
+} from '@/utils/economicImpactAccessors';
 import { formatNumber, formatPercent, localeCode, precision } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
 
 interface Props {
-  output: SocietyWideReportOutput;
+  output: EconomicImpactResponse;
 }
 
 export default function DeepPovertyImpactByAgeSubPage({ output }: Props) {
@@ -25,14 +30,21 @@ export default function DeepPovertyImpactByAgeSubPage({ output }: Props) {
   const chartHeight = getClampedChartHeight(viewportHeight, mobile);
 
   // Extract data
-  const deepPovertyImpact = output.poverty.deep_poverty;
+  const deepPovertyType = getDefaultDeepPovertyType(countryId);
+  const povertyByAge = getPovertyByAge(output, deepPovertyType);
+  const allRates = getPovertyRates(povertyByAge.all);
+  const childRates = getPovertyRates(povertyByAge.child);
+  const adultRates = getPovertyRates(povertyByAge.adult);
+  const seniorRates = getPovertyRates(povertyByAge.senior);
 
   // Calculate changes for each age group
-  const childPovertyChange = deepPovertyImpact.child.reform / deepPovertyImpact.child.baseline - 1;
-  const adultPovertyChange = deepPovertyImpact.adult.reform / deepPovertyImpact.adult.baseline - 1;
+  const childPovertyChange =
+    childRates.baseline === 0 ? 0 : childRates.reform / childRates.baseline - 1;
+  const adultPovertyChange =
+    adultRates.baseline === 0 ? 0 : adultRates.reform / adultRates.baseline - 1;
   const seniorPovertyChange =
-    deepPovertyImpact.senior.reform / deepPovertyImpact.senior.baseline - 1;
-  const totalPovertyChange = deepPovertyImpact.all.reform / deepPovertyImpact.all.baseline - 1;
+    seniorRates.baseline === 0 ? 0 : seniorRates.reform / seniorRates.baseline - 1;
+  const totalPovertyChange = allRates.baseline === 0 ? 0 : allRates.reform / allRates.baseline - 1;
 
   const povertyChanges = [
     childPovertyChange,
@@ -41,11 +53,11 @@ export default function DeepPovertyImpactByAgeSubPage({ output }: Props) {
     totalPovertyChange,
   ];
   const povertyLabels = ['Children', 'Working-age adults', 'Seniors', 'All'];
-  const labelToKey: Record<string, keyof typeof deepPovertyImpact> = {
-    Children: 'child',
-    'Working-age adults': 'adult',
-    Seniors: 'senior',
-    All: 'all',
+  const ratesByLabel: Record<string, { baseline: number; reform: number }> = {
+    Children: childRates,
+    'Working-age adults': adultRates,
+    Seniors: seniorRates,
+    All: allRates,
   };
 
   // Calculate precision for display
@@ -60,9 +72,8 @@ export default function DeepPovertyImpactByAgeSubPage({ output }: Props) {
   // Generate hover message
   const hoverMessage = (x: string) => {
     const obj = `the percentage of ${x === 'All' ? 'people' : x.toLowerCase()} in deep poverty`;
-    const baseline = deepPovertyImpact[labelToKey[x]].baseline;
-    const reform = deepPovertyImpact[labelToKey[x]].reform;
-    const change = reform / baseline - 1;
+    const { baseline, reform } = ratesByLabel[x];
+    const change = baseline === 0 ? 0 : reform / baseline - 1;
     return relativeChangeMessage('This reform', obj, change, 0.001, countryId, {
       baseline,
       reform,
@@ -72,9 +83,8 @@ export default function DeepPovertyImpactByAgeSubPage({ output }: Props) {
 
   // Generate chart title
   const getChartTitle = () => {
-    const baseline = deepPovertyImpact.all.baseline;
-    const reform = deepPovertyImpact.all.reform;
-    const relativeChange = reform / baseline - 1;
+    const { baseline, reform } = allRates;
+    const relativeChange = baseline === 0 ? 0 : reform / baseline - 1;
     const absoluteChange = Math.round(Math.abs(reform - baseline) * 1000) / 10;
     const objectTerm = 'the deep poverty rate';
     const relTerm = formatPercent(Math.abs(relativeChange), countryId, {
@@ -100,9 +110,8 @@ export default function DeepPovertyImpactByAgeSubPage({ output }: Props) {
     const data = [
       header,
       ...povertyLabels.map((label) => {
-        const baseline = deepPovertyImpact[labelToKey[label]].baseline;
-        const reform = deepPovertyImpact[labelToKey[label]].reform;
-        const change = reform / baseline - 1;
+        const { baseline, reform } = ratesByLabel[label];
+        const change = baseline === 0 ? 0 : reform / baseline - 1;
         return [label, baseline.toString(), reform.toString(), change.toString()];
       }),
     ];

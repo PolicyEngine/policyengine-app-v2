@@ -1,14 +1,13 @@
 import { useMemo } from 'react';
 import { Stack, Text, Title } from '@mantine/core';
 import { transformLocalAuthorityRelativeChange } from '@/adapters/local-authority/localAuthorityDataAdapter';
-import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
+import type { EconomicImpactResponse } from '@/api/v2/economyAnalysis';
 import { HexagonalMap } from '@/components/visualization/HexagonalMap';
-import type { ReportOutputSocietyWideUK } from '@/types/metadata/ReportOutputSocietyWideUK';
 import { formatParameterValue } from '@/utils/chartValueUtils';
 import { DIVERGING_GRAY_TEAL } from '@/utils/visualization/colorScales';
 
 interface RelativeChangeByLocalAuthorityProps {
-  output: SocietyWideReportOutput;
+  output: EconomicImpactResponse;
 }
 
 /**
@@ -20,13 +19,8 @@ interface RelativeChangeByLocalAuthorityProps {
 export function RelativeChangeByLocalAuthority({ output }: RelativeChangeByLocalAuthorityProps) {
   // Transform API data to hexagonal map format
   const hexMapData = useMemo(() => {
-    // Type guard to ensure output is UK report with local authority data
-    if (!('local_authority_impact' in output)) {
-      return [];
-    }
-    const localAuthorityData = (output as ReportOutputSocietyWideUK).local_authority_impact
-      ?.by_local_authority;
-    if (!localAuthorityData) {
+    const localAuthorityData = output.local_authority_impact;
+    if (!localAuthorityData?.length) {
       return [];
     }
     return transformLocalAuthorityRelativeChange(localAuthorityData);

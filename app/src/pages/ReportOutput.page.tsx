@@ -2,16 +2,15 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Container, Stack, Text } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { SocietyWideReportOutput as SocietyWideOutput } from '@/api/societyWideCalculation';
 import { FloatingAlert } from '@/components/common/FloatingAlert';
 import { RenameIngredientModal } from '@/components/common/RenameIngredientModal';
 import { CALCULATOR_URL } from '@/constants';
-import { useUserId } from '@/hooks/useUserId';
 import { ReportYearProvider } from '@/contexts/ReportYearContext';
 import { spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useSaveSharedReport } from '@/hooks/useSaveSharedReport';
 import { useSharedReportData } from '@/hooks/useSharedReportData';
+import { useUserId } from '@/hooks/useUserId';
 import { useUpdateReportAssociation } from '@/hooks/useUserReportAssociations';
 import { useUserReportById } from '@/hooks/useUserReports';
 import type { Geography } from '@/types/ingredients/Geography';
@@ -410,18 +409,4 @@ function getTabsForOutputType(
   }
 
   return [{ value: 'overview', label: 'Overview' }];
-}
-
-/**
- * Type guard to check if society-wide output is US-specific
- */
-export function isUSSocietyWideOutput(output: SocietyWideOutput): boolean {
-  return 'poverty_by_race' in output && output.poverty_by_race !== null;
-}
-
-/**
- * Type guard to check if society-wide output is UK-specific
- */
-export function isUKSocietyWideOutput(output: SocietyWideOutput): boolean {
-  return 'constituency_impact' in output && output.constituency_impact !== null;
 }

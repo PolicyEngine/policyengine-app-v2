@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { Alert, Button, Loader, Stack, Text } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { useQueryClient } from '@tanstack/react-query';
 import {
   BulletsValue,
   ColumnConfig,
@@ -225,8 +225,8 @@ export default function ReportsPage() {
         {showMigration && migrationResult === null && (
           <Alert variant="light" color="blue" title="Local data available for sync">
             <Text size="sm">
-              You have report and simulation data saved in local storage.
-              Sync it to the v2 API to keep it accessible.
+              You have report and simulation data saved in local storage. Sync it to the v2 API to
+              keep it accessible.
             </Text>
             {isMigrating ? (
               <Loader size="sm" mt="sm" />

@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { Stack, Text } from '@mantine/core';
-import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
+import type { EconomicImpactResponse } from '@/api/v2/economyAnalysis';
 import { SidebarTabs, type SidebarTab } from '@/components/SidebarTabs';
 import { AbsoluteChangeByLocalAuthority } from './local-authority/AbsoluteChangeByLocalAuthority';
 import { RelativeChangeByLocalAuthority } from './local-authority/RelativeChangeByLocalAuthority';
 
 interface LocalAuthoritySubPageProps {
-  output: SocietyWideReportOutput;
+  output: EconomicImpactResponse;
 }
 
 const LOCAL_AUTHORITY_TABS: SidebarTab[] = [
@@ -26,8 +26,8 @@ const LOCAL_AUTHORITY_TABS: SidebarTab[] = [
 export function LocalAuthoritySubPage({ output }: LocalAuthoritySubPageProps) {
   const [activeTab, setActiveTab] = useState<string>('average');
 
-  // Type guard: only UK reports have constituency data (proxy for UK report check)
-  if (!('local_authority_impact' in output)) {
+  // Type guard: only UK reports have local authority data
+  if (!output.local_authority_impact?.length) {
     return (
       <Stack align="center" justify="center" h={400}>
         <Text c="dimmed">Local authority analysis not available for this region</Text>

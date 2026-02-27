@@ -37,7 +37,7 @@ describe('SocietyWideOverview', () => {
     test('given positive budgetary impact then displays formatted value with revenue subtext', () => {
       // Given
       const output = createMockSocietyWideOutput({
-        budget: { budgetary_impact: 1_000_000 } as any,
+        budgetaryImpact: 1_000_000,
       });
 
       // When
@@ -53,7 +53,7 @@ describe('SocietyWideOverview', () => {
     test('given negative budgetary impact then displays spending subtext', () => {
       // Given
       const output = createMockSocietyWideOutput({
-        budget: { budgetary_impact: -1_000_000 } as any,
+        budgetaryImpact: -1_000_000,
       });
 
       // When
@@ -65,7 +65,7 @@ describe('SocietyWideOverview', () => {
 
     test('given zero budgetary impact then shows no change message', () => {
       // Given
-      const output = createMockSocietyWideOutput({ budget: { budgetary_impact: 0 } as any });
+      const output = createMockSocietyWideOutput({ budgetaryImpact: 0 });
 
       // When
       const { container } = render(<SocietyWideOverview output={output} />);
@@ -80,11 +80,8 @@ describe('SocietyWideOverview', () => {
     test('given poverty decrease then shows percentage decrease', () => {
       // Given
       const output = createMockSocietyWideOutput({
-        poverty: {
-          poverty: {
-            all: { baseline: 0.1, reform: 0.09 },
-          },
-        } as any,
+        povertyBaseline: 0.1,
+        povertyReform: 0.09,
       });
 
       // When
@@ -99,11 +96,8 @@ describe('SocietyWideOverview', () => {
     test('given poverty increase then shows percentage increase', () => {
       // Given
       const output = createMockSocietyWideOutput({
-        poverty: {
-          poverty: {
-            all: { baseline: 0.1, reform: 0.12 },
-          },
-        } as any,
+        povertyBaseline: 0.1,
+        povertyReform: 0.12,
       });
 
       // When
@@ -117,11 +111,8 @@ describe('SocietyWideOverview', () => {
     test('given no poverty change then shows no change message', () => {
       // Given
       const output = createMockSocietyWideOutput({
-        poverty: {
-          poverty: {
-            all: { baseline: 0.1, reform: 0.1 },
-          },
-        } as any,
+        povertyBaseline: 0.1,
+        povertyReform: 0.1,
       });
 
       // When
@@ -135,11 +126,8 @@ describe('SocietyWideOverview', () => {
     test('given zero baseline poverty then handles edge case', () => {
       // Given - edge case where baseline is 0
       const output = createMockSocietyWideOutput({
-        poverty: {
-          poverty: {
-            all: { baseline: 0, reform: 0.05 },
-          },
-        } as any,
+        povertyBaseline: 0,
+        povertyReform: 0.05,
       });
 
       // When
@@ -154,15 +142,11 @@ describe('SocietyWideOverview', () => {
     test('given both winners and losers then shows distribution', () => {
       // Given
       const output = createMockSocietyWideOutput({
-        intra_decile: {
-          all: {
-            'Gain more than 5%': 0.2,
-            'Gain less than 5%': 0.1,
-            'Lose more than 5%': 0.05,
-            'Lose less than 5%': 0.05,
-            'No change': 0.6,
-          },
-        } as any,
+        gainMore5: 0.2,
+        gainLess5: 0.1,
+        loseMore5: 0.05,
+        loseLess5: 0.05,
+        noChange: 0.6,
       });
 
       // When
@@ -178,15 +162,11 @@ describe('SocietyWideOverview', () => {
     test('given only winners then shows only gains', () => {
       // Given
       const output = createMockSocietyWideOutput({
-        intra_decile: {
-          all: {
-            'Gain more than 5%': 0.2,
-            'Gain less than 5%': 0.1,
-            'Lose more than 5%': 0,
-            'Lose less than 5%': 0,
-            'No change': 0.7,
-          },
-        } as any,
+        gainMore5: 0.2,
+        gainLess5: 0.1,
+        loseMore5: 0,
+        loseLess5: 0,
+        noChange: 0.7,
       });
 
       // When
@@ -200,15 +180,11 @@ describe('SocietyWideOverview', () => {
     test('given only losers then shows only losses', () => {
       // Given
       const output = createMockSocietyWideOutput({
-        intra_decile: {
-          all: {
-            'Gain more than 5%': 0,
-            'Gain less than 5%': 0,
-            'Lose more than 5%': 0.05,
-            'Lose less than 5%': 0.05,
-            'No change': 0.9,
-          },
-        } as any,
+        gainMore5: 0,
+        gainLess5: 0,
+        loseMore5: 0.05,
+        loseLess5: 0.05,
+        noChange: 0.9,
       });
 
       // When

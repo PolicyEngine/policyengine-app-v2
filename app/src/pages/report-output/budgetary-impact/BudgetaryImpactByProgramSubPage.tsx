@@ -3,7 +3,7 @@ import Plot from 'react-plotly.js';
 import { useSelector } from 'react-redux';
 import { Stack, Text } from '@mantine/core';
 import { useMediaQuery, useViewportSize } from '@mantine/hooks';
-import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
+import type { EconomicImpactResponse } from '@/api/v2/economyAnalysis';
 import { ChartContainer } from '@/components/ChartContainer';
 import { colors } from '@/designTokens/colors';
 import { spacing } from '@/designTokens/spacing';
@@ -12,11 +12,12 @@ import { useRegionsList } from '@/hooks/useStaticMetadata';
 import { RootState } from '@/store';
 import { absoluteChangeMessage } from '@/utils/chartMessages';
 import { DEFAULT_CHART_CONFIG, downloadCsv, getClampedChartHeight } from '@/utils/chartUtils';
+import { getDerivedBudget } from '@/utils/economicImpactAccessors';
 import { currencySymbol, formatCurrencyAbbr, localeCode } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
 
 interface Props {
-  output: SocietyWideReportOutput;
+  output: EconomicImpactResponse;
 }
 
 interface ProgramBudgetItem {
@@ -45,8 +46,8 @@ export default function BudgetaryImpactByProgramSubPage({ output }: Props) {
   }
 
   // Extract data
-  const budgetaryImpact = output.budget.budgetary_impact;
-  const detailedBudget = output.detailed_budget as Record<string, ProgramBudgetItem>;
+  const budgetaryImpact = getDerivedBudget(output).budgetaryImpact;
+  const detailedBudget = output.detailed_budget as unknown as Record<string, ProgramBudgetItem>;
 
   // Filter programs with non-zero difference and get labels
   const programs: Array<{ key: string; label: string; value: number }> = [];

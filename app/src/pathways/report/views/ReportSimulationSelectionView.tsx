@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Stack } from '@mantine/core';
+import { createEconomySimulation } from '@/api/v2/simulations';
 import PathwayView from '@/components/common/PathwayView';
 import { ButtonPanelVariant } from '@/components/flowView';
-import { createEconomySimulation } from '@/api/v2/simulations';
 import { useUserId } from '@/hooks/useUserId';
 import { useUserSimulations } from '@/hooks/useUserSimulations';
 import { PolicyStateProps, PopulationStateProps, SimulationStateProps } from '@/types/pathwayState';

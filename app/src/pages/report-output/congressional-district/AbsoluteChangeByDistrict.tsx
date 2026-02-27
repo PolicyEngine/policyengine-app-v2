@@ -4,16 +4,15 @@ import {
   buildDistrictLabelLookup,
   transformDistrictAbsoluteChange,
 } from '@/adapters/congressional-district/congressionalDistrictDataAdapter';
-import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
+import type { EconomicImpactResponse } from '@/api/v2/economyAnalysis';
 import { USDistrictChoroplethMap } from '@/components/visualization/USDistrictChoroplethMap';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useRegionsList } from '@/hooks/useStaticMetadata';
-import type { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
 import { formatParameterValue } from '@/utils/chartValueUtils';
 import { DIVERGING_GRAY_TEAL } from '@/utils/visualization/colorScales';
 
 interface AbsoluteChangeByDistrictProps {
-  output: SocietyWideReportOutput;
+  output: EconomicImpactResponse;
 }
 
 /**
@@ -32,12 +31,8 @@ export function AbsoluteChangeByDistrict({ output }: AbsoluteChangeByDistrictPro
 
   // Transform API data to choropleth map format
   const mapData = useMemo(() => {
-    // Type guard to ensure output is US report with district data
-    if (!('congressional_district_impact' in output)) {
-      return [];
-    }
-    const districtData = (output as ReportOutputSocietyWideUS).congressional_district_impact;
-    if (!districtData) {
+    const districtData = output.congressional_district_impact;
+    if (!districtData?.length) {
       return [];
     }
     return transformDistrictAbsoluteChange(districtData, labelLookup);

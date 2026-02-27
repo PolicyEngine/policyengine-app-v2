@@ -2,7 +2,7 @@ import type { Layout } from 'plotly.js';
 import Plot from 'react-plotly.js';
 import { Stack, Text } from '@mantine/core';
 import { useMediaQuery, useViewportSize } from '@mantine/hooks';
-import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
+import type { EconomicImpactResponse } from '@/api/v2/economyAnalysis';
 import { ChartContainer } from '@/components/ChartContainer';
 import { colors } from '@/designTokens/colors';
 import { spacing } from '@/designTokens/spacing';
@@ -10,11 +10,12 @@ import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useRegionsList } from '@/hooks/useStaticMetadata';
 import { absoluteChangeMessage } from '@/utils/chartMessages';
 import { DEFAULT_CHART_CONFIG, downloadCsv, getClampedChartHeight } from '@/utils/chartUtils';
+import { getDecileImpacts, getDerivedBudget } from '@/utils/economicImpactAccessors';
 import { currencySymbol, formatCurrency, localeCode, ordinal, precision } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
 
 interface Props {
-  output: SocietyWideReportOutput;
+  output: EconomicImpactResponse;
 }
 
 export default function DistributionalImpactIncomeAverageSubPage({ output }: Props) {
@@ -24,12 +25,10 @@ export default function DistributionalImpactIncomeAverageSubPage({ output }: Pro
   const { height: viewportHeight } = useViewportSize();
   const chartHeight = getClampedChartHeight(viewportHeight, mobile);
 
-  // Extract data - object with keys "1", "2", ..., "10"
-  const decileAverage = output.decile.average;
-
-  // Convert to arrays for plotting
-  const xArray = Object.keys(decileAverage);
-  const yArray = Object.values(decileAverage);
+  // Extract data from v2 API response
+  const decileData = getDecileImpacts(output);
+  const xArray = decileData.map((d) => d.decile.toString());
+  const yArray = decileData.map((d) => d.absolute_change ?? 0);
 
   // Calculate precision for value display
   let yvaluePrecision = precision(yArray, 1);
@@ -57,7 +56,8 @@ export default function DistributionalImpactIncomeAverageSubPage({ output }: Pro
 
   // Generate chart title
   const getChartTitle = () => {
-    const averageChange = -output.budget.budgetary_impact / output.budget.households;
+    const budget = getDerivedBudget(output);
+    const averageChange = -budget.budgetaryImpact / budget.households;
     const term1 = 'the net income of households';
     const term2 = formatCurrency(Math.abs(averageChange), countryId, {
       maximumFractionDigits: 0,
@@ -75,9 +75,9 @@ export default function DistributionalImpactIncomeAverageSubPage({ output }: Pro
 
   // CSV export handler
   const handleDownloadCsv = () => {
-    const csvData = Object.entries(decileAverage).map(([key, value]) => [
-      `Decile ${key}`,
-      value.toString(),
+    const csvData = decileData.map((d) => [
+      `Decile ${d.decile}`,
+      (d.absolute_change ?? 0).toString(),
     ]);
     downloadCsv(csvData, 'distributional-impact-income-average.csv');
   };
@@ -101,7 +101,7 @@ export default function DistributionalImpactIncomeAverageSubPage({ output }: Pro
   const layout = {
     xaxis: {
       title: { text: 'Income decile' },
-      tickvals: Object.keys(decileAverage),
+      tickvals: decileData.map((d) => d.decile.toString()),
       fixedrange: true,
     },
     yaxis: {

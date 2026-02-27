@@ -85,9 +85,14 @@ export interface EconomyCustomRequest {
 export interface DecileImpactData {
   id: string;
   report_id: string;
+  income_variable: string;
+  entity: string | null;
   decile: number;
+  quantiles: number;
+  baseline_mean: number | null;
+  reform_mean: number | null;
+  absolute_change: number | null;
   relative_change: number | null;
-  average_change: number | null;
   count_better_off: number | null;
   count_worse_off: number | null;
   count_no_change: number | null;
@@ -97,83 +102,98 @@ export interface ProgramStatisticsData {
   id: string;
   report_id: string;
   program_name: string;
+  entity: string;
+  is_tax: boolean;
   baseline_total: number | null;
   reform_total: number | null;
   change: number | null;
+  baseline_count: number | null;
+  reform_count: number | null;
+  winners: number | null;
+  losers: number | null;
 }
 
+/** Per-simulation poverty row. Baseline and reform are separate rows matched by simulation_id. */
 export interface PovertyData {
   id: string;
+  simulation_id: string;
   report_id: string;
-  category: string;
+  poverty_type: string;
+  entity: string;
   filter_variable: string | null;
-  filter_value: string | null;
-  baseline_headcount: number | null;
-  baseline_rate: number | null;
-  reform_headcount: number | null;
-  reform_rate: number | null;
-  baseline_deep_headcount: number | null;
-  baseline_deep_rate: number | null;
-  reform_deep_headcount: number | null;
-  reform_deep_rate: number | null;
+  headcount: number | null;
+  total_population: number | null;
+  rate: number | null;
 }
 
+/** Per-simulation inequality row. Baseline and reform are separate rows. */
 export interface InequalityData {
   id: string;
+  simulation_id: string;
   report_id: string;
-  baseline_gini: number | null;
-  reform_gini: number | null;
-  baseline_top_10_share: number | null;
-  reform_top_10_share: number | null;
-  baseline_top_1_share: number | null;
-  reform_top_1_share: number | null;
+  income_variable: string;
+  entity: string;
+  gini: number | null;
+  top_10_share: number | null;
+  top_1_share: number | null;
+  bottom_50_share: number | null;
 }
 
+/** Per-variable budget row. Multiple rows per report (household_tax, household_benefits, etc.) */
 export interface BudgetSummaryData {
   id: string;
   report_id: string;
-  tax_revenue_impact: number | null;
-  benefit_spending_impact: number | null;
-  net_budget_impact: number | null;
-  state_tax_revenue_impact: number | null;
-  household_count: number | null;
-  baseline_net_income: number | null;
+  variable_name: string;
+  entity: string;
+  baseline_total: number | null;
+  reform_total: number | null;
+  change: number | null;
 }
 
 export interface IntraDecileData {
   id: string;
   report_id: string;
   decile: number;
-  gain_more_than_5_pct: number | null;
-  gain_less_than_5_pct: number | null;
+  gain_more_than_5pct: number | null;
+  gain_less_than_5pct: number | null;
   no_change: number | null;
-  lose_less_than_5_pct: number | null;
-  lose_more_than_5_pct: number | null;
+  lose_less_than_5pct: number | null;
+  lose_more_than_5pct: number | null;
 }
 
 export interface CongressionalDistrictData {
   id: string;
   report_id: string;
-  district: string;
-  state: string;
-  average_change: number | null;
-  relative_change: number | null;
+  district_geoid: number;
+  state_fips: number;
+  district_number: number;
+  average_household_income_change: number | null;
+  relative_household_income_change: number | null;
+  population: number | null;
 }
 
 export interface ConstituencyData {
   id: string;
   report_id: string;
-  constituency: string;
-  average_change: number | null;
-  relative_change: number | null;
+  constituency_code: string;
+  constituency_name: string;
+  x: number;
+  y: number;
+  average_household_income_change: number | null;
+  relative_household_income_change: number | null;
+  population: number | null;
 }
 
 export interface LocalAuthorityData {
   id: string;
   report_id: string;
-  local_authority: string;
-  average_change: number | null;
-  relative_change: number | null;
+  local_authority_code: string;
+  local_authority_name: string;
+  x: number;
+  y: number;
+  average_household_income_change: number | null;
+  relative_household_income_change: number | null;
+  population: number | null;
 }
 
 // ============================================================================

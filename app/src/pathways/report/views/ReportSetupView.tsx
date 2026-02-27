@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import PathwayView from '@/components/common/PathwayView';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { useUserId } from '@/hooks/useUserId';
 import { useRegions } from '@/hooks/useRegions';
 import { useUserHouseholds } from '@/hooks/useUserHousehold';
+import { useUserId } from '@/hooks/useUserId';
 import { MetadataRegionEntry } from '@/types/metadata';
 import { ReportStateProps, SimulationStateProps } from '@/types/pathwayState';
 import { getCountryLabel, getRegionLabel, isNationalGeography } from '@/utils/geographyUtils';

@@ -1,5 +1,5 @@
 import type { ComponentType } from 'react';
-import type { SocietyWideReportOutput as SocietyWideOutput } from '@/api/societyWideCalculation';
+import type { EconomicImpactResponse } from '@/api/v2/economyAnalysis';
 import BudgetaryImpactByProgramSubPage from './budgetary-impact/BudgetaryImpactByProgramSubPage';
 import BudgetaryImpactSubPage from './budgetary-impact/BudgetaryImpactSubPage';
 import { AbsoluteChangeByDistrict } from './congressional-district/AbsoluteChangeByDistrict';
@@ -19,12 +19,12 @@ import PovertyImpactByGenderSubPage from './poverty-impact/PovertyImpactByGender
 import PovertyImpactByRaceSubPage from './poverty-impact/PovertyImpactByRaceSubPage';
 
 interface Props {
-  output: SocietyWideOutput;
+  output: EconomicImpactResponse;
   view?: string;
 }
 
 interface ViewComponentProps {
-  output: SocietyWideOutput;
+  output: EconomicImpactResponse;
 }
 
 /**

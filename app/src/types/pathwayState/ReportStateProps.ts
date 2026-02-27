@@ -1,5 +1,6 @@
+import type { EconomicImpactResponse } from '@/api/v2/economyAnalysis';
 import { countryIds } from '@/libs/countries';
-import type { ReportOutput } from '@/types/ingredients/Report';
+import type { HouseholdReportOutput } from '@/types/calculation/household';
 import { SimulationStateProps } from './SimulationStateProps';
 
 /**
@@ -20,7 +21,7 @@ export interface ReportStateProps {
   apiVersion: string | null; // API version for calculations
   status: 'pending' | 'complete' | 'error'; // Report generation status
   outputType?: 'household' | 'economy'; // Discriminator for output type
-  output?: ReportOutput | null; // Generated report output
+  output?: EconomicImpactResponse | HouseholdReportOutput | null; // Generated report output
 
   // Nested ingredient state - REPLACES separate Redux slices
   // Array of exactly 2 simulations (baseline and reform)

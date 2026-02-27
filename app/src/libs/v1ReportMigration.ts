@@ -37,18 +37,12 @@ export interface MigrationProgress {
 
 const localReportStore = new LocalStorageReportStore();
 
-export async function hasV1ReportsToMigrate(
-  userId: string,
-  countryId?: string,
-): Promise<boolean> {
+export async function hasV1ReportsToMigrate(userId: string, countryId?: string): Promise<boolean> {
   const reports = await localReportStore.findByUser(userId, countryId);
   return reports.length > 0;
 }
 
-export async function getV1ReportCount(
-  userId: string,
-  countryId?: string,
-): Promise<number> {
+export async function getV1ReportCount(userId: string, countryId?: string): Promise<number> {
   const reports = await localReportStore.findByUser(userId, countryId);
   return reports.length;
 }
@@ -68,7 +62,7 @@ export async function getV1ReportCount(
 async function migrateSingleReport(
   v1UserReport: UserReport,
   userId: string,
-  countryId: (typeof countryIds)[number],
+  countryId: (typeof countryIds)[number]
 ): Promise<void> {
   // 1. Fetch v1 report metadata
   const v1Report = await fetchReportById(countryId, v1UserReport.reportId);
@@ -141,7 +135,7 @@ async function migrateSingleReport(
 export async function migrateV1Reports(
   userId: string,
   countryId: (typeof countryIds)[number],
-  onProgress?: (progress: MigrationProgress) => void,
+  onProgress?: (progress: MigrationProgress) => void
 ): Promise<MigrationProgress> {
   const v1Reports = await localReportStore.findByUser(userId, countryId);
 

@@ -2,7 +2,7 @@ import type { Layout } from 'plotly.js';
 import Plot from 'react-plotly.js';
 import { Stack } from '@mantine/core';
 import { useMediaQuery, useViewportSize } from '@mantine/hooks';
-import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
+import type { EconomicImpactResponse } from '@/api/v2/economyAnalysis';
 import { ChartContainer } from '@/components/ChartContainer';
 import { colors } from '@/designTokens/colors';
 import { spacing } from '@/designTokens/spacing';
@@ -10,11 +10,12 @@ import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useRegionsList } from '@/hooks/useStaticMetadata';
 import { absoluteChangeMessage } from '@/utils/chartMessages';
 import { DEFAULT_CHART_CONFIG, downloadCsv, getClampedChartHeight } from '@/utils/chartUtils';
+import { getDerivedBudget } from '@/utils/economicImpactAccessors';
 import { currencySymbol, formatCurrencyAbbr, localeCode } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
 
 interface Props {
-  output: SocietyWideReportOutput;
+  output: EconomicImpactResponse;
 }
 
 export default function BudgetaryImpactSubPage({ output }: Props) {
@@ -25,10 +26,11 @@ export default function BudgetaryImpactSubPage({ output }: Props) {
   const chartHeight = getClampedChartHeight(viewportHeight, mobile);
 
   // Extract data
-  const budgetaryImpact = output.budget.budgetary_impact;
-  const spendingImpact = output.budget.benefit_spending_impact;
-  const stateTaxImpact = output.budget.state_tax_revenue_impact;
-  const taxImpact = output.budget.tax_revenue_impact - stateTaxImpact;
+  const budget = getDerivedBudget(output);
+  const budgetaryImpact = budget.budgetaryImpact;
+  const spendingImpact = budget.benefitSpendingImpact;
+  const stateTaxImpact = budget.stateTaxRevenueImpact;
+  const taxImpact = budget.taxRevenueImpact - stateTaxImpact;
 
   // Labels - different for US vs other countries, and desktop vs mobile
   const desktopLabels = [

@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { Stack, Text } from '@mantine/core';
-import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
+import type { EconomicImpactResponse } from '@/api/v2/economyAnalysis';
 import { SidebarTabs, type SidebarTab } from '@/components/SidebarTabs';
 import { AbsoluteChangeByConstituency } from './constituency/AbsoluteChangeByConstituency';
 import { RelativeChangeByConstituency } from './constituency/RelativeChangeByConstituency';
 
 interface ConstituencySubPageProps {
-  output: SocietyWideReportOutput;
+  output: EconomicImpactResponse;
 }
 
 const CONSTITUENCY_TABS: SidebarTab[] = [
@@ -27,7 +27,7 @@ export function ConstituencySubPage({ output }: ConstituencySubPageProps) {
   const [activeTab, setActiveTab] = useState<string>('average');
 
   // Type guard: only UK reports have constituency data
-  if (!('constituency_impact' in output)) {
+  if (!output.constituency_impact?.length) {
     return (
       <Stack align="center" justify="center" h={400}>
         <Text c="dimmed">Constituency analysis not available for this region</Text>

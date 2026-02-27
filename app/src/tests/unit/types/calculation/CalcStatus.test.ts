@@ -63,8 +63,8 @@ describe('CalcStatus types', () => {
     it('should accept economy output', () => {
       const result: CalcResult = mockSocietyWideResult();
 
-      expect(result).toHaveProperty('budget');
-      expect(result).toHaveProperty('decile');
+      expect(result).toHaveProperty('budget_summary');
+      expect(result).toHaveProperty('decile_impacts');
       expect(result).toHaveProperty('poverty');
     });
 

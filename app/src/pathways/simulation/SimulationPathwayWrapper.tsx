@@ -8,11 +8,11 @@
 import { useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import StandardLayout from '@/components/StandardLayout';
-import { useUserId } from '@/hooks/useUserId';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { usePathwayNavigation } from '@/hooks/usePathwayNavigation';
 import { useCurrentLawId, useRegionsList } from '@/hooks/useStaticMetadata';
 import { useUserHouseholds } from '@/hooks/useUserHousehold';
+import { useUserId } from '@/hooks/useUserId';
 import { useUserPolicies } from '@/hooks/useUserPolicy';
 import { SimulationViewMode } from '@/types/pathwayModes/SimulationViewMode';
 import { SimulationStateProps } from '@/types/pathwayState';

@@ -8,8 +8,8 @@
 
 import { useCallback, useRef, useState } from 'react';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { useUserId } from '@/hooks/useUserId';
 import { useCurrentLawId } from '@/hooks/useStaticMetadata';
+import { useUserId } from '@/hooks/useUserId';
 import { ReportIngredientsInput } from '@/hooks/utils/useFetchReportIngredients';
 import { CountryId } from '@/libs/countries';
 import { UserReport } from '@/types/ingredients/UserReport';

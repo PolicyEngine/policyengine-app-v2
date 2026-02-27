@@ -1,14 +1,22 @@
 import { IconCoin, IconHome, IconUsers } from '@tabler/icons-react';
 import { Box, Group, SimpleGrid, Stack, Text } from '@mantine/core';
-import { SocietyWideReportOutput } from '@/api/societyWideCalculation';
+import type { EconomicImpactResponse } from '@/api/v2/economyAnalysis';
 import MetricCard from '@/components/report/MetricCard';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import {
+  getDefaultPovertyType,
+  getDerivedBudget,
+  getIntraDecileAll,
+  getIntraDecileValue,
+  getPovertyByAge,
+  getPovertyRates,
+} from '@/utils/economicImpactAccessors';
 import { formatBudgetaryImpact } from '@/utils/formatPowers';
 import { currencySymbol } from '@/utils/formatters';
 
 interface SocietyWideOverviewProps {
-  output: SocietyWideReportOutput;
+  output: EconomicImpactResponse;
 }
 
 // Fixed size for icon containers to ensure square aspect ratio
@@ -29,7 +37,8 @@ export default function SocietyWideOverview({ output }: SocietyWideOverviewProps
   const symbol = currencySymbol(countryId);
 
   // Calculate budgetary impact
-  const budgetaryImpact = output.budget.budgetary_impact;
+  const budget = getDerivedBudget(output);
+  const budgetaryImpact = budget.budgetaryImpact;
   const budgetFormatted = formatBudgetaryImpact(Math.abs(budgetaryImpact));
   const budgetIsPositive = budgetaryImpact > 0;
   const budgetValue =
@@ -44,7 +53,9 @@ export default function SocietyWideOverview({ output }: SocietyWideOverviewProps
         : 'in additional government spending';
 
   // Calculate poverty rate change
-  const povertyOverview = output.poverty.poverty.all;
+  const povertyType = getDefaultPovertyType(countryId);
+  const povertyByAge = getPovertyByAge(output, povertyType);
+  const povertyOverview = getPovertyRates(povertyByAge.all);
   const povertyRateChange =
     povertyOverview.baseline === 0
       ? 0
@@ -63,10 +74,14 @@ export default function SocietyWideOverview({ output }: SocietyWideOverviewProps
         : 'increase in poverty rate';
 
   // Calculate winners and losers
-  const decileOverview = output.intra_decile.all;
-  const winnersPercent = decileOverview['Gain more than 5%'] + decileOverview['Gain less than 5%'];
-  const losersPercent = decileOverview['Lose more than 5%'] + decileOverview['Lose less than 5%'];
-  const unchangedPercent = decileOverview['No change'];
+  const decileOverview = getIntraDecileAll(output);
+  const winnersPercent =
+    getIntraDecileValue(decileOverview, 'Gain more than 5%') +
+    getIntraDecileValue(decileOverview, 'Gain less than 5%');
+  const losersPercent =
+    getIntraDecileValue(decileOverview, 'Lose more than 5%') +
+    getIntraDecileValue(decileOverview, 'Lose less than 5%');
+  const unchangedPercent = getIntraDecileValue(decileOverview, 'No change');
 
   return (
     <Stack gap={spacing.xl}>

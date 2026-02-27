@@ -2,7 +2,7 @@ import type { Layout } from 'plotly.js';
 import Plot from 'react-plotly.js';
 import { Stack, Text } from '@mantine/core';
 import { useMediaQuery, useViewportSize } from '@mantine/hooks';
-import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
+import type { EconomicImpactResponse } from '@/api/v2/economyAnalysis';
 import { ChartContainer } from '@/components/ChartContainer';
 import { colors } from '@/designTokens/colors';
 import { spacing } from '@/designTokens/spacing';
@@ -10,11 +10,17 @@ import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useRegionsList } from '@/hooks/useStaticMetadata';
 import { relativeChangeMessage } from '@/utils/chartMessages';
 import { DEFAULT_CHART_CONFIG, downloadCsv, getClampedChartHeight } from '@/utils/chartUtils';
+import {
+  getDefaultPovertyType,
+  getPovertyByAge,
+  getPovertyByRace,
+  getPovertyRates,
+} from '@/utils/economicImpactAccessors';
 import { formatNumber, formatPercent, localeCode, precision } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
 
 interface Props {
-  output: SocietyWideReportOutput;
+  output: EconomicImpactResponse;
 }
 
 export default function PovertyImpactByRaceSubPage({ output }: Props) {
@@ -25,27 +31,30 @@ export default function PovertyImpactByRaceSubPage({ output }: Props) {
   const chartHeight = getClampedChartHeight(viewportHeight, mobile);
 
   // Extract data
-  type RaceData = Record<string, { baseline: number; reform: number }>;
-  const raceImpact: RaceData = (output.poverty_by_race as any)?.poverty || {};
-  const allImpact = output.poverty.poverty;
+  const povertyType = getDefaultPovertyType(countryId);
+  const racePoverty = getPovertyByRace(output, povertyType);
+  const allRates = getPovertyRates(getPovertyByAge(output, povertyType).all);
 
-  // Get all race keys dynamically
-  const raceKeys = Object.keys(raceImpact).filter((key) => key !== 'all');
-  const raceChanges = raceKeys.map((key) => {
-    const data = raceImpact[key];
-    return data.reform / data.baseline - 1;
-  });
-  const totalPovertyChange = allImpact.all.reform / allImpact.all.baseline - 1;
+  const raceRates = racePoverty.map(({ race, pair }) => ({
+    race,
+    label: race.charAt(0).toUpperCase() + race.slice(1),
+    rates: getPovertyRates(pair),
+  }));
+  const raceChanges = raceRates.map(({ rates }) =>
+    rates.baseline === 0 ? 0 : rates.reform / rates.baseline - 1
+  );
+  const totalPovertyChange = allRates.baseline === 0 ? 0 : allRates.reform / allRates.baseline - 1;
 
   const povertyChanges = [...raceChanges, totalPovertyChange];
-  const povertyLabels = [
-    ...raceKeys.map((key) => key.charAt(0).toUpperCase() + key.slice(1)),
-    'All',
-  ];
-  const labelToKey: Record<string, string> = {
-    ...Object.fromEntries(povertyLabels.slice(0, -1).map((label, i) => [label, raceKeys[i]])),
-    All: 'all',
+  const povertyLabels = [...raceRates.map((r) => r.label), 'All'];
+
+  // Build a lookup of rates by label (race labels + "All")
+  const ratesByLabel: Record<string, { baseline: number; reform: number }> = {
+    All: allRates,
   };
+  for (const r of raceRates) {
+    ratesByLabel[r.label] = r.rates;
+  }
 
   // Calculate precision for display
   const yvaluePrecision = Math.max(1, precision(povertyChanges, 100));
@@ -59,10 +68,8 @@ export default function PovertyImpactByRaceSubPage({ output }: Props) {
   // Generate hover message
   const hoverMessage = (x: string) => {
     const obj = `the percentage of ${x === 'All' ? 'people' : x.toLowerCase()} in poverty`;
-    const key = labelToKey[x];
-    const baseline = x === 'All' ? allImpact.all.baseline : raceImpact[key].baseline;
-    const reform = x === 'All' ? allImpact.all.reform : raceImpact[key].reform;
-    const change = reform / baseline - 1;
+    const { baseline, reform } = ratesByLabel[x];
+    const change = baseline === 0 ? 0 : reform / baseline - 1;
     return relativeChangeMessage('This reform', obj, change, 0.001, countryId, {
       baseline,
       reform,
@@ -72,9 +79,8 @@ export default function PovertyImpactByRaceSubPage({ output }: Props) {
 
   // Generate chart title
   const getChartTitle = () => {
-    const baseline = allImpact.all.baseline;
-    const reform = allImpact.all.reform;
-    const relativeChange = reform / baseline - 1;
+    const { baseline, reform } = allRates;
+    const relativeChange = baseline === 0 ? 0 : reform / baseline - 1;
     const absoluteChange = Math.round(Math.abs(reform - baseline) * 1000) / 10;
     const objectTerm = 'the poverty rate';
     const relTerm = formatPercent(Math.abs(relativeChange), countryId, {
@@ -100,10 +106,8 @@ export default function PovertyImpactByRaceSubPage({ output }: Props) {
     const data = [
       header,
       ...povertyLabels.map((label) => {
-        const key = labelToKey[label];
-        const baseline = label === 'All' ? allImpact.all.baseline : raceImpact[key].baseline;
-        const reform = label === 'All' ? allImpact.all.reform : raceImpact[key].reform;
-        const change = reform / baseline - 1;
+        const { baseline, reform } = ratesByLabel[label];
+        const change = baseline === 0 ? 0 : reform / baseline - 1;
         return [label, baseline.toString(), reform.toString(), change.toString()];
       }),
     ];

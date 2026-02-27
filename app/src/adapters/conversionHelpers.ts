@@ -1,4 +1,3 @@
-import { ReportOutput } from '@/types/ingredients/Report';
 import { PolicyMetadataParams, PolicyMetadataParamValues } from '@/types/metadata/policyMetadata';
 import { Parameter } from '@/types/subIngredients/parameter';
 import { ValueInterval } from '@/types/subIngredients/valueInterval';
@@ -52,7 +51,7 @@ export function convertParametersToPolicyJson(parameters: Parameter[]): PolicyMe
  * strings in the v1 API. This parser is needed to display them. Will be removed
  * once v1 API endpoints are decommissioned.
  */
-export function convertJsonToReportOutput(jsonString: string | null): ReportOutput | null {
+export function convertJsonToReportOutput(jsonString: string | null): unknown {
   if (jsonString === null) {
     return null;
   }
