@@ -12,6 +12,7 @@ import {
   getHouseholdSimulation,
 } from '@/api/v2/simulations';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useReportFull } from '@/hooks/useReportFull';
 import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
 import { Policy } from '@/types/ingredients/Policy';
@@ -383,9 +384,19 @@ export const useUserReportById = (userReportId: string, options?: { enabled?: bo
   const isV2Report = !!(userReport?.outputType && userReport?.simulationIds?.length);
   const outputType = userReport?.outputType;
 
-  // For v2: construct Report from UserReport metadata (no v1 fetch needed)
+  // V2 economy reports use the full endpoint (single API call)
+  const useFullEndpoint = isV2Report && outputType === 'economy';
+
+  // Step 2a: For v2 economy reports — use the full endpoint
+  const fullData = useReportFull(
+    useFullEndpoint ? baseReportId : undefined,
+    userReport ?? undefined,
+    { enabled: isEnabled && useFullEndpoint }
+  );
+
+  // Step 2b: For non-economy v2 reports — construct Report from UserReport metadata
   const v2Report: Report | undefined =
-    isV2Report && userReport
+    isV2Report && !useFullEndpoint && userReport
       ? {
           id: userReport.reportId,
           countryId: userReport.countryId,
@@ -402,7 +413,7 @@ export const useUserReportById = (userReportId: string, options?: { enabled?: bo
     ? (queryNormalizer.getObjectById(baseReportId) as Report | undefined)
     : undefined;
 
-  // Step 2: Fetch base report via v1 (disabled for v2 reports)
+  // Step 2c: Fetch base report via v1 (disabled for v2 reports)
   const {
     data: v1Report,
     isLoading: repLoading,
@@ -417,10 +428,9 @@ export const useUserReportById = (userReportId: string, options?: { enabled?: bo
     staleTime: 5 * 60 * 1000,
   });
 
-  const finalReport = v2Report || cachedReport || v1Report;
+  const finalReport = useFullEndpoint ? undefined : v2Report || cachedReport || v1Report;
 
-  // Step 3: Fetch simulations for the report
-  // For v2, simulationIds come from UserReport; for v1 they come from fetched Report
+  // Step 3: Fetch simulations for the report (non-full-endpoint path)
   const simulationIds = finalReport?.simulationIds ?? [];
 
   const simulationResults = useParallelQueries<Simulation>(simulationIds, {
@@ -437,18 +447,17 @@ export const useUserReportById = (userReportId: string, options?: { enabled?: bo
       const metadata = await fetchSimulationById(country, id);
       return SimulationAdapter.fromMetadata(metadata);
     },
-    enabled: isEnabled && simulationIds.length > 0,
+    enabled: isEnabled && !useFullEndpoint && simulationIds.length > 0,
     staleTime: Infinity,
     gcTime: 0,
   });
 
-  const simulations = simulationResults.queries
+  const legacySimulations = simulationResults.queries
     .map((q) => q.data)
     .filter((s): s is Simulation => !!s);
 
   // Step 4: Extract policy IDs from simulations and fetch policies
-  // Only fetch v2 (UUID) policy IDs — v1 integer IDs can't be resolved via v2 API
-  const policyIds = extractUniqueIds(simulations, 'policyId').filter(isV2EntityId);
+  const policyIds = extractUniqueIds(legacySimulations, 'policyId').filter(isV2EntityId);
 
   const policyResults = useParallelQueries<Policy>(policyIds, {
     queryKey: policyKeys.byId,
@@ -456,64 +465,90 @@ export const useUserReportById = (userReportId: string, options?: { enabled?: bo
       const response = await fetchPolicyById(id);
       return PolicyAdapter.fromV2Response(response);
     },
-    enabled: isEnabled && policyIds.length > 0,
+    enabled: isEnabled && !useFullEndpoint && policyIds.length > 0,
     staleTime: 5 * 60 * 1000,
   });
 
-  const policies = policyResults.queries.map((q) => q.data).filter((p): p is Policy => !!p);
+  const legacyPolicies = policyResults.queries
+    .map((q) => q.data)
+    .filter((p): p is Policy => !!p);
 
-  // Step 5: Get user associations (only if we have userId)
+  // Step 5: Get user associations (always called — hooks must be unconditional)
   const { data: simulationAssociations } = useSimulationAssociationsByUser(userId || '');
-
   const { data: policyAssociations } = usePolicyAssociationsByUser(userId || '');
   const { data: householdAssociations } = useHouseholdAssociationsByUser(userId || '');
 
-  const userSimulations = simulationAssociations?.filter((sa) =>
-    finalReport?.simulationIds?.includes(sa.simulationId)
-  );
-
-  const userPolicies = policyAssociations?.filter((pa) =>
-    simulations.some((s) => s.policyId === pa.policyId)
-  );
-
   // Step 6: Extract households from simulations and fetch them
-  // Filter for household simulations, then extract unique population IDs
-  // Only include v2 (UUID) IDs — v1 integer IDs can't be resolved via v2 API
-  const householdSimulations = simulations.filter((s) => s.populationType === 'household');
+  const householdSimulations = legacySimulations.filter((s) => s.populationType === 'household');
   const householdIds = extractUniqueIds(householdSimulations, 'populationId').filter(isV2EntityId);
 
   const householdResults = useParallelQueries<Household>(householdIds, {
     queryKey: householdKeys.byId,
     queryFn: (id) => fetchHouseholdByIdV2(id),
-    enabled: isEnabled && householdIds.length > 0,
+    enabled: isEnabled && !useFullEndpoint && householdIds.length > 0,
     staleTime: 5 * 60 * 1000,
   });
 
-  const households = householdResults.queries.map((q) => q.data).filter((h): h is Household => !!h);
+  const legacyHouseholds = householdResults.queries
+    .map((q) => q.data)
+    .filter((h): h is Household => !!h);
 
-  const userHouseholds = householdAssociations?.filter((ha) =>
-    households.some((h) => h.id === ha.householdId)
+  // Step 7: Select which data source to return based on endpoint type
+  if (useFullEndpoint) {
+    const userSimulations = simulationAssociations?.filter((sa) =>
+      fullData.report?.simulationIds?.includes(sa.simulationId)
+    );
+    const userPolicies = policyAssociations?.filter((pa) =>
+      fullData.simulations.some((s) => s.policyId === pa.policyId)
+    );
+    const userHouseholds = householdAssociations?.filter((ha) =>
+      fullData.households.some((h) => h.id === ha.householdId)
+    );
+
+    return {
+      userReport,
+      report: fullData.report,
+      simulations: fullData.simulations,
+      policies: fullData.policies,
+      households: fullData.households,
+      geographies: fullData.geographies,
+      userSimulations,
+      userPolicies,
+      userHouseholds,
+      isLoading: userReportLoading || fullData.isLoading,
+      error: userReportError || fullData.error,
+    };
+  }
+
+  // Legacy path: assemble from individual queries
+  const userSimulations = simulationAssociations?.filter((sa) =>
+    finalReport?.simulationIds?.includes(sa.simulationId)
   );
 
-  // Step 7: Get geography data from simulations
+  const userPolicies = policyAssociations?.filter((pa) =>
+    legacySimulations.some((s) => s.policyId === pa.policyId)
+  );
+
+  const userHouseholds = householdAssociations?.filter((ha) =>
+    legacyHouseholds.some((h) => h.id === ha.householdId)
+  );
+
   const geographies: Geography[] = [];
-  simulations.forEach((sim) => {
+  legacySimulations.forEach((sim) => {
     if (sim.populationType === 'geography' && sim.populationId && sim.countryId) {
-      const geography: Geography = {
+      geographies.push({
         countryId: sim.countryId,
         regionCode: sim.populationId,
-      };
-
-      geographies.push(geography);
+      });
     }
   });
 
   return {
     userReport,
     report: finalReport,
-    simulations,
-    policies,
-    households,
+    simulations: legacySimulations,
+    policies: legacyPolicies,
+    households: legacyHouseholds,
     geographies,
     userSimulations,
     userPolicies,

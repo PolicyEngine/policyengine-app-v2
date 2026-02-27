@@ -21,6 +21,21 @@ export interface V2PolicyCreatePayload {
 }
 
 /**
+ * V2 Policy parameter value as returned by the API (includes parameter name)
+ */
+export interface V2PolicyResponseParameterValue {
+  id: string;
+  parameter_id: string;
+  parameter_name: string; // dotted path, e.g. "gov.irs.credits.eitc.max[0].rate"
+  value_json: number | string | boolean | Record<string, unknown>;
+  start_date: string;
+  end_date: string | null;
+  policy_id: string | null;
+  dynamic_id: string | null;
+  created_at: string;
+}
+
+/**
  * V2 Policy response from API
  */
 export interface V2PolicyResponse {
@@ -30,6 +45,7 @@ export interface V2PolicyResponse {
   tax_benefit_model_id: string;
   created_at: string;
   updated_at: string;
+  parameter_values: V2PolicyResponseParameterValue[];
 }
 
 /**

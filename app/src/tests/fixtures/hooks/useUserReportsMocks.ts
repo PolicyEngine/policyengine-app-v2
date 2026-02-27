@@ -152,6 +152,7 @@ export const mockV2PolicyResponse1: V2PolicyResponse = {
   tax_benefit_model_id: 'test-tbm-id',
   created_at: '2025-01-01T00:00:00Z',
   updated_at: '2025-01-01T00:00:00Z',
+  parameter_values: [],
 };
 
 export const mockV2PolicyResponse2: V2PolicyResponse = {
@@ -161,6 +162,7 @@ export const mockV2PolicyResponse2: V2PolicyResponse = {
   tax_benefit_model_id: 'test-tbm-id',
   created_at: '2025-01-02T00:00:00Z',
   updated_at: '2025-01-02T00:00:00Z',
+  parameter_values: [],
 };
 
 export const mockHouseholdMetadata: HouseholdMetadata = {

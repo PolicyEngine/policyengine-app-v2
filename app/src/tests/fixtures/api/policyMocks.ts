@@ -24,6 +24,7 @@ export const mockV2PolicyResponse = (overrides?: Partial<V2PolicyResponse>): V2P
   tax_benefit_model_id: TEST_TAX_BENEFIT_MODEL_ID,
   created_at: '2025-01-01T00:00:00Z',
   updated_at: '2025-01-01T00:00:00Z',
+  parameter_values: [],
   ...overrides,
 });
 

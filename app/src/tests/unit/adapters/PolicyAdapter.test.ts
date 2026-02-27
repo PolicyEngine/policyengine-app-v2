@@ -14,6 +14,7 @@ describe('PolicyAdapter', () => {
         tax_benefit_model_id: 'model-uuid-456',
         created_at: '2025-01-15T10:00:00Z',
         updated_at: '2025-01-15T10:00:00Z',
+        parameter_values: [],
       };
 
       // When
@@ -34,6 +35,7 @@ describe('PolicyAdapter', () => {
         tax_benefit_model_id: 'model-uuid-456',
         created_at: '2025-01-15T10:00:00Z',
         updated_at: '2025-01-15T10:00:00Z',
+        parameter_values: [],
       };
 
       // When

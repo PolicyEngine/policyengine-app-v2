@@ -1,6 +1,12 @@
-import { V2PolicyCreatePayload, V2PolicyParameterValue, V2PolicyResponse } from '@/api/policy';
+import {
+  V2PolicyCreatePayload,
+  V2PolicyParameterValue,
+  V2PolicyResponse,
+} from '@/api/policy';
+import { FOREVER } from '@/constants';
 import { Policy } from '@/types/ingredients/Policy';
 import { ParameterMetadata } from '@/types/metadata';
+import { ValueInterval } from '@/types/subIngredients/valueInterval';
 
 /**
  * Adapter for converting between Policy and API formats
@@ -10,12 +16,22 @@ export class PolicyAdapter {
    * Converts V2 API response to Policy type
    */
   static fromV2Response(response: V2PolicyResponse): Policy {
+    // Group parameter_values by parameter_name
+    const paramMap = new Map<string, ValueInterval[]>();
+    for (const pv of response.parameter_values ?? []) {
+      const name = pv.parameter_name;
+      if (!paramMap.has(name)) paramMap.set(name, []);
+      paramMap.get(name)!.push({
+        startDate: pv.start_date.split('T')[0],
+        endDate: pv.end_date?.split('T')[0] ?? FOREVER,
+        value: pv.value_json,
+      });
+    }
+
     return {
       id: response.id,
       taxBenefitModelId: response.tax_benefit_model_id,
-      // Note: V2 response doesn't include parameter values directly
-      // They would need to be fetched separately if needed
-      parameters: [],
+      parameters: Array.from(paramMap, ([name, values]) => ({ name, values })),
     };
   }
 
