@@ -56,7 +56,7 @@ export default function StandardLayout({ children }: StandardLayoutProps) {
           >
             <Sidebar />
           </nav>
-          <main className="tw:flex-1 tw:min-w-0 tw:max-w-[calc(100vw-300px)] tw:overflow-y-auto tw:overflow-x-hidden tw:p-[24px]">
+          <main className="tw:flex-1 tw:min-w-0 tw:max-w-[calc(100vw-300px)] tw:overflow-y-auto tw:overflow-x-hidden tw:p-[24px] tw:bg-gray-50">
             {children}
           </main>
         </div>

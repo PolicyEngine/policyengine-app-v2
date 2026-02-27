@@ -73,7 +73,7 @@ export default function HouseholdReproducibility({
 
   return (
     <div>
-      <h2>Reproduce these results</h2>
+      <h2 className="tw:text-2xl tw:font-bold tw:text-gray-900 tw:mb-md">Reproduce these results</h2>
 
       <Stack className="tw:gap-lg">
         {/* Instructions card */}

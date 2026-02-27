@@ -106,6 +106,14 @@
   /* Destructive (delete buttons, error states) */
   --color-destructive: #ef4444;
 
+  /* Popover/dropdown backgrounds */
+  --color-popover: #fff;
+  --color-popover-foreground: #101828;
+
+  /* Card backgrounds */
+  --color-card: #fff;
+  --color-card-foreground: #101828;
+
   /* Border, input, ring (form controls) */
   --color-border: #e2e8f0;
   --color-input: #e2e8f0;
@@ -227,6 +235,15 @@
   textarea {
     font-family: inherit;
     font-size: inherit;
+  }
+
+  /* Form inputs should always have a solid white background so they
+     stand out against the gray page background (colors.gray[50]).
+     Uses the bg-primary design token (#fff). */
+  input,
+  select,
+  textarea {
+    background-color: var(--tw-color-bg-primary);
   }
 
   /* Hide native number input spinners — prevents overlap with suffix icons */
