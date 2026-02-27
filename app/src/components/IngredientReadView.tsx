@@ -119,7 +119,7 @@ export default function IngredientReadView({
 
         {isError && (
           <div style={{ padding: spacing['3xl'] }}>
-            <Text style={{ color: 'red', textAlign: 'center' }}>
+            <Text style={{ color: colors.error, textAlign: 'center' }}>
               Error: {(error as Error)?.message || 'Something went wrong.'}
             </Text>
           </div>

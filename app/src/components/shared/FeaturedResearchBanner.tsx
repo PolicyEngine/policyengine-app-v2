@@ -69,11 +69,11 @@ export default function FeaturedResearchBanner() {
     <div
       className="tw:relative tw:overflow-hidden"
       style={{
-        background: `linear-gradient(135deg, ${colors.primary[600]} 0%, ${colors.primary[500]} 50%, #2a9d8f 100%)`,
+        background: `linear-gradient(135deg, ${colors.primary[600]} 0%, ${colors.primary[500]} 50%, ${colors.primary[400]} 100%)`,
         borderBottom: `3px solid ${colors.primary[700]}`,
         padding: `${spacing.xl} ${spacing.xl}`,
         fontFamily: typography.fontFamily.primary,
-        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)',
+        boxShadow: `0 4px 20px ${colors.shadow.dark}`,
       }}
     >
       {/* Decorative Background Pattern */}
@@ -103,7 +103,7 @@ export default function FeaturedResearchBanner() {
       <div
         className="tw:relative tw:z-[1]"
         style={{
-          maxWidth: '1400px',
+          maxWidth: spacing.layout.content,
           margin: '0 auto',
         }}
       >
@@ -116,7 +116,7 @@ export default function FeaturedResearchBanner() {
             color: colors.white,
             marginBottom: spacing.xl,
             textAlign: 'center',
-            textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+            textShadow: `0 2px 4px ${colors.shadow.medium}`,
           }}
         >
           Explore our latest research and tools
@@ -147,7 +147,7 @@ export default function FeaturedResearchBanner() {
                   minWidth: '120px',
                   backdropFilter: 'blur(10px)',
                   border: '2px solid rgba(255, 255, 255, 0.3)',
-                  boxShadow: '0 8px 16px rgba(0, 0, 0, 0.1)',
+                  boxShadow: `0 8px 16px ${colors.shadow.medium}`,
                 }}
               >
                 <Text
@@ -155,8 +155,8 @@ export default function FeaturedResearchBanner() {
                     fontSize: typography.fontSize['3xl'],
                     fontWeight: typography.fontWeight.bold,
                     color: colors.white,
-                    lineHeight: 1,
-                    textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                    lineHeight: typography.lineHeight.none,
+                    textShadow: `0 2px 4px ${colors.shadow.medium}`,
                     textAlign: 'center',
                   }}
                 >
@@ -216,7 +216,7 @@ export default function FeaturedResearchBanner() {
                   padding: spacing.lg,
                   cursor: 'pointer',
                   border: `2px solid ${colors.white}`,
-                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                  boxShadow: `0 4px 12px ${colors.shadow.medium}`,
                 }}
               >
                 <div className="tw:flex tw:flex-col tw:items-center tw:justify-center tw:text-center tw:h-full">
@@ -234,7 +234,7 @@ export default function FeaturedResearchBanner() {
                     style={{
                       fontSize: typography.fontSize.sm,
                       color: colors.gray[700],
-                      lineHeight: 1.4,
+                      lineHeight: typography.lineHeight.snug,
                     }}
                   >
                     {card.desc}

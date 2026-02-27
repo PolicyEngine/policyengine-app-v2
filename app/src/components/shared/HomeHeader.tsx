@@ -44,11 +44,11 @@ export default function HeaderNavigation({ navbarOpened, onToggleNavbar }: Heade
       style={{
         position: 'sticky',
         top: 0,
-        padding: `${spacing.sm} 24px`,
+        padding: `${spacing.sm} ${spacing['2xl']}`,
         height: spacing.layout.header,
         backgroundColor: colors.primary[600],
         borderBottom: `0.5px solid ${colors.border.dark}`,
-        boxShadow: '0px 2px 4px -1px rgba(0, 0, 0, 0.06), 0px 4px 6px -1px rgba(0, 0, 0, 0.10)',
+        boxShadow: `0px 2px 4px -1px ${colors.shadow.light}, 0px 4px 6px -1px ${colors.shadow.medium}`,
         zIndex: 1000,
         fontFamily: typography.fontFamily.primary,
         opacity: opened ? 0 : 1,

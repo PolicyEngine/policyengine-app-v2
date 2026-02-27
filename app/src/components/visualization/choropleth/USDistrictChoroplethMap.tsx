@@ -51,10 +51,10 @@ const GEOJSON_PATHS: Record<MapVisualizationType, string> = {
 };
 
 /** Default fill for districts without data */
-const NO_DATA_FILL = '#e0e0e0';
+const NO_DATA_FILL = colors.gray[300];
 
 /** Stroke color for district borders */
-const BORDER_COLOR = '#ffffff';
+const BORDER_COLOR = colors.white;
 
 /** Stroke width for district borders */
 const BORDER_WIDTH = 0.5;
@@ -446,7 +446,7 @@ export function USDistrictChoroplethMap({
         className="tw:flex tw:items-center tw:justify-center"
         style={{ height: fullConfig.height }}
       >
-        <Text style={{ color: 'red' }}>{error}</Text>
+        <Text style={{ color: colors.error }}>{error}</Text>
       </div>
     );
   }
@@ -557,14 +557,14 @@ export function USDistrictChoroplethMap({
             position: 'absolute',
             left: tooltip.x + 12,
             top: tooltip.y - 30,
-            background: 'white',
+            background: colors.white,
             border: `1px solid ${colors.border.light}`,
             borderRadius: spacing.radius.element,
             padding: `${spacing.xs} ${spacing.sm}`,
             fontSize: typography.fontSize.xs,
             pointerEvents: 'none',
             zIndex: 10,
-            boxShadow: '0 2px 6px rgba(0,0,0,0.12)',
+            boxShadow: `0 2px 6px ${colors.shadow.medium}`,
             whiteSpace: 'nowrap',
           }}
         >

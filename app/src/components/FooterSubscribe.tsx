@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Button, Input, Spinner, Stack } from '@/components/ui';
+import { spacing, typography } from '@/designTokens';
 import { cn } from '@/lib/utils';
 import { trackNewsletterSignup } from '@/utils/analytics';
 import { submitToMailchimp } from '@/utils/mailchimpSubscription';
@@ -44,7 +45,7 @@ export default function FooterSubscribe() {
     <Stack gap="xs" className="tw:pl-6">
       <p
         className="tw:font-semibold tw:text-white tw:font-sans tw:m-0"
-        style={{ fontSize: '1.625rem' }}
+        style={{ fontSize: typography.fontSize['2xl'] }}
       >
         Subscribe to PolicyEngine
       </p>
@@ -55,7 +56,7 @@ export default function FooterSubscribe() {
         <Input
           placeholder="Enter your email address"
           className="tw:bg-white tw:w-full"
-          style={{ height: '42px' }}
+          style={{ height: spacing.component.input.height }}
           value={email}
           onChange={(event) => setEmail(event.currentTarget.value)}
           disabled={status === 'loading'}
@@ -65,7 +66,7 @@ export default function FooterSubscribe() {
           disabled={status === 'loading'}
           size="lg"
           className="tw:bg-primary-500 tw:text-white tw:hover:bg-primary-400 tw:w-full tw:font-semibold tw:tracking-wider"
-          style={{ height: '42px' }}
+          style={{ height: spacing.component.input.height }}
         >
           {status === 'loading' ? <Spinner size="sm" /> : null}
           SUBSCRIBE

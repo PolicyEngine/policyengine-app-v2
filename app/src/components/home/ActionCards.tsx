@@ -20,7 +20,7 @@ export default function ActionCards() {
             cursor: 'pointer',
             border: `1.5px solid ${colors.primary[500]}`,
             fontFamily: typography.fontFamily.primary,
-            boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+            boxShadow: `0 1px 3px ${colors.shadow.medium}`,
           }}
         >
           <Text fw={typography.fontWeight.semibold} c={colors.primary[500]} size="xl">

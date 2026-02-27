@@ -42,7 +42,7 @@ export default function YearInReviewBanner() {
       href={yearInReviewUrl}
       className="tw:block tw:relative tw:no-underline tw:cursor-pointer tw:transition-opacity tw:duration-200 tw:hover:opacity-95"
       style={{
-        background: `linear-gradient(135deg, #0F172A 0%, #1E293B 50%, ${colors.primary[700]} 100%)`,
+        background: `linear-gradient(135deg, ${colors.gray[900]} 0%, ${colors.gray[800]} 50%, ${colors.primary[700]} 100%)`,
         padding: `${spacing.md} ${spacing.xl}`,
         fontFamily: typography.fontFamily.primary,
       }}
@@ -51,7 +51,7 @@ export default function YearInReviewBanner() {
         className="tw:flex tw:justify-center tw:items-center tw:flex-wrap"
         style={{
           gap: spacing.lg,
-          maxWidth: '1200px',
+          maxWidth: spacing.layout.content,
           margin: '0 auto',
         }}
       >
