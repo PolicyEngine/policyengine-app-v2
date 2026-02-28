@@ -26,8 +26,9 @@
     "test-all": "bun run prettier && bun run eslint && bun run typecheck && bun run vitest && bun run build",
     "test": "bun run vitest",
     "test:quick": "bun run vitest",
-    "storybook": "storybook dev -p 6006",
-    "storybook:build": "storybook build"
+    "storybook": "VITE_APP_MODE=website storybook dev -p 6006",
+    "storybook:build": "VITE_APP_MODE=website storybook build",
+    "chromatic": "VITE_APP_MODE=website chromatic --only-changed --build-script-name='storybook:build'"
   },
   "dependencies": {
     "@mantine/core": "8.1.2",
@@ -64,6 +65,7 @@
   "devDependencies": {
     "@eslint/js": "^9.29.0",
     "@ianvs/prettier-plugin-sort-imports": "^4.4.2",
+    "@storybook/addon-essentials": "^8.6.14",
     "@storybook/react": "^8.6.12",
     "@storybook/react-vite": "^8.6.12",
     "@testing-library/dom": "^10.4.0",
@@ -81,6 +83,7 @@
     "@types/wordwrapjs": "^5.1.2",
     "@vercel/node": "^5.5.10",
     "@vitejs/plugin-react": "^4.5.2",
+    "chromatic": "^15.2.0",
     "concurrently": "^9.1.2",
     "eslint": "^9.29.0",
     "eslint-config-mantine": "^4.0.3",

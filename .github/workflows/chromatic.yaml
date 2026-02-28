@@ -1,0 +1,35 @@
+name: Chromatic
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  chromatic:
+    name: Visual regression tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Required for TurboSnap to diff changes
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build design system
+        run: bun run design-system:build
+
+      - name: Run Chromatic
+        working-directory: ./app
+        run: bunx chromatic --only-changed ${{ github.event_name == 'push' && '--auto-accept-changes' || '' }} --build-script-name="storybook:build" --project-token=${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+        env:
+          VITE_APP_MODE: website

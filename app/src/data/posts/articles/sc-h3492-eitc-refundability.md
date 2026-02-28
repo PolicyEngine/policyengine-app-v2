@@ -25,16 +25,15 @@ Consider a single parent with one child (age 5) earning $20,000. Under current l
 
 **Table 1: SC tax provisions reducing liability for head of household filer with one young child**
 
-| Provision | 2026 value |
-| --- | --- |
-| Head of household standard deduction | $24,150 |
-| Dependent exemption | $5,040 |
-| Young child exemption | $5,040 |
-| 0% bracket threshold | $3,640 |
-| **Total** | **$37,870** |
+| Provision                            | 2026 value  |
+| ------------------------------------ | ----------- |
+| Head of household standard deduction | $24,150     |
+| Dependent exemption                  | $5,040      |
+| Young child exemption                | $5,040      |
+| 0% bracket threshold                 | $3,640      |
+| **Total**                            | **$37,870** |
 
-As earnings rise above $37,870, the household begins to benefit from the nonrefundable EITC. For instance, if the household earned $45,000, they would owe $216 in state taxes. This reduces the "excess" credit available for refund, but net income still increases by $273, making their total EITC benefit $489 under House Bill 3492. At roughly $50,000, the household's tax liability exceeds the EITC's value, meaning there is no longer any excess and the bill provides no additional value. The SC EITC fully phases out near $52,000 of earnings for this family. 
-
+As earnings rise above $37,870, the household begins to benefit from the nonrefundable EITC. For instance, if the household earned $45,000, they would owe $216 in state taxes. This reduces the "excess" credit available for refund, but net income still increases by $273, making their total EITC benefit $489 under House Bill 3492. At roughly $50,000, the household's tax liability exceeds the EITC's value, meaning there is no longer any excess and the bill provides no additional value. The SC EITC fully phases out near $52,000 of earnings for this family.
 
 Figure 1 displays the total SC EITC benefit that a single parent with one child would receive under current law and H.3492 as employment earnings rise.
 
