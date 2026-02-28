@@ -60,3 +60,8 @@ export function trackChartCsvDownloaded() {
 export function trackPythonCodeCopied() {
   trackEvent('python_code_copied');
 }
+
+/** Fires when a landing page is viewed */
+export function trackLandingPageViewed(params: { page: string; countryId: string }) {
+  trackEvent('landing_page_viewed', params);
+}

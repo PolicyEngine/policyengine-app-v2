@@ -85,7 +85,7 @@ function generateSitemap(): string {
   }
 
   // Static pages
-  const staticPages = ['research', 'team', 'donate', 'supporters'];
+  const staticPages = ['research', 'team', 'donate', 'supporters', 'claude-plugin'];
   for (const country of ['us', 'uk']) {
     for (const page of staticPages) {
       entries.push({
@@ -144,6 +144,13 @@ function generateSitemap(): string {
     url: `${BASE_URL}/us/state-legislative-tracker`,
     changefreq: 'daily',
     priority: '0.8',
+  });
+
+  // TAXSIM emulator (US-only, served via Vercel rewrite)
+  entries.push({
+    url: `${BASE_URL}/us/taxsim`,
+    changefreq: 'weekly',
+    priority: '0.7',
   });
 
   // Build XML
