@@ -1,4 +1,4 @@
-// Fixtures for social media crawler detection tests
+// Fixtures for social media crawler and LLM bot detection tests
 
 // Known crawler user agents
 export const CRAWLER_USER_AGENTS = {
@@ -11,6 +11,22 @@ export const CRAWLER_USER_AGENTS = {
   TELEGRAM: 'TelegramBot (like TwitterBot)',
   WHATSAPP: 'WhatsApp/2.21.4.22',
   DISCORD: 'Discordbot/2.0',
+} as const;
+
+// LLM / AI bot user agents
+export const LLM_BOT_USER_AGENTS = {
+  GPTBOT:
+    'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; GPTBot/1.0; +https://openai.com/gptbot)',
+  CHATGPT_USER:
+    'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; ChatGPT-User/1.0; +https://openai.com/bot)',
+  CCBOT: 'CCBot/2.0 (https://commoncrawl.org/faq/)',
+  ANTHROPIC: 'anthropic-ai',
+  CLAUDE_WEB: 'Claude-Web/1.0',
+  PERPLEXITY:
+    'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; PerplexityBot/1.0; +https://perplexity.ai/perplexitybot)',
+  COHERE: 'cohere-ai',
+  GOOGLE_EXTENDED: 'Google-Extended',
+  BYTESPIDER: 'Bytespider',
 } as const;
 
 // Non-crawler user agents (should NOT be detected as crawlers)

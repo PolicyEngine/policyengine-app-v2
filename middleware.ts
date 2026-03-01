@@ -1,6 +1,7 @@
-// Vercel Edge Middleware for SEO and social media preview support
-// Intercepts requests from search engine bots and social crawlers to return
-// proper meta tags, structured data (JSON-LD), and canonical URLs
+// Vercel Edge Middleware for SEO, social media preview, and LLM bot support.
+// Intercepts requests from search engine bots, social crawlers, and LLM user
+// agents to return proper meta tags, structured data (JSON-LD), canonical URLs,
+// or full pre-rendered article HTML.
 
 import appsData from "./app/src/data/apps/apps.json";
 import postsData from "./app/src/data/posts/posts.json";
@@ -47,11 +48,34 @@ const SEARCH_ENGINE_BOTS = [
   "DuckDuckBot",
 ];
 
+// LLM / AI bot user agents that cannot execute JavaScript and need full
+// pre-rendered HTML to read article content.
+export const LLM_USER_AGENTS = [
+  "GPTBot",
+  "ChatGPT-User",
+  "Google-Extended",
+  "CCBot",
+  "anthropic-ai",
+  "Claude-Web",
+  "PerplexityBot",
+  "Bytespider",
+  "cohere-ai",
+];
+
 function isSearchEngine(userAgent: string | null): boolean {
   if (!userAgent) {
     return false;
   }
   return SEARCH_ENGINE_BOTS.some((bot) => userAgent.includes(bot));
+}
+
+export function isLLMBot(userAgent: string | null): boolean {
+  if (!userAgent) {
+    return false;
+  }
+  return LLM_USER_AGENTS.some((bot) =>
+    userAgent.toLowerCase().includes(bot.toLowerCase()),
+  );
 }
 
 const TRACKER_PREFIX = "/us/state-legislative-tracker";
@@ -352,9 +376,42 @@ export const config = {
   matcher: ["/:countryId/:path*", "/:countryId"],
 };
 
+/**
+ * Try to serve a pre-rendered HTML page for the given blog post slug.
+ * The HTML files are generated at build time by generate-prerender.ts and
+ * live in /prerender/{slug}.html inside the public directory.
+ */
+async function tryServePrerender(
+  slug: string,
+  requestUrl: string,
+): Promise<Response | null> {
+  try {
+    const prerenderUrl = new URL(`/prerender/${slug}.html`, requestUrl);
+    const response = await fetch(prerenderUrl.toString());
+    if (response.ok) {
+      return new Response(response.body, {
+        status: 200,
+        headers: {
+          "Content-Type": "text/html; charset=utf-8",
+          "Cache-Control": "public, max-age=3600",
+        },
+      });
+    }
+  } catch {
+    // Fall through – pre-rendered file not available
+  }
+  return null;
+}
+
 export default async function middleware(request: Request) {
   const userAgent = request.headers.get("user-agent");
   const url = new URL(request.url);
+
+  // Let pre-rendered files pass through to avoid recursion when the
+  // middleware fetches /prerender/{slug}.html internally.
+  if (url.pathname.startsWith("/prerender/")) {
+    return;
+  }
 
   // Let static files (sitemap, robots, etc.) pass through to Vercel's file serving
   if (url.pathname === "/sitemap.xml" || url.pathname === "/robots.txt") {
@@ -365,7 +422,11 @@ export default async function middleware(request: Request) {
   // (pre-rendered HTML with canonical policyengine.org URLs, structured data, sitemap)
   // Regular users fall through to the catch-all rewrite → website.html → iframe
   if (url.pathname.startsWith(TRACKER_PREFIX)) {
-    if (isCrawler(userAgent) || isSearchEngine(userAgent)) {
+    if (
+      isCrawler(userAgent) ||
+      isSearchEngine(userAgent) ||
+      isLLMBot(userAgent)
+    ) {
       try {
         const trackerPath = url.pathname.slice(TRACKER_PREFIX.length) || "/";
         const modalUrl = `${TRACKER_MODAL_ORIGIN}${trackerPath}`;
@@ -376,7 +437,8 @@ export default async function middleware(request: Request) {
         return new Response(response.body, {
           status: response.status,
           headers: {
-            "Content-Type": response.headers.get("Content-Type") || "text/html",
+            "Content-Type":
+              response.headers.get("Content-Type") || "text/html",
             "Cache-Control": "public, max-age=3600",
           },
         });
@@ -387,7 +449,24 @@ export default async function middleware(request: Request) {
     return;
   }
 
-  if (!isCrawler(userAgent) && !isSearchEngine(userAgent)) {
+  // --- LLM bots & search engines: serve full pre-rendered blog content -----
+  if (isLLMBot(userAgent) || isSearchEngine(userAgent)) {
+    const parts = parsePathParts(url.pathname);
+    if (parts?.section === "research" && parts.slug) {
+      const prerendered = await tryServePrerender(parts.slug, request.url);
+      if (prerendered) {
+        return prerendered;
+      }
+      // Fall through to OG-only response below if pre-render not found
+    }
+  }
+
+  // --- Social media crawlers: serve OG-tag-only HTML -----------------------
+  if (
+    !isCrawler(userAgent) &&
+    !isSearchEngine(userAgent) &&
+    !isLLMBot(userAgent)
+  ) {
     return;
   }
 
