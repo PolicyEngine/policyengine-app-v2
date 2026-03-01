@@ -1,5 +1,5 @@
 import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
-import { Box, Button, Group, SimpleGrid } from '@mantine/core';
+import { Button, Group, Spinner } from '@/components/ui';
 import PaginationControls, { PaginationConfig } from './PaginationControls';
 
 export interface ButtonConfig {
@@ -38,49 +38,43 @@ export default function MultiButtonFooter(props: MultiButtonFooterProps) {
   // New layout: Grid with equal spacing - Cancel left, Pagination center, Back/Next right
   if (cancelAction || backAction || primaryAction) {
     return (
-      <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="md">
-        {/* Left side: Cancel button */}
-        <Box style={{ display: 'flex', justifyContent: 'flex-start' }}>
+      <div className="tw:flex tw:flex-wrap tw:justify-between tw:items-center tw:gap-md">
+        {/* Left: Cancel */}
+        <div className="tw:flex">
           {cancelAction && (
-            <Button variant="outline" onClick={cancelAction.onClick} fullWidth>
+            <Button variant="outline" onClick={cancelAction.onClick}>
               {cancelAction.label}
             </Button>
           )}
-        </Box>
+        </div>
 
-        {/* Center: Pagination controls (if provided) */}
-        <Box style={{ display: 'flex', justifyContent: 'center' }}>
-          {pagination && <PaginationControls pagination={pagination} />}
-        </Box>
+        {/* Center: Pagination (if provided) */}
+        {pagination && (
+          <div className="tw:flex tw:justify-center">
+            <PaginationControls pagination={pagination} />
+          </div>
+        )}
 
-        {/* Right side: Back and Primary buttons */}
-        <Box style={{ display: 'flex', justifyContent: 'flex-end' }}>
-          <Group gap="sm" wrap="nowrap" style={{ width: '100%' }}>
-            {backAction && (
-              <Button
-                variant="outline"
-                onClick={backAction.onClick}
-                leftSection={<IconChevronLeft size={16} />}
-                fullWidth
-              >
-                {backAction.label}
-              </Button>
-            )}
-            {primaryAction && (
-              <Button
-                variant="filled"
-                onClick={primaryAction.onClick}
-                loading={primaryAction.isLoading}
-                disabled={primaryAction.isDisabled}
-                rightSection={<IconChevronRight size={16} />}
-                fullWidth
-              >
-                {primaryAction.label}
-              </Button>
-            )}
-          </Group>
-        </Box>
-      </SimpleGrid>
+        {/* Right: Back + Primary */}
+        <div className="tw:flex tw:gap-sm">
+          {backAction && (
+            <Button variant="outline" onClick={backAction.onClick}>
+              <IconChevronLeft size={16} />
+              {backAction.label}
+            </Button>
+          )}
+          {primaryAction && (
+            <Button
+              onClick={primaryAction.onClick}
+              disabled={primaryAction.isDisabled || primaryAction.isLoading}
+            >
+              {primaryAction.isLoading && <Spinner size="sm" />}
+              {primaryAction.label}
+              <IconChevronRight size={16} />
+            </Button>
+          )}
+        </div>
+      </div>
     );
   }
 
@@ -90,15 +84,15 @@ export default function MultiButtonFooter(props: MultiButtonFooterProps) {
   }
 
   return (
-    <Group justify="flex-end" gap="sm">
+    <Group className="tw:justify-end" gap="sm">
       {buttons.map((button, index) => (
         <Button
           key={index}
-          variant={button.variant === 'disabled' ? 'outline' : button.variant}
-          disabled={button.variant === 'disabled'}
+          variant={button.variant === 'filled' ? 'default' : 'outline'}
+          disabled={button.variant === 'disabled' || button.isLoading}
           onClick={button.onClick}
-          loading={button.isLoading}
         >
+          {button.isLoading && <Spinner size="sm" />}
           {button.label}
         </Button>
       ))}

@@ -1,6 +1,7 @@
 import { IconCheck } from '@tabler/icons-react';
-import { Badge, Card, Container, Divider, Group, Stack, Text, Title } from '@mantine/core';
+import { Badge, Container, Group, Stack, Text, Title } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
+import { cn } from '@/lib/utils';
 import MultiButtonFooter, { ButtonConfig } from './common/MultiButtonFooter';
 
 // Interfaces for different content types
@@ -70,43 +71,41 @@ export default function IngredientSubmissionView({
       return (
         <Stack gap="md">
           {summaryBoxes.map((item, index) => (
-            <Card
+            <div
               key={index}
-              withBorder
-              variant={
+              className={cn(
+                'tw:w-full tw:text-left tw:rounded-element tw:border tw:p-md tw:transition-all',
                 item.isDisabled
-                  ? 'setupCondition--disabled'
-                  : item.isFulfilled
-                    ? 'setupCondition--fulfilled'
-                    : 'setupCondition--unfulfilled'
-              }
+                  ? 'tw:opacity-60 tw:border-border-light tw:bg-gray-50 tw:pointer-events-none'
+                  : 'tw:border-border-light tw:bg-white tw:hover:bg-gray-50 tw:hover:border-border-medium'
+              )}
             >
-              <Group gap={spacing.sm} align="center">
-                {item.isFulfilled && (
-                  <IconCheck
-                    size={20}
-                    style={{
-                      color: 'var(--mantine-color-primary-6)',
-                      marginTop: '2px',
-                      flexShrink: 0,
-                    }}
-                  />
-                )}
-                <Stack gap={spacing.xs} style={{ flex: 1 }}>
-                  <Text fw={700}>{item.title}</Text>
+              <Group gap="sm" className="tw:items-center">
+                <div className="tw:w-5 tw:shrink-0" style={{ marginTop: '2px' }}>
+                  {item.isFulfilled && (
+                    <IconCheck
+                      size={20}
+                      style={{
+                        color: colors.primary[600],
+                      }}
+                    />
+                  )}
+                </div>
+                <Stack gap="xs" style={{ flex: 1 }}>
+                  <Text fw={typography.fontWeight.bold}>{item.title}</Text>
                   {item.description && (
-                    <Text size="sm" c="dimmed">
+                    <Text size="sm" style={{ color: colors.text.secondary }}>
                       {item.description}
                     </Text>
                   )}
                 </Stack>
                 {item.badge && (
-                  <Badge size="sm" variant="light" color="blue" radius={spacing.radius.element}>
-                    {typeof item.badge === 'number' ? `${item.badge}` : item.badge}
+                  <Badge variant="secondary" style={{ borderRadius: spacing.radius.element }}>
+                    {item.badge}
                   </Badge>
                 )}
               </Group>
-            </Card>
+            </div>
           ))}
         </Stack>
       );
@@ -114,45 +113,49 @@ export default function IngredientSubmissionView({
 
     if (textList && textList.length > 0) {
       return (
-        <Stack gap={spacing.md}>
+        <Stack gap="md">
           {textList.map((item, index) => (
-            <Stack key={index} gap={spacing.xs}>
+            <Stack key={index} gap="xs">
               {/* Main item with optional header styling */}
-              <Group gap={spacing.xs} align="center">
+              <div className="tw:flex tw:items-center tw:gap-1">
                 <Text
                   size={item.isHeader ? 'lg' : 'sm'}
-                  fw={item.isHeader ? 700 : 600}
-                  style={{ flex: 1 }}
+                  fw={item.isHeader ? typography.fontWeight.bold : typography.fontWeight.semibold}
+                  className="tw:flex-1"
                 >
                   {item.text}
                 </Text>
                 {item.badge && (
-                  <Badge size="xs" variant="light" color="gray" radius={spacing.radius.element}>
-                    {typeof item.badge === 'number' ? `${item.badge}` : item.badge}
+                  <Badge variant="secondary" style={{ borderRadius: spacing.radius.element }}>
+                    {item.badge}
                   </Badge>
                 )}
-              </Group>
+              </div>
 
               {/* Sub-items with parameter names and date intervals */}
               {item.subItems && item.subItems.length > 0 && (
-                <Stack gap={spacing.md} ml={spacing.md}>
+                <Stack gap="md" className="tw:ml-3">
                   {item.subItems.map((subItem, subIndex) => (
-                    <Stack key={subIndex} gap={spacing.xs}>
+                    <Stack key={subIndex} gap="xs">
                       {/* Parameter name */}
-                      <Text size="sm" fw={500}>
+                      <Text size="sm" fw={typography.fontWeight.medium}>
                         {subItem.label}
                       </Text>
 
                       {/* Date intervals in two columns */}
                       {subItem.dateIntervals && subItem.dateIntervals.length > 0 && (
-                        <Stack gap={spacing.xs} ml={spacing.sm}>
+                        <Stack gap="xs" className="tw:ml-2">
                           {subItem.dateIntervals.map((interval, intervalIndex) => (
-                            <Group key={intervalIndex} gap={spacing.sm} align="center">
-                              <Text size="sm" c={colors.text.secondary} style={{ flex: 1 }}>
+                            <div key={intervalIndex} className="tw:flex tw:items-center tw:gap-2">
+                              <Text
+                                size="sm"
+                                className="tw:flex-1"
+                                style={{ color: colors.text.secondary }}
+                              >
                                 {interval.dateRange}
                               </Text>
                               <Text size="sm">{interval.value}</Text>
-                            </Group>
+                            </div>
                           ))}
                         </Stack>
                       )}
@@ -201,27 +204,29 @@ export default function IngredientSubmissionView({
       };
 
   return (
-    <>
-      <Container variant="guttered">
-        <Title order={2} variant="colored">
-          {title}
-        </Title>
-        {subtitle && (
-          <Text c="dimmed" mb="sm">
-            {subtitle}
-          </Text>
-        )}
-        <Divider my="sm" />
-        {warningMessage && (
-          <Text c={colors.text.warning} fw={typography.fontWeight.medium} mb="md">
-            {warningMessage}
-          </Text>
-        )}
-        <Stack gap="md" pb="lg">
-          {renderContent()}
-        </Stack>
-        <MultiButtonFooter {...footerProps} />
-      </Container>
-    </>
+    <Container variant="guttered">
+      <Title order={2} style={{ color: colors.primary[700] }}>
+        {title}
+      </Title>
+      {subtitle && (
+        <Text style={{ color: colors.text.secondary, marginBottom: spacing.sm }}>{subtitle}</Text>
+      )}
+      <hr className="tw:my-2 tw:border-border-light" />
+      {warningMessage && (
+        <Text
+          style={{
+            color: colors.text.warning,
+            fontWeight: typography.fontWeight.medium,
+            marginBottom: spacing.md,
+          }}
+        >
+          {warningMessage}
+        </Text>
+      )}
+      <Stack gap="md" className="tw:pb-4">
+        {renderContent()}
+      </Stack>
+      <MultiButtonFooter {...footerProps} />
+    </Container>
   );
 }

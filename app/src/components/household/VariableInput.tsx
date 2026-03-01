@@ -5,9 +5,19 @@
  * Uses VariableResolver for entity-aware value getting/setting.
  */
 
-import { Group, NumberInput, Select, Switch, Text, TextInput } from '@mantine/core';
+import {
+  Input,
+  Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Switch,
+  Text,
+} from '@/components/ui';
+import { colors, typography } from '@/designTokens';
 import { Household } from '@/types/ingredients/Household';
-import { getInputFormattingProps } from '@/utils/householdValues';
 import { coerceByValueType } from '@/utils/valueCoercion';
 import { getValue, setValue, VariableInfo } from '@/utils/VariableResolver';
 
@@ -37,85 +47,107 @@ export default function VariableInput({
     onChange(newHousehold);
   };
 
-  // Get formatting props for number inputs
-  const formattingProps = getInputFormattingProps({
-    valueType: variable.valueType,
-    unit: variable.unit,
-  });
-
   // Render based on valueType
   switch (variable.valueType) {
     // Note: Same pattern in ValueInputBox.tsx - extract to shared component if reused again
     case 'bool': {
       const isChecked = Boolean(currentValue);
       return (
-        <Group gap="xs" justify="flex-start">
-          <Text size="sm" c={isChecked ? 'dimmed' : 'dark'} fw={isChecked ? 400 : 600}>
+        <div className="tw:flex tw:items-center tw:gap-1 tw:justify-start">
+          <Text
+            size="sm"
+            style={{
+              color: isChecked ? colors.gray[600] : colors.gray[900],
+              fontWeight: isChecked ? typography.fontWeight.normal : typography.fontWeight.semibold,
+            }}
+          >
             False
           </Text>
           <Switch
             checked={isChecked}
-            onChange={(event) => handleChange(event.currentTarget.checked)}
+            onCheckedChange={(checked) => handleChange(checked)}
             disabled={disabled}
           />
-          <Text size="sm" c={isChecked ? 'dark' : 'dimmed'} fw={isChecked ? 600 : 400}>
+          <Text
+            size="sm"
+            style={{
+              color: isChecked ? colors.gray[900] : colors.gray[600],
+              fontWeight: isChecked ? typography.fontWeight.semibold : typography.fontWeight.normal,
+            }}
+          >
             True
           </Text>
-        </Group>
+        </div>
       );
     }
 
     case 'Enum':
       if (variable.possibleValues && variable.possibleValues.length > 0) {
         return (
-          <Select
-            label={variable.label}
-            value={currentValue?.toString() || ''}
-            onChange={(val) => handleChange(val)}
-            data={variable.possibleValues.map((pv) => ({
-              value: pv.value,
-              label: pv.label,
-            }))}
-            placeholder={`Select ${variable.label}`}
-            searchable
-            disabled={disabled}
-          />
+          <div>
+            {variable.label && <Label>{variable.label}</Label>}
+            <Select
+              value={currentValue?.toString() || ''}
+              onValueChange={(val) => handleChange(val)}
+              disabled={disabled}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={`Select ${variable.label}`} />
+              </SelectTrigger>
+              <SelectContent>
+                {variable.possibleValues.map((pv) => (
+                  <SelectItem key={pv.value} value={pv.value}>
+                    {pv.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         );
       }
       // Fall through to text input if no possibleValues
       return (
-        <TextInput
-          label={variable.label}
-          value={currentValue?.toString() || ''}
-          onChange={(e) => handleChange(e.currentTarget.value)}
-          placeholder={`Enter ${variable.label}`}
-          disabled={disabled}
-        />
+        <div>
+          {variable.label && <Label>{variable.label}</Label>}
+          <Input
+            value={currentValue?.toString() || ''}
+            onChange={(e) => handleChange(e.currentTarget.value)}
+            placeholder={`Enter ${variable.label}`}
+            disabled={disabled}
+          />
+        </div>
       );
 
     case 'float':
     case 'int':
       return (
-        <NumberInput
-          label={variable.label}
-          value={currentValue ?? variable.defaultValue ?? 0}
-          onChange={(val) => handleChange(coerceByValueType(val, variable.valueType))}
-          placeholder={`Enter ${variable.label}`}
-          disabled={disabled}
-          {...formattingProps}
-        />
+        <div>
+          {variable.label && <Label>{variable.label}</Label>}
+          <Input
+            type="number"
+            value={currentValue ?? variable.defaultValue ?? 0}
+            onChange={(e) =>
+              handleChange(coerceByValueType(e.target.valueAsNumber || 0, variable.valueType))
+            }
+            placeholder={`Enter ${variable.label}`}
+            disabled={disabled}
+            step={variable.valueType === 'int' ? 1 : 'any'}
+          />
+        </div>
       );
 
     case 'str':
     default:
       return (
-        <TextInput
-          label={variable.label}
-          value={currentValue?.toString() || ''}
-          onChange={(e) => handleChange(e.currentTarget.value)}
-          placeholder={`Enter ${variable.label}`}
-          disabled={disabled}
-        />
+        <div>
+          {variable.label && <Label>{variable.label}</Label>}
+          <Input
+            value={currentValue?.toString() || ''}
+            onChange={(e) => handleChange(e.currentTarget.value)}
+            placeholder={`Enter ${variable.label}`}
+            disabled={disabled}
+          />
+        </div>
       );
   }
 }

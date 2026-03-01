@@ -5,7 +5,7 @@
  * for responsive rendering, replacing the old app's useDisplayCategory hook
  */
 
-import { useMediaQuery } from '@mantine/hooks';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 import type { DisplayCategory } from '@/types/blog';
 import { blogBreakpoints } from './blogStyles';
 

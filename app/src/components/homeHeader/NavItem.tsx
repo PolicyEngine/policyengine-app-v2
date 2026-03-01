@@ -1,6 +1,11 @@
 import { IconChevronDown } from '@tabler/icons-react';
-import { Link } from 'react-router-dom';
-import { Anchor, Group, Menu, Text, UnstyledButton } from '@mantine/core';
+import { Link, useNavigate } from 'react-router-dom';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui';
 import { colors, typography } from '@/designTokens';
 
 export interface DropdownItem {
@@ -21,7 +26,7 @@ interface NavItemProps {
   setup: NavItemSetup;
 }
 
-const linkStyles = {
+const linkStyles: React.CSSProperties = {
   color: colors.text.inverse,
   fontWeight: typography.fontWeight.medium,
   fontSize: '18px',
@@ -46,45 +51,54 @@ function isInternalHref(href: string | undefined): href is string {
  */
 export default function NavItem({ setup }: NavItemProps) {
   const { label, onClick, href, hasDropdown, dropdownItems } = setup;
+  const navigate = useNavigate();
 
   if (hasDropdown && dropdownItems) {
     return (
-      <Menu shadow="md" width={200} zIndex={1001} position="bottom" offset={10}>
-        <Menu.Target>
-          <UnstyledButton onClick={onClick}>
-            <Group gap={4} align="center">
-              <Text
-                c={colors.text.inverse}
-                fw={typography.fontWeight.medium}
-                size="18px"
-                style={{ fontFamily: typography.fontFamily.primary }}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button
+            type="button"
+            onClick={onClick}
+            className="tw:bg-transparent tw:border-none tw:cursor-pointer tw:p-0"
+          >
+            <div className="tw:flex tw:items-center tw:gap-1">
+              <span
+                style={{
+                  color: colors.text.inverse,
+                  fontWeight: typography.fontWeight.medium,
+                  fontSize: '18px',
+                  fontFamily: typography.fontFamily.primary,
+                }}
               >
                 {label}
-              </Text>
+              </span>
               <IconChevronDown size={18} color={colors.text.inverse} />
-            </Group>
-          </UnstyledButton>
-        </Menu.Target>
-        <Menu.Dropdown>
-          {dropdownItems.map((item) =>
-            item.href ? (
-              isInternalHref(item.href) ? (
-                <Menu.Item key={item.label} component={Link} to={item.href}>
-                  {item.label}
-                </Menu.Item>
-              ) : (
-                <Menu.Item key={item.label} component="a" href={item.href}>
-                  {item.label}
-                </Menu.Item>
-              )
-            ) : (
-              <Menu.Item key={item.label} onClick={item.onClick}>
-                {item.label}
-              </Menu.Item>
-            )
-          )}
-        </Menu.Dropdown>
-      </Menu>
+            </div>
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="tw:w-[200px] tw:z-[1001] tw:bg-white">
+          {dropdownItems.map((item) => (
+            <DropdownMenuItem
+              key={item.label}
+              className="tw:cursor-pointer"
+              onSelect={() => {
+                if (item.href) {
+                  if (isInternalHref(item.href)) {
+                    navigate(item.href);
+                  } else {
+                    window.location.href = item.href;
+                  }
+                } else if (item.onClick) {
+                  item.onClick();
+                }
+              }}
+            >
+              {item.label}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
     );
   }
 
@@ -99,17 +113,13 @@ export default function NavItem({ setup }: NavItemProps) {
 
   // Absolute URLs use standard anchor tag
   return (
-    <Anchor
-      c={colors.text.inverse}
-      variant="subtle"
-      td="none"
-      fw={typography.fontWeight.medium}
-      size="18px"
-      style={{ fontFamily: typography.fontFamily.primary }}
+    <a
       href={href}
       onClick={href ? undefined : onClick}
+      style={linkStyles}
+      className="tw:hover:underline"
     >
       {label}
-    </Anchor>
+    </a>
   );
 }

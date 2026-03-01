@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   IconArrowDown,
   IconArrowUp,
@@ -11,17 +12,8 @@ import {
   IconX,
 } from '@tabler/icons-react';
 import { Link } from 'react-router-dom';
-import {
-  Box,
-  CopyButton,
-  Flex,
-  SimpleGrid,
-  Text,
-  Title,
-  Tooltip,
-  UnstyledButton,
-} from '@mantine/core';
 import StaticPageLayout from '@/components/shared/static/StaticPageLayout';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 
 // Color tokens to display
@@ -59,106 +51,52 @@ const radiusTokens = [
   { name: 'feature', value: spacing.radius.feature },
 ];
 
-function ColorSwatch({
-  name: _name,
-  value,
-  label,
-}: {
-  name: string;
-  value: string;
-  label: string;
-}) {
+function ColorSwatch({ value, label }: { name: string; value: string; label: string }) {
+  const [copied, setCopied] = useState(false);
   const isLight = value === colors.white || value === colors.primary[100];
 
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(value);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+
   return (
-    <CopyButton value={value}>
-      {({ copied, copy }) => (
-        <Tooltip label={copied ? 'Copied!' : 'Click to copy'}>
-          <UnstyledButton
-            onClick={copy}
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button
+          type="button"
+          onClick={handleCopy}
+          className="tw:bg-transparent tw:border tw:border-border-light tw:rounded-container tw:overflow-hidden tw:cursor-pointer tw:p-0 tw:transition-all tw:duration-150 tw:hover:-translate-y-0.5 tw:hover:shadow-md"
+        >
+          <div
+            className="tw:h-20"
             style={{
-              borderRadius: spacing.radius.container,
-              overflow: 'hidden',
-              background: colors.white,
-              border: `1px solid ${colors.border.light}`,
-              cursor: 'pointer',
-              transition: 'all 0.15s ease',
+              background: value,
+              borderBottom: isLight ? `1px solid ${colors.border.light}` : 'none',
             }}
-            styles={{
-              root: {
-                '&:hover': {
-                  transform: 'translateY(-2px)',
-                  boxShadow: `0 4px 12px ${colors.shadow.light}`,
-                },
-              },
-            }}
-          >
-            <Box
-              style={{
-                height: 80,
-                background: value,
-                border: isLight ? `1px solid ${colors.border.light}` : 'none',
-              }}
-            />
-            <Box p="md">
-              <Text
-                style={{
-                  fontFamily: typography.fontFamily.mono,
-                  fontSize: typography.fontSize.sm,
-                  color: colors.text.primary,
-                  marginBottom: spacing.xs,
-                }}
-              >
-                {label}
-              </Text>
-              <Text
-                style={{
-                  fontFamily: typography.fontFamily.mono,
-                  fontSize: typography.fontSize.xs,
-                  color: colors.text.tertiary,
-                }}
-              >
-                {value}
-              </Text>
-            </Box>
-          </UnstyledButton>
-        </Tooltip>
-      )}
-    </CopyButton>
+          />
+          <div className="tw:p-md tw:text-left">
+            <p className="tw:font-mono tw:text-sm tw:text-text-primary tw:mb-xs">{label}</p>
+            <p className="tw:font-mono tw:text-xs tw:text-text-tertiary">{value}</p>
+          </div>
+        </button>
+      </TooltipTrigger>
+      <TooltipContent>{copied ? 'Copied!' : 'Click to copy'}</TooltipContent>
+    </Tooltip>
   );
 }
 
 function SectionTitle({ children, badge }: { children: string; badge?: string }) {
   return (
-    <Flex align="center" gap="md" mb="xl">
-      <Title
-        order={2}
-        style={{
-          fontSize: typography.fontSize['2xl'],
-          fontWeight: typography.fontWeight.semibold,
-          fontFamily: typography.fontFamily.primary,
-          color: colors.text.primary,
-        }}
-      >
-        {children}
-      </Title>
+    <div className="tw:flex tw:items-center tw:gap-md tw:mb-xl">
+      <h2 className="tw:text-2xl tw:font-semibold tw:font-sans tw:text-text-primary">{children}</h2>
       {badge && (
-        <Text
-          style={{
-            fontSize: typography.fontSize.xs,
-            fontFamily: typography.fontFamily.mono,
-            padding: `${spacing.xs} ${spacing.sm}`,
-            background: colors.primary[100],
-            color: colors.primary[600],
-            borderRadius: spacing.radius.container,
-            textTransform: 'uppercase',
-            letterSpacing: '0.05em',
-          }}
-        >
+        <span className="tw:text-xs tw:font-mono tw:px-sm tw:py-xs tw:bg-primary-100 tw:text-primary-600 tw:rounded-container tw:uppercase tw:tracking-wide">
           {badge}
-        </Text>
+        </span>
       )}
-    </Flex>
+    </div>
   );
 }
 
@@ -166,225 +104,132 @@ export default function BrandDesignPage() {
   return (
     <StaticPageLayout title="Design system">
       {/* Hero */}
-      <Box
-        py={spacing['4xl']}
+      <div
+        className="tw:py-4xl tw:border-b tw:border-border-dark"
         style={{
-          backgroundColor: '#F7FEFE',
-          borderBottom: `1px solid ${colors.border.dark}`,
+          backgroundColor: colors.primary[50],
           paddingLeft: '6.125%',
           paddingRight: '6.125%',
         }}
       >
-        <Text
-          style={{
-            fontSize: typography.fontSize.sm,
-            color: colors.text.secondary,
-            marginBottom: spacing.md,
-          }}
-        >
-          <Link to="../brand" style={{ color: colors.primary[500], textDecoration: 'none' }}>
+        <p className="tw:text-sm tw:text-text-secondary tw:mb-md">
+          <Link to="../brand" className="tw:text-primary-500 tw:no-underline tw:hover:underline">
             Brand
           </Link>
           {' / '}
           Design
-        </Text>
-        <Title
-          style={{
-            fontSize: typography.fontSize['4xl'],
-            fontWeight: typography.fontWeight.semibold,
-            fontFamily: typography.fontFamily.primary,
-            color: colors.text.primary,
-            marginBottom: spacing.md,
-          }}
-        >
+        </p>
+        <h1 className="tw:text-4xl tw:font-semibold tw:font-sans tw:text-text-primary tw:mb-md">
           Design system
-        </Title>
-        <Text
-          style={{
-            fontSize: typography.fontSize.lg,
-            color: colors.text.secondary,
-            maxWidth: 600,
-          }}
-        >
+        </h1>
+        <p className="tw:text-lg tw:text-text-secondary tw:max-w-[600px]">
           Tokens, typography, and spacing for building consistent PolicyEngine interfaces.
-        </Text>
-      </Box>
+        </p>
+      </div>
 
       {/* Content */}
-      <Box
-        py={spacing['4xl']}
-        style={{
-          paddingLeft: '6.125%',
-          paddingRight: '6.125%',
-          maxWidth: 1200,
-        }}
+      <div
+        className="tw:py-4xl tw:max-w-[1200px]"
+        style={{ paddingLeft: '6.125%', paddingRight: '6.125%' }}
       >
         {/* Colors */}
-        <Box mb={spacing['4xl']}>
+        <div className="tw:mb-4xl">
           <SectionTitle badge={`${colorTokens.length} tokens`}>Colors</SectionTitle>
-          <SimpleGrid cols={{ base: 2, sm: 3, md: 4, lg: 6 }} spacing="md">
+          <div className="tw:grid tw:grid-cols-2 tw:sm:grid-cols-3 tw:md:grid-cols-4 tw:lg:grid-cols-6 tw:gap-md">
             {colorTokens.map((color) => (
               <ColorSwatch key={color.name} {...color} />
             ))}
-          </SimpleGrid>
-        </Box>
+          </div>
+        </div>
 
         {/* Typography */}
-        <Box mb={spacing['4xl']}>
+        <div className="tw:mb-4xl">
           <SectionTitle>Typography</SectionTitle>
-          <Box
-            style={{
-              background: colors.white,
-              border: `1px solid ${colors.border.light}`,
-              borderRadius: spacing.radius.container,
-              overflow: 'hidden',
-            }}
-          >
+          <div className="tw:bg-white tw:border tw:border-border-light tw:rounded-container tw:overflow-hidden">
             {[
               {
                 label: 'Primary',
                 font: typography.fontFamily.primary,
-                sample: 'Inter — The quick brown fox jumps over the lazy dog.',
+                sample: 'Inter \u2014 The quick brown fox jumps over the lazy dog.',
               },
               {
                 label: 'Mono',
                 font: typography.fontFamily.mono,
-                sample: 'JetBrains Mono — const x = fn(args);',
+                sample: 'JetBrains Mono \u2014 const x = fn(args);',
               },
             ].map((item, i) => (
-              <Flex
+              <div
                 key={item.label}
-                align="baseline"
-                gap="xl"
-                p="lg"
+                className="tw:flex tw:items-baseline tw:gap-xl tw:p-lg"
                 style={{
                   borderBottom: i < 1 ? `1px solid ${colors.border.light}` : 'none',
                 }}
               >
-                <Text
-                  style={{
-                    width: 100,
-                    flexShrink: 0,
-                    fontFamily: typography.fontFamily.mono,
-                    fontSize: typography.fontSize.xs,
-                    color: colors.text.tertiary,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em',
-                  }}
-                >
+                <span className="tw:w-[100px] tw:shrink-0 tw:font-mono tw:text-xs tw:text-text-tertiary tw:uppercase tw:tracking-wide">
                   {item.label}
-                </Text>
-                <Text
-                  style={{
-                    fontFamily: item.font,
-                    fontSize: typography.fontSize.lg,
-                    color: colors.text.primary,
-                  }}
-                >
+                </span>
+                <span className="tw:text-lg tw:text-text-primary" style={{ fontFamily: item.font }}>
                   {item.sample}
-                </Text>
-              </Flex>
+                </span>
+              </div>
             ))}
-          </Box>
-        </Box>
+          </div>
+        </div>
 
         {/* Spacing */}
-        <Box mb={spacing['4xl']}>
+        <div className="tw:mb-4xl">
           <SectionTitle badge={`${spacingTokens.length} tokens`}>Spacing</SectionTitle>
-          <Flex direction="column" gap="sm">
+          <div className="tw:flex tw:flex-col tw:gap-sm">
             {spacingTokens.map((space) => (
-              <Flex key={space.name} align="center" gap="lg">
-                <Text
-                  style={{
-                    width: 60,
-                    fontFamily: typography.fontFamily.mono,
-                    fontSize: typography.fontSize.sm,
-                    color: colors.text.tertiary,
-                  }}
-                >
+              <div key={space.name} className="tw:flex tw:items-center tw:gap-lg">
+                <span className="tw:w-[60px] tw:font-mono tw:text-sm tw:text-text-tertiary">
                   {space.name}
-                </Text>
-                <Box
-                  style={{
-                    height: 24,
-                    width: space.value,
-                    background: colors.primary[500],
-                    borderRadius: spacing.radius.element,
-                    opacity: 0.6,
-                  }}
+                </span>
+                <div
+                  className="tw:h-6 tw:bg-primary-500 tw:rounded-element tw:opacity-60"
+                  style={{ width: space.value }}
                 />
-                <Text
-                  style={{
-                    fontFamily: typography.fontFamily.mono,
-                    fontSize: typography.fontSize.xs,
-                    color: colors.text.tertiary,
-                  }}
-                >
-                  {space.value}
-                </Text>
-              </Flex>
+                <span className="tw:font-mono tw:text-xs tw:text-text-tertiary">{space.value}</span>
+              </div>
             ))}
-          </Flex>
-        </Box>
+          </div>
+        </div>
 
         {/* Border radius */}
-        <Box mb={spacing['4xl']}>
+        <div className="tw:mb-4xl">
           <SectionTitle badge={`${radiusTokens.length} tokens`}>Border radius</SectionTitle>
-          <Flex gap="xl" wrap="wrap">
+          <div className="tw:flex tw:gap-xl tw:flex-wrap">
             {radiusTokens.map((radius) => (
-              <Flex key={radius.name} direction="column" align="center" gap="sm">
-                <Box
-                  style={{
-                    width: 80,
-                    height: 80,
-                    background: colors.primary[500],
-                    borderRadius: radius.value,
-                    opacity: 0.3,
-                  }}
+              <div key={radius.name} className="tw:flex tw:flex-col tw:items-center tw:gap-sm">
+                <div
+                  className="tw:w-20 tw:h-20 tw:bg-primary-500 tw:opacity-30"
+                  style={{ borderRadius: radius.value }}
                 />
-                <Text
-                  style={{
-                    fontFamily: typography.fontFamily.mono,
-                    fontSize: typography.fontSize.sm,
-                    color: colors.text.tertiary,
-                  }}
-                >
+                <span className="tw:font-mono tw:text-sm tw:text-text-tertiary">
                   {radius.name} ({radius.value})
-                </Text>
-              </Flex>
+                </span>
+              </div>
             ))}
-          </Flex>
-        </Box>
+          </div>
+        </div>
 
         {/* Icons */}
-        <Box mb={spacing['4xl']}>
+        <div className="tw:mb-4xl">
           <SectionTitle badge="Tabler Icons">Icons</SectionTitle>
-          <Text
-            mb="xl"
-            style={{
-              fontSize: typography.fontSize.base,
-              color: colors.text.secondary,
-            }}
-          >
+          <p className="tw:text-base tw:text-text-secondary tw:mb-xl">
             PolicyEngine uses{' '}
             <a
               href="https://tabler.io/icons"
               target="_blank"
               rel="noopener noreferrer"
-              style={{ color: colors.primary[500] }}
+              className="tw:text-primary-500 tw:hover:underline"
             >
               Tabler Icons
             </a>
-            . Import from{' '}
-            <code
-              style={{ fontFamily: typography.fontFamily.mono, fontSize: typography.fontSize.sm }}
-            >
-              @tabler/icons-react
-            </code>
-            .
-          </Text>
+            . Import from <code className="tw:font-mono tw:text-sm">@tabler/icons-react</code>.
+          </p>
 
-          <SimpleGrid cols={{ base: 4, sm: 5, md: 10 }} spacing="md">
+          <div className="tw:grid tw:grid-cols-4 tw:sm:grid-cols-5 tw:md:grid-cols-10 tw:gap-md">
             {[
               { icon: IconSearch, name: 'Search' },
               { icon: IconCheck, name: 'Check' },
@@ -397,52 +242,27 @@ export default function BrandDesignPage() {
               { icon: IconInfoCircle, name: 'InfoCircle' },
               { icon: IconWorld, name: 'World' },
             ].map(({ icon: Icon, name }) => (
-              <Flex
+              <div
                 key={name}
-                direction="column"
-                align="center"
-                gap="xs"
-                p="md"
-                style={{
-                  background: colors.white,
-                  border: `1px solid ${colors.border.light}`,
-                  borderRadius: spacing.radius.container,
-                }}
+                className="tw:flex tw:flex-col tw:items-center tw:gap-xs tw:p-md tw:bg-white tw:border tw:border-border-light tw:rounded-container"
               >
                 <Icon size={24} color={colors.text.secondary} />
-                <Text
-                  style={{
-                    fontFamily: typography.fontFamily.mono,
-                    fontSize: typography.fontSize.xs,
-                    color: colors.text.tertiary,
-                  }}
-                >
-                  {name}
-                </Text>
-              </Flex>
+                <span className="tw:font-mono tw:text-xs tw:text-text-tertiary">{name}</span>
+              </div>
             ))}
-          </SimpleGrid>
-        </Box>
+          </div>
+        </div>
 
         {/* Usage */}
-        <Box>
+        <div>
           <SectionTitle>Usage</SectionTitle>
-          <Box
-            p="xl"
-            style={{
-              background: colors.secondary[900],
-              borderRadius: spacing.radius.container,
-            }}
+          <div
+            className="tw:p-xl tw:rounded-container"
+            style={{ background: colors.secondary[900] }}
           >
-            <Text
-              component="pre"
-              style={{
-                fontFamily: typography.fontFamily.mono,
-                fontSize: typography.fontSize.sm,
-                color: colors.secondary[300],
-                margin: 0,
-                overflow: 'auto',
-              }}
+            <pre
+              className="tw:font-mono tw:text-sm tw:m-0 tw:overflow-auto"
+              style={{ color: colors.secondary[300] }}
             >
               {`// Import design tokens
 import { colors, spacing, typography } from '@/designTokens';
@@ -458,10 +278,10 @@ import { colors, spacing, typography } from '@/designTokens';
 >
   Content
 </Box>`}
-            </Text>
-          </Box>
-        </Box>
-      </Box>
+            </pre>
+          </div>
+        </div>
+      </div>
     </StaticPageLayout>
   );
 }

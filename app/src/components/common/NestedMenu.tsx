@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { NavLink } from '@mantine/core';
+import { colors } from '@/designTokens';
+import { cn } from '@/lib/utils';
 
 interface NestedMenuOptions {
   name: string;
@@ -9,45 +10,57 @@ interface NestedMenuOptions {
 
 interface NestedMenuProps {
   menuOptions: NestedMenuOptions[];
-  onItemClick?: (name: string) => void; // Optional callback for item click
+  onItemClick?: (name: string) => void;
 }
 
 export default function NestedMenu({ menuOptions, onItemClick }: NestedMenuProps) {
   const [active, setActive] = useState<string | null>(null);
-
-  // Manually control what's been selected so that we render deeper menu levels
-  // on demand; vastly improves runtime for larger menu sets, e.g., US policy params
   const [selectedSet, setSelectedSet] = useState<Set<string>>(new Set());
 
   function handleClick(name: string) {
     if (onItemClick) {
-      onItemClick(name); // Call the optional callback if provided
+      onItemClick(name);
     }
     setActive(name);
     setSelectedSet((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(name)) {
-        newSet.delete(name); // If already selected, remove it
+        newSet.delete(name);
       } else {
-        newSet.add(name); // If not selected, add it
+        newSet.add(name);
       }
       return newSet;
     });
   }
 
-  function mapOverOneParamLevel(list: NestedMenuOptions[]) {
+  function mapOverOneParamLevel(list: NestedMenuOptions[], depth = 0) {
     return list.map((item: NestedMenuOptions) => {
+      const isActive = active === item.name;
+      const isExpanded = selectedSet.has(item.name);
+
       return (
-        <NavLink
-          key={item.name}
-          // href={`#${item.name}`} TODO: Do we need href?
-          label={item.label}
-          active={active === item.name}
-          onClick={() => handleClick(item.name)}
-          opened={selectedSet.has(item.name)}
-        >
-          {item.children && selectedSet.has(item.name) && mapOverOneParamLevel(item.children)}
-        </NavLink>
+        <div key={item.name}>
+          <button
+            type="button"
+            className={cn(
+              'tw:w-full tw:text-left tw:border-none tw:cursor-pointer tw:text-sm tw:flex tw:items-center tw:gap-1.5 tw:rounded-sm tw:transition-colors',
+              isActive
+                ? 'tw:bg-primary-50 tw:text-primary-700 tw:font-medium'
+                : 'tw:bg-transparent tw:text-gray-700 tw:hover:bg-gray-100'
+            )}
+            style={{
+              padding: '6px 12px',
+              paddingLeft: `${12 + depth * 20}px`,
+              borderLeft: isActive ? `3px solid ${colors.primary[500]}` : '3px solid transparent',
+            }}
+            onClick={() => handleClick(item.name)}
+          >
+            <span className="tw:leading-tight">{item.label}</span>
+          </button>
+          {item.children && isExpanded && (
+            <div>{mapOverOneParamLevel(item.children, depth + 1)}</div>
+          )}
+        </div>
       );
     });
   }

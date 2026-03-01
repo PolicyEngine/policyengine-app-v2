@@ -1,6 +1,3 @@
-import { Box, Code, Text } from '@mantine/core';
-import { spacing, typography } from '@/designTokens';
-
 interface CodeBlockProps {
   title: string;
   content: string;
@@ -12,12 +9,10 @@ interface CodeBlockProps {
  */
 export function CodeBlock({ title, content, maxHeight = '185px' }: CodeBlockProps) {
   return (
-    <Box>
-      <Text size="sm" fw={typography.fontWeight.medium} mb={spacing.xs}>
-        {title}
-      </Text>
-      <Code
-        block
+    <div>
+      <p className="tw:text-sm tw:font-medium tw:mb-xs">{title}</p>
+      <code
+        className="tw:block tw:bg-gray-100 tw:px-sm tw:py-sm tw:rounded-md tw:text-xs tw:font-mono"
         style={{
           whiteSpace: 'pre-wrap',
           wordBreak: 'break-word',
@@ -27,7 +22,7 @@ export function CodeBlock({ title, content, maxHeight = '185px' }: CodeBlockProp
         }}
       >
         {content}
-      </Code>
-    </Box>
+      </code>
+    </div>
   );
 }

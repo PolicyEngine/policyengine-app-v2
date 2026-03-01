@@ -7,12 +7,12 @@
 import { useState } from 'react';
 import { IconChevronRight, IconChevronUp } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
-import { AppShell, Box, Button, Drawer, Group, Text } from '@mantine/core';
-import { useDisclosure } from '@mantine/hooks';
 import HeaderNavigation from '@/components/shared/HomeHeader';
-import { spacing } from '@/designTokens';
+import { Button, Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui';
+import { spacing, typography } from '@/designTokens';
 import { colors } from '@/designTokens/colors';
 import { useIsMobile } from '@/hooks/useChartDimensions';
+import { useDisclosure } from '@/hooks/useDisclosure';
 import { RootState } from '@/store';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import { PolicyStateProps } from '@/types/pathwayState';
@@ -46,12 +46,16 @@ export default function PolicyParameterSelectorView({
   // Count modifications from policy prop
   const modificationCount = countPolicyModifications(policy);
 
+  const headerHeight = parseInt(spacing.appShell.header.height, 10);
+  const navbarWidth = parseInt(spacing.appShell.navbar.width, 10);
+  const footerHeight = parseInt(spacing.appShell.footer.height, 10);
+
   // Show error if metadata failed to load
   if (error) {
     return (
       <div>
-        <Text c="red">Error loading parameters: {error}</Text>
-        <Text>Please try refreshing the page.</Text>
+        <p className="tw:text-red-600">Error loading parameters: {error}</p>
+        <p>Please try refreshing the page.</p>
       </div>
     );
   }
@@ -64,166 +68,145 @@ export default function PolicyParameterSelectorView({
     }
   }
 
-  const footerHeight = parseInt(spacing.appShell.footer.height, 10);
-
   return (
-    <AppShell
-      layout="default"
-      padding="md"
-      header={{ height: parseInt(spacing.appShell.header.height, 10) }}
-      navbar={{
-        width: parseInt(spacing.appShell.navbar.width, 10),
-        breakpoint: spacing.appShell.navbar.breakpoint,
-        collapsed: { mobile: true },
-      }}
-      footer={{ height: isMobile ? 0 : footerHeight }}
-    >
-      <AppShell.Header p={0}>
+    <div className="tw:flex tw:flex-col tw:h-screen tw:overflow-hidden">
+      {/* Header */}
+      <div style={{ height: headerHeight }} className="tw:shrink-0">
         <HeaderNavigation />
-      </AppShell.Header>
+      </div>
 
-      <AppShell.Navbar p="md" bg="gray.0">
-        {loading || !parameterTree ? (
-          <div>Loading parameters...</div>
-        ) : (
-          <Menu setSelectedParamLabel={handleMenuItemClick} parameterTree={parameterTree} />
+      <div className="tw:flex tw:flex-1 tw:min-h-0">
+        {/* Navbar - desktop only */}
+        {!isMobile && (
+          <div
+            className="tw:bg-gray-50 tw:p-md tw:overflow-auto tw:shrink-0"
+            style={{ width: navbarWidth }}
+          >
+            {loading || !parameterTree ? (
+              <div>Loading parameters...</div>
+            ) : (
+              <Menu setSelectedParamLabel={handleMenuItemClick} parameterTree={parameterTree} />
+            )}
+          </div>
         )}
-      </AppShell.Navbar>
 
-      <AppShell.Main bg="gray.0" style={isMobile ? { paddingBottom: footerHeight } : undefined}>
-        {loading || !parameterTree ? (
-          <MainEmpty />
-        ) : selectedLeafParam ? (
-          <PolicyParameterSelectorMain
-            key={selectedLeafParam.parameter}
-            param={selectedLeafParam}
-            policy={policy}
-            onPolicyUpdate={onPolicyUpdate}
-          />
-        ) : (
-          <MainEmpty />
-        )}
-      </AppShell.Main>
+        {/* Main content */}
+        <div
+          className="tw:flex-1 tw:min-w-0 tw:bg-gray-50 tw:p-md tw:overflow-auto"
+          style={isMobile ? { paddingBottom: footerHeight } : undefined}
+        >
+          {loading || !parameterTree ? (
+            <MainEmpty />
+          ) : selectedLeafParam ? (
+            <PolicyParameterSelectorMain
+              key={selectedLeafParam.parameter}
+              param={selectedLeafParam}
+              policy={policy}
+              onPolicyUpdate={onPolicyUpdate}
+            />
+          ) : (
+            <MainEmpty />
+          )}
+        </div>
+      </div>
 
-      {/* Desktop footer */}
+      {/* Desktop footer - fixed at bottom like Mantine AppShell.Footer */}
       {!isMobile && (
-        <AppShell.Footer p="md">
-          <Group justify="space-between" align="center" wrap="wrap" gap="sm">
+        <div
+          className="tw:p-md tw:border-t tw:border-gray-200 tw:bg-white tw:shrink-0"
+          style={{ height: footerHeight }}
+        >
+          <div className="tw:flex tw:justify-between tw:items-center tw:flex-wrap tw:gap-sm">
             {onBack && (
-              <Button variant="default" onClick={onBack}>
+              <Button variant="outline" onClick={onBack}>
                 Back
               </Button>
             )}
             {modificationCount > 0 && (
-              <Group gap="xs">
-                <Box
+              <div className="tw:flex tw:items-center tw:gap-xs">
+                <div
+                  className="tw:rounded-full"
                   style={{
                     width: '8px',
                     height: '8px',
-                    borderRadius: '50%',
                     backgroundColor: colors.primary[600],
                   }}
                 />
-                <Text size="sm" c="gray.5">
+                <span className="tw:text-sm tw:text-gray-400">
                   {modificationCount} parameter modification
                   {modificationCount !== 1 ? 's' : ''}
-                </Text>
-              </Group>
+                </span>
+              </div>
             )}
-            <Button variant="filled" onClick={onNext} rightSection={<IconChevronRight size={16} />}>
+            <Button onClick={onNext}>
               Review my policy
+              <IconChevronRight size={16} />
             </Button>
-          </Group>
-        </AppShell.Footer>
+          </div>
+        </div>
       )}
 
       {/* Mobile bottom bar */}
       {isMobile && (
-        <Box
-          style={{
-            position: 'fixed',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            padding: spacing.md,
-            backgroundColor: 'white',
-            borderTop: `1px solid ${colors.border.light}`,
-            zIndex: 200,
-          }}
+        <div
+          className="tw:fixed tw:bottom-0 tw:left-0 tw:right-0 tw:p-md tw:bg-white tw:z-50"
+          style={{ borderTop: `1px solid ${colors.border.light}` }}
         >
-          <Group justify="space-between" align="center" gap="sm" wrap="nowrap">
-            <Button
-              variant="default"
-              size="sm"
-              onClick={toggleMobile}
-              leftSection={
-                <IconChevronUp
-                  size={16}
-                  style={{
-                    transform: mobileOpened ? 'rotate(180deg)' : 'rotate(0deg)',
-                    transition: 'transform 150ms ease',
-                  }}
-                />
-              }
-            >
+          <div className="tw:flex tw:justify-between tw:items-center tw:gap-sm tw:flex-nowrap">
+            <Button variant="outline" size="sm" onClick={toggleMobile}>
+              <IconChevronUp
+                size={16}
+                style={{
+                  transform: mobileOpened ? 'rotate(180deg)' : 'rotate(0deg)',
+                  transition: 'transform 150ms ease',
+                }}
+              />
               Parameters
               {modificationCount > 0 && (
-                <Box
-                  component="span"
-                  ml={6}
+                <span
+                  className="tw:inline-flex tw:items-center tw:justify-center tw:rounded-full tw:text-white tw:ml-1.5"
                   style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
                     width: '18px',
                     height: '18px',
-                    borderRadius: '50%',
                     backgroundColor: colors.primary[600],
-                    color: 'white',
                     fontSize: '11px',
-                    fontWeight: 700,
+                    fontWeight: typography.fontWeight.bold,
                   }}
                 >
                   {modificationCount}
-                </Box>
+                </span>
               )}
             </Button>
-            <Group gap="sm" wrap="nowrap">
+            <div className="tw:flex tw:gap-sm tw:flex-nowrap">
               {onBack && (
-                <Button variant="default" size="sm" onClick={onBack}>
+                <Button variant="outline" size="sm" onClick={onBack}>
                   Back
                 </Button>
               )}
-              <Button
-                variant="filled"
-                size="sm"
-                onClick={onNext}
-                rightSection={<IconChevronRight size={16} />}
-              >
+              <Button size="sm" onClick={onNext}>
                 Review
+                <IconChevronRight size={16} />
               </Button>
-            </Group>
-          </Group>
-        </Box>
+            </div>
+          </div>
+        </div>
       )}
 
-      {/* Mobile bottom drawer for parameter tree */}
+      {/* Mobile bottom sheet for parameter tree */}
       {isMobile && (
-        <Drawer
-          opened={mobileOpened}
-          onClose={closeMobile}
-          position="bottom"
-          size="70%"
-          title="Select parameters"
-          zIndex={300}
-        >
-          {loading || !parameterTree ? (
-            <div>Loading parameters...</div>
-          ) : (
-            <Menu setSelectedParamLabel={handleMenuItemClick} parameterTree={parameterTree} />
-          )}
-        </Drawer>
+        <Sheet open={mobileOpened} onOpenChange={(open) => !open && closeMobile()}>
+          <SheetContent side="bottom" className="tw:h-[70vh]">
+            <SheetHeader>
+              <SheetTitle>Select parameters</SheetTitle>
+            </SheetHeader>
+            {loading || !parameterTree ? (
+              <div>Loading parameters...</div>
+            ) : (
+              <Menu setSelectedParamLabel={handleMenuItemClick} parameterTree={parameterTree} />
+            )}
+          </SheetContent>
+        </Sheet>
       )}
-    </AppShell>
+    </div>
   );
 }

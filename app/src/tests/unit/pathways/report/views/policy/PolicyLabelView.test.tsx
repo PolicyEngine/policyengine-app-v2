@@ -50,8 +50,9 @@ describe('PolicyLabelView', () => {
         />
       );
 
-      // Then
-      expect(screen.getByLabelText(/policy title/i)).toBeInTheDocument();
+      // Then - label text is visible, input is a sibling (not connected via htmlFor)
+      expect(screen.getByText(/policy title/i)).toBeInTheDocument();
+      expect(screen.getByRole('textbox')).toBeInTheDocument();
     });
 
     test('given standalone mode and null label then shows default My policy', () => {
@@ -66,7 +67,7 @@ describe('PolicyLabelView', () => {
       );
 
       // Then
-      expect(screen.getByLabelText(/policy title/i)).toHaveValue('My policy');
+      expect(screen.getByRole('textbox')).toHaveValue('My policy');
     });
   });
 
@@ -98,7 +99,7 @@ describe('PolicyLabelView', () => {
       );
 
       // Then
-      expect(screen.getByLabelText(/policy title/i)).toHaveValue('Baseline policy');
+      expect(screen.getByRole('textbox')).toHaveValue('Baseline policy');
     });
 
     test('given report mode reform then shows reform policy default label', () => {
@@ -114,7 +115,7 @@ describe('PolicyLabelView', () => {
       );
 
       // Then
-      expect(screen.getByLabelText(/policy title/i)).toHaveValue('Reform policy');
+      expect(screen.getByRole('textbox')).toHaveValue('Reform policy');
     });
   });
 
@@ -130,7 +131,7 @@ describe('PolicyLabelView', () => {
           onNext={mockOnNext}
         />
       );
-      const input = screen.getByLabelText(/policy title/i);
+      const input = screen.getByRole('textbox');
 
       // When
       await user.clear(input);

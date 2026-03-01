@@ -14,15 +14,16 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { Group, Radio, Stack, Text } from '@mantine/core';
-import { useMediaQuery, useViewportSize } from '@mantine/hooks';
 import { PolicyAdapter } from '@/adapters/PolicyAdapter';
 import { ChartWatermark, TOOLTIP_STYLE } from '@/components/charts';
-import { colors, spacing } from '@/designTokens';
+import { RadioGroup, RadioGroupItem, Stack, Text } from '@/components/ui';
+import { colors, typography } from '@/designTokens';
 import { MOBILE_BREAKPOINT_QUERY } from '@/hooks/useChartDimensions';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useHouseholdVariation } from '@/hooks/useHouseholdVariation';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useReportYear } from '@/hooks/useReportYear';
+import { useViewportSize } from '@/hooks/useViewportSize';
 import type { RootState } from '@/store';
 import type { Household } from '@/types/ingredients/Household';
 import type { Policy } from '@/types/ingredients/Policy';
@@ -50,12 +51,15 @@ function MTRTooltip({ active, payload, label, symbol }: any) {
   }
   return (
     <div style={TOOLTIP_STYLE}>
-      <p style={{ fontWeight: 600, margin: 0 }}>
+      <p style={{ fontWeight: typography.fontWeight.semibold, margin: 0 }}>
         Earnings: {symbol}
         {Number(label).toLocaleString()}
       </p>
       {payload.map((p: any) => (
-        <p key={p.name} style={{ margin: '2px 0', fontSize: 13, color: p.stroke }}>
+        <p
+          key={p.name}
+          style={{ margin: '2px 0', fontSize: typography.fontSize.sm, color: p.stroke }}
+        >
           {p.name}: {(Number(p.value) * 100).toFixed(1)}%
         </p>
       ))}
@@ -87,7 +91,7 @@ export default function MarginalTaxRatesSubPage({
   // Early return if no report year available (shouldn't happen in report output context)
   if (!reportYear) {
     return (
-      <Stack gap={spacing.md}>
+      <Stack gap="md">
         <Text c="red">Error: Report year not available</Text>
       </Stack>
     );
@@ -140,7 +144,7 @@ export default function MarginalTaxRatesSubPage({
 
   if (baselineError) {
     return (
-      <Stack gap={spacing.md}>
+      <Stack gap="md">
         <Text c="red">Error loading baseline variation: {baselineError.message}</Text>
       </Stack>
     );
@@ -148,7 +152,7 @@ export default function MarginalTaxRatesSubPage({
 
   if (reform && reformError) {
     return (
-      <Stack gap={spacing.md}>
+      <Stack gap="md">
         <Text c="red">Error loading reform variation: {reformError.message}</Text>
       </Stack>
     );
@@ -157,7 +161,7 @@ export default function MarginalTaxRatesSubPage({
   // Verify baseline data exists and has required structure
   if (!baselineVariation || !baselineVariation.householdData?.people) {
     return (
-      <Stack gap={spacing.md}>
+      <Stack gap="md">
         <Text c="red">No baseline variation data available</Text>
       </Stack>
     );
@@ -166,7 +170,7 @@ export default function MarginalTaxRatesSubPage({
   // If reform exists, verify reform data has required structure
   if (reform && reformVariation && !reformVariation.householdData?.people) {
     return (
-      <Stack gap={spacing.md}>
+      <Stack gap="md">
         <Text c="red">Invalid reform variation data</Text>
       </Stack>
     );
@@ -197,7 +201,7 @@ export default function MarginalTaxRatesSubPage({
 
   if (!Array.isArray(baselineMTR)) {
     return (
-      <Stack gap={spacing.md}>
+      <Stack gap="md">
         <Text c="red">No marginal tax rate data available</Text>
       </Stack>
     );
@@ -370,19 +374,25 @@ export default function MarginalTaxRatesSubPage({
   };
 
   return (
-    <Stack gap={spacing.lg}>
+    <Stack gap="lg">
       <Text size="sm" c="dimmed">
         Marginal tax rates show the percentage of the next dollar earned that goes to taxes. Values
         are clipped to the range -200% to +200% for display purposes.
       </Text>
 
       {reform && (
-        <Radio.Group value={viewMode} onChange={(value) => setViewMode(value as ViewMode)}>
-          <Group gap={spacing.md}>
-            <Radio value="both" label="Baseline and Reform" />
-            <Radio value="difference" label="Difference" />
-          </Group>
-        </Radio.Group>
+        <RadioGroup value={viewMode} onValueChange={(value) => setViewMode(value as ViewMode)}>
+          <div className="tw:flex tw:gap-md tw:items-center">
+            <div className="tw:flex tw:items-center tw:gap-xs">
+              <RadioGroupItem value="both" id="mtr-both" />
+              <label htmlFor="mtr-both">Baseline and reform</label>
+            </div>
+            <div className="tw:flex tw:items-center tw:gap-xs">
+              <RadioGroupItem value="difference" id="mtr-difference" />
+              <label htmlFor="mtr-difference">Difference</label>
+            </div>
+          </div>
+        </RadioGroup>
       )}
 
       <div style={{ width: '100%', position: 'relative' }}>

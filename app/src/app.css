@@ -1,0 +1,261 @@
+@import 'tailwindcss' prefix(tw);
+
+@theme {
+  /* Primary brand colors - teal */
+  --color-primary-50: #e6fffa;
+  --color-primary-100: #b2f5ea;
+  --color-primary-200: #81e6d9;
+  --color-primary-300: #4fd1c5;
+  --color-primary-400: #38b2ac;
+  --color-primary-500: #319795;
+  --color-primary-600: #2c7a7b;
+  --color-primary-700: #285e61;
+  --color-primary-800: #234e52;
+  --color-primary-900: #1d4044;
+
+  /* Secondary colors - gray scale */
+  --color-secondary-50: #f0f9ff;
+  --color-secondary-100: #f2f4f7;
+  --color-secondary-200: #e2e8f0;
+  --color-secondary-300: #cbd5e1;
+  --color-secondary-400: #94a3b8;
+  --color-secondary-500: #64748b;
+  --color-secondary-600: #475569;
+  --color-secondary-700: #344054;
+  --color-secondary-800: #1e293b;
+  --color-secondary-900: #101828;
+
+  /* Blue accent colors */
+  --color-blue-50: #f0f9ff;
+  --color-blue-100: #e0f2fe;
+  --color-blue-200: #bae6fd;
+  --color-blue-300: #7dd3fc;
+  --color-blue-400: #38bdf8;
+  --color-blue-500: #0ea5e9;
+  --color-blue-600: #0284c7;
+  --color-blue-700: #026aa2;
+  --color-blue-800: #075985;
+  --color-blue-900: #0c4a6e;
+
+  /* Gray scale */
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f2f4f7;
+  --color-gray-200: #e2e8f0;
+  --color-gray-300: #d1d5db;
+  --color-gray-400: #9ca3af;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #4b5563;
+  --color-gray-700: #344054;
+  --color-gray-800: #1f2937;
+  --color-gray-900: #101828;
+
+  /* Semantic colors */
+  --color-success: #22c55e;
+  --color-warning: #fec601;
+  --color-error: #ef4444;
+  --color-info: #1890ff;
+
+  /* Background colors */
+  --color-bg-primary: #fff;
+  --color-bg-secondary: #f5f9ff;
+  --color-bg-tertiary: #f1f5f9;
+
+  /* Text colors */
+  --color-text-primary: #000;
+  --color-text-secondary: #5a5a5a;
+  --color-text-tertiary: #9ca3af;
+  --color-text-inverse: #fff;
+
+  /* Border colors */
+  --color-border-light: #e2e8f0;
+  --color-border-medium: #cbd5e1;
+  --color-border-dark: #94a3b8;
+
+  /*
+   * =========================================================
+   * shadcn/ui semantic color tokens
+   * =========================================================
+   * These are REQUIRED by all shadcn/ui components (Button,
+   * Badge, Table, Input, Dialog, etc.). They use classes like
+   * tw:bg-primary, tw:text-foreground, tw:border-border which
+   * resolve to these CSS variables.
+   * =========================================================
+   */
+
+  /* Core foreground/background */
+  --color-background: #fff;
+  --color-foreground: #101828;
+
+  /* Primary action color (buttons, links, badges) */
+  /* Uses primary-600 shade to match Mantine's filled button default (primaryShade: 6) */
+  --color-primary: #2c7a7b;
+  --color-primary-foreground: #fff;
+
+  /* Secondary (muted buttons, secondary badges) */
+  --color-secondary: #f2f4f7;
+  --color-secondary-foreground: #101828;
+
+  /* Muted (subtle backgrounds, disabled states) */
+  --color-muted: #f2f4f7;
+  --color-muted-foreground: #6b7280;
+
+  /* Accent (hover highlights, active states) */
+  --color-accent: #f2f4f7;
+  --color-accent-foreground: #101828;
+
+  /* Destructive (delete buttons, error states) */
+  --color-destructive: #ef4444;
+
+  /* Popover/dropdown backgrounds */
+  --color-popover: #fff;
+  --color-popover-foreground: #101828;
+
+  /* Card backgrounds */
+  --color-card: #fff;
+  --color-card-foreground: #101828;
+
+  /* Border, input, ring (form controls) */
+  --color-border: #e2e8f0;
+  --color-input: #e2e8f0;
+  --color-ring: #319795;
+
+  /* Typography */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+
+  --font-size-xs: 12px;
+  --font-size-sm: 14px;
+  --font-size-base: 16px;
+  --font-size-lg: 18px;
+  --font-size-xl: 20px;
+  --font-size-2xl: 24px;
+  --font-size-3xl: 28px;
+  --font-size-4xl: 32px;
+
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 20px;
+  --spacing-2xl: 24px;
+  --spacing-3xl: 32px;
+  --spacing-4xl: 48px;
+  --spacing-5xl: 64px;
+
+  /* Border radius - semantic scale */
+  --radius-chip: 2px;
+  --radius-element: 4px;
+  --radius-container: 8px;
+  --radius-feature: 12px;
+
+  /* shadcn radius tokens */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+
+  /* Breakpoints matching Mantine */
+  --breakpoint-xs: 36rem;
+  --breakpoint-sm: 48rem;
+  --breakpoint-md: 62rem;
+  --breakpoint-lg: 75rem;
+  --breakpoint-xl: 88rem;
+  --breakpoint-2xl: 96rem;
+
+  /* Layout */
+  --spacing-sidebar: 79px;
+  --spacing-sidebar-width: 280px;
+  --spacing-header: 58px;
+  --spacing-content: 1361px;
+  --spacing-container: 976px;
+}
+
+/*
+ * =========================================================
+ * Base styles
+ * =========================================================
+ * Tailwind Preflight resets all HTML elements to a blank
+ * slate (removes margins, makes headings unstyled, etc.).
+ * These base styles restore sensible defaults matching the
+ * Mantine theme that was previously provided by
+ * MantineProvider + @mantine/core/styles.css.
+ * =========================================================
+ */
+/*
+ * IMPORTANT: prefix(tw) causes all @theme variables to be prefixed
+ * with --tw-. So --font-sans becomes --tw-font-sans, etc.
+ * All var() references in hand-written CSS must use --tw- prefix.
+ */
+@layer base {
+  /* Default border color — Tailwind Preflight uses currentColor (black)
+     unless overridden. This makes all border utilities light gray by default. */
+  *,
+  ::before,
+  ::after {
+    border-color: var(--tw-color-border);
+  }
+
+  html {
+    font-family: var(--tw-font-sans);
+    font-size: var(--tw-font-size-base);
+    line-height: 1.55;
+    color: var(--tw-color-foreground);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    font-family: var(--tw-font-sans);
+    color: var(--tw-color-foreground);
+    background-color: var(--tw-color-background);
+  }
+
+  /* Links */
+  a {
+    color: inherit;
+    text-decoration: inherit;
+  }
+
+  /* Tables - restore basic structure that Preflight strips.
+     The table container and rows get a solid white background so
+     they stand out against the gray page background (gray-50). */
+  table {
+    border-collapse: collapse;
+    width: 100%;
+  }
+
+  [data-slot='table-container'],
+  tr {
+    background-color: var(--tw-color-bg-primary);
+  }
+
+  th {
+    text-align: left;
+    font-weight: 600;
+  }
+
+  /* Form elements — inherit font and use solid white background so they
+     stand out against the gray page background (colors.gray[50]).
+     Tailwind utility classes (e.g. tw:bg-primary on filled buttons)
+     are in @layer utilities and override this base rule. */
+  button,
+  input,
+  select,
+  textarea {
+    font-family: inherit;
+    font-size: inherit;
+    background-color: var(--tw-color-bg-primary);
+  }
+
+  /* Hide native number input spinners — prevents overlap with suffix icons */
+  input[type='number']::-webkit-inner-spin-button,
+  input[type='number']::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  input[type='number'] {
+    -moz-appearance: textfield;
+  }
+}

@@ -9,7 +9,7 @@
  */
 
 import { useState } from 'react';
-import { spacing } from '@/designTokens';
+import { colors, spacing, typography } from '@/designTokens';
 import type { StreamlitEmbedProps } from '@/types/apps';
 
 export default function StreamlitEmbed({
@@ -67,15 +67,15 @@ export default function StreamlitEmbed({
             left: 0,
             right: 0,
             zIndex: 1000,
-            backgroundColor: '#f0f2f5',
-            borderBottom: '1px solid #d9d9d9',
-            padding: '8px 16px',
-            fontSize: '13px',
-            color: '#595959',
+            backgroundColor: colors.gray[100],
+            borderBottom: `1px solid ${colors.gray[300]}`,
+            padding: `${spacing.sm} ${spacing.lg}`,
+            fontSize: typography.fontSize.sm,
+            color: colors.gray[600],
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            gap: '12px',
+            gap: spacing.md,
             animation: 'fadeIn 0.3s ease-in',
           }}
         >
@@ -83,7 +83,7 @@ export default function StreamlitEmbed({
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '12px',
+              gap: spacing.md,
             }}
           >
             <span>If the app is sleeping:</span>
@@ -92,23 +92,23 @@ export default function StreamlitEmbed({
               target="_blank"
               rel="noopener noreferrer"
               style={{
-                backgroundColor: '#ffffff',
-                border: '1px solid #d9d9d9',
+                backgroundColor: colors.white,
+                border: `1px solid ${colors.gray[300]}`,
                 borderRadius: spacing.radius.element,
-                padding: '2px 12px',
-                fontSize: '12px',
-                color: '#595959',
+                padding: `2px ${spacing.md}`,
+                fontSize: typography.fontSize.xs,
+                color: colors.gray[600],
                 textDecoration: 'none',
                 display: 'inline-block',
                 transition: 'all 0.2s',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = '#1890ff';
-                e.currentTarget.style.color = '#1890ff';
+                e.currentTarget.style.borderColor = colors.primary[500];
+                e.currentTarget.style.color = colors.primary[500];
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = '#d9d9d9';
-                e.currentTarget.style.color = '#595959';
+                e.currentTarget.style.borderColor = colors.gray[300];
+                e.currentTarget.style.color = colors.gray[600];
               }}
             >
               Wake it up
@@ -120,10 +120,10 @@ export default function StreamlitEmbed({
             style={{
               background: 'none',
               border: 'none',
-              color: '#8c8c8c',
+              color: colors.gray[500],
               cursor: 'pointer',
               fontSize: '16px',
-              padding: '0 4px',
+              padding: `0 ${spacing.xs}`,
               lineHeight: '1',
             }}
             aria-label="Close notice"

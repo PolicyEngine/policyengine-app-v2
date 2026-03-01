@@ -46,7 +46,7 @@ describe('DefaultBaselineOption', () => {
       expect(screen.getByText(DEFAULT_BASELINE_LABELS.UK)).toBeInTheDocument();
     });
 
-    test('given component renders then displays card as button', () => {
+    test('given component renders then displays clickable button', () => {
       // When
       render(
         <DefaultBaselineOption
@@ -56,10 +56,10 @@ describe('DefaultBaselineOption', () => {
         />
       );
 
-      // Then
+      // Then - Component renders as a button element
       const button = screen.getByRole('button');
       expect(button).toBeInTheDocument();
-      expect(button).not.toBeDisabled();
+      expect(button).toHaveClass('tw:cursor-pointer');
     });
 
     test('given component renders then displays chevron icon', () => {
@@ -79,9 +79,9 @@ describe('DefaultBaselineOption', () => {
   });
 
   describe('Selection state', () => {
-    test('given isSelected is false then shows inactive variant', () => {
+    test('given isSelected is false then shows inactive styling', () => {
       // When
-      const { container } = render(
+      render(
         <DefaultBaselineOption
           countryId={TEST_COUNTRIES.US}
           isSelected={false}
@@ -89,20 +89,23 @@ describe('DefaultBaselineOption', () => {
         />
       );
 
-      // Then
-      const button = container.querySelector('[data-variant="buttonPanel--inactive"]');
+      // Then - Button uses border-border-light when not selected
+      const button = screen.getByRole('button');
       expect(button).toBeInTheDocument();
+      expect(button).toHaveClass('tw:border-border-light');
     });
 
-    test('given isSelected is true then shows active variant', () => {
+    test('given isSelected is true then shows active styling', () => {
       // When
-      const { container } = render(
+      render(
         <DefaultBaselineOption countryId={TEST_COUNTRIES.US} isSelected onClick={mockOnClick} />
       );
 
-      // Then
-      const button = container.querySelector('[data-variant="buttonPanel--active"]');
+      // Then - Button uses border-primary-500 and bg-secondary-100 when selected
+      const button = screen.getByRole('button');
       expect(button).toBeInTheDocument();
+      expect(button).toHaveClass('tw:border-primary-500');
+      expect(button).toHaveClass('tw:bg-secondary-100');
     });
   });
 
@@ -120,10 +123,8 @@ describe('DefaultBaselineOption', () => {
         />
       );
 
-      const button = screen.getByRole('button');
-
       // When
-      await user.click(button);
+      await user.click(screen.getByRole('button'));
 
       // Then
       expect(mockCallback).toHaveBeenCalledOnce();
