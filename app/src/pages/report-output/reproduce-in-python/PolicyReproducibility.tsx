@@ -30,6 +30,7 @@ interface PolicyReproducibilityProps {
   policy: PolicyData;
   region?: string;
   dataset?: string | null;
+  isDefaultDataset?: boolean;
 }
 
 export default function PolicyReproducibility({
@@ -37,6 +38,7 @@ export default function PolicyReproducibility({
   policy,
   region = 'us',
   dataset = null,
+  isDefaultDataset = true,
 }: PolicyReproducibilityProps) {
   const [copied, setCopied] = useState(false);
   const reportYear = useReportYear();
@@ -48,7 +50,10 @@ export default function PolicyReproducibility({
     policy,
     region,
     timePeriod,
-    dataset
+    dataset,
+    null,
+    false,
+    isDefaultDataset
   );
 
   const codeText = codeLines.join('\n');

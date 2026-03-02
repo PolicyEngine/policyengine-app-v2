@@ -374,23 +374,55 @@ describe('reproducibilityCode', () => {
         expect(code).toContain('Microsimulation(reform=reform');
       });
 
-      test('given US state region then uses pooled CPS dataset', () => {
+      test('given US state region then uses state-specific dataset', () => {
         // When
         const lines = getReproducibilityCodeBlock(
           'policy',
           TEST_COUNTRIES.US,
           EMPTY_POLICY,
-          TEST_REGIONS.CA_STATE, // California state
+          TEST_REGIONS.CA_STATE, // "state/ca"
           TEST_YEARS.DEFAULT,
           null
         );
         const code = lines.join('\n');
 
         // Then
-        expect(code).toContain('pooled_3_year_cps_2023.h5');
+        expect(code).toContain('states/CA.h5');
       });
 
-      test('given known dataset then uses specified dataset path', () => {
+      test('given congressional district region then uses district-specific dataset', () => {
+        // When
+        const lines = getReproducibilityCodeBlock(
+          'policy',
+          TEST_COUNTRIES.US,
+          EMPTY_POLICY,
+          TEST_REGIONS.CA_DISTRICT, // "congressional_district/CA-01"
+          TEST_YEARS.DEFAULT,
+          null
+        );
+        const code = lines.join('\n');
+
+        // Then
+        expect(code).toContain('districts/CA-01.h5');
+      });
+
+      test('given city/place region then uses city-specific dataset', () => {
+        // When
+        const lines = getReproducibilityCodeBlock(
+          'policy',
+          TEST_COUNTRIES.US,
+          EMPTY_POLICY,
+          TEST_REGIONS.NJ_PLACE, // "place/NJ-57000"
+          TEST_YEARS.DEFAULT,
+          null
+        );
+        const code = lines.join('\n');
+
+        // Then
+        expect(code).toContain('cities/NJ-57000.h5');
+      });
+
+      test('given non-default dataset then includes dataset URL', () => {
         // When
         const lines = getReproducibilityCodeBlock(
           'policy',
@@ -398,15 +430,19 @@ describe('reproducibilityCode', () => {
           EMPTY_POLICY,
           TEST_REGIONS.US_NATIONAL,
           TEST_YEARS.DEFAULT,
-          TEST_DATASETS.ENHANCED_CPS_2024
+          TEST_DATASETS.ENHANCED_CPS,
+          null,
+          false,
+          false // not the default dataset
         );
         const code = lines.join('\n');
 
         // Then
         expect(code).toContain('enhanced_cps_2024.h5');
+        expect(code).toContain('dataset=');
       });
 
-      test('given unknown dataset then does not include dataset specifier', () => {
+      test('given default dataset then omits dataset specifier', () => {
         // When
         const lines = getReproducibilityCodeBlock(
           'policy',
@@ -414,7 +450,26 @@ describe('reproducibilityCode', () => {
           EMPTY_POLICY,
           TEST_REGIONS.US_NATIONAL,
           TEST_YEARS.DEFAULT,
-          TEST_DATASETS.UNKNOWN_DATASET
+          TEST_DATASETS.CPS,
+          null,
+          false,
+          true // is the default dataset
+        );
+        const code = lines.join('\n');
+
+        // Then
+        expect(code).not.toContain('dataset=');
+      });
+
+      test('given null dataset then does not include dataset specifier', () => {
+        // When
+        const lines = getReproducibilityCodeBlock(
+          'policy',
+          TEST_COUNTRIES.US,
+          EMPTY_POLICY,
+          TEST_REGIONS.US_NATIONAL,
+          TEST_YEARS.DEFAULT,
+          null
         );
         const code = lines.join('\n');
 
