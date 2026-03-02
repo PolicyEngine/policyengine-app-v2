@@ -7,12 +7,12 @@
 
 import { useEffect, useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
-import { Box, Center, Container, Loader, Text } from '@mantine/core';
 import { blogSpacing } from '@/components/blog/blogStyles';
 import { MarkdownFormatter } from '@/components/blog/MarkdownFormatter';
 import { NotebookRenderer } from '@/components/blog/NotebookRenderer';
 import { useDisplayCategory } from '@/components/blog/useDisplayCategory';
 import StaticPageLayout from '@/components/shared/static/StaticPageLayout';
+import { Container, Spinner, Text } from '@/components/ui';
 import authorsData from '@/data/posts/authors.json';
 import {
   getLocationTags,
@@ -21,7 +21,7 @@ import {
   locationLabels,
   topicLabels,
 } from '@/data/posts/postTransformers';
-import { colors } from '@/designTokens';
+import { colors, spacing, typography } from '@/designTokens';
 import type { AuthorsCollection, BlogPost, Notebook } from '@/types/blog';
 import { extractMarkdownFromNotebook, isNotebookFile } from '@/utils/notebookUtils';
 
@@ -117,9 +117,12 @@ export default function BlogPage() {
   if (loading) {
     return (
       <StaticPageLayout title={post.title}>
-        <Center py="xl" style={{ minHeight: '50vh' }}>
-          <Loader size="lg" />
-        </Center>
+        <div
+          className="tw:flex tw:items-center tw:justify-center tw:py-xl"
+          style={{ minHeight: '50vh' }}
+        >
+          <Spinner size="lg" />
+        </div>
       </StaticPageLayout>
     );
   }
@@ -127,9 +130,9 @@ export default function BlogPage() {
   if (error) {
     return (
       <StaticPageLayout title="Error">
-        <Center py="xl">
-          <Text c="red">{error}</Text>
-        </Center>
+        <div className="tw:flex tw:items-center tw:justify-center tw:py-xl">
+          <Text style={{ color: colors.error }}>{error}</Text>
+        </div>
       </StaticPageLayout>
     );
   }
@@ -137,8 +140,14 @@ export default function BlogPage() {
   return (
     <StaticPageLayout title={post.title}>
       {/* Header Section */}
-      <Box style={{ backgroundColor: colors.gray[50] }}>
-        <Container size="xl" py={post.hideHeaderImage ? 40 : 80}>
+      <div style={{ backgroundColor: colors.gray[50] }}>
+        <Container
+          size="xl"
+          style={{
+            paddingTop: post.hideHeaderImage ? spacing.component.input.height : spacing['5xl'],
+            paddingBottom: post.hideHeaderImage ? spacing.component.input.height : spacing['5xl'],
+          }}
+        >
           <PostHeadingSection
             post={post}
             markdown={content}
@@ -147,10 +156,10 @@ export default function BlogPage() {
             displayCategory={displayCategory}
           />
         </Container>
-      </Box>
+      </div>
 
       {/* Body Section */}
-      <Container size="xl" py="xl">
+      <Container size="xl" className="tw:py-xl">
         <PostBodySection
           post={post}
           markdown={content}
@@ -199,16 +208,25 @@ function PostHeadingSection({
     return (
       <div style={{ display: 'flex' }}>
         {/* Left sidebar */}
-        <div style={{ flex: 1, paddingRight: 30 }}>
-          <Text size="md" tt="uppercase" fw={600} mb="sm" style={{ letterSpacing: '0.05em' }}>
+        <div style={{ flex: 1, paddingRight: spacing['3xl'] }}>
+          <Text
+            size="md"
+            fw={typography.fontWeight.semibold}
+            className="tw:mb-sm tw:uppercase"
+            style={{ letterSpacing: '0.05em' }}
+          >
             {postDate}
           </Text>
           <Authorship post={post} countryId={countryId} />
-          <div style={{ marginBottom: 60 }} />
-          <Text size="md" c="dimmed" tt="uppercase" style={{ letterSpacing: '0.05em' }}>
+          <div style={{ marginBottom: spacing['5xl'] }} />
+          <Text
+            size="md"
+            className="tw:uppercase"
+            style={{ letterSpacing: '0.05em', color: colors.gray[500] }}
+          >
             {readingTime}
           </Text>
-          <div style={{ marginTop: 60 }} />
+          <div style={{ marginTop: spacing['5xl'] }} />
           <ShareLinks post={post} displayCategory={displayCategory} />
         </div>
 
@@ -217,12 +235,23 @@ function PostHeadingSection({
           <Text
             component="h1"
             size="xl"
-            fw={700}
-            style={{ fontSize: '2.5rem', lineHeight: 1.2, marginBottom: 20 }}
+            fw={typography.fontWeight.bold}
+            style={{
+              fontSize: typography.fontSize['4xl'],
+              lineHeight: typography.lineHeight.tight,
+              marginBottom: spacing.xl,
+            }}
           >
             {post.title}
           </Text>
-          <Text size="lg" c="dimmed" style={{ marginTop: 30, fontSize: '1.25rem' }}>
+          <Text
+            size="lg"
+            style={{
+              marginTop: spacing['3xl'],
+              fontSize: typography.fontSize.xl,
+              color: colors.gray[500],
+            }}
+          >
             {post.description}
           </Text>
           {imageUrl && !post.hideHeaderImage && (
@@ -230,7 +259,7 @@ function PostHeadingSection({
               alt={post.title}
               title={post.imageCredit}
               src={imageUrl}
-              style={{ width: '100%', marginTop: 30 }}
+              style={{ width: '100%', marginTop: spacing['3xl'] }}
               onError={(e) => {
                 e.currentTarget.style.display = 'none';
               }}
@@ -250,13 +279,17 @@ function PostHeadingSection({
       <Text
         component="h1"
         size="xl"
-        fw={700}
-        style={{ fontSize: displayCategory === 'mobile' ? '1.75rem' : '2rem', lineHeight: 1.2 }}
-        mb="md"
+        fw={typography.fontWeight.bold}
+        style={{
+          fontSize:
+            displayCategory === 'mobile' ? typography.fontSize['3xl'] : typography.fontSize['4xl'],
+          lineHeight: typography.lineHeight.tight,
+        }}
+        className="tw:mb-md"
       >
         {post.title}
       </Text>
-      <Text size="lg" c="dimmed" mb="lg">
+      <Text size="lg" className="tw:mb-lg" style={{ color: colors.gray[500] }}>
         {post.description}
       </Text>
       <div
@@ -264,16 +297,25 @@ function PostHeadingSection({
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          marginBottom: 20,
+          marginBottom: spacing.xl,
           flexWrap: 'wrap',
-          gap: 10,
+          gap: spacing.sm,
         }}
       >
         <Authorship post={post} countryId={countryId} />
-        <Text size="md" tt="uppercase" fw={600} style={{ letterSpacing: '0.05em' }}>
+        <Text
+          size="md"
+          fw={typography.fontWeight.semibold}
+          className="tw:uppercase"
+          style={{ letterSpacing: '0.05em' }}
+        >
           {postDate}
         </Text>
-        <Text size="md" c="dimmed" tt="uppercase" style={{ letterSpacing: '0.05em' }}>
+        <Text
+          size="md"
+          className="tw:uppercase"
+          style={{ letterSpacing: '0.05em', color: colors.gray[500] }}
+        >
           {readingTime}
         </Text>
       </div>
@@ -288,7 +330,7 @@ function PostHeadingSection({
           }}
         />
       )}
-      <div style={{ marginTop: 20 }}>
+      <div style={{ marginTop: spacing.xl }}>
         <ShareLinks post={post} displayCategory={displayCategory} />
       </div>
     </div>
@@ -320,13 +362,12 @@ function PostBodySection({
     return (
       <div style={{ display: 'flex' }}>
         {/* Left sidebar - Contents */}
-        <div style={{ flex: 1, marginRight: 30 }}>
+        <div style={{ flex: 1, marginRight: spacing['3xl'] }}>
           <div style={{ position: 'sticky', top: 150, marginTop: blogSpacing.marginTop.paragraph }}>
             <Text
               size="sm"
-              tt="uppercase"
-              fw={600}
-              mb="xs"
+              fw={typography.fontWeight.semibold}
+              className="tw:uppercase tw:mb-xs"
               style={{ letterSpacing: '0.1em', color: colors.primary[600] }}
             >
               Contents
@@ -342,7 +383,7 @@ function PostBodySection({
         </div>
 
         {/* Right sidebar - More On */}
-        <div style={{ flex: 1, marginLeft: 20 }}>
+        <div style={{ flex: 1, marginLeft: spacing.xl }}>
           <div style={{ position: 'sticky', top: 150, marginTop: blogSpacing.marginTop.paragraph }}>
             <MoreOn post={post} countryId={countryId} />
           </div>
@@ -355,19 +396,18 @@ function PostBodySection({
   if (displayCategory === 'tablet') {
     return (
       <div style={{ display: 'flex' }}>
-        <div style={{ flex: 1, marginRight: 30 }}>
+        <div style={{ flex: 1, marginRight: spacing['3xl'] }}>
           <div style={{ position: 'sticky', top: 150 }}>
             <Text
               size="sm"
-              tt="uppercase"
-              fw={600}
-              mb="xs"
+              fw={typography.fontWeight.semibold}
+              className="tw:uppercase tw:mb-xs"
               style={{ letterSpacing: '0.1em', color: colors.primary[600] }}
             >
               Contents
             </Text>
             <LeftContents markdown={markdown} />
-            <div style={{ marginTop: 15 }} />
+            <div style={{ marginTop: spacing.lg }} />
             <MoreOn post={post} countryId={countryId} />
           </div>
         </div>
@@ -382,12 +422,11 @@ function PostBodySection({
   // Mobile
   return (
     <div>
-      <div style={{ marginBottom: 20 }}>
+      <div style={{ marginBottom: spacing.xl }}>
         <Text
           size="sm"
-          tt="uppercase"
-          fw={600}
-          mb="xs"
+          fw={typography.fontWeight.semibold}
+          className="tw:uppercase tw:mb-xs"
           style={{ letterSpacing: '0.1em', color: colors.primary[600] }}
         >
           Contents
@@ -396,7 +435,7 @@ function PostBodySection({
       </div>
       {bodyContent}
       <AuthorSection post={post} countryId={countryId} />
-      <div style={{ marginTop: 15 }}>
+      <div style={{ marginTop: spacing.lg }}>
         <MoreOn post={post} countryId={countryId} />
       </div>
     </div>
@@ -449,7 +488,12 @@ function Authorship({ post, countryId }: { post: BlogPost; countryId: string }) 
   }
 
   return (
-    <Text size="md" tt="uppercase" fw={600} style={{ letterSpacing: '0.05em' }}>
+    <Text
+      size="md"
+      fw={typography.fontWeight.semibold}
+      className="tw:uppercase"
+      style={{ letterSpacing: '0.05em' }}
+    >
       {content}
     </Text>
   );
@@ -458,7 +502,7 @@ function Authorship({ post, countryId }: { post: BlogPost; countryId: string }) 
 // Author Section (footer with author bios)
 function AuthorSection({ post, countryId }: { post: BlogPost; countryId: string }) {
   return (
-    <div style={{ marginTop: 50 }}>
+    <div style={{ marginTop: spacing['4xl'] }}>
       {post.authors.map((authorId) => {
         const author = authors[authorId];
         if (!author) {
@@ -471,9 +515,9 @@ function AuthorSection({ post, countryId }: { post: BlogPost; countryId: string 
             style={{
               display: 'flex',
               justifyContent: 'start',
-              gap: 15,
-              padding: '1rem 0.5rem',
-              borderTop: '1px solid black',
+              gap: spacing.lg,
+              padding: `${spacing.lg} ${spacing.sm}`,
+              borderTop: `1px solid ${colors.border.dark}`,
             }}
           >
             {author.headshot && (
@@ -488,8 +532,13 @@ function AuthorSection({ post, countryId }: { post: BlogPost; countryId: string 
                 }}
               />
             )}
-            <div style={{ paddingTop: 5 }}>
-              <Text size="sm" tt="uppercase" fw={600} style={{ letterSpacing: '0.05em' }}>
+            <div style={{ paddingTop: spacing.xs }}>
+              <Text
+                size="sm"
+                fw={typography.fontWeight.semibold}
+                className="tw:uppercase"
+                style={{ letterSpacing: '0.05em' }}
+              >
                 <Link
                   to={`/${countryId}/research?authors=${authorId}`}
                   style={{ color: colors.primary[600], textDecoration: 'none' }}
@@ -500,7 +549,7 @@ function AuthorSection({ post, countryId }: { post: BlogPost; countryId: string 
                     .join(' ')}
                 </Link>
               </Text>
-              <Text size="xs" c="dimmed">
+              <Text size="xs" style={{ color: colors.gray[500] }}>
                 {author.title}
               </Text>
             </div>
@@ -529,7 +578,7 @@ function MoreOn({ post, countryId }: { post: BlogPost; countryId: string }) {
             style={{
               color: colors.gray[700],
               textDecoration: 'none',
-              fontSize: '0.95rem',
+              fontSize: typography.fontSize.base,
               transition: 'color 0.2s ease',
               display: 'block',
               padding: '2px 0',
@@ -555,9 +604,8 @@ function MoreOn({ post, countryId }: { post: BlogPost; countryId: string }) {
     <>
       <Text
         size="sm"
-        tt="uppercase"
-        fw={600}
-        mb="xs"
+        fw={typography.fontWeight.semibold}
+        className="tw:uppercase tw:mb-xs"
         style={{ letterSpacing: '0.1em', color: colors.primary[600] }}
       >
         More on
@@ -600,11 +648,16 @@ function ShareLinks({ post, displayCategory }: { post: BlogPost; displayCategory
       style={{
         display: 'flex',
         flexDirection: desktop ? 'column' : 'row',
-        gap: desktop ? 10 : 20,
+        gap: desktop ? spacing.sm : spacing.xl,
       }}
     >
       {desktop && (
-        <Text size="sm" tt="uppercase" fw={600} style={{ letterSpacing: '0.1em' }}>
+        <Text
+          size="sm"
+          fw={typography.fontWeight.semibold}
+          className="tw:uppercase"
+          style={{ letterSpacing: '0.1em' }}
+        >
           Share
         </Text>
       )}
@@ -617,10 +670,10 @@ function ShareLinks({ post, displayCategory }: { post: BlogPost; displayCategory
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 8,
+            gap: spacing.sm,
             color: colors.gray[600],
             textDecoration: 'none',
-            fontSize: '0.85rem',
+            fontSize: typography.fontSize.xs,
           }}
           title={link.name}
         >
@@ -632,10 +685,10 @@ function ShareLinks({ post, displayCategory }: { post: BlogPost; displayCategory
               alignItems: 'center',
               justifyContent: 'center',
               backgroundColor: desktop ? colors.gray[500] : 'transparent',
-              color: desktop ? 'white' : colors.gray[600],
+              color: desktop ? colors.white : colors.gray[600],
               border: desktop ? 'none' : `1px solid ${colors.gray[400]}`,
-              fontSize: '0.75rem',
-              fontWeight: 600,
+              fontSize: typography.fontSize.xs,
+              fontWeight: typography.fontWeight.semibold,
             }}
           >
             {link.icon}

@@ -1,4 +1,4 @@
-import { Text } from '@mantine/core';
+import { Text } from '@/components/ui';
 import { colors, typography } from '@/designTokens';
 import { TextColumnConfig, TextValue } from './types';
 

@@ -23,8 +23,8 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { Stack } from '@mantine/core';
-import { spacing } from '@/designTokens/spacing';
+import { Stack } from '@/components/ui';
+import { typography } from '@/designTokens';
 import { RECHARTS_FONT_STYLE } from '@/utils/chartUtils';
 import { ChartWatermark } from './ChartWatermark';
 import { TOOLTIP_STYLE } from './tooltipStyle';
@@ -73,9 +73,9 @@ function WaterfallBarLabel({ x, y, width, height, index, data }: any) {
       y={labelY}
       textAnchor="middle"
       dominantBaseline="central"
-      fontSize={12}
+      fontSize={typography.fontSize.xs}
       fill="#fff"
-      fontWeight={500}
+      fontWeight={typography.fontWeight.medium}
     >
       {entry.label}
     </text>
@@ -93,7 +93,7 @@ function WaterfallTooltip({ active, payload }: any) {
   const data = payload[0].payload as WaterfallDatum;
   return (
     <div style={{ ...TOOLTIP_STYLE, maxWidth: 'min(300px, 90vw)' }}>
-      <p style={{ fontWeight: 600, margin: 0 }}>{data.name}</p>
+      <p style={{ fontWeight: typography.fontWeight.semibold, margin: 0 }}>{data.name}</p>
     </div>
   );
 }
@@ -115,7 +115,7 @@ export function WaterfallChart({
   margin = { top: 20, right: 20, bottom: 30, left: 20 },
 }: WaterfallChartProps) {
   return (
-    <Stack gap={spacing.sm}>
+    <Stack gap="sm">
       <ResponsiveContainer width="100%" height={height}>
         <BarChart data={data} margin={margin}>
           <CartesianGrid strokeDasharray="3 3" vertical={false} />

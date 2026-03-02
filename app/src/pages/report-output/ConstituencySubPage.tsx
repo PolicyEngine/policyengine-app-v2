@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Stack, Text } from '@mantine/core';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { SidebarTabs, type SidebarTab } from '@/components/SidebarTabs';
+import { Stack, Text } from '@/components/ui';
 import { AbsoluteChangeByConstituency } from './constituency/AbsoluteChangeByConstituency';
 import { RelativeChangeByConstituency } from './constituency/RelativeChangeByConstituency';
 
@@ -29,7 +29,7 @@ export function ConstituencySubPage({ output }: ConstituencySubPageProps) {
   // Type guard: only UK reports have constituency data
   if (!('constituency_impact' in output)) {
     return (
-      <Stack align="center" justify="center" h={400}>
+      <Stack align="center" justify="center" style={{ height: 400 }}>
         <Text c="dimmed">Constituency analysis not available for this region</Text>
       </Stack>
     );

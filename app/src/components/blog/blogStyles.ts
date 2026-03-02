@@ -18,25 +18,25 @@ export const blogColors = {
   primaryHover: colors.primary[700],
 
   // Text colors (semantic naming)
-  textPrimary: '#333', // Main body text
-  textSecondary: '#555', // Muted text, quotes
-  textTertiary: '#666', // Very muted (code labels)
-  textHeading: '#222', // Headings (darkest)
-  textHeading2: '#333', // H2 headings
-  textHeading3: '#444', // H3 headings
-  textHeading4: '#555', // H4 headings
+  textPrimary: colors.gray[800], // Main body text
+  textSecondary: colors.gray[600], // Muted text, quotes
+  textTertiary: colors.gray[500], // Very muted (code labels)
+  textHeading: colors.gray[900], // Headings (darkest)
+  textHeading2: colors.gray[800], // H2 headings
+  textHeading3: colors.gray[700], // H3 headings
+  textHeading4: colors.gray[600], // H4 headings
 
   // Background colors (semantic naming)
   backgroundPrimary: colors.white, // Main content background
-  backgroundSecondary: '#f9f9f9', // Light panels (quotes, footnotes)
-  backgroundCode: '#f5f5f5', // Code blocks
-  backgroundCodeLabel: '#f0f0f0', // Code language label
-  backgroundTable: '#f2f2f2', // Alternate table rows
+  backgroundSecondary: colors.gray[50], // Light panels (quotes, footnotes)
+  backgroundCode: colors.gray[100], // Code blocks
+  backgroundCodeLabel: colors.gray[100], // Code language label
+  backgroundTable: colors.gray[100], // Alternate table rows
 
   // Border colors
-  borderLight: '#f0f0f0', // Very light borders (h2)
-  borderMedium: '#eee', // Medium borders (code blocks)
-  borderDark: '#ddd', // Darker borders (footnotes, labels)
+  borderLight: colors.gray[100], // Very light borders (h2)
+  borderMedium: colors.gray[200], // Medium borders (code blocks)
+  borderDark: colors.gray[300], // Darker borders (footnotes, labels)
 
   // Link colors
   link: colors.primary[600],

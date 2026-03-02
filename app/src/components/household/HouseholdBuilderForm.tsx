@@ -10,8 +10,24 @@
 
 import { useMemo, useState } from 'react';
 import { IconInfoCircle, IconPlus } from '@tabler/icons-react';
-import { Accordion, Alert, Button, Divider, Group, Select, Stack, Text } from '@mantine/core';
-import { colors, spacing } from '@/designTokens';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+  Alert,
+  AlertDescription,
+  Button,
+  Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Stack,
+  Text,
+} from '@/components/ui';
+import { colors, spacing, typography } from '@/designTokens';
 import { Household } from '@/types/ingredients/Household';
 import { sortPeopleKeys } from '@/utils/householdIndividuals';
 import {
@@ -277,79 +293,95 @@ export default function HouseholdBuilderForm({
       {/* Floating notification when variable added to different entity */}
       {warningMessage && (
         <Alert
-          icon={<IconInfoCircle size={16} />}
-          color="teal"
-          variant="outline"
-          withCloseButton
-          onClose={() => setWarningMessage(null)}
+          variant="default"
+          className="tw:fixed tw:z-[1000] tw:opacity-100 tw:bg-white"
           style={{
-            position: 'fixed',
-            top: `calc(${spacing.appShell.header.height} + ${spacing.xl})`,
+            top: `calc(60px + ${spacing.xl})`,
             right: spacing.xl,
             maxWidth: 'min(400px, calc(100vw - 40px))',
-            zIndex: 1000,
-            opacity: 1,
-            backgroundColor: colors.white,
+            border: `1px solid ${colors.primary[500]}`,
           }}
         >
-          {warningMessage}
+          <IconInfoCircle size={16} />
+          <AlertDescription>{warningMessage}</AlertDescription>
+          <button
+            type="button"
+            onClick={() => setWarningMessage(null)}
+            className="tw:absolute tw:top-2 tw:right-2 tw:bg-transparent tw:border-none tw:cursor-pointer tw:p-1"
+          >
+            ×
+          </button>
         </Alert>
       )}
 
       {/* Household Information */}
       <Stack gap="md">
         {/* Marital Status and Children - side by side */}
-        <Group grow>
-          <Select
-            label="Marital status"
-            value={maritalStatus}
-            onChange={(val) => onMaritalStatusChange((val || 'single') as 'single' | 'married')}
-            data={[
-              { value: 'single', label: 'Single' },
-              { value: 'married', label: 'Married' },
-            ]}
-            disabled={disabled}
-          />
+        <div className="tw:grid tw:grid-cols-2 tw:gap-4">
+          <div>
+            <Label>Marital status</Label>
+            <Select
+              value={maritalStatus}
+              onValueChange={(val) =>
+                onMaritalStatusChange((val || 'single') as 'single' | 'married')
+              }
+              disabled={disabled}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="single">Single</SelectItem>
+                <SelectItem value="married">Married</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-          <Select
-            label="Number of children"
-            value={numChildren.toString()}
-            onChange={(val) => onNumChildrenChange(parseInt(val || '0', 10))}
-            data={[
-              { value: '0', label: '0' },
-              { value: '1', label: '1' },
-              { value: '2', label: '2' },
-              { value: '3', label: '3' },
-              { value: '4', label: '4' },
-              { value: '5', label: '5' },
-            ]}
-            disabled={disabled}
-          />
-        </Group>
+          <div>
+            <Label>Number of children</Label>
+            <Select
+              value={numChildren.toString()}
+              onValueChange={(val) => onNumChildrenChange(parseInt(val || '0', 10))}
+              disabled={disabled}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="0">0</SelectItem>
+                <SelectItem value="1">1</SelectItem>
+                <SelectItem value="2">2</SelectItem>
+                <SelectItem value="3">3</SelectItem>
+                <SelectItem value="4">4</SelectItem>
+                <SelectItem value="5">5</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
       </Stack>
 
-      <Divider />
+      <hr className="tw:border-border-light" />
 
       {/* Main Accordion Sections - all open by default */}
-      <Accordion defaultValue={['individuals', 'household-vars']} multiple>
+      <Accordion type="multiple" defaultValue={['individuals', 'household-vars']}>
         {/* Individuals / Members Section */}
-        <Accordion.Item value="individuals">
-          <Accordion.Control>
-            <Text fw={500}>Individuals</Text>
-          </Accordion.Control>
-          <Accordion.Panel>
-            <Accordion key={people.join(',')} defaultValue={people} multiple>
+        <AccordionItem value="individuals">
+          <AccordionTrigger>
+            <Text fw={typography.fontWeight.medium}>Individuals</Text>
+          </AccordionTrigger>
+          <AccordionContent>
+            <Accordion type="multiple" key={people.join(',')} defaultValue={people}>
               {people.map((person) => {
                 const personVars = getPersonVariables(person);
 
                 return (
-                  <Accordion.Item key={person} value={person}>
-                    <Accordion.Control>
-                      <Text fw={600} size="sm">
+                  <AccordionItem key={person} value={person}>
+                    <AccordionTrigger>
+                      <Text fw={typography.fontWeight.semibold} size="sm">
                         {getPersonDisplayNameCapitalized(person)}
                       </Text>
-                    </Accordion.Control>
-                    <Accordion.Panel>
+                    </AccordionTrigger>
+                    <AccordionContent>
                       <Stack gap="md">
                         {/* Basic person inputs (dynamically from metadata) */}
                         {basicPersonFields.map((fieldName) => {
@@ -418,31 +450,30 @@ export default function HouseholdBuilderForm({
                           />
                         ) : (
                           <Button
-                            // variant="default"
-                            variant="subtle"
-                            size="compact-sm"
-                            leftSection={<IconPlus size={14} />}
+                            variant="ghost"
+                            size="sm"
                             onClick={() => handleOpenPersonSearch(person)}
-                            style={{ alignSelf: 'flex-start' }}
+                            className="tw:self-start"
                           >
+                            <IconPlus size={14} />
                             Add variable to {getPersonDisplayName(person)}
                           </Button>
                         )}
                       </Stack>
-                    </Accordion.Panel>
-                  </Accordion.Item>
+                    </AccordionContent>
+                  </AccordionItem>
                 );
               })}
             </Accordion>
-          </Accordion.Panel>
-        </Accordion.Item>
+          </AccordionContent>
+        </AccordionItem>
 
         {/* Household Variables Section */}
-        <Accordion.Item value="household-vars">
-          <Accordion.Control>
-            <Text fw={500}>Household</Text>
-          </Accordion.Control>
-          <Accordion.Panel>
+        <AccordionItem value="household-vars">
+          <AccordionTrigger>
+            <Text fw={typography.fontWeight.medium}>Household</Text>
+          </AccordionTrigger>
+          <AccordionContent>
             <Stack gap="md">
               {/* Basic household inputs (like state_name) */}
               {basicNonPersonFields.map((fieldName) => {
@@ -506,18 +537,18 @@ export default function HouseholdBuilderForm({
                 />
               ) : (
                 <Button
-                  variant="subtle"
-                  size="compact-sm"
-                  leftSection={<IconPlus size={14} />}
+                  variant="ghost"
+                  size="sm"
                   onClick={handleOpenHouseholdSearch}
-                  style={{ alignSelf: 'flex-start' }}
+                  className="tw:self-start"
                 >
+                  <IconPlus size={14} />
                   Add variable to your household
                 </Button>
               )}
             </Stack>
-          </Accordion.Panel>
-        </Accordion.Item>
+          </AccordionContent>
+        </AccordionItem>
       </Accordion>
     </Stack>
   );

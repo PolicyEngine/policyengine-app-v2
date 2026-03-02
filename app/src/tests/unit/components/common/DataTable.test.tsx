@@ -53,9 +53,10 @@ describe('DataTable', () => {
       <DataTable<MockRowData> data={TEST_DATA} columns={TEST_COLUMNS} />
     );
 
-    // Then — the table's parent div has overflow-x: auto
+    // Then — the table's ancestor div has overflow-x-auto via Tailwind class
     const table = container.querySelector('table')!;
-    const scrollWrapper = table.parentElement!;
-    expect(scrollWrapper.style.overflowX).toBe('auto');
+    // ShadcnTable wraps <table> in a container div with tw:overflow-x-auto
+    const tableContainer = table.parentElement!;
+    expect(tableContainer.className).toContain('overflow-x-auto');
   });
 });

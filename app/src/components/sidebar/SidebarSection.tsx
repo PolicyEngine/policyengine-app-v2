@@ -1,5 +1,4 @@
-import { Stack, Text } from '@mantine/core';
-import { colors } from '../../designTokens';
+import { colors, typography } from '../../designTokens';
 
 interface SidebarSectionProps {
   title?: string;
@@ -8,24 +7,21 @@ interface SidebarSectionProps {
 
 export default function SidebarSection({ title, children }: SidebarSectionProps) {
   return (
-    <Stack gap={4} px={8} py={8}>
+    <div className="tw:flex tw:flex-col tw:gap-1 tw:px-2 tw:py-2">
       {title && (
-        <Text
-          size="xs"
-          fw={500}
-          c={colors.text.secondary}
-          px={12}
-          pb={4}
+        <span
+          className="tw:px-3 tw:pb-1"
           style={{
-            fontSize: 12,
-            lineHeight: '18px',
-            letterSpacing: 0,
+            fontSize: typography.fontSize.xs,
+            lineHeight: typography.lineHeight.normal,
+            fontWeight: typography.fontWeight.medium,
+            color: colors.text.secondary,
           }}
         >
           {title}
-        </Text>
+        </span>
       )}
-      <Stack gap={2}>{children}</Stack>
-    </Stack>
+      <div className="tw:flex tw:flex-col tw:gap-0.5">{children}</div>
+    </div>
   );
 }

@@ -1,5 +1,4 @@
 import { useSelector } from 'react-redux';
-import { Box } from '@mantine/core';
 import { RootState } from '@/store';
 import { Household } from '@/types/ingredients/Household';
 import VariableArithmetic from './VariableArithmetic';
@@ -27,7 +26,7 @@ export default function HouseholdBreakdown({
   }
 
   return (
-    <Box
+    <div
       style={{
         borderLeft: `3px solid ${borderColor}`,
       }}
@@ -40,6 +39,6 @@ export default function HouseholdBreakdown({
         defaultExpanded={false}
         childrenOnly
       />
-    </Box>
+    </div>
   );
 }

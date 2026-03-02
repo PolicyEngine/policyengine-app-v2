@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react';
-import { Box } from '@mantine/core';
 import { ChartWatermark } from '@/components/charts';
-import { colors, spacing } from '@/designTokens';
+import { colors, spacing, typography } from '@/designTokens';
 import type { HexMapConfig } from '@/types/visualization/HexMapConfig';
 import type { HexMapDataPoint } from '@/types/visualization/HexMapDataPoint';
 import { getColorScale, interpolateColor } from '@/utils/visualization/colorScales';
@@ -134,7 +133,7 @@ export function HexagonalMap({ data, config = {}, exportRef }: HexagonalMapProps
   const toSvgY = (y: number) => height - padding - (y - dataBounds.yMin) * scale;
 
   return (
-    <Box
+    <div
       ref={exportRef}
       style={{
         border: `1px solid ${colors.border.light}`,
@@ -205,9 +204,9 @@ export function HexagonalMap({ data, config = {}, exportRef }: HexagonalMapProps
             transform: 'translate(-50%, -100%)',
             backgroundColor: 'rgba(0,0,0,0.85)',
             color: '#fff',
-            padding: '4px 8px',
+            padding: `${spacing.xs} ${spacing.sm}`,
             borderRadius: spacing.radius.element,
-            fontSize: 12,
+            fontSize: typography.fontSize.xs,
             whiteSpace: 'nowrap',
             pointerEvents: 'none',
             zIndex: 10,
@@ -220,7 +219,7 @@ export function HexagonalMap({ data, config = {}, exportRef }: HexagonalMapProps
       <div style={{ padding: `${spacing.xs}px ${spacing.sm}px` }}>
         <ChartWatermark />
       </div>
-    </Box>
+    </div>
   );
 }
 

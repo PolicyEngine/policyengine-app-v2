@@ -1,5 +1,5 @@
-import { Box, Text } from '@mantine/core';
-import { colors, spacing } from '@/designTokens';
+import { Text } from '@/components/ui';
+import { colors, spacing, typography } from '@/designTokens';
 
 const PolicyEngineLogo = '/assets/logos/policyengine/white.svg';
 
@@ -11,18 +11,15 @@ interface HeaderBarProps {
 
 export default function HeaderBar({ title, children, showLogo = false }: HeaderBarProps) {
   return (
-    <Box
-      bg={colors.primary[900]}
-      px={spacing.appShell.header.padding.split(' ')[1]}
-      py={spacing.appShell.header.padding.split(' ')[0]}
+    <div
+      className="tw:flex tw:items-center tw:justify-between"
       style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
+        backgroundColor: colors.primary[900],
+        padding: spacing.appShell.header.padding,
         minHeight: spacing.appShell.header.height,
       }}
     >
-      <Box style={{ display: 'flex', alignItems: 'center' }}>
+      <div className="tw:flex tw:items-center">
         {showLogo && (
           <img
             src={PolicyEngineLogo}
@@ -35,12 +32,12 @@ export default function HeaderBar({ title, children, showLogo = false }: HeaderB
           />
         )}
         {title && (
-          <Text c="white" fw={700} size="md">
+          <Text style={{ color: colors.white, fontWeight: typography.fontWeight.bold }} size="md">
             {title}
           </Text>
         )}
-      </Box>
+      </div>
       {children}
-    </Box>
+    </div>
   );
 }

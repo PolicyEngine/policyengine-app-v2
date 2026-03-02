@@ -1,4 +1,11 @@
-import { Select } from '@mantine/core';
+import {
+  Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui';
 import { RegionOption } from '@/utils/regionStrategies';
 
 interface UKCountrySelectorProps {
@@ -13,13 +20,20 @@ export default function UKCountrySelector({
   onCountryChange,
 }: UKCountrySelectorProps) {
   return (
-    <Select
-      label="Select Country"
-      placeholder="Pick a country"
-      data={countryOptions}
-      value={selectedCountry}
-      onChange={(val) => onCountryChange(val || '')}
-      searchable
-    />
+    <div>
+      <Label className="tw:text-sm tw:font-medium tw:mb-1 tw:block">Select country</Label>
+      <Select value={selectedCountry} onValueChange={(val) => onCountryChange(val)}>
+        <SelectTrigger className="tw:w-full">
+          <SelectValue placeholder="Pick a country" />
+        </SelectTrigger>
+        <SelectContent>
+          {countryOptions.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
   );
 }

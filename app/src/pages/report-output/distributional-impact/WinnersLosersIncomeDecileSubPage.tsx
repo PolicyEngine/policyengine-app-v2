@@ -1,14 +1,16 @@
 import { useSelector } from 'react-redux';
 import { Bar, BarChart, Label, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { Stack, Text } from '@mantine/core';
-import { useMediaQuery, useViewportSize } from '@mantine/hooks';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { ChartContainer } from '@/components/ChartContainer';
 import { TOOLTIP_STYLE } from '@/components/charts';
+import { Stack, Text } from '@/components/ui';
 import { colors } from '@/designTokens/colors';
 import { spacing } from '@/designTokens/spacing';
+import { typography } from '@/designTokens/typography';
 import { MOBILE_BREAKPOINT_QUERY } from '@/hooks/useChartDimensions';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { useViewportSize } from '@/hooks/useViewportSize';
 import type { RootState } from '@/store';
 import { downloadCsv, getClampedChartHeight, RECHARTS_FONT_STYLE } from '@/utils/chartUtils';
 import { formatPercent } from '@/utils/formatters';
@@ -50,9 +52,9 @@ function WinnersLosersTooltip({ active, payload, label }: any) {
   const decileLabel = label === 'All' ? 'All households' : `Decile ${label}`;
   return (
     <div style={TOOLTIP_STYLE}>
-      <p style={{ fontWeight: 600, margin: 0 }}>{decileLabel}</p>
+      <p style={{ fontWeight: typography.fontWeight.semibold, margin: 0 }}>{decileLabel}</p>
       {payload.map((p: any) => (
-        <p key={p.dataKey} style={{ margin: '2px 0', fontSize: 13 }}>
+        <p key={p.dataKey} style={{ margin: '2px 0', fontSize: typography.fontSize.sm }}>
           <span
             style={{
               display: 'inline-block',
@@ -142,8 +144,8 @@ export default function WinnersLosersIncomeDecileSubPage({ output }: Props) {
 
   return (
     <ChartContainer title={getChartTitle()} onDownloadCsv={handleDownloadCsv}>
-      <Stack gap={spacing.sm}>
-        <Stack gap={0}>
+      <Stack gap="sm">
+        <Stack className="tw:gap-0">
           {/* All households - small chart */}
           <ResponsiveContainer width="100%" height={60}>
             <BarChart

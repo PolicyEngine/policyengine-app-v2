@@ -10,13 +10,13 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { Stack, Text } from '@mantine/core';
 import { TOOLTIP_STYLE } from '@/components/charts';
 import { CHART_COLORS } from '@/constants/chartColors';
 import {
   CHART_DISPLAY_EXTENSION_DATE,
   YEARS_INTO_FUTURE_FOR_CHART,
 } from '@/constants/chartConstants';
+import { typography } from '@/designTokens';
 import { useChartWidth, useIsMobile, useWindowHeight } from '@/hooks/useChartDimensions';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import { ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
@@ -53,9 +53,9 @@ export default function PolicyParameterSelectorHistoricalValues(
   } = props;
 
   return (
-    <Stack mt="xl">
-      <Text fw={700}>Historical values</Text>
-      <Text>{capitalize(param.label)} over time</Text>
+    <div className="tw:flex tw:flex-col tw:gap-sm tw:mt-xl">
+      <p className="tw:font-bold">Historical values</p>
+      <p>{capitalize(param.label)} over time</p>
       <ParameterOverTimeChart
         param={param}
         baseValuesCollection={baseValues}
@@ -63,7 +63,7 @@ export default function PolicyParameterSelectorHistoricalValues(
         policyLabel={policyLabel}
         policyId={policyId}
       />
-    </Stack>
+    </div>
   );
 }
 
@@ -74,9 +74,12 @@ function HistoricalTooltip({ active, payload, label, param }: any) {
   const dateStr = new Date(label).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
   return (
     <div style={TOOLTIP_STYLE}>
-      <p style={{ fontWeight: 600, margin: 0 }}>{dateStr}</p>
+      <p style={{ fontWeight: typography.fontWeight.semibold, margin: 0 }}>{dateStr}</p>
       {payload.map((p: any) => (
-        <p key={p.name} style={{ margin: '2px 0', fontSize: 13, color: p.stroke }}>
+        <p
+          key={p.name}
+          style={{ margin: '2px 0', fontSize: typography.fontSize.sm, color: p.stroke }}
+        >
           {p.name}: {formatParameterValue(p.value, param?.unit, { decimalPlaces: 2 })}
         </p>
       ))}
@@ -304,9 +307,7 @@ export const ParameterOverTimeChart = memo((props: ParameterOverTimeChartProps) 
   if (x.length === 0 || y.length === 0) {
     return (
       <div ref={chartContainerRef}>
-        <Text c="dimmed" ta="center" py="xl">
-          No data available to display
-        </Text>
+        <p className="tw:text-gray-500 tw:text-center tw:py-xl">No data available to display</p>
       </div>
     );
   }
@@ -368,10 +369,10 @@ export const ParameterOverTimeChart = memo((props: ParameterOverTimeChartProps) 
         </LineChart>
       </ResponsiveContainer>
       {hasInfiniteValues && (
-        <Text size="sm" c="gray.8" fs="italic" mt="xs">
+        <p className="tw:text-sm tw:text-gray-600 tw:italic tw:mt-xs">
           Note: Charts do not currently display parameters with values of positive or negative
           infinity.
-        </Text>
+        </p>
       )}
     </div>
   );

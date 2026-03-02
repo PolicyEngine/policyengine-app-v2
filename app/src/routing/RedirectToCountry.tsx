@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import { Box, Loader } from '@mantine/core';
+import { Spinner } from '@/components/ui';
 import { geolocationService } from './geolocation/GeolocationService';
 
 /**
@@ -80,19 +80,10 @@ export function RedirectToCountry() {
 
   if (isDetecting) {
     return (
-      <Box
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          height: '100vh',
-          gap: '16px',
-        }}
-      >
-        <Loader size="lg" />
+      <div className="tw:flex tw:flex-col tw:items-center tw:justify-center tw:h-screen tw:gap-4">
+        <Spinner size="lg" />
         <div>Loading PolicyEngine...</div>
-      </Box>
+      </div>
     );
   }
 

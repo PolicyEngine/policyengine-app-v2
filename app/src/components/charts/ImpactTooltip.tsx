@@ -1,3 +1,4 @@
+import { typography } from '@/designTokens';
 import { TOOLTIP_STYLE } from './tooltipStyle';
 
 interface ImpactTooltipEntry {
@@ -21,8 +22,10 @@ export function ImpactTooltip({ active, payload }: ImpactTooltipProps) {
   const data = payload[0].payload;
   return (
     <div style={{ ...TOOLTIP_STYLE, maxWidth: 'min(300px, 90vw)' }}>
-      <p style={{ fontWeight: 600, margin: 0 }}>{data.name}</p>
-      <p style={{ margin: '4px 0 0', fontSize: 13, whiteSpace: 'pre-wrap' }}>{data.hoverText}</p>
+      <p style={{ fontWeight: typography.fontWeight.semibold, margin: 0 }}>{data.name}</p>
+      <p style={{ marginTop: 4, fontSize: typography.fontSize.sm, whiteSpace: 'pre-wrap' }}>
+        {data.hoverText}
+      </p>
     </div>
   );
 }

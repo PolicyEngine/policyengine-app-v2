@@ -48,7 +48,7 @@ describe('IngredientReadView', () => {
 
   test('given loading state then displays loader', () => {
     // When
-    const { container } = render(
+    render(
       <IngredientReadView
         ingredient={MOCK_INGREDIENT.NAME}
         title={MOCK_INGREDIENT.TITLE}
@@ -59,9 +59,8 @@ describe('IngredientReadView', () => {
       />
     );
 
-    // Then - Mantine Loader uses a span, so just check it's rendered
-    const loader = container.querySelector('.mantine-Loader-root');
-    expect(loader).toBeInTheDocument();
+    // Then — Spinner component renders with role="status"
+    expect(screen.getByRole('status')).toBeInTheDocument();
   });
 
   test('given error state then displays error message', () => {

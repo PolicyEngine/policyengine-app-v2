@@ -1,6 +1,14 @@
 import { useState } from 'react';
 import { IconChevronDown } from '@tabler/icons-react';
-import { Button, Group, Menu, rem } from '@mantine/core';
+import {
+  Button,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  Group,
+  Separator,
+} from '@/components/ui';
 import { colors, spacing } from '@/designTokens';
 import { IngredientRecord, SplitMenuColumnConfig } from './types';
 
@@ -28,7 +36,7 @@ export function SplitMenuColumn({ config, record }: SplitMenuColumnProps) {
   };
 
   return (
-    <Group gap={0} style={{ width: 'fit-content' }}>
+    <Group gap="xs" style={{ width: 'fit-content' }} className="tw:flex-nowrap tw:gap-0">
       {/* Primary Button */}
       <Button
         variant="outline"
@@ -39,7 +47,7 @@ export function SplitMenuColumn({ config, record }: SplitMenuColumnProps) {
           borderTopRightRadius: 0,
           borderBottomRightRadius: 0,
           borderRight: 'none',
-          minWidth: rem(120),
+          minWidth: 120,
           justifyContent: 'flex-start',
           paddingLeft: spacing.md,
           paddingRight: spacing.md,
@@ -49,15 +57,8 @@ export function SplitMenuColumn({ config, record }: SplitMenuColumnProps) {
       </Button>
 
       {/* Dropdown Button */}
-      <Menu
-        opened={opened}
-        onChange={setOpened}
-        shadow="md"
-        width="max-content"
-        position="bottom-end"
-        offset={0}
-      >
-        <Menu.Target>
+      <DropdownMenu open={opened} onOpenChange={setOpened}>
+        <DropdownMenuTrigger asChild>
           <Button
             variant="outline"
             disabled
@@ -68,7 +69,7 @@ export function SplitMenuColumn({ config, record }: SplitMenuColumnProps) {
               borderLeft: `1px solid ${colors.border.light}`,
               paddingLeft: spacing.xs,
               paddingRight: spacing.xs,
-              minWidth: rem(32),
+              minWidth: 32,
             }}
           >
             <IconChevronDown
@@ -79,31 +80,31 @@ export function SplitMenuColumn({ config, record }: SplitMenuColumnProps) {
               }}
             />
           </Button>
-        </Menu.Target>
+        </DropdownMenuTrigger>
 
-        <Menu.Dropdown style={{ minWidth: rem(152) }}>
+        <DropdownMenuContent align="end" style={{ minWidth: 152 }}>
           {/* Include primary action in dropdown as well */}
-          <Menu.Item
+          <DropdownMenuItem
             onClick={() => handleSecondaryAction(primaryAction.action)}
-            color={primaryAction.color}
+            className={primaryAction.color === 'red' ? 'tw:text-red-500' : ''}
           >
             {primaryAction.label}
-          </Menu.Item>
+          </DropdownMenuItem>
 
-          {secondaryActions.length > 0 && <Menu.Divider />}
+          {secondaryActions.length > 0 && <Separator />}
 
           {/* Secondary actions */}
           {secondaryActions.map((action) => (
-            <Menu.Item
+            <DropdownMenuItem
               key={action.action}
-              color={action.color}
+              className={action.color === 'red' ? 'tw:text-red-500' : ''}
               onClick={() => handleSecondaryAction(action.action)}
             >
               {action.label}
-            </Menu.Item>
+            </DropdownMenuItem>
           ))}
-        </Menu.Dropdown>
-      </Menu>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </Group>
   );
 }

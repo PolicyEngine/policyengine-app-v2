@@ -1,6 +1,4 @@
 import { useSelector } from 'react-redux';
-import { Stack, Text } from '@mantine/core';
-import { useMediaQuery, useViewportSize } from '@mantine/hooks';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { ChartContainer } from '@/components/ChartContainer';
 import {
@@ -9,9 +7,11 @@ import {
   WaterfallChart,
   type WaterfallItem,
 } from '@/components/charts';
-import { spacing } from '@/designTokens/spacing';
+import { Stack, Text } from '@/components/ui';
 import { MOBILE_BREAKPOINT_QUERY } from '@/hooks/useChartDimensions';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { useViewportSize } from '@/hooks/useViewportSize';
 import type { RootState } from '@/store';
 import { absoluteChangeMessage } from '@/utils/chartMessages';
 import { downloadCsv, getClampedChartHeight, getNiceTicks } from '@/utils/chartUtils';
@@ -45,7 +45,7 @@ export default function BudgetaryImpactByProgramSubPage({ output }: Props) {
   // Check if detailed_budget exists (UK only feature)
   if (!output.detailed_budget || typeof output.detailed_budget !== 'object') {
     return (
-      <Stack gap={spacing.md}>
+      <Stack gap="md">
         <Text size="lg" fw={500}>
           Detailed budgetary impact by program is not available for this report.
         </Text>
@@ -69,7 +69,7 @@ export default function BudgetaryImpactByProgramSubPage({ output }: Props) {
   // If no programs with changes, show message
   if (programs.length === 0) {
     return (
-      <Stack gap={spacing.md}>
+      <Stack gap="md">
         <Text size="lg" fw={500}>
           This reform has no impact on individual programs.
         </Text>
