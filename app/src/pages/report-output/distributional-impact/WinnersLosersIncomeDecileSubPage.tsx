@@ -21,6 +21,7 @@ import { regionName } from '@/utils/impactChartUtils';
 
 interface Props {
   output: SocietyWideReportOutput;
+  chartHeight?: number;
 }
 
 // Category definitions and styling
@@ -56,12 +57,15 @@ const LEGEND_TEXT_MAP: Record<string, string> = {
   'Lose more than 5%': 'Loss more than 5%',
 };
 
-export default function WinnersLosersIncomeDecileSubPage({ output }: Props) {
+export default function WinnersLosersIncomeDecileSubPage({
+  output,
+  chartHeight: chartHeightProp,
+}: Props) {
   const mobile = useMediaQuery('(max-width: 768px)');
   const countryId = useCurrentCountry();
   const metadata = useSelector((state: RootState) => state.metadata);
   const { height: viewportHeight } = useViewportSize();
-  const chartHeight = getClampedChartHeight(viewportHeight, mobile);
+  const chartHeight = chartHeightProp ?? getClampedChartHeight(viewportHeight, mobile);
 
   // Extract data
   const deciles = output.intra_decile.deciles;
