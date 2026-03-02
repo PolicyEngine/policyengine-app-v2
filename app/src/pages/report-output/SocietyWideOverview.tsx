@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { IconCoin, IconHome, IconUsers } from '@tabler/icons-react';
 import { Box, Group, SimpleGrid, Text } from '@mantine/core';
 import { SocietyWideReportOutput } from '@/api/societyWideCalculation';
-import DashboardCard from '@/components/report/DashboardCard';
+import DashboardCard, { SHRUNKEN_CARD_HEIGHT } from '@/components/report/DashboardCard';
 import MetricCard from '@/components/report/MetricCard';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
@@ -22,6 +22,19 @@ const SECONDARY_ICON_SIZE = 36;
 
 const GRID_GAP = 16;
 
+// Expanded card chart heights, calculated from the layout:
+//   Expanded card outer: SHRUNKEN_CARD_HEIGHT * 2 + GRID_GAP = 416px
+//   Card border: 2px (1px each side)
+//   Card padding (spacing.lg = 16px): 32px → content area = 382px
+//   ChartContainer chrome (title ~28px + gap 8px + box border 2px + box padding 24px) = 62px
+//   Description text (2 lines ~40px + gap 8px) = 48px  (poverty & winners only)
+//
+// Budget (spacing.xl = 20px padding, no description): 416 - 42 - 62 = 312px
+// Poverty / Winners (spacing.lg, with description):  416 - 34 - 62 - 48 = 272px
+const EXPANDED_H = SHRUNKEN_CARD_HEIGHT * 2 + GRID_GAP; // 416
+const BUDGET_CHART_H = EXPANDED_H - 2 - 40 - 62 - 2; // 310
+const SECONDARY_CHART_H = EXPANDED_H - 2 - 32 - 62 - 48 - 2; // 270
+
 type CardKey = 'budget' | 'poverty' | 'winners';
 
 export default function SocietyWideOverview({ output }: SocietyWideOverviewProps) {
@@ -38,18 +51,38 @@ export default function SocietyWideOverview({ output }: SocietyWideOverviewProps
 
   // Calculate budgetary impact
   const budgetaryImpact = output.budget.budgetary_impact;
-  const budgetFormatted = formatBudgetaryImpact(Math.abs(budgetaryImpact));
+
+  // Federal and state breakdowns (US only)
+  const stateTaxImpact = output.budget.state_tax_revenue_impact;
+  const federalTaxImpact = output.budget.tax_revenue_impact - stateTaxImpact;
+  const spendingImpact = output.budget.benefit_spending_impact;
+
+  const formatImpact = (value: number) => {
+    if (value === 0) return 'No change';
+    const abs = Math.abs(value);
+    if (abs < 1e6) return `<${symbol}1 million`;
+    const formatted = formatBudgetaryImpact(abs);
+    return `${symbol}${formatted.display}${formatted.label ? ` ${formatted.label}` : ''}`;
+  };
+
   const budgetIsPositive = budgetaryImpact > 0;
-  const budgetValue =
-    budgetaryImpact === 0
-      ? 'No change'
-      : `${symbol}${budgetFormatted.display}${budgetFormatted.label ? ` ${budgetFormatted.label}` : ''}`;
+  const budgetValue = formatImpact(budgetaryImpact);
   const budgetSubtext =
     budgetaryImpact === 0
       ? 'This policy has no impact on the budget'
       : budgetIsPositive
         ? 'in additional government revenue'
         : 'in additional government spending';
+
+  const trendOf = (value: number): 'positive' | 'negative' | 'neutral' =>
+    value === 0 ? 'neutral' : value > 0 ? 'positive' : 'negative';
+
+  const subtextOf = (value: number, category: string) =>
+    value === 0
+      ? `No change in ${category}`
+      : value > 0
+        ? `in additional ${category}`
+        : `in reduced ${category}`;
 
   // Calculate poverty rate change
   const povertyOverview = output.poverty.poverty.all;
@@ -87,7 +120,7 @@ export default function SocietyWideOverview({ output }: SocietyWideOverviewProps
         shrunkenBorderColor={colors.primary[100]}
         padding={spacing.xl}
         shrunkenContent={
-          <Group gap={spacing.md} align="flex-start">
+          <Group gap={spacing.lg} align="flex-start">
             <Box
               style={{
                 width: HERO_ICON_SIZE,
@@ -113,9 +146,31 @@ export default function SocietyWideOverview({ output }: SocietyWideOverviewProps
                 hero
               />
             </Box>
+            {countryId === 'us' && (
+              <Group gap={spacing.xl} align="flex-start" style={{ flexShrink: 0 }}>
+                <MetricCard
+                  label="Federal tax revenue"
+                  value={formatImpact(federalTaxImpact)}
+                  subtext={subtextOf(federalTaxImpact, 'federal tax revenue')}
+                  trend={trendOf(federalTaxImpact)}
+                />
+                <MetricCard
+                  label="State and local tax revenue"
+                  value={formatImpact(stateTaxImpact)}
+                  subtext={subtextOf(stateTaxImpact, 'state tax revenue')}
+                  trend={trendOf(stateTaxImpact)}
+                />
+                <MetricCard
+                  label="Benefit spending"
+                  value={formatImpact(spendingImpact)}
+                  subtext={subtextOf(spendingImpact, 'benefit spending')}
+                  trend={trendOf(-spendingImpact)}
+                />
+              </Group>
+            )}
           </Group>
         }
-        expandedContent={<BudgetaryImpactSubPage output={output} />}
+        expandedContent={<BudgetaryImpactSubPage output={output} chartHeight={BUDGET_CHART_H} />}
         onToggleMode={() => toggle('budget')}
       />
 
@@ -152,7 +207,9 @@ export default function SocietyWideOverview({ output }: SocietyWideOverviewProps
             </Box>
           </Group>
         }
-        expandedContent={<PovertyImpactByAgeSubPage output={output} />}
+        expandedContent={
+          <PovertyImpactByAgeSubPage output={output} chartHeight={SECONDARY_CHART_H} />
+        }
         onToggleMode={() => toggle('poverty')}
       />
 
@@ -274,7 +331,9 @@ export default function SocietyWideOverview({ output }: SocietyWideOverviewProps
             </Box>
           </Group>
         }
-        expandedContent={<WinnersLosersIncomeDecileSubPage output={output} />}
+        expandedContent={
+          <WinnersLosersIncomeDecileSubPage output={output} chartHeight={SECONDARY_CHART_H} />
+        }
         onToggleMode={() => toggle('winners')}
       />
     </SimpleGrid>

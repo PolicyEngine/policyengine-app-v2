@@ -25,14 +25,15 @@ import {
 
 interface Props {
   output: SocietyWideReportOutput;
+  chartHeight?: number;
 }
 
-export default function BudgetaryImpactSubPage({ output }: Props) {
+export default function BudgetaryImpactSubPage({ output, chartHeight: chartHeightProp }: Props) {
   const mobile = useMediaQuery(MOBILE_BREAKPOINT_QUERY);
   const { height: viewportHeight } = useViewportSize();
   const countryId = useCurrentCountry();
   const metadata = useSelector((state: RootState) => state.metadata);
-  const chartHeight = getClampedChartHeight(viewportHeight, mobile);
+  const chartHeight = chartHeightProp ?? getClampedChartHeight(viewportHeight, mobile);
 
   // Extract data
   const budgetaryImpact = output.budget.budgetary_impact;
