@@ -165,6 +165,15 @@ export const mockFilteredParameters = {
     type: 'parameter' as const,
     indexInModule: 2,
   },
+  'gov.contrib.pycache': {
+    parameter: 'gov.contrib.pycache',
+    label: 'Pycache',
+    description: 'Should be filtered out',
+    economy: true,
+    household: true,
+    type: 'parameter' as const,
+    indexInModule: 3,
+  },
 };
 
 // Mock parameters with neither economy nor household flags
