@@ -54,11 +54,11 @@
     },
     {
       "source": "/uk/spring-statement-2026",
-      "destination": "https://uk-spring-statement-2026.vercel.app/"
+      "destination": "https://uk-spring-statement-2026-policy-engine.vercel.app/"
     },
     {
       "source": "/uk/spring-statement-2026/:path*",
-      "destination": "https://uk-spring-statement-2026.vercel.app/:path*"
+      "destination": "https://uk-spring-statement-2026-policy-engine.vercel.app/:path*"
     },
     { "source": "/(.*)", "destination": "/website.html" }
   ],
