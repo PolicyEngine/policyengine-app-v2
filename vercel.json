@@ -52,6 +52,14 @@
       "source": "/us/taxsim/:path*",
       "destination": "https://cps-dashboard-pied.vercel.app/us/taxsim/:path*"
     },
+    {
+      "source": "/uk/spring-statement-2026",
+      "destination": "https://uk-spring-statement-2026.vercel.app/"
+    },
+    {
+      "source": "/uk/spring-statement-2026/:path*",
+      "destination": "https://uk-spring-statement-2026.vercel.app/:path*"
+    },
     { "source": "/(.*)", "destination": "/website.html" }
   ],
   "headers": [
