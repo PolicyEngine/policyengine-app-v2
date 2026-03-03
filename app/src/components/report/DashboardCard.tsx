@@ -27,8 +27,17 @@ interface DashboardCardProps {
   // Custom shrunken content (replaces header + slides entirely)
   shrunkenContent?: React.ReactNode;
 
+  // Two-part shrunken layout: header at top, body centered in remaining space
+  shrunkenHeader?: React.ReactNode;
+  shrunkenBody?: React.ReactNode;
+
   // Layout
   colSpan?: number;
+  /** Number of grid rows the card occupies when expanded (default 2) */
+  expandedRows?: number;
+
+  /** Controls (e.g. SegmentedControl) rendered in a row with the minimize button when expanded */
+  expandedControls?: React.ReactNode;
 
   // Style overrides (apply only when shrunken/idle)
   shrunkenBackground?: string;
@@ -67,7 +76,11 @@ export default function DashboardCard({
   label,
   slides,
   shrunkenContent,
+  shrunkenHeader,
+  shrunkenBody,
   colSpan = 1,
+  expandedRows = 2,
+  expandedControls,
   shrunkenBackground,
   shrunkenBorderColor,
   padding: paddingProp,
@@ -76,7 +89,7 @@ export default function DashboardCard({
   const cardRef = useRef<HTMLDivElement>(null);
   const safeIndex = slides ? Math.min(activeSlideIndex, slides.length - 1) : 0;
   const isExpanded = mode === 'expanded';
-  const useCustomContent = !!shrunkenContent;
+  const useCustomContent = !!shrunkenContent || !!shrunkenHeader;
   const cardPadding = paddingProp ?? spacing.lg;
 
   const [phase, setPhase] = useState<Phase>('idle');
@@ -163,7 +176,7 @@ export default function DashboardCard({
   // --- Derived values ---
   const isLifted = phase !== 'idle';
   const expandedW = colSpan >= 2 ? (cell?.w ?? 0) : cell ? cell.w * 2 + gridGap : 0;
-  const expandedH = cell ? cell.h * 2 + gridGap : 0;
+  const expandedH = cell ? cell.h * expandedRows + gridGap * (expandedRows - 1) : 0;
 
   // Background/border: use overrides only when idle (shrunken)
   const cardBackground =
@@ -276,7 +289,7 @@ export default function DashboardCard({
 
         {/* Content area */}
         <div style={{ position: 'relative', flex: 1, minHeight: 0, overflow: 'hidden' }}>
-          {/* Shrunken layer — always mounted, opacity-controlled, vertically centered */}
+          {/* Shrunken layer — always mounted, opacity-controlled */}
           <div
             style={{
               opacity: shrunkenContentOpacity,
@@ -284,10 +297,31 @@ export default function DashboardCard({
               pointerEvents: phase === 'idle' ? 'auto' : 'none',
               height: '100%',
               display: 'flex',
-              alignItems: 'center',
+              alignItems: shrunkenHeader ? 'stretch' : 'center',
             }}
           >
-            {useCustomContent ? (
+            {shrunkenHeader ? (
+              <div
+                style={{
+                  width: '100%',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  height: '100%',
+                }}
+              >
+                <div style={{ flexShrink: 0 }}>{shrunkenHeader}</div>
+                <div
+                  style={{
+                    flex: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    minHeight: 0,
+                  }}
+                >
+                  <div style={{ width: '100%' }}>{shrunkenBody}</div>
+                </div>
+              </div>
+            ) : useCustomContent ? (
               <div style={{ width: '100%' }}>{shrunkenContent}</div>
             ) : (
               <Stack gap={spacing.md} style={{ width: '100%' }}>
@@ -327,16 +361,37 @@ export default function DashboardCard({
                 opacity: expandedContentOpacity,
                 transition: `opacity ${FADE_MS}ms ease`,
                 pointerEvents: phase === 'expanded' ? 'auto' : 'none',
-                overflow: 'auto',
+                display: 'flex',
+                flexDirection: 'column',
               }}
             >
-              {expandedContent}
+              {/* Controls row: expandedControls on left, minimize button on right */}
+              {onToggleMode && (
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    flexShrink: 0,
+                    height: 31,
+                    marginBottom: spacing.sm,
+                  }}
+                >
+                  <div style={{ display: 'flex', gap: spacing.lg }}>
+                    {expandedControls}
+                  </div>
+                  {expandButton}
+                </div>
+              )}
+              <div style={{ flex: 1, minHeight: 0 }}>
+                {expandedContent}
+              </div>
             </div>
           )}
         </div>
 
-        {/* Expand button for custom content mode — absolutely positioned */}
-        {useCustomContent && expandButton && (
+        {/* Expand button for custom content mode — absolutely positioned (hidden when expanded) */}
+        {useCustomContent && expandButton && !mountExpanded && (
           <div style={{ position: 'absolute', top: 12, right: 12, zIndex: 2 }}>{expandButton}</div>
         )}
       </motion.div>

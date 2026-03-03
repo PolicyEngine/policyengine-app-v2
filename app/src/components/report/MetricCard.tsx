@@ -4,8 +4,8 @@ import { colors } from '@/designTokens';
 type MetricTrend = 'positive' | 'negative' | 'neutral';
 
 interface MetricCardProps {
-  /** Label describing the metric */
-  label: string;
+  /** Label describing the metric (omit to hide) */
+  label?: string;
   /** The main value to display */
   value: string;
   /** Optional secondary value or context */
@@ -66,11 +66,13 @@ export default function MetricCard({
   return (
     <div>
       {/* Label */}
-      <p
-        className={`tw:font-medium tw:text-gray-500 tw:uppercase tw:tracking-widest ${hero ? 'tw:text-sm' : 'tw:text-xs'}`}
-      >
-        {label}
-      </p>
+      {label && (
+        <p
+          className={`tw:font-medium tw:text-gray-500 tw:uppercase tw:tracking-widest ${hero ? 'tw:text-sm' : 'tw:text-xs'}`}
+        >
+          {label}
+        </p>
+      )}
 
       {/* Value with trend indicator */}
       <div className="tw:flex tw:items-center tw:gap-sm tw:mt-xs">

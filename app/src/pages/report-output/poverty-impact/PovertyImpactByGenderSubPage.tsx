@@ -32,14 +32,15 @@ import { regionName } from '@/utils/impactChartUtils';
 
 interface Props {
   output: SocietyWideReportOutput;
+  chartHeight?: number;
 }
 
-export default function PovertyImpactByGenderSubPage({ output }: Props) {
+export default function PovertyImpactByGenderSubPage({ output, chartHeight: chartHeightProp }: Props) {
   const mobile = useMediaQuery(MOBILE_BREAKPOINT_QUERY);
   const countryId = useCurrentCountry();
   const metadata = useSelector((state: RootState) => state.metadata);
   const { height: viewportHeight } = useViewportSize();
-  const chartHeight = getClampedChartHeight(viewportHeight, mobile);
+  const chartHeight = chartHeightProp ?? getClampedChartHeight(viewportHeight, mobile);
 
   // Extract data
   const genderImpact = output.poverty_by_gender?.poverty || {
