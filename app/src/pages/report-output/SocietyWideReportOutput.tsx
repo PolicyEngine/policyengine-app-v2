@@ -90,7 +90,7 @@ const INPUT_ONLY_TABS: Record<string, (props: InputTabProps) => React.ReactEleme
         policy={policyV1}
         region={simulations?.[0]?.populationId || report.countryId}
         dataset={datasetName}
-        isDefaultDataset={true}
+        isDefaultDataset
       />
     );
   },
