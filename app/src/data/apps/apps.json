@@ -1,6 +1,19 @@
 [
   {
     "type": "iframe",
+    "slug": "spring-statement-2026",
+    "title": "UK Spring Statement 2026 analysis dashboard",
+    "description": "Interactive dashboard analysing OBR March 2026 forecast revisions and their impact on UK household incomes across income deciles and household types",
+    "source": "https://uk-spring-statement-2026-policy-engine.vercel.app/",
+    "tags": ["uk", "featured", "policy", "interactives"],
+    "countryId": "uk",
+    "displayWithResearch": true,
+    "image": "uk-spring-statement-2026.png",
+    "date": "2026-03-03 12:00:00",
+    "authors": ["max-ghenis"]
+  },
+  {
+    "type": "iframe",
     "slug": "marriage",
     "title": "Marriage incentive calculator",
     "description": "Interactive calculator showing how marriage affects taxes, benefits, and net income for US households across all states",
