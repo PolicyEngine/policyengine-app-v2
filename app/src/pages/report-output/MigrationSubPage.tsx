@@ -1,11 +1,9 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
 import {
   Box,
-  Button,
   Collapse,
   Group,
-  Progress,
   SegmentedControl,
   Stack,
   Text,
@@ -13,20 +11,13 @@ import {
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
-import { USDistrictChoroplethMap } from '@/components/visualization/USDistrictChoroplethMap';
-import {
-  CongressionalDistrictDataProvider,
-  useCongressionalDistrictData,
-} from '@/contexts/CongressionalDistrictDataContext';
+import { CongressionalDistrictDataProvider } from '@/contexts/CongressionalDistrictDataContext';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import type { Geography } from '@/types/ingredients/Geography';
 import type { Report } from '@/types/ingredients/Report';
 import type { Simulation } from '@/types/ingredients/Simulation';
-import type { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
-import { formatParameterValue } from '@/utils/chartValueUtils';
 import { isUKLocalLevelGeography } from '@/utils/geographyUtils';
-import { DIVERGING_GRAY_TEAL } from '@/utils/visualization/colorScales';
 import BudgetaryImpactByProgramSubPage from './budgetary-impact/BudgetaryImpactByProgramSubPage';
 import { ConstituencySubPage } from './ConstituencySubPage';
 import DistributionalImpactWealthAverageSubPage from './distributional-impact/DistributionalImpactWealthAverageSubPage';
@@ -99,13 +90,6 @@ const DISTRIBUTIONAL_MODE_OPTIONS = [
   { label: 'Intra-decile impacts', value: 'intra-decile' as DistributionalMode },
 ];
 
-type CongressionalMode = 'absolute' | 'relative';
-
-const CONGRESSIONAL_MODE_OPTIONS = [
-  { label: 'Absolute', value: 'absolute' as CongressionalMode },
-  { label: 'Relative', value: 'relative' as CongressionalMode },
-];
-
 const segmentedControlStyles = {
   root: {
     background: colors.gray[100],
@@ -116,134 +100,6 @@ const segmentedControlStyles = {
     boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
   },
 };
-
-/**
- * Congressional district collapsible section.
- * Renders the map immediately (all outlines visible, white fill).
- * Districts fill in progressively as state-by-state data arrives.
- * Must be rendered inside a CongressionalDistrictDataProvider.
- */
-function CongressionalDistrictSection({ output }: { output: SocietyWideReportOutput }) {
-  const {
-    stateResponses,
-    completedCount,
-    totalStates,
-    hasStarted,
-    isLoading,
-    labelLookup,
-    stateCode,
-    startFetch,
-  } = useCongressionalDistrictData();
-  const [mode, setMode] = useState<CongressionalMode>('absolute');
-
-  // Check if output already has district data (from nationwide calculation)
-  const existingDistricts = useMemo(() => {
-    if (!('congressional_district_impact' in output)) {
-      return null;
-    }
-    const districtData = (output as ReportOutputSocietyWideUS).congressional_district_impact;
-    if (!districtData?.districts) {
-      return null;
-    }
-    return districtData.districts;
-  }, [output]);
-
-  // Build map data from context (progressive fill as states complete)
-  const contextMapData = useMemo(() => {
-    if (stateResponses.size === 0) {
-      return [];
-    }
-    const points: Array<{ geoId: string; label: string; value: number }> = [];
-    stateResponses.forEach((stateData) => {
-      stateData.districts.forEach((district) => {
-        points.push({
-          geoId: district.district,
-          label: labelLookup.get(district.district) ?? `District ${district.district}`,
-          value:
-            mode === 'absolute'
-              ? district.average_household_income_change
-              : district.relative_household_income_change,
-        });
-      });
-    });
-    return points;
-  }, [stateResponses, labelLookup, mode]);
-
-  // Use pre-computed data if available, otherwise progressive context data
-  const mapData = useMemo(() => {
-    if (existingDistricts) {
-      return existingDistricts.map((item) => ({
-        geoId: item.district,
-        label: labelLookup.get(item.district) ?? `District ${item.district}`,
-        value:
-          mode === 'absolute'
-            ? item.average_household_income_change
-            : item.relative_household_income_change,
-      }));
-    }
-    return contextMapData;
-  }, [existingDistricts, contextMapData, labelLookup, mode]);
-
-  // Map config based on absolute vs relative mode
-  const mapConfig = useMemo(
-    () => ({
-      colorScale: {
-        colors: DIVERGING_GRAY_TEAL.colors,
-        tickFormat: mode === 'absolute' ? '$,.0f' : '.1%',
-        symmetric: true,
-      },
-      formatValue: (value: number) =>
-        mode === 'absolute'
-          ? formatParameterValue(value, 'currency-USD', {
-              decimalPlaces: 0,
-              includeSymbol: true,
-            })
-          : formatParameterValue(value, '/1', { decimalPlaces: 1 }),
-    }),
-    [mode]
-  );
-
-  // Progress
-  const progressPercent = totalStates > 0 ? Math.round((completedCount / totalStates) * 100) : 0;
-  const progressMessage = isLoading
-    ? `Computing district impacts (${completedCount} of ${totalStates} states)...`
-    : undefined;
-
-  return (
-    <CollapsibleSection
-      label="Congressional district impact"
-      defaultOpen={false}
-      right={
-        <Group gap={spacing.lg}>
-          {!hasStarted && !existingDistricts && (
-            <Button variant="light" color="gray" size="xs" onClick={startFetch} maw={250}>
-              Compute congressional impacts
-            </Button>
-          )}
-          <SegmentedControl
-            value={mode}
-            onChange={(value) => setMode(value as CongressionalMode)}
-            size="xs"
-            data={CONGRESSIONAL_MODE_OPTIONS}
-            styles={segmentedControlStyles}
-          />
-        </Group>
-      }
-    >
-      {progressMessage && (
-        <Text size="sm" c={colors.text.secondary}>
-          {progressMessage}
-        </Text>
-      )}
-      {isLoading && <Progress value={progressPercent} size="sm" />}
-      <USDistrictChoroplethMap
-        data={mapData}
-        config={mapConfig}
-        focusState={stateCode ?? undefined}
-      />
-    </CollapsibleSection>
-  );
-}
 
 export default function MigrationSubPage({
   output,
@@ -299,8 +155,6 @@ export default function MigrationSubPage({
           {wealthMode === 'intra-decile' && <WinnersLosersWealthDecileSubPage output={output} />}
         </CollapsibleSection>
       )}
-
-      {canShowCongressional && <CongressionalDistrictSection output={output} />}
 
       {showUKGeographySections && (
         <>

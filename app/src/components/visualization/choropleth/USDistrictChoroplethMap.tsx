@@ -472,6 +472,7 @@ export function USDistrictChoroplethMap({
       ref={mergedRef}
       className="tw:flex tw:items-stretch"
       style={{
+        height: '100%',
         border: `1px solid ${colors.border.light}`,
         borderRadius: spacing.radius.container,
         backgroundColor: colors.background.primary,
