@@ -186,6 +186,79 @@ export function buildBackgroundTrace(geoJSON: GeoJSONFeatureCollection): Partial
 }
 
 /**
+ * Build a red error trace for districts belonging to states that failed to load.
+ * Shows a solid red fill with an error message on hover.
+ */
+export function buildErrorTrace(
+  geoJSON: GeoJSONFeatureCollection,
+  errorStates: string[]
+): Partial<PlotData> | null {
+  if (errorStates.length === 0) {
+    return null;
+  }
+
+  const errorSet = new Set(errorStates);
+  const locations: string[] = [];
+  const hoverText: string[] = [];
+  const features: GeoJSONFeature[] = [];
+
+  geoJSON.features.forEach((feature: GeoJSONFeature) => {
+    const districtId = feature.properties?.DISTRICT_ID as string;
+    if (!districtId) {
+      return;
+    }
+    // DISTRICT_ID format: "CO-01" — extract 2-letter state abbreviation
+    const stateAbbr = districtId.split('-')[0];
+    if (!errorSet.has(stateAbbr)) {
+      return;
+    }
+    locations.push(districtId);
+    hoverText.push(
+      `${feature.properties?.NAMELSAD ?? districtId}<br><b>Error loading data</b>`
+    );
+    features.push(feature);
+  });
+
+  if (locations.length === 0) {
+    return null;
+  }
+
+  const errorGeoJSON: GeoJSONFeatureCollection = {
+    ...geoJSON,
+    features: features.map((f, i) => ({ ...f, id: locations[i] })),
+  };
+
+  return {
+    type: 'choropleth',
+    geojson: errorGeoJSON,
+    locations,
+    z: locations.map(() => 1),
+    text: hoverText,
+    featureidkey: 'id',
+    locationmode: 'geojson-id',
+    colorscale: [
+      [0, 'rgba(220, 53, 69, 0.5)'],
+      [1, 'rgba(220, 53, 69, 0.5)'],
+    ] as ColorscaleEntry[],
+    zmin: 0,
+    zmax: 1,
+    showscale: false,
+    hovertemplate: '%{text}<extra></extra>',
+    hoverlabel: {
+      bgcolor: 'rgba(220, 53, 69, 0.9)',
+      font: { color: 'white' },
+      bordercolor: 'rgba(220, 53, 69, 1)',
+    },
+    marker: {
+      line: {
+        color: 'rgba(220, 53, 69, 0.8)',
+        width: 1.0,
+      },
+    },
+  } as Partial<PlotData>;
+}
+
+/**
  * Build the geo configuration for Plotly.
  *
  * @param focusState - Optional state code to zoom to
@@ -319,7 +392,8 @@ export function buildPlotDataAndLayout(
   dataMap: Map<string, ChoroplethDataPoint>,
   colorRange: ColorRange,
   config: ChoroplethMapConfig,
-  focusState?: string
+  focusState?: string,
+  errorStates?: string[]
 ): PlotDataAndLayout {
   // Background trace: all district outlines (white fill, gray borders)
   const backgroundTrace = buildBackgroundTrace(geoJSON);
@@ -338,7 +412,16 @@ export function buildPlotDataAndLayout(
 
   // Build data trace (colored fills for districts with data)
   const dataTraces = buildPlotData(geoJSONWithIds, processedData, colorscale, colorRange, config);
+
+  // Build error trace (red fill for districts in errored states)
+  const errorTrace = errorStates ? buildErrorTrace(geoJSON, errorStates) : null;
+
   const plotLayout = buildPlotLayout(geoConfig, config.height);
 
-  return { plotData: [backgroundTrace, ...dataTraces], plotLayout };
+  const plotData = [backgroundTrace, ...dataTraces];
+  if (errorTrace) {
+    plotData.push(errorTrace);
+  }
+
+  return { plotData, plotLayout };
 }

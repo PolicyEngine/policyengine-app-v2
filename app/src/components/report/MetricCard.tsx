@@ -1,8 +1,8 @@
-import { IconArrowDown, IconArrowUp, IconMinus } from '@tabler/icons-react';
+import { IconAlertTriangle, IconArrowDown, IconArrowUp, IconMinus } from '@tabler/icons-react';
 import { Box, Group, Text, ThemeIcon } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
 
-type MetricTrend = 'positive' | 'negative' | 'neutral';
+type MetricTrend = 'positive' | 'negative' | 'neutral' | 'error';
 
 interface MetricCardProps {
   /** Label describing the metric (omit to hide) */
@@ -42,12 +42,18 @@ export default function MetricCard({
         return colors.primary[600];
       case 'negative':
         return colors.gray[600];
+      case 'error':
+        return 'rgb(220, 53, 69)';
       default:
         return colors.gray[500];
     }
   };
 
   const getTrendIcon = () => {
+    if (trend === 'error') {
+      return <IconAlertTriangle size={hero ? 20 : 16} stroke={2.5} />;
+    }
+
     // When invertArrow is true, flip the arrow direction
     // (useful for metrics like poverty where decrease is good)
     const showUpArrow = invertArrow ? trend === 'negative' : trend === 'positive';
@@ -71,7 +77,7 @@ export default function MetricCard({
         <Text
           size={hero ? 'sm' : 'xs'}
           fw={typography.fontWeight.medium}
-          c={colors.text.secondary}
+          c={trend === 'error' ? 'rgb(220, 53, 69)' : colors.text.secondary}
           tt="uppercase"
           style={{ letterSpacing: '0.05em' }}
         >
@@ -86,7 +92,7 @@ export default function MetricCard({
             size={hero ? 32 : 24}
             radius="xl"
             variant="light"
-            color={trend === 'positive' ? 'teal' : 'gray'}
+            color={trend === 'positive' ? 'teal' : trend === 'error' ? 'red' : 'gray'}
           >
             {getTrendIcon()}
           </ThemeIcon>

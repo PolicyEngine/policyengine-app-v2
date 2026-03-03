@@ -108,6 +108,7 @@ export function USDistrictChoroplethMap({
   config = {},
   geoDataPath = DEFAULT_GEOJSON_PATH,
   focusState,
+  errorStates,
 }: USDistrictChoroplethMapProps) {
   // Load GeoJSON data
   const { geoJSON, loading, error } = useGeoJSONLoader(geoDataPath);
@@ -129,8 +130,8 @@ export function USDistrictChoroplethMap({
     if (!geoJSON) {
       return { plotData: [], plotLayout: {} };
     }
-    return buildPlotDataAndLayout(geoJSON, dataMap, colorRange, fullConfig, focusState);
-  }, [geoJSON, dataMap, colorRange, fullConfig, focusState]);
+    return buildPlotDataAndLayout(geoJSON, dataMap, colorRange, fullConfig, focusState, errorStates);
+  }, [geoJSON, dataMap, colorRange, fullConfig, focusState, errorStates]);
 
   // Build Plotly config
   const plotConfig = useMemo(() => buildPlotConfig(), []);

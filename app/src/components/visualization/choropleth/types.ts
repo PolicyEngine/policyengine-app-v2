@@ -86,6 +86,8 @@ export interface USDistrictChoroplethMapProps {
   geoDataPath?: string;
   /** State code to focus/zoom on (e.g., 'ca', 'ny'). If provided, map will zoom to fit that state's districts. */
   focusState?: string;
+  /** Uppercase 2-letter state abbreviations whose fetches errored (e.g., ['CO']). Districts in these states are colored red with error hover text. */
+  errorStates?: string[];
 }
 
 /**
