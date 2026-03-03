@@ -19,7 +19,7 @@ describe('appTransformers', () => {
       expect(app.description).toBeDefined();
       expect(app.source).toBeDefined();
       expect(app.type).toBeDefined();
-      expect(['streamlit', 'iframe', 'obbba-iframe', 'custom']).toContain(app.type);
+      expect(['streamlit', 'iframe', 'obbba-iframe', 'custom', 'rewrite']).toContain(app.type);
       expect(app.tags).toBeDefined();
       expect(Array.isArray(app.tags)).toBe(true);
       expect(app.countryId).toBeDefined();
