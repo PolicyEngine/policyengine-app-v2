@@ -406,7 +406,7 @@ describe('reproducibilityCode', () => {
         expect(code).toContain('districts/CA-01.h5');
       });
 
-      test('given city/place region then uses city-specific dataset', () => {
+      test('given place region then uses state dataset with place_fips filtering', () => {
         // When
         const lines = getReproducibilityCodeBlock(
           'policy',
@@ -418,8 +418,17 @@ describe('reproducibilityCode', () => {
         );
         const code = lines.join('\n');
 
-        // Then
-        expect(code).toContain('cities/NJ-57000.h5');
+        // Then - uses parent state's dataset, not a city-specific one
+        expect(code).toContain('states/NJ.h5');
+        expect(code).not.toContain('cities/');
+        // Filters by place_fips
+        expect(code).toContain('place_fips');
+        expect(code).toContain('57000');
+        // Creates filtered dataframe for simulations
+        expect(code).toContain('subset_df');
+        expect(code).toContain('Microsimulation(dataset=subset_df');
+        // Includes pandas import for filtering
+        expect(code).toContain('import pandas as pd');
       });
 
       test('given non-default dataset then includes dataset URL', () => {

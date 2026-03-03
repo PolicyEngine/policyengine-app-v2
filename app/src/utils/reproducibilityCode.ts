@@ -11,11 +11,11 @@ import { CURRENT_YEAR } from '@/constants';
 // Default year fallback - use the app's current year constant
 const DEFAULT_YEAR = parseInt(CURRENT_YEAR, 10);
 
-// Maps region prefixes (from metadata) to HuggingFace subfolder names
+// Maps region prefixes (from metadata) to HuggingFace subfolder names.
+// Note: place/ is NOT included — places use the parent state's dataset + filtering.
 const US_REGION_PREFIX_TO_FOLDER: Record<string, string> = {
   'state/': 'states',
   'congressional_district/': 'districts',
-  'place/': 'cities',
 };
 
 /**
@@ -34,7 +34,7 @@ function getDatasetUrl(countryId: string, datasetName: string, year: number): st
  * Region values from metadata always use the pattern: "prefix/code"
  *   - "state/ca" → states/CA.h5
  *   - "congressional_district/CA-01" → districts/CA-01.h5
- *   - "place/NJ-57000" → cities/NJ-57000.h5
+ * Note: place/ regions are handled separately via getPlaceStateDatasetUrl.
  */
 function getSubnationalDatasetUrl(region: string): string | null {
   for (const [prefix, folder] of Object.entries(US_REGION_PREFIX_TO_FOLDER)) {
@@ -46,6 +46,32 @@ function getSubnationalDatasetUrl(region: string): string | null {
   }
 
   return null;
+}
+
+/**
+ * For place/ regions, get the parent state's dataset URL.
+ * "place/NJ-57000" → states/NJ.h5
+ */
+function getPlaceStateDatasetUrl(region: string): string | null {
+  if (!region.startsWith('place/')) {
+    return null;
+  }
+  const code = region.slice('place/'.length);
+  const stateCode = code.split('-')[0];
+  return `hf://policyengine/policyengine-us-data/states/${stateCode.toUpperCase()}.h5`;
+}
+
+/**
+ * Extract the FIPS code from a place region string.
+ * "place/NJ-57000" → "57000"
+ */
+function getPlaceFips(region: string): string | null {
+  if (!region.startsWith('place/')) {
+    return null;
+  }
+  const code = region.slice('place/'.length);
+  const parts = code.split('-');
+  return parts.length > 1 ? parts[1] : null;
 }
 
 /**
@@ -86,7 +112,8 @@ function getAllPolicyValues(policy: { baseline: { data: any }; reform: { data: a
 function getHeaderCode(
   type: 'household' | 'policy',
   countryId: string,
-  policy: { baseline: { data: any }; reform: { data: any } }
+  policy: { baseline: { data: any }; reform: { data: any } },
+  region: string
 ): string[] {
   const lines: string[] = [];
   const packageName = countryId === 'uk' ? 'policyengine_uk' : 'policyengine_us';
@@ -107,6 +134,11 @@ function getHeaderCode(
   const allValues = getAllPolicyValues(policy);
   if (allValues.some((value) => value === Infinity || value === -Infinity)) {
     lines.push('import numpy as np');
+  }
+
+  // Place-level filtering requires pandas
+  if (type === 'policy' && region.startsWith('place/')) {
+    lines.push('import pandas as pd');
   }
 
   return lines;
@@ -227,10 +259,15 @@ function getImplementationCode(
   const isNational = region === countryId;
   const year = timePeriod || DEFAULT_YEAR;
 
+  // Place regions use state dataset + place_fips filtering
+  if (countryId === 'us' && region.startsWith('place/')) {
+    return getPlaceImplementationCode(region, year, hasBaseline, hasReform);
+  }
+
   let datasetText = '';
 
   if (countryId === 'us' && !isNational) {
-    // US sub-national: use region-specific dataset from HuggingFace
+    // US sub-national (state, congressional district): use region-specific dataset
     datasetText = getSubnationalDatasetUrl(region) || '';
   } else if (dataset && !isDefaultDataset) {
     // Non-default dataset explicitly selected: include the dataset URL
@@ -258,6 +295,46 @@ function getImplementationCode(
 }
 
 /**
+ * Generate place-level implementation code.
+ * Places use the parent state's dataset and filter by place_fips,
+ * matching the policyengine package's _filter_us_simulation_by_place().
+ */
+function getPlaceImplementationCode(
+  region: string,
+  year: number,
+  hasBaseline: boolean,
+  hasReform: boolean
+): string[] {
+  const stateDatasetUrl = getPlaceStateDatasetUrl(region) || '';
+  const placeFips = getPlaceFips(region) || '';
+
+  const baselineReformArg = hasBaseline ? ', reform=baseline' : '';
+  const reformReformArg = hasReform ? ', reform=reform' : '';
+
+  return [
+    '',
+    '',
+    '# Load state-level dataset',
+    `sim = Microsimulation(dataset="${stateDatasetUrl}")`,
+    '',
+    `# Filter to place (FIPS ${placeFips})`,
+    'hh_place_fips = sim.calculate("place_fips").values',
+    'hh_ids = sim.calculate("household_id").values',
+    `matching_ids = set(hh_ids[(hh_place_fips == "${placeFips}") | (hh_place_fips == b"${placeFips}")])`,
+    'person_hh_ids = sim.calculate("household_id", map_to="person").values',
+    'person_mask = pd.Series(person_hh_ids).isin(matching_ids)',
+    'subset_df = sim.to_input_dataframe().loc[person_mask]',
+    '',
+    '# Run simulations on filtered data',
+    `baseline = Microsimulation(dataset=subset_df${baselineReformArg})`,
+    `reformed = Microsimulation(dataset=subset_df${reformReformArg})`,
+    `baseline_income = baseline.calculate("household_net_income", period=${year})`,
+    `reformed_income = reformed.calculate("household_net_income", period=${year})`,
+    'difference_income = reformed_income - baseline_income',
+  ];
+}
+
+/**
  * Main function to generate the reproducibility code block
  * Ported directly from v1's getReproducibilityCodeBlock
  */
@@ -273,7 +350,7 @@ export function getReproducibilityCodeBlock(
   isDefaultDataset: boolean = true
 ): string[] {
   return [
-    ...getHeaderCode(type, countryId, policy),
+    ...getHeaderCode(type, countryId, policy, region),
     ...getBaselineCode(policy, countryId),
     ...getReformCode(policy, countryId),
     ...getSituationCode(type, policy, year, householdInput, earningVariation),
