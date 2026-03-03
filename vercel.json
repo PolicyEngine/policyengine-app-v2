@@ -52,6 +52,14 @@
       "source": "/us/taxsim/:path*",
       "destination": "https://cps-dashboard-pied.vercel.app/us/taxsim/:path*"
     },
+    {
+      "source": "/uk/spring-statement",
+      "destination": "https://spring-statement-calculator.vercel.app/"
+    },
+    {
+      "source": "/uk/spring-statement/:path*",
+      "destination": "https://spring-statement-calculator.vercel.app/:path*"
+    },
     { "source": "/(.*)", "destination": "/website.html" }
   ],
   "headers": [

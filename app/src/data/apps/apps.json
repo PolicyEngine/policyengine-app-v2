@@ -288,5 +288,15 @@
     "source": "https://policyengine.github.io/snap-district-map/",
     "tags": ["us", "policy"],
     "countryId": "us"
+  },
+  {
+    "type": "rewrite",
+    "slug": "spring-statement",
+    "title": "Spring Statement 2025 personal calculator",
+    "description": "See how the Spring Statement 2025 policy changes affect your household's taxes and benefits. Covers income tax, National Insurance, Universal Credit, and more.",
+    "source": "https://spring-statement-calculator.vercel.app/",
+    "tags": ["uk", "featured", "policy"],
+    "countryId": "uk",
+    "date": "2026-03-03 12:00:00"
   }
 ]

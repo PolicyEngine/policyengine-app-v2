@@ -153,6 +153,13 @@ function generateSitemap(): string {
     priority: '0.7',
   });
 
+  // Spring Statement personal calculator (UK-only, served via Vercel rewrite)
+  entries.push({
+    url: `${BASE_URL}/uk/spring-statement`,
+    changefreq: 'weekly',
+    priority: '0.7',
+  });
+
   // Build XML
   const urlEntries = entries
     .map((e) => {
