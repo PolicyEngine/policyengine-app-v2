@@ -43,12 +43,18 @@ export async function fetchSocietyWideCalculation(
   });
 
   if (!response.ok) {
+    let body = '';
+    try {
+      body = await response.text();
+    } catch {
+      // ignore
+    }
     console.error(
-      '[fetchSocietyWideCalculation] Failed with status:',
-      response.status,
-      response.statusText
+      `[fetchSocietyWideCalculation] ${response.status} ${response.statusText}`,
+      url,
+      body
     );
-    throw new Error(`Society-wide calculation failed: ${response.statusText}`);
+    throw new Error(`Society-wide calculation failed (${response.status}): ${body || response.statusText}`);
   }
 
   const data = await response.json();

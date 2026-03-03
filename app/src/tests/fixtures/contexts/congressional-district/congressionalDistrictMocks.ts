@@ -260,6 +260,7 @@ export function createMockContextValue(
     isLoading: false,
     hasStarted: false,
     errorCount: 0,
+    erroredStates: new Set<string>(),
     labelLookup: new Map(),
     isStateLevelReport: false,
     stateCode: null,

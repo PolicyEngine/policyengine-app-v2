@@ -1,7 +1,7 @@
-import { IconArrowDown, IconArrowUp, IconMinus } from '@tabler/icons-react';
+import { IconAlertTriangle, IconArrowDown, IconArrowUp, IconMinus } from '@tabler/icons-react';
 import { colors } from '@/designTokens';
 
-type MetricTrend = 'positive' | 'negative' | 'neutral';
+type MetricTrend = 'positive' | 'negative' | 'neutral' | 'error';
 
 interface MetricCardProps {
   /** Label describing the metric (omit to hide) */
@@ -41,12 +41,18 @@ export default function MetricCard({
         return colors.primary[600];
       case 'negative':
         return colors.gray[600];
+      case 'error':
+        return 'rgb(220, 53, 69)';
       default:
         return colors.gray[500];
     }
   };
 
   const getTrendIcon = () => {
+    if (trend === 'error') {
+      return <IconAlertTriangle size={hero ? 20 : 16} stroke={2.5} />;
+    }
+
     // When invertArrow is true, flip the arrow direction
     // (useful for metrics like poverty where decrease is good)
     const showUpArrow = invertArrow ? trend === 'negative' : trend === 'positive';
@@ -68,7 +74,8 @@ export default function MetricCard({
       {/* Label */}
       {label && (
         <p
-          className={`tw:font-medium tw:text-gray-500 tw:uppercase tw:tracking-widest ${hero ? 'tw:text-sm' : 'tw:text-xs'}`}
+          className={`tw:font-medium tw:uppercase tw:tracking-widest ${hero ? 'tw:text-sm' : 'tw:text-xs'}`}
+          style={{ color: trend === 'error' ? 'rgb(220, 53, 69)' : colors.gray[500] }}
         >
           {label}
         </p>
@@ -81,8 +88,17 @@ export default function MetricCard({
             className={`tw:flex tw:items-center tw:justify-center tw:rounded-full ${hero ? 'tw:w-8 tw:h-8' : 'tw:w-6 tw:h-6'}`}
             style={{
               backgroundColor:
-                trend === 'positive' ? `${colors.primary[100]}` : `${colors.gray[100]}`,
-              color: trend === 'positive' ? colors.primary[600] : colors.gray[600],
+                trend === 'positive'
+                  ? `${colors.primary[100]}`
+                  : trend === 'error'
+                    ? 'rgba(220, 53, 69, 0.1)'
+                    : `${colors.gray[100]}`,
+              color:
+                trend === 'positive'
+                  ? colors.primary[600]
+                  : trend === 'error'
+                    ? 'rgb(220, 53, 69)'
+                    : colors.gray[600],
             }}
           >
             {getTrendIcon()}

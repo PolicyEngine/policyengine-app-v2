@@ -133,7 +133,8 @@ type CardKey = 'budget' | 'decile' | 'poverty' | 'winners' | 'inequality' | 'con
 
 /**
  * Congressional district card content — must be rendered inside a
- * CongressionalDistrictDataProvider. Auto-starts fetching on mount.
+ * CongressionalDistrictDataProvider. Starts fetching once the report
+ * output is available and no pre-computed district data exists.
  */
 function CongressionalDistrictCard({
   output,
@@ -159,15 +160,9 @@ function CongressionalDistrictCard({
     labelLookup,
     stateCode,
     startFetch,
+    erroredStates,
   } = useCongressionalDistrictData();
   const [congressionalMode, setCongressionalMode] = useState<CongressionalMode>('absolute');
-
-  // Auto-start fetch on mount
-  useEffect(() => {
-    if (!hasStarted) {
-      startFetch();
-    }
-  }, [hasStarted, startFetch]);
 
   // Check if output already has district data (from nationwide calculation)
   const existingDistricts = useMemo(() => {
@@ -180,6 +175,14 @@ function CongressionalDistrictCard({
     }
     return districtData.districts;
   }, [output]);
+
+  // Auto-start fetch only when the report output is ready and no
+  // pre-computed district data exists (avoids 51 redundant requests)
+  useEffect(() => {
+    if (!existingDistricts && !hasStarted) {
+      startFetch();
+    }
+  }, [existingDistricts, hasStarted, startFetch]);
 
   // Build map data from context (progressive fill as states complete)
   const contextMapData = useMemo(() => {
@@ -262,6 +265,39 @@ function CongressionalDistrictCard({
     return { gainingCount: gaining, losingCount: losing };
   }, [existingDistricts, stateResponses]);
 
+  // Detect errored districts from EITHER source:
+  // 1. Pre-computed data: districts in labelLookup but missing from existingDistricts
+  // 2. Progressive fetching: districts belonging to states in erroredStates
+  const { errorDistrictCount, errorStateAbbrs } = useMemo(() => {
+    if (existingDistricts) {
+      const existingSet = new Set(existingDistricts.map((d) => d.district));
+      const missingStates = new Set<string>();
+      let count = 0;
+      labelLookup.forEach((_label, districtId) => {
+        if (!existingSet.has(districtId)) {
+          count++;
+          missingStates.add(districtId.split('-')[0]);
+        }
+      });
+      return { errorDistrictCount: count, errorStateAbbrs: Array.from(missingStates) };
+    }
+
+    const abbrs = Array.from(erroredStates).map((code) =>
+      code.replace(/^state\//, '').toUpperCase()
+    );
+    if (abbrs.length === 0) {
+      return { errorDistrictCount: 0, errorStateAbbrs: abbrs };
+    }
+    const errorSet = new Set(abbrs);
+    let count = 0;
+    labelLookup.forEach((_label, districtId) => {
+      if (errorSet.has(districtId.split('-')[0])) {
+        count++;
+      }
+    });
+    return { errorDistrictCount: count, errorStateAbbrs: abbrs };
+  }, [existingDistricts, erroredStates, labelLookup]);
+
   const dataReady = existingDistricts || (!isLoading && hasStarted);
   const progressPercent = totalStates > 0 ? Math.round((completedCount / totalStates) * 100) : 0;
 
@@ -303,6 +339,13 @@ function CongressionalDistrictCard({
                   Loading ({completedCount} of {totalStates} states)...
                 </Text>
                 <Progress value={progressPercent} size="sm" />
+                {errorDistrictCount > 0 && (
+                  <MetricCard
+                    label="Districts with errors"
+                    value={errorDistrictCount.toString()}
+                    trend="error"
+                  />
+                )}
               </Stack>
             ) : (
               <Group gap={spacing.sm} grow>
@@ -320,6 +363,15 @@ function CongressionalDistrictCard({
                     trend="negative"
                   />
                 </Box>
+                {errorDistrictCount > 0 && (
+                  <Box style={{ display: 'flex', justifyContent: 'center' }}>
+                    <MetricCard
+                      label="Districts with errors"
+                      value={errorDistrictCount.toString()}
+                      trend="error"
+                    />
+                  </Box>
+                )}
               </Group>
             )}
           </Box>
@@ -339,6 +391,7 @@ function CongressionalDistrictCard({
           data={mapData}
           config={{ ...mapConfig, height: CONGRESSIONAL_MAP_H }}
           focusState={stateCode ?? undefined}
+          errorStates={errorStateAbbrs}
         />
       }
       onToggleMode={onToggleMode}
@@ -630,7 +683,7 @@ export default function SocietyWideOverview({ output, showCongressionalCard }: S
                 },
               ]}
               layout={{
-                margin: { t: 5, b: 20, l: 35, r: 5 },
+                margin: { t: 5, b: 20, l: 50, r: 5 },
                 showlegend: false,
                 paper_bgcolor: 'transparent',
                 plot_bgcolor: 'transparent',
@@ -651,20 +704,6 @@ export default function SocietyWideOverview({ output, showCongressionalCard }: S
               config={MINI_CHART_CONFIG}
               style={{ width: '100%', height: MINI_CHART_HEIGHT }}
             />
-            <Group gap={spacing.xs} style={{ marginTop: -2 }}>
-              <Box
-                style={{
-                  width: 10,
-                  height: 10,
-                  borderRadius: 2,
-                  backgroundColor: colors.primary[500],
-                  flexShrink: 0,
-                }}
-              />
-              <Text size="xs" c={colors.text.secondary}>
-                Absolute impacts by decile
-              </Text>
-            </Group>
           </Box>
         }
         expandedControls={
