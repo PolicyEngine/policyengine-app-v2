@@ -153,9 +153,7 @@ export function SocietyWideReportOutput({
   userGeographies,
 }: SocietyWideReportOutputProps) {
   // Read datasets from metadata for the reproduce tab
-  const datasets = useSelector(
-    (state: RootState) => state.metadata.economyOptions?.datasets
-  );
+  const datasets = useSelector((state: RootState) => state.metadata.economyOptions?.datasets);
 
   // Get calculation status for report (for state decisions)
   const calcStatus = useCalculationStatus(report?.id || '', 'report');
