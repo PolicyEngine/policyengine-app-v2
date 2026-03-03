@@ -161,6 +161,7 @@ export function USDistrictChoroplethMap({
   return (
     <Box
       style={{
+        height: '100%',
         border: `1px solid ${colors.border.light}`,
         borderRadius: spacing.sm,
         backgroundColor: colors.background.primary,

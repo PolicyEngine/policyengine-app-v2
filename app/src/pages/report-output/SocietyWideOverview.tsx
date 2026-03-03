@@ -69,6 +69,11 @@ const CONTROLS_ROW_H = 39; // 31 (SC xs height) + 8 (marginBottom)
 const BUDGET_CHART_H = 279;
 const SECONDARY_CHART_H = 252;
 
+// Congressional map height (3 rows):
+//   outer: 200×3 + 16×2 = 632, minus border(2) + padding(32) + controls(39) = 559
+//   minus map Box border (2px) = 557
+const CONGRESSIONAL_MAP_H = 557;
+
 // Poverty segmented control types and options
 type PovertyDepth = 'regular' | 'deep';
 type PovertyBreakdown = 'by-age' | 'by-gender' | 'by-race';
@@ -332,7 +337,7 @@ function CongressionalDistrictCard({
       expandedContent={
         <USDistrictChoroplethMap
           data={mapData}
-          config={mapConfig}
+          config={{ ...mapConfig, height: CONGRESSIONAL_MAP_H }}
           focusState={stateCode ?? undefined}
         />
       }
