@@ -1,5 +1,4 @@
 import { Query } from '@tanstack/react-query';
-import { getDatasetIdForRegion } from '@/api/societyWideCalculation';
 import {
   createEconomyAnalysis,
   EconomicImpactRequest,
@@ -60,13 +59,12 @@ export class SocietyWideCalcStrategy implements CalcExecutionStrategy {
 
     try {
       const region = params.region || params.countryId;
-      const datasetId = await getDatasetIdForRegion(params.countryId, region);
 
       const request: EconomicImpactRequest = {
         tax_benefit_model_name: `policyengine_${params.countryId}`,
         region,
         policy_id: params.policyIds.reform ?? params.policyIds.baseline ?? null,
-        dataset_id: datasetId,
+        year: parseInt(params.year, 10),
       };
 
       const response = await createEconomyAnalysis(request);

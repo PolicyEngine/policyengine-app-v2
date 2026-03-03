@@ -1,7 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { LocalStorageReportStore } from '@/api/reportAssociation';
 import { LocalStorageSimulationStore } from '@/api/simulationAssociation';
-import { getDatasetIdForRegion } from '@/api/societyWideCalculation';
 import {
   createEconomyAnalysis,
   EconomicImpactRequest,
@@ -109,19 +108,18 @@ async function createHouseholdReportV2(
 async function createEconomyReportV2(
   countryId: string,
   region: string,
-  reformPolicyId: string | null
+  reformPolicyId: string | null,
+  year: number
 ): Promise<{
   response: EconomicImpactResponse;
   reportId: string;
   v2SimulationIds: string[];
 }> {
-  const datasetId = await getDatasetIdForRegion(countryId, region);
-
   const request: EconomicImpactRequest = {
     tax_benefit_model_name: `policyengine_${countryId}`,
     region,
     policy_id: reformPolicyId,
-    dataset_id: datasetId,
+    year,
   };
 
   const response = await createEconomyAnalysis(request);
@@ -181,7 +179,12 @@ export function useCreateReport(reportLabel?: string) {
         const region = populations.geography1?.regionCode || simulation1.populationId || countryId;
         const reformPolicyId = simulation2?.policyId ?? simulation1.policyId ?? null;
 
-        const result = await createEconomyReportV2(countryId, region, reformPolicyId);
+        const result = await createEconomyReportV2(
+          countryId,
+          region,
+          reformPolicyId,
+          parseInt(year, 10)
+        );
         reportId = result.reportId;
         v2SimulationIds = result.v2SimulationIds;
       }

@@ -15,7 +15,6 @@ export interface V2RegionMetadata {
   parent_code: string | null; // e.g., "us", "state/ca"
   state_code: string | null; // For US regions
   state_name: string | null; // For US regions
-  dataset_id: string;
   tax_benefit_model_id: string;
   created_at: string;
   updated_at: string;

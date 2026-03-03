@@ -43,6 +43,7 @@ export interface EconomicImpactRequest {
   dataset_id?: string | null;
   policy_id?: string | null;
   dynamic_id?: string | null;
+  year?: number | null;
 }
 
 /** Response from POST and GET /analysis/economic-impact */
@@ -75,6 +76,7 @@ export interface EconomyCustomRequest {
   dataset_id?: string | null;
   policy_id?: string | null;
   dynamic_id?: string | null;
+  year?: number | null;
   modules: string[];
 }
 

@@ -18,11 +18,6 @@ vi.mock('@/api/v2/economyAnalysis', () => ({
   getEconomyAnalysis: vi.fn(),
 }));
 
-// Mock getDatasetIdForRegion (async region-based dataset UUID lookup)
-vi.mock('@/api/societyWideCalculation', () => ({
-  getDatasetIdForRegion: vi.fn(() => Promise.resolve('00000000-0000-4000-a000-000000000001')),
-}));
-
 describe('SocietyWideCalcStrategy', () => {
   let strategy: SocietyWideCalcStrategy;
   let mockCreateEconomyAnalysis: any;
@@ -58,7 +53,7 @@ describe('SocietyWideCalcStrategy', () => {
         tax_benefit_model_name: 'policyengine_us',
         region: 'us',
         policy_id: '2', // reform takes precedence
-        dataset_id: '00000000-0000-4000-a000-000000000001',
+        year: 2024,
       });
       expect(result.status).toBe('pending');
       expect(result.progress).toBe(0);
@@ -91,7 +86,7 @@ describe('SocietyWideCalcStrategy', () => {
       );
     });
 
-    it('given UK region then resolves dataset_id from API', async () => {
+    it('given UK region then passes year in request', async () => {
       const params = mockSocietyWideCalcParams({
         countryId: 'uk',
         region: 'uk',
@@ -104,12 +99,12 @@ describe('SocietyWideCalcStrategy', () => {
         expect.objectContaining({
           tax_benefit_model_name: 'policyengine_uk',
           region: 'uk',
-          dataset_id: '00000000-0000-4000-a000-000000000001',
+          year: 2024,
         })
       );
     });
 
-    it('given US state region then resolves dataset_id from API', async () => {
+    it('given US state region then passes year in request', async () => {
       const params = mockSocietyWideCalcParams({
         countryId: 'us',
         region: 'ca',
@@ -121,7 +116,7 @@ describe('SocietyWideCalcStrategy', () => {
       expect(mockCreateEconomyAnalysis).toHaveBeenCalledWith(
         expect.objectContaining({
           region: 'ca',
-          dataset_id: '00000000-0000-4000-a000-000000000001',
+          year: 2024,
         })
       );
     });

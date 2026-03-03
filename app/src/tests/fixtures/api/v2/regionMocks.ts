@@ -20,7 +20,6 @@ export const mockV2Region = (overrides?: Partial<V2RegionMetadata>): V2RegionMet
   parent_code: 'us',
   state_code: 'CA',
   state_name: 'California',
-  dataset_id: 'dataset-cps-2024',
   tax_benefit_model_id: 'tbm-us-001',
   created_at: TEST_TIMESTAMPS.CREATED_AT,
   updated_at: TEST_TIMESTAMPS.UPDATED_AT,

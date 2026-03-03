@@ -34,11 +34,6 @@ vi.mock('@/api/v2/economyAnalysis', () => ({
   createEconomyAnalysis: vi.fn(),
 }));
 
-// Mock dataset lookup
-vi.mock('@/api/societyWideCalculation', () => ({
-  getDatasetIdForRegion: vi.fn(() => Promise.resolve('00000000-0000-4000-a000-000000000001')),
-}));
-
 // Mock report association store
 const mockReportStoreCreate = vi.fn();
 vi.mock('@/api/reportAssociation', () => ({
@@ -312,7 +307,7 @@ describe('useCreateReport', () => {
         tax_benefit_model_name: 'policyengine_us',
         region: 'us',
         policy_id: 'policy-reform',
-        dataset_id: '00000000-0000-4000-a000-000000000001',
+        year: parseInt(TEST_YEAR, 10),
       });
     });
 
