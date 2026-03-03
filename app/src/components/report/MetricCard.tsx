@@ -5,8 +5,8 @@ import { colors, spacing, typography } from '@/designTokens';
 type MetricTrend = 'positive' | 'negative' | 'neutral';
 
 interface MetricCardProps {
-  /** Label describing the metric */
-  label: string;
+  /** Label describing the metric (omit to hide) */
+  label?: string;
   /** The main value to display */
   value: string;
   /** Optional secondary value or context */
@@ -67,15 +67,17 @@ export default function MetricCard({
   return (
     <Box>
       {/* Label */}
-      <Text
-        size={hero ? 'sm' : 'xs'}
-        fw={typography.fontWeight.medium}
-        c={colors.text.secondary}
-        tt="uppercase"
-        style={{ letterSpacing: '0.05em' }}
-      >
-        {label}
-      </Text>
+      {label && (
+        <Text
+          size={hero ? 'sm' : 'xs'}
+          fw={typography.fontWeight.medium}
+          c={colors.text.secondary}
+          tt="uppercase"
+          style={{ letterSpacing: '0.05em' }}
+        >
+          {label}
+        </Text>
+      )}
 
       {/* Value with trend indicator */}
       <Group gap={spacing.sm} align="center" mt={spacing.xs}>
