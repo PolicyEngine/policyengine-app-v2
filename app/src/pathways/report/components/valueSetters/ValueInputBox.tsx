@@ -9,10 +9,11 @@ interface ValueInputBoxProps {
   param: ParameterMetadata;
   value?: any;
   onChange?: (value: any) => void;
+  onEnter?: () => void;
 }
 
 export function ValueInputBox(props: ValueInputBoxProps) {
-  const { param, value, onChange, label } = props;
+  const { param, value, onChange, onEnter, label } = props;
 
   // US and UK packages use these type designations inconsistently
   const USD_UNITS = ['currency-USD', 'currency_USD', 'USD'];
@@ -98,6 +99,12 @@ export function ValueInputBox(props: ValueInputBoxProps) {
           value={displayValue}
           onChange={handleChange}
           className={cn(prefix ? 'tw:pl-7' : '', isPercentage ? 'tw:pr-7' : '')}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') {
+              event.preventDefault();
+              onEnter?.();
+            }
+          }}
           style={{ flex: 1 }}
         />
         {isPercentage && (

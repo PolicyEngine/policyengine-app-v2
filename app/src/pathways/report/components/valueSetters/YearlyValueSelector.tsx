@@ -18,6 +18,7 @@ export function YearlyValueSelector(props: ValueSetterProps) {
     setStartDate,
     endDate,
     setEndDate,
+    onEnter,
   } = props;
 
   // Local state for param value
@@ -99,7 +100,7 @@ export function YearlyValueSelector(props: ValueSetterProps) {
           onChange={handleEndYearChange}
         />
       </div>
-      <ValueInputBox param={param} value={paramValue} onChange={setParamValue} />
+      <ValueInputBox param={param} value={paramValue} onChange={setParamValue} onEnter={onEnter} />
     </div>
   );
 }
