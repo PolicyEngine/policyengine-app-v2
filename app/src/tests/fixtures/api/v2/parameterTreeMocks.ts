@@ -6,9 +6,9 @@ import type {
   ParameterChildrenResponse,
   V2ParameterData,
 } from '@/api/v2/parameterTree';
-import { API_V2_BASE_URL, TEST_COUNTRIES, TEST_VERSIONS } from './apiV2Mocks';
+import { API_V2_BASE_URL, MODEL_NAMES, TEST_COUNTRIES, TEST_VERSIONS } from './apiV2Mocks';
 
-export { API_V2_BASE_URL, TEST_COUNTRIES, TEST_VERSIONS };
+export { API_V2_BASE_URL, MODEL_NAMES, TEST_COUNTRIES, TEST_VERSIONS };
 
 // ---------------------------------------------------------------------------
 // Parameter children
@@ -89,8 +89,8 @@ export const MOCK_PARAMETER_DATA: V2ParameterData[] = [
 // ---------------------------------------------------------------------------
 
 export const API_ENDPOINTS = {
-  CHILDREN: (parentPath: string, countryId: string) =>
-    `${API_V2_BASE_URL}/parameters/children?country_id=${countryId}&parent_path=${parentPath}`,
+  CHILDREN: (parentPath: string, modelName: string) =>
+    `${API_V2_BASE_URL}/parameters/children?tax_benefit_model_name=${modelName}&parent_path=${parentPath}`,
   BY_NAME: `${API_V2_BASE_URL}/parameters/by-name`,
 } as const;
 

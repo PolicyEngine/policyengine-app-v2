@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fetchParameterChildren, fetchParametersByName } from '@/api/v2/parameterTree';
 import {
   API_ENDPOINTS,
+  MODEL_NAMES,
   MOCK_CHILDREN_RESPONSE,
   MOCK_EMPTY_CHILDREN_RESPONSE,
   MOCK_PARAM_NAMES,
@@ -36,7 +37,7 @@ describe('parameterTree API', () => {
 
       // Then
       expect(fetchSpy).toHaveBeenCalledWith(
-        API_ENDPOINTS.CHILDREN(PARENT_PATHS.GOV, TEST_COUNTRIES.US)
+        API_ENDPOINTS.CHILDREN(PARENT_PATHS.GOV, MODEL_NAMES.US)
       );
       expect(result).toEqual(MOCK_CHILDREN_RESPONSE);
     });
@@ -104,7 +105,7 @@ describe('parameterTree API', () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           names: [...MOCK_PARAM_NAMES],
-          country_id: TEST_COUNTRIES.US,
+          tax_benefit_model_name: MODEL_NAMES.US,
         }),
       });
       expect(result).toEqual(MOCK_PARAMETER_DATA);
