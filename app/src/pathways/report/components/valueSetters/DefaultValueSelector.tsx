@@ -18,6 +18,7 @@ export function DefaultValueSelector(props: ValueSetterProps) {
     setStartDate,
     endDate,
     setEndDate,
+    onEnter,
   } = props;
 
   // Local state for param value
@@ -80,7 +81,7 @@ export function DefaultValueSelector(props: ValueSetterProps) {
         <span className="tw:text-sm tw:font-medium">onward:</span>
       </div>
       <div className="tw:flex-1">
-        <ValueInputBox param={param} value={paramValue} onChange={setParamValue} />
+        <ValueInputBox param={param} value={paramValue} onChange={setParamValue} onEnter={onEnter} />
       </div>
     </div>
   );
