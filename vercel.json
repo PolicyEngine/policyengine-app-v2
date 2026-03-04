@@ -46,11 +46,11 @@
     },
     {
       "source": "/us/taxsim",
-      "destination": "https://policyengine-taxsim-policy-engine.vercel.app/us/taxsim"
+      "destination": "https://policyengine-taxsim-policy-engine.vercel.app/"
     },
     {
       "source": "/us/taxsim/:path*",
-      "destination": "https://policyengine-taxsim-policy-engine.vercel.app/us/taxsim/:path*"
+      "destination": "https://policyengine-taxsim-policy-engine.vercel.app/:path*"
     },
     {
       "source": "/uk/spring-statement-2026",
