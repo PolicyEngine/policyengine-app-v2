@@ -5,7 +5,7 @@
  * and targeted parameter lookup via POST /parameters/by-name.
  */
 
-import { API_V2_BASE_URL } from './taxBenefitModels';
+import { API_V2_BASE_URL, getModelName } from './taxBenefitModels';
 
 // ---------------------------------------------------------------------------
 // Types (matching API response schema)
@@ -48,7 +48,7 @@ export async function fetchParameterChildren(
   countryId: string
 ): Promise<ParameterChildrenResponse> {
   const params = new URLSearchParams({
-    country_id: countryId,
+    tax_benefit_model_name: getModelName(countryId),
     parent_path: parentPath,
   });
 
@@ -75,7 +75,7 @@ export async function fetchParametersByName(
   const res = await fetch(`${API_V2_BASE_URL}/parameters/by-name`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ names, country_id: countryId }),
+    body: JSON.stringify({ names, tax_benefit_model_name: getModelName(countryId) }),
   });
 
   if (!res.ok) {
