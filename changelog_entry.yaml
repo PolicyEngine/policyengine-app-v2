@@ -1,4 +1,4 @@
-- bump: minor
+- bump: patch
   changes:
-    added:
-      - Add student loan reform distributional impact interactive visualisation
+    fixed:
+      - Fix Spring Statement 2026 URL by switching from broken Vercel rewrite to iframe embed
