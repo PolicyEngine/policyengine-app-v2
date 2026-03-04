@@ -2,13 +2,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fetchParameterChildren, fetchParametersByName } from '@/api/v2/parameterTree';
 import {
   API_ENDPOINTS,
-  MODEL_NAMES,
   MOCK_CHILDREN_RESPONSE,
   MOCK_EMPTY_CHILDREN_RESPONSE,
   MOCK_PARAM_NAMES,
   MOCK_PARAMETER_DATA,
   mockFetchError,
   mockFetchSuccess,
+  MODEL_NAMES,
   PARENT_PATHS,
   TEST_COUNTRIES,
 } from '@/tests/fixtures/api/v2/parameterTreeMocks';
