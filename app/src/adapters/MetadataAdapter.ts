@@ -37,8 +37,7 @@ export class MetadataAdapter {
       tax_benefit_model_version_id: v2.tax_benefit_model_version_id,
       created_at: v2.created_at,
       // Use API label if available, otherwise auto-generate from name (sentence case)
-      label:
-        v2.label || v2.name.replace(/_/g, ' ').replace(/^./, (c: string) => c.toUpperCase()),
+      label: v2.label || v2.name.replace(/_/g, ' ').replace(/^./, (c: string) => c.toUpperCase()),
     };
   }
 
