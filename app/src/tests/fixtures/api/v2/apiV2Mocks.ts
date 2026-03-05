@@ -35,6 +35,7 @@ export function createMockVariable(
   return {
     id: 'var-1',
     name: 'test_variable',
+    label: null,
     entity: 'person',
     description: 'Test variable description',
     data_type: 'float',

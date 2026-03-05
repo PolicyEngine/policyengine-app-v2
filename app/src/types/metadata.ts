@@ -8,6 +8,7 @@ import { UK_REGION_TYPES, US_REGION_TYPES } from './regionTypes';
 export interface V2VariableMetadata {
   id: string;
   name: string;
+  label: string | null;
   entity: string;
   description: string;
   data_type: string;
@@ -76,16 +77,12 @@ export interface MetadataRegionEntry {
  * Based on V2 API response with computed label for display
  *
  * TODO: Migrate fully to V2VariableMetadata. This intermediate type exists because:
- * 1. `label` is computed from `name` in MetadataAdapter (V2 API doesn't provide labels)
- * 2. `adds`/`subtracts` are V1 fields used by VariableArithmetic for breakdown display
+ * 1. `adds`/`subtracts` are V1 fields used by VariableArithmetic for breakdown display
  *
  * KNOWN ISSUES:
  * - `adds`/`subtracts` are NEVER POPULATED from V2 API, so VariableArithmetic
  *   breakdown functionality is currently broken. V1 API included these fields
  *   directly in the response to describe variable arithmetic formulas.
- * - `label` is auto-generated from `name` (e.g., "employment_income" -> "Employment income")
- *   using sentence case. V1 API provided human-curated labels. V2 API should add
- *   a `label` field to match V1's quality.
  */
 export interface VariableMetadata {
   // Core fields from V2 API
@@ -99,7 +96,7 @@ export interface VariableMetadata {
   tax_benefit_model_version_id?: string;
   created_at?: string;
 
-  // Auto-generated from name (sentence case) - V2 API should provide this field
+  // From V2 API label field, with fallback to auto-generated sentence case from name
   label?: string;
 
   // Variable arithmetic (for breakdown calculations)

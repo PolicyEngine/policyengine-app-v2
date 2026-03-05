@@ -33,9 +33,23 @@ describe('MetadataAdapter', () => {
       expect(result.description).toBe('Employment income');
     });
 
-    it('given variable name with underscores then generates sentence-case label', () => {
+    it('given API label then uses API label', () => {
       // Given
-      const v2Variable = createMockVariable({ name: 'employment_income' });
+      const v2Variable = createMockVariable({
+        name: 'employment_income',
+        label: 'Employment income before labor supply responses',
+      });
+
+      // When
+      const result = MetadataAdapter.variableFromV2(v2Variable);
+
+      // Then
+      expect(result.label).toBe('Employment income before labor supply responses');
+    });
+
+    it('given null label then falls back to sentence-case from name', () => {
+      // Given
+      const v2Variable = createMockVariable({ name: 'employment_income', label: null });
 
       // When
       const result = MetadataAdapter.variableFromV2(v2Variable);
@@ -44,9 +58,20 @@ describe('MetadataAdapter', () => {
       expect(result.label).toBe('Employment income');
     });
 
-    it('given single word name then capitalizes label', () => {
+    it('given empty string label then falls back to sentence-case from name', () => {
       // Given
-      const v2Variable = createMockVariable({ name: 'age' });
+      const v2Variable = createMockVariable({ name: 'employment_income', label: '' });
+
+      // When
+      const result = MetadataAdapter.variableFromV2(v2Variable);
+
+      // Then
+      expect(result.label).toBe('Employment income');
+    });
+
+    it('given single word name with null label then capitalizes', () => {
+      // Given
+      const v2Variable = createMockVariable({ name: 'age', label: null });
 
       // When
       const result = MetadataAdapter.variableFromV2(v2Variable);

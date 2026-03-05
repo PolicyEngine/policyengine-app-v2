@@ -36,9 +36,8 @@ export class MetadataAdapter {
       default_value: v2.default_value,
       tax_benefit_model_version_id: v2.tax_benefit_model_version_id,
       created_at: v2.created_at,
-      // Auto-generate label from name (sentence case)
-      // TODO: V2 API should provide labels like V1 API did
-      label: v2.name.replace(/_/g, ' ').replace(/^./, (c: string) => c.toUpperCase()),
+      // Use API label if available, otherwise auto-generate from name (sentence case)
+      label: v2.label || v2.name.replace(/_/g, ' ').replace(/^./, (c: string) => c.toUpperCase()),
     };
   }
 
