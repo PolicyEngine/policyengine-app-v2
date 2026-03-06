@@ -186,6 +186,11 @@ export default function FeaturedResearchBanner() {
           <div className="tw:flex tw:justify-center tw:flex-wrap" style={{ gap: spacing.xl }}>
             {[
               {
+                href: '/uk/spring-statement-2026',
+                title: 'Spring Statement 2026 analysis',
+                desc: 'New OBR forecast and its effects on UK living standards',
+              },
+              {
                 href: '/uk/research/uk-two-child-limit-reintroduction',
                 title: 'Two-child limit reintroduction',
                 desc: 'Budgetary, distributional, poverty, and inequality impacts across the UK',
@@ -199,11 +204,6 @@ export default function FeaturedResearchBanner() {
                 href: '/uk/uk-student-loan-calculator',
                 title: 'Student loan deductions calculator',
                 desc: 'Repayments, marginal tax rates, and lifetime costs for UK graduates',
-              },
-              {
-                href: '/uk/scottish-budget-2026-27',
-                title: 'Scottish Budget 2026-27',
-                desc: 'Living standards, poverty, and local area impacts across Scotland',
               },
             ].map((card) => (
               <a
