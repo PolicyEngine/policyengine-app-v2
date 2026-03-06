@@ -19,7 +19,7 @@ import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import type { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
 import { formatParameterValue } from '@/utils/chartValueUtils';
 import { formatBudgetaryImpact } from '@/utils/formatPowers';
-import { currencySymbol } from '@/utils/formatters';
+import { currencySymbol, formatCurrencyAbbr } from '@/utils/formatters';
 import { DIVERGING_GRAY_TEAL } from '@/utils/visualization/colorScales';
 import BudgetaryImpactSubPage from './budgetary-impact/BudgetaryImpactSubPage';
 import DistributionalImpactIncomeAverageSubPage from './distributional-impact/DistributionalImpactIncomeAverageSubPage';
@@ -65,7 +65,7 @@ const GRID_GAP = 16;
 //     Budget  (no description):  chartHeight = 279
 //     Secondary (with desc+gap): chartHeight = 279 − 27 = 252
 //
-const CONTROLS_ROW_H = 39; // 31 (SC xs height) + 8 (marginBottom)
+// CONTROLS_ROW_H = 39: 31 (SC xs height) + 8 (marginBottom) — referenced in derivation above
 const BUDGET_CHART_H = 279;
 const SECONDARY_CHART_H = 252;
 
@@ -112,7 +112,6 @@ const segmentedControlStyles = {
   },
 };
 
-
 type DecileMode = 'absolute' | 'relative';
 const DECILE_MODE_OPTIONS = [
   { label: 'Absolute', value: 'absolute' as DecileMode },
@@ -123,6 +122,49 @@ const DECILE_MODE_OPTIONS = [
 const MINI_CHART_HEIGHT = 90;
 const MINI_CHART_CONFIG = { displayModeBar: false, responsive: true, staticPlot: true };
 
+/**
+ * Build tickvals/ticktext arrays for a currency y-axis where negative signs
+ * appear to the left of the currency symbol: -$500 not $-500.
+ * Generates ~4–5 nice ticks spanning the data range.
+ */
+function currencyTicks(
+  values: number[],
+  currSymbol: string,
+  decimalPlaces = 0
+): { tickvals: number[]; ticktext: string[] } {
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const range = max - min || Math.abs(max) || 1;
+  // Pick a nice step: 1, 2, 5, 10, 20, 50, …
+  const rawStep = range / 4;
+  const mag = 10 ** Math.floor(Math.log10(rawStep));
+  const candidates = [1, 2, 5, 10];
+  const step = candidates.reduce((best, c) => {
+    const s = c * mag;
+    return Math.abs(s - rawStep) < Math.abs(best - rawStep) ? s : best;
+  });
+  const lo = Math.floor(min / step) * step;
+  const hi = Math.ceil(max / step) * step;
+  const ticks: number[] = [];
+  for (let v = lo; v <= hi + step * 0.01; v += step) {
+    ticks.push(Math.round(v * 1e10) / 1e10); // avoid FP noise
+  }
+  const fmt = (v: number) => {
+    const abs = Math.abs(v).toLocaleString('en-US', {
+      minimumFractionDigits: decimalPlaces,
+      maximumFractionDigits: decimalPlaces,
+    });
+    if (v < 0) {
+      return `-${currSymbol}${abs}`;
+    }
+    if (v > 0) {
+      return `${currSymbol}${abs}`;
+    }
+    return `${currSymbol}0`;
+  };
+  return { tickvals: ticks, ticktext: ticks.map(fmt) };
+}
+
 type CongressionalMode = 'absolute' | 'relative';
 const CONGRESSIONAL_MODE_OPTIONS = [
   { label: 'Absolute', value: 'absolute' as CongressionalMode },
@@ -130,6 +172,102 @@ const CONGRESSIONAL_MODE_OPTIONS = [
 ];
 
 type CardKey = 'budget' | 'decile' | 'poverty' | 'winners' | 'inequality' | 'congressional';
+
+type RankedDistrict = { id: string; label: string; value: number };
+
+/**
+ * Renders a column of 5 ranked districts with conditional section headers.
+ * For the "top" column (descending order): gains header is "Biggest gains",
+ * losses header is "Smallest losses".
+ * For the "bottom" column (ascending order): losses header is "Biggest losses",
+ * gains header is "Smallest gains".
+ */
+function DistrictRankColumn({
+  items,
+  side,
+  formatValue,
+}: {
+  items: RankedDistrict[];
+  side: 'top' | 'bottom';
+  formatValue: (v: number) => string;
+}) {
+  const gainHeader = side === 'top' ? 'Biggest gains (absolute)' : 'Smallest gains (absolute)';
+  const lossHeader = side === 'top' ? 'Smallest losses (absolute)' : 'Biggest losses (absolute)';
+
+  // Build sections: group consecutive items by sign, assigning headers
+  const rows: Array<
+    { type: 'header'; text: string } | { type: 'item'; district: RankedDistrict; rank: number }
+  > = [];
+  let lastSign: 'gain' | 'loss' | null = null;
+  let rank = 1;
+  for (const d of items) {
+    const sign = d.value >= 0 ? 'gain' : 'loss';
+    if (sign !== lastSign) {
+      rows.push({ type: 'header', text: sign === 'gain' ? gainHeader : lossHeader });
+      lastSign = sign;
+    }
+    rows.push({ type: 'item', district: d, rank });
+    rank++;
+  }
+
+  return (
+    <Box style={{ flex: 1, minWidth: 0 }}>
+      {rows.map((row, i) =>
+        row.type === 'header' ? (
+          <Text
+            key={`h-${i}`}
+            size="xs"
+            fw={typography.fontWeight.medium}
+            c={colors.text.secondary}
+            tt="uppercase"
+            style={{ letterSpacing: '0.05em', marginBottom: 2, marginTop: i > 0 ? 6 : 0 }}
+          >
+            {row.text}
+          </Text>
+        ) : (
+          <Box
+            key={row.district.id}
+            style={{
+              display: 'flex',
+              alignItems: 'baseline',
+              gap: 4,
+              lineHeight: 1.5,
+            }}
+          >
+            <Text
+              size="sm"
+              c={colors.text.tertiary}
+              style={{ flexShrink: 0, minWidth: 18, textAlign: 'right' }}
+            >
+              {row.rank}.
+            </Text>
+            <Text
+              size="sm"
+              c={colors.text.secondary}
+              style={{
+                flex: 1,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                minWidth: 0,
+              }}
+            >
+              {row.district.label}
+            </Text>
+            <Text
+              size="sm"
+              fw={typography.fontWeight.medium}
+              c={row.district.value >= 0 ? colors.primary[600] : colors.gray[600]}
+              style={{ flexShrink: 0 }}
+            >
+              {formatValue(row.district.value)}
+            </Text>
+          </Box>
+        )
+      )}
+    </Box>
+  );
+}
 
 /**
  * Congressional district card content — must be rendered inside a
@@ -239,31 +377,39 @@ function CongressionalDistrictCard({
     [congressionalMode]
   );
 
-  // Count districts gaining and losing (from whichever data source is available)
-  const { gainingCount, losingCount } = useMemo(() => {
-    let gaining = 0;
-    let losing = 0;
+  // Build sorted district list for top 5 / bottom 5 display.
+  // Labels update automatically when labelLookup populates from metadata.
+  const sortedDistricts = useMemo(() => {
+    const all: Array<{ id: string; label: string; value: number }> = [];
+    const toShortLabel = (districtId: string) => {
+      const fullLabel = labelLookup.get(districtId) ?? districtId;
+      return fullLabel.replace(/\s+congressional\s+district$/i, '');
+    };
     if (existingDistricts) {
       for (const d of existingDistricts) {
-        if (d.average_household_income_change > 0) {
-          gaining++;
-        } else if (d.average_household_income_change < 0) {
-          losing++;
-        }
+        all.push({
+          id: d.district,
+          label: toShortLabel(d.district),
+          value: d.average_household_income_change,
+        });
       }
     } else {
       stateResponses.forEach((stateData) => {
         for (const d of stateData.districts) {
-          if (d.average_household_income_change > 0) {
-            gaining++;
-          } else if (d.average_household_income_change < 0) {
-            losing++;
-          }
+          all.push({
+            id: d.district,
+            label: toShortLabel(d.district),
+            value: d.average_household_income_change,
+          });
         }
       });
     }
-    return { gainingCount: gaining, losingCount: losing };
-  }, [existingDistricts, stateResponses]);
+    all.sort((a, b) => b.value - a.value);
+    return all;
+  }, [existingDistricts, stateResponses, labelLookup]);
+
+  const top5 = sortedDistricts.slice(0, 5);
+  const bottom5 = sortedDistricts.slice(-5).reverse();
 
   // Detect errored districts from EITHER source:
   // 1. Pre-computed data: districts in labelLookup but missing from existingDistricts
@@ -308,18 +454,40 @@ function CongressionalDistrictCard({
       expandDirection="up-right"
       gridGap={gridGap}
       colSpan={2}
+      shrunkenRows={2}
       expandedRows={3}
       shrunkenHeader={header}
       shrunkenBody={
-        <Group gap={spacing.lg} align="center" style={{ height: '100%' }}>
-          {/* Left half: placeholder for hex choropleth map */}
-          <Box style={{ flex: 1 }}>
-            {/* TODO: Add small hexagonal choropleth map component */}
+        !dataReady ? (
+          <Stack gap={spacing.sm}>
+            <Text size="sm" c={colors.text.secondary}>
+              Loading ({completedCount} of {totalStates} states)...
+            </Text>
+            <Progress value={progressPercent} size="sm" />
+            {errorDistrictCount > 0 && (
+              <MetricCard
+                label="Districts with errors"
+                value={errorDistrictCount.toString()}
+                trend="error"
+              />
+            )}
+          </Stack>
+        ) : (
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              display: 'grid',
+              gridTemplateColumns: '2fr 1fr',
+              gap: spacing.md,
+            }}
+          >
+            {/* Left half: placeholder for hex choropleth map */}
             <Box
               style={{
-                height: 100,
-                background: colors.gray[100],
-                borderRadius: spacing.sm,
+                height: '100%',
+                backgroundColor: colors.gray[100],
+                borderRadius: spacing.radius.md,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -329,53 +497,38 @@ function CongressionalDistrictCard({
                 Map placeholder
               </Text>
             </Box>
-          </Box>
-
-          {/* Right half: loading state or gain/lose counts */}
-          <Box style={{ flex: 1 }}>
-            {!dataReady ? (
-              <Stack gap={spacing.sm}>
-                <Text size="sm" c={colors.text.secondary}>
-                  Loading ({completedCount} of {totalStates} states)...
-                </Text>
-                <Progress value={progressPercent} size="sm" />
-                {errorDistrictCount > 0 && (
-                  <MetricCard
-                    label="Districts with errors"
-                    value={errorDistrictCount.toString()}
-                    trend="error"
-                  />
-                )}
-              </Stack>
-            ) : (
-              <Group gap={spacing.sm} grow>
-                <Box style={{ display: 'flex', justifyContent: 'center' }}>
-                  <MetricCard
-                    label="Districts gaining"
-                    value={gainingCount.toString()}
-                    trend="positive"
-                  />
-                </Box>
-                <Box style={{ display: 'flex', justifyContent: 'center' }}>
-                  <MetricCard
-                    label="Districts losing"
-                    value={losingCount.toString()}
-                    trend="negative"
-                  />
-                </Box>
-                {errorDistrictCount > 0 && (
-                  <Box style={{ display: 'flex', justifyContent: 'center' }}>
-                    <MetricCard
-                      label="Districts with errors"
-                      value={errorDistrictCount.toString()}
-                      trend="error"
-                    />
-                  </Box>
-                )}
-              </Group>
-            )}
-          </Box>
-        </Group>
+            {/* Right third: rankings stacked — winners on top */}
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: spacing.md,
+                overflow: 'hidden',
+              }}
+            >
+              <DistrictRankColumn
+                items={top5}
+                side="top"
+                formatValue={(v) =>
+                  formatParameterValue(v, 'currency-USD', {
+                    decimalPlaces: 0,
+                    includeSymbol: true,
+                  })
+                }
+              />
+              <DistrictRankColumn
+                items={bottom5}
+                side="bottom"
+                formatValue={(v) =>
+                  formatParameterValue(v, 'currency-USD', {
+                    decimalPlaces: 0,
+                    includeSymbol: true,
+                  })
+                }
+              />
+            </div>
+          </div>
+        )
       }
       expandedControls={
         <SegmentedControl
@@ -399,7 +552,10 @@ function CongressionalDistrictCard({
   );
 }
 
-export default function SocietyWideOverview({ output, showCongressionalCard }: SocietyWideOverviewProps) {
+export default function SocietyWideOverview({
+  output,
+  showCongressionalCard,
+}: SocietyWideOverviewProps) {
   const countryId = useCurrentCountry();
   const symbol = currencySymbol(countryId);
   const [expandedCard, setExpandedCard] = useState<CardKey | null>(null);
@@ -445,6 +601,27 @@ export default function SocietyWideOverview({ output, showCongressionalCard }: S
     return `${symbol}${formatted.display}${formatted.label ? ` ${formatted.label}` : ''}`;
   };
 
+  // Mini waterfall chart data for the shrunken budgetary card
+  const budgetMiniLabelsAll =
+    countryId === 'us'
+      ? ['Federal taxes', 'State taxes', 'Benefits', 'Net']
+      : ['Tax revenues', 'Benefits', 'Net'];
+  const budgetMiniRawAll =
+    countryId === 'us'
+      ? [federalTaxImpact, stateTaxImpact, -spendingImpact, budgetaryImpact]
+      : [output.budget.tax_revenue_impact, -spendingImpact, budgetaryImpact];
+  // Choose magnitude based on the max absolute value
+  const budgetMaxAbs = Math.max(...budgetMiniRawAll.map(Math.abs));
+  const budgetMagnitude =
+    budgetMaxAbs >= 1e9
+      ? { divisor: 1e9, label: `${symbol}bn` }
+      : budgetMaxAbs >= 1e6
+        ? { divisor: 1e6, label: `${symbol}m` }
+        : { divisor: 1e3, label: `${symbol}k` };
+  const budgetMiniValuesAll = budgetMiniRawAll.map((v) => v / budgetMagnitude.divisor);
+  const budgetMiniValues = budgetMiniValuesAll.filter((v) => v !== 0);
+  const budgetMiniLabels = budgetMiniLabelsAll.filter((_, i) => budgetMiniValuesAll[i] !== 0);
+
   const budgetIsPositive = budgetaryImpact > 0;
   const budgetValue = formatImpact(budgetaryImpact);
   const budgetSubtext =
@@ -453,16 +630,6 @@ export default function SocietyWideOverview({ output, showCongressionalCard }: S
       : budgetIsPositive
         ? 'in additional government revenue'
         : 'in additional government spending';
-
-  const trendOf = (value: number): 'positive' | 'negative' | 'neutral' =>
-    value === 0 ? 'neutral' : value > 0 ? 'positive' : 'negative';
-
-  const subtextOf = (value: number, category: string) =>
-    value === 0
-      ? `No change in ${category}`
-      : value > 0
-        ? `in additional ${category}`
-        : `in reduced ${category}`;
 
   // Calculate poverty rate change
   const povertyOverview = output.poverty.poverty.all;
@@ -492,11 +659,7 @@ export default function SocietyWideOverview({ output, showCongressionalCard }: S
   const childPovertyValue =
     childPovertyRateChange === 0 ? 'No change' : `${childPovertyAbsChange.toFixed(1)}%`;
   const childPovertyTrend: 'positive' | 'negative' | 'neutral' =
-    childPovertyRateChange === 0
-      ? 'neutral'
-      : childPovertyRateChange < 0
-        ? 'positive'
-        : 'negative';
+    childPovertyRateChange === 0 ? 'neutral' : childPovertyRateChange < 0 ? 'positive' : 'negative';
   const childPovertySubtext =
     childPovertyRateChange === 0
       ? 'Child poverty rate unchanged'
@@ -621,8 +784,16 @@ export default function SocietyWideOverview({ output, showCongressionalCard }: S
         padding={spacing.xl}
         shrunkenHeader={cardHeader(IconCoin, 'Budgetary impact', true)}
         shrunkenBody={
-          <Group gap={spacing.lg} align="flex-start">
-            <Box style={{ flex: 1 }}>
+          <div
+            style={{
+              display: 'flex',
+              gap: spacing.xl,
+              alignItems: 'flex-start',
+              paddingLeft: '4%',
+              paddingRight: '2%',
+            }}
+          >
+            <Box style={{ flex: '0 0 auto' }}>
               <MetricCard
                 value={budgetValue}
                 subtext={budgetSubtext}
@@ -632,29 +803,70 @@ export default function SocietyWideOverview({ output, showCongressionalCard }: S
                 hero
               />
             </Box>
-            {countryId === 'us' && (
-              <Group gap={spacing.xl} align="flex-start" style={{ flexShrink: 0 }}>
-                <MetricCard
-                  label="Federal tax revenue"
-                  value={formatImpact(federalTaxImpact)}
-                  subtext={subtextOf(federalTaxImpact, 'federal tax revenue')}
-                  trend={trendOf(federalTaxImpact)}
-                />
-                <MetricCard
-                  label="State and local tax revenue"
-                  value={formatImpact(stateTaxImpact)}
-                  subtext={subtextOf(stateTaxImpact, 'state tax revenue')}
-                  trend={trendOf(stateTaxImpact)}
-                />
-                <MetricCard
-                  label="Benefit spending"
-                  value={formatImpact(spendingImpact)}
-                  subtext={subtextOf(spendingImpact, 'benefit spending')}
-                  trend={trendOf(-spendingImpact)}
-                />
-              </Group>
-            )}
-          </Group>
+            {/* Spacer pushes chart toward right half */}
+            <div style={{ flex: '1 1 10%' }} />
+            <Box style={{ flex: '0 1 55%', minWidth: 0 }}>
+              <Plot
+                data={
+                  [
+                    {
+                      x: budgetMiniLabels,
+                      y: budgetMiniValues,
+                      type: 'waterfall',
+                      orientation: 'v',
+                      measure:
+                        budgetMiniValues.length > 1
+                          ? Array(budgetMiniValues.length - 1)
+                              .fill('relative')
+                              .concat(['total'])
+                          : undefined,
+                      text: budgetMiniValues.map((v) =>
+                        formatCurrencyAbbr(v * budgetMagnitude.divisor, countryId, {
+                          maximumFractionDigits: 1,
+                        })
+                      ),
+                      textposition: 'inside',
+                      increasing: { marker: { color: colors.primary[500] } },
+                      decreasing: { marker: { color: colors.gray[600] } },
+                      totals: {
+                        marker: {
+                          color: budgetaryImpact < 0 ? colors.gray[600] : colors.primary[500],
+                        },
+                      },
+                      connector: {
+                        line: { color: colors.gray[400], width: 1, dash: 'dot' },
+                      },
+                    },
+                  ] as any
+                }
+                layout={
+                  {
+                    margin: { t: 5, b: 50, l: 55, r: 15 },
+                    showlegend: false,
+                    paper_bgcolor: 'transparent',
+                    plot_bgcolor: 'transparent',
+                    xaxis: {
+                      fixedrange: true,
+                      tickfont: { size: 9, color: colors.text.secondary },
+                    },
+                    yaxis: {
+                      fixedrange: true,
+                      title: {
+                        text: budgetMagnitude.label,
+                        font: { size: 10, color: colors.text.secondary },
+                        standoff: 5,
+                      },
+                      ...currencyTicks(budgetMiniValues, symbol, 1),
+                      tickfont: { color: colors.text.secondary },
+                    },
+                    uniformtext: { mode: 'hide', minsize: 8 },
+                  } as any
+                }
+                config={MINI_CHART_CONFIG}
+                style={{ width: '100%', height: 120 }}
+              />
+            </Box>
+          </div>
         }
         expandedContent={<BudgetaryImpactSubPage output={output} chartHeight={BUDGET_CHART_H} />}
         onToggleMode={() => toggle('budget')}
@@ -696,8 +908,7 @@ export default function SocietyWideOverview({ output, showCongressionalCard }: S
                 },
                 yaxis: {
                   fixedrange: true,
-                  tickprefix: symbol,
-                  tickformat: ',.0f',
+                  ...currencyTicks(decileAbsValues, symbol),
                   tickfont: { color: colors.text.secondary },
                 },
               }}

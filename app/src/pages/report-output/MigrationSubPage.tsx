@@ -1,14 +1,6 @@
 import { useState } from 'react';
 import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
-import {
-  Box,
-  Collapse,
-  Group,
-  SegmentedControl,
-  Stack,
-  Text,
-  UnstyledButton,
-} from '@mantine/core';
+import { Box, Collapse, Group, SegmentedControl, Stack, Text, UnstyledButton } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { CongressionalDistrictDataProvider } from '@/contexts/CongressionalDistrictDataContext';

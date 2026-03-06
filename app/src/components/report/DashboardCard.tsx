@@ -1,10 +1,9 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { IconArrowsMinimize, IconMaximize } from '@tabler/icons-react';
+import { IconArrowsMinimize } from '@tabler/icons-react';
 import { motion } from 'framer-motion';
-import { ActionIcon, Box, Group, Stack, Text, Tooltip } from '@mantine/core';
-import { colors, spacing, typography } from '@/designTokens';
+import { ActionIcon, Button, Tooltip } from '@mantine/core';
+import { colors, spacing } from '@/designTokens';
 
-const SECONDARY_ICON_SIZE = 36;
 const FADE_MS = 150;
 const RESIZE_S = 0.35;
 export const SHRUNKEN_CARD_HEIGHT = 200;
@@ -19,20 +18,15 @@ interface DashboardCardProps {
   onToggleMode?: () => void;
   gridGap?: number;
 
-  // Standard header mode (icon + label + slides)
-  icon?: React.ComponentType<{ size: number; color: string; stroke: number }>;
-  label?: string;
-  slides?: React.ReactNode[];
-
-  // Custom shrunken content (replaces header + slides entirely)
-  shrunkenContent?: React.ReactNode;
-
-  // Two-part shrunken layout: header at top, body centered in remaining space
-  shrunkenHeader?: React.ReactNode;
+  /** Header pinned to top of shrunken card (e.g. icon + label) */
+  shrunkenHeader: React.ReactNode;
+  /** Body centered in remaining space below header */
   shrunkenBody?: React.ReactNode;
 
   // Layout
   colSpan?: number;
+  /** Number of grid rows the card occupies when shrunken (default 1) */
+  shrunkenRows?: number;
   /** Number of grid rows the card occupies when expanded (default 2) */
   expandedRows?: number;
 
@@ -72,25 +66,20 @@ export default function DashboardCard({
   expandedContent,
   onToggleMode,
   gridGap = 16,
-  icon: Icon,
-  label,
-  slides,
-  shrunkenContent,
   shrunkenHeader,
   shrunkenBody,
   colSpan = 1,
+  shrunkenRows = 1,
   expandedRows = 2,
   expandedControls,
   shrunkenBackground,
   shrunkenBorderColor,
   padding: paddingProp,
 }: DashboardCardProps) {
-  const [activeSlideIndex, setActiveSlideIndex] = useState(0);
   const cardRef = useRef<HTMLDivElement>(null);
-  const safeIndex = slides ? Math.min(activeSlideIndex, slides.length - 1) : 0;
   const isExpanded = mode === 'expanded';
-  const useCustomContent = !!shrunkenContent || !!shrunkenHeader;
   const cardPadding = paddingProp ?? spacing.lg;
+  const shrunkenHeight = SHRUNKEN_CARD_HEIGHT * shrunkenRows + gridGap * (shrunkenRows - 1);
 
   const [phase, setPhase] = useState<Phase>('idle');
   const [cell, setCell] = useState<{ w: number; h: number } | null>(null);
@@ -176,7 +165,10 @@ export default function DashboardCard({
   // --- Derived values ---
   const isLifted = phase !== 'idle';
   const expandedW = colSpan >= 2 ? (cell?.w ?? 0) : cell ? cell.w * 2 + gridGap : 0;
-  const expandedH = cell ? cell.h * expandedRows + gridGap * (expandedRows - 1) : 0;
+  // Expanded height is always based on single-row cell height, not the shrunken
+  // card height (which may span multiple rows via shrunkenRows).
+  const singleRowH = SHRUNKEN_CARD_HEIGHT;
+  const expandedH = cell ? singleRowH * expandedRows + gridGap * (expandedRows - 1) : 0;
 
   // Background/border: use overrides only when idle (shrunken)
   const cardBackground =
@@ -203,19 +195,33 @@ export default function DashboardCard({
   const anchor = ANCHOR[expandDirection];
 
   const expandButton = onToggleMode ? (
-    <Tooltip label={isExpanded ? 'Collapse' : 'Expand'} position="left">
-      <ActionIcon
+    isExpanded ? (
+      <Tooltip label="Collapse" position="left">
+        <ActionIcon
+          variant="subtle"
+          color="gray"
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleMode();
+          }}
+        >
+          <IconArrowsMinimize size={16} />
+        </ActionIcon>
+      </Tooltip>
+    ) : (
+      <Button
         variant="subtle"
-        color="gray"
-        size="sm"
+        color="teal"
+        size="compact-xs"
         onClick={(e) => {
           e.stopPropagation();
           onToggleMode();
         }}
       >
-        {isExpanded ? <IconArrowsMinimize size={16} /> : <IconMaximize size={14} />}
-      </ActionIcon>
-    </Tooltip>
+        See detailed analysis
+      </Button>
+    )
   ) : null;
 
   return (
@@ -223,8 +229,9 @@ export default function DashboardCard({
     <div
       style={{
         position: 'relative',
-        height: isLifted ? (cell?.h ?? SHRUNKEN_CARD_HEIGHT) : SHRUNKEN_CARD_HEIGHT,
+        height: isLifted ? (cell?.h ?? shrunkenHeight) : shrunkenHeight,
         ...(colSpan > 1 ? { gridColumn: `span ${colSpan}` } : {}),
+        ...(shrunkenRows > 1 ? { gridRow: `span ${shrunkenRows}` } : {}),
       }}
     >
       <motion.div
@@ -236,7 +243,7 @@ export default function DashboardCard({
         style={{
           position: isLifted ? 'absolute' : 'relative',
           ...(isLifted ? anchor : {}),
-          ...(!isLifted ? { width: '100%', height: SHRUNKEN_CARD_HEIGHT } : {}),
+          ...(!isLifted ? { width: '100%', height: shrunkenHeight } : {}),
           zIndex,
           background: cardBackground,
           borderRadius: spacing.md,
@@ -250,43 +257,6 @@ export default function DashboardCard({
         }}
         onClick={!isExpanded ? onToggleMode : undefined}
       >
-        {/* Standard header — only when not using custom content */}
-        {!useCustomContent && Icon && label && (
-          <Group
-            justify="space-between"
-            align="flex-start"
-            mb={spacing.md}
-            style={{ flexShrink: 0 }}
-          >
-            <Group gap={spacing.md} align="flex-start">
-              <Box
-                style={{
-                  width: SECONDARY_ICON_SIZE,
-                  height: SECONDARY_ICON_SIZE,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: colors.gray[100],
-                  borderRadius: spacing.xs,
-                  flexShrink: 0,
-                }}
-              >
-                <Icon size={20} color={colors.gray[600]} stroke={1.5} />
-              </Box>
-              <Text
-                size="xs"
-                fw={typography.fontWeight.medium}
-                c={colors.text.secondary}
-                tt="uppercase"
-                style={{ letterSpacing: '0.05em', paddingTop: 8 }}
-              >
-                {label}
-              </Text>
-            </Group>
-            {expandButton}
-          </Group>
-        )}
-
         {/* Content area */}
         <div style={{ position: 'relative', flex: 1, minHeight: 0, overflow: 'hidden' }}>
           {/* Shrunken layer — always mounted, opacity-controlled */}
@@ -297,59 +267,40 @@ export default function DashboardCard({
               pointerEvents: phase === 'idle' ? 'auto' : 'none',
               height: '100%',
               display: 'flex',
-              alignItems: shrunkenHeader ? 'stretch' : 'center',
+              alignItems: 'stretch',
             }}
           >
-            {shrunkenHeader ? (
+            <div
+              style={{
+                width: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                height: '100%',
+              }}
+            >
               <div
                 style={{
-                  width: '100%',
+                  flexShrink: 0,
                   display: 'flex',
-                  flexDirection: 'column',
-                  height: '100%',
+                  justifyContent: 'space-between',
+                  alignItems: 'flex-start',
                 }}
               >
-                <div style={{ flexShrink: 0 }}>{shrunkenHeader}</div>
-                <div
-                  style={{
-                    flex: 1,
-                    display: 'flex',
-                    alignItems: 'center',
-                    minHeight: 0,
-                  }}
-                >
-                  <div style={{ width: '100%' }}>{shrunkenBody}</div>
-                </div>
+                {shrunkenHeader}
+                {expandButton}
               </div>
-            ) : useCustomContent ? (
-              <div style={{ width: '100%' }}>{shrunkenContent}</div>
-            ) : (
-              <Stack gap={spacing.md} style={{ width: '100%' }}>
-                <Box>{slides?.[safeIndex]}</Box>
-                {slides && slides.length > 1 && (
-                  <Group gap={spacing.xs} justify="center">
-                    {slides.map((_, index) => (
-                      <Box
-                        key={index}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setActiveSlideIndex(index);
-                        }}
-                        style={{
-                          width: 8,
-                          height: 8,
-                          borderRadius: '50%',
-                          backgroundColor:
-                            index === safeIndex ? colors.primary[500] : colors.gray[300],
-                          cursor: 'pointer',
-                          transition: 'background-color 0.2s ease',
-                        }}
-                      />
-                    ))}
-                  </Group>
-                )}
-              </Stack>
-            )}
+              <div
+                style={{
+                  flex: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  minHeight: 0,
+                  position: 'relative',
+                }}
+              >
+                <div style={{ width: '100%' }}>{shrunkenBody}</div>
+              </div>
+            </div>
           </div>
 
           {/* Expanded layer — only mounted after card finishes expanding */}
@@ -377,23 +328,14 @@ export default function DashboardCard({
                     marginBottom: spacing.sm,
                   }}
                 >
-                  <div style={{ display: 'flex', gap: spacing.lg }}>
-                    {expandedControls}
-                  </div>
+                  <div style={{ display: 'flex', gap: spacing.lg }}>{expandedControls}</div>
                   {expandButton}
                 </div>
               )}
-              <div style={{ flex: 1, minHeight: 0 }}>
-                {expandedContent}
-              </div>
+              <div style={{ flex: 1, minHeight: 0 }}>{expandedContent}</div>
             </div>
           )}
         </div>
-
-        {/* Expand button for custom content mode — absolutely positioned (hidden when expanded) */}
-        {useCustomContent && expandButton && !mountExpanded && (
-          <div style={{ position: 'absolute', top: 12, right: 12, zIndex: 2 }}>{expandButton}</div>
-        )}
       </motion.div>
     </div>
   );
