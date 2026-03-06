@@ -157,7 +157,7 @@ function getBaselineCode(
   let jsonStr = JSON.stringify(policy.baseline.data, null, 2);
   jsonStr = sanitizeStringToPython(jsonStr);
   const lines = [''].concat(jsonStr.split('\n'));
-  lines[1] = `baseline = Reform.from_dict({${lines[1]}`;
+  lines[1] = `baseline = Reform.from_dict(${lines[1]}`;
   lines[lines.length - 1] = `${lines[lines.length - 1]}, country_id="${countryId}")`;
   return lines;
 }
@@ -175,7 +175,7 @@ function getReformCode(
   let jsonStr = JSON.stringify(policy.reform.data, null, 2);
   jsonStr = sanitizeStringToPython(jsonStr);
   const lines = [''].concat(jsonStr.split('\n'));
-  lines[1] = `reform = Reform.from_dict({${lines[1]}`;
+  lines[1] = `reform = Reform.from_dict(${lines[1]}`;
   lines[lines.length - 1] = `${lines[lines.length - 1]}, country_id="${countryId}")`;
   return lines;
 }

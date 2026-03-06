@@ -503,6 +503,109 @@ describe('reproducibilityCode', () => {
       });
     });
 
+    describe('syntax validation', () => {
+      /**
+       * Checks that brackets and parentheses are balanced in generated Python.
+       * Counts (), {}, and [] pairs — any mismatch means invalid syntax.
+       */
+      function assertBalancedBrackets(code: string) {
+        let parens = 0;
+        let braces = 0;
+        let squares = 0;
+        for (const ch of code) {
+          if (ch === '(') {
+            parens++;
+          }
+          if (ch === ')') {
+            parens--;
+          }
+          if (ch === '{') {
+            braces++;
+          }
+          if (ch === '}') {
+            braces--;
+          }
+          if (ch === '[') {
+            squares++;
+          }
+          if (ch === ']') {
+            squares--;
+          }
+          // Should never go negative (closing before opening)
+          expect(parens).toBeGreaterThanOrEqual(0);
+          expect(braces).toBeGreaterThanOrEqual(0);
+          expect(squares).toBeGreaterThanOrEqual(0);
+        }
+        expect(parens).toBe(0);
+        expect(braces).toBe(0);
+        expect(squares).toBe(0);
+      }
+
+      test('given reform-only policy then generated code has balanced brackets', () => {
+        // When
+        const code = getReproducibilityCodeBlock(
+          'household',
+          TEST_COUNTRIES.US,
+          REFORM_ONLY_POLICY,
+          TEST_REGIONS.US_NATIONAL,
+          TEST_YEARS.DEFAULT,
+          null,
+          SIMPLE_HOUSEHOLD_INPUT,
+          false
+        ).join('\n');
+
+        // Then
+        assertBalancedBrackets(code);
+      });
+
+      test('given baseline-and-reform policy then generated code has balanced brackets', () => {
+        // When
+        const code = getReproducibilityCodeBlock(
+          'policy',
+          TEST_COUNTRIES.US,
+          BASELINE_AND_REFORM_POLICY,
+          TEST_REGIONS.US_NATIONAL,
+          TEST_YEARS.DEFAULT,
+          null
+        ).join('\n');
+
+        // Then
+        assertBalancedBrackets(code);
+      });
+
+      test('given household with earning variation then generated code has balanced brackets', () => {
+        // When
+        const code = getReproducibilityCodeBlock(
+          'household',
+          TEST_COUNTRIES.US,
+          REFORM_ONLY_POLICY,
+          TEST_REGIONS.US_NATIONAL,
+          TEST_YEARS.DEFAULT,
+          null,
+          SIMPLE_HOUSEHOLD_INPUT,
+          true
+        ).join('\n');
+
+        // Then
+        assertBalancedBrackets(code);
+      });
+
+      test('given place region with reform then generated code has balanced brackets', () => {
+        // When
+        const code = getReproducibilityCodeBlock(
+          'policy',
+          TEST_COUNTRIES.US,
+          REFORM_ONLY_POLICY,
+          TEST_REGIONS.NJ_PLACE,
+          TEST_YEARS.DEFAULT,
+          null
+        ).join('\n');
+
+        // Then
+        assertBalancedBrackets(code);
+      });
+    });
+
     describe('infinity handling', () => {
       test('given policy with Infinity then adds numpy import', () => {
         // When
