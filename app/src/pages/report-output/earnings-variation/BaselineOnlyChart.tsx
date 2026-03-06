@@ -89,11 +89,12 @@ export default function BaselineOnlyChart({
     metadata
   ) as number;
 
-  // Get current earnings to show marker position
+  // Get current earnings to show marker position (first person only, matching axes sweep)
+  const firstPersonName = Object.keys(baseline.householdData?.people || {})[0];
   const currentEarnings = getValueFromHousehold(
     'employment_income',
     year,
-    null,
+    firstPersonName,
     baseline,
     metadata
   ) as number;

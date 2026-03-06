@@ -121,11 +121,12 @@ export default function BaselineAndReformChart({
     return <div>No variation data available</div>;
   }
 
-  // Get current earnings for marker
+  // Get current earnings for marker (first person only, matching axes sweep)
+  const firstPersonName = Object.keys(baseline.householdData?.people || {})[0];
   const currentEarnings = getValueFromHousehold(
     'employment_income',
     year,
-    null,
+    firstPersonName,
     baseline,
     metadata
   ) as number;
