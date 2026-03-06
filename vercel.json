@@ -45,6 +45,14 @@
       "destination": "https://policyengine.github.io/plugin-blog/:path*"
     },
     {
+      "source": "/us/watca",
+      "destination": "https://working-americans-tax-cut-act-one.vercel.app/us/watca"
+    },
+    {
+      "source": "/us/watca/:path*",
+      "destination": "https://working-americans-tax-cut-act-one.vercel.app/us/watca/:path*"
+    },
+    {
       "source": "/us/taxsim",
       "destination": "https://policyengine-taxsim-policy-engine.vercel.app/us/taxsim"
     },

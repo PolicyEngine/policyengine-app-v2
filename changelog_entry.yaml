@@ -1,4 +1,4 @@
-- bump: patch
+- bump: minor
   changes:
-    changed:
-      - Add Spring Statement 2026 to featured research banner and remove Scottish Budget 2026-27 card
+    added:
+      - Add Working Americans' Tax Cut Act calculator as reverse-proxied app at /us/watca
