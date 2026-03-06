@@ -213,9 +213,7 @@ export function buildErrorTrace(
       return;
     }
     locations.push(districtId);
-    hoverText.push(
-      `${feature.properties?.NAMELSAD ?? districtId}<br><b>Error loading data</b>`
-    );
+    hoverText.push(`${feature.properties?.NAMELSAD ?? districtId}<br><b>Error loading data</b>`);
     features.push(feature);
   });
 

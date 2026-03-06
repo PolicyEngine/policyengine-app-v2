@@ -130,7 +130,14 @@ export function USDistrictChoroplethMap({
     if (!geoJSON) {
       return { plotData: [], plotLayout: {} };
     }
-    return buildPlotDataAndLayout(geoJSON, dataMap, colorRange, fullConfig, focusState, errorStates);
+    return buildPlotDataAndLayout(
+      geoJSON,
+      dataMap,
+      colorRange,
+      fullConfig,
+      focusState,
+      errorStates
+    );
   }, [geoJSON, dataMap, colorRange, fullConfig, focusState, errorStates]);
 
   // Build Plotly config

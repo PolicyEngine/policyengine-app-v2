@@ -24,7 +24,10 @@ interface Props {
   chartHeight?: number;
 }
 
-export default function DeepPovertyImpactByAgeSubPage({ output, chartHeight: chartHeightProp }: Props) {
+export default function DeepPovertyImpactByAgeSubPage({
+  output,
+  chartHeight: chartHeightProp,
+}: Props) {
   const mobile = useMediaQuery('(max-width: 768px)');
   const countryId = useCurrentCountry();
   const metadata = useSelector((state: RootState) => state.metadata);

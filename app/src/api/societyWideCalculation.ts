@@ -54,7 +54,9 @@ export async function fetchSocietyWideCalculation(
       url,
       body
     );
-    throw new Error(`Society-wide calculation failed (${response.status}): ${body || response.statusText}`);
+    throw new Error(
+      `Society-wide calculation failed (${response.status}): ${body || response.statusText}`
+    );
   }
 
   const data = await response.json();
