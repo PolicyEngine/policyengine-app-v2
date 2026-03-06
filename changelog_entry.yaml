@@ -1,4 +1,4 @@
 - bump: patch
   changes:
-    fixed:
-      - Fix Spring Statement 2026 URL by switching from broken Vercel rewrite to iframe embed
+    changed:
+      - Add Spring Statement 2026 to featured research banner and remove Scottish Budget 2026-27 card
