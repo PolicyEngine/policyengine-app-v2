@@ -70,9 +70,9 @@ describe('FeaturedResearchBanner', () => {
     render(<FeaturedResearchBanner />);
 
     // Then
+    expect(screen.getByText(BANNER_CARD_TITLES.SPRING_STATEMENT)).toBeInTheDocument();
     expect(screen.getByText(BANNER_CARD_TITLES.SALARY_SACRIFICE)).toBeInTheDocument();
     expect(screen.getByText(BANNER_CARD_TITLES.STUDENT_LOAN)).toBeInTheDocument();
-    expect(screen.getByText(BANNER_CARD_TITLES.SCOTTISH_BUDGET)).toBeInTheDocument();
   });
 
   test('given analysis cards then link to correct URLs', () => {
@@ -83,13 +83,13 @@ describe('FeaturedResearchBanner', () => {
     render(<FeaturedResearchBanner />);
 
     // Then
+    const springLink = screen.getByText(BANNER_CARD_TITLES.SPRING_STATEMENT).closest('a');
     const salaryLink = screen.getByText(BANNER_CARD_TITLES.SALARY_SACRIFICE).closest('a');
     const studentLink = screen.getByText(BANNER_CARD_TITLES.STUDENT_LOAN).closest('a');
-    const scottishLink = screen.getByText(BANNER_CARD_TITLES.SCOTTISH_BUDGET).closest('a');
 
+    expect(springLink).toHaveAttribute('href', BANNER_CARD_LINKS.SPRING_STATEMENT);
     expect(salaryLink).toHaveAttribute('href', BANNER_CARD_LINKS.SALARY_SACRIFICE);
     expect(studentLink).toHaveAttribute('href', BANNER_CARD_LINKS.STUDENT_LOAN);
-    expect(scottishLink).toHaveAttribute('href', BANNER_CARD_LINKS.SCOTTISH_BUDGET);
   });
 
   test('given analysis card links then open in same tab', () => {
