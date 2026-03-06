@@ -56,6 +56,82 @@ describe('MetadataAdapter', () => {
     });
   });
 
+  describe('variableFromV2 adds/subtracts', () => {
+    it('given V2 variable with null adds then converts to undefined', () => {
+      // Given
+      const v2Variable = createMockVariable({ adds: null });
+
+      // When
+      const result = MetadataAdapter.variableFromV2(v2Variable);
+
+      // Then
+      expect(result.adds).toBeUndefined();
+    });
+
+    it('given V2 variable with null subtracts then converts to undefined', () => {
+      // Given
+      const v2Variable = createMockVariable({ subtracts: null });
+
+      // When
+      const result = MetadataAdapter.variableFromV2(v2Variable);
+
+      // Then
+      expect(result.subtracts).toBeUndefined();
+    });
+
+    it('given V2 variable with adds array then preserves array', () => {
+      // Given
+      const ADDS_COMPONENTS = ['employment_income', 'self_employment_income', 'pension_income'];
+      const v2Variable = createMockVariable({ adds: ADDS_COMPONENTS });
+
+      // When
+      const result = MetadataAdapter.variableFromV2(v2Variable);
+
+      // Then
+      expect(result.adds).toEqual(ADDS_COMPONENTS);
+    });
+
+    it('given V2 variable with subtracts array then preserves array', () => {
+      // Given
+      const SUBTRACTS_COMPONENTS = ['tax_deduction', 'personal_allowance'];
+      const v2Variable = createMockVariable({ subtracts: SUBTRACTS_COMPONENTS });
+
+      // When
+      const result = MetadataAdapter.variableFromV2(v2Variable);
+
+      // Then
+      expect(result.subtracts).toEqual(SUBTRACTS_COMPONENTS);
+    });
+
+    it('given V2 variable with both adds and subtracts then preserves both', () => {
+      // Given
+      const ADDS_COMPONENTS = ['gross_income', 'capital_gains'];
+      const SUBTRACTS_COMPONENTS = ['standard_deduction'];
+      const v2Variable = createMockVariable({
+        adds: ADDS_COMPONENTS,
+        subtracts: SUBTRACTS_COMPONENTS,
+      });
+
+      // When
+      const result = MetadataAdapter.variableFromV2(v2Variable);
+
+      // Then
+      expect(result.adds).toEqual(ADDS_COMPONENTS);
+      expect(result.subtracts).toEqual(SUBTRACTS_COMPONENTS);
+    });
+
+    it('given V2 variable with empty adds array then preserves empty array', () => {
+      // Given
+      const v2Variable = createMockVariable({ adds: [] });
+
+      // When
+      const result = MetadataAdapter.variableFromV2(v2Variable);
+
+      // Then
+      expect(result.adds).toEqual([]);
+    });
+  });
+
   describe('variablesFromV2', () => {
     it('given array of V2 variables then converts to keyed record', () => {
       // Given

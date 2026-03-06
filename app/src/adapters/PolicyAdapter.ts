@@ -1,8 +1,4 @@
-import {
-  V2PolicyCreatePayload,
-  V2PolicyParameterValue,
-  V2PolicyResponse,
-} from '@/api/policy';
+import { V2PolicyCreatePayload, V2PolicyParameterValue, V2PolicyResponse } from '@/api/policy';
 import { FOREVER } from '@/constants';
 import { Policy } from '@/types/ingredients/Policy';
 import { ParameterMetadata } from '@/types/metadata';
@@ -20,7 +16,9 @@ export class PolicyAdapter {
     const paramMap = new Map<string, ValueInterval[]>();
     for (const pv of response.parameter_values ?? []) {
       const name = pv.parameter_name;
-      if (!paramMap.has(name)) paramMap.set(name, []);
+      if (!paramMap.has(name)) {
+        paramMap.set(name, []);
+      }
       paramMap.get(name)!.push({
         startDate: pv.start_date.split('T')[0],
         endDate: pv.end_date?.split('T')[0] ?? FOREVER,

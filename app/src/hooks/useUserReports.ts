@@ -469,9 +469,7 @@ export const useUserReportById = (userReportId: string, options?: { enabled?: bo
     staleTime: 5 * 60 * 1000,
   });
 
-  const legacyPolicies = policyResults.queries
-    .map((q) => q.data)
-    .filter((p): p is Policy => !!p);
+  const legacyPolicies = policyResults.queries.map((q) => q.data).filter((p): p is Policy => !!p);
 
   // Step 5: Get user associations (always called — hooks must be unconditional)
   const { data: simulationAssociations } = useSimulationAssociationsByUser(userId || '');

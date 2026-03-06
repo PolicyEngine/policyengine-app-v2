@@ -39,6 +39,8 @@ export class MetadataAdapter {
       // Auto-generate label from name (sentence case)
       // TODO: V2 API should provide labels like V1 API did
       label: v2.name.replace(/_/g, ' ').replace(/^./, (c: string) => c.toUpperCase()),
+      adds: v2.adds ?? undefined,
+      subtracts: v2.subtracts ?? undefined,
     };
   }
 

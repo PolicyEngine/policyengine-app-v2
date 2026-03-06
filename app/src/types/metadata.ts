@@ -13,6 +13,8 @@ export interface V2VariableMetadata {
   data_type: string;
   possible_values: string[] | null;
   default_value: string | number | boolean | null;
+  adds: string[] | null;
+  subtracts: string[] | null;
   tax_benefit_model_version_id: string;
   created_at: string;
 }
@@ -77,12 +79,8 @@ export interface MetadataRegionEntry {
  *
  * TODO: Migrate fully to V2VariableMetadata. This intermediate type exists because:
  * 1. `label` is computed from `name` in MetadataAdapter (V2 API doesn't provide labels)
- * 2. `adds`/`subtracts` are V1 fields used by VariableArithmetic for breakdown display
  *
  * KNOWN ISSUES:
- * - `adds`/`subtracts` are NEVER POPULATED from V2 API, so VariableArithmetic
- *   breakdown functionality is currently broken. V1 API included these fields
- *   directly in the response to describe variable arithmetic formulas.
  * - `label` is auto-generated from `name` (e.g., "employment_income" -> "Employment income")
  *   using sentence case. V1 API provided human-curated labels. V2 API should add
  *   a `label` field to match V1's quality.
@@ -103,9 +101,8 @@ export interface VariableMetadata {
   label?: string;
 
   // Variable arithmetic (for breakdown calculations)
-  // WARNING: These fields are NOT populated from V2 API - see note above
-  adds?: string | string[];
-  subtracts?: string | string[];
+  adds?: string[];
+  subtracts?: string[];
 }
 
 /**
