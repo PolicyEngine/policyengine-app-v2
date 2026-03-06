@@ -188,7 +188,7 @@ export default function FeaturedResearchBanner() {
               {
                 href: '/uk/spring-statement-2026',
                 title: 'Spring Statement 2026 analysis',
-                desc: 'New OBR forecast and its effect on UK household incomes',
+                desc: 'New OBR forecast and its effects on UK living standards',
               },
               {
                 href: '/uk/research/uk-two-child-limit-reintroduction',
