@@ -187,7 +187,7 @@ export default function FeaturedResearchBanner() {
             {[
               {
                 href: '/uk/spring-statement-2026',
-                title: 'Spring Statement 2026',
+                title: 'Spring Statement 2026 analysis',
                 desc: 'OBR forecast revisions and their impact on UK household incomes across income deciles and household types',
               },
               {

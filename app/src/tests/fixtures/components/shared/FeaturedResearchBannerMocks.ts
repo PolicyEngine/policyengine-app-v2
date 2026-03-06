@@ -12,7 +12,7 @@ export const BANNER_CARD_LINKS = {
 } as const;
 
 export const BANNER_CARD_TITLES = {
-  SPRING_STATEMENT: 'Spring Statement 2026',
+  SPRING_STATEMENT: 'Spring Statement 2026 analysis',
   SALARY_SACRIFICE: 'Salary sacrifice cap analysis tool',
   STUDENT_LOAN: 'Student loan deductions calculator',
 } as const;
