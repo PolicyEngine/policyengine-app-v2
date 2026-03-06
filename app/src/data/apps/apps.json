@@ -1,6 +1,19 @@
 [
   {
     "type": "iframe",
+    "slug": "watca",
+    "title": "Working Americans' Tax Cut Act calculator",
+    "description": "Estimate the household and national impact of the cost-of-living exemption and millionaire surtax proposed by Senator Van Hollen",
+    "source": "https://working-americans-tax-cut-act-one.vercel.app/",
+    "tags": ["us", "featured", "policy", "interactives"],
+    "countryId": "us",
+    "displayWithResearch": true,
+    "image": "watca-calculator.png",
+    "date": "2026-03-06 12:00:00",
+    "authors": ["max-ghenis", "pavel-makarchuk"]
+  },
+  {
+    "type": "iframe",
     "slug": "spring-statement-2026",
     "title": "UK Spring Statement 2026 analysis dashboard",
     "description": "Interactive dashboard analysing OBR March 2026 forecast revisions and their impact on UK household incomes across income deciles and household types",
