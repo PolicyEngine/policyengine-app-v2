@@ -81,14 +81,19 @@ function FilterSection({
         overflow: 'hidden',
       }}
     >
-      <div
+      <button
+        type="button"
         style={sectionHeaderStyle}
         onClick={onToggle}
         onMouseEnter={(e) => {
-          if (!isExpanded) e.currentTarget.style.backgroundColor = colors.gray[50];
+          if (!isExpanded) {
+            e.currentTarget.style.backgroundColor = colors.gray[50];
+          }
         }}
         onMouseLeave={(e) => {
-          if (!isExpanded) e.currentTarget.style.backgroundColor = 'transparent';
+          if (!isExpanded) {
+            e.currentTarget.style.backgroundColor = 'transparent';
+          }
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -128,7 +133,7 @@ function FilterSection({
             transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
           }}
         />
-      </div>
+      </button>
 
       <div
         style={{
@@ -289,7 +294,9 @@ export function ResearchFilters({
             value={searchQuery}
             onChange={(e) => onSearchChange(e.currentTarget.value)}
             onKeyDown={(e) => {
-              if (e.key === 'Enter') onSearchSubmit();
+              if (e.key === 'Enter') {
+                onSearchSubmit();
+              }
             }}
             style={{
               paddingLeft: '36px',
