@@ -49,14 +49,6 @@ function LogoItem({ org }: { org: Organization }) {
           maxHeight: '70px',
           width: 'auto',
           height: 'auto',
-          filter: 'grayscale(100%)',
-          transition: 'filter 0.2s ease',
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.filter = 'grayscale(0%)';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.filter = 'grayscale(100%)';
         }}
       />
     </a>
