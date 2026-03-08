@@ -448,7 +448,7 @@ export default function HouseholdGraph({ nodes, impact }: HouseholdGraphProps) {
           const info = currentImpact.get(node.id);
           if (info && info.polarity !== 'neutral') {
             [tr, tg, tb] = info.polarity === 'positive' ? COLOR_PRIMARY : COLOR_NEGATIVE;
-            tOpacity = 0.3 + info.magnitude * 0.2;
+            tOpacity = 0.15 + info.magnitude * 0.1;
             tSize = NODE_SIZE * (1 + info.magnitude * 0.8);
           }
         }
