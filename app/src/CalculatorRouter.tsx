@@ -22,14 +22,6 @@ const ReportsPage = lazy(() => import('./pages/Reports.page'));
 const SimulationsPage = lazy(() => import('./pages/Simulations.page'));
 const ReportBuilderPage = lazy(() => import('./pages/reportBuilder/ReportBuilderPage'));
 const ModifyReportPage = lazy(() => import('./pages/reportBuilder/ModifyReportPage'));
-const PolicyEditingConceptsPage = lazy(
-  () => import('./pages/policyEditingConcepts/PolicyEditingConcepts.page')
-);
-const PolicyEditingConceptPage = lazy(
-  () => import('./pages/policyEditingConcepts/PolicyEditingConceptPage')
-);
-const PlaygroundPage = lazy(() => import('./pages/playground/PlaygroundPage'));
-
 // Lazy-loaded pathway wrappers — heavy components with their own sub-routes
 const PolicyPathwayWrapper = lazy(() => import('./pathways/policy/PolicyPathwayWrapper'));
 const PopulationPathwayWrapper = lazy(
@@ -130,18 +122,6 @@ const router = createBrowserRouter(
                 {
                   path: 'reports/create/:userReportId',
                   element: <ModifyReportPage />,
-                },
-                {
-                  path: 'policy-editing-concepts',
-                  element: <PolicyEditingConceptsPage />,
-                },
-                {
-                  path: 'policy-editing-concepts/:conceptId',
-                  element: <PolicyEditingConceptPage />,
-                },
-                {
-                  path: 'playground',
-                  element: <PlaygroundPage />,
                 },
                 {
                   path: 'account',
