@@ -13,16 +13,23 @@ export interface HeroSectionProps {
 export default function HeroSection({ title, description }: HeroSectionProps) {
   return (
     <div
-      className="tw:px-[6.125%] tw:py-12 tw:md:py-16"
+      className="tw:px-[6.125%] tw:py-14 tw:md:py-20"
       style={{
-        background: `linear-gradient(to right, ${colors.primary[800]}, ${colors.primary[600]})`,
+        backgroundColor: colors.gray[50],
+        borderBottom: `1px solid ${colors.border.light}`,
       }}
     >
-      <div className="tw:max-w-3xl">
-        <h1 className="tw:text-3xl tw:md:text-4xl tw:font-semibold tw:text-white tw:tracking-tight">
+      <div>
+        <h1
+          className="tw:text-3xl tw:md:text-4xl tw:font-bold tw:tracking-tight"
+          style={{ color: colors.primary[800] }}
+        >
           {title}
         </h1>
-        <p className="tw:text-base tw:md:text-lg tw:leading-relaxed tw:text-white/75 tw:mt-3 tw:max-w-2xl">
+        <p
+          className="tw:text-base tw:md:text-lg tw:leading-relaxed tw:mt-4"
+          style={{ color: colors.gray[500] }}
+        >
           {description}
         </p>
       </div>
