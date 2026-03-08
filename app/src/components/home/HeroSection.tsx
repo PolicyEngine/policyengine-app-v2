@@ -45,7 +45,7 @@ export default function HeroSection() {
   const [impact, setImpact] = useState<ImpactState | null>(null);
   const impactTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
-  const nodes = useMemo(() => generateGraph(), []);
+  const nodes = useMemo(() => generateGraph(countryId), [countryId]);
 
   const handlePromptComplete = useCallback(
     (promptIndex: number, distribution: PromptData) => {
