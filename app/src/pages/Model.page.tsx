@@ -18,7 +18,9 @@ export default function ModelPage() {
   const handleMessage = useCallback((event: MessageEvent) => {
     // Only accept messages from the embed origin
     try {
-      if (new URL(EMBED_BASE).origin !== event.origin) { return; }
+      if (new URL(EMBED_BASE).origin !== event.origin) {
+        return;
+      }
     } catch {
       return;
     }

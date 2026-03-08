@@ -52,7 +52,9 @@ export default function CountrySelector() {
       }
     }
     function handleKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') { setOpen(false); }
+      if (e.key === 'Escape') {
+        setOpen(false);
+      }
     }
     document.addEventListener('mousedown', handleClick);
     document.addEventListener('keydown', handleKey);

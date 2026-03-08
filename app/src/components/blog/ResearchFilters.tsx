@@ -197,7 +197,7 @@ function CheckboxRow({
           fontSize: '13.5px',
           fontFamily: typography.fontFamily.primary,
           color: checked ? colors.primary[700] : colors.secondary[700],
-          fontWeight: checked ? typography.fontWeight.semibold : typography.fontWeight.regular,
+          fontWeight: checked ? typography.fontWeight.semibold : typography.fontWeight.normal,
           transition: 'color 0.1s ease',
           flex: 1,
         }}

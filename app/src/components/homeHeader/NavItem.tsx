@@ -93,7 +93,9 @@ function AppleDropdown({
     [navigate, onClose]
   );
 
-  if (!open && contentHeight === 0) { return null; }
+  if (!open && contentHeight === 0) {
+    return null;
+  }
 
   return (
     <>
@@ -188,7 +190,9 @@ export default function NavItem({ setup }: NavItemProps) {
 
   // Close on click outside
   useEffect(() => {
-    if (!dropdownOpen) { return; }
+    if (!dropdownOpen) {
+      return;
+    }
     function handleClick(e: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setDropdownOpen(false);
@@ -200,9 +204,13 @@ export default function NavItem({ setup }: NavItemProps) {
 
   // Close on Escape
   useEffect(() => {
-    if (!dropdownOpen) { return; }
+    if (!dropdownOpen) {
+      return;
+    }
     function handleKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') { setDropdownOpen(false); }
+      if (e.key === 'Escape') {
+        setDropdownOpen(false);
+      }
     }
     document.addEventListener('keydown', handleKey);
     return () => document.removeEventListener('keydown', handleKey);
