@@ -8,7 +8,7 @@ import {
   IconUsers,
 } from '@tabler/icons-react';
 import Plot from 'react-plotly.js';
-import { Box, Group, Progress, SegmentedControl, SimpleGrid, Stack, Text } from '@mantine/core';
+import { Group, Progress, SegmentedControl, Stack, Text } from '@/components/ui';
 import { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import DashboardCard from '@/components/report/DashboardCard';
 import MetricCard from '@/components/report/MetricCard';
@@ -100,17 +100,6 @@ function getBreakdownOptions(
   }
   return options;
 }
-
-const segmentedControlStyles = {
-  root: {
-    background: colors.gray[100],
-    borderRadius: spacing.radius.container,
-  },
-  indicator: {
-    background: colors.white,
-    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-  },
-};
 
 type DecileMode = 'absolute' | 'relative';
 const DECILE_MODE_OPTIONS = [
@@ -211,7 +200,7 @@ function DistrictRankColumn({
   }
 
   return (
-    <Box style={{ flex: 1, minWidth: 0 }}>
+    <div style={{ flex: 1, minWidth: 0 }}>
       {rows.map((row, i) =>
         row.type === 'header' ? (
           <Text
@@ -219,13 +208,13 @@ function DistrictRankColumn({
             size="xs"
             fw={typography.fontWeight.medium}
             c={colors.text.secondary}
-            tt="uppercase"
+            className="tw:uppercase"
             style={{ letterSpacing: '0.05em', marginBottom: 2, marginTop: i > 0 ? 6 : 0 }}
           >
             {row.text}
           </Text>
         ) : (
-          <Box
+          <div
             key={row.district.id}
             style={{
               display: 'flex',
@@ -262,10 +251,10 @@ function DistrictRankColumn({
             >
               {formatValue(row.district.value)}
             </Text>
-          </Box>
+          </div>
         )
       )}
-    </Box>
+    </div>
   );
 }
 
@@ -459,11 +448,11 @@ function CongressionalDistrictCard({
       shrunkenHeader={header}
       shrunkenBody={
         !dataReady ? (
-          <Stack gap={spacing.sm}>
+          <Stack gap="sm">
             <Text size="sm" c={colors.text.secondary}>
               Loading ({completedCount} of {totalStates} states)...
             </Text>
-            <Progress value={progressPercent} size="sm" />
+            <Progress value={progressPercent} />
             {errorDistrictCount > 0 && (
               <MetricCard
                 label="Districts with errors"
@@ -483,7 +472,7 @@ function CongressionalDistrictCard({
             }}
           >
             {/* Left half: placeholder for hex choropleth map */}
-            <Box
+            <div
               style={{
                 height: '100%',
                 backgroundColor: colors.gray[100],
@@ -496,7 +485,7 @@ function CongressionalDistrictCard({
               <Text size="xs" c={colors.text.tertiary}>
                 Map placeholder
               </Text>
-            </Box>
+            </div>
             {/* Right third: rankings stacked — winners on top */}
             <div
               style={{
@@ -533,10 +522,9 @@ function CongressionalDistrictCard({
       expandedControls={
         <SegmentedControl
           value={congressionalMode}
-          onChange={(value) => setCongressionalMode(value as CongressionalMode)}
+          onValueChange={(value) => setCongressionalMode(value as CongressionalMode)}
           size="xs"
-          data={CONGRESSIONAL_MODE_OPTIONS}
-          styles={segmentedControlStyles}
+          options={CONGRESSIONAL_MODE_OPTIONS}
         />
       }
       expandedContent={
@@ -739,8 +727,8 @@ export default function SocietyWideOverview({
     labelText: string,
     hero = false
   ) => (
-    <Group gap={hero ? spacing.lg : spacing.md} align="center">
-      <Box
+    <Group gap={hero ? 'lg' : 'md'} align="center">
+      <div
         style={{
           width: hero ? HERO_ICON_SIZE : SECONDARY_ICON_SIZE,
           height: hero ? HERO_ICON_SIZE : SECONDARY_ICON_SIZE,
@@ -757,12 +745,12 @@ export default function SocietyWideOverview({
           color={hero ? colors.primary[700] : colors.gray[600]}
           stroke={1.5}
         />
-      </Box>
+      </div>
       <Text
         size={hero ? 'sm' : 'xs'}
         fw={typography.fontWeight.medium}
         c={colors.text.secondary}
-        tt="uppercase"
+        className="tw:uppercase"
         style={{ letterSpacing: '0.05em' }}
       >
         {labelText}
@@ -771,7 +759,7 @@ export default function SocietyWideOverview({
   );
 
   return (
-    <SimpleGrid cols={{ base: 1, sm: 2 }} spacing={GRID_GAP}>
+    <div className="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2" style={{ gap: GRID_GAP }}>
       {/* Budgetary Impact — full width hero */}
       <DashboardCard
         mode={modeOf('budget')}
@@ -793,7 +781,7 @@ export default function SocietyWideOverview({
               paddingRight: '2%',
             }}
           >
-            <Box style={{ flex: '0 0 auto' }}>
+            <div style={{ flex: '0 0 auto' }}>
               <MetricCard
                 value={budgetValue}
                 subtext={budgetSubtext}
@@ -802,10 +790,10 @@ export default function SocietyWideOverview({
                 }
                 hero
               />
-            </Box>
+            </div>
             {/* Spacer pushes chart toward right half */}
             <div style={{ flex: '1 1 10%' }} />
-            <Box style={{ flex: '0 1 55%', minWidth: 0 }}>
+            <div style={{ flex: '0 1 55%', minWidth: 0 }}>
               <Plot
                 data={
                   [
@@ -865,7 +853,7 @@ export default function SocietyWideOverview({
                 config={MINI_CHART_CONFIG}
                 style={{ width: '100%', height: 120 }}
               />
-            </Box>
+            </div>
           </div>
         }
         expandedContent={<BudgetaryImpactSubPage output={output} chartHeight={BUDGET_CHART_H} />}
@@ -880,7 +868,7 @@ export default function SocietyWideOverview({
         gridGap={GRID_GAP}
         shrunkenHeader={cardHeader(IconChartBar, 'Decile impacts')}
         shrunkenBody={
-          <Box>
+          <div>
             <Plot
               data={[
                 {
@@ -915,15 +903,14 @@ export default function SocietyWideOverview({
               config={MINI_CHART_CONFIG}
               style={{ width: '100%', height: MINI_CHART_HEIGHT }}
             />
-          </Box>
+          </div>
         }
         expandedControls={
           <SegmentedControl
             value={decileMode}
-            onChange={(value) => setDecileMode(value as DecileMode)}
+            onValueChange={(value) => setDecileMode(value as DecileMode)}
             size="xs"
-            data={DECILE_MODE_OPTIONS}
-            styles={segmentedControlStyles}
+            options={DECILE_MODE_OPTIONS}
           />
         }
         expandedContent={
@@ -950,9 +937,9 @@ export default function SocietyWideOverview({
         gridGap={GRID_GAP}
         shrunkenHeader={cardHeader(IconUsers, 'Winners and losers')}
         shrunkenBody={
-          <Box>
+          <div>
             {/* Distribution Bar */}
-            <Box
+            <div
               style={{
                 display: 'flex',
                 height: 8,
@@ -961,7 +948,7 @@ export default function SocietyWideOverview({
                 backgroundColor: colors.gray[200],
               }}
             >
-              <Box
+              <div
                 style={{
                   width: `${winnersPercent * 100}%`,
                   height: '100%',
@@ -969,7 +956,7 @@ export default function SocietyWideOverview({
                   transition: 'width 0.3s ease',
                 }}
               />
-              <Box
+              <div
                 style={{
                   width: `${unchangedPercent * 100}%`,
                   height: '100%',
@@ -977,7 +964,7 @@ export default function SocietyWideOverview({
                   transition: 'width 0.3s ease',
                 }}
               />
-              <Box
+              <div
                 style={{
                   width: `${losersPercent * 100}%`,
                   height: '100%',
@@ -985,12 +972,12 @@ export default function SocietyWideOverview({
                   transition: 'width 0.3s ease',
                 }}
               />
-            </Box>
+            </div>
 
             {/* Legend */}
-            <Group gap={spacing.lg} mt={spacing.sm} wrap="wrap">
-              <Group gap={spacing.xs}>
-                <Box
+            <Group gap="lg" wrap="wrap" style={{ marginTop: spacing.sm }}>
+              <Group gap="xs">
+                <div
                   style={{
                     width: 10,
                     height: 10,
@@ -1003,8 +990,8 @@ export default function SocietyWideOverview({
                   Gain: {(winnersPercent * 100).toFixed(1)}%
                 </Text>
               </Group>
-              <Group gap={spacing.xs}>
-                <Box
+              <Group gap="xs">
+                <div
                   style={{
                     width: 10,
                     height: 10,
@@ -1017,8 +1004,8 @@ export default function SocietyWideOverview({
                   No change: {(unchangedPercent * 100).toFixed(1)}%
                 </Text>
               </Group>
-              <Group gap={spacing.xs}>
-                <Box
+              <Group gap="xs">
+                <div
                   style={{
                     width: 10,
                     height: 10,
@@ -1032,7 +1019,7 @@ export default function SocietyWideOverview({
                 </Text>
               </Group>
             </Group>
-          </Box>
+          </div>
         }
         expandedContent={
           <WinnersLosersIncomeDecileSubPage output={output} chartHeight={SECONDARY_CHART_H} />
@@ -1048,8 +1035,8 @@ export default function SocietyWideOverview({
         gridGap={GRID_GAP}
         shrunkenHeader={cardHeader(IconHome, 'Poverty impact')}
         shrunkenBody={
-          <Group gap={spacing.sm} grow>
-            <Box style={{ display: 'flex', justifyContent: 'center' }}>
+          <Group gap="sm" grow>
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
               <MetricCard
                 label="Overall"
                 value={povertyValue}
@@ -1057,8 +1044,8 @@ export default function SocietyWideOverview({
                 trend={povertyTrend as 'positive' | 'negative' | 'neutral'}
                 invertArrow
               />
-            </Box>
-            <Box style={{ display: 'flex', justifyContent: 'center' }}>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
               <MetricCard
                 label="Child"
                 value={childPovertyValue}
@@ -1066,24 +1053,22 @@ export default function SocietyWideOverview({
                 trend={childPovertyTrend}
                 invertArrow
               />
-            </Box>
+            </div>
           </Group>
         }
         expandedControls={
           <>
             <SegmentedControl
               value={povertyDepth}
-              onChange={handleDepthChange}
+              onValueChange={handleDepthChange}
               size="xs"
-              data={POVERTY_DEPTH_OPTIONS}
-              styles={segmentedControlStyles}
+              options={POVERTY_DEPTH_OPTIONS}
             />
             <SegmentedControl
               value={povertyBreakdown}
-              onChange={(value) => setPovertyBreakdown(value as PovertyBreakdown)}
+              onValueChange={(value) => setPovertyBreakdown(value as PovertyBreakdown)}
               size="xs"
-              data={breakdownOptions}
-              styles={segmentedControlStyles}
+              options={breakdownOptions}
             />
           </>
         }
@@ -1099,8 +1084,8 @@ export default function SocietyWideOverview({
         gridGap={GRID_GAP}
         shrunkenHeader={cardHeader(IconScale, 'Inequality impact')}
         shrunkenBody={
-          <Group gap={spacing.sm} grow>
-            <Box style={{ display: 'flex', justifyContent: 'center' }}>
+          <Group gap="sm" grow>
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
               <MetricCard
                 label="Gini index"
                 value={giniValue}
@@ -1108,8 +1093,8 @@ export default function SocietyWideOverview({
                 trend={giniTrend}
                 invertArrow
               />
-            </Box>
-            <Box style={{ display: 'flex', justifyContent: 'center' }}>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
               <MetricCard
                 label="Top 1% share"
                 value={top1Value}
@@ -1117,7 +1102,7 @@ export default function SocietyWideOverview({
                 trend={top1Trend}
                 invertArrow
               />
-            </Box>
+            </div>
           </Group>
         }
         expandedContent={
@@ -1137,6 +1122,6 @@ export default function SocietyWideOverview({
           onToggleMode={() => toggle('congressional')}
         />
       )}
-    </SimpleGrid>
+    </div>
   );
 }

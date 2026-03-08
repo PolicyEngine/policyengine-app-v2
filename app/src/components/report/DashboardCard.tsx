@@ -1,7 +1,8 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { IconArrowsMinimize } from '@tabler/icons-react';
 import { motion } from 'framer-motion';
-import { ActionIcon, Button, Tooltip } from '@mantine/core';
+import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { colors, spacing } from '@/designTokens';
 
 const FADE_MS = 150;
@@ -196,24 +197,26 @@ export default function DashboardCard({
 
   const expandButton = onToggleMode ? (
     isExpanded ? (
-      <Tooltip label="Collapse" position="left">
-        <ActionIcon
-          variant="subtle"
-          color="gray"
-          size="sm"
-          onClick={(e) => {
-            e.stopPropagation();
-            onToggleMode();
-          }}
-        >
-          <IconArrowsMinimize size={16} />
-        </ActionIcon>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleMode();
+            }}
+            aria-label="Collapse"
+          >
+            <IconArrowsMinimize size={16} />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="left">Collapse</TooltipContent>
       </Tooltip>
     ) : (
       <Button
-        variant="subtle"
-        color="teal"
-        size="compact-xs"
+        variant="link"
+        size="xs"
         onClick={(e) => {
           e.stopPropagation();
           onToggleMode();

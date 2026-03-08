@@ -1,7 +1,8 @@
 import { IconBookmark, IconCode, IconSettings } from '@tabler/icons-react';
-import { ActionIcon, Group, Tooltip } from '@mantine/core';
 import { ShareButton } from '@/components/common/ActionButtons';
-import { colors, typography } from '@/designTokens';
+import { Button } from '@/components/ui/button';
+import { Group } from '@/components/ui';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface ReportActionButtonsProps {
   isSharedView: boolean;
@@ -27,59 +28,49 @@ export function ReportActionButtons({
 }: ReportActionButtonsProps) {
   if (isSharedView) {
     return (
-      <Tooltip
-        label="Save to my reports"
-        position="right"
-        styles={{
-          tooltip: {
-            backgroundColor: colors.gray[700],
-            fontSize: typography.fontSize.xs,
-          },
-        }}
-      >
-        <ActionIcon
-          variant="subtle"
-          color="gray"
-          size="lg"
-          aria-label="Save report to my reports"
-          onClick={onSave}
-        >
-          <IconBookmark size={18} />
-        </ActionIcon>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Save report to my reports"
+            onClick={onSave}
+          >
+            <IconBookmark size={18} />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="right">Save to my reports</TooltipContent>
       </Tooltip>
     );
   }
 
-  const tooltipStyles = {
-    tooltip: {
-      backgroundColor: colors.gray[700],
-      fontSize: typography.fontSize.xs,
-    },
-  };
-
   return (
-    <Group gap="xs" ml={6}>
-      <Tooltip label="View/edit report" position="bottom" styles={tooltipStyles} withArrow>
-        <ActionIcon
-          variant="light"
-          color="gray"
-          size="lg"
-          aria-label="View/edit report"
-          onClick={onView}
-        >
-          <IconSettings size={18} />
-        </ActionIcon>
+    <Group gap="xs" className="tw:ml-1.5">
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="View/edit report"
+            onClick={onView}
+          >
+            <IconSettings size={18} />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="bottom">View/edit report</TooltipContent>
       </Tooltip>
-      <Tooltip label="Reproduce in Python" position="bottom" styles={tooltipStyles} withArrow>
-        <ActionIcon
-          variant="light"
-          color="gray"
-          size="lg"
-          aria-label="Reproduce in Python"
-          onClick={onReproduce}
-        >
-          <IconCode size={18} />
-        </ActionIcon>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Reproduce in Python"
+            onClick={onReproduce}
+          >
+            <IconCode size={18} />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="bottom">Reproduce in Python</TooltipContent>
       </Tooltip>
       <ShareButton onClick={onShare} />
     </Group>

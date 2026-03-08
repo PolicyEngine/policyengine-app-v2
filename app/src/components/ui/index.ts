@@ -98,3 +98,6 @@ export {
 export { Tabs, TabsList, TabsTrigger, TabsContent } from './tabs';
 export { Textarea } from './textarea';
 export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from './tooltip';
+export { Collapsible, CollapsibleTrigger, CollapsibleContent } from './collapsible';
+export { SegmentedControl } from './segmented-control';
+export type { SegmentedControlOption, SegmentedControlProps } from './segmented-control';

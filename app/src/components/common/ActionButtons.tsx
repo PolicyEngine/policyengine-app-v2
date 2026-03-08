@@ -7,8 +7,8 @@ import {
   IconStatusChange,
   IconTransfer,
 } from '@tabler/icons-react';
-import { ActionIcon, Button, Tooltip } from '@mantine/core';
-import { colors, typography } from '@/designTokens';
+import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 export interface ActionButtonProps {
   label?: string;
@@ -16,9 +16,6 @@ export interface ActionButtonProps {
   onClick?: () => void;
   disabled?: boolean;
   loading?: boolean;
-  color?: string;
-  variant?: string;
-  size?: string;
   tooltipPosition?: 'top' | 'bottom' | 'left' | 'right';
 }
 
@@ -33,49 +30,34 @@ function ActionButtonBase({
   label,
   onClick,
   disabled,
-  loading,
-  color,
-  variant = 'light',
-  size = 'lg',
   tooltipPosition = 'bottom',
 }: ActionButtonBaseProps) {
-  const tooltipStyles = {
-    tooltip: {
-      backgroundColor: colors.gray[700],
-      fontSize: typography.fontSize.xs,
-    },
-  };
-
-  if (label) {
-    return (
-      <Tooltip label={tooltip} position={tooltipPosition} styles={tooltipStyles} withArrow>
-        <Button
-          variant={variant}
-          color={color || 'teal'}
-          leftSection={<Icon size={16} />}
-          onClick={onClick}
-          disabled={disabled}
-          loading={loading}
-        >
-          {label}
-        </Button>
-      </Tooltip>
-    );
-  }
-
   return (
-    <Tooltip label={tooltip} position={tooltipPosition} styles={tooltipStyles} withArrow>
-      <ActionIcon
-        variant={variant}
-        color={color || 'gray'}
-        size={size}
-        aria-label={tooltip}
-        onClick={onClick}
-        disabled={disabled}
-        loading={loading}
-      >
-        <Icon size={18} />
-      </ActionIcon>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        {label ? (
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={onClick}
+            disabled={disabled}
+          >
+            <Icon size={16} />
+            {label}
+          </Button>
+        ) : (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onClick}
+            disabled={disabled}
+            aria-label={tooltip}
+          >
+            <Icon size={18} />
+          </Button>
+        )}
+      </TooltipTrigger>
+      <TooltipContent side={tooltipPosition}>{tooltip}</TooltipContent>
     </Tooltip>
   );
 }

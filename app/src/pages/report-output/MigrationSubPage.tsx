@@ -1,7 +1,13 @@
 import { useState } from 'react';
 import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
-import { Box, Collapse, Group, SegmentedControl, Stack, Text, UnstyledButton } from '@mantine/core';
-import { useDisclosure } from '@mantine/hooks';
+import {
+  Collapsible,
+  CollapsibleContent,
+  Group,
+  SegmentedControl,
+  Stack,
+  Text,
+} from '@/components/ui';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { CongressionalDistrictDataProvider } from '@/contexts/CongressionalDistrictDataContext';
 import { colors, spacing, typography } from '@/designTokens';
@@ -36,41 +42,50 @@ function CollapsibleSection({
   defaultOpen?: boolean;
   children: React.ReactNode;
 }) {
-  const [opened, { toggle }] = useDisclosure(defaultOpen);
+  const [opened, setOpened] = useState(defaultOpen);
   const ChevronIcon = opened ? IconChevronDown : IconChevronRight;
 
   return (
-    <>
-      <Box
-        pt={spacing['3xl']}
+    <Collapsible open={opened} onOpenChange={setOpened}>
+      <div
         style={{
+          paddingTop: spacing['3xl'],
           borderTop: `1px solid ${colors.border.light}`,
         }}
       >
         <Group justify="space-between" align="center">
-          <UnstyledButton onClick={toggle}>
-            <Group gap={spacing.xs} align="center">
+          <button
+            type="button"
+            onClick={() => setOpened(!opened)}
+            style={{
+              all: 'unset',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+            }}
+          >
+            <Group gap="xs" align="center">
               <ChevronIcon size={14} color={colors.text.secondary} />
               <Text
                 size="xs"
                 fw={typography.fontWeight.semibold}
                 c={colors.text.secondary}
-                tt="uppercase"
+                className="tw:uppercase"
                 style={{ letterSpacing: '0.06em' }}
               >
                 {label}
               </Text>
             </Group>
-          </UnstyledButton>
+          </button>
           {opened && right}
         </Group>
-      </Box>
-      <Collapse in={opened}>
-        <Stack gap={spacing.xl} pt={spacing.xl}>
+      </div>
+      <CollapsibleContent>
+        <Stack gap="xl" style={{ paddingTop: spacing.xl }}>
           {children}
         </Stack>
-      </Collapse>
-    </>
+      </CollapsibleContent>
+    </Collapsible>
   );
 }
 
@@ -82,16 +97,6 @@ const DISTRIBUTIONAL_MODE_OPTIONS = [
   { label: 'Intra-decile impacts', value: 'intra-decile' as DistributionalMode },
 ];
 
-const segmentedControlStyles = {
-  root: {
-    background: colors.gray[100],
-    borderRadius: spacing.radius.md,
-  },
-  indicator: {
-    background: colors.white,
-    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-  },
-};
 
 export default function MigrationSubPage({
   output,
@@ -131,10 +136,9 @@ export default function MigrationSubPage({
           right={
             <SegmentedControl
               value={wealthMode}
-              onChange={(value) => setWealthMode(value as DistributionalMode)}
+              onValueChange={(value) => setWealthMode(value as DistributionalMode)}
               size="xs"
-              data={DISTRIBUTIONAL_MODE_OPTIONS}
-              styles={segmentedControlStyles}
+              options={DISTRIBUTIONAL_MODE_OPTIONS}
             />
           }
         >
@@ -163,7 +167,7 @@ export default function MigrationSubPage({
   );
 
   return (
-    <Stack gap={spacing.xl}>
+    <Stack gap="xl">
       {canShowCongressional ? (
         <CongressionalDistrictDataProvider
           reformPolicyId={reformPolicyId}
