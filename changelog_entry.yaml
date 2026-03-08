@@ -1,4 +1,7 @@
 - bump: minor
   changes:
-    added:
-      - Add Working Americans' Tax Cut Act calculator as reverse-proxied app at /us/watca
+    changed:
+      - Revamp header and footer with soft left-to-right teal gradient, polished nav items with hover effects, and Apple-style animated dropdowns
+      - Redesign research filters with animated collapsible sections, active filter count badges, and full-row clickable checkboxes
+      - Upgrade blog post cards with refined typography, staggered entry animations, and subtle hover lift effects
+      - Add postMessage height listener to Model page iframe for dynamic content sizing

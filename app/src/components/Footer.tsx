@@ -10,7 +10,7 @@ import {
 import type { CountryId } from '@/api/report';
 import FooterSubscribe from '@/components/FooterSubscribe';
 import { Container, Stack } from '@/components/ui';
-import { spacing } from '@/designTokens';
+import { colors, spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { trackContactClicked } from '@/utils/analytics';
 
@@ -46,8 +46,11 @@ export default function Footer() {
   const CONTACT_LINKS = getContactLinks(countryId);
   return (
     <footer
-      className="tw:w-full tw:bg-primary-900"
-      style={{ padding: `${spacing['4xl']} ${spacing['5xl']}` }}
+      className="tw:w-full"
+      style={{
+        padding: `${spacing['4xl']} ${spacing['5xl']}`,
+        background: `linear-gradient(to right, ${colors.primary[800]}, ${colors.primary[600]})`,
+      }}
     >
       <Container size="2xl">
         <img src={PolicyEngineLogo} alt="PolicyEngine" className="tw:h-[52px] tw:w-auto" />
