@@ -28,38 +28,87 @@ export interface NodeImpact {
 export type ImpactState = Map<number, NodeImpact>;
 
 /**
- * Assign winner/loser/neutral impact to each node using a deterministic
- * shuffle (no geographic clustering — avoids misleading spatial patterns).
+ * Assign winner/loser/neutral impact with mostly-uniform distribution
+ * plus a soft spatial bias so each prompt has a distinct visual pattern.
+ * Cluster centres are random (not geographic) to avoid implying location.
  */
 export function generateImpactForPrompt(
   promptIndex: number,
-  nodes: { id: number }[],
+  nodes: { id: number; x: number; y: number }[],
   winnerPct: number,
   loserPct: number
 ): ImpactState {
   const impact: ImpactState = new Map();
+  const totalAffected = winnerPct + loserPct;
+
+  if (totalAffected === 0) {
+    for (const node of nodes) {
+      impact.set(node.id, { polarity: 'neutral', magnitude: 0 });
+    }
+    return impact;
+  }
+
+  // 2-3 random cluster centres per prompt for soft spatial bias
+  const numClusters = 2 + Math.floor(seededRandom(promptIndex * 13) * 2);
+  const winnerShare = winnerPct / totalAffected;
+  const numWinnerClusters = Math.max(winnerPct > 0 ? 1 : 0, Math.round(numClusters * winnerShare));
+
+  const clusters: { cx: number; cy: number; polarity: 'positive' | 'negative' }[] = [];
+  for (let c = 0; c < numClusters; c++) {
+    const seed = promptIndex * 100 + c;
+    clusters.push({
+      cx: 0.1 + seededRandom(seed) * 0.8,
+      cy: 0.1 + seededRandom(seed + 1) * 0.8,
+      polarity: c < numWinnerClusters ? 'positive' : 'negative',
+    });
+  }
+
+  // Score: 70% random + 30% spatial proximity to nearest cluster
+  const scored = nodes.map((node) => {
+    let minPosDist = Infinity;
+    let minNegDist = Infinity;
+    for (const cl of clusters) {
+      const dx = node.x - cl.cx;
+      const dy = node.y - cl.cy;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (cl.polarity === 'positive') {
+        minPosDist = Math.min(minPosDist, dist);
+      } else {
+        minNegDist = Math.min(minNegDist, dist);
+      }
+    }
+    const noise = seededRandom(promptIndex * 1000 + node.id) * 0.7;
+    return { id: node.id, posScore: minPosDist * 0.3 + noise, negScore: minNegDist * 0.3 + noise };
+  });
+
   const targetWinners = Math.round(nodes.length * winnerPct);
   const targetLosers = Math.round(nodes.length * loserPct);
 
-  // Deterministic shuffle: assign each node a seeded random score, sort by it
-  const ordered = nodes
-    .map((node) => ({ id: node.id, score: seededRandom(promptIndex * 1000 + node.id) }))
-    .sort((a, b) => a.score - b.score);
-
-  for (let i = 0; i < ordered.length; i++) {
-    const id = ordered[i].id;
-    if (i < targetWinners) {
-      impact.set(id, {
+  if (targetWinners > 0) {
+    const byPos = [...scored].sort((a, b) => a.posScore - b.posScore);
+    for (let i = 0; i < targetWinners && i < byPos.length; i++) {
+      impact.set(byPos[i].id, {
         polarity: 'positive',
-        magnitude: 0.7 + seededRandom(id * 3 + promptIndex) * 0.3,
+        magnitude: 0.7 + seededRandom(byPos[i].id * 3 + promptIndex) * 0.3,
       });
-    } else if (i < targetWinners + targetLosers) {
-      impact.set(id, {
+    }
+  }
+
+  if (targetLosers > 0) {
+    const byNeg = [...scored]
+      .filter((s) => !impact.has(s.id))
+      .sort((a, b) => a.negScore - b.negScore);
+    for (let i = 0; i < targetLosers && i < byNeg.length; i++) {
+      impact.set(byNeg[i].id, {
         polarity: 'negative',
-        magnitude: 0.7 + seededRandom(id * 3 + promptIndex + 1) * 0.3,
+        magnitude: 0.7 + seededRandom(byNeg[i].id * 3 + promptIndex + 1) * 0.3,
       });
-    } else {
-      impact.set(id, { polarity: 'neutral', magnitude: 0 });
+    }
+  }
+
+  for (const node of nodes) {
+    if (!impact.has(node.id)) {
+      impact.set(node.id, { polarity: 'neutral', magnitude: 0 });
     }
   }
 
@@ -157,7 +206,7 @@ function createNode(nodeId: number, cx: number, cy: number, sigma: number): Node
     id: nodeId,
     x: Math.max(0.01, Math.min(0.99, cx + gaussianJitter(seed, sigma))),
     y: Math.max(0.01, Math.min(0.99, cy + gaussianJitter(seed + 2, sigma))),
-    baseOpacity: 0.12,
+    baseOpacity: 0.08,
     driftDuration: 10 + seededRandom(seed + 6) * 14,
     driftDelay: seededRandom(seed + 7) * -20,
     driftVariant: Math.floor(seededRandom(seed + 8) * 4),
