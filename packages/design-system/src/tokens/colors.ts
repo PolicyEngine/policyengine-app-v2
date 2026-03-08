@@ -52,7 +52,6 @@ export const colors = {
   },
 
   // Semantic colors
-  success: '#22C55E',
   warning: '#FEC601',
   error: '#EF4444',
   info: '#1890FF',
@@ -118,7 +117,6 @@ export const TEAL_PRIMARY = colors.primary[500];
 export const TEAL_ACCENT = '#39C6C0'; // Legacy accent
 
 // Semantic color exports (for givecalc compatibility)
-export const SUCCESS_GREEN = colors.success;
 export const WARNING_YELLOW = colors.warning;
 export const ERROR_RED = colors.error;
 export const INFO_BLUE = colors.info;

@@ -25,7 +25,6 @@ const colorTokens = [
   { name: 'secondary.700', value: colors.secondary[700], label: 'Gray' },
   { name: 'secondary.500', value: colors.secondary[500], label: 'Gray medium' },
   { name: 'secondary.300', value: colors.secondary[300], label: 'Gray light' },
-  { name: 'success', value: colors.success, label: 'Success' },
   { name: 'warning', value: colors.warning, label: 'Warning' },
   { name: 'error', value: colors.error, label: 'Error' },
   { name: 'info', value: colors.info, label: 'Info' },
