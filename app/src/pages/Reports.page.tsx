@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { Alert, Button, Loader, Stack, Text } from '@mantine/core';
+import { useQueryClient } from '@tanstack/react-query';
+import { Alert, Button, Progress, Stack, Text } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import {
   BulletsValue,
@@ -18,8 +18,13 @@ import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useUserId } from '@/hooks/useUserId';
 import { useUpdateReportAssociation } from '@/hooks/useUserReportAssociations';
 import { useUserReports } from '@/hooks/useUserReports';
-import { reportAssociationKeys } from '@/libs/queryKeys';
-import { hasLocalStorageData } from '@/libs/v1Migration';
+import {
+  detectV1Reports,
+  migrateAllV1Reports,
+  type V1ReportInfo,
+  type MigrationRunResult,
+  type MigrationProgress,
+} from '@/libs/migration';
 import { useCacheMonitor } from '@/utils/cacheMonitor';
 import { formatDate } from '@/utils/dateUtils';
 
@@ -39,24 +44,33 @@ export default function ReportsPage() {
   const [searchValue, setSearchValue] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-  // V1→v2 migration state
-  const [showMigration] = useState(() => hasLocalStorageData());
+  // V1 migration state
+  const [v1Reports, setV1Reports] = useState<V1ReportInfo[]>([]);
   const [isMigrating, setIsMigrating] = useState(false);
-  const [migrationResult, setMigrationResult] = useState<boolean | null>(null);
+  const [migrationProgress, setMigrationProgress] = useState<MigrationProgress | null>(null);
+  const [migrationResult, setMigrationResult] = useState<MigrationRunResult | null>(null);
+
+  // Detect v1 reports on load
+  useEffect(() => {
+    const found = detectV1Reports(userId);
+    setV1Reports(found);
+  }, [userId]);
 
   const handleMigrate = useCallback(async () => {
     setIsMigrating(true);
     setMigrationResult(null);
     try {
-      const { migrateV1AssociationsToV2 } = await import('@/libs/v1Migration');
-      const success = await migrateV1AssociationsToV2(userId);
-      setMigrationResult(success);
+      const result = await migrateAllV1Reports(userId, (progress) => {
+        setMigrationProgress(progress);
+      });
+      setMigrationResult(result);
+      setV1Reports([]);
+      queryClient.invalidateQueries();
     } catch (err) {
       console.error('[ReportsPage] Migration failed:', err);
-      setMigrationResult(false);
     } finally {
       setIsMigrating(false);
-      queryClient.invalidateQueries({ queryKey: reportAssociationKeys.all });
+      setMigrationProgress(null);
     }
   }, [userId, queryClient]);
 
@@ -222,34 +236,51 @@ export default function ReportsPage() {
   return (
     <>
       <Stack gap="md">
-        {showMigration && migrationResult === null && (
-          <Alert variant="light" color="blue" title="Local data available for sync">
+        {v1Reports.length > 0 && !migrationResult && (
+          <Alert color="yellow" title="Some reports need migration">
             <Text size="sm">
-              You have report and simulation data saved in local storage. Sync it to the v2 API to
-              keep it accessible.
+              We found {v1Reports.length} report(s) that use an older version of our API.
+              These reports will not work correctly until migrated to the new version.
             </Text>
-            {isMigrating ? (
-              <Loader size="sm" mt="sm" />
+            {isMigrating && migrationProgress ? (
+              <Stack gap="xs" mt="sm">
+                <Text size="sm">
+                  Migrating {migrationProgress.current} of {migrationProgress.total}
+                  {migrationProgress.currentLabel ? `: ${migrationProgress.currentLabel}` : ''}
+                </Text>
+                <Progress
+                  value={(migrationProgress.current / migrationProgress.total) * 100}
+                  size="sm"
+                  animated
+                />
+              </Stack>
             ) : (
-              <Button onClick={handleMigrate} mt="sm" size="sm">
-                Sync my data to v2 API
+              <Button
+                mt="sm"
+                size="sm"
+                onClick={handleMigrate}
+                loading={isMigrating}
+              >
+                Migrate reports
               </Button>
             )}
           </Alert>
         )}
-        {migrationResult !== null && (
+
+        {migrationResult && (
           <Alert
-            variant="light"
-            color={migrationResult ? 'green' : 'red'}
-            title={migrationResult ? 'Sync complete' : 'Sync had errors'}
+            color={migrationResult.failed.length === 0 ? 'green' : 'orange'}
+            title="Migration complete"
           >
             <Text size="sm">
-              {migrationResult
-                ? 'All local data has been synced to the v2 API.'
-                : 'Some items failed to sync. Check the console for details.'}
+              {migrationResult.succeeded.length} of {migrationResult.total} report(s) migrated
+              successfully.
+              {migrationResult.failed.length > 0 &&
+                ` ${migrationResult.failed.length} report(s) failed to migrate.`}
             </Text>
           </Alert>
         )}
+
         <IngredientReadView
           ingredient="report"
           title="Your saved reports"

@@ -1,3 +1,6 @@
+import { BASE_URL } from '@/constants';
+import { countryIds } from '@/libs/countries';
+import { PolicyMetadataParams } from '@/types/metadata/policyMetadata';
 import { API_V2_BASE_URL } from '@/api/v2/taxBenefitModels';
 
 /**
@@ -46,6 +49,44 @@ export interface V2PolicyResponse {
   created_at: string;
   updated_at: string;
   parameter_values: V2PolicyResponseParameterValue[];
+}
+
+/**
+ * Fetch a policy by ID from the v1 API.
+ *
+ * Returns the policy's parameter overrides as a map of
+ * parameter name → { date range → value }.
+ *
+ * Used by the migration system to read v1 policy data before
+ * converting it to a v2 policy.
+ */
+export async function fetchV1Policy(
+  countryId: (typeof countryIds)[number],
+  policyId: string
+): Promise<PolicyMetadataParams> {
+  const url = `${BASE_URL}/${countryId}/policy/${policyId}`;
+
+  const res = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+  });
+
+  if (!res.ok) {
+    throw new Error(
+      `Failed to fetch v1 policy ${policyId}: ${res.status} ${res.statusText}`
+    );
+  }
+
+  const json = await res.json();
+
+  if (json.status !== 'ok') {
+    throw new Error(json.message || `Failed to fetch v1 policy ${policyId}`);
+  }
+
+  return json.result.policy_json ?? {};
 }
 
 /**
