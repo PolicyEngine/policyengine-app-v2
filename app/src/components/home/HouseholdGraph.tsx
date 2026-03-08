@@ -116,10 +116,11 @@ export function generateImpactForPrompt(
 export function generateGraph(): Node[] {
   const nodes: Node[] = [];
 
+  const cols = Math.ceil(Math.sqrt(NODE_COUNT * 1.6));
+  const rows = Math.ceil(NODE_COUNT / cols);
+
   for (let i = 0; i < NODE_COUNT; i++) {
     const seed = i * 7 + 42;
-    const cols = Math.ceil(Math.sqrt(NODE_COUNT * 1.6));
-    const rows = Math.ceil(NODE_COUNT / cols);
     const gridX = (i % cols) / cols;
     const gridY = Math.floor(i / cols) / rows;
     const jitterX = (seededRandom(seed) - 0.5) * (1 / cols) * 1.4;
@@ -228,11 +229,11 @@ export default function HouseholdGraph({ nodes, impact }: HouseholdGraphProps) {
   const prevImpactIdentityRef = useRef<ImpactState | null>(null);
 
   // Update impact ref; track when it changes for wave timing
-  if (impact !== prevImpactIdentityRef.current) {
+  useEffect(() => {
     prevImpactIdentityRef.current = impact;
     impactRef.current = impact;
     impactChangeTimeRef.current = performance.now();
-  }
+  }, [impact]);
 
   // Build per-node animation state once and precompute wave delays
   const animStates = useMemo(() => {
@@ -276,13 +277,17 @@ export default function HouseholdGraph({ nodes, impact }: HouseholdGraphProps) {
     let raf = 0;
     let lastFrame = performance.now();
     const startTime = performance.now();
+    let cachedW = 0;
+    let cachedH = 0;
 
-    // Resize handler with DPR support
+    // Resize handler with DPR support; caches dimensions to avoid layout reads per frame
     const resize = () => {
       const dpr = window.devicePixelRatio || 1;
       const rect = canvas.getBoundingClientRect();
-      canvas.width = rect.width * dpr;
-      canvas.height = rect.height * dpr;
+      cachedW = rect.width;
+      cachedH = rect.height;
+      canvas.width = cachedW * dpr;
+      canvas.height = cachedH * dpr;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
 
@@ -291,9 +296,8 @@ export default function HouseholdGraph({ nodes, impact }: HouseholdGraphProps) {
     resize();
 
     const animate = (now: number) => {
-      const rect = canvas.getBoundingClientRect();
-      const w = rect.width;
-      const h = rect.height;
+      const w = cachedW;
+      const h = cachedH;
       const dpr = window.devicePixelRatio || 1;
 
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -343,12 +347,8 @@ export default function HouseholdGraph({ nodes, impact }: HouseholdGraphProps) {
         // Impact colouring (with radial wave delay)
         if (currentImpact && impactAge >= state.waveDelay) {
           const info = currentImpact.get(node.id);
-          if (info?.polarity === 'positive') {
-            [tr, tg, tb] = COLOR_SUCCESS;
-            tOpacity = 0.5 + info.magnitude * 0.4;
-            tSize = node.size * (1 + info.magnitude * 0.8);
-          } else if (info?.polarity === 'negative') {
-            [tr, tg, tb] = COLOR_ERROR;
+          if (info && info.polarity !== 'neutral') {
+            [tr, tg, tb] = info.polarity === 'positive' ? COLOR_SUCCESS : COLOR_ERROR;
             tOpacity = 0.5 + info.magnitude * 0.4;
             tSize = node.size * (1 + info.magnitude * 0.8);
           }

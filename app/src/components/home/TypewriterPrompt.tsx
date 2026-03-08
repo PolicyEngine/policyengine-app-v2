@@ -60,6 +60,16 @@ const US_PROMPTS: PromptData[] = [
   { text: 'the impact of making the TCJA provisions permanent', winnerPct: 0.6, loserPct: 0.05 },
 ];
 
+// Inject cursor blink keyframes once into document head
+function ensureCursorBlinkStyle() {
+  if (typeof document !== 'undefined' && !document.querySelector('[data-cursor-blink]')) {
+    const style = document.createElement('style');
+    style.setAttribute('data-cursor-blink', '');
+    style.textContent = `@keyframes cursorBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }`;
+    document.head.appendChild(style);
+  }
+}
+
 const TYPE_SPEED = 28; // ms per character
 const DELETE_SPEED = 18; // ms per character (faster)
 const PAUSE_AFTER_TYPE = 2400; // ms to hold after finishing typing
@@ -76,10 +86,12 @@ export default function TypewriterPrompt({
   onPromptComplete,
   onPromptClearing,
 }: TypewriterPromptProps) {
+  useEffect(ensureCursorBlinkStyle, []);
+
   const prompts = countryId === 'uk' ? UK_PROMPTS : US_PROMPTS;
   const [displayText, setDisplayText] = useState('');
   const [promptIndex, setPromptIndex] = useState(0);
-  const [phase, setPhase] = useState<'typing' | 'holding' | 'deleting' | 'pausing'>('typing');
+  const [phase, setPhase] = useState<'typing' | 'deleting' | 'pausing'>('typing');
   const charIndex = useRef(0);
   const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
@@ -205,12 +217,6 @@ export default function TypewriterPrompt({
             animation: 'cursorBlink 1s step-end infinite',
           }}
         />
-        <style>{`
-          @keyframes cursorBlink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0; }
-          }
-        `}</style>
       </div>
     </div>
   );
