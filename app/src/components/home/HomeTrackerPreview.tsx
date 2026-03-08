@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Container, Group, Text } from '@/components/ui';
+import OptimisedImage from '@/components/ui/OptimisedImage';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 
@@ -86,9 +87,10 @@ export default function HomeTrackerPreview() {
                   overflow: 'hidden',
                 }}
               >
-                <img
+                <OptimisedImage
                   src="/assets/posts/state-legislative-tracker.webp"
                   alt="2026 State Legislative Tracker showing US map with state session statuses"
+                  width={640}
                   style={{
                     width: '100%',
                     height: '100%',

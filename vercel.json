@@ -1,5 +1,10 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "images": {
+    "sizes": [256, 384, 640, 750, 1080],
+    "formats": ["image/avif", "image/webp"],
+    "minimumCacheTTL": 86400
+  },
   "installCommand": "bun install --frozen-lockfile",
   "buildCommand": "bun run design-system:build && cd app && bun run generate-llms-txt && bun run generate-sitemap && bun run build:website",
   "outputDirectory": "app/dist",
