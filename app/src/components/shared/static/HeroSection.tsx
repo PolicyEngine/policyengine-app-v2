@@ -1,4 +1,4 @@
-import { cn } from '@/lib/utils';
+import { colors } from '@/designTokens';
 
 export interface HeroSectionProps {
   title: string;
@@ -10,50 +10,21 @@ export interface HeroSectionProps {
   variant?: 'light' | 'default' | 'accent' | 'dark';
 }
 
-export default function HeroSection({ title, description, variant = 'default' }: HeroSectionProps) {
-  const isDark = variant === 'accent' || variant === 'dark';
-
+export default function HeroSection({ title, description }: HeroSectionProps) {
   return (
     <div
-      className={cn(
-        'tw:py-4xl tw:px-[6.125%] tw:border-b tw:border-border-dark',
-        isDark ? 'tw:bg-primary-700' : 'tw:bg-[#F7FEFE]'
-      )}
+      className="tw:px-[6.125%] tw:py-12 tw:md:py-16"
+      style={{
+        background: `linear-gradient(to right, ${colors.primary[800]}, ${colors.primary[600]})`,
+      }}
     >
-      <div className="tw:flex tw:flex-col tw:md:flex-row tw:items-stretch tw:md:items-center tw:gap-3 tw:md:gap-5">
-        <div className="tw:w-full tw:md:w-[300px]">
-          <h1
-            className={cn(
-              'tw:text-4xl tw:font-semibold',
-              isDark ? 'tw:text-text-inverse' : 'tw:text-text-primary'
-            )}
-          >
-            {title}
-          </h1>
-        </div>
-
-        <hr
-          className={cn('tw:md:hidden', isDark ? 'tw:border-white' : 'tw:border-border-dark')}
-          style={{ borderWidth: '0.5px' }}
-        />
-
-        <div
-          className={cn(
-            'tw:hidden tw:md:block tw:self-stretch tw:border-l',
-            isDark ? 'tw:border-white' : 'tw:border-border-dark'
-          )}
-        />
-
-        <div className="tw:flex-1">
-          <p
-            className={cn(
-              'tw:text-lg tw:leading-relaxed tw:text-left',
-              isDark ? 'tw:text-text-inverse' : 'tw:text-text-primary'
-            )}
-          >
-            {description}
-          </p>
-        </div>
+      <div className="tw:max-w-3xl">
+        <h1 className="tw:text-3xl tw:md:text-4xl tw:font-semibold tw:text-white tw:tracking-tight">
+          {title}
+        </h1>
+        <p className="tw:text-base tw:md:text-lg tw:leading-relaxed tw:text-white/75 tw:mt-3 tw:max-w-2xl">
+          {description}
+        </p>
       </div>
     </div>
   );
