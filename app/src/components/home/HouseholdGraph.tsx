@@ -113,29 +113,138 @@ export function generateImpactForPrompt(
   return impact;
 }
 
-export function generateGraph(): Node[] {
+// Population centers: [x, y, weight] in normalized 0-1 space
+// US: continental US mapped to landscape-oriented rectangle
+// Coordinates approximate major metro areas; weight ≈ relative population
+const US_CENTERS: [number, number, number][] = [
+  // Northeast corridor
+  [0.88, 0.28, 8.3], // NYC
+  [0.85, 0.32, 4.0], // Philadelphia
+  [0.92, 0.25, 2.8], // Boston
+  [0.87, 0.35, 2.5], // Baltimore/DC
+  [0.84, 0.28, 1.2], // Hartford/CT
+  // Southeast
+  [0.82, 0.52, 3.5], // Atlanta
+  [0.87, 0.55, 3.0], // Charlotte/Raleigh
+  [0.82, 0.62, 2.8], // Miami/S Florida
+  [0.78, 0.62, 2.2], // Tampa/Orlando
+  [0.73, 0.58, 1.5], // Nashville
+  [0.85, 0.47, 1.0], // Virginia Beach
+  // Midwest
+  [0.68, 0.3, 4.7], // Chicago
+  [0.72, 0.32, 2.5], // Detroit
+  [0.66, 0.35, 1.8], // Indianapolis/Columbus
+  [0.62, 0.3, 1.6], // Minneapolis
+  [0.58, 0.35, 1.5], // Kansas City/St Louis
+  [0.72, 0.28, 1.2], // Cleveland/Pittsburgh
+  [0.62, 0.34, 0.8], // Milwaukee
+  // Texas
+  [0.52, 0.65, 3.8], // Dallas/Fort Worth
+  [0.5, 0.72, 3.5], // Houston
+  [0.46, 0.68, 1.5], // San Antonio/Austin
+  // Mountain/West
+  [0.32, 0.42, 1.8], // Denver
+  [0.22, 0.48, 1.5], // Phoenix
+  [0.17, 0.42, 1.2], // Las Vegas
+  [0.28, 0.35, 0.8], // Salt Lake City
+  // Pacific
+  [0.1, 0.55, 6.5], // LA/SoCal
+  [0.08, 0.38, 4.0], // SF Bay Area
+  [0.1, 0.48, 1.5], // San Diego
+  [0.08, 0.22, 2.0], // Seattle
+  [0.08, 0.28, 1.2], // Portland
+  [0.05, 0.15, 0.5], // Spokane/rural WA
+];
+
+// UK: oriented vertically (taller than wide)
+const UK_CENTERS: [number, number, number][] = [
+  // London & Southeast
+  [0.62, 0.78, 14.0], // London (metro ~14m of ~67m)
+  [0.55, 0.82, 1.5], // Southampton/Portsmouth
+  [0.68, 0.76, 1.0], // Canterbury/Kent
+  [0.58, 0.74, 0.8], // Reading/Surrey
+  // Midlands
+  [0.48, 0.62, 4.5], // Birmingham
+  [0.52, 0.58, 2.0], // Leicester/Nottingham
+  [0.42, 0.58, 1.5], // Stoke/Wolverhampton
+  [0.55, 0.55, 1.0], // Peterborough
+  // North of England
+  [0.45, 0.45, 4.0], // Manchester
+  [0.5, 0.42, 3.0], // Leeds/Bradford
+  [0.55, 0.38, 1.8], // Sheffield
+  [0.48, 0.48, 1.5], // Liverpool
+  [0.52, 0.32, 1.8], // Newcastle/Sunderland
+  [0.48, 0.38, 0.8], // Hull
+  // Wales
+  [0.32, 0.68, 1.5], // Cardiff/Swansea
+  [0.28, 0.58, 0.5], // Mid Wales
+  // Scotland
+  [0.42, 0.2, 3.0], // Glasgow
+  [0.5, 0.18, 2.5], // Edinburgh
+  [0.48, 0.12, 0.8], // Dundee/Aberdeen
+  [0.38, 0.08, 0.3], // Inverness/Highlands
+  // East
+  [0.65, 0.68, 1.5], // Cambridge/Norwich
+  [0.6, 0.65, 1.0], // Essex/Colchester
+  // Southwest
+  [0.35, 0.82, 1.0], // Exeter/Plymouth
+  [0.42, 0.78, 1.2], // Bristol/Bath
+];
+
+// Box-Muller transform for gaussian jitter (seeded)
+function gaussianJitter(seed: number, sigma: number): number {
+  const u1 = Math.max(1e-10, seededRandom(seed));
+  const u2 = seededRandom(seed + 1);
+  return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2) * sigma;
+}
+
+export function generateGraph(countryId: string = 'us'): Node[] {
+  const centers = countryId === 'uk' ? UK_CENTERS : US_CENTERS;
+  const totalWeight = centers.reduce((sum, c) => sum + c[2], 0);
   const nodes: Node[] = [];
 
-  const cols = Math.ceil(Math.sqrt(NODE_COUNT * 1.6));
-  const rows = Math.ceil(NODE_COUNT / cols);
+  // Distribute NODE_COUNT dots proportionally across population centers
+  let nodeId = 0;
+  for (const [cx, cy, weight] of centers) {
+    const count = Math.round((weight / totalWeight) * NODE_COUNT);
+    // Jitter radius scales with weight (bigger cities spread more)
+    const sigma = 0.02 + (weight / totalWeight) * 0.06;
+    for (let j = 0; j < count && nodeId < NODE_COUNT; j++) {
+      const seed = nodeId * 7 + 42;
+      const x = cx + gaussianJitter(seed, sigma);
+      const y = cy + gaussianJitter(seed + 2, sigma);
 
-  for (let i = 0; i < NODE_COUNT; i++) {
-    const seed = i * 7 + 42;
-    const gridX = (i % cols) / cols;
-    const gridY = Math.floor(i / cols) / rows;
-    const jitterX = (seededRandom(seed) - 0.5) * (1 / cols) * 1.4;
-    const jitterY = (seededRandom(seed + 1) - 0.5) * (1 / rows) * 1.4;
+      nodes.push({
+        id: nodeId,
+        x: Math.max(0.01, Math.min(0.99, x)),
+        y: Math.max(0.01, Math.min(0.99, y)),
+        size: NODE_MIN_SIZE + seededRandom(seed + 4) * (NODE_MAX_SIZE - NODE_MIN_SIZE),
+        baseOpacity: 0.15 + seededRandom(seed + 5) * 0.15,
+        driftDuration: 10 + seededRandom(seed + 6) * 14,
+        driftDelay: seededRandom(seed + 7) * -20,
+        driftVariant: Math.floor(seededRandom(seed + 8) * 4),
+      });
+      nodeId++;
+    }
+  }
 
+  // Fill remaining dots (rounding leftovers) near random centers
+  while (nodeId < NODE_COUNT) {
+    const seed = nodeId * 7 + 42;
+    const ci = Math.floor(seededRandom(seed + 99) * centers.length);
+    const [cx, cy] = centers[ci];
+    const sigma = 0.03;
     nodes.push({
-      id: i,
-      x: Math.max(0.01, Math.min(0.99, gridX + jitterX)),
-      y: Math.max(0.01, Math.min(0.99, gridY + jitterY)),
-      size: NODE_MIN_SIZE + seededRandom(seed + 2) * (NODE_MAX_SIZE - NODE_MIN_SIZE),
-      baseOpacity: 0.15 + seededRandom(seed + 3) * 0.15,
-      driftDuration: 10 + seededRandom(seed + 4) * 14,
-      driftDelay: seededRandom(seed + 5) * -20,
-      driftVariant: Math.floor(seededRandom(seed + 6) * 4),
+      id: nodeId,
+      x: Math.max(0.01, Math.min(0.99, cx + gaussianJitter(seed, sigma))),
+      y: Math.max(0.01, Math.min(0.99, cy + gaussianJitter(seed + 2, sigma))),
+      size: NODE_MIN_SIZE + seededRandom(seed + 4) * (NODE_MAX_SIZE - NODE_MIN_SIZE),
+      baseOpacity: 0.15 + seededRandom(seed + 5) * 0.15,
+      driftDuration: 10 + seededRandom(seed + 6) * 14,
+      driftDelay: seededRandom(seed + 7) * -20,
+      driftVariant: Math.floor(seededRandom(seed + 8) * 4),
     });
+    nodeId++;
   }
 
   return nodes;
