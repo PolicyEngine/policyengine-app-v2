@@ -26,8 +26,13 @@ export function BlogPostCard({ item, countryId }: BlogPostCardProps) {
     .slice(0, 3)
     .map((tag) => topicLabels[tag] || locationLabels[tag] || tag);
 
+  // Apps may be served via Vercel rewrites (reverse proxy), so use a plain
+  // <a> to force a full server request instead of client-side routing.
+  const Wrapper = item.isApp ? 'a' : Link;
+  const wrapperProps = item.isApp ? { href: link } : { to: link };
+
   return (
-    <Link to={link} className="tw:no-underline tw:text-inherit tw:group">
+    <Wrapper {...(wrapperProps as any)} className="tw:no-underline tw:text-inherit tw:group">
       <div
         className={cn(
           'tw:flex tw:flex-col tw:h-full',
@@ -86,6 +91,6 @@ export function BlogPostCard({ item, countryId }: BlogPostCardProps) {
           </p>
         </div>
       </div>
-    </Link>
+    </Wrapper>
   );
 }
