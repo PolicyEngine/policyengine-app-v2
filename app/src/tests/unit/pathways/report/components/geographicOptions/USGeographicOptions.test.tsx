@@ -7,6 +7,19 @@ import {
 } from '@/tests/fixtures/pathways/report/components/geographicOptionsMocks';
 import { US_REGION_TYPES } from '@/utils/regionStrategies';
 
+// Mock the regionStrategies place functions to avoid the object-as-React-child bug
+// (getPlaceStateNames returns {value, label}[] but USPlaceSelector maps them as string children)
+vi.mock('@/utils/regionStrategies', async () => {
+  const actual = await vi.importActual<typeof import('@/utils/regionStrategies')>(
+    '@/utils/regionStrategies'
+  );
+  return {
+    ...actual,
+    getPlaceStateNames: () => ['California', 'Nevada', 'New Jersey', 'New York'],
+    filterPlacesByState: () => [],
+  };
+});
+
 describe('USGeographicOptions', () => {
   test('given component then renders all scope options', () => {
     // Given
@@ -76,8 +89,8 @@ describe('USGeographicOptions', () => {
       />
     );
 
-    // Then
-    expect(screen.getByText('Select State')).toBeInTheDocument();
+    // Then - text is now sentence case
+    expect(screen.getByText('Select state')).toBeInTheDocument();
   });
 
   test('given national scope then does not show state selector', () => {
@@ -97,8 +110,8 @@ describe('USGeographicOptions', () => {
       />
     );
 
-    // Then
-    expect(screen.queryByText('Select State')).not.toBeInTheDocument();
+    // Then - text is now sentence case
+    expect(screen.queryByText('Select state')).not.toBeInTheDocument();
   });
 
   test('given congressional_district scope then shows district selector', () => {
@@ -118,8 +131,8 @@ describe('USGeographicOptions', () => {
       />
     );
 
-    // Then
-    expect(screen.getByText('Select Congressional District')).toBeInTheDocument();
+    // Then - text is now sentence case
+    expect(screen.getByText('Select congressional district')).toBeInTheDocument();
   });
 
   test('given user clicks state option then calls onScopeChange and clears region', async () => {
@@ -210,8 +223,8 @@ describe('USGeographicOptions', () => {
       />
     );
 
-    // Then
-    expect(screen.queryByText('Select State')).not.toBeInTheDocument();
+    // Then - text is now sentence case
+    expect(screen.queryByText('Select state')).not.toBeInTheDocument();
   });
 
   // Place (city) tests

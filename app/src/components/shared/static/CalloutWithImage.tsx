@@ -1,5 +1,5 @@
-import { Button, Container, Grid, Image, Stack, Text, Title } from '@mantine/core';
-import { colors, spacing, typography } from '@/designTokens';
+import { Button, Container, Stack, Text, Title } from '@/components/ui';
+import { colors, typography } from '@/designTokens';
 
 export interface CalloutWithImageProps {
   title: string;
@@ -23,55 +23,51 @@ export default function CalloutWithImage({
   imageAlt,
 }: CalloutWithImageProps) {
   return (
-    <Container size="xl" px="sm" py="3xl">
-      <Grid align="center" gutter="xl">
+    <Container size="xl" className="tw:px-2 tw:py-12">
+      <div className="tw:grid tw:grid-cols-1 tw:md:grid-cols-2 tw:gap-8 tw:items-center">
         {/* Left Column */}
-        <Grid.Col span={{ base: 12, md: 6 }}>
-          <Stack gap="md">
-            <Title
-              size={typography.fontSize['4xl']}
+        <Stack gap="md">
+          <Title
+            order={2}
+            style={{
+              fontSize: typography.fontSize['4xl'],
+              color: colors.text.primary,
+              fontWeight: typography.fontWeight.medium,
+              fontFamily: typography.fontFamily.primary,
+            }}
+          >
+            {title}
+          </Title>
+          <Text
+            size="lg"
+            style={{ color: colors.text.secondary, lineHeight: typography.lineHeight.snug }}
+          >
+            {description}
+          </Text>
+          {buttonLabel && (
+            <Button
+              onClick={onButtonClick}
               style={{
-                color: colors.text.primary,
-                fontWeight: typography.fontWeight.medium,
-                fontFamily: typography.fontFamily.primary,
+                backgroundColor: colors.primary[400],
+                alignSelf: 'flex-start',
+                marginTop: '14px',
               }}
             >
-              {title}
-            </Title>
-            <Text
-              size="lg"
-              style={{ color: colors.text.secondary, lineHeight: typography.lineHeight.snug }}
-            >
-              {description}
-            </Text>
-            {buttonLabel && (
-              <Button
-                size="lg"
-                radius="md"
-                color={colors.primary[400]}
-                onClick={onButtonClick}
-                style={{
-                  borderRadius: spacing.radius.none,
-                  alignSelf: 'flex-start',
-                  marginTop: '14px',
-                }}
-              >
-                {buttonLabel}
-              </Button>
-            )}
-          </Stack>
-        </Grid.Col>
+              {buttonLabel}
+            </Button>
+          )}
+        </Stack>
 
         {/* Right Column */}
-        <Grid.Col span={{ base: 12, md: 6 }}>
-          <Image
+        <div className="tw:flex tw:justify-center">
+          <img
             src={imageSrc}
             alt={imageAlt}
-            radius="lg"
-            style={{ width: '90%', height: 'auto', objectFit: 'cover', justifySelf: 'center' }}
+            className="tw:rounded-lg tw:object-cover"
+            style={{ width: '90%', height: 'auto' }}
           />
-        </Grid.Col>
-      </Grid>
+        </div>
+      </div>
     </Container>
   );
 }

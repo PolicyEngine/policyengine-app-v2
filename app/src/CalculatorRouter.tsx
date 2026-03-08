@@ -2,10 +2,9 @@
  * Router for the Calculator app (app.policyengine.org)
  * Contains only the interactive calculator functionality
  */
-import { createBrowserRouter, Outlet, RouterProvider } from 'react-router-dom';
-import PathwayLayout from './components/PathwayLayout';
+import { createBrowserRouter, Navigate, Outlet, RouterProvider } from 'react-router-dom';
 import StandardLayout from './components/StandardLayout';
-import DashboardPage from './pages/Dashboard.page';
+import NotFoundPage from './pages/NotFound.page';
 import PoliciesPage from './pages/Policies.page';
 import PopulationsPage from './pages/Populations.page';
 import ReportOutputPage from './pages/ReportOutput.page';
@@ -23,7 +22,7 @@ import { RedirectToCountry } from './routing/RedirectToCountry';
 /**
  * Layout wrapper that renders StandardLayout with Outlet for nested routes.
  * This allows the app shell (header, sidebar) to remain visible while
- * child guards like MetadataGuard show their loading states.
+ * child routes render their content.
  */
 function StandardLayoutOutlet() {
   return (
@@ -43,13 +42,13 @@ const router = createBrowserRouter(
       path: '/:countryId',
       element: <CountryGuard />,
       children: [
-        // Routes with standard layout that need metadata (blocking)
-        // Layout is OUTSIDE the guard so app shell remains visible during loading
+        // All routes that require metadata (single guard, single fetch)
         {
-          element: <StandardLayoutOutlet />,
+          element: <MetadataGuard />,
           children: [
+            // Report output - uses StandardLayout for sidebar + navbar
             {
-              element: <MetadataGuard />,
+              element: <StandardLayoutOutlet />,
               children: [
                 {
                   path: 'report-output/:reportId/:subpage?/:view?',
@@ -57,34 +56,22 @@ const router = createBrowserRouter(
                 },
               ],
             },
-          ],
-        },
-        // Pathway routes that need metadata (blocking)
-        // Pathways manage their own AppShell layouts - do NOT wrap in StandardLayoutOutlet
-        // This allows views like PolicyParameterSelectorView to use custom AppShell configurations
-        {
-          element: <MetadataGuard />,
-          children: [
+            // Pathway routes - pathways manage their own layouts
             {
-              element: <PathwayLayout />,
-              children: [
-                {
-                  path: 'reports/create',
-                  element: <ReportPathwayWrapper />,
-                },
-                {
-                  path: 'simulations/create',
-                  element: <SimulationPathwayWrapper />,
-                },
-                {
-                  path: 'households/create',
-                  element: <PopulationPathwayWrapper />,
-                },
-                {
-                  path: 'policies/create',
-                  element: <PolicyPathwayWrapper />,
-                },
-              ],
+              path: 'reports/create',
+              element: <ReportPathwayWrapper />,
+            },
+            {
+              path: 'simulations/create',
+              element: <SimulationPathwayWrapper />,
+            },
+            {
+              path: 'households/create',
+              element: <PopulationPathwayWrapper />,
+            },
+            {
+              path: 'policies/create',
+              element: <PolicyPathwayWrapper />,
             },
           ],
         },
@@ -97,11 +84,7 @@ const router = createBrowserRouter(
               children: [
                 {
                   index: true,
-                  element: <DashboardPage />,
-                },
-                {
-                  path: 'dashboard',
-                  element: <DashboardPage />,
+                  element: <Navigate to="reports" replace />,
                 },
                 {
                   path: 'reports',
@@ -126,6 +109,11 @@ const router = createBrowserRouter(
               ],
             },
           ],
+        },
+        // Catch-all 404 - outside AppShell, no metadata required
+        {
+          path: '*',
+          element: <NotFoundPage />,
         },
       ],
     },

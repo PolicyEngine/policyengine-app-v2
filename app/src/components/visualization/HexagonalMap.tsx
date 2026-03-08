@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react';
-import { Box } from '@mantine/core';
 import { ChartWatermark } from '@/components/charts';
-import { colors, spacing } from '@/designTokens';
+import { colors, spacing, typography } from '@/designTokens';
 import type { HexMapConfig } from '@/types/visualization/HexMapConfig';
 import type { HexMapDataPoint } from '@/types/visualization/HexMapDataPoint';
 import { getColorScale, interpolateColor } from '@/utils/visualization/colorScales';
@@ -17,6 +16,9 @@ interface HexagonalMapProps {
 
   /** Configuration for the map */
   config?: Partial<HexMapConfig>;
+
+  /** Optional ref to the map container for image export */
+  exportRef?: React.Ref<HTMLDivElement>;
 }
 
 /** Generate SVG polygon points for a flat-topped hexagon centered at (cx, cy) */
@@ -36,7 +38,7 @@ const COLOR_BAR_WIDTH = 12;
 /** Color bar right margin */
 const COLOR_BAR_MARGIN = 60;
 
-export function HexagonalMap({ data, config = {} }: HexagonalMapProps) {
+export function HexagonalMap({ data, config = {}, exportRef }: HexagonalMapProps) {
   const [tooltip, setTooltip] = useState<{
     text: string;
     x: number;
@@ -131,7 +133,8 @@ export function HexagonalMap({ data, config = {} }: HexagonalMapProps) {
   const toSvgY = (y: number) => height - padding - (y - dataBounds.yMin) * scale;
 
   return (
-    <Box
+    <div
+      ref={exportRef}
       style={{
         border: `1px solid ${colors.border.light}`,
         borderRadius: spacing.radius.container,
@@ -193,6 +196,7 @@ export function HexagonalMap({ data, config = {} }: HexagonalMapProps) {
       {/* Tooltip overlay */}
       {tooltip && (
         <div
+          data-export-exclude
           style={{
             position: 'absolute',
             left: tooltip.x,
@@ -200,9 +204,9 @@ export function HexagonalMap({ data, config = {} }: HexagonalMapProps) {
             transform: 'translate(-50%, -100%)',
             backgroundColor: 'rgba(0,0,0,0.85)',
             color: '#fff',
-            padding: '4px 8px',
+            padding: `${spacing.xs} ${spacing.sm}`,
             borderRadius: spacing.radius.element,
-            fontSize: 12,
+            fontSize: typography.fontSize.xs,
             whiteSpace: 'nowrap',
             pointerEvents: 'none',
             zIndex: 10,
@@ -215,7 +219,7 @@ export function HexagonalMap({ data, config = {} }: HexagonalMapProps) {
       <div style={{ padding: `${spacing.xs}px ${spacing.sm}px` }}>
         <ChartWatermark />
       </div>
-    </Box>
+    </div>
   );
 }
 

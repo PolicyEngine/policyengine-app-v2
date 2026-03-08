@@ -1,10 +1,15 @@
-import { useDisclosure } from '@mantine/hooks';
 import HeaderContent from '@/components/homeHeader/HeaderContent';
 import { NavItemSetup } from '@/components/homeHeader/NavItem';
 import { colors, spacing, typography } from '@/designTokens';
+import { useDisclosure } from '@/hooks/useDisclosure';
 import { useWebsitePath } from '@/hooks/useWebsitePath';
 
-export default function HeaderNavigation() {
+interface HeaderNavigationProps {
+  navbarOpened?: boolean;
+  onToggleNavbar?: () => void;
+}
+
+export default function HeaderNavigation({ navbarOpened, onToggleNavbar }: HeaderNavigationProps) {
   const [opened, { open, close }] = useDisclosure(false);
   const { getWebsitePath } = useWebsitePath();
 
@@ -37,31 +42,28 @@ export default function HeaderNavigation() {
   return (
     <div
       style={{
-        position: 'sticky' as const,
+        position: 'sticky',
         top: 0,
-        paddingTop: spacing.sm,
-        paddingBottom: spacing.sm,
-        paddingLeft: '24px',
-        paddingRight: '24px',
+        padding: `${spacing.sm} ${spacing['2xl']}`,
         height: spacing.layout.header,
         backgroundColor: colors.primary[600],
         borderBottom: `0.5px solid ${colors.border.dark}`,
-        boxShadow: `
-      0px 2px 4px -1px rgba(0, 0, 0, 0.06),
-      0px 4px 6px -1px rgba(0, 0, 0, 0.10)
-    `,
+        boxShadow: `0px 2px 4px -1px ${colors.shadow.light}, 0px 4px 6px -1px ${colors.shadow.medium}`,
         zIndex: 1000,
         fontFamily: typography.fontFamily.primary,
         opacity: opened ? 0 : 1,
         transition: 'opacity 0.1s ease',
-        marginTop: '0px',
-        marginLeft: '0px',
-        marginRight: '0px',
         width: '100%',
-        borderRadius: spacing.radius.none,
       }}
     >
-      <HeaderContent opened={opened} onOpen={open} onClose={close} navItems={navItems} />
+      <HeaderContent
+        opened={opened}
+        onOpen={open}
+        onClose={close}
+        navItems={navItems}
+        navbarOpened={navbarOpened}
+        onToggleNavbar={onToggleNavbar}
+      />
     </div>
   );
 }

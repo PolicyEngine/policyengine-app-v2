@@ -1,8 +1,12 @@
 import { createRef } from 'react';
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { MantineProvider } from '@mantine/core';
-import { useChartWidth, useIsMobile, useWindowHeight } from '@/hooks/useChartDimensions';
+import {
+  MOBILE_BREAKPOINT_QUERY,
+  useChartWidth,
+  useIsMobile,
+  useWindowHeight,
+} from '@/hooks/useChartDimensions';
 import {
   EXPECTED_MOBILE_AT_375,
   EXPECTED_MOBILE_AT_768,
@@ -97,6 +101,13 @@ describe('useChartDimensions', () => {
     vi.clearAllMocks();
   });
 
+  describe('MOBILE_BREAKPOINT_QUERY', () => {
+    it('given constant then matches Mantine sm breakpoint in em units', () => {
+      // Then
+      expect(MOBILE_BREAKPOINT_QUERY).toBe('(max-width: 48em)');
+    });
+  });
+
   describe('useChartWidth', () => {
     it('given container ref then returns initial width of 0', () => {
       // Given
@@ -179,10 +190,6 @@ describe('useChartDimensions', () => {
   });
 
   describe('useIsMobile', () => {
-    const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <MantineProvider>{children}</MantineProvider>
-    );
-
     it('given desktop width then returns false', () => {
       // Given
       Object.defineProperty(window, 'innerWidth', {
@@ -192,7 +199,7 @@ describe('useChartDimensions', () => {
       });
 
       // When
-      const { result } = renderHook(() => useIsMobile(), { wrapper });
+      const { result } = renderHook(() => useIsMobile());
 
       // Then
       expect(result.current).toBe(EXPECTED_MOBILE_AT_1920);
@@ -207,7 +214,7 @@ describe('useChartDimensions', () => {
       });
 
       // When
-      const { result } = renderHook(() => useIsMobile(), { wrapper });
+      const { result } = renderHook(() => useIsMobile());
 
       // Need to wait for the effect to run
       await act(async () => {
@@ -227,7 +234,7 @@ describe('useChartDimensions', () => {
       });
 
       // When
-      const { result } = renderHook(() => useIsMobile(), { wrapper });
+      const { result } = renderHook(() => useIsMobile());
 
       // Then
       expect(result.current).toBe(EXPECTED_MOBILE_AT_768);
@@ -240,7 +247,7 @@ describe('useChartDimensions', () => {
         configurable: true,
         value: MOCK_DESKTOP_WIDTH,
       });
-      const { result } = renderHook(() => useIsMobile(), { wrapper });
+      const { result } = renderHook(() => useIsMobile());
 
       // When - Resize to mobile
       await act(async () => {
@@ -264,7 +271,7 @@ describe('useChartDimensions', () => {
         configurable: true,
         value: MOCK_MOBILE_WIDTH,
       });
-      const { result } = renderHook(() => useIsMobile(), { wrapper });
+      const { result } = renderHook(() => useIsMobile());
 
       // When - Resize to desktop
       act(() => {

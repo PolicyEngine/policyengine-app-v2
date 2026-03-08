@@ -374,23 +374,64 @@ describe('reproducibilityCode', () => {
         expect(code).toContain('Microsimulation(reform=reform');
       });
 
-      test('given US state region then uses pooled CPS dataset', () => {
+      test('given US state region then uses state-specific dataset', () => {
         // When
         const lines = getReproducibilityCodeBlock(
           'policy',
           TEST_COUNTRIES.US,
           EMPTY_POLICY,
-          TEST_REGIONS.CA_STATE, // California state
+          TEST_REGIONS.CA_STATE, // "state/ca"
           TEST_YEARS.DEFAULT,
           null
         );
         const code = lines.join('\n');
 
         // Then
-        expect(code).toContain('pooled_3_year_cps_2023.h5');
+        expect(code).toContain('states/CA.h5');
       });
 
-      test('given known dataset then uses specified dataset path', () => {
+      test('given congressional district region then uses district-specific dataset', () => {
+        // When
+        const lines = getReproducibilityCodeBlock(
+          'policy',
+          TEST_COUNTRIES.US,
+          EMPTY_POLICY,
+          TEST_REGIONS.CA_DISTRICT, // "congressional_district/CA-01"
+          TEST_YEARS.DEFAULT,
+          null
+        );
+        const code = lines.join('\n');
+
+        // Then
+        expect(code).toContain('districts/CA-01.h5');
+      });
+
+      test('given place region then uses state dataset with place_fips filtering', () => {
+        // When
+        const lines = getReproducibilityCodeBlock(
+          'policy',
+          TEST_COUNTRIES.US,
+          EMPTY_POLICY,
+          TEST_REGIONS.NJ_PLACE, // "place/NJ-57000"
+          TEST_YEARS.DEFAULT,
+          null
+        );
+        const code = lines.join('\n');
+
+        // Then - uses parent state's dataset, not a city-specific one
+        expect(code).toContain('states/NJ.h5');
+        expect(code).not.toContain('cities/');
+        // Filters by place_fips
+        expect(code).toContain('place_fips');
+        expect(code).toContain('57000');
+        // Creates filtered dataframe for simulations
+        expect(code).toContain('subset_df');
+        expect(code).toContain('Microsimulation(dataset=subset_df');
+        // Includes pandas import for filtering
+        expect(code).toContain('import pandas as pd');
+      });
+
+      test('given non-default dataset then includes dataset URL', () => {
         // When
         const lines = getReproducibilityCodeBlock(
           'policy',
@@ -398,15 +439,19 @@ describe('reproducibilityCode', () => {
           EMPTY_POLICY,
           TEST_REGIONS.US_NATIONAL,
           TEST_YEARS.DEFAULT,
-          TEST_DATASETS.ENHANCED_CPS_2024
+          TEST_DATASETS.ENHANCED_CPS,
+          null,
+          false,
+          false // not the default dataset
         );
         const code = lines.join('\n');
 
         // Then
         expect(code).toContain('enhanced_cps_2024.h5');
+        expect(code).toContain('dataset=');
       });
 
-      test('given unknown dataset then does not include dataset specifier', () => {
+      test('given default dataset then omits dataset specifier', () => {
         // When
         const lines = getReproducibilityCodeBlock(
           'policy',
@@ -414,7 +459,26 @@ describe('reproducibilityCode', () => {
           EMPTY_POLICY,
           TEST_REGIONS.US_NATIONAL,
           TEST_YEARS.DEFAULT,
-          TEST_DATASETS.UNKNOWN_DATASET
+          TEST_DATASETS.CPS,
+          null,
+          false,
+          true // is the default dataset
+        );
+        const code = lines.join('\n');
+
+        // Then
+        expect(code).not.toContain('dataset=');
+      });
+
+      test('given null dataset then does not include dataset specifier', () => {
+        // When
+        const lines = getReproducibilityCodeBlock(
+          'policy',
+          TEST_COUNTRIES.US,
+          EMPTY_POLICY,
+          TEST_REGIONS.US_NATIONAL,
+          TEST_YEARS.DEFAULT,
+          null
         );
         const code = lines.join('\n');
 
@@ -436,6 +500,109 @@ describe('reproducibilityCode', () => {
 
         // Then
         expect(code).toContain(`period=${TEST_YEARS.PREVIOUS}`);
+      });
+    });
+
+    describe('syntax validation', () => {
+      /**
+       * Checks that brackets and parentheses are balanced in generated Python.
+       * Counts (), {}, and [] pairs — any mismatch means invalid syntax.
+       */
+      function assertBalancedBrackets(code: string) {
+        let parens = 0;
+        let braces = 0;
+        let squares = 0;
+        for (const ch of code) {
+          if (ch === '(') {
+            parens++;
+          }
+          if (ch === ')') {
+            parens--;
+          }
+          if (ch === '{') {
+            braces++;
+          }
+          if (ch === '}') {
+            braces--;
+          }
+          if (ch === '[') {
+            squares++;
+          }
+          if (ch === ']') {
+            squares--;
+          }
+          // Should never go negative (closing before opening)
+          expect(parens).toBeGreaterThanOrEqual(0);
+          expect(braces).toBeGreaterThanOrEqual(0);
+          expect(squares).toBeGreaterThanOrEqual(0);
+        }
+        expect(parens).toBe(0);
+        expect(braces).toBe(0);
+        expect(squares).toBe(0);
+      }
+
+      test('given reform-only policy then generated code has balanced brackets', () => {
+        // When
+        const code = getReproducibilityCodeBlock(
+          'household',
+          TEST_COUNTRIES.US,
+          REFORM_ONLY_POLICY,
+          TEST_REGIONS.US_NATIONAL,
+          TEST_YEARS.DEFAULT,
+          null,
+          SIMPLE_HOUSEHOLD_INPUT,
+          false
+        ).join('\n');
+
+        // Then
+        assertBalancedBrackets(code);
+      });
+
+      test('given baseline-and-reform policy then generated code has balanced brackets', () => {
+        // When
+        const code = getReproducibilityCodeBlock(
+          'policy',
+          TEST_COUNTRIES.US,
+          BASELINE_AND_REFORM_POLICY,
+          TEST_REGIONS.US_NATIONAL,
+          TEST_YEARS.DEFAULT,
+          null
+        ).join('\n');
+
+        // Then
+        assertBalancedBrackets(code);
+      });
+
+      test('given household with earning variation then generated code has balanced brackets', () => {
+        // When
+        const code = getReproducibilityCodeBlock(
+          'household',
+          TEST_COUNTRIES.US,
+          REFORM_ONLY_POLICY,
+          TEST_REGIONS.US_NATIONAL,
+          TEST_YEARS.DEFAULT,
+          null,
+          SIMPLE_HOUSEHOLD_INPUT,
+          true
+        ).join('\n');
+
+        // Then
+        assertBalancedBrackets(code);
+      });
+
+      test('given place region with reform then generated code has balanced brackets', () => {
+        // When
+        const code = getReproducibilityCodeBlock(
+          'policy',
+          TEST_COUNTRIES.US,
+          REFORM_ONLY_POLICY,
+          TEST_REGIONS.NJ_PLACE,
+          TEST_YEARS.DEFAULT,
+          null
+        ).join('\n');
+
+        // Then
+        assertBalancedBrackets(code);
       });
     });
 

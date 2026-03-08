@@ -1,5 +1,4 @@
 import { useSelector } from 'react-redux';
-import { Box } from '@mantine/core';
 import { RootState } from '@/store';
 import { Household } from '@/types/ingredients/Household';
 import VariableArithmetic from './VariableArithmetic';
@@ -19,15 +18,15 @@ export default function HouseholdBreakdown({
   reform,
   borderColor,
 }: HouseholdBreakdownProps) {
-  const metadata = useSelector((state: RootState) => state.metadata);
+  const variables = useSelector((state: RootState) => state.metadata.variables);
 
-  const rootVariable = metadata.variables.household_net_income;
+  const rootVariable = variables.household_net_income;
   if (!rootVariable) {
     return null;
   }
 
   return (
-    <Box
+    <div
       style={{
         borderLeft: `3px solid ${borderColor}`,
       }}
@@ -40,6 +39,6 @@ export default function HouseholdBreakdown({
         defaultExpanded={false}
         childrenOnly
       />
-    </Box>
+    </div>
   );
 }

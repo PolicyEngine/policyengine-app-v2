@@ -9,8 +9,9 @@
  */
 
 import { IconChevronRight } from '@tabler/icons-react';
-import { Card, Group, Stack, Text } from '@mantine/core';
-import { spacing } from '@/designTokens';
+import { Group, Stack, Text } from '@/components/ui';
+import { colors, typography } from '@/designTokens';
+import { cn } from '@/lib/utils';
 import { getDefaultBaselineLabel } from '@/utils/isDefaultBaselineSimulation';
 
 interface DefaultBaselineOptionProps {
@@ -27,31 +28,33 @@ export default function DefaultBaselineOption({
   const simulationLabel = getDefaultBaselineLabel(countryId);
 
   return (
-    <Card
-      withBorder
-      component="button"
+    <button
+      type="button"
       onClick={onClick}
-      variant={isSelected ? 'buttonPanel--active' : 'buttonPanel--inactive'}
-      style={{
-        cursor: 'pointer',
-      }}
+      className={cn(
+        'tw:w-full tw:text-left tw:rounded-element tw:border tw:p-md tw:transition-all',
+        isSelected
+          ? 'tw:border-primary-500 tw:bg-secondary-100 tw:cursor-pointer tw:hover:bg-secondary-200 tw:hover:border-primary-600'
+          : 'tw:border-border-light tw:bg-white tw:cursor-pointer tw:hover:bg-gray-50 tw:hover:border-border-medium'
+      )}
     >
-      <Group justify="space-between" align="center">
-        <Stack gap={spacing.xs} style={{ flex: 1 }}>
-          <Text fw={700}>{simulationLabel}</Text>
-          <Text size="sm" c="dimmed">
+      <Group className="tw:justify-between tw:items-center">
+        <div className="tw:w-5 tw:shrink-0" />
+        <Stack gap="xs" style={{ flex: 1 }}>
+          <Text fw={typography.fontWeight.bold}>{simulationLabel}</Text>
+          <Text size="sm" style={{ color: colors.gray[600] }}>
             Use current law with all households nationwide as baseline
           </Text>
         </Stack>
         <IconChevronRight
           size={20}
           style={{
-            color: 'var(--mantine-color-gray-6)',
+            color: colors.gray[600],
             marginTop: '2px',
             flexShrink: 0,
           }}
         />
       </Group>
-    </Card>
+    </button>
   );
 }

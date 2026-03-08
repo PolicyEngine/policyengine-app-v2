@@ -1,4 +1,4 @@
-import { Card, Center, Container, Text } from '@mantine/core';
+import { Container, Text } from '@/components/ui';
 import { CALCULATOR_URL } from '@/constants';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
@@ -7,29 +7,27 @@ export default function ActionCards() {
   const countryId = useCurrentCountry();
 
   return (
-    <Container size="xl" pb={spacing['4xl']}>
-      <Center>
-        <Card
-          component="a"
+    <Container size="xl" style={{ paddingBottom: spacing['4xl'] }}>
+      <div className="tw:flex tw:items-center tw:justify-center">
+        <a
           href={`${CALCULATOR_URL}/${countryId}/reports`}
-          shadow="sm"
-          p={spacing.xl}
-          radius={spacing.radius.container}
-          withBorder
+          className="tw:no-underline"
           style={{
+            display: 'block',
+            padding: spacing.xl,
+            borderRadius: spacing.radius.container,
             backgroundColor: 'transparent',
             cursor: 'pointer',
-            borderColor: colors.primary[500],
-            borderWidth: 1.5,
+            border: `1.5px solid ${colors.primary[500]}`,
             fontFamily: typography.fontFamily.primary,
-            textDecoration: 'none',
+            boxShadow: `0 1px 3px ${colors.shadow.medium}`,
           }}
         >
           <Text fw={typography.fontWeight.semibold} c={colors.primary[500]} size="xl">
             Enter PolicyEngine
           </Text>
-        </Card>
-      </Center>
+        </a>
+      </div>
     </Container>
   );
 }

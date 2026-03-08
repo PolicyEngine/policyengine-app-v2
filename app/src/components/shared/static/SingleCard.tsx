@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Badge, Box, Card, Flex, Group, Image, Text } from '@mantine/core';
+import { Badge, Card, CardContent, Group, Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 
 export interface CardProps {
@@ -41,89 +41,104 @@ export function SingleCard({
 
   return (
     <Card
-      shadow="sm"
-      padding={spacing['3xl']}
-      radius={spacing.radius.container}
-      withBorder
       onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      className="tw:shadow-sm"
       style={{
         cursor: onClick ? 'pointer' : 'default',
         backgroundColor,
         border: hovered ? `solid ${colors.black}` : `solid ${colors.border.light}`,
         transform: hovered ? 'translateY(-3px)' : 'translateY(0)',
         transition: 'all 0.2s ease-in-out',
+        borderRadius: spacing.radius.container,
+        padding: spacing['3xl'],
       }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
     >
-      {icon && <Box mb={spacing.sm}>{icon}</Box>}
+      <CardContent className="tw:p-0">
+        {icon && <div style={{ marginBottom: spacing.sm }}>{icon}</div>}
 
-      <Text
-        fw={typography.fontWeight.medium}
-        fz={typography.fontSize['2xl']}
-        lh={typography.lineHeight.normal}
-        c={background === 'green' ? colors.text.inverse : colors.text.primary}
-        style={{ fontFamily: typography.fontFamily.primary }}
-      >
-        {title}
-      </Text>
-
-      {tags.length > 0 && (
-        <Group mb={spacing.lg} align="left" style={{ flexWrap: 'wrap' }} mt={spacing.md}>
-          {tags.map((tag, idx) => (
-            <Badge
-              key={idx}
-              radius={spacing.radius.container}
-              c={background === 'green' ? colors.text.inverse : colors.text.primary}
-              variant="filled"
-              style={{
-                backgroundColor: background === 'green' ? colors.primary[500] : colors.gray[200],
-              }}
-            >
-              {tag}
-            </Badge>
-          ))}
-        </Group>
-      )}
-
-      <Text
-        fz={typography.fontSize.lg}
-        lh={typography.lineHeight.relaxed}
-        c={background === 'green' ? colors.text.inverse : colors.text.secondary}
-        style={{ fontFamily: typography.fontFamily.body }}
-      >
-        {description}
-      </Text>
-
-      {(footerText || image) && (
-        <Flex
-          mt={spacing.lg}
-          align="left"
-          gap="xl"
-          direction="column"
-          style={{ cursor: onClick ? 'pointer' : 'default' }}
+        <Text
+          fw={typography.fontWeight.medium}
+          style={{
+            color: background === 'green' ? colors.text.inverse : colors.text.primary,
+            fontFamily: typography.fontFamily.primary,
+            fontSize: typography.fontSize['2xl'],
+            lineHeight: typography.lineHeight.normal,
+          }}
         >
-          {image && (
-            <Image
-              src={image}
-              style={{ width: '90%', height: 'auto', objectFit: 'cover', justifySelf: 'center' }}
-              radius={spacing.radius.container}
-            />
-          )}
-          {footerText && (
-            <Text
-              fz={typography.fontSize.base}
-              c={background === 'green' ? colors.text.inverse : colors.text.primary}
-              style={{
-                textDecoration: 'underline',
-              }}
-              onClick={onClick}
-            >
-              {footerText}
-            </Text>
-          )}
-        </Flex>
-      )}
+          {title}
+        </Text>
+
+        {tags.length > 0 && (
+          <Group
+            wrap="wrap"
+            align="start"
+            style={{ marginBottom: spacing.lg, marginTop: spacing.md }}
+          >
+            {tags.map((tag, idx) => (
+              <Badge
+                key={idx}
+                style={{
+                  borderRadius: spacing.radius.container,
+                  color: background === 'green' ? colors.text.inverse : colors.text.primary,
+                  backgroundColor: background === 'green' ? colors.primary[500] : colors.gray[200],
+                }}
+              >
+                {tag}
+              </Badge>
+            ))}
+          </Group>
+        )}
+
+        <Text
+          style={{
+            color: background === 'green' ? colors.text.inverse : colors.text.secondary,
+            fontFamily: typography.fontFamily.body,
+            fontSize: typography.fontSize.lg,
+            lineHeight: typography.lineHeight.relaxed,
+          }}
+        >
+          {description}
+        </Text>
+
+        {(footerText || image) && (
+          <div
+            className="tw:flex tw:flex-col tw:gap-5"
+            style={{
+              marginTop: spacing.lg,
+              cursor: onClick ? 'pointer' : 'default',
+              alignItems: 'flex-start',
+            }}
+          >
+            {image && (
+              <img
+                src={image}
+                alt=""
+                style={{
+                  width: '90%',
+                  height: 'auto',
+                  objectFit: 'cover',
+                  justifySelf: 'center',
+                  borderRadius: spacing.radius.container,
+                }}
+              />
+            )}
+            {footerText && (
+              <Text
+                style={{
+                  color: background === 'green' ? colors.text.inverse : colors.text.primary,
+                  textDecoration: 'underline',
+                  fontSize: typography.fontSize.base,
+                }}
+                onClick={onClick}
+              >
+                {footerText}
+              </Text>
+            )}
+          </div>
+        )}
+      </CardContent>
     </Card>
   );
 }

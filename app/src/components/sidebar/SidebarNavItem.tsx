@@ -1,7 +1,7 @@
 import { IconExternalLink } from '@tabler/icons-react';
 import { Link } from 'react-router-dom';
-import { Group, Text, Tooltip, UnstyledButton } from '@mantine/core';
-import { colors, spacing } from '../../designTokens';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui';
+import { colors, spacing, typography } from '../../designTokens';
 
 interface SidebarNavItemProps {
   label: string;
@@ -21,20 +21,21 @@ export default function SidebarNavItem({
   disabled,
 }: SidebarNavItemProps) {
   const content = (
-    <Group gap={20} wrap="nowrap">
+    <div className="tw:flex tw:items-center tw:gap-5 tw:flex-nowrap">
       <Icon
         size={20}
         stroke={1.5}
         color={disabled ? colors.gray[400] : isActive ? colors.gray[700] : colors.text.secondary}
       />
-      <Text
-        size="sm"
-        fw={isActive ? 500 : 400}
-        c={disabled ? colors.gray[400] : isActive ? colors.gray[900] : colors.gray[700]}
-        style={{ flex: 1 }}
+      <span
+        className="tw:flex-1 tw:text-sm"
+        style={{
+          fontWeight: isActive ? typography.fontWeight.medium : typography.fontWeight.normal,
+          color: disabled ? colors.gray[400] : isActive ? colors.gray[900] : colors.gray[700],
+        }}
       >
         {label}
-      </Text>
+      </span>
       {external && (
         <IconExternalLink
           size={14}
@@ -42,50 +43,56 @@ export default function SidebarNavItem({
           color={disabled ? colors.gray[400] : colors.text.secondary}
         />
       )}
-    </Group>
+    </div>
   );
 
-  const buttonStyles = {
+  const buttonStyles: React.CSSProperties = {
     display: 'block',
     width: '100%',
     borderRadius: spacing.radius.element,
-    padding: '8px 12px',
+    padding: `${spacing.sm} ${spacing.md}`,
     backgroundColor: isActive ? colors.gray[50] : 'transparent',
     textDecoration: 'none',
     cursor: disabled ? 'not-allowed' : 'pointer',
     opacity: disabled ? 0.6 : 1,
-    '&:hover': {
-      backgroundColor: disabled ? 'transparent' : colors.gray[50],
-    },
+    border: 'none',
   };
 
   if (disabled) {
     return (
-      <Tooltip label="Under development" position="right" withArrow style={{ padding: '8px' }}>
-        <UnstyledButton style={buttonStyles} onClick={(e) => e.preventDefault()}>
-          {content}
-        </UnstyledButton>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            type="button"
+            style={buttonStyles}
+            onClick={(e) => e.preventDefault()}
+            className="tw:hover:bg-gray-50"
+          >
+            {content}
+          </button>
+        </TooltipTrigger>
+        <TooltipContent side="right">Under development</TooltipContent>
       </Tooltip>
     );
   }
 
   if (external) {
     return (
-      <UnstyledButton
-        component="a"
+      <a
         href={path}
         target="_blank"
         rel="noopener noreferrer"
         style={buttonStyles}
+        className="tw:hover:bg-gray-50"
       >
         {content}
-      </UnstyledButton>
+      </a>
     );
   }
 
   return (
-    <UnstyledButton component={Link} to={path} style={buttonStyles}>
+    <Link to={path} style={buttonStyles} className="tw:hover:bg-gray-50">
       {content}
-    </UnstyledButton>
+    </Link>
   );
 }

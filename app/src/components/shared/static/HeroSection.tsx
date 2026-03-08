@@ -1,5 +1,4 @@
-import { Box, Divider, Flex, Text, Title } from '@mantine/core';
-import { colors, spacing, typography } from '@/designTokens';
+import { cn } from '@/lib/utils';
 
 export interface HeroSectionProps {
   title: string;
@@ -12,80 +11,50 @@ export interface HeroSectionProps {
 }
 
 export default function HeroSection({ title, description, variant = 'default' }: HeroSectionProps) {
-  const backgrounds = {
-    light: '#F7FEFE', // Deprecated, kept for backwards compatibility
-    default: '#F7FEFE',
-    accent: colors.primary[700], // Deprecated, kept for backwards compatibility
-    dark: colors.primary[700],
-  };
-
-  const textColors = {
-    light: colors.text.primary,
-    default: colors.text.primary,
-    accent: colors.text.inverse, // Deprecated, kept for backwards compatibility
-    dark: colors.text.inverse,
-  };
+  const isDark = variant === 'accent' || variant === 'dark';
 
   return (
-    <Box
-      py={spacing['4xl']}
-      style={{
-        backgroundColor: backgrounds[variant],
-        borderBottom: `1px solid ${colors.border.dark}`,
-        paddingLeft: '6.125%',
-        paddingRight: '6.125%',
-      }}
+    <div
+      className={cn(
+        'tw:py-4xl tw:px-[6.125%] tw:border-b tw:border-border-dark',
+        isDark ? 'tw:bg-primary-700' : 'tw:bg-[#F7FEFE]'
+      )}
     >
-      <Flex
-        direction={{ base: 'column', md: 'row' }}
-        align={{ base: 'stretch', md: 'center' }}
-        gap={{ base: 'md', md: 'xl' }}
-      >
-        <Box w={{ base: '100%', md: 300 }}>
-          <Title
-            style={{
-              fontSize: typography.fontSize['4xl'],
-              fontWeight: typography.fontWeight.semibold,
-              fontFamily: typography.fontFamily.primary,
-              color: textColors[variant],
-            }}
+      <div className="tw:flex tw:flex-col tw:md:flex-row tw:items-stretch tw:md:items-center tw:gap-3 tw:md:gap-5">
+        <div className="tw:w-full tw:md:w-[300px]">
+          <h1
+            className={cn(
+              'tw:text-4xl tw:font-semibold',
+              isDark ? 'tw:text-text-inverse' : 'tw:text-text-primary'
+            )}
           >
             {title}
-          </Title>
-        </Box>
+          </h1>
+        </div>
 
-        <Divider
-          orientation="horizontal"
-          size="xs"
-          color={
-            variant === 'accent' || variant === 'dark' ? colors.text.inverse : colors.border.dark
-          }
-          hiddenFrom="md"
+        <hr
+          className={cn('tw:md:hidden', isDark ? 'tw:border-white' : 'tw:border-border-dark')}
+          style={{ borderWidth: '0.5px' }}
         />
 
-        <Divider
-          orientation="vertical"
-          size="xs"
-          color={
-            variant === 'accent' || variant === 'dark' ? colors.text.inverse : colors.border.dark
-          }
-          visibleFrom="md"
+        <div
+          className={cn(
+            'tw:hidden tw:md:block tw:self-stretch tw:border-l',
+            isDark ? 'tw:border-white' : 'tw:border-border-dark'
+          )}
         />
 
-        <Box flex={1}>
-          <Text
-            style={{
-              color: textColors[variant],
-              fontSize: typography.fontSize.lg,
-              lineHeight: typography.lineHeight.relaxed,
-              fontFamily: typography.fontFamily.body,
-            }}
-            ta={{ base: 'left', md: 'left' }}
+        <div className="tw:flex-1">
+          <p
+            className={cn(
+              'tw:text-lg tw:leading-relaxed tw:text-left',
+              isDark ? 'tw:text-text-inverse' : 'tw:text-text-primary'
+            )}
           >
             {description}
-          </Text>
-        </Box>
-      </Flex>
-    </Box>
+          </p>
+        </div>
+      </div>
+    </div>
   );
 }

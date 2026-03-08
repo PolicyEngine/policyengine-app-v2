@@ -1,16 +1,8 @@
-import { Box } from '@mantine/core';
-
 const PolicyEngineLogo = '/assets/logos/policyengine/white.svg';
 
 export default function SidebarLogo() {
   return (
-    <Box
-      style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-      }}
-    >
+    <div className="tw:flex tw:justify-center tw:items-center">
       <img
         src={PolicyEngineLogo}
         alt="PolicyEngine"
@@ -19,6 +11,6 @@ export default function SidebarLogo() {
           width: 'auto',
         }}
       />
-    </Box>
+    </div>
   );
 }

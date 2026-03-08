@@ -1,4 +1,3 @@
-import { Box } from '@mantine/core';
 import HeroSection from '@/components/home/HeroSection';
 import HomeBlogPreview from '@/components/home/HomeBlogPreview';
 import HomeTrackerPreview from '@/components/home/HomeTrackerPreview';
@@ -12,7 +11,7 @@ export default function HomePage() {
     <>
       <DowningStreetBanner />
       <HeroSection />
-      <Box
+      <div
         style={{
           fontFamily: typography.fontFamily.primary,
         }}
@@ -21,7 +20,7 @@ export default function HomePage() {
         <FeaturedResearchBanner />
         <HomeBlogPreview />
         <HomeTrackerPreview />
-      </Box>
+      </div>
     </>
   );
 }

@@ -93,6 +93,8 @@ export interface USDistrictChoroplethMapProps {
   focusState?: string;
   /** Map visualization type: 'geographic' (natural boundaries) or 'hex' (equal-size hexagons). Defaults to 'geographic'. */
   visualizationType?: MapVisualizationType;
+  /** Optional ref to the map container for image export */
+  exportRef?: React.Ref<HTMLDivElement>;
 }
 
 /**

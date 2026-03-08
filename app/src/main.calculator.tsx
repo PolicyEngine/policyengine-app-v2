@@ -6,6 +6,8 @@ import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/react';
 import { createRoot } from 'react-dom/client';
 import CalculatorApp from './CalculatorApp';
+// Initialize dev-only journey profiler (registers window.__journeyProfiler)
+import './utils/journeyProfiler';
 
 /**
  * React 19 root-level error handlers

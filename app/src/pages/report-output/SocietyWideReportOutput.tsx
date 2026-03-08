@@ -1,8 +1,10 @@
 import { useMemo } from 'react';
+import { useSelector } from 'react-redux';
 import type { SocietyWideReportOutput as SocietyWideOutput } from '@/api/societyWideCalculation';
 import { useCalculationStatus } from '@/hooks/useCalculationStatus';
 import { useReportProgressDisplay } from '@/hooks/useReportProgressDisplay';
 import { useStartCalculationOnLoad } from '@/hooks/useStartCalculationOnLoad';
+import { RootState } from '@/store';
 import type { CalcStartConfig } from '@/types/calculation';
 import type { Geography } from '@/types/ingredients/Geography';
 import type { Policy } from '@/types/ingredients/Policy';
@@ -26,6 +28,16 @@ import PopulationSubPage from './PopulationSubPage';
 import PolicyReproducibility from './reproduce-in-python/PolicyReproducibility';
 
 /**
+ * Dataset entry from metadata economy options
+ */
+interface DatasetEntry {
+  name: string;
+  label: string;
+  title: string;
+  default: boolean;
+}
+
+/**
  * Props available to input-only tabs (don't need calculation output)
  */
 interface InputTabProps {
@@ -35,6 +47,7 @@ interface InputTabProps {
   userPolicies?: UserPolicy[];
   geographies?: Geography[];
   userGeographies?: UserGeographyPopulation[];
+  datasets?: DatasetEntry[];
 }
 
 /**
@@ -67,14 +80,17 @@ const INPUT_ONLY_TABS: Record<string, (props: InputTabProps) => React.ReactEleme
     <DynamicsSubPage policies={policies} userPolicies={userPolicies} reportType="economy" />
   ),
 
-  reproduce: ({ report, policies, simulations }) => {
+  reproduce: ({ report, policies, simulations, datasets }) => {
     const policyV1 = convertPoliciesToV1Format(policies);
+    const defaultDataset = datasets?.find((d) => d.default);
+    const datasetName = defaultDataset?.name || null;
     return (
       <PolicyReproducibility
         countryId={report.countryId}
         policy={policyV1}
         region={simulations?.[0]?.populationId || report.countryId}
-        dataset={null}
+        dataset={datasetName}
+        isDefaultDataset
       />
     );
   },
@@ -136,6 +152,9 @@ export function SocietyWideReportOutput({
   geographies,
   userGeographies,
 }: SocietyWideReportOutputProps) {
+  // Read datasets from metadata for the reproduce tab
+  const datasets = useSelector((state: RootState) => state.metadata.economyOptions?.datasets);
+
   // Get calculation status for report (for state decisions)
   const calcStatus = useCalculationStatus(report?.id || '', 'report');
 
@@ -212,6 +231,7 @@ export function SocietyWideReportOutput({
       userPolicies,
       geographies,
       userGeographies,
+      datasets,
     });
   }
 

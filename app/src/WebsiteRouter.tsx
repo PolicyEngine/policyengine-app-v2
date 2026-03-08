@@ -13,6 +13,7 @@ import BrandPage from './pages/Brand.page';
 import BrandAssetsPage from './pages/BrandAssets.page';
 import BrandDesignPage from './pages/BrandDesign.page';
 import BrandWritingPage from './pages/BrandWriting.page';
+import ClaudePluginsPage from './pages/ClaudePlugins.page';
 import DonatePage from './pages/Donate.page';
 import OrgLogosEmbedPage from './pages/embed/OrgLogosEmbed.page';
 import HomePage from './pages/Home.page';
@@ -39,6 +40,7 @@ const router = createBrowserRouter(
       path: '/',
       element: <RedirectToCountry />,
     },
+    // /slides is handled by Vercel rewrites (server-side proxy to slides app)
     {
       path: '/:countryId',
       element: <CountryGuardSimple />,
@@ -115,6 +117,10 @@ const router = createBrowserRouter(
               path: 'model',
               element: <ModelPage />,
             },
+            {
+              path: 'claude-plugin',
+              element: <ClaudePluginsPage />,
+            },
           ],
         },
         // Full-page embeds - no layout wrapper
@@ -139,7 +145,7 @@ const router = createBrowserRouter(
               element: <AppLayout />,
               children: [
                 {
-                  path: ':slug',
+                  path: ':slug/*',
                   element: <AppPage />,
                 },
               ],
