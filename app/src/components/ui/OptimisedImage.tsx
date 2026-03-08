@@ -18,7 +18,7 @@ interface OptimisedImageProps extends ImgHTMLAttributes<HTMLImageElement> {
   quality?: number;
 }
 
-function optimisedSrc(src: string, width?: number, quality = 75): string {
+function optimisedSrc(src: string, width?: number, quality = 80): string {
   // Only optimise local paths served from the same origin
   if (!src.startsWith('/')) {
     return src;
@@ -29,9 +29,11 @@ function optimisedSrc(src: string, width?: number, quality = 75): string {
     return src;
   }
 
+  // Request 2x resolution for Retina displays
+  const dpr = typeof window !== 'undefined' ? Math.min(window.devicePixelRatio || 1, 2) : 1;
   const params = new URLSearchParams({ url: src, q: String(quality) });
   if (width) {
-    params.set('w', String(width));
+    params.set('w', String(Math.round(width * dpr)));
   }
   return `/_vercel/image?${params}`;
 }
@@ -39,7 +41,7 @@ function optimisedSrc(src: string, width?: number, quality = 75): string {
 export default function OptimisedImage({
   src,
   width,
-  quality = 75,
+  quality = 80,
   alt = '',
   ...rest
 }: OptimisedImageProps) {
