@@ -4,6 +4,7 @@
 
 import { TOOLTIP_STYLE, type WaterfallDatum } from '@/components/charts';
 import { colors } from '@/designTokens/colors';
+import { typography } from '@/designTokens/typography';
 import type { CountryId } from '@/libs/countries';
 import type { MetadataState } from '@/types/metadata';
 import { formatCurrencyAbbr } from '@/utils/formatters';
@@ -17,8 +18,10 @@ export function BudgetWaterfallTooltip({ active, payload }: any) {
   const data = payload[0].payload as WaterfallDatum & { hoverText: string };
   return (
     <div style={{ ...TOOLTIP_STYLE, maxWidth: 300 }}>
-      <p style={{ fontWeight: 600, margin: 0 }}>{data.name}</p>
-      <p style={{ margin: '4px 0 0', fontSize: 13, whiteSpace: 'pre-wrap' }}>{data.hoverText}</p>
+      <p style={{ fontWeight: typography.fontWeight.semibold, margin: 0 }}>{data.name}</p>
+      <p style={{ margin: '4px 0 0', fontSize: typography.fontSize.sm, whiteSpace: 'pre-wrap' }}>
+        {data.hoverText}
+      </p>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "installCommand": "bun install --frozen-lockfile",
-  "buildCommand": "bun run design-system:build && cd app && bun run generate-llms-txt && bun run build:website",
+  "buildCommand": "bun run design-system:build && cd app && bun run generate-llms-txt && bun run generate-sitemap && bun run build:website",
   "outputDirectory": "app/dist",
   "redirects": [
     {
@@ -15,7 +15,57 @@
       "permanent": true
     }
   ],
-  "rewrites": [{ "source": "/(.*)", "destination": "/website.html" }],
+  "rewrites": [
+    {
+      "source": "/robots.txt",
+      "destination": "/robots.txt"
+    },
+    {
+      "source": "/sitemap.xml",
+      "destination": "/sitemap.xml"
+    },
+    {
+      "source": "/_tracker/:path*",
+      "destination": "https://policyengine--state-legislative-tracker.modal.run/_tracker/:path*"
+    },
+    {
+      "source": "/slides",
+      "destination": "https://policyengine-slides.vercel.app/slides"
+    },
+    {
+      "source": "/slides/:path*",
+      "destination": "https://policyengine-slides.vercel.app/slides/:path*"
+    },
+    {
+      "source": "/plugin-blog",
+      "destination": "https://policyengine.github.io/plugin-blog/"
+    },
+    {
+      "source": "/plugin-blog/:path*",
+      "destination": "https://policyengine.github.io/plugin-blog/:path*"
+    },
+    {
+      "source": "/us/watca",
+      "destination": "https://working-americans-tax-cut-act-one.vercel.app/us/watca"
+    },
+    {
+      "source": "/us/watca/:path*",
+      "destination": "https://working-americans-tax-cut-act-one.vercel.app/us/watca/:path*"
+    },
+    {
+      "source": "/us/taxsim",
+      "destination": "https://policyengine-taxsim-policy-engine.vercel.app/us/taxsim"
+    },
+    {
+      "source": "/us/taxsim/",
+      "destination": "https://policyengine-taxsim-policy-engine.vercel.app/us/taxsim/"
+    },
+    {
+      "source": "/us/taxsim/:path*",
+      "destination": "https://policyengine-taxsim-policy-engine.vercel.app/us/taxsim/:path*"
+    },
+{ "source": "/(.*)", "destination": "/website.html" }
+  ],
   "headers": [
     {
       "source": "/assets/(.*)",

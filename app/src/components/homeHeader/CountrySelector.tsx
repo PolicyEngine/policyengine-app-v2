@@ -1,6 +1,12 @@
 import { IconWorld } from '@tabler/icons-react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Group, Menu, Text, UnstyledButton } from '@mantine/core';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  Text,
+} from '@/components/ui';
 import { colors, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 
@@ -26,17 +32,20 @@ export default function CountrySelector() {
   };
 
   return (
-    <Menu shadow="md" width={200} zIndex={1001} position="bottom-end" offset={10}>
-      <Menu.Target>
-        <UnstyledButton aria-label="Country selector" style={{ lineHeight: 1 }}>
-          <Group gap={4} align="center">
-            <IconWorld size={18} color={colors.text.inverse} />
-          </Group>
-        </UnstyledButton>
-      </Menu.Target>
-      <Menu.Dropdown>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          className="tw:bg-transparent tw:border-none tw:cursor-pointer tw:p-0 tw:leading-none"
+          aria-label="Country selector"
+          style={{ lineHeight: 1 }}
+        >
+          <IconWorld size={18} color={colors.text.inverse} />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="tw:w-[200px] tw:z-[1001] tw:bg-white">
         {countries.map((country) => (
-          <Menu.Item
+          <DropdownMenuItem
             key={country.id}
             onClick={() => handleCountryChange(country.id)}
             style={{
@@ -53,9 +62,9 @@ export default function CountrySelector() {
             >
               {country.label}
             </Text>
-          </Menu.Item>
+          </DropdownMenuItem>
         ))}
-      </Menu.Dropdown>
-    </Menu>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

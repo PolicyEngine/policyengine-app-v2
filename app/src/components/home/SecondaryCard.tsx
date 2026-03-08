@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Box, Text } from '@mantine/core';
-import { colors, spacing, typography } from '@/designTokens';
+import { cn } from '@/lib/utils';
 import type { BlogPost } from '@/types/blog';
 import { formatPostDate, getPostImageUrl } from './blogPreviewUtils';
 
@@ -16,124 +15,48 @@ export default function SecondaryCard({ post, countryId }: SecondaryCardProps) {
   return (
     <Link
       to={`/${countryId}/research/${post.slug}`}
-      style={{ textDecoration: 'none', color: 'inherit', display: 'block', height: '100%' }}
+      className="tw:block tw:no-underline tw:text-inherit tw:h-full tw:group"
     >
-      <Box
-        style={{
-          borderRadius: spacing.radius.feature,
-          overflow: 'hidden',
-          backgroundColor: colors.white,
-          border: `1px solid ${colors.border.light}`,
-          transition: 'box-shadow 0.25s ease, transform 0.25s ease',
-          cursor: 'pointer',
-          height: '100%',
-          display: 'flex',
-          flexDirection: 'column',
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.boxShadow = `0 6px 24px ${colors.shadow.medium}`;
-          e.currentTarget.style.transform = 'translateY(-2px)';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.boxShadow = 'none';
-          e.currentTarget.style.transform = 'translateY(0)';
-        }}
+      <div
+        className={cn(
+          'tw:flex tw:flex-col tw:h-full',
+          'tw:rounded-feature tw:overflow-hidden tw:bg-white tw:border tw:border-border-light',
+          'tw:transition-all tw:duration-300 tw:ease-out',
+          'tw:hover:shadow-[0_6px_24px_rgba(16,24,40,0.1)] tw:hover:-translate-y-0.5',
+          'tw:focus-within:shadow-[0_0_0_2px_var(--color-primary-500)] tw:focus-within:outline-none'
+        )}
       >
-        {/* Image */}
         {imageUrl && (
-          <Box
-            style={{
-              height: '180px',
-              overflow: 'hidden',
-              backgroundColor: colors.gray[100],
-              flexShrink: 0,
-            }}
-          >
+          <div className="tw:h-[180px] tw:overflow-hidden tw:bg-gray-100 tw:shrink-0">
             <img
               src={imageUrl}
               alt={post.title}
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-                display: 'block',
-              }}
+              className="tw:w-full tw:h-full tw:object-cover tw:block tw:transition-transform tw:duration-500 tw:group-hover:scale-[1.03]"
               onError={(e) => {
                 e.currentTarget.style.display = 'none';
               }}
             />
-          </Box>
+          </div>
         )}
 
-        {/* Content */}
-        <Box
-          style={{
-            padding: spacing.lg,
-            display: 'flex',
-            flexDirection: 'column',
-            flex: 1,
-          }}
-        >
-          <Text
-            size={typography.fontSize.xs}
-            c={colors.primary[600]}
-            fw={typography.fontWeight.semibold}
-            tt="uppercase"
-            style={{
-              letterSpacing: '0.06em',
-              fontFamily: typography.fontFamily.primary,
-              marginBottom: spacing.xs,
-            }}
-          >
+        <div className="tw:flex tw:flex-col tw:flex-1 tw:p-lg">
+          <p className="tw:text-xs tw:font-semibold tw:text-primary-600 tw:uppercase tw:tracking-wide tw:mb-xs">
             {date}
-          </Text>
+          </p>
 
-          <Text
-            fw={typography.fontWeight.semibold}
-            style={{
-              fontSize: typography.fontSize.base,
-              lineHeight: typography.lineHeight.snug,
-              fontFamily: typography.fontFamily.primary,
-              color: colors.gray[900],
-              display: '-webkit-box',
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: 'vertical',
-              overflow: 'hidden',
-              marginBottom: spacing.sm,
-            }}
-          >
+          <p className="tw:text-base tw:font-semibold tw:leading-snug tw:text-gray-900 tw:line-clamp-2 tw:mb-sm">
             {post.title}
-          </Text>
+          </p>
 
-          <Text
-            size={typography.fontSize.sm}
-            style={{
-              color: colors.text.secondary,
-              lineHeight: typography.lineHeight.normal,
-              fontFamily: typography.fontFamily.primary,
-              display: '-webkit-box',
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: 'vertical',
-              overflow: 'hidden',
-              flex: 1,
-            }}
-          >
+          <p className="tw:text-sm tw:text-text-secondary tw:leading-normal tw:line-clamp-2 tw:flex-1">
             {post.description}
-          </Text>
+          </p>
 
-          <Text
-            size={typography.fontSize.sm}
-            fw={typography.fontWeight.semibold}
-            style={{
-              color: colors.primary[600],
-              marginTop: spacing.md,
-              fontFamily: typography.fontFamily.primary,
-            }}
-          >
+          <p className="tw:text-sm tw:font-semibold tw:text-primary-600 tw:mt-md tw:transition-transform tw:duration-200 tw:group-hover:translate-x-1">
             Read &rarr;
-          </Text>
-        </Box>
-      </Box>
+          </p>
+        </div>
+      </div>
     </Link>
   );
 }

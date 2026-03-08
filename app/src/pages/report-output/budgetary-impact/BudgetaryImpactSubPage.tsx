@@ -1,5 +1,4 @@
 import { useSelector } from 'react-redux';
-import { useMediaQuery, useViewportSize } from '@mantine/hooks';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { ChartContainer } from '@/components/ChartContainer';
 import {
@@ -8,7 +7,10 @@ import {
   WaterfallChart,
   type WaterfallItem,
 } from '@/components/charts';
+import { MOBILE_BREAKPOINT_QUERY } from '@/hooks/useChartDimensions';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { useViewportSize } from '@/hooks/useViewportSize';
 import type { RootState } from '@/store';
 import { absoluteChangeMessage } from '@/utils/chartMessages';
 import { downloadCsv, getClampedChartHeight, getNiceTicks } from '@/utils/chartUtils';
@@ -26,7 +28,7 @@ interface Props {
 }
 
 export default function BudgetaryImpactSubPage({ output }: Props) {
-  const mobile = useMediaQuery('(max-width: 768px)');
+  const mobile = useMediaQuery(MOBILE_BREAKPOINT_QUERY);
   const { height: viewportHeight } = useViewportSize();
   const countryId = useCurrentCountry();
   const metadata = useSelector((state: RootState) => state.metadata);

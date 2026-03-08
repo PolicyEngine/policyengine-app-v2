@@ -25,10 +25,14 @@
 
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { ComposableMap, Geographies, Geography, ZoomableGroup } from 'react-simple-maps';
-import { Box, Center, Loader, Stack, Text } from '@mantine/core';
 import { ChartWatermark } from '@/components/charts';
-import { colors, spacing } from '@/designTokens';
-import type { GeoJSONFeatureCollection, USDistrictChoroplethMapProps } from './types';
+import { Spinner, Stack, Text } from '@/components/ui';
+import { colors, spacing, typography } from '@/designTokens';
+import type {
+  GeoJSONFeatureCollection,
+  MapVisualizationType,
+  USDistrictChoroplethMapProps,
+} from './types';
 import {
   calculateColorRange,
   createDataLookupMap,
@@ -40,14 +44,17 @@ import {
 /** GeoJSON cache to avoid re-fetching (keyed by path) */
 const geoJSONCache: Record<string, GeoJSONFeatureCollection> = {};
 
-/** Default path to GeoJSON file */
-const DEFAULT_GEOJSON_PATH = '/data/geojson/congressional_districts.geojson';
+/** GeoJSON paths for each visualization type */
+const GEOJSON_PATHS: Record<MapVisualizationType, string> = {
+  geographic: '/data/geojson/congressional_districts.geojson',
+  hex: '/data/geojson/congressional_districts_hex.geojson',
+};
 
 /** Default fill for districts without data */
-const NO_DATA_FILL = '#e0e0e0';
+const NO_DATA_FILL = colors.gray[300];
 
 /** Stroke color for district borders */
-const BORDER_COLOR = '#ffffff';
+const BORDER_COLOR = colors.white;
 
 /** Stroke width for district borders */
 const BORDER_WIDTH = 0.5;
@@ -99,11 +106,6 @@ function useGeoJSONLoader(geoDataPath: string) {
 
 /**
  * Compute center and zoom for a focused state.
- *
- * When focusState is provided, we compute the centroid of matching features
- * using the geoAlbersUsa projection's baked-in center and pick a zoom level
- * based on the bounding box. Since geoAlbersUsa has a fixed center, we
- * pass the displacement as the ZoomableGroup center and an appropriate zoom.
  */
 function useFocusStateView(
   geoJSON: GeoJSONFeatureCollection | null,
@@ -117,7 +119,6 @@ function useFocusStateView(
     const statePrefix = `${focusState.toUpperCase()}-`;
     const fips = STATE_ABBREV_TO_FIPS[focusState.toLowerCase()];
 
-    // Filter features belonging to this state
     const stateFeatures = geoJSON.features.filter((f) => {
       const districtId = f.properties?.DISTRICT_ID as string | undefined;
       const stateFp = f.properties?.STATEFP as string | undefined;
@@ -128,7 +129,6 @@ function useFocusStateView(
       return null;
     }
 
-    // Compute bounding box across all matching geometries
     let minLng = Infinity,
       maxLng = -Infinity,
       minLat = Infinity,
@@ -179,17 +179,12 @@ function useFocusStateView(
     const spanLat = maxLat - minLat;
     const maxSpan = Math.max(spanLng, spanLat);
 
-    // Heuristic zoom: smaller span = higher zoom
-    // Full US spans ~60 degrees, so zoom = ~60 / maxSpan capped
     const zoom = Math.min(Math.max(50 / (maxSpan || 1), 1), 20);
 
     return { center: [centerLng, centerLat], zoom };
   }, [geoJSON, focusState]);
 }
 
-/**
- * Tooltip state
- */
 interface TooltipState {
   x: number;
   y: number;
@@ -197,9 +192,6 @@ interface TooltipState {
   value: string;
 }
 
-/**
- * SVG Color bar component
- */
 function ColorBar({
   scaleColors,
   height,
@@ -241,11 +233,9 @@ function ColorBar({
         fill={`url(#${gradientId})`}
         rx={2}
       />
-      {/* Max label */}
       <text x={24} y={barY + 4} fontSize={10} fill={colors.gray[600]} dominantBaseline="hanging">
         {formatValue(max)}
       </text>
-      {/* Min label */}
       <text x={24} y={barY + barHeight - 4} fontSize={10} fill={colors.gray[600]}>
         {formatValue(min)}
       </text>
@@ -253,40 +243,118 @@ function ColorBar({
   );
 }
 
-/**
- * US Congressional District Choropleth Map Component
- *
- * Renders a geographic choropleth map of US congressional districts.
- * Supports diverging color scales, custom formatting, and state-level zooming.
- */
+function useGeoJSONFitProjection(
+  geoJSON: GeoJSONFeatureCollection | null,
+  enabled: boolean,
+  svgWidth: number,
+  svgHeight: number
+): { center: [number, number]; scale: number } | null {
+  return useMemo(() => {
+    if (!enabled || !geoJSON) {
+      return null;
+    }
+
+    let minLng = Infinity,
+      maxLng = -Infinity,
+      minLat = Infinity,
+      maxLat = -Infinity;
+
+    for (const feature of geoJSON.features) {
+      const geom = feature.geometry as {
+        type: string;
+        coordinates: number[][][] | number[][][][];
+      };
+      if (!geom?.coordinates) {
+        continue;
+      }
+
+      const rings =
+        geom.type === 'Polygon'
+          ? (geom.coordinates as number[][][])
+          : geom.type === 'MultiPolygon'
+            ? (geom.coordinates as number[][][][]).flat()
+            : [];
+
+      for (const ring of rings) {
+        for (const [lng, lat] of ring) {
+          if (lng < minLng) {
+            minLng = lng;
+          }
+          if (lng > maxLng) {
+            maxLng = lng;
+          }
+          if (lat < minLat) {
+            minLat = lat;
+          }
+          if (lat > maxLat) {
+            maxLat = lat;
+          }
+        }
+      }
+    }
+
+    if (!isFinite(minLng)) {
+      return null;
+    }
+
+    const center: [number, number] = [(minLng + maxLng) / 2, (minLat + maxLat) / 2];
+    const lonSpan = maxLng - minLng;
+    const latSpan = maxLat - minLat;
+
+    const padding = 0.85;
+    const scaleForWidth = (svgWidth * padding) / ((lonSpan * Math.PI) / 180);
+    const scaleForHeight = (svgHeight * padding) / ((latSpan * Math.PI) / 180);
+    const scale = Math.min(scaleForWidth, scaleForHeight);
+
+    return { center, scale };
+  }, [enabled, geoJSON, svgWidth, svgHeight]);
+}
+
+const SVG_WIDTH = 800;
+
+const DEFAULT_US_CENTER: [number, number] = [-96, 38.5];
+
 export function USDistrictChoroplethMap({
   data,
   config = {},
-  geoDataPath = DEFAULT_GEOJSON_PATH,
+  geoDataPath,
   focusState,
+  visualizationType = 'geographic',
+  exportRef,
 }: USDistrictChoroplethMapProps) {
   const uniqueId = useId();
   const containerRef = useRef<HTMLDivElement>(null);
+  const isHexMap = visualizationType === 'hex';
 
-  // Load GeoJSON data
-  const { geoJSON, loading, error } = useGeoJSONLoader(geoDataPath);
+  const mergedRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      (containerRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+      if (typeof exportRef === 'function') {
+        exportRef(node);
+      } else if (exportRef) {
+        (exportRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+      }
+    },
+    [exportRef]
+  );
 
-  // Merge configuration with defaults
+  const effectiveGeoDataPath = geoDataPath ?? GEOJSON_PATHS[visualizationType];
+
+  const { geoJSON, loading, error } = useGeoJSONLoader(effectiveGeoDataPath);
+
   const fullConfig = useMemo(() => mergeConfig(config), [config]);
 
-  // Create data lookup map for efficient access
   const dataMap = useMemo(() => createDataLookupMap(data), [data]);
 
-  // Calculate color range
   const colorRange = useMemo(
     () => calculateColorRange(data, fullConfig.colorScale.symmetric ?? true),
     [data, fullConfig.colorScale.symmetric]
   );
 
-  // Compute focus state view (center + zoom)
+  const hexFit = useGeoJSONFitProjection(geoJSON, isHexMap, SVG_WIDTH, fullConfig.height);
+
   const focusView = useFocusStateView(geoJSON, focusState);
 
-  // Filter GeoJSON to only focused state when applicable
   const filteredGeoJSON = useMemo(() => {
     if (!geoJSON || !focusState) {
       return geoJSON;
@@ -304,7 +372,6 @@ export function USDistrictChoroplethMap({
     return { ...geoJSON, features: filtered };
   }, [geoJSON, focusState]);
 
-  // Tooltip state
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
 
   const handleMouseEnter = useCallback(
@@ -358,32 +425,41 @@ export function USDistrictChoroplethMap({
   // Loading state
   if (loading) {
     return (
-      <Center h={fullConfig.height}>
+      <div
+        className="tw:flex tw:items-center tw:justify-center"
+        style={{ height: fullConfig.height }}
+      >
         <Stack align="center" gap="sm">
-          <Loader size="lg" color={colors.primary[500]} />
-          <Text size="sm" c="dimmed">
+          <Spinner size="lg" />
+          <Text size="sm" style={{ color: colors.text.secondary }}>
             Loading map data...
           </Text>
         </Stack>
-      </Center>
+      </div>
     );
   }
 
   // Error state
   if (error) {
     return (
-      <Center h={fullConfig.height}>
-        <Text c="red">{error}</Text>
-      </Center>
+      <div
+        className="tw:flex tw:items-center tw:justify-center"
+        style={{ height: fullConfig.height }}
+      >
+        <Text style={{ color: colors.error }}>{error}</Text>
+      </div>
     );
   }
 
   // No data state
   if (!data.length) {
     return (
-      <Center h={fullConfig.height}>
-        <Text c="dimmed">No district data available</Text>
-      </Center>
+      <div
+        className="tw:flex tw:items-center tw:justify-center"
+        style={{ height: fullConfig.height }}
+      >
+        <Text style={{ color: colors.text.secondary }}>No district data available</Text>
+      </div>
     );
   }
 
@@ -391,28 +467,30 @@ export function USDistrictChoroplethMap({
   const gradientId = `choropleth-gradient-${uniqueId.replace(/:/g, '')}`;
 
   return (
-    <Box
-      ref={containerRef}
+    <div
+      ref={mergedRef}
+      className="tw:flex tw:items-stretch"
       style={{
         border: `1px solid ${colors.border.light}`,
         borderRadius: spacing.radius.container,
         backgroundColor: colors.background.primary,
         overflow: 'hidden',
         position: 'relative',
-        display: 'flex',
-        alignItems: 'stretch',
       }}
     >
       {/* Map */}
       <div style={{ flex: 1, minWidth: 0 }}>
         <ComposableMap
-          projection="geoAlbersUsa"
-          width={800}
+          projection={isHexMap ? 'geoEquirectangular' : 'geoAlbersUsa'}
+          projectionConfig={
+            isHexMap && hexFit ? { center: hexFit.center, scale: hexFit.scale } : undefined
+          }
+          width={SVG_WIDTH}
           height={fullConfig.height}
           style={{ width: '100%', height: '100%' }}
         >
           <ZoomableGroup
-            center={focusView?.center ?? [0, 0]}
+            center={focusView?.center ?? (isHexMap && hexFit ? hexFit.center : DEFAULT_US_CENTER)}
             zoom={focusView?.zoom ?? 1}
             minZoom={0.5}
             maxZoom={20}
@@ -474,22 +552,23 @@ export function USDistrictChoroplethMap({
       {tooltip && (
         <div
           role="tooltip"
+          data-export-exclude
           style={{
             position: 'absolute',
             left: tooltip.x + 12,
             top: tooltip.y - 30,
-            background: 'white',
+            background: colors.white,
             border: `1px solid ${colors.border.light}`,
             borderRadius: spacing.radius.element,
-            padding: '6px 10px',
-            fontSize: 12,
+            padding: `${spacing.xs} ${spacing.sm}`,
+            fontSize: typography.fontSize.xs,
             pointerEvents: 'none',
             zIndex: 10,
-            boxShadow: '0 2px 6px rgba(0,0,0,0.12)',
+            boxShadow: `0 2px 6px ${colors.shadow.medium}`,
             whiteSpace: 'nowrap',
           }}
         >
-          <div style={{ fontWeight: 600 }}>{tooltip.label}</div>
+          <div style={{ fontWeight: typography.fontWeight.semibold }}>{tooltip.label}</div>
           <div style={{ color: colors.gray[600] }}>{tooltip.value}</div>
         </div>
       )}
@@ -503,6 +582,6 @@ export function USDistrictChoroplethMap({
       >
         <ChartWatermark />
       </div>
-    </Box>
+    </div>
   );
 }

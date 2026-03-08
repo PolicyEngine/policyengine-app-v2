@@ -3,7 +3,6 @@ import {
   colors,
   TEAL_PRIMARY,
   TEAL_ACCENT,
-  SUCCESS_GREEN,
   WARNING_YELLOW,
   ERROR_RED,
   INFO_BLUE,
@@ -47,15 +46,13 @@ describe('colors', () => {
   });
 
   describe('semantic colors', () => {
-    it('should have success, warning, error, info colors', () => {
-      expect(colors.success).toBe('#22C55E');
+    it('should have warning, error, info colors', () => {
       expect(colors.warning).toBe('#FEC601');
       expect(colors.error).toBe('#EF4444');
       expect(colors.info).toBe('#1890FF');
     });
 
     it('should export semantic colors as constants', () => {
-      expect(SUCCESS_GREEN).toBe(colors.success);
       expect(WARNING_YELLOW).toBe(colors.warning);
       expect(ERROR_RED).toBe(colors.error);
       expect(INFO_BLUE).toBe(colors.info);
@@ -124,7 +121,6 @@ describe('colors', () => {
       });
 
       // Check semantic colors
-      expect(colors.success).toMatch(hexRegex);
       expect(colors.warning).toMatch(hexRegex);
       expect(colors.error).toMatch(hexRegex);
       expect(colors.info).toMatch(hexRegex);

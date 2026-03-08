@@ -118,7 +118,7 @@ Figure 2 shows the change in government revenue from each reform across fiscal y
       "type": "bar",
       "name": "Threshold freeze extension",
       "marker": {
-        "color": "#22C55E",
+        "color": "#319795",
         "line": {
           "width": 0
         }
@@ -511,7 +511,7 @@ Figure 6 shows the relative change in household income by income decile from eac
       "type": "bar",
       "name": "Threshold freeze extension",
       "marker": {
-        "color": "#22C55E",
+        "color": "#319795",
         "line": {
           "width": 0
         }

@@ -1,6 +1,7 @@
 import { QueryClient, QueryObserver } from '@tanstack/react-query';
 import { calculationQueries } from '@/libs/queries/calculationQueries';
 import type { CalcMetadata, CalcParams, CalcStartConfig, CalcStatus } from '@/types/calculation';
+import { trackSimulationCompleted } from '@/utils/analytics';
 import type { CalcOrchestratorManager } from './CalcOrchestratorManager';
 import { ResultPersister } from './ResultPersister';
 
@@ -87,6 +88,7 @@ export class CalcOrchestrator {
     // CRITICAL DECISION POINT: Household vs Economy
     if (initialStatus.status === 'complete') {
       // HOUSEHOLD CASE: Calculation completed synchronously
+      trackSimulationCompleted({ calcType: metadata.calcType, countryId: config.countryId });
       await this.resultPersister.persist(initialStatus, config.countryId, config.year);
 
       // Notify manager to cleanup this orchestrator
@@ -155,6 +157,7 @@ export class CalcOrchestrator {
 
       // Handle completion
       if (status.status === 'complete' && status.result) {
+        trackSimulationCompleted({ calcType: _metadata.calcType, countryId });
         this.resultPersister
           .persist(status, countryId, year)
           .catch((error) => {

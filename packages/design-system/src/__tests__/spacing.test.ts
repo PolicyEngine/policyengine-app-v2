@@ -75,7 +75,7 @@ describe('spacing', () => {
 
     it('should have main content config', () => {
       expect(spacing.appShell.main.padding).toBe('24px');
-      expect(spacing.appShell.main.minHeight).toBe('100vh');
+      expect(spacing.appShell.main.minHeight).toBe('100dvh');
     });
   });
 

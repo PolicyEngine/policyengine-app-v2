@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Box, Flex, Text } from '@mantine/core';
+import { Text } from '@/components/ui';
 import { CountryId, getOrgsForCountrySorted, Organization } from '@/data/organizations';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
@@ -116,37 +116,40 @@ export default function OrgLogos() {
   const visibleOrgs = slotIndices.map((idx) => shuffledOrgs[idx]).filter(Boolean) as Organization[];
 
   return (
-    <Box mt={spacing['4xl']} mb={spacing['4xl']}>
+    <div style={{ marginTop: spacing['4xl'], marginBottom: spacing['4xl'] }}>
       <Text
-        ta="center"
         size="lg"
         c={colors.primary[600]}
         fw={typography.fontWeight.medium}
-        mb={spacing.xl}
-        style={{ fontFamily: typography.fontFamily.primary }}
+        style={{
+          textAlign: 'center',
+          marginBottom: spacing.xl,
+          fontFamily: typography.fontFamily.primary,
+        }}
       >
         {countryId === 'us'
           ? 'Trusted by researchers, governments, and benefit platforms'
           : 'Trusted by researchers and policy organizations'}
       </Text>
 
-      <Box
+      <div
         style={{
           width: '100vw',
           marginLeft: 'calc(-50vw + 50%)',
           overflowX: 'hidden',
         }}
       >
-        <Flex
-          justify="center"
-          align="center"
-          gap={spacing['5xl']}
-          wrap="nowrap"
-          px={spacing['4xl']}
-          style={{ minWidth: 'max-content' }}
+        <div
+          className="tw:flex tw:flex-nowrap tw:items-center tw:justify-center"
+          style={{
+            gap: spacing['5xl'],
+            paddingLeft: spacing['4xl'],
+            paddingRight: spacing['4xl'],
+            minWidth: 'max-content',
+          }}
         >
           {visibleOrgs.map((org, i) => (
-            <Box
+            <div
               key={`slot-${i}`}
               style={{
                 flex: '0 0 auto',
@@ -185,10 +188,10 @@ export default function OrgLogos() {
                   }}
                 />
               </button>
-            </Box>
+            </div>
           ))}
-        </Flex>
-      </Box>
-    </Box>
+        </div>
+      </div>
+    </div>
   );
 }

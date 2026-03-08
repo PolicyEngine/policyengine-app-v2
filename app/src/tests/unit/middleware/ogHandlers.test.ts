@@ -8,8 +8,8 @@ import {
   TEST_URLS,
 } from '@/tests/fixtures/middleware/ogMocks';
 // Import after mocks
-// @ts-ignore - importing from root middleware file
-import middleware from '../../../../middleware';
+// @ts-ignore - importing from repo root middleware file
+import middleware from '../../../../../middleware';
 
 // Mock the JSON imports
 vi.mock('../../../../src/data/posts/posts.json', () => ({
@@ -18,6 +18,10 @@ vi.mock('../../../../src/data/posts/posts.json', () => ({
 
 vi.mock('../../../../src/data/apps/apps.json', () => ({
   default: [MOCK_APP_WITH_IMAGE, MOCK_APP_WITHOUT_IMAGE],
+}));
+
+vi.mock('../../../../src/data/posts/authors.json', () => ({
+  default: { 'test-author': { name: 'Test Author' } },
 }));
 
 describe('middleware route handlers', () => {
@@ -383,6 +387,32 @@ describe('middleware route handlers', () => {
       // Given
       const request = new Request('https://policyengine.org/', {
         headers: { 'User-Agent': CRAWLER_USER_AGENTS.FACEBOOK },
+      });
+
+      // When
+      const response = await middleware(request);
+
+      // Then
+      expect(response).toBeUndefined();
+    });
+
+    test('given Googlebot requesting /sitemap.xml then passes through', async () => {
+      // Given
+      const request = new Request('https://policyengine.org/sitemap.xml', {
+        headers: { 'User-Agent': 'Googlebot' },
+      });
+
+      // When
+      const response = await middleware(request);
+
+      // Then
+      expect(response).toBeUndefined();
+    });
+
+    test('given Googlebot requesting /robots.txt then passes through', async () => {
+      // Given
+      const request = new Request('https://policyengine.org/robots.txt', {
+        headers: { 'User-Agent': 'Googlebot' },
       });
 
       // When

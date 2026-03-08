@@ -1,4 +1,4 @@
 - bump: minor
   changes:
     added:
-      - Add US marriage incentive calculator to apps listing
+      - Add Working Americans' Tax Cut Act calculator as reverse-proxied app at /us/watca

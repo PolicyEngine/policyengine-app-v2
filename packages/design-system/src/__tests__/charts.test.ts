@@ -19,7 +19,7 @@ describe('charts', () => {
     });
 
     it('should have semantic colors', () => {
-      expect(chartColors.positive).toBe(colors.success);
+      expect(chartColors.positive).toBe(colors.primary[500]);
       expect(chartColors.negative).toBe(colors.error);
     });
 

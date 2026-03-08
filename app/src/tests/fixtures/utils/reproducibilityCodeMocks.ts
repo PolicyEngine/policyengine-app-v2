@@ -292,19 +292,22 @@ export const V2_POLICIES_BOTH_CUSTOM = [
 ];
 
 /**
- * Dataset constants
+ * Dataset constants (names match metadata economy_options.datasets)
  */
 export const TEST_DATASETS = {
-  ENHANCED_CPS_2024: 'enhanced_cps_2024',
+  CPS: 'cps',
+  ENHANCED_CPS: 'enhanced_cps',
   UNKNOWN_DATASET: 'unknown_dataset',
 } as const;
 
 /**
- * Region constants
+ * Region constants (values match metadata region.name format)
  */
 export const TEST_REGIONS = {
   US_NATIONAL: 'us',
-  CA_STATE: 'ca',
+  CA_STATE: 'state/ca',
+  CA_DISTRICT: 'congressional_district/CA-01',
+  NJ_PLACE: 'place/NJ-57000',
   UK_NATIONAL: 'uk',
 } as const;
 

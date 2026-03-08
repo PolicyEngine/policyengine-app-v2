@@ -10,8 +10,8 @@ import {
 } from '@/tests/fixtures/middleware/ogMocks';
 
 // Mock the JSON imports
-vi.mock('../../../middleware', async () => {
-  const actual = await vi.importActual('../../../middleware');
+vi.mock('../../../../../middleware', async () => {
+  const actual = await vi.importActual('../../../../../middleware');
   return {
     ...actual,
   };

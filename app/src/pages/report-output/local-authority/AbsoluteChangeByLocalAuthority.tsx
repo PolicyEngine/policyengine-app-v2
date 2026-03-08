@@ -1,7 +1,8 @@
-import { useMemo } from 'react';
-import { Stack, Text, Title } from '@mantine/core';
+import { useMemo, useRef } from 'react';
 import { transformLocalAuthorityAbsoluteChange } from '@/adapters/local-authority/localAuthorityDataAdapter';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
+import { MapDownloadMenu } from '@/components/MapDownloadMenu';
+import { Group, Stack, Text, Title } from '@/components/ui';
 import { HexagonalMap } from '@/components/visualization/HexagonalMap';
 import type { ReportOutputSocietyWideUK } from '@/types/metadata/ReportOutputSocietyWideUK';
 import { formatParameterValue } from '@/utils/chartValueUtils';
@@ -18,6 +19,7 @@ interface AbsoluteChangeByLocalAuthorityProps {
  * for each UK local authority in currency terms.
  */
 export function AbsoluteChangeByLocalAuthority({ output }: AbsoluteChangeByLocalAuthorityProps) {
+  const mapRef = useRef<HTMLDivElement>(null);
   // Transform API data to hexagonal map format
   const hexMapData = useMemo(() => {
     // Type guard to ensure output is UK report with local authority data
@@ -34,7 +36,7 @@ export function AbsoluteChangeByLocalAuthority({ output }: AbsoluteChangeByLocal
 
   if (!hexMapData.length) {
     return (
-      <Stack align="center" justify="center" h={400}>
+      <Stack align="center" justify="center" style={{ height: 400 }}>
         <Text c="dimmed">No local authority data available</Text>
       </Stack>
     );
@@ -42,9 +44,12 @@ export function AbsoluteChangeByLocalAuthority({ output }: AbsoluteChangeByLocal
 
   return (
     <Stack gap="md">
-      <div>
-        <Title order={3}>Absolute household income change by local authority</Title>
-      </div>
+      <Group justify="space-between" align="start" wrap="nowrap">
+        <Title order={3} style={{ flex: 1 }}>
+          Absolute household income change by local authority
+        </Title>
+        <MapDownloadMenu mapRef={mapRef} filename="absolute-change-by-local-authority" />
+      </Group>
 
       <HexagonalMap
         data={hexMapData}
@@ -61,6 +66,7 @@ export function AbsoluteChangeByLocalAuthority({ output }: AbsoluteChangeByLocal
               includeSymbol: true,
             }),
         }}
+        exportRef={mapRef}
       />
     </Stack>
   );

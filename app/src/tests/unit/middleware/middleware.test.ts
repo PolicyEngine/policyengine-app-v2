@@ -3,7 +3,7 @@ import {
   CRAWLER_USER_AGENTS as CRAWLER_MOCKS,
   NON_CRAWLER_USER_AGENTS,
 } from '@/tests/fixtures/middleware/crawlerMocks';
-import { CRAWLER_USER_AGENTS, isCrawler } from '../../../../middleware';
+import { CRAWLER_USER_AGENTS, isCrawler } from '../../../../../middleware';
 
 describe('middleware', () => {
   describe('CRAWLER_USER_AGENTS', () => {

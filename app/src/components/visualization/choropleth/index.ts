@@ -5,11 +5,13 @@
  * of US congressional districts.
  */
 
+export { MapTypeToggle } from './MapTypeToggle';
 export { USDistrictChoroplethMap } from './USDistrictChoroplethMap';
 
 export type {
   ChoroplethDataPoint,
   ChoroplethMapConfig,
+  MapVisualizationType,
   PartialChoroplethMapConfig,
   USDistrictChoroplethMapProps,
   GeoJSONFeature,

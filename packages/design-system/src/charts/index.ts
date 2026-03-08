@@ -13,7 +13,7 @@ export const chartColors = {
   primary: TEAL_PRIMARY,
   secondary: colors.gray[400],
   baseline: colors.gray[300],
-  positive: colors.success,
+  positive: TEAL_PRIMARY,
   negative: colors.error,
   neutral: colors.gray[500],
   // For multi-series charts

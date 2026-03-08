@@ -82,9 +82,22 @@ const PolicyEngineLogo = "/assets/logos/policyengine/white.svg";
 - `app/public/` - Static assets served at exact URLs
 - `app/src/` - Source code processed by bundler
 
-## Embedded sites (GitHub Pages iframes)
+## Embedded sites
 
-Several pages embed external sites from GitHub Pages via iframes in `app/src/pages/`:
+### Vercel rewrites (server-side proxy)
+
+Some external apps are served via Vercel rewrites in `vercel.json`, not iframes. This is required for Next.js apps (CSR/SSR) because they render blank in cross-origin iframes.
+
+| Route        | Destination                                  | Source repo             |
+| ------------ | -------------------------------------------- | ----------------------- |
+| `/slides/*`  | `policyengine-slides.vercel.app/slides/*`    | `policyengine-slides`   |
+| `/_tracker/*`| `policyengine--state-legislative-tracker...`  | state legislative tracker |
+
+**Important**: Rewrite rules in `vercel.json` must appear before the SPA catch-all (`{ "source": "/(.*)", "destination": "/website.html" }`), otherwise the catch-all intercepts first.
+
+### GitHub Pages iframes
+
+Simple static sites (GitHub Pages) can be embedded via iframes in `app/src/pages/`:
 
 | Route                             | Component                   | Embed source                                 |
 | --------------------------------- | --------------------------- | -------------------------------------------- |
@@ -98,6 +111,12 @@ When renaming an embedded repo:
 3. Search the org for other references: `gh api search/code?q=org:PolicyEngine+OLD_NAME`
 
 CI automatically checks these embed URLs on every push and PR (the `check-embeds` job in `pr.yaml` and `push.yaml`).
+
+### Choosing iframe vs Vercel rewrite
+
+- **Static sites (GitHub Pages)** → iframe works fine
+- **Next.js / CSR apps** → must use Vercel rewrite (Next.js `BAILOUT_TO_CLIENT_SIDE_RENDERING` renders blank in cross-origin iframes)
+- Vercel rewrites don't need React Router routes — the rewrite handles everything server-side
 
 ## Before committing
 

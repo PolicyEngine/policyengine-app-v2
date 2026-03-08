@@ -1,6 +1,6 @@
 import { useSelector } from 'react-redux';
-import { Box, Text } from '@mantine/core';
 import ParameterTable from '@/components/report/ParameterTable';
+import { Text } from '@/components/ui';
 import { getParamDefinitionDate } from '@/constants';
 import { colors, spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
@@ -73,21 +73,20 @@ export default function DynamicsSubPage({ policies, userPolicies }: DynamicsSubP
   if (paramList.length === 0) {
     return (
       <div>
-        <h2>Dynamics information</h2>
-        <Box
+        <h2 className="tw:text-2xl tw:font-bold tw:text-gray-900 tw:mb-md">Dynamics information</h2>
+        <div
+          className="tw:mt-xl tw:text-center"
           style={{
             border: `1px solid ${colors.border.light}`,
             borderRadius: spacing.radius.container,
             padding: spacing['2xl'],
             backgroundColor: colors.white,
-            marginTop: spacing.xl,
-            textAlign: 'center',
           }}
         >
-          <Text size="sm" c={colors.text.secondary}>
+          <Text className="tw:text-sm" style={{ color: colors.text.secondary }}>
             No custom dynamics configuration for this report.
           </Text>
-        </Box>
+        </div>
       </div>
     );
   }
@@ -104,7 +103,7 @@ export default function DynamicsSubPage({ policies, userPolicies }: DynamicsSubP
 
   return (
     <div>
-      <h2>Dynamics information</h2>
+      <h2 className="tw:text-2xl tw:font-bold tw:text-gray-900 tw:mb-md">Dynamics information</h2>
 
       <ParameterTable
         parameterNames={paramList}

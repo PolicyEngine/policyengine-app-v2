@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Alert, Anchor } from '@mantine/core';
+import { IconX } from '@tabler/icons-react';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 
@@ -37,39 +37,42 @@ export default function GiveCalcBanner() {
   };
 
   return (
-    <Alert
-      withCloseButton
-      closeButtonLabel="Dismiss banner"
-      onClose={handleClose}
-      styles={{
-        root: {
-          backgroundColor: '#fef3c7',
-          borderBottom: `1px solid #fcd34d`,
-          borderRadius: spacing.radius.none,
-          padding: `${spacing.sm} ${spacing.md}`,
-          fontFamily: typography.fontFamily.primary,
-        },
-        message: {
-          textAlign: 'center',
-          fontSize: '14px',
-          color: colors.gray[800],
-        },
+    <div
+      className="tw:relative tw:flex tw:items-center tw:justify-center"
+      style={{
+        backgroundColor: '#fef3c7',
+        borderBottom: '1px solid #fcd34d',
+        padding: `${spacing.sm} ${spacing.md}`,
+        fontFamily: typography.fontFamily.primary,
       }}
     >
-      Last day to make tax-deductible donations in 2025! See how much your giving saves on taxes at{' '}
-      <Anchor
-        href="https://givecalc.org"
-        target="_blank"
-        rel="noopener noreferrer"
-        size="sm"
-        style={{
-          color: colors.primary[700],
-          fontWeight: typography.fontWeight.semibold,
-          textDecoration: 'underline',
-        }}
+      <span
+        className="tw:text-center"
+        style={{ fontSize: typography.fontSize.sm, color: colors.gray[800] }}
       >
-        GiveCalc.org
-      </Anchor>
-    </Alert>
+        Last day to make tax-deductible donations in 2025! See how much your giving saves on taxes
+        at{' '}
+        <a
+          href="https://givecalc.org"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            color: colors.primary[700],
+            fontWeight: typography.fontWeight.semibold,
+            textDecoration: 'underline',
+          }}
+        >
+          GiveCalc.org
+        </a>
+      </span>
+      <button
+        type="button"
+        onClick={handleClose}
+        aria-label="Dismiss banner"
+        className="tw:absolute tw:right-2 tw:bg-transparent tw:border-none tw:cursor-pointer tw:p-1"
+      >
+        <IconX size={16} />
+      </button>
+    </div>
   );
 }

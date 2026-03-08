@@ -1,4 +1,11 @@
-import { Table } from '@mantine/core';
+import {
+  ShadcnTable as Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui';
 
 interface DataTableProps<T> {
   data: T[];
@@ -6,30 +13,26 @@ interface DataTableProps<T> {
 }
 
 export default function DataTable<T>({ data, columns }: DataTableProps<T>) {
-  // const [scrolled, setScrolled] = useState(false);
   return (
-    // <ScrollArea h={300} onScrollPositionChange={({ y }) => setScrolled(y !== 0)}>
-    <Table miw={700}>
-      <Table.Thead>
-        <Table.Tr>
-          {columns.map((col) => (
-            <th key={String(col.key)}>{col.header}</th>
-          ))}
-        </Table.Tr>
-      </Table.Thead>
-      <Table.Tbody>
-        {data.map((row, i) => (
-          // <tr key={i}>
-          <Table.Tr key={i} ta="center">
+    <div className="tw:overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
+      <Table style={{ minWidth: 700 }}>
+        <TableHeader>
+          <TableRow>
             {columns.map((col) => (
-              <td key={String(col.key)}>{String(row[col.key])}</td>
+              <TableHead key={String(col.key)}>{col.header}</TableHead>
             ))}
-          </Table.Tr>
-
-          // </tr>
-        ))}
-      </Table.Tbody>
-    </Table>
-    // </ScrollArea>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {data.map((row, i) => (
+            <TableRow key={i} className="tw:text-center">
+              {columns.map((col) => (
+                <TableCell key={String(col.key)}>{String(row[col.key])}</TableCell>
+              ))}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   );
 }

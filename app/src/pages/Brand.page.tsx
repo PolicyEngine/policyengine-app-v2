@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
-import { Box, SimpleGrid, Text, Title, UnstyledButton } from '@mantine/core';
 import HeroSection from '@/components/shared/static/HeroSection';
 import StaticPageLayout from '@/components/shared/static/StaticPageLayout';
+import { Text, Title } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 
 interface BrandCardProps {
@@ -13,26 +13,22 @@ interface BrandCardProps {
 
 function BrandCard({ to, title, description, meta }: BrandCardProps) {
   return (
-    <UnstyledButton
-      component={Link}
+    <Link
       to={to}
+      className="tw:block tw:no-underline tw:transition-all tw:duration-200 tw:hover:-translate-y-0.5"
       style={{
-        display: 'block',
         padding: spacing['2xl'],
         background: colors.white,
         border: `1px solid ${colors.border.light}`,
         borderRadius: spacing.radius.container,
-        textDecoration: 'none',
-        transition: 'all 0.2s ease',
       }}
-      styles={{
-        root: {
-          '&:hover': {
-            borderColor: colors.primary[500],
-            boxShadow: `0 4px 12px ${colors.shadow.light}`,
-            transform: 'translateY(-2px)',
-          },
-        },
+      onMouseEnter={(e) => {
+        e.currentTarget.style.borderColor = colors.primary[500];
+        e.currentTarget.style.boxShadow = `0 4px 12px ${colors.shadow.light}`;
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.borderColor = colors.border.light;
+        e.currentTarget.style.boxShadow = 'none';
       }}
     >
       <Title
@@ -65,7 +61,7 @@ function BrandCard({ to, title, description, meta }: BrandCardProps) {
       >
         {meta}
       </Text>
-    </UnstyledButton>
+    </Link>
   );
 }
 
@@ -99,20 +95,20 @@ export default function BrandPage() {
         description="Resources for representing PolicyEngine consistently across platforms, publications, and partnerships."
       />
 
-      <Box
-        py={spacing['4xl']}
+      <div
+        className="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:md:grid-cols-3 tw:gap-xl"
         style={{
+          paddingTop: spacing['4xl'],
+          paddingBottom: spacing['4xl'],
           backgroundColor: colors.background.tertiary,
           paddingLeft: '6.125%',
           paddingRight: '6.125%',
         }}
       >
-        <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="xl">
-          {brandCards.map((card) => (
-            <BrandCard key={card.to} {...card} />
-          ))}
-        </SimpleGrid>
-      </Box>
+        {brandCards.map((card) => (
+          <BrandCard key={card.to} {...card} />
+        ))}
+      </div>
     </StaticPageLayout>
   );
 }

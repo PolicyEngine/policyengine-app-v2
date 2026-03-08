@@ -263,6 +263,9 @@ export default function ReportPathwayWrapper({ onComplete }: ReportPathwayWrappe
     }
 
     // Submit report
+    if (import.meta.env.DEV) {
+      (window as any).__journeyProfiler?.markStart('report-submit-to-navigate', 'user-interaction');
+    }
     createReport(
       {
         countryId: reportState.countryId,
@@ -280,6 +283,16 @@ export default function ReportPathwayWrapper({ onComplete }: ReportPathwayWrappe
       },
       {
         onSuccess: (data) => {
+          if (import.meta.env.DEV) {
+            (window as any).__journeyProfiler?.markEnd(
+              'report-submit-to-navigate',
+              'user-interaction'
+            );
+            (window as any).__journeyProfiler?.markEvent(
+              'report-navigate-to-output',
+              'user-interaction'
+            );
+          }
           const outputPath = getReportOutputPath(reportState.countryId, data.userReport.id);
           navigate(outputPath);
           onComplete?.();

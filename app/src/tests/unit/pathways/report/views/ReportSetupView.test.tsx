@@ -100,7 +100,7 @@ describe('ReportSetupView', () => {
 
     test('given no simulations configured then comparison card is disabled', () => {
       // When
-      const { container } = render(
+      render(
         <ReportSetupView
           reportState={mockReportState}
           onNavigateToSimulationSelection={mockOnNavigateToSimulationSelection}
@@ -109,13 +109,14 @@ describe('ReportSetupView', () => {
         />
       );
 
-      // Then - Find card by looking for the disabled state in the Card component
-      const cards = container.querySelectorAll('[data-variant^="setupCondition"]');
-      const comparisonCard = Array.from(cards).find((card) =>
-        card.textContent?.includes('Comparison simulation')
+      // Then - SetupConditionsVariant renders cards as <button> elements
+      // The comparison card should be disabled and contain waiting text
+      const buttons = screen.getAllByRole('button');
+      const comparisonCard = buttons.find((btn) =>
+        btn.textContent?.includes('Comparison simulation')
       );
-      // The card should have disabled styling or be marked as disabled
       expect(comparisonCard).toBeDefined();
+      expect(comparisonCard).toBeDisabled();
       expect(comparisonCard?.textContent).toContain('Waiting for baseline');
     });
 
@@ -130,12 +131,11 @@ describe('ReportSetupView', () => {
         />
       );
 
-      // Then
+      // Then - The primary action button contains "Configure baseline simulation"
+      // and is rendered by MultiButtonFooter with disabled state
       const buttons = screen.getAllByRole('button');
-      const primaryButton = buttons.find(
-        (btn) =>
-          btn.textContent?.includes('Configure baseline simulation') &&
-          btn.className?.includes('Button')
+      const primaryButton = buttons.find((btn) =>
+        btn.textContent?.includes('Configure baseline simulation')
       );
       expect(primaryButton).toBeDisabled();
     });

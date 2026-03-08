@@ -125,7 +125,7 @@ const chartHeight = getClampedChartHeight(viewportHeight, mobile);
 | Negative change (losses, losers) | `colors.gray[600]`    | `#4B5563`        |
 | Neutral/baseline                 | `colors.gray[300]`    | `#D1D5DB`        |
 | Error/warning states             | `colors.error`        | `#EF4444`        |
-| Success states                   | `colors.success`      | `#22C55E`        |
+| Success states                   | `colors.primary[500]` | `#319795`        |
 
 ### Dynamic color assignment (Recharts)
 

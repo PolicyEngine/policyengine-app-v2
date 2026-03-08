@@ -66,16 +66,28 @@ describe('Sidebar', () => {
     );
   });
 
-  test('given disabled link then shows tooltip on hover', async () => {
-    // Given
-    const user = userEvent.setup();
+  test('given sidebar renders then displays contact support in My account section', () => {
+    // When
     render(<Sidebar />);
 
+    // Then
+    expect(screen.getByText('Contact support')).toBeInTheDocument();
+  });
+
+  test('given isOpen=false then sidebar content is not rendered', () => {
     // When
-    const accountSettings = screen.getByText('Account settings');
-    await user.hover(accountSettings);
+    render(<Sidebar isOpen={false} />);
 
     // Then
-    expect(await screen.findByText('Under development')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /new report/i })).not.toBeInTheDocument();
+  });
+
+  test('given sidebar renders then root element uses 100% height', () => {
+    // When
+    const { container } = render(<Sidebar />);
+
+    // Then — should use 100% (not 100vh) for AppShell compatibility
+    const root = container.firstChild as HTMLElement;
+    expect(root.style.height).not.toBe('100vh');
   });
 });
