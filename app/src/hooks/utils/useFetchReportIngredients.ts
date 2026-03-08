@@ -223,7 +223,7 @@ export function useFetchReportIngredients(
     },
     enabled: isEnabled && simulationIds.length > 0,
     staleTime: Infinity,
-    gcTime: 0,
+    gcTime: 5 * 60 * 1000,
   });
 
   const simulations = simulationResults.queries

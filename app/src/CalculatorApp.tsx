@@ -4,9 +4,9 @@
  */
 import './app.css';
 
+import { lazy, Suspense } from 'react';
 import { QueryNormalizerProvider } from '@normy/react-query';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { Provider } from 'react-redux';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { CalculatorRouter } from './CalculatorRouter';
@@ -14,6 +14,10 @@ import { AppProvider } from './contexts/AppContext';
 import { CalcOrchestratorProvider } from './contexts/CalcOrchestratorContext';
 import { store } from './store';
 import { cacheMonitor } from './utils/cacheMonitor';
+
+const ReactQueryDevtools = lazy(() =>
+  import('@tanstack/react-query-devtools').then((m) => ({ default: m.ReactQueryDevtools }))
+);
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -39,7 +43,11 @@ export default function CalculatorApp() {
             <TooltipProvider>
               <CalcOrchestratorProvider>
                 <CalculatorRouter />
-                <ReactQueryDevtools initialIsOpen={false} />
+                {import.meta.env.DEV && (
+                  <Suspense>
+                    <ReactQueryDevtools initialIsOpen={false} />
+                  </Suspense>
+                )}
               </CalcOrchestratorProvider>
             </TooltipProvider>
           </QueryClientProvider>

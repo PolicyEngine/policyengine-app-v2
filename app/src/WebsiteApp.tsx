@@ -4,15 +4,19 @@
  */
 import './app.css';
 
+import { lazy, Suspense } from 'react';
 import { QueryNormalizerProvider } from '@normy/react-query';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { Provider } from 'react-redux';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { AppProvider } from './contexts/AppContext';
 import { store } from './store';
 import { cacheMonitor } from './utils/cacheMonitor';
 import { WebsiteRouter } from './WebsiteRouter';
+
+const ReactQueryDevtools = lazy(() =>
+  import('@tanstack/react-query-devtools').then((m) => ({ default: m.ReactQueryDevtools }))
+);
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -22,7 +26,6 @@ const queryClient = new QueryClient({
   },
 });
 
-// Initialize cache monitor
 cacheMonitor.init(queryClient);
 
 export default function WebsiteApp() {
@@ -32,14 +35,18 @@ export default function WebsiteApp() {
         <QueryNormalizerProvider
           queryClient={queryClient}
           normalizerConfig={{
-            devLogging: true,
+            devLogging: import.meta.env.DEV,
           }}
         >
           <QueryClientProvider client={queryClient}>
             <TooltipProvider>
               <WebsiteRouter />
             </TooltipProvider>
-            <ReactQueryDevtools initialIsOpen={false} />
+            {import.meta.env.DEV && (
+              <Suspense>
+                <ReactQueryDevtools initialIsOpen={false} />
+              </Suspense>
+            )}
           </QueryClientProvider>
         </QueryNormalizerProvider>
       </Provider>

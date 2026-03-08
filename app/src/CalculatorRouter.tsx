@@ -2,22 +2,39 @@
  * Router for the Calculator app (app.policyengine.org)
  * Contains only the interactive calculator functionality
  */
+import { lazy, Suspense } from 'react';
 import { createBrowserRouter, Navigate, Outlet, RouterProvider } from 'react-router-dom';
 import StandardLayout from './components/StandardLayout';
 import NotFoundPage from './pages/NotFound.page';
-import PoliciesPage from './pages/Policies.page';
-import PopulationsPage from './pages/Populations.page';
-import ReportOutputPage from './pages/ReportOutput.page';
-import ReportsPage from './pages/Reports.page';
-import SimulationsPage from './pages/Simulations.page';
-import PolicyPathwayWrapper from './pathways/policy/PolicyPathwayWrapper';
-import PopulationPathwayWrapper from './pathways/population/PopulationPathwayWrapper';
-import ReportPathwayWrapper from './pathways/report/ReportPathwayWrapper';
-import SimulationPathwayWrapper from './pathways/simulation/SimulationPathwayWrapper';
 import { CountryGuard } from './routing/guards/CountryGuard';
 import { MetadataGuard } from './routing/guards/MetadataGuard';
 import { MetadataLazyLoader } from './routing/guards/MetadataLazyLoader';
 import { RedirectToCountry } from './routing/RedirectToCountry';
+
+// Lazy-loaded page components — only fetched when the route is visited
+const PoliciesPage = lazy(() => import('./pages/Policies.page'));
+const PopulationsPage = lazy(() => import('./pages/Populations.page'));
+const ReportOutputPage = lazy(() => import('./pages/ReportOutput.page'));
+const ReportsPage = lazy(() => import('./pages/Reports.page'));
+const SimulationsPage = lazy(() => import('./pages/Simulations.page'));
+
+// Lazy-loaded pathway wrappers — heavy components with their own sub-routes
+const PolicyPathwayWrapper = lazy(() => import('./pathways/policy/PolicyPathwayWrapper'));
+const PopulationPathwayWrapper = lazy(
+  () => import('./pathways/population/PopulationPathwayWrapper')
+);
+const ReportPathwayWrapper = lazy(() => import('./pathways/report/ReportPathwayWrapper'));
+const SimulationPathwayWrapper = lazy(
+  () => import('./pathways/simulation/SimulationPathwayWrapper')
+);
+
+function SuspenseOutlet() {
+  return (
+    <Suspense>
+      <Outlet />
+    </Suspense>
+  );
+}
 
 /**
  * Layout wrapper that renders StandardLayout with Outlet for nested routes.
@@ -27,7 +44,7 @@ import { RedirectToCountry } from './routing/RedirectToCountry';
 function StandardLayoutOutlet() {
   return (
     <StandardLayout>
-      <Outlet />
+      <SuspenseOutlet />
     </StandardLayout>
   );
 }
@@ -58,20 +75,25 @@ const router = createBrowserRouter(
             },
             // Pathway routes - pathways manage their own layouts
             {
-              path: 'reports/create',
-              element: <ReportPathwayWrapper />,
-            },
-            {
-              path: 'simulations/create',
-              element: <SimulationPathwayWrapper />,
-            },
-            {
-              path: 'households/create',
-              element: <PopulationPathwayWrapper />,
-            },
-            {
-              path: 'policies/create',
-              element: <PolicyPathwayWrapper />,
+              element: <SuspenseOutlet />,
+              children: [
+                {
+                  path: 'reports/create',
+                  element: <ReportPathwayWrapper />,
+                },
+                {
+                  path: 'simulations/create',
+                  element: <SimulationPathwayWrapper />,
+                },
+                {
+                  path: 'households/create',
+                  element: <PopulationPathwayWrapper />,
+                },
+                {
+                  path: 'policies/create',
+                  element: <PolicyPathwayWrapper />,
+                },
+              ],
             },
           ],
         },

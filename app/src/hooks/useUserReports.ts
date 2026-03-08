@@ -140,10 +140,8 @@ export const useUserReports = (userId: string) => {
     // that specific simulation will be marked stale and refetch on next mount
     // All other simulations remain fresh and use cached data (fast navigation)
     staleTime: Infinity,
-    // gcTime: 0 - Delete from cache immediately when no components are using this data
-    // Prevents memory bloat from accumulating unused simulation data
-    // When navigating away from Reports page, unused simulations are garbage collected
-    gcTime: 0,
+    // Keep cached data for 5 minutes after unmount so back-navigation is instant
+    gcTime: 5 * 60 * 1000,
   });
 
   // Step 6: Extract policy and household IDs from fetched simulations
@@ -397,10 +395,8 @@ export const useUserReportById = (userReportId: string, options?: { enabled?: bo
     // that specific simulation will be marked stale and refetch on next mount
     // All other simulations remain fresh and use cached data (fast navigation)
     staleTime: Infinity,
-    // gcTime: 0 - Delete from cache immediately when no components are using this data
-    // Prevents memory bloat from accumulating unused simulation data
-    // When navigating away from report output, unused simulations are garbage collected
-    gcTime: 0,
+    // Keep cached data for 5 minutes after unmount so back-navigation is instant
+    gcTime: 5 * 60 * 1000,
   });
 
   const simulations = simulationResults.queries
