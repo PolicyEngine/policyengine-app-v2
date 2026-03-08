@@ -16,7 +16,7 @@ import liberalParty from '@/images/logos/orgs/liberal-party.png';
 import mca from '@/images/logos/orgs/mca.png';
 import mirza from '@/images/logos/orgs/mirza.png';
 import mothersOutreach from '@/images/logos/orgs/mothers-outreach-network.png';
-import myfriendben from '@/images/logos/orgs/myfriendben.webp';
+import myfriendben from '@/images/logos/orgs/myfriendben.png';
 import niesr from '@/images/logos/orgs/niesr.png';
 import nisk from '@/images/logos/orgs/niskanen-center.png';
 import ppp from '@/images/logos/orgs/peoples-policy-project.png';
