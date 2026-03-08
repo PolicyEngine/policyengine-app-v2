@@ -5,28 +5,13 @@ const meta: Meta<typeof ReportOutputLayout> = {
   title: 'Report output/ReportOutputLayout',
   component: ReportOutputLayout,
   args: {
-    onTabChange: () => {},
-    onEditName: () => {},
     onShare: () => {},
     onSave: () => {},
-    onSidebarNavigate: () => {},
   },
 };
 
 export default meta;
 type Story = StoryObj<typeof ReportOutputLayout>;
-
-const societyWideTabs = [
-  { value: 'overview', label: 'Overview' },
-  { value: 'comparative', label: 'Comparative analysis' },
-  { value: 'parameters', label: 'Policy parameters' },
-];
-
-const householdTabs = [
-  { value: 'overview', label: 'Overview' },
-  { value: 'household', label: 'Household details' },
-  { value: 'parameters', label: 'Policy parameters' },
-];
 
 const PlaceholderContent = ({ text }: { text: string }) => (
   <div
@@ -49,10 +34,6 @@ export const SocietyWide: Story = {
     reportLabel: 'Expand Child Tax Credit to $4,000',
     reportYear: '2026',
     timestamp: 'Ran today at 14:23:41',
-    tabs: societyWideTabs,
-    activeTab: 'overview',
-    outputType: 'societyWide',
-    showSidebar: false,
     isSharedView: false,
     children: <PlaceholderContent text="Society-wide overview content" />,
   },
@@ -64,10 +45,6 @@ export const Household: Story = {
     reportLabel: 'Household impact analysis',
     reportYear: '2026',
     timestamp: 'Ran yesterday at 09:15:22',
-    tabs: householdTabs,
-    activeTab: 'overview',
-    outputType: 'household',
-    showSidebar: false,
     isSharedView: false,
     children: <PlaceholderContent text="Household overview content" />,
   },
@@ -79,10 +56,6 @@ export const SharedView: Story = {
     reportLabel: 'UBI $500/month analysis',
     reportYear: '2026',
     timestamp: 'Shared 2 hours ago',
-    tabs: societyWideTabs,
-    activeTab: 'overview',
-    outputType: 'societyWide',
-    showSidebar: false,
     isSharedView: true,
     children: <PlaceholderContent text="Shared report content" />,
   },

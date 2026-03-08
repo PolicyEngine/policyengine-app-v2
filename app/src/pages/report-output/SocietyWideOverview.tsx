@@ -104,7 +104,7 @@ function getBreakdownOptions(
 const segmentedControlStyles = {
   root: {
     background: colors.gray[100],
-    borderRadius: spacing.radius.md,
+    borderRadius: spacing.radius.container,
   },
   indicator: {
     background: colors.white,
@@ -487,7 +487,7 @@ function CongressionalDistrictCard({
               style={{
                 height: '100%',
                 backgroundColor: colors.gray[100],
-                borderRadius: spacing.radius.md,
+                borderRadius: spacing.radius.container,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',

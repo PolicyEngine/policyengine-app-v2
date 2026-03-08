@@ -234,7 +234,6 @@ export function SocietyWideReportOutput({
       policies,
       userPolicies,
       geographies,
-      userGeographies,
       datasets,
     });
   }
