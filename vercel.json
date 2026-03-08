@@ -64,7 +64,15 @@
       "source": "/us/taxsim/:path*",
       "destination": "https://policyengine-taxsim-policy-engine.vercel.app/us/taxsim/:path*"
     },
-{ "source": "/(.*)", "destination": "/website.html" }
+    {
+      "source": "/_model-embed",
+      "destination": "https://policyengine-model.vercel.app/"
+    },
+    {
+      "source": "/_model-embed/:path*",
+      "destination": "https://policyengine-model.vercel.app/:path*"
+    },
+    { "source": "/(.*)", "destination": "/website.html" }
   ],
   "headers": [
     {

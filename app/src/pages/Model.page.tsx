@@ -1,44 +1,54 @@
 /**
- * Embeds the PolicyEngine Model overview from Vercel.
- * Listens for postMessage height updates from the embedded app
- * so the iframe expands to fit its content without scrollbars.
+ * Embeds the PolicyEngine Model overview via a same-origin Vercel rewrite.
+ * Because the rewrite makes the iframe same-origin, we can directly read
+ * its document height and resize the iframe to fit without scrollbars.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 
-const EMBED_BASE = 'https://policyengine-model.vercel.app';
 const FALLBACK_HEIGHT = 'calc(100vh - 200px)';
+const POLL_INTERVAL = 500;
 
 export default function ModelPage() {
   const countryId = useCurrentCountry();
-  const embedUrl = `${EMBED_BASE}?embed&country=${countryId}`;
+  // Same-origin path via Vercel rewrite — allows contentDocument access
+  const embedUrl = `/_model-embed?embed&country=${countryId}`;
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [height, setHeight] = useState<string>(FALLBACK_HEIGHT);
 
-  const handleMessage = useCallback((event: MessageEvent) => {
-    // Only accept messages from the embed origin
+  const measureHeight = useCallback(() => {
     try {
-      if (new URL(EMBED_BASE).origin !== event.origin) {
-        return;
+      const doc = iframeRef.current?.contentDocument;
+      if (doc?.body) {
+        const h = Math.max(doc.body.scrollHeight, doc.documentElement.scrollHeight);
+        if (h > 0) {
+          setHeight(`${h}px`);
+        }
       }
     } catch {
-      return;
-    }
-
-    // Support common height message formats
-    const data = event.data;
-    if (typeof data === 'object' && data !== null) {
-      const h = data.height ?? data.frameHeight ?? data.documentHeight;
-      if (typeof h === 'number' && h > 0) {
-        setHeight(`${h}px`);
-      }
+      // Cross-origin fallback — ignore
     }
   }, []);
 
   useEffect(() => {
-    window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
-  }, [handleMessage]);
+    const iframe = iframeRef.current;
+    if (!iframe) {
+      return;
+    }
+
+    // Measure on load and then poll for dynamic content changes
+    const handleLoad = () => {
+      measureHeight();
+    };
+    iframe.addEventListener('load', handleLoad);
+
+    const interval = setInterval(measureHeight, POLL_INTERVAL);
+
+    return () => {
+      iframe.removeEventListener('load', handleLoad);
+      clearInterval(interval);
+    };
+  }, [measureHeight]);
 
   return (
     <iframe
