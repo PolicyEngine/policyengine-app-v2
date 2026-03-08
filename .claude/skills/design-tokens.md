@@ -69,7 +69,7 @@ import { colors, spacing, typography } from '@/designTokens';
 ### Semantic Colors
 | Token | Use For |
 |-------|---------|
-| `colors.success` (`#22C55E`) | Positive changes, gains, winners |
+| `colors.primary[500]` (`#319795`) | Positive changes, gains, winners |
 | `colors.error` (`#EF4444`) | Negative changes, losses, errors |
 | `colors.warning` (`#FEC601`) | Warnings, cautions |
 | `colors.info` (`#1890FF`) | Informational highlights |

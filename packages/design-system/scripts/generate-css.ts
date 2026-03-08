@@ -44,7 +44,6 @@ sections.push('  /* Colors — blue */');
 sections.push(...flattenObject(colors.blue, '--pe-color-blue'));
 sections.push('');
 sections.push('  /* Colors — semantic */');
-sections.push(`  --pe-color-success: ${colors.success};`);
 sections.push(`  --pe-color-warning: ${colors.warning};`);
 sections.push(`  --pe-color-error: ${colors.error};`);
 sections.push(`  --pe-color-info: ${colors.info};`);

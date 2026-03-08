@@ -44,7 +44,7 @@ const US_PROMPTS: PromptData[] = [
   { text: 'how a flat tax at 25% compares to the current system', winnerPct: 0.4, loserPct: 0.4 },
   { text: 'who pays more from eliminating the payroll tax cap', winnerPct: 0, loserPct: 0.06 },
   { text: 'how raising the top rate to 45% affects revenue', winnerPct: 0, loserPct: 0.03 },
-  { text: 'who benefits from expanding the child care credit', winnerPct: 0.25, loserPct: 0 },
+  { text: 'who benefits from expanding the Child and Dependent Care Credit', winnerPct: 0.25, loserPct: 0 },
   { text: 'the poverty impact of a $300/month child allowance', winnerPct: 0.4, loserPct: 0 },
   {
     text: 'how capping itemized deductions at $50,000 affects revenue',

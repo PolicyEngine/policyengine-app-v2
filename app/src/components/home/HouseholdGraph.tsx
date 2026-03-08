@@ -202,7 +202,7 @@ function parseHex(hex: string): [number, number, number] {
 const COLOR_GRAY: [number, number, number] = parseHex(colors.gray[300]);
 const COLOR_PRIMARY_500: [number, number, number] = parseHex(colors.primary[500]);
 const COLOR_PRIMARY_400: [number, number, number] = parseHex(colors.primary[400]);
-const COLOR_SUCCESS: [number, number, number] = parseHex(colors.success);
+const COLOR_POSITIVE: [number, number, number] = parseHex(colors.primary[500]);
 const COLOR_ERROR: [number, number, number] = parseHex(colors.error);
 
 // Per-node mutable animation state (lives outside React)
@@ -348,7 +348,7 @@ export default function HouseholdGraph({ nodes, impact }: HouseholdGraphProps) {
         if (currentImpact && impactAge >= state.waveDelay) {
           const info = currentImpact.get(node.id);
           if (info && info.polarity !== 'neutral') {
-            [tr, tg, tb] = info.polarity === 'positive' ? COLOR_SUCCESS : COLOR_ERROR;
+            [tr, tg, tb] = info.polarity === 'positive' ? COLOR_POSITIVE : COLOR_ERROR;
             tOpacity = 0.5 + info.magnitude * 0.4;
             tSize = node.size * (1 + info.magnitude * 0.8);
           }

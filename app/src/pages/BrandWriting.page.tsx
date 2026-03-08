@@ -60,8 +60,8 @@ function ExampleBox({ type, children }: { type: 'good' | 'bad'; children: React.
     <div
       className="tw:p-md"
       style={{
-        background: isGood ? `${colors.success}10` : `${colors.error}10`,
-        border: `1px solid ${isGood ? colors.success : colors.error}30`,
+        background: isGood ? `${colors.primary[500]}10` : `${colors.error}10`,
+        border: `1px solid ${isGood ? colors.primary[500] : colors.error}30`,
         borderRadius: spacing.radius.container,
       }}
     >
@@ -72,7 +72,7 @@ function ExampleBox({ type, children }: { type: 'good' | 'bad'; children: React.
           fontWeight: typography.fontWeight.semibold,
           textTransform: 'uppercase',
           letterSpacing: '0.05em',
-          color: isGood ? colors.success : colors.error,
+          color: isGood ? colors.primary[500] : colors.error,
         }}
       >
         <span className="tw:flex tw:items-center tw:gap-1">

@@ -74,8 +74,8 @@ function UsageCard({ type, items }: { type: 'do' | 'dont'; items: string[] }) {
     <div
       className="tw:p-lg"
       style={{
-        background: isDo ? `${colors.success}08` : `${colors.error}08`,
-        border: `1px solid ${isDo ? colors.success : colors.error}20`,
+        background: isDo ? `${colors.primary[500]}08` : `${colors.error}08`,
+        border: `1px solid ${isDo ? colors.primary[500] : colors.error}20`,
         borderRadius: spacing.radius.container,
       }}
     >
@@ -84,7 +84,7 @@ function UsageCard({ type, items }: { type: 'do' | 'dont'; items: string[] }) {
         style={{
           fontSize: typography.fontSize.sm,
           fontWeight: typography.fontWeight.semibold,
-          color: isDo ? colors.success : colors.error,
+          color: isDo ? colors.primary[500] : colors.error,
         }}
       >
         <span className="tw:flex tw:items-center tw:gap-1">
