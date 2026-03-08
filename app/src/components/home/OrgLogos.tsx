@@ -44,6 +44,9 @@ function LogoItem({ org }: { org: Organization }) {
       <img
         src={org.logo}
         alt={org.name}
+        loading="lazy"
+        width={LOGO_WIDTH}
+        height={70}
         style={{
           maxWidth: `${LOGO_WIDTH}px`,
           maxHeight: '70px',

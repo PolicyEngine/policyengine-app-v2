@@ -14,7 +14,7 @@ The LIFT Act's Middle Class Tax Credit phases in with 100% of earnings up to a m
 
 This structure is depicted below. You can also calculate how the LIFT Act would affect your own household with **[this calculator](https://legacy.policyengine.org/us/household?reform=61627&focus=intro&region=enhanced_us&timePeriod=2024&baseline=2)**.
 
-![Figure 1: LIFT Act Middle Class Tax Credit by filing status and earnings level (2024)](/images/posts/lift-act/trapezoids.png)
+![Figure 1: LIFT Act Middle Class Tax Credit by filing status and earnings level (2024)](/images/posts/lift-act/trapezoids.webp)
 
 # Static US Impact
 
@@ -25,7 +25,7 @@ This structure is depicted below. You can also calculate how the LIFT Act would 
 - Reduce the Gini index of income inequality by 4.1%
 - Benefit 68% of Americans
 
-![Figure 2: Winners from the LIFT Act Middle Class Tax Credit by Decile (2024)](/images/posts/lift-act/winners.png)
+![Figure 2: Winners from the LIFT Act Middle Class Tax Credit by Decile (2024)](/images/posts/lift-act/winners.webp)
 
 While the earnings requirement reduces the share of individuals in the bottom decile who would benefit, those in the second through sixth deciles gain more than those in higher income households.
 

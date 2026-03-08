@@ -22,7 +22,7 @@ GiveCalc uses PolicyEngine's microsimulation model to compute your taxes with an
 
 For example, a single California filer earning $200,000 with $20,000 in mortgage interest saves $5,857 in taxes on a $20,000 donation — a 33% marginal savings rate that makes their net cost $14,143.
 
-![GiveCalc screenshot showing tax savings calculation](/assets/posts/us-giving-tuesday-2025/screenshot.png)
+![GiveCalc screenshot showing tax savings calculation](/assets/posts/us-giving-tuesday-2025/screenshot.webp)
 
 ## Supporting PolicyEngine
 
@@ -34,19 +34,19 @@ PolicyEngine builds open-source infrastructure for evidence-based policy analysi
 
 [PolicyEngine's calculator](https://policyengine.org/us/reports) lets anyone see how taxes and benefits affect their specific situation—and how proposed reforms would change it.
 
-![PolicyEngine calculator showing Nebraska EITC analysis](/assets/posts/us-giving-tuesday-2025/policyengine-calculator.png)
+![PolicyEngine calculator showing Nebraska EITC analysis](/assets/posts/us-giving-tuesday-2025/policyengine-calculator.webp)
 
 ### High-profile policy analysis
 
 When major legislation moves through Congress, we build custom tools to help the public understand impacts. Our [OBBBA household calculator](https://policyengine.github.io/obbba-household-by-household/) lets anyone see how reconciliation bill provisions affect their family.
 
-![OBBBA household-by-household calculator](/assets/posts/us-giving-tuesday-2025/obbba.png)
+![OBBBA household-by-household calculator](/assets/posts/us-giving-tuesday-2025/obbba.webp)
 
 ### Benefit access
 
 Tools like [MyFriendBen](https://myfriendben.org), [Amplifi Benefit Navigator](https://www.benefitnavigator.us), [Starlight](https://www.meetstarlight.com), and [Mirza](https://mirza.co) use PolicyEngine's API to screen families for 40+ federal and state programs they may qualify for. MyFriendBen alone has identified over $800 million in unclaimed benefits for Colorado residents; Amplifi has helped 17,000 California households access $185 million in benefits. Collectively, these tools have identified over $1 billion in unclaimed benefits.
 
-![Benefit screening tools powered by PolicyEngine](/assets/posts/us-giving-tuesday-2025/benefit-tools-collage.png)
+![Benefit screening tools powered by PolicyEngine](/assets/posts/us-giving-tuesday-2025/benefit-tools-collage.webp)
 
 ### What donations support
 

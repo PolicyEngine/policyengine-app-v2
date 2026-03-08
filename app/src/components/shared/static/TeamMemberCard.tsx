@@ -19,6 +19,9 @@ export default function TeamMemberCard({ member, variant = 'default' }: TeamMemb
       <img
         src={member.image}
         alt={member.name}
+        loading="lazy"
+        width={250}
+        height={250}
         className="tw:h-[180px] tw:w-[180px] tw:sm:h-[250px] tw:sm:w-[250px] tw:object-cover tw:rounded-container"
       />
 

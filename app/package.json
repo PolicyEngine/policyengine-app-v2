@@ -99,6 +99,7 @@
     "postcss-simple-vars": "^7.0.1",
     "prettier": "^3.5.3",
     "prop-types": "^15.8.1",
+    "sharp": "^0.34.5",
     "storybook": "^8.6.12",
     "storybook-dark-mode": "^4.0.2",
     "stylelint": "^16.20.0",

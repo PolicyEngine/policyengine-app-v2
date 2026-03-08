@@ -87,7 +87,7 @@ export default function HomeTrackerPreview() {
                 }}
               >
                 <img
-                  src="/assets/posts/state-legislative-tracker.png"
+                  src="/assets/posts/state-legislative-tracker.webp"
                   alt="2026 State Legislative Tracker showing US map with state session statuses"
                   style={{
                     width: '100%',
