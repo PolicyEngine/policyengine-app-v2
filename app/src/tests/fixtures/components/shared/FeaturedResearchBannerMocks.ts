@@ -1,9 +1,6 @@
-export const BANNER_DISMISSED_KEY = 'autumn-budget-2025-banner-dismissed';
+export const BANNER_DISMISSED_KEY = 'featured-research-banner-dismissed';
 
-export const BUDGET_DATE = new Date('2025-11-26T12:30:00Z');
-
-export const MOCK_DATE_BEFORE_BUDGET = new Date('2025-11-20T10:00:00Z');
-export const MOCK_DATE_AFTER_BUDGET = new Date('2025-11-27T10:00:00Z');
+export const MOCK_DATE = new Date('2026-03-01T10:00:00Z');
 
 export const BANNER_CARD_LINKS = {
   SPRING_STATEMENT: '/uk/spring-statement-2026',
