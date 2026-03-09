@@ -1,0 +1,704 @@
+import { Fragment, useState } from 'react';
+import {
+  IconChartLine,
+  IconChevronRight,
+  IconHome,
+  IconInfoCircle,
+  IconPlus,
+  IconScale,
+  IconSparkles,
+  IconUsers,
+} from '@tabler/icons-react';
+import { useSelector } from 'react-redux';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Group } from '@/components/ui/Group';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
+import { Spinner } from '@/components/ui/Spinner';
+import { Stack } from '@/components/ui/Stack';
+import { Text } from '@/components/ui/Text';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { MOCK_USER_ID } from '@/constants';
+import { colors, spacing } from '@/designTokens';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useUserHouseholds } from '@/hooks/useUserHousehold';
+import { useUserPolicies } from '@/hooks/useUserPolicy';
+import { RootState } from '@/store';
+import { PolicyStateProps, PopulationStateProps } from '@/types/pathwayState';
+import { countPolicyModifications } from '@/utils/countParameterChanges';
+import { formatPeriod } from '@/utils/dateUtils';
+import { formatLabelParts, getHierarchicalLabels } from '@/utils/parameterLabels';
+import { formatParameterValue } from '@/utils/policyTableHelpers';
+import { CountryMapIcon } from '../components/shared/CountryMapIcon';
+import { COUNTRY_CONFIG, FONT_SIZES, INGREDIENT_COLORS } from '../constants';
+import { createCurrentLawPolicy } from '../currentLaw';
+import { IngredientType } from '../types';
+
+interface IngredientPickerModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  type: IngredientType;
+  onSelect: (item: PolicyStateProps | PopulationStateProps | null) => void;
+  onCreateNew: () => void;
+}
+
+export function IngredientPickerModal({
+  isOpen,
+  onClose,
+  type,
+  onSelect,
+  onCreateNew,
+}: IngredientPickerModalProps) {
+  const countryId = useCurrentCountry() as 'us' | 'uk';
+  const countryConfig = COUNTRY_CONFIG[countryId] || COUNTRY_CONFIG.us;
+  const userId = MOCK_USER_ID.toString();
+  const { data: policies, isLoading: policiesLoading } = useUserPolicies(userId);
+  const { data: households, isLoading: householdsLoading } = useUserHouseholds(userId);
+  const colorConfig = INGREDIENT_COLORS[type];
+  const [expandedPolicyId, setExpandedPolicyId] = useState<string | null>(null);
+  const parameters = useSelector((state: RootState) => state.metadata.parameters);
+
+  const getTitle = () => {
+    switch (type) {
+      case 'policy':
+        return 'Select policy';
+      case 'population':
+        return 'Select population';
+      case 'dynamics':
+        return 'Configure dynamics';
+    }
+  };
+
+  const getIcon = () => {
+    const iconProps = { size: 20, color: colorConfig.icon };
+    switch (type) {
+      case 'policy':
+        return <IconScale {...iconProps} />;
+      case 'population':
+        return <IconUsers {...iconProps} />;
+      case 'dynamics':
+        return <IconChartLine {...iconProps} />;
+    }
+  };
+
+  const handleSelectPolicy = (policyId: string, label: string, paramCount: number) => {
+    onSelect({ id: policyId, label, parameters: Array(paramCount).fill({}) });
+    onClose();
+  };
+
+  const handleSelectCurrentLaw = () => {
+    onSelect(createCurrentLawPolicy());
+    onClose();
+  };
+
+  const handleSelectHousehold = (householdId: string, label: string) => {
+    onSelect({
+      label,
+      type: 'household',
+      household: { id: householdId, countryId, householdData: { people: {} } },
+      geography: null,
+    });
+    onClose();
+  };
+
+  const handleSelectGeography = (
+    geoId: string,
+    label: string,
+    scope: 'national' | 'subnational'
+  ) => {
+    onSelect({
+      label,
+      type: 'geography',
+      household: null,
+      geography: { id: geoId, countryId, scope, geographyId: geoId, name: label },
+    });
+    onClose();
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="tw:sm:max-w-[80vw] tw:max-w-[1200px]" style={{ padding: 0 }}>
+        <DialogHeader
+          style={{
+            borderBottom: `1px solid ${colors.border.light}`,
+            padding: spacing.lg,
+            paddingBottom: spacing.md,
+          }}
+        >
+          <DialogTitle>
+            <Group gap="sm">
+              <div
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: spacing.radius.element,
+                  background: colorConfig.bg,
+                  border: `1px solid ${colorConfig.border}`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                {getIcon()}
+              </div>
+              <Text fw={600} style={{ fontSize: FONT_SIZES.normal }}>
+                {getTitle()}
+              </Text>
+            </Group>
+          </DialogTitle>
+        </DialogHeader>
+        <div style={{ padding: spacing.xl }}>
+          <Stack gap="lg">
+            {type === 'policy' && (
+              <>
+                <div
+                  role="button"
+                  tabIndex={0}
+                  style={{
+                    padding: spacing.md,
+                    borderRadius: spacing.radius.container,
+                    border: `1px solid ${colors.border.light}`,
+                    cursor: 'pointer',
+                  }}
+                  onClick={handleSelectCurrentLaw}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleSelectCurrentLaw();
+                    }
+                  }}
+                >
+                  <Group gap="md">
+                    <div
+                      style={{
+                        width: 36,
+                        height: 36,
+                        borderRadius: spacing.radius.container,
+                        background: colorConfig.bg,
+                        border: `1px solid ${colorConfig.border}`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <IconScale size={18} color={colorConfig.icon} />
+                    </div>
+                    <Stack style={{ gap: 2 }}>
+                      <Text fw={600} style={{ fontSize: FONT_SIZES.normal }}>
+                        Current law
+                      </Text>
+                      <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
+                        Use existing tax and benefit rules without modifications
+                      </Text>
+                    </Stack>
+                  </Group>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: spacing.sm }}>
+                  <Separator style={{ flex: 1 }} />
+                  <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
+                    Or select an existing policy
+                  </Text>
+                  <Separator style={{ flex: 1 }} />
+                </div>
+                <ScrollArea className="tw:h-[320px]">
+                  {policiesLoading ? (
+                    <div style={{ padding: spacing.xl, textAlign: 'center' }}>
+                      <Spinner size="sm" />
+                    </div>
+                  ) : (
+                    <Stack gap="sm">
+                      {policies?.map((p) => {
+                        // Use association data for display (like Policies page)
+                        const policyId = p.association.policyId.toString();
+                        const label = p.association.label || `Policy #${policyId}`;
+                        const paramCount = countPolicyModifications(p.policy); // Handles undefined gracefully
+                        const policyParams = p.policy?.parameters || [];
+                        const isExpanded = expandedPolicyId === policyId;
+
+                        return (
+                          <div
+                            key={policyId}
+                            style={{
+                              borderRadius: spacing.radius.container,
+                              border: `1px solid ${isExpanded ? colorConfig.border : colors.border.light}`,
+                              overflow: 'hidden',
+                              transition: 'all 0.2s ease',
+                            }}
+                          >
+                            {/* Main clickable row */}
+                            <div
+                              role="button"
+                              tabIndex={0}
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                padding: spacing.sm,
+                                cursor: 'pointer',
+                                transition: 'background 0.15s ease',
+                              }}
+                              onClick={() => handleSelectPolicy(policyId, label, paramCount)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                  e.preventDefault();
+                                  handleSelectPolicy(policyId, label, paramCount);
+                                }
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.background = colors.gray[50];
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.background = 'transparent';
+                              }}
+                            >
+                              {/* Policy info - takes remaining space */}
+                              <Stack style={{ gap: 2, flex: 1, minWidth: 0 }}>
+                                <Text fw={500} style={{ fontSize: FONT_SIZES.normal }}>
+                                  {label}
+                                </Text>
+                                <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
+                                  {paramCount} param{paramCount !== 1 ? 's' : ''} changed
+                                </Text>
+                              </Stack>
+
+                              {/* Info/expand button - isolated click zone */}
+                              <Button
+                                variant="ghost"
+                                size="icon-sm"
+                                onClick={(e) => {
+                                  e.stopPropagation(); // Prevent selection
+                                  setExpandedPolicyId(isExpanded ? null : policyId);
+                                }}
+                                style={{ marginRight: spacing.sm }}
+                                aria-label={
+                                  isExpanded ? 'Hide parameter details' : 'Show parameter details'
+                                }
+                              >
+                                <IconInfoCircle size={18} />
+                              </Button>
+
+                              {/* Select indicator */}
+                              <IconChevronRight size={16} color={colors.gray[400]} />
+                            </div>
+
+                            {/* Expandable parameter details - table-like display */}
+                            <div
+                              style={{
+                                maxHeight: isExpanded ? '400px' : '0px',
+                                opacity: isExpanded ? 1 : 0,
+                                overflow: isExpanded ? 'auto' : 'hidden',
+                                transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                                borderTop: isExpanded ? `1px solid ${colors.gray[200]}` : 'none',
+                              }}
+                            >
+                              {/* Unified grid for header and data rows */}
+                              <div
+                                style={{
+                                  display: 'grid',
+                                  gridTemplateColumns: '1fr 180px',
+                                  gap: `0 ${spacing.md}`,
+                                }}
+                              >
+                                {/* Header row */}
+                                <Text
+                                  fw={600}
+                                  c="dimmed"
+                                  style={{
+                                    fontSize: FONT_SIZES.tiny,
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.05em',
+                                    padding: spacing.md,
+                                    paddingBottom: spacing.xs,
+                                    borderBottom: `1px solid ${colors.gray[200]}`,
+                                  }}
+                                >
+                                  Parameter
+                                </Text>
+                                <Text
+                                  fw={600}
+                                  c="dimmed"
+                                  style={{
+                                    fontSize: FONT_SIZES.tiny,
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.05em',
+                                    textAlign: 'right',
+                                    padding: spacing.md,
+                                    paddingBottom: spacing.xs,
+                                    borderBottom: `1px solid ${colors.gray[200]}`,
+                                  }}
+                                >
+                                  Changes
+                                </Text>
+
+                                {/* Data rows - grouped by parameter */}
+                                {(() => {
+                                  // Build grouped list of parameters with their changes
+                                  const groupedParams: Array<{
+                                    paramName: string;
+                                    label: string;
+                                    changes: Array<{ period: string; value: string }>;
+                                  }> = [];
+
+                                  policyParams.forEach((param) => {
+                                    const paramName = param.name;
+                                    const hierarchicalLabels = getHierarchicalLabels(
+                                      paramName,
+                                      parameters
+                                    );
+                                    const displayLabel =
+                                      hierarchicalLabels.length > 0
+                                        ? formatLabelParts(hierarchicalLabels)
+                                        : paramName.split('.').pop() || paramName;
+                                    const metadata = parameters[paramName];
+
+                                    // Use value intervals directly from the Policy type
+                                    const changes = (param.values || []).map((interval) => ({
+                                      period: formatPeriod(interval.startDate, interval.endDate),
+                                      value: formatParameterValue(interval.value, metadata?.unit),
+                                    }));
+
+                                    groupedParams.push({ paramName, label: displayLabel, changes });
+                                  });
+
+                                  if (groupedParams.length === 0) {
+                                    return (
+                                      <>
+                                        <Text
+                                          c="dimmed"
+                                          style={{
+                                            fontSize: FONT_SIZES.small,
+                                            padding: spacing.md,
+                                            gridColumn: '1 / -1',
+                                          }}
+                                        >
+                                          No parameter details available
+                                        </Text>
+                                      </>
+                                    );
+                                  }
+
+                                  const displayParams = groupedParams.slice(0, 10);
+                                  const remainingCount = groupedParams.length - 10;
+
+                                  return (
+                                    <>
+                                      {displayParams.map((param) => (
+                                        <Fragment key={param.paramName}>
+                                          {/* Parameter name cell */}
+                                          <div
+                                            style={{
+                                              padding: `${spacing.sm} ${spacing.md}`,
+                                              borderBottom: `1px solid ${colors.gray[100]}`,
+                                              minWidth: 0,
+                                            }}
+                                          >
+                                            <Tooltip>
+                                              <TooltipTrigger asChild>
+                                                <Text
+                                                  style={{
+                                                    fontSize: FONT_SIZES.small,
+                                                    color: colors.gray[700],
+                                                    lineHeight: 1.4,
+                                                  }}
+                                                >
+                                                  {param.label}
+                                                </Text>
+                                              </TooltipTrigger>
+                                              <TooltipContent>{param.paramName}</TooltipContent>
+                                            </Tooltip>
+                                          </div>
+                                          {/* Changes cell - multiple lines */}
+                                          <div
+                                            style={{
+                                              padding: `${spacing.sm} ${spacing.md}`,
+                                              borderBottom: `1px solid ${colors.gray[100]}`,
+                                              textAlign: 'right',
+                                            }}
+                                          >
+                                            {param.changes.map((change, idx) => (
+                                              <Text
+                                                key={idx}
+                                                style={{
+                                                  fontSize: FONT_SIZES.small,
+                                                  lineHeight: 1.5,
+                                                }}
+                                              >
+                                                <Text
+                                                  component="span"
+                                                  style={{ color: colors.gray[500] }}
+                                                >
+                                                  {change.period}:
+                                                </Text>{' '}
+                                                <Text
+                                                  component="span"
+                                                  fw={500}
+                                                  style={{ color: colorConfig.icon }}
+                                                >
+                                                  {change.value}
+                                                </Text>
+                                              </Text>
+                                            ))}
+                                          </div>
+                                        </Fragment>
+                                      ))}
+                                      {remainingCount > 0 && (
+                                        <Text
+                                          c="dimmed"
+                                          style={{
+                                            fontSize: FONT_SIZES.tiny,
+                                            textAlign: 'center',
+                                            padding: spacing.sm,
+                                            gridColumn: '1 / -1',
+                                          }}
+                                        >
+                                          +{remainingCount} more parameter
+                                          {remainingCount !== 1 ? 's' : ''}
+                                        </Text>
+                                      )}
+                                    </>
+                                  );
+                                })()}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                      {(!policies || policies.length === 0) && (
+                        <Text
+                          c="dimmed"
+                          style={{
+                            textAlign: 'center',
+                            paddingTop: spacing.lg,
+                            paddingBottom: spacing.lg,
+                          }}
+                        >
+                          No saved policies
+                        </Text>
+                      )}
+                    </Stack>
+                  )}
+                </ScrollArea>
+                <Separator />
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    onCreateNew();
+                    onClose();
+                  }}
+                >
+                  <IconPlus size={16} />
+                  Create new policy
+                </Button>
+              </>
+            )}
+
+            {type === 'population' && (
+              <>
+                <div
+                  role="button"
+                  tabIndex={0}
+                  style={{
+                    padding: spacing.md,
+                    borderRadius: spacing.radius.container,
+                    border: `1px solid ${colors.border.light}`,
+                    cursor: 'pointer',
+                  }}
+                  onClick={() =>
+                    handleSelectGeography(
+                      countryConfig.geographyId,
+                      countryConfig.nationwideLabel,
+                      'national'
+                    )
+                  }
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleSelectGeography(
+                        countryConfig.geographyId,
+                        countryConfig.nationwideLabel,
+                        'national'
+                      );
+                    }
+                  }}
+                >
+                  <Group gap="md">
+                    <div
+                      style={{
+                        width: 36,
+                        height: 36,
+                        borderRadius: spacing.radius.container,
+                        background: colorConfig.bg,
+                        border: `1px solid ${colorConfig.border}`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <CountryMapIcon countryId={countryId} size={18} color={colorConfig.icon} />
+                    </div>
+                    <Stack style={{ gap: 2 }}>
+                      <Text fw={600} style={{ fontSize: FONT_SIZES.normal }}>
+                        {countryConfig.nationwideTitle}
+                      </Text>
+                      <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
+                        {countryConfig.nationwideSubtitle}
+                      </Text>
+                    </Stack>
+                  </Group>
+                </div>
+                <div
+                  role="button"
+                  tabIndex={0}
+                  style={{
+                    padding: spacing.md,
+                    borderRadius: spacing.radius.container,
+                    border: `1px solid ${colors.border.light}`,
+                    cursor: 'pointer',
+                  }}
+                  onClick={() => handleSelectHousehold('sample-household', 'Sample household')}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleSelectHousehold('sample-household', 'Sample household');
+                    }
+                  }}
+                >
+                  <Group gap="md">
+                    <div
+                      style={{
+                        width: 36,
+                        height: 36,
+                        borderRadius: spacing.radius.container,
+                        background: colorConfig.bg,
+                        border: `1px solid ${colorConfig.border}`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <IconHome size={18} color={colorConfig.icon} />
+                    </div>
+                    <Stack style={{ gap: 2 }}>
+                      <Text fw={600} style={{ fontSize: FONT_SIZES.normal }}>
+                        Sample household
+                      </Text>
+                      <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
+                        Single household simulation
+                      </Text>
+                    </Stack>
+                  </Group>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: spacing.sm }}>
+                  <Separator style={{ flex: 1 }} />
+                  <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
+                    Or select an existing household
+                  </Text>
+                  <Separator style={{ flex: 1 }} />
+                </div>
+                <ScrollArea className="tw:h-[150px]">
+                  {householdsLoading ? (
+                    <div style={{ padding: spacing.xl, textAlign: 'center' }}>
+                      <Spinner size="sm" />
+                    </div>
+                  ) : (
+                    <Stack gap="sm">
+                      {households?.map((h) => {
+                        // Use association data for display (like Populations page)
+                        const householdId = h.association.householdId.toString();
+                        const label = h.association.label || `Household #${householdId}`;
+                        return (
+                          <div
+                            key={householdId}
+                            role="button"
+                            tabIndex={0}
+                            style={{
+                              padding: spacing.sm,
+                              borderRadius: spacing.radius.container,
+                              border: `1px solid ${colors.border.light}`,
+                              cursor: 'pointer',
+                            }}
+                            onClick={() => handleSelectHousehold(householdId, label)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                handleSelectHousehold(householdId, label);
+                              }
+                            }}
+                          >
+                            <Group justify="space-between">
+                              <Text fw={500} style={{ fontSize: FONT_SIZES.normal }}>
+                                {label}
+                              </Text>
+                              <IconChevronRight size={16} color={colors.gray[400]} />
+                            </Group>
+                          </div>
+                        );
+                      })}
+                      {(!households || households.length === 0) && (
+                        <Text
+                          c="dimmed"
+                          style={{
+                            textAlign: 'center',
+                            paddingTop: spacing.lg,
+                            paddingBottom: spacing.lg,
+                          }}
+                        >
+                          No saved households
+                        </Text>
+                      )}
+                    </Stack>
+                  )}
+                </ScrollArea>
+                <Separator />
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    onCreateNew();
+                    onClose();
+                  }}
+                >
+                  <IconPlus size={16} />
+                  Create new household
+                </Button>
+              </>
+            )}
+
+            {type === 'dynamics' && (
+              <Stack
+                gap="lg"
+                align="center"
+                style={{ paddingTop: spacing.xl, paddingBottom: spacing.xl }}
+              >
+                <div
+                  style={{
+                    width: 64,
+                    height: 64,
+                    borderRadius: '50%',
+                    background: colorConfig.bg,
+                    border: `1px solid ${colorConfig.border}`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <IconSparkles size={28} color={colorConfig.icon} />
+                </div>
+                <Stack gap="xs" align="center">
+                  <Text fw={600} c={colors.gray[700]}>
+                    Dynamics coming soon
+                  </Text>
+                  <Text
+                    c="dimmed"
+                    style={{ textAlign: 'center', maxWidth: 300, fontSize: FONT_SIZES.small }}
+                  >
+                    Dynamic behavioral responses will be available in a future update.
+                  </Text>
+                </Stack>
+              </Stack>
+            )}
+          </Stack>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}

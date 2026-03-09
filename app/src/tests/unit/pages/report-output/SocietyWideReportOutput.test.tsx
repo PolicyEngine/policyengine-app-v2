@@ -44,6 +44,10 @@ vi.mock('@/pages/report-output/OverviewSubPage', () => ({
   default: vi.fn(() => <div data-testid="overview-page">Cost</div>),
 }));
 
+vi.mock('@/pages/report-output/MigrationSubPage', () => ({
+  default: vi.fn(() => <div data-testid="migration-page">Migration</div>),
+}));
+
 vi.mock('@/pages/report-output/PolicySubPage', () => ({
   default: vi.fn(() => <div data-testid="policy-page">Policy</div>),
 }));
@@ -144,7 +148,7 @@ describe('SocietyWideReportOutput', () => {
     expect(screen.getByText('Calculation failed')).toBeInTheDocument();
   });
 
-  test('given calculation complete then shows overview with output', () => {
+  test('given calculation complete then shows migration subpage with output', () => {
     // Given
     mockUseCalculationStatus.mockReturnValue(MOCK_CALC_STATUS_COMPLETE);
 
@@ -152,7 +156,7 @@ describe('SocietyWideReportOutput', () => {
     render(
       <SocietyWideReportOutput
         reportId="test-report-123"
-        subpage="overview"
+        subpage="migration"
         report={MOCK_REPORT}
         simulations={[MOCK_SIMULATION_BASELINE]}
         policies={[MOCK_POLICY_BASELINE, MOCK_POLICY_REFORM]}
@@ -162,8 +166,7 @@ describe('SocietyWideReportOutput', () => {
     );
 
     // Then
-    expect(screen.getByTestId('overview-page')).toBeInTheDocument();
-    expect(screen.getByText('Cost')).toBeInTheDocument();
+    expect(screen.getByTestId('migration-page')).toBeInTheDocument();
   });
 
   test('given no output yet then shows not found message', () => {

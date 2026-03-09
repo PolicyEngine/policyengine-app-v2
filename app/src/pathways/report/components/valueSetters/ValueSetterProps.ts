@@ -14,4 +14,5 @@ export interface ValueSetterProps {
   setStartDate: Dispatch<SetStateAction<string>>;
   endDate: string;
   setEndDate: Dispatch<SetStateAction<string>>;
+  onSubmit?: () => void;
 }

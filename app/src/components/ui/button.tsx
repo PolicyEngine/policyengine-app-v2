@@ -45,7 +45,8 @@ function Button({
   VariantProps<typeof buttonVariants> & {
     asChild?: boolean;
   }) {
-  const Comp = asChild ? Slot.Root : 'button';
+  // Cast needed: dual csstype versions in monorepo cause SlotProps style mismatch
+  const Comp = (asChild ? Slot.Root : 'button') as React.ElementType;
 
   return (
     <Comp

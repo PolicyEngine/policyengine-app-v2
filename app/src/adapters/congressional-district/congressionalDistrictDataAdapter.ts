@@ -25,7 +25,9 @@ export function buildDistrictLabelLookup(regions: MetadataRegionEntry[]): Distri
 
   for (const region of regions) {
     if (region.type === US_REGION_TYPES.CONGRESSIONAL_DISTRICT) {
-      lookup.set(region.name, region.label);
+      // Strip "congressional_district/" prefix so keys match API district IDs (e.g., "AL-01")
+      const key = region.name.replace(/^congressional_district\//, '');
+      lookup.set(key, region.label);
     }
   }
 

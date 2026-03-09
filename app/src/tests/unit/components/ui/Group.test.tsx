@@ -111,7 +111,7 @@ describe('Group', () => {
         content
       </Group>
     );
-    expect(screen.getByTestId('group').className).toContain('[&>*]:tw:flex-1');
+    expect(screen.getByTestId('group').className).toContain('tw:[&>*]:flex-1');
   });
 
   it('forwards ref', () => {

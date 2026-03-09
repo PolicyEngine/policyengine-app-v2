@@ -1,25 +1,30 @@
-import { IconBookmark, IconPencil, IconShare } from '@tabler/icons-react';
-import { Button, Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui';
+import { IconBookmark, IconCode, IconSettings } from '@tabler/icons-react';
+import { ShareButton } from '@/components/common/ActionButtons';
+import { Group } from '@/components/ui';
+import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface ReportActionButtonsProps {
   isSharedView: boolean;
   onShare?: () => void;
   onSave?: () => void;
-  onEdit?: () => void;
+  onView?: () => void;
+  onReproduce?: () => void;
 }
 
 /**
  * ReportActionButtons - Action buttons for report output header
  *
  * Renders different buttons based on view type:
- * - Normal view: Share + Edit buttons
+ * - Normal view: Reproduce + View/edit + Share buttons
  * - Shared view: Save button with tooltip
  */
 export function ReportActionButtons({
   isSharedView,
   onShare,
   onSave,
-  onEdit,
+  onView,
+  onReproduce,
 }: ReportActionButtonsProps) {
   if (isSharedView) {
     return (
@@ -40,13 +45,29 @@ export function ReportActionButtons({
   }
 
   return (
-    <>
-      <Button variant="ghost" size="icon" aria-label="Edit report name" onClick={onEdit}>
-        <IconPencil size={18} />
-      </Button>
-      <Button variant="ghost" size="icon" aria-label="Share report" onClick={onShare}>
-        <IconShare size={18} />
-      </Button>
-    </>
+    <Group gap="xs" className="tw:ml-1.5">
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button variant="ghost" size="icon" aria-label="View/edit report" onClick={onView}>
+            <IconSettings size={18} />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="bottom">View/edit report</TooltipContent>
+      </Tooltip>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Reproduce in Python"
+            onClick={onReproduce}
+          >
+            <IconCode size={18} />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="bottom">Reproduce in Python</TooltipContent>
+      </Tooltip>
+      <ShareButton onClick={onShare} />
+    </Group>
   );
 }

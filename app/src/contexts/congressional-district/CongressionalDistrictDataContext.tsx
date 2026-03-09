@@ -226,6 +226,7 @@ export function CongressionalDistrictDataProvider({
       isLoading,
       hasStarted: state.hasStarted,
       errorCount,
+      erroredStates: state.erroredStates,
       labelLookup,
       isStateLevelReport,
       stateCode: stateCodeValue,
@@ -237,6 +238,7 @@ export function CongressionalDistrictDataProvider({
     [
       state.stateResponses,
       state.hasStarted,
+      state.erroredStates,
       completedCount,
       loadingCount,
       totalDistrictsLoaded,

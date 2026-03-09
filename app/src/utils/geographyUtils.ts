@@ -1,7 +1,11 @@
 import type { Geography } from '@/types/ingredients/Geography';
 import { MetadataState } from '@/types/metadata';
 import { UK_REGION_TYPES } from '@/types/regionTypes';
-import { findPlaceFromRegionString, getPlaceDisplayName } from '@/utils/regionStrategies';
+import {
+  extractRegionDisplayValue,
+  findPlaceFromRegionString,
+  getPlaceDisplayName,
+} from '@/utils/regionStrategies';
 
 /**
  * Extracts the UK region type from a Geography object based on its geographyId.
@@ -177,4 +181,33 @@ export function getRegionTypeLabel(
 
   // Default fallback
   return 'Region';
+}
+
+/**
+ * Generate a display label for a Geography object.
+ * This is used when geographies are selected without requiring user input.
+ *
+ * @param geography - The Geography object
+ * @returns A human-readable label (e.g., "Households nationwide", "Households in California")
+ */
+export function generateGeographyLabel(geography: Geography): string {
+  if (geography.scope === 'national') {
+    return geography.countryId === 'uk' ? 'Households UK-wide' : 'Households nationwide';
+  }
+
+  // Use the human-readable name when available
+  if (geography.name) {
+    return `Households in ${geography.name}`;
+  }
+
+  // Handle US place (city) format: "place/CA-44000"
+  if (geography.geographyId.startsWith('place/')) {
+    const place = findPlaceFromRegionString(geography.geographyId);
+    if (place) {
+      return `Households in ${getPlaceDisplayName(place.name)}`;
+    }
+  }
+
+  const displayValue = extractRegionDisplayValue(geography.geographyId);
+  return `Households in ${displayValue}`;
 }

@@ -321,6 +321,7 @@ export function USDistrictChoroplethMap({
   focusState,
   visualizationType = 'geographic',
   exportRef,
+  errorStates,
 }: USDistrictChoroplethMapProps) {
   const uniqueId = useId();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -353,6 +354,12 @@ export function USDistrictChoroplethMap({
 
   const hexFit = useGeoJSONFitProjection(geoJSON, isHexMap, SVG_WIDTH, fullConfig.height);
 
+  // Build error state set for efficient lookup
+  const errorStateSet = useMemo(
+    () => new Set(errorStates?.map((s) => s.toUpperCase()) ?? []),
+    [errorStates]
+  );
+
   const focusView = useFocusStateView(geoJSON, focusState);
 
   const filteredGeoJSON = useMemo(() => {
@@ -376,13 +383,25 @@ export function USDistrictChoroplethMap({
 
   const handleMouseEnter = useCallback(
     (event: React.MouseEvent, districtId: string) => {
-      const dataPoint = dataMap.get(districtId);
-      if (!dataPoint) {
+      const rect = containerRef.current?.getBoundingClientRect();
+      if (!rect) {
         return;
       }
 
-      const rect = containerRef.current?.getBoundingClientRect();
-      if (!rect) {
+      // Check if district belongs to an error state
+      const stateAbbr = districtId.split('-')[0]?.toUpperCase();
+      if (stateAbbr && errorStateSet.has(stateAbbr)) {
+        setTooltip({
+          x: event.clientX - rect.left,
+          y: event.clientY - rect.top,
+          label: districtId,
+          value: 'Error loading data',
+        });
+        return;
+      }
+
+      const dataPoint = dataMap.get(districtId);
+      if (!dataPoint) {
         return;
       }
 
@@ -393,7 +412,7 @@ export function USDistrictChoroplethMap({
         value: fullConfig.formatValue(dataPoint.value),
       });
     },
-    [dataMap, fullConfig]
+    [dataMap, fullConfig, errorStateSet]
   );
 
   const handleMouseMove = useCallback(
@@ -471,6 +490,7 @@ export function USDistrictChoroplethMap({
       ref={mergedRef}
       className="tw:flex tw:items-stretch"
       style={{
+        height: '100%',
         border: `1px solid ${colors.border.light}`,
         borderRadius: spacing.radius.container,
         backgroundColor: colors.background.primary,
@@ -500,11 +520,19 @@ export function USDistrictChoroplethMap({
                 {({ geographies }) =>
                   geographies.map((geo) => {
                     const districtId = geo.properties?.DISTRICT_ID as string | undefined;
+                    const stateAbbr = districtId?.split('-')[0]?.toUpperCase();
+                    const isErrorState = stateAbbr ? errorStateSet.has(stateAbbr) : false;
                     const dataPoint = districtId ? dataMap.get(districtId) : undefined;
 
-                    const fillColor = dataPoint
-                      ? getDistrictColor(dataPoint.value, colorRange, fullConfig.colorScale.colors)
-                      : NO_DATA_FILL;
+                    const fillColor = isErrorState
+                      ? 'rgba(220, 53, 69, 0.5)'
+                      : dataPoint
+                        ? getDistrictColor(
+                            dataPoint.value,
+                            colorRange,
+                            fullConfig.colorScale.colors
+                          )
+                        : NO_DATA_FILL;
 
                     return (
                       <Geography
