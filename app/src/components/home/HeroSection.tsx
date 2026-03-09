@@ -45,7 +45,7 @@ export default function HeroSection() {
   const [impact, setImpact] = useState<ImpactState | null>(null);
   const impactTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
-  const nodes = useMemo(() => generateGraph(), []);
+  const nodes = useMemo(() => generateGraph(countryId), [countryId]);
 
   const handlePromptComplete = useCallback(
     (promptIndex: number, distribution: PromptData) => {
@@ -90,24 +90,18 @@ export default function HeroSection() {
     >
       <HouseholdGraph nodes={nodes} impact={impact} />
 
-      {/* Headline */}
-      <motion.h1
+      {/* Logo */}
+      <motion.img
         variants={fadeIn}
+        src="/assets/logos/policyengine/teal.svg"
+        alt="PolicyEngine"
         style={{
           position: 'relative',
           zIndex: 1,
-          fontSize: 'clamp(32px, 5.5vw, 52px)',
-          fontWeight: typography.fontWeight.bold,
-          color: colors.primary[800],
-          fontFamily: typography.fontFamily.primary,
-          lineHeight: 1.1,
-          margin: 0,
-          textAlign: 'center',
-          letterSpacing: '-0.02em',
+          width: 'clamp(200px, 40vw, 360px)',
+          height: 'auto',
         }}
-      >
-        PolicyEngine
-      </motion.h1>
+      />
 
       {/* Subtitle */}
       <motion.p
