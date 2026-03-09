@@ -1,7 +1,7 @@
 [
   {
     "type": "iframe",
-    "slug": "kypa",
+    "slug": "keep-your-pay-act",
     "title": "Keep Your Pay Act calculator",
     "description": "Estimate the household and national impact of Senator Booker's Keep Your Pay Act, which raises the standard deduction, expands the Child Tax Credit, and triples the childless EITC",
     "source": "https://keep-your-pay-act.vercel.app/",
