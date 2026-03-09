@@ -59,11 +59,11 @@
     },
     {
       "source": "/us/keep-your-pay-act",
-      "destination": "https://keep-your-pay-act.vercel.app/"
+      "destination": "https://keep-your-pay-act.vercel.app/us/keep-your-pay-act"
     },
     {
       "source": "/us/keep-your-pay-act/:path*",
-      "destination": "https://keep-your-pay-act.vercel.app/:path*"
+      "destination": "https://keep-your-pay-act.vercel.app/us/keep-your-pay-act/:path*"
     },
     {
       "source": "/us/taxsim",
