@@ -58,11 +58,11 @@
       "destination": "https://working-americans-tax-cut-act-one.vercel.app/us/watca/:path*"
     },
     {
-      "source": "/us/kypa",
+      "source": "/us/keep-your-pay-act",
       "destination": "https://keep-your-pay-act.vercel.app/"
     },
     {
-      "source": "/us/kypa/:path*",
+      "source": "/us/keep-your-pay-act/:path*",
       "destination": "https://keep-your-pay-act.vercel.app/:path*"
     },
     {
