@@ -10,7 +10,7 @@ import { ValueInputBox } from './ValueInputBox';
 import { ValueSetterProps } from './ValueSetterProps';
 
 export function MultiYearValueSelector(props: ValueSetterProps) {
-  const { param, policy, setIntervals } = props;
+  const { param, policy, setIntervals, onEnter } = props;
 
   // Get available years from metadata
   const availableYears = useSelector(getTaxYears);
@@ -87,6 +87,7 @@ export function MultiYearValueSelector(props: ValueSetterProps) {
                 param={param}
                 value={yearValues[year]}
                 onChange={(value) => handleYearValueChange(year, value)}
+                onEnter={onEnter}
               />
             </div>
           ))}
@@ -101,6 +102,7 @@ export function MultiYearValueSelector(props: ValueSetterProps) {
                 param={param}
                 value={yearValues[year]}
                 onChange={(value) => handleYearValueChange(year, value)}
+                onEnter={onEnter}
               />
             </div>
           ))}

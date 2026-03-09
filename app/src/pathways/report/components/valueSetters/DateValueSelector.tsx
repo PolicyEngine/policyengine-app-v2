@@ -18,6 +18,7 @@ export function DateValueSelector(props: ValueSetterProps) {
     setStartDate,
     endDate,
     setEndDate,
+    onEnter,
   } = props;
 
   // Local state for param value
@@ -87,7 +88,7 @@ export function DateValueSelector(props: ValueSetterProps) {
           onChange={handleEndDateChange}
         />
       </div>
-      <ValueInputBox param={param} value={paramValue} onChange={setParamValue} />
+      <ValueInputBox param={param} value={paramValue} onChange={setParamValue} onEnter={onEnter} />
     </div>
   );
 }

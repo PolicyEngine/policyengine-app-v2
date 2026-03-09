@@ -74,6 +74,7 @@ export default function PolicyParameterSelectorValueSetter({
     setStartDate,
     endDate,
     setEndDate,
+    onEnter: handleSubmit,
   };
 
   return (
