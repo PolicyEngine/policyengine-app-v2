@@ -18,6 +18,7 @@ import { fetchPolicyById } from '@/api/policy';
 import { fetchReportById } from '@/api/report';
 import { fetchSimulationById } from '@/api/simulation';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { GC_TIME_5_MIN } from '@/libs/queryConfig';
 import { householdKeys, policyKeys, reportKeys, simulationKeys } from '@/libs/queryKeys';
 import { RootState } from '@/store';
 import { Geography } from '@/types/ingredients/Geography';
@@ -223,7 +224,7 @@ export function useFetchReportIngredients(
     },
     enabled: isEnabled && simulationIds.length > 0,
     staleTime: Infinity,
-    gcTime: 5 * 60 * 1000,
+    gcTime: GC_TIME_5_MIN,
   });
 
   const simulations = simulationResults.queries

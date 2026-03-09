@@ -59,5 +59,5 @@ export default function OptimisedImage({
 }: OptimisedImageProps) {
   const resolvedSrc = src ? optimisedSrc(src, width, quality) : undefined;
 
-  return <img src={resolvedSrc} width={width} loading="lazy" alt={alt} {...rest} />;
+  return <img {...rest} src={resolvedSrc} width={width} loading="lazy" alt={alt} />;
 }

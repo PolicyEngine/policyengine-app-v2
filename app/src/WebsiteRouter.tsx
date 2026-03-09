@@ -3,13 +3,14 @@
  * Contains homepage, blog, team, and embedded apps
  */
 import { lazy, Suspense } from 'react';
-import { createBrowserRouter, Navigate, Outlet, RouterProvider, useParams } from 'react-router-dom';
+import { createBrowserRouter, Navigate, RouterProvider, useParams } from 'react-router-dom';
 import AppLayout from './components/AppLayout';
 import StaticLayout from './components/StaticLayout';
 import HomePage from './pages/Home.page';
 import { CountryAppGuard } from './routing/guards/CountryAppGuard';
 import { CountryGuardSimple } from './routing/guards/CountryGuardSimple';
 import { RedirectToCountry } from './routing/RedirectToCountry';
+import SuspenseOutlet from './routing/SuspenseOutlet';
 
 // Lazy-loaded pages — only fetched when the route is visited
 const AdsDashboardPage = lazy(() => import('./pages/AdsDashboard.page'));
@@ -35,14 +36,6 @@ const YearInReviewPage = lazy(() => import('./pages/YearInReview.page'));
 function BlogRedirect() {
   const { postName } = useParams();
   return <Navigate to={`../research/${postName}`} replace />;
-}
-
-function SuspenseOutlet() {
-  return (
-    <Suspense>
-      <Outlet />
-    </Suspense>
-  );
 }
 
 const router = createBrowserRouter(

@@ -2,14 +2,15 @@
  * Router for the Calculator app (app.policyengine.org)
  * Contains only the interactive calculator functionality
  */
-import { lazy, Suspense } from 'react';
-import { createBrowserRouter, Navigate, Outlet, RouterProvider } from 'react-router-dom';
+import { lazy } from 'react';
+import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
 import StandardLayout from './components/StandardLayout';
 import NotFoundPage from './pages/NotFound.page';
 import { CountryGuard } from './routing/guards/CountryGuard';
 import { MetadataGuard } from './routing/guards/MetadataGuard';
 import { MetadataLazyLoader } from './routing/guards/MetadataLazyLoader';
 import { RedirectToCountry } from './routing/RedirectToCountry';
+import SuspenseOutlet from './routing/SuspenseOutlet';
 
 // Lazy-loaded page components — only fetched when the route is visited
 const PoliciesPage = lazy(() => import('./pages/Policies.page'));
@@ -27,14 +28,6 @@ const ReportPathwayWrapper = lazy(() => import('./pathways/report/ReportPathwayW
 const SimulationPathwayWrapper = lazy(
   () => import('./pathways/simulation/SimulationPathwayWrapper')
 );
-
-function SuspenseOutlet() {
-  return (
-    <Suspense>
-      <Outlet />
-    </Suspense>
-  );
-}
 
 /**
  * Layout wrapper that renders StandardLayout with Outlet for nested routes.
