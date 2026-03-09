@@ -796,15 +796,8 @@ export default function HouseholdGraph({ nodes, impact, countryId = 'us' }: Hous
       const currentImpact = impactRef.current;
       const impactAge = now - impactChangeTimeRef.current;
 
-      // Very slow, subtle orbit
       const cx = w * 0.5;
       const cy = h * 0.5;
-      const orbitAngle = (elapsed / 1800) * Math.PI * 2; // 30 minutes per revolution
-      const orbitTilt = 0.08; // very slight tilt
-      const cosA = Math.cos(orbitAngle);
-      const sinA = Math.sin(orbitAngle);
-      const cosTilt = Math.cos(orbitTilt);
-      const sinTilt = Math.sin(orbitTilt);
 
       for (let i = 0; i < nodes.length; i++) {
         const node = nodes[i];
@@ -825,14 +818,8 @@ export default function HouseholdGraph({ nodes, impact, countryId = 'us' }: Hous
         const driftT = (elapsed - node.driftDelay) / node.driftDuration;
         const [driftX, driftY] = getDrift(node.driftVariant, driftT);
 
-        // Subtle 3D orbit: rotate flat map slightly around center
-        const rawX = node.x * w + driftX - cx;
-        const rawY = node.y * h + driftY - cy;
-        // Rotate around Y, then slight tilt compresses Y
-        const rx = rawX * cosA - rawY * sinA;
-        const ry = (rawX * sinA + rawY * cosA) * cosTilt;
-        const px = rx + cx;
-        const py = ry + cy;
+        const px = node.x * w + driftX;
+        const py = node.y * h + driftY;
 
         // Determine target colour, opacity, and size
         let tr = COLOR_GRAY[0];
