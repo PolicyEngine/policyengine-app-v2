@@ -29,7 +29,8 @@ export const HTTP_STATUS = {
 } as const;
 
 export const ERROR_MESSAGES = {
-  CALCULATION_FAILED: (statusText: string) => `Society-wide calculation failed: ${statusText}`,
+  CALCULATION_FAILED: (status: number, statusText: string) =>
+    `Society-wide calculation failed (${status}): ${statusText}`,
   TIMEOUT:
     'Society-wide calculation timed out after 25 minutes, the max length for a Google Cloud society-wide simulation Workflow',
   NETWORK_ERROR: 'Network error',

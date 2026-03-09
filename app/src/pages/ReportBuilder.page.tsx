@@ -1212,7 +1212,7 @@ function SimulationBlock({
                     width: 20,
                     height: 20,
                     borderRadius: '50%',
-                    background: colors.success,
+                    background: colors.primary[500],
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -5517,12 +5517,12 @@ function ReportMetaPanel({
             {/* Ready message */}
             {isReportConfigured && (
               <Group gap="xs" justify="center" style={{ marginTop: spacing.xs }}>
-                <IconCircleCheck size={14} color={colors.success} />
+                <IconCircleCheck size={14} color={colors.primary[500]} />
                 <Text
                   style={{
                     fontFamily: typography.fontFamily.primary,
                     fontSize: FONT_SIZES.small,
-                    color: colors.success,
+                    color: colors.primary[500],
                   }}
                 >
                   Ready to run your analysis
