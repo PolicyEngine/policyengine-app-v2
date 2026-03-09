@@ -6,7 +6,7 @@
     "minimumCacheTTL": 86400
   },
   "installCommand": "bun install --frozen-lockfile",
-  "buildCommand": "bun run design-system:build && cd app && bun run generate-llms-txt && bun run generate-sitemap && bun run build:website",
+  "buildCommand": "bun run design-system:build && cd app && bun run generate-llms-txt && bun run generate-prerender && bun run generate-sitemap && bun run build:website",
   "outputDirectory": "app/dist",
   "redirects": [
     {
