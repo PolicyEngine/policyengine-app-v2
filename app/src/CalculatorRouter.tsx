@@ -2,33 +2,24 @@
  * Router for the Calculator app (app.policyengine.org)
  * Contains only the interactive calculator functionality
  */
-import { lazy } from 'react';
-import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
+import { createBrowserRouter, Navigate, Outlet, RouterProvider } from 'react-router-dom';
 import PathwayLayout from './components/PathwayLayout';
 import StandardLayout from './components/StandardLayout';
 import NotFoundPage from './pages/NotFound.page';
+import PoliciesPage from './pages/Policies.page';
+import PopulationsPage from './pages/Populations.page';
+import ReportOutputPage from './pages/ReportOutput.page';
+import ReportsPage from './pages/Reports.page';
+import SimulationsPage from './pages/Simulations.page';
+import PolicyPathwayWrapper from './pathways/policy/PolicyPathwayWrapper';
+import PopulationPathwayWrapper from './pathways/population/PopulationPathwayWrapper';
+import SimulationPathwayWrapper from './pathways/simulation/SimulationPathwayWrapper';
+import ReportBuilderPage from './pages/reportBuilder/ReportBuilderPage';
+import ModifyReportPage from './pages/reportBuilder/ModifyReportPage';
 import { CountryGuard } from './routing/guards/CountryGuard';
 import { MetadataGuard } from './routing/guards/MetadataGuard';
 import { MetadataLazyLoader } from './routing/guards/MetadataLazyLoader';
 import { RedirectToCountry } from './routing/RedirectToCountry';
-import SuspenseOutlet from './routing/SuspenseOutlet';
-
-// Lazy-loaded page components — only fetched when the route is visited
-const PoliciesPage = lazy(() => import('./pages/Policies.page'));
-const PopulationsPage = lazy(() => import('./pages/Populations.page'));
-const ReportOutputPage = lazy(() => import('./pages/ReportOutput.page'));
-const ReportsPage = lazy(() => import('./pages/Reports.page'));
-const SimulationsPage = lazy(() => import('./pages/Simulations.page'));
-const ReportBuilderPage = lazy(() => import('./pages/reportBuilder/ReportBuilderPage'));
-const ModifyReportPage = lazy(() => import('./pages/reportBuilder/ModifyReportPage'));
-// Lazy-loaded pathway wrappers — heavy components with their own sub-routes
-const PolicyPathwayWrapper = lazy(() => import('./pathways/policy/PolicyPathwayWrapper'));
-const PopulationPathwayWrapper = lazy(
-  () => import('./pathways/population/PopulationPathwayWrapper')
-);
-const SimulationPathwayWrapper = lazy(
-  () => import('./pathways/simulation/SimulationPathwayWrapper')
-);
 
 /**
  * Layout wrapper that renders StandardLayout with Outlet for nested routes.
@@ -38,7 +29,7 @@ const SimulationPathwayWrapper = lazy(
 function StandardLayoutOutlet() {
   return (
     <StandardLayout>
-      <SuspenseOutlet />
+      <Outlet />
     </StandardLayout>
   );
 }

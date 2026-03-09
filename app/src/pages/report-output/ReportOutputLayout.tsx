@@ -53,8 +53,8 @@ export default function ReportOutputLayout({
           style={{ marginBottom: `-${spacing.md}` }}
           onClick={() => navigate(`/${countryId}/reports`)}
         >
-          <IconChevronLeft size={14} color={colors.gray[500]} />
-          <Text className="tw:text-sm" style={{ color: colors.text.tertiary }}>
+          <IconChevronLeft size={14} color={colors.text.secondary} />
+          <Text className="tw:text-sm" style={{ color: colors.text.secondary }}>
             Back to reports
           </Text>
         </Group>
