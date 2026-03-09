@@ -6,10 +6,7 @@
     "description": "Estimate the household and national impact of Senator Booker's Keep Your Pay Act, which raises the standard deduction, expands the Child Tax Credit, and triples the childless EITC",
     "source": "https://keep-your-pay-act.vercel.app/",
     "tags": ["us", "featured", "policy", "interactives"],
-    "countryId": "us",
-    "displayWithResearch": true,
-    "date": "2026-03-09 12:00:00",
-    "authors": ["daphne-hansell", "david-trimmer"]
+    "countryId": "us"
   },
   {
     "type": "iframe",
