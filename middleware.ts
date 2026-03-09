@@ -62,6 +62,8 @@ export const LLM_USER_AGENTS = [
   "cohere-ai",
 ];
 
+const LLM_USER_AGENTS_LOWER = LLM_USER_AGENTS.map((a) => a.toLowerCase());
+
 function isSearchEngine(userAgent: string | null): boolean {
   if (!userAgent) {
     return false;
@@ -73,9 +75,8 @@ export function isLLMBot(userAgent: string | null): boolean {
   if (!userAgent) {
     return false;
   }
-  return LLM_USER_AGENTS.some((bot) =>
-    userAgent.toLowerCase().includes(bot.toLowerCase()),
-  );
+  const lower = userAgent.toLowerCase();
+  return LLM_USER_AGENTS_LOWER.some((bot) => lower.includes(bot));
 }
 
 const TRACKER_PREFIX = "/us/state-legislative-tracker";
@@ -437,8 +438,7 @@ export default async function middleware(request: Request) {
         return new Response(response.body, {
           status: response.status,
           headers: {
-            "Content-Type":
-              response.headers.get("Content-Type") || "text/html",
+            "Content-Type": response.headers.get("Content-Type") || "text/html",
             "Cache-Control": "public, max-age=3600",
           },
         });
