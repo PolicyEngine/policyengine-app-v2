@@ -58,6 +58,14 @@
       "destination": "https://working-americans-tax-cut-act-one.vercel.app/us/watca/:path*"
     },
     {
+      "source": "/us/kypa",
+      "destination": "https://keep-your-pay-act.vercel.app/us/kypa"
+    },
+    {
+      "source": "/us/kypa/:path*",
+      "destination": "https://keep-your-pay-act.vercel.app/us/kypa/:path*"
+    },
+    {
       "source": "/us/taxsim",
       "destination": "https://policyengine-taxsim-policy-engine.vercel.app/us/taxsim"
     },
