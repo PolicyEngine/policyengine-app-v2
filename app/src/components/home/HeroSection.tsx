@@ -88,7 +88,7 @@ export default function HeroSection() {
         overflow: 'hidden',
       }}
     >
-      <HouseholdGraph nodes={nodes} impact={impact} countryId={countryId} />
+      <HouseholdGraph nodes={nodes} impact={impact} />
 
       {/* Logo */}
       <motion.img

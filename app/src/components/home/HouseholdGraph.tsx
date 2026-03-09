@@ -700,10 +700,9 @@ interface AnimState {
 interface HouseholdGraphProps {
   nodes: Node[];
   impact: ImpactState | null;
-  countryId?: string;
 }
 
-export default function HouseholdGraph({ nodes, impact, countryId = 'us' }: HouseholdGraphProps) {
+export default function HouseholdGraph({ nodes, impact }: HouseholdGraphProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const mouseRef = useRef<{ x: number; y: number } | null>(null);
   const impactRef = useRef<ImpactState | null>(null);
@@ -796,9 +795,6 @@ export default function HouseholdGraph({ nodes, impact, countryId = 'us' }: Hous
       const currentImpact = impactRef.current;
       const impactAge = now - impactChangeTimeRef.current;
 
-      const cx = w * 0.5;
-      const cy = h * 0.5;
-
       for (let i = 0; i < nodes.length; i++) {
         const node = nodes[i];
         const state = animStates[i];
@@ -890,7 +886,7 @@ export default function HouseholdGraph({ nodes, impact, countryId = 'us' }: Hous
       cancelAnimationFrame(raf);
       observer.disconnect();
     };
-  }, [nodes, animStates, popStartTimes, countryId]);
+  }, [nodes, animStates, popStartTimes]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
