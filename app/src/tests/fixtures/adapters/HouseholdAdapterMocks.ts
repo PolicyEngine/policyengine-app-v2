@@ -33,7 +33,7 @@ export const mockEntityMetadata = {
 export const mockHouseholdMetadata: HouseholdMetadata = {
   id: '12345',
   household: {
-    tax_benefit_model_name: 'policyengine_us',
+    country_id: 'us',
     year: parseInt(CURRENT_YEAR, 10),
     people: [
       {
@@ -56,7 +56,7 @@ export const mockHouseholdMetadata: HouseholdMetadata = {
 export const mockHouseholdMetadataWithUnknownEntity: HouseholdMetadata = {
   id: '67890',
   household: {
-    tax_benefit_model_name: 'policyengine_uk',
+    country_id: 'uk',
     year: parseInt(CURRENT_YEAR, 10),
     people: [
       {
@@ -68,7 +68,7 @@ export const mockHouseholdMetadataWithUnknownEntity: HouseholdMetadata = {
 };
 
 export const mockHouseholdData: Household = {
-  tax_benefit_model_name: 'policyengine_us',
+  country_id: 'us',
   year: 2025,
   people: [
     {
@@ -85,7 +85,7 @@ export const mockHouseholdData: Household = {
 };
 
 export const mockHouseholdDataWithMultipleEntities: Household = {
-  tax_benefit_model_name: 'policyengine_us',
+  country_id: 'us',
   year: parseInt(CURRENT_YEAR, 10),
   people: [
     {
@@ -105,13 +105,13 @@ export const mockHouseholdDataWithMultipleEntities: Household = {
 };
 
 export const mockEmptyHouseholdData: Household = {
-  tax_benefit_model_name: 'policyengine_us',
+  country_id: 'us',
   year: parseInt(CURRENT_YEAR, 10),
   people: [],
 };
 
 export const mockHouseholdDataWithUnknownEntity: Household = {
-  tax_benefit_model_name: 'policyengine_us',
+  country_id: 'us',
   year: parseInt(CURRENT_YEAR, 10),
   people: [
     {

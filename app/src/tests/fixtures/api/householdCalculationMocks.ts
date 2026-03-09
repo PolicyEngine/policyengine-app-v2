@@ -95,7 +95,7 @@ export const mockErrorResponse = (status: number, errorText: string = 'Error'): 
 
 export const mockHouseholdResult: Household = {
   id: TEST_HOUSEHOLD_IDS.EXISTING,
-  tax_benefit_model_name: 'policyengine_us',
+  country_id: 'us',
   year: parseInt(CURRENT_YEAR, 10),
   people: [
     { age: 30, employment_income: 50000, capital_gains: 5000 },
@@ -108,7 +108,7 @@ export const mockHouseholdResult: Household = {
 
 export const mockHouseholdResultUK: Household = {
   id: TEST_HOUSEHOLD_IDS.EXISTING,
-  tax_benefit_model_name: 'policyengine_uk',
+  country_id: 'uk',
   year: parseInt(CURRENT_YEAR, 10),
   people: [
     { age: 35, employment_income: 40000 },
@@ -120,7 +120,7 @@ export const mockHouseholdResultUK: Household = {
 
 export const mockLargeHouseholdResult: Household = {
   id: TEST_HOUSEHOLD_IDS.LARGE_HOUSEHOLD,
-  tax_benefit_model_name: 'policyengine_us',
+  country_id: 'us',
   year: parseInt(CURRENT_YEAR, 10),
   people: [
     { age: 40, employment_income: 75000 },

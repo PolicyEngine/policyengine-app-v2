@@ -33,14 +33,14 @@ export function isSimulation(obj: BaseIngredient): obj is Simulation {
  * Type guard to check if an object is a Household
  */
 export function isHousehold(obj: BaseIngredient): obj is Household {
-  return 'tax_benefit_model_name' in obj && 'people' in obj;
+  return 'country_id' in obj && 'people' in obj;
 }
 
 /**
  * Type guard to check if an object is a Geography
  */
 export function isGeography(obj: BaseIngredient): obj is Geography {
-  return 'regionCode' in obj && 'countryId' in obj && !('tax_benefit_model_name' in obj);
+  return 'regionCode' in obj && 'countryId' in obj && !('country_id' in obj);
 }
 
 /**

@@ -48,7 +48,7 @@ export const ERROR_MESSAGES = {
  * Mock Household (app internal format - single dicts for entity groups)
  */
 export const mockUSHousehold: Household = {
-  tax_benefit_model_name: 'policyengine_us',
+  country_id: 'us',
   year: parseInt(CURRENT_YEAR, 10),
   people: [
     { age: 30, employment_income: 50000 },
@@ -59,7 +59,7 @@ export const mockUSHousehold: Household = {
 };
 
 export const mockUKHousehold: Household = {
-  tax_benefit_model_name: 'policyengine_uk',
+  country_id: 'uk',
   year: parseInt(CURRENT_YEAR, 10),
   people: [{ age: 35, employment_income: 30000 }],
   benunit: { is_married: false },
@@ -71,7 +71,7 @@ export const mockUKHousehold: Household = {
  */
 export const mockV2HouseholdResponse: HouseholdV2Response = {
   id: EXISTING_HOUSEHOLD_ID,
-  tax_benefit_model_name: 'policyengine_us',
+  country_id: 'us',
   year: parseInt(CURRENT_YEAR, 10),
   label: null,
   people: [
@@ -86,7 +86,7 @@ export const mockV2HouseholdResponse: HouseholdV2Response = {
 
 export const mockV2HouseholdResponseUK: HouseholdV2Response = {
   id: 'uk-household-uuid',
-  tax_benefit_model_name: 'policyengine_uk',
+  country_id: 'uk',
   year: parseInt(CURRENT_YEAR, 10),
   label: 'UK Test Household',
   people: [{ age: 35, employment_income: 30000 }],
@@ -98,7 +98,7 @@ export const mockV2HouseholdResponseUK: HouseholdV2Response = {
 
 export const mockV2CreatedHouseholdResponse: HouseholdV2Response = {
   id: NEW_HOUSEHOLD_ID,
-  tax_benefit_model_name: 'policyengine_us',
+  country_id: 'us',
   year: parseInt(CURRENT_YEAR, 10),
   label: null,
   people: [{ age: 25 }],
@@ -122,13 +122,13 @@ export const mockHouseholdMetadata: HouseholdMetadata = {
 // ============================================================================
 
 export const mockHouseholdCalculatePayload: HouseholdCalculatePayload = {
-  tax_benefit_model_name: 'policyengine_us',
+  country_id: 'us',
   year: parseInt(CURRENT_YEAR, 10),
   people: [{ age: 25 }],
 };
 
 export const mockHouseholdCalculatePayloadUK: HouseholdCalculatePayload = {
-  tax_benefit_model_name: 'policyengine_uk',
+  country_id: 'uk',
   year: parseInt(CURRENT_YEAR, 10),
   people: [{ age: 25 }],
 };
@@ -136,7 +136,7 @@ export const mockHouseholdCalculatePayloadUK: HouseholdCalculatePayload = {
 // Large household payload for testing complex data handling
 // Note: HouseholdCalculatePayload uses arrays for entity groups (calculation format)
 export const mockLargeHouseholdPayload: HouseholdCalculatePayload = {
-  tax_benefit_model_name: 'policyengine_us',
+  country_id: 'us',
   year: parseInt(CURRENT_YEAR, 10),
   people: [
     { age: 30, employment_income: 50000 },

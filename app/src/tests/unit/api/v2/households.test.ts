@@ -39,7 +39,7 @@ describe('v2/households', () => {
 
       // Then
       expect(result).toEqual({
-        tax_benefit_model_name: 'policyengine_us',
+        country_id: 'us',
         year: 2025,
         label: null,
         people: household.people,
@@ -66,7 +66,7 @@ describe('v2/households', () => {
     it('given UK household then includes benunit', () => {
       // Given
       const ukHousehold = createMockHousehold({
-        tax_benefit_model_name: 'policyengine_uk',
+        country_id: 'uk',
         benunit: { is_married: true },
         tax_unit: undefined,
       });
@@ -75,7 +75,7 @@ describe('v2/households', () => {
       const result = householdToV2Request(ukHousehold);
 
       // Then
-      expect(result.tax_benefit_model_name).toBe('policyengine_uk');
+      expect(result.country_id).toBe('uk');
       expect(result.benunit).toEqual({ is_married: true });
       expect(result.tax_unit).toBeNull();
     });
@@ -92,7 +92,7 @@ describe('v2/households', () => {
       // Then
       expect(result).toEqual({
         id: response.id,
-        tax_benefit_model_name: 'policyengine_us',
+        country_id: 'us',
         year: 2025,
         label: undefined, // null converted to undefined
         people: response.people,
@@ -226,11 +226,11 @@ describe('v2/households', () => {
       vi.mocked(global.fetch).mockResolvedValue(mockFetchSuccess([]));
 
       // When
-      await listHouseholdsV2({ tax_benefit_model_name: 'policyengine_us' });
+      await listHouseholdsV2({ country_id: 'us' });
 
       // Then
       expect(global.fetch).toHaveBeenCalledWith(
-        `${API_V2_BASE_URL}/households/?tax_benefit_model_name=policyengine_us`,
+        `${API_V2_BASE_URL}/households/?country_id=us`,
         expect.any(Object)
       );
     });

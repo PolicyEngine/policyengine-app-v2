@@ -6,8 +6,9 @@
  * For v1 API boundary conversion, see api/legacyConversion.ts
  */
 
+import type { CountryId } from '@/libs/countries';
 import { countryIds } from '@/libs/countries';
-import { Household, TaxBenefitModelName } from '@/types/ingredients/Household';
+import { Household } from '@/types/ingredients/Household';
 import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
 import { HouseholdCalculatePayload, householdToCalculatePayload } from '@/types/payloads';
 
@@ -54,24 +55,24 @@ export class HouseholdAdapter {
   }
 
   /**
-   * Get the country ID from a Household's tax_benefit_model_name
+   * Get the country ID from a Household
    */
   static getCountryId(household: Household): (typeof countryIds)[number] {
-    return modelNameToCountryId(household.tax_benefit_model_name);
+    return household.country_id;
   }
 
   /**
    * Check if household is for US
    */
   static isUS(household: Household): boolean {
-    return household.tax_benefit_model_name === 'policyengine_us';
+    return household.country_id === 'us';
   }
 
   /**
    * Check if household is for UK
    */
   static isUK(household: Household): boolean {
-    return household.tax_benefit_model_name === 'policyengine_uk';
+    return household.country_id === 'uk';
   }
 }
 
@@ -80,29 +81,17 @@ export class HouseholdAdapter {
 // ============================================================================
 
 /**
- * Convert country ID to tax_benefit_model_name
+ * @deprecated Use country_id directly — no conversion needed.
  */
-export function countryIdToModelName(countryId: (typeof countryIds)[number]): TaxBenefitModelName {
-  switch (countryId) {
-    case 'uk':
-      return 'policyengine_uk';
-    case 'us':
-    default:
-      return 'policyengine_us';
-  }
+export function countryIdToModelName(countryId: (typeof countryIds)[number]): CountryId {
+  return countryId;
 }
 
 /**
- * Convert tax_benefit_model_name to country ID
+ * @deprecated Use country_id directly — no conversion needed.
  */
-export function modelNameToCountryId(modelName: TaxBenefitModelName): (typeof countryIds)[number] {
-  switch (modelName) {
-    case 'policyengine_uk':
-      return 'uk';
-    case 'policyengine_us':
-    default:
-      return 'us';
-  }
+export function modelNameToCountryId(modelName: CountryId): (typeof countryIds)[number] {
+  return modelName;
 }
 
 /**

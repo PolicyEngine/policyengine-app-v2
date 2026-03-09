@@ -53,7 +53,7 @@ export const MOCK_SIMULATION_REFORM: Simulation = {
  */
 export const MOCK_HOUSEHOLD: Household = {
   id: 'hh-1',
-  tax_benefit_model_name: 'policyengine_us',
+  country_id: 'us',
   year: 2024,
   people: [{ age: 30, employment_income: 50000 }],
   label: 'Test Household',

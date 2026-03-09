@@ -7,7 +7,8 @@
  * For running calculations on a household, use householdCalculation.ts instead.
  */
 
-import { Household, TaxBenefitModelName } from '@/types/ingredients/Household';
+import type { CountryId } from '@/libs/countries';
+import { Household } from '@/types/ingredients/Household';
 import { API_V2_BASE_URL } from './taxBenefitModels';
 
 // ============================================================================
@@ -19,7 +20,7 @@ import { API_V2_BASE_URL } from './taxBenefitModels';
  */
 export interface HouseholdV2Response {
   id: string; // UUID
-  tax_benefit_model_name: TaxBenefitModelName;
+  country_id: CountryId;
   year: number;
   label: string | null;
   people: Record<string, any>[];
@@ -37,7 +38,7 @@ export interface HouseholdV2Response {
  * Request body for creating a household (HouseholdCreate schema)
  */
 export interface HouseholdV2CreateRequest {
-  tax_benefit_model_name: TaxBenefitModelName;
+  country_id: CountryId;
   year: number;
   label?: string | null;
   people: Record<string, any>[];
@@ -58,7 +59,7 @@ export interface HouseholdV2CreateRequest {
  */
 export function householdToV2Request(household: Household): HouseholdV2CreateRequest {
   return {
-    tax_benefit_model_name: household.tax_benefit_model_name,
+    country_id: household.country_id,
     year: household.year,
     label: household.label ?? null,
     people: household.people,
@@ -77,7 +78,7 @@ export function householdToV2Request(household: Household): HouseholdV2CreateReq
 export function v2ResponseToHousehold(response: HouseholdV2Response): Household {
   return {
     id: response.id,
-    tax_benefit_model_name: response.tax_benefit_model_name,
+    country_id: response.country_id,
     year: response.year,
     label: response.label ?? undefined,
     people: response.people,
@@ -148,14 +149,14 @@ export async function fetchHouseholdByIdV2(householdId: string): Promise<Househo
  * List households from v2 alpha API with optional filtering
  */
 export async function listHouseholdsV2(options?: {
-  tax_benefit_model_name?: TaxBenefitModelName;
+  country_id?: CountryId;
   limit?: number;
   offset?: number;
 }): Promise<Household[]> {
   const params = new URLSearchParams();
 
-  if (options?.tax_benefit_model_name) {
-    params.set('tax_benefit_model_name', options.tax_benefit_model_name);
+  if (options?.country_id) {
+    params.set('country_id', options.country_id);
   }
   if (options?.limit !== undefined) {
     params.set('limit', String(options.limit));

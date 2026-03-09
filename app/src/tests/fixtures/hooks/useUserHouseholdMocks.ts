@@ -20,7 +20,7 @@ export const TEST_GEOGRAPHY_LABEL = 'Test Geography Population';
 export const mockApiHouseholdMetadata1: HouseholdMetadata = {
   id: TEST_HOUSEHOLD_ID_1,
   household: {
-    tax_benefit_model_name: 'policyengine_us',
+    country_id: 'us',
     year: 2025,
     people: [
       {
@@ -57,7 +57,7 @@ export const mockHouseholdMetadata = {
 export const mockApiHouseholdMetadata2: HouseholdMetadata = {
   id: TEST_HOUSEHOLD_ID_2,
   household: {
-    tax_benefit_model_name: 'policyengine_us',
+    country_id: 'us',
     year: 2025,
     people: [
       {

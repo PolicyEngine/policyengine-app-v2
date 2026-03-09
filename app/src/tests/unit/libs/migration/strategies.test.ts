@@ -1,12 +1,22 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { fetchV1Household, v1ResponseToHousehold } from '@/api/legacyConversion';
+// Import mocked modules
+import { createPolicy, fetchV1Policy } from '@/api/policy';
+import { createHouseholdV2 } from '@/api/v2/households';
+import { fetchParametersByName } from '@/api/v2/parameterTree';
+import { fetchModelByCountry } from '@/api/v2/taxBenefitModels';
+import { createUserHouseholdAssociationV2 } from '@/api/v2/userHouseholdAssociations';
+import { createUserPolicyAssociationV2 } from '@/api/v2/userPolicyAssociations';
+import { createUserReportAssociationV2 } from '@/api/v2/userReportAssociations';
+import { createUserSimulationAssociationV2 } from '@/api/v2/userSimulationAssociations';
 import {
-  migratePolicy,
-  migrateHousehold,
   migrateGeography,
-  migrateUserPolicyAssociation,
+  migrateHousehold,
+  migratePolicy,
   migrateUserHouseholdAssociation,
-  migrateUserSimulationAssociation,
+  migrateUserPolicyAssociation,
   migrateUserReportAssociation,
+  migrateUserSimulationAssociation,
 } from '@/libs/migration/strategies';
 
 // Mock all API modules
@@ -47,17 +57,6 @@ vi.mock('@/api/v2/userSimulationAssociations', () => ({
 vi.mock('@/api/v2/userReportAssociations', () => ({
   createUserReportAssociationV2: vi.fn(),
 }));
-
-// Import mocked modules
-import { fetchV1Policy, createPolicy } from '@/api/policy';
-import { fetchV1Household, v1ResponseToHousehold } from '@/api/legacyConversion';
-import { createHouseholdV2 } from '@/api/v2/households';
-import { fetchModelByCountry } from '@/api/v2/taxBenefitModels';
-import { fetchParametersByName } from '@/api/v2/parameterTree';
-import { createUserPolicyAssociationV2 } from '@/api/v2/userPolicyAssociations';
-import { createUserHouseholdAssociationV2 } from '@/api/v2/userHouseholdAssociations';
-import { createUserSimulationAssociationV2 } from '@/api/v2/userSimulationAssociations';
-import { createUserReportAssociationV2 } from '@/api/v2/userReportAssociations';
 
 const TEST_USER_ID = 'user-abc-123';
 
@@ -101,7 +100,7 @@ describe('strategies', () => {
         },
       ]);
       vi.mocked(fetchModelByCountry).mockResolvedValue({
-        model: { id: 'model-uuid-1', name: 'policyengine-us', description: '', created_at: '' },
+        model: { id: 'model-uuid-1', name: 'policyengine_us', description: '', created_at: '' },
         latest_version: { id: 'version-1', model_id: 'model-uuid-1', version: '1.0.0' },
       });
       vi.mocked(createPolicy).mockResolvedValue({
@@ -159,7 +158,7 @@ describe('strategies', () => {
       });
       vi.mocked(fetchParametersByName).mockResolvedValue([]);
       vi.mocked(fetchModelByCountry).mockResolvedValue({
-        model: { id: 'model-uuid-1', name: 'policyengine-us', description: '', created_at: '' },
+        model: { id: 'model-uuid-1', name: 'policyengine_us', description: '', created_at: '' },
         latest_version: { id: 'version-1', model_id: 'model-uuid-1', version: '1.0.0' },
       });
       vi.mocked(createPolicy).mockResolvedValue({
@@ -175,16 +174,14 @@ describe('strategies', () => {
       const result = await migratePolicy('us', '42');
 
       expect(result.success).toBe(true);
-      expect(createPolicy).toHaveBeenCalledWith(
-        expect.objectContaining({ parameter_values: [] })
-      );
+      expect(createPolicy).toHaveBeenCalledWith(expect.objectContaining({ parameter_values: [] }));
     });
   });
 
   describe('migrateHousehold', () => {
     test('given valid v1 household then creates v2 household', async () => {
       const v1Data = { people: { you: { age: { '2025': 30 } } } };
-      const v2Household = { people: [{ age: 30 }], tax_benefit_model_name: 'policyengine-us', year: 2025 };
+      const v2Household = { people: [{ age: 30 }], country_id: 'us', year: 2025 };
 
       vi.mocked(fetchV1Household).mockResolvedValue(v1Data);
       vi.mocked(v1ResponseToHousehold).mockReturnValue(v2Household as any);
@@ -273,11 +270,7 @@ describe('strategies', () => {
         type: 'household',
       } as any);
 
-      const result = await migrateUserHouseholdAssociation(
-        'v2-hh-uuid',
-        TEST_USER_ID,
-        'us'
-      );
+      const result = await migrateUserHouseholdAssociation('v2-hh-uuid', TEST_USER_ID, 'us');
 
       expect(result.success).toBe(true);
       expect(result.v2Id).toBe('v2-uh-uuid');
@@ -293,11 +286,7 @@ describe('strategies', () => {
         countryId: 'us',
       } as any);
 
-      const result = await migrateUserSimulationAssociation(
-        'v2-sim-uuid',
-        TEST_USER_ID,
-        'us'
-      );
+      const result = await migrateUserSimulationAssociation('v2-sim-uuid', TEST_USER_ID, 'us');
 
       expect(result.success).toBe(true);
       expect(result.v2Id).toBe('v2-us-uuid');

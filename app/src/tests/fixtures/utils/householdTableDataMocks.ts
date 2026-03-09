@@ -7,7 +7,7 @@ import { Household } from '@/types/ingredients/Household';
 
 export const MOCK_HOUSEHOLD_SIMPLE: Household = {
   id: 'household-1',
-  tax_benefit_model_name: 'policyengine_us',
+  country_id: 'us',
   year: 2024,
   people: [
     {
@@ -28,7 +28,7 @@ export const MOCK_HOUSEHOLD_SIMPLE: Household = {
 
 export const MOCK_HOUSEHOLD_COMPLEX: Household = {
   id: 'household-2',
-  tax_benefit_model_name: 'policyengine_us',
+  country_id: 'us',
   year: 2024,
   people: [
     {
@@ -59,7 +59,7 @@ export const MOCK_HOUSEHOLD_COMPLEX: Household = {
 
 export const MOCK_HOUSEHOLD_EMPTY: Household = {
   id: 'household-empty',
-  tax_benefit_model_name: 'policyengine_us',
+  country_id: 'us',
   year: 2024,
   people: [],
 };
@@ -67,7 +67,7 @@ export const MOCK_HOUSEHOLD_EMPTY: Household = {
 // Clone of simple household for equality testing
 export const MOCK_HOUSEHOLD_SIMPLE_CLONE: Household = {
   id: 'household-1-clone',
-  tax_benefit_model_name: 'policyengine_us',
+  country_id: 'us',
   year: 2024,
   people: [
     {

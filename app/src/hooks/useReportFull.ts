@@ -117,7 +117,7 @@ function mapFullResponse(
     households.push({
       id: h.id,
       year: h.year,
-      tax_benefit_model_name: h.tax_benefit_model_name as Household['tax_benefit_model_name'],
+      country_id: h.country_id as Household['country_id'],
       people: h.people as Household['people'],
       tax_unit: h.tax_unit ?? undefined,
       family: h.family ?? undefined,

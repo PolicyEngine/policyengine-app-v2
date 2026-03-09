@@ -90,7 +90,7 @@ describe('HouseholdValidation', () => {
       vi.mocked(HouseholdQueries.getPersonCount).mockReturnValue(2);
 
       // When
-      const result = HouseholdValidation.validateForModel(mockValidUSHousehold, 'policyengine_us');
+      const result = HouseholdValidation.validateForModel(mockValidUSHousehold, 'us');
 
       // Then
       verifyNoErrors(result);
@@ -104,7 +104,7 @@ describe('HouseholdValidation', () => {
       vi.mocked(HouseholdQueries.getPersonCount).mockReturnValue(2);
 
       // When
-      const result = HouseholdValidation.validateForModel(mockValidUKHousehold, 'policyengine_uk');
+      const result = HouseholdValidation.validateForModel(mockValidUKHousehold, 'uk');
 
       // Then
       verifyNoErrors(result);
@@ -116,13 +116,13 @@ describe('HouseholdValidation', () => {
       vi.mocked(HouseholdQueries.isUKHousehold).mockReturnValue(true);
 
       // When
-      const result = HouseholdValidation.validateForModel(mockValidUKHousehold, 'policyengine_us');
+      const result = HouseholdValidation.validateForModel(mockValidUKHousehold, 'us');
 
       // Then
       verifyHasErrors(result, 1);
-      verifyValidationError(result, ERROR_CODES.MODEL_MISMATCH, 'tax_benefit_model_name');
-      expect(result.errors[0].message).toContain('policyengine_uk');
-      expect(result.errors[0].message).toContain('policyengine_us');
+      verifyValidationError(result, ERROR_CODES.MODEL_MISMATCH, 'country_id');
+      expect(result.errors[0].message).toContain('uk');
+      expect(result.errors[0].message).toContain('us');
     });
 
     test('given household with missing age when validating then returns warning', () => {
@@ -132,10 +132,7 @@ describe('HouseholdValidation', () => {
       vi.mocked(HouseholdQueries.getPersonCount).mockReturnValue(2);
 
       // When
-      const result = HouseholdValidation.validateForModel(
-        mockHouseholdMissingAge,
-        'policyengine_us'
-      );
+      const result = HouseholdValidation.validateForModel(mockHouseholdMissingAge, 'us');
 
       // Then
       verifyNoErrors(result);
@@ -179,7 +176,7 @@ describe('HouseholdValidation', () => {
       const errors: any[] = [];
       const warnings: any[] = [];
       const household = {
-        tax_benefit_model_name: 'policyengine_us',
+        country_id: 'us',
         year: parseInt(CURRENT_YEAR, 10),
         people: 'not an array',
       } as any;
@@ -198,7 +195,7 @@ describe('HouseholdValidation', () => {
       const errors: any[] = [];
       const warnings: any[] = [];
       const household: Household = {
-        tax_benefit_model_name: 'policyengine_us',
+        country_id: 'us',
         year: parseInt(CURRENT_YEAR, 10),
         people: [
           {
@@ -222,7 +219,7 @@ describe('HouseholdValidation', () => {
       const errors: any[] = [];
       const warnings: any[] = [];
       const household = {
-        tax_benefit_model_name: 'policyengine_us',
+        country_id: 'us',
         people: [{ age: 30 }],
       } as any;
 
@@ -240,7 +237,7 @@ describe('HouseholdValidation', () => {
       const errors: any[] = [];
       const warnings: any[] = [];
       const household: Household = {
-        tax_benefit_model_name: 'policyengine_us',
+        country_id: 'us',
         year: 1999,
         people: [{ age: 30 }],
       };
@@ -273,7 +270,7 @@ describe('HouseholdValidation', () => {
       // Given
       const warnings: any[] = [];
       const household: Household = {
-        tax_benefit_model_name: 'policyengine_us',
+        country_id: 'us',
         year: parseInt(CURRENT_YEAR, 10),
         people: [{ age: 30 }],
         household: {},
@@ -293,7 +290,7 @@ describe('HouseholdValidation', () => {
       // Given
       const warnings: any[] = [];
       const household: Household = {
-        tax_benefit_model_name: 'policyengine_us',
+        country_id: 'us',
         year: parseInt(CURRENT_YEAR, 10),
         people: [{ age: 30 }],
         tax_unit: {},
@@ -313,7 +310,7 @@ describe('HouseholdValidation', () => {
       // Given
       const warnings: any[] = [];
       const household: Household = {
-        tax_benefit_model_name: 'policyengine_us',
+        country_id: 'us',
         year: parseInt(CURRENT_YEAR, 10),
         people: [],
       };
@@ -508,7 +505,7 @@ describe('HouseholdValidation', () => {
     test('given household without year when checking ready then returns error', () => {
       // Given
       const household = {
-        tax_benefit_model_name: 'policyengine_us',
+        country_id: 'us',
         people: [{ age: 30 }],
       } as any;
       vi.mocked(HouseholdQueries.getPersonCount).mockReturnValue(1);
@@ -536,7 +533,7 @@ describe('HouseholdValidation', () => {
 
       // Then
       expect(result.isValid).toBe(false);
-      verifyValidationError(result, ERROR_CODES.NO_MODEL, 'tax_benefit_model_name');
+      verifyValidationError(result, ERROR_CODES.NO_MODEL, 'country_id');
     });
 
     test('given household with warnings when checking ready then includes warnings', () => {
@@ -557,7 +554,7 @@ describe('HouseholdValidation', () => {
     test('given household with model mismatch when checking ready then returns error', () => {
       // Given
       const household: Household = {
-        tax_benefit_model_name: 'policyengine_uk',
+        country_id: 'uk',
         year: parseInt(CURRENT_YEAR, 10),
         people: [{ age: 30 }],
       };

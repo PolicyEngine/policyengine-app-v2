@@ -67,7 +67,7 @@ export const mockPolicy2: Policy = {
 // Mock Household entity
 export const mockHousehold1: Household = {
   id: TEST_HOUSEHOLD_ID,
-  tax_benefit_model_name: 'policyengine_us',
+  country_id: 'us',
   year: 2025,
   people: [],
 };
@@ -168,7 +168,7 @@ export const mockV2PolicyResponse2: V2PolicyResponse = {
 export const mockHouseholdMetadata: HouseholdMetadata = {
   id: TEST_HOUSEHOLD_ID,
   household: {
-    tax_benefit_model_name: 'policyengine_us',
+    country_id: 'us',
     year: 2025,
     people: [],
   },

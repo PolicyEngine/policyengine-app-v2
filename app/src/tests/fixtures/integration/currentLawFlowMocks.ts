@@ -77,7 +77,7 @@ export const mockPopulation: Population = {
   isCreated: true,
   household: {
     id: 'household-123',
-    tax_benefit_model_name: 'policyengine_us',
+    country_id: 'us',
     year: 2025,
     people: [],
   },

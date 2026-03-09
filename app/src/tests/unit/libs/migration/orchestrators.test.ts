@@ -1,8 +1,17 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { fetchReportById } from '@/api/report';
+import { fetchSimulationById } from '@/api/simulation';
+import { createEconomyAnalysis } from '@/api/v2/economyAnalysis';
+import { createHouseholdAnalysis } from '@/api/v2/householdAnalysis';
+import { detectV1Reports } from '@/libs/migration/detect';
+import { migrateAllV1Reports, orchestrateReportMigration } from '@/libs/migration/orchestrators';
 import {
-  orchestrateReportMigration,
-  migrateAllV1Reports,
-} from '@/libs/migration/orchestrators';
+  migrateGeography,
+  migrateHousehold,
+  migratePolicy,
+  migrateUserReportAssociation,
+  migrateUserSimulationAssociation,
+} from '@/libs/migration/strategies';
 import type { V1ReportInfo } from '@/libs/migration/types';
 
 // Mock all dependencies
@@ -22,6 +31,7 @@ vi.mock('@/api/v2/economyAnalysis', () => ({
   createEconomyAnalysis: vi.fn(),
 }));
 
+// getModelName no longer used by orchestrators (they pass country_id directly)
 vi.mock('@/api/v2/taxBenefitModels', () => ({
   getModelName: vi.fn().mockReturnValue('policyengine-us'),
 }));
@@ -37,19 +47,6 @@ vi.mock('@/libs/migration/strategies', () => ({
 vi.mock('@/libs/migration/detect', () => ({
   detectV1Reports: vi.fn(),
 }));
-
-import { fetchReportById } from '@/api/report';
-import { fetchSimulationById } from '@/api/simulation';
-import { createHouseholdAnalysis } from '@/api/v2/householdAnalysis';
-import { createEconomyAnalysis } from '@/api/v2/economyAnalysis';
-import {
-  migratePolicy,
-  migrateHousehold,
-  migrateGeography,
-  migrateUserReportAssociation,
-  migrateUserSimulationAssociation,
-} from '@/libs/migration/strategies';
-import { detectV1Reports } from '@/libs/migration/detect';
 
 const TEST_USER_ID = 'user-abc-123';
 
@@ -224,7 +221,7 @@ describe('orchestrators', () => {
 
       expect(result.success).toBe(true);
       expect(createEconomyAnalysis).toHaveBeenCalledWith({
-        tax_benefit_model_name: 'policyengine-us',
+        country_id: 'us',
         region: 'enhanced_cps',
         policy_id: 'v2-policy-uuid',
       });
@@ -331,10 +328,7 @@ describe('orchestrators', () => {
     });
 
     test('given v1 reports then migrates each and calls progress callback', async () => {
-      vi.mocked(detectV1Reports).mockReturnValue([
-        HOUSEHOLD_REPORT_INFO,
-        ECONOMY_REPORT_INFO,
-      ]);
+      vi.mocked(detectV1Reports).mockReturnValue([HOUSEHOLD_REPORT_INFO, ECONOMY_REPORT_INFO]);
 
       // Mock the full flow for both reports to succeed
       vi.mocked(fetchReportById).mockResolvedValue({
@@ -399,10 +393,7 @@ describe('orchestrators', () => {
     });
 
     test('given mixed success and failure then categorizes correctly', async () => {
-      vi.mocked(detectV1Reports).mockReturnValue([
-        HOUSEHOLD_REPORT_INFO,
-        ECONOMY_REPORT_INFO,
-      ]);
+      vi.mocked(detectV1Reports).mockReturnValue([HOUSEHOLD_REPORT_INFO, ECONOMY_REPORT_INFO]);
 
       // First report succeeds
       vi.mocked(fetchReportById)

@@ -12,7 +12,7 @@ import { TEST_COUNTRIES } from '@/tests/fixtures/constants';
 
 vi.mock('@/api/v2/taxBenefitModels', () => ({
   API_V2_BASE_URL: 'https://test-api.example.com',
-  getModelName: (countryId: string) => `policyengine-${countryId}`,
+  getModelName: (countryId: string) => `policyengine_${countryId}`,
 }));
 
 describe('regions', () => {
@@ -35,9 +35,7 @@ describe('regions', () => {
       const result = await fetchRegions(TEST_COUNTRIES.US);
 
       // Then
-      expect(fetch).toHaveBeenCalledWith(
-        'https://test-api.example.com/regions/?tax_benefit_model_name=policyengine-us'
-      );
+      expect(fetch).toHaveBeenCalledWith('https://test-api.example.com/regions/?country_id=us');
       expect(result).toHaveLength(3);
     });
 
@@ -52,7 +50,7 @@ describe('regions', () => {
 
       // Then
       const calledUrl = vi.mocked(fetch).mock.calls[0][0] as string;
-      expect(calledUrl).toContain('tax_benefit_model_name=policyengine-us');
+      expect(calledUrl).toContain('country_id=us');
       expect(calledUrl).toContain('region_type=state');
     });
 
@@ -94,7 +92,7 @@ describe('regions', () => {
 
       // Then
       expect(fetch).toHaveBeenCalledWith(
-        `https://test-api.example.com/regions/by-code/${encodeURIComponent(TEST_REGION_CODES.CALIFORNIA)}?tax_benefit_model_name=policyengine-us`
+        `https://test-api.example.com/regions/by-code/${encodeURIComponent(TEST_REGION_CODES.CALIFORNIA)}?country_id=us`
       );
       expect(result.code).toBe(TEST_REGION_CODES.CALIFORNIA);
       expect(result.label).toBe('California');

@@ -76,7 +76,7 @@ export const mockPersonNoAge: HouseholdPerson = {
 
 // Valid US household (entity groups are single dicts)
 export const mockValidUSHousehold: Household = {
-  tax_benefit_model_name: 'policyengine_us',
+  country_id: 'us',
   year: parseInt(VALIDATION_YEARS.DEFAULT, 10),
   people: [
     {
@@ -92,7 +92,7 @@ export const mockValidUSHousehold: Household = {
 
 // Valid UK household
 export const mockValidUKHousehold: Household = {
-  tax_benefit_model_name: 'policyengine_uk',
+  country_id: 'uk',
   year: parseInt(VALIDATION_YEARS.DEFAULT, 10),
   people: [
     {
@@ -108,7 +108,7 @@ export const mockValidUKHousehold: Household = {
 
 // Household with country mismatch
 export const mockHouseholdCountryMismatch: Household = {
-  tax_benefit_model_name: 'policyengine_us',
+  country_id: 'us',
   year: parseInt(VALIDATION_YEARS.DEFAULT, 10),
   people: [
     {
@@ -120,7 +120,7 @@ export const mockHouseholdCountryMismatch: Household = {
 
 // Household with missing age
 export const mockHouseholdMissingAge: Household = {
-  tax_benefit_model_name: 'policyengine_us',
+  country_id: 'us',
   year: parseInt(VALIDATION_YEARS.DEFAULT, 10),
   people: [
     {
@@ -136,7 +136,7 @@ export const mockHouseholdMissingAge: Household = {
 
 // Empty household
 export const mockEmptyHousehold: Household = {
-  tax_benefit_model_name: 'policyengine_us',
+  country_id: 'us',
   year: parseInt(VALIDATION_YEARS.DEFAULT, 10),
   people: [],
 };

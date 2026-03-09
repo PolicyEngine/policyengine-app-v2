@@ -71,7 +71,7 @@ export const mockFailedHouseholdResponse = (
 export const mockEconomySimulationRequest = (
   overrides?: Partial<EconomySimulationRequest>
 ): EconomySimulationRequest => ({
-  tax_benefit_model_name: 'policyengine-us',
+  country_id: 'us',
   region: 'state/ca',
   policy_id: TEST_POLICY_IDS.POLICY_789,
   ...overrides,

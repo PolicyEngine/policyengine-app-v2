@@ -91,7 +91,7 @@ export const MOCK_V1_US_EMPTY_ENTITIES = {
 
 // US household: single person with employment income and state
 export const MOCK_V2_US_SINGLE_PERSON: Household = {
-  tax_benefit_model_name: 'policyengine_us',
+  country_id: 'us',
   year: 2024,
   people: [{ age: 30, employment_income: 50000 }],
   tax_unit: {},
@@ -103,7 +103,7 @@ export const MOCK_V2_US_SINGLE_PERSON: Household = {
 
 // US household: couple with child
 export const MOCK_V2_US_COUPLE_WITH_CHILD: Household = {
-  tax_benefit_model_name: 'policyengine_us',
+  country_id: 'us',
   year: 2024,
   people: [{ age: 35 }, { age: 33 }, { age: 8, is_tax_unit_dependent: true }],
   tax_unit: {},
@@ -115,7 +115,7 @@ export const MOCK_V2_US_COUPLE_WITH_CHILD: Household = {
 
 // UK household: single person with benunit and region
 export const MOCK_V2_UK_SINGLE_PERSON: Household = {
-  tax_benefit_model_name: 'policyengine_uk',
+  country_id: 'uk',
   year: 2024,
   people: [{ age: 30 }],
   benunit: { is_married: false },
@@ -124,7 +124,7 @@ export const MOCK_V2_UK_SINGLE_PERSON: Household = {
 
 // US household: parent with three dependents
 export const MOCK_V2_US_MULTIPLE_DEPENDENTS: Household = {
-  tax_benefit_model_name: 'policyengine_us',
+  country_id: 'us',
   year: 2024,
   people: [
     { age: 40 },
@@ -141,7 +141,7 @@ export const MOCK_V2_US_MULTIPLE_DEPENDENTS: Household = {
 
 // US household: single person with label (for creation payload test)
 export const MOCK_V2_US_WITH_LABEL: Household = {
-  tax_benefit_model_name: 'policyengine_us',
+  country_id: 'us',
   year: 2024,
   people: [{ age: 30 }],
   label: 'My Household',
@@ -149,7 +149,7 @@ export const MOCK_V2_US_WITH_LABEL: Household = {
 
 // US household: round-trip test data (couple with dependent and state)
 export const MOCK_V2_US_ROUND_TRIP: Household = {
-  tax_benefit_model_name: 'policyengine_us',
+  country_id: 'us',
   year: 2024,
   people: [
     { age: 35, employment_income: 50000 },

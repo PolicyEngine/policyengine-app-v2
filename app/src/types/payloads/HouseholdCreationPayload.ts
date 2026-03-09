@@ -8,7 +8,8 @@
  * Entity groups are arrays of flat dicts (supporting multiple entities).
  */
 
-import { Household, HouseholdPerson, TaxBenefitModelName } from '@/types/ingredients/Household';
+import type { CountryId } from '@/libs/countries';
+import { Household, HouseholdPerson } from '@/types/ingredients/Household';
 
 /**
  * Payload for creating a household calculation job
@@ -17,8 +18,8 @@ import { Household, HouseholdPerson, TaxBenefitModelName } from '@/types/ingredi
  * Entity groups are arrays of dicts matching API v2 Alpha HouseholdCalculateRequest.
  */
 export interface HouseholdCalculatePayload {
-  /** Which country's tax-benefit model to use */
-  tax_benefit_model_name: TaxBenefitModelName;
+  /** Which country to use ('us' or 'uk') */
+  country_id: CountryId;
 
   /** Simulation year */
   year: number;
@@ -74,7 +75,7 @@ export function householdToCalculatePayload(
   dynamicId?: string
 ): HouseholdCalculatePayload {
   const payload: HouseholdCalculatePayload = {
-    tax_benefit_model_name: household.tax_benefit_model_name,
+    country_id: household.country_id,
     year: household.year,
     people: household.people,
   };

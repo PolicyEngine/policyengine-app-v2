@@ -6,9 +6,14 @@
  *
  * NOT integrated into the migration pipeline — called separately
  * after testing confirms migration works.
+ *
+ * CURRENTLY DISABLED: All write operations are no-ops.
+ * This allows repeated manual testing without losing v1 data.
  */
 
-import type { MigrationRunResult, CleanupSummary } from './types';
+import type { CleanupSummary, MigrationRunResult } from './types';
+
+const LOG = '[migration:cleanup]';
 
 const LS_KEYS = {
   reports: 'user-report-associations',
@@ -22,11 +27,13 @@ const LS_KEYS = {
  *
  * Takes the results from migrateAllV1Reports() and removes ONLY
  * records whose v1 user-association ID appears in the succeeded list.
+ *
+ * CURRENTLY: DRY RUN ONLY — logs what would be removed but does not touch localStorage.
  */
 export function cleanupMigratedRecords(results: MigrationRunResult): CleanupSummary {
-  const succeededIds = new Set(
-    results.succeeded.map((r) => r.v1UserAssociationId)
-  );
+  console.warn(`${LOG} CLEANUP IS DISABLED — dry run only, localStorage will NOT be modified`);
+
+  const succeededIds = new Set(results.succeeded.map((r) => r.v1UserAssociationId));
 
   const summary: CleanupSummary = {
     removedReports: 0,
@@ -35,14 +42,13 @@ export function cleanupMigratedRecords(results: MigrationRunResult): CleanupSumm
     removedHouseholds: 0,
   };
 
-  summary.removedReports = removeFromLocalStorage(LS_KEYS.reports, succeededIds);
+  summary.removedReports = countWouldRemove(LS_KEYS.reports, succeededIds);
 
   // For simulations/policies/households, we also check dependency IDs
   const dependencyIds = new Set<string>();
   for (const result of results.succeeded) {
     if (result.v2Ids.dependencyIds) {
       for (const [key, value] of Object.entries(result.v2Ids.dependencyIds)) {
-        // Dependency IDs are the v1 IDs that were migrated
         if (value && key !== 'outputType') {
           dependencyIds.add(value);
         }
@@ -52,18 +58,19 @@ export function cleanupMigratedRecords(results: MigrationRunResult): CleanupSumm
 
   const allIdsToRemove = new Set([...succeededIds, ...dependencyIds]);
 
-  summary.removedSimulations = removeFromLocalStorage(LS_KEYS.simulations, allIdsToRemove);
-  summary.removedPolicies = removeFromLocalStorage(LS_KEYS.policies, allIdsToRemove);
-  summary.removedHouseholds = removeFromLocalStorage(LS_KEYS.households, allIdsToRemove);
+  summary.removedSimulations = countWouldRemove(LS_KEYS.simulations, allIdsToRemove);
+  summary.removedPolicies = countWouldRemove(LS_KEYS.policies, allIdsToRemove);
+  summary.removedHouseholds = countWouldRemove(LS_KEYS.households, allIdsToRemove);
 
+  console.info(`${LOG} Dry run summary (would remove):`, summary);
   return summary;
 }
 
 /**
- * Remove records from a localStorage array by ID.
- * Returns the count of removed records.
+ * Count how many records WOULD be removed from a localStorage array.
+ * Does NOT actually modify localStorage.
  */
-function removeFromLocalStorage(key: string, idsToRemove: Set<string>): number {
+function countWouldRemove(key: string, idsToRemove: Set<string>): number {
   try {
     const stored = localStorage.getItem(key);
     if (!stored) {
@@ -75,13 +82,17 @@ function removeFromLocalStorage(key: string, idsToRemove: Set<string>): number {
       return 0;
     }
 
-    const before = parsed.length;
-    const filtered = parsed.filter(
-      (record: { id?: string }) => !record.id || !idsToRemove.has(record.id)
+    const wouldRemove = parsed.filter(
+      (record: { id?: string }) => record.id && idsToRemove.has(record.id)
     );
 
-    localStorage.setItem(key, JSON.stringify(filtered));
-    return before - filtered.length;
+    if (wouldRemove.length > 0) {
+      console.info(
+        `${LOG}   "${key}": would remove ${wouldRemove.length}/${parsed.length} record(s)`
+      );
+    }
+
+    return wouldRemove.length;
   } catch {
     return 0;
   }

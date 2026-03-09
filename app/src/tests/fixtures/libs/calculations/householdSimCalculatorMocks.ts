@@ -35,14 +35,14 @@ export const TEST_COUNTRIES = {
 
 export const mockHouseholdInput = (): Household => ({
   id: TEST_HOUSEHOLD_IDS.HOUSEHOLD_1,
-  tax_benefit_model_name: 'policyengine_us',
+  country_id: 'us',
   year: parseInt(CURRENT_YEAR, 10),
   people: [{ age: 30, employment_income: 50000 }],
 });
 
 export const mockHouseholdResult = (): Household => ({
   id: TEST_HOUSEHOLD_IDS.HOUSEHOLD_1,
-  tax_benefit_model_name: 'policyengine_us',
+  country_id: 'us',
   year: parseInt(CURRENT_YEAR, 10),
   people: [{ age: 30, employment_income: 50000, net_income: 42000 }],
   household: { household_net_income: 42000 },

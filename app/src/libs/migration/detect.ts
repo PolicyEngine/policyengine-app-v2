@@ -10,17 +10,25 @@ import type { CountryId } from '@/libs/countries';
 import type { UserReport } from '@/types/ingredients/UserReport';
 import type { V1ReportInfo } from './types';
 
+const LOG = '[migration:detect]';
 const LS_REPORT_KEY = 'user-report-associations';
 
 function parseLocalStorageReports(): UserReport[] {
   try {
     const stored = localStorage.getItem(LS_REPORT_KEY);
     if (!stored) {
+      console.info(`${LOG} No data in localStorage key "${LS_REPORT_KEY}"`);
       return [];
     }
     const parsed = JSON.parse(stored);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
+    if (!Array.isArray(parsed)) {
+      console.warn(`${LOG} localStorage key "${LS_REPORT_KEY}" is not an array`);
+      return [];
+    }
+    console.info(`${LOG} Found ${parsed.length} total report(s) in localStorage`);
+    return parsed;
+  } catch (err) {
+    console.error(`${LOG} Failed to parse localStorage "${LS_REPORT_KEY}":`, err);
     return [];
   }
 }
@@ -34,16 +42,30 @@ function isV1Report(report: UserReport): boolean {
  * Returns info about each v1 report found. Makes zero API calls.
  */
 export function detectV1Reports(userId: string): V1ReportInfo[] {
+  console.info(`${LOG} Scanning for v1 reports (userId=${userId})`);
   const allReports = parseLocalStorageReports();
 
-  return allReports
-    .filter((r) => r.userId === userId && isV1Report(r))
-    .map((r) => ({
-      userReportId: r.id,
-      reportId: r.reportId,
-      label: r.label,
-      countryId: r.countryId as CountryId,
-    }));
+  const userReports = allReports.filter((r) => r.userId === userId);
+  const v1Reports = userReports.filter(isV1Report);
+
+  console.info(`${LOG} ${userReports.length} report(s) for this user, ${v1Reports.length} are v1`);
+
+  if (v1Reports.length > 0) {
+    for (const r of v1Reports) {
+      console.info(
+        `${LOG}   v1 report: id=${r.id}, reportId=${r.reportId}, label="${r.label ?? '(none)'}", ` +
+          `country=${r.countryId}, outputType=${r.outputType ?? 'MISSING'}, ` +
+          `simulationIds=${r.simulationIds?.length ?? 'MISSING'}`
+      );
+    }
+  }
+
+  return v1Reports.map((r) => ({
+    userReportId: r.id,
+    reportId: r.reportId,
+    label: r.label,
+    countryId: r.countryId as CountryId,
+  }));
 }
 
 /**

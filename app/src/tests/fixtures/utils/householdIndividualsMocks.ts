@@ -32,21 +32,21 @@ export const MOCK_MANY_DEPENDENTS_PEOPLE: HouseholdPerson[] = [
 
 // US household: two adults + one dependent
 export const MOCK_HOUSEHOLD_WITH_NAMES: Household = {
-  tax_benefit_model_name: 'policyengine_us',
+  country_id: 'us',
   year: 2024,
   people: [{ age: 35 }, { age: 33 }, { age: 10, is_tax_unit_dependent: true }],
 };
 
 // Empty household
 export const MOCK_EMPTY_HOUSEHOLD: Household = {
-  tax_benefit_model_name: 'policyengine_us',
+  country_id: 'us',
   year: 2024,
   people: [],
 };
 
 // US household with person and entity data (for extractGroupEntities)
 export const MOCK_HOUSEHOLD_WITH_ENTITIES: Household = {
-  tax_benefit_model_name: 'policyengine_us',
+  country_id: 'us',
   year: 2024,
   people: [{ age: 30 }],
   tax_unit: {},
@@ -55,7 +55,7 @@ export const MOCK_HOUSEHOLD_WITH_ENTITIES: Household = {
 
 // US household with multiple entity variables
 export const MOCK_HOUSEHOLD_WITH_ENTITY_VARS: Household = {
-  tax_benefit_model_name: 'policyengine_us',
+  country_id: 'us',
   year: 2024,
   people: [{ age: 30 }],
   household: { state_name: 'CA', rent: 24000 },
@@ -63,7 +63,7 @@ export const MOCK_HOUSEHOLD_WITH_ENTITY_VARS: Household = {
 
 // US household with multiple empty entities (for skip test)
 export const MOCK_HOUSEHOLD_EMPTY_ENTITIES: Household = {
-  tax_benefit_model_name: 'policyengine_us',
+  country_id: 'us',
   year: 2024,
   people: [{ age: 30 }],
   tax_unit: {},

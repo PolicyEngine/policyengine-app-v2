@@ -38,7 +38,7 @@ export interface AnalysisRegionInfo {
 
 /** POST /analysis/economic-impact request body */
 export interface EconomicImpactRequest {
-  tax_benefit_model_name: string;
+  country_id: string;
   region?: string | null;
   dataset_id?: string | null;
   policy_id?: string | null;
@@ -71,7 +71,7 @@ export interface EconomicImpactResponse {
 
 /** POST /analysis/economy-custom request body */
 export interface EconomyCustomRequest {
-  tax_benefit_model_name: string;
+  country_id: string;
   region?: string | null;
   dataset_id?: string | null;
   policy_id?: string | null;

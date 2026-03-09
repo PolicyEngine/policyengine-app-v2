@@ -147,7 +147,7 @@ export function calculationResultToHousehold(
   originalHousehold: Household
 ): Household {
   return {
-    tax_benefit_model_name: originalHousehold.tax_benefit_model_name,
+    country_id: originalHousehold.country_id,
     year: originalHousehold.year,
     people: result.person,
     // Extract first element from arrays (single household case)

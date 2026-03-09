@@ -116,7 +116,7 @@ async function createEconomyReportV2(
   v2SimulationIds: string[];
 }> {
   const request: EconomicImpactRequest = {
-    tax_benefit_model_name: `policyengine_${countryId}`,
+    country_id: countryId,
     region,
     policy_id: reformPolicyId,
     year,

@@ -6,8 +6,9 @@
  * The API handles entity-to-person assignment server-side.
  */
 
+import type { CountryId } from '@/libs/countries';
 import { RootState } from '@/store';
-import { Household, TaxBenefitModelName } from '@/types/ingredients/Household';
+import { Household } from '@/types/ingredients/Household';
 import { VariableMetadata } from '@/types/metadata';
 import * as HouseholdQueries from './HouseholdQueries';
 
@@ -40,16 +41,16 @@ export const HouseholdValidation = {
   /**
    * Validate a household for a specific model
    */
-  validateForModel(household: Household, expectedModelName: TaxBenefitModelName): ValidationResult {
+  validateForModel(household: Household, expectedCountryId: CountryId): ValidationResult {
     const errors: ValidationError[] = [];
     const warnings: ValidationWarning[] = [];
 
-    // Check if model matches
-    if (household.tax_benefit_model_name !== expectedModelName) {
+    // Check if country matches
+    if (household.country_id !== expectedCountryId) {
       errors.push({
         code: 'MODEL_MISMATCH',
-        message: `Household model ${household.tax_benefit_model_name} does not match expected ${expectedModelName}`,
-        field: 'tax_benefit_model_name',
+        message: `Household country ${household.country_id} does not match expected ${expectedCountryId}`,
+        field: 'country_id',
       });
     }
 
@@ -245,21 +246,18 @@ export const HouseholdValidation = {
       });
     }
 
-    // Must have a model name
-    if (!household.tax_benefit_model_name) {
+    // Must have a country_id
+    if (!household.country_id) {
       errors.push({
         code: 'NO_MODEL',
-        message: 'Household must have a tax_benefit_model_name',
-        field: 'tax_benefit_model_name',
+        message: 'Household must have a country_id',
+        field: 'country_id',
       });
     }
 
-    // Validate structure for the model
-    if (household.tax_benefit_model_name) {
-      const structureValidation = this.validateForModel(
-        household,
-        household.tax_benefit_model_name
-      );
+    // Validate structure for the country
+    if (household.country_id) {
+      const structureValidation = this.validateForModel(household, household.country_id);
       errors.push(...structureValidation.errors);
       warnings.push(...structureValidation.warnings);
     }
@@ -293,7 +291,7 @@ export const HouseholdValidation = {
  */
 export function hasMinimumStructure(household: Household): boolean {
   return (
-    !!household.tax_benefit_model_name &&
+    !!household.country_id &&
     !!household.year &&
     Array.isArray(household.people) &&
     household.people.length > 0

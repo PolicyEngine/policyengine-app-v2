@@ -23,7 +23,7 @@ describe('legacyConversion', () => {
     test('given US v1 response with one person then converts to v2 format', () => {
       const result = v1ResponseToHousehold(MOCK_V1_US_SINGLE_PERSON, 'us', 2024);
 
-      expect(result.tax_benefit_model_name).toBe('policyengine_us');
+      expect(result.country_id).toBe('us');
       expect(result.year).toBe(2024);
       expect(result.people).toHaveLength(1);
       expect(result.people[0].age).toBe(30);
@@ -38,7 +38,7 @@ describe('legacyConversion', () => {
     test('given UK v1 response then converts to v2 format with benunit', () => {
       const result = v1ResponseToHousehold(MOCK_V1_UK_SINGLE_PERSON, 'uk', 2024);
 
-      expect(result.tax_benefit_model_name).toBe('policyengine_uk');
+      expect(result.country_id).toBe('uk');
       expect(result.people).toHaveLength(1);
       expect(result.people[0].age).toBe(40);
       expect(result.benunit).toEqual({ is_married: false });

@@ -12,7 +12,12 @@
  * batch processing. The conversion to arrays happens in HouseholdAdapter.toCalculatePayload().
  */
 
-export type TaxBenefitModelName = 'policyengine_uk' | 'policyengine_us';
+import type { CountryId } from '@/libs/countries';
+
+/**
+ * @deprecated Use CountryId from '@/libs/countries' instead.
+ */
+export type TaxBenefitModelName = CountryId;
 
 /**
  * Main Household interface matching API v2 Alpha HouseholdCreate (storage format)
@@ -21,8 +26,8 @@ export interface Household {
   /** Job ID from API v2 (only present after calculation) */
   id?: string;
 
-  /** Which country's tax-benefit model to use */
-  tax_benefit_model_name: TaxBenefitModelName;
+  /** Which country to use ('us' or 'uk') */
+  country_id: CountryId;
 
   /** Simulation year - applies to all variable values */
   year: number;
