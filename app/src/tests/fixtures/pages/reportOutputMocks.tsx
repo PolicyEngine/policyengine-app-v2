@@ -134,7 +134,9 @@ export const createMockSocietyWideOutput = (overrides?: any) => {
     data_version: '2024.1.0',
   };
 
-  if (!overrides) return defaults;
+  if (!overrides) {
+    return defaults;
+  }
 
   // Deep merge poverty to preserve child/adult/senior when only all is overridden
   const mergedPoverty = overrides.poverty
