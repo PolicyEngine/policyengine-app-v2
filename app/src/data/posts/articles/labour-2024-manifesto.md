@@ -68,15 +68,15 @@ PolicyEngine estimates that in 2028 the Labour Party manifesto would:
 
 We estimate that gains would be progressive along income lines, with the lowest decile seeing a 2.4% increase in net income and the highest decile seeing a 1% loss.
 
-![Impact by income decile](/images/posts/labour-2024-manifesto/decile.png)
+![Impact by income decile](/images/posts/labour-2024-manifesto/decile.webp)
 
 We also estimate that people in lower and middle income deciles are highly likely to benefit. Only the top decile sees a majority of people come out behind, and more than 80% in each of the bottom eight deciles come out ahead or the same.
 
-![Winners and losers by income decile](/images/posts/labour-2024-manifesto/winners.png)
+![Winners and losers by income decile](/images/posts/labour-2024-manifesto/winners.webp)
 
 On poverty, we estimate modest reductions in absolute poverty across all age groups, particularly aimed at seniors. We also project that the Gini index of income inequality would by 0.6%.
 
-![Poverty impact by age group](/images/posts/labour-2024-manifesto/poverty.png)
+![Poverty impact by age group](/images/posts/labour-2024-manifesto/poverty.webp)
 
 ## Conclusion
 

@@ -50,7 +50,7 @@ value. For a single parent with 5 children, this value will not be
 reduced to zero before more than £60,000 in earnings.
 
 ![A graph with numbers and lines Description automatically
-generated](/images/posts/repealing_the_two_child_limit/hh_impact.png)
+generated](/images/posts/repealing_the_two_child_limit/hh_impact.webp)
 
 _Figure 1: the impact of removing the UC child limit on net income for a
 single parent by number of children and employment income. Note: this
@@ -128,7 +128,7 @@ estimate this would leave £470m deficit (distributional impacts shown in
 Figure 2).
 
 ![A graph of a graph showing the amount of income decile Description
-automatically generated](/images/posts/repealing_the_two_child_limit/decile_chart.png)
+automatically generated](/images/posts/repealing_the_two_child_limit/decile_chart.webp)
 
 _Figure 2: [the distributional impacts of funding the two-child limit
 repeal with a 1p higher rate
@@ -207,7 +207,7 @@ the other 2,000+ statistics we target, ensuring that the model weights
 do not over-calibrate towards this new set of statistical targets.
 
 ![A graph of a graph Description automatically
-generated](/images/posts/repealing_the_two_child_limit/calibration.png)
+generated](/images/posts/repealing_the_two_child_limit/calibration.webp)
 
 _Figure 3: An example of PolicyEngine's calibration process, in which
 survey weights are adjusted to shift the FRS projection of UC-claiming,

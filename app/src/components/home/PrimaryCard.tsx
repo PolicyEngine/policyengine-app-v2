@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import OptimisedImage from '@/components/ui/OptimisedImage';
 import { cn } from '@/lib/utils';
 import type { BlogPost } from '@/types/blog';
 import { formatPostDate, getPostImageUrl } from './blogPreviewUtils';
@@ -30,9 +31,10 @@ export default function PrimaryCard({ post, countryId, flex }: PrimaryCardProps)
       >
         {imageUrl && (
           <div className="tw:min-h-[200px] tw:flex-1 tw:overflow-hidden tw:bg-gray-100">
-            <img
+            <OptimisedImage
               src={imageUrl}
               alt={post.title}
+              width={640}
               className="tw:w-full tw:h-full tw:object-cover tw:block tw:transition-transform tw:duration-500 tw:group-hover:scale-[1.03]"
               onError={(e) => {
                 e.currentTarget.style.display = 'none';

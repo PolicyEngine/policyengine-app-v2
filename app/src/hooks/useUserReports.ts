@@ -7,6 +7,7 @@ import { fetchPolicyById } from '@/api/policy';
 import { fetchReportById } from '@/api/report';
 import { fetchSimulationById } from '@/api/simulation';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { GC_TIME_5_MIN } from '@/libs/queryConfig';
 import { RootState } from '@/store';
 import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
@@ -140,10 +141,7 @@ export const useUserReports = (userId: string) => {
     // that specific simulation will be marked stale and refetch on next mount
     // All other simulations remain fresh and use cached data (fast navigation)
     staleTime: Infinity,
-    // gcTime: 0 - Delete from cache immediately when no components are using this data
-    // Prevents memory bloat from accumulating unused simulation data
-    // When navigating away from Reports page, unused simulations are garbage collected
-    gcTime: 0,
+    gcTime: GC_TIME_5_MIN,
   });
 
   // Step 6: Extract policy and household IDs from fetched simulations
@@ -397,10 +395,7 @@ export const useUserReportById = (userReportId: string, options?: { enabled?: bo
     // that specific simulation will be marked stale and refetch on next mount
     // All other simulations remain fresh and use cached data (fast navigation)
     staleTime: Infinity,
-    // gcTime: 0 - Delete from cache immediately when no components are using this data
-    // Prevents memory bloat from accumulating unused simulation data
-    // When navigating away from report output, unused simulations are garbage collected
-    gcTime: 0,
+    gcTime: GC_TIME_5_MIN,
   });
 
   const simulations = simulationResults.queries

@@ -1,6 +1,7 @@
 import { IconArrowRight } from '@tabler/icons-react';
 import { Link } from 'react-router-dom';
 import { Text } from '@/components/ui';
+import OptimisedImage from '@/components/ui/OptimisedImage';
 import { locationLabels, topicLabels } from '@/data/posts/postTransformers';
 import { colors, typography } from '@/designTokens';
 import type { ResearchItem } from '@/types/blog';
@@ -37,10 +38,10 @@ export function BlogPostCard({ item, countryId }: BlogPostCardProps) {
         {/* Image */}
         <div className="tw:relative tw:h-[260px] tw:overflow-hidden tw:bg-gray-100">
           {item.image && (
-            <img
+            <OptimisedImage
               src={item.image.startsWith('http') ? item.image : `/assets/posts/${item.image}`}
               alt={item.title}
-              loading="lazy"
+              width={640}
               className="tw:w-full tw:h-full tw:object-cover tw:transition-transform tw:duration-500 tw:ease-out tw:group-hover:scale-105"
               onError={(e) => {
                 e.currentTarget.style.display = 'none';

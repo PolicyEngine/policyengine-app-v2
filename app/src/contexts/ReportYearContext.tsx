@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useContext } from 'react';
+import { createContext, ReactNode, useContext, useMemo } from 'react';
 
 interface ReportYearContextValue {
   year: string | null;
@@ -12,7 +12,8 @@ interface ReportYearProviderProps {
 }
 
 export function ReportYearProvider({ year, children }: ReportYearProviderProps) {
-  return <ReportYearContext.Provider value={{ year }}>{children}</ReportYearContext.Provider>;
+  const value = useMemo(() => ({ year }), [year]);
+  return <ReportYearContext.Provider value={value}>{children}</ReportYearContext.Provider>;
 }
 
 export function useReportYearContext(): string | null {

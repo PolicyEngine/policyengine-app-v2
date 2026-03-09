@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { Text } from '@/components/ui';
+import OptimisedImage from '@/components/ui/OptimisedImage';
 import { CountryId, getOrgsForCountry, Organization } from '@/data/organizations';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
@@ -41,9 +42,11 @@ function LogoItem({ org }: { org: Organization }) {
         e.currentTarget.style.opacity = '0.7';
       }}
     >
-      <img
+      <OptimisedImage
         src={org.logo}
         alt={org.name}
+        width={LOGO_WIDTH}
+        height={70}
         style={{
           maxWidth: `${LOGO_WIDTH}px`,
           maxHeight: '70px',

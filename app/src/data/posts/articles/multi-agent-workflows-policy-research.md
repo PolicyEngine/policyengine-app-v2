@@ -6,11 +6,11 @@ Using Claude Code, we configured three [specialised agents](https://docs.claude.
 
 We stored each agent as a markdown file in [`.claude/agents/`](https://docs.claude.com/en/docs/claude-code/agents#creating-custom-agents), defining their specific roles and tools. The data fetching agent got access to GitHub APIs and PolicyEngine documentation. The script writer could execute Python and access our policyengine-uk package. The report generator worked with markdown formatting and [Plotly](https://plotly.com/) visualisations.
 
-![](/images/posts/multi-agent-workflows-policy-research/claude-code-interface.png)
+![](/images/posts/multi-agent-workflows-policy-research/claude-code-interface.webp)
 
 Claude Code automatically routes tasks to the appropriate agent based on the request. When we asked it to analyse a carbon tax scenario, it handled the coordination without explicit instructions about which agent should do what.
 
-![](/images/posts/multi-agent-workflows-policy-research/create-agent-dialog.png)
+![](/images/posts/multi-agent-workflows-policy-research/create-agent-dialog.webp)
 
 ## What worked
 
@@ -20,7 +20,7 @@ The system saved the most time on repetitive tasks. Once we configured the agent
 
 The report generator consistently matched PolicyEngine's house style at least as well as our human writers typically do on first attempt. It maintained active voice, avoided subjective adjectives, and led with quantitative findings.
 
-![](/images/posts/multi-agent-workflows-policy-research/policyengine-agents-list.png)
+![](/images/posts/multi-agent-workflows-policy-research/policyengine-agents-list.webp)
 
 ## What didn't work
 
@@ -30,7 +30,7 @@ We found prompt precision mattered more than expected. An instruction to "analys
 
 We hit an unexpected problem with code review. Our first approach used the script-writing agent to review its own code. This caught syntax errors but missed logical problems. We had to create a separate reviewer agent with different prompting to get meaningful code critique.
 
-![](/images/posts/multi-agent-workflows-policy-research/agents-in-progress.png)
+![](/images/posts/multi-agent-workflows-policy-research/agents-in-progress.webp)
 
 ## What we learned
 

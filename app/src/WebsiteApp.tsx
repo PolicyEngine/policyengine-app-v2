@@ -6,8 +6,8 @@ import './app.css';
 
 import { QueryNormalizerProvider } from '@normy/react-query';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { Provider } from 'react-redux';
+import DevTools from '@/components/DevTools';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { AppProvider } from './contexts/AppContext';
 import { store } from './store';
@@ -22,7 +22,6 @@ const queryClient = new QueryClient({
   },
 });
 
-// Initialize cache monitor
 cacheMonitor.init(queryClient);
 
 export default function WebsiteApp() {
@@ -32,14 +31,14 @@ export default function WebsiteApp() {
         <QueryNormalizerProvider
           queryClient={queryClient}
           normalizerConfig={{
-            devLogging: true,
+            devLogging: import.meta.env.DEV,
           }}
         >
           <QueryClientProvider client={queryClient}>
             <TooltipProvider>
               <WebsiteRouter />
             </TooltipProvider>
-            <ReactQueryDevtools initialIsOpen={false} />
+            <DevTools />
           </QueryClientProvider>
         </QueryNormalizerProvider>
       </Provider>

@@ -11,7 +11,7 @@ const supporters: Supporter[] = [
     id: 'nuffield',
     name: 'Nuffield Foundation',
     websiteUrl: 'https://www.nuffieldfoundation.org/',
-    logoUrl: '/assets/supporters/nuffield.png',
+    logoUrl: '/assets/supporters/nuffield.webp',
     description:
       'an independent charitable trust with a mission to advance educational opportunity and social well-being.',
   },
@@ -43,7 +43,7 @@ const supporters: Supporter[] = [
     id: 'huff',
     name: 'Gerald Huff Fund for Humanity',
     websiteUrl: 'https://www.hufffund.org/',
-    logoUrl: '/assets/supporters/huff.png',
+    logoUrl: '/assets/supporters/huff.webp',
     description:
       'a non-profit organization that was created in 2019 to promulgate the message of Gerald Huff, ardent proponent of Universal Basic Income as a transitional solution to the existential threat of technological unemployment.',
   },
@@ -66,7 +66,7 @@ const supporters: Supporter[] = [
     id: 'crfb',
     name: 'Committee for a Responsible Federal Budget',
     websiteUrl: 'https://www.crfb.org/',
-    logoUrl: '/assets/supporters/crfb.png',
+    logoUrl: '/assets/supporters/crfb.webp',
     description:
       'a nonpartisan, non-profit organization committed to educating the public on issues with significant fiscal policy impact.',
   },
@@ -80,14 +80,14 @@ const supporters: Supporter[] = [
   {
     id: 'dylan',
     name: 'Dylan Hirsch-Shell',
-    logoUrl: '/assets/supporters/dylan.jpg',
+    logoUrl: '/assets/supporters/dylan.webp',
     description: 'a scientist, engineer, and community advocate.',
   },
   {
     id: 'nsf',
     name: 'National Science Foundation',
     websiteUrl: 'https://www.nsf.gov/',
-    logoUrl: '/assets/supporters/nsf.png',
+    logoUrl: '/assets/supporters/nsf.webp',
     description:
       'an independent federal agency supporting science and engineering in all 50 states and U.S. territories through research and education.',
   },
@@ -95,7 +95,7 @@ const supporters: Supporter[] = [
     id: 'pci',
     name: "Pritzker Children's Initiative",
     websiteUrl: 'https://www.pritzkerchildrensinitiative.org/',
-    logoUrl: '/assets/supporters/pci.png',
+    logoUrl: '/assets/supporters/pci.webp',
     description:
       'a program of the J.B. and M.K. Pritzker Family Foundation focused on ensuring every child arrives at kindergarten ready to succeed, with particular emphasis on the prenatal to age three period.',
   },

@@ -6,8 +6,8 @@ import './app.css';
 
 import { QueryNormalizerProvider } from '@normy/react-query';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { Provider } from 'react-redux';
+import DevTools from '@/components/DevTools';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { CalculatorRouter } from './CalculatorRouter';
 import { AppProvider } from './contexts/AppContext';
@@ -39,7 +39,7 @@ export default function CalculatorApp() {
             <TooltipProvider>
               <CalcOrchestratorProvider>
                 <CalculatorRouter />
-                <ReactQueryDevtools initialIsOpen={false} />
+                <DevTools />
               </CalcOrchestratorProvider>
             </TooltipProvider>
           </QueryClientProvider>
