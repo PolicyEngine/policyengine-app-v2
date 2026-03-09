@@ -7,7 +7,16 @@
 
 import React, { useLayoutEffect, useState } from 'react';
 import { IconCheck, IconFileDescription, IconPencil } from '@tabler/icons-react';
-import { ActionIcon, Box, Select, Text, TextInput } from '@mantine/core';
+import {
+  Button,
+  Input,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Text,
+} from '@/components/ui';
 import { CURRENT_YEAR } from '@/constants';
 import { colors, spacing, typography } from '@/designTokens';
 import { FONT_SIZES } from '../constants';
@@ -17,13 +26,15 @@ const SEGMENT_HEIGHT = 38;
 
 const segmentBase: React.CSSProperties = {
   height: SEGMENT_HEIGHT,
-  borderRadius: spacing.radius.lg,
+  borderRadius: spacing.radius.feature,
   background: colors.white,
   border: `1px solid ${colors.primary[200]}`,
   boxShadow: `0 2px 8px ${colors.shadow.light}`,
   display: 'flex',
   alignItems: 'center',
 };
+
+const YEAR_OPTIONS = ['2023', '2024', '2025', '2026'];
 
 interface ReportMetaPanelProps {
   reportState: ReportBuilderState;
@@ -53,13 +64,13 @@ export function ReportMetaPanel({ reportState, setReportState, isReadOnly }: Rep
   }, [labelInput, isEditingLabel]);
 
   return (
-    <Box style={{ display: 'contents' }}>
+    <div style={{ display: 'contents' }}>
       {/* Icon segment */}
-      <Box
+      <div
         style={{
           width: SEGMENT_HEIGHT,
           height: SEGMENT_HEIGHT,
-          borderRadius: spacing.radius.lg,
+          borderRadius: spacing.radius.feature,
           background: `linear-gradient(135deg, ${colors.primary[50]} 0%, ${colors.primary[100]} 100%)`,
           border: `1px solid ${colors.primary[200]}`,
           display: 'flex',
@@ -69,10 +80,10 @@ export function ReportMetaPanel({ reportState, setReportState, isReadOnly }: Rep
         }}
       >
         <IconFileDescription size={20} color={colors.primary[600]} />
-      </Box>
+      </div>
 
       {/* Name segment */}
-      <Box
+      <div
         style={{
           ...segmentBase,
           flex: 1,
@@ -82,8 +93,17 @@ export function ReportMetaPanel({ reportState, setReportState, isReadOnly }: Rep
           cursor: isReadOnly ? 'default' : isEditingLabel ? 'text' : 'pointer',
           position: 'relative',
         }}
+        role="button"
+        tabIndex={0}
         onClick={() => {
           if (!isReadOnly && !isEditingLabel) {
+            setLabelInput(reportState.label || '');
+            setIsEditingLabel(true);
+          }
+        }}
+        onKeyDown={(e) => {
+          if (!isReadOnly && !isEditingLabel && (e.key === 'Enter' || e.key === ' ')) {
+            e.preventDefault();
             setLabelInput(reportState.label || '');
             setIsEditingLabel(true);
           }
@@ -115,41 +135,37 @@ export function ReportMetaPanel({ reportState, setReportState, isReadOnly }: Rep
                 fontSize: FONT_SIZES.small,
               }}
             />
-            <TextInput
+            <Input
               value={labelInput}
               onChange={(e) => setLabelInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleLabelSubmit()}
               onBlur={handleLabelSubmit}
               placeholder={defaultReportLabel}
-              size="xs"
               autoFocus
-              style={{ flex: 1, minWidth: 0, width: inputWidth ? inputWidth + 8 : 'auto' }}
-              styles={{
-                input: {
-                  fontFamily: typography.fontFamily.primary,
-                  fontWeight: 600,
-                  fontSize: FONT_SIZES.small,
-                  border: 'none',
-                  background: 'transparent',
-                  padding: 0,
-                  minHeight: 'auto',
-                },
+              className="tw:border-none tw:bg-transparent tw:p-0 tw:h-auto tw:shadow-none tw:focus-visible:ring-0"
+              style={{
+                flex: 1,
+                minWidth: 0,
+                width: inputWidth ? inputWidth + 8 : 'auto',
+                fontFamily: typography.fontFamily.primary,
+                fontWeight: 600,
+                fontSize: FONT_SIZES.small,
               }}
               onClick={(e: React.MouseEvent) => e.stopPropagation()}
             />
-            <ActionIcon
-              size="sm"
-              variant="subtle"
-              color="teal"
+            <Button
+              variant="ghost"
+              size="icon-sm"
               onClick={(e: React.MouseEvent) => {
                 e.stopPropagation();
                 handleLabelSubmit();
               }}
               aria-label="Confirm report name"
+              className="tw:text-teal-600"
               style={{ flexShrink: 0 }}
             >
               <IconCheck size={14} />
-            </ActionIcon>
+            </Button>
           </>
         ) : (
           <>
@@ -175,10 +191,10 @@ export function ReportMetaPanel({ reportState, setReportState, isReadOnly }: Rep
             )}
           </>
         )}
-      </Box>
+      </div>
 
       {/* Year segment */}
-      <Box
+      <div
         style={{
           ...segmentBase,
           padding: `0 ${spacing.md}`,
@@ -201,36 +217,35 @@ export function ReportMetaPanel({ reportState, setReportState, isReadOnly }: Rep
           Year
         </Text>
         <Select
-          aria-label="Report year"
           value={reportState.year}
-          onChange={(value) => setReportState((prev) => ({ ...prev, year: value || CURRENT_YEAR }))}
-          data={['2023', '2024', '2025', '2026']}
-          size="sm"
-          variant="unstyled"
-          withCheckIcon={false}
+          onValueChange={(value) =>
+            setReportState((prev) => ({ ...prev, year: value || CURRENT_YEAR }))
+          }
           disabled={isReadOnly}
-          rightSection={isReadOnly ? <span /> : undefined}
-          comboboxProps={{ width: 120, position: 'bottom-end' }}
-          styles={{
-            input: {
+        >
+          <SelectTrigger
+            aria-label="Report year"
+            className="tw:border-none tw:bg-transparent tw:shadow-none tw:focus-visible:ring-0 tw:h-auto tw:p-0 tw:min-h-0"
+            style={{
               fontFamily: typography.fontFamily.primary,
               fontSize: FONT_SIZES.small,
               fontWeight: 500,
               color: colors.gray[700],
               cursor: isReadOnly ? 'default' : 'pointer',
-              paddingLeft: 0,
-              paddingRight: isReadOnly ? 0 : spacing.xl,
-              minHeight: 'auto',
-              height: 'auto',
-              WebkitTextFillColor: colors.gray[700],
-              background: 'transparent',
-            },
-            root: {
               width: isReadOnly ? 'auto' : 72,
-            },
-          }}
-        />
-      </Box>
-    </Box>
+            }}
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent align="end">
+            {YEAR_OPTIONS.map((year) => (
+              <SelectItem key={year} value={year}>
+                {year}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    </div>
   );
 }

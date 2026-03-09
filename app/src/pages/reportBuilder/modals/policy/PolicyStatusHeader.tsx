@@ -2,7 +2,7 @@
  * PolicyStatusHeader - Glassmorphic status bar for policy creation mode
  */
 import { IconScale } from '@tabler/icons-react';
-import { Box, Group, Text } from '@mantine/core';
+import { Group, Text } from '@/components/ui';
 import { colors, spacing } from '@/designTokens';
 import { EditableLabel } from '../../components/EditableLabel';
 import { FONT_SIZES, INGREDIENT_COLORS } from '../../constants';
@@ -25,7 +25,7 @@ export function PolicyStatusHeader({
       background: 'rgba(255, 255, 255, 0.95)',
       backdropFilter: 'blur(20px) saturate(180%)',
       WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-      borderRadius: spacing.radius.lg,
+      borderRadius: spacing.radius.feature,
       border: `1px solid ${modificationCount > 0 ? colorConfig.border : colors.border.light}`,
       boxShadow:
         modificationCount > 0
@@ -39,14 +39,14 @@ export function PolicyStatusHeader({
   };
 
   return (
-    <Box style={dockStyles.statusHeader}>
+    <div style={dockStyles.statusHeader}>
       <Group justify="space-between" align="center" wrap="nowrap">
-        <Group gap={spacing.md} align="center" wrap="nowrap" style={{ minWidth: 0 }}>
-          <Box
+        <Group gap="md" align="center" wrap="nowrap" style={{ minWidth: 0 }}>
+          <div
             style={{
               width: 32,
               height: 32,
-              borderRadius: spacing.radius.md,
+              borderRadius: spacing.radius.container,
               background: `linear-gradient(135deg, ${colorConfig.bg} 0%, ${colors.white} 100%)`,
               border: `1px solid ${colorConfig.border}`,
               display: 'flex',
@@ -56,7 +56,7 @@ export function PolicyStatusHeader({
             }}
           >
             <IconScale size={18} color={colorConfig.icon} />
-          </Box>
+          </div>
           <EditableLabel
             value={policyLabel}
             onChange={setPolicyLabel}
@@ -64,11 +64,11 @@ export function PolicyStatusHeader({
             emptyStateText="Click to name your policy..."
           />
         </Group>
-        <Group gap={spacing.md} align="center" wrap="nowrap" style={{ flexShrink: 0 }}>
-          <Group gap={spacing.xs} style={{ flexShrink: 0 }}>
+        <Group gap="md" align="center" wrap="nowrap" style={{ flexShrink: 0 }}>
+          <Group gap="xs" style={{ flexShrink: 0 }}>
             {modificationCount > 0 ? (
               <>
-                <Box
+                <div
                   style={{
                     width: 8,
                     height: 8,
@@ -88,6 +88,6 @@ export function PolicyStatusHeader({
           </Group>
         </Group>
       </Group>
-    </Box>
+    </div>
   );
 }

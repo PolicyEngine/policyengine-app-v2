@@ -3,7 +3,7 @@
  */
 
 import React from 'react';
-import { Box, Group, Stack, Text, UnstyledButton } from '@mantine/core';
+import { Group, Stack, Text } from '@/components/ui';
 import { colors, spacing } from '@/designTokens';
 import { FONT_SIZES } from '../../constants';
 import { ChangesCardProps } from './types';
@@ -19,11 +19,11 @@ export function ChangesCard({
   }
 
   return (
-    <Box
+    <div
       style={{
         background: colors.white,
         border: `1px solid ${colors.border.light}`,
-        borderRadius: spacing.radius.lg,
+        borderRadius: spacing.radius.feature,
         padding: spacing.md,
       }}
     >
@@ -31,22 +31,23 @@ export function ChangesCard({
         <Text size="sm" fw={600} style={{ color: colors.gray[700] }}>
           Changes for this parameter
         </Text>
-        <Box
+        <div
           style={{
             background: colors.primary[50],
             color: colors.primary[700],
             padding: `2px ${spacing.sm}`,
-            borderRadius: spacing.radius.sm,
+            borderRadius: spacing.radius.element,
             fontSize: FONT_SIZES.small,
             fontWeight: 500,
           }}
         >
           {modificationCount}
-        </Box>
+        </div>
       </Group>
-      <Stack gap={spacing.xs}>
+      <Stack gap="xs">
         {modifiedParams.map((param) => (
-          <UnstyledButton
+          <button
+            type="button"
             key={param.paramName}
             onClick={() => onSelectParam(param.paramName)}
             style={{
@@ -56,23 +57,26 @@ export function ChangesCard({
               padding: spacing.sm,
               background:
                 selectedParamName === param.paramName ? colors.primary[50] : colors.gray[50],
-              borderRadius: spacing.radius.sm,
+              borderRadius: spacing.radius.element,
               width: '100%',
+              cursor: 'pointer',
+              border: 'none',
+              font: 'inherit',
             }}
           >
             <Text size="xs" style={{ color: colors.gray[600], flex: 1 }}>
               {param.label}
             </Text>
-            <Stack gap={2} align="flex-end">
+            <Stack gap="xs" align="end" style={{ gap: 2 }}>
               {param.changes.map((change, idx) => (
                 <Text key={idx} size="xs" fw={600} style={{ color: colors.primary[700] }}>
                   {change.period}: {change.value}
                 </Text>
               ))}
             </Stack>
-          </UnstyledButton>
+          </button>
         ))}
       </Stack>
-    </Box>
+    </div>
   );
 }

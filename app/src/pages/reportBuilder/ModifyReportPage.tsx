@@ -1,7 +1,17 @@
 import { useCallback, useMemo, useState } from 'react';
 import { IconNewSection, IconPencil, IconStatusChange, IconX } from '@tabler/icons-react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { Button, Container, Group, Modal, Stack, Text } from '@mantine/core';
+import {
+  Button,
+  Container,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  Group,
+  Stack,
+  Text,
+} from '@/components/ui';
 import { spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { getReportOutputPath } from '@/utils/reportRouting';
@@ -122,8 +132,8 @@ export default function ModifyReportPage() {
 
   if (isLoading || !reportState) {
     return (
-      <Container size="xl" px={spacing.xl}>
-        <Stack gap={spacing.xl}>
+      <Container size="xl" style={{ paddingLeft: spacing.xl, paddingRight: spacing.xl }}>
+        <Stack gap="xl">
           <Text>Loading report...</Text>
         </Stack>
       </Container>
@@ -132,8 +142,8 @@ export default function ModifyReportPage() {
 
   if (error) {
     return (
-      <Container size="xl" px={spacing.xl}>
-        <Stack gap={spacing.xl}>
+      <Container size="xl" style={{ paddingLeft: spacing.xl, paddingRight: spacing.xl }}>
+        <Stack gap="xl">
           <Text c="red">Error loading report: {error.message}</Text>
         </Stack>
       </Container>
@@ -155,34 +165,35 @@ export default function ModifyReportPage() {
         isReadOnly={!isEditing}
       />
 
-      <Modal
-        opened={showSameNameWarning}
-        onClose={() => setShowSameNameWarning(false)}
-        title="Same name"
-        centered
-        size="sm"
+      <Dialog
+        open={showSameNameWarning}
+        onOpenChange={(open) => !open && setShowSameNameWarning(false)}
       >
-        <Stack gap={spacing.md}>
-          <Text size="sm">
-            Both the original and new report will have the name &quot;
-            {(reportState?.label || '').trim()}&quot;. Are you sure you want to save?
-          </Text>
-          <Group justify="flex-end" gap={spacing.sm}>
-            <Button variant="subtle" color="gray" onClick={() => setShowSameNameWarning(false)}>
-              Cancel
-            </Button>
-            <Button
-              color="teal"
-              onClick={() => {
-                setShowSameNameWarning(false);
-                handleSaveAsNew(reportState?.label || 'Untitled report');
-              }}
-            >
-              Save anyway
-            </Button>
-          </Group>
-        </Stack>
-      </Modal>
+        <DialogContent className="tw:sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Same name</DialogTitle>
+          </DialogHeader>
+          <Stack gap="md">
+            <Text size="sm">
+              Both the original and new report will have the name &quot;
+              {(reportState?.label || '').trim()}&quot;. Are you sure you want to save?
+            </Text>
+            <Group justify="end" gap="sm">
+              <Button variant="ghost" onClick={() => setShowSameNameWarning(false)}>
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  setShowSameNameWarning(false);
+                  handleSaveAsNew(reportState?.label || 'Untitled report');
+                }}
+              >
+                Save anyway
+              </Button>
+            </Group>
+          </Stack>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

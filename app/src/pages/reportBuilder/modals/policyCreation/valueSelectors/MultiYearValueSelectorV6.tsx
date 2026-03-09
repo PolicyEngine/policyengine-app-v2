@@ -5,8 +5,8 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Group, Stack, Text } from '@mantine/core';
-import { colors, spacing } from '@/designTokens';
+import { Group, Stack, Text } from '@/components/ui';
+import { colors } from '@/designTokens';
 import { getTaxYears } from '@/libs/metadataUtils';
 import { getDefaultValueForParam } from '@/pathways/report/components/valueSetters/getDefaultValueForParam';
 import { ValueInputBox } from '@/pathways/report/components/valueSetters/ValueInputBox';
@@ -80,10 +80,10 @@ export function MultiYearValueSelectorV6(props: ValueSetterProps) {
 
   // V6 Layout: Two columns with year labels and inputs
   return (
-    <Group gap={spacing.lg} align="flex-start">
-      <Stack gap={spacing.xs} style={{ flex: 1 }}>
+    <Group gap="lg" align="start">
+      <Stack gap="xs" style={{ flex: 1 }}>
         {leftColumn.map((year) => (
-          <Group key={year} gap={spacing.sm}>
+          <Group key={year} gap="sm">
             <Text size="xs" c={colors.gray[800]} style={{ width: 40 }}>
               {year}
             </Text>
@@ -96,9 +96,9 @@ export function MultiYearValueSelectorV6(props: ValueSetterProps) {
           </Group>
         ))}
       </Stack>
-      <Stack gap={spacing.xs} style={{ flex: 1 }}>
+      <Stack gap="xs" style={{ flex: 1 }}>
         {rightColumn.map((year) => (
-          <Group key={year} gap={spacing.sm}>
+          <Group key={year} gap="sm">
             <Text size="xs" c={colors.gray[800]} style={{ width: 40 }}>
               {year}
             </Text>

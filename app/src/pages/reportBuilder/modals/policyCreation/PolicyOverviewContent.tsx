@@ -6,7 +6,7 @@
  */
 import { Fragment } from 'react';
 import { IconScale } from '@tabler/icons-react';
-import { Box, Group, Stack, Text } from '@mantine/core';
+import { Group, Stack, Text } from '@/components/ui';
 import { colors, spacing } from '@/designTokens';
 import { EditableLabel } from '../../components/EditableLabel';
 import { FONT_SIZES, INGREDIENT_COLORS } from '../../constants';
@@ -36,14 +36,14 @@ export function PolicyOverviewContent({
   onClickParam,
 }: PolicyOverviewContentProps) {
   return (
-    <Stack gap={spacing.lg}>
+    <Stack gap="lg">
       {/* Naming card */}
-      <Box
+      <div
         style={{
           background: colors.white,
           backdropFilter: 'blur(20px) saturate(180%)',
           WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-          borderRadius: spacing.radius.lg,
+          borderRadius: spacing.radius.feature,
           border: `1px solid ${modificationCount > 0 ? colorConfig.border : colors.border.light}`,
           boxShadow:
             modificationCount > 0
@@ -53,12 +53,12 @@ export function PolicyOverviewContent({
           transition: 'all 0.3s ease',
         }}
       >
-        <Group gap={spacing.md} align="center" wrap="nowrap">
-          <Box
+        <Group gap="md" align="center" wrap="nowrap">
+          <div
             style={{
               width: 32,
               height: 32,
-              borderRadius: spacing.radius.md,
+              borderRadius: spacing.radius.container,
               background: `linear-gradient(135deg, ${colorConfig.bg} 0%, ${colors.white} 100%)`,
               border: `1px solid ${colorConfig.border}`,
               display: 'flex',
@@ -68,7 +68,7 @@ export function PolicyOverviewContent({
             }}
           >
             <IconScale size={18} color={colorConfig.icon} />
-          </Box>
+          </div>
           {isReadOnly ? (
             <Text fw={600} style={{ fontSize: FONT_SIZES.normal, color: colors.gray[800] }}>
               {policyLabel || 'Untitled policy'}
@@ -82,11 +82,11 @@ export function PolicyOverviewContent({
             />
           )}
         </Group>
-      </Box>
+      </div>
 
       {/* Parameter / Period / Value grid */}
       {modifiedParams.length === 0 ? (
-        <Box
+        <div
           style={{
             display: 'flex',
             flexDirection: 'column',
@@ -101,23 +101,27 @@ export function PolicyOverviewContent({
           </Text>
           {!isReadOnly && (
             <Text
-              ta="center"
-              style={{ fontSize: FONT_SIZES.tiny, color: colors.gray[400], maxWidth: 280 }}
+              style={{
+                textAlign: 'center',
+                fontSize: FONT_SIZES.tiny,
+                color: colors.gray[400],
+                maxWidth: 280,
+              }}
             >
               Select a parameter from the sidebar to start modifying values.
             </Text>
           )}
-        </Box>
+        </div>
       ) : (
-        <Box
+        <div
           style={{
             background: colors.white,
-            borderRadius: spacing.radius.lg,
+            borderRadius: spacing.radius.feature,
             border: `1px solid ${colors.border.light}`,
             overflow: 'hidden',
           }}
         >
-          <Box
+          <div
             style={{
               display: 'grid',
               gridTemplateColumns: '1fr auto auto',
@@ -173,7 +177,7 @@ export function PolicyOverviewContent({
               };
               return (
                 <Fragment key={param.paramName}>
-                  <Box
+                  <div
                     {...rowHandlers}
                     style={{
                       padding: `${spacing.sm} ${spacing.md}`,
@@ -191,8 +195,8 @@ export function PolicyOverviewContent({
                     >
                       {param.label}
                     </Text>
-                  </Box>
-                  <Box
+                  </div>
+                  <div
                     {...rowHandlers}
                     style={{
                       padding: `${spacing.sm} ${spacing.md}`,
@@ -213,8 +217,8 @@ export function PolicyOverviewContent({
                         {c.period}
                       </Text>
                     ))}
-                  </Box>
-                  <Box
+                  </div>
+                  <div
                     {...rowHandlers}
                     style={{
                       padding: `${spacing.sm} ${spacing.md}`,
@@ -236,12 +240,12 @@ export function PolicyOverviewContent({
                         {c.value}
                       </Text>
                     ))}
-                  </Box>
+                  </div>
                 </Fragment>
               );
             })}
-          </Box>
-        </Box>
+          </div>
+        </div>
       )}
     </Stack>
   );

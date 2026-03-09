@@ -6,18 +6,26 @@
  * area — the sidebar itself always shows the parameter search + tree.
  */
 
-import React, { useCallback, useMemo } from 'react';
-import { IconListDetails, IconSearch } from '@tabler/icons-react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
-  Autocomplete,
-  Box,
-  NavLink,
+  IconChevronDown,
+  IconChevronRight,
+  IconListDetails,
+  IconSearch,
+} from '@tabler/icons-react';
+import {
+  Command,
+  CommandItem,
+  CommandList,
+  Input,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
   ScrollArea,
   Skeleton,
   Stack,
   Text,
-  UnstyledButton,
-} from '@mantine/core';
+} from '@/components/ui';
 import { colors, spacing } from '@/designTokens';
 import { ParameterTreeNode } from '@/types/metadata';
 import { FONT_SIZES, INGREDIENT_COLORS } from '../../constants';
@@ -39,30 +47,74 @@ export function ParameterSidebar({
 }: ParameterSidebarProps) {
   const hasOverview = activeTab !== undefined && onTabChange !== undefined;
   const colorConfig = INGREDIENT_COLORS.policy;
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  // Filter search results
+  const filteredSearchResults = useMemo(() => {
+    if (!parameterSearch.trim()) {
+      return [];
+    }
+    const query = parameterSearch.toLowerCase();
+    return searchableParameters.filter((p) => p.label.toLowerCase().includes(query)).slice(0, 20);
+  }, [parameterSearch, searchableParameters]);
 
   // Render nested menu recursively
   const renderMenuItems = useCallback(
     (items: ParameterTreeNode[]): React.ReactNode => {
       return items
         .filter((item) => !item.name.includes('pycache'))
-        .map((item) => (
-          <NavLink
-            key={item.name}
-            label={item.label}
-            active={activeTab !== 'overview' && selectedParam?.parameter === item.name}
-            opened={expandedMenuItems.has(item.name)}
-            onClick={() => onMenuItemClick(item.name)}
-            childrenOffset={16}
-            color="primary"
-            style={{
-              borderRadius: spacing.radius.sm,
-            }}
-          >
-            {item.children && expandedMenuItems.has(item.name) && renderMenuItems(item.children)}
-          </NavLink>
-        ));
+        .map((item) => {
+          const isActive = activeTab !== 'overview' && selectedParam?.parameter === item.name;
+          const isExpanded = expandedMenuItems.has(item.name);
+          const hasChildren = !!item.children?.length;
+          const ChevronIcon = isExpanded ? IconChevronDown : IconChevronRight;
+
+          return (
+            <div key={item.name}>
+              <button
+                type="button"
+                onClick={() => onMenuItemClick(item.name)}
+                style={{
+                  all: 'unset',
+                  cursor: 'pointer',
+                  width: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: spacing.xs,
+                  padding: `${spacing.xs} ${spacing.sm}`,
+                  borderRadius: spacing.radius.element,
+                  fontSize: FONT_SIZES.small,
+                  background: isActive ? colorConfig.bg : 'transparent',
+                  color: isActive ? colorConfig.icon : colors.gray[700],
+                  fontWeight: isActive ? 600 : 400,
+                  boxSizing: 'border-box',
+                }}
+              >
+                {hasChildren ? (
+                  <ChevronIcon size={14} style={{ flexShrink: 0 }} />
+                ) : (
+                  <span style={{ width: 14, flexShrink: 0 }} />
+                )}
+                <span
+                  style={{
+                    flex: 1,
+                    textAlign: 'left',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {item.label}
+                </span>
+              </button>
+              {hasChildren && isExpanded && (
+                <div style={{ paddingLeft: 16 }}>{renderMenuItems(item.children!)}</div>
+              )}
+            </div>
+          );
+        });
     },
-    [activeTab, selectedParam?.parameter, expandedMenuItems, onMenuItemClick]
+    [activeTab, selectedParam?.parameter, expandedMenuItems, onMenuItemClick, colorConfig]
   );
 
   // Memoize the rendered tree
@@ -74,7 +126,7 @@ export function ParameterSidebar({
   }, [metadataLoading, parameterTree, renderMenuItems]);
 
   return (
-    <Box
+    <div
       style={{
         width: 280,
         borderRight: `1px solid ${colors.border.light}`,
@@ -83,31 +135,29 @@ export function ParameterSidebar({
         background: colors.gray[50],
       }}
     >
-      <Box style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         {/* Policy overview menu item (optional) */}
         {hasOverview && (
-          <Box style={{ padding: `${spacing.sm} ${spacing.sm} 0` }}>
-            <UnstyledButton
+          <div style={{ padding: `${spacing.sm} ${spacing.sm} 0` }}>
+            <button
+              type="button"
               style={{
+                all: 'unset',
                 ...modalStyles.sidebarItem,
                 width: '100%',
-                background:
-                  activeTab === 'overview' ? 'var(--mantine-color-primary-light)' : 'transparent',
-                color:
-                  activeTab === 'overview'
-                    ? 'var(--mantine-color-primary-light-color)'
-                    : colors.gray[700],
+                background: activeTab === 'overview' ? colorConfig.bg : 'transparent',
+                color: activeTab === 'overview' ? colorConfig.icon : colors.gray[700],
               }}
               onClick={() => onTabChange('overview')}
             >
               <IconListDetails size={16} />
               <Text style={{ fontSize: FONT_SIZES.small, flex: 1 }}>Policy overview</Text>
-            </UnstyledButton>
-          </Box>
+            </button>
+          </div>
         )}
 
         {/* Search + tree — always visible */}
-        <Box style={{ padding: spacing.md, borderBottom: `1px solid ${colors.border.light}` }}>
+        <div style={{ padding: spacing.md, borderBottom: `1px solid ${colors.border.light}` }}>
           {!hasOverview && (
             <Text
               fw={600}
@@ -120,45 +170,74 @@ export function ParameterSidebar({
               PARAMETERS
             </Text>
           )}
-          <Autocomplete
-            placeholder="Search parameters..."
-            value={parameterSearch}
-            onChange={onSearchChange}
-            onOptionSubmit={onSearchSelect}
-            data={searchableParameters}
-            limit={20}
-            leftSection={<IconSearch size={14} color={colors.gray[400]} />}
-            styles={{
-              input: {
-                fontSize: FONT_SIZES.small,
-                height: 32,
-                minHeight: 32,
-              },
-              dropdown: {
+          <Popover
+            open={searchOpen && filteredSearchResults.length > 0}
+            onOpenChange={setSearchOpen}
+          >
+            <PopoverTrigger asChild>
+              <div className="tw:relative">
+                <IconSearch
+                  size={14}
+                  className="tw:absolute tw:left-2.5 tw:top-1/2 tw:-translate-y-1/2"
+                  color={colors.gray[400]}
+                />
+                <Input
+                  placeholder="Search parameters..."
+                  value={parameterSearch}
+                  onChange={(e) => {
+                    onSearchChange(e.target.value);
+                    setSearchOpen(true);
+                  }}
+                  onFocus={() => setSearchOpen(true)}
+                  className="tw:pl-8 tw:h-8"
+                  style={{ fontSize: FONT_SIZES.small }}
+                />
+              </div>
+            </PopoverTrigger>
+            <PopoverContent
+              className="tw:p-0"
+              style={{
+                width: 'var(--radix-popover-trigger-width)',
                 maxHeight: 300,
-              },
-              option: {
-                fontSize: FONT_SIZES.small,
-                padding: `${spacing.xs} ${spacing.sm}`,
-              },
-            }}
-            size="xs"
-          />
-        </Box>
-        <ScrollArea style={{ flex: 1 }} offsetScrollbars>
-          <Box style={{ padding: spacing.sm }}>
+                overflow: 'auto',
+              }}
+              align="start"
+              onOpenAutoFocus={(e) => e.preventDefault()}
+            >
+              <Command>
+                <CommandList>
+                  {filteredSearchResults.map((item) => (
+                    <CommandItem
+                      key={item.value}
+                      value={item.value}
+                      onSelect={() => {
+                        onSearchSelect(item.value);
+                        setSearchOpen(false);
+                      }}
+                      style={{ fontSize: FONT_SIZES.small, padding: `${spacing.xs} ${spacing.sm}` }}
+                    >
+                      {item.label}
+                    </CommandItem>
+                  ))}
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+        </div>
+        <ScrollArea className="tw:flex-1">
+          <div style={{ padding: spacing.sm }}>
             {metadataLoading || !parameterTree ? (
-              <Stack gap={spacing.xs}>
-                <Skeleton height={32} />
-                <Skeleton height={32} />
-                <Skeleton height={32} />
+              <Stack gap="xs">
+                <Skeleton className="tw:h-8" />
+                <Skeleton className="tw:h-8" />
+                <Skeleton className="tw:h-8" />
               </Stack>
             ) : (
               renderedMenuTree
             )}
-          </Box>
+          </div>
         </ScrollArea>
-      </Box>
-    </Box>
+      </div>
+    </div>
   );
 }

@@ -7,17 +7,12 @@
  * - Household list
  */
 import { IconChevronRight, IconHome, IconSearch } from '@tabler/icons-react';
-import {
-  Box,
-  Group,
-  Paper,
-  ScrollArea,
-  Skeleton,
-  Stack,
-  Text,
-  TextInput,
-  UnstyledButton,
-} from '@mantine/core';
+import { Group } from '@/components/ui/Group';
+import { Input } from '@/components/ui/input';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Stack } from '@/components/ui/Stack';
+import { Text } from '@/components/ui/Text';
 import { colors, spacing } from '@/designTokens';
 import { RegionOption } from '@/utils/regionStrategies';
 import { FONT_SIZES, INGREDIENT_COLORS } from '../../constants';
@@ -70,7 +65,7 @@ export function PopulationBrowseContent({
     },
     regionChip: {
       padding: `${spacing.sm} ${spacing.md}`,
-      borderRadius: spacing.radius.md,
+      borderRadius: spacing.radius.container,
       border: `1px solid ${colors.border.light}`,
       background: colors.white,
       cursor: 'pointer',
@@ -80,7 +75,7 @@ export function PopulationBrowseContent({
     },
     householdCard: {
       padding: spacing.md,
-      borderRadius: spacing.radius.md,
+      borderRadius: spacing.radius.container,
       border: `1px solid ${colors.border.light}`,
       background: colors.white,
       cursor: 'pointer',
@@ -92,30 +87,39 @@ export function PopulationBrowseContent({
   const showExternalSearchAndHeader = activeCategory !== 'districts' && activeCategory !== 'places';
 
   return (
-    <Stack gap={spacing.lg} style={{ height: '100%' }}>
+    <Stack gap="lg" style={{ height: '100%' }}>
       {/* Search Bar - hidden for national and districts (StateDistrictSelector has its own) */}
       {showExternalSearchAndHeader && (
-        <TextInput
-          placeholder={
-            activeCategory === 'my-households'
-              ? 'Search households...'
-              : `Search ${getSectionTitle().toLowerCase()}...`
-          }
-          leftSection={<IconSearch size={16} color={colors.gray[400]} />}
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          size="sm"
-          styles={{
-            input: {
-              borderRadius: spacing.radius.md,
+        <div style={{ position: 'relative' }}>
+          <div
+            style={{
+              position: 'absolute',
+              left: 10,
+              top: '50%',
+              transform: 'translateY(-50%)',
+              zIndex: 1,
+              display: 'flex',
+              alignItems: 'center',
+            }}
+          >
+            <IconSearch size={16} color={colors.gray[400]} />
+          </div>
+          <Input
+            placeholder={
+              activeCategory === 'my-households'
+                ? 'Search households...'
+                : `Search ${getSectionTitle().toLowerCase()}...`
+            }
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{
+              borderRadius: spacing.radius.container,
               border: `1px solid ${colors.border.light}`,
               fontSize: FONT_SIZES.small,
-              '&:focus': {
-                borderColor: colorConfig.accent,
-              },
-            },
-          }}
-        />
+              paddingLeft: 34,
+            }}
+          />
+        </div>
       )}
 
       {/* Section Header - hidden for national and districts */}
@@ -131,17 +135,17 @@ export function PopulationBrowseContent({
       )}
 
       {/* Content */}
-      <ScrollArea style={{ flex: 1 }} offsetScrollbars>
+      <ScrollArea style={{ flex: 1 }}>
         {activeCategory === 'my-households' ? (
           // Households list
           householdsLoading ? (
-            <Stack gap={spacing.md}>
+            <Stack gap="md">
               {[1, 2, 3].map((i) => (
-                <Skeleton key={i} height={60} radius="md" />
+                <Skeleton key={i} className="tw:h-[60px] tw:rounded-md" />
               ))}
             </Stack>
           ) : filteredHouseholds.length === 0 ? (
-            <Box
+            <div
               style={{
                 display: 'flex',
                 flexDirection: 'column',
@@ -151,7 +155,7 @@ export function PopulationBrowseContent({
                 gap: spacing.md,
               }}
             >
-              <Box
+              <div
                 style={{
                   width: 64,
                   height: 64,
@@ -163,31 +167,42 @@ export function PopulationBrowseContent({
                 }}
               >
                 <IconHome size={28} color={colors.gray[400]} />
-              </Box>
+              </div>
               <Text fw={500} c={colors.gray[600]}>
                 {searchQuery ? 'No households match your search' : 'No households yet'}
               </Text>
-              <Text c="dimmed" ta="center" maw={300} style={{ fontSize: FONT_SIZES.small }}>
+              <Text
+                c="dimmed"
+                style={{ textAlign: 'center', maxWidth: 300, fontSize: FONT_SIZES.small }}
+              >
                 {searchQuery
                   ? 'Try adjusting your search terms'
                   : 'Create a custom household using the button in the sidebar'}
               </Text>
-            </Box>
+            </div>
           ) : (
-            <Stack gap={spacing.sm}>
+            <Stack gap="sm">
               {filteredHouseholds.map((household) => (
-                <Paper
+                <div
                   key={household.id}
                   style={styles.householdCard}
+                  role="button"
+                  tabIndex={0}
                   onClick={() => onSelectHousehold(household)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      onSelectHousehold(household);
+                    }
+                  }}
                 >
                   <Group justify="space-between" align="center">
-                    <Group gap={spacing.md}>
-                      <Box
+                    <Group gap="md">
+                      <div
                         style={{
                           width: 40,
                           height: 40,
-                          borderRadius: spacing.radius.md,
+                          borderRadius: spacing.radius.container,
                           background: colorConfig.bg,
                           display: 'flex',
                           alignItems: 'center',
@@ -195,8 +210,8 @@ export function PopulationBrowseContent({
                         }}
                       >
                         <IconHome size={20} color={colorConfig.icon} />
-                      </Box>
-                      <Stack gap={2}>
+                      </div>
+                      <Stack style={{ gap: 2 }}>
                         <Text fw={600} style={{ fontSize: FONT_SIZES.normal }}>
                           {household.label}
                         </Text>
@@ -208,7 +223,7 @@ export function PopulationBrowseContent({
                     </Group>
                     <IconChevronRight size={16} color={colors.gray[400]} />
                   </Group>
-                </Paper>
+                </div>
               ))}
             </Stack>
           )
@@ -229,7 +244,7 @@ export function PopulationBrowseContent({
           />
         ) : // Standard geography grid (states, countries, constituencies, local authorities)
         filteredRegions.length === 0 ? (
-          <Box
+          <div
             style={{
               display: 'flex',
               flexDirection: 'column',
@@ -242,13 +257,14 @@ export function PopulationBrowseContent({
             <Text fw={500} c={colors.gray[600]}>
               No regions match your search
             </Text>
-          </Box>
+          </div>
         ) : (
-          <Box style={styles.regionGrid}>
+          <div style={styles.regionGrid}>
             {filteredRegions.map((region) => (
-              <UnstyledButton
+              <button
+                type="button"
                 key={region.value}
-                style={styles.regionChip}
+                style={{ all: 'unset', ...styles.regionChip }}
                 onClick={() => onSelectGeography(region)}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.borderColor = colorConfig.border;
@@ -260,9 +276,9 @@ export function PopulationBrowseContent({
                 }}
               >
                 {region.label}
-              </UnstyledButton>
+              </button>
             ))}
-          </Box>
+          </div>
         )}
       </ScrollArea>
     </Stack>

@@ -4,7 +4,7 @@
 
 import { useState } from 'react';
 import { IconPlus } from '@tabler/icons-react';
-import { Box, Text } from '@mantine/core';
+import { Text } from '@/components/ui';
 import { colors } from '@/designTokens';
 import { FONT_SIZES } from '../constants';
 import { styles } from '../styles';
@@ -14,7 +14,7 @@ export function AddSimulationCard({ onClick, disabled }: AddSimulationCardProps)
   const [isHovered, setIsHovered] = useState(false);
 
   return (
-    <Box
+    <div
       style={{
         ...styles.addSimulationCard,
         opacity: disabled ? 0.5 : 1,
@@ -22,11 +22,19 @@ export function AddSimulationCard({ onClick, disabled }: AddSimulationCardProps)
         borderColor: isHovered && !disabled ? colors.primary[400] : colors.border.medium,
         background: isHovered && !disabled ? colors.primary[50] : colors.white,
       }}
+      role="button"
+      tabIndex={disabled ? -1 : 0}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={disabled ? undefined : onClick}
+      onKeyDown={(e) => {
+        if (!disabled && (e.key === 'Enter' || e.key === ' ')) {
+          e.preventDefault();
+          onClick?.();
+        }
+      }}
     >
-      <Box
+      <div
         style={{
           width: 56,
           height: 56,
@@ -42,7 +50,7 @@ export function AddSimulationCard({ onClick, disabled }: AddSimulationCardProps)
           size={28}
           color={isHovered && !disabled ? colors.primary[600] : colors.gray[400]}
         />
-      </Box>
+      </div>
       <Text
         fw={600}
         c={isHovered && !disabled ? colors.primary[700] : colors.gray[500]}
@@ -50,9 +58,9 @@ export function AddSimulationCard({ onClick, disabled }: AddSimulationCardProps)
       >
         Add reform simulation
       </Text>
-      <Text c="dimmed" ta="center" style={{ fontSize: FONT_SIZES.small, maxWidth: 200 }}>
+      <Text c="dimmed" style={{ textAlign: 'center', fontSize: FONT_SIZES.small, maxWidth: 200 }}>
         Compare policy changes against your baseline
       </Text>
-    </Box>
+    </div>
   );
 }

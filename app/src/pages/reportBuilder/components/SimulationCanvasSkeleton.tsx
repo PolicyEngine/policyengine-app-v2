@@ -2,20 +2,20 @@
  * SimulationCanvasSkeleton - Loading placeholder for the simulation canvas
  */
 
-import { Box, Group, Skeleton } from '@mantine/core';
+import { Group, Skeleton } from '@/components/ui';
 import { colors, spacing } from '@/designTokens';
 import { styles } from '../styles';
 
 export function SimulationCanvasSkeleton() {
   return (
-    <Box style={styles.canvasContainer}>
-      <Box style={styles.canvasGrid} />
-      <Box style={styles.simulationsGrid}>
+    <div style={styles.canvasContainer}>
+      <div style={styles.canvasGrid} />
+      <div style={styles.simulationsGrid}>
         {/* Simulation block skeleton */}
-        <Box
+        <div
           style={{
             background: colors.white,
-            borderRadius: spacing.radius.lg,
+            borderRadius: spacing.radius.feature,
             border: `2px solid ${colors.border.light}`,
             padding: spacing.xl,
             gridRow: 'span 4',
@@ -25,66 +25,66 @@ export function SimulationCanvasSkeleton() {
           }}
         >
           <Group justify="space-between">
-            <Skeleton height={24} width={180} radius="md" />
-            <Skeleton height={20} width={20} radius="sm" />
+            <Skeleton className="tw:h-[24px]" style={{ width: 180 }} />
+            <Skeleton className="tw:h-[20px] tw:rounded-sm" style={{ width: 20 }} />
           </Group>
 
-          <Box
+          <div
             style={{
               padding: spacing.lg,
               background: colors.gray[50],
-              borderRadius: spacing.radius.md,
+              borderRadius: spacing.radius.container,
             }}
           >
-            <Group gap={spacing.xs} mb={spacing.md}>
-              <Skeleton height={32} width={32} radius="md" />
-              <Skeleton height={16} width={60} radius="sm" />
+            <Group gap="xs" style={{ marginBottom: spacing.md }}>
+              <Skeleton className="tw:h-[32px]" style={{ width: 32 }} />
+              <Skeleton className="tw:h-[16px] tw:rounded-sm" style={{ width: 60 }} />
             </Group>
-            <Group gap={spacing.xs}>
-              <Skeleton height={80} style={{ flex: 1 }} radius="md" />
-              <Skeleton height={80} style={{ flex: 1 }} radius="md" />
-              <Skeleton height={80} style={{ flex: 1 }} radius="md" />
+            <Group gap="xs">
+              <Skeleton className="tw:h-[80px]" style={{ flex: 1 }} />
+              <Skeleton className="tw:h-[80px]" style={{ flex: 1 }} />
+              <Skeleton className="tw:h-[80px]" style={{ flex: 1 }} />
             </Group>
-          </Box>
+          </div>
 
-          <Box
+          <div
             style={{
               padding: spacing.lg,
               background: colors.gray[50],
-              borderRadius: spacing.radius.md,
+              borderRadius: spacing.radius.container,
             }}
           >
-            <Group gap={spacing.xs} mb={spacing.md}>
-              <Skeleton height={32} width={32} radius="md" />
-              <Skeleton height={16} width={80} radius="sm" />
+            <Group gap="xs" style={{ marginBottom: spacing.md }}>
+              <Skeleton className="tw:h-[32px]" style={{ width: 32 }} />
+              <Skeleton className="tw:h-[16px] tw:rounded-sm" style={{ width: 80 }} />
             </Group>
-            <Group gap={spacing.xs}>
-              <Skeleton height={80} style={{ flex: 1 }} radius="md" />
-              <Skeleton height={80} style={{ flex: 1 }} radius="md" />
-              <Skeleton height={80} style={{ flex: 1 }} radius="md" />
+            <Group gap="xs">
+              <Skeleton className="tw:h-[80px]" style={{ flex: 1 }} />
+              <Skeleton className="tw:h-[80px]" style={{ flex: 1 }} />
+              <Skeleton className="tw:h-[80px]" style={{ flex: 1 }} />
             </Group>
-          </Box>
+          </div>
 
-          <Box
+          <div
             style={{
               padding: spacing.lg,
               background: colors.gray[50],
-              borderRadius: spacing.radius.md,
+              borderRadius: spacing.radius.container,
             }}
           >
-            <Group gap={spacing.xs} mb={spacing.md}>
-              <Skeleton height={32} width={32} radius="md" />
-              <Skeleton height={16} width={70} radius="sm" />
+            <Group gap="xs" style={{ marginBottom: spacing.md }}>
+              <Skeleton className="tw:h-[32px]" style={{ width: 32 }} />
+              <Skeleton className="tw:h-[16px] tw:rounded-sm" style={{ width: 70 }} />
             </Group>
-            <Skeleton height={48} radius="md" />
-          </Box>
-        </Box>
+            <Skeleton className="tw:h-[48px]" />
+          </div>
+        </div>
 
         {/* Add simulation card skeleton */}
-        <Box
+        <div
           style={{
             background: colors.white,
-            borderRadius: spacing.radius.lg,
+            borderRadius: spacing.radius.feature,
             border: `2px dashed ${colors.gray[300]}`,
             padding: spacing.xl,
             gridRow: 'span 4',
@@ -95,11 +95,11 @@ export function SimulationCanvasSkeleton() {
             gap: spacing.md,
           }}
         >
-          <Skeleton height={48} width={48} radius="xl" />
-          <Skeleton height={20} width={140} radius="sm" />
-          <Skeleton height={14} width={200} radius="sm" />
-        </Box>
-      </Box>
-    </Box>
+          <Skeleton className="tw:h-[48px] tw:rounded-xl" style={{ width: 48 }} />
+          <Skeleton className="tw:h-[20px] tw:rounded-sm" style={{ width: 140 }} />
+          <Skeleton className="tw:h-[14px] tw:rounded-sm" style={{ width: 200 }} />
+        </div>
+      </div>
+    </div>
   );
 }

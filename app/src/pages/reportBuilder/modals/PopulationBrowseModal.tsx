@@ -16,10 +16,12 @@ import {
 } from '@tabler/icons-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
-import { Box, Group, Paper, Stack, Text } from '@mantine/core';
 import { HouseholdAdapter } from '@/adapters/HouseholdAdapter';
 import { geographyUsageStore, householdUsageStore } from '@/api/usageTracking';
 import { UKOutlineIcon, USOutlineIcon } from '@/components/icons/CountryOutlineIcons';
+import { Group } from '@/components/ui/Group';
+import { Stack } from '@/components/ui/Stack';
+import { Text } from '@/components/ui/Text';
 import { CURRENT_YEAR, MOCK_USER_ID } from '@/constants';
 import { colors, spacing } from '@/designTokens';
 import { useCreateHousehold } from '@/hooks/useCreateHousehold';
@@ -504,29 +506,37 @@ export function PopulationBrowseModal({
 
     if (activeCategory === 'frequently-selected') {
       return (
-        <Stack gap={spacing.lg} style={{ height: '100%' }}>
+        <Stack gap="lg" style={{ height: '100%' }}>
           <Text fw={600} style={{ fontSize: FONT_SIZES.normal, color: colors.gray[800] }}>
             Frequently selected
           </Text>
-          <Paper
+          <div
+            role="button"
+            tabIndex={0}
             style={{
               background: colors.white,
               border: `1px solid ${colors.border.light}`,
-              borderRadius: spacing.radius.lg,
+              borderRadius: spacing.radius.feature,
               padding: spacing.lg,
               cursor: 'pointer',
               transition: 'all 0.2s ease',
               maxWidth: 340,
             }}
             onClick={() => handleSelectGeography(null)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                handleSelectGeography(null);
+              }
+            }}
           >
             <Group justify="space-between" align="center" wrap="nowrap">
-              <Group gap={spacing.md} wrap="nowrap">
-                <Box
+              <Group gap="md" wrap="nowrap">
+                <div
                   style={{
                     width: 40,
                     height: 40,
-                    borderRadius: spacing.radius.md,
+                    borderRadius: spacing.radius.container,
                     background: colorConfig.bg,
                     display: 'flex',
                     alignItems: 'center',
@@ -534,8 +544,8 @@ export function PopulationBrowseModal({
                   }}
                 >
                   {countryId === 'uk' ? <UKOutlineIcon size={20} /> : <USOutlineIcon size={20} />}
-                </Box>
-                <Stack gap={2}>
+                </div>
+                <Stack style={{ gap: 2 }}>
                   <Text fw={600} style={{ fontSize: FONT_SIZES.normal, color: colors.gray[900] }}>
                     {countryConfig.nationwideTitle}
                   </Text>
@@ -546,7 +556,7 @@ export function PopulationBrowseModal({
               </Group>
               <IconChevronRight size={16} color={colors.gray[400]} />
             </Group>
-          </Paper>
+          </div>
         </Stack>
       );
     }

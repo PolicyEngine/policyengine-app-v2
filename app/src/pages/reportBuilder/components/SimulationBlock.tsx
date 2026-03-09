@@ -3,8 +3,8 @@
  */
 
 import { IconCheck, IconTrash } from '@tabler/icons-react';
-import { ActionIcon, Box, Group, Paper, Text, Tooltip } from '@mantine/core';
-import { colors, spacing } from '@/designTokens';
+import { Button, Group, Text, Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui';
+import { colors } from '@/designTokens';
 import type { PopulationStateProps, SimulationStateProps } from '@/types/pathwayState';
 import { FONT_SIZES } from '../constants';
 import { styles } from '../styles';
@@ -93,14 +93,14 @@ export function SimulationBlock({
       : undefined;
 
   return (
-    <Paper
+    <div
       style={{
         ...styles.simulationCard,
         ...(isFullyConfigured ? styles.simulationCardActive : {}),
       }}
     >
       {/* Status indicator */}
-      <Box
+      <div
         style={{
           position: 'absolute',
           top: -1,
@@ -115,7 +115,7 @@ export function SimulationBlock({
       />
 
       {/* Header */}
-      <Box style={styles.simulationHeader}>
+      <div style={styles.simulationHeader}>
         <EditableLabel
           value={simulation.label || ''}
           onChange={onLabelChange}
@@ -123,36 +123,39 @@ export function SimulationBlock({
           emptyStateText={defaultLabel}
         />
 
-        <Group gap={spacing.xs}>
+        <Group gap="xs">
           {isRequired && (
-            <Text c="dimmed" fs="italic" style={{ fontSize: FONT_SIZES.small }}>
+            <Text c="dimmed" style={{ fontSize: FONT_SIZES.small, fontStyle: 'italic' }}>
               Required
             </Text>
           )}
           {isFullyConfigured && (
-            <Tooltip label="Fully configured">
-              <Box
-                style={{
-                  width: 20,
-                  height: 20,
-                  borderRadius: '50%',
-                  background: colors.primary[500],
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <IconCheck size={12} color="white" stroke={3} />
-              </Box>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div
+                  style={{
+                    width: 20,
+                    height: 20,
+                    borderRadius: '50%',
+                    background: colors.primary[500],
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <IconCheck size={12} color="white" stroke={3} />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>Fully configured</TooltipContent>
             </Tooltip>
           )}
           {canRemove && (
-            <ActionIcon size="sm" variant="subtle" color="red" onClick={onRemove}>
+            <Button variant="ghost" size="icon-sm" onClick={onRemove} className="tw:text-red-500">
               <IconTrash size={14} />
-            </ActionIcon>
+            </Button>
           )}
         </Group>
-      </Box>
+      </div>
 
       {/* Panels - direct children for subgrid alignment */}
       <IngredientSection
@@ -182,6 +185,6 @@ export function SimulationBlock({
         inheritedPopulationLabel={inheritedPopulationLabel}
         recentPopulations={recentPopulations}
       />
-    </Paper>
+    </div>
   );
 }

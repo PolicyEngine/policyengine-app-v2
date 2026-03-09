@@ -3,7 +3,7 @@
  */
 
 import React from 'react';
-import { Box, Stack, Text } from '@mantine/core';
+import { Stack, Text } from '@/components/ui';
 import { colors, spacing } from '@/designTokens';
 import HistoricalValues from '@/pathways/report/components/policyParameterSelector/HistoricalValues';
 import { FONT_SIZES } from '../../constants';
@@ -16,17 +16,17 @@ export function HistoricalValuesCard({
   policyLabel,
 }: HistoricalValuesCardProps) {
   return (
-    <Box
+    <div
       style={{
         flex: 1,
         minWidth: 0,
         background: colors.white,
-        borderRadius: spacing.radius.lg,
+        borderRadius: spacing.radius.feature,
         padding: spacing.lg,
         border: `1px solid ${colors.border.light}`,
       }}
     >
-      <Stack gap={spacing.md}>
+      <Stack gap="md">
         <Text fw={600} style={{ fontSize: FONT_SIZES.normal, color: colors.gray[700] }}>
           Historical values
         </Text>
@@ -40,6 +40,6 @@ export function HistoricalValuesCard({
           />
         )}
       </Stack>
-    </Box>
+    </div>
   );
 }

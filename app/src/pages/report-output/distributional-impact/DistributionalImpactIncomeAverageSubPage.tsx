@@ -35,7 +35,10 @@ interface Props {
   chartHeight?: number;
 }
 
-export default function DistributionalImpactIncomeAverageSubPage({ output, chartHeight: chartHeightProp }: Props) {
+export default function DistributionalImpactIncomeAverageSubPage({
+  output,
+  chartHeight: chartHeightProp,
+}: Props) {
   const mobile = useMediaQuery(MOBILE_BREAKPOINT_QUERY);
   const countryId = useCurrentCountry();
   const metadata = useSelector((state: RootState) => state.metadata);

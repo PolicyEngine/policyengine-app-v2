@@ -179,7 +179,9 @@ export const getFieldLabel = (fieldName: string) => {
 export const selectSearchableParameters = createSelector(
   [(state: RootState) => state.metadata.parameters],
   (parameters): SearchableParameter[] => {
-    if (!parameters) return [];
+    if (!parameters) {
+      return [];
+    }
 
     return Object.values(parameters)
       .filter(

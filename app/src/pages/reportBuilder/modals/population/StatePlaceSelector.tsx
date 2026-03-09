@@ -7,7 +7,10 @@
  */
 import { useMemo } from 'react';
 import { IconSearch } from '@tabler/icons-react';
-import { Box, Group, Stack, Text, TextInput, UnstyledButton } from '@mantine/core';
+import { Group } from '@/components/ui/Group';
+import { Input } from '@/components/ui/input';
+import { Stack } from '@/components/ui/Stack';
+import { Text } from '@/components/ui/Text';
 import { colors, spacing } from '@/designTokens';
 import { getPlaceDisplayName, getUSPlaces, RegionOption } from '@/utils/regionStrategies';
 import { FONT_SIZES, INGREDIENT_COLORS } from '../../constants';
@@ -116,7 +119,7 @@ const styles = {
   },
   placeChip: {
     padding: `${spacing.xs} ${spacing.md}`,
-    borderRadius: spacing.radius.md,
+    borderRadius: spacing.radius.container,
     border: `1px solid ${colors.border.light}`,
     background: colors.white,
     cursor: 'pointer',
@@ -139,23 +142,32 @@ const styles = {
 
 function SearchBar({ value, onChange }: { value: string; onChange: (value: string) => void }) {
   return (
-    <TextInput
-      placeholder="Search states or cities..."
-      leftSection={<IconSearch size={16} color={colors.gray[400]} />}
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      size="sm"
-      styles={{
-        input: {
-          borderRadius: spacing.radius.md,
+    <div style={{ position: 'relative' }}>
+      <div
+        style={{
+          position: 'absolute',
+          left: 10,
+          top: '50%',
+          transform: 'translateY(-50%)',
+          zIndex: 1,
+          display: 'flex',
+          alignItems: 'center',
+        }}
+      >
+        <IconSearch size={16} color={colors.gray[400]} />
+      </div>
+      <Input
+        placeholder="Search states or cities..."
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        style={{
+          borderRadius: spacing.radius.container,
           border: `1px solid ${colors.border.light}`,
           fontSize: FONT_SIZES.small,
-          '&:focus': {
-            borderColor: colorConfig.accent,
-          },
-        },
-      }}
-    />
+          paddingLeft: 34,
+        }}
+      />
+    </div>
   );
 }
 
@@ -174,11 +186,11 @@ function SectionHeader({ count }: { count: number }) {
 
 function EmptyState() {
   return (
-    <Box style={styles.emptyState}>
+    <div style={styles.emptyState}>
       <Text fw={500} c={colors.gray[600]}>
         No cities match your search
       </Text>
-    </Box>
+    </div>
   );
 }
 
@@ -190,7 +202,7 @@ function StateHeader({
   stateAbbreviation: string;
 }) {
   return (
-    <Box style={styles.stateHeader}>
+    <div style={styles.stateHeader}>
       <Text fw={600} style={{ fontSize: FONT_SIZES.normal, color: colors.gray[700] }}>
         {stateName}
         {stateAbbreviation && (
@@ -203,14 +215,15 @@ function StateHeader({
           </Text>
         )}
       </Text>
-    </Box>
+    </div>
   );
 }
 
 function PlaceChip({ label, onClick }: { label: string; onClick: () => void }) {
   return (
-    <UnstyledButton
-      style={styles.placeChip}
+    <button
+      type="button"
+      style={{ all: 'unset', ...styles.placeChip }}
       onClick={onClick}
       onMouseEnter={(e) => {
         e.currentTarget.style.borderColor = colorConfig.border;
@@ -222,7 +235,7 @@ function PlaceChip({ label, onClick }: { label: string; onClick: () => void }) {
       }}
     >
       {label}
-    </UnstyledButton>
+    </button>
   );
 }
 
@@ -234,9 +247,9 @@ function StateGroupSection({
   onSelectPlace: (place: RegionOption) => void;
 }) {
   return (
-    <Box>
+    <div>
       <StateHeader stateName={group.stateName} stateAbbreviation={group.stateAbbreviation} />
-      <Box style={styles.placeGrid}>
+      <div style={styles.placeGrid}>
         {group.places.map((place) => (
           <PlaceChip
             key={place.value}
@@ -244,8 +257,8 @@ function StateGroupSection({
             onClick={() => onSelectPlace(place)}
           />
         ))}
-      </Box>
-    </Box>
+      </div>
+    </div>
   );
 }
 
@@ -271,10 +284,10 @@ export function StatePlaceSelector({
   const totalPlaceCount = countTotalPlaces(filteredGroups);
 
   return (
-    <Stack gap={spacing.lg} style={{ height: '100%' }}>
+    <Stack gap="lg" style={{ height: '100%' }}>
       <SearchBar value={searchQuery} onChange={setSearchQuery} />
       <SectionHeader count={totalPlaceCount} />
-      <Box style={{ flex: 1, overflow: 'auto' }}>
+      <div style={{ flex: 1, overflow: 'auto' }}>
         {filteredGroups.length === 0 ? (
           <EmptyState />
         ) : (
@@ -282,7 +295,7 @@ export function StatePlaceSelector({
             <StateGroupSection key={group.stateName} group={group} onSelectPlace={onSelectPlace} />
           ))
         )}
-      </Box>
+      </div>
     </Stack>
   );
 }

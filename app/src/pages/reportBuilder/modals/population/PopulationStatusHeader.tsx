@@ -2,7 +2,7 @@
  * PopulationStatusHeader - Glassmorphic status bar for household creation mode
  */
 import { IconHome } from '@tabler/icons-react';
-import { Box, Group, Text } from '@mantine/core';
+import { Group, Text } from '@/components/ui';
 import { colors, spacing } from '@/designTokens';
 import { EditableLabel } from '../../components/EditableLabel';
 import { FONT_SIZES, INGREDIENT_COLORS } from '../../constants';
@@ -25,7 +25,7 @@ export function PopulationStatusHeader({
       background: 'rgba(255, 255, 255, 0.95)',
       backdropFilter: 'blur(20px) saturate(180%)',
       WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-      borderRadius: spacing.radius.lg,
+      borderRadius: spacing.radius.feature,
       border: `1px solid ${memberCount > 0 ? colorConfig.border : colors.border.light}`,
       boxShadow:
         memberCount > 0
@@ -39,16 +39,16 @@ export function PopulationStatusHeader({
   };
 
   return (
-    <Box style={dockStyles.statusHeader}>
+    <div style={dockStyles.statusHeader}>
       <Group justify="space-between" align="center" wrap="nowrap">
         {/* Left side: Household icon and editable name */}
-        <Group gap={spacing.md} align="center" wrap="nowrap" style={{ minWidth: 0 }}>
+        <Group gap="md" align="center" wrap="nowrap" style={{ minWidth: 0 }}>
           {/* Household icon */}
-          <Box
+          <div
             style={{
               width: 32,
               height: 32,
-              borderRadius: spacing.radius.md,
+              borderRadius: spacing.radius.container,
               background: `linear-gradient(135deg, ${colorConfig.bg} 0%, ${colors.white} 100%)`,
               border: `1px solid ${colorConfig.border}`,
               display: 'flex',
@@ -58,7 +58,7 @@ export function PopulationStatusHeader({
             }}
           >
             <IconHome size={18} color={colorConfig.icon} />
-          </Box>
+          </div>
 
           {/* Editable household name */}
           <EditableLabel
@@ -70,11 +70,11 @@ export function PopulationStatusHeader({
         </Group>
 
         {/* Right side: Member count */}
-        <Group gap={spacing.md} align="center" wrap="nowrap" style={{ flexShrink: 0 }}>
-          <Group gap={spacing.xs} style={{ flexShrink: 0 }}>
+        <Group gap="md" align="center" wrap="nowrap" style={{ flexShrink: 0 }}>
+          <Group gap="xs" style={{ flexShrink: 0 }}>
             {memberCount > 0 ? (
               <>
-                <Box
+                <div
                   style={{
                     width: 8,
                     height: 8,
@@ -94,6 +94,6 @@ export function PopulationStatusHeader({
           </Group>
         </Group>
       </Group>
-    </Box>
+    </div>
   );
 }

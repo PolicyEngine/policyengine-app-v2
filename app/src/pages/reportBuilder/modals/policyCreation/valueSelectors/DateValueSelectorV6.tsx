@@ -5,9 +5,8 @@
 
 import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
-import { Box, Group, Stack, Text } from '@mantine/core';
-import { DatePickerInput } from '@mantine/dates';
-import { colors, spacing } from '@/designTokens';
+import { DatePicker, Group, Stack, Text } from '@/components/ui';
+import { colors } from '@/designTokens';
 import { getDefaultValueForParam } from '@/pathways/report/components/valueSetters/getDefaultValueForParam';
 import { ValueInputBox } from '@/pathways/report/components/valueSetters/ValueInputBox';
 import { ValueSetterProps } from '@/pathways/report/components/valueSetters/ValueSetterProps';
@@ -62,50 +61,50 @@ export function DateValueSelectorV6(props: ValueSetterProps) {
     }
   }, [startDate, endDate, paramValue, setIntervals]);
 
-  function handleStartDateChange(value: Date | string | null) {
+  function handleStartDateChange(value: Date | null) {
     setStartDate(toLocalDateString(value));
   }
 
-  function handleEndDateChange(value: Date | string | null) {
+  function handleEndDateChange(value: Date | null) {
     setEndDate(toLocalDateString(value));
   }
 
   // V6 Layout: Two rows - date row, then value row
   return (
-    <Stack gap={spacing.sm}>
+    <Stack gap="sm">
       {/* First row: From date + To date */}
-      <Group gap={spacing.sm}>
-        <Box style={{ flex: 1 }}>
-          <Text size="xs" c={colors.gray[600]} mb={4}>
+      <Group gap="sm">
+        <div style={{ flex: 1 }}>
+          <Text size="xs" c={colors.gray[600]} style={{ marginBottom: 4 }}>
             From
           </Text>
-          <DatePickerInput
+          <DatePicker
             placeholder="From"
             minDate={fromLocalDateString(minDate)}
             maxDate={fromLocalDateString(maxDate)}
             value={fromLocalDateString(startDate)}
             onChange={handleStartDateChange}
-            valueFormat="MMM. D, YYYY"
+            displayFormat="MMM. D, YYYY"
           />
-        </Box>
-        <Box style={{ flex: 1 }}>
-          <Text size="xs" c={colors.gray[600]} mb={4}>
+        </div>
+        <div style={{ flex: 1 }}>
+          <Text size="xs" c={colors.gray[600]} style={{ marginBottom: 4 }}>
             To
           </Text>
-          <DatePickerInput
+          <DatePicker
             placeholder="To"
             minDate={fromLocalDateString(minDate)}
             maxDate={fromLocalDateString(maxDate)}
             value={fromLocalDateString(endDate)}
             onChange={handleEndDateChange}
-            valueFormat="MMM. D, YYYY"
+            displayFormat="MMM. D, YYYY"
           />
-        </Box>
+        </div>
       </Group>
 
       {/* Second row: Value */}
-      <Box>
-        <Text size="xs" c={colors.gray[600]} mb={4}>
+      <div>
+        <Text size="xs" c={colors.gray[600]} style={{ marginBottom: 4 }}>
           Value
         </Text>
         <ValueInputBox
@@ -114,7 +113,7 @@ export function DateValueSelectorV6(props: ValueSetterProps) {
           onChange={setParamValue}
           onSubmit={props.onSubmit}
         />
-      </Box>
+      </div>
     </Stack>
   );
 }

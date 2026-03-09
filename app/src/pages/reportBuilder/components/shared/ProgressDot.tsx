@@ -1,4 +1,3 @@
-import { Box } from '@mantine/core';
 import { colors } from '@/designTokens';
 
 interface ProgressDotProps {
@@ -8,7 +7,7 @@ interface ProgressDotProps {
 
 export function ProgressDot({ filled, pulsing }: ProgressDotProps) {
   return (
-    <Box
+    <div
       style={{
         width: 8,
         height: 8,

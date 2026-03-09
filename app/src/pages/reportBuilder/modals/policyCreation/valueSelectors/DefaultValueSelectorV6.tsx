@@ -4,10 +4,9 @@
  */
 
 import { useEffect, useState } from 'react';
-import { Box, Group, Stack, Text } from '@mantine/core';
-import { YearPickerInput } from '@mantine/dates';
+import { Group, Stack, Text, YearPicker } from '@/components/ui';
 import { FOREVER } from '@/constants';
-import { colors, spacing } from '@/designTokens';
+import { colors } from '@/designTokens';
 import { getDefaultValueForParam } from '@/pathways/report/components/valueSetters/getDefaultValueForParam';
 import { ValueInputBox } from '@/pathways/report/components/valueSetters/ValueInputBox';
 import { ValueSetterProps } from '@/pathways/report/components/valueSetters/ValueSetterProps';
@@ -59,35 +58,35 @@ export function DefaultValueSelectorV6(props: ValueSetterProps) {
     }
   }, [startDate, endDate, paramValue, setIntervals]);
 
-  function handleStartDateChange(value: Date | string | null) {
+  function handleStartDateChange(value: Date | null) {
     setStartDate(toISODateString(value));
   }
 
   // V6 Layout: Two rows - date row, then value row
   return (
-    <Stack gap={spacing.sm}>
+    <Stack gap="sm">
       {/* First row: From year + "onward" */}
-      <Group gap={spacing.sm} align="flex-end">
-        <Box style={{ flex: 1 }}>
-          <Text size="xs" c={colors.gray[600]} mb={4}>
+      <Group gap="sm" align="end">
+        <div style={{ flex: 1 }}>
+          <Text size="xs" c={colors.gray[600]} style={{ marginBottom: 4 }}>
             From
           </Text>
-          <YearPickerInput
+          <YearPicker
             placeholder="2025"
             minDate={fromISODateString(minDate)}
             maxDate={fromISODateString(maxDate)}
             value={fromISODateString(startDate)}
             onChange={handleStartDateChange}
           />
-        </Box>
-        <Text size="sm" c={colors.gray[800]} pb={8}>
+        </div>
+        <Text size="sm" c={colors.gray[800]} style={{ paddingBottom: 8 }}>
           onward
         </Text>
       </Group>
 
       {/* Second row: Value */}
-      <Box>
-        <Text size="xs" c={colors.gray[600]} mb={4}>
+      <div>
+        <Text size="xs" c={colors.gray[600]} style={{ marginBottom: 4 }}>
           Value
         </Text>
         <ValueInputBox
@@ -96,7 +95,7 @@ export function DefaultValueSelectorV6(props: ValueSetterProps) {
           onChange={setParamValue}
           onSubmit={props.onSubmit}
         />
-      </Box>
+      </div>
     </Stack>
   );
 }

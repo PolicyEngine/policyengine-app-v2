@@ -1,7 +1,7 @@
 import { IconBookmark, IconCode, IconSettings } from '@tabler/icons-react';
 import { ShareButton } from '@/components/common/ActionButtons';
-import { Button } from '@/components/ui/button';
 import { Group } from '@/components/ui';
+import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface ReportActionButtonsProps {
@@ -48,12 +48,7 @@ export function ReportActionButtons({
     <Group gap="xs" className="tw:ml-1.5">
       <Tooltip>
         <TooltipTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label="View/edit report"
-            onClick={onView}
-          >
+          <Button variant="ghost" size="icon" aria-label="View/edit report" onClick={onView}>
             <IconSettings size={18} />
           </Button>
         </TooltipTrigger>

@@ -485,7 +485,6 @@ export function USDistrictChoroplethMap({
   const geoSource = filteredGeoJSON ?? geoJSON;
   const gradientId = `choropleth-gradient-${uniqueId.replace(/:/g, '')}`;
 
-
   return (
     <div
       ref={mergedRef}
@@ -528,7 +527,11 @@ export function USDistrictChoroplethMap({
                     const fillColor = isErrorState
                       ? 'rgba(220, 53, 69, 0.5)'
                       : dataPoint
-                        ? getDistrictColor(dataPoint.value, colorRange, fullConfig.colorScale.colors)
+                        ? getDistrictColor(
+                            dataPoint.value,
+                            colorRange,
+                            fullConfig.colorScale.colors
+                          )
                         : NO_DATA_FILL;
 
                     return (

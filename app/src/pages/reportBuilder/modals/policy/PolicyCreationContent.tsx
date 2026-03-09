@@ -3,17 +3,13 @@
  */
 import { Dispatch, SetStateAction } from 'react';
 import { IconScale, IconTrash } from '@tabler/icons-react';
-import {
-  ActionIcon,
-  Badge,
-  Box,
-  Button,
-  Group,
-  SegmentedControl,
-  Stack,
-  Text,
-  Title,
-} from '@mantine/core';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Group } from '@/components/ui/Group';
+import { SegmentedControl } from '@/components/ui/segmented-control';
+import { Stack } from '@/components/ui/Stack';
+import { Text } from '@/components/ui/Text';
+import { Title } from '@/components/ui/Title';
 import { colors, spacing } from '@/designTokens';
 import HistoricalValues from '@/pathways/report/components/policyParameterSelector/HistoricalValues';
 import { ValueSetterMode } from '@/pathways/report/components/valueSetters';
@@ -156,7 +152,7 @@ export function PolicyCreationContent({
 
   if (!selectedParam) {
     return (
-      <Box
+      <div
         style={{
           height: '100%',
           display: 'flex',
@@ -166,12 +162,12 @@ export function PolicyCreationContent({
           padding: spacing.lg,
         }}
       >
-        <Stack align="center" gap={spacing.md}>
-          <Box
+        <Stack align="center" gap="md">
+          <div
             style={{
               width: 64,
               height: 64,
-              borderRadius: spacing.radius.lg,
+              borderRadius: spacing.radius.feature,
               background: colors.gray[100],
               display: 'flex',
               alignItems: 'center',
@@ -179,28 +175,32 @@ export function PolicyCreationContent({
             }}
           >
             <IconScale size={32} color={colors.gray[400]} />
-          </Box>
+          </div>
           <Text
-            ta="center"
-            style={{ fontSize: FONT_SIZES.normal, color: colors.gray[600], maxWidth: 400 }}
+            style={{
+              textAlign: 'center',
+              fontSize: FONT_SIZES.normal,
+              color: colors.gray[600],
+              maxWidth: 400,
+            }}
           >
             {isReadOnly
               ? 'Select a parameter from the menu to view its details.'
               : 'Select a parameter from the menu to modify its value for your policy reform.'}
           </Text>
         </Stack>
-      </Box>
+      </div>
     );
   }
 
   return (
-    <Box style={{ background: colors.gray[50], minHeight: '100%', padding: spacing.lg }}>
-      <Stack gap={spacing.lg}>
+    <div style={{ background: colors.gray[50], minHeight: '100%', padding: spacing.lg }}>
+      <Stack gap="lg">
         {/* Parameter Header Card */}
-        <Box
+        <div
           style={{
             background: colors.white,
-            borderRadius: spacing.radius.lg,
+            borderRadius: spacing.radius.feature,
             padding: spacing.lg,
             border: `1px solid ${colors.border.light}`,
           }}
@@ -213,23 +213,23 @@ export function PolicyCreationContent({
               {selectedParam.description}
             </Text>
           )}
-        </Box>
+        </div>
 
         {/* 50/50 Split Content */}
-        <Group gap={spacing.lg} align="flex-start" wrap="nowrap">
+        <Group gap="lg" align="start" wrap="nowrap">
           {/* Left Column: Setter + Changes */}
-          <Stack gap={spacing.lg} style={{ flex: 1, minWidth: 0 }}>
-            {/* Value Setter Card — hidden in read-only mode */}
+          <Stack gap="lg" style={{ flex: 1, minWidth: 0 }}>
+            {/* Value Setter Card -- hidden in read-only mode */}
             {!isReadOnly && (
-              <Box
+              <div
                 style={{
                   background: colors.white,
-                  borderRadius: spacing.radius.lg,
+                  borderRadius: spacing.radius.feature,
                   padding: spacing.lg,
                   border: `1px solid ${colors.border.light}`,
                 }}
               >
-                <Stack gap={spacing.md}>
+                <Stack gap="md">
                   <Text fw={600} style={{ fontSize: FONT_SIZES.normal, color: colors.gray[700] }}>
                     Set new value
                   </Text>
@@ -237,22 +237,12 @@ export function PolicyCreationContent({
                   {/* Mode selector - SegmentedControl per V6 mockup */}
                   <SegmentedControl
                     value={valueSetterMode}
-                    onChange={(value) => {
+                    onValueChange={(value) => {
                       setIntervals([]);
                       setValueSetterMode(value as ValueSetterMode);
                     }}
                     size="xs"
-                    data={MODE_OPTIONS}
-                    styles={{
-                      root: {
-                        background: colors.gray[100],
-                        borderRadius: spacing.radius.md,
-                      },
-                      indicator: {
-                        background: colors.white,
-                        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-                      },
-                    }}
+                    options={MODE_OPTIONS}
                   />
 
                   <ValueSetterToRender
@@ -271,34 +261,31 @@ export function PolicyCreationContent({
                   <Button
                     onClick={onValueSubmit}
                     disabled={intervals.length === 0}
-                    color="teal"
-                    fullWidth
+                    className="tw:w-full"
                   >
                     Add change
                   </Button>
                 </Stack>
-              </Box>
+              </div>
             )}
 
             {/* Changes for this parameter */}
             {currentParamChanges.length > 0 && (
-              <Box
+              <div
                 style={{
                   background: colors.white,
                   border: `1px solid ${colors.border.light}`,
-                  borderRadius: spacing.radius.lg,
+                  borderRadius: spacing.radius.feature,
                   padding: spacing.lg,
                 }}
               >
-                <Group justify="space-between" mb={spacing.sm}>
+                <Group justify="space-between" style={{ marginBottom: spacing.sm }}>
                   <Text size="sm" fw={600} style={{ color: colors.gray[700] }}>
                     Changes for this parameter
                   </Text>
-                  <Badge size="xs" color="teal" variant="light">
-                    {currentParamChanges.length}
-                  </Badge>
+                  <Badge variant="secondary">{currentParamChanges.length}</Badge>
                 </Group>
-                <Stack gap={spacing.xs}>
+                <Stack gap="xs">
                   {currentParamChanges.map((change, i) => (
                     <Group
                       key={i}
@@ -306,46 +293,45 @@ export function PolicyCreationContent({
                       style={{
                         padding: spacing.sm,
                         background: colors.gray[50],
-                        borderRadius: spacing.radius.sm,
+                        borderRadius: spacing.radius.element,
                       }}
                     >
                       <Text size="xs" style={{ color: colors.gray[600] }}>
                         {formatPeriod(change)}
                       </Text>
-                      <Group gap={spacing.xs}>
+                      <Group gap="xs">
                         <Text size="xs" fw={600} style={{ color: colors.primary[700] }}>
                           {formatValue(change.value)}
                         </Text>
                         {!isReadOnly && (
-                          <ActionIcon
-                            size="xs"
-                            variant="subtle"
-                            color="gray"
+                          <Button
+                            variant="ghost"
+                            size="icon-xs"
                             onClick={() => handleRemoveChange(i)}
                           >
                             <IconTrash size={12} />
-                          </ActionIcon>
+                          </Button>
                         )}
                       </Group>
                     </Group>
                   ))}
                 </Stack>
-              </Box>
+              </div>
             )}
           </Stack>
 
           {/* Right Column: Historical Values Chart */}
-          <Box
+          <div
             style={{
               flex: 1,
               minWidth: 0,
               background: colors.white,
-              borderRadius: spacing.radius.lg,
+              borderRadius: spacing.radius.feature,
               padding: spacing.lg,
               border: `1px solid ${colors.border.light}`,
             }}
           >
-            <Stack gap={spacing.md}>
+            <Stack gap="md">
               <Text fw={600} style={{ fontSize: FONT_SIZES.normal, color: colors.gray[700] }}>
                 Historical values
               </Text>
@@ -359,9 +345,9 @@ export function PolicyCreationContent({
                 />
               )}
             </Stack>
-          </Box>
+          </div>
         </Group>
       </Stack>
-    </Box>
+    </div>
   );
 }

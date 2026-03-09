@@ -8,10 +8,12 @@ import {
   IconUsers,
 } from '@tabler/icons-react';
 import Plot from 'react-plotly.js';
-import { Group, Progress, SegmentedControl, Stack, Text } from '@/components/ui';
 import { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import DashboardCard from '@/components/report/DashboardCard';
 import MetricCard from '@/components/report/MetricCard';
+import { Group, Progress, SegmentedControl, Stack, Text } from '@/components/ui';
+import { MapTypeToggle } from '@/components/visualization/choropleth/MapTypeToggle';
+import type { MapVisualizationType } from '@/components/visualization/choropleth/types';
 import { USDistrictChoroplethMap } from '@/components/visualization/USDistrictChoroplethMap';
 import { useCongressionalDistrictData } from '@/contexts/CongressionalDistrictDataContext';
 import { colors, spacing, typography } from '@/designTokens';
@@ -290,6 +292,8 @@ function CongressionalDistrictCard({
     erroredStates,
   } = useCongressionalDistrictData();
   const [congressionalMode, setCongressionalMode] = useState<CongressionalMode>('absolute');
+  const [mapVisualizationType, setMapVisualizationType] =
+    useState<MapVisualizationType>('geographic');
 
   // Check if output already has district data (from nationwide calculation)
   const existingDistricts = useMemo(() => {
@@ -465,26 +469,35 @@ function CongressionalDistrictCard({
           <div
             style={{
               position: 'absolute',
-              inset: 0,
+              top: spacing.md,
+              left: 0,
+              right: 0,
+              bottom: 0,
               display: 'grid',
               gridTemplateColumns: '2fr 1fr',
               gap: spacing.md,
             }}
           >
-            {/* Left half: placeholder for hex choropleth map */}
-            <div
-              style={{
-                height: '100%',
-                backgroundColor: colors.gray[100],
-                borderRadius: spacing.radius.container,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Text size="xs" c={colors.text.tertiary}>
-                Map placeholder
-              </Text>
+            {/* Left half: small hex choropleth map, zoomed in */}
+            <div style={{ height: '100%', overflow: 'hidden' }}>
+              <div
+                style={{
+                  transform: 'scale(1.35)',
+                  transformOrigin: 'center center',
+                  height: '100%',
+                }}
+              >
+                <USDistrictChoroplethMap
+                  data={mapData}
+                  visualizationType="hex"
+                  config={{
+                    ...mapConfig,
+                    height: 300,
+                    showColorBar: false,
+                  }}
+                  errorStates={errorStateAbbrs}
+                />
+              </div>
             </div>
             {/* Right third: rankings stacked — winners on top */}
             <div
@@ -520,16 +533,20 @@ function CongressionalDistrictCard({
         )
       }
       expandedControls={
-        <SegmentedControl
-          value={congressionalMode}
-          onValueChange={(value) => setCongressionalMode(value as CongressionalMode)}
-          size="xs"
-          options={CONGRESSIONAL_MODE_OPTIONS}
-        />
+        <>
+          <MapTypeToggle value={mapVisualizationType} onChange={setMapVisualizationType} />
+          <SegmentedControl
+            value={congressionalMode}
+            onValueChange={(value) => setCongressionalMode(value as CongressionalMode)}
+            size="xs"
+            options={CONGRESSIONAL_MODE_OPTIONS}
+          />
+        </>
       }
       expandedContent={
         <USDistrictChoroplethMap
           data={mapData}
+          visualizationType={mapVisualizationType}
           config={{ ...mapConfig, height: CONGRESSIONAL_MAP_H }}
           focusState={stateCode ?? undefined}
           errorStates={errorStateAbbrs}
@@ -759,7 +776,7 @@ export default function SocietyWideOverview({
   );
 
   return (
-    <div className="tw:grid tw:grid-cols-1 sm:tw:grid-cols-2" style={{ gap: GRID_GAP }}>
+    <div className="tw:grid tw:grid-cols-2" style={{ gap: GRID_GAP }}>
       {/* Budgetary Impact — full width hero */}
       <DashboardCard
         mode={modeOf('budget')}
@@ -1036,24 +1053,22 @@ export default function SocietyWideOverview({
         shrunkenHeader={cardHeader(IconHome, 'Poverty impact')}
         shrunkenBody={
           <Group gap="sm" grow>
-            <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <MetricCard
-                label="Overall"
-                value={povertyValue}
-                subtext={povertySubtext}
-                trend={povertyTrend as 'positive' | 'negative' | 'neutral'}
-                invertArrow
-              />
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <MetricCard
-                label="Child"
-                value={childPovertyValue}
-                subtext={childPovertySubtext}
-                trend={childPovertyTrend}
-                invertArrow
-              />
-            </div>
+            <MetricCard
+              label="Overall"
+              value={povertyValue}
+              subtext={povertySubtext}
+              trend={povertyTrend as 'positive' | 'negative' | 'neutral'}
+              invertArrow
+              centered
+            />
+            <MetricCard
+              label="Child"
+              value={childPovertyValue}
+              subtext={childPovertySubtext}
+              trend={childPovertyTrend}
+              invertArrow
+              centered
+            />
           </Group>
         }
         expandedControls={
@@ -1085,24 +1100,22 @@ export default function SocietyWideOverview({
         shrunkenHeader={cardHeader(IconScale, 'Inequality impact')}
         shrunkenBody={
           <Group gap="sm" grow>
-            <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <MetricCard
-                label="Gini index"
-                value={giniValue}
-                subtext={giniSubtext}
-                trend={giniTrend}
-                invertArrow
-              />
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <MetricCard
-                label="Top 1% share"
-                value={top1Value}
-                subtext={top1Subtext}
-                trend={top1Trend}
-                invertArrow
-              />
-            </div>
+            <MetricCard
+              label="Gini index"
+              value={giniValue}
+              subtext={giniSubtext}
+              trend={giniTrend}
+              invertArrow
+              centered
+            />
+            <MetricCard
+              label="Top 1% share"
+              value={top1Value}
+              subtext={top1Subtext}
+              trend={top1Trend}
+              invertArrow
+              centered
+            />
           </Group>
         }
         expandedContent={

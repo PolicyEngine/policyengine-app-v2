@@ -1,5 +1,5 @@
 import { IconPencil } from '@tabler/icons-react';
-import { ActionIcon, Box, Group, Text, TextInput } from '@mantine/core';
+import { Button, Group, Input, Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import { FONT_SIZES } from '../../constants';
 import { CreationStatusHeaderProps } from '../../types';
@@ -28,12 +28,12 @@ export function CreationStatusHeader({
   };
 
   return (
-    <Box
+    <div
       style={{
         background: 'rgba(255, 255, 255, 0.95)',
         backdropFilter: 'blur(20px) saturate(180%)',
         WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-        borderRadius: spacing.radius.lg,
+        borderRadius: spacing.radius.feature,
         border: `1px solid ${hasChanges ? colorConfig.border : colors.border.light}`,
         boxShadow: hasChanges
           ? `0 4px 20px rgba(0, 0, 0, 0.08), 0 0 0 1px ${colorConfig.border}`
@@ -46,13 +46,13 @@ export function CreationStatusHeader({
     >
       <Group justify="space-between" align="center" wrap="nowrap">
         {/* Left side: Icon and editable name */}
-        <Group gap={spacing.md} align="center" wrap="nowrap" style={{ minWidth: 0 }}>
+        <Group gap="md" align="center" wrap="nowrap" style={{ minWidth: 0 }}>
           {/* Icon container */}
-          <Box
+          <div
             style={{
               width: 32,
               height: 32,
-              borderRadius: spacing.radius.md,
+              borderRadius: spacing.radius.container,
               background: `linear-gradient(135deg, ${colorConfig.bg} 0%, ${colors.white} 100%)`,
               border: `1px solid ${colorConfig.border}`,
               display: 'flex',
@@ -62,29 +62,24 @@ export function CreationStatusHeader({
             }}
           >
             {icon}
-          </Box>
+          </div>
 
           {/* Editable name */}
-          <Box style={{ minWidth: 0, display: 'flex', alignItems: 'center', gap: spacing.xs }}>
+          <div style={{ minWidth: 0, display: 'flex', alignItems: 'center', gap: spacing.xs }}>
             {isEditingLabel ? (
-              <TextInput
+              <Input
                 value={label}
                 onChange={(e) => onLabelChange(e.currentTarget.value)}
                 onBlur={onStopEditing}
                 onKeyDown={handleKeyDown}
                 autoFocus
                 placeholder={placeholder.replace('Click to ', 'Enter ')}
-                size="xs"
-                style={{ width: 250 }}
-                styles={{
-                  input: {
-                    fontFamily: typography.fontFamily.primary,
-                    fontWeight: 600,
-                    fontSize: FONT_SIZES.normal,
-                    border: 'none',
-                    background: 'transparent',
-                    padding: 0,
-                  },
+                className="tw:border-none tw:bg-transparent tw:p-0 tw:h-auto tw:shadow-none tw:focus-visible:ring-0"
+                style={{
+                  width: 250,
+                  fontFamily: typography.fontFamily.primary,
+                  fontWeight: 600,
+                  fontSize: FONT_SIZES.normal,
                 }}
               />
             ) : (
@@ -104,27 +99,26 @@ export function CreationStatusHeader({
                 >
                   {label || placeholder}
                 </Text>
-                <ActionIcon
-                  size="sm"
-                  variant="subtle"
-                  color="gray"
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
                   onClick={onStartEditing}
                   style={{ flexShrink: 0 }}
                 >
                   <IconPencil size={14} />
-                </ActionIcon>
+                </Button>
               </>
             )}
-          </Box>
+          </div>
         </Group>
 
         {/* Right side: Status indicator */}
-        <Group gap={spacing.md} align="center" wrap="nowrap" style={{ flexShrink: 0 }}>
+        <Group gap="md" align="center" wrap="nowrap" style={{ flexShrink: 0 }}>
           {/* Status with indicator dot */}
-          <Group gap={spacing.xs} style={{ flexShrink: 0 }}>
+          <Group gap="xs" style={{ flexShrink: 0 }}>
             {hasChanges ? (
               <>
-                <Box
+                <div
                   style={{
                     width: 8,
                     height: 8,
@@ -147,6 +141,6 @@ export function CreationStatusHeader({
           {children}
         </Group>
       </Group>
-    </Box>
+    </div>
   );
 }

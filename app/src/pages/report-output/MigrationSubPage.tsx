@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
+import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import {
   Collapsible,
   CollapsibleContent,
@@ -8,7 +9,6 @@ import {
   Stack,
   Text,
 } from '@/components/ui';
-import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { CongressionalDistrictDataProvider } from '@/contexts/CongressionalDistrictDataContext';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
@@ -96,7 +96,6 @@ const DISTRIBUTIONAL_MODE_OPTIONS = [
   { label: 'Relative decile impacts', value: 'relative' as DistributionalMode },
   { label: 'Intra-decile impacts', value: 'intra-decile' as DistributionalMode },
 ];
-
 
 export default function MigrationSubPage({
   output,

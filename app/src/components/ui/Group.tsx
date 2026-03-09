@@ -51,7 +51,7 @@ const Group = React.forwardRef<HTMLDivElement, GroupProps>(
           justifyMap[justify ?? 'start'],
           alignMap[align],
           wrap === 'wrap' ? 'tw:flex-wrap' : 'tw:flex-nowrap',
-          grow && '[&>*]:tw:flex-1',
+          grow && 'tw:[&>*]:flex-1',
           className
         )}
         {...props}

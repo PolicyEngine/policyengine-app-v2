@@ -2,7 +2,7 @@
  * Toggle component for switching between map visualization types
  */
 
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui';
+import { SegmentedControl } from '@/components/ui';
 import type { MapVisualizationType } from './types';
 
 interface MapTypeToggleProps {
@@ -11,6 +11,11 @@ interface MapTypeToggleProps {
   /** Callback when the visualization type changes */
   onChange: (value: MapVisualizationType) => void;
 }
+
+const MAP_TYPE_OPTIONS = [
+  { label: 'Geographic', value: 'geographic' as MapVisualizationType },
+  { label: 'Hex grid', value: 'hex' as MapVisualizationType },
+];
 
 /**
  * Toggle component for switching between geographic and hex map views.
@@ -25,11 +30,11 @@ interface MapTypeToggleProps {
  */
 export function MapTypeToggle({ value, onChange }: MapTypeToggleProps) {
   return (
-    <Tabs value={value} onValueChange={(val) => onChange(val as MapVisualizationType)}>
-      <TabsList>
-        <TabsTrigger value="geographic">Geographic</TabsTrigger>
-        <TabsTrigger value="hex">Hex grid</TabsTrigger>
-      </TabsList>
-    </Tabs>
+    <SegmentedControl
+      value={value}
+      onValueChange={(val) => onChange(val as MapVisualizationType)}
+      size="xs"
+      options={MAP_TYPE_OPTIONS}
+    />
   );
 }

@@ -36,7 +36,7 @@ export const pageStyles = {
 export const canvasStyles = {
   canvasContainer: {
     background: colors.white,
-    borderRadius: spacing.radius.xl,
+    borderRadius: spacing.radius.feature,
     border: `1px solid ${colors.border.light}`,
     boxShadow: `0 4px 24px ${colors.shadow.light}`,
     padding: spacing['2xl'],
@@ -74,7 +74,7 @@ export const canvasStyles = {
 export const simulationStyles = {
   simulationCard: {
     background: colors.white,
-    borderRadius: spacing.radius.lg,
+    borderRadius: spacing.radius.feature,
     border: `2px solid ${colors.gray[200]}`,
     padding: spacing.xl,
     transition: 'all 0.2s ease',
@@ -116,7 +116,7 @@ export const simulationStyles = {
 export const ingredientStyles = {
   ingredientSection: {
     padding: spacing.md,
-    borderRadius: spacing.radius.lg,
+    borderRadius: spacing.radius.feature,
     border: `1px solid`,
     background: 'white',
     minWidth: 0,
@@ -133,7 +133,7 @@ export const ingredientStyles = {
   ingredientSectionIcon: {
     width: 32,
     height: 32,
-    borderRadius: spacing.radius.md,
+    borderRadius: spacing.radius.container,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -162,7 +162,7 @@ export const chipStyles = {
   // Square chip (expands to fill grid cell, min 80px height)
   chipSquare: {
     minHeight: 80,
-    borderRadius: spacing.radius.md,
+    borderRadius: spacing.radius.container,
     borderWidth: 1,
     borderStyle: 'solid',
     display: 'flex',
@@ -186,7 +186,7 @@ export const chipStyles = {
     alignItems: 'center',
     gap: spacing.md,
     padding: `${spacing.md} ${spacing.lg}`,
-    borderRadius: spacing.radius.md,
+    borderRadius: spacing.radius.container,
     borderWidth: 1,
     borderStyle: 'solid',
     cursor: 'pointer',
@@ -201,7 +201,7 @@ export const chipStyles = {
   chipRowIcon: {
     width: 40,
     height: 40,
-    borderRadius: spacing.radius.md,
+    borderRadius: spacing.radius.container,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -211,7 +211,7 @@ export const chipStyles = {
   // Perforated "Create new policy" chip (expands to fill grid cell)
   chipCustomSquare: {
     minHeight: 80,
-    borderRadius: spacing.radius.md,
+    borderRadius: spacing.radius.container,
     borderWidth: 2,
     borderStyle: 'dashed',
     display: 'flex',
@@ -229,7 +229,7 @@ export const chipStyles = {
     alignItems: 'center',
     gap: spacing.md,
     padding: `${spacing.md} ${spacing.lg}`,
-    borderRadius: spacing.radius.md,
+    borderRadius: spacing.radius.container,
     borderWidth: 2,
     borderStyle: 'dashed',
     cursor: 'pointer',
@@ -245,7 +245,7 @@ export const chipStyles = {
 export const addSimulationStyles = {
   addSimulationCard: {
     background: colors.white,
-    borderRadius: spacing.radius.lg,
+    borderRadius: spacing.radius.feature,
     border: `2px dashed ${colors.border.medium}`,
     padding: spacing.xl,
     display: 'flex',
@@ -266,7 +266,7 @@ export const addSimulationStyles = {
 export const reportMetaStyles = {
   reportMetaCard: {
     background: colors.white,
-    borderRadius: spacing.radius.lg,
+    borderRadius: spacing.radius.feature,
     border: `1px solid ${colors.border.light}`,
     padding: `${spacing.xl} ${spacing.xl} ${spacing['2xl']} ${spacing.xl}`,
     marginBottom: spacing.xl,
@@ -318,7 +318,7 @@ export const modalStyles = {
     alignItems: 'center',
     gap: spacing.sm,
     padding: `${spacing.sm} ${spacing.sm}`,
-    borderRadius: spacing.radius.md,
+    borderRadius: spacing.radius.container,
     cursor: 'pointer',
     transition: 'all 0.15s ease',
   },
@@ -343,7 +343,7 @@ export const modalStyles = {
 
   policyCard: {
     padding: spacing.lg,
-    borderRadius: spacing.radius.lg,
+    borderRadius: spacing.radius.feature,
     border: `1px solid ${colors.border.light}`,
     cursor: 'pointer',
     transition: 'all 0.15s ease',
@@ -352,7 +352,7 @@ export const modalStyles = {
 
   householdCard: {
     padding: spacing.lg,
-    borderRadius: spacing.radius.lg,
+    borderRadius: spacing.radius.feature,
     border: `1px solid ${colors.border.light}`,
     cursor: 'pointer',
     transition: 'all 0.15s ease',
@@ -367,7 +367,7 @@ export const modalStyles = {
 
   regionChip: {
     padding: `${spacing.sm} ${spacing.md}`,
-    borderRadius: spacing.radius.md,
+    borderRadius: spacing.radius.container,
     border: `1px solid ${colors.border.light}`,
     cursor: 'pointer',
     transition: 'all 0.15s ease',
@@ -385,7 +385,7 @@ export const statusHeaderStyles = {
     background: 'rgba(255, 255, 255, 0.95)',
     backdropFilter: 'blur(20px) saturate(180%)',
     WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-    borderRadius: spacing.radius.lg,
+    borderRadius: spacing.radius.feature,
     border: `1px solid ${hasChanges ? colorConfig.border : colors.border.light}`,
     boxShadow: hasChanges
       ? `0 4px 20px ${colorConfig.border}40`

@@ -7,7 +7,7 @@
 
 import { useLayoutEffect, useState } from 'react';
 import { IconCheck, IconPencil } from '@tabler/icons-react';
-import { ActionIcon, Box, Text, TextInput } from '@mantine/core';
+import { Button, Input, Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import { FONT_SIZES } from '../constants';
 
@@ -51,10 +51,10 @@ export function EditableLabel({
   const displayText = value || emptyStateText || placeholder;
 
   return (
-    <Box style={{ display: 'flex', alignItems: 'center', gap: spacing.xs, minWidth: 0, flex: 1 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: spacing.xs, minWidth: 0, flex: 1 }}>
       {isEditing ? (
         <>
-          <TextInput
+          <Input
             value={inputValue}
             onChange={(e) => setInputValue(e.currentTarget.value)}
             onKeyDown={(e) => {
@@ -69,29 +69,25 @@ export function EditableLabel({
             autoFocus
             onBlur={handleSubmit}
             placeholder={placeholder}
-            size="xs"
-            style={{ flex: 1, minWidth: 0 }}
-            styles={{
-              input: {
-                fontFamily: typography.fontFamily.primary,
-                fontWeight: 600,
-                fontSize: FONT_SIZES.normal,
-                border: 'none',
-                background: 'transparent',
-                padding: 0,
-              },
+            className="tw:border-none tw:bg-transparent tw:p-0 tw:h-auto tw:shadow-none tw:focus-visible:ring-0"
+            style={{
+              flex: 1,
+              minWidth: 0,
+              fontFamily: typography.fontFamily.primary,
+              fontWeight: 600,
+              fontSize: FONT_SIZES.normal,
             }}
           />
-          <ActionIcon
-            size="sm"
-            variant="subtle"
-            color="teal"
+          <Button
+            variant="ghost"
+            size="icon-sm"
             onClick={handleSubmit}
             aria-label="Confirm name"
+            className="tw:text-teal-600"
             style={{ flexShrink: 0 }}
           >
             <IconCheck size={14} />
-          </ActionIcon>
+          </Button>
         </>
       ) : (
         <>
@@ -111,17 +107,16 @@ export function EditableLabel({
           >
             {displayText}
           </Text>
-          <ActionIcon
-            size="sm"
-            variant="subtle"
-            color="gray"
+          <Button
+            variant="ghost"
+            size="icon-sm"
             onClick={handleStartEditing}
             style={{ flexShrink: 0 }}
           >
             <IconPencil size={14} />
-          </ActionIcon>
+          </Button>
         </>
       )}
-    </Box>
+    </div>
   );
 }

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { IconPlus } from '@tabler/icons-react';
-import { Box, Text } from '@mantine/core';
+import { Text } from '@/components/ui';
 import { colors } from '@/designTokens';
 import { FONT_SIZES } from '../../constants';
 import { chipStyles } from '../../styles';
@@ -11,7 +11,9 @@ export function CreateCustomChip({ label, onClick, variant, colorConfig }: Creat
 
   if (variant === 'square') {
     return (
-      <Box
+      <div
+        role="button"
+        tabIndex={0}
         style={{
           ...chipStyles.chipCustomSquare,
           borderColor: isHovered ? colorConfig.accent : colors.border.medium,
@@ -20,22 +22,29 @@ export function CreateCustomChip({ label, onClick, variant, colorConfig }: Creat
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         onClick={onClick}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onClick();
+          }
+        }}
       >
         <IconPlus size={20} color={isHovered ? colorConfig.icon : colors.gray[400]} />
         <Text
-          ta="center"
           fw={600}
           c={isHovered ? colorConfig.icon : colors.gray[500]}
-          style={{ fontSize: FONT_SIZES.small, lineHeight: 1.2 }}
+          style={{ textAlign: 'center', fontSize: FONT_SIZES.small, lineHeight: 1.2 }}
         >
           {label}
         </Text>
-      </Box>
+      </div>
     );
   }
 
   return (
-    <Box
+    <div
+      role="button"
+      tabIndex={0}
       style={{
         ...chipStyles.chipCustomRow,
         borderColor: isHovered ? colorConfig.accent : colors.border.medium,
@@ -44,15 +53,21 @@ export function CreateCustomChip({ label, onClick, variant, colorConfig }: Creat
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick();
+        }
+      }}
     >
-      <Box
+      <div
         style={{
           ...chipStyles.chipRowIcon,
           background: isHovered ? colorConfig.border : colors.gray[100],
         }}
       >
         <IconPlus size={20} color={isHovered ? colorConfig.icon : colors.gray[400]} />
-      </Box>
+      </div>
       <Text
         fw={600}
         c={isHovered ? colorConfig.icon : colors.gray[500]}
@@ -60,6 +75,6 @@ export function CreateCustomChip({ label, onClick, variant, colorConfig }: Creat
       >
         {label}
       </Text>
-    </Box>
+    </div>
   );
 }

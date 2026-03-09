@@ -83,7 +83,9 @@ export function buildLabelMapFromTree(
 ): Record<string, string> {
   const labelMap: Record<string, string> = {};
 
-  if (!tree) return labelMap;
+  if (!tree) {
+    return labelMap;
+  }
 
   function traverse(node: ParameterTreeNode): void {
     // Add this node's path -> label mapping
@@ -112,7 +114,9 @@ export function getHierarchicalLabelsFromTree(
   paramName: string,
   parameterTree: ParameterTreeNode | null | undefined
 ): string[] {
-  if (!parameterTree) return [];
+  if (!parameterTree) {
+    return [];
+  }
 
   const parts = splitParameterPath(paramName);
   const paths = buildCumulativePaths(parts);

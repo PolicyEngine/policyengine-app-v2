@@ -8,7 +8,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { IconChevronRight, IconFolder, IconPlus, IconScale, IconStar } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
-import { Box, Button, Group, Modal, Paper, Stack, Text } from '@mantine/core';
 import { PolicyAdapter } from '@/adapters';
 import { createPolicy as createPolicyApi } from '@/api/policy';
 import {
@@ -16,6 +15,12 @@ import {
   EditAndUpdateButton,
   EditDefaultButton,
 } from '@/components/common/ActionButtons';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Group } from '@/components/ui/Group';
+import { Spinner } from '@/components/ui/Spinner';
+import { Stack } from '@/components/ui/Stack';
+import { Text } from '@/components/ui/Text';
 import { MOCK_USER_ID } from '@/constants';
 import { colors, spacing } from '@/designTokens';
 import { useCreatePolicy } from '@/hooks/useCreatePolicy';
@@ -500,8 +505,8 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
 
   // Overview content for creation mode — naming, param grid, action buttons
   const renderOverviewContent = () => (
-    <Box style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <Box style={{ flex: 1, overflow: 'auto', padding: spacing.lg }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <div style={{ flex: 1, overflow: 'auto', padding: spacing.lg }}>
         <PolicyOverviewContent
           policyLabel={policyLabel}
           onLabelChange={setPolicyLabel}
@@ -512,8 +517,8 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
           onHoverParam={setHoveredParamName}
           onClickParam={handleSearchSelect}
         />
-      </Box>
-    </Box>
+      </div>
+    </div>
   );
 
   const renderMainContent = () => {
@@ -546,15 +551,17 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
 
     if (activeSection === 'frequently-selected') {
       return (
-        <Stack gap={spacing.lg} style={{ height: '100%' }}>
+        <Stack gap="lg" style={{ height: '100%' }}>
           <Text fw={600} style={{ fontSize: FONT_SIZES.normal, color: colors.gray[800] }}>
             Frequently selected
           </Text>
-          <Paper
+          <div
+            role="button"
+            tabIndex={0}
             style={{
               background: colors.white,
               border: `1px solid ${colors.border.light}`,
-              borderRadius: spacing.radius.lg,
+              borderRadius: spacing.radius.feature,
               padding: spacing.lg,
               cursor: 'pointer',
               transition: 'all 0.2s ease',
@@ -563,8 +570,14 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
               maxWidth: 340,
             }}
             onClick={handleSelectCurrentLaw}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                handleSelectCurrentLaw();
+              }
+            }}
           >
-            <Box
+            <div
               style={{
                 position: 'absolute',
                 top: 0,
@@ -574,8 +587,8 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
                 background: `linear-gradient(90deg, ${colorConfig.accent}, ${colorConfig.icon})`,
               }}
             />
-            <Group justify="space-between" align="flex-start" wrap="nowrap">
-              <Stack gap={spacing.xs} style={{ flex: 1, minWidth: 0 }}>
+            <Group justify="space-between" align="start" wrap="nowrap">
+              <Stack gap="xs" style={{ flex: 1, minWidth: 0 }}>
                 <Text fw={600} style={{ fontSize: FONT_SIZES.normal, color: colors.gray[900] }}>
                   Current law
                 </Text>
@@ -585,7 +598,7 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
               </Stack>
               <IconChevronRight size={16} color={colors.gray[400]} />
             </Group>
-          </Paper>
+          </div>
         </Stack>
       );
     }
@@ -658,7 +671,7 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
         renderMainContent={renderMainContent}
         footer={
           isCreationMode ? (
-            <Box
+            <div
               style={{
                 display: 'grid',
                 gridTemplateColumns: 'auto 1fr auto',
@@ -666,20 +679,20 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
                 width: '100%',
               }}
             >
-              <Button variant="subtle" color="gray" onClick={handleExitCreationMode}>
+              <Button variant="ghost" onClick={handleExitCreationMode}>
                 Cancel
               </Button>
-              <Box style={{ textAlign: 'center' }}>
+              <div style={{ textAlign: 'center' }}>
                 {modificationCount > 0 && (
                   <Group
-                    gap={spacing.xs}
+                    gap="xs"
                     justify="center"
                     style={{ cursor: 'pointer' }}
                     onClick={() => setActiveTab('overview')}
                     onMouseEnter={() => setFooterHovered(true)}
                     onMouseLeave={() => setFooterHovered(false)}
                   >
-                    <Box
+                    <div
                       style={{
                         width: 8,
                         height: 8,
@@ -698,23 +711,17 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
                     </Text>
                   </Group>
                 )}
-              </Box>
-              <Group gap={spacing.sm} justify="flex-end">
+              </div>
+              <Group gap="sm" justify="end">
                 {editorMode === 'create' && (
-                  <Button
-                    color="teal"
-                    onClick={handleCreatePolicy}
-                    loading={isCreating}
-                    disabled={!policyLabel.trim()}
-                  >
+                  <Button onClick={handleCreatePolicy} disabled={isCreating || !policyLabel.trim()}>
+                    {isCreating && <Spinner size="sm" />}
                     Create policy
                   </Button>
                 )}
                 {editorMode === 'display' && (
                   <EditDefaultButton
                     label="Edit this policy"
-                    color="teal"
-                    variant="filled"
                     onClick={() => setEditorMode('edit')}
                   />
                 )}
@@ -722,15 +729,12 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
                   <>
                     <EditAndUpdateButton
                       label="Update existing policy"
-                      variant="light"
                       onClick={handleUpdateExistingPolicy}
                       loading={isUpdating}
                       disabled={!policyLabel.trim() || isCreating}
                     />
                     <EditAndSaveNewButton
                       label="Save as new policy"
-                      color="teal"
-                      variant="filled"
                       onClick={handleSaveAsNewPolicy}
                       loading={isCreating}
                       disabled={isUpdating}
@@ -738,40 +742,41 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
                   </>
                 )}
               </Group>
-            </Box>
+            </div>
           ) : undefined
         }
         contentPadding={isCreationMode ? 0 : undefined}
       />
 
-      <Modal
-        opened={showSameNameWarning}
-        onClose={() => setShowSameNameWarning(false)}
-        title="Same name"
-        centered
-        size="sm"
+      <Dialog
+        open={showSameNameWarning}
+        onOpenChange={(open) => !open && setShowSameNameWarning(false)}
       >
-        <Stack gap={spacing.md}>
-          <Text size="sm">
-            Both the original and new policy will have the name &quot;{policyLabel.trim()}&quot;.
-            Are you sure you want to save?
-          </Text>
-          <Group justify="flex-end" gap={spacing.sm}>
-            <Button variant="subtle" color="gray" onClick={() => setShowSameNameWarning(false)}>
-              Cancel
-            </Button>
-            <Button
-              color="teal"
-              onClick={() => {
-                setShowSameNameWarning(false);
-                handleCreatePolicy();
-              }}
-            >
-              Save anyway
-            </Button>
-          </Group>
-        </Stack>
-      </Modal>
+        <DialogContent className="tw:sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Same name</DialogTitle>
+          </DialogHeader>
+          <Stack gap="md">
+            <Text size="sm">
+              Both the original and new policy will have the name &quot;{policyLabel.trim()}&quot;.
+              Are you sure you want to save?
+            </Text>
+            <Group justify="end" gap="sm">
+              <Button variant="ghost" onClick={() => setShowSameNameWarning(false)}>
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  setShowSameNameWarning(false);
+                  handleCreatePolicy();
+                }}
+              >
+                Save anyway
+              </Button>
+            </Group>
+          </Stack>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

@@ -101,3 +101,27 @@ export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from './tool
 export { Collapsible, CollapsibleTrigger, CollapsibleContent } from './collapsible';
 export { SegmentedControl } from './segmented-control';
 export type { SegmentedControlOption, SegmentedControlProps } from './segmented-control';
+export {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+  PopoverAnchor,
+  PopoverHeader,
+  PopoverTitle,
+  PopoverDescription,
+} from './popover';
+export {
+  Command,
+  CommandDialog,
+  CommandInput,
+  CommandList,
+  CommandEmpty,
+  CommandGroup,
+  CommandItem,
+  CommandShortcut,
+  CommandSeparator,
+} from './command';
+export { YearPicker } from './year-picker';
+export type { YearPickerProps } from './year-picker';
+export { DatePicker } from './date-picker';
+export type { DatePickerProps } from './date-picker';

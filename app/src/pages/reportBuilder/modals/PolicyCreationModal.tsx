@@ -11,7 +11,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { IconScale, IconX } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
-import { ActionIcon, Box, Button, Group, Modal, Stack, Text } from '@mantine/core';
 import { PolicyAdapter } from '@/adapters';
 import { createPolicy as createPolicyApi } from '@/api/policy';
 import {
@@ -19,6 +18,12 @@ import {
   EditAndUpdateButton,
   EditDefaultButton,
 } from '@/components/common/ActionButtons';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
+import { Group } from '@/components/ui/Group';
+import { Spinner } from '@/components/ui/Spinner';
+import { Stack } from '@/components/ui/Stack';
+import { Text } from '@/components/ui/Text';
 import { colors, spacing } from '@/designTokens';
 import { useCreatePolicy } from '@/hooks/useCreatePolicy';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
@@ -87,7 +92,7 @@ export function PolicyCreationModal({
   const [policyLabel, setPolicyLabel] = useState<string>('');
   const [policyParameters, setPolicyParameters] = useState<Parameter[]>([]);
 
-  // Sidebar tab state — controls main content area
+  // Sidebar tab state -- controls main content area
   const [activeTab, setActiveTab] = useState<SidebarTab>('overview');
 
   // Parameter selection state
@@ -132,7 +137,7 @@ export function PolicyCreationModal({
       setIntervals([]);
       setParameterSearch('');
     }
-  }, [isOpen, initialEditorMode]); // initialPolicy intentionally not in deps — only read on open transition
+  }, [isOpen, initialEditorMode]); // initialPolicy intentionally not in deps -- only read on open transition
 
   // Create local policy state object for components
   const localPolicy: PolicyStateProps = useMemo(
@@ -357,12 +362,12 @@ export function PolicyCreationModal({
   const { baseValues, reformValues } = getChartValues();
 
   // =========================================================================
-  // OVERVIEW CONTENT — shown when "Policy overview" tab is active
+  // OVERVIEW CONTENT -- shown when "Policy overview" tab is active
   // =========================================================================
 
   const renderOverviewContent = () => (
-    <Box style={{ flex: 1, display: 'flex', flexDirection: 'column', background: colors.gray[50] }}>
-      <Box style={{ flex: 1, overflow: 'auto', padding: spacing.xl }}>
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: colors.gray[50] }}>
+      <div style={{ flex: 1, overflow: 'auto', padding: spacing.xl }}>
         <PolicyOverviewContent
           policyLabel={policyLabel}
           onLabelChange={setPolicyLabel}
@@ -373,29 +378,29 @@ export function PolicyCreationModal({
           onHoverParam={setHoveredParamName}
           onClickParam={handleSearchSelect}
         />
-      </Box>
-    </Box>
+      </div>
+    </div>
   );
 
   // =========================================================================
-  // PARAMETERS CONTENT — shown when "Parameters" tab is active
+  // PARAMETERS CONTENT -- shown when "Parameters" tab is active
   // =========================================================================
 
   const renderParametersContent = () => (
-    <Box style={{ flex: 1, overflow: 'auto', background: colors.gray[50] }}>
+    <div style={{ flex: 1, overflow: 'auto', background: colors.gray[50] }}>
       {!selectedParam ? (
         <EmptyParameterState
           message={isReadOnly ? 'Select a parameter from the menu to view its details.' : undefined}
         />
       ) : (
-        <Box style={{ padding: spacing.xl }}>
-          <Stack gap={spacing.lg}>
+        <div style={{ padding: spacing.xl }}>
+          <Stack gap="lg">
             <ParameterHeaderCard
               label={selectedParam.label || ''}
               description={selectedParam.description ?? undefined}
             />
-            <Group gap={spacing.lg} align="flex-start" wrap="nowrap">
-              <Stack gap={spacing.lg} style={{ flex: 1, minWidth: 0 }}>
+            <Group gap="lg" align="start" wrap="nowrap">
+              <Stack gap="lg" style={{ flex: 1, minWidth: 0 }}>
                 {!isReadOnly && (
                   <ValueSetterCard
                     selectedParam={selectedParam}
@@ -430,258 +435,280 @@ export function PolicyCreationModal({
               />
             </Group>
           </Stack>
-        </Box>
+        </div>
       )}
-    </Box>
+    </div>
   );
 
   return (
-    <Modal
-      opened={isOpen}
-      onClose={onClose}
-      withCloseButton={false}
-      size="90vw"
-      radius="lg"
-      styles={{
-        content: {
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) {
+          onClose();
+        }
+      }}
+    >
+      <DialogContent
+        showCloseButton={false}
+        className="tw:sm:max-w-[90vw] tw:p-0"
+        style={{
           maxWidth: '1400px',
           height: '85vh',
           maxHeight: '800px',
           display: 'flex',
           flexDirection: 'column',
-        },
-        header: {
-          padding: spacing.md,
-          paddingLeft: spacing.xl,
-          paddingRight: spacing.xl,
-          borderBottom: `1px solid ${colors.border.light}`,
-        },
-        title: {
-          flex: 1,
-        },
-        body: {
-          padding: 0,
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden',
-        },
-      }}
-      title={
-        <Group justify="space-between" align="center" wrap="nowrap" style={{ width: '100%' }}>
-          <Group gap={spacing.md} align="center" wrap="nowrap">
-            <Box
-              style={{
-                width: 32,
-                height: 32,
-                borderRadius: spacing.radius.md,
-                background: `linear-gradient(135deg, ${colorConfig.bg} 0%, ${colors.white} 100%)`,
-                border: `1px solid ${colorConfig.border}`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-              }}
-            >
-              <IconScale size={18} color={colorConfig.icon} />
-            </Box>
-            <Text fw={600} style={{ fontSize: FONT_SIZES.normal, color: colors.gray[800] }}>
-              {editorMode === 'display'
-                ? 'Policy details'
-                : editorMode === 'edit'
-                  ? 'Edit policy'
-                  : 'Policy editor'}
-            </Text>
-          </Group>
-          <ActionIcon variant="subtle" color="gray" onClick={onClose} style={{ flexShrink: 0 }}>
-            <IconX size={18} />
-          </ActionIcon>
-        </Group>
-      }
-    >
-      {/* Main content area */}
-      <Group align="stretch" gap={0} style={{ flex: 1, overflow: 'hidden' }} wrap="nowrap">
-        {/* Left Sidebar - Parameter Tree with tabs */}
-        <ParameterSidebar
-          parameterTree={parameterTree}
-          metadataLoading={metadataLoading}
-          selectedParam={selectedParam}
-          expandedMenuItems={expandedMenuItems}
-          parameterSearch={parameterSearch}
-          searchableParameters={searchableParameters}
-          onSearchChange={setParameterSearch}
-          onSearchSelect={handleSearchSelect}
-          onMenuItemClick={handleMenuItemClick}
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-        />
-
-        {/* Main Content — switches based on active tab */}
-        {activeTab === 'overview' ? renderOverviewContent() : renderParametersContent()}
-      </Group>
-
-      {/* Footer — unified mode bar */}
-      <Box
-        style={{
-          borderTop: `1px solid ${colors.border.light}`,
-          padding: spacing.md,
-          paddingLeft: spacing.xl,
-          paddingRight: spacing.xl,
-          background: colors.white,
         }}
       >
-        <Box
+        <DialogTitle className="tw:sr-only">
+          {editorMode === 'display'
+            ? 'Policy details'
+            : editorMode === 'edit'
+              ? 'Edit policy'
+              : 'Policy editor'}
+        </DialogTitle>
+        <DialogDescription className="tw:sr-only">
+          Create or edit a policy reform by modifying parameter values.
+        </DialogDescription>
+        {/* Header */}
+        <div
           style={{
-            display: 'grid',
-            gridTemplateColumns: 'auto 1fr auto',
-            alignItems: 'center',
-            width: '100%',
+            padding: spacing.md,
+            paddingLeft: spacing.xl,
+            paddingRight: spacing.xl,
+            borderBottom: `1px solid ${colors.border.light}`,
           }}
         >
-          <Button variant="subtle" color="gray" onClick={onClose}>
-            Cancel
-          </Button>
-          <Box style={{ textAlign: 'center' }}>
-            {modificationCount > 0 && (
-              <Group
-                gap={spacing.xs}
-                justify="center"
-                style={{ cursor: 'pointer' }}
-                onClick={() => setActiveTab('overview')}
-                onMouseEnter={() => setFooterHovered(true)}
-                onMouseLeave={() => setFooterHovered(false)}
-              >
-                <Box
-                  style={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: '50%',
-                    background: colors.primary[500],
-                  }}
-                />
-                <Text
-                  style={{
-                    fontSize: FONT_SIZES.small,
-                    color: footerHovered ? colors.primary[600] : colors.gray[600],
-                    transition: 'color 0.15s ease',
-                  }}
-                >
-                  {modificationCount} parameter{modificationCount !== 1 ? 's' : ''} modified
-                </Text>
-              </Group>
-            )}
-          </Box>
-          <Group gap={spacing.sm} justify="flex-end">
-            {editorMode === 'create' && (
-              <Button
-                color="teal"
-                onClick={() => {
-                  if (!policyLabel.trim()) {
-                    setShowUnnamedWarning(true);
-                  } else {
-                    handleCreatePolicy();
-                  }
+          <Group justify="space-between" align="center" wrap="nowrap" style={{ width: '100%' }}>
+            <Group gap="md" align="center" wrap="nowrap">
+              <div
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: spacing.radius.container,
+                  background: `linear-gradient(135deg, ${colorConfig.bg} 0%, ${colors.white} 100%)`,
+                  border: `1px solid ${colorConfig.border}`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
                 }}
-                loading={isCreating}
               >
-                Create policy
-              </Button>
-            )}
-            {editorMode === 'display' && (
-              <EditDefaultButton
-                label="Edit this policy"
-                color="teal"
-                variant="filled"
-                onClick={() => setEditorMode('edit')}
-              />
-            )}
-            {editorMode === 'edit' && (
-              <>
-                <EditAndUpdateButton
-                  label="Update existing policy"
-                  variant="light"
-                  onClick={handleUpdateExistingPolicy}
-                  loading={isUpdating}
-                  disabled={!policyLabel.trim() || isCreating}
-                />
-                <EditAndSaveNewButton
-                  label="Save as new policy"
-                  color="teal"
-                  variant="filled"
+                <IconScale size={18} color={colorConfig.icon} />
+              </div>
+              <Text fw={600} style={{ fontSize: FONT_SIZES.normal, color: colors.gray[800] }}>
+                {editorMode === 'display'
+                  ? 'Policy details'
+                  : editorMode === 'edit'
+                    ? 'Edit policy'
+                    : 'Policy editor'}
+              </Text>
+            </Group>
+            <Button variant="ghost" size="icon-sm" onClick={onClose} style={{ flexShrink: 0 }}>
+              <IconX size={18} />
+            </Button>
+          </Group>
+        </div>
+
+        {/* Main content area */}
+        <div
+          style={{
+            flex: 1,
+            overflow: 'hidden',
+            display: 'flex',
+            flexDirection: 'row',
+          }}
+        >
+          {/* Left Sidebar - Parameter Tree with tabs */}
+          <ParameterSidebar
+            parameterTree={parameterTree}
+            metadataLoading={metadataLoading}
+            selectedParam={selectedParam}
+            expandedMenuItems={expandedMenuItems}
+            parameterSearch={parameterSearch}
+            searchableParameters={searchableParameters}
+            onSearchChange={setParameterSearch}
+            onSearchSelect={handleSearchSelect}
+            onMenuItemClick={handleMenuItemClick}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+          />
+
+          {/* Main Content -- switches based on active tab */}
+          {activeTab === 'overview' ? renderOverviewContent() : renderParametersContent()}
+        </div>
+
+        {/* Footer -- unified mode bar */}
+        <div
+          style={{
+            borderTop: `1px solid ${colors.border.light}`,
+            padding: spacing.md,
+            paddingLeft: spacing.xl,
+            paddingRight: spacing.xl,
+            background: colors.white,
+          }}
+        >
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'auto 1fr auto',
+              alignItems: 'center',
+              width: '100%',
+            }}
+          >
+            <Button variant="ghost" onClick={onClose}>
+              Cancel
+            </Button>
+            <div style={{ textAlign: 'center' }}>
+              {modificationCount > 0 && (
+                <Group
+                  gap="xs"
+                  justify="center"
+                  style={{ cursor: 'pointer' }}
+                  onClick={() => setActiveTab('overview')}
+                  onMouseEnter={() => setFooterHovered(true)}
+                  onMouseLeave={() => setFooterHovered(false)}
+                >
+                  <div
+                    style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: '50%',
+                      background: colors.primary[500],
+                    }}
+                  />
+                  <Text
+                    style={{
+                      fontSize: FONT_SIZES.small,
+                      color: footerHovered ? colors.primary[600] : colors.gray[600],
+                      transition: 'color 0.15s ease',
+                    }}
+                  >
+                    {modificationCount} parameter{modificationCount !== 1 ? 's' : ''} modified
+                  </Text>
+                </Group>
+              )}
+            </div>
+            <Group gap="sm" justify="end">
+              {editorMode === 'create' && (
+                <Button
                   onClick={() => {
                     if (!policyLabel.trim()) {
                       setShowUnnamedWarning(true);
                     } else {
-                      handleSaveAsNewPolicy();
+                      handleCreatePolicy();
                     }
                   }}
-                  loading={isCreating}
-                  disabled={isUpdating}
-                />
-              </>
-            )}
-          </Group>
-        </Box>
-      </Box>
+                  disabled={isCreating}
+                >
+                  {isCreating && <Spinner size="sm" />}
+                  Create policy
+                </Button>
+              )}
+              {editorMode === 'display' && (
+                <EditDefaultButton label="Edit this policy" onClick={() => setEditorMode('edit')} />
+              )}
+              {editorMode === 'edit' && (
+                <>
+                  <EditAndUpdateButton
+                    label="Update existing policy"
+                    onClick={handleUpdateExistingPolicy}
+                    loading={isUpdating}
+                    disabled={!policyLabel.trim() || isCreating}
+                  />
+                  <EditAndSaveNewButton
+                    label="Save as new policy"
+                    onClick={() => {
+                      if (!policyLabel.trim()) {
+                        setShowUnnamedWarning(true);
+                      } else {
+                        handleSaveAsNewPolicy();
+                      }
+                    }}
+                    loading={isCreating}
+                    disabled={isUpdating}
+                  />
+                </>
+              )}
+            </Group>
+          </div>
+        </div>
 
-      {/* Same-name warning modal */}
-      <Modal
-        opened={showSameNameWarning}
-        onClose={() => setShowSameNameWarning(false)}
-        title={<strong>Same name</strong>}
-        centered
-        size="sm"
-      >
-        <Stack gap={spacing.md}>
-          <Text size="sm">
-            Both the original and new policy will have the name &ldquo;
-            {policyLabel}&rdquo;. Are you sure you want to save?
-          </Text>
-          <Group justify="flex-end" gap={spacing.sm}>
-            <Button variant="subtle" color="gray" onClick={() => setShowSameNameWarning(false)}>
-              Cancel
-            </Button>
-            <Button
-              color="teal"
-              onClick={() => {
-                setShowSameNameWarning(false);
-                handleCreatePolicy();
-              }}
-            >
-              Save anyway
-            </Button>
-          </Group>
-        </Stack>
-      </Modal>
+        {/* Same-name warning modal */}
+        <Dialog
+          open={showSameNameWarning}
+          onOpenChange={(open) => {
+            if (!open) {
+              setShowSameNameWarning(false);
+            }
+          }}
+        >
+          <DialogContent className="tw:sm:max-w-sm">
+            <DialogTitle>
+              <strong>Same name</strong>
+            </DialogTitle>
+            <DialogDescription className="tw:sr-only">
+              Confirm saving a policy with the same name
+            </DialogDescription>
+            <Stack gap="md">
+              <Text size="sm">
+                Both the original and new policy will have the name &ldquo;
+                {policyLabel}&rdquo;. Are you sure you want to save?
+              </Text>
+              <Group justify="end" gap="sm">
+                <Button variant="ghost" onClick={() => setShowSameNameWarning(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => {
+                    setShowSameNameWarning(false);
+                    handleCreatePolicy();
+                  }}
+                >
+                  Save anyway
+                </Button>
+              </Group>
+            </Stack>
+          </DialogContent>
+        </Dialog>
 
-      {/* Unnamed policy warning modal */}
-      <Modal
-        opened={showUnnamedWarning}
-        onClose={() => setShowUnnamedWarning(false)}
-        title={<strong>Unnamed policy</strong>}
-        centered
-        size="sm"
-      >
-        <Stack gap={spacing.md}>
-          <Text size="sm">
-            This policy has no name. Are you sure you want to save it without a name?
-          </Text>
-          <Group justify="flex-end" gap={spacing.sm}>
-            <Button variant="subtle" color="gray" onClick={() => setShowUnnamedWarning(false)}>
-              Cancel
-            </Button>
-            <Button
-              color="teal"
-              onClick={() => {
-                setShowUnnamedWarning(false);
-                handleCreatePolicy();
-              }}
-            >
-              Save anyway
-            </Button>
-          </Group>
-        </Stack>
-      </Modal>
-    </Modal>
+        {/* Unnamed policy warning modal */}
+        <Dialog
+          open={showUnnamedWarning}
+          onOpenChange={(open) => {
+            if (!open) {
+              setShowUnnamedWarning(false);
+            }
+          }}
+        >
+          <DialogContent className="tw:sm:max-w-sm">
+            <DialogTitle>
+              <strong>Unnamed policy</strong>
+            </DialogTitle>
+            <DialogDescription className="tw:sr-only">
+              Confirm saving an unnamed policy
+            </DialogDescription>
+            <Stack gap="md">
+              <Text size="sm">
+                This policy has no name. Are you sure you want to save it without a name?
+              </Text>
+              <Group justify="end" gap="sm">
+                <Button variant="ghost" onClick={() => setShowUnnamedWarning(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => {
+                    setShowUnnamedWarning(false);
+                    handleCreatePolicy();
+                  }}
+                >
+                  Save anyway
+                </Button>
+              </Group>
+            </Stack>
+          </DialogContent>
+        </Dialog>
+      </DialogContent>
+    </Dialog>
   );
 }

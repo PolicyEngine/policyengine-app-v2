@@ -12,14 +12,12 @@
  */
 import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  IconArrowRight,
   IconChartLine,
   IconCheck,
   IconChevronLeft,
   IconChevronRight,
   IconCircleCheck,
   IconCircleDashed,
-  IconClock,
   IconFileDescription,
   IconFolder,
   IconHome,
@@ -38,38 +36,42 @@ import {
 } from '@tabler/icons-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
-import {
-  ActionIcon,
-  Autocomplete,
-  Box,
-  Button,
-  Container,
-  Divider,
-  Drawer,
-  Group,
-  Loader,
-  LoadingOverlay,
-  Modal,
-  NavLink,
-  Paper,
-  Popover,
-  ScrollArea,
-  Select,
-  Skeleton,
-  Stack,
-  Tabs,
-  Text,
-  TextInput,
-  Title,
-  Tooltip,
-  Transition,
-  UnstyledButton,
-} from '@mantine/core';
 import { PolicyAdapter } from '@/adapters';
 import { HouseholdAdapter } from '@/adapters/HouseholdAdapter';
 import { geographyUsageStore, householdUsageStore } from '@/api/usageTracking';
 import HouseholdBuilderForm from '@/components/household/HouseholdBuilderForm';
 import { UKOutlineIcon, USOutlineIcon } from '@/components/icons/CountryOutlineIcons';
+import {
+  Button,
+  Command,
+  CommandItem,
+  CommandList,
+  Dialog,
+  DialogContent,
+  Group,
+  Input,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+  ScrollArea,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Separator,
+  Skeleton,
+  Spinner,
+  Stack,
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  Text,
+  Title,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui';
 import { CURRENT_YEAR, MOCK_USER_ID } from '@/constants';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCreateHousehold } from '@/hooks/useCreateHousehold';
@@ -93,7 +95,7 @@ import { ParameterTreeNode } from '@/types/metadata';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import { PolicyStateProps, PopulationStateProps, SimulationStateProps } from '@/types/pathwayState';
 import { PolicyCreationPayload } from '@/types/payloads';
-import { getParameterByName, Parameter } from '@/types/subIngredients/parameter';
+import { Parameter } from '@/types/subIngredients/parameter';
 import {
   ValueInterval,
   ValueIntervalCollection,
@@ -235,9 +237,6 @@ function CountryMapIcon({
   return <USOutlineIcon size={size} color={color} />;
 }
 
-// Default sample populations (for backwards compatibility)
-const SAMPLE_POPULATIONS = getSamplePopulations('us');
-
 // ============================================================================
 // STYLES
 // ============================================================================
@@ -264,7 +263,7 @@ const styles = {
 
   canvasContainer: {
     background: colors.white,
-    borderRadius: spacing.radius.xl,
+    borderRadius: spacing.radius.feature,
     border: `1px solid ${colors.border.light}`,
     boxShadow: `0 4px 24px ${colors.shadow.light}`,
     padding: spacing['2xl'],
@@ -296,7 +295,7 @@ const styles = {
 
   simulationCard: {
     background: colors.white,
-    borderRadius: spacing.radius.lg,
+    borderRadius: spacing.radius.feature,
     border: `2px solid ${colors.gray[200]}`,
     padding: spacing.xl,
     transition: 'all 0.2s ease',
@@ -329,7 +328,7 @@ const styles = {
   // Ingredient section (bubble/card container, not clickable)
   ingredientSection: {
     padding: spacing.md,
-    borderRadius: spacing.radius.lg,
+    borderRadius: spacing.radius.feature,
     border: `1px solid`,
     background: 'white',
   },
@@ -344,7 +343,7 @@ const styles = {
   ingredientSectionIcon: {
     width: 32,
     height: 32,
-    borderRadius: spacing.radius.md,
+    borderRadius: spacing.radius.container,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -367,7 +366,7 @@ const styles = {
   // Square chip (expands to fill grid cell, min 80px height)
   chipSquare: {
     minHeight: 80,
-    borderRadius: spacing.radius.md,
+    borderRadius: spacing.radius.container,
     borderWidth: 1,
     borderStyle: 'solid',
     display: 'flex',
@@ -391,7 +390,7 @@ const styles = {
     alignItems: 'center',
     gap: spacing.md,
     padding: `${spacing.md} ${spacing.lg}`,
-    borderRadius: spacing.radius.md,
+    borderRadius: spacing.radius.container,
     borderWidth: 1,
     borderStyle: 'solid',
     cursor: 'pointer',
@@ -406,7 +405,7 @@ const styles = {
   chipRowIcon: {
     width: 40,
     height: 40,
-    borderRadius: spacing.radius.md,
+    borderRadius: spacing.radius.container,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -416,7 +415,7 @@ const styles = {
   // Perforated "Create new policy" chip (expands to fill grid cell)
   chipCustomSquare: {
     minHeight: 80,
-    borderRadius: spacing.radius.md,
+    borderRadius: spacing.radius.container,
     borderWidth: 2,
     borderStyle: 'dashed',
     display: 'flex',
@@ -434,7 +433,7 @@ const styles = {
     alignItems: 'center',
     gap: spacing.md,
     padding: `${spacing.md} ${spacing.lg}`,
-    borderRadius: spacing.radius.md,
+    borderRadius: spacing.radius.container,
     borderWidth: 2,
     borderStyle: 'dashed',
     cursor: 'pointer',
@@ -444,7 +443,7 @@ const styles = {
 
   addSimulationCard: {
     background: colors.white,
-    borderRadius: spacing.radius.lg,
+    borderRadius: spacing.radius.feature,
     border: `2px dashed ${colors.border.medium}`,
     padding: spacing.xl,
     display: 'flex',
@@ -459,7 +458,7 @@ const styles = {
 
   reportMetaCard: {
     background: colors.white,
-    borderRadius: spacing.radius.lg,
+    borderRadius: spacing.radius.feature,
     border: `1px solid ${colors.border.light}`,
     padding: `${spacing.xl} ${spacing.xl} ${spacing['2xl']} ${spacing.xl}`,
     marginBottom: spacing.xl,
@@ -507,7 +506,9 @@ function OptionChipSquare({
   const [isHovered, setIsHovered] = useState(false);
 
   return (
-    <Box
+    <div
+      role="button"
+      tabIndex={0}
       style={{
         ...styles.chipSquare,
         borderColor: isSelected ? colorConfig.accent : colors.border.light,
@@ -522,12 +523,17 @@ function OptionChipSquare({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.currentTarget.click();
+        }
+      }}
     >
-      <Box
+      <div
         style={{
           width: 28,
           height: 28,
-          borderRadius: spacing.radius.sm,
+          borderRadius: spacing.radius.element,
           background: isSelected ? colorConfig.border : colors.gray[100],
           display: 'flex',
           alignItems: 'center',
@@ -535,21 +541,23 @@ function OptionChipSquare({
         }}
       >
         {icon}
-      </Box>
+      </div>
       <Text
-        ta="center"
         fw={600}
         c={isSelected ? colorConfig.icon : colors.gray[700]}
-        style={{ fontSize: FONT_SIZES.small, lineHeight: 1.2 }}
+        style={{ textAlign: 'center', fontSize: FONT_SIZES.small, lineHeight: 1.2 }}
       >
         {label}
       </Text>
       {description && (
-        <Text ta="center" c="dimmed" style={{ fontSize: FONT_SIZES.tiny, lineHeight: 1.2 }}>
+        <Text
+          c="dimmed"
+          style={{ textAlign: 'center', fontSize: FONT_SIZES.tiny, lineHeight: 1.2 }}
+        >
           {description}
         </Text>
       )}
-    </Box>
+    </div>
   );
 }
 
@@ -573,7 +581,9 @@ function OptionChipRow({
   const [isHovered, setIsHovered] = useState(false);
 
   return (
-    <Box
+    <div
+      role="button"
+      tabIndex={0}
       style={{
         ...styles.chipRow,
         borderColor: isSelected ? colorConfig.accent : colors.border.light,
@@ -583,16 +593,21 @@ function OptionChipRow({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.currentTarget.click();
+        }
+      }}
     >
-      <Box
+      <div
         style={{
           ...styles.chipRowIcon,
           background: isSelected ? colorConfig.border : colors.gray[100],
         }}
       >
         {icon}
-      </Box>
-      <Stack gap={2} style={{ flex: 1 }}>
+      </div>
+      <Stack style={{ gap: 2, flex: 1 }}>
         <Text
           fw={600}
           c={isSelected ? colorConfig.icon : colors.gray[700]}
@@ -607,72 +622,7 @@ function OptionChipRow({
         )}
       </Stack>
       {isSelected && <IconCheck size={18} color={colorConfig.accent} stroke={2.5} />}
-    </Box>
-  );
-}
-
-interface CreateCustomChipProps {
-  label: string;
-  onClick: () => void;
-  variant: 'square' | 'row';
-  colorConfig: IngredientColorConfig;
-}
-
-function CreateCustomChip({ label, onClick, variant, colorConfig }: CreateCustomChipProps) {
-  const [isHovered, setIsHovered] = useState(false);
-
-  if (variant === 'square') {
-    return (
-      <Box
-        style={{
-          ...styles.chipCustomSquare,
-          borderColor: isHovered ? colorConfig.accent : colors.border.medium,
-          background: isHovered ? colorConfig.bg : colors.gray[50],
-        }}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-        onClick={onClick}
-      >
-        <IconPlus size={20} color={isHovered ? colorConfig.icon : colors.gray[400]} />
-        <Text
-          ta="center"
-          fw={600}
-          c={isHovered ? colorConfig.icon : colors.gray[500]}
-          style={{ fontSize: FONT_SIZES.small, lineHeight: 1.2 }}
-        >
-          {label}
-        </Text>
-      </Box>
-    );
-  }
-
-  return (
-    <Box
-      style={{
-        ...styles.chipCustomRow,
-        borderColor: isHovered ? colorConfig.accent : colors.border.medium,
-        background: isHovered ? colorConfig.bg : colors.gray[50],
-      }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      onClick={onClick}
-    >
-      <Box
-        style={{
-          ...styles.chipRowIcon,
-          background: isHovered ? colorConfig.border : colors.gray[100],
-        }}
-      >
-        <IconPlus size={20} color={isHovered ? colorConfig.icon : colors.gray[400]} />
-      </Box>
-      <Text
-        fw={600}
-        c={isHovered ? colorConfig.icon : colors.gray[500]}
-        style={{ fontSize: FONT_SIZES.normal }}
-      >
-        {label}
-      </Text>
-    </Box>
+    </div>
   );
 }
 
@@ -703,7 +653,9 @@ function BrowseMoreChip({
 
   if (variant === 'square') {
     return (
-      <Box
+      <div
+        role="button"
+        tabIndex={0}
         style={{
           ...styles.chipCustomSquare,
           borderColor: isHovered ? colorConfig.accent : colors.border.medium,
@@ -712,31 +664,36 @@ function BrowseMoreChip({
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         onClick={onClick}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.currentTarget.click();
+          }
+        }}
       >
         <IconSearch size={20} color={isHovered ? colorConfig.icon : colors.gray[400]} />
         <Text
-          ta="center"
           fw={600}
           c={isHovered ? colorConfig.icon : colors.gray[500]}
-          style={{ fontSize: FONT_SIZES.small, lineHeight: 1.2 }}
+          style={{ textAlign: 'center', fontSize: FONT_SIZES.small, lineHeight: 1.2 }}
         >
           {label}
         </Text>
         {description && (
           <Text
-            ta="center"
             c={isHovered ? colorConfig.icon : colors.gray[400]}
-            style={{ fontSize: FONT_SIZES.tiny, lineHeight: 1.2 }}
+            style={{ textAlign: 'center', fontSize: FONT_SIZES.tiny, lineHeight: 1.2 }}
           >
             {description}
           </Text>
         )}
-      </Box>
+      </div>
     );
   }
 
   return (
-    <Box
+    <div
+      role="button"
+      tabIndex={0}
       style={{
         ...styles.chipCustomRow,
         borderColor: isHovered ? colorConfig.accent : colors.border.medium,
@@ -745,16 +702,21 @@ function BrowseMoreChip({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.currentTarget.click();
+        }
+      }}
     >
-      <Box
+      <div
         style={{
           ...styles.chipRowIcon,
           background: isHovered ? colorConfig.border : colors.gray[100],
         }}
       >
         <IconSearch size={20} color={isHovered ? colorConfig.icon : colors.gray[400]} />
-      </Box>
-      <Stack gap={2} style={{ flex: 1 }}>
+      </div>
+      <Stack style={{ gap: 2, flex: 1 }}>
         <Text
           fw={600}
           c={isHovered ? colorConfig.icon : colors.gray[500]}
@@ -771,7 +733,7 @@ function BrowseMoreChip({
           </Text>
         )}
       </Stack>
-    </Box>
+    </div>
   );
 }
 
@@ -812,7 +774,7 @@ function IngredientSection({
   onSelectRecentPopulation,
   onDeselectPopulation,
   onDeselectPolicy,
-  onCreateCustom,
+  onCreateCustom: _onCreateCustom,
   onBrowseMore,
   isInherited,
   inheritedPopulationType,
@@ -841,7 +803,7 @@ function IngredientSection({
   const ChipComponent = useRowLayout ? OptionChipRow : OptionChipSquare;
 
   return (
-    <Box
+    <div
       style={{
         ...styles.ingredientSection,
         borderColor: colors.border.light,
@@ -849,8 +811,8 @@ function IngredientSection({
       }}
     >
       {/* Section header */}
-      <Box style={styles.ingredientSectionHeader}>
-        <Box
+      <div style={styles.ingredientSectionHeader}>
+        <div
           style={{
             ...styles.ingredientSectionIcon,
             background: colorConfig.bg,
@@ -858,7 +820,7 @@ function IngredientSection({
           }}
         >
           <IconComponent size={16} color={colorConfig.icon} stroke={2} />
-        </Box>
+        </div>
         <Text
           fw={600}
           c={colorConfig.icon}
@@ -867,12 +829,12 @@ function IngredientSection({
           {typeLabels[type]}
         </Text>
         {isInherited && <Text style={styles.inheritedBadge}>(inherited from baseline)</Text>}
-      </Box>
+      </div>
 
       {/* Chips container */}
       {isInherited && inheritedPopulationType ? (
-        <Box style={useRowLayout ? styles.chipRowContainer : styles.chipGridSquare}>
-          <Box
+        <div style={useRowLayout ? styles.chipRowContainer : styles.chipGridSquare}>
+          <div
             style={{
               ...(useRowLayout ? styles.chipRow : styles.chipSquare),
               opacity: 0.6,
@@ -883,7 +845,7 @@ function IngredientSection({
           >
             {useRowLayout ? (
               <>
-                <Box
+                <div
                   style={{
                     ...styles.chipRowIcon,
                     background: colors.gray[200],
@@ -894,8 +856,8 @@ function IngredientSection({
                   ) : (
                     <CountryMapIcon countryId={countryId} size={20} color={colors.gray[500]} />
                   )}
-                </Box>
-                <Stack gap={2} style={{ flex: 1 }}>
+                </div>
+                <Stack style={{ gap: 2, flex: 1 }}>
                   <Text fw={600} c={colors.gray[500]} style={{ fontSize: FONT_SIZES.normal }}>
                     {inheritedPopulationType === 'household'
                       ? 'Household'
@@ -910,11 +872,11 @@ function IngredientSection({
               </>
             ) : (
               <>
-                <Box
+                <div
                   style={{
                     width: 28,
                     height: 28,
-                    borderRadius: spacing.radius.sm,
+                    borderRadius: spacing.radius.element,
                     background: colors.gray[200],
                     display: 'flex',
                     alignItems: 'center',
@@ -926,21 +888,19 @@ function IngredientSection({
                   ) : (
                     <CountryMapIcon countryId={countryId} size={16} color={colors.gray[500]} />
                   )}
-                </Box>
+                </div>
                 <Text
-                  ta="center"
                   fw={600}
                   c={colors.gray[500]}
-                  style={{ fontSize: FONT_SIZES.small, lineHeight: 1.2 }}
+                  style={{ textAlign: 'center', fontSize: FONT_SIZES.small, lineHeight: 1.2 }}
                 >
                   {inheritedPopulationType === 'household'
                     ? 'Household'
                     : countryConfig.nationwideTitle}
                 </Text>
                 <Text
-                  ta="center"
                   c={colors.gray[400]}
-                  style={{ fontSize: FONT_SIZES.tiny, lineHeight: 1.2 }}
+                  style={{ textAlign: 'center', fontSize: FONT_SIZES.tiny, lineHeight: 1.2 }}
                 >
                   {inheritedPopulationType === 'household'
                     ? 'Inherited'
@@ -948,10 +908,10 @@ function IngredientSection({
                 </Text>
               </>
             )}
-          </Box>
-        </Box>
+          </div>
+        </div>
       ) : (
-        <Box style={useRowLayout ? styles.chipRowContainer : styles.chipGridSquare}>
+        <div style={useRowLayout ? styles.chipRowContainer : styles.chipGridSquare}>
           {type === 'policy' && onQuickSelectPolicy && (
             <>
               {/* Current law - always first */}
@@ -1079,11 +1039,11 @@ function IngredientSection({
           )}
 
           {type === 'dynamics' && (
-            <Box
+            <div
               style={{
                 padding: spacing.md,
                 background: colors.white,
-                borderRadius: spacing.radius.md,
+                borderRadius: spacing.radius.container,
                 border: `1px dashed ${colorConfig.border}`,
                 gridColumn: '1 / -1',
                 display: 'flex',
@@ -1091,17 +1051,17 @@ function IngredientSection({
                 justifyContent: 'center',
               }}
             >
-              <Group gap={spacing.sm}>
+              <Group gap="sm">
                 <IconSparkles size={18} color={colorConfig.accent} />
                 <Text c={colorConfig.icon} style={{ fontSize: FONT_SIZES.normal }}>
                   Dynamics coming soon
                 </Text>
               </Group>
-            </Box>
+            </div>
           )}
-        </Box>
+        </div>
       )}
-    </Box>
+    </div>
   );
 }
 
@@ -1185,14 +1145,14 @@ function SimulationBlock({
       : null;
 
   return (
-    <Paper
+    <div
       style={{
         ...styles.simulationCard,
         ...(isFullyConfigured ? styles.simulationCardActive : {}),
       }}
     >
       {/* Status indicator */}
-      <Box
+      <div
         style={{
           position: 'absolute',
           top: -1,
@@ -1207,71 +1167,70 @@ function SimulationBlock({
       />
 
       {/* Header */}
-      <Box style={styles.simulationHeader}>
-        <Group gap={spacing.sm}>
+      <div style={styles.simulationHeader}>
+        <Group gap="sm">
           {isEditingLabel ? (
-            <TextInput
+            <Input
               value={labelInput}
               onChange={(e) => setLabelInput(e.target.value)}
               onBlur={handleLabelSubmit}
               onKeyDown={(e) => e.key === 'Enter' && handleLabelSubmit()}
-              size="sm"
               autoFocus
-              styles={{
-                input: {
-                  fontWeight: typography.fontWeight.semibold,
-                  fontSize: FONT_SIZES.normal,
-                },
+              style={{
+                fontWeight: typography.fontWeight.semibold,
+                fontSize: FONT_SIZES.normal,
               }}
             />
           ) : (
-            <Group gap={spacing.xs}>
+            <Group gap="xs">
               <Text style={styles.simulationTitle}>{simulation.label || defaultLabel}</Text>
-              <ActionIcon
-                size="xs"
-                variant="subtle"
-                color="gray"
+              <Button
+                variant="ghost"
+                size="icon-xs"
                 onClick={() => {
                   setLabelInput(simulation.label || defaultLabel);
                   setIsEditingLabel(true);
                 }}
               >
                 <IconPencil size={12} />
-              </ActionIcon>
+              </Button>
             </Group>
           )}
         </Group>
 
-        <Group gap={spacing.xs}>
+        <Group gap="xs">
           {isRequired && (
-            <Text c="dimmed" fs="italic" style={{ fontSize: FONT_SIZES.small }}>
+            <Text c="dimmed" style={{ fontStyle: 'italic', fontSize: FONT_SIZES.small }}>
               Required
             </Text>
           )}
           {isFullyConfigured && (
-            <Tooltip label="Fully configured">
-              <Box
-                style={{
-                  width: 20,
-                  height: 20,
-                  borderRadius: '50%',
-                  background: colors.success,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <IconCheck size={12} color="white" stroke={3} />
-              </Box>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div
+                  style={{
+                    width: 20,
+                    height: 20,
+                    borderRadius: '50%',
+                    background: colors.success,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <IconCheck size={12} color="white" stroke={3} />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>Fully configured</TooltipContent>
             </Tooltip>
           )}
           {canRemove && (
-            <ActionIcon size="sm" variant="subtle" color="red" onClick={onRemove}>
+            <Button variant="ghost" size="icon-sm" className="tw:text-red-500" onClick={onRemove}>
               <IconTrash size={14} />
-            </ActionIcon>
+            </Button>
           )}
         </Group>
-      </Box>
+      </div>
 
       {/* Panels - direct children for subgrid alignment */}
       <IngredientSection
@@ -1308,7 +1267,7 @@ function SimulationBlock({
         onCreateCustom={() => {}}
         viewMode={viewMode}
       />
-    </Paper>
+    </div>
   );
 }
 
@@ -1321,7 +1280,9 @@ function AddSimulationCard({ onClick, disabled }: AddSimulationCardProps) {
   const [isHovered, setIsHovered] = useState(false);
 
   return (
-    <Box
+    <div
+      role="button"
+      tabIndex={disabled ? -1 : 0}
       style={{
         ...styles.addSimulationCard,
         opacity: disabled ? 0.5 : 1,
@@ -1332,8 +1293,13 @@ function AddSimulationCard({ onClick, disabled }: AddSimulationCardProps) {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={disabled ? undefined : onClick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.currentTarget.click();
+        }
+      }}
     >
-      <Box
+      <div
         style={{
           width: 56,
           height: 56,
@@ -1349,7 +1315,7 @@ function AddSimulationCard({ onClick, disabled }: AddSimulationCardProps) {
           size={28}
           color={isHovered && !disabled ? colors.primary[600] : colors.gray[400]}
         />
-      </Box>
+      </div>
       <Text
         fw={600}
         c={isHovered && !disabled ? colors.primary[700] : colors.gray[500]}
@@ -1357,10 +1323,10 @@ function AddSimulationCard({ onClick, disabled }: AddSimulationCardProps) {
       >
         Add reform simulation
       </Text>
-      <Text c="dimmed" ta="center" style={{ fontSize: FONT_SIZES.small, maxWidth: 200 }}>
+      <Text c="dimmed" style={{ textAlign: 'center', fontSize: FONT_SIZES.small, maxWidth: 200 }}>
         Compare policy changes against your baseline
       </Text>
-    </Box>
+    </div>
   );
 }
 
@@ -1450,16 +1416,25 @@ function IngredientPickerModal({
   };
 
   return (
-    <Modal
-      opened={isOpen}
-      onClose={onClose}
-      title={
-        <Group gap={spacing.sm}>
-          <Box
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent
+        className="tw:sm:max-w-none tw:p-0 tw:gap-0"
+        style={{ width: '80vw', maxWidth: '1200px' }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: spacing.sm,
+            padding: `${spacing.md} ${spacing.xl}`,
+            borderBottom: `1px solid ${colors.border.light}`,
+          }}
+        >
+          <div
             style={{
               width: 32,
               height: 32,
-              borderRadius: spacing.radius.sm,
+              borderRadius: spacing.radius.element,
               background: colorConfig.bg,
               border: `1px solid ${colorConfig.border}`,
               display: 'flex',
@@ -1468,358 +1443,509 @@ function IngredientPickerModal({
             }}
           >
             {getIcon()}
-          </Box>
+          </div>
           <Text fw={600} style={{ fontSize: FONT_SIZES.normal }}>
             {getTitle()}
           </Text>
-        </Group>
-      }
-      size="xl"
-      radius="lg"
-      styles={{
-        content: { width: '80vw', maxWidth: '1200px' },
-        header: { borderBottom: `1px solid ${colors.border.light}`, paddingBottom: spacing.md },
-        body: { padding: spacing.xl },
-      }}
-    >
-      <Stack gap={spacing.lg}>
-        {type === 'policy' && (
-          <>
-            <Paper
-              p="md"
-              radius="md"
-              withBorder
-              style={{ cursor: 'pointer' }}
-              onClick={handleSelectCurrentLaw}
-            >
-              <Group gap={spacing.md}>
-                <Box
+        </div>
+        <div style={{ padding: spacing.xl }}>
+          <Stack gap="lg">
+            {type === 'policy' && (
+              <>
+                <div
+                  role="button"
+                  tabIndex={0}
                   style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: spacing.radius.md,
-                    background: colorConfig.bg,
-                    border: `1px solid ${colorConfig.border}`,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
+                    padding: spacing.md,
+                    borderRadius: spacing.radius.container,
+                    border: `1px solid ${colors.border.light}`,
+                    cursor: 'pointer',
+                  }}
+                  onClick={handleSelectCurrentLaw}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.currentTarget.click();
+                    }
                   }}
                 >
-                  <IconScale size={18} color={colorConfig.icon} />
-                </Box>
-                <Stack gap={2}>
-                  <Text fw={600} style={{ fontSize: FONT_SIZES.normal }}>
-                    Current law
+                  <Group gap="md">
+                    <div
+                      style={{
+                        width: 36,
+                        height: 36,
+                        borderRadius: spacing.radius.container,
+                        background: colorConfig.bg,
+                        border: `1px solid ${colorConfig.border}`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <IconScale size={18} color={colorConfig.icon} />
+                    </div>
+                    <Stack style={{ gap: 2 }}>
+                      <Text fw={600} style={{ fontSize: FONT_SIZES.normal }}>
+                        Current law
+                      </Text>
+                      <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
+                        Use existing tax and benefit rules without modifications
+                      </Text>
+                    </Stack>
+                  </Group>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: spacing.md }}>
+                  <Separator style={{ flex: 1 }} />
+                  <Text c="dimmed" size="sm">
+                    Or select an existing policy
                   </Text>
-                  <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
-                    Use existing tax and benefit rules without modifications
-                  </Text>
-                </Stack>
-              </Group>
-            </Paper>
-            <Divider label="Or select an existing policy" labelPosition="center" />
-            <ScrollArea h={320}>
-              {policiesLoading ? (
-                <Box p={spacing.xl} ta="center">
-                  <Loader size="sm" />
-                </Box>
-              ) : (
-                <Stack gap={spacing.sm}>
-                  {policies?.map((p) => {
-                    // Use association data for display (like Policies page)
-                    const policyId = p.association.policyId.toString();
-                    const label = p.association.label || `Policy #${policyId}`;
-                    const paramCount = countPolicyModifications(p.policy); // Handles undefined gracefully
-                    const policyParams = p.policy?.parameters || [];
-                    const isExpanded = expandedPolicyId === policyId;
+                  <Separator style={{ flex: 1 }} />
+                </div>
+                <ScrollArea className="tw:h-[320px]">
+                  {policiesLoading ? (
+                    <div style={{ padding: spacing.xl, textAlign: 'center' }}>
+                      <Spinner size="sm" />
+                    </div>
+                  ) : (
+                    <Stack gap="sm">
+                      {policies?.map((p) => {
+                        // Use association data for display (like Policies page)
+                        const policyId = p.association.policyId.toString();
+                        const label = p.association.label || `Policy #${policyId}`;
+                        const paramCount = countPolicyModifications(p.policy); // Handles undefined gracefully
+                        const policyParams = p.policy?.parameters || [];
+                        const isExpanded = expandedPolicyId === policyId;
 
-                    return (
-                      <Paper
-                        key={policyId}
-                        radius="md"
-                        withBorder
-                        style={{
-                          overflow: 'hidden',
-                          transition: 'all 0.2s ease',
-                          borderColor: isExpanded ? colorConfig.border : undefined,
-                        }}
-                      >
-                        {/* Main clickable row */}
-                        <Box
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            padding: spacing.sm,
-                            cursor: 'pointer',
-                            transition: 'background 0.15s ease',
-                          }}
-                          onClick={() => handleSelectPolicy(policyId, label, paramCount)}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.background = colors.gray[50];
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.background = 'transparent';
-                          }}
-                        >
-                          {/* Policy info - takes remaining space */}
-                          <Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
-                            <Text fw={500} style={{ fontSize: FONT_SIZES.normal }}>
-                              {label}
-                            </Text>
-                            <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
-                              {paramCount} param{paramCount !== 1 ? 's' : ''} changed
-                            </Text>
-                          </Stack>
-
-                          {/* Info/expand button - isolated click zone */}
-                          <ActionIcon
-                            variant="subtle"
-                            color="gray"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation(); // Prevent selection
-                              setExpandedPolicyId(isExpanded ? null : policyId);
-                            }}
-                            style={{ marginRight: spacing.sm }}
-                            aria-label={
-                              isExpanded ? 'Hide parameter details' : 'Show parameter details'
-                            }
-                          >
-                            <IconInfoCircle size={18} />
-                          </ActionIcon>
-
-                          {/* Select indicator */}
-                          <IconChevronRight size={16} color={colors.gray[400]} />
-                        </Box>
-
-                        {/* Expandable parameter details - table-like display */}
-                        <Box
-                          style={{
-                            maxHeight: isExpanded ? '400px' : '0px',
-                            opacity: isExpanded ? 1 : 0,
-                            overflow: isExpanded ? 'auto' : 'hidden',
-                            transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-                            borderTop: isExpanded ? `1px solid ${colors.gray[200]}` : 'none',
-                          }}
-                        >
-                          {/* Unified grid for header and data rows */}
-                          <Box
+                        return (
+                          <div
+                            key={policyId}
                             style={{
-                              display: 'grid',
-                              gridTemplateColumns: '1fr 180px',
-                              gap: `0 ${spacing.md}`,
+                              borderRadius: spacing.radius.container,
+                              border: `1px solid ${colors.border.light}`,
+                              overflow: 'hidden',
+                              transition: 'all 0.2s ease',
+                              borderColor: isExpanded ? colorConfig.border : undefined,
                             }}
                           >
-                            {/* Header row */}
-                            <Text
-                              fw={600}
-                              c="dimmed"
+                            {/* Main clickable row */}
+                            <div
+                              role="button"
+                              tabIndex={0}
                               style={{
-                                fontSize: FONT_SIZES.tiny,
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.05em',
-                                padding: spacing.md,
-                                paddingBottom: spacing.xs,
-                                borderBottom: `1px solid ${colors.gray[200]}`,
+                                display: 'flex',
+                                alignItems: 'center',
+                                padding: spacing.sm,
+                                cursor: 'pointer',
+                                transition: 'background 0.15s ease',
+                              }}
+                              onClick={() => handleSelectPolicy(policyId, label, paramCount)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                  e.currentTarget.click();
+                                }
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.background = colors.gray[50];
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.background = 'transparent';
                               }}
                             >
-                              Parameter
-                            </Text>
-                            <Text
-                              fw={600}
-                              c="dimmed"
+                              {/* Policy info - takes remaining space */}
+                              <Stack style={{ gap: 2, flex: 1, minWidth: 0 }}>
+                                <Text fw={500} style={{ fontSize: FONT_SIZES.normal }}>
+                                  {label}
+                                </Text>
+                                <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
+                                  {paramCount} param{paramCount !== 1 ? 's' : ''} changed
+                                </Text>
+                              </Stack>
+
+                              {/* Info/expand button - isolated click zone */}
+                              <Button
+                                variant="ghost"
+                                size="icon-sm"
+                                onClick={(e) => {
+                                  e.stopPropagation(); // Prevent selection
+                                  setExpandedPolicyId(isExpanded ? null : policyId);
+                                }}
+                                style={{ marginRight: spacing.sm }}
+                                aria-label={
+                                  isExpanded ? 'Hide parameter details' : 'Show parameter details'
+                                }
+                              >
+                                <IconInfoCircle size={18} />
+                              </Button>
+
+                              {/* Select indicator */}
+                              <IconChevronRight size={16} color={colors.gray[400]} />
+                            </div>
+
+                            {/* Expandable parameter details - table-like display */}
+                            <div
                               style={{
-                                fontSize: FONT_SIZES.tiny,
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.05em',
-                                textAlign: 'right',
-                                padding: spacing.md,
-                                paddingBottom: spacing.xs,
-                                borderBottom: `1px solid ${colors.gray[200]}`,
+                                maxHeight: isExpanded ? '400px' : '0px',
+                                opacity: isExpanded ? 1 : 0,
+                                overflow: isExpanded ? 'auto' : 'hidden',
+                                transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                                borderTop: isExpanded ? `1px solid ${colors.gray[200]}` : 'none',
                               }}
                             >
-                              Changes
-                            </Text>
+                              {/* Unified grid for header and data rows */}
+                              <div
+                                style={{
+                                  display: 'grid',
+                                  gridTemplateColumns: '1fr 180px',
+                                  gap: `0 ${spacing.md}`,
+                                }}
+                              >
+                                {/* Header row */}
+                                <Text
+                                  fw={600}
+                                  c="dimmed"
+                                  style={{
+                                    fontSize: FONT_SIZES.tiny,
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.05em',
+                                    padding: spacing.md,
+                                    paddingBottom: spacing.xs,
+                                    borderBottom: `1px solid ${colors.gray[200]}`,
+                                  }}
+                                >
+                                  Parameter
+                                </Text>
+                                <Text
+                                  fw={600}
+                                  c="dimmed"
+                                  style={{
+                                    fontSize: FONT_SIZES.tiny,
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.05em',
+                                    textAlign: 'right',
+                                    padding: spacing.md,
+                                    paddingBottom: spacing.xs,
+                                    borderBottom: `1px solid ${colors.gray[200]}`,
+                                  }}
+                                >
+                                  Changes
+                                </Text>
 
-                            {/* Data rows - grouped by parameter */}
-                            {(() => {
-                              // Build grouped list of parameters with their changes
-                              const groupedParams: Array<{
-                                paramName: string;
-                                label: string;
-                                changes: Array<{ period: string; value: string }>;
-                              }> = [];
+                                {/* Data rows - grouped by parameter */}
+                                {(() => {
+                                  // Build grouped list of parameters with their changes
+                                  const groupedParams: Array<{
+                                    paramName: string;
+                                    label: string;
+                                    changes: Array<{ period: string; value: string }>;
+                                  }> = [];
 
-                              policyParams.forEach((param) => {
-                                const paramName = param.name;
-                                const hierarchicalLabels = getHierarchicalLabels(
-                                  paramName,
-                                  parameters
-                                );
-                                const displayLabel =
-                                  hierarchicalLabels.length > 0
-                                    ? formatLabelParts(hierarchicalLabels)
-                                    : paramName.split('.').pop() || paramName;
-                                const metadata = parameters[paramName];
+                                  policyParams.forEach((param) => {
+                                    const paramName = param.name;
+                                    const hierarchicalLabels = getHierarchicalLabels(
+                                      paramName,
+                                      parameters
+                                    );
+                                    const displayLabel =
+                                      hierarchicalLabels.length > 0
+                                        ? formatLabelParts(hierarchicalLabels)
+                                        : paramName.split('.').pop() || paramName;
+                                    const metadata = parameters[paramName];
 
-                                // Use value intervals directly from the Policy type
-                                const changes = (param.values || []).map((interval) => ({
-                                  period: formatPeriod(interval.startDate, interval.endDate),
-                                  value: formatParameterValue(interval.value, metadata?.unit),
-                                }));
+                                    // Use value intervals directly from the Policy type
+                                    const changes = (param.values || []).map((interval) => ({
+                                      period: formatPeriod(interval.startDate, interval.endDate),
+                                      value: formatParameterValue(interval.value, metadata?.unit),
+                                    }));
 
-                                groupedParams.push({ paramName, label: displayLabel, changes });
-                              });
+                                    groupedParams.push({ paramName, label: displayLabel, changes });
+                                  });
 
-                              if (groupedParams.length === 0) {
-                                return (
-                                  <>
-                                    <Text
-                                      c="dimmed"
-                                      style={{
-                                        fontSize: FONT_SIZES.small,
-                                        padding: spacing.md,
-                                        gridColumn: '1 / -1',
-                                      }}
-                                    >
-                                      No parameter details available
-                                    </Text>
-                                  </>
-                                );
-                              }
-
-                              const displayParams = groupedParams.slice(0, 10);
-                              const remainingCount = groupedParams.length - 10;
-
-                              return (
-                                <>
-                                  {displayParams.map((param) => (
-                                    <Fragment key={param.paramName}>
-                                      {/* Parameter name cell */}
-                                      <Box
-                                        style={{
-                                          padding: `${spacing.sm} ${spacing.md}`,
-                                          borderBottom: `1px solid ${colors.gray[100]}`,
-                                          minWidth: 0,
-                                        }}
-                                      >
-                                        <Tooltip
-                                          label={param.paramName}
-                                          multiline
-                                          w={300}
-                                          withArrow
+                                  if (groupedParams.length === 0) {
+                                    return (
+                                      <>
+                                        <Text
+                                          c="dimmed"
+                                          style={{
+                                            fontSize: FONT_SIZES.small,
+                                            padding: spacing.md,
+                                            gridColumn: '1 / -1',
+                                          }}
                                         >
-                                          <Text
-                                            style={{
-                                              fontSize: FONT_SIZES.small,
-                                              color: colors.gray[700],
-                                              lineHeight: 1.4,
-                                            }}
-                                          >
-                                            {param.label}
-                                          </Text>
-                                        </Tooltip>
-                                      </Box>
-                                      {/* Changes cell - multiple lines */}
-                                      <Box
-                                        style={{
-                                          padding: `${spacing.sm} ${spacing.md}`,
-                                          borderBottom: `1px solid ${colors.gray[100]}`,
-                                          textAlign: 'right',
-                                        }}
-                                      >
-                                        {param.changes.map((change, idx) => (
-                                          <Text
-                                            key={idx}
-                                            style={{
-                                              fontSize: FONT_SIZES.small,
-                                              lineHeight: 1.5,
-                                            }}
-                                          >
-                                            <Text
-                                              component="span"
-                                              style={{ color: colors.gray[500] }}
-                                            >
-                                              {change.period}:
-                                            </Text>{' '}
-                                            <Text
-                                              component="span"
-                                              fw={500}
-                                              style={{ color: colorConfig.icon }}
-                                            >
-                                              {change.value}
-                                            </Text>
-                                          </Text>
-                                        ))}
-                                      </Box>
-                                    </Fragment>
-                                  ))}
-                                  {remainingCount > 0 && (
-                                    <Text
-                                      c="dimmed"
-                                      style={{
-                                        fontSize: FONT_SIZES.tiny,
-                                        textAlign: 'center',
-                                        padding: spacing.sm,
-                                        gridColumn: '1 / -1',
-                                      }}
-                                    >
-                                      +{remainingCount} more parameter
-                                      {remainingCount !== 1 ? 's' : ''}
-                                    </Text>
-                                  )}
-                                </>
-                              );
-                            })()}
-                          </Box>
-                        </Box>
-                      </Paper>
-                    );
-                  })}
-                  {(!policies || policies.length === 0) && (
-                    <Text c="dimmed" ta="center" py="lg">
-                      No saved policies
-                    </Text>
-                  )}
-                </Stack>
-              )}
-            </ScrollArea>
-            <Divider />
-            <Button
-              variant="light"
-              color="teal"
-              leftSection={<IconPlus size={16} />}
-              onClick={() => {
-                onCreateNew();
-                onClose();
-              }}
-            >
-              Create new policy
-            </Button>
-          </>
-        )}
+                                          No parameter details available
+                                        </Text>
+                                      </>
+                                    );
+                                  }
 
-        {type === 'population' && (
-          <>
-            <Paper
-              p="md"
-              radius="md"
-              withBorder
-              style={{ cursor: 'pointer' }}
-              onClick={() =>
-                handleSelectGeography(
-                  countryConfig.nationwideId,
-                  countryConfig.nationwideLabel,
-                  'national'
-                )
-              }
-            >
-              <Group gap={spacing.md}>
-                <Box
+                                  const displayParams = groupedParams.slice(0, 10);
+                                  const remainingCount = groupedParams.length - 10;
+
+                                  return (
+                                    <>
+                                      {displayParams.map((param) => (
+                                        <Fragment key={param.paramName}>
+                                          {/* Parameter name cell */}
+                                          <div
+                                            style={{
+                                              padding: `${spacing.sm} ${spacing.md}`,
+                                              borderBottom: `1px solid ${colors.gray[100]}`,
+                                              minWidth: 0,
+                                            }}
+                                          >
+                                            <Tooltip>
+                                              <TooltipTrigger asChild>
+                                                <Text
+                                                  style={{
+                                                    fontSize: FONT_SIZES.small,
+                                                    color: colors.gray[700],
+                                                    lineHeight: 1.4,
+                                                  }}
+                                                >
+                                                  {param.label}
+                                                </Text>
+                                              </TooltipTrigger>
+                                              <TooltipContent className="tw:max-w-[300px]">
+                                                {param.paramName}
+                                              </TooltipContent>
+                                            </Tooltip>
+                                          </div>
+                                          {/* Changes cell - multiple lines */}
+                                          <div
+                                            style={{
+                                              padding: `${spacing.sm} ${spacing.md}`,
+                                              borderBottom: `1px solid ${colors.gray[100]}`,
+                                              textAlign: 'right',
+                                            }}
+                                          >
+                                            {param.changes.map((change, idx) => (
+                                              <Text
+                                                key={idx}
+                                                style={{
+                                                  fontSize: FONT_SIZES.small,
+                                                  lineHeight: 1.5,
+                                                }}
+                                              >
+                                                <span style={{ color: colors.gray[500] }}>
+                                                  {change.period}:
+                                                </span>{' '}
+                                                <span
+                                                  style={{
+                                                    color: colorConfig.icon,
+                                                    fontWeight: 500,
+                                                  }}
+                                                >
+                                                  {change.value}
+                                                </span>
+                                              </Text>
+                                            ))}
+                                          </div>
+                                        </Fragment>
+                                      ))}
+                                      {remainingCount > 0 && (
+                                        <Text
+                                          c="dimmed"
+                                          style={{
+                                            fontSize: FONT_SIZES.tiny,
+                                            textAlign: 'center',
+                                            padding: spacing.sm,
+                                            gridColumn: '1 / -1',
+                                          }}
+                                        >
+                                          +{remainingCount} more parameter
+                                          {remainingCount !== 1 ? 's' : ''}
+                                        </Text>
+                                      )}
+                                    </>
+                                  );
+                                })()}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                      {(!policies || policies.length === 0) && (
+                        <Text c="dimmed" style={{ textAlign: 'center', paddingBlock: spacing.lg }}>
+                          No saved policies
+                        </Text>
+                      )}
+                    </Stack>
+                  )}
+                </ScrollArea>
+                <Separator />
+                <Button
+                  onClick={() => {
+                    onCreateNew();
+                    onClose();
+                  }}
+                >
+                  <IconPlus size={16} />
+                  Create new policy
+                </Button>
+              </>
+            )}
+
+            {type === 'population' && (
+              <>
+                <div
+                  role="button"
+                  tabIndex={0}
                   style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: spacing.radius.md,
+                    padding: spacing.md,
+                    borderRadius: spacing.radius.container,
+                    border: `1px solid ${colors.border.light}`,
+                    cursor: 'pointer',
+                  }}
+                  onClick={() =>
+                    handleSelectGeography(
+                      countryConfig.nationwideId,
+                      countryConfig.nationwideLabel,
+                      'national'
+                    )
+                  }
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.currentTarget.click();
+                    }
+                  }}
+                >
+                  <Group gap="md">
+                    <div
+                      style={{
+                        width: 36,
+                        height: 36,
+                        borderRadius: spacing.radius.container,
+                        background: colorConfig.bg,
+                        border: `1px solid ${colorConfig.border}`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <CountryMapIcon countryId={countryId} size={18} color={colorConfig.icon} />
+                    </div>
+                    <Stack style={{ gap: 2 }}>
+                      <Text fw={600} style={{ fontSize: FONT_SIZES.normal }}>
+                        {countryConfig.nationwideTitle}
+                      </Text>
+                      <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
+                        {countryConfig.nationwideSubtitle}
+                      </Text>
+                    </Stack>
+                  </Group>
+                </div>
+                <div
+                  role="button"
+                  tabIndex={0}
+                  style={{
+                    padding: spacing.md,
+                    borderRadius: spacing.radius.container,
+                    border: `1px solid ${colors.border.light}`,
+                    cursor: 'pointer',
+                  }}
+                  onClick={() => handleSelectHousehold('sample-household', 'Sample household')}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.currentTarget.click();
+                    }
+                  }}
+                >
+                  <Group gap="md">
+                    <div
+                      style={{
+                        width: 36,
+                        height: 36,
+                        borderRadius: spacing.radius.container,
+                        background: colorConfig.bg,
+                        border: `1px solid ${colorConfig.border}`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <IconHome size={18} color={colorConfig.icon} />
+                    </div>
+                    <Stack style={{ gap: 2 }}>
+                      <Text fw={600} style={{ fontSize: FONT_SIZES.normal }}>
+                        Sample household
+                      </Text>
+                      <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
+                        Single household simulation
+                      </Text>
+                    </Stack>
+                  </Group>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: spacing.md }}>
+                  <Separator style={{ flex: 1 }} />
+                  <Text c="dimmed" size="sm">
+                    Or select an existing household
+                  </Text>
+                  <Separator style={{ flex: 1 }} />
+                </div>
+                <ScrollArea className="tw:h-[150px]">
+                  {householdsLoading ? (
+                    <div style={{ padding: spacing.xl, textAlign: 'center' }}>
+                      <Spinner size="sm" />
+                    </div>
+                  ) : (
+                    <Stack gap="sm">
+                      {households?.map((h) => {
+                        // Use association data for display (like Populations page)
+                        const householdId = h.association.householdId.toString();
+                        const label = h.association.label || `Household #${householdId}`;
+                        return (
+                          <div
+                            role="button"
+                            tabIndex={0}
+                            key={householdId}
+                            style={{
+                              padding: spacing.sm,
+                              borderRadius: spacing.radius.container,
+                              border: `1px solid ${colors.border.light}`,
+                              cursor: 'pointer',
+                            }}
+                            onClick={() => handleSelectHousehold(householdId, label)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.currentTarget.click();
+                              }
+                            }}
+                          >
+                            <Group justify="space-between">
+                              <Text fw={500} style={{ fontSize: FONT_SIZES.normal }}>
+                                {label}
+                              </Text>
+                              <IconChevronRight size={16} color={colors.gray[400]} />
+                            </Group>
+                          </div>
+                        );
+                      })}
+                      {(!households || households.length === 0) && (
+                        <Text c="dimmed" style={{ textAlign: 'center', paddingBlock: spacing.lg }}>
+                          No saved households
+                        </Text>
+                      )}
+                    </Stack>
+                  )}
+                </ScrollArea>
+                <Separator />
+                <Button
+                  onClick={() => {
+                    onCreateNew();
+                    onClose();
+                  }}
+                >
+                  <IconPlus size={16} />
+                  Create new household
+                </Button>
+              </>
+            )}
+
+            {type === 'dynamics' && (
+              <Stack gap="lg" align="center" style={{ paddingBlock: spacing.xl }}>
+                <div
+                  style={{
+                    width: 64,
+                    height: 64,
+                    borderRadius: '50%',
                     background: colorConfig.bg,
                     border: `1px solid ${colorConfig.border}`,
                     display: 'flex',
@@ -1827,131 +1953,25 @@ function IngredientPickerModal({
                     justifyContent: 'center',
                   }}
                 >
-                  <CountryMapIcon countryId={countryId} size={18} color={colorConfig.icon} />
-                </Box>
-                <Stack gap={2}>
-                  <Text fw={600} style={{ fontSize: FONT_SIZES.normal }}>
-                    {countryConfig.nationwideTitle}
+                  <IconSparkles size={28} color={colorConfig.icon} />
+                </div>
+                <Stack gap="xs" align="center">
+                  <Text fw={600} c={colors.gray[700]}>
+                    Dynamics coming soon
                   </Text>
-                  <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
-                    {countryConfig.nationwideSubtitle}
-                  </Text>
-                </Stack>
-              </Group>
-            </Paper>
-            <Paper
-              p="md"
-              radius="md"
-              withBorder
-              style={{ cursor: 'pointer' }}
-              onClick={() => handleSelectHousehold('sample-household', 'Sample household')}
-            >
-              <Group gap={spacing.md}>
-                <Box
-                  style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: spacing.radius.md,
-                    background: colorConfig.bg,
-                    border: `1px solid ${colorConfig.border}`,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <IconHome size={18} color={colorConfig.icon} />
-                </Box>
-                <Stack gap={2}>
-                  <Text fw={600} style={{ fontSize: FONT_SIZES.normal }}>
-                    Sample household
-                  </Text>
-                  <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
-                    Single household simulation
+                  <Text
+                    c="dimmed"
+                    style={{ textAlign: 'center', maxWidth: 300, fontSize: FONT_SIZES.small }}
+                  >
+                    Dynamic behavioral responses will be available in a future update.
                   </Text>
                 </Stack>
-              </Group>
-            </Paper>
-            <Divider label="Or select an existing household" labelPosition="center" />
-            <ScrollArea h={150}>
-              {householdsLoading ? (
-                <Box p={spacing.xl} ta="center">
-                  <Loader size="sm" />
-                </Box>
-              ) : (
-                <Stack gap={spacing.sm}>
-                  {households?.map((h) => {
-                    // Use association data for display (like Populations page)
-                    const householdId = h.association.householdId.toString();
-                    const label = h.association.label || `Household #${householdId}`;
-                    return (
-                      <Paper
-                        key={householdId}
-                        p="sm"
-                        radius="md"
-                        withBorder
-                        style={{ cursor: 'pointer' }}
-                        onClick={() => handleSelectHousehold(householdId, label)}
-                      >
-                        <Group justify="space-between">
-                          <Text fw={500} style={{ fontSize: FONT_SIZES.normal }}>
-                            {label}
-                          </Text>
-                          <IconChevronRight size={16} color={colors.gray[400]} />
-                        </Group>
-                      </Paper>
-                    );
-                  })}
-                  {(!households || households.length === 0) && (
-                    <Text c="dimmed" ta="center" py="lg">
-                      No saved households
-                    </Text>
-                  )}
-                </Stack>
-              )}
-            </ScrollArea>
-            <Divider />
-            <Button
-              variant="light"
-              color="teal"
-              leftSection={<IconPlus size={16} />}
-              onClick={() => {
-                onCreateNew();
-                onClose();
-              }}
-            >
-              Create new household
-            </Button>
-          </>
-        )}
-
-        {type === 'dynamics' && (
-          <Stack gap={spacing.lg} align="center" py="xl">
-            <Box
-              style={{
-                width: 64,
-                height: 64,
-                borderRadius: '50%',
-                background: colorConfig.bg,
-                border: `1px solid ${colorConfig.border}`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <IconSparkles size={28} color={colorConfig.icon} />
-            </Box>
-            <Stack gap={spacing.xs} align="center">
-              <Text fw={600} c={colors.gray[700]}>
-                Dynamics coming soon
-              </Text>
-              <Text c="dimmed" ta="center" maw={300} style={{ fontSize: FONT_SIZES.small }}>
-                Dynamic behavioral responses will be available in a future update.
-              </Text>
-            </Stack>
+              </Stack>
+            )}
           </Stack>
-        )}
-      </Stack>
-    </Modal>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -1966,7 +1986,7 @@ interface PolicyBrowseModalProps {
 }
 
 function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseModalProps) {
-  const countryId = useCurrentCountry() as 'us' | 'uk';
+  useCurrentCountry();
   const userId = MOCK_USER_ID.toString();
   const { data: policies, isLoading } = useUserPolicies(userId);
   const {
@@ -2050,7 +2070,9 @@ function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseModalProps
       const query = searchQuery.toLowerCase();
       result = result.filter((p) => {
         // Search in policy label
-        if (p.label.toLowerCase().includes(query)) return true;
+        if (p.label.toLowerCase().includes(query)) {
+          return true;
+        }
         // Search in parameter display names (hierarchical labels)
         const paramDisplayNames = p.parameters
           .map((param) => {
@@ -2061,7 +2083,9 @@ function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseModalProps
           })
           .join(' ')
           .toLowerCase();
-        if (paramDisplayNames.includes(query)) return true;
+        if (paramDisplayNames.includes(query)) {
+          return true;
+        }
         return false;
       });
     }
@@ -2132,7 +2156,9 @@ function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseModalProps
 
   // Build flat list of all searchable parameters for autocomplete
   const searchableParameters = useMemo(() => {
-    if (!parameters) return [];
+    if (!parameters) {
+      return [];
+    }
 
     return Object.values(parameters)
       .filter(
@@ -2155,7 +2181,9 @@ function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseModalProps
   const handleSearchSelect = useCallback(
     (paramName: string) => {
       const param = parameters[paramName];
-      if (!param || param.type !== 'parameter') return;
+      if (!param || param.type !== 'parameter') {
+        return;
+      }
 
       // Expand all parent nodes in the tree path
       const pathParts = paramName.split('.');
@@ -2204,7 +2232,9 @@ function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseModalProps
 
   // Handle value submission
   const handleValueSubmit = useCallback(() => {
-    if (!selectedParam || intervals.length === 0) return;
+    if (!selectedParam || intervals.length === 0) {
+      return;
+    }
 
     const updatedParameters = [...policyParameters];
     let existingParam = updatedParameters.find((p) => p.name === selectedParam.parameter);
@@ -2280,19 +2310,45 @@ function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseModalProps
       return items
         .filter((item) => !item.name.includes('pycache'))
         .map((item) => (
-          <NavLink
-            key={item.name}
-            label={item.label}
-            active={selectedParam?.parameter === item.name}
-            opened={expandedMenuItems.has(item.name)}
-            onClick={() => handleMenuItemClick(item.name)}
-            childrenOffset={16}
-            style={{
-              borderRadius: spacing.radius.sm,
-            }}
-          >
-            {item.children && expandedMenuItems.has(item.name) && renderMenuItems(item.children)}
-          </NavLink>
+          <div key={item.name}>
+            <button
+              type="button"
+              onClick={() => handleMenuItemClick(item.name)}
+              style={{
+                all: 'unset',
+                cursor: 'pointer',
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                gap: spacing.xs,
+                padding: `${spacing.xs} ${spacing.sm}`,
+                borderRadius: spacing.radius.element,
+                fontSize: FONT_SIZES.small,
+                background:
+                  selectedParam?.parameter === item.name
+                    ? INGREDIENT_COLORS.policy.bg
+                    : 'transparent',
+                color:
+                  selectedParam?.parameter === item.name
+                    ? INGREDIENT_COLORS.policy.icon
+                    : colors.gray[700],
+              }}
+            >
+              {item.children ? (
+                expandedMenuItems.has(item.name) ? (
+                  <IconChevronRight size={14} style={{ transform: 'rotate(90deg)' }} />
+                ) : (
+                  <IconChevronRight size={14} />
+                )
+              ) : (
+                <span style={{ width: 14 }} />
+              )}
+              <span style={{ flex: 1, textAlign: 'left' }}>{item.label}</span>
+            </button>
+            {item.children && expandedMenuItems.has(item.name) && (
+              <div style={{ paddingLeft: 16 }}>{renderMenuItems(item.children)}</div>
+            )}
+          </div>
         ));
     },
     [selectedParam?.parameter, expandedMenuItems, handleMenuItemClick]
@@ -2300,13 +2356,17 @@ function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseModalProps
 
   // Memoize the rendered tree
   const renderedMenuTree = useMemo(() => {
-    if (metadataLoading || !parameterTree) return null;
+    if (metadataLoading || !parameterTree) {
+      return null;
+    }
     return renderMenuItems(parameterTree.children || []);
   }, [metadataLoading, parameterTree, renderMenuItems]);
 
   // Get base and reform values for chart
   const getChartValues = () => {
-    if (!selectedParam) return { baseValues: null, reformValues: null };
+    if (!selectedParam) {
+      return { baseValues: null, reformValues: null };
+    }
 
     const baseValues = new ValueIntervalCollection(selectedParam.values as ValuesList);
     const reformValues = new ValueIntervalCollection(baseValues);
@@ -2354,7 +2414,7 @@ function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseModalProps
       alignItems: 'center',
       gap: spacing.sm,
       padding: `${spacing.sm} ${spacing.md}`,
-      borderRadius: spacing.radius.md,
+      borderRadius: spacing.radius.container,
       cursor: 'pointer',
       transition: 'all 0.15s ease',
       fontSize: FONT_SIZES.small,
@@ -2378,7 +2438,7 @@ function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseModalProps
     policyCard: {
       background: colors.white,
       border: `1px solid ${colors.border.light}`,
-      borderRadius: spacing.radius.lg,
+      borderRadius: spacing.radius.feature,
       padding: spacing.lg,
       cursor: 'pointer',
       transition: 'all 0.2s ease',
@@ -2402,7 +2462,7 @@ function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseModalProps
       background: 'rgba(255, 255, 255, 0.95)',
       backdropFilter: 'blur(20px) saturate(180%)',
       WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-      borderRadius: spacing.radius.lg,
+      borderRadius: spacing.radius.feature,
       border: `1px solid ${modificationCount > 0 ? colorConfig.border : colors.border.light}`,
       boxShadow:
         modificationCount > 0
@@ -2423,21 +2483,39 @@ function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseModalProps
 
   // Policy for drawer preview
   const drawerPolicy = useMemo(() => {
-    if (!drawerPolicyId) return null;
+    if (!drawerPolicyId) {
+      return null;
+    }
     return userPolicies.find((p) => p.id === drawerPolicyId) || null;
   }, [drawerPolicyId, userPolicies]);
 
   return (
-    <Modal
-      opened={isOpen}
-      onClose={onClose}
-      title={
-        <Group gap={spacing.sm}>
-          <Box
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent
+        className="tw:sm:max-w-none tw:p-0 tw:gap-0"
+        style={{
+          maxWidth: '1400px',
+          width: '90vw',
+          height: '85vh',
+          maxHeight: '800px',
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: spacing.sm,
+            padding: `${spacing.md} ${spacing.xl}`,
+            borderBottom: `1px solid ${colors.border.light}`,
+          }}
+        >
+          <div
             style={{
               width: 36,
               height: 36,
-              borderRadius: spacing.radius.md,
+              borderRadius: spacing.radius.container,
               background: `linear-gradient(135deg, ${colorConfig.bg} 0%, ${colors.white} 100%)`,
               border: `1px solid ${colorConfig.border}`,
               display: 'flex',
@@ -2446,8 +2524,8 @@ function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseModalProps
             }}
           >
             <IconScale size={20} color={colorConfig.icon} />
-          </Box>
-          <Stack gap={0}>
+          </div>
+          <Stack style={{ gap: 0 }}>
             <Text fw={600} style={{ fontSize: FONT_SIZES.normal, color: colors.gray[900] }}>
               {isCreationMode ? 'Create policy' : 'Select policy'}
             </Text>
@@ -2457,909 +2535,961 @@ function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseModalProps
                 : 'Choose an existing policy or create a new one'}
             </Text>
           </Stack>
-        </Group>
-      }
-      size="90vw"
-      radius="lg"
-      styles={{
-        content: {
-          maxWidth: '1400px',
-          height: '85vh',
-          maxHeight: '800px',
-          display: 'flex',
-          flexDirection: 'column',
-        },
-        header: {
-          borderBottom: `1px solid ${colors.border.light}`,
-          paddingBottom: spacing.md,
-          paddingLeft: spacing.xl,
-          paddingRight: spacing.xl,
-        },
-        body: {
-          padding: 0,
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden',
-        },
-      }}
-    >
-      {isCreationMode ? (
-        // ========== CREATION MODE ==========
-        <>
-          <Group align="stretch" gap={0} style={{ flex: 1, overflow: 'hidden' }} wrap="nowrap">
-            {/* Left Sidebar - Parameter Tree */}
-            <Box
-              style={{
-                width: 280,
-                borderRight: `1px solid ${colors.border.light}`,
-                display: 'flex',
-                flexDirection: 'column',
-                background: colors.gray[50],
-              }}
-            >
-              {/* Parameter Tree */}
-              <Box
-                style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
-              >
-                <Box
-                  style={{ padding: spacing.md, borderBottom: `1px solid ${colors.border.light}` }}
-                >
-                  <Text
-                    fw={600}
-                    style={{
-                      fontSize: FONT_SIZES.small,
-                      color: colors.gray[600],
-                      marginBottom: spacing.sm,
-                    }}
-                  >
-                    PARAMETERS
-                  </Text>
-                  <Autocomplete
-                    placeholder="Search parameters..."
-                    value={parameterSearch}
-                    onChange={setParameterSearch}
-                    onOptionSubmit={handleSearchSelect}
-                    data={searchableParameters}
-                    limit={20}
-                    leftSection={<IconSearch size={14} color={colors.gray[400]} />}
-                    styles={{
-                      input: {
-                        fontSize: FONT_SIZES.small,
-                        height: 32,
-                        minHeight: 32,
-                      },
-                      dropdown: {
-                        maxHeight: 300,
-                      },
-                      option: {
-                        fontSize: FONT_SIZES.small,
-                        padding: `${spacing.xs} ${spacing.sm}`,
-                      },
-                    }}
-                    size="xs"
-                  />
-                </Box>
-                <ScrollArea style={{ flex: 1 }} offsetScrollbars>
-                  <Box style={{ padding: spacing.sm }}>
-                    {metadataLoading || !parameterTree ? (
-                      <Stack gap={spacing.xs}>
-                        <Skeleton height={32} />
-                        <Skeleton height={32} />
-                        <Skeleton height={32} />
-                      </Stack>
-                    ) : (
-                      renderedMenuTree
-                    )}
-                  </Box>
-                </ScrollArea>
-              </Box>
-            </Box>
-
-            {/* Main Content - Parameter Editor */}
-            <Box
-              style={{
-                flex: 1,
-                display: 'flex',
-                flexDirection: 'column',
-                background: colors.white,
-                overflow: 'hidden',
-              }}
-            >
-              {/* Status Header Bar */}
-              <Box style={dockStyles.statusHeader}>
-                <Group justify="space-between" align="center" wrap="nowrap">
-                  {/* Left side: Policy icon and editable name */}
-                  <Group gap={spacing.md} align="center" wrap="nowrap" style={{ minWidth: 0 }}>
-                    {/* Policy icon */}
-                    <Box
-                      style={{
-                        width: 32,
-                        height: 32,
-                        borderRadius: spacing.radius.md,
-                        background: `linear-gradient(135deg, ${colorConfig.bg} 0%, ${colors.white} 100%)`,
-                        border: `1px solid ${colorConfig.border}`,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        flexShrink: 0,
-                      }}
-                    >
-                      <IconScale size={18} color={colorConfig.icon} />
-                    </Box>
-
-                    {/* Editable policy name */}
-                    <Box
-                      style={{
-                        minWidth: 0,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: spacing.xs,
-                      }}
-                    >
-                      {isEditingLabel ? (
-                        <TextInput
-                          value={policyLabel}
-                          onChange={(e) => setPolicyLabel(e.currentTarget.value)}
-                          onBlur={() => setIsEditingLabel(false)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') setIsEditingLabel(false);
-                            if (e.key === 'Escape') setIsEditingLabel(false);
-                          }}
-                          autoFocus
-                          placeholder="Enter policy name..."
-                          size="xs"
-                          style={{ width: 250 }}
-                          styles={{
-                            input: {
-                              fontFamily: typography.fontFamily.primary,
-                              fontWeight: 600,
-                              fontSize: FONT_SIZES.normal,
-                              border: 'none',
-                              background: 'transparent',
-                              padding: 0,
-                            },
-                          }}
-                        />
-                      ) : (
-                        <>
-                          <Text
-                            fw={600}
-                            style={{
-                              fontFamily: typography.fontFamily.primary,
-                              fontSize: FONT_SIZES.normal,
-                              color: policyLabel ? colors.gray[800] : colors.gray[400],
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap',
-                              cursor: 'pointer',
-                            }}
-                            onClick={() => setIsEditingLabel(true)}
-                          >
-                            {policyLabel || 'Click to name your policy...'}
-                          </Text>
-                          <ActionIcon
-                            size="sm"
-                            variant="subtle"
-                            color="gray"
-                            onClick={() => setIsEditingLabel(true)}
-                            style={{ flexShrink: 0 }}
-                          >
-                            <IconPencil size={14} />
-                          </ActionIcon>
-                        </>
-                      )}
-                    </Box>
-                  </Group>
-
-                  {/* Right side: Modification count */}
-                  <Group gap={spacing.md} align="center" wrap="nowrap" style={{ flexShrink: 0 }}>
-                    {/* Modification count with status indicator */}
-                    <Group gap={spacing.xs} style={{ flexShrink: 0 }}>
-                      {modificationCount > 0 ? (
-                        <>
-                          <Box
-                            style={{
-                              width: 8,
-                              height: 8,
-                              borderRadius: '50%',
-                              background: colors.primary[500],
-                            }}
-                          />
-                          <Text style={{ fontSize: FONT_SIZES.small, color: colors.gray[600] }}>
-                            {modificationCount} parameter{modificationCount !== 1 ? 's' : ''}{' '}
-                            modified
-                          </Text>
-                        </>
-                      ) : (
-                        <Text style={{ fontSize: FONT_SIZES.small, color: colors.gray[400] }}>
-                          No changes yet
-                        </Text>
-                      )}
-                    </Group>
-                  </Group>
-                </Group>
-              </Box>
-
-              {/* Parameter Editor Content */}
-              <Box style={{ flex: 1, overflow: 'auto' }}>
-                {!selectedParam ? (
-                  <Box
-                    style={{
-                      height: '100%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      padding: spacing.xl,
-                    }}
-                  >
-                    <Stack align="center" gap={spacing.md}>
-                      <Box
-                        style={{
-                          width: 64,
-                          height: 64,
-                          borderRadius: spacing.radius.lg,
-                          background: colors.gray[100],
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}
-                      >
-                        <IconScale size={32} color={colors.gray[400]} />
-                      </Box>
-                      <Text
-                        ta="center"
-                        style={{
-                          fontSize: FONT_SIZES.normal,
-                          color: colors.gray[600],
-                          maxWidth: 400,
-                        }}
-                      >
-                        Select a parameter from the menu to modify its value for your policy reform.
-                      </Text>
-                    </Stack>
-                  </Box>
-                ) : (
-                  <Box style={{ padding: spacing.xl }}>
-                    <Stack gap={spacing.lg}>
-                      {/* Parameter Header */}
-                      <Box>
-                        <Title order={3} style={{ marginBottom: spacing.sm }}>
-                          {capitalize(selectedParam.label || 'Label unavailable')}
-                        </Title>
-                        {selectedParam.description && (
-                          <Text style={{ fontSize: FONT_SIZES.normal, color: colors.gray[600] }}>
-                            {selectedParam.description}
-                          </Text>
-                        )}
-                      </Box>
-
-                      {/* Value Setter */}
-                      <Box
-                        style={{
-                          background: colors.gray[50],
-                          border: `1px solid ${colors.border.light}`,
-                          borderRadius: spacing.radius.md,
-                          padding: spacing.lg,
-                        }}
-                      >
-                        <Stack gap={spacing.md}>
-                          <Text fw={600} style={{ fontSize: FONT_SIZES.normal }}>
-                            Set new value
-                          </Text>
-                          <Divider />
-                          <Group align="flex-end" wrap="nowrap">
-                            <Box style={{ flex: 1 }}>
-                              <ValueSetterToRender
-                                minDate={minDate}
-                                maxDate={maxDate}
-                                param={selectedParam}
-                                policy={localPolicy}
-                                intervals={intervals}
-                                setIntervals={setIntervals}
-                                startDate={startDate}
-                                setStartDate={setStartDate}
-                                endDate={endDate}
-                                setEndDate={setEndDate}
-                              />
-                            </Box>
-                            <ModeSelectorButton
-                              setMode={(mode) => {
-                                setIntervals([]);
-                                setValueSetterMode(mode);
-                              }}
-                            />
-                            <Button
-                              onClick={handleValueSubmit}
-                              disabled={intervals.length === 0}
-                              color="teal"
-                            >
-                              Add change
-                            </Button>
-                          </Group>
-                        </Stack>
-                      </Box>
-
-                      {/* Historical Values Chart */}
-                      {baseValues && reformValues && (
-                        <Box>
-                          <HistoricalValues
-                            param={selectedParam}
-                            baseValues={baseValues}
-                            reformValues={reformValues}
-                            policyLabel={policyLabel}
-                            policyId={null}
-                          />
-                        </Box>
-                      )}
-                    </Stack>
-                  </Box>
-                )}
-              </Box>
-            </Box>
-          </Group>
-
-          {/* Footer for creation mode */}
-          <Box
-            style={{
-              flexShrink: 0,
-              borderTop: `1px solid ${colors.border.light}`,
-              padding: spacing.md,
-              paddingLeft: spacing.xl,
-              paddingRight: spacing.xl,
-              background: colors.white,
-            }}
-          >
-            <Group justify="space-between" gap={spacing.sm}>
-              <Button
-                variant="subtle"
-                color="gray"
-                leftSection={<IconChevronLeft size={16} />}
-                onClick={handleExitCreationMode}
-              >
-                Back
-              </Button>
-              <Button
-                color="teal"
-                onClick={handleCreatePolicy}
-                loading={isCreating}
-                disabled={!policyLabel.trim()}
-              >
-                Create policy
-              </Button>
-            </Group>
-          </Box>
-        </>
-      ) : (
-        // ========== BROWSE MODE ==========
-        <>
-          <Group
-            align="stretch"
-            gap={spacing.xl}
-            style={{ height: '100%', width: '100%', padding: spacing.xl }}
-            wrap="nowrap"
-          >
-            {/* Left Sidebar */}
-            <Box style={modalStyles.sidebar}>
-              {/* Quick Actions */}
-              <Box style={modalStyles.sidebarSection}>
-                <Text style={modalStyles.sidebarLabel}>Quick select</Text>
-                <UnstyledButton
+        </div>
+        <div
+          style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+            padding: 0,
+          }}
+        >
+          {isCreationMode ? (
+            // ========== CREATION MODE ==========
+            <>
+              <Group align="stretch" style={{ gap: 0, flex: 1, overflow: 'hidden' }} wrap="nowrap">
+                {/* Left Sidebar - Parameter Tree */}
+                <div
                   style={{
-                    ...modalStyles.sidebarItem,
+                    width: 280,
+                    borderRight: `1px solid ${colors.border.light}`,
+                    display: 'flex',
+                    flexDirection: 'column',
                     background: colors.gray[50],
-                    border: `1px solid ${colors.border.light}`,
-                  }}
-                  onClick={handleSelectCurrentLaw}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = colorConfig.bg;
-                    e.currentTarget.style.borderColor = colorConfig.border;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = colors.gray[50];
-                    e.currentTarget.style.borderColor = colors.border.light;
                   }}
                 >
-                  <IconScale size={16} color={colorConfig.icon} />
-                  <Text
-                    style={{ fontSize: FONT_SIZES.small, fontWeight: typography.fontWeight.medium }}
-                  >
-                    Current law
-                  </Text>
-                </UnstyledButton>
-              </Box>
-
-              <Divider />
-
-              {/* Navigation Sections */}
-              <Box style={modalStyles.sidebarSection}>
-                <Text style={modalStyles.sidebarLabel}>Library</Text>
-
-                {/* My Policies (sorted by most recent) */}
-                <UnstyledButton
-                  style={{
-                    ...modalStyles.sidebarItem,
-                    background: activeSection === 'my-policies' ? colorConfig.bg : 'transparent',
-                    color: activeSection === 'my-policies' ? colorConfig.icon : colors.gray[700],
-                  }}
-                  onClick={() => setActiveSection('my-policies')}
-                >
-                  <IconFolder size={16} />
-                  <Text style={{ fontSize: FONT_SIZES.small, flex: 1 }}>My policies</Text>
-                  <Text fw={700} style={{ fontSize: FONT_SIZES.small, color: colors.gray[500] }}>
-                    {userPolicies.length}
-                  </Text>
-                </UnstyledButton>
-
-                {/* User-created policies */}
-                <UnstyledButton
-                  style={{
-                    ...modalStyles.sidebarItem,
-                    background: activeSection === 'public' ? colorConfig.bg : 'transparent',
-                    color: activeSection === 'public' ? colorConfig.icon : colors.gray[700],
-                  }}
-                  onClick={() => setActiveSection('public')}
-                >
-                  <IconUsers size={16} />
-                  <Text style={{ fontSize: FONT_SIZES.small, flex: 1 }}>User-created policies</Text>
-                </UnstyledButton>
-
-                {/* Create New Policy */}
-                <UnstyledButton
-                  style={{
-                    ...modalStyles.sidebarItem,
-                    background: isCreationMode ? colorConfig.bg : 'transparent',
-                    color: isCreationMode ? colorConfig.icon : colors.gray[700],
-                  }}
-                  onClick={handleEnterCreationMode}
-                >
-                  <IconPlus size={16} />
-                  <Text style={{ fontSize: FONT_SIZES.small, flex: 1 }}>Create new policy</Text>
-                </UnstyledButton>
-              </Box>
-            </Box>
-
-            {/* Main Content Area */}
-            <Box style={modalStyles.mainContent}>
-              {/* Search Bar */}
-              <Box style={modalStyles.searchBar}>
-                <TextInput
-                  placeholder="Search policies by name or parameter..."
-                  leftSection={<IconSearch size={16} color={colors.gray[400]} />}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  size="sm"
-                  styles={{
-                    input: {
-                      borderRadius: spacing.radius.md,
-                      border: `1px solid ${colors.border.light}`,
-                      fontSize: FONT_SIZES.small,
-                      '&:focus': {
-                        borderColor: colorConfig.accent,
-                      },
-                    },
-                  }}
-                />
-              </Box>
-
-              {/* Section Header */}
-              <Group justify="space-between" align="center">
-                <Text fw={600} style={{ fontSize: FONT_SIZES.normal, color: colors.gray[800] }}>
-                  {getSectionTitle()}
-                </Text>
-                <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
-                  {displayedPolicies.length}{' '}
-                  {displayedPolicies.length === 1 ? 'policy' : 'policies'}
-                </Text>
-              </Group>
-
-              {/* Policy Grid */}
-              <ScrollArea style={{ flex: 1 }} offsetScrollbars>
-                {isLoading ? (
-                  <Stack gap={spacing.md}>
-                    {[1, 2, 3].map((i) => (
-                      <Skeleton key={i} height={80} radius="md" />
-                    ))}
-                  </Stack>
-                ) : activeSection === 'public' ? (
-                  // Placeholder for User-created policies section
-                  <Box
+                  {/* Parameter Tree */}
+                  <div
                     style={{
+                      flex: 1,
+                      overflow: 'hidden',
                       display: 'flex',
                       flexDirection: 'column',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      padding: spacing['4xl'],
-                      gap: spacing.md,
                     }}
                   >
-                    <Box
+                    <div
                       style={{
-                        width: 64,
-                        height: 64,
-                        borderRadius: '50%',
-                        background: colors.gray[100],
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
+                        padding: spacing.md,
+                        borderBottom: `1px solid ${colors.border.light}`,
                       }}
                     >
-                      <IconUsers size={28} color={colors.gray[400]} />
-                    </Box>
-                    <Text fw={500} c={colors.gray[600]}>
-                      Coming soon
-                    </Text>
-                    <Text c="dimmed" ta="center" maw={300} style={{ fontSize: FONT_SIZES.small }}>
-                      Search and browse policies created by other PolicyEngine users.
-                    </Text>
-                  </Box>
-                ) : displayedPolicies.length === 0 ? (
-                  <Box
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      padding: spacing['4xl'],
-                      gap: spacing.md,
-                    }}
-                  >
-                    <Box
-                      style={{
-                        width: 64,
-                        height: 64,
-                        borderRadius: '50%',
-                        background: colors.gray[100],
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      <IconFolder size={28} color={colors.gray[400]} />
-                    </Box>
-                    <Text fw={500} c={colors.gray[600]}>
-                      {searchQuery ? 'No policies match your search' : 'No policies yet'}
-                    </Text>
-                    <Text c="dimmed" ta="center" maw={300} style={{ fontSize: FONT_SIZES.small }}>
-                      {searchQuery
-                        ? 'Try adjusting your search terms or browse all policies'
-                        : 'Create your first policy to get started'}
-                    </Text>
-                    {!searchQuery && (
-                      <Button
-                        variant="outline"
-                        color="gray"
-                        leftSection={<IconPlus size={16} />}
-                        onClick={handleEnterCreationMode}
-                        mt={spacing.sm}
+                      <Text
+                        fw={600}
+                        style={{
+                          fontSize: FONT_SIZES.small,
+                          color: colors.gray[600],
+                          marginBottom: spacing.sm,
+                        }}
                       >
-                        Create policy
-                      </Button>
-                    )}
-                  </Box>
-                ) : (
-                  <Box style={modalStyles.policyGrid}>
-                    {displayedPolicies.map((policy) => {
-                      const isSelected = selectedPolicyId === policy.id;
+                        PARAMETERS
+                      </Text>
+                      <Popover
+                        open={
+                          !!parameterSearch &&
+                          searchableParameters.filter((p) =>
+                            p.label.toLowerCase().includes(parameterSearch.toLowerCase())
+                          ).length > 0
+                        }
+                      >
+                        <PopoverTrigger asChild>
+                          <div className="tw:relative">
+                            <IconSearch
+                              size={14}
+                              color={colors.gray[400]}
+                              className="tw:absolute tw:left-2.5 tw:top-1/2 tw:-translate-y-1/2"
+                            />
+                            <Input
+                              placeholder="Search parameters..."
+                              value={parameterSearch}
+                              onChange={(e) => setParameterSearch(e.target.value)}
+                              className="tw:pl-8 tw:h-8 tw:text-xs"
+                            />
+                          </div>
+                        </PopoverTrigger>
+                        <PopoverContent
+                          className="tw:p-0"
+                          align="start"
+                          style={{ width: 'var(--radix-popover-trigger-width)' }}
+                          onOpenAutoFocus={(e) => e.preventDefault()}
+                        >
+                          <Command>
+                            <CommandList>
+                              {searchableParameters
+                                .filter((p) =>
+                                  p.label.toLowerCase().includes(parameterSearch.toLowerCase())
+                                )
+                                .slice(0, 20)
+                                .map((item) => (
+                                  <CommandItem
+                                    key={item.value}
+                                    onSelect={() => {
+                                      handleSearchSelect(item.value);
+                                      setParameterSearch('');
+                                    }}
+                                  >
+                                    {item.label}
+                                  </CommandItem>
+                                ))}
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                    <ScrollArea style={{ flex: 1 }}>
+                      <div style={{ padding: spacing.sm }}>
+                        {metadataLoading || !parameterTree ? (
+                          <Stack gap="xs">
+                            <Skeleton className="tw:h-[32px]" />
+                            <Skeleton className="tw:h-[32px]" />
+                            <Skeleton className="tw:h-[32px]" />
+                          </Stack>
+                        ) : (
+                          renderedMenuTree
+                        )}
+                      </div>
+                    </ScrollArea>
+                  </div>
+                </div>
 
-                      return (
-                        <Paper
-                          key={policy.id}
+                {/* Main Content - Parameter Editor */}
+                <div
+                  style={{
+                    flex: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    background: colors.white,
+                    overflow: 'hidden',
+                  }}
+                >
+                  {/* Status Header Bar */}
+                  <div style={dockStyles.statusHeader}>
+                    <Group justify="space-between" align="center" wrap="nowrap">
+                      {/* Left side: Policy icon and editable name */}
+                      <Group gap="md" align="center" wrap="nowrap" style={{ minWidth: 0 }}>
+                        {/* Policy icon */}
+                        <div
                           style={{
-                            ...modalStyles.policyCard,
-                            background: colors.white,
-                            borderColor: isSelected ? colorConfig.border : colors.gray[200],
-                          }}
-                          onClick={() => {
-                            setSelectedPolicyId(policy.id);
-                            handleSelectPolicy(
-                              policy.id,
-                              policy.label,
-                              policy.paramCount,
-                              policy.associationId
-                            );
+                            width: 32,
+                            height: 32,
+                            borderRadius: spacing.radius.container,
+                            background: `linear-gradient(135deg, ${colorConfig.bg} 0%, ${colors.white} 100%)`,
+                            border: `1px solid ${colorConfig.border}`,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            flexShrink: 0,
                           }}
                         >
-                          {/* Policy accent bar */}
-                          <Box
-                            style={{
-                              position: 'absolute',
-                              top: 0,
-                              left: 0,
-                              right: 0,
-                              height: 3,
-                              background: isSelected
-                                ? `linear-gradient(90deg, ${colorConfig.accent}, ${colorConfig.icon})`
-                                : colors.gray[200],
-                              transition: 'all 0.2s ease',
-                            }}
-                          />
+                          <IconScale size={18} color={colorConfig.icon} />
+                        </div>
 
-                          <Group justify="space-between" align="flex-start" wrap="nowrap">
-                            <Stack gap={spacing.xs} style={{ flex: 1, minWidth: 0 }}>
+                        {/* Editable policy name */}
+                        <div
+                          style={{
+                            minWidth: 0,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: spacing.xs,
+                          }}
+                        >
+                          {isEditingLabel ? (
+                            <Input
+                              value={policyLabel}
+                              onChange={(e) => setPolicyLabel(e.currentTarget.value)}
+                              onBlur={() => setIsEditingLabel(false)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  setIsEditingLabel(false);
+                                }
+                                if (e.key === 'Escape') {
+                                  setIsEditingLabel(false);
+                                }
+                              }}
+                              autoFocus
+                              placeholder="Enter policy name..."
+                              className="tw:border-none tw:bg-transparent tw:p-0 tw:h-auto tw:shadow-none tw:focus-visible:ring-0"
+                              style={{
+                                width: 250,
+                                fontFamily: typography.fontFamily.primary,
+                                fontWeight: 600,
+                                fontSize: FONT_SIZES.normal,
+                              }}
+                            />
+                          ) : (
+                            <>
                               <Text
                                 fw={600}
                                 style={{
+                                  fontFamily: typography.fontFamily.primary,
                                   fontSize: FONT_SIZES.normal,
-                                  color: colors.gray[900],
+                                  color: policyLabel ? colors.gray[800] : colors.gray[400],
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  whiteSpace: 'nowrap',
+                                  cursor: 'pointer',
                                 }}
+                                onClick={() => setIsEditingLabel(true)}
                               >
-                                {policy.label}
+                                {policyLabel || 'Click to name your policy...'}
                               </Text>
-                              <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
-                                {policy.paramCount} param{policy.paramCount !== 1 ? 's' : ''}{' '}
-                                changed
-                              </Text>
-                            </Stack>
+                              <Button
+                                variant="ghost"
+                                size="icon-sm"
+                                onClick={() => setIsEditingLabel(true)}
+                                style={{ flexShrink: 0 }}
+                              >
+                                <IconPencil size={14} />
+                              </Button>
+                            </>
+                          )}
+                        </div>
+                      </Group>
 
-                            <Group gap={spacing.xs} style={{ flexShrink: 0 }}>
-                              {/* Info button */}
-                              <ActionIcon
-                                variant="subtle"
-                                color="gray"
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setDrawerPolicyId(policy.id);
+                      {/* Right side: Modification count */}
+                      <Group gap="md" align="center" wrap="nowrap" style={{ flexShrink: 0 }}>
+                        {/* Modification count with status indicator */}
+                        <Group gap="xs" style={{ flexShrink: 0 }}>
+                          {modificationCount > 0 ? (
+                            <>
+                              <div
+                                style={{
+                                  width: 8,
+                                  height: 8,
+                                  borderRadius: '50%',
+                                  background: colors.primary[500],
                                 }}
-                              >
-                                <IconInfoCircle size={18} />
-                              </ActionIcon>
-                              {/* Select indicator */}
-                              <IconChevronRight size={16} color={colors.gray[400]} />
-                            </Group>
-                          </Group>
-                        </Paper>
-                      );
-                    })}
-                  </Box>
-                )}
-              </ScrollArea>
-            </Box>
-          </Group>
+                              />
+                              <Text style={{ fontSize: FONT_SIZES.small, color: colors.gray[600] }}>
+                                {modificationCount} parameter{modificationCount !== 1 ? 's' : ''}{' '}
+                                modified
+                              </Text>
+                            </>
+                          ) : (
+                            <Text style={{ fontSize: FONT_SIZES.small, color: colors.gray[400] }}>
+                              No changes yet
+                            </Text>
+                          )}
+                        </Group>
+                      </Group>
+                    </Group>
+                  </div>
 
-          {/* Sliding panel overlay - click to close */}
-          <Transition mounted={!!drawerPolicy} transition="fade" duration={200}>
-            {(transitionStyles) => (
-              <Box
-                style={{
-                  ...transitionStyles,
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  background: 'rgba(0, 0, 0, 0.08)',
-                  zIndex: 10,
-                }}
-                onClick={() => setDrawerPolicyId(null)}
-              />
-            )}
-          </Transition>
-
-          {/* Sliding panel for policy details */}
-          <Transition mounted={!!drawerPolicy} transition="slide-left" duration={250}>
-            {(transitionStyles) => (
-              <Box
-                style={{
-                  ...transitionStyles,
-                  position: 'absolute',
-                  top: 0,
-                  right: 0,
-                  bottom: 0,
-                  width: 480,
-                  background: colors.white,
-                  borderLeft: `1px solid ${colors.gray[200]}`,
-                  boxShadow: '-8px 0 24px rgba(0, 0, 0, 0.08)',
-                  zIndex: 11,
-                  display: 'flex',
-                  flexDirection: 'column',
-                }}
-                onClick={(e) => e.stopPropagation()}
-              >
-                {drawerPolicy && (
-                  <>
-                    {/* Panel header */}
-                    <Box
-                      style={{
-                        padding: spacing.lg,
-                        borderBottom: `1px solid ${colors.gray[200]}`,
-                      }}
-                    >
-                      <Group justify="space-between" align="flex-start">
-                        <Stack gap={spacing.xs} style={{ flex: 1 }}>
-                          <Text
-                            fw={600}
-                            style={{ fontSize: FONT_SIZES.normal, color: colors.gray[900] }}
+                  {/* Parameter Editor Content */}
+                  <div style={{ flex: 1, overflow: 'auto' }}>
+                    {!selectedParam ? (
+                      <div
+                        style={{
+                          height: '100%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          padding: spacing.xl,
+                        }}
+                      >
+                        <Stack align="center" gap="md">
+                          <div
+                            style={{
+                              width: 64,
+                              height: 64,
+                              borderRadius: spacing.radius.feature,
+                              background: colors.gray[100],
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                            }}
                           >
-                            {drawerPolicy.label}
-                          </Text>
-                          <Text style={{ fontSize: FONT_SIZES.small, color: colors.gray[500] }}>
-                            {drawerPolicy.paramCount} parameter
-                            {drawerPolicy.paramCount !== 1 ? 's' : ''} changed from current law
+                            <IconScale size={32} color={colors.gray[400]} />
+                          </div>
+                          <Text
+                            style={{
+                              textAlign: 'center',
+                              fontSize: FONT_SIZES.normal,
+                              color: colors.gray[600],
+                              maxWidth: 400,
+                            }}
+                          >
+                            Select a parameter from the menu to modify its value for your policy
+                            reform.
                           </Text>
                         </Stack>
-                        <ActionIcon
-                          variant="subtle"
-                          color="gray"
-                          onClick={() => setDrawerPolicyId(null)}
-                        >
-                          <IconX size={18} />
-                        </ActionIcon>
-                      </Group>
-                    </Box>
+                      </div>
+                    ) : (
+                      <div style={{ padding: spacing.xl }}>
+                        <Stack gap="lg">
+                          {/* Parameter Header */}
+                          <div>
+                            <Title order={3} style={{ marginBottom: spacing.sm }}>
+                              {capitalize(selectedParam.label || 'Label unavailable')}
+                            </Title>
+                            {selectedParam.description && (
+                              <Text
+                                style={{ fontSize: FONT_SIZES.normal, color: colors.gray[600] }}
+                              >
+                                {selectedParam.description}
+                              </Text>
+                            )}
+                          </div>
 
-                    {/* Panel body */}
-                    <Box
-                      style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}
+                          {/* Value Setter */}
+                          <div
+                            style={{
+                              background: colors.gray[50],
+                              border: `1px solid ${colors.border.light}`,
+                              borderRadius: spacing.radius.container,
+                              padding: spacing.lg,
+                            }}
+                          >
+                            <Stack gap="md">
+                              <Text fw={600} style={{ fontSize: FONT_SIZES.normal }}>
+                                Set new value
+                              </Text>
+                              <Separator />
+                              <Group align="end" wrap="nowrap">
+                                <div style={{ flex: 1 }}>
+                                  <ValueSetterToRender
+                                    minDate={minDate}
+                                    maxDate={maxDate}
+                                    param={selectedParam}
+                                    policy={localPolicy}
+                                    intervals={intervals}
+                                    setIntervals={setIntervals}
+                                    startDate={startDate}
+                                    setStartDate={setStartDate}
+                                    endDate={endDate}
+                                    setEndDate={setEndDate}
+                                  />
+                                </div>
+                                <ModeSelectorButton
+                                  setMode={(mode) => {
+                                    setIntervals([]);
+                                    setValueSetterMode(mode);
+                                  }}
+                                />
+                                <Button
+                                  onClick={handleValueSubmit}
+                                  disabled={intervals.length === 0}
+                                >
+                                  Add change
+                                </Button>
+                              </Group>
+                            </Stack>
+                          </div>
+
+                          {/* Historical Values Chart */}
+                          {baseValues && reformValues && (
+                            <div>
+                              <HistoricalValues
+                                param={selectedParam}
+                                baseValues={baseValues}
+                                reformValues={reformValues}
+                                policyLabel={policyLabel}
+                                policyId={null}
+                              />
+                            </div>
+                          )}
+                        </Stack>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </Group>
+
+              {/* Footer for creation mode */}
+              <div
+                style={{
+                  flexShrink: 0,
+                  borderTop: `1px solid ${colors.border.light}`,
+                  padding: spacing.md,
+                  paddingLeft: spacing.xl,
+                  paddingRight: spacing.xl,
+                  background: colors.white,
+                }}
+              >
+                <Group justify="space-between" gap="sm">
+                  <Button variant="ghost" onClick={handleExitCreationMode}>
+                    <IconChevronLeft size={16} />
+                    Back
+                  </Button>
+                  <Button onClick={handleCreatePolicy} disabled={isCreating || !policyLabel.trim()}>
+                    {isCreating && <Spinner size="sm" />}
+                    Create policy
+                  </Button>
+                </Group>
+              </div>
+            </>
+          ) : (
+            // ========== BROWSE MODE ==========
+            <>
+              <Group
+                align="stretch"
+                gap="xl"
+                style={{ height: '100%', width: '100%', padding: spacing.xl }}
+                wrap="nowrap"
+              >
+                {/* Left Sidebar */}
+                <div style={modalStyles.sidebar}>
+                  {/* Quick Actions */}
+                  <div style={modalStyles.sidebarSection}>
+                    <Text style={modalStyles.sidebarLabel}>Quick select</Text>
+                    <button
+                      type="button"
+                      style={{
+                        ...modalStyles.sidebarItem,
+                        background: colors.gray[50],
+                        border: `1px solid ${colors.border.light}`,
+                      }}
+                      onClick={handleSelectCurrentLaw}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = colorConfig.bg;
+                        e.currentTarget.style.borderColor = colorConfig.border;
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = colors.gray[50];
+                        e.currentTarget.style.borderColor = colors.border.light;
+                      }}
                     >
-                      <ScrollArea style={{ flex: 1 }} offsetScrollbars>
-                        {/* Unified grid for header and data rows */}
-                        <Box
+                      <IconScale size={16} color={colorConfig.icon} />
+                      <Text
+                        style={{
+                          fontSize: FONT_SIZES.small,
+                          fontWeight: typography.fontWeight.medium,
+                        }}
+                      >
+                        Current law
+                      </Text>
+                    </button>
+                  </div>
+
+                  <Separator />
+
+                  {/* Navigation Sections */}
+                  <div style={modalStyles.sidebarSection}>
+                    <Text style={modalStyles.sidebarLabel}>Library</Text>
+
+                    {/* My Policies (sorted by most recent) */}
+                    <button
+                      type="button"
+                      style={{
+                        ...modalStyles.sidebarItem,
+                        background:
+                          activeSection === 'my-policies' ? colorConfig.bg : 'transparent',
+                        color:
+                          activeSection === 'my-policies' ? colorConfig.icon : colors.gray[700],
+                      }}
+                      onClick={() => setActiveSection('my-policies')}
+                    >
+                      <IconFolder size={16} />
+                      <Text style={{ fontSize: FONT_SIZES.small, flex: 1 }}>My policies</Text>
+                      <Text
+                        fw={700}
+                        style={{ fontSize: FONT_SIZES.small, color: colors.gray[500] }}
+                      >
+                        {userPolicies.length}
+                      </Text>
+                    </button>
+
+                    {/* User-created policies */}
+                    <button
+                      type="button"
+                      style={{
+                        ...modalStyles.sidebarItem,
+                        background: activeSection === 'public' ? colorConfig.bg : 'transparent',
+                        color: activeSection === 'public' ? colorConfig.icon : colors.gray[700],
+                      }}
+                      onClick={() => setActiveSection('public')}
+                    >
+                      <IconUsers size={16} />
+                      <Text style={{ fontSize: FONT_SIZES.small, flex: 1 }}>
+                        User-created policies
+                      </Text>
+                    </button>
+
+                    {/* Create New Policy */}
+                    <button
+                      type="button"
+                      style={{
+                        ...modalStyles.sidebarItem,
+                        background: isCreationMode ? colorConfig.bg : 'transparent',
+                        color: isCreationMode ? colorConfig.icon : colors.gray[700],
+                      }}
+                      onClick={handleEnterCreationMode}
+                    >
+                      <IconPlus size={16} />
+                      <Text style={{ fontSize: FONT_SIZES.small, flex: 1 }}>Create new policy</Text>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Main Content Area */}
+                <div style={modalStyles.mainContent}>
+                  {/* Search Bar */}
+                  <div style={modalStyles.searchBar}>
+                    <div className="tw:relative">
+                      <IconSearch
+                        size={16}
+                        color={colors.gray[400]}
+                        className="tw:absolute tw:left-2.5 tw:top-1/2 tw:-translate-y-1/2 tw:text-muted-foreground"
+                      />
+                      <Input
+                        placeholder="Search policies by name or parameter..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="tw:pl-8"
+                        style={{
+                          borderRadius: spacing.radius.container,
+                          border: `1px solid ${colors.border.light}`,
+                          fontSize: FONT_SIZES.small,
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Section Header */}
+                  <Group justify="space-between" align="center">
+                    <Text fw={600} style={{ fontSize: FONT_SIZES.normal, color: colors.gray[800] }}>
+                      {getSectionTitle()}
+                    </Text>
+                    <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
+                      {displayedPolicies.length}{' '}
+                      {displayedPolicies.length === 1 ? 'policy' : 'policies'}
+                    </Text>
+                  </Group>
+
+                  {/* Policy Grid */}
+                  <ScrollArea style={{ flex: 1 }}>
+                    {isLoading ? (
+                      <Stack gap="md">
+                        {[1, 2, 3].map((i) => (
+                          <Skeleton key={i} className="tw:h-[80px] tw:rounded-md" />
+                        ))}
+                      </Stack>
+                    ) : activeSection === 'public' ? (
+                      // Placeholder for User-created policies section
+                      <div
+                        style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          padding: spacing['4xl'],
+                          gap: spacing.md,
+                        }}
+                      >
+                        <div
                           style={{
-                            display: 'grid',
-                            gridTemplateColumns: '1fr auto auto',
-                            gap: `0`,
+                            width: 64,
+                            height: 64,
+                            borderRadius: '50%',
+                            background: colors.gray[100],
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
                           }}
                         >
-                          {/* Header row */}
-                          <Text
-                            fw={600}
-                            style={{
-                              fontSize: FONT_SIZES.small,
-                              color: colors.gray[600],
-                              padding: spacing.lg,
-                              paddingBottom: spacing.sm,
-                              borderBottom: `1px solid ${colors.gray[200]}`,
-                            }}
-                          >
-                            Parameter
-                          </Text>
-                          <Text
-                            fw={600}
-                            style={{
-                              fontSize: FONT_SIZES.small,
-                              color: colors.gray[600],
-                              textAlign: 'right',
-                              padding: spacing.lg,
-                              paddingBottom: spacing.sm,
-                              borderBottom: `1px solid ${colors.gray[200]}`,
-                              gridColumn: 'span 2',
-                            }}
-                          >
-                            Changes
-                          </Text>
-
-                          {/* Data rows - grouped by parameter */}
-                          {(() => {
-                            const groupedParams: Array<{
-                              paramName: string;
-                              label: string;
-                              changes: Array<{ period: string; value: string }>;
-                            }> = [];
-
-                            drawerPolicy.parameters.forEach((param) => {
-                              const paramName = param.name;
-                              const hierarchicalLabels = getHierarchicalLabels(
-                                paramName,
-                                parameters
-                              );
-                              const displayLabel =
-                                hierarchicalLabels.length > 0
-                                  ? formatLabelParts(hierarchicalLabels)
-                                  : paramName.split('.').pop() || paramName;
-                              const metadata = parameters[paramName];
-
-                              // Use value intervals directly from the Policy type
-                              const changes = (param.values || []).map((interval) => ({
-                                period: formatPeriod(interval.startDate, interval.endDate),
-                                value: formatParameterValue(interval.value, metadata?.unit),
-                              }));
-
-                              groupedParams.push({ paramName, label: displayLabel, changes });
-                            });
-
-                            return groupedParams.map((param) => (
-                              <Fragment key={param.paramName}>
-                                {/* Parameter name cell */}
-                                <Box
-                                  style={{
-                                    padding: `${spacing.sm} ${spacing.lg}`,
-                                    borderBottom: `1px solid ${colors.gray[100]}`,
-                                  }}
-                                >
-                                  <Tooltip label={param.paramName} multiline w={300} withArrow>
-                                    <Text
-                                      style={{
-                                        fontSize: FONT_SIZES.small,
-                                        color: colors.gray[700],
-                                        lineHeight: 1.4,
-                                      }}
-                                    >
-                                      {param.label}
-                                    </Text>
-                                  </Tooltip>
-                                </Box>
-                                {/* Period column */}
-                                <Box
-                                  style={{
-                                    padding: `${spacing.sm} ${spacing.md}`,
-                                    borderBottom: `1px solid ${colors.gray[100]}`,
-                                    textAlign: 'right',
-                                  }}
-                                >
-                                  {param.changes.map((change, idx) => (
-                                    <Text
-                                      key={idx}
-                                      style={{
-                                        fontSize: FONT_SIZES.small,
-                                        color: colors.gray[500],
-                                        lineHeight: 1.4,
-                                      }}
-                                    >
-                                      {change.period}
-                                    </Text>
-                                  ))}
-                                </Box>
-                                {/* Value column */}
-                                <Box
-                                  style={{
-                                    padding: `${spacing.sm} ${spacing.lg}`,
-                                    paddingLeft: spacing.sm,
-                                    borderBottom: `1px solid ${colors.gray[100]}`,
-                                    textAlign: 'right',
-                                  }}
-                                >
-                                  {param.changes.map((change, idx) => (
-                                    <Text
-                                      key={idx}
-                                      fw={500}
-                                      style={{
-                                        fontSize: FONT_SIZES.small,
-                                        color: colorConfig.icon,
-                                        lineHeight: 1.4,
-                                      }}
-                                    >
-                                      {change.value}
-                                    </Text>
-                                  ))}
-                                </Box>
-                              </Fragment>
-                            ));
-                          })()}
-                        </Box>
-                      </ScrollArea>
-                    </Box>
-
-                    {/* Panel footer */}
-                    <Box
-                      style={{ padding: spacing.lg, borderTop: `1px solid ${colors.gray[200]}` }}
-                    >
-                      <Button
-                        color="teal"
-                        fullWidth
-                        onClick={() => {
-                          handleSelectPolicy(
-                            drawerPolicy.id,
-                            drawerPolicy.label,
-                            drawerPolicy.paramCount,
-                            drawerPolicy.associationId
-                          );
-                          setDrawerPolicyId(null);
+                          <IconUsers size={28} color={colors.gray[400]} />
+                        </div>
+                        <Text fw={500} c={colors.gray[600]}>
+                          Coming soon
+                        </Text>
+                        <Text
+                          c="dimmed"
+                          style={{ textAlign: 'center', maxWidth: 300, fontSize: FONT_SIZES.small }}
+                        >
+                          Search and browse policies created by other PolicyEngine users.
+                        </Text>
+                      </div>
+                    ) : displayedPolicies.length === 0 ? (
+                      <div
+                        style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          padding: spacing['4xl'],
+                          gap: spacing.md,
                         }}
-                        rightSection={<IconChevronRight size={16} />}
                       >
-                        Select this policy
-                      </Button>
-                    </Box>
-                  </>
-                )}
-              </Box>
-            )}
-          </Transition>
-        </>
-      )}
-    </Modal>
+                        <div
+                          style={{
+                            width: 64,
+                            height: 64,
+                            borderRadius: '50%',
+                            background: colors.gray[100],
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          <IconFolder size={28} color={colors.gray[400]} />
+                        </div>
+                        <Text fw={500} c={colors.gray[600]}>
+                          {searchQuery ? 'No policies match your search' : 'No policies yet'}
+                        </Text>
+                        <Text
+                          c="dimmed"
+                          style={{ textAlign: 'center', maxWidth: 300, fontSize: FONT_SIZES.small }}
+                        >
+                          {searchQuery
+                            ? 'Try adjusting your search terms or browse all policies'
+                            : 'Create your first policy to get started'}
+                        </Text>
+                        {!searchQuery && (
+                          <Button
+                            variant="outline"
+                            onClick={handleEnterCreationMode}
+                            style={{ marginTop: spacing.sm }}
+                          >
+                            <IconPlus size={16} />
+                            Create policy
+                          </Button>
+                        )}
+                      </div>
+                    ) : (
+                      <div style={modalStyles.policyGrid}>
+                        {displayedPolicies.map((policy) => {
+                          const isSelected = selectedPolicyId === policy.id;
+
+                          return (
+                            <div
+                              role="button"
+                              tabIndex={0}
+                              key={policy.id}
+                              style={{
+                                ...modalStyles.policyCard,
+                                background: colors.white,
+                                borderColor: isSelected ? colorConfig.border : colors.gray[200],
+                              }}
+                              onClick={() => {
+                                setSelectedPolicyId(policy.id);
+                                handleSelectPolicy(
+                                  policy.id,
+                                  policy.label,
+                                  policy.paramCount,
+                                  policy.associationId
+                                );
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                  e.currentTarget.click();
+                                }
+                              }}
+                            >
+                              {/* Policy accent bar */}
+                              <div
+                                style={{
+                                  position: 'absolute',
+                                  top: 0,
+                                  left: 0,
+                                  right: 0,
+                                  height: 3,
+                                  background: isSelected
+                                    ? `linear-gradient(90deg, ${colorConfig.accent}, ${colorConfig.icon})`
+                                    : colors.gray[200],
+                                  transition: 'all 0.2s ease',
+                                }}
+                              />
+
+                              <Group justify="space-between" align="start" wrap="nowrap">
+                                <Stack gap="xs" style={{ flex: 1, minWidth: 0 }}>
+                                  <Text
+                                    fw={600}
+                                    style={{
+                                      fontSize: FONT_SIZES.normal,
+                                      color: colors.gray[900],
+                                    }}
+                                  >
+                                    {policy.label}
+                                  </Text>
+                                  <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
+                                    {policy.paramCount} param{policy.paramCount !== 1 ? 's' : ''}{' '}
+                                    changed
+                                  </Text>
+                                </Stack>
+
+                                <Group gap="xs" style={{ flexShrink: 0 }}>
+                                  {/* Info button */}
+                                  <Button
+                                    variant="ghost"
+                                    size="icon-sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setDrawerPolicyId(policy.id);
+                                    }}
+                                  >
+                                    <IconInfoCircle size={18} />
+                                  </Button>
+                                  {/* Select indicator */}
+                                  <IconChevronRight size={16} color={colors.gray[400]} />
+                                </Group>
+                              </Group>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </ScrollArea>
+                </div>
+              </Group>
+
+              {/* Sliding panel overlay - click to close */}
+              {!!drawerPolicy && (
+                <div
+                  role="button"
+                  tabIndex={0}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: 'rgba(0, 0, 0, 0.08)',
+                    zIndex: 10,
+                  }}
+                  onClick={() => setDrawerPolicyId(null)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.currentTarget.click();
+                    }
+                  }}
+                  aria-label="Close drawer"
+                />
+              )}
+
+              {/* Sliding panel for policy details */}
+              {!!drawerPolicy && (
+                <div
+                  role="button"
+                  tabIndex={0}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    right: 0,
+                    bottom: 0,
+                    width: 480,
+                    background: colors.white,
+                    borderLeft: `1px solid ${colors.gray[200]}`,
+                    boxShadow: '-8px 0 24px rgba(0, 0, 0, 0.08)',
+                    zIndex: 11,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    transition: 'transform 250ms ease',
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.stopPropagation();
+                    }
+                  }}
+                >
+                  {drawerPolicy && (
+                    <>
+                      {/* Panel header */}
+                      <div
+                        style={{
+                          padding: spacing.lg,
+                          borderBottom: `1px solid ${colors.gray[200]}`,
+                        }}
+                      >
+                        <Group justify="space-between" align="start">
+                          <Stack gap="xs" style={{ flex: 1 }}>
+                            <Text
+                              fw={600}
+                              style={{ fontSize: FONT_SIZES.normal, color: colors.gray[900] }}
+                            >
+                              {drawerPolicy.label}
+                            </Text>
+                            <Text style={{ fontSize: FONT_SIZES.small, color: colors.gray[500] }}>
+                              {drawerPolicy.paramCount} parameter
+                              {drawerPolicy.paramCount !== 1 ? 's' : ''} changed from current law
+                            </Text>
+                          </Stack>
+                          <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            onClick={() => setDrawerPolicyId(null)}
+                          >
+                            <IconX size={18} />
+                          </Button>
+                        </Group>
+                      </div>
+
+                      {/* Panel body */}
+                      <div
+                        style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}
+                      >
+                        <ScrollArea style={{ flex: 1 }}>
+                          {/* Unified grid for header and data rows */}
+                          <div
+                            style={{
+                              display: 'grid',
+                              gridTemplateColumns: '1fr auto auto',
+                              gap: `0`,
+                            }}
+                          >
+                            {/* Header row */}
+                            <Text
+                              fw={600}
+                              style={{
+                                fontSize: FONT_SIZES.small,
+                                color: colors.gray[600],
+                                padding: spacing.lg,
+                                paddingBottom: spacing.sm,
+                                borderBottom: `1px solid ${colors.gray[200]}`,
+                              }}
+                            >
+                              Parameter
+                            </Text>
+                            <Text
+                              fw={600}
+                              style={{
+                                fontSize: FONT_SIZES.small,
+                                color: colors.gray[600],
+                                textAlign: 'right',
+                                padding: spacing.lg,
+                                paddingBottom: spacing.sm,
+                                borderBottom: `1px solid ${colors.gray[200]}`,
+                                gridColumn: 'span 2',
+                              }}
+                            >
+                              Changes
+                            </Text>
+
+                            {/* Data rows - grouped by parameter */}
+                            {(() => {
+                              const groupedParams: Array<{
+                                paramName: string;
+                                label: string;
+                                changes: Array<{ period: string; value: string }>;
+                              }> = [];
+
+                              drawerPolicy.parameters.forEach((param) => {
+                                const paramName = param.name;
+                                const hierarchicalLabels = getHierarchicalLabels(
+                                  paramName,
+                                  parameters
+                                );
+                                const displayLabel =
+                                  hierarchicalLabels.length > 0
+                                    ? formatLabelParts(hierarchicalLabels)
+                                    : paramName.split('.').pop() || paramName;
+                                const metadata = parameters[paramName];
+
+                                // Use value intervals directly from the Policy type
+                                const changes = (param.values || []).map((interval) => ({
+                                  period: formatPeriod(interval.startDate, interval.endDate),
+                                  value: formatParameterValue(interval.value, metadata?.unit),
+                                }));
+
+                                groupedParams.push({ paramName, label: displayLabel, changes });
+                              });
+
+                              return groupedParams.map((param) => (
+                                <Fragment key={param.paramName}>
+                                  {/* Parameter name cell */}
+                                  <div
+                                    style={{
+                                      padding: `${spacing.sm} ${spacing.lg}`,
+                                      borderBottom: `1px solid ${colors.gray[100]}`,
+                                    }}
+                                  >
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <Text
+                                          style={{
+                                            fontSize: FONT_SIZES.small,
+                                            color: colors.gray[700],
+                                            lineHeight: 1.4,
+                                          }}
+                                        >
+                                          {param.label}
+                                        </Text>
+                                      </TooltipTrigger>
+                                      <TooltipContent className="tw:max-w-[300px]">
+                                        {param.paramName}
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </div>
+                                  {/* Period column */}
+                                  <div
+                                    style={{
+                                      padding: `${spacing.sm} ${spacing.md}`,
+                                      borderBottom: `1px solid ${colors.gray[100]}`,
+                                      textAlign: 'right',
+                                    }}
+                                  >
+                                    {param.changes.map((change, idx) => (
+                                      <Text
+                                        key={idx}
+                                        style={{
+                                          fontSize: FONT_SIZES.small,
+                                          color: colors.gray[500],
+                                          lineHeight: 1.4,
+                                        }}
+                                      >
+                                        {change.period}
+                                      </Text>
+                                    ))}
+                                  </div>
+                                  {/* Value column */}
+                                  <div
+                                    style={{
+                                      padding: `${spacing.sm} ${spacing.lg}`,
+                                      paddingLeft: spacing.sm,
+                                      borderBottom: `1px solid ${colors.gray[100]}`,
+                                      textAlign: 'right',
+                                    }}
+                                  >
+                                    {param.changes.map((change, idx) => (
+                                      <Text
+                                        key={idx}
+                                        fw={500}
+                                        style={{
+                                          fontSize: FONT_SIZES.small,
+                                          color: colorConfig.icon,
+                                          lineHeight: 1.4,
+                                        }}
+                                      >
+                                        {change.value}
+                                      </Text>
+                                    ))}
+                                  </div>
+                                </Fragment>
+                              ));
+                            })()}
+                          </div>
+                        </ScrollArea>
+                      </div>
+
+                      {/* Panel footer */}
+                      <div
+                        style={{ padding: spacing.lg, borderTop: `1px solid ${colors.gray[200]}` }}
+                      >
+                        <Button
+                          className="tw:w-full"
+                          onClick={() => {
+                            handleSelectPolicy(
+                              drawerPolicy.id,
+                              drawerPolicy.label,
+                              drawerPolicy.paramCount,
+                              drawerPolicy.associationId
+                            );
+                            setDrawerPolicyId(null);
+                          }}
+                        >
+                          Select this policy
+                          <IconChevronRight size={16} />
+                        </Button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -3387,7 +3517,7 @@ function PopulationBrowseModal({
   isOpen,
   onClose,
   onSelect,
-  onCreateNew,
+  onCreateNew: _onCreateNew,
 }: PopulationBrowseModalProps) {
   const countryId = useCurrentCountry() as 'us' | 'uk';
   const userId = MOCK_USER_ID.toString();
@@ -3424,7 +3554,9 @@ function PopulationBrowseModal({
 
   // Derive marital status and number of children from household draft
   const householdPeople = useMemo(() => {
-    if (!householdDraft) return [];
+    if (!householdDraft) {
+      return [];
+    }
     return Object.keys(householdDraft.householdData.people || {});
   }, [householdDraft]);
 
@@ -3492,7 +3624,9 @@ function PopulationBrowseModal({
 
   // Transform households with usage tracking sort
   const sortedHouseholds = useMemo(() => {
-    if (!households) return [];
+    if (!households) {
+      return [];
+    }
 
     return [...households]
       .map((h) => {
@@ -3517,13 +3651,17 @@ function PopulationBrowseModal({
 
   // Filter regions/households based on search
   const filteredRegions = useMemo(() => {
-    if (!searchQuery.trim()) return activeRegions;
+    if (!searchQuery.trim()) {
+      return activeRegions;
+    }
     const query = searchQuery.toLowerCase();
     return activeRegions.filter((r) => r.label.toLowerCase().includes(query));
   }, [activeRegions, searchQuery]);
 
   const filteredHouseholds = useMemo(() => {
-    if (!searchQuery.trim()) return sortedHouseholds;
+    if (!searchQuery.trim()) {
+      return sortedHouseholds;
+    }
     const query = searchQuery.toLowerCase();
     return sortedHouseholds.filter((h) => h.label.toLowerCase().includes(query));
   }, [sortedHouseholds, searchQuery]);
@@ -3609,7 +3747,9 @@ function PopulationBrowseModal({
   // Handle marital status change
   const handleMaritalStatusChange = useCallback(
     (newStatus: 'single' | 'married') => {
-      if (!householdDraft) return;
+      if (!householdDraft) {
+        return;
+      }
 
       const builder = new HouseholdBuilder(countryId as 'us' | 'uk', reportYear);
       builder.loadHousehold(householdDraft);
@@ -3631,7 +3771,9 @@ function PopulationBrowseModal({
   // Handle number of children change
   const handleNumChildrenChange = useCallback(
     (newCount: number) => {
-      if (!householdDraft) return;
+      if (!householdDraft) {
+        return;
+      }
 
       const builder = new HouseholdBuilder(countryId as 'us' | 'uk', reportYear);
       builder.loadHousehold(householdDraft);
@@ -3712,7 +3854,6 @@ function PopulationBrowseModal({
   ]);
 
   const colorConfig = INGREDIENT_COLORS.population;
-  const countryConfig = COUNTRY_CONFIG[countryId] || COUNTRY_CONFIG.us;
 
   // Styles (matching PolicyBrowseModal)
   const modalStyles = {
@@ -3748,7 +3889,7 @@ function PopulationBrowseModal({
       alignItems: 'center',
       gap: spacing.sm,
       padding: `${spacing.sm} ${spacing.md}`,
-      borderRadius: spacing.radius.md,
+      borderRadius: spacing.radius.container,
       cursor: 'pointer',
       transition: 'all 0.15s ease',
       fontSize: FONT_SIZES.small,
@@ -3770,7 +3911,7 @@ function PopulationBrowseModal({
     },
     regionChip: {
       padding: `${spacing.sm} ${spacing.md}`,
-      borderRadius: spacing.radius.md,
+      borderRadius: spacing.radius.container,
       border: `1px solid ${colors.border.light}`,
       background: colors.white,
       cursor: 'pointer',
@@ -3780,7 +3921,7 @@ function PopulationBrowseModal({
     },
     householdCard: {
       padding: spacing.md,
-      borderRadius: spacing.radius.md,
+      borderRadius: spacing.radius.container,
       border: `1px solid ${colors.border.light}`,
       background: colors.white,
       cursor: 'pointer',
@@ -3794,7 +3935,7 @@ function PopulationBrowseModal({
       background: 'rgba(255, 255, 255, 0.95)',
       backdropFilter: 'blur(20px) saturate(180%)',
       WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-      borderRadius: spacing.radius.lg,
+      borderRadius: spacing.radius.feature,
       border: `1px solid ${householdDraft ? colorConfig.border : colors.border.light}`,
       boxShadow: householdDraft
         ? `0 4px 20px rgba(0, 0, 0, 0.08), 0 0 0 1px ${colorConfig.border}`
@@ -3807,30 +3948,54 @@ function PopulationBrowseModal({
 
   // Get section title
   const getSectionTitle = () => {
-    if (activeCategory === 'national') return countryId === 'uk' ? 'UK-wide' : 'Nationwide';
-    if (activeCategory === 'my-households') return 'My households';
+    if (activeCategory === 'national') {
+      return countryId === 'uk' ? 'UK-wide' : 'Nationwide';
+    }
+    if (activeCategory === 'my-households') {
+      return 'My households';
+    }
     const category = geographyCategories.find((c) => c.id === activeCategory);
     return category?.label || 'Regions';
   };
 
   // Get item count for display
   const getItemCount = () => {
-    if (activeCategory === 'national') return 1;
-    if (activeCategory === 'my-households') return filteredHouseholds.length;
+    if (activeCategory === 'national') {
+      return 1;
+    }
+    if (activeCategory === 'my-households') {
+      return filteredHouseholds.length;
+    }
     return filteredRegions.length;
   };
 
   return (
-    <Modal
-      opened={isOpen}
-      onClose={onClose}
-      title={
-        <Group gap={spacing.sm}>
-          <Box
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent
+        className="tw:sm:max-w-none tw:p-0 tw:gap-0"
+        style={{
+          maxWidth: '1400px',
+          width: '90vw',
+          height: '85vh',
+          maxHeight: '800px',
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: spacing.sm,
+            padding: `${spacing.md} ${spacing.xl}`,
+            borderBottom: `1px solid ${colors.border.light}`,
+          }}
+        >
+          <div
             style={{
               width: 36,
               height: 36,
-              borderRadius: spacing.radius.md,
+              borderRadius: spacing.radius.container,
               background: `linear-gradient(135deg, ${colorConfig.bg} 0%, ${colors.white} 100%)`,
               border: `1px solid ${colorConfig.border}`,
               display: 'flex',
@@ -3839,8 +4004,8 @@ function PopulationBrowseModal({
             }}
           >
             <IconUsers size={20} color={colorConfig.icon} />
-          </Box>
-          <Stack gap={0}>
+          </div>
+          <Stack style={{ gap: 0 }}>
             <Text fw={600} style={{ fontSize: FONT_SIZES.normal, color: colors.gray[900] }}>
               {isCreationMode ? 'Create household' : 'Household(s)'}
             </Text>
@@ -3850,530 +4015,562 @@ function PopulationBrowseModal({
                 : 'Choose a geographic region or create a household'}
             </Text>
           </Stack>
-        </Group>
-      }
-      size="90vw"
-      radius="lg"
-      styles={{
-        content: {
-          maxWidth: '1400px',
-          height: '85vh',
-          maxHeight: '800px',
-          display: 'flex',
-          flexDirection: 'column',
-        },
-        header: {
-          borderBottom: `1px solid ${colors.border.light}`,
-          paddingBottom: spacing.md,
-          paddingLeft: spacing.xl,
-          paddingRight: spacing.xl,
-        },
-        body: {
-          padding: 0,
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden',
-        },
-      }}
-    >
-      <Group
-        align="stretch"
-        gap={0}
-        style={{ flex: 1, height: '100%', overflow: 'hidden' }}
-        wrap="nowrap"
-      >
-        {/* Left Sidebar - independently scrollable */}
-        <Box style={{ ...modalStyles.sidebar, height: '100%' }}>
-          <ScrollArea h="100%" offsetScrollbars>
-            <Box style={modalStyles.sidebarInner}>
-              {/* Quick Select */}
-              <Box style={modalStyles.sidebarSection}>
-                <Text style={modalStyles.sidebarLabel}>Quick select</Text>
-                <UnstyledButton
-                  style={{
-                    ...modalStyles.sidebarItem,
-                    background:
-                      activeCategory === 'national' && !isCreationMode
-                        ? colorConfig.bg
-                        : colors.gray[50],
-                    border: `1px solid ${activeCategory === 'national' && !isCreationMode ? colorConfig.border : colors.border.light}`,
-                    color:
-                      activeCategory === 'national' && !isCreationMode
-                        ? colorConfig.icon
-                        : colors.gray[700],
-                  }}
-                  onClick={() => {
-                    setActiveCategory('national');
-                    setIsCreationMode(false);
-                  }}
-                >
-                  {countryId === 'uk' ? <UKOutlineIcon size={16} /> : <USOutlineIcon size={16} />}
-                  <Text
-                    style={{ fontSize: FONT_SIZES.small, fontWeight: typography.fontWeight.medium }}
-                  >
-                    {countryId === 'uk' ? 'UK-wide' : 'Nationwide'}
-                  </Text>
-                </UnstyledButton>
-              </Box>
-
-              <Divider />
-
-              {/* Geography Categories */}
-              <Box style={modalStyles.sidebarSection}>
-                <Text style={modalStyles.sidebarLabel}>Geographies</Text>
-                {geographyCategories.map((category) => (
-                  <UnstyledButton
-                    key={category.id}
-                    style={{
-                      ...modalStyles.sidebarItem,
-                      background:
-                        activeCategory === category.id && !isCreationMode
-                          ? colorConfig.bg
-                          : 'transparent',
-                      color:
-                        activeCategory === category.id && !isCreationMode
-                          ? colorConfig.icon
-                          : colors.gray[700],
-                    }}
-                    onClick={() => {
-                      setActiveCategory(category.id);
-                      setIsCreationMode(false);
-                    }}
-                  >
-                    <IconFolder size={16} />
-                    <Text style={{ fontSize: FONT_SIZES.small, flex: 1 }}>{category.label}</Text>
-                    <Text fw={700} style={{ fontSize: FONT_SIZES.small, color: colors.gray[500] }}>
-                      {category.count}
-                    </Text>
-                  </UnstyledButton>
-                ))}
-              </Box>
-
-              <Divider />
-
-              {/* My Households */}
-              <Box style={modalStyles.sidebarSection}>
-                <Text style={modalStyles.sidebarLabel}>Households</Text>
-                <UnstyledButton
-                  style={{
-                    ...modalStyles.sidebarItem,
-                    background:
-                      activeCategory === 'my-households' && !isCreationMode
-                        ? colorConfig.bg
-                        : 'transparent',
-                    color:
-                      activeCategory === 'my-households' && !isCreationMode
-                        ? colorConfig.icon
-                        : colors.gray[700],
-                  }}
-                  onClick={() => {
-                    setActiveCategory('my-households');
-                    setIsCreationMode(false);
-                  }}
-                >
-                  <IconHome size={16} />
-                  <Text style={{ fontSize: FONT_SIZES.small, flex: 1 }}>My households</Text>
-                  <Text fw={700} style={{ fontSize: FONT_SIZES.small, color: colors.gray[500] }}>
-                    {sortedHouseholds.length}
-                  </Text>
-                </UnstyledButton>
-
-                {/* Create New - styled as sidebar tab */}
-                <UnstyledButton
-                  style={{
-                    ...modalStyles.sidebarItem,
-                    background: isCreationMode ? colorConfig.bg : 'transparent',
-                    color: isCreationMode ? colorConfig.icon : colors.gray[700],
-                  }}
-                  onClick={handleEnterCreationMode}
-                >
-                  <IconPlus size={16} />
-                  <Text style={{ fontSize: FONT_SIZES.small, flex: 1 }}>Create new household</Text>
-                </UnstyledButton>
-              </Box>
-            </Box>
-          </ScrollArea>
-        </Box>
-
-        {/* Main Content Area */}
-        <Box style={modalStyles.mainContent}>
-          {isCreationMode ? (
-            // Household Creation Form
-            <>
-              {/* Status Header Bar */}
-              <Box style={dockStyles.statusHeader}>
-                <Group justify="space-between" align="center" wrap="nowrap">
-                  {/* Left side: Household icon and editable name */}
-                  <Group gap={spacing.md} align="center" wrap="nowrap" style={{ minWidth: 0 }}>
-                    {/* Household icon */}
-                    <Box
+        </div>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          <Group
+            align="stretch"
+            style={{ gap: 0, flex: 1, height: '100%', overflow: 'hidden' }}
+            wrap="nowrap"
+          >
+            {/* Left Sidebar - independently scrollable */}
+            <div style={{ ...modalStyles.sidebar, height: '100%' }}>
+              <ScrollArea className="tw:h-full">
+                <div style={modalStyles.sidebarInner}>
+                  {/* Quick Select */}
+                  <div style={modalStyles.sidebarSection}>
+                    <Text style={modalStyles.sidebarLabel}>Quick select</Text>
+                    <button
+                      type="button"
                       style={{
-                        width: 32,
-                        height: 32,
-                        borderRadius: spacing.radius.md,
-                        background: `linear-gradient(135deg, ${colorConfig.bg} 0%, ${colors.white} 100%)`,
-                        border: `1px solid ${colorConfig.border}`,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        flexShrink: 0,
+                        ...modalStyles.sidebarItem,
+                        background:
+                          activeCategory === 'national' && !isCreationMode
+                            ? colorConfig.bg
+                            : colors.gray[50],
+                        border: `1px solid ${activeCategory === 'national' && !isCreationMode ? colorConfig.border : colors.border.light}`,
+                        color:
+                          activeCategory === 'national' && !isCreationMode
+                            ? colorConfig.icon
+                            : colors.gray[700],
+                      }}
+                      onClick={() => {
+                        setActiveCategory('national');
+                        setIsCreationMode(false);
                       }}
                     >
-                      <IconHome size={18} color={colorConfig.icon} />
-                    </Box>
-
-                    {/* Editable household name */}
-                    <Box
-                      style={{
-                        minWidth: 0,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: spacing.xs,
-                      }}
-                    >
-                      {isEditingLabel ? (
-                        <TextInput
-                          value={householdLabel}
-                          onChange={(e) => setHouseholdLabel(e.currentTarget.value)}
-                          onBlur={() => setIsEditingLabel(false)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') setIsEditingLabel(false);
-                            if (e.key === 'Escape') setIsEditingLabel(false);
-                          }}
-                          autoFocus
-                          placeholder="Enter household name..."
-                          size="xs"
-                          style={{ width: 250 }}
-                          styles={{
-                            input: {
-                              fontFamily: typography.fontFamily.primary,
-                              fontWeight: 600,
-                              fontSize: FONT_SIZES.normal,
-                              border: 'none',
-                              background: 'transparent',
-                              padding: 0,
-                            },
-                          }}
-                        />
+                      {countryId === 'uk' ? (
+                        <UKOutlineIcon size={16} />
                       ) : (
-                        <>
-                          <Text
-                            fw={600}
-                            style={{
-                              fontFamily: typography.fontFamily.primary,
-                              fontSize: FONT_SIZES.normal,
-                              color: householdLabel ? colors.gray[800] : colors.gray[400],
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap',
-                              cursor: 'pointer',
-                            }}
-                            onClick={() => setIsEditingLabel(true)}
-                          >
-                            {householdLabel || 'Click to name your household...'}
-                          </Text>
-                          <ActionIcon
-                            size="sm"
-                            variant="subtle"
-                            color="gray"
-                            onClick={() => setIsEditingLabel(true)}
-                            style={{ flexShrink: 0 }}
-                          >
-                            <IconPencil size={14} />
-                          </ActionIcon>
-                        </>
+                        <USOutlineIcon size={16} />
                       )}
-                    </Box>
-                  </Group>
-
-                  {/* Right side: Member count */}
-                  <Group gap={spacing.md} align="center" wrap="nowrap" style={{ flexShrink: 0 }}>
-                    <Group gap={spacing.xs} style={{ flexShrink: 0 }}>
-                      {householdPeople.length > 0 ? (
-                        <>
-                          <Box
-                            style={{
-                              width: 8,
-                              height: 8,
-                              borderRadius: '50%',
-                              background: colors.primary[500],
-                            }}
-                          />
-                          <Text style={{ fontSize: FONT_SIZES.small, color: colors.gray[600] }}>
-                            {householdPeople.length} member{householdPeople.length !== 1 ? 's' : ''}
-                          </Text>
-                        </>
-                      ) : (
-                        <Text style={{ fontSize: FONT_SIZES.small, color: colors.gray[400] }}>
-                          No members yet
-                        </Text>
-                      )}
-                    </Group>
-                  </Group>
-                </Group>
-              </Box>
-
-              <ScrollArea style={{ flex: 1 }} offsetScrollbars>
-                {/* HouseholdBuilderForm */}
-                {householdDraft && (
-                  <Box pos="relative">
-                    <LoadingOverlay visible={isCreating} />
-                    <HouseholdBuilderForm
-                      household={householdDraft}
-                      metadata={metadata}
-                      year={reportYear}
-                      maritalStatus={maritalStatus}
-                      numChildren={numChildren}
-                      basicPersonFields={basicInputFields.person || []}
-                      basicNonPersonFields={basicNonPersonFields}
-                      onChange={setHouseholdDraft}
-                      onMaritalStatusChange={handleMaritalStatusChange}
-                      onNumChildrenChange={handleNumChildrenChange}
-                      disabled={isCreating}
-                    />
-                  </Box>
-                )}
-              </ScrollArea>
-            </>
-          ) : (
-            <>
-              {/* Search Bar */}
-              {activeCategory !== 'national' && (
-                <TextInput
-                  placeholder={
-                    activeCategory === 'my-households'
-                      ? 'Search households...'
-                      : `Search ${getSectionTitle().toLowerCase()}...`
-                  }
-                  leftSection={<IconSearch size={16} color={colors.gray[400]} />}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  size="sm"
-                  styles={{
-                    input: {
-                      borderRadius: spacing.radius.md,
-                      border: `1px solid ${colors.border.light}`,
-                      fontSize: FONT_SIZES.small,
-                      '&:focus': {
-                        borderColor: colorConfig.accent,
-                      },
-                    },
-                  }}
-                />
-              )}
-
-              {/* Section Header */}
-              <Group justify="space-between" align="center">
-                <Text fw={600} style={{ fontSize: FONT_SIZES.normal, color: colors.gray[800] }}>
-                  {getSectionTitle()}
-                </Text>
-                <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
-                  {getItemCount()} {getItemCount() === 1 ? 'option' : 'options'}
-                </Text>
-              </Group>
-
-              {/* Content */}
-              <ScrollArea style={{ flex: 1 }} offsetScrollbars>
-                {activeCategory === 'national' ? (
-                  // National selection - single prominent option
-                  <Box
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      padding: spacing['2xl'],
-                      gap: spacing.lg,
-                    }}
-                  >
-                    <Paper
-                      style={{
-                        ...modalStyles.householdCard,
-                        width: '100%',
-                        maxWidth: 400,
-                        textAlign: 'center',
-                        padding: spacing.xl,
-                      }}
-                      onClick={() => handleSelectGeography(null)}
-                    >
-                      <Stack align="center" gap={spacing.md}>
-                        {countryId === 'uk' ? (
-                          <UKOutlineIcon size={48} />
-                        ) : (
-                          <USOutlineIcon size={48} />
-                        )}
-                        <Stack gap={spacing.xs}>
-                          <Text fw={600} style={{ fontSize: FONT_SIZES.normal }}>
-                            {countryId === 'uk' ? 'Households UK-wide' : 'Households nationwide'}
-                          </Text>
-                          <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
-                            Simulate policy effects across the entire{' '}
-                            {countryId === 'uk' ? 'United Kingdom' : 'United States'}
-                          </Text>
-                        </Stack>
-                        <Button color="teal" rightSection={<IconChevronRight size={16} />}>
-                          Select
-                        </Button>
-                      </Stack>
-                    </Paper>
-                  </Box>
-                ) : activeCategory === 'my-households' ? (
-                  // Households list
-                  householdsLoading ? (
-                    <Stack gap={spacing.md}>
-                      {[1, 2, 3].map((i) => (
-                        <Skeleton key={i} height={60} radius="md" />
-                      ))}
-                    </Stack>
-                  ) : filteredHouseholds.length === 0 ? (
-                    <Box
-                      style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        padding: spacing['4xl'],
-                        gap: spacing.md,
-                      }}
-                    >
-                      <Box
+                      <Text
                         style={{
-                          width: 64,
-                          height: 64,
-                          borderRadius: '50%',
-                          background: colors.gray[100],
+                          fontSize: FONT_SIZES.small,
+                          fontWeight: typography.fontWeight.medium,
+                        }}
+                      >
+                        {countryId === 'uk' ? 'UK-wide' : 'Nationwide'}
+                      </Text>
+                    </button>
+                  </div>
+
+                  <Separator />
+
+                  {/* Geography Categories */}
+                  <div style={modalStyles.sidebarSection}>
+                    <Text style={modalStyles.sidebarLabel}>Geographies</Text>
+                    {geographyCategories.map((category) => (
+                      <button
+                        type="button"
+                        key={category.id}
+                        style={{
+                          ...modalStyles.sidebarItem,
+                          background:
+                            activeCategory === category.id && !isCreationMode
+                              ? colorConfig.bg
+                              : 'transparent',
+                          color:
+                            activeCategory === category.id && !isCreationMode
+                              ? colorConfig.icon
+                              : colors.gray[700],
+                        }}
+                        onClick={() => {
+                          setActiveCategory(category.id);
+                          setIsCreationMode(false);
+                        }}
+                      >
+                        <IconFolder size={16} />
+                        <Text style={{ fontSize: FONT_SIZES.small, flex: 1 }}>
+                          {category.label}
+                        </Text>
+                        <Text
+                          fw={700}
+                          style={{ fontSize: FONT_SIZES.small, color: colors.gray[500] }}
+                        >
+                          {category.count}
+                        </Text>
+                      </button>
+                    ))}
+                  </div>
+
+                  <Separator />
+
+                  {/* My Households */}
+                  <div style={modalStyles.sidebarSection}>
+                    <Text style={modalStyles.sidebarLabel}>Households</Text>
+                    <button
+                      type="button"
+                      style={{
+                        ...modalStyles.sidebarItem,
+                        background:
+                          activeCategory === 'my-households' && !isCreationMode
+                            ? colorConfig.bg
+                            : 'transparent',
+                        color:
+                          activeCategory === 'my-households' && !isCreationMode
+                            ? colorConfig.icon
+                            : colors.gray[700],
+                      }}
+                      onClick={() => {
+                        setActiveCategory('my-households');
+                        setIsCreationMode(false);
+                      }}
+                    >
+                      <IconHome size={16} />
+                      <Text style={{ fontSize: FONT_SIZES.small, flex: 1 }}>My households</Text>
+                      <Text
+                        fw={700}
+                        style={{ fontSize: FONT_SIZES.small, color: colors.gray[500] }}
+                      >
+                        {sortedHouseholds.length}
+                      </Text>
+                    </button>
+
+                    {/* Create New - styled as sidebar tab */}
+                    <button
+                      type="button"
+                      style={{
+                        ...modalStyles.sidebarItem,
+                        background: isCreationMode ? colorConfig.bg : 'transparent',
+                        color: isCreationMode ? colorConfig.icon : colors.gray[700],
+                      }}
+                      onClick={handleEnterCreationMode}
+                    >
+                      <IconPlus size={16} />
+                      <Text style={{ fontSize: FONT_SIZES.small, flex: 1 }}>
+                        Create new household
+                      </Text>
+                    </button>
+                  </div>
+                </div>
+              </ScrollArea>
+            </div>
+
+            {/* Main Content Area */}
+            <div style={modalStyles.mainContent}>
+              {isCreationMode ? (
+                // Household Creation Form
+                <>
+                  {/* Status Header Bar */}
+                  <div style={dockStyles.statusHeader}>
+                    <Group justify="space-between" align="center" wrap="nowrap">
+                      {/* Left side: Household icon and editable name */}
+                      <Group gap="md" align="center" wrap="nowrap" style={{ minWidth: 0 }}>
+                        {/* Household icon */}
+                        <div
+                          style={{
+                            width: 32,
+                            height: 32,
+                            borderRadius: spacing.radius.container,
+                            background: `linear-gradient(135deg, ${colorConfig.bg} 0%, ${colors.white} 100%)`,
+                            border: `1px solid ${colorConfig.border}`,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            flexShrink: 0,
+                          }}
+                        >
+                          <IconHome size={18} color={colorConfig.icon} />
+                        </div>
+
+                        {/* Editable household name */}
+                        <div
+                          style={{
+                            minWidth: 0,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: spacing.xs,
+                          }}
+                        >
+                          {isEditingLabel ? (
+                            <Input
+                              value={householdLabel}
+                              onChange={(e) => setHouseholdLabel(e.currentTarget.value)}
+                              onBlur={() => setIsEditingLabel(false)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  setIsEditingLabel(false);
+                                }
+                                if (e.key === 'Escape') {
+                                  setIsEditingLabel(false);
+                                }
+                              }}
+                              autoFocus
+                              placeholder="Enter household name..."
+                              className="tw:border-none tw:bg-transparent tw:p-0 tw:h-auto tw:shadow-none tw:focus-visible:ring-0"
+                              style={{
+                                width: 250,
+                                fontFamily: typography.fontFamily.primary,
+                                fontWeight: 600,
+                                fontSize: FONT_SIZES.normal,
+                              }}
+                            />
+                          ) : (
+                            <>
+                              <Text
+                                fw={600}
+                                style={{
+                                  fontFamily: typography.fontFamily.primary,
+                                  fontSize: FONT_SIZES.normal,
+                                  color: householdLabel ? colors.gray[800] : colors.gray[400],
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  whiteSpace: 'nowrap',
+                                  cursor: 'pointer',
+                                }}
+                                onClick={() => setIsEditingLabel(true)}
+                              >
+                                {householdLabel || 'Click to name your household...'}
+                              </Text>
+                              <Button
+                                variant="ghost"
+                                size="icon-sm"
+                                onClick={() => setIsEditingLabel(true)}
+                                style={{ flexShrink: 0 }}
+                              >
+                                <IconPencil size={14} />
+                              </Button>
+                            </>
+                          )}
+                        </div>
+                      </Group>
+
+                      {/* Right side: Member count */}
+                      <Group gap="md" align="center" wrap="nowrap" style={{ flexShrink: 0 }}>
+                        <Group gap="xs" style={{ flexShrink: 0 }}>
+                          {householdPeople.length > 0 ? (
+                            <>
+                              <div
+                                style={{
+                                  width: 8,
+                                  height: 8,
+                                  borderRadius: '50%',
+                                  background: colors.primary[500],
+                                }}
+                              />
+                              <Text style={{ fontSize: FONT_SIZES.small, color: colors.gray[600] }}>
+                                {householdPeople.length} member
+                                {householdPeople.length !== 1 ? 's' : ''}
+                              </Text>
+                            </>
+                          ) : (
+                            <Text style={{ fontSize: FONT_SIZES.small, color: colors.gray[400] }}>
+                              No members yet
+                            </Text>
+                          )}
+                        </Group>
+                      </Group>
+                    </Group>
+                  </div>
+
+                  <ScrollArea style={{ flex: 1 }}>
+                    {/* HouseholdBuilderForm */}
+                    {householdDraft && (
+                      <div style={{ position: 'relative' }}>
+                        {isCreating && (
+                          <div
+                            style={{
+                              position: 'absolute',
+                              inset: 0,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              background: 'rgba(255, 255, 255, 0.7)',
+                              zIndex: 10,
+                              borderRadius: spacing.radius.container,
+                            }}
+                          >
+                            <Spinner size="md" />
+                          </div>
+                        )}
+                        <HouseholdBuilderForm
+                          household={householdDraft}
+                          metadata={metadata}
+                          year={reportYear}
+                          maritalStatus={maritalStatus}
+                          numChildren={numChildren}
+                          basicPersonFields={basicInputFields.person || []}
+                          basicNonPersonFields={basicNonPersonFields}
+                          onChange={setHouseholdDraft}
+                          onMaritalStatusChange={handleMaritalStatusChange}
+                          onNumChildrenChange={handleNumChildrenChange}
+                          disabled={isCreating}
+                        />
+                      </div>
+                    )}
+                  </ScrollArea>
+                </>
+              ) : (
+                <>
+                  {/* Search Bar */}
+                  {activeCategory !== 'national' && (
+                    <div className="tw:relative">
+                      <IconSearch
+                        size={16}
+                        color={colors.gray[400]}
+                        className="tw:absolute tw:left-2.5 tw:top-1/2 tw:-translate-y-1/2 tw:text-muted-foreground"
+                      />
+                      <Input
+                        placeholder={
+                          activeCategory === 'my-households'
+                            ? 'Search households...'
+                            : `Search ${getSectionTitle().toLowerCase()}...`
+                        }
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="tw:pl-8"
+                        style={{
+                          borderRadius: spacing.radius.container,
+                          border: `1px solid ${colors.border.light}`,
+                          fontSize: FONT_SIZES.small,
+                        }}
+                      />
+                    </div>
+                  )}
+
+                  {/* Section Header */}
+                  <Group justify="space-between" align="center">
+                    <Text fw={600} style={{ fontSize: FONT_SIZES.normal, color: colors.gray[800] }}>
+                      {getSectionTitle()}
+                    </Text>
+                    <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
+                      {getItemCount()} {getItemCount() === 1 ? 'option' : 'options'}
+                    </Text>
+                  </Group>
+
+                  {/* Content */}
+                  <ScrollArea style={{ flex: 1 }}>
+                    {activeCategory === 'national' ? (
+                      // National selection - single prominent option
+                      <div
+                        style={{
                           display: 'flex',
+                          flexDirection: 'column',
                           alignItems: 'center',
                           justifyContent: 'center',
+                          padding: spacing['2xl'],
+                          gap: spacing.lg,
                         }}
                       >
-                        <IconHome size={28} color={colors.gray[400]} />
-                      </Box>
-                      <Text fw={500} c={colors.gray[600]}>
-                        {searchQuery ? 'No households match your search' : 'No households yet'}
-                      </Text>
-                      <Text c="dimmed" ta="center" maw={300} style={{ fontSize: FONT_SIZES.small }}>
-                        {searchQuery
-                          ? 'Try adjusting your search terms'
-                          : 'Create a custom household using the button in the sidebar'}
-                      </Text>
-                    </Box>
-                  ) : (
-                    <Stack gap={spacing.sm}>
-                      {filteredHouseholds.map((household) => (
-                        <Paper
-                          key={household.id}
-                          style={modalStyles.householdCard}
-                          onClick={() => handleSelectHousehold(household)}
+                        <div
+                          role="button"
+                          tabIndex={0}
+                          style={{
+                            ...modalStyles.householdCard,
+                            width: '100%',
+                            maxWidth: 400,
+                            textAlign: 'center',
+                            padding: spacing.xl,
+                          }}
+                          onClick={() => handleSelectGeography(null)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.currentTarget.click();
+                            }
+                          }}
                         >
-                          <Group justify="space-between" align="center">
-                            <Group gap={spacing.md}>
-                              <Box
-                                style={{
-                                  width: 40,
-                                  height: 40,
-                                  borderRadius: spacing.radius.md,
-                                  background: colorConfig.bg,
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                }}
-                              >
-                                <IconHome size={20} color={colorConfig.icon} />
-                              </Box>
-                              <Stack gap={2}>
-                                <Text fw={600} style={{ fontSize: FONT_SIZES.normal }}>
-                                  {household.label}
-                                </Text>
-                                <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
-                                  {household.memberCount}{' '}
-                                  {household.memberCount === 1 ? 'member' : 'members'}
-                                </Text>
-                              </Stack>
-                            </Group>
-                            <IconChevronRight size={16} color={colors.gray[400]} />
-                          </Group>
-                        </Paper>
-                      ))}
-                    </Stack>
-                  )
-                ) : // Geography grid
-                filteredRegions.length === 0 ? (
-                  <Box
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      padding: spacing['4xl'],
-                      gap: spacing.md,
-                    }}
-                  >
-                    <Text fw={500} c={colors.gray[600]}>
-                      No regions match your search
-                    </Text>
-                  </Box>
-                ) : (
-                  <Box style={modalStyles.regionGrid}>
-                    {filteredRegions.map((region) => (
-                      <UnstyledButton
-                        key={region.value}
-                        style={modalStyles.regionChip}
-                        onClick={() => handleSelectGeography(region)}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.borderColor = colorConfig.border;
-                          e.currentTarget.style.background = colorConfig.bg;
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.borderColor = colors.border.light;
-                          e.currentTarget.style.background = colors.white;
+                          <Stack align="center" gap="md">
+                            {countryId === 'uk' ? (
+                              <UKOutlineIcon size={48} />
+                            ) : (
+                              <USOutlineIcon size={48} />
+                            )}
+                            <Stack gap="xs">
+                              <Text fw={600} style={{ fontSize: FONT_SIZES.normal }}>
+                                {countryId === 'uk'
+                                  ? 'Households UK-wide'
+                                  : 'Households nationwide'}
+                              </Text>
+                              <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
+                                Simulate policy effects across the entire{' '}
+                                {countryId === 'uk' ? 'United Kingdom' : 'United States'}
+                              </Text>
+                            </Stack>
+                            <Button>
+                              Select
+                              <IconChevronRight size={16} />
+                            </Button>
+                          </Stack>
+                        </div>
+                      </div>
+                    ) : activeCategory === 'my-households' ? (
+                      // Households list
+                      householdsLoading ? (
+                        <Stack gap="md">
+                          {[1, 2, 3].map((i) => (
+                            <Skeleton key={i} className="tw:h-[60px] tw:rounded-md" />
+                          ))}
+                        </Stack>
+                      ) : filteredHouseholds.length === 0 ? (
+                        <div
+                          style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            padding: spacing['4xl'],
+                            gap: spacing.md,
+                          }}
+                        >
+                          <div
+                            style={{
+                              width: 64,
+                              height: 64,
+                              borderRadius: '50%',
+                              background: colors.gray[100],
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                            }}
+                          >
+                            <IconHome size={28} color={colors.gray[400]} />
+                          </div>
+                          <Text fw={500} c={colors.gray[600]}>
+                            {searchQuery ? 'No households match your search' : 'No households yet'}
+                          </Text>
+                          <Text
+                            c="dimmed"
+                            style={{
+                              textAlign: 'center',
+                              maxWidth: 300,
+                              fontSize: FONT_SIZES.small,
+                            }}
+                          >
+                            {searchQuery
+                              ? 'Try adjusting your search terms'
+                              : 'Create a custom household using the button in the sidebar'}
+                          </Text>
+                        </div>
+                      ) : (
+                        <Stack gap="sm">
+                          {filteredHouseholds.map((household) => (
+                            <div
+                              role="button"
+                              tabIndex={0}
+                              key={household.id}
+                              style={modalStyles.householdCard}
+                              onClick={() => handleSelectHousehold(household)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                  e.currentTarget.click();
+                                }
+                              }}
+                            >
+                              <Group justify="space-between" align="center">
+                                <Group gap="md">
+                                  <div
+                                    style={{
+                                      width: 40,
+                                      height: 40,
+                                      borderRadius: spacing.radius.container,
+                                      background: colorConfig.bg,
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                    }}
+                                  >
+                                    <IconHome size={20} color={colorConfig.icon} />
+                                  </div>
+                                  <Stack style={{ gap: 2 }}>
+                                    <Text fw={600} style={{ fontSize: FONT_SIZES.normal }}>
+                                      {household.label}
+                                    </Text>
+                                    <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
+                                      {household.memberCount}{' '}
+                                      {household.memberCount === 1 ? 'member' : 'members'}
+                                    </Text>
+                                  </Stack>
+                                </Group>
+                                <IconChevronRight size={16} color={colors.gray[400]} />
+                              </Group>
+                            </div>
+                          ))}
+                        </Stack>
+                      )
+                    ) : // Geography grid
+                    filteredRegions.length === 0 ? (
+                      <div
+                        style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          padding: spacing['4xl'],
+                          gap: spacing.md,
                         }}
                       >
-                        {region.label}
-                      </UnstyledButton>
-                    ))}
-                  </Box>
-                )}
-              </ScrollArea>
-            </>
-          )}
-        </Box>
-      </Group>
-
-      {/* Footer for creation mode - fixed at bottom */}
-      {isCreationMode && (
-        <Box
-          style={{
-            flexShrink: 0,
-            borderTop: `1px solid ${colors.border.light}`,
-            padding: spacing.md,
-            paddingLeft: spacing.xl,
-            paddingRight: spacing.xl,
-            background: colors.white,
-          }}
-        >
-          <Group justify="space-between" gap={spacing.sm}>
-            <Button
-              variant="subtle"
-              color="gray"
-              leftSection={<IconChevronLeft size={16} />}
-              onClick={handleExitCreationMode}
-            >
-              Back
-            </Button>
-            <Button
-              color="teal"
-              onClick={handleCreateHousehold}
-              loading={isCreating}
-              disabled={!householdLabel.trim() || !householdDraft}
-            >
-              Create household
-            </Button>
+                        <Text fw={500} c={colors.gray[600]}>
+                          No regions match your search
+                        </Text>
+                      </div>
+                    ) : (
+                      <div style={modalStyles.regionGrid}>
+                        {filteredRegions.map((region) => (
+                          <button
+                            type="button"
+                            key={region.value}
+                            style={modalStyles.regionChip}
+                            onClick={() => handleSelectGeography(region)}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.borderColor = colorConfig.border;
+                              e.currentTarget.style.background = colorConfig.bg;
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.borderColor = colors.border.light;
+                              e.currentTarget.style.background = colors.white;
+                            }}
+                          >
+                            {region.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </ScrollArea>
+                </>
+              )}
+            </div>
           </Group>
-        </Box>
-      )}
-    </Modal>
+
+          {/* Footer for creation mode - fixed at bottom */}
+          {isCreationMode && (
+            <div
+              style={{
+                flexShrink: 0,
+                borderTop: `1px solid ${colors.border.light}`,
+                padding: spacing.md,
+                paddingLeft: spacing.xl,
+                paddingRight: spacing.xl,
+                background: colors.white,
+              }}
+            >
+              <Group justify="space-between" gap="sm">
+                <Button variant="ghost" onClick={handleExitCreationMode}>
+                  <IconChevronLeft size={16} />
+                  Back
+                </Button>
+                <Button
+                  onClick={handleCreateHousehold}
+                  disabled={isCreating || !householdLabel.trim() || !householdDraft}
+                >
+                  {isCreating && <Spinner size="sm" />}
+                  Create household
+                </Button>
+              </Group>
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -4405,9 +4602,8 @@ function SimulationCanvas({
   viewMode,
 }: SimulationCanvasProps) {
   const countryId = useCurrentCountry() as 'us' | 'uk';
-  const countryConfig = COUNTRY_CONFIG[countryId] || COUNTRY_CONFIG.us;
   const userId = MOCK_USER_ID.toString();
-  const { data: policies, isLoading: policiesLoading } = useUserPolicies(userId);
+  const { data: policies } = useUserPolicies(userId);
   const { data: households } = useUserHouseholds(userId);
   const regionOptions = useSelector((state: RootState) => state.metadata.economyOptions.region);
   // Any geography selection (nationwide or subnational) requires dual-simulation
@@ -4474,7 +4670,9 @@ function SimulationCanvas({
     const recentGeoIds = geographyUsageStore.getRecentIds(10);
     for (const geoId of recentGeoIds) {
       // Skip national scopes as they're shown separately
-      if (geoId === 'us' || geoId === 'uk') continue;
+      if (geoId === 'us' || geoId === 'uk') {
+        continue;
+      }
 
       const timestamp = geographyUsageStore.getLastUsed(geoId) || '';
       const region = allRegions.find((r) => r.value === geoId);
@@ -4538,7 +4736,9 @@ function SimulationCanvas({
   }, [countryId, households, regionOptions]);
 
   const handleAddSimulation = useCallback(() => {
-    if (reportState.simulations.length >= 2) return;
+    if (reportState.simulations.length >= 2) {
+      return;
+    }
     const newSim = initializeSimulationState();
     newSim.label = 'Reform simulation';
     newSim.population = { ...reportState.simulations[0].population };
@@ -4547,7 +4747,9 @@ function SimulationCanvas({
 
   const handleRemoveSimulation = useCallback(
     (index: number) => {
-      if (index === 0) return;
+      if (index === 0) {
+        return;
+      }
       setReportState((prev) => ({
         ...prev,
         simulations: prev.simulations.filter((_, i) => i !== index),
@@ -4571,10 +4773,15 @@ function SimulationCanvas({
       const { simulationIndex, ingredientType } = pickerState;
       setReportState((prev) => {
         const newSimulations = prev.simulations.map((sim, i) => {
-          if (i !== simulationIndex) return sim;
-          if (ingredientType === 'policy') return { ...sim, policy: item as PolicyStateProps };
-          if (ingredientType === 'population')
+          if (i !== simulationIndex) {
+            return sim;
+          }
+          if (ingredientType === 'policy') {
+            return { ...sim, policy: item as PolicyStateProps };
+          }
+          if (ingredientType === 'population') {
             return { ...sim, population: item as PopulationStateProps };
+          }
           return sim;
         });
         if (ingredientType === 'population' && simulationIndex === 0 && newSimulations.length > 1) {
@@ -4662,7 +4869,7 @@ function SimulationCanvas({
         // Create a new population object to ensure React detects the change
         const newPopulation = { ...population };
 
-        let newSimulations = prev.simulations.map((sim, i) =>
+        const newSimulations = prev.simulations.map((sim, i) =>
           i === simulationIndex ? { ...sim, population: newPopulation } : sim
         );
 
@@ -4678,7 +4885,7 @@ function SimulationCanvas({
   );
 
   const handleQuickSelectPopulation = useCallback(
-    (simulationIndex: number, populationType: 'nationwide') => {
+    (simulationIndex: number, _populationType: 'nationwide') => {
       const samplePopulations = getSamplePopulations(countryId);
       const populationState = samplePopulations.nationwide;
 
@@ -4688,7 +4895,7 @@ function SimulationCanvas({
       }
 
       setReportState((prev) => {
-        let newSimulations = prev.simulations.map((sim, i) =>
+        const newSimulations = prev.simulations.map((sim, i) =>
           i === simulationIndex ? { ...sim, population: { ...populationState } } : sim
         );
 
@@ -4717,7 +4924,7 @@ function SimulationCanvas({
         // Create a new population object to ensure React detects the change
         const newPopulation = { ...population };
 
-        let newSimulations = prev.simulations.map((sim, i) =>
+        const newSimulations = prev.simulations.map((sim, i) =>
           i === simulationIndex ? { ...sim, population: newPopulation } : sim
         );
 
@@ -4747,7 +4954,7 @@ function SimulationCanvas({
   const handleDeselectPopulation = useCallback(
     (simulationIndex: number) => {
       setReportState((prev) => {
-        let newSimulations = prev.simulations.map((sim, i) =>
+        const newSimulations = prev.simulations.map((sim, i) =>
           i === simulationIndex ? { ...sim, population: initializePopulationState() } : sim
         );
 
@@ -4800,9 +5007,9 @@ function SimulationCanvas({
 
   return (
     <>
-      <Box style={styles.canvasContainer}>
-        <Box style={styles.canvasGrid} />
-        <Box style={styles.simulationsGrid}>
+      <div style={styles.canvasContainer}>
+        <div style={styles.canvasGrid} />
+        <div style={styles.simulationsGrid}>
           <SimulationBlock
             simulation={reportState.simulations[0]}
             index={0}
@@ -4845,7 +5052,7 @@ function SimulationCanvas({
               onRemove={() => handleRemoveSimulation(1)}
               canRemove={!isGeographySelected}
               isRequired={isGeographySelected}
-              populationInherited={true}
+              populationInherited
               inheritedPopulation={reportState.simulations[0].population}
               savedPolicies={savedPolicies}
               recentPopulations={recentPopulations}
@@ -4854,8 +5061,8 @@ function SimulationCanvas({
           ) : (
             <AddSimulationCard onClick={handleAddSimulation} disabled={false} />
           )}
-        </Box>
-      </Box>
+        </div>
+      </div>
 
       <IngredientPickerModal
         isOpen={pickerState.isOpen}
@@ -4908,7 +5115,7 @@ interface ReportMetaPanelProps {
 // Progress dot component
 function ProgressDot({ filled, pulsing }: { filled: boolean; pulsing?: boolean }) {
   return (
-    <Box
+    <div
       style={{
         width: 8,
         height: 8,
@@ -4971,7 +5178,7 @@ function ReportMetaPanel({
       background: 'rgba(255, 255, 255, 0.92)',
       backdropFilter: 'blur(20px) saturate(180%)',
       WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-      borderRadius: spacing.radius.xl, // Match canvasContainer
+      borderRadius: spacing.radius.feature, // Match canvasContainer
       border: `1px solid ${isReportConfigured ? colors.primary[200] : colors.border.light}`,
       boxShadow: isReportConfigured
         ? `0 8px 32px rgba(44, 122, 123, 0.15), 0 2px 8px rgba(0, 0, 0, 0.08)`
@@ -5004,7 +5211,7 @@ function ReportMetaPanel({
         : colors.gray[200],
       color: isReportConfigured ? 'white' : colors.gray[500],
       border: 'none',
-      borderRadius: spacing.radius.lg, // Match other buttons
+      borderRadius: spacing.radius.feature, // Match other buttons
       padding: `${spacing.sm} ${spacing.lg}`,
       fontFamily: typography.fontFamily.primary,
       fontWeight: 600,
@@ -5028,23 +5235,23 @@ function ReportMetaPanel({
       gap: spacing.xs,
       padding: `${spacing.xs} ${spacing.sm}`,
       background: colors.gray[50],
-      borderRadius: spacing.radius.md,
+      borderRadius: spacing.radius.container,
       fontFamily: typography.fontFamily.primary,
       fontSize: FONT_SIZES.small,
     },
   };
 
   return (
-    <Box style={dockStyles.container}>
-      <Box style={dockStyles.dock}>
+    <div style={dockStyles.container}>
+      <div style={dockStyles.dock}>
         {/* Compact row - always visible */}
-        <Box style={dockStyles.compactRow}>
+        <div style={dockStyles.compactRow}>
           {/* Document icon */}
-          <Box
+          <div
             style={{
               width: 32,
               height: 32,
-              borderRadius: spacing.radius.md,
+              borderRadius: spacing.radius.container,
               background: `linear-gradient(135deg, ${colors.primary[50]} 0%, ${colors.primary[100]} 100%)`,
               display: 'flex',
               alignItems: 'center',
@@ -5053,31 +5260,26 @@ function ReportMetaPanel({
             }}
           >
             <IconFileDescription size={18} color={colors.primary[600]} />
-          </Box>
+          </div>
 
           {/* Title with pencil icon - flexible width */}
-          <Box
+          <div
             style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: spacing.xs }}
           >
             {isEditingLabel ? (
-              <TextInput
+              <Input
                 value={labelInput}
                 onChange={(e) => setLabelInput(e.target.value)}
                 onBlur={handleLabelSubmit}
                 onKeyDown={(e) => e.key === 'Enter' && handleLabelSubmit()}
                 placeholder="Report name..."
-                size="xs"
                 autoFocus
-                style={{ flex: 1 }}
-                styles={{
-                  input: {
-                    fontFamily: typography.fontFamily.primary,
-                    fontWeight: 600,
-                    fontSize: FONT_SIZES.normal,
-                    border: 'none',
-                    background: 'transparent',
-                    padding: 0,
-                  },
+                className="tw:border-none tw:bg-transparent tw:p-0 tw:h-auto tw:shadow-none tw:focus-visible:ring-0"
+                style={{
+                  flex: 1,
+                  fontFamily: typography.fontFamily.primary,
+                  fontWeight: 600,
+                  fontSize: FONT_SIZES.normal,
                 }}
               />
             ) : (
@@ -5095,10 +5297,9 @@ function ReportMetaPanel({
                 >
                   {reportState.label || 'Untitled report'}
                 </Text>
-                <ActionIcon
-                  size="sm"
-                  variant="subtle"
-                  color="gray"
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
                   onClick={() => {
                     setLabelInput(reportState.label || '');
                     setIsEditingLabel(true);
@@ -5107,45 +5308,45 @@ function ReportMetaPanel({
                   style={{ flexShrink: 0 }}
                 >
                   <IconPencil size={14} />
-                </ActionIcon>
+                </Button>
               </>
             )}
-          </Box>
+          </div>
 
           {/* Divider */}
-          <Box style={{ ...dockStyles.divider, flexShrink: 0 }} />
+          <div style={{ ...dockStyles.divider, flexShrink: 0 }} />
 
           {/* Year selector - fixed width, no checkmark */}
           <Select
-            aria-label="Report year"
             value={reportState.year}
-            onChange={(value) =>
+            onValueChange={(value) =>
               setReportState((prev) => ({ ...prev, year: value || CURRENT_YEAR }))
             }
-            data={['2023', '2024', '2025', '2026']}
-            size="xs"
-            w={60}
-            variant="unstyled"
-            rightSection={null}
-            withCheckIcon={false}
-            styles={{
-              input: {
+          >
+            <SelectTrigger
+              className="tw:border-none tw:bg-transparent tw:shadow-none tw:h-auto tw:p-0 tw:w-[60px] tw:focus:ring-0"
+              style={{
                 fontFamily: typography.fontFamily.primary,
                 fontSize: FONT_SIZES.normal,
                 fontWeight: 500,
                 color: colors.gray[600],
-                cursor: 'pointer',
-                padding: 0,
-                minHeight: 'auto',
-              },
-            }}
-          />
+              }}
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="2023">2023</SelectItem>
+              <SelectItem value="2024">2024</SelectItem>
+              <SelectItem value="2025">2025</SelectItem>
+              <SelectItem value="2026">2026</SelectItem>
+            </SelectContent>
+          </Select>
 
           {/* Divider */}
-          <Box style={{ ...dockStyles.divider, flexShrink: 0 }} />
+          <div style={{ ...dockStyles.divider, flexShrink: 0 }} />
 
           {/* Progress dots - fixed width */}
-          <Group gap={6} style={{ flexShrink: 0 }}>
+          <Group style={{ gap: 6, flexShrink: 0 }}>
             {steps.map((completed, i) => (
               <ProgressDot
                 key={i}
@@ -5156,13 +5357,13 @@ function ReportMetaPanel({
           </Group>
 
           {/* Divider */}
-          <Box style={dockStyles.divider} />
+          <div style={dockStyles.divider} />
 
           {/* Run button */}
-          <Box
-            component="button"
+          <button
+            type="button"
             style={dockStyles.runButton}
-            onClick={() => isReportConfigured && console.log('Run report')}
+            onClick={() => isReportConfigured && console.info('Run report')}
             onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
               if (isReportConfigured) {
                 e.currentTarget.style.transform = 'scale(1.05)';
@@ -5178,14 +5379,14 @@ function ReportMetaPanel({
           >
             <IconPlayerPlay size={16} />
             <span>Run</span>
-          </Box>
-        </Box>
+          </button>
+        </div>
 
         {/* Expanded content - visible on hover */}
-        <Box style={dockStyles.expandedContent}>
-          <Stack gap={spacing.sm}>
+        <div style={dockStyles.expandedContent}>
+          <Stack gap="sm">
             {/* Baseline row */}
-            <Box style={dockStyles.configRow}>
+            <div style={dockStyles.configRow}>
               <Text
                 c="dimmed"
                 style={{
@@ -5196,7 +5397,7 @@ function ReportMetaPanel({
               >
                 Baseline
               </Text>
-              <Box style={dockStyles.configChip}>
+              <div style={dockStyles.configChip}>
                 {baselinePolicyConfigured ? (
                   <>
                     <IconScale size={12} color={colors.secondary[500]} />
@@ -5224,14 +5425,14 @@ function ReportMetaPanel({
                     </Text>
                   </>
                 )}
-              </Box>
+              </div>
               <Text
                 c="dimmed"
                 style={{ fontFamily: typography.fontFamily.primary, fontSize: FONT_SIZES.small }}
               >
                 +
               </Text>
-              <Box style={dockStyles.configChip}>
+              <div style={dockStyles.configChip}>
                 {baselinePopulationConfigured ? (
                   <>
                     <IconUsers size={12} color={colors.primary[500]} />
@@ -5259,12 +5460,12 @@ function ReportMetaPanel({
                     </Text>
                   </>
                 )}
-              </Box>
-            </Box>
+              </div>
+            </div>
 
             {/* Reform row (if applicable) */}
             {hasReform && (
-              <Box style={dockStyles.configRow}>
+              <div style={dockStyles.configRow}>
                 <Text
                   c="dimmed"
                   style={{
@@ -5275,7 +5476,7 @@ function ReportMetaPanel({
                 >
                   Reform
                 </Text>
-                <Box style={dockStyles.configChip}>
+                <div style={dockStyles.configChip}>
                   {reformPolicyConfigured ? (
                     <>
                       <IconScale size={12} color={colors.secondary[500]} />
@@ -5303,19 +5504,19 @@ function ReportMetaPanel({
                       </Text>
                     </>
                   )}
-                </Box>
+                </div>
                 <Text
                   c="dimmed"
                   style={{ fontFamily: typography.fontFamily.primary, fontSize: FONT_SIZES.tiny }}
                 >
                   (inherits population)
                 </Text>
-              </Box>
+              </div>
             )}
 
             {/* Ready message */}
             {isReportConfigured && (
-              <Group gap={spacing.xs} justify="center" mt={spacing.xs}>
+              <Group gap="xs" justify="center" style={{ marginTop: spacing.xs }}>
                 <IconCircleCheck size={14} color={colors.success} />
                 <Text
                   style={{
@@ -5329,8 +5530,8 @@ function ReportMetaPanel({
               </Group>
             )}
           </Stack>
-        </Box>
-      </Box>
+        </div>
+      </div>
 
       {/* CSS for pulse animation */}
       <style>{`
@@ -5339,7 +5540,7 @@ function ReportMetaPanel({
           50% { opacity: 0.6; transform: scale(1.1); }
         }
       `}</style>
-    </Box>
+    </div>
   );
 }
 
@@ -5348,8 +5549,7 @@ function ReportMetaPanel({
 // ============================================================================
 
 export default function ReportBuilderPage() {
-  const countryId = useCurrentCountry() as 'us' | 'uk';
-  const countryConfig = COUNTRY_CONFIG[countryId] || COUNTRY_CONFIG.us;
+  useCurrentCountry();
   const [activeTab, setActiveTab] = useState<string | null>('cards');
 
   const initialSim = initializeSimulationState();
@@ -5387,10 +5587,10 @@ export default function ReportBuilderPage() {
   const viewMode = (activeTab || 'cards') as ViewMode;
 
   return (
-    <Box style={styles.pageContainer}>
-      <Box style={styles.headerSection}>
+    <div style={styles.pageContainer}>
+      <div style={styles.headerSection}>
         <h1 style={styles.mainTitle}>Report builder</h1>
-      </Box>
+      </div>
 
       <ReportMetaPanel
         reportState={reportState}
@@ -5398,15 +5598,19 @@ export default function ReportBuilderPage() {
         isReportConfigured={isReportConfigured}
       />
 
-      <Tabs value={activeTab} onChange={setActiveTab} mb="xl">
-        <Tabs.List>
-          <Tabs.Tab value="cards" leftSection={<IconLayoutColumns size={16} />}>
-            Card view
-          </Tabs.Tab>
-          <Tabs.Tab value="rows" leftSection={<IconRowInsertBottom size={16} />}>
-            Row view
-          </Tabs.Tab>
-        </Tabs.List>
+      <Tabs
+        value={activeTab || 'cards'}
+        onValueChange={setActiveTab}
+        style={{ marginBottom: spacing.xl }}
+      >
+        <TabsList>
+          <TabsTrigger value="cards">
+            <IconLayoutColumns size={16} /> Card view
+          </TabsTrigger>
+          <TabsTrigger value="rows">
+            <IconRowInsertBottom size={16} /> Row view
+          </TabsTrigger>
+        </TabsList>
       </Tabs>
 
       <SimulationCanvas
@@ -5416,6 +5620,6 @@ export default function ReportBuilderPage() {
         setPickerState={setPickerState}
         viewMode={viewMode}
       />
-    </Box>
+    </div>
   );
 }

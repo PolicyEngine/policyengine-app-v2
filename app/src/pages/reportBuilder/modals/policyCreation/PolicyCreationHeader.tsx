@@ -4,7 +4,7 @@
 
 import React from 'react';
 import { IconPencil, IconScale, IconX } from '@tabler/icons-react';
-import { ActionIcon, Box, Group, Text, TextInput } from '@mantine/core';
+import { Button, Group, Input, Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import { FONT_SIZES, INGREDIENT_COLORS } from '../../constants';
 
@@ -28,16 +28,16 @@ export function PolicyCreationHeader({
   const colorConfig = INGREDIENT_COLORS.policy;
 
   return (
-    <Box style={{ width: '100%' }}>
+    <div style={{ width: '100%' }}>
       <Group justify="space-between" align="center" wrap="nowrap">
         {/* Left side: Policy icon and name */}
-        <Group gap={spacing.md} align="center" wrap="nowrap" style={{ minWidth: 0 }}>
+        <Group gap="md" align="center" wrap="nowrap" style={{ minWidth: 0 }}>
           {/* Policy icon */}
-          <Box
+          <div
             style={{
               width: 32,
               height: 32,
-              borderRadius: spacing.radius.md,
+              borderRadius: spacing.radius.container,
               background: `linear-gradient(135deg, ${colorConfig.bg} 0%, ${colors.white} 100%)`,
               border: `1px solid ${colorConfig.border}`,
               display: 'flex',
@@ -47,12 +47,12 @@ export function PolicyCreationHeader({
             }}
           >
             <IconScale size={18} color={colorConfig.icon} />
-          </Box>
+          </div>
 
           {/* Editable policy name */}
-          <Box style={{ minWidth: 0, display: 'flex', alignItems: 'center', gap: spacing.xs }}>
+          <div style={{ minWidth: 0, display: 'flex', alignItems: 'center', gap: spacing.xs }}>
             {isEditingLabel ? (
-              <TextInput
+              <Input
                 value={policyLabel}
                 onChange={(e) => onLabelChange(e.currentTarget.value)}
                 onBlur={() => onEditingChange(false)}
@@ -66,17 +66,12 @@ export function PolicyCreationHeader({
                 }}
                 placeholder="Untitled policy"
                 autoFocus
-                size="xs"
-                style={{ width: 250 }}
-                styles={{
-                  input: {
-                    fontFamily: typography.fontFamily.primary,
-                    fontWeight: 600,
-                    fontSize: FONT_SIZES.normal,
-                    border: 'none',
-                    background: 'transparent',
-                    padding: 0,
-                  },
+                className="tw:border-none tw:bg-transparent tw:p-0 tw:h-auto tw:shadow-none tw:focus-visible:ring-0"
+                style={{
+                  width: 250,
+                  fontFamily: typography.fontFamily.primary,
+                  fontWeight: 600,
+                  fontSize: FONT_SIZES.normal,
                 }}
               />
             ) : (
@@ -94,27 +89,26 @@ export function PolicyCreationHeader({
                 >
                   {policyLabel || 'Untitled policy'}
                 </Text>
-                <ActionIcon
-                  size="sm"
-                  variant="subtle"
-                  color="gray"
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
                   onClick={() => onEditingChange(true)}
                   style={{ flexShrink: 0 }}
                 >
                   <IconPencil size={14} />
-                </ActionIcon>
+                </Button>
               </>
             )}
-          </Box>
+          </div>
         </Group>
 
         {/* Right side: Modification count + Close */}
-        <Group gap={spacing.md} align="center" wrap="nowrap" style={{ flexShrink: 0 }}>
+        <Group gap="md" align="center" wrap="nowrap" style={{ flexShrink: 0 }}>
           {/* Modification count */}
-          <Group gap={spacing.xs} style={{ flexShrink: 0 }}>
+          <Group gap="xs" style={{ flexShrink: 0 }}>
             {modificationCount > 0 ? (
               <>
-                <Box
+                <div
                   style={{
                     width: 8,
                     height: 8,
@@ -134,11 +128,11 @@ export function PolicyCreationHeader({
           </Group>
 
           {/* Close button */}
-          <ActionIcon variant="subtle" color="gray" onClick={onClose} style={{ flexShrink: 0 }}>
+          <Button variant="ghost" size="icon-sm" onClick={onClose} style={{ flexShrink: 0 }}>
             <IconX size={18} />
-          </ActionIcon>
+          </Button>
         </Group>
       </Group>
-    </Box>
+    </div>
   );
 }

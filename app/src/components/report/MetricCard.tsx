@@ -18,6 +18,8 @@ interface MetricCardProps {
   description?: string;
   /** Invert the arrow direction (useful when decrease is good, like poverty) */
   invertArrow?: boolean;
+  /** Center all content (label, value row, subtext) */
+  centered?: boolean;
 }
 
 /**
@@ -34,6 +36,7 @@ export default function MetricCard({
   hero = false,
   description,
   invertArrow = false,
+  centered = false,
 }: MetricCardProps) {
   const getTrendColor = () => {
     switch (trend) {
@@ -70,7 +73,7 @@ export default function MetricCard({
   const trendColor = getTrendColor();
 
   return (
-    <div>
+    <div style={centered ? { textAlign: 'center' } : undefined}>
       {/* Label */}
       {label && (
         <p
@@ -82,7 +85,9 @@ export default function MetricCard({
       )}
 
       {/* Value with trend indicator */}
-      <div className="tw:flex tw:items-center tw:gap-sm tw:mt-xs">
+      <div
+        className={`tw:flex tw:items-center tw:gap-sm tw:mt-xs ${centered ? 'tw:justify-center' : ''}`}
+      >
         {trend !== 'neutral' && (
           <div
             className={`tw:flex tw:items-center tw:justify-center tw:rounded-full ${hero ? 'tw:w-8 tw:h-8' : 'tw:w-6 tw:h-6'}`}

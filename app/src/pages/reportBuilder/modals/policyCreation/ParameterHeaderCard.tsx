@@ -3,7 +3,7 @@
  */
 
 import React from 'react';
-import { Box, Text, Title } from '@mantine/core';
+import { Text, Title } from '@/components/ui';
 import { colors, spacing } from '@/designTokens';
 import { capitalize } from '@/utils/stringUtils';
 import { FONT_SIZES } from '../../constants';
@@ -11,10 +11,10 @@ import { ParameterHeaderCardProps } from './types';
 
 export function ParameterHeaderCard({ label, description }: ParameterHeaderCardProps) {
   return (
-    <Box
+    <div
       style={{
         background: colors.white,
-        borderRadius: spacing.radius.lg,
+        borderRadius: spacing.radius.feature,
         padding: spacing.lg,
         border: `1px solid ${colors.border.light}`,
       }}
@@ -25,6 +25,6 @@ export function ParameterHeaderCard({ label, description }: ParameterHeaderCardP
       {description && (
         <Text style={{ fontSize: FONT_SIZES.normal, color: colors.gray[600] }}>{description}</Text>
       )}
-    </Box>
+    </div>
   );
 }

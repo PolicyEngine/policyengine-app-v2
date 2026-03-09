@@ -28,8 +28,8 @@ function SegmentedControl({
       <TabsPrimitive.List
         data-slot="segmented-control"
         className={cn(
-          'tw:inline-flex tw:items-center tw:rounded-lg tw:bg-muted tw:p-[3px]',
-          size === 'xs' ? 'tw:h-7' : 'tw:h-9',
+          'tw:inline-flex tw:items-center tw:gap-0.5 tw:rounded-lg tw:bg-muted',
+          size === 'xs' ? 'tw:h-7 tw:p-1' : 'tw:h-9 tw:p-1',
           className
         )}
       >
@@ -39,10 +39,10 @@ function SegmentedControl({
             value={option.value}
             disabled={option.disabled}
             className={cn(
-              'tw:inline-flex tw:items-center tw:justify-center tw:rounded-md tw:px-2 tw:font-medium tw:whitespace-nowrap tw:transition-all',
+              'tw:inline-flex tw:h-full tw:items-center tw:justify-center tw:rounded-md tw:px-2 tw:font-medium tw:whitespace-nowrap tw:transition-all',
               'tw:text-muted-foreground tw:data-[state=active]:bg-background tw:data-[state=active]:text-foreground tw:data-[state=active]:shadow-sm',
               'tw:disabled:pointer-events-none tw:disabled:opacity-50',
-              size === 'xs' ? 'tw:text-xs tw:h-[calc(100%-2px)]' : 'tw:text-sm tw:h-[calc(100%-6px)]'
+              size === 'xs' ? 'tw:text-xs' : 'tw:text-sm'
             )}
           >
             {option.label}

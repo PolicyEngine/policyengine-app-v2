@@ -5,7 +5,6 @@
  * and callback logic lives in useSimulationCanvas.
  */
 
-import { Box } from '@mantine/core';
 import { useSimulationCanvas } from '../hooks/useSimulationCanvas';
 import {
   IngredientPickerModal,
@@ -44,9 +43,9 @@ export function SimulationCanvas({
 
   return (
     <>
-      <Box style={styles.canvasContainer}>
-        <Box style={styles.canvasGrid} />
-        <Box style={styles.simulationsGrid}>
+      <div style={styles.canvasContainer}>
+        <div style={styles.canvasGrid} />
+        <div style={styles.simulationsGrid}>
           <BlockComponent
             simulation={reportState.simulations[0]}
             index={0}
@@ -102,8 +101,8 @@ export function SimulationCanvas({
           ) : (
             <AddSimulationCard onClick={canvas.handleAddSimulation} disabled={false} />
           )}
-        </Box>
-      </Box>
+        </div>
+      </div>
 
       <IngredientPickerModal
         isOpen={canvas.pickerState.isOpen}

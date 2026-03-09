@@ -1,8 +1,9 @@
 /**
  * HouseholdCreationContent - Household creation form wrapper
  */
-import { Box, LoadingOverlay, ScrollArea } from '@mantine/core';
 import HouseholdBuilderForm from '@/components/household/HouseholdBuilderForm';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Spinner } from '@/components/ui/Spinner';
 import { Household } from '@/types/ingredients/Household';
 import { MetadataState } from '@/types/metadata';
 
@@ -38,9 +39,23 @@ export function HouseholdCreationContent({
   }
 
   return (
-    <ScrollArea style={{ flex: 1 }} offsetScrollbars>
-      <Box pos="relative">
-        <LoadingOverlay visible={isCreating} />
+    <ScrollArea style={{ flex: 1 }}>
+      <div style={{ position: 'relative' }}>
+        {isCreating && (
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: 'rgba(255,255,255,0.8)',
+              zIndex: 10,
+            }}
+          >
+            <Spinner />
+          </div>
+        )}
         <HouseholdBuilderForm
           household={householdDraft}
           metadata={metadata}
@@ -54,7 +69,7 @@ export function HouseholdCreationContent({
           onNumChildrenChange={onNumChildrenChange}
           disabled={isCreating}
         />
-      </Box>
+      </div>
     </ScrollArea>
   );
 }

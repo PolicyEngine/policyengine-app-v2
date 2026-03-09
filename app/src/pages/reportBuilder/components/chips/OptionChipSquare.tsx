@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Box, Text } from '@mantine/core';
+import { Text } from '@/components/ui';
 import { colors, spacing } from '@/designTokens';
 import { FONT_SIZES } from '../../constants';
 import { chipStyles } from '../../styles';
@@ -16,7 +16,9 @@ export function OptionChipSquare({
   const [isHovered, setIsHovered] = useState(false);
 
   return (
-    <Box
+    <div
+      role="button"
+      tabIndex={0}
       style={{
         ...chipStyles.chipSquare,
         borderColor: isSelected ? colorConfig.accent : colors.border.light,
@@ -31,12 +33,18 @@ export function OptionChipSquare({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick();
+        }
+      }}
     >
-      <Box
+      <div
         style={{
           width: 28,
           height: 28,
-          borderRadius: spacing.radius.sm,
+          borderRadius: spacing.radius.element,
           background: isSelected ? colorConfig.border : colors.gray[100],
           display: 'flex',
           alignItems: 'center',
@@ -44,20 +52,22 @@ export function OptionChipSquare({
         }}
       >
         {icon}
-      </Box>
+      </div>
       <Text
-        ta="center"
         fw={600}
         c={isSelected ? colorConfig.icon : colors.gray[700]}
-        style={{ fontSize: FONT_SIZES.small, lineHeight: 1.2 }}
+        style={{ textAlign: 'center', fontSize: FONT_SIZES.small, lineHeight: 1.2 }}
       >
         {label}
       </Text>
       {description && (
-        <Text ta="center" c="dimmed" style={{ fontSize: FONT_SIZES.tiny, lineHeight: 1.2 }}>
+        <Text
+          c="dimmed"
+          style={{ textAlign: 'center', fontSize: FONT_SIZES.tiny, lineHeight: 1.2 }}
+        >
           {description}
         </Text>
       )}
-    </Box>
+    </div>
   );
 }

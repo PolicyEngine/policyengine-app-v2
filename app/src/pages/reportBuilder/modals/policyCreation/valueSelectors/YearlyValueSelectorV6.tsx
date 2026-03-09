@@ -5,9 +5,8 @@
 
 import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
-import { Box, Group, Stack, Text } from '@mantine/core';
-import { YearPickerInput } from '@mantine/dates';
-import { colors, spacing } from '@/designTokens';
+import { Group, Stack, Text, YearPicker } from '@/components/ui';
+import { colors } from '@/designTokens';
 import { getDefaultValueForParam } from '@/pathways/report/components/valueSetters/getDefaultValueForParam';
 import { ValueInputBox } from '@/pathways/report/components/valueSetters/ValueInputBox';
 import { ValueSetterProps } from '@/pathways/report/components/valueSetters/ValueSetterProps';
@@ -62,11 +61,11 @@ export function YearlyValueSelectorV6(props: ValueSetterProps) {
     }
   }, [startDate, endDate, paramValue, setIntervals]);
 
-  function handleStartDateChange(value: Date | string | null) {
+  function handleStartDateChange(value: Date | null) {
     setStartDate(toISODateString(value));
   }
 
-  function handleEndDateChange(value: Date | string | null) {
+  function handleEndDateChange(value: Date | null) {
     const isoString = toISODateString(value);
     if (isoString) {
       const endOfYearDate = dayjs(isoString).endOf('year').format('YYYY-MM-DD');
@@ -78,38 +77,38 @@ export function YearlyValueSelectorV6(props: ValueSetterProps) {
 
   // V6 Layout: Two rows - date row, then value row
   return (
-    <Stack gap={spacing.sm}>
+    <Stack gap="sm">
       {/* First row: From year + To year */}
-      <Group gap={spacing.sm}>
-        <Box style={{ flex: 1 }}>
-          <Text size="xs" c={colors.gray[600]} mb={4}>
+      <Group gap="sm">
+        <div style={{ flex: 1 }}>
+          <Text size="xs" c={colors.gray[600]} style={{ marginBottom: 4 }}>
             From
           </Text>
-          <YearPickerInput
+          <YearPicker
             placeholder="2025"
             minDate={fromISODateString(minDate)}
             maxDate={fromISODateString(maxDate)}
             value={fromISODateString(startDate)}
             onChange={handleStartDateChange}
           />
-        </Box>
-        <Box style={{ flex: 1 }}>
-          <Text size="xs" c={colors.gray[600]} mb={4}>
+        </div>
+        <div style={{ flex: 1 }}>
+          <Text size="xs" c={colors.gray[600]} style={{ marginBottom: 4 }}>
             To
           </Text>
-          <YearPickerInput
+          <YearPicker
             placeholder="2026"
             minDate={fromISODateString(minDate)}
             maxDate={fromISODateString(maxDate)}
             value={fromISODateString(endDate)}
             onChange={handleEndDateChange}
           />
-        </Box>
+        </div>
       </Group>
 
       {/* Second row: Value */}
-      <Box>
-        <Text size="xs" c={colors.gray[600]} mb={4}>
+      <div>
+        <Text size="xs" c={colors.gray[600]} style={{ marginBottom: 4 }}>
           Value
         </Text>
         <ValueInputBox
@@ -118,7 +117,7 @@ export function YearlyValueSelectorV6(props: ValueSetterProps) {
           onChange={setParamValue}
           onSubmit={props.onSubmit}
         />
-      </Box>
+      </div>
     </Stack>
   );
 }

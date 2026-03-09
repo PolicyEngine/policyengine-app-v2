@@ -36,12 +36,7 @@ function ActionButtonBase({
     <Tooltip>
       <TooltipTrigger asChild>
         {label ? (
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={onClick}
-            disabled={disabled}
-          >
+          <Button variant="secondary" size="sm" onClick={onClick} disabled={disabled}>
             <Icon size={16} />
             {label}
           </Button>

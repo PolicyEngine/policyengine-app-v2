@@ -4,7 +4,7 @@
 
 import React from 'react';
 import { IconPencil, IconScale } from '@tabler/icons-react';
-import { ActionIcon, Box, Group, Text, TextInput } from '@mantine/core';
+import { Button, Group, Input, Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import { FONT_SIZES, INGREDIENT_COLORS } from '../../constants';
 
@@ -24,21 +24,21 @@ export function PolicyNameEditor({
   const colorConfig = INGREDIENT_COLORS.policy;
 
   return (
-    <Box
+    <div
       style={{
         background: colors.white,
-        borderRadius: spacing.radius.lg,
+        borderRadius: spacing.radius.feature,
         padding: spacing.lg,
         border: `1px solid ${colors.border.light}`,
       }}
     >
-      <Group gap={spacing.md} align="center" wrap="nowrap">
+      <Group gap="md" align="center" wrap="nowrap">
         {/* Policy icon */}
-        <Box
+        <div
           style={{
             width: 32,
             height: 32,
-            borderRadius: spacing.radius.md,
+            borderRadius: spacing.radius.container,
             background: `linear-gradient(135deg, ${colorConfig.bg} 0%, ${colors.white} 100%)`,
             border: `1px solid ${colorConfig.border}`,
             display: 'flex',
@@ -48,12 +48,12 @@ export function PolicyNameEditor({
           }}
         >
           <IconScale size={18} color={colorConfig.icon} />
-        </Box>
+        </div>
 
         {/* Editable policy name */}
-        <Box style={{ flex: 1, display: 'flex', alignItems: 'center', gap: spacing.xs }}>
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: spacing.xs }}>
           {isEditingLabel ? (
-            <TextInput
+            <Input
               value={policyLabel}
               onChange={(e) => onLabelChange(e.currentTarget.value)}
               onBlur={() => onEditingChange(false)}
@@ -66,14 +66,12 @@ export function PolicyNameEditor({
                 }
               }}
               autoFocus
-              size="sm"
-              style={{ flex: 1 }}
-              styles={{
-                input: {
-                  fontFamily: typography.fontFamily.primary,
-                  fontWeight: 600,
-                  fontSize: FONT_SIZES.normal,
-                },
+              className="tw:shadow-none tw:focus-visible:ring-1"
+              style={{
+                flex: 1,
+                fontFamily: typography.fontFamily.primary,
+                fontWeight: 600,
+                fontSize: FONT_SIZES.normal,
               }}
             />
           ) : (
@@ -88,18 +86,13 @@ export function PolicyNameEditor({
               >
                 {policyLabel || 'New policy'}
               </Text>
-              <ActionIcon
-                size="sm"
-                variant="subtle"
-                color="gray"
-                onClick={() => onEditingChange(true)}
-              >
+              <Button variant="ghost" size="icon-sm" onClick={() => onEditingChange(true)}>
                 <IconPencil size={14} />
-              </ActionIcon>
+              </Button>
             </>
           )}
-        </Box>
+        </div>
       </Group>
-    </Box>
+    </div>
   );
 }

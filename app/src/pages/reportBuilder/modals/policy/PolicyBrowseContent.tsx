@@ -9,18 +9,13 @@ import {
   IconSearch,
   IconUsers,
 } from '@tabler/icons-react';
-import {
-  ActionIcon,
-  Box,
-  Button,
-  Group,
-  Paper,
-  ScrollArea,
-  Skeleton,
-  Stack,
-  Text,
-  TextInput,
-} from '@mantine/core';
+import { Button } from '@/components/ui/button';
+import { Group } from '@/components/ui/Group';
+import { Input } from '@/components/ui/input';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Stack } from '@/components/ui/Stack';
+import { Text } from '@/components/ui/Text';
 import { colors, spacing } from '@/designTokens';
 import { FONT_SIZES, INGREDIENT_COLORS } from '../../constants';
 
@@ -74,7 +69,7 @@ export function PolicyBrowseContent({
     policyCard: {
       background: colors.white,
       border: `1px solid ${colors.border.light}`,
-      borderRadius: spacing.radius.lg,
+      borderRadius: spacing.radius.feature,
       padding: spacing.lg,
       cursor: 'pointer',
       transition: 'all 0.2s ease',
@@ -84,23 +79,35 @@ export function PolicyBrowseContent({
   };
 
   return (
-    <Stack gap={spacing.lg} style={{ height: '100%' }}>
-      <Box style={modalStyles.searchBar}>
-        <TextInput
-          placeholder="Search policies by name or parameter..."
-          leftSection={<IconSearch size={16} color={colors.gray[400]} />}
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          size="sm"
-          styles={{
-            input: {
-              borderRadius: spacing.radius.md,
+    <Stack gap="lg" style={{ height: '100%' }}>
+      <div style={modalStyles.searchBar}>
+        <div style={{ position: 'relative' }}>
+          <div
+            style={{
+              position: 'absolute',
+              left: 10,
+              top: '50%',
+              transform: 'translateY(-50%)',
+              pointerEvents: 'none',
+              display: 'flex',
+              alignItems: 'center',
+            }}
+          >
+            <IconSearch size={16} color={colors.gray[400]} />
+          </div>
+          <Input
+            placeholder="Search policies by name or parameter..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{
+              borderRadius: spacing.radius.container,
               border: `1px solid ${colors.border.light}`,
               fontSize: FONT_SIZES.small,
-            },
-          }}
-        />
-      </Box>
+              paddingLeft: 34,
+            }}
+          />
+        </div>
+      </div>
 
       <Group justify="space-between" align="center">
         <Text fw={600} style={{ fontSize: FONT_SIZES.normal, color: colors.gray[800] }}>
@@ -111,15 +118,15 @@ export function PolicyBrowseContent({
         </Text>
       </Group>
 
-      <ScrollArea style={{ flex: 1 }} offsetScrollbars>
+      <ScrollArea style={{ flex: 1 }}>
         {isLoading ? (
-          <Stack gap={spacing.md}>
+          <Stack gap="md">
             {[1, 2, 3].map((i) => (
-              <Skeleton key={i} height={80} radius="md" />
+              <Skeleton key={i} className="tw:h-[80px] tw:rounded-md" />
             ))}
           </Stack>
         ) : activeSection === 'public' ? (
-          <Box
+          <div
             style={{
               display: 'flex',
               flexDirection: 'column',
@@ -129,7 +136,7 @@ export function PolicyBrowseContent({
               gap: spacing.md,
             }}
           >
-            <Box
+            <div
               style={{
                 width: 64,
                 height: 64,
@@ -141,16 +148,19 @@ export function PolicyBrowseContent({
               }}
             >
               <IconUsers size={28} color={colors.gray[400]} />
-            </Box>
+            </div>
             <Text fw={500} c={colors.gray[600]}>
               Coming soon
             </Text>
-            <Text c="dimmed" ta="center" maw={300} style={{ fontSize: FONT_SIZES.small }}>
+            <Text
+              c="dimmed"
+              style={{ textAlign: 'center', maxWidth: 300, fontSize: FONT_SIZES.small }}
+            >
               Search and browse policies created by other PolicyEngine users.
             </Text>
-          </Box>
+          </div>
         ) : displayedPolicies.length === 0 ? (
-          <Box
+          <div
             style={{
               display: 'flex',
               flexDirection: 'column',
@@ -160,7 +170,7 @@ export function PolicyBrowseContent({
               gap: spacing.md,
             }}
           >
-            <Box
+            <div
               style={{
                 width: 64,
                 height: 64,
@@ -172,11 +182,14 @@ export function PolicyBrowseContent({
               }}
             >
               <IconFolder size={28} color={colors.gray[400]} />
-            </Box>
+            </div>
             <Text fw={500} c={colors.gray[600]}>
               {searchQuery ? 'No policies match your search' : 'No policies yet'}
             </Text>
-            <Text c="dimmed" ta="center" maw={300} style={{ fontSize: FONT_SIZES.small }}>
+            <Text
+              c="dimmed"
+              style={{ textAlign: 'center', maxWidth: 300, fontSize: FONT_SIZES.small }}
+            >
               {searchQuery
                 ? 'Try adjusting your search terms or browse all policies'
                 : 'Create your first policy to get started'}
@@ -184,30 +197,37 @@ export function PolicyBrowseContent({
             {!searchQuery && (
               <Button
                 variant="outline"
-                color="gray"
-                leftSection={<IconPlus size={16} />}
                 onClick={onEnterCreationMode}
-                mt={spacing.sm}
+                style={{ marginTop: spacing.sm }}
               >
+                <IconPlus size={16} />
                 Create policy
               </Button>
             )}
-          </Box>
+          </div>
         ) : (
-          <Box style={modalStyles.policyGrid}>
+          <div style={modalStyles.policyGrid}>
             {displayedPolicies.map((policy) => {
               const isSelected = selectedPolicyId === policy.id;
               return (
-                <Paper
+                <div
                   key={policy.id}
                   style={{
                     ...modalStyles.policyCard,
                     background: colors.white,
                     borderColor: isSelected ? colorConfig.border : colors.gray[200],
                   }}
+                  role="button"
+                  tabIndex={0}
                   onClick={() => onSelectPolicy(policy)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      onSelectPolicy(policy);
+                    }
+                  }}
                 >
-                  <Box
+                  <div
                     style={{
                       position: 'absolute',
                       top: 0,
@@ -220,8 +240,8 @@ export function PolicyBrowseContent({
                       transition: 'all 0.2s ease',
                     }}
                   />
-                  <Group justify="space-between" align="flex-start" wrap="nowrap">
-                    <Stack gap={spacing.xs} style={{ flex: 1, minWidth: 0 }}>
+                  <Group justify="space-between" align="start" wrap="nowrap">
+                    <Stack gap="xs" style={{ flex: 1, minWidth: 0 }}>
                       <Text
                         fw={600}
                         style={{ fontSize: FONT_SIZES.normal, color: colors.gray[900] }}
@@ -232,25 +252,24 @@ export function PolicyBrowseContent({
                         {policy.paramCount} param{policy.paramCount !== 1 ? 's' : ''} changed
                       </Text>
                     </Stack>
-                    <Group gap={spacing.xs} style={{ flexShrink: 0 }}>
-                      <ActionIcon
-                        variant="subtle"
-                        color="gray"
-                        size="sm"
+                    <Group gap="xs" style={{ flexShrink: 0 }}>
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
                         onClick={(e) => {
                           e.stopPropagation();
                           onPolicyInfoClick(policy.id);
                         }}
                       >
                         <IconInfoCircle size={18} />
-                      </ActionIcon>
+                      </Button>
                       <IconChevronRight size={16} color={colors.gray[400]} />
                     </Group>
                   </Group>
-                </Paper>
+                </div>
               );
             })}
-          </Box>
+          </div>
         )}
       </ScrollArea>
     </Stack>

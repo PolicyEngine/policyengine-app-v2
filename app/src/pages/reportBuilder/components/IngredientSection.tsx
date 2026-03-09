@@ -11,7 +11,7 @@ import {
   IconSparkles,
   IconUsers,
 } from '@tabler/icons-react';
-import { Box, Group, Text } from '@mantine/core';
+import { Group, Text } from '@/components/ui';
 import { colors, spacing } from '@/designTokens';
 import { COUNTRY_CONFIG, FONT_SIZES, INGREDIENT_COLORS } from '../constants';
 import { isCurrentLaw } from '../currentLaw';
@@ -55,7 +55,7 @@ export function IngredientSection({
   const iconSize = 16;
 
   return (
-    <Box
+    <div
       style={{
         ...styles.ingredientSection,
         borderColor: colors.border.light,
@@ -63,8 +63,8 @@ export function IngredientSection({
       }}
     >
       {/* Section header */}
-      <Box style={styles.ingredientSectionHeader}>
-        <Box
+      <div style={styles.ingredientSectionHeader}>
+        <div
           style={{
             ...styles.ingredientSectionIcon,
             background: colorConfig.bg,
@@ -72,7 +72,7 @@ export function IngredientSection({
           }}
         >
           <IconComponent size={16} color={colorConfig.icon} stroke={2} />
-        </Box>
+        </div>
         <Text
           fw={600}
           c={colorConfig.icon}
@@ -81,10 +81,10 @@ export function IngredientSection({
           {typeLabels[type]}
         </Text>
         {isInherited && <Text style={styles.inheritedBadge}>(inherited from baseline)</Text>}
-      </Box>
+      </div>
 
       {/* Chips container */}
-      <Box style={styles.chipGridSquare}>
+      <div style={styles.chipGridSquare}>
         {type === 'policy' && onQuickSelectPolicy && (
           <>
             {/* Current law - always first */}
@@ -212,11 +212,11 @@ export function IngredientSection({
         )}
 
         {type === 'dynamics' && (
-          <Box
+          <div
             style={{
               padding: spacing.md,
               background: colors.white,
-              borderRadius: spacing.radius.md,
+              borderRadius: spacing.radius.container,
               border: `1px dashed ${colorConfig.border}`,
               gridColumn: '1 / -1',
               display: 'flex',
@@ -224,15 +224,15 @@ export function IngredientSection({
               justifyContent: 'center',
             }}
           >
-            <Group gap={spacing.sm}>
+            <Group gap="sm">
               <IconSparkles size={18} color={colorConfig.accent} />
               <Text c={colorConfig.icon} style={{ fontSize: FONT_SIZES.normal }}>
                 Dynamics coming soon
               </Text>
             </Group>
-          </Box>
+          </div>
         )}
-      </Box>
-    </Box>
+      </div>
+    </div>
   );
 }

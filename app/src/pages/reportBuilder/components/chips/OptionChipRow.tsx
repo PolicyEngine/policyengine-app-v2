@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { IconCheck } from '@tabler/icons-react';
-import { Box, Stack, Text } from '@mantine/core';
+import { Stack, Text } from '@/components/ui';
 import { colors } from '@/designTokens';
 import { FONT_SIZES } from '../../constants';
 import { chipStyles } from '../../styles';
@@ -17,7 +17,9 @@ export function OptionChipRow({
   const [isHovered, setIsHovered] = useState(false);
 
   return (
-    <Box
+    <div
+      role="button"
+      tabIndex={0}
       style={{
         ...chipStyles.chipRow,
         borderColor: isSelected ? colorConfig.accent : colors.border.light,
@@ -27,16 +29,22 @@ export function OptionChipRow({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick();
+        }
+      }}
     >
-      <Box
+      <div
         style={{
           ...chipStyles.chipRowIcon,
           background: isSelected ? colorConfig.border : colors.gray[100],
         }}
       >
         {icon}
-      </Box>
-      <Stack gap={2} style={{ flex: 1 }}>
+      </div>
+      <Stack style={{ gap: 2, flex: 1 }}>
         <Text
           fw={600}
           c={isSelected ? colorConfig.icon : colors.gray[700]}
@@ -51,6 +59,6 @@ export function OptionChipRow({
         )}
       </Stack>
       {isSelected && <IconCheck size={18} color={colorConfig.accent} stroke={2.5} />}
-    </Box>
+    </div>
   );
 }

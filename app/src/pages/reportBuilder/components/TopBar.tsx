@@ -6,7 +6,7 @@
  */
 
 import React from 'react';
-import { Box, Loader } from '@mantine/core';
+import { Spinner } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import { FONT_SIZES } from '../constants';
 import type { TopBarAction } from '../types';
@@ -64,17 +64,17 @@ function handleMouseLeave(e: React.MouseEvent<HTMLButtonElement>, action: TopBar
 
 export function TopBar({ children, actions }: TopBarProps) {
   return (
-    <Box
+    <div
       style={{
         background: colors.white,
-        borderRadius: spacing.radius.xl,
+        borderRadius: spacing.radius.feature,
         border: `1px solid ${colors.border.light}`,
         boxShadow: `0 4px 24px ${colors.shadow.light}`,
         padding: spacing.sm,
         marginBottom: spacing.xl,
       }}
     >
-      <Box
+      <div
         style={{
           display: 'flex',
           alignItems: 'center',
@@ -84,15 +84,15 @@ export function TopBar({ children, actions }: TopBarProps) {
         {children}
 
         {actions.length > 0 && (
-          <Box style={{ display: 'flex', gap: spacing.xs, flexShrink: 0 }}>
+          <div style={{ display: 'flex', gap: spacing.xs, flexShrink: 0 }}>
             {actions.map((action) => (
-              <Box
+              <button
+                type="button"
                 key={action.key}
-                component="button"
                 style={{
                   ...getButtonStyles(action),
                   height: 38,
-                  borderRadius: spacing.radius.lg,
+                  borderRadius: spacing.radius.feature,
                   padding: `0 ${spacing.md}`,
                   fontFamily: typography.fontFamily.primary,
                   fontWeight: 600,
@@ -104,6 +104,7 @@ export function TopBar({ children, actions }: TopBarProps) {
                   transition: 'all 0.3s ease',
                   flexShrink: 0,
                   whiteSpace: 'nowrap',
+                  cursor: 'pointer',
                 }}
                 onClick={action.onClick}
                 disabled={action.disabled || action.loading}
@@ -114,13 +115,13 @@ export function TopBar({ children, actions }: TopBarProps) {
                   handleMouseLeave(e, action)
                 }
               >
-                {action.loading ? <Loader size={16} color="gray" /> : action.icon}
+                {action.loading ? <Spinner size="sm" /> : action.icon}
                 <span>{action.loading ? action.loadingLabel || action.label : action.label}</span>
-              </Box>
+              </button>
             ))}
-          </Box>
+          </div>
         )}
-      </Box>
-    </Box>
+      </div>
+    </div>
   );
 }

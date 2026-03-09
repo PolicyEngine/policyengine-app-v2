@@ -20,7 +20,7 @@ import {
   IconUsers,
   IconX,
 } from '@tabler/icons-react';
-import { Box, Group, Text, Tooltip } from '@mantine/core';
+import { Group, Text, Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui';
 import { colors, spacing } from '@/designTokens';
 import { COUNTRY_CONFIG, FONT_SIZES, INGREDIENT_COLORS } from '../constants';
 import { CURRENT_LAW_LABEL, isCurrentLaw } from '../currentLaw';
@@ -34,7 +34,7 @@ export function IngredientSectionFull({
   countryId = 'us',
   onQuickSelectPolicy: _onQuickSelectPolicy,
   onSelectSavedPolicy: _onSelectSavedPolicy,
-  onEditPolicy,
+  onEditPolicy: _onEditPolicy,
   onQuickSelectPopulation: _onQuickSelectPopulation,
   onSelectRecentPopulation: _onSelectRecentPopulation,
   onDeselectPopulation,
@@ -135,7 +135,7 @@ export function IngredientSectionFull({
     type === 'policy' && !isCurrentLaw(currentId) && !!currentId && onViewPolicy;
 
   return (
-    <Box
+    <div
       style={{
         ...styles.ingredientSection,
         borderColor: colors.border.light,
@@ -143,8 +143,8 @@ export function IngredientSectionFull({
       }}
     >
       {/* Section header */}
-      <Box style={styles.ingredientSectionHeader}>
-        <Box
+      <div style={styles.ingredientSectionHeader}>
+        <div
           style={{
             ...styles.ingredientSectionIcon,
             background: colorConfig.bg,
@@ -152,7 +152,7 @@ export function IngredientSectionFull({
           }}
         >
           <IconComponent size={16} color={colorConfig.icon} stroke={2} />
-        </Box>
+        </div>
         <Text
           fw={600}
           c={colorConfig.icon}
@@ -161,34 +161,34 @@ export function IngredientSectionFull({
           {typeLabels[type]}
         </Text>
         {isInherited && <Text style={styles.inheritedBadge}>(inherited from baseline)</Text>}
-      </Box>
+      </div>
 
       {/* Content area */}
       {type === 'dynamics' ? (
-        <Box
+        <div
           style={{
             padding: spacing.md,
             background: colors.white,
-            borderRadius: spacing.radius.md,
+            borderRadius: spacing.radius.container,
             border: `1px dashed ${colorConfig.border}`,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
           }}
         >
-          <Group gap={spacing.sm}>
+          <Group gap="sm">
             <IconSparkles size={18} color={colorConfig.accent} />
             <Text c={colorConfig.icon} style={{ fontSize: FONT_SIZES.normal }}>
               Dynamics coming soon
             </Text>
           </Group>
-        </Box>
+        </div>
       ) : hasSelection ? (
         /* Selected item - full-width card */
-        <Box
+        <div
           style={{
             padding: `${spacing.md} ${spacing.lg}`,
-            borderRadius: spacing.radius.md,
+            borderRadius: spacing.radius.container,
             background: isInherited ? colors.gray[50] : colorConfig.bg,
             border: isInherited
               ? `1px solid ${colors.gray[200]}`
@@ -201,11 +201,11 @@ export function IngredientSectionFull({
             overflow: 'hidden',
           }}
         >
-          <Box
+          <div
             style={{
               width: 36,
               height: 36,
-              borderRadius: spacing.radius.md,
+              borderRadius: spacing.radius.container,
               background: colors.white,
               display: 'flex',
               alignItems: 'center',
@@ -225,8 +225,8 @@ export function IngredientSectionFull({
               ) : (
                 <CountryMapIcon countryId={countryId} size={18} color={colorConfig.icon} />
               ))}
-          </Box>
-          <Box style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+          </div>
+          <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
             <Text
               fw={600}
               c={colorConfig.icon}
@@ -248,8 +248,8 @@ export function IngredientSectionFull({
                   : selectedPopulationLabel?.description}
               </Text>
             )}
-          </Box>
-          <Box
+          </div>
+          <div
             style={{
               display: 'flex',
               gap: spacing.xs,
@@ -258,48 +258,18 @@ export function IngredientSectionFull({
           >
             {/* View/edit policy gear — visible in both view and edit modes */}
             {showViewEditPolicyButton && (
-              <Tooltip label="View/edit policy" position="bottom" withArrow>
-                <Box
-                  component="button"
-                  onClick={(e: React.MouseEvent) => {
-                    e.stopPropagation();
-                    onViewPolicy();
-                  }}
-                  style={{
-                    background: colors.white,
-                    border: `1px solid ${colorConfig.border}`,
-                    borderRadius: spacing.radius.sm,
-                    width: 34,
-                    height: 34,
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: colorConfig.icon,
-                  }}
-                >
-                  <IconSettings size={14} />
-                </Box>
-              </Tooltip>
-            )}
-            {/* Swap and remove — only in edit mode */}
-            {!isInherited && !isReadOnly && (
-              <>
-                <Tooltip
-                  label={`Swap ${type === 'population' ? 'household(s)' : type}`}
-                  position="bottom"
-                  withArrow
-                >
-                  <Box
-                    component="button"
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
                     onClick={(e: React.MouseEvent) => {
                       e.stopPropagation();
-                      onBrowseMore?.();
+                      onViewPolicy();
                     }}
                     style={{
                       background: colors.white,
                       border: `1px solid ${colorConfig.border}`,
-                      borderRadius: spacing.radius.sm,
+                      borderRadius: spacing.radius.element,
                       width: 34,
                       height: 34,
                       cursor: 'pointer',
@@ -309,43 +279,88 @@ export function IngredientSectionFull({
                       color: colorConfig.icon,
                     }}
                   >
-                    <IconTransfer size={14} />
-                  </Box>
+                    <IconSettings size={14} />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">View/edit policy</TooltipContent>
+              </Tooltip>
+            )}
+            {/* Swap and remove — only in edit mode */}
+            {!isInherited && !isReadOnly && (
+              <>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      onClick={(e: React.MouseEvent) => {
+                        e.stopPropagation();
+                        onBrowseMore?.();
+                      }}
+                      style={{
+                        background: colors.white,
+                        border: `1px solid ${colorConfig.border}`,
+                        borderRadius: spacing.radius.element,
+                        width: 34,
+                        height: 34,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: colorConfig.icon,
+                      }}
+                    >
+                      <IconTransfer size={14} />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    Swap {type === 'population' ? 'household(s)' : type}
+                  </TooltipContent>
                 </Tooltip>
-                <Tooltip label="Remove" position="bottom" withArrow>
-                  <Box
-                    component="button"
-                    onClick={(e: React.MouseEvent) => {
-                      e.stopPropagation();
-                      handleDeselect();
-                    }}
-                    style={{
-                      background: 'transparent',
-                      border: `1px solid ${colors.gray[300]}`,
-                      borderRadius: spacing.radius.sm,
-                      width: 34,
-                      height: 34,
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: colors.gray[400],
-                    }}
-                  >
-                    <IconX size={14} />
-                  </Box>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      onClick={(e: React.MouseEvent) => {
+                        e.stopPropagation();
+                        handleDeselect();
+                      }}
+                      style={{
+                        background: 'transparent',
+                        border: `1px solid ${colors.gray[300]}`,
+                        borderRadius: spacing.radius.element,
+                        width: 34,
+                        height: 34,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: colors.gray[400],
+                      }}
+                    >
+                      <IconX size={14} />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">Remove</TooltipContent>
                 </Tooltip>
               </>
             )}
-          </Box>
-        </Box>
+          </div>
+        </div>
       ) : (
         /* Empty state - clickable area to add ingredient */
-        <Box
+        <div
+          role="button"
+          tabIndex={0}
           onClick={handleEmptyClick}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              handleEmptyClick?.();
+            }
+          }}
           style={{
             padding: `${spacing.md} ${spacing.lg}`,
-            borderRadius: spacing.radius.md,
+            borderRadius: spacing.radius.container,
             border: `2px dashed ${colorConfig.border}`,
             background: colorConfig.bg,
             display: 'flex',
@@ -365,7 +380,7 @@ export function IngredientSectionFull({
             e.currentTarget.style.borderColor = colorConfig.border;
           }}
         >
-          <Box
+          <div
             style={{
               width: 36,
               height: 36,
@@ -379,17 +394,17 @@ export function IngredientSectionFull({
             }}
           >
             <IconPlus size={18} color={colorConfig.icon} />
-          </Box>
-          <Box>
+          </div>
+          <div>
             <Text fw={600} c={colorConfig.icon} style={{ fontSize: FONT_SIZES.normal }}>
               Add {type === 'policy' ? 'policy' : 'population'}
             </Text>
             <Text c={colors.gray[500]} style={{ fontSize: FONT_SIZES.small }}>
               Click to browse and select
             </Text>
-          </Box>
-        </Box>
+          </div>
+        </div>
       )}
-    </Box>
+    </div>
   );
 }

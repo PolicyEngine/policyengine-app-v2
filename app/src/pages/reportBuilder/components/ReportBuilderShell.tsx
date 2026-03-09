@@ -6,8 +6,8 @@
  */
 import { IconChevronLeft } from '@tabler/icons-react';
 import { useNavigate } from 'react-router-dom';
-import { Box, Group, Text } from '@mantine/core';
-import { colors, spacing } from '@/designTokens';
+import { Group, Text } from '@/components/ui';
+import { colors } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { styles } from '../styles';
 import type { IngredientPickerState, ReportBuilderState, TopBarAction } from '../types';
@@ -46,13 +46,12 @@ export function ReportBuilderShell({
   const countryId = useCurrentCountry();
 
   return (
-    <Box style={styles.pageContainer}>
+    <div style={styles.pageContainer}>
       {/* Back breadcrumb */}
       <Group
-        gap={spacing.xs}
+        gap="xs"
         align="center"
-        mb={8}
-        style={{ cursor: 'pointer' }}
+        style={{ marginBottom: 8, cursor: 'pointer' }}
         onClick={() => navigate(backPath || `/${countryId}/reports`)}
       >
         <IconChevronLeft size={14} color={colors.gray[500]} />
@@ -61,9 +60,9 @@ export function ReportBuilderShell({
         </Text>
       </Group>
 
-      <Box style={styles.headerSection}>
+      <div style={styles.headerSection}>
         <h1 style={styles.mainTitle}>{title}</h1>
-      </Box>
+      </div>
 
       <TopBar actions={actions}>
         <ReportMetaPanel
@@ -81,6 +80,6 @@ export function ReportBuilderShell({
         BlockComponent={BlockComponent}
         isReadOnly={isReadOnly}
       />
-    </Box>
+    </div>
   );
 }

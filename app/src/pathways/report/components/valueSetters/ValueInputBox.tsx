@@ -99,7 +99,9 @@ export function ValueInputBox(props: ValueInputBoxProps) {
           value={displayValue}
           onChange={handleChange}
           onKeyDown={(e) => {
-            if (e.key === 'Enter') onSubmit?.();
+            if (e.key === 'Enter') {
+              onSubmit?.();
+            }
           }}
           className={cn(prefix ? 'tw:pl-7' : '', isPercentage ? 'tw:pr-7' : '')}
           style={{ flex: 1 }}
