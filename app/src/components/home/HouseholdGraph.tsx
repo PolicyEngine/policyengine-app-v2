@@ -1,9 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { colors } from '@/designTokens';
+import { UK_CENTERS, US_CENTERS } from './populationCenters';
 
-const NODE_COUNT = 3200;
-const NODE_SIZE = 4;
+const NODE_COUNT = 10000;
+const NODE_SIZE = 1.5;
 const HOVER_RADIUS = 110;
+const HOVER_RADIUS_SQ = HOVER_RADIUS * HOVER_RADIUS;
+const TWO_PI = Math.PI * 2;
+const EASE_C1 = 2.2;
+const EASE_C3 = EASE_C1 + 1;
 
 function seededRandom(seed: number) {
   const x = Math.sin(seed * 9301 + 49297) * 49297;
@@ -15,6 +20,7 @@ interface Node {
   x: number;
   y: number;
   baseOpacity: number;
+  baseSize: number;
   driftDuration: number;
   driftDelay: number;
   driftVariant: number;
@@ -115,84 +121,6 @@ export function generateImpactForPrompt(
   return impact;
 }
 
-// Population centers: [x, y, weight] in normalized 0-1 space
-// US: continental US mapped to landscape-oriented rectangle
-// Coordinates approximate major metro areas; weight ≈ relative population
-const US_CENTERS: [number, number, number][] = [
-  // Northeast corridor
-  [0.88, 0.28, 8.3], // NYC
-  [0.85, 0.32, 4.0], // Philadelphia
-  [0.92, 0.25, 2.8], // Boston
-  [0.87, 0.35, 2.5], // Baltimore/DC
-  [0.84, 0.28, 1.2], // Hartford/CT
-  // Southeast
-  [0.82, 0.52, 3.5], // Atlanta
-  [0.87, 0.55, 3.0], // Charlotte/Raleigh
-  [0.82, 0.62, 2.8], // Miami/S Florida
-  [0.78, 0.62, 2.2], // Tampa/Orlando
-  [0.73, 0.58, 1.5], // Nashville
-  [0.85, 0.47, 1.0], // Virginia Beach
-  // Midwest
-  [0.68, 0.3, 4.7], // Chicago
-  [0.72, 0.32, 2.5], // Detroit
-  [0.66, 0.35, 1.8], // Indianapolis/Columbus
-  [0.62, 0.3, 1.6], // Minneapolis
-  [0.58, 0.35, 1.5], // Kansas City/St Louis
-  [0.72, 0.28, 1.2], // Cleveland/Pittsburgh
-  [0.62, 0.34, 0.8], // Milwaukee
-  // Texas
-  [0.52, 0.65, 3.8], // Dallas/Fort Worth
-  [0.5, 0.72, 3.5], // Houston
-  [0.46, 0.68, 1.5], // San Antonio/Austin
-  // Mountain/West
-  [0.32, 0.42, 1.8], // Denver
-  [0.22, 0.48, 1.5], // Phoenix
-  [0.17, 0.42, 1.2], // Las Vegas
-  [0.28, 0.35, 0.8], // Salt Lake City
-  // Pacific
-  [0.1, 0.55, 6.5], // LA/SoCal
-  [0.08, 0.38, 4.0], // SF Bay Area
-  [0.1, 0.48, 1.5], // San Diego
-  [0.08, 0.22, 2.0], // Seattle
-  [0.08, 0.28, 1.2], // Portland
-  [0.05, 0.15, 0.5], // Spokane/rural WA
-];
-
-// UK: oriented vertically (taller than wide)
-const UK_CENTERS: [number, number, number][] = [
-  // London & Southeast
-  [0.62, 0.78, 14.0], // London (metro ~14m of ~67m)
-  [0.55, 0.82, 1.5], // Southampton/Portsmouth
-  [0.68, 0.76, 1.0], // Canterbury/Kent
-  [0.58, 0.74, 0.8], // Reading/Surrey
-  // Midlands
-  [0.48, 0.62, 4.5], // Birmingham
-  [0.52, 0.58, 2.0], // Leicester/Nottingham
-  [0.42, 0.58, 1.5], // Stoke/Wolverhampton
-  [0.55, 0.55, 1.0], // Peterborough
-  // North of England
-  [0.45, 0.45, 4.0], // Manchester
-  [0.5, 0.42, 3.0], // Leeds/Bradford
-  [0.55, 0.38, 1.8], // Sheffield
-  [0.48, 0.48, 1.5], // Liverpool
-  [0.52, 0.32, 1.8], // Newcastle/Sunderland
-  [0.48, 0.38, 0.8], // Hull
-  // Wales
-  [0.32, 0.68, 1.5], // Cardiff/Swansea
-  [0.28, 0.58, 0.5], // Mid Wales
-  // Scotland
-  [0.42, 0.2, 3.0], // Glasgow
-  [0.5, 0.18, 2.5], // Edinburgh
-  [0.48, 0.12, 0.8], // Dundee/Aberdeen
-  [0.38, 0.08, 0.3], // Inverness/Highlands
-  // East
-  [0.65, 0.68, 1.5], // Cambridge/Norwich
-  [0.6, 0.65, 1.0], // Essex/Colchester
-  // Southwest
-  [0.35, 0.82, 1.0], // Exeter/Plymouth
-  [0.42, 0.78, 1.2], // Bristol/Bath
-];
-
 // Box-Muller transform for gaussian jitter (seeded)
 function gaussianJitter(seed: number, sigma: number): number {
   const u1 = Math.max(1e-10, seededRandom(seed));
@@ -207,6 +135,7 @@ function createNode(nodeId: number, cx: number, cy: number, sigma: number): Node
     x: Math.max(0.01, Math.min(0.99, cx + gaussianJitter(seed, sigma))),
     y: Math.max(0.01, Math.min(0.99, cy + gaussianJitter(seed + 2, sigma))),
     baseOpacity: 0.08,
+    baseSize: NODE_SIZE * (0.2 + seededRandom(seed + 9) * 1.8),
     driftDuration: 10 + seededRandom(seed + 6) * 14,
     driftDelay: seededRandom(seed + 7) * -20,
     driftVariant: Math.floor(seededRandom(seed + 8) * 4),
@@ -223,7 +152,7 @@ export function generateGraph(countryId: string = 'us'): Node[] {
   for (const [cx, cy, weight] of centers) {
     const count = Math.round((weight / totalWeight) * NODE_COUNT);
     // Jitter radius scales with weight (bigger cities spread more)
-    const sigma = 0.02 + (weight / totalWeight) * 0.06;
+    const sigma = 0.008 + (weight / totalWeight) * 0.04;
     for (let j = 0; j < count && nodeId < NODE_COUNT; j++) {
       nodes.push(createNode(nodeId, cx, cy, sigma));
       nodeId++;
@@ -271,6 +200,9 @@ const DRIFT_KEYFRAMES: [number, number][][] = [
   ],
 ];
 
+// Reusable buffer to avoid allocating a new array every frame per node
+const _driftOut: [number, number] = [0, 0];
+
 function getDrift(variant: number, t: number): [number, number] {
   const kf = DRIFT_KEYFRAMES[variant];
   const n = kf.length;
@@ -280,7 +212,9 @@ function getDrift(variant: number, t: number): [number, number] {
   const next = (i + 1) % n;
   // Cosine ease between waypoints
   const ease = (1 - Math.cos(frac * Math.PI)) * 0.5;
-  return [kf[i][0] + (kf[next][0] - kf[i][0]) * ease, kf[i][1] + (kf[next][1] - kf[i][1]) * ease];
+  _driftOut[0] = kf[i][0] + (kf[next][0] - kf[i][0]) * ease;
+  _driftOut[1] = kf[i][1] + (kf[next][1] - kf[i][1]) * ease;
+  return _driftOut;
 }
 
 function parseHex(hex: string): [number, number, number] {
@@ -423,10 +357,7 @@ export default function HouseholdGraph({ nodes, impact }: HouseholdGraphProps) {
           continue;
         }
         const popT = Math.min(popElapsed / 500, 1);
-        // easeOutBack with moderate overshoot
-        const c1 = 2.2;
-        const c3 = c1 + 1;
-        const popScale = popT >= 1 ? 1 : 1 + c3 * (popT - 1) ** 3 + c1 * (popT - 1) ** 2;
+        const popScale = popT >= 1 ? 1 : 1 + EASE_C3 * (popT - 1) ** 3 + EASE_C1 * (popT - 1) ** 2;
 
         // Drift
         const driftT = (elapsed - node.driftDelay) / node.driftDuration;
@@ -440,7 +371,7 @@ export default function HouseholdGraph({ nodes, impact }: HouseholdGraphProps) {
         let tg = COLOR_GRAY[1];
         let tb = COLOR_GRAY[2];
         let tOpacity = node.baseOpacity;
-        let tSize = NODE_SIZE;
+        let tSize = node.baseSize;
         let useFastLerp = false;
 
         // Impact colouring (with radial wave delay)
@@ -457,8 +388,9 @@ export default function HouseholdGraph({ nodes, impact }: HouseholdGraphProps) {
         if (mouse) {
           const dx = px - mouse.x;
           const dy = py - mouse.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < HOVER_RADIUS) {
+          const distSq = dx * dx + dy * dy;
+          if (distSq < HOVER_RADIUS_SQ) {
+            const dist = Math.sqrt(distSq);
             const prox = 1 - dist / HOVER_RADIUS;
             if (prox > 0.7) {
               [tr, tg, tb] = COLOR_PRIMARY;
@@ -490,7 +422,7 @@ export default function HouseholdGraph({ nodes, impact }: HouseholdGraphProps) {
         ctx.globalAlpha = alpha;
         ctx.fillStyle = `rgb(${state.r | 0},${state.g | 0},${state.b | 0})`;
         ctx.beginPath();
-        ctx.arc(px, py, half, 0, Math.PI * 2);
+        ctx.arc(px, py, half, 0, TWO_PI);
         ctx.fill();
       }
 
