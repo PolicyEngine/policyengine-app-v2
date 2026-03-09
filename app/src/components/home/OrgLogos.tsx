@@ -69,8 +69,8 @@ export default function OrgLogos() {
   // Total width of one full set of logos
   const setWidth = orgs.length * (LOGO_WIDTH + LOGO_GAP);
 
-  // Animation duration scales with number of logos for consistent speed
-  const duration = orgs.length * 3;
+  // ~40px/s — slow enough to read, fast enough to notice movement
+  const duration = setWidth / 40;
 
   return (
     <div style={{ marginTop: spacing['4xl'], marginBottom: spacing['4xl'] }}>
@@ -100,6 +100,7 @@ export default function OrgLogos() {
         }}
       >
         <div
+          className="org-logos-track"
           style={{
             display: 'flex',
             gap: `${LOGO_GAP}px`,
@@ -121,6 +122,9 @@ export default function OrgLogos() {
         @keyframes marquee {
           0% { transform: translateX(0); }
           100% { transform: translateX(-${setWidth}px); }
+        }
+        .org-logos-track:hover {
+          animation-play-state: paused;
         }
       `}</style>
     </div>
