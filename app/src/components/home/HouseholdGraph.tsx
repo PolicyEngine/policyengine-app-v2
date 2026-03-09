@@ -357,8 +357,7 @@ export default function HouseholdGraph({ nodes, impact }: HouseholdGraphProps) {
           continue;
         }
         const popT = Math.min(popElapsed / 500, 1);
-        const popScale =
-          popT >= 1 ? 1 : 1 + EASE_C3 * (popT - 1) ** 3 + EASE_C1 * (popT - 1) ** 2;
+        const popScale = popT >= 1 ? 1 : 1 + EASE_C3 * (popT - 1) ** 3 + EASE_C1 * (popT - 1) ** 2;
 
         // Drift
         const driftT = (elapsed - node.driftDelay) / node.driftDuration;
@@ -423,7 +422,7 @@ export default function HouseholdGraph({ nodes, impact }: HouseholdGraphProps) {
         ctx.globalAlpha = alpha;
         ctx.fillStyle = `rgb(${state.r | 0},${state.g | 0},${state.b | 0})`;
         ctx.beginPath();
-        ctx.arc(px, py, half, 0, Math.PI * 2);
+        ctx.arc(px, py, half, 0, TWO_PI);
         ctx.fill();
       }
 
