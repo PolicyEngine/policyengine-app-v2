@@ -3,11 +3,6 @@ import { colors } from '@/designTokens';
 export interface HeroSectionProps {
   title: string;
   description: string | React.ReactNode;
-  /**
-   * @deprecated 'light' variant is deprecated. Use 'default' instead.
-   * @deprecated 'accent' variant is deprecated. Use 'dark' instead.
-   */
-  variant?: 'light' | 'default' | 'accent' | 'dark';
 }
 
 export default function HeroSection({ title, description }: HeroSectionProps) {
@@ -19,20 +14,18 @@ export default function HeroSection({ title, description }: HeroSectionProps) {
         borderBottom: `1px solid ${colors.border.light}`,
       }}
     >
-      <div>
-        <h1
-          className="tw:text-3xl tw:md:text-4xl tw:font-bold tw:tracking-tight"
-          style={{ color: colors.primary[800] }}
-        >
-          {title}
-        </h1>
-        <p
-          className="tw:text-base tw:md:text-lg tw:leading-relaxed tw:mt-4"
-          style={{ color: colors.gray[500] }}
-        >
-          {description}
-        </p>
-      </div>
+      <h1
+        className="tw:text-3xl tw:md:text-4xl tw:font-bold tw:tracking-tight"
+        style={{ color: colors.primary[800] }}
+      >
+        {title}
+      </h1>
+      <p
+        className="tw:text-base tw:md:text-lg tw:leading-relaxed tw:mt-4"
+        style={{ color: colors.gray[500] }}
+      >
+        {description}
+      </p>
     </div>
   );
 }
