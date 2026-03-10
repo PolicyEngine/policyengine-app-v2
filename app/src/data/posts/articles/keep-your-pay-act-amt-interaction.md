@@ -57,9 +57,9 @@ Bracket savings alone suggest $13,696 in tax relief, but the AMT claws back $6,9
 
 ## Who is affected
 
-The [interactive chart below](/us/keep-your-pay-act/amt-chart) shows how the AMT clawback varies by income for a married couple filing jointly with only employment income and the standard deduction in Texas in 2026. Filers with other deductions (SALT, mortgage interest, etc.) or income sources will see different results.
+The chart below shows how the AMT clawback varies by income for a married couple filing jointly with only employment income and the standard deduction in Texas in 2026. Filers with other deductions (SALT, mortgage interest, etc.) or income sources will see different results.
 
-<iframe src="/us/keep-your-pay-act/amt-chart" width="100%" height="500" style="border: none; overflow: hidden;" title="KYPA AMT savings by income"></iframe>
+<iframe src="/us/keep-your-pay-act/amt-chart" width="100%" height="550" style="border: none; overflow: hidden;" title="KYPA AMT savings by income"></iframe>
 
 The AMT reduces KYPA savings for filers in roughly the $250,000–$625,000 range (married filing jointly). Below that range, the standard deduction increase does not push the regular tax below the AMT floor. Above that range, higher bracket rates keep the regular tax above the AMT.
 
