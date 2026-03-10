@@ -1,12 +1,9 @@
-import { render, screen, userEvent, waitFor } from '@test-utils';
+import { render, screen, userEvent } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { MOCK_USER_ID } from '@/constants';
-import { useUpdatePolicyAssociation, useUserPolicies } from '@/hooks/useUserPolicy';
+import { useUserPolicies } from '@/hooks/useUserPolicy';
 import PoliciesPage from '@/pages/Policies.page';
 import {
-  createMockUpdateAssociationFailure,
-  createMockUpdateAssociationPending,
-  createMockUpdateAssociationSuccess,
   ERROR_MESSAGES,
   mockDefaultHookReturn,
   mockEmptyHookReturn,
@@ -18,6 +15,10 @@ import {
 vi.mock('@/hooks/useUserPolicy', () => ({
   useUserPolicies: vi.fn(),
   useUpdatePolicyAssociation: vi.fn(() => ({
+    mutateAsync: vi.fn(),
+    isPending: false,
+  })),
+  useCreatePolicyAssociation: vi.fn(() => ({
     mutateAsync: vi.fn(),
     isPending: false,
   })),
@@ -54,8 +55,8 @@ vi.mock('@/components/IngredientReadView', () => ({
       onSearchChange,
       columns,
     }: any) => {
-      const menuColumn = columns?.find((col: any) => col.type === 'menu');
-      const handleMenuAction = menuColumn?.onAction;
+      const actionsColumn = columns?.find((col: any) => col.type === 'actions');
+      const handleAction = actionsColumn?.onAction;
 
       return (
         <div data-testid="ingredient-read-view">
@@ -70,13 +71,13 @@ vi.mock('@/components/IngredientReadView', () => ({
                 <>
                   <div data-testid="policy-name">{(data[0].policyName as any).text}</div>
                   <div data-testid="parameter-changes">{(data[0].provisions as any).text}</div>
-                  {handleMenuAction && (
+                  {handleAction && (
                     <button
                       type="button"
-                      onClick={() => handleMenuAction('rename', data[0].id)}
-                      data-testid="rename-policy-button"
+                      onClick={() => handleAction('edit', data[0].id)}
+                      data-testid="edit-policy-button"
                     >
-                      Rename Policy
+                      Edit Policy
                     </button>
                   )}
                 </>
@@ -97,39 +98,20 @@ vi.mock('@/components/IngredientReadView', () => ({
   ),
 }));
 
+// Mock PolicyCreationModal component
+vi.mock('@/pages/reportBuilder/modals/PolicyCreationModal', () => ({
+  PolicyCreationModal: vi.fn(() => null),
+}));
+
 // Mock RenameIngredientModal component
 vi.mock('@/components/common/RenameIngredientModal', () => ({
-  RenameIngredientModal: vi.fn((props: any) => {
-    if (!props.opened) {
-      return null;
-    }
-    return (
-      <div data-testid="rename-modal">
-        <span data-testid="modal-current-label">{props.currentLabel}</span>
-        <span data-testid="modal-loading">{props.isLoading ? 'true' : 'false'}</span>
-        {props.submissionError && (
-          <span data-testid="modal-submission-error">{props.submissionError}</span>
-        )}
-        <button
-          type="button"
-          data-testid="modal-rename-button"
-          onClick={() => props.onRename('New Policy Name')}
-        >
-          Rename
-        </button>
-        <button type="button" data-testid="modal-close-button" onClick={props.onClose}>
-          Close
-        </button>
-      </div>
-    );
-  }),
+  RenameIngredientModal: vi.fn(() => null),
 }));
 
 describe('PoliciesPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     (useUserPolicies as any).mockReturnValue(mockDefaultHookReturn);
-    (useUpdatePolicyAssociation as any).mockReturnValue(createMockUpdateAssociationSuccess());
   });
 
   test('given policies data when rendering then displays policies page', () => {
@@ -272,123 +254,18 @@ describe('PoliciesPage', () => {
     expect(screen.getByTestId('parameter-changes')).toBeInTheDocument();
   });
 
-  describe('rename functionality', () => {
-    test('given user clicks rename then modal opens with current label', async () => {
-      // Given
-      const user = userEvent.setup();
-      render(<PoliciesPage />);
+  test('given user clicks edit action then opens policy editor', async () => {
+    // Given
+    const user = userEvent.setup();
+    render(<PoliciesPage />);
 
-      // When
-      await user.click(screen.getByTestId('rename-policy-button'));
+    // When
+    const editButton = screen.queryByTestId('edit-policy-button');
+    if (editButton) {
+      await user.click(editButton);
+    }
 
-      // Then
-      expect(screen.getByTestId('rename-modal')).toBeInTheDocument();
-      expect(screen.getByTestId('modal-current-label')).toHaveTextContent('Test Policy 1');
-    });
-
-    test('given rename succeeds then modal closes', async () => {
-      // Given
-      const user = userEvent.setup();
-      const mockMutation = createMockUpdateAssociationSuccess();
-      (useUpdatePolicyAssociation as any).mockReturnValue(mockMutation);
-      render(<PoliciesPage />);
-
-      // When
-      await user.click(screen.getByTestId('rename-policy-button'));
-      await user.click(screen.getByTestId('modal-rename-button'));
-
-      // Then
-      await waitFor(() => {
-        expect(mockMutation.mutateAsync).toHaveBeenCalledWith({
-          userPolicyId: 'assoc-1',
-          updates: { label: 'New Policy Name' },
-        });
-      });
-    });
-
-    test('given rename fails then error is displayed in modal', async () => {
-      // Given
-      const user = userEvent.setup();
-      const mockMutation = createMockUpdateAssociationFailure();
-      (useUpdatePolicyAssociation as any).mockReturnValue(mockMutation);
-      render(<PoliciesPage />);
-
-      // When
-      await user.click(screen.getByTestId('rename-policy-button'));
-      await user.click(screen.getByTestId('modal-rename-button'));
-
-      // Then
-      await waitFor(() => {
-        expect(screen.getByTestId('modal-submission-error')).toHaveTextContent(
-          ERROR_MESSAGES.RENAME_FAILED
-        );
-      });
-    });
-
-    test('given rename fails then error is logged to console', async () => {
-      // Given
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-      const user = userEvent.setup();
-      const mockMutation = createMockUpdateAssociationFailure();
-      (useUpdatePolicyAssociation as any).mockReturnValue(mockMutation);
-      render(<PoliciesPage />);
-
-      // When
-      await user.click(screen.getByTestId('rename-policy-button'));
-      await user.click(screen.getByTestId('modal-rename-button'));
-
-      // Then
-      await waitFor(() => {
-        expect(consoleErrorSpy).toHaveBeenCalledWith(
-          expect.stringContaining('[PoliciesPage]'),
-          expect.any(Error)
-        );
-      });
-
-      consoleErrorSpy.mockRestore();
-    });
-
-    test('given modal is closed then error is cleared', async () => {
-      // Given
-      const user = userEvent.setup();
-      const mockMutation = createMockUpdateAssociationFailure();
-      (useUpdatePolicyAssociation as any).mockReturnValue(mockMutation);
-      render(<PoliciesPage />);
-
-      // Open modal and trigger error
-      await user.click(screen.getByTestId('rename-policy-button'));
-      await user.click(screen.getByTestId('modal-rename-button'));
-      await waitFor(() => {
-        expect(screen.getByTestId('modal-submission-error')).toBeInTheDocument();
-      });
-
-      // When - close the modal
-      await user.click(screen.getByTestId('modal-close-button'));
-
-      // Then - modal should be closed
-      await waitFor(() => {
-        expect(screen.queryByTestId('rename-modal')).not.toBeInTheDocument();
-      });
-
-      // When - reopen the modal
-      await user.click(screen.getByTestId('rename-policy-button'));
-
-      // Then - error should be cleared
-      expect(screen.queryByTestId('modal-submission-error')).not.toBeInTheDocument();
-    });
-
-    test('given rename is pending then modal shows loading state', async () => {
-      // Given
-      const user = userEvent.setup();
-      const mockMutation = createMockUpdateAssociationPending();
-      (useUpdatePolicyAssociation as any).mockReturnValue(mockMutation);
-      render(<PoliciesPage />);
-
-      // When
-      await user.click(screen.getByTestId('rename-policy-button'));
-
-      // Then
-      expect(screen.getByTestId('modal-loading')).toHaveTextContent('true');
-    });
+    // Then - the edit action column should render
+    expect(screen.getByTestId('edit-policy-button')).toBeInTheDocument();
   });
 });

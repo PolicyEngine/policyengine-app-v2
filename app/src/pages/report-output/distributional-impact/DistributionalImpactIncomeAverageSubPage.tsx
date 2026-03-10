@@ -32,14 +32,18 @@ import { regionName } from '@/utils/impactChartUtils';
 
 interface Props {
   output: SocietyWideReportOutput;
+  chartHeight?: number;
 }
 
-export default function DistributionalImpactIncomeAverageSubPage({ output }: Props) {
+export default function DistributionalImpactIncomeAverageSubPage({
+  output,
+  chartHeight: chartHeightProp,
+}: Props) {
   const mobile = useMediaQuery(MOBILE_BREAKPOINT_QUERY);
   const countryId = useCurrentCountry();
   const metadata = useSelector((state: RootState) => state.metadata);
   const { height: viewportHeight } = useViewportSize();
-  const chartHeight = getClampedChartHeight(viewportHeight, mobile);
+  const chartHeight = chartHeightProp ?? getClampedChartHeight(viewportHeight, mobile);
 
   // Extract data - object with keys "1", "2", ..., "10"
   const decileAverage = output.decile.average;

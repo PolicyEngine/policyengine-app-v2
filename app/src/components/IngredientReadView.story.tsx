@@ -7,9 +7,6 @@ const meta: Meta<typeof IngredientReadView> = {
   component: IngredientReadView,
   args: {
     onBuild: () => {},
-    enableSelection: true,
-    isSelected: () => false,
-    onSelectionChange: () => {},
   },
 };
 

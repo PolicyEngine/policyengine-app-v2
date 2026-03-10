@@ -500,6 +500,20 @@ export function findPlaceFromRegionString(regionString: string): PlaceOption | u
 }
 
 /**
+ * Get US places as RegionOption array for use in geography selectors
+ * Uses the static US_PLACES_OVER_100K data (333 cities with 100k+ population)
+ */
+export function getUSPlaces(): RegionOption[] {
+  return US_PLACES_OVER_100K.map((place) => ({
+    value: placeToRegionString(place),
+    label: getPlaceDisplayName(place.name),
+    type: US_REGION_TYPES.PLACE,
+    stateAbbreviation: place.stateAbbrev,
+    stateName: place.stateName,
+  }));
+}
+
+/**
  * Get US states from metadata (filters by type)
  */
 export function getUSStates(regions: MetadataRegionEntry[]): RegionOption[] {

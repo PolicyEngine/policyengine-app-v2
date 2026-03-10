@@ -7,7 +7,7 @@ const meta: Meta<typeof ReportActionButtons> = {
   args: {
     onShare: () => {},
     onSave: () => {},
-    onEdit: () => {},
+    onView: () => {},
   },
 };
 

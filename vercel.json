@@ -58,6 +58,14 @@
       "destination": "https://working-americans-tax-cut-act-one.vercel.app/us/watca/:path*"
     },
     {
+      "source": "/us/keep-your-pay-act",
+      "destination": "https://keep-your-pay-act.vercel.app/us/keep-your-pay-act"
+    },
+    {
+      "source": "/us/keep-your-pay-act/:path*",
+      "destination": "https://keep-your-pay-act.vercel.app/us/keep-your-pay-act/:path*"
+    },
+    {
       "source": "/us/taxsim",
       "destination": "https://policyengine-taxsim-policy-engine.vercel.app/us/taxsim"
     },
@@ -68,6 +76,14 @@
     {
       "source": "/us/taxsim/:path*",
       "destination": "https://policyengine-taxsim-policy-engine.vercel.app/us/taxsim/:path*"
+    },
+    {
+      "source": "/:countryId/model",
+      "destination": "https://policyengine-model.vercel.app/:countryId/model"
+    },
+    {
+      "source": "/:countryId/model/:path*",
+      "destination": "https://policyengine-model.vercel.app/:countryId/model/:path*"
     },
     {
       "source": "/us/api",

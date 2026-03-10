@@ -1,12 +1,4 @@
 - bump: minor
   changes:
-    changed:
-      - Add route-level code splitting with React.lazy() across all page and pathway components
-      - Split vendor bundles (react, recharts, markdown, framer-motion, query) into stable cacheable chunks
-      - Lazy-load ReactQueryDevtools only in development builds
-      - Gate cache monitor behind dev mode to eliminate production overhead
-      - Increase gcTime from 0 to 5 minutes for simulation queries to enable instant back-navigation
-      - Memoise ReportYearContext value to prevent unnecessary consumer re-renders
-      - Fix WebsiteApp query normaliser devLogging to respect dev mode
-      - Convert 278 PNG/JPG images to WebP (159 MB down to 23 MB, 85% reduction)
-      - Add loading=lazy and width/height attributes to team and org logo images
+    added:
+      - Add Keep Your Pay Act calculator at /us/kypa

@@ -132,19 +132,16 @@ describe('ReportOutputPage', () => {
     expect(screen.getByRole('heading', { name: 'Test Report' })).toBeInTheDocument();
   });
 
-  test('given society-wide report then overview tabs are shown', () => {
+  test('given society-wide report with complete calculation then renders without error', () => {
     // Given
     render(<ReportOutputPage />);
 
-    // Then
-    expect(screen.getByText('Overview')).toBeInTheDocument();
-    expect(screen.getByText('Comparative analysis')).toBeInTheDocument();
-    expect(screen.getByText('Policy')).toBeInTheDocument();
-    expect(screen.getByText('Population')).toBeInTheDocument();
-    expect(screen.getByText('Dynamics')).toBeInTheDocument();
+    // Then - page renders layout and delegates to society-wide output
+    expect(screen.queryByText('Loading report...')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Error loading report/)).not.toBeInTheDocument();
   });
 
-  test('given UK national report then constituency and local authority tabs are shown', () => {
+  test('given UK national report then renders without error', () => {
     // Given
     vi.mocked(useUserReportById).mockReturnValue({
       userReport: MOCK_USER_REPORT_UK,
@@ -164,12 +161,12 @@ describe('ReportOutputPage', () => {
     // When
     render(<ReportOutputPage />);
 
-    // Then
-    expect(screen.getByText('Constituencies')).toBeInTheDocument();
-    expect(screen.getByText('Local authorities')).toBeInTheDocument();
+    // Then - page renders layout and delegates to society-wide output
+    expect(screen.queryByText('Loading report...')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Error loading report/)).not.toBeInTheDocument();
   });
 
-  test('given UK country-level report (e.g., England) then constituency and local authority tabs are shown', () => {
+  test('given UK country-level report (e.g., England) then renders without error', () => {
     // Given
     vi.mocked(useUserReportById).mockReturnValue({
       userReport: MOCK_USER_REPORT_UK,
@@ -189,12 +186,12 @@ describe('ReportOutputPage', () => {
     // When
     render(<ReportOutputPage />);
 
-    // Then - Country-level reports should still show the maps
-    expect(screen.getByText('Constituencies')).toBeInTheDocument();
-    expect(screen.getByText('Local authorities')).toBeInTheDocument();
+    // Then - page renders layout and delegates to society-wide output
+    expect(screen.queryByText('Loading report...')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Error loading report/)).not.toBeInTheDocument();
   });
 
-  test('given UK subnational constituency report then constituency and local authority tabs are hidden', () => {
+  test('given UK subnational constituency report then constituency and local authority content is not shown', () => {
     // Given
     vi.mocked(useUserReportById).mockReturnValue({
       userReport: MOCK_USER_REPORT_UK,
@@ -214,14 +211,7 @@ describe('ReportOutputPage', () => {
     // When
     render(<ReportOutputPage />);
 
-    // Then - Standard tabs should still be visible
-    expect(screen.getByText('Overview')).toBeInTheDocument();
-    expect(screen.getByText('Comparative analysis')).toBeInTheDocument();
-    expect(screen.getByText('Policy')).toBeInTheDocument();
-    expect(screen.getByText('Population')).toBeInTheDocument();
-    expect(screen.getByText('Dynamics')).toBeInTheDocument();
-
-    // But constituency and local authority tabs should not be shown
+    // Then - constituency and local authority content should not be shown
     expect(screen.queryByText('Constituencies')).not.toBeInTheDocument();
     expect(screen.queryByText('Local authorities')).not.toBeInTheDocument();
   });

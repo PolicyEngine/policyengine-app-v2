@@ -60,38 +60,108 @@ export const mockHouseholdData = {
 };
 
 /**
- * Factory function for creating mock SocietyWideReportOutput with overrides
- * Used by SocietyWideOverview tests
+ * Factory function for creating mock SocietyWideReportOutput with overrides.
+ * Deep-merges poverty and poverty.poverty so tests can override just `all`
+ * without losing `child`, `adult`, `senior` data.
  */
-export const createMockSocietyWideOutput = (overrides?: any) => ({
-  budget: {
-    budgetary_impact: 1_000_000,
-    baseline_net_income: 5_000_000_000,
-    benefit_spending_impact: 500_000,
-    households: 10000,
-    state_tax_revenue_impact: 200_000,
-    tax_revenue_impact: 300_000,
-  },
-  poverty: {
-    baseline: {},
-    reform: {},
+export const createMockSocietyWideOutput = (overrides?: any) => {
+  const defaults = {
+    budget: {
+      budgetary_impact: 1_000_000,
+      baseline_net_income: 5_000_000_000,
+      benefit_spending_impact: 500_000,
+      households: 10000,
+      state_tax_revenue_impact: 200_000,
+      tax_revenue_impact: 300_000,
+    },
     poverty: {
-      all: { baseline: 0.1, reform: 0.09 },
+      baseline: {},
+      reform: {},
+      poverty: {
+        all: { baseline: 0.1, reform: 0.09 },
+        child: { baseline: 0.15, reform: 0.13 },
+        adult: { baseline: 0.08, reform: 0.07 },
+        senior: { baseline: 0.09, reform: 0.085 },
+      },
+      deep_poverty: {
+        all: { baseline: 0.05, reform: 0.045 },
+        child: { baseline: 0.07, reform: 0.06 },
+        adult: { baseline: 0.04, reform: 0.035 },
+        senior: { baseline: 0.03, reform: 0.028 },
+      },
     },
-  },
-  intra_decile: {
-    all: {
-      'Gain more than 5%': 0.2,
-      'Gain less than 5%': 0.1,
-      'Lose more than 5%': 0.05,
-      'Lose less than 5%': 0.05,
-      'No change': 0.6,
+    inequality: {
+      gini: { baseline: 0.45, reform: 0.44 },
+      top_10_pct_share: { baseline: 0.35, reform: 0.34 },
+      top_1_pct_share: { baseline: 0.15, reform: 0.14 },
     },
-  },
-  poverty_by_race: null,
-  data_version: '2024.1.0',
-  ...overrides,
-});
+    intra_decile: {
+      all: {
+        'Gain more than 5%': 0.2,
+        'Gain less than 5%': 0.1,
+        'Lose more than 5%': 0.05,
+        'Lose less than 5%': 0.05,
+        'No change': 0.6,
+      },
+    },
+    decile: {
+      average: {
+        '1': -50,
+        '2': -30,
+        '3': -10,
+        '4': 5,
+        '5': 20,
+        '6': 35,
+        '7': 50,
+        '8': 70,
+        '9': 100,
+        '10': 150,
+      },
+      relative: {
+        '1': -0.02,
+        '2': -0.01,
+        '3': -0.005,
+        '4': 0.002,
+        '5': 0.005,
+        '6': 0.008,
+        '7': 0.01,
+        '8': 0.012,
+        '9': 0.015,
+        '10': 0.02,
+      },
+    },
+    poverty_by_race: null,
+    data_version: '2024.1.0',
+  };
+
+  if (!overrides) {
+    return defaults;
+  }
+
+  // Deep merge poverty to preserve child/adult/senior when only all is overridden
+  const mergedPoverty = overrides.poverty
+    ? {
+        ...defaults.poverty,
+        ...overrides.poverty,
+        poverty: {
+          ...defaults.poverty.poverty,
+          ...(overrides.poverty.poverty || {}),
+        },
+        deep_poverty: {
+          ...defaults.poverty.deep_poverty,
+          ...(overrides.poverty.deep_poverty || {}),
+        },
+      }
+    : defaults.poverty;
+
+  const { poverty: _poverty, ...restOverrides } = overrides;
+
+  return {
+    ...defaults,
+    ...restOverrides,
+    poverty: mergedPoverty,
+  };
+};
 
 /**
  * Mock Report for SocietyWideReportOutput tests
