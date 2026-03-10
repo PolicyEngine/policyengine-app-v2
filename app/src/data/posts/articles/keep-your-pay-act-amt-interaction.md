@@ -68,7 +68,6 @@ The chart below shows how the AMT clawback varies by income for a married couple
 
 The AMT reduces KYPA savings for filers in roughly the $250,000–$625,000 range (married filing jointly). Below that range, the standard deduction increase does not push the regular tax below the AMT floor. Above that range, higher bracket rates keep the regular tax above the AMT.
 
-Lower- and middle-income households receive the full value of the standard deduction increase, CTC expansion, and EITC expansion.
 
 ## Methodology
 
