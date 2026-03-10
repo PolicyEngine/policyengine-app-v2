@@ -1,0 +1,11 @@
+{
+  "/_not-found/page": "app/_not-found/page.js",
+  "/[countryId]/privacy/page": "app/[countryId]/privacy/page.js",
+  "/[countryId]/page": "app/[countryId]/page.js",
+  "/[countryId]/donate/page": "app/[countryId]/donate/page.js",
+  "/[countryId]/claude-plugin/page": "app/[countryId]/claude-plugin/page.js",
+  "/[countryId]/terms/page": "app/[countryId]/terms/page.js",
+  "/[countryId]/research/page": "app/[countryId]/research/page.js",
+  "/[countryId]/supporters/page": "app/[countryId]/supporters/page.js",
+  "/[countryId]/team/page": "app/[countryId]/team/page.js"
+}
