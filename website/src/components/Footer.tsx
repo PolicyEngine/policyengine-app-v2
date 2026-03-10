@@ -1,0 +1,310 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import {
+  IconBrandFacebook,
+  IconBrandGithub,
+  IconBrandInstagram,
+  IconBrandLinkedin,
+  IconBrandTwitter,
+  IconBrandYoutube,
+  IconMail,
+} from "@tabler/icons-react";
+import {
+  colors,
+  spacing,
+  typography,
+} from "@policyengine/design-system/tokens";
+
+const PolicyEngineLogo = "/assets/logos/policyengine/white.svg";
+
+const SOCIAL_LINKS = [
+  {
+    icon: IconMail,
+    href: "mailto:hello@policyengine.org",
+    label: "Email",
+  },
+  {
+    icon: IconBrandTwitter,
+    href: "https://twitter.com/ThePolicyEngine",
+    label: "Twitter",
+  },
+  {
+    icon: IconBrandFacebook,
+    href: "https://www.facebook.com/PolicyEngine",
+    label: "Facebook",
+  },
+  {
+    icon: IconBrandLinkedin,
+    href: "https://www.linkedin.com/company/thepolicyengine",
+    label: "LinkedIn",
+  },
+  {
+    icon: IconBrandYoutube,
+    href: "https://www.youtube.com/@policyengine",
+    label: "YouTube",
+  },
+  {
+    icon: IconBrandInstagram,
+    href: "https://www.instagram.com/PolicyEngine/",
+    label: "Instagram",
+  },
+  {
+    icon: IconBrandGithub,
+    href: "https://github.com/PolicyEngine",
+    label: "GitHub",
+  },
+];
+
+function useCountryId(): string {
+  const pathname = usePathname();
+  const parts = pathname.split("/").filter(Boolean);
+  return parts[0] || "us";
+}
+
+function FooterSubscribe() {
+  const [email, setEmail] = useState("");
+  const [status, setStatus] = useState<
+    "idle" | "loading" | "success" | "error"
+  >("idle");
+  const [message, setMessage] = useState("");
+
+  const handleSubscribe = async () => {
+    if (!email) {
+      setStatus("error");
+      setMessage("Please enter a valid email address.");
+      return;
+    }
+
+    setStatus("loading");
+    setMessage("");
+
+    try {
+      const res = await fetch("/api/mailchimp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setStatus("success");
+        setMessage(data.message || "Successfully subscribed!");
+        setEmail("");
+      } else {
+        setStatus("error");
+        setMessage(
+          data.message || "Subscription failed. Please try again.",
+        );
+      }
+    } catch {
+      setStatus("error");
+      setMessage(
+        "There was an issue processing your subscription; please try again later.",
+      );
+    }
+  };
+
+  return (
+    <div style={{ paddingLeft: spacing.lg }}>
+      <p
+        style={{
+          fontWeight: typography.fontWeight.semibold,
+          color: colors.text.inverse,
+          fontFamily: typography.fontFamily.primary,
+          margin: 0,
+          fontSize: typography.fontSize["2xl"],
+        }}
+      >
+        Subscribe to PolicyEngine
+      </p>
+      <p
+        style={{
+          fontSize: typography.fontSize.lg,
+          color: colors.text.inverse,
+          fontFamily: typography.fontFamily.primary,
+          margin: `${spacing.xs} 0 0`,
+        }}
+      >
+        Get the latest posts delivered right to your inbox.
+      </p>
+      <div
+        style={{
+          marginTop: spacing.lg,
+          width: "80%",
+          display: "flex",
+          flexDirection: "column",
+          gap: spacing.sm,
+        }}
+      >
+        <input
+          type="email"
+          placeholder="Enter your email address"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          disabled={status === "loading"}
+          style={{
+            height: "44px",
+            padding: "0 12px",
+            borderRadius: "6px",
+            border: "1px solid #ccc",
+            fontSize: "14px",
+            fontFamily: typography.fontFamily.primary,
+            width: "100%",
+            boxSizing: "border-box",
+          }}
+        />
+        <button
+          type="button"
+          onClick={handleSubscribe}
+          disabled={status === "loading"}
+          style={{
+            height: "44px",
+            borderRadius: "6px",
+            border: "none",
+            backgroundColor: colors.primary[500],
+            color: colors.text.inverse,
+            fontWeight: typography.fontWeight.semibold,
+            fontSize: "14px",
+            fontFamily: typography.fontFamily.primary,
+            letterSpacing: "0.05em",
+            cursor: status === "loading" ? "wait" : "pointer",
+            width: "100%",
+          }}
+        >
+          {status === "loading" ? "Subscribing..." : "SUBSCRIBE"}
+        </button>
+        {message && (
+          <p
+            style={{
+              fontSize: typography.fontSize.sm,
+              textAlign: "center",
+              fontFamily: typography.fontFamily.primary,
+              margin: 0,
+              color: status === "success" ? "#68D391" : "#FC8181",
+            }}
+          >
+            {message}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default function Footer() {
+  const countryId = useCountryId();
+
+  const contactLinks = [
+    { href: `/${countryId}/team`, text: "About us" },
+    { href: `/${countryId}/donate`, text: "Donate" },
+    { href: `/${countryId}/privacy`, text: "Privacy policy" },
+    { href: `/${countryId}/terms`, text: "Terms and conditions" },
+  ];
+
+  return (
+    <footer
+      data-testid="site-footer"
+      style={{
+        width: "100%",
+        padding: `${spacing["4xl"]} ${spacing["5xl"]}`,
+        background: `linear-gradient(to right, ${colors.primary[800]}, ${colors.primary[600]})`,
+      }}
+    >
+      <div style={{ maxWidth: "1280px", margin: "0 auto" }}>
+        <img
+          src={PolicyEngineLogo}
+          alt="PolicyEngine"
+          style={{ height: "52px", width: "auto" }}
+        />
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr",
+            marginTop: spacing["2xl"],
+            gap: spacing["4xl"],
+          }}
+          className="md:grid-cols-2"
+        >
+          {/* Left column */}
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: spacing["2xl"],
+              alignItems: "flex-start",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: spacing.xs,
+              }}
+            >
+              {contactLinks.map(({ href, text }) => (
+                <Link
+                  key={href}
+                  href={href}
+                  style={{
+                    color: colors.text.inverse,
+                    fontSize: "16px",
+                    textDecoration: "none",
+                    fontFamily: typography.fontFamily.primary,
+                  }}
+                >
+                  {text}
+                </Link>
+              ))}
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: spacing.md,
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "12px",
+                }}
+              >
+                {SOCIAL_LINKS.map(({ icon: Icon, href, label }) => (
+                  <a
+                    key={href}
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={label}
+                    style={{ color: colors.text.inverse }}
+                  >
+                    <Icon size={24} />
+                  </a>
+                ))}
+              </div>
+              <p
+                style={{
+                  fontSize: typography.fontSize.xs,
+                  color: colors.text.inverse,
+                  margin: 0,
+                  fontFamily: typography.fontFamily.primary,
+                }}
+              >
+                &copy; {new Date().getFullYear()} PolicyEngine. All rights
+                reserved.
+              </p>
+            </div>
+          </div>
+
+          {/* Right column */}
+          <FooterSubscribe />
+        </div>
+      </div>
+    </footer>
+  );
+}

@@ -3,21 +3,32 @@ import { describe, expect, test } from "vitest";
 import HomePage from "../../app/[countryId]/page";
 
 describe("HomePage", () => {
-  test("renders a heading", async () => {
-    const page = await HomePage({ params: Promise.resolve({ countryId: "us" }) });
+  test("renders the PolicyEngine logo", async () => {
+    const page = await HomePage({
+      params: Promise.resolve({ countryId: "us" }),
+    });
     render(page);
-    expect(screen.getByRole("heading", { level: 1 })).toBeInTheDocument();
+    expect(screen.getByAltText("PolicyEngine")).toBeInTheDocument();
   });
 
-  test("displays US when countryId is us", async () => {
-    const page = await HomePage({ params: Promise.resolve({ countryId: "us" }) });
+  test("renders org logos section for US", async () => {
+    const page = await HomePage({
+      params: Promise.resolve({ countryId: "us" }),
+    });
     render(page);
-    expect(screen.getByText(/US/)).toBeInTheDocument();
+    // Marquee duplicates logos, so use getAllByTitle
+    const logos = screen.getAllByTitle("Niskanen Center");
+    expect(logos.length).toBeGreaterThan(0);
   });
 
-  test("displays UK when countryId is uk", async () => {
-    const page = await HomePage({ params: Promise.resolve({ countryId: "uk" }) });
+  test("renders blog preview section", async () => {
+    const page = await HomePage({
+      params: Promise.resolve({ countryId: "us" }),
+    });
     render(page);
-    expect(screen.getByText(/UK/)).toBeInTheDocument();
+    // Blog preview section should exist with post links
+    const links = screen.getAllByRole("link");
+    // Should have many links (nav + org logos + blog posts)
+    expect(links.length).toBeGreaterThan(5);
   });
 });

@@ -1,4 +1,6 @@
 import { notFound } from "next/navigation";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 
 const VALID_COUNTRIES = ["us", "uk", "ca", "ng", "il"];
 
@@ -17,14 +19,9 @@ export default async function CountryLayout({
 
   return (
     <div className="min-h-screen flex flex-col">
-      <header data-testid="site-header">
-        {/* Header will be ported from app/src/components/shared/HomeHeader.tsx */}
-        <nav>PolicyEngine</nav>
-      </header>
+      <Header />
       <main className="flex-1">{children}</main>
-      <footer data-testid="site-footer">
-        {/* Footer will be ported from app/src/components/Footer.tsx */}
-      </footer>
+      <Footer />
     </div>
   );
 }

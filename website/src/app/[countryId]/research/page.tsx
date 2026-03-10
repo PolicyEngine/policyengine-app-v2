@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
+import ResearchClient from "./ResearchClient";
 
 export const metadata: Metadata = {
-  title: "Research",
+  title: "Research and analysis",
 };
 
-export default function ResearchPage() {
-  return (
-    <div>
-      <h1>Research</h1>
-    </div>
-  );
+export default async function ResearchPage({
+  params,
+}: {
+  params: Promise<{ countryId: string }>;
+}) {
+  const { countryId } = await params;
+  return <ResearchClient countryId={countryId} />;
 }

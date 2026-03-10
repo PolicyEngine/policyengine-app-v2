@@ -2,11 +2,13 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, test, vi } from "vitest";
 import { notFound } from "next/navigation";
 
-// Mock next/navigation since notFound() throws
+// Mock next/navigation since notFound() throws and Header/Footer use hooks
 vi.mock("next/navigation", () => ({
   notFound: vi.fn(() => {
     throw new Error("NEXT_NOT_FOUND");
   }),
+  usePathname: vi.fn(() => "/us"),
+  useRouter: vi.fn(() => ({ push: vi.fn(), replace: vi.fn() })),
 }));
 
 import CountryLayout from "../../app/[countryId]/layout";
