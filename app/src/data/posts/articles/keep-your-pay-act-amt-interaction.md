@@ -4,7 +4,7 @@ Senator Booker's [tax calculator](https://www.booker.senate.gov/tax-calculator) 
 
 ## How the AMT offsets part of the tax savings
 
-The regular income tax and the AMT run two parallel calculations. You pay whichever produces the higher amount.
+The regular income tax and the AMT run two parallel calculations.[^1] You pay whichever produces the higher amount.
 
 **Regular income tax** uses the standard deduction:
 
@@ -88,3 +88,5 @@ The AMT reduces KYPA savings for filers in roughly the $250,000–$625,000 range
 ## Methodology
 
 All calculations use the [PolicyEngine US microsimulation model](https://policyengine.org), which models AMT alongside regular income tax. AMT exemptions in 2026 under the One Big Beautiful Bill Act are $140,200 for married filing jointly, $90,100 for single and head of household, and $70,100 for married filing separately.
+
+[^1]: These are simplified calculations. The PolicyEngine model includes more complex interactions such as capital gains taxes.
