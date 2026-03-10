@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { Alert, Button, Progress, Stack, Text } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import {
@@ -21,9 +21,9 @@ import { useUserReports } from '@/hooks/useUserReports';
 import {
   detectV1Reports,
   migrateAllV1Reports,
-  type V1ReportInfo,
-  type MigrationRunResult,
   type MigrationProgress,
+  type MigrationRunResult,
+  type V1ReportInfo,
 } from '@/libs/migration';
 import { useCacheMonitor } from '@/utils/cacheMonitor';
 import { formatDate } from '@/utils/dateUtils';
@@ -239,8 +239,8 @@ export default function ReportsPage() {
         {v1Reports.length > 0 && !migrationResult && (
           <Alert color="yellow" title="Some reports need migration">
             <Text size="sm">
-              We found {v1Reports.length} report(s) that use an older version of our API.
-              These reports will not work correctly until migrated to the new version.
+              We found {v1Reports.length} report(s) that use an older version of our API. These
+              reports will not work correctly until migrated to the new version.
             </Text>
             {isMigrating && migrationProgress ? (
               <Stack gap="xs" mt="sm">
@@ -255,12 +255,7 @@ export default function ReportsPage() {
                 />
               </Stack>
             ) : (
-              <Button
-                mt="sm"
-                size="sm"
-                onClick={handleMigrate}
-                loading={isMigrating}
-              >
+              <Button mt="sm" size="sm" onClick={handleMigrate} loading={isMigrating}>
                 Migrate reports
               </Button>
             )}

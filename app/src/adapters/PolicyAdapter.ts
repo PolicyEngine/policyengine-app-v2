@@ -1,8 +1,4 @@
-import {
-  V2PolicyCreatePayload,
-  V2PolicyParameterValue,
-  V2PolicyResponse,
-} from '@/api/policy';
+import { V2PolicyCreatePayload, V2PolicyParameterValue, V2PolicyResponse } from '@/api/policy';
 import { FOREVER } from '@/constants';
 import { Policy } from '@/types/ingredients/Policy';
 import { ParameterMetadata } from '@/types/metadata';

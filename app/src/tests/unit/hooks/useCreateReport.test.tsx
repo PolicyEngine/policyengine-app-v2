@@ -135,7 +135,8 @@ describe('useCreateReport', () => {
       // Then
       expect(mockCreateHouseholdAnalysis).toHaveBeenCalledWith({
         household_id: 'household-123',
-        policy_id: 'policy-1',
+        baseline_policy_id: 'current_law',
+        reform_policy_id: 'policy-1',
       });
     });
 
@@ -168,15 +169,17 @@ describe('useCreateReport', () => {
       expect(mockCreateHouseholdAnalysis).toHaveBeenCalledTimes(2);
       expect(mockCreateHouseholdAnalysis).toHaveBeenNthCalledWith(1, {
         household_id: 'household-123',
-        policy_id: 'policy-1',
+        baseline_policy_id: 'current_law',
+        reform_policy_id: 'policy-1',
       });
       expect(mockCreateHouseholdAnalysis).toHaveBeenNthCalledWith(2, {
         household_id: 'household-123',
-        policy_id: 'policy-reform',
+        baseline_policy_id: 'current_law',
+        reform_policy_id: 'policy-reform',
       });
     });
 
-    test('given household simulation with no policyId then sends null policy_id', async () => {
+    test('given household simulation with no policyId then sends only baseline_policy_id', async () => {
       // Given
       const baselineSim = { ...mockHouseholdSimulation, policyId: undefined };
       mockCreateHouseholdAnalysis.mockResolvedValue(mockHouseholdImpactBaselineOnlyResponse);
@@ -191,10 +194,10 @@ describe('useCreateReport', () => {
         populations: { household1: mockHousehold },
       });
 
-      // Then
+      // Then — no reform_policy_id when policyId is undefined (single calc)
       expect(mockCreateHouseholdAnalysis).toHaveBeenCalledWith({
         household_id: 'household-123',
-        policy_id: null,
+        baseline_policy_id: 'current_law',
       });
     });
 
@@ -304,9 +307,10 @@ describe('useCreateReport', () => {
 
       // Then
       expect(mockCreateEconomyAnalysis).toHaveBeenCalledWith({
-        tax_benefit_model_name: 'policyengine_us',
+        country_id: TEST_COUNTRY_ID,
         region: 'us',
-        policy_id: 'policy-reform',
+        baseline_policy_id: 'policy-2',
+        reform_policy_id: 'policy-reform',
         year: parseInt(TEST_YEAR, 10),
       });
     });

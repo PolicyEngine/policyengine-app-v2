@@ -25,11 +25,16 @@ export interface HouseholdSimulationInfo {
   error_message: string | null;
 }
 
+/** Policy ID input: UUID string, "current_law", or undefined (omit). */
+export type PolicyIdInput = string | 'current_law' | undefined;
+
 /** POST /analysis/household-impact request body */
 export interface HouseholdImpactRequest {
   household_id: string;
-  policy_id?: string | null;
+  baseline_policy_id?: PolicyIdInput;
+  reform_policy_id?: PolicyIdInput;
   dynamic_id?: string | null;
+  run?: boolean;
 }
 
 /** Response from POST and GET /analysis/household-impact */

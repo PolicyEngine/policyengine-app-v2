@@ -36,14 +36,19 @@ export interface AnalysisRegionInfo {
   filter_value: string | null;
 }
 
+/** Policy ID input: UUID string, "current_law", or undefined (omit). */
+export type PolicyIdInput = string | 'current_law' | undefined;
+
 /** POST /analysis/economic-impact request body */
 export interface EconomicImpactRequest {
   country_id: string;
   region?: string | null;
   dataset_id?: string | null;
-  policy_id?: string | null;
+  baseline_policy_id?: PolicyIdInput;
+  reform_policy_id?: PolicyIdInput;
   dynamic_id?: string | null;
   year?: number | null;
+  run?: boolean;
 }
 
 /** Response from POST and GET /analysis/economic-impact */
@@ -74,10 +79,12 @@ export interface EconomyCustomRequest {
   country_id: string;
   region?: string | null;
   dataset_id?: string | null;
-  policy_id?: string | null;
+  baseline_policy_id?: PolicyIdInput;
+  reform_policy_id?: PolicyIdInput;
   dynamic_id?: string | null;
   year?: number | null;
   modules: string[];
+  run?: boolean;
 }
 
 // ---------------------------------------------------------------------------

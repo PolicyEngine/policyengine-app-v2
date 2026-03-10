@@ -63,7 +63,8 @@ export class SocietyWideCalcStrategy implements CalcExecutionStrategy {
       const request: EconomicImpactRequest = {
         country_id: params.countryId,
         region,
-        policy_id: params.policyIds.reform ?? params.policyIds.baseline ?? null,
+        baseline_policy_id: params.policyIds.baseline ?? 'current_law',
+        reform_policy_id: params.policyIds.reform ?? 'current_law',
         year: parseInt(params.year, 10),
       };
 

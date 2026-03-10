@@ -28,7 +28,8 @@ export const mockHouseholdImpactRequest = (
   overrides?: Partial<HouseholdImpactRequest>
 ): HouseholdImpactRequest => ({
   household_id: TEST_HOUSEHOLD_IDS.HH_ANALYSIS_001,
-  policy_id: TEST_POLICY_IDS.POLICY_789,
+  baseline_policy_id: 'current_law',
+  reform_policy_id: TEST_POLICY_IDS.POLICY_789,
   ...overrides,
 });
 

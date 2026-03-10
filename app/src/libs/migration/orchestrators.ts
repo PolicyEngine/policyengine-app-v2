@@ -31,6 +31,7 @@ import {
 import type {
   MigrationError,
   MigrationProgress,
+  MigrationResult,
   MigrationRunResult,
   OrchestratorResult,
   V1ReportInfo,
@@ -75,24 +76,34 @@ export async function orchestrateReportMigration(
         `status=${v1Report.status}, year=${v1Report.year}`
     );
 
-    // Step 2: Fetch v1 simulation metadata (simulation_1_id is the reform sim)
-    const v1SimId = v1Report.simulation_1_id;
-    console.info(`${LOG} Step 2: Fetching v1 simulation ${v1SimId}...`);
-    const v1Sim = await fetchSimulationById(countryId, v1SimId);
+    // Step 2: Fetch BOTH v1 simulation metadata
+    console.info(`${LOG} Step 2: Fetching v1 simulations...`);
+    const v1Sim1 = await fetchSimulationById(countryId, v1Report.simulation_1_id);
     console.info(
-      `${LOG} Step 2: OK — policy_id=${v1Sim.policy_id}, ` +
-        `population_type=${v1Sim.population_type}, population_id=${v1Sim.population_id}`
+      `${LOG} Step 2: sim1 — policy_id=${v1Sim1.policy_id}, ` +
+        `population_type=${v1Sim1.population_type}, population_id=${v1Sim1.population_id}`
     );
+    const v1Sim2 = v1Report.simulation_2_id
+      ? await fetchSimulationById(countryId, v1Report.simulation_2_id)
+      : null;
+    if (v1Sim2) {
+      console.info(
+        `${LOG} Step 2: sim2 — policy_id=${v1Sim2.policy_id}, ` +
+          `population_type=${v1Sim2.population_type}, population_id=${v1Sim2.population_id}`
+      );
+    } else {
+      console.info(`${LOG} Step 2: No sim2 (single-simulation report)`);
+    }
 
-    // Step 3: Migrate policy
-    console.info(`${LOG} Step 3: Migrating policy...`);
-    const policyResult = await migratePolicy(countryId, v1Sim.policy_id);
-    if (!policyResult.success) {
-      console.error(`${LOG} Step 3: FAILED — ${policyResult.error}`);
+    // Step 3: Migrate BOTH policies
+    console.info(`${LOG} Step 3: Migrating baseline policy (sim1)...`);
+    const baselinePolicyResult = await migratePolicy(countryId, v1Sim1.policy_id);
+    if (!baselinePolicyResult.success) {
+      console.error(`${LOG} Step 3: baseline policy FAILED — ${baselinePolicyResult.error}`);
       errors.push({
         stage: 'policy',
-        v1Id: v1Sim.policy_id,
-        message: policyResult.error ?? 'Unknown policy migration error',
+        v1Id: v1Sim1.policy_id,
+        message: baselinePolicyResult.error ?? 'Unknown baseline policy migration error',
       });
       logReportSummary(reportInfo, false, errors);
       return {
@@ -102,38 +113,65 @@ export async function orchestrateReportMigration(
         errors,
       };
     }
-    console.info(`${LOG} Step 3: OK — v2PolicyId=${policyResult.v2Id ?? '(current law)'}`);
+    console.info(`${LOG} Step 3: baseline OK — v2PolicyId=${baselinePolicyResult.v2Id ?? '(current law)'}`);
 
-    // Step 4: Migrate population
-    const isHousehold = v1Sim.population_type === 'household';
+    let reformPolicyResult: MigrationResult = { success: true, v2Id: null, v1Id: '' };
+    if (v1Sim2) {
+      console.info(`${LOG} Step 3: Migrating reform policy (sim2)...`);
+      reformPolicyResult = await migratePolicy(countryId, v1Sim2.policy_id);
+      if (!reformPolicyResult.success) {
+        console.error(`${LOG} Step 3: reform policy FAILED — ${reformPolicyResult.error}`);
+        errors.push({
+          stage: 'policy',
+          v1Id: v1Sim2.policy_id,
+          message: reformPolicyResult.error ?? 'Unknown reform policy migration error',
+        });
+        logReportSummary(reportInfo, false, errors);
+        return {
+          success: false,
+          v1UserAssociationId: userReportId,
+          v2Ids: { dependencyIds: { baselinePolicyId: baselinePolicyResult.v2Id ?? null } },
+          errors,
+        };
+      }
+      console.info(`${LOG} Step 3: reform OK — v2PolicyId=${reformPolicyResult.v2Id ?? '(current law)'}`);
+    }
+
+    // Step 4: Migrate population (both sims share the same population)
+    const isHousehold = v1Sim1.population_type === 'household';
     let v2PopulationId: string | null = null;
 
-    console.info(`${LOG} Step 4: Migrating population (type=${v1Sim.population_type})...`);
+    console.info(`${LOG} Step 4: Migrating population (type=${v1Sim1.population_type})...`);
     if (isHousehold) {
-      const householdResult = await migrateHousehold(countryId, v1Sim.population_id);
+      const householdResult = await migrateHousehold(countryId, v1Sim1.population_id);
       if (!householdResult.success) {
         console.error(`${LOG} Step 4: FAILED — ${householdResult.error}`);
         errors.push({
           stage: 'household',
-          v1Id: v1Sim.population_id,
+          v1Id: v1Sim1.population_id,
           message: householdResult.error ?? 'Unknown household migration error',
         });
         logReportSummary(reportInfo, false, errors);
         return {
           success: false,
           v1UserAssociationId: userReportId,
-          v2Ids: { dependencyIds: { policyId: policyResult.v2Id ?? null } },
+          v2Ids: {
+            dependencyIds: {
+              baselinePolicyId: baselinePolicyResult.v2Id ?? null,
+              reformPolicyId: reformPolicyResult.v2Id ?? null,
+            },
+          },
           errors,
         };
       }
       v2PopulationId = householdResult.v2Id ?? null;
     } else {
-      const geoResult = migrateGeography(countryId, v1Sim.population_id);
+      const geoResult = migrateGeography(countryId, v1Sim1.population_id);
       v2PopulationId = geoResult.v2Id ?? null;
     }
     console.info(`${LOG} Step 4: OK — v2PopulationId=${v2PopulationId}`);
 
-    // Step 5: Create v2 report via analysis endpoint
+    // Step 5: Create v2 report via analysis endpoint (with both policy IDs + year)
     let v2ReportId: string;
     let v2SimIds: string[] = [];
 
@@ -143,7 +181,8 @@ export async function orchestrateReportMigration(
     if (isHousehold) {
       const analysis = await createHouseholdAnalysis({
         household_id: v2PopulationId!,
-        policy_id: policyResult.v2Id ?? undefined,
+        baseline_policy_id: baselinePolicyResult.v2Id ?? 'current_law',
+        reform_policy_id: reformPolicyResult.v2Id ?? 'current_law',
       });
       v2ReportId = analysis.report_id;
       if (analysis.baseline_simulation) {
@@ -156,7 +195,9 @@ export async function orchestrateReportMigration(
       const analysis = await createEconomyAnalysis({
         country_id: countryId,
         region: v2PopulationId,
-        policy_id: policyResult.v2Id ?? undefined,
+        baseline_policy_id: baselinePolicyResult.v2Id ?? 'current_law',
+        reform_policy_id: reformPolicyResult.v2Id ?? 'current_law',
+        year: parseInt(v1Report.year, 10),
       });
       v2ReportId = analysis.report_id;
       v2SimIds = [analysis.baseline_simulation.id, analysis.reform_simulation.id];
@@ -197,7 +238,8 @@ export async function orchestrateReportMigration(
         baseEntityId: v2ReportId,
         userAssociationId: assocResult.v2Id ?? undefined,
         dependencyIds: {
-          policyId: policyResult.v2Id ?? null,
+          baselinePolicyId: baselinePolicyResult.v2Id ?? null,
+          reformPolicyId: reformPolicyResult.v2Id ?? null,
           populationId: v2PopulationId,
           outputType,
           ...Object.fromEntries(v2SimIds.map((id, i) => [`simulationId_${i}`, id])),
@@ -323,7 +365,8 @@ function logReportSummary(
     console.info(`${LOG} v2: reportId=${result.v2Ids.baseEntityId}`);
     console.info(`${LOG}     userAssocId=${result.v2Ids.userAssociationId}`);
     if (result.v2Ids.dependencyIds) {
-      console.info(`${LOG}     policyId=${result.v2Ids.dependencyIds.policyId ?? '(current law)'}`);
+      console.info(`${LOG}     baselinePolicyId=${result.v2Ids.dependencyIds.baselinePolicyId ?? '(current law)'}`);
+      console.info(`${LOG}     reformPolicyId=${result.v2Ids.dependencyIds.reformPolicyId ?? '(current law)'}`);
       console.info(`${LOG}     populationId=${result.v2Ids.dependencyIds.populationId}`);
       console.info(`${LOG}     outputType=${result.v2Ids.dependencyIds.outputType}`);
     }

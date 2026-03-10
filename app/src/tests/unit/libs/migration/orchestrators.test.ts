@@ -83,22 +83,37 @@ describe('orchestrators', () => {
         output: null,
       });
 
-      // V1 simulation metadata
-      vi.mocked(fetchSimulationById).mockResolvedValue({
-        id: 100,
-        country_id: 'us',
-        api_version: 'v1',
-        population_id: '50',
-        population_type: 'household',
-        policy_id: '30',
-      });
+      // V1 simulation metadata (sim1 = baseline, sim2 = reform)
+      vi.mocked(fetchSimulationById)
+        .mockResolvedValueOnce({
+          id: 100,
+          country_id: 'us',
+          api_version: 'v1',
+          population_id: '50',
+          population_type: 'household',
+          policy_id: '30',
+        })
+        .mockResolvedValueOnce({
+          id: 101,
+          country_id: 'us',
+          api_version: 'v1',
+          population_id: '50',
+          population_type: 'household',
+          policy_id: '31',
+        });
 
-      // Strategy mocks
-      vi.mocked(migratePolicy).mockResolvedValue({
-        success: true,
-        v2Id: 'v2-policy-uuid',
-        v1Id: '30',
-      });
+      // Strategy mocks (baseline + reform policies)
+      vi.mocked(migratePolicy)
+        .mockResolvedValueOnce({
+          success: true,
+          v2Id: 'v2-baseline-policy-uuid',
+          v1Id: '30',
+        })
+        .mockResolvedValueOnce({
+          success: true,
+          v2Id: 'v2-reform-policy-uuid',
+          v1Id: '31',
+        });
       vi.mocked(migrateHousehold).mockResolvedValue({
         success: true,
         v2Id: 'v2-hh-uuid',
@@ -137,11 +152,14 @@ describe('orchestrators', () => {
       expect(result.v2Ids.baseEntityId).toBe('v2-report-uuid');
       expect(result.errors).toHaveLength(0);
 
-      expect(migratePolicy).toHaveBeenCalledWith('us', '30');
+      expect(migratePolicy).toHaveBeenCalledTimes(2);
+      expect(migratePolicy).toHaveBeenNthCalledWith(1, 'us', '30');
+      expect(migratePolicy).toHaveBeenNthCalledWith(2, 'us', '31');
       expect(migrateHousehold).toHaveBeenCalledWith('us', '50');
       expect(createHouseholdAnalysis).toHaveBeenCalledWith({
         household_id: 'v2-hh-uuid',
-        policy_id: 'v2-policy-uuid',
+        baseline_policy_id: 'v2-baseline-policy-uuid',
+        reform_policy_id: 'v2-reform-policy-uuid',
       });
       expect(migrateUserReportAssociation).toHaveBeenCalledWith(
         'v2-report-uuid',
@@ -165,20 +183,36 @@ describe('orchestrators', () => {
         output: null,
       });
 
-      vi.mocked(fetchSimulationById).mockResolvedValue({
-        id: 200,
-        country_id: 'us',
-        api_version: 'v1',
-        population_id: 'enhanced_cps',
-        population_type: 'geography',
-        policy_id: '30',
-      });
+      // V1 simulations (sim1 = baseline, sim2 = reform)
+      vi.mocked(fetchSimulationById)
+        .mockResolvedValueOnce({
+          id: 200,
+          country_id: 'us',
+          api_version: 'v1',
+          population_id: 'enhanced_cps',
+          population_type: 'geography',
+          policy_id: '30',
+        })
+        .mockResolvedValueOnce({
+          id: 201,
+          country_id: 'us',
+          api_version: 'v1',
+          population_id: 'enhanced_cps',
+          population_type: 'geography',
+          policy_id: '31',
+        });
 
-      vi.mocked(migratePolicy).mockResolvedValue({
-        success: true,
-        v2Id: 'v2-policy-uuid',
-        v1Id: '30',
-      });
+      vi.mocked(migratePolicy)
+        .mockResolvedValueOnce({
+          success: true,
+          v2Id: 'v2-baseline-policy-uuid',
+          v1Id: '30',
+        })
+        .mockResolvedValueOnce({
+          success: true,
+          v2Id: 'v2-reform-policy-uuid',
+          v1Id: '31',
+        });
       vi.mocked(migrateGeography).mockReturnValue({
         success: true,
         v2Id: 'enhanced_cps',
@@ -223,7 +257,9 @@ describe('orchestrators', () => {
       expect(createEconomyAnalysis).toHaveBeenCalledWith({
         country_id: 'us',
         region: 'enhanced_cps',
-        policy_id: 'v2-policy-uuid',
+        baseline_policy_id: 'v2-baseline-policy-uuid',
+        reform_policy_id: 'v2-reform-policy-uuid',
+        year: 2025,
       });
     });
 
@@ -302,7 +338,7 @@ describe('orchestrators', () => {
       expect(result.success).toBe(false);
       expect(result.errors).toHaveLength(1);
       expect(result.errors[0].stage).toBe('household');
-      expect(result.v2Ids.dependencyIds?.policyId).toBe('v2-policy-uuid');
+      expect(result.v2Ids.dependencyIds?.baselinePolicyId).toBe('v2-policy-uuid');
     });
 
     test('given fetchReportById throws then catches and reports error', async () => {

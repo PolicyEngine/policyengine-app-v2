@@ -53,7 +53,8 @@ export const mockEconomicImpactRequest = (
 ): EconomicImpactRequest => ({
   country_id: 'us',
   region: 'state/ca',
-  policy_id: TEST_POLICY_IDS.POLICY_789,
+  baseline_policy_id: 'current_law',
+  reform_policy_id: TEST_POLICY_IDS.POLICY_789,
   ...overrides,
 });
 
@@ -101,7 +102,8 @@ export const mockEconomyCustomRequest = (
 ): EconomyCustomRequest => ({
   country_id: 'us',
   modules: ['decile_impacts', 'poverty'],
-  policy_id: TEST_POLICY_IDS.POLICY_789,
+  baseline_policy_id: 'current_law',
+  reform_policy_id: TEST_POLICY_IDS.POLICY_789,
   ...overrides,
 });
 

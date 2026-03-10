@@ -1,7 +1,7 @@
+import { API_V2_BASE_URL } from '@/api/v2/taxBenefitModels';
 import { BASE_URL } from '@/constants';
 import { countryIds } from '@/libs/countries';
 import { PolicyMetadataParams } from '@/types/metadata/policyMetadata';
-import { API_V2_BASE_URL } from '@/api/v2/taxBenefitModels';
 
 /**
  * V2 Policy parameter value - represents a single parameter change
@@ -75,9 +75,7 @@ export async function fetchV1Policy(
   });
 
   if (!res.ok) {
-    throw new Error(
-      `Failed to fetch v1 policy ${policyId}: ${res.status} ${res.statusText}`
-    );
+    throw new Error(`Failed to fetch v1 policy ${policyId}: ${res.status} ${res.statusText}`);
   }
 
   const json = await res.json();

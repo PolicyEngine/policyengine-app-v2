@@ -9,7 +9,10 @@ const LS_KEYS = {
   households: 'user-population-households',
 };
 
-function makeSucceededResult(v1Id: string, deps?: Record<string, string | null>): OrchestratorResult {
+function makeSucceededResult(
+  v1Id: string,
+  deps?: Record<string, string | null>
+): OrchestratorResult {
   return {
     success: true,
     v1UserAssociationId: v1Id,
@@ -118,32 +121,23 @@ describe('cleanup', () => {
   });
 
   test('given dependency IDs in succeeded results then removes from all stores', () => {
-    localStorage.setItem(
-      LS_KEYS.reports,
-      JSON.stringify([{ id: 'ur-v1-001' }])
-    );
+    localStorage.setItem(LS_KEYS.reports, JSON.stringify([{ id: 'ur-v1-001' }]));
     localStorage.setItem(
       LS_KEYS.simulations,
-      JSON.stringify([
-        { id: 'sim-base-uuid' },
-        { id: 'sim-reform-uuid' },
-        { id: 'sim-keep' },
-      ])
+      JSON.stringify([{ id: 'sim-base-uuid' }, { id: 'sim-reform-uuid' }, { id: 'sim-keep' }])
     );
     localStorage.setItem(
       LS_KEYS.policies,
       JSON.stringify([{ id: 'v2-policy-uuid' }, { id: 'policy-keep' }])
     );
-    localStorage.setItem(
-      LS_KEYS.households,
-      JSON.stringify([{ id: 'v2-hh-uuid' }])
-    );
+    localStorage.setItem(LS_KEYS.households, JSON.stringify([{ id: 'v2-hh-uuid' }]));
 
     const result = cleanupMigratedRecords({
       total: 1,
       succeeded: [
         makeSucceededResult('ur-v1-001', {
-          policyId: 'v2-policy-uuid',
+          baselinePolicyId: 'v2-policy-uuid',
+          reformPolicyId: null,
           populationId: 'v2-hh-uuid',
           outputType: 'household',
           simulationId_0: 'sim-base-uuid',

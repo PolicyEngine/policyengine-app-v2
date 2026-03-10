@@ -110,14 +110,15 @@ describe('HouseholdCalcStrategy', () => {
 
       expect(mockCreateHouseholdAnalysis).toHaveBeenCalledWith({
         household_id: 'household-abc',
-        policy_id: 'reform-id',
+        baseline_policy_id: 'baseline-id',
+        reform_policy_id: 'reform-id',
       });
       expect(result.status).toBe('pending');
       expect(result.progress).toBe(0);
       expect(result.message).toBe('Starting household analysis...');
     });
 
-    it('given no reform policy then uses baseline as policy_id', async () => {
+    it('given no reform policy then sends only baseline_policy_id', async () => {
       const params = mockHouseholdCalcParams({
         populationId: 'household-abc',
         policyIds: { baseline: 'baseline-id' },
@@ -127,11 +128,14 @@ describe('HouseholdCalcStrategy', () => {
       await strategy.execute(params, mockMetadata);
 
       expect(mockCreateHouseholdAnalysis).toHaveBeenCalledWith(
-        expect.objectContaining({ policy_id: 'baseline-id' })
+        expect.objectContaining({ baseline_policy_id: 'baseline-id' })
       );
+      // reform_policy_id should NOT be included when reform is undefined (single calc)
+      const callArg = mockCreateHouseholdAnalysis.mock.calls[0][0];
+      expect(callArg).not.toHaveProperty('reform_policy_id');
     });
 
-    it('given null policies then sends null policy_id', async () => {
+    it('given null policies then sends current_law baseline and no reform', async () => {
       const params = mockHouseholdCalcParams({
         policyIds: { baseline: null },
       });
@@ -140,7 +144,7 @@ describe('HouseholdCalcStrategy', () => {
       await strategy.execute(params, mockMetadata);
 
       expect(mockCreateHouseholdAnalysis).toHaveBeenCalledWith(
-        expect.objectContaining({ policy_id: null })
+        expect.objectContaining({ baseline_policy_id: 'current_law' })
       );
     });
 
