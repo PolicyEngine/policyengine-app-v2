@@ -23,6 +23,7 @@ export default function HeaderNavigation({ navbarOpened, onToggleNavbar }: Heade
       label: 'Model',
       href: getWebsitePath('/model'),
       hasDropdown: false,
+      reloadDocument: true,
     },
     {
       label: 'About',

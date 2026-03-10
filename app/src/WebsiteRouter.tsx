@@ -24,7 +24,6 @@ const BrandWritingPage = lazy(() => import('./pages/BrandWriting.page'));
 const ClaudePluginsPage = lazy(() => import('./pages/ClaudePlugins.page'));
 const DonatePage = lazy(() => import('./pages/Donate.page'));
 const OrgLogosEmbedPage = lazy(() => import('./pages/embed/OrgLogosEmbed.page'));
-const ModelPage = lazy(() => import('./pages/Model.page'));
 const PrivacyPage = lazy(() => import('./pages/Privacy.page'));
 const ResearchPage = lazy(() => import('./pages/Research.page'));
 const SupportersPage = lazy(() => import('./pages/Supporters.page'));
@@ -36,6 +35,13 @@ const YearInReviewPage = lazy(() => import('./pages/YearInReview.page'));
 function BlogRedirect() {
   const { postName } = useParams();
   return <Navigate to={`../research/${postName}`} replace />;
+}
+
+// Full-page redirect to /model (handled by Vercel rewrite, not React Router)
+function MethodologyRedirect() {
+  const { countryId } = useParams();
+  window.location.replace(`/${countryId}/model`);
+  return null;
 }
 
 const router = createBrowserRouter(
@@ -82,7 +88,7 @@ const router = createBrowserRouter(
                 },
                 {
                   path: 'methodology',
-                  element: <Navigate to="../model" replace />,
+                  element: <MethodologyRedirect />,
                 },
                 {
                   path: 'support',
@@ -119,10 +125,6 @@ const router = createBrowserRouter(
                 {
                   path: 'ai-inequality',
                   element: <AIGrowthResearchPage />,
-                },
-                {
-                  path: 'model',
-                  element: <ModelPage />,
                 },
                 {
                   path: 'claude-plugin',

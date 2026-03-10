@@ -15,6 +15,8 @@ export interface NavItemSetup {
   href?: string;
   hasDropdown: boolean;
   dropdownItems?: DropdownItem[];
+  /** Force full page load instead of SPA navigation (for Vercel-rewritten routes) */
+  reloadDocument?: boolean;
 }
 
 interface NavItemProps {
@@ -184,7 +186,7 @@ function AppleDropdown({
  * Can be either a simple link or a dropdown menu.
  */
 export default function NavItem({ setup }: NavItemProps) {
-  const { label, onClick, href, hasDropdown, dropdownItems } = setup;
+  const { label, onClick, href, hasDropdown, dropdownItems, reloadDocument } = setup;
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -259,7 +261,7 @@ export default function NavItem({ setup }: NavItemProps) {
   // Relative paths use React Router's Link for SPA behavior
   if (isInternalHref(href)) {
     return (
-      <Link to={href} style={navItemStyle} {...hoverHandlers}>
+      <Link to={href} reloadDocument={reloadDocument} style={navItemStyle} {...hoverHandlers}>
         {label}
       </Link>
     );
