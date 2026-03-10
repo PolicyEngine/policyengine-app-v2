@@ -120,7 +120,7 @@ export interface VariableMetadata {
  *   filtering logic should be removed/changed.
  * - `period`: V1 included time period info. V2 doesn't provide this.
  * - `type`: V1 distinguished "parameter" vs "parameterNode" for tree hierarchy.
- *   V2 only returns actual parameters; nodes are created dynamically in buildParameterTreeV2.
+ *   V2 uses "parameter" vs "node" (cleaner naming, avoids redundant "parameter" prefix).
  * - `values`: V1 included values inline. V2 fetches via separate /parameter-values endpoint.
  *   Currently set to {} and populated on-demand.
  */
@@ -135,8 +135,8 @@ export interface ParameterMetadata {
   tax_benefit_model_version_id?: string;
   created_at?: string;
 
-  // Parameter tree fields
-  type?: 'parameter' | 'parameterNode';
+  // Parameter tree fields (V2 uses 'node', V1 used 'parameterNode')
+  type?: 'parameter' | 'node';
   parameter: string; // Dot-separated path to parameter
 
   // Values indexed by date
