@@ -85,6 +85,18 @@
       "source": "/:countryId/model/:path*",
       "destination": "https://policyengine-model.vercel.app/:countryId/model/:path*"
     },
+    {
+      "source": "/us/api",
+      "destination": "https://household-api-docs-policy-engine.vercel.app/us/api"
+    },
+    {
+      "source": "/us/api/",
+      "destination": "https://household-api-docs-policy-engine.vercel.app/us/api/"
+    },
+    {
+      "source": "/us/api/:path*",
+      "destination": "https://household-api-docs-policy-engine.vercel.app/us/api/:path*"
+    },
     { "source": "/(.*)", "destination": "/website.html" }
   ],
   "headers": [
