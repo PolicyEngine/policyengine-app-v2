@@ -24,20 +24,41 @@ Because AMTI adds back the standard deduction, increasing the standard deduction
 
 Consider a married couple in Texas (no state income tax) earning $500,000 in 2026.
 
-| Line item             |  Current law |        KYPA |  Difference |
-| :-------------------- | -----------: | ----------: | ----------: |
-| AGI                   |     $500,000 |    $500,000 |           — |
-| Standard deduction    |      $32,200 |     $75,000 |    +$42,800 |
-| Taxable income        |     $467,800 |    $425,000 |    −$42,800 |
-| Regular tax           |     $102,608 |     $88,912 |    −$13,696 |
-| AMTI                  |     $500,000 |    $500,000 |           — |
-| AMT exemption         |     $140,200 |    $140,200 |           — |
-| AMT taxable           |     $359,800 |    $359,800 |           — |
-| Tentative minimum tax |      $95,864 |     $95,864 |           — |
-| **AMT owed**          |       **$0** |  **$6,952** | **+$6,952** |
-| **Total income tax**  | **$102,608** | **$95,864** | **−$6,744** |
+### The regular tax savings
 
-The simple bracket calculation shows $13,696 in savings (the regular tax difference). But KYPA pushes the regular tax below the tentative minimum tax, triggering $6,952 in AMT. The actual tax savings are $6,744 — 51% less than the headline figure. Senator Booker's calculator uses the simple bracket calculation and does not account for this AMT interaction.
+KYPA raises the standard deduction from $32,200 to $75,000, reducing taxable income by $42,800 and cutting the regular tax by $13,696:
+
+| Line item          | Current law |     KYPA | Difference |
+| :----------------- | ----------: | -------: | ---------: |
+| AGI                |    $500,000 | $500,000 |          — |
+| Standard deduction |     $32,200 |  $75,000 |   +$42,800 |
+| Taxable income     |    $467,800 | $425,000 |   −$42,800 |
+| Regular tax        |    $102,608 |  $88,912 |   −$13,696 |
+
+This $13,696 is the figure Senator Booker's calculator would show. But it's not the full picture.
+
+### The AMT clawback
+
+The AMT runs a parallel calculation that ignores the standard deduction. AMTI adds back the standard deduction (and other preference items), so the larger standard deduction has no effect on it. The AMT side is identical under current law and KYPA:
+
+| Line item             |   Amount |
+| :-------------------- | -------: |
+| AMTI                  | $500,000 |
+| AMT exemption         | $140,200 |
+| AMT taxable           | $359,800 |
+| Tentative minimum tax |  $95,864 |
+
+Under current law, the regular tax ($102,608) exceeds the tentative minimum tax ($95,864), so AMT owed is $0. Under KYPA, the regular tax drops to $88,912 — now _below_ the tentative minimum tax. The AMT fills the gap: $95,864 − $88,912 = $6,952.
+
+### The bottom line
+
+| Line item            |  Current law |        KYPA |  Difference |
+| :------------------- | -----------: | ----------: | ----------: |
+| Regular tax          |     $102,608 |     $88,912 |    −$13,696 |
+| AMT owed             |           $0 |      $6,952 |     +$6,952 |
+| **Total income tax** | **$102,608** | **$95,864** | **−$6,744** |
+
+The bracket calculation shows $13,696 in savings, but the AMT claws back $6,952. The actual tax savings are $6,744 — 51% less than the headline figure. Senator Booker's calculator does not account for this AMT interaction.
 
 ## Who is affected
 
