@@ -28,7 +28,6 @@ export default function HeaderNavigation({ navbarOpened, onToggleNavbar }: Heade
       label: 'API',
       href: getWebsitePath('/api'),
       hasDropdown: false,
-      reloadDocument: true,
     },
     {
       label: 'About',
