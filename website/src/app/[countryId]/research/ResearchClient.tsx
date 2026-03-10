@@ -231,7 +231,7 @@ function FilterSection({
     } else {
       setHeight(0);
     }
-  }, [isExpanded]);
+  }, [isExpanded, children]);
 
   return (
     <div
@@ -418,7 +418,7 @@ const typeOptions = [
   { value: "interactive", label: "Interactive" },
 ];
 
-const mockAuthors = [
+const AUTHORS = [
   { key: "max-ghenis", name: "Max Ghenis" },
   { key: "nikhil-woodruff", name: "Nikhil Woodruff" },
   { key: "pavel-makarchuk", name: "Pavel Makarchuk" },
@@ -428,20 +428,13 @@ const mockAuthors = [
 
 type ExpandedSection = "type" | "topics" | "locations" | "authors" | null;
 
-export default function ResearchClient({
-  countryId,
-}: {
-  countryId: string;
-}) {
+export default function ResearchClient({ countryId }: { countryId: string }) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
 
   const allItems = useMemo(() => getResearchItems(), []);
-  const defaultLocations = useMemo(
-    () => [countryId, "global"],
-    [countryId],
-  );
+  const defaultLocations = useMemo(() => [countryId, "global"], [countryId]);
 
   // Filter state
   const [searchQuery, setSearchQuery] = useState(
@@ -459,8 +452,7 @@ export default function ResearchClient({
   const [selectedAuthors, setSelectedAuthors] = useState<string[]>(() =>
     parseArrayParam(searchParams.get("authors")),
   );
-  const [expandedSection, setExpandedSection] =
-    useState<ExpandedSection>(null);
+  const [expandedSection, setExpandedSection] = useState<ExpandedSection>(null);
   const [usStatesExpanded, setUsStatesExpanded] = useState(false);
 
   // Sync URL params
@@ -490,6 +482,16 @@ export default function ResearchClient({
     router,
   ]);
 
+  // Memoize Fuse instance — only re-create when the full item list changes
+  const fuse = useMemo(
+    () =>
+      new Fuse(allItems, {
+        keys: ["title", "description"],
+        threshold: 0.3,
+      }),
+    [allItems],
+  );
+
   // Filtered items
   const filteredItems = useMemo(() => {
     let items = allItems;
@@ -516,15 +518,12 @@ export default function ResearchClient({
       );
     }
     if (searchQuery.trim()) {
-      const fuse = new Fuse(items, {
-        keys: ["title", "description"],
-        threshold: 0.3,
-      });
       items = fuse.search(searchQuery).map((r) => r.item);
     }
     return items;
   }, [
     allItems,
+    fuse,
     selectedTypes,
     selectedTopics,
     selectedLocations,
@@ -675,9 +674,7 @@ export default function ResearchClient({
                 label="Type"
                 isExpanded={expandedSection === "type"}
                 onToggle={() =>
-                  setExpandedSection(
-                    expandedSection === "type" ? null : "type",
-                  )
+                  setExpandedSection(expandedSection === "type" ? null : "type")
                 }
                 count={selectedTypes.length}
               >
@@ -803,7 +800,7 @@ export default function ResearchClient({
                 }
                 count={selectedAuthors.length}
               >
-                {mockAuthors.map((author) => (
+                {AUTHORS.map((author) => (
                   <CheckboxRow
                     key={author.key}
                     label={author.name}

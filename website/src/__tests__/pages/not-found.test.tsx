@@ -5,6 +5,8 @@ import NotFound from "../../app/not-found";
 describe("NotFound", () => {
   test("renders page not found heading", () => {
     render(<NotFound />);
-    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(/page not found/i);
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
+      /page not found/i,
+    );
   });
 });

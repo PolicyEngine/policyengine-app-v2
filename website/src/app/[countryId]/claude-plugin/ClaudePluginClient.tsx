@@ -113,7 +113,10 @@ function TerminalBlock({
   lines,
   compact,
 }: {
-  lines: { type: "comment" | "command" | "prompt" | "output" | "success"; text: string }[];
+  lines: {
+    type: "comment" | "command" | "prompt" | "output" | "success";
+    text: string;
+  }[];
   compact?: boolean;
 }) {
   return (
@@ -535,8 +538,7 @@ export default function ClaudePluginClient({
                   backgroundColor: TERM_BG,
                   borderRadius: "14px",
                   padding: "22px 26px",
-                  fontFamily:
-                    "'JetBrains Mono', 'Fira Code', Menlo, monospace",
+                  fontFamily: "'JetBrains Mono', 'Fira Code', Menlo, monospace",
                   fontSize: "13px",
                   lineHeight: 2,
                   boxShadow:
@@ -559,19 +561,13 @@ export default function ClaudePluginClient({
                 <div style={{ marginBottom: 14 }}>
                   <WindowDots size={11} />
                 </div>
-                <TerminalLine
-                  type="comment"
-                  text="# 1. Install Claude Code"
-                />
+                <TerminalLine type="comment" text="# 1. Install Claude Code" />
                 <TerminalLine
                   type="command"
                   text="npm install -g @anthropic-ai/claude-code"
                 />
                 <div style={{ marginTop: 6 }} />
-                <TerminalLine
-                  type="comment"
-                  text="# 2. Add the plugin"
-                />
+                <TerminalLine type="comment" text="# 2. Add the plugin" />
                 <TerminalLine
                   type="command"
                   text="claude plugins add PolicyEngine/policyengine-claude"
@@ -627,8 +623,7 @@ export default function ClaudePluginClient({
                     display: "flex",
                     flexDirection: "column",
                     height: "100%",
-                    transition:
-                      "all 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
+                    transition: "all 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
                   }}
                 >
                   <h3
@@ -698,9 +693,9 @@ export default function ClaudePluginClient({
                 marginBottom: spacing.xl,
               }}
             >
-              Watch how the plugin examines the impact of TANF on a
-              household in LA County — from a plain-English prompt to a full
-              household-level analysis.
+              Watch how the plugin examines the impact of TANF on a household in
+              LA County — from a plain-English prompt to a full household-level
+              analysis.
             </p>
             <div style={{ maxWidth: 800 }}>
               <div
@@ -879,8 +874,7 @@ export default function ClaudePluginClient({
           <div
             style={{
               display: "grid",
-              gridTemplateColumns:
-                "repeat(auto-fill, minmax(280px, 1fr))",
+              gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
               gap: spacing.md,
               maxWidth: 700,
               marginLeft: "auto",
@@ -910,8 +904,7 @@ export default function ClaudePluginClient({
                     padding: spacing.lg,
                     textDecoration: "none",
                     cursor: "pointer",
-                    transition:
-                      "all 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
+                    transition: "all 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
                     height: "100%",
                   }}
                 >

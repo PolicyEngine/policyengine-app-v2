@@ -38,7 +38,7 @@ describe("CountryLayout", () => {
       CountryLayout({
         children: <div>Content</div>,
         params: Promise.resolve({ countryId: "invalid" }),
-      })
+      }),
     ).rejects.toThrow("NEXT_NOT_FOUND");
     expect(notFound).toHaveBeenCalled();
   });

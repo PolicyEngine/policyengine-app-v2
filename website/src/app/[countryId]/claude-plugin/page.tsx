@@ -3,8 +3,7 @@ import ClaudePluginClient from "./ClaudePluginClient";
 
 export const metadata: Metadata = {
   title: "Claude plugin",
-  description:
-    "AI-powered policy analysis with Claude Code and PolicyEngine.",
+  description: "AI-powered policy analysis with Claude Code and PolicyEngine.",
 };
 
 export default async function ClaudePluginPage({

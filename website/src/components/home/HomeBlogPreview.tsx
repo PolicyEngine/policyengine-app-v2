@@ -57,7 +57,12 @@ function PrimaryCard({
   return (
     <Link
       href={`/${countryId}/research/${slug}`}
-      style={{ flex: 1, textDecoration: "none", color: "inherit", display: "block" }}
+      style={{
+        flex: 1,
+        textDecoration: "none",
+        color: "inherit",
+        display: "block",
+      }}
     >
       <div
         style={{
@@ -172,7 +177,12 @@ function SecondaryCard({
   return (
     <Link
       href={`/${countryId}/research/${slug}`}
-      style={{ textDecoration: "none", color: "inherit", display: "block", height: "100%" }}
+      style={{
+        textDecoration: "none",
+        color: "inherit",
+        display: "block",
+        height: "100%",
+      }}
     >
       <div
         style={{
@@ -285,11 +295,7 @@ function SecondaryCard({
   );
 }
 
-export default function HomeBlogPreview({
-  countryId,
-}: {
-  countryId: string;
-}) {
+export default function HomeBlogPreview({ countryId }: { countryId: string }) {
   const relevantPosts = (postsData as BlogPost[])
     .filter(
       (post) => post.tags.includes(countryId) || post.tags.includes("global"),
@@ -310,7 +316,13 @@ export default function HomeBlogPreview({
         paddingBottom: spacing["5xl"],
       }}
     >
-      <div style={{ maxWidth: spacing.layout.content, margin: "0 auto", padding: `0 ${spacing.xl}` }}>
+      <div
+        style={{
+          maxWidth: spacing.layout.content,
+          margin: "0 auto",
+          padding: `0 ${spacing.xl}`,
+        }}
+      >
         {/* Section header */}
         <div
           style={{
@@ -354,7 +366,13 @@ export default function HomeBlogPreview({
             gap: spacing["2xl"],
           }}
         >
-          <div style={{ display: "flex", flexDirection: "column", gap: spacing["2xl"] }}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: spacing["2xl"],
+            }}
+          >
             {leftPosts.map((post) => (
               <PrimaryCard
                 key={getSlug(post.filename)}
@@ -363,7 +381,13 @@ export default function HomeBlogPreview({
               />
             ))}
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: spacing["2xl"] }}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: spacing["2xl"],
+            }}
+          >
             {rightPosts.map((post) => (
               <SecondaryCard
                 key={getSlug(post.filename)}

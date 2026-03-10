@@ -122,8 +122,7 @@ export const projects: SupportedProjectData[] = [
   },
   {
     title: "SALT and AMT policy calculator",
-    projectUrl:
-      "https://policyengine.org/us/research/introducing-salternative",
+    projectUrl: "https://policyengine.org/us/research/introducing-salternative",
     amount: 94800,
     currency: "USD",
     awardDate: "2024-07",
@@ -204,8 +203,7 @@ export const projects: SupportedProjectData[] = [
     supporterId: "institute",
   },
   {
-    title:
-      "Analysis of reforms to the taxation of Social Security benefits",
+    title: "Analysis of reforms to the taxation of Social Security benefits",
     amount: 35000,
     currency: "USD",
     awardDate: "2025-01",
@@ -233,8 +231,7 @@ export const projects: SupportedProjectData[] = [
   },
   {
     title: "Pathways to Enable Open-Source Ecosystems (POSE) Phase I",
-    projectUrl:
-      "https://www.nsf.gov/awardsearch/showAward?AWD_ID=2229642",
+    projectUrl: "https://www.nsf.gov/awardsearch/showAward?AWD_ID=2229642",
     amount: 300000,
     currency: "USD",
     awardDate: "2025-08",

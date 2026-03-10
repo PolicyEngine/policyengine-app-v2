@@ -14,6 +14,7 @@ import {
   spacing,
   typography,
 } from "@policyengine/design-system/tokens";
+import { useCountryId } from "@/hooks/useCountryId";
 
 const PolicyEngineLogo = "/assets/logos/policyengine/white.svg";
 
@@ -54,12 +55,6 @@ const hoverHandlers = {
     e.currentTarget.style.backgroundColor = "transparent";
   },
 };
-
-function useCountryId(): string {
-  const pathname = usePathname();
-  const parts = pathname.split("/").filter(Boolean);
-  return parts[0] || "us";
-}
 
 // --- Dropdown panel ---
 
@@ -390,8 +385,7 @@ function CountrySelector() {
                     letterSpacing: "-0.01em",
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor =
-                      colors.primary[500];
+                    e.currentTarget.style.backgroundColor = colors.primary[500];
                     e.currentTarget.style.color = colors.text.inverse;
                   }}
                   onMouseLeave={(e) => {

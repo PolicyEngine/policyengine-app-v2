@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useState } from "react";
 import {
   colors,
   spacing,
@@ -60,7 +60,13 @@ function LogoItem({ org }: { org: Organization }) {
 }
 
 export default function OrgLogos({ countryId }: { countryId: string }) {
-  const orgs = useMemo(() => shuffle(getOrgsForCountry(countryId)), [countryId]);
+  const [orgs, setOrgs] = useState<Organization[]>(() =>
+    getOrgsForCountry(countryId),
+  );
+
+  useEffect(() => {
+    setOrgs(shuffle(getOrgsForCountry(countryId)));
+  }, [countryId]);
 
   if (orgs.length === 0) return null;
 

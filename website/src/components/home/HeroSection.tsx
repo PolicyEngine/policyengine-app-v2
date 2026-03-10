@@ -97,7 +97,10 @@ function TypewriterPrompt({ countryId }: { countryId: string }) {
   useEffect(() => {
     if (phase !== "typing") return;
     if (charIndex.current >= currentPrompt.length) {
-      timerRef.current = setTimeout(() => setPhase("deleting"), PAUSE_AFTER_TYPE);
+      timerRef.current = setTimeout(
+        () => setPhase("deleting"),
+        PAUSE_AFTER_TYPE,
+      );
       return clearTimer;
     }
     timerRef.current = setTimeout(() => {
@@ -132,7 +135,14 @@ function TypewriterPrompt({ countryId }: { countryId: string }) {
   }, [phase, clearTimer, prompts.length]);
 
   return (
-    <div style={{ position: "relative", zIndex: 1, textAlign: "center", padding: `0 ${spacing.lg}` }}>
+    <div
+      style={{
+        position: "relative",
+        zIndex: 1,
+        textAlign: "center",
+        padding: `0 ${spacing.lg}`,
+      }}
+    >
       <div
         style={{
           display: "inline-block",

@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import {
   IconBrandFacebook,
   IconBrandGithub,
@@ -17,6 +16,7 @@ import {
   spacing,
   typography,
 } from "@policyengine/design-system/tokens";
+import { useCountryId } from "@/hooks/useCountryId";
 
 const PolicyEngineLogo = "/assets/logos/policyengine/white.svg";
 
@@ -58,12 +58,6 @@ const SOCIAL_LINKS = [
   },
 ];
 
-function useCountryId(): string {
-  const pathname = usePathname();
-  const parts = pathname.split("/").filter(Boolean);
-  return parts[0] || "us";
-}
-
 function FooterSubscribe() {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<
@@ -94,9 +88,7 @@ function FooterSubscribe() {
         setEmail("");
       } else {
         setStatus("error");
-        setMessage(
-          data.message || "Subscription failed. Please try again.",
-        );
+        setMessage(data.message || "Subscription failed. Please try again.");
       }
     } catch {
       setStatus("error");

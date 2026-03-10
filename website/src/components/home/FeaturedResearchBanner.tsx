@@ -131,15 +131,13 @@ export default function FeaturedResearchBanner({
               onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor =
                   "rgba(255, 255, 255, 0.14)";
-                e.currentTarget.style.borderColor =
-                  "rgba(255, 255, 255, 0.25)";
+                e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.25)";
                 e.currentTarget.style.transform = "translateY(-2px)";
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.backgroundColor =
                   "rgba(255, 255, 255, 0.08)";
-                e.currentTarget.style.borderColor =
-                  "rgba(255, 255, 255, 0.12)";
+                e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.12)";
                 e.currentTarget.style.transform = "translateY(0)";
               }}
             >

@@ -1441,7 +1441,14 @@
     "title": "How Would Each Presidential Candidate’s Economic Plans Affect Your Household?",
     "description": "PolicyEngine has created a personalized calculator for the 2024 presidential election’s tax proposals.",
     "date": "2024-11-03 17:30:00",
-    "tags": ["us", "election", "donald-trump", "kamala-harris", "featured", "interactives"],
+    "tags": [
+      "us",
+      "election",
+      "donald-trump",
+      "kamala-harris",
+      "featured",
+      "interactives"
+    ],
     "authors": ["max-ghenis", "pavel-makarchuk"],
     "filename": "introducing-2024-election-calculator.md",
     "image": "introducing-2024-election-calculator.webp"
@@ -1514,7 +1521,12 @@
     "description": "We've expanded our modeling framework to capture how policy changes affect labor supply.",
     "date": "2024-12-27 09:00:00",
     "tags": ["us", "policy", "behavioral-responses", "featured"],
-    "authors": ["max-ghenis", "nikhil-woodruff", "jason-debacker", "vahid-ahmadi"],
+    "authors": [
+      "max-ghenis",
+      "nikhil-woodruff",
+      "jason-debacker",
+      "vahid-ahmadi"
+    ],
     "filename": "us-behavioral-responses.md",
     "image": "behavioural-responses.webp"
   },

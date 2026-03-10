@@ -1,5 +1,3 @@
-"use client";
-
 import {
   colors,
   spacing,
