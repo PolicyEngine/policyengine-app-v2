@@ -55,6 +55,10 @@ Under current law, the regular tax ($102,608) exceeds the tentative minimum tax 
 
 Bracket savings alone suggest $13,696 in tax relief, but the AMT claws back $6,952 of that. The actual tax cut totals $6,744 — 51% less than the headline figure.
 
+[PolicyEngine's Keep Your Pay Act calculator](/us/keep-your-pay-act) accounts for the AMT and confirms the $6,744 net savings:
+
+![PolicyEngine's Keep Your Pay Act calculator showing +$6,744/year for a married couple filing jointly with $500,000 income in Texas](/assets/posts/keep-your-pay-act-amt-interaction/policyengine-calculator-500k.png)
+
 ## Who is affected
 
 The chart below shows how the AMT clawback varies by income for a married couple filing jointly with only employment income and the standard deduction in Texas in 2026. Filers with other deductions (SALT, mortgage interest, etc.) or income sources will see different results.
