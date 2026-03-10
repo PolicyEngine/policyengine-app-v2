@@ -1,6 +1,6 @@
 The Keep Your Pay Act (KYPA), introduced by Senator Cory Booker, would more than double the standard deduction, from $32,200 to $75,000 for married couples filing jointly. For high earners around $500,000–$700,000, this creates an interaction with the Alternative Minimum Tax (AMT) that reduces the tax savings by roughly $3,500 compared to a simple bracket calculation.
 
-Senator Booker's [tax calculator](https://www.booker.senate.gov/tax-calculator) does not model this interaction. As a result, it shows larger tax savings than affected filers would actually receive.
+Senator Booker's [tax calculator](https://www.booker.senate.gov/tax-calculator) does not model this interaction. As a result, it shows larger tax savings than affected filers would actually receive. [PolicyEngine's Keep Your Pay Act calculator](/us/keep-your-pay-act) does account for the AMT interaction.
 
 ## How the AMT offsets part of the tax savings
 
@@ -26,43 +26,43 @@ Consider a married couple in Texas (no state income tax) earning $587,000 in 202
 
 ### Current law
 
-| Line item | Amount |
-| :-- | --: |
-| AGI | $587,000 |
-| Standard deduction | $32,200 |
-| Taxable income | $554,800 |
-| Regular tax | $131,719 |
-| AMT income | $587,000 |
-| AMT exemption | $140,200 |
-| AMT taxable | $446,800 |
-| Tentative minimum tax | ~$120,200 |
-| Regular tax ($131,719) > tentative min (~$120,200) | |
-| **AMT owed** | **$0** |
-| **Total income tax** | **$131,719** |
+| Line item                                          |       Amount |
+| :------------------------------------------------- | -----------: |
+| AGI                                                |     $587,000 |
+| Standard deduction                                 |      $32,200 |
+| Taxable income                                     |     $554,800 |
+| Regular tax                                        |     $131,719 |
+| AMT income                                         |     $587,000 |
+| AMT exemption                                      |     $140,200 |
+| AMT taxable                                        |     $446,800 |
+| Tentative minimum tax                              |    ~$120,200 |
+| Regular tax ($131,719) > tentative min (~$120,200) |              |
+| **AMT owed**                                       |       **$0** |
+| **Total income tax**                               | **$131,719** |
 
 ### Under the Keep Your Pay Act
 
-| Line item | Amount |
-| :-- | --: |
-| AGI | $587,000 |
-| Standard deduction | $75,000 |
-| Taxable income | $512,000 |
-| Regular tax | $116,752 |
-| AMT income | $587,000 |
-| AMT exemption | $140,200 |
-| AMT taxable | $446,800 |
-| Tentative minimum tax | ~$120,200 |
-| Regular tax ($116,752) < tentative min (~$120,200) | |
-| **AMT owed** | **~$3,500** |
-| **Total income tax** | **~$120,200** |
+| Line item                                          |        Amount |
+| :------------------------------------------------- | ------------: |
+| AGI                                                |      $587,000 |
+| Standard deduction                                 |       $75,000 |
+| Taxable income                                     |      $512,000 |
+| Regular tax                                        |      $116,752 |
+| AMT income                                         |      $587,000 |
+| AMT exemption                                      |      $140,200 |
+| AMT taxable                                        |      $446,800 |
+| Tentative minimum tax                              |     ~$120,200 |
+| Regular tax ($116,752) < tentative min (~$120,200) |               |
+| **AMT owed**                                       |   **~$3,500** |
+| **Total income tax**                               | **~$120,200** |
 
 ### Comparison
 
-| | Simple bracket calculation | With AMT |
-| :-- | --: | --: |
-| Tax savings | $14,967 | $11,495 |
-| Effective savings reduction | — | $3,472 |
-| Reduction as share of savings | — | 23% |
+|                               | Simple bracket calculation | With AMT |
+| :---------------------------- | -------------------------: | -------: |
+| Tax savings                   |                    $14,967 |  $11,495 |
+| Effective savings reduction   |                          — |   $3,472 |
+| Reduction as share of savings |                          — |      23% |
 
 The simple bracket calculation (which is what Senator Booker's calculator uses) shows $14,967 in savings. The AMT offsets $3,472 of that, leaving actual savings of $11,495.
 
