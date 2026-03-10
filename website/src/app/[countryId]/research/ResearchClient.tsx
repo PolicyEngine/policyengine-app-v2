@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import Fuse from "fuse.js";
@@ -23,6 +23,7 @@ import {
   topicLabels,
   type ResearchItem,
 } from "@/data/posts/postTransformers";
+import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 
 /* ─── helpers ─── */
 
@@ -370,45 +371,6 @@ function CheckboxRow({
       </span>
     </button>
   );
-}
-
-/* ─── infinite scroll hook ─── */
-
-function useInfiniteScroll({
-  totalCount,
-  initialCount = 8,
-  incrementCount = 8,
-}: {
-  totalCount: number;
-  initialCount?: number;
-  incrementCount?: number;
-}) {
-  const [visibleCount, setVisibleCount] = useState(initialCount);
-  const sentinelRef = useRef<HTMLDivElement>(null);
-
-  const reset = useCallback(() => {
-    setVisibleCount(initialCount);
-  }, [initialCount]);
-
-  useEffect(() => {
-    const el = sentinelRef.current;
-    if (!el) return;
-
-    const obs = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting) {
-        setVisibleCount((prev) => Math.min(prev + incrementCount, totalCount));
-      }
-    });
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, [totalCount, incrementCount]);
-
-  return {
-    visibleCount: Math.min(visibleCount, totalCount),
-    sentinelRef,
-    hasMore: visibleCount < totalCount,
-    reset,
-  };
 }
 
 /* ─── main client component ─── */

@@ -1,8 +1,7 @@
 import { notFound } from "next/navigation";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-
-const VALID_COUNTRIES = ["us", "uk", "ca", "ng", "il"];
+import { VALID_COUNTRIES } from "@/lib/countries";
 
 export default async function CountryLayout({
   children,
