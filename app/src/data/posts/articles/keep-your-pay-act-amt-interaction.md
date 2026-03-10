@@ -34,7 +34,7 @@ This calculation does not include the AMT.
 
 ### The AMT clawback
 
-The AMT adds back the standard deduction, so the larger standard deduction does not change any AMT values. The AMT side stays identical under current law and KYPA:
+The AMT adds back the standard deduction, so raising it does not change the tentative minimum tax — the threshold that triggers AMT when regular tax falls below it:
 
 | Line item             |   Amount |
 | :-------------------- | -------: |
