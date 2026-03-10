@@ -14,7 +14,7 @@ The regular income tax and the AMT run two parallel calculations. You pay whiche
 **AMT** computes its own taxable base. It starts from taxable income, adds back the standard deduction and other preference items, then subtracts its own exemption and applies a flatter rate:
 
 - AMT income (AMTI) = taxable income + standard deduction + other AMT preference items
-- AMT taxable = AMTI − AMT exemption
+- AMT taxable income = AMTI − AMT exemption
 - Tentative minimum tax = 26% on first ~$250,000 + 28% above
 - AMT owed = max(0, tentative minimum tax − regular tax)
 
@@ -34,23 +34,16 @@ This calculation does not include the AMT.
 
 ### The AMT clawback
 
-The AMT adds back the standard deduction, so the larger standard deduction does not change any AMT values. The AMT side stays identical under current law and KYPA:
+The AMT adds back the standard deduction, so the larger standard deduction does not change any AMT values. The AMT side stays identical under current law and KYPA. Under current law, the regular tax ($102,608) exceeds the tentative minimum tax ($95,864), so the filer owes no AMT. Under KYPA, the regular tax drops to $88,912 — now _below_ the tentative minimum tax. The AMT fills the gap: $95,864 − $88,912 = $6,952.
 
-| Line item             |   Amount |
-| :-------------------- | -------: |
-| AMTI                  | $500,000 |
-| AMT exemption         | $140,200 |
-| AMT taxable           | $359,800 |
-| Tentative minimum tax |  $95,864 |
-
-Under current law, the regular tax ($102,608) exceeds the tentative minimum tax ($95,864), so the filer owes no AMT. Under KYPA, the regular tax drops to $88,912 — now _below_ the tentative minimum tax. The AMT fills the gap: $95,864 − $88,912 = $6,952.
-
-### The bottom line
-
-| Line item            |  Current law |        KYPA |  Difference |
-| :------------------- | -----------: | ----------: | ----------: |
-| Regular tax          |     $102,608 |     $88,912 |    −$13,696 |
-| AMT                  |           $0 |      $6,952 |     +$6,952 |
+| Line item | Current law | KYPA | Difference |
+| :--- | ---: | ---: | ---: |
+| Regular tax | $102,608 | $88,912 | −$13,696 |
+| &ensp;&ensp;AMTI | $500,000 | $500,000 | $0 |
+| &ensp;&ensp;AMT exemption | $140,200 | $140,200 | $0 |
+| &ensp;&ensp;AMT taxable income | $359,800 | $359,800 | $0 |
+| &ensp;&ensp;Tentative minimum tax | $95,864 | $95,864 | $0 |
+| AMT | $0 | $6,952 | +$6,952 |
 | **Total income tax** | **$102,608** | **$95,864** | **−$6,744** |
 
 Bracket savings alone suggest $13,696 in tax relief, but the AMT claws back $6,952 of that. The actual tax cut totals $6,744 — 51% less than the headline figure.
