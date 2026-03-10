@@ -1,23 +1,18 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { SocietyWideReportOutput as SocietyWideOutput } from '@/api/societyWideCalculation';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { FloatingAlert } from '@/components/common/FloatingAlert';
-import { RenameIngredientModal } from '@/components/common/RenameIngredientModal';
 import { ReportErrorFallback } from '@/components/report/ReportErrorFallback';
 import { Container, Stack, Text } from '@/components/ui';
 import { CALCULATOR_URL } from '@/constants';
 import { ReportYearProvider } from '@/contexts/ReportYearContext';
 import { colors, spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { useDisclosure } from '@/hooks/useDisclosure';
 import { useSaveSharedReport } from '@/hooks/useSaveSharedReport';
 import { useSharedReportData } from '@/hooks/useSharedReportData';
-import { useUpdateReportAssociation } from '@/hooks/useUserReportAssociations';
 import { useUserReportById } from '@/hooks/useUserReports';
-import type { Geography } from '@/types/ingredients/Geography';
 import { formatReportTimestamp } from '@/utils/dateUtils';
-import { isUKLocalLevelGeography } from '@/utils/geographyUtils';
 import {
   buildSharePath,
   createShareData,
@@ -114,73 +109,12 @@ export default function ReportOutputPage() {
         ? 'societyWide'
         : undefined;
 
-  const DEFAULT_PAGE = 'overview';
-  const activeTab = subpage || DEFAULT_PAGE;
+  // Active subpage and view from URL params
+  const activeTab = subpage || '';
   const activeView = view || '';
-
-  // Redirect to overview if no subpage is specified and data is ready
-  // For shared views, preserve the share param in the URL
-  useEffect(() => {
-    if (!subpage && report && simulations) {
-      if (isSharedView && shareDataUserReportId) {
-        navigate(
-          `/${countryId}/report-output/${shareDataUserReportId}/${DEFAULT_PAGE}?${searchParams.toString()}`
-        );
-      } else if (userReportId) {
-        navigate(`/${countryId}/report-output/${userReportId}/${DEFAULT_PAGE}`);
-      }
-    }
-  }, [
-    subpage,
-    navigate,
-    report,
-    simulations,
-    countryId,
-    userReportId,
-    isSharedView,
-    searchParams,
-    shareDataUserReportId,
-  ]);
-
-  // Determine which tabs to show based on output type, country, and geography scope
-  const tabs = outputType ? getTabsForOutputType(outputType, report?.countryId, geographies) : [];
-
-  // Handle tab navigation (absolute path, preserve search params for shared views)
-  const handleTabClick = (tabValue: string) => {
-    if (isSharedView && shareDataUserReportId) {
-      navigate(
-        `/${countryId}/report-output/${shareDataUserReportId}/${tabValue}?${searchParams.toString()}`
-      );
-    } else {
-      navigate(`/${countryId}/report-output/${userReportId}/${tabValue}`);
-    }
-  };
 
   // Format the report creation timestamp using the current country's locale
   const timestamp = formatReportTimestamp(userReport?.createdAt, countryId);
-
-  // Add modal state for rename
-  const [renameOpened, { open: openRename, close: closeRename }] = useDisclosure(false);
-
-  // Add mutation hook for rename
-  const updateAssociation = useUpdateReportAssociation();
-
-  // Add rename handler
-  const handleRename = async (newLabel: string) => {
-    if (!userReportId) {
-      return;
-    }
-
-    try {
-      await updateAssociation.mutateAsync({
-        userReportId,
-        updates: { label: newLabel },
-      });
-      closeRename();
-    } catch (error) {
-      console.error('[ReportOutputPage] Failed to rename report:', error);
-    }
-  };
 
   // Hook for saving shared reports with all ingredients
   const { saveSharedReport, saveResult, setSaveResult } = useSaveSharedReport();
@@ -234,6 +168,31 @@ export default function ReportOutputPage() {
     }
   };
 
+  // Handle view button click - navigate to report builder in view mode
+  const handleView = () => {
+    if (userReportId) {
+      navigate(`/${countryId}/reports/create/${userReportId}`, {
+        state: {
+          from: 'report-output',
+          reportPath: `/${countryId}/report-output/${userReportId}`,
+        },
+      });
+    }
+  };
+
+  // Handle reproduce button click - navigate to reproduce in Python content
+  const handleReproduce = () => {
+    const id = isSharedView ? shareDataUserReportId : userReportId;
+    if (id) {
+      const basePath = `/${countryId}/report-output/${id}/reproduce`;
+      if (isSharedView) {
+        navigate(`${basePath}?${searchParams.toString()}`);
+      } else {
+        navigate(basePath);
+      }
+    }
+  };
+
   // Show loading state while fetching data
   if (import.meta.env.DEV && dataLoading) {
     (window as any).__journeyProfiler?.markEvent('report-output-data-loading', 'render');
@@ -260,20 +219,6 @@ export default function ReportOutputPage() {
       </Container>
     );
   }
-
-  // Determine if sidebar should be shown
-  const showSidebar = activeTab === 'comparative-analysis';
-
-  // Handle sidebar navigation (absolute path, preserve search params for shared views)
-  const handleSidebarNavigate = (viewName: string) => {
-    if (isSharedView && shareDataUserReportId) {
-      navigate(
-        `/${countryId}/report-output/${shareDataUserReportId}/comparative-analysis/${viewName}?${searchParams.toString()}`
-      );
-    } else {
-      navigate(`/${countryId}/report-output/${userReportId}/comparative-analysis/${viewName}`);
-    }
-  };
 
   // Determine the display label and ID for the report
   const displayLabel = userReport?.label;
@@ -312,7 +257,6 @@ export default function ReportOutputPage() {
           userPolicies={userPolicies}
           policies={policies}
           geographies={geographies}
-          userGeographies={userGeographies}
         />
       );
     }
@@ -350,17 +294,11 @@ export default function ReportOutputPage() {
         reportLabel={displayLabel ?? undefined}
         reportYear={report?.year}
         timestamp={timestamp}
-        tabs={tabs}
-        activeTab={activeTab}
-        onTabChange={handleTabClick}
-        onEditName={openRename}
-        showSidebar={showSidebar}
-        outputType={outputType}
-        activeView={activeView}
-        onSidebarNavigate={handleSidebarNavigate}
         isSharedView={isSharedView}
         onShare={handleShare}
         onSave={handleSave}
+        onView={!isSharedView ? handleView : undefined}
+        onReproduce={handleReproduce}
       >
         <ErrorBoundary
           fallback={(error, errorInfo) => (
@@ -370,58 +308,8 @@ export default function ReportOutputPage() {
           {renderContent()}
         </ErrorBoundary>
       </ReportOutputLayout>
-
-      <RenameIngredientModal
-        opened={renameOpened}
-        onClose={closeRename}
-        currentLabel={userReport?.label || `Report #${userReportId}`}
-        onRename={handleRename}
-        isLoading={updateAssociation.isPending}
-        ingredientType="report"
-      />
     </ReportYearProvider>
   );
-}
-
-/**
- * Determine which tabs to display based on output type and content
- */
-function getTabsForOutputType(
-  outputType: ReportOutputType,
-  countryId?: string,
-  geographies?: Geography[]
-): Array<{ value: string; label: string }> {
-  if (outputType === 'societyWide') {
-    const tabs = [
-      { value: 'overview', label: 'Overview' },
-      { value: 'comparative-analysis', label: 'Comparative analysis' },
-      { value: 'policy', label: 'Policy' },
-      { value: 'population', label: 'Population' },
-      { value: 'dynamics', label: 'Dynamics' },
-      { value: 'reproduce', label: 'Reproduce in Python' },
-    ];
-
-    const hasLocalLevelGeography = geographies?.some((g) => isUKLocalLevelGeography(g));
-    if (countryId === 'uk' && !hasLocalLevelGeography) {
-      tabs.push({ value: 'constituency', label: 'Constituencies' });
-      tabs.push({ value: 'local-authority', label: 'Local authorities' });
-    }
-
-    return tabs;
-  }
-
-  if (outputType === 'household') {
-    return [
-      { value: 'overview', label: 'Overview' },
-      { value: 'comparative-analysis', label: 'Comparative analysis' },
-      { value: 'policy', label: 'Policy' },
-      { value: 'population', label: 'Population' },
-      { value: 'dynamics', label: 'Dynamics' },
-      { value: 'reproduce', label: 'Reproduce in Python' },
-    ];
-  }
-
-  return [{ value: 'overview', label: 'Overview' }];
 }
 
 /**

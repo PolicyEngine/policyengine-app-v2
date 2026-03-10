@@ -2,36 +2,46 @@
  * Router for the Website (policyengine.org)
  * Contains homepage, blog, team, and embedded apps
  */
+import { lazy, Suspense } from 'react';
 import { createBrowserRouter, Navigate, RouterProvider, useParams } from 'react-router-dom';
 import AppLayout from './components/AppLayout';
 import StaticLayout from './components/StaticLayout';
-import AdsDashboardPage from './pages/AdsDashboard.page';
-import AIGrowthResearchPage from './pages/AIGrowthResearch.page';
-import AppPage from './pages/AppPage';
-import BlogPage from './pages/Blog.page';
-import BrandPage from './pages/Brand.page';
-import BrandAssetsPage from './pages/BrandAssets.page';
-import BrandDesignPage from './pages/BrandDesign.page';
-import BrandWritingPage from './pages/BrandWriting.page';
-import ClaudePluginsPage from './pages/ClaudePlugins.page';
-import DonatePage from './pages/Donate.page';
-import OrgLogosEmbedPage from './pages/embed/OrgLogosEmbed.page';
 import HomePage from './pages/Home.page';
-import ModelPage from './pages/Model.page';
-import PrivacyPage from './pages/Privacy.page';
-import ResearchPage from './pages/Research.page';
-import SupportersPage from './pages/Supporters.page';
-import TeamPage from './pages/Team.page';
-import TermsPage from './pages/Terms.page';
-import YearInReviewPage from './pages/YearInReview.page';
 import { CountryAppGuard } from './routing/guards/CountryAppGuard';
 import { CountryGuardSimple } from './routing/guards/CountryGuardSimple';
 import { RedirectToCountry } from './routing/RedirectToCountry';
+import SuspenseOutlet from './routing/SuspenseOutlet';
+
+// Lazy-loaded pages — only fetched when the route is visited
+const AdsDashboardPage = lazy(() => import('./pages/AdsDashboard.page'));
+const AIGrowthResearchPage = lazy(() => import('./pages/AIGrowthResearch.page'));
+const AppPage = lazy(() => import('./pages/AppPage'));
+const BlogPage = lazy(() => import('./pages/Blog.page'));
+const BrandPage = lazy(() => import('./pages/Brand.page'));
+const BrandAssetsPage = lazy(() => import('./pages/BrandAssets.page'));
+const BrandDesignPage = lazy(() => import('./pages/BrandDesign.page'));
+const BrandWritingPage = lazy(() => import('./pages/BrandWriting.page'));
+const ClaudePluginsPage = lazy(() => import('./pages/ClaudePlugins.page'));
+const DonatePage = lazy(() => import('./pages/Donate.page'));
+const OrgLogosEmbedPage = lazy(() => import('./pages/embed/OrgLogosEmbed.page'));
+const PrivacyPage = lazy(() => import('./pages/Privacy.page'));
+const ResearchPage = lazy(() => import('./pages/Research.page'));
+const SupportersPage = lazy(() => import('./pages/Supporters.page'));
+const TeamPage = lazy(() => import('./pages/Team.page'));
+const TermsPage = lazy(() => import('./pages/Terms.page'));
+const YearInReviewPage = lazy(() => import('./pages/YearInReview.page'));
 
 // Redirect component for legacy /blog/:postName URLs
 function BlogRedirect() {
   const { postName } = useParams();
   return <Navigate to={`../research/${postName}`} replace />;
+}
+
+// /model is handled by Vercel rewrite; methodology does a full-page redirect
+function MethodologyRedirect() {
+  const { countryId } = useParams();
+  window.location.replace(`/${countryId}/model`);
+  return null;
 }
 
 const router = createBrowserRouter(
@@ -50,90 +60,100 @@ const router = createBrowserRouter(
           element: <StaticLayout />,
           children: [
             {
-              index: true,
-              element: <HomePage />,
-            },
-            {
-              path: 'donate',
-              element: <DonatePage />,
-            },
-            {
-              path: 'supporters',
-              element: <SupportersPage />,
-            },
-            {
-              path: 'team',
-              element: <TeamPage />,
-            },
-            {
-              path: 'privacy',
-              element: <PrivacyPage />,
-            },
-            {
-              path: 'terms',
-              element: <TermsPage />,
-            },
-            {
-              path: 'methodology',
-              element: <Navigate to="../model" replace />,
-            },
-            {
-              path: 'support',
-              element: <div>Support page</div>,
-            },
-            {
-              path: 'research',
-              element: <ResearchPage />,
-            },
-            {
-              path: 'research/:slug',
-              element: <BlogPage />,
-            },
-            {
-              path: 'brand',
-              element: <BrandPage />,
-            },
-            {
-              path: 'brand/design',
-              element: <BrandDesignPage />,
-            },
-            {
-              path: 'brand/writing',
-              element: <BrandWritingPage />,
-            },
-            {
-              path: 'brand/assets',
-              element: <BrandAssetsPage />,
-            },
-            {
-              path: 'ads-dashboard',
-              element: <AdsDashboardPage />,
-            },
-            {
-              path: 'ai-inequality',
-              element: <AIGrowthResearchPage />,
-            },
-            {
-              path: 'model',
-              element: <ModelPage />,
-            },
-            {
-              path: 'claude-plugin',
-              element: <ClaudePluginsPage />,
+              element: <SuspenseOutlet />,
+              children: [
+                {
+                  index: true,
+                  element: <HomePage />,
+                },
+                {
+                  path: 'donate',
+                  element: <DonatePage />,
+                },
+                {
+                  path: 'supporters',
+                  element: <SupportersPage />,
+                },
+                {
+                  path: 'team',
+                  element: <TeamPage />,
+                },
+                {
+                  path: 'privacy',
+                  element: <PrivacyPage />,
+                },
+                {
+                  path: 'terms',
+                  element: <TermsPage />,
+                },
+                {
+                  path: 'methodology',
+                  element: <MethodologyRedirect />,
+                },
+                {
+                  path: 'support',
+                  element: <div>Support page</div>,
+                },
+                {
+                  path: 'research',
+                  element: <ResearchPage />,
+                },
+                {
+                  path: 'research/:slug',
+                  element: <BlogPage />,
+                },
+                {
+                  path: 'brand',
+                  element: <BrandPage />,
+                },
+                {
+                  path: 'brand/design',
+                  element: <BrandDesignPage />,
+                },
+                {
+                  path: 'brand/writing',
+                  element: <BrandWritingPage />,
+                },
+                {
+                  path: 'brand/assets',
+                  element: <BrandAssetsPage />,
+                },
+                {
+                  path: 'ads-dashboard',
+                  element: <AdsDashboardPage />,
+                },
+                {
+                  path: 'ai-inequality',
+                  element: <AIGrowthResearchPage />,
+                },
+                // /model is handled by Vercel rewrite to policyengine-model.vercel.app
+                {
+                  path: 'claude-plugin',
+                  element: <ClaudePluginsPage />,
+                },
+              ],
             },
           ],
         },
         // Full-page embeds - no layout wrapper
         {
           path: '2025-year-in-review',
-          element: <YearInReviewPage />,
+          element: (
+            <Suspense>
+              <YearInReviewPage />
+            </Suspense>
+          ),
         },
         // Embed routes - minimal layout for iframe embedding
         {
           children: [
             {
               path: 'embed/org-logos',
-              element: <OrgLogosEmbedPage />,
+              element: (
+                <Suspense>
+                  <OrgLogosEmbedPage />
+                </Suspense>
+              ),
             },
           ],
         },
@@ -146,7 +166,11 @@ const router = createBrowserRouter(
               children: [
                 {
                   path: ':slug/*',
-                  element: <AppPage />,
+                  element: (
+                    <Suspense>
+                      <AppPage />
+                    </Suspense>
+                  ),
                 },
               ],
             },

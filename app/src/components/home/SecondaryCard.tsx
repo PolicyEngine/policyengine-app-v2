@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import OptimisedImage from '@/components/ui/OptimisedImage';
 import { cn } from '@/lib/utils';
 import type { BlogPost } from '@/types/blog';
 import { formatPostDate, getPostImageUrl } from './blogPreviewUtils';
@@ -28,9 +29,10 @@ export default function SecondaryCard({ post, countryId }: SecondaryCardProps) {
       >
         {imageUrl && (
           <div className="tw:h-[180px] tw:overflow-hidden tw:bg-gray-100 tw:shrink-0">
-            <img
+            <OptimisedImage
               src={imageUrl}
               alt={post.title}
+              width={384}
               className="tw:w-full tw:h-full tw:object-cover tw:block tw:transition-transform tw:duration-500 tw:group-hover:scale-[1.03]"
               onError={(e) => {
                 e.currentTarget.style.display = 'none';

@@ -31,6 +31,12 @@ jobs:
 
       - name: Run Chromatic
         working-directory: ./app
-        run: bunx chromatic --only-changed ${{ github.event_name == 'push' && '--auto-accept-changes' || '' }} --build-script-name="storybook:build" --project-token=${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+        run: >-
+          bunx chromatic
+          --only-changed
+          --build-script-name="storybook:build"
+          --project-token=${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+          ${{ github.event_name == 'push' && '--auto-accept-changes' || '' }}
+          ${{ github.event_name == 'pull_request' && format('--patch-build={0}...main', github.head_ref) || '' }}
         env:
           VITE_APP_MODE: website

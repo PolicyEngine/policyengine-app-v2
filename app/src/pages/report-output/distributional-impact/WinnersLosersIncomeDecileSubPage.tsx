@@ -18,6 +18,7 @@ import { regionName } from '@/utils/impactChartUtils';
 
 interface Props {
   output: SocietyWideReportOutput;
+  chartHeight?: number;
 }
 
 // Category definitions and styling
@@ -73,12 +74,15 @@ function WinnersLosersTooltip({ active, payload, label }: any) {
   );
 }
 
-export default function WinnersLosersIncomeDecileSubPage({ output }: Props) {
+export default function WinnersLosersIncomeDecileSubPage({
+  output,
+  chartHeight: chartHeightProp,
+}: Props) {
   const mobile = useMediaQuery(MOBILE_BREAKPOINT_QUERY);
   const countryId = useCurrentCountry();
   const metadata = useSelector((state: RootState) => state.metadata);
   const { height: viewportHeight } = useViewportSize();
-  const chartHeight = getClampedChartHeight(viewportHeight, mobile);
+  const chartHeight = chartHeightProp ?? getClampedChartHeight(viewportHeight, mobile);
 
   // Extract data
   const deciles = output.intra_decile.deciles;

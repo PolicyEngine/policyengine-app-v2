@@ -10,7 +10,7 @@ coverage/
 
 # Production
 dist/
-dist-ssr/
+dist-*/
 build/
 *.local
 .vite/

@@ -18,7 +18,7 @@ When the IRA enhancements expire, their premium tax credits would decrease by $2
 
 **Healthcare Assistance by Household Income showing premium tax credits with and without IRA enhancements**
 
-![](/images/posts/aca-calc-chart.png)
+![](/images/posts/aca-calc-chart.webp)
 
 ## Key features
 

@@ -30,7 +30,7 @@ We construct our enhanced data, which we call the Enhanced Current Population Su
 
 Our procedure maps to the above sequence. As shown in Figure 1 ([high resolution](https://docs.google.com/drawings/d/1DMExtIYWJMzn2Dii_S9eWXyuGsEtr_7JDl_vfU9F4IY/preview)), we first "age" the CPS and PUF to the current year (e.g., by growing PUF wages by the average growth of wages since 2015), then incorporate information from the PUF onto the CPS (while also preserving the original CPS), and finally reweighting the data. This contrasts to the standard approach among tax analysts: similarly age the CPS and PUF, but use the PUF as a base file, append nonfilers from the CPS, then reweight.
 
-![Figure 1: PolicyEngine's data flow to create PUF-enhanced CPS file](/images/posts/enhanced_cps_beta/data_hierarchy.png)
+![Figure 1: PolicyEngine's data flow to create PUF-enhanced CPS file](/images/posts/enhanced_cps_beta/data_hierarchy.webp)
 
 Specifically, here are our steps:
 
@@ -61,7 +61,7 @@ We've assessed our approach chiefly by comparing aggregates against administrati
 
 To see how our totals compare, explore our [interactive dashboard](https://policyengine-us-calibration-validation.streamlit.app/) (screenshot below).
 
-![PolicyEngine's calibration dashboard](/images/posts/enhanced_cps_beta/dashboard.png)
+![PolicyEngine's calibration dashboard](/images/posts/enhanced_cps_beta/dashboard.webp)
 
 We have additionally compared results from reforms, and we will launch a similar dashboard with those comparisons in the future.
 
@@ -71,7 +71,7 @@ You can use the ECPS in the PolicyEngine web app, in the policyengine-us Python 
 
 To use the ECPS in the PolicyEngine web app, run a microsimulation as normal, and then toggle the _Use Enhanced CPS_ switch in the right panel, or bottom on mobile. We will make this the default option after we exit beta, as it has been in PolicyEngine UK since we introduced the enhanced data.
 
-![Enhanced CPS switch](/images/posts/enhanced_cps_beta/app_screenshot.png)
+![Enhanced CPS switch](/images/posts/enhanced_cps_beta/app_screenshot.webp)
 
 To use the ECPS in the policyengine-us Python package, specify it in the Microsimulation call as follows, then use it as you would otherwise.
 

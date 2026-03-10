@@ -1,3 +1,4 @@
+import OptimisedImage from '@/components/ui/OptimisedImage';
 import { cn } from '@/lib/utils';
 
 export interface TeamMember {
@@ -16,9 +17,11 @@ export default function TeamMemberCard({ member, variant = 'default' }: TeamMemb
 
   return (
     <div className="tw:grid tw:grid-cols-1 tw:sm:grid-cols-[auto_1fr] tw:items-stretch tw:gap-[5vw] tw:mt-[50px]">
-      <img
+      <OptimisedImage
         src={member.image}
         alt={member.name}
+        width={250}
+        height={250}
         className="tw:h-[180px] tw:w-[180px] tw:sm:h-[250px] tw:sm:w-[250px] tw:object-cover tw:rounded-container"
       />
 

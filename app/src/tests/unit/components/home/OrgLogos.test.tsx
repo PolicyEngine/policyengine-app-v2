@@ -5,7 +5,7 @@ import { TEST_COUNTRY_IDS } from '@/tests/fixtures/components/homeHeader/Country
 
 // Mock the organizations module
 vi.mock('@/data/organizations', () => ({
-  getOrgsForCountrySorted: vi.fn((countryId: string) => {
+  getOrgsForCountry: vi.fn((countryId: string) => {
     if (countryId === 'us') {
       return [
         {
@@ -18,36 +18,6 @@ vi.mock('@/data/organizations', () => ({
           name: 'US Organization 2',
           logo: '/us-logo2.png',
           link: 'https://us-org2.example.com',
-          countries: ['us'],
-        },
-        {
-          name: 'US Organization 3',
-          logo: '/us-logo3.png',
-          link: 'https://us-org3.example.com',
-          countries: ['us'],
-        },
-        {
-          name: 'US Organization 4',
-          logo: '/us-logo4.png',
-          link: 'https://us-org4.example.com',
-          countries: ['us'],
-        },
-        {
-          name: 'US Organization 5',
-          logo: '/us-logo5.png',
-          link: 'https://us-org5.example.com',
-          countries: ['us'],
-        },
-        {
-          name: 'US Organization 6',
-          logo: '/us-logo6.png',
-          link: 'https://us-org6.example.com',
-          countries: ['us'],
-        },
-        {
-          name: 'US Organization 7',
-          logo: '/us-logo7.png',
-          link: 'https://us-org7.example.com',
           countries: ['us'],
         },
       ];
@@ -66,36 +36,6 @@ vi.mock('@/data/organizations', () => ({
           link: 'https://uk-org2.example.com',
           countries: ['uk'],
         },
-        {
-          name: 'UK Organization 3',
-          logo: '/uk-logo3.png',
-          link: 'https://uk-org3.example.com',
-          countries: ['uk'],
-        },
-        {
-          name: 'UK Organization 4',
-          logo: '/uk-logo4.png',
-          link: 'https://uk-org4.example.com',
-          countries: ['uk'],
-        },
-        {
-          name: 'UK Organization 5',
-          logo: '/uk-logo5.png',
-          link: 'https://uk-org5.example.com',
-          countries: ['uk'],
-        },
-        {
-          name: 'UK Organization 6',
-          logo: '/uk-logo6.png',
-          link: 'https://uk-org6.example.com',
-          countries: ['uk'],
-        },
-        {
-          name: 'UK Organization 7',
-          logo: '/uk-logo7.png',
-          link: 'https://uk-org7.example.com',
-          countries: ['uk'],
-        },
       ];
     }
     return [];
@@ -107,52 +47,36 @@ describe('OrgLogos', () => {
     vi.clearAllMocks();
   });
 
-  test('given US country then displays US organizations', () => {
-    // When
-    renderWithCountry(<OrgLogos />, TEST_COUNTRY_IDS.US);
+  // The carousel renders two copies of each logo for seamless looping,
+  // so we use getAllByAltText and check the first instance.
 
-    // Then
-    expect(screen.getByAltText('US Organization 1')).toBeInTheDocument();
-    expect(screen.getByAltText('US Organization 2')).toBeInTheDocument();
+  test('given US country then displays US organizations', () => {
+    renderWithCountry(<OrgLogos />, TEST_COUNTRY_IDS.US);
+    expect(screen.getAllByAltText('US Organization 1').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByAltText('US Organization 2').length).toBeGreaterThanOrEqual(1);
   });
 
   test('given UK country then displays UK organizations', () => {
-    // When
     renderWithCountry(<OrgLogos />, TEST_COUNTRY_IDS.UK);
-
-    // Then
-    expect(screen.getByAltText('UK Organization 1')).toBeInTheDocument();
-    expect(screen.getByAltText('UK Organization 2')).toBeInTheDocument();
+    expect(screen.getAllByAltText('UK Organization 1').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByAltText('UK Organization 2').length).toBeGreaterThanOrEqual(1);
   });
 
-  test('given organization logo then opens link on click', async () => {
-    // Given
-    const windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
-    const { userEvent } = await import('@test-utils');
-    const user = userEvent.setup();
-
-    // When
+  test('given organization logo then links to correct URL', () => {
     renderWithCountry(<OrgLogos />, TEST_COUNTRY_IDS.US);
-    await user.click(screen.getByAltText('US Organization 1'));
-
-    // Then
-    expect(windowOpenSpy).toHaveBeenCalledWith('https://us-org1.example.com', '_blank');
+    const link = screen.getAllByAltText('US Organization 1')[0].closest('a');
+    expect(link).toHaveAttribute('href', 'https://us-org1.example.com');
+    expect(link).toHaveAttribute('target', '_blank');
   });
 
   test('given US country then displays benefit platforms copy', () => {
-    // When
     renderWithCountry(<OrgLogos />, TEST_COUNTRY_IDS.US);
-
-    // Then
     expect(screen.getByText(/benefit platforms/)).toBeInTheDocument();
   });
 
-  test('given UK country then displays simpler copy without benefit platforms', () => {
-    // When
+  test('given UK country then displays policy organisations copy', () => {
     renderWithCountry(<OrgLogos />, TEST_COUNTRY_IDS.UK);
-
-    // Then
     expect(screen.queryByText(/benefit platforms/)).not.toBeInTheDocument();
-    expect(screen.getByText('Trusted by researchers and policy organizations')).toBeInTheDocument();
+    expect(screen.getByText('Trusted by researchers and policy organisations')).toBeInTheDocument();
   });
 });

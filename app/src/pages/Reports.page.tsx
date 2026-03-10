@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
+import { IconSettings } from '@tabler/icons-react';
+import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import {
   BulletsValue,
@@ -17,12 +19,15 @@ import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useDisclosure } from '@/hooks/useDisclosure';
 import { useUpdateReportAssociation } from '@/hooks/useUserReportAssociations';
 import { useUserReports } from '@/hooks/useUserReports';
+import { RootState } from '@/store';
 import { useCacheMonitor } from '@/utils/cacheMonitor';
 import { formatDate } from '@/utils/dateUtils';
+import { CURRENT_LAW_LABEL } from './reportBuilder/currentLaw';
 
 export default function ReportsPage() {
   const userId = MOCK_USER_ID.toString(); // TODO: Replace with actual user ID retrieval logic
   const { data, isLoading, isError, error } = useUserReports(userId);
+  const currentLawId = useSelector((state: RootState) => state.metadata.currentLawId);
   const cacheMonitor = useCacheMonitor();
   const navigate = useNavigate();
   const countryId = useCurrentCountry();
@@ -33,11 +38,10 @@ export default function ReportsPage() {
   }, [data]);
 
   const [searchValue, setSearchValue] = useState('');
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   // Rename modal state
   const [renamingReportId, setRenamingReportId] = useState<string | null>(null);
-  const [renameOpened, { open: openRename, close: closeRename }] = useDisclosure(false);
+  const [renameOpened, { close: closeRename }] = useDisclosure(false);
 
   // Rename mutation hook
   const updateAssociation = useUpdateReportAssociation();
@@ -45,19 +49,6 @@ export default function ReportsPage() {
   const handleBuildReport = () => {
     const targetPath = `/${countryId}/reports/create`;
     navigate(targetPath);
-  };
-
-  const handleSelectionChange = (recordId: string, selected: boolean) => {
-    setSelectedIds((prev) =>
-      selected ? [...prev, recordId] : prev.filter((id) => id !== recordId)
-    );
-  };
-
-  const isSelected = (recordId: string) => selectedIds.includes(recordId);
-
-  const handleOpenRename = (userReportId: string) => {
-    setRenamingReportId(userReportId);
-    openRename();
   };
 
   const handleCloseRename = () => {
@@ -95,7 +86,7 @@ export default function ReportsPage() {
     },
     {
       key: 'dateCreated',
-      header: 'Date Created',
+      header: 'Date created',
       type: 'text',
     },
     {
@@ -109,8 +100,8 @@ export default function ReportsPage() {
       type: 'text',
     },
     {
-      key: 'simulations',
-      header: 'Simulations',
+      key: 'policies',
+      header: 'Policies',
       type: 'bullets',
       items: [
         {
@@ -120,18 +111,18 @@ export default function ReportsPage() {
       ],
     },
     {
-      key: 'outputType',
-      header: 'Output Type',
+      key: 'population',
+      header: 'Population',
       type: 'text',
     },
     {
       key: 'actions',
       header: '',
-      type: 'menu',
-      actions: [{ label: 'Rename', action: 'rename' }],
+      type: 'actions',
+      actions: [{ action: 'edit', tooltip: 'View/edit report', icon: <IconSettings size={16} /> }],
       onAction: (action: string, recordId: string) => {
-        if (action === 'rename') {
-          handleOpenRename(recordId);
+        if (action === 'edit') {
+          navigate(`/${countryId}/reports/create/${recordId}`);
         }
       },
     },
@@ -144,6 +135,34 @@ export default function ReportsPage() {
         const simulationIds =
           (item.simulations?.map((s) => s.id).filter(Boolean) as string[]) || [];
         const isHouseholdReport = item.simulations?.[0]?.populationType === 'household';
+
+        // Build policy labels from simulations
+        const policyItems = item.simulations?.map((sim) => {
+          if (sim.policyId === currentLawId?.toString()) {
+            return { text: CURRENT_LAW_LABEL };
+          }
+          const userPolicy = item.userPolicies?.find((up) => up.policyId === sim.policyId);
+          if (userPolicy?.label) {
+            return { text: userPolicy.label };
+          }
+          const policy = item.policies?.find((p) => p.id === sim.policyId);
+          return { text: policy?.label || `Policy #${sim.policyId}` };
+        }) || [{ text: 'No policies' }];
+
+        // Build population label (shared across simulations)
+        const firstSim = item.simulations?.[0];
+        let populationLabel = '';
+        if (firstSim?.populationType === 'household') {
+          const userHousehold = item.userHouseholds?.find(
+            (uh) => uh.householdId === firstSim.populationId
+          );
+          populationLabel = userHousehold?.label || 'Household';
+        } else if (firstSim?.populationId) {
+          const geo = item.geographies?.find(
+            (g) => g.id === firstSim.populationId || g.geographyId === firstSim.populationId
+          );
+          populationLabel = geo?.name || firstSim.populationId;
+        }
 
         return {
           id: item.userReport.id,
@@ -175,21 +194,15 @@ export default function ReportsPage() {
               <ReportOutputTypeCell reportId={item.userReport.reportId} report={item.report} />
             ),
           },
-          simulations: {
-            items: item.simulations?.map((sim, index) => ({
-              text: item.userSimulations?.[index]?.label || `Simulation #${sim.id}`,
-            })) || [
-              {
-                text: 'No simulations',
-              },
-            ],
+          policies: {
+            items: policyItems,
           } as BulletsValue,
-          outputType: {
-            text: isHouseholdReport ? 'Household' : 'Society-wide',
+          population: {
+            text: populationLabel,
           } as TextValue,
         };
       }) || [],
-    [data, countryId]
+    [data, countryId, currentLawId]
   );
 
   return (
@@ -207,9 +220,6 @@ export default function ReportsPage() {
           columns={reportColumns}
           searchValue={searchValue}
           onSearchChange={setSearchValue}
-          enableSelection
-          isSelected={isSelected}
-          onSelectionChange={handleSelectionChange}
         />
       </Stack>
 

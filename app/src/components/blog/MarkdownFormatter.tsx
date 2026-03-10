@@ -20,6 +20,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import ReactMarkdown, { type Components } from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
 import remarkGfm from 'remark-gfm';
+import OptimisedImage from '@/components/ui/OptimisedImage';
 import type { MarkdownFormatterProps } from '@/types/blog';
 import {
   blogColors,
@@ -363,10 +364,10 @@ export function MarkdownFormatter({
             marginBottom: blogSpacing.marginBottom.image,
           }}
         >
-          <img
+          <OptimisedImage
             src={transformedSrc}
             alt={alt || ''}
-            loading="lazy"
+            width={750}
             style={{
               width: '100%',
               height: 'auto',

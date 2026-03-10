@@ -100,6 +100,23 @@ export default defineConfig({
   build: {
     rollupOptions: {
       input: getInputConfig(),
+      output: {
+        manualChunks: {
+          // Stable vendor chunks — cached separately from app code
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-charts': ['recharts'],
+          'vendor-markdown': [
+            'react-markdown',
+            'rehype-katex',
+            'rehype-raw',
+            'remark-gfm',
+            'remark-math',
+            'react-syntax-highlighter',
+          ],
+          'vendor-motion': ['framer-motion'],
+          'vendor-query': ['@tanstack/react-query', '@reduxjs/toolkit', 'react-redux'],
+        },
+      },
     },
   },
   test: {

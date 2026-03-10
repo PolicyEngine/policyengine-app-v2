@@ -1,7 +1,6 @@
 import { IconPlus } from '@tabler/icons-react';
 import {
   Button,
-  Checkbox,
   Spinner,
   ShadcnTable as Table,
   TableBody,
@@ -31,9 +30,6 @@ interface IngredientReadViewProps {
   searchValue?: string;
   onSearchChange?: (value: string) => void;
   onMoreFilters?: () => void;
-  enableSelection?: boolean;
-  isSelected?: (recordId: string) => boolean;
-  onSelectionChange?: (recordId: string, selected: boolean) => void;
 }
 
 export default function IngredientReadView({
@@ -50,9 +46,6 @@ export default function IngredientReadView({
   searchValue: _searchValue = '',
   onSearchChange: _onSearchChange,
   onMoreFilters: _onMoreFilters,
-  enableSelection = true,
-  isSelected = () => false,
-  onSelectionChange,
 }: IngredientReadViewProps) {
   return (
     <div>
@@ -135,16 +128,6 @@ export default function IngredientReadView({
               <Table>
                 <TableHeader>
                   <TableRow style={{ backgroundColor: colors.gray[50] }}>
-                    {enableSelection && (
-                      <TableHead
-                        style={{
-                          width: '48px',
-                          padding: `${spacing.md} ${spacing.lg}`,
-                        }}
-                      >
-                        {/* Optional: Add "select all" checkbox here in the future */}
-                      </TableHead>
-                    )}
                     {columns.map((column) => (
                       <TableHead
                         key={column.key}
@@ -163,48 +146,18 @@ export default function IngredientReadView({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {data.map((record) => {
-                    const selected = isSelected(record.id);
-                    return (
-                      <TableRow
-                        key={record.id}
-                        style={{
-                          backgroundColor: selected ? colors.blue[50] : 'transparent',
-                          borderLeft: selected
-                            ? `3px solid ${colors.primary[500]}`
-                            : '3px solid transparent',
-                          cursor: enableSelection ? 'pointer' : 'default',
-                        }}
-                        onClick={() => {
-                          if (enableSelection && onSelectionChange) {
-                            onSelectionChange(record.id, !selected);
-                          }
-                        }}
-                      >
-                        {enableSelection && (
-                          <TableCell style={{ padding: `${spacing.md} ${spacing.lg}` }}>
-                            <Checkbox
-                              checked={selected}
-                              onCheckedChange={(checked) => {
-                                if (onSelectionChange) {
-                                  onSelectionChange(record.id, !!checked);
-                                }
-                              }}
-                              onClick={(e) => e.stopPropagation()}
-                            />
-                          </TableCell>
-                        )}
-                        {columns.map((column) => (
-                          <TableCell
-                            key={column.key}
-                            style={{ padding: `${spacing.md} ${spacing.lg}` }}
-                          >
-                            <ColumnRenderer config={column} record={record} />
-                          </TableCell>
-                        ))}
-                      </TableRow>
-                    );
-                  })}
+                  {data.map((record) => (
+                    <TableRow key={record.id}>
+                      {columns.map((column) => (
+                        <TableCell
+                          key={column.key}
+                          style={{ padding: `${spacing.md} ${spacing.lg}` }}
+                        >
+                          <ColumnRenderer config={column} record={record} />
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))}
                 </TableBody>
               </Table>
             )}

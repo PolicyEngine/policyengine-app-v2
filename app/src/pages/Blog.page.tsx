@@ -13,6 +13,7 @@ import { NotebookRenderer } from '@/components/blog/NotebookRenderer';
 import { useDisplayCategory } from '@/components/blog/useDisplayCategory';
 import StaticPageLayout from '@/components/shared/static/StaticPageLayout';
 import { Container, Spinner, Text } from '@/components/ui';
+import OptimisedImage from '@/components/ui/OptimisedImage';
 import authorsData from '@/data/posts/authors.json';
 import {
   getLocationTags,
@@ -255,10 +256,11 @@ function PostHeadingSection({
             {post.description}
           </Text>
           {imageUrl && !post.hideHeaderImage && (
-            <img
+            <OptimisedImage
               alt={post.title}
               title={post.imageCredit}
               src={imageUrl}
+              width={1080}
               style={{ width: '100%', marginTop: spacing['3xl'] }}
               onError={(e) => {
                 e.currentTarget.style.display = 'none';
@@ -320,10 +322,11 @@ function PostHeadingSection({
         </Text>
       </div>
       {imageUrl && !post.hideHeaderImage && (
-        <img
+        <OptimisedImage
           alt={post.title}
           title={post.imageCredit}
           src={imageUrl}
+          width={750}
           style={{ width: '100%' }}
           onError={(e) => {
             e.currentTarget.style.display = 'none';
@@ -521,7 +524,7 @@ function AuthorSection({ post, countryId }: { post: BlogPost; countryId: string 
             }}
           >
             {author.headshot && (
-              <img
+              <OptimisedImage
                 alt={author.name}
                 src={`/assets/authors/${author.headshot}`}
                 width={70}

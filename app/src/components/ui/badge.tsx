@@ -30,7 +30,8 @@ function Badge({
   asChild = false,
   ...props
 }: React.ComponentProps<'span'> & VariantProps<typeof badgeVariants> & { asChild?: boolean }) {
-  const Comp = asChild ? Slot.Root : 'span';
+  // Cast needed: dual csstype versions in monorepo cause SlotProps style mismatch
+  const Comp = (asChild ? Slot.Root : 'span') as React.ElementType;
 
   return (
     <Comp

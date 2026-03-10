@@ -1,7 +1,12 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "images": {
+    "sizes": [128, 256, 384, 512, 640, 750, 828, 1080, 1200, 1920],
+    "formats": ["image/avif", "image/webp"],
+    "minimumCacheTTL": 86400
+  },
   "installCommand": "bun install --frozen-lockfile",
-  "buildCommand": "bun run design-system:build && cd app && bun run generate-llms-txt && bun run generate-sitemap && bun run build:website",
+  "buildCommand": "bun run design-system:build && cd app && bun run generate-llms-txt && bun run generate-prerender && bun run generate-sitemap && bun run build:website",
   "outputDirectory": "app/dist",
   "redirects": [
     {
@@ -53,6 +58,14 @@
       "destination": "https://working-americans-tax-cut-act-one.vercel.app/us/watca/:path*"
     },
     {
+      "source": "/us/keep-your-pay-act",
+      "destination": "https://keep-your-pay-act.vercel.app/us/keep-your-pay-act"
+    },
+    {
+      "source": "/us/keep-your-pay-act/:path*",
+      "destination": "https://keep-your-pay-act.vercel.app/us/keep-your-pay-act/:path*"
+    },
+    {
       "source": "/us/taxsim",
       "destination": "https://policyengine-taxsim-policy-engine.vercel.app/us/taxsim"
     },
@@ -64,7 +77,27 @@
       "source": "/us/taxsim/:path*",
       "destination": "https://policyengine-taxsim-policy-engine.vercel.app/us/taxsim/:path*"
     },
-{ "source": "/(.*)", "destination": "/website.html" }
+    {
+      "source": "/:countryId/model",
+      "destination": "https://policyengine-model.vercel.app/:countryId/model"
+    },
+    {
+      "source": "/:countryId/model/:path*",
+      "destination": "https://policyengine-model.vercel.app/:countryId/model/:path*"
+    },
+    {
+      "source": "/us/api",
+      "destination": "https://household-api-docs-policy-engine.vercel.app/us/api"
+    },
+    {
+      "source": "/us/api/",
+      "destination": "https://household-api-docs-policy-engine.vercel.app/us/api/"
+    },
+    {
+      "source": "/us/api/:path*",
+      "destination": "https://household-api-docs-policy-engine.vercel.app/us/api/:path*"
+    },
+    { "source": "/(.*)", "destination": "/website.html" }
   ],
   "headers": [
     {

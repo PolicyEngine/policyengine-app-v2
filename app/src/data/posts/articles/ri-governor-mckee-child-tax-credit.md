@@ -32,15 +32,15 @@ The reform primarily benefits lower-income families with children, as they see l
 
 [^2]: As seen in Figure 1, the phase-out of the CTC does not perfectly align with the personal exemption, leading to instances where net income jumps suddenly. This may be due to the inflation adjustment of the CTC's phase-out parameters being rounded to a different number than the personal exemption.
 
-![Figure 1: Net income change by employment income for a single parent with one child](/assets/posts/ri-governor-ctc-household.png)
+![Figure 1: Net income change by employment income for a single parent with one child](/assets/posts/ri-governor-ctc-household.webp)
 
 ## Statewide impacts
 
 For tax year 2027, the proposal would reduce state revenues by $36.7 million, according to PolicyEngine's static modeling. The reform would also raise the net income of 29.2% of Rhode Island residents, with beneficiaries concentrated in lower income ranges (see Figure 2). We project that the proposal would reduce poverty and child poverty by 1.0 and 2.1%, respectively, as measured by the Supplemental Poverty Measure. Figure 3 displays the statewide impacts of Governor McKee's CTC proposal.
 
-![Figure 2: Average household benefit by income range](/assets/posts/ri-governor-ctc-income-chart.png)
+![Figure 2: Average household benefit by income range](/assets/posts/ri-governor-ctc-income-chart.webp)
 
-![Figure 3: Statewide impacts of Governor McKee's child tax credit proposal](/assets/posts/ri-governor-ctc-statewide-impacts.png)
+![Figure 3: Statewide impacts of Governor McKee's child tax credit proposal](/assets/posts/ri-governor-ctc-statewide-impacts.webp)
 
 ## Conclusion
 

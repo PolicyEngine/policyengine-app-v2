@@ -6,3 +6,6 @@ public/llms-full.txt
 public/llms-research-us.txt
 public/llms-recent.txt
 public/llms-research-uk.txt
+
+# Generated pre-rendered HTML for LLM/search engine bots (built on deploy)
+public/prerender/

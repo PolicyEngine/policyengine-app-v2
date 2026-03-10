@@ -3,16 +3,18 @@
  * Contains only the interactive calculator functionality
  */
 import { createBrowserRouter, Navigate, Outlet, RouterProvider } from 'react-router-dom';
+import PathwayLayout from './components/PathwayLayout';
 import StandardLayout from './components/StandardLayout';
 import NotFoundPage from './pages/NotFound.page';
 import PoliciesPage from './pages/Policies.page';
 import PopulationsPage from './pages/Populations.page';
+import ModifyReportPage from './pages/reportBuilder/ModifyReportPage';
+import ReportBuilderPage from './pages/reportBuilder/ReportBuilderPage';
 import ReportOutputPage from './pages/ReportOutput.page';
 import ReportsPage from './pages/Reports.page';
 import SimulationsPage from './pages/Simulations.page';
 import PolicyPathwayWrapper from './pathways/policy/PolicyPathwayWrapper';
 import PopulationPathwayWrapper from './pathways/population/PopulationPathwayWrapper';
-import ReportPathwayWrapper from './pathways/report/ReportPathwayWrapper';
 import SimulationPathwayWrapper from './pathways/simulation/SimulationPathwayWrapper';
 import { CountryGuard } from './routing/guards/CountryGuard';
 import { MetadataGuard } from './routing/guards/MetadataGuard';
@@ -58,20 +60,21 @@ const router = createBrowserRouter(
             },
             // Pathway routes - pathways manage their own layouts
             {
-              path: 'reports/create',
-              element: <ReportPathwayWrapper />,
-            },
-            {
-              path: 'simulations/create',
-              element: <SimulationPathwayWrapper />,
-            },
-            {
-              path: 'households/create',
-              element: <PopulationPathwayWrapper />,
-            },
-            {
-              path: 'policies/create',
-              element: <PolicyPathwayWrapper />,
+              element: <PathwayLayout />,
+              children: [
+                {
+                  path: 'simulations/create',
+                  element: <SimulationPathwayWrapper />,
+                },
+                {
+                  path: 'households/create',
+                  element: <PopulationPathwayWrapper />,
+                },
+                {
+                  path: 'policies/create',
+                  element: <PolicyPathwayWrapper />,
+                },
+              ],
             },
           ],
         },
@@ -101,6 +104,14 @@ const router = createBrowserRouter(
                 {
                   path: 'policies',
                   element: <PoliciesPage />,
+                },
+                {
+                  path: 'reports/create',
+                  element: <ReportBuilderPage />,
+                },
+                {
+                  path: 'reports/create/:userReportId',
+                  element: <ModifyReportPage />,
                 },
                 {
                   path: 'account',

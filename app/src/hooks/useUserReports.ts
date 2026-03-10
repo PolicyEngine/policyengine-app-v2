@@ -7,6 +7,7 @@ import { fetchPolicyById } from '@/api/policy';
 import { fetchReportById } from '@/api/report';
 import { fetchSimulationById } from '@/api/simulation';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { GC_TIME_5_MIN } from '@/libs/queryConfig';
 import { RootState } from '@/store';
 import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
@@ -20,6 +21,7 @@ import {
 } from '@/types/ingredients/UserPopulation';
 import { UserReport } from '@/types/ingredients/UserReport';
 import { UserSimulation } from '@/types/ingredients/UserSimulation';
+import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
 import { findPlaceFromRegionString, getPlaceDisplayName } from '@/utils/regionStrategies';
 import { householdKeys, policyKeys, reportKeys, simulationKeys } from '../libs/queryKeys';
 import { useGeographicAssociationsByUser } from './useUserGeographic';
@@ -140,10 +142,7 @@ export const useUserReports = (userId: string) => {
     // that specific simulation will be marked stale and refetch on next mount
     // All other simulations remain fresh and use cached data (fast navigation)
     staleTime: Infinity,
-    // gcTime: 0 - Delete from cache immediately when no components are using this data
-    // Prevents memory bloat from accumulating unused simulation data
-    // When navigating away from Reports page, unused simulations are garbage collected
-    gcTime: 0,
+    gcTime: GC_TIME_5_MIN,
   });
 
   // Step 6: Extract policy and household IDs from fetched simulations
@@ -397,10 +396,7 @@ export const useUserReportById = (userReportId: string, options?: { enabled?: bo
     // that specific simulation will be marked stale and refetch on next mount
     // All other simulations remain fresh and use cached data (fast navigation)
     staleTime: Infinity,
-    // gcTime: 0 - Delete from cache immediately when no components are using this data
-    // Prevents memory bloat from accumulating unused simulation data
-    // When navigating away from report output, unused simulations are garbage collected
-    gcTime: 0,
+    gcTime: GC_TIME_5_MIN,
   });
 
   const simulations = simulationResults.queries
@@ -442,17 +438,16 @@ export const useUserReportById = (userReportId: string, options?: { enabled?: bo
   const householdSimulations = simulations.filter((s) => s.populationType === 'household');
   const householdIds = extractUniqueIds(householdSimulations, 'populationId');
 
-  const householdResults = useParallelQueries<Household>(householdIds, {
+  const householdResults = useParallelQueries<HouseholdMetadata>(householdIds, {
     queryKey: householdKeys.byId,
-    queryFn: async (id) => {
-      const metadata = await fetchHouseholdById(country, id);
-      return HouseholdAdapter.fromMetadata(metadata);
-    },
+    queryFn: async (id) => fetchHouseholdById(country, id),
     enabled: isEnabled && householdIds.length > 0,
     staleTime: 5 * 60 * 1000,
   });
 
-  const households = householdResults.queries.map((q) => q.data).filter((h): h is Household => !!h);
+  const households = householdResults.queries
+    .map((q) => (q.data ? HouseholdAdapter.fromMetadata(q.data) : undefined))
+    .filter((h): h is Household => !!h);
 
   const userHouseholds = householdAssociations?.filter((ha) =>
     households.some((h) => h.id === ha.householdId)

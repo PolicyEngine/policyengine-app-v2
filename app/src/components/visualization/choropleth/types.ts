@@ -95,6 +95,8 @@ export interface USDistrictChoroplethMapProps {
   visualizationType?: MapVisualizationType;
   /** Optional ref to the map container for image export */
   exportRef?: React.Ref<HTMLDivElement>;
+  /** Uppercase 2-letter state abbreviations whose fetches errored (e.g., ['CO']). Districts in these states are colored red with error hover text. */
+  errorStates?: string[];
 }
 
 /**

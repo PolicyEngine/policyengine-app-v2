@@ -1,3 +1,4 @@
+import OptimisedImage from '@/components/ui/OptimisedImage';
 import SupportedProject, { SupportedProject as SupportedProjectType } from './SupportedProject';
 
 export interface Supporter {
@@ -24,9 +25,10 @@ export default function SupporterCard({ supporter, projects }: SupporterCardProp
             rel="noopener noreferrer"
             className="tw:shrink-0"
           >
-            <img
+            <OptimisedImage
               src={supporter.logoUrl}
               alt={`${supporter.name} logo`}
+              width={200}
               className="tw:w-[150px] tw:sm:w-[200px] tw:h-[60px] tw:sm:h-[80px] tw:object-contain tw:object-left-center"
             />
           </a>

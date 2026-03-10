@@ -21,7 +21,7 @@ One unexpected challenge: Claude Code (using Opus 4.1 at the time) developed a s
 
 We moved into the [Open Gov Hub](https://www.opengovhub.org/). The [microsite](https://policyengine.github.io/dc-office-comparison/) helped us make the decision systematically. Open Gov Hub stood out for its mission alignment—housing 40+ civic tech and policy organizations—combined with practical advantages: central location with 23-minute metro access from our Arlington team members, 10-minute bike ride from our DC-based staff, competitive pricing for dedicated desks, and membership in a global coworking network. The space includes a balcony and conference rooms, and we're already planning policy-focused events with the other organizations in the building.
 
-![PolicyEngine team at the Open Gov Hub](/images/posts/open-gov-hub-team.jpg)
+![PolicyEngine team at the Open Gov Hub](/images/posts/open-gov-hub-team.webp)
 
 ## Join us
 

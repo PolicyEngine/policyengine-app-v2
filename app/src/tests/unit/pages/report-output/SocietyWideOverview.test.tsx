@@ -41,7 +41,7 @@ describe('SocietyWideOverview', () => {
       const { container } = render(<SocietyWideOverview output={output} />);
 
       // Then
-      expect(screen.getByText('Budgetary Impact')).toBeInTheDocument();
+      expect(screen.getByText('Budgetary impact')).toBeInTheDocument();
       expect(container.textContent).toContain('$1.0');
       expect(container.textContent).toContain('million');
       expect(container.textContent).toContain('additional government revenue');
@@ -88,7 +88,7 @@ describe('SocietyWideOverview', () => {
       const { container } = render(<SocietyWideOverview output={output} />);
 
       // Then
-      expect(screen.getByText('Poverty Impact')).toBeInTheDocument();
+      expect(screen.getByText('Poverty impact')).toBeInTheDocument();
       expect(container.textContent).toContain('10.0%');
       expect(container.textContent).toContain('decrease in poverty rate');
     });
@@ -143,7 +143,7 @@ describe('SocietyWideOverview', () => {
       const { container } = render(<SocietyWideOverview output={output} />);
 
       // Then - component should handle division by zero gracefully
-      expect(container.textContent).toContain('Poverty Impact');
+      expect(container.textContent).toContain('Poverty impact');
     });
   });
 
@@ -225,8 +225,8 @@ describe('SocietyWideOverview', () => {
     render(<SocietyWideOverview output={output} />);
 
     // Then
-    expect(screen.getByText('Budgetary Impact')).toBeInTheDocument();
-    expect(screen.getByText('Poverty Impact')).toBeInTheDocument();
+    expect(screen.getByText('Budgetary impact')).toBeInTheDocument();
+    expect(screen.getByText('Poverty impact')).toBeInTheDocument();
     expect(screen.getByText('Winners and losers')).toBeInTheDocument();
   });
 });

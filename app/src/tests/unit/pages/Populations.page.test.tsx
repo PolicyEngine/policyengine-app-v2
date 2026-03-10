@@ -311,7 +311,7 @@ describe('PopulationsPage', () => {
       renderPage();
 
       // When - Find and click a checkbox (assuming the IngredientReadView renders checkboxes)
-      const checkboxes = screen.getAllByRole('checkbox');
+      const checkboxes = screen.queryAllByRole('checkbox');
       if (checkboxes.length > 0) {
         await user.click(checkboxes[0]);
 

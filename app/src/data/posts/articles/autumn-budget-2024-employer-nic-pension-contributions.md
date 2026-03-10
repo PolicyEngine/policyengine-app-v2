@@ -59,7 +59,7 @@ Overall, this raises £9.6 billion in 2025, totalling £50 billion over five yea
 
 Our assumption that employers pass on some fraction of the increased payroll costs is based upon [economic](https://www.cbo.gov/system/files/2021-06/57089-Payroll-Taxes.pdf) [research](https://www.sciencedirect.com/science/article/pii/S0047272718300926) suggesting that employers often pass on the cost of increased payroll taxes to employees through lower wages or reduced hiring. Our model can vary this assumption: for example, we could assume that employers reduce wages by 50% of the distance to the fixed-cost wage, or any other fraction. The chart below shows the resultant budgetary impacts in FY 2025 under five simulated employee incidence shares: 0%, 25%, 50%, 75% and 100%. As expected, this effect is effectively linear. Revenue impacts decrease as employee incidence increases, because lower incomes push up costs by increasing benefit spending and decreasing tax liabilities.
 
-![](/images/posts/autumn-budget-2024-employer-nic-pension-contributions/revenue-impact-of-increasing-employer-ni-by-employee-incidence.png)
+![](/images/posts/autumn-budget-2024-employer-nic-pension-contributions/revenue-impact-of-increasing-employer-ni-by-employee-incidence.webp)
 
 # Conclusion
 

@@ -1,6 +1,19 @@
 [
   {
     "type": "iframe",
+    "slug": "keep-your-pay-act",
+    "title": "Keep Your Pay Act calculator",
+    "description": "Estimate the household and national impact of Senator Booker's Keep Your Pay Act, which raises the standard deduction, expands the Child Tax Credit, and triples the childless EITC",
+    "source": "https://keep-your-pay-act.vercel.app/",
+    "tags": ["us", "featured", "policy", "interactives"],
+    "countryId": "us",
+    "displayWithResearch": true,
+    "image": "keep-your-pay-act-calculator.png",
+    "date": "2026-03-09 12:00:00",
+    "authors": ["david-trimmer", "daphne-hansell"]
+  },
+  {
+    "type": "iframe",
     "slug": "watca",
     "title": "Working Americans' Tax Cut Act calculator",
     "description": "Estimate the household and national impact of the cost-of-living exemption and millionaire surtax proposed by Senator Van Hollen",
@@ -8,7 +21,7 @@
     "tags": ["us", "featured", "policy", "interactives"],
     "countryId": "us",
     "displayWithResearch": true,
-    "image": "watca-calculator.png",
+    "image": "watca-calculator.webp",
     "date": "2026-03-06 12:00:00",
     "authors": ["max-ghenis", "pavel-makarchuk"]
   },
@@ -21,7 +34,7 @@
     "tags": ["uk", "featured", "policy", "interactives"],
     "countryId": "uk",
     "displayWithResearch": true,
-    "image": "uk-spring-statement-2026.jpg",
+    "image": "uk-spring-statement-2026.webp",
     "date": "2026-03-04 12:00:00",
     "authors": ["max-ghenis", "vahid-ahmadi", "pavel-makarchuk"]
   },
@@ -34,7 +47,7 @@
     "tags": ["us", "featured", "policy", "interactives"],
     "countryId": "us",
     "displayWithResearch": true,
-    "image": "marriage-calculator.png",
+    "image": "marriage-calculator.webp",
     "date": "2026-02-13 12:00:00",
     "authors": ["daphne-hansell"]
   },
@@ -47,7 +60,7 @@
     "tags": ["uk", "policy", "interactives"],
     "countryId": "uk",
     "displayWithResearch": false,
-    "image": "marriage-calculator.png",
+    "image": "marriage-calculator.webp",
     "date": "2026-02-13 12:00:00",
     "authors": ["daphne-hansell"]
   },
@@ -60,7 +73,7 @@
     "tags": ["us", "featured", "policy", "interactives"],
     "countryId": "us",
     "displayWithResearch": true,
-    "image": "state-legislative-tracker.png",
+    "image": "state-legislative-tracker.webp",
     "date": "2026-02-11 12:00:00",
     "authors": ["pavel-makarchuk"]
   },
@@ -73,7 +86,7 @@
     "tags": ["uk", "featured", "policy"],
     "countryId": "uk",
     "displayWithResearch": true,
-    "image": "uk-salary-sacrifice-tool.png",
+    "image": "uk-salary-sacrifice-tool.webp",
     "date": "2026-02-09 12:00:00",
     "authors": ["vahid-ahmadi"]
   },
@@ -86,7 +99,7 @@
     "tags": ["uk", "featured", "policy"],
     "countryId": "uk",
     "displayWithResearch": true,
-    "image": "uk-student-loan-calculator.jpg",
+    "image": "uk-student-loan-calculator.webp",
     "date": "2026-02-06 12:00:00",
     "authors": ["vahid-ahmadi"]
   },
@@ -99,7 +112,7 @@
     "tags": ["us", "technical", "featured", "interactives"],
     "countryId": "us",
     "displayWithResearch": true,
-    "image": "encode-policy-multi-agent-ai-cover.png",
+    "image": "encode-policy-multi-agent-ai-cover.webp",
     "date": "2026-02-02 12:00:00",
     "authors": ["ziming-hua"]
   },
@@ -112,7 +125,7 @@
     "tags": ["uk", "featured", "policy", "scotland", "interactives"],
     "countryId": "uk",
     "displayWithResearch": true,
-    "image": "scottish-budget-2026.jpg",
+    "image": "scottish-budget-2026.webp",
     "date": "2026-01-23 12:00:00",
     "authors": ["vahid-ahmadi"]
   },
@@ -125,7 +138,7 @@
     "tags": ["uk", "featured", "policy", "interactives"],
     "countryId": "uk",
     "displayWithResearch": true,
-    "image": "uk-local-areas-dashboard.png",
+    "image": "uk-local-areas-dashboard.webp",
     "date": "2025-12-16 12:00:00",
     "authors": ["vahid-ahmadi"]
   },
@@ -138,7 +151,7 @@
     "tags": ["uk", "featured", "policy", "interactives"],
     "countryId": "uk",
     "displayWithResearch": true,
-    "image": "autumn-2025-budget-dashboard.jpg",
+    "image": "autumn-2025-budget-dashboard.webp",
     "date": "2025-12-09 12:00:00",
     "authors": ["vahid-ahmadi"]
   },
@@ -151,7 +164,7 @@
     "tags": ["uk", "featured", "policy", "interactives"],
     "countryId": "uk",
     "displayWithResearch": true,
-    "image": "uk-public-services-spending.jpg",
+    "image": "uk-public-services-spending.webp",
     "date": "2025-11-11 11:00:00",
     "authors": ["vahid-ahmadi"]
   },
@@ -258,7 +271,7 @@
     "tags": ["uk", "featured", "policy", "interactives"],
     "countryId": "uk",
     "displayWithResearch": true,
-    "image": "young-child-exemption-two-child-limit.jpg",
+    "image": "young-child-exemption-two-child-limit.webp",
     "date": "2025-10-28",
     "authors": ["vahid-ahmadi"]
   },
@@ -280,7 +293,7 @@
     "tags": ["us", "policy", "featured", "reconciliation", "interactives"],
     "countryId": "us",
     "displayWithResearch": true,
-    "image": "obbba-household-by-household.png",
+    "image": "obbba-household-by-household.webp",
     "date": "2025-08-11",
     "authors": ["max-ghenis", "pavel-makarchuk", "ben-ogorek", "nikhil-woodruff"]
   },

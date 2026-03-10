@@ -26,7 +26,7 @@ The small variations between estimates may stem from slightly different assumpti
 
 We estimate this policy would raise net incomes by up to 0.5% across the income distribution. The lowest income decile sees a rise of 0.5%, and higher income deciles see a lower rise.
 
-![Decile impacts](/images/posts/autumn-budget-24-fuel-duty/decile.png)
+![Decile impacts](/images/posts/autumn-budget-24-fuel-duty/decile.webp)
 
 We estimate no impact on the absolute poverty rate, but a slight (0.2%) reduction in income inequality.
 

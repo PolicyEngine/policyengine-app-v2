@@ -24,11 +24,11 @@ The OBR and HM Treasury both estimate the impact of introducing VAT on private s
 
 This reform disproportionately affects households in the upper income deciles, reducing the net income of the top decile by 0.15% on average.
 
-![](/images/posts/school_vat/income.png)
+![](/images/posts/school_vat/income.webp)
 
 The policy would decrease net income for 3% of the population, with effects concentrated in higher income deciles.
 
-![](/images/posts/school_vat/winner-loser.png)
+![](/images/posts/school_vat/winner-loser.webp)
 
 When analysing impacts by wealth rather than income, this reform contributes to the pattern where all wealth deciles see lower net income, though with notably larger effects on wealthier households who are more likely to use private education[^1].
 

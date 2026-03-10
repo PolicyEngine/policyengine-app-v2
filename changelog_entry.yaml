@@ -1,4 +1,4 @@
 - bump: minor
   changes:
     added:
-      - Add Working Americans' Tax Cut Act calculator as reverse-proxied app at /us/watca
+      - Add Keep Your Pay Act calculator at /us/kypa

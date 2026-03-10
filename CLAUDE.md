@@ -92,6 +92,7 @@ Some external apps are served via Vercel rewrites in `vercel.json`, not iframes.
 | ------------ | -------------------------------------------- | ----------------------- |
 | `/slides/*`  | `policyengine-slides.vercel.app/slides/*`    | `policyengine-slides`   |
 | `/_tracker/*`| `policyengine--state-legislative-tracker...`  | state legislative tracker |
+| `/us/api/*`  | `household-api-docs-policy-engine.vercel.app/us/api/*` | `household-api-docs` |
 
 **Important**: Rewrite rules in `vercel.json` must appear before the SPA catch-all (`{ "source": "/(.*)", "destination": "/website.html" }`), otherwise the catch-all intercepts first.
 
