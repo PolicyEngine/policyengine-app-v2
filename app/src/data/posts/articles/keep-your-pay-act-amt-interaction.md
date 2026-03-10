@@ -43,9 +43,9 @@ The AMT adds back the standard deduction, so raising it does not change the tent
 | AMT taxable income    | $359,800 |
 | Tentative minimum tax |  $95,864 |
 
-Under current law, the regular tax ($102,608) exceeds the tentative minimum tax ($95,864), so the filer owes no AMT. Under KYPA, the regular tax drops to $88,912 — now _below_ the tentative minimum tax. The AMT fills the gap: $95,864 − $88,912 = $6,952.
-
 ### The bottom line
+
+Under current law, the regular tax ($102,608) exceeds the tentative minimum tax ($95,864), so the filer owes no AMT. Under KYPA, the regular tax drops to $88,912 — now _below_ the tentative minimum tax. The AMT fills the gap: $95,864 − $88,912 = $6,952.
 
 | Line item             |  Current law |        KYPA |  Difference |
 | :-------------------- | -----------: | ----------: | ----------: |
