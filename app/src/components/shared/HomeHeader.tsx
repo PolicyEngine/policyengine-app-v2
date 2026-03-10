@@ -25,6 +25,12 @@ export default function HeaderNavigation({ navbarOpened, onToggleNavbar }: Heade
       hasDropdown: false,
     },
     {
+      label: 'API',
+      href: getWebsitePath('/api'),
+      hasDropdown: false,
+      reloadDocument: true,
+    },
+    {
       label: 'About',
       hasDropdown: true,
       dropdownItems: [
