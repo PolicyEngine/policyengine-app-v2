@@ -147,10 +147,8 @@ export const useUserReports = (userId: string) => {
   } = useHouseholdAssociationsByUser(userId);
 
   // Step 2: Separate v2 reports (UUID reportId) from v1 reports (integer ID)
-  const v2Associations =
-    reportAssociations?.filter((a) => isV2EntityId(a.reportId)) ?? [];
-  const v1Associations =
-    reportAssociations?.filter((a) => !isV2EntityId(a.reportId)) ?? [];
+  const v2Associations = reportAssociations?.filter((a) => isV2EntityId(a.reportId)) ?? [];
+  const v1Associations = reportAssociations?.filter((a) => !isV2EntityId(a.reportId)) ?? [];
 
   // Step 3a: Fetch v2 report metadata from the API (simulationIds, outputType, status)
   const v2ReportIds = v2Associations.map((a) => a.reportId).filter(Boolean);
@@ -166,9 +164,7 @@ export const useUserReports = (userId: string) => {
     staleTime: 30 * 1000,
   });
 
-  const v2Reports = v2ReportResults.queries
-    .map((q) => q.data)
-    .filter((r): r is Report => !!r);
+  const v2Reports = v2ReportResults.queries.map((q) => q.data).filter((r): r is Report => !!r);
 
   // Step 3b: Fetch v1 reports from the legacy API
   const v1ReportIds = v1Associations.map((a) => a.reportId).filter(Boolean);

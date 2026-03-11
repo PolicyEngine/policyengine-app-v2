@@ -119,7 +119,9 @@ export async function orchestrateReportMigration(
         warnings,
       };
     }
-    console.info(`${LOG} Step 3: baseline OK — v2PolicyId=${baselinePolicyResult.v2Id ?? '(current law)'}`);
+    console.info(
+      `${LOG} Step 3: baseline OK — v2PolicyId=${baselinePolicyResult.v2Id ?? '(current law)'}`
+    );
     if (baselinePolicyResult.warnings) {
       warnings.push(...baselinePolicyResult.warnings.map((w) => `Baseline policy: ${w}`));
     }
@@ -146,7 +148,9 @@ export async function orchestrateReportMigration(
           warnings,
         };
       }
-      console.info(`${LOG} Step 3: reform OK — v2PolicyId=${reformPolicyResult.v2Id ?? '(current law)'}`);
+      console.info(
+        `${LOG} Step 3: reform OK — v2PolicyId=${reformPolicyResult.v2Id ?? '(current law)'}`
+      );
       if (reformPolicyResult.warnings) {
         warnings.push(...reformPolicyResult.warnings.map((w) => `Reform policy: ${w}`));
       }
@@ -367,7 +371,9 @@ export async function migrateAllV1Reports(
   // Clean up successfully-migrated v1 records from localStorage
   if (result.succeeded.length > 0) {
     const cleanup = cleanupMigratedRecords(result);
-    console.info(`${LOG} Cleanup: ${cleanup.removedReports} report(s), ${cleanup.removedSimulations} sim(s), ${cleanup.removedPolicies} policy(ies), ${cleanup.removedHouseholds} household(s) removed from localStorage`);
+    console.info(
+      `${LOG} Cleanup: ${cleanup.removedReports} report(s), ${cleanup.removedSimulations} sim(s), ${cleanup.removedPolicies} policy(ies), ${cleanup.removedHouseholds} household(s) removed from localStorage`
+    );
   }
   console.info(`${LOG} ============================================================\n`);
 
@@ -395,8 +401,12 @@ function logReportSummary(
     console.info(`${LOG} v2: reportId=${result.v2Ids.baseEntityId}`);
     console.info(`${LOG}     userAssocId=${result.v2Ids.userAssociationId}`);
     if (result.v2Ids.dependencyIds) {
-      console.info(`${LOG}     baselinePolicyId=${result.v2Ids.dependencyIds.baselinePolicyId ?? '(current law)'}`);
-      console.info(`${LOG}     reformPolicyId=${result.v2Ids.dependencyIds.reformPolicyId ?? '(current law)'}`);
+      console.info(
+        `${LOG}     baselinePolicyId=${result.v2Ids.dependencyIds.baselinePolicyId ?? '(current law)'}`
+      );
+      console.info(
+        `${LOG}     reformPolicyId=${result.v2Ids.dependencyIds.reformPolicyId ?? '(current law)'}`
+      );
       console.info(`${LOG}     populationId=${result.v2Ids.dependencyIds.populationId}`);
       console.info(`${LOG}     outputType=${result.v2Ids.dependencyIds.outputType}`);
     }

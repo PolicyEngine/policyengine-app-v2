@@ -79,9 +79,7 @@ function removeMatchingRecords(key: string, idsToRemove: Set<string>): number {
 
     if (removedCount > 0) {
       localStorage.setItem(key, JSON.stringify(kept));
-      console.info(
-        `${LOG}   "${key}": removed ${removedCount}/${parsed.length} record(s)`
-      );
+      console.info(`${LOG}   "${key}": removed ${removedCount}/${parsed.length} record(s)`);
     }
 
     return removedCount;

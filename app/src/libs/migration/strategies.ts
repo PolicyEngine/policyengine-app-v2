@@ -117,9 +117,12 @@ export async function migratePolicy(
       success: true,
       v2Id: v2Policy.id,
       v1Id: v1PolicyId,
-      warnings: unmappedParams.length > 0
-        ? [`${unmappedParams.length} parameter(s) could not be mapped to v2: ${unmappedParams.join(', ')}`]
-        : undefined,
+      warnings:
+        unmappedParams.length > 0
+          ? [
+              `${unmappedParams.length} parameter(s) could not be mapped to v2: ${unmappedParams.join(', ')}`,
+            ]
+          : undefined,
     };
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);

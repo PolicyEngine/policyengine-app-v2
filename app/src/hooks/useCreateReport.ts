@@ -78,9 +78,7 @@ async function createHouseholdReportV2(
     const request: HouseholdImpactRequest = {
       household_id: householdId,
       baseline_policy_id: 'current_law',
-      ...(sim.policyId
-        ? { reform_policy_id: sim.policyId }
-        : {}),
+      ...(sim.policyId ? { reform_policy_id: sim.policyId } : {}),
     };
     const response = await createHouseholdAnalysis(request);
     responses.push(response);

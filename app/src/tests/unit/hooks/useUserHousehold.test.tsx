@@ -147,17 +147,14 @@ describe('useUserHousehold hooks', () => {
       expect(mockStore.findByUser).toHaveBeenCalledWith(userId, 'us');
     });
 
-    test('given empty user ID when fetching then still attempts fetch', async () => {
+    test('given empty user ID when fetching then query is disabled', async () => {
       // When
       const { result } = renderHook(() => useHouseholdAssociationsByUser(''), { wrapper });
 
-      // Then
-      await waitFor(() => {
-        expect(result.current.isSuccess).toBe(true);
-      });
-
+      // Then — query should not fire with empty userId
+      expect(result.current.fetchStatus).toBe('idle');
       const mockStore = (LocalStorageHouseholdStore as any)();
-      expect(mockStore.findByUser).toHaveBeenCalledWith('', 'us');
+      expect(mockStore.findByUser).not.toHaveBeenCalled();
     });
 
     test('given store error when fetching then returns error state', async () => {

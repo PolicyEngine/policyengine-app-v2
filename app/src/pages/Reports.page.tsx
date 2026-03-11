@@ -3,7 +3,6 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { Alert, Box, Button, Progress, Stack, Text } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { colors, spacing, typography } from '@/designTokens';
 import {
   BulletsValue,
   ColumnConfig,
@@ -15,6 +14,7 @@ import { RenameIngredientModal } from '@/components/common/RenameIngredientModal
 import IngredientReadView from '@/components/IngredientReadView';
 import { MultiSimOutputTypeCell } from '@/components/report/MultiSimReportOutputTypeCell';
 import { ReportOutputTypeCell } from '@/components/report/ReportOutputTypeCell';
+import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useUserId } from '@/hooks/useUserId';
 import { useUpdateReportAssociation } from '@/hooks/useUserReportAssociations';
@@ -243,9 +243,7 @@ export default function ReportsPage() {
       <Stack gap="md">
         {migrationError && (
           <Alert color="red" title="Migration failed">
-            <Text fz={typography.fontSize.sm}>
-              {migrationError}
-            </Text>
+            <Text fz={typography.fontSize.sm}>{migrationError}</Text>
           </Alert>
         )}
 
@@ -295,7 +293,7 @@ export default function ReportsPage() {
               migrationResult.failed.length > 0
                 ? 'orange'
                 : [...migrationResult.succeeded, ...migrationResult.failed].some(
-                      (r) => r.warnings?.length,
+                      (r) => r.warnings?.length
                     )
                   ? 'yellow'
                   : 'teal'
@@ -328,7 +326,7 @@ export default function ReportsPage() {
               </Stack>
             )}
             {[...migrationResult.succeeded, ...migrationResult.failed].some(
-              (r) => r.warnings?.length,
+              (r) => r.warnings?.length
             ) && (
               <Stack gap="xs" mt="sm">
                 <Text size="sm" fw={600}>
