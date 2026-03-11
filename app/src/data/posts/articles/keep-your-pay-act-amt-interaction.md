@@ -8,31 +8,15 @@ The regular income tax and the AMT run two parallel calculations.[^1] You pay wh
 
 **Regular income tax** uses the standard deduction:
 
-$$
-\text{Taxable income} = \text{AGI} - \text{Standard deduction}
-$$
-
-$$
-\text{Tax} = \text{Bracket rates applied to taxable income}
-$$
+- `Taxable income = AGI − Standard deduction`
+- `Tax = Bracket rates applied to taxable income`
 
 **AMT** computes its own taxable base. It starts from taxable income, adds back the standard deduction and other preference items, then subtracts its own exemption and applies a flatter rate:
 
-$$
-\text{AMTI} = \text{Taxable income} + \text{Standard deduction} + \text{Other AMT preference items}
-$$
-
-$$
-\text{AMT taxable income} = \text{AMTI} - \text{AMT exemption}
-$$
-
-$$
-\text{Tentative minimum tax} = 26\%\ \text{on first}\ {\sim}\$250{,}000 + 28\%\ \text{above}
-$$
-
-$$
-\text{AMT owed} = \max(0,\ \text{Tentative minimum tax} - \text{Regular tax})
-$$
+- `AMTI = Taxable income + Standard deduction + Other AMT preference items`
+- `AMT taxable income = AMTI − AMT exemption`
+- `Tentative minimum tax = 26% on first ~$250,000 + 28% above`
+- `AMT owed = max(0, Tentative minimum tax − Regular tax)`
 
 Because AMTI adds back the standard deduction, raising the standard deduction does not change the AMT calculation. It only lowers the regular tax. When the regular tax drops below the tentative minimum tax, the AMT fills the gap.
 
