@@ -22,7 +22,9 @@ const BrandAssetsPage = lazy(() => import('./pages/BrandAssets.page'));
 const BrandDesignPage = lazy(() => import('./pages/BrandDesign.page'));
 const BrandWritingPage = lazy(() => import('./pages/BrandWriting.page'));
 const ClaudePluginsPage = lazy(() => import('./pages/ClaudePlugins.page'));
+const DevToolsPage = lazy(() => import('./pages/DevTools.page'));
 const DonatePage = lazy(() => import('./pages/Donate.page'));
+const ApiStatusPage = lazy(() => import('./pages/ApiStatus.page'));
 const OrgLogosEmbedPage = lazy(() => import('./pages/embed/OrgLogosEmbed.page'));
 const PrivacyPage = lazy(() => import('./pages/Privacy.page'));
 const ResearchPage = lazy(() => import('./pages/Research.page'));
@@ -65,6 +67,14 @@ const router = createBrowserRouter(
                 {
                   index: true,
                   element: <HomePage />,
+                },
+                {
+                  path: 'dev-tools',
+                  element: <DevToolsPage />,
+                },
+                {
+                  path: 'dev-tools/api-status',
+                  element: <ApiStatusPage />,
                 },
                 {
                   path: 'donate',
