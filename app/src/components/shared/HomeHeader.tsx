@@ -1,5 +1,6 @@
 import HeaderContent from '@/components/homeHeader/HeaderContent';
 import { NavItemSetup } from '@/components/homeHeader/NavItem';
+import { WEBSITE_URL } from '@/constants';
 import { colors, spacing, typography } from '@/designTokens';
 import { useDisclosure } from '@/hooks/useDisclosure';
 import { useWebsitePath } from '@/hooks/useWebsitePath';
@@ -11,7 +12,7 @@ interface HeaderNavigationProps {
 
 export default function HeaderNavigation({ navbarOpened, onToggleNavbar }: HeaderNavigationProps) {
   const [opened, { open, close }] = useDisclosure(false);
-  const { getWebsitePath } = useWebsitePath();
+  const { getWebsitePath, countryId } = useWebsitePath();
 
   const navItems: NavItemSetup[] = [
     {
@@ -26,7 +27,9 @@ export default function HeaderNavigation({ navbarOpened, onToggleNavbar }: Heade
     },
     {
       label: 'API',
-      href: getWebsitePath('/api'),
+      // Always use an absolute URL — the API docs are a separate app served
+      // via Vercel rewrite, so React Router must not intercept this link.
+      href: `${WEBSITE_URL}/${countryId}/api`,
       hasDropdown: false,
     },
     {
