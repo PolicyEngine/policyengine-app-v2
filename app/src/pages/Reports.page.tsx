@@ -50,6 +50,7 @@ export default function ReportsPage() {
   const [isMigrating, setIsMigrating] = useState(false);
   const [migrationProgress, setMigrationProgress] = useState<MigrationProgress | null>(null);
   const [migrationResult, setMigrationResult] = useState<MigrationRunResult | null>(null);
+  const [migrationError, setMigrationError] = useState<string | null>(null);
 
   // Detect v1 reports on load
   useEffect(() => {
@@ -60,6 +61,7 @@ export default function ReportsPage() {
   const handleMigrate = useCallback(async () => {
     setIsMigrating(true);
     setMigrationResult(null);
+    setMigrationError(null);
     try {
       const result = await migrateAllV1Reports(userId, (progress) => {
         setMigrationProgress(progress);
@@ -68,7 +70,9 @@ export default function ReportsPage() {
       setV1Reports([]);
       queryClient.invalidateQueries();
     } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
       console.error('[ReportsPage] Migration failed:', err);
+      setMigrationError(message);
     } finally {
       setIsMigrating(false);
       setMigrationProgress(null);
@@ -136,7 +140,7 @@ export default function ReportsPage() {
     },
     {
       key: 'dateCreated',
-      header: 'Date Created',
+      header: 'Date created',
       type: 'text',
     },
     {
@@ -162,7 +166,7 @@ export default function ReportsPage() {
     },
     {
       key: 'outputType',
-      header: 'Output Type',
+      header: 'Output type',
       type: 'text',
     },
     {
@@ -237,7 +241,15 @@ export default function ReportsPage() {
   return (
     <>
       <Stack gap="md">
-        {v1Reports.length > 0 && !migrationResult && (
+        {migrationError && (
+          <Alert color="red" title="Migration failed">
+            <Text fz={typography.fontSize.sm}>
+              {migrationError}
+            </Text>
+          </Alert>
+        )}
+
+        {v1Reports.length > 0 && !migrationResult && !migrationError && (
           <Box
             p={spacing.xl}
             style={{

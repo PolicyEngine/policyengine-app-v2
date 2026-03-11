@@ -18,6 +18,8 @@ import { fetchSimulationById } from '@/api/simulation';
 import { createEconomyAnalysis } from '@/api/v2/economyAnalysis';
 // V2 analysis endpoints (create report + simulations server-side)
 import { createHouseholdAnalysis } from '@/api/v2/householdAnalysis';
+// Cleanup
+import { cleanupMigratedRecords } from './cleanup';
 // Detection
 import { detectV1Reports } from './detect';
 // Strategy functions
@@ -137,8 +139,8 @@ export async function orchestrateReportMigration(
         return {
           success: false,
           v1UserAssociationId: userReportId,
-        v1ReportId: reportId,
-        label,
+          v1ReportId: reportId,
+          label,
           v2Ids: { dependencyIds: { baselinePolicyId: baselinePolicyResult.v2Id ?? null } },
           errors,
           warnings,
@@ -168,8 +170,8 @@ export async function orchestrateReportMigration(
         return {
           success: false,
           v1UserAssociationId: userReportId,
-        v1ReportId: reportId,
-        label,
+          v1ReportId: reportId,
+          label,
           v2Ids: {
             dependencyIds: {
               baselinePolicyId: baselinePolicyResult.v2Id ?? null,
@@ -362,7 +364,11 @@ export async function migrateAllV1Reports(
       );
     }
   }
-  console.info(`${LOG} NOTE: localStorage was NOT modified (cleanup disabled for testing)`);
+  // Clean up successfully-migrated v1 records from localStorage
+  if (result.succeeded.length > 0) {
+    const cleanup = cleanupMigratedRecords(result);
+    console.info(`${LOG} Cleanup: ${cleanup.removedReports} report(s), ${cleanup.removedSimulations} sim(s), ${cleanup.removedPolicies} policy(ies), ${cleanup.removedHouseholds} household(s) removed from localStorage`);
+  }
   console.info(`${LOG} ============================================================\n`);
 
   return result;

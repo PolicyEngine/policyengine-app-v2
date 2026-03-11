@@ -39,12 +39,12 @@ function makeFailedResult(v1Id: string): OrchestratorResult {
   };
 }
 
-describe('cleanup (dry run)', () => {
+describe('cleanup', () => {
   beforeEach(() => {
     localStorage.clear();
   });
 
-  test('given empty succeeded list then counts zero removals', () => {
+  test('given empty succeeded list then removes nothing', () => {
     localStorage.setItem(LS_KEYS.reports, JSON.stringify([{ id: 'keep-me' }]));
 
     const result = cleanupMigratedRecords({
@@ -54,12 +54,11 @@ describe('cleanup (dry run)', () => {
     });
 
     expect(result.removedReports).toBe(0);
-    // Dry run: localStorage is NOT modified
     const remaining = JSON.parse(localStorage.getItem(LS_KEYS.reports)!);
     expect(remaining).toHaveLength(1);
   });
 
-  test('given succeeded results then counts matching reports for removal', () => {
+  test('given succeeded results then removes matching reports from localStorage', () => {
     localStorage.setItem(
       LS_KEYS.reports,
       JSON.stringify([
@@ -76,12 +75,12 @@ describe('cleanup (dry run)', () => {
     });
 
     expect(result.removedReports).toBe(2);
-    // Dry run: localStorage is NOT modified — all 3 records remain
     const remaining = JSON.parse(localStorage.getItem(LS_KEYS.reports)!);
-    expect(remaining).toHaveLength(3);
+    expect(remaining).toHaveLength(1);
+    expect(remaining[0].id).toBe('ur-keep');
   });
 
-  test('given failed results then only counts succeeded for removal', () => {
+  test('given failed results then only removes succeeded from localStorage', () => {
     localStorage.setItem(
       LS_KEYS.reports,
       JSON.stringify([
@@ -97,9 +96,9 @@ describe('cleanup (dry run)', () => {
     });
 
     expect(result.removedReports).toBe(1);
-    // Dry run: localStorage is NOT modified — both records remain
     const remaining = JSON.parse(localStorage.getItem(LS_KEYS.reports)!);
-    expect(remaining).toHaveLength(2);
+    expect(remaining).toHaveLength(1);
+    expect(remaining[0].id).toBe('ur-v1-002');
   });
 
   test('given empty localStorage then returns zero counts', () => {
@@ -127,7 +126,7 @@ describe('cleanup (dry run)', () => {
     expect(result.removedReports).toBe(0);
   });
 
-  test('given dependency IDs in succeeded results then counts removals from all stores', () => {
+  test('given dependency IDs in succeeded results then removes from all stores', () => {
     localStorage.setItem(LS_KEYS.reports, JSON.stringify([{ id: 'ur-v1-001' }]));
     localStorage.setItem(
       LS_KEYS.simulations,
@@ -159,9 +158,11 @@ describe('cleanup (dry run)', () => {
     expect(result.removedPolicies).toBe(1);
     expect(result.removedHouseholds).toBe(1);
 
-    // Dry run: localStorage is NOT modified — all records remain
-    expect(JSON.parse(localStorage.getItem(LS_KEYS.simulations)!)).toHaveLength(3);
-    expect(JSON.parse(localStorage.getItem(LS_KEYS.policies)!)).toHaveLength(2);
-    expect(JSON.parse(localStorage.getItem(LS_KEYS.households)!)).toHaveLength(1);
+    // Verify records were actually removed
+    expect(JSON.parse(localStorage.getItem(LS_KEYS.simulations)!)).toHaveLength(1);
+    expect(JSON.parse(localStorage.getItem(LS_KEYS.simulations)!)[0].id).toBe('sim-keep');
+    expect(JSON.parse(localStorage.getItem(LS_KEYS.policies)!)).toHaveLength(1);
+    expect(JSON.parse(localStorage.getItem(LS_KEYS.policies)!)[0].id).toBe('policy-keep');
+    expect(localStorage.getItem(LS_KEYS.households)).toBe('[]');
   });
 });
