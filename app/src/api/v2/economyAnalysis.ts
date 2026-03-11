@@ -19,7 +19,7 @@ import { API_V2_BASE_URL } from './taxBenefitModels';
 // Types
 // ============================================================================
 
-export type ReportStatus = 'pending' | 'running' | 'completed' | 'failed';
+export type ReportStatus = 'pending' | 'execution_deferred' | 'running' | 'completed' | 'failed';
 
 export interface SimulationInfo {
   id: string;

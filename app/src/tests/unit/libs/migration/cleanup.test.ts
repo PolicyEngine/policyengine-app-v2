@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test } from 'vitest';
 import { cleanupMigratedRecords } from '@/libs/migration/cleanup';
-import type { MigrationRunResult, OrchestratorResult } from '@/libs/migration/types';
+import type { OrchestratorResult } from '@/libs/migration/types';
 
 const LS_KEYS = {
   reports: 'user-report-associations',

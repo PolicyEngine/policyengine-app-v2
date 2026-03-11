@@ -183,6 +183,7 @@ export async function orchestrateReportMigration(
         household_id: v2PopulationId!,
         baseline_policy_id: baselinePolicyResult.v2Id ?? 'current_law',
         reform_policy_id: reformPolicyResult.v2Id ?? 'current_law',
+        run: false,
       });
       v2ReportId = analysis.report_id;
       if (analysis.baseline_simulation) {
@@ -198,6 +199,7 @@ export async function orchestrateReportMigration(
         baseline_policy_id: baselinePolicyResult.v2Id ?? 'current_law',
         reform_policy_id: reformPolicyResult.v2Id ?? 'current_law',
         year: parseInt(v1Report.year, 10),
+        run: false,
       });
       v2ReportId = analysis.report_id;
       v2SimIds = [analysis.baseline_simulation.id, analysis.reform_simulation.id];

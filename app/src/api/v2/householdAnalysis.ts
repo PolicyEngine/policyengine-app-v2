@@ -17,7 +17,7 @@ import { API_V2_BASE_URL } from './taxBenefitModels';
 // Types
 // ============================================================================
 
-export type HouseholdReportStatus = 'pending' | 'running' | 'completed' | 'failed';
+export type HouseholdReportStatus = 'pending' | 'execution_deferred' | 'running' | 'completed' | 'failed';
 
 export interface HouseholdSimulationInfo {
   id: string;

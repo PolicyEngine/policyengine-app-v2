@@ -6,8 +6,7 @@
  * For v1 API boundary conversion, see api/legacyConversion.ts
  */
 
-import type { CountryId } from '@/libs/countries';
-import { countryIds } from '@/libs/countries';
+import { type CountryId, countryIds } from '@/libs/countries';
 import { Household } from '@/types/ingredients/Household';
 import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
 import { HouseholdCalculatePayload, householdToCalculatePayload } from '@/types/payloads';
