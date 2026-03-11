@@ -99,7 +99,7 @@ describe('getHierarchicalLabels', () => {
     const partialMetadata = {
       'gov.irs': {
         label: 'IRS',
-        type: 'parameterNode' as const,
+        type: 'node' as const,
         parameter: 'gov.irs',
         unit: '',
       },
@@ -279,7 +279,7 @@ describe('capitalize first formatting', () => {
 
     // When
     const result = getHierarchicalLabels('gov.irs', {
-      'gov.irs': { label: input, type: 'parameterNode', parameter: 'gov.irs', unit: '' },
+      'gov.irs': { label: input, type: 'node', parameter: 'gov.irs', unit: '' },
     });
 
     // Then
@@ -292,7 +292,7 @@ describe('capitalize first formatting', () => {
 
     // When
     const result = getHierarchicalLabels('gov.irs', {
-      'gov.irs': { label: input, type: 'parameterNode', parameter: 'gov.irs', unit: '' },
+      'gov.irs': { label: input, type: 'node', parameter: 'gov.irs', unit: '' },
     });
 
     // Then
@@ -305,7 +305,7 @@ describe('capitalize first formatting', () => {
 
     // When
     const result = getHierarchicalLabels('gov.irs', {
-      'gov.irs': { label: input, type: 'parameterNode', parameter: 'gov.irs', unit: '' },
+      'gov.irs': { label: input, type: 'node', parameter: 'gov.irs', unit: '' },
     });
 
     // Then
@@ -318,7 +318,7 @@ describe('capitalize first formatting', () => {
 
     // When
     const result = getHierarchicalLabels('gov.irs', {
-      'gov.irs': { label: input, type: 'parameterNode', parameter: 'gov.irs', unit: '' },
+      'gov.irs': { label: input, type: 'node', parameter: 'gov.irs', unit: '' },
     });
 
     // Then
@@ -331,7 +331,7 @@ describe('capitalize first formatting', () => {
 
     // When
     const result = getHierarchicalLabels('gov.irs', {
-      'gov.irs': { label: input, type: 'parameterNode', parameter: 'gov.irs', unit: '' },
+      'gov.irs': { label: input, type: 'node', parameter: 'gov.irs', unit: '' },
     });
 
     // Then
@@ -344,7 +344,7 @@ describe('capitalize first formatting', () => {
 
     // When
     const result = getHierarchicalLabels('gov.irs', {
-      'gov.irs': { label: input, type: 'parameterNode', parameter: 'gov.irs', unit: '' },
+      'gov.irs': { label: input, type: 'node', parameter: 'gov.irs', unit: '' },
     });
 
     // Then
