@@ -22,7 +22,9 @@ export default function HeaderNavigation({ navbarOpened, onToggleNavbar }: Heade
     },
     {
       label: 'Model',
-      href: getWebsitePath('/model'),
+      // Always use an absolute URL — the model explorer is a separate app served
+      // via Vercel rewrite, so React Router must not intercept this link.
+      href: `${WEBSITE_URL}/${countryId}/model`,
       hasDropdown: false,
     },
     {
