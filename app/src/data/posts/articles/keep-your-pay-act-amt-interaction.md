@@ -4,19 +4,19 @@ Senator Booker's [tax calculator](https://www.booker.senate.gov/tax-calculator) 
 
 ## How the AMT offsets part of the tax savings
 
-The regular income tax and the AMT run two parallel calculations. You pay whichever produces the higher amount.
+The regular income tax and the AMT run two parallel calculations.[^1] You pay whichever produces the higher amount.
 
 **Regular income tax** uses the standard deduction:
 
-- Taxable income = AGI − standard deduction
-- Tax = bracket rates applied to taxable income
+- `Taxable income = AGI − Standard deduction`
+- `Tax = Bracket rates applied to taxable income`
 
 **AMT** computes its own taxable base. It starts from taxable income, adds back the standard deduction and other preference items, then subtracts its own exemption and applies a flatter rate:
 
-- AMT income (AMTI) = taxable income + standard deduction + other AMT preference items
-- AMT taxable = AMTI − AMT exemption
-- Tentative minimum tax = 26% on first ~$250,000 + 28% above
-- AMT owed = max(0, tentative minimum tax − regular tax)
+- `AMTI = Taxable income + Standard deduction + Other AMT preference items`
+- `AMT taxable income = AMTI − AMT exemption`
+- `Tentative minimum tax = 26% on first ~$250,000 + 28% above`
+- `AMT owed = max(0, Tentative minimum tax − Regular tax)`
 
 Because AMTI adds back the standard deduction, raising the standard deduction does not change the AMT calculation. It only lowers the regular tax. When the regular tax drops below the tentative minimum tax, the AMT fills the gap.
 
@@ -34,24 +34,25 @@ This calculation does not include the AMT.
 
 ### The AMT clawback
 
-The AMT adds back the standard deduction, so the larger standard deduction does not change any AMT values. The AMT side stays identical under current law and KYPA:
+The AMT adds back the standard deduction, so raising it does not change the tentative minimum tax — the threshold that triggers AMT when regular tax falls below it:
 
 | Line item             |   Amount |
 | :-------------------- | -------: |
 | AMTI                  | $500,000 |
 | AMT exemption         | $140,200 |
-| AMT taxable           | $359,800 |
+| AMT taxable income    | $359,800 |
 | Tentative minimum tax |  $95,864 |
-
-Under current law, the regular tax ($102,608) exceeds the tentative minimum tax ($95,864), so the filer owes no AMT. Under KYPA, the regular tax drops to $88,912 — now _below_ the tentative minimum tax. The AMT fills the gap: $95,864 − $88,912 = $6,952.
 
 ### The bottom line
 
-| Line item            |  Current law |        KYPA |  Difference |
-| :------------------- | -----------: | ----------: | ----------: |
-| Regular tax          |     $102,608 |     $88,912 |    −$13,696 |
-| AMT                  |           $0 |      $6,952 |     +$6,952 |
-| **Total income tax** | **$102,608** | **$95,864** | **−$6,744** |
+Under current law, the regular tax ($102,608) exceeds the tentative minimum tax ($95,864), so the filer owes no AMT. Under KYPA, the regular tax drops to $88,912 — now _below_ the tentative minimum tax. The AMT fills the gap: $95,864 − $88,912 = $6,952.
+
+| Line item             |  Current law |        KYPA |  Difference |
+| :-------------------- | -----------: | ----------: | ----------: |
+| Regular tax           |     $102,608 |     $88,912 |    −$13,696 |
+| Tentative minimum tax |      $95,864 |     $95,864 |          $0 |
+| AMT                   |           $0 |      $6,952 |     +$6,952 |
+| **Total income tax**  | **$102,608** | **$95,864** | **−$6,744** |
 
 Bracket savings alone suggest $13,696 in tax relief, but the AMT claws back $6,952 of that. The actual tax cut totals $6,744 — 51% less than the headline figure.
 
@@ -61,14 +62,15 @@ Bracket savings alone suggest $13,696 in tax relief, but the AMT claws back $6,9
 
 ## Who is affected
 
-The chart below shows how the AMT clawback varies by income for a married couple filing jointly with only employment income and the standard deduction in Texas in 2026. Filers with other deductions (SALT, mortgage interest, etc.) or income sources will see different results.
+The chart below shows how the AMT clawback varies for a non-itemizer couple filing jointly based on their employment income in Texas in 2026.
 
 <iframe src="/us/keep-your-pay-act/amt-chart" width="100%" height="550" style="border: none; overflow: hidden;" title="KYPA AMT savings by income"></iframe>
 
 The AMT reduces KYPA savings for filers in roughly the $250,000–$625,000 range (married filing jointly). Below that range, the standard deduction increase does not push the regular tax below the AMT floor. Above that range, higher bracket rates keep the regular tax above the AMT.
 
-Lower- and middle-income households receive the full value of the standard deduction increase, CTC expansion, and EITC expansion.
 
 ## Methodology
 
 All calculations use the [PolicyEngine US microsimulation model](https://policyengine.org), which models AMT alongside regular income tax. AMT exemptions in 2026 under the One Big Beautiful Bill Act are $140,200 for married filing jointly, $90,100 for single and head of household, and $70,100 for married filing separately.
+
+[^1]: These are simplified calculations. The PolicyEngine model includes more complex interactions such as capital gains taxes.
