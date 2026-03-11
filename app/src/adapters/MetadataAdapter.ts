@@ -38,6 +38,8 @@ export class MetadataAdapter {
       created_at: v2.created_at,
       // Use API label if available, otherwise auto-generate from name (sentence case)
       label: v2.label || v2.name.replace(/_/g, ' ').replace(/^./, (c: string) => c.toUpperCase()),
+      adds: v2.adds ?? undefined,
+      subtracts: v2.subtracts ?? undefined,
     };
   }
 

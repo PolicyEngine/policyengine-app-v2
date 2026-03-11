@@ -14,6 +14,8 @@ export interface V2VariableMetadata {
   data_type: string;
   possible_values: string[] | null;
   default_value: string | number | boolean | null;
+  adds: string[] | null;
+  subtracts: string[] | null;
   tax_benefit_model_version_id: string;
   created_at: string;
 }
@@ -100,9 +102,8 @@ export interface VariableMetadata {
   label?: string;
 
   // Variable arithmetic (for breakdown calculations)
-  // WARNING: These fields are NOT populated from V2 API - see note above
-  adds?: string | string[];
-  subtracts?: string | string[];
+  adds?: string[];
+  subtracts?: string[];
 }
 
 /**
