@@ -4,6 +4,7 @@ import {
   HouseholdJobResponse,
   HouseholdJobStatusResponse,
 } from '@/api/v2/householdCalculation';
+import { API_V2_BASE_URL as IMPORTED_API_V2_BASE_URL } from '@/api/v2/taxBenefitModels';
 import { CURRENT_YEAR } from '@/constants';
 import { Household } from '@/types/ingredients/Household';
 
@@ -66,8 +67,8 @@ export const ERROR_MESSAGES = {
   INVALID_PARAMETERS: 'Invalid parameters provided for household calculation',
 } as const;
 
-// V2 Alpha API Base URL
-export const API_V2_BASE_URL = 'https://v2.api.policyengine.org';
+// V2 Alpha API Base URL - imported from source so tests use the same runtime value
+export const API_V2_BASE_URL = IMPORTED_API_V2_BASE_URL;
 
 // ============================================================================
 // Mock response helpers

@@ -59,6 +59,7 @@ export async function orchestrateReportMigration(
   userId: string
 ): Promise<OrchestratorResult> {
   const errors: MigrationError[] = [];
+  const warnings: string[] = [];
   const { countryId, reportId, userReportId, label } = reportInfo;
 
   console.info(
@@ -109,11 +110,17 @@ export async function orchestrateReportMigration(
       return {
         success: false,
         v1UserAssociationId: userReportId,
+        v1ReportId: reportId,
+        label,
         v2Ids: {},
         errors,
+        warnings,
       };
     }
     console.info(`${LOG} Step 3: baseline OK — v2PolicyId=${baselinePolicyResult.v2Id ?? '(current law)'}`);
+    if (baselinePolicyResult.warnings) {
+      warnings.push(...baselinePolicyResult.warnings.map((w) => `Baseline policy: ${w}`));
+    }
 
     let reformPolicyResult: MigrationResult = { success: true, v2Id: null, v1Id: '' };
     if (v1Sim2) {
@@ -130,11 +137,17 @@ export async function orchestrateReportMigration(
         return {
           success: false,
           v1UserAssociationId: userReportId,
+        v1ReportId: reportId,
+        label,
           v2Ids: { dependencyIds: { baselinePolicyId: baselinePolicyResult.v2Id ?? null } },
           errors,
+          warnings,
         };
       }
       console.info(`${LOG} Step 3: reform OK — v2PolicyId=${reformPolicyResult.v2Id ?? '(current law)'}`);
+      if (reformPolicyResult.warnings) {
+        warnings.push(...reformPolicyResult.warnings.map((w) => `Reform policy: ${w}`));
+      }
     }
 
     // Step 4: Migrate population (both sims share the same population)
@@ -155,6 +168,8 @@ export async function orchestrateReportMigration(
         return {
           success: false,
           v1UserAssociationId: userReportId,
+        v1ReportId: reportId,
+        label,
           v2Ids: {
             dependencyIds: {
               baselinePolicyId: baselinePolicyResult.v2Id ?? null,
@@ -162,6 +177,7 @@ export async function orchestrateReportMigration(
             },
           },
           errors,
+          warnings,
         };
       }
       v2PopulationId = householdResult.v2Id ?? null;
@@ -236,6 +252,8 @@ export async function orchestrateReportMigration(
     const result: OrchestratorResult = {
       success,
       v1UserAssociationId: userReportId,
+      v1ReportId: reportId,
+      label,
       v2Ids: {
         baseEntityId: v2ReportId,
         userAssociationId: assocResult.v2Id ?? undefined,
@@ -248,6 +266,7 @@ export async function orchestrateReportMigration(
         },
       },
       errors,
+      warnings,
     };
 
     logReportSummary(reportInfo, success, errors, result);
@@ -265,8 +284,11 @@ export async function orchestrateReportMigration(
     return {
       success: false,
       v1UserAssociationId: userReportId,
+      v1ReportId: reportId,
+      label,
       v2Ids: {},
       errors,
+      warnings,
     };
   }
 }

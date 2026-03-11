@@ -33,6 +33,7 @@ export const useSimulationAssociationsByUser = (userId: string) => {
   return useQuery({
     queryKey: simulationAssociationKeys.byUser(userId, countryId),
     queryFn: () => store.findByUser(userId, countryId),
+    enabled: !!userId,
     ...config,
   });
 };

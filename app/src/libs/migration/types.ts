@@ -8,6 +8,7 @@ export interface MigrationResult<T = string> {
   v2Id?: T | null;
   v1Id: string;
   error?: string;
+  warnings?: string[];
 }
 
 /**
@@ -25,12 +26,15 @@ export interface MigrationError {
 export interface OrchestratorResult {
   success: boolean;
   v1UserAssociationId: string;
+  v1ReportId: string;
+  label?: string;
   v2Ids: {
     baseEntityId?: string | null;
     userAssociationId?: string;
     dependencyIds?: Record<string, string | null>;
   };
   errors: MigrationError[];
+  warnings: string[];
 }
 
 /**

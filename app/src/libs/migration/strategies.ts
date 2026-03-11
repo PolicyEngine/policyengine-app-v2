@@ -113,7 +113,14 @@ export async function migratePolicy(
     });
 
     console.info(`${LOG} Policy: SUCCESS v1=${v1PolicyId} → v2=${v2Policy.id}`);
-    return { success: true, v2Id: v2Policy.id, v1Id: v1PolicyId };
+    return {
+      success: true,
+      v2Id: v2Policy.id,
+      v1Id: v1PolicyId,
+      warnings: unmappedParams.length > 0
+        ? [`${unmappedParams.length} parameter(s) could not be mapped to v2: ${unmappedParams.join(', ')}`]
+        : undefined,
+    };
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error(`${LOG} Policy: FAILED v1=${v1PolicyId} — ${msg}`);

@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { Alert, Button, Progress, Stack, Text } from '@mantine/core';
+import { Alert, Box, Button, Progress, Stack, Text } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
+import { colors, spacing, typography } from '@/designTokens';
 import {
   BulletsValue,
   ColumnConfig,
@@ -237,8 +238,22 @@ export default function ReportsPage() {
     <>
       <Stack gap="md">
         {v1Reports.length > 0 && !migrationResult && (
-          <Alert color="yellow" title="Some reports need migration">
-            <Text size="sm">
+          <Box
+            p={spacing.xl}
+            style={{
+              backgroundColor: colors.gray[200],
+              borderRadius: spacing.radius.lg,
+            }}
+          >
+            <Text
+              fw={typography.fontWeight.semibold}
+              fz={typography.fontSize.base}
+              c={colors.text.primary}
+              mb={spacing.xs}
+            >
+              Some reports need migration
+            </Text>
+            <Text fz={typography.fontSize.sm} c={colors.text.secondary}>
               We found {v1Reports.length} report(s) that use an older version of our API. These
               reports will not work correctly until migrated to the new version.
             </Text>
@@ -259,12 +274,20 @@ export default function ReportsPage() {
                 Migrate reports
               </Button>
             )}
-          </Alert>
+          </Box>
         )}
 
         {migrationResult && (
           <Alert
-            color={migrationResult.failed.length === 0 ? 'green' : 'orange'}
+            color={
+              migrationResult.failed.length > 0
+                ? 'orange'
+                : [...migrationResult.succeeded, ...migrationResult.failed].some(
+                      (r) => r.warnings?.length,
+                    )
+                  ? 'yellow'
+                  : 'teal'
+            }
             title="Migration complete"
           >
             <Text size="sm">
@@ -273,6 +296,48 @@ export default function ReportsPage() {
               {migrationResult.failed.length > 0 &&
                 ` ${migrationResult.failed.length} report(s) failed to migrate.`}
             </Text>
+            {migrationResult.failed.length > 0 && (
+              <Stack gap="xs" mt="sm">
+                <Text size="sm" fw={600}>
+                  Failed migrations:
+                </Text>
+                {migrationResult.failed.map((f) => (
+                  <Stack key={f.v1UserAssociationId} gap={2}>
+                    <Text size="xs" c="dimmed">
+                      Report: {f.label || `#${f.v1ReportId}`}
+                    </Text>
+                    {f.errors.map((e, i) => (
+                      <Text key={i} size="xs" c="red.7">
+                        &bull; {e.stage}: {e.message}
+                      </Text>
+                    ))}
+                  </Stack>
+                ))}
+              </Stack>
+            )}
+            {[...migrationResult.succeeded, ...migrationResult.failed].some(
+              (r) => r.warnings?.length,
+            ) && (
+              <Stack gap="xs" mt="sm">
+                <Text size="sm" fw={600}>
+                  Warnings:
+                </Text>
+                {[...migrationResult.succeeded, ...migrationResult.failed]
+                  .filter((r) => r.warnings?.length)
+                  .map((r) => (
+                    <Stack key={r.v1UserAssociationId} gap={2}>
+                      <Text size="xs" c="dimmed">
+                        Report: {r.label || `#${r.v1ReportId}`}
+                      </Text>
+                      {r.warnings!.map((w, i) => (
+                        <Text key={i} size="xs" c="orange.7">
+                          &bull; {w}
+                        </Text>
+                      ))}
+                    </Stack>
+                  ))}
+              </Stack>
+            )}
           </Alert>
         )}
 

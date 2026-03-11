@@ -4,14 +4,13 @@
  * Centralized logic for determining whether association data should be
  * read from the v2 API or localStorage.
  *
- * localStorage is the source of truth until real authentication provides
- * stable server-side user identities. The v2 API requires UUID user IDs,
- * but we generate anonymous UUIDs per-browser which are not yet persisted
- * server-side across devices.
+ * All user-ingredient associations (reports, simulations, policies,
+ * households) are stored in the v2 API. The only thing in localStorage
+ * is the anonymous user UUID.
  */
 
 export type StoreBackend = 'api' | 'localStorage';
 
 export function getStoreBackend(): StoreBackend {
-  return 'localStorage';
+  return 'api';
 }

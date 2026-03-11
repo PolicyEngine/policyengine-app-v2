@@ -5,6 +5,7 @@
 // Household factory types
 import type { HouseholdV2Response } from '@/api/v2/households';
 import type { TaxBenefitModel, TaxBenefitModelVersion } from '@/api/v2/taxBenefitModels';
+import { API_V2_BASE_URL as IMPORTED_API_V2_BASE_URL } from '@/api/v2/taxBenefitModels';
 import type { Household } from '@/types/ingredients/Household';
 import type {
   V2DatasetMetadata,
@@ -150,8 +151,8 @@ export const MODEL_NAMES = {
   UK: 'uk',
 } as const;
 
-// API Base URL
-export const API_V2_BASE_URL = 'https://v2.api.policyengine.org';
+// API Base URL - imported from source so tests use the same runtime value
+export const API_V2_BASE_URL = IMPORTED_API_V2_BASE_URL;
 
 // HTTP status codes
 export const HTTP_STATUS = {

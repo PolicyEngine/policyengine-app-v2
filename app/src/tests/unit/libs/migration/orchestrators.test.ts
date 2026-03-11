@@ -160,6 +160,7 @@ describe('orchestrators', () => {
         household_id: 'v2-hh-uuid',
         baseline_policy_id: 'v2-baseline-policy-uuid',
         reform_policy_id: 'v2-reform-policy-uuid',
+        run: false,
       });
       expect(migrateUserReportAssociation).toHaveBeenCalledWith(
         'v2-report-uuid',
@@ -260,6 +261,7 @@ describe('orchestrators', () => {
         baseline_policy_id: 'v2-baseline-policy-uuid',
         reform_policy_id: 'v2-reform-policy-uuid',
         year: 2025,
+        run: false,
       });
     });
 

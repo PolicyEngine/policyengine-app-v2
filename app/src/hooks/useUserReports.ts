@@ -5,6 +5,7 @@ import { fetchPolicyById } from '@/api/policy';
 import { fetchReportById } from '@/api/report';
 import { fetchSimulationById } from '@/api/simulation';
 import { fetchHouseholdByIdV2 } from '@/api/v2/households';
+import { fetchReportFull, ReportFullResponse } from '@/api/v2/reportFull';
 import {
   fromEconomySimulationResponse,
   fromHouseholdSimulationResponse,
@@ -33,6 +34,50 @@ import {
   isV2EntityId,
   useParallelQueries,
 } from './utils/normalizedUtils';
+
+/** Map v2 API report status to app Report status */
+function mapV2Status(status: string): Report['status'] {
+  switch (status) {
+    case 'completed':
+      return 'complete';
+    case 'failed':
+      return 'error';
+    default:
+      return 'pending';
+  }
+}
+
+/** Derive outputType from v2 API report_type string */
+function deriveOutputType(reportType: string | null): 'household' | 'economy' | undefined {
+  if (reportType?.includes('household')) {
+    return 'household';
+  }
+  if (reportType?.includes('economy')) {
+    return 'economy';
+  }
+  return undefined;
+}
+
+/** Convert a ReportFullResponse to an app Report object */
+function reportFromFullResponse(full: ReportFullResponse, countryId: string): Report {
+  const simIds: string[] = [];
+  if (full.baseline_simulation) {
+    simIds.push(full.baseline_simulation.id);
+  }
+  if (full.reform_simulation) {
+    simIds.push(full.reform_simulation.id);
+  }
+
+  return {
+    id: full.report.id,
+    countryId: countryId as Report['countryId'],
+    year: full.household?.year?.toString() || new Date().getFullYear().toString(),
+    apiVersion: 'v2',
+    simulationIds: simIds,
+    status: mapV2Status(full.report.status),
+    outputType: deriveOutputType(full.report.report_type),
+  };
+}
 
 /**
  * Enhanced result type that includes all relationships
@@ -101,27 +146,34 @@ export const useUserReports = (userId: string) => {
     error: housAssocError,
   } = useHouseholdAssociationsByUser(userId);
 
-  // Step 2: Separate v2 reports (have outputType + simulationIds) from v1 reports
+  // Step 2: Separate v2 reports (UUID reportId) from v1 reports (integer ID)
   const v2Associations =
-    reportAssociations?.filter((a) => a.outputType && a.simulationIds?.length) ?? [];
+    reportAssociations?.filter((a) => isV2EntityId(a.reportId)) ?? [];
   const v1Associations =
-    reportAssociations?.filter((a) => !a.outputType || !a.simulationIds?.length) ?? [];
+    reportAssociations?.filter((a) => !isV2EntityId(a.reportId)) ?? [];
 
-  // Construct Report objects from v2 UserReport metadata (no API call needed)
-  const v2Reports: Report[] = v2Associations.map((a) => ({
-    id: a.reportId,
-    countryId: a.countryId,
-    year: a.year || new Date().getFullYear().toString(),
-    apiVersion: 'v2' as const,
-    simulationIds: a.simulationIds!,
-    status: 'pending' as const,
-    outputType: a.outputType,
-  }));
+  // Step 3a: Fetch v2 report metadata from the API (simulationIds, outputType, status)
+  const v2ReportIds = v2Associations.map((a) => a.reportId).filter(Boolean);
 
-  // Step 3: Fetch v1 reports only (v2 reports are constructed above)
+  const v2ReportResults = useParallelQueries<Report>(v2ReportIds, {
+    queryKey: reportKeys.byId,
+    queryFn: async (id) => {
+      const full = await fetchReportFull(id);
+      const assoc = v2Associations.find((a) => a.reportId === id);
+      return reportFromFullResponse(full, assoc?.countryId || country);
+    },
+    enabled: v2ReportIds.length > 0,
+    staleTime: 30 * 1000,
+  });
+
+  const v2Reports = v2ReportResults.queries
+    .map((q) => q.data)
+    .filter((r): r is Report => !!r);
+
+  // Step 3b: Fetch v1 reports from the legacy API
   const v1ReportIds = v1Associations.map((a) => a.reportId).filter(Boolean);
 
-  const reportResults = useParallelQueries<Report>(v1ReportIds, {
+  const v1ReportResults = useParallelQueries<Report>(v1ReportIds, {
     queryKey: reportKeys.byId,
     queryFn: async (id) => {
       const metadata = await fetchReportById(country, id);
@@ -131,8 +183,8 @@ export const useUserReports = (userId: string) => {
     staleTime: 5 * 60 * 1000,
   });
 
-  // Step 4: Merge v1 fetched reports with v2 constructed reports
-  const v1Reports = reportResults.queries.map((q) => q.data).filter((r): r is Report => !!r);
+  // Step 4: Merge v1 fetched reports with v2 fetched reports
+  const v1Reports = v1ReportResults.queries.map((q) => q.data).filter((r): r is Report => !!r);
   const reports = [...v2Reports, ...v1Reports];
 
   // Collect all simulation IDs from all reports
@@ -140,12 +192,12 @@ export const useUserReports = (userId: string) => {
     .flatMap((r) => r.simulationIds)
     .filter((id, index, self) => self.indexOf(id) === index);
 
-  // Build a lookup: simId → outputType from v2 associations for routing to the right endpoint
+  // Build a lookup: simId → outputType from v2 reports for routing to the right endpoint
   const v2SimOutputType = new Map<string, 'household' | 'economy'>();
-  v2Associations.forEach((a) => {
-    a.simulationIds?.forEach((simId) => {
-      if (a.outputType) {
-        v2SimOutputType.set(simId, a.outputType);
+  v2Reports.forEach((r) => {
+    r.simulationIds?.forEach((simId) => {
+      if (r.outputType) {
+        v2SimOutputType.set(simId, r.outputType);
       }
     });
   });
@@ -214,7 +266,8 @@ export const useUserReports = (userId: string) => {
     { isLoading: simAssocLoading, error: simAssocError },
     { isLoading: polAssocLoading, error: polAssocError },
     { isLoading: housAssocLoading, error: housAssocError },
-    { isLoading: reportResults.isLoading, error: reportResults.error },
+    { isLoading: v2ReportResults.isLoading, error: v2ReportResults.error },
+    { isLoading: v1ReportResults.isLoading, error: v1ReportResults.error },
     { isLoading: simulationResults.isLoading, error: simulationResults.error },
     { isLoading: policyResults.isLoading, error: policyResults.error },
     { isLoading: householdResults.isLoading, error: householdResults.error }
@@ -380,33 +433,18 @@ export const useUserReportById = (userReportId: string, options?: { enabled?: bo
   const baseReportId = userReport?.reportId;
   const userId = userReport?.userId;
 
-  // Determine if this is a v2 report (has outputType + simulationIds from useCreateReport)
-  const isV2Report = !!(userReport?.outputType && userReport?.simulationIds?.length);
-  const outputType = userReport?.outputType;
+  // Determine if this is a v2 report by checking if reportId is a UUID
+  const isV2Report = !!baseReportId && isV2EntityId(baseReportId);
 
-  // V2 economy reports use the full endpoint (single API call)
-  const useFullEndpoint = isV2Report && outputType === 'economy';
+  // All v2 reports use the full endpoint (single API call for all data)
+  const useFullEndpoint = isV2Report;
 
-  // Step 2a: For v2 economy reports — use the full endpoint
+  // Step 2a: For v2 reports — use the full endpoint
   const fullData = useReportFull(
     useFullEndpoint ? baseReportId : undefined,
     userReport ?? undefined,
     { enabled: isEnabled && useFullEndpoint }
   );
-
-  // Step 2b: For non-economy v2 reports — construct Report from UserReport metadata
-  const v2Report: Report | undefined =
-    isV2Report && !useFullEndpoint && userReport
-      ? {
-          id: userReport.reportId,
-          countryId: userReport.countryId,
-          year: userReport.year || new Date().getFullYear().toString(),
-          apiVersion: 'v2',
-          simulationIds: userReport.simulationIds!,
-          status: 'pending',
-          outputType: userReport.outputType,
-        }
-      : undefined;
 
   // Try to get base report from normalized cache first
   const cachedReport = baseReportId
@@ -428,7 +466,7 @@ export const useUserReportById = (userReportId: string, options?: { enabled?: bo
     staleTime: 5 * 60 * 1000,
   });
 
-  const finalReport = useFullEndpoint ? undefined : v2Report || cachedReport || v1Report;
+  const finalReport = useFullEndpoint ? undefined : cachedReport || v1Report;
 
   // Step 3: Fetch simulations for the report (non-full-endpoint path)
   const simulationIds = finalReport?.simulationIds ?? [];
@@ -436,14 +474,7 @@ export const useUserReportById = (userReportId: string, options?: { enabled?: bo
   const simulationResults = useParallelQueries<Simulation>(simulationIds, {
     queryKey: simulationKeys.byId,
     queryFn: async (id) => {
-      if (isV2Report && outputType === 'household') {
-        const response = await getHouseholdSimulation(id);
-        return fromHouseholdSimulationResponse(response);
-      }
-      if (isV2Report && outputType === 'economy') {
-        const response = await getEconomySimulation(id);
-        return fromEconomySimulationResponse(response);
-      }
+      // v1 reports use legacy simulation endpoint
       const metadata = await fetchSimulationById(country, id);
       return SimulationAdapter.fromMetadata(metadata);
     },
