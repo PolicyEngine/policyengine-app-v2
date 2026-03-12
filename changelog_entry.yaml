@@ -1,4 +1,4 @@
 - bump: minor
   changes:
     added:
-      - Add Keep Your Pay Act calculator at /us/kypa
+      - Add energy price shock interactive calculator at /uk/energy-price-shock
