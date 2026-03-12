@@ -13,13 +13,13 @@ export default function PolicyParameterSelectorMenu({
   const countryId = useCurrentCountry();
 
   return (
-    <Stack h="100%">
-      <Box>
+    <Stack h="100%" style={{ minHeight: 0 }}>
+      <Box style={{ flexShrink: 0 }}>
         <SelectorMenuHeader />
         <Divider my="xs" />
       </Box>
 
-      <ScrollArea flex={1} type="scroll">
+      <ScrollArea style={{ flex: 1, minHeight: 0 }} type="scroll">
         <LazyNestedMenu
           countryId={countryId}
           rootPath="gov"

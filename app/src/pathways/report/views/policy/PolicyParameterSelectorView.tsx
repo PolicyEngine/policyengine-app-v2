@@ -107,7 +107,7 @@ export default function PolicyParameterSelectorView({
         <HeaderNavigation />
       </AppShell.Header>
 
-      <AppShell.Navbar p="md" bg="gray.0">
+      <AppShell.Navbar p="md" bg="gray.0" style={{ display: 'flex', flexDirection: 'column' }}>
         <Menu setSelectedParamLabel={handleMenuItemClick} />
       </AppShell.Navbar>
 
