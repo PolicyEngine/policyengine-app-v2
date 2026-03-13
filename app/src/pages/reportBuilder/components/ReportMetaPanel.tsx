@@ -7,6 +7,7 @@
 
 import React, { useLayoutEffect, useState } from 'react';
 import { IconCheck, IconFileDescription, IconPencil } from '@tabler/icons-react';
+import { useSelector } from 'react-redux';
 import {
   Button,
   Input,
@@ -19,6 +20,7 @@ import {
 } from '@/components/ui';
 import { CURRENT_YEAR } from '@/constants';
 import { colors, spacing, typography } from '@/designTokens';
+import { getTaxYears } from '@/libs/metadataUtils';
 import { FONT_SIZES } from '../constants';
 import type { ReportBuilderState } from '../types';
 
@@ -34,8 +36,6 @@ const segmentBase: React.CSSProperties = {
   alignItems: 'center',
 };
 
-const YEAR_OPTIONS = ['2023', '2024', '2025', '2026'];
-
 interface ReportMetaPanelProps {
   reportState: ReportBuilderState;
   setReportState: React.Dispatch<React.SetStateAction<ReportBuilderState>>;
@@ -43,6 +43,7 @@ interface ReportMetaPanelProps {
 }
 
 export function ReportMetaPanel({ reportState, setReportState, isReadOnly }: ReportMetaPanelProps) {
+  const yearOptions = useSelector(getTaxYears);
   const [isEditingLabel, setIsEditingLabel] = useState(false);
   const [labelInput, setLabelInput] = useState('');
   const [inputWidth, setInputWidth] = useState<number | null>(null);
@@ -238,9 +239,9 @@ export function ReportMetaPanel({ reportState, setReportState, isReadOnly }: Rep
             <SelectValue />
           </SelectTrigger>
           <SelectContent align="end">
-            {YEAR_OPTIONS.map((year) => (
-              <SelectItem key={year} value={year}>
-                {year}
+            {yearOptions.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
               </SelectItem>
             ))}
           </SelectContent>
