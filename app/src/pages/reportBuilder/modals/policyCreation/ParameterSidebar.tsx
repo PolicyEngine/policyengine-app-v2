@@ -129,6 +129,7 @@ export function ParameterSidebar({
     <div
       style={{
         width: 280,
+        height: '100%',
         borderRight: `1px solid ${colors.border.light}`,
         display: 'flex',
         flexDirection: 'column',
@@ -224,7 +225,7 @@ export function ParameterSidebar({
             </PopoverContent>
           </Popover>
         </div>
-        <ScrollArea className="tw:flex-1">
+        <ScrollArea style={{ flex: 1, minHeight: 0 }}>
           <div style={{ padding: spacing.sm }}>
             {metadataLoading || !parameterTree ? (
               <Stack gap="xs">
