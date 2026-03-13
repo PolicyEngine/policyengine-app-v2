@@ -79,11 +79,11 @@
     },
     {
       "source": "/:countryId/model",
-      "destination": "https://policyengine-model.vercel.app/:countryId/model"
+      "destination": "https://policyengine-model-policy-engine.vercel.app/?country=:countryId"
     },
     {
       "source": "/:countryId/model/:path*",
-      "destination": "https://policyengine-model.vercel.app/:countryId/model/:path*"
+      "destination": "https://policyengine-model-policy-engine.vercel.app/:path*?country=:countryId"
     },
     {
       "source": "/us/api",
