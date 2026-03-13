@@ -1,6 +1,19 @@
 [
   {
     "type": "iframe",
+    "slug": "student-loan-visualisation",
+    "title": "The distributional impact of student loan reform",
+    "description": "PolicyEngine models how cancelling the threshold freeze and capping interest at RPI affect graduate repayments across the income distribution",
+    "source": "https://student-loan-visualisation.vercel.app/",
+    "tags": ["uk", "featured", "policy"],
+    "countryId": "uk",
+    "displayWithResearch": true,
+    "image": "student-loan-visualisation.png",
+    "date": "2026-02-25 12:00:00",
+    "authors": ["vahid-ahmadi"]
+  },
+  {
+    "type": "iframe",
     "slug": "energy-price-shock",
     "title": "Energy price shock: distributional impact and policy options",
     "description": "Estimate the distributional impact of energy price shock scenarios on UK households, with electricity and gas breakdowns, and model five policy responses",
