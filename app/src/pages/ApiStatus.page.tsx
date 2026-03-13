@@ -1,5 +1,5 @@
-import { IconAlertTriangle, IconCircleCheck, IconCircleX } from '@tabler/icons-react';
 import { useEffect, useState } from 'react';
+import { IconAlertTriangle, IconCircleCheck, IconCircleX } from '@tabler/icons-react';
 import HeroSection from '@/components/shared/static/HeroSection';
 import StaticPageLayout from '@/components/shared/static/StaticPageLayout';
 import { Alert, AlertDescription, AlertTitle, Spinner, Text } from '@/components/ui';
@@ -13,9 +13,12 @@ const MONITOR_IDS = ['1160318', '4160084'];
 type AggregateStatus = 'operational' | 'degraded' | 'down';
 
 function getAggregateStatus(monitors: MonitorData[]): AggregateStatus {
-  if (monitors.some((m) => m.status === 'down')) return 'down';
-  if (monitors.some((m) => m.status === 'maintenance' || m.status === 'validating'))
+  if (monitors.some((m) => m.status === 'down')) {
+    return 'down';
+  }
+  if (monitors.some((m) => m.status === 'maintenance' || m.status === 'validating')) {
     return 'degraded';
+  }
   return 'operational';
 }
 
@@ -74,8 +77,12 @@ const COLOR_STOPS: RGB[] = [
 const NO_DATA_COLOR = colors.gray[200];
 
 function colorForDay(day: DayRecord): string {
-  if (day.status === 'no-data') return NO_DATA_COLOR;
-  if (day.downtimeMinutes === 0) return rgbToHex(COLOR_STOPS[0]);
+  if (day.status === 'no-data') {
+    return NO_DATA_COLOR;
+  }
+  if (day.downtimeMinutes === 0) {
+    return rgbToHex(COLOR_STOPS[0]);
+  }
 
   // Any downtime jumps to yellow, then gradient yellow→orange→red over 0-60 minutes
   const minutes = Math.min(day.downtimeMinutes, 60);
@@ -89,30 +96,48 @@ function colorForDay(day: DayRecord): string {
 }
 
 function formatDayLabel(day: DayRecord): string {
-  if (day.status === 'no-data') return 'No data';
-  if (day.downtimeMinutes === 0) return 'Operational';
-  if (day.downtimeMinutes >= 60) return 'Major outage';
-  if (day.downtimeMinutes >= 30) return 'Partial outage';
+  if (day.status === 'no-data') {
+    return 'No data';
+  }
+  if (day.downtimeMinutes === 0) {
+    return 'Operational';
+  }
+  if (day.downtimeMinutes >= 60) {
+    return 'Major outage';
+  }
+  if (day.downtimeMinutes >= 30) {
+    return 'Partial outage';
+  }
   return 'Degraded';
 }
 
 function formatDowntime(minutes: number): string {
-  if (minutes < 1) return `${Math.round(minutes * 60)}s`;
-  if (minutes < 60) return `${Math.round(minutes)}m`;
+  if (minutes < 1) {
+    return `${Math.round(minutes * 60)}s`;
+  }
+  if (minutes < 60) {
+    return `${Math.round(minutes)}m`;
+  }
   const hours = Math.floor(minutes / 60);
   const remaining = Math.round(minutes % 60);
   return remaining > 0 ? `${hours}h ${remaining}m` : `${hours}h`;
 }
 
 function formatDate(dateStr: string): string {
-  const date = new Date(dateStr + 'T00:00:00');
+  const date = new Date(`${dateStr}T00:00:00`);
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
 function formatMonitorStatus(status: MonitorStatus): { label: string; color: string } {
-  if (status === 'up') return { label: 'Operational', color: colors.primary[500] };
-  if (status === 'down') return { label: 'Down', color: colors.error };
-  if (status === 'maintenance') return { label: 'Maintenance', color: colors.info };
+  if (status === 'up') {
+    return { label: 'Operational', color: colors.primary[500] };
+  }
+  if (status === 'down') {
+    return { label: 'Down', color: colors.error };
+  }
+  if (status === 'maintenance') {
+    return { label: 'Maintenance', color: colors.info };
+  }
   return { label: 'Unknown', color: colors.text.tertiary };
 }
 
@@ -469,7 +494,6 @@ export default function ApiStatusPage() {
                 <MonitorRow key={monitor.id} monitor={monitor} />
               ))}
             </div>
-
           </div>
         )}
       </div>
