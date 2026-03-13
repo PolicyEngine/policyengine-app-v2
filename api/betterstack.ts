@@ -2,13 +2,13 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 const BETTERSTACK_BASE = 'https://uptime.betterstack.com';
 const DAYS_WINDOW = 90;
-const ONE_HOUR_SECONDS = 3600;
 
 type DayStatus = 'operational' | 'degraded' | 'down' | 'no-data';
 
 interface DayRecord {
   date: string;
   status: DayStatus;
+  downtimeMinutes: number;
 }
 
 interface MonitorResult {
@@ -86,7 +86,7 @@ function computeDayStatuses(
 
   return dates.map((dateStr) => {
     if (dateStr < createdDate) {
-      return { date: dateStr, status: 'no-data' as DayStatus };
+      return { date: dateStr, status: 'no-data' as DayStatus, downtimeMinutes: 0 };
     }
 
     const dayStart = new Date(`${dateStr}T00:00:00Z`).getTime();
@@ -109,15 +109,13 @@ function computeDayStatuses(
       }
     }
 
-    const totalOutageSeconds = totalOutageMs / 1000;
+    const downtimeMinutes = totalOutageMs / 1000 / 60;
 
-    if (totalOutageSeconds > ONE_HOUR_SECONDS) {
-      return { date: dateStr, status: 'down' as DayStatus };
-    }
-    if (totalOutageSeconds > 0) {
-      return { date: dateStr, status: 'degraded' as DayStatus };
-    }
-    return { date: dateStr, status: 'operational' as DayStatus };
+    let status: DayStatus = 'operational';
+    if (downtimeMinutes > 60) status = 'down';
+    else if (downtimeMinutes > 0) status = 'degraded';
+
+    return { date: dateStr, status, downtimeMinutes };
   });
 }
 

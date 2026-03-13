@@ -4,7 +4,7 @@ import HeroSection from '@/components/shared/static/HeroSection';
 import StaticPageLayout from '@/components/shared/static/StaticPageLayout';
 import { Alert, AlertDescription, AlertTitle, Spinner, Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
-import type { DayRecord, DayStatus, MonitorData, MonitorStatus, StatusPageData } from '@/types/betterstack';
+import type { DayRecord, MonitorData, MonitorStatus, StatusPageData } from '@/types/betterstack';
 
 const MONITOR_IDS = ['1160318', '4160084'];
 
@@ -43,12 +43,54 @@ const STATUS_CONFIG: Record<
   },
 };
 
-const DAY_STATUS_COLORS: Record<DayStatus, string> = {
-  operational: colors.primary[500],
-  degraded: colors.warning,
-  down: colors.error,
-  'no-data': colors.gray[200],
-};
+// --- Continuous gradient color computation (Atlassian-style) ---
+
+type RGB = [number, number, number];
+
+function hexToRgb(hex: string): RGB {
+  const h = hex.replace('#', '');
+  return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
+}
+
+function rgbToHex([r, g, b]: RGB): string {
+  return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+}
+
+function lerpRgb(a: RGB, b: RGB, t: number): RGB {
+  return [
+    Math.round(a[0] + (b[0] - a[0]) * t),
+    Math.round(a[1] + (b[1] - a[1]) * t),
+    Math.round(a[2] + (b[2] - a[2]) * t),
+  ];
+}
+
+const COLOR_STOPS: RGB[] = [
+  hexToRgb(colors.primary[500]), // green (operational)
+  hexToRgb('#DBAB09'), // yellow
+  hexToRgb('#E36209'), // orange
+  hexToRgb(colors.error), // red
+];
+
+const NO_DATA_COLOR = colors.gray[200];
+
+function colorForDay(day: DayRecord): string {
+  if (day.status === 'no-data') return NO_DATA_COLOR;
+  if (day.downtimeMinutes === 0) return rgbToHex(COLOR_STOPS[0]);
+
+  // Linear interpolation across 3 bands: green→yellow (0-20), yellow→orange (20-40), orange→red (40-60)
+  const minutes = Math.min(day.downtimeMinutes, 60);
+
+  if (minutes <= 20) {
+    const t = minutes / 20;
+    return rgbToHex(lerpRgb(COLOR_STOPS[0], COLOR_STOPS[1], t));
+  }
+  if (minutes <= 40) {
+    const t = (minutes - 20) / 20;
+    return rgbToHex(lerpRgb(COLOR_STOPS[1], COLOR_STOPS[2], t));
+  }
+  const t = (minutes - 40) / 20;
+  return rgbToHex(lerpRgb(COLOR_STOPS[2], COLOR_STOPS[3], t));
+}
 
 function formatMonitorStatus(status: MonitorStatus): { label: string; color: string } {
   if (status === 'up') return { label: 'Operational', color: colors.primary[500] };
@@ -110,10 +152,10 @@ function UptimeBar({ days }: { days: DayRecord[] }) {
         {days.map((day) => (
           <div
             key={day.date}
-            title={`${day.date}: ${day.status}`}
+            title={`${day.date}: ${day.downtimeMinutes > 0 ? `${Math.round(day.downtimeMinutes)}min downtime` : day.status}`}
             style={{
               flex: 1,
-              backgroundColor: DAY_STATUS_COLORS[day.status],
+              backgroundColor: colorForDay(day),
               borderRadius: '2px',
               minWidth: '2px',
             }}
@@ -206,49 +248,43 @@ function MonitorRow({ monitor }: { monitor: MonitorData }) {
 }
 
 function StatusLegend() {
-  const items: { label: string; color: string }[] = [
-    { label: 'Operational', color: DAY_STATUS_COLORS.operational },
-    { label: 'Degraded', color: DAY_STATUS_COLORS.degraded },
-    { label: 'Down', color: DAY_STATUS_COLORS.down },
-  ];
+  const gradientStops = COLOR_STOPS.map((rgb) => rgbToHex(rgb));
 
   return (
     <div
       style={{
         display: 'flex',
-        gap: spacing.lg,
+        alignItems: 'center',
         justifyContent: 'center',
+        gap: spacing.md,
         paddingTop: spacing.xl,
         paddingBottom: spacing.xl,
       }}
     >
-      {items.map((item) => (
-        <div
-          key={item.label}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: spacing.sm,
-          }}
-        >
-          <div
-            style={{
-              width: '12px',
-              height: '12px',
-              borderRadius: '2px',
-              backgroundColor: item.color,
-            }}
-          />
-          <Text
-            style={{
-              fontSize: typography.fontSize.xs,
-              color: colors.text.secondary,
-            }}
-          >
-            {item.label}
-          </Text>
-        </div>
-      ))}
+      <Text
+        style={{
+          fontSize: typography.fontSize.xs,
+          color: colors.text.secondary,
+        }}
+      >
+        No downtime
+      </Text>
+      <div
+        style={{
+          width: '120px',
+          height: '12px',
+          borderRadius: '2px',
+          background: `linear-gradient(to right, ${gradientStops.join(', ')})`,
+        }}
+      />
+      <Text
+        style={{
+          fontSize: typography.fontSize.xs,
+          color: colors.text.secondary,
+        }}
+      >
+        60+ min downtime
+      </Text>
     </div>
   );
 }
