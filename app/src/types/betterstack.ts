@@ -4,6 +4,7 @@ export type DayStatus = 'operational' | 'degraded' | 'down' | 'no-data';
 export interface DayRecord {
   date: string; // YYYY-MM-DD
   status: DayStatus;
+  downtimeMinutes: number; // total outage minutes for the day
 }
 
 export interface MonitorData {
