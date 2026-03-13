@@ -236,5 +236,11 @@ export function getNiceTicks(domain: [number, number], count = 5): number[] {
     ticks.push(rounded);
   }
 
+  // Ensure the last tick is at or above dMax so the domain fully covers the data
+  if (ticks.length >= 2 && ticks[ticks.length - 1] < dMax) {
+    const lastTick = Math.round((ticks[ticks.length - 1] + step) * 1e10) / 1e10 || 0;
+    ticks.push(lastTick);
+  }
+
   return ticks;
 }

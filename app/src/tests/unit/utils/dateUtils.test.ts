@@ -1,10 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   EXPECTED_FORMATS,
+  EXPECTED_LOCAL_DATE_STRINGS,
   TEST_COUNTRIES,
+  TEST_DATE_OBJECTS,
   TEST_DATES,
 } from '@/tests/fixtures/utils/dateUtilsMocks';
-import { formatDate, formatReportTimestamp } from '@/utils/dateUtils';
+import {
+  formatDate,
+  formatReportTimestamp,
+  fromLocalDateString,
+  toLocalDateString,
+} from '@/utils/dateUtils';
 
 describe('dateUtils', () => {
   describe('formatDate', () => {
@@ -235,6 +242,93 @@ describe('dateUtils', () => {
         // Format is "Ran {date} at {time}" where time can be "H:MM AM/PM" or "HH:MM"
         expect(result).toMatch(/at \d{1,2}:\d{2}/);
       });
+    });
+  });
+
+  describe('toLocalDateString', () => {
+    it('given Date at midnight local time then preserves the date', () => {
+      // Given
+      const date = TEST_DATE_OBJECTS.JAN_1_2025_MIDNIGHT_LOCAL;
+
+      // When
+      const result = toLocalDateString(date);
+
+      // Then — must not shift to previous day regardless of timezone
+      expect(result).toBe(EXPECTED_LOCAL_DATE_STRINGS.JAN_1_2025);
+    });
+
+    it('given year-end Date at midnight local time then preserves the date', () => {
+      // Given
+      const date = TEST_DATE_OBJECTS.DEC_31_2024_MIDNIGHT_LOCAL;
+
+      // When
+      const result = toLocalDateString(date);
+
+      // Then
+      expect(result).toBe(EXPECTED_LOCAL_DATE_STRINGS.DEC_31_2024);
+    });
+
+    it('given mid-year Date at midnight local time then preserves the date', () => {
+      // Given
+      const date = TEST_DATE_OBJECTS.JUL_4_2025_MIDNIGHT_LOCAL;
+
+      // When
+      const result = toLocalDateString(date);
+
+      // Then
+      expect(result).toBe(EXPECTED_LOCAL_DATE_STRINGS.JUL_4_2025);
+    });
+
+    it('given null then returns empty string', () => {
+      // When
+      const result = toLocalDateString(null);
+
+      // Then
+      expect(result).toBe('');
+    });
+
+    it('given date string then returns it unchanged', () => {
+      // When
+      const result = toLocalDateString(EXPECTED_LOCAL_DATE_STRINGS.JAN_1_2025);
+
+      // Then
+      expect(result).toBe(EXPECTED_LOCAL_DATE_STRINGS.JAN_1_2025);
+    });
+  });
+
+  describe('fromLocalDateString', () => {
+    it('given valid date string then returns Date in local timezone', () => {
+      // Given
+      const dateString = EXPECTED_LOCAL_DATE_STRINGS.JAN_1_2025;
+
+      // When
+      const result = fromLocalDateString(dateString);
+
+      // Then — the Date should represent Jan 1 in local time
+      expect(result).toBeInstanceOf(Date);
+      expect(result!.getFullYear()).toBe(2025);
+      expect(result!.getMonth()).toBe(0);
+      expect(result!.getDate()).toBe(1);
+    });
+
+    it('given empty string then returns undefined', () => {
+      // When
+      const result = fromLocalDateString('');
+
+      // Then
+      expect(result).toBeUndefined();
+    });
+
+    it('given round-trip through fromLocalDateString and toLocalDateString then preserves the date', () => {
+      // Given
+      const original = EXPECTED_LOCAL_DATE_STRINGS.DEC_31_2024;
+
+      // When
+      const dateObj = fromLocalDateString(original);
+      const result = toLocalDateString(dateObj!);
+
+      // Then
+      expect(result).toBe(original);
     });
   });
 });

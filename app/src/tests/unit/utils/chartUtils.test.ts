@@ -180,8 +180,8 @@ describe('chartUtils', () => {
   });
 
   describe('getNiceTicks', () => {
-    it('given [0, 14] with 5 ticks then snaps to multiples of 5', () => {
-      expect(getNiceTicks([0, 14], 5)).toEqual([0, 5, 10]);
+    it('given [0, 14] with 5 ticks then snaps to multiples of 5 covering the domain', () => {
+      expect(getNiceTicks([0, 14], 5)).toEqual([0, 5, 10, 15]);
     });
 
     it('given [0, 20] with 5 ticks then returns clean multiples of 5', () => {
@@ -202,6 +202,39 @@ describe('chartUtils', () => {
 
     it('given equal domain then returns single tick', () => {
       expect(getNiceTicks([5, 5], 5)).toEqual([5]);
+    });
+
+    it('given domain with 10% headroom then last tick covers the padded max', () => {
+      // Given — data ranges from 0 to 3, with 10% headroom applied (maxY = 3.3)
+      const paddedDomain: [number, number] = [0, 3.3];
+
+      // When
+      const ticks = getNiceTicks(paddedDomain);
+
+      // Then — last tick must be at or above the padded max so headroom is visible
+      expect(ticks[ticks.length - 1]).toBeGreaterThanOrEqual(3.3);
+    });
+
+    it('given small padded domain then last tick covers the padded max', () => {
+      // Given — data ranges from 0 to 0.22 (percentage), padded to 1.1
+      const paddedDomain: [number, number] = [0, 1.1];
+
+      // When
+      const ticks = getNiceTicks(paddedDomain);
+
+      // Then
+      expect(ticks[ticks.length - 1]).toBeGreaterThanOrEqual(1.1);
+    });
+
+    it('given large padded domain then last tick covers the padded max', () => {
+      // Given — data ranges from 0 to 50000, padded to 55000
+      const paddedDomain: [number, number] = [0, 55000];
+
+      // When
+      const ticks = getNiceTicks(paddedDomain);
+
+      // Then
+      expect(ticks[ticks.length - 1]).toBeGreaterThanOrEqual(55000);
     });
   });
 });

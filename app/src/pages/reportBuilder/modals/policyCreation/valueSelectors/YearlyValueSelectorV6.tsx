@@ -11,7 +11,7 @@ import { getDefaultValueForParam } from '@/pathways/report/components/valueSette
 import { ValueInputBox } from '@/pathways/report/components/valueSetters/ValueInputBox';
 import { ValueSetterProps } from '@/pathways/report/components/valueSetters/ValueSetterProps';
 import { ValueInterval } from '@/types/subIngredients/valueInterval';
-import { fromISODateString, toISODateString } from '@/utils/dateUtils';
+import { fromLocalDateString, toLocalDateString } from '@/utils/dateUtils';
 
 export function YearlyValueSelectorV6(props: ValueSetterProps) {
   const {
@@ -62,13 +62,13 @@ export function YearlyValueSelectorV6(props: ValueSetterProps) {
   }, [startDate, endDate, paramValue, setIntervals]);
 
   function handleStartDateChange(value: Date | null) {
-    setStartDate(toISODateString(value));
+    setStartDate(toLocalDateString(value));
   }
 
   function handleEndDateChange(value: Date | null) {
-    const isoString = toISODateString(value);
-    if (isoString) {
-      const endOfYearDate = dayjs(isoString).endOf('year').format('YYYY-MM-DD');
+    const dateString = toLocalDateString(value);
+    if (dateString) {
+      const endOfYearDate = dayjs(dateString).endOf('year').format('YYYY-MM-DD');
       setEndDate(endOfYearDate);
     } else {
       setEndDate('');
@@ -86,9 +86,9 @@ export function YearlyValueSelectorV6(props: ValueSetterProps) {
           </Text>
           <YearPicker
             placeholder="2025"
-            minDate={fromISODateString(minDate)}
-            maxDate={fromISODateString(maxDate)}
-            value={fromISODateString(startDate)}
+            minDate={fromLocalDateString(minDate)}
+            maxDate={fromLocalDateString(maxDate)}
+            value={fromLocalDateString(startDate)}
             onChange={handleStartDateChange}
           />
         </div>
@@ -98,9 +98,9 @@ export function YearlyValueSelectorV6(props: ValueSetterProps) {
           </Text>
           <YearPicker
             placeholder="2026"
-            minDate={fromISODateString(minDate)}
-            maxDate={fromISODateString(maxDate)}
-            value={fromISODateString(endDate)}
+            minDate={fromLocalDateString(minDate)}
+            maxDate={fromLocalDateString(maxDate)}
+            value={fromLocalDateString(endDate)}
             onChange={handleEndDateChange}
           />
         </div>
