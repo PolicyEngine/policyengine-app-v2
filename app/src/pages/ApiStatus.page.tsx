@@ -346,48 +346,6 @@ function MonitorRow({ monitor }: { monitor: MonitorData }) {
   );
 }
 
-function StatusLegend() {
-  const gradientStops = COLOR_STOPS.map((rgb) => rgbToHex(rgb));
-
-  return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: spacing.md,
-        paddingTop: spacing.xl,
-        paddingBottom: spacing.xl,
-      }}
-    >
-      <Text
-        style={{
-          fontSize: typography.fontSize.xs,
-          color: colors.text.secondary,
-        }}
-      >
-        No downtime
-      </Text>
-      <div
-        style={{
-          width: '120px',
-          height: '12px',
-          borderRadius: '2px',
-          background: `linear-gradient(to right, ${gradientStops.join(', ')})`,
-        }}
-      />
-      <Text
-        style={{
-          fontSize: typography.fontSize.xs,
-          color: colors.text.secondary,
-        }}
-      >
-        60+ min downtime
-      </Text>
-    </div>
-  );
-}
-
 // --- Data fetching ---
 
 function useStatusData(): {
@@ -512,7 +470,6 @@ export default function ApiStatusPage() {
               ))}
             </div>
 
-            <StatusLegend />
           </div>
         )}
       </div>
