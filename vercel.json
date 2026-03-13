@@ -97,6 +97,7 @@
       "source": "/us/api/:path*",
       "destination": "https://household-api-docs-policy-engine.vercel.app/us/api/:path*"
     },
+    { "source": "/api/:path*", "destination": "/api/:path*" },
     { "source": "/(.*)", "destination": "/website.html" }
   ],
   "headers": [
