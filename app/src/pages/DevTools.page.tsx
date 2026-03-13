@@ -59,8 +59,7 @@ const devToolCards: DevToolCardProps[] = [
   {
     to: 'api-status',
     title: 'API status',
-    description:
-      'Check the current status and availability of PolicyEngine API endpoints.',
+    description: 'Check the current status and availability of PolicyEngine API endpoints.',
   },
 ];
 
