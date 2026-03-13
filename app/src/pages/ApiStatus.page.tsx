@@ -6,51 +6,7 @@ import { Alert, AlertDescription, AlertTitle, Spinner, Text } from '@/components
 import { colors, spacing, typography } from '@/designTokens';
 import type { DayRecord, DayStatus, MonitorData, MonitorStatus, StatusPageData } from '@/types/betterstack';
 
-// Monitor IDs to display — update these with your BetterStack monitor IDs
 const MONITOR_IDS = ['1160318', '4160084'];
-
-// --- Mock data (will be replaced by API fetch) ---
-
-function generateMockDays(): DayRecord[] {
-  const days: DayRecord[] = [];
-  const today = new Date();
-  for (let i = 89; i >= 0; i--) {
-    const date = new Date(today);
-    date.setDate(date.getDate() - i);
-    const dateStr = date.toISOString().split('T')[0];
-    // Simulate: mostly operational, a few degraded/down days
-    let status: DayStatus = 'operational';
-    if (i === 42) status = 'down';
-    if (i === 43 || i === 15) status = 'degraded';
-    days.push({ date: dateStr, status });
-  }
-  return days;
-}
-
-const MOCK_MONITORS: MonitorData[] = [
-  {
-    id: '1',
-    name: 'PolicyEngine API',
-    url: 'https://api.policyengine.org',
-    status: 'up',
-    lastCheckedAt: new Date().toISOString(),
-    availability: 99.82,
-    totalDowntime: 1552,
-    numberOfIncidents: 3,
-    days: generateMockDays(),
-  },
-  {
-    id: '2',
-    name: 'PolicyEngine household API',
-    url: 'https://household.api.policyengine.org',
-    status: 'up',
-    lastCheckedAt: new Date().toISOString(),
-    availability: 99.95,
-    totalDowntime: 432,
-    numberOfIncidents: 1,
-    days: generateMockDays(),
-  },
-];
 
 // --- Status helpers ---
 
@@ -299,23 +255,16 @@ function StatusLegend() {
 
 // --- Data fetching ---
 
-function useMockFallback(): boolean {
-  return MONITOR_IDS.length === 1 && MONITOR_IDS[0] === 'REPLACE_WITH_MONITOR_ID';
-}
-
 function useStatusData(): {
   monitors: MonitorData[] | null;
   loading: boolean;
   error: string | null;
 } {
-  const isMock = useMockFallback();
-  const [monitors, setMonitors] = useState<MonitorData[] | null>(isMock ? MOCK_MONITORS : null);
-  const [loading, setLoading] = useState(!isMock);
+  const [monitors, setMonitors] = useState<MonitorData[] | null>(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (isMock) return;
-
     async function fetchData() {
       try {
         const res = await fetch(`/api/betterstack?monitors=${MONITOR_IDS.join(',')}`);
@@ -332,7 +281,7 @@ function useStatusData(): {
     }
 
     fetchData();
-  }, [isMock]);
+  }, []);
 
   return { monitors, loading, error };
 }
