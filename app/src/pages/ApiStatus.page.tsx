@@ -77,19 +77,36 @@ function colorForDay(day: DayRecord): string {
   if (day.status === 'no-data') return NO_DATA_COLOR;
   if (day.downtimeMinutes === 0) return rgbToHex(COLOR_STOPS[0]);
 
-  // Linear interpolation across 3 bands: green→yellow (0-20), yellow→orange (20-40), orange→red (40-60)
+  // Any downtime jumps to yellow, then gradient yellow→orange→red over 0-60 minutes
   const minutes = Math.min(day.downtimeMinutes, 60);
 
-  if (minutes <= 20) {
-    const t = minutes / 20;
-    return rgbToHex(lerpRgb(COLOR_STOPS[0], COLOR_STOPS[1], t));
-  }
-  if (minutes <= 40) {
-    const t = (minutes - 20) / 20;
+  if (minutes <= 30) {
+    const t = minutes / 30;
     return rgbToHex(lerpRgb(COLOR_STOPS[1], COLOR_STOPS[2], t));
   }
-  const t = (minutes - 40) / 20;
+  const t = (minutes - 30) / 30;
   return rgbToHex(lerpRgb(COLOR_STOPS[2], COLOR_STOPS[3], t));
+}
+
+function formatDayLabel(day: DayRecord): string {
+  if (day.status === 'no-data') return 'No data';
+  if (day.downtimeMinutes === 0) return 'Operational';
+  if (day.downtimeMinutes >= 60) return 'Major outage';
+  if (day.downtimeMinutes >= 30) return 'Partial outage';
+  return 'Degraded';
+}
+
+function formatDowntime(minutes: number): string {
+  if (minutes < 1) return `${Math.round(minutes * 60)}s`;
+  if (minutes < 60) return `${Math.round(minutes)}m`;
+  const hours = Math.floor(minutes / 60);
+  const remaining = Math.round(minutes % 60);
+  return remaining > 0 ? `${hours}h ${remaining}m` : `${hours}h`;
+}
+
+function formatDate(dateStr: string): string {
+  const date = new Date(dateStr + 'T00:00:00');
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
 function formatMonitorStatus(status: MonitorStatus): { label: string; color: string } {
@@ -138,6 +155,97 @@ function AggregateStatusBanner({ monitors }: { monitors: MonitorData[] }) {
   );
 }
 
+function DayBar({ day }: { day: DayRecord }) {
+  const [hovered, setHovered] = useState(false);
+  const dayColor = colorForDay(day);
+  const statusLabel = formatDayLabel(day);
+
+  return (
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        flex: 1,
+        backgroundColor: dayColor,
+        borderRadius: '2px',
+        minWidth: '2px',
+        position: 'relative',
+        cursor: 'default',
+      }}
+    >
+      {hovered && (
+        <div
+          style={{
+            position: 'absolute',
+            bottom: 'calc(100% + 8px)',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            background: colors.white,
+            border: `1px solid ${colors.gray[200]}`,
+            borderRadius: spacing.radius.element,
+            padding: `${spacing.sm} ${spacing.md}`,
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1)',
+            zIndex: 50,
+            whiteSpace: 'nowrap',
+            pointerEvents: 'none',
+          }}
+        >
+          <p
+            style={{
+              margin: 0,
+              fontSize: typography.fontSize.xs,
+              fontWeight: typography.fontWeight.semibold,
+              fontFamily: typography.fontFamily.primary,
+              color: colors.text.primary,
+            }}
+          >
+            {formatDate(day.date)}
+          </p>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: spacing.xs,
+              marginTop: '4px',
+            }}
+          >
+            <div
+              style={{
+                width: '8px',
+                height: '8px',
+                borderRadius: '50%',
+                backgroundColor: dayColor,
+                flexShrink: 0,
+              }}
+            />
+            <span
+              style={{
+                fontSize: typography.fontSize.xs,
+                color: colors.text.secondary,
+              }}
+            >
+              {statusLabel}
+            </span>
+          </div>
+          {day.downtimeMinutes > 0 && day.status !== 'no-data' && (
+            <p
+              style={{
+                margin: 0,
+                marginTop: '2px',
+                fontSize: typography.fontSize.xs,
+                color: colors.text.tertiary,
+                paddingLeft: `calc(8px + ${spacing.xs})`,
+              }}
+            >
+              {formatDowntime(day.downtimeMinutes)} downtime
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function UptimeBar({ days }: { days: DayRecord[] }) {
   return (
     <div>
@@ -150,16 +258,7 @@ function UptimeBar({ days }: { days: DayRecord[] }) {
         }}
       >
         {days.map((day) => (
-          <div
-            key={day.date}
-            title={`${day.date}: ${day.downtimeMinutes > 0 ? `${Math.round(day.downtimeMinutes)}min downtime` : day.status}`}
-            style={{
-              flex: 1,
-              backgroundColor: colorForDay(day),
-              borderRadius: '2px',
-              minWidth: '2px',
-            }}
-          />
+          <DayBar key={day.date} day={day} />
         ))}
       </div>
       <div
