@@ -30,7 +30,6 @@ const BASE_URL = "https://www.policyengine.org";
 // Let all user agents (including bots) pass through to the actual app.
 const REWRITE_PREFIXES = [
   "/us/keep-your-pay-act",
-  "/us/watca",
   "/us/taxsim",
   "/us/api",
 ];
@@ -96,7 +95,7 @@ const DEFAULT_OG = {
   title: "PolicyEngine",
   description:
     "Free, open-source tools to understand tax and benefit policies. Calculate your taxes and benefits, or analyze policy reforms.",
-  image: "https://policyengine.org/assets/logos/policyengine/teal.png",
+  image: "https://www.policyengine.org/assets/logos/policyengine/teal.png",
 };
 
 const STATIC_PAGES: Record<string, { title: string; description: string }> = {
