@@ -61,24 +61,9 @@ export default function CTASection({
             {title}
           </h2>
         )}
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "24px",
-            alignItems: "stretch",
-          }}
-        >
+        <div className="flex flex-col md:flex-row items-stretch md:items-center gap-6 md:gap-12">
           <div style={{ flex: 1.5, color: textColors[variant] }}>{content}</div>
-          <div
-            style={{
-              flex: 1,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
+          <div className="flex flex-1 flex-col items-center justify-center">
             <ActionButton
               {...cta}
               variant={isInverted ? "inverted" : "primary"}
