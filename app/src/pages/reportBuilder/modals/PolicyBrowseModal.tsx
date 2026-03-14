@@ -100,6 +100,7 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
   const [footerHovered, setFooterHovered] = useState(false);
   const [originalLabel, setOriginalLabel] = useState('');
   const [showSameNameWarning, setShowSameNameWarning] = useState(false);
+  const [showUnnamedWarning, setShowUnnamedWarning] = useState(false);
 
   // API hook for creating policy
   const { createPolicy, isPending: isCreating } = useCreatePolicy(policyLabel || undefined);
@@ -368,16 +369,13 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
 
   // Handle policy creation
   const handleCreatePolicy = useCallback(async () => {
-    if (!policyLabel.trim()) {
-      return;
-    }
     const policyData: Partial<Policy> = { parameters: policyParameters };
     const payload: PolicyCreationPayload = PolicyAdapter.toCreationPayload(policyData as Policy);
     try {
       const result = await createPolicy(payload);
       const createdPolicy: PolicyStateProps = {
         id: result.result.policy_id,
-        label: policyLabel,
+        label: policyLabel || null,
         parameters: policyParameters,
       };
       onSelect(createdPolicy);
@@ -714,7 +712,16 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
               </div>
               <Group gap="sm" justify="end">
                 {editorMode === 'create' && (
-                  <Button onClick={handleCreatePolicy} disabled={isCreating || !policyLabel.trim()}>
+                  <Button
+                    onClick={() => {
+                      if (!policyLabel.trim()) {
+                        setShowUnnamedWarning(true);
+                      } else {
+                        handleCreatePolicy();
+                      }
+                    }}
+                    disabled={isCreating || modificationCount === 0}
+                  >
                     {isCreating && <Spinner size="sm" />}
                     Create policy
                   </Button>
@@ -731,13 +738,19 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
                       label="Update existing policy"
                       onClick={handleUpdateExistingPolicy}
                       loading={isUpdating}
-                      disabled={!policyLabel.trim() || isCreating}
+                      disabled={!policyLabel.trim() || isCreating || modificationCount === 0}
                     />
                     <EditAndSaveNewButton
                       label="Save as new policy"
-                      onClick={handleSaveAsNewPolicy}
+                      onClick={() => {
+                        if (!policyLabel.trim()) {
+                          setShowUnnamedWarning(true);
+                        } else {
+                          handleSaveAsNewPolicy();
+                        }
+                      }}
                       loading={isCreating}
-                      disabled={isUpdating}
+                      disabled={isUpdating || modificationCount === 0}
                     />
                   </>
                 )}
@@ -752,7 +765,7 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
         open={showSameNameWarning}
         onOpenChange={(open) => !open && setShowSameNameWarning(false)}
       >
-        <DialogContent className="tw:sm:max-w-sm">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Same name</DialogTitle>
           </DialogHeader>
@@ -762,12 +775,41 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
               Are you sure you want to save?
             </Text>
             <Group justify="end" gap="sm">
-              <Button variant="ghost" onClick={() => setShowSameNameWarning(false)}>
+              <Button variant="outline" onClick={() => setShowSameNameWarning(false)}>
                 Cancel
               </Button>
               <Button
                 onClick={() => {
                   setShowSameNameWarning(false);
+                  handleCreatePolicy();
+                }}
+              >
+                Save anyway
+              </Button>
+            </Group>
+          </Stack>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={showUnnamedWarning}
+        onOpenChange={(open) => !open && setShowUnnamedWarning(false)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Unnamed policy</DialogTitle>
+          </DialogHeader>
+          <Stack gap="md">
+            <Text size="sm">
+              This policy has no name. Are you sure you want to save it without a name?
+            </Text>
+            <Group justify="end" gap="sm">
+              <Button variant="outline" onClick={() => setShowUnnamedWarning(false)}>
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  setShowUnnamedWarning(false);
                   handleCreatePolicy();
                 }}
               >

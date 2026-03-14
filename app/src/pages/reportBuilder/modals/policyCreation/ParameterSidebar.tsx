@@ -21,7 +21,6 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-  ScrollArea,
   Skeleton,
   Stack,
   Text,
@@ -224,7 +223,7 @@ export function ParameterSidebar({
             </PopoverContent>
           </Popover>
         </div>
-        <ScrollArea className="tw:flex-1">
+        <div className="tw:flex-1 tw:min-h-0" style={{ overflowY: 'scroll' }}>
           <div style={{ padding: spacing.sm }}>
             {metadataLoading || !parameterTree ? (
               <Stack gap="xs">
@@ -236,7 +235,7 @@ export function ParameterSidebar({
               renderedMenuTree
             )}
           </div>
-        </ScrollArea>
+        </div>
       </div>
     </div>
   );

@@ -53,8 +53,7 @@ export default function PolicyParameterSelectorHistoricalValues(
   } = props;
 
   return (
-    <div className="tw:flex tw:flex-col tw:gap-sm tw:mt-xl">
-      <p className="tw:font-bold">Historical values</p>
+    <div className="tw:flex tw:flex-col tw:gap-sm">
       <p>{capitalize(param.label)} over time</p>
       <ParameterOverTimeChart
         param={param}
@@ -195,6 +194,12 @@ export const ParameterOverTimeChart = memo((props: ParameterOverTimeChartProps) 
         maxY = Math.max(maxY, 1);
       }
 
+      // Add 10% headroom above the max value
+      const range = maxY - minY;
+      if (range > 0) {
+        maxY += range * 0.1;
+      }
+
       if (minY === maxY) {
         return { maxDate, yMin: 0, yMax: 1, yTicks: [0, 1] };
       }
@@ -321,7 +326,7 @@ export const ParameterOverTimeChart = memo((props: ParameterOverTimeChartProps) 
             top: isMobile ? 40 : 20,
             right: isMobile ? 50 : 40,
             bottom: isMobile ? 30 : 50,
-            left: isMobile ? 50 : 60,
+            left: isMobile ? 10 : 5,
           }}
         >
           <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />

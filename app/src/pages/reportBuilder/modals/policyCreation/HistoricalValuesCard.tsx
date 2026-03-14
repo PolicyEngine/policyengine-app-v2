@@ -22,7 +22,7 @@ export function HistoricalValuesCard({
         minWidth: 0,
         background: colors.white,
         borderRadius: spacing.radius.feature,
-        padding: spacing.lg,
+        padding: 0,
         border: `1px solid ${colors.border.light}`,
       }}
     >

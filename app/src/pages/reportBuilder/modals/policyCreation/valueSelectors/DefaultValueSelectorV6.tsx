@@ -11,7 +11,7 @@ import { getDefaultValueForParam } from '@/pathways/report/components/valueSette
 import { ValueInputBox } from '@/pathways/report/components/valueSetters/ValueInputBox';
 import { ValueSetterProps } from '@/pathways/report/components/valueSetters/ValueSetterProps';
 import { ValueInterval } from '@/types/subIngredients/valueInterval';
-import { fromISODateString, toISODateString } from '@/utils/dateUtils';
+import { fromLocalDateString, toLocalDateString } from '@/utils/dateUtils';
 
 export function DefaultValueSelectorV6(props: ValueSetterProps) {
   const {
@@ -59,7 +59,7 @@ export function DefaultValueSelectorV6(props: ValueSetterProps) {
   }, [startDate, endDate, paramValue, setIntervals]);
 
   function handleStartDateChange(value: Date | null) {
-    setStartDate(toISODateString(value));
+    setStartDate(toLocalDateString(value));
   }
 
   // V6 Layout: Two rows - date row, then value row
@@ -73,9 +73,9 @@ export function DefaultValueSelectorV6(props: ValueSetterProps) {
           </Text>
           <YearPicker
             placeholder="2025"
-            minDate={fromISODateString(minDate)}
-            maxDate={fromISODateString(maxDate)}
-            value={fromISODateString(startDate)}
+            minDate={fromLocalDateString(minDate)}
+            maxDate={fromLocalDateString(maxDate)}
+            value={fromLocalDateString(startDate)}
             onChange={handleStartDateChange}
           />
         </div>
