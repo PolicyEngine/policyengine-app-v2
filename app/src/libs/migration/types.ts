@@ -73,4 +73,14 @@ export interface CleanupSummary {
   removedSimulations: number;
   removedPolicies: number;
   removedHouseholds: number;
+  errors: string[];
+}
+
+/**
+ * Result of detecting v1 reports in localStorage.
+ * Distinguishes "no reports" (reports=[]) from "corrupt data" (reports=[], error=...).
+ */
+export interface DetectionResult {
+  reports: V1ReportInfo[];
+  error?: string;
 }

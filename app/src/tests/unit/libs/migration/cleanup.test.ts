@@ -54,6 +54,7 @@ describe('cleanup', () => {
     });
 
     expect(result.removedReports).toBe(0);
+    expect(result.errors).toEqual([]);
     const remaining = JSON.parse(localStorage.getItem(LS_KEYS.reports)!);
     expect(remaining).toHaveLength(1);
   });
@@ -114,7 +115,7 @@ describe('cleanup', () => {
     expect(result.removedHouseholds).toBe(0);
   });
 
-  test('given corrupt localStorage then handles gracefully', () => {
+  test('given corrupt localStorage then returns zero and populates errors', () => {
     localStorage.setItem(LS_KEYS.reports, 'not-valid-json');
 
     const result = cleanupMigratedRecords({
@@ -124,6 +125,8 @@ describe('cleanup', () => {
     });
 
     expect(result.removedReports).toBe(0);
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0]).toContain('user-report-associations');
   });
 
   test('given dependency IDs in succeeded results then removes from all stores', () => {

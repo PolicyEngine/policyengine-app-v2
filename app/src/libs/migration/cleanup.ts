@@ -30,9 +30,14 @@ export function cleanupMigratedRecords(results: MigrationRunResult): CleanupSumm
     removedSimulations: 0,
     removedPolicies: 0,
     removedHouseholds: 0,
+    errors: [],
   };
 
-  summary.removedReports = removeMatchingRecords(LS_KEYS.reports, succeededIds);
+  const reportsResult = removeMatchingRecords(LS_KEYS.reports, succeededIds);
+  summary.removedReports = reportsResult.removed;
+  if (reportsResult.error) {
+    summary.errors.push(reportsResult.error);
+  }
 
   // For simulations/policies/households, we also check dependency IDs
   const dependencyIds = new Set<string>();
@@ -48,9 +53,23 @@ export function cleanupMigratedRecords(results: MigrationRunResult): CleanupSumm
 
   const allIdsToRemove = new Set([...succeededIds, ...dependencyIds]);
 
-  summary.removedSimulations = removeMatchingRecords(LS_KEYS.simulations, allIdsToRemove);
-  summary.removedPolicies = removeMatchingRecords(LS_KEYS.policies, allIdsToRemove);
-  summary.removedHouseholds = removeMatchingRecords(LS_KEYS.households, allIdsToRemove);
+  const simsResult = removeMatchingRecords(LS_KEYS.simulations, allIdsToRemove);
+  summary.removedSimulations = simsResult.removed;
+  if (simsResult.error) {
+    summary.errors.push(simsResult.error);
+  }
+
+  const policiesResult = removeMatchingRecords(LS_KEYS.policies, allIdsToRemove);
+  summary.removedPolicies = policiesResult.removed;
+  if (policiesResult.error) {
+    summary.errors.push(policiesResult.error);
+  }
+
+  const householdsResult = removeMatchingRecords(LS_KEYS.households, allIdsToRemove);
+  summary.removedHouseholds = householdsResult.removed;
+  if (householdsResult.error) {
+    summary.errors.push(householdsResult.error);
+  }
 
   console.info(`${LOG} Cleanup summary:`, summary);
   return summary;
@@ -60,20 +79,23 @@ export function cleanupMigratedRecords(results: MigrationRunResult): CleanupSumm
  * Remove records matching the given IDs from a localStorage array.
  * Returns the number of records removed.
  */
-function removeMatchingRecords(key: string, idsToRemove: Set<string>): number {
+function removeMatchingRecords(
+  key: string,
+  idsToRemove: Set<string>,
+): { removed: number; error?: string } {
   try {
     const stored = localStorage.getItem(key);
     if (!stored) {
-      return 0;
+      return { removed: 0 };
     }
 
     const parsed = JSON.parse(stored);
     if (!Array.isArray(parsed)) {
-      return 0;
+      return { removed: 0 };
     }
 
     const kept = parsed.filter(
-      (record: { id?: string }) => !record.id || !idsToRemove.has(record.id)
+      (record: { id?: string }) => !record.id || !idsToRemove.has(record.id),
     );
     const removedCount = parsed.length - kept.length;
 
@@ -82,9 +104,10 @@ function removeMatchingRecords(key: string, idsToRemove: Set<string>): number {
       console.info(`${LOG}   "${key}": removed ${removedCount}/${parsed.length} record(s)`);
     }
 
-    return removedCount;
+    return { removed: removedCount };
   } catch (err) {
-    console.error(`${LOG} Error processing localStorage key "${key}":`, err);
-    return 0;
+    const message = `Error processing localStorage key "${key}": ${err instanceof Error ? err.message : String(err)}`;
+    console.error(`${LOG} ${message}`);
+    return { removed: 0, error: message };
   }
 }

@@ -317,7 +317,11 @@ export async function migrateAllV1Reports(
   console.info(`${LOG} Starting migration for userId=${userId}`);
   console.info(`${LOG} ============================================================`);
 
-  const v1Reports = detectV1Reports(userId);
+  const detection = detectV1Reports(userId);
+  if (detection.error) {
+    console.error(`${LOG} Detection error: ${detection.error}`);
+  }
+  const v1Reports = detection.reports;
 
   if (v1Reports.length === 0) {
     console.info(`${LOG} No v1 reports found. Nothing to migrate.`);
@@ -372,8 +376,11 @@ export async function migrateAllV1Reports(
   if (result.succeeded.length > 0) {
     const cleanup = cleanupMigratedRecords(result);
     console.info(
-      `${LOG} Cleanup: ${cleanup.removedReports} report(s), ${cleanup.removedSimulations} sim(s), ${cleanup.removedPolicies} policy(ies), ${cleanup.removedHouseholds} household(s) removed from localStorage`
+      `${LOG} Cleanup: ${cleanup.removedReports} report(s), ${cleanup.removedSimulations} sim(s), ${cleanup.removedPolicies} policy(ies), ${cleanup.removedHouseholds} household(s) removed from localStorage`,
     );
+    if (cleanup.errors.length > 0) {
+      console.warn(`${LOG} Cleanup had ${cleanup.errors.length} error(s):`, cleanup.errors);
+    }
   }
   console.info(`${LOG} ============================================================\n`);
 

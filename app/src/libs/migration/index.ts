@@ -9,4 +9,5 @@ export type {
   MigrationProgress,
   V1ReportInfo,
   CleanupSummary,
+  DetectionResult,
 } from './types';

@@ -54,8 +54,11 @@ export default function ReportsPage() {
 
   // Detect v1 reports on load
   useEffect(() => {
-    const found = detectV1Reports(userId);
-    setV1Reports(found);
+    const detection = detectV1Reports(userId);
+    setV1Reports(detection.reports);
+    if (detection.error) {
+      setMigrationError(`Could not read saved reports: ${detection.error}`);
+    }
   }, [userId]);
 
   const handleMigrate = useCallback(async () => {

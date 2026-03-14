@@ -8,28 +8,30 @@
 
 import type { CountryId } from '@/libs/countries';
 import type { UserReport } from '@/types/ingredients/UserReport';
-import type { V1ReportInfo } from './types';
+import type { DetectionResult } from './types';
 
 const LOG = '[migration:detect]';
 const LS_REPORT_KEY = 'user-report-associations';
 
-function parseLocalStorageReports(): UserReport[] {
+function parseLocalStorageReports(): { reports: UserReport[]; error?: string } {
   try {
     const stored = localStorage.getItem(LS_REPORT_KEY);
     if (!stored) {
       console.info(`${LOG} No data in localStorage key "${LS_REPORT_KEY}"`);
-      return [];
+      return { reports: [] };
     }
     const parsed = JSON.parse(stored);
     if (!Array.isArray(parsed)) {
-      console.warn(`${LOG} localStorage key "${LS_REPORT_KEY}" is not an array`);
-      return [];
+      const error = `localStorage key "${LS_REPORT_KEY}" is not an array`;
+      console.warn(`${LOG} ${error}`);
+      return { reports: [], error };
     }
     console.info(`${LOG} Found ${parsed.length} total report(s) in localStorage`);
-    return parsed;
+    return { reports: parsed };
   } catch (err) {
-    console.error(`${LOG} Failed to parse localStorage "${LS_REPORT_KEY}":`, err);
-    return [];
+    const error = `Failed to parse localStorage "${LS_REPORT_KEY}": ${err instanceof Error ? err.message : String(err)}`;
+    console.error(`${LOG} ${error}`);
+    return { reports: [], error };
   }
 }
 
@@ -41,9 +43,9 @@ function isV1Report(report: UserReport): boolean {
  * Detect v1 reports in localStorage for a given user.
  * Returns info about each v1 report found. Makes zero API calls.
  */
-export function detectV1Reports(userId: string): V1ReportInfo[] {
+export function detectV1Reports(userId: string): DetectionResult {
   console.info(`${LOG} Scanning for v1 reports (userId=${userId})`);
-  const allReports = parseLocalStorageReports();
+  const { reports: allReports, error } = parseLocalStorageReports();
 
   const userReports = allReports.filter((r) => r.userId === userId);
   const v1Reports = userReports.filter(isV1Report);
@@ -55,22 +57,25 @@ export function detectV1Reports(userId: string): V1ReportInfo[] {
       console.info(
         `${LOG}   v1 report: id=${r.id}, reportId=${r.reportId}, label="${r.label ?? '(none)'}", ` +
           `country=${r.countryId}, outputType=${r.outputType ?? 'MISSING'}, ` +
-          `simulationIds=${r.simulationIds?.length ?? 'MISSING'}`
+          `simulationIds=${r.simulationIds?.length ?? 'MISSING'}`,
       );
     }
   }
 
-  return v1Reports.map((r) => ({
-    userReportId: r.id,
-    reportId: r.reportId,
-    label: r.label,
-    countryId: r.countryId as CountryId,
-  }));
+  return {
+    reports: v1Reports.map((r) => ({
+      userReportId: r.id,
+      reportId: r.reportId,
+      label: r.label,
+      countryId: r.countryId as CountryId,
+    })),
+    error,
+  };
 }
 
 /**
  * Convenience check: are there any v1 reports for this user?
  */
 export function hasV1Reports(userId: string): boolean {
-  return detectV1Reports(userId).length > 0;
+  return detectV1Reports(userId).reports.length > 0;
 }

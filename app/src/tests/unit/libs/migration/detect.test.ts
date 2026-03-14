@@ -35,18 +35,20 @@ describe('detect', () => {
   });
 
   describe('detectV1Reports', () => {
-    test('given empty localStorage then returns empty array', () => {
+    test('given empty localStorage then returns empty reports with no error', () => {
       const result = detectV1Reports(TEST_USER_ID);
 
-      expect(result).toEqual([]);
+      expect(result.reports).toEqual([]);
+      expect(result.error).toBeUndefined();
     });
 
-    test('given only v2 reports then returns empty array', () => {
+    test('given only v2 reports then returns empty reports', () => {
       localStorage.setItem(LS_KEY, JSON.stringify([makeV2Report()]));
 
       const result = detectV1Reports(TEST_USER_ID);
 
-      expect(result).toEqual([]);
+      expect(result.reports).toEqual([]);
+      expect(result.error).toBeUndefined();
     });
 
     test('given v1 report missing outputType then detects it', () => {
@@ -55,8 +57,8 @@ describe('detect', () => {
 
       const result = detectV1Reports(TEST_USER_ID);
 
-      expect(result).toHaveLength(1);
-      expect(result[0]).toEqual({
+      expect(result.reports).toHaveLength(1);
+      expect(result.reports[0]).toEqual({
         userReportId: 'ur-v1-001',
         reportId: '42',
         label: 'My v1 report',
@@ -70,7 +72,7 @@ describe('detect', () => {
 
       const result = detectV1Reports(TEST_USER_ID);
 
-      expect(result).toHaveLength(1);
+      expect(result.reports).toHaveLength(1);
     });
 
     test('given v1 report with empty simulationIds then detects it', () => {
@@ -79,7 +81,7 @@ describe('detect', () => {
 
       const result = detectV1Reports(TEST_USER_ID);
 
-      expect(result).toHaveLength(1);
+      expect(result.reports).toHaveLength(1);
     });
 
     test('given v1 report missing both fields then detects it', () => {
@@ -88,7 +90,7 @@ describe('detect', () => {
 
       const result = detectV1Reports(TEST_USER_ID);
 
-      expect(result).toHaveLength(1);
+      expect(result.reports).toHaveLength(1);
     });
 
     test('given mixed v1 and v2 reports then returns only v1', () => {
@@ -97,8 +99,8 @@ describe('detect', () => {
 
       const result = detectV1Reports(TEST_USER_ID);
 
-      expect(result).toHaveLength(1);
-      expect(result[0].reportId).toBe('42');
+      expect(result.reports).toHaveLength(1);
+      expect(result.reports[0].reportId).toBe('42');
     });
 
     test('given reports for different users then filters by userId', () => {
@@ -110,24 +112,28 @@ describe('detect', () => {
 
       const result = detectV1Reports(TEST_USER_ID);
 
-      expect(result).toHaveLength(1);
-      expect(result[0].userReportId).toBe('ur-v1-001');
+      expect(result.reports).toHaveLength(1);
+      expect(result.reports[0].userReportId).toBe('ur-v1-001');
     });
 
-    test('given corrupt JSON in localStorage then returns empty array', () => {
+    test('given corrupt JSON in localStorage then returns empty reports with error', () => {
       localStorage.setItem(LS_KEY, 'not-valid-json{{{');
 
       const result = detectV1Reports(TEST_USER_ID);
 
-      expect(result).toEqual([]);
+      expect(result.reports).toEqual([]);
+      expect(result.error).toBeDefined();
+      expect(result.error).toContain('Failed to parse');
     });
 
-    test('given non-array in localStorage then returns empty array', () => {
+    test('given non-array in localStorage then returns empty reports with error', () => {
       localStorage.setItem(LS_KEY, JSON.stringify({ foo: 'bar' }));
 
       const result = detectV1Reports(TEST_USER_ID);
 
-      expect(result).toEqual([]);
+      expect(result.reports).toEqual([]);
+      expect(result.error).toBeDefined();
+      expect(result.error).toContain('not an array');
     });
 
     test('given multiple v1 reports then returns all with correct shape', () => {
@@ -139,14 +145,14 @@ describe('detect', () => {
 
       const result = detectV1Reports(TEST_USER_ID);
 
-      expect(result).toHaveLength(2);
-      expect(result[0]).toEqual({
+      expect(result.reports).toHaveLength(2);
+      expect(result.reports[0]).toEqual({
         userReportId: 'ur-v1-001',
         reportId: '10',
         label: 'First',
         countryId: 'us',
       });
-      expect(result[1]).toEqual({
+      expect(result.reports[1]).toEqual({
         userReportId: 'ur-v1-002',
         reportId: '20',
         label: 'Second',
