@@ -12,7 +12,7 @@ export default async function CountryLayout({
 }) {
   const { countryId } = await params;
 
-  if (!VALID_COUNTRIES.includes(countryId)) {
+  if (!(VALID_COUNTRIES as readonly string[]).includes(countryId)) {
     notFound();
   }
 
