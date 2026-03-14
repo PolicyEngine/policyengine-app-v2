@@ -376,7 +376,7 @@ export async function migrateAllV1Reports(
   if (result.succeeded.length > 0) {
     const cleanup = cleanupMigratedRecords(result);
     console.info(
-      `${LOG} Cleanup: ${cleanup.removedReports} report(s), ${cleanup.removedSimulations} sim(s), ${cleanup.removedPolicies} policy(ies), ${cleanup.removedHouseholds} household(s) removed from localStorage`,
+      `${LOG} Cleanup: ${cleanup.removedReports} report(s), ${cleanup.removedSimulations} sim(s), ${cleanup.removedPolicies} policy(ies), ${cleanup.removedHouseholds} household(s) removed from localStorage`
     );
     if (cleanup.errors.length > 0) {
       console.warn(`${LOG} Cleanup had ${cleanup.errors.length} error(s):`, cleanup.errors);

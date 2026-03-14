@@ -81,7 +81,7 @@ export function cleanupMigratedRecords(results: MigrationRunResult): CleanupSumm
  */
 function removeMatchingRecords(
   key: string,
-  idsToRemove: Set<string>,
+  idsToRemove: Set<string>
 ): { removed: number; error?: string } {
   try {
     const stored = localStorage.getItem(key);
@@ -95,7 +95,7 @@ function removeMatchingRecords(
     }
 
     const kept = parsed.filter(
-      (record: { id?: string }) => !record.id || !idsToRemove.has(record.id),
+      (record: { id?: string }) => !record.id || !idsToRemove.has(record.id)
     );
     const removedCount = parsed.length - kept.length;
 

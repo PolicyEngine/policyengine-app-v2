@@ -57,7 +57,7 @@ export function detectV1Reports(userId: string): DetectionResult {
       console.info(
         `${LOG}   v1 report: id=${r.id}, reportId=${r.reportId}, label="${r.label ?? '(none)'}", ` +
           `country=${r.countryId}, outputType=${r.outputType ?? 'MISSING'}, ` +
-          `simulationIds=${r.simulationIds?.length ?? 'MISSING'}`,
+          `simulationIds=${r.simulationIds?.length ?? 'MISSING'}`
       );
     }
   }

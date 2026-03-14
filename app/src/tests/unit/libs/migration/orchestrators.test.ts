@@ -366,7 +366,10 @@ describe('orchestrators', () => {
     });
 
     test('given v1 reports then migrates each and calls progress callback', async () => {
-      vi.mocked(detectV1Reports).mockReturnValue({ reports: [HOUSEHOLD_REPORT_INFO, ECONOMY_REPORT_INFO], error: undefined });
+      vi.mocked(detectV1Reports).mockReturnValue({
+        reports: [HOUSEHOLD_REPORT_INFO, ECONOMY_REPORT_INFO],
+        error: undefined,
+      });
 
       // Mock the full flow for both reports to succeed
       vi.mocked(fetchReportById).mockResolvedValue({
@@ -431,7 +434,10 @@ describe('orchestrators', () => {
     });
 
     test('given mixed success and failure then categorizes correctly', async () => {
-      vi.mocked(detectV1Reports).mockReturnValue({ reports: [HOUSEHOLD_REPORT_INFO, ECONOMY_REPORT_INFO], error: undefined });
+      vi.mocked(detectV1Reports).mockReturnValue({
+        reports: [HOUSEHOLD_REPORT_INFO, ECONOMY_REPORT_INFO],
+        error: undefined,
+      });
 
       // First report succeeds
       vi.mocked(fetchReportById)
