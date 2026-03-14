@@ -40,7 +40,7 @@ describe('v2/householdCalculation', () => {
     it('given valid payload then creates calculation job', async () => {
       // Given
       const payload = {
-        tax_benefit_model_name: 'policyengine_us' as const,
+        country_id: 'us' as const,
         year: parseInt(CURRENT_YEAR, 10),
         people: [{ age: 30, employment_income: 50000 }],
         tax_unit: [{ state_code: 'CA' }],
@@ -67,7 +67,7 @@ describe('v2/householdCalculation', () => {
     it('given payload with policy_id then includes policy in request', async () => {
       // Given
       const payload = {
-        tax_benefit_model_name: 'policyengine_us' as const,
+        country_id: 'us' as const,
         year: parseInt(CURRENT_YEAR, 10),
         people: [{ age: 30 }],
         policy_id: TEST_POLICY_IDS.REFORM,
@@ -85,7 +85,7 @@ describe('v2/householdCalculation', () => {
     it('given API error then throws error with status', async () => {
       // Given
       const payload = {
-        tax_benefit_model_name: 'policyengine_us' as const,
+        country_id: 'us' as const,
         year: parseInt(CURRENT_YEAR, 10),
         people: [],
       };
@@ -261,7 +261,7 @@ describe('v2/householdCalculation', () => {
     it('given US calculation result then converts to Household format', () => {
       // Given
       const originalHousehold: Household = {
-        tax_benefit_model_name: 'policyengine_us',
+        country_id: 'us',
         year: parseInt(CURRENT_YEAR, 10),
         people: [{ age: 30 }],
       };
@@ -270,7 +270,7 @@ describe('v2/householdCalculation', () => {
       const result = calculationResultToHousehold(mockV2CalculationResult, originalHousehold);
 
       // Then
-      expect(result.tax_benefit_model_name).toBe('policyengine_us');
+      expect(result.country_id).toBe('us');
       expect(result.year).toBe(parseInt(CURRENT_YEAR, 10));
       expect(result.people).toEqual(mockV2CalculationResult.person);
       // Extracts first element from arrays
@@ -281,7 +281,7 @@ describe('v2/householdCalculation', () => {
     it('given result with null entity then returns undefined', () => {
       // Given
       const originalHousehold: Household = {
-        tax_benefit_model_name: 'policyengine_uk',
+        country_id: 'uk',
         year: parseInt(CURRENT_YEAR, 10),
         people: [{ age: 35 }],
       };
@@ -312,7 +312,7 @@ describe('v2/householdCalculation', () => {
     it('given household then creates job, polls, and returns Household', async () => {
       // Given
       const household: Household = {
-        tax_benefit_model_name: 'policyengine_us',
+        country_id: 'us',
         year: parseInt(CURRENT_YEAR, 10),
         people: [{ age: 30, employment_income: 50000 }],
         tax_unit: { state_code: 'CA' },
@@ -335,7 +335,7 @@ describe('v2/householdCalculation', () => {
       const result = await calculateHouseholdV2Alpha(household);
 
       // Then
-      expect(result.tax_benefit_model_name).toBe('policyengine_us');
+      expect(result.country_id).toBe('us');
       expect(result.people).toEqual(mockV2CalculationResult.person);
       expect(result.tax_unit).toEqual(mockV2CalculationResult.tax_unit![0]);
     });
@@ -343,7 +343,7 @@ describe('v2/householdCalculation', () => {
     it('given household with policyId then includes policy in request', async () => {
       // Given
       const household: Household = {
-        tax_benefit_model_name: 'policyengine_us',
+        country_id: 'us',
         year: parseInt(CURRENT_YEAR, 10),
         people: [{ age: 30 }],
       };
@@ -365,7 +365,7 @@ describe('v2/householdCalculation', () => {
     it('given household with dynamicId then includes dynamic in request', async () => {
       // Given
       const household: Household = {
-        tax_benefit_model_name: 'policyengine_us',
+        country_id: 'us',
         year: parseInt(CURRENT_YEAR, 10),
         people: [{ age: 30 }],
       };

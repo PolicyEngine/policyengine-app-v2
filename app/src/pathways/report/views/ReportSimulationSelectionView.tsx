@@ -163,7 +163,7 @@ export default function ReportSimulationSelectionView({
 
     try {
       const response = await createEconomySimulation({
-        tax_benefit_model_name: `policyengine_${countryId}`,
+        country_id: countryId,
         region: regionCode,
         policy_id: null, // current law
       });

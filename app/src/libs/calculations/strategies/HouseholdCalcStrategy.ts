@@ -61,7 +61,10 @@ export class HouseholdCalcStrategy implements CalcExecutionStrategy {
     try {
       const request: HouseholdImpactRequest = {
         household_id: params.populationId,
-        policy_id: params.policyIds.reform ?? params.policyIds.baseline ?? null,
+        baseline_policy_id: params.policyIds.baseline ?? 'current_law',
+        ...(params.policyIds.reform !== undefined
+          ? { reform_policy_id: params.policyIds.reform ?? 'current_law' }
+          : {}),
       };
 
       const response = await createHouseholdAnalysis(request);

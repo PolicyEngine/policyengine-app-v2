@@ -4,7 +4,6 @@ import {
   API_ENDPOINTS,
   mockFetchError,
   mockFetchSuccess,
-  MODEL_NAMES,
   SAMPLE_RESPONSES,
   TEST_COUNTRIES,
 } from '@/tests/fixtures/api/v2/apiV2Mocks';
@@ -31,10 +30,10 @@ describe('datasets', () => {
 
       // Then
       expect(result).toEqual(SAMPLE_RESPONSES.DATASETS);
-      expect(global.fetch).toHaveBeenCalledWith(API_ENDPOINTS.DATASETS(MODEL_NAMES.US));
+      expect(global.fetch).toHaveBeenCalledWith(API_ENDPOINTS.DATASETS(TEST_COUNTRIES.US));
     });
 
-    it('given UK country then fetches datasets with correct model name', async () => {
+    it('given UK country then fetches datasets with correct country_id', async () => {
       // Given
       vi.mocked(global.fetch).mockResolvedValue(mockFetchSuccess(SAMPLE_RESPONSES.DATASETS));
 
@@ -42,7 +41,7 @@ describe('datasets', () => {
       await fetchDatasets(TEST_COUNTRIES.UK);
 
       // Then
-      expect(global.fetch).toHaveBeenCalledWith(API_ENDPOINTS.DATASETS(MODEL_NAMES.UK));
+      expect(global.fetch).toHaveBeenCalledWith(API_ENDPOINTS.DATASETS(TEST_COUNTRIES.UK));
     });
 
     it('given failed response then throws error', async () => {
@@ -53,11 +52,6 @@ describe('datasets', () => {
       await expect(fetchDatasets(TEST_COUNTRIES.US)).rejects.toThrow(
         `Failed to fetch datasets for ${TEST_COUNTRIES.US}`
       );
-    });
-
-    it('given unknown country then throws error', async () => {
-      // When/Then
-      await expect(fetchDatasets('unknown')).rejects.toThrow('Unknown country: unknown');
     });
 
     it('given empty datasets response then returns empty array', async () => {

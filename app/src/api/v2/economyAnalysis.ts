@@ -19,7 +19,7 @@ import { API_V2_BASE_URL } from './taxBenefitModels';
 // Types
 // ============================================================================
 
-export type ReportStatus = 'pending' | 'running' | 'completed' | 'failed';
+export type ReportStatus = 'pending' | 'execution_deferred' | 'running' | 'completed' | 'failed';
 
 export interface SimulationInfo {
   id: string;
@@ -36,14 +36,19 @@ export interface AnalysisRegionInfo {
   filter_value: string | null;
 }
 
+/** Policy ID input: UUID string, "current_law", or undefined (omit). */
+export type PolicyIdInput = string | 'current_law' | undefined;
+
 /** POST /analysis/economic-impact request body */
 export interface EconomicImpactRequest {
-  tax_benefit_model_name: string;
+  country_id: string;
   region?: string | null;
   dataset_id?: string | null;
-  policy_id?: string | null;
+  baseline_policy_id?: PolicyIdInput;
+  reform_policy_id?: PolicyIdInput;
   dynamic_id?: string | null;
   year?: number | null;
+  run?: boolean;
 }
 
 /** Response from POST and GET /analysis/economic-impact */
@@ -71,13 +76,15 @@ export interface EconomicImpactResponse {
 
 /** POST /analysis/economy-custom request body */
 export interface EconomyCustomRequest {
-  tax_benefit_model_name: string;
+  country_id: string;
   region?: string | null;
   dataset_id?: string | null;
-  policy_id?: string | null;
+  baseline_policy_id?: PolicyIdInput;
+  reform_policy_id?: PolicyIdInput;
   dynamic_id?: string | null;
   year?: number | null;
   modules: string[];
+  run?: boolean;
 }
 
 // ---------------------------------------------------------------------------

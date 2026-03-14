@@ -4,6 +4,7 @@ import {
   HouseholdJobResponse,
   HouseholdJobStatusResponse,
 } from '@/api/v2/householdCalculation';
+import { API_V2_BASE_URL as IMPORTED_API_V2_BASE_URL } from '@/api/v2/taxBenefitModels';
 import { CURRENT_YEAR } from '@/constants';
 import { Household } from '@/types/ingredients/Household';
 
@@ -66,8 +67,8 @@ export const ERROR_MESSAGES = {
   INVALID_PARAMETERS: 'Invalid parameters provided for household calculation',
 } as const;
 
-// V2 Alpha API Base URL
-export const API_V2_BASE_URL = 'https://v2.api.policyengine.org';
+// V2 Alpha API Base URL - imported from source so tests use the same runtime value
+export const API_V2_BASE_URL = IMPORTED_API_V2_BASE_URL;
 
 // ============================================================================
 // Mock response helpers
@@ -95,7 +96,7 @@ export const mockErrorResponse = (status: number, errorText: string = 'Error'): 
 
 export const mockHouseholdResult: Household = {
   id: TEST_HOUSEHOLD_IDS.EXISTING,
-  tax_benefit_model_name: 'policyengine_us',
+  country_id: 'us',
   year: parseInt(CURRENT_YEAR, 10),
   people: [
     { age: 30, employment_income: 50000, capital_gains: 5000 },
@@ -108,7 +109,7 @@ export const mockHouseholdResult: Household = {
 
 export const mockHouseholdResultUK: Household = {
   id: TEST_HOUSEHOLD_IDS.EXISTING,
-  tax_benefit_model_name: 'policyengine_uk',
+  country_id: 'uk',
   year: parseInt(CURRENT_YEAR, 10),
   people: [
     { age: 35, employment_income: 40000 },
@@ -120,7 +121,7 @@ export const mockHouseholdResultUK: Household = {
 
 export const mockLargeHouseholdResult: Household = {
   id: TEST_HOUSEHOLD_IDS.LARGE_HOUSEHOLD,
-  tax_benefit_model_name: 'policyengine_us',
+  country_id: 'us',
   year: parseInt(CURRENT_YEAR, 10),
   people: [
     { age: 40, employment_income: 75000 },

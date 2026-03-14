@@ -77,7 +77,7 @@ export const mockSocietyWideResult = (): EconomicImpactResponse =>
  * Mock household calculation result
  */
 export const mockHouseholdResult = (): Household => ({
-  tax_benefit_model_name: 'policyengine_us',
+  country_id: 'us',
   year: 2024,
   people: [{ age: 30, employment_income: 50000 }],
   household: { household_net_income: 45000 },

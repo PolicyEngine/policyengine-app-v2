@@ -84,15 +84,8 @@ export const mockChildUSDependent: HouseholdPerson = {
 
 // Mock household structures
 export const createEmptyHousehold = (countryId: string): Household => {
-  const modelName =
-    countryId === 'us'
-      ? 'policyengine_us'
-      : countryId === 'uk'
-        ? 'policyengine_uk'
-        : 'policyengine_us';
-
   return {
-    tax_benefit_model_name: modelName as any,
+    country_id: countryId as any,
     year: parseInt(YEARS.CURRENT, 10),
     people: [],
   };
@@ -100,7 +93,7 @@ export const createEmptyHousehold = (countryId: string): Household => {
 
 // Mock US household with one adult (entity groups are single dicts)
 export const mockUSHouseholdOneAdult: Household = {
-  tax_benefit_model_name: 'policyengine_us',
+  country_id: 'us',
   year: parseInt(YEARS.CURRENT, 10),
   people: [
     {
@@ -113,7 +106,7 @@ export const mockUSHouseholdOneAdult: Household = {
 
 // Mock UK household with one adult
 export const mockUKHouseholdOneAdult: Household = {
-  tax_benefit_model_name: 'policyengine_uk',
+  country_id: 'uk',
   year: parseInt(YEARS.CURRENT, 10),
   people: [
     {
@@ -126,7 +119,7 @@ export const mockUKHouseholdOneAdult: Household = {
 
 // Mock US household with married couple
 export const mockUSHouseholdMarried: Household = {
-  tax_benefit_model_name: 'policyengine_us',
+  country_id: 'us',
   year: parseInt(YEARS.CURRENT, 10),
   people: [
     {
@@ -143,7 +136,7 @@ export const mockUSHouseholdMarried: Household = {
 
 // Mock household with custom variables
 export const mockHouseholdWithVariables: Household = {
-  tax_benefit_model_name: 'policyengine_us',
+  country_id: 'us',
   year: parseInt(YEARS.CURRENT, 10),
   people: [
     {
@@ -160,8 +153,8 @@ export const mockHouseholdWithVariables: Household = {
 
 // Helper to verify household structure
 export const verifyHouseholdStructure = (household: Household, countryId: string): void => {
-  const expectedModelName = countryId === 'us' ? 'policyengine_us' : 'policyengine_uk';
-  expect(household.tax_benefit_model_name).toBe(expectedModelName);
+  const expectedCountryId = countryId === 'us' ? 'us' : 'uk';
+  expect(household.country_id).toBe(expectedCountryId);
   expect(household.people).toBeDefined();
   expect(Array.isArray(household.people)).toBe(true);
 };

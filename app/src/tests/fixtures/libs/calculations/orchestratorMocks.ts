@@ -73,7 +73,7 @@ export const mockHouseholdCalcConfig = (overrides?: Partial<CalcStartConfig>): C
   populations: {
     household1: {
       id: TEST_POPULATION_IDS.HOUSEHOLD_1,
-      tax_benefit_model_name: 'policyengine_us' as const,
+      country_id: 'us' as const,
       year: 2024,
       people: [],
     },

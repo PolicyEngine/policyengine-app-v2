@@ -530,20 +530,20 @@ describe('HouseholdQueries', () => {
   });
 
   describe('getModelName', () => {
-    test('given US household when getting model name then returns policyengine_us', () => {
+    test('given US household when getting model name then returns country_id', () => {
       // When
       const result = getModelName(mockHouseholdTwoAdultsTwoChildren);
 
       // Then
-      expect(result).toBe('policyengine_us');
+      expect(result).toBe('us');
     });
 
-    test('given UK household when getting model name then returns policyengine_uk', () => {
+    test('given UK household when getting model name then returns country_id', () => {
       // When
       const result = getModelName(mockUKHousehold);
 
       // Then
-      expect(result).toBe('policyengine_uk');
+      expect(result).toBe('uk');
     });
   });
 

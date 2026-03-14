@@ -84,7 +84,7 @@ export default function SimulationsPage() {
     },
     {
       key: 'dateCreated',
-      header: 'Date Created',
+      header: 'Date created',
       type: 'text',
     },
     {

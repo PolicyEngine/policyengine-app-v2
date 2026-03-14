@@ -67,7 +67,7 @@ export const MOCK_METADATA_MISSING_ENTITY = {
 
 // Base household for VariableResolver tests
 export const MOCK_RESOLVER_HOUSEHOLD: Household = {
-  tax_benefit_model_name: 'policyengine_us',
+  country_id: 'us',
   year: 2024,
   people: [
     { age: 30, employment_income: 50000 },

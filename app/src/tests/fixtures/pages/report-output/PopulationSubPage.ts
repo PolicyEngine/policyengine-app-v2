@@ -29,7 +29,7 @@ export const TEST_USER_ID = 'user-xyz-789';
 // Mock Households
 export const mockHouseholdFamilyOfFour: Household = {
   id: TEST_HOUSEHOLD_IDS.FAMILY_OF_FOUR,
-  tax_benefit_model_name: 'policyengine_us',
+  country_id: 'us',
   year: 2024,
   people: [
     {
@@ -50,7 +50,7 @@ export const mockHouseholdFamilyOfFour: Household = {
 
 export const mockHouseholdSinglePerson: Household = {
   id: TEST_HOUSEHOLD_IDS.SINGLE_PERSON,
-  tax_benefit_model_name: 'policyengine_us',
+  country_id: 'us',
   year: 2024,
   people: [
     {

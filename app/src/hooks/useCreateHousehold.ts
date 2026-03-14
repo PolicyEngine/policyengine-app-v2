@@ -6,7 +6,6 @@
  */
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { modelNameToCountryId } from '@/adapters/HouseholdAdapter';
 import { createHouseholdV2 } from '@/api/v2/households';
 import { householdKeys } from '@/libs/queryKeys';
 import { Household } from '@/types/ingredients/Household';
@@ -27,7 +26,7 @@ export function useCreateHousehold(householdLabel?: string) {
       try {
         queryClient.invalidateQueries({ queryKey: householdKeys.all });
 
-        const countryId = modelNameToCountryId(variables.tax_benefit_model_name);
+        const countryId = variables.country_id;
 
         await createAssociation.mutateAsync({
           userId,

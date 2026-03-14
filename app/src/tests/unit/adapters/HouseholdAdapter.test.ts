@@ -17,7 +17,7 @@ const TEST_DYNAMIC_ID = 'dynamic-456';
 
 // Mock household data
 const mockUSHousehold: Household = {
-  tax_benefit_model_name: 'policyengine_us',
+  country_id: 'us',
   year: TEST_YEAR,
   people: [
     {
@@ -38,7 +38,7 @@ const mockUSHousehold: Household = {
 };
 
 const mockUKHousehold: Household = {
-  tax_benefit_model_name: 'policyengine_uk',
+  country_id: 'uk',
   year: TEST_YEAR,
   people: [
     {
@@ -132,7 +132,7 @@ describe('HouseholdAdapter', () => {
 
     test('given household with all US entity types then preserves all entities', () => {
       const householdWithAllEntities: Household = {
-        tax_benefit_model_name: 'policyengine_us',
+        country_id: 'us',
         year: TEST_YEAR,
         people: [{ age: 30 }],
         tax_unit: {},
@@ -206,14 +206,14 @@ describe('HouseholdAdapter', () => {
       const ukHouseholdWithLabel = { ...mockUKHousehold, label: 'UK Test' };
       const result = HouseholdAdapter.toMetadata(ukHouseholdWithLabel);
 
-      expect(result.household.tax_benefit_model_name).toBe('policyengine_uk');
+      expect(result.household.country_id).toBe('uk');
       expect(result.household.benunit).toBeDefined();
       expect(result.label).toBe('UK Test');
     });
 
     test('given household with all entity types then preserves all in metadata', () => {
       const householdWithAllEntities: Household = {
-        tax_benefit_model_name: 'policyengine_us',
+        country_id: 'us',
         year: TEST_YEAR,
         people: [{}],
         tax_unit: {},
@@ -239,7 +239,7 @@ describe('HouseholdAdapter', () => {
 
       // toCalculatePayload wraps single entity dicts in arrays for the calculation API
       expect(result).toEqual({
-        tax_benefit_model_name: 'policyengine_us',
+        country_id: 'us',
         year: TEST_YEAR,
         people: mockUSHousehold.people,
         tax_unit: [mockUSHousehold.tax_unit],
@@ -281,7 +281,7 @@ describe('HouseholdAdapter', () => {
     test('given UK household then creates UK payload', () => {
       const result = HouseholdAdapter.toCalculatePayload(mockUKHousehold);
 
-      expect(result.tax_benefit_model_name).toBe('policyengine_uk');
+      expect(result.country_id).toBe('uk');
       expect(result.benunit).toBeDefined();
       expect(result.tax_unit).toBeUndefined();
     });
@@ -295,7 +295,7 @@ describe('HouseholdAdapter', () => {
 
     test('given household with all entity types then includes all in payload', () => {
       const householdWithAllEntities: Household = {
-        tax_benefit_model_name: 'policyengine_us',
+        country_id: 'us',
         year: TEST_YEAR,
         people: [{}],
         tax_unit: {},
@@ -316,7 +316,7 @@ describe('HouseholdAdapter', () => {
 
     test('given household with undefined entity types then excludes them from payload', () => {
       const minimalHousehold: Household = {
-        tax_benefit_model_name: 'policyengine_us',
+        country_id: 'us',
         year: TEST_YEAR,
         people: [{}],
       };
@@ -374,35 +374,29 @@ describe('HouseholdAdapter', () => {
   });
 });
 
-describe('countryIdToModelName', () => {
-  test('given us then returns policyengine_us', () => {
+describe('countryIdToModelName (deprecated identity)', () => {
+  test('given us then returns us', () => {
     const result = countryIdToModelName('us');
-
-    expect(result).toBe('policyengine_us');
-  });
-
-  test('given uk then returns policyengine_uk', () => {
-    const result = countryIdToModelName('uk');
-
-    expect(result).toBe('policyengine_uk');
-  });
-
-  test('given ca then defaults to policyengine_us', () => {
-    const result = countryIdToModelName('ca' as any);
-
-    expect(result).toBe('policyengine_us');
-  });
-});
-
-describe('modelNameToCountryId', () => {
-  test('given policyengine_us then returns us', () => {
-    const result = modelNameToCountryId('policyengine_us');
 
     expect(result).toBe('us');
   });
 
-  test('given policyengine_uk then returns uk', () => {
-    const result = modelNameToCountryId('policyengine_uk');
+  test('given uk then returns uk', () => {
+    const result = countryIdToModelName('uk');
+
+    expect(result).toBe('uk');
+  });
+});
+
+describe('modelNameToCountryId (deprecated identity)', () => {
+  test('given us then returns us', () => {
+    const result = modelNameToCountryId('us');
+
+    expect(result).toBe('us');
+  });
+
+  test('given uk then returns uk', () => {
+    const result = modelNameToCountryId('uk');
 
     expect(result).toBe('uk');
   });

@@ -9,7 +9,7 @@ import { HouseholdWithAxes } from '@/utils/householdVariationAxes';
 
 // Base household with variation axes for earnings sweep
 export const MOCK_HOUSEHOLD_WITH_AXES: HouseholdWithAxes = {
-  tax_benefit_model_name: 'policyengine_us',
+  country_id: 'us',
   year: 2024,
   people: [{ age: 30 }],
   household: { state_name: 'CA' },

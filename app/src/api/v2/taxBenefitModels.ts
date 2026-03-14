@@ -1,8 +1,7 @@
 export const API_V2_BASE_URL = import.meta.env.VITE_API_V2_URL || 'https://v2.api.policyengine.org';
 
 /**
- * Map country IDs to their API model names.
- * The API uses model names (e.g., "policyengine-us") for filtering.
+ * @deprecated No longer needed — API endpoints accept country_id directly.
  */
 export const COUNTRY_TO_MODEL_NAME: Record<string, string> = {
   us: 'policyengine-us',
@@ -36,7 +35,7 @@ export async function fetchTaxBenefitModels(): Promise<TaxBenefitModel[]> {
 }
 
 /**
- * Get the model name for a country (e.g., "policyengine-us")
+ * @deprecated No longer needed — API endpoints accept country_id directly.
  */
 export function getModelName(countryId: string): string {
   const modelName = COUNTRY_TO_MODEL_NAME[countryId];

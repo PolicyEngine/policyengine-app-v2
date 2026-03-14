@@ -77,13 +77,14 @@ async function createHouseholdReportV2(
   for (const sim of allSimulations) {
     const request: HouseholdImpactRequest = {
       household_id: householdId,
-      policy_id: sim.policyId ?? null,
+      baseline_policy_id: 'current_law',
+      ...(sim.policyId ? { reform_policy_id: sim.policyId } : {}),
     };
     const response = await createHouseholdAnalysis(request);
     responses.push(response);
 
     // Extract the primary simulation ID for this analysis:
-    // - If reform_simulation exists (policy_id was set), use reform_simulation.id
+    // - If reform_simulation exists (reform policy was set), use reform_simulation.id
     // - Otherwise use baseline_simulation.id (baseline-only / current law)
     const primarySimId = response.reform_simulation?.id || response.baseline_simulation?.id;
 
@@ -108,6 +109,7 @@ async function createHouseholdReportV2(
 async function createEconomyReportV2(
   countryId: string,
   region: string,
+  baselinePolicyId: string | null,
   reformPolicyId: string | null,
   year: number
 ): Promise<{
@@ -116,9 +118,10 @@ async function createEconomyReportV2(
   v2SimulationIds: string[];
 }> {
   const request: EconomicImpactRequest = {
-    tax_benefit_model_name: `policyengine_${countryId}`,
+    country_id: countryId,
     region,
-    policy_id: reformPolicyId,
+    baseline_policy_id: baselinePolicyId ?? 'current_law',
+    reform_policy_id: reformPolicyId ?? 'current_law',
     year,
   };
 
@@ -177,11 +180,13 @@ export function useCreateReport(reportLabel?: string) {
         reportId = crypto.randomUUID();
       } else {
         const region = populations.geography1?.regionCode || simulation1.populationId || countryId;
+        const baselinePolicyId = simulation1?.policyId ?? null;
         const reformPolicyId = simulation2?.policyId ?? simulation1.policyId ?? null;
 
         const result = await createEconomyReportV2(
           countryId,
           region,
+          baselinePolicyId,
           reformPolicyId,
           parseInt(year, 10)
         );

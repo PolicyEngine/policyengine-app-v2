@@ -134,7 +134,7 @@ export function householdsAreEqual(
   }
 
   // Compare key fields
-  if (household1.tax_benefit_model_name !== household2.tax_benefit_model_name) {
+  if (household1.country_id !== household2.country_id) {
     return false;
   }
   if (household1.year !== household2.year) {
@@ -167,7 +167,7 @@ export function getHouseholdSummary(household: Household): {
     adultCount: HouseholdQueries.getAdultCount(household),
     childCount: HouseholdQueries.getChildCount(household),
     year: household.year,
-    model: household.tax_benefit_model_name,
+    model: household.country_id,
   };
 }
 

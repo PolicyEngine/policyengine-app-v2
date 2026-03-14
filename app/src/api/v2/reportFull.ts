@@ -39,7 +39,7 @@ export interface ReportReadResponse {
 
 export interface HouseholdReadResponse {
   id: string;
-  tax_benefit_model_name: string;
+  country_id: string;
   year: number;
   label: string | null;
   people: Record<string, unknown>[];

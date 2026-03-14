@@ -50,9 +50,10 @@ describe('SocietyWideCalcStrategy', () => {
       const result = await strategy.execute(params, mockMetadata);
 
       expect(mockCreateEconomyAnalysis).toHaveBeenCalledWith({
-        tax_benefit_model_name: 'policyengine_us',
+        country_id: 'us',
         region: 'us',
-        policy_id: '2', // reform takes precedence
+        baseline_policy_id: '1',
+        reform_policy_id: '2',
         year: 2024,
       });
       expect(result.status).toBe('pending');
@@ -60,7 +61,7 @@ describe('SocietyWideCalcStrategy', () => {
       expect(result.message).toBe('Starting economy analysis...');
     });
 
-    it('given no reform policy then uses baseline policy_id', async () => {
+    it('given no reform policy then uses baseline as baseline_policy_id', async () => {
       const params = mockSocietyWideCalcParams({
         policyIds: { baseline: 'baseline-id' },
       });
@@ -69,11 +70,14 @@ describe('SocietyWideCalcStrategy', () => {
       await strategy.execute(params, mockMetadata);
 
       expect(mockCreateEconomyAnalysis).toHaveBeenCalledWith(
-        expect.objectContaining({ policy_id: 'baseline-id' })
+        expect.objectContaining({
+          baseline_policy_id: 'baseline-id',
+          reform_policy_id: 'current_law',
+        })
       );
     });
 
-    it('given null policies then sends null policy_id', async () => {
+    it('given null policies then sends current_law for both', async () => {
       const params = mockSocietyWideCalcParams({
         policyIds: { baseline: null },
       });
@@ -82,7 +86,10 @@ describe('SocietyWideCalcStrategy', () => {
       await strategy.execute(params, mockMetadata);
 
       expect(mockCreateEconomyAnalysis).toHaveBeenCalledWith(
-        expect.objectContaining({ policy_id: null })
+        expect.objectContaining({
+          baseline_policy_id: 'current_law',
+          reform_policy_id: 'current_law',
+        })
       );
     });
 
@@ -97,7 +104,7 @@ describe('SocietyWideCalcStrategy', () => {
 
       expect(mockCreateEconomyAnalysis).toHaveBeenCalledWith(
         expect.objectContaining({
-          tax_benefit_model_name: 'policyengine_uk',
+          country_id: 'uk',
           region: 'uk',
           year: 2024,
         })

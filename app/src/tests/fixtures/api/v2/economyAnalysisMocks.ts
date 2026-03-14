@@ -51,9 +51,10 @@ export const mockDecileImpact = (overrides?: Partial<DecileImpactData>): DecileI
 export const mockEconomicImpactRequest = (
   overrides?: Partial<EconomicImpactRequest>
 ): EconomicImpactRequest => ({
-  tax_benefit_model_name: 'policyengine-us',
+  country_id: 'us',
   region: 'state/ca',
-  policy_id: TEST_POLICY_IDS.POLICY_789,
+  baseline_policy_id: 'current_law',
+  reform_policy_id: TEST_POLICY_IDS.POLICY_789,
   ...overrides,
 });
 
@@ -99,9 +100,10 @@ export const mockFailedEconomicImpactResponse = (
 export const mockEconomyCustomRequest = (
   overrides?: Partial<EconomyCustomRequest>
 ): EconomyCustomRequest => ({
-  tax_benefit_model_name: 'policyengine-us',
+  country_id: 'us',
   modules: ['decile_impacts', 'poverty'],
-  policy_id: TEST_POLICY_IDS.POLICY_789,
+  baseline_policy_id: 'current_law',
+  reform_policy_id: TEST_POLICY_IDS.POLICY_789,
   ...overrides,
 });
 

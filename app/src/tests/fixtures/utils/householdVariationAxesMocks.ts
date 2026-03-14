@@ -7,7 +7,7 @@ import { Household } from '@/types/ingredients/Household';
 
 // Base US household with standard employment income
 export const MOCK_BASE_HOUSEHOLD: Household = {
-  tax_benefit_model_name: 'policyengine_us',
+  country_id: 'us',
   year: 2024,
   people: [{ age: 30, employment_income: 50000 }],
   household: { state_name: 'CA' },

@@ -30,7 +30,7 @@ export const usePolicyAssociationsByUser = (userId: string) => {
   return useQuery({
     queryKey: policyAssociationKeys.byUser(userId, countryId),
     queryFn: () => store.findByUser(userId, countryId),
-    enabled: !!countryId,
+    enabled: !!userId && !!countryId,
     ...config,
   });
 };

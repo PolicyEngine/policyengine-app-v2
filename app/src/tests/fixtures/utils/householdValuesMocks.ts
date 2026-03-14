@@ -63,7 +63,7 @@ export const MOCK_METADATA_CONTEXT: HouseholdMetadataContext = {
 
 export const MOCK_HOUSEHOLD_DATA: Household = {
   id: 'test-household',
-  tax_benefit_model_name: 'policyengine_us',
+  country_id: 'us',
   year: 2025,
   people: [
     {
@@ -87,7 +87,7 @@ export const MOCK_HOUSEHOLD_DATA: Household = {
 
 export const MOCK_HOUSEHOLD_DATA_REFORM: Household = {
   id: 'test-household-reform',
-  tax_benefit_model_name: 'policyengine_us',
+  country_id: 'us',
   year: 2025,
   people: [
     {
@@ -112,7 +112,7 @@ export const MOCK_HOUSEHOLD_DATA_REFORM: Household = {
 // Single-year household (v2 has no multi-period concept)
 export const MOCK_HOUSEHOLD_DATA_MULTI_PERIOD: Household = {
   id: 'test-household-multi',
-  tax_benefit_model_name: 'policyengine_us',
+  country_id: 'us',
   year: 2025,
   people: [],
   household: {

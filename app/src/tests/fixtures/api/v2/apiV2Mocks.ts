@@ -4,7 +4,11 @@
 
 // Household factory types
 import type { HouseholdV2Response } from '@/api/v2/households';
-import type { TaxBenefitModel, TaxBenefitModelVersion } from '@/api/v2/taxBenefitModels';
+import {
+  API_V2_BASE_URL as IMPORTED_API_V2_BASE_URL,
+  type TaxBenefitModel,
+  type TaxBenefitModelVersion,
+} from '@/api/v2/taxBenefitModels';
 import type { Household } from '@/types/ingredients/Household';
 import type {
   V2DatasetMetadata,
@@ -149,12 +153,12 @@ export const MODEL_IDS = {
 
 // Model names (used for API query parameters)
 export const MODEL_NAMES = {
-  US: 'policyengine-us',
-  UK: 'policyengine-uk',
+  US: 'us',
+  UK: 'uk',
 } as const;
 
-// API Base URL
-export const API_V2_BASE_URL = 'https://v2.api.policyengine.org';
+// API Base URL - imported from source so tests use the same runtime value
+export const API_V2_BASE_URL = IMPORTED_API_V2_BASE_URL;
 
 // HTTP status codes
 export const HTTP_STATUS = {
@@ -227,7 +231,7 @@ export function createMockHouseholdV2Response(
 ): HouseholdV2Response {
   return {
     id: 'hh-test-uuid-12345',
-    tax_benefit_model_name: 'policyengine_us',
+    country_id: 'us',
     year: 2025,
     label: null,
     people: [{ age: 30, employment_income: 50000 }],
@@ -246,7 +250,7 @@ export function createMockHouseholdV2Response(
 // Household factory - app internal format
 export function createMockHousehold(overrides: Partial<Household> = {}): Household {
   return {
-    tax_benefit_model_name: 'policyengine_us',
+    country_id: 'us',
     year: 2025,
     people: [{ age: 30, employment_income: 50000 }],
     tax_unit: { state_code: 'CA' },
@@ -260,11 +264,10 @@ export const API_ENDPOINTS = {
   TAX_BENEFIT_MODELS: `${API_V2_BASE_URL}/tax-benefit-models/`,
   TAX_BENEFIT_MODEL_VERSIONS: `${API_V2_BASE_URL}/tax-benefit-model-versions/`,
   VARIABLES: (modelName: string, limit: number = 10000) =>
-    `${API_V2_BASE_URL}/variables/?tax_benefit_model_name=${modelName}&limit=${limit}`,
+    `${API_V2_BASE_URL}/variables/?country_id=${modelName}&limit=${limit}`,
   PARAMETERS: (modelName: string, limit: number = 10000) =>
-    `${API_V2_BASE_URL}/parameters/?tax_benefit_model_name=${modelName}&limit=${limit}`,
-  DATASETS: (modelName: string) =>
-    `${API_V2_BASE_URL}/datasets/?tax_benefit_model_name=${modelName}`,
+    `${API_V2_BASE_URL}/parameters/?country_id=${modelName}&limit=${limit}`,
+  DATASETS: (modelName: string) => `${API_V2_BASE_URL}/datasets/?country_id=${modelName}`,
   PARAMETER_VALUES: (parameterId: string, policyId: string) =>
     `${API_V2_BASE_URL}/parameter-values/?parameter_id=${parameterId}&policy_id=${policyId}`,
   HOUSEHOLDS: `${API_V2_BASE_URL}/households/`,

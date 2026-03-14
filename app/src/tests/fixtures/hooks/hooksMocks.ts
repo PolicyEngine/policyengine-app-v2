@@ -94,7 +94,7 @@ export const TEST_VALUES = {
 export const mockHouseholdMetadata: HouseholdMetadata = {
   id: TEST_IDS.HOUSEHOLD_ID,
   household: {
-    tax_benefit_model_name: 'policyengine_us',
+    country_id: 'us',
     year: parseInt(CURRENT_YEAR, 10),
     people: [
       {
@@ -135,7 +135,7 @@ export const mockUserHouseholdPopulationList: UserHouseholdPopulation[] = [
 // Note: UserGeographyPopulation mocks removed - geographies are no longer stored as user associations
 
 export const mockHouseholdCreationPayload: Household = {
-  tax_benefit_model_name: 'policyengine_us',
+  country_id: 'us',
   year: parseInt(CURRENT_YEAR, 10),
   people: [
     {
@@ -157,7 +157,7 @@ export const mockCreateHouseholdResponse = {
 // Response from v2 API - returns full household with id
 export const mockCreateHouseholdV2Response: Household = {
   id: TEST_IDS.HOUSEHOLD_ID,
-  tax_benefit_model_name: 'policyengine_us',
+  country_id: 'us',
   year: parseInt(CURRENT_YEAR, 10),
   people: [
     {

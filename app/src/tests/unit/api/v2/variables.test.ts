@@ -55,9 +55,14 @@ describe('variables', () => {
       );
     });
 
-    it('given unknown country then throws error', async () => {
+    it('given unknown country then throws error from failed response', async () => {
+      // Given
+      vi.mocked(global.fetch).mockResolvedValue(mockFetchError());
+
       // When/Then
-      await expect(fetchVariables('unknown')).rejects.toThrow('Unknown country: unknown');
+      await expect(fetchVariables('unknown')).rejects.toThrow(
+        'Failed to fetch variables for unknown'
+      );
     });
   });
 });

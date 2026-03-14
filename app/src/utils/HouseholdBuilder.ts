@@ -11,13 +11,14 @@
  * from single dicts to arrays happens in householdToCalculatePayload().
  *
  * Example usage:
- *   const builder = new HouseholdBuilder('policyengine_us', 2025);
+ *   const builder = new HouseholdBuilder('us', 2025);
  *   builder.addAdult({ age: 35, employment_income: 50000 });
  *   builder.addChild({ age: 10 });
  *   const household = builder.build();
  */
 
-import { Household, HouseholdPerson, TaxBenefitModelName } from '@/types/ingredients/Household';
+import type { CountryId } from '@/libs/countries';
+import { Household, HouseholdPerson } from '@/types/ingredients/Household';
 
 /**
  * Options for adding an adult
@@ -49,22 +50,22 @@ export interface EntityVariables {
 export class HouseholdBuilder {
   private household: Household;
 
-  constructor(modelName: TaxBenefitModelName, year: number) {
+  constructor(modelName: CountryId, year: number) {
     this.household = this.createEmptyHousehold(modelName, year);
   }
 
   /**
    * Create an empty household structure with single-dict entities
    */
-  private createEmptyHousehold(modelName: TaxBenefitModelName, year: number): Household {
+  private createEmptyHousehold(modelName: CountryId, year: number): Household {
     const household: Household = {
-      tax_benefit_model_name: modelName,
+      country_id: modelName,
       year,
       people: [],
     };
 
     // Initialize entity dicts based on model
-    if (modelName === 'policyengine_us') {
+    if (modelName === 'us') {
       household.tax_unit = {};
       household.family = {};
       household.spm_unit = {};
@@ -125,7 +126,7 @@ export class HouseholdBuilder {
     }
 
     // Add US-specific child defaults
-    if (this.household.tax_benefit_model_name === 'policyengine_us') {
+    if (this.household.country_id === 'us') {
       person.is_tax_unit_dependent = true;
     }
 
@@ -197,7 +198,7 @@ export class HouseholdBuilder {
    * Set the state for US households
    */
   setState(stateCode: string, stateFips: number): HouseholdBuilder {
-    if (this.household.tax_benefit_model_name !== 'policyengine_us') {
+    if (this.household.country_id !== 'us') {
       throw new Error('setState is only valid for US households');
     }
 
@@ -218,7 +219,7 @@ export class HouseholdBuilder {
    * Set the region for UK households
    */
   setRegion(region: string): HouseholdBuilder {
-    if (this.household.tax_benefit_model_name !== 'policyengine_uk') {
+    if (this.household.country_id !== 'uk') {
       throw new Error('setRegion is only valid for UK households');
     }
 
@@ -275,7 +276,7 @@ export class HouseholdBuilder {
  * Create a single adult US household
  */
 export function createSingleAdultUS(year: number, options: AddAdultOptions): Household {
-  const builder = new HouseholdBuilder('policyengine_us', year);
+  const builder = new HouseholdBuilder('us', year);
   builder.addAdult(options);
   return builder.build();
 }
@@ -284,7 +285,7 @@ export function createSingleAdultUS(year: number, options: AddAdultOptions): Hou
  * Create a single adult UK household
  */
 export function createSingleAdultUK(year: number, options: AddAdultOptions): Household {
-  const builder = new HouseholdBuilder('policyengine_uk', year);
+  const builder = new HouseholdBuilder('uk', year);
   builder.addAdult(options);
   return builder.build();
 }
@@ -297,7 +298,7 @@ export function createCoupleUS(
   adult1: AddAdultOptions,
   adult2: AddAdultOptions
 ): Household {
-  const builder = new HouseholdBuilder('policyengine_us', year);
+  const builder = new HouseholdBuilder('us', year);
   builder.addAdult(adult1);
   builder.addAdult(adult2);
   return builder.build();
@@ -311,7 +312,7 @@ export function createCoupleUK(
   adult1: AddAdultOptions,
   adult2: AddAdultOptions
 ): Household {
-  const builder = new HouseholdBuilder('policyengine_uk', year);
+  const builder = new HouseholdBuilder('uk', year);
   builder.addAdult(adult1);
   builder.addAdult(adult2);
   return builder.build();

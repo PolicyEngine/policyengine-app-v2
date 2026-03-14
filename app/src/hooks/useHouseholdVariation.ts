@@ -8,7 +8,6 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { modelNameToCountryId } from '@/adapters/HouseholdAdapter';
 import { fetchHouseholdVariation } from '@/api/householdVariation';
 import { v1ResponseToHousehold } from '@/api/legacyConversion';
 import { fetchHouseholdByIdV2 } from '@/api/v2/households';
@@ -87,11 +86,11 @@ export function useHouseholdVariationInline({
   policyData: any;
   enabled?: boolean;
 }) {
-  const countryId = modelNameToCountryId(household.tax_benefit_model_name);
+  const countryId = household.country_id;
   const cacheKey = JSON.stringify({
     people: household.people.length,
     year: household.year,
-    model: household.tax_benefit_model_name,
+    model: household.country_id,
   });
 
   return useQuery({

@@ -68,7 +68,7 @@ describe('householdVariationAxes', () => {
     test('given household then preserves other fields', () => {
       const result = buildHouseholdVariationAxes(MOCK_BASE_HOUSEHOLD);
 
-      expect(result.tax_benefit_model_name).toBe('policyengine_us');
+      expect(result.country_id).toBe('us');
       expect(result.year).toBe(2024);
       expect(result.household).toEqual({ state_name: 'CA' });
     });

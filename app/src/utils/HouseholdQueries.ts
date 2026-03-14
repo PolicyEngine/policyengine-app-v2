@@ -190,24 +190,24 @@ export function getYear(household: Household): number {
 }
 
 /**
- * Get the tax-benefit model name
+ * Get the country ID
  */
 export function getModelName(household: Household): string {
-  return household.tax_benefit_model_name;
+  return household.country_id;
 }
 
 /**
  * Check if this is a US household
  */
 export function isUSHousehold(household: Household): boolean {
-  return household.tax_benefit_model_name === 'policyengine_us';
+  return household.country_id === 'us';
 }
 
 /**
  * Check if this is a UK household
  */
 export function isUKHousehold(household: Household): boolean {
-  return household.tax_benefit_model_name === 'policyengine_uk';
+  return household.country_id === 'uk';
 }
 
 /**

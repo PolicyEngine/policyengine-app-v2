@@ -16,7 +16,7 @@
  * This file should be DELETED when the app migrates to API v2 Alpha endpoints directly.
  */
 
-import { countryIdToModelName, modelNameToCountryId } from '@/adapters/HouseholdAdapter';
+import { BASE_URL } from '@/constants';
 import { countryIds } from '@/libs/countries';
 import { Household, HouseholdPerson } from '@/types/ingredients/Household';
 
@@ -38,7 +38,7 @@ export function v1ResponseToHousehold(
   const simulationYear = year ?? extractYearFromV1Data(data) ?? new Date().getFullYear();
 
   const household: Household = {
-    tax_benefit_model_name: countryIdToModelName(countryId),
+    country_id: countryId,
     year: simulationYear,
     people: [],
   };
@@ -96,7 +96,7 @@ export function v1ResponseToHousehold(
  */
 export function householdToV1Request(household: Household): Record<string, any> {
   const year = String(household.year);
-  const countryId = modelNameToCountryId(household.tax_benefit_model_name);
+  const countryId = household.country_id;
 
   const result: Record<string, any> = {
     people: {},
@@ -150,7 +150,7 @@ export function householdToV1CreationPayload(household: Household): {
   label?: string;
 } {
   return {
-    country_id: modelNameToCountryId(household.tax_benefit_model_name),
+    country_id: household.country_id,
     data: householdToV1Request(household),
     label: household.label,
   };
@@ -285,4 +285,43 @@ function extractYearFromV1Data(data: Record<string, any>): number | undefined {
     }
   }
   return undefined;
+}
+
+// ============================================================================
+// v1 API Fetch
+// ============================================================================
+
+/**
+ * Fetch a household by ID from the v1 API.
+ *
+ * Returns the raw v1 format (named people, year-keyed values) which can be
+ * converted to v2 Alpha format via `v1ResponseToHousehold()`.
+ *
+ * Used by the migration system to read v1 household data before converting.
+ */
+export async function fetchV1Household(
+  countryId: (typeof countryIds)[number],
+  householdId: string
+): Promise<Record<string, any>> {
+  const url = `${BASE_URL}/${countryId}/household/${householdId}`;
+
+  const res = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to fetch v1 household ${householdId}: ${res.status} ${res.statusText}`);
+  }
+
+  const json = await res.json();
+
+  if (json.status !== 'ok') {
+    throw new Error(json.message || `Failed to fetch v1 household ${householdId}`);
+  }
+
+  return json.result;
 }

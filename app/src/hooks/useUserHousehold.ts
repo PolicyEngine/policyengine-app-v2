@@ -27,6 +27,7 @@ export const useHouseholdAssociationsByUser = (userId: string) => {
   return useQuery({
     queryKey: householdAssociationKeys.byUser(userId, countryId),
     queryFn: () => store.findByUser(userId, countryId),
+    enabled: !!userId,
     ...config,
   });
 };

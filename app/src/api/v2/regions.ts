@@ -1,4 +1,4 @@
-import { API_V2_BASE_URL, getModelName } from './taxBenefitModels';
+import { API_V2_BASE_URL } from './taxBenefitModels';
 
 /**
  * V2 API Region response type
@@ -30,8 +30,7 @@ export async function fetchRegions(
   countryId: string,
   regionType?: string
 ): Promise<V2RegionMetadata[]> {
-  const modelName = getModelName(countryId);
-  let url = `${API_V2_BASE_URL}/regions/?tax_benefit_model_name=${modelName}`;
+  let url = `${API_V2_BASE_URL}/regions/?country_id=${countryId}`;
 
   if (regionType) {
     url += `&region_type=${encodeURIComponent(regionType)}`;
@@ -56,8 +55,7 @@ export async function fetchRegionByCode(
   countryId: string,
   regionCode: string
 ): Promise<V2RegionMetadata> {
-  const modelName = getModelName(countryId);
-  const url = `${API_V2_BASE_URL}/regions/by-code/${encodeURIComponent(regionCode)}?tax_benefit_model_name=${modelName}`;
+  const url = `${API_V2_BASE_URL}/regions/by-code/${encodeURIComponent(regionCode)}?country_id=${countryId}`;
 
   const res = await fetch(url);
 

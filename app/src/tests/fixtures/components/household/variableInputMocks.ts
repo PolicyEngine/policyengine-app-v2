@@ -106,7 +106,7 @@ export const MOCK_INPUT_METADATA = {
 
 // Base household for testing
 export const MOCK_INPUT_HOUSEHOLD: Household = {
-  tax_benefit_model_name: 'policyengine_us',
+  country_id: 'us',
   year: 2024,
   people: [
     { age: 30, employment_income: 50000, is_disabled: false },

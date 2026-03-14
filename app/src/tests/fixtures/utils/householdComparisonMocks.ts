@@ -3,7 +3,7 @@ import type { HouseholdMetadataContext } from '@/utils/householdValues';
 
 export const mockHousehold = (_netIncome: number = 50000): Household => ({
   id: 'household-1',
-  tax_benefit_model_name: 'policyengine_us',
+  country_id: 'us',
   year: 2025,
   people: [],
 });

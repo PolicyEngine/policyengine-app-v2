@@ -73,14 +73,14 @@ export const QUERY_EXPECTED_COUNTS = {
 
 // Empty household
 export const mockEmptyHousehold: Household = {
-  tax_benefit_model_name: 'policyengine_us',
+  country_id: 'us',
   year: 2024,
   people: [],
 };
 
 // Household with 2 adults and 2 children (v2 Alpha: no person_id/name, entity groups are dicts)
 export const mockHouseholdTwoAdultsTwoChildren: Household = {
-  tax_benefit_model_name: 'policyengine_us',
+  country_id: 'us',
   year: 2024,
   people: [
     {
@@ -113,7 +113,7 @@ export const mockHouseholdTwoAdultsTwoChildren: Household = {
 
 // UK household with benefit units
 export const mockUKHousehold: Household = {
-  tax_benefit_model_name: 'policyengine_uk',
+  country_id: 'uk',
   year: 2024,
   people: [
     {
@@ -137,9 +137,9 @@ export const mockUKHousehold: Household = {
  */
 export const createHouseholdWithPeople = (
   people: HouseholdPerson[],
-  modelName: 'policyengine_us' | 'policyengine_uk' = 'policyengine_us'
+  countryId: 'us' | 'uk' = 'us'
 ): Household => ({
-  tax_benefit_model_name: modelName,
+  country_id: countryId,
   year: 2024,
   people,
   household: {},

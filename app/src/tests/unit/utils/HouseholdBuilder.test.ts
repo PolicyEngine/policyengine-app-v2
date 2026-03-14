@@ -10,8 +10,8 @@ import {
 
 // Test constants
 const CURRENT_YEAR = 2025;
-const MODEL_US = 'policyengine_us' as const;
-const MODEL_UK = 'policyengine_uk' as const;
+const MODEL_US = 'us' as const;
+const MODEL_UK = 'uk' as const;
 
 describe('HouseholdBuilder', () => {
   let builder: HouseholdBuilder;
@@ -26,7 +26,7 @@ describe('HouseholdBuilder', () => {
       const household = builder.build();
 
       // Then
-      expect(household.tax_benefit_model_name).toBe(MODEL_US);
+      expect(household.country_id).toBe(MODEL_US);
       expect(household.year).toBe(CURRENT_YEAR);
       expect(household.people).toEqual([]);
       expect(household.tax_unit).toEqual({});
@@ -45,7 +45,7 @@ describe('HouseholdBuilder', () => {
       const household = builder.build();
 
       // Then
-      expect(household.tax_benefit_model_name).toBe(MODEL_UK);
+      expect(household.country_id).toBe(MODEL_UK);
       expect(household.year).toBe(CURRENT_YEAR);
       expect(household.people).toEqual([]);
       expect(household.benunit).toEqual({});
@@ -402,7 +402,7 @@ describe('HouseholdBuilder', () => {
     test('given existing household when loadHousehold then loads for modification', () => {
       // Given
       const existingHousehold: Household = {
-        tax_benefit_model_name: MODEL_US,
+        country_id: MODEL_US,
         year: CURRENT_YEAR,
         people: [{ age: 30 }],
         tax_unit: {},
@@ -426,7 +426,7 @@ describe('HouseholdBuilder', () => {
     test('given loaded household when modified then original unchanged', () => {
       // Given
       const existingHousehold: Household = {
-        tax_benefit_model_name: MODEL_US,
+        country_id: MODEL_US,
         year: CURRENT_YEAR,
         people: [{ age: 30 }],
         tax_unit: {},
@@ -547,7 +547,7 @@ describe('HouseholdBuilder', () => {
         });
 
         // Then
-        expect(household.tax_benefit_model_name).toBe(MODEL_US);
+        expect(household.country_id).toBe(MODEL_US);
         expect(household.year).toBe(CURRENT_YEAR);
         expect(household.people).toHaveLength(1);
         expect(household.people[0].age).toBe(35);
@@ -574,7 +574,7 @@ describe('HouseholdBuilder', () => {
         });
 
         // Then
-        expect(household.tax_benefit_model_name).toBe(MODEL_UK);
+        expect(household.country_id).toBe(MODEL_UK);
         expect(household.year).toBe(CURRENT_YEAR);
         expect(household.people).toHaveLength(1);
         expect(household.people[0].age).toBe(35);
@@ -593,7 +593,7 @@ describe('HouseholdBuilder', () => {
         );
 
         // Then
-        expect(household.tax_benefit_model_name).toBe(MODEL_US);
+        expect(household.country_id).toBe(MODEL_US);
         expect(household.year).toBe(CURRENT_YEAR);
         expect(household.people).toHaveLength(2);
         expect(household.people[0].age).toBe(35);
@@ -618,7 +618,7 @@ describe('HouseholdBuilder', () => {
         const household = createCoupleUK(CURRENT_YEAR, { age: 35 }, { age: 40 });
 
         // Then
-        expect(household.tax_benefit_model_name).toBe(MODEL_UK);
+        expect(household.country_id).toBe(MODEL_UK);
         expect(household.year).toBe(CURRENT_YEAR);
         expect(household.people).toHaveLength(2);
         expect(household.people[0].age).toBe(35);

@@ -61,9 +61,10 @@ export class SocietyWideCalcStrategy implements CalcExecutionStrategy {
       const region = params.region || params.countryId;
 
       const request: EconomicImpactRequest = {
-        tax_benefit_model_name: `policyengine_${params.countryId}`,
+        country_id: params.countryId,
         region,
-        policy_id: params.policyIds.reform ?? params.policyIds.baseline ?? null,
+        baseline_policy_id: params.policyIds.baseline ?? 'current_law',
+        reform_policy_id: params.policyIds.reform ?? 'current_law',
         year: parseInt(params.year, 10),
       };
 
