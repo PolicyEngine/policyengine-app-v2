@@ -214,11 +214,10 @@ export default function Footer() {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "1fr",
             marginTop: spacing["2xl"],
             gap: spacing["4xl"],
           }}
-          className="md:grid-cols-2"
+          className="grid-cols-1 md:grid-cols-2"
         >
           {/* Left column */}
           <div
