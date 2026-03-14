@@ -720,7 +720,7 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
                         handleCreatePolicy();
                       }
                     }}
-                    disabled={isCreating}
+                    disabled={isCreating || modificationCount === 0}
                   >
                     {isCreating && <Spinner size="sm" />}
                     Create policy
@@ -738,7 +738,7 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
                       label="Update existing policy"
                       onClick={handleUpdateExistingPolicy}
                       loading={isUpdating}
-                      disabled={!policyLabel.trim() || isCreating}
+                      disabled={!policyLabel.trim() || isCreating || modificationCount === 0}
                     />
                     <EditAndSaveNewButton
                       label="Save as new policy"
@@ -750,7 +750,7 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
                         }
                       }}
                       loading={isCreating}
-                      disabled={isUpdating}
+                      disabled={isUpdating || modificationCount === 0}
                     />
                   </>
                 )}
@@ -765,7 +765,7 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
         open={showSameNameWarning}
         onOpenChange={(open) => !open && setShowSameNameWarning(false)}
       >
-        <DialogContent className="tw:sm:max-w-sm">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Same name</DialogTitle>
           </DialogHeader>
@@ -775,7 +775,7 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
               Are you sure you want to save?
             </Text>
             <Group justify="end" gap="sm">
-              <Button variant="ghost" onClick={() => setShowSameNameWarning(false)}>
+              <Button variant="outline" onClick={() => setShowSameNameWarning(false)}>
                 Cancel
               </Button>
               <Button
@@ -795,7 +795,7 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
         open={showUnnamedWarning}
         onOpenChange={(open) => !open && setShowUnnamedWarning(false)}
       >
-        <DialogContent className="tw:sm:max-w-sm">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Unnamed policy</DialogTitle>
           </DialogHeader>
@@ -804,7 +804,7 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
               This policy has no name. Are you sure you want to save it without a name?
             </Text>
             <Group justify="end" gap="sm">
-              <Button variant="ghost" onClick={() => setShowUnnamedWarning(false)}>
+              <Button variant="outline" onClick={() => setShowUnnamedWarning(false)}>
                 Cancel
               </Button>
               <Button

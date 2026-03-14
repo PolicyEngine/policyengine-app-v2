@@ -599,7 +599,7 @@ export function PolicyCreationModal({
                       handleCreatePolicy();
                     }
                   }}
-                  disabled={isCreating}
+                  disabled={isCreating || modificationCount === 0}
                 >
                   {isCreating && <Spinner size="sm" />}
                   Create policy
@@ -614,7 +614,7 @@ export function PolicyCreationModal({
                     label="Update existing policy"
                     onClick={handleUpdateExistingPolicy}
                     loading={isUpdating}
-                    disabled={!policyLabel.trim() || isCreating}
+                    disabled={!policyLabel.trim() || isCreating || modificationCount === 0}
                   />
                   <EditAndSaveNewButton
                     label="Save as new policy"
@@ -626,7 +626,7 @@ export function PolicyCreationModal({
                       }
                     }}
                     loading={isCreating}
-                    disabled={isUpdating}
+                    disabled={isUpdating || modificationCount === 0}
                   />
                 </>
               )}
@@ -643,7 +643,7 @@ export function PolicyCreationModal({
             }
           }}
         >
-          <DialogContent className="tw:sm:max-w-sm">
+          <DialogContent>
             <DialogTitle>
               <strong>Same name</strong>
             </DialogTitle>
@@ -656,7 +656,7 @@ export function PolicyCreationModal({
                 {policyLabel}&rdquo;. Are you sure you want to save?
               </Text>
               <Group justify="end" gap="sm">
-                <Button variant="ghost" onClick={() => setShowSameNameWarning(false)}>
+                <Button variant="outline" onClick={() => setShowSameNameWarning(false)}>
                   Cancel
                 </Button>
                 <Button
@@ -681,7 +681,7 @@ export function PolicyCreationModal({
             }
           }}
         >
-          <DialogContent className="tw:sm:max-w-sm">
+          <DialogContent>
             <DialogTitle>
               <strong>Unnamed policy</strong>
             </DialogTitle>
@@ -693,7 +693,7 @@ export function PolicyCreationModal({
                 This policy has no name. Are you sure you want to save it without a name?
               </Text>
               <Group justify="end" gap="sm">
-                <Button variant="ghost" onClick={() => setShowUnnamedWarning(false)}>
+                <Button variant="outline" onClick={() => setShowUnnamedWarning(false)}>
                   Cancel
                 </Button>
                 <Button
