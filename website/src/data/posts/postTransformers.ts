@@ -14,6 +14,8 @@ export interface BlogPost {
   filename: string;
   image: string;
   slug: string;
+  hideHeaderImage?: boolean;
+  imageCredit?: string;
 }
 
 export interface ResearchItem {

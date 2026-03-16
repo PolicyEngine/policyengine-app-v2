@@ -17,8 +17,13 @@
     "fuse.js": "^7.1.0",
     "jsonp": "^0.2.1",
     "next": "^15.3.3",
+    "plotly.js": "^3.4.0",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
+    "react-markdown": "^10.1.0",
+    "react-plotly.js": "^2.6.0",
+    "rehype-raw": "^7.0.0",
+    "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.8",
