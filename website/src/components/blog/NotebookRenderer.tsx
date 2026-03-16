@@ -9,10 +9,7 @@
  */
 
 import { useMemo } from "react";
-import type {
-  Notebook,
-  NotebookCell as NotebookCellType,
-} from "@/types/blog";
+import type { Notebook, NotebookCell as NotebookCellType } from "@/types/blog";
 import {
   extractNotebookFootnotes,
   hasFootnoteReferences,
@@ -28,9 +25,7 @@ import {
 } from "./MarkdownFormatter";
 import { useDisplayCategory } from "./useDisplayCategory";
 
-function buildFootnotesMarkdown(
-  footnotes: Record<string, string>,
-): string {
+function buildFootnotesMarkdown(footnotes: Record<string, string>): string {
   const sortedKeys = Object.keys(footnotes).sort(
     (a, b) => parseInt(a, 10) - parseInt(b, 10),
   );
@@ -250,26 +245,20 @@ function NotebookOutputPlain({ data }: { data: string | string[] }) {
   }
 }
 
-function NotebookOutputPlotly({
-  data,
-}: {
-  data: Record<string, unknown>;
-}) {
+function NotebookOutputPlotly({ data }: { data: Record<string, unknown> }) {
   const displayCategory = useDisplayCategory();
   const layout = data.layout as Record<string, unknown> | undefined;
   const title = (layout?.title as Record<string, unknown>)?.text as
     | string
     | undefined;
 
-  const images = (layout?.images as Record<string, unknown>[])?.map(
-    (img) => ({
-      ...img,
-      source:
-        typeof img.source === "string"
-          ? img.source.replace("/teal-square.png", "/teal-square.svg")
-          : img.source,
-    }),
-  );
+  const images = (layout?.images as Record<string, unknown>[])?.map((img) => ({
+    ...img,
+    source:
+      typeof img.source === "string"
+        ? img.source.replace("/teal-square.png", "/teal-square.svg")
+        : img.source,
+  }));
 
   const defaultMargins = { l: 20, r: 20, t: 20, b: 20 };
   const margins = {
@@ -319,11 +308,7 @@ function NotebookOutputPlotly({
   );
 }
 
-function NotebookOutputMarkdown({
-  data,
-}: {
-  data: string | string[];
-}) {
+function NotebookOutputMarkdown({ data }: { data: string | string[] }) {
   const markdown = Array.isArray(data) ? data.join("") : data;
   return <MarkdownFormatter markdown={markdown} />;
 }

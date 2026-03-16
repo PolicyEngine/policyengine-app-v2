@@ -1,10 +1,6 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
-import {
-  getArticleContent,
-  getAllSlugs,
-  getPostBySlug,
-} from "@/lib/articles";
+import { getArticleContent, getAllSlugs, getPostBySlug } from "@/lib/articles";
 import { isNotebookFile } from "@/lib/notebookUtils";
 import ArticleClient from "./ArticleClient";
 

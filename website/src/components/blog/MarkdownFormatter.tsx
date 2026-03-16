@@ -23,7 +23,9 @@ import {
 import { LazyPlot } from "./LazyPlot";
 import { useDisplayCategory } from "./useDisplayCategory";
 
-function safeJsonParse(data: string | string[]): Record<string, unknown> | null {
+function safeJsonParse(
+  data: string | string[],
+): Record<string, unknown> | null {
   try {
     const jsonString = Array.isArray(data) ? data[0] : data;
     return JSON.parse(jsonString);

@@ -21,9 +21,7 @@ import {
   locationLabels,
   topicLabels,
 } from "@/data/posts/postTransformers";
-import {
-  extractMarkdownFromNotebook,
-} from "@/lib/notebookUtils";
+import { extractMarkdownFromNotebook } from "@/lib/notebookUtils";
 import authorsData from "@/data/posts/authors.json";
 import {
   colors,
@@ -537,18 +535,14 @@ function AuthorSection({
   );
 }
 
-function MoreOn({
-  post,
-  countryId,
-}: {
-  post: BlogPost;
-  countryId: string;
-}) {
+function MoreOn({ post, countryId }: { post: BlogPost; countryId: string }) {
   const locationTagList = getLocationTags();
   const topicTagList = getTopicTags();
 
   const links = post.tags
-    .filter((tag) => locationTagList.includes(tag) || topicTagList.includes(tag))
+    .filter(
+      (tag) => locationTagList.includes(tag) || topicTagList.includes(tag),
+    )
     .map((tag) => {
       const isLocation = locationTagList.includes(tag);
       const label = isLocation ? locationLabels[tag] : topicLabels[tag];
@@ -672,9 +666,7 @@ function ShareLinks({
 function LeftContents({ markdown }: { markdown: string }) {
   if (!markdown) return null;
 
-  const headers = markdown
-    .split("\n")
-    .filter((line) => line.startsWith("##"));
+  const headers = markdown.split("\n").filter((line) => line.startsWith("##"));
 
   if (headers.length === 0) return null;
 
