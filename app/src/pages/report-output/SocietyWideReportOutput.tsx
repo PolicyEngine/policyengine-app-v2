@@ -14,6 +14,7 @@ import type { UserPolicy } from '@/types/ingredients/UserPolicy';
 import type { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
 import type { UserSimulation } from '@/types/ingredients/UserSimulation';
 import { convertPoliciesToV1Format } from '@/utils/reproducibilityCode';
+import { resolveDefaultReportOutputSubpage } from '@/utils/reportOutputSubpage';
 import { getDisplayStatus } from '@/utils/statusMapping';
 import { ComparativeAnalysisPage } from './ComparativeAnalysisPage';
 import { ConstituencySubPage } from './ConstituencySubPage';
@@ -156,6 +157,8 @@ export function SocietyWideReportOutput({
   policies,
   geographies,
 }: SocietyWideReportOutputProps) {
+  const normalizedSubpage = resolveDefaultReportOutputSubpage('societyWide', subpage);
+
   // Read datasets from metadata for the reproduce tab
   const datasets = useSelector((state: RootState) => state.metadata.economyOptions?.datasets);
 
@@ -226,7 +229,7 @@ export function SocietyWideReportOutput({
   }
 
   // 2. Data loaded - render input-only tabs immediately (no calculation needed)
-  const InputTabRenderer = INPUT_ONLY_TABS[subpage];
+  const InputTabRenderer = INPUT_ONLY_TABS[normalizedSubpage];
   if (InputTabRenderer) {
     return InputTabRenderer({
       report,
@@ -260,7 +263,7 @@ export function SocietyWideReportOutput({
   if (calcStatus.isComplete && calcStatus.result) {
     const output = calcStatus.result as SocietyWideOutput;
 
-    const OutputTabRenderer = OUTPUT_TABS[subpage || 'migration'];
+    const OutputTabRenderer = OUTPUT_TABS[normalizedSubpage];
     if (OutputTabRenderer) {
       return OutputTabRenderer({
         report,

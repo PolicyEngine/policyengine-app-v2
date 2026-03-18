@@ -8,6 +8,7 @@ import type { UserPolicy } from '@/types/ingredients/UserPolicy';
 import type { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import type { UserSimulation } from '@/types/ingredients/UserSimulation';
 import { convertPoliciesToV1Format } from '@/utils/reproducibilityCode';
+import { resolveDefaultReportOutputSubpage } from '@/utils/reportOutputSubpage';
 import { getDisplayStatus } from '@/utils/statusMapping';
 import DynamicsSubPage from './DynamicsSubPage';
 import ErrorPage from './ErrorPage';
@@ -150,6 +151,8 @@ export function HouseholdReportOutput({
   isLoading: dataLoading,
   error: dataError,
 }: HouseholdReportOutputProps) {
+  const normalizedSubpage = resolveDefaultReportOutputSubpage('household', subpage);
+
   // Build view model (memoized - recomputes only when props change)
   const viewModel = useMemo(
     () => new HouseholdReportViewModel(report, simulations, userSimulations, userPolicies),
@@ -184,7 +187,7 @@ export function HouseholdReportOutput({
   }
 
   // 3. Data loaded - render input-only tabs immediately (no calculation needed)
-  const InputTabRenderer = INPUT_ONLY_TABS[subpage];
+  const InputTabRenderer = INPUT_ONLY_TABS[normalizedSubpage];
   if (InputTabRenderer) {
     return InputTabRenderer({
       report,
@@ -220,7 +223,7 @@ export function HouseholdReportOutput({
     // Normalize output to always be an array
     const output = Array.isArray(rawOutput) ? rawOutput : [rawOutput];
 
-    const OutputTabRenderer = OUTPUT_TABS[subpage];
+    const OutputTabRenderer = OUTPUT_TABS[normalizedSubpage];
     if (OutputTabRenderer) {
       return OutputTabRenderer({
         report,

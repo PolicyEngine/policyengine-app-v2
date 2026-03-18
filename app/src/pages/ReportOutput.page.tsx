@@ -13,6 +13,7 @@ import { useSaveSharedReport } from '@/hooks/useSaveSharedReport';
 import { useSharedReportData } from '@/hooks/useSharedReportData';
 import { useUserReportById } from '@/hooks/useUserReports';
 import { formatReportTimestamp } from '@/utils/dateUtils';
+import { resolveDefaultReportOutputSubpage } from '@/utils/reportOutputSubpage';
 import {
   buildSharePath,
   createShareData,
@@ -110,7 +111,7 @@ export default function ReportOutputPage() {
         : undefined;
 
   // Active subpage and view from URL params
-  const activeTab = subpage || '';
+  const activeTab = resolveDefaultReportOutputSubpage(outputType, subpage);
   const activeView = view || '';
 
   // Format the report creation timestamp using the current country's locale
