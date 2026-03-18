@@ -63,6 +63,28 @@ describe('SimulationAdapter', () => {
       expect(typeof result.output).toBe('object');
     });
 
+    it('given legacy ok status then normalizes to complete', () => {
+      // Given
+      const metadata = mockSimulationMetadata({ status: 'ok' });
+
+      // When
+      const result = SimulationAdapter.fromMetadata(metadata);
+
+      // Then
+      expect(result.status).toBe('complete');
+    });
+
+    it('given legacy computing status then normalizes to pending', () => {
+      // Given
+      const metadata = mockSimulationMetadata({ status: 'computing', output: null });
+
+      // When
+      const result = SimulationAdapter.fromMetadata(metadata);
+
+      // Then
+      expect(result.status).toBe('pending');
+    });
+
     it('given missing population_id then throws error', () => {
       // Given
       const metadata = mockSimulationMetadata({ population_id: undefined as any });

@@ -36,12 +36,20 @@ export class HouseholdReportViewModel {
       return { isPending: false, isComplete: false, isError: false };
     }
 
+    const isSimulationComplete = (simulation: Simulation): boolean =>
+      simulation.status === 'complete' ||
+      (simulation.output !== null && simulation.output !== undefined);
+
+    const isSimulationError = (simulation: Simulation): boolean => simulation.status === 'error';
+
     return {
-      // 'pending' means: needs calculation OR currently calculating
-      // Also check for undefined/null status (defensive)
-      isPending: this.simulations.some((s) => !s.status || s.status === 'pending'),
-      isComplete: this.simulations.every((s) => s.status === 'complete'),
-      isError: this.simulations.some((s) => s.status === 'error'),
+      // Treat any non-error simulation without persisted output as pending.
+      // This prevents valid legacy household results from falling through to NotFound.
+      isPending: this.simulations.some(
+        (simulation) => !isSimulationComplete(simulation) && !isSimulationError(simulation)
+      ),
+      isComplete: this.simulations.every(isSimulationComplete),
+      isError: this.simulations.some(isSimulationError),
     };
   }
 
