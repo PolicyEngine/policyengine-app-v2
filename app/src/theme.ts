@@ -23,3 +23,5 @@ export const policyEngineTheme = createTheme({
   // Component styles from design tokens
   components: themeComponents,
 });
+
+export const theme = policyEngineTheme;

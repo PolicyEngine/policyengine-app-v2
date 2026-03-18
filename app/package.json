@@ -25,6 +25,7 @@
     "test-all": "bun run prettier && bun run eslint && bun run typecheck && bun run vitest && bun run build",
     "test": "bun run vitest",
     "test:quick": "bun run vitest",
+    "prestorybook:build": "npm run build --workspace=@policyengine/design-system",
     "storybook": "storybook dev -p 6006",
     "storybook:build": "storybook build"
   },
