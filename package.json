@@ -3,7 +3,8 @@
   "private": true,
   "workspaces": [
     "packages/*",
-    "app"
+    "app",
+    "website"
   ],
   "scripts": {
     "dev": "bun run design-system:build && bun run --filter=policyengine-app-v2 dev",
