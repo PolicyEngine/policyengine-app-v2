@@ -9,9 +9,10 @@ import {
   MARKDOWN_SAMPLES,
 } from '@/tests/fixtures/components/blog/MarkdownFormatterMocks';
 
-// Mock Plotly to avoid rendering issues in tests
-// Note: vi.mock is hoisted, so the mock must be defined inline (not imported)
-vi.mock('react-plotly.js', () => ({ default: vi.fn(() => null) }));
+// Mock LazyPlot (lazy-loaded Plotly wrapper) to avoid rendering issues in tests
+vi.mock('@/components/blog/LazyPlot', () => ({
+  LazyPlot: vi.fn(() => null),
+}));
 
 describe('MarkdownFormatter', () => {
   describe('MarkdownFormatter component', () => {

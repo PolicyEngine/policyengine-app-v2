@@ -5,16 +5,21 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { locationLabels, locationTags, posts, topicLabels } from '@/data/posts/postTransformers';
+import {
+  getLocationTags,
+  getPosts,
+  locationLabels,
+  topicLabels,
+} from '@/data/posts/postTransformers';
 
 describe('postTransformers', () => {
   describe('tag labels', () => {
     it('should have display labels for all topic tags used in posts', () => {
       // Get all unique tags from posts
-      const allTags = [...new Set(posts.flatMap((post) => post.tags))];
+      const allTags = [...new Set(getPosts().flatMap((post) => post.tags))];
 
       // Filter to topic tags (non-location tags)
-      const usedTopicTags = allTags.filter((tag) => !locationTags.includes(tag));
+      const usedTopicTags = allTags.filter((tag) => !getLocationTags().includes(tag));
 
       // Find tags without labels
       const missingLabels = usedTopicTags.filter((tag) => !topicLabels[tag]);
@@ -32,10 +37,10 @@ describe('postTransformers', () => {
 
     it('should have display labels for all location tags used in posts', () => {
       // Get all unique tags from posts
-      const allTags = [...new Set(posts.flatMap((post) => post.tags))];
+      const allTags = [...new Set(getPosts().flatMap((post) => post.tags))];
 
       // Filter to location tags
-      const usedLocationTags = allTags.filter((tag) => locationTags.includes(tag));
+      const usedLocationTags = allTags.filter((tag) => getLocationTags().includes(tag));
 
       // Find tags without labels
       const missingLabels = usedLocationTags.filter((tag) => !locationLabels[tag]);
@@ -52,7 +57,7 @@ describe('postTransformers', () => {
     });
 
     it('should have unique slugs for all posts', () => {
-      const slugs = posts.map((post) => post.slug);
+      const slugs = getPosts().map((post) => post.slug);
       const duplicates = slugs.filter((slug, index) => slugs.indexOf(slug) !== index);
 
       if (duplicates.length > 0) {
@@ -70,7 +75,7 @@ describe('postTransformers', () => {
 
   describe('post data integrity', () => {
     it('should have required fields for all posts', () => {
-      const postsWithMissingFields = posts.filter(
+      const postsWithMissingFields = getPosts().filter(
         (post) =>
           !post.title ||
           !post.description ||

@@ -57,10 +57,10 @@ _All figures in £ billions_
 
 PolicyEngine estimates that the reforms to employer NI will reduce net income by between 0.1 and 0.6 percent among household income deciles, with the impact strongest for the upper middle of the distribution.
 
-![Decile impact](/images/posts/autumn-budget-24-employer-ni/decile.png)
+![Decile impact](/images/posts/autumn-budget-24-employer-ni/decile.webp)
 
 The reforms are projected to affect two thirds of people, and over 90% of the top three income deciles. 94% of the lowest income decile is unaffected by the tax reforms.
 
-![Winners and losers](/images/posts/autumn-budget-24-employer-ni/winners.png)
+![Winners and losers](/images/posts/autumn-budget-24-employer-ni/winners.webp)
 
 PolicyEngine estimates no significant (&lt;1%) change to before-housing-costs absolute poverty or income inequality.

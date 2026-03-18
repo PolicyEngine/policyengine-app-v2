@@ -5,7 +5,6 @@
  */
 
 import { useState } from 'react';
-import { Text } from '@mantine/core';
 import PathwayView from '@/components/common/PathwayView';
 import { MOCK_USER_ID } from '@/constants';
 import {
@@ -95,7 +94,7 @@ export default function PolicyExistingView({
     return (
       <PathwayView
         title="Select an existing policy"
-        content={<Text>Loading policies...</Text>}
+        content={<p>Loading policies...</p>}
         buttonPreset="none"
       />
     );
@@ -106,10 +105,10 @@ export default function PolicyExistingView({
       <PathwayView
         title="Select an existing policy"
         content={
-          <Text c="red">
+          <p className="tw:text-red-600">
             Error:{' '}
             {(error as Error)?.message || 'Failed to load policies. Please refresh and try again.'}
-          </Text>
+          </p>
         }
         buttonPreset="none"
       />
@@ -120,7 +119,7 @@ export default function PolicyExistingView({
     return (
       <PathwayView
         title="Select an existing policy"
-        content={<Text>No policies available. Please create a new policy.</Text>}
+        content={<p>No policies available. Please create a new policy.</p>}
         primaryAction={{
           label: 'Next',
           onClick: () => {},

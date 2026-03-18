@@ -1,7 +1,12 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "images": {
+    "sizes": [128, 256, 384, 512, 640, 750, 828, 1080, 1200, 1920],
+    "formats": ["image/avif", "image/webp"],
+    "minimumCacheTTL": 86400
+  },
   "installCommand": "bun install --frozen-lockfile",
-  "buildCommand": "bun run design-system:build && cd app && bun run generate-llms-txt && bun run build:website",
+  "buildCommand": "bun run design-system:build && cd app && bun run generate-llms-txt && bun run generate-prerender && bun run generate-sitemap && bun run build:website",
   "outputDirectory": "app/dist",
   "redirects": [
     {
@@ -15,7 +20,85 @@
       "permanent": true
     }
   ],
-  "rewrites": [{ "source": "/(.*)", "destination": "/website.html" }],
+  "rewrites": [
+    {
+      "source": "/robots.txt",
+      "destination": "/robots.txt"
+    },
+    {
+      "source": "/sitemap.xml",
+      "destination": "/sitemap.xml"
+    },
+    {
+      "source": "/_tracker/:path*",
+      "destination": "https://policyengine--state-legislative-tracker.modal.run/_tracker/:path*"
+    },
+    {
+      "source": "/slides",
+      "destination": "https://policyengine-slides.vercel.app/slides"
+    },
+    {
+      "source": "/slides/:path*",
+      "destination": "https://policyengine-slides.vercel.app/slides/:path*"
+    },
+    {
+      "source": "/plugin-blog",
+      "destination": "https://policyengine.github.io/plugin-blog/"
+    },
+    {
+      "source": "/plugin-blog/:path*",
+      "destination": "https://policyengine.github.io/plugin-blog/:path*"
+    },
+    {
+      "source": "/us/watca",
+      "destination": "https://working-americans-tax-cut-act-one.vercel.app/us/watca"
+    },
+    {
+      "source": "/us/watca/:path*",
+      "destination": "https://working-americans-tax-cut-act-one.vercel.app/us/watca/:path*"
+    },
+    {
+      "source": "/us/keep-your-pay-act",
+      "destination": "https://keep-your-pay-act.vercel.app/us/keep-your-pay-act"
+    },
+    {
+      "source": "/us/keep-your-pay-act/:path*",
+      "destination": "https://keep-your-pay-act.vercel.app/us/keep-your-pay-act/:path*"
+    },
+    {
+      "source": "/us/taxsim",
+      "destination": "https://policyengine-taxsim-policy-engine.vercel.app/us/taxsim"
+    },
+    {
+      "source": "/us/taxsim/",
+      "destination": "https://policyengine-taxsim-policy-engine.vercel.app/us/taxsim/"
+    },
+    {
+      "source": "/us/taxsim/:path*",
+      "destination": "https://policyengine-taxsim-policy-engine.vercel.app/us/taxsim/:path*"
+    },
+    {
+      "source": "/:countryId/model",
+      "destination": "https://policyengine-model-phi.vercel.app/?country=:countryId"
+    },
+    {
+      "source": "/:countryId/model/:path*",
+      "destination": "https://policyengine-model-phi.vercel.app/:path*?country=:countryId"
+    },
+    {
+      "source": "/us/api",
+      "destination": "https://household-api-docs-policy-engine.vercel.app/us/api"
+    },
+    {
+      "source": "/us/api/",
+      "destination": "https://household-api-docs-policy-engine.vercel.app/us/api/"
+    },
+    {
+      "source": "/us/api/:path*",
+      "destination": "https://household-api-docs-policy-engine.vercel.app/us/api/:path*"
+    },
+    { "source": "/(.*)", "destination": "/website.html" }
+  ],
   "headers": [
     {
       "source": "/assets/(.*)",

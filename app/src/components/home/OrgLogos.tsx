@@ -1,194 +1,135 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Box, Flex, Text } from '@mantine/core';
-import { CountryId, getOrgsForCountrySorted, Organization } from '@/data/organizations';
+import { useMemo } from 'react';
+import { Text } from '@/components/ui';
+import OptimisedImage from '@/components/ui/OptimisedImage';
+import { CountryId, getOrgsForCountry, Organization } from '@/data/organizations';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 
-const NUM_VISIBLE = 7;
-const CYCLE_INTERVAL = 2000; // 2 seconds between each change
+const LOGO_WIDTH = 140;
+const LOGO_GAP = 64;
 
-// Fisher-Yates shuffle, placing initialFirst orgs in the center
-function shuffleArrayWithCenter<T extends { initialFirst?: boolean }>(array: T[]): T[] {
-  const initialFirst = array.filter((item) => item.initialFirst);
-  const rest = array.filter((item) => !item.initialFirst);
-
-  // Shuffle only the non-initialFirst items
-  const shuffled = [...rest];
-  for (let i = shuffled.length - 1; i > 0; i--) {
+// Fisher-Yates shuffle
+function shuffle<T>(array: T[]): T[] {
+  const result = [...array];
+  for (let i = result.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    [result[i], result[j]] = [result[j], result[i]];
   }
+  return result;
+}
 
-  // Place initialFirst orgs in the center of the visible slots
-  // For 7 visible slots, center is index 3
-  const centerIndex = Math.floor(NUM_VISIBLE / 2);
-  const before = shuffled.slice(0, centerIndex);
-  const after = shuffled.slice(centerIndex);
-
-  return [...before, ...initialFirst, ...after];
+function LogoItem({ org }: { org: Organization }) {
+  return (
+    <a
+      href={org.link}
+      target="_blank"
+      rel="noopener noreferrer"
+      title={org.name}
+      style={{
+        flex: '0 0 auto',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: `${LOGO_WIDTH}px`,
+        height: '80px',
+        opacity: 0.7,
+        transition: 'opacity 0.2s ease',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.opacity = '1';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.opacity = '0.7';
+      }}
+    >
+      <OptimisedImage
+        src={org.logo}
+        alt={org.name}
+        width={LOGO_WIDTH}
+        height={70}
+        style={{
+          maxWidth: `${LOGO_WIDTH}px`,
+          maxHeight: '70px',
+          width: 'auto',
+          height: 'auto',
+        }}
+      />
+    </a>
+  );
 }
 
 export default function OrgLogos() {
   const countryId = useCurrentCountry() as CountryId;
 
-  // Get logos for current country, with initialFirst orgs in the center, rest shuffled
-  const shuffledOrgs = useMemo(() => {
-    const orgs = getOrgsForCountrySorted(countryId);
-    return shuffleArrayWithCenter(orgs);
+  const orgs = useMemo(() => {
+    return shuffle(getOrgsForCountry(countryId));
   }, [countryId]);
 
-  // Track which logo index each slot is showing and its transition state
-  const [slotIndices, setSlotIndices] = useState<number[]>([]);
-  const [transitioningSlot, setTransitioningSlot] = useState<number | null>(null);
-  const lastSlotRef = useRef<number>(-1);
-  const nextLogoRef = useRef<number>(NUM_VISIBLE);
-
-  // Initialize slots with first N logos
-  useEffect(() => {
-    if (shuffledOrgs.length === 0) {
-      return;
-    }
-    const initial = shuffledOrgs.slice(0, NUM_VISIBLE).map((_, i) => i);
-    setSlotIndices(initial);
-    nextLogoRef.current = NUM_VISIBLE;
-    // Randomize starting position so the first slot to rotate isn't predictable
-    lastSlotRef.current = Math.floor(Math.random() * NUM_VISIBLE);
-  }, [shuffledOrgs]);
-
-  // Cycle slots using golden ratio step for visually scattered but deterministic pattern
-  // Step of 4 with 7 slots creates: 0, 4, 1, 5, 2, 6, 3, 0, 4...
-  const GOLDEN_STEP = 4;
-
-  const cycleNextSlot = useCallback(() => {
-    if (shuffledOrgs.length <= NUM_VISIBLE) {
-      return;
-    }
-
-    // Use golden ratio stepping for an unexpected but non-random pattern
-    const nextSlot = (lastSlotRef.current + GOLDEN_STEP) % NUM_VISIBLE;
-    lastSlotRef.current = nextSlot;
-
-    // Start fade out
-    setTransitioningSlot(nextSlot);
-
-    setTimeout(() => {
-      setSlotIndices((prev) => {
-        const next = [...prev];
-        const oldLogoIndex = prev[nextSlot]; // The logo being replaced
-        const currentlyVisible = new Set(prev);
-
-        // Find next logo that isn't already visible AND isn't the one being replaced
-        let newLogoIndex = nextLogoRef.current % shuffledOrgs.length;
-        let attempts = 0;
-        while (
-          (currentlyVisible.has(newLogoIndex) || newLogoIndex === oldLogoIndex) &&
-          attempts < shuffledOrgs.length
-        ) {
-          newLogoIndex = (newLogoIndex + 1) % shuffledOrgs.length;
-          attempts++;
-        }
-
-        next[nextSlot] = newLogoIndex;
-        nextLogoRef.current = newLogoIndex + 1;
-        return next;
-      });
-
-      // Fade back in
-      setTransitioningSlot(null);
-    }, 300);
-  }, [shuffledOrgs.length]);
-
-  // Set up single interval timer
-  useEffect(() => {
-    if (shuffledOrgs.length <= NUM_VISIBLE || slotIndices.length === 0) {
-      return;
-    }
-
-    const interval = setInterval(cycleNextSlot, CYCLE_INTERVAL);
-
-    return () => clearInterval(interval);
-  }, [shuffledOrgs.length, slotIndices.length, cycleNextSlot]);
-
-  if (shuffledOrgs.length === 0 || slotIndices.length === 0) {
+  if (orgs.length === 0) {
     return null;
   }
 
-  const visibleOrgs = slotIndices.map((idx) => shuffledOrgs[idx]).filter(Boolean) as Organization[];
+  // Total width of one full set of logos
+  const setWidth = orgs.length * (LOGO_WIDTH + LOGO_GAP);
+
+  // ~40px/s — slow enough to read, fast enough to notice movement
+  const duration = setWidth / 40;
 
   return (
-    <Box mt={spacing['4xl']} mb={spacing['4xl']}>
+    <div style={{ marginTop: spacing['4xl'], marginBottom: spacing['4xl'] }}>
       <Text
-        ta="center"
         size="lg"
         c={colors.primary[600]}
         fw={typography.fontWeight.medium}
-        mb={spacing.xl}
-        style={{ fontFamily: typography.fontFamily.primary }}
+        style={{
+          textAlign: 'center',
+          marginBottom: spacing.xl,
+          fontFamily: typography.fontFamily.primary,
+        }}
       >
         {countryId === 'us'
           ? 'Trusted by researchers, governments, and benefit platforms'
-          : 'Trusted by researchers and policy organizations'}
+          : 'Trusted by researchers and policy organisations'}
       </Text>
 
-      <Box
+      <div
         style={{
-          width: '100vw',
-          marginLeft: 'calc(-50vw + 50%)',
-          overflowX: 'hidden',
+          width: '100%',
+          overflow: 'hidden',
+          maskImage:
+            'linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)',
+          WebkitMaskImage:
+            'linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)',
         }}
       >
-        <Flex
-          justify="center"
-          align="center"
-          gap={spacing['5xl']}
-          wrap="nowrap"
-          px={spacing['4xl']}
-          style={{ minWidth: 'max-content' }}
+        <div
+          className="org-logos-track"
+          style={{
+            display: 'flex',
+            gap: `${LOGO_GAP}px`,
+            width: 'max-content',
+            animation: `marquee ${duration}s linear infinite`,
+          }}
         >
-          {visibleOrgs.map((org, i) => (
-            <Box
-              key={`slot-${i}`}
-              style={{
-                flex: '0 0 auto',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                width: '120px',
-                height: '100px',
-                opacity: transitioningSlot === i ? 0 : 1,
-                transition: 'opacity 0.3s ease-in-out',
-              }}
-            >
-              <button
-                type="button"
-                onClick={() => window.open(org.link, '_blank')}
-                title={org.name}
-                style={{
-                  all: 'unset',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: '100%',
-                  height: '100%',
-                }}
-              >
-                <img
-                  src={org.logo}
-                  alt={org.name}
-                  style={{
-                    maxWidth: '120px',
-                    maxHeight: '100px',
-                    width: 'auto',
-                    height: 'auto',
-                  }}
-                />
-              </button>
-            </Box>
+          {/* Render two copies for seamless loop */}
+          {orgs.map((org, i) => (
+            <LogoItem key={`a-${i}`} org={org} />
           ))}
-        </Flex>
-      </Box>
-    </Box>
+          {orgs.map((org, i) => (
+            <LogoItem key={`b-${i}`} org={org} />
+          ))}
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes marquee {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-${setWidth}px); }
+        }
+        .org-logos-track:hover {
+          animation-play-state: paused;
+        }
+      `}</style>
+    </div>
   );
 }

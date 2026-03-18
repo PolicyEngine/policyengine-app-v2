@@ -26,7 +26,7 @@ The CGT reforms affect 1.2% of the population, with impacts limited to the highe
 
 Our [distributional analysis](https://legacy.policyengine.org/uk/policy?focus=policyOutput.inequalityImpact&reform=69732&region=uk&timePeriod=2025&baseline=1) shows no change in poverty measures, while the Gini index falls by 0.4%. Across most of the income distribution (the bottom 90% of households), incomes remain unchanged.
 
-![](/images/posts/cgt-autumn-budget-pic/cgt-win-loser.png)
+![](/images/posts/cgt-autumn-budget-pic/cgt-win-loser.webp)
 
 Read more of PolicyEngine’s Autumn Budget 2024 coverage:
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Group, Loader, Text } from '@mantine/core';
+import { Spinner } from '@/components/ui';
 import { useMultiSimulationCalcStatus } from '@/hooks/useCalcStatusSubscription';
 import type { Report } from '@/types/ingredients/Report';
 import type { Simulation } from '@/types/ingredients/Simulation';
@@ -21,22 +21,20 @@ interface MultiSimReportOutputTypeCellProps {
  */
 export const MultiSimOutputTypeCell = React.memo(
   ({ simulationIds, simulations: _simulations, report }: MultiSimReportOutputTypeCellProps) => {
-    // Subscribe to CalcStatus for this report's simulations
     const { isCalculating, progress } = useMultiSimulationCalcStatus(simulationIds);
 
-    // Show calculating state with spinner and progress
     if (isCalculating) {
       return (
-        <Group gap="xs">
-          <Loader size="sm" color="teal" />
-          <Text size="sm">{progress ? `${Math.round(progress)}%` : ''}</Text>
-        </Group>
+        <div className="tw:flex tw:items-center tw:gap-xs">
+          <Spinner className="tw:h-4 tw:w-4" />
+          <span className="tw:text-sm">{progress ? `${Math.round(progress)}%` : ''}</span>
+        </div>
       );
     }
 
-    // Show status text
     const status = report?.status || 'initializing';
     const formattedStatus = status.charAt(0).toUpperCase() + status.slice(1);
-    return <Text size="sm">{formattedStatus}</Text>;
+    return <span className="tw:text-sm">{formattedStatus}</span>;
   }
 );
+MultiSimOutputTypeCell.displayName = 'MultiSimOutputTypeCell';

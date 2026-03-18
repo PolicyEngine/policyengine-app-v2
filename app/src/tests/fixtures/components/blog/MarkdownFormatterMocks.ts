@@ -1,8 +1,8 @@
 /**
  * Test fixtures for MarkdownFormatter component tests
  *
- * Note: Plotly mock must be defined inline in test files due to vi.mock hoisting.
- * Use: vi.mock('react-plotly.js', () => ({ default: vi.fn(() => null) }));
+ * Note: LazyPlot is mocked in test files to avoid loading Plotly in tests.
+ * Use: vi.mock('@/components/blog/LazyPlot', () => ({ LazyPlot: vi.fn(() => null) }));
  */
 
 /**

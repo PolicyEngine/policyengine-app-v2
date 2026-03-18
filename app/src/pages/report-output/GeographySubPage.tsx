@@ -1,14 +1,19 @@
-import { Box, Table, Text } from '@mantine/core';
+import {
+  ShadcnTable as Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+  Text,
+} from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import { Geography } from '@/types/ingredients/Geography';
-import { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
 import { capitalize } from '@/utils/stringUtils';
 
 interface GeographySubPageProps {
   baselineGeography?: Geography;
   reformGeography?: Geography;
-  baselineUserGeography?: UserGeographyPopulation;
-  reformUserGeography?: UserGeographyPopulation;
 }
 
 /**
@@ -20,8 +25,6 @@ interface GeographySubPageProps {
 export default function GeographySubPage({
   baselineGeography,
   reformGeography,
-  baselineUserGeography,
-  reformUserGeography,
 }: GeographySubPageProps) {
   if (!baselineGeography && !reformGeography) {
     return <div>No geography data available</div>;
@@ -30,9 +33,9 @@ export default function GeographySubPage({
   // Check if geographies are the same
   const geographiesAreSame = baselineGeography?.id === reformGeography?.id;
 
-  // Get labels from UserGeographyPopulation, fallback to geography names, then to generic labels
-  const baselineLabel = baselineUserGeography?.label || baselineGeography?.name || 'Baseline';
-  const reformLabel = reformUserGeography?.label || reformGeography?.name || 'Reform';
+  // Get labels from geography metadata
+  const baselineLabel = baselineGeography?.name || 'Baseline';
+  const reformLabel = reformGeography?.name || 'Reform';
 
   // Define table rows
   const rows = [
@@ -52,133 +55,120 @@ export default function GeographySubPage({
   const labelColumnWidth = 45;
   const valueColumnWidth = geographiesAreSame ? 55 : 27.5;
 
+  const thStyle = {
+    fontSize: typography.fontSize.xs,
+    fontWeight: typography.fontWeight.medium,
+    color: colors.text.secondary,
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.05em',
+    padding: `${spacing.md} ${spacing.lg}`,
+  };
+
   return (
     <div>
-      <h2>Population information</h2>
+      <h2 className="tw:text-2xl tw:font-bold tw:text-gray-900 tw:mb-md">Population information</h2>
 
-      <Box
+      <div
+        className="tw:mt-xl tw:overflow-hidden"
         style={{
           border: `1px solid ${colors.border.light}`,
-          borderRadius: spacing.radius.lg,
-          overflow: 'hidden',
+          borderRadius: spacing.radius.container,
           backgroundColor: colors.white,
-          marginTop: spacing.xl,
         }}
       >
         <Table>
-          <Table.Thead style={{ backgroundColor: colors.gray[50] }}>
-            <Table.Tr>
-              <Table.Th
-                style={{
-                  width: `${labelColumnWidth}%`,
-                  fontSize: typography.fontSize.xs,
-                  fontWeight: typography.fontWeight.medium,
-                  color: colors.text.secondary,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em',
-                  padding: `${spacing.md} ${spacing.lg}`,
-                }}
-              >
-                Property
-              </Table.Th>
+          <TableHeader style={{ backgroundColor: colors.gray[50] }}>
+            <TableRow>
+              <TableHead style={{ ...thStyle, width: `${labelColumnWidth}%` }}>Property</TableHead>
               {geographiesAreSame ? (
-                <Table.Th
-                  style={{
-                    width: `${valueColumnWidth}%`,
-                    textAlign: 'right',
-                    fontSize: typography.fontSize.xs,
-                    fontWeight: typography.fontWeight.medium,
-                    color: colors.text.secondary,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em',
-                    padding: `${spacing.md} ${spacing.lg}`,
-                  }}
+                <TableHead
+                  style={{ ...thStyle, width: `${valueColumnWidth}%`, textAlign: 'right' }}
                 >
                   {baselineLabel.toUpperCase()} (BASELINE / REFORM)
-                </Table.Th>
+                </TableHead>
               ) : (
                 <>
-                  <Table.Th
-                    style={{
-                      width: `${valueColumnWidth}%`,
-                      textAlign: 'right',
-                      fontSize: typography.fontSize.xs,
-                      fontWeight: typography.fontWeight.medium,
-                      color: colors.text.secondary,
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.05em',
-                      padding: `${spacing.md} ${spacing.lg}`,
-                    }}
+                  <TableHead
+                    style={{ ...thStyle, width: `${valueColumnWidth}%`, textAlign: 'right' }}
                   >
                     {baselineLabel.toUpperCase()} (BASELINE)
-                  </Table.Th>
-                  <Table.Th
-                    style={{
-                      width: `${valueColumnWidth}%`,
-                      textAlign: 'right',
-                      fontSize: typography.fontSize.xs,
-                      fontWeight: typography.fontWeight.medium,
-                      color: colors.text.secondary,
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.05em',
-                      padding: `${spacing.md} ${spacing.lg}`,
-                    }}
+                  </TableHead>
+                  <TableHead
+                    style={{ ...thStyle, width: `${valueColumnWidth}%`, textAlign: 'right' }}
                   >
                     {reformLabel.toUpperCase()} (REFORM)
-                  </Table.Th>
+                  </TableHead>
                 </>
               )}
-            </Table.Tr>
-          </Table.Thead>
+            </TableRow>
+          </TableHeader>
 
-          <Table.Tbody>
+          <TableBody>
             {rows.map((row) => (
-              <Table.Tr key={row.label}>
-                <Table.Td style={{ padding: `${spacing.md} ${spacing.lg}` }}>
-                  <Text size="sm" fw={typography.fontWeight.medium}>
+              <TableRow key={row.label}>
+                <TableCell style={{ padding: `${spacing.md} ${spacing.lg}` }}>
+                  <Text className="tw:text-sm" style={{ fontWeight: typography.fontWeight.medium }}>
                     {row.label}
                   </Text>
-                </Table.Td>
+                </TableCell>
                 {geographiesAreSame ? (
-                  <Table.Td
+                  <TableCell
                     style={{
                       textAlign: 'right',
                       padding: `${spacing.md} ${spacing.lg}`,
                     }}
                   >
-                    <Text size="sm" fw={typography.fontWeight.medium} c={colors.text.primary}>
+                    <Text
+                      className="tw:text-sm"
+                      style={{
+                        fontWeight: typography.fontWeight.medium,
+                        color: colors.text.primary,
+                      }}
+                    >
                       {row.baselineValue}
                     </Text>
-                  </Table.Td>
+                  </TableCell>
                 ) : (
                   <>
-                    <Table.Td
+                    <TableCell
                       style={{
                         textAlign: 'right',
                         padding: `${spacing.md} ${spacing.lg}`,
                       }}
                     >
-                      <Text size="sm" fw={typography.fontWeight.medium} c={colors.text.primary}>
+                      <Text
+                        className="tw:text-sm"
+                        style={{
+                          fontWeight: typography.fontWeight.medium,
+                          color: colors.text.primary,
+                        }}
+                      >
                         {row.baselineValue}
                       </Text>
-                    </Table.Td>
-                    <Table.Td
+                    </TableCell>
+                    <TableCell
                       style={{
                         textAlign: 'right',
                         padding: `${spacing.md} ${spacing.lg}`,
                       }}
                     >
-                      <Text size="sm" fw={typography.fontWeight.medium} c={colors.text.primary}>
+                      <Text
+                        className="tw:text-sm"
+                        style={{
+                          fontWeight: typography.fontWeight.medium,
+                          color: colors.text.primary,
+                        }}
+                      >
                         {row.reformValue}
                       </Text>
-                    </Table.Td>
+                    </TableCell>
                   </>
                 )}
-              </Table.Tr>
+              </TableRow>
             ))}
-          </Table.Tbody>
+          </TableBody>
         </Table>
-      </Box>
+      </div>
     </div>
   );
 }

@@ -1,8 +1,10 @@
+import { useMemo } from 'react';
 import { useSelector } from 'react-redux';
-import { Box, Stack, Text } from '@mantine/core';
+import { Stack, Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import { RootState } from '@/store';
 import { Household } from '@/types/ingredients/Household';
+import { MetadataState } from '@/types/metadata';
 import { calculateVariableComparison } from '@/utils/householdComparison';
 import { formatVariableValue } from '@/utils/householdValues';
 import HouseholdBreakdown from './HouseholdBreakdown';
@@ -22,14 +24,18 @@ export default function HouseholdSummaryCard({
   reform,
   policyLabels,
 }: HouseholdSummaryCardProps) {
-  const metadata = useSelector((state: RootState) => state.metadata);
+  const variables = useSelector((state: RootState) => state.metadata.variables);
+  const entities = useSelector((state: RootState) => state.metadata.entities);
+  const metadata = useMemo(() => ({ variables, entities }) as MetadataState, [variables, entities]);
 
-  const rootVariable = metadata.variables.household_net_income;
+  const rootVariable = variables.household_net_income;
   if (!rootVariable) {
     return (
-      <Box>
-        <Text c="red">Error: household_net_income variable not found in metadata</Text>
-      </Box>
+      <div>
+        <Text style={{ color: colors.error }}>
+          Error: household_net_income variable not found in metadata
+        </Text>
+      </div>
     );
   }
 
@@ -61,41 +67,44 @@ export default function HouseholdSummaryCard({
   }
 
   // Determine border color based on mode and direction
-  const borderColor = isComparisonMode
-    ? comparison.direction === 'increase'
-      ? colors.primary[700]
-      : colors.text.secondary
-    : colors.primary[700];
+  const borderColor: string =
+    isComparisonMode && comparison.direction !== 'increase'
+      ? colors.text.secondary
+      : colors.primary[700];
 
   return (
-    <Box
-      p={spacing.xl}
+    <div
       style={{
+        padding: spacing.xl,
         border: `1px solid ${colors.border.light}`,
-        borderRadius: spacing.sm,
+        borderRadius: spacing.radius.container,
         backgroundColor: colors.background.primary,
       }}
     >
-      <Stack gap={spacing.lg}>
+      <Stack gap="lg">
         {/* Main Title */}
-        <Box>
-          <Text size="xl" fw={typography.fontWeight.semibold} c={colors.primary[700]}>
+        <div>
+          <Text
+            size="xl"
+            fw={typography.fontWeight.semibold}
+            style={{ color: colors.primary[700] }}
+          >
             {titleText}
           </Text>
-        </Box>
+        </div>
 
         {/* Recursive Breakdown */}
         <HouseholdBreakdown baseline={baseline} reform={reform} borderColor={borderColor} />
 
         {/* Description */}
-        <Box ta="center" mt={spacing.sm}>
-          <Text size="sm" c={colors.text.secondary}>
+        <div className="tw:text-center" style={{ marginTop: spacing.sm }}>
+          <Text size="sm" style={{ color: colors.text.secondary }}>
             {isComparisonMode
               ? "Here's how the policy change affected your household's net income. Click to expand a section and see the breakdown."
               : "Here's how we calculated your household's net income. Click to expand a section and see the breakdown."}
           </Text>
-        </Box>
+        </div>
       </Stack>
-    </Box>
+    </div>
   );
 }

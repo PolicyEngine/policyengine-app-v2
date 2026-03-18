@@ -1,4 +1,5 @@
 import { resolve } from 'path';
+import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 import tsconfigPaths from 'vite-tsconfig-paths';
@@ -82,7 +83,7 @@ if (calculatorUrl) {
 }
 
 export default defineConfig({
-  plugins: [react(), tsconfigPaths(), spaFallbackPlugin()],
+  plugins: [tailwindcss(), react(), tsconfigPaths(), spaFallbackPlugin()],
   base: process.env.BASE_URL || '/',
   server: {
     // Use discovered ports in dev, defaults otherwise
@@ -99,6 +100,23 @@ export default defineConfig({
   build: {
     rollupOptions: {
       input: getInputConfig(),
+      output: {
+        manualChunks: {
+          // Stable vendor chunks — cached separately from app code
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-charts': ['recharts'],
+          'vendor-markdown': [
+            'react-markdown',
+            'rehype-katex',
+            'rehype-raw',
+            'remark-gfm',
+            'remark-math',
+            'react-syntax-highlighter',
+          ],
+          'vendor-motion': ['framer-motion'],
+          'vendor-query': ['@tanstack/react-query', '@reduxjs/toolkit', 'react-redux'],
+        },
+      },
     },
   },
   test: {

@@ -530,7 +530,7 @@ The £100/tonne carbon dividend [shows](https://legacy.policyengine.org/uk/polic
 
 **Figure 5**: £100/tonne carbon dividend constituency map
 
-![](/images/posts/uk-carbon-tax/carbon-tax-100.png)
+![](/images/posts/uk-carbon-tax/carbon-tax-100.webp)
 
 The regional breakdown shows that England benefits most from the £100/tonne carbon dividend, while Wales faces losses across all constituencies.
 
@@ -665,7 +665,7 @@ The higher carbon tax rate [amplifies](https://legacy.policyengine.org/uk/policy
 
 **Figure 7**: £200/tonne carbon dividend constituency map
 
-![](/images/posts/uk-carbon-tax/carbon-tax-200.png)
+![](/images/posts/uk-carbon-tax/carbon-tax-200.webp)
 
 At the £200/tonne rate, 294 constituencies gain compared to 265 at the £100/tonne rate, with 60 constituencies showing no change.
 

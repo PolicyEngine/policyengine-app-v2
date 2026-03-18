@@ -1,13 +1,10 @@
 import { render, screen } from '@test-utils';
-import { describe, expect, test, vi } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import { LocalAuthoritySubPage } from '@/pages/report-output/LocalAuthoritySubPage';
 import {
   MOCK_UK_REPORT_OUTPUT_NO_LA_FIELD,
   MOCK_UK_REPORT_OUTPUT_WITH_LA,
 } from '@/tests/fixtures/pages/local-authority/localAuthorityComponentMocks';
-
-// Mock Plotly
-vi.mock('react-plotly.js', () => ({ default: vi.fn(() => null) }));
 
 describe('LocalAuthoritySubPage', () => {
   test('given UK report with local authority data then renders tabs', () => {

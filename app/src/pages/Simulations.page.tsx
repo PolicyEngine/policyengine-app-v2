@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Stack } from '@mantine/core';
-import { useDisclosure } from '@mantine/hooks';
 import { ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
 import { RenameIngredientModal } from '@/components/common/RenameIngredientModal';
 import IngredientReadView from '@/components/IngredientReadView';
+import { Stack } from '@/components/ui';
 import { MOCK_USER_ID } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useDisclosure } from '@/hooks/useDisclosure';
 import { useUpdateSimulationAssociation } from '@/hooks/useUserSimulationAssociations';
 import { useUserSimulations } from '@/hooks/useUserSimulations';
 import { formatDate } from '@/utils/dateUtils';
@@ -18,7 +18,6 @@ export default function SimulationsPage() {
   const countryId = useCurrentCountry();
 
   const [searchValue, setSearchValue] = useState('');
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   // Rename modal state
   const [renamingSimulationId, setRenamingSimulationId] = useState<string | null>(null);
@@ -30,14 +29,6 @@ export default function SimulationsPage() {
   const handleBuildSimulation = () => {
     navigate(`/${countryId}/simulations/create`);
   };
-
-  const handleSelectionChange = (recordId: string, selected: boolean) => {
-    setSelectedIds((prev) =>
-      selected ? [...prev, recordId] : prev.filter((id) => id !== recordId)
-    );
-  };
-
-  const isSelected = (recordId: string) => selectedIds.includes(recordId);
 
   const handleOpenRename = (userSimulationId: string) => {
     setRenamingSimulationId(userSimulationId);
@@ -149,9 +140,6 @@ export default function SimulationsPage() {
           columns={simulationColumns}
           searchValue={searchValue}
           onSearchChange={setSearchValue}
-          enableSelection
-          isSelected={isSelected}
-          onSelectionChange={handleSelectionChange}
         />
       </Stack>
 

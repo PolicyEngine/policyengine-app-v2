@@ -15,14 +15,11 @@ export const themeSpacing = {
   },
 
   radius: {
-    xs: spacing.radius.xs,
-    sm: spacing.radius.sm,
-    md: spacing.radius.md,
-    lg: spacing.radius.lg,
-    xl: spacing.radius.xl,
-    '2xl': spacing.radius['2xl'],
-    '3xl': spacing.radius['3xl'],
-    '4xl': spacing.radius['4xl'],
+    xs: spacing.radius.chip,
+    sm: spacing.radius.element,
+    md: spacing.radius.container,
+    lg: spacing.radius.feature,
+    xl: spacing.radius.feature,
   },
 
   shadows: {

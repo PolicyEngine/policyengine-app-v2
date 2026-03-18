@@ -1,0 +1,81 @@
+Senator Cory Booker's [Keep Your Pay Act](https://www.booker.senate.gov/news/press/booker-announces-keep-your-pay-act) would more than double the standard deduction: from $32,200 to $75,000 for married couples filing jointly, from $16,100 to $37,500 for single filers, and from $24,150 to $56,250 for heads of household. It would also raise the top two bracket rates from 35% to 41% and from 37% to 43%. For some high earners, the Alternative Minimum Tax (AMT) claws back over half of the tax savings that a simple bracket calculation predicts.
+
+Senator Booker's [tax calculator](https://www.booker.senate.gov/tax-calculator) models the standard deduction increase and rate changes but does not model the AMT interaction, so it overstates the savings for affected filers. [PolicyEngine's Keep Your Pay Act calculator](/us/keep-your-pay-act) accounts for it.
+
+## How the AMT offsets part of the tax savings
+
+The regular income tax and the AMT run two parallel calculations.[^1] You pay whichever produces the higher amount.
+
+**Regular income tax** uses the standard deduction:
+
+- `Taxable income = AGI − Standard deduction`
+- `Tax = Bracket rates applied to taxable income`
+
+**AMT** computes its own taxable base. It starts from taxable income, adds back the standard deduction and other preference items, then subtracts its own exemption and applies a flatter rate:
+
+- `AMTI = Taxable income + Standard deduction + Other AMT preference items`
+- `AMT taxable income = AMTI − AMT exemption`
+- `Tentative minimum tax = 26% on first ~$250,000 + 28% above`
+- `AMT owed = max(0, Tentative minimum tax − Regular tax)`
+
+Because AMTI adds back the standard deduction, raising the standard deduction does not change the AMT calculation. It only lowers the regular tax. When the regular tax drops below the tentative minimum tax, the AMT fills the gap.
+
+## Worked example
+
+Consider a married couple in Texas (no state income tax) earning $500,000 in 2026.
+
+### What Booker's calculator shows
+
+Senator Booker's calculator reports $13,696 in tax savings for this household:
+
+![Senator Booker's Keep Your Pay Act calculator showing $13,696 in estimated savings for a married couple filing jointly with $500,000 income](/assets/posts/keep-your-pay-act-amt-interaction/booker-calculator-500k.png)
+
+This calculation does not include the AMT. (At $500,000 income, the filer is below the 35% bracket threshold, so the rate increases do not affect this example.)
+
+### The AMT clawback
+
+The AMT adds back the standard deduction, so raising it does not change the tentative minimum tax — the threshold that triggers AMT when regular tax falls below it:
+
+| Line item             |   Amount |
+| :-------------------- | -------: |
+| AMTI                  | $500,000 |
+| AMT exemption         | $140,200 |
+| AMT taxable income    | $359,800 |
+| Tentative minimum tax |  $95,864 |
+
+### The bottom line
+
+Under current law, the regular tax ($102,608) exceeds the tentative minimum tax ($95,864), so the filer owes no AMT. Under KYPA, the regular tax drops to $88,912 — now _below_ the tentative minimum tax. The AMT fills the gap: $95,864 − $88,912 = $6,952.
+
+| Line item             |  Current law |        KYPA |  Difference |
+| :-------------------- | -----------: | ----------: | ----------: |
+| Regular tax           |     $102,608 |     $88,912 |    −$13,696 |
+| Tentative minimum tax |      $95,864 |     $95,864 |          $0 |
+| AMT                   |           $0 |      $6,952 |     +$6,952 |
+| **Total income tax**  | **$102,608** | **$95,864** | **−$6,744** |
+
+Bracket savings alone suggest $13,696 in tax relief, but the AMT claws back $6,952 of that. The actual tax cut totals $6,744 — 51% less than the headline figure.
+
+[PolicyEngine's Keep Your Pay Act calculator](/us/keep-your-pay-act) accounts for the AMT and confirms the $6,744 net savings:
+
+![PolicyEngine's Keep Your Pay Act calculator showing +$6,744/year for a married couple filing jointly with $500,000 income in Texas](/assets/posts/keep-your-pay-act-amt-interaction/policyengine-calculator-500k.png)
+
+## Who is affected
+
+The chart below shows total KYPA tax savings — including the standard deduction increase, rate changes, and AMT — for a non-itemizer couple filing jointly based on their employment income in Texas in 2026.
+
+<iframe src="/us/keep-your-pay-act/amt-chart" width="100%" height="550" style="border: none; overflow: hidden;" title="KYPA tax savings by income"></iframe>
+
+Three income ranges emerge for married filers filing jointly:
+
+- **Below ~$250,000**: Full savings from the standard deduction increase. No AMT impact, no rate increase impact.
+- **$250,000–$625,000**: The AMT claws back part of the standard deduction savings. The teal line (without AMT) diverges from the gray line (with AMT).
+- **Above ~$625,000**: The rate increases (35%→41%, 37%→43%) begin to dominate. Both lines decline, and above ~$855,000, the rate hikes cost more than the standard deduction saves — KYPA produces a net tax increase.
+
+The maximum net savings is $13,327 at $615,000 (married filing jointly). For single filers, the max is $7,414 at $295,000, and savings turn negative above $420,000.
+
+## Methodology
+
+All calculations use the [PolicyEngine US microsimulation model](https://policyengine.org), which models AMT alongside regular income tax. AMT exemptions in 2026 under the One Big Beautiful Bill Act are $140,200 for married filing jointly, $90,100 for single and head of household, and $70,100 for married filing separately. The chart reflects the full KYPA reform: standard deduction increases, bracket rate changes (35%→41% and 37%→43%), CTC expansion, and EITC changes.
+
+[^1]: These are simplified calculations. The PolicyEngine model includes more complex interactions such as capital gains taxes.

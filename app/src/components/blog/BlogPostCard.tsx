@@ -1,14 +1,9 @@
-/**
- * BlogPostCard Component
- *
- * Card component for displaying blog posts and apps in the Research listing.
- * Styled with v2 design tokens.
- */
-
+import { IconArrowRight } from '@tabler/icons-react';
 import { Link } from 'react-router-dom';
-import { Badge, Box, Group, Text } from '@mantine/core';
+import { Text } from '@/components/ui';
+import OptimisedImage from '@/components/ui/OptimisedImage';
 import { locationLabels, topicLabels } from '@/data/posts/postTransformers';
-import { colors, spacing } from '@/designTokens';
+import { colors, typography } from '@/designTokens';
 import type { ResearchItem } from '@/types/blog';
 
 interface BlogPostCardProps {
@@ -17,137 +12,153 @@ interface BlogPostCardProps {
 }
 
 export function BlogPostCard({ item, countryId }: BlogPostCardProps) {
-  // Generate link based on whether it's an app or post
-  // Apps go to AppPage, posts go to BlogPage
   const link = item.isApp
     ? `/${item.countryId}/${item.slug}`
     : `/${countryId}/research/${item.slug}`;
 
-  // All links are now internal
-  const isExternal = false;
-
-  // Format date
   const formattedDate = new Date(item.date).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
   });
 
-  // Get display tags (up to 3)
   const displayTags = item.tags
     .filter((tag) => topicLabels[tag] || locationLabels[tag])
     .slice(0, 3)
     .map((tag) => topicLabels[tag] || locationLabels[tag] || tag);
 
-  const cardContent = (
-    <Box
-      style={{
-        border: `1px solid ${colors.gray[300]}`,
-        borderRadius: spacing.radius.md,
-        overflow: 'hidden',
-        backgroundColor: colors.white,
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        transition: 'box-shadow 0.2s ease',
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.boxShadow = `0 4px 12px ${colors.gray[300]}`;
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.boxShadow = 'none';
-      }}
-    >
-      {/* Image */}
-      <Box
-        style={{
-          height: '200px',
-          overflow: 'hidden',
-          backgroundColor: colors.gray[100],
-        }}
-      >
-        {item.image && (
-          <img
-            src={item.image.startsWith('http') ? item.image : `/assets/posts/${item.image}`}
-            alt={item.title}
-            loading="lazy"
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-            }}
-            onError={(e) => {
-              // Hide broken images
-              e.currentTarget.style.display = 'none';
-            }}
-          />
-        )}
-      </Box>
-
-      {/* Content */}
-      <Box
-        style={{
-          padding: spacing.md,
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-        }}
-      >
-        {/* Tags and Date */}
-        <Group justify="space-between" mb="xs">
-          <Group gap="xs">
-            {displayTags.map((tag) => (
-              <Badge key={tag} size="xs" variant="light" color={item.isApp ? 'teal' : 'blue'}>
-                {tag}
-              </Badge>
-            ))}
-          </Group>
-          <Text size="xs" c="dimmed" tt="uppercase">
-            {formattedDate}
-          </Text>
-        </Group>
-
-        {/* Title */}
-        <Text fw={600} size="md" mb="xs" lineClamp={2} style={{ color: colors.gray[900] }}>
-          {item.title}
-        </Text>
-
-        {/* Description */}
-        <Text size="sm" c="dimmed" lineClamp={3} style={{ flex: 1 }}>
-          {item.description}
-        </Text>
-
-        {/* Read link */}
-        <Text
-          size="sm"
-          mt="sm"
-          style={{
-            color: colors.primary[600],
-            textAlign: 'right',
-          }}
-        >
-          {item.isApp ? 'Open →' : 'Read →'}
-        </Text>
-      </Box>
-    </Box>
-  );
-
-  if (isExternal) {
-    return (
-      <a
-        href={link}
-        target="_blank"
-        rel="noopener noreferrer"
-        style={{ textDecoration: 'none', color: 'inherit' }}
-      >
-        {cardContent}
-      </a>
-    );
-  }
+  // Apps may be served via Vercel rewrites (reverse proxy), so use a plain
+  // <a> to force a full server request instead of client-side routing.
+  const Wrapper = item.isApp ? 'a' : Link;
+  const wrapperProps = item.isApp ? { href: link } : { to: link };
 
   return (
-    <Link to={link} style={{ textDecoration: 'none', color: 'inherit' }}>
-      {cardContent}
-    </Link>
+    <Wrapper {...(wrapperProps as any)} className="tw:no-underline tw:text-inherit tw:group">
+      <div className="tw:flex tw:flex-col tw:h-full tw:rounded-xl tw:overflow-hidden tw:bg-white tw:transition-all tw:duration-300 tw:ease-out tw:border tw:border-gray-200 tw:hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] tw:hover:border-gray-300 tw:hover:-translate-y-0.5">
+        {/* Image */}
+        <div className="tw:relative tw:h-[260px] tw:overflow-hidden tw:bg-gray-100">
+          {item.image && (
+            <OptimisedImage
+              src={item.image.startsWith('http') ? item.image : `/assets/posts/${item.image}`}
+              alt={item.title}
+              width={640}
+              className="tw:w-full tw:h-full tw:object-cover tw:transition-transform tw:duration-500 tw:ease-out tw:group-hover:scale-105"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+              }}
+            />
+          )}
+          {/* Gradient overlay at bottom of image for depth */}
+          <div
+            style={{
+              position: 'absolute',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: '40px',
+              background: 'linear-gradient(transparent, rgba(0,0,0,0.04))',
+              pointerEvents: 'none',
+            }}
+          />
+        </div>
+
+        {/* Content */}
+        <div
+          style={{
+            padding: '16px 18px',
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+        >
+          {/* Tags + Date row */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: '10px',
+              fontSize: '11px',
+              fontFamily: typography.fontFamily.primary,
+              fontWeight: typography.fontWeight.medium,
+              color: colors.gray[500],
+              letterSpacing: '0.03em',
+              textTransform: 'uppercase',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              {displayTags.map((tag, i) => (
+                <span key={tag} style={{ display: 'inline-flex', alignItems: 'center' }}>
+                  {tag}
+                  {i < displayTags.length - 1 && (
+                    <span style={{ margin: '0 8px', color: colors.gray[400], fontSize: '9px' }}>
+                      ●
+                    </span>
+                  )}
+                </span>
+              ))}
+            </div>
+            <span style={{ flexShrink: 0 }}>{formattedDate}</span>
+          </div>
+
+          {/* Title */}
+          <p
+            style={{
+              fontWeight: typography.fontWeight.semibold,
+              fontSize: '15.5px',
+              lineHeight: '1.4',
+              color: colors.secondary[900],
+              marginBottom: '8px',
+              fontFamily: typography.fontFamily.primary,
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden',
+              letterSpacing: '-0.01em',
+            }}
+          >
+            {item.title}
+          </p>
+
+          {/* Description */}
+          <Text
+            size="sm"
+            style={{
+              color: colors.text.secondary,
+              flex: 1,
+              display: '-webkit-box',
+              WebkitLineClamp: 3,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden',
+              lineHeight: '1.6',
+            }}
+          >
+            {item.description}
+          </Text>
+
+          {/* CTA */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'flex-end',
+              gap: '4px',
+              marginTop: '12px',
+              color: colors.primary[600],
+              fontFamily: typography.fontFamily.primary,
+              fontWeight: typography.fontWeight.medium,
+              fontSize: '13.5px',
+            }}
+            className="tw:transition-all tw:duration-200 tw:group-hover:gap-2"
+          >
+            <span>{item.isApp ? 'Open' : 'Read more'}</span>
+            <IconArrowRight
+              size={15}
+              className="tw:transition-transform tw:duration-200 tw:group-hover:translate-x-0.5"
+            />
+          </div>
+        </div>
+      </div>
+    </Wrapper>
   );
 }

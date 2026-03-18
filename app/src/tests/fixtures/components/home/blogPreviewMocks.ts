@@ -7,7 +7,7 @@ export const MOCK_US_POST_NEWEST: BlogPost = {
   tags: ['us', 'policy'],
   authors: ['david-trimmer'],
   filename: 'stronger-start-working-families-act.md',
-  image: 'stronger-start-working-families-act.jpg',
+  image: 'stronger-start-working-families-act.webp',
   slug: 'stronger-start-working-families-act',
 };
 
@@ -18,7 +18,7 @@ export const MOCK_US_POST_SECOND: BlogPost = {
   tags: ['us', 'us-ut', 'policy'],
   authors: ['david-trimmer'],
   filename: 'utah-sb60-income-tax-reduction.md',
-  image: 'ut-SB60.jpg',
+  image: 'ut-SB60.webp',
   slug: 'utah-sb60-income-tax-reduction',
 };
 

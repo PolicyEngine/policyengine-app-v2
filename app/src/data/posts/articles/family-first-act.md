@@ -61,11 +61,11 @@ We estimate national impacts using the PolicyEngine US microsimulation model. Se
 The FFA raises [$20 billion](https://legacy.policyengine.org/us/policy?focus=policyOutput.budgetaryImpact.overall&reform=73854&region=enhanced_us&timePeriod=2026&baseline=2) in net federal revenue in 2026.
 While the Child Tax Credit expansion (including the pregnant mother's credit) costs $170 billion, other provisions raise $190 billion-—primarily the SALT deduction cap which raises $111 billion. Figure 4 shows the revenue impact of each provision.
 
-![Figure 4: Federal budgetary impacts of Family First Act provisions in 2026](/images/posts/family-first-act/FFA-waterfall.png)
+![Figure 4: Federal budgetary impacts of Family First Act provisions in 2026](/images/posts/family-first-act/FFA-waterfall.webp)
 
 Over the 2025-2034 budget window, the reform raises $505 billion, with federal revenue gains growing each year as shown in Figure 5.
 
-![Figure 5: Federal budgetary impacts of Family First Act from 2025 to 2034](/images/posts/family-first-act/FFA-10-year-impact.png)
+![Figure 5: Federal budgetary impacts of Family First Act from 2025 to 2034](/images/posts/family-first-act/FFA-10-year-impact.webp)
 
 ### State Revenue Effects
 

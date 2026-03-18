@@ -1,12 +1,11 @@
-import { IconArrowDown, IconArrowUp, IconMinus } from '@tabler/icons-react';
-import { Box, Group, Text, ThemeIcon } from '@mantine/core';
-import { colors, spacing, typography } from '@/designTokens';
+import { IconAlertTriangle, IconArrowDown, IconArrowUp, IconMinus } from '@tabler/icons-react';
+import { colors } from '@/designTokens';
 
-type MetricTrend = 'positive' | 'negative' | 'neutral';
+type MetricTrend = 'positive' | 'negative' | 'neutral' | 'error';
 
 interface MetricCardProps {
-  /** Label describing the metric */
-  label: string;
+  /** Label describing the metric (omit to hide) */
+  label?: string;
   /** The main value to display */
   value: string;
   /** Optional secondary value or context */
@@ -19,6 +18,8 @@ interface MetricCardProps {
   description?: string;
   /** Invert the arrow direction (useful when decrease is good, like poverty) */
   invertArrow?: boolean;
+  /** Center all content (label, value row, subtext) */
+  centered?: boolean;
 }
 
 /**
@@ -35,6 +36,7 @@ export default function MetricCard({
   hero = false,
   description,
   invertArrow = false,
+  centered = false,
 }: MetricCardProps) {
   const getTrendColor = () => {
     switch (trend) {
@@ -42,12 +44,18 @@ export default function MetricCard({
         return colors.primary[600];
       case 'negative':
         return colors.gray[600];
+      case 'error':
+        return 'rgb(220, 53, 69)';
       default:
         return colors.gray[500];
     }
   };
 
   const getTrendIcon = () => {
+    if (trend === 'error') {
+      return <IconAlertTriangle size={hero ? 20 : 16} stroke={2.5} />;
+    }
+
     // When invertArrow is true, flip the arrow direction
     // (useful for metrics like poverty where decrease is good)
     const showUpArrow = invertArrow ? trend === 'negative' : trend === 'positive';
@@ -65,56 +73,64 @@ export default function MetricCard({
   const trendColor = getTrendColor();
 
   return (
-    <Box>
+    <div style={centered ? { textAlign: 'center' } : undefined}>
       {/* Label */}
-      <Text
-        size={hero ? 'sm' : 'xs'}
-        fw={typography.fontWeight.medium}
-        c={colors.text.secondary}
-        tt="uppercase"
-        style={{ letterSpacing: '0.05em' }}
-      >
-        {label}
-      </Text>
+      {label && (
+        <p
+          className={`tw:font-medium tw:uppercase tw:tracking-widest ${hero ? 'tw:text-sm' : 'tw:text-xs'}`}
+          style={{ color: trend === 'error' ? 'rgb(220, 53, 69)' : colors.gray[500] }}
+        >
+          {label}
+        </p>
+      )}
 
       {/* Value with trend indicator */}
-      <Group gap={spacing.sm} align="center" mt={spacing.xs}>
+      <div
+        className={`tw:flex tw:items-center tw:gap-sm tw:mt-xs ${centered ? 'tw:justify-center' : ''}`}
+      >
         {trend !== 'neutral' && (
-          <ThemeIcon
-            size={hero ? 32 : 24}
-            radius="xl"
-            variant="light"
-            color={trend === 'positive' ? 'teal' : 'gray'}
+          <div
+            className={`tw:flex tw:items-center tw:justify-center tw:rounded-full ${hero ? 'tw:w-8 tw:h-8' : 'tw:w-6 tw:h-6'}`}
+            style={{
+              backgroundColor:
+                trend === 'positive'
+                  ? `${colors.primary[100]}`
+                  : trend === 'error'
+                    ? 'rgba(220, 53, 69, 0.1)'
+                    : `${colors.gray[100]}`,
+              color:
+                trend === 'positive'
+                  ? colors.primary[600]
+                  : trend === 'error'
+                    ? 'rgb(220, 53, 69)'
+                    : colors.gray[600],
+            }}
           >
             {getTrendIcon()}
-          </ThemeIcon>
+          </div>
         )}
-        <Text
-          fw={typography.fontWeight.bold}
-          c={trendColor}
+        <span
+          className="tw:font-bold"
           style={{
+            color: trendColor,
             fontSize: hero ? '2.5rem' : '1.75rem',
             lineHeight: 1.1,
             letterSpacing: '-0.02em',
           }}
         >
           {value}
-        </Text>
-      </Group>
+        </span>
+      </div>
 
       {/* Subtext */}
-      {subtext && (
-        <Text size="sm" c={colors.text.secondary} mt={spacing.xs}>
-          {subtext}
-        </Text>
-      )}
+      {subtext && <p className="tw:text-sm tw:text-gray-500 tw:mt-xs">{subtext}</p>}
 
       {/* Description */}
       {description && (
-        <Text size="xs" c={colors.text.tertiary} mt={spacing.sm} style={{ lineHeight: 1.5 }}>
+        <p className="tw:text-xs tw:text-gray-400 tw:mt-sm" style={{ lineHeight: 1.5 }}>
           {description}
-        </Text>
+        </p>
       )}
-    </Box>
+    </div>
   );
 }

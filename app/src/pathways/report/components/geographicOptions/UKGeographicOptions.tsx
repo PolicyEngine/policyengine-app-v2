@@ -1,4 +1,4 @@
-import { Box, Radio } from '@mantine/core';
+import { Label, RadioGroup, RadioGroupItem } from '@/components/ui';
 import { UKScopeType } from '@/types/regionTypes';
 import { RegionOption, UK_REGION_TYPES } from '@/utils/regionStrategies';
 import UKConstituencySelector from './UKConstituencySelector';
@@ -24,80 +24,75 @@ export default function UKGeographicOptions({
   onScopeChange,
   onRegionChange,
 }: UKGeographicOptionsProps) {
+  const handleScopeChange = (newScope: string) => {
+    onRegionChange('');
+    onScopeChange(newScope as UKScopeType);
+  };
+
   return (
-    <>
+    <RadioGroup value={scope} onValueChange={handleScopeChange}>
       {/* UK-wide option */}
-      <Radio
-        value={UK_REGION_TYPES.NATIONAL}
-        label="All households UK-wide"
-        checked={scope === UK_REGION_TYPES.NATIONAL}
-        onChange={() => onScopeChange(UK_REGION_TYPES.NATIONAL)}
-      />
+      <div className="tw:flex tw:items-center tw:gap-2">
+        <RadioGroupItem value={UK_REGION_TYPES.NATIONAL} id="scope-national" />
+        <Label htmlFor="scope-national">All households UK-wide</Label>
+      </div>
 
       {/* Country option */}
-      <Box>
-        <Radio
-          value={UK_REGION_TYPES.COUNTRY}
-          label="All households in a country"
-          checked={scope === UK_REGION_TYPES.COUNTRY}
-          onChange={() => onScopeChange(UK_REGION_TYPES.COUNTRY)}
-        />
+      <div>
+        <div className="tw:flex tw:items-center tw:gap-2">
+          <RadioGroupItem value={UK_REGION_TYPES.COUNTRY} id="scope-country" />
+          <Label htmlFor="scope-country">All households in a country</Label>
+        </div>
         {scope === UK_REGION_TYPES.COUNTRY && countryOptions.length > 0 && (
-          <Box ml={24} mt="xs">
+          <div className="tw:ml-6 tw:mt-xs">
             <UKCountrySelector
               countryOptions={countryOptions}
               selectedCountry={selectedRegion}
               onCountryChange={onRegionChange}
             />
-          </Box>
+          </div>
         )}
-      </Box>
+      </div>
 
       {/* Parliamentary Constituency option */}
-      <Box>
-        <Radio
-          value={UK_REGION_TYPES.CONSTITUENCY}
-          label="All households in a constituency"
-          checked={scope === UK_REGION_TYPES.CONSTITUENCY}
-          onChange={() => onScopeChange(UK_REGION_TYPES.CONSTITUENCY)}
-        />
+      <div>
+        <div className="tw:flex tw:items-center tw:gap-2">
+          <RadioGroupItem value={UK_REGION_TYPES.CONSTITUENCY} id="scope-constituency" />
+          <Label htmlFor="scope-constituency">All households in a constituency</Label>
+        </div>
         {scope === UK_REGION_TYPES.CONSTITUENCY && constituencyOptions.length > 0 && (
-          <Box ml={24} mt="xs">
+          <div className="tw:ml-6 tw:mt-xs">
             <UKConstituencySelector
               constituencyOptions={constituencyOptions}
               selectedConstituency={selectedRegion}
               onConstituencyChange={onRegionChange}
             />
-          </Box>
+          </div>
         )}
-      </Box>
+      </div>
 
       {/* Local Authority option */}
-      <Box>
-        <Radio
-          value={UK_REGION_TYPES.LOCAL_AUTHORITY}
-          label="All households in a local authority"
-          checked={scope === UK_REGION_TYPES.LOCAL_AUTHORITY}
-          onChange={() => onScopeChange(UK_REGION_TYPES.LOCAL_AUTHORITY)}
-        />
+      <div>
+        <div className="tw:flex tw:items-center tw:gap-2">
+          <RadioGroupItem value={UK_REGION_TYPES.LOCAL_AUTHORITY} id="scope-local-authority" />
+          <Label htmlFor="scope-local-authority">All households in a local authority</Label>
+        </div>
         {scope === UK_REGION_TYPES.LOCAL_AUTHORITY && localAuthorityOptions.length > 0 && (
-          <Box ml={24} mt="xs">
+          <div className="tw:ml-6 tw:mt-xs">
             <UKLocalAuthoritySelector
               localAuthorityOptions={localAuthorityOptions}
               selectedLocalAuthority={selectedRegion}
               onLocalAuthorityChange={onRegionChange}
             />
-          </Box>
+          </div>
         )}
-      </Box>
+      </div>
 
       {/* Household option */}
-      <Radio
-        value="household"
-        label="Custom household"
-        checked={scope === 'household'}
-        onChange={() => onScopeChange('household')}
-      />
-    </>
+      <div className="tw:flex tw:items-center tw:gap-2">
+        <RadioGroupItem value="household" id="scope-household" />
+        <Label htmlFor="scope-household">Custom household</Label>
+      </div>
+    </RadioGroup>
   );
 }

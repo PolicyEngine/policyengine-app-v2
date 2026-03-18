@@ -66,7 +66,7 @@ const mockPosts = vi.hoisted(() => {
 
 // Mock the postTransformers module to control which posts are returned
 vi.mock('@/data/posts/postTransformers', () => ({
-  posts: mockPosts,
+  getPosts: () => mockPosts,
 }));
 
 describe('HomeBlogPreview', () => {

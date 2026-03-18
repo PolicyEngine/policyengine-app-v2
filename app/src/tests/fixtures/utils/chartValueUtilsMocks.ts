@@ -48,7 +48,7 @@ export const EXPECTED_FORMATS = {
   NULL: 'N/A',
   UNDEFINED: 'N/A',
   ZERO: '$0.00',
-  NEGATIVE: '$-100.50',
+  NEGATIVE: '-$100.50',
 } as const;
 
 // Sample data arrays for axis formatting

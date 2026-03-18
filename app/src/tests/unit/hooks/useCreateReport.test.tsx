@@ -152,7 +152,7 @@ describe('useCreateReport', () => {
 
       // Then
       await waitFor(() => {
-        expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['reports'] });
+        expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['report-associations'] });
       });
     });
 

@@ -2,17 +2,15 @@
  * Website App (policyengine.org)
  * Homepage, blog, team, and embedded calculators
  */
-import '@mantine/core/styles.css';
-import '@mantine/dates/styles.css';
+import './app.css';
 
 import { QueryNormalizerProvider } from '@normy/react-query';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { Provider } from 'react-redux';
-import { MantineProvider } from '@mantine/core';
+import DevTools from '@/components/DevTools';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import { AppProvider } from './contexts/AppContext';
 import { store } from './store';
-import { policyEngineTheme } from './theme';
 import { cacheMonitor } from './utils/cacheMonitor';
 import { WebsiteRouter } from './WebsiteRouter';
 
@@ -24,26 +22,25 @@ const queryClient = new QueryClient({
   },
 });
 
-// Initialize cache monitor
 cacheMonitor.init(queryClient);
 
 export default function WebsiteApp() {
   return (
     <AppProvider mode="website">
       <Provider store={store}>
-        <MantineProvider theme={policyEngineTheme}>
-          <QueryNormalizerProvider
-            queryClient={queryClient}
-            normalizerConfig={{
-              devLogging: true,
-            }}
-          >
-            <QueryClientProvider client={queryClient}>
+        <QueryNormalizerProvider
+          queryClient={queryClient}
+          normalizerConfig={{
+            devLogging: import.meta.env.DEV,
+          }}
+        >
+          <QueryClientProvider client={queryClient}>
+            <TooltipProvider>
               <WebsiteRouter />
-              <ReactQueryDevtools initialIsOpen={false} />
-            </QueryClientProvider>
-          </QueryNormalizerProvider>
-        </MantineProvider>
+            </TooltipProvider>
+            <DevTools />
+          </QueryClientProvider>
+        </QueryNormalizerProvider>
       </Provider>
     </AppProvider>
   );

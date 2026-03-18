@@ -75,19 +75,17 @@ describe('spacing', () => {
 
     it('should have main content config', () => {
       expect(spacing.appShell.main.padding).toBe('24px');
-      expect(spacing.appShell.main.minHeight).toBe('100vh');
+      expect(spacing.appShell.main.minHeight).toBe('100dvh');
     });
   });
 
   describe('border radius', () => {
-    it('should have a complete radius scale', () => {
-      expect(spacing.radius.xs).toBe('2px');
-      expect(spacing.radius.sm).toBe('4px');
-      expect(spacing.radius.md).toBe('6px');
-      expect(spacing.radius.lg).toBe('8px');
-      expect(spacing.radius.xl).toBe('12px');
-      expect(spacing.radius['2xl']).toBe('16px');
-      expect(spacing.radius['4xl']).toBe('32px');
+    it('should have a complete semantic radius scale', () => {
+      expect(spacing.radius.none).toBe('0px');
+      expect(spacing.radius.chip).toBe('2px');
+      expect(spacing.radius.element).toBe('4px');
+      expect(spacing.radius.container).toBe('8px');
+      expect(spacing.radius.feature).toBe('12px');
     });
   });
 

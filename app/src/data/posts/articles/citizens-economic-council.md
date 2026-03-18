@@ -2,7 +2,7 @@ Findings from a new deliberative public engagement project, [published](https://
 
 Guided by an advisory board of 18 experts in economic policymaking and deliberative research, the project recruited 39 UK citizens and, over six three-hour sessions involving economic background guidance from expert speakers, explored their views on a ‘menu of options’ for fiscal policy reforms.
 
-![Advisory board](/images/posts/citizens-economic-council/advisory-board.png)
+![Advisory board](/images/posts/citizens-economic-council/advisory-board.webp)
 _See the full advisory board [here](https://citizensecon.org.uk/about-us)._
 
 A key focus of the project was on the ability of deliberative engagement to understand how the public views benefits and tradeoffs of individual policy choices when combined together, rather than individual policy provisions on their own. From the report:

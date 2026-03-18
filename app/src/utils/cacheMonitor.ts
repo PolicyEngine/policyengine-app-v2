@@ -16,7 +16,7 @@ interface CacheMonitorConfig {
 }
 
 const defaultConfig: CacheMonitorConfig = {
-  enabled: true,
+  enabled: import.meta.env.DEV,
   logFetches: true,
   logInvalidations: true,
   logGarbageCollection: true,

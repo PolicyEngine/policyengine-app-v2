@@ -19,7 +19,7 @@ describe('appTransformers', () => {
       expect(app.description).toBeDefined();
       expect(app.source).toBeDefined();
       expect(app.type).toBeDefined();
-      expect(['streamlit', 'iframe', 'obbba-iframe', 'custom']).toContain(app.type);
+      expect(['streamlit', 'iframe', 'obbba-iframe', 'custom', 'rewrite']).toContain(app.type);
       expect(app.tags).toBeDefined();
       expect(Array.isArray(app.tags)).toBe(true);
       expect(app.countryId).toBeDefined();
@@ -56,10 +56,10 @@ describe('appTransformers', () => {
     });
   });
 
-  test('slugs are unique', () => {
-    const slugs = apps.map((a) => a.slug);
-    const uniqueSlugs = new Set(slugs);
-    expect(uniqueSlugs.size).toBe(slugs.length);
+  test('slug + countryId pairs are unique', () => {
+    const keys = apps.map((a) => `${a.countryId}/${a.slug}`);
+    const uniqueKeys = new Set(keys);
+    expect(uniqueKeys.size).toBe(keys.length);
   });
 
   test('OBBBA iframe apps are configured correctly', () => {

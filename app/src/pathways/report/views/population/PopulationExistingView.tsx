@@ -6,7 +6,6 @@
 
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Text } from '@mantine/core';
 import { HouseholdAdapter } from '@/adapters';
 import PathwayView from '@/components/common/PathwayView';
 import { MOCK_USER_ID } from '@/constants';
@@ -163,7 +162,7 @@ export default function PopulationExistingView({
     return (
       <PathwayView
         title="Select existing household(s)"
-        content={<Text>Loading households...</Text>}
+        content={<p className="tw:text-gray-600">Loading households...</p>}
         buttonPreset="none"
       />
     );
@@ -173,7 +172,11 @@ export default function PopulationExistingView({
     return (
       <PathwayView
         title="Select existing household(s)"
-        content={<Text c="red">Error: {(error as Error)?.message || 'Something went wrong.'}</Text>}
+        content={
+          <p className="tw:text-red-600">
+            Error: {(error as Error)?.message || 'Something went wrong.'}
+          </p>
+        }
         buttonPreset="none"
       />
     );
@@ -183,7 +186,11 @@ export default function PopulationExistingView({
     return (
       <PathwayView
         title="Select existing household(s)"
-        content={<Text>No households available. Please create new household(s).</Text>}
+        content={
+          <p className="tw:text-gray-600">
+            No households available. Please create new household(s).
+          </p>
+        }
         primaryAction={{
           label: 'Next',
           onClick: () => {},

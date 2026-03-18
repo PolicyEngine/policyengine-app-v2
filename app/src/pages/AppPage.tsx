@@ -5,16 +5,38 @@
  * Routes apps to appropriate embed component based on type.
  */
 
+import { useEffect } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
 import IframeContent from '@/components/IframeContent';
 import { OBBBAIframeContent, StreamlitEmbed } from '@/components/interactive';
 import { apps } from '@/data/apps/appTransformers';
+import { trackToolEngaged } from '@/utils/analytics';
 
 export default function AppPage() {
-  const { slug } = useParams<{ slug: string }>();
+  const {
+    slug,
+    countryId,
+    '*': subPath,
+  } = useParams<{
+    slug: string;
+    countryId: string;
+    '*': string;
+  }>();
   const location = useLocation();
 
-  const app = apps.find((a) => a.slug === slug);
+  const app =
+    apps.find((a) => a.slug === slug && a.countryId === countryId) ||
+    apps.find((a) => a.slug === slug);
+
+  useEffect(() => {
+    if (!app) {
+      return;
+    }
+    const timer = setTimeout(() => {
+      trackToolEngaged({ toolSlug: app.slug, toolTitle: app.title });
+    }, 15000);
+    return () => clearTimeout(timer);
+  }, [app]);
 
   if (!app) {
     return (
@@ -41,8 +63,21 @@ export default function AppPage() {
     return <OBBBAIframeContent url={app.source} title={app.title} />;
   }
 
-  // Forward hash fragment from the browser URL to the iframe (e.g. #NY)
-  const iframeUrl = location.hash ? `${app.source}${location.hash}` : app.source;
+  // Build iframe URL from app source, sub-path, and hash fragment
+  const base = subPath ? `${app.source.replace(/\/$/, '')}/${subPath}` : app.source;
+
+  let iframeUrl: string;
+  if (location.hash && countryId && countryId !== 'us') {
+    const params = new URLSearchParams(location.hash.slice(1));
+    params.set('country', countryId);
+    iframeUrl = `${base}#${params.toString()}`;
+  } else if (location.hash) {
+    iframeUrl = `${base}${location.hash}`;
+  } else if (countryId && countryId !== 'us') {
+    iframeUrl = `${base}#country=${countryId}`;
+  } else {
+    iframeUrl = base;
+  }
 
   // Default: standard iframe (for 'iframe' type and any other types)
   return <IframeContent url={iframeUrl} title={app.title} />;

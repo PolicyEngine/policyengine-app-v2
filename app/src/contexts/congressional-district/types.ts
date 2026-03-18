@@ -66,6 +66,8 @@ export interface CongressionalDistrictDataContextValue {
   hasStarted: boolean;
   /** Number of states that errored */
   errorCount: number;
+  /** Set of state codes that errored (e.g., 'state/co') */
+  erroredStates: Set<string>;
   /** Label lookup for district display names */
   labelLookup: DistrictLabelLookup;
   /** Whether this is a state-level report (single state) vs national */

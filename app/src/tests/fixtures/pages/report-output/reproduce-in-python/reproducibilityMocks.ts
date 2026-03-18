@@ -83,6 +83,7 @@ export const DEFAULT_POLICY_REPRODUCIBILITY_PROPS = {
   policy: MOCK_POLICY_V1,
   region: TEST_COUNTRIES.US,
   dataset: null,
+  isDefaultDataset: true,
 };
 
 /**
@@ -104,6 +105,7 @@ export const UK_POLICY_REPRODUCIBILITY_PROPS = {
   policy: MOCK_POLICY_V1,
   region: TEST_COUNTRIES.UK,
   dataset: null,
+  isDefaultDataset: true,
 };
 
 /**

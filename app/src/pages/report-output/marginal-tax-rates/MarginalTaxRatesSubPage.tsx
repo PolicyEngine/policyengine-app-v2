@@ -1,26 +1,36 @@
 import { useState } from 'react';
-import type { Layout } from 'plotly.js';
-import Plot from 'react-plotly.js';
 import { useSelector } from 'react-redux';
-import { Group, Radio, Stack, Text } from '@mantine/core';
-import { useMediaQuery, useViewportSize } from '@mantine/hooks';
+import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  Label,
+  Legend,
+  Line,
+  LineChart,
+  ReferenceDot,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 import { PolicyAdapter } from '@/adapters/PolicyAdapter';
-import { colors, spacing } from '@/designTokens';
+import { ChartWatermark, TOOLTIP_STYLE } from '@/components/charts';
+import { RadioGroup, RadioGroupItem, Stack, Text } from '@/components/ui';
+import { colors, typography } from '@/designTokens';
+import { MOBILE_BREAKPOINT_QUERY } from '@/hooks/useChartDimensions';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useHouseholdVariation } from '@/hooks/useHouseholdVariation';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useReportYear } from '@/hooks/useReportYear';
+import { useViewportSize } from '@/hooks/useViewportSize';
 import type { RootState } from '@/store';
 import type { Household } from '@/types/ingredients/Household';
 import type { Policy } from '@/types/ingredients/Policy';
 import type { Simulation } from '@/types/ingredients/Simulation';
 import type { UserPolicy } from '@/types/ingredients/UserPolicy';
-import {
-  DEFAULT_CHART_CONFIG,
-  DEFAULT_CHART_LAYOUT,
-  getChartLogoImage,
-  getClampedChartHeight,
-} from '@/utils/chartUtils';
-import { currencySymbol, localeCode } from '@/utils/formatters';
+import { getClampedChartHeight, getNiceTicks, RECHARTS_FONT_STYLE } from '@/utils/chartUtils';
+import { currencySymbol } from '@/utils/formatters';
 import { getValueFromHousehold } from '@/utils/householdValues';
 import LoadingPage from '../LoadingPage';
 
@@ -34,6 +44,28 @@ interface Props {
 }
 
 type ViewMode = 'both' | 'difference';
+
+function MTRTooltip({ active, payload, label, symbol }: any) {
+  if (!active || !payload?.length) {
+    return null;
+  }
+  return (
+    <div style={TOOLTIP_STYLE}>
+      <p style={{ fontWeight: typography.fontWeight.semibold, margin: 0 }}>
+        Earnings: {symbol}
+        {Number(label).toLocaleString()}
+      </p>
+      {payload.map((p: any) => (
+        <p
+          key={p.name}
+          style={{ margin: '2px 0', fontSize: typography.fontSize.sm, color: p.stroke }}
+        >
+          {p.name}: {(Number(p.value) * 100).toFixed(1)}%
+        </p>
+      ))}
+    </div>
+  );
+}
 
 /**
  * Marginal Tax Rates page
@@ -49,7 +81,7 @@ export default function MarginalTaxRatesSubPage({
   households: _households,
 }: Props) {
   const [viewMode, setViewMode] = useState<ViewMode>('both');
-  const mobile = useMediaQuery('(max-width: 768px)');
+  const mobile = useMediaQuery(MOBILE_BREAKPOINT_QUERY);
   const { height: viewportHeight } = useViewportSize();
   const countryId = useCurrentCountry();
   const reportYear = useReportYear();
@@ -59,7 +91,7 @@ export default function MarginalTaxRatesSubPage({
   // Early return if no report year available (shouldn't happen in report output context)
   if (!reportYear) {
     return (
-      <Stack gap={spacing.md}>
+      <Stack gap="md">
         <Text c="red">Error: Report year not available</Text>
       </Stack>
     );
@@ -112,7 +144,7 @@ export default function MarginalTaxRatesSubPage({
 
   if (baselineError) {
     return (
-      <Stack gap={spacing.md}>
+      <Stack gap="md">
         <Text c="red">Error loading baseline variation: {baselineError.message}</Text>
       </Stack>
     );
@@ -120,7 +152,7 @@ export default function MarginalTaxRatesSubPage({
 
   if (reform && reformError) {
     return (
-      <Stack gap={spacing.md}>
+      <Stack gap="md">
         <Text c="red">Error loading reform variation: {reformError.message}</Text>
       </Stack>
     );
@@ -129,7 +161,7 @@ export default function MarginalTaxRatesSubPage({
   // Verify baseline data exists and has required structure
   if (!baselineVariation || !baselineVariation.householdData?.people) {
     return (
-      <Stack gap={spacing.md}>
+      <Stack gap="md">
         <Text c="red">No baseline variation data available</Text>
       </Stack>
     );
@@ -138,7 +170,7 @@ export default function MarginalTaxRatesSubPage({
   // If reform exists, verify reform data has required structure
   if (reform && reformVariation && !reformVariation.householdData?.people) {
     return (
-      <Stack gap={spacing.md}>
+      <Stack gap="md">
         <Text c="red">Invalid reform variation data</Text>
       </Stack>
     );
@@ -169,7 +201,7 @@ export default function MarginalTaxRatesSubPage({
 
   if (!Array.isArray(baselineMTR)) {
     return (
-      <Stack gap={spacing.md}>
+      <Stack gap="md">
         <Text c="red">No marginal tax rate data available</Text>
       </Stack>
     );
@@ -210,81 +242,83 @@ export default function MarginalTaxRatesSubPage({
     ? baselineMTRClipped.map((b, i) => reformMTRClipped[i] - b)
     : null;
 
+  const symbol = currencySymbol(countryId);
+
+  const chartData = xValues.map((x, i) => ({
+    earnings: x,
+    baseline: baselineMTRClipped[i],
+    ...(reformMTRClipped && { reform: reformMTRClipped[i] }),
+    ...(mtrDifference && { difference: mtrDifference[i] }),
+  }));
+
+  const xTicks = getNiceTicks([0, maxEarnings]);
+  const mtrTicks = getNiceTicks([-2, 2]);
+  const diffValues = mtrDifference ? mtrDifference.filter((v) => v !== undefined) : [0];
+  const diffTicks = getNiceTicks([Math.min(0, ...diffValues), Math.max(0, ...diffValues)]);
+
   const renderChart = () => {
     if (!reform || !reformMTRClipped || viewMode === 'both') {
-      const symbol = currencySymbol(countryId);
-      const chartData: any[] = [
-        {
-          x: xValues,
-          y: baselineMTRClipped,
-          type: 'scatter' as const,
-          mode: 'lines' as const,
-          line: { color: colors.gray[600], width: 2 },
-          name: 'Baseline',
-          hovertemplate: `<b>Earnings: %{x:${symbol},.0f}</b><br>MTR: %{y:.1%}<extra></extra>`,
-        },
-      ];
-
-      if (reform && reformMTRClipped) {
-        chartData.push({
-          x: xValues,
-          y: reformMTRClipped,
-          type: 'scatter' as const,
-          mode: 'lines' as const,
-          line: { color: colors.primary[500], width: 2 },
-          name: 'Reform',
-          hovertemplate: `<b>Earnings: %{x:${symbol},.0f}</b><br>MTR: %{y:.1%}<extra></extra>`,
-        });
-      } else {
-        // Add current MTR marker for single mode
-        chartData.push({
-          x: [currentEarnings],
-          y: [Math.max(-2, Math.min(2, currentMTR))],
-          type: 'scatter' as const,
-          mode: 'markers' as const,
-          marker: { color: colors.primary[500], size: 10 },
-          name: 'Current',
-          hovertemplate: `<b>Your current position</b><br>Earnings: %{x:${symbol},.0f}<br>MTR: %{y:.1%}<extra></extra>`,
-        });
-      }
-
-      const layout = {
-        ...DEFAULT_CHART_LAYOUT,
-        xaxis: {
-          title: { text: 'Employment income' },
-          tickprefix: currencySymbol(countryId),
-          tickformat: ',.0f',
-          fixedrange: true,
-        },
-        yaxis: {
-          title: { text: 'Marginal tax rate' },
-          tickformat: '.0%',
-          range: [-2, 2],
-          fixedrange: true,
-        },
-        showlegend: true,
-        legend: {
-          x: 0.02,
-          y: 0.98,
-          xanchor: 'left' as const,
-          yanchor: 'top' as const,
-        },
-        margin: {
-          t: 20,
-          b: 80,
-          l: 80,
-          r: 20,
-        },
-        images: [getChartLogoImage()],
-      } as Partial<Layout>;
-
       return (
-        <Plot
-          data={chartData}
-          layout={layout}
-          config={{ ...DEFAULT_CHART_CONFIG, locale: localeCode(countryId) }}
-          style={{ width: '100%', height: chartHeight }}
-        />
+        <ResponsiveContainer width="100%" height={chartHeight}>
+          <LineChart data={chartData} margin={{ top: 20, right: 20, bottom: 80, left: 80 }}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis
+              dataKey="earnings"
+              ticks={xTicks}
+              tick={RECHARTS_FONT_STYLE}
+              tickFormatter={(v: number) => `${symbol}${v.toLocaleString()}`}
+            >
+              <Label
+                value="Employment income"
+                position="bottom"
+                offset={20}
+                style={RECHARTS_FONT_STYLE}
+              />
+            </XAxis>
+            <YAxis
+              domain={[-2, 2]}
+              ticks={mtrTicks}
+              tick={RECHARTS_FONT_STYLE}
+              tickFormatter={(v: number) => `${(v * 100).toFixed(0)}%`}
+            >
+              <Label
+                value="Marginal tax rate"
+                angle={-90}
+                position="insideLeft"
+                style={{ textAnchor: 'middle', ...RECHARTS_FONT_STYLE }}
+              />
+            </YAxis>
+            <Tooltip content={<MTRTooltip symbol={symbol} />} />
+            <Legend verticalAlign="top" align="left" />
+            <Line
+              type="monotone"
+              dataKey="baseline"
+              name="Baseline"
+              stroke={colors.gray[600]}
+              strokeWidth={2}
+              dot={false}
+            />
+            {reform && reformMTRClipped && (
+              <Line
+                type="monotone"
+                dataKey="reform"
+                name="Reform"
+                stroke={colors.primary[500]}
+                strokeWidth={2}
+                dot={false}
+              />
+            )}
+            {!reform && (
+              <ReferenceDot
+                x={currentEarnings}
+                y={Math.max(-2, Math.min(2, currentMTR))}
+                r={5}
+                fill={colors.primary[500]}
+                stroke={colors.primary[500]}
+              />
+            )}
+          </LineChart>
+        </ResponsiveContainer>
       );
     }
 
@@ -294,71 +328,77 @@ export default function MarginalTaxRatesSubPage({
       return null;
     }
 
-    const symbol = currencySymbol(countryId);
-    const chartData = [
-      {
-        x: xValues,
-        y: mtrDifference,
-        type: 'scatter' as const,
-        mode: 'lines' as const,
-        line: { color: colors.primary[500], width: 2 },
-        fill: 'tozeroy' as const,
-        fillcolor: colors.primary.alpha[60],
-        name: 'MTR Difference',
-        hovertemplate: `<b>Earnings: %{x:${symbol},.0f}</b><br>Change: %{y:.1%}<extra></extra>`,
-      },
-    ];
-
-    const layout = {
-      ...DEFAULT_CHART_LAYOUT,
-      xaxis: {
-        title: { text: 'Employment income' },
-        tickprefix: currencySymbol(countryId),
-        tickformat: ',.0f',
-        fixedrange: true,
-      },
-      yaxis: {
-        title: { text: 'Change in marginal tax rate' },
-        tickformat: '.1%',
-        fixedrange: true,
-      },
-      showlegend: false,
-      margin: {
-        t: 20,
-        b: 80,
-        l: 80,
-        r: 20,
-      },
-      images: [getChartLogoImage()],
-    } as Partial<Layout>;
-
     return (
-      <Plot
-        data={chartData}
-        layout={layout}
-        config={{ ...DEFAULT_CHART_CONFIG, locale: localeCode(countryId) }}
-        style={{ width: '100%', height: chartHeight }}
-      />
+      <ResponsiveContainer width="100%" height={chartHeight}>
+        <AreaChart data={chartData} margin={{ top: 20, right: 20, bottom: 80, left: 80 }}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis
+            dataKey="earnings"
+            ticks={xTicks}
+            tick={RECHARTS_FONT_STYLE}
+            tickFormatter={(v: number) => `${symbol}${v.toLocaleString()}`}
+          >
+            <Label
+              value="Employment income"
+              position="bottom"
+              offset={20}
+              style={RECHARTS_FONT_STYLE}
+            />
+          </XAxis>
+          <YAxis
+            ticks={diffTicks}
+            domain={[diffTicks[0], diffTicks[diffTicks.length - 1]]}
+            tick={RECHARTS_FONT_STYLE}
+            tickFormatter={(v: number) => `${(v * 100).toFixed(1)}%`}
+          >
+            <Label
+              value="Change in marginal tax rate"
+              angle={-90}
+              position="insideLeft"
+              style={{ textAnchor: 'middle', ...RECHARTS_FONT_STYLE }}
+            />
+          </YAxis>
+          <Tooltip content={<MTRTooltip symbol={symbol} />} />
+          <Area
+            type="monotone"
+            dataKey="difference"
+            name="MTR Difference"
+            stroke={colors.primary[500]}
+            fill={colors.primary[500]}
+            fillOpacity={0.6}
+            strokeWidth={2}
+          />
+        </AreaChart>
+      </ResponsiveContainer>
     );
   };
 
   return (
-    <Stack gap={spacing.lg}>
+    <Stack gap="lg">
       <Text size="sm" c="dimmed">
         Marginal tax rates show the percentage of the next dollar earned that goes to taxes. Values
         are clipped to the range -200% to +200% for display purposes.
       </Text>
 
       {reform && (
-        <Radio.Group value={viewMode} onChange={(value) => setViewMode(value as ViewMode)}>
-          <Group gap={spacing.md}>
-            <Radio value="both" label="Baseline and Reform" />
-            <Radio value="difference" label="Difference" />
-          </Group>
-        </Radio.Group>
+        <RadioGroup value={viewMode} onValueChange={(value) => setViewMode(value as ViewMode)}>
+          <div className="tw:flex tw:gap-md tw:items-center">
+            <div className="tw:flex tw:items-center tw:gap-xs">
+              <RadioGroupItem value="both" id="mtr-both" />
+              <label htmlFor="mtr-both">Baseline and reform</label>
+            </div>
+            <div className="tw:flex tw:items-center tw:gap-xs">
+              <RadioGroupItem value="difference" id="mtr-difference" />
+              <label htmlFor="mtr-difference">Difference</label>
+            </div>
+          </div>
+        </RadioGroup>
       )}
 
-      {renderChart()}
+      <div style={{ width: '100%', position: 'relative' }}>
+        {renderChart()}
+        <ChartWatermark />
+      </div>
     </Stack>
   );
 }

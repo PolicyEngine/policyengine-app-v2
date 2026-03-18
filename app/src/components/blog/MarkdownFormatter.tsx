@@ -18,9 +18,9 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import ReactMarkdown, { type Components } from 'react-markdown';
-import Plot from 'react-plotly.js';
 import rehypeRaw from 'rehype-raw';
 import remarkGfm from 'remark-gfm';
+import OptimisedImage from '@/components/ui/OptimisedImage';
 import type { MarkdownFormatterProps } from '@/types/blog';
 import {
   blogColors,
@@ -30,13 +30,14 @@ import {
   blogSpacing,
   blogTypography,
 } from './blogStyles';
+import { LazyPlot } from './LazyPlot';
 import { useDisplayCategory } from './useDisplayCategory';
 
-// Import Google Fonts for Roboto Serif
+// Import Google Fonts for code blocks (Roboto Mono)
 const fontLinkElement = document.createElement('link');
 fontLinkElement.rel = 'stylesheet';
 fontLinkElement.href =
-  'https://fonts.googleapis.com/css2?family=Roboto+Serif:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;700&display=swap';
+  'https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&display=swap';
 if (!document.head.querySelector(`link[href="${fontLinkElement.href}"]`)) {
   document.head.appendChild(fontLinkElement);
 }
@@ -229,7 +230,7 @@ export function PlotlyChartCode({
         marginBottom: 20,
       }}
     >
-      <Plot
+      <LazyPlot
         data={plotlyData.data}
         layout={{
           ...plotlyData.layout,
@@ -363,10 +364,10 @@ export function MarkdownFormatter({
             marginBottom: blogSpacing.marginBottom.image,
           }}
         >
-          <img
+          <OptimisedImage
             src={transformedSrc}
             alt={alt || ''}
-            loading="lazy"
+            width={750}
             style={{
               width: '100%',
               height: 'auto',
@@ -526,7 +527,7 @@ export function MarkdownFormatter({
               backgroundColor: blogColors.primary,
               color: 'white',
               padding: '12px 24px',
-              borderRadius: '6px',
+              borderRadius: blogRadius.md,
               textDecoration: 'none',
               fontWeight: blogFontWeights.semiBold,
               fontFamily: blogTypography.bodyFont,

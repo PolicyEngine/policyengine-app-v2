@@ -1,8 +1,10 @@
 import { useMemo } from 'react';
+import { useSelector } from 'react-redux';
 import type { SocietyWideReportOutput as SocietyWideOutput } from '@/api/societyWideCalculation';
 import { useCalculationStatus } from '@/hooks/useCalculationStatus';
 import { useReportProgressDisplay } from '@/hooks/useReportProgressDisplay';
 import { useStartCalculationOnLoad } from '@/hooks/useStartCalculationOnLoad';
+import { RootState } from '@/store';
 import type { CalcStartConfig } from '@/types/calculation';
 import type { Geography } from '@/types/ingredients/Geography';
 import type { Policy } from '@/types/ingredients/Policy';
@@ -19,11 +21,21 @@ import DynamicsSubPage from './DynamicsSubPage';
 import ErrorPage from './ErrorPage';
 import LoadingPage from './LoadingPage';
 import { LocalAuthoritySubPage } from './LocalAuthoritySubPage';
+import MigrationSubPage from './MigrationSubPage';
 import NotFoundSubPage from './NotFoundSubPage';
-import OverviewSubPage from './OverviewSubPage';
 import PolicySubPage from './PolicySubPage';
 import PopulationSubPage from './PopulationSubPage';
 import PolicyReproducibility from './reproduce-in-python/PolicyReproducibility';
+
+/**
+ * Dataset entry from metadata economy options
+ */
+interface DatasetEntry {
+  name: string;
+  label: string;
+  title: string;
+  default: boolean;
+}
 
 /**
  * Props available to input-only tabs (don't need calculation output)
@@ -35,6 +47,7 @@ interface InputTabProps {
   userPolicies?: UserPolicy[];
   geographies?: Geography[];
   userGeographies?: UserGeographyPopulation[];
+  datasets?: DatasetEntry[];
 }
 
 /**
@@ -54,12 +67,11 @@ const INPUT_ONLY_TABS: Record<string, (props: InputTabProps) => React.ReactEleme
     <PolicySubPage policies={policies} userPolicies={userPolicies} reportType="economy" />
   ),
 
-  population: ({ simulations, geographies, userGeographies }) => (
+  population: ({ simulations, geographies }) => (
     <PopulationSubPage
       baselineSimulation={simulations?.[0]}
       reformSimulation={simulations?.[1]}
       geographies={geographies}
-      userGeographies={userGeographies}
     />
   ),
 
@@ -67,14 +79,17 @@ const INPUT_ONLY_TABS: Record<string, (props: InputTabProps) => React.ReactEleme
     <DynamicsSubPage policies={policies} userPolicies={userPolicies} reportType="economy" />
   ),
 
-  reproduce: ({ report, policies, simulations }) => {
+  reproduce: ({ report, policies, simulations, datasets }) => {
     const policyV1 = convertPoliciesToV1Format(policies);
+    const defaultDataset = datasets?.find((d) => d.default);
+    const datasetName = defaultDataset?.name || null;
     return (
       <PolicyReproducibility
         countryId={report.countryId}
         policy={policyV1}
         region={simulations?.[0]?.populationId || report.countryId}
-        dataset={null}
+        dataset={datasetName}
+        isDefaultDataset
       />
     );
   },
@@ -85,7 +100,14 @@ const INPUT_ONLY_TABS: Record<string, (props: InputTabProps) => React.ReactEleme
  * These tabs need the OUTPUT data (calculated society-wide impacts)
  */
 const OUTPUT_TABS: Record<string, (props: OutputTabProps) => React.ReactElement> = {
-  overview: ({ output }) => <OverviewSubPage output={output} outputType="societyWide" />,
+  migration: ({ output, report, simulations, geographies }) => (
+    <MigrationSubPage
+      output={output}
+      report={report}
+      simulations={simulations}
+      geographies={geographies}
+    />
+  ),
 
   'comparative-analysis': ({ output, simulations, report, activeView }) => (
     <ComparativeAnalysisPage
@@ -113,7 +135,6 @@ interface SocietyWideReportOutputProps {
   userPolicies?: UserPolicy[];
   policies?: Policy[];
   geographies?: Geography[];
-  userGeographies?: UserGeographyPopulation[];
 }
 
 /**
@@ -127,15 +148,17 @@ interface SocietyWideReportOutputProps {
  */
 export function SocietyWideReportOutput({
   reportId: _reportId,
-  subpage = 'overview',
+  subpage = 'migration',
   activeView,
   report,
   simulations,
   userPolicies,
   policies,
   geographies,
-  userGeographies,
 }: SocietyWideReportOutputProps) {
+  // Read datasets from metadata for the reproduce tab
+  const datasets = useSelector((state: RootState) => state.metadata.economyOptions?.datasets);
+
   // Get calculation status for report (for state decisions)
   const calcStatus = useCalculationStatus(report?.id || '', 'report');
 
@@ -211,7 +234,7 @@ export function SocietyWideReportOutput({
       policies,
       userPolicies,
       geographies,
-      userGeographies,
+      datasets,
     });
   }
 
@@ -237,7 +260,7 @@ export function SocietyWideReportOutput({
   if (calcStatus.isComplete && calcStatus.result) {
     const output = calcStatus.result as SocietyWideOutput;
 
-    const OutputTabRenderer = OUTPUT_TABS[subpage];
+    const OutputTabRenderer = OUTPUT_TABS[subpage || 'migration'];
     if (OutputTabRenderer) {
       return OutputTabRenderer({
         report,
@@ -245,7 +268,6 @@ export function SocietyWideReportOutput({
         policies,
         userPolicies,
         geographies,
-        userGeographies,
         output,
         activeView,
       });

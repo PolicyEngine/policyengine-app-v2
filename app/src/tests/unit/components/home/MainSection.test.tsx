@@ -36,4 +36,13 @@ describe('MainSection', () => {
     expect(screen.getByText(/free, open-source tax and benefit analysis/i)).toBeInTheDocument();
     expect(screen.getByText(/benefit access tools/i)).toBeInTheDocument();
   });
+
+  test('given component renders then hero title uses responsive font size', () => {
+    // When
+    renderWithCountry(<MainSection />, TEST_COUNTRY_IDS.US);
+
+    // Then — responsive font size is applied via Tailwind class, not inline style
+    const heading = screen.getByRole('heading', { name: /start simulating/i });
+    expect(heading.className).toContain('text-[clamp(28px,5vw,48px)]');
+  });
 });

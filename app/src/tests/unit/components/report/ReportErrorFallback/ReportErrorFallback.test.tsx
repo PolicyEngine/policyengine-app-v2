@@ -2,9 +2,6 @@ import { render, screen } from '@test-utils';
 import { describe, expect, test } from 'vitest';
 import { ReportErrorFallback } from '@/components/report/ReportErrorFallback';
 
-// Mock Plotly to avoid errors
-vi.mock('react-plotly.js', () => ({ default: vi.fn(() => null) }));
-
 const createTestError = (message: string): Error => {
   const error = new Error(message);
   error.stack = `Error: ${message}\n    at TestComponent (test.tsx:10:5)`;

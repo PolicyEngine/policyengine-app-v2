@@ -49,9 +49,6 @@ import {
   TEST_SIMULATION_ID_2,
 } from '@/tests/fixtures/hooks/useUserReportsMocks';
 
-// Mock Plotly
-vi.mock('react-plotly.js', () => ({ default: vi.fn(() => null) }));
-
 // Mock the normalizer
 vi.mock('@normy/react-query', () => ({
   useQueryNormalizer: () => createNormalizedCacheMock(),

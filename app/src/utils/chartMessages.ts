@@ -10,10 +10,12 @@ import { formatPercent } from './formatters';
 type CountryId = (typeof countryIds)[number];
 
 /**
- * Wrap text to a specified width, replacing newlines with <br> tags
+ * Wrap text to a specified width.
+ * Returns newline-separated text. Consumers that render HTML (e.g. Plotly
+ * hover templates) should convert '\n' → '<br>' at point of use.
  */
 function wordWrap(text: string, width: number = 50): string {
-  return wordwrap.wrap(text, { width }).replaceAll('\n', '<br>');
+  return wordwrap.wrap(text, { width });
 }
 
 /**

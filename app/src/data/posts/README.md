@@ -27,7 +27,7 @@ For a post with filename `giving-tuesday-2025.md`:
 2. Add images to that folder
 3. Reference in markdown:
    ```markdown
-   ![Screenshot](/assets/posts/giving-tuesday-2025/screenshot.png)
+   ![Screenshot](/assets/posts/giving-tuesday-2025/screenshot.webp)
    ```
 
 ### Cover Images
@@ -37,11 +37,11 @@ Cover images are specified in `posts.json` with a relative path from the images 
 ```json
 {
   "filename": "your-post.md",
-  "image": "your-post/cover.png"
+  "image": "your-post/cover.webp"
 }
 ```
 
-The cover image file should be at: `app/src/data/posts/images/your-post/cover.png`
+The cover image file should be at: `app/src/data/posts/images/your-post/cover.webp`
 
 ## External Images
 

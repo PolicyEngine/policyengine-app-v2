@@ -3,7 +3,8 @@
   "private": true,
   "workspaces": [
     "packages/*",
-    "app"
+    "app",
+    "website"
   ],
   "scripts": {
     "dev": "bun run design-system:build && bun run --filter=policyengine-app-v2 dev",
@@ -20,7 +21,7 @@
     "jsdom": "^26.1.0",
     "turbo": "^2.5.3"
   },
-  "packageManager": "bun@1.2.0",
+  "packageManager": "bun@1.2.21",
   "engines": {
     "node": ">=22.0.0"
   },

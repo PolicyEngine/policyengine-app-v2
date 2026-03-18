@@ -1,27 +1,31 @@
 import { describe, it, expect } from 'vitest';
-import { typography, FONT_UI, FONT_CHART, FONT_MONO } from '../tokens/typography';
+import { typography, FONT_UI, FONT_CHART, FONT_PROSE, FONT_MONO } from '../tokens/typography';
 
 describe('typography', () => {
   describe('font families', () => {
-    it('should have primary font as Inter', () => {
+    it('should use Inter for all non-mono font families', () => {
       expect(typography.fontFamily.primary).toContain('Inter');
+      expect(typography.fontFamily.secondary).toContain('Inter');
+      expect(typography.fontFamily.body).toContain('Inter');
+      expect(typography.fontFamily.chart).toContain('Inter');
+      expect(typography.fontFamily.prose).toContain('Inter');
     });
 
-    it('should have chart font as Roboto Serif', () => {
-      expect(typography.fontFamily.chart).toContain('Roboto Serif');
+    it('should have all non-mono families resolve to the same value', () => {
+      const inter = typography.fontFamily.primary;
+      expect(typography.fontFamily.secondary).toBe(inter);
+      expect(typography.fontFamily.body).toBe(inter);
+      expect(typography.fontFamily.chart).toBe(inter);
+      expect(typography.fontFamily.prose).toBe(inter);
     });
 
     it('should have monospace font', () => {
       expect(typography.fontFamily.mono).toContain('JetBrains Mono');
     });
 
-    it('should include fallback fonts for all families', () => {
-      // All font families should have system fallbacks
+    it('should include fallback fonts', () => {
       expect(typography.fontFamily.primary).toContain('sans-serif');
-      expect(typography.fontFamily.secondary).toContain('sans-serif');
-      expect(typography.fontFamily.body).toContain('sans-serif');
       expect(typography.fontFamily.mono).toContain('monospace');
-      expect(typography.fontFamily.chart).toContain('serif');
     });
   });
 
@@ -30,9 +34,14 @@ describe('typography', () => {
       expect(FONT_UI).toBe(typography.fontFamily.primary);
     });
 
-    it('should export FONT_CHART for Plotly charts', () => {
+    it('should export FONT_CHART as Inter', () => {
       expect(FONT_CHART).toBe(typography.fontFamily.chart);
-      expect(FONT_CHART).toContain('Roboto Serif');
+      expect(FONT_CHART).toContain('Inter');
+    });
+
+    it('should export FONT_PROSE as Inter (same as primary)', () => {
+      expect(FONT_PROSE).toBe(typography.fontFamily.primary);
+      expect(FONT_PROSE).toContain('Inter');
     });
 
     it('should export FONT_MONO for code', () => {
@@ -95,6 +104,12 @@ describe('typography', () => {
       expect(typography.textStyles['sm-medium']).toBeDefined();
       expect(typography.textStyles['sm-semibold']).toBeDefined();
       expect(typography.textStyles['body-regular']).toBeDefined();
+    });
+
+    it('should use Inter for all text styles', () => {
+      Object.values(typography.textStyles).forEach((style) => {
+        expect(style.fontFamily).toBe('Inter');
+      });
     });
 
     it('should have complete text style definitions', () => {

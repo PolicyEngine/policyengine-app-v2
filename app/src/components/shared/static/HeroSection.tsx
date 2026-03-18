@@ -1,91 +1,31 @@
-import { Box, Divider, Flex, Text, Title } from '@mantine/core';
-import { colors, spacing, typography } from '@/designTokens';
+import { colors } from '@/designTokens';
 
 export interface HeroSectionProps {
   title: string;
   description: string | React.ReactNode;
-  /**
-   * @deprecated 'light' variant is deprecated. Use 'default' instead.
-   * @deprecated 'accent' variant is deprecated. Use 'dark' instead.
-   */
-  variant?: 'light' | 'default' | 'accent' | 'dark';
 }
 
-export default function HeroSection({ title, description, variant = 'default' }: HeroSectionProps) {
-  const backgrounds = {
-    light: '#F7FEFE', // Deprecated, kept for backwards compatibility
-    default: '#F7FEFE',
-    accent: colors.primary[700], // Deprecated, kept for backwards compatibility
-    dark: colors.primary[700],
-  };
-
-  const textColors = {
-    light: colors.text.primary,
-    default: colors.text.primary,
-    accent: colors.text.inverse, // Deprecated, kept for backwards compatibility
-    dark: colors.text.inverse,
-  };
-
+export default function HeroSection({ title, description }: HeroSectionProps) {
   return (
-    <Box
-      py={spacing['4xl']}
+    <div
+      className="tw:px-[6.125%] tw:py-14 tw:md:py-20"
       style={{
-        backgroundColor: backgrounds[variant],
-        borderBottom: `1px solid ${colors.border.dark}`,
-        paddingLeft: '6.125%',
-        paddingRight: '6.125%',
+        backgroundColor: colors.gray[50],
+        borderBottom: `1px solid ${colors.border.light}`,
       }}
     >
-      <Flex
-        direction={{ base: 'column', md: 'row' }}
-        align={{ base: 'stretch', md: 'center' }}
-        gap={{ base: 'md', md: 'xl' }}
+      <h1
+        className="tw:text-3xl tw:md:text-4xl tw:font-bold tw:tracking-tight"
+        style={{ color: colors.primary[800] }}
       >
-        <Box w={{ base: '100%', md: 300 }}>
-          <Title
-            style={{
-              fontSize: typography.fontSize['4xl'],
-              fontWeight: typography.fontWeight.semibold,
-              fontFamily: typography.fontFamily.primary,
-              color: textColors[variant],
-            }}
-          >
-            {title}
-          </Title>
-        </Box>
-
-        <Divider
-          orientation="horizontal"
-          size="xs"
-          color={
-            variant === 'accent' || variant === 'dark' ? colors.text.inverse : colors.border.dark
-          }
-          hiddenFrom="md"
-        />
-
-        <Divider
-          orientation="vertical"
-          size="xs"
-          color={
-            variant === 'accent' || variant === 'dark' ? colors.text.inverse : colors.border.dark
-          }
-          visibleFrom="md"
-        />
-
-        <Box flex={1}>
-          <Text
-            style={{
-              color: textColors[variant],
-              fontSize: typography.fontSize.lg,
-              lineHeight: typography.lineHeight.relaxed,
-              fontFamily: typography.fontFamily.body,
-            }}
-            ta={{ base: 'left', md: 'left' }}
-          >
-            {description}
-          </Text>
-        </Box>
-      </Flex>
-    </Box>
+        {title}
+      </h1>
+      <p
+        className="tw:text-base tw:md:text-lg tw:leading-relaxed tw:mt-4"
+        style={{ color: colors.gray[500] }}
+      >
+        {description}
+      </p>
+    </div>
   );
 }

@@ -1,5 +1,6 @@
 {
   "extends": ["stylelint-config-standard-scss"],
+  "ignoreFiles": ["public/assets/posts/**/*.css"],
   "rules": {
     "custom-property-pattern": null,
     "selector-class-pattern": null,

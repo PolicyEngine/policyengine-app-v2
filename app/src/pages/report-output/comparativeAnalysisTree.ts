@@ -7,147 +7,17 @@ export interface TreeNode {
 
 /**
  * Get the tree structure for Comparative Analysis submenu
- * Based on V1 tree structure but adapted for V2
+ *
+ * All charts have been migrated to the Migration tab:
+ * - budgetary-impact-overall, budgetary-impact-by-program
+ * - distributional-impact-income-relative, distributional-impact-income-average
+ * - distributional-impact-wealth-relative, distributional-impact-wealth-average
+ * - winners-losers-income-decile, winners-losers-wealth-decile
+ * - poverty-impact-age, poverty-impact-gender, poverty-impact-race
+ * - deep-poverty-impact-age, deep-poverty-impact-gender
+ * - inequality-impact
+ * - congressional-district-absolute, congressional-district-relative
  */
-export function getComparativeAnalysisTree(countryId: string): TreeNode[] {
-  return [
-    {
-      name: 'budgetaryImpact',
-      label: 'Budgetary impact',
-      children: [
-        {
-          name: 'budgetary-impact-overall',
-          label: 'Overall',
-        },
-        ...(countryId === 'uk'
-          ? [
-              {
-                name: 'budgetary-impact-by-program',
-                label: 'By program',
-              },
-            ]
-          : []),
-      ],
-    },
-    {
-      name: 'distributionalImpact',
-      label: 'Distributional impact',
-      children: [
-        {
-          name: 'distributionalImpact.incomeDecile',
-          label: 'By income decile',
-          children: [
-            {
-              name: 'distributional-impact-income-relative',
-              label: 'Relative',
-            },
-            {
-              name: 'distributional-impact-income-average',
-              label: 'Absolute',
-            },
-          ],
-        },
-        ...(countryId === 'uk'
-          ? [
-              {
-                name: 'distributionalImpact.wealthDecile',
-                label: 'By wealth decile',
-                children: [
-                  {
-                    name: 'distributional-impact-wealth-relative',
-                    label: 'Relative',
-                  },
-                  {
-                    name: 'distributional-impact-wealth-average',
-                    label: 'Absolute',
-                  },
-                ],
-              },
-            ]
-          : []),
-      ],
-    },
-    {
-      name: 'winnersAndLosers',
-      label: 'Winners and losers',
-      children: [
-        {
-          name: 'winners-losers-income-decile',
-          label: 'By income decile',
-        },
-        ...(countryId === 'uk'
-          ? [
-              {
-                name: 'winners-losers-wealth-decile',
-                label: 'By wealth decile',
-              },
-            ]
-          : []),
-      ],
-    },
-    {
-      name: 'povertyImpact',
-      label: 'Poverty impact',
-      children: [
-        {
-          name: 'povertyImpact.regular',
-          label: 'Regular poverty',
-          children: [
-            {
-              name: 'poverty-impact-age',
-              label: 'By age',
-            },
-            {
-              name: 'poverty-impact-gender',
-              label: 'By gender',
-            },
-            ...(countryId === 'us'
-              ? [
-                  {
-                    name: 'poverty-impact-race',
-                    label: 'By race',
-                  },
-                ]
-              : []),
-          ],
-        },
-        {
-          name: 'povertyImpact.deep',
-          label: 'Deep poverty',
-          children: [
-            {
-              name: 'deep-poverty-impact-age',
-              label: 'By age',
-            },
-            {
-              name: 'deep-poverty-impact-gender',
-              label: 'By gender',
-            },
-          ],
-        },
-      ],
-    },
-    {
-      name: 'inequality-impact',
-      label: 'Inequality impact',
-    },
-    ...(countryId === 'us'
-      ? [
-          {
-            name: 'congressionalDistricts',
-            label: 'Congressional districts',
-            children: [
-              {
-                name: 'congressional-district-absolute',
-                label: 'Absolute',
-              },
-              {
-                name: 'congressional-district-relative',
-                label: 'Relative',
-              },
-            ],
-          },
-        ]
-      : []),
-  ];
+export function getComparativeAnalysisTree(_countryId: string): TreeNode[] {
+  return [];
 }

@@ -4,13 +4,11 @@
 
 import { describe, expect, test } from 'vitest';
 import {
-  buildDivergingColorscale,
-  buildGeoConfig,
   calculateColorRange,
   createDataLookupMap,
   DEFAULT_CHOROPLETH_CONFIG,
+  getDistrictColor,
   mergeConfig,
-  processGeoJSONFeatures,
 } from '@/components/visualization/choropleth/utils';
 import {
   EXPECTED_ASYMMETRIC_NEGATIVE_RANGE,
@@ -22,10 +20,7 @@ import {
   MOCK_CUSTOM_HEIGHT_CONFIG,
   MOCK_EMPTY_DATA_POINTS,
   MOCK_FULL_CUSTOM_CONFIG,
-  MOCK_GEOJSON_FEATURE_COLLECTION,
-  MOCK_GEOJSON_WITH_MISSING_IDS,
   TEST_DISTRICT_IDS,
-  TEST_FOCUS_STATES,
   TEST_VALUES,
 } from '@/tests/fixtures/components/visualization/choropleth/choroplethMocks';
 
@@ -163,153 +158,52 @@ describe('calculateColorRange', () => {
   });
 });
 
-describe('buildDivergingColorscale', () => {
-  test('given call then returns array with 5 entries', () => {
-    // When
-    const result = buildDivergingColorscale();
-
-    // Then
-    expect(result).toHaveLength(5);
-  });
-
-  test('given call then first entry is at position 0', () => {
-    // When
-    const result = buildDivergingColorscale();
-
-    // Then
-    expect(result[0][0]).toBe(0);
-  });
-
-  test('given call then last entry is at position 1', () => {
-    // When
-    const result = buildDivergingColorscale();
-
-    // Then
-    expect(result[4][0]).toBe(1);
-  });
-
-  test('given call then middle entry is at position 0.5', () => {
-    // When
-    const result = buildDivergingColorscale();
-
-    // Then
-    expect(result[2][0]).toBe(0.5);
-  });
-
-  test('given call then entries around zero have tight band', () => {
-    // When
-    const result = buildDivergingColorscale();
-
-    // Then
-    expect(result[1][0]).toBe(0.4999);
-    expect(result[3][0]).toBe(0.5001);
-  });
-});
-
-describe('processGeoJSONFeatures', () => {
-  test('given geoJSON and data then returns matching features only', () => {
+describe('getDistrictColor', () => {
+  test('given value at minimum then returns first color', () => {
     // Given
-    const dataMap = createDataLookupMap(MOCK_CHOROPLETH_DATA_POINTS);
-    const formatValue = (val: number) => `$${val.toFixed(2)}`;
+    const scaleColors = ['#000000', '#888888', '#ffffff'];
+    const colorRange = { min: -100, max: 100 };
 
     // When
-    const result = processGeoJSONFeatures(MOCK_GEOJSON_FEATURE_COLLECTION, dataMap, formatValue);
+    const result = getDistrictColor(-100, colorRange, scaleColors);
 
     // Then
-    expect(result.locations).toHaveLength(5);
-    expect(result.values).toHaveLength(5);
-    expect(result.hoverText).toHaveLength(5);
-    expect(result.features).toHaveLength(5);
+    expect(result).toBe('#000000');
   });
 
-  test('given geoJSON with features missing IDs then skips those features', () => {
+  test('given value at maximum then returns last color', () => {
     // Given
-    const dataMap = createDataLookupMap(MOCK_CHOROPLETH_DATA_POINTS);
-    const formatValue = (val: number) => val.toString();
+    const scaleColors = ['#000000', '#888888', '#ffffff'];
+    const colorRange = { min: -100, max: 100 };
 
     // When
-    const result = processGeoJSONFeatures(MOCK_GEOJSON_WITH_MISSING_IDS, dataMap, formatValue);
+    const result = getDistrictColor(100, colorRange, scaleColors);
 
     // Then
-    // Only AL-01 and CA-52 have both IDs in geoJSON and data in dataMap
-    expect(result.locations).toHaveLength(2);
-    expect(result.locations).toContain(TEST_DISTRICT_IDS.ALABAMA_1);
-    expect(result.locations).toContain(TEST_DISTRICT_IDS.CALIFORNIA_52);
+    expect(result).toBe('#ffffff');
   });
 
-  test('given geoJSON with no matching data then returns empty arrays', () => {
+  test('given value at midpoint then returns middle color', () => {
     // Given
-    const emptyDataMap = createDataLookupMap(MOCK_EMPTY_DATA_POINTS);
-    const formatValue = (val: number) => val.toString();
+    const scaleColors = ['#000000', '#888888', '#ffffff'];
+    const colorRange = { min: -100, max: 100 };
 
     // When
-    const result = processGeoJSONFeatures(
-      MOCK_GEOJSON_FEATURE_COLLECTION,
-      emptyDataMap,
-      formatValue
-    );
+    const result = getDistrictColor(0, colorRange, scaleColors);
 
     // Then
-    expect(result.locations).toHaveLength(0);
-    expect(result.values).toHaveLength(0);
+    expect(result).toBe('#888888');
   });
 
-  test('given geoJSON and data then hover text contains label and formatted value', () => {
+  test('given zero range then returns middle color', () => {
     // Given
-    const dataMap = createDataLookupMap(MOCK_CHOROPLETH_DATA_POINTS);
-    const formatValue = (val: number) => `$${val.toFixed(2)}`;
+    const scaleColors = ['#000000', '#888888', '#ffffff'];
+    const colorRange = { min: 50, max: 50 };
 
     // When
-    const result = processGeoJSONFeatures(MOCK_GEOJSON_FEATURE_COLLECTION, dataMap, formatValue);
+    const result = getDistrictColor(50, colorRange, scaleColors);
 
     // Then
-    const alabama1Index = result.locations.indexOf(TEST_DISTRICT_IDS.ALABAMA_1);
-    expect(result.hoverText[alabama1Index]).toContain("Alabama's 1st congressional district");
-    expect(result.hoverText[alabama1Index]).toContain('$312.45');
-  });
-});
-
-describe('buildGeoConfig', () => {
-  test('given no focus state then returns config without fitbounds', () => {
-    // When
-    const result = buildGeoConfig();
-
-    // Then
-    expect(result.scope).toBe('usa');
-    expect(result.projection.type).toBe('albers usa');
-    expect(result.fitbounds).toBeUndefined();
-  });
-
-  test('given focus state then config includes fitbounds geojson', () => {
-    // Given
-    const focusState = TEST_FOCUS_STATES.CALIFORNIA;
-
-    // When
-    const result = buildGeoConfig(focusState);
-
-    // Then
-    expect(result.fitbounds).toBe('geojson');
-  });
-
-  test('given any focus state then same fitbounds config', () => {
-    // Given
-    const focusStates = [TEST_FOCUS_STATES.DC, TEST_FOCUS_STATES.NEW_YORK, TEST_FOCUS_STATES.TEXAS];
-
-    // When/Then
-    focusStates.forEach((state) => {
-      const result = buildGeoConfig(state);
-      expect(result.fitbounds).toBe('geojson');
-    });
-  });
-
-  test('given no focus state then coastal and border settings are false', () => {
-    // When
-    const result = buildGeoConfig();
-
-    // Then
-    expect(result.showcoastlines).toBe(false);
-    expect(result.showcountries).toBe(false);
-    expect(result.showsubunits).toBe(false);
-    expect(result.showframe).toBe(false);
+    expect(result).toBe('#888888');
   });
 });

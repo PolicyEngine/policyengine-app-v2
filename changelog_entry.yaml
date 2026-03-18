@@ -1,4 +1,4 @@
 - bump: patch
   changes:
-    added:
-      - Add salary sacrifice cap analysis tool to apps listing
+    fixed:
+      - Restore student loan visualisation interactive that was accidentally removed in #766

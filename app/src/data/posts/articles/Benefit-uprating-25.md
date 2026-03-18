@@ -20,23 +20,23 @@ PolicyEngine compares the actual uprating plan (increasing by 1.7%), which is th
 
 Our analysis shows that the uprating provides larger relative benefits for low-income households: it raises the lowest income decile's net income by 0.8%, and the top decile's by less than 0.1%.
 
-![](/images/posts/benefit_uprating/dist-income-effect.png)
+![](/images/posts/benefit_uprating/dist-income-effect.webp)
 
 Uprating would benefit around 45% of the population, disproportionately those in the bottom half of the income distribution. 0.5% of the population – entirely in the lowest income decile – would gain at least 5% of their net income.
 
-![](/images/posts/benefit_uprating/win-losser.png)
+![](/images/posts/benefit_uprating/win-losser.webp)
 
 ### Poverty impact
 
 The 1.7% benefits uprating reduces the total poverty rate (absolute, before housing costs) by 1.8% and the child poverty rate by 4.0%.
 
-![](/images/posts/benefit_uprating/poverty-effect.png)
+![](/images/posts/benefit_uprating/poverty-effect.webp)
 
 ### Inequality impact
 
 Our analysis measures the impact of the 1.7% benefits uprating on inequality through multiple metrics. The reduction in inequality is shown by a 0.27% decrease in the Gini index, with smaller income shares for the highest earners – the top 10% share falls by 0.14% and the top 1% share by 0.17%.
 
-![](/images/posts/benefit_uprating/inequality-effect.png)
+![](/images/posts/benefit_uprating/inequality-effect.webp)
 
 ## Conclusion
 

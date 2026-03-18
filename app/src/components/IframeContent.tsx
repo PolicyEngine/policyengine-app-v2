@@ -8,7 +8,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { colors } from '@/designTokens';
+import { colors, spacing, typography } from '@/designTokens';
 import type { IframeContentProps } from '@/types/apps';
 
 export default function IframeContent({
@@ -30,6 +30,12 @@ export default function IframeContent({
     }
   }, [url]);
 
+  // Base path is /:countryId/:slug — deep link sub-paths append after this
+  const basePath = useMemo(() => {
+    const segments = location.pathname.split('/').filter(Boolean);
+    return `/${segments.slice(0, 2).join('/')}`;
+  }, [location.pathname]);
+
   // Listen for hash change messages from iframe and sync to parent URL bar
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
@@ -38,12 +44,18 @@ export default function IframeContent({
       }
       if (event.data?.type === 'hashchange' && typeof event.data.hash === 'string') {
         const hash = event.data.hash || '';
-        window.history.replaceState(null, '', `${location.pathname}${hash}`);
+        if (hash && !hash.startsWith('#')) {
+          // Path-based deep link: replace sub-path after the base route
+          const subPath = hash.startsWith('/') ? hash : `/${hash}`;
+          window.history.replaceState(null, '', `${basePath}${subPath}`);
+        } else {
+          window.history.replaceState(null, '', `${basePath}${hash}`);
+        }
       }
     };
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [location.pathname, iframeOrigin]);
+  }, [basePath, iframeOrigin]);
 
   const iframeHeight = height || 'calc(100vh - var(--header-height, 58px))';
   const iframeWidth = width || '100%';
@@ -61,11 +73,11 @@ export default function IframeContent({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            backgroundColor: '#f9fafb',
+            backgroundColor: colors.gray[50],
             zIndex: 1,
           }}
         >
-          <div style={{ textAlign: 'center', padding: '2rem' }}>
+          <div style={{ textAlign: 'center', padding: spacing['4xl'] }}>
             <div
               style={{
                 width: '48px',
@@ -73,11 +85,13 @@ export default function IframeContent({
                 border: `4px solid ${colors.gray[200]}`,
                 borderTop: `4px solid ${colors.primary[600]}`,
                 borderRadius: '50%',
-                margin: '0 auto 1rem',
+                margin: `0 auto ${spacing.lg}`,
                 animation: 'spin 1s linear infinite',
               }}
             />
-            <p style={{ color: colors.gray[500], fontSize: '14px' }}>Loading calculator...</p>
+            <p style={{ color: colors.gray[500], fontSize: typography.fontSize.sm }}>
+              Loading calculator...
+            </p>
           </div>
         </div>
       )}
@@ -92,21 +106,21 @@ export default function IframeContent({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            backgroundColor: '#f9fafb',
+            backgroundColor: colors.gray[50],
             zIndex: 1,
           }}
         >
           <div
             style={{
               textAlign: 'center',
-              padding: '2rem',
+              padding: spacing['4xl'],
               maxWidth: '500px',
             }}
           >
-            <h2 style={{ color: colors.gray[900], marginBottom: '1rem' }}>
+            <h2 style={{ color: colors.gray[900], marginBottom: spacing.lg }}>
               Unable to load calculator
             </h2>
-            <p style={{ color: colors.gray[500], marginBottom: '1rem' }}>
+            <p style={{ color: colors.gray[500], marginBottom: spacing.lg }}>
               The embedded calculator could not be loaded. You can try opening it directly:
             </p>
             <a
@@ -115,11 +129,11 @@ export default function IframeContent({
               rel="noopener noreferrer"
               style={{
                 display: 'inline-block',
-                padding: '0.5rem 1rem',
+                padding: `${spacing.sm} ${spacing.lg}`,
                 backgroundColor: colors.primary[600],
                 color: colors.white,
                 textDecoration: 'none',
-                borderRadius: '4px',
+                borderRadius: spacing.radius.element,
               }}
             >
               Open Calculator in New Tab

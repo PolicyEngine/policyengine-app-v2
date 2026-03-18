@@ -166,7 +166,7 @@ describe('societyWide API', () => {
       const params = { region: 'us', time_period: CURRENT_YEAR };
       await expect(
         fetchSocietyWideCalculation(countryId, reformPolicyId, baselinePolicyId, params)
-      ).rejects.toThrow(ERROR_MESSAGES.CALCULATION_FAILED('Not Found'));
+      ).rejects.toThrow(ERROR_MESSAGES.CALCULATION_FAILED(HTTP_STATUS.NOT_FOUND, 'Not Found'));
     });
 
     test('given server error then throws generic error message', async () => {
@@ -181,7 +181,9 @@ describe('societyWide API', () => {
       const params = { region: 'us', time_period: CURRENT_YEAR };
       await expect(
         fetchSocietyWideCalculation(countryId, reformPolicyId, baselinePolicyId, params)
-      ).rejects.toThrow(ERROR_MESSAGES.CALCULATION_FAILED('Error'));
+      ).rejects.toThrow(
+        ERROR_MESSAGES.CALCULATION_FAILED(HTTP_STATUS.INTERNAL_SERVER_ERROR, 'Error')
+      );
     });
 
     test('given network error then propagates error', async () => {

@@ -81,16 +81,20 @@ export function formatParameterValue(value: any, unit?: string): string {
       return `${percentValue.toFixed(DECIMAL_PRECISION)}%`;
     }
     if (unit === 'currency-USD') {
-      return `$${value.toLocaleString('en-US', {
+      return value.toLocaleString('en-US', {
+        style: 'currency',
+        currency: 'USD',
         minimumFractionDigits: DECIMAL_PRECISION,
         maximumFractionDigits: DECIMAL_PRECISION,
-      })}`;
+      });
     }
     if (unit === 'currency-GBP') {
-      return `£${value.toLocaleString('en-GB', {
+      return value.toLocaleString('en-GB', {
+        style: 'currency',
+        currency: 'GBP',
         minimumFractionDigits: DECIMAL_PRECISION,
         maximumFractionDigits: DECIMAL_PRECISION,
-      })}`;
+      });
     }
     return value.toLocaleString('en-US', {
       minimumFractionDigits: DECIMAL_PRECISION,

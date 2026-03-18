@@ -1,5 +1,5 @@
-import { Box, Grid, Image, Text } from '@mantine/core';
-import { colors, spacing, typography } from '@/designTokens';
+import OptimisedImage from '@/components/ui/OptimisedImage';
+import { cn } from '@/lib/utils';
 
 export interface TeamMember {
   name: string;
@@ -13,63 +13,36 @@ export interface TeamMemberCardProps {
 }
 
 export default function TeamMemberCard({ member, variant = 'default' }: TeamMemberCardProps) {
-  const borderColor = variant === 'inverted' ? colors.white : colors.black;
-  const textColor = variant === 'inverted' ? colors.text.inverse : colors.text.primary;
-  const nameColor = variant === 'inverted' ? colors.white : colors.text.primary;
+  const isInverted = variant === 'inverted';
 
   return (
-    <Grid
-      style={{
-        marginTop: 50,
-      }}
-      gutter="5vw"
-      align="stretch"
-    >
-      <Grid.Col span="content">
-        <Image
-          src={member.image}
-          alt={member.name}
-          h={250}
-          w={250}
-          radius={spacing.md}
-          style={{
-            objectFit: 'cover',
-          }}
-        />
-      </Grid.Col>
+    <div className="tw:grid tw:grid-cols-1 tw:sm:grid-cols-[auto_1fr] tw:items-stretch tw:gap-[5vw] tw:mt-[50px]">
+      <OptimisedImage
+        src={member.image}
+        alt={member.name}
+        width={250}
+        height={250}
+        className="tw:h-[180px] tw:w-[180px] tw:sm:h-[250px] tw:sm:w-[250px] tw:object-cover tw:rounded-container"
+      />
 
-      <Grid.Col span="auto">
-        <Box
-          style={{
-            borderBottom: `1px solid ${borderColor}`,
-            paddingBottom: 50,
-            height: '100%',
-          }}
+      <div
+        className={cn(
+          'tw:h-full tw:pb-[50px] tw:border-b',
+          isInverted ? 'tw:border-white' : 'tw:border-black'
+        )}
+      >
+        <p
+          className={cn(
+            'tw:text-base tw:leading-relaxed',
+            isInverted ? 'tw:text-text-inverse' : 'tw:text-text-primary'
+          )}
         >
-          <Text
-            style={{
-              fontFamily: typography.fontFamily.body,
-              fontSize: typography.fontSize.base,
-              lineHeight: typography.lineHeight.relaxed,
-              color: textColor,
-            }}
-          >
-            <Text
-              component="span"
-              fw={typography.fontWeight.semibold}
-              style={{
-                fontFamily: typography.fontFamily.primary,
-                letterSpacing: '0.05em',
-                color: nameColor,
-                textTransform: 'uppercase',
-              }}
-            >
-              {member.name}
-            </Text>{' '}
-            {member.bio}
-          </Text>
-        </Box>
-      </Grid.Col>
-    </Grid>
+          <span className="tw:font-semibold tw:uppercase" style={{ letterSpacing: '0.05em' }}>
+            {member.name}
+          </span>{' '}
+          {member.bio}
+        </p>
+      </div>
+    </div>
   );
 }
