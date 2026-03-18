@@ -16,6 +16,26 @@ import { SimulationCreationPayload, SimulationSetOutputPayload } from '@/types/p
  */
 export class SimulationAdapter {
   /**
+   * Maps API status values to canonical Simulation status values.
+   * Supports both current and legacy API responses.
+   */
+  private static mapApiStatusToSimulationStatus(apiStatus?: string): Simulation['status'] {
+    if (!apiStatus) {
+      return undefined;
+    }
+
+    const statusMap: Record<string, NonNullable<Simulation['status']>> = {
+      ok: 'complete',
+      computing: 'pending',
+      error: 'error',
+      pending: 'pending',
+      complete: 'complete',
+    };
+
+    return statusMap[apiStatus];
+  }
+
+  /**
    * Converts SimulationMetadata from API GET response to Simulation type
    */
   static fromMetadata(metadata: SimulationMetadata): Simulation {
@@ -54,7 +74,7 @@ export class SimulationAdapter {
       label: null,
       isCreated: true,
       output: parsedOutput,
-      status: metadata.status,
+      status: this.mapApiStatusToSimulationStatus(metadata.status),
     };
 
     return simulation;
