@@ -17,6 +17,7 @@ vi.mock('recharts', () => ({
   CartesianGrid: vi.fn(() => null),
   Cell: vi.fn(() => null),
   Label: vi.fn(() => null),
+  ReferenceLine: vi.fn(() => null),
   ResponsiveContainer: vi.fn(({ children }) => children),
   Tooltip: vi.fn(() => null),
   XAxis: vi.fn(() => null),

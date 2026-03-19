@@ -71,7 +71,7 @@ function deriveUserSimulations(
           userId,
           simulationId: sim.id ?? '',
           countryId: sim.countryId as 'us' | 'uk',
-          label: sim.label,
+          label: sim.label ?? undefined,
           isCreated: true,
         }))
       : matchedUserSimulations;

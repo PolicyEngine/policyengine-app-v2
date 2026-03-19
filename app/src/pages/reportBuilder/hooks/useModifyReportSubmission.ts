@@ -102,7 +102,7 @@ export function useModifyReportSubmission({
         userId: MOCK_USER_ID,
         simulationId,
         countryId,
-        label: simState.label,
+        label: simState.label ?? undefined,
         isCreated: true,
       });
 
