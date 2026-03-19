@@ -14,6 +14,8 @@ import { useCallback, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { ReportAdapter, SimulationAdapter } from '@/adapters';
 import { createSimulation } from '@/api/simulation';
+import { LocalStorageSimulationStore } from '@/api/simulationAssociation';
+import { MOCK_USER_ID } from '@/constants';
 import { useCreateReport } from '@/hooks/useCreateReport';
 import { RootState } from '@/store';
 import { Report } from '@/types/ingredients/Report';
@@ -134,6 +136,16 @@ export function useReportSubmission({
         const result = await createSimulation(countryId, payload);
         const simulationId = result.result.simulation_id;
         simulationIds.push(simulationId);
+
+        // Create UserSimulation association in localStorage so sharing works
+        const simulationStore = new LocalStorageSimulationStore();
+        await simulationStore.create({
+          userId: MOCK_USER_ID,
+          simulationId,
+          countryId,
+          label: simState.label ?? undefined,
+          isCreated: true,
+        });
 
         const simulation = convertToSimulation(simState, simulationId, countryId, currentLawId);
         simulations.push(simulation);

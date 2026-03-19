@@ -4,7 +4,7 @@
  * Composes ReportBuilderShell with:
  * - Blank state initialization
  * - useReportSubmission for create-only submission
- * - Auto-add second simulation when geography is selected
+ * - Auto-add/remove second simulation based on population type
  * - Single "Run" top bar action
  */
 
@@ -52,11 +52,17 @@ export default function ReportBuilderPage() {
     },
   });
 
-  // Auto-add second simulation when geography is selected (setup mode only)
+  // Auto-manage second simulation based on population type.
+  // Geography reports require a comparison sim; household reports don't.
   const isGeographySelected = !!reportState.simulations[0]?.population?.geography?.id;
 
   useEffect(() => {
-    if (!reportState.id && isGeographySelected) {
+    if (reportState.id) {
+      return;
+    }
+
+    if (isGeographySelected) {
+      // Auto-add reform sim when geography is selected
       setReportState((prev) => {
         if (prev.simulations.length !== 1) {
           return prev;
@@ -65,6 +71,17 @@ export default function ReportBuilderPage() {
         newSim.label = 'Reform simulation';
         newSim.population = { ...prev.simulations[0].population };
         return { ...prev, simulations: [...prev.simulations, newSim] };
+      });
+    } else {
+      // Auto-remove unconfigured reform sim when switching away from geography
+      setReportState((prev) => {
+        if (prev.simulations.length !== 2) {
+          return prev;
+        }
+        if (!prev.simulations[1].policy.id) {
+          return { ...prev, simulations: [prev.simulations[0]] };
+        }
+        return prev;
       });
     }
   }, [reportState.id, isGeographySelected, setReportState]);

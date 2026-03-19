@@ -425,9 +425,25 @@ export const useUserReportById = (userReportId: string, options?: { enabled?: bo
   const { data: householdAssociations } = useHouseholdAssociationsByUser(userId || '');
   const { data: geographyAssociations } = useGeographicAssociationsByUser(userId || '');
 
-  const userSimulations = simulationAssociations?.filter((sa) =>
+  const matchedUserSimulations = simulationAssociations?.filter((sa) =>
     finalReport?.simulationIds?.includes(sa.simulationId)
   );
+
+  // Fallback: if no localStorage associations exist but we have simulations,
+  // synthesize UserSimulation objects so sharing works for reports created
+  // before UserSimulation associations were stored during report creation.
+  const userSimulations =
+    matchedUserSimulations && matchedUserSimulations.length > 0
+      ? matchedUserSimulations
+      : simulations.length > 0 && userId
+        ? simulations.map((sim) => ({
+            userId,
+            simulationId: sim.id ?? '',
+            countryId: sim.countryId as 'us' | 'uk',
+            label: sim.label ?? undefined,
+            isCreated: true,
+          }))
+        : matchedUserSimulations;
 
   const userPolicies = policyAssociations?.filter((pa) =>
     simulations.some((s) => s.policyId === pa.policyId)
