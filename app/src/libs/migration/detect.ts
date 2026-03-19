@@ -47,10 +47,15 @@ export function detectV1Reports(userId: string): DetectionResult {
   console.info(`${LOG} Scanning for v1 reports (userId=${userId})`);
   const { reports: allReports, error } = parseLocalStorageReports();
 
-  const userReports = allReports.filter((r) => r.userId === userId);
+  const userReports = allReports.filter(
+    (r) => r.userId === userId || r.userId === 'anonymous'
+  );
   const v1Reports = userReports.filter(isV1Report);
 
-  console.info(`${LOG} ${userReports.length} report(s) for this user, ${v1Reports.length} are v1`);
+  const anonymousCount = userReports.filter((r) => r.userId === 'anonymous').length;
+  console.info(
+    `${LOG} ${userReports.length} report(s) for this user (${anonymousCount} from 'anonymous'), ${v1Reports.length} are v1`
+  );
 
   if (v1Reports.length > 0) {
     for (const r of v1Reports) {

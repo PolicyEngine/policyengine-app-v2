@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { LocalStorageReportStore } from '@/api/reportAssociation';
-import { LocalStorageSimulationStore } from '@/api/simulationAssociation';
+import { useUserReportStore } from '@/hooks/useUserReportAssociations';
+import { useUserSimulationStore } from '@/hooks/useUserSimulationAssociations';
 import {
   createEconomyAnalysis,
   EconomicImpactRequest,
@@ -149,9 +149,8 @@ export function useCreateReport(reportLabel?: string) {
   const manager = useCalcOrchestratorManager();
   const userId = useUserId();
 
-  // TODO: Replace with actual auth check
-  const reportStore = new LocalStorageReportStore();
-  const simulationStore = new LocalStorageSimulationStore();
+  const reportStore = useUserReportStore();
+  const simulationStore = useUserSimulationStore();
 
   const mutation = useMutation({
     mutationFn: async (params: CreateReportParams): Promise<CreateReportResult> => {
@@ -175,9 +174,9 @@ export function useCreateReport(reportLabel?: string) {
         v2Simulations = result.v2Simulations;
         v2SimulationIds = v2Simulations.map((s) => s.id!);
 
-        // For household, use a local UUID as the container report ID.
-        // There's no single v2 report for a multi-simulation household report.
-        reportId = crypto.randomUUID();
+        // Use the report_id from the first household analysis response.
+        // The API creates a Report record for each analysis call.
+        reportId = result.responses[0]?.report_id ?? crypto.randomUUID();
       } else {
         const region = populations.geography1?.regionCode || simulation1.populationId || countryId;
         const baselinePolicyId = simulation1?.policyId ?? null;
