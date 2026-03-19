@@ -49,8 +49,12 @@ jobs:
       - name: Build design system
         run: bun run design-system:build
 
-      - name: Run TypeScript type checks
+      - name: Run TypeScript type checks (app)
         working-directory: ./app
+        run: bun run typecheck
+
+      - name: Run TypeScript type checks (website)
+        working-directory: ./website
         run: bun run typecheck
 
   test:
@@ -77,6 +81,10 @@ jobs:
         working-directory: ./app
         run: bun run test
 
+      - name: Run website tests
+        working-directory: ./website
+        run: bun run test
+
   check-embeds:
     name: Check embedded site URLs
     runs-on: ubuntu-latest
@@ -90,7 +98,7 @@ jobs:
           FAILED=0
           # Extract all policyengine.github.io URLs from page components,
           # stripping template-literal expressions like ${countryId} and ?query params
-          for raw_url in $(grep -roh "https://policyengine\.github\.io/[^'\"]*" app/src/pages/ | sort -u); do
+          for raw_url in $(grep -roh "https://policyengine\.github\.io/[^'\"]*" app/src/pages/ website/src/app/ | sort -u); do
             # Remove template expressions (${...}) and query strings for the health check
             url=$(echo "$raw_url" | sed 's/\${[^}]*}//g' | sed 's/?.*//')
             # Remove trailing slash for consistency
@@ -124,4 +132,8 @@ jobs:
 
       - name: Build application
         working-directory: ./app
+        run: bun run build
+
+      - name: Build website
+        working-directory: ./website
         run: bun run build
