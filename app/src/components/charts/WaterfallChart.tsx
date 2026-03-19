@@ -18,6 +18,7 @@ import {
   CartesianGrid,
   Cell,
   Label,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -25,6 +26,7 @@ import {
 } from 'recharts';
 import { Stack } from '@/components/ui';
 import { typography } from '@/designTokens';
+import { colors } from '@/designTokens/colors';
 import { RECHARTS_FONT_STYLE } from '@/utils/chartUtils';
 import { ChartWatermark } from './ChartWatermark';
 import { TOOLTIP_STYLE } from './tooltipStyle';
@@ -112,14 +114,21 @@ export function WaterfallChart({
   tooltipContent,
   yTicks,
   yTickCount = 5,
-  margin = { top: 20, right: 20, bottom: 30, left: 20 },
+  margin = { top: 20, right: 20, bottom: 60, left: 60 },
 }: WaterfallChartProps) {
   return (
     <Stack gap="sm">
       <ResponsiveContainer width="100%" height={height}>
         <BarChart data={data} margin={margin}>
           <CartesianGrid strokeDasharray="3 3" vertical={false} />
-          <XAxis dataKey="name" tick={RECHARTS_FONT_STYLE} />
+          <XAxis
+            dataKey="name"
+            tick={RECHARTS_FONT_STYLE}
+            interval={0}
+            angle={-30}
+            textAnchor="end"
+            height={60}
+          />
           <YAxis
             domain={yDomain}
             ticks={yTicks}
@@ -136,6 +145,7 @@ export function WaterfallChart({
               />
             )}
           </YAxis>
+          <ReferenceLine y={0} stroke={colors.gray[400]} strokeWidth={1} />
           <Tooltip content={tooltipContent ?? <WaterfallTooltip />} />
           <Bar
             dataKey="waterfallRange"

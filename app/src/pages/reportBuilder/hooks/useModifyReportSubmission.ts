@@ -15,6 +15,7 @@ import { useSelector } from 'react-redux';
 import { ReportAdapter, SimulationAdapter } from '@/adapters';
 import { createReport as createBaseReport, createReportAndAssociateWithUser } from '@/api/report';
 import { createSimulation } from '@/api/simulation';
+import { LocalStorageSimulationStore } from '@/api/simulationAssociation';
 import { MOCK_USER_ID } from '@/constants';
 import { useCalcOrchestratorManager } from '@/contexts/CalcOrchestratorContext';
 import { useUpdateReportAssociation } from '@/hooks/useUserReportAssociations';
@@ -94,6 +95,16 @@ export function useModifyReportSubmission({
       const result = await createSimulation(countryId, payload);
       const simulationId = result.result.simulation_id;
       simulationIds.push(simulationId);
+
+      // Create UserSimulation association in localStorage so sharing works
+      const simulationStore = new LocalStorageSimulationStore();
+      await simulationStore.create({
+        userId: MOCK_USER_ID,
+        simulationId,
+        countryId,
+        label: simState.label,
+        isCreated: true,
+      });
 
       simulations.push({
         id: simulationId,
