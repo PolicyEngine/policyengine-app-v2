@@ -33,14 +33,14 @@ vi.mock('@/api/report', () => ({
     id: 'base-report-new',
     country_id: 'us',
     year: '2026',
-    simulation_ids: [TEST_SIMULATION_IDS.SIM_NEW_1, TEST_SIMULATION_IDS.SIM_NEW_2],
+    simulation_ids: ['new-sim-1', 'new-sim-2'],
   }),
   createReportAndAssociateWithUser: vi.fn().mockResolvedValue({
     report: {
       id: 'base-report-new',
       countryId: 'us',
       year: '2026',
-      simulationIds: [TEST_SIMULATION_IDS.SIM_NEW_1, TEST_SIMULATION_IDS.SIM_NEW_2],
+      simulationIds: ['new-sim-1', 'new-sim-2'],
     },
     userReport: { id: 'user-report-new' },
   }),
