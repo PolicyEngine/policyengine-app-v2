@@ -7,11 +7,8 @@ import ResearchPage from "../../app/[countryId]/research/page";
 import ClaudePluginPage from "../../app/[countryId]/claude-plugin/page";
 
 describe("static pages", () => {
-  test("Donate page renders heading", async () => {
-    const el = await DonatePage({
-      params: Promise.resolve({ countryId: "us" }),
-    });
-    render(el);
+  test("Donate page renders heading", () => {
+    render(<DonatePage />);
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
       /donate/i,
     );
