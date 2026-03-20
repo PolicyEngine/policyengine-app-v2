@@ -3,8 +3,8 @@
  * Shared chart formatting for Plotly.js charts
  */
 
-import { colors, TEAL_PRIMARY } from '../tokens/colors';
-import { typography } from '../tokens/typography';
+import { colors, TEAL_PRIMARY } from "../tokens/colors";
+import { typography } from "../tokens/typography";
 
 /**
  * Standard chart colors for PolicyEngine visualizations
@@ -19,10 +19,10 @@ export const chartColors = {
   // For multi-series charts
   series: [
     TEAL_PRIMARY,
-    colors.blue[500],
-    colors.primary[700],
-    colors.blue[700],
     colors.gray[500],
+    colors.primary[700],
+    colors.gray[700],
+    colors.primary[300],
   ],
 } as const;
 
@@ -45,10 +45,10 @@ export const chartLayout = {
   },
   showlegend: true,
   legend: {
-    orientation: 'h' as const,
-    yanchor: 'bottom' as const,
+    orientation: "h" as const,
+    yanchor: "bottom" as const,
     y: 1.02,
-    xanchor: 'right' as const,
+    xanchor: "right" as const,
     x: 1,
   },
   xaxis: {
@@ -87,15 +87,15 @@ export const chartDimensions = {
  * PolicyEngine logo image configuration for chart watermarks
  */
 export const chartLogo = {
-  source: '/assets/logos/policyengine/teal-square.png',
-  xref: 'paper' as const,
-  yref: 'paper' as const,
+  source: "/assets/logos/policyengine/teal-square.png",
+  xref: "paper" as const,
+  yref: "paper" as const,
   x: 1,
   y: 0,
   sizex: 0.1,
   sizey: 0.1,
-  xanchor: 'right' as const,
-  yanchor: 'bottom' as const,
+  xanchor: "right" as const,
+  yanchor: "bottom" as const,
   opacity: 0.8,
 } as const;
 
@@ -116,7 +116,7 @@ export interface ChartConfig {
 }
 
 export function getChartConfig(
-  dimensions: keyof typeof chartDimensions = 'default'
+  dimensions: keyof typeof chartDimensions = "default",
 ): ChartConfig {
   const dims = chartDimensions[dimensions];
   return {

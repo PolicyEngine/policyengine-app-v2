@@ -7,7 +7,10 @@ type AlertType = 'success' | 'info' | 'warning' | 'error';
 
 const alertConfig: Record<AlertType, { icon: ReactNode; className: string }> = {
   success: { icon: <IconCheck size={16} />, className: 'tw:border-green-500 tw:text-green-700' },
-  info: { icon: <IconInfoCircle size={16} />, className: 'tw:border-blue-500 tw:text-blue-700' },
+  info: {
+    icon: <IconInfoCircle size={16} />,
+    className: 'tw:border-primary-500 tw:text-primary-700',
+  },
   warning: {
     icon: <IconAlertTriangle size={16} />,
     className: 'tw:border-yellow-500 tw:text-yellow-700',

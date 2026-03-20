@@ -19,7 +19,7 @@ export function LinkColumn({ config, value }: LinkColumnProps) {
       to={value.url || `${config.urlPrefix || '#'}${value.text}`}
       className="tw:no-underline tw:hover:underline"
       style={{
-        color: config.color || colors.blue[600],
+        color: config.color || colors.text.link,
         fontSize: fontSizeMap[config.size || 'sm'],
       }}
       onClick={(e) => e.stopPropagation()}
