@@ -1,0 +1,163 @@
+[
+  {
+    "title": "How a new tax plan could affect your wallet",
+    "outlet": "The New York Times",
+    "date": "2026-02-15",
+    "url": "https://example.com/nyt-article",
+    "image": "nyt-tax-plan.webp",
+    "tags": ["us", "tax"],
+    "featured": true
+  },
+  {
+    "title": "Think tank models show child poverty impact of benefit changes",
+    "outlet": "The Washington Post",
+    "date": "2026-01-20",
+    "url": "https://example.com/wapo-article",
+    "image": "wapo-child-poverty.webp",
+    "tags": ["us", "policy"],
+    "featured": true
+  },
+  {
+    "title": "UK budget analysis reveals winners and losers",
+    "outlet": "The Guardian",
+    "date": "2025-11-05",
+    "url": "https://example.com/guardian-article",
+    "image": "guardian-uk-budget.webp",
+    "tags": ["uk", "policy"],
+    "featured": true
+  },
+  {
+    "title": "How AI is changing policy analysis",
+    "outlet": "Wired",
+    "date": "2025-10-12",
+    "url": "https://example.com/wired-article",
+    "image": "wired-ai-policy.webp",
+    "tags": ["us", "technical"],
+    "featured": true
+  },
+  {
+    "title": "Universal basic income calculator goes viral",
+    "outlet": "BBC News",
+    "date": "2025-09-01",
+    "url": "https://example.com/bbc-article",
+    "image": "bbc-ubi.webp",
+    "tags": ["uk", "policy"],
+    "featured": true
+  },
+  {
+    "title": "Canadian carbon tax rebate analysis",
+    "outlet": "The Globe and Mail",
+    "date": "2025-08-18",
+    "url": "https://example.com/globe-article",
+    "image": "globe-carbon-tax.webp",
+    "tags": ["ca", "tax"],
+    "featured": true
+  },
+  {
+    "title": "SNAP benefits calculator helps families navigate complex eligibility rules",
+    "outlet": "NPR",
+    "date": "2026-03-01",
+    "url": "https://example.com/npr-snap",
+    "image": "npr-snap.webp",
+    "tags": ["us", "policy"]
+  },
+  {
+    "title": "The real cost of the SALT deduction cap",
+    "outlet": "The Wall Street Journal",
+    "date": "2026-02-28",
+    "url": "https://example.com/wsj-salt",
+    "image": "wsj-salt.webp",
+    "tags": ["us", "tax"]
+  },
+  {
+    "title": "Open-source tax model challenges government estimates",
+    "outlet": "Bloomberg",
+    "date": "2026-02-10",
+    "url": "https://example.com/bloomberg-model",
+    "image": "bloomberg-model.webp",
+    "tags": ["us", "technical"]
+  },
+  {
+    "title": "Who really benefits from the expanded child tax credit?",
+    "outlet": "Vox",
+    "date": "2026-01-05",
+    "url": "https://example.com/vox-ctc",
+    "image": "vox-ctc.webp",
+    "tags": ["us", "tax"]
+  },
+  {
+    "title": "State-by-state EITC analysis shows uneven impact",
+    "outlet": "Politico",
+    "date": "2025-12-15",
+    "url": "https://example.com/politico-eitc",
+    "image": "politico-eitc.webp",
+    "tags": ["us", "tax"]
+  },
+  {
+    "title": "How much would a flat tax save you? New calculator has the answer",
+    "outlet": "Forbes",
+    "date": "2025-11-20",
+    "url": "https://example.com/forbes-flat-tax",
+    "image": "forbes-flat-tax.webp",
+    "tags": ["us", "tax"]
+  },
+  {
+    "title": "Poverty rates could drop under proposed welfare reform",
+    "outlet": "The Atlantic",
+    "date": "2025-10-30",
+    "url": "https://example.com/atlantic-welfare",
+    "image": "atlantic-welfare.webp",
+    "tags": ["us", "policy"]
+  },
+  {
+    "title": "UK universal credit overhaul modeled by PolicyEngine",
+    "outlet": "Financial Times",
+    "date": "2025-10-01",
+    "url": "https://example.com/ft-uc",
+    "image": "ft-uc.webp",
+    "tags": ["uk", "policy"],
+    "featured": true
+  },
+  {
+    "title": "Tax policy transparency gets a tech upgrade",
+    "outlet": "MIT Technology Review",
+    "date": "2025-09-15",
+    "url": "https://example.com/mit-tech",
+    "image": "mit-tech.webp",
+    "tags": ["global", "technical"]
+  },
+  {
+    "title": "Council tax reform: who pays more, who pays less",
+    "outlet": "The Times",
+    "date": "2025-08-25",
+    "url": "https://example.com/times-council-tax",
+    "image": "times-council-tax.webp",
+    "tags": ["uk", "tax"]
+  },
+  {
+    "title": "Canada child benefit changes could lift 50,000 children out of poverty",
+    "outlet": "CBC News",
+    "date": "2025-07-10",
+    "url": "https://example.com/cbc-ccb",
+    "image": "cbc-ccb.webp",
+    "tags": ["ca", "policy"],
+    "featured": true
+  },
+  {
+    "title": "Economists turn to open-source tools for policy scoring",
+    "outlet": "The Economist",
+    "date": "2025-06-20",
+    "url": "https://example.com/economist-open-source",
+    "image": "economist-open-source.webp",
+    "tags": ["global", "technical"]
+  },
+  {
+    "title": "Ontario basic income pilot results analyzed with open-source model",
+    "outlet": "Toronto Star",
+    "date": "2025-05-10",
+    "url": "https://example.com/star-obi",
+    "image": "star-obi.webp",
+    "tags": ["ca", "policy"],
+    "featured": true
+  }
+]
