@@ -12,6 +12,7 @@ export const TEST_COUNTRIES = {
 } as const;
 
 export const mockPolicyData = (overrides?: any) => ({
+  status: 'ok',
   result: {
     id: TEST_POLICY_IDS.POLICY_123,
     label: 'Test Policy',

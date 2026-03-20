@@ -34,7 +34,7 @@ describe('household API', () => {
       // Given
       const country = TEST_COUNTRIES.US;
       const householdId = EXISTING_HOUSEHOLD_ID;
-      const mockResponse = mockSuccessResponse({ result: mockHouseholdMetadata });
+      const mockResponse = mockSuccessResponse({ status: 'ok', result: mockHouseholdMetadata });
       (global.fetch as any).mockResolvedValue(mockResponse);
 
       // When
@@ -68,7 +68,7 @@ describe('household API', () => {
       // Given
       const countries = Object.values(TEST_COUNTRIES);
       const householdId = EXISTING_HOUSEHOLD_ID;
-      const mockResponse = mockSuccessResponse({ result: mockHouseholdMetadata });
+      const mockResponse = mockSuccessResponse({ status: 'ok', result: mockHouseholdMetadata });
       (global.fetch as any).mockResolvedValue(mockResponse);
 
       // When

@@ -24,11 +24,20 @@ export async function fetchReportById(
   });
 
   if (!res.ok) {
-    console.error('[fetchReportById] Failed:', res.status, res.statusText);
-    throw new Error(`Failed to fetch report ${reportId}`);
+    throw new Error(`Failed to fetch report ${reportId}: ${res.status} ${res.statusText}`);
   }
 
-  const json = await res.json();
+  let json;
+  try {
+    json = await res.json();
+  } catch (error) {
+    throw new Error(`Failed to parse report response: ${error}`);
+  }
+
+  if (json.status !== 'ok') {
+    throw new Error(json.message || `Failed to fetch report ${reportId}`);
+  }
+
   return json.result;
 }
 
@@ -45,10 +54,20 @@ export async function createReport(
   });
 
   if (!res.ok) {
-    throw new Error('Failed to create report');
+    throw new Error(`Failed to create report: ${res.status} ${res.statusText}`);
   }
 
-  const json = await res.json();
+  let json;
+  try {
+    json = await res.json();
+  } catch (error) {
+    throw new Error(`Failed to parse report creation response: ${error}`);
+  }
+
+  if (json.status !== 'ok') {
+    throw new Error(json.message || 'Failed to create report');
+  }
+
   return json.result;
 }
 
@@ -66,10 +85,20 @@ async function updateReport(
   });
 
   if (!res.ok) {
-    throw new Error(`Failed to update report ${reportId}`);
+    throw new Error(`Failed to update report ${reportId}: ${res.status} ${res.statusText}`);
   }
 
-  const json = await res.json();
+  let json;
+  try {
+    json = await res.json();
+  } catch (error) {
+    throw new Error(`Failed to parse report update response: ${error}`);
+  }
+
+  if (json.status !== 'ok') {
+    throw new Error(json.message || `Failed to update report ${reportId}`);
+  }
+
   return json.result;
 }
 

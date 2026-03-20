@@ -14,7 +14,6 @@ import { Simulation } from '@/types/ingredients/Simulation';
 import { UserPolicy } from '@/types/ingredients/UserPolicy';
 import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { UserSimulation } from '@/types/ingredients/UserSimulation';
-import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
 import { householdKeys, policyKeys, simulationKeys } from '../libs/queryKeys';
 import { useHouseholdAssociationsByUser } from './useUserHousehold';
 import { usePolicyAssociationsByUser } from './useUserPolicy';
@@ -246,7 +245,7 @@ export const useUserSimulations = (userId: string) => {
       queryNormalizer.getObjectById(id) as Simulation | undefined,
     getNormalizedPolicy: (id: string) => queryNormalizer.getObjectById(id) as Policy | undefined,
     getNormalizedHousehold: (id: string) =>
-      queryNormalizer.getObjectById(id) as HouseholdMetadata | undefined,
+      queryNormalizer.getObjectById(id) as Household | undefined,
   };
 };
 
@@ -293,17 +292,16 @@ export const useUserSimulationById = (userId: string, simulationId: string) => {
   // Try to fetch as household first
   const populationId = finalSimulation?.populationId;
 
-  const { data: householdMetadata } = useQuery({
+  const { data: household } = useQuery({
     queryKey: householdKeys.byId(populationId ?? ''),
-    queryFn: () => fetchHouseholdById(country, populationId!),
+    queryFn: async () => {
+      const metadata = await fetchHouseholdById(country, populationId!);
+      return HouseholdAdapter.fromMetadata(metadata);
+    },
     enabled: !!populationId,
     staleTime: 5 * 60 * 1000,
     retry: 1, // Only retry once if it's not a household
   });
-
-  const household = householdMetadata
-    ? HouseholdAdapter.fromMetadata(householdMetadata)
-    : undefined;
 
   // Get user associations
   const { data: policyAssociations } = usePolicyAssociationsByUser(userId);
