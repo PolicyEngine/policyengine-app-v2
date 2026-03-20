@@ -272,7 +272,7 @@ export default function HeroSection({ countryId }: { countryId: string }) {
       {/* CTA button */}
       <div style={{ position: "relative", zIndex: 1, textAlign: "center" }}>
         <a
-          href={`/${countryId}/calculator`}
+          href={`${process.env.NEXT_PUBLIC_CALCULATOR_URL || "https://app.policyengine.org"}/${countryId}/reports`}
           style={{
             display: "inline-block",
             background: colors.primary[500],
