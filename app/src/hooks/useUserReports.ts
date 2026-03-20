@@ -463,9 +463,7 @@ export const useUserReportById = (userReportId: string, options?: { enabled?: bo
     staleTime: 5 * 60 * 1000,
   });
 
-  const households = householdResults.queries
-    .map((q) => q.data)
-    .filter((h): h is Household => !!h);
+  const households = householdResults.queries.map((q) => q.data).filter((h): h is Household => !!h);
 
   const userHouseholds = householdAssociations?.filter((ha) =>
     households.some((h) => h.id === ha.householdId)
