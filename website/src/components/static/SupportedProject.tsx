@@ -49,7 +49,7 @@ export default function SupportedProject({
             target="_blank"
             rel="noopener noreferrer"
             style={{
-              color: colors.blue[700],
+              color: colors.text.link,
               textDecoration: "none",
             }}
           >
