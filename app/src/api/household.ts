@@ -20,7 +20,16 @@ export async function fetchHouseholdById(
     throw new Error(`Failed to fetch household ${household}`);
   }
 
-  const json = await res.json();
+  let json;
+  try {
+    json = await res.json();
+  } catch (error) {
+    throw new Error(`Failed to parse household response: ${error}`);
+  }
+
+  if (json.status !== 'ok') {
+    throw new Error(json.message || `Failed to fetch household ${household}`);
+  }
 
   // Forcibly convert numeric ID to string
   json.result.id = String(json.result.id);
