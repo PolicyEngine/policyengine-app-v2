@@ -18,7 +18,9 @@ restore_assets_link() {
   fi
 }
 
-trap restore_assets_link EXIT
+if [ -z "${VERCEL:-}" ] && [ -z "${CI:-}" ]; then
+  trap restore_assets_link EXIT
+fi
 
 rm -rf "$WEBSITE_ASSETS_DIR"
 mkdir -p "$WEBSITE_ROOT/public"
