@@ -37,7 +37,7 @@ describe('report API', () => {
       const reportId = 'report-123';
       const mockResponse = {
         ok: true,
-        json: vi.fn().mockResolvedValue({ result: mockReportMetadata }),
+        json: vi.fn().mockResolvedValue({ status: 'ok', result: mockReportMetadata }),
       };
       (global.fetch as any).mockResolvedValue(mockResponse);
 
@@ -77,7 +77,7 @@ describe('report API', () => {
       // Given
       const countryId = 'us';
       const payload = mockReportCreationPayload;
-      const mockApiResponse = { result: mockReportMetadata };
+      const mockApiResponse = { status: 'ok', result: mockReportMetadata };
       const mockResponse = {
         ok: true,
         json: vi.fn().mockResolvedValue(mockApiResponse),
@@ -116,7 +116,7 @@ describe('report API', () => {
       // Given
       const countryId = 'us';
       const reportId = 'report-123';
-      const mockApiResponse = { result: mockReportMetadata };
+      const mockApiResponse = { status: 'ok', result: mockReportMetadata };
       const mockResponse = {
         ok: true,
         json: vi.fn().mockResolvedValue(mockApiResponse),
@@ -157,7 +157,7 @@ describe('report API', () => {
       // Given
       const countryId = 'us';
       const reportId = 'report-123';
-      const mockApiResponse = { result: mockReportMetadata };
+      const mockApiResponse = { status: 'ok', result: mockReportMetadata };
       const mockResponse = {
         ok: true,
         json: vi.fn().mockResolvedValue(mockApiResponse),
@@ -201,7 +201,7 @@ describe('report API', () => {
       const userId = MOCK_USER_ID;
       const label = MOCK_USER_LABEL;
 
-      const mockApiResponse = { result: mockReportMetadata };
+      const mockApiResponse = { status: 'ok', result: mockReportMetadata };
       const mockResponse = {
         ok: true,
         json: vi.fn().mockResolvedValue(mockApiResponse),
@@ -272,7 +272,7 @@ describe('report API', () => {
       // Given
       const countryId = 'us';
       const payload = mockReportCreationPayload;
-      const mockApiResponse = { result: mockReportMetadata };
+      const mockApiResponse = { status: 'ok', result: mockReportMetadata };
       const mockResponse = {
         ok: true,
         json: vi.fn().mockResolvedValue(mockApiResponse),
