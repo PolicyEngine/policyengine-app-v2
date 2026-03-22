@@ -1,163 +1,273 @@
 [
   {
-    "title": "How a new tax plan could affect your wallet",
-    "outlet": "The New York Times",
-    "date": "2026-02-15",
-    "url": "https://example.com/nyt-article",
-    "image": "nyt-tax-plan.webp",
-    "tags": ["us", "tax"],
-    "featured": true
-  },
-  {
-    "title": "Think tank models show child poverty impact of benefit changes",
-    "outlet": "The Washington Post",
-    "date": "2026-01-20",
-    "url": "https://example.com/wapo-article",
-    "image": "wapo-child-poverty.webp",
+    "title": "Immigration fiscal impact calculator",
+    "outlet": "Joint Economic Committee (U.S. Senate)",
+    "date": "2026-03-17",
+    "url": "https://www.jec.senate.gov/public/index.cfm/republicans/2026/3/immigration-fiscal-impact-calculator",
+    "image": "jec-immigration.webp",
     "tags": ["us", "policy"],
     "featured": true
   },
   {
-    "title": "UK budget analysis reveals winners and losers",
-    "outlet": "The Guardian",
-    "date": "2025-11-05",
-    "url": "https://example.com/guardian-article",
-    "image": "guardian-uk-budget.webp",
+    "title": "Booker announces Keep Your Pay Act to \"provide wallet relief\" and put more money in your pocket",
+    "outlet": "U.S. Senate (Booker)",
+    "date": "2026-03-20",
+    "url": "https://www.booker.senate.gov/news/press/what-theyre-saying-booker-announces-keep-your-pay-act-to-provide-wallet-relief-and-put-more-money-in-your-pocket",
+    "image": "booker-keep-your-pay.webp",
+    "tags": ["us", "tax"],
+    "featured": true
+  },
+  {
+    "title": "Break glass: a plan for the next economic shock",
+    "outlet": "Committee for a Responsible Federal Budget",
+    "date": "2026-03-06",
+    "url": "https://www.crfb.org/papers/break-glass-plan-next-economic-shock",
+    "image": "crfb-break-glass.webp",
+    "tags": ["us", "policy"],
+    "featured": true
+  },
+  {
+    "title": "National Insurance Contributions (Employer Pensions Contributions) Bill",
+    "outlet": "UK Parliament (Hansard)",
+    "date": "2026-02-24",
+    "url": "https://hansard.parliament.uk/Lords/2026-02-24/debates/A381F7D6-0A3C-48FD-8D9E-67751E25877A/NationalInsuranceContributions(EmployerPensionsContributions)Bill",
+    "image": "hansard-nic.webp",
+    "tags": ["uk", "tax"],
+    "featured": true
+  },
+  {
+    "title": "Agent-based macroeconomics for the UK's seventh carbon budget",
+    "outlet": "arXiv",
+    "date": "2026-03-13",
+    "url": "https://arxiv.org/pdf/2602.15607",
+    "image": "arxiv-carbon-budget.webp",
     "tags": ["uk", "policy"],
     "featured": true
   },
   {
-    "title": "How AI is changing policy analysis",
-    "outlet": "Wired",
-    "date": "2025-10-12",
-    "url": "https://example.com/wired-article",
-    "image": "wired-ai-policy.webp",
-    "tags": ["us", "technical"],
-    "featured": true
-  },
-  {
-    "title": "Universal basic income calculator goes viral",
-    "outlet": "BBC News",
-    "date": "2025-09-01",
-    "url": "https://example.com/bbc-article",
-    "image": "bbc-ubi.webp",
-    "tags": ["uk", "policy"],
-    "featured": true
-  },
-  {
-    "title": "Canadian carbon tax rebate analysis",
-    "outlet": "The Globe and Mail",
-    "date": "2025-08-18",
-    "url": "https://example.com/globe-article",
-    "image": "globe-carbon-tax.webp",
-    "tags": ["ca", "tax"],
-    "featured": true
-  },
-  {
-    "title": "SNAP benefits calculator helps families navigate complex eligibility rules",
-    "outlet": "NPR",
-    "date": "2026-03-01",
-    "url": "https://example.com/npr-snap",
-    "image": "npr-snap.webp",
-    "tags": ["us", "policy"]
-  },
-  {
-    "title": "The real cost of the SALT deduction cap",
-    "outlet": "The Wall Street Journal",
-    "date": "2026-02-28",
-    "url": "https://example.com/wsj-salt",
-    "image": "wsj-salt.webp",
-    "tags": ["us", "tax"]
-  },
-  {
-    "title": "Open-source tax model challenges government estimates",
-    "outlet": "Bloomberg",
-    "date": "2026-02-10",
-    "url": "https://example.com/bloomberg-model",
-    "image": "bloomberg-model.webp",
-    "tags": ["us", "technical"]
-  },
-  {
-    "title": "Who really benefits from the expanded child tax credit?",
-    "outlet": "Vox",
+    "title": "Informing policy using micro-simulations",
+    "outlet": "No10 Innovation Fellowship (UK Government)",
     "date": "2026-01-05",
-    "url": "https://example.com/vox-ctc",
-    "image": "vox-ctc.webp",
-    "tags": ["us", "tax"]
-  },
-  {
-    "title": "State-by-state EITC analysis shows uneven impact",
-    "outlet": "Politico",
-    "date": "2025-12-15",
-    "url": "https://example.com/politico-eitc",
-    "image": "politico-eitc.webp",
-    "tags": ["us", "tax"]
-  },
-  {
-    "title": "How much would a flat tax save you? New calculator has the answer",
-    "outlet": "Forbes",
-    "date": "2025-11-20",
-    "url": "https://example.com/forbes-flat-tax",
-    "image": "forbes-flat-tax.webp",
-    "tags": ["us", "tax"]
-  },
-  {
-    "title": "Poverty rates could drop under proposed welfare reform",
-    "outlet": "The Atlantic",
-    "date": "2025-10-30",
-    "url": "https://example.com/atlantic-welfare",
-    "image": "atlantic-welfare.webp",
-    "tags": ["us", "policy"]
-  },
-  {
-    "title": "UK universal credit overhaul modeled by PolicyEngine",
-    "outlet": "Financial Times",
-    "date": "2025-10-01",
-    "url": "https://example.com/ft-uc",
-    "image": "ft-uc.webp",
-    "tags": ["uk", "policy"],
+    "url": "https://fellows.ai.gov.uk/articles/nikhil-woodruff-micro-simulation/",
+    "image": "no10-fellowship.webp",
+    "tags": ["uk", "technical"],
     "featured": true
   },
   {
-    "title": "Tax policy transparency gets a tech upgrade",
-    "outlet": "MIT Technology Review",
-    "date": "2025-09-15",
-    "url": "https://example.com/mit-tech",
-    "image": "mit-tech.webp",
+    "title": "The inflation hangover: how the post-pandemic price surge reshaped affordability in America",
+    "outlet": "Common Sense Institute",
+    "date": "2026-03-17",
+    "url": "https://www.commonsenseinstituteus.org/ResearchUploads/CSI%20Report%20-%20State%20Affordability.pdf",
+    "image": "csi-inflation.webp",
+    "tags": ["us", "policy"]
+  },
+  {
+    "title": "Frequently asked questions",
+    "outlet": "MIT Living Wage Calculator",
+    "date": "2026-02-15",
+    "url": "https://livingwage.mit.edu/pages/faqs",
+    "image": "mit-living-wage.webp",
+    "tags": ["us", "policy"]
+  },
+  {
+    "title": "Rashida Tlaib's plan to combat poverty",
+    "outlet": "Jacobin",
+    "date": "2025-11-01",
+    "url": "https://jacobin.com/2025/11/tlaib-poverty-inequality-reduction-legislation",
+    "image": "jacobin-tlaib.webp",
+    "tags": ["us", "policy"]
+  },
+  {
+    "title": "Social Security needs a fix more than ever after the Big Bill",
+    "outlet": "Barron's",
+    "date": "2025-07-18",
+    "url": "https://www.barrons.com/articles/social-security-needs-a-fix-more-than-ever-after-the-big-bill-what-would-work-d7674124",
+    "image": "barrons-social-security.webp",
+    "tags": ["us", "policy"]
+  },
+  {
+    "title": "Interactions between the SALT deduction and AMT exemption",
+    "outlet": "Arnold Ventures",
+    "date": "2025-06-18",
+    "url": "https://assets.arnoldventures.org/uploads/PDFs/AV_Public-Finance_SALT-AMT.pdf",
+    "image": "arnold-salt-amt.webp",
+    "tags": ["us", "tax"]
+  },
+  {
+    "title": "AI in regulatory design and delivery: governing with artificial intelligence",
+    "outlet": "OECD",
+    "date": "2025-06-01",
+    "url": "https://www.oecd.org/en/publications/governing-with-artificial-intelligence_795de142-en/full-report/ai-in-regulatory-design-and-delivery_128691e6.html",
+    "image": "oecd-ai-governance.webp",
     "tags": ["global", "technical"]
   },
   {
-    "title": "Council tax reform: who pays more, who pays less",
-    "outlet": "The Times",
-    "date": "2025-08-25",
-    "url": "https://example.com/times-council-tax",
-    "image": "times-council-tax.webp",
+    "title": "Workers face pay hit under Reeves's National Insurance plans",
+    "outlet": "The Telegraph",
+    "date": "2025-05-30",
+    "url": "https://www.telegraph.co.uk/money/tax/workers-face-3000-pay-cut-under-reeves-national-insurance/",
+    "image": "telegraph-nic.webp",
     "tags": ["uk", "tax"]
   },
   {
-    "title": "Canada child benefit changes could lift 50,000 children out of poverty",
-    "outlet": "CBC News",
-    "date": "2025-07-10",
-    "url": "https://example.com/cbc-ccb",
-    "image": "cbc-ccb.webp",
-    "tags": ["ca", "policy"],
+    "title": "Revealed: how Farage's £80bn tax cuts would benefit the richest most",
+    "outlet": "The Independent",
+    "date": "2025-05-30",
+    "url": "https://www.independent.co.uk/news/uk/politics/farage-reform-tax-starmer-labour-b2760738.html",
+    "image": "independent-farage.webp",
+    "tags": ["uk", "tax"]
+  },
+  {
+    "title": "An analysis of gubernatorial candidate Ethan Penner's tax reform plan",
+    "outlet": "American Enterprise Institute",
+    "date": "2025-09-01",
+    "url": "https://www.aei.org/wp-content/uploads/2025/09/Analysis-of-the-Penner-Tax-Plan-1.pdf",
+    "image": "aei-penner.webp",
+    "tags": ["us", "tax"]
+  },
+  {
+    "title": "Property tax hikes to be felt nationwide, says think-tank",
+    "outlet": "Property Industry Eye",
+    "date": "2025-03-31",
+    "url": "https://propertyindustryeye.com/property-tax-hikes-to-be-felt-nationwide-says-think-tank/",
+    "image": "pie-property-tax.webp",
+    "tags": ["uk", "tax"]
+  },
+  {
+    "title": "New analysis: the cost of tax hikes",
+    "outlet": "Institute of Economic Affairs",
+    "date": "2025-03-29",
+    "url": "https://insider.iea.org.uk/p/new-analysis-the-cost-of-tax-hikes",
+    "image": "iea-tax-hikes.webp",
+    "tags": ["uk", "tax"]
+  },
+  {
+    "title": "G7 GovAI grand challenge",
+    "outlet": "Impact Canada (Government of Canada)",
+    "date": "2025-11-17",
+    "url": "https://impact.canada.ca/en/challenges/g7-govAI",
+    "image": "impact-canada-govai.webp",
+    "tags": ["ca", "technical"],
     "featured": true
   },
   {
-    "title": "Economists turn to open-source tools for policy scoring",
-    "outlet": "The Economist",
-    "date": "2025-06-20",
-    "url": "https://example.com/economist-open-source",
-    "image": "economist-open-source.webp",
-    "tags": ["global", "technical"]
+    "title": "Matthew H. Jensen congressional testimony",
+    "outlet": "U.S. Congress",
+    "date": "2025-04-02",
+    "url": "https://www.congress.gov/119/meeting/house/118088/witnesses/HHRG-119-II15-Bio-JensenM-20250402.pdf",
+    "image": "congress-jensen.webp",
+    "tags": ["us", "tax"]
   },
   {
-    "title": "Ontario basic income pilot results analyzed with open-source model",
-    "outlet": "Toronto Star",
-    "date": "2025-05-10",
-    "url": "https://example.com/star-obi",
-    "image": "star-obi.webp",
-    "tags": ["ca", "policy"],
-    "featured": true
+    "title": "Congressman Morgan McGarvey introduces Young Adult Tax Credit Act",
+    "outlet": "U.S. House of Representatives",
+    "date": "2024-03-05",
+    "url": "https://mcgarvey.house.gov/media/press-releases/congressman-morgan-mcgarvey-introduces-young-adult-tax-credit-act",
+    "image": "mcgarvey-yatc.webp",
+    "tags": ["us", "tax"]
+  },
+  {
+    "title": "HMT: PolicyEngine UK — algorithmic transparency record",
+    "outlet": "GOV.UK",
+    "date": "2024-12-17",
+    "url": "https://www.gov.uk/algorithmic-transparency-records/hmt-modelling-policy-engine",
+    "image": "govuk-transparency.webp",
+    "tags": ["uk", "technical"]
+  },
+  {
+    "title": "Employer NIC rise could reduce wages, according to new research",
+    "outlet": "Institute of Economic Affairs",
+    "date": "2024-10-28",
+    "url": "https://iea.org.uk/media/employer-nic-rise-could-reduce-wages-according-to-new-research/",
+    "image": "iea-nic-wages.webp",
+    "tags": ["uk", "tax"]
+  },
+  {
+    "title": "Hawai'i's unnecessary benefit cliff: how one small policy change could deliver $45M per year in SNAP benefits",
+    "outlet": "UHERO (University of Hawai'i)",
+    "date": "2024-09-23",
+    "url": "https://uhero.hawaii.edu/hawai%CA%BBis-unnecessary-benefit-cliff-how-one-small-policy-change-could-deliver-in-45m-per-year-in-federally-funded-snap-benefits/",
+    "image": "uhero-snap.webp",
+    "tags": ["us", "policy"]
+  },
+  {
+    "title": "Implications of child poverty reduction targets for public health and health inequalities",
+    "outlet": "BMJ (Journal of Epidemiology & Community Health)",
+    "date": "2024-07-08",
+    "url": "https://jech.bmj.com/content/jech/early/2024/07/08/jech-2024-222313.full.pdf",
+    "image": "bmj-child-poverty.webp",
+    "tags": ["uk", "policy"]
+  },
+  {
+    "title": "Tax microsimulation at The Budget Lab",
+    "outlet": "Yale Budget Lab",
+    "date": "2024-04-12",
+    "url": "https://budgetlab.yale.edu/research/tax-microsimulation-budget-lab",
+    "image": "yale-budget-lab.webp",
+    "tags": ["us", "technical"]
+  },
+  {
+    "title": "Paying for progress",
+    "outlet": "Progressive Policy Institute",
+    "date": "2024-08-22",
+    "url": "https://www.progressivepolicy.org/wp-content/uploads/2024/08/PayingForProgress-2024.pdf",
+    "image": "ppi-paying-progress.webp",
+    "tags": ["us", "policy"]
+  },
+  {
+    "title": "Sen. Gounardes: Working Families Tax Credit would lift families out of poverty",
+    "outlet": "New York State Senate",
+    "date": "2025-01-01",
+    "url": "https://www.nysenate.gov/newsroom/press-releases/2025/andrew-gounardes/sen-gounardes-working-families-tax-credit-would",
+    "image": "nysenate-gounardes.webp",
+    "tags": ["us", "tax"]
+  },
+  {
+    "title": "Lessons learned deploying a marginal tax rate calculator",
+    "outlet": "U.S. Department of Health & Human Services (ASPE)",
+    "date": "2023-08-01",
+    "url": "https://aspe.hhs.gov/sites/default/files/documents/211a0569e93345d7cfb8757bdb4f5c6f/eMTR-calculator-brief.pdf",
+    "image": "hhs-emtr.webp",
+    "tags": ["us", "technical"]
+  },
+  {
+    "title": "Oxfam's love affair with 'inequality'",
+    "outlet": "The Wall Street Journal",
+    "date": "2023-03-20",
+    "url": "https://www.wsj.com/opinion/oxfams-inequality-report-obscures-how-life-for-the-poor-has-improved-0e1bd13e",
+    "image": "wsj-oxfam.webp",
+    "tags": ["us", "policy"]
+  },
+  {
+    "title": "Rashida Tlaib's End Child Poverty Act would dramatically reduce poverty",
+    "outlet": "U.S. House of Representatives (Tlaib)",
+    "date": "2024-01-30",
+    "url": "https://tlaib.house.gov/posts/jacobin-rashida-tlaibs-end-child-poverty-act-would-dramatically-reduce-poverty",
+    "image": "tlaib-child-poverty.webp",
+    "tags": ["us", "policy"]
+  },
+  {
+    "title": "Historical post-tax income estimates using the Current Population Survey",
+    "outlet": "U.S. Census Bureau",
+    "date": "2024-01-01",
+    "url": "https://www2.census.gov/library/working-papers/2024/demo/sehsd-wp2024-23.pdf",
+    "image": "census-post-tax.webp",
+    "tags": ["us", "technical"]
+  },
+  {
+    "title": "NIESR UK living standards review 2025",
+    "outlet": "National Institute of Economic and Social Research",
+    "date": "2025-03-01",
+    "url": "https://niesr.ac.uk/wp-content/uploads/2025/03/JC871-NIESR-UK-Living-Standards-Review-2025-final-version.pdf",
+    "image": "niesr-living-standards.webp",
+    "tags": ["uk", "policy"]
+  },
+  {
+    "title": "Enhancing, localising and democratising tax-benefit policy analysis",
+    "outlet": "Nuffield Foundation",
+    "date": "2024-09-01",
+    "url": "https://www.nuffieldfoundation.org/project/enhancing-localising-and-democratising-tax-benefit-policy-analysis",
+    "image": "nuffield-tax-benefit.webp",
+    "tags": ["uk", "technical"]
   }
 ]

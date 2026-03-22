@@ -64,7 +64,8 @@ function CitationCard({ citation, large }: { citation: Citation; large?: boolean
                 parent.style.display = 'flex';
                 parent.style.alignItems = 'center';
                 parent.style.justifyContent = 'center';
-                parent.innerHTML = `<span style="color: ${colors.gray[400]}; font-family: ${typography.fontFamily.primary}; font-size: 14px;">${citation.outlet}</span>`;
+                parent.style.padding = '24px';
+                parent.innerHTML = `<span style="color: ${colors.gray[400]}; font-family: ${typography.fontFamily.primary}; font-size: 18px; font-weight: 600; text-align: center;">${citation.outlet}</span>`;
               }
             }}
           />
@@ -151,18 +152,21 @@ export default function CitationsPage() {
   const citations = citationsData as Citation[];
 
   const countryCitations = useMemo(() => {
-    return [...citations]
-      .filter((c) => c.tags.includes(countryId) || c.tags.includes('global'))
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    return citations.filter((c) => c.tags.includes(countryId) || c.tags.includes('global'));
   }, [citations, countryId]);
 
+  // Featured citations keep their JSON order (so you control the hero card)
   const featuredCitations = useMemo(
     () => countryCitations.filter((c) => c.featured),
     [countryCitations]
   );
 
+  // Non-featured citations sorted by date descending
   const restCitations = useMemo(
-    () => countryCitations.filter((c) => !c.featured),
+    () =>
+      countryCitations
+        .filter((c) => !c.featured)
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
     [countryCitations]
   );
 
