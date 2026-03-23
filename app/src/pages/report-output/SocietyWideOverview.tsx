@@ -9,6 +9,7 @@ import {
 } from '@tabler/icons-react';
 import Plot from 'react-plotly.js';
 import { useSelector } from 'react-redux';
+import { normalizeDistrictId } from '@/adapters/congressional-district/congressionalDistrictDataAdapter';
 import { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import DashboardCard from '@/components/report/DashboardCard';
 import MetricCard from '@/components/report/MetricCard';
@@ -288,7 +289,10 @@ function CongressionalDistrictCard({
     if (!districtData?.districts) {
       return null;
     }
-    return districtData.districts;
+    return districtData.districts.map((d) => ({
+      ...d,
+      district: normalizeDistrictId(d.district),
+    }));
   }, [output]);
 
   // Auto-start fetch only when the report output is ready and no
@@ -614,12 +618,7 @@ export default function SocietyWideOverview({
 
   const budgetIsPositive = budgetaryImpact > 0;
   const budgetValue = formatImpact(budgetaryImpact);
-  const budgetSubtext =
-    budgetaryImpact === 0
-      ? 'This policy has no impact on the budget'
-      : budgetIsPositive
-        ? 'in additional government revenue'
-        : 'in additional government spending';
+  const budgetSubtext = getBudgetChartTitle(budgetaryImpact, countryId, metadata);
 
   // Calculate poverty rate change
   const povertyOverview = output.poverty.poverty.all;
@@ -832,7 +831,7 @@ export default function SocietyWideOverview({
                       decreasing: { marker: { color: colors.gray[600] } },
                       totals: {
                         marker: {
-                          color: budgetaryImpact < 0 ? colors.gray[600] : colors.primary[500],
+                          color: budgetaryImpact < 0 ? colors.gray[600] : colors.primary[700],
                         },
                       },
                       connector: {

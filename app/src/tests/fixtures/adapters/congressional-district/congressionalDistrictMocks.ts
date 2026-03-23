@@ -165,6 +165,32 @@ export const EMPTY_DISTRICT_DATA: USCongressionalDistrictBreakdown = {
 };
 
 /**
+ * District data with buggy -00 ID from single-district state (backend dataset bug)
+ */
+export const BUGGY_SINGLE_DISTRICT_DATA: USCongressionalDistrictBreakdown = {
+  districts: [
+    {
+      district: 'WY-00', // Backend bug: should be WY-01
+      average_household_income_change: 500.0,
+      relative_household_income_change: 0.03,
+    },
+  ],
+};
+
+/**
+ * District data with buggy DC-98 ID (backend dataset bug)
+ */
+export const BUGGY_DC_DISTRICT_DATA: USCongressionalDistrictBreakdown = {
+  districts: [
+    {
+      district: 'DC-98', // Backend bug: should be DC-01
+      average_household_income_change: 250.0,
+      relative_household_income_change: 0.015,
+    },
+  ],
+};
+
+/**
  * District data with a district not in metadata (for fallback label testing)
  */
 export const DISTRICT_DATA_WITH_UNKNOWN: USCongressionalDistrictBreakdown = {

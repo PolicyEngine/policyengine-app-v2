@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { normalizeDistrictId } from '@/adapters/congressional-district/congressionalDistrictDataAdapter';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { MapDownloadMenu } from '@/components/MapDownloadMenu';
 import { Group, Progress, Stack, Text, Title } from '@/components/ui';
@@ -51,11 +52,14 @@ export function RelativeChangeByDistrict({ output }: RelativeChangeByDistrictPro
     if (!districtData?.districts) {
       return [];
     }
-    return districtData.districts.map((item) => ({
-      geoId: item.district,
-      label: labelLookup.get(item.district) ?? `District ${item.district}`,
-      value: item.relative_household_income_change,
-    }));
+    return districtData.districts.map((item) => {
+      const id = normalizeDistrictId(item.district);
+      return {
+        geoId: id,
+        label: labelLookup.get(id) ?? `District ${id}`,
+        value: item.relative_household_income_change,
+      };
+    });
   }, [output, labelLookup]);
 
   // Transform context data to choropleth format (relative change)
