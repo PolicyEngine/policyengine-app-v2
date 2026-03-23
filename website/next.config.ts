@@ -47,8 +47,8 @@ const nextConfig: NextConfig = {
       { source: "/us/taxsim", destination: "https://policyengine-taxsim-policy-engine.vercel.app/us/taxsim" },
       { source: "/us/taxsim/:path*", destination: "https://policyengine-taxsim-policy-engine.vercel.app/us/taxsim/:path*" },
       // Model documentation (Vercel)
-      { source: "/:countryId/model", destination: "https://policyengine-model.vercel.app/:countryId/model" },
-      { source: "/:countryId/model/:path*", destination: "https://policyengine-model.vercel.app/:countryId/model/:path*" },
+      { source: "/:countryId/model", destination: "https://policyengine-model-phi.vercel.app/?country=:countryId" },
+      { source: "/:countryId/model/:path*", destination: "https://policyengine-model-phi.vercel.app/:path*?country=:countryId" },
       // Household API docs (Vercel)
       { source: "/us/api", destination: "https://household-api-docs-policy-engine.vercel.app/us/api" },
       { source: "/us/api/:path*", destination: "https://household-api-docs-policy-engine.vercel.app/us/api/:path*" },
