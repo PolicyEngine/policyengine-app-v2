@@ -15,6 +15,7 @@
   "dependencies": {
     "@policyengine/design-system": "workspace:*",
     "@tabler/icons-react": "^3.31.0",
+    "framer-motion": "^12.38.0",
     "fuse.js": "^7.1.0",
     "jsonp": "^0.2.1",
     "next": "^15.3.3",

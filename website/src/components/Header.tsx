@@ -394,6 +394,17 @@ function CountrySelector() {
                   }}
                 >
                   {country.label}
+                  {countryId === country.id && (
+                    <span
+                      style={{
+                        marginLeft: "auto",
+                        fontSize: "12px",
+                        opacity: 0.6,
+                      }}
+                    >
+                      ✓
+                    </span>
+                  )}
                 </button>
               ))}
             </div>
@@ -561,6 +572,8 @@ export default function Header() {
 
   const navItems: NavItemSetup[] = [
     { label: "Research", href: `/${countryId}/research`, hasDropdown: false },
+    { label: "Model", href: `/${countryId}/model`, hasDropdown: false },
+    { label: "API", href: `/${countryId}/api`, hasDropdown: false },
     {
       label: "About",
       hasDropdown: true,
