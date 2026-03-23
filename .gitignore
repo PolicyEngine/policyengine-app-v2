@@ -78,3 +78,4 @@ venv/
 .vercel
 .turbo
 .env*.local
+bun.lockb
