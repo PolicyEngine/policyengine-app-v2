@@ -9,6 +9,15 @@
     "featured": true
   },
   {
+    "title": "National Insurance Contributions (Employer Pensions Contributions) Bill",
+    "outlet": "UK Parliament (Hansard)",
+    "date": "2026-02-24",
+    "url": "https://hansard.parliament.uk/Lords/2026-02-24/debates/A381F7D6-0A3C-48FD-8D9E-67751E25877A/NationalInsuranceContributions(EmployerPensionsContributions)Bill",
+    "image": "hansard-nic.webp",
+    "tags": ["uk", "tax"],
+    "featured": true
+  },
+  {
     "title": "Booker announces Keep Your Pay Act to \"provide wallet relief\" and put more money in your pocket",
     "outlet": "U.S. Senate (Booker)",
     "date": "2026-03-20",
@@ -24,15 +33,6 @@
     "url": "https://www.crfb.org/papers/break-glass-plan-next-economic-shock",
     "image": "crfb-break-glass.webp",
     "tags": ["us", "policy"],
-    "featured": true
-  },
-  {
-    "title": "National Insurance Contributions (Employer Pensions Contributions) Bill",
-    "outlet": "UK Parliament (Hansard)",
-    "date": "2026-02-24",
-    "url": "https://hansard.parliament.uk/Lords/2026-02-24/debates/A381F7D6-0A3C-48FD-8D9E-67751E25877A/NationalInsuranceContributions(EmployerPensionsContributions)Bill",
-    "image": "hansard-nic.webp",
-    "tags": ["uk", "tax"],
     "featured": true
   },
   {
