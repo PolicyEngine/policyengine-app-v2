@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import HeroSection from '@/components/shared/static/HeroSection';
 import StaticPageLayout from '@/components/shared/static/StaticPageLayout';
@@ -6,6 +6,14 @@ import { Container, Text } from '@/components/ui';
 import citationsData from '@/data/citations.json';
 import { colors, spacing, typography } from '@/designTokens';
 import type { Citation } from '@/types/citation';
+
+const locationLabels: Record<string, string> = {
+  all: 'All',
+  us: 'US',
+  uk: 'UK',
+  ca: 'Canada',
+  global: 'Global',
+};
 
 function formatDate(dateStr: string): string {
   const date = new Date(`${dateStr}T00:00:00`);
@@ -107,6 +115,51 @@ function CitationCard({ citation, large }: { citation: Citation; large?: boolean
   );
 }
 
+function LocationFilter({
+  selected,
+  onChange,
+  options,
+}: {
+  selected: string;
+  onChange: (value: string) => void;
+  options: string[];
+}) {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        gap: spacing.xs,
+        flexWrap: 'wrap',
+      }}
+    >
+      {options.map((option) => {
+        const isActive = selected === option;
+        return (
+          <button
+            key={option}
+            type="button"
+            onClick={() => onChange(option)}
+            style={{
+              padding: `${spacing.xs} ${spacing.md}`,
+              borderRadius: '999px',
+              border: `1px solid ${isActive ? colors.primary[500] : colors.border.light}`,
+              backgroundColor: isActive ? colors.primary[500] : colors.white,
+              color: isActive ? colors.white : colors.gray[600],
+              fontSize: '14px',
+              fontFamily: typography.fontFamily.primary,
+              fontWeight: isActive ? 600 : 400,
+              cursor: 'pointer',
+              transition: 'all 0.15s ease',
+            }}
+          >
+            {locationLabels[option] || option}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 function FeaturedLayout({ citations }: { citations: Citation[] }) {
   const [hero, ...side] = citations;
   if (!hero) {
@@ -150,12 +203,29 @@ function FeaturedLayout({ citations }: { citations: Citation[] }) {
 
 export default function CitationsPage() {
   const { countryId = 'us' } = useParams<{ countryId: string }>();
+  const [locationFilter, setLocationFilter] = useState(countryId);
 
   const citations = citationsData as Citation[];
 
+  // Derive available location options from the data
+  const locationOptions = useMemo(() => {
+    const countryTags = new Set<string>();
+    for (const c of citations) {
+      for (const tag of c.tags) {
+        if (['us', 'uk', 'ca', 'global'].includes(tag)) {
+          countryTags.add(tag);
+        }
+      }
+    }
+    return ['all', ...['us', 'uk', 'ca', 'global'].filter((t) => countryTags.has(t))];
+  }, [citations]);
+
   const countryCitations = useMemo(() => {
-    return citations.filter((c) => c.tags.includes(countryId) || c.tags.includes('global'));
-  }, [citations, countryId]);
+    if (locationFilter === 'all') {
+      return citations;
+    }
+    return citations.filter((c) => c.tags.includes(locationFilter) || c.tags.includes('global'));
+  }, [citations, locationFilter]);
 
   // Featured citations keep their JSON order (so you control the hero card)
   const featuredCitations = useMemo(
@@ -180,6 +250,14 @@ export default function CitationsPage() {
       />
 
       <Container size="xl" className="tw:py-xl">
+        <div style={{ marginBottom: spacing.xl }}>
+          <LocationFilter
+            selected={locationFilter}
+            onChange={setLocationFilter}
+            options={locationOptions}
+          />
+        </div>
+
         {countryCitations.length === 0 ? (
           <div
             className="tw:text-center"
