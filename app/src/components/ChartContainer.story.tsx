@@ -5,7 +5,7 @@ const meta: Meta<typeof ChartContainer> = {
   title: 'Building blocks/ChartContainer',
   component: ChartContainer,
   args: {
-    onDownloadCsv: () => {},
+    downloadFilename: 'chart.svg',
   },
 };
 

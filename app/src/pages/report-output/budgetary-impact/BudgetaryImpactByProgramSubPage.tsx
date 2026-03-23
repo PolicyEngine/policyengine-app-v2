@@ -14,7 +14,7 @@ import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useViewportSize } from '@/hooks/useViewportSize';
 import type { RootState } from '@/store';
 import { absoluteChangeMessage } from '@/utils/chartMessages';
-import { downloadCsv, getClampedChartHeight, getNiceTicks } from '@/utils/chartUtils';
+import { getClampedChartHeight, getNiceTicks } from '@/utils/chartUtils';
 import { currencySymbol } from '@/utils/formatters';
 import {
   BudgetWaterfallTooltip,
@@ -77,23 +77,6 @@ export default function BudgetaryImpactByProgramSubPage({ output }: Props) {
     );
   }
 
-  // CSV export handler
-  const handleDownloadCsv = () => {
-    const csvData = [
-      ['Program', 'Baseline', 'Reform', 'Difference'],
-      ...programs.map((p) => {
-        const item = detailedBudget[p.key];
-        return [
-          p.label,
-          item.baseline.toString(),
-          item.reform.toString(),
-          item.difference.toString(),
-        ];
-      }),
-    ];
-    downloadCsv(csvData, 'budgetary-impact-by-program.csv');
-  };
-
   // Generate hover message
   const hoverMessage = (label: string, valueBn: number) => {
     const actualValue = valueBn * 1e9;
@@ -127,7 +110,7 @@ export default function BudgetaryImpactByProgramSubPage({ output }: Props) {
   return (
     <ChartContainer
       title={getBudgetChartTitle(budgetaryImpact, countryId, metadata)}
-      onDownloadCsv={handleDownloadCsv}
+      downloadFilename="budgetary-impact-by-program.svg"
     >
       <WaterfallChart
         data={dataWithHover}

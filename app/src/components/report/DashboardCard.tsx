@@ -1,9 +1,13 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { IconArrowsMinimize } from '@tabler/icons-react';
+import { IconArrowsMinimize, IconDownload } from '@tabler/icons-react';
 import { motion } from 'framer-motion';
+import { Text } from '@/components/ui';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { colors, spacing } from '@/designTokens';
+import { typography } from '@/designTokens/typography';
+import { trackChartCsvDownloaded } from '@/utils/analytics';
+import { downloadChartAsSvg } from '@/utils/chartUtils';
 
 const FADE_MS = 150;
 const RESIZE_S = 0.35;
@@ -33,6 +37,11 @@ interface DashboardCardProps {
 
   /** Controls (e.g. SegmentedControl) rendered in a row with the minimize button when expanded */
   expandedControls?: React.ReactNode;
+
+  /** Title displayed in the expanded toolbar (left side) */
+  expandedTitle?: string;
+  /** SVG download filename — renders a download button in the expanded toolbar */
+  downloadFilename?: string;
 
   // Style overrides (apply only when shrunken/idle)
   shrunkenBackground?: string;
@@ -73,11 +82,14 @@ export default function DashboardCard({
   shrunkenRows = 1,
   expandedRows = 2,
   expandedControls,
+  expandedTitle,
+  downloadFilename,
   shrunkenBackground,
   shrunkenBorderColor,
   padding: paddingProp,
 }: DashboardCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
+  const expandedContentRef = useRef<HTMLDivElement>(null);
   const isExpanded = mode === 'expanded';
   const cardPadding = paddingProp ?? spacing.lg;
   const shrunkenHeight = SHRUNKEN_CARD_HEIGHT * shrunkenRows + gridGap * (shrunkenRows - 1);
@@ -319,23 +331,82 @@ export default function DashboardCard({
                 flexDirection: 'column',
               }}
             >
-              {/* Controls row: expandedControls on left, minimize button on right */}
-              {onToggleMode && (
+              {/* Toolbar: header (left) | CSV + minimize (right) */}
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: expandedControls ? 'flex-start' : 'center',
+                  flexShrink: 0,
+                  minHeight: 31,
+                  marginBottom: spacing.sm,
+                  gap: spacing.md,
+                }}
+              >
                 <div
                   style={{
                     display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    flexShrink: 0,
-                    height: 31,
-                    marginBottom: spacing.sm,
+                    flexDirection: expandedControls && expandedTitle ? 'column' : 'row',
+                    alignItems: expandedControls && expandedTitle ? 'flex-start' : 'center',
+                    gap: expandedControls && expandedTitle ? spacing.xs : spacing.lg,
+                    flex: 1,
+                    minWidth: 0,
                   }}
                 >
-                  <div style={{ display: 'flex', gap: spacing.lg }}>{expandedControls}</div>
-                  {expandButton}
+                  {expandedControls && (
+                    <div style={{ display: 'flex', gap: spacing.lg, flexShrink: 0 }}>
+                      {expandedControls}
+                    </div>
+                  )}
+                  {expandedTitle && (
+                    <Text
+                      size="md"
+                      fw={typography.fontWeight.medium}
+                      style={{ flexShrink: 1, minWidth: 0 }}
+                      className="tw:line-clamp-2"
+                    >
+                      {expandedTitle}
+                    </Text>
+                  )}
                 </div>
-              )}
-              <div style={{ flex: 1, minHeight: 0 }}>{expandedContent}</div>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: spacing.xs,
+                    flexShrink: 0,
+                  }}
+                >
+                  {downloadFilename && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon-xs"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            trackChartCsvDownloaded();
+                            if (expandedContentRef.current) {
+                              downloadChartAsSvg(expandedContentRef.current, {
+                                title: expandedTitle,
+                                filename: downloadFilename,
+                              });
+                            }
+                          }}
+                          aria-label="Download as SVG"
+                        >
+                          <IconDownload size={16} />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="left">Download as SVG</TooltipContent>
+                    </Tooltip>
+                  )}
+                  {onToggleMode && expandButton}
+                </div>
+              </div>
+              <div ref={expandedContentRef} style={{ flex: 1, minHeight: 0 }}>
+                {expandedContent}
+              </div>
             </div>
           )}
         </div>

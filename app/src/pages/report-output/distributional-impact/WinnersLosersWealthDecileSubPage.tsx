@@ -9,7 +9,7 @@ import { spacing } from '@/designTokens/spacing';
 import { typography } from '@/designTokens/typography';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import type { RootState } from '@/store';
-import { downloadCsv, RECHARTS_FONT_STYLE } from '@/utils/chartUtils';
+import { RECHARTS_FONT_STYLE } from '@/utils/chartUtils';
 import { formatPercent } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
 
@@ -128,21 +128,8 @@ export default function WinnersLosersWealthDecileSubPage({ output }: Props) {
     return `This reform would have no effect on ${objectTerm} for the population${regionPhrase}`;
   };
 
-  // CSV export handler
-  const handleDownloadCsv = () => {
-    const header = ['Wealth decile', ...CATEGORIES];
-    const rows = [
-      ...decileNumbers.map((d) => [
-        d.toString(),
-        ...CATEGORIES.map((cat) => (deciles as any)[cat]?.[d - 1]?.toString() || '0'),
-      ]),
-      ['All', ...CATEGORIES.map((cat) => all[cat].toString())],
-    ];
-    downloadCsv([header, ...rows], 'winners-losers-wealth-decile.csv');
-  };
-
   return (
-    <ChartContainer title={getChartTitle()} onDownloadCsv={handleDownloadCsv}>
+    <ChartContainer title={getChartTitle()} downloadFilename="winners-losers-wealth-decile.svg">
       <Stack gap="sm">
         <div style={{ display: 'flex' }}>
           {/* Chart area */}

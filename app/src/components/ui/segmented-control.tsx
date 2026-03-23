@@ -28,7 +28,7 @@ function SegmentedControl({
       <TabsPrimitive.List
         data-slot="segmented-control"
         className={cn(
-          'tw:inline-flex tw:items-center tw:gap-0.5 tw:rounded-lg tw:bg-muted',
+          'tw:inline-flex tw:items-center tw:gap-1 tw:rounded-lg tw:bg-muted',
           size === 'xs' ? 'tw:h-7 tw:p-1' : 'tw:h-9 tw:p-1',
           className
         )}

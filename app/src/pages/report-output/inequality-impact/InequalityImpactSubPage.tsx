@@ -22,9 +22,9 @@ import { useViewportSize } from '@/hooks/useViewportSize';
 import type { RootState } from '@/store';
 import { relativeChangeMessage } from '@/utils/chartMessages';
 import {
-  downloadCsv,
   getClampedChartHeight,
   getNiceTicks,
+  getYAxisLayout,
   RECHARTS_FONT_STYLE,
 } from '@/utils/chartUtils';
 import { formatPercent, precision } from '@/utils/formatters';
@@ -33,9 +33,14 @@ import { regionName } from '@/utils/impactChartUtils';
 interface Props {
   output: SocietyWideReportOutput;
   chartHeight?: number;
+  fillHeight?: boolean;
 }
 
-export default function InequalityImpactSubPage({ output, chartHeight: chartHeightProp }: Props) {
+export default function InequalityImpactSubPage({
+  output,
+  chartHeight: chartHeightProp,
+  fillHeight = false,
+}: Props) {
   const mobile = useMediaQuery(MOBILE_BREAKPOINT_QUERY);
   const countryId = useCurrentCountry();
   const metadata = useSelector((state: RootState) => state.metadata);
@@ -108,23 +113,6 @@ export default function InequalityImpactSubPage({ output, chartHeight: chartHeig
     return `This reform would ${signTerm} income inequality${regionPhrase}`;
   };
 
-  // CSV export handler
-  const handleDownloadCsv = () => {
-    const header = ['Metric', 'Baseline', 'Reform', 'Change'];
-    const baselineValues = [giniImpact.baseline, top10Impact.baseline, top1Impact.baseline];
-    const reformValues = [giniImpact.reform, top10Impact.reform, top1Impact.reform];
-    const data = [
-      header,
-      ...labels.map((label, index) => {
-        const baseline = baselineValues[index];
-        const reform = reformValues[index];
-        const change = reform / baseline - 1;
-        return [label, baseline.toString(), reform.toString(), change.toString()];
-      }),
-    ];
-    downloadCsv(data, 'inequality-impact.csv');
-  };
-
   // Recharts data
   const chartData = labels.map((label, i) => ({
     name: label,
@@ -137,40 +125,69 @@ export default function InequalityImpactSubPage({ output, chartHeight: chartHeig
   const yDomain: [number, number] = [Math.min(0, ...values), Math.max(0, ...values)];
   const yTicks = getNiceTicks(yDomain);
 
+  const yTickFormatter = (v: number) => `${(v * 100).toFixed(ytickPrecision)}%`;
+  const yAxis = getYAxisLayout(yTicks, true, yTickFormatter);
+
+  const barChart = (
+    <BarChart data={chartData} margin={{ top: 20, right: 20, bottom: 20, left: yAxis.marginLeft }}>
+      <CartesianGrid strokeDasharray="3 3" vertical={false} />
+      <XAxis dataKey="name" tick={RECHARTS_FONT_STYLE} />
+      <YAxis
+        ticks={yTicks}
+        domain={[yTicks[0], yTicks[yTicks.length - 1]]}
+        tickFormatter={yTickFormatter}
+        tick={RECHARTS_FONT_STYLE}
+        tickLine={false}
+        width={yAxis.yAxisWidth}
+      >
+        <Label
+          value="Relative change"
+          angle={-90}
+          position="center"
+          dx={yAxis.labelDx}
+          style={{ textAnchor: 'middle', ...RECHARTS_FONT_STYLE }}
+        />
+      </YAxis>
+      <Tooltip content={<ImpactTooltip />} />
+      <Bar dataKey="value" label={<ImpactBarLabel data={chartData} />}>
+        {chartData.map((entry, index) => (
+          <Cell key={index} fill={entry.value < 0 ? colors.primary[500] : colors.gray[600]} />
+        ))}
+      </Bar>
+    </BarChart>
+  );
+
+  const inequalityDescription = (
+    <Text size="sm" c="dimmed">
+      PolicyEngine reports income inequality based on the distribution of net income after taxes and
+      transfers.
+    </Text>
+  );
+
+  if (fillHeight) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+        <div style={{ flex: 1, minHeight: 0 }}>
+          <ResponsiveContainer width="100%" height="100%">
+            {barChart}
+          </ResponsiveContainer>
+        </div>
+        <div style={{ flexShrink: 0 }}>
+          <ChartWatermark />
+          {inequalityDescription}
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <ChartContainer title={getChartTitle()} onDownloadCsv={handleDownloadCsv}>
+    <ChartContainer title={getChartTitle()} downloadFilename="inequality-impact.svg">
       <Stack gap="sm">
         <ResponsiveContainer width="100%" height={chartHeight}>
-          <BarChart data={chartData} margin={{ top: 5, right: 20, bottom: 60, left: 20 }}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} />
-            <XAxis dataKey="name" tick={RECHARTS_FONT_STYLE} />
-            <YAxis
-              ticks={yTicks}
-              domain={[yTicks[0], yTicks[yTicks.length - 1]]}
-              tickFormatter={(v: number) => `${(v * 100).toFixed(ytickPrecision)}%`}
-              tick={RECHARTS_FONT_STYLE}
-            >
-              <Label
-                value="Relative change"
-                angle={-90}
-                position="insideLeft"
-                style={{ textAnchor: 'middle', ...RECHARTS_FONT_STYLE }}
-              />
-            </YAxis>
-            <Tooltip content={<ImpactTooltip />} />
-            <Bar dataKey="value" label={<ImpactBarLabel data={chartData} />}>
-              {chartData.map((entry, index) => (
-                <Cell key={index} fill={entry.value < 0 ? colors.primary[500] : colors.gray[600]} />
-              ))}
-            </Bar>
-          </BarChart>
+          {barChart}
         </ResponsiveContainer>
         <ChartWatermark />
-
-        <Text size="sm" c="dimmed">
-          PolicyEngine reports income inequality based on the distribution of net income after taxes
-          and transfers.
-        </Text>
+        {inequalityDescription}
       </Stack>
     </ChartContainer>
   );
