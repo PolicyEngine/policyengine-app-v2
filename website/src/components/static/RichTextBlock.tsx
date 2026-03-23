@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { colors } from "@policyengine/design-system/tokens";
+import { colors, typography } from "@policyengine/design-system/tokens";
 
 export interface RichTextBlockProps {
   children: ReactNode;
@@ -13,13 +13,15 @@ export default function RichTextBlock({
   const textColor =
     variant === "inverted" ? colors.text.inverse : colors.text.primary;
   const linkColor =
-    variant === "inverted" ? colors.text.inverse : colors.primary[500];
+    variant === "inverted" ? colors.text.inverse : colors.text.link;
+  const linkHoverColor =
+    variant === "inverted" ? colors.text.inverse : colors.text.linkHover;
 
   return (
     <>
       <style>{`
         .rich-text-block p {
-          font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          font-family: ${typography.fontFamily.body};
           font-size: 16px;
           line-height: 1.625;
           margin-bottom: 16px;
@@ -34,7 +36,7 @@ export default function RichTextBlock({
           transition: opacity 0.2s ease;
         }
         .rich-text-block a:hover {
-          opacity: 0.8;
+          color: var(--rtb-link-hover-color);
         }
       `}</style>
       <div
@@ -43,6 +45,7 @@ export default function RichTextBlock({
           {
             color: textColor,
             "--rtb-link-color": linkColor,
+            "--rtb-link-hover-color": linkHoverColor,
           } as React.CSSProperties
         }
       >

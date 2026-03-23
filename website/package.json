@@ -4,7 +4,8 @@
   "version": "0.1.0",
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build",
+    "build": "bash scripts/build.sh",
+    "build:next": "next build",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
@@ -12,7 +13,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@policyengine/design-system": "workspace:*",
+    "@policyengine/design-system": "*",
     "@tabler/icons-react": "^3.31.0",
     "fuse.js": "^7.1.0",
     "jsonp": "^0.2.1",
