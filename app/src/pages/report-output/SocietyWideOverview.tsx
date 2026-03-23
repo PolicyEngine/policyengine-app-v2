@@ -8,6 +8,8 @@ import {
   IconUsers,
 } from '@tabler/icons-react';
 import Plot from 'react-plotly.js';
+import { useSelector } from 'react-redux';
+import { normalizeDistrictId } from '@/adapters/congressional-district/congressionalDistrictDataAdapter';
 import { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import DashboardCard from '@/components/report/DashboardCard';
 import MetricCard from '@/components/report/MetricCard';
@@ -18,18 +20,27 @@ import { USDistrictChoroplethMap } from '@/components/visualization/USDistrictCh
 import { useCongressionalDistrictData } from '@/contexts/CongressionalDistrictDataContext';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import type { RootState } from '@/store';
 import type { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
 import { formatParameterValue } from '@/utils/chartValueUtils';
 import { formatBudgetaryImpact } from '@/utils/formatPowers';
 import { currencySymbol, formatCurrencyAbbr } from '@/utils/formatters';
 import { DIVERGING_GRAY_TEAL } from '@/utils/visualization/colorScales';
 import BudgetaryImpactSubPage from './budgetary-impact/BudgetaryImpactSubPage';
+import { getBudgetChartTitle } from './budgetary-impact/budgetChartUtils';
+import {
+  getDistributionalAverageTitle,
+  getDistributionalRelativeTitle,
+  getWinnersLosersTitle,
+} from './distributional-impact/distributionalChartUtils';
 import DistributionalImpactIncomeAverageSubPage from './distributional-impact/DistributionalImpactIncomeAverageSubPage';
 import DistributionalImpactIncomeRelativeSubPage from './distributional-impact/DistributionalImpactIncomeRelativeSubPage';
 import WinnersLosersIncomeDecileSubPage from './distributional-impact/WinnersLosersIncomeDecileSubPage';
+import { getInequalityTitle } from './inequality-impact/inequalityChartUtils';
 import InequalityImpactSubPage from './inequality-impact/InequalityImpactSubPage';
 import DeepPovertyImpactByAgeSubPage from './poverty-impact/DeepPovertyImpactByAgeSubPage';
 import DeepPovertyImpactByGenderSubPage from './poverty-impact/DeepPovertyImpactByGenderSubPage';
+import { getDeepPovertyTitle, getPovertyTitle } from './poverty-impact/povertyChartUtils';
 import PovertyImpactByAgeSubPage from './poverty-impact/PovertyImpactByAgeSubPage';
 import PovertyImpactByGenderSubPage from './poverty-impact/PovertyImpactByGenderSubPage';
 import PovertyImpactByRaceSubPage from './poverty-impact/PovertyImpactByRaceSubPage';
@@ -44,32 +55,6 @@ const HERO_ICON_SIZE = 48;
 const SECONDARY_ICON_SIZE = 36;
 
 const GRID_GAP = 16;
-
-// Expanded card chart heights — derived from the layout:
-//
-//   Expanded card outer: SHRUNKEN_CARD_HEIGHT × 2 + GRID_GAP = 416px
-//   Card border: 2px (1px each side)
-//   Card padding (spacing.lg = 16px): 32px → content area = 382px
-//
-//   Controls row (height: 31px, matching SegmentedControl xs rendered height
-//   of ~30.6px — see SegmentedControl.css: root padding 4px + label padding
-//   2px + font 12px × 1.55 line-height + label padding 2px + root padding 4px)
-//   + marginBottom 8px = 39px total
-//
-//   → expandedContent area = 382 − 39 = 343px (secondary cards)
-//   → expandedContent area = 374 − 39 = 335px (budget card, spacing.xl = 20px)
-//
-//   ChartContainer chrome: title row (~28px) + gap (8px) + Box padding (24px)
-//   + Box border (2px) = 62px.  Secondary charts also have a description line
-//   (~19px) and an inner gap (8px) = 27px extra inside the Box.
-//
-//   Target Box content height ≈ 279 for all chart cards:
-//     Budget  (no description):  chartHeight = 279
-//     Secondary (with desc+gap): chartHeight = 279 − 27 = 252
-//
-// CONTROLS_ROW_H = 39: 31 (SC xs height) + 8 (marginBottom) — referenced in derivation above
-const BUDGET_CHART_H = 279;
-const SECONDARY_CHART_H = 252;
 
 // Congressional map height (3 rows):
 //   outer: 200×3 + 16×2 = 632, minus border(2) + padding(32) + controls(39) = 559
@@ -304,7 +289,10 @@ function CongressionalDistrictCard({
     if (!districtData?.districts) {
       return null;
     }
-    return districtData.districts;
+    return districtData.districts.map((d) => ({
+      ...d,
+      district: normalizeDistrictId(d.district),
+    }));
   }, [output]);
 
   // Auto-start fetch only when the report output is ready and no
@@ -562,6 +550,7 @@ export default function SocietyWideOverview({
   showCongressionalCard,
 }: SocietyWideOverviewProps) {
   const countryId = useCurrentCountry();
+  const metadata = useSelector((state: RootState) => state.metadata);
   const symbol = currencySymbol(countryId);
   const [expandedCard, setExpandedCard] = useState<CardKey | null>(null);
   const [decileMode, setDecileMode] = useState<DecileMode>('absolute');
@@ -629,12 +618,7 @@ export default function SocietyWideOverview({
 
   const budgetIsPositive = budgetaryImpact > 0;
   const budgetValue = formatImpact(budgetaryImpact);
-  const budgetSubtext =
-    budgetaryImpact === 0
-      ? 'This policy has no impact on the budget'
-      : budgetIsPositive
-        ? 'in additional government revenue'
-        : 'in additional government spending';
+  const budgetSubtext = getBudgetChartTitle(budgetaryImpact, countryId, metadata);
 
   // Calculate poverty rate change
   const povertyOverview = output.poverty.poverty.all;
@@ -710,22 +694,34 @@ export default function SocietyWideOverview({
   const povertyChart = (() => {
     if (povertyDepth === 'regular') {
       if (povertyBreakdown === 'by-age') {
-        return <PovertyImpactByAgeSubPage output={output} chartHeight={SECONDARY_CHART_H} />;
+        return <PovertyImpactByAgeSubPage output={output} fillHeight />;
       }
       if (povertyBreakdown === 'by-gender') {
-        return <PovertyImpactByGenderSubPage output={output} chartHeight={SECONDARY_CHART_H} />;
+        return <PovertyImpactByGenderSubPage output={output} fillHeight />;
       }
       if (povertyBreakdown === 'by-race') {
-        return <PovertyImpactByRaceSubPage output={output} chartHeight={SECONDARY_CHART_H} />;
+        return <PovertyImpactByRaceSubPage output={output} fillHeight />;
       }
     }
     if (povertyBreakdown === 'by-age') {
-      return <DeepPovertyImpactByAgeSubPage output={output} chartHeight={SECONDARY_CHART_H} />;
+      return <DeepPovertyImpactByAgeSubPage output={output} fillHeight />;
     }
     if (povertyBreakdown === 'by-gender') {
-      return <DeepPovertyImpactByGenderSubPage output={output} chartHeight={SECONDARY_CHART_H} />;
+      return <DeepPovertyImpactByGenderSubPage output={output} fillHeight />;
     }
     return null;
+  })();
+
+  // Poverty SVG download filename depends on depth + breakdown
+  const povertyDownloadFilename = (() => {
+    const depthPrefix = povertyDepth === 'deep' ? 'deep-' : '';
+    const breakdownSuffix =
+      povertyBreakdown === 'by-age'
+        ? 'by-age'
+        : povertyBreakdown === 'by-gender'
+          ? 'by-gender'
+          : 'by-race';
+    return `${depthPrefix}poverty-impact-${breakdownSuffix}.svg`;
   })();
 
   // Decile impact mini chart data (absolute)
@@ -835,7 +831,7 @@ export default function SocietyWideOverview({
                       decreasing: { marker: { color: colors.gray[600] } },
                       totals: {
                         marker: {
-                          color: budgetaryImpact < 0 ? colors.gray[600] : colors.primary[500],
+                          color: budgetaryImpact < 0 ? colors.gray[600] : colors.primary[700],
                         },
                       },
                       connector: {
@@ -873,7 +869,9 @@ export default function SocietyWideOverview({
             </div>
           </div>
         }
-        expandedContent={<BudgetaryImpactSubPage output={output} chartHeight={BUDGET_CHART_H} />}
+        expandedTitle={getBudgetChartTitle(output.budget.budgetary_impact, countryId, metadata)}
+        downloadFilename="budgetary-impact.svg"
+        expandedContent={<BudgetaryImpactSubPage output={output} fillHeight />}
         onToggleMode={() => toggle('budget')}
       />
 
@@ -930,17 +928,21 @@ export default function SocietyWideOverview({
             options={DECILE_MODE_OPTIONS}
           />
         }
+        expandedTitle={
+          decileMode === 'absolute'
+            ? getDistributionalAverageTitle(output, countryId, metadata)
+            : getDistributionalRelativeTitle(output, countryId, metadata)
+        }
+        downloadFilename={
+          decileMode === 'absolute'
+            ? 'distributional-impact-income-average.svg'
+            : 'distributional-impact-income-relative.svg'
+        }
         expandedContent={
           decileMode === 'absolute' ? (
-            <DistributionalImpactIncomeAverageSubPage
-              output={output}
-              chartHeight={SECONDARY_CHART_H}
-            />
+            <DistributionalImpactIncomeAverageSubPage output={output} fillHeight />
           ) : (
-            <DistributionalImpactIncomeRelativeSubPage
-              output={output}
-              chartHeight={SECONDARY_CHART_H}
-            />
+            <DistributionalImpactIncomeRelativeSubPage output={output} fillHeight />
           )
         }
         onToggleMode={() => toggle('decile')}
@@ -1038,9 +1040,9 @@ export default function SocietyWideOverview({
             </Group>
           </div>
         }
-        expandedContent={
-          <WinnersLosersIncomeDecileSubPage output={output} chartHeight={SECONDARY_CHART_H} />
-        }
+        expandedTitle={getWinnersLosersTitle(output, countryId, metadata)}
+        downloadFilename="winners-losers-income-decile.svg"
+        expandedContent={<WinnersLosersIncomeDecileSubPage output={output} fillHeight />}
         onToggleMode={() => toggle('winners')}
       />
 
@@ -1087,6 +1089,12 @@ export default function SocietyWideOverview({
             />
           </>
         }
+        expandedTitle={
+          povertyDepth === 'regular'
+            ? getPovertyTitle(output, countryId, metadata)
+            : getDeepPovertyTitle(output, countryId, metadata)
+        }
+        downloadFilename={povertyDownloadFilename}
         expandedContent={povertyChart}
         onToggleMode={() => toggle('poverty')}
       />
@@ -1118,9 +1126,9 @@ export default function SocietyWideOverview({
             />
           </Group>
         }
-        expandedContent={
-          <InequalityImpactSubPage output={output} chartHeight={SECONDARY_CHART_H} />
-        }
+        expandedTitle={getInequalityTitle(output, metadata)}
+        downloadFilename="inequality-impact.svg"
+        expandedContent={<InequalityImpactSubPage output={output} fillHeight />}
         onToggleMode={() => toggle('inequality')}
       />
 

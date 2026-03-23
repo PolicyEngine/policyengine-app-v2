@@ -5,6 +5,7 @@ import {
   computeWaterfallData,
   getWaterfallDomain,
   WaterfallChart,
+  type WaterfallDatum,
   type WaterfallItem,
 } from '@/components/charts';
 import { MOBILE_BREAKPOINT_QUERY } from '@/hooks/useChartDimensions';
@@ -13,7 +14,7 @@ import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useViewportSize } from '@/hooks/useViewportSize';
 import type { RootState } from '@/store';
 import { absoluteChangeMessage } from '@/utils/chartMessages';
-import { downloadCsv, getClampedChartHeight, getNiceTicks } from '@/utils/chartUtils';
+import { getClampedChartHeight, getNiceTicks } from '@/utils/chartUtils';
 import { currencySymbol } from '@/utils/formatters';
 import {
   BudgetWaterfallTooltip,
@@ -26,9 +27,14 @@ import {
 interface Props {
   output: SocietyWideReportOutput;
   chartHeight?: number;
+  fillHeight?: boolean;
 }
 
-export default function BudgetaryImpactSubPage({ output, chartHeight: chartHeightProp }: Props) {
+export default function BudgetaryImpactSubPage({
+  output,
+  chartHeight: chartHeightProp,
+  fillHeight = false,
+}: Props) {
   const mobile = useMediaQuery(MOBILE_BREAKPOINT_QUERY);
   const { height: viewportHeight } = useViewportSize();
   const countryId = useCurrentCountry();
@@ -68,12 +74,6 @@ export default function BudgetaryImpactSubPage({ output, chartHeight: chartHeigh
   // Filter out zero values
   const values = valuesBeforeFilter.filter((v) => v !== 0);
   const labels = labelsBeforeFilter.filter((_label, i) => valuesBeforeFilter[i] !== 0);
-
-  // CSV export handler
-  const handleDownloadCsv = () => {
-    const csvData = labels.map((label, i) => [label, values[i].toString()]);
-    downloadCsv(csvData, 'budgetary-impact.csv');
-  };
 
   // Generate hover message
   const hoverMessage = (name: string, valueBn: number) => {
@@ -115,21 +115,27 @@ export default function BudgetaryImpactSubPage({ output, chartHeight: chartHeigh
   const symbol = currencySymbol(countryId);
   const tickFormatter = makeBudgetTickFormatter(symbol, yDomain);
 
+  const waterfallProps = {
+    data: dataWithHover,
+    yDomain,
+    yTicks,
+    yAxisLabel: 'Budgetary impact (bn)' as const,
+    yTickFormatter: tickFormatter,
+    fillColor: (d: WaterfallDatum) => getBudgetFillColor(d, budgetaryImpact),
+    tooltipContent: <BudgetWaterfallTooltip />,
+    barLabelFormatter: (v: number) => formatBillions(v * 1e9, countryId),
+  };
+
+  if (fillHeight) {
+    return <WaterfallChart {...waterfallProps} fillHeight />;
+  }
+
   return (
     <ChartContainer
       title={getBudgetChartTitle(budgetaryImpact, countryId, metadata)}
-      onDownloadCsv={handleDownloadCsv}
+      downloadFilename="budgetary-impact.svg"
     >
-      <WaterfallChart
-        data={dataWithHover}
-        yDomain={yDomain}
-        yTicks={yTicks}
-        height={chartHeight}
-        yAxisLabel="Budgetary impact (bn)"
-        yTickFormatter={tickFormatter}
-        fillColor={(d) => getBudgetFillColor(d, budgetaryImpact)}
-        tooltipContent={<BudgetWaterfallTooltip />}
-      />
+      <WaterfallChart {...waterfallProps} height={chartHeight} />
     </ChartContainer>
   );
 }

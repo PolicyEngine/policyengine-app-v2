@@ -1,11 +1,14 @@
 import { describe, expect, test } from 'vitest';
 import {
   buildDistrictLabelLookup,
+  normalizeDistrictId,
   transformDistrictAbsoluteChange,
   transformDistrictData,
   transformDistrictRelativeChange,
 } from '@/adapters/congressional-district/congressionalDistrictDataAdapter';
 import {
+  BUGGY_DC_DISTRICT_DATA,
+  BUGGY_SINGLE_DISTRICT_DATA,
   DISTRICT_DATA_WITH_UNKNOWN,
   EMPTY_DISTRICT_DATA,
   EXPECTED_ABSOLUTE_CHANGE_DATA,
@@ -266,6 +269,69 @@ describe('congressionalDistrictDataAdapter', () => {
       expect(result[0].value).toBeGreaterThan(0); // AL-01
       expect(result[2].value).toBeLessThan(0); // NY-12
       expect(result[3].value).toBe(0); // TX-28
+    });
+  });
+
+  describe('normalizeDistrictId', () => {
+    test('given single-district state with -00 then normalizes to -01', () => {
+      expect(normalizeDistrictId('WY-00')).toBe('WY-01');
+    });
+
+    test('given any state with -00 then normalizes to -01', () => {
+      expect(normalizeDistrictId('AK-00')).toBe('AK-01');
+      expect(normalizeDistrictId('DE-00')).toBe('DE-01');
+      expect(normalizeDistrictId('MT-00')).toBe('MT-01');
+      expect(normalizeDistrictId('ND-00')).toBe('ND-01');
+      expect(normalizeDistrictId('SD-00')).toBe('SD-01');
+      expect(normalizeDistrictId('VT-00')).toBe('VT-01');
+    });
+
+    test('given DC-98 then normalizes to DC-01', () => {
+      expect(normalizeDistrictId('DC-98')).toBe('DC-01');
+    });
+
+    test('given normal district ID then returns unchanged', () => {
+      expect(normalizeDistrictId('CA-52')).toBe('CA-52');
+      expect(normalizeDistrictId('AL-01')).toBe('AL-01');
+      expect(normalizeDistrictId('NY-12')).toBe('NY-12');
+    });
+
+    test('given DC with correct format then returns unchanged', () => {
+      expect(normalizeDistrictId('DC-01')).toBe('DC-01');
+    });
+  });
+
+  describe('transformDistrictData with buggy district IDs', () => {
+    test('given single-district state with -00 then normalizes geoId and resolves label', () => {
+      // Given
+      const apiData = BUGGY_SINGLE_DISTRICT_DATA;
+      const labelLookup = new Map([['WY-01', "Wyoming's at-large congressional district"]]);
+
+      // When
+      const result = transformDistrictData(apiData, 'average_household_income_change', labelLookup);
+
+      // Then
+      expect(result).toHaveLength(1);
+      expect(result[0].geoId).toBe('WY-01');
+      expect(result[0].label).toBe("Wyoming's at-large congressional district");
+      expect(result[0].value).toBe(500.0);
+    });
+
+    test('given DC-98 then normalizes geoId and resolves label', () => {
+      // Given
+      const apiData = BUGGY_DC_DISTRICT_DATA;
+      const labelLookup = new Map([
+        ['DC-01', "District of Columbia's at-large congressional district"],
+      ]);
+
+      // When
+      const result = transformDistrictData(apiData, 'average_household_income_change', labelLookup);
+
+      // Then
+      expect(result).toHaveLength(1);
+      expect(result[0].geoId).toBe('DC-01');
+      expect(result[0].label).toBe("District of Columbia's at-large congressional district");
+      expect(result[0].value).toBe(250.0);
     });
   });
 });

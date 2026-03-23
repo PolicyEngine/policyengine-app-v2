@@ -23,9 +23,9 @@ import { useViewportSize } from '@/hooks/useViewportSize';
 import type { RootState } from '@/store';
 import { relativeChangeMessage } from '@/utils/chartMessages';
 import {
-  downloadCsv,
   getClampedChartHeight,
   getNiceTicks,
+  getYAxisLayout,
   RECHARTS_FONT_STYLE,
 } from '@/utils/chartUtils';
 import { formatNumber, formatPercent } from '@/utils/formatters';
@@ -34,11 +34,13 @@ import { regionName } from '@/utils/impactChartUtils';
 interface Props {
   output: SocietyWideReportOutput;
   chartHeight?: number;
+  fillHeight?: boolean;
 }
 
 export default function PovertyImpactByGenderSubPage({
   output,
   chartHeight: chartHeightProp,
+  fillHeight = false,
 }: Props) {
   const mobile = useMediaQuery(MOBILE_BREAKPOINT_QUERY);
   const countryId = useCurrentCountry();
@@ -115,26 +117,6 @@ export default function PovertyImpactByGenderSubPage({
     return `This reform would ${signTerm} ${objectTerm}${regionPhrase} by ${term2}`;
   };
 
-  // CSV export handler
-  const handleDownloadCsv = () => {
-    const header = ['Gender', 'Baseline', 'Reform', 'Change'];
-    const data = [
-      header,
-      ...povertyLabels.map((label) => {
-        const key = labelToKey[label];
-        const baseline =
-          label === 'All'
-            ? allImpact.all.baseline
-            : genderImpact[key as 'male' | 'female'].baseline;
-        const reform =
-          label === 'All' ? allImpact.all.reform : genderImpact[key as 'male' | 'female'].reform;
-        const change = reform / baseline - 1;
-        return [label, baseline.toString(), reform.toString(), change.toString()];
-      }),
-    ];
-    downloadCsv(data, 'poverty-impact-by-gender.csv');
-  };
-
   // Recharts data
   const chartData = povertyLabels.map((label, i) => ({
     name: label,
@@ -147,6 +129,9 @@ export default function PovertyImpactByGenderSubPage({
   const yDomain: [number, number] = [Math.min(0, ...values), Math.max(0, ...values)];
   const yTicks = getNiceTicks(yDomain);
 
+  const yTickFormatter = (v: number) => `${(v * 100).toFixed(1)}%`;
+  const yAxis = getYAxisLayout(yTicks, true, yTickFormatter);
+
   // Description text
   const povertyMeasure =
     countryId === 'uk'
@@ -155,40 +140,66 @@ export default function PovertyImpactByGenderSubPage({
   const unitTerm = countryId === 'uk' ? 'resource units' : 'households';
   const description = `PolicyEngine reports the impact to ${povertyMeasure}. The poverty rate is the population share in ${unitTerm} with net income (after taxes and transfers) below their poverty threshold.`;
 
+  const barChart = (
+    <BarChart data={chartData} margin={{ top: 20, right: 20, bottom: 20, left: yAxis.marginLeft }}>
+      <CartesianGrid strokeDasharray="3 3" vertical={false} />
+      <XAxis dataKey="name" tick={RECHARTS_FONT_STYLE} />
+      <YAxis
+        ticks={yTicks}
+        domain={[yTicks[0], yTicks[yTicks.length - 1]]}
+        tickFormatter={yTickFormatter}
+        tick={RECHARTS_FONT_STYLE}
+        tickLine={false}
+        width={yAxis.yAxisWidth}
+      >
+        <Label
+          value="Relative change in poverty rate"
+          angle={-90}
+          position="center"
+          dx={yAxis.labelDx}
+          style={{ textAnchor: 'middle', ...RECHARTS_FONT_STYLE }}
+        />
+      </YAxis>
+      <ReferenceLine y={0} stroke={colors.gray[600]} strokeWidth={1} />
+      <Tooltip content={<ImpactTooltip />} />
+      <Bar dataKey="value" label={<ImpactBarLabel data={chartData} />}>
+        {chartData.map((entry, index) => (
+          <Cell key={index} fill={entry.value < 0 ? colors.primary[500] : colors.gray[600]} />
+        ))}
+      </Bar>
+    </BarChart>
+  );
+
+  const descriptionText = (
+    <Text size="sm" c="dimmed">
+      {description}
+    </Text>
+  );
+
+  if (fillHeight) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+        <div style={{ flex: 1, minHeight: 0 }}>
+          <ResponsiveContainer width="100%" height="100%">
+            {barChart}
+          </ResponsiveContainer>
+        </div>
+        <div style={{ flexShrink: 0 }}>
+          <ChartWatermark />
+          {descriptionText}
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <ChartContainer title={getChartTitle()} onDownloadCsv={handleDownloadCsv}>
+    <ChartContainer title={getChartTitle()} downloadFilename="poverty-impact-by-gender.svg">
       <Stack gap="sm">
         <ResponsiveContainer width="100%" height={chartHeight}>
-          <BarChart data={chartData} margin={{ top: 20, right: 20, bottom: 60, left: 60 }}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} />
-            <XAxis dataKey="name" tick={RECHARTS_FONT_STYLE} />
-            <YAxis
-              ticks={yTicks}
-              domain={[yTicks[0], yTicks[yTicks.length - 1]]}
-              tickFormatter={(v: number) => `${(v * 100).toFixed(1)}%`}
-              tick={RECHARTS_FONT_STYLE}
-            >
-              <Label
-                value="Relative change in poverty rate"
-                angle={-90}
-                position="insideLeft"
-                style={{ textAnchor: 'middle', ...RECHARTS_FONT_STYLE }}
-              />
-            </YAxis>
-            <ReferenceLine y={0} stroke={colors.gray[400]} strokeWidth={1} />
-            <Tooltip content={<ImpactTooltip />} />
-            <Bar dataKey="value" label={<ImpactBarLabel data={chartData} />}>
-              {chartData.map((entry, index) => (
-                <Cell key={index} fill={entry.value < 0 ? colors.primary[500] : colors.gray[600]} />
-              ))}
-            </Bar>
-          </BarChart>
+          {barChart}
         </ResponsiveContainer>
         <ChartWatermark />
-
-        <Text size="sm" c="dimmed">
-          {description}
-        </Text>
+        {descriptionText}
       </Stack>
     </ChartContainer>
   );

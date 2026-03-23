@@ -16,7 +16,10 @@ import {
   useRef,
 } from 'react';
 import { useSelector } from 'react-redux';
-import { buildDistrictLabelLookup } from '@/adapters/congressional-district/congressionalDistrictDataAdapter';
+import {
+  buildDistrictLabelLookup,
+  normalizeDistrictId,
+} from '@/adapters/congressional-district/congressionalDistrictDataAdapter';
 import {
   fetchSocietyWideCalculation,
   SocietyWideCalculationResponse,
@@ -109,7 +112,13 @@ export function CongressionalDistrictDataProvider({
             const districtData = result.congressional_district_impact;
 
             const stateData: StateDistrictData | null = districtData?.districts
-              ? { stateCode, districts: districtData.districts }
+              ? {
+                  stateCode,
+                  districts: districtData.districts.map((d) => ({
+                    ...d,
+                    district: normalizeDistrictId(d.district),
+                  })),
+                }
               : null;
 
             dispatch({ type: 'STATE_COMPLETED', stateCode, data: stateData });

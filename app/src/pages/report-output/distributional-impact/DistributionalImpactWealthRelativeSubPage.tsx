@@ -21,12 +21,7 @@ import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useViewportSize } from '@/hooks/useViewportSize';
 import type { RootState } from '@/store';
 import { relativeChangeMessage } from '@/utils/chartMessages';
-import {
-  downloadCsv,
-  getClampedChartHeight,
-  getNiceTicks,
-  RECHARTS_FONT_STYLE,
-} from '@/utils/chartUtils';
+import { getClampedChartHeight, getNiceTicks, RECHARTS_FONT_STYLE } from '@/utils/chartUtils';
 import { formatPercent, ordinal, precision } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
 
@@ -81,18 +76,6 @@ export default function DistributionalImpactWealthRelativeSubPage({ output }: Pr
     return `This reform would ${signTerm} ${term1} by ${term2}${regionPhrase} on average`;
   };
 
-  // CSV export handler
-  const handleDownloadCsv = () => {
-    const csvData = [
-      ['Wealth decile', 'Relative change'],
-      ...Object.entries(decileRelative).map(([decile, relativeChange]) => [
-        decile,
-        relativeChange.toString(),
-      ]),
-    ];
-    downloadCsv(csvData, 'distributional-impact-wealth-relative.csv');
-  };
-
   // Transform data for Recharts
   const chartData = xArray.map((x, i) => ({
     name: x,
@@ -106,7 +89,10 @@ export default function DistributionalImpactWealthRelativeSubPage({ output }: Pr
   const yTicks = getNiceTicks(yDomain);
 
   return (
-    <ChartContainer title={getChartTitle()} onDownloadCsv={handleDownloadCsv}>
+    <ChartContainer
+      title={getChartTitle()}
+      downloadFilename="distributional-impact-wealth-relative.svg"
+    >
       <Stack gap="sm">
         <ResponsiveContainer width="100%" height={chartHeight}>
           <BarChart data={chartData} margin={{ top: 20, right: 20, bottom: 30, left: 30 }}>

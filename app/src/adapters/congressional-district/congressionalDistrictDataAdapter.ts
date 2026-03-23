@@ -9,6 +9,24 @@ import { US_REGION_TYPES } from '@/types/regionTypes';
 export type DistrictLabelLookup = Map<string, string>;
 
 /**
+ * Normalizes district IDs to match the canonical format used by metadata and GeoJSON.
+ *
+ * WORKAROUND: The backend dataset encodes single-district states as -00 instead of
+ * -01, and DC as -98 instead of -01. This function corrects those IDs so they match
+ * the metadata and GeoJSON. Remove this workaround once the dataset is fixed upstream.
+ */
+export function normalizeDistrictId(districtId: string): string {
+  const [state, num] = districtId.split('-');
+  if (num === '00') {
+    return `${state}-01`;
+  }
+  if (state === 'DC' && num === '98') {
+    return 'DC-01';
+  }
+  return districtId;
+}
+
+/**
  * Builds a lookup map from district ID to label from metadata regions.
  *
  * @param regions - Array of region entries from metadata.economyOptions.region
@@ -68,11 +86,14 @@ export function transformDistrictData(
   valueField: 'average_household_income_change' | 'relative_household_income_change',
   labelLookup: DistrictLabelLookup
 ): ChoroplethDataPoint[] {
-  return apiData.districts.map((item) => ({
-    geoId: item.district, // Use district ID directly (matches GeoJSON DISTRICT_ID)
-    label: labelLookup.get(item.district) ?? `District ${item.district}`,
-    value: item[valueField],
-  }));
+  return apiData.districts.map((item) => {
+    const id = normalizeDistrictId(item.district);
+    return {
+      geoId: id,
+      label: labelLookup.get(id) ?? `District ${id}`,
+      value: item[valueField],
+    };
+  });
 }
 
 /**

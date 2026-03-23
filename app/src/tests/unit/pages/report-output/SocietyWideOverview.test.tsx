@@ -31,7 +31,7 @@ describe('SocietyWideOverview', () => {
   });
 
   describe('budgetary impact section', () => {
-    test('given positive budgetary impact then displays formatted value with revenue subtext', () => {
+    test('given positive budgetary impact then displays formatted value with raise subtext', () => {
       // Given
       const output = createMockSocietyWideOutput({
         budget: { budgetary_impact: 1_000_000 } as any,
@@ -44,10 +44,10 @@ describe('SocietyWideOverview', () => {
       expect(screen.getByText('Budgetary impact')).toBeInTheDocument();
       expect(container.textContent).toContain('$1.0');
       expect(container.textContent).toContain('million');
-      expect(container.textContent).toContain('additional government revenue');
+      expect(container.textContent).toContain('This reform would raise');
     });
 
-    test('given negative budgetary impact then displays spending subtext', () => {
+    test('given negative budgetary impact then displays cost subtext', () => {
       // Given
       const output = createMockSocietyWideOutput({
         budget: { budgetary_impact: -1_000_000 } as any,
@@ -57,7 +57,7 @@ describe('SocietyWideOverview', () => {
       const { container } = render(<SocietyWideOverview output={output} />);
 
       // Then
-      expect(container.textContent).toContain('additional government spending');
+      expect(container.textContent).toContain('This reform would cost');
     });
 
     test('given zero budgetary impact then shows no change message', () => {
@@ -69,7 +69,7 @@ describe('SocietyWideOverview', () => {
 
       // Then
       expect(container.textContent).toContain('No change');
-      expect(container.textContent).toContain('no impact on the budget');
+      expect(container.textContent).toContain('no effect on the budget');
     });
   });
 

@@ -21,12 +21,7 @@ import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useViewportSize } from '@/hooks/useViewportSize';
 import type { RootState } from '@/store';
 import { absoluteChangeMessage } from '@/utils/chartMessages';
-import {
-  downloadCsv,
-  getClampedChartHeight,
-  getNiceTicks,
-  RECHARTS_FONT_STYLE,
-} from '@/utils/chartUtils';
+import { getClampedChartHeight, getNiceTicks, RECHARTS_FONT_STYLE } from '@/utils/chartUtils';
 import { currencySymbol, formatCurrency, ordinal, precision } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
 
@@ -89,15 +84,6 @@ export default function DistributionalImpactWealthAverageSubPage({ output }: Pro
     return `This reform would ${signTerm} ${term1} by ${term2}${regionPhrase} on average`;
   };
 
-  // CSV export handler
-  const handleDownloadCsv = () => {
-    const csvData = Object.entries(decileAverage).map(([key, value]) => [
-      `Decile ${key}`,
-      value.toString(),
-    ]);
-    downloadCsv(csvData, 'distributional-impact-wealth-average.csv');
-  };
-
   // Transform data for Recharts
   const chartData = xArray.map((x, i) => ({
     name: x,
@@ -113,7 +99,10 @@ export default function DistributionalImpactWealthAverageSubPage({ output }: Pro
   const prefix = currencySymbol(countryId);
 
   return (
-    <ChartContainer title={getChartTitle()} onDownloadCsv={handleDownloadCsv}>
+    <ChartContainer
+      title={getChartTitle()}
+      downloadFilename="distributional-impact-wealth-average.svg"
+    >
       <Stack gap="sm">
         <ResponsiveContainer width="100%" height={chartHeight}>
           <BarChart data={chartData} margin={{ top: 20, right: 20, bottom: 30, left: 20 }}>

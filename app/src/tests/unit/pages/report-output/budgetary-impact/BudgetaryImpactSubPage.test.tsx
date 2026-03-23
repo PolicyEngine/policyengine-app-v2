@@ -32,10 +32,12 @@ vi.mock('@/hooks/useCurrentCountry', () => ({
 // Mock chart utils
 vi.mock('@/utils/chartUtils', () => ({
   DEFAULT_CHART_CONFIG: { displayModeBar: false },
+  downloadChartAsSvg: vi.fn(),
   downloadCsv: vi.fn(),
   getChartLogoImage: vi.fn(() => ({})),
   getClampedChartHeight: vi.fn(() => 500),
   getNiceTicks: vi.fn(() => [0, 5, 10]),
+  getYAxisLayout: vi.fn(() => ({ yAxisWidth: 60, marginLeft: 10, labelDx: -20 })),
   RECHARTS_FONT_STYLE: { fontFamily: 'Inter', fontSize: 12 },
   RECHARTS_WATERMARK: { src: '/test.png', width: 80, opacity: 0.8 },
 }));
@@ -65,28 +67,25 @@ describe('BudgetaryImpactSubPage', () => {
     expect(screen.getByText(/This reform would have no effect on the budget/i)).toBeInTheDocument();
   });
 
-  test('given output then renders download CSV button', () => {
+  test('given output then renders download SVG button', () => {
     // When
     render(<BudgetaryImpactSubPage output={MOCK_POSITIVE_IMPACT} />);
 
     // Then
-    expect(screen.getByLabelText(/download csv/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/download as svg/i)).toBeInTheDocument();
   });
 
-  test('given user clicks download CSV then calls downloadCsv', async () => {
+  test('given user clicks download SVG then calls downloadChartAsSvg', async () => {
     // Given
     const user = userEvent.setup();
-    const { downloadCsv } = await import('@/utils/chartUtils');
+    const { downloadChartAsSvg } = await import('@/utils/chartUtils');
     render(<BudgetaryImpactSubPage output={MOCK_POSITIVE_IMPACT} />);
 
     // When
-    await user.click(screen.getByLabelText(/download csv/i));
+    await user.click(screen.getByLabelText(/download as svg/i));
 
     // Then
-    expect(downloadCsv).toHaveBeenCalledWith(
-      expect.arrayContaining([expect.arrayContaining([expect.any(String), expect.any(String)])]),
-      'budgetary-impact.csv'
-    );
+    expect(downloadChartAsSvg).toHaveBeenCalled();
   });
 
   test('given large positive impact then formats with bn suffix', () => {

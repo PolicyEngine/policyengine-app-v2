@@ -23,9 +23,9 @@ import { useViewportSize } from '@/hooks/useViewportSize';
 import type { RootState } from '@/store';
 import { relativeChangeMessage } from '@/utils/chartMessages';
 import {
-  downloadCsv,
   getClampedChartHeight,
   getNiceTicks,
+  getYAxisLayout,
   RECHARTS_FONT_STYLE,
 } from '@/utils/chartUtils';
 import { formatPercent, ordinal, precision } from '@/utils/formatters';
@@ -34,11 +34,13 @@ import { regionName } from '@/utils/impactChartUtils';
 interface Props {
   output: SocietyWideReportOutput;
   chartHeight?: number;
+  fillHeight?: boolean;
 }
 
 export default function DistributionalImpactIncomeRelativeSubPage({
   output,
   chartHeight: chartHeightProp,
+  fillHeight = false,
 }: Props) {
   const mobile = useMediaQuery(MOBILE_BREAKPOINT_QUERY);
   const countryId = useCurrentCountry();
@@ -86,18 +88,6 @@ export default function DistributionalImpactIncomeRelativeSubPage({
     return `This reform would ${signTerm} ${term1} by ${term2}${regionPhrase} on average`;
   };
 
-  // CSV export handler
-  const handleDownloadCsv = () => {
-    const csvData = [
-      ['Income decile', 'Relative change'],
-      ...Object.entries(decileRelative).map(([decile, relativeChange]) => [
-        decile,
-        relativeChange.toString(),
-      ]),
-    ];
-    downloadCsv(csvData, 'distributional-impact-income-relative.csv');
-  };
-
   // Transform data for Recharts
   const chartData = xArray.map((x, i) => ({
     name: x,
@@ -110,6 +100,9 @@ export default function DistributionalImpactIncomeRelativeSubPage({
   const yDomain: [number, number] = [Math.min(0, ...values), Math.max(0, ...values)];
   const yTicks = getNiceTicks(yDomain);
 
+  const yTickFormatter = (v: number) => `${v >= 0 ? '+' : ''}${(v * 100).toFixed(1)}%`;
+  const yAxis = getYAxisLayout(yTicks, true, yTickFormatter);
+
   // Description text
   const description = (
     <Text size="sm" c="dimmed">
@@ -118,50 +111,64 @@ export default function DistributionalImpactIncomeRelativeSubPage({
     </Text>
   );
 
+  const barChart = (
+    <BarChart data={chartData} margin={{ top: 20, right: 20, bottom: 30, left: yAxis.marginLeft }}>
+      <CartesianGrid strokeDasharray="3 3" vertical={false} />
+      <XAxis dataKey="name" tick={RECHARTS_FONT_STYLE} tickLine={false}>
+        <Label value="Income decile" position="bottom" offset={10} style={RECHARTS_FONT_STYLE} />
+      </XAxis>
+      <YAxis
+        ticks={yTicks}
+        domain={[yTicks[0], yTicks[yTicks.length - 1]]}
+        tick={RECHARTS_FONT_STYLE}
+        tickLine={false}
+        tickFormatter={yTickFormatter}
+        width={yAxis.yAxisWidth}
+      >
+        <Label
+          value="Relative change in household income"
+          angle={-90}
+          position="center"
+          dx={yAxis.labelDx}
+          style={{ ...RECHARTS_FONT_STYLE, textAnchor: 'middle' }}
+        />
+      </YAxis>
+      <ReferenceLine y={0} stroke={colors.gray[600]} strokeWidth={1} />
+      <Tooltip content={<ImpactTooltip />} />
+      <Bar dataKey="value" label={<ImpactBarLabel data={chartData} />} isAnimationActive={false}>
+        {chartData.map((entry, index) => (
+          <Cell key={index} fill={entry.value < 0 ? colors.gray[600] : colors.primary[500]} />
+        ))}
+      </Bar>
+    </BarChart>
+  );
+
+  if (fillHeight) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+        <div style={{ flex: 1, minHeight: 0 }}>
+          <ResponsiveContainer width="100%" height="100%">
+            {barChart}
+          </ResponsiveContainer>
+        </div>
+        <div style={{ flexShrink: 0 }}>
+          <ChartWatermark />
+          {description}
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <ChartContainer title={getChartTitle()} onDownloadCsv={handleDownloadCsv}>
+    <ChartContainer
+      title={getChartTitle()}
+      downloadFilename="distributional-impact-income-relative.svg"
+    >
       <Stack gap="sm">
         <ResponsiveContainer width="100%" height={chartHeight}>
-          <BarChart data={chartData} margin={{ top: 20, right: 20, bottom: 30, left: 60 }}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} />
-            <XAxis dataKey="name" tick={RECHARTS_FONT_STYLE} tickLine={false}>
-              <Label
-                value="Income decile"
-                position="bottom"
-                offset={10}
-                style={RECHARTS_FONT_STYLE}
-              />
-            </XAxis>
-            <YAxis
-              ticks={yTicks}
-              domain={[yTicks[0], yTicks[yTicks.length - 1]]}
-              tick={RECHARTS_FONT_STYLE}
-              tickLine={false}
-              tickFormatter={(v: number) => `${v >= 0 ? '+' : ''}${(v * 100).toFixed(1)}%`}
-            >
-              <Label
-                value="Relative change in household income"
-                angle={-90}
-                position="insideLeft"
-                offset={0}
-                style={{ ...RECHARTS_FONT_STYLE, textAnchor: 'middle' }}
-              />
-            </YAxis>
-            <ReferenceLine y={0} stroke={colors.gray[400]} strokeWidth={1} />
-            <Tooltip content={<ImpactTooltip />} />
-            <Bar
-              dataKey="value"
-              label={<ImpactBarLabel data={chartData} />}
-              isAnimationActive={false}
-            >
-              {chartData.map((entry, index) => (
-                <Cell key={index} fill={entry.value < 0 ? colors.gray[600] : colors.primary[500]} />
-              ))}
-            </Bar>
-          </BarChart>
+          {barChart}
         </ResponsiveContainer>
         <ChartWatermark />
-
         {description}
       </Stack>
     </ChartContainer>

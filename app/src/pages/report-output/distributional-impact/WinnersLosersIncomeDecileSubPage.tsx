@@ -9,13 +9,14 @@ import { spacing } from '@/designTokens/spacing';
 import { typography } from '@/designTokens/typography';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import type { RootState } from '@/store';
-import { downloadCsv, RECHARTS_FONT_STYLE } from '@/utils/chartUtils';
+import { RECHARTS_FONT_STYLE } from '@/utils/chartUtils';
 import { formatPercent } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
 
 interface Props {
   output: SocietyWideReportOutput;
   chartHeight?: number;
+  fillHeight?: boolean;
 }
 
 // Category definitions and styling
@@ -76,6 +77,7 @@ function WinnersLosersTooltip({ active, payload, label }: any) {
 export default function WinnersLosersIncomeDecileSubPage({
   output,
   chartHeight: _chartHeight,
+  fillHeight = false,
 }: Props) {
   const countryId = useCurrentCountry();
   const metadata = useSelector((state: RootState) => state.metadata);
@@ -126,19 +128,6 @@ export default function WinnersLosersIncomeDecileSubPage({
     return `This reform would have no effect on ${objectTerm} for the population${regionPhrase}`;
   };
 
-  // CSV export handler
-  const handleDownloadCsv = () => {
-    const header = ['Decile', ...CATEGORIES];
-    const rows = [
-      ...decileNumbers.map((d) => [
-        d.toString(),
-        ...CATEGORIES.map((cat) => deciles[cat][d - 1].toString()),
-      ]),
-      ['All', ...CATEGORIES.map((cat) => all[cat].toString())],
-    ];
-    downloadCsv([header, ...rows], 'winners-losers-income-decile.csv');
-  };
-
   // Description text
   const description = (
     <Text size="sm" c="dimmed">
@@ -147,148 +136,165 @@ export default function WinnersLosersIncomeDecileSubPage({
     </Text>
   );
 
-  return (
-    <ChartContainer title={getChartTitle()} onDownloadCsv={handleDownloadCsv}>
-      <Stack gap="sm">
-        <div style={{ display: 'flex' }}>
-          {/* Chart area */}
-          <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-            {/* "All" bar */}
-            <div style={{ height: allBarHeight }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  layout="vertical"
-                  data={allData}
-                  stackOffset="expand"
-                  barSize={BAR_SIZE}
-                  margin={{ top: 8, right: 10, bottom: 0, left: 40 }}
-                >
-                  <XAxis type="number" hide />
-                  <YAxis
-                    type="category"
-                    dataKey="name"
-                    tick={RECHARTS_FONT_STYLE}
-                    tickLine={false}
-                    axisLine={false}
-                    width={40}
-                  />
-                  <Tooltip
-                    content={<WinnersLosersTooltip />}
-                    allowEscapeViewBox={{ x: true, y: true }}
-                    offset={20}
-                    wrapperStyle={{ zIndex: 1000 }}
-                  />
-                  {CATEGORIES.map((cat) => (
-                    <Bar
-                      key={cat}
-                      dataKey={cat}
-                      stackId="a"
-                      fill={COLOR_MAP[cat]}
-                      isAnimationActive={false}
-                    />
-                  ))}
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-            <div style={{ height: gapHeight }} />
+  const allBarChart = (
+    <ResponsiveContainer width="100%" height="100%">
+      <BarChart
+        layout="vertical"
+        data={allData}
+        stackOffset="expand"
+        barSize={BAR_SIZE}
+        margin={{ top: 8, right: 10, bottom: 0, left: 40 }}
+      >
+        <XAxis type="number" hide />
+        <YAxis
+          type="category"
+          dataKey="name"
+          tick={RECHARTS_FONT_STYLE}
+          tickLine={false}
+          axisLine={false}
+          width={40}
+        />
+        <Tooltip
+          content={<WinnersLosersTooltip />}
+          allowEscapeViewBox={{ x: true, y: true }}
+          offset={20}
+          wrapperStyle={{ zIndex: 1000 }}
+        />
+        {CATEGORIES.map((cat) => (
+          <Bar
+            key={cat}
+            dataKey={cat}
+            stackId="a"
+            fill={COLOR_MAP[cat]}
+            isAnimationActive={false}
+          />
+        ))}
+      </BarChart>
+    </ResponsiveContainer>
+  );
 
-            {/* Decile bars — tight spacing */}
-            <div style={{ height: decileHeight }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  layout="vertical"
-                  data={decileData}
-                  stackOffset="expand"
-                  barSize={BAR_SIZE}
-                  barCategoryGap={1}
-                  margin={{ top: 0, right: 10, bottom: 40, left: 40 }}
-                >
-                  <XAxis
-                    type="number"
-                    tick={RECHARTS_FONT_STYLE}
-                    tickLine={false}
-                    tickFormatter={(v: number) => `${(v * 100).toFixed(0)}%`}
-                  >
-                    <Label
-                      value="Population share"
-                      position="bottom"
-                      offset={20}
-                      style={RECHARTS_FONT_STYLE}
-                    />
-                  </XAxis>
-                  <YAxis
-                    type="category"
-                    dataKey="name"
-                    tick={RECHARTS_FONT_STYLE}
-                    tickLine={false}
-                    width={40}
-                    interval={0}
-                  >
-                    <Label
-                      value="Income decile"
-                      angle={-90}
-                      position="insideLeft"
-                      style={{ textAnchor: 'middle', ...RECHARTS_FONT_STYLE }}
-                    />
-                  </YAxis>
-                  <Tooltip
-                    content={<WinnersLosersTooltip />}
-                    allowEscapeViewBox={{ x: true, y: true }}
-                    offset={20}
-                    wrapperStyle={{ zIndex: 1000 }}
-                  />
-                  {CATEGORIES.map((cat) => (
-                    <Bar
-                      key={cat}
-                      dataKey={cat}
-                      stackId="a"
-                      fill={COLOR_MAP[cat]}
-                      isAnimationActive={false}
-                    />
-                  ))}
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
+  const decileBarChart = (
+    <ResponsiveContainer width="100%" height="100%">
+      <BarChart
+        layout="vertical"
+        data={decileData}
+        stackOffset="expand"
+        barSize={BAR_SIZE}
+        barCategoryGap={1}
+        margin={{ top: 0, right: 10, bottom: 40, left: 40 }}
+      >
+        <XAxis
+          type="number"
+          tick={RECHARTS_FONT_STYLE}
+          tickLine={false}
+          tickFormatter={(v: number) => `${(v * 100).toFixed(0)}%`}
+        >
+          <Label
+            value="Population share"
+            position="bottom"
+            offset={20}
+            style={RECHARTS_FONT_STYLE}
+          />
+        </XAxis>
+        <YAxis
+          type="category"
+          dataKey="name"
+          tick={RECHARTS_FONT_STYLE}
+          tickLine={false}
+          width={40}
+          interval={0}
+        >
+          <Label
+            value="Income decile"
+            angle={-90}
+            position="insideLeft"
+            style={{ textAnchor: 'middle', ...RECHARTS_FONT_STYLE }}
+          />
+        </YAxis>
+        <Tooltip
+          content={<WinnersLosersTooltip />}
+          allowEscapeViewBox={{ x: true, y: true }}
+          offset={20}
+          wrapperStyle={{ zIndex: 1000 }}
+        />
+        {CATEGORIES.map((cat) => (
+          <Bar
+            key={cat}
+            dataKey={cat}
+            stackId="a"
+            fill={COLOR_MAP[cat]}
+            isAnimationActive={false}
+          />
+        ))}
+      </BarChart>
+    </ResponsiveContainer>
+  );
 
-          {/* Legend — right side */}
-          <div
+  const legend = (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        gap: 8,
+        paddingLeft: 16,
+        paddingRight: 8,
+        flexShrink: 0,
+      }}
+    >
+      {CATEGORIES.map((cat) => (
+        <div key={cat} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span
             style={{
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              gap: 8,
-              paddingLeft: 16,
-              paddingRight: 8,
+              display: 'inline-block',
+              width: 12,
+              height: 12,
+              borderRadius: 2,
+              backgroundColor: COLOR_MAP[cat],
               flexShrink: 0,
             }}
+          />
+          <span
+            style={{
+              fontSize: typography.fontSize.xs,
+              color: colors.gray[500],
+              whiteSpace: 'nowrap',
+            }}
           >
-            {CATEGORIES.map((cat) => (
-              <div key={cat} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span
-                  style={{
-                    display: 'inline-block',
-                    width: 12,
-                    height: 12,
-                    borderRadius: 2,
-                    backgroundColor: COLOR_MAP[cat],
-                    flexShrink: 0,
-                  }}
-                />
-                <span
-                  style={{
-                    fontSize: typography.fontSize.xs,
-                    color: colors.gray[500],
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {LEGEND_TEXT_MAP[cat]}
-                </span>
-              </div>
-            ))}
-          </div>
+            {LEGEND_TEXT_MAP[cat]}
+          </span>
         </div>
+      ))}
+    </div>
+  );
 
+  if (fillHeight) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+        <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
+          <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+            <div style={{ height: allBarHeight, flexShrink: 0 }}>{allBarChart}</div>
+            <div style={{ height: gapHeight, flexShrink: 0 }} />
+            <div style={{ flex: 1, minHeight: 0 }}>{decileBarChart}</div>
+          </div>
+          {legend}
+        </div>
+        <div style={{ flexShrink: 0 }}>{description}</div>
+      </div>
+    );
+  }
+
+  return (
+    <ChartContainer title={getChartTitle()} downloadFilename="winners-losers-income-decile.svg">
+      <Stack gap="sm">
+        <div style={{ display: 'flex' }}>
+          <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+            <div style={{ height: allBarHeight }}>{allBarChart}</div>
+            <div style={{ height: gapHeight }} />
+            <div style={{ height: decileHeight }}>{decileBarChart}</div>
+          </div>
+          {legend}
+        </div>
         {description}
       </Stack>
     </ChartContainer>

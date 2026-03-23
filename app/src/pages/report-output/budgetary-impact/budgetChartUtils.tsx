@@ -29,7 +29,7 @@ export function BudgetWaterfallTooltip({ active, payload }: any) {
 /** Returns fill color for a waterfall bar based on its value and the overall budget impact. */
 export function getBudgetFillColor(datum: WaterfallDatum, budgetaryImpact: number): string {
   if (datum.isTotal) {
-    return budgetaryImpact < 0 ? colors.gray[600] : colors.primary[500];
+    return budgetaryImpact < 0 ? colors.gray[600] : colors.primary[700];
   }
   return datum.value >= 0 ? colors.primary[500] : colors.gray[600];
 }
