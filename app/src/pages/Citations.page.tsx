@@ -8,7 +8,7 @@ import { colors, spacing, typography } from '@/designTokens';
 import type { Citation } from '@/types/citation';
 
 function formatDate(dateStr: string): string {
-  const date = new Date(dateStr + 'T00:00:00');
+  const date = new Date(`${dateStr}T00:00:00`);
   return date.toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',
@@ -84,7 +84,7 @@ function CitationCard({ citation, large }: { citation: Citation; large?: boolean
             {citation.outlet}
           </Text>
           <Text
-            size={large ? 'base' : 'sm'}
+            size={large ? 'md' : 'sm'}
             style={{
               color: colors.gray[800],
               fontWeight: large ? 600 : 500,
@@ -109,7 +109,9 @@ function CitationCard({ citation, large }: { citation: Citation; large?: boolean
 
 function FeaturedLayout({ citations }: { citations: Citation[] }) {
   const [hero, ...side] = citations;
-  if (!hero) return null;
+  if (!hero) {
+    return null;
+  }
 
   if (side.length === 0) {
     return <CitationCard citation={hero} large />;

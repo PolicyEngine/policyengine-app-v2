@@ -110,6 +110,38 @@
     "tags": ["global", "technical"]
   },
   {
+    "title": "The Citizens' Economic Council on the cost of living",
+    "outlet": "King's College London",
+    "date": "2023-09-30",
+    "url": "https://www.kcl.ac.uk/research/citizens-economic-council-on-the-cost-of-living",
+    "image": "kcl-cost-of-living.webp",
+    "tags": ["uk", "policy"]
+  },
+  {
+    "title": "Why Land Value Tax and a Universal Basic Income are even better together",
+    "outlet": "Progress and Poverty Institute",
+    "date": "2024-01-01",
+    "url": "https://progressandpovertyinstitute.org/universal-land-dividend-why-land-value-tax-and-a-universal-basic-income-are-even-better-together/",
+    "image": "ppi-lvt-ubi.webp",
+    "tags": ["uk", "policy"]
+  },
+  {
+    "title": "The macroeconomic effect of the UK's 2022 cost-of-living payments",
+    "outlet": "London School of Economics (CFM)",
+    "date": "2023-11-30",
+    "url": "https://www.lse.ac.uk/CFM/assets/pdf/CFM-Discussion-Papers-2023/CFMDP2023-16-Paper.pdf",
+    "image": "lse-cost-of-living.webp",
+    "tags": ["uk", "policy"]
+  },
+  {
+    "title": "Labour's National Insurance overhaul could make workers £3,000 worse-off, bombshell research claims",
+    "outlet": "GB News",
+    "date": "2024-10-27",
+    "url": "https://www.gbnews.com/money/budget-workers-national-insurance-tax",
+    "image": "gbnews-nic.webp",
+    "tags": ["uk", "tax"]
+  },
+  {
     "title": "Workers face pay hit under Reeves's National Insurance plans",
     "outlet": "The Telegraph",
     "date": "2025-05-30",
@@ -189,14 +221,6 @@
     "url": "https://uhero.hawaii.edu/hawai%CA%BBis-unnecessary-benefit-cliff-how-one-small-policy-change-could-deliver-in-45m-per-year-in-federally-funded-snap-benefits/",
     "image": "uhero-snap.webp",
     "tags": ["us", "policy"]
-  },
-  {
-    "title": "Implications of child poverty reduction targets for public health and health inequalities",
-    "outlet": "BMJ (Journal of Epidemiology & Community Health)",
-    "date": "2024-07-08",
-    "url": "https://jech.bmj.com/content/jech/early/2024/07/08/jech-2024-222313.full.pdf",
-    "image": "bmj-child-poverty.webp",
-    "tags": ["uk", "policy"]
   },
   {
     "title": "Paying for progress",
