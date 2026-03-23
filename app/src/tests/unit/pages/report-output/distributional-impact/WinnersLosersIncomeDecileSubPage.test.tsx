@@ -23,9 +23,11 @@ vi.mock('@/hooks/useCurrentCountry', () => ({
 
 vi.mock('@/utils/chartUtils', () => ({
   DEFAULT_CHART_CONFIG: { displayModeBar: false },
+  downloadChartAsSvg: vi.fn(),
   downloadCsv: vi.fn(),
   getChartLogoImage: vi.fn(() => ({})),
   getClampedChartHeight: vi.fn(() => 500),
+  getYAxisLayout: vi.fn(() => ({ yAxisWidth: 60, marginLeft: 10, labelDx: -20 })),
   RECHARTS_FONT_STYLE: { fontFamily: 'Inter', fontSize: 12 },
   RECHARTS_WATERMARK: { src: '/test.png', width: 80, opacity: 0.8 },
 }));
