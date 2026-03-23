@@ -54,6 +54,14 @@
     "featured": true
   },
   {
+    "title": "Rhode Island House Committee on Finance H. 7127, Governor's proposed Child Tax Credit",
+    "outlet": "Rhode Island General Assembly",
+    "date": "2026-03-02",
+    "url": "https://www.rilegislature.gov/Special/comdoc/House%20Finance%202026/03-03-2026--H7127~Article%205~~Sections%205%20and%206--Cory_Worrall--FIN.pdf",
+    "image": "ri-legislature-h7127.webp",
+    "tags": ["us", "tax"]
+  },
+  {
     "title": "The inflation hangover: how the post-pandemic price surge reshaped affordability in America",
     "outlet": "Common Sense Institute",
     "date": "2026-03-17",
@@ -62,11 +70,11 @@
     "tags": ["us", "policy"]
   },
   {
-    "title": "Frequently asked questions",
-    "outlet": "MIT Living Wage Calculator",
+    "title": "How we're improving tax calculations in partnership with PolicyEngine",
+    "outlet": "Living Wage Institute",
     "date": "2026-02-15",
-    "url": "https://livingwage.mit.edu/pages/faqs",
-    "image": "mit-living-wage.webp",
+    "url": "https://www.livingwage.institute/post/how-we-re-improving-tax-calculations-in-partnership-with-policyengine",
+    "image": "lwi-tax-calculations.webp",
     "tags": ["us", "policy"]
   },
   {
@@ -151,14 +159,6 @@
     "featured": true
   },
   {
-    "title": "Matthew H. Jensen congressional testimony",
-    "outlet": "U.S. Congress",
-    "date": "2025-04-02",
-    "url": "https://www.congress.gov/119/meeting/house/118088/witnesses/HHRG-119-II15-Bio-JensenM-20250402.pdf",
-    "image": "congress-jensen.webp",
-    "tags": ["us", "tax"]
-  },
-  {
     "title": "Congressman Morgan McGarvey introduces Young Adult Tax Credit Act",
     "outlet": "U.S. House of Representatives",
     "date": "2024-03-05",
@@ -215,20 +215,20 @@
     "tags": ["us", "policy"]
   },
   {
-    "title": "Sen. Gounardes: Working Families Tax Credit would lift families out of poverty",
+    "title": "Sen. Gounardes' Working Families Tax Credit would benefit every part of New York State",
     "outlet": "New York State Senate",
-    "date": "2025-01-01",
+    "date": "2025-03-26",
     "url": "https://www.nysenate.gov/newsroom/press-releases/2025/andrew-gounardes/sen-gounardes-working-families-tax-credit-would",
     "image": "nysenate-gounardes.webp",
     "tags": ["us", "tax"]
   },
   {
-    "title": "Lessons learned deploying a marginal tax rate calculator",
-    "outlet": "U.S. Department of Health & Human Services (ASPE)",
-    "date": "2023-08-01",
-    "url": "https://aspe.hhs.gov/sites/default/files/documents/211a0569e93345d7cfb8757bdb4f5c6f/eMTR-calculator-brief.pdf",
-    "image": "hhs-emtr.webp",
-    "tags": ["us", "technical"]
+    "title": "Sen. Gounardes: my Working Families Tax Credit is the best way to help New York families",
+    "outlet": "New York State Senate",
+    "date": "2025-01-05",
+    "url": "https://www.nysenate.gov/newsroom/press-releases/2025/andrew-gounardes/sen-gounardes-my-working-families-tax-credit-best-way",
+    "image": "nysenate-gounardes-2.webp",
+    "tags": ["us", "tax"]
   },
   {
     "title": "Oxfam's love affair with 'inequality'",
@@ -237,6 +237,14 @@
     "url": "https://www.wsj.com/opinion/oxfams-inequality-report-obscures-how-life-for-the-poor-has-improved-0e1bd13e",
     "image": "wsj-oxfam.webp",
     "tags": ["us", "policy"]
+  },
+  {
+    "title": "Congressional hackathon report",
+    "outlet": "U.S. House of Representatives",
+    "date": "2024-02-01",
+    "url": "https://www.house.gov/sites/default/files/2024-02/Hackathon-Report-2023.pdf",
+    "image": "house-hackathon.webp",
+    "tags": ["us", "technical"]
   },
   {
     "title": "Rashida Tlaib's End Child Poverty Act would dramatically reduce poverty",
@@ -269,5 +277,13 @@
     "url": "https://www.nuffieldfoundation.org/project/enhancing-localising-and-democratising-tax-benefit-policy-analysis",
     "image": "nuffield-tax-benefit.webp",
     "tags": ["uk", "technical"]
+  },
+  {
+    "title": "Testimony of Commissioner Gary P. Jenkins",
+    "outlet": "New York City Council",
+    "date": "2022-05-02",
+    "url": "https://www.nyc.gov/site/hra/news/testimony.page",
+    "image": "nyc-council-jenkins.webp",
+    "tags": ["us", "policy"]
   }
 ]
