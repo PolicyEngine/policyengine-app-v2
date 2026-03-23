@@ -199,14 +199,6 @@
     "tags": ["uk", "policy"]
   },
   {
-    "title": "Tax microsimulation at The Budget Lab",
-    "outlet": "Yale Budget Lab",
-    "date": "2024-04-12",
-    "url": "https://budgetlab.yale.edu/research/tax-microsimulation-budget-lab",
-    "image": "yale-budget-lab.webp",
-    "tags": ["us", "technical"]
-  },
-  {
     "title": "Paying for progress",
     "outlet": "Progressive Policy Institute",
     "date": "2024-08-22",
@@ -237,14 +229,6 @@
     "url": "https://www.wsj.com/opinion/oxfams-inequality-report-obscures-how-life-for-the-poor-has-improved-0e1bd13e",
     "image": "wsj-oxfam.webp",
     "tags": ["us", "policy"]
-  },
-  {
-    "title": "Congressional hackathon report",
-    "outlet": "U.S. House of Representatives",
-    "date": "2024-02-01",
-    "url": "https://www.house.gov/sites/default/files/2024-02/Hackathon-Report-2023.pdf",
-    "image": "house-hackathon.webp",
-    "tags": ["us", "technical"]
   },
   {
     "title": "Rashida Tlaib's End Child Poverty Act would dramatically reduce poverty",
@@ -282,8 +266,104 @@
     "title": "Testimony of Commissioner Gary P. Jenkins",
     "outlet": "New York City Council",
     "date": "2022-05-02",
-    "url": "https://www.nyc.gov/site/hra/news/testimony.page",
+    "url": "https://legistar.council.nyc.gov/View.ashx?GUID=D359072E-068C-436F-9580-BC73D593AC03&ID=10879223&M=F",
     "image": "nyc-council-jenkins.webp",
+    "tags": ["us", "policy"]
+  },
+  {
+    "title": "Building a stronger foundation for American families: options for Child Tax Credit reform",
+    "outlet": "Niskanen Center",
+    "date": "2024-02-29",
+    "url": "https://www.niskanencenter.org/building-a-stronger-foundation-for-american-families-options-for-child-tax-credit-reform/",
+    "image": "niskanen-ctc.webp",
+    "tags": ["us", "tax"]
+  },
+  {
+    "title": "EPPC policy memo calls for federal action on tax relief for parents",
+    "outlet": "Ethics & Public Policy Center",
+    "date": "2024-10-01",
+    "url": "https://eppc.org/news/eppc-policy-memo-calls-for-federal-action-on-tax-relief-for-parents/",
+    "image": "eppc-ctc-memo.webp",
+    "tags": ["us", "tax"]
+  },
+  {
+    "title": "Free money: the feasibility of implementing a universal basic income in the United States",
+    "outlet": "University of South Carolina",
+    "date": "2023-04-30",
+    "url": "https://scholarcommons.sc.edu/senior_theses/587/",
+    "image": "usc-ubi.webp",
+    "tags": ["us", "policy"]
+  },
+  {
+    "title": "Rhode Island child tax credit would be bold, simple, and fiscally responsible",
+    "outlet": "Niskanen Center",
+    "date": "2026-01-12",
+    "url": "https://www.niskanencenter.org/rhode-island-child-tax-credit-would-be-bold-simple-and-fiscally-responsible/",
+    "image": "niskanen-ri-ctc.webp",
+    "tags": ["us", "tax"]
+  },
+  {
+    "title": "Which states benefit most from the SALT deduction?",
+    "outlet": "Bipartisan Policy Center",
+    "date": "2025-05-15",
+    "url": "https://bipartisanpolicy.org/explainer/which-states-benefit-most-from-the-salt-deduction/",
+    "image": "bpc-salt.webp",
+    "tags": ["us", "tax"]
+  },
+  {
+    "title": "A more equitable tax system is possible",
+    "outlet": "Roosevelt Institute",
+    "date": "2025-04-21",
+    "url": "https://rooseveltinstitute.org/blog/more-equitable-tax-is-possible/",
+    "image": "roosevelt-tax.webp",
+    "tags": ["us", "tax"]
+  },
+  {
+    "title": "Newborn needs: the case for an American baby bonus",
+    "outlet": "Niskanen Center",
+    "date": "2025-04-21",
+    "url": "https://www.niskanencenter.org/newborn-needs-the-case-for-an-american-baby-bonus/",
+    "image": "niskanen-baby-bonus.webp",
+    "tags": ["us", "policy"]
+  },
+  {
+    "title": "How to phase out Arkansas's work-punishing personal income tax",
+    "outlet": "Opportunity Arkansas",
+    "date": "2024-10-31",
+    "url": "https://www.opportunityarkansas.org/wp-content/uploads/2024/11/Income-Tax-Reform-paper_DIGITAL_11-17-2023.pdf",
+    "image": "opportunity-ar-tax.webp",
+    "tags": ["us", "tax"]
+  },
+  {
+    "title": "DCTC passes in the first budget vote!",
+    "outlet": "Mother's Outreach Network",
+    "date": "2024-05-29",
+    "url": "https://mothersoutreachnetwork.org/dctc-passes-in-the-first-budget-vote/",
+    "image": "mon-dctc-vote.webp",
+    "tags": ["us", "policy"]
+  },
+  {
+    "title": "Report on the District Child Tax Credit proposal",
+    "outlet": "Mother's Outreach Network",
+    "date": "2023-06-30",
+    "url": "https://mothersoutreachnetwork.org/dc-tax-credit-proposal/",
+    "image": "mon-dc-report.webp",
+    "tags": ["us", "policy"]
+  },
+  {
+    "title": "CTC calculator",
+    "outlet": "The Gerald Huff Fund for Humanity",
+    "date": "2024-01-01",
+    "url": "https://fundforhumanity.org/ctc-calculator/",
+    "image": "fundforhumanity-ctc.webp",
+    "tags": ["us", "policy"]
+  },
+  {
+    "title": "One page primer: Child Tax Credit",
+    "outlet": "DC Guaranteed Income Coalition",
+    "date": "2023-01-01",
+    "url": "https://dcgicoalition.org/one-page-primer-child-tax-credit/",
+    "image": "dcgi-ctc.webp",
     "tags": ["us", "policy"]
   }
 ]
