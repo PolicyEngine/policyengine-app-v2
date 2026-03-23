@@ -1,6 +1,6 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { markReportCompleted } from '@/api/report';
-import { fetchSimulationById, markSimulationError, updateSimulationOutput } from '@/api/simulation';
+import { markSimulationError, updateSimulationOutput } from '@/api/simulation';
 import { reportKeys, simulationKeys } from '@/libs/queryKeys';
 import type { HouseholdReportConfig, SimulationConfig } from '@/types/calculation/household';
 import type { HouseholdData } from '@/types/ingredients/Household';
@@ -186,10 +186,12 @@ export class HouseholdReportOrchestrator {
     simulationId: string,
     result: any
   ): Promise<void> {
-    try {
-      await updateSimulationOutput(countryId as any, simulationId, result);
+    // Persist output — this is the critical step. If it fails, throw.
+    await updateSimulationOutput(countryId as any, simulationId, result);
 
-      // Log invalidation for cache monitoring
+    // Cache warming — best effort only. Failure here should NOT
+    // cascade into markSimulationError since the output is already persisted.
+    try {
       cacheMonitor.logInvalidation(simulationKeys.byId(simulationId), {
         reason: 'Simulation output persisted',
         simulationId,
@@ -198,14 +200,8 @@ export class HouseholdReportOrchestrator {
       this.queryClient.invalidateQueries({
         queryKey: simulationKeys.byId(simulationId),
       });
-
-      // Wait a moment for cache to settle
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
-      await fetchSimulationById(countryId as any, simulationId);
     } catch (error) {
-      console.error('[HouseholdReportOrchestrator] Failed to persist simulation:', error);
-      throw error;
+      console.info('[HouseholdReportOrchestrator] Cache warming failed (non-critical):', error);
     }
   }
 

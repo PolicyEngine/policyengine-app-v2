@@ -25,18 +25,6 @@
   --color-secondary-800: #1e293b;
   --color-secondary-900: #101828;
 
-  /* Blue accent colors */
-  --color-blue-50: #f0f9ff;
-  --color-blue-100: #e0f2fe;
-  --color-blue-200: #bae6fd;
-  --color-blue-300: #7dd3fc;
-  --color-blue-400: #38bdf8;
-  --color-blue-500: #0ea5e9;
-  --color-blue-600: #0284c7;
-  --color-blue-700: #026aa2;
-  --color-blue-800: #075985;
-  --color-blue-900: #0c4a6e;
-
   /* Gray scale */
   --color-gray-50: #f9fafb;
   --color-gray-100: #f2f4f7;
@@ -53,7 +41,7 @@
   --color-success: #22c55e;
   --color-warning: #fec601;
   --color-error: #ef4444;
-  --color-info: #1890ff;
+  --color-info: #2c7a7b;
 
   /* Background colors */
   --color-bg-primary: #fff;
@@ -65,6 +53,8 @@
   --color-text-secondary: #5a5a5a;
   --color-text-tertiary: #9ca3af;
   --color-text-inverse: #fff;
+  --color-text-link: #2c7a7b;
+  --color-text-link-hover: #285e61;
 
   /* Border colors */
   --color-border-light: #e2e8f0;

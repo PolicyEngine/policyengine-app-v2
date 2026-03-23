@@ -17,7 +17,16 @@ export async function fetchPolicyById(country: string, policyId: string): Promis
     throw new Error(`Failed to fetch policy ${policyId}`);
   }
 
-  const json = await res.json();
+  let json;
+  try {
+    json = await res.json();
+  } catch (error) {
+    throw new Error(`Failed to parse policy response: ${error}`);
+  }
+
+  if (json.status !== 'ok') {
+    throw new Error(json.message || `Failed to fetch policy ${policyId}`);
+  }
 
   return json.result;
 }

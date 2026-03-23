@@ -2,3 +2,7 @@
   changes:
     fixed:
       - Restore student loan visualisation interactive that was accidentally removed in #766
+      - Fix report share button not working after report builder refactor
+      - Fix chart negative axis formatting (clipped labels, missing zero reference line)
+      - Fix SimulationAdapter status mapping ('ok' to 'complete')
+      - Fix winners/losers chart layout to match updated design

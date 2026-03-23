@@ -39,7 +39,7 @@ export default function SupporterCard({ supporter, projects }: SupporterCardProp
               href={supporter.websiteUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="tw:text-blue-700 tw:font-bold tw:no-underline tw:hover:underline"
+              className="tw:text-text-link tw:font-bold tw:no-underline tw:hover:text-text-link-hover tw:hover:underline"
             >
               {supporter.name}
             </a>

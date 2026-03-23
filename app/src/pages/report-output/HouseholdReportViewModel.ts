@@ -40,7 +40,8 @@ export class HouseholdReportViewModel {
       simulation.status === 'complete' ||
       (simulation.output !== null && simulation.output !== undefined);
 
-    const isSimulationError = (simulation: Simulation): boolean => simulation.status === 'error';
+    const isSimulationError = (simulation: Simulation): boolean =>
+      simulation.status === 'error' && simulation.output === null;
 
     return {
       // Treat any non-error simulation without persisted output as pending.

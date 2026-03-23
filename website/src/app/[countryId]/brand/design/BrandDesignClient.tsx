@@ -42,7 +42,7 @@ const colorTokens = [
   },
   { name: "warning", value: colors.warning, label: "Warning" },
   { name: "error", value: colors.error, label: "Error" },
-  { name: "info", value: colors.info, label: "Info" },
+  { name: "primary.600", value: colors.primary[600], label: "Link" },
   { name: "white", value: colors.white, label: "White" },
 ];
 

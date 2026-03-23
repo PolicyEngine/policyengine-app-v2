@@ -5,6 +5,7 @@ import {
   CartesianGrid,
   Cell,
   Label,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -121,7 +122,7 @@ export default function DistributionalImpactIncomeRelativeSubPage({
     <ChartContainer title={getChartTitle()} onDownloadCsv={handleDownloadCsv}>
       <Stack gap="sm">
         <ResponsiveContainer width="100%" height={chartHeight}>
-          <BarChart data={chartData} margin={{ top: 20, right: 20, bottom: 30, left: 30 }}>
+          <BarChart data={chartData} margin={{ top: 20, right: 20, bottom: 30, left: 60 }}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} />
             <XAxis dataKey="name" tick={RECHARTS_FONT_STYLE} tickLine={false}>
               <Label
@@ -146,6 +147,7 @@ export default function DistributionalImpactIncomeRelativeSubPage({
                 style={{ ...RECHARTS_FONT_STYLE, textAnchor: 'middle' }}
               />
             </YAxis>
+            <ReferenceLine y={0} stroke={colors.gray[400]} strokeWidth={1} />
             <Tooltip content={<ImpactTooltip />} />
             <Bar
               dataKey="value"

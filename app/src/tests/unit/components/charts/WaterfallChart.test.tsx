@@ -64,7 +64,8 @@ describe('WaterfallChart', () => {
 
     expect(screen.getByText('Revenue')).toBeInTheDocument();
     expect(screen.getByText('Costs')).toBeInTheDocument();
-    expect(screen.getByText('Total')).toBeInTheDocument();
+    // "Total" appears in both a recharts measurement span and the axis label
+    expect(screen.getAllByText('Total').length).toBeGreaterThanOrEqual(1);
   });
 
   it('renders a Y-axis label when provided', () => {

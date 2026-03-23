@@ -21,7 +21,6 @@ import {
 } from '@/types/ingredients/UserPopulation';
 import { UserReport } from '@/types/ingredients/UserReport';
 import { UserSimulation } from '@/types/ingredients/UserSimulation';
-import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
 import { findPlaceFromRegionString, getPlaceDisplayName } from '@/utils/regionStrategies';
 import { householdKeys, policyKeys, reportKeys, simulationKeys } from '../libs/queryKeys';
 import { useGeographicAssociationsByUser } from './useUserGeographic';
@@ -425,9 +424,25 @@ export const useUserReportById = (userReportId: string, options?: { enabled?: bo
   const { data: householdAssociations } = useHouseholdAssociationsByUser(userId || '');
   const { data: geographyAssociations } = useGeographicAssociationsByUser(userId || '');
 
-  const userSimulations = simulationAssociations?.filter((sa) =>
+  const matchedUserSimulations = simulationAssociations?.filter((sa) =>
     finalReport?.simulationIds?.includes(sa.simulationId)
   );
+
+  // Fallback: if no localStorage associations exist but we have simulations,
+  // synthesize UserSimulation objects so sharing works for reports created
+  // before UserSimulation associations were stored during report creation.
+  const userSimulations =
+    matchedUserSimulations && matchedUserSimulations.length > 0
+      ? matchedUserSimulations
+      : simulations.length > 0 && userId
+        ? simulations.map((sim) => ({
+            userId,
+            simulationId: sim.id ?? '',
+            countryId: sim.countryId as 'us' | 'uk',
+            label: sim.label ?? undefined,
+            isCreated: true,
+          }))
+        : matchedUserSimulations;
 
   const userPolicies = policyAssociations?.filter((pa) =>
     simulations.some((s) => s.policyId === pa.policyId)
@@ -438,16 +453,17 @@ export const useUserReportById = (userReportId: string, options?: { enabled?: bo
   const householdSimulations = simulations.filter((s) => s.populationType === 'household');
   const householdIds = extractUniqueIds(householdSimulations, 'populationId');
 
-  const householdResults = useParallelQueries<HouseholdMetadata>(householdIds, {
+  const householdResults = useParallelQueries<Household>(householdIds, {
     queryKey: householdKeys.byId,
-    queryFn: async (id) => fetchHouseholdById(country, id),
+    queryFn: async (id) => {
+      const metadata = await fetchHouseholdById(country, id);
+      return HouseholdAdapter.fromMetadata(metadata);
+    },
     enabled: isEnabled && householdIds.length > 0,
     staleTime: 5 * 60 * 1000,
   });
 
-  const households = householdResults.queries
-    .map((q) => (q.data ? HouseholdAdapter.fromMetadata(q.data) : undefined))
-    .filter((h): h is Household => !!h);
+  const households = householdResults.queries.map((q) => q.data).filter((h): h is Household => !!h);
 
   const userHouseholds = householdAssociations?.filter((ha) =>
     households.some((h) => h.id === ha.householdId)

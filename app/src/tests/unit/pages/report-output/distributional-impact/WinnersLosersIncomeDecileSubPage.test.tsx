@@ -10,6 +10,7 @@ vi.mock('recharts', () => ({
   BarChart: vi.fn(({ children }) => children),
   Label: vi.fn(() => null),
   Legend: vi.fn(() => null),
+  ReferenceLine: vi.fn(() => null),
   ResponsiveContainer: vi.fn(({ children }) => children),
   Tooltip: vi.fn(() => null),
   XAxis: vi.fn(() => null),
