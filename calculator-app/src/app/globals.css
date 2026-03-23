@@ -1,0 +1,5 @@
+/* Import shared CSS from the Vite app — Tailwind v4 config, theme tokens, base styles */
+@import "../../../app/src/app.css";
+
+/* Scan shared components for Tailwind class usage */
+@source "../../../app/src/**/*.{ts,tsx}";
