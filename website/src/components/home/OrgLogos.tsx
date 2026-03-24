@@ -46,7 +46,7 @@ function LogoItem({ org }: { org: Organization }) {
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={org.logo}
+        src={org.logo.src}
         alt={org.name}
         style={{
           maxWidth: `${LOGO_WIDTH}px`,

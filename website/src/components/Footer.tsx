@@ -146,6 +146,7 @@ function FooterSubscribe() {
             padding: "0 12px",
             borderRadius: "6px",
             border: "1px solid #ccc",
+            backgroundColor: colors.white,
             fontSize: "14px",
             fontFamily: typography.fontFamily.primary,
             width: "100%",

@@ -1,196 +1,228 @@
+// Organization logos — imported from Vite app source so they're
+// processed by webpack (hashed filenames, cache-busting).
+import arnoldVentures from "../../../app/src/images/logos/orgs/arnold-ventures.png";
+import asi from "../../../app/src/images/logos/orgs/asi.png";
+import cec from "../../../app/src/images/logos/orgs/cec.svg";
+import centre from "../../../app/src/images/logos/orgs/centre.png";
+import cfi from "../../../app/src/images/logos/orgs/cfi.png";
+import cgo from "../../../app/src/images/logos/orgs/cgo.png";
+import cps from "../../../app/src/images/logos/orgs/cps.png";
+import dpga from "../../../app/src/images/logos/orgs/dpga.svg";
+import epmt from "../../../app/src/images/logos/orgs/epmt.png";
+import f4gi from "../../../app/src/images/logos/orgs/f4gi.png";
+import gary from "../../../app/src/images/logos/orgs/gary-community-ventures.png";
+import gpew from "../../../app/src/images/logos/orgs/gpew.png";
+import jacobin from "../../../app/src/images/logos/orgs/jacobin.png";
+import liberalParty from "../../../app/src/images/logos/orgs/liberal-party.png";
+import mca from "../../../app/src/images/logos/orgs/mca.png";
+import mirza from "../../../app/src/images/logos/orgs/mirza.png";
+import mothersOutreach from "../../../app/src/images/logos/orgs/mothers-outreach-network.png";
+import myfriendben from "../../../app/src/images/logos/orgs/myfriendben.png";
+import niesr from "../../../app/src/images/logos/orgs/niesr.png";
+import nisk from "../../../app/src/images/logos/orgs/niskanen-center.png";
+import ppp from "../../../app/src/images/logos/orgs/peoples-policy-project.png";
+import pn3policy from "../../../app/src/images/logos/orgs/pn3policy.png";
+import smf from "../../../app/src/images/logos/orgs/smf.png";
+import starlight from "../../../app/src/images/logos/orgs/starlight.png";
+import ubicenterLogo from "../../../app/src/images/logos/orgs/ubicenter.png";
+import ubilabs from "../../../app/src/images/logos/orgs/ubilabs.png";
+import ukeu from "../../../app/src/images/logos/orgs/ukeu.svg";
+import umich from "../../../app/src/images/logos/orgs/umich.png";
+import usc from "../../../app/src/images/logos/orgs/usc.png";
+
 export type CountryId = "uk" | "us";
 
 export interface Organization {
   name: string;
-  logo: string;
+  logo: { src: string };
   link: string;
   countries: CountryId[];
 }
 
-export const organizations: Organization[] = [
+export const organizations: Record<string, Organization> = {
   // Both UK and US
-  {
+  dpga: {
     name: "Digital Public Goods Alliance",
-    logo: "/assets/logos/orgs/dpga.svg",
+    logo: dpga,
     link: "https://digitalpublicgoods.net/",
     countries: ["uk", "us"],
   },
-  {
+  ubicenter: {
     name: "UBI Center",
-    logo: "/assets/logos/orgs/ubicenter.png",
+    logo: ubicenterLogo,
     link: "https://www.ubicenter.org/",
     countries: ["uk", "us"],
   },
 
   // UK only
-  {
+  ukeu: {
     name: "UK in a Changing Europe",
-    logo: "/assets/logos/orgs/ukeu.svg",
+    logo: ukeu,
     link: "https://ukandeu.ac.uk/",
     countries: ["uk"],
   },
-  {
+  niesr: {
     name: "National Institute of Economic and Social Research",
-    logo: "/assets/logos/orgs/niesr.png",
+    logo: niesr,
     link: "https://www.niesr.ac.uk/",
     countries: ["uk"],
   },
-  {
+  green_party: {
     name: "Green Party of England and Wales",
-    logo: "/assets/logos/orgs/gpew.png",
+    logo: gpew,
     link: "https://www.greenparty.org.uk/",
     countries: ["uk"],
   },
-  {
+  centre: {
     name: "Centre Think Tank",
-    logo: "/assets/logos/orgs/centre.png",
+    logo: centre,
     link: "https://centrethinktank.co.uk/",
     countries: ["uk"],
   },
-  {
+  smf: {
     name: "Social Market Foundation",
-    logo: "/assets/logos/orgs/smf.png",
+    logo: smf,
     link: "https://www.smf.co.uk/",
     countries: ["uk"],
   },
-  {
+  cps: {
     name: "Centre for Policy Studies",
-    logo: "/assets/logos/orgs/cps.png",
+    logo: cps,
     link: "https://www.cps.org.uk/",
     countries: ["uk"],
   },
-  {
+  ubilabs: {
     name: "UBILabs",
-    logo: "/assets/logos/orgs/ubilabs.png",
+    logo: ubilabs,
     link: "https://www.ubilabnetwork.org/",
     countries: ["uk"],
   },
-  {
+  liberal: {
     name: "The Liberal Party",
-    logo: "/assets/logos/orgs/liberal-party.png",
+    logo: liberalParty,
     link: "http://www.liberal.org.uk/",
     countries: ["uk"],
   },
-  {
+  asi: {
     name: "Adam Smith Institute",
-    logo: "/assets/logos/orgs/asi.png",
+    logo: asi,
     link: "https://www.adamsmith.org/",
     countries: ["uk"],
   },
-  {
+  cec: {
     name: "Citizens' Economic Council",
-    logo: "/assets/logos/orgs/cec.svg",
+    logo: cec,
     link: "https://citizenseconomiccouncil.org/",
     countries: ["uk"],
   },
 
   // US only
-  {
+  arnold_ventures: {
     name: "Arnold Ventures",
-    logo: "/assets/logos/orgs/arnold-ventures.png",
+    logo: arnoldVentures,
     link: "https://www.arnoldventures.org/",
     countries: ["us"],
   },
-  {
+  niskanen_center: {
     name: "Niskanen Center",
-    logo: "/assets/logos/orgs/niskanen-center.png",
+    logo: nisk,
     link: "https://www.niskanencenter.org/",
     countries: ["us"],
   },
-  {
+  cfi: {
     name: "Colorado Fiscal Institute",
-    logo: "/assets/logos/orgs/cfi.png",
+    logo: cfi,
     link: "https://www.coloradofiscal.org/",
     countries: ["us"],
   },
-  {
+  pn3policy: {
     name: "Prenatal-to-3 Policy Impact Center",
-    logo: "/assets/logos/orgs/pn3policy.png",
+    logo: pn3policy,
     link: "https://www.pn3policy.org/",
     countries: ["us"],
   },
-  {
+  mothers_outreach_network: {
     name: "Mothers Outreach Network",
-    logo: "/assets/logos/orgs/mothers-outreach-network.png",
+    logo: mothersOutreach,
     link: "https://www.mothersoutreachnetwork.org/",
     countries: ["us"],
   },
-  {
+  mfb: {
     name: "MyFriendBen",
-    logo: "/assets/logos/orgs/myfriendben.png",
+    logo: myfriendben,
     link: "https://www.myfriendben.org/",
     countries: ["us"],
   },
-  {
+  gary: {
     name: "Gary Community Ventures",
-    logo: "/assets/logos/orgs/gary-community-ventures.png",
+    logo: gary,
     link: "https://garycommunity.org/",
     countries: ["us"],
   },
-  {
+  f4gi: {
     name: "Fund for Guaranteed Income",
-    logo: "/assets/logos/orgs/f4gi.png",
+    logo: f4gi,
     link: "https://www.f4gi.org/",
     countries: ["us"],
   },
-  {
+  mca: {
     name: "Maryland Child Alliance",
-    logo: "/assets/logos/orgs/mca.png",
+    logo: mca,
     link: "https://www.marylandchildalliance.org/",
     countries: ["us"],
   },
-  {
+  epmt: {
     name: "End Poverty Make Trillions",
-    logo: "/assets/logos/orgs/epmt.png",
+    logo: epmt,
     link: "https://endpovertymaketrillions.com/",
     countries: ["us"],
   },
-  {
+  cgo: {
     name: "Center for Growth and Opportunity",
-    logo: "/assets/logos/orgs/cgo.png",
+    logo: cgo,
     link: "https://www.thecgo.org/",
     countries: ["us"],
   },
-  {
+  umich: {
     name: "University of Michigan",
-    logo: "/assets/logos/orgs/umich.png",
+    logo: umich,
     link: "https://umich.edu/",
     countries: ["us"],
   },
-  {
+  usc: {
     name: "University of Southern California",
-    logo: "/assets/logos/orgs/usc.png",
+    logo: usc,
     link: "https://www.usc.edu/",
     countries: ["us"],
   },
-  {
+  jacobin: {
     name: "Jacobin",
-    logo: "/assets/logos/orgs/jacobin.png",
+    logo: jacobin,
     link: "https://jacobin.com/",
     countries: ["us"],
   },
-  {
+  mirza: {
     name: "Mirza",
-    logo: "/assets/logos/orgs/mirza.png",
+    logo: mirza,
     link: "https://heymirza.com/",
     countries: ["us"],
   },
-  {
+  starlight: {
     name: "Starlight",
-    logo: "/assets/logos/orgs/starlight.png",
+    logo: starlight,
     link: "https://www.get-starlight.com/",
     countries: ["us"],
   },
-  {
+  ppp: {
     name: "People's Policy Project",
-    logo: "/assets/logos/orgs/peoples-policy-project.png",
+    logo: ppp,
     link: "https://www.peoplespolicyproject.org/",
     countries: ["us"],
   },
-];
+};
 
 export function getOrgsForCountry(countryId: string): Organization[] {
-  return organizations.filter((org) =>
+  return Object.values(organizations).filter((org) =>
     org.countries.includes(countryId as CountryId),
   );
 }
