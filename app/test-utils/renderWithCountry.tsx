@@ -1,6 +1,7 @@
 import { render as testingLibraryRender } from '@testing-library/react';
 import { Provider as ReduxProvider } from 'react-redux';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { CountryProvider } from '../src/contexts/CountryContext';
 import { TooltipProvider } from '../src/components/ui/tooltip';
 import { AppMode, AppProvider } from '../src/contexts/AppContext';
 import { store } from '../src/store';
@@ -16,12 +17,14 @@ export function renderWithCountry(
       <AppProvider mode={appMode}>
         <ReduxProvider store={store}>
           <MemoryRouter initialEntries={[path]}>
-            <TooltipProvider>
-              <Routes>
-                <Route path="/:countryId" element={children} />
-                <Route path="/:countryId/*" element={children} />
-              </Routes>
-            </TooltipProvider>
+            <CountryProvider value={countryId as any}>
+              <TooltipProvider>
+                <Routes>
+                  <Route path="/:countryId" element={children} />
+                  <Route path="/:countryId/*" element={children} />
+                </Routes>
+              </TooltipProvider>
+            </CountryProvider>
           </MemoryRouter>
         </ReduxProvider>
       </AppProvider>

@@ -5,6 +5,7 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { CountryProvider } from '@/contexts/CountryContext';
 import * as householdApi from '@/api/household';
 import * as policyApi from '@/api/policy';
 import * as reportApi from '@/api/report';
@@ -173,9 +174,11 @@ describe('useUserReports', () => {
     <Provider store={store}>
       <QueryClientProvider client={queryClient}>
         <MemoryRouter initialEntries={['/us/reports']}>
-          <Routes>
-            <Route path="/:countryId/*" element={children} />
-          </Routes>
+          <CountryProvider value="us">
+            <Routes>
+              <Route path="/:countryId/*" element={children} />
+            </Routes>
+          </CountryProvider>
         </MemoryRouter>
       </QueryClientProvider>
     </Provider>
@@ -627,9 +630,11 @@ describe('useUserReportById', () => {
     <Provider store={store}>
       <QueryClientProvider client={queryClient}>
         <MemoryRouter initialEntries={['/us/reports']}>
-          <Routes>
-            <Route path="/:countryId/*" element={children} />
-          </Routes>
+          <CountryProvider value="us">
+            <Routes>
+              <Route path="/:countryId/*" element={children} />
+            </Routes>
+          </CountryProvider>
         </MemoryRouter>
       </QueryClientProvider>
     </Provider>
