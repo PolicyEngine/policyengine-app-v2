@@ -16,8 +16,7 @@ export function useCurrentCountry(): CountryId {
 
   if (!countryId || !countryIds.includes(countryId as any)) {
     throw new Error(
-      'useCurrentCountry must be used within a CountryProvider. ' +
-        `Got countryId: ${countryId}`
+      'useCurrentCountry must be used within a CountryProvider. ' + `Got countryId: ${countryId}`
     );
   }
 

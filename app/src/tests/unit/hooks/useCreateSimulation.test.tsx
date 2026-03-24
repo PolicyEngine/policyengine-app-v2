@@ -6,9 +6,9 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { createSimulation } from '@/api/simulation';
 import { CountryProvider } from '@/contexts/CountryContext';
-import type { CountryId } from '@/libs/countries';
 import { useCreateSimulation } from '@/hooks/useCreateSimulation';
 import { useCreateSimulationAssociation } from '@/hooks/useUserSimulationAssociations';
+import type { CountryId } from '@/libs/countries';
 import {
   mockSimulationPayload,
   mockSimulationPayloadGeography,
