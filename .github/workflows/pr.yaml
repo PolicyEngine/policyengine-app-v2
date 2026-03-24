@@ -57,6 +57,10 @@ jobs:
         working-directory: ./website
         run: bun run typecheck
 
+      - name: Typecheck calculator
+        working-directory: ./calculator-app
+        run: bun run typecheck
+
   test:
     name: Tests
     runs-on: ubuntu-latest
@@ -136,4 +140,8 @@ jobs:
 
       - name: Build website
         working-directory: ./website
+        run: bun run build
+
+      - name: Build calculator
+        working-directory: ./calculator-app
         run: bun run build
