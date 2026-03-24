@@ -1,5 +1,5 @@
-import { createContext, useContext } from "react";
-import type { CountryId } from "@/libs/countries";
+import { createContext, useContext } from 'react';
+import type { CountryId } from '@/libs/countries';
 
 const CountryContext = createContext<CountryId | null>(null);
 

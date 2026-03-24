@@ -1,9 +1,9 @@
 import { render as testingLibraryRender } from '@testing-library/react';
 import { Provider as ReduxProvider } from 'react-redux';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import { CountryProvider } from '../src/contexts/CountryContext';
 import { TooltipProvider } from '../src/components/ui/tooltip';
 import { AppMode, AppProvider } from '../src/contexts/AppContext';
+import { CountryProvider } from '../src/contexts/CountryContext';
 import { store } from '../src/store';
 
 export function renderWithCountry(

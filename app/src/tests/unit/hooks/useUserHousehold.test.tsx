@@ -5,9 +5,9 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { CountryProvider } from '@/contexts/CountryContext';
 import { fetchHouseholdById } from '@/api/household';
 import { LocalStorageHouseholdStore } from '@/api/householdAssociation';
+import { CountryProvider } from '@/contexts/CountryContext';
 import {
   useCreateHouseholdAssociation,
   useHouseholdAssociation,
