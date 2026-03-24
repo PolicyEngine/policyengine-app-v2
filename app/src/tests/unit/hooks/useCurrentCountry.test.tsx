@@ -3,7 +3,7 @@ import { describe, expect, test } from 'vitest';
 import { CountryProvider } from '@/contexts/CountryContext';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import type { CountryId } from '@/libs/countries';
-import { TEST_COUNTRIES, TEST_PATHS } from '@/tests/fixtures/hooks/useCurrentCountryMocks';
+import { TEST_COUNTRIES } from '@/tests/fixtures/hooks/useCurrentCountryMocks';
 
 function createWrapper(countryId: CountryId) {
   return function Wrapper({ children }: { children: React.ReactNode }) {
