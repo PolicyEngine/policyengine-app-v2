@@ -40,6 +40,7 @@ export default function HeaderNavigation({ navbarOpened, onToggleNavbar }: Heade
       dropdownItems: [
         { label: 'Team', href: getWebsitePath('/team') },
         { label: 'Supporters', href: getWebsitePath('/supporters') },
+        { label: 'Citations', href: getWebsitePath('/citations') },
       ],
     },
     {

@@ -21,6 +21,7 @@ const BrandPage = lazy(() => import('./pages/Brand.page'));
 const BrandAssetsPage = lazy(() => import('./pages/BrandAssets.page'));
 const BrandDesignPage = lazy(() => import('./pages/BrandDesign.page'));
 const BrandWritingPage = lazy(() => import('./pages/BrandWriting.page'));
+const CitationsPage = lazy(() => import('./pages/Citations.page'));
 const ClaudePluginsPage = lazy(() => import('./pages/ClaudePlugins.page'));
 const DonatePage = lazy(() => import('./pages/Donate.page'));
 const OrgLogosEmbedPage = lazy(() => import('./pages/embed/OrgLogosEmbed.page'));
@@ -101,6 +102,10 @@ const router = createBrowserRouter(
                 {
                   path: 'research/:slug',
                   element: <BlogPage />,
+                },
+                {
+                  path: 'citations',
+                  element: <CitationsPage />,
                 },
                 {
                   path: 'brand',
