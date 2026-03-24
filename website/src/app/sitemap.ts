@@ -3,13 +3,6 @@ import { getPostsSorted } from "@/data/posts/postTransformers";
 
 const BASE_URL = "https://policyengine.org";
 
-function slugFromFilename(filename: string): string {
-  return filename
-    .replace(/\.(md|ipynb)$/, "")
-    .toLowerCase()
-    .replace(/_/g, "-");
-}
-
 export default function sitemap(): MetadataRoute.Sitemap {
   const entries: MetadataRoute.Sitemap = [];
 
@@ -50,7 +43,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // Research articles
   const posts = getPostsSorted();
   for (const post of posts) {
-    const slug = slugFromFilename(post.filename);
+    const slug = post.slug;
     const countries = post.tags.filter((t: string) =>
       ["us", "uk"].includes(t),
     );

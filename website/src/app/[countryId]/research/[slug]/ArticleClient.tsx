@@ -4,7 +4,7 @@
  * ArticleClient — client component for rendering a blog article.
  *
  * Receives post metadata and raw content from the server component.
- * Handles the responsive 3-column layout (TOC | content | related),
+ * Handles the responsive 3-column layout (TOC | content | "More on" topics),
  * heading section, author bios, and share links.
  */
 
@@ -62,8 +62,13 @@ export default function ArticleClient({
 
   const { markdown, notebook } = useMemo(() => {
     if (isNotebook) {
-      const nb: Notebook = JSON.parse(content);
-      return { markdown: extractMarkdownFromNotebook(nb), notebook: nb };
+      try {
+        const nb: Notebook = JSON.parse(content);
+        return { markdown: extractMarkdownFromNotebook(nb), notebook: nb };
+      } catch (err) {
+        console.error("Failed to parse notebook JSON:", err);
+        return { markdown: "", notebook: null };
+      }
     }
     return { markdown: content, notebook: null };
   }, [content, isNotebook]);
@@ -417,19 +422,45 @@ function Authorship({
   post: BlogPost;
   countryId: string;
 }) {
-  const names = post.authors.map((id) => (
-    <Link
-      key={id}
-      href={`/${countryId}/research?authors=${id}`}
-      style={{
-        color: colors.primary[600],
-        textDecoration: "none",
-        whiteSpace: "nowrap",
-      }}
-    >
-      {formatAuthorName(id)}
-    </Link>
+  const authorNames = post.authors.map((id) => (
+    <span key={id} style={{ whiteSpace: "nowrap" }}>
+      <Link
+        href={`/${countryId}/research?authors=${id}`}
+        style={{
+          color: colors.primary[600],
+          textDecoration: "none",
+        }}
+      >
+        {formatAuthorName(id)}
+      </Link>
+    </span>
   ));
+
+  let content;
+  if (authorNames.length === 1) {
+    content = <>By {authorNames}</>;
+  } else if (authorNames.length === 2) {
+    content = (
+      <>
+        By {authorNames[0]} and {authorNames[1]}
+      </>
+    );
+  } else {
+    const last = authorNames.pop();
+    content = (
+      <>
+        By{" "}
+        {authorNames.reduce((prev, curr, i) => (
+          <>
+            {prev}
+            {i > 0 ? ", " : ""}
+            {curr}
+          </>
+        ))}
+        , and {last}
+      </>
+    );
+  }
 
   return (
     <p
@@ -441,22 +472,7 @@ function Authorship({
         margin: 0,
       }}
     >
-      By{" "}
-      {names.length <= 2
-        ? names.reduce((prev, curr, i) => (
-            <>
-              {prev}
-              {i > 0 ? " and " : ""}
-              {curr}
-            </>
-          ))
-        : names.map((name, i) => (
-            <span key={i}>
-              {i > 0 && i < names.length - 1 ? ", " : ""}
-              {i === names.length - 1 ? ", and " : ""}
-              {name}
-            </span>
-          ))}
+      {content}
     </p>
   );
 }

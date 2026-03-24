@@ -14,6 +14,7 @@ import {
   spacing,
   typography,
 } from "@policyengine/design-system/tokens";
+import { useDisplayCategory } from "@/components/blog/useDisplayCategory";
 import {
   getResearchItems,
   getTopicTags,
@@ -67,7 +68,7 @@ function BlogPostCard({
           display: "flex",
           flexDirection: "column",
           height: "100%",
-          borderRadius: "12px",
+          borderRadius: spacing.radius.feature,
           overflow: "hidden",
           backgroundColor: colors.white,
           border: `1px solid ${colors.gray[200]}`,
@@ -104,7 +105,7 @@ function BlogPostCard({
         {/* Content */}
         <div
           style={{
-            padding: "16px 18px",
+            padding: `${spacing.lg} ${spacing.lg}`,
             flex: 1,
             display: "flex",
             flexDirection: "column",
@@ -116,8 +117,8 @@ function BlogPostCard({
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
-              marginBottom: "10px",
-              fontSize: "11px",
+              marginBottom: spacing.sm,
+              fontSize: typography.fontSize.xs,
               fontFamily: typography.fontFamily.primary,
               fontWeight: typography.fontWeight.medium,
               color: colors.gray[500],
@@ -135,7 +136,7 @@ function BlogPostCard({
                   {i < displayTags.length - 1 && (
                     <span
                       style={{
-                        margin: "0 8px",
+                        margin: `0 ${spacing.sm}`,
                         color: colors.gray[400],
                         fontSize: "9px",
                       }}
@@ -153,10 +154,10 @@ function BlogPostCard({
           <p
             style={{
               fontWeight: typography.fontWeight.semibold,
-              fontSize: "15.5px",
+              fontSize: typography.fontSize.base,
               lineHeight: "1.4",
               color: colors.secondary[900],
-              marginBottom: "8px",
+              marginBottom: spacing.sm,
               fontFamily: typography.fontFamily.primary,
               display: "-webkit-box",
               WebkitLineClamp: 2,
@@ -191,12 +192,12 @@ function BlogPostCard({
               display: "flex",
               alignItems: "center",
               justifyContent: "flex-end",
-              gap: "4px",
-              marginTop: "12px",
+              gap: spacing.xs,
+              marginTop: spacing.md,
               color: colors.primary[600],
               fontFamily: typography.fontFamily.primary,
               fontWeight: typography.fontWeight.medium,
-              fontSize: "13.5px",
+              fontSize: typography.fontSize.sm,
             }}
           >
             <span>Read more</span>
@@ -237,9 +238,9 @@ function FilterSection({
   return (
     <div
       style={{
-        borderRadius: "12px",
+        borderRadius: spacing.radius.feature,
         border: `1px solid ${isExpanded ? colors.primary[200] : colors.border.light}`,
-        backgroundColor: isExpanded ? "rgba(230, 255, 250, 0.3)" : colors.white,
+        backgroundColor: isExpanded ? colors.primary[50] : colors.white,
         transition: "border-color 0.2s ease, background-color 0.2s ease",
         overflow: "hidden",
       }}
@@ -251,15 +252,15 @@ function FilterSection({
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          padding: "10px 12px",
-          borderRadius: "10px",
+          padding: `${spacing.sm} ${spacing.md}`,
+          borderRadius: spacing.radius.feature,
           cursor: "pointer",
           background: "transparent",
           border: "none",
           width: "100%",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: spacing.sm }}>
           <span
             style={{
               fontWeight: typography.fontWeight.semibold,
@@ -278,13 +279,13 @@ function FilterSection({
                 justifyContent: "center",
                 minWidth: "20px",
                 height: "20px",
-                borderRadius: "10px",
+                borderRadius: spacing.radius.feature,
                 backgroundColor: colors.primary[500],
                 color: colors.white,
-                fontSize: "11px",
+                fontSize: typography.fontSize.xs,
                 fontWeight: typography.fontWeight.bold,
                 fontFamily: typography.fontFamily.primary,
-                padding: "0 6px",
+                padding: `0 ${spacing.xs}`,
               }}
             >
               {count}
@@ -310,7 +311,7 @@ function FilterSection({
           overflow: "hidden",
         }}
       >
-        <div ref={contentRef} style={{ padding: "4px 12px 12px" }}>
+        <div ref={contentRef} style={{ padding: `${spacing.xs} ${spacing.md} ${spacing.md}` }}>
           {children}
         </div>
       </div>
@@ -338,10 +339,10 @@ function CheckboxRow({
       style={{
         display: "flex",
         alignItems: "center",
-        gap: "10px",
-        padding: "6px 8px",
-        borderRadius: "8px",
-        marginLeft: indented ? "16px" : 0,
+        gap: spacing.sm,
+        padding: `${spacing.xs} ${spacing.sm}`,
+        borderRadius: spacing.radius.container,
+        marginLeft: indented ? spacing.lg : 0,
         cursor: "pointer",
         background: "transparent",
         border: "none",
@@ -358,7 +359,7 @@ function CheckboxRow({
       />
       <span
         style={{
-          fontSize: "13.5px",
+          fontSize: typography.fontSize.sm,
           fontFamily: typography.fontFamily.primary,
           color: checked ? colors.primary[700] : colors.secondary[700],
           fontWeight: checked
@@ -527,8 +528,8 @@ export default function ResearchClient({ countryId }: { countryId: string }) {
     }
   }
 
-  const isDesktop =
-    typeof window !== "undefined" ? window.innerWidth >= 768 : true;
+  const displayCategory = useDisplayCategory();
+  const isDesktop = displayCategory === "desktop";
 
   return (
     <>
@@ -555,7 +556,8 @@ export default function ResearchClient({ countryId }: { countryId: string }) {
           style={{
             fontSize: typography.fontSize.lg,
             fontFamily: typography.fontFamily.body,
-            color: "rgba(255,255,255,0.8)",
+            color: colors.text.inverse,
+            opacity: 0.8,
             maxWidth: "600px",
             margin: "0 auto",
           }}
@@ -568,7 +570,7 @@ export default function ResearchClient({ countryId }: { countryId: string }) {
       {/* Content */}
       <div
         style={{
-          maxWidth: "1200px",
+          maxWidth: spacing.layout.content,
           margin: "0 auto",
           padding: spacing.xl,
         }}
@@ -597,7 +599,7 @@ export default function ResearchClient({ countryId }: { countryId: string }) {
                   color={colors.text.tertiary}
                   style={{
                     position: "absolute",
-                    left: "12px",
+                    left: spacing.md,
                     top: "50%",
                     transform: "translateY(-50%)",
                     pointerEvents: "none",
@@ -609,13 +611,13 @@ export default function ResearchClient({ countryId }: { countryId: string }) {
                   onChange={(e) => setSearchQuery(e.target.value)}
                   style={{
                     width: "100%",
-                    paddingLeft: "36px",
-                    paddingRight: "12px",
-                    paddingTop: "8px",
-                    paddingBottom: "8px",
-                    borderRadius: "10px",
+                    paddingLeft: spacing["3xl"],
+                    paddingRight: spacing.md,
+                    paddingTop: spacing.sm,
+                    paddingBottom: spacing.sm,
+                    borderRadius: spacing.radius.feature,
                     border: `1px solid ${colors.border.light}`,
-                    fontSize: "14px",
+                    fontSize: typography.fontSize.sm,
                     fontFamily: typography.fontFamily.primary,
                     outline: "none",
                     boxSizing: "border-box",
@@ -629,7 +631,7 @@ export default function ResearchClient({ countryId }: { countryId: string }) {
               style={{
                 display: "flex",
                 flexDirection: "column",
-                gap: "8px",
+                gap: spacing.sm,
               }}
             >
               <FilterSection
@@ -719,9 +721,9 @@ export default function ResearchClient({ countryId }: { countryId: string }) {
                               background: "transparent",
                               border: "none",
                               cursor: "pointer",
-                              padding: "4px 8px",
-                              borderRadius: "6px",
-                              fontSize: "12px",
+                              padding: `${spacing.xs} ${spacing.sm}`,
+                              borderRadius: spacing.radius.element,
+                              fontSize: typography.fontSize.xs,
                               color: colors.primary[600],
                               fontWeight: typography.fontWeight.medium,
                             }}
@@ -834,7 +836,7 @@ export default function ResearchClient({ countryId }: { countryId: string }) {
                   textAlign: "center",
                   padding: spacing["3xl"],
                   backgroundColor: colors.gray[50],
-                  borderRadius: "12px",
+                  borderRadius: spacing.radius.feature,
                 }}
               >
                 <p

@@ -24,6 +24,9 @@ const ARTICLES_DIR = path.join(
  */
 export function getArticleContent(filename: string): string {
   const filePath = path.join(ARTICLES_DIR, filename);
+  if (!fs.existsSync(filePath)) {
+    throw new Error(`Article file not found: ${filename}`);
+  }
   return fs.readFileSync(filePath, "utf-8");
 }
 

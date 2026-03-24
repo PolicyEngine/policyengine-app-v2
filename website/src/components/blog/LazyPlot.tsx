@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { colors } from "@policyengine/design-system/tokens";
 
 /**
  * Lazy-loaded Plotly chart component.
@@ -16,7 +17,7 @@ const Plot = dynamic(() => import("react-plotly.js"), {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        color: "#999",
+        color: colors.gray[400],
       }}
     >
       Loading chart…
