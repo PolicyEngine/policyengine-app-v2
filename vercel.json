@@ -74,6 +74,30 @@
       "destination": "https://policyengine-taxsim-policy-engine.vercel.app/us/taxsim/"
     },
     {
+      "source": "/us/taxsim/run",
+      "destination": "https://policyengine-taxsim-policy-engine.vercel.app/us/taxsim/run"
+    },
+    {
+      "source": "/us/taxsim/run/",
+      "destination": "https://policyengine-taxsim-policy-engine.vercel.app/us/taxsim/run/"
+    },
+    {
+      "source": "/us/taxsim/documentation",
+      "destination": "https://policyengine-taxsim-policy-engine.vercel.app/us/taxsim/documentation"
+    },
+    {
+      "source": "/us/taxsim/documentation/",
+      "destination": "https://policyengine-taxsim-policy-engine.vercel.app/us/taxsim/documentation/"
+    },
+    {
+      "source": "/us/taxsim/dashboard",
+      "destination": "https://policyengine-taxsim-policy-engine.vercel.app/us/taxsim/dashboard"
+    },
+    {
+      "source": "/us/taxsim/dashboard/",
+      "destination": "https://policyengine-taxsim-policy-engine.vercel.app/us/taxsim/dashboard/"
+    },
+    {
       "source": "/us/taxsim/:path*",
       "destination": "https://policyengine-taxsim-policy-engine.vercel.app/us/taxsim/:path*"
     },
