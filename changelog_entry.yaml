@@ -1,5 +1,7 @@
 - bump: patch
   changes:
+    added:
+      - Add council tax to land value tax reform dashboard for UK
     fixed:
       - Restore student loan visualisation interactive that was accidentally removed in #766
       - Fix report share button not working after report builder refactor
