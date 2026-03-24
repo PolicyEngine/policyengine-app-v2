@@ -21,6 +21,7 @@ import { RootState } from '@/store';
 import { Report } from '@/types/ingredients/Report';
 import { Simulation } from '@/types/ingredients/Simulation';
 import { SimulationStateProps } from '@/types/pathwayState';
+import { trackReportStarted } from '@/utils/analytics';
 import { toApiPolicyId } from '../currentLaw';
 import { ReportBuilderState } from '../types';
 
@@ -95,6 +96,7 @@ export function useReportSubmission({
     }
 
     setIsSubmitting(true);
+    trackReportStarted();
 
     try {
       const simulationIds: string[] = [];
