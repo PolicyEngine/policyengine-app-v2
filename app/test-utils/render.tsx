@@ -1,17 +1,20 @@
 import { render as testingLibraryRender } from '@testing-library/react';
 import { Provider as ReduxProvider } from 'react-redux';
 import { MemoryRouter } from 'react-router-dom';
+import { CountryProvider } from '../src/contexts/CountryContext';
 import { TooltipProvider } from '../src/components/ui/tooltip';
 import { AppProvider } from '../src/contexts/AppContext';
 import { store } from '../src/store';
 
-export function render(ui: React.ReactNode) {
+export function render(ui: React.ReactNode, countryId: string = 'us') {
   return testingLibraryRender(ui, {
     wrapper: ({ children }: { children: React.ReactNode }) => (
       <AppProvider mode="website">
         <ReduxProvider store={store}>
           <MemoryRouter>
-            <TooltipProvider>{children}</TooltipProvider>
+            <CountryProvider value={countryId as any}>
+              <TooltipProvider>{children}</TooltipProvider>
+            </CountryProvider>
           </MemoryRouter>
         </ReduxProvider>
       </AppProvider>
