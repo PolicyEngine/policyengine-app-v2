@@ -10,6 +10,10 @@ import { ClientOnly } from "./client";
  * In future PRs, individual routes can be extracted from the catch-all
  * into proper Next.js file-based routes for SSR/code-splitting benefits.
  */
+export function generateStaticParams() {
+  return [{ slug: [""] }];
+}
+
 export default function Page() {
   return <ClientOnly />;
 }
