@@ -372,7 +372,7 @@ export default function BrandWritingPage() {
           >
             PolicyEngine&apos;s voice is research-oriented but accessible. We
             explain complex policy concepts clearly while maintaining rigor.
-            When writing about our products, the tone can be more natural and
+            When writing about our tools, the tone can be more natural and
             conversational.
           </p>
 

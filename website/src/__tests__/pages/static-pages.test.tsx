@@ -5,6 +5,7 @@ import PrivacyPage from "../../app/[countryId]/privacy/page";
 import TermsPage from "../../app/[countryId]/terms/page";
 import ResearchPage from "../../app/[countryId]/research/page";
 import ClaudePluginPage from "../../app/[countryId]/claude-plugin/page";
+import ToolsPage from "../../app/[countryId]/tools/page";
 
 describe("static pages", () => {
   test("Donate page renders heading", async () => {
@@ -44,6 +45,14 @@ describe("static pages", () => {
 
   test("Claude Plugin page returns a valid element", async () => {
     const el = await ClaudePluginPage({
+      params: Promise.resolve({ countryId: "us" }),
+    });
+    expect(el).toBeTruthy();
+    expect(el.type).toBeDefined();
+  });
+
+  test("Tools page returns a valid element", async () => {
+    const el = await ToolsPage({
       params: Promise.resolve({ countryId: "us" }),
     });
     expect(el).toBeTruthy();

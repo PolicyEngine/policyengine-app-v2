@@ -561,6 +561,11 @@ export default function Header() {
 
   const navItems: NavItemSetup[] = [
     { label: "Research", href: `/${countryId}/research`, hasDropdown: false },
+    { label: "Tools", href: `/${countryId}/tools`, hasDropdown: false },
+    { label: "Model", href: `/${countryId}/model`, hasDropdown: false },
+    ...(countryId === "us"
+      ? [{ label: "API", href: `/${countryId}/api`, hasDropdown: false }]
+      : []),
     {
       label: "About",
       hasDropdown: true,
