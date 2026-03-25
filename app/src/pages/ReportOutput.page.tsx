@@ -172,12 +172,11 @@ export default function ReportOutputPage() {
   // Handle view button click - navigate to report builder in view mode
   const handleView = () => {
     if (userReportId) {
-      navigate(`/${countryId}/reports/create/${userReportId}`, {
-        state: {
-          from: 'report-output',
-          reportPath: `/${countryId}/report-output/${userReportId}`,
-        },
+      const params = new URLSearchParams({
+        from: 'report-output',
+        reportPath: `/${countryId}/report-output/${userReportId}`,
       });
+      navigate(`/${countryId}/reports/create/${userReportId}?${params}`);
     }
   };
 
