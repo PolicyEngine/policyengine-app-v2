@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { AppLink } from '@/components/AppLink';
 import { spacing } from '@/designTokens';
 import { useWebsitePath } from '@/hooks/useWebsitePath';
 
@@ -22,12 +22,12 @@ export default function HeaderLogo() {
 
   const logoImage = <img src={PolicyEngineLogo} alt="PolicyEngine" style={logoImageStyles} />;
 
-  // Relative paths use React Router Link for SPA behavior
+  // Relative paths use AppLink for SPA behavior
   if (href.startsWith('/')) {
     return (
-      <Link to={href} style={{ ...logoContainerStyles, marginRight: spacing.md }}>
+      <AppLink to={href} style={{ ...logoContainerStyles, marginRight: spacing.md }}>
         {logoImage}
-      </Link>
+      </AppLink>
     );
   }
 
