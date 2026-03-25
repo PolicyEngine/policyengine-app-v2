@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
 import { RenameIngredientModal } from '@/components/common/RenameIngredientModal';
 import IngredientReadView from '@/components/IngredientReadView';
 import { Stack } from '@/components/ui';
 import { MOCK_USER_ID } from '@/constants';
+import { useAppNavigate } from '@/contexts/NavigationContext';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useDisclosure } from '@/hooks/useDisclosure';
 import { useUpdateSimulationAssociation } from '@/hooks/useUserSimulationAssociations';
@@ -14,7 +14,7 @@ import { formatDate } from '@/utils/dateUtils';
 export default function SimulationsPage() {
   const userId = MOCK_USER_ID.toString(); // TODO: Replace with actual user ID retrieval logic
   const { data, isLoading, isError, error } = useUserSimulations(userId);
-  const navigate = useNavigate();
+  const nav = useAppNavigate();
   const countryId = useCurrentCountry();
 
   const [searchValue, setSearchValue] = useState('');
@@ -27,7 +27,7 @@ export default function SimulationsPage() {
   const updateAssociation = useUpdateSimulationAssociation();
 
   const handleBuildSimulation = () => {
-    navigate(`/${countryId}/simulations/create`);
+    nav.push(`/${countryId}/simulations/create`);
   };
 
   const handleOpenRename = (userSimulationId: string) => {
