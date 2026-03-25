@@ -4,17 +4,9 @@
  */
 
 import postsData from "./posts.json";
+import type { BlogPost } from "@/types/blog";
 
-export interface BlogPost {
-  title: string;
-  description: string;
-  date: string;
-  authors: string[];
-  tags: string[];
-  filename: string;
-  image: string;
-  slug: string;
-}
+export type { BlogPost };
 
 export interface ResearchItem {
   title: string;

@@ -6,17 +6,8 @@ import {
   spacing,
   typography,
 } from "@policyengine/design-system/tokens";
+import type { BlogPost } from "@/types/blog";
 import postsData from "@/data/posts/posts.json";
-
-interface BlogPost {
-  title: string;
-  description: string;
-  date: string;
-  tags: string[];
-  authors: string[];
-  filename: string;
-  image?: string;
-}
 
 const LEFT_COUNT = 2;
 const RIGHT_COUNT = 3;

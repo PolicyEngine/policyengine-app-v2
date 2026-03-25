@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import ResearchClient from "./ResearchClient";
 
 export const metadata: Metadata = {
@@ -11,5 +12,9 @@ export default async function ResearchPage({
   params: Promise<{ countryId: string }>;
 }) {
   const { countryId } = await params;
-  return <ResearchClient countryId={countryId} />;
+  return (
+    <Suspense>
+      <ResearchClient countryId={countryId} />
+    </Suspense>
+  );
 }

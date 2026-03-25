@@ -1,5 +1,14 @@
 [
   {
+    "title": "The Keep Your Pay Act's AMT interaction",
+    "description": "Senator Booker's proposed standard deduction increase triggers AMT for some high earners, clawing back over half of tax savings compared to a simple bracket calculation.",
+    "date": "2026-03-10",
+    "tags": ["us", "policy", "tax", "featured"],
+    "authors": ["daphne-hansell"],
+    "filename": "keep-your-pay-act-amt-interaction.md",
+    "image": "keep-your-pay-act-amt-interaction.webp"
+  },
+  {
     "title": "How reintroducing the two-child benefit limit would affect the UK",
     "description": "PolicyEngine estimates the budgetary, distributional, poverty, and inequality impacts of reintroducing the two-child benefit limit across the UK.",
     "date": "2026-02-24",

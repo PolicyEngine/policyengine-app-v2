@@ -13,9 +13,9 @@ export default function RichTextBlock({
   const textColor =
     variant === "inverted" ? colors.text.inverse : colors.text.primary;
   const linkColor =
-    variant === "inverted" ? colors.text.inverse : colors.text.link;
+    variant === "inverted" ? colors.text.inverse : colors.primary[600];
   const linkHoverColor =
-    variant === "inverted" ? colors.text.inverse : colors.text.linkHover;
+    variant === "inverted" ? colors.text.inverse : colors.primary[700];
 
   return (
     <>

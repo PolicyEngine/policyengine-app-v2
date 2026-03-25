@@ -67,7 +67,7 @@ export default function SupporterCard({
               target="_blank"
               rel="noopener noreferrer"
               style={{
-                color: colors.text.link,
+                color: colors.primary[600],
                 fontWeight: 700,
                 textDecoration: "none",
               }}

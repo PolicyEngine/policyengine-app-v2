@@ -3,6 +3,10 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { VALID_COUNTRIES } from "@/lib/countries";
 
+export function generateStaticParams() {
+  return VALID_COUNTRIES.map((countryId) => ({ countryId }));
+}
+
 export default async function CountryLayout({
   children,
   params,
