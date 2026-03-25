@@ -2,8 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Stack } from '@/components/ui';
 import { CURRENT_YEAR } from '@/constants';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { getTaxYears } from '@/libs/metadataUtils';
-import { RootState } from '@/store';
 import { ValueInterval } from '@/types/subIngredients/valueInterval';
 import { getDefaultValueForParam } from './getDefaultValueForParam';
 import { ValueInputBox } from './ValueInputBox';
@@ -14,7 +14,7 @@ export function MultiYearValueSelector(props: ValueSetterProps) {
 
   // Get available years from metadata
   const availableYears = useSelector(getTaxYears);
-  const countryId = useSelector((state: RootState) => state.metadata.currentCountry);
+  const countryId = useCurrentCountry();
 
   // Country-specific max years configuration
   const MAX_YEARS_BY_COUNTRY: Record<string, number> = {

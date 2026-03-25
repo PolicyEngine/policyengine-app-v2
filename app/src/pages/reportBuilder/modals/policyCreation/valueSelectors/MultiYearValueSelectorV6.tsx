@@ -7,11 +7,11 @@ import { useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Group, Stack, Text } from '@/components/ui';
 import { colors } from '@/designTokens';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { getTaxYears } from '@/libs/metadataUtils';
 import { getDefaultValueForParam } from '@/pathways/report/components/valueSetters/getDefaultValueForParam';
 import { ValueInputBox } from '@/pathways/report/components/valueSetters/ValueInputBox';
 import { ValueSetterProps } from '@/pathways/report/components/valueSetters/ValueSetterProps';
-import { RootState } from '@/store';
 import { ValueInterval } from '@/types/subIngredients/valueInterval';
 
 export function MultiYearValueSelectorV6(props: ValueSetterProps) {
@@ -19,7 +19,7 @@ export function MultiYearValueSelectorV6(props: ValueSetterProps) {
 
   // Get available years from metadata
   const availableYears = useSelector(getTaxYears);
-  const countryId = useSelector((state: RootState) => state.metadata.currentCountry);
+  const countryId = useCurrentCountry();
 
   // Country-specific max years configuration
   const MAX_YEARS_BY_COUNTRY: Record<string, number> = {
