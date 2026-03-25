@@ -27,6 +27,16 @@ function ModifyReportPageRoute() {
   return <ModifyReportPage userReportId={userReportId} />;
 }
 
+/** Bridges react-router useParams to ReportOutputPage's prop interface. */
+function ReportOutputRoute() {
+  const { reportId, subpage, view } = useParams<{
+    reportId: string;
+    subpage?: string;
+    view?: string;
+  }>();
+  return <ReportOutputPage reportId={reportId} subpage={subpage} view={view} />;
+}
+
 /**
  * Layout wrapper that renders StandardLayout with Outlet for nested routes.
  * This allows the app shell (header, sidebar) to remain visible while
@@ -60,7 +70,7 @@ const router = createBrowserRouter(
               children: [
                 {
                   path: 'report-output/:reportId/:subpage?/:view?',
-                  element: <ReportOutputPage />,
+                  element: <ReportOutputRoute />,
                 },
               ],
             },
