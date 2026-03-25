@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { IconSettings } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
 import {
   BulletsValue,
   ColumnConfig,
@@ -15,6 +14,7 @@ import { MultiSimOutputTypeCell } from '@/components/report/MultiSimReportOutput
 import { ReportOutputTypeCell } from '@/components/report/ReportOutputTypeCell';
 import { Stack } from '@/components/ui';
 import { MOCK_USER_ID } from '@/constants';
+import { useAppNavigate } from '@/contexts/NavigationContext';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useDisclosure } from '@/hooks/useDisclosure';
 import { useUpdateReportAssociation } from '@/hooks/useUserReportAssociations';
@@ -29,7 +29,7 @@ export default function ReportsPage() {
   const { data, isLoading, isError, error } = useUserReports(userId);
   const currentLawId = useSelector((state: RootState) => state.metadata.currentLawId);
   const cacheMonitor = useCacheMonitor();
-  const navigate = useNavigate();
+  const nav = useAppNavigate();
   const countryId = useCurrentCountry();
 
   // Log cache state when component mounts and when data changes
@@ -48,7 +48,7 @@ export default function ReportsPage() {
 
   const handleBuildReport = () => {
     const targetPath = `/${countryId}/reports/create`;
-    navigate(targetPath);
+    nav.push(targetPath);
   };
 
   const handleCloseRename = () => {
@@ -122,7 +122,7 @@ export default function ReportsPage() {
       actions: [{ action: 'edit', tooltip: 'View/edit report', icon: <IconSettings size={16} /> }],
       onAction: (action: string, recordId: string) => {
         if (action === 'edit') {
-          navigate(`/${countryId}/reports/create/${recordId}`);
+          nav.push(`/${countryId}/reports/create/${recordId}`);
         }
       },
     },

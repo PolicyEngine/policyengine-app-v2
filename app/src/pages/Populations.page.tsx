@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
 import { BulletsValue, ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
 import { RenameIngredientModal } from '@/components/common/RenameIngredientModal';
 import IngredientReadView from '@/components/IngredientReadView';
 import { Stack } from '@/components/ui';
 import { MOCK_USER_ID } from '@/constants';
+import { useAppNavigate } from '@/contexts/NavigationContext';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useDisclosure } from '@/hooks/useDisclosure';
 import {
@@ -42,7 +42,7 @@ export default function PopulationsPage() {
     error: geographicError,
   } = useGeographicAssociationsByUser(userId);
 
-  const navigate = useNavigate();
+  const nav = useAppNavigate();
 
   const [searchValue, setSearchValue] = useState('');
 
@@ -62,7 +62,7 @@ export default function PopulationsPage() {
   const error = householdError || geographicError;
 
   const handleBuildPopulation = () => {
-    navigate(`/${countryId}/households/create`);
+    nav.push(`/${countryId}/households/create`);
   };
 
   const handleOpenRename = (recordId: string) => {
