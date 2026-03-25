@@ -120,7 +120,9 @@ export function WaterfallChart({
           const y = props.y as number;
           const w = props.width as number;
           const h = props.height as number;
-          const value = props.value as number;
+          // Use the datum's value, not props.value — Recharts gives the
+          // cumulative stack-top for stacked bars, which is wrong for labels.
+          const datum = data[idx];
 
           // Store this bar's pixel rect for the next bar's connector
           barPositions[idx] = { x, y, width: w, height: h };
@@ -137,7 +139,7 @@ export function WaterfallChart({
 
           const barHeight = Math.abs(h);
           const showLabel = showBarLabels && barHeight >= 20;
-          const text = barLabelFormatter ? barLabelFormatter(value) : String(value);
+          const text = barLabelFormatter ? barLabelFormatter(datum.value) : datum.label;
 
           return (
             <g>
