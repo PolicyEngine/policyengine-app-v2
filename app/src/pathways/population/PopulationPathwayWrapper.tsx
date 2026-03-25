@@ -7,9 +7,9 @@
 
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
 import StandardLayout from '@/components/StandardLayout';
 import { CURRENT_YEAR } from '@/constants';
+import { useAppNavigate } from '@/contexts/NavigationContext';
 import { ReportYearProvider } from '@/contexts/ReportYearContext';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { usePathwayNavigation } from '@/hooks/usePathwayNavigation';
@@ -31,7 +31,7 @@ interface PopulationPathwayWrapperProps {
 
 export default function PopulationPathwayWrapper({ onComplete }: PopulationPathwayWrapperProps) {
   const countryId = useCurrentCountry();
-  const navigate = useNavigate();
+  const navigate = useAppNavigate();
 
   // Initialize population state
   const [populationState, setPopulationState] = useState<PopulationStateProps>(() => {
@@ -58,11 +58,11 @@ export default function PopulationPathwayWrapper({ onComplete }: PopulationPathw
     {
       // Custom navigation for standalone pathway: exit to households list
       onHouseholdComplete: (_householdId: string, _household: Household) => {
-        navigate(`/${countryId}/households`);
+        navigate.push(`/${countryId}/households`);
         onComplete?.();
       },
       onGeographyComplete: (_geographyId: string, _label: string) => {
-        navigate(`/${countryId}/households`);
+        navigate.push(`/${countryId}/households`);
         onComplete?.();
       },
     }
@@ -79,7 +79,7 @@ export default function PopulationPathwayWrapper({ onComplete }: PopulationPathw
           regionData={metadata.economyOptions?.region || []}
           onScopeSelected={populationCallbacks.handleScopeSelected}
           onBack={canGoBack ? goBack : undefined}
-          onCancel={() => navigate(`/${countryId}/households`)}
+          onCancel={() => navigate.push(`/${countryId}/households`)}
         />
       );
       break;
