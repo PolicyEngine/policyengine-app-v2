@@ -1,8 +1,8 @@
 import { IconCalendar, IconChevronLeft, IconClock } from '@tabler/icons-react';
-import { useNavigate } from 'react-router-dom';
 import { ReportActionButtons } from '@/components/report/ReportActionButtons';
 import { SharedReportTag } from '@/components/report/SharedReportTag';
 import { Container, Group, Stack, Text, Title } from '@/components/ui';
+import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 
@@ -42,7 +42,7 @@ export default function ReportOutputLayout({
   children,
 }: ReportOutputLayoutProps) {
   const countryId = useCurrentCountry();
-  const navigate = useNavigate();
+  const nav = useAppNavigate();
 
   return (
     <Container size="xl" className="tw:px-xl">
@@ -51,7 +51,7 @@ export default function ReportOutputLayout({
         <Group
           className="tw:gap-xs tw:items-center tw:cursor-pointer"
           style={{ marginBottom: `-${spacing.md}` }}
-          onClick={() => navigate(`/${countryId}/reports`)}
+          onClick={() => nav.push(`/${countryId}/reports`)}
         >
           <IconChevronLeft size={14} color={colors.text.secondary} />
           <Text className="tw:text-sm" style={{ color: colors.text.secondary }}>

@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { SocietyWideReportOutput as SocietyWideOutput } from '@/api/societyWideCalculation';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { FloatingAlert } from '@/components/common/FloatingAlert';
 import { ReportErrorFallback } from '@/components/report/ReportErrorFallback';
 import { Container, Stack, Text } from '@/components/ui';
 import { CALCULATOR_URL } from '@/constants';
+import { useAppLocation } from '@/contexts/LocationContext';
+import { useAppNavigate } from '@/contexts/NavigationContext';
 import { ReportYearProvider } from '@/contexts/ReportYearContext';
 import { colors, spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
@@ -43,22 +44,24 @@ export type ReportOutputType = 'household' | 'societyWide';
  * - useSharedReportData: uses ShareData from URL (same shape)
  */
 
-export default function ReportOutputPage() {
+interface ReportOutputPageProps {
+  reportId?: string;
+  subpage?: string;
+  view?: string;
+}
+
+export default function ReportOutputPage({
+  reportId: userReportId,
+  subpage,
+  view,
+}: ReportOutputPageProps) {
   if (import.meta.env.DEV) {
     (window as any).__journeyProfiler?.markEvent('report-output-render', 'render');
   }
-  const navigate = useNavigate();
+  const nav = useAppNavigate();
   const countryId = useCurrentCountry();
-  const [searchParams] = useSearchParams();
-  const {
-    reportId: userReportId,
-    subpage,
-    view,
-  } = useParams<{
-    reportId?: string;
-    subpage?: string;
-    view?: string;
-  }>();
+  const location = useAppLocation();
+  const searchParams = new URLSearchParams(location.search);
 
   // Detect shared view from URL
   const shareData = extractShareDataFromUrl(searchParams);
@@ -163,7 +166,7 @@ export default function ReportOutputPage() {
       // ShareData already contains user associations - just pass it directly
       const newUserReport = await saveSharedReport(shareData);
       // Navigate to owned view (same URL pattern but now in localStorage)
-      navigate(`/${countryId}/report-output/${newUserReport.id}/${activeTab}`);
+      nav.push(`/${countryId}/report-output/${newUserReport.id}/${activeTab}`);
     } catch (error) {
       console.error('[ReportOutputPage] Failed to save report:', error);
     }
@@ -176,7 +179,7 @@ export default function ReportOutputPage() {
         from: 'report-output',
         reportPath: `/${countryId}/report-output/${userReportId}`,
       });
-      navigate(`/${countryId}/reports/create/${userReportId}?${params}`);
+      nav.push(`/${countryId}/reports/create/${userReportId}?${params}`);
     }
   };
 
@@ -186,9 +189,9 @@ export default function ReportOutputPage() {
     if (id) {
       const basePath = `/${countryId}/report-output/${id}/reproduce`;
       if (isSharedView) {
-        navigate(`${basePath}?${searchParams.toString()}`);
+        nav.push(`${basePath}?${searchParams.toString()}`);
       } else {
-        navigate(basePath);
+        nav.push(basePath);
       }
     }
   };
