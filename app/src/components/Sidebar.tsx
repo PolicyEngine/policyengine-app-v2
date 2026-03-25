@@ -10,9 +10,10 @@ import {
   IconScale,
   IconUsers,
 } from '@tabler/icons-react';
-import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui';
 import { WEBSITE_URL } from '@/constants';
+import { useAppLocation } from '@/contexts/LocationContext';
+import { useAppNavigate } from '@/contexts/NavigationContext';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { colors, typography } from '../designTokens';
 import SidebarDivider from './sidebar/SidebarDivider';
@@ -24,8 +25,8 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ isOpen = true }: SidebarProps) {
-  const location = useLocation();
-  const navigate = useNavigate();
+  const location = useAppLocation();
+  const nav = useAppNavigate();
   const countryId = useCurrentCountry();
 
   // All internal navigation paths include the country prefix for consistency with v1 app
@@ -93,7 +94,7 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
             fontSize: typography.fontSize.sm,
             fontWeight: typography.fontWeight.medium,
           }}
-          onClick={() => navigate(`/${countryId}/reports/create`)}
+          onClick={() => nav.push(`/${countryId}/reports/create`)}
         >
           New report
           <IconPlus size={16} />

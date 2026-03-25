@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { IconWorld } from '@tabler/icons-react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useAppLocation } from '@/contexts/LocationContext';
+import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 
@@ -11,8 +12,8 @@ const countries = [
 
 export default function CountrySelector() {
   const countryId = useCurrentCountry();
-  const navigate = useNavigate();
-  const location = useLocation();
+  const nav = useAppNavigate();
+  const location = useAppLocation();
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -25,12 +26,12 @@ export default function CountrySelector() {
       const pathParts = location.pathname.split('/').filter(Boolean);
       if (pathParts.length > 0) {
         pathParts[0] = newCountryId;
-        navigate(`/${pathParts.join('/')}`);
+        nav.push(`/${pathParts.join('/')}`);
       } else {
-        navigate(`/${newCountryId}`);
+        nav.push(`/${newCountryId}`);
       }
     },
-    [location.pathname, navigate]
+    [location.pathname, nav]
   );
 
   useEffect(() => {

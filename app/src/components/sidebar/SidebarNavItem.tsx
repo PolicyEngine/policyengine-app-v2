@@ -1,5 +1,5 @@
 import { IconExternalLink } from '@tabler/icons-react';
-import { Link } from 'react-router-dom';
+import { AppLink } from '@/components/AppLink';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui';
 import { colors, spacing, typography } from '../../designTokens';
 
@@ -91,8 +91,8 @@ export default function SidebarNavItem({
   }
 
   return (
-    <Link to={path} style={buttonStyles} className="tw:hover:bg-gray-50">
+    <AppLink to={path} style={buttonStyles} className="tw:hover:bg-gray-50">
       {content}
-    </Link>
+    </AppLink>
   );
 }
