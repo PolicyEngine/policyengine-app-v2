@@ -6,8 +6,8 @@
  */
 
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import StandardLayout from '@/components/StandardLayout';
+import { useAppNavigate } from '@/contexts/NavigationContext';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { usePathwayNavigation } from '@/hooks/usePathwayNavigation';
 import { StandalonePolicyViewMode } from '@/types/pathwayModes/PolicyViewMode';
@@ -28,7 +28,7 @@ interface PolicyPathwayWrapperProps {
 
 export default function PolicyPathwayWrapper({ onComplete }: PolicyPathwayWrapperProps) {
   const countryId = useCurrentCountry();
-  const navigate = useNavigate();
+  const navigate = useAppNavigate();
 
   // Initialize policy state
   const [policyState, setPolicyState] = useState<PolicyStateProps>(() => {
@@ -50,7 +50,7 @@ export default function PolicyPathwayWrapper({ onComplete }: PolicyPathwayWrappe
     StandalonePolicyViewMode.SUBMIT, // returnMode (not used in standalone mode)
     (_policyId: string) => {
       // onPolicyComplete: custom navigation for standalone pathway
-      navigate(`/${countryId}/policies`);
+      navigate.push(`/${countryId}/policies`);
       onComplete?.();
     }
   );
@@ -67,7 +67,7 @@ export default function PolicyPathwayWrapper({ onComplete }: PolicyPathwayWrappe
           onUpdateLabel={policyCallbacks.updateLabel}
           onNext={() => navigateToMode(StandalonePolicyViewMode.PARAMETER_SELECTOR)}
           onBack={canGoBack ? goBack : undefined}
-          onCancel={() => navigate(`/${countryId}/policies`)}
+          onCancel={() => navigate.push(`/${countryId}/policies`)}
         />
       );
       break;
@@ -90,7 +90,7 @@ export default function PolicyPathwayWrapper({ onComplete }: PolicyPathwayWrappe
           countryId={countryId}
           onSubmitSuccess={policyCallbacks.handleSubmitSuccess}
           onBack={canGoBack ? goBack : undefined}
-          onCancel={() => navigate(`/${countryId}/policies`)}
+          onCancel={() => navigate.push(`/${countryId}/policies`)}
         />
       );
       break;

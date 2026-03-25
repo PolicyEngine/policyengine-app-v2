@@ -7,9 +7,9 @@
 
 import { useCallback, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
 import StandardLayout from '@/components/StandardLayout';
 import { MOCK_USER_ID } from '@/constants';
+import { useAppNavigate } from '@/contexts/NavigationContext';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { usePathwayNavigation } from '@/hooks/usePathwayNavigation';
 import { useUserGeographics } from '@/hooks/useUserGeographic';
@@ -51,7 +51,7 @@ interface SimulationPathwayWrapperProps {
 
 export default function SimulationPathwayWrapper({ onComplete }: SimulationPathwayWrapperProps) {
   const countryId = useCurrentCountry();
-  const navigate = useNavigate();
+  const navigate = useAppNavigate();
 
   // Initialize simulation state
   const [simulationState, setSimulationState] = useState<SimulationStateProps>(() => {
@@ -106,7 +106,7 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
     SimulationViewMode.SETUP,
     (_simulationId: string) => {
       // onSimulationComplete: custom navigation for standalone pathway
-      navigate(`/${countryId}/simulations`);
+      navigate.push(`/${countryId}/simulations`);
       onComplete?.();
     }
   );
@@ -166,7 +166,7 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
           onUpdateLabel={simulationCallbacks.updateLabel}
           onNext={() => navigateToMode(SimulationViewMode.SETUP)}
           onBack={canGoBack ? goBack : undefined}
-          onCancel={() => navigate(`/${countryId}/simulations`)}
+          onCancel={() => navigate.push(`/${countryId}/simulations`)}
         />
       );
       break;
@@ -181,7 +181,7 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
           onNavigateToPopulation={handleNavigateToPopulation}
           onNext={() => navigateToMode(SimulationViewMode.SUBMIT)}
           onBack={canGoBack ? goBack : undefined}
-          onCancel={() => navigate(`/${countryId}/simulations`)}
+          onCancel={() => navigate.push(`/${countryId}/simulations`)}
         />
       );
       break;
@@ -192,7 +192,7 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
           simulation={simulationState}
           onSubmitSuccess={simulationCallbacks.handleSubmitSuccess}
           onBack={canGoBack ? goBack : undefined}
-          onCancel={() => navigate(`/${countryId}/simulations`)}
+          onCancel={() => navigate.push(`/${countryId}/simulations`)}
         />
       );
       break;
@@ -207,7 +207,7 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
           onCreateNew={() => navigateToMode(SimulationViewMode.POLICY_LABEL)}
           onLoadExisting={() => navigateToMode(SimulationViewMode.SELECT_EXISTING_POLICY)}
           onBack={canGoBack ? goBack : undefined}
-          onCancel={() => navigate(`/${countryId}/simulations`)}
+          onCancel={() => navigate.push(`/${countryId}/simulations`)}
         />
       );
       break;
@@ -228,7 +228,7 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
             );
           }}
           onBack={canGoBack ? goBack : undefined}
-          onCancel={() => navigate(`/${countryId}/simulations`)}
+          onCancel={() => navigate.push(`/${countryId}/simulations`)}
         />
       );
       break;
@@ -242,7 +242,7 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
           onUpdateLabel={policyCallbacks.updateLabel}
           onNext={() => navigateToMode(SimulationViewMode.POLICY_PARAMETER_SELECTOR)}
           onBack={canGoBack ? goBack : undefined}
-          onCancel={() => navigate(`/${countryId}/simulations`)}
+          onCancel={() => navigate.push(`/${countryId}/simulations`)}
         />
       );
       break;
@@ -265,7 +265,7 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
           countryId={countryId}
           onSubmitSuccess={policyCallbacks.handleSubmitSuccess}
           onBack={canGoBack ? goBack : undefined}
-          onCancel={() => navigate(`/${countryId}/simulations`)}
+          onCancel={() => navigate.push(`/${countryId}/simulations`)}
         />
       );
       break;
@@ -275,7 +275,7 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
         <PolicyExistingView
           onSelectPolicy={policyCallbacks.handleSelectExisting}
           onBack={canGoBack ? goBack : undefined}
-          onCancel={() => navigate(`/${countryId}/simulations`)}
+          onCancel={() => navigate.push(`/${countryId}/simulations`)}
         />
       );
       break;
@@ -288,7 +288,7 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
           regionData={metadata.economyOptions?.region || []}
           onScopeSelected={populationCallbacks.handleScopeSelected}
           onBack={canGoBack ? goBack : undefined}
-          onCancel={() => navigate(`/${countryId}/simulations`)}
+          onCancel={() => navigate.push(`/${countryId}/simulations`)}
         />
       );
       break;
@@ -340,7 +340,7 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
           onSelectHousehold={populationCallbacks.handleSelectExistingHousehold}
           onSelectGeography={populationCallbacks.handleSelectExistingGeography}
           onBack={canGoBack ? goBack : undefined}
-          onCancel={() => navigate(`/${countryId}/simulations`)}
+          onCancel={() => navigate.push(`/${countryId}/simulations`)}
         />
       );
       break;
