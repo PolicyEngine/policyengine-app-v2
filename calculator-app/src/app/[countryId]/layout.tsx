@@ -1,11 +1,11 @@
 "use client";
 
-import { use, useMemo } from "react";
+import { use, useEffect, useMemo } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { CountryProvider } from "@/contexts/CountryContext";
 import { LocationProvider } from "@/contexts/LocationContext";
 import { NavigationProvider } from "@/contexts/NavigationContext";
-import type { CountryId } from "@/libs/countries";
+import { countryIds, type CountryId } from "@/libs/countries";
 
 /**
  * Layout for extracted Next.js pages under /:countryId/*.
@@ -23,6 +23,17 @@ export default function CountryLayout({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const isValid = countryIds.includes(countryId as CountryId);
+
+  useEffect(() => {
+    if (!isValid) {
+      router.replace("/");
+    }
+  }, [isValid, router]);
+
+  if (!isValid) {
+    return null;
+  }
 
   const navValue = useMemo(
     () => ({
