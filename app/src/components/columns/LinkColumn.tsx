@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { AppLink } from '@/components/AppLink';
 import { colors } from '@/designTokens';
 import { LinkColumnConfig, LinkValue } from './types';
 
@@ -15,7 +15,7 @@ interface LinkColumnProps {
 
 export function LinkColumn({ config, value }: LinkColumnProps) {
   return (
-    <Link
+    <AppLink
       to={value.url || `${config.urlPrefix || '#'}${value.text}`}
       className="tw:no-underline tw:hover:underline"
       style={{
@@ -25,6 +25,6 @@ export function LinkColumn({ config, value }: LinkColumnProps) {
       onClick={(e) => e.stopPropagation()}
     >
       {value.text}
-    </Link>
+    </AppLink>
   );
 }
