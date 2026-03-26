@@ -89,6 +89,13 @@ export default defineConfig({
     // Use discovered ports in dev, defaults otherwise
     port: appMode === 'calculator' ? (calculatorPort ?? 3001) : (websitePort ?? 3000),
     strictPort: true,
+    proxy: {
+      '/us/california-wealth-tax/embed': {
+        target: 'https://california-wealth-tax.vercel.app',
+        changeOrigin: true,
+        secure: true,
+      },
+    },
   },
   define: viteDefines,
   // Use separate cache directories for website and calculator to avoid conflicts
