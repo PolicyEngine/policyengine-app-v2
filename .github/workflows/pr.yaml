@@ -124,11 +124,17 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
+      - name: Install unzip
+        run: apt-get update && apt-get install -y unzip
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+
       - name: Install dependencies
-        run: npm install --frozen-lockfile
+        run: bun install --frozen-lockfile
 
       - name: Build design system
-        run: npm run design-system:build
+        run: bun run design-system:build
 
       - name: Run visual tests
         working-directory: ./app
