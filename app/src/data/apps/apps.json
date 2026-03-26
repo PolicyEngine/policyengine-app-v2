@@ -77,6 +77,17 @@
   },
   {
     "type": "iframe",
+    "slug": "california-wealth-tax",
+    "title": "California wealth tax fiscal impact calculator",
+    "description": "Estimate how California's proposed billionaire wealth tax changes revenue once avoidance, migration, return flows, and income-tax offsets are taken into account",
+    "source": "https://california-wealth-tax.vercel.app/us/california-wealth-tax",
+    "tags": ["us", "us-ca", "policy", "interactives", "tax"],
+    "countryId": "us",
+    "displayWithResearch": false,
+    "date": "2026-03-25 12:00:00"
+  },
+  {
+    "type": "iframe",
     "slug": "uk-land-value-tax",
     "title": "Council tax to land value tax reform dashboard",
     "description": "Explore the revenue and distributional effects of replacing council tax with an annual land value tax in the UK",
