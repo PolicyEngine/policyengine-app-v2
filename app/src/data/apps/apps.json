@@ -64,6 +64,19 @@
   },
   {
     "type": "iframe",
+    "slug": "oregon-kicker-refund",
+    "title": "Oregon Kicker Refund calculator",
+    "description": "Calculate your 2025 Oregon Kicker refund based on your 2024 Oregon tax liability. The kicker returns surplus state revenue to taxpayers.",
+    "source": "https://oregon-kicker-refund.vercel.app/us/oregon-kicker-refund",
+    "tags": ["us", "policy", "interactives"],
+    "countryId": "us",
+    "displayWithResearch": true,
+    "image": "oregon-kicker-refund.png",
+    "date": "2026-03-25 12:00:00",
+    "authors": ["david-trimmer"]
+  },
+  {
+    "type": "iframe",
     "slug": "watca",
     "title": "Working Americans' Tax Cut Act calculator",
     "description": "Estimate the household and national impact of the cost-of-living exemption and millionaire surtax proposed by Senator Van Hollen",

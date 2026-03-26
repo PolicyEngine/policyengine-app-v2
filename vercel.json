@@ -129,6 +129,14 @@
       "source": "/us/api/:path*",
       "destination": "https://household-api-docs-policy-engine.vercel.app/us/api/:path*"
     },
+    {
+      "source": "/us/oregon-kicker-refund",
+      "destination": "https://oregon-kicker-refund.vercel.app/us/oregon-kicker-refund"
+    },
+    {
+      "source": "/us/oregon-kicker-refund/:path*",
+      "destination": "https://oregon-kicker-refund.vercel.app/us/oregon-kicker-refund/:path*"
+    },
     { "source": "/(.*)", "destination": "/website.html" }
   ],
   "headers": [
