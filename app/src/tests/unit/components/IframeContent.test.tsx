@@ -17,10 +17,7 @@ describe('IframeContent', () => {
           <Route
             path="/:countryId/:slug"
             element={
-              <IframeContent
-                url="/us/california-wealth-tax/embed"
-                title="California wealth tax"
-              />
+              <IframeContent url="/us/california-wealth-tax/embed" title="California wealth tax" />
             }
           />
         </Routes>
