@@ -24,7 +24,7 @@ export default function IframeContent({
   // Derive allowed origin from iframe URL for postMessage validation
   const iframeOrigin = useMemo(() => {
     try {
-      return new URL(url).origin;
+      return new URL(url, window.location.origin).origin;
     } catch {
       return '';
     }

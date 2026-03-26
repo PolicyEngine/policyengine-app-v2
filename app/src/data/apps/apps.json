@@ -80,7 +80,7 @@
     "slug": "california-wealth-tax",
     "title": "California wealth tax fiscal impact calculator",
     "description": "Estimate how California's proposed billionaire wealth tax changes revenue once avoidance, migration, return flows, and income-tax offsets are taken into account",
-    "source": "https://california-wealth-tax.vercel.app/us/california-wealth-tax",
+    "source": "/us/california-wealth-tax/embed",
     "tags": ["us", "us-ca", "policy", "interactives", "tax"],
     "countryId": "us",
     "displayWithResearch": true,

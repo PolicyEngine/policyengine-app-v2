@@ -66,12 +66,12 @@
       "destination": "https://keep-your-pay-act.vercel.app/us/keep-your-pay-act/:path*"
     },
     {
-      "source": "/us/california-wealth-tax",
-      "destination": "https://california-wealth-tax.vercel.app/us/california-wealth-tax"
+      "source": "/us/california-wealth-tax/embed",
+      "destination": "https://california-wealth-tax.vercel.app/us/california-wealth-tax/embed"
     },
     {
-      "source": "/us/california-wealth-tax/:path*",
-      "destination": "https://california-wealth-tax.vercel.app/us/california-wealth-tax/:path*"
+      "source": "/us/california-wealth-tax/embed/:path*",
+      "destination": "https://california-wealth-tax.vercel.app/us/california-wealth-tax/embed/:path*"
     },
     {
       "source": "/us/taxsim",
