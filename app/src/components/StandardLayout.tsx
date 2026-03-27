@@ -9,8 +9,8 @@
  */
 
 import { useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
 import { LayoutProvider, useIsInsideLayout } from '@/contexts/LayoutContext';
+import { useAppLocation } from '@/contexts/LocationContext';
 import { useDisclosure } from '@/hooks/useDisclosure';
 import { cn } from '@/lib/utils';
 import GiveCalcBanner from './shared/GiveCalcBanner';
@@ -23,7 +23,7 @@ interface StandardLayoutProps {
 
 export default function StandardLayout({ children }: StandardLayoutProps) {
   const isInsideLayout = useIsInsideLayout();
-  const location = useLocation();
+  const location = useAppLocation();
   const [navbarOpened, { toggle: toggleNavbar, close: closeNavbar }] = useDisclosure();
 
   // Close navbar on route change (mobile UX)

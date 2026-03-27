@@ -1,45 +1,56 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { useDispatch } from 'react-redux';
-import { Navigate, Outlet, useParams } from 'react-router-dom';
-import { countryIds } from '@/libs/countries';
+import { Navigate, Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { CountryProvider } from '@/contexts/CountryContext';
+import { LocationProvider } from '@/contexts/LocationContext';
+import { NavigationProvider } from '@/contexts/NavigationContext';
+import { countryIds, type CountryId } from '@/libs/countries';
 import { setCurrentCountry } from '@/reducers/metadataReducer';
 import { AppDispatch } from '@/store';
 
 /**
  * Guard component that validates country parameter in the route.
  *
- * Architecture:
- * - URL parameter is the single source of truth for country
- * - This guard validates the country parameter
- * - Components read country directly from URL via useCurrentCountry() hook
- * - Syncs to Redux state for metadata loading
- *
- * Flow:
- * 1. Validates countryId from URL parameter
- * 2. If valid, syncs to Redux metadata state
- * 3. If invalid, redirects to root path
- *
- * Acts as a layout component that either redirects or renders child routes.
+ * Reads countryId from react-router's useParams and provides it via
+ * CountryProvider so that useCurrentCountry() works without any
+ * direct react-router dependency. Also provides NavigationContext and
+ * LocationContext so shared components work in both router contexts.
  */
 export function CountryGuard() {
   const { countryId } = useParams<{ countryId: string }>();
+  const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useDispatch<AppDispatch>();
 
-  // Validation logic
   const isValid = countryId && countryIds.includes(countryId as any);
 
-  // Sync country to Redux for metadata loading
   useEffect(() => {
     if (isValid && countryId) {
       dispatch(setCurrentCountry(countryId));
     }
   }, [countryId, isValid, dispatch]);
 
+  const push = useCallback((path: string) => navigate(path), [navigate]);
+  const replace = useCallback((path: string) => navigate(path, { replace: true }), [navigate]);
+  const back = useCallback(() => navigate(-1), [navigate]);
+  const navValue = useMemo(() => ({ push, replace, back }), [push, replace, back]);
+
+  const locationValue = useMemo(
+    () => ({ pathname: location.pathname, search: location.search }),
+    [location.pathname, location.search]
+  );
+
   if (!isValid) {
-    // Redirect to root path and let the root route handler determine the country.
     return <Navigate to="/" replace />;
   }
 
-  // Render child routes when validation passes.
-  return <Outlet />;
+  return (
+    <CountryProvider value={countryId as CountryId}>
+      <NavigationProvider value={navValue}>
+        <LocationProvider value={locationValue}>
+          <Outlet />
+        </LocationProvider>
+      </NavigationProvider>
+    </CountryProvider>
+  );
 }

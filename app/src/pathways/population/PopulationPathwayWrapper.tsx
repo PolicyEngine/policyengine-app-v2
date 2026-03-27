@@ -5,11 +5,11 @@
  * Reuses shared views from the report pathway with mode="standalone".
  */
 
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
 import StandardLayout from '@/components/StandardLayout';
 import { CURRENT_YEAR } from '@/constants';
+import { useAppNavigate } from '@/contexts/NavigationContext';
 import { ReportYearProvider } from '@/contexts/ReportYearContext';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { usePathwayNavigation } from '@/hooks/usePathwayNavigation';
@@ -31,7 +31,11 @@ interface PopulationPathwayWrapperProps {
 
 export default function PopulationPathwayWrapper({ onComplete }: PopulationPathwayWrapperProps) {
   const countryId = useCurrentCountry();
-  const navigate = useNavigate();
+  const nav = useAppNavigate();
+
+  const handleCancel = useCallback(() => {
+    nav.push(`/${countryId}/households`);
+  }, [nav, countryId]);
 
   // Initialize population state
   const [populationState, setPopulationState] = useState<PopulationStateProps>(() => {
@@ -58,15 +62,26 @@ export default function PopulationPathwayWrapper({ onComplete }: PopulationPathw
     {
       // Custom navigation for standalone pathway: exit to households list
       onHouseholdComplete: (_householdId: string, _household: Household) => {
-        navigate(`/${countryId}/households`);
+        nav.push(`/${countryId}/households`);
         onComplete?.();
       },
       onGeographyComplete: (_geographyId: string, _label: string) => {
-        navigate(`/${countryId}/households`);
+        nav.push(`/${countryId}/households`);
         onComplete?.();
       },
     }
   );
+
+  // Redirect to listing page on unknown view mode
+  const isValidMode = Object.values(StandalonePopulationViewMode).includes(
+    currentMode as StandalonePopulationViewMode
+  );
+  useEffect(() => {
+    if (!isValidMode) {
+      console.error(`[PopulationPathwayWrapper] Unknown view mode: ${currentMode}`);
+      nav.push(`/${countryId}/households`);
+    }
+  }, [isValidMode, currentMode, nav, countryId]);
 
   // ========== VIEW RENDERING ==========
   let currentView: React.ReactElement;
@@ -79,7 +94,7 @@ export default function PopulationPathwayWrapper({ onComplete }: PopulationPathw
           regionData={metadata.economyOptions?.region || []}
           onScopeSelected={populationCallbacks.handleScopeSelected}
           onBack={canGoBack ? goBack : undefined}
-          onCancel={() => navigate(`/${countryId}/households`)}
+          onCancel={handleCancel}
         />
       );
       break;
@@ -126,7 +141,7 @@ export default function PopulationPathwayWrapper({ onComplete }: PopulationPathw
       break;
 
     default:
-      currentView = <div>Unknown view mode: {currentMode}</div>;
+      currentView = <></>;
   }
 
   return (

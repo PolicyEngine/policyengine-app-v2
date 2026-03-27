@@ -5,8 +5,10 @@ import { Provider } from 'react-redux';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { createSimulation } from '@/api/simulation';
+import { CountryProvider } from '@/contexts/CountryContext';
 import { useCreateSimulation } from '@/hooks/useCreateSimulation';
 import { useCreateSimulationAssociation } from '@/hooks/useUserSimulationAssociations';
+import type { CountryId } from '@/libs/countries';
 import {
   mockSimulationPayload,
   mockSimulationPayloadGeography,
@@ -87,9 +89,11 @@ describe('useCreateSimulation', () => {
     <Provider store={mockStore}>
       <QueryClientProvider client={queryClient}>
         <MemoryRouter initialEntries={['/us/simulations']}>
-          <Routes>
-            <Route path="/:countryId/*" element={children} />
-          </Routes>
+          <CountryProvider value={'us' as CountryId}>
+            <Routes>
+              <Route path="/:countryId/*" element={children} />
+            </Routes>
+          </CountryProvider>
         </MemoryRouter>
       </QueryClientProvider>
     </Provider>
@@ -185,9 +189,11 @@ describe('useCreateSimulation', () => {
         <Provider store={ukStore}>
           <QueryClientProvider client={queryClient}>
             <MemoryRouter initialEntries={['/uk/simulations']}>
-              <Routes>
-                <Route path="/:countryId/*" element={children} />
-              </Routes>
+              <CountryProvider value={'uk' as CountryId}>
+                <Routes>
+                  <Route path="/:countryId/*" element={children} />
+                </Routes>
+              </CountryProvider>
             </MemoryRouter>
           </QueryClientProvider>
         </Provider>
@@ -212,9 +218,11 @@ describe('useCreateSimulation', () => {
         <Provider store={ukStore}>
           <QueryClientProvider client={queryClient}>
             <MemoryRouter initialEntries={['/uk/simulations']}>
-              <Routes>
-                <Route path="/:countryId/*" element={children} />
-              </Routes>
+              <CountryProvider value={'uk' as CountryId}>
+                <Routes>
+                  <Route path="/:countryId/*" element={children} />
+                </Routes>
+              </CountryProvider>
             </MemoryRouter>
           </QueryClientProvider>
         </Provider>

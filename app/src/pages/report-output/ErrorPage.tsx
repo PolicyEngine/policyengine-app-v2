@@ -1,6 +1,6 @@
 import { IconAlertCircle } from '@tabler/icons-react';
-import { useNavigate } from 'react-router-dom';
 import { Alert, AlertDescription, AlertTitle, Button, Stack } from '@/components/ui';
+import { useAppNavigate } from '@/contexts/NavigationContext';
 
 interface ErrorPageProps {
   error?: any;
@@ -10,7 +10,7 @@ interface ErrorPageProps {
  * Error page component displayed when report calculation fails
  */
 export default function ErrorPage({ error }: ErrorPageProps) {
-  const navigate = useNavigate();
+  const nav = useAppNavigate();
 
   return (
     <Stack className="tw:gap-md">
@@ -24,7 +24,7 @@ export default function ErrorPage({ error }: ErrorPageProps) {
         </AlertDescription>
       </Alert>
 
-      <Button variant="outline" onClick={() => navigate(-1)} className="tw:w-full">
+      <Button variant="outline" onClick={() => nav.back()} className="tw:w-full">
         Go back
       </Button>
     </Stack>

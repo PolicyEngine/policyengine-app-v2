@@ -4,7 +4,8 @@
   "workspaces": [
     "packages/*",
     "app",
-    "website"
+    "website",
+    "calculator-app"
   ],
   "scripts": {
     "dev": "bun run design-system:build && bun run --filter=policyengine-app-v2 dev",

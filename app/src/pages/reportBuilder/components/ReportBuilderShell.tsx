@@ -5,8 +5,8 @@
  * Accepts all logic via props so different modes (setup, modify) can compose it.
  */
 import { IconChevronLeft } from '@tabler/icons-react';
-import { useNavigate } from 'react-router-dom';
 import { Group, Text } from '@/components/ui';
+import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { styles } from '../styles';
@@ -42,7 +42,7 @@ export function ReportBuilderShell({
   backPath,
   backLabel,
 }: ReportBuilderShellProps) {
-  const navigate = useNavigate();
+  const nav = useAppNavigate();
   const countryId = useCurrentCountry();
 
   return (
@@ -52,7 +52,7 @@ export function ReportBuilderShell({
         gap="xs"
         align="center"
         style={{ marginBottom: 8, cursor: 'pointer' }}
-        onClick={() => navigate(backPath || `/${countryId}/reports`)}
+        onClick={() => nav.push(backPath || `/${countryId}/reports`)}
       >
         <IconChevronLeft size={14} color={colors.gray[500]} />
         <Text size="sm" c="dimmed">

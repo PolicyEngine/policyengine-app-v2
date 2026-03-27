@@ -2,7 +2,7 @@
  * Router for the Calculator app (app.policyengine.org)
  * Contains only the interactive calculator functionality
  */
-import { createBrowserRouter, Navigate, Outlet, RouterProvider } from 'react-router-dom';
+import { createBrowserRouter, Navigate, Outlet, RouterProvider, useParams } from 'react-router-dom';
 import PathwayLayout from './components/PathwayLayout';
 import StandardLayout from './components/StandardLayout';
 import NotFoundPage from './pages/NotFound.page';
@@ -20,6 +20,22 @@ import { CountryGuard } from './routing/guards/CountryGuard';
 import { MetadataGuard } from './routing/guards/MetadataGuard';
 import { MetadataLazyLoader } from './routing/guards/MetadataLazyLoader';
 import { RedirectToCountry } from './routing/RedirectToCountry';
+
+/** Bridges react-router useParams to ModifyReportPage's prop interface. */
+function ModifyReportPageRoute() {
+  const { userReportId } = useParams<{ userReportId: string }>();
+  return <ModifyReportPage userReportId={userReportId} />;
+}
+
+/** Bridges react-router useParams to ReportOutputPage's prop interface. */
+function ReportOutputRoute() {
+  const { reportId, subpage, view } = useParams<{
+    reportId: string;
+    subpage?: string;
+    view?: string;
+  }>();
+  return <ReportOutputPage reportId={reportId} subpage={subpage} view={view} />;
+}
 
 /**
  * Layout wrapper that renders StandardLayout with Outlet for nested routes.
@@ -54,7 +70,7 @@ const router = createBrowserRouter(
               children: [
                 {
                   path: 'report-output/:reportId/:subpage?/:view?',
-                  element: <ReportOutputPage />,
+                  element: <ReportOutputRoute />,
                 },
               ],
             },
@@ -111,7 +127,7 @@ const router = createBrowserRouter(
                 },
                 {
                   path: 'reports/create/:userReportId',
-                  element: <ModifyReportPage />,
+                  element: <ModifyReportPageRoute />,
                 },
                 {
                   path: 'account',

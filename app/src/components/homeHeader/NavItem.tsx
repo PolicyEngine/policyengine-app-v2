@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { IconChevronDown } from '@tabler/icons-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { AppLink } from '@/components/AppLink';
+import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, typography } from '@/designTokens';
 
 export interface DropdownItem {
@@ -61,7 +62,7 @@ function AppleDropdown({
   open: boolean;
   onClose: () => void;
 }) {
-  const navigate = useNavigate();
+  const nav = useAppNavigate();
   const contentRef = useRef<HTMLDivElement>(null);
   const [contentHeight, setContentHeight] = useState(0);
   const [visible, setVisible] = useState(false);
@@ -82,7 +83,7 @@ function AppleDropdown({
       onClose();
       if (item.href) {
         if (isInternalHref(item.href)) {
-          navigate(item.href);
+          nav.push(item.href);
         } else {
           window.location.href = item.href;
         }
@@ -90,7 +91,7 @@ function AppleDropdown({
         item.onClick();
       }
     },
-    [navigate, onClose]
+    [nav, onClose]
   );
 
   if (!open && contentHeight === 0) {
@@ -256,12 +257,12 @@ export default function NavItem({ setup }: NavItemProps) {
     );
   }
 
-  // Relative paths use React Router's Link for SPA behavior
+  // Relative paths use AppLink for SPA behavior
   if (isInternalHref(href)) {
     return (
-      <Link to={href} style={navItemStyle} {...hoverHandlers}>
+      <AppLink to={href} style={navItemStyle} {...hoverHandlers}>
         {label}
-      </Link>
+      </AppLink>
     );
   }
 

@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { IconSettings } from '@tabler/icons-react';
-import { useNavigate } from 'react-router-dom';
 import { ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
 import { RenameIngredientModal } from '@/components/common/RenameIngredientModal';
 import IngredientReadView from '@/components/IngredientReadView';
 import { Stack } from '@/components/ui';
 import { MOCK_USER_ID } from '@/constants';
+import { useAppNavigate } from '@/contexts/NavigationContext';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useDisclosure } from '@/hooks/useDisclosure';
 import { useUpdatePolicyAssociation, useUserPolicies } from '@/hooks/useUserPolicy';
@@ -18,7 +18,7 @@ import { formatDate } from '@/utils/dateUtils';
 export default function PoliciesPage() {
   const userId = MOCK_USER_ID.toString(); // TODO: Replace with actual user ID retrieval logic
   const { data, isLoading, isError, error } = useUserPolicies(userId);
-  const navigate = useNavigate();
+  const nav = useAppNavigate();
   const countryId = useCurrentCountry();
 
   const [searchValue, setSearchValue] = useState('');
@@ -38,7 +38,7 @@ export default function PoliciesPage() {
   const updateAssociation = useUpdatePolicyAssociation();
 
   const handleBuildPolicy = () => {
-    navigate(`/${countryId}/policies/create`);
+    nav.push(`/${countryId}/policies/create`);
   };
 
   const handleOpenEditor = (recordId: string, mode: EditorMode = 'edit') => {

@@ -1,43 +1,24 @@
-import { useParams } from 'react-router-dom';
-import { countryIds } from '@/libs/countries';
+import { useCountryContext } from '@/contexts/CountryContext';
+import { countryIds, type CountryId } from '@/libs/countries';
 
 /**
- * Returns the current country ID from the URL parameter.
+ * Returns the current country ID from context.
  *
- * Architecture:
- * - URL parameter (/:countryId) is the single source of truth
- * - CountryGuard validates the parameter before this hook is called
- * - This hook reads directly from URL via React Router's useParams()
- * - Simple, idiomatic React Router pattern
+ * The country is set by a CountryProvider higher in the tree:
+ * - In the react-router catch-all: CountryGuard reads useParams and provides it
+ * - In extracted Next.js pages: [countryId]/layout.tsx reads Next.js params and provides it
  *
- * Usage:
- * - Must be used within routes protected by CountryGuard
- * - CountryGuard ensures the country parameter is valid
- * - This hook can safely assume the parameter exists and is valid
- *
- * @returns The country ID from URL parameter
- * @throws {Error} If called outside country routes or if country is invalid
- *
- * @example
- * ```tsx
- * function MyComponent() {
- *   const country = useCurrentCountry(); // Returns 'us', 'uk', etc.
- *   const { data } = useUserReports(userId, country);
- *   // ...
- * }
- * ```
+ * @returns The country ID
+ * @throws {Error} If called outside a CountryProvider or if country is invalid
  */
-export function useCurrentCountry(): (typeof countryIds)[number] {
-  const { countryId } = useParams<{ countryId: string }>();
+export function useCurrentCountry(): CountryId {
+  const countryId = useCountryContext();
 
-  // CountryGuard ensures this is always valid when inside protected routes
-  // This check is for safety and better error messages
   if (!countryId || !countryIds.includes(countryId as any)) {
     throw new Error(
-      'useCurrentCountry must be used within country routes (protected by CountryGuard). ' +
-        `Got countryId: ${countryId}`
+      'useCurrentCountry must be used within a CountryProvider. ' + `Got countryId: ${countryId}`
     );
   }
 
-  return countryId as (typeof countryIds)[number];
+  return countryId as CountryId;
 }

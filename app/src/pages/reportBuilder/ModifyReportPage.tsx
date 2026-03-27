@@ -1,6 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
 import { IconNewSection, IconPencil, IconStatusChange, IconX } from '@tabler/icons-react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
   Button,
   Container,
@@ -12,6 +11,8 @@ import {
   Stack,
   Text,
 } from '@/components/ui';
+import { useAppLocation } from '@/contexts/LocationContext';
+import { useAppNavigate } from '@/contexts/NavigationContext';
 import { spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { getReportOutputPath } from '@/utils/reportRouting';
@@ -20,19 +21,13 @@ import { useModifyReportSubmission } from './hooks/useModifyReportSubmission';
 import { useReportBuilderState } from './hooks/useReportBuilderState';
 import type { IngredientPickerState, ReportBuilderState, TopBarAction } from './types';
 
-export default function ModifyReportPage() {
-  const { userReportId } = useParams<{ userReportId: string }>();
+export default function ModifyReportPage({ userReportId }: { userReportId?: string }) {
   const countryId = useCurrentCountry() as 'us' | 'uk';
-  const navigate = useNavigate();
-  const location = useLocation();
-  const locationState = location.state as {
-    edit?: boolean;
-    from?: string;
-    reportPath?: string;
-  } | null;
-  const startInEditMode = locationState?.edit === true;
-  const cameFromReportOutput = locationState?.from === 'report-output';
-  const reportOutputPath = locationState?.reportPath;
+  const nav = useAppNavigate();
+  const location = useAppLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const cameFromReportOutput = searchParams.get('from') === 'report-output';
+  const reportOutputPath = searchParams.get('reportPath');
 
   const { reportState, setReportState, originalState, isLoading, error } = useReportBuilderState(
     userReportId ?? ''
@@ -49,12 +44,12 @@ export default function ModifyReportPage() {
     countryId,
     existingUserReportId: userReportId ?? '',
     onSuccess: (resultUserReportId) => {
-      navigate(getReportOutputPath(countryId, resultUserReportId));
+      nav.push(getReportOutputPath(countryId, resultUserReportId));
     },
   });
 
   // View/edit mode state
-  const [isEditing, setIsEditing] = useState(startInEditMode);
+  const [isEditing, setIsEditing] = useState(false);
   const [showSameNameWarning, setShowSameNameWarning] = useState(false);
 
   const isEitherSubmitting = isSavingNew || isReplacing;
@@ -120,9 +115,6 @@ export default function ModifyReportPage() {
     ];
   }, [
     isEditing,
-    countryId,
-    userReportId,
-    navigate,
     handleSaveAsNewClick,
     handleReplace,
     isSavingNew,
@@ -154,7 +146,7 @@ export default function ModifyReportPage() {
     <>
       <ReportBuilderShell
         title={isEditing ? 'Edit report' : 'View report setup'}
-        backPath={cameFromReportOutput ? reportOutputPath : undefined}
+        backPath={cameFromReportOutput ? (reportOutputPath ?? undefined) : undefined}
         backLabel={cameFromReportOutput ? reportState?.label || 'Report output' : undefined}
         actions={topBarActions}
         reportState={reportState}

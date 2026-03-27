@@ -10,8 +10,8 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { IconPlayerPlay } from '@tabler/icons-react';
-import { useNavigate } from 'react-router-dom';
 import { CURRENT_YEAR } from '@/constants';
+import { useAppNavigate } from '@/contexts/NavigationContext';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { initializeSimulationState } from '@/utils/pathwayState/initializeSimulationState';
 import { getReportOutputPath } from '@/utils/reportRouting';
@@ -23,7 +23,7 @@ import type { IngredientPickerState, ReportBuilderState, TopBarAction } from './
 
 export default function ReportBuilderPage() {
   const countryId = useCurrentCountry() as 'us' | 'uk';
-  const navigate = useNavigate();
+  const nav = useAppNavigate();
 
   // State initialization (setup mode: defaults to Current law + nationwide)
   const initialSim = initializeSimulationState();
@@ -48,7 +48,7 @@ export default function ReportBuilderPage() {
     reportState,
     countryId,
     onSuccess: (userReportId) => {
-      navigate(getReportOutputPath(countryId, userReportId));
+      nav.push(getReportOutputPath(countryId, userReportId));
     },
   });
 

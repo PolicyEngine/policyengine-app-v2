@@ -19,20 +19,6 @@ import {
 } from '@/tests/fixtures/pages/ReportOutputPageMocks';
 
 // Mock dependencies
-vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual('react-router-dom');
-  return {
-    ...actual,
-    useNavigate: () => vi.fn(),
-    useParams: () => ({
-      reportId: MOCK_USER_REPORT_ID,
-      subpage: 'overview',
-      view: undefined,
-    }),
-    useSearchParams: () => [new URLSearchParams(), vi.fn()],
-  };
-});
-
 vi.mock('@/hooks/useCurrentCountry', () => ({
   useCurrentCountry: () => 'us',
 }));
@@ -118,7 +104,7 @@ describe('ReportOutputPage', () => {
 
   test('given report with year then year is passed to layout', () => {
     // Given - MOCK_REPORT has year '2024'
-    render(<ReportOutputPage />);
+    render(<ReportOutputPage reportId={MOCK_USER_REPORT_ID} subpage="overview" />);
 
     // Then - Year should be displayed in the layout
     expect(screen.getByText(/Year: 2024/)).toBeInTheDocument();
@@ -126,7 +112,7 @@ describe('ReportOutputPage', () => {
 
   test('given report label then label is displayed', () => {
     // Given
-    render(<ReportOutputPage />);
+    render(<ReportOutputPage reportId={MOCK_USER_REPORT_ID} subpage="overview" />);
 
     // Then
     expect(screen.getByRole('heading', { name: 'Test Report' })).toBeInTheDocument();
@@ -134,7 +120,7 @@ describe('ReportOutputPage', () => {
 
   test('given society-wide report with complete calculation then renders without error', () => {
     // Given
-    render(<ReportOutputPage />);
+    render(<ReportOutputPage reportId={MOCK_USER_REPORT_ID} subpage="overview" />);
 
     // Then - page renders layout and delegates to society-wide output
     expect(screen.queryByText('Loading report...')).not.toBeInTheDocument();
@@ -159,7 +145,7 @@ describe('ReportOutputPage', () => {
     });
 
     // When
-    render(<ReportOutputPage />);
+    render(<ReportOutputPage reportId={MOCK_USER_REPORT_ID} subpage="overview" />);
 
     // Then - page renders layout and delegates to society-wide output
     expect(screen.queryByText('Loading report...')).not.toBeInTheDocument();
@@ -184,7 +170,7 @@ describe('ReportOutputPage', () => {
     });
 
     // When
-    render(<ReportOutputPage />);
+    render(<ReportOutputPage reportId={MOCK_USER_REPORT_ID} subpage="overview" />);
 
     // Then - page renders layout and delegates to society-wide output
     expect(screen.queryByText('Loading report...')).not.toBeInTheDocument();
@@ -209,7 +195,7 @@ describe('ReportOutputPage', () => {
     });
 
     // When
-    render(<ReportOutputPage />);
+    render(<ReportOutputPage reportId={MOCK_USER_REPORT_ID} subpage="overview" />);
 
     // Then - constituency and local authority content should not be shown
     expect(screen.queryByText('Constituencies')).not.toBeInTheDocument();
@@ -234,7 +220,7 @@ describe('ReportOutputPage', () => {
     });
 
     // When
-    render(<ReportOutputPage />);
+    render(<ReportOutputPage reportId={MOCK_USER_REPORT_ID} subpage="overview" />);
 
     // Then - Constituency and local authority tabs should not be shown
     expect(screen.queryByText('Constituencies')).not.toBeInTheDocument();

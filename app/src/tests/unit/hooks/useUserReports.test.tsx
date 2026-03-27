@@ -9,6 +9,7 @@ import * as householdApi from '@/api/household';
 import * as policyApi from '@/api/policy';
 import * as reportApi from '@/api/report';
 import * as simulationApi from '@/api/simulation';
+import { CountryProvider } from '@/contexts/CountryContext';
 import { useHouseholdAssociationsByUser } from '@/hooks/useUserHousehold';
 import { usePolicyAssociationsByUser } from '@/hooks/useUserPolicy';
 import {
@@ -173,9 +174,11 @@ describe('useUserReports', () => {
     <Provider store={store}>
       <QueryClientProvider client={queryClient}>
         <MemoryRouter initialEntries={['/us/reports']}>
-          <Routes>
-            <Route path="/:countryId/*" element={children} />
-          </Routes>
+          <CountryProvider value="us">
+            <Routes>
+              <Route path="/:countryId/*" element={children} />
+            </Routes>
+          </CountryProvider>
         </MemoryRouter>
       </QueryClientProvider>
     </Provider>
@@ -627,9 +630,11 @@ describe('useUserReportById', () => {
     <Provider store={store}>
       <QueryClientProvider client={queryClient}>
         <MemoryRouter initialEntries={['/us/reports']}>
-          <Routes>
-            <Route path="/:countryId/*" element={children} />
-          </Routes>
+          <CountryProvider value="us">
+            <Routes>
+              <Route path="/:countryId/*" element={children} />
+            </Routes>
+          </CountryProvider>
         </MemoryRouter>
       </QueryClientProvider>
     </Provider>

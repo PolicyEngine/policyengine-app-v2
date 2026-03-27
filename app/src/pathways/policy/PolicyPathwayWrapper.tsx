@@ -5,9 +5,9 @@
  * Reuses shared views from the report pathway with mode="standalone".
  */
 
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useCallback, useEffect, useState } from 'react';
 import StandardLayout from '@/components/StandardLayout';
+import { useAppNavigate } from '@/contexts/NavigationContext';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { usePathwayNavigation } from '@/hooks/usePathwayNavigation';
 import { StandalonePolicyViewMode } from '@/types/pathwayModes/PolicyViewMode';
@@ -28,7 +28,11 @@ interface PolicyPathwayWrapperProps {
 
 export default function PolicyPathwayWrapper({ onComplete }: PolicyPathwayWrapperProps) {
   const countryId = useCurrentCountry();
-  const navigate = useNavigate();
+  const nav = useAppNavigate();
+
+  const handleCancel = useCallback(() => {
+    nav.push(`/${countryId}/policies`);
+  }, [nav, countryId]);
 
   // Initialize policy state
   const [policyState, setPolicyState] = useState<PolicyStateProps>(() => {
@@ -50,10 +54,21 @@ export default function PolicyPathwayWrapper({ onComplete }: PolicyPathwayWrappe
     StandalonePolicyViewMode.SUBMIT, // returnMode (not used in standalone mode)
     (_policyId: string) => {
       // onPolicyComplete: custom navigation for standalone pathway
-      navigate(`/${countryId}/policies`);
+      nav.push(`/${countryId}/policies`);
       onComplete?.();
     }
   );
+
+  // Redirect to listing page on unknown view mode
+  const isValidMode = Object.values(StandalonePolicyViewMode).includes(
+    currentMode as StandalonePolicyViewMode
+  );
+  useEffect(() => {
+    if (!isValidMode) {
+      console.error(`[PolicyPathwayWrapper] Unknown view mode: ${currentMode}`);
+      nav.push(`/${countryId}/policies`);
+    }
+  }, [isValidMode, currentMode, nav, countryId]);
 
   // ========== VIEW RENDERING ==========
   let currentView: React.ReactElement;
@@ -67,7 +82,7 @@ export default function PolicyPathwayWrapper({ onComplete }: PolicyPathwayWrappe
           onUpdateLabel={policyCallbacks.updateLabel}
           onNext={() => navigateToMode(StandalonePolicyViewMode.PARAMETER_SELECTOR)}
           onBack={canGoBack ? goBack : undefined}
-          onCancel={() => navigate(`/${countryId}/policies`)}
+          onCancel={handleCancel}
         />
       );
       break;
@@ -90,13 +105,13 @@ export default function PolicyPathwayWrapper({ onComplete }: PolicyPathwayWrappe
           countryId={countryId}
           onSubmitSuccess={policyCallbacks.handleSubmitSuccess}
           onBack={canGoBack ? goBack : undefined}
-          onCancel={() => navigate(`/${countryId}/policies`)}
+          onCancel={handleCancel}
         />
       );
       break;
 
     default:
-      currentView = <div>Unknown view mode: {currentMode}</div>;
+      currentView = <></>;
   }
 
   // Conditionally wrap with StandardLayout
