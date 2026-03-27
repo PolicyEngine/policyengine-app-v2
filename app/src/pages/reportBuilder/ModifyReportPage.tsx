@@ -26,7 +26,6 @@ export default function ModifyReportPage({ userReportId }: { userReportId?: stri
   const nav = useAppNavigate();
   const location = useAppLocation();
   const searchParams = new URLSearchParams(location.search);
-  const startInEditMode = searchParams.get('edit') === 'true';
   const cameFromReportOutput = searchParams.get('from') === 'report-output';
   const reportOutputPath = searchParams.get('reportPath');
 
@@ -50,7 +49,7 @@ export default function ModifyReportPage({ userReportId }: { userReportId?: stri
   });
 
   // View/edit mode state
-  const [isEditing, setIsEditing] = useState(startInEditMode);
+  const [isEditing, setIsEditing] = useState(false);
   const [showSameNameWarning, setShowSameNameWarning] = useState(false);
 
   const isEitherSubmitting = isSavingNew || isReplacing;
@@ -116,8 +115,6 @@ export default function ModifyReportPage({ userReportId }: { userReportId?: stri
     ];
   }, [
     isEditing,
-    countryId,
-    userReportId,
     handleSaveAsNewClick,
     handleReplace,
     isSavingNew,
