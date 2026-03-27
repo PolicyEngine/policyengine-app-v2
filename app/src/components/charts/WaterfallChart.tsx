@@ -82,7 +82,7 @@ function WaterfallTooltip({ active, payload }: any) {
 // ---------------------------------------------------------------------------
 
 /** Pick the correct pixel Y for a connector based on which bar edge holds the running total. */
-function getConnectorY(bar: { y: number; height: number }, edge: 'top' | 'bottom'): number {
+export function getConnectorY(bar: { y: number; height: number }, edge: 'top' | 'bottom'): number {
   return edge === 'top' ? bar.y : bar.y + bar.height;
 }
 

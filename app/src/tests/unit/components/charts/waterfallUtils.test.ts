@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { getConnectorY } from '@/components/charts/WaterfallChart';
 import {
   computeBarMetrics,
   computeWaterfallConnectors,
@@ -190,7 +191,12 @@ describe('computeWaterfallData', () => {
     const result = computeWaterfallData(items, fmt);
 
     // B should start from running total of 10 (not 20)
-    expect(result[2]).toMatchObject({ base: 10, value: 5 });
+    expect(result[2]).toMatchObject({
+      base: 10,
+      value: 5,
+      barHeight: 5,
+      runningTotalEdge: 'top',
+    });
   });
 
   it('formats labels using the provided formatter', () => {
@@ -215,18 +221,30 @@ describe('computeWaterfallData', () => {
 
     const result = computeWaterfallData(items, fmt);
 
-    // A: base=0, value=10 (visible from 0 to 10)
-    expect(result[0].base).toBe(0);
-    expect(result[0].value).toBe(10);
-    expect(result[0].range).toEqual([0, 10]);
-    // B: base=7, value=-3 (visible from 7 to 10)
-    expect(result[1].base).toBe(7);
-    expect(result[1].value).toBe(-3);
-    expect(result[1].range).toEqual([7, 10]);
-    // Total: base=0, value=7 (visible from 0 to 7)
-    expect(result[2].base).toBe(0);
-    expect(result[2].value).toBe(7);
-    expect(result[2].range).toEqual([0, 7]);
+    // A: base=0, value=10, positive → top
+    expect(result[0]).toMatchObject({
+      base: 0,
+      value: 10,
+      barHeight: 10,
+      range: [0, 10],
+      runningTotalEdge: 'top',
+    });
+    // B: base=7, value=-3, negative → bottom
+    expect(result[1]).toMatchObject({
+      base: 7,
+      value: -3,
+      barHeight: 3,
+      range: [7, 10],
+      runningTotalEdge: 'bottom',
+    });
+    // Total: base=0, value=7, positive → top
+    expect(result[2]).toMatchObject({
+      base: 0,
+      value: 7,
+      barHeight: 7,
+      range: [0, 7],
+      runningTotalEdge: 'top',
+    });
   });
 });
 
@@ -382,6 +400,60 @@ describe('computeWaterfallConnectors', () => {
     // A: base=-4, barHeight=4, bottom edge → connector at base = -4
     expect(connectors).toHaveLength(1);
     expect(connectors[0]).toEqual({ y: -4, fromIndex: 0, toIndex: 1 });
+  });
+
+  it('connects from a negative total bar to the next step', () => {
+    const data = computeWaterfallData(
+      [
+        { name: 'A', value: -5 },
+        { name: 'Subtotal', value: -5, isTotal: true },
+        { name: 'B', value: 3 },
+      ],
+      fmt
+    );
+
+    const connectors = computeWaterfallConnectors(data);
+
+    // A→Subtotal at -5 (negative: base = -5)
+    expect(connectors[0]).toEqual({ y: -5, fromIndex: 0, toIndex: 1 });
+    // Subtotal→B at -5 (negative total: base = -5)
+    expect(connectors[1]).toEqual({ y: -5, fromIndex: 1, toIndex: 2 });
+  });
+
+  it('connects through a zero-value bar', () => {
+    const data = computeWaterfallData(
+      [
+        { name: 'A', value: 10 },
+        { name: 'Zero', value: 0 },
+        { name: 'B', value: 5 },
+      ],
+      fmt
+    );
+
+    const connectors = computeWaterfallConnectors(data);
+
+    // A→Zero at 10 (positive: base + barHeight = 0 + 10)
+    expect(connectors[0]).toEqual({ y: 10, fromIndex: 0, toIndex: 1 });
+    // Zero→B at 10 (zero: base + barHeight = 10 + 0)
+    expect(connectors[1]).toEqual({ y: 10, fromIndex: 1, toIndex: 2 });
+  });
+});
+
+describe('getConnectorY', () => {
+  it('returns bar.y for top edge', () => {
+    expect(getConnectorY({ y: 50, height: 100 }, 'top')).toBe(50);
+  });
+
+  it('returns bar.y + bar.height for bottom edge', () => {
+    expect(getConnectorY({ y: 50, height: 100 }, 'bottom')).toBe(150);
+  });
+
+  it('returns bar.y when height is zero (top edge)', () => {
+    expect(getConnectorY({ y: 80, height: 0 }, 'top')).toBe(80);
+  });
+
+  it('returns bar.y when height is zero (bottom edge)', () => {
+    expect(getConnectorY({ y: 80, height: 0 }, 'bottom')).toBe(80);
   });
 });
 
