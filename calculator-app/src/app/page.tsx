@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Spinner } from "@/components/ui";
+import { countryIds } from "@/libs/countries";
 import { geolocationService } from "@/routing/geolocation/GeolocationService";
 
 /**
@@ -11,33 +12,27 @@ import { geolocationService } from "@/routing/geolocation/GeolocationService";
  */
 export default function RootPage() {
   const router = useRouter();
-  const [isDetecting, setIsDetecting] = useState(true);
 
   useEffect(() => {
     async function detect() {
-      // Check localStorage cache first (4-hour TTL)
       const cached = getCachedCountry();
       if (cached) {
         router.replace(`/${cached}/reports`);
         return;
       }
 
-      // Detect via geolocation service
       try {
         const country = await geolocationService.detectCountry();
         cacheCountry(country);
         router.replace(`/${country}/reports`);
-      } catch {
+      } catch (error) {
+        console.warn("[RootPage] Geolocation failed, falling back to US:", error);
         router.replace("/us/reports");
-      } finally {
-        setIsDetecting(false);
       }
     }
 
     detect();
   }, [router]);
-
-  if (!isDetecting) return null;
 
   return (
     <div className="tw:flex tw:flex-col tw:items-center tw:justify-center tw:h-screen tw:gap-4">
@@ -55,10 +50,15 @@ function getCachedCountry(): string | null {
     const { country, timestamp } = JSON.parse(cachedData);
     const fourHoursInMs = 4 * 60 * 60 * 1000;
     if (Date.now() - timestamp < fourHoursInMs) {
-      return country;
+      // Validate cached country is still a supported country ID
+      if (countryIds.includes(country)) {
+        return country;
+      }
+      console.warn("[RootPage] Cached country is not a valid country ID:", country);
     }
     localStorage.removeItem("detectedCountry");
-  } catch {
+  } catch (error) {
+    console.warn("[RootPage] Invalid cached country data:", error);
     localStorage.removeItem("detectedCountry");
   }
   return null;

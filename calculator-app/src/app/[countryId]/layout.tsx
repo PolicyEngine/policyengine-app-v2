@@ -25,16 +25,6 @@ export default function CountryLayout({
   const searchParams = useSearchParams();
   const isValid = countryIds.includes(countryId as CountryId);
 
-  useEffect(() => {
-    if (!isValid) {
-      router.replace("/");
-    }
-  }, [isValid, router]);
-
-  if (!isValid) {
-    return null;
-  }
-
   const navValue = useMemo(
     () => ({
       push: (path: string) => router.push(path),
@@ -51,6 +41,16 @@ export default function CountryLayout({
     }),
     [pathname, searchParams],
   );
+
+  useEffect(() => {
+    if (!isValid) {
+      router.replace("/");
+    }
+  }, [isValid, router]);
+
+  if (!isValid) {
+    return null;
+  }
 
   return (
     <CountryProvider value={countryId as CountryId}>
