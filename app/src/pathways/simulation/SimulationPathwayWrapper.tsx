@@ -5,7 +5,7 @@
  * Reuses all shared views from the report pathway with mode="standalone".
  */
 
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import StandardLayout from '@/components/StandardLayout';
 import { MOCK_USER_ID } from '@/constants';
@@ -51,7 +51,11 @@ interface SimulationPathwayWrapperProps {
 
 export default function SimulationPathwayWrapper({ onComplete }: SimulationPathwayWrapperProps) {
   const countryId = useCurrentCountry();
-  const navigate = useAppNavigate();
+  const nav = useAppNavigate();
+
+  const handleCancel = useCallback(() => {
+    nav.push(`/${countryId}/simulations`);
+  }, [nav, countryId]);
 
   // Initialize simulation state
   const [simulationState, setSimulationState] = useState<SimulationStateProps>(() => {
@@ -106,7 +110,7 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
     SimulationViewMode.SETUP,
     (_simulationId: string) => {
       // onSimulationComplete: custom navigation for standalone pathway
-      navigate.push(`/${countryId}/simulations`);
+      nav.push(`/${countryId}/simulations`);
       onComplete?.();
     }
   );
@@ -153,6 +157,15 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
     navigateToMode(SimulationViewMode.SETUP);
   }, [currentLawId, navigateToMode]);
 
+  // Redirect to listing page on unknown view mode
+  const isValidMode = Object.values(SimulationViewMode).includes(currentMode as SimulationViewMode);
+  useEffect(() => {
+    if (!isValidMode) {
+      console.error(`[SimulationPathwayWrapper] Unknown view mode: ${currentMode}`);
+      nav.push(`/${countryId}/simulations`);
+    }
+  }, [isValidMode, currentMode, nav, countryId]);
+
   // ========== VIEW RENDERING ==========
   let currentView: React.ReactElement;
 
@@ -166,7 +179,7 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
           onUpdateLabel={simulationCallbacks.updateLabel}
           onNext={() => navigateToMode(SimulationViewMode.SETUP)}
           onBack={canGoBack ? goBack : undefined}
-          onCancel={() => navigate.push(`/${countryId}/simulations`)}
+          onCancel={handleCancel}
         />
       );
       break;
@@ -181,7 +194,7 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
           onNavigateToPopulation={handleNavigateToPopulation}
           onNext={() => navigateToMode(SimulationViewMode.SUBMIT)}
           onBack={canGoBack ? goBack : undefined}
-          onCancel={() => navigate.push(`/${countryId}/simulations`)}
+          onCancel={handleCancel}
         />
       );
       break;
@@ -192,7 +205,7 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
           simulation={simulationState}
           onSubmitSuccess={simulationCallbacks.handleSubmitSuccess}
           onBack={canGoBack ? goBack : undefined}
-          onCancel={() => navigate.push(`/${countryId}/simulations`)}
+          onCancel={handleCancel}
         />
       );
       break;
@@ -207,7 +220,7 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
           onCreateNew={() => navigateToMode(SimulationViewMode.POLICY_LABEL)}
           onLoadExisting={() => navigateToMode(SimulationViewMode.SELECT_EXISTING_POLICY)}
           onBack={canGoBack ? goBack : undefined}
-          onCancel={() => navigate.push(`/${countryId}/simulations`)}
+          onCancel={handleCancel}
         />
       );
       break;
@@ -228,7 +241,7 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
             );
           }}
           onBack={canGoBack ? goBack : undefined}
-          onCancel={() => navigate.push(`/${countryId}/simulations`)}
+          onCancel={handleCancel}
         />
       );
       break;
@@ -242,7 +255,7 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
           onUpdateLabel={policyCallbacks.updateLabel}
           onNext={() => navigateToMode(SimulationViewMode.POLICY_PARAMETER_SELECTOR)}
           onBack={canGoBack ? goBack : undefined}
-          onCancel={() => navigate.push(`/${countryId}/simulations`)}
+          onCancel={handleCancel}
         />
       );
       break;
@@ -265,7 +278,7 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
           countryId={countryId}
           onSubmitSuccess={policyCallbacks.handleSubmitSuccess}
           onBack={canGoBack ? goBack : undefined}
-          onCancel={() => navigate.push(`/${countryId}/simulations`)}
+          onCancel={handleCancel}
         />
       );
       break;
@@ -275,7 +288,7 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
         <PolicyExistingView
           onSelectPolicy={policyCallbacks.handleSelectExisting}
           onBack={canGoBack ? goBack : undefined}
-          onCancel={() => navigate.push(`/${countryId}/simulations`)}
+          onCancel={handleCancel}
         />
       );
       break;
@@ -288,7 +301,7 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
           regionData={metadata.economyOptions?.region || []}
           onScopeSelected={populationCallbacks.handleScopeSelected}
           onBack={canGoBack ? goBack : undefined}
-          onCancel={() => navigate.push(`/${countryId}/simulations`)}
+          onCancel={handleCancel}
         />
       );
       break;
@@ -340,13 +353,13 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
           onSelectHousehold={populationCallbacks.handleSelectExistingHousehold}
           onSelectGeography={populationCallbacks.handleSelectExistingGeography}
           onBack={canGoBack ? goBack : undefined}
-          onCancel={() => navigate.push(`/${countryId}/simulations`)}
+          onCancel={handleCancel}
         />
       );
       break;
 
     default:
-      currentView = <div>Unknown view mode: {currentMode}</div>;
+      currentView = <></>;
   }
 
   // Conditionally wrap with StandardLayout
