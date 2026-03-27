@@ -2,3 +2,5 @@
   changes:
     added:
       - Add Oregon Kicker Refund calculator at /us/oregon-kicker-refund
+    fixed:
+      - Fix waterfall chart bar and connector positioning for negative values

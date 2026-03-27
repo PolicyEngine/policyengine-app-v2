@@ -24,14 +24,52 @@ export interface WaterfallDatum {
   name: string;
   /** Signed value (item.value for steps, running total for totals) */
   value: number;
-  /** Transparent stacking base = Math.min(start, end) */
+  /** Absolute bar height for Recharts stacking (always positive) */
+  barHeight: number;
+  /** Transparent stacking base (lower bound of the bar) */
   base: number;
   /** Range tuple [low, high] for domain calculation */
   range: [number, number];
+  /** Which edge of the bar represents the running total: top for positive, bottom for negative */
+  runningTotalEdge: 'top' | 'bottom';
   /** Pre-formatted label for display inside bar */
   label: string;
   /** Whether this is the total bar */
   isTotal: boolean;
+}
+
+// ---------------------------------------------------------------------------
+// Bar metrics strategy — sign-aware positioning for waterfall bars
+// ---------------------------------------------------------------------------
+
+export interface BarMetrics {
+  base: number;
+  barHeight: number;
+  range: [number, number];
+  runningTotalEdge: 'top' | 'bottom';
+}
+
+function positiveBarMetrics(start: number, end: number): BarMetrics {
+  return {
+    base: start,
+    barHeight: end - start,
+    range: [start, end],
+    runningTotalEdge: 'top',
+  };
+}
+
+function negativeBarMetrics(start: number, end: number): BarMetrics {
+  return {
+    base: end,
+    barHeight: start - end,
+    range: [end, start],
+    runningTotalEdge: 'bottom',
+  };
+}
+
+/** Compute stacking base, bar height, range, and running-total edge for a bar. */
+export function computeBarMetrics(start: number, end: number, value: number): BarMetrics {
+  return value < 0 ? negativeBarMetrics(start, end) : positiveBarMetrics(start, end);
 }
 
 /**
@@ -57,26 +95,22 @@ export function computeWaterfallData(
     const { name, value, isTotal = false } = item;
 
     if (isTotal) {
-      const start = 0;
-      const end = runningTotal;
+      const metrics = computeBarMetrics(0, runningTotal, runningTotal);
       result.push({
         name,
         value: runningTotal,
-        base: Math.min(start, end),
-        range: [Math.min(start, end), Math.max(start, end)],
+        ...metrics,
         label: formatValue(runningTotal),
         isTotal: true,
       });
     } else {
       const start = runningTotal;
       runningTotal += value;
-      const end = runningTotal;
-
+      const metrics = computeBarMetrics(start, runningTotal, value);
       result.push({
         name,
         value,
-        base: Math.min(start, end),
-        range: [Math.min(start, end), Math.max(start, end)],
+        ...metrics,
         label: formatValue(value),
         isTotal: false,
       });
@@ -118,18 +152,13 @@ export interface WaterfallConnector {
  * Compute horizontal connector lines between consecutive waterfall bars.
  *
  * Each connector sits at the running-total boundary between two bars —
- * i.e. the Y value where bar i ends and bar i+1 begins. Connectors into
- * total bars are skipped (totals anchor to 0, not the previous running total).
+ * i.e. the Y value where bar i ends and bar i+1 begins.
  */
 export function computeWaterfallConnectors(data: WaterfallDatum[]): WaterfallConnector[] {
   const connectors: WaterfallConnector[] = [];
   for (let i = 0; i < data.length - 1; i++) {
     const d = data[i];
-    // Running total after bar i:
-    //   total bar  → d.value (the running total it represents)
-    //   positive   → base + value (top of bar)
-    //   negative   → base (bottom of bar, since base = end when value < 0)
-    const y = d.isTotal ? d.value : d.base + Math.max(0, d.value);
+    const y = d.runningTotalEdge === 'top' ? d.base + d.barHeight : d.base;
     connectors.push({ y, fromIndex: i, toIndex: i + 1 });
   }
   return connectors;

@@ -78,6 +78,15 @@ function WaterfallTooltip({ active, payload }: any) {
 }
 
 // ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+/** Pick the correct pixel Y for a connector based on which bar edge holds the running total. */
+export function getConnectorY(bar: { y: number; height: number }, edge: 'top' | 'bottom'): number {
+  return edge === 'top' ? bar.y : bar.y + bar.height;
+}
+
+// ---------------------------------------------------------------------------
 // Main component
 // ---------------------------------------------------------------------------
 
@@ -131,11 +140,10 @@ export function WaterfallChart({
           const conn = connectorsByTarget.get(idx);
           const fromBar = conn ? barPositions[conn.fromIndex] : undefined;
 
-          // The connector Y pixel is the top edge of the FROM bar.
-          // For positive bars: y = pixel(base + value) = running total → correct.
-          // For negative bars: y = pixel(base) = stacking point; the bar
-          //   extends downward, and the running total = base, so y is also correct.
-          const connYPx = fromBar?.y;
+          const connYPx =
+            fromBar && conn
+              ? getConnectorY(fromBar, data[conn.fromIndex].runningTotalEdge)
+              : undefined;
 
           const barHeight = Math.abs(h);
           const showLabel = showBarLabels && barHeight >= 20;
@@ -228,7 +236,7 @@ export function WaterfallChart({
           )}
         />
         <Bar
-          dataKey="value"
+          dataKey="barHeight"
           stackId="waterfall"
           radius={[4, 4, 0, 0]}
           isAnimationActive={false}

@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import { getConnectorY } from '@/components/charts/WaterfallChart';
 import {
+  computeBarMetrics,
   computeWaterfallConnectors,
   computeWaterfallData,
   getWaterfallDomain,
@@ -20,12 +22,30 @@ describe('computeWaterfallData', () => {
 
     expect(result).toHaveLength(3);
 
-    // A: base=0, value=10, range=[0,10]
-    expect(result[0]).toMatchObject({ base: 0, value: 10, range: [0, 10] });
+    // A: base=0, value=10, range=[0,10], positive → top edge
+    expect(result[0]).toMatchObject({
+      base: 0,
+      value: 10,
+      barHeight: 10,
+      range: [0, 10],
+      runningTotalEdge: 'top',
+    });
     // B: base=10, value=5, range=[10,15]
-    expect(result[1]).toMatchObject({ base: 10, value: 5, range: [10, 15] });
+    expect(result[1]).toMatchObject({
+      base: 10,
+      value: 5,
+      barHeight: 5,
+      range: [10, 15],
+      runningTotalEdge: 'top',
+    });
     // C: base=15, value=3, range=[15,18]
-    expect(result[2]).toMatchObject({ base: 15, value: 3, range: [15, 18] });
+    expect(result[2]).toMatchObject({
+      base: 15,
+      value: 3,
+      barHeight: 3,
+      range: [15, 18],
+      runningTotalEdge: 'top',
+    });
   });
 
   it('stacks all-negative values downward from 0', () => {
@@ -36,10 +56,22 @@ describe('computeWaterfallData', () => {
 
     const result = computeWaterfallData(items, fmt);
 
-    // A: start=0, end=-4, base=min(0,-4)=-4, value=-4, range=[-4,0]
-    expect(result[0]).toMatchObject({ base: -4, value: -4, range: [-4, 0] });
-    // B: start=-4, end=-10, base=min(-4,-10)=-10, value=-6, range=[-10,-4]
-    expect(result[1]).toMatchObject({ base: -10, value: -6, range: [-10, -4] });
+    // A: start=0, end=-4, base=-4, negative → bottom edge
+    expect(result[0]).toMatchObject({
+      base: -4,
+      value: -4,
+      barHeight: 4,
+      range: [-4, 0],
+      runningTotalEdge: 'bottom',
+    });
+    // B: start=-4, end=-10, base=-10, negative → bottom edge
+    expect(result[1]).toMatchObject({
+      base: -10,
+      value: -6,
+      barHeight: 6,
+      range: [-10, -4],
+      runningTotalEdge: 'bottom',
+    });
   });
 
   it('handles mixed positive and negative values with correct running total', () => {
@@ -51,12 +83,30 @@ describe('computeWaterfallData', () => {
 
     const result = computeWaterfallData(items, fmt);
 
-    // Revenue: base=0, value=10, range=[0,10]
-    expect(result[0]).toMatchObject({ base: 0, value: 10, range: [0, 10] });
-    // Costs: start=10, end=7, base=min(10,7)=7, value=-3, range=[7,10]
-    expect(result[1]).toMatchObject({ base: 7, value: -3, range: [7, 10] });
-    // Bonus: start=7, end=9, base=min(7,9)=7, value=2, range=[7,9]
-    expect(result[2]).toMatchObject({ base: 7, value: 2, range: [7, 9] });
+    // Revenue: positive → top edge
+    expect(result[0]).toMatchObject({
+      base: 0,
+      value: 10,
+      barHeight: 10,
+      range: [0, 10],
+      runningTotalEdge: 'top',
+    });
+    // Costs: negative → bottom edge
+    expect(result[1]).toMatchObject({
+      base: 7,
+      value: -3,
+      barHeight: 3,
+      range: [7, 10],
+      runningTotalEdge: 'bottom',
+    });
+    // Bonus: positive → top edge
+    expect(result[2]).toMatchObject({
+      base: 7,
+      value: 2,
+      barHeight: 2,
+      range: [7, 9],
+      runningTotalEdge: 'top',
+    });
   });
 
   it('anchors total bar to zero', () => {
@@ -70,10 +120,14 @@ describe('computeWaterfallData', () => {
 
     const total = result[2];
     expect(total.isTotal).toBe(true);
-    // Positive total: running=7, base=min(0,7)=0, value=7
-    expect(total.base).toBe(0);
-    expect(total.value).toBe(7);
-    expect(total.range).toEqual([0, 7]);
+    // Positive total: running=7, base=0, top edge
+    expect(total).toMatchObject({
+      base: 0,
+      value: 7,
+      barHeight: 7,
+      range: [0, 7],
+      runningTotalEdge: 'top',
+    });
   });
 
   it('anchors negative total bar correctly (from negative value to 0)', () => {
@@ -85,10 +139,14 @@ describe('computeWaterfallData', () => {
     const result = computeWaterfallData(items, fmt);
 
     const total = result[1];
-    // Negative total: running=-5, base=min(0,-5)=-5, value=-5
-    expect(total.base).toBe(-5);
-    expect(total.value).toBe(-5);
-    expect(total.range).toEqual([-5, 0]);
+    // Negative total: running=-5, base=-5, bottom edge
+    expect(total).toMatchObject({
+      base: -5,
+      value: -5,
+      barHeight: 5,
+      range: [-5, 0],
+      runningTotalEdge: 'bottom',
+    });
   });
 
   it('handles a single value (no total)', () => {
@@ -101,6 +159,8 @@ describe('computeWaterfallData', () => {
       name: 'Only',
       base: 0,
       value: 42,
+      barHeight: 42,
+      runningTotalEdge: 'top',
       label: '$42',
       isTotal: false,
     });
@@ -115,10 +175,10 @@ describe('computeWaterfallData', () => {
 
     const result = computeWaterfallData(items, fmt);
 
-    // Zero item: base=5, value=0 (zero height)
-    expect(result[1]).toMatchObject({ base: 5, value: 0 });
+    // Zero item: base=5, value=0 (zero height), uses positive strategy
+    expect(result[1]).toMatchObject({ base: 5, value: 0, barHeight: 0, runningTotalEdge: 'top' });
     // B still starts at 5 (running total unchanged by zero)
-    expect(result[2]).toMatchObject({ base: 5, value: 3 });
+    expect(result[2]).toMatchObject({ base: 5, value: 3, barHeight: 3, runningTotalEdge: 'top' });
   });
 
   it('does not advance running total for total bars', () => {
@@ -131,7 +191,12 @@ describe('computeWaterfallData', () => {
     const result = computeWaterfallData(items, fmt);
 
     // B should start from running total of 10 (not 20)
-    expect(result[2]).toMatchObject({ base: 10, value: 5 });
+    expect(result[2]).toMatchObject({
+      base: 10,
+      value: 5,
+      barHeight: 5,
+      runningTotalEdge: 'top',
+    });
   });
 
   it('formats labels using the provided formatter', () => {
@@ -156,18 +221,30 @@ describe('computeWaterfallData', () => {
 
     const result = computeWaterfallData(items, fmt);
 
-    // A: base=0, value=10 (visible from 0 to 10)
-    expect(result[0].base).toBe(0);
-    expect(result[0].value).toBe(10);
-    expect(result[0].range).toEqual([0, 10]);
-    // B: base=7, value=-3 (visible from 7 to 10)
-    expect(result[1].base).toBe(7);
-    expect(result[1].value).toBe(-3);
-    expect(result[1].range).toEqual([7, 10]);
-    // Total: base=0, value=7 (visible from 0 to 7)
-    expect(result[2].base).toBe(0);
-    expect(result[2].value).toBe(7);
-    expect(result[2].range).toEqual([0, 7]);
+    // A: base=0, value=10, positive → top
+    expect(result[0]).toMatchObject({
+      base: 0,
+      value: 10,
+      barHeight: 10,
+      range: [0, 10],
+      runningTotalEdge: 'top',
+    });
+    // B: base=7, value=-3, negative → bottom
+    expect(result[1]).toMatchObject({
+      base: 7,
+      value: -3,
+      barHeight: 3,
+      range: [7, 10],
+      runningTotalEdge: 'bottom',
+    });
+    // Total: base=0, value=7, positive → top
+    expect(result[2]).toMatchObject({
+      base: 0,
+      value: 7,
+      barHeight: 7,
+      range: [0, 7],
+      runningTotalEdge: 'top',
+    });
   });
 });
 
@@ -320,8 +397,130 @@ describe('computeWaterfallConnectors', () => {
 
     const connectors = computeWaterfallConnectors(data);
 
-    // A: base=-4, value=-4 → negative, connector at base = -4
+    // A: base=-4, barHeight=4, bottom edge → connector at base = -4
     expect(connectors).toHaveLength(1);
     expect(connectors[0]).toEqual({ y: -4, fromIndex: 0, toIndex: 1 });
+  });
+
+  it('connects from a negative total bar to the next step', () => {
+    const data = computeWaterfallData(
+      [
+        { name: 'A', value: -5 },
+        { name: 'Subtotal', value: -5, isTotal: true },
+        { name: 'B', value: 3 },
+      ],
+      fmt
+    );
+
+    const connectors = computeWaterfallConnectors(data);
+
+    // A→Subtotal at -5 (negative: base = -5)
+    expect(connectors[0]).toEqual({ y: -5, fromIndex: 0, toIndex: 1 });
+    // Subtotal→B at -5 (negative total: base = -5)
+    expect(connectors[1]).toEqual({ y: -5, fromIndex: 1, toIndex: 2 });
+  });
+
+  it('connects through a zero-value bar', () => {
+    const data = computeWaterfallData(
+      [
+        { name: 'A', value: 10 },
+        { name: 'Zero', value: 0 },
+        { name: 'B', value: 5 },
+      ],
+      fmt
+    );
+
+    const connectors = computeWaterfallConnectors(data);
+
+    // A→Zero at 10 (positive: base + barHeight = 0 + 10)
+    expect(connectors[0]).toEqual({ y: 10, fromIndex: 0, toIndex: 1 });
+    // Zero→B at 10 (zero: base + barHeight = 10 + 0)
+    expect(connectors[1]).toEqual({ y: 10, fromIndex: 1, toIndex: 2 });
+  });
+});
+
+describe('getConnectorY', () => {
+  it('returns bar.y for top edge', () => {
+    expect(getConnectorY({ y: 50, height: 100 }, 'top')).toBe(50);
+  });
+
+  it('returns bar.y + bar.height for bottom edge', () => {
+    expect(getConnectorY({ y: 50, height: 100 }, 'bottom')).toBe(150);
+  });
+
+  it('returns bar.y when height is zero (top edge)', () => {
+    expect(getConnectorY({ y: 80, height: 0 }, 'top')).toBe(80);
+  });
+
+  it('returns bar.y when height is zero (bottom edge)', () => {
+    expect(getConnectorY({ y: 80, height: 0 }, 'bottom')).toBe(80);
+  });
+});
+
+describe('computeBarMetrics', () => {
+  it('returns top edge and positive barHeight for positive values', () => {
+    const metrics = computeBarMetrics(0, 10, 10);
+
+    expect(metrics).toEqual({
+      base: 0,
+      barHeight: 10,
+      range: [0, 10],
+      runningTotalEdge: 'top',
+    });
+  });
+
+  it('returns bottom edge and positive barHeight for negative values', () => {
+    const metrics = computeBarMetrics(10, 7, -3);
+
+    expect(metrics).toEqual({
+      base: 7,
+      barHeight: 3,
+      range: [7, 10],
+      runningTotalEdge: 'bottom',
+    });
+  });
+
+  it('uses positive strategy for zero values', () => {
+    const metrics = computeBarMetrics(5, 5, 0);
+
+    expect(metrics).toEqual({
+      base: 5,
+      barHeight: 0,
+      range: [5, 5],
+      runningTotalEdge: 'top',
+    });
+  });
+
+  it('handles negative start and end (all-negative waterfall)', () => {
+    const metrics = computeBarMetrics(-4, -10, -6);
+
+    expect(metrics).toEqual({
+      base: -10,
+      barHeight: 6,
+      range: [-10, -4],
+      runningTotalEdge: 'bottom',
+    });
+  });
+
+  it('handles total bar with positive running total', () => {
+    const metrics = computeBarMetrics(0, 7, 7);
+
+    expect(metrics).toEqual({
+      base: 0,
+      barHeight: 7,
+      range: [0, 7],
+      runningTotalEdge: 'top',
+    });
+  });
+
+  it('handles total bar with negative running total', () => {
+    const metrics = computeBarMetrics(0, -5, -5);
+
+    expect(metrics).toEqual({
+      base: -5,
+      barHeight: 5,
+      range: [-5, 0],
+      runningTotalEdge: 'bottom',
+    });
   });
 });
