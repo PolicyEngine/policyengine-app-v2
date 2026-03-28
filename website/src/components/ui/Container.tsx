@@ -1,5 +1,5 @@
 import React from 'react';
-import { spacing } from '@/designTokens';
+import { spacing } from '@policyengine/design-system/tokens';
 import { cn } from '@/lib/utils';
 
 const sizeMap = {

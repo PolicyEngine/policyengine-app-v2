@@ -38,7 +38,7 @@ function optimisedSrc(src: string, width?: number, quality = 80): string {
   }
 
   // Skip in dev — Vercel image API isn't available locally
-  if (import.meta.env.DEV) {
+  if (process.env.NODE_ENV === 'development') {
     return src;
   }
 
@@ -57,7 +57,7 @@ export default function OptimisedImage({
   alt = '',
   ...rest
 }: OptimisedImageProps) {
-  const resolvedSrc = src ? optimisedSrc(src, width, quality) : undefined;
+  const resolvedSrc = typeof src === 'string' ? optimisedSrc(src, width, quality) : undefined;
 
   return <img {...rest} src={resolvedSrc} width={width} loading="lazy" alt={alt} />;
 }
