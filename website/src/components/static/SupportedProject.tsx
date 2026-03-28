@@ -1,35 +1,35 @@
-import {
-  colors,
-  spacing,
-  typography,
-} from "@policyengine/design-system/tokens";
+import { colors, spacing, typography } from '@policyengine/design-system/tokens';
 
-export interface SupportedProjectData {
+export interface SupportedProject {
   title: string;
   projectUrl?: string;
   amount: number;
-  currency: "USD" | "GBP";
-  awardDate: string;
+  currency: 'USD' | 'GBP';
+  awardDate: string; // Format: YYYY-MM
   description: string;
   supporterId: string;
 }
 
-function formatDate(dateStr: string): string {
-  const [year, month] = dateStr.split("-");
-  const date = new Date(parseInt(year, 10), parseInt(month, 10) - 1);
-  return date.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+/** @deprecated Use `SupportedProject` instead */
+export type SupportedProjectData = SupportedProject;
+
+export interface SupportedProjectProps {
+  project: SupportedProject;
 }
 
-export default function SupportedProject({
-  project,
-}: {
-  project: SupportedProjectData;
-}) {
+// Utility to format YYYY-MM date to "Month YYYY"
+function formatDate(dateStr: string): string {
+  const [year, month] = dateStr.split('-');
+  const date = new Date(parseInt(year, 10), parseInt(month, 10) - 1);
+  return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+}
+
+export default function SupportedProject({ project }: SupportedProjectProps) {
   return (
     <div
       style={{
-        margin: "16px 0",
-        padding: "16px",
+        margin: '16px 0',
+        padding: '16px',
         borderLeft: `4px solid ${colors.primary[500]}`,
         backgroundColor: colors.gray[50],
       }}
@@ -49,8 +49,8 @@ export default function SupportedProject({
             target="_blank"
             rel="noopener noreferrer"
             style={{
-              color: colors.primary[600],
-              textDecoration: "none",
+              color: colors.text.link,
+              textDecoration: 'none',
             }}
           >
             {project.title}
@@ -61,9 +61,8 @@ export default function SupportedProject({
       </h3>
 
       <div
+        className="tw:flex tw:flex-wrap"
         style={{
-          display: "flex",
-          flexWrap: "wrap",
           gap: spacing.lg,
           marginBottom: spacing.sm,
         }}
@@ -74,8 +73,8 @@ export default function SupportedProject({
             fontFamily: typography.fontFamily.body,
           }}
         >
-          <strong>Award:</strong> {project.currency === "GBP" ? "£" : "$"}
-          {project.amount.toLocaleString("en-US")}
+          <strong>Award:</strong> {project.currency === 'GBP' ? '\u00a3' : '$'}
+          {project.amount.toLocaleString('en-US')}
         </span>
         <span
           style={{

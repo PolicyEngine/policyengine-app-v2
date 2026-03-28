@@ -8,31 +8,21 @@ export interface HeroSectionProps {
 export default function HeroSection({ title, description }: HeroSectionProps) {
   return (
     <div
+      className="tw:px-[6.125%] tw:py-14 tw:md:py-20"
       style={{
-        padding: "56px 6.125% 56px",
         backgroundColor: colors.gray[50],
         borderBottom: `1px solid ${colors.border.light}`,
       }}
     >
       <h1
-        style={{
-          fontSize: "2.25rem",
-          fontWeight: 700,
-          letterSpacing: "-0.025em",
-          color: colors.primary[800],
-          margin: 0,
-        }}
+        className="tw:text-3xl tw:md:text-4xl tw:font-bold tw:tracking-tight"
+        style={{ color: colors.primary[800] }}
       >
         {title}
       </h1>
       <p
-        style={{
-          fontSize: "1.125rem",
-          lineHeight: 1.625,
-          marginTop: "16px",
-          marginBottom: 0,
-          color: colors.gray[500],
-        }}
+        className="tw:text-base tw:md:text-lg tw:leading-relaxed tw:mt-4"
+        style={{ color: colors.gray[500] }}
       >
         {description}
       </p>

@@ -1,4 +1,5 @@
 import { ReactNode } from "react";
+import { Container, Title } from "@/components/ui";
 import {
   colors,
   spacing,
@@ -9,20 +10,22 @@ export interface ContentSectionProps {
   title?: string;
   variant?: "primary" | "secondary" | "accent";
   children: ReactNode;
+  centerTitle?: boolean;
 }
 
 export default function ContentSection({
   title,
   variant = "primary",
   children,
+  centerTitle = false,
 }: ContentSectionProps) {
-  const backgrounds: Record<string, string> = {
+  const backgrounds = {
     primary: colors.white,
     secondary: colors.gray[100],
     accent: colors.primary[700],
   };
 
-  const textColors: Record<string, string> = {
+  const textColors = {
     primary: colors.text.primary,
     secondary: colors.text.primary,
     accent: colors.text.inverse,
@@ -39,22 +42,30 @@ export default function ContentSection({
         paddingRight: "6.125%",
       }}
     >
-      <div style={{ maxWidth: "1280px" }}>
+      <Container size="xl" className="tw:px-0">
         {title && (
-          <h2
+          <Title
+            order={2}
             style={{
               fontSize: typography.fontSize["3xl"],
               fontWeight: typography.fontWeight.semibold,
               fontFamily: typography.fontFamily.primary,
               color: textColors[variant],
+              textAlign: centerTitle ? "center" : "left",
               marginBottom: spacing.xl,
             }}
           >
             {title}
-          </h2>
+          </Title>
         )}
-        <div style={{ color: textColors[variant] }}>{children}</div>
-      </div>
+        <div
+          style={{
+            color: textColors[variant],
+          }}
+        >
+          {children}
+        </div>
+      </Container>
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { ReactNode } from "react";
+import { Container, Title } from "@/components/ui";
 import {
   colors,
   spacing,
@@ -14,18 +15,6 @@ export interface CTASectionProps {
   caption?: string;
 }
 
-const backgrounds = {
-  primary: colors.white,
-  secondary: colors.gray[100],
-  accent: colors.primary[700],
-};
-
-const textColors = {
-  primary: colors.text.primary,
-  secondary: colors.text.primary,
-  accent: colors.text.inverse,
-};
-
 export default function CTASection({
   title,
   variant = "accent",
@@ -33,6 +22,18 @@ export default function CTASection({
   cta,
   caption,
 }: CTASectionProps) {
+  const backgrounds = {
+    primary: colors.white,
+    secondary: colors.gray[100],
+    accent: colors.primary[700],
+  };
+
+  const textColors = {
+    primary: colors.text.primary,
+    secondary: colors.text.primary,
+    accent: colors.text.inverse,
+  };
+
   const isInverted = variant === "accent";
 
   return (
@@ -46,24 +47,26 @@ export default function CTASection({
         paddingRight: "6.125%",
       }}
     >
-      <div style={{ maxWidth: "1280px" }}>
+      <Container size="xl" className="tw:px-0">
         {title && (
-          <h2
+          <Title
+            order={2}
             style={{
               fontSize: typography.fontSize["3xl"],
               fontWeight: typography.fontWeight.semibold,
               fontFamily: typography.fontFamily.primary,
               color: textColors[variant],
-              marginTop: 0,
               marginBottom: spacing.xl,
             }}
           >
             {title}
-          </h2>
+          </Title>
         )}
-        <div className="flex flex-col md:flex-row items-stretch md:items-center gap-6 md:gap-12">
-          <div style={{ flex: 1.5, color: textColors[variant] }}>{content}</div>
-          <div className="flex flex-1 flex-col items-center justify-center">
+        <div className="tw:flex tw:flex-col tw:md:flex-row tw:items-stretch tw:md:items-center tw:gap-6 tw:md:gap-12">
+          <div style={{ flex: 1.5, color: textColors[variant] }}>
+            {content}
+          </div>
+          <div className="tw:flex tw:flex-1 tw:flex-col tw:items-center tw:justify-center">
             <ActionButton
               {...cta}
               variant={isInverted ? "inverted" : "primary"}
@@ -71,7 +74,7 @@ export default function CTASection({
             />
           </div>
         </div>
-      </div>
+      </Container>
     </div>
   );
 }

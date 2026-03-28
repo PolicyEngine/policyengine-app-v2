@@ -1,8 +1,5 @@
-import {
-  colors,
-  spacing,
-  typography,
-} from "@policyengine/design-system/tokens";
+import { Container, Title } from '@/components/ui';
+import { colors, spacing, typography } from '@policyengine/design-system/tokens';
 
 export interface LegalSection {
   heading: string;
@@ -14,56 +11,57 @@ export interface LegalPageLayoutProps {
   sections: LegalSection[];
 }
 
-export default function LegalPageLayout({
-  title,
-  sections,
-}: LegalPageLayoutProps) {
+export default function LegalPageLayout({ title, sections }: LegalPageLayoutProps) {
   return (
     <div
       style={{
-        paddingTop: spacing["4xl"],
-        paddingBottom: spacing["4xl"],
+        paddingTop: spacing['4xl'],
+        paddingBottom: spacing['4xl'],
         backgroundColor: colors.white,
-        paddingLeft: "6.125%",
-        paddingRight: "6.125%",
+        paddingLeft: '6.125%',
+        paddingRight: '6.125%',
       }}
     >
-      <div style={{ maxWidth: "768px" }}>
-        <h1
+      <Container size="md" className="tw:px-0">
+        <Title
+          order={1}
           style={{
-            fontSize: typography.fontSize["4xl"],
+            fontSize: typography.fontSize['4xl'],
             fontWeight: typography.fontWeight.semibold,
             fontFamily: typography.fontFamily.primary,
             color: colors.text.primary,
-            marginTop: 0,
-            marginBottom: spacing["3xl"],
+            marginBottom: spacing['3xl'],
           }}
         >
           {title}
-        </h1>
+        </Title>
 
         {sections.map((section, index) => (
-          <div key={index} style={{ marginBottom: spacing["2xl"] }}>
-            <h2
+          <div key={index} style={{ marginBottom: spacing['2xl'] }}>
+            <Title
+              order={2}
               style={{
-                fontSize: typography.fontSize["2xl"],
+                fontSize: typography.fontSize['2xl'],
                 fontWeight: typography.fontWeight.semibold,
                 fontFamily: typography.fontFamily.primary,
                 color: colors.text.primary,
-                marginTop: 0,
                 marginBottom: spacing.lg,
               }}
             >
               {section.heading}
-            </h2>
+            </Title>
 
-            <div className="legal-content">
+            <div
+              className="legal-content"
+              style={{
+                fontSize: typography.fontSize.base,
+                lineHeight: typography.lineHeight.relaxed,
+                fontFamily: typography.fontFamily.body,
+                color: colors.text.secondary,
+              }}
+            >
               <style>{`
                 .legal-content p {
-                  font-size: ${typography.fontSize.base};
-                  line-height: ${typography.lineHeight.relaxed};
-                  font-family: ${typography.fontFamily.body};
-                  color: ${colors.text.secondary};
                   margin-bottom: ${spacing.md};
                   margin-top: 0;
                 }
@@ -96,7 +94,7 @@ export default function LegalPageLayout({
             </div>
           </div>
         ))}
-      </div>
+      </Container>
     </div>
   );
 }

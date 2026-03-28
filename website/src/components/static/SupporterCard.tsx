@@ -1,5 +1,5 @@
-import SupportedProject, { SupportedProjectData } from "./SupportedProject";
-import { colors } from "@policyengine/design-system/tokens";
+import OptimisedImage from '@/components/ui/OptimisedImage';
+import SupportedProject, { SupportedProject as SupportedProjectType } from './SupportedProject';
 
 export interface Supporter {
   id: string;
@@ -11,72 +11,41 @@ export interface Supporter {
 
 export interface SupporterCardProps {
   supporter: Supporter;
-  projects: SupportedProjectData[];
+  projects: SupportedProjectType[];
 }
 
-export default function SupporterCard({
-  supporter,
-  projects,
-}: SupporterCardProps) {
+export default function SupporterCard({ supporter, projects }: SupporterCardProps) {
   return (
-    <div
-      style={{
-        marginBottom: "48px",
-        padding: "24px",
-        border: `1px solid ${colors.border.light}`,
-        borderRadius: "4px",
-        boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          flexWrap: "wrap",
-          alignItems: "center",
-          gap: "16px",
-          marginBottom: "24px",
-        }}
-      >
+    <div className="tw:mb-4xl tw:p-2xl tw:border tw:border-border-light tw:rounded-element tw:shadow-[0_2px_4px_rgba(0,0,0,0.05)]">
+      <div className="tw:flex tw:flex-wrap tw:items-center tw:gap-lg tw:mb-2xl">
         {supporter.logoUrl && (
           <a
             href={supporter.websiteUrl}
             target="_blank"
             rel="noopener noreferrer"
-            style={{ flexShrink: 0 }}
+            className="tw:shrink-0"
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <OptimisedImage
               src={supporter.logoUrl}
               alt={`${supporter.name} logo`}
               width={200}
-              height={80}
-              loading="lazy"
-              style={{
-                width: 200,
-                height: 80,
-                objectFit: "contain",
-                objectPosition: "left center",
-              }}
+              className="tw:w-[150px] tw:sm:w-[200px] tw:h-[60px] tw:sm:h-[80px] tw:object-contain tw:object-left-center"
             />
           </a>
         )}
-        <p style={{ fontSize: "16px", lineHeight: 1.625, margin: 0 }}>
+        <p className="tw:text-base tw:leading-relaxed">
           {supporter.websiteUrl ? (
             <a
               href={supporter.websiteUrl}
               target="_blank"
               rel="noopener noreferrer"
-              style={{
-                color: colors.primary[600],
-                fontWeight: 700,
-                textDecoration: "none",
-              }}
+              className="tw:text-text-link tw:font-bold tw:no-underline tw:hover:text-text-link-hover tw:hover:underline"
             >
               {supporter.name}
             </a>
           ) : (
-            <span style={{ fontWeight: 700 }}>{supporter.name}</span>
-          )}{" "}
+            <span className="tw:font-bold">{supporter.name}</span>
+          )}{' '}
           &mdash; {supporter.description}
         </p>
       </div>

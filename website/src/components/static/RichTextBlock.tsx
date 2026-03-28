@@ -1,11 +1,15 @@
 import { ReactNode } from "react";
-import { colors, typography } from "@policyengine/design-system/tokens";
+import { colors } from "@policyengine/design-system/tokens";
+
+import "@/styles/stylesheets/RichTextBlock.css";
 
 export interface RichTextBlockProps {
   children: ReactNode;
   variant?: "default" | "inverted";
 }
 
+// Note: For most components, we don't condone separate CSS stylesheets, but
+// there is no way to provide styling to child components natively
 export default function RichTextBlock({
   children,
   variant = "default",
@@ -13,44 +17,18 @@ export default function RichTextBlock({
   const textColor =
     variant === "inverted" ? colors.text.inverse : colors.text.primary;
   const linkColor =
-    variant === "inverted" ? colors.text.inverse : colors.primary[600];
-  const linkHoverColor =
-    variant === "inverted" ? colors.text.inverse : colors.primary[700];
+    variant === "inverted" ? colors.text.inverse : colors.primary[500];
 
   return (
-    <>
-      <style>{`
-        .rich-text-block p {
-          font-family: ${typography.fontFamily.body};
-          font-size: 16px;
-          line-height: 1.625;
-          margin-bottom: 16px;
-          margin-top: 0;
-        }
-        .rich-text-block p:last-child {
-          margin-bottom: 0;
-        }
-        .rich-text-block a {
-          color: var(--rtb-link-color);
-          text-decoration: underline;
-          transition: opacity 0.2s ease;
-        }
-        .rich-text-block a:hover {
-          color: var(--rtb-link-hover-color);
-        }
-      `}</style>
-      <div
-        className="rich-text-block"
-        style={
-          {
-            color: textColor,
-            "--rtb-link-color": linkColor,
-            "--rtb-link-hover-color": linkHoverColor,
-          } as React.CSSProperties
-        }
-      >
-        {children}
-      </div>
-    </>
+    <div
+      className="rich-text-block"
+      style={{
+        color: textColor,
+        // CSS custom property for link color that the variant can use
+        ["--link-color" as string]: linkColor,
+      }}
+    >
+      {children}
+    </div>
   );
 }

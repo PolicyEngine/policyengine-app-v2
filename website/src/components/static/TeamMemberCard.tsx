@@ -1,3 +1,6 @@
+import OptimisedImage from '@/components/ui/OptimisedImage';
+import { cn } from '@/lib/utils';
+
 export interface TeamMember {
   name: string;
   bio: string;
@@ -6,66 +9,37 @@ export interface TeamMember {
 
 export interface TeamMemberCardProps {
   member: TeamMember;
-  variant?: "default" | "inverted";
+  variant?: 'default' | 'inverted';
 }
 
-export default function TeamMemberCard({
-  member,
-  variant = "default",
-}: TeamMemberCardProps) {
-  const isInverted = variant === "inverted";
-  const textColor = isInverted ? "#FFFFFF" : "#000000";
-  const borderColor = isInverted ? "#FFFFFF" : "#000000";
+export default function TeamMemberCard({ member, variant = 'default' }: TeamMemberCardProps) {
+  const isInverted = variant === 'inverted';
 
   return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "auto 1fr",
-        alignItems: "stretch",
-        gap: "5vw",
-        marginTop: "50px",
-      }}
-    >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
+    <div className="tw:grid tw:grid-cols-1 tw:sm:grid-cols-[auto_1fr] tw:items-stretch tw:gap-[5vw] tw:mt-[50px]">
+      <OptimisedImage
         src={member.image}
         alt={member.name}
         width={250}
         height={250}
-        loading="lazy"
-        style={{
-          width: 250,
-          height: 250,
-          objectFit: "cover",
-          borderRadius: "8px",
-        }}
+        className="tw:h-[180px] tw:w-[180px] tw:sm:h-[250px] tw:sm:w-[250px] tw:object-cover tw:rounded-container"
       />
 
       <div
-        style={{
-          height: "100%",
-          paddingBottom: "50px",
-          borderBottom: `1px solid ${borderColor}`,
-        }}
+        className={cn(
+          'tw:h-full tw:pb-[50px] tw:border-b',
+          isInverted ? 'tw:border-white' : 'tw:border-black'
+        )}
       >
         <p
-          style={{
-            fontSize: "16px",
-            lineHeight: 1.625,
-            color: textColor,
-            margin: 0,
-          }}
+          className={cn(
+            'tw:text-base tw:leading-relaxed',
+            isInverted ? 'tw:text-text-inverse' : 'tw:text-text-primary'
+          )}
         >
-          <span
-            style={{
-              fontWeight: 600,
-              textTransform: "uppercase",
-              letterSpacing: "0.05em",
-            }}
-          >
+          <span className="tw:font-semibold tw:uppercase" style={{ letterSpacing: '0.05em' }}>
             {member.name}
-          </span>{" "}
+          </span>{' '}
           {member.bio}
         </p>
       </div>

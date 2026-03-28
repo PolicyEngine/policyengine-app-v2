@@ -1,25 +1,37 @@
 "use client";
 
 import Link from "next/link";
+import { Container, Group, Text } from "@/components/ui";
+import OptimisedImage from "@/components/ui/OptimisedImage";
+import { cn } from "@/lib/utils";
 import {
   colors,
   spacing,
   typography,
 } from "@policyengine/design-system/tokens";
+import { getPostsSorted } from "@/data/posts/postTransformers";
 import type { BlogPost } from "@/types/blog";
-import postsData from "@/data/posts/posts.json";
 
+/**
+ * Number of posts shown in the blog preview on the home page.
+ * 2 on the left (primary cards), 3 on the right (secondary cards).
+ */
 const LEFT_COUNT = 2;
 const RIGHT_COUNT = 3;
 const TOTAL_POSTS = LEFT_COUNT + RIGHT_COUNT;
 
 function getPostImageUrl(post: BlogPost): string {
-  if (!post.image) return "";
-  if (post.image.startsWith("http")) return post.image;
+  if (!post.image) {
+    return "";
+  }
+  if (post.image.startsWith("http")) {
+    return post.image;
+  }
   return `/assets/posts/${post.image}`;
 }
 
 function formatPostDate(dateStr: string): string {
+  // Append T12:00:00 to date-only strings to avoid UTC midnight timezone shift
   const normalized = /^\d{4}-\d{2}-\d{2}$/.test(dateStr)
     ? `${dateStr}T12:00:00`
     : dateStr;
@@ -30,122 +42,63 @@ function formatPostDate(dateStr: string): string {
   });
 }
 
-function getSlug(filename: string): string {
-  return filename.replace(/\.md$/, "");
-}
+/* ------------------------------------------------------------------ */
+/*  PrimaryCard                                                        */
+/* ------------------------------------------------------------------ */
 
-function PrimaryCard({
-  post,
-  countryId,
-}: {
+interface PrimaryCardProps {
   post: BlogPost;
   countryId: string;
-}) {
+  flex?: number;
+}
+
+function PrimaryCard({ post, countryId, flex }: PrimaryCardProps) {
   const imageUrl = getPostImageUrl(post);
   const date = formatPostDate(post.date);
-  const slug = getSlug(post.filename);
 
   return (
     <Link
-      href={`/${countryId}/research/${slug}`}
-      style={{
-        flex: 1,
-        textDecoration: "none",
-        color: "inherit",
-        display: "block",
-      }}
+      href={`/${countryId}/research/${post.slug}`}
+      className="tw:block tw:no-underline tw:text-inherit tw:group"
+      style={{ flex: flex ?? "none" }}
     >
       <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          height: "100%",
-          borderRadius: spacing.radius.feature,
-          overflow: "hidden",
-          backgroundColor: colors.white,
-          border: `1px solid ${colors.border.light}`,
-          transition: "box-shadow 0.3s ease, transform 0.3s ease",
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.boxShadow = `0 8px 30px ${colors.shadow.medium}`;
-          e.currentTarget.style.transform = "translateY(-2px)";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.boxShadow = "none";
-          e.currentTarget.style.transform = "translateY(0)";
-        }}
+        className={cn(
+          "tw:flex tw:flex-col tw:h-full",
+          "tw:rounded-feature tw:overflow-hidden tw:bg-white tw:border tw:border-border-light",
+          "tw:transition-all tw:duration-300 tw:ease-out",
+          "tw:hover:shadow-[0_8px_30px_rgba(16,24,40,0.1)] tw:hover:-translate-y-0.5",
+          "tw:focus-within:shadow-[0_0_0_2px_var(--color-primary-500)] tw:focus-within:outline-none",
+        )}
       >
         {imageUrl && (
-          <div
-            style={{
-              minHeight: "200px",
-              flex: 1,
-              overflow: "hidden",
-              backgroundColor: colors.gray[100],
-            }}
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+          <div className="tw:min-h-[200px] tw:flex-1 tw:overflow-hidden tw:bg-gray-100">
+            <OptimisedImage
               src={imageUrl}
               alt={post.title}
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-                display: "block",
+              width={640}
+              className="tw:w-full tw:h-full tw:object-cover tw:block tw:transition-transform tw:duration-500 tw:group-hover:scale-[1.03]"
+              onError={(e) => {
+                e.currentTarget.style.display = "none";
               }}
             />
           </div>
         )}
-        <div style={{ padding: spacing["2xl"], flexShrink: 0 }}>
-          <p
-            style={{
-              fontSize: typography.fontSize.xs,
-              fontWeight: typography.fontWeight.semibold,
-              color: colors.primary[600],
-              textTransform: "uppercase",
-              letterSpacing: "0.06em",
-              marginBottom: spacing.sm,
-              fontFamily: typography.fontFamily.primary,
-            }}
-          >
+
+        <div className="tw:p-2xl tw:shrink-0">
+          <p className="tw:text-xs tw:font-semibold tw:text-primary-600 tw:uppercase tw:tracking-wide tw:mb-sm">
             {date}
           </p>
-          <p
-            style={{
-              fontSize: typography.fontSize["2xl"],
-              fontWeight: typography.fontWeight.bold,
-              lineHeight: typography.lineHeight.tight,
-              color: colors.gray[900],
-              marginBottom: spacing.md,
-              fontFamily: typography.fontFamily.primary,
-            }}
-          >
+
+          <p className="tw:text-2xl tw:font-bold tw:leading-tight tw:text-gray-900 tw:mb-md">
             {post.title}
           </p>
-          <p
-            style={{
-              fontSize: typography.fontSize.sm,
-              color: colors.text.secondary,
-              lineHeight: typography.lineHeight.relaxed,
-              fontFamily: typography.fontFamily.primary,
-              display: "-webkit-box",
-              WebkitLineClamp: 3,
-              WebkitBoxOrient: "vertical",
-              overflow: "hidden",
-            }}
-          >
+
+          <p className="tw:text-sm tw:text-text-secondary tw:leading-relaxed tw:line-clamp-3">
             {post.description}
           </p>
-          <p
-            style={{
-              fontSize: typography.fontSize.sm,
-              fontWeight: typography.fontWeight.semibold,
-              color: colors.primary[600],
-              marginTop: spacing.lg,
-              fontFamily: typography.fontFamily.primary,
-            }}
-          >
+
+          <p className="tw:text-sm tw:font-semibold tw:text-primary-600 tw:mt-lg tw:transition-transform tw:duration-200 tw:group-hover:translate-x-1">
             Read more &rarr;
           </p>
         </div>
@@ -154,130 +107,61 @@ function PrimaryCard({
   );
 }
 
-function SecondaryCard({
-  post,
-  countryId,
-}: {
+/* ------------------------------------------------------------------ */
+/*  SecondaryCard                                                      */
+/* ------------------------------------------------------------------ */
+
+interface SecondaryCardProps {
   post: BlogPost;
   countryId: string;
-}) {
+}
+
+function SecondaryCard({ post, countryId }: SecondaryCardProps) {
   const imageUrl = getPostImageUrl(post);
   const date = formatPostDate(post.date);
-  const slug = getSlug(post.filename);
 
   return (
     <Link
-      href={`/${countryId}/research/${slug}`}
-      style={{
-        textDecoration: "none",
-        color: "inherit",
-        display: "block",
-        height: "100%",
-      }}
+      href={`/${countryId}/research/${post.slug}`}
+      className="tw:block tw:no-underline tw:text-inherit tw:h-full tw:group"
     >
       <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          height: "100%",
-          borderRadius: spacing.radius.feature,
-          overflow: "hidden",
-          backgroundColor: colors.white,
-          border: `1px solid ${colors.border.light}`,
-          transition: "box-shadow 0.3s ease, transform 0.3s ease",
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.boxShadow = `0 6px 24px ${colors.shadow.medium}`;
-          e.currentTarget.style.transform = "translateY(-2px)";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.boxShadow = "none";
-          e.currentTarget.style.transform = "translateY(0)";
-        }}
+        className={cn(
+          "tw:flex tw:flex-col tw:h-full",
+          "tw:rounded-feature tw:overflow-hidden tw:bg-white tw:border tw:border-border-light",
+          "tw:transition-all tw:duration-300 tw:ease-out",
+          "tw:hover:shadow-[0_6px_24px_rgba(16,24,40,0.1)] tw:hover:-translate-y-0.5",
+          "tw:focus-within:shadow-[0_0_0_2px_var(--color-primary-500)] tw:focus-within:outline-none",
+        )}
       >
         {imageUrl && (
-          <div
-            style={{
-              height: "180px",
-              overflow: "hidden",
-              backgroundColor: colors.gray[100],
-              flexShrink: 0,
-            }}
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+          <div className="tw:h-[180px] tw:overflow-hidden tw:bg-gray-100 tw:shrink-0">
+            <OptimisedImage
               src={imageUrl}
               alt={post.title}
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-                display: "block",
+              width={384}
+              className="tw:w-full tw:h-full tw:object-cover tw:block tw:transition-transform tw:duration-500 tw:group-hover:scale-[1.03]"
+              onError={(e) => {
+                e.currentTarget.style.display = "none";
               }}
             />
           </div>
         )}
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            flex: 1,
-            padding: spacing.lg,
-          }}
-        >
-          <p
-            style={{
-              fontSize: typography.fontSize.xs,
-              fontWeight: typography.fontWeight.semibold,
-              color: colors.primary[600],
-              textTransform: "uppercase",
-              letterSpacing: "0.06em",
-              marginBottom: spacing.xs,
-              fontFamily: typography.fontFamily.primary,
-            }}
-          >
+
+        <div className="tw:flex tw:flex-col tw:flex-1 tw:p-lg">
+          <p className="tw:text-xs tw:font-semibold tw:text-primary-600 tw:uppercase tw:tracking-wide tw:mb-xs">
             {date}
           </p>
-          <p
-            style={{
-              fontSize: typography.fontSize.base,
-              fontWeight: typography.fontWeight.semibold,
-              lineHeight: typography.lineHeight.snug,
-              color: colors.gray[900],
-              marginBottom: spacing.sm,
-              fontFamily: typography.fontFamily.primary,
-              display: "-webkit-box",
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: "vertical",
-              overflow: "hidden",
-            }}
-          >
+
+          <p className="tw:text-base tw:font-semibold tw:leading-snug tw:text-gray-900 tw:line-clamp-2 tw:mb-sm">
             {post.title}
           </p>
-          <p
-            style={{
-              fontSize: typography.fontSize.sm,
-              color: colors.text.secondary,
-              lineHeight: typography.lineHeight.normal,
-              fontFamily: typography.fontFamily.primary,
-              flex: 1,
-              display: "-webkit-box",
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: "vertical",
-              overflow: "hidden",
-            }}
-          >
+
+          <p className="tw:text-sm tw:text-text-secondary tw:leading-normal tw:line-clamp-2 tw:flex-1">
             {post.description}
           </p>
-          <p
-            style={{
-              fontSize: typography.fontSize.sm,
-              fontWeight: typography.fontWeight.semibold,
-              color: colors.primary[600],
-              marginTop: spacing.md,
-              fontFamily: typography.fontFamily.primary,
-            }}
-          >
+
+          <p className="tw:text-sm tw:font-semibold tw:text-primary-600 tw:mt-md tw:transition-transform tw:duration-200 tw:group-hover:translate-x-1">
             Read &rarr;
           </p>
         </div>
@@ -286,15 +170,26 @@ function SecondaryCard({
   );
 }
 
-export default function HomeBlogPreview({ countryId }: { countryId: string }) {
-  const relevantPosts = (postsData as BlogPost[])
+/* ------------------------------------------------------------------ */
+/*  HomeBlogPreview                                                    */
+/* ------------------------------------------------------------------ */
+
+export default function HomeBlogPreview({
+  countryId,
+}: {
+  countryId: string;
+}) {
+  // getPostsSorted() returns posts sorted newest-first with slugs pre-computed
+  const relevantPosts = getPostsSorted()
     .filter(
-      (post) => post.tags.includes(countryId) || post.tags.includes("global"),
+      (post: BlogPost) =>
+        post.tags.includes(countryId) || post.tags.includes("global"),
     )
-    .sort((a, b) => b.date.localeCompare(a.date))
     .slice(0, TOTAL_POSTS);
 
-  if (relevantPosts.length === 0) return null;
+  if (relevantPosts.length === 0) {
+    return null;
+  }
 
   const leftPosts = relevantPosts.slice(0, LEFT_COUNT);
   const rightPosts = relevantPosts.slice(LEFT_COUNT, TOTAL_POSTS);
@@ -307,34 +202,25 @@ export default function HomeBlogPreview({ countryId }: { countryId: string }) {
         paddingBottom: spacing["5xl"],
       }}
     >
-      <div
-        style={{
-          maxWidth: spacing.layout.content,
-          margin: "0 auto",
-          padding: `0 ${spacing.xl}`,
-        }}
-      >
+      <Container size="xl">
         {/* Section header */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "baseline",
-            marginBottom: spacing["3xl"],
-          }}
+        <Group
+          justify="space-between"
+          align="baseline"
+          style={{ marginBottom: spacing["3xl"] }}
         >
-          <p
+          <Text
+            fw={typography.fontWeight.bold}
             style={{
-              fontWeight: typography.fontWeight.bold,
               fontSize: typography.fontSize["3xl"],
               color: colors.primary[800],
               fontFamily: typography.fontFamily.primary,
               lineHeight: typography.lineHeight.tight,
-              margin: 0,
             }}
           >
             Expert policy analysis
-          </p>
+          </Text>
+
           <Link
             href={`/${countryId}/research`}
             style={{
@@ -347,48 +233,43 @@ export default function HomeBlogPreview({ countryId }: { countryId: string }) {
           >
             View all research &rarr;
           </Link>
-        </div>
+        </Group>
 
-        {/* Two-column layout */}
+        {/* Two-column layout: 2 left (stacked), 3 right (stacked) */}
         <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: spacing["2xl"],
-          }}
+          className="tw:grid tw:grid-cols-1 tw:md:grid-cols-2"
+          style={{ gap: spacing["2xl"] }}
         >
+          {/* Left column: 2 posts stacked, filling equal height */}
           <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: spacing["2xl"],
-            }}
+            className="tw:flex tw:flex-col"
+            style={{ gap: spacing["2xl"] }}
           >
-            {leftPosts.map((post) => (
+            {leftPosts.map((post: BlogPost) => (
               <PrimaryCard
-                key={getSlug(post.filename)}
+                key={post.slug}
                 post={post}
                 countryId={countryId}
+                flex={1}
               />
             ))}
           </div>
+
+          {/* Right column: 3 smaller posts stacked */}
           <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: spacing["2xl"],
-            }}
+            className="tw:flex tw:flex-col"
+            style={{ gap: spacing["2xl"] }}
           >
-            {rightPosts.map((post) => (
+            {rightPosts.map((post: BlogPost) => (
               <SecondaryCard
-                key={getSlug(post.filename)}
+                key={post.slug}
                 post={post}
                 countryId={countryId}
               />
             ))}
           </div>
         </div>
-      </div>
+      </Container>
     </div>
   );
 }

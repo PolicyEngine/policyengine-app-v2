@@ -1,3 +1,4 @@
+import { Container, Title } from "@/components/ui";
 import {
   colors,
   spacing,
@@ -16,13 +17,13 @@ export default function TeamSection({
   members,
   variant = "primary",
 }: TeamSectionProps) {
-  const backgrounds: Record<string, string> = {
+  const backgrounds = {
     primary: colors.white,
     secondary: colors.gray[100],
     accent: colors.primary[700],
   };
 
-  const textColors: Record<string, string> = {
+  const textColors = {
     primary: colors.text.primary,
     secondary: colors.text.primary,
     accent: colors.text.inverse,
@@ -41,29 +42,25 @@ export default function TeamSection({
         paddingRight: "6.125%",
       }}
     >
-      <div style={{ maxWidth: "1280px" }}>
-        <h2
+      <Container size="xl" className="tw:px-0">
+        <Title
+          order={2}
           style={{
             fontSize: typography.fontSize["3xl"],
             fontWeight: typography.fontWeight.semibold,
             fontFamily: typography.fontFamily.primary,
             color: textColors[variant],
-            margin: 0,
           }}
         >
           {title}
-        </h2>
+        </Title>
 
         <div>
-          {members.map((member) => (
-            <TeamMemberCard
-              key={member.name}
-              member={member}
-              variant={cardVariant}
-            />
+          {members.map((member, index) => (
+            <TeamMemberCard key={index} member={member} variant={cardVariant} />
           ))}
         </div>
-      </div>
+      </Container>
     </div>
   );
 }
