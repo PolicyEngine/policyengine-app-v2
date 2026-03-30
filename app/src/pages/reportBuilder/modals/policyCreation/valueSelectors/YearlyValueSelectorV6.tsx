@@ -17,6 +17,7 @@ export function YearlyValueSelectorV6(props: ValueSetterProps) {
   const {
     param,
     policy,
+    reportYear,
     setIntervals,
     minDate,
     maxDate,
@@ -25,6 +26,7 @@ export function YearlyValueSelectorV6(props: ValueSetterProps) {
     endDate,
     setEndDate,
   } = props;
+  const nextReportYear = reportYear ? String(parseInt(reportYear, 10) + 1) : undefined;
 
   // Local state for param value
   const [paramValue, setParamValue] = useState<any>(
@@ -85,7 +87,7 @@ export function YearlyValueSelectorV6(props: ValueSetterProps) {
             From
           </Text>
           <YearPicker
-            placeholder="2025"
+            placeholder={reportYear}
             minDate={fromLocalDateString(minDate)}
             maxDate={fromLocalDateString(maxDate)}
             value={fromLocalDateString(startDate)}
@@ -97,7 +99,7 @@ export function YearlyValueSelectorV6(props: ValueSetterProps) {
             To
           </Text>
           <YearPicker
-            placeholder="2026"
+            placeholder={nextReportYear}
             minDate={fromLocalDateString(minDate)}
             maxDate={fromLocalDateString(maxDate)}
             value={fromLocalDateString(endDate)}

@@ -19,6 +19,7 @@ import { SimulationBlock, type SimulationBlockProps } from './SimulationBlock';
 import { SimulationCanvasSkeleton } from './SimulationCanvasSkeleton';
 
 interface SimulationCanvasProps {
+  reportYear: string;
   reportState: ReportBuilderState;
   setReportState: React.Dispatch<React.SetStateAction<ReportBuilderState>>;
   pickerState: IngredientPickerState;
@@ -28,6 +29,7 @@ interface SimulationCanvasProps {
 }
 
 export function SimulationCanvas({
+  reportYear,
   reportState,
   setReportState,
   pickerState,
@@ -121,6 +123,7 @@ export function SimulationCanvas({
         isOpen={canvas.policyBrowseState.isOpen}
         onClose={canvas.closePolicyBrowse}
         onSelect={canvas.handlePolicySelectFromBrowse}
+        reportYear={reportYear}
       />
 
       <PopulationBrowseModal
@@ -141,6 +144,7 @@ export function SimulationCanvas({
         simulationIndex={canvas.policyCreationState.simulationIndex}
         initialPolicy={canvas.policyCreationState.initialPolicy}
         initialEditorMode={canvas.policyCreationState.initialEditorMode}
+        reportYear={reportYear}
       />
     </>
   );

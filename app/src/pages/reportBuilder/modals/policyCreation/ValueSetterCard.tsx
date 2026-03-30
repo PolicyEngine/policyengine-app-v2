@@ -24,6 +24,7 @@ const MODE_OPTIONS = [
 export function ValueSetterCard({
   selectedParam,
   localPolicy,
+  reportYear,
   minDate,
   maxDate,
   valueSetterMode,
@@ -68,6 +69,7 @@ export function ValueSetterCard({
           maxDate={maxDate}
           param={selectedParam}
           policy={localPolicy}
+          reportYear={reportYear}
           intervals={intervals}
           setIntervals={onIntervalsChange}
           startDate={startDate}

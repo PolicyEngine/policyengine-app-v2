@@ -72,6 +72,7 @@ export interface ParameterHeaderCardProps {
 export interface ValueSetterCardProps {
   selectedParam: ParameterMetadata;
   localPolicy: PolicyStateProps;
+  reportYear: string;
   minDate: string;
   maxDate: string;
   valueSetterMode: ValueSetterMode;

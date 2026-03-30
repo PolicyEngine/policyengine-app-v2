@@ -73,6 +73,7 @@ export function ReportBuilderShell({
       </TopBar>
 
       <SimulationCanvas
+        reportYear={reportState.year}
         reportState={reportState}
         setReportState={setReportState}
         pickerState={pickerState}
