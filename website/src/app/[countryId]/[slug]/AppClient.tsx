@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { colors, spacing, typography } from "@policyengine/design-system/tokens";
 
 interface AppClientProps {
@@ -20,6 +20,7 @@ export default function AppClient({ app, countryId }: AppClientProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   const iframeOrigin = useMemo(() => {
     try {
@@ -34,7 +35,18 @@ export default function AppClient({ app, countryId }: AppClientProps) {
     return `/${segments.slice(0, 2).join("/")}`;
   }, [pathname]);
 
-  // Listen for hash change messages from iframe and sync to parent URL bar
+  // Forward parent URL query params into the iframe src
+  const iframeBaseUrl = useMemo(() => {
+    try {
+      const resolved = new URL(app.source, window.location.origin);
+      resolved.search = searchParams.toString() ? `?${searchParams.toString()}` : "";
+      return resolved.toString();
+    } catch {
+      return app.source;
+    }
+  }, [searchParams, app.source]);
+
+  // Listen for messages from iframe and sync to parent URL bar
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       if (event.origin !== iframeOrigin) return;
@@ -50,15 +62,22 @@ export default function AppClient({ app, countryId }: AppClientProps) {
           window.history.replaceState(null, "", `${basePath}${hash}`);
         }
       }
+      if (
+        event.data?.type === "urlUpdate" &&
+        typeof event.data.params === "string"
+      ) {
+        const query = event.data.params ? `?${event.data.params}` : "";
+        window.history.replaceState(null, "", `${basePath}${query}`);
+      }
     };
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
   }, [basePath, iframeOrigin]);
 
-  // Build iframe URL
-  let iframeUrl = app.source;
+  // Build iframe URL with forwarded params and country hash
+  let iframeUrl = iframeBaseUrl;
   if (countryId && countryId !== "us") {
-    iframeUrl = `${app.source}#country=${countryId}`;
+    iframeUrl = `${iframeBaseUrl}#country=${countryId}`;
   }
 
   const iframeHeight = "calc(100vh - 58px)";
@@ -163,6 +182,7 @@ export default function AppClient({ app, countryId }: AppClientProps) {
           display: "block",
         }}
         title={app.title}
+        allow="clipboard-write"
         onLoad={() => setIsLoading(false)}
         onError={() => {
           setIsLoading(false);
