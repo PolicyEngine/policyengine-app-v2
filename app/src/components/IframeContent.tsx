@@ -36,7 +36,17 @@ export default function IframeContent({
     return `/${segments.slice(0, 2).join('/')}`;
   }, [location.pathname]);
 
-  // Listen for hash change messages from iframe and sync to parent URL bar
+  const iframeUrl = useMemo(() => {
+    try {
+      const resolved = new URL(url, window.location.origin);
+      resolved.search = location.search;
+      return resolved.toString();
+    } catch {
+      return url;
+    }
+  }, [location.search, url]);
+
+  // Listen for state updates from iframe and sync to parent URL bar
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       if (event.origin !== iframeOrigin) {
@@ -51,6 +61,11 @@ export default function IframeContent({
         } else {
           window.history.replaceState(null, '', `${basePath}${hash}`);
         }
+      }
+
+      if (event.data?.type === 'urlUpdate' && typeof event.data.params === 'string') {
+        const query = event.data.params ? `?${event.data.params}` : '';
+        window.history.replaceState(null, '', `${basePath}${query}`);
       }
     };
     window.addEventListener('message', handleMessage);
@@ -142,7 +157,7 @@ export default function IframeContent({
         </div>
       )}
       <iframe
-        src={url}
+        src={iframeUrl}
         style={{
           width: iframeWidth,
           height: iframeHeight,
@@ -150,6 +165,7 @@ export default function IframeContent({
           display: 'block',
         }}
         title={title}
+        allow="clipboard-write"
         onLoad={() => setIsLoading(false)}
         onError={() => {
           setIsLoading(false);
