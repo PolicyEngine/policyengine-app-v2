@@ -1,5 +1,11 @@
 "use client";
 
+declare global {
+  interface Window {
+    gtag?: (...args: unknown[]) => void;
+  }
+}
+
 import { useEffect, useMemo, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { colors, spacing, typography } from "@policyengine/design-system/tokens";
@@ -16,11 +22,25 @@ interface AppClientProps {
   countryId: string;
 }
 
+function trackToolEngaged(params: { toolSlug: string; toolTitle: string }) {
+  if (typeof window !== "undefined" && window.gtag) {
+    window.gtag("event", "tool_engaged", params);
+  }
+}
+
 export default function AppClient({ app, countryId }: AppClientProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const pathname = usePathname();
   const searchParams = useSearchParams();
+
+  // Track engagement after 15s on page
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      trackToolEngaged({ toolSlug: app.slug, toolTitle: app.title });
+    }, 15000);
+    return () => clearTimeout(timer);
+  }, [app.slug, app.title]);
 
   const iframeOrigin = useMemo(() => {
     try {
@@ -74,9 +94,23 @@ export default function AppClient({ app, countryId }: AppClientProps) {
     return () => window.removeEventListener("message", handleMessage);
   }, [basePath, iframeOrigin]);
 
-  // Build iframe URL with forwarded params and country hash
+  // Build iframe URL: forward hash fragment from parent URL into iframe src
+  const [hash, setHash] = useState("");
+  useEffect(() => {
+    setHash(window.location.hash);
+  }, []);
+
   let iframeUrl = iframeBaseUrl;
-  if (countryId && countryId !== "us") {
+  if (hash) {
+    // Parent has a hash — forward it (and inject country if non-US)
+    if (countryId && countryId !== "us") {
+      const params = new URLSearchParams(hash.slice(1));
+      params.set("country", countryId);
+      iframeUrl = `${iframeBaseUrl}#${params.toString()}`;
+    } else {
+      iframeUrl = `${iframeBaseUrl}${hash}`;
+    }
+  } else if (countryId && countryId !== "us") {
     iframeUrl = `${iframeBaseUrl}#country=${countryId}`;
   }
 
