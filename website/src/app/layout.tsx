@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://policyengine.org"),
+  metadataBase: new URL("https://www.policyengine.org"),
   title: {
     template: "%s | PolicyEngine",
     default: "PolicyEngine",

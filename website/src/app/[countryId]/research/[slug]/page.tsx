@@ -68,12 +68,39 @@ export default async function ArticlePage({
   const content = getArticleContent(post.filename);
   const isNotebook = isNotebookFile(post.filename);
 
+  const imageUrl = post.image
+    ? post.image.startsWith("http")
+      ? post.image
+      : `https://www.policyengine.org/assets/posts/${post.image}`
+    : undefined;
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: post.title,
+    description: post.description,
+    datePublished: post.date,
+    author: post.authors.map((name) => ({ "@type": "Person", name })),
+    publisher: {
+      "@type": "Organization",
+      name: "PolicyEngine",
+      url: "https://www.policyengine.org",
+    },
+    ...(imageUrl ? { image: imageUrl } : {}),
+  };
+
   return (
-    <ArticleClient
-      post={post}
-      content={content}
-      isNotebook={isNotebook}
-      countryId={countryId}
-    />
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <ArticleClient
+        post={post}
+        content={content}
+        isNotebook={isNotebook}
+        countryId={countryId}
+      />
+    </>
   );
 }

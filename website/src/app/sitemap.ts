@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { getPostsSorted } from "@/data/posts/postTransformers";
 
-const BASE_URL = "https://policyengine.org";
+const BASE_URL = "https://www.policyengine.org";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const entries: MetadataRoute.Sitemap = [];
@@ -44,9 +44,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const posts = getPostsSorted();
   for (const post of posts) {
     const slug = post.slug;
-    const countries = post.tags.filter((t: string) =>
-      ["us", "uk"].includes(t),
-    );
+    const countries = post.tags.filter((t: string) => ["us", "uk"].includes(t));
     const targetCountries = countries.length > 0 ? countries : ["us"];
 
     for (const country of targetCountries) {
