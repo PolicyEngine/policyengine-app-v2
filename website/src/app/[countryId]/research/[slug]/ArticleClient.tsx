@@ -15,6 +15,8 @@ import { MarkdownFormatter } from "@/components/blog/MarkdownFormatter";
 import { NotebookRenderer } from "@/components/blog/NotebookRenderer";
 import { useDisplayCategory } from "@/components/blog/useDisplayCategory";
 import { blogSpacing } from "@/components/blog/blogStyles";
+import { Container, Spinner, Text } from "@/components/ui";
+import OptimisedImage from "@/components/ui/OptimisedImage";
 import {
   getLocationTags,
   getTopicTags,
@@ -89,11 +91,15 @@ export default function ArticleClient({
     <>
       {/* Header section */}
       <div style={{ backgroundColor: colors.gray[50] }}>
-        <div
+        <Container
+          size="xl"
           style={{
-            maxWidth: 1280,
-            margin: "0 auto",
-            padding: `${post.hideHeaderImage ? spacing.lg : spacing["5xl"]} ${spacing["2xl"]}`,
+            paddingTop: post.hideHeaderImage
+              ? spacing.component.input.height
+              : spacing["5xl"],
+            paddingBottom: post.hideHeaderImage
+              ? spacing.component.input.height
+              : spacing["5xl"],
           }}
         >
           <PostHeading
@@ -104,17 +110,11 @@ export default function ArticleClient({
             countryId={countryId}
             displayCategory={displayCategory}
           />
-        </div>
+        </Container>
       </div>
 
       {/* Body section */}
-      <div
-        style={{
-          maxWidth: 1280,
-          margin: "0 auto",
-          padding: `${spacing.xl} ${spacing["2xl"]}`,
-        }}
-      >
+      <Container size="xl" className="tw:py-xl">
         <PostBody
           post={post}
           markdown={markdown}
@@ -122,7 +122,7 @@ export default function ArticleClient({
           countryId={countryId}
           displayCategory={displayCategory}
         />
-      </div>
+      </Container>
     </>
   );
 }
@@ -153,47 +153,43 @@ function PostHeading({
       <div style={{ display: "flex" }}>
         {/* Left sidebar */}
         <div style={{ flex: 1, paddingRight: spacing["3xl"] }}>
-          <p
-            style={{
-              fontWeight: typography.fontWeight.semibold,
-              textTransform: "uppercase",
-              letterSpacing: "0.05em",
-              marginBottom: spacing.sm,
-              fontSize: typography.fontSize.base,
-            }}
+          <Text
+            size="md"
+            fw={typography.fontWeight.semibold}
+            className="tw:mb-sm tw:uppercase"
+            style={{ letterSpacing: "0.05em" }}
           >
             {formattedDate}
-          </p>
+          </Text>
           <Authorship post={post} countryId={countryId} />
           <div style={{ marginBottom: spacing["5xl"] }} />
-          <p
-            style={{
-              textTransform: "uppercase",
-              letterSpacing: "0.05em",
-              color: colors.gray[500],
-              fontSize: typography.fontSize.base,
-            }}
+          <Text
+            size="md"
+            className="tw:uppercase"
+            style={{ letterSpacing: "0.05em", color: colors.gray[500] }}
           >
             {readingTime}
-          </p>
+          </Text>
           <div style={{ marginTop: spacing["5xl"] }} />
           <ShareLinks post={post} displayCategory={displayCategory} />
         </div>
 
         {/* Main content */}
         <div style={{ flex: 3 }}>
-          <h1
+          <Text
+            component="h1"
+            size="xl"
+            fw={typography.fontWeight.bold}
             style={{
               fontSize: typography.fontSize["4xl"],
-              fontWeight: typography.fontWeight.bold,
               lineHeight: typography.lineHeight.tight,
               marginBottom: spacing.xl,
-              marginTop: 0,
             }}
           >
             {post.title}
-          </h1>
-          <p
+          </Text>
+          <Text
+            size="lg"
             style={{
               marginTop: spacing["3xl"],
               fontSize: typography.fontSize.xl,
@@ -201,13 +197,13 @@ function PostHeading({
             }}
           >
             {post.description}
-          </p>
+          </Text>
           {imageUrl && !post.hideHeaderImage && (
-            /* eslint-disable-next-line @next/next/no-img-element */
-            <img
+            <OptimisedImage
               alt={post.title}
               title={post.imageCredit}
               src={imageUrl}
+              width={1080}
               style={{ width: "100%", marginTop: spacing["3xl"] }}
               onError={(e) => {
                 e.currentTarget.style.display = "none";
@@ -225,29 +221,28 @@ function PostHeading({
   // Tablet and mobile
   return (
     <div>
-      <h1
+      <Text
+        component="h1"
+        size="xl"
+        fw={typography.fontWeight.bold}
         style={{
           fontSize:
             displayCategory === "mobile"
               ? typography.fontSize["3xl"]
               : typography.fontSize["4xl"],
-          fontWeight: typography.fontWeight.bold,
           lineHeight: typography.lineHeight.tight,
-          marginBottom: spacing.md,
-          marginTop: 0,
         }}
+        className="tw:mb-md"
       >
         {post.title}
-      </h1>
-      <p
-        style={{
-          color: colors.gray[500],
-          fontSize: typography.fontSize.lg,
-          marginBottom: spacing.lg,
-        }}
+      </Text>
+      <Text
+        size="lg"
+        className="tw:mb-lg"
+        style={{ color: colors.gray[500] }}
       >
         {post.description}
-      </p>
+      </Text>
       <div
         style={{
           display: "flex",
@@ -259,35 +254,28 @@ function PostHeading({
         }}
       >
         <Authorship post={post} countryId={countryId} />
-        <p
-          style={{
-            fontWeight: typography.fontWeight.semibold,
-            textTransform: "uppercase",
-            letterSpacing: "0.05em",
-            fontSize: typography.fontSize.base,
-            margin: 0,
-          }}
+        <Text
+          size="md"
+          fw={typography.fontWeight.semibold}
+          className="tw:uppercase"
+          style={{ letterSpacing: "0.05em" }}
         >
           {formattedDate}
-        </p>
-        <p
-          style={{
-            textTransform: "uppercase",
-            letterSpacing: "0.05em",
-            color: colors.gray[500],
-            fontSize: typography.fontSize.base,
-            margin: 0,
-          }}
+        </Text>
+        <Text
+          size="md"
+          className="tw:uppercase"
+          style={{ letterSpacing: "0.05em", color: colors.gray[500] }}
         >
           {readingTime}
-        </p>
+        </Text>
       </div>
       {imageUrl && !post.hideHeaderImage && (
-        /* eslint-disable-next-line @next/next/no-img-element */
-        <img
+        <OptimisedImage
           alt={post.title}
           title={post.imageCredit}
           src={imageUrl}
+          width={750}
           style={{ width: "100%" }}
           onError={(e) => {
             e.currentTarget.style.display = "none";
@@ -335,7 +323,14 @@ function PostBody({
               marginTop: blogSpacing.marginTop.paragraph,
             }}
           >
-            <SectionLabel>Contents</SectionLabel>
+            <Text
+              size="sm"
+              fw={typography.fontWeight.semibold}
+              className="tw:uppercase tw:mb-xs"
+              style={{ letterSpacing: "0.1em", color: colors.primary[600] }}
+            >
+              Contents
+            </Text>
             <LeftContents markdown={markdown} />
           </div>
         </div>
@@ -363,7 +358,14 @@ function PostBody({
       <div style={{ display: "flex" }}>
         <div style={{ flex: 1, marginRight: spacing["3xl"] }}>
           <div style={{ position: "sticky", top: 150 }}>
-            <SectionLabel>Contents</SectionLabel>
+            <Text
+              size="sm"
+              fw={typography.fontWeight.semibold}
+              className="tw:uppercase tw:mb-xs"
+              style={{ letterSpacing: "0.1em", color: colors.primary[600] }}
+            >
+              Contents
+            </Text>
             <LeftContents markdown={markdown} />
             <div style={{ marginTop: spacing.lg }} />
             <MoreOn post={post} countryId={countryId} />
@@ -381,7 +383,14 @@ function PostBody({
   return (
     <div>
       <div style={{ marginBottom: spacing.xl }}>
-        <SectionLabel>Contents</SectionLabel>
+        <Text
+          size="sm"
+          fw={typography.fontWeight.semibold}
+          className="tw:uppercase tw:mb-xs"
+          style={{ letterSpacing: "0.1em", color: colors.primary[600] }}
+        >
+          Contents
+        </Text>
         <LeftContents markdown={markdown} />
       </div>
       {bodyContent}
@@ -396,24 +405,6 @@ function PostBody({
 /* ------------------------------------------------------------------ */
 /*  Sub-components                                                     */
 /* ------------------------------------------------------------------ */
-
-function SectionLabel({ children }: { children: string }) {
-  return (
-    <p
-      style={{
-        fontWeight: typography.fontWeight.semibold,
-        textTransform: "uppercase",
-        letterSpacing: "0.1em",
-        color: colors.primary[600],
-        fontSize: typography.fontSize.sm,
-        marginBottom: spacing.xs,
-        marginTop: 0,
-      }}
-    >
-      {children}
-    </p>
-  );
-}
 
 function Authorship({
   post,
@@ -463,17 +454,14 @@ function Authorship({
   }
 
   return (
-    <p
-      style={{
-        fontWeight: typography.fontWeight.semibold,
-        textTransform: "uppercase",
-        letterSpacing: "0.05em",
-        fontSize: typography.fontSize.base,
-        margin: 0,
-      }}
+    <Text
+      size="md"
+      fw={typography.fontWeight.semibold}
+      className="tw:uppercase"
+      style={{ letterSpacing: "0.05em" }}
     >
       {content}
-    </p>
+    </Text>
   );
 }
 
@@ -502,8 +490,7 @@ function AuthorSection({
             }}
           >
             {author.headshot && (
-              /* eslint-disable-next-line @next/next/no-img-element */
-              <img
+              <OptimisedImage
                 alt={author.name}
                 src={`/assets/authors/${author.headshot}`}
                 width={70}
@@ -515,14 +502,11 @@ function AuthorSection({
               />
             )}
             <div style={{ paddingTop: spacing.xs }}>
-              <p
-                style={{
-                  fontWeight: typography.fontWeight.semibold,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.05em",
-                  fontSize: typography.fontSize.sm,
-                  margin: 0,
-                }}
+              <Text
+                size="sm"
+                fw={typography.fontWeight.semibold}
+                className="tw:uppercase"
+                style={{ letterSpacing: "0.05em" }}
               >
                 <Link
                   href={`/${countryId}/research?authors=${authorId}`}
@@ -533,16 +517,10 @@ function AuthorSection({
                 >
                   {formatAuthorName(authorId)}
                 </Link>
-              </p>
-              <p
-                style={{
-                  color: colors.gray[500],
-                  fontSize: typography.fontSize.xs,
-                  margin: 0,
-                }}
-              >
+              </Text>
+              <Text size="xs" style={{ color: colors.gray[500] }}>
                 {author.title}
-              </p>
+              </Text>
             </div>
           </div>
         );
@@ -593,7 +571,14 @@ function MoreOn({ post, countryId }: { post: BlogPost; countryId: string }) {
 
   return (
     <>
-      <SectionLabel>More on</SectionLabel>
+      <Text
+        size="sm"
+        fw={typography.fontWeight.semibold}
+        className="tw:uppercase tw:mb-xs"
+        style={{ letterSpacing: "0.1em", color: colors.primary[600] }}
+      >
+        More on
+      </Text>
       {links}
     </>
   );
@@ -606,30 +591,32 @@ function ShareLinks({
   post: BlogPost;
   displayCategory: string;
 }) {
+  const currentUrl =
+    typeof window !== "undefined" ? window.location.href : "";
   const desktop = displayCategory === "desktop";
 
   const links = [
-    { name: "Twitter", icon: "𝕏", param: "tweet" },
-    { name: "Facebook", icon: "f", param: "fb" },
-    { name: "LinkedIn", icon: "in", param: "li" },
-    { name: "Email", icon: "✉", param: "email" },
+    {
+      name: "Twitter",
+      icon: "\u{1D54F}",
+      url: `https://twitter.com/intent/tweet?text=${encodeURIComponent(post.title)}&url=${encodeURIComponent(currentUrl)}`,
+    },
+    {
+      name: "Facebook",
+      icon: "f",
+      url: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(currentUrl)}`,
+    },
+    {
+      name: "LinkedIn",
+      icon: "in",
+      url: `https://www.linkedin.com/shareArticle?mini=true&url=${currentUrl}&title=${post.title}&summary=${post.description}`,
+    },
+    {
+      name: "Email",
+      icon: "\u2709",
+      url: `mailto:?subject=${encodeURIComponent(post.title)}&body=${encodeURIComponent(currentUrl)}`,
+    },
   ];
-
-  const getUrl = (param: string) => {
-    const url = typeof window !== "undefined" ? window.location.href : "";
-    switch (param) {
-      case "tweet":
-        return `https://twitter.com/intent/tweet?text=${encodeURIComponent(post.title)}&url=${encodeURIComponent(url)}`;
-      case "fb":
-        return `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
-      case "li":
-        return `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(url)}&title=${encodeURIComponent(post.title)}`;
-      case "email":
-        return `mailto:?subject=${encodeURIComponent(post.title)}&body=${encodeURIComponent(url)}`;
-      default:
-        return "#";
-    }
-  };
 
   return (
     <div
@@ -639,14 +626,22 @@ function ShareLinks({
         gap: desktop ? spacing.sm : spacing.xl,
       }}
     >
-      {desktop && <SectionLabel>Share</SectionLabel>}
+      {desktop && (
+        <Text
+          size="sm"
+          fw={typography.fontWeight.semibold}
+          className="tw:uppercase"
+          style={{ letterSpacing: "0.1em" }}
+        >
+          Share
+        </Text>
+      )}
       {links.map((link) => (
         <a
           key={link.name}
-          href={getUrl(link.param)}
+          href={link.url}
           target="_blank"
           rel="noopener noreferrer"
-          title={link.name}
           style={{
             display: "flex",
             alignItems: "center",
@@ -655,6 +650,7 @@ function ShareLinks({
             textDecoration: "none",
             fontSize: typography.fontSize.xs,
           }}
+          title={link.name}
         >
           <span
             style={{
@@ -665,7 +661,9 @@ function ShareLinks({
               justifyContent: "center",
               backgroundColor: desktop ? colors.gray[500] : "transparent",
               color: desktop ? colors.white : colors.gray[600],
-              border: desktop ? "none" : `1px solid ${colors.gray[400]}`,
+              border: desktop
+                ? "none"
+                : `1px solid ${colors.gray[400]}`,
               fontSize: typography.fontSize.xs,
               fontWeight: typography.fontWeight.semibold,
             }}
@@ -686,61 +684,56 @@ function LeftContents({ markdown }: { markdown: string }) {
 
   if (headers.length === 0) return null;
 
-  return (
-    <>
-      {headers.map((header, index) => {
-        const level = header.split("#").length - 1;
-        let text = header.split(" ").slice(1).join(" ");
+  const contents = headers.map((header, index) => {
+    const level = header.split("#").length - 1;
+    let text = header.split(" ").slice(1).join(" ");
 
-        // Extract text from markdown links [text](url)
-        if (text.includes("[")) {
-          text = text.split("[").slice(1).join("[").split("]")[0];
-        }
+    // Extract text from markdown links [text](url)
+    if (text.includes("[")) {
+      text = text.split("[").slice(1).join("[").split("]")[0];
+    }
 
-        const slug = header
-          .replace(/[#,/]/g, "")
-          .trim()
-          .replace(/\s+/g, "-")
-          .toLowerCase();
+    const slug = header
+      .replace(/[#,/]/g, "")
+      .trim()
+      .replace(/\s+/g, "-")
+      .toLowerCase();
 
-        return (
-          <div key={`${slug}-${index}`} style={{ marginBottom: 2 }}>
-            <button
-              type="button"
-              onClick={() => {
-                const el = document.getElementById(slug);
-                if (el) {
-                  const top =
-                    el.getBoundingClientRect().top +
-                    window.pageYOffset -
-                    SCROLL_OFFSET_PX;
-                  window.scrollTo({ top, behavior: "smooth" });
-                }
-              }}
-              style={{
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                textAlign: "left",
-                fontSize: 15 - 1.5 * (level - 2),
-                paddingLeft: 8 * (level - 2),
-                padding: "2px 0",
-                color: colors.gray[700],
-                transition: "color 0.2s ease",
-                fontFamily: typography.fontFamily.primary,
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = colors.primary[600];
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = colors.gray[700];
-              }}
-            >
-              {text}
-            </button>
-          </div>
-        );
-      })}
-    </>
-  );
+    return (
+      <div key={`${slug}-${index}`} style={{ marginBottom: 2 }}>
+        <Text
+          size="sm"
+          style={{
+            fontSize: 15 - 1.5 * (level - 2),
+            cursor: "pointer",
+            paddingLeft: 8 * (level - 2),
+            padding: "2px 0",
+            color: colors.gray[700],
+            transition: "color 0.2s ease",
+          }}
+          onClick={() => {
+            const element = document.getElementById(slug);
+            if (element) {
+              const elementPosition =
+                element.getBoundingClientRect().top + window.pageYOffset;
+              window.scrollTo({
+                top: elementPosition - SCROLL_OFFSET_PX,
+                behavior: "smooth",
+              });
+            }
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.color = colors.primary[600];
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.color = colors.gray[700];
+          }}
+        >
+          {text}
+        </Text>
+      </div>
+    );
+  });
+
+  return <>{contents}</>;
 }
