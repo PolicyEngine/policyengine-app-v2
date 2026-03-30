@@ -11,11 +11,19 @@ import type { ImgHTMLAttributes } from 'react';
  *   <OptimisedImage src="/assets/team/nikhil.webp" width={250} quality={80} />
  */
 
-interface OptimisedImageProps extends ImgHTMLAttributes<HTMLImageElement> {
+interface StaticImageData {
+  src: string;
+  height: number;
+  width: number;
+}
+
+interface OptimisedImageProps extends Omit<ImgHTMLAttributes<HTMLImageElement>, 'src'> {
   /** Desired display width in pixels — used for resizing on the edge. */
   width?: number;
   /** Image quality 1–100 (default 80). */
   quality?: number;
+  /** Accept both string URLs and Next.js static imports */
+  src?: string | StaticImageData;
 }
 
 // Must match the "sizes" array in vercel.json
@@ -42,7 +50,7 @@ function optimisedSrc(src: string, width?: number, quality = 80): string {
     return src;
   }
 
-  const dpr = typeof window !== 'undefined' ? Math.min(window.devicePixelRatio || 1, 2) : 1;
+  const dpr = 1;
   const params = new URLSearchParams({ url: src, q: String(quality) });
   if (width) {
     params.set('w', String(snapWidth(Math.round(width * dpr))));
@@ -57,7 +65,9 @@ export default function OptimisedImage({
   alt = '',
   ...rest
 }: OptimisedImageProps) {
-  const resolvedSrc = typeof src === 'string' ? optimisedSrc(src, width, quality) : undefined;
+  // Resolve Next.js static imports (StaticImageData) to their .src string
+  const rawSrc = typeof src === 'object' && src !== null && 'src' in src ? src.src : src;
+  const resolvedSrc = typeof rawSrc === 'string' ? optimisedSrc(rawSrc, width, quality) : undefined;
 
   return <img {...rest} src={resolvedSrc} width={width} loading="lazy" alt={alt} />;
 }

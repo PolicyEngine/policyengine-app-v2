@@ -21,9 +21,9 @@ export default async function CountryLayout({
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="tw:min-h-screen tw:flex tw:flex-col">
       <Header />
-      <main className="flex-1">{children}</main>
+      <main className="tw:flex-1">{children}</main>
       <Footer />
     </div>
   );

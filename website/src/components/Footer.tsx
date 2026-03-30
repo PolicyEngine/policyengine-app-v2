@@ -189,6 +189,7 @@ export default function Footer() {
   const CONTACT_LINKS = getContactLinks(countryId);
   return (
     <footer
+      data-testid="site-footer"
       className="tw:w-full"
       style={{
         padding: `${spacing['4xl']} ${spacing['5xl']}`,

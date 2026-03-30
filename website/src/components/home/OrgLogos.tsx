@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Text } from "@/components/ui";
 import OptimisedImage from "@/components/ui/OptimisedImage";
 import {
@@ -68,9 +68,13 @@ function LogoItem({ org }: { org: Organization }) {
 }
 
 export default function OrgLogos({ countryId }: { countryId: string }) {
-  const orgs = useMemo(() => {
-    return shuffle(getOrgsForCountry(countryId as CountryId));
-  }, [countryId]);
+  // Initialize with stable (unshuffled) order for SSR, then shuffle on client
+  const unshuffled = useMemo(() => getOrgsForCountry(countryId as CountryId), [countryId]);
+  const [orgs, setOrgs] = useState(unshuffled);
+
+  useEffect(() => {
+    setOrgs(shuffle(unshuffled));
+  }, [unshuffled]);
 
   if (orgs.length === 0) {
     return null;

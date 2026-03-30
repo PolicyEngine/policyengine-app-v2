@@ -635,7 +635,7 @@ export default function Header() {
               alignItems: "center",
               gap: "24px",
             }}
-            className="hidden lg:flex"
+            className="tw:hidden tw:lg:flex"
           >
             {navItems.map((item) => (
               <NavItem key={item.label} setup={item} />
@@ -644,13 +644,13 @@ export default function Header() {
         </div>
 
         {/* Right: country selector (desktop) */}
-        <div className="hidden lg:flex" style={{ alignItems: "center" }}>
+        <div className="tw:hidden tw:lg:flex" style={{ alignItems: "center" }}>
           <CountrySelector />
         </div>
 
         {/* Right: mobile controls */}
         <div
-          className="flex lg:hidden"
+          className="tw:flex tw:lg:hidden"
           style={{ alignItems: "center", gap: spacing.md }}
         >
           <CountrySelector />
