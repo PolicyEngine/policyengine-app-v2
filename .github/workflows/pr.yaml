@@ -16,26 +16,35 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Check for non-data changes to app/
+      - name: Check for non-data changes to app/ and root vercel.json
         run: |
           # Get files changed in this PR (vs base branch)
-          CHANGED=$(git diff --name-only origin/${{ github.base_ref }}...HEAD -- app/)
+          ALL_CHANGED=$(git diff --name-only origin/${{ github.base_ref }}...HEAD)
 
-          # Filter out allowed data paths
-          BLOCKED=$(echo "$CHANGED" | grep -v \
+          # 1. Check app/ directory (exclude data paths)
+          APP_BLOCKED=$(echo "$ALL_CHANGED" | grep '^app/' | grep -v \
             -e '^app/src/data/' \
             -e '^app/public/assets/' \
             -e '^app/public/data/' \
-            -e '^$' \
           || true)
 
+          # 2. Check root vercel.json (Vite app config — rewrites should go in website/next.config.ts)
+          VERCEL_BLOCKED=$(echo "$ALL_CHANGED" | grep '^vercel.json$' || true)
+
+          BLOCKED="${APP_BLOCKED}${VERCEL_BLOCKED:+$'\n'$VERCEL_BLOCKED}"
+          BLOCKED=$(echo "$BLOCKED" | sed '/^$/d')
+
           if [ -n "$BLOCKED" ]; then
-            echo "::warning::The following app/ files were modified outside of data directories."
-            echo "::warning::New UI code should go in website/ or calculator-app/ instead."
+            echo "::warning::⚠️ Migration guard: the following files belong to the legacy Vite app."
+            echo "::warning::This check is temporary — it will be removed after the Next.js cutover (#817)."
             echo ""
+            echo "Files flagged:"
             echo "$BLOCKED"
             echo ""
-            echo "Allowed paths: app/src/data/*, app/public/assets/*, app/public/data/*"
+            echo "What to do instead:"
+            echo "  - app/src/components/ or app/src/pages/ → website/src/ or calculator-app/src/"
+            echo "  - vercel.json (root) → website/next.config.ts rewrites"
+            echo "  - app/src/data/*, app/public/assets/* → OK (shared data, no action needed)"
             echo ""
             echo "If this change is intentional (e.g. bug fix to Vite app), this warning can be ignored."
           fi
