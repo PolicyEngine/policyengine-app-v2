@@ -580,6 +580,7 @@ export default function Header() {
       dropdownItems: [
         { label: "Team", href: `/${countryId}/team` },
         { label: "Supporters", href: `/${countryId}/supporters` },
+        { label: "Citations", href: `/${countryId}/citations` },
       ],
     },
     { label: "Donate", href: `/${countryId}/donate`, hasDropdown: false },
