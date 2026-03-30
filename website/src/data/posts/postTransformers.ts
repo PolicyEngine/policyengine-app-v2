@@ -4,6 +4,7 @@
  */
 
 import postsData from "./posts.json";
+import appsData from "@/data/apps.json";
 import type { BlogPost } from "@/types/blog";
 
 export type { BlogPost };
@@ -187,10 +188,11 @@ export const locationLabels: TagLabels = {
 };
 
 /**
- * Get research items (posts only for now — apps are a future task)
+ * Get combined research items (posts + apps with displayWithResearch)
+ * sorted by date (newest first)
  */
 export function getResearchItems(): ResearchItem[] {
-  return getPostsSorted().map((post) => ({
+  const postItems: ResearchItem[] = getPostsSorted().map((post) => ({
     title: post.title,
     description: post.description,
     date: post.date,
@@ -202,4 +204,22 @@ export function getResearchItems(): ResearchItem[] {
     countryId:
       post.tags.find((tag) => ["us", "uk", "ca", "ng"].includes(tag)) || "us",
   }));
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const apps = appsData as any[];
+  const appItems: ResearchItem[] = apps
+    .filter((app) => app.displayWithResearch)
+    .map((app) => ({
+      title: app.title,
+      description: app.description,
+      date: app.date || "1970-01-01",
+      authors: app.authors || [],
+      tags: app.tags,
+      image: app.image || "",
+      slug: app.slug,
+      isApp: true,
+      countryId: app.countryId,
+    }));
+
+  return [...postItems, ...appItems].sort((a, b) => (a.date < b.date ? 1 : -1));
 }

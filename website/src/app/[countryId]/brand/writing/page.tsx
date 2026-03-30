@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { IconCheck, IconX } from "@tabler/icons-react";
+import { Text, Title } from "@/components/ui";
 import {
   colors,
   spacing,
@@ -13,52 +14,51 @@ export const metadata: Metadata = {
 
 function SectionTitle({ children }: { children: string }) {
   return (
-    <h2
+    <Title
+      order={2}
+      className="tw:mb-lg tw:pb-md"
       style={{
         fontSize: typography.fontSize["2xl"],
         fontWeight: typography.fontWeight.semibold,
         fontFamily: typography.fontFamily.primary,
         color: colors.text.primary,
-        marginBottom: spacing.lg,
-        paddingBottom: spacing.md,
         borderBottom: `1px solid ${colors.border.light}`,
       }}
     >
       {children}
-    </h2>
+    </Title>
   );
 }
 
 function RuleTitle({ children }: { children: string }) {
   return (
-    <h3
+    <Title
+      order={3}
+      className="tw:mb-sm"
       style={{
         fontSize: typography.fontSize.lg,
         fontWeight: typography.fontWeight.semibold,
         fontFamily: typography.fontFamily.primary,
         color: colors.text.primary,
-        marginBottom: spacing.sm,
-        marginTop: 0,
       }}
     >
       {children}
-    </h3>
+    </Title>
   );
 }
 
 function RuleDescription({ children }: { children: string }) {
   return (
-    <p
+    <Text
+      className="tw:mb-md"
       style={{
         fontSize: typography.fontSize.base,
         color: colors.text.secondary,
         lineHeight: typography.lineHeight.relaxed,
-        marginBottom: spacing.md,
-        marginTop: 0,
       }}
     >
       {children}
-    </p>
+    </Text>
   );
 }
 
@@ -72,31 +72,31 @@ function ExampleBox({
   const isGood = type === "good";
   return (
     <div
+      className="tw:p-md"
       style={{
-        padding: spacing.md,
-        background: isGood ? `${colors.primary[500]}10` : `${colors.error}10`,
+        background: isGood
+          ? `${colors.primary[500]}10`
+          : `${colors.error}10`,
         border: `1px solid ${isGood ? colors.primary[500] : colors.error}30`,
         borderRadius: spacing.radius.container,
       }}
     >
-      <p
+      <Text
+        className="tw:mb-sm"
         style={{
           fontSize: typography.fontSize.xs,
           fontWeight: typography.fontWeight.semibold,
           textTransform: "uppercase",
           letterSpacing: "0.05em",
           color: isGood ? colors.primary[500] : colors.error,
-          marginBottom: spacing.sm,
-          marginTop: 0,
-          display: "flex",
-          alignItems: "center",
-          gap: 4,
         }}
       >
-        {isGood ? <IconCheck size={14} /> : <IconX size={14} />}
-        {isGood ? "Correct" : "Incorrect"}
-      </p>
-      <div
+        <span className="tw:flex tw:items-center tw:gap-1">
+          {isGood ? <IconCheck size={14} /> : <IconX size={14} />}
+          {isGood ? "Correct" : "Incorrect"}
+        </span>
+      </Text>
+      <Text
         style={{
           fontSize: typography.fontSize.sm,
           color: colors.text.primary,
@@ -104,25 +104,28 @@ function ExampleBox({
         }}
       >
         {children}
-      </div>
+      </Text>
     </div>
   );
 }
 
-function TermItem({ term, definition }: { term: string; definition: string }) {
+function TermItem({
+  term,
+  definition,
+}: {
+  term: string;
+  definition: string;
+}) {
   return (
     <div
+      className="tw:flex tw:items-center tw:p-md tw:gap-lg"
       style={{
-        display: "flex",
-        alignItems: "center",
-        padding: spacing.md,
-        gap: spacing.lg,
         background: colors.white,
         border: `1px solid ${colors.border.light}`,
         borderRadius: spacing.radius.container,
       }}
     >
-      <span
+      <Text
         style={{
           width: 140,
           flexShrink: 0,
@@ -132,15 +135,15 @@ function TermItem({ term, definition }: { term: string; definition: string }) {
         }}
       >
         {term}
-      </span>
-      <span
+      </Text>
+      <Text
         style={{
           fontSize: typography.fontSize.sm,
           color: colors.text.secondary,
         }}
       >
         {definition}
-      </span>
+      </Text>
     </div>
   );
 }
@@ -148,49 +151,32 @@ function TermItem({ term, definition }: { term: string; definition: string }) {
 function TipBox({ children }: { children: React.ReactNode }) {
   return (
     <div
+      className="tw:p-lg tw:mt-lg"
       style={{
-        padding: spacing.lg,
-        marginTop: spacing.lg,
         background: `${colors.primary[500]}08`,
         border: `1px solid ${colors.primary[500]}20`,
         borderRadius: spacing.radius.container,
       }}
     >
-      <p
+      <Text
+        className="tw:mb-sm"
         style={{
           fontSize: typography.fontSize.sm,
           fontWeight: typography.fontWeight.semibold,
           color: colors.primary[600],
-          marginBottom: spacing.sm,
-          marginTop: 0,
         }}
       >
         Pro tip
-      </p>
-      <p
+      </Text>
+      <Text
         style={{
           fontSize: typography.fontSize.sm,
           color: colors.text.secondary,
           lineHeight: typography.lineHeight.relaxed,
-          margin: 0,
         }}
       >
         {children}
-      </p>
-    </div>
-  );
-}
-
-function ExampleRow({ children }: { children: React.ReactNode }) {
-  return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-        gap: spacing.md,
-      }}
-    >
-      {children}
+      </Text>
     </div>
   );
 }
@@ -209,12 +195,11 @@ export default function BrandWritingPage() {
           paddingRight: "6.125%",
         }}
       >
-        <p
+        <Text
           style={{
             fontSize: typography.fontSize.sm,
             color: colors.text.secondary,
             marginBottom: spacing.md,
-            marginTop: 0,
           }}
         >
           <Link
@@ -225,30 +210,28 @@ export default function BrandWritingPage() {
           </Link>
           {" / "}
           Writing
-        </p>
-        <h1
+        </Text>
+        <Title
           style={{
             fontSize: typography.fontSize["4xl"],
             fontWeight: typography.fontWeight.semibold,
             fontFamily: typography.fontFamily.primary,
             color: colors.text.primary,
             marginBottom: spacing.md,
-            marginTop: 0,
           }}
         >
           Writing guide
-        </h1>
-        <p
+        </Title>
+        <Text
           style={{
             fontSize: typography.fontSize.lg,
             color: colors.text.secondary,
             maxWidth: 600,
-            margin: 0,
           }}
         >
-          How PolicyEngine communicates. Voice, tone, and content guidelines for
-          research-oriented writing.
-        </p>
+          How PolicyEngine communicates. Voice, tone, and content guidelines
+          for research-oriented writing.
+        </Text>
       </div>
 
       {/* Content */}
@@ -264,73 +247,81 @@ export default function BrandWritingPage() {
         {/* Sentence case */}
         <div style={{ marginBottom: spacing["4xl"] }}>
           <SectionTitle>Sentence case</SectionTitle>
-          <p
+          <Text
+            className="tw:mb-xl"
             style={{
               fontSize: typography.fontSize.base,
               color: colors.text.secondary,
               lineHeight: typography.lineHeight.relaxed,
-              marginBottom: spacing.xl,
-              marginTop: 0,
             }}
           >
-            Always use sentence case for headings, not title case. This follows
-            the modern standard used by Apple, Google, Slack, Notion, and
-            GOV.UK.
-          </p>
+            Always use sentence case for headings, not title case. This
+            follows the modern standard used by Apple, Google, Slack, Notion,
+            and GOV.UK.
+          </Text>
 
-          <div style={{ marginBottom: spacing.xl }}>
+          <div className="tw:mb-xl">
             <RuleTitle>The rule</RuleTitle>
             <RuleDescription>
-              Capitalize only the first word of a heading and any proper nouns.
-              Everything else stays lowercase.
+              Capitalize only the first word of a heading and any proper
+              nouns. Everything else stays lowercase.
             </RuleDescription>
-            <ExampleRow>
-              <ExampleBox type="good">
-                How tax reform affects families
-                <br />
-                Understanding the EITC
-                <br />
-                Getting started with PolicyEngine
-                <br />
-                Why microsimulation matters
-              </ExampleBox>
-              <ExampleBox type="bad">
-                How Tax Reform Affects Families
-                <br />
-                Understanding The EITC
-                <br />
-                Getting Started With PolicyEngine
-                <br />
-                Why Microsimulation Matters
-              </ExampleBox>
-            </ExampleRow>
+            <div className="tw:flex tw:flex-col tw:sm:flex-row tw:gap-md">
+              <div className="tw:flex-1">
+                <ExampleBox type="good">
+                  How tax reform affects families
+                  <br />
+                  Understanding the EITC
+                  <br />
+                  Getting started with PolicyEngine
+                  <br />
+                  Why microsimulation matters
+                </ExampleBox>
+              </div>
+              <div className="tw:flex-1">
+                <ExampleBox type="bad">
+                  How Tax Reform Affects Families
+                  <br />
+                  Understanding The EITC
+                  <br />
+                  Getting Started With PolicyEngine
+                  <br />
+                  Why Microsimulation Matters
+                </ExampleBox>
+              </div>
+            </div>
           </div>
 
-          <div style={{ marginBottom: spacing.xl }}>
+          <div className="tw:mb-xl">
             <RuleTitle>Proper nouns stay capitalized</RuleTitle>
             <RuleDescription>
-              Brand names, acronyms, and proper nouns keep their capitalization.
+              Brand names, acronyms, and proper nouns keep their
+              capitalization.
             </RuleDescription>
-            <ExampleRow>
-              <ExampleBox type="good">
-                How AI affects income distribution
-                <br />
-                Analyzing the American Rescue Plan
-                <br />
-                UK benefit calculations
-                <br />
-                Building with PolicyEngine
-              </ExampleBox>
-              <ExampleBox type="bad">
-                How ai affects income distribution
-                <br />
-                Analyzing the american rescue plan
-                <br />
-                Uk benefit calculations
-                <br />
-                Building with policyengine
-              </ExampleBox>
-            </ExampleRow>
+            <div className="tw:flex tw:flex-col tw:sm:flex-row tw:gap-md">
+              <div className="tw:flex-1">
+                <ExampleBox type="good">
+                  How AI affects income distribution
+                  <br />
+                  Analyzing the American Rescue Plan
+                  <br />
+                  UK benefit calculations
+                  <br />
+                  Building with PolicyEngine
+                </ExampleBox>
+              </div>
+              <div className="tw:flex-1">
+                <ExampleBox type="bad">
+                  How ai affects income distribution
+                  <br />
+                  Analyzing the american rescue plan
+                  <br />
+                  Uk benefit calculations
+                  <br />
+                  Building with policyengine
+                </ExampleBox>
+              </div>
+            </div>
           </div>
 
           <div>
@@ -351,7 +342,9 @@ export default function BrandWritingPage() {
               <li style={{ marginBottom: spacing.xs }}>Navigation labels</li>
               <li style={{ marginBottom: spacing.xs }}>Button text</li>
               <li style={{ marginBottom: spacing.xs }}>Form labels</li>
-              <li style={{ marginBottom: spacing.xs }}>Documentation titles</li>
+              <li style={{ marginBottom: spacing.xs }}>
+                Documentation titles
+              </li>
               <li style={{ marginBottom: spacing.xs }}>Blog post titles</li>
               <li style={{ marginBottom: spacing.xs }}>Error messages</li>
             </ul>
@@ -361,124 +354,134 @@ export default function BrandWritingPage() {
         {/* Voice and tone */}
         <div style={{ marginBottom: spacing["4xl"] }}>
           <SectionTitle>Voice and tone</SectionTitle>
-          <p
+          <Text
+            className="tw:mb-xl"
             style={{
               fontSize: typography.fontSize.base,
               color: colors.text.secondary,
               lineHeight: typography.lineHeight.relaxed,
-              marginBottom: spacing.xl,
-              marginTop: 0,
             }}
           >
             PolicyEngine&apos;s voice is research-oriented but accessible. We
             explain complex policy concepts clearly while maintaining rigor.
             When writing about our products, the tone can be more natural and
             conversational.
-          </p>
+          </Text>
 
-          <div style={{ marginBottom: spacing.xl }}>
+          <div className="tw:mb-xl">
             <RuleTitle>Use active voice</RuleTitle>
             <RuleDescription>
-              Write in active voice. The subject should perform the action, not
-              receive it.
+              Write in active voice. The subject should perform the action,
+              not receive it.
             </RuleDescription>
-            <ExampleRow>
-              <ExampleBox type="good">
-                The policy increases benefits by $1,200/year.
-                <br />
-                We validated against IRS data.
-                <br />
-                PolicyEngine calculates taxes for all 50 states.
-              </ExampleBox>
-              <ExampleBox type="bad">
-                Benefits are increased by $1,200/year by the policy.
-                <br />
-                Validation was performed against IRS data.
-                <br />
-                Taxes for all 50 states are calculated by PolicyEngine.
-              </ExampleBox>
-            </ExampleRow>
+            <div className="tw:flex tw:flex-col tw:sm:flex-row tw:gap-md">
+              <div className="tw:flex-1">
+                <ExampleBox type="good">
+                  The policy increases benefits by $1,200/year.
+                  <br />
+                  We validated against IRS data.
+                  <br />
+                  PolicyEngine calculates taxes for all 50 states.
+                </ExampleBox>
+              </div>
+              <div className="tw:flex-1">
+                <ExampleBox type="bad">
+                  Benefits are increased by $1,200/year by the policy.
+                  <br />
+                  Validation was performed against IRS data.
+                  <br />
+                  Taxes for all 50 states are calculated by PolicyEngine.
+                </ExampleBox>
+              </div>
+            </div>
           </div>
 
-          <div style={{ marginBottom: spacing.xl }}>
+          <div className="tw:mb-xl">
             <RuleTitle>Be direct</RuleTitle>
             <RuleDescription>
               Get to the point. Avoid filler words and unnecessary qualifiers.
             </RuleDescription>
-            <ExampleRow>
-              <ExampleBox type="good">
-                The reform costs $50 billion annually.
-              </ExampleBox>
-              <ExampleBox type="bad">
-                It can be noted that the reform would cost approximately $50
-                billion per year.
-              </ExampleBox>
-            </ExampleRow>
+            <div className="tw:flex tw:flex-col tw:sm:flex-row tw:gap-md">
+              <div className="tw:flex-1">
+                <ExampleBox type="good">
+                  The reform costs $50 billion annually.
+                </ExampleBox>
+              </div>
+              <div className="tw:flex-1">
+                <ExampleBox type="bad">
+                  It can be noted that the reform would cost approximately $50
+                  billion per year.
+                </ExampleBox>
+              </div>
+            </div>
           </div>
 
-          <div style={{ marginBottom: spacing.xl }}>
+          <div className="tw:mb-xl">
             <RuleTitle>Be precise</RuleTitle>
             <RuleDescription>
               Use specific numbers and concrete examples. Avoid vague claims.
             </RuleDescription>
-            <ExampleRow>
-              <ExampleBox type="good">
-                The policy affects 42 million households.
-              </ExampleBox>
-              <ExampleBox type="bad">
-                The policy affects many households.
-              </ExampleBox>
-            </ExampleRow>
+            <div className="tw:flex tw:flex-col tw:sm:flex-row tw:gap-md">
+              <div className="tw:flex-1">
+                <ExampleBox type="good">
+                  The policy affects 42 million households.
+                </ExampleBox>
+              </div>
+              <div className="tw:flex-1">
+                <ExampleBox type="bad">
+                  The policy affects many households.
+                </ExampleBox>
+              </div>
+            </div>
           </div>
 
-          <div style={{ marginBottom: spacing.xl }}>
+          <div className="tw:mb-xl">
             <RuleTitle>Present numbers dispassionately</RuleTitle>
             <RuleDescription>
-              When presenting results from PolicyEngine, let the data speak for
-              itself. Avoid adjectives or adverbs that aren&apos;t backed by the
-              numbers themselves.
+              When presenting results from PolicyEngine, let the data speak
+              for itself. Avoid adjectives or adverbs that aren&apos;t backed
+              by the numbers themselves.
             </RuleDescription>
-            <ExampleRow>
-              <ExampleBox type="good">
-                The policy reduces poverty by 15%.
-                <br />
-                Average benefits increase by $2,400/year.
-                <br />
-                The reform costs $80 billion annually.
-              </ExampleBox>
-              <ExampleBox type="bad">
-                The policy dramatically slashes poverty by an impressive 15%.
-                <br />
-                Benefits skyrocket by a remarkable $2,400/year.
-                <br />
-                The reform has a surprisingly modest cost of just $80 billion.
-              </ExampleBox>
-            </ExampleRow>
+            <div className="tw:flex tw:flex-col tw:sm:flex-row tw:gap-md">
+              <div className="tw:flex-1">
+                <ExampleBox type="good">
+                  The policy reduces poverty by 15%.
+                  <br />
+                  Average benefits increase by $2,400/year.
+                  <br />
+                  The reform costs $80 billion annually.
+                </ExampleBox>
+              </div>
+              <div className="tw:flex-1">
+                <ExampleBox type="bad">
+                  The policy dramatically slashes poverty by an impressive
+                  15%.
+                  <br />
+                  Benefits skyrocket by a remarkable $2,400/year.
+                  <br />
+                  The reform has a surprisingly modest cost of just $80
+                  billion.
+                </ExampleBox>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Terminology */}
         <div style={{ marginBottom: spacing["4xl"] }}>
           <SectionTitle>Terminology</SectionTitle>
-          <p
+          <Text
+            className="tw:mb-xl"
             style={{
               fontSize: typography.fontSize.base,
               color: colors.text.secondary,
               lineHeight: typography.lineHeight.relaxed,
-              marginBottom: spacing.xl,
-              marginTop: 0,
             }}
           >
             Use these terms consistently across all PolicyEngine content.
-          </p>
+          </Text>
 
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: spacing.sm,
-            }}
-          >
+          <div className="tw:flex tw:flex-col tw:gap-sm">
             <TermItem
               term="PolicyEngine"
               definition="The organization and platform. Capital P, capital E, one word."
@@ -517,19 +520,13 @@ export default function BrandWritingPage() {
           </TipBox>
         </div>
 
-        {/* Numbers and formatting */}
+        {/* Numbers */}
         <div>
           <SectionTitle>Numbers and formatting</SectionTitle>
 
-          <div style={{ marginBottom: spacing.xl }}>
+          <div className="tw:mb-xl">
             <RuleTitle>Numbers</RuleTitle>
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: spacing.sm,
-              }}
-            >
+            <div className="tw:flex tw:flex-col tw:gap-sm">
               <TermItem
                 term="1-9"
                 definition='Spell out: "three states", "five scenarios"'

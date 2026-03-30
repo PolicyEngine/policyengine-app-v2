@@ -1,3 +1,4 @@
+import { Text } from "@/components/ui";
 import {
   colors,
   spacing,
@@ -22,32 +23,22 @@ export default function BulletList({
     variant === "inverted" ? colors.text.inverse : colors.text.primary;
 
   return (
-    <ul
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: "16px",
-        listStyle: "disc",
-        paddingLeft: "24px",
-        margin: 0,
-      }}
-    >
+    <ul className="tw:flex tw:flex-col tw:gap-4 tw:list-disc tw:pl-6">
       {items.map((item, index) => (
-        <li key={index}>
+        <li key={index} className="tw:w-full">
           <div style={{ marginTop: spacing.xs }}>
-            <span
+            <Text
+              weight="bold"
               style={{
                 fontFamily: typography.fontFamily.body,
                 fontSize: typography.fontSize.lg,
-                fontWeight: typography.fontWeight.bold,
                 color: textColor,
-                display: "block",
                 marginBottom: spacing.xs,
               }}
             >
               {item.title}
-            </span>
-            <span
+            </Text>
+            <Text
               style={{
                 fontFamily: typography.fontFamily.body,
                 fontSize: typography.fontSize.base,
@@ -56,7 +47,7 @@ export default function BulletList({
               }}
             >
               {item.description}
-            </span>
+            </Text>
           </div>
         </li>
       ))}

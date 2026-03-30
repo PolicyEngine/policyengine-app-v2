@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { IconCheck, IconX } from "@tabler/icons-react";
+import { Button, Text, Title } from "@/components/ui";
 import {
   colors,
   spacing,
@@ -13,17 +14,18 @@ export const metadata: Metadata = {
 
 function SectionTitle({ children }: { children: string }) {
   return (
-    <h2
+    <Title
+      order={2}
+      className="tw:mb-lg"
       style={{
         fontSize: typography.fontSize["2xl"],
         fontWeight: typography.fontWeight.semibold,
         fontFamily: typography.fontFamily.primary,
         color: colors.text.primary,
-        marginBottom: spacing.lg,
       }}
     >
       {children}
-    </h2>
+    </Title>
   );
 }
 
@@ -46,11 +48,8 @@ function LogoCard({
       }}
     >
       <div
+        className="tw:flex tw:items-center tw:justify-center tw:p-xl"
         style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: spacing.xl,
           background,
           minHeight: 120,
         }}
@@ -62,74 +61,61 @@ function LogoCard({
           style={{ height: 48 }}
         />
       </div>
-      <div style={{ padding: spacing.md }}>
-        <p
+      <div className="tw:p-md">
+        <Text
+          className="tw:mb-sm tw:text-center"
           style={{
             fontSize: typography.fontSize.sm,
             color: colors.text.secondary,
-            marginBottom: spacing.sm,
-            marginTop: 0,
-            textAlign: "center",
           }}
         >
           {variant}
-        </p>
-        <a
-          href={logoSrc}
-          download
-          style={{
-            display: "block",
-            width: "100%",
-            textAlign: "center",
-            padding: `${spacing.sm} ${spacing.md}`,
-            border: `1px solid ${colors.border.light}`,
-            borderRadius: spacing.radius.element,
-            color: colors.text.primary,
-            textDecoration: "none",
-            fontSize: typography.fontSize.sm,
-            background: colors.white,
-          }}
-        >
-          Download PNG
-        </a>
+        </Text>
+        <Button variant="outline" className="tw:w-full" asChild>
+          <a href={logoSrc} download>
+            Download PNG
+          </a>
+        </Button>
       </div>
     </div>
   );
 }
 
-function UsageCard({ type, items }: { type: "do" | "dont"; items: string[] }) {
+function UsageCard({
+  type,
+  items,
+}: {
+  type: "do" | "dont";
+  items: string[];
+}) {
   const isDo = type === "do";
   return (
     <div
+      className="tw:p-lg"
       style={{
-        padding: spacing.lg,
         background: isDo ? `${colors.primary[500]}08` : `${colors.error}08`,
         border: `1px solid ${isDo ? colors.primary[500] : colors.error}20`,
         borderRadius: spacing.radius.container,
-        flex: 1,
       }}
     >
-      <p
+      <Text
+        className="tw:mb-md"
         style={{
           fontSize: typography.fontSize.sm,
           fontWeight: typography.fontWeight.semibold,
           color: isDo ? colors.primary[500] : colors.error,
-          marginBottom: spacing.md,
-          marginTop: 0,
-          display: "flex",
-          alignItems: "center",
-          gap: 4,
         }}
       >
-        {isDo ? <IconCheck size={14} /> : <IconX size={14} />}
-        {isDo ? "Do" : "Don't"}
-      </p>
+        <span className="tw:flex tw:items-center tw:gap-1">
+          {isDo ? <IconCheck size={14} /> : <IconX size={14} />}
+          {isDo ? "Do" : "Don't"}
+        </span>
+      </Text>
       <ul
         style={{
           color: colors.text.secondary,
           fontSize: typography.fontSize.sm,
           paddingLeft: 20,
-          margin: 0,
         }}
       >
         {items.map((item, i) => (
@@ -152,27 +138,25 @@ function ColorSwatch({ name, value }: { name: string; value: string }) {
       }}
     >
       <div style={{ height: 60, background: value }} />
-      <div style={{ padding: spacing.sm, background: colors.white }}>
-        <p
+      <div className="tw:p-sm" style={{ background: colors.white }}>
+        <Text
           style={{
             fontSize: typography.fontSize.sm,
             fontWeight: typography.fontWeight.medium,
             marginBottom: spacing.xs,
-            marginTop: 0,
           }}
         >
           {name}
-        </p>
-        <p
+        </Text>
+        <Text
           style={{
             fontFamily: typography.fontFamily.mono,
             fontSize: typography.fontSize.xs,
             color: colors.text.tertiary,
-            margin: 0,
           }}
         >
           {value}
-        </p>
+        </Text>
       </div>
     </div>
   );
@@ -192,12 +176,11 @@ export default function BrandAssetsPage() {
           paddingRight: "6.125%",
         }}
       >
-        <p
+        <Text
           style={{
             fontSize: typography.fontSize.sm,
             color: colors.text.secondary,
             marginBottom: spacing.md,
-            marginTop: 0,
           }}
         >
           <Link
@@ -208,30 +191,28 @@ export default function BrandAssetsPage() {
           </Link>
           {" / "}
           Assets
-        </p>
-        <h1
+        </Text>
+        <Title
           style={{
             fontSize: typography.fontSize["4xl"],
             fontWeight: typography.fontWeight.semibold,
             fontFamily: typography.fontFamily.primary,
             color: colors.text.primary,
             marginBottom: spacing.md,
-            marginTop: 0,
           }}
         >
           Assets
-        </h1>
-        <p
+        </Title>
+        <Text
           style={{
             fontSize: typography.fontSize.lg,
             color: colors.text.secondary,
             maxWidth: 600,
-            margin: 0,
           }}
         >
           Logo files, usage guidelines, and brand resources for partners and
           press.
-        </p>
+        </Text>
       </div>
 
       {/* Content */}
@@ -247,37 +228,28 @@ export default function BrandAssetsPage() {
         {/* Logos */}
         <div style={{ marginBottom: spacing["4xl"] }}>
           <SectionTitle>Logos</SectionTitle>
-          <p
+          <Text
+            className="tw:mb-xl"
             style={{
               fontSize: typography.fontSize.base,
               color: colors.text.secondary,
-              marginBottom: spacing.xl,
-              marginTop: 0,
             }}
           >
             Download official PolicyEngine logos for use in publications,
             presentations, and partner materials.
-          </p>
+          </Text>
 
-          <p
+          <Text
+            className="tw:mb-md"
             style={{
               fontSize: typography.fontSize.base,
               fontWeight: typography.fontWeight.semibold,
               color: colors.text.primary,
-              marginBottom: spacing.md,
-              marginTop: 0,
             }}
           >
             Full logo
-          </p>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-              gap: spacing.lg,
-              marginBottom: spacing.xl,
-            }}
-          >
+          </Text>
+          <div className="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:gap-lg tw:mb-xl">
             <LogoCard
               variant="Teal on white"
               background={colors.white}
@@ -290,24 +262,17 @@ export default function BrandAssetsPage() {
             />
           </div>
 
-          <p
+          <Text
+            className="tw:mb-md"
             style={{
               fontSize: typography.fontSize.base,
               fontWeight: typography.fontWeight.semibold,
               color: colors.text.primary,
-              marginBottom: spacing.md,
-              marginTop: 0,
             }}
           >
             Square mark
-          </p>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-              gap: spacing.lg,
-            }}
-          >
+          </Text>
+          <div className="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:gap-lg">
             <LogoCard
               variant="Teal square"
               background={colors.white}
@@ -324,24 +289,20 @@ export default function BrandAssetsPage() {
         {/* Clear space */}
         <div style={{ marginBottom: spacing["4xl"] }}>
           <SectionTitle>Clear space</SectionTitle>
-          <p
+          <Text
+            className="tw:mb-xl"
             style={{
               fontSize: typography.fontSize.base,
               color: colors.text.secondary,
-              marginBottom: spacing.xl,
-              marginTop: 0,
             }}
           >
             Maintain clear space around the logo equal to at least half the
             height of the logomark.
-          </p>
+          </Text>
 
           <div
+            className="tw:flex tw:justify-center tw:p-xl tw:mb-md"
             style={{
-              display: "flex",
-              justifyContent: "center",
-              padding: spacing.xl,
-              marginBottom: spacing.md,
               background: colors.white,
               border: `1px solid ${colors.border.light}`,
               borderRadius: spacing.radius.container,
@@ -361,7 +322,7 @@ export default function BrandAssetsPage() {
                 alt="PolicyEngine logo"
                 style={{ height: 40 }}
               />
-              <span
+              <Text
                 style={{
                   position: "absolute",
                   top: -20,
@@ -373,73 +334,63 @@ export default function BrandAssetsPage() {
                 }}
               >
                 0.5x
-              </span>
+              </Text>
             </div>
           </div>
-          <p
+          <Text
+            className="tw:text-center"
             style={{
-              textAlign: "center",
               fontSize: typography.fontSize.sm,
               color: colors.text.tertiary,
-              margin: 0,
             }}
           >
             Minimum clear space around logo
-          </p>
+          </Text>
         </div>
 
         {/* Usage guidelines */}
         <div style={{ marginBottom: spacing["4xl"] }}>
           <SectionTitle>Usage guidelines</SectionTitle>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-              gap: spacing.lg,
-            }}
-          >
-            <UsageCard
-              type="do"
-              items={[
-                "Use official logo files",
-                "Maintain clear space",
-                "Use on contrasting backgrounds",
-                "Scale proportionally",
-              ]}
-            />
-            <UsageCard
-              type="dont"
-              items={[
-                "Stretch or distort the logo",
-                "Change logo colors",
-                "Add effects or shadows",
-                "Place on busy backgrounds",
-              ]}
-            />
+          <div className="tw:flex tw:flex-col tw:sm:flex-row tw:gap-lg">
+            <div className="tw:flex-1">
+              <UsageCard
+                type="do"
+                items={[
+                  "Use official logo files",
+                  "Maintain clear space",
+                  "Use on contrasting backgrounds",
+                  "Scale proportionally",
+                ]}
+              />
+            </div>
+            <div className="tw:flex-1">
+              <UsageCard
+                type="dont"
+                items={[
+                  "Stretch or distort the logo",
+                  "Change logo colors",
+                  "Add effects or shadows",
+                  "Place on busy backgrounds",
+                ]}
+              />
+            </div>
           </div>
         </div>
 
         {/* Brand colors */}
         <div>
           <SectionTitle>Brand colors</SectionTitle>
-          <p
+          <Text
+            className="tw:mb-xl"
             style={{
               fontSize: typography.fontSize.base,
               color: colors.text.secondary,
-              marginBottom: spacing.xl,
-              marginTop: 0,
             }}
           >
             Primary brand colors for use alongside the PolicyEngine logo.
-          </p>
+          </Text>
 
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))",
-              gap: spacing.md,
-            }}
-          >
+          <div className="tw:grid tw:grid-cols-2 tw:sm:grid-cols-4 tw:gap-md">
             <ColorSwatch name="Primary teal" value={colors.primary[500]} />
             <ColorSwatch name="Primary dark" value={colors.primary[700]} />
             <ColorSwatch name="Gray" value={colors.secondary[700]} />

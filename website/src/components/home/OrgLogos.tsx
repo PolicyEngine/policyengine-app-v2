@@ -1,16 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Text } from "@/components/ui";
+import OptimisedImage from "@/components/ui/OptimisedImage";
+import {
+  CountryId,
+  getOrgsForCountry,
+  Organization,
+} from "@/data/organizations";
 import {
   colors,
   spacing,
   typography,
 } from "@policyengine/design-system/tokens";
-import { getOrgsForCountry, type Organization } from "@/data/organizations";
 
 const LOGO_WIDTH = 140;
 const LOGO_GAP = 64;
 
+// Fisher-Yates shuffle
 function shuffle<T>(array: T[]): T[] {
   const result = [...array];
   for (let i = result.length - 1; i > 0; i--) {
@@ -44,10 +51,11 @@ function LogoItem({ org }: { org: Organization }) {
         e.currentTarget.style.opacity = "0.7";
       }}
     >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
+      <OptimisedImage
         src={org.logo.src}
         alt={org.name}
+        width={LOGO_WIDTH}
+        height={70}
         style={{
           maxWidth: `${LOGO_WIDTH}px`,
           maxHeight: "70px",
@@ -60,35 +68,40 @@ function LogoItem({ org }: { org: Organization }) {
 }
 
 export default function OrgLogos({ countryId }: { countryId: string }) {
-  const [orgs, setOrgs] = useState<Organization[]>(() =>
-    getOrgsForCountry(countryId),
-  );
+  // Initialize with stable (unshuffled) order for SSR, then shuffle on client
+  const unshuffled = useMemo(() => getOrgsForCountry(countryId as CountryId), [countryId]);
+  const [orgs, setOrgs] = useState(unshuffled);
 
   useEffect(() => {
-    setOrgs(shuffle(getOrgsForCountry(countryId)));
-  }, [countryId]);
+    setOrgs(shuffle(unshuffled));
+  }, [unshuffled]);
 
-  if (orgs.length === 0) return null;
+  if (orgs.length === 0) {
+    return null;
+  }
 
+  // Total width of one full set of logos
   const setWidth = orgs.length * (LOGO_WIDTH + LOGO_GAP);
+
+  // ~40px/s — slow enough to read, fast enough to notice movement
   const duration = setWidth / 40;
 
   return (
     <div style={{ marginTop: spacing["4xl"], marginBottom: spacing["4xl"] }}>
-      <p
+      <Text
+        size="lg"
+        c={colors.primary[600]}
+        fw={typography.fontWeight.medium}
         style={{
           textAlign: "center",
           marginBottom: spacing.xl,
           fontFamily: typography.fontFamily.primary,
-          fontSize: typography.fontSize.lg,
-          color: colors.primary[600],
-          fontWeight: typography.fontWeight.medium,
         }}
       >
         {countryId === "us"
           ? "Trusted by researchers, governments, and benefit platforms"
           : "Trusted by researchers and policy organisations"}
-      </p>
+      </Text>
 
       <div
         style={{
@@ -109,6 +122,7 @@ export default function OrgLogos({ countryId }: { countryId: string }) {
             animation: `marquee ${duration}s linear infinite`,
           }}
         >
+          {/* Render two copies for seamless loop */}
           {orgs.map((org, i) => (
             <LogoItem key={`a-${i}`} org={org} />
           ))}
