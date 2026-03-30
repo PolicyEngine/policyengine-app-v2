@@ -64,7 +64,7 @@ interface PolicyCreationModalProps {
   isOpen: boolean;
   onClose: () => void;
   onPolicyCreated: (policy: PolicyStateProps) => void;
-  reportYear?: string;
+  reportYear: string;
   simulationIndex: number;
   initialPolicy?: PolicyStateProps;
   initialEditorMode?: EditorMode;
@@ -105,12 +105,11 @@ export function PolicyCreationModal({
   // Value setter state
   const [valueSetterMode, setValueSetterMode] = useState<ValueSetterMode>(ValueSetterMode.DEFAULT);
   const [intervals, setIntervals] = useState<ValueInterval[]>([]);
-  // Preserve the legacy standalone policy editor default unless report builder passes a year.
   const {
     reportYear: resolvedReportYear,
     startDate: defaultStartDate,
     endDate: defaultEndDate,
-  } = getReportYearDateBounds(reportYear, '2025');
+  } = getReportYearDateBounds(reportYear);
   const [startDate, setStartDate] = useState<string>(defaultStartDate);
   const [endDate, setEndDate] = useState<string>(defaultEndDate);
 

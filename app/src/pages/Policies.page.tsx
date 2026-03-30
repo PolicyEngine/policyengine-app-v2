@@ -15,6 +15,8 @@ import { PolicyStateProps } from '@/types/pathwayState';
 import { countPolicyModifications } from '@/utils/countParameterChanges';
 import { formatDate } from '@/utils/dateUtils';
 
+const LEGACY_POLICY_EDITOR_YEAR = '2025';
+
 export default function PoliciesPage() {
   const userId = MOCK_USER_ID.toString(); // TODO: Replace with actual user ID retrieval logic
   const { data, isLoading, isError, error } = useUserPolicies(userId);
@@ -180,6 +182,7 @@ export default function PoliciesPage() {
           setEditingAssociationId(null);
         }}
         simulationIndex={0}
+        reportYear={LEGACY_POLICY_EDITOR_YEAR}
         initialPolicy={editingPolicy ?? undefined}
         initialEditorMode={editorMode}
         initialAssociationId={editingAssociationId ?? undefined}

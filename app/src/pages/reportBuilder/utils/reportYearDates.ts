@@ -1,11 +1,13 @@
-import { CURRENT_YEAR, getParamDefinitionDate } from '@/constants';
+import { getParamDefinitionDate } from '@/constants';
 
-export function getReportYearDateBounds(reportYear?: string, fallbackYear: string = CURRENT_YEAR) {
-  const resolvedReportYear = reportYear || fallbackYear;
+export function getReportYearDateBounds(reportYear: string) {
+  if (!reportYear) {
+    throw new Error('[getReportYearDateBounds] reportYear is required');
+  }
 
   return {
-    reportYear: resolvedReportYear,
-    startDate: getParamDefinitionDate(resolvedReportYear),
-    endDate: `${resolvedReportYear}-12-31`,
+    reportYear,
+    startDate: getParamDefinitionDate(reportYear),
+    endDate: `${reportYear}-12-31`,
   };
 }

@@ -5097,6 +5097,7 @@ function SimulationCanvas({
           handlePolicyCreated(policyCreationState.simulationIndex, policy)
         }
         simulationIndex={policyCreationState.simulationIndex}
+        reportYear={reportState.year}
       />
     </>
   );
