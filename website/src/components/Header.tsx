@@ -426,8 +426,6 @@ function MobileMenu({
   onClose: () => void;
   navItems: NavItemSetup[];
 }) {
-  if (!open) return null;
-
   return (
     <div
       style={{
@@ -436,6 +434,7 @@ function MobileMenu({
         zIndex: 2000,
         display: "flex",
         justifyContent: "flex-end",
+        pointerEvents: open ? "auto" : "none",
       }}
     >
       {/* Backdrop */}
@@ -445,6 +444,8 @@ function MobileMenu({
           position: "absolute",
           inset: 0,
           backgroundColor: "rgba(0,0,0,0.4)",
+          opacity: open ? 1 : 0,
+          transition: "opacity 0.3s ease",
         }}
       />
       {/* Panel */}
@@ -458,6 +459,8 @@ function MobileMenu({
           display: "flex",
           flexDirection: "column",
           gap: spacing.lg,
+          transform: open ? "translateX(0)" : "translateX(100%)",
+          transition: "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
         }}
       >
         <div
@@ -601,6 +604,8 @@ export default function Header() {
         fontFamily: typography.fontFamily.primary,
         width: "100%",
         boxSizing: "border-box",
+        opacity: mobileOpen ? 0 : 1,
+        transition: "opacity 0.1s ease",
       }}
     >
       <div
