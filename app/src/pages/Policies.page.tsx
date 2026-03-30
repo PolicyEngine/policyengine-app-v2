@@ -4,7 +4,7 @@ import { ColumnConfig, IngredientRecord, TextValue } from '@/components/columns'
 import { RenameIngredientModal } from '@/components/common/RenameIngredientModal';
 import IngredientReadView from '@/components/IngredientReadView';
 import { Stack } from '@/components/ui';
-import { MOCK_USER_ID } from '@/constants';
+import { CURRENT_YEAR, MOCK_USER_ID } from '@/constants';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useDisclosure } from '@/hooks/useDisclosure';
@@ -14,8 +14,6 @@ import { PolicyCreationModal } from '@/pages/reportBuilder/modals/PolicyCreation
 import { PolicyStateProps } from '@/types/pathwayState';
 import { countPolicyModifications } from '@/utils/countParameterChanges';
 import { formatDate } from '@/utils/dateUtils';
-
-const LEGACY_POLICY_EDITOR_YEAR = '2025';
 
 export default function PoliciesPage() {
   const userId = MOCK_USER_ID.toString(); // TODO: Replace with actual user ID retrieval logic
@@ -182,7 +180,7 @@ export default function PoliciesPage() {
           setEditingAssociationId(null);
         }}
         simulationIndex={0}
-        reportYear={LEGACY_POLICY_EDITOR_YEAR}
+        reportYear={CURRENT_YEAR}
         initialPolicy={editingPolicy ?? undefined}
         initialEditorMode={editorMode}
         initialAssociationId={editingAssociationId ?? undefined}
