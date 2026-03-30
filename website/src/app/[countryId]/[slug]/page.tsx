@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import appsData from "@/data/apps.json";
 import { VALID_COUNTRIES } from "@/lib/countries";
@@ -45,5 +46,9 @@ export default async function AppPage({
     notFound();
   }
 
-  return <AppClient app={app} countryId={countryId} />;
+  return (
+    <Suspense>
+      <AppClient app={app} countryId={countryId} />
+    </Suspense>
+  );
 }
