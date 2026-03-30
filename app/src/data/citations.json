@@ -1,5 +1,13 @@
 [
   {
+    "title": "One Big Beautiful Bill? A preliminary assessment",
+    "outlet": "Brookings Institution",
+    "date": "2026-03-23",
+    "url": "https://www.brookings.edu/articles/one-big-beautiful-bill-a-preliminary-assessment/",
+    "image": "brookings-big-beautiful-bill.jpg",
+    "tags": ["us", "policy"]
+  },
+  {
     "title": "Immigration fiscal impact calculator",
     "outlet": "Joint Economic Committee (U.S. Senate)",
     "date": "2026-03-17",
@@ -302,6 +310,14 @@
     "tags": ["uk", "policy"]
   },
   {
+    "title": "Editorial: 50 years with LOTTE",
+    "outlet": "International Journal of Microsimulation",
+    "date": "2024-12-31",
+    "url": "https://microsimulation.pub/articles/00313",
+    "image": "ijm-50-years-lotte.jpg",
+    "tags": ["global", "technical"]
+  },
+  {
     "title": "Enhancing, localising and democratising tax-benefit policy analysis",
     "outlet": "Nuffield Foundation",
     "date": "2024-09-01",
@@ -372,6 +388,14 @@
     "url": "https://www.niskanencenter.org/newborn-needs-the-case-for-an-american-baby-bonus/",
     "image": "niskanen-baby-bonus.webp",
     "tags": ["us", "policy"]
+  },
+  {
+    "title": "Disentangling in-work and child tax credits to address improper payments",
+    "outlet": "Niskanen Center",
+    "date": "2025-03-26",
+    "url": "https://www.niskanencenter.org/disentangling-in-work-and-child-tax-credits-to-address-improper-payments/",
+    "image": "niskanen-disentangling-credits.jpg",
+    "tags": ["us", "tax"]
   },
   {
     "title": "How to phase out Arkansas's work-punishing personal income tax",
