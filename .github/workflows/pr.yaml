@@ -16,37 +16,60 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Check for non-data changes to app/ and root vercel.json
+      - name: Check for website-related changes to app/ and root vercel.json
         run: |
           # Get files changed in this PR (vs base branch)
           ALL_CHANGED=$(git diff --name-only origin/${{ github.base_ref }}...HEAD)
 
-          # 1. Check app/ directory (exclude data paths)
-          APP_BLOCKED=$(echo "$ALL_CHANGED" | grep '^app/' | grep -v \
-            -e '^app/src/data/' \
-            -e '^app/public/assets/' \
-            -e '^app/public/data/' \
+          # Website-specific paths in app/ that have been ported to website/
+          # and should no longer be modified in app/.
+          # Calculator components (report builder, household, charts, etc.) are
+          # still legitimately modified in app/ since calculator-app/ imports from there.
+          WEBSITE_BLOCKED=$(echo "$ALL_CHANGED" | grep -E \
+            -e '^app/src/components/home/' \
+            -e '^app/src/components/shared/static/' \
+            -e '^app/src/components/shared/HomeHeader\.tsx' \
+            -e '^app/src/components/homeHeader/' \
+            -e '^app/src/components/Footer\.tsx' \
+            -e '^app/src/components/FooterSubscribe\.tsx' \
+            -e '^app/src/components/blog/BlogPostCard\.tsx' \
+            -e '^app/src/components/blog/BlogPostGrid\.tsx' \
+            -e '^app/src/components/blog/ResearchFilters\.tsx' \
+            -e '^app/src/components/blog/blogStyles\.ts' \
+            -e '^app/src/pages/Home\.page\.tsx' \
+            -e '^app/src/pages/Research\.page\.tsx' \
+            -e '^app/src/pages/Blog\.page\.tsx' \
+            -e '^app/src/pages/Team\.page\.tsx' \
+            -e '^app/src/pages/Supporters\.page\.tsx' \
+            -e '^app/src/pages/Donate\.page\.tsx' \
+            -e '^app/src/pages/Privacy\.page\.tsx' \
+            -e '^app/src/pages/Terms\.page\.tsx' \
+            -e '^app/src/pages/Brand' \
+            -e '^app/src/pages/Citations\.page\.tsx' \
+            -e '^app/src/pages/AppPage\.tsx' \
           || true)
 
-          # 2. Check root vercel.json (Vite app config — rewrites should go in website/next.config.ts)
+          # Root vercel.json (Vite app config — new rewrites should go in website/next.config.ts)
           VERCEL_BLOCKED=$(echo "$ALL_CHANGED" | grep '^vercel.json$' || true)
 
-          BLOCKED="${APP_BLOCKED}${VERCEL_BLOCKED:+$'\n'$VERCEL_BLOCKED}"
+          BLOCKED="${WEBSITE_BLOCKED}${VERCEL_BLOCKED:+$'\n'$VERCEL_BLOCKED}"
           BLOCKED=$(echo "$BLOCKED" | sed '/^$/d')
 
           if [ -n "$BLOCKED" ]; then
-            echo "::warning::⚠️ Migration guard: the following files belong to the legacy Vite app."
+            echo "::warning::⚠️ Migration guard: the following files have been ported to the Next.js website."
             echo "::warning::This check is temporary — it will be removed after the Next.js cutover (#817)."
             echo ""
             echo "Files flagged:"
             echo "$BLOCKED"
             echo ""
-            echo "What to do instead:"
-            echo "  - app/src/components/ or app/src/pages/ → website/src/ or calculator-app/src/"
-            echo "  - vercel.json (root) → website/next.config.ts rewrites"
-            echo "  - app/src/data/*, app/public/assets/* → OK (shared data, no action needed)"
+            echo "These files now have Next.js equivalents in website/. Changes should go there instead."
+            echo "Calculator components in app/ (report builder, household, charts, etc.) are fine to modify."
             echo ""
-            echo "If this change is intentional (e.g. bug fix to Vite app), this warning can be ignored."
+            echo "  - Website pages/components → website/src/"
+            echo "  - vercel.json (root) → website/next.config.ts rewrites"
+            echo "  - app/src/data/*, app/public/assets/* → OK (shared data)"
+            echo ""
+            echo "If this change is intentional (e.g. bug fix needed in both Vite and Next.js), this warning can be ignored."
           fi
 
   lint:

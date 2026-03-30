@@ -1,19 +1,21 @@
 # PolicyEngine App v2 Development Guidelines
 
-## app/ is in maintenance mode
+## app/ directory — what goes where
 
-**Do not add new components, pages, or styles to `app/`.** All new UI work goes in `website/` (static site) or `calculator-app/` (calculator). The `app/` directory contains the legacy Vite build that is being replaced by Next.js.
+The `app/` directory contains the legacy Vite build. Some parts have been ported to Next.js, others are still active.
 
-**What you CAN modify in app/:**
-- `app/src/data/` — posts.json, citations.json, apps.json, authors.json (shared data files)
-- `app/public/assets/` — images, logos (shared static assets)
+**Ported to website/ (do NOT modify in app/):**
+- Website components: `home/`, `shared/static/`, `homeHeader/`, `Footer.tsx`, `FooterSubscribe.tsx`, `blog/BlogPostCard.tsx`, `blog/BlogPostGrid.tsx`, `blog/ResearchFilters.tsx`
+- Website pages: `Home`, `Research`, `Blog`, `Team`, `Supporters`, `Donate`, `Privacy`, `Terms`, `Brand*`, `Citations`, `AppPage`
+- `vercel.json` (root) — new rewrites go in `website/next.config.ts`
 
-**What you should NOT modify in app/:**
-- `app/src/components/` — port to `website/src/components/` or `calculator-app/` instead
-- `app/src/pages/` — create Next.js routes in `website/src/app/` or `calculator-app/src/app/` instead
-- `app/src/styles/` — use `website/src/app/globals.css` instead
+**Still active in app/ (OK to modify):**
+- Calculator components (report builder, household, charts, sidebar, etc.) — `calculator-app/` imports these via `externalDir`
+- Calculator pages (report output, pathways, etc.)
+- `app/src/data/` — shared data files (posts.json, citations.json, apps.json, authors.json)
+- `app/public/assets/` — shared static assets
 
-CI will warn if a PR modifies non-data files in `app/`.
+CI will warn if a PR modifies website-specific files in `app/`.
 
 ## Visual Standards (MUST READ)
 
