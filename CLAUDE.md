@@ -1,5 +1,20 @@
 # PolicyEngine App v2 Development Guidelines
 
+## app/ is in maintenance mode
+
+**Do not add new components, pages, or styles to `app/`.** All new UI work goes in `website/` (static site) or `calculator-app/` (calculator). The `app/` directory contains the legacy Vite build that is being replaced by Next.js.
+
+**What you CAN modify in app/:**
+- `app/src/data/` — posts.json, citations.json, apps.json, authors.json (shared data files)
+- `app/public/assets/` — images, logos (shared static assets)
+
+**What you should NOT modify in app/:**
+- `app/src/components/` — port to `website/src/components/` or `calculator-app/` instead
+- `app/src/pages/` — create Next.js routes in `website/src/app/` or `calculator-app/src/app/` instead
+- `app/src/styles/` — use `website/src/app/globals.css` instead
+
+CI will warn if a PR modifies non-data files in `app/`.
+
 ## Visual Standards (MUST READ)
 
 Detailed visual standards are documented in `.claude/skills/`. **These are mandatory for all UI code:**
