@@ -7,6 +7,39 @@ on:
       - master
 
 jobs:
+  guard-app-dir:
+    name: Guard app/ directory
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for non-data changes to app/
+        run: |
+          # Get files changed in this PR (vs base branch)
+          CHANGED=$(git diff --name-only origin/${{ github.base_ref }}...HEAD -- app/)
+
+          # Filter out allowed data paths
+          BLOCKED=$(echo "$CHANGED" | grep -v \
+            -e '^app/src/data/' \
+            -e '^app/public/assets/' \
+            -e '^app/public/data/' \
+            -e '^$' \
+          || true)
+
+          if [ -n "$BLOCKED" ]; then
+            echo "::warning::The following app/ files were modified outside of data directories."
+            echo "::warning::New UI code should go in website/ or calculator-app/ instead."
+            echo ""
+            echo "$BLOCKED"
+            echo ""
+            echo "Allowed paths: app/src/data/*, app/public/assets/*, app/public/data/*"
+            echo ""
+            echo "If this change is intentional (e.g. bug fix to Vite app), this warning can be ignored."
+          fi
+
   lint:
     name: Lint and format
     runs-on: ubuntu-latest
