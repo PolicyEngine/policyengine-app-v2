@@ -52,6 +52,12 @@ const nextConfig: NextConfig = {
       // Household API docs (Vercel)
       { source: "/us/api", destination: "https://household-api-docs-policy-engine.vercel.app/us/api" },
       { source: "/us/api/:path*", destination: "https://household-api-docs-policy-engine.vercel.app/us/api/:path*" },
+      // Oregon Kicker Refund calculator (Vercel)
+      { source: "/us/oregon-kicker-refund", destination: "https://oregon-kicker-refund.vercel.app/us/oregon-kicker-refund" },
+      { source: "/us/oregon-kicker-refund/:path*", destination: "https://oregon-kicker-refund.vercel.app/us/oregon-kicker-refund/:path*" },
+      // California wealth tax calculator (Vercel)
+      { source: "/us/california-wealth-tax/embed", destination: "https://california-wealth-tax.vercel.app/us/california-wealth-tax/embed" },
+      { source: "/us/california-wealth-tax/embed/:path*", destination: "https://california-wealth-tax.vercel.app/us/california-wealth-tax/embed/:path*" },
     ];
   },
 
