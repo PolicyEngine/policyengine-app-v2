@@ -470,7 +470,7 @@ function CongressionalDistrictCard({
             <div style={{ height: '100%', overflow: 'hidden' }}>
               <div
                 style={{
-                  transform: 'scale(1.35)',
+                  transform: stateCode ? 'scale(1)' : 'scale(1.35)',
                   transformOrigin: 'center center',
                   height: '100%',
                 }}
@@ -483,6 +483,7 @@ function CongressionalDistrictCard({
                     height: 300,
                     showColorBar: false,
                   }}
+                  focusState={stateCode ?? undefined}
                   errorStates={errorStateAbbrs}
                 />
               </div>

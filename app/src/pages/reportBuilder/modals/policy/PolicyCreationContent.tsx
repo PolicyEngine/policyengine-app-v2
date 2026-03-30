@@ -38,6 +38,7 @@ interface PolicyCreationContentProps {
   localPolicy: PolicyStateProps;
   policyLabel: string;
   policyParameters: Parameter[];
+  reportYear: string;
   setPolicyParameters: Dispatch<SetStateAction<Parameter[]>>;
   minDate: string;
   maxDate: string;
@@ -58,6 +59,7 @@ export function PolicyCreationContent({
   localPolicy,
   policyLabel,
   policyParameters,
+  reportYear,
   setPolicyParameters,
   minDate,
   maxDate,
@@ -250,6 +252,7 @@ export function PolicyCreationContent({
                     maxDate={maxDate}
                     param={selectedParam}
                     policy={localPolicy}
+                    reportYear={reportYear}
                     intervals={intervals}
                     setIntervals={setIntervals}
                     startDate={startDate}

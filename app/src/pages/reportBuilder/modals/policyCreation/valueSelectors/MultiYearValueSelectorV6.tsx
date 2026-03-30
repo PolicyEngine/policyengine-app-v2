@@ -6,6 +6,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Group, Stack, Text } from '@/components/ui';
+import { CURRENT_YEAR } from '@/constants';
 import { colors } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { getTaxYears } from '@/libs/metadataUtils';
@@ -15,7 +16,7 @@ import { ValueSetterProps } from '@/pathways/report/components/valueSetters/Valu
 import { ValueInterval } from '@/types/subIngredients/valueInterval';
 
 export function MultiYearValueSelectorV6(props: ValueSetterProps) {
-  const { param, policy, setIntervals } = props;
+  const { param, policy, reportYear, setIntervals } = props;
 
   // Get available years from metadata
   const availableYears = useSelector(getTaxYears);
@@ -27,15 +28,16 @@ export function MultiYearValueSelectorV6(props: ValueSetterProps) {
     uk: 5,
   };
 
-  // Generate years from metadata, starting from current year
+  const startYear = parseInt(reportYear || CURRENT_YEAR, 10);
+
+  // Generate years from metadata, starting from the report year
   const generateYears = () => {
-    const currentYear = new Date().getFullYear();
     const maxYears = MAX_YEARS_BY_COUNTRY[countryId || 'us'] || 10;
 
-    // Filter available years from metadata to only include current year onwards
+    // Filter available years from metadata to only include report year onwards
     const futureYears = availableYears
       .map((option) => parseInt(option.value, 10))
-      .filter((year) => year >= currentYear)
+      .filter((year) => year >= startYear)
       .sort((a, b) => a - b);
 
     // Take only the configured max years for this country
@@ -51,7 +53,7 @@ export function MultiYearValueSelectorV6(props: ValueSetterProps) {
       initialValues[year] = getDefaultValueForParam(param, policy, `${year}-01-01`);
     });
     return initialValues;
-  }, [param, policy]);
+  }, [years, param, policy]);
 
   const [yearValues, setYearValues] = useState<Record<string, any>>(getInitialYearValues);
 

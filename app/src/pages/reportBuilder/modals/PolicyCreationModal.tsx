@@ -46,6 +46,7 @@ import { formatPeriod } from '@/utils/dateUtils';
 import { formatLabelParts, getHierarchicalLabels } from '@/utils/parameterLabels';
 import { formatParameterValue } from '@/utils/policyTableHelpers';
 import { FONT_SIZES, INGREDIENT_COLORS } from '../constants';
+import { getReportYearDateBounds } from '../utils/reportYearDates';
 import {
   ChangesCard,
   EditorMode,
@@ -63,6 +64,7 @@ interface PolicyCreationModalProps {
   isOpen: boolean;
   onClose: () => void;
   onPolicyCreated: (policy: PolicyStateProps) => void;
+  reportYear: string;
   simulationIndex: number;
   initialPolicy?: PolicyStateProps;
   initialEditorMode?: EditorMode;
@@ -73,6 +75,7 @@ export function PolicyCreationModal({
   isOpen,
   onClose,
   onPolicyCreated,
+  reportYear,
   simulationIndex,
   initialPolicy,
   initialEditorMode,
@@ -102,8 +105,13 @@ export function PolicyCreationModal({
   // Value setter state
   const [valueSetterMode, setValueSetterMode] = useState<ValueSetterMode>(ValueSetterMode.DEFAULT);
   const [intervals, setIntervals] = useState<ValueInterval[]>([]);
-  const [startDate, setStartDate] = useState<string>('2025-01-01');
-  const [endDate, setEndDate] = useState<string>('2025-12-31');
+  const {
+    reportYear: resolvedReportYear,
+    startDate: defaultStartDate,
+    endDate: defaultEndDate,
+  } = getReportYearDateBounds(reportYear);
+  const [startDate, setStartDate] = useState<string>(defaultStartDate);
+  const [endDate, setEndDate] = useState<string>(defaultEndDate);
 
   // Parameter search state
   const [parameterSearch, setParameterSearch] = useState('');
@@ -135,9 +143,11 @@ export function PolicyCreationModal({
       setSelectedParam(null);
       setExpandedMenuItems(new Set());
       setIntervals([]);
+      setStartDate(defaultStartDate);
+      setEndDate(defaultEndDate);
       setParameterSearch('');
     }
-  }, [isOpen, initialEditorMode]); // initialPolicy intentionally not in deps -- only read on open transition
+  }, [isOpen, initialEditorMode, initialPolicy, defaultStartDate, defaultEndDate]);
 
   // Create local policy state object for components
   const localPolicy: PolicyStateProps = useMemo(
@@ -405,6 +415,7 @@ export function PolicyCreationModal({
                   <ValueSetterCard
                     selectedParam={selectedParam}
                     localPolicy={localPolicy}
+                    reportYear={resolvedReportYear}
                     minDate={minDate}
                     maxDate={maxDate}
                     valueSetterMode={valueSetterMode}

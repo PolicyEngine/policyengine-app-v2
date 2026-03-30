@@ -45,6 +45,7 @@ import {
 import { formatParameterValue } from '@/utils/policyTableHelpers';
 import { FONT_SIZES, INGREDIENT_COLORS } from '../constants';
 import { createCurrentLawPolicy } from '../currentLaw';
+import { getReportYearDateBounds } from '../utils/reportYearDates';
 import { BrowseModalTemplate } from './BrowseModalTemplate';
 import {
   PolicyBrowseContent,
@@ -59,9 +60,15 @@ interface PolicyBrowseModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSelect: (policy: PolicyStateProps) => void;
+  reportYear: string;
 }
 
-export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseModalProps) {
+export function PolicyBrowseModal({
+  isOpen,
+  onClose,
+  onSelect,
+  reportYear,
+}: PolicyBrowseModalProps) {
   const countryId = useCurrentCountry();
   const userId = MOCK_USER_ID.toString();
   const { data: policies, isLoading } = useUserPolicies(userId);
@@ -93,8 +100,13 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
   const [expandedMenuItems, setExpandedMenuItems] = useState<Set<string>>(new Set());
   const [valueSetterMode, setValueSetterMode] = useState<ValueSetterMode>(ValueSetterMode.DEFAULT);
   const [intervals, setIntervals] = useState<ValueInterval[]>([]);
-  const [startDate, setStartDate] = useState<string>('2025-01-01');
-  const [endDate, setEndDate] = useState<string>('2025-12-31');
+  const {
+    reportYear: resolvedReportYear,
+    startDate: defaultStartDate,
+    endDate: defaultEndDate,
+  } = getReportYearDateBounds(reportYear);
+  const [startDate, setStartDate] = useState<string>(defaultStartDate);
+  const [endDate, setEndDate] = useState<string>(defaultEndDate);
   const [parameterSearch, setParameterSearch] = useState('');
   const [hoveredParamName, setHoveredParamName] = useState<string | null>(null);
   const [footerHovered, setFooterHovered] = useState(false);
@@ -128,9 +140,11 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
       setSelectedParam(null);
       setExpandedMenuItems(new Set());
       setIntervals([]);
+      setStartDate(defaultStartDate);
+      setEndDate(defaultEndDate);
       setParameterSearch('');
     }
-  }, [isOpen]);
+  }, [isOpen, defaultStartDate, defaultEndDate]);
 
   // Transform policies data, sorted by most recent
   const userPolicies = useMemo(() => {
@@ -325,13 +339,15 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
     setSelectedParam(null);
     setExpandedMenuItems(new Set());
     setIntervals([]);
+    setStartDate(defaultStartDate);
+    setEndDate(defaultEndDate);
     setParameterSearch('');
     setActiveTab('overview');
     setEditorMode('create');
     setEditingAssociationId(null);
     setIsUpdating(false);
     setIsCreationMode(true);
-  }, []);
+  }, [defaultStartDate, defaultEndDate]);
 
   // Handle opening an existing policy in the editor (display mode)
   const handleOpenInEditor = useCallback(
@@ -343,13 +359,15 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
       setSelectedParam(null);
       setExpandedMenuItems(new Set());
       setIntervals([]);
+      setStartDate(defaultStartDate);
+      setEndDate(defaultEndDate);
       setParameterSearch('');
       setActiveTab('overview');
       setEditorMode('display');
       setEditingAssociationId(policy.associationId || null);
       setIsCreationMode(true);
     },
-    []
+    [defaultStartDate, defaultEndDate]
   );
 
   // Exit editor / creation mode
@@ -530,6 +548,7 @@ export function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseMod
           localPolicy={localPolicy}
           policyLabel={policyLabel}
           policyParameters={policyParameters}
+          reportYear={resolvedReportYear}
           setPolicyParameters={setPolicyParameters}
           minDate={minDate}
           maxDate={maxDate}

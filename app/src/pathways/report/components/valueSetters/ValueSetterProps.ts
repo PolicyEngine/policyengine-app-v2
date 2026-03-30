@@ -8,6 +8,7 @@ export interface ValueSetterProps {
   maxDate: string;
   param: ParameterMetadata;
   policy: PolicyStateProps;
+  reportYear?: string;
   intervals: ValueInterval[];
   setIntervals: Dispatch<SetStateAction<ValueInterval[]>>;
   startDate: string;
