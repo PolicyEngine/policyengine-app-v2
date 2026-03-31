@@ -55,6 +55,59 @@ export interface ParameterTreeNode {
   household?: boolean;
 }
 
+// ============================================================================
+// V2 API metadata types (used by app/src/api/v2/ module)
+// ============================================================================
+
+export interface V2VariableMetadata {
+  id: string;
+  name: string;
+  label: string | null;
+  entity: string;
+  description: string;
+  data_type: string;
+  possible_values: string[] | null;
+  default_value: string | number | boolean | null;
+  adds: string[] | null;
+  subtracts: string[] | null;
+  tax_benefit_model_version_id: string;
+  created_at: string;
+}
+
+export interface V2ParameterMetadata {
+  id: string;
+  name: string;
+  label: string;
+  description: string;
+  data_type: string;
+  unit: string | null;
+  tax_benefit_model_version_id: string;
+  created_at: string;
+}
+
+export interface V2DatasetMetadata {
+  id: string;
+  name: string;
+  description: string;
+  filepath: string;
+  year: number;
+  is_output_dataset: boolean;
+  tax_benefit_model_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface V2ParameterValueMetadata {
+  id: string;
+  parameter_id: string;
+  policy_id: string | null;
+  dynamic_id: string | null;
+  start_date: string;
+  end_date: string | null;
+  value_json: number | string | boolean;
+  created_at: string;
+}
+
 export interface MetadataState {
   currentCountry: string | null;
   loading: boolean;
