@@ -201,12 +201,48 @@ describe('Report', () => {
       expect(report.isPending).toBe(true);
     });
 
+    it('given status is running then returns true', () => {
+      // Given / When
+      const report = new Report({ ...PENDING_REPORT_DATA, status: 'running' as const });
+
+      // Then
+      expect(report.isPending).toBe(true);
+    });
+
     it('given status is complete then returns false', () => {
       // Given / When
       const report = new Report(COMPLETE_REPORT_DATA);
 
       // Then
       expect(report.isPending).toBe(false);
+    });
+  });
+
+  describe('status setter', () => {
+    it('given pending then transition to running succeeds', () => {
+      const report = new Report(PENDING_REPORT_DATA);
+      report.status = 'running';
+      expect(report.status).toBe('running');
+    });
+
+    it('given running then transition to complete succeeds', () => {
+      const report = new Report({ ...PENDING_REPORT_DATA, status: 'running' as const });
+      report.status = 'complete';
+      expect(report.status).toBe('complete');
+    });
+
+    it('given complete then transition to pending throws', () => {
+      const report = new Report(COMPLETE_REPORT_DATA);
+      expect(() => {
+        report.status = 'pending';
+      }).toThrow('Invalid status transition: complete');
+    });
+
+    it('given error then transition to running throws', () => {
+      const report = new Report(ERROR_REPORT_DATA);
+      expect(() => {
+        report.status = 'running';
+      }).toThrow('Invalid status transition: error');
     });
   });
 

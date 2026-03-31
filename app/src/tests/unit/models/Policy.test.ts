@@ -35,6 +35,10 @@ describe('Policy', () => {
       expect(policy.parameters).toHaveLength(2);
     });
 
+    it('given empty id then throws', () => {
+      expect(() => new Policy(createMockPolicyData({ id: '' }))).toThrow('Policy requires an id');
+    });
+
     it('given null label then label is null', () => {
       // Given
       const data = createMockPolicyData({ label: null });
@@ -326,6 +330,52 @@ describe('Policy', () => {
       // Then
       expect(policy.isCurrentLaw).toBe(true);
       expect(policy.parameterCount).toBe(0);
+    });
+
+    it('given parameter_value with null parameter_name then falls back to parameter_id', () => {
+      // Given
+      const response = createMockV2PolicyResponse({
+        parameter_values: [
+          {
+            id: 'pv-001',
+            parameter_id: 'param-fallback-id',
+            parameter_name: null as unknown as string,
+            value_json: 42,
+            start_date: '2026-01-01',
+            end_date: null,
+            policy_id: null,
+            dynamic_id: null,
+            created_at: '2026-01-01T00:00:00Z',
+          },
+        ],
+      });
+
+      // When
+      const policy = Policy.fromV2Response(response);
+
+      // Then
+      expect(policy.parameters[0].parameterName).toBe('param-fallback-id');
+    });
+
+    it('given invalid tax_benefit_model_id then throws', () => {
+      // Given
+      const response = createMockV2PolicyResponse({
+        tax_benefit_model_id: 'invalid-country',
+      });
+
+      // When / Then
+      expect(() => Policy.fromV2Response(response)).toThrow('invalid-country');
+    });
+
+    it('given V2PolicyResponse with name null then label is null', () => {
+      // Given
+      const response = createMockV2PolicyResponse({ name: null as unknown as string });
+
+      // When
+      const policy = Policy.fromV2Response(response);
+
+      // Then
+      expect(policy.label).toBeNull();
     });
   });
 

@@ -1,51 +1,26 @@
-import type { CountryId } from "@/libs/countries";
+import { UserAssociation, type UserAssociationFields } from './UserAssociation';
 
-interface UserPolicyData {
-  id: string;
-  userId: string;
+interface UserPolicyData extends UserAssociationFields {
   policyId: string;
-  countryId: CountryId;
-  createdAt: string;
-  label: string | null;
 }
 
-export class UserPolicy {
-  readonly id: string;
-  readonly userId: string;
-  readonly policyId: string;
-  readonly countryId: CountryId;
-  readonly createdAt: string;
-
-  private _label: string | null;
-
+export class UserPolicy extends UserAssociation<UserPolicyData> {
   constructor(data: UserPolicyData) {
-    this.id = data.id;
-    this.userId = data.userId;
-    this.policyId = data.policyId;
-    this.countryId = data.countryId;
-    this.createdAt = data.createdAt;
-    this._label = data.label ?? null;
+    super({ ...data, entityId: data.policyId });
   }
 
-  get label(): string | null {
-    return this._label;
-  }
-  set label(value: string | null) {
-    this._label = value;
+  get policyId(): string {
+    return this.entityId;
   }
 
   toJSON(): UserPolicyData {
     return {
       id: this.id,
       userId: this.userId,
-      policyId: this.policyId,
+      policyId: this.entityId,
       countryId: this.countryId,
       createdAt: this.createdAt,
-      label: this._label,
+      label: this.label,
     };
-  }
-
-  isEqual(other: UserPolicy): boolean {
-    return this.id === other.id;
   }
 }

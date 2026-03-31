@@ -12,7 +12,7 @@ interface ReportData {
   status: ReportStatus;
   outputType: ReportOutputType;
   label?: string | null;
-  output?: unknown | null;
+  output?: unknown;
 }
 
 export class Report extends BaseModel<ReportData> {
@@ -24,7 +24,7 @@ export class Report extends BaseModel<ReportData> {
   private _simulationIds: string[];
   private _status: ReportStatus;
   private _label: string | null;
-  private _output: unknown | null;
+  private _output: unknown;
 
   constructor(data: ReportData) {
     super();
@@ -56,7 +56,7 @@ export class Report extends BaseModel<ReportData> {
   get label(): string | null {
     return this._label;
   }
-  get output(): unknown | null {
+  get output(): unknown {
     return this._output;
   }
 
@@ -89,6 +89,19 @@ export class Report extends BaseModel<ReportData> {
 
   set label(value: string | null) {
     this._label = value;
+  }
+
+  set status(value: ReportStatus) {
+    const valid: Record<ReportStatus, ReportStatus[]> = {
+      pending: ['running', 'complete', 'error'],
+      running: ['complete', 'error'],
+      complete: [],
+      error: [],
+    };
+    if (!valid[this._status].includes(value)) {
+      throw new Error(`Invalid status transition: ${this._status} → ${value}`);
+    }
+    this._status = value;
   }
 
   // --- Serialization ---

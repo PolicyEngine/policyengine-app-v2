@@ -357,6 +357,48 @@ describe('Simulation', () => {
         sim.status = 'pending';
       }).toThrow('Invalid status transition: error');
     });
+
+    it('given running status then transition to pending throws', () => {
+      const sim = new Simulation(RUNNING_SIMULATION_DATA);
+      expect(() => {
+        sim.status = 'pending';
+      }).toThrow('Invalid status transition: running');
+    });
+
+    it('given pending status then self-transition throws', () => {
+      const sim = new Simulation(PENDING_SIMULATION_DATA);
+      expect(() => {
+        sim.status = 'pending';
+      }).toThrow('Invalid status transition: pending');
+    });
+
+    it('given complete status then self-transition throws', () => {
+      const sim = new Simulation(COMPLETE_SIMULATION_DATA);
+      expect(() => {
+        sim.status = 'complete';
+      }).toThrow('Invalid status transition: complete');
+    });
+
+    it('given error status then self-transition throws', () => {
+      const sim = new Simulation(ERROR_SIMULATION_DATA);
+      expect(() => {
+        sim.status = 'error';
+      }).toThrow('Invalid status transition: error');
+    });
+
+    it('given complete status then transition to error throws', () => {
+      const sim = new Simulation(COMPLETE_SIMULATION_DATA);
+      expect(() => {
+        sim.status = 'error';
+      }).toThrow('Invalid status transition: complete');
+    });
+
+    it('given error status then transition to complete throws', () => {
+      const sim = new Simulation(ERROR_SIMULATION_DATA);
+      expect(() => {
+        sim.status = 'complete';
+      }).toThrow('Invalid status transition: error');
+    });
   });
 
   describe('toJSON', () => {

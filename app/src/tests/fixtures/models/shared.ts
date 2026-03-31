@@ -91,6 +91,7 @@ export const createMockCurrentLawPolicyData = (
 export interface HouseholdDataShape {
   id: string;
   countryId: CountryId;
+  year: number | null;
   label: string | null;
   data: Record<string, unknown>;
 }
@@ -100,6 +101,7 @@ export const createMockHouseholdData = (
 ): HouseholdDataShape => ({
   id: TEST_HOUSEHOLD_ID,
   countryId: TEST_COUNTRY_ID,
+  year: 2026,
   label: TEST_HOUSEHOLD_LABEL,
   data: {
     people: {
@@ -225,6 +227,7 @@ export const BASELINE_SIMULATION_DATA = {
   status: 'pending' as const,
   label: null,
   isCreated: true,
+  output: undefined as unknown | undefined,
 };
 
 export const REFORM_SIMULATION_DATA = {

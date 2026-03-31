@@ -354,16 +354,16 @@ describe('Household', () => {
       expect(householdA.isEqual(householdB)).toBe(false);
     });
 
-    it('given same id but different label then returns true', () => {
+    it('given same id but different label then returns false', () => {
       // Given
       const householdA = new Household(createMockHouseholdData());
       const householdB = new Household(createMockHouseholdData({ label: 'Different label' }));
 
       // When / Then
-      expect(householdA.isEqual(householdB)).toBe(true);
+      expect(householdA.isEqual(householdB)).toBe(false);
     });
 
-    it('given same id but different data then returns true', () => {
+    it('given same id but different data then returns false', () => {
       // Given
       const householdA = new Household(createMockHouseholdData());
       const householdB = new Household(
@@ -371,7 +371,7 @@ describe('Household', () => {
       );
 
       // When / Then
-      expect(householdA.isEqual(householdB)).toBe(true);
+      expect(householdA.isEqual(householdB)).toBe(false);
     });
   });
 });

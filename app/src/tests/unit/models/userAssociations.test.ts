@@ -11,7 +11,7 @@ const TEST_COUNTRY_ID = 'us' as const;
 const TEST_CREATED_AT = '2026-01-15T12:00:00Z';
 
 describe('UserPolicy', () => {
-  const buildPolicy = (overrides?: Partial<Parameters<typeof UserPolicy>[0]>) =>
+  const buildPolicy = (overrides?: Partial<ConstructorParameters<typeof UserPolicy>[0]>) =>
     new UserPolicy({
       id: TEST_ID,
       userId: TEST_USER_ID,
@@ -83,7 +83,7 @@ describe('UserPolicy', () => {
 });
 
 describe('UserSimulation', () => {
-  const buildSimulation = (overrides?: Partial<Parameters<typeof UserSimulation>[0]>) =>
+  const buildSimulation = (overrides?: Partial<ConstructorParameters<typeof UserSimulation>[0]>) =>
     new UserSimulation({
       id: TEST_ID,
       userId: TEST_USER_ID,
@@ -155,7 +155,7 @@ describe('UserSimulation', () => {
 });
 
 describe('UserReport', () => {
-  const buildReport = (overrides?: Partial<Parameters<typeof UserReport>[0]>) =>
+  const buildReport = (overrides?: Partial<ConstructorParameters<typeof UserReport>[0]>) =>
     new UserReport({
       id: TEST_ID,
       userId: TEST_USER_ID,
@@ -228,7 +228,7 @@ describe('UserReport', () => {
 
 describe('UserHouseholdPopulation', () => {
   const buildHouseholdPopulation = (
-    overrides?: Partial<Parameters<typeof UserHouseholdPopulation>[0]>
+    overrides?: Partial<ConstructorParameters<typeof UserHouseholdPopulation>[0]>
   ) =>
     new UserHouseholdPopulation({
       id: TEST_ID,

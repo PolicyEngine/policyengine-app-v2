@@ -1,6 +1,6 @@
-import type { CountryId } from "@/libs/countries";
-import type { V2PolicyResponse } from "@/api/policy";
-import { BaseModel } from "./BaseModel";
+import type { V2PolicyResponse } from '@/api/policy';
+import { countryIds, type CountryId } from '@/libs/countries';
+import { BaseModel } from './BaseModel';
 
 interface PolicyParameter {
   parameterName: string;
@@ -30,12 +30,15 @@ export class Policy extends BaseModel<PolicyData> {
 
   constructor(data: PolicyData) {
     super();
+    if (!data.id) {
+      throw new Error('Policy requires an id');
+    }
     this.id = data.id;
     this.countryId = data.countryId;
     this.apiVersion = data.apiVersion;
     this.isCreated = data.isCreated;
     this._label = data.label;
-    this._parameters = [...data.parameters];
+    this._parameters = data.parameters.map((p) => ({ ...p }));
   }
 
   // --- Getters ---
@@ -73,9 +76,15 @@ export class Policy extends BaseModel<PolicyData> {
    * Create from v2 API response.
    */
   static fromV2Response(response: V2PolicyResponse): Policy {
-    const parameters: PolicyParameter[] = (
-      response.parameter_values ?? []
-    ).map((pv) => ({
+    const modelId = response.tax_benefit_model_id;
+    if (!countryIds.includes(modelId as CountryId)) {
+      throw new Error(
+        `Unknown tax_benefit_model_id "${modelId}". Expected one of: ${countryIds.join(', ')}`
+      );
+    }
+    const countryId = modelId as CountryId;
+
+    const parameters: PolicyParameter[] = (response.parameter_values ?? []).map((pv) => ({
       parameterName: pv.parameter_name ?? pv.parameter_id,
       parameterId: pv.parameter_id,
       value: pv.value_json,
@@ -85,9 +94,9 @@ export class Policy extends BaseModel<PolicyData> {
 
     return new Policy({
       id: response.id,
-      countryId: response.tax_benefit_model_id as unknown as CountryId,
+      countryId,
       label: response.name ?? null,
-      apiVersion: "v2",
+      apiVersion: 'v2',
       isCreated: true,
       parameters,
     });
@@ -102,7 +111,7 @@ export class Policy extends BaseModel<PolicyData> {
       label: this._label,
       apiVersion: this.apiVersion,
       isCreated: this.isCreated,
-      parameters: [...this._parameters],
+      parameters: this._parameters.map((p) => ({ ...p })),
     };
   }
 
@@ -110,7 +119,7 @@ export class Policy extends BaseModel<PolicyData> {
     return (
       this.id === other.id &&
       this._label === other._label &&
-      this._parameters.length === other._parameters.length
+      JSON.stringify(this._parameters) === JSON.stringify(other._parameters)
     );
   }
 }
