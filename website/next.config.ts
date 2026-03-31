@@ -41,6 +41,8 @@ const nextConfig: NextConfig = {
         // Household API docs (Vercel) — beforeFiles so it intercepts before Next.js trailing slash redirect
         { source: "/us/api", destination: "https://household-api-docs-policy-engine.vercel.app/us/api/" },
         { source: "/us/api/:path*", destination: "https://household-api-docs-policy-engine.vercel.app/us/api/:path*" },
+        // PE-84 April Fools 2026 (Vercel)
+        { source: "/pe84", destination: "https://april-fools-2026-two.vercel.app/calculator" },
       ],
       // afterFiles: checked after pages/public files but before dynamic routes.
       afterFiles: [
