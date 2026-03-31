@@ -45,6 +45,11 @@ function optimisedSrc(src: string, width?: number, quality = 80): string {
     return src;
   }
 
+  // Skip _next/static paths — already optimized at build time by Next.js
+  if (src.startsWith('/_next/')) {
+    return src;
+  }
+
   // Skip in dev — Vercel image API isn't available locally
   if (process.env.NODE_ENV === 'development') {
     return src;
