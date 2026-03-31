@@ -495,6 +495,7 @@ export default function ApiStatusClient() {
     return (
       <div
         style={{
+          flex: 1,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -512,6 +513,7 @@ export default function ApiStatusClient() {
     return (
       <div
         style={{
+          flex: 1,
           backgroundColor: colors.background.tertiary,
           padding: spacing["4xl"],
           paddingLeft: "6.125%",
@@ -533,6 +535,7 @@ export default function ApiStatusClient() {
   return (
     <div
       style={{
+        flex: 1,
         backgroundColor: colors.background.tertiary,
         paddingTop: spacing["4xl"],
         paddingBottom: spacing["4xl"],

@@ -74,6 +74,7 @@ export default async function DevToolsPage({
         minHeight: `calc(100vh - ${spacing.layout.header})`,
         display: "flex",
         flexDirection: "column",
+        backgroundColor: colors.background.tertiary,
       }}
     >
       <HeroSection
