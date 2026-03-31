@@ -3,7 +3,6 @@
 import { use } from "react";
 import StandardLayout from "@/components/StandardLayout";
 import ModifyReportPage from "@/pages/reportBuilder/ModifyReportPage";
-import { CalculatorProviders } from "../../../providers";
 
 export default function ModifyReportRoute({
   params,
@@ -13,10 +12,8 @@ export default function ModifyReportRoute({
   const { userReportId } = use(params);
 
   return (
-    <CalculatorProviders>
-      <StandardLayout>
-        <ModifyReportPage userReportId={userReportId} />
-      </StandardLayout>
-    </CalculatorProviders>
+    <StandardLayout>
+      <ModifyReportPage userReportId={userReportId} />
+    </StandardLayout>
   );
 }
