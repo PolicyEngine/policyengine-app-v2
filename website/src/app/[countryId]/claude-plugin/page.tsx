@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import ClaudePluginClient from "./ClaudePluginClient";
 
 export const metadata: Metadata = {
-  title: "Claude plugin",
-  description: "AI-powered policy analysis with Claude Code and PolicyEngine.",
+  title: "PolicyEngine AI skills",
+  description:
+    "AI-powered policy analysis with PolicyEngine skills for Claude Code and Codex.",
 };
 
 export default async function ClaudePluginPage({

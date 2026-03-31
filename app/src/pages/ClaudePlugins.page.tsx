@@ -283,10 +283,10 @@ const ukMicrosimFeatures: MicrosimFeature[] = [
 ];
 
 const stats = [
-  { value: '24', label: 'Skills' },
-  { value: '21', label: 'Agents' },
-  { value: '4', label: 'Commands' },
-  { value: '7', label: 'Bundles' },
+  { value: '49', label: 'Skills' },
+  { value: '42', label: 'Agents' },
+  { value: '15', label: 'Commands' },
+  { value: '9', label: 'Bundles' },
 ];
 
 /* ─── shared section padding ─── */
@@ -311,7 +311,7 @@ export default function ClaudePluginsPage() {
     : 'What is the budgetary impact of doubling the standard deduction?';
 
   return (
-    <StaticPageLayout title="Claude Plugins">
+    <StaticPageLayout title="PolicyEngine AI Skills">
       {/* ━━━ HERO ━━━ */}
       <div
         style={{
@@ -347,7 +347,7 @@ export default function ClaudePluginsPage() {
                     marginBottom: 20,
                   }}
                 >
-                  Claude Code Plugin
+                  AI skills for Claude & Codex
                 </span>
               </FadeInSection>
 
@@ -378,32 +378,92 @@ export default function ClaudePluginsPage() {
                     marginBottom: 28,
                   }}
                 >
+                  Use the Claude wrapper in Claude Code or install the source skills repo in Codex.
                   Run microsimulations, model reforms, analyze distributional impacts, and build
-                  dashboards — all from your terminal.
+                  dashboards from your terminal.
                 </p>
               </FadeInSection>
 
               <FadeInSection delay={240}>
-                <a
-                  href="https://github.com/PolicyEngine/policyengine-claude"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <div
                   style={{
-                    display: 'inline-block',
-                    backgroundColor: colors.primary[500],
-                    color: colors.white,
-                    fontFamily: typography.fontFamily.primary,
-                    fontWeight: typography.fontWeight.semibold,
-                    fontSize: typography.fontSize.sm,
-                    border: 'none',
-                    borderRadius: spacing.sm,
-                    padding: '11px 28px',
-                    textDecoration: 'none',
-                    transition: 'all 0.2s ease',
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: spacing.sm,
+                    alignItems: 'center',
                   }}
                 >
-                  View on GitHub
-                </a>
+                  <a
+                    href="https://github.com/PolicyEngine/policyengine-claude"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: 'inline-block',
+                      backgroundColor: colors.primary[500],
+                      color: colors.white,
+                      fontFamily: typography.fontFamily.primary,
+                      fontWeight: typography.fontWeight.semibold,
+                      fontSize: typography.fontSize.sm,
+                      border: 'none',
+                      borderRadius: spacing.sm,
+                      padding: '11px 28px',
+                      textDecoration: 'none',
+                      transition: 'all 0.2s ease',
+                    }}
+                  >
+                    Claude install
+                  </a>
+                  <a
+                    href="https://github.com/PolicyEngine/policyengine-skills"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: 'inline-block',
+                      backgroundColor: colors.white,
+                      color: colors.primary[500],
+                      fontFamily: typography.fontFamily.primary,
+                      fontWeight: typography.fontWeight.semibold,
+                      fontSize: typography.fontSize.sm,
+                      border: `1px solid ${colors.primary[200]}`,
+                      borderRadius: spacing.sm,
+                      padding: '11px 28px',
+                      textDecoration: 'none',
+                      transition: 'all 0.2s ease',
+                    }}
+                  >
+                    Source skills repo
+                  </a>
+                </div>
+                <p
+                  style={{
+                    color: colors.text.tertiary,
+                    fontSize: typography.fontSize.sm,
+                    lineHeight: typography.lineHeight.normal,
+                    fontFamily: typography.fontFamily.body,
+                    maxWidth: 460,
+                    marginTop: spacing.md,
+                    marginBottom: 0,
+                  }}
+                >
+                  <a
+                    href="https://github.com/PolicyEngine/policyengine-skills"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: colors.primary[500], textDecoration: 'none' }}
+                  >
+                    policyengine-skills
+                  </a>{' '}
+                  is the source of truth.{' '}
+                  <a
+                    href="https://github.com/PolicyEngine/policyengine-claude"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: colors.primary[500], textDecoration: 'none' }}
+                  >
+                    policyengine-claude
+                  </a>{' '}
+                  is the generated Claude install wrapper.
+                </p>
               </FadeInSection>
             </div>
 
@@ -437,16 +497,24 @@ export default function ClaudePluginsPage() {
                 <div style={{ marginBottom: 14 }}>
                   <WindowDots size={11} />
                 </div>
-                <TerminalLine type="comment" text="# 1. Install Claude Code" />
-                <TerminalLine type="command" text="npm install -g @anthropic-ai/claude-code" />
+                <TerminalLine type="comment" text="# Claude Code" />
+                <TerminalLine
+                  type="prompt"
+                  text="/plugin marketplace add PolicyEngine/policyengine-claude"
+                />
+                <TerminalLine type="prompt" text="/plugin install complete@policyengine-claude" />
                 <div style={{ marginTop: 6 }} />
-                <TerminalLine type="comment" text="# 2. Add the plugin" />
+                <TerminalLine type="comment" text="# Codex" />
                 <TerminalLine
                   type="command"
-                  text="claude plugins add PolicyEngine/policyengine-claude"
+                  text="git clone https://github.com/PolicyEngine/policyengine-skills.git"
+                />
+                <TerminalLine
+                  type="command"
+                  text="cd policyengine-skills && ./scripts/install_codex.sh"
                 />
                 <div style={{ marginTop: 6 }} />
-                <TerminalLine type="comment" text="# 3. Analyze" />
+                <TerminalLine type="comment" text="# Analyze" />
                 <TerminalLine type="prompt" text={heroPrompt} />
               </div>
             </FadeInSection>
@@ -566,8 +634,8 @@ export default function ClaudePluginsPage() {
                 marginBottom: spacing.xl,
               }}
             >
-              Watch how the plugin examines the impact of TANF on a household in LA County — from a
-              plain-English prompt to a full household-level analysis.
+              Watch how the PolicyEngine AI workflow examines the impact of TANF on a household in
+              LA County — from a plain-English prompt to a full household-level analysis.
             </p>
             <div style={{ maxWidth: 800 }}>
               <div
@@ -648,9 +716,10 @@ export default function ClaudePluginsPage() {
                 marginBottom: spacing['3xl'],
               }}
             >
-              The analysis-tools plugin turns Claude into a microsimulation analyst. Point it at any
-              tax or benefit reform and it runs full population analysis using PolicyEngine&apos;s
-              weighted survey data.
+              The analysis-tools Claude bundle turns Claude into a microsimulation analyst, and the
+              same underlying skills can be installed in Codex. Point either setup at any tax or
+              benefit reform and it runs full population analysis using PolicyEngine&apos;s weighted
+              survey data.
             </p>
           </FadeInSection>
 

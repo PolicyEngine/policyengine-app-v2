@@ -44,7 +44,7 @@ These limitations reveal where human judgement remains essential. When policy in
 
 We're working to address these limitations through improved agent configurations and leveraging Anthropic's recently launched [Skills](https://www.anthropic.com/news/skills) and [plugin ecosystem](https://www.anthropic.com/news/claude-code-plugins). Skills allow us to package specific PolicyEngine expertise—like properly structuring benefit programme interactions or applying our methodological standards—into reusable components that Claude Code loads when needed.
 
-We're packaging these insights into the [policyengine-claude plugin](https://github.com/PolicyEngine/policyengine-mcp), which enables other researchers to use Claude Code with PolicyEngine more effectively. The plugin includes specialised agents, pre-configured skills for common policy analyses, and direct database access through the Model Context Protocol.
+We're packaging these insights into the shared [policyengine-skills repository](https://github.com/PolicyEngine/policyengine-skills) and the generated [policyengine-claude wrapper](https://github.com/PolicyEngine/policyengine-claude), which let researchers use PolicyEngine with Claude Code today and install the same underlying skills in Codex. The Claude wrapper includes specialised agents and pre-configured bundles for common policy analyses.
 
 We'll demonstrate this workflow at our [PolicyEngine 2.0 event](https://www.eventbrite.co.uk/e/policyengine-20-and-the-future-of-public-policy-analysis-tickets-1673065246189?aff=oddtdtcreator) on 3 November in London, where we'll show how these tools work together for real policy analysis. If you're interested in seeing multi-agent workflows in action for policy research, we'd encourage you to attend.
 
