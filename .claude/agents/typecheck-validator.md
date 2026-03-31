@@ -2,6 +2,7 @@
 name: typecheck-validator
 description: Run TypeScript type checking via the Makefile, automatically fix any errors, and iterate until clean
 tools: Bash, Read, Edit, Glob, Grep
+allowedTools: Bash, Read, Edit, Glob, Grep
 model: sonnet
 ---
 

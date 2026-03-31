@@ -2,6 +2,7 @@
 name: lint-format-validator
 description: Run ESLint then Prettier via the Makefile, automatically fix any failures, and iterate until both pass cleanly
 tools: Bash, Read, Edit, Glob, Grep
+allowedTools: Bash, Read, Edit, Glob, Grep
 model: sonnet
 ---
 
