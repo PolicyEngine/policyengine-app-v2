@@ -28,6 +28,7 @@ interface NavItemSetup {
   href?: string;
   hasDropdown: boolean;
   dropdownItems?: DropdownItem[];
+  external?: boolean;
 }
 
 const COUNTRIES = [
@@ -230,6 +231,14 @@ function NavItem({ setup }: { setup: NavItemSetup }) {
   }
 
   if (href) {
+    // External rewrite routes (Model, API) use <a> to avoid Next.js RSC prefetch 404s
+    if (setup.external) {
+      return (
+        <a href={href} style={navItemStyle} {...hoverHandlers}>
+          {label}
+        </a>
+      );
+    }
     return (
       <Link href={href} style={navItemStyle} {...hoverHandlers}>
         {label}
@@ -575,8 +584,8 @@ export default function Header() {
 
   const navItems: NavItemSetup[] = [
     { label: "Research", href: `/${countryId}/research`, hasDropdown: false },
-    { label: "Model", href: `/${countryId}/model`, hasDropdown: false },
-    { label: "API", href: `/${countryId}/api`, hasDropdown: false },
+    { label: "Model", href: `/${countryId}/model`, hasDropdown: false, external: true },
+    { label: "API", href: `/${countryId}/api`, hasDropdown: false, external: true },
     {
       label: "About",
       hasDropdown: true,
