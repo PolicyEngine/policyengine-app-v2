@@ -149,7 +149,6 @@
       "source": "/uk/api/:path*",
       "destination": "https://household-api-docs-policy-engine.vercel.app/uk/api/:path*"
     },
-    { "source": "/api/:path*", "destination": "/api/:path*" },
     { "source": "/(.*)", "destination": "/website.html" }
   ],
   "headers": [

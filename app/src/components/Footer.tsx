@@ -19,7 +19,6 @@ const PolicyEngineLogo = '/assets/logos/policyengine/white.svg';
 const getContactLinks = (countryId: CountryId) => ({
   about: `/${countryId}/team`,
   donate: `/${countryId}/donate`,
-  devTools: `/${countryId}/dev-tools`,
   privacy: `/${countryId}/privacy`,
   terms: `/${countryId}/terms`,
 });
@@ -64,7 +63,6 @@ export default function Footer() {
               {[
                 { href: CONTACT_LINKS.about, text: 'About us' },
                 { href: CONTACT_LINKS.donate, text: 'Donate' },
-                { href: CONTACT_LINKS.devTools, text: 'Developer tools' },
                 { href: CONTACT_LINKS.privacy, text: 'Privacy policy' },
                 { href: CONTACT_LINKS.terms, text: 'Terms and conditions' },
               ].map(({ href, text }) => (
