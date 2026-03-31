@@ -77,9 +77,9 @@ export interface V2VariableMetadata {
 export interface V2ParameterMetadata {
   id: string;
   name: string;
-  label: string;
-  description: string;
-  data_type: string;
+  label: string | null;
+  description: string | null;
+  data_type: string | null;
   unit: string | null;
   tax_benefit_model_version_id: string;
   created_at: string;
@@ -104,7 +104,7 @@ export interface V2ParameterValueMetadata {
   dynamic_id: string | null;
   start_date: string;
   end_date: string | null;
-  value_json: number | string | boolean;
+  value_json: number | string | boolean | Record<string, unknown>;
   created_at: string;
 }
 

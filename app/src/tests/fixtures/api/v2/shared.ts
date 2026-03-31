@@ -33,10 +33,13 @@ export const TEST_COUNTRY_ID = 'us';
 // Fetch mock helpers
 // ============================================================================
 
+const JSON_HEADERS = { get: (key: string) => (key === 'content-type' ? 'application/json' : null) };
+
 export function mockFetchSuccess(data: unknown) {
   return vi.fn().mockResolvedValue({
     ok: true,
     status: 200,
+    headers: JSON_HEADERS,
     json: vi.fn().mockResolvedValue(data),
     text: vi.fn().mockResolvedValue(JSON.stringify(data)),
   });
@@ -46,6 +49,7 @@ export function mockFetchError(status: number, message: string) {
   return vi.fn().mockResolvedValue({
     ok: false,
     status,
+    headers: JSON_HEADERS,
     json: vi.fn().mockResolvedValue({ error: message }),
     text: vi.fn().mockResolvedValue(message),
   });
@@ -55,6 +59,7 @@ export function mockFetch404() {
   return vi.fn().mockResolvedValue({
     ok: false,
     status: 404,
+    headers: JSON_HEADERS,
     json: vi.fn().mockResolvedValue({ error: 'Not found' }),
     text: vi.fn().mockResolvedValue('Not found'),
   });
@@ -68,6 +73,7 @@ export function mockFetchSequence(
     fn.mockResolvedValueOnce({
       ok: resp.ok,
       status: resp.status,
+      headers: JSON_HEADERS,
       json: vi.fn().mockResolvedValue(resp.data),
       text: vi.fn().mockResolvedValue(JSON.stringify(resp.data)),
     });

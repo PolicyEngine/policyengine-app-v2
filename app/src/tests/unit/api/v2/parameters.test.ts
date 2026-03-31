@@ -37,7 +37,7 @@ describe('parameters API', () => {
       vi.stubGlobal('fetch', mockFetchError(500, 'Server error'));
 
       // When / Then
-      await expect(fetchParameters('us')).rejects.toThrow('Failed to fetch parameters for us');
+      await expect(fetchParameters('us')).rejects.toThrow('fetchParameters(us): 500 Server error');
     });
   });
 });
@@ -82,7 +82,7 @@ describe('parameterValues API', () => {
 
       // When / Then
       await expect(fetchParameterValues(TEST_IDS.PARAMETER_ID, TEST_IDS.POLICY_ID)).rejects.toThrow(
-        `Failed to fetch parameter values for parameter ${TEST_IDS.PARAMETER_ID} with policy ${TEST_IDS.POLICY_ID}`
+        `fetchParameterValues(${TEST_IDS.PARAMETER_ID}, ${TEST_IDS.POLICY_ID}): 500 Server error`
       );
     });
   });
@@ -117,7 +117,7 @@ describe('parameterTree API', () => {
 
       // When / Then
       await expect(fetchParameterChildren('gov.irs', 'us')).rejects.toThrow(
-        'Failed to fetch parameter children for path "gov.irs"'
+        'fetchParameterChildren("gov.irs", us): 500 Server error'
       );
     });
   });
@@ -167,7 +167,7 @@ describe('parameterTree API', () => {
 
       // When / Then
       await expect(fetchParametersByName(['gov.irs.credits.ctc.amount'], 'us')).rejects.toThrow(
-        'Failed to fetch parameters by name'
+        'fetchParametersByName(us): 500 Server error'
       );
     });
   });

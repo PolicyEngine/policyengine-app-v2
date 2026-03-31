@@ -139,6 +139,9 @@ export function extractUniqueIds<T extends { [key: string]: any }>(
  */
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export function isV2EntityId(id: string): boolean {
+  if (typeof id !== 'string' || !id) {
+    return false;
+  }
   return UUID_RE.test(id);
 }
 

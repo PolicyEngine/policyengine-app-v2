@@ -6,6 +6,7 @@
  */
 
 import { API_V2_BASE_URL } from './taxBenefitModels';
+import { v2Fetch } from './v2Fetch';
 
 // ---------------------------------------------------------------------------
 // Types (matching API response schema)
@@ -52,13 +53,10 @@ export async function fetchParameterChildren(
     parent_path: parentPath,
   });
 
-  const res = await fetch(`${API_V2_BASE_URL}/parameters/children?${params}`);
-
-  if (!res.ok) {
-    throw new Error(`Failed to fetch parameter children for path "${parentPath}"`);
-  }
-
-  return res.json();
+  return v2Fetch<ParameterChildrenResponse>(
+    `${API_V2_BASE_URL}/parameters/children?${params}`,
+    `fetchParameterChildren("${parentPath}", ${countryId})`
+  );
 }
 
 /**
@@ -72,15 +70,13 @@ export async function fetchParametersByName(
     return [];
   }
 
-  const res = await fetch(`${API_V2_BASE_URL}/parameters/by-name`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ names, country_id: countryId }),
-  });
-
-  if (!res.ok) {
-    throw new Error(`Failed to fetch parameters by name`);
-  }
-
-  return res.json();
+  return v2Fetch<V2ParameterData[]>(
+    `${API_V2_BASE_URL}/parameters/by-name`,
+    `fetchParametersByName(${countryId})`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ names, country_id: countryId }),
+    }
+  );
 }

@@ -1,5 +1,6 @@
 import type { V2ParameterValueMetadata } from '@/types/metadata';
 import { API_V2_BASE_URL } from './taxBenefitModels';
+import { v2Fetch } from './v2Fetch';
 
 /**
  * Special constant to indicate baseline (current law) values.
@@ -31,13 +32,8 @@ export async function fetchParameterValues(
     params.set('policy_id', policyId);
   }
 
-  const res = await fetch(`${API_V2_BASE_URL}/parameter-values/?${params.toString()}`);
-
-  if (!res.ok) {
-    throw new Error(
-      `Failed to fetch parameter values for parameter ${parameterId} with policy ${policyId}`
-    );
-  }
-
-  return res.json();
+  return v2Fetch<V2ParameterValueMetadata[]>(
+    `${API_V2_BASE_URL}/parameter-values/?${params.toString()}`,
+    `fetchParameterValues(${parameterId}, ${policyId})`
+  );
 }

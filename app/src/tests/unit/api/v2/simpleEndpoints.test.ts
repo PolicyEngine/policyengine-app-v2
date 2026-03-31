@@ -42,7 +42,7 @@ describe('fetchVariables', () => {
     vi.stubGlobal('fetch', mockFetchError(500, 'Server error'));
 
     // When / Then
-    await expect(fetchVariables('uk')).rejects.toThrow('Failed to fetch variables for uk');
+    await expect(fetchVariables('uk')).rejects.toThrow('fetchVariables(uk): 500 Server error');
   });
 });
 
@@ -69,7 +69,7 @@ describe('fetchDatasets', () => {
     vi.stubGlobal('fetch', mockFetchError(500, 'Server error'));
 
     // When / Then
-    await expect(fetchDatasets('us')).rejects.toThrow('Failed to fetch datasets for us');
+    await expect(fetchDatasets('us')).rejects.toThrow('fetchDatasets(us): 500 Server error');
   });
 });
 
@@ -114,7 +114,7 @@ describe('fetchRegions', () => {
     vi.stubGlobal('fetch', mockFetchError(500, 'Server error'));
 
     // When / Then
-    await expect(fetchRegions('us')).rejects.toThrow('Failed to fetch regions for us');
+    await expect(fetchRegions('us')).rejects.toThrow('fetchRegions(us): 500 Server error');
   });
 });
 
@@ -194,7 +194,9 @@ describe('fetchAnalysisOptions', () => {
     vi.stubGlobal('fetch', mockFetchError(500, 'Server error'));
 
     // When / Then
-    await expect(fetchAnalysisOptions('us')).rejects.toThrow('Failed to fetch analysis options');
+    await expect(fetchAnalysisOptions('us')).rejects.toThrow(
+      'fetchAnalysisOptions: 500 Server error'
+    );
   });
 });
 
@@ -224,7 +226,7 @@ describe('fetchReportFull', () => {
 
     // When / Then
     await expect(fetchReportFull(TEST_IDS.REPORT_ID)).rejects.toThrow(
-      `Failed to fetch full report ${TEST_IDS.REPORT_ID}: 500`
+      `fetchReportFull(${TEST_IDS.REPORT_ID}): 500 Server error`
     );
   });
 });

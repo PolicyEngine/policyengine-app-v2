@@ -9,6 +9,7 @@
 
 import type { CountryId } from '@/libs/countries';
 import { API_V2_BASE_URL } from './taxBenefitModels';
+import { cancellableSleep, v2Fetch } from './v2Fetch';
 
 /**
  * V2-specific flat household shape used by calculation endpoints.
@@ -116,7 +117,7 @@ export async function createHouseholdCalculationJobV2(
 ): Promise<HouseholdJobResponse> {
   const url = `${API_V2_BASE_URL}/household/calculate`;
 
-  const res = await fetch(url, {
+  return v2Fetch<HouseholdJobResponse>(url, 'createHouseholdCalculationJobV2', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -124,57 +125,63 @@ export async function createHouseholdCalculationJobV2(
     },
     body: JSON.stringify(payload),
   });
-
-  if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`Failed to create calculation job: ${res.status} ${errorText}`);
-  }
-
-  return res.json();
 }
 
 /**
- * Get the status and result of a household calculation job
+ * Get the status and result of a household calculation job.
+ * Throws with status code in message on any error (including 404).
  */
 export async function getHouseholdCalculationJobStatusV2(
   jobId: string
 ): Promise<HouseholdJobStatusResponse> {
   const url = `${API_V2_BASE_URL}/household/calculate/${jobId}`;
 
-  const res = await fetch(url, {
+  return v2Fetch<HouseholdJobStatusResponse>(url, `getHouseholdCalculationJobStatusV2(${jobId})`, {
     method: 'GET',
     headers: {
       Accept: 'application/json',
     },
   });
-
-  if (!res.ok) {
-    if (res.status === 404) {
-      throw new Error(`Calculation job ${jobId} not found`);
-    }
-    const errorText = await res.text();
-    throw new Error(`Failed to get job status: ${res.status} ${errorText}`);
-  }
-
-  return res.json();
 }
 
 /**
- * Poll for calculation job completion with timeout
+ * Poll for calculation job completion with timeout.
+ * Supports AbortSignal for cancellation and retries transient errors up to 3 times.
  */
 export async function pollHouseholdCalculationJobV2(
   jobId: string,
   options: {
     pollIntervalMs?: number;
     timeoutMs?: number;
+    signal?: AbortSignal;
   } = {}
 ): Promise<HouseholdCalculationResult> {
-  const { pollIntervalMs = 1000, timeoutMs = 240000 } = options;
+  const { pollIntervalMs = 1000, timeoutMs = 240000, signal } = options;
+  const maxTransientRetries = 3;
 
   const startTime = Date.now();
+  let consecutiveErrors = 0;
 
   while (Date.now() - startTime < timeoutMs) {
-    const status = await getHouseholdCalculationJobStatusV2(jobId);
+    let status: HouseholdJobStatusResponse;
+    try {
+      status = await getHouseholdCalculationJobStatusV2(jobId);
+      consecutiveErrors = 0;
+    } catch (error) {
+      if (signal?.aborted) {
+        throw error;
+      }
+      consecutiveErrors++;
+      if (consecutiveErrors > maxTransientRetries) {
+        throw error;
+      }
+      console.warn(
+        `[v2 API] Transient error polling job ${jobId} (attempt ${consecutiveErrors}/${maxTransientRetries}):`,
+        error
+      );
+      await cancellableSleep(pollIntervalMs, signal);
+      continue;
+    }
 
     if (status.status === 'COMPLETED') {
       if (!status.result) {
@@ -187,11 +194,10 @@ export async function pollHouseholdCalculationJobV2(
       throw new Error(status.error_message || 'Calculation failed');
     }
 
-    // Wait before polling again
-    await new Promise((resolve) => setTimeout(resolve, pollIntervalMs));
+    await cancellableSleep(pollIntervalMs, signal);
   }
 
-  throw new Error('Calculation timed out after 4 minutes');
+  throw new Error(`Calculation job ${jobId} timed out after ${timeoutMs / 1000}s`);
 }
 
 /**
@@ -226,6 +232,7 @@ export async function calculateHouseholdV2Alpha(
   options: {
     pollIntervalMs?: number;
     timeoutMs?: number;
+    signal?: AbortSignal;
   } = {}
 ): Promise<V2HouseholdShape> {
   // Convert to calculation payload format (arrays)

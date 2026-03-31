@@ -1,4 +1,5 @@
 import { API_V2_BASE_URL } from './taxBenefitModels';
+import { v2Fetch } from './v2Fetch';
 
 /**
  * V2 API Region response type
@@ -36,17 +37,14 @@ export async function fetchRegions(
     url += `&region_type=${encodeURIComponent(regionType)}`;
   }
 
-  const res = await fetch(url);
-
-  if (!res.ok) {
-    throw new Error(`Failed to fetch regions for ${countryId}`);
-  }
-
-  return res.json();
+  return v2Fetch<V2RegionMetadata[]>(url, `fetchRegions(${countryId})`);
 }
 
 /**
- * Fetch a specific region by code
+ * Fetch a specific region by code.
+ *
+ * Uses manual fetch because 404 must throw a domain-specific message
+ * ("Region not found: ...") rather than the generic v2Fetch error.
  *
  * @param countryId - Country ID (e.g., 'us', 'uk')
  * @param regionCode - Region code (e.g., 'state/ca', 'us')
@@ -63,7 +61,10 @@ export async function fetchRegionByCode(
     if (res.status === 404) {
       throw new Error(`Region not found: ${regionCode}`);
     }
-    throw new Error(`Failed to fetch region ${regionCode} for ${countryId}`);
+    const errorText = await res.text().catch(() => '');
+    throw new Error(
+      `Failed to fetch region ${regionCode} for ${countryId}: ${res.status} ${errorText}`
+    );
   }
 
   return res.json();

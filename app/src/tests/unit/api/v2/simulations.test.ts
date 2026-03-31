@@ -208,7 +208,7 @@ describe('simulations v2 API', () => {
 
       // When / Then
       await expect(createHouseholdSimulation(request)).rejects.toThrow(
-        'Failed to create household simulation: 500'
+        'createHouseholdSimulation: 500 Internal Server Error'
       );
     });
   });
@@ -243,7 +243,7 @@ describe('simulations v2 API', () => {
 
       // When / Then
       await expect(getHouseholdSimulation(TEST_IDS.SIMULATION_ID)).rejects.toThrow(
-        `Household simulation ${TEST_IDS.SIMULATION_ID} not found`
+        `getHouseholdSimulation(${TEST_IDS.SIMULATION_ID}): 404 Not found`
       );
     });
   });
@@ -289,7 +289,7 @@ describe('simulations v2 API', () => {
 
       // When / Then
       await expect(createEconomySimulation(request)).rejects.toThrow(
-        'Failed to create economy simulation: 400'
+        'createEconomySimulation: 400 Bad Request'
       );
     });
   });
@@ -324,7 +324,7 @@ describe('simulations v2 API', () => {
 
       // When / Then
       await expect(getEconomySimulation(TEST_IDS.SIMULATION_ID)).rejects.toThrow(
-        `Economy simulation ${TEST_IDS.SIMULATION_ID} not found`
+        `getEconomySimulation(${TEST_IDS.SIMULATION_ID}): 404 Not found`
       );
     });
   });

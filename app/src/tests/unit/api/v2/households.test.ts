@@ -166,7 +166,7 @@ describe('households v2 API', () => {
 
       // When / Then
       await expect(createHouseholdV2(shape as V2HouseholdShape)).rejects.toThrow(
-        'Failed to create household: 500'
+        'createHouseholdV2: 500 Internal Server Error'
       );
     });
   });
@@ -202,7 +202,7 @@ describe('households v2 API', () => {
 
       // When / Then
       await expect(fetchHouseholdByIdV2(TEST_IDS.HOUSEHOLD_ID)).rejects.toThrow(
-        `Household ${TEST_IDS.HOUSEHOLD_ID} not found`
+        `fetchHouseholdByIdV2(${TEST_IDS.HOUSEHOLD_ID}): 404 Not found`
       );
     });
 
@@ -212,7 +212,7 @@ describe('households v2 API', () => {
 
       // When / Then
       await expect(fetchHouseholdByIdV2(TEST_IDS.HOUSEHOLD_ID)).rejects.toThrow(
-        `Failed to fetch household ${TEST_IDS.HOUSEHOLD_ID}: 500`
+        `fetchHouseholdByIdV2(${TEST_IDS.HOUSEHOLD_ID}): 500 Server Error`
       );
     });
   });
@@ -283,14 +283,12 @@ describe('households v2 API', () => {
       );
     });
 
-    test('given 404 response then throws not found error', async () => {
+    test('given 404 response then resolves without error (already deleted)', async () => {
       // Given
       vi.stubGlobal('fetch', mockFetch404());
 
       // When / Then
-      await expect(deleteHouseholdV2(TEST_IDS.HOUSEHOLD_ID)).rejects.toThrow(
-        `Household ${TEST_IDS.HOUSEHOLD_ID} not found`
-      );
+      await expect(deleteHouseholdV2(TEST_IDS.HOUSEHOLD_ID)).resolves.toBeUndefined();
     });
   });
 });

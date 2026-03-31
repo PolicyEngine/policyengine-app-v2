@@ -31,7 +31,7 @@ describe('householdAnalysis', () => {
       const response = createMockHouseholdImpactResponse();
 
       // When
-      const report = fromHouseholdImpactResponse(response);
+      const report = fromHouseholdImpactResponse(response, 'us', '2026');
 
       // Then
       expect(report.id).toBe(TEST_IDS.REPORT_ID);
@@ -46,7 +46,7 @@ describe('householdAnalysis', () => {
       };
 
       // When
-      const report = fromHouseholdImpactResponse(response);
+      const report = fromHouseholdImpactResponse(response, 'us', '2026');
 
       // Then
       expect(report.simulationIds).toEqual(['sim-baseline']);
@@ -57,7 +57,7 @@ describe('householdAnalysis', () => {
       const response = createMockHouseholdImpactResponse({ status: 'completed' });
 
       // When
-      const report = fromHouseholdImpactResponse(response);
+      const report = fromHouseholdImpactResponse(response, 'us', '2026');
 
       // Then
       expect(report.status).toBe('complete');
@@ -68,7 +68,7 @@ describe('householdAnalysis', () => {
       const response = createMockHouseholdImpactResponse({ status: 'failed' });
 
       // When
-      const report = fromHouseholdImpactResponse(response);
+      const report = fromHouseholdImpactResponse(response, 'us', '2026');
 
       // Then
       expect(report.status).toBe('error');
@@ -79,7 +79,7 @@ describe('householdAnalysis', () => {
       const response = createMockHouseholdImpactResponse({ status: 'pending' });
 
       // When
-      const report = fromHouseholdImpactResponse(response);
+      const report = fromHouseholdImpactResponse(response, 'us', '2026');
 
       // Then
       expect(report.status).toBe('pending');
@@ -90,7 +90,7 @@ describe('householdAnalysis', () => {
       const response = createMockHouseholdImpactResponse();
 
       // When
-      const report = fromHouseholdImpactResponse(response);
+      const report = fromHouseholdImpactResponse(response, 'us', '2026');
 
       // Then
       expect(report.outputType).toBe('household');
@@ -101,7 +101,7 @@ describe('householdAnalysis', () => {
       const response = createMockHouseholdImpactResponse();
 
       // When
-      const report = fromHouseholdImpactResponse(response);
+      const report = fromHouseholdImpactResponse(response, 'us', '2026');
 
       // Then
       expect(report.apiVersion).toBe('v2');
@@ -141,7 +141,7 @@ describe('householdAnalysis', () => {
       // When / Then
       await expect(
         createHouseholdAnalysis({ household_id: TEST_IDS.HOUSEHOLD_ID })
-      ).rejects.toThrow('Failed to create household analysis');
+      ).rejects.toThrow('createHouseholdAnalysis: 500 Internal Server Error');
     });
   });
 
@@ -172,7 +172,7 @@ describe('householdAnalysis', () => {
 
       // When / Then
       await expect(getHouseholdAnalysis(TEST_IDS.REPORT_ID)).rejects.toThrow(
-        `Household analysis report ${TEST_IDS.REPORT_ID} not found`
+        'getHouseholdAnalysis: 404 Not found'
       );
     });
   });

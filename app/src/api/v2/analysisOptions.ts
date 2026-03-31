@@ -10,6 +10,7 @@
  */
 
 import { API_V2_BASE_URL } from './taxBenefitModels';
+import { v2Fetch } from './v2Fetch';
 
 // ============================================================================
 // Types
@@ -33,14 +34,10 @@ export interface ModuleOption {
  */
 export async function fetchAnalysisOptions(country?: string): Promise<ModuleOption[]> {
   const params = country ? `?country=${encodeURIComponent(country)}` : '';
-  const res = await fetch(`${API_V2_BASE_URL}/analysis/options${params}`, {
-    headers: { Accept: 'application/json' },
-  });
 
-  if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`Failed to fetch analysis options: ${res.status} ${errorText}`);
-  }
-
-  return res.json();
+  return v2Fetch<ModuleOption[]>(
+    `${API_V2_BASE_URL}/analysis/options${params}`,
+    'fetchAnalysisOptions',
+    { headers: { Accept: 'application/json' } }
+  );
 }

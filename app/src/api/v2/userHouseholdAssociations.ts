@@ -14,6 +14,7 @@
 
 import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { API_V2_BASE_URL } from './taxBenefitModels';
+import { v2Fetch, v2FetchVoid } from './v2Fetch';
 
 // ============================================================================
 // Types for v2 Alpha API
@@ -108,21 +109,18 @@ export async function createUserHouseholdAssociationV2(
   const url = `${API_V2_BASE_URL}${BASE_PATH}/`;
   const body = toV2CreateRequest(association);
 
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-    },
-    body: JSON.stringify(body),
-  });
-
-  if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`Failed to create household association: ${res.status} ${errorText}`);
-  }
-
-  const json: UserHouseholdAssociationV2Response = await res.json();
+  const json = await v2Fetch<UserHouseholdAssociationV2Response>(
+    url,
+    'createUserHouseholdAssociation',
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify(body),
+    }
+  );
   return fromV2Response(json);
 }
 
@@ -139,19 +137,14 @@ export async function fetchUserHouseholdAssociationsV2(
     url += `?country_id=${encodeURIComponent(countryId)}`;
   }
 
-  const res = await fetch(url, {
-    method: 'GET',
-    headers: {
-      Accept: 'application/json',
-    },
-  });
-
-  if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`Failed to fetch household associations: ${res.status} ${errorText}`);
-  }
-
-  const json: UserHouseholdAssociationV2Response[] = await res.json();
+  const json = await v2Fetch<UserHouseholdAssociationV2Response[]>(
+    url,
+    'fetchUserHouseholdAssociations',
+    {
+      method: 'GET',
+      headers: { Accept: 'application/json' },
+    }
+  );
   return json.map(fromV2Response);
 }
 
@@ -166,24 +159,16 @@ export async function fetchUserHouseholdAssociationByIdV2(
 ): Promise<UserHouseholdPopulation | null> {
   const url = `${API_V2_BASE_URL}${BASE_PATH}/${userId}/${householdId}`;
 
-  const res = await fetch(url, {
-    method: 'GET',
-    headers: {
-      Accept: 'application/json',
-    },
-  });
-
-  if (res.status === 404) {
-    return null;
-  }
-
-  if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`Failed to fetch household association: ${res.status} ${errorText}`);
-  }
-
-  const json: UserHouseholdAssociationV2Response[] = await res.json();
-  if (json.length === 0) {
+  const json = await v2Fetch<UserHouseholdAssociationV2Response[] | null>(
+    url,
+    'fetchUserHouseholdAssociationById',
+    {
+      method: 'GET',
+      headers: { Accept: 'application/json' },
+      nullOn404: true,
+    }
+  );
+  if (!json || json.length === 0) {
     return null;
   }
 
@@ -201,21 +186,18 @@ export async function updateUserHouseholdAssociationV2(
 ): Promise<UserHouseholdPopulation> {
   const url = `${API_V2_BASE_URL}${BASE_PATH}/${associationId}`;
 
-  const res = await fetch(url, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-    },
-    body: JSON.stringify(updates),
-  });
-
-  if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`Failed to update household association: ${res.status} ${errorText}`);
-  }
-
-  const json: UserHouseholdAssociationV2Response = await res.json();
+  const json = await v2Fetch<UserHouseholdAssociationV2Response>(
+    url,
+    'updateUserHouseholdAssociation',
+    {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify(updates),
+    }
+  );
   return fromV2Response(json);
 }
 
@@ -226,13 +208,8 @@ export async function updateUserHouseholdAssociationV2(
 export async function deleteUserHouseholdAssociationV2(associationId: string): Promise<void> {
   const url = `${API_V2_BASE_URL}${BASE_PATH}/${associationId}`;
 
-  const res = await fetch(url, {
+  await v2FetchVoid(url, 'deleteUserHouseholdAssociation', {
     method: 'DELETE',
+    allowNotFound: true,
   });
-
-  // API returns 204 on success, 404 if not found (both are acceptable for delete)
-  if (!res.ok && res.status !== 404) {
-    const errorText = await res.text();
-    throw new Error(`Failed to delete household association: ${res.status} ${errorText}`);
-  }
 }

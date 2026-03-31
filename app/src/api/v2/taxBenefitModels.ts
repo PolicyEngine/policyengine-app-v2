@@ -1,3 +1,5 @@
+import { v2Fetch } from './v2Fetch';
+
 export const API_V2_BASE_URL = import.meta.env.VITE_API_V2_URL || 'https://v2.api.policyengine.org';
 
 /**
@@ -25,13 +27,10 @@ export interface TaxBenefitModelVersion {
  * Fetch all tax benefit models
  */
 export async function fetchTaxBenefitModels(): Promise<TaxBenefitModel[]> {
-  const res = await fetch(`${API_V2_BASE_URL}/tax-benefit-models/`);
-
-  if (!res.ok) {
-    throw new Error('Failed to fetch tax benefit models');
-  }
-
-  return res.json();
+  return v2Fetch<TaxBenefitModel[]>(
+    `${API_V2_BASE_URL}/tax-benefit-models/`,
+    'fetchTaxBenefitModels'
+  );
 }
 
 /**
@@ -62,17 +61,17 @@ export async function fetchModelByCountry(countryId: string): Promise<ModelByCou
     throw new Error(`Model not found for country: ${countryId}`);
   }
 
-  const versionsRes = await fetch(`${API_V2_BASE_URL}/tax-benefit-model-versions/`);
-  if (!versionsRes.ok) {
-    throw new Error('Failed to fetch model versions');
-  }
-
-  const versions: TaxBenefitModelVersion[] = await versionsRes.json();
+  const versions = await v2Fetch<TaxBenefitModelVersion[]>(
+    `${API_V2_BASE_URL}/tax-benefit-model-versions/`,
+    'fetchModelByCountry:versions'
+  );
   const modelVersions = versions.filter((v) => v.model_id === model.id);
   if (modelVersions.length === 0) {
     throw new Error(`No versions found for country: ${countryId}`);
   }
 
+  // NOTE: Assumes the API returns versions with the latest first.
+  // The version string format is unspecified, so we cannot sort client-side.
   return { model, latest_version: modelVersions[0] };
 }
 
@@ -81,31 +80,26 @@ export async function fetchModelByCountry(countryId: string): Promise<ModelByCou
  */
 export async function fetchModelVersion(countryId: string): Promise<string> {
   const modelName = getModelName(countryId);
-  const res = await fetch(`${API_V2_BASE_URL}/tax-benefit-models/`);
-
-  if (!res.ok) {
-    throw new Error(`Failed to fetch models`);
-  }
-
-  const models: TaxBenefitModel[] = await res.json();
+  const models = await v2Fetch<TaxBenefitModel[]>(
+    `${API_V2_BASE_URL}/tax-benefit-models/`,
+    'fetchModelVersion:models'
+  );
   const model = models.find((m) => m.name === modelName);
   if (!model) {
     throw new Error(`Model not found for ${countryId}`);
   }
 
-  const versionsRes = await fetch(`${API_V2_BASE_URL}/tax-benefit-model-versions/`);
-
-  if (!versionsRes.ok) {
-    throw new Error(`Failed to fetch model versions`);
-  }
-
-  const versions: TaxBenefitModelVersion[] = await versionsRes.json();
+  const versions = await v2Fetch<TaxBenefitModelVersion[]>(
+    `${API_V2_BASE_URL}/tax-benefit-model-versions/`,
+    'fetchModelVersion:versions'
+  );
   const modelVersions = versions.filter((v) => v.model_id === model.id);
 
   if (modelVersions.length === 0) {
     throw new Error(`No versions found for ${countryId}`);
   }
 
+  // NOTE: Assumes the API returns versions with the latest first.
   return modelVersions[0].version;
 }
 
@@ -114,30 +108,25 @@ export async function fetchModelVersion(countryId: string): Promise<string> {
  */
 export async function fetchModelVersionId(countryId: string): Promise<string> {
   const modelName = getModelName(countryId);
-  const res = await fetch(`${API_V2_BASE_URL}/tax-benefit-models/`);
-
-  if (!res.ok) {
-    throw new Error(`Failed to fetch models`);
-  }
-
-  const models: TaxBenefitModel[] = await res.json();
+  const models = await v2Fetch<TaxBenefitModel[]>(
+    `${API_V2_BASE_URL}/tax-benefit-models/`,
+    'fetchModelVersionId:models'
+  );
   const model = models.find((m) => m.name === modelName);
   if (!model) {
     throw new Error(`Model not found for ${countryId}`);
   }
 
-  const versionsRes = await fetch(`${API_V2_BASE_URL}/tax-benefit-model-versions/`);
-
-  if (!versionsRes.ok) {
-    throw new Error(`Failed to fetch model versions`);
-  }
-
-  const versions: TaxBenefitModelVersion[] = await versionsRes.json();
+  const versions = await v2Fetch<TaxBenefitModelVersion[]>(
+    `${API_V2_BASE_URL}/tax-benefit-model-versions/`,
+    'fetchModelVersionId:versions'
+  );
   const modelVersions = versions.filter((v) => v.model_id === model.id);
 
   if (modelVersions.length === 0) {
     throw new Error(`No versions found for ${countryId}`);
   }
 
+  // NOTE: Assumes the API returns versions with the latest first.
   return modelVersions[0].id;
 }

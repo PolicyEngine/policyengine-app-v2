@@ -15,6 +15,7 @@
 import { CountryId } from '@/libs/countries';
 import { UserPolicy } from '@/types/ingredients/UserPolicy';
 import { API_V2_BASE_URL } from './taxBenefitModels';
+import { v2Fetch, v2FetchVoid } from './v2Fetch';
 
 // ============================================================================
 // Types for v2 Alpha API
@@ -100,7 +101,7 @@ export async function createUserPolicyAssociationV2(
   const url = `${API_V2_BASE_URL}${BASE_PATH}/`;
   const body = toV2CreateRequest(userPolicy);
 
-  const res = await fetch(url, {
+  const json = await v2Fetch<UserPolicyAssociationV2Response>(url, 'createUserPolicyAssociation', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -108,13 +109,6 @@ export async function createUserPolicyAssociationV2(
     },
     body: JSON.stringify(body),
   });
-
-  if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`Failed to create policy association: ${res.status} ${errorText}`);
-  }
-
-  const json: UserPolicyAssociationV2Response = await res.json();
   return fromV2Response(json);
 }
 
@@ -133,17 +127,14 @@ export async function fetchUserPolicyAssociationsV2(
 
   const url = `${API_V2_BASE_URL}${BASE_PATH}/?${params}`;
 
-  const res = await fetch(url, {
-    method: 'GET',
-    headers: { Accept: 'application/json' },
-  });
-
-  if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`Failed to fetch user policy associations: ${res.status} ${errorText}`);
-  }
-
-  const json: UserPolicyAssociationV2Response[] = await res.json();
+  const json = await v2Fetch<UserPolicyAssociationV2Response[]>(
+    url,
+    'fetchUserPolicyAssociations',
+    {
+      method: 'GET',
+      headers: { Accept: 'application/json' },
+    }
+  );
   return json.map(fromV2Response);
 }
 
@@ -156,22 +147,16 @@ export async function fetchUserPolicyAssociationByIdV2(
 ): Promise<UserPolicy | null> {
   const url = `${API_V2_BASE_URL}${BASE_PATH}/${userPolicyId}`;
 
-  const res = await fetch(url, {
-    method: 'GET',
-    headers: { Accept: 'application/json' },
-  });
-
-  if (res.status === 404) {
-    return null;
-  }
-
-  if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`Failed to fetch policy association: ${res.status} ${errorText}`);
-  }
-
-  const json: UserPolicyAssociationV2Response = await res.json();
-  return fromV2Response(json);
+  const json = await v2Fetch<UserPolicyAssociationV2Response | null>(
+    url,
+    'fetchUserPolicyAssociationById',
+    {
+      method: 'GET',
+      headers: { Accept: 'application/json' },
+      nullOn404: true,
+    }
+  );
+  return json ? fromV2Response(json) : null;
 }
 
 /**
@@ -188,7 +173,7 @@ export async function updateUserPolicyAssociationV2(
   const params = new URLSearchParams({ user_id: userId });
   const url = `${API_V2_BASE_URL}${BASE_PATH}/${userPolicyId}?${params}`;
 
-  const res = await fetch(url, {
+  const json = await v2Fetch<UserPolicyAssociationV2Response>(url, 'updateUserPolicyAssociation', {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
@@ -196,13 +181,6 @@ export async function updateUserPolicyAssociationV2(
     },
     body: JSON.stringify(updates),
   });
-
-  if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`Failed to update policy association: ${res.status} ${errorText}`);
-  }
-
-  const json: UserPolicyAssociationV2Response = await res.json();
   return fromV2Response(json);
 }
 
@@ -219,13 +197,8 @@ export async function deleteUserPolicyAssociationV2(
   const params = new URLSearchParams({ user_id: userId });
   const url = `${API_V2_BASE_URL}${BASE_PATH}/${userPolicyId}?${params}`;
 
-  const res = await fetch(url, {
+  await v2FetchVoid(url, 'deleteUserPolicyAssociation', {
     method: 'DELETE',
+    allowNotFound: true,
   });
-
-  // API returns 204 on success, 404 if not found (both are acceptable for delete)
-  if (!res.ok && res.status !== 404) {
-    const errorText = await res.text();
-    throw new Error(`Failed to delete policy association: ${res.status} ${errorText}`);
-  }
 }

@@ -12,26 +12,19 @@
 
 import { Report } from '@/types/ingredients/Report';
 import { API_V2_BASE_URL } from './taxBenefitModels';
+import type { PolicyIdInput, ReportStatus, SimulationInfo } from './types';
+import { cancellableSleep, v2Fetch } from './v2Fetch';
 
 // ============================================================================
 // Types
 // ============================================================================
 
-export type HouseholdReportStatus =
-  | 'pending'
-  | 'execution_deferred'
-  | 'running'
-  | 'completed'
-  | 'failed';
-
-export interface HouseholdSimulationInfo {
-  id: string;
-  status: string;
-  error_message: string | null;
-}
-
-/** Policy ID input: UUID string, "current_law", or undefined (omit). */
-export type PolicyIdInput = string | 'current_law' | undefined;
+// Re-export shared types for backwards compatibility
+export type {
+  ReportStatus as HouseholdReportStatus,
+  SimulationInfo as HouseholdSimulationInfo,
+  PolicyIdInput,
+};
 
 /** POST /analysis/household-impact request body */
 export interface HouseholdImpactRequest {
@@ -46,9 +39,9 @@ export interface HouseholdImpactRequest {
 export interface HouseholdImpactResponse {
   report_id: string;
   report_type: string;
-  status: HouseholdReportStatus;
-  baseline_simulation: HouseholdSimulationInfo | null;
-  reform_simulation: HouseholdSimulationInfo | null;
+  status: ReportStatus;
+  baseline_simulation: SimulationInfo | null;
+  reform_simulation: SimulationInfo | null;
   baseline_result: Record<string, any> | null;
   reform_result: Record<string, any> | null;
   impact: Record<string, any> | null;
@@ -60,19 +53,28 @@ export interface HouseholdImpactResponse {
 // ============================================================================
 
 /** Map API report status to app domain status */
-function toAppStatus(status: HouseholdReportStatus): Report['status'] {
+function toAppStatus(status: ReportStatus): Report['status'] {
   switch (status) {
     case 'completed':
       return 'complete';
     case 'failed':
       return 'error';
+    case 'pending':
+    case 'execution_deferred':
+    case 'running':
+      return 'pending';
     default:
+      console.warn(`[v2 API] Unknown household report status: "${status}"`);
       return 'pending';
   }
 }
 
 /** Convert household impact response to app Report */
-export function fromHouseholdImpactResponse(response: HouseholdImpactResponse): Report {
+export function fromHouseholdImpactResponse(
+  response: HouseholdImpactResponse,
+  countryId: Report['countryId'],
+  year: string
+): Report {
   const simulationIds: string[] = [];
   if (response.baseline_simulation) {
     simulationIds.push(response.baseline_simulation.id);
@@ -83,8 +85,8 @@ export function fromHouseholdImpactResponse(response: HouseholdImpactResponse): 
 
   return {
     id: response.report_id,
-    countryId: 'us', // Caller should override based on context
-    year: new Date().getFullYear().toString(),
+    countryId,
+    year,
     apiVersion: 'v2',
     simulationIds,
     status: toAppStatus(response.status),
@@ -103,21 +105,18 @@ export function fromHouseholdImpactResponse(response: HouseholdImpactResponse): 
 export async function createHouseholdAnalysis(
   request: HouseholdImpactRequest
 ): Promise<HouseholdImpactResponse> {
-  const res = await fetch(`${API_V2_BASE_URL}/analysis/household-impact`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-    },
-    body: JSON.stringify(request),
-  });
-
-  if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`Failed to create household analysis: ${res.status} ${errorText}`);
-  }
-
-  return res.json();
+  return v2Fetch<HouseholdImpactResponse>(
+    `${API_V2_BASE_URL}/analysis/household-impact`,
+    'createHouseholdAnalysis',
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify(request),
+    }
+  );
 }
 
 /**
@@ -125,20 +124,11 @@ export async function createHouseholdAnalysis(
  * GET /analysis/household-impact/{report_id}
  */
 export async function getHouseholdAnalysis(reportId: string): Promise<HouseholdImpactResponse> {
-  const res = await fetch(`${API_V2_BASE_URL}/analysis/household-impact/${reportId}`, {
-    headers: { Accept: 'application/json' },
-  });
-
-  if (res.status === 404) {
-    throw new Error(`Household analysis report ${reportId} not found`);
-  }
-
-  if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`Failed to get household analysis: ${res.status} ${errorText}`);
-  }
-
-  return res.json();
+  return v2Fetch<HouseholdImpactResponse>(
+    `${API_V2_BASE_URL}/analysis/household-impact/${reportId}`,
+    'getHouseholdAnalysis',
+    { headers: { Accept: 'application/json' } }
+  );
 }
 
 /**
@@ -146,13 +136,30 @@ export async function getHouseholdAnalysis(reportId: string): Promise<HouseholdI
  */
 export async function pollHouseholdAnalysis(
   reportId: string,
-  options: { pollIntervalMs?: number; timeoutMs?: number } = {}
+  options: { pollIntervalMs?: number; timeoutMs?: number; signal?: AbortSignal } = {}
 ): Promise<HouseholdImpactResponse> {
-  const { pollIntervalMs = 1000, timeoutMs = 240000 } = options;
+  const { pollIntervalMs = 1000, timeoutMs = 240000, signal } = options;
   const startTime = Date.now();
+  const maxTransientRetries = 3;
+  let transientFailures = 0;
 
   while (Date.now() - startTime < timeoutMs) {
-    const response = await getHouseholdAnalysis(reportId);
+    let response: HouseholdImpactResponse;
+    try {
+      response = await getHouseholdAnalysis(reportId);
+      transientFailures = 0;
+    } catch (err) {
+      transientFailures++;
+      if (transientFailures >= maxTransientRetries) {
+        throw err;
+      }
+      console.warn(
+        `[v2 API] pollHouseholdAnalysis: transient error (${transientFailures}/${maxTransientRetries})`,
+        err
+      );
+      await cancellableSleep(pollIntervalMs, signal);
+      continue;
+    }
 
     if (response.status === 'completed') {
       return response;
@@ -162,8 +169,8 @@ export async function pollHouseholdAnalysis(
       throw new Error(response.error_message || 'Household analysis failed');
     }
 
-    await new Promise((resolve) => setTimeout(resolve, pollIntervalMs));
+    await cancellableSleep(pollIntervalMs, signal);
   }
 
-  throw new Error('Household analysis timed out');
+  throw new Error(`Household analysis timed out for report ${reportId}`);
 }

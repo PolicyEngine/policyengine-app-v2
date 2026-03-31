@@ -34,7 +34,7 @@ describe('economyAnalysis', () => {
       const response = createMockEconomicImpactResponse({ status: 'completed' });
 
       // When
-      const report = fromEconomicImpactResponse(response);
+      const report = fromEconomicImpactResponse(response, 'us', '2026');
 
       // Then
       expect(report.id).toBe(TEST_IDS.REPORT_ID);
@@ -46,7 +46,7 @@ describe('economyAnalysis', () => {
       const response = createMockEconomicImpactResponse({ status: 'completed' });
 
       // When
-      const report = fromEconomicImpactResponse(response);
+      const report = fromEconomicImpactResponse(response, 'us', '2026');
 
       // Then
       expect(report.status).toBe('complete');
@@ -57,7 +57,7 @@ describe('economyAnalysis', () => {
       const response = createMockEconomicImpactResponse({ status: 'failed' });
 
       // When
-      const report = fromEconomicImpactResponse(response);
+      const report = fromEconomicImpactResponse(response, 'us', '2026');
 
       // Then
       expect(report.status).toBe('error');
@@ -68,7 +68,7 @@ describe('economyAnalysis', () => {
       const response = createMockEconomicImpactResponse({ status: 'pending' });
 
       // When
-      const report = fromEconomicImpactResponse(response);
+      const report = fromEconomicImpactResponse(response, 'us', '2026');
 
       // Then
       expect(report.status).toBe('pending');
@@ -79,7 +79,7 @@ describe('economyAnalysis', () => {
       const response = createMockEconomicImpactResponse();
 
       // When
-      const report = fromEconomicImpactResponse(response);
+      const report = fromEconomicImpactResponse(response, 'us', '2026');
 
       // Then
       expect(report.outputType).toBe('economy');
@@ -90,7 +90,7 @@ describe('economyAnalysis', () => {
       const response = createMockEconomicImpactResponse();
 
       // When
-      const report = fromEconomicImpactResponse(response);
+      const report = fromEconomicImpactResponse(response, 'us', '2026');
 
       // Then
       expect(report.apiVersion).toBe('v2');
@@ -128,7 +128,7 @@ describe('economyAnalysis', () => {
 
       // When / Then
       await expect(createEconomyAnalysis({ country_id: TEST_COUNTRY_ID })).rejects.toThrow(
-        'Failed to create economy analysis'
+        'createEconomyAnalysis: 500 Internal Server Error'
       );
     });
   });
@@ -160,7 +160,7 @@ describe('economyAnalysis', () => {
 
       // When / Then
       await expect(getEconomyAnalysis(TEST_IDS.REPORT_ID)).rejects.toThrow(
-        `Economy analysis report ${TEST_IDS.REPORT_ID} not found`
+        'getEconomyAnalysis: 404 Not found'
       );
     });
   });
@@ -279,7 +279,7 @@ describe('economyAnalysis', () => {
       // When / Then
       await expect(
         getEconomyCustomAnalysis(TEST_IDS.REPORT_ID, ['decile_impacts'])
-      ).rejects.toThrow(`Custom economy analysis report ${TEST_IDS.REPORT_ID} not found`);
+      ).rejects.toThrow('getEconomyCustomAnalysis: 404 Not found');
     });
   });
 });

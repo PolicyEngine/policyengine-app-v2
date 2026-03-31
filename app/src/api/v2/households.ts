@@ -10,6 +10,7 @@
 import type { CountryId } from '@/libs/countries';
 import type { V2HouseholdShape } from './householdCalculation';
 import { API_V2_BASE_URL } from './taxBenefitModels';
+import { v2Fetch, v2FetchVoid } from './v2Fetch';
 
 // ============================================================================
 // Types for v2 Alpha /households API
@@ -102,7 +103,7 @@ export async function createHouseholdV2(household: V2HouseholdShape): Promise<V2
   const url = `${API_V2_BASE_URL}/households/`;
   const body = householdToV2Request(household);
 
-  const res = await fetch(url, {
+  const json = await v2Fetch<HouseholdV2Response>(url, 'createHouseholdV2', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -110,38 +111,22 @@ export async function createHouseholdV2(household: V2HouseholdShape): Promise<V2
     },
     body: JSON.stringify(body),
   });
-
-  if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`Failed to create household: ${res.status} ${errorText}`);
-  }
-
-  const json: HouseholdV2Response = await res.json();
   return v2ResponseToHousehold(json);
 }
 
 /**
- * Fetch a household by ID from v2 alpha API
+ * Fetch a household by ID from v2 alpha API.
+ * Throws with status code in message on any error (including 404).
  */
 export async function fetchHouseholdByIdV2(householdId: string): Promise<V2HouseholdShape> {
   const url = `${API_V2_BASE_URL}/households/${householdId}`;
 
-  const res = await fetch(url, {
+  const json = await v2Fetch<HouseholdV2Response>(url, `fetchHouseholdByIdV2(${householdId})`, {
     method: 'GET',
     headers: {
       Accept: 'application/json',
     },
   });
-
-  if (!res.ok) {
-    if (res.status === 404) {
-      throw new Error(`Household ${householdId} not found`);
-    }
-    const errorText = await res.text();
-    throw new Error(`Failed to fetch household ${householdId}: ${res.status} ${errorText}`);
-  }
-
-  const json: HouseholdV2Response = await res.json();
   return v2ResponseToHousehold(json);
 }
 
@@ -168,37 +153,24 @@ export async function listHouseholdsV2(options?: {
   const queryString = params.toString();
   const url = `${API_V2_BASE_URL}/households/${queryString ? `?${queryString}` : ''}`;
 
-  const res = await fetch(url, {
+  const json = await v2Fetch<HouseholdV2Response[]>(url, 'listHouseholdsV2', {
     method: 'GET',
     headers: {
       Accept: 'application/json',
     },
   });
-
-  if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`Failed to list households: ${res.status} ${errorText}`);
-  }
-
-  const json: HouseholdV2Response[] = await res.json();
   return json.map(v2ResponseToHousehold);
 }
 
 /**
- * Delete a household by ID from v2 alpha API
+ * Delete a household by ID from v2 alpha API.
+ * Silently succeeds if the household is already deleted (404).
  */
 export async function deleteHouseholdV2(householdId: string): Promise<void> {
   const url = `${API_V2_BASE_URL}/households/${householdId}`;
 
-  const res = await fetch(url, {
+  await v2FetchVoid(url, `deleteHouseholdV2(${householdId})`, {
     method: 'DELETE',
+    allowNotFound: true,
   });
-
-  if (!res.ok) {
-    if (res.status === 404) {
-      throw new Error(`Household ${householdId} not found`);
-    }
-    const errorText = await res.text();
-    throw new Error(`Failed to delete household ${householdId}: ${res.status} ${errorText}`);
-  }
 }

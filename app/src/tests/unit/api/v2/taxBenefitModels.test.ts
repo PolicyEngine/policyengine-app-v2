@@ -78,7 +78,9 @@ describe('taxBenefitModels', () => {
       vi.stubGlobal('fetch', mockFetchError(500, 'Internal Server Error'));
 
       // When / Then
-      await expect(fetchTaxBenefitModels()).rejects.toThrow('Failed to fetch tax benefit models');
+      await expect(fetchTaxBenefitModels()).rejects.toThrow(
+        'fetchTaxBenefitModels: 500 Internal Server Error'
+      );
     });
   });
 

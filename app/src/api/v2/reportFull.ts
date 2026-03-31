@@ -20,6 +20,7 @@ import {
 } from '@/api/v2/economyAnalysis';
 import { HouseholdImpactResponse } from '@/api/v2/householdAnalysis';
 import { API_V2_BASE_URL } from './taxBenefitModels';
+import { v2Fetch } from './v2Fetch';
 
 // ============================================================================
 // Types
@@ -76,11 +77,8 @@ export interface ReportFullResponse {
  * run yet, status will be "pending" and result fields will be null.
  */
 export async function fetchReportFull(reportId: string): Promise<ReportFullResponse> {
-  const res = await fetch(`${API_V2_BASE_URL}/reports/${reportId}/full`);
-
-  if (!res.ok) {
-    throw new Error(`Failed to fetch full report ${reportId}: ${res.status}`);
-  }
-
-  return res.json();
+  return v2Fetch<ReportFullResponse>(
+    `${API_V2_BASE_URL}/reports/${reportId}/full`,
+    `fetchReportFull(${reportId})`
+  );
 }

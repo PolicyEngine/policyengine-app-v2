@@ -14,18 +14,15 @@
 
 import { Report } from '@/types/ingredients/Report';
 import { API_V2_BASE_URL } from './taxBenefitModels';
+import type { PolicyIdInput, ReportStatus, SimulationInfo } from './types';
+import { cancellableSleep, v2Fetch } from './v2Fetch';
 
 // ============================================================================
 // Types
 // ============================================================================
 
-export type ReportStatus = 'pending' | 'execution_deferred' | 'running' | 'completed' | 'failed';
-
-export interface SimulationInfo {
-  id: string;
-  status: string;
-  error_message: string | null;
-}
+// Re-export shared types for backwards compatibility
+export type { ReportStatus, SimulationInfo, PolicyIdInput };
 
 export interface AnalysisRegionInfo {
   code: string;
@@ -35,9 +32,6 @@ export interface AnalysisRegionInfo {
   filter_field: string | null;
   filter_value: string | null;
 }
-
-/** Policy ID input: UUID string, "current_law", or undefined (omit). */
-export type PolicyIdInput = string | 'current_law' | undefined;
 
 /** POST /analysis/economic-impact request body */
 export interface EconomicImpactRequest {
@@ -216,17 +210,26 @@ function toAppStatus(status: ReportStatus): Report['status'] {
       return 'complete';
     case 'failed':
       return 'error';
+    case 'pending':
+    case 'execution_deferred':
+    case 'running':
+      return 'pending';
     default:
+      console.warn(`[v2 API] Unknown economy report status: "${status}"`);
       return 'pending';
   }
 }
 
 /** Convert economic impact response to app Report (metadata only, output stored separately) */
-export function fromEconomicImpactResponse(response: EconomicImpactResponse): Report {
+export function fromEconomicImpactResponse(
+  response: EconomicImpactResponse,
+  countryId: Report['countryId'],
+  year: string
+): Report {
   return {
     id: response.report_id,
-    countryId: 'us', // Caller should override based on context
-    year: new Date().getFullYear().toString(),
+    countryId,
+    year,
     apiVersion: 'v2',
     simulationIds: [response.baseline_simulation.id, response.reform_simulation.id],
     status: toAppStatus(response.status),
@@ -245,21 +248,18 @@ export function fromEconomicImpactResponse(response: EconomicImpactResponse): Re
 export async function createEconomyAnalysis(
   request: EconomicImpactRequest
 ): Promise<EconomicImpactResponse> {
-  const res = await fetch(`${API_V2_BASE_URL}/analysis/economic-impact`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-    },
-    body: JSON.stringify(request),
-  });
-
-  if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`Failed to create economy analysis: ${res.status} ${errorText}`);
-  }
-
-  return res.json();
+  return v2Fetch<EconomicImpactResponse>(
+    `${API_V2_BASE_URL}/analysis/economic-impact`,
+    'createEconomyAnalysis',
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify(request),
+    }
+  );
 }
 
 /**
@@ -267,20 +267,11 @@ export async function createEconomyAnalysis(
  * GET /analysis/economic-impact/{report_id}
  */
 export async function getEconomyAnalysis(reportId: string): Promise<EconomicImpactResponse> {
-  const res = await fetch(`${API_V2_BASE_URL}/analysis/economic-impact/${reportId}`, {
-    headers: { Accept: 'application/json' },
-  });
-
-  if (res.status === 404) {
-    throw new Error(`Economy analysis report ${reportId} not found`);
-  }
-
-  if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`Failed to get economy analysis: ${res.status} ${errorText}`);
-  }
-
-  return res.json();
+  return v2Fetch<EconomicImpactResponse>(
+    `${API_V2_BASE_URL}/analysis/economic-impact/${reportId}`,
+    'getEconomyAnalysis',
+    { headers: { Accept: 'application/json' } }
+  );
 }
 
 /**
@@ -288,13 +279,30 @@ export async function getEconomyAnalysis(reportId: string): Promise<EconomicImpa
  */
 export async function pollEconomyAnalysis(
   reportId: string,
-  options: { pollIntervalMs?: number; timeoutMs?: number } = {}
+  options: { pollIntervalMs?: number; timeoutMs?: number; signal?: AbortSignal } = {}
 ): Promise<EconomicImpactResponse> {
-  const { pollIntervalMs = 2000, timeoutMs = 600000 } = options;
+  const { pollIntervalMs = 2000, timeoutMs = 600000, signal } = options;
   const startTime = Date.now();
+  const maxTransientRetries = 3;
+  let transientFailures = 0;
 
   while (Date.now() - startTime < timeoutMs) {
-    const response = await getEconomyAnalysis(reportId);
+    let response: EconomicImpactResponse;
+    try {
+      response = await getEconomyAnalysis(reportId);
+      transientFailures = 0;
+    } catch (err) {
+      transientFailures++;
+      if (transientFailures >= maxTransientRetries) {
+        throw err;
+      }
+      console.warn(
+        `[v2 API] pollEconomyAnalysis: transient error (${transientFailures}/${maxTransientRetries})`,
+        err
+      );
+      await cancellableSleep(pollIntervalMs, signal);
+      continue;
+    }
 
     if (response.status === 'completed') {
       return response;
@@ -304,10 +312,10 @@ export async function pollEconomyAnalysis(
       throw new Error(response.error_message || 'Economy analysis failed');
     }
 
-    await new Promise((resolve) => setTimeout(resolve, pollIntervalMs));
+    await cancellableSleep(pollIntervalMs, signal);
   }
 
-  throw new Error('Economy analysis timed out');
+  throw new Error(`Economy analysis timed out for report ${reportId}`);
 }
 
 /**
@@ -317,21 +325,18 @@ export async function pollEconomyAnalysis(
 export async function createEconomyCustomAnalysis(
   request: EconomyCustomRequest
 ): Promise<EconomicImpactResponse> {
-  const res = await fetch(`${API_V2_BASE_URL}/analysis/economy-custom`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-    },
-    body: JSON.stringify(request),
-  });
-
-  if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`Failed to create custom economy analysis: ${res.status} ${errorText}`);
-  }
-
-  return res.json();
+  return v2Fetch<EconomicImpactResponse>(
+    `${API_V2_BASE_URL}/analysis/economy-custom`,
+    'createEconomyCustomAnalysis',
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify(request),
+    }
+  );
 }
 
 /**
@@ -343,20 +348,11 @@ export async function getEconomyCustomAnalysis(
   modules: string[]
 ): Promise<EconomicImpactResponse> {
   const params = new URLSearchParams({ modules: modules.join(',') });
-  const res = await fetch(`${API_V2_BASE_URL}/analysis/economy-custom/${reportId}?${params}`, {
-    headers: { Accept: 'application/json' },
-  });
-
-  if (res.status === 404) {
-    throw new Error(`Custom economy analysis report ${reportId} not found`);
-  }
-
-  if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`Failed to get custom economy analysis: ${res.status} ${errorText}`);
-  }
-
-  return res.json();
+  return v2Fetch<EconomicImpactResponse>(
+    `${API_V2_BASE_URL}/analysis/economy-custom/${reportId}?${params}`,
+    'getEconomyCustomAnalysis',
+    { headers: { Accept: 'application/json' } }
+  );
 }
 
 /**
@@ -366,15 +362,12 @@ export async function getEconomyCustomAnalysis(
 export async function rerunReport(
   reportId: string
 ): Promise<{ report_id: string; status: string }> {
-  const res = await fetch(`${API_V2_BASE_URL}/analysis/rerun/${reportId}`, {
-    method: 'POST',
-    headers: { Accept: 'application/json' },
-  });
-
-  if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`Failed to rerun report: ${res.status} ${errorText}`);
-  }
-
-  return res.json();
+  return v2Fetch<{ report_id: string; status: string }>(
+    `${API_V2_BASE_URL}/analysis/rerun/${reportId}`,
+    'rerunReport',
+    {
+      method: 'POST',
+      headers: { Accept: 'application/json' },
+    }
+  );
 }

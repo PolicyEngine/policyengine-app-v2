@@ -15,6 +15,7 @@
 import { CountryId } from '@/libs/countries';
 import { UserSimulation } from '@/types/ingredients/UserSimulation';
 import { API_V2_BASE_URL } from './taxBenefitModels';
+import { v2Fetch, v2FetchVoid } from './v2Fetch';
 
 // ============================================================================
 // Types for v2 Alpha API
@@ -90,21 +91,18 @@ export async function createUserSimulationAssociationV2(
   const url = `${API_V2_BASE_URL}${BASE_PATH}/`;
   const body = toV2CreateRequest(association);
 
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-    },
-    body: JSON.stringify(body),
-  });
-
-  if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`Failed to create simulation association: ${res.status} ${errorText}`);
-  }
-
-  const json: UserSimulationAssociationV2Response = await res.json();
+  const json = await v2Fetch<UserSimulationAssociationV2Response>(
+    url,
+    'createUserSimulationAssociation',
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify(body),
+    }
+  );
   return fromV2Response(json);
 }
 
@@ -123,17 +121,14 @@ export async function fetchUserSimulationAssociationsV2(
 
   const url = `${API_V2_BASE_URL}${BASE_PATH}/?${params}`;
 
-  const res = await fetch(url, {
-    method: 'GET',
-    headers: { Accept: 'application/json' },
-  });
-
-  if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`Failed to fetch simulation associations: ${res.status} ${errorText}`);
-  }
-
-  const json: UserSimulationAssociationV2Response[] = await res.json();
+  const json = await v2Fetch<UserSimulationAssociationV2Response[]>(
+    url,
+    'fetchUserSimulationAssociations',
+    {
+      method: 'GET',
+      headers: { Accept: 'application/json' },
+    }
+  );
   return json.map(fromV2Response);
 }
 
@@ -146,22 +141,16 @@ export async function fetchUserSimulationAssociationByIdV2(
 ): Promise<UserSimulation | null> {
   const url = `${API_V2_BASE_URL}${BASE_PATH}/${userSimulationId}`;
 
-  const res = await fetch(url, {
-    method: 'GET',
-    headers: { Accept: 'application/json' },
-  });
-
-  if (res.status === 404) {
-    return null;
-  }
-
-  if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`Failed to fetch simulation association: ${res.status} ${errorText}`);
-  }
-
-  const json: UserSimulationAssociationV2Response = await res.json();
-  return fromV2Response(json);
+  const json = await v2Fetch<UserSimulationAssociationV2Response | null>(
+    url,
+    'fetchUserSimulationAssociationById',
+    {
+      method: 'GET',
+      headers: { Accept: 'application/json' },
+      nullOn404: true,
+    }
+  );
+  return json ? fromV2Response(json) : null;
 }
 
 /**
@@ -178,21 +167,18 @@ export async function updateUserSimulationAssociationV2(
   const params = new URLSearchParams({ user_id: userId });
   const url = `${API_V2_BASE_URL}${BASE_PATH}/${userSimulationId}?${params}`;
 
-  const res = await fetch(url, {
-    method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-    },
-    body: JSON.stringify(updates),
-  });
-
-  if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`Failed to update simulation association: ${res.status} ${errorText}`);
-  }
-
-  const json: UserSimulationAssociationV2Response = await res.json();
+  const json = await v2Fetch<UserSimulationAssociationV2Response>(
+    url,
+    'updateUserSimulationAssociation',
+    {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify(updates),
+    }
+  );
   return fromV2Response(json);
 }
 
@@ -209,13 +195,8 @@ export async function deleteUserSimulationAssociationV2(
   const params = new URLSearchParams({ user_id: userId });
   const url = `${API_V2_BASE_URL}${BASE_PATH}/${userSimulationId}?${params}`;
 
-  const res = await fetch(url, {
+  await v2FetchVoid(url, 'deleteUserSimulationAssociation', {
     method: 'DELETE',
+    allowNotFound: true,
   });
-
-  // API returns 204 on success, 404 if not found (both are acceptable for delete)
-  if (!res.ok && res.status !== 404) {
-    const errorText = await res.text();
-    throw new Error(`Failed to delete simulation association: ${res.status} ${errorText}`);
-  }
 }

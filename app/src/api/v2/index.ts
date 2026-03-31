@@ -83,6 +83,7 @@ export {
   pollEconomySimulation,
   fromHouseholdSimulationResponse,
   fromEconomySimulationResponse,
+  fetchSimulationByIdV2,
   type SimulationStatus,
   type HouseholdSimulationRequest,
   type HouseholdSimulationResponse,
@@ -90,6 +91,9 @@ export {
   type EconomySimulationResponse,
   type RegionInfo,
 } from './simulations';
+
+// Shared v2 API types
+export type { PolicyIdInput, ReportStatus, SimulationInfo } from './types';
 
 // Economy Analysis (v2 Alpha — baseline vs reform comparison)
 export {
@@ -99,11 +103,10 @@ export {
   createEconomyCustomAnalysis,
   getEconomyCustomAnalysis,
   fromEconomicImpactResponse,
-  type ReportStatus,
+  rerunReport,
   type EconomicImpactRequest,
   type EconomicImpactResponse,
   type EconomyCustomRequest,
-  type SimulationInfo,
   type AnalysisRegionInfo,
   type DecileImpactData,
   type ProgramStatisticsData,
@@ -122,9 +125,10 @@ export {
   getHouseholdAnalysis,
   pollHouseholdAnalysis,
   fromHouseholdImpactResponse,
+  type HouseholdReportStatus,
+  type HouseholdSimulationInfo,
   type HouseholdImpactRequest,
   type HouseholdImpactResponse,
-  type HouseholdSimulationInfo,
 } from './householdAnalysis';
 
 // Analysis Options (v2 Alpha — available economy modules)

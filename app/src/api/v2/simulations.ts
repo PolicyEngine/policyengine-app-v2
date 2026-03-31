@@ -13,12 +13,18 @@
 
 import { Simulation } from '@/types/ingredients/Simulation';
 import { API_V2_BASE_URL } from './taxBenefitModels';
+import { cancellableSleep, v2Fetch } from './v2Fetch';
 
 // ============================================================================
 // Types
 // ============================================================================
 
-export type SimulationStatus = 'pending' | 'running' | 'completed' | 'failed';
+export type SimulationStatus =
+  | 'pending'
+  | 'execution_deferred'
+  | 'running'
+  | 'completed'
+  | 'failed';
 
 /** POST /simulations/household request body */
 export interface HouseholdSimulationRequest {
@@ -79,7 +85,12 @@ function toAppStatus(status: SimulationStatus): Simulation['status'] {
       return 'complete';
     case 'failed':
       return 'error';
+    case 'pending':
+    case 'execution_deferred':
+    case 'running':
+      return 'pending';
     default:
+      console.warn(`[v2 API] Unknown simulation status: "${status}", treating as pending`);
       return 'pending';
   }
 }
@@ -122,58 +133,71 @@ export function fromEconomySimulationResponse(response: EconomySimulationRespons
 export async function createHouseholdSimulation(
   request: HouseholdSimulationRequest
 ): Promise<HouseholdSimulationResponse> {
-  const res = await fetch(`${API_V2_BASE_URL}/simulations/household`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-    },
-    body: JSON.stringify(request),
-  });
-
-  if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`Failed to create household simulation: ${res.status} ${errorText}`);
-  }
-
-  return res.json();
+  return v2Fetch<HouseholdSimulationResponse>(
+    `${API_V2_BASE_URL}/simulations/household`,
+    'createHouseholdSimulation',
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify(request),
+    }
+  );
 }
 
 /**
  * Get household simulation status and result.
  * GET /simulations/household/{simulation_id}
+ * Throws with status code in message on any error (including 404).
  */
 export async function getHouseholdSimulation(
   simulationId: string
 ): Promise<HouseholdSimulationResponse> {
-  const res = await fetch(`${API_V2_BASE_URL}/simulations/household/${simulationId}`, {
-    headers: { Accept: 'application/json' },
-  });
-
-  if (res.status === 404) {
-    throw new Error(`Household simulation ${simulationId} not found`);
-  }
-
-  if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`Failed to get household simulation: ${res.status} ${errorText}`);
-  }
-
-  return res.json();
+  return v2Fetch<HouseholdSimulationResponse>(
+    `${API_V2_BASE_URL}/simulations/household/${simulationId}`,
+    `getHouseholdSimulation(${simulationId})`,
+    {
+      headers: { Accept: 'application/json' },
+    }
+  );
 }
 
 /**
  * Poll household simulation until completed or failed.
+ * Supports AbortSignal for cancellation and retries transient errors up to 3 times.
  */
 export async function pollHouseholdSimulation(
   simulationId: string,
-  options: { pollIntervalMs?: number; timeoutMs?: number } = {}
+  options: { pollIntervalMs?: number; timeoutMs?: number; signal?: AbortSignal } = {}
 ): Promise<HouseholdSimulationResponse> {
-  const { pollIntervalMs = 1000, timeoutMs = 240000 } = options;
+  const { pollIntervalMs = 1000, timeoutMs = 240000, signal } = options;
+  const maxTransientRetries = 3;
+
   const startTime = Date.now();
+  let consecutiveErrors = 0;
 
   while (Date.now() - startTime < timeoutMs) {
-    const response = await getHouseholdSimulation(simulationId);
+    let response: HouseholdSimulationResponse;
+    try {
+      response = await getHouseholdSimulation(simulationId);
+      consecutiveErrors = 0;
+    } catch (error) {
+      if (signal?.aborted) {
+        throw error;
+      }
+      consecutiveErrors++;
+      if (consecutiveErrors > maxTransientRetries) {
+        throw error;
+      }
+      console.warn(
+        `[v2 API] Transient error polling household simulation ${simulationId} (attempt ${consecutiveErrors}/${maxTransientRetries}):`,
+        error
+      );
+      await cancellableSleep(pollIntervalMs, signal);
+      continue;
+    }
 
     if (response.status === 'completed') {
       return response;
@@ -183,10 +207,10 @@ export async function pollHouseholdSimulation(
       throw new Error(response.error_message || 'Household simulation failed');
     }
 
-    await new Promise((resolve) => setTimeout(resolve, pollIntervalMs));
+    await cancellableSleep(pollIntervalMs, signal);
   }
 
-  throw new Error('Household simulation timed out');
+  throw new Error(`Household simulation ${simulationId} timed out after ${timeoutMs / 1000}s`);
 }
 
 // ============================================================================
@@ -200,58 +224,71 @@ export async function pollHouseholdSimulation(
 export async function createEconomySimulation(
   request: EconomySimulationRequest
 ): Promise<EconomySimulationResponse> {
-  const res = await fetch(`${API_V2_BASE_URL}/simulations/economy`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-    },
-    body: JSON.stringify(request),
-  });
-
-  if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`Failed to create economy simulation: ${res.status} ${errorText}`);
-  }
-
-  return res.json();
+  return v2Fetch<EconomySimulationResponse>(
+    `${API_V2_BASE_URL}/simulations/economy`,
+    'createEconomySimulation',
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify(request),
+    }
+  );
 }
 
 /**
  * Get economy simulation status and result.
  * GET /simulations/economy/{simulation_id}
+ * Throws with status code in message on any error (including 404).
  */
 export async function getEconomySimulation(
   simulationId: string
 ): Promise<EconomySimulationResponse> {
-  const res = await fetch(`${API_V2_BASE_URL}/simulations/economy/${simulationId}`, {
-    headers: { Accept: 'application/json' },
-  });
-
-  if (res.status === 404) {
-    throw new Error(`Economy simulation ${simulationId} not found`);
-  }
-
-  if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`Failed to get economy simulation: ${res.status} ${errorText}`);
-  }
-
-  return res.json();
+  return v2Fetch<EconomySimulationResponse>(
+    `${API_V2_BASE_URL}/simulations/economy/${simulationId}`,
+    `getEconomySimulation(${simulationId})`,
+    {
+      headers: { Accept: 'application/json' },
+    }
+  );
 }
 
 /**
  * Poll economy simulation until completed or failed.
+ * Supports AbortSignal for cancellation and retries transient errors up to 3 times.
  */
 export async function pollEconomySimulation(
   simulationId: string,
-  options: { pollIntervalMs?: number; timeoutMs?: number } = {}
+  options: { pollIntervalMs?: number; timeoutMs?: number; signal?: AbortSignal } = {}
 ): Promise<EconomySimulationResponse> {
-  const { pollIntervalMs = 2000, timeoutMs = 600000 } = options;
+  const { pollIntervalMs = 2000, timeoutMs = 600000, signal } = options;
+  const maxTransientRetries = 3;
+
   const startTime = Date.now();
+  let consecutiveErrors = 0;
 
   while (Date.now() - startTime < timeoutMs) {
-    const response = await getEconomySimulation(simulationId);
+    let response: EconomySimulationResponse;
+    try {
+      response = await getEconomySimulation(simulationId);
+      consecutiveErrors = 0;
+    } catch (error) {
+      if (signal?.aborted) {
+        throw error;
+      }
+      consecutiveErrors++;
+      if (consecutiveErrors > maxTransientRetries) {
+        throw error;
+      }
+      console.warn(
+        `[v2 API] Transient error polling economy simulation ${simulationId} (attempt ${consecutiveErrors}/${maxTransientRetries}):`,
+        error
+      );
+      await cancellableSleep(pollIntervalMs, signal);
+      continue;
+    }
 
     if (response.status === 'completed') {
       return response;
@@ -261,10 +298,10 @@ export async function pollEconomySimulation(
       throw new Error(response.error_message || 'Economy simulation failed');
     }
 
-    await new Promise((resolve) => setTimeout(resolve, pollIntervalMs));
+    await cancellableSleep(pollIntervalMs, signal);
   }
 
-  throw new Error('Economy simulation timed out');
+  throw new Error(`Economy simulation ${simulationId} timed out after ${timeoutMs / 1000}s`);
 }
 
 // ============================================================================
@@ -292,16 +329,13 @@ interface GenericSimulationResponse {
  * to the correct app domain type in a single request.
  */
 export async function fetchSimulationByIdV2(simulationId: string): Promise<Simulation> {
-  const res = await fetch(`${API_V2_BASE_URL}/simulations/${simulationId}`, {
-    headers: { Accept: 'application/json' },
-  });
-
-  if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`Failed to get simulation: ${res.status} ${errorText}`);
-  }
-
-  const response: GenericSimulationResponse = await res.json();
+  const response = await v2Fetch<GenericSimulationResponse>(
+    `${API_V2_BASE_URL}/simulations/${simulationId}`,
+    `fetchSimulationByIdV2(${simulationId})`,
+    {
+      headers: { Accept: 'application/json' },
+    }
+  );
 
   if (response.simulation_type === 'household') {
     return fromHouseholdSimulationResponse({

@@ -153,7 +153,7 @@ describe('householdCalculation v2 API', () => {
 
       // When / Then
       await expect(createHouseholdCalculationJobV2(payload)).rejects.toThrow(
-        'Failed to create calculation job: 422'
+        'createHouseholdCalculationJobV2: 422 Validation error'
       );
     });
   });
@@ -190,7 +190,7 @@ describe('householdCalculation v2 API', () => {
 
       // When / Then
       await expect(getHouseholdCalculationJobStatusV2(TEST_IDS.JOB_ID)).rejects.toThrow(
-        `Calculation job ${TEST_IDS.JOB_ID} not found`
+        `getHouseholdCalculationJobStatusV2(${TEST_IDS.JOB_ID}): 404 Not found`
       );
     });
   });
@@ -248,7 +248,7 @@ describe('householdCalculation v2 API', () => {
           timeoutMs: 50,
           pollIntervalMs: 10,
         })
-      ).rejects.toThrow('Calculation timed out');
+      ).rejects.toThrow(/timed out/);
     });
   });
 });
