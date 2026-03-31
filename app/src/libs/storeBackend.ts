@@ -9,8 +9,8 @@
  * is the anonymous user UUID.
  */
 
-export type StoreBackend = "api" | "localStorage";
+export type StoreBackend = 'api' | 'localStorage';
 
 export function getStoreBackend(): StoreBackend {
-  return "api";
+  return 'api';
 }

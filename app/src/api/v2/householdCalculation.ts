@@ -49,7 +49,7 @@ export interface HouseholdCalculatePayload {
 function householdToCalculatePayload(
   household: V2HouseholdShape,
   policyId?: string,
-  dynamicId?: string,
+  dynamicId?: string
 ): HouseholdCalculatePayload {
   return {
     country_id: household.country_id,
