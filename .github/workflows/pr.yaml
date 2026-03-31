@@ -56,20 +56,20 @@ jobs:
           BLOCKED=$(echo "$BLOCKED" | sed '/^$/d')
 
           if [ -n "$BLOCKED" ]; then
-            echo "::warning::⚠️ Migration guard: the following files have been ported to the Next.js website."
-            echo "::warning::This check is temporary — it will be removed after the Next.js cutover (#817)."
+            echo "::error::⚠️ Migration guard: the following files have been ported to the Next.js website."
+            echo "This check is temporary — it will be removed after the Next.js cutover (#817)."
             echo ""
             echo "Files flagged:"
             echo "$BLOCKED"
             echo ""
-            echo "These files now have Next.js equivalents in website/. Changes should go there instead."
+            echo "These files now have Next.js equivalents in website/. Make your changes there instead."
             echo "Calculator components in app/ (report builder, household, charts, etc.) are fine to modify."
             echo ""
             echo "  - Website pages/components → website/src/"
             echo "  - vercel.json (root) → website/next.config.ts rewrites"
             echo "  - app/src/data/*, app/public/assets/* → OK (shared data)"
             echo ""
-            echo "If this change is intentional (e.g. bug fix needed in both Vite and Next.js), this warning can be ignored."
+            exit 1
           fi
 
   lint:
