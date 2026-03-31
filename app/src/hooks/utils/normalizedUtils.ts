@@ -134,6 +134,18 @@ export function extractUniqueIds<T extends { [key: string]: any }>(
 }
 
 /**
+ * Detect whether an entity ID is a v2 UUID (vs a v1 integer ID).
+ * Used to route fetches to the correct API version.
+ */
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+export function isV2EntityId(id: string): boolean {
+  if (typeof id !== 'string' || !id) {
+    return false;
+  }
+  return UUID_RE.test(id);
+}
+
+/**
  * Helper to create a lookup map from an array of objects
  */
 export function createLookupMap<T extends { id: string | number }>(items: T[]): Record<string, T> {
