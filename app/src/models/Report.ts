@@ -1,8 +1,8 @@
-import type { CountryId } from "@/libs/countries";
-import { BaseModel } from "./BaseModel";
+import type { CountryId } from '@/libs/countries';
+import { BaseModel } from './BaseModel';
 
-type ReportStatus = "pending" | "running" | "complete" | "error";
-type ReportOutputType = "household" | "economy";
+type ReportStatus = 'pending' | 'running' | 'complete' | 'error';
+type ReportOutputType = 'household' | 'economy';
 
 interface ReportData {
   id: string;
@@ -28,9 +28,12 @@ export class Report extends BaseModel<ReportData> {
 
   constructor(data: ReportData) {
     super();
-    if (!data.id) throw new Error("Report requires an id");
-    if (!data.simulationIds?.length)
-      throw new Error("Report requires at least one simulationId");
+    if (!data.id) {
+      throw new Error('Report requires an id');
+    }
+    if (!data.simulationIds?.length) {
+      throw new Error('Report requires at least one simulationId');
+    }
 
     this.id = data.id;
     this.countryId = data.countryId;
@@ -58,19 +61,19 @@ export class Report extends BaseModel<ReportData> {
   }
 
   get isHouseholdReport(): boolean {
-    return this.outputType === "household";
+    return this.outputType === 'household';
   }
   get isEconomyReport(): boolean {
-    return this.outputType === "economy";
+    return this.outputType === 'economy';
   }
   get isComplete(): boolean {
-    return this._status === "complete";
+    return this._status === 'complete';
   }
   get isPending(): boolean {
-    return this._status === "pending" || this._status === "running";
+    return this._status === 'pending' || this._status === 'running';
   }
   get isError(): boolean {
-    return this._status === "error";
+    return this._status === 'error';
   }
   get baselineSimulationId(): string {
     return this._simulationIds[0];
