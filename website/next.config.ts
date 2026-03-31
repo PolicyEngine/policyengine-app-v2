@@ -38,6 +38,9 @@ const nextConfig: NextConfig = {
         // Oregon Kicker Refund calculator (Vercel)
         { source: "/us/oregon-kicker-refund", destination: "https://oregon-kicker-refund.vercel.app/us/oregon-kicker-refund" },
         { source: "/us/oregon-kicker-refund/:path*", destination: "https://oregon-kicker-refund.vercel.app/us/oregon-kicker-refund/:path*" },
+        // Household API docs (Vercel) — beforeFiles so it intercepts before Next.js trailing slash redirect
+        { source: "/us/api", destination: "https://household-api-docs-policy-engine.vercel.app/us/api/" },
+        { source: "/us/api/:path*", destination: "https://household-api-docs-policy-engine.vercel.app/us/api/:path*" },
       ],
       // afterFiles: checked after pages/public files but before dynamic routes.
       afterFiles: [
@@ -55,9 +58,6 @@ const nextConfig: NextConfig = {
         // Model documentation (Vercel)
         { source: "/:countryId/model", destination: "https://policyengine-model-phi.vercel.app/?country=:countryId" },
         { source: "/:countryId/model/:path*", destination: "https://policyengine-model-phi.vercel.app/:path*?country=:countryId" },
-        // Household API docs (Vercel)
-        { source: "/us/api", destination: "https://household-api-docs-policy-engine.vercel.app/us/api" },
-        { source: "/us/api/:path*", destination: "https://household-api-docs-policy-engine.vercel.app/us/api/:path*" },
         // California wealth tax calculator embed (Vercel)
         { source: "/us/california-wealth-tax/embed", destination: "https://california-wealth-tax.vercel.app/us/california-wealth-tax/embed" },
         { source: "/us/california-wealth-tax/embed/:path*", destination: "https://california-wealth-tax.vercel.app/us/california-wealth-tax/embed/:path*" },
