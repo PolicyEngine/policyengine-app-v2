@@ -28,6 +28,7 @@ interface NavItemSetup {
   href?: string;
   hasDropdown: boolean;
   dropdownItems?: DropdownItem[];
+  external?: boolean;
 }
 
 const COUNTRIES = [
@@ -230,10 +231,12 @@ function NavItem({ setup }: { setup: NavItemSetup }) {
   }
 
   if (href) {
+    // External rewrite routes (Model, API) use <a> to avoid Next.js RSC prefetch 404s
+    const Tag = setup.external ? "a" : Link;
     return (
-      <Link href={href} style={navItemStyle} {...hoverHandlers}>
+      <Tag href={href} style={navItemStyle} {...hoverHandlers}>
         {label}
-      </Link>
+      </Tag>
     );
   }
 
@@ -417,6 +420,24 @@ function CountrySelector() {
 
 // --- Mobile menu ---
 
+const mobileNavLinkStyle: React.CSSProperties = {
+  color: colors.text.inverse,
+  textDecoration: "none",
+  fontWeight: typography.fontWeight.medium,
+  fontSize: typography.fontSize.sm,
+  fontFamily: typography.fontFamily.primary,
+  display: "block",
+};
+
+function MobileNavLink({ item, onClose }: { item: NavItemSetup; onClose: () => void }) {
+  const Tag = item.external ? "a" : Link;
+  return (
+    <Tag href={item.href || "#"} onClick={onClose} style={mobileNavLinkStyle}>
+      {item.label}
+    </Tag>
+  );
+}
+
 function MobileMenu({
   open,
   onClose,
@@ -544,21 +565,7 @@ function MobileMenu({
                 </div>
               </div>
             ) : (
-              <Link
-                key={item.label}
-                href={item.href || "#"}
-                onClick={onClose}
-                style={{
-                  color: colors.text.inverse,
-                  textDecoration: "none",
-                  fontWeight: typography.fontWeight.medium,
-                  fontSize: typography.fontSize.sm,
-                  fontFamily: typography.fontFamily.primary,
-                  display: "block",
-                }}
-              >
-                {item.label}
-              </Link>
+              <MobileNavLink key={item.label} item={item} onClose={onClose} />
             ),
           )}
         </div>
@@ -575,8 +582,8 @@ export default function Header() {
 
   const navItems: NavItemSetup[] = [
     { label: "Research", href: `/${countryId}/research`, hasDropdown: false },
-    { label: "Model", href: `/${countryId}/model`, hasDropdown: false },
-    { label: "API", href: `/${countryId}/api`, hasDropdown: false },
+    { label: "Model", href: `/${countryId}/model`, hasDropdown: false, external: true },
+    { label: "API", href: `/${countryId}/api`, hasDropdown: false, external: true },
     {
       label: "About",
       hasDropdown: true,
