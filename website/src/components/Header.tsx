@@ -232,17 +232,11 @@ function NavItem({ setup }: { setup: NavItemSetup }) {
 
   if (href) {
     // External rewrite routes (Model, API) use <a> to avoid Next.js RSC prefetch 404s
-    if (setup.external) {
-      return (
-        <a href={href} style={navItemStyle} {...hoverHandlers}>
-          {label}
-        </a>
-      );
-    }
+    const Tag = setup.external ? "a" : Link;
     return (
-      <Link href={href} style={navItemStyle} {...hoverHandlers}>
+      <Tag href={href} style={navItemStyle} {...hoverHandlers}>
         {label}
-      </Link>
+      </Tag>
     );
   }
 
@@ -426,6 +420,24 @@ function CountrySelector() {
 
 // --- Mobile menu ---
 
+const mobileNavLinkStyle: React.CSSProperties = {
+  color: colors.text.inverse,
+  textDecoration: "none",
+  fontWeight: typography.fontWeight.medium,
+  fontSize: typography.fontSize.sm,
+  fontFamily: typography.fontFamily.primary,
+  display: "block",
+};
+
+function MobileNavLink({ item, onClose }: { item: NavItemSetup; onClose: () => void }) {
+  const Tag = item.external ? "a" : Link;
+  return (
+    <Tag href={item.href || "#"} onClick={onClose} style={mobileNavLinkStyle}>
+      {item.label}
+    </Tag>
+  );
+}
+
 function MobileMenu({
   open,
   onClose,
@@ -553,21 +565,7 @@ function MobileMenu({
                 </div>
               </div>
             ) : (
-              <Link
-                key={item.label}
-                href={item.href || "#"}
-                onClick={onClose}
-                style={{
-                  color: colors.text.inverse,
-                  textDecoration: "none",
-                  fontWeight: typography.fontWeight.medium,
-                  fontSize: typography.fontSize.sm,
-                  fontFamily: typography.fontFamily.primary,
-                  display: "block",
-                }}
-              >
-                {item.label}
-              </Link>
+              <MobileNavLink key={item.label} item={item} onClose={onClose} />
             ),
           )}
         </div>

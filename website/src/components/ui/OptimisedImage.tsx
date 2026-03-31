@@ -50,6 +50,11 @@ function optimisedSrc(src: string, width?: number, quality = 80): string {
     return src;
   }
 
+  // Skip SVGs — vector images can't be raster-optimized
+  if (src.endsWith('.svg')) {
+    return src;
+  }
+
   // Skip in dev — Vercel image API isn't available locally
   if (process.env.NODE_ENV === 'development') {
     return src;
