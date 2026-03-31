@@ -207,7 +207,9 @@ export function createMockEconomySimulationResponse(
 // ============================================================================
 
 export function createMockEconomicImpactResponse(
-  overrides?: Partial<{ status: 'pending' | 'execution_deferred' | 'running' | 'completed' | 'failed' }>
+  overrides?: Partial<{
+    status: 'pending' | 'execution_deferred' | 'running' | 'completed' | 'failed';
+  }>
 ) {
   return {
     report_id: TEST_IDS.REPORT_ID,
@@ -236,7 +238,9 @@ export function createMockEconomicImpactResponse(
 // ============================================================================
 
 export function createMockHouseholdImpactResponse(
-  overrides?: Partial<{ status: 'pending' | 'execution_deferred' | 'running' | 'completed' | 'failed' }>
+  overrides?: Partial<{
+    status: 'pending' | 'execution_deferred' | 'running' | 'completed' | 'failed';
+  }>
 ) {
   return {
     report_id: TEST_IDS.REPORT_ID,
