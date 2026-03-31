@@ -1,5 +1,4 @@
 import { useMemo } from 'react';
-import { useQueryNormalizer } from '@normy/react-query';
 import { useQueries, UseQueryResult } from '@tanstack/react-query';
 
 /**
@@ -80,43 +79,6 @@ export function combineLoadingStates(
 }
 
 /**
- * Hook for accessing normalized data via @normy/react-query
- */
-export function useNormalizedData<T>(_entityKey: string, id: string): T | null {
-  const queryNormalizer = useQueryNormalizer();
-  return queryNormalizer.getObjectById(id) || null;
-}
-
-/**
- * Hook for getting all entities of a type
- */
-export function useAllEntities<T>(entityKey: string): T[] {
-  const queryNormalizer = useQueryNormalizer();
-  const data = queryNormalizer.getNormalizedData(entityKey);
-  return data ? Object.values(data) : [];
-}
-
-/**
- * Hook for searching entities by a specific field
- */
-export function useSearchEntities<T extends Record<string, any>>(
-  entityKey: string,
-  searchField: keyof T,
-  searchTerm: string
-): T[] {
-  const entities = useAllEntities<T>(entityKey);
-
-  if (!searchTerm) {
-    return entities;
-  }
-
-  const lowerSearchTerm = searchTerm.toLowerCase();
-  return entities.filter((entity) =>
-    entity[searchField]?.toString().toLowerCase().includes(lowerSearchTerm)
-  );
-}
-
-/**
  * Helper to extract unique IDs from an array of objects
  */
 export function extractUniqueIds<T extends { [key: string]: any }>(
@@ -156,74 +118,4 @@ export function createLookupMap<T extends { id: string | number }>(items: T[]): 
     }
   });
   return map;
-}
-
-/**
- * Safe getter for nested entity references using @normy/react-query
- */
-export function useNestedEntity<T>(
-  entityType: string,
-  id: string | number | undefined | null
-): T | null {
-  const queryNormalizer = useQueryNormalizer();
-
-  if (id == null) {
-    return null;
-  }
-
-  const entities = queryNormalizer.getNormalizedData(entityType);
-  return entities?.[id.toString()] || null;
-}
-
-/**
- * Hook to get related entities through a junction table
- */
-export function useRelatedEntity<T, U>(
-  primaryEntityKey: string,
-  relatedEntityKey: string,
-  relationshipField: keyof T,
-  id: string
-): U | null {
-  const queryNormalizer = useQueryNormalizer();
-
-  const primaryEntities = queryNormalizer.getNormalizedData(primaryEntityKey);
-  const primaryEntity = primaryEntities?.[id];
-
-  if (!primaryEntity) {
-    return null;
-  }
-
-  const relatedId = primaryEntity[relationshipField];
-  if (!relatedId) {
-    return null;
-  }
-
-  const relatedEntities = queryNormalizer.getNormalizedData(relatedEntityKey);
-  return relatedEntities?.[relatedId] || null;
-}
-
-/**
- * Hook for manual data normalization updates
- */
-export function useManualNormalization() {
-  const queryNormalizer = useQueryNormalizer();
-
-  return {
-    updateEntity: <T extends { id: string | number }>(entityKey: string, entity: T) => {
-      queryNormalizer.setNormalizedData({
-        [entityKey]: {
-          [entity.id]: entity,
-        },
-      });
-    },
-    updateEntities: <T extends { id: string | number }>(entityKey: string, entities: T[]) => {
-      const normalized: Record<string, T> = {};
-      entities.forEach((entity) => {
-        normalized[entity.id] = entity;
-      });
-      queryNormalizer.setNormalizedData({
-        [entityKey]: normalized,
-      });
-    },
-  };
 }

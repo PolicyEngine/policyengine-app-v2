@@ -1,5 +1,4 @@
-import { useQueryNormalizer } from '@normy/react-query';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
 import { HouseholdAdapter, PolicyAdapter, SimulationAdapter } from '@/adapters';
 import { fetchHouseholdById } from '@/api/household';
@@ -59,7 +58,7 @@ export interface EnhancedUserSimulation {
  */
 export const useUserSimulations = (userId: string) => {
   const country = useCurrentCountry();
-  const queryNormalizer = useQueryNormalizer();
+  const queryClient = useQueryClient();
 
   // Get geography data from metadata
   const geographyOptions = useSelector((state: RootState) => state.metadata.economyOptions.region);
@@ -153,14 +152,12 @@ export const useUserSimulations = (userId: string) => {
     simulationAssociations
       ?.filter((userSim) => userSim.simulationId) // Filter out associations without simulationId
       .map((userSim) => {
-        // Get simulation from normalized cache or query results
-        const simulation =
-          (queryNormalizer.getObjectById(userSim.simulationId) as Simulation | undefined) ||
-          simulations.find((s) => s.id === userSim.simulationId);
+        // Get simulation from query results
+        const simulation = simulations.find((s) => s.id === userSim.simulationId);
 
-        // Get related entities from normalized cache
+        // Get related policy from query results
         const policy = simulation?.policyId
-          ? (queryNormalizer.getObjectById(simulation.policyId) as Policy | undefined)
+          ? policyResults.queries.find((q) => q.data?.id === simulation.policyId)?.data
           : undefined;
 
         // Determine if populationId is household or geography based on populationType
@@ -170,9 +167,9 @@ export const useUserSimulations = (userId: string) => {
 
         if (simulation?.populationId && simulation?.populationType) {
           if (simulation.populationType === 'household') {
-            household = queryNormalizer.getObjectById(simulation.populationId) as
-              | Household
-              | undefined;
+            household = householdResults.queries.find(
+              (q) => q.data?.id === simulation.populationId
+            )?.data;
             userHousehold = householdAssociations?.find(
               (ha) => ha.householdId === simulation.populationId
             );
@@ -240,12 +237,12 @@ export const useUserSimulations = (userId: string) => {
     getSimulationsByPolicy,
     getSimulationsByHousehold,
 
-    // Direct access to normalized cache
+    // Direct cache access via React Query
     getNormalizedSimulation: (id: string) =>
-      queryNormalizer.getObjectById(id) as Simulation | undefined,
-    getNormalizedPolicy: (id: string) => queryNormalizer.getObjectById(id) as Policy | undefined,
+      queryClient.getQueryData<Simulation>(simulationKeys.byId(id)),
+    getNormalizedPolicy: (id: string) => queryClient.getQueryData<Policy>(policyKeys.byId(id)),
     getNormalizedHousehold: (id: string) =>
-      queryNormalizer.getObjectById(id) as Household | undefined,
+      queryClient.getQueryData<Household>(householdKeys.byId(id)),
   };
 };
 
@@ -254,11 +251,11 @@ export const useUserSimulations = (userId: string) => {
  * Leverages the normalized cache for efficient data access
  */
 export const useUserSimulationById = (userId: string, simulationId: string) => {
-  const queryNormalizer = useQueryNormalizer();
+  const queryClient = useQueryClient();
   const country = useCurrentCountry();
 
-  // Try to get from normalized cache first
-  const cachedSimulation = queryNormalizer.getObjectById(simulationId) as Simulation | undefined;
+  // Try to get from React Query cache first
+  const cachedSimulation = queryClient.getQueryData<Simulation>(simulationKeys.byId(simulationId));
 
   // Fetch if not in cache
   const {
