@@ -206,10 +206,12 @@ export function createMockEconomySimulationResponse(
 // Mock response factories — Economy Analysis
 // ============================================================================
 
-export function createMockEconomicImpactResponse(overrides?: Partial<{ status: string }>) {
+export function createMockEconomicImpactResponse(
+  overrides?: Partial<{ status: 'pending' | 'execution_deferred' | 'running' | 'completed' | 'failed' }>
+) {
   return {
     report_id: TEST_IDS.REPORT_ID,
-    status: overrides?.status ?? 'completed',
+    status: overrides?.status ?? ('completed' as const),
     baseline_simulation: { id: 'sim-baseline', status: 'completed', error_message: null },
     reform_simulation: { id: 'sim-reform', status: 'completed', error_message: null },
     region: null,
@@ -233,11 +235,13 @@ export function createMockEconomicImpactResponse(overrides?: Partial<{ status: s
 // Mock response factories — Household Analysis
 // ============================================================================
 
-export function createMockHouseholdImpactResponse(overrides?: Partial<{ status: string }>) {
+export function createMockHouseholdImpactResponse(
+  overrides?: Partial<{ status: 'pending' | 'execution_deferred' | 'running' | 'completed' | 'failed' }>
+) {
   return {
     report_id: TEST_IDS.REPORT_ID,
-    report_type: 'household',
-    status: overrides?.status ?? 'completed',
+    report_type: 'household' as const,
+    status: overrides?.status ?? ('completed' as const),
     baseline_simulation: { id: 'sim-baseline', status: 'completed', error_message: null },
     reform_simulation: { id: 'sim-reform', status: 'completed', error_message: null },
     baseline_result: { net_income: 50000 },
