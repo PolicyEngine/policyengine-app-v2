@@ -32,7 +32,6 @@
     "chromatic": "VITE_APP_MODE=website chromatic --only-changed --build-script-name='storybook:build'"
   },
   "dependencies": {
-    "@normy/react-query": "^0.20.0",
     "@policyengine/design-system": "*",
     "@reduxjs/toolkit": "^2.8.2",
     "@tabler/icons-react": "^3.34.0",

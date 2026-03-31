@@ -1,6 +1,6 @@
-import type { CountryId } from "@/libs/countries";
-import type { V2PolicyResponse } from "@/api/policy";
-import { BaseModel } from "./BaseModel";
+import type { V2PolicyResponse } from '@/api/policy';
+import type { CountryId } from '@/libs/countries';
+import { BaseModel } from './BaseModel';
 
 interface PolicyParameter {
   parameterName: string;
@@ -73,9 +73,7 @@ export class Policy extends BaseModel<PolicyData> {
    * Create from v2 API response.
    */
   static fromV2Response(response: V2PolicyResponse): Policy {
-    const parameters: PolicyParameter[] = (
-      response.parameter_values ?? []
-    ).map((pv) => ({
+    const parameters: PolicyParameter[] = (response.parameter_values ?? []).map((pv) => ({
       parameterName: pv.parameter_name ?? pv.parameter_id,
       parameterId: pv.parameter_id,
       value: pv.value_json,
@@ -87,7 +85,7 @@ export class Policy extends BaseModel<PolicyData> {
       id: response.id,
       countryId: response.tax_benefit_model_id as unknown as CountryId,
       label: response.name ?? null,
-      apiVersion: "v2",
+      apiVersion: 'v2',
       isCreated: true,
       parameters,
     });

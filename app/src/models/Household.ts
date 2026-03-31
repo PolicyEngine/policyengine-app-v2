@@ -1,6 +1,6 @@
-import type { CountryId } from "@/libs/countries";
-import type { HouseholdV2Response } from "@/api/v2/households";
-import { BaseModel } from "./BaseModel";
+import type { HouseholdV2Response } from '@/api/v2/households';
+import type { CountryId } from '@/libs/countries';
+import { BaseModel } from './BaseModel';
 
 interface HouseholdData {
   id: string;

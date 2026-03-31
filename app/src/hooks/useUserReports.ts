@@ -1,5 +1,4 @@
-import { useQueryNormalizer } from '@normy/react-query';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
 import { HouseholdAdapter, PolicyAdapter, ReportAdapter, SimulationAdapter } from '@/adapters';
 import { fetchHouseholdById } from '@/api/household';
@@ -75,7 +74,7 @@ export interface EnhancedUserReport {
  */
 export const useUserReports = (userId: string) => {
   const country = useCurrentCountry();
-  const queryNormalizer = useQueryNormalizer();
+  const queryClient = useQueryClient();
 
   // Get geography data from metadata
   const geographyOptions = useSelector((state: RootState) => state.metadata.economyOptions.region);
@@ -196,27 +195,20 @@ export const useUserReports = (userId: string) => {
     reportAssociations
       ?.filter((userRep) => userRep.reportId) // Filter out associations without reportId
       .map((userRep) => {
-        // Get report from normalized cache or query results
-        const cachedReport = queryNormalizer.getObjectById(userRep.reportId) as Report | undefined;
-        const directReport = reports.find((r) => r.id === userRep.reportId);
+        // Get report from query results
+        const report = reports.find((r) => r.id === userRep.reportId);
 
-        const report = cachedReport || directReport;
-
-        // Get related simulations
+        // Get related simulations from query results
         const reportSimulations =
           report?.simulationIds
-            ?.map((simId) => {
-              const fromNormy = queryNormalizer.getObjectById(simId) as Simulation | undefined;
-              const fromQuery = simulations.find((s) => s.id === simId);
-              return fromNormy || fromQuery;
-            })
+            ?.map((simId) => simulations.find((s) => s.id === simId))
             .filter((s): s is Simulation => !!s) ?? [];
 
-        // Get policies from simulations
+        // Get policies from query results
         const reportPolicies = reportSimulations
           .map((sim) => sim.policyId)
           .filter((id): id is string => !!id)
-          .map((policyId) => queryNormalizer.getObjectById(policyId) as Policy | undefined)
+          .map((policyId) => policyResults.queries.find((q) => q.data?.id === policyId)?.data)
           .filter((p): p is Policy => !!p);
 
         // Get unique policy IDs for finding user associations
@@ -231,9 +223,9 @@ export const useUserReports = (userId: string) => {
         reportSimulations.forEach((sim) => {
           if (sim.populationId && sim.populationType) {
             if (sim.populationType === 'household') {
-              const household = queryNormalizer.getObjectById(sim.populationId) as
-                | Household
-                | undefined;
+              const household = householdResults.queries.find(
+                (q) => q.data?.id === sim.populationId
+              )?.data;
               if (household) {
                 reportHouseholds.push(household);
               }
@@ -324,13 +316,13 @@ export const useUserReports = (userId: string) => {
     getReportsByPolicy,
     getReportsByHousehold,
 
-    // Direct access to normalized cache
-    getNormalizedReport: (id: string) => queryNormalizer.getObjectById(id) as Report | undefined,
+    // Direct cache access via React Query
+    getNormalizedReport: (id: string) => queryClient.getQueryData<Report>(reportKeys.byId(id)),
     getNormalizedSimulation: (id: string) =>
-      queryNormalizer.getObjectById(id) as Simulation | undefined,
-    getNormalizedPolicy: (id: string) => queryNormalizer.getObjectById(id) as Policy | undefined,
+      queryClient.getQueryData<Simulation>(simulationKeys.byId(id)),
+    getNormalizedPolicy: (id: string) => queryClient.getQueryData<Policy>(policyKeys.byId(id)),
     getNormalizedHousehold: (id: string) =>
-      queryNormalizer.getObjectById(id) as Household | undefined,
+      queryClient.getQueryData<Household>(householdKeys.byId(id)),
   };
 };
 
@@ -342,7 +334,7 @@ export const useUserReports = (userId: string) => {
  * @returns Complete report data including UserReport, base Report, and all related entities
  */
 export const useUserReportById = (userReportId: string, options?: { enabled?: boolean }) => {
-  const queryNormalizer = useQueryNormalizer();
+  const queryClient = useQueryClient();
   const country = useCurrentCountry();
   const isEnabled = options?.enabled !== false;
 
@@ -357,9 +349,9 @@ export const useUserReportById = (userReportId: string, options?: { enabled?: bo
   const baseReportId = userReport?.reportId;
   const userId = userReport?.userId;
 
-  // Try to get base report from normalized cache first
+  // Try to get base report from React Query cache first
   const cachedReport = baseReportId
-    ? (queryNormalizer.getObjectById(baseReportId) as Report | undefined)
+    ? queryClient.getQueryData<Report>(reportKeys.byId(baseReportId))
     : undefined;
 
   // Step 2: Fetch base report (query always enabled to allow invalidation)

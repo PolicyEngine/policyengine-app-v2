@@ -1,4 +1,4 @@
-import type { CountryId } from "@/libs/countries";
+import type { CountryId } from '@/libs/countries';
 
 interface UserHouseholdPopulationData {
   id: string;

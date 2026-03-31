@@ -1,8 +1,8 @@
-import type { CountryId } from "@/libs/countries";
-import { BaseModel } from "./BaseModel";
+import type { CountryId } from '@/libs/countries';
+import { BaseModel } from './BaseModel';
 
-type SimulationStatus = "pending" | "running" | "complete" | "error";
-type PopulationType = "household" | "geography";
+type SimulationStatus = 'pending' | 'running' | 'complete' | 'error';
+type PopulationType = 'household' | 'geography';
 
 interface SimulationData {
   id: string;
@@ -66,19 +66,19 @@ export class Simulation extends BaseModel<SimulationData> {
     return this._policyId !== null;
   }
   get isHousehold(): boolean {
-    return this.populationType === "household";
+    return this.populationType === 'household';
   }
   get isEconomy(): boolean {
-    return this.populationType === "geography";
+    return this.populationType === 'geography';
   }
   get isComplete(): boolean {
-    return this._status === "complete";
+    return this._status === 'complete';
   }
   get isPending(): boolean {
-    return this._status === "pending" || this._status === "running";
+    return this._status === 'pending' || this._status === 'running';
   }
   get isError(): boolean {
-    return this._status === "error";
+    return this._status === 'error';
   }
 
   // --- Setters ---
@@ -89,15 +89,13 @@ export class Simulation extends BaseModel<SimulationData> {
 
   set status(value: SimulationStatus) {
     const valid: Record<SimulationStatus, SimulationStatus[]> = {
-      pending: ["running", "complete", "error"],
-      running: ["complete", "error"],
+      pending: ['running', 'complete', 'error'],
+      running: ['complete', 'error'],
       complete: [],
       error: [],
     };
     if (!valid[this._status].includes(value)) {
-      throw new Error(
-        `Invalid status transition: ${this._status} → ${value}`,
-      );
+      throw new Error(`Invalid status transition: ${this._status} → ${value}`);
     }
     this._status = value;
   }

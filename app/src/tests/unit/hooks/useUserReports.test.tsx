@@ -29,7 +29,6 @@ import {
 } from '@/tests/fixtures/api/reportAssociationMocks';
 import { createMockQueryClient } from '@/tests/fixtures/hooks/hooksMocks';
 import {
-  createNormalizedCacheMock,
   ERROR_MESSAGES,
   mockHousehold1,
   mockHouseholdMetadata,
@@ -49,12 +48,6 @@ import {
   TEST_SIMULATION_ID_1,
   TEST_SIMULATION_ID_2,
 } from '@/tests/fixtures/hooks/useUserReportsMocks';
-
-// Mock the normalizer
-vi.mock('@normy/react-query', () => ({
-  useQueryNormalizer: () => createNormalizedCacheMock(),
-  QueryNormalizerProvider: ({ children }: { children: React.ReactNode }) => children,
-}));
 
 // Mock the association hooks
 vi.mock('@/hooks/useUserReportAssociations', () => ({
