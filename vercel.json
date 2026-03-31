@@ -149,6 +149,10 @@
       "source": "/uk/api/:path*",
       "destination": "https://household-api-docs-policy-engine.vercel.app/uk/api/:path*"
     },
+    {
+      "source": "/pe84",
+      "destination": "https://april-fools-2026-two.vercel.app/calculator"
+    },
     { "source": "/(.*)", "destination": "/website.html" }
   ],
   "headers": [
