@@ -81,8 +81,14 @@ describe("Developer tools pages", () => {
     expect(
       await screen.findByText(/all systems operational/i),
     ).toBeInTheDocument();
-    expect(screen.getByText("US household API")).toBeInTheDocument();
-    expect(screen.getByText("UK household API")).toBeInTheDocument();
+    expect(
+      screen.getByText("PolicyEngine internal API (api.policyengine.org)"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "PolicyEngine household API (household.api.policyengine.org)",
+      ),
+    ).toBeInTheDocument();
     expect(container.firstElementChild).toHaveStyle({
       minHeight: `calc(100vh - ${spacing.layout.header})`,
       display: "flex",

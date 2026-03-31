@@ -16,6 +16,10 @@ import type {
 } from "@/types/betterstack";
 
 const MONITOR_IDS = ["1160318", "4160084"];
+const MONITOR_LABELS: Record<string, string> = {
+  "1160318": "PolicyEngine internal API (api.policyengine.org)",
+  "4160084": "PolicyEngine household API (household.api.policyengine.org)",
+};
 
 type AggregateStatus = "operational" | "degraded" | "down";
 
@@ -197,6 +201,10 @@ function formatMonitorStatus(
   return { label: "Pending", color: colors.text.tertiary };
 }
 
+function getMonitorLabel(monitor: MonitorData): string {
+  return MONITOR_LABELS[monitor.id] ?? monitor.name;
+}
+
 function AggregateStatusBanner({ monitors }: { monitors: MonitorData[] }) {
   const aggregateStatus = getAggregateStatus(monitors);
   const config = STATUS_CONFIG[aggregateStatus];
@@ -372,6 +380,7 @@ function UptimeBar({ days }: { days: DayRecord[] }) {
 
 function MonitorRow({ monitor }: { monitor: MonitorData }) {
   const statusInfo = formatMonitorStatus(monitor.status);
+  const monitorLabel = getMonitorLabel(monitor);
 
   return (
     <div
@@ -401,7 +410,7 @@ function MonitorRow({ monitor }: { monitor: MonitorData }) {
               color: colors.text.primary,
             }}
           >
-            {monitor.name}
+            {monitorLabel}
           </span>
           <span
             style={{
