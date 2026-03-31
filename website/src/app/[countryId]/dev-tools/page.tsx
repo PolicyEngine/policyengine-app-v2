@@ -69,7 +69,13 @@ export default async function DevToolsPage({
   const { countryId } = await params;
 
   return (
-    <div>
+    <div
+      style={{
+        minHeight: `calc(100vh - ${spacing.layout.header})`,
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
       <HeroSection
         title="Developer tools"
         description="Tools and resources for developers building on the PolicyEngine platform."
@@ -78,6 +84,7 @@ export default async function DevToolsPage({
       <div
         className="tw:grid tw:grid-cols-1 tw:sm:grid-cols-2 tw:md:grid-cols-3 tw:gap-xl"
         style={{
+          flex: 1,
           paddingTop: spacing["4xl"],
           paddingBottom: spacing["4xl"],
           backgroundColor: colors.background.tertiary,

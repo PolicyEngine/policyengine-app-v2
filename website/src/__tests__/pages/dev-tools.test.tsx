@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+import { spacing } from "@policyengine/design-system/tokens";
 import DevToolsPage from "../../app/[countryId]/dev-tools/page";
 import ApiStatusPage from "../../app/[countryId]/dev-tools/api-status/page";
 
@@ -63,20 +64,30 @@ describe("Developer tools pages", () => {
       params: Promise.resolve({ countryId: "us" }),
     });
 
-    render(page);
+    const { container } = render(page);
 
     const apiStatusLink = screen.getByRole("link", { name: /api status/i });
     expect(apiStatusLink).toHaveAttribute("href", "/us/dev-tools/api-status");
+    expect(container.firstElementChild).toHaveStyle({
+      minHeight: `calc(100vh - ${spacing.layout.header})`,
+      display: "flex",
+      flexDirection: "column",
+    });
   });
 
   test("API status page loads and renders monitor data", async () => {
-    render(<ApiStatusPage />);
+    const { container } = render(<ApiStatusPage />);
 
     expect(
       await screen.findByText(/all systems operational/i),
     ).toBeInTheDocument();
     expect(screen.getByText("US household API")).toBeInTheDocument();
     expect(screen.getByText("UK household API")).toBeInTheDocument();
+    expect(container.firstElementChild).toHaveStyle({
+      minHeight: `calc(100vh - ${spacing.layout.header})`,
+      display: "flex",
+      flexDirection: "column",
+    });
     expect(global.fetch).toHaveBeenCalledWith(
       "/api/betterstack?monitors=1160318,4160084",
     );
