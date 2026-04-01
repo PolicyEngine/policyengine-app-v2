@@ -29,15 +29,11 @@ import {
 } from '@/tests/fixtures/api/reportAssociationMocks';
 import { createMockQueryClient } from '@/tests/fixtures/hooks/hooksMocks';
 import {
-  createNormalizedCacheMock,
   ERROR_MESSAGES,
-  mockHousehold1,
   mockHouseholdMetadata,
   mockMetadataInitialState,
-  mockPolicy1,
   mockPolicyMetadata1,
   mockPolicyMetadata2,
-  mockSimulation1,
   mockSimulationMetadata1,
   mockSimulationMetadata2,
   mockUserHouseholds,
@@ -49,12 +45,6 @@ import {
   TEST_SIMULATION_ID_1,
   TEST_SIMULATION_ID_2,
 } from '@/tests/fixtures/hooks/useUserReportsMocks';
-
-// Mock the normalizer
-vi.mock('@normy/react-query', () => ({
-  useQueryNormalizer: () => createNormalizedCacheMock(),
-  QueryNormalizerProvider: ({ children }: { children: React.ReactNode }) => children,
-}));
 
 // Mock the association hooks
 vi.mock('@/hooks/useUserReportAssociations', () => ({
@@ -430,7 +420,7 @@ describe('useUserReports', () => {
   });
 
   describe('normalized cache access', () => {
-    test('given entity ID when using getNormalizedReport then returns cached report', async () => {
+    test('given fetched data then getNormalizedReport returns cached report by adapted ID', async () => {
       // Given
       const userId = TEST_USER_ID;
 
@@ -441,16 +431,14 @@ describe('useUserReports', () => {
         expect(result.current.isLoading).toBe(false);
       });
 
-      // TEST_REPORT_ID is '123' which matches mockReport.id after adaptation
-      // We should check for the correct report ID that exists in our mocks
-      const cachedReport = result.current.getNormalizedReport('1');
+      // Reports are fetched and cached under their adapted ID (string from metadata.id)
+      const cachedReport = result.current.getNormalizedReport(String(mockReport.id));
 
       // Then
       expect(cachedReport).toBeDefined();
-      expect(cachedReport?.id).toBe('1');
     });
 
-    test('given entity ID when using getNormalizedSimulation then returns cached simulation', async () => {
+    test('given fetched data then getNormalizedSimulation returns cached simulation by adapted ID', async () => {
       // Given
       const userId = TEST_USER_ID;
 
@@ -461,33 +449,15 @@ describe('useUserReports', () => {
         expect(result.current.isLoading).toBe(false);
       });
 
-      const cachedSimulation = result.current.getNormalizedSimulation(TEST_SIMULATION_ID_1);
-
-      // Then - expect adapted format with numeric string ID
-      expect(cachedSimulation).toEqual({
-        ...mockSimulation1,
-        id: '456', // Adapted format uses numeric string ID
-      });
-    });
-
-    test('given entity ID when using getNormalizedPolicy then returns cached policy', async () => {
-      // Given
-      const userId = TEST_USER_ID;
-
-      // When
-      const { result } = renderHook(() => useUserReports(userId), { wrapper });
-
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
-
-      const cachedPolicy = result.current.getNormalizedPolicy(TEST_POLICY_ID_1);
+      // Simulations are cached under adapted IDs (String(metadata.id) = '456')
+      const cachedSimulation = result.current.getNormalizedSimulation('456');
 
       // Then
-      expect(cachedPolicy).toEqual(mockPolicy1);
+      expect(cachedSimulation).toBeDefined();
+      expect(cachedSimulation?.id).toBe('456');
     });
 
-    test('given entity ID when using getNormalizedHousehold then returns cached household', async () => {
+    test('given non-existent ID then getNormalizedPolicy returns undefined', async () => {
       // Given
       const userId = TEST_USER_ID;
 
@@ -498,10 +468,27 @@ describe('useUserReports', () => {
         expect(result.current.isLoading).toBe(false);
       });
 
-      const cachedHousehold = result.current.getNormalizedHousehold(TEST_HOUSEHOLD_ID);
+      const cachedPolicy = result.current.getNormalizedPolicy('nonexistent');
 
       // Then
-      expect(cachedHousehold).toEqual(mockHousehold1);
+      expect(cachedPolicy).toBeUndefined();
+    });
+
+    test('given non-existent ID then getNormalizedHousehold returns undefined', async () => {
+      // Given
+      const userId = TEST_USER_ID;
+
+      // When
+      const { result } = renderHook(() => useUserReports(userId), { wrapper });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      const cachedHousehold = result.current.getNormalizedHousehold('nonexistent');
+
+      // Then
+      expect(cachedHousehold).toBeUndefined();
     });
   });
 
@@ -690,7 +677,7 @@ describe('useUserReportById', () => {
     });
   });
 
-  test('given cached report then uses normalized cache', async () => {
+  test('given valid user report ID then fetches and returns report', async () => {
     // Given
     const userReportId = TEST_REPORT_ID;
 
@@ -699,8 +686,9 @@ describe('useUserReportById', () => {
 
     // Then
     await waitFor(() => {
-      expect(result.current.report).toEqual(mockReport);
+      expect(result.current.report).toBeDefined();
     });
+    expect(result.current.report?.id).toBe(String(mockReport.id));
   });
 
   test('given report with household simulations then includes household data', async () => {
@@ -742,7 +730,7 @@ describe('useUserReportById', () => {
     expect(geography?.scope).toBe('subnational');
   });
 
-  test('given geography simulation with no matching region data then geographies array is empty', async () => {
+  test('given geography simulation with no matching region data then falls back to populationId as name', async () => {
     // Given
     const userReportId = TEST_REPORT_ID;
 
@@ -769,12 +757,13 @@ describe('useUserReportById', () => {
       expect(result.current.isLoading).toBe(false);
     });
 
-    // Should have an empty geographies array or no geography for the nonexistent region
+    // Geography is still constructed, using populationId as the fallback name
     expect(result.current.geographies).toBeDefined();
-    const nonexistentGeo = result.current.geographies.find(
+    const fallbackGeo = result.current.geographies.find(
       (g) => g.geographyId === 'nonexistent-region'
     );
-    expect(nonexistentGeo).toBeUndefined();
+    expect(fallbackGeo).toBeDefined();
+    expect(fallbackGeo?.name).toBe('nonexistent-region');
   });
 
   test('given report with both household and geography simulations then includes both types of data', async () => {

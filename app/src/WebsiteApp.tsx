@@ -4,7 +4,6 @@
  */
 import './app.css';
 
-import { QueryNormalizerProvider } from '@normy/react-query';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Provider } from 'react-redux';
 import DevTools from '@/components/DevTools';
@@ -28,19 +27,12 @@ export default function WebsiteApp() {
   return (
     <AppProvider mode="website">
       <Provider store={store}>
-        <QueryNormalizerProvider
-          queryClient={queryClient}
-          normalizerConfig={{
-            devLogging: import.meta.env.DEV,
-          }}
-        >
-          <QueryClientProvider client={queryClient}>
-            <TooltipProvider>
-              <WebsiteRouter />
-            </TooltipProvider>
-            <DevTools />
-          </QueryClientProvider>
-        </QueryNormalizerProvider>
+        <QueryClientProvider client={queryClient}>
+          <TooltipProvider>
+            <WebsiteRouter />
+          </TooltipProvider>
+          <DevTools />
+        </QueryClientProvider>
       </Provider>
     </AppProvider>
   );
