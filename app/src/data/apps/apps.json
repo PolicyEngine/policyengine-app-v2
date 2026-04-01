@@ -1,6 +1,19 @@
 [
   {
     "type": "iframe",
+    "slug": "pe84",
+    "title": "Introducing the PE-84",
+    "description": "The world's first graphing microsimulator. Ten million households per second. Fifty thousand tax and benefit parameters. In your pocket.",
+    "source": "https://april-fools-2026-two.vercel.app/calculator",
+    "tags": ["us", "uk", "featured"],
+    "countryId": "us",
+    "displayWithResearch": true,
+    "image": "pe84.png",
+    "date": "2026-04-01 09:00:00",
+    "authors": ["max-ghenis"]
+  },
+  {
+    "type": "iframe",
     "slug": "2025-year-in-review",
     "title": "PolicyEngine 2025 Year in Review",
     "description": "2025 was our biggest year yet. 62 jurisdictions, 100K+ people served, PolicyEngine 2.0, and more.",

@@ -18,6 +18,11 @@
       "source": "/:countryId/blog",
       "destination": "/:countryId/research",
       "permanent": true
+    },
+    {
+      "source": "/pe84",
+      "destination": "/us/pe84",
+      "permanent": false
     }
   ],
   "rewrites": [
