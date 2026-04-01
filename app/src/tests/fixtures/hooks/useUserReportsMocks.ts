@@ -1,4 +1,3 @@
-import { vi } from 'vitest';
 import { Household } from '@/types/ingredients/Household';
 import { Policy } from '@/types/ingredients/Policy';
 import { Simulation } from '@/types/ingredients/Simulation';
@@ -10,7 +9,6 @@ import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
 import { PolicyMetadata } from '@/types/metadata/policyMetadata';
 import { SimulationMetadata } from '@/types/metadata/simulationMetadata';
 import { US_REGION_TYPES } from '@/types/regionTypes';
-import { mockReport } from '../adapters/reportMocks';
 import { TEST_USER_ID } from '../api/reportAssociationMocks';
 
 // Test ID constants
@@ -208,56 +206,6 @@ export const mockMetadataInitialState = {
     parameterTree: null,
   } satisfies MetadataState,
 };
-
-// Helper function to create normalized cache mock
-export const createNormalizedCacheMock = () => ({
-  getObjectById: vi.fn((id: string) => {
-    // Return mocked normalized data based on ID
-    if (id === mockReport.id || id === '123') {
-      return mockReport;
-    }
-    if (id === 'report-1' || id === '1') {
-      return {
-        ...mockReport,
-        id: '1',
-        simulationIds: ['456', '789'],
-      };
-    }
-    if (id === 'report-2' || id === '2') {
-      return {
-        ...mockReport,
-        id: '2',
-        simulationIds: ['456'],
-      };
-    }
-    // Check policies first (before simulations)
-    if (id === TEST_POLICY_ID_1 || id === 'policy-456') {
-      return mockPolicy1;
-    }
-    if (id === TEST_POLICY_ID_2 || id === 'policy-789') {
-      return mockPolicy2;
-    }
-    // Then check simulations
-    if (id === TEST_SIMULATION_ID_1 || id === '456') {
-      // Return simulation with adapted ID format (string number) to match SimulationAdapter output
-      return {
-        ...mockSimulation1,
-        id: '456', // Override to match adapted format
-      };
-    }
-    if (id === TEST_SIMULATION_ID_2 || id === '789') {
-      // Return simulation with adapted ID format (string number) to match SimulationAdapter output
-      return {
-        ...mockSimulation2,
-        id: '789', // Override to match adapted format
-      };
-    }
-    if (id === TEST_HOUSEHOLD_ID || id === 'household-123') {
-      return mockHousehold1;
-    }
-    return undefined;
-  }),
-});
 
 // Error messages
 export const ERROR_MESSAGES = {
