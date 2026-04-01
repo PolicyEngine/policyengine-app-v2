@@ -43,8 +43,9 @@ const nextConfig: NextConfig = {
         { source: "/us/api/:path*", destination: "https://household-api-docs-policy-engine.vercel.app/us/api/:path*" },
         // Zone asset proxy — API docs uses assetPrefix: '/_zones/household-api-docs'
         { source: "/_zones/household-api-docs/:path*", destination: "https://household-api-docs-policy-engine.vercel.app/_zones/household-api-docs/:path*" },
-        // PE-84 April Fools 2026 (Vercel)
+        // PE-84 April Fools 2026 (Vercel) — assetPrefix: '/_zones/pe84'
         { source: "/pe84", destination: "https://april-fools-2026-two.vercel.app/calculator" },
+        { source: "/_zones/pe84/:path*", destination: "https://april-fools-2026-two.vercel.app/_zones/pe84/:path*" },
       ],
       // afterFiles: checked after pages/public files but before dynamic routes.
       afterFiles: [
