@@ -153,6 +153,10 @@
       "source": "/pe84",
       "destination": "https://april-fools-2026-two.vercel.app/calculator"
     },
+    {
+      "source": "/_zones/pe84/:path*",
+      "destination": "https://april-fools-2026-two.vercel.app/_zones/pe84/:path*"
+    },
     { "source": "/(.*)", "destination": "/website.html" }
   ],
   "headers": [
