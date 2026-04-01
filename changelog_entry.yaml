@@ -1,6 +1,4 @@
 - bump: patch
   changes:
     added:
-      - Add Oregon Kicker Refund calculator at /us/oregon-kicker-refund
-    fixed:
-      - Fix waterfall chart bar and connector positioning for negative values
+      - Add Scotland income tax reform analysis dashboard at /uk/scotland-income-tax-reform
