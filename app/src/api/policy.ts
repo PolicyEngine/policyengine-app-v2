@@ -2,6 +2,36 @@ import { BASE_URL } from '@/constants';
 import { PolicyMetadata } from '@/types/metadata/policyMetadata';
 import { PolicyCreationPayload } from '@/types/payloads';
 
+// ============================================================================
+// V2 API policy types (used by app/src/api/v2/ module)
+// ============================================================================
+
+export interface V2PolicyResponseParameterValue {
+  id: string;
+  parameter_id: string;
+  parameter_name: string;
+  value_json: number | string | boolean | Record<string, unknown>;
+  start_date: string;
+  end_date: string | null;
+  policy_id: string | null;
+  dynamic_id: string | null;
+  created_at: string;
+}
+
+export interface V2PolicyResponse {
+  id: string;
+  name: string;
+  description: string | null;
+  tax_benefit_model_id: string;
+  created_at: string;
+  updated_at: string;
+  parameter_values: V2PolicyResponseParameterValue[];
+}
+
+// ============================================================================
+// V1 API functions
+// ============================================================================
+
 export async function fetchPolicyById(country: string, policyId: string): Promise<PolicyMetadata> {
   const url = `${BASE_URL}/${country}/policy/${policyId}`;
 
