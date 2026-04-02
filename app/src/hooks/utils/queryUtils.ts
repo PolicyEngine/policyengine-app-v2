@@ -30,7 +30,7 @@ export interface ParallelQueriesResult<T> {
  */
 export function useParallelQueries<T>(
   ids: string[],
-  config: FetchConfig<T>,
+  config: FetchConfig<T>
 ): ParallelQueriesResult<T> {
   // Deduplicate IDs to prevent duplicate query keys (defense in depth)
   // This prevents React Query's "Duplicate Queries" warning when the same ID appears multiple times
@@ -77,7 +77,7 @@ export function combineLoadingStates(
  */
 export function extractUniqueIds<T extends { [key: string]: any }>(
   items: T[],
-  idField: keyof T,
+  idField: keyof T
 ): string[] {
   const ids = new Set<string>();
   items.forEach((item) => {

@@ -204,5 +204,4 @@ describe('normalizedUtils', () => {
       expect(typeof result[0]).toBe('string');
     });
   });
-
 });

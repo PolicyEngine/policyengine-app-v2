@@ -17,11 +17,7 @@ import { householdKeys, policyKeys, simulationKeys } from '../libs/queryKeys';
 import { useHouseholdAssociationsByUser } from './useUserHousehold';
 import { usePolicyAssociationsByUser } from './useUserPolicy';
 import { useSimulationAssociationsByUser } from './useUserSimulationAssociations';
-import {
-  combineLoadingStates,
-  extractUniqueIds,
-  useParallelQueries,
-} from './utils/queryUtils';
+import { combineLoadingStates, extractUniqueIds, useParallelQueries } from './utils/queryUtils';
 
 /**
  * Enhanced result type that includes all relationships
