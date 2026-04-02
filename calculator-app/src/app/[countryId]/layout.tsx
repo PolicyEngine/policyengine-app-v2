@@ -6,6 +6,7 @@ import { CountryProvider } from "@/contexts/CountryContext";
 import { LocationProvider } from "@/contexts/LocationContext";
 import { NavigationProvider } from "@/contexts/NavigationContext";
 import { countryIds, type CountryId } from "@/libs/countries";
+import StandardLayout from "@/components/StandardLayout";
 import { CalculatorProviders } from "./providers";
 
 /**
@@ -58,7 +59,9 @@ export default function CountryLayout({
     <CountryProvider value={countryId as CountryId}>
       <NavigationProvider value={navValue}>
         <LocationProvider value={locationValue}>
-          <CalculatorProviders>{children}</CalculatorProviders>
+          <CalculatorProviders>
+            <StandardLayout>{children}</StandardLayout>
+          </CalculatorProviders>
         </LocationProvider>
       </NavigationProvider>
     </CountryProvider>
