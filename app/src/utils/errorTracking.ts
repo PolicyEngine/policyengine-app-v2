@@ -39,6 +39,13 @@ export function captureCalculationException(
   });
 }
 
+export function captureApiException(error: unknown, context: ErrorContext = {}) {
+  captureCalculatorException(error, {
+    source: 'api',
+    ...context,
+  });
+}
+
 export function captureRouteException(error: unknown, context: ErrorContext = {}) {
   captureCalculatorException(error, {
     source: 'route',

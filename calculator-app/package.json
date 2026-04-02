@@ -5,10 +5,11 @@
   "scripts": {
     "dev": "sh -c 'next dev --port ${PORT:-3001}'",
     "build": "next build",
-    "start": "next start",
+    "start": "sh -c 'next start --port ${PORT:-3001}'",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@posthog/nextjs-config": "^1.0.3",
     "next": "^15.3.3",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",

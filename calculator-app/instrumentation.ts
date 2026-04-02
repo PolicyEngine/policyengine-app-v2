@@ -1,5 +1,6 @@
 type RequestLike = {
   headers?: Headers | { cookie?: string | string[] | undefined };
+  url?: string;
 };
 
 function normalizeError(error: unknown): Error {
@@ -48,6 +49,22 @@ function getDistinctIdFromCookie(cookieHeader?: string): string | undefined {
 
 export function register() {}
 
+function getServerRelease() {
+  return process.env.APP_RELEASE ?? process.env.NEXT_PUBLIC_APP_RELEASE;
+}
+
+function getRequestPath(request: RequestLike): string | undefined {
+  if (!request.url) {
+    return undefined;
+  }
+
+  try {
+    return new URL(request.url).pathname;
+  } catch {
+    return undefined;
+  }
+}
+
 export async function onRequestError(
   error: unknown,
   request: RequestLike,
@@ -65,5 +82,9 @@ export async function onRequestError(
   }
 
   const distinctId = getDistinctIdFromCookie(getCookieHeader(request));
-  await posthog.captureException(normalizeError(error), distinctId);
+  await posthog.captureException(normalizeError(error), distinctId, {
+    surface: "calculator",
+    release: getServerRelease(),
+    request_path: getRequestPath(request),
+  });
 }

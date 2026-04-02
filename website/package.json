@@ -7,13 +7,14 @@
     "dev:full": "node scripts/dev-server.mjs",
     "build": "bash scripts/build.sh",
     "build:next": "next build",
-    "start": "next start",
+    "start": "sh -c 'next start --port ${PORT:-3000}'",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@posthog/nextjs-config": "^1.0.3",
     "@policyengine/design-system": "*",
     "@tabler/icons-react": "^3.31.0",
     "fuse.js": "^7.1.0",

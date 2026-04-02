@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withPostHogConfig } from "@posthog/nextjs-config";
 
 const nextConfig: NextConfig = {
   async redirects() {
@@ -70,4 +71,23 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+const posthogApiKey = process.env.POSTHOG_API_KEY;
+const posthogProjectId = process.env.POSTHOG_PROJECT_ID;
+
+const posthogNextConfig =
+  posthogApiKey && posthogProjectId
+    ? withPostHogConfig(nextConfig, {
+        personalApiKey: posthogApiKey,
+        projectId: posthogProjectId,
+        host: process.env.NEXT_PUBLIC_POSTHOG_HOST,
+        sourcemaps: {
+          enabled: true,
+          releaseName: "policyengine-website",
+          releaseVersion:
+            process.env.APP_RELEASE ?? process.env.NEXT_PUBLIC_APP_RELEASE,
+          deleteAfterUpload: true,
+        },
+      })
+    : nextConfig;
+
+export default posthogNextConfig;
