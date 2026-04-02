@@ -11,6 +11,8 @@ import type { Properties } from 'posthog-js';
 import type { Household } from '@/types/ingredients/Household';
 import type { Report } from '@/types/ingredients/Report';
 import type { Simulation } from '@/types/ingredients/Simulation';
+import type { PolicyStateProps } from '@/types/pathwayState';
+import type { PopulationStateProps } from '@/types/pathwayState';
 import { getPostHogClient } from '@/utils/posthogClient';
 import {
   buildCalcConfigSnapshot,
@@ -57,6 +59,10 @@ function normalizeCalcType(
   calcType: 'household' | 'societyWide' | 'society_wide'
 ): CalculatorCalcType {
   return calcType === 'societyWide' ? 'society_wide' : calcType;
+}
+
+function getSimulationRole(simulationIndex: number): 'baseline' | 'reform' {
+  return simulationIndex === 0 ? 'baseline' : 'reform';
 }
 
 export function trackSocietyWideBuilderOpened(params: {
@@ -223,6 +229,66 @@ export function trackReportCreated(params: {
     report_id: params.report.id,
     calc_type: buildPersistedReportSnapshot(params.report, params.simulations).calc_type,
     report_config_snapshot: buildPersistedReportSnapshot(params.report, params.simulations),
+  });
+}
+
+export function trackReportYearSelected(params: {
+  countryId: string;
+  selectedYear: string;
+  previousYear?: string;
+}) {
+  captureCalculatorEvent('report_year_selected', {
+    country_id: params.countryId,
+    year: params.selectedYear,
+    selected_year: params.selectedYear,
+    previous_year: params.previousYear,
+  });
+}
+
+export function trackReportPolicySelected(params: {
+  countryId: string;
+  year: string;
+  simulationIndex: number;
+  selectionSource: 'current_law' | 'saved' | 'browse' | 'created';
+  policy: PolicyStateProps;
+}) {
+  captureCalculatorEvent('report_policy_selected', {
+    country_id: params.countryId,
+    year: params.year,
+    simulation_index: params.simulationIndex,
+    simulation_role: getSimulationRole(params.simulationIndex),
+    selection_source: params.selectionSource,
+    policy_id: params.policy.id,
+    policy_label: params.policy.label,
+    parameter_count: params.policy.parameters.length,
+  });
+}
+
+export function trackReportPopulationSelected(params: {
+  countryId: string;
+  year: string;
+  simulationIndex: number;
+  selectionSource: 'quick_select' | 'recent' | 'browse';
+  population: PopulationStateProps;
+}) {
+  const populationType = params.population.type;
+
+  if (!populationType) {
+    return;
+  }
+
+  captureCalculatorEvent('report_population_selected', {
+    country_id: params.countryId,
+    year: params.year,
+    simulation_index: params.simulationIndex,
+    simulation_role: getSimulationRole(params.simulationIndex),
+    selection_source: params.selectionSource,
+    population_type: populationType,
+    population_label: params.population.label,
+    household_id: params.population.household?.id,
+    geography_id: params.population.geography?.geographyId,
+    geography_scope: params.population.geography?.scope,
+    household_snapshot: buildHouseholdSnapshot(params.population.household) ?? undefined,
   });
 }
 

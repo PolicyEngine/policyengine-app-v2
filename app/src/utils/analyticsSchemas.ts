@@ -56,6 +56,10 @@ interface CalculatorBaseEventProperties {
   source?: string;
 }
 
+type SimulationRole = 'baseline' | 'reform';
+type PolicySelectionSource = 'current_law' | 'saved' | 'browse' | 'created';
+type PopulationSelectionSource = 'quick_select' | 'recent' | 'browse';
+
 export interface CalculatorEventPayloadMap {
   calculation_completed: CalculatorBaseEventProperties & {
     duration_ms?: number;
@@ -108,6 +112,25 @@ export interface CalculatorEventPayloadMap {
     has_label?: boolean;
     policy_id?: string;
   };
+  report_policy_selected: CalculatorBaseEventProperties & {
+    simulation_index: number;
+    simulation_role: SimulationRole;
+    selection_source: PolicySelectionSource;
+    policy_id?: string;
+    policy_label?: string | null;
+    parameter_count?: number;
+  };
+  report_population_selected: CalculatorBaseEventProperties & {
+    simulation_index: number;
+    simulation_role: SimulationRole;
+    selection_source: PopulationSelectionSource;
+    population_type: 'household' | 'geography';
+    population_label?: string | null;
+    household_id?: string;
+    geography_id?: string;
+    geography_scope?: string;
+    household_snapshot?: HouseholdSnapshot;
+  };
   python_code_copied: CalculatorBaseEventProperties;
   report_created: CalculatorBaseEventProperties & {
     report_config_snapshot: ReportConfigSnapshot;
@@ -120,6 +143,10 @@ export interface CalculatorEventPayloadMap {
   };
   report_started: CalculatorBaseEventProperties & {
     report_config_snapshot: ReportConfigSnapshot;
+  };
+  report_year_selected: CalculatorBaseEventProperties & {
+    selected_year: string;
+    previous_year?: string;
   };
   society_wide_builder_opened: CalculatorBaseEventProperties;
   tool_engaged: {
