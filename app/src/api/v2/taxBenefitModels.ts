@@ -1,6 +1,7 @@
 import { v2Fetch } from './v2Fetch';
 
-export const API_V2_BASE_URL = import.meta.env.VITE_API_V2_URL || 'https://v2.api.policyengine.org';
+export const API_V2_BASE_URL =
+  process.env.NEXT_PUBLIC_API_V2_URL || 'https://v2.api.policyengine.org';
 
 /**
  * @deprecated No longer needed — API endpoints accept country_id directly.
