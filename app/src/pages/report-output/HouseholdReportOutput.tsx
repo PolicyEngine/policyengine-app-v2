@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useSimulationProgressDisplay } from '@/hooks/household';
 import type { Household } from '@/types/ingredients/Household';
 import type { Policy } from '@/types/ingredients/Policy';
@@ -10,6 +10,7 @@ import type { UserSimulation } from '@/types/ingredients/UserSimulation';
 import { resolveDefaultReportOutputSubpage } from '@/utils/reportOutputSubpage';
 import { convertPoliciesToV1Format } from '@/utils/reproducibilityCode';
 import { getDisplayStatus } from '@/utils/statusMapping';
+import { trackReportOutputSubpageViewed, trackReportOutputViewed } from '@/utils/analytics';
 import DynamicsSubPage from './DynamicsSubPage';
 import ErrorPage from './ErrorPage';
 import { HouseholdComparativeAnalysisPage } from './HouseholdComparativeAnalysisPage';
@@ -152,6 +153,34 @@ export function HouseholdReportOutput({
   error: dataError,
 }: HouseholdReportOutputProps) {
   const normalizedSubpage = resolveDefaultReportOutputSubpage('household', subpage);
+
+  useEffect(() => {
+    if (!report) {
+      return;
+    }
+
+    trackReportOutputViewed({
+      report,
+      simulations,
+      calcType: 'household',
+      subpage: normalizedSubpage,
+      activeView,
+    });
+  }, [report?.id]);
+
+  useEffect(() => {
+    if (!report) {
+      return;
+    }
+
+    trackReportOutputSubpageViewed({
+      report,
+      simulations,
+      calcType: 'household',
+      subpage: normalizedSubpage,
+      activeView,
+    });
+  }, [activeView, normalizedSubpage, report, simulations]);
 
   // Build view model (memoized - recomputes only when props change)
   const viewModel = useMemo(

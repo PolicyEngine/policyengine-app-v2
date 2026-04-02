@@ -6,6 +6,7 @@ import type { HouseholdReportConfig, SimulationConfig } from '@/types/calculatio
 import type { HouseholdData } from '@/types/ingredients/Household';
 import type { Report } from '@/types/ingredients/Report';
 import { cacheMonitor } from '@/utils/cacheMonitor';
+import { captureCalculationException } from '@/utils/errorTracking';
 import { HouseholdProgressCoordinator } from './HouseholdProgressCoordinator';
 import { buildHouseholdReportOutput } from './householdReportUtils';
 import { HouseholdSimCalculator } from './HouseholdSimCalculator';
@@ -93,6 +94,11 @@ export class HouseholdReportOrchestrator {
       })
       .catch((error) => {
         console.error('[HouseholdReportOrchestrator] Error in parallel execution:', error);
+        captureCalculationException(error, {
+          source: 'household_report_orchestrator_parallel',
+          country_id: countryId,
+          report_id: reportId,
+        });
 
         // Mark report as error
         return this.markReportError(config.report, countryId, reportId);
@@ -147,6 +153,12 @@ export class HouseholdReportOrchestrator {
       await this.persistSimulation(countryId, simulationId, result);
     } catch (error) {
       console.error('[HouseholdReportOrchestrator] Simulation failed:', error);
+      captureCalculationException(error, {
+        source: 'household_report_orchestrator_simulation',
+        country_id: countryId,
+        report_id: reportId,
+        simulation_id: simulationId,
+      });
 
       // Notify progress coordinator that this simulation failed
       progressCoordinator.failSimulation(simulationId);
@@ -256,6 +268,11 @@ export class HouseholdReportOrchestrator {
       }
     } catch (error) {
       console.error('[HouseholdReportOrchestrator] Failed to mark report complete:', error);
+      captureCalculationException(error, {
+        source: 'household_report_orchestrator_complete',
+        country_id: countryId,
+        report_id: reportId,
+      });
     }
   }
 
@@ -291,6 +308,11 @@ export class HouseholdReportOrchestrator {
       }
     } catch (error) {
       console.error('[HouseholdReportOrchestrator] Failed to mark report error:', error);
+      captureCalculationException(error, {
+        source: 'household_report_orchestrator_mark_error',
+        country_id: countryId,
+        report_id: reportId,
+      });
     }
   }
 }

@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "sh -c 'next dev --turbopack --port ${PORT:-3000}'",
     "dev:full": "node scripts/dev-server.mjs",
     "build": "bash scripts/build.sh",
     "build:next": "next build",
@@ -20,6 +20,8 @@
     "jsonp": "^0.2.1",
     "framer-motion": "^12.38.0",
     "next": "^15.3.3",
+    "posthog-js": "^1.292.0",
+    "posthog-node": "^5.10.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-markdown": "^10.1.0",

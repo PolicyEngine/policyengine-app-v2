@@ -18,6 +18,11 @@ import {
   typography,
 } from "@policyengine/design-system/tokens";
 import { useCountryId } from "@/hooks/useCountryId";
+import {
+  trackNewsletterSignupFailed,
+  trackNewsletterSignupStarted,
+  trackNewsletterSignupSucceeded,
+} from "@/lib/posthog-events";
 
 const PolicyEngineLogo = "/assets/logos/policyengine/white.svg";
 
@@ -70,11 +75,16 @@ function FooterSubscribe() {
     if (!email) {
       setStatus("error");
       setMessage("Please enter a valid email address.");
+      trackNewsletterSignupFailed({
+        has_email: false,
+        reason: "missing_email",
+      });
       return;
     }
 
     setStatus("loading");
     setMessage("");
+    trackNewsletterSignupStarted({ has_email: true });
 
     const MAILCHIMP_URL =
       "https://policyengine.us5.list-manage.com/subscribe/post-json?u=e5ad35332666289a0f48013c5&id=71ed1f89d8&f_id=00f173e6f0";
@@ -89,15 +99,24 @@ function FooterSubscribe() {
           setMessage(
             "There was an issue processing your subscription; please try again later.",
           );
+          trackNewsletterSignupFailed({
+            has_email: true,
+            reason: "network_error",
+          });
           return;
         }
         if (data?.result !== "error") {
           setStatus("success");
           setMessage(data?.msg || "Successfully subscribed!");
+          trackNewsletterSignupSucceeded({ has_email: true });
           setEmail("");
         } else {
           setStatus("error");
           setMessage(data?.msg || "Subscription failed. Please try again.");
+          trackNewsletterSignupFailed({
+            has_email: true,
+            reason: "mailchimp_error",
+          });
         }
       },
     );

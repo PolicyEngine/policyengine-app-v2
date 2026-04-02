@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { PostHogProvider } from "./providers";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://policyengine.org"),
@@ -31,7 +32,7 @@ export default function RootLayout({
           margin: 0,
         }}
       >
-        {children}
+        <PostHogProvider>{children}</PostHogProvider>
       </body>
     </html>
   );

@@ -8,7 +8,7 @@
  * heading section, author bios, and share links.
  */
 
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import Link from "next/link";
 import type { AuthorsCollection, BlogPost, Notebook } from "@/types/blog";
 import { MarkdownFormatter } from "@/components/blog/MarkdownFormatter";
@@ -28,6 +28,7 @@ import {
   spacing,
   typography,
 } from "@policyengine/design-system/tokens";
+import { trackResearchArticleViewed } from "@/lib/posthog-events";
 
 const authors = authorsData as AuthorsCollection;
 
@@ -84,6 +85,18 @@ export default function ArticleClient({
       ? post.image
       : `/assets/posts/${post.image}`
     : "";
+
+  useEffect(() => {
+    trackResearchArticleViewed({
+      country_id: countryId,
+      slug: post.slug,
+      title: post.title,
+      author_count: post.authors.length,
+      topic_tags: post.tags.filter((tag) => topicLabels[tag]),
+      location_tags: post.tags.filter((tag) => locationLabels[tag]),
+      is_notebook: isNotebook,
+    });
+  }, [countryId, isNotebook, post.authors.length, post.slug, post.tags, post.title]);
 
   return (
     <>

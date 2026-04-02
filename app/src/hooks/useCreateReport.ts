@@ -8,6 +8,11 @@ import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
 import { Simulation } from '@/types/ingredients/Simulation';
 import { ReportCreationPayload } from '@/types/payloads';
+import { trackReportCreated } from '@/utils/analytics';
+import {
+  captureCalculationException,
+  captureCalculatorException,
+} from '@/utils/errorTracking';
 
 interface CreateReportAndBeginCalculationParams {
   countryId: (typeof countryIds)[number];
@@ -83,12 +88,23 @@ export function useCreateReport(reportLabel?: string) {
       try {
         const { report, simulations, populations } = result;
         const reportIdStr = String(report.id);
+        const simulationList = [simulations?.simulation1, simulations?.simulation2].filter(
+          (simulation): simulation is Simulation => Boolean(simulation)
+        );
 
         // Invalidate report association queries so the Reports page picks up the new report
         queryClient.invalidateQueries({ queryKey: reportAssociationKeys.all });
 
         // Cache the report data using consistent key structure
         queryClient.setQueryData(reportKeys.byId(reportIdStr), report);
+        trackReportCreated({
+          countryId: report.countryId,
+          report: {
+            ...report,
+            id: reportIdStr,
+          },
+          simulations: simulationList,
+        });
 
         // Determine calculation type from simulation
         const simulation1 = simulations?.simulation1;
@@ -147,6 +163,13 @@ export function useCreateReport(reportLabel?: string) {
                   `[useCreateReport] Failed to start calculation for simulation ${sim.id}:`,
                   error
                 );
+                captureCalculationException(error, {
+                  source: 'use_create_report_household_start',
+                  country_id: report.countryId,
+                  year: report.year,
+                  report_id: reportIdStr,
+                  simulation_id: sim.id,
+                });
               });
           }
         } else {
@@ -173,6 +196,10 @@ export function useCreateReport(reportLabel?: string) {
         }
       } catch (error) {
         console.error('[useCreateReport] Post-creation tasks failed:', error);
+        captureCalculatorException(error, {
+          source: 'use_create_report_on_success',
+          report_label: reportLabel,
+        });
       } finally {
         if (import.meta.env.DEV) {
           (window as any).__journeyProfiler?.markEnd('report-onSuccess', 'render');

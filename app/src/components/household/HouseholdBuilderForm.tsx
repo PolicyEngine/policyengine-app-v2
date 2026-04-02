@@ -8,7 +8,7 @@
  * - Inline search for adding custom variables per person or household-level
  */
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { IconInfoCircle, IconPlus } from '@tabler/icons-react';
 import {
   Accordion,
@@ -29,6 +29,11 @@ import {
 } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import { Household } from '@/types/ingredients/Household';
+import {
+  trackHouseholdBuilderOpened,
+  trackHouseholdVariableAdded,
+  trackHouseholdVariableRemoved,
+} from '@/utils/analytics';
 import { sortPeopleKeys } from '@/utils/householdIndividuals';
 import {
   addVariable,
@@ -54,6 +59,7 @@ export interface HouseholdBuilderFormProps {
   onMaritalStatusChange: (status: 'single' | 'married') => void;
   onNumChildrenChange: (num: number) => void;
   disabled?: boolean;
+  trackingMode?: 'report' | 'standalone';
 }
 
 export default function HouseholdBuilderForm({
@@ -68,6 +74,7 @@ export default function HouseholdBuilderForm({
   onMaritalStatusChange,
   onNumChildrenChange,
   disabled = false,
+  trackingMode = 'report',
 }: HouseholdBuilderFormProps) {
   // State for custom variables
   const [selectedVariables, setSelectedVariables] = useState<string[]>([]);
@@ -138,6 +145,14 @@ export default function HouseholdBuilderForm({
     [householdSearchValue, allInputVariables]
   );
 
+  useEffect(() => {
+    trackHouseholdBuilderOpened({
+      countryId: household.countryId,
+      year,
+      mode: trackingMode,
+    });
+  }, [household.countryId, trackingMode, year]);
+
   // Get variables for a specific person (custom only, not basic inputs)
   const getPersonVariables = (personName: string): string[] => {
     const personData = household.householdData.people[personName];
@@ -198,9 +213,24 @@ export default function HouseholdBuilderForm({
     const newHousehold = addVariableToEntity(household, variable.name, metadata, year, person);
     onChange(newHousehold);
 
+    const nextSelectedVariables = selectedVariables.includes(variable.name)
+      ? selectedVariables
+      : [...selectedVariables, variable.name];
+
     if (!selectedVariables.includes(variable.name)) {
-      setSelectedVariables([...selectedVariables, variable.name]);
+      setSelectedVariables(nextSelectedVariables);
     }
+
+    trackHouseholdVariableAdded({
+      countryId: household.countryId,
+      year,
+      household: newHousehold,
+      variableName: variable.name,
+      variableLabel: variable.label,
+      entityScope: isPerson ? 'person' : 'household',
+      entityName: isPerson ? person : undefined,
+      selectedVariableCount: nextSelectedVariables.length,
+    });
 
     setActivePersonSearch(null);
     setPersonSearchValue('');
@@ -223,9 +253,23 @@ export default function HouseholdBuilderForm({
     );
 
     // If no one else has it, remove from selectedVariables
+    const nextSelectedVariables = stillUsedByOthers
+      ? selectedVariables
+      : selectedVariables.filter((v) => v !== varName);
+
     if (!stillUsedByOthers) {
-      setSelectedVariables(selectedVariables.filter((v) => v !== varName));
+      setSelectedVariables(nextSelectedVariables);
     }
+
+    trackHouseholdVariableRemoved({
+      countryId: household.countryId,
+      year,
+      household: newHousehold,
+      variableName: varName,
+      entityScope: 'person',
+      entityName: person,
+      selectedVariableCount: nextSelectedVariables.length,
+    });
   };
 
   // Handle opening household search
@@ -272,9 +316,23 @@ export default function HouseholdBuilderForm({
       );
     }
     onChange(newHousehold);
+    const nextSelectedVariables = selectedVariables.includes(variable.name)
+      ? selectedVariables
+      : [...selectedVariables, variable.name];
     if (!selectedVariables.includes(variable.name)) {
-      setSelectedVariables([...selectedVariables, variable.name]);
+      setSelectedVariables(nextSelectedVariables);
     }
+
+    trackHouseholdVariableAdded({
+      countryId: household.countryId,
+      year,
+      household: newHousehold,
+      variableName: variable.name,
+      variableLabel: variable.label,
+      entityScope: isPerson ? 'person' : 'household',
+      entityName: isPerson ? 'all_people' : undefined,
+      selectedVariableCount: nextSelectedVariables.length,
+    });
 
     setIsHouseholdSearchActive(false);
     setHouseholdSearchValue('');
@@ -285,7 +343,17 @@ export default function HouseholdBuilderForm({
   const handleRemoveHouseholdVariable = (varName: string) => {
     const newHousehold = removeVariable(household, varName, metadata);
     onChange(newHousehold);
-    setSelectedVariables(selectedVariables.filter((v) => v !== varName));
+    const nextSelectedVariables = selectedVariables.filter((v) => v !== varName);
+    setSelectedVariables(nextSelectedVariables);
+
+    trackHouseholdVariableRemoved({
+      countryId: household.countryId,
+      year,
+      household: newHousehold,
+      variableName: varName,
+      entityScope: 'household',
+      selectedVariableCount: nextSelectedVariables.length,
+    });
   };
 
   return (

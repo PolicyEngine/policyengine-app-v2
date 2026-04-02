@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { PostHogProvider } from "./providers";
 
 export const metadata: Metadata = {
   title: "PolicyEngine Calculator",
@@ -15,7 +16,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <div id="root">{children}</div>
+        <PostHogProvider>
+          <div id="root">{children}</div>
+        </PostHogProvider>
       </body>
     </html>
   );

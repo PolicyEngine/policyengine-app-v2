@@ -21,7 +21,8 @@ import { RootState } from '@/store';
 import { Report } from '@/types/ingredients/Report';
 import { Simulation } from '@/types/ingredients/Simulation';
 import { SimulationStateProps } from '@/types/pathwayState';
-import { trackReportStarted } from '@/utils/analytics';
+import { trackCalculationFailed, trackReportStarted } from '@/utils/analytics';
+import { captureCalculatorException } from '@/utils/errorTracking';
 import { toApiPolicyId } from '../currentLaw';
 import { ReportBuilderState } from '../types';
 
@@ -96,7 +97,10 @@ export function useReportSubmission({
     }
 
     setIsSubmitting(true);
-    trackReportStarted();
+    trackReportStarted({
+      countryId,
+      reportState,
+    });
 
     try {
       const simulationIds: string[] = [];
@@ -155,6 +159,14 @@ export function useReportSubmission({
 
       if (simulationIds.length === 0) {
         console.error('[useReportSubmission] No simulations created');
+        trackCalculationFailed({
+          calcId: 'report_submission',
+          targetType: 'report',
+          countryId,
+          year: reportState.year,
+          calcType: 'societyWide',
+          error: new Error('No simulations were created for the report'),
+        });
         setIsSubmitting(false);
         return;
       }
@@ -189,12 +201,22 @@ export function useReportSubmission({
           },
           onError: (error) => {
             console.error('[useReportSubmission] Report creation failed:', error);
+            captureCalculatorException(error, {
+              source: 'use_report_submission_on_error',
+              country_id: countryId,
+              year: reportState.year,
+            });
             setIsSubmitting(false);
           },
         }
       );
     } catch (error) {
       console.error('[useReportSubmission] Error running report:', error);
+      captureCalculatorException(error, {
+        source: 'use_report_submission',
+        country_id: countryId,
+        year: reportState.year,
+      });
       setIsSubmitting(false);
     }
   }, [

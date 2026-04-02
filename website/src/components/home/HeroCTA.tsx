@@ -8,6 +8,7 @@ import {
   spacing,
   typography,
 } from "@policyengine/design-system/tokens";
+import { trackEnterCalculatorClicked } from "@/lib/posthog-events";
 
 const ctaVariant = {
   hidden: { opacity: 0, y: 20 },
@@ -24,6 +25,8 @@ const ctaVariant = {
 };
 
 export default function HeroCTA({ countryId }: { countryId: string }) {
+  const destinationUrl = `${CALCULATOR_URL}/${countryId}/reports`;
+
   return (
     <motion.div
       variants={ctaVariant}
@@ -34,7 +37,13 @@ export default function HeroCTA({ countryId }: { countryId: string }) {
       }}
     >
       <motion.a
-        href={`${CALCULATOR_URL}/${countryId}/reports`}
+        href={destinationUrl}
+        onClick={() =>
+          trackEnterCalculatorClicked({
+            country_id: countryId,
+            destination_url: destinationUrl,
+          })
+        }
         whileHover={{ scale: 1.03 }}
         whileTap={{ scale: 0.98 }}
         style={{

@@ -16,8 +16,10 @@ import { getBasicInputFields } from '@/libs/metadataUtils';
 import { RootState } from '@/store';
 import { Household } from '@/types/ingredients/Household';
 import { PopulationStateProps } from '@/types/pathwayState';
+import { trackHouseholdSaved } from '@/utils/analytics';
 import { HouseholdBuilder } from '@/utils/HouseholdBuilder';
 import { HouseholdValidation } from '@/utils/HouseholdValidation';
+import { captureCalculatorException } from '@/utils/errorTracking';
 
 interface HouseholdBuilderViewProps {
   population: PopulationStateProps;
@@ -160,9 +162,22 @@ export default function HouseholdBuilderView({
       const result = await createHousehold(payload);
 
       const householdId = result.result.household_id;
+      trackHouseholdSaved({
+        countryId,
+        year: reportYear,
+        householdId,
+        household,
+        maritalStatus,
+        numChildren,
+        mode: 'standalone',
+      });
       onSubmitSuccess(householdId, household);
     } catch (err) {
-      // Error is handled by the mutation
+      captureCalculatorException(err, {
+        source: 'household_builder_view',
+        country_id: countryId,
+        year: reportYear,
+      });
     }
   };
 
@@ -188,6 +203,7 @@ export default function HouseholdBuilderView({
         household={household}
         metadata={metadata}
         year={reportYear}
+        trackingMode="standalone"
         maritalStatus={maritalStatus}
         numChildren={numChildren}
         basicPersonFields={basicInputFields.person || []}
