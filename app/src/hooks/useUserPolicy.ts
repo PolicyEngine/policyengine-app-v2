@@ -94,7 +94,7 @@ export const useCreatePolicyAssociation = () => {
             'CREATE',
             newAssociation as unknown as Record<string, unknown>,
             v2Result as unknown as Record<string, unknown>,
-            { skipFields: ['id', 'createdAt', 'updatedAt', 'isCreated'] },
+            { skipFields: ['id', 'createdAt', 'updatedAt', 'isCreated'] }
           );
         })
         .catch((error) => {
@@ -149,7 +149,7 @@ export const useUpdatePolicyAssociation = () => {
                 'UPDATE',
                 updatedAssociation as unknown as Record<string, unknown>,
                 v2Result as unknown as Record<string, unknown>,
-                { skipFields: ['id', 'createdAt', 'updatedAt', 'isCreated'] },
+                { skipFields: ['id', 'createdAt', 'updatedAt', 'isCreated'] }
               );
             })
             .catch((error) => {

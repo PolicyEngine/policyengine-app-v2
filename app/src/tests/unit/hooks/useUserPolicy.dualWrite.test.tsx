@@ -70,17 +70,14 @@ const mockV2UpdateResult: UserPolicy = {
 // ============================================================================
 
 // vi.hoisted ensures these are available when vi.mock factories run (hoisted above imports)
-const {
-  mockStoreCreate,
-  mockStoreUpdate,
-  mockStoreFindByUser,
-  mockStoreFindById,
-} = vi.hoisted(() => ({
-  mockStoreCreate: vi.fn(),
-  mockStoreUpdate: vi.fn(),
-  mockStoreFindByUser: vi.fn().mockResolvedValue([]),
-  mockStoreFindById: vi.fn().mockResolvedValue(null),
-}));
+const { mockStoreCreate, mockStoreUpdate, mockStoreFindByUser, mockStoreFindById } = vi.hoisted(
+  () => ({
+    mockStoreCreate: vi.fn(),
+    mockStoreUpdate: vi.fn(),
+    mockStoreFindByUser: vi.fn().mockResolvedValue([]),
+    mockStoreFindById: vi.fn().mockResolvedValue(null),
+  })
+);
 
 // Mock the localStorage store (primary v1 path).
 // useUserPolicy.ts creates singletons at module scope, so the mock
@@ -162,7 +159,7 @@ describe('useCreatePolicyAssociation dual-write', () => {
           policyId: TEST_POLICY_ID,
           countryId: TEST_COUNTRY_ID,
           label: TEST_LABEL,
-        }),
+        })
       );
     });
   });
@@ -218,7 +215,7 @@ describe('useCreatePolicyAssociation dual-write', () => {
         'CREATE',
         expect.any(Object),
         expect.any(Object),
-        { skipFields: ['id', 'createdAt', 'updatedAt', 'isCreated'] },
+        { skipFields: ['id', 'createdAt', 'updatedAt', 'isCreated'] }
       );
     });
   });
@@ -228,7 +225,7 @@ describe('useCreatePolicyAssociation dual-write', () => {
     mockStoreCreate.mockResolvedValue(mockV1CreateResult);
 
     vi.spyOn(v2PolicyApi, 'createUserPolicyAssociationV2').mockRejectedValue(
-      new Error('v2 API unreachable'),
+      new Error('v2 API unreachable')
     );
     const infoSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
 
@@ -251,7 +248,7 @@ describe('useCreatePolicyAssociation dual-write', () => {
     await waitFor(() => {
       expect(infoSpy).toHaveBeenCalledWith(
         expect.stringContaining('[PolicyMigration] Shadow v2 create failed'),
-        expect.any(Error),
+        expect.any(Error)
       );
     });
   });
@@ -321,7 +318,7 @@ describe('useUpdatePolicyAssociation dual-write', () => {
     mockStoreUpdate.mockResolvedValue(mockV1UpdateResult);
 
     vi.spyOn(v2PolicyApi, 'updateUserPolicyAssociationV2').mockRejectedValue(
-      new Error('v2 update failed'),
+      new Error('v2 update failed')
     );
     const infoSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
 
@@ -342,7 +339,7 @@ describe('useUpdatePolicyAssociation dual-write', () => {
     await waitFor(() => {
       expect(infoSpy).toHaveBeenCalledWith(
         expect.stringContaining('[PolicyMigration] Shadow v2 update failed'),
-        expect.any(Error),
+        expect.any(Error)
       );
     });
   });

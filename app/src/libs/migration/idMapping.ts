@@ -9,47 +9,32 @@
  * Value: the v2 UUID string
  */
 
-const KEY_PREFIX = "v1v2";
+const KEY_PREFIX = 'v1v2';
 
 function storageKey(entityType: string, v1Id: string): string {
   return `${KEY_PREFIX}:${entityType}:${v1Id}`;
 }
 
-export function setV2Id(
-  entityType: string,
-  v1Id: string,
-  v2Id: string,
-): void {
+export function setV2Id(entityType: string, v1Id: string, v2Id: string): void {
   try {
     localStorage.setItem(storageKey(entityType, v1Id), v2Id);
   } catch (error) {
-    console.info(
-      `[${entityType}Migration] Failed to store ID mapping: ${v1Id} → ${v2Id}`,
-      error,
-    );
+    console.info(`[${entityType}Migration] Failed to store ID mapping: ${v1Id} → ${v2Id}`, error);
   }
 }
 
-export function getV2Id(
-  entityType: string,
-  v1Id: string,
-): string | null {
+export function getV2Id(entityType: string, v1Id: string): string | null {
   try {
     return localStorage.getItem(storageKey(entityType, v1Id));
   } catch (error) {
-    console.info(
-      `[${entityType}Migration] Failed to read ID mapping for ${v1Id}`,
-      error,
-    );
+    console.info(`[${entityType}Migration] Failed to read ID mapping for ${v1Id}`, error);
     return null;
   }
 }
 
 export function clearV2Mappings(entityType?: string): void {
   try {
-    const prefix = entityType
-      ? `${KEY_PREFIX}:${entityType}:`
-      : `${KEY_PREFIX}:`;
+    const prefix = entityType ? `${KEY_PREFIX}:${entityType}:` : `${KEY_PREFIX}:`;
     const keysToRemove: string[] = [];
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
@@ -59,6 +44,6 @@ export function clearV2Mappings(entityType?: string): void {
     }
     keysToRemove.forEach((key) => localStorage.removeItem(key));
   } catch (error) {
-    console.info("[Migration] Failed to clear ID mappings", error);
+    console.info('[Migration] Failed to clear ID mappings', error);
   }
 }
