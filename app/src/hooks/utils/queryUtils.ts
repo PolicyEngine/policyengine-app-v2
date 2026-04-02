@@ -2,16 +2,6 @@ import { useMemo } from 'react';
 import { useQueries, UseQueryResult } from '@tanstack/react-query';
 
 /**
- * Generic interface for normalized data structure
- */
-export interface NormalizedData<T extends Record<string, any> = Record<string, any>> {
-  entities: T;
-  result: string[];
-  isLoading: boolean;
-  error: Error | null;
-}
-
-/**
  * Configuration for fetching and caching data
  */
 export interface FetchConfig<T> {
@@ -40,7 +30,7 @@ export interface ParallelQueriesResult<T> {
  */
 export function useParallelQueries<T>(
   ids: string[],
-  config: FetchConfig<T>
+  config: FetchConfig<T>,
 ): ParallelQueriesResult<T> {
   // Deduplicate IDs to prevent duplicate query keys (defense in depth)
   // This prevents React Query's "Duplicate Queries" warning when the same ID appears multiple times
@@ -87,7 +77,7 @@ export function combineLoadingStates(
  */
 export function extractUniqueIds<T extends { [key: string]: any }>(
   items: T[],
-  idField: keyof T
+  idField: keyof T,
 ): string[] {
   const ids = new Set<string>();
   items.forEach((item) => {
@@ -109,17 +99,4 @@ export function isV2EntityId(id: string): boolean {
     return false;
   }
   return UUID_RE.test(id);
-}
-
-/**
- * Helper to create a lookup map from an array of objects
- */
-export function createLookupMap<T extends { id: string | number }>(items: T[]): Record<string, T> {
-  const map: Record<string, T> = {};
-  items.forEach((item) => {
-    if (item?.id != null) {
-      map[item.id.toString()] = item;
-    }
-  });
-  return map;
 }

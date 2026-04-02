@@ -21,7 +21,7 @@ import {
   combineLoadingStates,
   extractUniqueIds,
   useParallelQueries,
-} from './utils/normalizedUtils';
+} from './utils/queryUtils';
 
 /**
  * Enhanced result type that includes all relationships

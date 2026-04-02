@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { isV2EntityId } from '@/hooks/utils/normalizedUtils';
+import { isV2EntityId } from '@/hooks/utils/queryUtils';
 import { TEST_IDS } from '@/tests/fixtures/api/v2/shared';
 
 vi.stubGlobal('fetch', vi.fn());

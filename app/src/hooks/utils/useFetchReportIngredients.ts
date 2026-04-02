@@ -34,7 +34,7 @@ import {
 import { UserReport } from '@/types/ingredients/UserReport';
 import { UserSimulation } from '@/types/ingredients/UserSimulation';
 import { findPlaceFromRegionString, getPlaceDisplayName } from '@/utils/regionStrategies';
-import { combineLoadingStates, extractUniqueIds, useParallelQueries } from './normalizedUtils';
+import { combineLoadingStates, extractUniqueIds, useParallelQueries } from './queryUtils';
 
 // Type for geography options from redux store
 type GeographyOption = { name: string; label: string };
