@@ -191,6 +191,7 @@ export const useUserPolicies = (userId: string) => {
       },
       enabled: !!associations, // Only run when associations are loaded
       staleTime: 5 * 60 * 1000,
+      structuralSharing: false,
     })),
   });
 

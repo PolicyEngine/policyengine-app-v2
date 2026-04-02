@@ -165,6 +165,7 @@ export const useUserReports = (userId: string) => {
     },
     enabled: policyIds.length > 0,
     staleTime: 5 * 60 * 1000,
+    structuralSharing: false,
   });
 
   // Step 8: Fetch households
@@ -405,6 +406,7 @@ export const useUserReportById = (userReportId: string, options?: { enabled?: bo
     },
     enabled: isEnabled && policyIds.length > 0,
     staleTime: 5 * 60 * 1000,
+    structuralSharing: false,
   });
 
   const policies = policyResults.queries.map((q) => q.data).filter((p): p is Policy => !!p);

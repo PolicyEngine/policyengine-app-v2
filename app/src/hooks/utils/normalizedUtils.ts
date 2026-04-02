@@ -20,6 +20,7 @@ export interface FetchConfig<T> {
   enabled?: boolean;
   staleTime?: number;
   gcTime?: number;
+  structuralSharing?: boolean;
 }
 
 /**
@@ -53,6 +54,9 @@ export function useParallelQueries<T>(
       enabled: config.enabled !== false,
       staleTime: config.staleTime ?? 5 * 60 * 1000, // Default 5 minutes (use ?? to allow 0)
       gcTime: config.gcTime ?? 5 * 60 * 1000, // Default 5 minutes (use ?? to allow 0)
+      ...(config.structuralSharing !== undefined && {
+        structuralSharing: config.structuralSharing,
+      }),
     })),
   });
 

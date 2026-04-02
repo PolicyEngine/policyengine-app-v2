@@ -124,6 +124,7 @@ export const useUserSimulations = (userId: string) => {
     },
     enabled: policyIds.length > 0,
     staleTime: 5 * 60 * 1000,
+    structuralSharing: false,
   });
 
   // Step 6: Fetch households (populations)

@@ -11,5 +11,6 @@ export function usePolicy(country?: string, policyId = '88713') {
   return useQuery({
     queryKey: ['policy', resolvedCountry, policyId],
     queryFn: () => fetchPolicyById(resolvedCountry, policyId),
+    structuralSharing: false,
   });
 }
