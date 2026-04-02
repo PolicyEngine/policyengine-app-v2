@@ -1,7 +1,14 @@
 import type { NextConfig } from "next";
 import { withPostHogConfig } from "@posthog/nextjs-config";
+import { getPostHogProxyRewrites } from "./src/lib/posthogProxy";
+
+const posthogProxyRewrites = getPostHogProxyRewrites(
+  process.env.NEXT_PUBLIC_POSTHOG_HOST
+);
 
 const nextConfig: NextConfig = {
+  skipTrailingSlashRedirect: posthogProxyRewrites.length > 0,
+
   async redirects() {
     return [
       // Root → /us (temporary — will be replaced with geolocation)
@@ -26,6 +33,7 @@ const nextConfig: NextConfig = {
 
   async rewrites() {
     return [
+      ...posthogProxyRewrites,
       // State legislative tracker (Modal)
       {
         source: "/_tracker/:path*",

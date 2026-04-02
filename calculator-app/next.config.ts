@@ -2,13 +2,23 @@ import type { NextConfig } from "next";
 import { withPostHogConfig } from "@posthog/nextjs-config";
 import path from "path";
 import { fileURLToPath } from "url";
+import { getPostHogProxyRewrites } from "./src/lib/posthogProxy";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const posthogProxyRewrites = getPostHogProxyRewrites(
+  process.env.NEXT_PUBLIC_POSTHOG_HOST
+);
 
 const nextConfig: NextConfig = {
   // Compile TypeScript files from ../app/src/ (the shared Vite codebase)
+  skipTrailingSlashRedirect: posthogProxyRewrites.length > 0,
+
   experimental: {
     externalDir: true,
+  },
+
+  async rewrites() {
+    return posthogProxyRewrites;
   },
 
   webpack: (config, { dev }) => {
