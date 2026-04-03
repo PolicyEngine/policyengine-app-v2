@@ -3,7 +3,6 @@ import HomeBlogPreview from "@/components/home/HomeBlogPreview";
 import HomeTrackerPreview from "@/components/home/HomeTrackerPreview";
 import OrgLogos from "@/components/home/OrgLogos";
 import FeaturedResearchBanner from "@/components/home/FeaturedResearchBanner";
-import PE84Banner from "@/components/home/PE84Banner";
 import { typography } from "@policyengine/design-system/tokens";
 
 export default async function HomePage({
@@ -15,7 +14,6 @@ export default async function HomePage({
 
   return (
     <>
-      <PE84Banner />
       <HeroSection countryId={countryId} />
       <div style={{ fontFamily: typography.fontFamily.primary }}>
         <OrgLogos countryId={countryId} />
