@@ -419,34 +419,26 @@ export default async function middleware(request: Request) {
     return;
   }
 
-  // State legislative tracker: proxy crawlers to Modal for SEO
+  // State legislative tracker: proxy ALL requests to Modal
   // (pre-rendered HTML with canonical policyengine.org URLs, structured data, sitemap)
-  // Regular users fall through to the catch-all rewrite → website.html → iframe
   if (url.pathname.startsWith(TRACKER_PREFIX)) {
-    if (
-      isCrawler(userAgent) ||
-      isSearchEngine(userAgent) ||
-      isLLMBot(userAgent)
-    ) {
-      try {
-        const trackerPath = url.pathname.slice(TRACKER_PREFIX.length) || "/";
-        const modalUrl = `${TRACKER_MODAL_ORIGIN}${trackerPath}`;
-        const response = await fetch(modalUrl);
-        if (!response.ok) {
-          return; // Fall through to app shell on upstream error
-        }
-        return new Response(response.body, {
-          status: response.status,
-          headers: {
-            "Content-Type": response.headers.get("Content-Type") || "text/html",
-            "Cache-Control": "public, max-age=3600",
-          },
-        });
-      } catch {
-        return; // Fall through to app shell if Modal is unreachable
+    try {
+      const trackerPath = url.pathname.slice(TRACKER_PREFIX.length) || "/";
+      const modalUrl = `${TRACKER_MODAL_ORIGIN}${trackerPath}${url.search}`;
+      const response = await fetch(modalUrl);
+      if (!response.ok) {
+        return; // Fall through to app shell on upstream error
       }
+      return new Response(response.body, {
+        status: response.status,
+        headers: {
+          "Content-Type": response.headers.get("Content-Type") || "text/html",
+          "Cache-Control": "public, max-age=3600",
+        },
+      });
+    } catch {
+      return; // Fall through to app shell if Modal is unreachable
     }
-    return;
   }
 
   // --- LLM bots & search engines: serve full pre-rendered blog content -----
