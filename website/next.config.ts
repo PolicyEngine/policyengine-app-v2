@@ -29,6 +29,9 @@ const nextConfig: NextConfig = {
       // External Next.js apps that serve full pages must go here
       // so they take priority over the dynamic [slug] route.
       beforeFiles: [
+        // State legislative tracker (Modal) — served directly, not via iframe
+        { source: "/:countryId/state-legislative-tracker", destination: "https://policyengine--state-legislative-tracker.modal.run/" },
+        { source: "/:countryId/state-legislative-tracker/:path*", destination: "https://policyengine--state-legislative-tracker.modal.run/:path*" },
         // Working Americans Tax Cut Act (Vercel)
         { source: "/us/watca", destination: "https://working-americans-tax-cut-act-one.vercel.app/us/watca" },
         { source: "/us/watca/:path*", destination: "https://working-americans-tax-cut-act-one.vercel.app/us/watca/:path*" },
