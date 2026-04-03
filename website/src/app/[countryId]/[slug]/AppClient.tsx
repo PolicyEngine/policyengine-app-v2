@@ -20,6 +20,7 @@ interface AppClientProps {
     countryId: string;
   };
   countryId: string;
+  subPath?: string;
 }
 
 function trackToolEngaged(params: { toolSlug: string; toolTitle: string }) {
@@ -28,7 +29,7 @@ function trackToolEngaged(params: { toolSlug: string; toolTitle: string }) {
   }
 }
 
-export default function AppClient({ app, countryId }: AppClientProps) {
+export default function AppClient({ app, countryId, subPath }: AppClientProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const pathname = usePathname();
@@ -55,16 +56,20 @@ export default function AppClient({ app, countryId }: AppClientProps) {
     return `/${segments.slice(0, 2).join("/")}`;
   }, [pathname]);
 
-  // Forward parent URL query params into the iframe src
+  // Forward parent URL query params and sub-path into the iframe src
   const iframeBaseUrl = useMemo(() => {
     try {
       const resolved = new URL(app.source, window.location.origin);
+      // Append sub-path for deep links (e.g. /MN/mn-hf4621)
+      if (subPath) {
+        resolved.pathname = resolved.pathname.replace(/\/$/, "") + subPath;
+      }
       resolved.search = searchParams.toString() ? `?${searchParams.toString()}` : "";
       return resolved.toString();
     } catch {
       return app.source;
     }
-  }, [searchParams, app.source]);
+  }, [searchParams, app.source, subPath]);
 
   // Listen for messages from iframe and sync to parent URL bar
   useEffect(() => {
