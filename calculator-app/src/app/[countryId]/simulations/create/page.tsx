@@ -1,7 +1,12 @@
 "use client";
 
 import SimulationPathwayWrapper from "@/pathways/simulation/SimulationPathwayWrapper";
+import { CalculatorProviders } from "../../providers";
 
 export default function SimulationCreateRoute() {
-  return <SimulationPathwayWrapper />;
+  return (
+    <CalculatorProviders>
+      <SimulationPathwayWrapper />
+    </CalculatorProviders>
+  );
 }

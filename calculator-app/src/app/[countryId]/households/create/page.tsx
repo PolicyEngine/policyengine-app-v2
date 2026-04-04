@@ -1,7 +1,12 @@
 "use client";
 
 import PopulationPathwayWrapper from "@/pathways/population/PopulationPathwayWrapper";
+import { CalculatorProviders } from "../../providers";
 
 export default function HouseholdCreateRoute() {
-  return <PopulationPathwayWrapper />;
+  return (
+    <CalculatorProviders>
+      <PopulationPathwayWrapper />
+    </CalculatorProviders>
+  );
 }
