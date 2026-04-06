@@ -68,7 +68,7 @@ export function register() {}
 export async function onRequestError(
   error: unknown,
   request: RequestLike,
-  _context: unknown
+  _context: unknown,
 ) {
   if (process.env.NEXT_RUNTIME !== "nodejs") {
     return;

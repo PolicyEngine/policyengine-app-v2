@@ -9,10 +9,7 @@ import { Household } from '@/types/ingredients/Household';
 import { Simulation } from '@/types/ingredients/Simulation';
 import { ReportCreationPayload } from '@/types/payloads';
 import { trackReportCreated } from '@/utils/analytics';
-import {
-  captureCalculationException,
-  captureCalculatorException,
-} from '@/utils/errorTracking';
+import { captureCalculationException, captureCalculatorException } from '@/utils/errorTracking';
 
 interface CreateReportAndBeginCalculationParams {
   countryId: (typeof countryIds)[number];

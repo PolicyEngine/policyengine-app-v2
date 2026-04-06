@@ -46,12 +46,18 @@ function getPopulationType(
   return undefined;
 }
 
-function getPopulationLabel(population: PopulationStateProps | undefined): string | null | undefined {
-  return population?.label ?? population?.household?.id ?? population?.geography?.geographyId ?? null;
+function getPopulationLabel(
+  population: PopulationStateProps | undefined
+): string | null | undefined {
+  return (
+    population?.label ?? population?.household?.id ?? population?.geography?.geographyId ?? null
+  );
 }
 
 function getPopulationId(population: PopulationStateProps | undefined): string | undefined {
-  return population?.household?.id ?? population?.geography?.geographyId ?? population?.geography?.id;
+  return (
+    population?.household?.id ?? population?.geography?.geographyId ?? population?.geography?.id
+  );
 }
 
 function getVariableNames(householdData: HouseholdData): string[] {
@@ -100,9 +106,7 @@ export function buildHouseholdSnapshot(
   };
 }
 
-export function buildSimulationSnapshot(
-  simulation: SimulationLike
-): SimulationSnapshot | null {
+export function buildSimulationSnapshot(simulation: SimulationLike): SimulationSnapshot | null {
   if (!simulation) {
     return null;
   }
@@ -128,9 +132,7 @@ export function buildSimulationSnapshot(
   };
 }
 
-export function buildReportBuilderSnapshot(
-  reportState: ReportBuilderState
-): ReportConfigSnapshot {
+export function buildReportBuilderSnapshot(reportState: ReportBuilderState): ReportConfigSnapshot {
   const simulations = reportState.simulations
     .map((simulation) => buildSimulationSnapshot(simulation))
     .filter((simulation): simulation is SimulationSnapshot => simulation !== null);

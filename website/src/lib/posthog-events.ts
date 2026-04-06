@@ -10,7 +10,7 @@ function getClient() {
 
 export function captureWebsiteEvent(
   eventName: string,
-  properties: WebsiteEventProperties = {}
+  properties: WebsiteEventProperties = {},
 ) {
   getClient().capture(eventName, {
     surface: "website",
@@ -20,7 +20,7 @@ export function captureWebsiteEvent(
 
 export function captureWebsiteException(
   error: unknown,
-  properties: WebsiteEventProperties = {}
+  properties: WebsiteEventProperties = {},
 ) {
   const normalizedError =
     error instanceof Error
@@ -33,27 +33,39 @@ export function captureWebsiteException(
   });
 }
 
-export function trackEnterCalculatorClicked(properties: WebsiteEventProperties = {}) {
+export function trackEnterCalculatorClicked(
+  properties: WebsiteEventProperties = {},
+) {
   captureWebsiteEvent("enter_calculator_clicked", properties);
 }
 
-export function trackNewsletterSignupStarted(properties: WebsiteEventProperties = {}) {
+export function trackNewsletterSignupStarted(
+  properties: WebsiteEventProperties = {},
+) {
   captureWebsiteEvent("newsletter_signup_started", properties);
 }
 
-export function trackNewsletterSignupSucceeded(properties: WebsiteEventProperties = {}) {
+export function trackNewsletterSignupSucceeded(
+  properties: WebsiteEventProperties = {},
+) {
   captureWebsiteEvent("newsletter_signup_succeeded", properties);
 }
 
-export function trackNewsletterSignupFailed(properties: WebsiteEventProperties = {}) {
+export function trackNewsletterSignupFailed(
+  properties: WebsiteEventProperties = {},
+) {
   captureWebsiteEvent("newsletter_signup_failed", properties);
 }
 
-export function trackResearchArticleViewed(properties: WebsiteEventProperties = {}) {
+export function trackResearchArticleViewed(
+  properties: WebsiteEventProperties = {},
+) {
   captureWebsiteEvent("research_article_viewed", properties);
 }
 
-export function trackResearchFiltersChanged(properties: WebsiteEventProperties = {}) {
+export function trackResearchFiltersChanged(
+  properties: WebsiteEventProperties = {},
+) {
   captureWebsiteEvent("research_filters_changed", properties);
 }
 

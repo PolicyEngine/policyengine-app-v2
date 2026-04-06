@@ -13,10 +13,7 @@ function normalizeError(error: unknown): Error {
   return new Error(typeof error === 'string' ? error : 'Unknown calculator error');
 }
 
-export function captureCalculatorException(
-  error: unknown,
-  context: ErrorContext = {},
-) {
+export function captureCalculatorException(error: unknown, context: ErrorContext = {}) {
   const posthog = getPostHogClient();
 
   if (!posthog) {
@@ -29,10 +26,7 @@ export function captureCalculatorException(
   });
 }
 
-export function captureCalculationException(
-  error: unknown,
-  context: ErrorContext = {},
-) {
+export function captureCalculationException(error: unknown, context: ErrorContext = {}) {
   captureCalculatorException(error, {
     source: 'calculation',
     ...context,
@@ -56,7 +50,7 @@ export function captureRouteException(error: unknown, context: ErrorContext = {}
 export function captureReactBoundaryException(
   error: unknown,
   errorInfo?: ErrorInfo,
-  context: ErrorContext = {},
+  context: ErrorContext = {}
 ) {
   captureCalculatorException(error, {
     source: 'react_error_boundary',

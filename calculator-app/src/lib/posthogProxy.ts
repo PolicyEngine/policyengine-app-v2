@@ -37,7 +37,7 @@ function normalizeHost(host: string | null | undefined): URL | null {
 }
 
 export function getPostHogProxyConfig(
-  host: string | null | undefined
+  host: string | null | undefined,
 ): PostHogProxyConfig | null {
   const normalizedHost = normalizeHost(host);
 
@@ -60,7 +60,7 @@ export function getPostHogProxyConfig(
 }
 
 export function getPostHogProxyRewrites(
-  host: string | null | undefined
+  host: string | null | undefined,
 ): Array<{ destination: string; source: string }> {
   const proxyConfig = getPostHogProxyConfig(host);
 

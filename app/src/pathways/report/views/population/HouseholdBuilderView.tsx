@@ -17,9 +17,9 @@ import { RootState } from '@/store';
 import { Household } from '@/types/ingredients/Household';
 import { PopulationStateProps } from '@/types/pathwayState';
 import { trackHouseholdSaved } from '@/utils/analytics';
+import { captureCalculatorException } from '@/utils/errorTracking';
 import { HouseholdBuilder } from '@/utils/HouseholdBuilder';
 import { HouseholdValidation } from '@/utils/HouseholdValidation';
-import { captureCalculatorException } from '@/utils/errorTracking';
 
 interface HouseholdBuilderViewProps {
   population: PopulationStateProps;

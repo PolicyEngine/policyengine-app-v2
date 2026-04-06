@@ -8,7 +8,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const posthogApiKey = process.env.POSTHOG_API_KEY;
 const posthogProjectId = process.env.POSTHOG_PROJECT_ID;
 const posthogProxyRewrites = getPostHogProxyRewrites(
-  process.env.NEXT_PUBLIC_POSTHOG_HOST
+  process.env.NEXT_PUBLIC_POSTHOG_HOST,
 );
 
 const nextConfig: NextConfig = {
@@ -38,7 +38,7 @@ const nextConfig: NextConfig = {
         "import.meta.env.SSR": "false",
         "import.meta.env.VITE_APP_MODE": JSON.stringify("calculator"),
         "import.meta.env.VITE_APP_RELEASE": JSON.stringify(
-          process.env.NEXT_PUBLIC_APP_RELEASE || process.env.APP_RELEASE || ""
+          process.env.NEXT_PUBLIC_APP_RELEASE || process.env.APP_RELEASE || "",
         ),
         "import.meta.env.VITE_WEBSITE_URL": JSON.stringify(
           process.env.NEXT_PUBLIC_WEBSITE_URL || "",
@@ -61,7 +61,6 @@ const nextConfig: NextConfig = {
 
     return config;
   },
-
 };
 
 export default posthogApiKey && posthogProjectId

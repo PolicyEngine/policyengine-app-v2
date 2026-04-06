@@ -21,10 +21,7 @@ import { useUserPolicies } from '@/hooks/useUserPolicy';
 import { RootState } from '@/store';
 import { Geography } from '@/types/ingredients/Geography';
 import { PolicyStateProps, PopulationStateProps } from '@/types/pathwayState';
-import {
-  trackReportPolicySelected,
-  trackReportPopulationSelected,
-} from '@/utils/analytics';
+import { trackReportPolicySelected, trackReportPopulationSelected } from '@/utils/analytics';
 import { countPolicyModifications } from '@/utils/countParameterChanges';
 import { generateGeographyLabel } from '@/utils/geographyUtils';
 import { initializePolicyState } from '@/utils/pathwayState/initializePolicyState';

@@ -41,7 +41,10 @@ export default function GlobalError({
         <a
           href="/us/reports"
           className="tw:px-4 tw:py-2 tw:text-sm tw:font-medium tw:border tw:rounded-md"
-          style={{ borderColor: colors.border.light, color: colors.text.primary }}
+          style={{
+            borderColor: colors.border.light,
+            color: colors.text.primary,
+          }}
         >
           Go to reports
         </a>

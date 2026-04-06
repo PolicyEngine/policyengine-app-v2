@@ -435,7 +435,13 @@ const mobileNavLinkStyle: React.CSSProperties = {
   display: "block",
 };
 
-function MobileNavLink({ item, onClose }: { item: NavItemSetup; onClose: () => void }) {
+function MobileNavLink({
+  item,
+  onClose,
+}: {
+  item: NavItemSetup;
+  onClose: () => void;
+}) {
   const Tag = item.external ? "a" : Link;
   return (
     <Tag href={item.href || "#"} onClick={onClose} style={mobileNavLinkStyle}>
@@ -588,8 +594,18 @@ export default function Header() {
 
   const navItems: NavItemSetup[] = [
     { label: "Research", href: `/${countryId}/research`, hasDropdown: false },
-    { label: "Model", href: `/${countryId}/model`, hasDropdown: false, external: true },
-    { label: "API", href: `/${countryId}/api`, hasDropdown: false, external: true },
+    {
+      label: "Model",
+      href: `/${countryId}/model`,
+      hasDropdown: false,
+      external: true,
+    },
+    {
+      label: "API",
+      href: `/${countryId}/api`,
+      hasDropdown: false,
+      external: true,
+    },
     {
       label: "About",
       hasDropdown: true,

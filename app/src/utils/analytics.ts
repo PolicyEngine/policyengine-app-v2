@@ -6,25 +6,23 @@
  * In the Next.js calculator app, events go to PostHog. While the legacy Vite
  * app still exists, we keep a GA fallback so existing flows do not break.
  */
-
 import type { Properties } from 'posthog-js';
 import type { Household } from '@/types/ingredients/Household';
 import type { Report } from '@/types/ingredients/Report';
 import type { Simulation } from '@/types/ingredients/Simulation';
-import type { PolicyStateProps } from '@/types/pathwayState';
-import type { PopulationStateProps } from '@/types/pathwayState';
+import type { PolicyStateProps, PopulationStateProps } from '@/types/pathwayState';
 import { getPostHogClient } from '@/utils/posthogClient';
+import type {
+  CalculatorCalcType,
+  CalculatorEventName,
+  CalculatorEventPayloadMap,
+} from './analyticsSchemas';
 import {
   buildCalcConfigSnapshot,
   buildHouseholdSnapshot,
   buildPersistedReportSnapshot,
   buildReportBuilderSnapshot,
 } from './analyticsSnapshots';
-import type {
-  CalculatorCalcType,
-  CalculatorEventName,
-  CalculatorEventPayloadMap,
-} from './analyticsSchemas';
 
 declare global {
   interface Window {
@@ -50,7 +48,7 @@ function trackEvent(eventName: string, params?: Properties) {
 
 export function captureCalculatorEvent(
   eventName: CalculatorEventName,
-  params: CalculatorEventPayloadMap[CalculatorEventName],
+  params: CalculatorEventPayloadMap[CalculatorEventName]
 ) {
   trackEvent(eventName, params as Properties);
 }
@@ -65,10 +63,7 @@ function getSimulationRole(simulationIndex: number): 'baseline' | 'reform' {
   return simulationIndex === 0 ? 'baseline' : 'reform';
 }
 
-export function trackSocietyWideBuilderOpened(params: {
-  countryId: string;
-  year: string;
-}) {
+export function trackSocietyWideBuilderOpened(params: { countryId: string; year: string }) {
   captureCalculatorEvent('society_wide_builder_opened', {
     country_id: params.countryId,
     year: params.year,
@@ -331,8 +326,7 @@ export function trackCalculationFailed(params: {
     duration_ms: params.durationMs,
     error_name: normalizedError?.name,
     error_message:
-      normalizedError?.message ??
-      (typeof params.error === 'string' ? params.error : undefined),
+      normalizedError?.message ?? (typeof params.error === 'string' ? params.error : undefined),
     calc_config_snapshot: params.config ? buildCalcConfigSnapshot(params.config) : undefined,
   });
 }

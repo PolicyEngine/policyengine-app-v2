@@ -34,9 +34,9 @@ import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
 import { PopulationStateProps } from '@/types/pathwayState';
 import { trackHouseholdSaved } from '@/utils/analytics';
+import { captureCalculatorException } from '@/utils/errorTracking';
 import { generateGeographyLabel } from '@/utils/geographyUtils';
 import { HouseholdBuilder } from '@/utils/HouseholdBuilder';
-import { captureCalculatorException } from '@/utils/errorTracking';
 import {
   getUKConstituencies,
   getUKCountries,

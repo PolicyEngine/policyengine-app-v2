@@ -164,7 +164,9 @@ export function useReportSubmission({
           targetType: 'report',
           countryId,
           year: reportState.year,
-          calcType: reportState.simulations.some((simulation) => simulation.population.geography?.id)
+          calcType: reportState.simulations.some(
+            (simulation) => simulation.population.geography?.id
+          )
             ? 'societyWide'
             : 'household',
           error: new Error('No simulations were created for the report'),
