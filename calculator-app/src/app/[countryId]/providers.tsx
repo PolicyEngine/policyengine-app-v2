@@ -12,6 +12,7 @@ import { useFetchMetadata } from "@/hooks/useMetadata";
 import { setCurrentCountry } from "@/reducers/metadataReducer";
 import { AppDispatch, store } from "@/store";
 import { cacheMonitor } from "@/utils/cacheMonitor";
+import { perfMount } from "@/utils/perfHarness";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -33,6 +34,9 @@ export function CalculatorProviders({
 }: {
   children: React.ReactNode;
 }) {
+  // [PERF HARNESS] Track mount/unmount lifecycle
+  useEffect(() => perfMount('CalculatorProviders'), []);
+
   return (
     <AppProvider mode="calculator">
       <Provider store={store}>

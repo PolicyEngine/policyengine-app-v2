@@ -5,7 +5,7 @@
  * Reuses all shared views from the report pathway with mode="standalone".
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import StandardLayout from '@/components/StandardLayout';
 import { MOCK_USER_ID } from '@/constants';
@@ -18,6 +18,7 @@ import { useUserPolicies } from '@/hooks/useUserPolicy';
 import { RootState } from '@/store';
 import { SimulationViewMode } from '@/types/pathwayModes/SimulationViewMode';
 import { SimulationStateProps } from '@/types/pathwayState';
+import { perfModeChange, perfMount } from '@/utils/perfHarness';
 import {
   createPolicyCallbacks,
   createPopulationCallbacks,
@@ -53,6 +54,9 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
   const countryId = useCurrentCountry();
   const nav = useAppNavigate();
 
+  // [PERF HARNESS]
+  useEffect(() => perfMount('SimulationPathwayWrapper'), []);
+
   const handleCancel = useCallback(() => {
     nav.push(`/${countryId}/simulations`);
   }, [nav, countryId]);
@@ -72,6 +76,15 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
   const { currentMode, navigateToMode, goBack, canGoBack } = usePathwayNavigation(
     SimulationViewMode.LABEL
   );
+
+  // [PERF HARNESS] Track mode changes
+  const prevMode = useRef(currentMode);
+  useEffect(() => {
+    if (prevMode.current !== currentMode) {
+      perfModeChange('SimulationPathway', prevMode.current, currentMode);
+      prevMode.current = currentMode;
+    }
+  }, [currentMode]);
 
   // ========== FETCH USER DATA FOR CONDITIONAL NAVIGATION ==========
   const userId = MOCK_USER_ID.toString();

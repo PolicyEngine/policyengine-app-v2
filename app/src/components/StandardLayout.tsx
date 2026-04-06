@@ -8,11 +8,12 @@
  * children are rendered directly without double-wrapping.
  */
 
-import { useEffect } from 'react';
+import { Profiler, useEffect } from 'react';
 import { LayoutProvider, useIsInsideLayout } from '@/contexts/LayoutContext';
 import { useAppLocation } from '@/contexts/LocationContext';
 import { useDisclosure } from '@/hooks/useDisclosure';
 import { cn } from '@/lib/utils';
+import { perfMount, perfProfilerCallback } from '@/utils/perfHarness';
 import GiveCalcBanner from './shared/GiveCalcBanner';
 import HeaderNavigation from './shared/HomeHeader';
 import Sidebar from './Sidebar';
@@ -25,6 +26,9 @@ export default function StandardLayout({ children }: StandardLayoutProps) {
   const isInsideLayout = useIsInsideLayout();
   const location = useAppLocation();
   const [navbarOpened, { toggle: toggleNavbar, close: closeNavbar }] = useDisclosure();
+
+  // [PERF HARNESS] Track mount/unmount lifecycle
+  useEffect(() => perfMount('StandardLayout'), []);
 
   // Close navbar on route change (mobile UX)
   useEffect(() => {
@@ -39,6 +43,7 @@ export default function StandardLayout({ children }: StandardLayoutProps) {
 
   return (
     <LayoutProvider>
+      <Profiler id="StandardLayout" onRender={perfProfilerCallback}>
       <div className="tw:h-screen tw:overflow-hidden tw:flex tw:flex-col">
         <header className="tw:sticky tw:top-0 tw:z-50 tw:shrink-0">
           <HeaderNavigation navbarOpened={navbarOpened} onToggleNavbar={toggleNavbar} />
@@ -61,6 +66,7 @@ export default function StandardLayout({ children }: StandardLayoutProps) {
           </main>
         </div>
       </div>
+      </Profiler>
     </LayoutProvider>
   );
 }

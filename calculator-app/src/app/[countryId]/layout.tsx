@@ -6,6 +6,7 @@ import { CountryProvider } from "@/contexts/CountryContext";
 import { LocationProvider } from "@/contexts/LocationContext";
 import { NavigationProvider } from "@/contexts/NavigationContext";
 import { countryIds, type CountryId } from "@/libs/countries";
+import { perfNavChange } from "@/utils/perfHarness";
 
 /**
  * Layout for extracted Next.js pages under /:countryId/*.
@@ -41,6 +42,11 @@ export default function CountryLayout({
     }),
     [pathname, searchParams],
   );
+
+  // [PERF HARNESS] Track navigation timing
+  useEffect(() => {
+    perfNavChange(pathname);
+  }, [pathname]);
 
   useEffect(() => {
     if (!isValid) {

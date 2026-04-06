@@ -10,11 +10,13 @@ import {
   IconScale,
   IconUsers,
 } from '@tabler/icons-react';
+import { useEffect } from 'react';
 import { Button } from '@/components/ui';
 import { WEBSITE_URL } from '@/constants';
 import { useAppLocation } from '@/contexts/LocationContext';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { perfMount } from '@/utils/perfHarness';
 import { colors, typography } from '../designTokens';
 import SidebarDivider from './sidebar/SidebarDivider';
 import SidebarNavItem from './sidebar/SidebarNavItem';
@@ -28,6 +30,9 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
   const location = useAppLocation();
   const nav = useAppNavigate();
   const countryId = useCurrentCountry();
+
+  // [PERF HARNESS] Track mount/unmount lifecycle
+  useEffect(() => perfMount('Sidebar'), []);
 
   // All internal navigation paths include the country prefix for consistency with v1 app
   const navItems = [

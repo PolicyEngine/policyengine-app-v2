@@ -5,7 +5,7 @@
  * Reuses shared views from the report pathway with mode="standalone".
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import StandardLayout from '@/components/StandardLayout';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
@@ -14,6 +14,7 @@ import { StandalonePolicyViewMode } from '@/types/pathwayModes/PolicyViewMode';
 import { PolicyStateProps } from '@/types/pathwayState';
 import { createPolicyCallbacks } from '@/utils/pathwayCallbacks';
 import { initializePolicyState } from '@/utils/pathwayState/initializePolicyState';
+import { perfModeChange, perfMount } from '@/utils/perfHarness';
 // Policy views (reusing from report pathway)
 import PolicyLabelView from '../report/views/policy/PolicyLabelView';
 import PolicyParameterSelectorView from '../report/views/policy/PolicyParameterSelectorView';
@@ -30,6 +31,9 @@ export default function PolicyPathwayWrapper({ onComplete }: PolicyPathwayWrappe
   const countryId = useCurrentCountry();
   const nav = useAppNavigate();
 
+  // [PERF HARNESS]
+  useEffect(() => perfMount('PolicyPathwayWrapper'), []);
+
   const handleCancel = useCallback(() => {
     nav.push(`/${countryId}/policies`);
   }, [nav, countryId]);
@@ -43,6 +47,15 @@ export default function PolicyPathwayWrapper({ onComplete }: PolicyPathwayWrappe
   const { currentMode, navigateToMode, goBack, canGoBack } = usePathwayNavigation(
     StandalonePolicyViewMode.LABEL
   );
+
+  // [PERF HARNESS] Track mode changes
+  const prevMode = useRef(currentMode);
+  useEffect(() => {
+    if (prevMode.current !== currentMode) {
+      perfModeChange('PolicyPathway', prevMode.current, currentMode);
+      prevMode.current = currentMode;
+    }
+  }, [currentMode]);
 
   // ========== CALLBACKS ==========
   // Use shared callback factory with onPolicyComplete for standalone navigation
