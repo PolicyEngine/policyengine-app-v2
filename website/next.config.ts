@@ -51,6 +51,9 @@ const nextConfig: NextConfig = {
       afterFiles: [
         // State legislative tracker (Modal)
         { source: "/_tracker/:path*", destination: "https://policyengine--state-legislative-tracker.modal.run/_tracker/:path*" },
+        // Tracker assets at root paths — temporary until tracker repo updates to use absolute URLs
+        { source: "/policyengine-favicon.svg", destination: "https://policyengine--state-legislative-tracker.modal.run/policyengine-favicon.svg" },
+        { source: "/policyengine-logo.svg", destination: "https://policyengine--state-legislative-tracker.modal.run/policyengine-logo.svg" },
         // Slides (Vercel)
         { source: "/slides", destination: "https://policyengine-slides.vercel.app/slides" },
         { source: "/slides/:path*", destination: "https://policyengine-slides.vercel.app/slides/:path*" },
