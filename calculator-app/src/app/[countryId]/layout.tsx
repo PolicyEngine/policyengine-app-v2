@@ -48,6 +48,23 @@ export default function CountryLayout({
     perfNavChange(pathname);
   }, [pathname]);
 
+  // Aggressive prefetch: preload all calculator routes so navigations
+  // don't wait for chunk downloads (mimics Vite's upfront JS loading)
+  useEffect(() => {
+    if (!isValid) return;
+    const routes = [
+      `/${countryId}/reports`,
+      `/${countryId}/simulations`,
+      `/${countryId}/households`,
+      `/${countryId}/policies`,
+      `/${countryId}/reports/create`,
+      `/${countryId}/simulations/create`,
+      `/${countryId}/households/create`,
+      `/${countryId}/policies/create`,
+    ];
+    routes.forEach((route) => router.prefetch(route));
+  }, [countryId, isValid, router]);
+
   useEffect(() => {
     if (!isValid) {
       router.replace("/");
