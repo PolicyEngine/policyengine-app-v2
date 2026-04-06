@@ -56,20 +56,27 @@ export default function AppClient({ app, countryId, subPath }: AppClientProps) {
     return `/${segments.slice(0, 2).join("/")}`;
   }, [pathname]);
 
+  // Derive sub-path from the browser URL.
+  // e.g. pathname="/us/state-legislative-tracker/MN/mn-hf4621", basePath="/us/state-legislative-tracker"
+  // → derivedSubPath="/MN/mn-hf4621"
+  const derivedSubPath = useMemo(() => {
+    const extra = pathname.slice(basePath.length);
+    return extra || subPath || "";
+  }, [pathname, basePath, subPath]);
+
   // Forward parent URL query params and sub-path into the iframe src
   const iframeBaseUrl = useMemo(() => {
     try {
       const resolved = new URL(app.source, window.location.origin);
-      // Append sub-path for deep links (e.g. /MN/mn-hf4621)
-      if (subPath) {
-        resolved.pathname = resolved.pathname.replace(/\/$/, "") + subPath;
+      if (derivedSubPath) {
+        resolved.pathname = resolved.pathname.replace(/\/$/, "") + derivedSubPath;
       }
       resolved.search = searchParams.toString() ? `?${searchParams.toString()}` : "";
       return resolved.toString();
     } catch {
       return app.source;
     }
-  }, [searchParams, app.source, subPath]);
+  }, [searchParams, app.source, derivedSubPath]);
 
   // Listen for messages from iframe and sync to parent URL bar
   useEffect(() => {
