@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import type { SocietyWideReportOutput as SocietyWideOutput } from '@/api/societyWideCalculation';
 import { useCalculationStatus } from '@/hooks/useCalculationStatus';
@@ -13,6 +13,7 @@ import type { Simulation } from '@/types/ingredients/Simulation';
 import type { UserPolicy } from '@/types/ingredients/UserPolicy';
 import type { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
 import type { UserSimulation } from '@/types/ingredients/UserSimulation';
+import { trackReportOutputSubpageViewed, trackReportOutputViewed } from '@/utils/analytics';
 import { resolveDefaultReportOutputSubpage } from '@/utils/reportOutputSubpage';
 import { convertPoliciesToV1Format } from '@/utils/reproducibilityCode';
 import { getDisplayStatus } from '@/utils/statusMapping';
@@ -158,6 +159,34 @@ export function SocietyWideReportOutput({
   geographies,
 }: SocietyWideReportOutputProps) {
   const normalizedSubpage = resolveDefaultReportOutputSubpage('societyWide', subpage);
+
+  useEffect(() => {
+    if (!report) {
+      return;
+    }
+
+    trackReportOutputViewed({
+      report,
+      simulations,
+      calcType: 'societyWide',
+      subpage: normalizedSubpage,
+      activeView,
+    });
+  }, [report?.id]);
+
+  useEffect(() => {
+    if (!report) {
+      return;
+    }
+
+    trackReportOutputSubpageViewed({
+      report,
+      simulations,
+      calcType: 'societyWide',
+      subpage: normalizedSubpage,
+      activeView,
+    });
+  }, [activeView, normalizedSubpage, report, simulations]);
 
   // Read datasets from metadata for the reproduce tab
   const datasets = useSelector((state: RootState) => state.metadata.economyOptions?.datasets);

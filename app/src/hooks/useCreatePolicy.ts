@@ -2,6 +2,7 @@ import { useMutation } from '@tanstack/react-query';
 import { createPolicy } from '@/api/policy';
 import { MOCK_USER_ID } from '@/constants';
 import { PolicyCreationPayload } from '@/types/payloads';
+import { captureApiException } from '@/utils/errorTracking';
 import { useCurrentCountry } from './useCurrentCountry';
 import { useCreatePolicyAssociation } from './useUserPolicy';
 
@@ -26,6 +27,12 @@ export function useCreatePolicy(policyLabel?: string) {
         });
       } catch (error) {
         console.error('Policy created but association failed:', error);
+        captureApiException(error, {
+          source: 'policy_association',
+          country_id: countryId,
+          policy_id: data.result.policy_id,
+          has_label: Boolean(policyLabel),
+        });
       }
     },
   });

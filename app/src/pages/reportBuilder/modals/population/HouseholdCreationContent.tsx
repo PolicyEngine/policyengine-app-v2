@@ -60,6 +60,7 @@ export function HouseholdCreationContent({
           household={householdDraft}
           metadata={metadata}
           year={reportYear}
+          trackingMode="report"
           maritalStatus={maritalStatus}
           numChildren={numChildren}
           basicPersonFields={basicPersonFields}

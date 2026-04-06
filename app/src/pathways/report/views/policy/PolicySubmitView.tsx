@@ -54,7 +54,12 @@ export default function PolicySubmitView({
     );
     createPolicy(serializedPolicyCreationPayload, {
       onSuccess: (data) => {
-        trackPolicyCreated();
+        trackPolicyCreated({
+          countryId,
+          policyId: data.result.policy_id,
+          parameterCount: policy.parameters.length,
+          hasLabel: Boolean(policy.label),
+        });
         onSubmitSuccess(data.result.policy_id);
       },
     });

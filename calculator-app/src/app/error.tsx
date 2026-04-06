@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { colors } from "@/designTokens";
+import { captureRouteException } from "@/utils/errorTracking";
 
 export default function GlobalError({
   error,
@@ -11,6 +12,10 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
+    captureRouteException(error, {
+      boundary: "root",
+      digest: error.digest,
+    });
     console.error("[Calculator] Global error:", error);
   }, [error]);
 
@@ -36,7 +41,10 @@ export default function GlobalError({
         <a
           href="/us/reports"
           className="tw:px-4 tw:py-2 tw:text-sm tw:font-medium tw:border tw:rounded-md"
-          style={{ borderColor: colors.border.light, color: colors.text.primary }}
+          style={{
+            borderColor: colors.border.light,
+            color: colors.text.primary,
+          }}
         >
           Go to reports
         </a>

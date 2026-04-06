@@ -15,6 +15,7 @@ import {
   typography,
 } from "@policyengine/design-system/tokens";
 import { useCountryId } from "@/hooks/useCountryId";
+import { trackCountrySwitched } from "@/lib/posthog-events";
 
 const PolicyEngineLogo = "/assets/logos/policyengine/white.svg";
 
@@ -258,6 +259,11 @@ function CountrySelector() {
   const handleCountryChange = useCallback(
     (newCountryId: string) => {
       setOpen(false);
+      trackCountrySwitched({
+        from_country_id: countryId,
+        to_country_id: newCountryId,
+        pathname,
+      });
       const pathParts = pathname.split("/").filter(Boolean);
       if (pathParts.length > 0) {
         pathParts[0] = newCountryId;
@@ -266,7 +272,7 @@ function CountrySelector() {
         router.push(`/${newCountryId}`);
       }
     },
-    [pathname, router],
+    [countryId, pathname, router],
   );
 
   useEffect(() => {
@@ -429,7 +435,13 @@ const mobileNavLinkStyle: React.CSSProperties = {
   display: "block",
 };
 
-function MobileNavLink({ item, onClose }: { item: NavItemSetup; onClose: () => void }) {
+function MobileNavLink({
+  item,
+  onClose,
+}: {
+  item: NavItemSetup;
+  onClose: () => void;
+}) {
   const Tag = item.external ? "a" : Link;
   return (
     <Tag href={item.href || "#"} onClick={onClose} style={mobileNavLinkStyle}>
@@ -582,8 +594,18 @@ export default function Header() {
 
   const navItems: NavItemSetup[] = [
     { label: "Research", href: `/${countryId}/research`, hasDropdown: false },
-    { label: "Model", href: `/${countryId}/model`, hasDropdown: false, external: true },
-    { label: "API", href: `/${countryId}/api`, hasDropdown: false, external: true },
+    {
+      label: "Model",
+      href: `/${countryId}/model`,
+      hasDropdown: false,
+      external: true,
+    },
+    {
+      label: "API",
+      href: `/${countryId}/api`,
+      hasDropdown: false,
+      external: true,
+    },
     {
       label: "About",
       hasDropdown: true,

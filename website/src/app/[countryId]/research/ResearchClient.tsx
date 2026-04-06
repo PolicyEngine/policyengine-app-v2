@@ -52,6 +52,7 @@ import {
   type ResearchItem,
 } from "@/data/posts/postTransformers";
 import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
+import { trackResearchFiltersChanged } from "@/lib/posthog-events";
 
 /* ─── Constants ─── */
 
@@ -141,150 +142,158 @@ function BlogPostCard({
   // <a> to force a full server request instead of client-side routing.
   const cardClassName = "tw:no-underline tw:text-inherit tw:group";
   const cardContent = (
-      <div className="tw:flex tw:flex-col tw:h-full tw:rounded-xl tw:overflow-hidden tw:bg-white tw:transition-all tw:duration-300 tw:ease-out tw:border tw:border-gray-200 tw:hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] tw:hover:border-gray-300 tw:hover:-translate-y-0.5">
-        {/* Image */}
-        <div className="tw:relative tw:h-[260px] tw:overflow-hidden tw:bg-gray-100">
-          {item.image && (
-            <OptimisedImage
-              src={
-                item.image.startsWith("http")
-                  ? item.image
-                  : `/assets/posts/${item.image}`
-              }
-              alt={item.title}
-              width={640}
-              className="tw:w-full tw:h-full tw:object-cover tw:transition-transform tw:duration-500 tw:ease-out tw:group-hover:scale-105"
-              onError={(e) => {
-                e.currentTarget.style.display = "none";
-              }}
-            />
-          )}
-          {/* Gradient overlay at bottom of image for depth */}
-          <div
-            style={{
-              position: "absolute",
-              bottom: 0,
-              left: 0,
-              right: 0,
-              height: "40px",
-              background: "linear-gradient(transparent, rgba(0,0,0,0.04))",
-              pointerEvents: "none",
+    <div className="tw:flex tw:flex-col tw:h-full tw:rounded-xl tw:overflow-hidden tw:bg-white tw:transition-all tw:duration-300 tw:ease-out tw:border tw:border-gray-200 tw:hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] tw:hover:border-gray-300 tw:hover:-translate-y-0.5">
+      {/* Image */}
+      <div className="tw:relative tw:h-[260px] tw:overflow-hidden tw:bg-gray-100">
+        {item.image && (
+          <OptimisedImage
+            src={
+              item.image.startsWith("http")
+                ? item.image
+                : `/assets/posts/${item.image}`
+            }
+            alt={item.title}
+            width={640}
+            className="tw:w-full tw:h-full tw:object-cover tw:transition-transform tw:duration-500 tw:ease-out tw:group-hover:scale-105"
+            onError={(e) => {
+              e.currentTarget.style.display = "none";
             }}
           />
-        </div>
-
-        {/* Content */}
+        )}
+        {/* Gradient overlay at bottom of image for depth */}
         <div
           style={{
-            padding: "16px 18px",
-            flex: 1,
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: "40px",
+            background: "linear-gradient(transparent, rgba(0,0,0,0.04))",
+            pointerEvents: "none",
+          }}
+        />
+      </div>
+
+      {/* Content */}
+      <div
+        style={{
+          padding: "16px 18px",
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        {/* Tags + Date row */}
+        <div
+          style={{
             display: "flex",
-            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginBottom: "10px",
+            fontSize: "11px",
+            fontFamily: typography.fontFamily.primary,
+            fontWeight: typography.fontWeight.medium,
+            color: colors.gray[500],
+            letterSpacing: "0.03em",
+            textTransform: "uppercase",
           }}
         >
-          {/* Tags + Date row */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              marginBottom: "10px",
-              fontSize: "11px",
-              fontFamily: typography.fontFamily.primary,
-              fontWeight: typography.fontWeight.medium,
-              color: colors.gray[500],
-              letterSpacing: "0.03em",
-              textTransform: "uppercase",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center" }}>
-              {displayTags.map((tag, i) => (
-                <span
-                  key={tag}
-                  style={{ display: "inline-flex", alignItems: "center" }}
-                >
-                  {tag}
-                  {i < displayTags.length - 1 && (
-                    <span
-                      style={{
-                        margin: "0 8px",
-                        color: colors.gray[400],
-                        fontSize: "9px",
-                      }}
-                    >
-                      &#9679;
-                    </span>
-                  )}
-                </span>
-              ))}
-            </div>
-            <span style={{ flexShrink: 0 }}>{formattedDate}</span>
+          <div style={{ display: "flex", alignItems: "center" }}>
+            {displayTags.map((tag, i) => (
+              <span
+                key={tag}
+                style={{ display: "inline-flex", alignItems: "center" }}
+              >
+                {tag}
+                {i < displayTags.length - 1 && (
+                  <span
+                    style={{
+                      margin: "0 8px",
+                      color: colors.gray[400],
+                      fontSize: "9px",
+                    }}
+                  >
+                    &#9679;
+                  </span>
+                )}
+              </span>
+            ))}
           </div>
+          <span style={{ flexShrink: 0 }}>{formattedDate}</span>
+        </div>
 
-          {/* Title */}
-          <p
-            style={{
-              fontWeight: typography.fontWeight.semibold,
-              fontSize: "15.5px",
-              lineHeight: "1.4",
-              color: colors.secondary[900],
-              marginBottom: "8px",
-              fontFamily: typography.fontFamily.primary,
-              display: "-webkit-box",
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: "vertical",
-              overflow: "hidden",
-              letterSpacing: "-0.01em",
-            }}
-          >
-            {item.title}
-          </p>
+        {/* Title */}
+        <p
+          style={{
+            fontWeight: typography.fontWeight.semibold,
+            fontSize: "15.5px",
+            lineHeight: "1.4",
+            color: colors.secondary[900],
+            marginBottom: "8px",
+            fontFamily: typography.fontFamily.primary,
+            display: "-webkit-box",
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: "vertical",
+            overflow: "hidden",
+            letterSpacing: "-0.01em",
+          }}
+        >
+          {item.title}
+        </p>
 
-          {/* Description */}
-          <Text
-            size="sm"
-            style={{
-              color: colors.text.secondary,
-              flex: 1,
-              display: "-webkit-box",
-              WebkitLineClamp: 3,
-              WebkitBoxOrient: "vertical",
-              overflow: "hidden",
-              lineHeight: "1.6",
-            }}
-          >
-            {item.description}
-          </Text>
+        {/* Description */}
+        <Text
+          size="sm"
+          style={{
+            color: colors.text.secondary,
+            flex: 1,
+            display: "-webkit-box",
+            WebkitLineClamp: 3,
+            WebkitBoxOrient: "vertical",
+            overflow: "hidden",
+            lineHeight: "1.6",
+          }}
+        >
+          {item.description}
+        </Text>
 
-          {/* CTA */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "flex-end",
-              gap: "4px",
-              marginTop: "12px",
-              color: colors.primary[600],
-              fontFamily: typography.fontFamily.primary,
-              fontWeight: typography.fontWeight.medium,
-              fontSize: "13.5px",
-            }}
-            className="tw:transition-all tw:duration-200 tw:group-hover:gap-2"
-          >
-            <span>{item.isApp ? "Open" : "Read more"}</span>
-            <IconArrowRight
-              size={15}
-              className="tw:transition-transform tw:duration-200 tw:group-hover:translate-x-0.5"
-            />
-          </div>
+        {/* CTA */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "flex-end",
+            gap: "4px",
+            marginTop: "12px",
+            color: colors.primary[600],
+            fontFamily: typography.fontFamily.primary,
+            fontWeight: typography.fontWeight.medium,
+            fontSize: "13.5px",
+          }}
+          className="tw:transition-all tw:duration-200 tw:group-hover:gap-2"
+        >
+          <span>{item.isApp ? "Open" : "Read more"}</span>
+          <IconArrowRight
+            size={15}
+            className="tw:transition-transform tw:duration-200 tw:group-hover:translate-x-0.5"
+          />
         </div>
       </div>
+    </div>
   );
 
   if (item.isApp) {
-    return <a href={link} className={cardClassName}>{cardContent}</a>;
+    return (
+      <a href={link} className={cardClassName}>
+        {cardContent}
+      </a>
+    );
   }
-  return <Link href={link} className={cardClassName}>{cardContent}</Link>;
+  return (
+    <Link href={link} className={cardClassName}>
+      {cardContent}
+    </Link>
+  );
 }
 
 /* ─── BlogPostGrid ─── */
@@ -439,9 +448,7 @@ function FilterSection({
             fw={typography.fontWeight.semibold}
             size="sm"
             style={{
-              color: isExpanded
-                ? colors.primary[700]
-                : colors.secondary[800],
+              color: isExpanded ? colors.primary[700] : colors.secondary[800],
             }}
           >
             {label}
@@ -479,9 +486,7 @@ function FilterSection({
 
       <div
         style={{
-          maxHeight: isExpanded
-            ? `${Math.min(height, maxHeight)}px`
-            : "0px",
+          maxHeight: isExpanded ? `${Math.min(height, maxHeight)}px` : "0px",
           opacity: isExpanded ? 1 : 0,
           transition:
             "max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease",
@@ -516,7 +521,12 @@ function CheckboxRow({
       role="button"
       tabIndex={0}
       onClick={onChange}
-      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onChange(); } }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onChange();
+        }
+      }}
       style={{
         display: "flex",
         alignItems: "center",
@@ -596,8 +606,7 @@ function ResearchFilters({
   availableAuthors,
   countryId = "us",
 }: ResearchFiltersProps) {
-  const [expandedSection, setExpandedSection] =
-    useState<ExpandedSection>(null);
+  const [expandedSection, setExpandedSection] = useState<ExpandedSection>(null);
   const [usStatesExpanded, setUsStatesExpanded] = useState(false);
   const [availableHeight, setAvailableHeight] = useState<number>(400);
   const filterContainerRef = useRef<HTMLDivElement>(null);
@@ -794,8 +803,7 @@ function ResearchFilters({
                             colors.primary[50];
                         }}
                         onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor =
-                            "transparent";
+                          e.currentTarget.style.backgroundColor = "transparent";
                         }}
                       >
                         {usStatesExpanded ? "Hide states" : "Show states"}
@@ -846,11 +854,7 @@ function ResearchFilters({
 
 /* ─── Main Client Component ─── */
 
-export default function ResearchClient({
-  countryId,
-}: {
-  countryId: string;
-}) {
+export default function ResearchClient({ countryId }: { countryId: string }) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -860,10 +864,7 @@ export default function ResearchClient({
   const allItems = useMemo(() => getResearchItems(), []);
 
   // Default locations based on country
-  const defaultLocations = useMemo(
-    () => [countryId, "global"],
-    [countryId],
-  );
+  const defaultLocations = useMemo(() => [countryId, "global"], [countryId]);
 
   // Filter state - initialize from URL params
   const [searchQuery, setSearchQuery] = useState(
@@ -881,6 +882,7 @@ export default function ResearchClient({
   const [selectedAuthors, setSelectedAuthors] = useState<string[]>(() =>
     parseArrayParam(searchParams.get("authors")),
   );
+  const hasTrackedFiltersRef = useRef(false);
 
   // Sync URL params when filters change
   useEffect(() => {
@@ -978,6 +980,31 @@ export default function ResearchClient({
     reset,
   ]);
 
+  useEffect(() => {
+    if (!hasTrackedFiltersRef.current) {
+      hasTrackedFiltersRef.current = true;
+      return;
+    }
+
+    trackResearchFiltersChanged({
+      country_id: countryId,
+      search_query: searchQuery,
+      selected_types: selectedTypes,
+      selected_topics: selectedTopics,
+      selected_locations: selectedLocations,
+      selected_authors: selectedAuthors,
+      result_count: filteredItems.length,
+    });
+  }, [
+    countryId,
+    filteredItems.length,
+    searchQuery,
+    selectedAuthors,
+    selectedLocations,
+    selectedTopics,
+    selectedTypes,
+  ]);
+
   const visibleItems = useMemo(
     () => filteredItems.slice(0, visibleCount),
     [filteredItems, visibleCount],
@@ -1001,25 +1028,19 @@ export default function ResearchClient({
         <div
           style={{
             display: "flex",
-            flexDirection:
-              displayCategory === "desktop" ? "row" : "column",
+            flexDirection: displayCategory === "desktop" ? "row" : "column",
             gap: spacing.xl,
           }}
         >
           {/* Sidebar Filters */}
           <div
             style={{
-              flex:
-                displayCategory === "desktop" ? "0 0 250px" : "1",
-              position:
-                displayCategory === "desktop" ? "sticky" : "static",
-              top:
-                displayCategory === "desktop" ? "100px" : "auto",
+              flex: displayCategory === "desktop" ? "0 0 250px" : "1",
+              position: displayCategory === "desktop" ? "sticky" : "static",
+              top: displayCategory === "desktop" ? "100px" : "auto",
               alignSelf: "flex-start",
               height:
-                displayCategory === "desktop"
-                  ? "calc(100vh - 120px)"
-                  : "auto",
+                displayCategory === "desktop" ? "calc(100vh - 120px)" : "auto",
             }}
           >
             <ResearchFilters
@@ -1052,10 +1073,7 @@ export default function ResearchClient({
 
             {filteredItems.length > 0 ? (
               <>
-                <BlogPostGrid
-                  items={visibleItems}
-                  countryId={countryId}
-                />
+                <BlogPostGrid items={visibleItems} countryId={countryId} />
 
                 {/* Sentinel element for infinite scroll */}
                 {hasMore && (
