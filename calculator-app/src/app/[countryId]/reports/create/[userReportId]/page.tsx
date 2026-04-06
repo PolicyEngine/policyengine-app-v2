@@ -1,9 +1,8 @@
 "use client";
 
-import { use } from "react";
-import StandardLayout from "@/components/StandardLayout";
+import { use, useEffect } from "react";
 import ModifyReportPage from "@/pages/reportBuilder/ModifyReportPage";
-import { CalculatorProviders } from "../../../providers";
+import { perfContentVisible } from "@/utils/perfHarness";
 
 export default function ModifyReportRoute({
   params,
@@ -12,11 +11,8 @@ export default function ModifyReportRoute({
 }) {
   const { userReportId } = use(params);
 
-  return (
-    <CalculatorProviders>
-      <StandardLayout>
-        <ModifyReportPage userReportId={userReportId} />
-      </StandardLayout>
-    </CalculatorProviders>
-  );
+  // [PERF HARNESS]
+  useEffect(() => { perfContentVisible('ModifyReportRoute'); }, []);
+
+  return <ModifyReportPage userReportId={userReportId} />;
 }
