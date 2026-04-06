@@ -46,32 +46,34 @@ export default function StandardLayout({ children }: StandardLayoutProps) {
   return (
     <LayoutProvider>
       <Profiler id="StandardLayout" onRender={perfProfilerCallback}>
-      <div className="tw:h-screen tw:overflow-hidden tw:flex tw:flex-col">
-        <header className="tw:sticky tw:top-0 tw:z-50 tw:shrink-0">
-          <HeaderNavigation navbarOpened={navbarOpened} onToggleNavbar={toggleNavbar} />
-          <GiveCalcBanner />
-        </header>
+        <div className="tw:h-screen tw:overflow-hidden tw:flex tw:flex-col">
+          <header className="tw:sticky tw:top-0 tw:z-50 tw:shrink-0">
+            <HeaderNavigation navbarOpened={navbarOpened} onToggleNavbar={toggleNavbar} />
+            <GiveCalcBanner />
+          </header>
 
-        <div className="tw:flex tw:flex-1 tw:min-h-0">
-          <nav
-            className={cn(
-              'tw:w-[300px] tw:shrink-0 tw:border-r tw:border-border-light tw:overflow-y-auto tw:bg-white',
-              'tw:hidden tw:sm:block',
-              navbarOpened &&
-                'tw:fixed tw:inset-0 tw:z-40 tw:block tw:sm:relative tw:sm:z-auto tw:top-0',
-              isFullScreen && 'tw:!hidden'
-            )}
-          >
-            <Sidebar />
-          </nav>
-          <main className={cn(
-            'tw:flex-1 tw:min-w-0 tw:overflow-y-auto tw:overflow-x-hidden tw:bg-gray-50',
-            isFullScreen ? 'tw:max-w-full tw:p-0' : 'tw:max-w-[calc(100vw-300px)] tw:p-[24px]'
-          )}>
-            {children}
-          </main>
+          <div className="tw:flex tw:flex-1 tw:min-h-0">
+            <nav
+              className={cn(
+                'tw:w-[300px] tw:shrink-0 tw:border-r tw:border-border-light tw:overflow-y-auto tw:bg-white',
+                'tw:hidden tw:sm:block',
+                navbarOpened &&
+                  'tw:fixed tw:inset-0 tw:z-40 tw:block tw:sm:relative tw:sm:z-auto tw:top-0',
+                isFullScreen && 'tw:!hidden'
+              )}
+            >
+              <Sidebar />
+            </nav>
+            <main
+              className={cn(
+                'tw:flex-1 tw:min-w-0 tw:overflow-y-auto tw:overflow-x-hidden tw:bg-gray-50',
+                isFullScreen ? 'tw:max-w-full tw:p-0' : 'tw:max-w-[calc(100vw-300px)] tw:p-[24px]'
+              )}
+            >
+              {children}
+            </main>
+          </div>
         </div>
-      </div>
       </Profiler>
     </LayoutProvider>
   );

@@ -18,13 +18,13 @@ import { useUserPolicies } from '@/hooks/useUserPolicy';
 import { RootState } from '@/store';
 import { SimulationViewMode } from '@/types/pathwayModes/SimulationViewMode';
 import { SimulationStateProps } from '@/types/pathwayState';
-import { perfModeChange, perfMount } from '@/utils/perfHarness';
 import {
   createPolicyCallbacks,
   createPopulationCallbacks,
   createSimulationCallbacks,
 } from '@/utils/pathwayCallbacks';
 import { initializeSimulationState } from '@/utils/pathwayState/initializeSimulationState';
+import { perfModeChange, perfMount } from '@/utils/perfHarness';
 import PolicyExistingView from '../report/views/policy/PolicyExistingView';
 // Policy views
 import PolicyLabelView from '../report/views/policy/PolicyLabelView';

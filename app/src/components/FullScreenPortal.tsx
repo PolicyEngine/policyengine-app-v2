@@ -19,12 +19,12 @@ export default function FullScreenPortal({ children }: FullScreenPortalProps) {
     setContainer(el);
   }, []);
 
-  if (!container) return null;
+  if (!container) {
+    return null;
+  }
 
   return createPortal(
-    <div className="tw:fixed tw:inset-0 tw:z-[100] tw:bg-white">
-      {children}
-    </div>,
-    container,
+    <div className="tw:fixed tw:inset-0 tw:z-[100] tw:bg-white">{children}</div>,
+    container
   );
 }

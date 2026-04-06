@@ -8,7 +8,9 @@
  * Remove this file before merging the winning approach.
  */
 
-const ENABLED = typeof window !== "undefined";
+/* eslint-disable no-console */
+
+const ENABLED = typeof window !== 'undefined';
 
 // Stable reference time for the session
 const sessionStart = ENABLED ? performance.now() : 0;
@@ -27,7 +29,9 @@ function ts(): string {
  *   useEffect(() => perfMount("StandardLayout"), []);
  */
 export function perfMount(name: string): () => void {
-  if (!ENABLED) return () => {};
+  if (!ENABLED) {
+    return () => {};
+  }
 
   const mountTime = performance.now();
   performance.mark(`${name}-mount`);
@@ -45,7 +49,7 @@ export function perfMount(name: string): () => void {
   };
 }
 
-// ── Navigation timing ───────────────────────────────────────────
+// ── Navigation timing ─────���─────────────────────────────────────
 
 let lastPathname: string | null = null;
 let navStartTime: number | null = null;
@@ -59,16 +63,16 @@ let navStartTime: number | null = null;
  *   useEffect(() => { perfNavChange(pathname); }, [pathname]);
  */
 export function perfNavChange(pathname: string): void {
-  if (!ENABLED) return;
+  if (!ENABLED) {
+    return;
+  }
 
   const now = performance.now();
 
   if (lastPathname !== null && lastPathname !== pathname) {
-    performance.mark("nav-start");
+    performance.mark('nav-start');
     navStartTime = now;
-    console.log(
-      `[PERF] ${ts()} NAV     ${lastPathname} → ${pathname}`,
-    );
+    console.log(`[PERF] ${ts()} NAV     ${lastPathname} → ${pathname}`);
   }
 
   lastPathname = pathname;
@@ -79,18 +83,18 @@ export function perfNavChange(pathname: string): void {
  * component's useEffect). Measures nav-start → content-visible.
  */
 export function perfContentVisible(pageName: string): void {
-  if (!ENABLED || navStartTime === null) return;
+  if (!ENABLED || navStartTime === null) {
+    return;
+  }
 
   const elapsed = performance.now() - navStartTime;
-  performance.mark("content-visible");
+  performance.mark('content-visible');
   try {
-    performance.measure("nav→content", "nav-start", "content-visible");
+    performance.measure('nav→content', 'nav-start', 'content-visible');
   } catch {
     // marks may have been cleared
   }
-  console.log(
-    `[PERF] ${ts()} VISIBLE ${pageName} (${elapsed.toFixed(1)}ms after nav)`,
-  );
+  console.log(`[PERF] ${ts()} VISIBLE ${pageName} (${elapsed.toFixed(1)}ms after nav)`);
   navStartTime = null;
 }
 
@@ -104,26 +108,30 @@ export function perfContentVisible(pageName: string): void {
  */
 export function perfProfilerCallback(
   id: string,
-  phase: "mount" | "update" | "nested-update",
+  phase: 'mount' | 'update' | 'nested-update',
   actualDuration: number,
   baseDuration: number,
-  startTime: number,
-  commitTime: number,
+  _startTime: number,
+  _commitTime: number
 ): void {
-  if (!ENABLED) return;
+  if (!ENABLED) {
+    return;
+  }
 
   console.log(
-    `[PERF] ${ts()} RENDER  ${id} phase=${phase} actual=${actualDuration.toFixed(1)}ms base=${baseDuration.toFixed(1)}ms`,
+    `[PERF] ${ts()} RENDER  ${id} phase=${phase} actual=${actualDuration.toFixed(1)}ms base=${baseDuration.toFixed(1)}ms`
   );
 }
 
-// ── Pathway mode change ─────────────────────────────────────────
+// ─��� Pathway mode change ───���────────────────────────��────────────
 
 /**
  * Log pathway view mode transitions (e.g. LABEL → PARAMETER_SELECTOR).
  */
 export function perfModeChange(wrapper: string, from: string, to: string): void {
-  if (!ENABLED) return;
+  if (!ENABLED) {
+    return;
+  }
 
   performance.mark(`${wrapper}-mode-${to}`);
   console.log(`[PERF] ${ts()} MODE    ${wrapper}: ${from} → ${to}`);
