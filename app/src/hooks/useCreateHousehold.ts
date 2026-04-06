@@ -2,6 +2,7 @@ import { useMutation } from '@tanstack/react-query';
 import { createHousehold } from '@/api/household';
 import { MOCK_USER_ID } from '@/constants';
 import { countryIds } from '@/libs/countries';
+import { captureApiException } from '@/utils/errorTracking';
 import { useCreateHouseholdAssociation } from './useUserHousehold';
 
 export function useCreateHousehold(householdLabel?: string) {
@@ -22,6 +23,12 @@ export function useCreateHousehold(householdLabel?: string) {
         });
       } catch (error) {
         console.error('Household created but association failed:', error);
+        captureApiException(error, {
+          source: 'household_association',
+          country_id: variables.country_id,
+          household_id: data.result.household_id,
+          has_label: Boolean(householdLabel),
+        });
       }
     },
   });

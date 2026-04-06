@@ -20,7 +20,9 @@ import {
 } from '@/components/ui';
 import { CURRENT_YEAR } from '@/constants';
 import { colors, spacing, typography } from '@/designTokens';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { getTaxYears } from '@/libs/metadataUtils';
+import { trackReportYearSelected } from '@/utils/analytics';
 import { FONT_SIZES } from '../constants';
 import type { ReportBuilderState } from '../types';
 
@@ -43,6 +45,7 @@ interface ReportMetaPanelProps {
 }
 
 export function ReportMetaPanel({ reportState, setReportState, isReadOnly }: ReportMetaPanelProps) {
+  const countryId = useCurrentCountry();
   const yearOptions = useSelector(getTaxYears);
   const [isEditingLabel, setIsEditingLabel] = useState(false);
   const [labelInput, setLabelInput] = useState('');
@@ -219,9 +222,19 @@ export function ReportMetaPanel({ reportState, setReportState, isReadOnly }: Rep
         </Text>
         <Select
           value={reportState.year}
-          onValueChange={(value) =>
-            setReportState((prev) => ({ ...prev, year: value || CURRENT_YEAR }))
-          }
+          onValueChange={(value) => {
+            const nextYear = value || CURRENT_YEAR;
+
+            if (nextYear !== reportState.year) {
+              trackReportYearSelected({
+                countryId,
+                previousYear: reportState.year,
+                selectedYear: nextYear,
+              });
+            }
+
+            setReportState((prev) => ({ ...prev, year: nextYear }));
+          }}
           disabled={isReadOnly}
         >
           <SelectTrigger

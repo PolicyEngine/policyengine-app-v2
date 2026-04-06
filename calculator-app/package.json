@@ -9,6 +9,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@posthog/nextjs-config": "^1.8.28",
     "next": "^15.3.3",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
@@ -27,6 +28,8 @@
     "fuse.js": "^7.0.0",
     "html-to-image": "^1.11.13",
     "lucide-react": "^0.575.0",
+    "posthog-js": "^1.364.5",
+    "posthog-node": "^5.28.10",
     "radix-ui": "^1.4.3",
     "react-plotly.js": "^2.6.0",
     "react-redux": "^9.2.0",

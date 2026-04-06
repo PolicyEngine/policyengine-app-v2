@@ -21,6 +21,10 @@ import { useUserPolicies } from '@/hooks/useUserPolicy';
 import { RootState } from '@/store';
 import { Geography } from '@/types/ingredients/Geography';
 import { PolicyStateProps, PopulationStateProps } from '@/types/pathwayState';
+import {
+  trackReportPolicySelected,
+  trackReportPopulationSelected,
+} from '@/utils/analytics';
 import { countPolicyModifications } from '@/utils/countParameterChanges';
 import { generateGeographyLabel } from '@/utils/geographyUtils';
 import { initializePolicyState } from '@/utils/pathwayState/initializePolicyState';
@@ -278,20 +282,36 @@ export function useSimulationCanvas({
 
   const handleQuickSelectPolicy = useCallback(
     (simulationIndex: number) => {
-      updatePolicy(simulationIndex, createCurrentLawPolicy());
+      const policy = createCurrentLawPolicy();
+      updatePolicy(simulationIndex, policy);
+      trackReportPolicySelected({
+        countryId,
+        year: reportState.year,
+        simulationIndex,
+        selectionSource: 'current_law',
+        policy,
+      });
     },
-    [updatePolicy]
+    [countryId, reportState.year, updatePolicy]
   );
 
   const handleSelectSavedPolicy = useCallback(
     (simulationIndex: number, policyId: string, label: string, paramCount: number) => {
-      updatePolicy(simulationIndex, {
+      const policy = {
         id: policyId,
         label,
         parameters: Array(paramCount).fill({}),
+      };
+      updatePolicy(simulationIndex, policy);
+      trackReportPolicySelected({
+        countryId,
+        year: reportState.year,
+        simulationIndex,
+        selectionSource: 'saved',
+        policy,
       });
     },
-    [updatePolicy]
+    [countryId, reportState.year, updatePolicy]
   );
 
   const handleDeselectPolicy = useCallback(
@@ -308,19 +328,34 @@ export function useSimulationCanvas({
   const handlePolicySelectFromBrowse = useCallback(
     (policy: PolicyStateProps) => {
       updatePolicy(policyBrowseState.simulationIndex, policy);
+      trackReportPolicySelected({
+        countryId,
+        year: reportState.year,
+        simulationIndex: policyBrowseState.simulationIndex,
+        selectionSource: 'browse',
+        policy,
+      });
     },
-    [policyBrowseState.simulationIndex, updatePolicy]
+    [countryId, policyBrowseState.simulationIndex, reportState.year, updatePolicy]
   );
 
   const handlePolicyCreated = useCallback(
     (simulationIndex: number, policy: PolicyStateProps) => {
-      updatePolicy(simulationIndex, {
+      const policySelection = {
         id: policy.id,
         label: policy.label,
         parameters: policy.parameters,
+      };
+      updatePolicy(simulationIndex, policySelection);
+      trackReportPolicySelected({
+        countryId,
+        year: reportState.year,
+        simulationIndex,
+        selectionSource: 'created',
+        policy: policySelection,
       });
     },
-    [updatePolicy]
+    [countryId, reportState.year, updatePolicy]
   );
 
   const handleEditPolicy = useCallback(
@@ -402,8 +437,15 @@ export function useSimulationCanvas({
       }
 
       updatePopulationWithInheritance(simulationIndex, populationState);
+      trackReportPopulationSelected({
+        countryId,
+        year: reportState.year,
+        simulationIndex,
+        selectionSource: 'quick_select',
+        population: populationState,
+      });
     },
-    [countryId, updatePopulationWithInheritance]
+    [countryId, reportState.year, updatePopulationWithInheritance]
   );
 
   const handleSelectRecentPopulation = useCallback(
@@ -415,8 +457,15 @@ export function useSimulationCanvas({
       }
 
       updatePopulationWithInheritance(simulationIndex, population);
+      trackReportPopulationSelected({
+        countryId,
+        year: reportState.year,
+        simulationIndex,
+        selectionSource: 'recent',
+        population,
+      });
     },
-    [updatePopulationWithInheritance]
+    [countryId, reportState.year, updatePopulationWithInheritance]
   );
 
   const handleDeselectPopulation = useCallback(
@@ -433,8 +482,20 @@ export function useSimulationCanvas({
   const handlePopulationSelectFromBrowse = useCallback(
     (population: PopulationStateProps) => {
       updatePopulationWithInheritance(populationBrowseState.simulationIndex, population);
+      trackReportPopulationSelected({
+        countryId,
+        year: reportState.year,
+        simulationIndex: populationBrowseState.simulationIndex,
+        selectionSource: 'browse',
+        population,
+      });
     },
-    [populationBrowseState.simulationIndex, updatePopulationWithInheritance]
+    [
+      countryId,
+      populationBrowseState.simulationIndex,
+      reportState.year,
+      updatePopulationWithInheritance,
+    ]
   );
 
   // ---------------------------------------------------------------------------

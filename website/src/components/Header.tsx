@@ -15,6 +15,7 @@ import {
   typography,
 } from "@policyengine/design-system/tokens";
 import { useCountryId } from "@/hooks/useCountryId";
+import { trackCountrySwitched } from "@/lib/posthog-events";
 
 const PolicyEngineLogo = "/assets/logos/policyengine/white.svg";
 
@@ -258,6 +259,11 @@ function CountrySelector() {
   const handleCountryChange = useCallback(
     (newCountryId: string) => {
       setOpen(false);
+      trackCountrySwitched({
+        from_country_id: countryId,
+        to_country_id: newCountryId,
+        pathname,
+      });
       const pathParts = pathname.split("/").filter(Boolean);
       if (pathParts.length > 0) {
         pathParts[0] = newCountryId;
@@ -266,7 +272,7 @@ function CountrySelector() {
         router.push(`/${newCountryId}`);
       }
     },
-    [pathname, router],
+    [countryId, pathname, router],
   );
 
   useEffect(() => {

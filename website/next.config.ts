@@ -1,6 +1,16 @@
+import { withPostHogConfig } from "@posthog/nextjs-config";
 import type { NextConfig } from "next";
+import { getPostHogProxyRewrites } from "./src/lib/posthogProxy";
+
+const posthogApiKey = process.env.POSTHOG_API_KEY;
+const posthogProjectId = process.env.POSTHOG_PROJECT_ID;
+const posthogProxyRewrites = getPostHogProxyRewrites(
+  process.env.NEXT_PUBLIC_POSTHOG_HOST
+);
 
 const nextConfig: NextConfig = {
+  skipTrailingSlashRedirect: posthogProxyRewrites.length > 0,
+
   async redirects() {
     return [
       // Root → /us (temporary — will be replaced with geolocation)
@@ -29,6 +39,7 @@ const nextConfig: NextConfig = {
       // External Next.js apps that serve full pages must go here
       // so they take priority over the dynamic [slug] route.
       beforeFiles: [
+        ...posthogProxyRewrites,
         // Working Americans Tax Cut Act (Vercel)
         { source: "/us/watca", destination: "https://working-americans-tax-cut-act-one.vercel.app/us/watca" },
         { source: "/us/watca/:path*", destination: "https://working-americans-tax-cut-act-one.vercel.app/us/watca/:path*" },
@@ -82,4 +93,17 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default posthogApiKey && posthogProjectId
+  ? withPostHogConfig(nextConfig, {
+      personalApiKey: posthogApiKey,
+      projectId: posthogProjectId,
+      host: process.env.NEXT_PUBLIC_POSTHOG_HOST,
+      sourcemaps: {
+        enabled: true,
+        releaseName: "policyengine-website",
+        releaseVersion:
+          process.env.APP_RELEASE ?? process.env.NEXT_PUBLIC_APP_RELEASE,
+        deleteAfterUpload: true,
+      },
+    })
+  : nextConfig;

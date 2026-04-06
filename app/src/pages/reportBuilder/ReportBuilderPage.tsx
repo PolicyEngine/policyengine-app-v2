@@ -13,6 +13,7 @@ import { IconPlayerPlay } from '@tabler/icons-react';
 import { CURRENT_YEAR } from '@/constants';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { trackSocietyWideBuilderOpened } from '@/utils/analytics';
 import { initializeSimulationState } from '@/utils/pathwayState/initializeSimulationState';
 import { getReportOutputPath } from '@/utils/reportRouting';
 import { ReportBuilderShell, SimulationBlockFull } from './components';
@@ -42,6 +43,13 @@ export default function ReportBuilderPage() {
     simulationIndex: 0,
     ingredientType: 'policy',
   });
+
+  useEffect(() => {
+    trackSocietyWideBuilderOpened({
+      countryId,
+      year: CURRENT_YEAR,
+    });
+  }, [countryId]);
 
   // Submission logic (extracted hook)
   const { handleSubmit, isSubmitting, isReportConfigured } = useReportSubmission({

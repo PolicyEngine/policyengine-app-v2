@@ -15,28 +15,11 @@ import { Button, Container, Input, Spinner, Stack } from '@/components/ui';
 import { colors, spacing, typography } from '@policyengine/design-system/tokens';
 import { cn } from '@/lib/utils';
 import { useCountryId } from '@/hooks/useCountryId';
-
-/* ── GA4 helpers (inlined; no app-only deps) ── */
-
-declare global {
-  interface Window {
-    gtag?: (...args: unknown[]) => void;
-  }
-}
-
-function trackEvent(eventName: string, params?: Record<string, unknown>) {
-  if (typeof window !== 'undefined' && window.gtag) {
-    window.gtag('event', eventName, params);
-  }
-}
-
-function trackContactClicked() {
-  trackEvent('contact_clicked');
-}
-
-function trackNewsletterSignup() {
-  trackEvent('newsletter_signup');
-}
+import {
+  trackNewsletterSignupFailed,
+  trackNewsletterSignupStarted,
+  trackNewsletterSignupSucceeded,
+} from '@/lib/posthog-events';
 
 /* ── Mailchimp helper (inlined; uses jsonp from deps) ── */
 
@@ -110,25 +93,38 @@ function FooterSubscribe() {
     if (!email) {
       setStatus('error');
       setMessage('Please enter a valid email address.');
+      trackNewsletterSignupFailed({
+        has_email: false,
+        reason: 'missing_email',
+      });
       return;
     }
 
     setStatus('loading');
     setMessage('');
+    trackNewsletterSignupStarted({ has_email: true });
 
     try {
       const result = await submitToMailchimp(email);
       if (result.isSuccessful) {
-        trackNewsletterSignup();
+        trackNewsletterSignupSucceeded({ has_email: true });
         setStatus('success');
         setMessage(result.message);
         setEmail('');
       } else {
         setStatus('error');
         setMessage(result.message);
+        trackNewsletterSignupFailed({
+          has_email: true,
+          reason: 'mailchimp_error',
+        });
       }
     } catch (error) {
       setStatus('error');
+      trackNewsletterSignupFailed({
+        has_email: true,
+        reason: 'network_error',
+      });
       setMessage(
         error instanceof Error
           ? error.message
@@ -230,7 +226,6 @@ export default function Footer() {
                     rel="noopener noreferrer"
                     aria-label={label}
                     className="tw:text-white"
-                    onClick={href.startsWith('mailto:') ? trackContactClicked : undefined}
                   >
                     <Icon size={24} />
                   </a>

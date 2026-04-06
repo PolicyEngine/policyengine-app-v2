@@ -1,7 +1,12 @@
 import { QueryClient, QueryObserver } from '@tanstack/react-query';
 import { calculationQueries } from '@/libs/queries/calculationQueries';
 import type { CalcMetadata, CalcParams, CalcStartConfig, CalcStatus } from '@/types/calculation';
-import { trackSimulationCompleted } from '@/utils/analytics';
+import {
+  trackCalculationFailed,
+  trackCalculationStarted,
+  trackSimulationCompleted,
+} from '@/utils/analytics';
+import { captureCalculationException } from '@/utils/errorTracking';
 import type { CalcOrchestratorManager } from './CalcOrchestratorManager';
 import { ResultPersister } from './ResultPersister';
 
@@ -59,6 +64,7 @@ export class CalcOrchestrator {
     // Build metadata and params
     const metadata = this.buildMetadata(config);
     const params = this.buildParams(config);
+    trackCalculationStarted({ config });
 
     // Create query options (includes refetchInterval from strategy)
     const queryOptions =
@@ -80,7 +86,32 @@ export class CalcOrchestrator {
     }
 
     // Execute initial queryFn
-    const initialStatus = await queryOptions.queryFn();
+    let initialStatus: CalcStatus;
+
+    try {
+      initialStatus = await queryOptions.queryFn();
+    } catch (error) {
+      trackCalculationFailed({
+        calcId: config.calcId,
+        targetType: config.targetType,
+        countryId: config.countryId,
+        year: config.year,
+        calcType: metadata.calcType,
+        reportId: config.reportId,
+        durationMs: Date.now() - metadata.startedAt,
+        error,
+        config,
+      });
+      captureCalculationException(error, {
+        source: 'calc_orchestrator_query_fn',
+        calc_id: config.calcId,
+        target_type: config.targetType,
+        country_id: config.countryId,
+        year: config.year,
+        report_id: config.reportId,
+      });
+      throw error;
+    }
 
     // Set result in cache
     this.queryClient.setQueryData(queryOptions.queryKey, initialStatus);
@@ -88,7 +119,15 @@ export class CalcOrchestrator {
     // CRITICAL DECISION POINT: Household vs Economy
     if (initialStatus.status === 'complete') {
       // HOUSEHOLD CASE: Calculation completed synchronously
-      trackSimulationCompleted({ calcType: metadata.calcType, countryId: config.countryId });
+      trackSimulationCompleted({
+        calcType: metadata.calcType,
+        countryId: config.countryId,
+        year: config.year,
+        calcId: config.calcId,
+        targetType: config.targetType,
+        reportId: config.reportId,
+        durationMs: Date.now() - metadata.startedAt,
+      });
       await this.resultPersister.persist(initialStatus, config.countryId, config.year);
 
       // Notify manager to cleanup this orchestrator
@@ -157,7 +196,15 @@ export class CalcOrchestrator {
 
       // Handle completion
       if (status.status === 'complete' && status.result) {
-        trackSimulationCompleted({ calcType: _metadata.calcType, countryId });
+        trackSimulationCompleted({
+          calcType: _metadata.calcType,
+          countryId,
+          year,
+          calcId,
+          targetType: _metadata.targetType,
+          reportId: _metadata.reportId,
+          durationMs: Date.now() - _metadata.startedAt,
+        });
         this.resultPersister
           .persist(status, countryId, year)
           .catch((error) => {
@@ -179,6 +226,24 @@ export class CalcOrchestrator {
       // Handle error
       if (status.status === 'error') {
         console.error('[CalcOrchestrator] Calculation error:', status.error);
+        trackCalculationFailed({
+          calcId,
+          targetType: _metadata.targetType,
+          countryId,
+          year,
+          calcType: _metadata.calcType,
+          reportId: _metadata.reportId,
+          durationMs: Date.now() - _metadata.startedAt,
+          error: status.error,
+        });
+        captureCalculationException(status.error, {
+          source: 'calc_orchestrator_polling',
+          calc_id: calcId,
+          target_type: _metadata.targetType,
+          country_id: countryId,
+          year,
+          report_id: _metadata.reportId,
+        });
 
         unsubscribe();
         this.currentUnsubscribe = null;

@@ -52,6 +52,7 @@ import {
   type ResearchItem,
 } from "@/data/posts/postTransformers";
 import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
+import { trackResearchFiltersChanged } from "@/lib/posthog-events";
 
 /* ─── Constants ─── */
 
@@ -881,6 +882,7 @@ export default function ResearchClient({
   const [selectedAuthors, setSelectedAuthors] = useState<string[]>(() =>
     parseArrayParam(searchParams.get("authors")),
   );
+  const hasTrackedFiltersRef = useRef(false);
 
   // Sync URL params when filters change
   useEffect(() => {
@@ -976,6 +978,31 @@ export default function ResearchClient({
     selectedAuthors,
     searchQuery,
     reset,
+  ]);
+
+  useEffect(() => {
+    if (!hasTrackedFiltersRef.current) {
+      hasTrackedFiltersRef.current = true;
+      return;
+    }
+
+    trackResearchFiltersChanged({
+      country_id: countryId,
+      search_query: searchQuery,
+      selected_types: selectedTypes,
+      selected_topics: selectedTopics,
+      selected_locations: selectedLocations,
+      selected_authors: selectedAuthors,
+      result_count: filteredItems.length,
+    });
+  }, [
+    countryId,
+    filteredItems.length,
+    searchQuery,
+    selectedAuthors,
+    selectedLocations,
+    selectedTopics,
+    selectedTypes,
   ]);
 
   const visibleItems = useMemo(

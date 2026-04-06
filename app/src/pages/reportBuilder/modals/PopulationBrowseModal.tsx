@@ -33,8 +33,10 @@ import { RootState } from '@/store';
 import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
 import { PopulationStateProps } from '@/types/pathwayState';
+import { trackHouseholdSaved } from '@/utils/analytics';
 import { generateGeographyLabel } from '@/utils/geographyUtils';
 import { HouseholdBuilder } from '@/utils/HouseholdBuilder';
+import { captureCalculatorException } from '@/utils/errorTracking';
 import {
   getUKConstituencies,
   getUKCountries,
@@ -370,6 +372,16 @@ export function PopulationBrowseModal({
         id: householdId,
       };
 
+      trackHouseholdSaved({
+        countryId,
+        year: reportYear,
+        householdId,
+        household: createdHousehold,
+        maritalStatus,
+        numChildren,
+        mode: 'report',
+      });
+
       const populationState = {
         geography: null,
         household: createdHousehold,
@@ -385,12 +397,19 @@ export function PopulationBrowseModal({
       onClose();
     } catch (err) {
       console.error('Failed to create household:', err);
+      captureCalculatorException(err, {
+        source: 'population_browse_modal',
+        country_id: countryId,
+        year: reportYear,
+      });
     }
   }, [
     householdDraft,
     householdLabel,
     countryId,
     createHousehold,
+    maritalStatus,
+    numChildren,
     onSelect,
     onClose,
     queryClient,

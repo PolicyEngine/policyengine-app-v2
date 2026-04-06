@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { colors } from "@/designTokens";
+import { captureRouteException } from "@/utils/errorTracking";
 
 export default function CountryError({
   error,
@@ -11,6 +12,10 @@ export default function CountryError({
   reset: () => void;
 }) {
   useEffect(() => {
+    captureRouteException(error, {
+      boundary: "country",
+      digest: error.digest,
+    });
     console.error("[Calculator] Route error:", error);
   }, [error]);
 
