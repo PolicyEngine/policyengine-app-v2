@@ -1,5 +1,5 @@
 "use client";
-
+// Force Vercel rebuild for calculator-next
 import { use, useEffect, useMemo } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import StandardLayout from "@/components/StandardLayout";

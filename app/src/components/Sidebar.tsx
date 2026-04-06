@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import {
   IconBook,
   IconBrandGithub,
@@ -10,7 +11,6 @@ import {
   IconScale,
   IconUsers,
 } from '@tabler/icons-react';
-import { useEffect } from 'react';
 import { Button } from '@/components/ui';
 import { WEBSITE_URL } from '@/constants';
 import { useAppLocation } from '@/contexts/LocationContext';

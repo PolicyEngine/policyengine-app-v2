@@ -7,8 +7,8 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { useLayoutVisibility } from '@/contexts/LayoutVisibilityContext';
 import { MOCK_USER_ID } from '@/constants';
+import { useLayoutVisibility } from '@/contexts/LayoutVisibilityContext';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { usePathwayNavigation } from '@/hooks/usePathwayNavigation';
@@ -18,13 +18,13 @@ import { useUserPolicies } from '@/hooks/useUserPolicy';
 import { RootState } from '@/store';
 import { SimulationViewMode } from '@/types/pathwayModes/SimulationViewMode';
 import { SimulationStateProps } from '@/types/pathwayState';
-import { perfModeChange, perfMount } from '@/utils/perfHarness';
 import {
   createPolicyCallbacks,
   createPopulationCallbacks,
   createSimulationCallbacks,
 } from '@/utils/pathwayCallbacks';
 import { initializeSimulationState } from '@/utils/pathwayState/initializeSimulationState';
+import { perfModeChange, perfMount } from '@/utils/perfHarness';
 import PolicyExistingView from '../report/views/policy/PolicyExistingView';
 // Policy views
 import PolicyLabelView from '../report/views/policy/PolicyLabelView';
