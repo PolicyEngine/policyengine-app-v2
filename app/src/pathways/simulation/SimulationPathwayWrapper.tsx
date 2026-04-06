@@ -7,7 +7,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { useLayoutVisibility } from '@/contexts/LayoutVisibilityContext';
+import FullScreenPortal from '@/components/FullScreenPortal';
 import { MOCK_USER_ID } from '@/constants';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
@@ -85,14 +85,6 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
       prevMode.current = currentMode;
     }
   }, [currentMode]);
-
-  // Toggle sidebar visibility based on view mode
-  const { setFullScreen } = useLayoutVisibility();
-  useEffect(() => {
-    const shouldHide = MODES_WITH_OWN_LAYOUT.has(currentMode as SimulationViewMode);
-    setFullScreen(shouldHide);
-    return () => setFullScreen(false);
-  }, [currentMode, setFullScreen]);
 
   // ========== FETCH USER DATA FOR CONDITIONAL NAVIGATION ==========
   const userId = MOCK_USER_ID.toString();
@@ -383,7 +375,11 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
       currentView = <></>;
   }
 
-  // StandardLayout is provided by the parent layout — just render the view.
-  // Sidebar visibility is toggled via LayoutVisibilityContext above.
+  // StandardLayout is provided by the parent layout.
+  // Views that manage their own AppShell render inside a portal overlay.
+  if (MODES_WITH_OWN_LAYOUT.has(currentMode as SimulationViewMode)) {
+    return <FullScreenPortal>{currentView}</FullScreenPortal>;
+  }
+
   return currentView;
 }
