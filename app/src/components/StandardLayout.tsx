@@ -10,6 +10,7 @@
 
 import { Profiler, useEffect } from 'react';
 import { LayoutProvider, useIsInsideLayout } from '@/contexts/LayoutContext';
+import { useLayoutVisibility } from '@/contexts/LayoutVisibilityContext';
 import { useAppLocation } from '@/contexts/LocationContext';
 import { useDisclosure } from '@/hooks/useDisclosure';
 import { cn } from '@/lib/utils';
@@ -24,6 +25,7 @@ interface StandardLayoutProps {
 
 export default function StandardLayout({ children }: StandardLayoutProps) {
   const isInsideLayout = useIsInsideLayout();
+  const { isFullScreen } = useLayoutVisibility();
   const location = useAppLocation();
   const [navbarOpened, { toggle: toggleNavbar, close: closeNavbar }] = useDisclosure();
 
@@ -56,12 +58,16 @@ export default function StandardLayout({ children }: StandardLayoutProps) {
               'tw:w-[300px] tw:shrink-0 tw:border-r tw:border-border-light tw:overflow-y-auto tw:bg-white',
               'tw:hidden tw:sm:block',
               navbarOpened &&
-                'tw:fixed tw:inset-0 tw:z-40 tw:block tw:sm:relative tw:sm:z-auto tw:top-0'
+                'tw:fixed tw:inset-0 tw:z-40 tw:block tw:sm:relative tw:sm:z-auto tw:top-0',
+              isFullScreen && 'tw:!hidden'
             )}
           >
             <Sidebar />
           </nav>
-          <main className="tw:flex-1 tw:min-w-0 tw:max-w-[calc(100vw-300px)] tw:overflow-y-auto tw:overflow-x-hidden tw:p-[24px] tw:bg-gray-50">
+          <main className={cn(
+            'tw:flex-1 tw:min-w-0 tw:overflow-y-auto tw:overflow-x-hidden tw:bg-gray-50',
+            isFullScreen ? 'tw:max-w-full tw:p-0' : 'tw:max-w-[calc(100vw-300px)] tw:p-[24px]'
+          )}>
             {children}
           </main>
         </div>

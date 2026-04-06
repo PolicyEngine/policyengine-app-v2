@@ -144,9 +144,10 @@ export default function PopulationPathwayWrapper({ onComplete }: PopulationPathw
       currentView = <></>;
   }
 
+  // StandardLayout is provided by the parent layout — just render the view.
   return (
     <ReportYearProvider year={CURRENT_YEAR}>
-      <StandardLayout>{currentView}</StandardLayout>
+      {currentView}
     </ReportYearProvider>
   );
 }

@@ -6,7 +6,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import StandardLayout from '@/components/StandardLayout';
+import { useLayoutVisibility } from '@/contexts/LayoutVisibilityContext';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { usePathwayNavigation } from '@/hooks/usePathwayNavigation';
@@ -56,6 +56,14 @@ export default function PolicyPathwayWrapper({ onComplete }: PolicyPathwayWrappe
       prevMode.current = currentMode;
     }
   }, [currentMode]);
+
+  // Toggle sidebar visibility based on view mode
+  const { setFullScreen } = useLayoutVisibility();
+  useEffect(() => {
+    const shouldHide = MODES_WITH_OWN_LAYOUT.has(currentMode as StandalonePolicyViewMode);
+    setFullScreen(shouldHide);
+    return () => setFullScreen(false);
+  }, [currentMode, setFullScreen]);
 
   // ========== CALLBACKS ==========
   // Use shared callback factory with onPolicyComplete for standalone navigation
@@ -127,11 +135,7 @@ export default function PolicyPathwayWrapper({ onComplete }: PolicyPathwayWrappe
       currentView = <></>;
   }
 
-  // Conditionally wrap with StandardLayout
-  // PolicyParameterSelectorView manages its own AppShell
-  if (MODES_WITH_OWN_LAYOUT.has(currentMode as StandalonePolicyViewMode)) {
-    return currentView;
-  }
-
-  return <StandardLayout>{currentView}</StandardLayout>;
+  // StandardLayout is provided by the parent layout — just render the view.
+  // Sidebar visibility is toggled via LayoutVisibilityContext above.
+  return currentView;
 }
