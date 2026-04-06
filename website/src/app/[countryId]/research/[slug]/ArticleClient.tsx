@@ -15,7 +15,7 @@ import { MarkdownFormatter } from "@/components/blog/MarkdownFormatter";
 import { NotebookRenderer } from "@/components/blog/NotebookRenderer";
 import { useDisplayCategory } from "@/components/blog/useDisplayCategory";
 import { blogSpacing } from "@/components/blog/blogStyles";
-import { Container, Spinner, Text } from "@/components/ui";
+import { Container, Text } from "@/components/ui";
 import OptimisedImage from "@/components/ui/OptimisedImage";
 import {
   getLocationTags,

@@ -92,6 +92,31 @@ function Tr({ children }: { children?: React.ReactNode }) {
   );
 }
 
+function Th({ children }: { children?: React.ReactNode }) {
+  const displayCategory = useDisplayCategory();
+  const mobile = displayCategory === "mobile";
+
+  return (
+    <th
+      style={{
+        padding: blogSpacing.padding.table.header,
+        fontFamily: blogTypography.bodyFont,
+        fontWeight: blogFontWeights.semiBold,
+        fontSize: mobile
+          ? blogTypography.smallMobile
+          : blogTypography.smallDesktop,
+        borderBottom: "1px solid black",
+        backgroundColor: blogColors.primary,
+        textAlign: "center",
+        verticalAlign: "middle",
+        color: "white",
+      }}
+    >
+      {children}
+    </th>
+  );
+}
+
 /* ------------------------------------------------------------------ */
 /*  Highlighted block (side-by-side content)                           */
 /* ------------------------------------------------------------------ */
@@ -721,29 +746,7 @@ export function MarkdownFormatter({
       </table>
     ),
 
-    th: ({ children }) => {
-      const displayCategory = useDisplayCategory();
-      const mobile = displayCategory === "mobile";
-      return (
-        <th
-          style={{
-            padding: blogSpacing.padding.table.header,
-            fontFamily: blogTypography.bodyFont,
-            fontWeight: blogFontWeights.semiBold,
-            fontSize: mobile
-              ? blogTypography.smallMobile
-              : blogTypography.smallDesktop,
-            borderBottom: "1px solid black",
-            backgroundColor: blogColors.primary,
-            textAlign: "center",
-            verticalAlign: "middle",
-            color: "white",
-          }}
-        >
-          {children}
-        </th>
-      );
-    },
+    th: Th,
 
     td: Td,
     tr: Tr,
