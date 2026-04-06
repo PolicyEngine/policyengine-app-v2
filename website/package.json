@@ -3,11 +3,11 @@
   "private": true,
   "version": "0.1.0",
   "scripts": {
-    "dev": "sh -c 'next dev --turbopack --port ${PORT:-3000}'",
+    "dev": "next dev --turbopack",
     "dev:full": "node scripts/dev-server.mjs",
     "build": "bash scripts/build.sh",
     "build:next": "next build",
-    "start": "sh -c 'next start --port ${PORT:-3000}'",
+    "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",

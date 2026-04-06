@@ -8,8 +8,7 @@
     "calculator-app"
   ],
   "scripts": {
-    "dev": "bun run design-system:build && node scripts/dev-server-next.mjs",
-    "dev:legacy": "bun run design-system:build && bun run --filter=policyengine-app-v2 dev",
+    "dev": "bun run design-system:build && bun run --filter=policyengine-app-v2 dev",
     "build": "turbo run build",
     "test": "turbo run test",
     "lint": "turbo run lint",

@@ -3,7 +3,7 @@
 help:
 	@echo "Available commands:"
 	@echo "  make install    - Install dependencies"
-	@echo "  make dev        - Start Next.js website + calculator dev servers"
+	@echo "  make dev        - Start development server"
 	@echo "  make build      - Build production version"
 	@echo "  make typecheck  - Run type checks"
 	@echo "  make test       - Run tests"
