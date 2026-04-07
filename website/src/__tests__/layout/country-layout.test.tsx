@@ -33,6 +33,18 @@ describe("CountryLayout", () => {
     expect(screen.getByTestId("site-footer")).toBeInTheDocument();
   });
 
+  test("footer includes the developer tools link", async () => {
+    const layout = await CountryLayout({
+      children: <div>Content</div>,
+      params: Promise.resolve({ countryId: "us" }),
+    });
+
+    render(layout);
+    expect(
+      screen.getByRole("link", { name: /developer tools/i }),
+    ).toHaveAttribute("href", "/us/dev-tools");
+  });
+
   test("calls notFound for invalid country", async () => {
     await expect(
       CountryLayout({
