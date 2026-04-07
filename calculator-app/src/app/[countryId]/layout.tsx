@@ -1,5 +1,5 @@
 "use client";
-// Force Vercel rebuild for calculator-next
+// Force Vercel rebuild for calculator-next (simulated 500 test)
 
 import { use, useEffect, useMemo } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
