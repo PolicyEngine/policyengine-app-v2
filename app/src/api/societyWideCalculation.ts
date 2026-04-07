@@ -25,9 +25,6 @@ export async function fetchSocietyWideCalculation(
   baselinePolicyId: string,
   params: SocietyWideCalculationParams
 ): Promise<SocietyWideCalculationResponse> {
-  // TEMPORARY: Simulate API 500 to test error handling
-  throw new Error('Simulated 500: Society-wide calculation failed');
-
   const queryParams = new URLSearchParams();
 
   Object.entries(params).forEach(([key, value]) => {
