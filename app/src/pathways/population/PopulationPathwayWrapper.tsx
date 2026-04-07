@@ -7,7 +7,6 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import StandardLayout from '@/components/StandardLayout';
 import { CURRENT_YEAR } from '@/constants';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { ReportYearProvider } from '@/contexts/ReportYearContext';
@@ -144,9 +143,6 @@ export default function PopulationPathwayWrapper({ onComplete }: PopulationPathw
       currentView = <></>;
   }
 
-  return (
-    <ReportYearProvider year={CURRENT_YEAR}>
-      <StandardLayout>{currentView}</StandardLayout>
-    </ReportYearProvider>
-  );
+  // StandardLayout is provided by the parent layout.
+  return <ReportYearProvider year={CURRENT_YEAR}>{currentView}</ReportYearProvider>;
 }
