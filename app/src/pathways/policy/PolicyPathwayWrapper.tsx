@@ -6,7 +6,7 @@
  */
 
 import { useCallback, useEffect, useState } from 'react';
-import StandardLayout from '@/components/StandardLayout';
+import FullScreenPortal from '@/components/FullScreenPortal';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { usePathwayNavigation } from '@/hooks/usePathwayNavigation';
@@ -114,11 +114,11 @@ export default function PolicyPathwayWrapper({ onComplete }: PolicyPathwayWrappe
       currentView = <></>;
   }
 
-  // Conditionally wrap with StandardLayout
-  // PolicyParameterSelectorView manages its own AppShell
+  // StandardLayout is provided by the parent layout.
+  // Views that manage their own AppShell render inside a portal overlay.
   if (MODES_WITH_OWN_LAYOUT.has(currentMode as StandalonePolicyViewMode)) {
-    return currentView;
+    return <FullScreenPortal>{currentView}</FullScreenPortal>;
   }
 
-  return <StandardLayout>{currentView}</StandardLayout>;
+  return currentView;
 }

@@ -2,15 +2,18 @@
 
 import { use, useEffect, useMemo } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import StandardLayout from "@/components/StandardLayout";
 import { CountryProvider } from "@/contexts/CountryContext";
 import { LocationProvider } from "@/contexts/LocationContext";
 import { NavigationProvider } from "@/contexts/NavigationContext";
 import { countryIds, type CountryId } from "@/libs/countries";
+import { CalculatorProviders } from "./providers";
 
 /**
  * Layout for extracted Next.js pages under /:countryId/*.
- * Provides CountryContext, NavigationContext, and LocationContext
- * so shared components work identically in both router contexts.
+ * Provides CountryContext, NavigationContext, LocationContext,
+ * CalculatorProviders, and StandardLayout so they persist
+ * across page navigations without re-mounting.
  */
 export default function CountryLayout({
   children,
@@ -56,7 +59,10 @@ export default function CountryLayout({
     <CountryProvider value={countryId as CountryId}>
       <NavigationProvider value={navValue}>
         <LocationProvider value={locationValue}>
-          {children}
+          <CalculatorProviders>
+            <StandardLayout>{children}</StandardLayout>
+            <div id="fullscreen-portal" />
+          </CalculatorProviders>
         </LocationProvider>
       </NavigationProvider>
     </CountryProvider>
