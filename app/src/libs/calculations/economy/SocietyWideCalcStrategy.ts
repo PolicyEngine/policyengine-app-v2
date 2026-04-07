@@ -18,28 +18,43 @@ export class SocietyWideCalcStrategy implements CalcExecutionStrategy {
    * Makes direct API call - server manages state and queuing
    */
   async execute(params: CalcParams, metadata: CalcMetadata): Promise<CalcStatus> {
-    // Pass the region value AS-IS to the API (NO prefix stripping)
-    // For UK: includes prefix like "constituency/Sheffield Central" or "country/england"
-    // For US: just state code like "ca" or "ny"
-    // For National: just country code like "uk" or "us"
-    const apiRegion = params.region || params.countryId;
+    try {
+      // Pass the region value AS-IS to the API (NO prefix stripping)
+      // For UK: includes prefix like "constituency/Sheffield Central" or "country/england"
+      // For US: just state code like "ca" or "ny"
+      // For National: just country code like "uk" or "us"
+      const apiRegion = params.region || params.countryId;
 
-    // Build API parameters - use year from params
-    const apiParams: SocietyWideCalculationParams = {
-      region: apiRegion,
-      time_period: params.year,
-    };
+      // Build API parameters - use year from params
+      const apiParams: SocietyWideCalculationParams = {
+        region: apiRegion,
+        time_period: params.year,
+      };
 
-    // Call society-wide calculation API
-    const response = await fetchSocietyWideCalculation(
-      params.countryId,
-      params.policyIds.reform || params.policyIds.baseline,
-      params.policyIds.baseline,
-      apiParams
-    );
+      // Call society-wide calculation API
+      const response = await fetchSocietyWideCalculation(
+        params.countryId,
+        params.policyIds.reform || params.policyIds.baseline,
+        params.policyIds.baseline,
+        apiParams
+      );
 
-    // Transform to unified status with provided metadata
-    return this.transformResponseWithMetadata(response, metadata, params.countryId);
+      // Transform to unified status with provided metadata
+      return this.transformResponseWithMetadata(response, metadata, params.countryId);
+    } catch (error) {
+      console.error('[SocietyWideCalcStrategy.execute] Calculation failed:', error);
+      const errorMessage =
+        error instanceof Error ? error.message : 'Society-wide calculation failed';
+      return {
+        status: 'error',
+        error: {
+          code: 'SOCIETY_WIDE_CALC_FAILED',
+          message: errorMessage,
+          retryable: true,
+        },
+        metadata,
+      };
+    }
   }
 
   /**
