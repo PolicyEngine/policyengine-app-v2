@@ -26,6 +26,7 @@ on:
 
 jobs:
   publish:
+    if: ${{ github.event_name != 'push' || github.event.head_commit.message != 'Update changelog_entry.yaml' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
