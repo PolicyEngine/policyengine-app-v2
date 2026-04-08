@@ -3,10 +3,9 @@ import { renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   combineLoadingStates,
-  createLookupMap,
   extractUniqueIds,
   useParallelQueries,
-} from '@/hooks/utils/normalizedUtils';
+} from '@/hooks/utils/queryUtils';
 import {
   createDisabledQueryConfig,
   createErrorQueryConfig,
@@ -203,52 +202,6 @@ describe('normalizedUtils', () => {
       // Then
       expect(result).toEqual(['1', '2', '3']);
       expect(typeof result[0]).toBe('string');
-    });
-  });
-
-  describe('createLookupMap', () => {
-    it('given array of items then creates ID-keyed map', () => {
-      // Given
-      const items = [...TEST_ENTITIES.policies];
-
-      // When
-      const result = createLookupMap(items);
-
-      // Then
-      expect(result[TEST_IDS.POLICY_1]).toEqual(items[0]);
-      expect(result[TEST_IDS.POLICY_2]).toEqual(items[1]);
-    });
-
-    it('given numeric IDs then uses string keys', () => {
-      // Given
-      const items = [...TEST_ENTITIES.numericIds];
-
-      // When
-      const result = createLookupMap(items);
-
-      // Then
-      expect(result['1']).toEqual(items[0]);
-      expect(result['2']).toEqual(items[1]);
-    });
-
-    it('given empty array then returns empty map', () => {
-      // When
-      const result = createLookupMap([]);
-
-      // Then
-      expect(result).toEqual({});
-    });
-
-    it('given items with null ID then skips them', () => {
-      // Given
-      const items = [...TEST_ENTITIES.withNullId];
-
-      // When
-      const result = createLookupMap(items);
-
-      // Then
-      expect(result[TEST_IDS.POLICY_1]).toBeDefined();
-      expect(Object.keys(result)).toHaveLength(1);
     });
   });
 });

@@ -17,11 +17,7 @@ import { householdKeys, policyKeys, simulationKeys } from '../libs/queryKeys';
 import { useHouseholdAssociationsByUser } from './useUserHousehold';
 import { usePolicyAssociationsByUser } from './useUserPolicy';
 import { useSimulationAssociationsByUser } from './useUserSimulationAssociations';
-import {
-  combineLoadingStates,
-  extractUniqueIds,
-  useParallelQueries,
-} from './utils/normalizedUtils';
+import { combineLoadingStates, extractUniqueIds, useParallelQueries } from './utils/queryUtils';
 
 /**
  * Enhanced result type that includes all relationships
@@ -124,6 +120,7 @@ export const useUserSimulations = (userId: string) => {
     },
     enabled: policyIds.length > 0,
     staleTime: 5 * 60 * 1000,
+    structuralSharing: false,
   });
 
   // Step 6: Fetch households (populations)

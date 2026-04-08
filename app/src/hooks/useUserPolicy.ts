@@ -3,6 +3,10 @@ import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/rea
 import { PolicyAdapter } from '@/adapters';
 import { fetchPolicyById } from '@/api/policy';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import {
+  shadowCreateUserPolicyAssociation,
+  shadowUpdateUserPolicyAssociation,
+} from '@/libs/migration/policyShadow';
 import { Policy } from '@/types/ingredients/Policy';
 import { ApiPolicyStore, LocalStoragePolicyStore } from '../api/policyAssociation';
 import { queryConfig } from '../libs/queryConfig';
@@ -45,9 +49,10 @@ export const usePolicyAssociation = (userId: string, policyId: string) => {
   });
 };
 
-export const useCreatePolicyAssociation = () => {
+export const useCreatePolicyAssociation = (options?: { shadowV2?: boolean }) => {
   const store = useUserPolicyStore();
   const queryClient = useQueryClient();
+  const shadowV2 = options?.shadowV2 ?? true;
 
   return useMutation({
     mutationFn: (userPolicy: Omit<UserPolicy, 'id' | 'createdAt'>) => store.create(userPolicy),
@@ -71,6 +76,10 @@ export const useCreatePolicyAssociation = () => {
         ),
         newAssociation
       );
+
+      if (shadowV2) {
+        void shadowCreateUserPolicyAssociation(newAssociation);
+      }
     },
   });
 };
@@ -106,6 +115,8 @@ export const useUpdatePolicyAssociation = () => {
         policyAssociationKeys.specific(updatedAssociation.userId, updatedAssociation.policyId),
         updatedAssociation
       );
+
+      void shadowUpdateUserPolicyAssociation(updatedAssociation);
     },
   });
 };
@@ -191,6 +202,7 @@ export const useUserPolicies = (userId: string) => {
       },
       enabled: !!associations, // Only run when associations are loaded
       staleTime: 5 * 60 * 1000,
+      structuralSharing: false,
     })),
   });
 

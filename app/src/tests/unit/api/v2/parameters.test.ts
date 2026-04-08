@@ -161,6 +161,22 @@ describe('parameterTree API', () => {
       expect(calledUrl).toContain('/parameters/by-name');
     });
 
+    test('given model version ID then it includes it in the request body', async () => {
+      // Given
+      vi.stubGlobal('fetch', mockFetchSuccess([]));
+
+      // When
+      await fetchParametersByName(['gov.irs.credits.ctc.amount'], 'us', TEST_IDS.MODEL_VERSION_ID);
+
+      // Then
+      const request = vi.mocked(fetch).mock.calls[0][1] as RequestInit;
+      expect(JSON.parse(request.body as string)).toMatchObject({
+        names: ['gov.irs.credits.ctc.amount'],
+        country_id: 'us',
+        tax_benefit_model_version_id: TEST_IDS.MODEL_VERSION_ID,
+      });
+    });
+
     test('given an error response then it throws', async () => {
       // Given
       vi.stubGlobal('fetch', mockFetchError(500, 'Server error'));

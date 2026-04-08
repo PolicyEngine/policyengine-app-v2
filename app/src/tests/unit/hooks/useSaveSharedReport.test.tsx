@@ -5,12 +5,20 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { useSaveSharedReport } from '@/hooks/useSaveSharedReport';
+import { getV2Id } from '@/libs/migration/idMapping';
+import { sendMigrationLog } from '@/libs/migration/migrationLogTransport';
+import {
+  shadowCreatePolicyAndAssociation,
+  shadowCreateUserPolicyAssociation,
+} from '@/libs/migration/policyShadow';
 import {
   createMockMutation,
   createMockReportStore,
   CURRENT_LAW_ID,
   MOCK_EXISTING_USER_REPORT,
+  MOCK_POLICIES,
   MOCK_SAVE_SHARE_DATA,
+  MOCK_SAVED_USER_POLICY,
   MOCK_SAVED_USER_REPORT,
   MOCK_SHARE_DATA_WITH_CURRENT_LAW,
   MOCK_SHARE_DATA_WITH_HOUSEHOLD,
@@ -33,6 +41,19 @@ vi.mock('@/hooks/useUserSimulationAssociations', () => ({
 
 vi.mock('@/hooks/useUserPolicy', () => ({
   useCreatePolicyAssociation: () => mockCreatePolicy,
+}));
+
+vi.mock('@/libs/migration/idMapping', () => ({
+  getV2Id: vi.fn(),
+}));
+
+vi.mock('@/libs/migration/policyShadow', () => ({
+  shadowCreatePolicyAndAssociation: vi.fn(),
+  shadowCreateUserPolicyAssociation: vi.fn(),
+}));
+
+vi.mock('@/libs/migration/migrationLogTransport', () => ({
+  sendMigrationLog: vi.fn(),
 }));
 
 vi.mock('@/hooks/useUserHousehold', () => ({
@@ -73,17 +94,20 @@ describe('useSaveSharedReport', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.stubEnv('NEXT_PUBLIC_VERCEL_ENV', 'preview');
+    vi.spyOn(console, 'info').mockImplementation(() => {});
     queryClient = new QueryClient({
       defaultOptions: { queries: { retry: false } },
     });
 
     // Reset mock implementations
     mockCreateSimulation.mutateAsync.mockResolvedValue({});
-    mockCreatePolicy.mutateAsync.mockResolvedValue({});
+    mockCreatePolicy.mutateAsync.mockResolvedValue(MOCK_SAVED_USER_POLICY);
     mockCreateHousehold.mutateAsync.mockResolvedValue({});
     mockCreateGeography.mutateAsync.mockResolvedValue({});
     mockCreateReport.mutateAsync.mockResolvedValue(MOCK_SAVED_USER_REPORT);
     mockReportStore.findByUserReportId.mockResolvedValue(null);
+    vi.mocked(getV2Id).mockReturnValue(null);
   });
 
   test('given valid shareData then saves all associations and returns userReport', async () => {
@@ -121,6 +145,76 @@ describe('useSaveSharedReport', () => {
       label: 'United States',
     });
     expect(mockCreateReport.mutateAsync).toHaveBeenCalled();
+  });
+
+  test('given saved shared policy without v2 mapping then shadow creates v2 policy and association', async () => {
+    // Given
+    const store = createMockStore();
+    const wrapper = createWrapper(store);
+
+    // When
+    const { result } = renderHook(() => useSaveSharedReport(), { wrapper });
+
+    await act(async () => {
+      await result.current.saveSharedReport(MOCK_SAVE_SHARE_DATA, MOCK_POLICIES);
+    });
+
+    // Then
+    expect(shadowCreatePolicyAndAssociation).toHaveBeenCalledWith({
+      countryId: 'us',
+      label: 'My Policy',
+      v1PolicyId: TEST_IDS.POLICY,
+      v1PolicyPayload: {
+        data: {
+          'gov.irs.credits.ctc.amount': {
+            '2026-01-01.2100-12-31': 2000,
+          },
+        },
+      },
+      v1Association: MOCK_SAVED_USER_POLICY,
+    });
+    expect(shadowCreateUserPolicyAssociation).not.toHaveBeenCalled();
+  });
+
+  test('given saved shared policy without details then emits skipped remote log', async () => {
+    const store = createMockStore();
+    const wrapper = createWrapper(store);
+
+    const { result } = renderHook(() => useSaveSharedReport(), { wrapper });
+
+    await act(async () => {
+      await result.current.saveSharedReport(MOCK_SAVE_SHARE_DATA);
+    });
+
+    expect(sendMigrationLog).toHaveBeenCalledWith(
+      expect.objectContaining({
+        kind: 'event',
+        prefix: 'PolicyMigration',
+        operation: 'CREATE',
+        status: 'SKIPPED',
+      })
+    );
+  });
+
+  test('given saved shared policy with existing v2 mapping then shadows only the association', async () => {
+    // Given
+    vi.mocked(getV2Id).mockReturnValue('550e8400-e29b-41d4-a716-446655440000');
+    const store = createMockStore();
+    const wrapper = createWrapper(store);
+
+    // When
+    const { result } = renderHook(() => useSaveSharedReport(), { wrapper });
+
+    await act(async () => {
+      await result.current.saveSharedReport(MOCK_SAVE_SHARE_DATA, MOCK_POLICIES);
+    });
+
+    // Then
+    expect(shadowCreateUserPolicyAssociation).toHaveBeenCalledWith(
+      MOCK_SAVED_USER_POLICY,
+      '550e8400-e29b-41d4-a716-446655440000'
+    );
+    expect(shadowCreatePolicyAndAssociation).not.toHaveBeenCalled();
   });
 
   test('given existing report then returns already_saved without creating duplicates', async () => {
