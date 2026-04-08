@@ -199,6 +199,7 @@ export function useAggregatedCalculationStatus(
 
       return new QueryObserver<CalcStatus>(queryClient, {
         queryKey,
+        enabled: false,
       });
     });
 
