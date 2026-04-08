@@ -1,5 +1,6 @@
 const LEGACY_V1_REPORT_COUNTRY_IDS = ["uk", "us", "ca", "ng"] as const;
 const LEGACY_V1_REPORT_SURFACES = ["policy", "household"] as const;
+const EXCLUDED_HOST_PREFIXES = ["legacy.", "app."] as const;
 
 const LEGACY_V1_REPORT_PATH_PATTERN = new RegExp(
   `^/(?:${LEGACY_V1_REPORT_COUNTRY_IDS.join("|")})/(?:${LEGACY_V1_REPORT_SURFACES.join("|")})(?:/.*)?$`,
@@ -16,7 +17,9 @@ export function getLegacyAppRedirectUrl(input: URL | string): string | null {
   const url =
     typeof input === "string" ? new URL(input) : new URL(input.toString());
 
-  if (url.hostname.startsWith("legacy.")) {
+  if (
+    EXCLUDED_HOST_PREFIXES.some((prefix) => url.hostname.startsWith(prefix))
+  ) {
     return null;
   }
 

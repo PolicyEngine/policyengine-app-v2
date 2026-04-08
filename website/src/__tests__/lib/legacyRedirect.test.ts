@@ -41,6 +41,10 @@ const NON_LEGACY_URL_CASES = [
       "https://app.policyengine.org/us/report-output/sur-abc123?share=encoded-share-data",
   },
   {
+    description: "strict v1 path on the calculator app host",
+    inboundUrl: "https://app.policyengine.org/us/policy?focus=gov",
+  },
+  {
     description: "v2 policy list page",
     inboundUrl: "https://policyengine.org/us/policies",
   },

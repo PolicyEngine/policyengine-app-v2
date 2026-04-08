@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-import { getLegacyAppRedirectUrl } from "./src/lib/legacyRedirect";
+import { getLegacyAppRedirectUrl } from "./lib/legacyRedirect";
 
 export const config = {
   matcher: ["/:countryId/:path*", "/:countryId"],
