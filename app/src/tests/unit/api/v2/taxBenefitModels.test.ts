@@ -92,13 +92,7 @@ describe('taxBenefitModels', () => {
         model_id: mockModel.id,
         version: '2.0.0',
       });
-      vi.stubGlobal(
-        'fetch',
-        mockFetchSequence([
-          { ok: true, status: 200, data: [mockModel] },
-          { ok: true, status: 200, data: [mockVersion] },
-        ])
-      );
+      vi.stubGlobal('fetch', mockFetchSuccess({ model: mockModel, latest_version: mockVersion }));
 
       // When
       const result = await fetchModelByCountry('us');
@@ -106,18 +100,20 @@ describe('taxBenefitModels', () => {
       // Then
       expect(result.model).toEqual(mockModel);
       expect(result.latest_version).toEqual(mockVersion);
-      expect(fetch).toHaveBeenCalledTimes(2);
+      expect(fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/tax-benefit-models/by-country/us'),
+        {}
+      );
     });
 
     test('given model not found then it throws', async () => {
       // Given
-      vi.stubGlobal(
-        'fetch',
-        mockFetchSuccess([createMockTaxBenefitModel({ name: 'policyengine-uk' })])
-      );
+      vi.stubGlobal('fetch', mockFetchError(404, "No model found for country 'us'"));
 
       // When / Then
-      await expect(fetchModelByCountry('us')).rejects.toThrow('Model not found for country: us');
+      await expect(fetchModelByCountry('us')).rejects.toThrow(
+        "fetchModelByCountry(us): 404 No model found for country 'us'"
+      );
     });
   });
 

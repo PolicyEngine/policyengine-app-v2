@@ -1,5 +1,12 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { clearV2Mappings, getV2Id, setV2Id } from '@/libs/migration/idMapping';
+import {
+  clearV2Mappings,
+  getMappedV2UserId,
+  getOrCreateV2UserId,
+  getV2Id,
+  isUuid,
+  setV2Id,
+} from '@/libs/migration/idMapping';
 
 describe('idMapping', () => {
   beforeEach(() => {
@@ -33,6 +40,13 @@ describe('idMapping', () => {
       setV2Id('Policy', 'sup-1', 'uuid-new');
 
       expect(getV2Id('Policy', 'sup-1')).toBe('uuid-new');
+    });
+
+    test('given mixed-case entity type then stores lower-case localStorage key', () => {
+      setV2Id('Policy', '42', 'uuid-policy');
+
+      expect(localStorage.getItem('v1v2:policy:42')).toBe('uuid-policy');
+      expect(getV2Id('policy', '42')).toBe('uuid-policy');
     });
   });
 
@@ -77,6 +91,30 @@ describe('idMapping', () => {
       });
 
       expect(getV2Id('Policy', 'sup-1')).toBeNull();
+    });
+  });
+
+  describe('v2 user IDs', () => {
+    test('given UUID user ID then reuses it for v2', () => {
+      const userId = '550e8400-e29b-41d4-a716-446655440000';
+
+      expect(getOrCreateV2UserId(userId)).toBe(userId);
+      expect(getMappedV2UserId(userId)).toBe(userId);
+    });
+
+    test('given non-UUID user ID then creates and stores UUID mapping', () => {
+      const randomUUIDSpy = vi
+        .spyOn(crypto, 'randomUUID')
+        .mockReturnValue('c93a763d-8d9f-4ab8-b04f-2fbba0183f35');
+
+      expect(getOrCreateV2UserId('anonymous')).toBe('c93a763d-8d9f-4ab8-b04f-2fbba0183f35');
+      expect(getMappedV2UserId('anonymous')).toBe('c93a763d-8d9f-4ab8-b04f-2fbba0183f35');
+      expect(randomUUIDSpy).toHaveBeenCalledOnce();
+    });
+
+    test('given ID strings then identifies UUID format', () => {
+      expect(isUuid('550e8400-e29b-41d4-a716-446655440000')).toBe(true);
+      expect(isUuid('anonymous')).toBe(false);
     });
   });
 });

@@ -30,6 +30,16 @@ export {
 // Parameter values (on-demand fetching)
 export { fetchParameterValues, BASELINE_POLICY_ID } from './parameterValues';
 
+// Policies (v2 Alpha CRUD)
+export {
+  createPolicyV2,
+  fetchPolicyByIdV2,
+  type PolicyV2CreateRequest,
+  type PolicyV2ParameterValueCreateRequest,
+  type PolicyV2Response,
+  type PolicyV2ResponseParameterValue,
+} from './policies';
+
 // Datasets
 export { fetchDatasets } from './datasets';
 

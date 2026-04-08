@@ -64,7 +64,8 @@ export async function fetchParameterChildren(
  */
 export async function fetchParametersByName(
   names: string[],
-  countryId: string
+  countryId: string,
+  taxBenefitModelVersionId?: string
 ): Promise<V2ParameterData[]> {
   if (names.length === 0) {
     return [];
@@ -76,7 +77,13 @@ export async function fetchParametersByName(
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ names, country_id: countryId }),
+      body: JSON.stringify({
+        names,
+        country_id: countryId,
+        ...(taxBenefitModelVersionId && {
+          tax_benefit_model_version_id: taxBenefitModelVersionId,
+        }),
+      }),
     }
   );
 }

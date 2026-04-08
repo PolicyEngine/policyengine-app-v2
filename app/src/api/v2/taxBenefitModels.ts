@@ -54,26 +54,10 @@ export interface ModelByCountryResponse {
  * Fetch model + latest version for a country in a single call.
  */
 export async function fetchModelByCountry(countryId: string): Promise<ModelByCountryResponse> {
-  const modelName = getModelName(countryId);
-
-  const models = await fetchTaxBenefitModels();
-  const model = models.find((m) => m.name === modelName);
-  if (!model) {
-    throw new Error(`Model not found for country: ${countryId}`);
-  }
-
-  const versions = await v2Fetch<TaxBenefitModelVersion[]>(
-    `${API_V2_BASE_URL}/tax-benefit-model-versions/`,
-    'fetchModelByCountry:versions'
+  return v2Fetch<ModelByCountryResponse>(
+    `${API_V2_BASE_URL}/tax-benefit-models/by-country/${countryId}`,
+    `fetchModelByCountry(${countryId})`
   );
-  const modelVersions = versions.filter((v) => v.model_id === model.id);
-  if (modelVersions.length === 0) {
-    throw new Error(`No versions found for country: ${countryId}`);
-  }
-
-  // NOTE: Assumes the API returns versions with the latest first.
-  // The version string format is unspecified, so we cannot sort client-side.
-  return { model, latest_version: modelVersions[0] };
 }
 
 /**

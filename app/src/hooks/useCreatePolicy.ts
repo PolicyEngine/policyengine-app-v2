@@ -1,6 +1,8 @@
 import { useMutation } from '@tanstack/react-query';
 import { createPolicy } from '@/api/policy';
 import { MOCK_USER_ID } from '@/constants';
+import { shadowCreatePolicyAndAssociation } from '@/libs/migration/policyShadow';
+import type { UserPolicy } from '@/types/ingredients/UserPolicy';
 import { PolicyCreationPayload } from '@/types/payloads';
 import { useCurrentCountry } from './useCurrentCountry';
 import { useCreatePolicyAssociation } from './useUserPolicy';
@@ -8,16 +10,18 @@ import { useCreatePolicyAssociation } from './useUserPolicy';
 export function useCreatePolicy(policyLabel?: string) {
   const countryId = useCurrentCountry();
   // const user = MOCK_USER_ID; // TODO: Replace with actual user context or auth hook in future
-  const createAssociation = useCreatePolicyAssociation();
+  const createAssociation = useCreatePolicyAssociation({ shadowV2: false });
 
   const mutation = useMutation({
     mutationFn: (data: PolicyCreationPayload) => createPolicy(countryId, data),
-    onSuccess: async (data) => {
+    onSuccess: async (data, policyPayload) => {
+      let association: UserPolicy | undefined;
+
       try {
         // Create association with current user (or anonymous for session storage)
         const userId = MOCK_USER_ID; // TODO: Replace with actual user ID retrieval logic and add conditional logic to access user ID
 
-        await createAssociation.mutateAsync({
+        association = await createAssociation.mutateAsync({
           userId,
           policyId: data.result.policy_id, // This is from the API response structure; may be modified in API v2
           countryId,
@@ -27,6 +31,14 @@ export function useCreatePolicy(policyLabel?: string) {
       } catch (error) {
         console.error('Policy created but association failed:', error);
       }
+
+      void shadowCreatePolicyAndAssociation({
+        countryId,
+        label: policyLabel,
+        v1PolicyId: data.result.policy_id,
+        v1PolicyPayload: policyPayload,
+        v1Association: association,
+      });
     },
   });
 

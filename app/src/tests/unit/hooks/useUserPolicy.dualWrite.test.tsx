@@ -1,6 +1,6 @@
 import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import * as v2PolicyApi from '@/api/v2/userPolicyAssociations';
 import { useCreatePolicyAssociation, useUpdatePolicyAssociation } from '@/hooks/useUserPolicy';
@@ -18,6 +18,8 @@ const TEST_COUNTRY_ID = 'us' as const;
 const TEST_LABEL = 'My reform';
 const TEST_V1_ASSOC_ID = 'sup-abc123';
 const TEST_V2_ASSOC_ID = '550e8400-e29b-41d4-a716-446655440000';
+const TEST_V2_POLICY_ID = '6f52cd3e-3f6f-4d13-9b0f-f2a7ad460d9d';
+const TEST_V2_USER_ID = 'c93a763d-8d9f-4ab8-b04f-2fbba0183f35';
 
 // ============================================================================
 // Mock data
@@ -35,8 +37,8 @@ const mockV1CreateResult: UserPolicy = {
 
 const mockV2CreateResult: UserPolicy = {
   id: TEST_V2_ASSOC_ID,
-  userId: TEST_USER_ID,
-  policyId: TEST_POLICY_ID,
+  userId: TEST_V2_USER_ID,
+  policyId: TEST_V2_POLICY_ID,
   countryId: TEST_COUNTRY_ID,
   label: TEST_LABEL,
   createdAt: '2026-04-02T12:00:01Z',
@@ -56,8 +58,8 @@ const mockV1UpdateResult: UserPolicy = {
 
 const mockV2UpdateResult: UserPolicy = {
   id: TEST_V2_ASSOC_ID,
-  userId: TEST_USER_ID,
-  policyId: TEST_POLICY_ID,
+  userId: TEST_V2_USER_ID,
+  policyId: TEST_V2_POLICY_ID,
   countryId: TEST_COUNTRY_ID,
   label: 'Renamed policy',
   createdAt: '2026-04-02T12:00:01Z',
@@ -128,6 +130,8 @@ describe('useCreatePolicyAssociation dual-write', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
+    idMapping.setV2Id('Policy', TEST_POLICY_ID, TEST_V2_POLICY_ID);
+    idMapping.setV2Id('User', TEST_USER_ID, TEST_V2_USER_ID);
     queryClient = createQueryClient();
   });
 
@@ -144,19 +148,21 @@ describe('useCreatePolicyAssociation dual-write', () => {
     });
 
     // When
-    await result.current.mutateAsync({
-      userId: TEST_USER_ID,
-      policyId: TEST_POLICY_ID,
-      countryId: TEST_COUNTRY_ID,
-      label: TEST_LABEL,
+    await act(async () => {
+      await result.current.mutateAsync({
+        userId: TEST_USER_ID,
+        policyId: TEST_POLICY_ID,
+        countryId: TEST_COUNTRY_ID,
+        label: TEST_LABEL,
+      });
     });
 
     // Then — v2 API was called
     await waitFor(() => {
       expect(v2CreateSpy).toHaveBeenCalledWith(
         expect.objectContaining({
-          userId: TEST_USER_ID,
-          policyId: TEST_POLICY_ID,
+          userId: TEST_V2_USER_ID,
+          policyId: TEST_V2_POLICY_ID,
           countryId: TEST_COUNTRY_ID,
           label: TEST_LABEL,
         })
@@ -169,23 +175,23 @@ describe('useCreatePolicyAssociation dual-write', () => {
     mockStoreCreate.mockResolvedValue(mockV1CreateResult);
 
     vi.spyOn(v2PolicyApi, 'createUserPolicyAssociationV2').mockResolvedValue(mockV2CreateResult);
-    const setV2IdSpy = vi.spyOn(idMapping, 'setV2Id');
-
     const { result } = renderHook(() => useCreatePolicyAssociation(), {
       wrapper: createWrapper(queryClient),
     });
 
     // When
-    await result.current.mutateAsync({
-      userId: TEST_USER_ID,
-      policyId: TEST_POLICY_ID,
-      countryId: TEST_COUNTRY_ID,
-      label: TEST_LABEL,
+    await act(async () => {
+      await result.current.mutateAsync({
+        userId: TEST_USER_ID,
+        policyId: TEST_POLICY_ID,
+        countryId: TEST_COUNTRY_ID,
+        label: TEST_LABEL,
+      });
     });
 
     // Then
     await waitFor(() => {
-      expect(setV2IdSpy).toHaveBeenCalledWith('Policy', TEST_V1_ASSOC_ID, TEST_V2_ASSOC_ID);
+      expect(idMapping.getV2Id('UserPolicy', TEST_V1_ASSOC_ID)).toBe(TEST_V2_ASSOC_ID);
     });
   });
 
@@ -201,17 +207,19 @@ describe('useCreatePolicyAssociation dual-write', () => {
     });
 
     // When
-    await result.current.mutateAsync({
-      userId: TEST_USER_ID,
-      policyId: TEST_POLICY_ID,
-      countryId: TEST_COUNTRY_ID,
-      label: TEST_LABEL,
+    await act(async () => {
+      await result.current.mutateAsync({
+        userId: TEST_USER_ID,
+        policyId: TEST_POLICY_ID,
+        countryId: TEST_COUNTRY_ID,
+        label: TEST_LABEL,
+      });
     });
 
     // Then
     await waitFor(() => {
       expect(logSpy).toHaveBeenCalledWith(
-        'PolicyMigration',
+        'UserPolicyMigration',
         'CREATE',
         expect.any(Object),
         expect.any(Object),
@@ -234,11 +242,14 @@ describe('useCreatePolicyAssociation dual-write', () => {
     });
 
     // When
-    const v1Result = await result.current.mutateAsync({
-      userId: TEST_USER_ID,
-      policyId: TEST_POLICY_ID,
-      countryId: TEST_COUNTRY_ID,
-      label: TEST_LABEL,
+    let v1Result: UserPolicy | undefined;
+    await act(async () => {
+      v1Result = await result.current.mutateAsync({
+        userId: TEST_USER_ID,
+        policyId: TEST_POLICY_ID,
+        countryId: TEST_COUNTRY_ID,
+        label: TEST_LABEL,
+      });
     });
 
     // Then — primary path succeeded
@@ -247,7 +258,7 @@ describe('useCreatePolicyAssociation dual-write', () => {
     // And — failure was logged, not thrown
     await waitFor(() => {
       expect(infoSpy).toHaveBeenCalledWith(
-        expect.stringContaining('[PolicyMigration] Shadow v2 create failed'),
+        expect.stringContaining('[UserPolicyMigration] Shadow v2 create failed'),
         expect.any(Error)
       );
     });
@@ -265,7 +276,8 @@ describe('useUpdatePolicyAssociation dual-write', () => {
 
   test('given mapped v2 ID then shadow updates v2 API', async () => {
     // Given — pre-seed the ID mapping
-    idMapping.setV2Id('Policy', TEST_V1_ASSOC_ID, TEST_V2_ASSOC_ID);
+    idMapping.setV2Id('UserPolicy', TEST_V1_ASSOC_ID, TEST_V2_ASSOC_ID);
+    idMapping.setV2Id('User', TEST_USER_ID, TEST_V2_USER_ID);
     mockStoreUpdate.mockResolvedValue(mockV1UpdateResult);
 
     const v2UpdateSpy = vi
@@ -277,14 +289,16 @@ describe('useUpdatePolicyAssociation dual-write', () => {
     });
 
     // When
-    await result.current.mutateAsync({
-      userPolicyId: TEST_V1_ASSOC_ID,
-      updates: { label: 'Renamed policy' },
+    await act(async () => {
+      await result.current.mutateAsync({
+        userPolicyId: TEST_V1_ASSOC_ID,
+        updates: { label: 'Renamed policy' },
+      });
     });
 
     // Then
     await waitFor(() => {
-      expect(v2UpdateSpy).toHaveBeenCalledWith(TEST_V2_ASSOC_ID, TEST_USER_ID, {
+      expect(v2UpdateSpy).toHaveBeenCalledWith(TEST_V2_ASSOC_ID, TEST_V2_USER_ID, {
         label: 'Renamed policy',
       });
     });
@@ -301,20 +315,25 @@ describe('useUpdatePolicyAssociation dual-write', () => {
     });
 
     // When
-    await result.current.mutateAsync({
-      userPolicyId: TEST_V1_ASSOC_ID,
-      updates: { label: 'Renamed policy' },
+    await act(async () => {
+      await result.current.mutateAsync({
+        userPolicyId: TEST_V1_ASSOC_ID,
+        updates: { label: 'Renamed policy' },
+      });
     });
 
     // Then — v2 API was NOT called
     // Wait a tick to ensure the onSuccess had time to run
-    await new Promise((r) => setTimeout(r, 50));
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 50));
+    });
     expect(v2UpdateSpy).not.toHaveBeenCalled();
   });
 
   test('given v2 update failure then primary update still succeeds', async () => {
     // Given
-    idMapping.setV2Id('Policy', TEST_V1_ASSOC_ID, TEST_V2_ASSOC_ID);
+    idMapping.setV2Id('UserPolicy', TEST_V1_ASSOC_ID, TEST_V2_ASSOC_ID);
+    idMapping.setV2Id('User', TEST_USER_ID, TEST_V2_USER_ID);
     mockStoreUpdate.mockResolvedValue(mockV1UpdateResult);
 
     vi.spyOn(v2PolicyApi, 'updateUserPolicyAssociationV2').mockRejectedValue(
@@ -327,9 +346,12 @@ describe('useUpdatePolicyAssociation dual-write', () => {
     });
 
     // When
-    const v1Result = await result.current.mutateAsync({
-      userPolicyId: TEST_V1_ASSOC_ID,
-      updates: { label: 'Renamed policy' },
+    let v1Result: UserPolicy | undefined;
+    await act(async () => {
+      v1Result = await result.current.mutateAsync({
+        userPolicyId: TEST_V1_ASSOC_ID,
+        updates: { label: 'Renamed policy' },
+      });
     });
 
     // Then — primary path succeeded
@@ -338,7 +360,7 @@ describe('useUpdatePolicyAssociation dual-write', () => {
     // And — failure was logged
     await waitFor(() => {
       expect(infoSpy).toHaveBeenCalledWith(
-        expect.stringContaining('[PolicyMigration] Shadow v2 update failed'),
+        expect.stringContaining('[UserPolicyMigration] Shadow v2 update failed'),
         expect.any(Error)
       );
     });

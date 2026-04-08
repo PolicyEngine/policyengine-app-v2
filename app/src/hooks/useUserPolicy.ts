@@ -2,13 +2,11 @@
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { PolicyAdapter } from '@/adapters';
 import { fetchPolicyById } from '@/api/policy';
-import {
-  createUserPolicyAssociationV2,
-  updateUserPolicyAssociationV2,
-} from '@/api/v2/userPolicyAssociations';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { logMigrationComparison } from '@/libs/migration/comparisonLogger';
-import { getV2Id, setV2Id } from '@/libs/migration/idMapping';
+import {
+  shadowCreateUserPolicyAssociation,
+  shadowUpdateUserPolicyAssociation,
+} from '@/libs/migration/policyShadow';
 import { Policy } from '@/types/ingredients/Policy';
 import { ApiPolicyStore, LocalStoragePolicyStore } from '../api/policyAssociation';
 import { queryConfig } from '../libs/queryConfig';
@@ -51,9 +49,10 @@ export const usePolicyAssociation = (userId: string, policyId: string) => {
   });
 };
 
-export const useCreatePolicyAssociation = () => {
+export const useCreatePolicyAssociation = (options?: { shadowV2?: boolean }) => {
   const store = useUserPolicyStore();
   const queryClient = useQueryClient();
+  const shadowV2 = options?.shadowV2 ?? true;
 
   return useMutation({
     mutationFn: (userPolicy: Omit<UserPolicy, 'id' | 'createdAt'>) => store.create(userPolicy),
@@ -78,28 +77,9 @@ export const useCreatePolicyAssociation = () => {
         newAssociation
       );
 
-      // Shadow v2 write (fire-and-forget, never blocks primary path)
-      createUserPolicyAssociationV2({
-        userId: newAssociation.userId,
-        policyId: newAssociation.policyId,
-        countryId: newAssociation.countryId,
-        label: newAssociation.label,
-      })
-        .then((v2Result) => {
-          if (newAssociation.id && v2Result.id) {
-            setV2Id('Policy', newAssociation.id, v2Result.id);
-          }
-          logMigrationComparison(
-            'PolicyMigration',
-            'CREATE',
-            newAssociation as unknown as Record<string, unknown>,
-            v2Result as unknown as Record<string, unknown>,
-            { skipFields: ['id', 'createdAt', 'updatedAt', 'isCreated'] }
-          );
-        })
-        .catch((error) => {
-          console.info('[PolicyMigration] Shadow v2 create failed (non-blocking):', error);
-        });
+      if (shadowV2) {
+        void shadowCreateUserPolicyAssociation(newAssociation);
+      }
     },
   });
 };
@@ -136,27 +116,7 @@ export const useUpdatePolicyAssociation = () => {
         updatedAssociation
       );
 
-      // Shadow v2 update (fire-and-forget)
-      if (updatedAssociation.id) {
-        const v2Id = getV2Id('Policy', updatedAssociation.id);
-        if (v2Id) {
-          updateUserPolicyAssociationV2(v2Id, updatedAssociation.userId, {
-            label: updatedAssociation.label ?? null,
-          })
-            .then((v2Result) => {
-              logMigrationComparison(
-                'PolicyMigration',
-                'UPDATE',
-                updatedAssociation as unknown as Record<string, unknown>,
-                v2Result as unknown as Record<string, unknown>,
-                { skipFields: ['id', 'createdAt', 'updatedAt', 'isCreated'] }
-              );
-            })
-            .catch((error) => {
-              console.info('[PolicyMigration] Shadow v2 update failed (non-blocking):', error);
-            });
-        }
-      }
+      void shadowUpdateUserPolicyAssociation(updatedAssociation);
     },
   });
 };
