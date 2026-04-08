@@ -18,8 +18,8 @@ import {
 import { colors, spacing } from '@/designTokens';
 import { useReportYear } from '@/hooks/useReportYear';
 import { trackPythonCodeCopied } from '@/utils/analytics';
-import { getColabLink, getReproducibilityCodeBlock } from '@/utils/reproducibilityCode';
 import { parseReportTiming } from '@/utils/reportTiming';
+import { getColabLink, getReproducibilityCodeBlock } from '@/utils/reproducibilityCode';
 
 interface PolicyData {
   baseline: { data: Record<string, any> };

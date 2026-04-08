@@ -61,7 +61,11 @@ export function useModifyReportSubmission({
   const [isSavingNew, setIsSavingNew] = useState(false);
   const [isReplacing, setIsReplacing] = useState(false);
   const isGeographyReport = !!reportState.simulations[0]?.population?.geography?.id;
-  const availableBudgetWindowOptions = getBudgetWindowOptions(reportState.year, yearOptions, countryId);
+  const availableBudgetWindowOptions = getBudgetWindowOptions(
+    reportState.year,
+    yearOptions,
+    countryId
+  );
   const effectiveAnalysisMode = getEffectiveReportAnalysisMode(
     reportState.analysisMode,
     isGeographyReport ? availableBudgetWindowOptions : []

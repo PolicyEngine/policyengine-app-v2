@@ -25,9 +25,9 @@ import { countryIds } from '@/libs/countries';
 import { getTaxYears } from '@/libs/metadataUtils';
 import {
   clampBudgetWindowYears,
-  getEffectiveReportAnalysisMode,
   getBudgetWindowOptions,
   getDefaultBudgetWindowYears,
+  getEffectiveReportAnalysisMode,
 } from '@/utils/reportTiming';
 import { FONT_SIZES } from '../constants';
 import type { ReportBuilderState } from '../types';
