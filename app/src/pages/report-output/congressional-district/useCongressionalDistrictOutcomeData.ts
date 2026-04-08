@@ -38,6 +38,11 @@ interface OutcomeFetchState {
   hasStarted: boolean;
 }
 
+type DistrictPollResult =
+  | { type: 'complete'; data: DistrictOutcomeShares }
+  | { type: 'retry' }
+  | { type: 'error' };
+
 type OutcomeFetchAction =
   | { type: 'START'; targets: string[] }
   | { type: 'COMPLETE'; geoId: string; data: DistrictOutcomeShares }
@@ -179,50 +184,30 @@ export function useCongressionalDistrictOutcomeData(
     [districtTargets]
   );
 
-  const pollDistrict = useCallback(
-    async (target: DistrictTarget, signal: AbortSignal): Promise<void> => {
-      let attempts = 0;
+  const fetchDistrictOutcome = useCallback(
+    async (target: DistrictTarget): Promise<DistrictPollResult> => {
+      try {
+        const response = await fetchSocietyWideCalculation('us', reformPolicyId, baselinePolicyId, {
+          region: target.region,
+          time_period: year,
+        });
 
-      while (attempts < MAX_POLL_ATTEMPTS) {
-        if (signal.aborted) {
-          return;
+        if (response.status === 'ok' && response.result) {
+          const shares = extractDistrictOutcomeShares(response.result);
+          if (!shares) {
+            return { type: 'error' };
+          }
+          return { type: 'complete', data: shares };
         }
 
-        try {
-          const response = await fetchSocietyWideCalculation(
-            'us',
-            reformPolicyId,
-            baselinePolicyId,
-            {
-              region: target.region,
-              time_period: year,
-            }
-          );
-
-          if (response.status === 'ok' && response.result) {
-            const shares = extractDistrictOutcomeShares(response.result);
-            if (!shares) {
-              dispatch({ type: 'ERROR', geoId: target.geoId });
-              return;
-            }
-            dispatch({ type: 'COMPLETE', geoId: target.geoId, data: shares });
-            return;
-          }
-
-          if (response.status === 'error') {
-            dispatch({ type: 'ERROR', geoId: target.geoId });
-            return;
-          }
-
-          attempts++;
-          await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
-        } catch {
-          dispatch({ type: 'ERROR', geoId: target.geoId });
-          return;
+        if (response.status === 'error') {
+          return { type: 'error' };
         }
+
+        return { type: 'retry' };
+      } catch {
+        return { type: 'error' };
       }
-
-      dispatch({ type: 'ERROR', geoId: target.geoId });
     },
     [baselinePolicyId, reformPolicyId, year]
   );
@@ -241,26 +226,60 @@ export function useCongressionalDistrictOutcomeData(
       targets: districtTargets.map((target) => target.geoId),
     });
 
-    let nextIndex = 0;
+    const runRounds = async () => {
+      let currentRound = [...districtTargets];
+      const attemptsByGeoId = new Map<string, number>();
 
-    const worker = async () => {
-      while (!abortController.signal.aborted) {
-        const target = districtTargets[nextIndex];
-        nextIndex += 1;
+      while (!abortController.signal.aborted && currentRound.length > 0) {
+        const nextRound: DistrictTarget[] = [];
 
-        if (!target) {
+        for (let i = 0; i < currentRound.length; i += DISTRICT_FETCH_CONCURRENCY) {
+          const batch = currentRound.slice(i, i + DISTRICT_FETCH_CONCURRENCY);
+          const results = await Promise.all(
+            batch.map(async (target) => ({
+              target,
+              result: await fetchDistrictOutcome(target),
+            }))
+          );
+
+          if (abortController.signal.aborted) {
+            return;
+          }
+
+          results.forEach(({ target, result }) => {
+            if (result.type === 'complete') {
+              dispatch({ type: 'COMPLETE', geoId: target.geoId, data: result.data });
+              return;
+            }
+
+            if (result.type === 'error') {
+              dispatch({ type: 'ERROR', geoId: target.geoId });
+              return;
+            }
+
+            const attempts = (attemptsByGeoId.get(target.geoId) ?? 0) + 1;
+            attemptsByGeoId.set(target.geoId, attempts);
+
+            if (attempts >= MAX_POLL_ATTEMPTS) {
+              dispatch({ type: 'ERROR', geoId: target.geoId });
+              return;
+            }
+
+            nextRound.push(target);
+          });
+        }
+
+        if (nextRound.length === 0 || abortController.signal.aborted) {
           return;
         }
 
-        await pollDistrict(target, abortController.signal);
+        currentRound = nextRound;
+        await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
       }
     };
 
-    const workerCount = Math.min(DISTRICT_FETCH_CONCURRENCY, districtTargets.length);
-    for (let i = 0; i < workerCount; i += 1) {
-      void worker();
-    }
-  }, [districtTargets, pollDistrict, state.hasStarted]);
+    void runRounds();
+  }, [districtTargets, fetchDistrictOutcome, state.hasStarted]);
 
   useEffect(() => {
     abortControllerRef.current?.abort();

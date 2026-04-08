@@ -25,7 +25,7 @@ vi.mock('@/api/societyWideCalculation', () => ({
 }));
 
 vi.mock('@/contexts/congressional-district', () => ({
-  MAX_POLL_ATTEMPTS: 1,
+  MAX_POLL_ATTEMPTS: 3,
   POLL_INTERVAL_MS: 0,
   useCongressionalDistrictData: mockUseCongressionalDistrictData,
 }));
@@ -160,5 +160,67 @@ describe('useCongressionalDistrictOutcomeData helpers', () => {
 
     await waitFor(() => expect(mockFetchSocietyWideCalculation).toHaveBeenCalledTimes(4));
     await waitFor(() => expect(result.current.mapData).toHaveLength(2));
+  });
+
+  test('useCongressionalDistrictOutcomeData starts every district before retrying computing ones', async () => {
+    const expectedRegions = Array.from({ length: 13 }, (_, index) => {
+      const district = String(index + 1).padStart(2, '0');
+      return `congressional_district/AL-${district}`;
+    });
+
+    mockGetUSCongressionalDistricts.mockReturnValue(
+      expectedRegions.map((region, index) => ({
+        value: region,
+        stateAbbreviation: 'AL',
+        label: `District ${index + 1}`,
+      }))
+    );
+
+    mockUseCongressionalDistrictData.mockReturnValue({
+      reformPolicyId: 100,
+      baselinePolicyId: 0,
+      year: 2026,
+      stateCode: undefined,
+    });
+
+    const requestOrder: string[] = [];
+    const requestCounts = new Map<string, number>();
+
+    mockFetchSocietyWideCalculation.mockImplementation(
+      async (_countryId: string, _reformPolicyId: string, _baselinePolicyId: string, params) => {
+        requestOrder.push(params.region);
+
+        const currentCount = (requestCounts.get(params.region) ?? 0) + 1;
+        requestCounts.set(params.region, currentCount);
+
+        if (params.region === expectedRegions[12] || currentCount > 1) {
+          return {
+            status: 'ok',
+            result: createMockSocietyWideOutput({
+              intra_decile: {
+                all: {
+                  'Gain more than 5%': 0.2,
+                  'Gain less than 5%': 0.3,
+                  'Lose more than 5%': 0.1,
+                  'Lose less than 5%': 0.15,
+                  'No change': 0.25,
+                },
+              },
+            }),
+          };
+        }
+
+        return {
+          status: 'computing',
+          result: null,
+        };
+      }
+    );
+
+    const { result } = renderHook(() => useCongressionalDistrictOutcomeData('winner', true));
+
+    await waitFor(() => expect(result.current.mapData).toHaveLength(13));
+
+    expect(requestOrder.slice(0, 13)).toEqual(expectedRegions);
   });
 });
