@@ -48,6 +48,12 @@ export type FetchAction =
  * Context value with state and utility functions
  */
 export interface CongressionalDistrictDataContextValue {
+  /** Reform policy ID used for district-level calculations */
+  reformPolicyId: string;
+  /** Baseline policy ID used for district-level calculations */
+  baselinePolicyId: string;
+  /** Calculation year used for district-level calculations */
+  year: string;
   /** Map of state code to district data */
   stateResponses: Map<string, StateDistrictData>;
   /** Number of states that have completed successfully */

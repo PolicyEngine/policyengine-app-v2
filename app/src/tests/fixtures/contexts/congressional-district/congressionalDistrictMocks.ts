@@ -251,6 +251,9 @@ export function createMockContextValue(
   overrides: Partial<CongressionalDistrictDataContextValue> = {}
 ): CongressionalDistrictDataContextValue {
   return {
+    reformPolicyId: TEST_POLICY_IDS.REFORM,
+    baselinePolicyId: TEST_POLICY_IDS.BASELINE,
+    year: TEST_YEAR,
     stateResponses: new Map(),
     completedCount: 0,
     loadingCount: 0,
