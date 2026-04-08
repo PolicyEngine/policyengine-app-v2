@@ -19,6 +19,15 @@ export interface USCongressionalDistrictBreakdownItem {
 
   /** Relative household income change as a decimal (e.g., 0.041 = 4.1%) */
   relative_household_income_change: number;
+
+  /** Share of people in the district who gain income, as a decimal */
+  winner_percentage?: number;
+
+  /** Share of people in the district who lose income, as a decimal */
+  loser_percentage?: number;
+
+  /** Share of people in the district with effectively no income change, as a decimal */
+  no_change_percentage?: number;
 }
 
 /**

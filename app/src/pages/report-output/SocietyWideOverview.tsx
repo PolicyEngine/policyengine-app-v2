@@ -141,15 +141,61 @@ function currencyTicks(
   return { tickvals: ticks, ticktext: ticks.map(fmt) };
 }
 
-type CongressionalMode = 'absolute' | 'relative';
+type CongressionalMode = 'absolute' | 'relative' | 'winner-pct' | 'loser-pct';
 const CONGRESSIONAL_MODE_OPTIONS = [
   { label: 'Absolute', value: 'absolute' as CongressionalMode },
   { label: 'Relative', value: 'relative' as CongressionalMode },
+  { label: 'Winner %', value: 'winner-pct' as CongressionalMode },
+  { label: 'Loser %', value: 'loser-pct' as CongressionalMode },
+];
+
+const CONGRESSIONAL_WINNER_COLORS = [
+  colors.background.tertiary,
+  colors.primary[100],
+  colors.primary[200],
+  colors.primary[400],
+  colors.primary[600],
+];
+
+const CONGRESSIONAL_LOSER_COLORS = [
+  colors.background.tertiary,
+  colors.gray[200],
+  colors.gray[300],
+  colors.gray[500],
+  colors.gray[700],
 ];
 
 type CardKey = 'budget' | 'decile' | 'poverty' | 'winners' | 'inequality' | 'congressional';
 
 type RankedDistrict = { id: string; label: string; value: number };
+type OutcomeMapPoint = { geoId: string; label: string; value: number };
+
+export function buildOutcomeMapData(
+  districts: Array<{ district: string; winner_percentage?: number; loser_percentage?: number }>,
+  metric: 'winner' | 'loser',
+  labelLookup: Map<string, string>
+): { points: OutcomeMapPoint[]; missingCount: number } {
+  const points: OutcomeMapPoint[] = [];
+  let missingCount = 0;
+
+  districts.forEach((district) => {
+    const districtId = normalizeDistrictId(district.district);
+    const value = metric === 'winner' ? district.winner_percentage : district.loser_percentage;
+
+    if (typeof value !== 'number') {
+      missingCount += 1;
+      return;
+    }
+
+    points.push({
+      geoId: districtId,
+      label: labelLookup.get(districtId) ?? `District ${districtId}`,
+      value,
+    });
+  });
+
+  return { points, missingCount };
+}
 
 /**
  * Renders a column of 5 ranked districts with conditional section headers.
@@ -160,16 +206,15 @@ type RankedDistrict = { id: string; label: string; value: number };
  */
 function DistrictRankColumn({
   items,
-  side,
+  gainHeader,
+  lossHeader,
   formatValue,
 }: {
   items: RankedDistrict[];
-  side: 'top' | 'bottom';
+  gainHeader: string;
+  lossHeader: string;
   formatValue: (v: number) => string;
 }) {
-  const gainHeader = side === 'top' ? 'Biggest gains (absolute)' : 'Smallest gains (absolute)';
-  const lossHeader = side === 'top' ? 'Smallest losses (absolute)' : 'Biggest losses (absolute)';
-
   // Build sections: group consecutive items by sign, assigning headers
   const rows: Array<
     { type: 'header'; text: string } | { type: 'item'; district: RankedDistrict; rank: number }
@@ -245,6 +290,70 @@ function DistrictRankColumn({
   );
 }
 
+function DistrictListColumn({
+  items,
+  header,
+  formatValue,
+}: {
+  items: RankedDistrict[];
+  header: string;
+  formatValue: (v: number) => string;
+}) {
+  return (
+    <div style={{ flex: 1, minWidth: 0 }}>
+      <Text
+        size="xs"
+        fw={typography.fontWeight.medium}
+        c={colors.text.secondary}
+        className="tw:uppercase"
+        style={{ letterSpacing: '0.05em', marginBottom: 2 }}
+      >
+        {header}
+      </Text>
+      {items.map((district, index) => (
+        <div
+          key={district.id}
+          style={{
+            display: 'flex',
+            alignItems: 'baseline',
+            gap: 4,
+            lineHeight: 1.5,
+          }}
+        >
+          <Text
+            size="sm"
+            c={colors.text.tertiary}
+            style={{ flexShrink: 0, minWidth: 18, textAlign: 'right' }}
+          >
+            {index + 1}.
+          </Text>
+          <Text
+            size="sm"
+            c={colors.text.secondary}
+            style={{
+              flex: 1,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              minWidth: 0,
+            }}
+          >
+            {district.label}
+          </Text>
+          <Text
+            size="sm"
+            fw={typography.fontWeight.medium}
+            c={colors.text.primary}
+            style={{ flexShrink: 0 }}
+          >
+            {formatValue(district.value)}
+          </Text>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 /**
  * Congressional district card content — must be rendered inside a
  * CongressionalDistrictDataProvider. Starts fetching once the report
@@ -279,6 +388,9 @@ function CongressionalDistrictCard({
   const [congressionalMode, setCongressionalMode] = useState<CongressionalMode>('absolute');
   const [mapVisualizationType, setMapVisualizationType] =
     useState<MapVisualizationType>('geographic');
+  const isOutcomeMode = congressionalMode === 'winner-pct' || congressionalMode === 'loser-pct';
+  const changeMetric = congressionalMode === 'relative' ? 'relative' : 'absolute';
+  const outcomeMetric = congressionalMode === 'winner-pct' ? 'winner' : 'loser';
 
   // Check if output already has district data (from nationwide calculation)
   const existingDistricts = useMemo(() => {
@@ -304,7 +416,7 @@ function CongressionalDistrictCard({
   }, [existingDistricts, hasStarted, startFetch]);
 
   // Build map data from context (progressive fill as states complete)
-  const contextMapData = useMemo(() => {
+  const changeContextMapData = useMemo(() => {
     if (stateResponses.size === 0) {
       return [];
     }
@@ -315,48 +427,94 @@ function CongressionalDistrictCard({
           geoId: district.district,
           label: labelLookup.get(district.district) ?? `District ${district.district}`,
           value:
-            congressionalMode === 'absolute'
+            changeMetric === 'absolute'
               ? district.average_household_income_change
               : district.relative_household_income_change,
         });
       });
     });
     return points;
-  }, [stateResponses, labelLookup, congressionalMode]);
+  }, [changeMetric, labelLookup, stateResponses]);
 
   // Use pre-computed data if available, otherwise progressive context data
-  const mapData = useMemo(() => {
+  const changeMapData = useMemo(() => {
     if (existingDistricts) {
       return existingDistricts.map((item) => ({
         geoId: item.district,
         label: labelLookup.get(item.district) ?? `District ${item.district}`,
         value:
-          congressionalMode === 'absolute'
+          changeMetric === 'absolute'
             ? item.average_household_income_change
             : item.relative_household_income_change,
       }));
     }
-    return contextMapData;
-  }, [existingDistricts, contextMapData, labelLookup, congressionalMode]);
+    return changeContextMapData;
+  }, [changeContextMapData, changeMetric, existingDistricts, labelLookup]);
+
+  const payloadOutcomeData = useMemo(() => {
+    if (existingDistricts) {
+      return buildOutcomeMapData(existingDistricts, outcomeMetric, labelLookup);
+    }
+
+    if (stateResponses.size === 0) {
+      return { points: [], missingCount: 0 };
+    }
+
+    const districts: Array<{
+      district: string;
+      winner_percentage?: number;
+      loser_percentage?: number;
+    }> = [];
+    stateResponses.forEach((stateData) => {
+      stateData.districts.forEach((district) => {
+        districts.push(district);
+      });
+    });
+    return buildOutcomeMapData(districts, outcomeMetric, labelLookup);
+  }, [existingDistricts, labelLookup, outcomeMetric, stateResponses]);
+
+  const mapData = isOutcomeMode ? payloadOutcomeData.points : changeMapData;
+  const outcomeDisplayData = payloadOutcomeData.points;
 
   // Map config based on absolute vs relative mode
-  const mapConfig = useMemo(
-    () => ({
+  const mapConfig = useMemo(() => {
+    if (congressionalMode === 'winner-pct') {
+      return {
+        colorScale: {
+          colors: CONGRESSIONAL_WINNER_COLORS,
+          tickFormat: '.1%',
+          symmetric: false,
+        },
+        formatValue: (value: number) => formatParameterValue(value, '/1', { decimalPlaces: 1 }),
+      };
+    }
+
+    if (congressionalMode === 'loser-pct') {
+      return {
+        colorScale: {
+          colors: CONGRESSIONAL_LOSER_COLORS,
+          tickFormat: '.1%',
+          symmetric: false,
+        },
+        formatValue: (value: number) => formatParameterValue(value, '/1', { decimalPlaces: 1 }),
+      };
+    }
+
+    return {
       colorScale: {
         colors: DIVERGING_GRAY_TEAL.colors,
-        tickFormat: congressionalMode === 'absolute' ? '$,.0f' : '.1%',
+        tickFormat: changeMetric === 'absolute' ? '$,.0f' : '.1%',
         symmetric: true,
       },
       formatValue: (value: number) =>
-        congressionalMode === 'absolute'
+        changeMetric === 'absolute'
           ? formatParameterValue(value, 'currency-USD', {
               decimalPlaces: 0,
               includeSymbol: true,
             })
           : formatParameterValue(value, '/1', { decimalPlaces: 1 }),
-    }),
-    [congressionalMode]
-  );
+    };
+  }, [changeMetric, congressionalMode]);
 
   // Build sorted district list for top 5 / bottom 5 display.
   // Labels update automatically when labelLookup populates from metadata.
@@ -366,12 +524,23 @@ function CongressionalDistrictCard({
       const fullLabel = labelLookup.get(districtId) ?? districtId;
       return fullLabel.replace(/\s+congressional\s+district$/i, '');
     };
-    if (existingDistricts) {
+    if (isOutcomeMode) {
+      for (const district of outcomeDisplayData) {
+        all.push({
+          id: district.geoId,
+          label: toShortLabel(district.geoId),
+          value: district.value,
+        });
+      }
+    } else if (existingDistricts) {
       for (const d of existingDistricts) {
         all.push({
           id: d.district,
           label: toShortLabel(d.district),
-          value: d.average_household_income_change,
+          value:
+            changeMetric === 'absolute'
+              ? d.average_household_income_change
+              : d.relative_household_income_change,
         });
       }
     } else {
@@ -380,17 +549,61 @@ function CongressionalDistrictCard({
           all.push({
             id: d.district,
             label: toShortLabel(d.district),
-            value: d.average_household_income_change,
+            value:
+              changeMetric === 'absolute'
+                ? d.average_household_income_change
+                : d.relative_household_income_change,
           });
         }
       });
     }
     all.sort((a, b) => b.value - a.value);
     return all;
-  }, [existingDistricts, stateResponses, labelLookup]);
+  }, [
+    changeMetric,
+    existingDistricts,
+    isOutcomeMode,
+    labelLookup,
+    outcomeDisplayData,
+    stateResponses,
+  ]);
 
   const top5 = sortedDistricts.slice(0, 5);
   const bottom5 = sortedDistricts.slice(-5).reverse();
+
+  const rankingFormatValue = useMemo(() => {
+    if (changeMetric === 'absolute' && !isOutcomeMode) {
+      return (value: number) =>
+        formatParameterValue(value, 'currency-USD', {
+          decimalPlaces: 0,
+          includeSymbol: true,
+        });
+    }
+
+    return (value: number) => formatParameterValue(value, '/1', { decimalPlaces: 1 });
+  }, [changeMetric, isOutcomeMode]);
+
+  const signedHeaders = useMemo(
+    () => ({
+      topGain:
+        changeMetric === 'absolute' ? 'Biggest gains (absolute)' : 'Biggest gains (relative)',
+      topLoss:
+        changeMetric === 'absolute' ? 'Smallest losses (absolute)' : 'Smallest losses (relative)',
+      bottomGain:
+        changeMetric === 'absolute' ? 'Smallest gains (absolute)' : 'Smallest gains (relative)',
+      bottomLoss:
+        changeMetric === 'absolute' ? 'Biggest losses (absolute)' : 'Biggest losses (relative)',
+    }),
+    [changeMetric]
+  );
+
+  const listHeaders = useMemo(
+    () =>
+      congressionalMode === 'winner-pct'
+        ? { top: 'Highest winner share', bottom: 'Lowest winner share' }
+        : { top: 'Highest loser share', bottom: 'Lowest loser share' },
+    [congressionalMode]
+  );
 
   // Detect errored districts from EITHER source:
   // 1. Pre-computed data: districts in labelLookup but missing from existingDistricts
@@ -425,8 +638,15 @@ function CongressionalDistrictCard({
     return { errorDistrictCount: count, errorStateAbbrs: abbrs };
   }, [existingDistricts, erroredStates, labelLookup]);
 
-  const dataReady = existingDistricts || (!isLoading && hasStarted);
-  const progressPercent = totalStates > 0 ? Math.round((completedCount / totalStates) * 100) : 0;
+  const dataReady = Boolean(existingDistricts || (!isLoading && hasStarted));
+  const progressCount = completedCount;
+  const totalCount = totalStates;
+  const progressLabel = 'states';
+  const progressPercent = totalCount > 0 ? Math.round((progressCount / totalCount) * 100) : 0;
+  const visibleErrorCount = isOutcomeMode
+    ? errorDistrictCount + payloadOutcomeData.missingCount
+    : errorDistrictCount;
+  const mapErrorStates = errorStateAbbrs;
 
   return (
     <DashboardCard
@@ -442,13 +662,26 @@ function CongressionalDistrictCard({
         !dataReady ? (
           <Stack gap="sm">
             <Text size="sm" c={colors.text.secondary}>
-              Loading ({completedCount} of {totalStates} states)...
+              Loading ({progressCount} of {totalCount} {progressLabel})...
             </Text>
             <Progress value={progressPercent} />
-            {errorDistrictCount > 0 && (
+            {visibleErrorCount > 0 && (
               <MetricCard
                 label="Districts with errors"
-                value={errorDistrictCount.toString()}
+                value={visibleErrorCount.toString()}
+                trend="error"
+              />
+            )}
+          </Stack>
+        ) : mapData.length === 0 ? (
+          <Stack gap="sm" align="center" justify="center" style={{ height: '100%' }}>
+            <Text size="sm" c={colors.text.secondary}>
+              No congressional district data available
+            </Text>
+            {visibleErrorCount > 0 && (
+              <MetricCard
+                label="Districts with errors"
+                value={visibleErrorCount.toString()}
                 trend="error"
               />
             )}
@@ -484,7 +717,7 @@ function CongressionalDistrictCard({
                     showColorBar: false,
                   }}
                   focusState={stateCode ?? undefined}
-                  errorStates={errorStateAbbrs}
+                  errorStates={mapErrorStates}
                 />
               </div>
             </div>
@@ -497,26 +730,35 @@ function CongressionalDistrictCard({
                 overflow: 'hidden',
               }}
             >
-              <DistrictRankColumn
-                items={top5}
-                side="top"
-                formatValue={(v) =>
-                  formatParameterValue(v, 'currency-USD', {
-                    decimalPlaces: 0,
-                    includeSymbol: true,
-                  })
-                }
-              />
-              <DistrictRankColumn
-                items={bottom5}
-                side="bottom"
-                formatValue={(v) =>
-                  formatParameterValue(v, 'currency-USD', {
-                    decimalPlaces: 0,
-                    includeSymbol: true,
-                  })
-                }
-              />
+              {isOutcomeMode ? (
+                <>
+                  <DistrictListColumn
+                    items={top5}
+                    header={listHeaders.top}
+                    formatValue={rankingFormatValue}
+                  />
+                  <DistrictListColumn
+                    items={bottom5}
+                    header={listHeaders.bottom}
+                    formatValue={rankingFormatValue}
+                  />
+                </>
+              ) : (
+                <>
+                  <DistrictRankColumn
+                    items={top5}
+                    gainHeader={signedHeaders.topGain}
+                    lossHeader={signedHeaders.topLoss}
+                    formatValue={rankingFormatValue}
+                  />
+                  <DistrictRankColumn
+                    items={bottom5}
+                    gainHeader={signedHeaders.bottomGain}
+                    lossHeader={signedHeaders.bottomLoss}
+                    formatValue={rankingFormatValue}
+                  />
+                </>
+              )}
             </div>
           </div>
         )
@@ -533,13 +775,34 @@ function CongressionalDistrictCard({
         </>
       }
       expandedContent={
-        <USDistrictChoroplethMap
-          data={mapData}
-          visualizationType={mapVisualizationType}
-          config={{ ...mapConfig, height: CONGRESSIONAL_MAP_H }}
-          focusState={stateCode ?? undefined}
-          errorStates={errorStateAbbrs}
-        />
+        <Stack gap="sm">
+          {visibleErrorCount > 0 && (
+            <Text size="sm" c={colors.text.secondary}>
+              {isOutcomeMode
+                ? `${visibleErrorCount} congressional districts are missing outcome data.`
+                : `${visibleErrorCount} congressional districts could not be loaded.`}
+            </Text>
+          )}
+          {mapData.length > 0 ? (
+            <USDistrictChoroplethMap
+              data={mapData}
+              visualizationType={mapVisualizationType}
+              config={{ ...mapConfig, height: CONGRESSIONAL_MAP_H }}
+              focusState={stateCode ?? undefined}
+              errorStates={mapErrorStates}
+            />
+          ) : (
+            <Stack align="center" justify="center" style={{ height: CONGRESSIONAL_MAP_H }}>
+              <Text c={colors.text.secondary}>
+                {!dataReady
+                  ? 'Loading congressional district data...'
+                  : isOutcomeMode
+                    ? 'No congressional district outcome data available'
+                    : 'No congressional district data available'}
+              </Text>
+            </Stack>
+          )}
+        </Stack>
       }
       onToggleMode={onToggleMode}
     />

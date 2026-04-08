@@ -226,6 +226,9 @@ export function CongressionalDistrictDataProvider({
   // Build context value
   const contextValue = useMemo<CongressionalDistrictDataContextValue>(
     () => ({
+      reformPolicyId,
+      baselinePolicyId,
+      year,
       stateResponses: state.stateResponses,
       completedCount,
       loadingCount,
@@ -245,6 +248,9 @@ export function CongressionalDistrictDataProvider({
       getLoadingStates,
     }),
     [
+      reformPolicyId,
+      baselinePolicyId,
+      year,
       state.stateResponses,
       state.hasStarted,
       state.erroredStates,
