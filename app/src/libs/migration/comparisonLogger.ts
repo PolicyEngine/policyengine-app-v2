@@ -15,6 +15,7 @@
  * Temporary — deleted in Phase 5.
  */
 
+import { logMigrationConsole } from './migrationLogRuntime';
 import { sendMigrationLog } from './migrationLogTransport';
 import type { MigrationFieldStatus } from './migrationLogTypes';
 
@@ -82,7 +83,7 @@ export function logMigrationComparison(
   });
 
   for (const r of results) {
-    console.info(
+    logMigrationConsole(
       `[${prefix}:Detail] ${operation} ${r.field}: v1=${formatValue(r.v1)} v2=${formatValue(r.v2)} ${r.status}`
     );
   }
@@ -93,11 +94,11 @@ export function logMigrationComparison(
   const summaryStatus = mismatches === 0 ? 'MATCH' : 'DIVERGE';
 
   if (mismatches === 0) {
-    console.info(
+    logMigrationConsole(
       `[${prefix}:MATCH] ${operation}: ${matches}/${compared.length} compared fields match`
     );
   } else {
-    console.info(
+    logMigrationConsole(
       `[${prefix}:DIVERGE] ${operation}: ${matches}/${compared.length} compared fields match, ${mismatches} diverge`
     );
   }

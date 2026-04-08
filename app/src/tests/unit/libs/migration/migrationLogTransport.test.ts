@@ -30,7 +30,7 @@ describe('migrationLogTransport', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.stubEnv('NEXT_PUBLIC_ENABLE_VERCEL_MIGRATION_LOGS', 'true');
+    vi.stubEnv('NEXT_PUBLIC_VERCEL_ENV', 'preview');
     fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
     sendBeaconMock = vi.fn().mockReturnValue(true);
     vi.stubGlobal('fetch', fetchMock);
@@ -50,7 +50,7 @@ describe('migrationLogTransport', () => {
   });
 
   test('given remote logging disabled then does not ship payload', () => {
-    vi.stubEnv('NEXT_PUBLIC_ENABLE_VERCEL_MIGRATION_LOGS', 'false');
+    vi.stubEnv('NEXT_PUBLIC_VERCEL_ENV', '');
 
     sendMigrationLog(TEST_PAYLOAD);
 
@@ -114,5 +114,13 @@ describe('migrationLogTransport', () => {
     expect(body.truncatedDetailCount).toBeGreaterThan(0);
     expect(body.details[0].v1.length).toBeLessThanOrEqual(500);
     expect(body.details[0].v2.length).toBeLessThanOrEqual(500);
+  });
+
+  test('given production env then still ships payload', () => {
+    vi.stubEnv('NEXT_PUBLIC_VERCEL_ENV', 'production');
+
+    sendMigrationLog(TEST_PAYLOAD);
+
+    expect(sendBeaconMock).toHaveBeenCalled();
   });
 });

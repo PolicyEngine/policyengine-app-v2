@@ -1,3 +1,4 @@
+import { shouldSendMigrationLog } from './migrationLogRuntime';
 import type {
   MigrationComparisonLogPayload,
   MigrationEventLogPayload,
@@ -13,14 +14,6 @@ const MAX_DETAILS = 40;
 const MIN_DETAILS = 5;
 const MAX_METADATA_ENTRIES = 20;
 const MAX_METADATA_STRING_CHARS = 500;
-
-function isRemoteLoggingEnabled(): boolean {
-  if (typeof process === 'undefined') {
-    return false;
-  }
-
-  return process.env.NEXT_PUBLIC_ENABLE_VERCEL_MIGRATION_LOGS === 'true';
-}
 
 function truncateString(value: string, maxChars: number): string {
   return value.length <= maxChars ? value : `${value.slice(0, maxChars - 1)}…`;
@@ -123,7 +116,7 @@ function preparePayload(payload: MigrationRemoteLogPayload): MigrationRemoteLogP
 }
 
 export function sendMigrationLog(payload: MigrationRemoteLogPayload): void {
-  if (!isRemoteLoggingEnabled() || typeof window === 'undefined') {
+  if (!shouldSendMigrationLog() || typeof window === 'undefined') {
     return;
   }
 

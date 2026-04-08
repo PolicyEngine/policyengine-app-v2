@@ -9,6 +9,9 @@
  * Value: the v2 UUID string
  */
 
+import { logMigrationConsole } from './migrationLogRuntime';
+import { sendMigrationLog } from './migrationLogTransport';
+
 const KEY_PREFIX = 'v1v2';
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -36,7 +39,23 @@ export function setV2Id(entityType: string, v1Id: string, v2Id: string): void {
   try {
     localStorage.setItem(storageKey(entityType, v1Id), v2Id);
   } catch (error) {
-    console.info(`[${entityType}Migration] Failed to store ID mapping: ${v1Id} → ${v2Id}`, error);
+    logMigrationConsole(
+      `[${entityType}Migration] Failed to store ID mapping: ${v1Id} → ${v2Id}`,
+      error
+    );
+    sendMigrationLog({
+      kind: 'event',
+      prefix: `${entityType}Migration`,
+      status: 'FAILED',
+      message: 'Failed to store ID mapping',
+      metadata: {
+        entityType,
+        v1Id,
+        v2Id,
+        error: error instanceof Error ? error.message : String(error),
+      },
+      ts: new Date().toISOString(),
+    });
   }
 }
 
@@ -44,7 +63,19 @@ export function getV2Id(entityType: string, v1Id: string): string | null {
   try {
     return localStorage.getItem(storageKey(entityType, v1Id));
   } catch (error) {
-    console.info(`[${entityType}Migration] Failed to read ID mapping for ${v1Id}`, error);
+    logMigrationConsole(`[${entityType}Migration] Failed to read ID mapping for ${v1Id}`, error);
+    sendMigrationLog({
+      kind: 'event',
+      prefix: `${entityType}Migration`,
+      status: 'FAILED',
+      message: 'Failed to read ID mapping',
+      metadata: {
+        entityType,
+        v1Id,
+        error: error instanceof Error ? error.message : String(error),
+      },
+      ts: new Date().toISOString(),
+    });
     return null;
   }
 }
@@ -61,7 +92,18 @@ export function clearV2Mappings(entityType?: string): void {
     }
     keysToRemove.forEach((key) => localStorage.removeItem(key));
   } catch (error) {
-    console.info('[Migration] Failed to clear ID mappings', error);
+    logMigrationConsole('[Migration] Failed to clear ID mappings', error);
+    sendMigrationLog({
+      kind: 'event',
+      prefix: 'Migration',
+      status: 'FAILED',
+      message: 'Failed to clear ID mappings',
+      metadata: {
+        entityType: entityType ?? null,
+        error: error instanceof Error ? error.message : String(error),
+      },
+      ts: new Date().toISOString(),
+    });
   }
 }
 

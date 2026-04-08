@@ -10,6 +10,7 @@ describe('comparisonLogger', () => {
   let infoSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
+    vi.stubEnv('NEXT_PUBLIC_VERCEL_ENV', 'preview');
     infoSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
   });
 
@@ -164,6 +165,23 @@ describe('comparisonLogger', () => {
       for (const call of calls) {
         expect(call).toContain('UPDATE');
       }
+    });
+
+    test('given production env then skips browser console but still sends remote log', () => {
+      vi.stubEnv('NEXT_PUBLIC_VERCEL_ENV', 'production');
+      const v1 = { x: 1 };
+      const v2 = { x: 1 };
+
+      logMigrationComparison('PolicyMigration', 'CREATE', v1, v2);
+
+      expect(infoSpy).not.toHaveBeenCalled();
+      expect(sendMigrationLog).toHaveBeenCalledWith(
+        expect.objectContaining({
+          kind: 'comparison',
+          prefix: 'PolicyMigration',
+          status: 'MATCH',
+        })
+      );
     });
   });
 });

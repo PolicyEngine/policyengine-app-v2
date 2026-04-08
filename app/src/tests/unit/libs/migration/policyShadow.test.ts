@@ -92,6 +92,7 @@ const v2PolicyResponse = {
 describe('policyShadow', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.stubEnv('NEXT_PUBLIC_VERCEL_ENV', 'preview');
     localStorage.clear();
 
     vi.mocked(fetchModelByCountry).mockResolvedValue({

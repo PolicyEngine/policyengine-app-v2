@@ -129,6 +129,8 @@ describe('useCreatePolicyAssociation dual-write', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.stubEnv('NEXT_PUBLIC_VERCEL_ENV', 'preview');
+    vi.spyOn(console, 'info').mockImplementation(() => {});
     localStorage.clear();
     idMapping.setV2Id('Policy', TEST_POLICY_ID, TEST_V2_POLICY_ID);
     idMapping.setV2Id('User', TEST_USER_ID, TEST_V2_USER_ID);
@@ -270,6 +272,8 @@ describe('useUpdatePolicyAssociation dual-write', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.stubEnv('NEXT_PUBLIC_VERCEL_ENV', 'preview');
+    vi.spyOn(console, 'info').mockImplementation(() => {});
     localStorage.clear();
     queryClient = createQueryClient();
   });

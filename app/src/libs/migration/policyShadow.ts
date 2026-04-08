@@ -10,6 +10,7 @@ import type { UserPolicy } from '@/types/ingredients/UserPolicy';
 import type { PolicyCreationPayload } from '@/types/payloads';
 import { logMigrationComparison } from './comparisonLogger';
 import { getMappedV2UserId, getOrCreateV2UserId, getV2Id, setV2Id } from './idMapping';
+import { logMigrationConsole } from './migrationLogRuntime';
 import { sendMigrationLog } from './migrationLogTransport';
 
 type ComparableParameterValue = {
@@ -208,7 +209,7 @@ export async function shadowCreateUserPolicyAssociation(
       { skipFields: ['id', 'createdAt', 'updatedAt', 'isCreated'] }
     );
   } catch (error) {
-    console.info('[UserPolicyMigration] Shadow v2 create failed (non-blocking):', error);
+    logMigrationConsole('[UserPolicyMigration] Shadow v2 create failed (non-blocking):', error);
     sendMigrationLog({
       kind: 'event',
       prefix: 'UserPolicyMigration',
@@ -254,7 +255,7 @@ export async function shadowUpdateUserPolicyAssociation(v1Association: UserPolic
       { skipFields: ['id', 'createdAt', 'updatedAt', 'isCreated'] }
     );
   } catch (error) {
-    console.info('[UserPolicyMigration] Shadow v2 update failed (non-blocking):', error);
+    logMigrationConsole('[UserPolicyMigration] Shadow v2 update failed (non-blocking):', error);
     sendMigrationLog({
       kind: 'event',
       prefix: 'UserPolicyMigration',
@@ -307,7 +308,7 @@ export async function shadowCreatePolicyAndAssociation({
       await shadowCreateUserPolicyAssociation(v1Association, v2Policy.id);
     }
   } catch (error) {
-    console.info('[PolicyMigration] Shadow v2 policy create failed (non-blocking):', error);
+    logMigrationConsole('[PolicyMigration] Shadow v2 policy create failed (non-blocking):', error);
     sendMigrationLog({
       kind: 'event',
       prefix: 'PolicyMigration',

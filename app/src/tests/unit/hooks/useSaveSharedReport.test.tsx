@@ -94,6 +94,7 @@ describe('useSaveSharedReport', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.stubEnv('NEXT_PUBLIC_VERCEL_ENV', 'preview');
     vi.spyOn(console, 'info').mockImplementation(() => {});
     queryClient = new QueryClient({
       defaultOptions: { queries: { retry: false } },
