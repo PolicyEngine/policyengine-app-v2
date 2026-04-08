@@ -2,8 +2,47 @@ import { render, screen } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import SocietyWideOverview, {
   buildOutcomeMapData,
+  hasCompleteDistrictOutcomePayload,
 } from '@/pages/report-output/SocietyWideOverview';
 import { createMockSocietyWideOutput } from '@/tests/fixtures/pages/reportOutputMocks';
+
+const { mockUseCongressionalDistrictData } = vi.hoisted(() => ({
+  mockUseCongressionalDistrictData: vi.fn(),
+}));
+
+vi.mock('@/contexts/CongressionalDistrictDataContext', () => ({
+  useCongressionalDistrictData: mockUseCongressionalDistrictData,
+}));
+
+vi.mock('@/components/visualization/USDistrictChoroplethMap', () => ({
+  USDistrictChoroplethMap: vi.fn(() => <div data-testid="district-map" />),
+}));
+
+function createCongressionalDistrictContextMock(overrides: Record<string, unknown> = {}) {
+  return {
+    reformPolicyId: '96491',
+    baselinePolicyId: '2',
+    year: '2026',
+    stateResponses: new Map(),
+    completedCount: 0,
+    loadingCount: 0,
+    totalDistrictsLoaded: 0,
+    totalStates: 51,
+    isComplete: false,
+    isLoading: false,
+    hasStarted: false,
+    errorCount: 0,
+    erroredStates: new Set(),
+    labelLookup: new Map([['AL-01', "Alabama's 1st congressional district"]]),
+    isStateLevelReport: false,
+    stateCode: null,
+    startFetch: vi.fn(),
+    validateAllLoaded: vi.fn(),
+    getCompletedStates: vi.fn(),
+    getLoadingStates: vi.fn(),
+    ...overrides,
+  };
+}
 
 // Mock useCurrentCountry hook
 vi.mock('@/hooks/useCurrentCountry', () => ({
@@ -30,6 +69,7 @@ vi.mock('@/utils/formatPowers', () => ({
 describe('SocietyWideOverview', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockUseCongressionalDistrictData.mockReturnValue(createCongressionalDistrictContextMock());
   });
 
   describe('budgetary impact section', () => {
@@ -252,5 +292,69 @@ describe('SocietyWideOverview', () => {
       },
     ]);
     expect(result.missingCount).toBe(1);
+  });
+
+  test('hasCompleteDistrictOutcomePayload requires winner and loser shares for every district', () => {
+    expect(
+      hasCompleteDistrictOutcomePayload([
+        { district: 'AL-01', winner_percentage: 0.6, loser_percentage: 0.2 },
+        { district: 'AL-02', winner_percentage: 0.5, loser_percentage: 0.3 },
+      ])
+    ).toBe(true);
+
+    expect(
+      hasCompleteDistrictOutcomePayload([
+        { district: 'AL-01', winner_percentage: 0.6, loser_percentage: 0.2 },
+        { district: 'AL-02', winner_percentage: 0.5 },
+      ])
+    ).toBe(false);
+  });
+
+  test('saved districts without outcome shares trigger a same-payload refresh', () => {
+    const startFetch = vi.fn();
+    mockUseCongressionalDistrictData.mockReturnValue(
+      createCongressionalDistrictContextMock({ startFetch })
+    );
+
+    const output = createMockSocietyWideOutput({
+      congressional_district_impact: {
+        districts: [
+          {
+            district: 'AL-01',
+            average_household_income_change: 120,
+            relative_household_income_change: 0.01,
+          },
+        ],
+      },
+    });
+
+    render(<SocietyWideOverview output={output as any} showCongressionalCard />);
+
+    expect(startFetch).toHaveBeenCalledTimes(1);
+  });
+
+  test('saved districts with outcome shares do not trigger a refresh', () => {
+    const startFetch = vi.fn();
+    mockUseCongressionalDistrictData.mockReturnValue(
+      createCongressionalDistrictContextMock({ startFetch })
+    );
+
+    const output = createMockSocietyWideOutput({
+      congressional_district_impact: {
+        districts: [
+          {
+            district: 'AL-01',
+            average_household_income_change: 120,
+            relative_household_income_change: 0.01,
+            winner_percentage: 0.58,
+            loser_percentage: 0.21,
+          },
+        ],
+      },
+    });
+
+    render(<SocietyWideOverview output={output as any} showCongressionalCard />);
+
+    expect(startFetch).not.toHaveBeenCalled();
   });
 });
