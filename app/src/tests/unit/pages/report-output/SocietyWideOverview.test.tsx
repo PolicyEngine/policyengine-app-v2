@@ -232,7 +232,7 @@ describe('SocietyWideOverview', () => {
     expect(screen.getByText('Winners and losers')).toBeInTheDocument();
   });
 
-  test('buildOutcomeMapData reports missing payload values for partial winner share rollout', () => {
+  test('buildOutcomeMapData reads winner shares from the district payload and tracks gaps', () => {
     const labelLookup = new Map([
       ['AL-01', "Alabama's 1st congressional district"],
       ['AL-02', "Alabama's 2nd congressional district"],

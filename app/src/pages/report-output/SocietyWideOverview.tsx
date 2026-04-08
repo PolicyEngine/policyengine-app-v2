@@ -29,10 +29,6 @@ import { DIVERGING_GRAY_TEAL } from '@/utils/visualization/colorScales';
 import BudgetaryImpactSubPage from './budgetary-impact/BudgetaryImpactSubPage';
 import { getBudgetChartTitle } from './budgetary-impact/budgetChartUtils';
 import {
-  mergeOutcomeMapData,
-  useCongressionalDistrictOutcomeData,
-} from './congressional-district/useCongressionalDistrictOutcomeData';
-import {
   getDistributionalAverageTitle,
   getDistributionalRelativeTitle,
   getWinnersLosersTitle,
@@ -477,29 +473,8 @@ function CongressionalDistrictCard({
     return buildOutcomeMapData(districts, outcomeMetric, labelLookup);
   }, [existingDistricts, labelLookup, outcomeMetric, stateResponses]);
 
-  const payloadOutcomeMapData = payloadOutcomeData.points;
-  const isUsingFallbackOutcomeFetch =
-    isOutcomeMode && (payloadOutcomeMapData.length === 0 || payloadOutcomeData.missingCount > 0);
-
-  const {
-    mapData: fallbackOutcomeMapData,
-    errorCount: fallbackOutcomeErrorCount,
-    hasStarted: fallbackOutcomeHasStarted,
-    isLoading: fallbackOutcomeIsLoading,
-    processedCount: fallbackOutcomeProcessedCount,
-    totalDistricts: fallbackOutcomeTotalDistricts,
-  } = useCongressionalDistrictOutcomeData(outcomeMetric, isUsingFallbackOutcomeFetch);
-
-  const mergedOutcomeMapData = useMemo(
-    () =>
-      isUsingFallbackOutcomeFetch
-        ? mergeOutcomeMapData(payloadOutcomeMapData, fallbackOutcomeMapData)
-        : payloadOutcomeMapData,
-    [fallbackOutcomeMapData, isUsingFallbackOutcomeFetch, payloadOutcomeMapData]
-  );
-
-  const mapData = isOutcomeMode ? mergedOutcomeMapData : changeMapData;
-  const outcomeDisplayData = mergedOutcomeMapData;
+  const mapData = isOutcomeMode ? payloadOutcomeData.points : changeMapData;
+  const outcomeDisplayData = payloadOutcomeData.points;
 
   // Map config based on absolute vs relative mode
   const mapConfig = useMemo(() => {
@@ -663,15 +638,15 @@ function CongressionalDistrictCard({
     return { errorDistrictCount: count, errorStateAbbrs: abbrs };
   }, [existingDistricts, erroredStates, labelLookup]);
 
-  const dataReady = isOutcomeMode
-    ? mapData.length > 0 || (!fallbackOutcomeIsLoading && fallbackOutcomeHasStarted)
-    : Boolean(existingDistricts || (!isLoading && hasStarted));
-  const progressCount = isOutcomeMode ? fallbackOutcomeProcessedCount : completedCount;
-  const totalCount = isOutcomeMode ? fallbackOutcomeTotalDistricts : totalStates;
-  const progressLabel = isOutcomeMode ? 'districts' : 'states';
+  const dataReady = Boolean(existingDistricts || (!isLoading && hasStarted));
+  const progressCount = completedCount;
+  const totalCount = totalStates;
+  const progressLabel = 'states';
   const progressPercent = totalCount > 0 ? Math.round((progressCount / totalCount) * 100) : 0;
-  const visibleErrorCount = isOutcomeMode ? fallbackOutcomeErrorCount : errorDistrictCount;
-  const mapErrorStates = isOutcomeMode ? undefined : errorStateAbbrs;
+  const visibleErrorCount = isOutcomeMode
+    ? errorDistrictCount + payloadOutcomeData.missingCount
+    : errorDistrictCount;
+  const mapErrorStates = errorStateAbbrs;
 
   return (
     <DashboardCard
@@ -801,27 +776,12 @@ function CongressionalDistrictCard({
       }
       expandedContent={
         <Stack gap="sm">
-          {(isOutcomeMode || visibleErrorCount > 0) && (
-            <>
-              {isUsingFallbackOutcomeFetch && fallbackOutcomeHasStarted && (
-                <>
-                  <Text size="sm" c={colors.text.secondary}>
-                    Loaded {progressCount} of {totalCount} districts
-                  </Text>
-                  <Progress value={progressPercent} />
-                </>
-              )}
-              {!isOutcomeMode && visibleErrorCount > 0 && (
-                <Text size="sm" c={colors.text.secondary}>
-                  {visibleErrorCount} congressional districts could not be loaded.
-                </Text>
-              )}
-              {isUsingFallbackOutcomeFetch && visibleErrorCount > 0 && (
-                <Text size="sm" c={colors.text.secondary}>
-                  {visibleErrorCount} district outcome calculations failed.
-                </Text>
-              )}
-            </>
+          {visibleErrorCount > 0 && (
+            <Text size="sm" c={colors.text.secondary}>
+              {isOutcomeMode
+                ? `${visibleErrorCount} congressional districts are missing outcome data.`
+                : `${visibleErrorCount} congressional districts could not be loaded.`}
+            </Text>
           )}
           {mapData.length > 0 ? (
             <USDistrictChoroplethMap
@@ -834,9 +794,11 @@ function CongressionalDistrictCard({
           ) : (
             <Stack align="center" justify="center" style={{ height: CONGRESSIONAL_MAP_H }}>
               <Text c={colors.text.secondary}>
-                {isOutcomeMode
-                  ? 'Loading district winners and losers...'
-                  : 'No congressional district data available'}
+                {!dataReady
+                  ? 'Loading congressional district data...'
+                  : isOutcomeMode
+                    ? 'No congressional district outcome data available'
+                    : 'No congressional district data available'}
               </Text>
             </Stack>
           )}
