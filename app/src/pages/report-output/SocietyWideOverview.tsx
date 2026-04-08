@@ -179,13 +179,11 @@ type RankedDistrict = { id: string; label: string; value: number };
  */
 function DistrictRankColumn({
   items,
-  side,
   gainHeader,
   lossHeader,
   formatValue,
 }: {
   items: RankedDistrict[];
-  side: 'top' | 'bottom';
   gainHeader: string;
   lossHeader: string;
   formatValue: (v: number) => string;
@@ -764,14 +762,12 @@ function CongressionalDistrictCard({
                 <>
                   <DistrictRankColumn
                     items={top5}
-                    side="top"
                     gainHeader={signedHeaders.topGain}
                     lossHeader={signedHeaders.topLoss}
                     formatValue={rankingFormatValue}
                   />
                   <DistrictRankColumn
                     items={bottom5}
-                    side="bottom"
                     gainHeader={signedHeaders.bottomGain}
                     lossHeader={signedHeaders.bottomLoss}
                     formatValue={rankingFormatValue}
