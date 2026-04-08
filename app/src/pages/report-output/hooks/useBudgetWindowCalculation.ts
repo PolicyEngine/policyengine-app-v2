@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useContext, useEffect, useRef } from 'react';
+import { QueryClientContext } from '@tanstack/react-query';
 import { markReportCompleted } from '@/api/report';
 import { fetchSocietyWideCalculation } from '@/api/societyWideCalculation';
 import { calculationKeys, reportKeys } from '@/libs/queryKeys';
@@ -34,7 +34,7 @@ export function useBudgetWindowCalculation({
   report,
   simulations,
 }: UseBudgetWindowCalculationParams): void {
-  const queryClient = useQueryClient();
+  const queryClient = useContext(QueryClientContext);
   const runIdRef = useRef(0);
   const reportId = report?.id;
   const reportYear = report?.year;
@@ -47,7 +47,15 @@ export function useBudgetWindowCalculation({
   const region = simulations?.[0]?.populationId || reportCountryId;
 
   useEffect(() => {
-    if (!enabled || !report || !reportId || !reportYear || !reportCountryId || !baselinePolicyId) {
+    if (
+      !enabled ||
+      !queryClient ||
+      !report ||
+      !reportId ||
+      !reportYear ||
+      !reportCountryId ||
+      !baselinePolicyId
+    ) {
       return;
     }
 
