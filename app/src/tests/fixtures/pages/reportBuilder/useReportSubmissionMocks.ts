@@ -26,6 +26,10 @@ export const TEST_LABELS = {
 } as const;
 
 export const CURRENT_LAW_ID = 0;
+export const TEST_TIME_PERIODS = Array.from({ length: 10 }, (_, index) => {
+  const year = String(2026 + index);
+  return { name: year, label: year };
+});
 
 // Mock API responses
 export const mockCreateSimulationResponse = (simulationId: string) => ({
@@ -113,7 +117,7 @@ export function createTestStore(currentLawId: number = CURRENT_LAW_ID) {
         parameters: {},
         entities: {},
         variableModules: {},
-        economyOptions: { region: [], time_period: [], datasets: [] },
+        economyOptions: { region: [], time_period: TEST_TIME_PERIODS, datasets: [] },
         currentLawId,
         basicInputs: [],
         modelledPolicies: { core: {}, filtered: {} },

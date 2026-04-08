@@ -250,6 +250,38 @@ describe('useReportSubmission', () => {
         );
       });
     });
+
+    test('given invalid budget-window timing when submitted then falls back to the single start year', async () => {
+      const invalidBudgetWindowState = {
+        ...mockTwoSimReportState,
+        analysisMode: 'budget-window' as const,
+        budgetWindowYears: '10',
+        year: '2035',
+      };
+
+      const { result } = renderHook(
+        () =>
+          useReportSubmission({
+            reportState: invalidBudgetWindowState,
+            countryId: 'us',
+            onSuccess: mockOnSuccess,
+          }),
+        { wrapper }
+      );
+
+      await result.current.handleSubmit();
+
+      await waitFor(() => {
+        expect(mockCreateReportFn).toHaveBeenCalledWith(
+          expect.objectContaining({
+            payload: expect.objectContaining({
+              year: '2035',
+            }),
+          }),
+          expect.anything()
+        );
+      });
+    });
   });
 
   describe('isReportConfigured', () => {

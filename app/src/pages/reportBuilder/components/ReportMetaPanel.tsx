@@ -5,7 +5,7 @@
  * directly into TopBar's flex layout via display: contents.
  */
 
-import React, { useLayoutEffect, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useState } from 'react';
 import { IconCheck, IconFileDescription, IconPencil } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import {
@@ -25,6 +25,7 @@ import { countryIds } from '@/libs/countries';
 import { getTaxYears } from '@/libs/metadataUtils';
 import {
   clampBudgetWindowYears,
+  getEffectiveReportAnalysisMode,
   getBudgetWindowOptions,
   getDefaultBudgetWindowYears,
 } from '@/utils/reportTiming';
@@ -59,6 +60,10 @@ export function ReportMetaPanel({ reportState, setReportState, isReadOnly }: Rep
   const isGeographyReport = !!reportState.simulations[0]?.population?.geography?.id;
   const budgetWindowOptions = getBudgetWindowOptions(reportState.year, yearOptions, countryId);
   const canUseBudgetWindow = isGeographyReport && budgetWindowOptions.length > 0;
+  const effectiveAnalysisMode = getEffectiveReportAnalysisMode(
+    reportState.analysisMode,
+    canUseBudgetWindow ? budgetWindowOptions : []
+  );
 
   const handleLabelSubmit = () => {
     setReportState((prev) => ({ ...prev, label: labelInput || 'Untitled report' }));
@@ -74,6 +79,16 @@ export function ReportMetaPanel({ reportState, setReportState, isReadOnly }: Rep
       setInputWidth(measureRef.current.offsetWidth);
     }
   }, [labelInput, isEditingLabel]);
+
+  useEffect(() => {
+    if (reportState.analysisMode !== effectiveAnalysisMode) {
+      setReportState((prev) =>
+        prev.analysisMode === effectiveAnalysisMode
+          ? prev
+          : { ...prev, analysisMode: effectiveAnalysisMode }
+      );
+    }
+  }, [effectiveAnalysisMode, reportState.analysisMode, setReportState]);
 
   return (
     <div style={{ display: 'contents' }}>
@@ -226,7 +241,7 @@ export function ReportMetaPanel({ reportState, setReportState, isReadOnly }: Rep
           Timing
         </Text>
         <SegmentedControl
-          value={canUseBudgetWindow ? reportState.analysisMode : 'single-year'}
+          value={effectiveAnalysisMode}
           onValueChange={(value) => {
             const analysisMode = value as ReportBuilderState['analysisMode'];
             const normalizedWindowYears = clampBudgetWindowYears(
@@ -278,7 +293,7 @@ export function ReportMetaPanel({ reportState, setReportState, isReadOnly }: Rep
             pointerEvents: 'none',
           }}
         >
-          {reportState.analysisMode === 'budget-window' ? 'Start year' : 'Year'}
+          {effectiveAnalysisMode === 'budget-window' ? 'Start year' : 'Year'}
         </Text>
         <Select
           value={reportState.year}
@@ -298,6 +313,10 @@ export function ReportMetaPanel({ reportState, setReportState, isReadOnly }: Rep
             setReportState((prev) => ({
               ...prev,
               year: nextYear,
+              analysisMode: getEffectiveReportAnalysisMode(
+                prev.analysisMode,
+                isGeographyReport ? nextBudgetWindowOptions : []
+              ),
               budgetWindowYears: nextBudgetWindowYears,
             }));
           }}
@@ -327,7 +346,7 @@ export function ReportMetaPanel({ reportState, setReportState, isReadOnly }: Rep
         </Select>
       </div>
 
-      {reportState.analysisMode === 'budget-window' && (
+      {effectiveAnalysisMode === 'budget-window' && (
         <div
           style={{
             ...segmentBase,

@@ -60,9 +60,35 @@ vi.mock('@/pages/report-output/DynamicsSubPage', () => ({
   default: vi.fn(() => <div data-testid="dynamics-page">Dynamics</div>),
 }));
 
+vi.mock('@/pages/report-output/BudgetWindowSubPage', () => ({
+  BudgetWindowSubPage: vi.fn(() => <div data-testid="budget-window-page">Budget Window</div>),
+}));
+
 const mockUseCalculationStatus = useCalculationStatus as ReturnType<typeof vi.fn>;
 const mockUseReportProgressDisplay = useReportProgressDisplay as ReturnType<typeof vi.fn>;
 const mockUseStartCalculationOnLoad = useStartCalculationOnLoad as ReturnType<typeof vi.fn>;
+
+const MOCK_BUDGET_WINDOW_OUTPUT = {
+  kind: 'budgetWindow' as const,
+  startYear: '2026',
+  endYear: '2035',
+  windowSize: 10,
+  annualImpacts: [],
+  totals: {
+    year: 'Total',
+    taxRevenueImpact: 0,
+    federalTaxRevenueImpact: 0,
+    stateTaxRevenueImpact: 0,
+    benefitSpendingImpact: 0,
+    budgetaryImpact: 0,
+  },
+};
+
+const MOCK_BUDGET_WINDOW_REPORT = {
+  ...MOCK_REPORT,
+  year: '2026-2035',
+  output: MOCK_BUDGET_WINDOW_OUTPUT,
+};
 
 describe('SocietyWideReportOutput', () => {
   beforeEach(() => {
@@ -319,5 +345,39 @@ describe('SocietyWideReportOutput', () => {
         ]),
       })
     );
+  });
+
+  test('given budget-window report and unsupported subpage then shows budget-window page', () => {
+    mockUseCalculationStatus.mockReturnValue(MOCK_CALC_STATUS_COMPLETE);
+
+    render(
+      <SocietyWideReportOutput
+        reportId="test-report-123"
+        subpage="policy"
+        report={MOCK_BUDGET_WINDOW_REPORT}
+        simulations={[MOCK_SIMULATION_BASELINE, MOCK_SIMULATION_REFORM]}
+        policies={[MOCK_POLICY_BASELINE, MOCK_POLICY_REFORM]}
+        userPolicies={[MOCK_USER_POLICY]}
+      />
+    );
+
+    expect(screen.getByTestId('budget-window-page')).toBeInTheDocument();
+    expect(screen.queryByTestId('policy-page')).not.toBeInTheDocument();
+  });
+
+  test('given budget-window report and population subpage then shows population page', () => {
+    mockUseCalculationStatus.mockReturnValue(MOCK_CALC_STATUS_COMPLETE);
+
+    render(
+      <SocietyWideReportOutput
+        reportId="test-report-123"
+        subpage="population"
+        report={MOCK_BUDGET_WINDOW_REPORT}
+        simulations={[MOCK_SIMULATION_BASELINE, MOCK_SIMULATION_REFORM]}
+        geographies={[MOCK_GEOGRAPHY]}
+      />
+    );
+
+    expect(screen.getByTestId('population-page')).toBeInTheDocument();
   });
 });

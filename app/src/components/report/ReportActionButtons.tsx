@@ -54,19 +54,21 @@ export function ReportActionButtons({
         </TooltipTrigger>
         <TooltipContent side="bottom">View/edit report</TooltipContent>
       </Tooltip>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label="Reproduce in Python"
-            onClick={onReproduce}
-          >
-            <IconCode size={18} />
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent side="bottom">Reproduce in Python</TooltipContent>
-      </Tooltip>
+      {onReproduce && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="Reproduce in Python"
+              onClick={onReproduce}
+            >
+              <IconCode size={18} />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">Reproduce in Python</TooltipContent>
+        </Tooltip>
+      )}
       <ShareButton onClick={onShare} />
     </Group>
   );

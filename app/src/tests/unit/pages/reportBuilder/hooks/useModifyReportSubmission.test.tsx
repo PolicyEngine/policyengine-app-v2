@@ -4,6 +4,7 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { createReportAndAssociateWithUser } from '@/api/report';
 import { useModifyReportSubmission } from '@/pages/reportBuilder/hooks/useModifyReportSubmission';
 import {
   createTestStore,
@@ -167,6 +168,38 @@ describe('useModifyReportSubmission', () => {
         countryId: 'us',
         label: TEST_LABELS.REFORM,
         isCreated: true,
+      });
+    });
+
+    test('given invalid budget-window timing when saving as new then falls back to the single start year', async () => {
+      const invalidBudgetWindowState = {
+        ...mockTwoSimReportState,
+        analysisMode: 'budget-window' as const,
+        budgetWindowYears: '10',
+        year: '2035',
+      };
+
+      const { result } = renderHook(
+        () =>
+          useModifyReportSubmission({
+            reportState: invalidBudgetWindowState,
+            countryId: 'us',
+            existingUserReportId: EXISTING_USER_REPORT_ID,
+            onSuccess: mockOnSuccess,
+          }),
+        { wrapper }
+      );
+
+      await result.current.handleSaveAsNew('New Report Label');
+
+      await waitFor(() => {
+        expect(createReportAndAssociateWithUser).toHaveBeenCalledWith(
+          expect.objectContaining({
+            payload: expect.objectContaining({
+              year: '2035',
+            }),
+          })
+        );
       });
     });
   });

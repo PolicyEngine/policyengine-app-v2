@@ -19,11 +19,17 @@ import { LocalStorageSimulationStore } from '@/api/simulationAssociation';
 import { MOCK_USER_ID } from '@/constants';
 import { useCalcOrchestratorManager } from '@/contexts/CalcOrchestratorContext';
 import { useUpdateReportAssociation } from '@/hooks/useUserReportAssociations';
+import { getTaxYears } from '@/libs/metadataUtils';
 import { reportAssociationKeys, reportKeys } from '@/libs/queryKeys';
 import { RootState } from '@/store';
 import { Report } from '@/types/ingredients/Report';
 import { Simulation } from '@/types/ingredients/Simulation';
-import { isBudgetWindowReportYear, serializeReportTiming } from '@/utils/reportTiming';
+import {
+  getBudgetWindowOptions,
+  getEffectiveReportAnalysisMode,
+  isBudgetWindowReportYear,
+  serializeReportTiming,
+} from '@/utils/reportTiming';
 import { toApiPolicyId } from '../currentLaw';
 import { ReportBuilderState } from '../types';
 
@@ -48,11 +54,18 @@ export function useModifyReportSubmission({
   onSuccess,
 }: UseModifyReportSubmissionArgs): UseModifyReportSubmissionReturn {
   const currentLawId = useSelector((state: RootState) => state.metadata.currentLawId);
+  const yearOptions = useSelector(getTaxYears);
   const manager = useCalcOrchestratorManager();
   const updateReportAssociation = useUpdateReportAssociation();
   const queryClient = useQueryClient();
   const [isSavingNew, setIsSavingNew] = useState(false);
   const [isReplacing, setIsReplacing] = useState(false);
+  const isGeographyReport = !!reportState.simulations[0]?.population?.geography?.id;
+  const availableBudgetWindowOptions = getBudgetWindowOptions(reportState.year, yearOptions, countryId);
+  const effectiveAnalysisMode = getEffectiveReportAnalysisMode(
+    reportState.analysisMode,
+    isGeographyReport ? availableBudgetWindowOptions : []
+  );
 
   /**
    * Shared logic: create simulations via API and build the report payload.
@@ -128,7 +141,7 @@ export function useModifyReportSubmission({
     const reportPayload = ReportAdapter.toCreationPayload({
       countryId,
       year: serializeReportTiming({
-        analysisMode: reportState.analysisMode,
+        analysisMode: effectiveAnalysisMode,
         startYear: reportState.year,
         budgetWindowYears: reportState.budgetWindowYears,
       }),
@@ -137,7 +150,7 @@ export function useModifyReportSubmission({
     } as Report);
 
     return { simulationIds, simulations, reportPayload };
-  }, [reportState, countryId, currentLawId]);
+  }, [countryId, currentLawId, effectiveAnalysisMode, reportState]);
 
   /**
    * Shared logic: start calculation after a report is created.

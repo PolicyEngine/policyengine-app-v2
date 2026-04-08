@@ -70,6 +70,12 @@ describe('ReportActionButtons', () => {
     expect(handleReproduce).toHaveBeenCalledOnce();
   });
 
+  test('given no onReproduce callback then does not render the reproduce button', () => {
+    render(<ReportActionButtons isSharedView={false} onShare={vi.fn()} onView={vi.fn()} />);
+
+    expect(screen.queryByRole('button', { name: /reproduce in python/i })).not.toBeInTheDocument();
+  });
+
   test('given onView callback then calls it when view clicked', async () => {
     // Given
     const user = userEvent.setup();

@@ -17,12 +17,17 @@ import { createSimulation } from '@/api/simulation';
 import { LocalStorageSimulationStore } from '@/api/simulationAssociation';
 import { MOCK_USER_ID } from '@/constants';
 import { useCreateReport } from '@/hooks/useCreateReport';
+import { getTaxYears } from '@/libs/metadataUtils';
 import { RootState } from '@/store';
 import { Report } from '@/types/ingredients/Report';
 import { Simulation } from '@/types/ingredients/Simulation';
 import { SimulationStateProps } from '@/types/pathwayState';
 import { trackReportStarted } from '@/utils/analytics';
-import { serializeReportTiming } from '@/utils/reportTiming';
+import {
+  getBudgetWindowOptions,
+  getEffectiveReportAnalysisMode,
+  serializeReportTiming,
+} from '@/utils/reportTiming';
 import { toApiPolicyId } from '../currentLaw';
 import { ReportBuilderState } from '../types';
 
@@ -84,8 +89,15 @@ export function useReportSubmission({
   onSuccess,
 }: UseReportSubmissionArgs): UseReportSubmissionReturn {
   const currentLawId = useSelector((state: RootState) => state.metadata.currentLawId);
+  const yearOptions = useSelector(getTaxYears);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { createReport } = useCreateReport(reportState.label || undefined);
+  const isGeographyReport = !!reportState.simulations[0]?.population?.geography?.id;
+  const availableBudgetWindowOptions = getBudgetWindowOptions(reportState.year, yearOptions, countryId);
+  const effectiveAnalysisMode = getEffectiveReportAnalysisMode(
+    reportState.analysisMode,
+    isGeographyReport ? availableBudgetWindowOptions : []
+  );
 
   const isReportConfigured = reportState.simulations.every(
     (sim) => !!sim.policy.id && !!(sim.population.household?.id || sim.population.geography?.id)
@@ -163,7 +175,7 @@ export function useReportSubmission({
       const reportData: Partial<Report> = {
         countryId,
         year: serializeReportTiming({
-          analysisMode: reportState.analysisMode,
+          analysisMode: effectiveAnalysisMode,
           startYear: reportState.year,
           budgetWindowYears: reportState.budgetWindowYears,
         }),
@@ -209,6 +221,7 @@ export function useReportSubmission({
     countryId,
     currentLawId,
     createReport,
+    effectiveAnalysisMode,
     onSuccess,
   ]);
 

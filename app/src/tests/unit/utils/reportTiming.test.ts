@@ -3,6 +3,7 @@ import {
   clampBudgetWindowYears,
   formatBudgetWindowYear,
   getBudgetWindowOptions,
+  getEffectiveReportAnalysisMode,
   getDefaultBudgetWindowYears,
   getReportTimingDisplay,
   parseReportTiming,
@@ -42,6 +43,16 @@ describe('reportTiming', () => {
     ).toBe('2026-2035');
   });
 
+  test('falls back to a single year when the budget-window size is invalid', () => {
+    expect(
+      serializeReportTiming({
+        analysisMode: 'budget-window',
+        startYear: '2026',
+        budgetWindowYears: 'not-a-number',
+      })
+    ).toBe('2026');
+  });
+
   test('builds window options from available metadata years', () => {
     expect(
       getBudgetWindowOptions(
@@ -54,6 +65,11 @@ describe('reportTiming', () => {
 
   test('clamps window size to an allowed option', () => {
     expect(clampBudgetWindowYears('10', ['2', '3', '4'], 'us')).toBe('4');
+  });
+
+  test('falls back to single-year mode when no budget-window options are available', () => {
+    expect(getEffectiveReportAnalysisMode('budget-window', [])).toBe('single-year');
+    expect(getEffectiveReportAnalysisMode('budget-window', ['2', '3'])).toBe('budget-window');
   });
 
   test('returns sensible defaults and timing labels', () => {

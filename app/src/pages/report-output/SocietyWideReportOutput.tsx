@@ -20,6 +20,7 @@ import { getDisplayStatus } from '@/utils/statusMapping';
 import {
   BUDGET_WINDOW_SUBPAGE,
   isBudgetWindowReportOutput,
+  resolveBudgetWindowSubpage,
 } from './budget-window/budgetWindowUtils';
 import { BudgetWindowSubPage } from './BudgetWindowSubPage';
 import { ComparativeAnalysisPage } from './ComparativeAnalysisPage';
@@ -168,12 +169,9 @@ export function SocietyWideReportOutput({
   const normalizedSubpage = resolveDefaultReportOutputSubpage('societyWide', subpage, {
     societyWideDefaultSubpage: isBudgetWindow ? BUDGET_WINDOW_SUBPAGE : undefined,
   });
-  const effectiveSubpage =
-    isBudgetWindow &&
-    normalizedSubpage !== BUDGET_WINDOW_SUBPAGE &&
-    !Object.hasOwn(INPUT_ONLY_TABS, normalizedSubpage)
-      ? BUDGET_WINDOW_SUBPAGE
-      : normalizedSubpage;
+  const effectiveSubpage = isBudgetWindow
+    ? resolveBudgetWindowSubpage(normalizedSubpage)
+    : normalizedSubpage;
 
   // Read datasets from metadata for the reproduce tab
   const datasets = useSelector((state: RootState) => state.metadata.economyOptions?.datasets);

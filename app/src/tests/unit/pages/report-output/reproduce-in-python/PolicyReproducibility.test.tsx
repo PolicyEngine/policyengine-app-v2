@@ -5,18 +5,20 @@ import {
   DEFAULT_POLICY_REPRODUCIBILITY_PROPS,
   EXPECTED_CODE_SNIPPETS,
   EXPECTED_TEXT,
-  MOCK_REPORT_YEAR,
   UK_POLICY_REPRODUCIBILITY_PROPS,
 } from '@/tests/fixtures/pages/report-output/reproduce-in-python/reproducibilityMocks';
 
+const mockReportYear = vi.hoisted(() => ({ value: '2024' }));
+
 // Mock the useReportYear hook
 vi.mock('@/hooks/useReportYear', () => ({
-  useReportYear: () => MOCK_REPORT_YEAR,
+  useReportYear: () => mockReportYear.value,
 }));
 
 describe('PolicyReproducibility', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockReportYear.value = '2024';
   });
 
   describe('rendering', () => {
@@ -150,7 +152,15 @@ describe('PolicyReproducibility', () => {
 
       // Then
       // The year from the mock (2024) should appear in the period parameter
-      expect(screen.getByText(new RegExp(`period=${MOCK_REPORT_YEAR}`))).toBeInTheDocument();
+      expect(screen.getByText(new RegExp(`period=${mockReportYear.value}`))).toBeInTheDocument();
+    });
+
+    test('given budget-window year context then uses the start year in calculation', () => {
+      mockReportYear.value = '2026-2035';
+
+      render(<PolicyReproducibility {...DEFAULT_POLICY_REPRODUCIBILITY_PROPS} />);
+
+      expect(screen.getByText(/period=2026/)).toBeInTheDocument();
     });
   });
 });

@@ -73,11 +73,28 @@ export function serializeReportTiming({
   startYear: string;
   budgetWindowYears: string | number;
 }): string {
-  if (analysisMode !== 'budget-window') {
+  const parsedBudgetWindowYears = Number.parseInt(String(budgetWindowYears), 10);
+
+  if (
+    analysisMode !== 'budget-window' ||
+    Number.isNaN(parsedBudgetWindowYears) ||
+    parsedBudgetWindowYears < 2
+  ) {
     return startYear;
   }
 
-  return formatBudgetWindowYear(startYear, Number.parseInt(String(budgetWindowYears), 10));
+  return formatBudgetWindowYear(startYear, parsedBudgetWindowYears);
+}
+
+export function getEffectiveReportAnalysisMode(
+  analysisMode: ReportAnalysisMode,
+  availableBudgetWindowOptions: string[]
+): ReportAnalysisMode {
+  if (analysisMode === 'budget-window' && availableBudgetWindowOptions.length === 0) {
+    return 'single-year';
+  }
+
+  return analysisMode;
 }
 
 export function getBudgetWindowOptions(

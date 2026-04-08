@@ -19,6 +19,7 @@ import { colors, spacing } from '@/designTokens';
 import { useReportYear } from '@/hooks/useReportYear';
 import { trackPythonCodeCopied } from '@/utils/analytics';
 import { getColabLink, getReproducibilityCodeBlock } from '@/utils/reproducibilityCode';
+import { parseReportTiming } from '@/utils/reportTiming';
 
 interface PolicyData {
   baseline: { data: Record<string, any> };
@@ -42,7 +43,7 @@ export default function PolicyReproducibility({
 }: PolicyReproducibilityProps) {
   const [copied, setCopied] = useState(false);
   const reportYear = useReportYear();
-  const timePeriod = reportYear ? parseInt(reportYear, 10) : 2024;
+  const timePeriod = Number.parseInt(parseReportTiming(reportYear || '2024').startYear, 10) || 2024;
 
   const codeLines = getReproducibilityCodeBlock(
     'policy',

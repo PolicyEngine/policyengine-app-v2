@@ -6,6 +6,15 @@ import type {
 } from '@/types/report/BudgetWindowReportOutput';
 
 export const BUDGET_WINDOW_SUBPAGE = 'budget-window';
+export const BUDGET_WINDOW_SUPPORTED_SUBPAGES = [BUDGET_WINDOW_SUBPAGE, 'population'] as const;
+
+export function resolveBudgetWindowSubpage(subpage: string): string {
+  return BUDGET_WINDOW_SUPPORTED_SUBPAGES.includes(
+    subpage as (typeof BUDGET_WINDOW_SUPPORTED_SUBPAGES)[number]
+  )
+    ? subpage
+    : BUDGET_WINDOW_SUBPAGE;
+}
 
 export function isBudgetWindowReportOutput(output: unknown): output is BudgetWindowReportOutput {
   return (
