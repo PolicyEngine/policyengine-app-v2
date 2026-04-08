@@ -182,6 +182,51 @@ jobs:
           done
           if [ "$FAILED" = "1" ]; then exit 1; fi
 
+  visual-tests:
+    name: Visual regression
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.58.2-noble
+      options: --ipc=host
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install unzip
+        run: apt-get update && apt-get install -y unzip
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build design system
+        run: bun run design-system:build
+
+      - name: Run visual tests
+        working-directory: ./app
+        run: npx playwright test --grep @visual
+        env:
+          HOME: /root
+
+      - name: Upload HTML report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: app/playwright-report/
+          retention-days: 14
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: visual-test-results
+          path: app/test-results/
+          retention-days: 7
+
   build:
     name: Build
     runs-on: ubuntu-latest

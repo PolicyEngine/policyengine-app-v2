@@ -1,0 +1,84 @@
+name: Update visual baselines
+
+on:
+  # Pattern 1: Comment "/update-snapshots" on a PR
+  issue_comment:
+    types: [created]
+  # Pattern 2: Manual trigger from Actions tab (pick a branch)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-baselines:
+    name: Update visual baselines
+    # For issue_comment: only run on PRs when comment is "/update-snapshots"
+    # For workflow_dispatch: always run
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (
+        github.event.issue.pull_request &&
+        github.event.comment.body == '/update-snapshots'
+      )
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.58.2-noble
+      options: --ipc=host
+
+    steps:
+      # For issue_comment, we need to resolve the PR branch name
+      - name: Get PR branch
+        if: github.event_name == 'issue_comment'
+        id: pr
+        run: |
+          apt-get update && apt-get install -y jq curl
+          PR_DATA=$(curl -s \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.issue.number }}")
+          echo "branch=$(echo "$PR_DATA" | jq -r '.head.ref')" >> "$GITHUB_OUTPUT"
+
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.pr.outputs.branch || github.ref }}
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install unzip
+        run: |
+          if ! command -v unzip &> /dev/null; then
+            apt-get update && apt-get install -y unzip
+          fi
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build design system
+        run: bun run design-system:build
+
+      - name: Update visual baselines
+        working-directory: ./app
+        run: npx playwright test --grep @visual --update-snapshots --reporter=list
+        env:
+          HOME: /root
+
+      - name: Commit updated baselines
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: update visual baselines"
+          file_pattern: "app/e2e/__screenshots__/**/*.png"
+
+      # Add a rocket reaction so the commenter knows it worked
+      - name: React to comment
+        if: github.event_name == 'issue_comment'
+        run: |
+          curl -s -X POST \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${{ github.repository }}/issues/comments/${{ github.event.comment.id }}/reactions" \
+            -d '{"content": "rocket"}'
