@@ -28,7 +28,10 @@ import { currencySymbol, formatCurrencyAbbr } from '@/utils/formatters';
 import { DIVERGING_GRAY_TEAL } from '@/utils/visualization/colorScales';
 import BudgetaryImpactSubPage from './budgetary-impact/BudgetaryImpactSubPage';
 import { getBudgetChartTitle } from './budgetary-impact/budgetChartUtils';
-import { useCongressionalDistrictOutcomeData } from './congressional-district/useCongressionalDistrictOutcomeData';
+import {
+  mergeOutcomeMapData,
+  useCongressionalDistrictOutcomeData,
+} from './congressional-district/useCongressionalDistrictOutcomeData';
 import {
   getDistributionalAverageTitle,
   getDistributionalRelativeTitle,
@@ -169,6 +172,34 @@ const CONGRESSIONAL_LOSER_COLORS = [
 type CardKey = 'budget' | 'decile' | 'poverty' | 'winners' | 'inequality' | 'congressional';
 
 type RankedDistrict = { id: string; label: string; value: number };
+type OutcomeMapPoint = { geoId: string; label: string; value: number };
+
+export function buildOutcomeMapData(
+  districts: Array<{ district: string; winner_percentage?: number; loser_percentage?: number }>,
+  metric: 'winner' | 'loser',
+  labelLookup: Map<string, string>
+): { points: OutcomeMapPoint[]; missingCount: number } {
+  const points: OutcomeMapPoint[] = [];
+  let missingCount = 0;
+
+  districts.forEach((district) => {
+    const districtId = normalizeDistrictId(district.district);
+    const value = metric === 'winner' ? district.winner_percentage : district.loser_percentage;
+
+    if (typeof value !== 'number') {
+      missingCount += 1;
+      return;
+    }
+
+    points.push({
+      geoId: districtId,
+      label: labelLookup.get(districtId) ?? `District ${districtId}`,
+      value,
+    });
+  });
+
+  return { points, missingCount };
+}
 
 /**
  * Renders a column of 5 ranked districts with conditional section headers.
@@ -365,30 +396,6 @@ function CongressionalDistrictCard({
   const changeMetric = congressionalMode === 'relative' ? 'relative' : 'absolute';
   const outcomeMetric = congressionalMode === 'winner-pct' ? 'winner' : 'loser';
 
-  const getOutcomeValue = useMemo(
-    () => (district: { winner_percentage?: number; loser_percentage?: number }) => {
-      return outcomeMetric === 'winner' ? district.winner_percentage : district.loser_percentage;
-    },
-    [outcomeMetric]
-  );
-
-  const buildOutcomePoint = useMemo(
-    () =>
-      (district: { district: string; winner_percentage?: number; loser_percentage?: number }) => {
-        const value = getOutcomeValue(district);
-        if (typeof value !== 'number') {
-          return null;
-        }
-
-        return {
-          geoId: district.district,
-          label: labelLookup.get(district.district) ?? `District ${district.district}`,
-          value,
-        };
-      },
-    [getOutcomeValue, labelLookup]
-  );
-
   // Check if output already has district data (from nationwide calculation)
   const existingDistricts = useMemo(() => {
     if (!('congressional_district_impact' in output)) {
@@ -448,31 +455,31 @@ function CongressionalDistrictCard({
     return changeContextMapData;
   }, [changeContextMapData, changeMetric, existingDistricts, labelLookup]);
 
-  const payloadOutcomeMapData = useMemo(() => {
+  const payloadOutcomeData = useMemo(() => {
     if (existingDistricts) {
-      return existingDistricts.flatMap((district) => {
-        const point = buildOutcomePoint(district);
-        return point ? [point] : [];
-      });
+      return buildOutcomeMapData(existingDistricts, outcomeMetric, labelLookup);
     }
 
     if (stateResponses.size === 0) {
-      return [];
+      return { points: [], missingCount: 0 };
     }
 
-    const points: Array<{ geoId: string; label: string; value: number }> = [];
+    const districts: Array<{
+      district: string;
+      winner_percentage?: number;
+      loser_percentage?: number;
+    }> = [];
     stateResponses.forEach((stateData) => {
       stateData.districts.forEach((district) => {
-        const point = buildOutcomePoint(district);
-        if (point) {
-          points.push(point);
-        }
+        districts.push(district);
       });
     });
-    return points;
-  }, [buildOutcomePoint, existingDistricts, stateResponses]);
+    return buildOutcomeMapData(districts, outcomeMetric, labelLookup);
+  }, [existingDistricts, labelLookup, outcomeMetric, stateResponses]);
 
-  const isUsingFallbackOutcomeFetch = isOutcomeMode && payloadOutcomeMapData.length === 0;
+  const payloadOutcomeMapData = payloadOutcomeData.points;
+  const isUsingFallbackOutcomeFetch =
+    isOutcomeMode && (payloadOutcomeMapData.length === 0 || payloadOutcomeData.missingCount > 0);
 
   const {
     mapData: fallbackOutcomeMapData,
@@ -483,13 +490,16 @@ function CongressionalDistrictCard({
     totalDistricts: fallbackOutcomeTotalDistricts,
   } = useCongressionalDistrictOutcomeData(outcomeMetric, isUsingFallbackOutcomeFetch);
 
-  const mapData = isOutcomeMode
-    ? payloadOutcomeMapData.length > 0
-      ? payloadOutcomeMapData
-      : fallbackOutcomeMapData
-    : changeMapData;
-  const outcomeDisplayData =
-    payloadOutcomeMapData.length > 0 ? payloadOutcomeMapData : fallbackOutcomeMapData;
+  const mergedOutcomeMapData = useMemo(
+    () =>
+      isUsingFallbackOutcomeFetch
+        ? mergeOutcomeMapData(payloadOutcomeMapData, fallbackOutcomeMapData)
+        : payloadOutcomeMapData,
+    [fallbackOutcomeMapData, isUsingFallbackOutcomeFetch, payloadOutcomeMapData]
+  );
+
+  const mapData = isOutcomeMode ? mergedOutcomeMapData : changeMapData;
+  const outcomeDisplayData = mergedOutcomeMapData;
 
   // Map config based on absolute vs relative mode
   const mapConfig = useMemo(() => {

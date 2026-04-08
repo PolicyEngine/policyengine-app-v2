@@ -41,7 +41,8 @@ interface OutcomeFetchState {
 type OutcomeFetchAction =
   | { type: 'START'; targets: string[] }
   | { type: 'COMPLETE'; geoId: string; data: DistrictOutcomeShares }
-  | { type: 'ERROR'; geoId: string };
+  | { type: 'ERROR'; geoId: string }
+  | { type: 'RESET' };
 
 function outcomeFetchReducer(
   state: OutcomeFetchState,
@@ -92,6 +93,8 @@ function outcomeFetchReducer(
         hasStarted: state.hasStarted,
       };
     }
+    case 'RESET':
+      return initialOutcomeFetchState;
     default:
       return state;
   }
@@ -131,6 +134,19 @@ export function getDistrictOutcomeValue(
   return metric === 'winner' ? shares.winnerPct : shares.loserPct;
 }
 
+export function mergeOutcomeMapData(
+  payloadMapData: Array<{ geoId: string; label: string; value: number }>,
+  fallbackMapData: Array<{ geoId: string; label: string; value: number }>
+) {
+  const merged = new Map(fallbackMapData.map((point) => [point.geoId, point]));
+
+  payloadMapData.forEach((point) => {
+    merged.set(point.geoId, point);
+  });
+
+  return Array.from(merged.values());
+}
+
 export function useCongressionalDistrictOutcomeData(
   metric: CongressionalDistrictOutcomeMetric,
   enabled: boolean
@@ -157,6 +173,11 @@ export function useCongressionalDistrictOutcomeData(
         };
       });
   }, [regions, stateCode]);
+
+  const districtTargetKey = useMemo(
+    () => districtTargets.map((target) => target.geoId).join('|'),
+    [districtTargets]
+  );
 
   const pollDistrict = useCallback(
     async (target: DistrictTarget, signal: AbortSignal): Promise<void> => {
@@ -240,6 +261,12 @@ export function useCongressionalDistrictOutcomeData(
       void worker();
     }
   }, [districtTargets, pollDistrict, state.hasStarted]);
+
+  useEffect(() => {
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = null;
+    dispatch({ type: 'RESET' });
+  }, [baselinePolicyId, districtTargetKey, reformPolicyId, stateCode, year]);
 
   useEffect(() => {
     if (enabled) {

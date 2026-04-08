@@ -1,6 +1,8 @@
 import { render, screen } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import SocietyWideOverview from '@/pages/report-output/SocietyWideOverview';
+import SocietyWideOverview, {
+  buildOutcomeMapData,
+} from '@/pages/report-output/SocietyWideOverview';
 import { createMockSocietyWideOutput } from '@/tests/fixtures/pages/reportOutputMocks';
 
 // Mock useCurrentCountry hook
@@ -228,5 +230,27 @@ describe('SocietyWideOverview', () => {
     expect(screen.getByText('Budgetary impact')).toBeInTheDocument();
     expect(screen.getByText('Poverty impact')).toBeInTheDocument();
     expect(screen.getByText('Winners and losers')).toBeInTheDocument();
+  });
+
+  test('buildOutcomeMapData reports missing payload values for partial winner share rollout', () => {
+    const labelLookup = new Map([
+      ['AL-01', "Alabama's 1st congressional district"],
+      ['AL-02', "Alabama's 2nd congressional district"],
+    ]);
+
+    const result = buildOutcomeMapData(
+      [{ district: 'AL-01', winner_percentage: 0.6 }, { district: 'AL-02' }],
+      'winner',
+      labelLookup
+    );
+
+    expect(result.points).toEqual([
+      {
+        geoId: 'AL-01',
+        label: "Alabama's 1st congressional district",
+        value: 0.6,
+      },
+    ]);
+    expect(result.missingCount).toBe(1);
   });
 });
