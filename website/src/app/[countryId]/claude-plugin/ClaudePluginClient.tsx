@@ -707,7 +707,6 @@ export default function ClaudePluginClient({
                   boxShadow: "0 8px 32px -4px rgba(0,0,0,0.12)",
                 }}
               >
-                {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
                 <video
                   src="/assets/demo-clip.mp4"
                   controls

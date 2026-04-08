@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import HeroSection from "@/components/static/HeroSection";
+import OptimisedImage from "@/components/ui/OptimisedImage";
 import { Container } from "@/components/ui/Container";
 import { Text } from "@/components/ui/Text";
 import citationsData from "@/data/citations.json";
@@ -88,7 +89,7 @@ function CitationCard({
             overflow: "hidden",
           }}
         >
-          <img
+          <OptimisedImage
             src={`/assets/citations/${citation.image}`}
             alt={`${citation.title} — ${citation.outlet}`}
             style={{

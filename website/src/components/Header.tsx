@@ -14,6 +14,7 @@ import {
   spacing,
   typography,
 } from "@policyengine/design-system/tokens";
+import OptimisedImage from "@/components/ui/OptimisedImage";
 import { useCountryId } from "@/hooks/useCountryId";
 
 const PolicyEngineLogo = "/assets/logos/policyengine/white.svg";
@@ -634,7 +635,7 @@ export default function Header() {
               marginRight: spacing.md,
             }}
           >
-            <img
+            <OptimisedImage
               src={PolicyEngineLogo}
               alt="PolicyEngine"
               style={{ height: "24px", width: "auto" }}

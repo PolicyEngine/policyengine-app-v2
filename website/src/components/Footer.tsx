@@ -11,6 +11,7 @@ import {
   IconMail,
 } from '@tabler/icons-react';
 import jsonp from 'jsonp';
+import OptimisedImage from '@/components/ui/OptimisedImage';
 import { Button, Container, Input, Spinner, Stack } from '@/components/ui';
 import { colors, spacing, typography } from '@policyengine/design-system/tokens';
 import { cn } from '@/lib/utils';
@@ -198,7 +199,11 @@ export default function Footer() {
       }}
     >
       <Container size="2xl">
-        <img src={PolicyEngineLogo} alt="PolicyEngine" className="tw:h-[52px] tw:w-auto" />
+        <OptimisedImage
+          src={PolicyEngineLogo}
+          alt="PolicyEngine"
+          className="tw:h-[52px] tw:w-auto"
+        />
         <div
           className="tw:grid tw:grid-cols-1 tw:md:grid-cols-2 tw:mt-8"
           style={{ gap: spacing['4xl'] }}

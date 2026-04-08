@@ -277,7 +277,7 @@ export default function TypewriterPrompt({
       setPhase("typing");
     }, PAUSE_AFTER_DELETE);
     return clearTimer;
-  }, [phase, clearTimer]);
+  }, [phase, clearTimer, prompts.length]);
 
   return (
     <div
