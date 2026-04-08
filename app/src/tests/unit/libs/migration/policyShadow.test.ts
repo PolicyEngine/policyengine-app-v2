@@ -5,6 +5,7 @@ import { fetchModelByCountry } from '@/api/v2/taxBenefitModels';
 import { createUserPolicyAssociationV2 } from '@/api/v2/userPolicyAssociations';
 import { logMigrationComparison } from '@/libs/migration/comparisonLogger';
 import { getV2Id, setV2Id } from '@/libs/migration/idMapping';
+import { sendMigrationLog } from '@/libs/migration/migrationLogTransport';
 import {
   buildV2PolicyCreateRequest,
   shadowCreatePolicyAndAssociation,
@@ -31,6 +32,10 @@ vi.mock('@/api/v2/userPolicyAssociations', () => ({
 
 vi.mock('@/libs/migration/comparisonLogger', () => ({
   logMigrationComparison: vi.fn(),
+}));
+
+vi.mock('@/libs/migration/migrationLogTransport', () => ({
+  sendMigrationLog: vi.fn(),
 }));
 
 const TEST_COUNTRY_ID = 'us';
@@ -232,6 +237,14 @@ describe('policyShadow', () => {
     expect(infoSpy).toHaveBeenCalledWith(
       expect.stringContaining('[PolicyMigration] Shadow v2 policy create failed'),
       expect.any(Error)
+    );
+    expect(sendMigrationLog).toHaveBeenCalledWith(
+      expect.objectContaining({
+        kind: 'event',
+        prefix: 'PolicyMigration',
+        operation: 'CREATE',
+        status: 'FAILED',
+      })
     );
   });
 });

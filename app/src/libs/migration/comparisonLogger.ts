@@ -15,13 +15,14 @@
  * Temporary — deleted in Phase 5.
  */
 
-type FieldStatus = 'MATCH' | 'MISMATCH' | 'SKIPPED';
+import { sendMigrationLog } from './migrationLogTransport';
+import type { MigrationFieldStatus } from './migrationLogTypes';
 
 interface FieldResult {
   field: string;
   v1: unknown;
   v2: unknown;
-  status: FieldStatus;
+  status: MigrationFieldStatus;
 }
 
 function valuesEqual(v1: unknown, v2: unknown): boolean {
@@ -89,6 +90,7 @@ export function logMigrationComparison(
   const compared = results.filter((r) => r.status !== 'SKIPPED');
   const matches = compared.filter((r) => r.status === 'MATCH').length;
   const mismatches = compared.filter((r) => r.status === 'MISMATCH').length;
+  const summaryStatus = mismatches === 0 ? 'MATCH' : 'DIVERGE';
 
   if (mismatches === 0) {
     console.info(
@@ -99,4 +101,23 @@ export function logMigrationComparison(
       `[${prefix}:DIVERGE] ${operation}: ${matches}/${compared.length} compared fields match, ${mismatches} diverge`
     );
   }
+
+  sendMigrationLog({
+    kind: 'comparison',
+    prefix,
+    operation,
+    status: summaryStatus,
+    compared: compared.length,
+    matches,
+    mismatches,
+    skipped: results.length - compared.length,
+    detailCount: results.length,
+    details: results.map((result) => ({
+      field: result.field,
+      status: result.status,
+      v1: formatValue(result.v1),
+      v2: formatValue(result.v2),
+    })),
+    ts: new Date().toISOString(),
+  });
 }

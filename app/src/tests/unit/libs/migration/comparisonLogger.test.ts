@@ -1,5 +1,10 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { logMigrationComparison } from '@/libs/migration/comparisonLogger';
+import { sendMigrationLog } from '@/libs/migration/migrationLogTransport';
+
+vi.mock('@/libs/migration/migrationLogTransport', () => ({
+  sendMigrationLog: vi.fn(),
+}));
 
 describe('comparisonLogger', () => {
   let infoSpy: ReturnType<typeof vi.spyOn>;
@@ -24,6 +29,19 @@ describe('comparisonLogger', () => {
       const summary = calls.find((c) => c.includes('[PolicyMigration:MATCH]'));
       expect(summary).toBeDefined();
       expect(summary).toContain('3/3 compared fields match');
+      expect(sendMigrationLog).toHaveBeenCalledWith(
+        expect.objectContaining({
+          kind: 'comparison',
+          prefix: 'PolicyMigration',
+          operation: 'CREATE',
+          status: 'MATCH',
+          compared: 3,
+          matches: 3,
+          mismatches: 0,
+          skipped: 0,
+          detailCount: 3,
+        })
+      );
     });
 
     test('given mismatched field then logs DIVERGE summary', () => {
@@ -44,6 +62,15 @@ describe('comparisonLogger', () => {
       expect(labelDetail).toBeDefined();
       expect(labelDetail).toContain('v1="My reform"');
       expect(labelDetail).toContain('v2=null');
+      expect(sendMigrationLog).toHaveBeenCalledWith(
+        expect.objectContaining({
+          kind: 'comparison',
+          prefix: 'PolicyMigration',
+          operation: 'CREATE',
+          status: 'DIVERGE',
+          mismatches: 1,
+        })
+      );
     });
 
     test('given skipFields then marks those as SKIPPED and excludes from comparison count', () => {

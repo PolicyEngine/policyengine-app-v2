@@ -6,6 +6,7 @@ import { Provider } from 'react-redux';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { useSaveSharedReport } from '@/hooks/useSaveSharedReport';
 import { getV2Id } from '@/libs/migration/idMapping';
+import { sendMigrationLog } from '@/libs/migration/migrationLogTransport';
 import {
   shadowCreatePolicyAndAssociation,
   shadowCreateUserPolicyAssociation,
@@ -51,6 +52,10 @@ vi.mock('@/libs/migration/policyShadow', () => ({
   shadowCreateUserPolicyAssociation: vi.fn(),
 }));
 
+vi.mock('@/libs/migration/migrationLogTransport', () => ({
+  sendMigrationLog: vi.fn(),
+}));
+
 vi.mock('@/hooks/useUserHousehold', () => ({
   useCreateHouseholdAssociation: () => mockCreateHousehold,
 }));
@@ -89,6 +94,7 @@ describe('useSaveSharedReport', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.spyOn(console, 'info').mockImplementation(() => {});
     queryClient = new QueryClient({
       defaultOptions: { queries: { retry: false } },
     });
@@ -167,6 +173,26 @@ describe('useSaveSharedReport', () => {
       v1Association: MOCK_SAVED_USER_POLICY,
     });
     expect(shadowCreateUserPolicyAssociation).not.toHaveBeenCalled();
+  });
+
+  test('given saved shared policy without details then emits skipped remote log', async () => {
+    const store = createMockStore();
+    const wrapper = createWrapper(store);
+
+    const { result } = renderHook(() => useSaveSharedReport(), { wrapper });
+
+    await act(async () => {
+      await result.current.saveSharedReport(MOCK_SAVE_SHARE_DATA);
+    });
+
+    expect(sendMigrationLog).toHaveBeenCalledWith(
+      expect.objectContaining({
+        kind: 'event',
+        prefix: 'PolicyMigration',
+        operation: 'CREATE',
+        status: 'SKIPPED',
+      })
+    );
   });
 
   test('given saved shared policy with existing v2 mapping then shadows only the association', async () => {

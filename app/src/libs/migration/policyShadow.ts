@@ -10,6 +10,7 @@ import type { UserPolicy } from '@/types/ingredients/UserPolicy';
 import type { PolicyCreationPayload } from '@/types/payloads';
 import { logMigrationComparison } from './comparisonLogger';
 import { getMappedV2UserId, getOrCreateV2UserId, getV2Id, setV2Id } from './idMapping';
+import { sendMigrationLog } from './migrationLogTransport';
 
 type ComparableParameterValue = {
   parameterName: string;
@@ -208,6 +209,19 @@ export async function shadowCreateUserPolicyAssociation(
     );
   } catch (error) {
     console.info('[UserPolicyMigration] Shadow v2 create failed (non-blocking):', error);
+    sendMigrationLog({
+      kind: 'event',
+      prefix: 'UserPolicyMigration',
+      operation: 'CREATE',
+      status: 'FAILED',
+      message: 'Shadow v2 create failed (non-blocking)',
+      metadata: {
+        policyId: v1Association.policyId,
+        userId: v1Association.userId,
+        error: error instanceof Error ? error.message : String(error),
+      },
+      ts: new Date().toISOString(),
+    });
   }
 }
 
@@ -241,6 +255,20 @@ export async function shadowUpdateUserPolicyAssociation(v1Association: UserPolic
     );
   } catch (error) {
     console.info('[UserPolicyMigration] Shadow v2 update failed (non-blocking):', error);
+    sendMigrationLog({
+      kind: 'event',
+      prefix: 'UserPolicyMigration',
+      operation: 'UPDATE',
+      status: 'FAILED',
+      message: 'Shadow v2 update failed (non-blocking)',
+      metadata: {
+        policyId: v1Association.policyId,
+        userId: v1Association.userId,
+        associationId: v1Association.id,
+        error: error instanceof Error ? error.message : String(error),
+      },
+      ts: new Date().toISOString(),
+    });
   }
 }
 
@@ -280,5 +308,18 @@ export async function shadowCreatePolicyAndAssociation({
     }
   } catch (error) {
     console.info('[PolicyMigration] Shadow v2 policy create failed (non-blocking):', error);
+    sendMigrationLog({
+      kind: 'event',
+      prefix: 'PolicyMigration',
+      operation: 'CREATE',
+      status: 'FAILED',
+      message: 'Shadow v2 policy create failed (non-blocking)',
+      metadata: {
+        policyId: v1PolicyId,
+        countryId,
+        error: error instanceof Error ? error.message : String(error),
+      },
+      ts: new Date().toISOString(),
+    });
   }
 }

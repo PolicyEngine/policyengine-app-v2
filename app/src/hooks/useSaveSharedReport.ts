@@ -12,6 +12,7 @@ import { PolicyAdapter } from '@/adapters/PolicyAdapter';
 import { ReportIngredientsInput } from '@/hooks/utils/useFetchReportIngredients';
 import { CountryId } from '@/libs/countries';
 import { getV2Id } from '@/libs/migration/idMapping';
+import { sendMigrationLog } from '@/libs/migration/migrationLogTransport';
 import {
   shadowCreatePolicyAndAssociation,
   shadowCreateUserPolicyAssociation,
@@ -42,6 +43,18 @@ function shadowSavedPolicyAssociation(association: UserPolicy, policyDetails?: P
       '[PolicyMigration] Shared save missing policy details; skipping shadow v2 policy create:',
       association.policyId
     );
+    sendMigrationLog({
+      kind: 'event',
+      prefix: 'PolicyMigration',
+      operation: 'CREATE',
+      status: 'SKIPPED',
+      message: 'Shared save missing policy details; skipping shadow v2 policy create',
+      metadata: {
+        policyId: association.policyId,
+        countryId: association.countryId,
+      },
+      ts: new Date().toISOString(),
+    });
     return;
   }
 
