@@ -174,6 +174,12 @@ type DistrictOutcomePayload = {
   winner_percentage?: number;
   loser_percentage?: number;
 };
+type DistrictPayloadAvailability = {
+  expectedDistrictIds: string[];
+  hasCompleteCoverage: boolean;
+  hasCompleteWinnerData: boolean;
+  hasCompleteLoserData: boolean;
+};
 
 export function buildOutcomeMapData(
   districts: DistrictOutcomePayload[],
@@ -202,15 +208,69 @@ export function buildOutcomeMapData(
   return { points, missingCount };
 }
 
-export function hasCompleteDistrictOutcomePayload(districts: DistrictOutcomePayload[]): boolean {
-  return (
-    districts.length > 0 &&
-    districts.every(
-      (district) =>
-        typeof district.winner_percentage === 'number' &&
-        typeof district.loser_percentage === 'number'
-    )
+function getExpectedDistrictIds(
+  labelLookup: Map<string, string>,
+  stateCode: string | null
+): string[] {
+  const districtIds = Array.from(labelLookup.keys());
+  if (!stateCode) {
+    return districtIds;
+  }
+
+  const statePrefix = `${stateCode.toUpperCase()}-`;
+  return districtIds.filter((districtId) => districtId.startsWith(statePrefix));
+}
+
+export function getDistrictPayloadAvailability(
+  districts: DistrictOutcomePayload[],
+  labelLookup: Map<string, string>,
+  stateCode: string | null
+): DistrictPayloadAvailability {
+  const districtsById = new Map(
+    districts.map((district) => [normalizeDistrictId(district.district), district] as const)
   );
+  const expectedDistrictIds = getExpectedDistrictIds(labelLookup, stateCode);
+  const relevantDistrictIds =
+    expectedDistrictIds.length > 0 ? expectedDistrictIds : Array.from(districtsById.keys());
+
+  if (relevantDistrictIds.length === 0) {
+    return {
+      expectedDistrictIds,
+      hasCompleteCoverage: false,
+      hasCompleteWinnerData: false,
+      hasCompleteLoserData: false,
+    };
+  }
+
+  const hasCompleteCoverage = relevantDistrictIds.every((districtId) =>
+    districtsById.has(districtId)
+  );
+  const hasCompleteWinnerData =
+    hasCompleteCoverage &&
+    relevantDistrictIds.every(
+      (districtId) => typeof districtsById.get(districtId)?.winner_percentage === 'number'
+    );
+  const hasCompleteLoserData =
+    hasCompleteCoverage &&
+    relevantDistrictIds.every(
+      (districtId) => typeof districtsById.get(districtId)?.loser_percentage === 'number'
+    );
+
+  return {
+    expectedDistrictIds,
+    hasCompleteCoverage,
+    hasCompleteWinnerData,
+    hasCompleteLoserData,
+  };
+}
+
+export function hasCompleteDistrictOutcomePayload(
+  districts: DistrictOutcomePayload[],
+  labelLookup: Map<string, string>,
+  stateCode: string | null
+): boolean {
+  const availability = getDistrictPayloadAvailability(districts, labelLookup, stateCode);
+  return availability.hasCompleteWinnerData && availability.hasCompleteLoserData;
 }
 
 /**
@@ -423,18 +483,29 @@ function CongressionalDistrictCard({
     }));
   }, [output]);
 
-  const hasSavedOutcomeData = useMemo(
-    () => (savedDistricts ? hasCompleteDistrictOutcomePayload(savedDistricts) : false),
-    [savedDistricts]
+  const savedDistrictAvailability = useMemo(
+    () =>
+      savedDistricts
+        ? getDistrictPayloadAvailability(savedDistricts, labelLookup, stateCode)
+        : null,
+    [labelLookup, savedDistricts, stateCode]
   );
+  const hasSavedChangeData = savedDistrictAvailability?.hasCompleteCoverage ?? false;
+  const hasSavedWinnerData = savedDistrictAvailability?.hasCompleteWinnerData ?? false;
+  const hasSavedLoserData = savedDistrictAvailability?.hasCompleteLoserData ?? false;
+  const hasSavedOutcomeData = hasSavedWinnerData && hasSavedLoserData;
+  const hasSavedActiveOutcomeData =
+    outcomeMetric === 'winner' ? hasSavedWinnerData : hasSavedLoserData;
+  const needsSavedPayloadRefresh = !savedDistricts || !hasSavedChangeData || !hasSavedOutcomeData;
 
-  // Auto-start fetch only when the report output is ready and no
-  // complete district outcome data exists in the saved report output.
+  // Auto-start fetch when the saved payload is missing districts or missing
+  // either outcome metric, but still let the active mode use any complete
+  // metric-specific saved data that is already available.
   useEffect(() => {
-    if ((!savedDistricts || !hasSavedOutcomeData) && !hasStarted) {
+    if (needsSavedPayloadRefresh && !hasStarted) {
       startFetch();
     }
-  }, [hasSavedOutcomeData, hasStarted, savedDistricts, startFetch]);
+  }, [hasStarted, needsSavedPayloadRefresh, startFetch]);
 
   // Build map data from context (progressive fill as states complete)
   const changeContextMapData = useMemo(() => {
@@ -459,7 +530,7 @@ function CongressionalDistrictCard({
 
   // Use pre-computed data if available, otherwise progressive context data
   const changeMapData = useMemo(() => {
-    if (savedDistricts) {
+    if (savedDistricts && hasSavedChangeData) {
       return savedDistricts.map((item) => ({
         geoId: item.district,
         label: labelLookup.get(item.district) ?? `District ${item.district}`,
@@ -470,10 +541,10 @@ function CongressionalDistrictCard({
       }));
     }
     return changeContextMapData;
-  }, [changeContextMapData, changeMetric, labelLookup, savedDistricts]);
+  }, [changeContextMapData, changeMetric, hasSavedChangeData, labelLookup, savedDistricts]);
 
   const payloadOutcomeData = useMemo(() => {
-    if (savedDistricts && hasSavedOutcomeData) {
+    if (savedDistricts && hasSavedActiveOutcomeData) {
       return buildOutcomeMapData(savedDistricts, outcomeMetric, labelLookup);
     }
 
@@ -488,7 +559,7 @@ function CongressionalDistrictCard({
       });
     });
     return buildOutcomeMapData(districts, outcomeMetric, labelLookup);
-  }, [hasSavedOutcomeData, labelLookup, outcomeMetric, savedDistricts, stateResponses]);
+  }, [hasSavedActiveOutcomeData, labelLookup, outcomeMetric, savedDistricts, stateResponses]);
 
   const mapData = isOutcomeMode ? payloadOutcomeData.points : changeMapData;
   const outcomeDisplayData = payloadOutcomeData.points;
@@ -549,7 +620,7 @@ function CongressionalDistrictCard({
           value: district.value,
         });
       }
-    } else if (savedDistricts) {
+    } else if (savedDistricts && hasSavedChangeData) {
       for (const d of savedDistricts) {
         all.push({
           id: d.district,
@@ -578,6 +649,7 @@ function CongressionalDistrictCard({
     return all;
   }, [
     changeMetric,
+    hasSavedChangeData,
     isOutcomeMode,
     labelLookup,
     outcomeDisplayData,
@@ -633,14 +705,17 @@ function CongressionalDistrictCard({
     const savedSet = new Set(savedDistricts.map((d) => d.district));
     const missingStates = new Set<string>();
     let count = 0;
-    labelLookup.forEach((_label, districtId) => {
+    const expectedDistrictIds =
+      savedDistrictAvailability?.expectedDistrictIds ??
+      getExpectedDistrictIds(labelLookup, stateCode);
+    expectedDistrictIds.forEach((districtId) => {
       if (!savedSet.has(districtId)) {
         count++;
         missingStates.add(districtId.split('-')[0]);
       }
     });
     return { errorDistrictCount: count, errorStateAbbrs: Array.from(missingStates) };
-  }, [labelLookup, savedDistricts]);
+  }, [labelLookup, savedDistrictAvailability, savedDistricts, stateCode]);
 
   const fetchedErrorSummary = useMemo(() => {
     const abbrs = Array.from(erroredStates).map((code) =>
@@ -661,14 +736,20 @@ function CongressionalDistrictCard({
 
   const activeErrorSummary = useMemo(() => {
     if (isOutcomeMode) {
-      return hasSavedOutcomeData ? savedErrorSummary : fetchedErrorSummary;
+      return hasSavedActiveOutcomeData ? savedErrorSummary : fetchedErrorSummary;
     }
 
-    return savedDistricts ? savedErrorSummary : fetchedErrorSummary;
-  }, [fetchedErrorSummary, hasSavedOutcomeData, isOutcomeMode, savedDistricts, savedErrorSummary]);
+    return hasSavedChangeData ? savedErrorSummary : fetchedErrorSummary;
+  }, [
+    fetchedErrorSummary,
+    hasSavedActiveOutcomeData,
+    hasSavedChangeData,
+    isOutcomeMode,
+    savedErrorSummary,
+  ]);
 
-  const changeDataReady = Boolean(savedDistricts || (!isLoading && hasStarted));
-  const outcomeDataReady = Boolean(hasSavedOutcomeData || (!isLoading && hasStarted));
+  const changeDataReady = Boolean(hasSavedChangeData || (!isLoading && hasStarted));
+  const outcomeDataReady = Boolean(hasSavedActiveOutcomeData || (!isLoading && hasStarted));
   const dataReady = isOutcomeMode ? outcomeDataReady : changeDataReady;
   const progressCount = completedCount;
   const totalCount = totalStates;
