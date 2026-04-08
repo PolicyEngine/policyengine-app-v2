@@ -116,6 +116,12 @@ const STATIC_PAGES: Record<string, { title: string; description: string }> = {
   },
 };
 
+const LEGACY_V1_REPORT_COUNTRY_IDS = ["uk", "us", "ca", "ng"] as const;
+const LEGACY_V1_REPORT_SURFACES = ["policy", "household"] as const;
+const LEGACY_V1_REPORT_PATH_PATTERN = new RegExp(
+  `^/(?:${LEGACY_V1_REPORT_COUNTRY_IDS.join("|")})/(?:${LEGACY_V1_REPORT_SURFACES.join("|")})(?:/.*)?$`,
+);
+
 // Helper functions
 export function isCrawler(userAgent: string | null): boolean {
   if (!userAgent) {
@@ -124,6 +130,29 @@ export function isCrawler(userAgent: string | null): boolean {
   return CRAWLER_USER_AGENTS.some((crawler) =>
     userAgent.toLowerCase().includes(crawler.toLowerCase()),
   );
+}
+
+/**
+ * Returns the legacy app URL for strict v1 report routes, otherwise null.
+ *
+ * This intentionally matches only the code-proven v1 report surfaces:
+ * /:countryId/policy and /:countryId/household.
+ * It does not match historical population-impact links.
+ */
+export function getLegacyAppRedirectUrl(input: URL | string): string | null {
+  const url =
+    typeof input === "string" ? new URL(input) : new URL(input.toString());
+
+  if (url.hostname.startsWith("legacy.")) {
+    return null;
+  }
+
+  if (!LEGACY_V1_REPORT_PATH_PATTERN.test(url.pathname)) {
+    return null;
+  }
+
+  url.hostname = `legacy.${url.hostname}`;
+  return url.toString();
 }
 
 function parsePathParts(pathname: string): PathParts | null {
@@ -417,6 +446,11 @@ export default async function middleware(request: Request) {
   // Let static files (sitemap, robots, etc.) pass through to Vercel's file serving
   if (url.pathname === "/sitemap.xml" || url.pathname === "/robots.txt") {
     return;
+  }
+
+  const legacyRedirectUrl = getLegacyAppRedirectUrl(url);
+  if (legacyRedirectUrl) {
+    return Response.redirect(legacyRedirectUrl, 308);
   }
 
   // State legislative tracker: proxy crawlers to Modal for SEO
