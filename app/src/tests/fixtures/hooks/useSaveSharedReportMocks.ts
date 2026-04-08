@@ -4,6 +4,7 @@
 
 import { vi } from 'vitest';
 import { ReportIngredientsInput } from '@/hooks/utils/useFetchReportIngredients';
+import { Policy } from '@/types/ingredients/Policy';
 
 // ============================================================================
 // Constants
@@ -98,10 +99,34 @@ export const MOCK_SAVED_USER_REPORT = {
   label: 'My Shared Report',
 };
 
+export const MOCK_SAVED_USER_POLICY = {
+  id: 'sup-policy-save-1',
+  userId: 'anonymous',
+  policyId: TEST_IDS.POLICY,
+  countryId: TEST_COUNTRIES.US,
+  label: 'My Policy',
+  createdAt: '2026-04-08T12:00:00Z',
+  isCreated: true,
+};
+
 export const MOCK_EXISTING_USER_REPORT = {
   ...MOCK_SAVED_USER_REPORT,
   label: 'Already Saved Report',
 };
+
+export const MOCK_POLICIES: Policy[] = [
+  {
+    id: TEST_IDS.POLICY,
+    countryId: TEST_COUNTRIES.US,
+    label: 'My Policy',
+    parameters: [
+      {
+        name: 'gov.irs.credits.ctc.amount',
+        values: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 2000 }],
+      },
+    ],
+  },
+];
 
 // ============================================================================
 // Mock Hooks Factory
