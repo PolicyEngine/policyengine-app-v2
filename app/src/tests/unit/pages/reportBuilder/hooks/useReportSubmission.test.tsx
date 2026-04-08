@@ -219,6 +219,37 @@ describe('useReportSubmission', () => {
         );
       });
     });
+
+    test('given budget-window mode when submitted then serializes the report year as a range', async () => {
+      const budgetWindowState = {
+        ...mockTwoSimReportState,
+        analysisMode: 'budget-window' as const,
+        budgetWindowYears: '10',
+      };
+
+      const { result } = renderHook(
+        () =>
+          useReportSubmission({
+            reportState: budgetWindowState,
+            countryId: 'us',
+            onSuccess: mockOnSuccess,
+          }),
+        { wrapper }
+      );
+
+      await result.current.handleSubmit();
+
+      await waitFor(() => {
+        expect(mockCreateReportFn).toHaveBeenCalledWith(
+          expect.objectContaining({
+            payload: expect.objectContaining({
+              year: '2026-2035',
+            }),
+          }),
+          expect.anything()
+        );
+      });
+    });
   });
 
   describe('isReportConfigured', () => {

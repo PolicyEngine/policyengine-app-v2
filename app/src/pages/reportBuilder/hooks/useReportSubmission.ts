@@ -22,6 +22,7 @@ import { Report } from '@/types/ingredients/Report';
 import { Simulation } from '@/types/ingredients/Simulation';
 import { SimulationStateProps } from '@/types/pathwayState';
 import { trackReportStarted } from '@/utils/analytics';
+import { serializeReportTiming } from '@/utils/reportTiming';
 import { toApiPolicyId } from '../currentLaw';
 import { ReportBuilderState } from '../types';
 
@@ -161,7 +162,11 @@ export function useReportSubmission({
 
       const reportData: Partial<Report> = {
         countryId,
-        year: reportState.year,
+        year: serializeReportTiming({
+          analysisMode: reportState.analysisMode,
+          startYear: reportState.year,
+          budgetWindowYears: reportState.budgetWindowYears,
+        }),
         simulationIds,
         apiVersion: null,
       };

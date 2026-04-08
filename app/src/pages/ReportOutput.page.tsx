@@ -15,12 +15,14 @@ import { useSharedReportData } from '@/hooks/useSharedReportData';
 import { useUserReportById } from '@/hooks/useUserReports';
 import { formatReportTimestamp } from '@/utils/dateUtils';
 import { resolveDefaultReportOutputSubpage } from '@/utils/reportOutputSubpage';
+import { isBudgetWindowReportYear } from '@/utils/reportTiming';
 import {
   buildSharePath,
   createShareData,
   extractShareDataFromUrl,
   getShareDataUserReportId,
 } from '@/utils/shareUtils';
+import { BUDGET_WINDOW_SUBPAGE } from './report-output/budget-window/budgetWindowUtils';
 import { HouseholdReportOutput } from './report-output/HouseholdReportOutput';
 import ReportOutputLayout from './report-output/ReportOutputLayout';
 import { SocietyWideReportOutput } from './report-output/SocietyWideReportOutput';
@@ -112,9 +114,13 @@ export default function ReportOutputPage({
       : simulations?.[0]?.populationType === 'geography'
         ? 'societyWide'
         : undefined;
+  const isBudgetWindowReport =
+    outputType === 'societyWide' && isBudgetWindowReportYear(report?.year || '');
 
   // Active subpage and view from URL params
-  const activeTab = resolveDefaultReportOutputSubpage(outputType, subpage);
+  const activeTab = resolveDefaultReportOutputSubpage(outputType, subpage, {
+    societyWideDefaultSubpage: isBudgetWindowReport ? BUDGET_WINDOW_SUBPAGE : undefined,
+  });
   const activeView = view || '';
 
   // Format the report creation timestamp using the current country's locale

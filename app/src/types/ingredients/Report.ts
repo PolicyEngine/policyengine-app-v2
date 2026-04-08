@@ -2,9 +2,13 @@ import { countryIds } from '@/libs/countries';
 import type { HouseholdReportOutput } from '@/types/calculation/household';
 import { ReportOutputSocietyWideUK } from '@/types/metadata/ReportOutputSocietyWideUK';
 import { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
+import type { BudgetWindowReportOutput } from '@/types/report/BudgetWindowReportOutput';
 import { Household } from './Household';
 
-export type EconomyOutput = ReportOutputSocietyWideUS | ReportOutputSocietyWideUK;
+export type EconomyOutput =
+  | ReportOutputSocietyWideUS
+  | ReportOutputSocietyWideUK
+  | BudgetWindowReportOutput;
 export type HouseholdOutput = Household | Household[];
 
 /**

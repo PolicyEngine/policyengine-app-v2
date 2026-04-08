@@ -11,6 +11,7 @@ import type {
 import type { UserReport } from '@/types/ingredients/UserReport';
 import type { UserSimulation } from '@/types/ingredients/UserSimulation';
 import type { SimulationStateProps } from '@/types/pathwayState';
+import { getDefaultBudgetWindowYears, parseReportTiming } from '@/utils/reportTiming';
 import { CURRENT_LAW_LABEL, fromApiPolicyId, isCurrentLaw } from '../currentLaw';
 import type { ReportBuilderState } from '../types';
 
@@ -40,6 +41,7 @@ export function hydrateReportBuilderState({
   userHouseholds,
   currentLawId,
 }: HydrateArgs): ReportBuilderState {
+  const timing = parseReportTiming(report.year, report.countryId);
   const hydratedSimulations: SimulationStateProps[] = simulations.map((sim, index) => {
     // Find the user simulation label
     const userSim = userSimulations?.find((us) => us.simulationId === sim.id);
@@ -96,7 +98,12 @@ export function hydrateReportBuilderState({
   return {
     id: userReport.id,
     label: userReport.label || null,
-    year: report.year || '',
+    analysisMode: timing.analysisMode,
+    budgetWindowYears:
+      timing.analysisMode === 'budget-window'
+        ? String(timing.windowSize)
+        : String(getDefaultBudgetWindowYears(report.countryId)),
+    year: timing.startYear || '',
     simulations: hydratedSimulations,
   };
 }

@@ -7,7 +7,10 @@ const DEFAULT_SUBPAGES: Record<ReportOutputType, string> = {
 
 export function resolveDefaultReportOutputSubpage(
   outputType: ReportOutputType | undefined,
-  subpage: string | undefined
+  subpage: string | undefined,
+  options?: {
+    societyWideDefaultSubpage?: string;
+  }
 ) {
   if (subpage) {
     return subpage;
@@ -15,6 +18,10 @@ export function resolveDefaultReportOutputSubpage(
 
   if (!outputType) {
     return '';
+  }
+
+  if (outputType === 'societyWide' && options?.societyWideDefaultSubpage) {
+    return options.societyWideDefaultSubpage;
   }
 
   return DEFAULT_SUBPAGES[outputType];

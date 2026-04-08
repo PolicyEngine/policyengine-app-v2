@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { IconNewSection, IconPencil, IconStatusChange, IconX } from '@tabler/icons-react';
 import {
   Button,
@@ -16,6 +16,7 @@ import { useAppNavigate } from '@/contexts/NavigationContext';
 import { spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { getReportOutputPath } from '@/utils/reportRouting';
+import { getDefaultBudgetWindowYears } from '@/utils/reportTiming';
 import { ReportBuilderShell, SimulationBlockFull } from './components';
 import { useModifyReportSubmission } from './hooks/useModifyReportSubmission';
 import { useReportBuilderState } from './hooks/useReportBuilderState';
@@ -40,7 +41,13 @@ export default function ModifyReportPage({ userReportId }: { userReportId?: stri
   });
 
   const { handleSaveAsNew, handleReplace, isSavingNew, isReplacing } = useModifyReportSubmission({
-    reportState: reportState ?? { label: null, year: '', simulations: [] },
+    reportState: reportState ?? {
+      label: null,
+      analysisMode: 'single-year',
+      budgetWindowYears: String(getDefaultBudgetWindowYears(countryId)),
+      year: '',
+      simulations: [],
+    },
     countryId,
     existingUserReportId: userReportId ?? '',
     onSuccess: (resultUserReportId) => {
@@ -53,6 +60,15 @@ export default function ModifyReportPage({ userReportId }: { userReportId?: stri
   const [showSameNameWarning, setShowSameNameWarning] = useState(false);
 
   const isEitherSubmitting = isSavingNew || isReplacing;
+  const isGeographySelected = !!reportState?.simulations[0]?.population?.geography?.id;
+
+  useEffect(() => {
+    if (!reportState || isGeographySelected || reportState.analysisMode !== 'budget-window') {
+      return;
+    }
+
+    setReportState((prev) => (prev ? { ...prev, analysisMode: 'single-year' } : prev));
+  }, [isGeographySelected, reportState, setReportState]);
 
   // Same-name guard for "Save as new report"
   const handleSaveAsNewClick = useCallback(() => {

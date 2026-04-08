@@ -35,6 +35,8 @@ export const mockCreateSimulationResponse = (simulationId: string) => ({
 // Mock ReportBuilderState for a single-simulation report
 export const mockSingleSimReportState: ReportBuilderState = {
   label: TEST_LABELS.REPORT,
+  analysisMode: 'single-year',
+  budgetWindowYears: '10',
   year: '2026',
   simulations: [
     {
@@ -59,6 +61,8 @@ export const mockSingleSimReportState: ReportBuilderState = {
 // Mock ReportBuilderState for a two-simulation report
 export const mockTwoSimReportState: ReportBuilderState = {
   label: TEST_LABELS.REPORT,
+  analysisMode: 'single-year',
+  budgetWindowYears: '10',
   year: '2026',
   simulations: [
     {

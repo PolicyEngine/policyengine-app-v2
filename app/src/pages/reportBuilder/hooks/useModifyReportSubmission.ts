@@ -23,6 +23,7 @@ import { reportAssociationKeys, reportKeys } from '@/libs/queryKeys';
 import { RootState } from '@/store';
 import { Report } from '@/types/ingredients/Report';
 import { Simulation } from '@/types/ingredients/Simulation';
+import { isBudgetWindowReportYear, serializeReportTiming } from '@/utils/reportTiming';
 import { toApiPolicyId } from '../currentLaw';
 import { ReportBuilderState } from '../types';
 
@@ -126,7 +127,11 @@ export function useModifyReportSubmission({
 
     const reportPayload = ReportAdapter.toCreationPayload({
       countryId,
-      year: reportState.year,
+      year: serializeReportTiming({
+        analysisMode: reportState.analysisMode,
+        startYear: reportState.year,
+        budgetWindowYears: reportState.budgetWindowYears,
+      }),
       simulationIds,
       apiVersion: null,
     } as Report);
@@ -140,6 +145,10 @@ export function useModifyReportSubmission({
    */
   const startCalculation = useCallback(
     async (report: Report, simulations: (Simulation | null)[]) => {
+      if (isBudgetWindowReportYear(report.year)) {
+        return;
+      }
+
       const simulation1 = simulations[0];
       if (!simulation1) {
         return;

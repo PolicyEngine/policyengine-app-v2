@@ -15,6 +15,7 @@ import { useAppNavigate } from '@/contexts/NavigationContext';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { initializeSimulationState } from '@/utils/pathwayState/initializeSimulationState';
 import { getReportOutputPath } from '@/utils/reportRouting';
+import { getDefaultBudgetWindowYears } from '@/utils/reportTiming';
 import { ReportBuilderShell, SimulationBlockFull } from './components';
 import { getSamplePopulations } from './constants';
 import { createCurrentLawPolicy } from './currentLaw';
@@ -33,6 +34,8 @@ export default function ReportBuilderPage() {
 
   const [reportState, setReportState] = useState<ReportBuilderState>({
     label: null,
+    analysisMode: 'single-year',
+    budgetWindowYears: String(getDefaultBudgetWindowYears(countryId)),
     year: CURRENT_YEAR,
     simulations: [initialSim],
   });
@@ -85,6 +88,14 @@ export default function ReportBuilderPage() {
       });
     }
   }, [reportState.id, isGeographySelected, setReportState]);
+
+  useEffect(() => {
+    if (isGeographySelected || reportState.analysisMode !== 'budget-window') {
+      return;
+    }
+
+    setReportState((prev) => ({ ...prev, analysisMode: 'single-year' }));
+  }, [isGeographySelected, reportState.analysisMode]);
 
   // Top bar actions (setup mode: just "Run")
   const topBarActions: TopBarAction[] = useMemo(
