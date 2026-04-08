@@ -60,11 +60,15 @@ function optimisedSrc(src: string, width?: number, quality = 80): string {
     return src;
   }
 
+  // Vercel's image endpoint requires an explicit width.
+  // Fall back to the original asset path when callers omit one.
+  if (!width) {
+    return src;
+  }
+
   const dpr = 1;
   const params = new URLSearchParams({ url: src, q: String(quality) });
-  if (width) {
-    params.set('w', String(snapWidth(Math.round(width * dpr))));
-  }
+  params.set('w', String(snapWidth(Math.round(width * dpr))));
   return `/_vercel/image?${params}`;
 }
 
