@@ -1,4 +1,4 @@
-import type { MigrationRemoteLogPayload } from "../app/src/libs/migration/migrationLogTypes";
+import type { MigrationRemoteLogPayload } from "@/libs/migration/migrationLogTypes";
 
 const ALLOW_HEADER = "POST";
 
@@ -85,16 +85,16 @@ function isMigrationRemoteLogPayload(
   return false;
 }
 
-export default async function handler(request: Request): Promise<Response> {
-  if (request.method !== "POST") {
-    return new Response("Method Not Allowed", {
-      status: 405,
-      headers: {
-        Allow: ALLOW_HEADER,
-      },
-    });
-  }
+function methodNotAllowedResponse(): Response {
+  return new Response("Method Not Allowed", {
+    status: 405,
+    headers: {
+      Allow: ALLOW_HEADER,
+    },
+  });
+}
 
+export async function POST(request: Request): Promise<Response> {
   let payload: unknown;
   try {
     payload = await request.json();
@@ -114,4 +114,8 @@ export default async function handler(request: Request): Promise<Response> {
       "Cache-Control": "no-store",
     },
   });
+}
+
+export async function GET(_request: Request): Promise<Response> {
+  return methodNotAllowedResponse();
 }

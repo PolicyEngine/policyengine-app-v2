@@ -15,7 +15,11 @@ const MAX_METADATA_ENTRIES = 20;
 const MAX_METADATA_STRING_CHARS = 500;
 
 function isRemoteLoggingEnabled(): boolean {
-  return import.meta.env.VITE_ENABLE_VERCEL_MIGRATION_LOGS === 'true';
+  if (typeof process === 'undefined') {
+    return false;
+  }
+
+  return process.env.NEXT_PUBLIC_ENABLE_VERCEL_MIGRATION_LOGS === 'true';
 }
 
 function truncateString(value: string, maxChars: number): string {

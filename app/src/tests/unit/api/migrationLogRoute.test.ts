@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import type { MigrationRemoteLogPayload } from '@/libs/migration/migrationLogTypes';
-import handler from '../../../../../api/migration-log';
+import { GET, POST } from '../../../../../calculator-app/src/app/api/migration-log/route';
 
 const TEST_PAYLOAD: MigrationRemoteLogPayload = {
   kind: 'event',
@@ -23,7 +23,7 @@ describe('migration log route', () => {
   test('given valid post payload then logs and returns no content', async () => {
     const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
-    const response = await handler(
+    const response = await POST(
       new Request('https://policyengine.org/api/migration-log', {
         method: 'POST',
         headers: {
@@ -38,7 +38,7 @@ describe('migration log route', () => {
   });
 
   test('given non-post request then returns method not allowed', async () => {
-    const response = await handler(
+    const response = await GET(
       new Request('https://policyengine.org/api/migration-log', {
         method: 'GET',
       })
@@ -49,7 +49,7 @@ describe('migration log route', () => {
   });
 
   test('given invalid payload then returns bad request', async () => {
-    const response = await handler(
+    const response = await POST(
       new Request('https://policyengine.org/api/migration-log', {
         method: 'POST',
         headers: {
