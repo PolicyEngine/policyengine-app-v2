@@ -1,0 +1,152 @@
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { createHouseholdV2 } from '@/api/v2';
+import { createUserHouseholdAssociationV2 } from '@/api/v2/userHouseholdAssociations';
+import { logMigrationComparison } from '@/libs/migration/comparisonLogger';
+import { shadowCreateHouseholdAndAssociation } from '@/libs/migration/householdShadow';
+import { getV2Id, setV2Id } from '@/libs/migration/idMapping';
+import { sendMigrationLog } from '@/libs/migration/migrationLogTransport';
+import { Household } from '@/models/Household';
+import { createMockHouseholdData } from '@/tests/fixtures/models/shared';
+import type { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
+
+vi.mock('@/api/v2', () => ({
+  createHouseholdV2: vi.fn(),
+}));
+
+vi.mock('@/api/v2/userHouseholdAssociations', () => ({
+  createUserHouseholdAssociationV2: vi.fn(),
+  updateUserHouseholdAssociationV2: vi.fn(),
+}));
+
+vi.mock('@/libs/migration/comparisonLogger', () => ({
+  logMigrationComparison: vi.fn(),
+}));
+
+vi.mock('@/libs/migration/migrationLogTransport', () => ({
+  sendMigrationLog: vi.fn(),
+}));
+
+const TEST_COUNTRY_ID = 'us' as const;
+const TEST_V1_HOUSEHOLD_ID = '456';
+const TEST_V2_HOUSEHOLD_ID = '770e8400-e29b-41d4-a716-446655440002';
+const TEST_V1_USER_ID = 'anonymous';
+const TEST_V2_USER_ID = 'c93a763d-8d9f-4ab8-b04f-2fbba0183f35';
+const TEST_V1_ASSOC_ID = 'suh-abc123';
+const TEST_V2_ASSOC_ID = 'dd0e8400-e29b-41d4-a716-446655440008';
+
+const v1Household = new Household(
+  createMockHouseholdData({
+    id: TEST_V1_HOUSEHOLD_ID,
+    countryId: TEST_COUNTRY_ID,
+    label: 'My household',
+  })
+);
+
+const v1Association: UserHouseholdPopulation = {
+  type: 'household',
+  id: TEST_V1_ASSOC_ID,
+  userId: TEST_V1_USER_ID,
+  householdId: TEST_V1_HOUSEHOLD_ID,
+  countryId: TEST_COUNTRY_ID,
+  label: 'My household',
+  createdAt: '2026-04-09T12:00:00Z',
+  isCreated: true,
+};
+
+describe('householdShadow', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.stubEnv('NEXT_PUBLIC_VERCEL_ENV', 'preview');
+    localStorage.clear();
+    setV2Id('User', TEST_V1_USER_ID, TEST_V2_USER_ID);
+
+    vi.mocked(createHouseholdV2).mockResolvedValue({
+      ...v1Household.toV2Shape(),
+      id: TEST_V2_HOUSEHOLD_ID,
+    });
+    vi.mocked(createUserHouseholdAssociationV2).mockResolvedValue({
+      id: TEST_V2_ASSOC_ID,
+      type: 'household',
+      userId: TEST_V2_USER_ID,
+      householdId: TEST_V2_HOUSEHOLD_ID,
+      countryId: TEST_COUNTRY_ID,
+      label: 'My household',
+      createdAt: '2026-04-09T12:00:01Z',
+      updatedAt: '2026-04-09T12:00:01Z',
+      isCreated: true,
+    });
+  });
+
+  test('given successful v2 household create then it stores household and user-household mappings', async () => {
+    await shadowCreateHouseholdAndAssociation({
+      v1HouseholdId: TEST_V1_HOUSEHOLD_ID,
+      v1Household,
+      v1Association,
+    });
+
+    expect(createHouseholdV2).toHaveBeenCalledWith(
+      expect.objectContaining({
+        country_id: TEST_COUNTRY_ID,
+        year: 2026,
+      })
+    );
+    expect(createUserHouseholdAssociationV2).toHaveBeenCalledWith({
+      userId: TEST_V2_USER_ID,
+      householdId: TEST_V2_HOUSEHOLD_ID,
+      countryId: TEST_COUNTRY_ID,
+      label: 'My household',
+    });
+    expect(getV2Id('Household', TEST_V1_HOUSEHOLD_ID)).toBe(TEST_V2_HOUSEHOLD_ID);
+    expect(getV2Id('UserHousehold', TEST_V1_ASSOC_ID)).toBe(TEST_V2_ASSOC_ID);
+  });
+
+  test('given successful shadow create then it logs household and user-household comparisons', async () => {
+    await shadowCreateHouseholdAndAssociation({
+      v1HouseholdId: TEST_V1_HOUSEHOLD_ID,
+      v1Household,
+      v1Association,
+    });
+
+    expect(logMigrationComparison).toHaveBeenCalledWith(
+      'HouseholdMigration',
+      'CREATE',
+      expect.any(Object),
+      expect.any(Object),
+      { skipFields: ['id'] }
+    );
+    expect(logMigrationComparison).toHaveBeenCalledWith(
+      'UserHouseholdMigration',
+      'CREATE',
+      expect.any(Object),
+      expect.any(Object),
+      { skipFields: ['id', 'createdAt', 'updatedAt', 'isCreated'] }
+    );
+  });
+
+  test('given v2 household create fails then it logs and stays non-blocking', async () => {
+    vi.mocked(createHouseholdV2).mockRejectedValue(new Error('v2 unavailable'));
+    const infoSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
+
+    await expect(
+      shadowCreateHouseholdAndAssociation({
+        v1HouseholdId: TEST_V1_HOUSEHOLD_ID,
+        v1Household,
+        v1Association,
+      })
+    ).resolves.toBeUndefined();
+
+    expect(createUserHouseholdAssociationV2).not.toHaveBeenCalled();
+    expect(infoSpy).toHaveBeenCalledWith(
+      expect.stringContaining('[HouseholdMigration] Shadow v2 household create failed'),
+      expect.any(Error)
+    );
+    expect(sendMigrationLog).toHaveBeenCalledWith(
+      expect.objectContaining({
+        kind: 'event',
+        prefix: 'HouseholdMigration',
+        operation: 'CREATE',
+        status: 'FAILED',
+      })
+    );
+  });
+});
