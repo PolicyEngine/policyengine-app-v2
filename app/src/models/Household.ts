@@ -85,6 +85,19 @@ const GROUP_DEFINITIONS: readonly GroupDefinition[] = [
 const PERSON_LINK_KEYS = new Set(GROUP_DEFINITIONS.map((definition) => definition.personLinkKey));
 const PERSON_META_KEYS = new Set(['name', 'person_id', ...PERSON_LINK_KEYS]);
 const GROUP_ID_KEYS = new Set(GROUP_DEFINITIONS.map((definition) => definition.groupIdKey));
+type HouseholdV2Source = {
+  id: string;
+  country_id: string;
+  year: number;
+  label?: string | null;
+  people: HouseholdV2Response['people'];
+  tax_unit?: HouseholdV2Response['tax_unit'];
+  family?: HouseholdV2Response['family'];
+  spm_unit?: HouseholdV2Response['spm_unit'];
+  marital_unit?: HouseholdV2Response['marital_unit'];
+  household?: HouseholdV2Response['household'];
+  benunit?: HouseholdV2Response['benunit'];
+};
 
 function cloneValue<T>(value: T): T {
   if (typeof structuredClone === 'function') {
@@ -412,11 +425,25 @@ export class Household extends BaseModel<HouseholdModelData> {
   }
 
   static fromV1Metadata(metadata: HouseholdMetadata): Household {
+    return Household.fromV1Payload({
+      id: String(metadata.id),
+      countryId: metadata.country_id,
+      householdData: metadata.household_json,
+      label: metadata.label ?? null,
+    });
+  }
+
+  static fromV1Payload(args: {
+    id: string;
+    countryId: string;
+    householdData: HouseholdCreationPayload['data'];
+    label?: string | null;
+  }): Household {
     const data: Record<string, unknown> = {
-      people: cloneValue(metadata.household_json.people),
+      people: cloneValue(args.householdData.people),
     };
 
-    for (const [key, value] of Object.entries(metadata.household_json)) {
+    for (const [key, value] of Object.entries(args.householdData)) {
       if (key === 'people') {
         continue;
       }
@@ -433,25 +460,26 @@ export class Household extends BaseModel<HouseholdModelData> {
     }
 
     return new Household({
-      id: String(metadata.id),
-      countryId: normalizeCountryId(metadata.country_id),
-      label: metadata.label ?? null,
+      id: String(args.id),
+      countryId: normalizeCountryId(args.countryId),
+      label: args.label ?? null,
       year: inferYearFromData(data),
       data,
     });
   }
 
   static fromV2Response(response: HouseholdV2Response): Household {
-    const { peopleByName, personNameById } = buildPeopleFromV2Response(
-      response.people,
-      response.year
-    );
+    return Household.fromV2Shape(response);
+  }
+
+  static fromV2Shape(shape: HouseholdV2Source): Household {
+    const { peopleByName, personNameById } = buildPeopleFromV2Response(shape.people, shape.year);
     const data: Record<string, unknown> = {
       people: peopleByName,
     };
 
     for (const definition of GROUP_DEFINITIONS) {
-      const rawGroup = response[definition.v2Key];
+      const rawGroup = shape[definition.v2Key];
       if (!isRecord(rawGroup)) {
         continue;
       }
@@ -461,7 +489,7 @@ export class Household extends BaseModel<HouseholdModelData> {
           ? (rawGroup[definition.groupIdKey] as number)
           : 0;
       const members = buildGroupMembersFromPeople(
-        response.people,
+        shape.people,
         personNameById,
         definition.personLinkKey,
         groupId
@@ -470,16 +498,16 @@ export class Household extends BaseModel<HouseholdModelData> {
       data[definition.appKey] = {
         [buildGeneratedGroupName(definition.generatedKeyPrefix, 0)]: {
           members: members.length > 0 ? members : Object.keys(peopleByName),
-          ...wrapEntityRecordForYear(rawGroup, response.year, [definition.groupIdKey]),
+          ...wrapEntityRecordForYear(rawGroup, shape.year, [definition.groupIdKey]),
         },
       };
     }
 
     return new Household({
-      id: response.id,
-      countryId: normalizeCountryId(response.country_id),
-      label: response.label ?? null,
-      year: response.year ?? null,
+      id: shape.id,
+      countryId: normalizeCountryId(shape.country_id),
+      label: shape.label ?? null,
+      year: shape.year ?? null,
       data,
     });
   }
