@@ -5,12 +5,13 @@
  * directly into TopBar's flex layout via display: contents.
  */
 
-import React, { useLayoutEffect, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useState } from 'react';
 import { IconCheck, IconFileDescription, IconPencil } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import {
   Button,
   Input,
+  SegmentedControl,
   Select,
   SelectContent,
   SelectItem,
@@ -20,7 +21,14 @@ import {
 } from '@/components/ui';
 import { CURRENT_YEAR } from '@/constants';
 import { colors, spacing, typography } from '@/designTokens';
+import { countryIds } from '@/libs/countries';
 import { getTaxYears } from '@/libs/metadataUtils';
+import {
+  clampBudgetWindowYears,
+  getBudgetWindowOptions,
+  getDefaultBudgetWindowYears,
+  getEffectiveReportAnalysisMode,
+} from '@/utils/reportTiming';
 import { FONT_SIZES } from '../constants';
 import type { ReportBuilderState } from '../types';
 
@@ -48,6 +56,14 @@ export function ReportMetaPanel({ reportState, setReportState, isReadOnly }: Rep
   const [labelInput, setLabelInput] = useState('');
   const [inputWidth, setInputWidth] = useState<number | null>(null);
   const measureRef = React.useRef<HTMLSpanElement>(null);
+  const countryId = (reportState.simulations[0]?.countryId || 'us') as (typeof countryIds)[number];
+  const isGeographyReport = !!reportState.simulations[0]?.population?.geography?.id;
+  const budgetWindowOptions = getBudgetWindowOptions(reportState.year, yearOptions, countryId);
+  const canUseBudgetWindow = isGeographyReport && budgetWindowOptions.length > 0;
+  const effectiveAnalysisMode = getEffectiveReportAnalysisMode(
+    reportState.analysisMode,
+    canUseBudgetWindow ? budgetWindowOptions : []
+  );
 
   const handleLabelSubmit = () => {
     setReportState((prev) => ({ ...prev, label: labelInput || 'Untitled report' }));
@@ -63,6 +79,16 @@ export function ReportMetaPanel({ reportState, setReportState, isReadOnly }: Rep
       setInputWidth(measureRef.current.offsetWidth);
     }
   }, [labelInput, isEditingLabel]);
+
+  useEffect(() => {
+    if (reportState.analysisMode !== effectiveAnalysisMode) {
+      setReportState((prev) =>
+        prev.analysisMode === effectiveAnalysisMode
+          ? prev
+          : { ...prev, analysisMode: effectiveAnalysisMode }
+      );
+    }
+  }, [effectiveAnalysisMode, reportState.analysisMode, setReportState]);
 
   return (
     <div style={{ display: 'contents' }}>
@@ -194,6 +220,58 @@ export function ReportMetaPanel({ reportState, setReportState, isReadOnly }: Rep
         )}
       </div>
 
+      <div
+        style={{
+          ...segmentBase,
+          padding: `0 ${spacing.md}`,
+          gap: spacing.sm,
+          flexShrink: 0,
+        }}
+      >
+        <Text
+          c={colors.primary[500]}
+          fw={600}
+          style={{
+            fontSize: FONT_SIZES.tiny,
+            textTransform: 'uppercase',
+            letterSpacing: '0.05em',
+            flexShrink: 0,
+          }}
+        >
+          Timing
+        </Text>
+        <SegmentedControl
+          value={effectiveAnalysisMode}
+          onValueChange={(value) => {
+            const analysisMode = value as ReportBuilderState['analysisMode'];
+            const normalizedWindowYears = clampBudgetWindowYears(
+              reportState.budgetWindowYears || String(getDefaultBudgetWindowYears(countryId)),
+              budgetWindowOptions,
+              countryId
+            );
+
+            setReportState((prev) => ({
+              ...prev,
+              analysisMode,
+              budgetWindowYears:
+                analysisMode === 'budget-window'
+                  ? normalizedWindowYears
+                  : prev.budgetWindowYears || normalizedWindowYears,
+            }));
+          }}
+          options={[
+            { label: 'Single year', value: 'single-year' },
+            {
+              label: 'Budget window',
+              value: 'budget-window',
+              disabled: !canUseBudgetWindow,
+            },
+          ]}
+          size="xs"
+          className="tw:min-w-[180px]"
+        />
+      </div>
+
       {/* Year segment */}
       <div
         style={{
@@ -215,13 +293,33 @@ export function ReportMetaPanel({ reportState, setReportState, isReadOnly }: Rep
             pointerEvents: 'none',
           }}
         >
-          Year
+          {effectiveAnalysisMode === 'budget-window' ? 'Start year' : 'Year'}
         </Text>
         <Select
           value={reportState.year}
-          onValueChange={(value) =>
-            setReportState((prev) => ({ ...prev, year: value || CURRENT_YEAR }))
-          }
+          onValueChange={(value) => {
+            const nextYear = value || CURRENT_YEAR;
+            const nextBudgetWindowOptions = getBudgetWindowOptions(
+              nextYear,
+              yearOptions,
+              countryId
+            );
+            const nextBudgetWindowYears = clampBudgetWindowYears(
+              reportState.budgetWindowYears || String(getDefaultBudgetWindowYears(countryId)),
+              nextBudgetWindowOptions,
+              countryId
+            );
+
+            setReportState((prev) => ({
+              ...prev,
+              year: nextYear,
+              analysisMode: getEffectiveReportAnalysisMode(
+                prev.analysisMode,
+                isGeographyReport ? nextBudgetWindowOptions : []
+              ),
+              budgetWindowYears: nextBudgetWindowYears,
+            }));
+          }}
           disabled={isReadOnly}
         >
           <SelectTrigger
@@ -247,6 +345,65 @@ export function ReportMetaPanel({ reportState, setReportState, isReadOnly }: Rep
           </SelectContent>
         </Select>
       </div>
+
+      {effectiveAnalysisMode === 'budget-window' && (
+        <div
+          style={{
+            ...segmentBase,
+            padding: `0 ${spacing.md}`,
+            gap: spacing.sm,
+            flexShrink: 0,
+            position: 'relative',
+          }}
+        >
+          <Text
+            c={colors.primary[500]}
+            fw={600}
+            style={{
+              fontSize: FONT_SIZES.tiny,
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+              flexShrink: 0,
+              pointerEvents: 'none',
+            }}
+          >
+            Window
+          </Text>
+          <Select
+            value={clampBudgetWindowYears(
+              reportState.budgetWindowYears,
+              budgetWindowOptions,
+              countryId
+            )}
+            onValueChange={(value) =>
+              setReportState((prev) => ({ ...prev, budgetWindowYears: value }))
+            }
+            disabled={isReadOnly}
+          >
+            <SelectTrigger
+              aria-label="Budget window length"
+              className="tw:border-none tw:bg-transparent tw:shadow-none tw:focus-visible:ring-0 tw:h-auto tw:p-0 tw:min-h-0"
+              style={{
+                fontFamily: typography.fontFamily.primary,
+                fontSize: FONT_SIZES.small,
+                fontWeight: 500,
+                color: colors.gray[700],
+                cursor: isReadOnly ? 'default' : 'pointer',
+                width: 92,
+              }}
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent align="end">
+              {budgetWindowOptions.map((option) => (
+                <SelectItem key={option} value={option}>
+                  {option} years
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
     </div>
   );
 }

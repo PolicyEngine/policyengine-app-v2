@@ -14,6 +14,14 @@ describe('resolveDefaultReportOutputSubpage', () => {
     expect(resolveDefaultReportOutputSubpage('societyWide', undefined)).toBe('migration');
   });
 
+  test('given a society-wide fallback subpage then uses it', () => {
+    expect(
+      resolveDefaultReportOutputSubpage('societyWide', undefined, {
+        societyWideDefaultSubpage: 'budget-window',
+      })
+    ).toBe('budget-window');
+  });
+
   test('given an explicit subpage then preserves it', () => {
     expect(resolveDefaultReportOutputSubpage('household', 'policy')).toBe('policy');
   });

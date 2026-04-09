@@ -15,12 +15,17 @@ import { useSharedReportData } from '@/hooks/useSharedReportData';
 import { useUserReportById } from '@/hooks/useUserReports';
 import { formatReportTimestamp } from '@/utils/dateUtils';
 import { resolveDefaultReportOutputSubpage } from '@/utils/reportOutputSubpage';
+import { isBudgetWindowReportYear } from '@/utils/reportTiming';
 import {
   buildSharePath,
   createShareData,
   extractShareDataFromUrl,
   getShareDataUserReportId,
 } from '@/utils/shareUtils';
+import {
+  BUDGET_WINDOW_SUBPAGE,
+  resolveBudgetWindowSubpage,
+} from './report-output/budget-window/budgetWindowUtils';
 import { HouseholdReportOutput } from './report-output/HouseholdReportOutput';
 import ReportOutputLayout from './report-output/ReportOutputLayout';
 import { SocietyWideReportOutput } from './report-output/SocietyWideReportOutput';
@@ -112,9 +117,17 @@ export default function ReportOutputPage({
       : simulations?.[0]?.populationType === 'geography'
         ? 'societyWide'
         : undefined;
+  const isBudgetWindowReport =
+    outputType === 'societyWide' && isBudgetWindowReportYear(report?.year || '');
 
   // Active subpage and view from URL params
-  const activeTab = resolveDefaultReportOutputSubpage(outputType, subpage);
+  const defaultResolvedSubpage = resolveDefaultReportOutputSubpage(outputType, subpage, {
+    societyWideDefaultSubpage: isBudgetWindowReport ? BUDGET_WINDOW_SUBPAGE : undefined,
+  });
+  const activeTab =
+    isBudgetWindowReport && outputType === 'societyWide'
+      ? resolveBudgetWindowSubpage(defaultResolvedSubpage)
+      : defaultResolvedSubpage;
   const activeView = view || '';
 
   // Format the report creation timestamp using the current country's locale
@@ -185,6 +198,10 @@ export default function ReportOutputPage({
 
   // Handle reproduce button click - navigate to reproduce in Python content
   const handleReproduce = () => {
+    if (isBudgetWindowReport) {
+      return;
+    }
+
     const id = isSharedView ? shareDataUserReportId : userReportId;
     if (id) {
       const basePath = `/${countryId}/report-output/${id}/reproduce`;
@@ -301,7 +318,7 @@ export default function ReportOutputPage({
         onShare={handleShare}
         onSave={handleSave}
         onView={!isSharedView ? handleView : undefined}
-        onReproduce={handleReproduce}
+        onReproduce={!isBudgetWindowReport ? handleReproduce : undefined}
       >
         <ErrorBoundary
           fallback={(error, errorInfo) => (

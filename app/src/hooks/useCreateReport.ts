@@ -8,6 +8,7 @@ import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
 import { Simulation } from '@/types/ingredients/Simulation';
 import { ReportCreationPayload } from '@/types/payloads';
+import { isBudgetWindowReportYear } from '@/utils/reportTiming';
 
 interface CreateReportAndBeginCalculationParams {
   countryId: (typeof countryIds)[number];
@@ -95,6 +96,10 @@ export function useCreateReport(reportLabel?: string) {
         const simulation2 = simulations?.simulation2;
         const household = populations?.household1;
         const geography = populations?.geography1;
+
+        if (isBudgetWindowReportYear(report.year)) {
+          return;
+        }
 
         if (!simulation1) {
           console.warn('[useCreateReport] No simulation1 provided, cannot start calculation');

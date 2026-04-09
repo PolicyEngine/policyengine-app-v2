@@ -3,6 +3,7 @@
  */
 import { ReactNode } from 'react';
 import { PopulationStateProps, SimulationStateProps } from '@/types/pathwayState';
+import type { ReportAnalysisMode } from '@/utils/reportTiming';
 
 // ============================================================================
 // CORE STATE TYPES
@@ -11,6 +12,8 @@ import { PopulationStateProps, SimulationStateProps } from '@/types/pathwayState
 export interface ReportBuilderState {
   id?: string;
   label: string | null;
+  analysisMode: ReportAnalysisMode;
+  budgetWindowYears: string;
   year: string;
   simulations: SimulationStateProps[];
 }

@@ -1,12 +1,13 @@
 import { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { HouseholdData } from '@/types/ingredients/Household';
+import type { BudgetWindowReportOutput } from '@/types/report/BudgetWindowReportOutput';
 import { CalcError } from './CalcError';
 import { CalcMetadata } from './CalcMetadata';
 
 /**
  * Union type for all possible calculation results
  */
-export type CalcResult = SocietyWideReportOutput | HouseholdData;
+export type CalcResult = SocietyWideReportOutput | BudgetWindowReportOutput | HouseholdData;
 
 /**
  * Calculation status values

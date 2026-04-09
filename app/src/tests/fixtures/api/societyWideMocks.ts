@@ -1,6 +1,10 @@
 import { vi } from 'vitest';
-import { SocietyWideCalculationResponse } from '@/api/societyWideCalculation';
+import {
+  BudgetWindowCalculationResponse,
+  SocietyWideCalculationResponse,
+} from '@/api/societyWideCalculation';
 import { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
+import type { BudgetWindowReportOutput } from '@/types/report/BudgetWindowReportOutput';
 
 // Test IDs and constants
 export const TEST_COUNTRIES = {
@@ -1271,6 +1275,70 @@ export const mockErrorCalculationResponse: SocietyWideCalculationResponse = {
   status: 'error',
   result: null,
   error: 'Calculation failed due to invalid parameters',
+};
+
+export const mockBudgetWindowResult: BudgetWindowReportOutput = {
+  kind: 'budgetWindow',
+  startYear: '2026',
+  endYear: '2028',
+  windowSize: 3,
+  annualImpacts: [
+    {
+      year: '2026',
+      taxRevenueImpact: 100,
+      federalTaxRevenueImpact: 80,
+      stateTaxRevenueImpact: 20,
+      benefitSpendingImpact: -10,
+      budgetaryImpact: 90,
+    },
+    {
+      year: '2027',
+      taxRevenueImpact: 120,
+      federalTaxRevenueImpact: 90,
+      stateTaxRevenueImpact: 30,
+      benefitSpendingImpact: -20,
+      budgetaryImpact: 100,
+    },
+    {
+      year: '2028',
+      taxRevenueImpact: 140,
+      federalTaxRevenueImpact: 100,
+      stateTaxRevenueImpact: 40,
+      benefitSpendingImpact: -30,
+      budgetaryImpact: 110,
+    },
+  ],
+  totals: {
+    year: 'Total',
+    taxRevenueImpact: 360,
+    federalTaxRevenueImpact: 270,
+    stateTaxRevenueImpact: 90,
+    benefitSpendingImpact: -60,
+    budgetaryImpact: 300,
+  },
+};
+
+export const mockBudgetWindowPendingResponse: BudgetWindowCalculationResponse = {
+  status: 'computing',
+  result: null,
+  progress: 30,
+  completed_years: ['2026'],
+  computing_years: ['2027', '2028'],
+  queued_years: ['2029'],
+  message: 'Scoring 2027, 2028 (1 of 4 complete)...',
+};
+
+export const mockBudgetWindowCompletedResponse: BudgetWindowCalculationResponse = {
+  status: 'ok',
+  result: mockBudgetWindowResult,
+  progress: 100,
+};
+
+export const mockBudgetWindowErrorResponse: BudgetWindowCalculationResponse = {
+  status: 'error',
+  result: null,
+  error: 'Budget-window calculation failed',
+  message: 'Budget-window calculation failed',
 };
 
 // Network error

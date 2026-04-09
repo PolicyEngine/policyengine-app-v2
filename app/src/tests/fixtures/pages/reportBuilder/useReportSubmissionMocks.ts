@@ -26,6 +26,10 @@ export const TEST_LABELS = {
 } as const;
 
 export const CURRENT_LAW_ID = 0;
+export const TEST_TIME_PERIODS = Array.from({ length: 10 }, (_, index) => {
+  const year = String(2026 + index);
+  return { name: year, label: year };
+});
 
 // Mock API responses
 export const mockCreateSimulationResponse = (simulationId: string) => ({
@@ -35,6 +39,8 @@ export const mockCreateSimulationResponse = (simulationId: string) => ({
 // Mock ReportBuilderState for a single-simulation report
 export const mockSingleSimReportState: ReportBuilderState = {
   label: TEST_LABELS.REPORT,
+  analysisMode: 'single-year',
+  budgetWindowYears: '10',
   year: '2026',
   simulations: [
     {
@@ -59,6 +65,8 @@ export const mockSingleSimReportState: ReportBuilderState = {
 // Mock ReportBuilderState for a two-simulation report
 export const mockTwoSimReportState: ReportBuilderState = {
   label: TEST_LABELS.REPORT,
+  analysisMode: 'single-year',
+  budgetWindowYears: '10',
   year: '2026',
   simulations: [
     {
@@ -109,7 +117,7 @@ export function createTestStore(currentLawId: number = CURRENT_LAW_ID) {
         parameters: {},
         entities: {},
         variableModules: {},
-        economyOptions: { region: [], time_period: [], datasets: [] },
+        economyOptions: { region: [], time_period: TEST_TIME_PERIODS, datasets: [] },
         currentLawId,
         basicInputs: [],
         modelledPolicies: { core: {}, filtered: {} },
@@ -123,12 +131,14 @@ export function createTestStore(currentLawId: number = CURRENT_LAW_ID) {
 // Mock functions
 export const mockCreateSimulationFn = vi.fn();
 export const mockLocalStorageCreateFn = vi.fn();
+export const mockLocalStorageDeleteFn = vi.fn();
 export const mockCreateReportFn = vi.fn();
 export const mockOnSuccess = vi.fn();
 
 export function setupDefaultMocks() {
   mockCreateSimulationFn.mockReset();
   mockLocalStorageCreateFn.mockReset();
+  mockLocalStorageDeleteFn.mockReset();
   mockCreateReportFn.mockReset();
   mockOnSuccess.mockReset();
 
@@ -150,6 +160,7 @@ export function setupDefaultMocks() {
     countryId: 'us',
     isCreated: true,
   });
+  mockLocalStorageDeleteFn.mockResolvedValue(undefined);
 
   mockCreateReportFn.mockImplementation((_args: any, callbacks: any) => {
     callbacks?.onSuccess?.({ userReport: { id: 'user-report-new' } });

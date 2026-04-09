@@ -332,6 +332,42 @@ describe('useCreateReport', () => {
       });
     });
 
+    test('given a budget-window report when creating report then skips orchestrator startup', async () => {
+      (createReportAndAssociateWithUser as any).mockResolvedValue({
+        report: {
+          ...mockReport,
+          year: '2026-2035',
+        },
+        userReport: mockUserReportAssociation,
+        metadata: {
+          baseReportId: TEST_REPORT_ID_STRING,
+          userReportId: TEST_USER_REPORT_ID,
+          countryId: TEST_COUNTRY_ID,
+        },
+      });
+
+      const { result } = renderHook(() => useCreateReport(TEST_LABEL), { wrapper });
+
+      await result.current.createReport({
+        countryId: TEST_COUNTRY_ID,
+        payload: {
+          ...mockReportCreationPayload,
+          year: '2026-2035',
+        },
+        simulations: {
+          simulation1: mockSocietyWideSimulation,
+          simulation2: { ...mockSocietyWideSimulation, policyId: 'policy-3' },
+        },
+        populations: {
+          geography1: mockNationalGeography,
+        },
+      });
+
+      await waitFor(() => {
+        expect(mockStartCalculation).not.toHaveBeenCalled();
+      });
+    });
+
     test('given no simulation1 data then still creates report but does not start calculations', async () => {
       // When
       const { result } = renderHook(() => useCreateReport(TEST_LABEL), { wrapper });

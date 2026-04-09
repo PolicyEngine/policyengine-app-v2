@@ -7,8 +7,7 @@ export interface UserSimulationStore {
   findByUser: (userId: string, countryId?: string) => Promise<UserSimulation[]>;
   findById: (userId: string, simulationId: string) => Promise<UserSimulation | null>;
   update: (userSimulationId: string, updates: Partial<UserSimulation>) => Promise<UserSimulation>;
-  // The below are not yet implemented, but keeping for future use
-  // delete(userSimulationId: string): Promise<void>;
+  delete: (userId: string, simulationId: string) => Promise<void>;
 }
 
 export class ApiSimulationStore implements UserSimulationStore {
@@ -88,8 +87,6 @@ export class ApiSimulationStore implements UserSimulationStore {
     );
   }
 
-  // Not yet implemented, but keeping for future use
-  /*
   async delete(userId: string, simulationId: string): Promise<void> {
     const response = await fetch(`/api/user-simulation-associations/${userId}/${simulationId}`, {
       method: 'DELETE',
@@ -99,7 +96,6 @@ export class ApiSimulationStore implements UserSimulationStore {
       throw new Error('Failed to delete association');
     }
   }
-  */
 }
 
 export class LocalStorageSimulationStore implements UserSimulationStore {
@@ -179,14 +175,11 @@ export class LocalStorageSimulationStore implements UserSimulationStore {
     return updated;
   }
 
-  // Not yet implemented, but keeping for future use
-  /*
   async delete(userId: string, simulationId: string): Promise<void> {
     const simulations = this.getStoredSimulations();
     const filtered = simulations.filter(
-      a => !(a.userId === userId && a.simulationId === simulationId)
+      (association) => !(association.userId === userId && association.simulationId === simulationId)
     );
     this.setStoredSimulations(filtered);
   }
-  */
 }

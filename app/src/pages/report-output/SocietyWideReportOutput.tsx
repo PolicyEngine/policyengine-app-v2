@@ -14,12 +14,20 @@ import type { UserPolicy } from '@/types/ingredients/UserPolicy';
 import type { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
 import type { UserSimulation } from '@/types/ingredients/UserSimulation';
 import { resolveDefaultReportOutputSubpage } from '@/utils/reportOutputSubpage';
+import { isBudgetWindowReportYear } from '@/utils/reportTiming';
 import { convertPoliciesToV1Format } from '@/utils/reproducibilityCode';
 import { getDisplayStatus } from '@/utils/statusMapping';
+import {
+  BUDGET_WINDOW_SUBPAGE,
+  isBudgetWindowReportOutput,
+  resolveBudgetWindowSubpage,
+} from './budget-window/budgetWindowUtils';
+import { BudgetWindowSubPage } from './BudgetWindowSubPage';
 import { ComparativeAnalysisPage } from './ComparativeAnalysisPage';
 import { ConstituencySubPage } from './ConstituencySubPage';
 import DynamicsSubPage from './DynamicsSubPage';
 import ErrorPage from './ErrorPage';
+import { useBudgetWindowCalculation } from './hooks/useBudgetWindowCalculation';
 import LoadingPage from './LoadingPage';
 import { LocalAuthoritySubPage } from './LocalAuthoritySubPage';
 import MigrationSubPage from './MigrationSubPage';
@@ -157,7 +165,13 @@ export function SocietyWideReportOutput({
   policies,
   geographies,
 }: SocietyWideReportOutputProps) {
-  const normalizedSubpage = resolveDefaultReportOutputSubpage('societyWide', subpage);
+  const isBudgetWindow = isBudgetWindowReportYear(report?.year || '');
+  const normalizedSubpage = resolveDefaultReportOutputSubpage('societyWide', subpage, {
+    societyWideDefaultSubpage: isBudgetWindow ? BUDGET_WINDOW_SUBPAGE : undefined,
+  });
+  const effectiveSubpage = isBudgetWindow
+    ? resolveBudgetWindowSubpage(normalizedSubpage)
+    : normalizedSubpage;
 
   // Read datasets from metadata for the reproduce tab
   const datasets = useSelector((state: RootState) => state.metadata.economyOptions?.datasets);
@@ -171,6 +185,14 @@ export function SocietyWideReportOutput({
     hasCalcStatus,
     message: progressMessage,
   } = useReportProgressDisplay(report?.id);
+  const shouldRunBudgetWindowCalculation =
+    isBudgetWindow && effectiveSubpage !== 'population' && !!report && !!simulations?.[0];
+
+  useBudgetWindowCalculation({
+    enabled: shouldRunBudgetWindowCalculation,
+    report,
+    simulations,
+  });
 
   // Build calculation config for auto-start
   const calcConfigs = useMemo(() => {
@@ -214,7 +236,7 @@ export function SocietyWideReportOutput({
 
   // Auto-start calculation if needed (direct URL loads)
   useStartCalculationOnLoad({
-    enabled: !!report && !!calcConfigs,
+    enabled: !!report && !!calcConfigs && !isBudgetWindow,
     configs: calcConfigs || [],
     isComplete: calcStatus.isComplete,
   });
@@ -229,7 +251,7 @@ export function SocietyWideReportOutput({
   }
 
   // 2. Data loaded - render input-only tabs immediately (no calculation needed)
-  const InputTabRenderer = INPUT_ONLY_TABS[normalizedSubpage];
+  const InputTabRenderer = INPUT_ONLY_TABS[effectiveSubpage];
   if (InputTabRenderer) {
     return InputTabRenderer({
       report,
@@ -239,6 +261,10 @@ export function SocietyWideReportOutput({
       geographies,
       datasets,
     });
+  }
+
+  if (isBudgetWindow && isBudgetWindowReportOutput(report.output)) {
+    return <BudgetWindowSubPage output={report.output} countryId={report.countryId} />;
   }
 
   // 3. Show loading if calculation status is still initializing
@@ -261,9 +287,13 @@ export function SocietyWideReportOutput({
 
   // 6. Calculation complete - render output tabs
   if (calcStatus.isComplete && calcStatus.result) {
+    if (isBudgetWindow && isBudgetWindowReportOutput(calcStatus.result)) {
+      return <BudgetWindowSubPage output={calcStatus.result} countryId={report.countryId} />;
+    }
+
     const output = calcStatus.result as SocietyWideOutput;
 
-    const OutputTabRenderer = OUTPUT_TABS[normalizedSubpage];
+    const OutputTabRenderer = OUTPUT_TABS[effectiveSubpage];
     if (OutputTabRenderer) {
       return OutputTabRenderer({
         report,
@@ -278,5 +308,9 @@ export function SocietyWideReportOutput({
   }
 
   // 7. Unknown tab or no output
+  if (isBudgetWindow && isBudgetWindowReportOutput(report.output)) {
+    return <BudgetWindowSubPage output={report.output} countryId={report.countryId} />;
+  }
+
   return <NotFoundSubPage />;
 }

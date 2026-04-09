@@ -4,12 +4,14 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { createReportAndAssociateWithUser } from '@/api/report';
 import { useModifyReportSubmission } from '@/pages/reportBuilder/hooks/useModifyReportSubmission';
 import {
   createTestStore,
   CURRENT_LAW_ID,
   mockCreateSimulationFn,
   mockLocalStorageCreateFn,
+  mockLocalStorageDeleteFn,
   mockOnSuccess,
   mockTwoSimReportState,
   setupDefaultMocks,
@@ -25,6 +27,7 @@ vi.mock('@/api/simulation', () => ({
 vi.mock('@/api/simulationAssociation', () => ({
   LocalStorageSimulationStore: vi.fn().mockImplementation(() => ({
     create: mockLocalStorageCreateFn,
+    delete: mockLocalStorageDeleteFn,
   })),
 }));
 
@@ -169,6 +172,38 @@ describe('useModifyReportSubmission', () => {
         isCreated: true,
       });
     });
+
+    test('given invalid budget-window timing when saving as new then falls back to the single start year', async () => {
+      const invalidBudgetWindowState = {
+        ...mockTwoSimReportState,
+        analysisMode: 'budget-window' as const,
+        budgetWindowYears: '10',
+        year: '2035',
+      };
+
+      const { result } = renderHook(
+        () =>
+          useModifyReportSubmission({
+            reportState: invalidBudgetWindowState,
+            countryId: 'us',
+            existingUserReportId: EXISTING_USER_REPORT_ID,
+            onSuccess: mockOnSuccess,
+          }),
+        { wrapper }
+      );
+
+      await result.current.handleSaveAsNew('New Report Label');
+
+      await waitFor(() => {
+        expect(createReportAndAssociateWithUser).toHaveBeenCalledWith(
+          expect.objectContaining({
+            payload: expect.objectContaining({
+              year: '2035',
+            }),
+          })
+        );
+      });
+    });
   });
 
   describe('localStorage association creation via handleReplace', () => {
@@ -230,6 +265,42 @@ describe('useModifyReportSubmission', () => {
       await waitFor(() => {
         expect(mockOnSuccess).toHaveBeenCalledWith(EXISTING_USER_REPORT_ID);
       });
+    });
+
+    test('given replacing a hydrated report then deletes previous local associations', async () => {
+      const hydratedReportState = {
+        ...mockTwoSimReportState,
+        simulations: [
+          {
+            ...mockTwoSimReportState.simulations[0],
+            id: 'old-sim-1',
+          },
+          {
+            ...mockTwoSimReportState.simulations[1],
+            id: 'old-sim-2',
+          },
+        ],
+      };
+
+      const { result } = renderHook(
+        () =>
+          useModifyReportSubmission({
+            reportState: hydratedReportState as any,
+            countryId: 'us',
+            existingUserReportId: EXISTING_USER_REPORT_ID,
+            onSuccess: mockOnSuccess,
+          }),
+        { wrapper }
+      );
+
+      await result.current.handleReplace();
+
+      await waitFor(() => {
+        expect(mockLocalStorageDeleteFn).toHaveBeenCalledTimes(2);
+      });
+
+      expect(mockLocalStorageDeleteFn).toHaveBeenCalledWith('anonymous', 'old-sim-1');
+      expect(mockLocalStorageDeleteFn).toHaveBeenCalledWith('anonymous', 'old-sim-2');
     });
   });
 });

@@ -17,11 +17,17 @@ import { createSimulation } from '@/api/simulation';
 import { LocalStorageSimulationStore } from '@/api/simulationAssociation';
 import { MOCK_USER_ID } from '@/constants';
 import { useCreateReport } from '@/hooks/useCreateReport';
+import { getTaxYears } from '@/libs/metadataUtils';
 import { RootState } from '@/store';
 import { Report } from '@/types/ingredients/Report';
 import { Simulation } from '@/types/ingredients/Simulation';
 import { SimulationStateProps } from '@/types/pathwayState';
 import { trackReportStarted } from '@/utils/analytics';
+import {
+  getBudgetWindowOptions,
+  getEffectiveReportAnalysisMode,
+  serializeReportTiming,
+} from '@/utils/reportTiming';
 import { toApiPolicyId } from '../currentLaw';
 import { ReportBuilderState } from '../types';
 
@@ -35,6 +41,35 @@ interface UseReportSubmissionReturn {
   handleSubmit: () => Promise<void>;
   isSubmitting: boolean;
   isReportConfigured: boolean;
+}
+
+async function persistSimulationAssociations(
+  associations: Array<{
+    simulationId: string;
+    countryId: 'us' | 'uk';
+    label?: string;
+  }>
+): Promise<void> {
+  const simulationStore = new LocalStorageSimulationStore();
+  const createdSimulationIds: string[] = [];
+
+  try {
+    for (const association of associations) {
+      await simulationStore.create({
+        userId: MOCK_USER_ID,
+        simulationId: association.simulationId,
+        countryId: association.countryId,
+        label: association.label,
+        isCreated: true,
+      });
+      createdSimulationIds.push(association.simulationId);
+    }
+  } catch (error) {
+    await Promise.allSettled(
+      createdSimulationIds.map((simulationId) => simulationStore.delete(MOCK_USER_ID, simulationId))
+    );
+    console.error('[useReportSubmission] Failed to store simulation associations:', error);
+  }
 }
 
 function convertToSimulation(
@@ -83,8 +118,19 @@ export function useReportSubmission({
   onSuccess,
 }: UseReportSubmissionArgs): UseReportSubmissionReturn {
   const currentLawId = useSelector((state: RootState) => state.metadata.currentLawId);
+  const yearOptions = useSelector(getTaxYears);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { createReport } = useCreateReport(reportState.label || undefined);
+  const isGeographyReport = !!reportState.simulations[0]?.population?.geography?.id;
+  const availableBudgetWindowOptions = getBudgetWindowOptions(
+    reportState.year,
+    yearOptions,
+    countryId
+  );
+  const effectiveAnalysisMode = getEffectiveReportAnalysisMode(
+    reportState.analysisMode,
+    isGeographyReport ? availableBudgetWindowOptions : []
+  );
 
   const isReportConfigured = reportState.simulations.every(
     (sim) => !!sim.policy.id && !!(sim.population.household?.id || sim.population.geography?.id)
@@ -101,6 +147,11 @@ export function useReportSubmission({
     try {
       const simulationIds: string[] = [];
       const simulations: (Simulation | null)[] = [];
+      const simulationAssociations: Array<{
+        simulationId: string;
+        countryId: 'us' | 'uk';
+        label?: string;
+      }> = [];
 
       for (const simState of reportState.simulations) {
         const policyId = simState.policy?.id
@@ -138,15 +189,10 @@ export function useReportSubmission({
         const result = await createSimulation(countryId, payload);
         const simulationId = result.result.simulation_id;
         simulationIds.push(simulationId);
-
-        // Create UserSimulation association in localStorage so sharing works
-        const simulationStore = new LocalStorageSimulationStore();
-        await simulationStore.create({
-          userId: MOCK_USER_ID,
+        simulationAssociations.push({
           simulationId,
           countryId,
           label: simState.label ?? undefined,
-          isCreated: true,
         });
 
         const simulation = convertToSimulation(simState, simulationId, countryId, currentLawId);
@@ -161,7 +207,11 @@ export function useReportSubmission({
 
       const reportData: Partial<Report> = {
         countryId,
-        year: reportState.year,
+        year: serializeReportTiming({
+          analysisMode: effectiveAnalysisMode,
+          startYear: reportState.year,
+          budgetWindowYears: reportState.budgetWindowYears,
+        }),
         simulationIds,
         apiVersion: null,
       };
@@ -193,6 +243,8 @@ export function useReportSubmission({
           },
         }
       );
+
+      await persistSimulationAssociations(simulationAssociations);
     } catch (error) {
       console.error('[useReportSubmission] Error running report:', error);
       setIsSubmitting(false);
@@ -204,6 +256,7 @@ export function useReportSubmission({
     countryId,
     currentLawId,
     createReport,
+    effectiveAnalysisMode,
     onSuccess,
   ]);
 

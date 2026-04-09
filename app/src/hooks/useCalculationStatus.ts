@@ -61,6 +61,7 @@ function useSingleCalculationStatus(calcId: string, targetType: 'report' | 'simu
     // Create observer that watches this query key
     const observer = new QueryObserver<CalcStatus>(queryClient, {
       queryKey,
+      enabled: false,
     });
 
     // Subscribe to cache updates

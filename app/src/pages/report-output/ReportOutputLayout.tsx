@@ -5,6 +5,7 @@ import { Container, Group, Stack, Text, Title } from '@/components/ui';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { getReportTimingDisplay } from '@/utils/reportTiming';
 
 interface ReportOutputLayoutProps {
   reportId: string;
@@ -43,6 +44,7 @@ export default function ReportOutputLayout({
 }: ReportOutputLayoutProps) {
   const countryId = useCurrentCountry();
   const nav = useAppNavigate();
+  const timingDisplay = reportYear ? getReportTimingDisplay(reportYear) : null;
 
   return (
     <Container size="xl" className="tw:px-xl">
@@ -90,11 +92,11 @@ export default function ReportOutputLayout({
 
           {/* Timestamp and year */}
           <Group className="tw:gap-xs tw:items-center">
-            {reportYear && (
+            {timingDisplay && (
               <>
                 <IconCalendar size={16} color={colors.text.secondary} />
                 <Text className="tw:text-sm" style={{ color: colors.text.secondary }}>
-                  Year: {reportYear}
+                  {timingDisplay.label}: {timingDisplay.value}
                 </Text>
                 <Text className="tw:text-sm" style={{ color: colors.text.secondary }}>
                   •
