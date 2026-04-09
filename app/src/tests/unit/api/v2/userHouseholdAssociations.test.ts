@@ -6,6 +6,7 @@ import {
   fetchUserHouseholdAssociationsV2,
   fromV2Response,
   toV2CreateRequest,
+  toV2UpdateRequest,
   updateUserHouseholdAssociationV2,
 } from '@/api/v2/userHouseholdAssociations';
 import {
@@ -221,6 +222,18 @@ describe('userHouseholdAssociations', () => {
   // ==========================================================================
 
   describe('updateUserHouseholdAssociationV2', () => {
+    test('given camelCase householdId then it maps to snake_case API update payload', () => {
+      expect(
+        toV2UpdateRequest({
+          label: 'Updated household',
+          householdId: TEST_IDS.HOUSEHOLD_ID,
+        })
+      ).toEqual({
+        label: 'Updated household',
+        household_id: TEST_IDS.HOUSEHOLD_ID,
+      });
+    });
+
     test('given a successful PUT then it returns the updated association', async () => {
       // Given
       const mockResponse = {
@@ -238,7 +251,10 @@ describe('userHouseholdAssociations', () => {
       expect(result.label).toBe('Updated household');
       expect(fetch).toHaveBeenCalledWith(
         expect.stringContaining(`/user-household-associations/${TEST_IDS.ASSOCIATION_ID}`),
-        expect.objectContaining({ method: 'PUT' })
+        expect.objectContaining({
+          method: 'PUT',
+          body: JSON.stringify({ label: 'Updated household' }),
+        })
       );
     });
   });

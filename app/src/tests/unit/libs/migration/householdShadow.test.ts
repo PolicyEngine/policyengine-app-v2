@@ -1,8 +1,14 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { createHouseholdV2 } from '@/api/v2';
-import { createUserHouseholdAssociationV2 } from '@/api/v2/userHouseholdAssociations';
+import {
+  createUserHouseholdAssociationV2,
+  updateUserHouseholdAssociationV2,
+} from '@/api/v2/userHouseholdAssociations';
 import { logMigrationComparison } from '@/libs/migration/comparisonLogger';
-import { shadowCreateHouseholdAndAssociation } from '@/libs/migration/householdShadow';
+import {
+  shadowCreateHouseholdAndAssociation,
+  shadowUpdateUserHouseholdAssociation,
+} from '@/libs/migration/householdShadow';
 import { getV2Id, setV2Id } from '@/libs/migration/idMapping';
 import { sendMigrationLog } from '@/libs/migration/migrationLogTransport';
 import { Household } from '@/models/Household';
@@ -75,6 +81,17 @@ describe('householdShadow', () => {
       updatedAt: '2026-04-09T12:00:01Z',
       isCreated: true,
     });
+    vi.mocked(updateUserHouseholdAssociationV2).mockResolvedValue({
+      id: TEST_V2_ASSOC_ID,
+      type: 'household',
+      userId: TEST_V2_USER_ID,
+      householdId: TEST_V2_HOUSEHOLD_ID,
+      countryId: TEST_COUNTRY_ID,
+      label: 'My household',
+      createdAt: '2026-04-09T12:00:01Z',
+      updatedAt: '2026-04-09T12:00:02Z',
+      isCreated: true,
+    });
   });
 
   test('given successful v2 household create then it stores household and user-household mappings', async () => {
@@ -133,7 +150,7 @@ describe('householdShadow', () => {
         v1Household,
         v1Association,
       })
-    ).resolves.toBeUndefined();
+    ).resolves.toBeNull();
 
     expect(createUserHouseholdAssociationV2).not.toHaveBeenCalled();
     expect(infoSpy).toHaveBeenCalledWith(
@@ -147,6 +164,25 @@ describe('householdShadow', () => {
         operation: 'CREATE',
         status: 'FAILED',
       })
+    );
+  });
+
+  test('given mapped ids then it updates the existing v2 user-household association', async () => {
+    setV2Id('Household', TEST_V1_HOUSEHOLD_ID, TEST_V2_HOUSEHOLD_ID);
+    setV2Id('UserHousehold', TEST_V1_ASSOC_ID, TEST_V2_ASSOC_ID);
+
+    await shadowUpdateUserHouseholdAssociation(v1Association);
+
+    expect(updateUserHouseholdAssociationV2).toHaveBeenCalledWith(TEST_V2_ASSOC_ID, {
+      label: 'My household',
+      householdId: TEST_V2_HOUSEHOLD_ID,
+    });
+    expect(logMigrationComparison).toHaveBeenCalledWith(
+      'UserHouseholdMigration',
+      'UPDATE',
+      expect.any(Object),
+      expect.any(Object),
+      { skipFields: ['id', 'createdAt', 'updatedAt', 'isCreated'] }
     );
   });
 });
