@@ -48,6 +48,12 @@ export interface UserHouseholdAssociationV2CreateRequest {
  */
 export interface UserHouseholdAssociationV2UpdateRequest {
   label?: string | null;
+  householdId?: string;
+}
+
+interface UserHouseholdAssociationV2ApiUpdateRequest {
+  label?: string | null;
+  household_id?: string;
 }
 
 // ============================================================================
@@ -68,6 +74,15 @@ export function toV2CreateRequest(
     household_id: association.householdId,
     country_id: association.countryId,
     label: association.label ?? null,
+  };
+}
+
+export function toV2UpdateRequest(
+  updates: UserHouseholdAssociationV2UpdateRequest
+): UserHouseholdAssociationV2ApiUpdateRequest {
+  return {
+    label: updates.label,
+    household_id: updates.householdId,
   };
 }
 
@@ -185,6 +200,7 @@ export async function updateUserHouseholdAssociationV2(
   updates: UserHouseholdAssociationV2UpdateRequest
 ): Promise<UserHouseholdPopulation> {
   const url = `${API_V2_BASE_URL}${BASE_PATH}/${associationId}`;
+  const body = toV2UpdateRequest(updates);
 
   const json = await v2Fetch<UserHouseholdAssociationV2Response>(
     url,
@@ -195,7 +211,7 @@ export async function updateUserHouseholdAssociationV2(
         'Content-Type': 'application/json',
         Accept: 'application/json',
       },
-      body: JSON.stringify(updates),
+      body: JSON.stringify(body),
     }
   );
   return fromV2Response(json);

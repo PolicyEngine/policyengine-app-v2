@@ -1,9 +1,17 @@
 // Import auth hook here in future; for now, mocked out below
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
-import { fetchHouseholdById } from '@/api/household';
+import { HouseholdAdapter } from '@/adapters/HouseholdAdapter';
+import { createHousehold, fetchHouseholdById } from '@/api/household';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import {
+  shadowCreateHousehold,
+  shadowUpdateUserHouseholdAssociation,
+} from '@/libs/migration/householdShadow';
+import { Household as HouseholdModel } from '@/models/Household';
+import type { Household } from '@/types/ingredients/Household';
 import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
+import type { UserHouseholdStore } from '../api/householdAssociation';
 import { ApiHouseholdStore, LocalStorageHouseholdStore } from '../api/householdAssociation';
 import { queryConfig } from '../libs/queryConfig';
 import { householdAssociationKeys, householdKeys } from '../libs/queryKeys';
@@ -70,20 +78,79 @@ export const useCreateHouseholdAssociation = () => {
   });
 };
 
+export async function replaceHouseholdBaseForAssociation(args: {
+  association: UserHouseholdPopulation;
+  nextHousehold: Household;
+  store?: Pick<UserHouseholdStore, 'update'>;
+}): Promise<UserHouseholdPopulation> {
+  const { association, nextHousehold } = args;
+  const store = args.store ?? localHouseholdStore;
+
+  if (!association.id) {
+    throw new Error(
+      'Household association must have an id before its base household can be replaced'
+    );
+  }
+
+  const payload = HouseholdAdapter.toCreationPayload(
+    nextHousehold.householdData,
+    nextHousehold.countryId
+  );
+  const createdHousehold = await createHousehold(payload);
+  const nextHouseholdId = String(createdHousehold.result.household_id);
+  const updatedAssociation = await store.update(association.id, {
+    householdId: nextHouseholdId,
+  });
+
+  void (async () => {
+    const nextHouseholdModel = HouseholdModel.fromV1Payload({
+      id: nextHouseholdId,
+      countryId: nextHousehold.countryId,
+      householdData: payload.data,
+      label: updatedAssociation.label ?? association.label ?? null,
+    });
+    const v2HouseholdId = await shadowCreateHousehold(nextHouseholdId, nextHouseholdModel);
+    await shadowUpdateUserHouseholdAssociation(updatedAssociation, v2HouseholdId ?? undefined);
+  })();
+
+  return updatedAssociation;
+}
+
 export const useUpdateHouseholdAssociation = () => {
   const store = useUserHouseholdStore();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({
+    mutationFn: async ({
       userHouseholdId,
       updates,
+      association,
+      nextHousehold,
     }: {
       userHouseholdId: string;
       updates: Partial<UserHouseholdPopulation>;
-    }) => store.update(userHouseholdId, updates),
+      association?: UserHouseholdPopulation;
+      nextHousehold?: Household;
+    }) => {
+      if (nextHousehold) {
+        if (!association) {
+          throw new Error('Association is required when replacing a household base');
+        }
 
-    onSuccess: (updatedAssociation) => {
+        return replaceHouseholdBaseForAssociation({
+          association,
+          nextHousehold,
+          store,
+        });
+      }
+
+      return store.update(userHouseholdId, updates);
+    },
+
+    onSuccess: (updatedAssociation, variables) => {
+      const previousHouseholdId =
+        variables.association?.householdId ?? updatedAssociation.householdId;
+
       // Invalidate all related queries to trigger refetch
       queryClient.invalidateQueries({
         queryKey: householdAssociationKeys.byUser(
@@ -93,8 +160,13 @@ export const useUpdateHouseholdAssociation = () => {
       });
 
       queryClient.invalidateQueries({
-        queryKey: householdAssociationKeys.byHousehold(updatedAssociation.householdId),
+        queryKey: householdAssociationKeys.byHousehold(previousHouseholdId),
       });
+      if (previousHouseholdId !== updatedAssociation.householdId) {
+        queryClient.invalidateQueries({
+          queryKey: householdAssociationKeys.byHousehold(updatedAssociation.householdId),
+        });
+      }
 
       // Optimistically update caches
       queryClient.setQueryData(
@@ -104,6 +176,20 @@ export const useUpdateHouseholdAssociation = () => {
         ),
         updatedAssociation
       );
+
+      if (previousHouseholdId !== updatedAssociation.householdId) {
+        queryClient.removeQueries({
+          queryKey: householdAssociationKeys.specific(
+            updatedAssociation.userId,
+            previousHouseholdId
+          ),
+          exact: true,
+        });
+      }
+
+      if (!variables.nextHousehold) {
+        void shadowUpdateUserHouseholdAssociation(updatedAssociation);
+      }
     },
   });
 };
