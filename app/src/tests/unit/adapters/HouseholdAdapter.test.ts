@@ -109,7 +109,7 @@ describe('HouseholdAdapter', () => {
       const result = HouseholdAdapter.fromMetadata(metadata as any);
 
       expect(result).toEqual({
-        id: 789,
+        id: '789',
         countryId: 'ca',
         householdData: {
           people: {},
