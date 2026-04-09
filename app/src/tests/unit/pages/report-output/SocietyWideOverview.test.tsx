@@ -1,4 +1,4 @@
-import { render, screen } from '@test-utils';
+import { render, screen, userEvent } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import SocietyWideOverview, {
   buildOutcomeMapData,
@@ -271,6 +271,24 @@ describe('SocietyWideOverview', () => {
     expect(screen.getByText('Budgetary impact')).toBeInTheDocument();
     expect(screen.getByText('Poverty impact')).toBeInTheDocument();
     expect(screen.getByText('Winners and losers')).toBeInTheDocument();
+  });
+
+  test('congressional card exposes a tooltip explaining winner and loser percentages', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <SocietyWideOverview output={createMockSocietyWideOutput() as any} showCongressionalCard />
+    );
+
+    await user.hover(
+      screen.getByRole('button', {
+        name: 'Explain congressional district winner and loser percentages',
+      })
+    );
+
+    expect(await screen.findByRole('tooltip')).toHaveTextContent(
+      /Winner % and Loser % show the share of people in households whose net income changes by at least 0.1%./
+    );
   });
 
   test('buildOutcomeMapData reads winner shares from the district payload and tracks gaps', () => {
