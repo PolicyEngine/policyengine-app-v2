@@ -1,9 +1,14 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { fetchSocietyWideCalculation } from '@/api/societyWideCalculation';
+import {
+  fetchBudgetWindowSocietyWideCalculation,
+  fetchSocietyWideCalculation,
+} from '@/api/societyWideCalculation';
 import { BASE_URL, CURRENT_YEAR } from '@/constants';
 import {
   ERROR_MESSAGES,
   HTTP_STATUS,
+  mockBudgetWindowCompletedResponse,
+  mockBudgetWindowPendingResponse,
   mockCompletedResponse,
   mockErrorCalculationResponse,
   mockErrorResponse,
@@ -288,6 +293,56 @@ describe('societyWide API', () => {
           },
         })
       );
+    });
+  });
+
+  describe('fetchBudgetWindowSocietyWideCalculation', () => {
+    test('given valid parameters then fetches the budget-window calculation successfully', async () => {
+      const countryId = TEST_COUNTRIES.US;
+      const reformPolicyId = TEST_POLICY_IDS.REFORM;
+      const baselinePolicyId = TEST_POLICY_IDS.BASELINE;
+      const params = { region: 'us', start_year: '2026', window_size: 3 };
+      const mockResponse = mockSuccessResponse(mockBudgetWindowCompletedResponse);
+      (global.fetch as any).mockResolvedValue(mockResponse);
+
+      const result = await fetchBudgetWindowSocietyWideCalculation(
+        countryId,
+        reformPolicyId,
+        baselinePolicyId,
+        params
+      );
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        `${BASE_URL}/${countryId}/economy/${reformPolicyId}/over/${baselinePolicyId}/budget-window?region=us&start_year=2026&window_size=3`,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      expect(result).toEqual(mockBudgetWindowCompletedResponse);
+    });
+
+    test('given computing status then returns progress metadata', async () => {
+      const countryId = TEST_COUNTRIES.US;
+      const reformPolicyId = TEST_POLICY_IDS.REFORM;
+      const baselinePolicyId = TEST_POLICY_IDS.BASELINE;
+      const params = { region: 'us', start_year: '2026', window_size: 4 };
+      const mockResponse = mockSuccessResponse(mockBudgetWindowPendingResponse);
+      (global.fetch as any).mockResolvedValue(mockResponse);
+
+      const result = await fetchBudgetWindowSocietyWideCalculation(
+        countryId,
+        reformPolicyId,
+        baselinePolicyId,
+        params
+      );
+
+      expect(result.status).toBe('computing');
+      expect(result.progress).toBe(30);
+      expect(result.completed_years).toEqual(['2026']);
+      expect(result.computing_years).toEqual(['2027', '2028']);
+      expect(result.queued_years).toEqual(['2029']);
     });
   });
 });
