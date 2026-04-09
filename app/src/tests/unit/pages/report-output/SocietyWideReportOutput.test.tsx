@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { useCalculationStatus } from '@/hooks/useCalculationStatus';
 import { useReportProgressDisplay } from '@/hooks/useReportProgressDisplay';
 import { useStartCalculationOnLoad } from '@/hooks/useStartCalculationOnLoad';
+import { useBudgetWindowCalculation } from '@/pages/report-output/hooks/useBudgetWindowCalculation';
 import { SocietyWideReportOutput } from '@/pages/report-output/SocietyWideReportOutput';
 import {
   MOCK_CALC_STATUS_COMPLETE,
@@ -23,6 +24,7 @@ import {
 vi.mock('@/hooks/useCalculationStatus');
 vi.mock('@/hooks/useReportProgressDisplay');
 vi.mock('@/hooks/useStartCalculationOnLoad');
+vi.mock('@/pages/report-output/hooks/useBudgetWindowCalculation');
 // Mock subpage components with inline mocks to avoid hoisting issues
 vi.mock('@/pages/report-output/LoadingPage', () => ({
   default: vi.fn(({ message }: { message?: string; progress?: number }) => (
@@ -67,6 +69,7 @@ vi.mock('@/pages/report-output/BudgetWindowSubPage', () => ({
 const mockUseCalculationStatus = useCalculationStatus as ReturnType<typeof vi.fn>;
 const mockUseReportProgressDisplay = useReportProgressDisplay as ReturnType<typeof vi.fn>;
 const mockUseStartCalculationOnLoad = useStartCalculationOnLoad as ReturnType<typeof vi.fn>;
+const mockUseBudgetWindowCalculation = useBudgetWindowCalculation as ReturnType<typeof vi.fn>;
 
 const MOCK_BUDGET_WINDOW_OUTPUT = {
   kind: 'budgetWindow' as const,
@@ -99,6 +102,7 @@ describe('SocietyWideReportOutput', () => {
       message: undefined,
     });
     mockUseStartCalculationOnLoad.mockReturnValue(undefined);
+    mockUseBudgetWindowCalculation.mockReturnValue(undefined);
   });
 
   test('given no report then shows error message', () => {
@@ -379,5 +383,10 @@ describe('SocietyWideReportOutput', () => {
     );
 
     expect(screen.getByTestId('population-page')).toBeInTheDocument();
+    expect(mockUseBudgetWindowCalculation).toHaveBeenCalledWith(
+      expect.objectContaining({
+        enabled: false,
+      })
+    );
   });
 });

@@ -11,6 +11,7 @@ import {
   mockCreateReportFn,
   mockCreateSimulationFn,
   mockLocalStorageCreateFn,
+  mockLocalStorageDeleteFn,
   mockOnSuccess,
   mockSingleSimReportState,
   mockTwoSimReportState,
@@ -28,6 +29,7 @@ vi.mock('@/api/simulation', () => ({
 vi.mock('@/api/simulationAssociation', () => ({
   LocalStorageSimulationStore: vi.fn().mockImplementation(() => ({
     create: mockLocalStorageCreateFn,
+    delete: mockLocalStorageDeleteFn,
   })),
 }));
 
@@ -161,12 +163,17 @@ describe('useReportSubmission', () => {
       });
     });
 
-    test('given submission then calls createSimulation before localStorage association', async () => {
+    test('given submission then stores local associations after report creation succeeds', async () => {
       // Given
       const callOrder: string[] = [];
       mockCreateSimulationFn.mockImplementation(() => {
         callOrder.push('createSimulation');
         return Promise.resolve({ result: { simulation_id: TEST_SIMULATION_IDS.SIM_NEW_1 } });
+      });
+      mockCreateReportFn.mockImplementation((_args: any, callbacks: any) => {
+        callOrder.push('createReport');
+        callbacks?.onSuccess?.({ userReport: { id: 'user-report-new' } });
+        return Promise.resolve();
       });
       mockLocalStorageCreateFn.mockImplementation(() => {
         callOrder.push('localStorageCreate');
@@ -188,7 +195,30 @@ describe('useReportSubmission', () => {
 
       // Then
       await waitFor(() => {
-        expect(callOrder).toEqual(['createSimulation', 'localStorageCreate']);
+        expect(callOrder).toEqual(['createSimulation', 'createReport', 'localStorageCreate']);
+      });
+    });
+
+    test('given report creation fails then does not create localStorage associations', async () => {
+      mockCreateReportFn.mockImplementation((_args: any, callbacks: any) => {
+        callbacks?.onError?.(new Error('Report creation failed'));
+        return Promise.reject(new Error('Report creation failed'));
+      });
+
+      const { result } = renderHook(
+        () =>
+          useReportSubmission({
+            reportState: mockSingleSimReportState,
+            countryId: 'us',
+            onSuccess: mockOnSuccess,
+          }),
+        { wrapper }
+      );
+
+      await result.current.handleSubmit();
+
+      await waitFor(() => {
+        expect(mockLocalStorageCreateFn).not.toHaveBeenCalled();
       });
     });
 

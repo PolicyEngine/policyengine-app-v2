@@ -10,6 +10,7 @@ export interface SocietyWideCalculationParams {
   region: string; // Must include a region; "us" for US nationwide, two-letter state code for US states
   time_period: string; // Four-digit year
   dataset?: string; // Optional dataset parameter; defaults to API's default dataset
+  version?: string; // Optional API/model version parameter
 }
 
 export interface SocietyWideCalculationResponse {
@@ -25,6 +26,7 @@ export interface BudgetWindowCalculationParams {
   start_year: string;
   window_size: number;
   dataset?: string;
+  version?: string | null;
 }
 
 export interface BudgetWindowCalculationResponse {
@@ -36,6 +38,18 @@ export interface BudgetWindowCalculationResponse {
   queued_years?: string[];
   message?: string | null;
   error?: string;
+}
+
+export class CalculationRequestError extends Error {
+  status: number;
+  body: string;
+
+  constructor(message: string, status: number, body = '') {
+    super(message);
+    this.name = 'CalculationRequestError';
+    this.status = status;
+    this.body = body;
+  }
 }
 
 function buildQueryString<T extends object>(params: T): string {
@@ -65,8 +79,10 @@ async function fetchCalculationResponse<T>(url: string, logPrefix: string): Prom
       // ignore
     }
     console.error(`${logPrefix} ${response.status} ${response.statusText}`, url, body);
-    throw new Error(
-      `Society-wide calculation failed (${response.status}): ${body || response.statusText}`
+    throw new CalculationRequestError(
+      `Society-wide calculation failed (${response.status}): ${body || response.statusText}`,
+      response.status,
+      body
     );
   }
 

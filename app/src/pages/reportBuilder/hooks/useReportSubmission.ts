@@ -43,6 +43,35 @@ interface UseReportSubmissionReturn {
   isReportConfigured: boolean;
 }
 
+async function persistSimulationAssociations(
+  associations: Array<{
+    simulationId: string;
+    countryId: 'us' | 'uk';
+    label?: string;
+  }>
+): Promise<void> {
+  const simulationStore = new LocalStorageSimulationStore();
+  const createdSimulationIds: string[] = [];
+
+  try {
+    for (const association of associations) {
+      await simulationStore.create({
+        userId: MOCK_USER_ID,
+        simulationId: association.simulationId,
+        countryId: association.countryId,
+        label: association.label,
+        isCreated: true,
+      });
+      createdSimulationIds.push(association.simulationId);
+    }
+  } catch (error) {
+    await Promise.allSettled(
+      createdSimulationIds.map((simulationId) => simulationStore.delete(MOCK_USER_ID, simulationId))
+    );
+    console.error('[useReportSubmission] Failed to store simulation associations:', error);
+  }
+}
+
 function convertToSimulation(
   simState: SimulationStateProps,
   simulationId: string,
@@ -118,6 +147,11 @@ export function useReportSubmission({
     try {
       const simulationIds: string[] = [];
       const simulations: (Simulation | null)[] = [];
+      const simulationAssociations: Array<{
+        simulationId: string;
+        countryId: 'us' | 'uk';
+        label?: string;
+      }> = [];
 
       for (const simState of reportState.simulations) {
         const policyId = simState.policy?.id
@@ -155,15 +189,10 @@ export function useReportSubmission({
         const result = await createSimulation(countryId, payload);
         const simulationId = result.result.simulation_id;
         simulationIds.push(simulationId);
-
-        // Create UserSimulation association in localStorage so sharing works
-        const simulationStore = new LocalStorageSimulationStore();
-        await simulationStore.create({
-          userId: MOCK_USER_ID,
+        simulationAssociations.push({
           simulationId,
           countryId,
           label: simState.label ?? undefined,
-          isCreated: true,
         });
 
         const simulation = convertToSimulation(simState, simulationId, countryId, currentLawId);
@@ -214,6 +243,8 @@ export function useReportSubmission({
           },
         }
       );
+
+      await persistSimulationAssociations(simulationAssociations);
     } catch (error) {
       console.error('[useReportSubmission] Error running report:', error);
       setIsSubmitting(false);

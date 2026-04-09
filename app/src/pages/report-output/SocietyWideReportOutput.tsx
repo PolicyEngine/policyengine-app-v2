@@ -185,9 +185,11 @@ export function SocietyWideReportOutput({
     hasCalcStatus,
     message: progressMessage,
   } = useReportProgressDisplay(report?.id);
+  const shouldRunBudgetWindowCalculation =
+    isBudgetWindow && effectiveSubpage !== 'population' && !!report && !!simulations?.[0];
 
   useBudgetWindowCalculation({
-    enabled: isBudgetWindow && !!report && !!simulations?.[0],
+    enabled: shouldRunBudgetWindowCalculation,
     report,
     simulations,
   });

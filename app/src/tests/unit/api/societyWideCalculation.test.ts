@@ -301,7 +301,12 @@ describe('societyWide API', () => {
       const countryId = TEST_COUNTRIES.US;
       const reformPolicyId = TEST_POLICY_IDS.REFORM;
       const baselinePolicyId = TEST_POLICY_IDS.BASELINE;
-      const params = { region: 'us', start_year: '2026', window_size: 3 };
+      const params = {
+        region: 'us',
+        start_year: '2026',
+        window_size: 3,
+        version: '1.0.0',
+      };
       const mockResponse = mockSuccessResponse(mockBudgetWindowCompletedResponse);
       (global.fetch as any).mockResolvedValue(mockResponse);
 
@@ -313,7 +318,7 @@ describe('societyWide API', () => {
       );
 
       expect(global.fetch).toHaveBeenCalledWith(
-        `${BASE_URL}/${countryId}/economy/${reformPolicyId}/over/${baselinePolicyId}/budget-window?region=us&start_year=2026&window_size=3`,
+        `${BASE_URL}/${countryId}/economy/${reformPolicyId}/over/${baselinePolicyId}/budget-window?region=us&start_year=2026&window_size=3&version=1.0.0`,
         {
           headers: {
             'Content-Type': 'application/json',

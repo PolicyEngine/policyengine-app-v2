@@ -131,12 +131,14 @@ export function createTestStore(currentLawId: number = CURRENT_LAW_ID) {
 // Mock functions
 export const mockCreateSimulationFn = vi.fn();
 export const mockLocalStorageCreateFn = vi.fn();
+export const mockLocalStorageDeleteFn = vi.fn();
 export const mockCreateReportFn = vi.fn();
 export const mockOnSuccess = vi.fn();
 
 export function setupDefaultMocks() {
   mockCreateSimulationFn.mockReset();
   mockLocalStorageCreateFn.mockReset();
+  mockLocalStorageDeleteFn.mockReset();
   mockCreateReportFn.mockReset();
   mockOnSuccess.mockReset();
 
@@ -158,6 +160,7 @@ export function setupDefaultMocks() {
     countryId: 'us',
     isCreated: true,
   });
+  mockLocalStorageDeleteFn.mockResolvedValue(undefined);
 
   mockCreateReportFn.mockImplementation((_args: any, callbacks: any) => {
     callbacks?.onSuccess?.({ userReport: { id: 'user-report-new' } });

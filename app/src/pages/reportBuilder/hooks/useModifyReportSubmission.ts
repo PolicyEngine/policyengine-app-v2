@@ -47,6 +47,47 @@ interface UseModifyReportSubmissionReturn {
   isReplacing: boolean;
 }
 
+async function persistSimulationAssociations(
+  associations: Array<{
+    simulationId: string;
+    countryId: 'us' | 'uk';
+    label?: string;
+  }>
+): Promise<void> {
+  const simulationStore = new LocalStorageSimulationStore();
+  const createdSimulationIds: string[] = [];
+
+  try {
+    for (const association of associations) {
+      await simulationStore.create({
+        userId: MOCK_USER_ID,
+        simulationId: association.simulationId,
+        countryId: association.countryId,
+        label: association.label,
+        isCreated: true,
+      });
+      createdSimulationIds.push(association.simulationId);
+    }
+  } catch (error) {
+    await Promise.allSettled(
+      createdSimulationIds.map((simulationId) => simulationStore.delete(MOCK_USER_ID, simulationId))
+    );
+    console.error('[useModifyReportSubmission] Failed to store simulation associations:', error);
+  }
+}
+
+async function deleteSimulationAssociations(simulationIds: string[]): Promise<void> {
+  if (simulationIds.length === 0) {
+    return;
+  }
+
+  const simulationStore = new LocalStorageSimulationStore();
+
+  await Promise.allSettled(
+    simulationIds.map((simulationId) => simulationStore.delete(MOCK_USER_ID, simulationId))
+  );
+}
+
 export function useModifyReportSubmission({
   reportState,
   countryId,
@@ -78,6 +119,11 @@ export function useModifyReportSubmission({
   const createSimulationsAndReport = useCallback(async () => {
     const simulationIds: string[] = [];
     const simulations: (Simulation | null)[] = [];
+    const simulationAssociations: Array<{
+      simulationId: string;
+      countryId: 'us' | 'uk';
+      label?: string;
+    }> = [];
 
     for (const simState of reportState.simulations) {
       const policyId = simState.policy?.id
@@ -113,15 +159,10 @@ export function useModifyReportSubmission({
       const result = await createSimulation(countryId, payload);
       const simulationId = result.result.simulation_id;
       simulationIds.push(simulationId);
-
-      // Create UserSimulation association in localStorage so sharing works
-      const simulationStore = new LocalStorageSimulationStore();
-      await simulationStore.create({
-        userId: MOCK_USER_ID,
+      simulationAssociations.push({
         simulationId,
         countryId,
         label: simState.label ?? undefined,
-        isCreated: true,
       });
 
       simulations.push({
@@ -153,7 +194,7 @@ export function useModifyReportSubmission({
       apiVersion: null,
     } as Report);
 
-    return { simulationIds, simulations, reportPayload };
+    return { simulationIds, simulations, simulationAssociations, reportPayload };
   }, [countryId, currentLawId, effectiveAnalysisMode, reportState]);
 
   /**
@@ -231,7 +272,8 @@ export function useModifyReportSubmission({
       setIsSavingNew(true);
 
       try {
-        const { simulations, reportPayload } = await createSimulationsAndReport();
+        const { simulations, simulationAssociations, reportPayload } =
+          await createSimulationsAndReport();
 
         const result = await createReportAndAssociateWithUser({
           countryId,
@@ -239,6 +281,8 @@ export function useModifyReportSubmission({
           userId: MOCK_USER_ID,
           label: label || undefined,
         });
+
+        await persistSimulationAssociations(simulationAssociations);
 
         queryClient.invalidateQueries({ queryKey: reportKeys.all });
         queryClient.invalidateQueries({ queryKey: reportAssociationKeys.all });
@@ -272,7 +316,11 @@ export function useModifyReportSubmission({
     setIsReplacing(true);
 
     try {
-      const { simulations, reportPayload } = await createSimulationsAndReport();
+      const previousSimulationIds = reportState.simulations
+        .map((simulation) => simulation.id)
+        .filter((simulationId): simulationId is string => !!simulationId);
+      const { simulations, simulationAssociations, reportPayload } =
+        await createSimulationsAndReport();
 
       const reportMetadata = await createBaseReport(countryId, reportPayload);
       const report = ReportAdapter.fromMetadata(reportMetadata);
@@ -281,6 +329,9 @@ export function useModifyReportSubmission({
         userReportId: existingUserReportId,
         updates: { reportId: String(report.id) },
       });
+
+      await persistSimulationAssociations(simulationAssociations);
+      await deleteSimulationAssociations(previousSimulationIds);
 
       queryClient.invalidateQueries({ queryKey: reportKeys.all });
       queryClient.invalidateQueries({ queryKey: reportAssociationKeys.all });
