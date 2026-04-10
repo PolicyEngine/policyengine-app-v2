@@ -23,7 +23,7 @@
    Examples:
    - `src/components/Button.tsx` → `src/tests/unit/components/Button.test.tsx`
    - `src/hooks/useAuth.ts` → `src/tests/unit/hooks/useAuth.test.ts`
-   - `src/adapters/HouseholdAdapter.ts` → `src/tests/unit/adapters/HouseholdAdapter.test.ts`
+   - `src/models/Household.ts` → `src/tests/unit/models/Household.test.ts`
    - API integration test → `src/tests/integration/api/PolicyEngine.test.ts`
 
 3. **Test naming**: Use Given-When-Then pattern for clear, descriptive test names
