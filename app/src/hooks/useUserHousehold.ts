@@ -10,7 +10,6 @@ import {
 import { Household as HouseholdModel } from '@/models/Household';
 import type { Household } from '@/types/ingredients/Household';
 import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
-import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
 import type { UserHouseholdStore } from '../api/householdAssociation';
 import { ApiHouseholdStore, LocalStorageHouseholdStore } from '../api/householdAssociation';
 import { queryConfig } from '../libs/queryConfig';
@@ -219,7 +218,7 @@ export const useDeleteAssociation = () => {
 // Type for the combined data structure
 export interface UserHouseholdMetadataWithAssociation {
   association: UserHouseholdPopulation;
-  household: HouseholdMetadata | undefined;
+  household: HouseholdModel | undefined;
   isLoading: boolean;
   error: Error | null | undefined;
   isError?: boolean;
@@ -256,7 +255,10 @@ export const useUserHouseholds = (userId: string) => {
   const householdQueries = useQueries({
     queries: householdIds.map((householdId) => ({
       queryKey: householdKeys.byId(householdId),
-      queryFn: () => fetchHouseholdById(country, householdId),
+      queryFn: async () => {
+        const metadata = await fetchHouseholdById(country, householdId);
+        return HouseholdModel.fromV1Metadata(metadata);
+      },
       enabled: !!associations, // Only run when associations are loaded
       staleTime: 5 * 60 * 1000,
     })),

@@ -12,7 +12,7 @@
  */
 
 import { useSelector } from 'react-redux';
-import { HouseholdAdapter, PolicyAdapter, ReportAdapter, SimulationAdapter } from '@/adapters';
+import { PolicyAdapter, ReportAdapter, SimulationAdapter } from '@/adapters';
 import { fetchHouseholdById } from '@/api/household';
 import { fetchPolicyById } from '@/api/policy';
 import { fetchReportById } from '@/api/report';
@@ -20,6 +20,7 @@ import { fetchSimulationById } from '@/api/simulation';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { GC_TIME_5_MIN } from '@/libs/queryConfig';
 import { householdKeys, policyKeys, reportKeys, simulationKeys } from '@/libs/queryKeys';
+import { Household as HouseholdModel } from '@/models/Household';
 import { RootState } from '@/store';
 import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
@@ -255,7 +256,7 @@ export function useFetchReportIngredients(
     queryKey: householdKeys.byId,
     queryFn: async (id) => {
       const metadata = await fetchHouseholdById(country, id);
-      return HouseholdAdapter.fromMetadata(metadata);
+      return HouseholdModel.fromV1Metadata(metadata);
     },
     enabled: isEnabled && householdIds.length > 0,
     staleTime: 5 * 60 * 1000,
