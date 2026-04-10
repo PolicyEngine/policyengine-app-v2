@@ -17,7 +17,6 @@ import { countryIds } from '@/libs/countries';
 import { RootState } from '@/store';
 import { Household } from '@/types/ingredients/Household';
 import { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
-import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
 import { formatDate } from '@/utils/dateUtils';
 import { getCountryLabel } from '@/utils/geographyUtils';
 import { extractRegionDisplayValue } from '@/utils/regionStrategies';
@@ -190,18 +189,10 @@ export default function PopulationsPage() {
   };
 
   // Helper function to get household configuration details
-  const getHouseholdDetails = (
-    household:
-      | Pick<Household, 'householdData'>
-      | Pick<HouseholdMetadata, 'household_json'>
-      | undefined
-  ) => {
-    const householdData =
-      household && 'householdData' in household
-        ? household.householdData
-        : household?.household_json;
-    const peopleCount = Object.keys(householdData?.people ?? {}).length;
-    const families = (householdData?.families as Record<string, unknown> | undefined) ?? {};
+  const getHouseholdDetails = (household: Household | undefined) => {
+    const peopleCount = Object.keys(household?.householdData?.people ?? {}).length;
+    const families =
+      (household?.householdData?.families as Record<string, unknown> | undefined) ?? {};
     const familiesCount = Object.keys(families).length;
     return [
       { text: `${peopleCount} person${peopleCount !== 1 ? 's' : ''}`, badge: '' },

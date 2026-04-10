@@ -2,11 +2,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Household } from '@/models/Household';
 import { store } from '@/store';
 import {
-  mockEntityMetadata,
-  mockHouseholdMetadata,
-  mockHouseholdMetadataWithUnknownEntity,
-} from '@/tests/fixtures/adapters/HouseholdAdapterMocks';
-import {
   createMockEmptyHouseholdData,
   createMockHouseholdData,
   createMockHouseholdV2Response,
@@ -16,6 +11,11 @@ import {
   TEST_HOUSEHOLD_IDS,
   TEST_HOUSEHOLD_LABEL,
 } from '@/tests/fixtures/models/shared';
+import {
+  mockEntityMetadata,
+  mockHouseholdMetadata,
+  mockHouseholdMetadataWithUnknownEntity,
+} from '@/tests/fixtures/models/v1HouseholdMocks';
 
 vi.mock('@/store', () => ({
   store: {

@@ -1,6 +1,5 @@
 // Import auth hook here in future; for now, mocked out below
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
-import { HouseholdAdapter } from '@/adapters/HouseholdAdapter';
 import { createHousehold, fetchHouseholdById } from '@/api/household';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import {
@@ -91,10 +90,12 @@ export async function replaceHouseholdBaseForAssociation(args: {
     );
   }
 
-  const payload = HouseholdAdapter.toCreationPayload(
-    nextHousehold.householdData,
-    nextHousehold.countryId
-  );
+  const nextHouseholdDraft = HouseholdModel.fromDraft({
+    countryId: nextHousehold.countryId,
+    householdData: nextHousehold.householdData,
+    label: nextHousehold.id ? null : (association.label ?? null),
+  });
+  const payload = nextHouseholdDraft.toV1CreationPayload();
   const createdHousehold = await createHousehold(payload);
   const nextHouseholdId = String(createdHousehold.result.household_id);
   const updatedAssociation = await store.update(association.id, {
@@ -102,10 +103,10 @@ export async function replaceHouseholdBaseForAssociation(args: {
   });
 
   void (async () => {
-    const nextHouseholdModel = HouseholdModel.fromV1Payload({
+    const nextHouseholdModel = HouseholdModel.fromDraft({
       id: nextHouseholdId,
       countryId: nextHousehold.countryId,
-      householdData: payload.data,
+      householdData: nextHousehold.householdData,
       label: updatedAssociation.label ?? association.label ?? null,
     });
     const v2HouseholdId = await shadowCreateHousehold(nextHouseholdId, nextHouseholdModel);
