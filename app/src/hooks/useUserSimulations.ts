@@ -1,10 +1,11 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
-import { HouseholdAdapter, PolicyAdapter, SimulationAdapter } from '@/adapters';
+import { PolicyAdapter, SimulationAdapter } from '@/adapters';
 import { fetchHouseholdById } from '@/api/household';
 import { fetchPolicyById } from '@/api/policy';
 import { fetchSimulationById } from '@/api/simulation';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { Household as HouseholdModel } from '@/models/Household';
 import { RootState } from '@/store';
 import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
@@ -128,7 +129,7 @@ export const useUserSimulations = (userId: string) => {
     queryKey: householdKeys.byId,
     queryFn: async (id) => {
       const metadata = await fetchHouseholdById(country, id);
-      return HouseholdAdapter.fromMetadata(metadata);
+      return HouseholdModel.fromV1Metadata(metadata);
     },
     enabled: householdIds.length > 0,
     staleTime: 5 * 60 * 1000,
@@ -290,7 +291,7 @@ export const useUserSimulationById = (userId: string, simulationId: string) => {
     queryKey: householdKeys.byId(populationId ?? ''),
     queryFn: async () => {
       const metadata = await fetchHouseholdById(country, populationId!);
-      return HouseholdAdapter.fromMetadata(metadata);
+      return HouseholdModel.fromV1Metadata(metadata);
     },
     enabled: !!populationId,
     staleTime: 5 * 60 * 1000,

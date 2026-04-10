@@ -4,6 +4,7 @@
 
 import { vi } from 'vitest';
 import { ReportIngredientsInput } from '@/hooks/utils/useFetchReportIngredients';
+import { Household } from '@/types/ingredients/Household';
 import { Policy } from '@/types/ingredients/Policy';
 
 // ============================================================================
@@ -109,6 +110,17 @@ export const MOCK_SAVED_USER_POLICY = {
   isCreated: true,
 };
 
+export const MOCK_SAVED_USER_HOUSEHOLD = {
+  id: 'suh-household-save-1',
+  userId: 'anonymous',
+  householdId: TEST_IDS.HOUSEHOLD,
+  countryId: TEST_COUNTRIES.UK,
+  label: 'My Household',
+  createdAt: '2026-04-08T12:00:00Z',
+  isCreated: true,
+  type: 'household' as const,
+};
+
 export const MOCK_EXISTING_USER_REPORT = {
   ...MOCK_SAVED_USER_REPORT,
   label: 'Already Saved Report',
@@ -125,6 +137,31 @@ export const MOCK_POLICIES: Policy[] = [
         values: [{ startDate: '2026-01-01', endDate: '2100-12-31', value: 2000 }],
       },
     ],
+  },
+];
+
+export const MOCK_HOUSEHOLDS: Household[] = [
+  {
+    id: TEST_IDS.HOUSEHOLD,
+    countryId: TEST_COUNTRIES.UK,
+    householdData: {
+      people: {
+        you: {
+          age: { '2026': 40 },
+          employment_income: { '2026': 30000 },
+        },
+      },
+      households: {
+        household1: {
+          members: ['you'],
+        },
+      },
+      benunits: {
+        benunit1: {
+          members: ['you'],
+        },
+      },
+    },
   },
 ];
 

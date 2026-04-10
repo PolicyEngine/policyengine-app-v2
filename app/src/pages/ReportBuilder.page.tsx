@@ -37,7 +37,6 @@ import {
 import { useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
 import { PolicyAdapter } from '@/adapters';
-import { HouseholdAdapter } from '@/adapters/HouseholdAdapter';
 import { geographyUsageStore, householdUsageStore } from '@/api/usageTracking';
 import HouseholdBuilderForm from '@/components/household/HouseholdBuilderForm';
 import { UKOutlineIcon, USOutlineIcon } from '@/components/icons/CountryOutlineIcons';
@@ -81,6 +80,7 @@ import { useUserHouseholds } from '@/hooks/useUserHousehold';
 import { useUpdatePolicyAssociation, useUserPolicies } from '@/hooks/useUserPolicy';
 import { getBasicInputFields, getDateRange } from '@/libs/metadataUtils';
 import { householdAssociationKeys } from '@/libs/queryKeys';
+import { Household as HouseholdModel } from '@/models/Household';
 import HistoricalValues from '@/pathways/report/components/policyParameterSelector/HistoricalValues';
 import {
   ModeSelectorButton,
@@ -3639,9 +3639,7 @@ function PopulationBrowseModal({
         return {
           id: householdIdStr,
           label: h.association.label || `Household #${householdIdStr}`,
-          memberCount: h.household?.household_json?.people
-            ? Object.keys(h.household.household_json.people).length
-            : 0,
+          memberCount: Object.keys(h.household?.householdData?.people ?? {}).length,
           sortTimestamp,
           household: h.household,
         };
@@ -3703,19 +3701,13 @@ function PopulationBrowseModal({
     const householdIdStr = String(householdData.id);
     householdUsageStore.recordUsage(householdIdStr);
 
-    // Convert HouseholdMetadata to Household using the adapter
-    // If household data isn't available, create a minimal household object with just the ID
-    let household: Household | null = null;
-    if (householdData.household) {
-      household = HouseholdAdapter.fromMetadata(householdData.household);
-    } else {
-      // Fallback: create minimal household with ID for selection to work
-      household = {
-        id: householdIdStr,
-        countryId,
-        householdData: { people: {} },
-      };
-    }
+    const household: Household | null = householdData.household
+      ? householdData.household
+      : {
+          id: householdIdStr,
+          countryId,
+          householdData: { people: {} },
+        };
 
     const populationState: PopulationStateProps = {
       geography: null,
@@ -3809,7 +3801,10 @@ function PopulationBrowseModal({
       return;
     }
 
-    const payload = HouseholdAdapter.toCreationPayload(householdDraft.householdData, countryId);
+    const payload = HouseholdModel.fromDraft({
+      countryId,
+      householdData: householdDraft.householdData,
+    }).toV1CreationPayload();
 
     try {
       const result = await createHousehold(payload);
@@ -4710,8 +4705,8 @@ function SimulationCanvas({
         (h) => String(h.association.householdId) === householdId
       );
       if (householdData?.household) {
-        const household = HouseholdAdapter.fromMetadata(householdData.household);
-        // Use the household.id from the adapter for consistent matching with currentPopulationId
+        const household = householdData.household;
+        // Use the household.id for consistent matching with currentPopulationId
         const resolvedId = household.id || householdId;
         results.push({
           id: resolvedId,

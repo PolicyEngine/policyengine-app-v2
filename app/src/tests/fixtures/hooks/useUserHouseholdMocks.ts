@@ -1,4 +1,5 @@
 // Fixtures for useUserHouseholds and useUserGeographics hooks
+import { Household as HouseholdModel } from '@/models/Household';
 import { Geography } from '@/types/ingredients/Geography';
 import {
   UserGeographyPopulation,
@@ -62,7 +63,7 @@ export const mockHouseholdAssociation1: UserHouseholdPopulation = {
 // Combined metadata with association (returned by useUserHouseholds)
 export const mockHouseholdMetadata = {
   association: mockHouseholdAssociation1,
-  household: mockApiHouseholdMetadata1,
+  household: HouseholdModel.fromV1Metadata(mockApiHouseholdMetadata1),
   isLoading: false,
   error: null,
   isError: false,
@@ -109,7 +110,7 @@ export const mockHouseholdAssociation2: UserHouseholdPopulation = {
 
 export const mockHouseholdMetadata2 = {
   association: mockHouseholdAssociation2,
-  household: mockApiHouseholdMetadata2,
+  household: HouseholdModel.fromV1Metadata(mockApiHouseholdMetadata2),
   isLoading: false,
   error: null,
   isError: false,

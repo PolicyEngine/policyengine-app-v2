@@ -2,6 +2,7 @@ import type { V2HouseholdShape } from '@/api/v2/householdCalculation';
 import type { HouseholdV2Response } from '@/api/v2/households';
 import { countryIds, type CountryId } from '@/libs/countries';
 import { store } from '@/store';
+import type { HouseholdData as IngredientHouseholdData } from '@/types/ingredients/Household';
 import type { HouseholdMetadata } from '@/types/metadata/householdMetadata';
 import type { HouseholdCreationPayload } from '@/types/payloads';
 import { BaseModel } from './BaseModel';
@@ -389,6 +390,10 @@ export class Household extends BaseModel<HouseholdModelData> {
 
   get data(): Record<string, unknown> {
     return cloneValue(this._data);
+  }
+
+  get householdData(): IngredientHouseholdData {
+    return this.data as IngredientHouseholdData;
   }
 
   get people(): Record<string, unknown> {
