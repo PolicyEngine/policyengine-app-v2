@@ -425,6 +425,24 @@ describe('reproducibilityCode', () => {
         expect(code).toContain('districts/CA-01.h5');
       });
 
+      test('given pinned state dataset url then uses it verbatim instead of floating state path', () => {
+        const datasetUrl = 'hf://policyengine/policyengine-us-data/states/CA.h5@1.77.0';
+        const lines = getReproducibilityCodeBlock(
+          'policy',
+          TEST_COUNTRIES.US,
+          EMPTY_POLICY,
+          TEST_REGIONS.CA_STATE,
+          TEST_YEARS.DEFAULT,
+          datasetUrl,
+          null,
+          false,
+          false
+        );
+        const code = lines.join('\n');
+
+        expect(code).toContain(`dataset="${datasetUrl}"`);
+      });
+
       test('given place region then uses state dataset with place_fips filtering', () => {
         // When
         const lines = getReproducibilityCodeBlock(
@@ -448,6 +466,24 @@ describe('reproducibilityCode', () => {
         expect(code).toContain('Microsimulation(dataset=subset_df');
         // Includes pandas import for filtering
         expect(code).toContain('import pandas as pd');
+      });
+
+      test('given pinned place dataset url then uses it verbatim for filtering', () => {
+        const datasetUrl = 'hf://policyengine/policyengine-us-data/states/NJ.h5@1.77.0';
+        const lines = getReproducibilityCodeBlock(
+          'policy',
+          TEST_COUNTRIES.US,
+          EMPTY_POLICY,
+          TEST_REGIONS.NJ_PLACE,
+          TEST_YEARS.DEFAULT,
+          datasetUrl,
+          null,
+          false,
+          false
+        );
+        const code = lines.join('\n');
+
+        expect(code).toContain(`Microsimulation(dataset="${datasetUrl}")`);
       });
 
       test('given non-default dataset then includes dataset URL', () => {

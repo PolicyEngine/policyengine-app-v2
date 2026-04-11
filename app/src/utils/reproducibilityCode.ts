@@ -267,20 +267,22 @@ function getImplementationCode(
 
   const isNational = region === countryId;
   const year = timePeriod || DEFAULT_YEAR;
+  const resolvedDatasetUrl =
+    dataset && !isDefaultDataset ? getDatasetUrl(countryId, dataset, year) : null;
 
   // Place regions use state dataset + place_fips filtering
   if (countryId === 'us' && region.startsWith('place/')) {
-    return getPlaceImplementationCode(region, year, hasBaseline, hasReform);
+    return getPlaceImplementationCode(region, year, hasBaseline, hasReform, resolvedDatasetUrl);
   }
 
   let datasetText = '';
 
   if (countryId === 'us' && !isNational) {
-    // US sub-national (state, congressional district): use region-specific dataset
-    datasetText = getSubnationalDatasetUrl(region) || '';
-  } else if (dataset && !isDefaultDataset) {
+    // Prefer an explicitly resolved dataset URL when the backend pinned one.
+    datasetText = resolvedDatasetUrl || getSubnationalDatasetUrl(region) || '';
+  } else if (resolvedDatasetUrl) {
     // Non-default dataset explicitly selected: include the dataset URL
-    datasetText = getDatasetUrl(countryId, dataset, year) || '';
+    datasetText = resolvedDatasetUrl;
   }
   // Default dataset or no dataset: omit dataset= (matches API behavior)
 
@@ -312,9 +314,10 @@ function getPlaceImplementationCode(
   region: string,
   year: number,
   hasBaseline: boolean,
-  hasReform: boolean
+  hasReform: boolean,
+  datasetUrl: string | null = null
 ): string[] {
-  const stateDatasetUrl = getPlaceStateDatasetUrl(region) || '';
+  const stateDatasetUrl = datasetUrl || getPlaceStateDatasetUrl(region) || '';
   const placeFips = getPlaceFips(region) || '';
 
   const baselineReformArg = hasBaseline ? ', reform=baseline' : '';

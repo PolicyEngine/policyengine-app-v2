@@ -68,6 +68,7 @@ const INPUT_ONLY_TABS: Record<string, (props: InputTabProps) => React.ReactEleme
   reproduce: ({ report, policies, households }) => {
     const householdInput = households?.[0]?.householdData || {};
     const policyV1 = convertPoliciesToV1Format(policies);
+    const reportOutput = report.output as { policyengine_version?: string | null } | null;
     return (
       <HouseholdReproducibility
         countryId={report.countryId}
@@ -75,6 +76,7 @@ const INPUT_ONLY_TABS: Record<string, (props: InputTabProps) => React.ReactEleme
         householdInput={householdInput}
         region={report.countryId}
         dataset={null}
+        policyengineVersion={reportOutput?.policyengine_version ?? null}
       />
     );
   },
