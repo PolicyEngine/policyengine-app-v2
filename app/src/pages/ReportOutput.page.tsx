@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { SocietyWideReportOutput as SocietyWideOutput } from '@/api/societyWideCalculation';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { FloatingAlert } from '@/components/common/FloatingAlert';
@@ -14,6 +13,7 @@ import { useSaveSharedReport } from '@/hooks/useSaveSharedReport';
 import { useSharedReportData } from '@/hooks/useSharedReportData';
 import { useUserReportById } from '@/hooks/useUserReports';
 import { formatReportTimestamp } from '@/utils/dateUtils';
+import { getReportOutputPath } from '@/utils/reportRouting';
 import { resolveDefaultReportOutputSubpage } from '@/utils/reportOutputSubpage';
 import {
   buildSharePath,
@@ -62,14 +62,14 @@ export default function ReportOutputPage({
   const countryId = useCurrentCountry();
   const location = useAppLocation();
   const searchParams = new URLSearchParams(location.search);
+  const currentReportPath = `${location.pathname}${location.search}`;
 
   // Detect shared view from URL
   const shareData = extractShareDataFromUrl(searchParams);
   const isSharedView = shareData !== null;
   const shareDataUserReportId = shareData ? getShareDataUserReportId(shareData) : null;
-
-  // Alert state for clipboard copy notification
-  const [showCopyAlert, setShowCopyAlert] = useState(false);
+  const shareParam = searchParams.get('share');
+  const sharedSearch = shareParam ? new URLSearchParams({ share: shareParam }).toString() : '';
 
   // If no userReportId and not a shared view, show error
   if (!userReportId && !isSharedView) {
@@ -123,39 +123,6 @@ export default function ReportOutputPage({
   // Hook for saving shared reports with all ingredients
   const { saveSharedReport, saveResult, setSaveResult } = useSaveSharedReport();
 
-  // Handle share button click - copy share URL to clipboard
-  const handleShare = async () => {
-    if (!userReport || !userSimulations?.length) {
-      return;
-    }
-
-    // Create ShareData from user associations
-    const shareDataToEncode = createShareData(
-      userReport,
-      userSimulations ?? [],
-      userPolicies ?? [],
-      userHouseholds ?? [],
-      userGeographies ?? []
-    );
-
-    if (!shareDataToEncode) {
-      console.error('[ReportOutputPage] Failed to create share data');
-      return;
-    }
-
-    const sharePath = buildSharePath(shareDataToEncode);
-    const shareUrl = `${CALCULATOR_URL}${sharePath}`;
-
-    try {
-      await navigator.clipboard.writeText(shareUrl);
-      setShowCopyAlert(true);
-      // Auto-hide alert after 3 seconds
-      setTimeout(() => setShowCopyAlert(false), 3000);
-    } catch (error) {
-      console.error('[ReportOutputPage] Failed to copy share URL:', error);
-    }
-  };
-
   // Handle save button click - create user associations and navigate to owned view
   const handleSave = async () => {
     if (!shareData) {
@@ -174,12 +141,11 @@ export default function ReportOutputPage({
 
   // Handle view button click - navigate to report builder in view mode
   const handleView = () => {
-    if (userReportId) {
-      const params = new URLSearchParams({
-        from: 'report-output',
-        reportPath: `/${countryId}/report-output/${userReportId}`,
-      });
-      nav.push(`/${countryId}/reports/create/${userReportId}?${params}`);
+    const id = isSharedView ? shareDataUserReportId : userReportId;
+    if (id) {
+      nav.push(
+        `/${countryId}/reports/create/${id}${sharedSearch ? `?${sharedSearch}` : ''}`
+      );
     }
   };
 
@@ -187,31 +153,27 @@ export default function ReportOutputPage({
   const handleReproduce = () => {
     const id = isSharedView ? shareDataUserReportId : userReportId;
     if (id) {
-      const basePath = `/${countryId}/report-output/${id}/reproduce`;
-      if (isSharedView) {
-        nav.push(`${basePath}?${searchParams.toString()}`);
-      } else {
-        nav.push(basePath);
-      }
+      nav.push(
+        `/${countryId}/report-output/${id}/reproduce${sharedSearch ? `?${sharedSearch}` : ''}`
+      );
     }
   };
 
-  // Show loading state while fetching data
+  // Show loading state while fetching data with no cached report to render yet
   if (import.meta.env.DEV && dataLoading) {
     (window as any).__journeyProfiler?.markEvent('report-output-data-loading', 'render');
   }
-  if (dataLoading) {
-    return (
-      <Container size="xl" style={{ paddingLeft: spacing.xl, paddingRight: spacing.xl }}>
-        <Stack gap="xl">
-          <Text>Loading report...</Text>
-        </Stack>
-      </Container>
-    );
-  }
+  if (!report || !outputType) {
+    if (dataLoading) {
+      return (
+        <Container size="xl" style={{ paddingLeft: spacing.xl, paddingRight: spacing.xl }}>
+          <Stack gap="xl">
+            <Text>Loading report...</Text>
+          </Stack>
+        </Container>
+      );
+    }
 
-  // Show error if data failed to load
-  if (dataError || !report) {
     return (
       <Container size="xl" style={{ paddingLeft: spacing.xl, paddingRight: spacing.xl }}>
         <Stack gap="xl">
@@ -226,6 +188,34 @@ export default function ReportOutputPage({
   // Determine the display label and ID for the report
   const displayLabel = userReport?.label;
   const displayReportId = isSharedView ? shareDataUserReportId : userReportId;
+  const defaultReportOutputPath =
+    displayReportId !== null && displayReportId !== undefined
+      ? `${getReportOutputPath(countryId, displayReportId)}${sharedSearch ? `?${sharedSearch}` : ''}`
+      : undefined;
+  const layoutBackPath = activeTab === 'reproduce' ? defaultReportOutputPath : undefined;
+  const layoutBackLabel = activeTab === 'reproduce' ? 'report output' : undefined;
+  const shareUrl = (() => {
+    if (isSharedView && shareData) {
+      return `${CALCULATOR_URL}${currentReportPath}`;
+    }
+
+    if (!userReport || !userSimulations?.length) {
+      return null;
+    }
+
+    const shareDataToEncode = createShareData(
+      userReport,
+      userSimulations ?? [],
+      userPolicies ?? [],
+      userHouseholds ?? [],
+      userGeographies ?? []
+    );
+    if (!shareDataToEncode) {
+      return null;
+    }
+
+    return `${CALCULATOR_URL}${buildSharePath(shareDataToEncode)}`;
+  })();
 
   // Render content based on output type
   // Both shared and owned views now use the same user associations shape
@@ -273,12 +263,6 @@ export default function ReportOutputPage({
 
   return (
     <ReportYearProvider year={report?.year ?? null}>
-      {showCopyAlert && (
-        <FloatingAlert onClose={() => setShowCopyAlert(false)}>
-          Share link copied to clipboard!
-        </FloatingAlert>
-      )}
-
       {saveResult && (
         <FloatingAlert
           type={saveResult === 'success' || saveResult === 'already_saved' ? 'success' : 'warning'}
@@ -298,10 +282,12 @@ export default function ReportOutputPage({
         reportYear={report?.year}
         timestamp={timestamp}
         isSharedView={isSharedView}
-        onShare={handleShare}
         onSave={handleSave}
-        onView={!isSharedView ? handleView : undefined}
+        onView={handleView}
         onReproduce={handleReproduce}
+        shareUrl={shareUrl}
+        backPath={layoutBackPath}
+        backLabel={layoutBackLabel}
       >
         <ErrorBoundary
           fallback={(error, errorInfo) => (

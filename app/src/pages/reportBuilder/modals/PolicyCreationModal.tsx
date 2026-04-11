@@ -69,6 +69,19 @@ interface PolicyCreationModalProps {
   initialPolicy?: PolicyStateProps;
   initialEditorMode?: EditorMode;
   initialAssociationId?: string;
+  lockEditing?: boolean;
+}
+
+function resolveEditorMode(
+  initialPolicy: PolicyStateProps | undefined,
+  initialEditorMode: EditorMode | undefined,
+  lockEditing: boolean
+): EditorMode {
+  if (lockEditing && initialPolicy) {
+    return 'display';
+  }
+
+  return initialEditorMode || (initialPolicy ? 'edit' : 'create');
 }
 
 export function PolicyCreationModal({
@@ -80,6 +93,7 @@ export function PolicyCreationModal({
   initialPolicy,
   initialEditorMode,
   initialAssociationId,
+  lockEditing = false,
 }: PolicyCreationModalProps) {
   const countryId = useCurrentCountry();
 
@@ -128,7 +142,7 @@ export function PolicyCreationModal({
 
   // Editor mode: create (new policy), display (read-only existing), edit (modifying existing)
   const [editorMode, setEditorMode] = useState<EditorMode>(
-    initialEditorMode || (initialPolicy ? 'edit' : 'create')
+    resolveEditorMode(initialPolicy, initialEditorMode, lockEditing)
   );
   const isReadOnly = editorMode === 'display';
   const colorConfig = INGREDIENT_COLORS.policy;
@@ -138,7 +152,7 @@ export function PolicyCreationModal({
     if (isOpen) {
       setPolicyLabel(initialPolicy?.label || '');
       setPolicyParameters(initialPolicy?.parameters || []);
-      setEditorMode(initialEditorMode || (initialPolicy ? 'edit' : 'create'));
+      setEditorMode(resolveEditorMode(initialPolicy, initialEditorMode, lockEditing));
       setActiveTab('overview');
       setSelectedParam(null);
       setExpandedMenuItems(new Set());
@@ -147,7 +161,7 @@ export function PolicyCreationModal({
       setEndDate(defaultEndDate);
       setParameterSearch('');
     }
-  }, [isOpen, initialEditorMode, initialPolicy, defaultStartDate, defaultEndDate]);
+  }, [isOpen, initialEditorMode, initialPolicy, lockEditing, defaultStartDate, defaultEndDate]);
 
   // Create local policy state object for components
   const localPolicy: PolicyStateProps = useMemo(
@@ -616,7 +630,7 @@ export function PolicyCreationModal({
                   Create policy
                 </Button>
               )}
-              {editorMode === 'display' && (
+              {editorMode === 'display' && !lockEditing && (
                 <EditDefaultButton label="Edit this policy" onClick={() => setEditorMode('edit')} />
               )}
               {editorMode === 'edit' && (

@@ -7,10 +7,10 @@ import {
   IconScale,
   IconUsers,
 } from '@tabler/icons-react';
-import Plot from 'react-plotly.js';
 import { useSelector } from 'react-redux';
 import { normalizeDistrictId } from '@/adapters/congressional-district/congressionalDistrictDataAdapter';
 import { SocietyWideReportOutput } from '@/api/societyWideCalculation';
+import { ClientPlot } from '@/components/common/ClientPlot';
 import DashboardCard from '@/components/report/DashboardCard';
 import MetricCard from '@/components/report/MetricCard';
 import { Group, Progress, SegmentedControl, Stack, Text } from '@/components/ui';
@@ -1182,7 +1182,7 @@ export default function SocietyWideOverview({
             {/* Spacer pushes chart toward right half */}
             <div style={{ flex: '1 1 10%' }} />
             <div style={{ flex: '0 1 55%', minWidth: 0 }}>
-              <Plot
+              <ClientPlot
                 data={
                   [
                     {
@@ -1259,7 +1259,7 @@ export default function SocietyWideOverview({
         shrunkenHeader={cardHeader(IconChartBar, 'Decile impacts')}
         shrunkenBody={
           <div>
-            <Plot
+            <ClientPlot
               data={[
                 {
                   x: decileKeys,
