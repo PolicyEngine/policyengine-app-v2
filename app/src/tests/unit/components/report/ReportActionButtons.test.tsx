@@ -13,11 +13,12 @@ describe('ReportActionButtons', () => {
     expect(screen.queryByRole('button', { name: /view/i })).not.toBeInTheDocument();
   });
 
-  test('given isSharedView=false then renders reproduce, view, and share buttons', () => {
+  test('given isSharedView=false then renders rerun, reproduce, view, and share buttons', () => {
     // Given
     render(
       <ReportActionButtons
         isSharedView={false}
+        onRerun={vi.fn()}
         onShare={vi.fn()}
         onView={vi.fn()}
         onReproduce={vi.fn()}
@@ -25,6 +26,7 @@ describe('ReportActionButtons', () => {
     );
 
     // Then
+    expect(screen.getByRole('button', { name: /rerun report/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /reproduce in python/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /share/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /view/i })).toBeInTheDocument();
@@ -55,6 +57,27 @@ describe('ReportActionButtons', () => {
 
     // Then
     expect(handleShare).toHaveBeenCalledOnce();
+  });
+
+  test('given onRerun callback then calls it when rerun clicked', async () => {
+    // Given
+    const user = userEvent.setup();
+    const handleRerun = vi.fn();
+    render(<ReportActionButtons isSharedView={false} onRerun={handleRerun} />);
+
+    // When
+    await user.click(screen.getByRole('button', { name: /rerun report/i }));
+
+    // Then
+    expect(handleRerun).toHaveBeenCalledOnce();
+  });
+
+  test('given isRerunning=true then rerun button is disabled', () => {
+    // Given
+    render(<ReportActionButtons isSharedView={false} onRerun={vi.fn()} isRerunning />);
+
+    // Then
+    expect(screen.getByRole('button', { name: /rerun report/i })).toBeDisabled();
   });
 
   test('given onReproduce callback then calls it when reproduce clicked', async () => {

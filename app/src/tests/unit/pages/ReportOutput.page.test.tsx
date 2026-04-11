@@ -1,5 +1,5 @@
-import { render, screen } from '@test-utils';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { render, screen, userEvent } from '@test-utils';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { useUserReportById } from '@/hooks/useUserReports';
 import ReportOutputPage from '@/pages/ReportOutput.page';
 import {
@@ -7,6 +7,7 @@ import {
   MOCK_GEOGRAPHY_UK_COUNTRY,
   MOCK_GEOGRAPHY_UK_LOCAL_AUTHORITY,
   MOCK_GEOGRAPHY_UK_NATIONAL,
+  MOCK_REPORT_ID,
   MOCK_REPORT_UK_NATIONAL,
   MOCK_REPORT_UK_SUBNATIONAL,
   MOCK_REPORT_WITH_YEAR,
@@ -17,6 +18,10 @@ import {
   MOCK_USER_REPORT_ID,
   MOCK_USER_REPORT_UK,
 } from '@/tests/fixtures/pages/ReportOutputPageMocks';
+
+const { mockRerunReport } = vi.hoisted(() => ({
+  mockRerunReport: vi.fn(),
+}));
 
 // Mock dependencies
 vi.mock('@/hooks/useCurrentCountry', () => ({
@@ -97,9 +102,23 @@ vi.mock('@/hooks/useSaveSharedReport', () => ({
   })),
 }));
 
+vi.mock('@/hooks/useRerunReport', () => ({
+  useRerunReport: vi.fn(() => ({
+    rerunReport: mockRerunReport,
+    isPending: false,
+    error: null,
+  })),
+}));
+
 describe('ReportOutputPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockRerunReport.mockResolvedValue(undefined);
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   test('given report with year then year is passed to layout', () => {
@@ -125,6 +144,24 @@ describe('ReportOutputPage', () => {
     // Then - page renders layout and delegates to society-wide output
     expect(screen.queryByText('Loading report...')).not.toBeInTheDocument();
     expect(screen.queryByText(/Error loading report/)).not.toBeInTheDocument();
+  });
+
+  test('given owned report then rerun uses the base report id and linked simulation ids', async () => {
+    // Given
+    const user = userEvent.setup();
+    render(<ReportOutputPage reportId={MOCK_USER_REPORT_ID} subpage="overview" />);
+
+    // When
+    await user.click(screen.getByRole('button', { name: /rerun report/i }));
+
+    // Then
+    expect(window.confirm).toHaveBeenCalledWith(
+      'Rerun this report? Existing saved results will be cleared before recalculation starts.'
+    );
+    expect(mockRerunReport).toHaveBeenCalledWith({
+      reportId: MOCK_REPORT_ID,
+      simulationIds: ['sim-1', 'sim-2'],
+    });
   });
 
   test('given UK national report then renders without error', () => {

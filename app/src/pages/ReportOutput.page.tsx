@@ -10,6 +10,7 @@ import { useAppNavigate } from '@/contexts/NavigationContext';
 import { ReportYearProvider } from '@/contexts/ReportYearContext';
 import { colors, spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useRerunReport } from '@/hooks/useRerunReport';
 import { useSaveSharedReport } from '@/hooks/useSaveSharedReport';
 import { useSharedReportData } from '@/hooks/useSharedReportData';
 import { useUserReportById } from '@/hooks/useUserReports';
@@ -122,6 +123,7 @@ export default function ReportOutputPage({
 
   // Hook for saving shared reports with all ingredients
   const { saveSharedReport, saveResult, setSaveResult } = useSaveSharedReport();
+  const { rerunReport, isPending: isRerunning } = useRerunReport();
 
   // Handle share button click - copy share URL to clipboard
   const handleShare = async () => {
@@ -193,6 +195,36 @@ export default function ReportOutputPage({
       } else {
         nav.push(basePath);
       }
+    }
+  };
+
+  const handleRerun = async () => {
+    if (isSharedView || !report?.id) {
+      return;
+    }
+
+    const shouldRerun = window.confirm(
+      'Rerun this report? Existing saved results will be cleared before recalculation starts.'
+    );
+
+    if (!shouldRerun) {
+      return;
+    }
+
+    const simulationIds = [...new Set([
+      ...(report.simulationIds ?? []),
+      ...(simulations ?? [])
+        .map((simulation) => simulation.id)
+        .filter((simulationId): simulationId is string => Boolean(simulationId)),
+    ])];
+
+    try {
+      await rerunReport({
+        reportId: report.id,
+        simulationIds,
+      });
+    } catch (error) {
+      console.error('[ReportOutputPage] Failed to rerun report:', error);
     }
   };
 
@@ -298,6 +330,8 @@ export default function ReportOutputPage({
         reportYear={report?.year}
         timestamp={timestamp}
         isSharedView={isSharedView}
+        isRerunning={isRerunning}
+        onRerun={!isSharedView ? handleRerun : undefined}
         onShare={handleShare}
         onSave={handleSave}
         onView={!isSharedView ? handleView : undefined}

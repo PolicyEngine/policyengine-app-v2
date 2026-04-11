@@ -12,6 +12,8 @@ interface ReportOutputLayoutProps {
   reportYear?: string;
   timestamp?: string;
   isSharedView?: boolean;
+  isRerunning?: boolean;
+  onRerun?: () => void;
   onShare?: () => void;
   onSave?: () => void;
   onView?: () => void;
@@ -35,6 +37,8 @@ export default function ReportOutputLayout({
   reportYear,
   timestamp = 'Ran today at 05:23:41',
   isSharedView = false,
+  isRerunning = false,
+  onRerun,
   onShare,
   onSave,
   onView,
@@ -81,6 +85,8 @@ export default function ReportOutputLayout({
             </Group>
             <ReportActionButtons
               isSharedView={isSharedView}
+              isRerunning={isRerunning}
+              onRerun={onRerun}
               onShare={onShare}
               onSave={onSave}
               onView={onView}

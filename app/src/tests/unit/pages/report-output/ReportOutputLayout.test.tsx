@@ -156,7 +156,7 @@ describe('ReportOutputLayout', () => {
     expect(screen.getByRole('button', { name: /save report to my reports/i })).toBeInTheDocument();
   });
 
-  test('given isSharedView=false then shows view, edit, and share buttons', () => {
+  test('given isSharedView=false then shows rerun, view, edit, and share buttons', () => {
     // Given
     render(
       <ReportOutputLayout
@@ -165,6 +165,7 @@ describe('ReportOutputLayout', () => {
         reportYear={MOCK_REPORT_YEAR}
         timestamp={MOCK_TIMESTAMP}
         isSharedView={false}
+        onRerun={vi.fn()}
         onShare={vi.fn()}
         onView={vi.fn()}
         onReproduce={vi.fn()}
@@ -175,6 +176,7 @@ describe('ReportOutputLayout', () => {
 
     // Then
     expect(screen.queryByTestId('shared-report-tag')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /rerun report/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /reproduce in python/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /share/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /view/i })).toBeInTheDocument();
