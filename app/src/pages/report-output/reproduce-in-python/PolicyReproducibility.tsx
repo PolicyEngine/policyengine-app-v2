@@ -31,6 +31,7 @@ interface PolicyReproducibilityProps {
   region?: string;
   dataset?: string | null;
   isDefaultDataset?: boolean;
+  policyengineVersion?: string | null;
 }
 
 export default function PolicyReproducibility({
@@ -39,6 +40,7 @@ export default function PolicyReproducibility({
   region = 'us',
   dataset = null,
   isDefaultDataset = true,
+  policyengineVersion = null,
 }: PolicyReproducibilityProps) {
   const [copied, setCopied] = useState(false);
   const reportYear = useReportYear();
@@ -118,6 +120,11 @@ export default function PolicyReproducibility({
               )}{' '}
               to reproduce the microsimulation results.
             </Text>
+            {policyengineVersion ? (
+              <Text className="tw:text-sm" style={{ color: colors.text.secondary }}>
+                Resolved with policyengine.py {policyengineVersion}
+              </Text>
+            ) : null}
           </Group>
         </div>
 

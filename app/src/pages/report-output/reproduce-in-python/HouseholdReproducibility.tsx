@@ -32,6 +32,7 @@ interface HouseholdReproducibilityProps {
   householdInput: any;
   region?: string;
   dataset?: string | null;
+  policyengineVersion?: string | null;
 }
 
 export default function HouseholdReproducibility({
@@ -40,6 +41,7 @@ export default function HouseholdReproducibility({
   householdInput,
   region = 'us',
   dataset = null,
+  policyengineVersion = null,
 }: HouseholdReproducibilityProps) {
   const [earningVariation, setEarningVariation] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -120,6 +122,11 @@ export default function HouseholdReproducibility({
                 )}{' '}
                 to reproduce the results.
               </Text>
+              {policyengineVersion ? (
+                <Text className="tw:text-sm tw:mb-xs" style={{ color: colors.text.secondary }}>
+                  Resolved with policyengine.py {policyengineVersion}
+                </Text>
+              ) : null}
               <Group className="tw:gap-sm tw:items-center">
                 <Text className="tw:text-sm" style={{ color: colors.text.secondary }}>
                   Include earning variation

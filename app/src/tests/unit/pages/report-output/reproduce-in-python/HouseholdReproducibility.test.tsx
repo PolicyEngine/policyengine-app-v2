@@ -5,6 +5,7 @@ import {
   DEFAULT_HOUSEHOLD_REPRODUCIBILITY_PROPS,
   EXPECTED_CODE_SNIPPETS,
   EXPECTED_TEXT,
+  MOCK_POLICYENGINE_VERSION,
   MOCK_REPORT_YEAR,
   UK_HOUSEHOLD_REPRODUCIBILITY_PROPS,
 } from '@/tests/fixtures/pages/report-output/reproduce-in-python/reproducibilityMocks';
@@ -57,6 +58,23 @@ describe('HouseholdReproducibility', () => {
 
       // Then
       expect(screen.getByRole('button', { name: /Copy code to clipboard/i })).toBeInTheDocument();
+    });
+
+    test('given policyengine version then renders resolved bundle metadata', () => {
+      // When
+      render(
+        <HouseholdReproducibility
+          {...DEFAULT_HOUSEHOLD_REPRODUCIBILITY_PROPS}
+          policyengineVersion={MOCK_POLICYENGINE_VERSION}
+        />
+      );
+
+      // Then
+      expect(
+        screen.getByText(
+          new RegExp(`${EXPECTED_TEXT.POLICYENGINE_VERSION_PREFIX} ${MOCK_POLICYENGINE_VERSION}`)
+        )
+      ).toBeInTheDocument();
     });
 
     test('given US country then generates US-specific code', () => {

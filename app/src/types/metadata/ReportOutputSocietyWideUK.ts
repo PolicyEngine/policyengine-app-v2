@@ -55,6 +55,8 @@ export interface ReportOutputSocietyWideUK {
     by_local_authority: ReportOutputSocietyWideByLocalAuthority;
   };
   data_version: string;
+  dataset?: string | null;
+  policyengine_version?: string | null;
   decile: {
     average: Record<string, number>;
     relative: Record<string, number>;

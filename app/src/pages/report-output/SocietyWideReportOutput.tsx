@@ -83,14 +83,19 @@ const INPUT_ONLY_TABS: Record<string, (props: InputTabProps) => React.ReactEleme
   reproduce: ({ report, policies, simulations, datasets }) => {
     const policyV1 = convertPoliciesToV1Format(policies);
     const defaultDataset = datasets?.find((d) => d.default);
-    const datasetName = defaultDataset?.name || null;
+    const reportOutput = report.output as Partial<SocietyWideOutput> | null;
+    const datasetName = reportOutput?.dataset || defaultDataset?.name || null;
+    const isResolvedDataset = typeof datasetName === 'string' && datasetName.includes('://');
     return (
       <PolicyReproducibility
         countryId={report.countryId}
         policy={policyV1}
         region={simulations?.[0]?.populationId || report.countryId}
         dataset={datasetName}
-        isDefaultDataset
+        policyengineVersion={reportOutput?.policyengine_version ?? null}
+        isDefaultDataset={
+          !datasetName || (!isResolvedDataset && datasetName === defaultDataset?.name)
+        }
       />
     );
   },

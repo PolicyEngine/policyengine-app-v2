@@ -274,6 +274,37 @@ describe('SocietyWideReportOutput', () => {
     expect(screen.getByTestId('dynamics-page')).toBeInTheDocument();
   });
 
+  test('given reproduce subpage with resolved dataset in report output then uses exact dataset url', () => {
+    // Given
+    mockUseCalculationStatus.mockReturnValue(MOCK_CALC_STATUS_IDLE);
+    const reportWithBundleOutput = {
+      ...MOCK_REPORT,
+      output: {
+        dataset: 'hf://policyengine/policyengine-us-data/enhanced_cps_2024.h5@1.77.0',
+        policyengine_version: '3.4.0',
+        model_version: '1.634.4',
+        data_version: '1.77.0',
+      },
+    };
+
+    // When
+    render(
+      <SocietyWideReportOutput
+        reportId="test-report-123"
+        subpage="reproduce"
+        report={reportWithBundleOutput}
+        simulations={[MOCK_SIMULATION_BASELINE]}
+        policies={[MOCK_POLICY_BASELINE, MOCK_POLICY_REFORM]}
+      />
+    );
+
+    // Then
+    expect(
+      screen.getByText(/hf:\/\/policyengine\/policyengine-us-data\/enhanced_cps_2024\.h5@1\.77\.0/)
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Resolved with policyengine\.py 3\.4\.0/)).toBeInTheDocument();
+  });
+
   test('given invalid subpage then shows not found page', () => {
     // Given
     mockUseCalculationStatus.mockReturnValue(MOCK_CALC_STATUS_COMPLETE);

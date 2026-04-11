@@ -131,6 +131,45 @@ describe('societyWide API', () => {
       expect(result.result?.budget.budgetary_impact).toBe(75000);
     });
 
+    test('given completed status with policyengine bundle then merges bundle into result', async () => {
+      // Given
+      const countryId = TEST_COUNTRIES.US;
+      const reformPolicyId = TEST_POLICY_IDS.REFORM;
+      const baselinePolicyId = TEST_POLICY_IDS.BASELINE;
+      const mockResponse = mockSuccessResponse({
+        ...mockCompletedResponse,
+        result: {
+          ...mockCompletedResponse.result!,
+          model_version: 'old-model-version',
+          data_version: 'old-data-version',
+        },
+        policyengine_bundle: {
+          model_version: '1.634.4',
+          policyengine_version: '3.4.0',
+          data_version: '1.77.0',
+          dataset: 'hf://policyengine/policyengine-us-data/enhanced_cps_2024.h5@1.77.0',
+        },
+      });
+      (global.fetch as any).mockResolvedValue(mockResponse);
+
+      // When
+      const params = { region: 'us', time_period: CURRENT_YEAR };
+      const result = await fetchSocietyWideCalculation(
+        countryId,
+        reformPolicyId,
+        baselinePolicyId,
+        params
+      );
+
+      // Then
+      expect(result.result?.model_version).toBe('1.634.4');
+      expect(result.result?.policyengine_version).toBe('3.4.0');
+      expect(result.result?.data_version).toBe('1.77.0');
+      expect(result.result?.dataset).toBe(
+        'hf://policyengine/policyengine-us-data/enhanced_cps_2024.h5@1.77.0'
+      );
+    });
+
     test('given error status then returns error message with null result', async () => {
       // Given
       const countryId = TEST_COUNTRIES.US;

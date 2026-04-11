@@ -23,6 +23,10 @@ const US_REGION_PREFIX_TO_FOLDER: Record<string, string> = {
  * Dataset files follow the pattern: {name}_{year}.h5
  */
 function getDatasetUrl(countryId: string, datasetName: string, year: number): string | null {
+  if (datasetName.includes('://')) {
+    return datasetName;
+  }
+
   if (countryId === 'us') {
     return `hf://policyengine/policyengine-us-data/${datasetName}_${year}.h5`;
   }

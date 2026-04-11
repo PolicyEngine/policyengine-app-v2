@@ -451,6 +451,27 @@ describe('reproducibilityCode', () => {
         expect(code).toContain('dataset=');
       });
 
+      test('given full dataset url then uses it verbatim', () => {
+        // When
+        const lines = getReproducibilityCodeBlock(
+          'policy',
+          TEST_COUNTRIES.US,
+          EMPTY_POLICY,
+          TEST_REGIONS.US_NATIONAL,
+          TEST_YEARS.DEFAULT,
+          'hf://policyengine/policyengine-us-data/enhanced_cps_2024.h5@1.77.0',
+          null,
+          false,
+          false
+        );
+        const code = lines.join('\n');
+
+        // Then
+        expect(code).toContain(
+          'dataset="hf://policyengine/policyengine-us-data/enhanced_cps_2024.h5@1.77.0"'
+        );
+      });
+
       test('given default dataset then omits dataset specifier', () => {
         // When
         const lines = getReproducibilityCodeBlock(
