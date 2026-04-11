@@ -3,10 +3,12 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { useUserReportById } from '@/hooks/useUserReports';
 import ReportOutputPage from '@/pages/ReportOutput.page';
 import {
+  MOCK_DATA_VERSION,
   MOCK_GEOGRAPHY_UK_CONSTITUENCY,
   MOCK_GEOGRAPHY_UK_COUNTRY,
   MOCK_GEOGRAPHY_UK_LOCAL_AUTHORITY,
   MOCK_GEOGRAPHY_UK_NATIONAL,
+  MOCK_MODEL_VERSION,
   MOCK_REPORT_UK_NATIONAL,
   MOCK_REPORT_UK_SUBNATIONAL,
   MOCK_REPORT_WITH_YEAR,
@@ -116,6 +118,14 @@ describe('ReportOutputPage', () => {
 
     // Then
     expect(screen.getByRole('heading', { name: 'Test Report' })).toBeInTheDocument();
+  });
+
+  test('given society-wide report output versions then version metadata is displayed in the header', () => {
+    render(<ReportOutputPage reportId={MOCK_USER_REPORT_ID} subpage="overview" />);
+
+    expect(
+      screen.getByText(`Model version: ${MOCK_MODEL_VERSION} • Data version: ${MOCK_DATA_VERSION}`)
+    ).toBeInTheDocument();
   });
 
   test('given society-wide report with complete calculation then renders without error', () => {

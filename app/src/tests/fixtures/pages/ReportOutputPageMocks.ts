@@ -26,6 +26,9 @@ export const MOCK_USER_REPORT_UK = {
   createdAt: '2024-01-01T00:00:00Z',
 };
 
+export const MOCK_MODEL_VERSION = '1.0.0';
+export const MOCK_DATA_VERSION = '2024.1.0';
+
 export const MOCK_REPORT_WITH_YEAR: Report = {
   id: MOCK_REPORT_ID,
   countryId: 'us',
@@ -34,7 +37,10 @@ export const MOCK_REPORT_WITH_YEAR: Report = {
   simulationIds: ['sim-1', 'sim-2'],
   apiVersion: '1.0.0',
   status: 'complete',
-  output: null,
+  output: {
+    model_version: MOCK_MODEL_VERSION,
+    data_version: MOCK_DATA_VERSION,
+  } as any,
 };
 
 export const MOCK_REPORT_UK_NATIONAL: Report = {
@@ -116,12 +122,16 @@ export const MOCK_GEOGRAPHY_UK_LOCAL_AUTHORITY: Geography = {
 };
 
 export const MOCK_SOCIETY_WIDE_OUTPUT = {
+  model_version: MOCK_MODEL_VERSION,
+  data_version: MOCK_DATA_VERSION,
   budget: { budgetary_impact: 1000000 },
   poverty: { poverty: { all: { baseline: 0.1, reform: 0.09 } } },
   intra_decile: { all: { 'Gain more than 5%': 0.2, 'No change': 0.8 } },
 };
 
 export const MOCK_SOCIETY_WIDE_OUTPUT_UK = {
+  model_version: MOCK_MODEL_VERSION,
+  data_version: MOCK_DATA_VERSION,
   budget: { budgetary_impact: 1000000 },
   poverty: { poverty: { all: { baseline: 0.1, reform: 0.09 } } },
   intra_decile: { all: { 'Gain more than 5%': 0.2, 'No change': 0.8 } },

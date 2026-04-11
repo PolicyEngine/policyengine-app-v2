@@ -2,6 +2,8 @@ import { render, screen } from '@test-utils';
 import { describe, expect, test, vi } from 'vitest';
 import ReportOutputLayout from '@/pages/report-output/ReportOutputLayout';
 import {
+  MOCK_DATA_VERSION,
+  MOCK_MODEL_VERSION,
   MOCK_REPORT_ID,
   MOCK_REPORT_LABEL,
   MOCK_REPORT_YEAR,
@@ -116,6 +118,40 @@ describe('ReportOutputLayout', () => {
 
     // Then
     expect(screen.getByText(MOCK_TIMESTAMP)).toBeInTheDocument();
+  });
+
+  test('given model and data versions then version metadata is displayed below header metadata', () => {
+    render(
+      <ReportOutputLayout
+        reportId={MOCK_REPORT_ID}
+        reportLabel={MOCK_REPORT_LABEL}
+        reportYear={MOCK_REPORT_YEAR}
+        modelVersion={MOCK_MODEL_VERSION}
+        dataVersion={MOCK_DATA_VERSION}
+        timestamp={MOCK_TIMESTAMP}
+      >
+        <div>Test Content</div>
+      </ReportOutputLayout>
+    );
+
+    expect(
+      screen.getByText(`Model version: ${MOCK_MODEL_VERSION} • Data version: ${MOCK_DATA_VERSION}`)
+    ).toBeInTheDocument();
+  });
+
+  test('given no model and data versions then version metadata is not displayed', () => {
+    render(
+      <ReportOutputLayout
+        reportId={MOCK_REPORT_ID}
+        reportLabel={MOCK_REPORT_LABEL}
+        reportYear={MOCK_REPORT_YEAR}
+        timestamp={MOCK_TIMESTAMP}
+      >
+        <div>Test Content</div>
+      </ReportOutputLayout>
+    );
+
+    expect(screen.queryByText(/Model version:/)).not.toBeInTheDocument();
   });
 
   test('given children then children are rendered', () => {

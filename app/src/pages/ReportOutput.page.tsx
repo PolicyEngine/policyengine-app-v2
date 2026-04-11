@@ -13,6 +13,7 @@ import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useSaveSharedReport } from '@/hooks/useSaveSharedReport';
 import { useSharedReportData } from '@/hooks/useSharedReportData';
 import { useUserReportById } from '@/hooks/useUserReports';
+import type { EconomyOutput, Report } from '@/types/ingredients/Report';
 import { formatReportTimestamp } from '@/utils/dateUtils';
 import { resolveDefaultReportOutputSubpage } from '@/utils/reportOutputSubpage';
 import {
@@ -29,6 +30,29 @@ import { SocietyWideReportOutput } from './report-output/SocietyWideReportOutput
  * Type discriminator for output types
  */
 export type ReportOutputType = 'household' | 'societyWide';
+
+interface ReportVersionMetadata {
+  modelVersion: string | null;
+  dataVersion: string | null;
+}
+
+function extractReportVersionMetadata(output: Report['output']): ReportVersionMetadata | null {
+  if (!output || typeof output !== 'object') {
+    return null;
+  }
+
+  if (!('model_version' in output) && !('data_version' in output)) {
+    return null;
+  }
+
+  const economyOutput = output as Partial<EconomyOutput>;
+
+  return {
+    modelVersion:
+      typeof economyOutput.model_version === 'string' ? economyOutput.model_version : null,
+    dataVersion: typeof economyOutput.data_version === 'string' ? economyOutput.data_version : null,
+  };
+}
 
 /**
  * ReportOutputPage - Orchestration layer for report output pages
@@ -116,6 +140,7 @@ export default function ReportOutputPage({
   // Active subpage and view from URL params
   const activeTab = resolveDefaultReportOutputSubpage(outputType, subpage);
   const activeView = view || '';
+  const versionMetadata = extractReportVersionMetadata(report?.output);
 
   // Format the report creation timestamp using the current country's locale
   const timestamp = formatReportTimestamp(userReport?.createdAt, countryId);
@@ -296,6 +321,8 @@ export default function ReportOutputPage({
         reportId={displayReportId ?? ''}
         reportLabel={displayLabel ?? undefined}
         reportYear={report?.year}
+        modelVersion={versionMetadata?.modelVersion ?? undefined}
+        dataVersion={versionMetadata?.dataVersion ?? undefined}
         timestamp={timestamp}
         isSharedView={isSharedView}
         onShare={handleShare}
