@@ -9,6 +9,13 @@ import { ReportCreationPayload, ReportSetOutputPayload } from '@/types/payloads'
 
 export type CountryId = (typeof countryIds)[number];
 
+export interface ReportRerunResult {
+  report_id: number;
+  report_type: 'household' | 'geography';
+  simulation_ids: number[];
+  economy_cache_rows_deleted: number;
+}
+
 export async function fetchReportById(
   countryId: (typeof countryIds)[number],
   reportId: string
@@ -66,6 +73,38 @@ export async function createReport(
 
   if (json.status !== 'ok') {
     throw new Error(json.message || 'Failed to create report');
+  }
+
+  return json.result;
+}
+
+export async function rerunReport(
+  countryId: (typeof countryIds)[number],
+  reportId: string
+): Promise<ReportRerunResult> {
+  const url = `${BASE_URL}/${countryId}/report/${reportId}/rerun`;
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to rerun report ${reportId}: ${res.status} ${res.statusText}`);
+  }
+
+  let json;
+  try {
+    json = await res.json();
+  } catch (error) {
+    throw new Error(`Failed to parse report rerun response: ${error}`);
+  }
+
+  if (json.status !== 'ok') {
+    throw new Error(json.message || `Failed to rerun report ${reportId}`);
   }
 
   return json.result;

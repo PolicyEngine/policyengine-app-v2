@@ -5,6 +5,7 @@ import {
   fetchReportById,
   markReportCompleted,
   markReportError,
+  rerunReport,
 } from '@/api/report';
 import { LocalStorageReportStore } from '@/api/reportAssociation';
 import { BASE_URL, MOCK_USER_ID } from '@/constants';
@@ -108,6 +109,53 @@ describe('report API', () => {
 
       // When & Then
       await expect(createReport(countryId, payload)).rejects.toThrow('Failed to create report');
+    });
+  });
+
+  describe('rerunReport', () => {
+    test('given valid report ID then reruns report successfully', async () => {
+      const countryId = 'us';
+      const reportId = 'report-123';
+      const mockApiResponse = {
+        status: 'ok',
+        result: {
+          report_id: 123,
+          report_type: 'household',
+          simulation_ids: [456, 789],
+          economy_cache_rows_deleted: 0,
+        },
+      };
+      const mockResponse = {
+        ok: true,
+        json: vi.fn().mockResolvedValue(mockApiResponse),
+      };
+      (global.fetch as any).mockResolvedValue(mockResponse);
+
+      const result = await rerunReport(countryId, reportId);
+
+      expect(global.fetch).toHaveBeenCalledWith(`${BASE_URL}/${countryId}/report/${reportId}/rerun`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+      });
+      expect(result).toEqual(mockApiResponse.result);
+    });
+
+    test('given HTTP error then throws rerun error', async () => {
+      const countryId = 'us';
+      const reportId = 'report-123';
+      const mockResponse = {
+        ok: false,
+        status: 500,
+        statusText: 'Internal Server Error',
+      };
+      (global.fetch as any).mockResolvedValue(mockResponse);
+
+      await expect(rerunReport(countryId, reportId)).rejects.toThrow(
+        'Failed to rerun report report-123: 500 Internal Server Error'
+      );
     });
   });
 
