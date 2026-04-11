@@ -15,6 +15,7 @@ import {
   useUserHouseholds,
   useUserHouseholdStore,
 } from '@/hooks/useUserHousehold';
+import { Household as HouseholdModel } from '@/models/Household';
 import {
   createMockQueryClient,
   GEO_CONSTANTS,
@@ -303,10 +304,13 @@ describe('useUserHousehold hooks', () => {
       expect(result.current.data).toBeDefined();
       expect(result.current.data).toHaveLength(2); // Two households in mock list
 
-      // Verify each household has association and metadata
+      // Verify each household has association and canonical model data
       const firstHousehold = result.current.data![0];
       expect(firstHousehold.association).toEqual(mockUserHouseholdPopulationList[0]);
-      expect(firstHousehold.household).toEqual(mockHouseholdMetadata);
+      expect(firstHousehold.household).toBeInstanceOf(HouseholdModel);
+      expect(firstHousehold.household?.householdData).toEqual(
+        HouseholdModel.fromV1Metadata(mockHouseholdMetadata).householdData
+      );
       expect(firstHousehold.isLoading).toBe(false);
       expect(firstHousehold.error).toBeNull();
     });
@@ -362,7 +366,10 @@ describe('useUserHousehold hooks', () => {
       expect(result.current.data).toBeDefined();
 
       // First household should have data
-      expect(result.current.data![0].household).toEqual(mockHouseholdMetadata);
+      expect(result.current.data![0].household).toBeInstanceOf(HouseholdModel);
+      expect(result.current.data![0].household?.householdData).toEqual(
+        HouseholdModel.fromV1Metadata(mockHouseholdMetadata).householdData
+      );
 
       // Second household should have error
       expect(result.current.data![1].error).toBeDefined();

@@ -1,5 +1,6 @@
 import type { UserGeographicMetadataWithAssociation } from '@/hooks/useUserGeographic';
 import type { UserHouseholdMetadataWithAssociation } from '@/hooks/useUserHousehold';
+import { Household as HouseholdModel } from '@/models/Household';
 import type { Simulation } from '@/types/ingredients/Simulation';
 
 /**
@@ -39,13 +40,13 @@ export const mockHouseholdData: UserHouseholdMetadataWithAssociation[] = [
       countryId: 'us',
       type: 'household',
     },
-    household: {
+    household: HouseholdModel.fromDraft({
       id: TEST_HOUSEHOLD_IDS.HOUSEHOLD_123,
-      country_id: 'us',
-      api_version: '1.0.0',
-      household_json: '{}' as any,
-      household_hash: 'hash123',
-    },
+      countryId: 'us',
+      householdData: {
+        people: {},
+      },
+    }),
     isLoading: false,
     error: null,
   },
@@ -57,13 +58,13 @@ export const mockHouseholdData: UserHouseholdMetadataWithAssociation[] = [
       countryId: 'us',
       type: 'household',
     },
-    household: {
+    household: HouseholdModel.fromDraft({
       id: TEST_HOUSEHOLD_IDS.HOUSEHOLD_456,
-      country_id: 'us',
-      api_version: '1.0.0',
-      household_json: '{}' as any,
-      household_hash: 'hash456',
-    },
+      countryId: 'us',
+      householdData: {
+        people: {},
+      },
+    }),
     isLoading: false,
     error: null,
   },
@@ -127,20 +128,18 @@ export const mockHouseholdDataWithNumericMismatch: UserHouseholdMetadataWithAsso
       type: 'household',
       createdAt: new Date().toISOString(),
     },
-    household: {
+    household: HouseholdModel.fromDraft({
       id: TEST_HOUSEHOLD_IDS.NUMERIC_STRING_MATCH, // String ID
-      country_id: 'uk',
-      api_version: '2.39.0',
-      household_json: {
+      countryId: 'uk',
+      householdData: {
         people: {},
         families: {},
-        tax_units: {},
-        spm_units: {},
+        taxUnits: {},
+        spmUnits: {},
         households: {},
-        marital_units: {},
+        maritalUnits: {},
       },
-      household_hash: 'test-hash',
-    },
+    }),
     isLoading: false,
     error: null,
     isError: false,

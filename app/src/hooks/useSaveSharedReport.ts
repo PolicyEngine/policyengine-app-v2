@@ -11,6 +11,10 @@ import { useSelector } from 'react-redux';
 import { PolicyAdapter } from '@/adapters/PolicyAdapter';
 import { ReportIngredientsInput } from '@/hooks/utils/useFetchReportIngredients';
 import { CountryId } from '@/libs/countries';
+import {
+  shadowCreateHouseholdAndAssociation,
+  shadowCreateUserHouseholdAssociation,
+} from '@/libs/migration/householdShadow';
 import { getV2Id } from '@/libs/migration/idMapping';
 import { logMigrationConsole } from '@/libs/migration/migrationLogRuntime';
 import { sendMigrationLog } from '@/libs/migration/migrationLogTransport';
@@ -18,9 +22,11 @@ import {
   shadowCreatePolicyAndAssociation,
   shadowCreateUserPolicyAssociation,
 } from '@/libs/migration/policyShadow';
+import { Household, type HouseholdInput } from '@/models/Household';
 import { RootState } from '@/store';
 import { Policy } from '@/types/ingredients/Policy';
 import { UserPolicy } from '@/types/ingredients/UserPolicy';
+import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { UserReport } from '@/types/ingredients/UserReport';
 import { getShareDataUserReportId } from '@/utils/shareUtils';
 import { useCreateGeographicAssociation } from './useUserGeographic';
@@ -71,6 +77,48 @@ function shadowSavedPolicyAssociation(association: UserPolicy, policyDetails?: P
   });
 }
 
+function shadowSavedHouseholdAssociation(
+  association: UserHouseholdPopulation,
+  householdDetails?: HouseholdInput
+): void {
+  const mappedV2HouseholdId = getV2Id('Household', association.householdId);
+
+  if (mappedV2HouseholdId) {
+    void shadowCreateUserHouseholdAssociation(association, mappedV2HouseholdId);
+    return;
+  }
+
+  if (!householdDetails) {
+    logMigrationConsole(
+      '[HouseholdMigration] Shared save missing household details; skipping shadow v2 household create:',
+      association.householdId
+    );
+    sendMigrationLog({
+      kind: 'event',
+      prefix: 'HouseholdMigration',
+      operation: 'CREATE',
+      status: 'SKIPPED',
+      message: 'Shared save missing household details; skipping shadow v2 household create',
+      metadata: {
+        householdId: association.householdId,
+        countryId: association.countryId,
+      },
+      ts: new Date().toISOString(),
+    });
+    return;
+  }
+
+  void shadowCreateHouseholdAndAssociation({
+    v1HouseholdId: association.householdId,
+    v1Household: Household.fromInput({
+      ...householdDetails,
+      id: association.householdId,
+      label: association.label ?? null,
+    }),
+    v1Association: association,
+  });
+}
+
 /**
  * Hook for saving a shared report and all its user associations to localStorage
  *
@@ -107,11 +155,15 @@ export function useSaveSharedReport() {
 
   const saveSharedReport = async (
     shareData: ReportIngredientsInput,
-    policies: Policy[] = []
+    policies: Policy[] = [],
+    households: HouseholdInput[] = []
   ): Promise<UserReport> => {
     const userId = 'anonymous'; // TODO: Replace with auth context
     const userReportId = getShareDataUserReportId(shareData);
     const policiesById = new Map(policies.map((policy) => [String(policy.id), policy]));
+    const householdsById = new Map(
+      households.map((household) => [String(household.id), household])
+    );
 
     // Idempotency check: see if this report is already saved
     const existingReport = await reportStore.findByUserReportId(userReportId);
@@ -146,14 +198,17 @@ export function useSaveSharedReport() {
       });
 
     // Save households
-    const householdPromises = shareData.userHouseholds.map((hh) =>
-      createHouseholdAssociation.mutateAsync({
+    const householdPromises = shareData.userHouseholds.map(async (hh) => {
+      const association = await createHouseholdAssociation.mutateAsync({
         userId,
         householdId: hh.householdId,
         countryId: hh.countryId as CountryId,
         label: hh.label ?? undefined,
-      })
-    );
+      });
+
+      shadowSavedHouseholdAssociation(association, householdsById.get(String(hh.householdId)));
+      return association;
+    });
 
     // Save geographies
     const geographyPromises = shareData.userGeographies.map((geo) =>

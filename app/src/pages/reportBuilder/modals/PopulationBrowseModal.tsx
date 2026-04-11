@@ -16,7 +16,6 @@ import {
 } from '@tabler/icons-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
-import { HouseholdAdapter } from '@/adapters/HouseholdAdapter';
 import { geographyUsageStore, householdUsageStore } from '@/api/usageTracking';
 import { UKOutlineIcon, USOutlineIcon } from '@/components/icons/CountryOutlineIcons';
 import { Group } from '@/components/ui/Group';
@@ -29,6 +28,7 @@ import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useUserHouseholds } from '@/hooks/useUserHousehold';
 import { getBasicInputFields } from '@/libs/metadataUtils';
 import { householdAssociationKeys } from '@/libs/queryKeys';
+import { Household as HouseholdModel } from '@/models/Household';
 import { RootState } from '@/store';
 import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
@@ -194,9 +194,7 @@ export function PopulationBrowseModal({
         return {
           id: householdIdStr,
           label: h.association.label || `Household #${householdIdStr}`,
-          memberCount: h.household?.household_json?.people
-            ? Object.keys(h.household.household_json.people).length
-            : 0,
+          memberCount: Object.keys(h.household?.householdData?.people ?? {}).length,
           sortTimestamp,
           household: h.household,
         };
@@ -256,16 +254,13 @@ export function PopulationBrowseModal({
     const householdIdStr = String(householdData.id);
     householdUsageStore.recordUsage(householdIdStr);
 
-    let household: Household | null = null;
-    if (householdData.household) {
-      household = HouseholdAdapter.fromMetadata(householdData.household);
-    } else {
-      household = {
-        id: householdIdStr,
-        countryId,
-        householdData: { people: {} },
-      };
-    }
+    const household: Household | null = householdData.household
+      ? householdData.household
+      : {
+          id: householdIdStr,
+          countryId,
+          householdData: { people: {} },
+        };
 
     const populationState: PopulationStateProps = {
       geography: null,
@@ -357,7 +352,10 @@ export function PopulationBrowseModal({
       return;
     }
 
-    const payload = HouseholdAdapter.toCreationPayload(householdDraft.householdData, countryId);
+    const payload = HouseholdModel.fromDraft({
+      countryId,
+      householdData: householdDraft.householdData,
+    }).toV1CreationPayload();
 
     try {
       const result = await createHousehold(payload);

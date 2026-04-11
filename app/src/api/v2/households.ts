@@ -36,61 +36,10 @@ export interface HouseholdV2Response {
 }
 
 /**
- * Request body for creating a household (HouseholdCreate schema)
+ * Request body for creating a household (HouseholdCreate schema).
+ * This matches the v2 flat household shape without the stored id.
  */
-export interface HouseholdV2CreateRequest {
-  country_id: CountryId;
-  year: number;
-  label?: string | null;
-  people: Record<string, any>[];
-  tax_unit?: Record<string, any> | null;
-  family?: Record<string, any> | null;
-  spm_unit?: Record<string, any> | null;
-  marital_unit?: Record<string, any> | null;
-  household?: Record<string, any> | null;
-  benunit?: Record<string, any> | null;
-}
-
-// ============================================================================
-// Conversion Functions
-// ============================================================================
-
-/**
- * Convert app Household to v2 alpha API request format
- */
-export function householdToV2Request(household: V2HouseholdShape): HouseholdV2CreateRequest {
-  return {
-    country_id: household.country_id,
-    year: household.year,
-    label: household.label ?? null,
-    people: household.people,
-    tax_unit: household.tax_unit ?? null,
-    family: household.family ?? null,
-    spm_unit: household.spm_unit ?? null,
-    marital_unit: household.marital_unit ?? null,
-    household: household.household ?? null,
-    benunit: household.benunit ?? null,
-  };
-}
-
-/**
- * Convert v2 alpha API response to app Household format
- */
-export function v2ResponseToHousehold(response: HouseholdV2Response): V2HouseholdShape {
-  return {
-    id: response.id,
-    country_id: response.country_id,
-    year: response.year,
-    label: response.label ?? undefined,
-    people: response.people,
-    tax_unit: response.tax_unit ?? undefined,
-    family: response.family ?? undefined,
-    spm_unit: response.spm_unit ?? undefined,
-    marital_unit: response.marital_unit ?? undefined,
-    household: response.household ?? undefined,
-    benunit: response.benunit ?? undefined,
-  };
-}
+export type HouseholdV2CreateRequest = Omit<V2HouseholdShape, 'id'>;
 
 // ============================================================================
 // API Functions
@@ -99,35 +48,34 @@ export function v2ResponseToHousehold(response: HouseholdV2Response): V2Househol
 /**
  * Create a new household in v2 alpha API
  */
-export async function createHouseholdV2(household: V2HouseholdShape): Promise<V2HouseholdShape> {
+export async function createHouseholdV2(
+  household: HouseholdV2CreateRequest
+): Promise<HouseholdV2Response> {
   const url = `${API_V2_BASE_URL}/households/`;
-  const body = householdToV2Request(household);
 
-  const json = await v2Fetch<HouseholdV2Response>(url, 'createHouseholdV2', {
+  return v2Fetch<HouseholdV2Response>(url, 'createHouseholdV2', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Accept: 'application/json',
     },
-    body: JSON.stringify(body),
+    body: JSON.stringify(household),
   });
-  return v2ResponseToHousehold(json);
 }
 
 /**
  * Fetch a household by ID from v2 alpha API.
  * Throws with status code in message on any error (including 404).
  */
-export async function fetchHouseholdByIdV2(householdId: string): Promise<V2HouseholdShape> {
+export async function fetchHouseholdByIdV2(householdId: string): Promise<HouseholdV2Response> {
   const url = `${API_V2_BASE_URL}/households/${householdId}`;
 
-  const json = await v2Fetch<HouseholdV2Response>(url, `fetchHouseholdByIdV2(${householdId})`, {
+  return v2Fetch<HouseholdV2Response>(url, `fetchHouseholdByIdV2(${householdId})`, {
     method: 'GET',
     headers: {
       Accept: 'application/json',
     },
   });
-  return v2ResponseToHousehold(json);
 }
 
 /**
@@ -137,7 +85,7 @@ export async function listHouseholdsV2(options?: {
   country_id?: CountryId;
   limit?: number;
   offset?: number;
-}): Promise<V2HouseholdShape[]> {
+}): Promise<HouseholdV2Response[]> {
   const params = new URLSearchParams();
 
   if (options?.country_id) {
@@ -153,13 +101,12 @@ export async function listHouseholdsV2(options?: {
   const queryString = params.toString();
   const url = `${API_V2_BASE_URL}/households/${queryString ? `?${queryString}` : ''}`;
 
-  const json = await v2Fetch<HouseholdV2Response[]>(url, 'listHouseholdsV2', {
+  return v2Fetch<HouseholdV2Response[]>(url, 'listHouseholdsV2', {
     method: 'GET',
     headers: {
       Accept: 'application/json',
     },
   });
-  return json.map(v2ResponseToHousehold);
 }
 
 /**

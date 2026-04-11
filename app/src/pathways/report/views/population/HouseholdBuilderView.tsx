@@ -6,13 +6,13 @@
 
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
-import { HouseholdAdapter } from '@/adapters/HouseholdAdapter';
 import PathwayView from '@/components/common/PathwayView';
 import HouseholdBuilderForm from '@/components/household/HouseholdBuilderForm';
 import { Spinner, Stack } from '@/components/ui';
 import { useCreateHousehold } from '@/hooks/useCreateHousehold';
 import { useReportYear } from '@/hooks/useReportYear';
 import { getBasicInputFields } from '@/libs/metadataUtils';
+import { Household as HouseholdModel } from '@/models/Household';
 import { RootState } from '@/store';
 import { Household } from '@/types/ingredients/Household';
 import { PopulationStateProps } from '@/types/pathwayState';
@@ -153,8 +153,10 @@ export default function HouseholdBuilderView({
       return;
     }
 
-    // Convert to API format
-    const payload = HouseholdAdapter.toCreationPayload(household.householdData, countryId);
+    const payload = HouseholdModel.fromDraft({
+      countryId: countryId as Household['countryId'],
+      householdData: household.householdData,
+    }).toV1CreationPayload();
 
     try {
       const result = await createHousehold(payload);

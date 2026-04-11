@@ -12,7 +12,6 @@
 
 import { useCallback, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { HouseholdAdapter } from '@/adapters/HouseholdAdapter';
 import { geographyUsageStore, householdUsageStore } from '@/api/usageTracking';
 import { MOCK_USER_ID } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
@@ -168,11 +167,11 @@ export function useSimulationCanvas({
       const householdData = households?.find(
         (h) => String(h.association.householdId) === householdId
       );
-      if (!householdData?.household?.household_json) {
+      if (!householdData?.household) {
         continue;
       }
 
-      const household = HouseholdAdapter.fromMetadata(householdData.household);
+      const household = householdData.household;
       const resolvedId = household.id || householdId;
       const label = householdData.association.label || `Household #${householdId}`;
       results.push({

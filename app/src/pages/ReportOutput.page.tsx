@@ -164,7 +164,7 @@ export default function ReportOutputPage({
 
     try {
       // ShareData already contains user associations - just pass it directly
-      const newUserReport = await saveSharedReport(shareData, policies ?? []);
+      const newUserReport = await saveSharedReport(shareData, policies ?? [], households ?? []);
       // Navigate to owned view (same URL pattern but now in localStorage)
       nav.push(`/${countryId}/report-output/${newUserReport.id}/${activeTab}`);
     } catch (error) {

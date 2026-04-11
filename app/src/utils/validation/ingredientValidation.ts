@@ -93,8 +93,7 @@ export function isSimulationPersisted(
  * Checks if a UserHouseholdMetadataWithAssociation has fully loaded household data
  *
  * A household association is considered "ready" when:
- * 1. The household metadata exists (not undefined)
- * 2. The household metadata has household_json populated
+ * 1. The household model exists (not undefined)
  * 3. The query is not still loading
  *
  * @param association - The household association to check
@@ -112,20 +111,12 @@ export function isHouseholdAssociationReady(
     return false;
   }
 
-  // Household metadata not loaded
+  // Household model not loaded
   if (!association.household) {
     return false;
   }
 
-  // Check for household data in EITHER format:
-  // - API format: household_json (from direct API fetch)
-  // - Transformed format: householdData (from HouseholdAdapter.fromMetadata, which may be in cache)
-  // This handles the case where React Query cache contains transformed data from useUserSimulations
-  const hasHouseholdData = !!(
-    association.household.household_json || (association.household as any).householdData
-  );
-
-  if (!hasHouseholdData) {
+  if (!association.household.householdData) {
     return false;
   }
 

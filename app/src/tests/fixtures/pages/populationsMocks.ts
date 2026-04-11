@@ -1,10 +1,19 @@
 import { vi } from 'vitest';
 import { CURRENT_YEAR } from '@/constants';
+import { Household } from '@/types/ingredients/Household';
 import {
   UserGeographyPopulation,
   UserHouseholdPopulation,
 } from '@/types/ingredients/UserPopulation';
 import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
+
+function cloneValue<T>(value: T): T {
+  if (typeof structuredClone === 'function') {
+    return structuredClone(value);
+  }
+
+  return JSON.parse(JSON.stringify(value)) as T;
+}
 
 // ============= TEST CONSTANTS =============
 
@@ -213,6 +222,32 @@ export const mockHouseholdAssociation2: UserHouseholdPopulation = {
   isCreated: true,
 };
 
+export const mockHousehold1: Household = {
+  id: POPULATION_TEST_IDS.HOUSEHOLD_ID_1,
+  countryId: POPULATION_GEO.COUNTRY_US,
+  householdData: {
+    people: mockHouseholdMetadata1.household_json.people,
+    families: mockHouseholdMetadata1.household_json.families,
+    taxUnits: mockHouseholdMetadata1.household_json.tax_units,
+    spmUnits: mockHouseholdMetadata1.household_json.spm_units,
+    households: mockHouseholdMetadata1.household_json.households,
+    maritalUnits: mockHouseholdMetadata1.household_json.marital_units,
+  },
+};
+
+export const mockHousehold2: Household = {
+  id: POPULATION_TEST_IDS.HOUSEHOLD_ID_2,
+  countryId: POPULATION_GEO.COUNTRY_US,
+  householdData: {
+    people: mockHouseholdMetadata2.household_json.people,
+    families: mockHouseholdMetadata2.household_json.families,
+    taxUnits: mockHouseholdMetadata2.household_json.tax_units,
+    spmUnits: mockHouseholdMetadata2.household_json.spm_units,
+    households: mockHouseholdMetadata2.household_json.households,
+    maritalUnits: mockHouseholdMetadata2.household_json.marital_units,
+  },
+};
+
 // Mock geographic associations
 export const mockGeographicAssociation1: UserGeographyPopulation = {
   type: 'geography',
@@ -236,26 +271,46 @@ export const mockGeographicAssociation2: UserGeographyPopulation = {
   createdAt: POPULATION_TEST_IDS.TIMESTAMP_2,
 };
 
-// Combined mock data for useUserHouseholds hook
-export const mockUserHouseholdsData = [
+export const createMockHousehold1 = (): Household => cloneValue(mockHousehold1);
+
+export const createMockHousehold2 = (): Household => cloneValue(mockHousehold2);
+
+export const createMockHouseholdAssociation1 = (): UserHouseholdPopulation =>
+  cloneValue(mockHouseholdAssociation1);
+
+export const createMockHouseholdAssociation2 = (): UserHouseholdPopulation =>
+  cloneValue(mockHouseholdAssociation2);
+
+export const createMockGeographicAssociation1 = (): UserGeographyPopulation =>
+  cloneValue(mockGeographicAssociation1);
+
+export const createMockGeographicAssociation2 = (): UserGeographyPopulation =>
+  cloneValue(mockGeographicAssociation2);
+
+export const createMockUserHouseholdsData = () => [
   {
-    association: mockHouseholdAssociation1,
-    household: mockHouseholdMetadata1,
+    association: createMockHouseholdAssociation1(),
+    household: createMockHousehold1(),
     isLoading: false,
     error: null,
   },
   {
-    association: mockHouseholdAssociation2,
-    household: mockHouseholdMetadata2,
+    association: createMockHouseholdAssociation2(),
+    household: createMockHousehold2(),
     isLoading: false,
     error: null,
   },
 ];
 
-export const mockGeographicAssociationsData = [
-  mockGeographicAssociation1,
-  mockGeographicAssociation2,
+export const createMockGeographicAssociationsData = () => [
+  createMockGeographicAssociation1(),
+  createMockGeographicAssociation2(),
 ];
+
+// Combined mock data for useUserHouseholds hook
+export const mockUserHouseholdsData = createMockUserHouseholdsData();
+
+export const mockGeographicAssociationsData = createMockGeographicAssociationsData();
 
 // ============= MOCK FUNCTIONS =============
 
@@ -264,14 +319,14 @@ export const mockDispatch = vi.fn();
 
 // Hook mocks
 export const mockUseUserHouseholds = vi.fn(() => ({
-  data: mockUserHouseholdsData,
+  data: createMockUserHouseholdsData(),
   isLoading: false,
   isError: false,
   error: null,
 }));
 
 export const mockUseGeographicAssociationsByUser = vi.fn(() => ({
-  data: mockGeographicAssociationsData,
+  data: createMockGeographicAssociationsData(),
   isLoading: false,
   isError: false,
   error: null,
@@ -299,13 +354,13 @@ export const setupMockConsole = () => {
 // Helper to create loading states
 export const createLoadingState = (householdLoading = true, geographicLoading = false) => ({
   household: {
-    data: householdLoading ? undefined : mockUserHouseholdsData,
+    data: householdLoading ? undefined : createMockUserHouseholdsData(),
     isLoading: householdLoading,
     isError: false,
     error: null,
   },
   geographic: {
-    data: geographicLoading ? undefined : mockGeographicAssociationsData,
+    data: geographicLoading ? undefined : createMockGeographicAssociationsData(),
     isLoading: geographicLoading,
     isError: false,
     error: null,
@@ -315,13 +370,13 @@ export const createLoadingState = (householdLoading = true, geographicLoading = 
 // Helper to create error states
 export const createErrorState = (householdError = false, geographicError = false) => ({
   household: {
-    data: householdError ? undefined : mockUserHouseholdsData,
+    data: householdError ? undefined : createMockUserHouseholdsData(),
     isLoading: false,
     isError: householdError,
     error: householdError ? new Error(POPULATION_ERRORS.HOUSEHOLD_FETCH_FAILED) : null,
   },
   geographic: {
-    data: geographicError ? undefined : mockGeographicAssociationsData,
+    data: geographicError ? undefined : createMockGeographicAssociationsData(),
     isLoading: false,
     isError: geographicError,
     error: geographicError ? new Error(POPULATION_ERRORS.GEOGRAPHIC_FETCH_FAILED) : null,

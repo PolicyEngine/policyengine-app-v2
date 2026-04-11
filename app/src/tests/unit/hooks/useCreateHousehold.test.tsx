@@ -6,6 +6,7 @@ import { createHousehold } from '@/api/household';
 // Now import the actual implementations
 import { useCreateHousehold } from '@/hooks/useCreateHousehold';
 import { useCreateHouseholdAssociation } from '@/hooks/useUserHousehold';
+import { shadowCreateHouseholdAndAssociation } from '@/libs/migration/householdShadow';
 // Import fixtures first
 import {
   CONSOLE_MESSAGES,
@@ -23,6 +24,10 @@ import {
 // Mock the modules before importing them
 vi.mock('@/api/household', () => ({
   createHousehold: vi.fn(),
+}));
+
+vi.mock('@/libs/migration/householdShadow', () => ({
+  shadowCreateHouseholdAndAssociation: vi.fn(),
 }));
 
 vi.mock('@/constants', () => ({
@@ -55,6 +60,7 @@ describe('useCreateHousehold', () => {
     (useCreateHouseholdAssociation as any).mockReturnValue({
       mutateAsync: mockCreateHouseholdAssociationMutateAsync,
     });
+    (shadowCreateHouseholdAndAssociation as any).mockResolvedValue(undefined);
 
     // Set default mock implementations
     mockCreateHousehold.mockResolvedValue(mockCreateHouseholdResponse);
@@ -97,6 +103,7 @@ describe('useCreateHousehold', () => {
         countryId: mockHouseholdCreationPayload.country_id,
         label: TEST_LABELS.HOUSEHOLD,
       });
+      expect(shadowCreateHouseholdAndAssociation).toHaveBeenCalledTimes(1);
 
       // Verify response
       expect(response).toEqual(mockCreateHouseholdResponse);
@@ -137,6 +144,30 @@ describe('useCreateHousehold', () => {
         label: customLabel,
       });
     });
+
+    test('given successful create then it triggers household shadow create with the v1 household and association', async () => {
+      const { result } = renderHook(() => useCreateHousehold(TEST_LABELS.HOUSEHOLD), { wrapper });
+
+      await result.current.createHousehold(mockHouseholdCreationPayload);
+
+      await waitFor(() => {
+        expect(shadowCreateHouseholdAndAssociation).toHaveBeenCalledTimes(1);
+      });
+
+      const shadowArgs = vi.mocked(shadowCreateHouseholdAndAssociation).mock.calls[0][0];
+      expect(shadowArgs.v1HouseholdId).toBe(TEST_IDS.HOUSEHOLD_ID);
+      expect(shadowArgs.v1Association).toEqual(
+        expect.objectContaining({
+          userId: TEST_IDS.USER_ID,
+          householdId: TEST_IDS.HOUSEHOLD_ID,
+          label: TEST_LABELS.HOUSEHOLD,
+        })
+      );
+      expect(shadowArgs.v1Household.toV1CreationPayload()).toEqual({
+        ...mockHouseholdCreationPayload,
+        label: TEST_LABELS.HOUSEHOLD,
+      });
+    });
   });
 
   describe('error handling', () => {
@@ -173,6 +204,12 @@ describe('useCreateHousehold', () => {
       expect(consoleMocks.consoleSpy.error).toHaveBeenCalledWith(
         CONSOLE_MESSAGES.ASSOCIATION_ERROR,
         associationError
+      );
+      expect(shadowCreateHouseholdAndAssociation).toHaveBeenCalledWith(
+        expect.objectContaining({
+          v1HouseholdId: TEST_IDS.HOUSEHOLD_ID,
+          v1Association: undefined,
+        })
       );
 
       // Household creation should succeed (check only first argument)
