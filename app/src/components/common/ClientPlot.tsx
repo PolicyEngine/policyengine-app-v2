@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
+import type { PlotParams } from 'react-plotly.js';
 import { Spinner } from '@/components/ui';
 
-type PlotComponent = React.ComponentType<Record<string, unknown>>;
+type PlotComponent = React.ComponentType<PlotParams>;
 
 let cachedPlotComponent: PlotComponent | null = null;
 let plotComponentPromise: Promise<PlotComponent> | null = null;
@@ -36,7 +37,7 @@ function getFallbackHeight(style: unknown): number | string {
  * Client-only Plotly wrapper for pages that may be server-rendered.
  * Plotly touches `window` at module scope, so we defer the import until after mount.
  */
-export function ClientPlot(props: Record<string, unknown>) {
+export function ClientPlot(props: PlotParams) {
   const [Plot, setPlot] = useState<PlotComponent | null>(() => cachedPlotComponent);
 
   useEffect(() => {
