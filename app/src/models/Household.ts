@@ -85,7 +85,6 @@ const GROUP_DEFINITIONS: readonly GroupDefinition[] = [
 
 const PERSON_LINK_KEYS = new Set(GROUP_DEFINITIONS.map((definition) => definition.personLinkKey));
 const PERSON_META_KEYS = new Set(['name', 'person_id', ...PERSON_LINK_KEYS]);
-const GROUP_ID_KEYS = new Set(GROUP_DEFINITIONS.map((definition) => definition.groupIdKey));
 type HouseholdV2Source = {
   id: string;
   country_id: string;

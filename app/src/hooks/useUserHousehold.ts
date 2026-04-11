@@ -9,8 +9,11 @@ import {
 import { Household as HouseholdModel } from '@/models/Household';
 import type { Household } from '@/types/ingredients/Household';
 import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
-import type { UserHouseholdStore } from '../api/householdAssociation';
-import { ApiHouseholdStore, LocalStorageHouseholdStore } from '../api/householdAssociation';
+import {
+  ApiHouseholdStore,
+  LocalStorageHouseholdStore,
+  type UserHouseholdStore,
+} from '../api/householdAssociation';
 import { queryConfig } from '../libs/queryConfig';
 import { householdAssociationKeys, householdKeys } from '../libs/queryKeys';
 
