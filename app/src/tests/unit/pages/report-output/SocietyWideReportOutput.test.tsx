@@ -4,6 +4,7 @@ import { useCalculationStatus } from '@/hooks/useCalculationStatus';
 import { useReportProgressDisplay } from '@/hooks/useReportProgressDisplay';
 import { useStartCalculationOnLoad } from '@/hooks/useStartCalculationOnLoad';
 import { SocietyWideReportOutput } from '@/pages/report-output/SocietyWideReportOutput';
+import { mockUSReportOutput } from '@/tests/fixtures/api/societyWideMocks';
 import {
   MOCK_CALC_STATUS_COMPLETE,
   MOCK_CALC_STATUS_ERROR,
@@ -18,7 +19,6 @@ import {
   MOCK_SIMULATION_REFORM,
   MOCK_USER_POLICY,
 } from '@/tests/fixtures/pages/report-output/SocietyWideReportOutput';
-import { mockUSReportOutput } from '@/tests/fixtures/api/societyWideMocks';
 
 // Mock hooks
 vi.mock('@/hooks/useCalculationStatus');
@@ -278,6 +278,8 @@ describe('SocietyWideReportOutput', () => {
   test('given reproduce subpage with resolved dataset in report output then uses exact dataset url', () => {
     // Given
     mockUseCalculationStatus.mockReturnValue(MOCK_CALC_STATUS_IDLE);
+    // Preserve the exact pinned artifact so notebook reproduction does not
+    // silently fall back to a floating default dataset.
     const reportWithBundleOutput = {
       ...MOCK_REPORT,
       output: {
