@@ -2,7 +2,3 @@
   changes:
     added:
       - Add Scotland income tax reform analysis dashboard at /uk/scotland-income-tax-reform
-- bump: patch
-  changes:
-    changed:
-      - Show model and data version metadata in the report output header for completed economy reports
