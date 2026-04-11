@@ -7,8 +7,8 @@ import {
   createEmptyDataState,
   createErrorState,
   createLoadingState,
-  mockGeographicAssociationsData,
-  mockUserHouseholdsData,
+  createMockGeographicAssociationsData,
+  createMockUserHouseholdsData,
   POPULATION_COLUMNS,
   POPULATION_LABELS,
   POPULATION_TEST_IDS,
@@ -56,21 +56,25 @@ vi.mock('@/constants', () => ({
 
 describe('PopulationsPage', () => {
   let consoleMocks: ReturnType<typeof setupMockConsole>;
+  let userHouseholdsData: ReturnType<typeof createMockUserHouseholdsData>;
+  let geographicAssociationsData: ReturnType<typeof createMockGeographicAssociationsData>;
 
   beforeEach(() => {
     vi.clearAllMocks();
     consoleMocks = setupMockConsole();
+    userHouseholdsData = createMockUserHouseholdsData();
+    geographicAssociationsData = createMockGeographicAssociationsData();
 
     // Set default mock implementations
     (useUserHouseholds as any).mockReturnValue({
-      data: mockUserHouseholdsData,
+      data: userHouseholdsData,
       isLoading: false,
       isError: false,
       error: null,
     });
 
     (useGeographicAssociationsByUser as any).mockReturnValue({
-      data: mockGeographicAssociationsData,
+      data: geographicAssociationsData,
       isLoading: false,
       isError: false,
       error: null,
@@ -328,9 +332,9 @@ describe('PopulationsPage', () => {
       // Given
       const dataWithoutLabel = [
         {
-          ...mockUserHouseholdsData[0],
+          ...userHouseholdsData[0],
           association: {
-            ...mockUserHouseholdsData[0].association,
+            ...userHouseholdsData[0].association,
             label: undefined,
           },
         },
@@ -356,9 +360,9 @@ describe('PopulationsPage', () => {
       // Given
       const dataWithoutDate = [
         {
-          ...mockUserHouseholdsData[0],
+          ...userHouseholdsData[0],
           association: {
-            ...mockUserHouseholdsData[0].association,
+            ...userHouseholdsData[0].association,
             createdAt: undefined,
           },
         },
@@ -376,7 +380,7 @@ describe('PopulationsPage', () => {
 
       // Then - Check that the household data is displayed (but without checking for specific date text)
       expect(
-        screen.getByText(mockUserHouseholdsData[0].association.label || 'Household')
+        screen.getByText(userHouseholdsData[0].association.label || 'Household')
       ).toBeInTheDocument();
     });
 
@@ -384,10 +388,10 @@ describe('PopulationsPage', () => {
       // Given
       const dataWithNoPeople = [
         {
-          ...mockUserHouseholdsData[0],
+          ...userHouseholdsData[0],
           household: {
-            ...mockUserHouseholdsData[0].household,
-            household_json: {
+            ...userHouseholdsData[0].household,
+            householdData: {
               people: {},
               families: {},
             },
