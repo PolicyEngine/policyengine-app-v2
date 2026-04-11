@@ -14,8 +14,8 @@ import {
 } from '@/hooks/useUserGeographic';
 import { useUpdateHouseholdAssociation, useUserHouseholds } from '@/hooks/useUserHousehold';
 import { countryIds } from '@/libs/countries';
+import { Household } from '@/models/Household';
 import { RootState } from '@/store';
-import { Household } from '@/types/ingredients/Household';
 import { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
 import { formatDate } from '@/utils/dateUtils';
 import { getCountryLabel } from '@/utils/geographyUtils';

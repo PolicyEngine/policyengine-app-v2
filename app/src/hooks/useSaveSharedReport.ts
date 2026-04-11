@@ -22,9 +22,8 @@ import {
   shadowCreatePolicyAndAssociation,
   shadowCreateUserPolicyAssociation,
 } from '@/libs/migration/policyShadow';
-import { Household as HouseholdModel } from '@/models/Household';
+import { Household, type HouseholdInput } from '@/models/Household';
 import { RootState } from '@/store';
-import { Household } from '@/types/ingredients/Household';
 import { Policy } from '@/types/ingredients/Policy';
 import { UserPolicy } from '@/types/ingredients/UserPolicy';
 import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
@@ -80,7 +79,7 @@ function shadowSavedPolicyAssociation(association: UserPolicy, policyDetails?: P
 
 function shadowSavedHouseholdAssociation(
   association: UserHouseholdPopulation,
-  householdDetails?: Household
+  householdDetails?: HouseholdInput
 ): void {
   const mappedV2HouseholdId = getV2Id('Household', association.householdId);
 
@@ -111,10 +110,9 @@ function shadowSavedHouseholdAssociation(
 
   void shadowCreateHouseholdAndAssociation({
     v1HouseholdId: association.householdId,
-    v1Household: HouseholdModel.fromDraft({
+    v1Household: Household.fromInput({
+      ...householdDetails,
       id: association.householdId,
-      countryId: association.countryId,
-      householdData: householdDetails.householdData,
       label: association.label ?? null,
     }),
     v1Association: association,
@@ -158,7 +156,7 @@ export function useSaveSharedReport() {
   const saveSharedReport = async (
     shareData: ReportIngredientsInput,
     policies: Policy[] = [],
-    households: Household[] = []
+    households: HouseholdInput[] = []
   ): Promise<UserReport> => {
     const userId = 'anonymous'; // TODO: Replace with auth context
     const userReportId = getShareDataUserReportId(shareData);

@@ -93,20 +93,16 @@ export async function shadowCreateHousehold(
   v1Household: Household
 ): Promise<string | null> {
   try {
-    const v2Household = await createHouseholdV2(v1Household.toV2Shape());
-    if (!v2Household.id) {
-      throw new Error('Shadow v2 create returned a household without an id');
-    }
+    const v2Household = Household.fromV2Response(
+      await createHouseholdV2(v1Household.toV2CreateRequest())
+    );
 
     setV2Id('Household', v1HouseholdId, v2Household.id);
     logMigrationComparison(
       'HouseholdMigration',
       'CREATE',
       v1Household.toComparable() as unknown as Record<string, unknown>,
-      Household.fromV2Shape({
-        ...v2Household,
-        id: v2Household.id,
-      }).toComparable() as unknown as Record<string, unknown>,
+      v2Household.toComparable() as unknown as Record<string, unknown>,
       { skipFields: ['id'] }
     );
     return v2Household.id;

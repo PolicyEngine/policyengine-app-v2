@@ -44,16 +44,12 @@ export interface UserHouseholdAssociationV2CreateRequest {
 }
 
 /**
- * API request format for updating associations - matches UserHouseholdAssociationUpdate
+ * App-facing update input for household associations.
+ * This stays camelCase; serialization to the wire format happens below.
  */
-export interface UserHouseholdAssociationV2UpdateRequest {
+export interface UserHouseholdAssociationV2UpdateInput {
   label?: string | null;
   householdId?: string;
-}
-
-interface UserHouseholdAssociationV2ApiUpdateRequest {
-  label?: string | null;
-  household_id?: string;
 }
 
 // ============================================================================
@@ -77,9 +73,7 @@ export function toV2CreateRequest(
   };
 }
 
-export function toV2UpdateRequest(
-  updates: UserHouseholdAssociationV2UpdateRequest
-): UserHouseholdAssociationV2ApiUpdateRequest {
+export function toV2UpdateRequest(updates: UserHouseholdAssociationV2UpdateInput) {
   return {
     label: updates.label,
     household_id: updates.householdId,
@@ -197,7 +191,7 @@ export async function fetchUserHouseholdAssociationByIdV2(
  */
 export async function updateUserHouseholdAssociationV2(
   associationId: string,
-  updates: UserHouseholdAssociationV2UpdateRequest
+  updates: UserHouseholdAssociationV2UpdateInput
 ): Promise<UserHouseholdPopulation> {
   const url = `${API_V2_BASE_URL}${BASE_PATH}/${associationId}`;
   const body = toV2UpdateRequest(updates);
