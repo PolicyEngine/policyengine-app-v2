@@ -33,10 +33,8 @@ export function useCreateHousehold(householdLabel?: string) {
 
       void shadowCreateHouseholdAndAssociation({
         v1HouseholdId: data.result.household_id,
-        v1Household: Household.fromV1Payload({
+        v1Household: Household.fromV1CreationPayload(householdPayload, {
           id: data.result.household_id,
-          countryId: householdPayload.country_id,
-          householdData: householdPayload.data,
           label: resolvedLabel ?? null,
         }),
         v1Association: association,

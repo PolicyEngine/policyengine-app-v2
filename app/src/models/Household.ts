@@ -1,5 +1,5 @@
 import type { V2HouseholdShape } from '@/api/v2/householdCalculation';
-import type { HouseholdV2Response } from '@/api/v2/households';
+import type { HouseholdV2CreateRequest, HouseholdV2Response } from '@/api/v2/households';
 import { countryIds, type CountryId } from '@/libs/countries';
 import { store } from '@/store';
 import type { HouseholdData as IngredientHouseholdData } from '@/types/ingredients/Household';
@@ -21,6 +21,14 @@ export interface ComparableHousehold {
   year: number | null;
   label: string | null;
   data: Record<string, unknown>;
+}
+
+export interface HouseholdInput {
+  id?: string;
+  countryId: CountryId;
+  householdData: IngredientHouseholdData;
+  label?: string | null;
+  year?: number | null;
 }
 
 type GroupDefinition = {
@@ -412,6 +420,16 @@ export class Household extends BaseModel<HouseholdModelData> {
     this._label = value;
   }
 
+  static fromInput(input: HouseholdInput): Household {
+    return new Household({
+      id: input.id ?? 'draft-household',
+      countryId: normalizeCountryId(input.countryId),
+      label: input.label ?? null,
+      year: input.year ?? inferYearFromData(input.householdData),
+      data: input.householdData,
+    });
+  }
+
   static fromDraft(args: {
     countryId: CountryId;
     householdData: Record<string, unknown>;
@@ -419,12 +437,12 @@ export class Household extends BaseModel<HouseholdModelData> {
     year?: number | null;
     id?: string;
   }): Household {
-    return new Household({
-      id: args.id ?? 'draft-household',
+    return Household.fromInput({
+      id: args.id,
       countryId: args.countryId,
-      label: args.label ?? null,
-      year: args.year ?? inferYearFromData(args.householdData),
-      data: args.householdData,
+      householdData: args.householdData as IngredientHouseholdData,
+      label: args.label,
+      year: args.year,
     });
   }
 
@@ -434,6 +452,21 @@ export class Household extends BaseModel<HouseholdModelData> {
       countryId: metadata.country_id,
       householdData: metadata.household_json,
       label: metadata.label ?? null,
+    });
+  }
+
+  static fromV1CreationPayload(
+    payload: HouseholdCreationPayload,
+    options: {
+      id?: string;
+      label?: string | null;
+    } = {}
+  ): Household {
+    return Household.fromV1Payload({
+      id: options.id ?? 'draft-household',
+      countryId: payload.country_id,
+      householdData: payload.data,
+      label: options.label ?? payload.label ?? null,
     });
   }
 
@@ -516,6 +549,20 @@ export class Household extends BaseModel<HouseholdModelData> {
     });
   }
 
+  withId(id: string): Household {
+    return new Household({
+      ...this.toJSON(),
+      id,
+    });
+  }
+
+  withLabel(label: string | null): Household {
+    return new Household({
+      ...this.toJSON(),
+      label,
+    });
+  }
+
   toV1CreationPayload(): HouseholdCreationPayload {
     const payloadData: Record<string, unknown> = {
       people: cloneValue(this.people),
@@ -542,6 +589,11 @@ export class Household extends BaseModel<HouseholdModelData> {
       data: payloadData as unknown as HouseholdCreationPayload['data'],
       label: this._label ?? undefined,
     };
+  }
+
+  toV2CreateRequest(): HouseholdV2CreateRequest {
+    const { id: _ignoredId, ...request } = this.toV2Shape();
+    return request;
   }
 
   toV2Shape(): V2HouseholdShape {

@@ -72,6 +72,15 @@ describe('Household', () => {
       expect(household.personCount).toBe(0);
       expect(household.personNames).toEqual([]);
     });
+
+    it('can clone itself with a new id or label', () => {
+      const household = new Household(createMockHouseholdData());
+
+      expect(household.withId('new-id').id).toBe('new-id');
+      expect(household.withLabel('Renamed household').label).toBe('Renamed household');
+      expect(household.id).toBe(TEST_HOUSEHOLD_ID);
+      expect(household.label).toBe(TEST_HOUSEHOLD_LABEL);
+    });
   });
 
   describe('fromV1Metadata', () => {
@@ -98,6 +107,26 @@ describe('Household', () => {
         'Entity "unknown_entity" not found in metadata, including anyway'
       );
       expect(household.data).toHaveProperty('unknownEntity');
+    });
+  });
+
+  describe('fromV1CreationPayload', () => {
+    it('builds a household model directly from a v1 create payload', () => {
+      const household = Household.fromV1CreationPayload(
+        {
+          country_id: 'us',
+          label: 'Created household',
+          data: mockHouseholdMetadata.household_json,
+        },
+        { id: 'created-id' }
+      );
+
+      expect(household.id).toBe('created-id');
+      expect(household.label).toBe('Created household');
+      expect(household.householdData.people).toEqual(mockHouseholdMetadata.household_json.people);
+      expect(household.householdData.taxUnits).toEqual(
+        mockHouseholdMetadata.household_json.tax_units
+      );
     });
   });
 
@@ -265,6 +294,47 @@ describe('Household', () => {
       });
 
       expect(household.toV2Shape().year).toBe(2026);
+    });
+
+    it('builds a create request body without the persisted id', () => {
+      const household = new Household(createMockHouseholdData());
+
+      expect(household.toV2CreateRequest()).toEqual({
+        country_id: 'us',
+        year: 2026,
+        label: TEST_HOUSEHOLD_LABEL,
+        people: [
+          {
+            person_id: 0,
+            person_household_id: 0,
+            person_family_id: 0,
+            person_spm_unit_id: 0,
+            person_tax_unit_id: 0,
+            age: 35,
+            employment_income: 50000,
+          },
+          {
+            person_id: 1,
+            person_household_id: 0,
+            person_family_id: 0,
+            person_spm_unit_id: 0,
+            person_tax_unit_id: 0,
+            age: 8,
+          },
+        ],
+        household: {
+          household_id: 0,
+        },
+        family: {
+          family_id: 0,
+        },
+        spm_unit: {
+          spm_unit_id: 0,
+        },
+        tax_unit: {
+          tax_unit_id: 0,
+        },
+      });
     });
   });
 

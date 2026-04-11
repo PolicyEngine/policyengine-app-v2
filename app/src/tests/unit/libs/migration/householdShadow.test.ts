@@ -12,7 +12,10 @@ import {
 import { getV2Id, setV2Id } from '@/libs/migration/idMapping';
 import { sendMigrationLog } from '@/libs/migration/migrationLogTransport';
 import { Household } from '@/models/Household';
-import { createMockHouseholdData } from '@/tests/fixtures/models/shared';
+import {
+  createMockHouseholdData,
+  createMockHouseholdV2Response,
+} from '@/tests/fixtures/models/shared';
 import type { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 
 vi.mock('@/api/v2', () => ({
@@ -66,10 +69,13 @@ describe('householdShadow', () => {
     localStorage.clear();
     setV2Id('User', TEST_V1_USER_ID, TEST_V2_USER_ID);
 
-    vi.mocked(createHouseholdV2).mockResolvedValue({
-      ...v1Household.toV2Shape(),
-      id: TEST_V2_HOUSEHOLD_ID,
-    });
+    vi.mocked(createHouseholdV2).mockResolvedValue(
+      createMockHouseholdV2Response({
+        id: TEST_V2_HOUSEHOLD_ID,
+        country_id: TEST_COUNTRY_ID,
+        label: 'My household',
+      })
+    );
     vi.mocked(createUserHouseholdAssociationV2).mockResolvedValue({
       id: TEST_V2_ASSOC_ID,
       type: 'household',

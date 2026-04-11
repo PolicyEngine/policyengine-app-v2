@@ -6,8 +6,7 @@ import {
   shadowCreateHousehold,
   shadowUpdateUserHouseholdAssociation,
 } from '@/libs/migration/householdShadow';
-import { Household as HouseholdModel } from '@/models/Household';
-import type { Household } from '@/types/ingredients/Household';
+import { Household, type HouseholdInput } from '@/models/Household';
 import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import {
   ApiHouseholdStore,
@@ -81,7 +80,7 @@ export const useCreateHouseholdAssociation = () => {
 
 export async function replaceHouseholdBaseForAssociation(args: {
   association: UserHouseholdPopulation;
-  nextHousehold: Household;
+  nextHousehold: HouseholdInput;
   store?: Pick<UserHouseholdStore, 'update'>;
 }): Promise<UserHouseholdPopulation> {
   const { association, nextHousehold } = args;
@@ -93,12 +92,11 @@ export async function replaceHouseholdBaseForAssociation(args: {
     );
   }
 
-  const nextHouseholdDraft = HouseholdModel.fromDraft({
-    countryId: nextHousehold.countryId,
-    householdData: nextHousehold.householdData,
+  const nextHouseholdModel = Household.fromInput({
+    ...nextHousehold,
     label: nextHousehold.id ? null : (association.label ?? null),
   });
-  const payload = nextHouseholdDraft.toV1CreationPayload();
+  const payload = nextHouseholdModel.toV1CreationPayload();
   const createdHousehold = await createHousehold(payload);
   const nextHouseholdId = String(createdHousehold.result.household_id);
   const updatedAssociation = await store.update(association.id, {
@@ -106,13 +104,10 @@ export async function replaceHouseholdBaseForAssociation(args: {
   });
 
   void (async () => {
-    const nextHouseholdModel = HouseholdModel.fromDraft({
-      id: nextHouseholdId,
-      countryId: nextHousehold.countryId,
-      householdData: nextHousehold.householdData,
-      label: updatedAssociation.label ?? association.label ?? null,
-    });
-    const v2HouseholdId = await shadowCreateHousehold(nextHouseholdId, nextHouseholdModel);
+    const persistedHousehold = nextHouseholdModel
+      .withId(nextHouseholdId)
+      .withLabel(updatedAssociation.label ?? association.label ?? null);
+    const v2HouseholdId = await shadowCreateHousehold(nextHouseholdId, persistedHousehold);
     await shadowUpdateUserHouseholdAssociation(updatedAssociation, v2HouseholdId ?? undefined);
   })();
 
@@ -133,7 +128,7 @@ export const useUpdateHouseholdAssociation = () => {
       userHouseholdId: string;
       updates: Partial<UserHouseholdPopulation>;
       association?: UserHouseholdPopulation;
-      nextHousehold?: Household;
+      nextHousehold?: HouseholdInput;
     }) => {
       if (nextHousehold) {
         if (!association) {
@@ -222,7 +217,7 @@ export const useDeleteAssociation = () => {
 // Type for the combined data structure
 export interface UserHouseholdMetadataWithAssociation {
   association: UserHouseholdPopulation;
-  household: HouseholdModel | undefined;
+  household: Household | undefined;
   isLoading: boolean;
   error: Error | null | undefined;
   isError?: boolean;
@@ -261,7 +256,7 @@ export const useUserHouseholds = (userId: string) => {
       queryKey: householdKeys.byId(householdId),
       queryFn: async () => {
         const metadata = await fetchHouseholdById(country, householdId);
-        return HouseholdModel.fromV1Metadata(metadata);
+        return Household.fromV1Metadata(metadata);
       },
       enabled: !!associations, // Only run when associations are loaded
       staleTime: 5 * 60 * 1000,
