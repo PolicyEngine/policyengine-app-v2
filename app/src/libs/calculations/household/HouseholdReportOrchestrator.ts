@@ -128,7 +128,7 @@ export class HouseholdReportOrchestrator {
       // Execute the long-running calculation
       // This makes ONE blocking API call and waits for response (30-45s)
       // NO POLLING HAPPENS HERE
-      const result = await calculator.execute({
+      const calculation = await calculator.execute({
         countryId,
         populationId,
         policyId,
@@ -137,14 +137,14 @@ export class HouseholdReportOrchestrator {
       // Store result for report output aggregation
       const reportResults = this.simulationResults.get(reportId);
       if (reportResults) {
-        reportResults.set(simulationId, result as HouseholdData);
+        reportResults.set(simulationId, calculation.result);
       }
 
       // Notify progress coordinator that this simulation completed
       progressCoordinator.completeSimulation(simulationId);
 
       // Persist result to simulation.output
-      await this.persistSimulation(countryId, simulationId, result);
+      await this.persistSimulation(countryId, simulationId, calculation);
     } catch (error) {
       console.error('[HouseholdReportOrchestrator] Simulation failed:', error);
 

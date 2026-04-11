@@ -18,13 +18,23 @@ const US_REGION_PREFIX_TO_FOLDER: Record<string, string> = {
   'congressional_district/': 'districts',
 };
 
+function normalizeDatasetUrlForReproducibility(countryId: string, datasetName: string): string {
+  if (countryId === 'uk') {
+    return datasetName.replace(
+      'hf://policyengine/policyengine-uk-data-private/',
+      'hf://policyengine/policyengine-uk-data/'
+    );
+  }
+  return datasetName;
+}
+
 /**
  * Build a HuggingFace dataset URL for a US national-level dataset.
  * Dataset files follow the pattern: {name}_{year}.h5
  */
 function getDatasetUrl(countryId: string, datasetName: string, year: number): string | null {
   if (datasetName.includes('://')) {
-    return datasetName;
+    return normalizeDatasetUrlForReproducibility(countryId, datasetName);
   }
 
   if (countryId === 'us') {
@@ -122,9 +132,10 @@ function getHeaderCode(
 ): string[] {
   const lines: string[] = [];
   const packageName = countryId === 'uk' ? 'policyengine_uk' : 'policyengine_us';
+  const policyengineExtra = countryId === 'uk' ? 'uk' : 'us';
 
   if (policyengineVersion) {
-    lines.push(`%pip install policyengine==${policyengineVersion}`, '');
+    lines.push(`%pip install "policyengine[${policyengineExtra}]==${policyengineVersion}"`, '');
   }
 
   // Add lines depending upon type of block

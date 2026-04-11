@@ -64,22 +64,6 @@ const INPUT_ONLY_TABS: Record<string, (props: InputTabProps) => React.ReactEleme
   dynamics: ({ policies, userPolicies }) => (
     <DynamicsSubPage policies={policies} userPolicies={userPolicies} reportType="household" />
   ),
-
-  reproduce: ({ report, policies, households }) => {
-    const householdInput = households?.[0]?.householdData || {};
-    const policyV1 = convertPoliciesToV1Format(policies);
-    const reportOutput = report.output as { policyengine_version?: string | null } | null;
-    return (
-      <HouseholdReproducibility
-        countryId={report.countryId}
-        policy={policyV1}
-        householdInput={householdInput}
-        region={report.countryId}
-        dataset={null}
-        policyengineVersion={reportOutput?.policyengine_version ?? null}
-      />
-    );
-  },
 };
 
 /**
@@ -189,6 +173,21 @@ export function HouseholdReportOutput({
   }
 
   // 3. Data loaded - render input-only tabs immediately (no calculation needed)
+  if (normalizedSubpage === 'reproduce') {
+    const householdInput = households?.[0]?.householdData || {};
+    const policyV1 = convertPoliciesToV1Format(policies);
+    return (
+      <HouseholdReproducibility
+        countryId={report.countryId}
+        policy={policyV1}
+        householdInput={householdInput}
+        region={report.countryId}
+        dataset={null}
+        policyengineVersion={viewModel.getResolvedPolicyengineVersion()}
+      />
+    );
+  }
+
   const InputTabRenderer = INPUT_ONLY_TABS[normalizedSubpage];
   if (InputTabRenderer) {
     return InputTabRenderer({

@@ -237,7 +237,7 @@ describe('reproducibilityCode', () => {
         expect(code).toContain('reform=reform');
       });
 
-      test('given policyengine version then adds pinned install line', () => {
+      test('given policyengine version then adds pinned install line with country extra', () => {
         const lines = getReproducibilityCodeBlock(
           'policy',
           TEST_COUNTRIES.US,
@@ -252,8 +252,27 @@ describe('reproducibilityCode', () => {
         );
         const code = lines.join('\n');
 
-        expect(code).toContain('%pip install policyengine==3.4.0');
+        expect(code).toContain('%pip install "policyengine[us]==3.4.0"');
         expect(code).toContain(EXPECTED_IMPORTS.US_POLICY);
+      });
+
+      test('given UK policyengine version then installs UK extra before import', () => {
+        const lines = getReproducibilityCodeBlock(
+          'household',
+          TEST_COUNTRIES.UK,
+          EMPTY_POLICY,
+          TEST_REGIONS.UK_NATIONAL,
+          TEST_YEARS.DEFAULT,
+          null,
+          SIMPLE_HOUSEHOLD_INPUT,
+          false,
+          true,
+          '3.4.0'
+        );
+        const code = lines.join('\n');
+
+        expect(code).toContain('%pip install "policyengine[uk]==3.4.0"');
+        expect(code).toContain(EXPECTED_IMPORTS.UK_HOUSEHOLD);
       });
 
       test('given household with earning variation then adds axes', () => {
@@ -525,6 +544,26 @@ describe('reproducibilityCode', () => {
         expect(code).toContain(
           'dataset="hf://policyengine/policyengine-us-data/enhanced_cps_2024.h5@1.77.0"'
         );
+      });
+
+      test('given UK private dataset url then rewrites it to the public repo for reproduction', () => {
+        const lines = getReproducibilityCodeBlock(
+          'policy',
+          TEST_COUNTRIES.UK,
+          EMPTY_POLICY,
+          TEST_REGIONS.UK_NATIONAL,
+          TEST_YEARS.DEFAULT,
+          TEST_DATASETS.ENHANCED_FRS_PRIVATE_URL,
+          null,
+          false,
+          false
+        );
+        const code = lines.join('\n');
+
+        expect(code).toContain(
+          'dataset="hf://policyengine/policyengine-uk-data/enhanced_frs_2023_24.h5@1.40.3"'
+        );
+        expect(code).not.toContain('policyengine-uk-data-private');
       });
 
       test('given default dataset then omits dataset specifier', () => {

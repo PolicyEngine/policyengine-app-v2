@@ -1,3 +1,4 @@
+import type { PolicyEngineBundle } from '@/api/societyWideCalculation';
 import { BASE_URL } from '@/constants';
 import { HouseholdData } from '@/types/ingredients/Household';
 
@@ -5,13 +6,19 @@ export interface HouseholdCalculationResponse {
   status: 'ok' | 'error';
   result: HouseholdData | null;
   error?: string;
+  policyengine_bundle?: PolicyEngineBundle | null;
 }
 
-export async function fetchHouseholdCalculation(
+export interface HouseholdCalculationResult {
+  result: HouseholdData;
+  policyengine_bundle?: PolicyEngineBundle | null;
+}
+
+export async function fetchHouseholdCalculationWithBundle(
   countryId: string,
   householdId: string,
   policyId: string
-): Promise<HouseholdData> {
+): Promise<HouseholdCalculationResult> {
   const url = `${BASE_URL}/${countryId}/household/${householdId}/policy/${policyId}`;
 
   const controller = new AbortController();
@@ -37,7 +44,10 @@ export async function fetchHouseholdCalculation(
       throw new Error(data.error || 'Household calculation failed');
     }
 
-    return data.result;
+    return {
+      result: data.result,
+      policyengine_bundle: data.policyengine_bundle ?? null,
+    };
   } catch (error) {
     clearTimeout(timeoutId);
 
@@ -48,4 +58,13 @@ export async function fetchHouseholdCalculation(
 
     throw error;
   }
+}
+
+export async function fetchHouseholdCalculation(
+  countryId: string,
+  householdId: string,
+  policyId: string
+): Promise<HouseholdData> {
+  const data = await fetchHouseholdCalculationWithBundle(countryId, householdId, policyId);
+  return data.result;
 }

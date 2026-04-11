@@ -18,6 +18,7 @@ import {
   MOCK_SIMULATION_REFORM,
   MOCK_USER_POLICY,
 } from '@/tests/fixtures/pages/report-output/SocietyWideReportOutput';
+import { mockUSReportOutput } from '@/tests/fixtures/api/societyWideMocks';
 
 // Mock hooks
 vi.mock('@/hooks/useCalculationStatus');
@@ -280,6 +281,7 @@ describe('SocietyWideReportOutput', () => {
     const reportWithBundleOutput = {
       ...MOCK_REPORT,
       output: {
+        ...mockUSReportOutput,
         dataset: 'hf://policyengine/policyengine-us-data/enhanced_cps_2024.h5@1.77.0',
         policyengine_version: '3.4.0',
         model_version: '1.634.4',

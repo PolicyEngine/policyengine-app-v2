@@ -1,5 +1,8 @@
 import type { QueryClient } from '@tanstack/react-query';
-import { fetchHouseholdCalculation } from '@/api/householdCalculation';
+import {
+  fetchHouseholdCalculationWithBundle,
+  type HouseholdCalculationResult,
+} from '@/api/householdCalculation';
 import { calculationKeys } from '@/libs/queryKeys';
 import type { CalcStatus } from '@/types/calculation';
 
@@ -37,7 +40,7 @@ export class HouseholdSimCalculator {
     countryId: string;
     populationId: string;
     policyId: string;
-  }): Promise<any> {
+  }): Promise<HouseholdCalculationResult> {
     const calcKey = calculationKeys.bySimulationId(this.simulationId);
 
     // Set initial pending status (no progress field - coordinator handles it)
@@ -58,7 +61,7 @@ export class HouseholdSimCalculator {
     try {
       // Execute the LONG-RUNNING API call (30-50s)
       // This blocks but that's OK - runs in background Promise
-      const result = await fetchHouseholdCalculation(
+      const calculation = await fetchHouseholdCalculationWithBundle(
         params.countryId,
         params.populationId,
         params.policyId
@@ -67,7 +70,7 @@ export class HouseholdSimCalculator {
       // Set final complete status
       const completeStatus: CalcStatus = {
         status: 'complete',
-        result,
+        result: calculation.result,
         message: 'Complete',
         metadata: {
           calcId: this.simulationId,
@@ -80,7 +83,7 @@ export class HouseholdSimCalculator {
 
       this.queryClient.setQueryData(calcKey, completeStatus);
 
-      return result;
+      return calculation;
     } catch (error) {
       console.error('[HouseholdSimCalculator] API call failed:', error);
 

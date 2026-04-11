@@ -116,12 +116,64 @@ export class HouseholdReportViewModel {
     }
 
     return this.simulations
-      .filter((sim) => sim.output)
       .map((sim) => ({
-        id: sim.id,
+        simulation: sim,
+        householdData: this.getHouseholdData(sim.output),
+      }))
+      .filter(
+        (entry): entry is { simulation: Simulation; householdData: HouseholdData } =>
+          !!entry.householdData
+      )
+      .map(({ simulation, householdData }) => ({
+        id: simulation.id,
         countryId: this.report!.countryId,
-        householdData: sim.output as HouseholdData,
+        householdData,
       }));
+  }
+
+  getResolvedPolicyengineVersion(): string | null {
+    for (const simulation of this.simulations || []) {
+      const output = simulation.output;
+      if (
+        output &&
+        typeof output === 'object' &&
+        'policyengine_bundle' in output &&
+        output.policyengine_bundle &&
+        typeof output.policyengine_bundle === 'object' &&
+        'policyengine_version' in output.policyengine_bundle &&
+        typeof output.policyengine_bundle.policyengine_version === 'string'
+      ) {
+        return output.policyengine_bundle.policyengine_version;
+      }
+    }
+
+    const reportOutput = this.report?.output;
+    if (
+      reportOutput &&
+      typeof reportOutput === 'object' &&
+      'policyengine_version' in reportOutput &&
+      typeof reportOutput.policyengine_version === 'string'
+    ) {
+      return reportOutput.policyengine_version;
+    }
+
+    return null;
+  }
+
+  private getHouseholdData(output: unknown): HouseholdData | null {
+    if (!output || typeof output !== 'object') {
+      return null;
+    }
+
+    if ('result' in output && output.result && typeof output.result === 'object') {
+      return output.result as HouseholdData;
+    }
+
+    if ('people' in output && output.people && typeof output.people === 'object') {
+      return output as HouseholdData;
+    }
+
+    return null;
   }
 
   /**
@@ -133,7 +185,7 @@ export class HouseholdReportViewModel {
     }
 
     return this.simulations
-      .filter((sim) => sim.output)
+      .filter((sim) => this.getHouseholdData(sim.output))
       .map((sim) => {
         const userPolicy = this.userPolicies!.find((up) => up.policyId === sim.policyId);
         return userPolicy?.label || `Policy ${sim.policyId}`;
