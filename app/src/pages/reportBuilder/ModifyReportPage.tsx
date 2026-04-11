@@ -16,6 +16,7 @@ import { useAppNavigate } from '@/contexts/NavigationContext';
 import { spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { getReportOutputPath } from '@/utils/reportRouting';
+import { extractShareDataFromUrl } from '@/utils/shareUtils';
 import { ReportBuilderShell, SimulationBlockFull } from './components';
 import { useModifyReportSubmission } from './hooks/useModifyReportSubmission';
 import { useReportBuilderState } from './hooks/useReportBuilderState';
@@ -26,11 +27,17 @@ export default function ModifyReportPage({ userReportId }: { userReportId?: stri
   const nav = useAppNavigate();
   const location = useAppLocation();
   const searchParams = new URLSearchParams(location.search);
-  const cameFromReportOutput = searchParams.get('from') === 'report-output';
-  const reportOutputPath = searchParams.get('reportPath');
+  const shareData = extractShareDataFromUrl(searchParams);
+  const isSharedSource = shareData !== null;
+  const shareParam = searchParams.get('share');
+  const sharedSearch = shareParam ? new URLSearchParams({ share: shareParam }).toString() : '';
+  const reportOutputPath = userReportId
+    ? `${getReportOutputPath(countryId, userReportId)}${sharedSearch ? `?${sharedSearch}` : ''}`
+    : undefined;
 
   const { reportState, setReportState, originalState, isLoading, error } = useReportBuilderState(
-    userReportId ?? ''
+    userReportId ?? '',
+    { shareData }
   );
 
   const [pickerState, setPickerState] = useState<IngredientPickerState>({
@@ -51,6 +58,7 @@ export default function ModifyReportPage({ userReportId }: { userReportId?: stri
   // View/edit mode state
   const [isEditing, setIsEditing] = useState(false);
   const [showSameNameWarning, setShowSameNameWarning] = useState(false);
+  const isReadOnly = isSharedSource || !isEditing;
 
   const isEitherSubmitting = isSavingNew || isReplacing;
 
@@ -67,6 +75,9 @@ export default function ModifyReportPage({ userReportId }: { userReportId?: stri
 
   // Dynamic toolbar actions
   const topBarActions: TopBarAction[] = useMemo(() => {
+    if (isSharedSource) {
+      return [];
+    }
     if (!isEditing) {
       return [
         {
@@ -114,6 +125,7 @@ export default function ModifyReportPage({ userReportId }: { userReportId?: stri
       },
     ];
   }, [
+    isSharedSource,
     isEditing,
     handleSaveAsNewClick,
     handleReplace,
@@ -122,21 +134,21 @@ export default function ModifyReportPage({ userReportId }: { userReportId?: stri
     isEitherSubmitting,
   ]);
 
-  if (isLoading || !reportState) {
-    return (
-      <Container size="xl" style={{ paddingLeft: spacing.xl, paddingRight: spacing.xl }}>
-        <Stack gap="xl">
-          <Text>Loading report...</Text>
-        </Stack>
-      </Container>
-    );
-  }
+  if (!reportState) {
+    if (error) {
+      return (
+        <Container size="xl" style={{ paddingLeft: spacing.xl, paddingRight: spacing.xl }}>
+          <Stack gap="xl">
+            <Text c="red">Error loading report: {error.message}</Text>
+          </Stack>
+        </Container>
+      );
+    }
 
-  if (error) {
     return (
       <Container size="xl" style={{ paddingLeft: spacing.xl, paddingRight: spacing.xl }}>
         <Stack gap="xl">
-          <Text c="red">Error loading report: {error.message}</Text>
+          <Text>{isLoading ? 'Loading report...' : 'Report not found'}</Text>
         </Stack>
       </Container>
     );
@@ -145,16 +157,16 @@ export default function ModifyReportPage({ userReportId }: { userReportId?: stri
   return (
     <>
       <ReportBuilderShell
-        title={isEditing ? 'Edit report' : 'View report setup'}
-        backPath={cameFromReportOutput ? (reportOutputPath ?? undefined) : undefined}
-        backLabel={cameFromReportOutput ? reportState?.label || 'Report output' : undefined}
+        title={isEditing && !isSharedSource ? 'Edit report' : 'View report setup'}
+        backPath={reportOutputPath}
+        backLabel={reportOutputPath ? 'report output' : undefined}
         actions={topBarActions}
         reportState={reportState}
         setReportState={setReportState as React.Dispatch<React.SetStateAction<ReportBuilderState>>}
         pickerState={pickerState}
         setPickerState={setPickerState}
         BlockComponent={SimulationBlockFull}
-        isReadOnly={!isEditing}
+        isReadOnly={isReadOnly}
       />
 
       <Dialog

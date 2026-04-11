@@ -12,10 +12,12 @@ interface ReportOutputLayoutProps {
   reportYear?: string;
   timestamp?: string;
   isSharedView?: boolean;
-  onShare?: () => void;
   onSave?: () => void;
   onView?: () => void;
   onReproduce?: () => void;
+  shareUrl?: string | null;
+  backPath?: string;
+  backLabel?: string;
   children: React.ReactNode;
 }
 
@@ -35,10 +37,12 @@ export default function ReportOutputLayout({
   reportYear,
   timestamp = 'Ran today at 05:23:41',
   isSharedView = false,
-  onShare,
   onSave,
   onView,
   onReproduce,
+  shareUrl,
+  backPath,
+  backLabel,
   children,
 }: ReportOutputLayoutProps) {
   const countryId = useCurrentCountry();
@@ -51,11 +55,11 @@ export default function ReportOutputLayout({
         <Group
           className="tw:gap-xs tw:items-center tw:cursor-pointer"
           style={{ marginBottom: `-${spacing.md}` }}
-          onClick={() => nav.push(`/${countryId}/reports`)}
+          onClick={() => nav.push(backPath || `/${countryId}/reports`)}
         >
           <IconChevronLeft size={14} color={colors.text.secondary} />
           <Text className="tw:text-sm" style={{ color: colors.text.secondary }}>
-            Back to reports
+            {backLabel ? `Back to ${backLabel}` : 'Back to reports'}
           </Text>
         </Group>
 
@@ -81,10 +85,10 @@ export default function ReportOutputLayout({
             </Group>
             <ReportActionButtons
               isSharedView={isSharedView}
-              onShare={onShare}
               onSave={onSave}
               onView={onView}
               onReproduce={onReproduce}
+              shareUrl={shareUrl}
             />
           </Group>
 

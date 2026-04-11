@@ -5,9 +5,10 @@ const meta: Meta<typeof ReportActionButtons> = {
   title: 'Report output/ReportActionButtons',
   component: ReportActionButtons,
   args: {
-    onShare: () => {},
     onSave: () => {},
     onView: () => {},
+    onReproduce: () => {},
+    shareUrl: 'https://app.policyengine.org/us/report-output/test-report?share=abc123',
   },
 };
 

@@ -5,8 +5,10 @@ const meta: Meta<typeof ReportOutputLayout> = {
   title: 'Report output/ReportOutputLayout',
   component: ReportOutputLayout,
   args: {
-    onShare: () => {},
     onSave: () => {},
+    onView: () => {},
+    onReproduce: () => {},
+    shareUrl: 'https://app.policyengine.org/us/report-output/test-report?share=abc123',
   },
 };
 

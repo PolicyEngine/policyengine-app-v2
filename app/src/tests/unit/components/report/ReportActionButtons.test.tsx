@@ -1,16 +1,36 @@
 import { render, screen, userEvent } from '@test-utils';
-import { describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { ReportActionButtons } from '@/components/report/ReportActionButtons';
 
+const TEST_SHARE_URL = 'https://app.policyengine.org/us/report-output/test-report?share=abc123';
+
 describe('ReportActionButtons', () => {
-  test('given isSharedView=true then renders save button only', () => {
+  beforeEach(() => {
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: {
+        writeText: vi.fn().mockResolvedValue(undefined),
+      },
+    });
+  });
+
+  test('given isSharedView=true then renders save, view, reproduce, and share buttons', () => {
     // Given
-    render(<ReportActionButtons isSharedView onSave={vi.fn()} />);
+    render(
+      <ReportActionButtons
+        isSharedView
+        onSave={vi.fn()}
+        onView={vi.fn()}
+        onReproduce={vi.fn()}
+        shareUrl={TEST_SHARE_URL}
+      />
+    );
 
     // Then
     expect(screen.getByRole('button', { name: /save report to my reports/i })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /share/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /view/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /share/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /view report setup/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /reproduce in python/i })).toBeInTheDocument();
   });
 
   test('given isSharedView=false then renders reproduce, view, and share buttons', () => {
@@ -18,9 +38,9 @@ describe('ReportActionButtons', () => {
     render(
       <ReportActionButtons
         isSharedView={false}
-        onShare={vi.fn()}
         onView={vi.fn()}
         onReproduce={vi.fn()}
+        shareUrl={TEST_SHARE_URL}
       />
     );
 
@@ -44,17 +64,18 @@ describe('ReportActionButtons', () => {
     expect(handleSave).toHaveBeenCalledOnce();
   });
 
-  test('given onShare callback then calls it when share clicked', async () => {
+  test('given share url then copies immediately and shows confirmation without raw link', async () => {
     // Given
     const user = userEvent.setup();
-    const handleShare = vi.fn();
-    render(<ReportActionButtons isSharedView={false} onShare={handleShare} />);
+    render(<ReportActionButtons isSharedView={false} shareUrl={TEST_SHARE_URL} />);
 
     // When
     await user.click(screen.getByRole('button', { name: /share/i }));
 
     // Then
-    expect(handleShare).toHaveBeenCalledOnce();
+    expect(navigator.clipboard.writeText).toHaveBeenCalledWith(TEST_SHARE_URL);
+    expect(screen.getByText(/link copied to clipboard/i)).toBeInTheDocument();
+    expect(screen.queryByText(TEST_SHARE_URL)).not.toBeInTheDocument();
   });
 
   test('given onReproduce callback then calls it when reproduce clicked', async () => {

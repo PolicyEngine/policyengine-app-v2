@@ -101,7 +101,7 @@ export function SimulationCanvas({
               isReadOnly={isReadOnly}
             />
           ) : (
-            <AddSimulationCard onClick={canvas.handleAddSimulation} disabled={false} />
+            <AddSimulationCard onClick={canvas.handleAddSimulation} disabled={!!isReadOnly} />
           )}
         </div>
       </div>
@@ -144,6 +144,7 @@ export function SimulationCanvas({
         simulationIndex={canvas.policyCreationState.simulationIndex}
         initialPolicy={canvas.policyCreationState.initialPolicy}
         initialEditorMode={canvas.policyCreationState.initialEditorMode}
+        lockEditing={!!isReadOnly}
         reportYear={reportYear}
       />
     </>

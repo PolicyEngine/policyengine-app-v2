@@ -1,4 +1,4 @@
-import { render, screen } from '@test-utils';
+import { render, screen, userEvent } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { useUserReportById } from '@/hooks/useUserReports';
 import ReportOutputPage from '@/pages/ReportOutput.page';
@@ -18,10 +18,42 @@ import {
   MOCK_USER_REPORT_UK,
 } from '@/tests/fixtures/pages/ReportOutputPageMocks';
 
+const mockPush = vi.fn();
+const mockReplace = vi.fn();
+const mockBack = vi.fn();
+let mockLocation = {
+  pathname: `/us/report-output/${MOCK_USER_REPORT_ID}/overview`,
+  search: '',
+};
+
 // Mock dependencies
 vi.mock('@/hooks/useCurrentCountry', () => ({
   useCurrentCountry: () => 'us',
 }));
+
+vi.mock('@/contexts/NavigationContext', async () => {
+  const actual = await vi.importActual<typeof import('@/contexts/NavigationContext')>(
+    '@/contexts/NavigationContext'
+  );
+  return {
+    ...actual,
+    useAppNavigate: () => ({
+      push: mockPush,
+      replace: mockReplace,
+      back: mockBack,
+    }),
+  };
+});
+
+vi.mock('@/contexts/LocationContext', async () => {
+  const actual = await vi.importActual<typeof import('@/contexts/LocationContext')>(
+    '@/contexts/LocationContext'
+  );
+  return {
+    ...actual,
+    useAppLocation: () => mockLocation,
+  };
+});
 
 vi.mock('@/hooks/useUserReports', () => ({
   useUserReportById: vi.fn(() => ({
@@ -84,6 +116,18 @@ vi.mock('@/hooks/useReportProgressDisplay', () => ({
   })),
 }));
 
+vi.mock('@/hooks/household', () => ({
+  useSimulationProgressDisplay: vi.fn(() => ({
+    displayProgress: 100,
+    hasCalcStatus: true,
+    message: 'Complete',
+  })),
+  useHouseholdReportOrchestrator: vi.fn(() => ({
+    startReport: vi.fn(),
+    isCalculating: vi.fn(() => false),
+  })),
+}));
+
 vi.mock('@/hooks/useStartCalculationOnLoad', () => ({
   useStartCalculationOnLoad: vi.fn(),
 }));
@@ -100,6 +144,10 @@ vi.mock('@/hooks/useSaveSharedReport', () => ({
 describe('ReportOutputPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockLocation = {
+      pathname: `/us/report-output/${MOCK_USER_REPORT_ID}/overview`,
+      search: '',
+    };
   });
 
   test('given report with year then year is passed to layout', () => {
@@ -225,5 +273,109 @@ describe('ReportOutputPage', () => {
     // Then - Constituency and local authority tabs should not be shown
     expect(screen.queryByText('Constituencies')).not.toBeInTheDocument();
     expect(screen.queryByText('Local authorities')).not.toBeInTheDocument();
+  });
+
+  test('given cached report data while loading on reproduce then renders without the blocking loading page', () => {
+    // Given
+    vi.mocked(useUserReportById).mockReturnValue({
+      userReport: MOCK_USER_REPORT,
+      report: MOCK_REPORT_WITH_YEAR,
+      simulations: [MOCK_SIMULATION_GEOGRAPHY],
+      userSimulations: [],
+      userPolicies: [],
+      policies: [],
+      households: [],
+      userHouseholds: [],
+      geographies: [],
+      userGeographies: [],
+      isLoading: true,
+      error: null,
+    });
+
+    // When
+    render(<ReportOutputPage reportId={MOCK_USER_REPORT_ID} subpage="reproduce" />);
+
+    // Then
+    expect(screen.getByText(/reproduce these results/i)).toBeInTheDocument();
+    expect(screen.queryByText(/^Loading report\.\.\.$/i)).not.toBeInTheDocument();
+  });
+
+  test('given cached household report data while loading on reproduce then renders household reproducibility immediately', () => {
+    // Given
+    vi.mocked(useUserReportById).mockReturnValue({
+      userReport: MOCK_USER_REPORT,
+      report: {
+        ...MOCK_REPORT_WITH_YEAR,
+        label: 'Test Household Report',
+        simulationIds: ['sim-household'],
+      },
+      simulations: [
+        {
+          id: 'sim-household',
+          countryId: 'us' as const,
+          populationType: 'household' as const,
+          populationId: 'household-1',
+          policyId: 'policy-1',
+          status: 'complete' as const,
+          output: null,
+          label: null,
+          isCreated: true,
+        },
+      ],
+      userSimulations: [],
+      userPolicies: [],
+      policies: [],
+      households: [
+        {
+          id: 'household-1',
+          countryId: 'us',
+          householdData: {},
+        },
+      ],
+      userHouseholds: [],
+      geographies: [],
+      userGeographies: [],
+      isLoading: true,
+      error: null,
+    });
+
+    // When
+    render(<ReportOutputPage reportId={MOCK_USER_REPORT_ID} subpage="reproduce" />);
+
+    // Then
+    expect(screen.getByText(/reproduce these results/i)).toBeInTheDocument();
+    expect(screen.queryByText(/^Loading report\.\.\.$/i)).not.toBeInTheDocument();
+  });
+
+  test('given reproduce page then breadcrumb says back to report output', () => {
+    // Given
+    render(<ReportOutputPage reportId={MOCK_USER_REPORT_ID} subpage="reproduce" />);
+
+    // Then
+    expect(screen.getByText('Back to report output')).toBeInTheDocument();
+  });
+
+  test('given view action then it uses the canonical owned report setup URL', async () => {
+    // Given
+    const user = userEvent.setup();
+    render(<ReportOutputPage reportId={MOCK_USER_REPORT_ID} subpage="overview" />);
+
+    // When
+    await user.click(screen.getByRole('button', { name: /view/i }));
+
+    // Then
+    expect(mockPush).toHaveBeenCalledWith(`/${'us'}/reports/create/${MOCK_USER_REPORT_ID}`);
+  });
+
+  test('given reproduce action then it uses the canonical reproduce URL', async () => {
+    // Given
+    const user = userEvent.setup();
+    render(<ReportOutputPage reportId={MOCK_USER_REPORT_ID} subpage="overview" />);
+
+    // When
+    await user.click(screen.getByRole('button', { name: /reproduce in python/i }));
+
+    // Then
+    expect(mockPush).toHaveBeenCalledWith(`/${'us'}/report-output/${MOCK_USER_REPORT_ID}/reproduce`);
   });
 });

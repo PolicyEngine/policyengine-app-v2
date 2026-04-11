@@ -176,17 +176,16 @@ export function HouseholdReportOutput({
   // RENDER FLOW: Linear progression through data availability
   // ============================================================
 
-  // 1. Show loading state while fetching data from DB
-  if (dataLoading) {
-    return <LoadingPage message="Loading report..." />;
-  }
+  // 1. Show loading or error only when we have no report shell to render yet
+  if (!report) {
+    if (dataLoading) {
+      return <LoadingPage message="Loading report..." />;
+    }
 
-  // 2. Show error if data failed to load
-  if (dataError || !report) {
     return <ErrorPage error={dataError || new Error('Report not found')} />;
   }
 
-  // 3. Data loaded - render input-only tabs immediately (no calculation needed)
+  // 2. Input-only tabs can render as soon as the report payload exists
   const InputTabRenderer = INPUT_ONLY_TABS[normalizedSubpage];
   if (InputTabRenderer) {
     return InputTabRenderer({
@@ -199,19 +198,29 @@ export function HouseholdReportOutput({
     });
   }
 
-  // 4. Show error if any simulation has error status
+  // 3. Output-dependent tabs still wait for any remaining report data
+  if (dataLoading) {
+    return <LoadingPage message="Loading report..." />;
+  }
+
+  // 4. Show error if data failed to load
+  if (dataError) {
+    return <ErrorPage error={dataError} />;
+  }
+
+  // 5. Show error if any simulation has error status
   if (isError) {
     return <ErrorPage error={new Error(viewModel.getErrorMessage())} />;
   }
 
-  // 5. Show loading if calculation is pending (for output-dependent tabs)
+  // 6. Show loading if calculation is pending (for output-dependent tabs)
   if (isPending) {
     const displayStatusLabel = getDisplayStatus('pending');
     const message = progressMessage || `${displayStatusLabel} household simulations...`;
     return <LoadingPage message={message} progress={hasCalcStatus ? displayProgress : undefined} />;
   }
 
-  // 6. Calculation complete - render output tabs
+  // 7. Calculation complete - render output tabs
   if (isComplete) {
     const rawOutput = viewModel.getFormattedOutput();
     const policyLabels = viewModel.getPolicyLabels();
