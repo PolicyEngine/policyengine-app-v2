@@ -33,6 +33,8 @@ export const SocietyWide: Story = {
     reportId: 'rpt-abc123',
     reportLabel: 'Expand Child Tax Credit to $4,000',
     reportYear: '2026',
+    modelVersion: '1.0.0',
+    dataVersion: '2024.1.0',
     timestamp: 'Ran today at 14:23:41',
     isSharedView: false,
     children: <PlaceholderContent text="Society-wide overview content" />,

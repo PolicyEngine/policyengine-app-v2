@@ -10,6 +10,8 @@ interface ReportOutputLayoutProps {
   reportId: string;
   reportLabel?: string;
   reportYear?: string;
+  modelVersion?: string;
+  dataVersion?: string;
   timestamp?: string;
   isSharedView?: boolean;
   onShare?: () => void;
@@ -33,6 +35,8 @@ export default function ReportOutputLayout({
   reportId,
   reportLabel,
   reportYear,
+  modelVersion,
+  dataVersion,
   timestamp = 'Ran today at 05:23:41',
   isSharedView = false,
   onShare,
@@ -106,6 +110,11 @@ export default function ReportOutputLayout({
               {timestamp}
             </Text>
           </Group>
+          {(modelVersion || dataVersion) && (
+            <Text className="tw:text-sm tw:mt-1" style={{ color: colors.text.secondary }}>
+              Model version: {modelVersion ?? '—'} • Data version: {dataVersion ?? '—'}
+            </Text>
+          )}
         </div>
 
         {/* Content */}
