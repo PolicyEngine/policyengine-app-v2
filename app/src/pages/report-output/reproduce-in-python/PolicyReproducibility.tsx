@@ -55,7 +55,8 @@ export default function PolicyReproducibility({
     dataset,
     null,
     false,
-    isDefaultDataset
+    isDefaultDataset,
+    policyengineVersion
   );
 
   const codeText = codeLines.join('\n');

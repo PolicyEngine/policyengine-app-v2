@@ -117,10 +117,15 @@ function getHeaderCode(
   type: 'household' | 'policy',
   countryId: string,
   policy: { baseline: { data: any }; reform: { data: any } },
-  region: string
+  region: string,
+  policyengineVersion: string | null
 ): string[] {
   const lines: string[] = [];
   const packageName = countryId === 'uk' ? 'policyengine_uk' : 'policyengine_us';
+
+  if (policyengineVersion) {
+    lines.push(`%pip install policyengine==${policyengineVersion}`, '');
+  }
 
   // Add lines depending upon type of block
   if (type === 'household') {
@@ -351,10 +356,11 @@ export function getReproducibilityCodeBlock(
   dataset: string | null = null,
   householdInput: any = null,
   earningVariation: boolean = false,
-  isDefaultDataset: boolean = true
+  isDefaultDataset: boolean = true,
+  policyengineVersion: string | null = null
 ): string[] {
   return [
-    ...getHeaderCode(type, countryId, policy, region),
+    ...getHeaderCode(type, countryId, policy, region, policyengineVersion),
     ...getBaselineCode(policy, countryId),
     ...getReformCode(policy, countryId),
     ...getSituationCode(type, policy, year, householdInput, earningVariation),

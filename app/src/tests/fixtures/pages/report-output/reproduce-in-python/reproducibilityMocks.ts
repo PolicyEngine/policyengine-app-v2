@@ -132,6 +132,7 @@ export const EXPECTED_TEXT = {
  * Note: Use regex-safe patterns (escape special chars like parentheses)
  */
 export const EXPECTED_CODE_SNIPPETS = {
+  POLICYENGINE_INSTALL: '%pip install policyengine==3.4.0',
   US_HOUSEHOLD_IMPORT: 'from policyengine_us import Simulation',
   UK_HOUSEHOLD_IMPORT: 'from policyengine_uk import Simulation',
   US_POLICY_IMPORT: 'from policyengine_us import Microsimulation',

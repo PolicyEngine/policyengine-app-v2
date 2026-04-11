@@ -56,7 +56,9 @@ export default function HouseholdReproducibility({
     year,
     dataset,
     householdInput,
-    earningVariation
+    earningVariation,
+    true,
+    policyengineVersion
   );
 
   const codeText = lines.join('\n');

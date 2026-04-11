@@ -237,6 +237,25 @@ describe('reproducibilityCode', () => {
         expect(code).toContain('reform=reform');
       });
 
+      test('given policyengine version then adds pinned install line', () => {
+        const lines = getReproducibilityCodeBlock(
+          'policy',
+          TEST_COUNTRIES.US,
+          EMPTY_POLICY,
+          TEST_REGIONS.US_NATIONAL,
+          TEST_YEARS.DEFAULT,
+          null,
+          null,
+          false,
+          true,
+          '3.4.0'
+        );
+        const code = lines.join('\n');
+
+        expect(code).toContain('%pip install policyengine==3.4.0');
+        expect(code).toContain(EXPECTED_IMPORTS.US_POLICY);
+      });
+
       test('given household with earning variation then adds axes', () => {
         // When
         const lines = getReproducibilityCodeBlock(

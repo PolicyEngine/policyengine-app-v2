@@ -75,6 +75,9 @@ describe('HouseholdReproducibility', () => {
           new RegExp(`${EXPECTED_TEXT.POLICYENGINE_VERSION_PREFIX} ${MOCK_POLICYENGINE_VERSION}`)
         )
       ).toBeInTheDocument();
+      expect(
+        screen.getByText(new RegExp(EXPECTED_CODE_SNIPPETS.POLICYENGINE_INSTALL))
+      ).toBeInTheDocument();
     });
 
     test('given US country then generates US-specific code', () => {
