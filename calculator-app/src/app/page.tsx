@@ -7,7 +7,7 @@ import { countryIds } from "@/libs/countries";
 import { geolocationService } from "@/routing/geolocation/GeolocationService";
 
 /**
- * Root page — redirects to /:countryId/reports based on IP geolocation.
+ * Root page — redirects to /:countryId based on IP geolocation.
  * Mirrors app/src/routing/RedirectToCountry.tsx for the Next.js app.
  */
 export default function RootPage() {
@@ -17,17 +17,20 @@ export default function RootPage() {
     async function detect() {
       const cached = getCachedCountry();
       if (cached) {
-        router.replace(`/${cached}/reports`);
+        router.replace(`/${cached}`);
         return;
       }
 
       try {
         const country = await geolocationService.detectCountry();
         cacheCountry(country);
-        router.replace(`/${country}/reports`);
+        router.replace(`/${country}`);
       } catch (error) {
-        console.warn("[RootPage] Geolocation failed, falling back to US:", error);
-        router.replace("/us/reports");
+        console.warn(
+          "[RootPage] Geolocation failed, falling back to US:",
+          error,
+        );
+        router.replace("/us");
       }
     }
 
@@ -37,7 +40,7 @@ export default function RootPage() {
   return (
     <div className="tw:flex tw:flex-col tw:items-center tw:justify-center tw:h-screen tw:gap-4">
       <Spinner size="lg" />
-      <div>Loading PolicyEngine...</div>
+      <div>Opening PolicyEngine...</div>
     </div>
   );
 }
@@ -54,7 +57,10 @@ function getCachedCountry(): string | null {
       if (countryIds.includes(country)) {
         return country;
       }
-      console.warn("[RootPage] Cached country is not a valid country ID:", country);
+      console.warn(
+        "[RootPage] Cached country is not a valid country ID:",
+        country,
+      );
     }
     localStorage.removeItem("detectedCountry");
   } catch (error) {
