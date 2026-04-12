@@ -5,6 +5,7 @@ import {
   DEFAULT_POLICY_REPRODUCIBILITY_PROPS,
   EXPECTED_CODE_SNIPPETS,
   EXPECTED_TEXT,
+  MOCK_POLICYENGINE_VERSION,
   MOCK_REPORT_YEAR,
   UK_POLICY_REPRODUCIBILITY_PROPS,
 } from '@/tests/fixtures/pages/report-output/reproduce-in-python/reproducibilityMocks';
@@ -48,6 +49,26 @@ describe('PolicyReproducibility', () => {
       // Then
       expect(
         screen.getByText(new RegExp(EXPECTED_TEXT.MICROSIMULATION_INSTRUCTION))
+      ).toBeInTheDocument();
+    });
+
+    test('given policyengine version then renders resolved bundle metadata', () => {
+      // When
+      render(
+        <PolicyReproducibility
+          {...DEFAULT_POLICY_REPRODUCIBILITY_PROPS}
+          policyengineVersion={MOCK_POLICYENGINE_VERSION}
+        />
+      );
+
+      // Then
+      expect(
+        screen.getByText(
+          new RegExp(`${EXPECTED_TEXT.POLICYENGINE_VERSION_PREFIX} ${MOCK_POLICYENGINE_VERSION}`)
+        )
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText(new RegExp(EXPECTED_CODE_SNIPPETS.POLICYENGINE_INSTALL))
       ).toBeInTheDocument();
     });
 

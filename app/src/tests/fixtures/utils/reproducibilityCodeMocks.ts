@@ -297,6 +297,8 @@ export const V2_POLICIES_BOTH_CUSTOM = [
 export const TEST_DATASETS = {
   CPS: 'cps',
   ENHANCED_CPS: 'enhanced_cps',
+  ENHANCED_FRS_PRIVATE_URL:
+    'hf://policyengine/policyengine-uk-data-private/enhanced_frs_2023_24.h5@1.40.3',
   UNKNOWN_DATASET: 'unknown_dataset',
 } as const;
 

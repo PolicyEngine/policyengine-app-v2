@@ -1,5 +1,8 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { fetchHouseholdCalculation } from '@/api/householdCalculation';
+import {
+  fetchHouseholdCalculation,
+  fetchHouseholdCalculationWithBundle,
+} from '@/api/householdCalculation';
 import { BASE_URL } from '@/constants';
 import {
   ERROR_MESSAGES,
@@ -49,6 +52,24 @@ describe('household_calculation API', () => {
         })
       );
       expect(result).toEqual(mockSuccessfulCalculationResponse.result);
+    });
+
+    test('given bundle metadata then preserves it for callers that need provenance', async () => {
+      // Given
+      const countryId = TEST_COUNTRIES.US;
+      const householdId = TEST_HOUSEHOLD_IDS.EXISTING;
+      const policyId = TEST_POLICY_IDS.BASELINE;
+      const mockResponse = mockSuccessResponse(mockSuccessfulCalculationResponse);
+      (global.fetch as any).mockResolvedValue(mockResponse);
+
+      // When
+      const result = await fetchHouseholdCalculationWithBundle(countryId, householdId, policyId);
+
+      // Then
+      expect(result).toEqual({
+        result: mockSuccessfulCalculationResponse.result,
+        policyengine_bundle: mockSuccessfulCalculationResponse.policyengine_bundle,
+      });
     });
 
     test('given UK parameters then returns UK household data', async () => {

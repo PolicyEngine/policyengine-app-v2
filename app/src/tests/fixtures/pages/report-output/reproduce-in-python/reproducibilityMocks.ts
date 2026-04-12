@@ -73,6 +73,7 @@ export const DEFAULT_HOUSEHOLD_REPRODUCIBILITY_PROPS = {
   householdInput: MOCK_HOUSEHOLD_INPUT,
   region: TEST_COUNTRIES.US,
   dataset: null,
+  policyengineVersion: null,
 };
 
 /**
@@ -84,6 +85,7 @@ export const DEFAULT_POLICY_REPRODUCIBILITY_PROPS = {
   region: TEST_COUNTRIES.US,
   dataset: null,
   isDefaultDataset: true,
+  policyengineVersion: null,
 };
 
 /**
@@ -95,6 +97,7 @@ export const UK_HOUSEHOLD_REPRODUCIBILITY_PROPS = {
   householdInput: MOCK_HOUSEHOLD_INPUT,
   region: TEST_COUNTRIES.UK,
   dataset: null,
+  policyengineVersion: null,
 };
 
 /**
@@ -106,6 +109,7 @@ export const UK_POLICY_REPRODUCIBILITY_PROPS = {
   region: TEST_COUNTRIES.UK,
   dataset: null,
   isDefaultDataset: true,
+  policyengineVersion: null,
 };
 
 /**
@@ -120,6 +124,7 @@ export const EXPECTED_TEXT = {
   COPIED_LABEL: 'Copied!',
   PYTHON_LABEL: 'Python',
   MICROSIMULATION_INSTRUCTION: 'microsimulation results',
+  POLICYENGINE_VERSION_PREFIX: 'Resolved with policyengine.py',
 } as const;
 
 /**
@@ -127,6 +132,7 @@ export const EXPECTED_TEXT = {
  * Note: Use regex-safe patterns (escape special chars like parentheses)
  */
 export const EXPECTED_CODE_SNIPPETS = {
+  POLICYENGINE_INSTALL: '%pip install "policyengine\\[[a-z]+\\]==3\\.4\\.0"',
   US_HOUSEHOLD_IMPORT: 'from policyengine_us import Simulation',
   UK_HOUSEHOLD_IMPORT: 'from policyengine_uk import Simulation',
   US_POLICY_IMPORT: 'from policyengine_us import Microsimulation',
@@ -141,6 +147,7 @@ export const EXPECTED_CODE_SNIPPETS = {
  * Mock report year hook return value
  */
 export const MOCK_REPORT_YEAR = '2024';
+export const MOCK_POLICYENGINE_VERSION = '3.4.0';
 
 /**
  * Mock clipboard API

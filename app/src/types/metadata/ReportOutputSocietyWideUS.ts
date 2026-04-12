@@ -13,6 +13,8 @@ export interface ReportOutputSocietyWideUS {
   congressional_district_impact: USCongressionalDistrictBreakdown | null;
   constituency_impact: null;
   data_version: string;
+  dataset?: string | null;
+  policyengine_version?: string | null;
   decile: {
     average: Record<string, number>;
     relative: Record<string, number>;

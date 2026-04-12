@@ -153,6 +153,12 @@ export const mockLargeHouseholdResult: Household = {
 export const mockSuccessfulCalculationResponse: HouseholdCalculationResponse = {
   status: 'ok',
   result: mockHouseholdResult.householdData,
+  policyengine_bundle: {
+    model_version: '1.602.0',
+    policyengine_version: '3.4.1',
+    data_version: null,
+    dataset: null,
+  },
 };
 
 export const mockErrorCalculationResponse: HouseholdCalculationResponse = {
@@ -164,6 +170,12 @@ export const mockErrorCalculationResponse: HouseholdCalculationResponse = {
 export const mockUKCalculationResponse: HouseholdCalculationResponse = {
   status: 'ok',
   result: mockHouseholdResultUK.householdData,
+  policyengine_bundle: {
+    model_version: '2.74.0',
+    policyengine_version: '3.4.1',
+    data_version: null,
+    dataset: null,
+  },
 };
 
 // Network error mock

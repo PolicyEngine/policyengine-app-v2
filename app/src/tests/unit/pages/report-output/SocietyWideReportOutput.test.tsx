@@ -4,6 +4,7 @@ import { useCalculationStatus } from '@/hooks/useCalculationStatus';
 import { useReportProgressDisplay } from '@/hooks/useReportProgressDisplay';
 import { useStartCalculationOnLoad } from '@/hooks/useStartCalculationOnLoad';
 import { SocietyWideReportOutput } from '@/pages/report-output/SocietyWideReportOutput';
+import { mockUSReportOutput } from '@/tests/fixtures/api/societyWideMocks';
 import {
   MOCK_CALC_STATUS_COMPLETE,
   MOCK_CALC_STATUS_ERROR,
@@ -272,6 +273,70 @@ describe('SocietyWideReportOutput', () => {
 
     // Then
     expect(screen.getByTestId('dynamics-page')).toBeInTheDocument();
+  });
+
+  test('given reproduce subpage with resolved dataset in report output then uses exact dataset url', () => {
+    // Given
+    mockUseCalculationStatus.mockReturnValue(MOCK_CALC_STATUS_IDLE);
+    // Preserve the exact pinned artifact so notebook reproduction does not
+    // silently fall back to a floating default dataset.
+    const reportWithBundleOutput = {
+      ...MOCK_REPORT,
+      output: {
+        ...mockUSReportOutput,
+        dataset: 'hf://policyengine/policyengine-us-data/enhanced_cps_2024.h5@1.77.0',
+        policyengine_version: '3.4.0',
+        model_version: '1.634.4',
+        data_version: '1.77.0',
+      },
+    };
+
+    // When
+    render(
+      <SocietyWideReportOutput
+        reportId="test-report-123"
+        subpage="reproduce"
+        report={reportWithBundleOutput}
+        simulations={[MOCK_SIMULATION_BASELINE]}
+        policies={[MOCK_POLICY_BASELINE, MOCK_POLICY_REFORM]}
+      />
+    );
+
+    // Then
+    expect(
+      screen.getByText(/hf:\/\/policyengine\/policyengine-us-data\/enhanced_cps_2024\.h5@1\.77\.0/)
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Resolved with policyengine\.py 3\.4\.0/)).toBeInTheDocument();
+  });
+
+  test('given reproduce subpage with resolved live result then prefers live bundle over stored output', () => {
+    mockUseCalculationStatus.mockReturnValue({
+      ...MOCK_CALC_STATUS_COMPLETE,
+      result: {
+        ...MOCK_CALC_STATUS_COMPLETE.result,
+        dataset: 'hf://policyengine/policyengine-us-data/states/CA.h5@1.77.0',
+        policyengine_version: '3.5.0',
+      },
+    });
+    const reportWithoutBundleOutput = {
+      ...MOCK_REPORT,
+      output: null,
+    };
+
+    render(
+      <SocietyWideReportOutput
+        reportId="test-report-123"
+        subpage="reproduce"
+        report={reportWithoutBundleOutput}
+        simulations={[MOCK_SIMULATION_BASELINE]}
+        policies={[MOCK_POLICY_BASELINE, MOCK_POLICY_REFORM]}
+      />
+    );
+
+    expect(
+      screen.getByText(/hf:\/\/policyengine\/policyengine-us-data\/states\/CA\.h5@1\.77\.0/)
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Resolved with policyengine\.py 3\.5\.0/)).toBeInTheDocument();
   });
 
   test('given invalid subpage then shows not found page', () => {

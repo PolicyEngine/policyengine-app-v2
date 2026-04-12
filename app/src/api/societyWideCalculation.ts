@@ -4,6 +4,13 @@ import { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyW
 
 export type SocietyWideReportOutput = ReportOutputSocietyWideUS | ReportOutputSocietyWideUK;
 
+export interface PolicyEngineBundle {
+  model_version?: string | null;
+  policyengine_version?: string | null;
+  data_version?: string | null;
+  dataset?: string | null;
+}
+
 // NOTE: Need to add other params at later point
 export interface SocietyWideCalculationParams {
   region: string; // Must include a region; "us" for US nationwide, two-letter state code for US states
@@ -17,6 +24,29 @@ export interface SocietyWideCalculationResponse {
   average_time?: number;
   result: SocietyWideReportOutput | null;
   error?: string;
+  policyengine_bundle?: PolicyEngineBundle | null;
+}
+
+function mergePolicyEngineBundle(
+  response: SocietyWideCalculationResponse
+): SocietyWideCalculationResponse {
+  if (!response.result || !response.policyengine_bundle) {
+    return response;
+  }
+
+  const { policyengine_bundle: bundle } = response;
+
+  return {
+    ...response,
+    result: {
+      ...response.result,
+      model_version: bundle.model_version ?? response.result.model_version,
+      policyengine_version:
+        bundle.policyengine_version ?? response.result.policyengine_version ?? null,
+      data_version: bundle.data_version ?? response.result.data_version,
+      dataset: bundle.dataset ?? response.result.dataset ?? null,
+    },
+  };
 }
 
 export async function fetchSocietyWideCalculation(
@@ -59,6 +89,6 @@ export async function fetchSocietyWideCalculation(
     );
   }
 
-  const data = await response.json();
-  return data;
+  const data: SocietyWideCalculationResponse = await response.json();
+  return mergePolicyEngineBundle(data);
 }

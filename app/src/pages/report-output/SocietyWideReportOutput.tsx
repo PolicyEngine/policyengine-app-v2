@@ -49,6 +49,7 @@ interface InputTabProps {
   geographies?: Geography[];
   userGeographies?: UserGeographyPopulation[];
   datasets?: DatasetEntry[];
+  reportOutput?: Partial<SocietyWideOutput> | null;
 }
 
 /**
@@ -80,17 +81,21 @@ const INPUT_ONLY_TABS: Record<string, (props: InputTabProps) => React.ReactEleme
     <DynamicsSubPage policies={policies} userPolicies={userPolicies} reportType="economy" />
   ),
 
-  reproduce: ({ report, policies, simulations, datasets }) => {
+  reproduce: ({ report, policies, simulations, datasets, reportOutput }) => {
     const policyV1 = convertPoliciesToV1Format(policies);
     const defaultDataset = datasets?.find((d) => d.default);
-    const datasetName = defaultDataset?.name || null;
+    const datasetName = reportOutput?.dataset || defaultDataset?.name || null;
+    const isResolvedDataset = typeof datasetName === 'string' && datasetName.includes('://');
     return (
       <PolicyReproducibility
         countryId={report.countryId}
         policy={policyV1}
         region={simulations?.[0]?.populationId || report.countryId}
         dataset={datasetName}
-        isDefaultDataset
+        policyengineVersion={reportOutput?.policyengine_version ?? null}
+        isDefaultDataset={
+          !datasetName || (!isResolvedDataset && datasetName === defaultDataset?.name)
+        }
       />
     );
   },
@@ -231,6 +236,9 @@ export function SocietyWideReportOutput({
   // 2. Data loaded - render input-only tabs immediately (no calculation needed)
   const InputTabRenderer = INPUT_ONLY_TABS[normalizedSubpage];
   if (InputTabRenderer) {
+    const liveOrStoredOutput =
+      (calcStatus.result as Partial<SocietyWideOutput> | null) ||
+      (report.output as Partial<SocietyWideOutput> | null);
     return InputTabRenderer({
       report,
       simulations,
@@ -238,6 +246,7 @@ export function SocietyWideReportOutput({
       userPolicies,
       geographies,
       datasets,
+      reportOutput: liveOrStoredOutput,
     });
   }
 

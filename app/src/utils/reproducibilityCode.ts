@@ -18,11 +18,25 @@ const US_REGION_PREFIX_TO_FOLDER: Record<string, string> = {
   'congressional_district/': 'districts',
 };
 
+function normalizeDatasetUrlForReproducibility(countryId: string, datasetName: string): string {
+  if (countryId === 'uk') {
+    return datasetName.replace(
+      'hf://policyengine/policyengine-uk-data-private/',
+      'hf://policyengine/policyengine-uk-data/'
+    );
+  }
+  return datasetName;
+}
+
 /**
  * Build a HuggingFace dataset URL for a US national-level dataset.
  * Dataset files follow the pattern: {name}_{year}.h5
  */
 function getDatasetUrl(countryId: string, datasetName: string, year: number): string | null {
+  if (datasetName.includes('://')) {
+    return normalizeDatasetUrlForReproducibility(countryId, datasetName);
+  }
+
   if (countryId === 'us') {
     return `hf://policyengine/policyengine-us-data/${datasetName}_${year}.h5`;
   }
@@ -113,10 +127,16 @@ function getHeaderCode(
   type: 'household' | 'policy',
   countryId: string,
   policy: { baseline: { data: any }; reform: { data: any } },
-  region: string
+  region: string,
+  policyengineVersion: string | null
 ): string[] {
   const lines: string[] = [];
   const packageName = countryId === 'uk' ? 'policyengine_uk' : 'policyengine_us';
+  const policyengineExtra = countryId === 'uk' ? 'uk' : 'us';
+
+  if (policyengineVersion) {
+    lines.push(`%pip install "policyengine[${policyengineExtra}]==${policyengineVersion}"`, '');
+  }
 
   // Add lines depending upon type of block
   if (type === 'household') {
@@ -258,20 +278,22 @@ function getImplementationCode(
 
   const isNational = region === countryId;
   const year = timePeriod || DEFAULT_YEAR;
+  const resolvedDatasetUrl =
+    dataset && !isDefaultDataset ? getDatasetUrl(countryId, dataset, year) : null;
 
   // Place regions use state dataset + place_fips filtering
   if (countryId === 'us' && region.startsWith('place/')) {
-    return getPlaceImplementationCode(region, year, hasBaseline, hasReform);
+    return getPlaceImplementationCode(region, year, hasBaseline, hasReform, resolvedDatasetUrl);
   }
 
   let datasetText = '';
 
   if (countryId === 'us' && !isNational) {
-    // US sub-national (state, congressional district): use region-specific dataset
-    datasetText = getSubnationalDatasetUrl(region) || '';
-  } else if (dataset && !isDefaultDataset) {
+    // Prefer an explicitly resolved dataset URL when the backend pinned one.
+    datasetText = resolvedDatasetUrl || getSubnationalDatasetUrl(region) || '';
+  } else if (resolvedDatasetUrl) {
     // Non-default dataset explicitly selected: include the dataset URL
-    datasetText = getDatasetUrl(countryId, dataset, year) || '';
+    datasetText = resolvedDatasetUrl;
   }
   // Default dataset or no dataset: omit dataset= (matches API behavior)
 
@@ -303,9 +325,10 @@ function getPlaceImplementationCode(
   region: string,
   year: number,
   hasBaseline: boolean,
-  hasReform: boolean
+  hasReform: boolean,
+  datasetUrl: string | null = null
 ): string[] {
-  const stateDatasetUrl = getPlaceStateDatasetUrl(region) || '';
+  const stateDatasetUrl = datasetUrl || getPlaceStateDatasetUrl(region) || '';
   const placeFips = getPlaceFips(region) || '';
 
   const baselineReformArg = hasBaseline ? ', reform=baseline' : '';
@@ -347,10 +370,11 @@ export function getReproducibilityCodeBlock(
   dataset: string | null = null,
   householdInput: any = null,
   earningVariation: boolean = false,
-  isDefaultDataset: boolean = true
+  isDefaultDataset: boolean = true,
+  policyengineVersion: string | null = null
 ): string[] {
   return [
-    ...getHeaderCode(type, countryId, policy, region),
+    ...getHeaderCode(type, countryId, policy, region, policyengineVersion),
     ...getBaselineCode(policy, countryId),
     ...getReformCode(policy, countryId),
     ...getSituationCode(type, policy, year, householdInput, earningVariation),

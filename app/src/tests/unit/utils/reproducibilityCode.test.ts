@@ -237,6 +237,44 @@ describe('reproducibilityCode', () => {
         expect(code).toContain('reform=reform');
       });
 
+      test('given policyengine version then adds pinned install line with country extra', () => {
+        const lines = getReproducibilityCodeBlock(
+          'policy',
+          TEST_COUNTRIES.US,
+          EMPTY_POLICY,
+          TEST_REGIONS.US_NATIONAL,
+          TEST_YEARS.DEFAULT,
+          null,
+          null,
+          false,
+          true,
+          '3.4.0'
+        );
+        const code = lines.join('\n');
+
+        expect(code).toContain('%pip install "policyengine[us]==3.4.0"');
+        expect(code).toContain(EXPECTED_IMPORTS.US_POLICY);
+      });
+
+      test('given UK policyengine version then installs UK extra before import', () => {
+        const lines = getReproducibilityCodeBlock(
+          'household',
+          TEST_COUNTRIES.UK,
+          EMPTY_POLICY,
+          TEST_REGIONS.UK_NATIONAL,
+          TEST_YEARS.DEFAULT,
+          null,
+          SIMPLE_HOUSEHOLD_INPUT,
+          false,
+          true,
+          '3.4.0'
+        );
+        const code = lines.join('\n');
+
+        expect(code).toContain('%pip install "policyengine[uk]==3.4.0"');
+        expect(code).toContain(EXPECTED_IMPORTS.UK_HOUSEHOLD);
+      });
+
       test('given household with earning variation then adds axes', () => {
         // When
         const lines = getReproducibilityCodeBlock(
@@ -406,6 +444,24 @@ describe('reproducibilityCode', () => {
         expect(code).toContain('districts/CA-01.h5');
       });
 
+      test('given pinned state dataset url then uses it verbatim instead of floating state path', () => {
+        const datasetUrl = 'hf://policyengine/policyengine-us-data/states/CA.h5@1.77.0';
+        const lines = getReproducibilityCodeBlock(
+          'policy',
+          TEST_COUNTRIES.US,
+          EMPTY_POLICY,
+          TEST_REGIONS.CA_STATE,
+          TEST_YEARS.DEFAULT,
+          datasetUrl,
+          null,
+          false,
+          false
+        );
+        const code = lines.join('\n');
+
+        expect(code).toContain(`dataset="${datasetUrl}"`);
+      });
+
       test('given place region then uses state dataset with place_fips filtering', () => {
         // When
         const lines = getReproducibilityCodeBlock(
@@ -431,6 +487,24 @@ describe('reproducibilityCode', () => {
         expect(code).toContain('import pandas as pd');
       });
 
+      test('given pinned place dataset url then uses it verbatim for filtering', () => {
+        const datasetUrl = 'hf://policyengine/policyengine-us-data/states/NJ.h5@1.77.0';
+        const lines = getReproducibilityCodeBlock(
+          'policy',
+          TEST_COUNTRIES.US,
+          EMPTY_POLICY,
+          TEST_REGIONS.NJ_PLACE,
+          TEST_YEARS.DEFAULT,
+          datasetUrl,
+          null,
+          false,
+          false
+        );
+        const code = lines.join('\n');
+
+        expect(code).toContain(`Microsimulation(dataset="${datasetUrl}")`);
+      });
+
       test('given non-default dataset then includes dataset URL', () => {
         // When
         const lines = getReproducibilityCodeBlock(
@@ -449,6 +523,47 @@ describe('reproducibilityCode', () => {
         // Then
         expect(code).toContain('enhanced_cps_2024.h5');
         expect(code).toContain('dataset=');
+      });
+
+      test('given full dataset url then uses it verbatim', () => {
+        // When
+        const lines = getReproducibilityCodeBlock(
+          'policy',
+          TEST_COUNTRIES.US,
+          EMPTY_POLICY,
+          TEST_REGIONS.US_NATIONAL,
+          TEST_YEARS.DEFAULT,
+          'hf://policyengine/policyengine-us-data/enhanced_cps_2024.h5@1.77.0',
+          null,
+          false,
+          false
+        );
+        const code = lines.join('\n');
+
+        // Then
+        expect(code).toContain(
+          'dataset="hf://policyengine/policyengine-us-data/enhanced_cps_2024.h5@1.77.0"'
+        );
+      });
+
+      test('given UK private dataset url then rewrites it to the public repo for reproduction', () => {
+        const lines = getReproducibilityCodeBlock(
+          'policy',
+          TEST_COUNTRIES.UK,
+          EMPTY_POLICY,
+          TEST_REGIONS.UK_NATIONAL,
+          TEST_YEARS.DEFAULT,
+          TEST_DATASETS.ENHANCED_FRS_PRIVATE_URL,
+          null,
+          false,
+          false
+        );
+        const code = lines.join('\n');
+
+        expect(code).toContain(
+          'dataset="hf://policyengine/policyengine-uk-data/enhanced_frs_2023_24.h5@1.40.3"'
+        );
+        expect(code).not.toContain('policyengine-uk-data-private');
       });
 
       test('given default dataset then omits dataset specifier', () => {
