@@ -82,7 +82,7 @@ function FeatureCard({
         {icon}
       </div>
       <Title
-        order={3}
+        order={2}
         style={{
           fontSize: typography.fontSize.xl,
           fontWeight: typography.fontWeight.semibold,
@@ -262,7 +262,7 @@ export default function CalculatorLaunchPage() {
             }}
           >
             <Title
-              order={2}
+              order={3}
               style={{
                 fontSize: typography.fontSize.xl,
                 fontWeight: typography.fontWeight.semibold,
@@ -302,7 +302,7 @@ export default function CalculatorLaunchPage() {
             }}
           >
             <Title
-              order={2}
+              order={3}
               style={{
                 fontSize: typography.fontSize.xl,
                 fontWeight: typography.fontWeight.semibold,
