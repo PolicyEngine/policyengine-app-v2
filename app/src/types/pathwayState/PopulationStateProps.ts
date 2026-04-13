@@ -1,5 +1,5 @@
 import { Geography } from '@/types/ingredients/Geography';
-import { Household } from '@/types/ingredients/Household';
+import type { CanonicalHouseholdInputEnvelope } from '@/models/household/canonicalTypes';
 
 /**
  * PopulationStateProps - Local state interface for population within PathwayWrapper
@@ -17,6 +17,6 @@ import { Household } from '@/types/ingredients/Household';
 export interface PopulationStateProps {
   label: string | null; // Required field, can be null
   type: 'household' | 'geography' | null; // Tracks population type for easier management
-  household: Household | null; // Mutually exclusive with geography
+  household: CanonicalHouseholdInputEnvelope | null; // Mutually exclusive with geography
   geography: Geography | null; // Mutually exclusive with household
 }

@@ -18,9 +18,9 @@ import {
   UserHouseholdMetadataWithAssociation,
   useUserHouseholds,
 } from '@/hooks/useUserHousehold';
+import { Household as HouseholdModel } from '@/models/Household';
 import { RootState } from '@/store';
 import { Geography } from '@/types/ingredients/Geography';
-import { Household } from '@/types/ingredients/Household';
 import { getCountryLabel, getRegionLabel } from '@/utils/geographyUtils';
 import {
   isGeographicAssociationReady,
@@ -28,7 +28,7 @@ import {
 } from '@/utils/validation/ingredientValidation';
 
 interface PopulationExistingViewProps {
-  onSelectHousehold: (householdId: string, household: Household, label: string) => void;
+  onSelectHousehold: (householdId: string, household: HouseholdModel, label: string) => void;
   onSelectGeography: (geographyId: string, geography: Geography, label: string) => void;
   onBack?: () => void;
   onCancel?: () => void;

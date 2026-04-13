@@ -174,6 +174,16 @@ export class Household extends BaseModel<HouseholdModelData> {
     return cloneValue(this.setup);
   }
 
+  toInput(): CanonicalHouseholdInputEnvelope {
+    return {
+      id: this.id,
+      countryId: this.countryId,
+      label: this.label,
+      year: this.year,
+      householdData: this.data,
+    };
+  }
+
   toV1CreationPayload(): V1HouseholdCreateEnvelope {
     return buildV1CreateEnvelope(this.toCanonical());
   }

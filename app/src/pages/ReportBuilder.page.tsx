@@ -81,6 +81,7 @@ import { useUpdatePolicyAssociation, useUserPolicies } from '@/hooks/useUserPoli
 import { getBasicInputFields, getDateRange } from '@/libs/metadataUtils';
 import { householdAssociationKeys } from '@/libs/queryKeys';
 import { Household as HouseholdModel } from '@/models/Household';
+import type { CanonicalHouseholdInputEnvelope } from '@/models/household/canonicalTypes';
 import HistoricalValues from '@/pathways/report/components/policyParameterSelector/HistoricalValues';
 import {
   ModeSelectorButton,
@@ -89,7 +90,6 @@ import {
 } from '@/pathways/report/components/valueSetters';
 import { RootState } from '@/store';
 import { Geography } from '@/types/ingredients/Geography';
-import { Household } from '@/types/ingredients/Household';
 import { Policy } from '@/types/ingredients/Policy';
 import { ParameterTreeNode } from '@/types/metadata';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
@@ -3534,7 +3534,9 @@ function PopulationBrowseModal({
   // Creation mode state
   const [isCreationMode, setIsCreationMode] = useState(false);
   const [householdLabel, setHouseholdLabel] = useState('');
-  const [householdDraft, setHouseholdDraft] = useState<Household | null>(null);
+  const [householdDraft, setHouseholdDraft] = useState<CanonicalHouseholdInputEnvelope | null>(
+    null
+  );
   const [isEditingLabel, setIsEditingLabel] = useState(false);
 
   // Get report year (default to current year)
@@ -3701,8 +3703,8 @@ function PopulationBrowseModal({
     const householdIdStr = String(householdData.id);
     householdUsageStore.recordUsage(householdIdStr);
 
-    const household: Household | null = householdData.household
-      ? householdData.household
+    const household: CanonicalHouseholdInputEnvelope | null = householdData.household
+      ? householdData.household.toInput()
       : {
           id: householdIdStr,
           countryId,
@@ -3814,7 +3816,7 @@ function PopulationBrowseModal({
       householdUsageStore.recordUsage(householdId);
 
       // Create household with ID set for proper selection highlighting
-      const createdHousehold: Household = {
+      const createdHousehold: CanonicalHouseholdInputEnvelope = {
         ...householdDraft,
         id: householdId,
       };
@@ -4714,7 +4716,7 @@ function SimulationCanvas({
           type: 'household',
           population: {
             geography: null,
-            household,
+            household: household.toInput(),
             label: householdData.association.label || `Household #${householdId}`,
             type: 'household',
           },

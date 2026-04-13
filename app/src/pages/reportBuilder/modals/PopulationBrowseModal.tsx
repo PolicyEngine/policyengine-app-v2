@@ -29,9 +29,9 @@ import { useUserHouseholds } from '@/hooks/useUserHousehold';
 import { getBasicInputFields } from '@/libs/metadataUtils';
 import { householdAssociationKeys } from '@/libs/queryKeys';
 import { Household as HouseholdModel } from '@/models/Household';
+import type { CanonicalHouseholdInputEnvelope } from '@/models/household/canonicalTypes';
 import { RootState } from '@/store';
 import { Geography } from '@/types/ingredients/Geography';
-import { Household } from '@/types/ingredients/Household';
 import { PopulationStateProps } from '@/types/pathwayState';
 import { generateGeographyLabel } from '@/utils/geographyUtils';
 import { HouseholdBuilder } from '@/utils/HouseholdBuilder';
@@ -81,7 +81,9 @@ export function PopulationBrowseModal({
   // Creation mode state
   const [isCreationMode, setIsCreationMode] = useState(false);
   const [householdLabel, setHouseholdLabel] = useState('');
-  const [householdDraft, setHouseholdDraft] = useState<Household | null>(null);
+  const [householdDraft, setHouseholdDraft] = useState<CanonicalHouseholdInputEnvelope | null>(
+    null
+  );
 
   // Get report year (default to current year)
   const reportYear = CURRENT_YEAR.toString();
@@ -254,8 +256,8 @@ export function PopulationBrowseModal({
     const householdIdStr = String(householdData.id);
     householdUsageStore.recordUsage(householdIdStr);
 
-    const household: Household | null = householdData.household
-      ? householdData.household
+    const household: CanonicalHouseholdInputEnvelope | null = householdData.household
+      ? householdData.household.toInput()
       : {
           id: householdIdStr,
           countryId,
@@ -363,7 +365,7 @@ export function PopulationBrowseModal({
 
       householdUsageStore.recordUsage(householdId);
 
-      const createdHousehold: Household = {
+      const createdHousehold: CanonicalHouseholdInputEnvelope = {
         ...householdDraft,
         id: householdId,
       };

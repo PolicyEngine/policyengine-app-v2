@@ -1,6 +1,6 @@
 import { vi } from 'vitest';
 import { CURRENT_YEAR } from '@/constants';
-import { Household } from '@/types/ingredients/Household';
+import { Household as HouseholdModel } from '@/models/Household';
 import {
   UserGeographyPopulation,
   UserHouseholdPopulation,
@@ -222,31 +222,9 @@ export const mockHouseholdAssociation2: UserHouseholdPopulation = {
   isCreated: true,
 };
 
-export const mockHousehold1: Household = {
-  id: POPULATION_TEST_IDS.HOUSEHOLD_ID_1,
-  countryId: POPULATION_GEO.COUNTRY_US,
-  householdData: {
-    people: mockHouseholdMetadata1.household_json.people,
-    families: mockHouseholdMetadata1.household_json.families,
-    taxUnits: mockHouseholdMetadata1.household_json.tax_units,
-    spmUnits: mockHouseholdMetadata1.household_json.spm_units,
-    households: mockHouseholdMetadata1.household_json.households,
-    maritalUnits: mockHouseholdMetadata1.household_json.marital_units,
-  },
-};
+export const mockHousehold1 = HouseholdModel.fromV1Metadata(mockHouseholdMetadata1);
 
-export const mockHousehold2: Household = {
-  id: POPULATION_TEST_IDS.HOUSEHOLD_ID_2,
-  countryId: POPULATION_GEO.COUNTRY_US,
-  householdData: {
-    people: mockHouseholdMetadata2.household_json.people,
-    families: mockHouseholdMetadata2.household_json.families,
-    taxUnits: mockHouseholdMetadata2.household_json.tax_units,
-    spmUnits: mockHouseholdMetadata2.household_json.spm_units,
-    households: mockHouseholdMetadata2.household_json.households,
-    maritalUnits: mockHouseholdMetadata2.household_json.marital_units,
-  },
-};
+export const mockHousehold2 = HouseholdModel.fromV1Metadata(mockHouseholdMetadata2);
 
 // Mock geographic associations
 export const mockGeographicAssociation1: UserGeographyPopulation = {
@@ -271,9 +249,9 @@ export const mockGeographicAssociation2: UserGeographyPopulation = {
   createdAt: POPULATION_TEST_IDS.TIMESTAMP_2,
 };
 
-export const createMockHousehold1 = (): Household => cloneValue(mockHousehold1);
+export const createMockHousehold1 = (): HouseholdModel => HouseholdModel.fromInput(mockHousehold1.toInput());
 
-export const createMockHousehold2 = (): Household => cloneValue(mockHousehold2);
+export const createMockHousehold2 = (): HouseholdModel => HouseholdModel.fromInput(mockHousehold2.toInput());
 
 export const createMockHouseholdAssociation1 = (): UserHouseholdPopulation =>
   cloneValue(mockHouseholdAssociation1);

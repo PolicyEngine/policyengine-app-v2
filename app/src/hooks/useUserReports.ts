@@ -10,7 +10,6 @@ import { GC_TIME_5_MIN } from '@/libs/queryConfig';
 import { Household as HouseholdModel } from '@/models/Household';
 import { RootState } from '@/store';
 import { Geography } from '@/types/ingredients/Geography';
-import { Household } from '@/types/ingredients/Household';
 import { Policy } from '@/types/ingredients/Policy';
 import { Report } from '@/types/ingredients/Report';
 import { Simulation } from '@/types/ingredients/Simulation';
@@ -44,7 +43,7 @@ export interface EnhancedUserReport {
 
   // Related entities from simulations
   policies?: Policy[];
-  households?: Household[];
+  households?: HouseholdModel[];
   geographies?: Geography[];
 
   // User associations for related entities
@@ -166,7 +165,7 @@ export const useUserReports = (userId: string) => {
   });
 
   // Step 8: Fetch households
-  const householdResults = useParallelQueries<Household>(householdIds, {
+  const householdResults = useParallelQueries<HouseholdModel>(householdIds, {
     queryKey: householdKeys.byId,
     queryFn: async (id) => {
       const metadata = await fetchHouseholdById(country, id);
@@ -215,7 +214,7 @@ export const useUserReports = (userId: string) => {
         ];
 
         // Get households and geographies from simulations
-        const reportHouseholds: Household[] = [];
+        const reportHouseholds: HouseholdModel[] = [];
         const reportGeographies: Geography[] = [];
 
         reportSimulations.forEach((sim) => {
@@ -320,7 +319,7 @@ export const useUserReports = (userId: string) => {
       queryClient.getQueryData<Simulation>(simulationKeys.byId(id)),
     getNormalizedPolicy: (id: string) => queryClient.getQueryData<Policy>(policyKeys.byId(id)),
     getNormalizedHousehold: (id: string) =>
-      queryClient.getQueryData<Household>(householdKeys.byId(id)),
+      queryClient.getQueryData<HouseholdModel>(householdKeys.byId(id)),
   };
 };
 
@@ -444,7 +443,7 @@ export const useUserReportById = (userReportId: string, options?: { enabled?: bo
   const householdSimulations = simulations.filter((s) => s.populationType === 'household');
   const householdIds = extractUniqueIds(householdSimulations, 'populationId');
 
-  const householdResults = useParallelQueries<Household>(householdIds, {
+  const householdResults = useParallelQueries<HouseholdModel>(householdIds, {
     queryKey: householdKeys.byId,
     queryFn: async (id) => {
       const metadata = await fetchHouseholdById(country, id);
@@ -454,7 +453,9 @@ export const useUserReportById = (userReportId: string, options?: { enabled?: bo
     staleTime: 5 * 60 * 1000,
   });
 
-  const households = householdResults.queries.map((q) => q.data).filter((h): h is Household => !!h);
+  const households = householdResults.queries
+    .map((q) => q.data)
+    .filter((h): h is HouseholdModel => !!h);
 
   const userHouseholds = householdAssociations?.filter((ha) =>
     households.some((h) => h.id === ha.householdId)

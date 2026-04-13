@@ -1,5 +1,5 @@
 import { Geography } from './Geography';
-import { Household } from './Household';
+import type { CanonicalHouseholdInputEnvelope } from '@/models/household/canonicalTypes';
 
 /**
  * Population type for Redux state management
@@ -8,6 +8,6 @@ import { Household } from './Household';
 export interface Population {
   label?: string | null;
   isCreated?: boolean;
-  household?: Household | null;
+  household?: CanonicalHouseholdInputEnvelope | null;
   geography?: Geography | null;
 }

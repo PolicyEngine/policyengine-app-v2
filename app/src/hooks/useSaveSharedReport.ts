@@ -22,7 +22,8 @@ import {
   shadowCreatePolicyAndAssociation,
   shadowCreateUserPolicyAssociation,
 } from '@/libs/migration/policyShadow';
-import { Household, type HouseholdInput } from '@/models/Household';
+import { Household } from '@/models/Household';
+import type { CanonicalHouseholdInputEnvelope } from '@/models/household/canonicalTypes';
 import { RootState } from '@/store';
 import { Policy } from '@/types/ingredients/Policy';
 import { UserPolicy } from '@/types/ingredients/UserPolicy';
@@ -79,7 +80,7 @@ function shadowSavedPolicyAssociation(association: UserPolicy, policyDetails?: P
 
 function shadowSavedHouseholdAssociation(
   association: UserHouseholdPopulation,
-  householdDetails?: HouseholdInput
+  householdDetails?: CanonicalHouseholdInputEnvelope
 ): void {
   const mappedV2HouseholdId = getV2Id('Household', association.householdId);
 
@@ -156,7 +157,7 @@ export function useSaveSharedReport() {
   const saveSharedReport = async (
     shareData: ReportIngredientsInput,
     policies: Policy[] = [],
-    households: HouseholdInput[] = []
+    households: CanonicalHouseholdInputEnvelope[] = []
   ): Promise<UserReport> => {
     const userId = 'anonymous'; // TODO: Replace with auth context
     const userReportId = getShareDataUserReportId(shareData);

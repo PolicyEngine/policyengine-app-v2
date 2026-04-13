@@ -1,4 +1,4 @@
-import { Household } from '@/types/ingredients/Household';
+import { Household as HouseholdModel } from '@/models/Household';
 import { Policy } from '@/types/ingredients/Policy';
 import { Simulation } from '@/types/ingredients/Simulation';
 import { UserPolicy } from '@/types/ingredients/UserPolicy';
@@ -63,10 +63,11 @@ export const mockPolicy2: Policy = {
 };
 
 // Mock Household entity
-export const mockHousehold1: Household = {
+export const mockHousehold1 = HouseholdModel.fromV1Metadata({
   id: TEST_HOUSEHOLD_ID,
-  countryId: TEST_COUNTRIES.US,
-  householdData: {
+  country_id: TEST_COUNTRIES.US,
+  api_version: 'v1',
+  household_json: {
     people: {},
     families: {},
     tax_units: {},
@@ -74,7 +75,9 @@ export const mockHousehold1: Household = {
     households: {},
     marital_units: {},
   },
-};
+  household_hash: 'hash-household-123',
+  label: 'Test Household',
+});
 
 // Mock User Associations
 export const mockUserSimulations: UserSimulation[] = [
