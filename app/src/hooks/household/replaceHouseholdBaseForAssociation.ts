@@ -4,15 +4,16 @@ import {
   shadowCreateHousehold,
   shadowUpdateUserHouseholdAssociation,
 } from '@/libs/migration/householdShadow';
-import { Household, type HouseholdInput } from '@/models/Household';
+import { Household } from '@/models/Household';
+import type { CanonicalHouseholdInputEnvelope } from '@/models/household/canonicalTypes';
 import type { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 
 export async function replaceHouseholdBaseForAssociation(args: {
   association: UserHouseholdPopulation;
-  nextHousehold: HouseholdInput;
+  nextHousehold: CanonicalHouseholdInputEnvelope;
   store: Pick<UserHouseholdStore, 'update'>;
 }): Promise<UserHouseholdPopulation> {
-  const { association, nextHousehold, store } = args;
+  const { association, nextHousehold: nextHouseholdInput, store } = args;
 
   if (!association.id) {
     throw new Error(
@@ -20,9 +21,9 @@ export async function replaceHouseholdBaseForAssociation(args: {
     );
   }
 
-  const nextHouseholdModel = Household.fromInput({
-    ...nextHousehold,
-    label: nextHousehold.id ? null : (association.label ?? null),
+  const nextHouseholdModel = Household.fromCanonicalInput({
+    ...nextHouseholdInput,
+    label: nextHouseholdInput.id ? null : (association.label ?? null),
   });
   const createdHousehold = await createHousehold(nextHouseholdModel.toV1CreationPayload());
   const nextHouseholdId = String(createdHousehold.result.household_id);

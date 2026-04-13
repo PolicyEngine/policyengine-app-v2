@@ -99,6 +99,10 @@ export class Household extends BaseModel<HouseholdModelData> {
   }
 
   static fromInput(input: CanonicalHouseholdInputEnvelope): Household {
+    return Household.fromCanonicalInput(input);
+  }
+
+  static fromCanonicalInput(input: CanonicalHouseholdInputEnvelope): Household {
     return Household.fromCanonical(
       parseAppHouseholdInput(input),
       { id: input.id ?? 'draft-household' }
@@ -112,7 +116,7 @@ export class Household extends BaseModel<HouseholdModelData> {
     year?: number | null;
     id?: string;
   }): Household {
-    return Household.fromInput({
+    return Household.fromCanonicalInput({
       id: args.id,
       countryId: args.countryId,
       householdData: args.householdData,
@@ -188,12 +192,16 @@ export class Household extends BaseModel<HouseholdModelData> {
     return buildV1CreateEnvelope(this.toCanonical());
   }
 
-  toV2CreateRequest(): V2CreateHouseholdEnvelope {
+  toV2CreateEnvelope(): V2CreateHouseholdEnvelope {
     return buildV2CreateEnvelope(this.toCanonical());
   }
 
+  toV2CreateRequest(): V2CreateHouseholdEnvelope {
+    return this.toV2CreateEnvelope();
+  }
+
   toV2Shape(): V2CreateHouseholdEnvelope {
-    return this.toV2CreateRequest();
+    return this.toV2CreateEnvelope();
   }
 
   toComparable(): ComparableHousehold {

@@ -111,7 +111,7 @@ function shadowSavedHouseholdAssociation(
 
   void shadowCreateHouseholdAndAssociation({
     v1HouseholdId: association.householdId,
-    v1Household: Household.fromInput({
+    v1Household: Household.fromCanonicalInput({
       ...householdDetails,
       id: association.householdId,
       label: association.label ?? null,

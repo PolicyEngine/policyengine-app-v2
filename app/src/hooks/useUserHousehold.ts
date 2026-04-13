@@ -5,7 +5,8 @@ import type { UserHouseholdStore } from '@/api/householdAssociation';
 import { replaceHouseholdBaseForAssociation as replaceHouseholdBaseForAssociationAction } from '@/hooks/household/replaceHouseholdBaseForAssociation';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { shadowUpdateUserHouseholdAssociation } from '@/libs/migration/householdShadow';
-import { Household, type HouseholdInput } from '@/models/Household';
+import { Household } from '@/models/Household';
+import type { CanonicalHouseholdInputEnvelope } from '@/models/household/canonicalTypes';
 import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { ApiHouseholdStore, LocalStorageHouseholdStore } from '../api/householdAssociation';
 import { queryConfig } from '../libs/queryConfig';
@@ -75,7 +76,7 @@ export const useCreateHouseholdAssociation = () => {
 
 export async function replaceHouseholdBaseForAssociation(args: {
   association: UserHouseholdPopulation;
-  nextHousehold: HouseholdInput;
+  nextHousehold: CanonicalHouseholdInputEnvelope;
   store?: Pick<UserHouseholdStore, 'update'>;
 }): Promise<UserHouseholdPopulation> {
   return replaceHouseholdBaseForAssociationAction({
@@ -98,7 +99,7 @@ export const useUpdateHouseholdAssociation = () => {
       userHouseholdId: string;
       updates: Partial<UserHouseholdPopulation>;
       association?: UserHouseholdPopulation;
-      nextHousehold?: HouseholdInput;
+      nextHousehold?: CanonicalHouseholdInputEnvelope;
     }) => {
       if (nextHousehold) {
         if (!association) {

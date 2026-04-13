@@ -94,7 +94,7 @@ export async function shadowCreateHousehold(
 ): Promise<string | null> {
   try {
     const v2Household = Household.fromV2Response(
-      await createHouseholdV2(v1Household.toV2CreateRequest())
+      await createHouseholdV2(v1Household.toV2CreateEnvelope())
     );
 
     setV2Id('Household', v1HouseholdId, v2Household.id);
