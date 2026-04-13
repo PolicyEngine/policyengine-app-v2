@@ -14,7 +14,8 @@ import type {
   V1HouseholdMetadataEnvelope,
 } from './v1Types';
 import type {
-  V2HouseholdShape,
+  V2CreateHouseholdEnvelope,
+  V2HouseholdEnvelope,
   V2StoredHouseholdEnvelope,
 } from './v2Types';
 
@@ -41,9 +42,9 @@ export type {
   V2CreateHouseholdEnvelope,
   V2HouseholdCalculationPayload,
   V2HouseholdData,
+  V2HouseholdEnvelope,
   V2HouseholdGroupData,
   V2HouseholdPersonData,
-  V2HouseholdShape,
   V2StoredHouseholdEnvelope,
 } from './v2Types';
 
@@ -53,10 +54,9 @@ export type CanonicalEntityValues = CanonicalStructuredEntityValues;
 export type CanonicalGroup = CanonicalStructuredGroup;
 export type CanonicalHouseholdData = CanonicalStructuredHouseholdData;
 export type CanonicalHouseholdState = CanonicalStructuredHouseholdState;
-export type HouseholdV2Source = V2StoredHouseholdEnvelope | V2HouseholdShape;
 export type HouseholdV1PayloadData = V1HouseholdData;
 export type HouseholdV1Metadata = V1HouseholdMetadataEnvelope;
-export type HouseholdComparableShape = V2HouseholdShape;
+export type HouseholdComparableShape = V2CreateHouseholdEnvelope;
 
 // Transitional aliases to keep the current model/codecs stable while the taxonomy
 // becomes explicit in follow-up commits.

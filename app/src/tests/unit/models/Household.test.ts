@@ -287,6 +287,58 @@ describe('Household', () => {
         )
       ).toThrow('V2 household tax_unit has no linked members');
     });
+
+    it('rejects v2 groups that omit their numeric group id', () => {
+      expect(() =>
+        Household.fromV2Response(
+          createMockHouseholdV2Response({
+            people: [
+              {
+                name: 'adult',
+                person_id: 0,
+                person_tax_unit_id: 0,
+                age: 35,
+              },
+            ],
+            tax_unit: {},
+            family: null,
+            spm_unit: null,
+            marital_unit: null,
+            household: null,
+            benunit: null,
+          })
+        )
+      ).toThrow('V2 household tax_unit is missing numeric tax_unit_id');
+    });
+
+    it('rejects duplicate explicit person names in v2 responses', () => {
+      expect(() =>
+        Household.fromV2Response(
+          createMockHouseholdV2Response({
+            people: [
+              {
+                name: 'adult',
+                person_id: 0,
+                person_household_id: 0,
+                age: 35,
+              },
+              {
+                name: 'adult',
+                person_id: 1,
+                person_household_id: 0,
+                age: 8,
+              },
+            ],
+            household: { household_id: 0 },
+            tax_unit: null,
+            family: null,
+            spm_unit: null,
+            marital_unit: null,
+            benunit: null,
+          })
+        )
+      ).toThrow('Duplicate person name "adult" in v2 household response');
+    });
   });
 
   describe('toV1CreationPayload', () => {
@@ -349,11 +401,10 @@ describe('Household', () => {
   });
 
   describe('toV2Shape', () => {
-    it('flattens year-keyed values and attaches relationship ids for v2', () => {
+    it('flattens year-keyed values and attaches relationship ids for the v2 create envelope', () => {
       const household = createHousehold();
 
       expect(household.toV2Shape()).toEqual({
-        id: TEST_HOUSEHOLD_ID,
         country_id: 'us',
         year: 2026,
         label: TEST_HOUSEHOLD_LABEL,

@@ -5,12 +5,12 @@ import {
   getHouseholdCalculationJobStatusV2,
   pollHouseholdCalculationJobV2,
   type HouseholdCalculatePayload,
-  type V2HouseholdShape,
+  type V2CreateHouseholdEnvelope,
 } from '@/api/v2/householdCalculation';
 import {
   createMockHouseholdJobResponse,
   createMockHouseholdJobStatusResponse,
-  createMockV2HouseholdShape,
+  createMockV2CreateHouseholdEnvelope,
   mockFetch404,
   mockFetchError,
   mockFetchSequence,
@@ -41,10 +41,10 @@ describe('householdCalculation v2 API', () => {
         marital_unit: [{ filing_status: 'single' }],
         benunit: [{ uc_amount: 100 }],
       };
-      const original = createMockV2HouseholdShape();
+      const original = createMockV2CreateHouseholdEnvelope();
 
       // When
-      const household = calculationResultToHousehold(result, original as V2HouseholdShape);
+      const household = calculationResultToHousehold(result, original);
 
       // Then
       expect(household.people).toEqual([{ net_income: 45000 }]);
@@ -62,7 +62,7 @@ describe('householdCalculation v2 API', () => {
         person: [{ net_income: 45000 }],
         household: [{ total_tax: 5000 }],
       };
-      const original: V2HouseholdShape = {
+      const original: V2CreateHouseholdEnvelope = {
         country_id: 'uk',
         year: 2025,
         people: [{ age: 40 }],
@@ -87,10 +87,10 @@ describe('householdCalculation v2 API', () => {
         marital_unit: null,
         benunit: null,
       };
-      const original = createMockV2HouseholdShape();
+      const original = createMockV2CreateHouseholdEnvelope();
 
       // When
-      const household = calculationResultToHousehold(result as any, original as V2HouseholdShape);
+      const household = calculationResultToHousehold(result as any, original);
 
       // Then
       expect(household.tax_unit).toBeUndefined();
@@ -112,7 +112,7 @@ describe('householdCalculation v2 API', () => {
         country_id: 'us',
         year: 2026,
         people: [{ age: 30, employment_income: 50000 }],
-        tax_unit: { members: ['person1'] },
+        tax_unit: { tax_unit_id: 0 },
         family: null,
         spm_unit: null,
         marital_unit: null,

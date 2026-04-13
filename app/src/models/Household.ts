@@ -11,17 +11,13 @@ import type {
 import type { V1HouseholdCreateEnvelope, V1HouseholdMetadataEnvelope } from './household/v1Types';
 import type {
   V2CreateHouseholdEnvelope,
-  V2HouseholdShape,
   V2StoredHouseholdEnvelope,
 } from './household/v2Types';
 import {
-  buildCanonicalSetupFromStructuredState,
-  buildStructuredStateFromCanonicalSetup,
   cloneValue,
   deepEqual,
   inferYearFromData,
   normalizeCanonicalSetup,
-  normalizeCountryId,
 } from './household/utils';
 import { buildAppHouseholdData, parseAppHouseholdInput } from './household/appCodec';
 import {
@@ -30,9 +26,8 @@ import {
   parseV1MetadataEnvelope,
 } from './household/v1Codec';
 import {
-  buildV2CreateRequest,
-  buildV2HouseholdShape,
-  parseV2HouseholdShape,
+  buildV2CreateEnvelope,
+  parseV2HouseholdEnvelope,
 } from './household/v2Codec';
 
 export type { ComparableHousehold, HouseholdModelData } from './household/canonicalTypes';
@@ -64,13 +59,6 @@ export class Household extends BaseModel<HouseholdModelData> {
 
   get year(): number | null {
     return this.setup.year;
-  }
-
-  private toStructuredState() {
-    return buildStructuredStateFromCanonicalSetup({
-      id: this.id,
-      setup: this.setup,
-    });
   }
 
   get data(): CanonicalHouseholdInputData {
@@ -156,18 +144,15 @@ export class Household extends BaseModel<HouseholdModelData> {
   }
 
   static fromV2Response(response: V2StoredHouseholdEnvelope): Household {
-    return Household.fromV2Shape(response);
+    return Household.fromCanonical(parseV2HouseholdEnvelope(response), {
+      id: response.id,
+    });
   }
 
-  static fromV2Shape(shape: V2StoredHouseholdEnvelope | V2HouseholdShape): Household {
+  static fromV2CreateEnvelope(envelope: V2CreateHouseholdEnvelope): Household {
     return Household.fromCanonical(
-      buildCanonicalSetupFromStructuredState({
-        countryId: normalizeCountryId(shape.country_id),
-        label: shape.label ?? null,
-        year: shape.year ?? null,
-        data: parseV2HouseholdShape(shape),
-      }),
-      { id: shape.id }
+      parseV2HouseholdEnvelope(envelope),
+      { id: 'draft-household' }
     );
   }
 
@@ -194,15 +179,18 @@ export class Household extends BaseModel<HouseholdModelData> {
   }
 
   toV2CreateRequest(): V2CreateHouseholdEnvelope {
-    return buildV2CreateRequest(this.toStructuredState());
+    return buildV2CreateEnvelope(this.toCanonical());
   }
 
-  toV2Shape(): V2HouseholdShape {
-    return buildV2HouseholdShape(this.toStructuredState());
+  toV2Shape(): V2CreateHouseholdEnvelope {
+    return this.toV2CreateRequest();
   }
 
   toComparable(): ComparableHousehold {
-    return buildComparableHousehold(this.toStructuredState());
+    return buildComparableHousehold({
+      id: this.id,
+      setup: this.setup,
+    });
   }
 
   toJSON(): HouseholdModelData {

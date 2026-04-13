@@ -1,29 +1,32 @@
 import type {
-  CanonicalStructuredHouseholdState,
+  CanonicalHouseholdSetup,
   ComparableHousehold,
 } from './canonicalTypes';
 import { sortRecordKeysRecursively } from './utils';
-import { buildV2HouseholdShape } from './v2Codec';
+import { buildV2CreateEnvelope } from './v2Codec';
 
 export function buildComparableHousehold(
-  state: CanonicalStructuredHouseholdState
+  args: {
+    id: string;
+    setup: CanonicalHouseholdSetup;
+  }
 ): ComparableHousehold {
-  const v2Shape = buildV2HouseholdShape(state);
+  const v2Envelope = buildV2CreateEnvelope(args.setup);
   const comparableData = {
-    people: v2Shape.people,
-    tax_unit: v2Shape.tax_unit ?? null,
-    family: v2Shape.family ?? null,
-    spm_unit: v2Shape.spm_unit ?? null,
-    marital_unit: v2Shape.marital_unit ?? null,
-    household: v2Shape.household ?? null,
-    benunit: v2Shape.benunit ?? null,
+    people: v2Envelope.people,
+    tax_unit: v2Envelope.tax_unit ?? null,
+    family: v2Envelope.family ?? null,
+    spm_unit: v2Envelope.spm_unit ?? null,
+    marital_unit: v2Envelope.marital_unit ?? null,
+    household: v2Envelope.household ?? null,
+    benunit: v2Envelope.benunit ?? null,
   };
 
   return {
-    id: state.id,
-    countryId: state.countryId,
-    year: v2Shape.year,
-    label: state.label,
+    id: args.id,
+    countryId: args.setup.countryId,
+    year: v2Envelope.year,
+    label: args.setup.label,
     data: sortRecordKeysRecursively(comparableData) as Record<string, unknown>,
   };
 }

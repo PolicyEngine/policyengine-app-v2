@@ -114,8 +114,16 @@ export function createMockHouseholdV2Response(overrides?: Partial<{ id: string }
     country_id: TEST_COUNTRY_ID,
     year: 2026,
     label: 'Test household',
-    people: [{ age: 30, employment_income: 50000 }],
-    tax_unit: { members: ['person1'] },
+    people: [
+      {
+        name: 'adult',
+        person_id: 0,
+        person_tax_unit_id: 0,
+        age: 30,
+        employment_income: 50000,
+      },
+    ],
+    tax_unit: { tax_unit_id: 0 },
     family: null,
     spm_unit: null,
     marital_unit: null,
@@ -126,13 +134,21 @@ export function createMockHouseholdV2Response(overrides?: Partial<{ id: string }
   };
 }
 
-export function createMockV2HouseholdShape() {
+export function createMockV2CreateHouseholdEnvelope() {
   return {
     country_id: TEST_COUNTRY_ID as 'us',
     year: 2026,
     label: 'Test household',
-    people: [{ age: 30, employment_income: 50000 }],
-    tax_unit: { members: ['person1'] },
+    people: [
+      {
+        name: 'adult',
+        person_id: 0,
+        person_tax_unit_id: 0,
+        age: 30,
+        employment_income: 50000,
+      },
+    ],
+    tax_unit: { tax_unit_id: 0 },
     family: null,
     spm_unit: null,
     marital_unit: null,

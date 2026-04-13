@@ -8,20 +8,22 @@
  */
 
 import type {
+  V2CreateHouseholdEnvelope,
+  V2HouseholdEnvelope,
   V2HouseholdCalculationPayload,
   V2HouseholdGroupData,
   V2HouseholdPersonData,
-  V2HouseholdShape,
+  V2StoredHouseholdEnvelope,
 } from '@/models/household/v2Types';
 import { API_V2_BASE_URL } from './taxBenefitModels';
 import { cancellableSleep, v2Fetch } from './v2Fetch';
 
-export type { V2HouseholdShape };
+export type { V2CreateHouseholdEnvelope, V2StoredHouseholdEnvelope };
 
 export type HouseholdCalculatePayload = V2HouseholdCalculationPayload;
 
 function householdToCalculatePayload(
-  household: V2HouseholdShape,
+  household: V2HouseholdEnvelope,
   policyId?: string,
   dynamicId?: string
 ): HouseholdCalculatePayload {
@@ -178,8 +180,8 @@ export async function pollHouseholdCalculationJobV2(
  */
 export function calculationResultToHousehold(
   result: HouseholdCalculationResult,
-  originalHousehold: V2HouseholdShape
-): V2HouseholdShape {
+  originalHousehold: V2HouseholdEnvelope
+): V2CreateHouseholdEnvelope {
   return {
     country_id: originalHousehold.country_id,
     year: originalHousehold.year,
@@ -199,7 +201,7 @@ export function calculationResultToHousehold(
  * Creates job, polls for result, returns Household
  */
 export async function calculateHouseholdV2Alpha(
-  household: V2HouseholdShape,
+  household: V2HouseholdEnvelope,
   policyId?: string,
   dynamicId?: string,
   options: {
@@ -207,7 +209,7 @@ export async function calculateHouseholdV2Alpha(
     timeoutMs?: number;
     signal?: AbortSignal;
   } = {}
-): Promise<V2HouseholdShape> {
+): Promise<V2CreateHouseholdEnvelope> {
   // Convert to calculation payload format (arrays)
   const payload = householdToCalculatePayload(household, policyId, dynamicId);
 

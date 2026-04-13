@@ -1,30 +1,38 @@
-import { buildGeneratedGroupName, GROUP_DEFINITIONS, PERSON_META_KEYS } from './schema';
+import { GROUP_DEFINITIONS, PERSON_META_KEYS } from './schema';
 import type {
-  CanonicalStructuredHouseholdData,
-  CanonicalStructuredHouseholdState,
+  CanonicalGroupSetup,
+  CanonicalHouseholdSetup,
+  CanonicalPersonSetup,
 } from './canonicalTypes';
-import type { HouseholdV2Source } from './types';
-import type { V2CreateHouseholdEnvelope, V2HouseholdShape } from './v2Types';
+import type {
+  V2CreateHouseholdEnvelope,
+  V2HouseholdEnvelope,
+  V2HouseholdPersonData,
+} from './v2Types';
 import {
   flattenEntityValues,
+  getCanonicalGroupSetup,
   inferYearFromData,
   isRecord,
+  normalizeCanonicalSetup,
+  normalizeCountryId,
   omitRecordKeys,
+  SETUP_KEY_BY_APP_KEY,
   wrapEntityValuesForYear,
 } from './utils';
 
-function buildPeopleFromV2Response(
-  people: HouseholdV2Source['people'],
-  year: number
-): {
-  peopleByName: CanonicalStructuredHouseholdData['people'];
+function buildCanonicalPeopleFromV2Envelope(args: {
+  people: V2HouseholdEnvelope['people'];
+  year: number;
+}): {
+  people: Record<string, CanonicalPersonSetup>;
   personNameById: Map<number, string>;
 } {
-  const peopleByName: CanonicalStructuredHouseholdData['people'] = {};
+  const people: Record<string, CanonicalPersonSetup> = {};
   const personNameById = new Map<number, string>();
   const usedNames = new Set<string>();
 
-  for (const [index, rawPerson] of people.entries()) {
+  for (const [index, rawPerson] of args.people.entries()) {
     const person = isRecord(rawPerson) ? rawPerson : {};
     const personId = typeof person.person_id === 'number' ? person.person_id : index;
     const explicitName =
@@ -41,17 +49,16 @@ function buildPeopleFromV2Response(
 
     usedNames.add(personName);
     personNameById.set(personId, personName);
-    peopleByName[personName] = wrapEntityValuesForYear(
-      omitRecordKeys(person, PERSON_META_KEYS),
-      year
-    );
+    people[personName] = {
+      values: wrapEntityValuesForYear(omitRecordKeys(person, PERSON_META_KEYS), args.year),
+    };
   }
 
-  return { peopleByName, personNameById };
+  return { people, personNameById };
 }
 
-function buildGroupMembersFromPeople(args: {
-  people: HouseholdV2Source['people'];
+function buildGroupMembersFromV2People(args: {
+  people: V2HouseholdEnvelope['people'];
   personNameById: Map<number, string>;
   personLinkKey: string;
   groupId: number;
@@ -82,77 +89,93 @@ function buildGroupMembersFromPeople(args: {
   return members;
 }
 
-export function parseV2HouseholdShape(
-  shape: HouseholdV2Source
-): CanonicalStructuredHouseholdData {
-  const { peopleByName, personNameById } = buildPeopleFromV2Response(shape.people, shape.year);
-  const groups: CanonicalStructuredHouseholdData['groups'] = {};
+function parseV2Group(args: {
+  envelope: V2HouseholdEnvelope;
+  definition: (typeof GROUP_DEFINITIONS)[number];
+  personNameById: Map<number, string>;
+}): CanonicalGroupSetup | undefined {
+  const rawGroup = args.envelope[args.definition.v2Key];
+  if (rawGroup == null) {
+    return undefined;
+  }
 
-  for (const definition of GROUP_DEFINITIONS) {
-    const rawGroup = shape[definition.v2Key];
-    if (rawGroup == null) {
-      continue;
-    }
+  if (!isRecord(rawGroup)) {
+    throw new Error(`V2 household ${args.definition.v2Key} must be an object when present`);
+  }
 
-    if (!isRecord(rawGroup)) {
-      throw new Error(`V2 household ${definition.v2Key} must be an object when present`);
-    }
+  const groupId = rawGroup[args.definition.groupIdKey];
+  if (typeof groupId !== 'number') {
+    throw new Error(
+      `V2 household ${args.definition.v2Key} is missing numeric ${args.definition.groupIdKey}`
+    );
+  }
 
-    const groupId = rawGroup[definition.groupIdKey];
-    if (typeof groupId !== 'number') {
-      throw new Error(
-        `V2 household ${definition.v2Key} is missing numeric ${definition.groupIdKey}`
-      );
-    }
+  const members = buildGroupMembersFromV2People({
+    people: args.envelope.people,
+    personNameById: args.personNameById,
+    personLinkKey: args.definition.personLinkKey,
+    groupId,
+    groupLabel: args.definition.v2Key,
+  });
 
-    const members = buildGroupMembersFromPeople({
-      people: shape.people,
-      personNameById,
-      personLinkKey: definition.personLinkKey,
-      groupId,
-      groupLabel: definition.v2Key,
-    });
-
-    if (members.length === 0) {
-      throw new Error(
-        `V2 household ${definition.v2Key} has no linked members for ${definition.groupIdKey}=${groupId}`
-      );
-    }
-
-    groups[definition.appKey] = {
-      name: buildGeneratedGroupName(definition.generatedKeyPrefix, 0),
-      members,
-      values: wrapEntityValuesForYear(
-        omitRecordKeys(rawGroup, [definition.groupIdKey]),
-        shape.year
-      ),
-    };
+  if (members.length === 0) {
+    throw new Error(
+      `V2 household ${args.definition.v2Key} has no linked members for ${args.definition.groupIdKey}=${groupId}`
+    );
   }
 
   return {
-    people: peopleByName,
-    groups,
+    members,
+    values: wrapEntityValuesForYear(
+      omitRecordKeys(rawGroup, [args.definition.groupIdKey]),
+      args.envelope.year
+    ),
   };
 }
 
-export function buildV2HouseholdShape(
-  state: CanonicalStructuredHouseholdState
-): V2HouseholdShape {
-  const year = state.year ?? inferYearFromData(state.data);
-  if (year === null) {
-    throw new Error('Household requires a year to convert to v2 shape');
+export function parseV2HouseholdEnvelope(
+  envelope: V2HouseholdEnvelope
+): CanonicalHouseholdSetup {
+  const { people, personNameById } = buildCanonicalPeopleFromV2Envelope({
+    people: envelope.people,
+    year: envelope.year,
+  });
+
+  const setup: CanonicalHouseholdSetup = {
+    countryId: normalizeCountryId(envelope.country_id),
+    label: envelope.label ?? null,
+    year: envelope.year,
+    people,
+  };
+
+  for (const definition of GROUP_DEFINITIONS) {
+    const parsedGroup = parseV2Group({
+      envelope,
+      definition,
+      personNameById,
+    });
+
+    if (parsedGroup) {
+      setup[SETUP_KEY_BY_APP_KEY[definition.appKey]] = parsedGroup;
+    }
   }
 
-  const personNames = Object.keys(state.data.people).sort((left, right) =>
-    left.localeCompare(right)
-  );
+  return normalizeCanonicalSetup(setup);
+}
+
+function buildV2People(setup: CanonicalHouseholdSetup, year: number): V2HouseholdPersonData[] {
+  const personNames = Object.keys(setup.people).sort((left, right) => left.localeCompare(right));
   const personNameSet = new Set(personNames);
   const personAssignments = new Map<string, Record<string, number>>();
 
   for (const definition of GROUP_DEFINITIONS) {
-    const group = state.data.groups[definition.appKey];
+    const group = getCanonicalGroupSetup(setup, definition.appKey);
     if (!group) {
       continue;
+    }
+
+    if (group.members.length === 0) {
+      throw new Error(`Household ${definition.appKey} must have at least one member`);
     }
 
     const unknownMembers = group.members.filter((member) => !personNameSet.has(member));
@@ -169,39 +192,40 @@ export function buildV2HouseholdShape(
     });
   }
 
-  const people = personNames.map((personName, personIndex) => ({
+  return personNames.map((personName, personIndex) => ({
     name: personName,
     person_id: personIndex,
     ...personAssignments.get(personName),
-    ...flattenEntityValues(state.data.people[personName], year),
+    ...flattenEntityValues(setup.people[personName].values, year),
   }));
+}
 
-  const shape: V2HouseholdShape = {
-    id: state.id === 'draft-household' ? undefined : state.id,
-    country_id: state.countryId,
+export function buildV2CreateEnvelope(setup: CanonicalHouseholdSetup): V2CreateHouseholdEnvelope {
+  const normalizedSetup = normalizeCanonicalSetup(setup);
+  const year = normalizedSetup.year ?? inferYearFromData(normalizedSetup);
+
+  if (year === null) {
+    throw new Error('Household requires a year to convert to a v2 create envelope');
+  }
+
+  const envelope: V2CreateHouseholdEnvelope = {
+    country_id: normalizedSetup.countryId,
     year,
-    label: state.label,
-    people,
+    label: normalizedSetup.label,
+    people: buildV2People(normalizedSetup, year),
   };
 
   for (const definition of GROUP_DEFINITIONS) {
-    const group = state.data.groups[definition.appKey];
+    const group = getCanonicalGroupSetup(normalizedSetup, definition.appKey);
     if (!group) {
       continue;
     }
 
-    shape[definition.v2Key] = {
+    envelope[definition.v2Key] = {
       [definition.groupIdKey]: 0,
       ...flattenEntityValues(group.values, year),
     };
   }
 
-  return shape;
-}
-
-export function buildV2CreateRequest(
-  state: CanonicalStructuredHouseholdState
-): V2CreateHouseholdEnvelope {
-  const { id: _ignoredId, ...request } = buildV2HouseholdShape(state);
-  return request;
+  return envelope;
 }
