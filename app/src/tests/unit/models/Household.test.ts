@@ -288,7 +288,48 @@ describe('Household', () => {
       ).toThrow('V2 household tax_unit has no linked members');
     });
 
-    it('rejects v2 groups that omit their numeric group id', () => {
+    it('treats unlinked stored v2 groups as single groups containing all people', () => {
+      const household = Household.fromV2Response(
+        createMockHouseholdV2Response({
+          people: [
+            {
+              name: 'adult',
+              age: 35,
+            },
+            {
+              name: 'child',
+              age: 8,
+            },
+          ],
+          tax_unit: {},
+          family: { filing_status: 'single' },
+          spm_unit: null,
+          marital_unit: null,
+          household: { state_name: 'CA' },
+          benunit: null,
+        })
+      );
+
+      expect(household.data.taxUnits).toEqual({
+        taxUnit1: {
+          members: ['adult', 'child'],
+        },
+      });
+      expect(household.data.families).toEqual({
+        family1: {
+          members: ['adult', 'child'],
+          filing_status: { 2026: 'single' },
+        },
+      });
+      expect(household.data.households).toEqual({
+        household1: {
+          members: ['adult', 'child'],
+          state_name: { 2026: 'CA' },
+        },
+      });
+    });
+
+    it('still rejects missing group ids when person linkage is explicitly present', () => {
       expect(() =>
         Household.fromV2Response(
           createMockHouseholdV2Response({

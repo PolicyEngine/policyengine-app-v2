@@ -89,6 +89,16 @@ function buildGroupMembersFromV2People(args: {
   return members;
 }
 
+function hasExplicitPersonLinkAssignments(args: {
+  people: V2HouseholdEnvelope['people'];
+  personLinkKey: string;
+}): boolean {
+  return args.people.some((rawPerson) => {
+    const person = isRecord(rawPerson) ? rawPerson : {};
+    return typeof person[args.personLinkKey] === 'number';
+  });
+}
+
 function parseV2Group(args: {
   envelope: V2HouseholdEnvelope;
   definition: (typeof GROUP_DEFINITIONS)[number];
@@ -104,24 +114,35 @@ function parseV2Group(args: {
   }
 
   const groupId = rawGroup[args.definition.groupIdKey];
-  if (typeof groupId !== 'number') {
+  let members: string[];
+
+  if (typeof groupId === 'number') {
+    members = buildGroupMembersFromV2People({
+      people: args.envelope.people,
+      personNameById: args.personNameById,
+      personLinkKey: args.definition.personLinkKey,
+      groupId,
+      groupLabel: args.definition.v2Key,
+    });
+
+    if (members.length === 0) {
+      throw new Error(
+        `V2 household ${args.definition.v2Key} has no linked members for ${args.definition.groupIdKey}=${groupId}`
+      );
+    }
+  } else if (
+    hasExplicitPersonLinkAssignments({
+      people: args.envelope.people,
+      personLinkKey: args.definition.personLinkKey,
+    })
+  ) {
     throw new Error(
       `V2 household ${args.definition.v2Key} is missing numeric ${args.definition.groupIdKey}`
     );
-  }
-
-  const members = buildGroupMembersFromV2People({
-    people: args.envelope.people,
-    personNameById: args.personNameById,
-    personLinkKey: args.definition.personLinkKey,
-    groupId,
-    groupLabel: args.definition.v2Key,
-  });
-
-  if (members.length === 0) {
-    throw new Error(
-      `V2 household ${args.definition.v2Key} has no linked members for ${args.definition.groupIdKey}=${groupId}`
-    );
+  } else {
+    // Stored /households payloads can omit explicit entity ids. In that shape there
+    // is only one group object for the entity, so we treat it as containing all people.
+    members = Array.from(args.personNameById.values());
   }
 
   return {
