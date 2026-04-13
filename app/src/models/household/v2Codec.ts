@@ -1,14 +1,9 @@
-import { GROUP_DEFINITIONS, PERSON_META_KEYS } from './schema';
 import type {
   CanonicalGroupSetup,
   CanonicalHouseholdSetup,
   CanonicalPersonSetup,
 } from './canonicalTypes';
-import type {
-  V2CreateHouseholdEnvelope,
-  V2HouseholdEnvelope,
-  V2HouseholdPersonData,
-} from './v2Types';
+import { GROUP_DEFINITIONS, PERSON_META_KEYS } from './schema';
 import {
   flattenEntityValues,
   getCanonicalGroupSetup,
@@ -20,6 +15,11 @@ import {
   SETUP_KEY_BY_APP_KEY,
   wrapEntityValuesForYear,
 } from './utils';
+import type {
+  V2CreateHouseholdEnvelope,
+  V2HouseholdEnvelope,
+  V2HouseholdPersonData,
+} from './v2Types';
 
 function buildCanonicalPeopleFromV2Envelope(args: {
   people: V2HouseholdEnvelope['people'];
@@ -154,9 +154,7 @@ function parseV2Group(args: {
   };
 }
 
-export function parseV2HouseholdEnvelope(
-  envelope: V2HouseholdEnvelope
-): CanonicalHouseholdSetup {
+export function parseV2HouseholdEnvelope(envelope: V2HouseholdEnvelope): CanonicalHouseholdSetup {
   const { people, personNameById } = buildCanonicalPeopleFromV2Envelope({
     people: envelope.people,
     year: envelope.year,

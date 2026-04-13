@@ -22,10 +22,7 @@ import { HouseholdValidation } from '@/utils/HouseholdValidation';
 interface HouseholdBuilderViewProps {
   population: PopulationStateProps;
   countryId: string;
-  onSubmitSuccess: (
-    householdId: string,
-    household: CanonicalHouseholdInputEnvelope
-  ) => void;
+  onSubmitSuccess: (householdId: string, household: CanonicalHouseholdInputEnvelope) => void;
   onBack?: () => void;
 }
 

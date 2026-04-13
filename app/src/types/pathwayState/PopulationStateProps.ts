@@ -1,5 +1,5 @@
-import { Geography } from '@/types/ingredients/Geography';
 import type { CanonicalHouseholdInputEnvelope } from '@/models/household/canonicalTypes';
+import { Geography } from '@/types/ingredients/Geography';
 
 /**
  * PopulationStateProps - Local state interface for population within PathwayWrapper

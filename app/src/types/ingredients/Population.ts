@@ -1,5 +1,5 @@
-import { Geography } from './Geography';
 import type { CanonicalHouseholdInputEnvelope } from '@/models/household/canonicalTypes';
+import { Geography } from './Geography';
 
 /**
  * Population type for Redux state management

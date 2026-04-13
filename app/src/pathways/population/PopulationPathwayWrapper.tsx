@@ -60,10 +60,7 @@ export default function PopulationPathwayWrapper({ onComplete }: PopulationPathw
     StandalonePopulationViewMode.LABEL, // labelMode
     {
       // Custom navigation for standalone pathway: exit to households list
-      onHouseholdComplete: (
-        _householdId: string,
-        _household: CanonicalHouseholdInputEnvelope
-      ) => {
+      onHouseholdComplete: (_householdId: string, _household: CanonicalHouseholdInputEnvelope) => {
         nav.push(`/${countryId}/households`);
         onComplete?.();
       },

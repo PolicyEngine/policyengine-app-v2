@@ -1,16 +1,11 @@
-import type {
-  CanonicalHouseholdSetup,
-  ComparableHousehold,
-} from './canonicalTypes';
+import type { CanonicalHouseholdSetup, ComparableHousehold } from './canonicalTypes';
 import { sortRecordKeysRecursively } from './utils';
 import { buildV2CreateEnvelope } from './v2Codec';
 
-export function buildComparableHousehold(
-  args: {
-    id: string;
-    setup: CanonicalHouseholdSetup;
-  }
-): ComparableHousehold {
+export function buildComparableHousehold(args: {
+  id: string;
+  setup: CanonicalHouseholdSetup;
+}): ComparableHousehold {
   const v2Envelope = buildV2CreateEnvelope(args.setup);
   const comparableData = {
     people: v2Envelope.people,

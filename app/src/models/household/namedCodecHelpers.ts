@@ -80,10 +80,7 @@ export function parseNamedGroupCollection(args: {
   return {
     name: groupName,
     members,
-    values: normalizeCanonicalFieldMap(
-      rawValues,
-      `${args.context}: ${args.groupKey}.${groupName}`
-    ),
+    values: normalizeCanonicalFieldMap(rawValues, `${args.context}: ${args.groupKey}.${groupName}`),
   };
 }
 

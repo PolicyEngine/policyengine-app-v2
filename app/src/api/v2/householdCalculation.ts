@@ -9,8 +9,8 @@
 
 import type {
   V2CreateHouseholdEnvelope,
-  V2HouseholdEnvelope,
   V2HouseholdCalculationPayload,
+  V2HouseholdEnvelope,
   V2HouseholdGroupData,
   V2HouseholdPersonData,
   V2StoredHouseholdEnvelope,
