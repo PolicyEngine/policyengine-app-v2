@@ -1,7 +1,10 @@
-import type { V2HouseholdShape } from '@/api/v2/householdCalculation';
-import type { HouseholdV2CreateRequest } from '@/api/v2/households';
 import { buildGeneratedGroupName, GROUP_DEFINITIONS, PERSON_META_KEYS } from './schema';
-import type { CanonicalHouseholdData, CanonicalHouseholdState, HouseholdV2Source } from './types';
+import type {
+  CanonicalStructuredHouseholdData,
+  CanonicalStructuredHouseholdState,
+} from './canonicalTypes';
+import type { HouseholdV2Source } from './types';
+import type { V2CreateHouseholdEnvelope, V2HouseholdShape } from './v2Types';
 import {
   flattenEntityValues,
   inferYearFromData,
@@ -14,10 +17,10 @@ function buildPeopleFromV2Response(
   people: HouseholdV2Source['people'],
   year: number
 ): {
-  peopleByName: CanonicalHouseholdData['people'];
+  peopleByName: CanonicalStructuredHouseholdData['people'];
   personNameById: Map<number, string>;
 } {
-  const peopleByName: CanonicalHouseholdData['people'] = {};
+  const peopleByName: CanonicalStructuredHouseholdData['people'] = {};
   const personNameById = new Map<number, string>();
   const usedNames = new Set<string>();
 
@@ -79,9 +82,11 @@ function buildGroupMembersFromPeople(args: {
   return members;
 }
 
-export function parseV2HouseholdShape(shape: HouseholdV2Source): CanonicalHouseholdData {
+export function parseV2HouseholdShape(
+  shape: HouseholdV2Source
+): CanonicalStructuredHouseholdData {
   const { peopleByName, personNameById } = buildPeopleFromV2Response(shape.people, shape.year);
-  const groups: CanonicalHouseholdData['groups'] = {};
+  const groups: CanonicalStructuredHouseholdData['groups'] = {};
 
   for (const definition of GROUP_DEFINITIONS) {
     const rawGroup = shape[definition.v2Key];
@@ -130,7 +135,9 @@ export function parseV2HouseholdShape(shape: HouseholdV2Source): CanonicalHouseh
   };
 }
 
-export function buildV2HouseholdShape(state: CanonicalHouseholdState): V2HouseholdShape {
+export function buildV2HouseholdShape(
+  state: CanonicalStructuredHouseholdState
+): V2HouseholdShape {
   const year = state.year ?? inferYearFromData(state.data);
   if (year === null) {
     throw new Error('Household requires a year to convert to v2 shape');
@@ -192,7 +199,9 @@ export function buildV2HouseholdShape(state: CanonicalHouseholdState): V2Househo
   return shape;
 }
 
-export function buildV2CreateRequest(state: CanonicalHouseholdState): HouseholdV2CreateRequest {
+export function buildV2CreateRequest(
+  state: CanonicalStructuredHouseholdState
+): V2CreateHouseholdEnvelope {
   const { id: _ignoredId, ...request } = buildV2HouseholdShape(state);
   return request;
 }

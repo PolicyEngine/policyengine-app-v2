@@ -8,7 +8,10 @@
  */
 
 import type { CountryId } from '@/libs/countries';
-import type { V2HouseholdShape } from './householdCalculation';
+import type {
+  V2CreateHouseholdEnvelope,
+  V2StoredHouseholdEnvelope,
+} from '@/models/household/v2Types';
 import { API_V2_BASE_URL } from './taxBenefitModels';
 import { v2Fetch, v2FetchVoid } from './v2Fetch';
 
@@ -16,30 +19,9 @@ import { v2Fetch, v2FetchVoid } from './v2Fetch';
 // Types for v2 Alpha /households API
 // ============================================================================
 
-/**
- * Response from v2 alpha household endpoints (HouseholdRead schema)
- */
-export interface HouseholdV2Response {
-  id: string; // UUID
-  country_id: CountryId;
-  year: number;
-  label: string | null;
-  people: Record<string, any>[];
-  tax_unit?: Record<string, any> | null;
-  family?: Record<string, any> | null;
-  spm_unit?: Record<string, any> | null;
-  marital_unit?: Record<string, any> | null;
-  household?: Record<string, any> | null;
-  benunit?: Record<string, any> | null;
-  created_at: string;
-  updated_at: string;
-}
+export type HouseholdV2Response = V2StoredHouseholdEnvelope;
 
-/**
- * Request body for creating a household (HouseholdCreate schema).
- * This matches the v2 flat household shape without the stored id.
- */
-export type HouseholdV2CreateRequest = Omit<V2HouseholdShape, 'id'>;
+export type HouseholdV2CreateRequest = V2CreateHouseholdEnvelope;
 
 // ============================================================================
 // API Functions

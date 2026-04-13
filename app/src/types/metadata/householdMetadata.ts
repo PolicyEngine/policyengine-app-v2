@@ -1,45 +1,29 @@
-// Models the GET household api payload
-export interface HouseholdMetadata {
-  id: string;
-  country_id: string;
-  label?: string | null;
-  api_version: string;
-  household_json: HouseholdData;
-  household_hash: string;
-}
+import type {
+  V1HouseholdData,
+  V1HouseholdGroupProperties,
+  V1HouseholdMemberGroup,
+  V1HouseholdMetadataEnvelope,
+  V1HouseholdPersonData,
+} from '@/models/household/v1Types';
 
-// Models a household's json structure that can be reused in GET and POST api payloads
-export interface HouseholdData {
-  people: Record<string, HouseholdPerson>;
-  families: Record<string, MemberGroup>;
-  tax_units: Record<string, MemberGroup>;
-  spm_units: Record<string, MemberGroup>;
-  households: Record<string, MemberGroup & HouseholdProperties>;
-  marital_units: Record<string, MemberGroup & { marital_unit_id?: Record<string, number> }>;
-  // UK-specific structure
-  benunits?: Record<string, MemberGroup & { is_married?: Record<string, boolean> }>;
-}
+/**
+ * Legacy compatibility aliases for the v1 household transport family.
+ *
+ * New household model work should prefer the explicit v1 household types under
+ * `models/household/v1Types`.
+ */
 
-export interface HouseholdPerson {
-  age: Record<string, number>;
-  employment_income?: Record<string, number>;
-  is_tax_unit_dependent?: Record<string, boolean>;
-}
+/** @deprecated Prefer `V1HouseholdMetadataEnvelope`. */
+export type HouseholdMetadata = V1HouseholdMetadataEnvelope;
 
-export interface MemberGroup {
-  members: string[];
-}
+/** @deprecated Prefer `V1HouseholdData`. */
+export type HouseholdData = V1HouseholdData;
 
-// Extended household properties to support dynamic fields
-export interface HouseholdProperties {
-  // US fields
-  state_name?: Record<string, string>;
+/** @deprecated Prefer `V1HouseholdPersonData`. */
+export type HouseholdPerson = V1HouseholdPersonData;
 
-  // UK fields
-  brma?: Record<string, string>;
-  region?: Record<string, string>;
-  local_authority?: Record<string, string>;
+/** @deprecated Prefer `V1HouseholdMemberGroup`. */
+export type MemberGroup = V1HouseholdMemberGroup;
 
-  // Allow for other dynamic fields based on basicInputs
-  [key: string]: Record<string, string | number | boolean> | string[] | undefined;
-}
+/** @deprecated Prefer `V1HouseholdGroupProperties`. */
+export type HouseholdProperties = V1HouseholdGroupProperties;

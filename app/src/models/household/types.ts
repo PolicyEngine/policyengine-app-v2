@@ -1,70 +1,65 @@
-import type { V2HouseholdShape } from '@/api/v2/householdCalculation';
-import type { HouseholdV2Response } from '@/api/v2/households';
-import type { CountryId } from '@/libs/countries';
-import type { HouseholdData as IngredientHouseholdData } from '@/types/ingredients/Household';
-import type { HouseholdMetadata } from '@/types/metadata/householdMetadata';
-import type { HouseholdCreationPayload } from '@/types/payloads';
-import type { HouseholdGroupAppKey } from './schema';
+import type {
+  CanonicalHouseholdInputData,
+  CanonicalHouseholdInputEnvelope,
+  CanonicalStructuredEntityValues,
+  CanonicalStructuredGroup,
+  CanonicalStructuredHouseholdData,
+  CanonicalStructuredHouseholdState,
+  ComparableHousehold,
+  HouseholdModelData,
+} from './canonicalTypes';
+import type {
+  V1HouseholdCreateEnvelope,
+  V1HouseholdData,
+  V1HouseholdMetadataEnvelope,
+} from './v1Types';
+import type {
+  V2HouseholdShape,
+  V2StoredHouseholdEnvelope,
+} from './v2Types';
 
-export interface HouseholdModelData {
-  id: string;
-  countryId: CountryId;
-  label: string | null;
-  year: number | null;
-  data: IngredientHouseholdData;
-}
+export type { ComparableHousehold, HouseholdModelData } from './canonicalTypes';
+export type {
+  CanonicalGroupSetup,
+  CanonicalHouseholdInputData,
+  CanonicalHouseholdInputEnvelope,
+  CanonicalHouseholdInputGroup,
+  CanonicalHouseholdInputPerson,
+  CanonicalHouseholdSetup,
+  CanonicalPersonSetup,
+} from './canonicalTypes';
+export type {
+  V1HouseholdCreateEnvelope,
+  V1HouseholdData,
+  V1HouseholdGroupData,
+  V1HouseholdGroupProperties,
+  V1HouseholdMemberGroup,
+  V1HouseholdMetadataEnvelope,
+  V1HouseholdPersonData,
+} from './v1Types';
+export type {
+  V2CreateHouseholdEnvelope,
+  V2HouseholdCalculationPayload,
+  V2HouseholdData,
+  V2HouseholdGroupData,
+  V2HouseholdPersonData,
+  V2HouseholdShape,
+  V2StoredHouseholdEnvelope,
+} from './v2Types';
 
-export interface ComparableHousehold {
-  id: string;
-  countryId: CountryId;
-  year: number | null;
-  label: string | null;
-  data: Record<string, unknown>;
-}
-
-export interface HouseholdInput {
-  id?: string;
-  countryId: CountryId;
-  householdData: IngredientHouseholdData;
-  label?: string | null;
-  year?: number | null;
-}
-
-export type CanonicalEntityValues = Record<string, unknown>;
-
-export interface CanonicalGroup {
-  name: string;
-  members: string[];
-  values: CanonicalEntityValues;
-}
-
-export interface CanonicalHouseholdData {
-  people: Record<string, CanonicalEntityValues>;
-  groups: Partial<Record<HouseholdGroupAppKey, CanonicalGroup>>;
-}
-
-export interface CanonicalHouseholdState {
-  id: string;
-  countryId: CountryId;
-  label: string | null;
-  year: number | null;
-  data: CanonicalHouseholdData;
-}
-
-export interface HouseholdV2Source {
-  id: string;
-  country_id: string;
-  year: number;
-  label?: string | null;
-  people: HouseholdV2Response['people'];
-  tax_unit?: HouseholdV2Response['tax_unit'];
-  family?: HouseholdV2Response['family'];
-  spm_unit?: HouseholdV2Response['spm_unit'];
-  marital_unit?: HouseholdV2Response['marital_unit'];
-  household?: HouseholdV2Response['household'];
-  benunit?: HouseholdV2Response['benunit'];
-}
-
-export type HouseholdV1PayloadData = HouseholdCreationPayload['data'];
-export type HouseholdV1Metadata = HouseholdMetadata;
+// Transitional aliases used by the current household implementation.
+export type HouseholdInput = CanonicalHouseholdInputEnvelope;
+export type CanonicalEntityValues = CanonicalStructuredEntityValues;
+export type CanonicalGroup = CanonicalStructuredGroup;
+export type CanonicalHouseholdData = CanonicalStructuredHouseholdData;
+export type CanonicalHouseholdState = CanonicalStructuredHouseholdState;
+export type HouseholdV2Source = V2StoredHouseholdEnvelope | V2HouseholdShape;
+export type HouseholdV1PayloadData = V1HouseholdData;
+export type HouseholdV1Metadata = V1HouseholdMetadataEnvelope;
 export type HouseholdComparableShape = V2HouseholdShape;
+
+// Transitional aliases to keep the current model/codecs stable while the taxonomy
+// becomes explicit in follow-up commits.
+export type LegacyHouseholdModelData = HouseholdModelData;
+export type LegacyHouseholdInputData = CanonicalHouseholdInputData;
+export type LegacyV1HouseholdCreateEnvelope = V1HouseholdCreateEnvelope;

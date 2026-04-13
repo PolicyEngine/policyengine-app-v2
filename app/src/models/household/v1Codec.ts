@@ -1,15 +1,21 @@
-import type { HouseholdData as IngredientHouseholdData } from '@/types/ingredients/Household';
-import type { HouseholdCreationPayload } from '@/types/payloads';
 import {
   getGroupDefinitionByAppKey,
   GROUP_DEFINITIONS,
   KNOWN_APP_ENTITY_KEYS,
   KNOWN_V1_ENTITY_KEYS,
 } from './schema';
-import type { CanonicalGroup, CanonicalHouseholdData, HouseholdV1PayloadData } from './types';
+import type {
+  CanonicalHouseholdInputData,
+  CanonicalStructuredGroup,
+  CanonicalStructuredHouseholdData,
+} from './canonicalTypes';
+import type { V1HouseholdCreateEnvelope, V1HouseholdData } from './v1Types';
 import { cloneValue, isRecord } from './utils';
 
-function parsePeople(rawPeople: unknown, context: string): CanonicalHouseholdData['people'] {
+function parsePeople(
+  rawPeople: unknown,
+  context: string
+): CanonicalStructuredHouseholdData['people'] {
   if (rawPeople === undefined) {
     return {};
   }
@@ -34,7 +40,7 @@ function parseGroup(
   context: string,
   groupKey: string,
   peopleNames: Set<string>
-): CanonicalGroup | undefined {
+): CanonicalStructuredGroup | undefined {
   if (rawGroupCollection === undefined) {
     return undefined;
   }
@@ -80,8 +86,8 @@ function parseGroup(
 }
 
 export function parseAppHouseholdData(
-  householdData: IngredientHouseholdData
-): CanonicalHouseholdData {
+  householdData: CanonicalHouseholdInputData
+): CanonicalStructuredHouseholdData {
   const rawData = householdData as Record<string, unknown>;
   const unknownKeys = Object.keys(rawData).filter((key) => !KNOWN_APP_ENTITY_KEYS.has(key));
 
@@ -91,7 +97,7 @@ export function parseAppHouseholdData(
 
   const people = parsePeople(rawData.people, 'Household input');
   const peopleNames = new Set(Object.keys(people));
-  const groups: CanonicalHouseholdData['groups'] = {};
+  const groups: CanonicalStructuredHouseholdData['groups'] = {};
 
   for (const definition of GROUP_DEFINITIONS) {
     const parsedGroup = parseGroup(
@@ -110,8 +116,8 @@ export function parseAppHouseholdData(
 }
 
 export function parseV1HouseholdData(
-  householdData: HouseholdV1PayloadData
-): CanonicalHouseholdData {
+  householdData: V1HouseholdData
+): CanonicalStructuredHouseholdData {
   const rawData = householdData as Record<string, unknown>;
   const unknownKeys = Object.keys(rawData).filter((key) => !KNOWN_V1_ENTITY_KEYS.has(key));
 
@@ -121,7 +127,7 @@ export function parseV1HouseholdData(
 
   const people = parsePeople(rawData.people, 'V1 household payload');
   const peopleNames = new Set(Object.keys(people));
-  const groups: CanonicalHouseholdData['groups'] = {};
+  const groups: CanonicalStructuredHouseholdData['groups'] = {};
 
   for (const definition of GROUP_DEFINITIONS) {
     const parsedGroup = parseGroup(
@@ -139,7 +145,9 @@ export function parseV1HouseholdData(
   return { people, groups };
 }
 
-function buildGroupCollection(group: CanonicalGroup): Record<string, Record<string, unknown>> {
+function buildGroupCollection(
+  group: CanonicalStructuredGroup
+): Record<string, Record<string, unknown>> {
   return {
     [group.name]: {
       members: cloneValue(group.members),
@@ -148,7 +156,9 @@ function buildGroupCollection(group: CanonicalGroup): Record<string, Record<stri
   };
 }
 
-export function buildAppHouseholdData(data: CanonicalHouseholdData): IngredientHouseholdData {
+export function buildAppHouseholdData(
+  data: CanonicalStructuredHouseholdData
+): CanonicalHouseholdInputData {
   const householdData: Record<string, unknown> = {
     people: cloneValue(data.people),
   };
@@ -166,10 +176,12 @@ export function buildAppHouseholdData(data: CanonicalHouseholdData): IngredientH
     householdData[definition.appKey] = buildGroupCollection(group);
   }
 
-  return householdData as IngredientHouseholdData;
+  return householdData as CanonicalHouseholdInputData;
 }
 
-export function buildV1PayloadData(data: CanonicalHouseholdData): HouseholdCreationPayload['data'] {
+export function buildV1PayloadData(
+  data: CanonicalStructuredHouseholdData
+): V1HouseholdCreateEnvelope['data'] {
   const payloadData: Record<string, unknown> = {
     people: cloneValue(data.people),
   };
@@ -187,5 +199,5 @@ export function buildV1PayloadData(data: CanonicalHouseholdData): HouseholdCreat
     payloadData[definition.v1Key] = buildGroupCollection(group);
   }
 
-  return payloadData as HouseholdCreationPayload['data'];
+  return payloadData as V1HouseholdCreateEnvelope['data'];
 }

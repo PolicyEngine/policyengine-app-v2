@@ -1,5 +1,5 @@
 import { countryIds, type CountryId } from '@/libs/countries';
-import type { CanonicalEntityValues } from './types';
+import type { CanonicalStructuredEntityValues } from './canonicalTypes';
 
 export function cloneValue<T>(value: T): T {
   if (typeof structuredClone === 'function') {
@@ -91,7 +91,7 @@ export function wrapForYear(value: unknown, year: number): unknown {
 }
 
 export function flattenEntityValues(
-  values: CanonicalEntityValues,
+  values: CanonicalStructuredEntityValues,
   preferredYear: number | null
 ): Record<string, unknown> {
   const flattened: Record<string, unknown> = {};
@@ -109,8 +109,8 @@ export function flattenEntityValues(
 export function wrapEntityValuesForYear(
   values: Record<string, unknown>,
   year: number
-): CanonicalEntityValues {
-  const wrapped: CanonicalEntityValues = {};
+): CanonicalStructuredEntityValues {
+  const wrapped: CanonicalStructuredEntityValues = {};
 
   for (const [key, value] of Object.entries(values)) {
     if (value === undefined) {

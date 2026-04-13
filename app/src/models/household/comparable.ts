@@ -1,8 +1,13 @@
-import type { CanonicalHouseholdState, ComparableHousehold } from './types';
+import type {
+  CanonicalStructuredHouseholdState,
+  ComparableHousehold,
+} from './canonicalTypes';
 import { sortRecordKeysRecursively } from './utils';
 import { buildV2HouseholdShape } from './v2Codec';
 
-export function buildComparableHousehold(state: CanonicalHouseholdState): ComparableHousehold {
+export function buildComparableHousehold(
+  state: CanonicalStructuredHouseholdState
+): ComparableHousehold {
   const v2Shape = buildV2HouseholdShape(state);
   const comparableData = {
     people: v2Shape.people,

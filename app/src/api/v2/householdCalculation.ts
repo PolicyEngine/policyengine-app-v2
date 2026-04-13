@@ -7,45 +7,18 @@
  * Note: Variation/axes calculations are NOT supported in v2 alpha and remain on v1.
  */
 
-import type { CountryId } from '@/libs/countries';
+import type {
+  V2HouseholdCalculationPayload,
+  V2HouseholdGroupData,
+  V2HouseholdPersonData,
+  V2HouseholdShape,
+} from '@/models/household/v2Types';
 import { API_V2_BASE_URL } from './taxBenefitModels';
 import { cancellableSleep, v2Fetch } from './v2Fetch';
 
-/**
- * V2-specific flat household shape used by calculation endpoints.
- * This is the v2 API's native format — conversion from the app's
- * internal Household type happens in the adapter layer (Phase 2).
- */
-export interface V2HouseholdShape {
-  id?: string;
-  country_id: CountryId;
-  year: number;
-  label?: string | null;
-  people: Record<string, any>[];
-  tax_unit?: Record<string, any> | null;
-  family?: Record<string, any> | null;
-  spm_unit?: Record<string, any> | null;
-  marital_unit?: Record<string, any> | null;
-  household?: Record<string, any> | null;
-  benunit?: Record<string, any> | null;
-}
+export type { V2HouseholdShape };
 
-/**
- * Payload sent to POST /household/calculate
- */
-export interface HouseholdCalculatePayload {
-  country_id: CountryId;
-  year: number;
-  people: Record<string, any>[];
-  tax_unit?: Record<string, any> | null;
-  family?: Record<string, any> | null;
-  spm_unit?: Record<string, any> | null;
-  marital_unit?: Record<string, any> | null;
-  household?: Record<string, any> | null;
-  benunit?: Record<string, any> | null;
-  policy_id?: string;
-  dynamic_id?: string;
-}
+export type HouseholdCalculatePayload = V2HouseholdCalculationPayload;
 
 function householdToCalculatePayload(
   household: V2HouseholdShape,
@@ -95,13 +68,13 @@ export interface HouseholdJobStatusResponse {
  * Calculation result structure from v2 alpha
  */
 export interface HouseholdCalculationResult {
-  person: Record<string, any>[];
-  benunit?: Record<string, any>[] | null;
-  marital_unit?: Record<string, any>[] | null;
-  family?: Record<string, any>[] | null;
-  spm_unit?: Record<string, any>[] | null;
-  tax_unit?: Record<string, any>[] | null;
-  household: Record<string, any>[];
+  person: V2HouseholdPersonData[];
+  benunit?: V2HouseholdGroupData[] | null;
+  marital_unit?: V2HouseholdGroupData[] | null;
+  family?: V2HouseholdGroupData[] | null;
+  spm_unit?: V2HouseholdGroupData[] | null;
+  tax_unit?: V2HouseholdGroupData[] | null;
+  household: V2HouseholdGroupData[];
 }
 
 // ============================================================================
