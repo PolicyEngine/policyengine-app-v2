@@ -65,6 +65,18 @@ describe('MarkdownFormatter', () => {
       // Then
       expect(screen.getByRole('list')).toBeInTheDocument();
     });
+
+    test('given raw HTML markdown then does not render raw elements', () => {
+      // Given
+      const markdown = 'Paragraph before HTML.\n\n<img src="x" alt="malicious" onerror="alert(1)" />';
+
+      // When
+      render(<MarkdownFormatter markdown={markdown} />);
+
+      // Then
+      expect(screen.getByText('Paragraph before HTML.')).toBeInTheDocument();
+      expect(screen.queryByRole('img', { name: 'malicious' })).toBeNull();
+    });
   });
 
   describe('FootnotesSection component', () => {
@@ -137,6 +149,26 @@ describe('MarkdownFormatter', () => {
         'href',
         'https://two.com'
       );
+    });
+
+    test('given footnote with javascript href then keeps text but not a link', () => {
+      // Given
+      const footnotes = {
+        1: 'Read the [source](javascript:alert) before trusting it.',
+      };
+
+      // When
+      render(<FootnotesSection footnotes={footnotes} />);
+
+      // Then
+      expect(
+        screen.getByText(
+          (_, element) =>
+            element?.tagName.toLowerCase() === 'li' &&
+            element.textContent?.includes('Read the source before trusting it.') === true
+        )
+      ).toBeInTheDocument();
+      expect(screen.queryByRole('link', { name: 'source' })).toBeNull();
     });
   });
 });
