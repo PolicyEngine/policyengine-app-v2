@@ -455,7 +455,7 @@ function FilterSection({
                 minWidth: "20px",
                 height: "20px",
                 borderRadius: "10px",
-                backgroundColor: colors.primary[500],
+                backgroundColor: colors.primary[600],
                 color: colors.white,
                 fontSize: "11px",
                 fontWeight: typography.fontWeight.bold,
@@ -511,12 +511,11 @@ function CheckboxRow({
   onChange: () => void;
   indented?: boolean;
 }) {
+  const labelId = `${id}-label`;
+
   return (
-    <div
-      role="button"
-      tabIndex={0}
-      onClick={onChange}
-      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onChange(); } }}
+    <label
+      htmlFor={id}
       style={{
         display: "flex",
         alignItems: "center",
@@ -527,9 +526,7 @@ function CheckboxRow({
         transition: "background-color 0.1s ease",
         cursor: "pointer",
         background: "transparent",
-        border: "none",
         width: "100%",
-        textAlign: "left",
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.backgroundColor = colors.gray[50];
@@ -541,11 +538,11 @@ function CheckboxRow({
       <Checkbox
         id={id}
         checked={checked}
-        tabIndex={-1}
-        onCheckedChange={onChange}
-        onClick={(e: React.MouseEvent) => e.stopPropagation()}
+        aria-labelledby={labelId}
+        onCheckedChange={() => onChange()}
       />
       <span
+        id={labelId}
         style={{
           fontSize: "13.5px",
           fontFamily: typography.fontFamily.primary,
@@ -559,7 +556,7 @@ function CheckboxRow({
       >
         {label}
       </span>
-    </div>
+    </label>
   );
 }
 

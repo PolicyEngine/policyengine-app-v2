@@ -46,6 +46,40 @@ describe('IngredientReadView', () => {
     expect(screen.getByText(/no policy found/i)).toBeInTheDocument();
   });
 
+  test('given custom empty state then renders it instead of the default message', () => {
+    render(
+      <IngredientReadView
+        ingredient={MOCK_INGREDIENT.NAME}
+        title={MOCK_INGREDIENT.TITLE}
+        subtitle={MOCK_INGREDIENT.SUBTITLE}
+        emptyState={<div>Start by creating your first analysis.</div>}
+        isLoading={false}
+        isError={false}
+        data={EMPTY_DATA}
+        columns={MOCK_COLUMNS}
+      />
+    );
+
+    expect(screen.getByText(/start by creating your first analysis/i)).toBeInTheDocument();
+    expect(screen.queryByText(/no policy found/i)).not.toBeInTheDocument();
+  });
+
+  test('given title then renders it only once', () => {
+    render(
+      <IngredientReadView
+        ingredient={MOCK_INGREDIENT.NAME}
+        title={MOCK_INGREDIENT.TITLE}
+        subtitle={MOCK_INGREDIENT.SUBTITLE}
+        isLoading={false}
+        isError={false}
+        data={MOCK_DATA}
+        columns={MOCK_COLUMNS}
+      />
+    );
+
+    expect(screen.getAllByText(MOCK_INGREDIENT.TITLE)).toHaveLength(1);
+  });
+
   test('given loading state then displays loader', () => {
     // When
     render(

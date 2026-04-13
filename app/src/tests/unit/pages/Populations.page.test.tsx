@@ -92,7 +92,7 @@ describe('PopulationsPage', () => {
 
       // Then
       expect(
-        screen.getByRole('heading', { name: 'Your saved households', level: 2 })
+        screen.getByRole('heading', { name: 'Your saved households', level: 1 })
       ).toBeInTheDocument();
       expect(screen.getByText(POPULATION_LABELS.PAGE_SUBTITLE)).toBeInTheDocument();
     });
@@ -445,7 +445,7 @@ describe('PopulationsPage', () => {
       // Then
       // The component should render successfully without connections column
       expect(
-        screen.getByRole('heading', { name: 'Your saved households', level: 2 })
+        screen.getByRole('heading', { name: 'Your saved households', level: 1 })
       ).toBeInTheDocument();
       // Verify data is displayed correctly
       expect(screen.getByText(POPULATION_LABELS.HOUSEHOLD_1)).toBeInTheDocument();

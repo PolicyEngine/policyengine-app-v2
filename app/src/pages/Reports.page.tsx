@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { IconSettings } from '@tabler/icons-react';
+import { IconArrowRight, IconSettings } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import {
   BulletsValue,
@@ -12,9 +12,10 @@ import { RenameIngredientModal } from '@/components/common/RenameIngredientModal
 import IngredientReadView from '@/components/IngredientReadView';
 import { MultiSimOutputTypeCell } from '@/components/report/MultiSimReportOutputTypeCell';
 import { ReportOutputTypeCell } from '@/components/report/ReportOutputTypeCell';
-import { Stack } from '@/components/ui';
+import { Button, Group, Stack, Text, Title } from '@/components/ui';
 import { MOCK_USER_ID } from '@/constants';
 import { useAppNavigate } from '@/contexts/NavigationContext';
+import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useDisclosure } from '@/hooks/useDisclosure';
 import { useUpdateReportAssociation } from '@/hooks/useUserReportAssociations';
@@ -49,6 +50,10 @@ export default function ReportsPage() {
   const handleBuildReport = () => {
     const targetPath = `/${countryId}/reports/create`;
     nav.push(targetPath);
+  };
+
+  const handleBuildHousehold = () => {
+    nav.push(`/${countryId}/households/create?scope=household`);
   };
 
   const handleCloseRename = () => {
@@ -205,13 +210,46 @@ export default function ReportsPage() {
     [data, countryId, currentLawId]
   );
 
+  const emptyState = (
+    <Stack className="tw:items-center tw:text-center" gap="md">
+      <Title
+        order={3}
+        style={{
+          fontSize: typography.fontSize.xl,
+          fontWeight: typography.fontWeight.semibold,
+          color: colors.text.title,
+        }}
+      >
+        No saved analyses yet
+      </Title>
+      <Text style={{ color: colors.text.secondary, maxWidth: '38rem', lineHeight: 1.65 }}>
+        Start with a household calculation if you want an immediate answer for one family, or build
+        a population-wide report for national, state, or district analysis.
+      </Text>
+      <Group className="tw:flex-wrap tw:justify-center" style={{ marginTop: spacing.sm }}>
+        <Button onClick={handleBuildHousehold}>
+          Start household calculation
+          <IconArrowRight size={16} />
+        </Button>
+        <Button variant="outline" onClick={handleBuildReport}>
+          Build population report
+        </Button>
+      </Group>
+      <Text size="sm" style={{ color: colors.text.secondary }}>
+        Saved work stays in this browser unless you create a share link from report output.
+      </Text>
+    </Stack>
+  );
+
   return (
     <>
       <Stack gap="md">
         <IngredientReadView
           ingredient="report"
-          title="Your saved reports"
-          subtitle="Generate comprehensive impact analyses comparing tax policy scenarios. Reports show distributional effects, budget impacts, and poverty outcomes across demographics"
+          title="Saved analyses"
+          subtitle="Build household calculations and population-wide reports for poverty, net income, taxes, and benefit impacts."
+          buttonLabel="New analysis"
+          emptyState={emptyState}
           onBuild={handleBuildReport}
           isLoading={isLoading}
           isError={isError}

@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "PolicyEngine Calculator",
+  title: "PolicyEngine Poverty Calculator",
   description:
-    "Calculate your taxes and benefits, create policy simulations, and analyze reform impacts.",
+    "Run household poverty calculations, build policy reports, and analyze taxes, benefits, and reform impacts.",
 };
 
 export default function RootLayout({

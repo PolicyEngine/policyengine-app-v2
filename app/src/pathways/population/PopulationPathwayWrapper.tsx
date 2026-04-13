@@ -5,10 +5,11 @@
  * Reuses shared views from the report pathway with mode="standalone".
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import StandardLayout from '@/components/StandardLayout';
 import { CURRENT_YEAR } from '@/constants';
+import { useAppLocation } from '@/contexts/LocationContext';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { ReportYearProvider } from '@/contexts/ReportYearContext';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
@@ -24,6 +25,7 @@ import HouseholdBuilderView from '../report/views/population/HouseholdBuilderVie
 import PopulationLabelView from '../report/views/population/PopulationLabelView';
 // Population views (reusing from report pathway)
 import PopulationScopeView from '../report/views/population/PopulationScopeView';
+import { getPopulationLaunchPrefill } from './launchPrefill';
 
 interface PopulationPathwayWrapperProps {
   onComplete?: () => void;
@@ -32,6 +34,8 @@ interface PopulationPathwayWrapperProps {
 export default function PopulationPathwayWrapper({ onComplete }: PopulationPathwayWrapperProps) {
   const countryId = useCurrentCountry();
   const nav = useAppNavigate();
+  const location = useAppLocation();
+  const hasAppliedLaunchPrefill = useRef(false);
 
   const handleCancel = useCallback(() => {
     nav.push(`/${countryId}/households`);
@@ -82,6 +86,19 @@ export default function PopulationPathwayWrapper({ onComplete }: PopulationPathw
       nav.push(`/${countryId}/households`);
     }
   }, [isValidMode, currentMode, nav, countryId]);
+
+  useEffect(() => {
+    if (hasAppliedLaunchPrefill.current || currentMode !== StandalonePopulationViewMode.SCOPE) {
+      return;
+    }
+
+    if (getPopulationLaunchPrefill(location.search) !== 'household') {
+      return;
+    }
+
+    hasAppliedLaunchPrefill.current = true;
+    populationCallbacks.handleScopeSelected(null, 'household');
+  }, [currentMode, location.search, populationCallbacks]);
 
   // ========== VIEW RENDERING ==========
   let currentView: React.ReactElement;
