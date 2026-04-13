@@ -1,6 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { Household } from '@/models/Household';
-import { store } from '@/store';
 import {
   createMockEmptyHouseholdData,
   createMockHouseholdData,
@@ -12,30 +11,12 @@ import {
   TEST_HOUSEHOLD_LABEL,
 } from '@/tests/fixtures/models/shared';
 import {
-  mockEntityMetadata,
   mockHouseholdMetadata,
   mockHouseholdMetadataWithUnknownEntity,
 } from '@/tests/fixtures/models/v1HouseholdMocks';
 
-vi.mock('@/store', () => ({
-  store: {
-    getState: vi.fn(),
-  },
-}));
-
 describe('Household', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    vi.spyOn(console, 'warn').mockImplementation(() => {});
-
-    (store.getState as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
-      metadata: {
-        entities: mockEntityMetadata,
-      },
-    });
-  });
-
-  describe('constructor and basic accessors', () => {
+  describe('constructor and accessors', () => {
     it('stores the core household fields', () => {
       const household = new Household(createMockHouseholdData());
 
@@ -46,15 +27,7 @@ describe('Household', () => {
       expect(household.data).toHaveProperty('taxUnits');
     });
 
-    it('supports updating the label', () => {
-      const household = new Household(createMockHouseholdData());
-
-      household.label = 'Renamed household';
-
-      expect(household.label).toBe('Renamed household');
-    });
-
-    it('returns people, person count, and names from the app household shape', () => {
+    it('returns people, person count, and names from the canonical household shape', () => {
       const household = new Household(createMockHouseholdData());
 
       expect(household.people).toEqual({
@@ -73,13 +46,32 @@ describe('Household', () => {
       expect(household.personNames).toEqual([]);
     });
 
-    it('can clone itself with a new id or label', () => {
+    it('creates immutable copies when changing ids or labels', () => {
       const household = new Household(createMockHouseholdData());
 
       expect(household.withId('new-id').id).toBe('new-id');
       expect(household.withLabel('Renamed household').label).toBe('Renamed household');
       expect(household.id).toBe(TEST_HOUSEHOLD_ID);
       expect(household.label).toBe(TEST_HOUSEHOLD_LABEL);
+    });
+
+    it('rejects multiple groups of the same type at construction time', () => {
+      expect(
+        () =>
+          new Household(
+            createMockHouseholdData({
+              data: {
+                people: {
+                  adult: { age: { 2026: 35 } },
+                },
+                taxUnits: {
+                  taxUnit1: { members: ['adult'] },
+                  taxUnit2: { members: ['adult'] },
+                },
+              },
+            })
+          )
+      ).toThrow('expected at most one taxUnits entry');
     });
   });
 
@@ -100,13 +92,10 @@ describe('Household', () => {
       });
     });
 
-    it('keeps unknown entities and logs a warning', () => {
-      const household = Household.fromV1Metadata(mockHouseholdMetadataWithUnknownEntity);
-
-      expect(console.warn).toHaveBeenCalledWith(
-        'Entity "unknown_entity" not found in metadata, including anyway'
+    it('rejects unknown entities instead of silently accepting them', () => {
+      expect(() => Household.fromV1Metadata(mockHouseholdMetadataWithUnknownEntity)).toThrow(
+        'Unsupported household entities in v1 payload: unknown_entity'
       );
-      expect(household.data).toHaveProperty('unknownEntity');
     });
   });
 
@@ -187,6 +176,27 @@ describe('Household', () => {
         },
       });
     });
+
+    it('rejects v2 groups that do not link back to any people', () => {
+      expect(() =>
+        Household.fromV2Response(
+          createMockHouseholdV2Response({
+            people: [
+              {
+                name: 'adult',
+                person_id: 0,
+                age: 35,
+              },
+            ],
+            tax_unit: { tax_unit_id: 0 },
+            family: null,
+            spm_unit: null,
+            marital_unit: null,
+            household: null,
+          })
+        )
+      ).toThrow('V2 household tax_unit has no linked members');
+    });
   });
 
   describe('toV1CreationPayload', () => {
@@ -216,32 +226,6 @@ describe('Household', () => {
         },
       });
     });
-
-    it('falls back to snake_case and warns for unknown entities', () => {
-      const household = Household.fromDraft({
-        countryId: 'us',
-        householdData: {
-          people: {},
-          customEntity: {
-            entity1: { custom_field: 'value' },
-          },
-        },
-      });
-
-      expect(household.toV1CreationPayload()).toEqual({
-        country_id: 'us',
-        data: {
-          people: {},
-          custom_entity: {
-            entity1: { custom_field: 'value' },
-          },
-        },
-        label: undefined,
-      });
-      expect(console.warn).toHaveBeenCalledWith(
-        'Entity "customEntity" not found in metadata, using snake_case "custom_entity"'
-      );
-    });
   });
 
   describe('toV2Shape', () => {
@@ -255,6 +239,7 @@ describe('Household', () => {
         label: TEST_HOUSEHOLD_LABEL,
         people: [
           {
+            name: 'adult',
             person_id: 0,
             person_household_id: 0,
             person_family_id: 0,
@@ -264,6 +249,7 @@ describe('Household', () => {
             employment_income: 50000,
           },
           {
+            name: 'child',
             person_id: 1,
             person_household_id: 0,
             person_family_id: 0,
@@ -305,6 +291,7 @@ describe('Household', () => {
         label: TEST_HOUSEHOLD_LABEL,
         people: [
           {
+            name: 'adult',
             person_id: 0,
             person_household_id: 0,
             person_family_id: 0,
@@ -314,6 +301,7 @@ describe('Household', () => {
             employment_income: 50000,
           },
           {
+            name: 'child',
             person_id: 1,
             person_household_id: 0,
             person_family_id: 0,
@@ -360,6 +348,7 @@ describe('Household', () => {
             {
               age: 35,
               employment_income: 50000,
+              name: 'adult',
               person_family_id: 0,
               person_household_id: 0,
               person_id: 0,
@@ -368,6 +357,7 @@ describe('Household', () => {
             },
             {
               age: 8,
+              name: 'child',
               person_family_id: 0,
               person_household_id: 0,
               person_id: 1,

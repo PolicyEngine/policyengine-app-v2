@@ -1,18 +1,13 @@
 // Import auth hook here in future; for now, mocked out below
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
-import { createHousehold, fetchHouseholdById } from '@/api/household';
+import { fetchHouseholdById } from '@/api/household';
+import type { UserHouseholdStore } from '@/api/householdAssociation';
+import { replaceHouseholdBaseForAssociation as replaceHouseholdBaseForAssociationAction } from '@/hooks/household/replaceHouseholdBaseForAssociation';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import {
-  shadowCreateHousehold,
-  shadowUpdateUserHouseholdAssociation,
-} from '@/libs/migration/householdShadow';
+import { shadowUpdateUserHouseholdAssociation } from '@/libs/migration/householdShadow';
 import { Household, type HouseholdInput } from '@/models/Household';
 import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
-import {
-  ApiHouseholdStore,
-  LocalStorageHouseholdStore,
-  type UserHouseholdStore,
-} from '../api/householdAssociation';
+import { ApiHouseholdStore, LocalStorageHouseholdStore } from '../api/householdAssociation';
 import { queryConfig } from '../libs/queryConfig';
 import { householdAssociationKeys, householdKeys } from '../libs/queryKeys';
 
@@ -83,35 +78,10 @@ export async function replaceHouseholdBaseForAssociation(args: {
   nextHousehold: HouseholdInput;
   store?: Pick<UserHouseholdStore, 'update'>;
 }): Promise<UserHouseholdPopulation> {
-  const { association, nextHousehold } = args;
-  const store = args.store ?? localHouseholdStore;
-
-  if (!association.id) {
-    throw new Error(
-      'Household association must have an id before its base household can be replaced'
-    );
-  }
-
-  const nextHouseholdModel = Household.fromInput({
-    ...nextHousehold,
-    label: nextHousehold.id ? null : (association.label ?? null),
+  return replaceHouseholdBaseForAssociationAction({
+    ...args,
+    store: args.store ?? localHouseholdStore,
   });
-  const payload = nextHouseholdModel.toV1CreationPayload();
-  const createdHousehold = await createHousehold(payload);
-  const nextHouseholdId = String(createdHousehold.result.household_id);
-  const updatedAssociation = await store.update(association.id, {
-    householdId: nextHouseholdId,
-  });
-
-  void (async () => {
-    const persistedHousehold = nextHouseholdModel
-      .withId(nextHouseholdId)
-      .withLabel(updatedAssociation.label ?? association.label ?? null);
-    const v2HouseholdId = await shadowCreateHousehold(nextHouseholdId, persistedHousehold);
-    await shadowUpdateUserHouseholdAssociation(updatedAssociation, v2HouseholdId ?? undefined);
-  })();
-
-  return updatedAssociation;
 }
 
 export const useUpdateHouseholdAssociation = () => {

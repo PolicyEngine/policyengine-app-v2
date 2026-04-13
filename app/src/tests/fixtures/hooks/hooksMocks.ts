@@ -172,6 +172,9 @@ export const mockHouseholdCreationPayload: HouseholdCreationPayload = {
       person1: {
         age: { [CURRENT_YEAR]: TEST_VALUES.AGE },
       },
+      person2: {
+        age: { [CURRENT_YEAR]: TEST_VALUES.AGE - 2 },
+      },
     },
     tax_units: {
       unit1: {
