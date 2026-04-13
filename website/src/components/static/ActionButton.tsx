@@ -40,9 +40,9 @@ export default function ActionButton({
       hoverBorder: colors.black,
     },
     secondary: {
-      backgroundColor: colors.primary[500],
+      backgroundColor: colors.primary[600],
       color: colors.white,
-      border: `2px solid ${colors.primary[500]}`,
+      border: `2px solid ${colors.primary[600]}`,
       hoverBackground: colors.primary[600],
       hoverBorder: colors.primary[600],
     },

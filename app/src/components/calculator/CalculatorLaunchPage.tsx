@@ -4,23 +4,42 @@ import { WEBSITE_URL } from '@/constants';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import type { CountryId } from '@/libs/countries';
 
 type SupportedCountry = 'us' | 'uk';
+type LaunchContent = {
+  eyebrow: string;
+  title: string;
+  subtitle: string;
+  householdCta: string;
+  reportCta: string;
+  householdDescription: string;
+  reportDescription: string;
+  outputs: string[];
+  explainer: string;
+};
 
-const LAUNCH_CONTENT: Record<
-  SupportedCountry,
-  {
-    eyebrow: string;
-    title: string;
-    subtitle: string;
-    householdCta: string;
-    reportCta: string;
-    householdDescription: string;
-    reportDescription: string;
-    outputs: string[];
-    explainer: string;
-  }
-> = {
+const DEFAULT_LAUNCH_CONTENT: LaunchContent = {
+  eyebrow: 'Household and policy analysis',
+  title: 'Run household calculations and policy reports',
+  subtitle:
+    'Model a custom household, compare current law to reforms, and inspect income, taxes, benefits, and poverty impacts in one place.',
+  householdCta: 'Start household calculation',
+  reportCta: 'Build population report',
+  householdDescription:
+    'Check a household against current policy or a reform without starting from the full report workflow.',
+  reportDescription:
+    'Generate national or regional analyses for distribution, budget, and poverty impacts.',
+  outputs: [
+    'Household disposable income',
+    'Tax and benefit changes',
+    'Shareable and reproducible results',
+  ],
+  explainer:
+    'Saved work stays in this browser unless you create a share link, so first-run users can start immediately without an account.',
+};
+
+const LAUNCH_CONTENT: Record<SupportedCountry, LaunchContent> = {
   us: {
     eyebrow: 'Poverty and household policy analysis',
     title: 'Run Supplemental Poverty Measure calculations and policy reports',
@@ -61,6 +80,10 @@ const LAUNCH_CONTENT: Record<
   },
 };
 
+export function getLaunchContent(countryId: CountryId): LaunchContent {
+  return LAUNCH_CONTENT[countryId as SupportedCountry] ?? DEFAULT_LAUNCH_CONTENT;
+}
+
 function FeatureCard({
   icon,
   title,
@@ -82,7 +105,7 @@ function FeatureCard({
         {icon}
       </div>
       <Title
-        order={3}
+        order={2}
         style={{
           fontSize: typography.fontSize.xl,
           fontWeight: typography.fontWeight.semibold,
@@ -98,9 +121,9 @@ function FeatureCard({
 }
 
 export default function CalculatorLaunchPage() {
-  const countryId = useCurrentCountry() as SupportedCountry;
+  const countryId = useCurrentCountry();
   const nav = useAppNavigate();
-  const content = LAUNCH_CONTENT[countryId] ?? LAUNCH_CONTENT.us;
+  const content = getLaunchContent(countryId);
 
   return (
     <Container size="xl" className="tw:px-xl">
@@ -262,7 +285,7 @@ export default function CalculatorLaunchPage() {
             }}
           >
             <Title
-              order={2}
+              order={3}
               style={{
                 fontSize: typography.fontSize.xl,
                 fontWeight: typography.fontWeight.semibold,
@@ -302,7 +325,7 @@ export default function CalculatorLaunchPage() {
             }}
           >
             <Title
-              order={2}
+              order={3}
               style={{
                 fontSize: typography.fontSize.xl,
                 fontWeight: typography.fontWeight.semibold,

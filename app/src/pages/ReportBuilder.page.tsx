@@ -163,14 +163,14 @@ const INGREDIENT_COLORS = {
     icon: colors.primary[600],
     bg: colors.primary[50],
     border: colors.primary[200],
-    accent: colors.primary[500],
+    accent: colors.primary[600],
   },
   dynamics: {
     // Muted gray-green for dynamics (distinct from teal and slate)
     icon: colors.gray[500],
     bg: colors.gray[50],
     border: colors.gray[200],
-    accent: colors.gray[400],
+    accent: colors.gray[500],
   },
 };
 
@@ -1200,7 +1200,7 @@ function SimulationBlock({
 
         <Group gap="xs">
           {isRequired && (
-            <Text c="dimmed" style={{ fontStyle: 'italic', fontSize: FONT_SIZES.small }}>
+            <Text style={{ fontStyle: 'italic', fontSize: FONT_SIZES.small, color: colors.gray[600] }}>
               Required
             </Text>
           )}
@@ -1601,11 +1601,11 @@ function IngredientPickerModal({
                                 {/* Header row */}
                                 <Text
                                   fw={600}
-                                  c="dimmed"
                                   style={{
                                     fontSize: FONT_SIZES.tiny,
                                     textTransform: 'uppercase',
                                     letterSpacing: '0.05em',
+                                    color: colors.gray[600],
                                     padding: spacing.md,
                                     paddingBottom: spacing.xs,
                                     borderBottom: `1px solid ${colors.gray[200]}`,
@@ -1615,12 +1615,12 @@ function IngredientPickerModal({
                                 </Text>
                                 <Text
                                   fw={600}
-                                  c="dimmed"
                                   style={{
                                     fontSize: FONT_SIZES.tiny,
                                     textTransform: 'uppercase',
                                     letterSpacing: '0.05em',
                                     textAlign: 'right',
+                                    color: colors.gray[600],
                                     padding: spacing.md,
                                     paddingBottom: spacing.xs,
                                     borderBottom: `1px solid ${colors.gray[200]}`,
@@ -2766,7 +2766,7 @@ function PolicyBrowseModal({ isOpen, onClose, onSelect }: PolicyBrowseModalProps
                               </Text>
                             </>
                           ) : (
-                            <Text style={{ fontSize: FONT_SIZES.small, color: colors.gray[400] }}>
+                            <Text style={{ fontSize: FONT_SIZES.small, color: colors.gray[500] }}>
                               No changes yet
                             </Text>
                           )}
@@ -4264,7 +4264,7 @@ function PopulationBrowseModal({
                               </Text>
                             </>
                           ) : (
-                            <Text style={{ fontSize: FONT_SIZES.small, color: colors.gray[400] }}>
+                            <Text style={{ fontSize: FONT_SIZES.small, color: colors.gray[500] }}>
                               No members yet
                             </Text>
                           )}
@@ -5518,12 +5518,12 @@ function ReportMetaPanel({
             {/* Ready message */}
             {isReportConfigured && (
               <Group gap="xs" justify="center" style={{ marginTop: spacing.xs }}>
-                <IconCircleCheck size={14} color={colors.primary[500]} />
+                <IconCircleCheck size={14} color={colors.primary[600]} />
                 <Text
                   style={{
                     fontFamily: typography.fontFamily.primary,
                     fontSize: FONT_SIZES.small,
-                    color: colors.primary[500],
+                    color: colors.primary[600],
                   }}
                 >
                   Ready to run your analysis
