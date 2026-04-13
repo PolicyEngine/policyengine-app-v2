@@ -43,13 +43,19 @@ const TEST_V2_USER_ID = 'c93a763d-8d9f-4ab8-b04f-2fbba0183f35';
 const TEST_V1_ASSOC_ID = 'suh-abc123';
 const TEST_V2_ASSOC_ID = 'dd0e8400-e29b-41d4-a716-446655440008';
 
-const v1Household = new Household(
-  createMockHouseholdData({
-    id: TEST_V1_HOUSEHOLD_ID,
-    countryId: TEST_COUNTRY_ID,
-    label: 'My household',
-  })
-);
+const v1HouseholdData = createMockHouseholdData({
+  id: TEST_V1_HOUSEHOLD_ID,
+  countryId: TEST_COUNTRY_ID,
+  label: 'My household',
+});
+
+const v1Household = Household.fromInput({
+  id: v1HouseholdData.id,
+  countryId: v1HouseholdData.countryId,
+  label: v1HouseholdData.label,
+  year: v1HouseholdData.year,
+  householdData: v1HouseholdData.data,
+});
 
 const v1Association: UserHouseholdPopulation = {
   type: 'household',

@@ -4,6 +4,7 @@ import { buildComparableHousehold } from './household/comparable';
 import type {
   CanonicalHouseholdInputData,
   CanonicalHouseholdInputEnvelope,
+  CanonicalHouseholdSetup,
   ComparableHousehold,
   HouseholdModelData,
 } from './household/canonicalTypes';
@@ -13,7 +14,16 @@ import type {
   V2HouseholdShape,
   V2StoredHouseholdEnvelope,
 } from './household/v2Types';
-import { cloneValue, deepEqual, inferYearFromData, normalizeCountryId } from './household/utils';
+import {
+  buildCanonicalSetupFromStructuredState,
+  buildStructuredHouseholdDataFromCanonicalSetup,
+  buildStructuredStateFromCanonicalSetup,
+  cloneValue,
+  deepEqual,
+  inferYearFromData,
+  normalizeCanonicalSetup,
+  normalizeCountryId,
+} from './household/utils';
 import {
   buildAppHouseholdData,
   buildV1PayloadData,
@@ -26,49 +36,50 @@ import {
   parseV2HouseholdShape,
 } from './household/v2Codec';
 
-export type {
-  ComparableHousehold,
-  HouseholdModelData,
-} from './household/canonicalTypes';
+export type { ComparableHousehold, HouseholdModelData } from './household/canonicalTypes';
 export type { HouseholdInput } from './household/types';
 
 export class Household extends BaseModel<HouseholdModelData> {
   readonly id: string;
-  readonly countryId: CountryId;
-  readonly label: string | null;
-  readonly year: number | null;
 
-  private readonly canonicalData: ReturnType<typeof parseAppHouseholdData>;
+  private readonly setup: CanonicalHouseholdSetup;
 
-  constructor(data: HouseholdModelData) {
+  private constructor(args: { id: string; setup: CanonicalHouseholdSetup }) {
     super();
 
-    if (!data.id) {
+    if (!args.id) {
       throw new Error('Household requires an id');
     }
 
-    const countryId = normalizeCountryId(data.countryId);
-    const canonicalData = parseAppHouseholdData(data.data);
-
-    this.id = data.id;
-    this.countryId = countryId;
-    this.label = data.label ?? null;
-    this.year = data.year ?? inferYearFromData(canonicalData);
-    this.canonicalData = canonicalData;
+    this.id = args.id;
+    this.setup = normalizeCanonicalSetup(args.setup);
   }
 
-  private toCanonicalState() {
-    return {
+  get countryId(): CountryId {
+    return this.setup.countryId;
+  }
+
+  get label(): string | null {
+    return this.setup.label;
+  }
+
+  get year(): number | null {
+    return this.setup.year;
+  }
+
+  private toStructuredState() {
+    return buildStructuredStateFromCanonicalSetup({
       id: this.id,
-      countryId: this.countryId,
-      label: this.label,
-      year: this.year,
-      data: this.canonicalData,
-    };
+      setup: this.setup,
+    });
+  }
+
+  private toStructuredData() {
+    return buildStructuredHouseholdDataFromCanonicalSetup(this.setup);
   }
 
   get data(): CanonicalHouseholdInputData {
-    return buildAppHouseholdData(this.canonicalData);
+    return buildAppHouseholdData(this.toStructuredData());
   }
 
   get householdData(): CanonicalHouseholdInputData {
@@ -76,25 +87,44 @@ export class Household extends BaseModel<HouseholdModelData> {
   }
 
   get people(): CanonicalHouseholdInputData['people'] {
-    return cloneValue(this.canonicalData.people);
+    return cloneValue(this.data.people);
   }
 
   get personCount(): number {
-    return Object.keys(this.canonicalData.people).length;
+    return Object.keys(this.setup.people).length;
   }
 
   get personNames(): string[] {
-    return Object.keys(this.canonicalData.people);
+    return Object.keys(this.setup.people);
+  }
+
+  static fromCanonical(
+    setup: CanonicalHouseholdSetup,
+    options: {
+      id?: string;
+    } = {}
+  ): Household {
+    const normalizedSetup = normalizeCanonicalSetup(setup);
+
+    return new Household({
+      id: options.id ?? 'draft-household',
+      setup: {
+        ...normalizedSetup,
+        year: normalizedSetup.year ?? inferYearFromData(normalizedSetup),
+      },
+    });
   }
 
   static fromInput(input: CanonicalHouseholdInputEnvelope): Household {
-    return new Household({
-      id: input.id ?? 'draft-household',
-      countryId: normalizeCountryId(input.countryId),
-      label: input.label ?? null,
-      year: input.year ?? inferYearFromData(input.householdData),
-      data: input.householdData,
-    });
+    return Household.fromCanonical(
+      buildCanonicalSetupFromStructuredState({
+        countryId: normalizeCountryId(input.countryId),
+        label: input.label ?? null,
+        year: input.year ?? inferYearFromData(input.householdData),
+        data: parseAppHouseholdData(input.householdData),
+      }),
+      { id: input.id ?? 'draft-household' }
+    );
   }
 
   static fromDraft(args: {
@@ -143,15 +173,15 @@ export class Household extends BaseModel<HouseholdModelData> {
     householdData: V1HouseholdCreateEnvelope['data'];
     label?: string | null;
   }): Household {
-    const canonicalData = parseV1HouseholdData(args.householdData);
-
-    return new Household({
-      id: String(args.id),
-      countryId: normalizeCountryId(args.countryId),
-      label: args.label ?? null,
-      year: inferYearFromData(canonicalData),
-      data: buildAppHouseholdData(canonicalData),
-    });
+    return Household.fromCanonical(
+      buildCanonicalSetupFromStructuredState({
+        countryId: normalizeCountryId(args.countryId),
+        label: args.label ?? null,
+        year: null,
+        data: parseV1HouseholdData(args.householdData),
+      }),
+      { id: String(args.id) }
+    );
   }
 
   static fromV2Response(response: V2StoredHouseholdEnvelope): Household {
@@ -159,49 +189,53 @@ export class Household extends BaseModel<HouseholdModelData> {
   }
 
   static fromV2Shape(shape: V2StoredHouseholdEnvelope | V2HouseholdShape): Household {
-    const canonicalData = parseV2HouseholdShape(shape);
-
-    return new Household({
-      id: shape.id,
-      countryId: normalizeCountryId(shape.country_id),
-      label: shape.label ?? null,
-      year: shape.year ?? inferYearFromData(canonicalData),
-      data: buildAppHouseholdData(canonicalData),
-    });
+    return Household.fromCanonical(
+      buildCanonicalSetupFromStructuredState({
+        countryId: normalizeCountryId(shape.country_id),
+        label: shape.label ?? null,
+        year: shape.year ?? null,
+        data: parseV2HouseholdShape(shape),
+      }),
+      { id: shape.id }
+    );
   }
 
   withId(id: string): Household {
-    return new Household({
-      ...this.toJSON(),
-      id,
-    });
+    return Household.fromCanonical(this.toCanonical(), { id });
   }
 
   withLabel(label: string | null): Household {
-    return new Household({
-      ...this.toJSON(),
-      label,
-    });
+    return Household.fromCanonical(
+      {
+        ...this.toCanonical(),
+        label,
+      },
+      { id: this.id }
+    );
+  }
+
+  toCanonical(): CanonicalHouseholdSetup {
+    return cloneValue(this.setup);
   }
 
   toV1CreationPayload(): V1HouseholdCreateEnvelope {
     return {
       country_id: this.countryId,
-      data: buildV1PayloadData(this.canonicalData),
+      data: buildV1PayloadData(this.toStructuredData()),
       label: this.label ?? undefined,
     };
   }
 
   toV2CreateRequest(): V2CreateHouseholdEnvelope {
-    return buildV2CreateRequest(this.toCanonicalState());
+    return buildV2CreateRequest(this.toStructuredState());
   }
 
   toV2Shape(): V2HouseholdShape {
-    return buildV2HouseholdShape(this.toCanonicalState());
+    return buildV2HouseholdShape(this.toStructuredState());
   }
 
   toComparable(): ComparableHousehold {
-    return buildComparableHousehold(this.toCanonicalState());
+    return buildComparableHousehold(this.toStructuredState());
   }
 
   toJSON(): HouseholdModelData {
@@ -215,6 +249,9 @@ export class Household extends BaseModel<HouseholdModelData> {
   }
 
   isEqual(other: Household): boolean {
-    return deepEqual(this.toCanonicalState(), other.toCanonicalState());
+    return deepEqual(
+      { id: this.id, setup: this.setup },
+      { id: other.id, setup: other.toCanonical() }
+    );
   }
 }

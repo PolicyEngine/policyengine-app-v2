@@ -1,6 +1,7 @@
 import type { V2PolicyResponse, V2PolicyResponseParameterValue } from '@/api/policy';
 import type { HouseholdV2Response } from '@/api/v2/households';
 import type { CountryId } from '@/libs/countries';
+import type { CanonicalHouseholdInputData } from '@/models/household/canonicalTypes';
 
 // ============================================================================
 // Test constants
@@ -93,7 +94,7 @@ export interface HouseholdDataShape {
   countryId: CountryId;
   year: number | null;
   label: string | null;
-  data: Record<string, unknown>;
+  data: CanonicalHouseholdInputData;
 }
 
 export const createMockHouseholdData = (
@@ -120,7 +121,7 @@ export const createMockEmptyHouseholdData = (
   overrides?: Partial<HouseholdDataShape>
 ): HouseholdDataShape =>
   createMockHouseholdData({
-    data: {},
+    data: { people: {} },
     ...overrides,
   });
 

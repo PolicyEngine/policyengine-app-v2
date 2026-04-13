@@ -1,6 +1,19 @@
 import type { CountryId } from '@/libs/countries';
 import type { HouseholdGroupAppKey } from './schema';
 
+export type HouseholdScalar = string | number | boolean | null;
+export type CanonicalYearValueMap = Record<string, HouseholdScalar>;
+export type CanonicalFieldValue = HouseholdScalar | CanonicalYearValueMap;
+export type CanonicalFieldMap = Record<string, CanonicalFieldValue>;
+
+export type CanonicalGroupSetupKey =
+  | 'household'
+  | 'family'
+  | 'taxUnit'
+  | 'spmUnit'
+  | 'maritalUnit'
+  | 'benunit';
+
 export interface CanonicalHouseholdInputEnvelope {
   id?: string;
   countryId: CountryId;
@@ -9,29 +22,35 @@ export interface CanonicalHouseholdInputEnvelope {
   year?: number | null;
 }
 
-export interface CanonicalHouseholdInputData {
-  people: Record<string, CanonicalHouseholdInputPerson>;
-  [groupEntity: string]:
-    | Record<string, CanonicalHouseholdInputGroup>
-    | Record<string, CanonicalHouseholdInputPerson>;
-}
-
 export interface CanonicalHouseholdInputPerson {
-  [key: string]: any;
+  [key: string]: CanonicalFieldValue;
 }
 
 export interface CanonicalHouseholdInputGroup {
   members: string[];
-  [key: string]: any;
+  [key: string]: CanonicalFieldValue | string[];
+}
+
+export type CanonicalHouseholdInputGroupMap = Record<string, CanonicalHouseholdInputGroup>;
+
+export interface CanonicalHouseholdInputData {
+  people: Record<string, CanonicalHouseholdInputPerson>;
+  households?: CanonicalHouseholdInputGroupMap;
+  families?: CanonicalHouseholdInputGroupMap;
+  taxUnits?: CanonicalHouseholdInputGroupMap;
+  spmUnits?: CanonicalHouseholdInputGroupMap;
+  maritalUnits?: CanonicalHouseholdInputGroupMap;
+  benunits?: CanonicalHouseholdInputGroupMap;
 }
 
 export interface CanonicalPersonSetup {
-  values: Record<string, unknown>;
+  values: CanonicalFieldMap;
 }
 
 export interface CanonicalGroupSetup {
+  name?: string;
   members: string[];
-  values: Record<string, unknown>;
+  values: CanonicalFieldMap;
 }
 
 export interface CanonicalHouseholdSetup {
@@ -39,15 +58,15 @@ export interface CanonicalHouseholdSetup {
   label: string | null;
   year: number | null;
   people: Record<string, CanonicalPersonSetup>;
-  household?: CanonicalGroupSetup;
-  family?: CanonicalGroupSetup;
-  taxUnit?: CanonicalGroupSetup;
-  spmUnit?: CanonicalGroupSetup;
-  maritalUnit?: CanonicalGroupSetup;
-  benunit?: CanonicalGroupSetup;
+  household?: CanonicalGroupSetup | undefined;
+  family?: CanonicalGroupSetup | undefined;
+  taxUnit?: CanonicalGroupSetup | undefined;
+  spmUnit?: CanonicalGroupSetup | undefined;
+  maritalUnit?: CanonicalGroupSetup | undefined;
+  benunit?: CanonicalGroupSetup | undefined;
 }
 
-export type CanonicalStructuredEntityValues = Record<string, unknown>;
+export type CanonicalStructuredEntityValues = CanonicalFieldMap;
 
 export interface CanonicalStructuredGroup {
   name: string;
