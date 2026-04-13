@@ -7,6 +7,8 @@ import { CountryProvider } from '@/contexts/CountryContext';
 import { useRerunReport } from '@/hooks/useRerunReport';
 import type { CountryId } from '@/libs/countries';
 import { calculationKeys, reportKeys, simulationKeys } from '@/libs/queryKeys';
+import type { Report } from '@/types/ingredients/Report';
+import type { Simulation } from '@/types/ingredients/Simulation';
 
 vi.mock('@/api/report', () => ({
   rerunReport: vi.fn(),
@@ -53,9 +55,39 @@ describe('useRerunReport', () => {
   test('given cached report and simulation state when rerun succeeds then clears calculation cache and invalidates metadata queries', async () => {
     const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
 
-    queryClient.setQueryData(reportKeys.byId('report-123'), { status: 'complete' });
-    queryClient.setQueryData(simulationKeys.byId('sim-1'), { status: 'complete' });
-    queryClient.setQueryData(simulationKeys.byId('sim-2'), { status: 'complete' });
+    queryClient.setQueryData<Report>(reportKeys.byId('report-123'), {
+      id: 'report-123',
+      countryId: 'us',
+      year: '2024',
+      apiVersion: '1.0.0',
+      simulationIds: ['sim-1', 'sim-2'],
+      status: 'complete',
+      output: { budget: { budgetary_impact: 1 } } as never,
+    });
+    queryClient.setQueryData<Simulation>(simulationKeys.byId('sim-1'), {
+      id: 'sim-1',
+      countryId: 'us',
+      apiVersion: '1.0.0',
+      policyId: 'policy-1',
+      populationId: 'household-1',
+      populationType: 'household',
+      label: null,
+      isCreated: true,
+      status: 'complete',
+      output: { household_net_income: { 2024: 1 } },
+    });
+    queryClient.setQueryData<Simulation>(simulationKeys.byId('sim-2'), {
+      id: 'sim-2',
+      countryId: 'us',
+      apiVersion: '1.0.0',
+      policyId: 'policy-2',
+      populationId: 'household-1',
+      populationType: 'household',
+      label: null,
+      isCreated: true,
+      status: 'complete',
+      output: { household_net_income: { 2024: 2 } },
+    });
     queryClient.setQueryData(calculationKeys.byReportId('report-123'), { status: 'complete' });
     queryClient.setQueryData(calculationKeys.bySimulationId('sim-1'), { status: 'complete' });
     queryClient.setQueryData(calculationKeys.bySimulationId('sim-2'), { status: 'complete' });
@@ -71,6 +103,22 @@ describe('useRerunReport', () => {
       expect(queryClient.getQueryData(calculationKeys.byReportId('report-123'))).toBeUndefined();
       expect(queryClient.getQueryData(calculationKeys.bySimulationId('sim-1'))).toBeUndefined();
       expect(queryClient.getQueryData(calculationKeys.bySimulationId('sim-2'))).toBeUndefined();
+    });
+
+    expect(queryClient.getQueryData<Report>(reportKeys.byId('report-123'))).toMatchObject({
+      id: 'report-123',
+      status: 'pending',
+      output: null,
+    });
+    expect(queryClient.getQueryData<Simulation>(simulationKeys.byId('sim-1'))).toMatchObject({
+      id: 'sim-1',
+      status: 'pending',
+      output: null,
+    });
+    expect(queryClient.getQueryData<Simulation>(simulationKeys.byId('sim-2'))).toMatchObject({
+      id: 'sim-2',
+      status: 'pending',
+      output: null,
     });
 
     expect(invalidateSpy).toHaveBeenCalledWith({

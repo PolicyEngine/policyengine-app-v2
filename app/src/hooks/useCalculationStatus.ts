@@ -8,6 +8,25 @@ import {
 } from './useAggregatedCalculationStatus';
 import { useSyntheticProgress } from './useSyntheticProgress';
 
+function createInitializingStatus(
+  calcId: string,
+  targetType: 'report' | 'simulation'
+): CalcStatus {
+  return {
+    status: 'initializing',
+    metadata: {
+      calcId,
+      targetType,
+      calcType: targetType === 'report' ? 'societyWide' : 'household',
+      startedAt: Date.now(),
+    },
+  };
+}
+
+function queryKeysEqual(a: readonly unknown[], b: readonly unknown[]): boolean {
+  return a.length === b.length && a.every((value, index) => value === b[index]);
+}
+
 /**
  * Internal hook to read single calculation status from cache
  * Subscribes to calculation query updates via QueryObserver
@@ -39,15 +58,7 @@ function useSingleCalculationStatus(calcId: string, targetType: 'report' | 'simu
       return cached;
     }
 
-    return {
-      status: 'initializing' as const,
-      metadata: {
-        calcId,
-        targetType,
-        calcType: 'societyWide' as const,
-        startedAt: Date.now(),
-      },
-    };
+    return createInitializingStatus(calcId, targetType);
   });
 
   const [isLoading, setIsLoading] = useState(false);
@@ -67,6 +78,8 @@ function useSingleCalculationStatus(calcId: string, targetType: 'report' | 'simu
     const unsubscribe = observer.subscribe((result) => {
       if (result.data) {
         setStatus(result.data);
+      } else {
+        setStatus(createInitializingStatus(calcId, targetType));
       }
       setIsLoading(result.isLoading);
     });
@@ -75,10 +88,26 @@ function useSingleCalculationStatus(calcId: string, targetType: 'report' | 'simu
     const current = queryClient.getQueryData<CalcStatus>(queryKey);
     if (current) {
       setStatus(current);
+    } else {
+      setStatus(createInitializingStatus(calcId, targetType));
     }
+
+    const unsubscribeQueryCache = queryClient.getQueryCache().subscribe((event) => {
+      if (!event || event.type !== 'removed') {
+        return;
+      }
+
+      if (!queryKeysEqual(event.query.queryKey, queryKey)) {
+        return;
+      }
+
+      setStatus(createInitializingStatus(calcId, targetType));
+      setIsLoading(false);
+    });
 
     return () => {
       unsubscribe();
+      unsubscribeQueryCache();
     };
   }, [queryClient, queryKey, calcId]);
 

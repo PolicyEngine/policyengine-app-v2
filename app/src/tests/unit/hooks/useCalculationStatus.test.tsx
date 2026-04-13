@@ -1,6 +1,6 @@
 import React from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { useCalculationStatus } from '@/hooks/useCalculationStatus';
 import { calculationKeys } from '@/libs/queryKeys';
@@ -267,6 +267,48 @@ describe('useCalculationStatus', () => {
         expect(result.current.status).toBe('complete');
         expect(result.current.isComplete).toBe(true);
         expect(result.current.result).toEqual(completeStatus.result);
+      });
+    });
+
+    test('given complete cache entry removed then hook returns to initializing state', async () => {
+      // Given
+      const completeStatus = mockCalcStatusComplete({
+        metadata: {
+          calcId: HOOK_TEST_CONSTANTS.TEST_REPORT_ID,
+          calcType: 'societyWide',
+          targetType: 'report',
+          startedAt: Date.now(),
+        },
+      });
+      queryClient.setQueryData<CalcStatus>(
+        calculationKeys.byReportId(HOOK_TEST_CONSTANTS.TEST_REPORT_ID),
+        completeStatus
+      );
+
+      const { result } = renderHook(
+        () => useCalculationStatus(HOOK_TEST_CONSTANTS.TEST_REPORT_ID, 'report'),
+        { wrapper }
+      );
+
+      await waitFor(() => {
+        expect(result.current.status).toBe('complete');
+        expect(result.current.isComplete).toBe(true);
+      });
+
+      // When
+      await act(async () => {
+        queryClient.removeQueries({
+          queryKey: calculationKeys.byReportId(HOOK_TEST_CONSTANTS.TEST_REPORT_ID),
+          exact: true,
+        });
+      });
+
+      // Then
+      await waitFor(() => {
+        expect(result.current.status).toBe('initializing');
+        expect(result.current.isInitializing).toBe(true);
+        expect(result.current.isComplete).toBe(false);
+        expect(result.current.result).toBeUndefined();
       });
     });
   });
