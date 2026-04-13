@@ -149,12 +149,12 @@ export const mockHouseholdMetadata1: HouseholdMetadata = {
     },
     households: {
       household1: {
-        members: ['person1', 'person2'],
+        members: ['person1'],
       },
     },
     marital_units: {
       unit1: {
-        members: ['person1', 'person2'],
+        members: ['person1'],
       },
     },
   },
@@ -184,12 +184,12 @@ export const mockHouseholdMetadata2: HouseholdMetadata = {
     },
     households: {
       household1: {
-        members: ['person1', 'person2'],
+        members: ['person1'],
       },
     },
     marital_units: {
       unit1: {
-        members: ['person1', 'person2'],
+        members: ['person1'],
       },
     },
   },
@@ -249,9 +249,11 @@ export const mockGeographicAssociation2: UserGeographyPopulation = {
   createdAt: POPULATION_TEST_IDS.TIMESTAMP_2,
 };
 
-export const createMockHousehold1 = (): HouseholdModel => HouseholdModel.fromInput(mockHousehold1.toInput());
+export const createMockHousehold1 = (): HouseholdModel =>
+  HouseholdModel.fromCanonicalInput(mockHousehold1.toCanonicalInput());
 
-export const createMockHousehold2 = (): HouseholdModel => HouseholdModel.fromInput(mockHousehold2.toInput());
+export const createMockHousehold2 = (): HouseholdModel =>
+  HouseholdModel.fromCanonicalInput(mockHousehold2.toCanonicalInput());
 
 export const createMockHouseholdAssociation1 = (): UserHouseholdPopulation =>
   cloneValue(mockHouseholdAssociation1);

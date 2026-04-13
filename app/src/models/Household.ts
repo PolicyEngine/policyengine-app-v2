@@ -1,6 +1,6 @@
 import type { CountryId } from '@/libs/countries';
 import { BaseModel } from './BaseModel';
-import { buildComparableHousehold } from './household/comparable';
+import { buildAppHouseholdData, parseAppHouseholdInput } from './household/appCodec';
 import type {
   CanonicalHouseholdInputData,
   CanonicalHouseholdInputEnvelope,
@@ -8,30 +8,23 @@ import type {
   ComparableHousehold,
   HouseholdModelData,
 } from './household/canonicalTypes';
-import type { V1HouseholdCreateEnvelope, V1HouseholdMetadataEnvelope } from './household/v1Types';
-import type {
-  V2CreateHouseholdEnvelope,
-  V2StoredHouseholdEnvelope,
-} from './household/v2Types';
+import { buildComparableHousehold } from './household/comparable';
 import {
   cloneValue,
   deepEqual,
   inferYearFromData,
   normalizeCanonicalSetup,
 } from './household/utils';
-import { buildAppHouseholdData, parseAppHouseholdInput } from './household/appCodec';
 import {
   buildV1CreateEnvelope,
   parseV1CreateEnvelope,
   parseV1MetadataEnvelope,
 } from './household/v1Codec';
-import {
-  buildV2CreateEnvelope,
-  parseV2HouseholdEnvelope,
-} from './household/v2Codec';
+import type { V1HouseholdCreateEnvelope, V1HouseholdMetadataEnvelope } from './household/v1Types';
+import { buildV2CreateEnvelope, parseV2HouseholdEnvelope } from './household/v2Codec';
+import type { V2CreateHouseholdEnvelope, V2StoredHouseholdEnvelope } from './household/v2Types';
 
 export type { ComparableHousehold, HouseholdModelData } from './household/canonicalTypes';
-export type { HouseholdInput } from './household/types';
 
 export class Household extends BaseModel<HouseholdModelData> {
   readonly id: string;
@@ -98,15 +91,10 @@ export class Household extends BaseModel<HouseholdModelData> {
     });
   }
 
-  static fromInput(input: CanonicalHouseholdInputEnvelope): Household {
-    return Household.fromCanonicalInput(input);
-  }
-
   static fromCanonicalInput(input: CanonicalHouseholdInputEnvelope): Household {
-    return Household.fromCanonical(
-      parseAppHouseholdInput(input),
-      { id: input.id ?? 'draft-household' }
-    );
+    return Household.fromCanonical(parseAppHouseholdInput(input), {
+      id: input.id ?? 'draft-household',
+    });
   }
 
   static fromDraft(args: {
@@ -154,10 +142,7 @@ export class Household extends BaseModel<HouseholdModelData> {
   }
 
   static fromV2CreateEnvelope(envelope: V2CreateHouseholdEnvelope): Household {
-    return Household.fromCanonical(
-      parseV2HouseholdEnvelope(envelope),
-      { id: 'draft-household' }
-    );
+    return Household.fromCanonical(parseV2HouseholdEnvelope(envelope), { id: 'draft-household' });
   }
 
   withId(id: string): Household {
@@ -178,7 +163,7 @@ export class Household extends BaseModel<HouseholdModelData> {
     return cloneValue(this.setup);
   }
 
-  toInput(): CanonicalHouseholdInputEnvelope {
+  toCanonicalInput(): CanonicalHouseholdInputEnvelope {
     return {
       id: this.id,
       countryId: this.countryId,
@@ -194,14 +179,6 @@ export class Household extends BaseModel<HouseholdModelData> {
 
   toV2CreateEnvelope(): V2CreateHouseholdEnvelope {
     return buildV2CreateEnvelope(this.toCanonical());
-  }
-
-  toV2CreateRequest(): V2CreateHouseholdEnvelope {
-    return this.toV2CreateEnvelope();
-  }
-
-  toV2Shape(): V2CreateHouseholdEnvelope {
-    return this.toV2CreateEnvelope();
   }
 
   toComparable(): ComparableHousehold {

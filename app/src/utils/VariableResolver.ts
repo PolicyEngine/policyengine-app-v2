@@ -6,6 +6,7 @@
  */
 
 import { Household } from '@/types/ingredients/Household';
+import { getHouseholdGroupCollection, isHouseholdYearMap } from './householdDataAccess';
 
 export interface EntityInfo {
   entity: string; // e.g., "person", "tax_unit", "spm_unit"
@@ -126,18 +127,17 @@ function getEntityData(household: Household, entityPlural: string): Record<strin
     case 'people':
       return householdData.people;
     case 'households':
-      return householdData.households;
+      return householdData.households ?? null;
     case 'tax_units':
-      // Handle both snake_case and camelCase (HouseholdBuilder uses camelCase)
-      return householdData.tax_units || householdData.taxUnits;
+      return getHouseholdGroupCollection(householdData, 'tax_units') ?? null;
     case 'spm_units':
-      return householdData.spm_units || householdData.spmUnits;
+      return getHouseholdGroupCollection(householdData, 'spm_units') ?? null;
     case 'families':
-      return householdData.families;
+      return householdData.families ?? null;
     case 'marital_units':
-      return householdData.marital_units || householdData.maritalUnits;
+      return getHouseholdGroupCollection(householdData, 'marital_units') ?? null;
     case 'benunits':
-      return householdData.benunits;
+      return householdData.benunits ?? null;
     default:
       return null;
   }
@@ -192,6 +192,10 @@ export function getValue(
 
   const variableData = instance[variableName];
   if (!variableData) {
+    return null;
+  }
+
+  if (!isHouseholdYearMap(variableData)) {
     return null;
   }
 

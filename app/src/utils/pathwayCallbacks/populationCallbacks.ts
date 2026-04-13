@@ -24,10 +24,7 @@ export function createPopulationCallbacks<TState, TMode>(
   returnMode: TMode,
   labelMode: TMode,
   onPopulationComplete?: {
-    onHouseholdComplete?: (
-      householdId: string,
-      household: CanonicalHouseholdInputEnvelope
-    ) => void;
+    onHouseholdComplete?: (householdId: string, household: CanonicalHouseholdInputEnvelope) => void;
     onGeographyComplete?: (geographyId: string, label: string) => void;
   }
 ) {
@@ -60,7 +57,7 @@ export function createPopulationCallbacks<TState, TMode>(
     (householdId: string, household: HouseholdModel, label: string) => {
       setState((prev) =>
         populationUpdater(prev, {
-          household: household.withId(householdId).toInput(),
+          household: household.withId(householdId).toCanonicalInput(),
           geography: null,
           label,
           type: 'household',

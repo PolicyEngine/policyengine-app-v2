@@ -1,9 +1,4 @@
 import { countryIds, type CountryId } from '@/libs/countries';
-import {
-  buildGeneratedGroupName,
-  type HouseholdGroupAppKey,
-  GROUP_DEFINITIONS,
-} from './schema';
 import type {
   CanonicalFieldMap,
   CanonicalFieldValue,
@@ -15,11 +10,9 @@ import type {
   CanonicalStructuredHouseholdState,
   HouseholdScalar,
 } from './canonicalTypes';
+import { buildGeneratedGroupName, GROUP_DEFINITIONS, type HouseholdGroupAppKey } from './schema';
 
-export const SETUP_KEY_BY_APP_KEY: Record<
-  HouseholdGroupAppKey,
-  CanonicalGroupSetupKey
-> = {
+export const SETUP_KEY_BY_APP_KEY: Record<HouseholdGroupAppKey, CanonicalGroupSetupKey> = {
   households: 'household',
   families: 'family',
   taxUnits: 'taxUnit',
@@ -71,10 +64,7 @@ export function isYearValueMap(value: unknown): value is Record<string, Househol
   return keys.length > 0 && keys.every(isYearKey) && Object.values(value).every(isHouseholdScalar);
 }
 
-export function normalizeCanonicalFieldValue(
-  value: unknown,
-  context: string
-): CanonicalFieldValue {
+export function normalizeCanonicalFieldValue(value: unknown, context: string): CanonicalFieldValue {
   if (isHouseholdScalar(value)) {
     return value;
   }
@@ -86,10 +76,7 @@ export function normalizeCanonicalFieldValue(
   throw new Error(`${context} must be a scalar or year-keyed scalar map`);
 }
 
-export function normalizeCanonicalFieldMap(
-  values: unknown,
-  context: string
-): CanonicalFieldMap {
+export function normalizeCanonicalFieldMap(values: unknown, context: string): CanonicalFieldMap {
   if (!isRecord(values)) {
     throw new Error(`${context} must be an object`);
   }
@@ -131,7 +118,6 @@ export function setCanonicalGroupSetup(
       return;
     case 'benunits':
       setup.benunit = group;
-      return;
   }
 }
 
@@ -148,9 +134,7 @@ function normalizeCanonicalGroupSetup(args: {
   const unknownMembers = members.filter((member) => !args.peopleNames.has(member));
 
   if (unknownMembers.length > 0) {
-    throw new Error(
-      `${args.groupLabel} references unknown members: ${unknownMembers.join(', ')}`
-    );
+    throw new Error(`${args.groupLabel} references unknown members: ${unknownMembers.join(', ')}`);
   }
 
   return {
@@ -387,7 +371,9 @@ export function wrapEntityValuesForYear(
       value,
       `Year-wrapped entity field "${key}"`
     );
-    wrapped[key] = isYearValueMap(normalizedValue) ? normalizedValue : wrapForYear(normalizedValue, year);
+    wrapped[key] = isYearValueMap(normalizedValue)
+      ? normalizedValue
+      : wrapForYear(normalizedValue, year);
   }
 
   return wrapped;

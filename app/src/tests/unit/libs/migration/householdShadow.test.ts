@@ -49,7 +49,7 @@ const v1HouseholdData = createMockHouseholdData({
   label: 'My household',
 });
 
-const v1Household = Household.fromInput({
+const v1Household = Household.fromCanonicalInput({
   id: v1HouseholdData.id,
   countryId: v1HouseholdData.countryId,
   label: v1HouseholdData.label,

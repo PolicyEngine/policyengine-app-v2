@@ -15,12 +15,10 @@ import {
   mockHouseholdMetadataWithUnknownEntity,
 } from '@/tests/fixtures/models/v1HouseholdMocks';
 
-function createHousehold(
-  overrides?: Parameters<typeof createMockHouseholdData>[0]
-): Household {
+function createHousehold(overrides?: Parameters<typeof createMockHouseholdData>[0]): Household {
   const data = createMockHouseholdData(overrides);
 
-  return Household.fromInput({
+  return Household.fromCanonicalInput({
     id: data.id,
     countryId: data.countryId,
     label: data.label,
@@ -34,7 +32,7 @@ function createEmptyHousehold(
 ): Household {
   const data = createMockEmptyHouseholdData(overrides);
 
-  return Household.fromInput({
+  return Household.fromCanonicalInput({
     id: data.id,
     countryId: data.countryId,
     label: data.label,
@@ -84,19 +82,18 @@ describe('Household', () => {
     });
 
     it('rejects multiple groups of the same type at construction time', () => {
-      expect(
-        () =>
-          createHousehold({
-            data: {
-              people: {
-                adult: { age: { 2026: 35 } },
-              },
-              taxUnits: {
-                taxUnit1: { members: ['adult'] },
-                taxUnit2: { members: ['adult'] },
-              },
+      expect(() =>
+        createHousehold({
+          data: {
+            people: {
+              adult: { age: { 2026: 35 } },
             },
-          })
+            taxUnits: {
+              taxUnit1: { members: ['adult'] },
+              taxUnit2: { members: ['adult'] },
+            },
+          },
+        })
       ).toThrow('expected at most one taxUnits entry');
     });
   });
@@ -180,7 +177,7 @@ describe('Household', () => {
             ...mockHouseholdMetadata.household_json,
             tax_units: {
               taxUnit1: {
-                members: ['adult', 'missing-person'],
+                members: ['person1', 'missing-person'],
               },
             },
           },
@@ -441,11 +438,11 @@ describe('Household', () => {
     });
   });
 
-  describe('toV2Shape', () => {
+  describe('toV2CreateEnvelope', () => {
     it('flattens year-keyed values and attaches relationship ids for the v2 create envelope', () => {
       const household = createHousehold();
 
-      expect(household.toV2Shape()).toEqual({
+      expect(household.toV2CreateEnvelope()).toEqual({
         country_id: 'us',
         year: 2026,
         label: TEST_HOUSEHOLD_LABEL,
@@ -491,13 +488,13 @@ describe('Household', () => {
         householdData: createMockHouseholdData().data,
       });
 
-      expect(household.toV2Shape().year).toBe(2026);
+      expect(household.toV2CreateEnvelope().year).toBe(2026);
     });
 
-    it('builds a create request body without the persisted id', () => {
+    it('builds a v2 create envelope without the persisted id', () => {
       const household = createHousehold();
 
-      expect(household.toV2CreateRequest()).toEqual({
+      expect(household.toV2CreateEnvelope()).toEqual({
         country_id: 'us',
         year: 2026,
         label: TEST_HOUSEHOLD_LABEL,
@@ -591,7 +588,7 @@ describe('Household', () => {
   describe('serialization and equality', () => {
     it('round-trips through toJSON()', () => {
       const data = createMockHouseholdData();
-      const household = Household.fromInput({
+      const household = Household.fromCanonicalInput({
         id: data.id,
         countryId: data.countryId,
         label: data.label,

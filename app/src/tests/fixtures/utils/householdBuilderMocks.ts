@@ -1,10 +1,6 @@
 import { CURRENT_YEAR } from '@/constants';
-import {
-  Household,
-  HouseholdData,
-  HouseholdGroupEntity,
-  HouseholdPerson,
-} from '@/types/ingredients/Household';
+import { Household, HouseholdData, HouseholdPerson } from '@/types/ingredients/Household';
+import { getHouseholdGroupCollection } from '@/utils/householdDataAccess';
 
 // ============= TEST CONSTANTS =============
 
@@ -275,7 +271,10 @@ export const verifyPersonExists = (
   expect(person).toBeDefined();
 
   if (expectedAge !== undefined) {
-    const ageValues = Object.values(person.age);
+    const ageValues =
+      person.age && typeof person.age === 'object' && !Array.isArray(person.age)
+        ? Object.values(person.age)
+        : [];
     expect(ageValues[0]).toBe(expectedAge);
   }
 };
@@ -287,24 +286,31 @@ export const verifyPersonInGroup = (
   entityName: string,
   groupKey: string
 ): void => {
-  const entities = household.householdData[entityName] as Record<string, HouseholdGroupEntity>;
+  const entities = getHouseholdGroupCollection(household.householdData, entityName);
   expect(entities).toBeDefined();
+  if (!entities) {
+    return;
+  }
   expect(entities[groupKey]).toBeDefined();
   expect(entities[groupKey].members).toContain(personName);
 };
 
 // Helper to verify person not in any group
 export const verifyPersonNotInAnyGroup = (household: Household, personName: string): void => {
-  Object.keys(household.householdData).forEach((entityName) => {
-    if (entityName === 'people') {
+  [
+    ENTITY_NAMES.HOUSEHOLDS,
+    ENTITY_NAMES.FAMILIES,
+    ENTITY_NAMES.TAX_UNITS,
+    ENTITY_NAMES.SPM_UNITS,
+    ENTITY_NAMES.MARITAL_UNITS,
+    ENTITY_NAMES.BEN_UNITS,
+  ].forEach((entityName) => {
+    const entities = getHouseholdGroupCollection(household.householdData, entityName);
+    if (!entities) {
       return;
     }
-
-    const entities = household.householdData[entityName] as Record<string, HouseholdGroupEntity>;
     Object.values(entities).forEach((group) => {
-      if (group.members) {
-        expect(group.members).not.toContain(personName);
-      }
+      expect(group.members).not.toContain(personName);
     });
   });
 };
@@ -331,17 +337,17 @@ export const countGroupMembers = (
   entityName: string,
   groupKey: string
 ): number => {
-  const entities = household.householdData[entityName] as Record<string, HouseholdGroupEntity>;
+  const entities = getHouseholdGroupCollection(household.householdData, entityName);
   if (!entities || !entities[groupKey]) {
     return 0;
   }
-  return entities[groupKey].members?.length || 0;
+  return entities[groupKey].members.length;
 };
 
 // Helper to get all group keys for an entity
 export const getGroupKeys = (household: Household, entityName: string): string[] => {
-  const entities = household.householdData[entityName];
-  if (!entities || typeof entities !== 'object') {
+  const entities = getHouseholdGroupCollection(household.householdData, entityName);
+  if (!entities) {
     return [];
   }
   return Object.keys(entities);

@@ -84,6 +84,7 @@ export const MOCK_HOUSEHOLD_DATA: Household = {
   householdData: {
     households: {
       'your household': {
+        members: [],
         household_income: {
           [CURRENT_YEAR]: 50000,
         },
@@ -119,6 +120,7 @@ export const MOCK_HOUSEHOLD_DATA_REFORM: Household = {
   householdData: {
     households: {
       'your household': {
+        members: [],
         household_income: {
           [CURRENT_YEAR]: 52000,
         },
@@ -154,6 +156,7 @@ export const MOCK_HOUSEHOLD_DATA_MULTI_PERIOD: Household = {
   householdData: {
     households: {
       'your household': {
+        members: [],
         household_income: {
           '2024': 48000,
           [CURRENT_YEAR]: 50000,

@@ -257,7 +257,7 @@ export function PopulationBrowseModal({
     householdUsageStore.recordUsage(householdIdStr);
 
     const household: CanonicalHouseholdInputEnvelope | null = householdData.household
-      ? householdData.household.toInput()
+      ? householdData.household.toCanonicalInput()
       : {
           id: householdIdStr,
           countryId,

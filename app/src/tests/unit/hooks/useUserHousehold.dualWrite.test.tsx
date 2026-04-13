@@ -11,8 +11,8 @@ import {
 import { useUpdateHouseholdAssociation } from '@/hooks/useUserHousehold';
 import { getV2Id, setV2Id } from '@/libs/migration/idMapping';
 import { Household as HouseholdModel } from '@/models/Household';
+import type { CanonicalHouseholdInputEnvelope } from '@/models/household/canonicalTypes';
 import { createMockHouseholdData } from '@/tests/fixtures/models/shared';
-import type { Household } from '@/types/ingredients/Household';
 import type { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 
 const TEST_USER_ID = 'anonymous';
@@ -49,13 +49,13 @@ const replacedAssociation: UserHouseholdPopulation = {
   updatedAt: '2026-04-09T12:20:00Z',
 };
 
-const nextHousehold: Household = {
+const nextHousehold: CanonicalHouseholdInputEnvelope = {
   countryId: TEST_COUNTRY_ID,
   householdData: createMockHouseholdData({
     id: 'draft-replacement',
     countryId: TEST_COUNTRY_ID,
     label: TEST_LABEL,
-  }).data as Household['householdData'],
+  }).data,
 };
 
 const { mockStoreCreate, mockStoreUpdate, mockStoreFindByUser, mockStoreFindById } = vi.hoisted(
@@ -172,8 +172,10 @@ describe('useUpdateHouseholdAssociation dual-write', () => {
         countryId: TEST_COUNTRY_ID,
         householdData: nextHousehold.householdData,
         label: TEST_LABEL,
-      }).toV2Shape(),
+      }).toV2CreateEnvelope(),
       id: TEST_NEW_V2_HOUSEHOLD_ID,
+      created_at: '2026-04-09T12:20:00Z',
+      updated_at: '2026-04-09T12:20:00Z',
     });
     vi.mocked(updateUserHouseholdAssociationV2).mockResolvedValue({
       ...replacedAssociation,

@@ -1,4 +1,5 @@
-import { Household, HouseholdGroupEntity, HouseholdPerson } from '@/types/ingredients/Household';
+import { Household, HouseholdPerson } from '@/types/ingredients/Household';
+import { getHouseholdGroupCollection, getHouseholdYearValue } from '@/utils/householdDataAccess';
 
 /**
  * Extended person type with name (not ID - people don't have IDs)
@@ -24,8 +25,8 @@ export function getAllPeople(household: Household): PersonWithName[] {
 export function getAdults(household: Household, year: string): PersonWithName[] {
   return Object.entries(household.householdData.people)
     .filter(([, person]) => {
-      const age = person.age?.[year];
-      return age !== undefined && age >= 18;
+      const age = getHouseholdYearValue(person.age, year);
+      return typeof age === 'number' && age >= 18;
     })
     .map(([name, person]) => ({ name, ...person }));
 }
@@ -37,8 +38,8 @@ export function getAdults(household: Household, year: string): PersonWithName[] 
 export function getChildren(household: Household, year: string): PersonWithName[] {
   return Object.entries(household.householdData.people)
     .filter(([, person]) => {
-      const age = person.age?.[year];
-      return age !== undefined && age < 18;
+      const age = getHouseholdYearValue(person.age, year);
+      return typeof age === 'number' && age < 18;
     })
     .map(([name, person]) => ({ name, ...person }));
 }
@@ -76,9 +77,7 @@ export function getGroupVariable(
   variableName: string,
   year: string
 ): any {
-  const entities = household.householdData[entityName] as
-    | Record<string, HouseholdGroupEntity>
-    | undefined;
+  const entities = getHouseholdGroupCollection(household.householdData, entityName);
   if (!entities) {
     return undefined;
   }
@@ -89,10 +88,7 @@ export function getGroupVariable(
   }
 
   const variable = group[variableName];
-  if (typeof variable === 'object' && variable !== null && year in variable) {
-    return variable[year];
-  }
-  return undefined;
+  return getHouseholdYearValue(variable, year);
 }
 
 /**
@@ -131,9 +127,7 @@ export function getGroupMembers(
   entityName: string,
   groupKey: string
 ): string[] {
-  const entities = household.householdData[entityName] as
-    | Record<string, HouseholdGroupEntity>
-    | undefined;
+  const entities = getHouseholdGroupCollection(household.householdData, entityName);
   if (!entities) {
     return [];
   }
@@ -149,9 +143,7 @@ export function getGroups(
   household: Household,
   entityName: string
 ): Array<{ key: string; members: string[] }> {
-  const entities = household.householdData[entityName] as
-    | Record<string, HouseholdGroupEntity>
-    | undefined;
+  const entities = getHouseholdGroupCollection(household.householdData, entityName);
   if (!entities) {
     return [];
   }

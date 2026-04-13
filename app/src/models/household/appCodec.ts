@@ -1,21 +1,25 @@
+import type {
+  CanonicalHouseholdInputData,
+  CanonicalHouseholdInputEnvelope,
+  CanonicalHouseholdSetup,
+} from './canonicalTypes';
+import {
+  buildNamedGroupCollection,
+  parseNamedGroupCollection,
+  parseNamedPeople,
+} from './namedCodecHelpers';
+import { buildGeneratedGroupName, GROUP_DEFINITIONS, KNOWN_APP_ENTITY_KEYS } from './schema';
 import {
   getCanonicalGroupSetup,
   normalizeCanonicalSetup,
   normalizeCountryId,
   SETUP_KEY_BY_APP_KEY,
 } from './utils';
-import { buildGeneratedGroupName, GROUP_DEFINITIONS, KNOWN_APP_ENTITY_KEYS } from './schema';
-import type {
-  CanonicalHouseholdInputData,
-  CanonicalHouseholdInputEnvelope,
-  CanonicalHouseholdSetup,
-} from './canonicalTypes';
-import { buildNamedGroupCollection, parseNamedGroupCollection, parseNamedPeople } from './namedCodecHelpers';
 
 export function parseAppHouseholdInput(
   input: CanonicalHouseholdInputEnvelope
 ): CanonicalHouseholdSetup {
-  const rawData = input.householdData as Record<string, unknown>;
+  const rawData = input.householdData as unknown as Record<string, unknown>;
   const unknownKeys = Object.keys(rawData).filter((key) => !KNOWN_APP_ENTITY_KEYS.has(key));
 
   if (unknownKeys.length > 0) {
@@ -51,7 +55,10 @@ export function buildAppHouseholdData(setup: CanonicalHouseholdSetup): Canonical
   const normalizedSetup = normalizeCanonicalSetup(setup);
   const householdData: CanonicalHouseholdInputData = {
     people: Object.fromEntries(
-      Object.entries(normalizedSetup.people).map(([personName, person]) => [personName, person.values])
+      Object.entries(normalizedSetup.people).map(([personName, person]) => [
+        personName,
+        person.values,
+      ])
     ),
   };
 

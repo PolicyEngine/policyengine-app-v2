@@ -29,7 +29,7 @@ export function mockPopulationWithComplexHousehold(): Population {
             members: ['person1', 'person2'],
           },
         },
-        tax_units: {
+        taxUnits: {
           tax_unit1: {
             members: ['person1', 'person2'],
           },

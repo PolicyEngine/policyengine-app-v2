@@ -1,3 +1,15 @@
+import type {
+  CanonicalFieldValue,
+  CanonicalGroupSetup,
+  CanonicalHouseholdSetup,
+  HouseholdScalar,
+} from './canonicalTypes';
+import {
+  buildNamedGroupCollection,
+  parseNamedGroupCollection,
+  parseNamedPeople,
+} from './namedCodecHelpers';
+import { buildGeneratedGroupName, GROUP_DEFINITIONS, KNOWN_V1_ENTITY_KEYS } from './schema';
 import {
   getCanonicalGroupSetup,
   isYearValueMap,
@@ -6,13 +18,6 @@ import {
   SETUP_KEY_BY_APP_KEY,
   wrapForYear,
 } from './utils';
-import { buildGeneratedGroupName, GROUP_DEFINITIONS, KNOWN_V1_ENTITY_KEYS } from './schema';
-import type {
-  CanonicalFieldValue,
-  CanonicalGroupSetup,
-  CanonicalHouseholdSetup,
-  HouseholdScalar,
-} from './canonicalTypes';
 import type {
   V1HouseholdCreateEnvelope,
   V1HouseholdData,
@@ -20,14 +25,13 @@ import type {
   V1HouseholdMetadataEnvelope,
   V1HouseholdPersonData,
 } from './v1Types';
-import { buildNamedGroupCollection, parseNamedGroupCollection, parseNamedPeople } from './namedCodecHelpers';
 
 function parseV1HouseholdData(args: {
   householdData: V1HouseholdData;
   countryId: string;
   label?: string | null;
 }): CanonicalHouseholdSetup {
-  const rawData = args.householdData as Record<string, unknown>;
+  const rawData = args.householdData as unknown as Record<string, unknown>;
   const unknownKeys = Object.keys(rawData).filter((key) => !KNOWN_V1_ENTITY_KEYS.has(key));
 
   if (unknownKeys.length > 0) {
@@ -81,7 +85,10 @@ function buildV1PersonData(
   context: string
 ): V1HouseholdPersonData {
   return Object.fromEntries(
-    Object.entries(values).map(([key, value]) => [key, buildV1FieldValue(value, year, `${context}.${key}`)])
+    Object.entries(values).map(([key, value]) => [
+      key,
+      buildV1FieldValue(value, year, `${context}.${key}`),
+    ])
   );
 }
 
@@ -144,9 +151,7 @@ export function parseV1MetadataEnvelope(
   });
 }
 
-export function parseV1CreateEnvelope(
-  payload: V1HouseholdCreateEnvelope
-): CanonicalHouseholdSetup {
+export function parseV1CreateEnvelope(payload: V1HouseholdCreateEnvelope): CanonicalHouseholdSetup {
   return parseV1HouseholdData({
     householdData: payload.data,
     countryId: payload.country_id,

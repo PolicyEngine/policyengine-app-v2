@@ -1,5 +1,6 @@
 import { CURRENT_YEAR } from '@/constants';
 import { Household, HouseholdPerson } from '@/types/ingredients/Household';
+import { getHouseholdYearValue } from '@/utils/householdDataAccess';
 import { PersonWithName } from '@/utils/HouseholdQueries';
 
 // ============= TEST CONSTANTS =============
@@ -397,7 +398,7 @@ export const verifyPersonWithName = (
 ): void => {
   expect(actual.name).toBe(expectedName);
   if (expectedAge !== undefined) {
-    expect(actual.age[year]).toBe(expectedAge);
+    expect(getHouseholdYearValue(actual.age, year)).toBe(expectedAge);
   }
 };
 

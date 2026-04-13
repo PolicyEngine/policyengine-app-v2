@@ -3704,7 +3704,7 @@ function PopulationBrowseModal({
     householdUsageStore.recordUsage(householdIdStr);
 
     const household: CanonicalHouseholdInputEnvelope | null = householdData.household
-      ? householdData.household.toInput()
+      ? householdData.household.toCanonicalInput()
       : {
           id: householdIdStr,
           countryId,
@@ -4716,7 +4716,7 @@ function SimulationCanvas({
           type: 'household',
           population: {
             geography: null,
-            household: household.toInput(),
+            household: household.toCanonicalInput(),
             label: householdData.association.label || `Household #${householdId}`,
             type: 'household',
           },
