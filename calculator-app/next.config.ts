@@ -3,6 +3,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const rootNodeModules = path.resolve(__dirname, "../node_modules");
 
 const nextConfig: NextConfig = {
   // Compile TypeScript files from ../app/src/ (the shared Vite codebase)
@@ -42,6 +43,34 @@ const nextConfig: NextConfig = {
       "node_modules",
       ...(config.resolve.modules || []),
     ];
+
+    // Shared app code under ../app/src can otherwise resolve a second copy of
+    // React / React Query / Redux from app/node_modules. That breaks context
+    // singletons in Next, e.g. QueryClientProvider vs useQueryClient().
+    config.resolve.alias = {
+      ...(config.resolve.alias || {}),
+      react: path.join(rootNodeModules, "react"),
+      "react-dom": path.join(rootNodeModules, "react-dom"),
+      "react/jsx-runtime": path.join(rootNodeModules, "react/jsx-runtime.js"),
+      "react/jsx-dev-runtime": path.join(
+        rootNodeModules,
+        "react/jsx-dev-runtime.js",
+      ),
+      "react-redux": path.join(rootNodeModules, "react-redux"),
+      "@reduxjs/toolkit": path.join(rootNodeModules, "@reduxjs/toolkit"),
+      "@tanstack/query-core": path.join(
+        rootNodeModules,
+        "@tanstack/query-core",
+      ),
+      "@tanstack/react-query": path.join(
+        rootNodeModules,
+        "@tanstack/react-query",
+      ),
+      "@tanstack/react-query-devtools": path.join(
+        rootNodeModules,
+        "@tanstack/react-query-devtools",
+      ),
+    };
 
     return config;
   },
