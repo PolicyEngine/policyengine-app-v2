@@ -8,6 +8,7 @@ import type {
   CanonicalFieldMap,
   CanonicalFieldValue,
   CanonicalGroupSetup,
+  CanonicalGroupSetupKey,
   CanonicalHouseholdSetup,
   CanonicalStructuredEntityValues,
   CanonicalStructuredHouseholdData,
@@ -15,12 +16,9 @@ import type {
   HouseholdScalar,
 } from './canonicalTypes';
 
-const SETUP_KEY_BY_APP_KEY: Record<
+export const SETUP_KEY_BY_APP_KEY: Record<
   HouseholdGroupAppKey,
-  keyof Pick<
-    CanonicalHouseholdSetup,
-    'household' | 'family' | 'taxUnit' | 'spmUnit' | 'maritalUnit' | 'benunit'
-  >
+  CanonicalGroupSetupKey
 > = {
   households: 'household',
   families: 'family',
@@ -103,14 +101,14 @@ export function normalizeCanonicalFieldMap(
   );
 }
 
-function getCanonicalGroupSetup(
+export function getCanonicalGroupSetup(
   setup: CanonicalHouseholdSetup,
   appKey: HouseholdGroupAppKey
 ): CanonicalGroupSetup | undefined {
   return setup[SETUP_KEY_BY_APP_KEY[appKey]];
 }
 
-function setCanonicalGroupSetup(
+export function setCanonicalGroupSetup(
   setup: CanonicalHouseholdSetup,
   appKey: HouseholdGroupAppKey,
   group: CanonicalGroupSetup

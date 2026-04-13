@@ -1,203 +1,165 @@
 import {
-  getGroupDefinitionByAppKey,
-  GROUP_DEFINITIONS,
-  KNOWN_APP_ENTITY_KEYS,
-  KNOWN_V1_ENTITY_KEYS,
-} from './schema';
+  getCanonicalGroupSetup,
+  isYearValueMap,
+  normalizeCanonicalSetup,
+  normalizeCountryId,
+  SETUP_KEY_BY_APP_KEY,
+  wrapForYear,
+} from './utils';
+import { buildGeneratedGroupName, GROUP_DEFINITIONS, KNOWN_V1_ENTITY_KEYS } from './schema';
 import type {
-  CanonicalHouseholdInputData,
-  CanonicalStructuredGroup,
-  CanonicalStructuredHouseholdData,
+  CanonicalFieldValue,
+  CanonicalGroupSetup,
+  CanonicalHouseholdSetup,
+  HouseholdScalar,
 } from './canonicalTypes';
-import type { V1HouseholdCreateEnvelope, V1HouseholdData } from './v1Types';
-import { cloneValue, isRecord } from './utils';
+import type {
+  V1HouseholdCreateEnvelope,
+  V1HouseholdData,
+  V1HouseholdGroupData,
+  V1HouseholdMetadataEnvelope,
+  V1HouseholdPersonData,
+} from './v1Types';
+import { buildNamedGroupCollection, parseNamedGroupCollection, parseNamedPeople } from './namedCodecHelpers';
 
-function parsePeople(
-  rawPeople: unknown,
-  context: string
-): CanonicalStructuredHouseholdData['people'] {
-  if (rawPeople === undefined) {
-    return {};
-  }
-
-  if (!isRecord(rawPeople)) {
-    throw new Error(`${context}: people must be an object`);
-  }
-
-  return Object.fromEntries(
-    Object.entries(rawPeople).map(([personName, rawPerson]) => {
-      if (!isRecord(rawPerson)) {
-        throw new Error(`${context}: person "${personName}" must be an object`);
-      }
-
-      return [personName, cloneValue(rawPerson)];
-    })
-  );
-}
-
-function parseGroup(
-  rawGroupCollection: unknown,
-  context: string,
-  groupKey: string,
-  peopleNames: Set<string>
-): CanonicalStructuredGroup | undefined {
-  if (rawGroupCollection === undefined) {
-    return undefined;
-  }
-
-  if (!isRecord(rawGroupCollection)) {
-    throw new Error(`${context}: ${groupKey} must be an object`);
-  }
-
-  const entries = Object.entries(rawGroupCollection);
-  if (entries.length === 0) {
-    return undefined;
-  }
-  if (entries.length > 1) {
-    throw new Error(
-      `${context}: expected at most one ${groupKey} entry, received ${entries.length}`
-    );
-  }
-
-  const [groupName, rawGroup] = entries[0];
-  if (!isRecord(rawGroup)) {
-    throw new Error(`${context}: ${groupKey}.${groupName} must be an object`);
-  }
-
-  if (!Array.isArray(rawGroup.members)) {
-    throw new Error(`${context}: ${groupKey}.${groupName}.members must be an array`);
-  }
-
-  const members = rawGroup.members.map((member) => String(member));
-  const unknownMembers = members.filter((member) => !peopleNames.has(member));
-  if (unknownMembers.length > 0) {
-    throw new Error(
-      `${context}: ${groupKey}.${groupName} references unknown members: ${unknownMembers.join(', ')}`
-    );
-  }
-
-  const { members: _ignoredMembers, ...rawValues } = rawGroup;
-
-  return {
-    name: groupName,
-    members,
-    values: cloneValue(rawValues),
-  };
-}
-
-export function parseAppHouseholdData(
-  householdData: CanonicalHouseholdInputData
-): CanonicalStructuredHouseholdData {
-  const rawData = householdData as Record<string, unknown>;
-  const unknownKeys = Object.keys(rawData).filter((key) => !KNOWN_APP_ENTITY_KEYS.has(key));
-
-  if (unknownKeys.length > 0) {
-    throw new Error(`Unsupported household entities: ${unknownKeys.join(', ')}`);
-  }
-
-  const people = parsePeople(rawData.people, 'Household input');
-  const peopleNames = new Set(Object.keys(people));
-  const groups: CanonicalStructuredHouseholdData['groups'] = {};
-
-  for (const definition of GROUP_DEFINITIONS) {
-    const parsedGroup = parseGroup(
-      rawData[definition.appKey],
-      'Household input',
-      definition.appKey,
-      peopleNames
-    );
-
-    if (parsedGroup) {
-      groups[definition.appKey] = parsedGroup;
-    }
-  }
-
-  return { people, groups };
-}
-
-export function parseV1HouseholdData(
-  householdData: V1HouseholdData
-): CanonicalStructuredHouseholdData {
-  const rawData = householdData as Record<string, unknown>;
+function parseV1HouseholdData(args: {
+  householdData: V1HouseholdData;
+  countryId: string;
+  label?: string | null;
+}): CanonicalHouseholdSetup {
+  const rawData = args.householdData as Record<string, unknown>;
   const unknownKeys = Object.keys(rawData).filter((key) => !KNOWN_V1_ENTITY_KEYS.has(key));
 
   if (unknownKeys.length > 0) {
     throw new Error(`Unsupported household entities in v1 payload: ${unknownKeys.join(', ')}`);
   }
 
-  const people = parsePeople(rawData.people, 'V1 household payload');
+  const people = parseNamedPeople(rawData.people, 'V1 household payload');
   const peopleNames = new Set(Object.keys(people));
-  const groups: CanonicalStructuredHouseholdData['groups'] = {};
+  const setup: CanonicalHouseholdSetup = {
+    countryId: normalizeCountryId(args.countryId),
+    label: args.label ?? null,
+    year: null,
+    people,
+  };
 
   for (const definition of GROUP_DEFINITIONS) {
-    const parsedGroup = parseGroup(
-      rawData[definition.v1Key],
-      'V1 household payload',
-      definition.v1Key,
-      peopleNames
-    );
+    const parsedGroup = parseNamedGroupCollection({
+      rawGroupCollection: rawData[definition.v1Key],
+      context: 'V1 household payload',
+      groupKey: definition.v1Key,
+      peopleNames,
+    });
 
     if (parsedGroup) {
-      groups[definition.appKey] = parsedGroup;
+      setup[SETUP_KEY_BY_APP_KEY[definition.appKey]] = parsedGroup;
     }
   }
 
-  return { people, groups };
+  return normalizeCanonicalSetup(setup);
 }
 
-function buildGroupCollection(
-  group: CanonicalStructuredGroup
-): Record<string, Record<string, unknown>> {
-  return {
-    [group.name]: {
-      members: cloneValue(group.members),
-      ...cloneValue(group.values),
+function buildV1FieldValue(
+  value: CanonicalFieldValue,
+  year: number | null,
+  context: string
+): Record<string, HouseholdScalar> {
+  if (isYearValueMap(value)) {
+    return value;
+  }
+
+  if (year === null) {
+    throw new Error(`${context} requires a year to emit a v1 payload`);
+  }
+
+  return wrapForYear(value, year);
+}
+
+function buildV1PersonData(
+  values: CanonicalGroupSetup['values'],
+  year: number | null,
+  context: string
+): V1HouseholdPersonData {
+  return Object.fromEntries(
+    Object.entries(values).map(([key, value]) => [key, buildV1FieldValue(value, year, `${context}.${key}`)])
+  );
+}
+
+function buildV1GroupData(args: {
+  group: CanonicalGroupSetup;
+  fallbackName: string;
+  year: number | null;
+}): Record<string, V1HouseholdGroupData> {
+  const values = Object.fromEntries(
+    Object.entries(args.group.values).map(([key, value]) => [
+      key,
+      buildV1FieldValue(value, args.year, `V1 household group "${args.fallbackName}".${key}`),
+    ])
+  );
+
+  return buildNamedGroupCollection({
+    group: {
+      ...args.group,
+      values,
     },
-  };
+    fallbackName: args.fallbackName,
+  }) as Record<string, V1HouseholdGroupData>;
 }
 
-export function buildAppHouseholdData(
-  data: CanonicalStructuredHouseholdData
-): CanonicalHouseholdInputData {
-  const householdData: Record<string, unknown> = {
-    people: cloneValue(data.people),
+function buildV1HouseholdData(setup: CanonicalHouseholdSetup): V1HouseholdData {
+  const normalizedSetup = normalizeCanonicalSetup(setup);
+  const year = normalizedSetup.year;
+  const payloadData: Partial<V1HouseholdData> = {
+    people: Object.fromEntries(
+      Object.entries(normalizedSetup.people).map(([personName, person]) => [
+        personName,
+        buildV1PersonData(person.values, year, `V1 household person "${personName}"`),
+      ])
+    ),
   };
 
-  for (const [groupKey, group] of Object.entries(data.groups)) {
+  for (const definition of GROUP_DEFINITIONS) {
+    const group = getCanonicalGroupSetup(normalizedSetup, definition.appKey);
     if (!group) {
       continue;
     }
 
-    const definition = getGroupDefinitionByAppKey(groupKey);
-    if (!definition) {
-      throw new Error(`Unsupported canonical household group "${groupKey}"`);
-    }
-
-    householdData[definition.appKey] = buildGroupCollection(group);
+    payloadData[definition.v1Key] = buildV1GroupData({
+      group,
+      fallbackName: buildGeneratedGroupName(definition.generatedKeyPrefix, 0),
+      year,
+    });
   }
 
-  return householdData as CanonicalHouseholdInputData;
+  return payloadData as V1HouseholdData;
 }
 
-export function buildV1PayloadData(
-  data: CanonicalStructuredHouseholdData
-): V1HouseholdCreateEnvelope['data'] {
-  const payloadData: Record<string, unknown> = {
-    people: cloneValue(data.people),
+export function parseV1MetadataEnvelope(
+  metadata: V1HouseholdMetadataEnvelope
+): CanonicalHouseholdSetup {
+  return parseV1HouseholdData({
+    householdData: metadata.household_json,
+    countryId: metadata.country_id,
+    label: metadata.label ?? null,
+  });
+}
+
+export function parseV1CreateEnvelope(
+  payload: V1HouseholdCreateEnvelope
+): CanonicalHouseholdSetup {
+  return parseV1HouseholdData({
+    householdData: payload.data,
+    countryId: payload.country_id,
+    label: payload.label ?? null,
+  });
+}
+
+export function buildV1CreateEnvelope(setup: CanonicalHouseholdSetup): V1HouseholdCreateEnvelope {
+  const normalizedSetup = normalizeCanonicalSetup(setup);
+
+  return {
+    country_id: normalizedSetup.countryId,
+    data: buildV1HouseholdData(normalizedSetup),
+    label: normalizedSetup.label ?? undefined,
   };
-
-  for (const [groupKey, group] of Object.entries(data.groups)) {
-    if (!group) {
-      continue;
-    }
-
-    const definition = getGroupDefinitionByAppKey(groupKey);
-    if (!definition) {
-      throw new Error(`Unsupported canonical household group "${groupKey}"`);
-    }
-
-    payloadData[definition.v1Key] = buildGroupCollection(group);
-  }
-
-  return payloadData as V1HouseholdCreateEnvelope['data'];
 }

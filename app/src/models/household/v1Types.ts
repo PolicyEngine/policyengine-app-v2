@@ -1,3 +1,5 @@
+import type { HouseholdScalar } from './canonicalTypes';
+
 export interface V1HouseholdMetadataEnvelope {
   id: string;
   country_id: string;
@@ -9,16 +11,16 @@ export interface V1HouseholdMetadataEnvelope {
 
 export interface V1HouseholdData {
   people: Record<string, V1HouseholdPersonData>;
-  families: Record<string, V1HouseholdGroupData>;
-  tax_units: Record<string, V1HouseholdGroupData>;
-  spm_units: Record<string, V1HouseholdGroupData>;
-  households: Record<string, V1HouseholdGroupData>;
-  marital_units: Record<string, V1HouseholdGroupData>;
+  families?: Record<string, V1HouseholdGroupData>;
+  tax_units?: Record<string, V1HouseholdGroupData>;
+  spm_units?: Record<string, V1HouseholdGroupData>;
+  households?: Record<string, V1HouseholdGroupData>;
+  marital_units?: Record<string, V1HouseholdGroupData>;
   benunits?: Record<string, V1HouseholdGroupData>;
 }
 
 export interface V1HouseholdPersonData {
-  [key: string]: Record<string, string | number | boolean> | undefined;
+  [key: string]: Record<string, HouseholdScalar> | undefined;
 }
 
 export interface V1HouseholdMemberGroup {
@@ -26,14 +28,11 @@ export interface V1HouseholdMemberGroup {
 }
 
 export interface V1HouseholdGroupProperties {
-  [key: string]: Record<string, string | number | boolean> | undefined;
+  [key: string]: Record<string, HouseholdScalar> | undefined;
 }
 
 export type V1HouseholdGroupData = V1HouseholdMemberGroup & {
-  [key: string]:
-    | Record<string, string | number | boolean>
-    | string[]
-    | undefined;
+  [key: string]: Record<string, HouseholdScalar> | string[] | undefined;
 };
 
 export interface V1HouseholdCreateEnvelope {

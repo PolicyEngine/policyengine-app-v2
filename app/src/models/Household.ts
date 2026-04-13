@@ -16,7 +16,6 @@ import type {
 } from './household/v2Types';
 import {
   buildCanonicalSetupFromStructuredState,
-  buildStructuredHouseholdDataFromCanonicalSetup,
   buildStructuredStateFromCanonicalSetup,
   cloneValue,
   deepEqual,
@@ -24,11 +23,11 @@ import {
   normalizeCanonicalSetup,
   normalizeCountryId,
 } from './household/utils';
+import { buildAppHouseholdData, parseAppHouseholdInput } from './household/appCodec';
 import {
-  buildAppHouseholdData,
-  buildV1PayloadData,
-  parseAppHouseholdData,
-  parseV1HouseholdData,
+  buildV1CreateEnvelope,
+  parseV1CreateEnvelope,
+  parseV1MetadataEnvelope,
 } from './household/v1Codec';
 import {
   buildV2CreateRequest,
@@ -74,12 +73,8 @@ export class Household extends BaseModel<HouseholdModelData> {
     });
   }
 
-  private toStructuredData() {
-    return buildStructuredHouseholdDataFromCanonicalSetup(this.setup);
-  }
-
   get data(): CanonicalHouseholdInputData {
-    return buildAppHouseholdData(this.toStructuredData());
+    return buildAppHouseholdData(this.setup);
   }
 
   get householdData(): CanonicalHouseholdInputData {
@@ -117,12 +112,7 @@ export class Household extends BaseModel<HouseholdModelData> {
 
   static fromInput(input: CanonicalHouseholdInputEnvelope): Household {
     return Household.fromCanonical(
-      buildCanonicalSetupFromStructuredState({
-        countryId: normalizeCountryId(input.countryId),
-        label: input.label ?? null,
-        year: input.year ?? inferYearFromData(input.householdData),
-        data: parseAppHouseholdData(input.householdData),
-      }),
+      parseAppHouseholdInput(input),
       { id: input.id ?? 'draft-household' }
     );
   }
@@ -144,11 +134,8 @@ export class Household extends BaseModel<HouseholdModelData> {
   }
 
   static fromV1Metadata(metadata: V1HouseholdMetadataEnvelope): Household {
-    return Household.fromV1Payload({
+    return Household.fromCanonical(parseV1MetadataEnvelope(metadata), {
       id: String(metadata.id),
-      countryId: metadata.country_id,
-      householdData: metadata.household_json,
-      label: metadata.label ?? null,
     });
   }
 
@@ -159,28 +146,12 @@ export class Household extends BaseModel<HouseholdModelData> {
       label?: string | null;
     } = {}
   ): Household {
-    return Household.fromV1Payload({
-      id: options.id ?? 'draft-household',
-      countryId: payload.country_id,
-      householdData: payload.data,
-      label: options.label ?? payload.label ?? null,
-    });
-  }
-
-  static fromV1Payload(args: {
-    id: string;
-    countryId: string;
-    householdData: V1HouseholdCreateEnvelope['data'];
-    label?: string | null;
-  }): Household {
     return Household.fromCanonical(
-      buildCanonicalSetupFromStructuredState({
-        countryId: normalizeCountryId(args.countryId),
-        label: args.label ?? null,
-        year: null,
-        data: parseV1HouseholdData(args.householdData),
-      }),
-      { id: String(args.id) }
+      {
+        ...parseV1CreateEnvelope(payload),
+        label: options.label ?? payload.label ?? null,
+      },
+      { id: options.id ?? 'draft-household' }
     );
   }
 
@@ -219,11 +190,7 @@ export class Household extends BaseModel<HouseholdModelData> {
   }
 
   toV1CreationPayload(): V1HouseholdCreateEnvelope {
-    return {
-      country_id: this.countryId,
-      data: buildV1PayloadData(this.toStructuredData()),
-      label: this.label ?? undefined,
-    };
+    return buildV1CreateEnvelope(this.toCanonical());
   }
 
   toV2CreateRequest(): V2CreateHouseholdEnvelope {

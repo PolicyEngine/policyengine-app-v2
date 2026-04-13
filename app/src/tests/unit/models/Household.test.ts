@@ -171,6 +171,22 @@ describe('Household', () => {
         'Unsupported household entities in v1 payload: unknown_entity'
       );
     });
+
+    it('rejects v1 member groups that reference unknown people', () => {
+      expect(() =>
+        Household.fromV1Metadata({
+          ...mockHouseholdMetadata,
+          household_json: {
+            ...mockHouseholdMetadata.household_json,
+            tax_units: {
+              taxUnit1: {
+                members: ['adult', 'missing-person'],
+              },
+            },
+          },
+        })
+      ).toThrow('references unknown members: missing-person');
+    });
   });
 
   describe('fromV1CreationPayload', () => {
@@ -296,6 +312,36 @@ describe('Household', () => {
           },
           households: {
             household1: { members: ['adult', 'child'] },
+          },
+        },
+      });
+    });
+
+    it('wraps scalar canonical values with the household year before emitting v1 payloads', () => {
+      const household = Household.fromCanonical(
+        {
+          countryId: 'us',
+          label: 'Scalar household',
+          year: 2026,
+          people: {
+            adult: {
+              values: {
+                age: 35,
+              },
+            },
+          },
+        },
+        { id: 'scalar-household' }
+      );
+
+      expect(household.toV1CreationPayload()).toEqual({
+        country_id: 'us',
+        label: 'Scalar household',
+        data: {
+          people: {
+            adult: {
+              age: { 2026: 35 },
+            },
           },
         },
       });
