@@ -81,6 +81,8 @@ function generateOgHtml(metadata: OgMetadata, url: string): string {
   const twitterHandle = '@ThePolicyEngine';
   const safeTitle = escapeHtml(metadata.title);
   const safeDescription = escapeHtml(metadata.description);
+  const safeUrl = escapeHtml(url);
+  const safeImage = escapeHtml(metadata.image);
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -91,20 +93,20 @@ function generateOgHtml(metadata: OgMetadata, url: string): string {
   <meta name="description" content="${safeDescription}" />
   <meta property="og:title" content="${safeTitle}" />
   <meta property="og:description" content="${safeDescription}" />
-  <meta property="og:image" content="${metadata.image}" />
-  <meta property="og:url" content="${url}" />
+  <meta property="og:image" content="${safeImage}" />
+  <meta property="og:url" content="${safeUrl}" />
   <meta property="og:type" content="${metadata.type}" />
   <meta property="og:site_name" content="${siteName}" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:site" content="${twitterHandle}" />
   <meta name="twitter:title" content="${safeTitle}" />
   <meta name="twitter:description" content="${safeDescription}" />
-  <meta name="twitter:image" content="${metadata.image}" />
+  <meta name="twitter:image" content="${safeImage}" />
 </head>
 <body>
   <h1>${safeTitle}</h1>
   <p>${safeDescription}</p>
-  <p><a href="${url}">View on PolicyEngine</a></p>
+  <p><a href="${safeUrl}">View on PolicyEngine</a></p>
 </body>
 </html>`;
 }

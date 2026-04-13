@@ -10,7 +10,6 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
-import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
 import {
   blogColors,
@@ -32,6 +31,30 @@ function safeJsonParse(
   } catch (err) {
     console.error("[PLOTLY] Failed to parse JSON:", err);
     return null;
+  }
+}
+
+function isSafeHref(href: string): boolean {
+  const trimmed = href.trim();
+
+  if (!trimmed) {
+    return false;
+  }
+
+  if (
+    trimmed.startsWith("#") ||
+    trimmed.startsWith("/") ||
+    trimmed.startsWith("?") ||
+    trimmed.startsWith("//")
+  ) {
+    return true;
+  }
+
+  try {
+    const url = new URL(trimmed);
+    return ["http:", "https:", "mailto:", "tel:"].includes(url.protocol);
+  } catch {
+    return false;
   }
 }
 
@@ -829,11 +852,7 @@ export function MarkdownFormatter({
   };
 
   return (
-    <ReactMarkdown
-      rehypePlugins={[rehypeRaw]}
-      remarkPlugins={[remarkGfm]}
-      components={components}
-    >
+    <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
       {markdown}
     </ReactMarkdown>
   );
@@ -854,19 +873,23 @@ function parseInlineLinks(text: string): React.ReactNode[] {
       parts.push(text.slice(lastIndex, match.index));
     }
     parts.push(
-      <a
-        key={match.index}
-        href={match[2]}
-        target="_blank"
-        rel="noopener noreferrer"
-        style={{
-          color: blogColors.link,
-          textDecoration: "none",
-          borderBottom: `1px solid ${blogColors.link}`,
-        }}
-      >
-        {match[1]}
-      </a>,
+      isSafeHref(match[2]) ? (
+        <a
+          key={match.index}
+          href={match[2]}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            color: blogColors.link,
+            textDecoration: "none",
+            borderBottom: `1px solid ${blogColors.link}`,
+          }}
+        >
+          {match[1]}
+        </a>
+      ) : (
+        <span key={match.index}>{match[1]}</span>
+      ),
     );
     lastIndex = match.index + match[0].length;
   }
