@@ -28,9 +28,7 @@ export default function ModifyReportPage({ userReportId }: { userReportId?: stri
   const location = useAppLocation();
   const searchParams = new URLSearchParams(location.search);
   const shareParam = searchParams.get('share');
-  const shareSearch = shareParam
-    ? `?${new URLSearchParams({ share: shareParam }).toString()}`
-    : '';
+  const shareSearch = shareParam ? `?${new URLSearchParams({ share: shareParam }).toString()}` : '';
   const shareData = extractShareDataFromUrl(searchParams);
   const isSharedView = shareData !== null;
 
@@ -158,7 +156,9 @@ export default function ModifyReportPage({ userReportId }: { userReportId?: stri
     <>
       <ReportBuilderShell
         title={isReadOnly ? 'View report setup' : 'Edit report'}
-        backPath={userReportId ? `/${countryId}/report-output/${userReportId}${shareSearch}` : undefined}
+        backPath={
+          userReportId ? `/${countryId}/report-output/${userReportId}${shareSearch}` : undefined
+        }
         backLabel={userReportId ? reportState?.label || userReportId : undefined}
         actions={topBarActions}
         reportState={reportState}

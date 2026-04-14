@@ -1,7 +1,7 @@
 import { render, screen } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import ModifyReportPage from '@/pages/reportBuilder/ModifyReportPage';
 import type { ReportIngredientsInput } from '@/hooks/utils/useFetchReportIngredients';
+import ModifyReportPage from '@/pages/reportBuilder/ModifyReportPage';
 import type { ReportBuilderState } from '@/pages/reportBuilder/types';
 
 const mockUseAppLocation = vi.fn();
@@ -65,7 +65,10 @@ vi.mock('@/pages/reportBuilder/components', () => ({
 describe('ModifyReportPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockUseAppLocation.mockReturnValue({ pathname: '/us/report-output/sur-123/config', search: '' });
+    mockUseAppLocation.mockReturnValue({
+      pathname: '/us/report-output/sur-123/config',
+      search: '',
+    });
     mockUseReportBuilderState.mockReturnValue({
       reportState: baseReportState,
       setReportState: vi.fn(),

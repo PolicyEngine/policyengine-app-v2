@@ -132,9 +132,7 @@ export function PolicyCreationModal({
   const resolvedInitialEditorMode: EditorMode = forceReadOnly
     ? 'display'
     : initialEditorMode || (initialPolicy ? 'edit' : 'create');
-  const [editorMode, setEditorMode] = useState<EditorMode>(
-    resolvedInitialEditorMode
-  );
+  const [editorMode, setEditorMode] = useState<EditorMode>(resolvedInitialEditorMode);
   const effectiveEditorMode: EditorMode = forceReadOnly ? 'display' : editorMode;
   const isReadOnly = effectiveEditorMode === 'display';
   const colorConfig = INGREDIENT_COLORS.policy;

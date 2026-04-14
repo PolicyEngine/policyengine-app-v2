@@ -14,8 +14,8 @@ import { useSharedReportData } from '@/hooks/useSharedReportData';
 import { useUserReportById } from '@/hooks/useUserReports';
 import type { EconomyOutput, Report } from '@/types/ingredients/Report';
 import { formatReportTimestamp } from '@/utils/dateUtils';
-import { getReportConfigPath } from '@/utils/reportRouting';
 import { resolveDefaultReportOutputSubpage } from '@/utils/reportOutputSubpage';
+import { getReportConfigPath } from '@/utils/reportRouting';
 import {
   buildSharePath,
   createShareData,
@@ -87,9 +87,7 @@ export default function ReportOutputPage({
   const location = useAppLocation();
   const searchParams = new URLSearchParams(location.search);
   const shareParam = searchParams.get('share');
-  const shareSearch = shareParam
-    ? `?${new URLSearchParams({ share: shareParam }).toString()}`
-    : '';
+  const shareSearch = shareParam ? `?${new URLSearchParams({ share: shareParam }).toString()}` : '';
 
   // Detect shared view from URL
   const shareData = extractShareDataFromUrl(searchParams);
@@ -252,7 +250,7 @@ export default function ReportOutputPage({
       ? `/${countryId}/report-output/${displayReportId}${shareSearch}`
       : undefined;
   const reportOutputBackLabel =
-    activeTab === 'reproduce' && displayReportId ? displayLabel ?? displayReportId : undefined;
+    activeTab === 'reproduce' && displayReportId ? (displayLabel ?? displayReportId) : undefined;
 
   // Render content based on output type
   // Both shared and owned views now use the same user associations shape

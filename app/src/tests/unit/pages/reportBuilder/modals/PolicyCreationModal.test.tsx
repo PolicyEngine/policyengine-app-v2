@@ -71,7 +71,9 @@ describe('PolicyCreationModal', () => {
     );
 
     expect(screen.queryByRole('button', { name: /edit this policy/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /update existing policy/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /update existing policy/i })
+    ).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /save as new policy/i })).not.toBeInTheDocument();
   });
 

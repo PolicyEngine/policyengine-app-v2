@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { IconCheck, IconLink, IconShare } from '@tabler/icons-react';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
   Popover,
@@ -9,7 +10,6 @@ import {
   PopoverHeader,
   PopoverTitle,
 } from '@/components/ui/popover';
-import { Button } from '@/components/ui/button';
 
 interface ReportShareButtonProps {
   shareUrl?: string;
