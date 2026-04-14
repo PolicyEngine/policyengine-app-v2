@@ -38,6 +38,8 @@ export function SimulationCanvas({
   isReadOnly,
 }: SimulationCanvasProps) {
   const canvas = useSimulationCanvas({ reportState, setReportState, pickerState, setPickerState });
+  const isViewOnly = Boolean(isReadOnly);
+  const noop = () => {};
 
   if (canvas.isInitialLoading) {
     return <SimulationCanvasSkeleton />;
@@ -61,11 +63,13 @@ export function SimulationCanvas({
             onSelectRecentPopulation={(pop) => canvas.handleSelectRecentPopulation(0, pop)}
             onDeselectPolicy={() => canvas.handleDeselectPolicy(0)}
             onDeselectPopulation={() => canvas.handleDeselectPopulation(0)}
-            onEditPolicy={() => canvas.handleEditPolicy(0)}
+            onEditPolicy={isViewOnly ? noop : () => canvas.handleEditPolicy(0)}
             onViewPolicy={() => canvas.handleViewPolicy(0)}
-            onCreateCustomPolicy={() => canvas.handleCreateCustom(0, 'policy')}
-            onBrowseMorePolicies={() => canvas.handleBrowseMorePolicies(0)}
-            onBrowseMorePopulations={() => canvas.handleBrowseMorePopulations(0)}
+            onCreateCustomPolicy={isViewOnly ? noop : () => canvas.handleCreateCustom(0, 'policy')}
+            onBrowseMorePolicies={isViewOnly ? noop : () => canvas.handleBrowseMorePolicies(0)}
+            onBrowseMorePopulations={
+              isViewOnly ? noop : () => canvas.handleBrowseMorePopulations(0)
+            }
             canRemove={false}
             savedPolicies={canvas.savedPolicies}
             recentPopulations={canvas.recentPopulations}
@@ -86,11 +90,15 @@ export function SimulationCanvas({
               onSelectRecentPopulation={(pop) => canvas.handleSelectRecentPopulation(1, pop)}
               onDeselectPolicy={() => canvas.handleDeselectPolicy(1)}
               onDeselectPopulation={() => canvas.handleDeselectPopulation(1)}
-              onEditPolicy={() => canvas.handleEditPolicy(1)}
+              onEditPolicy={isViewOnly ? noop : () => canvas.handleEditPolicy(1)}
               onViewPolicy={() => canvas.handleViewPolicy(1)}
-              onCreateCustomPolicy={() => canvas.handleCreateCustom(1, 'policy')}
-              onBrowseMorePolicies={() => canvas.handleBrowseMorePolicies(1)}
-              onBrowseMorePopulations={() => canvas.handleBrowseMorePopulations(1)}
+              onCreateCustomPolicy={
+                isViewOnly ? noop : () => canvas.handleCreateCustom(1, 'policy')
+              }
+              onBrowseMorePolicies={isViewOnly ? noop : () => canvas.handleBrowseMorePolicies(1)}
+              onBrowseMorePopulations={
+                isViewOnly ? noop : () => canvas.handleBrowseMorePopulations(1)
+              }
               onRemove={() => canvas.handleRemoveSimulation(1)}
               canRemove={!canvas.isGeographySelected}
               isRequired={canvas.isGeographySelected}
@@ -148,6 +156,7 @@ export function SimulationCanvas({
         initialPolicy={canvas.policyCreationState.initialPolicy}
         initialEditorMode={canvas.policyCreationState.initialEditorMode}
         reportYear={reportYear}
+        forceReadOnly={isViewOnly}
       />
     </>
   );

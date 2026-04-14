@@ -130,8 +130,8 @@ export function IngredientSectionFull({
     }
   };
 
-  // Show view/edit gear button for non-current-law policies (in any mode)
-  const showViewEditPolicyButton =
+  // Show policy details action for non-current-law policies.
+  const showViewPolicyButton =
     type === 'policy' && !isCurrentLaw(currentId) && !!currentId && onViewPolicy;
 
   return (
@@ -256,8 +256,8 @@ export function IngredientSectionFull({
               flexShrink: 0,
             }}
           >
-            {/* View/edit policy gear — visible in both view and edit modes */}
-            {showViewEditPolicyButton && (
+            {/* Policy details gear */}
+            {showViewPolicyButton && (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button
@@ -282,7 +282,9 @@ export function IngredientSectionFull({
                     <IconSettings size={14} />
                   </button>
                 </TooltipTrigger>
-                <TooltipContent side="bottom">View/edit policy</TooltipContent>
+                <TooltipContent side="bottom">
+                  {isReadOnly ? 'View policy' : 'View/edit policy'}
+                </TooltipContent>
               </Tooltip>
             )}
             {/* Swap and remove — only in edit mode */}
