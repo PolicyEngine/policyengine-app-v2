@@ -103,6 +103,19 @@
   },
   {
     "type": "iframe",
+    "slug": "working-parents-tax-relief-act",
+    "title": "Working Parents Tax Relief Act calculator",
+    "description": "Estimate the impact of Rep. McDonald Rivet's proposed EITC enhancement for parents of young children, which increases credit percentages for families with children under age 4",
+    "source": "https://wptra.vercel.app/us/working-parents-tax-relief-act",
+    "tags": ["us", "policy", "interactives"],
+    "countryId": "us",
+    "displayWithResearch": true,
+    "image": "working-parents-tax-relief-act.png",
+    "date": "2026-04-14 12:00:00",
+    "authors": ["david-trimmer"]
+  },
+  {
+    "type": "iframe",
     "slug": "watca",
     "title": "Working Americans' Tax Cut Act calculator",
     "description": "Estimate the household and national impact of the cost-of-living exemption and millionaire surtax proposed by Senator Van Hollen",

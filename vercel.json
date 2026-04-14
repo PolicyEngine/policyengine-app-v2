@@ -143,6 +143,14 @@
       "destination": "https://oregon-kicker-refund.vercel.app/us/oregon-kicker-refund/:path*"
     },
     {
+      "source": "/us/working-parents-tax-relief-act",
+      "destination": "https://wptra.vercel.app/us/working-parents-tax-relief-act"
+    },
+    {
+      "source": "/us/working-parents-tax-relief-act/:path*",
+      "destination": "https://wptra.vercel.app/us/working-parents-tax-relief-act/:path*"
+    },
+    {
       "source": "/uk/api",
       "destination": "https://household-api-docs-policy-engine.vercel.app/uk/api"
     },
