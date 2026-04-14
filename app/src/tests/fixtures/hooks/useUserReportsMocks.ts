@@ -1,11 +1,11 @@
 import { Household as HouseholdModel } from '@/models/Household';
+import type { V1HouseholdMetadataEnvelope } from '@/models/household/v1Types';
 import { Policy } from '@/types/ingredients/Policy';
 import { Simulation } from '@/types/ingredients/Simulation';
 import { UserPolicy } from '@/types/ingredients/UserPolicy';
 import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { UserSimulation } from '@/types/ingredients/UserSimulation';
 import { MetadataState } from '@/types/metadata';
-import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
 import { PolicyMetadata } from '@/types/metadata/policyMetadata';
 import { SimulationMetadata } from '@/types/metadata/simulationMetadata';
 import { US_REGION_TYPES } from '@/types/regionTypes';
@@ -167,7 +167,7 @@ export const mockPolicyMetadata2: PolicyMetadata = {
   label: 'Test Policy 2',
 };
 
-export const mockHouseholdMetadata: HouseholdMetadata = {
+export const mockHouseholdMetadata: V1HouseholdMetadataEnvelope = {
   id: TEST_HOUSEHOLD_ID,
   country_id: TEST_COUNTRIES.US,
   api_version: 'v1',

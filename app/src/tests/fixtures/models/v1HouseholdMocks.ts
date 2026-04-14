@@ -1,6 +1,6 @@
 import { CURRENT_YEAR } from '@/constants';
+import type { V1HouseholdMetadataEnvelope } from '@/models/household/v1Types';
 import { HouseholdData } from '@/types/ingredients/Household';
-import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
 
 export const mockEntityMetadata = {
   person: {
@@ -30,7 +30,7 @@ export const mockEntityMetadata = {
   },
 };
 
-export const mockHouseholdMetadata: HouseholdMetadata = {
+export const mockHouseholdMetadata: V1HouseholdMetadataEnvelope = {
   id: '12345',
   country_id: 'us',
   household_json: {
@@ -74,7 +74,7 @@ export const mockHouseholdMetadata: HouseholdMetadata = {
   household_hash: '<household_hash>',
 };
 
-export const mockHouseholdMetadataWithUnknownEntity: HouseholdMetadata = {
+export const mockHouseholdMetadataWithUnknownEntity: V1HouseholdMetadataEnvelope = {
   id: '67890',
   country_id: 'uk',
   household_json: {

@@ -123,24 +123,11 @@ export function getGroupName(entityPlural: string, _personName?: string): string
 function getEntityData(household: Household, entityPlural: string): Record<string, any> | null {
   const householdData = household.householdData;
 
-  switch (entityPlural) {
-    case 'people':
-      return householdData.people;
-    case 'households':
-      return householdData.households ?? null;
-    case 'tax_units':
-      return getHouseholdGroupCollection(householdData, 'tax_units') ?? null;
-    case 'spm_units':
-      return getHouseholdGroupCollection(householdData, 'spm_units') ?? null;
-    case 'families':
-      return householdData.families ?? null;
-    case 'marital_units':
-      return getHouseholdGroupCollection(householdData, 'marital_units') ?? null;
-    case 'benunits':
-      return householdData.benunits ?? null;
-    default:
-      return null;
+  if (entityPlural === 'people') {
+    return householdData.people;
   }
+
+  return getHouseholdGroupCollection(householdData, entityPlural) ?? null;
 }
 
 /**

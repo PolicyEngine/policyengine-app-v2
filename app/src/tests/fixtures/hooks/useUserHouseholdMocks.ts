@@ -1,11 +1,11 @@
 // Fixtures for useUserHouseholds and useUserGeographics hooks
 import { Household as HouseholdModel } from '@/models/Household';
+import type { V1HouseholdMetadataEnvelope } from '@/models/household/v1Types';
 import { Geography } from '@/types/ingredients/Geography';
 import {
   UserGeographyPopulation,
   UserHouseholdPopulation,
 } from '@/types/ingredients/UserPopulation';
-import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
 
 // Test household IDs
 export const TEST_HOUSEHOLD_ID_1 = 'household-123';
@@ -20,7 +20,7 @@ export const TEST_HOUSEHOLD_LABEL = 'Test Household Population';
 export const TEST_GEOGRAPHY_LABEL = 'Test Geography Population';
 
 // Mock household metadata (API format)
-export const mockApiHouseholdMetadata1: HouseholdMetadata = {
+export const mockApiHouseholdMetadata1: V1HouseholdMetadataEnvelope = {
   id: TEST_HOUSEHOLD_ID_1,
   country_id: 'us',
   label: TEST_HOUSEHOLD_LABEL,
@@ -69,7 +69,7 @@ export const mockHouseholdMetadata = {
   isError: false,
 };
 
-export const mockApiHouseholdMetadata2: HouseholdMetadata = {
+export const mockApiHouseholdMetadata2: V1HouseholdMetadataEnvelope = {
   id: TEST_HOUSEHOLD_ID_2,
   country_id: 'us',
   label: 'Second Household',

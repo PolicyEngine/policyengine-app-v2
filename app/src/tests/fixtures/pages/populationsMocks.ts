@@ -1,11 +1,11 @@
 import { vi } from 'vitest';
 import { CURRENT_YEAR } from '@/constants';
 import { Household as HouseholdModel } from '@/models/Household';
+import type { V1HouseholdMetadataEnvelope } from '@/models/household/v1Types';
 import {
   UserGeographyPopulation,
   UserHouseholdPopulation,
 } from '@/types/ingredients/UserPopulation';
-import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
 
 function cloneValue<T>(value: T): T {
   if (typeof structuredClone === 'function') {
@@ -118,7 +118,7 @@ export const POPULATION_ERRORS = {
 // ============= MOCK DATA OBJECTS =============
 
 // Mock household metadata
-export const mockHouseholdMetadata1: HouseholdMetadata = {
+export const mockHouseholdMetadata1: V1HouseholdMetadataEnvelope = {
   id: POPULATION_TEST_IDS.HOUSEHOLD_ID_1.split('-')[1],
   country_id: POPULATION_GEO.COUNTRY_US,
   household_json: {
@@ -162,7 +162,7 @@ export const mockHouseholdMetadata1: HouseholdMetadata = {
   household_hash: '<household_hash>',
 };
 
-export const mockHouseholdMetadata2: HouseholdMetadata = {
+export const mockHouseholdMetadata2: V1HouseholdMetadataEnvelope = {
   id: POPULATION_TEST_IDS.HOUSEHOLD_ID_2.split('-')[1],
   country_id: POPULATION_GEO.COUNTRY_US,
   household_json: {

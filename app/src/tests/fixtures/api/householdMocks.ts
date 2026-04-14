@@ -1,6 +1,6 @@
 import { vi } from 'vitest';
 import { CURRENT_YEAR } from '@/constants';
-import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
+import type { V1HouseholdMetadataEnvelope } from '@/models/household/v1Types';
 import { HouseholdCreationPayload } from '@/types/payloads';
 
 // Test household IDs - descriptive names for clarity
@@ -31,7 +31,7 @@ export const ERROR_MESSAGES = {
   FAILED_TO_FETCH: 'Failed to fetch',
 } as const;
 
-export const mockHouseholdMetadata: HouseholdMetadata = {
+export const mockHouseholdMetadata: V1HouseholdMetadataEnvelope = {
   id: '12345',
   country_id: 'us',
   household_json: {

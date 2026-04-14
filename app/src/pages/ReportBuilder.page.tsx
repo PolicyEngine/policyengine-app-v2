@@ -3641,7 +3641,7 @@ function PopulationBrowseModal({
         return {
           id: householdIdStr,
           label: h.association.label || `Household #${householdIdStr}`,
-          memberCount: Object.keys(h.household?.householdData?.people ?? {}).length,
+          memberCount: h.household?.personCount ?? 0,
           sortTimestamp,
           household: h.household,
         };

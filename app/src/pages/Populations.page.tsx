@@ -190,7 +190,7 @@ export default function PopulationsPage() {
 
   // Helper function to get household configuration details
   const getHouseholdDetails = (household: Household | undefined) => {
-    const peopleCount = Object.keys(household?.householdData?.people ?? {}).length;
+    const peopleCount = household?.personCount ?? 0;
     const families =
       (household?.householdData?.families as Record<string, unknown> | undefined) ?? {};
     const familiesCount = Object.keys(families).length;

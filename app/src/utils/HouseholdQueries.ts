@@ -1,3 +1,4 @@
+import { Household as HouseholdModel } from '@/models/Household';
 import { Household, HouseholdPerson } from '@/types/ingredients/Household';
 import { getHouseholdGroupCollection, getHouseholdYearValue } from '@/utils/householdDataAccess';
 
@@ -95,6 +96,10 @@ export function getGroupVariable(
  * Count total people in household
  */
 export function getPersonCount(household: Household): number {
+  if (household instanceof HouseholdModel) {
+    return household.personCount;
+  }
+
   return Object.keys(household.householdData.people).length;
 }
 
@@ -116,7 +121,7 @@ export function getChildCount(household: Household, year: string): number {
  * Check if household has any people
  */
 export function isEmpty(household: Household): boolean {
-  return Object.keys(household.householdData.people).length === 0;
+  return getPersonCount(household) === 0;
 }
 
 /**
