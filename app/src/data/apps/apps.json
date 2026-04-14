@@ -168,6 +168,19 @@
   },
   {
     "type": "iframe",
+    "slug": "benefit-cliff-calculator",
+    "title": "Benefit cliff calculator",
+    "description": "Interactive calculator showing how benefits, refundable tax credits, taxes, and net income change for US households as earnings rise",
+    "source": "https://cliff-watch.vercel.app/",
+    "tags": ["us", "featured", "policy", "interactives"],
+    "countryId": "us",
+    "displayWithResearch": true,
+    "image": "benefit-cliff-calculator.png",
+    "date": "2026-04-14 12:00:00",
+    "authors": ["daphne-hansell"]
+  },
+  {
+    "type": "iframe",
     "slug": "marriage",
     "title": "Marriage incentive calculator",
     "description": "Interactive calculator showing how marriage affects taxes, benefits, and net income for US households across all states",
