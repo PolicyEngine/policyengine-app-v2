@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { useSharedReportData } from '@/hooks/useSharedReportData';
 import { useUserReportById } from '@/hooks/useUserReports';
+import type { ReportIngredientsInput } from '@/hooks/utils/useFetchReportIngredients';
 import { RootState } from '@/store';
 import type { ReportBuilderState } from '../types';
 import { hydrateReportBuilderState } from '../utils/hydrateReportBuilderState';
@@ -13,9 +15,17 @@ interface UseReportBuilderStateReturn {
   error: Error | null;
 }
 
-export function useReportBuilderState(userReportId: string): UseReportBuilderStateReturn {
+export function useReportBuilderState(
+  userReportId: string,
+  shareData: ReportIngredientsInput | null = null
+): UseReportBuilderStateReturn {
   const currentLawId = useSelector((state: RootState) => state.metadata.currentLawId);
-  const data = useUserReportById(userReportId);
+  const isSharedView = shareData !== null;
+  const ownedData = useUserReportById(userReportId, {
+    enabled: !isSharedView && !!userReportId,
+  });
+  const sharedDataResult = useSharedReportData(shareData, { enabled: isSharedView });
+  const data = isSharedView ? sharedDataResult : ownedData;
 
   const [reportState, setReportState] = useState<ReportBuilderState | null>(null);
   const originalStateRef = useRef<ReportBuilderState | null>(null);

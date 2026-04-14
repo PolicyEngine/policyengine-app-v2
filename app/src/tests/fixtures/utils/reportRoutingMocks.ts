@@ -16,7 +16,9 @@ export const TEST_REPORT_IDS = {
 
 export const EXPECTED_PATHS = {
   US_NUMERIC: '/us/report-output/12345',
+  US_NUMERIC_CONFIG: '/us/report-output/12345/config',
   UK_STRING: '/uk/report-output/report-abc-123',
+  UK_STRING_CONFIG: '/uk/report-output/report-abc-123/config',
   US_SPECIAL_CHARS: '/us/report-output/report_id-123',
   UK_GENERIC: '/uk/report-output/999',
 } as const;

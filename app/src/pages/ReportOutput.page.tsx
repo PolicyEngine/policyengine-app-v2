@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { SocietyWideReportOutput as SocietyWideOutput } from '@/api/societyWideCalculation';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { FloatingAlert } from '@/components/common/FloatingAlert';
@@ -15,6 +14,7 @@ import { useSharedReportData } from '@/hooks/useSharedReportData';
 import { useUserReportById } from '@/hooks/useUserReports';
 import type { EconomyOutput, Report } from '@/types/ingredients/Report';
 import { formatReportTimestamp } from '@/utils/dateUtils';
+import { getReportConfigPath } from '@/utils/reportRouting';
 import { resolveDefaultReportOutputSubpage } from '@/utils/reportOutputSubpage';
 import {
   buildSharePath,
@@ -63,7 +63,7 @@ function extractReportVersionMetadata(output: Report['output']): ReportVersionMe
  * - Delegates to type-specific output components (Household or SocietyWide)
  * - Wraps content in ReportOutputLayout for consistent chrome
  *
- * Both owned and shared views now use the same data shape:
+ * Both owned and shared views use the same data shape:
  * - useUserReportById: fetches from localStorage associations
  * - useSharedReportData: uses ShareData from URL (same shape)
  */
@@ -79,21 +79,22 @@ export default function ReportOutputPage({
   subpage,
   view,
 }: ReportOutputPageProps) {
-  if (import.meta.env.DEV) {
+  if (import.meta.env.DEV && typeof window !== 'undefined') {
     (window as any).__journeyProfiler?.markEvent('report-output-render', 'render');
   }
   const nav = useAppNavigate();
   const countryId = useCurrentCountry();
   const location = useAppLocation();
   const searchParams = new URLSearchParams(location.search);
+  const shareParam = searchParams.get('share');
+  const shareSearch = shareParam
+    ? `?${new URLSearchParams({ share: shareParam }).toString()}`
+    : '';
 
   // Detect shared view from URL
   const shareData = extractShareDataFromUrl(searchParams);
   const isSharedView = shareData !== null;
   const shareDataUserReportId = shareData ? getShareDataUserReportId(shareData) : null;
-
-  // Alert state for clipboard copy notification
-  const [showCopyAlert, setShowCopyAlert] = useState(false);
 
   // If no userReportId and not a shared view, show error
   if (!userReportId && !isSharedView) {
@@ -148,13 +149,20 @@ export default function ReportOutputPage({
   // Hook for saving shared reports with all ingredients
   const { saveSharedReport, saveResult, setSaveResult } = useSaveSharedReport();
 
-  // Handle share button click - copy share URL to clipboard
-  const handleShare = async () => {
-    if (!userReport || !userSimulations?.length) {
-      return;
+  const shareUrl = (() => {
+    if (isSharedView) {
+      const sharedReportId = shareDataUserReportId ?? userReportId;
+      if (!sharedReportId) {
+        return undefined;
+      }
+
+      return `${CALCULATOR_URL}/${countryId}/report-output/${sharedReportId}${shareSearch}`;
     }
 
-    // Create ShareData from user associations
+    if (!userReport || !userSimulations?.length) {
+      return undefined;
+    }
+
     const shareDataToEncode = createShareData(
       userReport,
       userSimulations ?? [],
@@ -163,23 +171,8 @@ export default function ReportOutputPage({
       userGeographies ?? []
     );
 
-    if (!shareDataToEncode) {
-      console.error('[ReportOutputPage] Failed to create share data');
-      return;
-    }
-
-    const sharePath = buildSharePath(shareDataToEncode);
-    const shareUrl = `${CALCULATOR_URL}${sharePath}`;
-
-    try {
-      await navigator.clipboard.writeText(shareUrl);
-      setShowCopyAlert(true);
-      // Auto-hide alert after 3 seconds
-      setTimeout(() => setShowCopyAlert(false), 3000);
-    } catch (error) {
-      console.error('[ReportOutputPage] Failed to copy share URL:', error);
-    }
-  };
+    return shareDataToEncode ? `${CALCULATOR_URL}${buildSharePath(shareDataToEncode)}` : undefined;
+  })();
 
   // Handle save button click - create user associations and navigate to owned view
   const handleSave = async () => {
@@ -199,12 +192,15 @@ export default function ReportOutputPage({
 
   // Handle view button click - navigate to report builder in view mode
   const handleView = () => {
-    if (userReportId) {
-      const params = new URLSearchParams({
-        from: 'report-output',
-        reportPath: `/${countryId}/report-output/${userReportId}`,
-      });
-      nav.push(`/${countryId}/reports/create/${userReportId}?${params}`);
+    const id = isSharedView ? shareDataUserReportId : userReportId;
+    if (!id) {
+      return;
+    }
+
+    if (isSharedView) {
+      nav.push(`${getReportConfigPath(countryId, id)}${shareSearch}`);
+    } else {
+      nav.push(getReportConfigPath(countryId, userReportId!));
     }
   };
 
@@ -214,7 +210,7 @@ export default function ReportOutputPage({
     if (id) {
       const basePath = `/${countryId}/report-output/${id}/reproduce`;
       if (isSharedView) {
-        nav.push(`${basePath}?${searchParams.toString()}`);
+        nav.push(`${basePath}${shareSearch}`);
       } else {
         nav.push(basePath);
       }
@@ -222,7 +218,7 @@ export default function ReportOutputPage({
   };
 
   // Show loading state while fetching data
-  if (import.meta.env.DEV && dataLoading) {
+  if (import.meta.env.DEV && typeof window !== 'undefined' && dataLoading) {
     (window as any).__journeyProfiler?.markEvent('report-output-data-loading', 'render');
   }
   if (dataLoading) {
@@ -251,6 +247,12 @@ export default function ReportOutputPage({
   // Determine the display label and ID for the report
   const displayLabel = userReport?.label;
   const displayReportId = isSharedView ? shareDataUserReportId : userReportId;
+  const reportOutputBackPath =
+    activeTab === 'reproduce' && displayReportId
+      ? `/${countryId}/report-output/${displayReportId}${shareSearch}`
+      : undefined;
+  const reportOutputBackLabel =
+    activeTab === 'reproduce' && displayReportId ? displayLabel ?? 'report output' : undefined;
 
   // Render content based on output type
   // Both shared and owned views now use the same user associations shape
@@ -292,18 +294,12 @@ export default function ReportOutputPage({
     return <Text style={{ color: colors.error }}>Unknown report type</Text>;
   };
 
-  if (import.meta.env.DEV) {
+  if (import.meta.env.DEV && typeof window !== 'undefined') {
     (window as any).__journeyProfiler?.markEvent('report-output-ready', 'render');
   }
 
   return (
     <ReportYearProvider year={report?.year ?? null}>
-      {showCopyAlert && (
-        <FloatingAlert onClose={() => setShowCopyAlert(false)}>
-          Share link copied to clipboard!
-        </FloatingAlert>
-      )}
-
       {saveResult && (
         <FloatingAlert
           type={saveResult === 'success' || saveResult === 'already_saved' ? 'success' : 'warning'}
@@ -324,10 +320,12 @@ export default function ReportOutputPage({
         modelVersion={versionMetadata?.modelVersion ?? undefined}
         dataVersion={versionMetadata?.dataVersion ?? undefined}
         timestamp={timestamp}
+        backPath={reportOutputBackPath}
+        backLabel={reportOutputBackLabel}
         isSharedView={isSharedView}
-        onShare={handleShare}
+        shareUrl={shareUrl}
         onSave={handleSave}
-        onView={!isSharedView ? handleView : undefined}
+        onView={handleView}
         onReproduce={handleReproduce}
       >
         <ErrorBoundary

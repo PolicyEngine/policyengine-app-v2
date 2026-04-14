@@ -101,7 +101,10 @@ export function SimulationCanvas({
               isReadOnly={isReadOnly}
             />
           ) : (
-            <AddSimulationCard onClick={canvas.handleAddSimulation} disabled={false} />
+            <AddSimulationCard
+              onClick={canvas.handleAddSimulation}
+              disabled={Boolean(isReadOnly)}
+            />
           )}
         </div>
       </div>

@@ -13,8 +13,10 @@ interface ReportOutputLayoutProps {
   modelVersion?: string;
   dataVersion?: string;
   timestamp?: string;
+  backPath?: string;
+  backLabel?: string;
   isSharedView?: boolean;
-  onShare?: () => void;
+  shareUrl?: string;
   onSave?: () => void;
   onView?: () => void;
   onReproduce?: () => void;
@@ -38,8 +40,10 @@ export default function ReportOutputLayout({
   modelVersion,
   dataVersion,
   timestamp = 'Ran today at 05:23:41',
+  backPath,
+  backLabel,
   isSharedView = false,
-  onShare,
+  shareUrl,
   onSave,
   onView,
   onReproduce,
@@ -55,11 +59,11 @@ export default function ReportOutputLayout({
         <Group
           className="tw:gap-xs tw:items-center tw:cursor-pointer"
           style={{ marginBottom: `-${spacing.md}` }}
-          onClick={() => nav.push(`/${countryId}/reports`)}
+          onClick={() => nav.push(backPath || `/${countryId}/reports`)}
         >
           <IconChevronLeft size={14} color={colors.text.secondary} />
           <Text className="tw:text-sm" style={{ color: colors.text.secondary }}>
-            Back to reports
+            {backLabel ? `Back to ${backLabel}` : 'Back to reports'}
           </Text>
         </Group>
 
@@ -85,7 +89,7 @@ export default function ReportOutputLayout({
             </Group>
             <ReportActionButtons
               isSharedView={isSharedView}
-              onShare={onShare}
+              shareUrl={shareUrl}
               onSave={onSave}
               onView={onView}
               onReproduce={onReproduce}

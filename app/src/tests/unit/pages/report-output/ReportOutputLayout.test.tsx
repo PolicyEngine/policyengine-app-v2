@@ -172,6 +172,22 @@ describe('ReportOutputLayout', () => {
     expect(screen.getByText(testContent)).toBeInTheDocument();
   });
 
+  test('given back label then breadcrumb uses report-specific text', () => {
+    render(
+      <ReportOutputLayout
+        reportId={MOCK_REPORT_ID}
+        reportLabel={MOCK_REPORT_LABEL}
+        timestamp={MOCK_TIMESTAMP}
+        backPath="/us/report-output/sur-123"
+        backLabel="test report"
+      >
+        <div>Test Content</div>
+      </ReportOutputLayout>
+    );
+
+    expect(screen.getByText('Back to test report')).toBeInTheDocument();
+  });
+
   test('given isSharedView=true then shows SharedReportTag and save button', () => {
     // Given
     render(
@@ -181,7 +197,10 @@ describe('ReportOutputLayout', () => {
         reportYear={MOCK_REPORT_YEAR}
         timestamp={MOCK_TIMESTAMP}
         isSharedView
+        shareUrl="https://app.policyengine.org/us/report-output/sur-abc123?share=abc"
         onSave={vi.fn()}
+        onView={vi.fn()}
+        onReproduce={vi.fn()}
       >
         <div>Content</div>
       </ReportOutputLayout>
@@ -190,6 +209,9 @@ describe('ReportOutputLayout', () => {
     // Then
     expect(screen.getByTestId('shared-report-tag')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /save report to my reports/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /view/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /reproduce in python/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /share/i })).toBeInTheDocument();
   });
 
   test('given isSharedView=false then shows view, edit, and share buttons', () => {
@@ -201,7 +223,7 @@ describe('ReportOutputLayout', () => {
         reportYear={MOCK_REPORT_YEAR}
         timestamp={MOCK_TIMESTAMP}
         isSharedView={false}
-        onShare={vi.fn()}
+        shareUrl="https://app.policyengine.org/us/report-output/sur-abc123?share=abc"
         onView={vi.fn()}
         onReproduce={vi.fn()}
       >
