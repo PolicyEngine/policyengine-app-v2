@@ -1,10 +1,9 @@
-import { IconCalendar, IconChevronLeft, IconClock } from '@tabler/icons-react';
+import { IconCalendar, IconClock } from '@tabler/icons-react';
+import { BackBreadcrumb } from '@/components/common/BackBreadcrumb';
 import { ReportActionButtons } from '@/components/report/ReportActionButtons';
 import { SharedReportTag } from '@/components/report/SharedReportTag';
 import { Container, Group, Stack, Text, Title } from '@/components/ui';
-import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing, typography } from '@/designTokens';
-import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 
 interface ReportOutputLayoutProps {
   reportId: string;
@@ -13,8 +12,10 @@ interface ReportOutputLayoutProps {
   modelVersion?: string;
   dataVersion?: string;
   timestamp?: string;
+  backPath?: string;
+  backLabel?: string;
   isSharedView?: boolean;
-  onShare?: () => void;
+  shareUrl?: string;
   onSave?: () => void;
   onView?: () => void;
   onReproduce?: () => void;
@@ -38,30 +39,25 @@ export default function ReportOutputLayout({
   modelVersion,
   dataVersion,
   timestamp = 'Ran today at 05:23:41',
+  backPath,
+  backLabel,
   isSharedView = false,
-  onShare,
+  shareUrl,
   onSave,
   onView,
   onReproduce,
   children,
 }: ReportOutputLayoutProps) {
-  const countryId = useCurrentCountry();
-  const nav = useAppNavigate();
-
   return (
     <Container size="xl" className="tw:px-xl">
       <Stack className="tw:gap-xl">
         {/* Back breadcrumb */}
-        <Group
+        <BackBreadcrumb
           className="tw:gap-xs tw:items-center tw:cursor-pointer"
           style={{ marginBottom: `-${spacing.md}` }}
-          onClick={() => nav.push(`/${countryId}/reports`)}
-        >
-          <IconChevronLeft size={14} color={colors.text.secondary} />
-          <Text className="tw:text-sm" style={{ color: colors.text.secondary }}>
-            Back to reports
-          </Text>
-        </Group>
+          backPath={backPath}
+          backLabel={backLabel}
+        />
 
         {/* Header Section */}
         <div>
@@ -85,7 +81,7 @@ export default function ReportOutputLayout({
             </Group>
             <ReportActionButtons
               isSharedView={isSharedView}
-              onShare={onShare}
+              shareUrl={shareUrl}
               onSave={onSave}
               onView={onView}
               onReproduce={onReproduce}

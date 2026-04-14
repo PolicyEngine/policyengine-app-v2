@@ -4,7 +4,7 @@ import {
   TEST_COUNTRY,
   TEST_REPORT_IDS,
 } from '@/tests/fixtures/utils/reportRoutingMocks';
-import { getReportOutputPath } from '@/utils/reportRouting';
+import { getReportConfigPath, getReportOutputPath } from '@/utils/reportRouting';
 
 describe('reportRouting', () => {
   describe('getReportOutputPath', () => {
@@ -38,6 +38,20 @@ describe('reportRouting', () => {
 
       // Then
       expect(result.startsWith('/')).toBe(true);
+    });
+  });
+
+  describe('getReportConfigPath', () => {
+    it('given US country and numeric report ID then returns correct config path', () => {
+      const result = getReportConfigPath(TEST_COUNTRY.US, TEST_REPORT_IDS.NUMERIC);
+
+      expect(result).toBe(EXPECTED_PATHS.US_NUMERIC_CONFIG);
+    });
+
+    it('given UK country and string report ID then returns correct config path', () => {
+      const result = getReportConfigPath(TEST_COUNTRY.UK, TEST_REPORT_IDS.STRING);
+
+      expect(result).toBe(EXPECTED_PATHS.UK_STRING_CONFIG);
     });
   });
 });

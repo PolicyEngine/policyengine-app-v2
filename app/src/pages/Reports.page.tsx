@@ -22,6 +22,7 @@ import { useUserReports } from '@/hooks/useUserReports';
 import { RootState } from '@/store';
 import { useCacheMonitor } from '@/utils/cacheMonitor';
 import { formatDate } from '@/utils/dateUtils';
+import { getReportConfigPath } from '@/utils/reportRouting';
 import { CURRENT_LAW_LABEL } from './reportBuilder/currentLaw';
 
 export default function ReportsPage() {
@@ -122,7 +123,7 @@ export default function ReportsPage() {
       actions: [{ action: 'edit', tooltip: 'View/edit report', icon: <IconSettings size={16} /> }],
       onAction: (action: string, recordId: string) => {
         if (action === 'edit') {
-          nav.push(`/${countryId}/reports/create/${recordId}`);
+          nav.push(getReportConfigPath(countryId, recordId));
         }
       },
     },

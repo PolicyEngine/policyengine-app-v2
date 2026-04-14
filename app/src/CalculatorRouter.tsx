@@ -27,6 +27,12 @@ function ModifyReportPageRoute() {
   return <ModifyReportPage userReportId={userReportId} />;
 }
 
+/** Bridges report-output config params to ModifyReportPage's prop interface. */
+function ReportConfigPageRoute() {
+  const { reportId } = useParams<{ reportId: string }>();
+  return <ModifyReportPage userReportId={reportId} />;
+}
+
 /** Bridges react-router useParams to ReportOutputPage's prop interface. */
 function ReportOutputRoute() {
   const { reportId, subpage, view } = useParams<{
@@ -68,6 +74,10 @@ const router = createBrowserRouter(
             {
               element: <StandardLayoutOutlet />,
               children: [
+                {
+                  path: 'report-output/:reportId/config',
+                  element: <ReportConfigPageRoute />,
+                },
                 {
                   path: 'report-output/:reportId/:subpage?/:view?',
                   element: <ReportOutputRoute />,

@@ -120,6 +120,12 @@ describe('ReportOutputPage', () => {
     expect(screen.getByRole('heading', { name: 'Test Report' })).toBeInTheDocument();
   });
 
+  test('given reproduce subpage then breadcrumb returns to the current report', () => {
+    render(<ReportOutputPage reportId={MOCK_USER_REPORT_ID} subpage="reproduce" />);
+
+    expect(screen.getByText('Back to Test Report')).toBeInTheDocument();
+  });
+
   test('given society-wide report output versions then version metadata is displayed in the header', () => {
     render(<ReportOutputPage reportId={MOCK_USER_REPORT_ID} subpage="overview" />);
 

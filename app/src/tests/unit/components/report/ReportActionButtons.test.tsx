@@ -1,16 +1,37 @@
 import { render, screen, userEvent } from '@test-utils';
-import { describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { ReportActionButtons } from '@/components/report/ReportActionButtons';
 
 describe('ReportActionButtons', () => {
-  test('given isSharedView=true then renders save button only', () => {
+  let clipboardWriteText: ReturnType<typeof vi.fn>;
+
+  beforeEach(() => {
+    clipboardWriteText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'clipboard', {
+      value: {
+        writeText: clipboardWriteText,
+      },
+      configurable: true,
+    });
+  });
+
+  test('given isSharedView=true then renders save and the standard action buttons', () => {
     // Given
-    render(<ReportActionButtons isSharedView onSave={vi.fn()} />);
+    render(
+      <ReportActionButtons
+        isSharedView
+        shareUrl="https://app.policyengine.org/us/report-output/sur-abc123?share=abc"
+        onSave={vi.fn()}
+        onView={vi.fn()}
+        onReproduce={vi.fn()}
+      />
+    );
 
     // Then
     expect(screen.getByRole('button', { name: /save report to my reports/i })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /share/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /view/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /share/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /view/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /reproduce in python/i })).toBeInTheDocument();
   });
 
   test('given isSharedView=false then renders reproduce, view, and share buttons', () => {
@@ -18,7 +39,7 @@ describe('ReportActionButtons', () => {
     render(
       <ReportActionButtons
         isSharedView={false}
-        onShare={vi.fn()}
+        shareUrl="https://app.policyengine.org/us/report-output/sur-abc123?share=abc"
         onView={vi.fn()}
         onReproduce={vi.fn()}
       />
@@ -44,17 +65,17 @@ describe('ReportActionButtons', () => {
     expect(handleSave).toHaveBeenCalledOnce();
   });
 
-  test('given onShare callback then calls it when share clicked', async () => {
+  test('given share url then copies the link and shows confirmation when share clicked', async () => {
     // Given
     const user = userEvent.setup();
-    const handleShare = vi.fn();
-    render(<ReportActionButtons isSharedView={false} onShare={handleShare} />);
+    const shareUrl = 'https://app.policyengine.org/us/report-output/sur-abc123?share=abc';
+    render(<ReportActionButtons isSharedView={false} shareUrl={shareUrl} />);
 
     // When
     await user.click(screen.getByRole('button', { name: /share/i }));
 
     // Then
-    expect(handleShare).toHaveBeenCalledOnce();
+    expect(screen.getByText(/share link copied/i)).toBeInTheDocument();
   });
 
   test('given onReproduce callback then calls it when reproduce clicked', async () => {

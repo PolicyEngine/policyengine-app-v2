@@ -69,6 +69,7 @@ interface PolicyCreationModalProps {
   initialPolicy?: PolicyStateProps;
   initialEditorMode?: EditorMode;
   initialAssociationId?: string;
+  forceReadOnly?: boolean;
 }
 
 export function PolicyCreationModal({
@@ -80,6 +81,7 @@ export function PolicyCreationModal({
   initialPolicy,
   initialEditorMode,
   initialAssociationId,
+  forceReadOnly = false,
 }: PolicyCreationModalProps) {
   const countryId = useCurrentCountry();
 
@@ -127,10 +129,12 @@ export function PolicyCreationModal({
   void simulationIndex;
 
   // Editor mode: create (new policy), display (read-only existing), edit (modifying existing)
-  const [editorMode, setEditorMode] = useState<EditorMode>(
-    initialEditorMode || (initialPolicy ? 'edit' : 'create')
-  );
-  const isReadOnly = editorMode === 'display';
+  const resolvedInitialEditorMode: EditorMode = forceReadOnly
+    ? 'display'
+    : initialEditorMode || (initialPolicy ? 'edit' : 'create');
+  const [editorMode, setEditorMode] = useState<EditorMode>(resolvedInitialEditorMode);
+  const effectiveEditorMode: EditorMode = forceReadOnly ? 'display' : editorMode;
+  const isReadOnly = effectiveEditorMode === 'display';
   const colorConfig = INGREDIENT_COLORS.policy;
 
   // Reset state when modal opens; pre-populate from initialPolicy when editing
@@ -138,7 +142,7 @@ export function PolicyCreationModal({
     if (isOpen) {
       setPolicyLabel(initialPolicy?.label || '');
       setPolicyParameters(initialPolicy?.parameters || []);
-      setEditorMode(initialEditorMode || (initialPolicy ? 'edit' : 'create'));
+      setEditorMode(resolvedInitialEditorMode);
       setActiveTab('overview');
       setSelectedParam(null);
       setExpandedMenuItems(new Set());
@@ -147,7 +151,7 @@ export function PolicyCreationModal({
       setEndDate(defaultEndDate);
       setParameterSearch('');
     }
-  }, [isOpen, initialEditorMode, initialPolicy, defaultStartDate, defaultEndDate]);
+  }, [isOpen, initialPolicy, resolvedInitialEditorMode, defaultStartDate, defaultEndDate]);
 
   // Create local policy state object for components
   const localPolicy: PolicyStateProps = useMemo(
@@ -303,12 +307,12 @@ export function PolicyCreationModal({
   const handleSaveAsNewPolicy = useCallback(() => {
     const currentName = (policyLabel || '').trim();
     const originalName = (initialPolicy?.label || '').trim();
-    if (editorMode === 'edit' && currentName && currentName === originalName) {
+    if (effectiveEditorMode === 'edit' && currentName && currentName === originalName) {
       setShowSameNameWarning(true);
     } else {
       handleCreatePolicy();
     }
-  }, [policyLabel, initialPolicy?.label, editorMode, handleCreatePolicy]);
+  }, [policyLabel, initialPolicy?.label, effectiveEditorMode, handleCreatePolicy]);
 
   // Handle updating an existing policy (create new base policy, update association)
   const handleUpdateExistingPolicy = useCallback(async () => {
@@ -472,9 +476,9 @@ export function PolicyCreationModal({
         }}
       >
         <DialogTitle className="tw:sr-only">
-          {editorMode === 'display'
+          {effectiveEditorMode === 'display'
             ? 'Policy details'
-            : editorMode === 'edit'
+            : effectiveEditorMode === 'edit'
               ? 'Edit policy'
               : 'Policy editor'}
         </DialogTitle>
@@ -508,9 +512,9 @@ export function PolicyCreationModal({
                 <IconScale size={18} color={colorConfig.icon} />
               </div>
               <Text fw={600} style={{ fontSize: FONT_SIZES.normal, color: colors.gray[800] }}>
-                {editorMode === 'display'
+                {effectiveEditorMode === 'display'
                   ? 'Policy details'
-                  : editorMode === 'edit'
+                  : effectiveEditorMode === 'edit'
                     ? 'Edit policy'
                     : 'Policy editor'}
               </Text>
@@ -601,7 +605,7 @@ export function PolicyCreationModal({
               )}
             </div>
             <Group gap="sm" justify="end">
-              {editorMode === 'create' && (
+              {!forceReadOnly && effectiveEditorMode === 'create' && (
                 <Button
                   onClick={() => {
                     if (!policyLabel.trim()) {
@@ -616,10 +620,17 @@ export function PolicyCreationModal({
                   Create policy
                 </Button>
               )}
-              {editorMode === 'display' && (
-                <EditDefaultButton label="Edit this policy" onClick={() => setEditorMode('edit')} />
+              {!forceReadOnly && effectiveEditorMode === 'display' && (
+                <EditDefaultButton
+                  label="Edit this policy"
+                  onClick={() => {
+                    if (!forceReadOnly) {
+                      setEditorMode('edit');
+                    }
+                  }}
+                />
               )}
-              {editorMode === 'edit' && (
+              {!forceReadOnly && effectiveEditorMode === 'edit' && (
                 <>
                   <EditAndUpdateButton
                     label="Update existing policy"

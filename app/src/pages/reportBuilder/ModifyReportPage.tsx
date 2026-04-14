@@ -16,6 +16,7 @@ import { useAppNavigate } from '@/contexts/NavigationContext';
 import { spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { getReportOutputPath } from '@/utils/reportRouting';
+import { extractShareDataFromUrl } from '@/utils/shareUtils';
 import { ReportBuilderShell, SimulationBlockFull } from './components';
 import { useModifyReportSubmission } from './hooks/useModifyReportSubmission';
 import { useReportBuilderState } from './hooks/useReportBuilderState';
@@ -26,11 +27,14 @@ export default function ModifyReportPage({ userReportId }: { userReportId?: stri
   const nav = useAppNavigate();
   const location = useAppLocation();
   const searchParams = new URLSearchParams(location.search);
-  const cameFromReportOutput = searchParams.get('from') === 'report-output';
-  const reportOutputPath = searchParams.get('reportPath');
+  const shareParam = searchParams.get('share');
+  const shareSearch = shareParam ? `?${new URLSearchParams({ share: shareParam }).toString()}` : '';
+  const shareData = extractShareDataFromUrl(searchParams);
+  const isSharedView = shareData !== null;
 
   const { reportState, setReportState, originalState, isLoading, error } = useReportBuilderState(
-    userReportId ?? ''
+    userReportId ?? '',
+    shareData
   );
 
   const [pickerState, setPickerState] = useState<IngredientPickerState>({
@@ -51,6 +55,7 @@ export default function ModifyReportPage({ userReportId }: { userReportId?: stri
   // View/edit mode state
   const [isEditing, setIsEditing] = useState(false);
   const [showSameNameWarning, setShowSameNameWarning] = useState(false);
+  const isReadOnly = isSharedView || !isEditing;
 
   const isEitherSubmitting = isSavingNew || isReplacing;
 
@@ -67,6 +72,10 @@ export default function ModifyReportPage({ userReportId }: { userReportId?: stri
 
   // Dynamic toolbar actions
   const topBarActions: TopBarAction[] = useMemo(() => {
+    if (isSharedView) {
+      return [];
+    }
+
     if (!isEditing) {
       return [
         {
@@ -114,6 +123,7 @@ export default function ModifyReportPage({ userReportId }: { userReportId?: stri
       },
     ];
   }, [
+    isSharedView,
     isEditing,
     handleSaveAsNewClick,
     handleReplace,
@@ -145,16 +155,18 @@ export default function ModifyReportPage({ userReportId }: { userReportId?: stri
   return (
     <>
       <ReportBuilderShell
-        title={isEditing ? 'Edit report' : 'View report setup'}
-        backPath={cameFromReportOutput ? (reportOutputPath ?? undefined) : undefined}
-        backLabel={cameFromReportOutput ? reportState?.label || 'Report output' : undefined}
+        title={isReadOnly ? 'View report setup' : 'Edit report'}
+        backPath={
+          userReportId ? `/${countryId}/report-output/${userReportId}${shareSearch}` : undefined
+        }
+        backLabel={userReportId ? reportState?.label || userReportId : undefined}
         actions={topBarActions}
         reportState={reportState}
         setReportState={setReportState as React.Dispatch<React.SetStateAction<ReportBuilderState>>}
         pickerState={pickerState}
         setPickerState={setPickerState}
         BlockComponent={SimulationBlockFull}
-        isReadOnly={!isEditing}
+        isReadOnly={isReadOnly}
       />
 
       <Dialog
