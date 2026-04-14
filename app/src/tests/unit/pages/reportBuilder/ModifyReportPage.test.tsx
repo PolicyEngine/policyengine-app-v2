@@ -120,4 +120,19 @@ describe('ModifyReportPage', () => {
     expect(mockUseReportBuilderState).toHaveBeenCalledWith('sur-shared-123', shareData);
     expect(screen.getByTestId('report-builder-shell')).toBeInTheDocument();
   });
+
+  test('given report with no label then breadcrumb falls back to report id', () => {
+    mockUseReportBuilderState.mockReturnValue({
+      reportState: { ...baseReportState, label: null },
+      setReportState: vi.fn(),
+      originalState: { ...baseReportState, label: null },
+      isLoading: false,
+      error: null,
+    });
+
+    render(<ModifyReportPage userReportId="sur-123" />);
+
+    const shellProps = mockReportBuilderShell.mock.calls[0]?.[0];
+    expect(shellProps.backLabel).toBe('sur-123');
+  });
 });

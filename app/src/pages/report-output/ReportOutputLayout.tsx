@@ -1,10 +1,9 @@
-import { IconCalendar, IconChevronLeft, IconClock } from '@tabler/icons-react';
+import { IconCalendar, IconClock } from '@tabler/icons-react';
+import { BackBreadcrumb } from '@/components/common/BackBreadcrumb';
 import { ReportActionButtons } from '@/components/report/ReportActionButtons';
 import { SharedReportTag } from '@/components/report/SharedReportTag';
 import { Container, Group, Stack, Text, Title } from '@/components/ui';
-import { useAppNavigate } from '@/contexts/NavigationContext';
 import { colors, spacing, typography } from '@/designTokens';
-import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 
 interface ReportOutputLayoutProps {
   reportId: string;
@@ -49,23 +48,16 @@ export default function ReportOutputLayout({
   onReproduce,
   children,
 }: ReportOutputLayoutProps) {
-  const countryId = useCurrentCountry();
-  const nav = useAppNavigate();
-
   return (
     <Container size="xl" className="tw:px-xl">
       <Stack className="tw:gap-xl">
         {/* Back breadcrumb */}
-        <Group
+        <BackBreadcrumb
           className="tw:gap-xs tw:items-center tw:cursor-pointer"
           style={{ marginBottom: `-${spacing.md}` }}
-          onClick={() => nav.push(backPath || `/${countryId}/reports`)}
-        >
-          <IconChevronLeft size={14} color={colors.text.secondary} />
-          <Text className="tw:text-sm" style={{ color: colors.text.secondary }}>
-            {backLabel ? `Back to ${backLabel}` : 'Back to reports'}
-          </Text>
-        </Group>
+          backPath={backPath}
+          backLabel={backLabel}
+        />
 
         {/* Header Section */}
         <div>

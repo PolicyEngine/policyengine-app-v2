@@ -159,7 +159,7 @@ export default function ModifyReportPage({ userReportId }: { userReportId?: stri
       <ReportBuilderShell
         title={isReadOnly ? 'View report setup' : 'Edit report'}
         backPath={userReportId ? `/${countryId}/report-output/${userReportId}${shareSearch}` : undefined}
-        backLabel={userReportId ? reportState?.label || 'report output' : undefined}
+        backLabel={userReportId ? reportState?.label || userReportId : undefined}
         actions={topBarActions}
         reportState={reportState}
         setReportState={setReportState as React.Dispatch<React.SetStateAction<ReportBuilderState>>}

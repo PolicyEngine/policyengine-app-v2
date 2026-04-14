@@ -252,7 +252,7 @@ export default function ReportOutputPage({
       ? `/${countryId}/report-output/${displayReportId}${shareSearch}`
       : undefined;
   const reportOutputBackLabel =
-    activeTab === 'reproduce' && displayReportId ? displayLabel ?? 'report output' : undefined;
+    activeTab === 'reproduce' && displayReportId ? displayLabel ?? displayReportId : undefined;
 
   // Render content based on output type
   // Both shared and owned views now use the same user associations shape

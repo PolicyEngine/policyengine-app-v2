@@ -4,11 +4,7 @@
  * Renders the page layout: header + TopBar (with ReportMetaPanel + actions) + SimulationCanvas.
  * Accepts all logic via props so different modes (setup, modify) can compose it.
  */
-import { IconChevronLeft } from '@tabler/icons-react';
-import { Group, Text } from '@/components/ui';
-import { useAppNavigate } from '@/contexts/NavigationContext';
-import { colors } from '@/designTokens';
-import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { BackBreadcrumb } from '@/components/common/BackBreadcrumb';
 import { styles } from '../styles';
 import type { IngredientPickerState, ReportBuilderState, TopBarAction } from '../types';
 import { ReportMetaPanel } from './ReportMetaPanel';
@@ -42,23 +38,15 @@ export function ReportBuilderShell({
   backPath,
   backLabel,
 }: ReportBuilderShellProps) {
-  const nav = useAppNavigate();
-  const countryId = useCurrentCountry();
-
   return (
     <div style={styles.pageContainer}>
       {/* Back breadcrumb */}
-      <Group
-        gap="xs"
-        align="center"
+      <BackBreadcrumb
+        className="tw:gap-xs tw:items-center tw:cursor-pointer"
         style={{ marginBottom: 8, cursor: 'pointer' }}
-        onClick={() => nav.push(backPath || `/${countryId}/reports`)}
-      >
-        <IconChevronLeft size={14} color={colors.gray[500]} />
-        <Text size="sm" c="dimmed">
-          {backLabel ? `Back to ${backLabel}` : 'Back to reports'}
-        </Text>
-      </Group>
+        backPath={backPath}
+        backLabel={backLabel}
+      />
 
       <div style={styles.headerSection}>
         <h1 style={styles.mainTitle}>{title}</h1>
