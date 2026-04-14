@@ -39,6 +39,7 @@ export function parseNamedGroupCollection(args: {
   context: string;
   groupKey: string;
   peopleNames: Set<string>;
+  onMultiple?: 'error' | 'first';
 }): CanonicalGroupSetup | undefined {
   if (args.rawGroupCollection === undefined) {
     return undefined;
@@ -52,7 +53,7 @@ export function parseNamedGroupCollection(args: {
   if (entries.length === 0) {
     return undefined;
   }
-  if (entries.length > 1) {
+  if (entries.length > 1 && (args.onMultiple ?? 'error') === 'error') {
     throw new Error(
       `${args.context}: expected at most one ${args.groupKey} entry, received ${entries.length}`
     );

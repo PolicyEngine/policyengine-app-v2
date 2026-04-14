@@ -81,20 +81,27 @@ describe('Household', () => {
       expect(household.label).toBe(TEST_HOUSEHOLD_LABEL);
     });
 
-    it('rejects multiple groups of the same type at construction time', () => {
-      expect(() =>
-        createHousehold({
-          data: {
-            people: {
-              adult: { age: { 2026: 35 } },
-            },
-            taxUnits: {
-              taxUnit1: { members: ['adult'] },
-              taxUnit2: { members: ['adult'] },
-            },
+    it('preserves multiple groups of the same type in the app household shape', () => {
+      const household = createHousehold({
+        data: {
+          people: {
+            adult: { age: { 2026: 35 } },
+            child: { age: { 2026: 8 } },
+            childTwo: { age: { 2026: 6 } },
           },
-        })
-      ).toThrow('expected at most one taxUnits entry');
+          maritalUnits: {
+            maritalUnit1: { members: ['adult'] },
+            maritalUnit2: { members: ['child'] },
+            maritalUnit3: { members: ['childTwo'] },
+          },
+        },
+      });
+
+      expect(household.householdData.maritalUnits).toEqual({
+        maritalUnit1: { members: ['adult'] },
+        maritalUnit2: { members: ['child'] },
+        maritalUnit3: { members: ['childTwo'] },
+      });
     });
   });
 
@@ -436,6 +443,42 @@ describe('Household', () => {
         },
       });
     });
+
+    it('preserves multi-group household data when emitting a v1 payload', () => {
+      const household = Household.fromDraft({
+        countryId: 'us',
+        year: 2026,
+        householdData: {
+          people: {
+            adult: { age: { 2026: 35 } },
+            child: { age: { 2026: 8 } },
+            childTwo: { age: { 2026: 6 } },
+          },
+          maritalUnits: {
+            maritalUnit1: { members: ['adult'] },
+            maritalUnit2: { members: ['child'] },
+            maritalUnit3: { members: ['childTwo'] },
+          },
+        },
+      });
+
+      expect(household.toV1CreationPayload()).toEqual({
+        country_id: 'us',
+        label: undefined,
+        data: {
+          people: {
+            adult: { age: { 2026: 35 } },
+            child: { age: { 2026: 8 } },
+            childTwo: { age: { 2026: 6 } },
+          },
+          marital_units: {
+            maritalUnit1: { members: ['adult'] },
+            maritalUnit2: { members: ['child'] },
+            maritalUnit3: { members: ['childTwo'] },
+          },
+        },
+      });
+    });
   });
 
   describe('toV2CreateEnvelope', () => {
@@ -532,6 +575,29 @@ describe('Household', () => {
           tax_unit_id: 0,
         },
       });
+    });
+
+    it('rejects households that require multiple stored v2 groups of the same type', () => {
+      const household = Household.fromDraft({
+        countryId: 'us',
+        year: 2026,
+        householdData: {
+          people: {
+            adult: { age: { 2026: 35 } },
+            child: { age: { 2026: 8 } },
+            childTwo: { age: { 2026: 6 } },
+          },
+          maritalUnits: {
+            maritalUnit1: { members: ['adult'] },
+            maritalUnit2: { members: ['child'] },
+            maritalUnit3: { members: ['childTwo'] },
+          },
+        },
+      });
+
+      expect(() => household.toV2CreateEnvelope()).toThrow(
+        'Household cannot be converted to stored v2 shape: maritalUnits has 3 groups'
+      );
     });
   });
 

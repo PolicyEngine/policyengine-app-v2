@@ -1,6 +1,13 @@
 import type { CountryId } from '@/libs/countries';
 import { BaseModel } from './BaseModel';
-import { buildAppHouseholdData, parseAppHouseholdInput } from './household/appCodec';
+import {
+  buildAppHouseholdData,
+  buildAppHouseholdDataFromV1Data,
+  buildV1CreateEnvelopeFromAppInput,
+  cloneAppHouseholdInputData,
+  countAppHouseholdGroups,
+  parseAppHouseholdInput,
+} from './household/appCodec';
 import type {
   CanonicalHouseholdInputData,
   CanonicalHouseholdInputEnvelope,
@@ -9,17 +16,13 @@ import type {
   HouseholdModelData,
 } from './household/canonicalTypes';
 import { buildComparableHousehold } from './household/comparable';
+import { GROUP_DEFINITIONS } from './household/schema';
 import {
   cloneValue,
   deepEqual,
   inferYearFromData,
   normalizeCanonicalSetup,
 } from './household/utils';
-import {
-  buildV1CreateEnvelope,
-  parseV1CreateEnvelope,
-  parseV1MetadataEnvelope,
-} from './household/v1Codec';
 import type { V1HouseholdCreateEnvelope, V1HouseholdMetadataEnvelope } from './household/v1Types';
 import { buildV2CreateEnvelope, parseV2HouseholdEnvelope } from './household/v2Codec';
 import type { V2CreateHouseholdEnvelope, V2StoredHouseholdEnvelope } from './household/v2Types';
@@ -31,7 +34,13 @@ export class Household extends BaseModel<HouseholdModelData> {
 
   private readonly setup: CanonicalHouseholdSetup;
 
-  private constructor(args: { id: string; setup: CanonicalHouseholdSetup }) {
+  private readonly appInputData: CanonicalHouseholdInputData;
+
+  private constructor(args: {
+    id: string;
+    setup: CanonicalHouseholdSetup;
+    appInputData?: CanonicalHouseholdInputData;
+  }) {
     super();
 
     if (!args.id) {
@@ -40,6 +49,9 @@ export class Household extends BaseModel<HouseholdModelData> {
 
     this.id = args.id;
     this.setup = normalizeCanonicalSetup(args.setup);
+    this.appInputData = cloneAppHouseholdInputData(
+      args.appInputData ?? buildAppHouseholdData(this.setup)
+    );
   }
 
   get countryId(): CountryId {
@@ -55,7 +67,7 @@ export class Household extends BaseModel<HouseholdModelData> {
   }
 
   get data(): CanonicalHouseholdInputData {
-    return buildAppHouseholdData(this.setup);
+    return cloneValue(this.appInputData);
   }
 
   get householdData(): CanonicalHouseholdInputData {
@@ -63,7 +75,7 @@ export class Household extends BaseModel<HouseholdModelData> {
   }
 
   get people(): CanonicalHouseholdInputData['people'] {
-    return cloneValue(this.data.people);
+    return cloneValue(this.appInputData.people);
   }
 
   get personCount(): number {
@@ -92,8 +104,20 @@ export class Household extends BaseModel<HouseholdModelData> {
   }
 
   static fromCanonicalInput(input: CanonicalHouseholdInputEnvelope): Household {
-    return Household.fromCanonical(parseAppHouseholdInput(input), {
+    const appInputData = cloneAppHouseholdInputData(input.householdData);
+    const parsedSetup = parseAppHouseholdInput({
+      ...input,
+      householdData: appInputData,
+    });
+    const year = input.year ?? inferYearFromData(appInputData);
+
+    return new Household({
       id: input.id ?? 'draft-household',
+      setup: {
+        ...parsedSetup,
+        year: parsedSetup.year ?? year,
+      },
+      appInputData,
     });
   }
 
@@ -114,8 +138,15 @@ export class Household extends BaseModel<HouseholdModelData> {
   }
 
   static fromV1Metadata(metadata: V1HouseholdMetadataEnvelope): Household {
-    return Household.fromCanonical(parseV1MetadataEnvelope(metadata), {
+    const appInputData = buildAppHouseholdDataFromV1Data(metadata.household_json);
+    const year = inferYearFromData(appInputData);
+
+    return Household.fromCanonicalInput({
       id: String(metadata.id),
+      countryId: metadata.country_id as CountryId,
+      label: metadata.label ?? null,
+      year,
+      householdData: appInputData,
     });
   }
 
@@ -126,13 +157,16 @@ export class Household extends BaseModel<HouseholdModelData> {
       label?: string | null;
     } = {}
   ): Household {
-    return Household.fromCanonical(
-      {
-        ...parseV1CreateEnvelope(payload),
-        label: options.label ?? payload.label ?? null,
-      },
-      { id: options.id ?? 'draft-household' }
-    );
+    const appInputData = buildAppHouseholdDataFromV1Data(payload.data);
+    const year = inferYearFromData(appInputData);
+
+    return Household.fromCanonicalInput({
+      id: options.id ?? 'draft-household',
+      countryId: payload.country_id as CountryId,
+      label: options.label ?? payload.label ?? null,
+      year,
+      householdData: appInputData,
+    });
   }
 
   static fromV2Response(response: V2StoredHouseholdEnvelope): Household {
@@ -146,17 +180,22 @@ export class Household extends BaseModel<HouseholdModelData> {
   }
 
   withId(id: string): Household {
-    return Household.fromCanonical(this.toCanonical(), { id });
+    return new Household({
+      id,
+      setup: this.toCanonical(),
+      appInputData: this.appInputData,
+    });
   }
 
   withLabel(label: string | null): Household {
-    return Household.fromCanonical(
-      {
+    return new Household({
+      id: this.id,
+      setup: {
         ...this.toCanonical(),
         label,
       },
-      { id: this.id }
-    );
+      appInputData: this.appInputData,
+    });
   }
 
   toCanonical(): CanonicalHouseholdSetup {
@@ -174,18 +213,30 @@ export class Household extends BaseModel<HouseholdModelData> {
   }
 
   toV1CreationPayload(): V1HouseholdCreateEnvelope {
-    return buildV1CreateEnvelope(this.toCanonical());
+    return buildV1CreateEnvelopeFromAppInput({
+      countryId: this.countryId,
+      householdData: this.appInputData,
+      label: this.label,
+      year: this.year ?? inferYearFromData(this.appInputData),
+    });
   }
 
   toV2CreateEnvelope(): V2CreateHouseholdEnvelope {
+    for (const definition of GROUP_DEFINITIONS) {
+      const groupCount = countAppHouseholdGroups(this.appInputData, definition.appKey);
+
+      if (groupCount > 1) {
+        throw new Error(
+          `Household cannot be converted to stored v2 shape: ${definition.appKey} has ${groupCount} groups, but v2 /households supports at most 1`
+        );
+      }
+    }
+
     return buildV2CreateEnvelope(this.toCanonical());
   }
 
   toComparable(): ComparableHousehold {
-    return buildComparableHousehold({
-      id: this.id,
-      setup: this.setup,
-    });
+    return buildComparableHousehold({ id: this.id, envelope: this.toV2CreateEnvelope() });
   }
 
   toJSON(): HouseholdModelData {
@@ -194,14 +245,11 @@ export class Household extends BaseModel<HouseholdModelData> {
       countryId: this.countryId,
       label: this.label,
       year: this.year,
-      data: this.data,
+      data: cloneValue(this.appInputData),
     };
   }
 
   isEqual(other: Household): boolean {
-    return deepEqual(
-      { id: this.id, setup: this.setup },
-      { id: other.id, setup: other.toCanonical() }
-    );
+    return deepEqual(this.toJSON(), other.toJSON());
   }
 }
