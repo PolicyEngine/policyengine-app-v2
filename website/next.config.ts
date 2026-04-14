@@ -41,6 +41,9 @@ const nextConfig: NextConfig = {
         // Oregon Kicker Refund calculator (Vercel)
         { source: "/us/oregon-kicker-refund", destination: "https://oregon-kicker-refund.vercel.app/us/oregon-kicker-refund" },
         { source: "/us/oregon-kicker-refund/:path*", destination: "https://oregon-kicker-refund.vercel.app/us/oregon-kicker-refund/:path*" },
+        // Working Parents Tax Relief Act calculator (Vercel)
+        { source: "/us/working-parents-tax-relief-act", destination: "https://wptra.vercel.app/us/working-parents-tax-relief-act" },
+        { source: "/us/working-parents-tax-relief-act/:path*", destination: "https://wptra.vercel.app/us/working-parents-tax-relief-act/:path*" },
         // Household API docs (Vercel) — beforeFiles so it intercepts before Next.js trailing slash redirect
         { source: "/us/api", destination: "https://household-api-docs-policy-engine.vercel.app/us/api/" },
         { source: "/us/api/:path*", destination: "https://household-api-docs-policy-engine.vercel.app/us/api/:path*" },
