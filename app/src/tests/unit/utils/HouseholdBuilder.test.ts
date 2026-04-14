@@ -307,6 +307,25 @@ describe('HouseholdBuilder', () => {
       ).toBe(3);
     });
 
+    test('given US child when addChild then does not create a child marital unit', () => {
+      // Given
+      builder.addAdult(PERSON_NAMES.ADULT_1, PERSON_AGES.ADULT_DEFAULT);
+      builder.addAdult(PERSON_NAMES.ADULT_2, PERSON_AGES.ADULT_DEFAULT);
+
+      // When
+      builder.addChild(PERSON_NAMES.CHILD_1, PERSON_AGES.CHILD_DEFAULT, []);
+      const household = builder.build();
+
+      // Then
+      const maritalUnits = household.householdData.maritalUnits!;
+      expect(Object.keys(maritalUnits)).toHaveLength(1);
+      expect(Object.keys(maritalUnits)).not.toContain(`${PERSON_NAMES.CHILD_1}'s marital unit`);
+      expect(maritalUnits[GROUP_KEYS.DEFAULT_MARITAL_UNIT].members).toEqual([
+        PERSON_NAMES.ADULT_1,
+        PERSON_NAMES.ADULT_2,
+      ]);
+    });
+
     test('given child with variables when addChild then includes variables', () => {
       // Given
       const variables = { [VARIABLE_NAMES.CUSTOM_VAR]: VARIABLE_VALUES.STRING_VALUE };

@@ -233,7 +233,10 @@ export class HouseholdBuilder {
       firstSpmUnit.members.push(personKey);
     }
 
-    // Handle marital units - adults share one, children get their own
+    // Handle marital units for builder-created US households.
+    // Adults share one default marital unit. Children do not get their own
+    // marital units by default, which keeps the common builder shape
+    // representable by stored v2 households.
     if (!this.household.householdData.maritalUnits) {
       this.household.householdData.maritalUnits = {};
     }
@@ -250,16 +253,6 @@ export class HouseholdBuilder {
       if (!maritalUnits['your marital unit'].members.includes(personKey)) {
         maritalUnits['your marital unit'].members.push(personKey);
       }
-    } else {
-      // Children get their own marital unit
-      const childMaritalUnitKey = `${personKey}'s marital unit`;
-      const childCount = Object.keys(maritalUnits).filter((k) =>
-        k.includes("'s marital unit")
-      ).length;
-      maritalUnits[childMaritalUnitKey] = {
-        members: [personKey],
-        marital_unit_id: { [this.currentYear]: childCount + 1 },
-      };
     }
 
     // Ensure default household exists
