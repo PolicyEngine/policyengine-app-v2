@@ -55,8 +55,7 @@ export default function HeaderNavigation({ navbarOpened, onToggleNavbar }: Heade
       style={{
         position: 'sticky',
         top: 0,
-        paddingBlock: spacing.sm,
-        paddingInline: 'clamp(16px, 4vw, 32px)',
+        padding: `${spacing.sm} ${spacing['2xl']}`,
         height: spacing.layout.header,
         background: `linear-gradient(to right, ${colors.primary[800]}, ${colors.primary[600]})`,
         borderBottom: `0.5px solid ${colors.primary[700]}`,
@@ -66,7 +65,6 @@ export default function HeaderNavigation({ navbarOpened, onToggleNavbar }: Heade
         opacity: opened ? 0 : 1,
         transition: 'opacity 0.1s ease',
         width: '100%',
-        boxSizing: 'border-box',
       }}
     >
       <HeaderContent

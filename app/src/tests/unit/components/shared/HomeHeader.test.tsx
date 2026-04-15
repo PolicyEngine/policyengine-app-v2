@@ -41,17 +41,6 @@ describe('HeaderNavigation', () => {
       // Then
       expect(container.firstChild).toBeInTheDocument();
     });
-
-    test('given component renders then header uses border-box sizing to avoid mobile overflow', () => {
-      // When
-      const { container } = renderWithCountry(<HeaderNavigation />, TEST_COUNTRIES.US);
-
-      // Then
-      expect(container.firstChild).toHaveStyle({
-        width: '100%',
-        boxSizing: 'border-box',
-      });
-    });
   });
 
   describe('website app mode (same-app navigation)', () => {

@@ -473,7 +473,8 @@ function MobileMenu({
       <div
         style={{
           position: "relative",
-          width: "300px",
+          width: "min(300px, calc(100vw - 24px))",
+          maxWidth: "100vw",
           height: "100%",
           backgroundColor: colors.primary[600],
           padding: spacing.lg,
@@ -602,7 +603,8 @@ export default function Header() {
       style={{
         position: "sticky",
         top: 0,
-        padding: `${spacing.sm} ${spacing["2xl"]}`,
+        paddingBlock: spacing.sm,
+        paddingInline: "clamp(16px, 4vw, 32px)",
         height: spacing.layout.header,
         background: `linear-gradient(to right, ${colors.primary[800]}, ${colors.primary[600]})`,
         borderBottom: `0.5px solid ${colors.primary[700]}`,
