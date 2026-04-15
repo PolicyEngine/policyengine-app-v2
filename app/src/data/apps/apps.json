@@ -4,7 +4,7 @@
     "slug": "taxation-of-benefits-reforms",
     "title": "Social Security taxation reform dashboard",
     "description": "Explore policy options for reforming the taxation of Social Security benefits, with budgetary impacts through 2100 using PolicyEngine microsimulation. Analysis commissioned by the Committee for a Responsible Federal Budget.",
-    "source": "https://crfb-tob-impacts.vercel.app/",
+    "source": "https://crfb-tob-impacts.vercel.app/dashboard/",
     "tags": ["us", "policy", "interactives", "tax"],
     "countryId": "us"
   },
