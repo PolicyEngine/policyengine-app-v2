@@ -1,4 +1,4 @@
 - bump: patch
   changes:
     added:
-      - Add Scotland income tax reform analysis dashboard at /uk/scotland-income-tax-reform
+      - Add Working Parents Tax Relief Act calculator at /us/working-parents-tax-relief-act
