@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 export default function AIInequalityPage() {
   return (
     <iframe
-      src="https://policyengine.github.io/ai-inequality"
+      src="https://ai-inequality-theta.vercel.app"
       title="AI and inequality | PolicyEngine"
       style={{
         width: "100%",
