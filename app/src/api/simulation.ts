@@ -131,11 +131,12 @@ export async function markSimulationCompleted(
  */
 export async function markSimulationError(
   countryId: (typeof countryIds)[number],
-  simulationId: string
+  simulationId: string,
+  errorMessage?: string
 ): Promise<SimulationMetadata> {
   const url = `${BASE_URL}/${countryId}/simulation`;
 
-  const payload = SimulationAdapter.toErrorPayload(parseInt(simulationId, 10));
+  const payload = SimulationAdapter.toErrorPayload(parseInt(simulationId, 10), errorMessage);
 
   const response = await fetch(url, {
     method: 'PATCH',
