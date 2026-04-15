@@ -71,7 +71,8 @@ export class CalcOrchestratorManager {
     } catch (error) {
       console.error(`[CalcOrchestratorManager] Failed to start calculation ${calcId}:`, error);
       this.cleanup(calcId);
-      throw error;
+      // Avoid bubbling async startup errors into the Next.js router.
+      // The error is logged and the orchestrator is cleaned up.
     }
   }
 
