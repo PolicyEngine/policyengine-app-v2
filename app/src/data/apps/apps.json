@@ -1,6 +1,15 @@
 [
   {
     "type": "iframe",
+    "slug": "taxation-of-benefits-reforms",
+    "title": "Social Security taxation reform dashboard",
+    "description": "Explore policy options for reforming the taxation of Social Security benefits, with budgetary impacts through 2100 using PolicyEngine microsimulation. Analysis commissioned by the Committee for a Responsible Federal Budget.",
+    "source": "https://crfb-tob-impacts.vercel.app/",
+    "tags": ["us", "policy", "interactives", "tax"],
+    "countryId": "us"
+  },
+  {
+    "type": "iframe",
     "slug": "scotland-income-tax-reform",
     "title": "Scotland income tax analysis dashboard",
     "description": "Reform UK Scotland proposes replacing Scotland's six income tax bands with the simpler rest-of-UK structure, then reducing every rate by 1pp or 4pp. This dashboard estimates the revenue cost and distributional effects using the PolicyEngine UK microsimulation model.",
