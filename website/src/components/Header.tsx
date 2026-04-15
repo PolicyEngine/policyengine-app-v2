@@ -614,8 +614,6 @@ export default function Header() {
         fontFamily: typography.fontFamily.primary,
         width: "100%",
         boxSizing: "border-box",
-        opacity: mobileOpen ? 0 : 1,
-        transition: "opacity 0.1s ease",
       }}
     >
       <div

@@ -44,4 +44,19 @@ describe("Header", () => {
       boxSizing: "border-box",
     });
   });
+
+  test("keeps the menu visible when opened", () => {
+    render(<Header />);
+
+    const buttons = screen.getAllByRole("button");
+    const menuButton = buttons.find(
+      (button) => button.getAttribute("aria-label") === "Toggle navigation",
+    );
+
+    expect(menuButton).toBeDefined();
+    fireEvent.click(menuButton!);
+
+    expect(screen.getByTestId("site-header")).not.toHaveStyle({ opacity: "0" });
+    expect(screen.getByText("Menu")).toBeVisible();
+  });
 });
