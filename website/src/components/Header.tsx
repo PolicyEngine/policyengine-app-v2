@@ -475,6 +475,7 @@ function MobileMenu({
           position: "relative",
           width: "min(300px, calc(100vw - 24px))",
           maxWidth: "100vw",
+          boxSizing: "border-box",
           height: "100%",
           backgroundColor: colors.primary[600],
           padding: spacing.lg,
@@ -645,8 +646,8 @@ export default function Header() {
 
           {/* Desktop nav — hidden on small screens */}
           <div
+            data-testid="desktop-nav"
             style={{
-              display: "flex",
               alignItems: "center",
               gap: "24px",
             }}
@@ -665,6 +666,7 @@ export default function Header() {
 
         {/* Right: mobile controls */}
         <div
+          data-testid="mobile-controls"
           className="tw:flex tw:lg:hidden"
           style={{ alignItems: "center", gap: spacing.md }}
         >
