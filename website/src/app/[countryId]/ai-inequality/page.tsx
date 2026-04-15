@@ -6,10 +6,20 @@ export const metadata: Metadata = {
     "Research examining how policy interventions shape distributional outcomes when AI drives economic transformation.",
 };
 
-export default function AIInequalityPage() {
+type Props = {
+  params: Promise<{ countryId: string }>;
+};
+
+function countryQuery(countryId: string) {
+  return countryId === "us" ? "" : `?country=${encodeURIComponent(countryId)}`;
+}
+
+export default async function AIInequalityPage({ params }: Props) {
+  const { countryId } = await params;
+
   return (
     <iframe
-      src="https://ai-inequality-theta.vercel.app"
+      src={`https://ai-inequality-theta.vercel.app${countryQuery(countryId)}`}
       title="AI and inequality | PolicyEngine"
       style={{
         width: "100%",
