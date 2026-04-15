@@ -1,5 +1,5 @@
 import { IconMenu2 } from '@tabler/icons-react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import CountrySelector from './CountrySelector';
 import { NavItemSetup } from './NavItem';
@@ -12,6 +12,11 @@ interface MobileMenuProps {
 }
 
 export default function MobileMenu({ opened, onOpen, onClose, navItems }: MobileMenuProps) {
+  const handleMenuItemClick = (callback?: () => void) => {
+    callback?.();
+    onClose();
+  };
+
   return (
     <>
       {/* Mobile Burger Menu with Country Selector */}
@@ -32,10 +37,17 @@ export default function MobileMenu({ opened, onOpen, onClose, navItems }: Mobile
         <SheetContent
           side="right"
           className="tw:w-[300px]"
-          style={{ backgroundColor: colors.primary[600] }}
+          style={{
+            backgroundColor: colors.primary[600],
+            width: 'min(300px, calc(100vw - 24px))',
+            maxWidth: '100vw',
+          }}
         >
           <SheetHeader>
             <SheetTitle className="tw:text-white">Menu</SheetTitle>
+            <SheetDescription className="tw:sr-only">
+              Mobile site navigation and country selector links.
+            </SheetDescription>
           </SheetHeader>
           <div className="tw:flex tw:flex-col" style={{ gap: spacing.lg, padding: spacing.lg }}>
             {navItems.map((item) =>
@@ -62,7 +74,7 @@ export default function MobileMenu({ opened, onOpen, onClose, navItems }: Mobile
                       <a
                         key={dropdownItem.label}
                         href={dropdownItem.href}
-                        onClick={dropdownItem.href ? undefined : dropdownItem.onClick}
+                        onClick={() => handleMenuItemClick(dropdownItem.onClick)}
                         style={{
                           color: colors.text.inverse,
                           textDecoration: 'none',
@@ -81,7 +93,7 @@ export default function MobileMenu({ opened, onOpen, onClose, navItems }: Mobile
                 <a
                   key={item.label}
                   href={item.href}
-                  onClick={item.href ? undefined : item.onClick}
+                  onClick={() => handleMenuItemClick(item.onClick)}
                   style={{
                     color: colors.text.inverse,
                     textDecoration: 'none',

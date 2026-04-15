@@ -48,7 +48,7 @@ export default function StreamlitEmbed({
       style={{
         position: 'relative',
         height: containerHeight,
-        width: '100vw',
+        width: '100%',
         overflow: 'hidden',
       }}
     >

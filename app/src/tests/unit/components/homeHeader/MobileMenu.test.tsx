@@ -63,6 +63,26 @@ describe('MobileMenu', () => {
     expect(screen.getByText('Donate')).toBeInTheDocument();
   });
 
+  test('given menu is opened then drawer width stays within the viewport', () => {
+    // Given
+    const onOpen = vi.fn();
+    const onClose = vi.fn();
+
+    // When
+    renderWithCountry(
+      <MobileMenu opened onOpen={onOpen} onClose={onClose} navItems={MOCK_NAV_ITEMS} />,
+      'us'
+    );
+
+    // Then
+    const drawerTitle = screen.getByText('Menu');
+    const drawer = drawerTitle.closest('[data-slot="sheet-content"]');
+    expect(drawer).toHaveStyle({
+      width: 'min(300px, calc(100vw - 24px))',
+      maxWidth: '100vw',
+    });
+  });
+
   test('given menu is opened then displays dropdown section with items', () => {
     // Given
     const onOpen = vi.fn();
@@ -169,5 +189,23 @@ describe('MobileMenu', () => {
 
     // Then
     expect(onHomeClick).toHaveBeenCalled();
+  });
+
+  test('given user clicks nav item then menu closes', async () => {
+    // Given
+    const user = userEvent.setup();
+    const onOpen = vi.fn();
+    const onClose = vi.fn();
+
+    // When
+    renderWithCountry(
+      <MobileMenu opened onOpen={onOpen} onClose={onClose} navItems={MOCK_NAV_ITEMS} />,
+      'us'
+    );
+
+    await user.click(screen.getByText('Donate'));
+
+    // Then
+    expect(onClose).toHaveBeenCalled();
   });
 });

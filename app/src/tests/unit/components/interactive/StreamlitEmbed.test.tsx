@@ -105,6 +105,7 @@ describe('StreamlitEmbed', () => {
     // Then
     const iframe = screen.getByTitle(TEST_IFRAME_TITLE);
     expect(iframe.parentElement).toBeInTheDocument();
+    expect(iframe.parentElement).toHaveStyle({ width: '100%' });
   });
 
   test('given alert banner then displays with close button', () => {
