@@ -7,7 +7,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import FullScreenPortal from '@/components/FullScreenPortal';
+import StandardLayout from '@/components/StandardLayout';
 import { MOCK_USER_ID } from '@/constants';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
@@ -362,11 +362,11 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
       currentView = <></>;
   }
 
-  // StandardLayout is provided by the calculator route-group layout.
-  // Views that manage their own AppShell render inside a full-screen portal.
+  // Conditionally wrap with StandardLayout
+  // Views in MODES_WITH_OWN_LAYOUT manage their own AppShell
   if (MODES_WITH_OWN_LAYOUT.has(currentMode as SimulationViewMode)) {
-    return <FullScreenPortal>{currentView}</FullScreenPortal>;
+    return currentView;
   }
 
-  return currentView;
+  return <StandardLayout>{currentView}</StandardLayout>;
 }

@@ -117,14 +117,14 @@ describe('CalcOrchestratorManager', () => {
       expect(manager.getDebugInfo().activeIds).toEqual(['report-1', 'report-2']);
     });
 
-    it('given orchestrator start fails then cleans up without throwing', async () => {
+    it('given orchestrator start fails then cleans up and throws', async () => {
       // Given
       const config = mockSocietyWideCalcConfig();
       const error = new Error(TEST_ERROR_MESSAGE);
       mockOrchestrator.startCalculation.mockRejectedValue(error);
 
-      // When - should resolve without throwing so router state is not corrupted
-      await manager.startCalculation(config);
+      // When/Then
+      await expect(manager.startCalculation(config)).rejects.toThrow(TEST_ERROR_MESSAGE);
 
       // Orchestrator should be cleaned up
       expect(mockOrchestrator.cleanup).toHaveBeenCalled();

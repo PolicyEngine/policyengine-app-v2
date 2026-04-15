@@ -6,7 +6,7 @@
  */
 
 import { useCallback, useEffect, useState } from 'react';
-import FullScreenPortal from '@/components/FullScreenPortal';
+import StandardLayout from '@/components/StandardLayout';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { usePathwayNavigation } from '@/hooks/usePathwayNavigation';
@@ -114,11 +114,11 @@ export default function PolicyPathwayWrapper({ onComplete }: PolicyPathwayWrappe
       currentView = <></>;
   }
 
-  // StandardLayout is provided by the calculator route-group layout.
-  // Views that manage their own AppShell render inside a full-screen portal.
+  // Conditionally wrap with StandardLayout
+  // PolicyParameterSelectorView manages its own AppShell
   if (MODES_WITH_OWN_LAYOUT.has(currentMode as StandalonePolicyViewMode)) {
-    return <FullScreenPortal>{currentView}</FullScreenPortal>;
+    return currentView;
   }
 
-  return currentView;
+  return <StandardLayout>{currentView}</StandardLayout>;
 }
