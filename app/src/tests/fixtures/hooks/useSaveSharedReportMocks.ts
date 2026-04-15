@@ -4,7 +4,9 @@
 
 import { vi } from 'vitest';
 import { ReportIngredientsInput } from '@/hooks/utils/useFetchReportIngredients';
+import { Household } from '@/models/Household';
 import type { CanonicalHouseholdInputEnvelope } from '@/models/household/canonicalTypes';
+import type { V1HouseholdMetadataEnvelope } from '@/models/household/v1Types';
 import { Policy } from '@/types/ingredients/Policy';
 
 // ============================================================================
@@ -164,6 +166,36 @@ export const MOCK_HOUSEHOLDS: CanonicalHouseholdInputEnvelope[] = [
     },
   },
 ];
+
+const MOCK_SHARED_V1_HOUSEHOLD_METADATA: V1HouseholdMetadataEnvelope = {
+  id: TEST_IDS.HOUSEHOLD,
+  country_id: TEST_COUNTRIES.UK,
+  label: 'Fetched Shared Household',
+  api_version: 'v1',
+  household_hash: 'shared-household-hash',
+  household_json: {
+    people: {
+      you: {
+        age: { '2026': 40 },
+        employment_income: { '2026': 30000 },
+      },
+    },
+    households: {
+      household1: {
+        members: ['you'],
+      },
+    },
+    benunits: {
+      benunit1: {
+        members: ['you'],
+      },
+    },
+  },
+};
+
+export const MOCK_SHARED_V1_HOUSEHOLD_MODEL = Household.fromV1Metadata(
+  MOCK_SHARED_V1_HOUSEHOLD_METADATA
+);
 
 // ============================================================================
 // Mock Hooks Factory

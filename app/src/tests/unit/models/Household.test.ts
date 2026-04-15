@@ -103,6 +103,63 @@ describe('Household', () => {
         maritalUnit3: { members: ['childTwo'] },
       });
     });
+
+    it('rejects invalid secondary app-input groups instead of validating only the first one', () => {
+      expect(() =>
+        Household.fromCanonicalInput({
+          countryId: 'us',
+          year: 2026,
+          householdData: {
+            people: {
+              adult: { age: { 2026: 35 } },
+            },
+            taxUnits: {
+              validTaxUnit: { members: ['adult'] },
+              invalidTaxUnit: { members: ['missing-person'] },
+            },
+          },
+        })
+      ).toThrow('references unknown members: missing-person');
+    });
+
+    it('rejects invalid app-input groups regardless of object insertion order', () => {
+      expect(() =>
+        Household.fromCanonicalInput({
+          countryId: 'us',
+          year: 2026,
+          householdData: {
+            people: {
+              adult: { age: { 2026: 35 } },
+            },
+            taxUnits: {
+              invalidTaxUnit: { members: ['missing-person'] },
+              validTaxUnit: { members: ['adult'] },
+            },
+          },
+        })
+      ).toThrow('references unknown members: missing-person');
+    });
+
+    it('rejects malformed secondary app-input groups with non-array members', () => {
+      expect(() =>
+        Household.fromCanonicalInput({
+          countryId: 'us',
+          year: 2026,
+          householdData: {
+            people: {
+              adult: { age: { 2026: 35 } },
+              child: { age: { 2026: 8 } },
+            },
+            maritalUnits: {
+              validMaritalUnit: { members: ['adult'] },
+              invalidMaritalUnit: {
+                members: 'child' as unknown as string[],
+              },
+            },
+          },
+        })
+      ).toThrow('invalidMaritalUnit.members must be an array');
+    });
   });
 
   describe('fromCanonical', () => {

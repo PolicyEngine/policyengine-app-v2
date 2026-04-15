@@ -60,6 +60,48 @@ export function parseNamedGroupCollection(args: {
   }
 
   const [groupName, rawGroup] = entries[0];
+  return parseNamedGroup({
+    groupName,
+    rawGroup,
+    context: args.context,
+    groupKey: args.groupKey,
+    peopleNames: args.peopleNames,
+  });
+}
+
+export function validateNamedGroupCollection(args: {
+  rawGroupCollection: unknown;
+  context: string;
+  groupKey: string;
+  peopleNames: Set<string>;
+}): void {
+  if (args.rawGroupCollection === undefined) {
+    return;
+  }
+
+  if (!isRecord(args.rawGroupCollection)) {
+    throw new Error(`${args.context}: ${args.groupKey} must be an object`);
+  }
+
+  for (const [groupName, rawGroup] of Object.entries(args.rawGroupCollection)) {
+    parseNamedGroup({
+      groupName,
+      rawGroup,
+      context: args.context,
+      groupKey: args.groupKey,
+      peopleNames: args.peopleNames,
+    });
+  }
+}
+
+function parseNamedGroup(args: {
+  groupName: string;
+  rawGroup: unknown;
+  context: string;
+  groupKey: string;
+  peopleNames: Set<string>;
+}): CanonicalGroupSetup {
+  const { groupName, rawGroup } = args;
   if (!isRecord(rawGroup)) {
     throw new Error(`${args.context}: ${args.groupKey}.${groupName} must be an object`);
   }

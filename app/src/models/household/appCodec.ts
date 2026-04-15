@@ -10,6 +10,7 @@ import {
   buildNamedGroupCollection,
   parseNamedGroupCollection,
   parseNamedPeople,
+  validateNamedGroupCollection,
 } from './namedCodecHelpers';
 import {
   buildGeneratedGroupName,
@@ -80,6 +81,17 @@ export function cloneAppHouseholdInputData(
 ): CanonicalHouseholdInputData {
   const rawData = householdData as unknown as Record<string, unknown>;
   assertKnownAppEntityKeys(rawData);
+  const people = parseNamedPeople(rawData.people, 'Household input');
+  const peopleNames = new Set(Object.keys(people));
+
+  for (const definition of GROUP_DEFINITIONS) {
+    validateNamedGroupCollection({
+      rawGroupCollection: rawData[definition.appKey],
+      context: 'Household input',
+      groupKey: definition.appKey,
+      peopleNames,
+    });
+  }
 
   return cloneValue(householdData);
 }

@@ -29,6 +29,7 @@ import {
   MOCK_SHARE_DATA_WITH_CURRENT_LAW,
   MOCK_SHARE_DATA_WITH_HOUSEHOLD,
   MOCK_SHARE_DATA_WITHOUT_LABEL,
+  MOCK_SHARED_V1_HOUSEHOLD_MODEL,
   TEST_ERRORS,
   TEST_IDS,
 } from '@/tests/fixtures/hooks/useSaveSharedReportMocks';
@@ -312,6 +313,32 @@ describe('useSaveSharedReport', () => {
     expect(callArgs.v1Association).toEqual(MOCK_SAVED_USER_HOUSEHOLD);
     expect(callArgs.v1Household.householdData).toEqual(MOCK_HOUSEHOLDS[0].householdData);
     expect(shadowCreateUserHouseholdAssociation).not.toHaveBeenCalled();
+  });
+
+  test('given fetched v1 household model without v2 mapping then shadow creates from the runtime model shape', async () => {
+    const store = createMockStore();
+    const wrapper = createWrapper(store);
+
+    const { result } = renderHook(() => useSaveSharedReport(), { wrapper });
+
+    await act(async () => {
+      await result.current.saveSharedReport(
+        MOCK_SHARE_DATA_WITH_HOUSEHOLD,
+        [],
+        [MOCK_SHARED_V1_HOUSEHOLD_MODEL]
+      );
+    });
+
+    expect(shadowCreateHouseholdAndAssociation).toHaveBeenCalledTimes(1);
+    const [callArgs] = vi.mocked(shadowCreateHouseholdAndAssociation).mock.calls[0];
+    expect(callArgs.v1HouseholdId).toBe(TEST_IDS.HOUSEHOLD);
+    expect(callArgs.v1Association).toEqual(MOCK_SAVED_USER_HOUSEHOLD);
+    expect(callArgs.v1Household.id).toBe(TEST_IDS.HOUSEHOLD);
+    expect(callArgs.v1Household.countryId).toBe('uk');
+    expect(callArgs.v1Household.label).toBe('My Household');
+    expect(callArgs.v1Household.householdData).toEqual(
+      MOCK_SHARED_V1_HOUSEHOLD_MODEL.householdData
+    );
   });
 
   test('given saved shared household without details then emits skipped remote log', async () => {

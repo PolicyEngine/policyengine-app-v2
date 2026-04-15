@@ -37,6 +37,7 @@ import { useCreateReportAssociation, useUserReportStore } from './useUserReportA
 import { useCreateSimulationAssociation } from './useUserSimulationAssociations';
 
 export type SaveResult = 'success' | 'partial' | 'already_saved' | null;
+type SharedSaveHouseholdDetails = CanonicalHouseholdInputEnvelope | Household;
 
 function shadowSavedPolicyAssociation(association: UserPolicy, policyDetails?: Policy): void {
   const mappedV2PolicyId = getV2Id('Policy', association.policyId);
@@ -80,7 +81,7 @@ function shadowSavedPolicyAssociation(association: UserPolicy, policyDetails?: P
 
 function shadowSavedHouseholdAssociation(
   association: UserHouseholdPopulation,
-  householdDetails?: CanonicalHouseholdInputEnvelope
+  householdDetails?: SharedSaveHouseholdDetails
 ): void {
   const mappedV2HouseholdId = getV2Id('Household', association.householdId);
 
@@ -109,13 +110,20 @@ function shadowSavedHouseholdAssociation(
     return;
   }
 
+  const v1Household =
+    householdDetails instanceof Household
+      ? householdDetails
+          .withId(association.householdId)
+          .withLabel(association.label ?? householdDetails.label ?? null)
+      : Household.fromCanonicalInput({
+          ...householdDetails,
+          id: association.householdId,
+          label: association.label ?? householdDetails.label ?? null,
+        });
+
   void shadowCreateHouseholdAndAssociation({
     v1HouseholdId: association.householdId,
-    v1Household: Household.fromCanonicalInput({
-      ...householdDetails,
-      id: association.householdId,
-      label: association.label ?? null,
-    }),
+    v1Household,
     v1Association: association,
   });
 }
@@ -157,7 +165,7 @@ export function useSaveSharedReport() {
   const saveSharedReport = async (
     shareData: ReportIngredientsInput,
     policies: Policy[] = [],
-    households: CanonicalHouseholdInputEnvelope[] = []
+    households: SharedSaveHouseholdDetails[] = []
   ): Promise<UserReport> => {
     const userId = 'anonymous'; // TODO: Replace with auth context
     const userReportId = getShareDataUserReportId(shareData);
