@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import {
   CartesianGrid,
@@ -67,61 +68,69 @@ export default function BaselineOnlyChart({
   const countryId = useCurrentCountry();
   const metadata = useSelector((state: RootState) => state.metadata);
   const chartHeight = getClampedChartHeight(viewportHeight, mobile);
-
   const variable = metadata.variables[variableName];
+
+  const chartSeries = useMemo(() => {
+    const yValues = getValueFromHousehold(variableName, year, null, baselineVariation, metadata);
+
+    if (!Array.isArray(yValues)) {
+      return null;
+    }
+
+    const currentValue = getValueFromHousehold(
+      variableName,
+      year,
+      null,
+      baseline,
+      metadata
+    ) as number;
+    const firstPersonName = Object.keys(baseline.householdData?.people || {})[0];
+    const currentEarnings = getValueFromHousehold(
+      'employment_income',
+      year,
+      firstPersonName,
+      baseline,
+      metadata
+    ) as number;
+    const maxEarnings = Math.max(countryId === 'ng' ? 1_200_000 : 200_000, 2 * currentEarnings);
+    const xValues = Array.from({ length: 401 }, (_, i) => (i * maxEarnings) / 400);
+    const chartData = xValues.map((earnings, index) => ({
+      earnings,
+      value: yValues[index],
+    }));
+    const yNumValues = chartData.map((datum) => datum.value);
+
+    return {
+      chartData,
+      currentEarnings,
+      currentValue,
+      maxEarnings,
+      xTicks: getNiceTicks([0, maxEarnings]),
+      yTicks: getNiceTicks([Math.min(...yNumValues), Math.max(...yNumValues)]),
+    };
+  }, [baseline, baselineVariation, countryId, metadata, variableName, year]);
+
   if (!variable) {
     return <div>Variable not found</div>;
   }
 
-  // Get variation data (401-point array)
-  const yValues = getValueFromHousehold(variableName, year, null, baselineVariation, metadata);
-
-  if (!Array.isArray(yValues)) {
+  if (!chartSeries) {
     return <div>No variation data available</div>;
   }
 
-  // Get current value at actual earnings
-  const currentValue = getValueFromHousehold(
-    variableName,
-    year,
-    null,
-    baseline,
-    metadata
-  ) as number;
-
-  // Get current earnings to show marker position (first person only, matching axes sweep)
-  const firstPersonName = Object.keys(baseline.householdData?.people || {})[0];
-  const currentEarnings = getValueFromHousehold(
-    'employment_income',
-    year,
-    firstPersonName,
-    baseline,
-    metadata
-  ) as number;
-
-  // X-axis is earnings range
-  const maxEarnings = Math.max(countryId === 'ng' ? 1_200_000 : 200_000, 2 * currentEarnings);
-  const xValues = Array.from({ length: 401 }, (_, i) => (i * maxEarnings) / 400);
-
   const symbol = currencySymbol(countryId);
-
-  const chartData = xValues.map((x, i) => ({
-    earnings: x,
-    value: yValues[i],
-  }));
-
-  const xTicks = getNiceTicks([0, maxEarnings]);
-  const yNumValues = chartData.map((d) => d.value);
-  const yTicks = getNiceTicks([Math.min(...yNumValues), Math.max(...yNumValues)]);
 
   return (
     <div style={{ width: '100%', position: 'relative' }}>
       <ResponsiveContainer width="100%" height={chartHeight}>
-        <LineChart data={chartData} margin={{ top: 20, right: 20, bottom: 80, left: 80 }}>
+        <LineChart
+          data={chartSeries.chartData}
+          margin={{ top: 20, right: 20, bottom: 80, left: 80 }}
+        >
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis
             dataKey="earnings"
-            ticks={xTicks}
+            ticks={chartSeries.xTicks}
             tick={RECHARTS_FONT_STYLE}
             tickFormatter={(v: number) => `${symbol}${v.toLocaleString()}`}
           >
@@ -133,8 +142,8 @@ export default function BaselineOnlyChart({
             />
           </XAxis>
           <YAxis
-            ticks={yTicks}
-            domain={[yTicks[0], yTicks[yTicks.length - 1]]}
+            ticks={chartSeries.yTicks}
+            domain={[chartSeries.yTicks[0], chartSeries.yTicks[chartSeries.yTicks.length - 1]]}
             tick={RECHARTS_FONT_STYLE}
           >
             <Label
@@ -155,8 +164,8 @@ export default function BaselineOnlyChart({
             dot={false}
           />
           <ReferenceDot
-            x={currentEarnings}
-            y={currentValue}
+            x={chartSeries.currentEarnings}
+            y={chartSeries.currentValue}
             r={5}
             fill={colors.primary[500]}
             stroke={colors.primary[500]}

@@ -1,5 +1,7 @@
 import { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { Household } from '@/types/ingredients/Household';
+import type { Policy } from '@/types/ingredients/Policy';
+import type { Simulation } from '@/types/ingredients/Simulation';
 import { ReportOutputType } from '../ReportOutput.page';
 import HouseholdOverview from './HouseholdOverview';
 import SocietyWideOverview from './SocietyWideOverview';
@@ -8,6 +10,9 @@ interface OverviewSubPageProps {
   output: SocietyWideReportOutput | Household | Household[];
   outputType: ReportOutputType;
   policyLabels?: string[];
+  simulations?: Simulation[];
+  policies?: Policy[];
+  activeView?: string;
 }
 
 /**
@@ -18,6 +23,9 @@ export default function OverviewSubPage({
   output,
   outputType,
   policyLabels,
+  simulations,
+  policies,
+  activeView,
 }: OverviewSubPageProps) {
   if (outputType === 'societyWide') {
     return <SocietyWideOverview output={output as SocietyWideReportOutput} />;
@@ -26,5 +34,13 @@ export default function OverviewSubPage({
   // Household output can be single or array (for multiple simulations)
   const householdOutputs = Array.isArray(output) ? output : [output as Household];
 
-  return <HouseholdOverview outputs={householdOutputs} policyLabels={policyLabels} />;
+  return (
+    <HouseholdOverview
+      outputs={householdOutputs}
+      policyLabels={policyLabels}
+      simulations={simulations}
+      policies={policies}
+      activeView={activeView}
+    />
+  );
 }

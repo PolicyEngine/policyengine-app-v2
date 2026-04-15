@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import {
   Area,
@@ -16,7 +16,7 @@ import {
 } from 'recharts';
 import { PolicyAdapter } from '@/adapters/PolicyAdapter';
 import { ChartWatermark, TOOLTIP_STYLE } from '@/components/charts';
-import { RadioGroup, RadioGroupItem, Stack, Text } from '@/components/ui';
+import { Group, RadioGroup, RadioGroupItem, Spinner, Stack, Text } from '@/components/ui';
 import { colors, typography } from '@/designTokens';
 import { MOBILE_BREAKPOINT_QUERY } from '@/hooks/useChartDimensions';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
@@ -32,7 +32,6 @@ import type { UserPolicy } from '@/types/ingredients/UserPolicy';
 import { getClampedChartHeight, getNiceTicks, RECHARTS_FONT_STYLE } from '@/utils/chartUtils';
 import { currencySymbol } from '@/utils/formatters';
 import { getValueFromHousehold } from '@/utils/householdValues';
-import LoadingPage from '../LoadingPage';
 
 interface Props {
   baseline: Household;
@@ -41,6 +40,8 @@ interface Props {
   policies?: Policy[];
   userPolicies?: UserPolicy[];
   households?: Household[];
+  baselineVariation?: Household | null;
+  reformVariation?: Household | null;
 }
 
 type ViewMode = 'both' | 'difference';
@@ -79,35 +80,30 @@ export default function MarginalTaxRatesSubPage({
   policies,
   userPolicies: _userPolicies,
   households: _households,
+  baselineVariation: providedBaselineVariation = null,
+  reformVariation: providedReformVariation = null,
 }: Props) {
   const [viewMode, setViewMode] = useState<ViewMode>('both');
   const mobile = useMediaQuery(MOBILE_BREAKPOINT_QUERY);
   const { height: viewportHeight } = useViewportSize();
   const countryId = useCurrentCountry();
   const reportYear = useReportYear();
+  const normalizedReportYear = reportYear ?? '';
   const metadata = useSelector((state: RootState) => state.metadata);
   const chartHeight = getClampedChartHeight(viewportHeight, mobile);
 
-  // Early return if no report year available (shouldn't happen in report output context)
-  if (!reportYear) {
-    return (
-      <Stack gap="md">
-        <Text c="red">Error: Report year not available</Text>
-      </Stack>
-    );
-  }
-
-  // Get policy data for variations
   const baselinePolicy = policies?.find((p) => p.id === simulations[0]?.policyId);
   const reformPolicy = simulations[1] && policies?.find((p) => p.id === simulations[1].policyId);
+  const baselinePolicyData = useMemo(
+    () => (baselinePolicy ? PolicyAdapter.toCreationPayload(baselinePolicy).data : {}),
+    [baselinePolicy]
+  );
+  const reformPolicyData = useMemo(
+    () => (reformPolicy ? PolicyAdapter.toCreationPayload(reformPolicy).data : {}),
+    [reformPolicy]
+  );
+  const shouldFetchInternally = !providedBaselineVariation;
 
-  // Convert policies to API format
-  const baselinePolicyData = baselinePolicy
-    ? PolicyAdapter.toCreationPayload(baselinePolicy).data
-    : {};
-  const reformPolicyData = reformPolicy ? PolicyAdapter.toCreationPayload(reformPolicy).data : {};
-
-  // Fetch baseline variation
   const {
     data: baselineVariation,
     isLoading: baselineLoading,
@@ -116,12 +112,12 @@ export default function MarginalTaxRatesSubPage({
     householdId: simulations[0]?.populationId || 'baseline',
     policyId: simulations[0]?.policyId || 'baseline-policy',
     policyData: baselinePolicyData,
-    year: reportYear,
+    year: normalizedReportYear,
     countryId,
-    enabled: !!simulations[0]?.populationId && !!baselinePolicy,
+    enabled:
+      shouldFetchInternally && !!reportYear && !!simulations[0]?.populationId && !!baselinePolicy,
   });
 
-  // Fetch reform variation (if reform exists)
   const {
     data: reformVariation,
     isLoading: reformLoading,
@@ -130,16 +126,120 @@ export default function MarginalTaxRatesSubPage({
     householdId: simulations[1]?.populationId || 'reform',
     policyId: simulations[1]?.policyId || 'reform-policy',
     policyData: reformPolicyData,
-    year: reportYear,
+    year: normalizedReportYear,
     countryId,
-    enabled: !!reform && !!simulations[1]?.populationId && !!reformPolicy,
+    enabled:
+      shouldFetchInternally &&
+      !!reportYear &&
+      !!reform &&
+      !!simulations[1]?.populationId &&
+      !!reformPolicy,
   });
 
-  // Show loading if either query is still loading
-  const isLoading = baselineLoading || (reform && reformLoading);
+  const resolvedBaselineVariation = providedBaselineVariation ?? baselineVariation ?? null;
+  const resolvedReformVariation = providedReformVariation ?? reformVariation ?? null;
+  const chartSeries = useMemo(() => {
+    if (
+      !reportYear ||
+      !resolvedBaselineVariation?.householdData?.people ||
+      (reform && resolvedReformVariation && !resolvedReformVariation.householdData?.people)
+    ) {
+      return null;
+    }
+
+    const clipMTR = (values: number[]) => values.map((value) => Math.max(-2, Math.min(2, value)));
+    const firstPersonName = Object.keys(resolvedBaselineVariation.householdData?.people || {})[0];
+    const baselineMTR = getValueFromHousehold(
+      'marginal_tax_rate',
+      normalizedReportYear,
+      firstPersonName,
+      resolvedBaselineVariation,
+      metadata
+    );
+    const reformMTR =
+      reform && resolvedReformVariation
+        ? getValueFromHousehold(
+            'marginal_tax_rate',
+            normalizedReportYear,
+            firstPersonName,
+            resolvedReformVariation,
+            metadata
+          )
+        : null;
+
+    if (!Array.isArray(baselineMTR)) {
+      return null;
+    }
+
+    const baselineMTRClipped = clipMTR(baselineMTR);
+    const reformMTRClipped = Array.isArray(reformMTR) ? clipMTR(reformMTR) : null;
+    const firstPersonNameBaseline = Object.keys(baseline.householdData?.people || {})[0];
+    const currentEarnings = getValueFromHousehold(
+      'employment_income',
+      normalizedReportYear,
+      firstPersonNameBaseline,
+      baseline,
+      metadata
+    ) as number;
+    const currentMTR = getValueFromHousehold(
+      'marginal_tax_rate',
+      normalizedReportYear,
+      firstPersonNameBaseline,
+      baseline,
+      metadata
+    ) as number;
+    const maxEarnings = Math.max(countryId === 'ng' ? 1_200_000 : 200_000, 2 * currentEarnings);
+    const xValues = Array.from({ length: 401 }, (_, i) => (i * maxEarnings) / 400);
+    const mtrDifference = reformMTRClipped
+      ? baselineMTRClipped.map((baseValue, index) => reformMTRClipped[index] - baseValue)
+      : null;
+    const chartData = xValues.map((earnings, index) => ({
+      earnings,
+      baseline: baselineMTRClipped[index],
+      ...(reformMTRClipped && { reform: reformMTRClipped[index] }),
+      ...(mtrDifference && { difference: mtrDifference[index] }),
+    }));
+    const diffValues = mtrDifference ? mtrDifference.filter((value) => value !== undefined) : [0];
+
+    return {
+      chartData,
+      currentEarnings,
+      currentMTR,
+      diffTicks: getNiceTicks([Math.min(0, ...diffValues), Math.max(0, ...diffValues)]),
+      maxEarnings,
+      mtrDifference,
+      mtrTicks: getNiceTicks([-2, 2]),
+      reformMTRClipped,
+      xTicks: getNiceTicks([0, maxEarnings]),
+    };
+  }, [
+    baseline,
+    countryId,
+    metadata,
+    normalizedReportYear,
+    reform,
+    reportYear,
+    resolvedBaselineVariation,
+    resolvedReformVariation,
+  ]);
+
+  const isLoading = shouldFetchInternally && (baselineLoading || (reform && reformLoading));
+
+  if (!reportYear) {
+    return (
+      <Stack gap="md">
+        <Text c="red">Error: Report year not available</Text>
+      </Stack>
+    );
+  }
 
   if (isLoading) {
-    return <LoadingPage message="Loading marginal tax rates..." />;
+    return (
+      <Group className="tw:gap-sm tw:items-center">
+        <Spinner size="sm" />
+        <Text className="tw:text-sm">Loading marginal tax rates...</Text>
+      </Group>
+    );
   }
 
   if (baselineError) {
@@ -158,8 +258,7 @@ export default function MarginalTaxRatesSubPage({
     );
   }
 
-  // Verify baseline data exists and has required structure
-  if (!baselineVariation || !baselineVariation.householdData?.people) {
+  if (!resolvedBaselineVariation || !resolvedBaselineVariation.householdData?.people) {
     return (
       <Stack gap="md">
         <Text c="red">No baseline variation data available</Text>
@@ -167,8 +266,7 @@ export default function MarginalTaxRatesSubPage({
     );
   }
 
-  // If reform exists, verify reform data has required structure
-  if (reform && reformVariation && !reformVariation.householdData?.people) {
+  if (reform && resolvedReformVariation && !resolvedReformVariation.householdData?.people) {
     return (
       <Stack gap="md">
         <Text c="red">Invalid reform variation data</Text>
@@ -176,30 +274,7 @@ export default function MarginalTaxRatesSubPage({
     );
   }
 
-  // Get MTR data (401-point arrays)
-  // Use first person's MTR (matches V1 behavior) - MTR should not be aggregated across people
-  const firstPersonName = Object.keys(baselineVariation.householdData?.people || {})[0];
-
-  const baselineMTR = getValueFromHousehold(
-    'marginal_tax_rate',
-    reportYear,
-    firstPersonName,
-    baselineVariation,
-    metadata
-  );
-
-  const reformMTR =
-    reform && reformVariation
-      ? getValueFromHousehold(
-          'marginal_tax_rate',
-          reportYear,
-          firstPersonName,
-          reformVariation,
-          metadata
-        )
-      : null;
-
-  if (!Array.isArray(baselineMTR)) {
+  if (!chartSeries) {
     return (
       <Stack gap="md">
         <Text c="red">No marginal tax rate data available</Text>
@@ -207,64 +282,22 @@ export default function MarginalTaxRatesSubPage({
     );
   }
 
-  // Clip values to -200% to +200% range (per V1 implementation)
-  const clipMTR = (values: number[]) => values.map((v) => Math.max(-2, Math.min(2, v)));
-
-  const baselineMTRClipped = clipMTR(baselineMTR);
-  const reformMTRClipped = reformMTR ? clipMTR(reformMTR as number[]) : null;
-
-  // Get current earnings for marker (first person only)
-  const firstPersonNameBaseline = Object.keys(baseline.householdData?.people || {})[0];
-
-  const currentEarnings = getValueFromHousehold(
-    'employment_income',
-    reportYear,
-    firstPersonNameBaseline,
-    baseline,
-    metadata
-  ) as number;
-
-  // Get current MTR (first person only)
-  const currentMTR = getValueFromHousehold(
-    'marginal_tax_rate',
-    reportYear,
-    firstPersonNameBaseline,
-    baseline,
-    metadata
-  ) as number;
-
-  // X-axis is earnings range
-  const maxEarnings = Math.max(countryId === 'ng' ? 1_200_000 : 200_000, 2 * currentEarnings);
-  const xValues = Array.from({ length: 401 }, (_, i) => (i * maxEarnings) / 400);
-
-  // Calculate difference if reform exists
-  const mtrDifference = reformMTRClipped
-    ? baselineMTRClipped.map((b, i) => reformMTRClipped[i] - b)
-    : null;
-
   const symbol = currencySymbol(countryId);
 
-  const chartData = xValues.map((x, i) => ({
-    earnings: x,
-    baseline: baselineMTRClipped[i],
-    ...(reformMTRClipped && { reform: reformMTRClipped[i] }),
-    ...(mtrDifference && { difference: mtrDifference[i] }),
-  }));
-
-  const xTicks = getNiceTicks([0, maxEarnings]);
-  const mtrTicks = getNiceTicks([-2, 2]);
-  const diffValues = mtrDifference ? mtrDifference.filter((v) => v !== undefined) : [0];
-  const diffTicks = getNiceTicks([Math.min(0, ...diffValues), Math.max(0, ...diffValues)]);
-
   const renderChart = () => {
-    if (!reform || !reformMTRClipped || viewMode === 'both') {
+    if (!reform || !chartSeries.reformMTRClipped || viewMode === 'both') {
+      const baselineStroke =
+        reform && chartSeries.reformMTRClipped ? colors.gray[600] : colors.primary[500];
       return (
         <ResponsiveContainer width="100%" height={chartHeight}>
-          <LineChart data={chartData} margin={{ top: 20, right: 20, bottom: 80, left: 80 }}>
+          <LineChart
+            data={chartSeries.chartData}
+            margin={{ top: 20, right: 20, bottom: 80, left: 80 }}
+          >
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis
               dataKey="earnings"
-              ticks={xTicks}
+              ticks={chartSeries.xTicks}
               tick={RECHARTS_FONT_STYLE}
               tickFormatter={(v: number) => `${symbol}${v.toLocaleString()}`}
             >
@@ -277,7 +310,7 @@ export default function MarginalTaxRatesSubPage({
             </XAxis>
             <YAxis
               domain={[-2, 2]}
-              ticks={mtrTicks}
+              ticks={chartSeries.mtrTicks}
               tick={RECHARTS_FONT_STYLE}
               tickFormatter={(v: number) => `${(v * 100).toFixed(0)}%`}
             >
@@ -294,11 +327,11 @@ export default function MarginalTaxRatesSubPage({
               type="monotone"
               dataKey="baseline"
               name="Baseline"
-              stroke={colors.gray[600]}
+              stroke={baselineStroke}
               strokeWidth={2}
               dot={false}
             />
-            {reform && reformMTRClipped && (
+            {reform && chartSeries.reformMTRClipped && (
               <Line
                 type="monotone"
                 dataKey="reform"
@@ -310,8 +343,8 @@ export default function MarginalTaxRatesSubPage({
             )}
             {!reform && (
               <ReferenceDot
-                x={currentEarnings}
-                y={Math.max(-2, Math.min(2, currentMTR))}
+                x={chartSeries.currentEarnings}
+                y={Math.max(-2, Math.min(2, chartSeries.currentMTR))}
                 r={5}
                 fill={colors.primary[500]}
                 stroke={colors.primary[500]}
@@ -322,19 +355,20 @@ export default function MarginalTaxRatesSubPage({
       );
     }
 
-    // Difference view
-    // This branch is only reachable when reform exists and mtrDifference is not null
-    if (!mtrDifference) {
+    if (!chartSeries.mtrDifference) {
       return null;
     }
 
     return (
       <ResponsiveContainer width="100%" height={chartHeight}>
-        <AreaChart data={chartData} margin={{ top: 20, right: 20, bottom: 80, left: 80 }}>
+        <AreaChart
+          data={chartSeries.chartData}
+          margin={{ top: 20, right: 20, bottom: 80, left: 80 }}
+        >
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis
             dataKey="earnings"
-            ticks={xTicks}
+            ticks={chartSeries.xTicks}
             tick={RECHARTS_FONT_STYLE}
             tickFormatter={(v: number) => `${symbol}${v.toLocaleString()}`}
           >
@@ -346,8 +380,11 @@ export default function MarginalTaxRatesSubPage({
             />
           </XAxis>
           <YAxis
-            ticks={diffTicks}
-            domain={[diffTicks[0], diffTicks[diffTicks.length - 1]]}
+            ticks={chartSeries.diffTicks}
+            domain={[
+              chartSeries.diffTicks[0],
+              chartSeries.diffTicks[chartSeries.diffTicks.length - 1],
+            ]}
             tick={RECHARTS_FONT_STYLE}
             tickFormatter={(v: number) => `${(v * 100).toFixed(1)}%`}
           >
