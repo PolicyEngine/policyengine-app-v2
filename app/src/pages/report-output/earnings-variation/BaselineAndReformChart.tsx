@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import {
   Area,
@@ -101,72 +101,90 @@ export default function BaselineAndReformChart({
   const countryId = useCurrentCountry();
   const metadata = useSelector((state: RootState) => state.metadata);
   const chartHeight = getClampedChartHeight(viewportHeight, mobile);
-
   const variable = metadata.variables[variableName];
+
+  const chartSeries = useMemo(() => {
+    const baselineYValues = getValueFromHousehold(
+      variableName,
+      year,
+      null,
+      baselineVariation,
+      metadata
+    );
+    const reformYValues = getValueFromHousehold(
+      variableName,
+      year,
+      null,
+      reformVariation,
+      metadata
+    );
+
+    if (!Array.isArray(baselineYValues) || !Array.isArray(reformYValues)) {
+      return null;
+    }
+
+    const firstPersonName = Object.keys(baseline.householdData?.people || {})[0];
+    const currentEarnings = getValueFromHousehold(
+      'employment_income',
+      year,
+      firstPersonName,
+      baseline,
+      metadata
+    ) as number;
+
+    const maxEarnings = Math.max(countryId === 'ng' ? 1_200_000 : 200_000, 2 * currentEarnings);
+    const xValues = Array.from({ length: 401 }, (_, i) => (i * maxEarnings) / 400);
+    const absoluteDiff = baselineYValues.map(
+      (baseValue, index) => reformYValues[index] - baseValue
+    );
+    const relativeDiff = baselineYValues.map((baseValue, index) =>
+      baseValue !== 0 ? (reformYValues[index] - baseValue) / Math.abs(baseValue) : 0
+    );
+    const chartData = xValues.map((earnings, index) => ({
+      earnings,
+      baseline: baselineYValues[index],
+      reform: reformYValues[index],
+      absoluteDiff: absoluteDiff[index],
+      relativeDiff: relativeDiff[index],
+    }));
+    const allBothValues = [...baselineYValues, ...reformYValues];
+
+    return {
+      absoluteDiff,
+      absDiffTicks: getNiceTicks([Math.min(...absoluteDiff), Math.max(...absoluteDiff)]),
+      baselineYValues,
+      bothYTicks: getNiceTicks([Math.min(...allBothValues), Math.max(...allBothValues)]),
+      chartData,
+      maxEarnings,
+      relDiffTicks: getNiceTicks([Math.min(...relativeDiff), Math.max(...relativeDiff)]),
+      reformYValues,
+      relativeDiff,
+      xTicks: getNiceTicks([0, maxEarnings]),
+    };
+  }, [baseline, baselineVariation, countryId, metadata, reformVariation, variableName, year]);
+
   if (!variable) {
     return <div>Variable not found</div>;
   }
 
-  // Get variation data (401-point arrays)
-  const baselineYValues = getValueFromHousehold(
-    variableName,
-    year,
-    null,
-    baselineVariation,
-    metadata
-  );
-  const reformYValues = getValueFromHousehold(variableName, year, null, reformVariation, metadata);
-
-  if (!Array.isArray(baselineYValues) || !Array.isArray(reformYValues)) {
+  if (!chartSeries) {
     return <div>No variation data available</div>;
   }
 
-  // Get current earnings for marker (first person only, matching axes sweep)
-  const firstPersonName = Object.keys(baseline.householdData?.people || {})[0];
-  const currentEarnings = getValueFromHousehold(
-    'employment_income',
-    year,
-    firstPersonName,
-    baseline,
-    metadata
-  ) as number;
-
-  // X-axis is earnings range
-  const maxEarnings = Math.max(countryId === 'ng' ? 1_200_000 : 200_000, 2 * currentEarnings);
-  const xValues = Array.from({ length: 401 }, (_, i) => (i * maxEarnings) / 400);
-
-  // Calculate differences
-  const absoluteDiff = baselineYValues.map((b, i) => reformYValues[i] - b);
-  const relativeDiff = baselineYValues.map((b, i) =>
-    b !== 0 ? (reformYValues[i] - b) / Math.abs(b) : 0
-  );
-
   const symbol = currencySymbol(countryId);
 
-  const chartData = xValues.map((x, i) => ({
-    earnings: x,
-    baseline: baselineYValues[i],
-    reform: reformYValues[i],
-    absoluteDiff: absoluteDiff[i],
-    relativeDiff: relativeDiff[i],
-  }));
-
-  const xTicks = getNiceTicks([0, maxEarnings]);
-  const allBothValues = [...baselineYValues, ...reformYValues];
-  const bothYTicks = getNiceTicks([Math.min(...allBothValues), Math.max(...allBothValues)]);
-  const absDiffTicks = getNiceTicks([Math.min(...absoluteDiff), Math.max(...absoluteDiff)]);
-  const relDiffTicks = getNiceTicks([Math.min(...relativeDiff), Math.max(...relativeDiff)]);
-
-  // Render different charts based on view mode
   const renderChart = () => {
     if (viewMode === 'both') {
       return (
         <ResponsiveContainer width="100%" height={chartHeight}>
-          <LineChart data={chartData} margin={{ top: 20, right: 20, bottom: 80, left: 80 }}>
+          <LineChart
+            data={chartSeries.chartData}
+            margin={{ top: 20, right: 20, bottom: 80, left: 80 }}
+          >
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis
               dataKey="earnings"
-              ticks={xTicks}
+              ticks={chartSeries.xTicks}
               tick={RECHARTS_FONT_STYLE}
               tickFormatter={(v: number) => `${symbol}${v.toLocaleString()}`}
             >
@@ -178,8 +196,11 @@ export default function BaselineAndReformChart({
               />
             </XAxis>
             <YAxis
-              ticks={bothYTicks}
-              domain={[bothYTicks[0], bothYTicks[bothYTicks.length - 1]]}
+              ticks={chartSeries.bothYTicks}
+              domain={[
+                chartSeries.bothYTicks[0],
+                chartSeries.bothYTicks[chartSeries.bothYTicks.length - 1],
+              ]}
               tick={RECHARTS_FONT_STYLE}
             >
               <Label
@@ -215,11 +236,14 @@ export default function BaselineAndReformChart({
     if (viewMode === 'absolute') {
       return (
         <ResponsiveContainer width="100%" height={chartHeight}>
-          <AreaChart data={chartData} margin={{ top: 20, right: 20, bottom: 80, left: 80 }}>
+          <AreaChart
+            data={chartSeries.chartData}
+            margin={{ top: 20, right: 20, bottom: 80, left: 80 }}
+          >
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis
               dataKey="earnings"
-              ticks={xTicks}
+              ticks={chartSeries.xTicks}
               tick={RECHARTS_FONT_STYLE}
               tickFormatter={(v: number) => `${symbol}${v.toLocaleString()}`}
             >
@@ -231,8 +255,11 @@ export default function BaselineAndReformChart({
               />
             </XAxis>
             <YAxis
-              ticks={absDiffTicks}
-              domain={[absDiffTicks[0], absDiffTicks[absDiffTicks.length - 1]]}
+              ticks={chartSeries.absDiffTicks}
+              domain={[
+                chartSeries.absDiffTicks[0],
+                chartSeries.absDiffTicks[chartSeries.absDiffTicks.length - 1],
+              ]}
               tick={RECHARTS_FONT_STYLE}
             >
               <Label
@@ -257,14 +284,16 @@ export default function BaselineAndReformChart({
       );
     }
 
-    // viewMode === 'relative'
     return (
       <ResponsiveContainer width="100%" height={chartHeight}>
-        <AreaChart data={chartData} margin={{ top: 20, right: 20, bottom: 80, left: 80 }}>
+        <AreaChart
+          data={chartSeries.chartData}
+          margin={{ top: 20, right: 20, bottom: 80, left: 80 }}
+        >
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis
             dataKey="earnings"
-            ticks={xTicks}
+            ticks={chartSeries.xTicks}
             tick={RECHARTS_FONT_STYLE}
             tickFormatter={(v: number) => `${symbol}${v.toLocaleString()}`}
           >
@@ -276,8 +305,11 @@ export default function BaselineAndReformChart({
             />
           </XAxis>
           <YAxis
-            ticks={relDiffTicks}
-            domain={[relDiffTicks[0], relDiffTicks[relDiffTicks.length - 1]]}
+            ticks={chartSeries.relDiffTicks}
+            domain={[
+              chartSeries.relDiffTicks[0],
+              chartSeries.relDiffTicks[chartSeries.relDiffTicks.length - 1],
+            ]}
             tick={RECHARTS_FONT_STYLE}
             tickFormatter={(v: number) => `${(v * 100).toFixed(1)}%`}
           >

@@ -1,5 +1,5 @@
 import type { QueryClient } from '@tanstack/react-query';
-import { markReportCompleted } from '@/api/report';
+import { markReportCompleted, markReportError as persistReportError } from '@/api/report';
 import { markSimulationError, updateSimulationOutput } from '@/api/simulation';
 import { reportKeys, simulationKeys } from '@/libs/queryKeys';
 import type { HouseholdReportConfig, SimulationConfig } from '@/types/calculation/household';
@@ -95,7 +95,12 @@ export class HouseholdReportOrchestrator {
         console.error('[HouseholdReportOrchestrator] Error in parallel execution:', error);
 
         // Mark report as error
-        return this.markReportError(config.report, countryId, reportId);
+        return this.markReportError(
+          config.report,
+          countryId,
+          reportId,
+          error instanceof Error ? error.message : undefined
+        );
       });
   }
 
@@ -153,7 +158,11 @@ export class HouseholdReportOrchestrator {
 
       // Mark simulation as error in database (persistent status)
       try {
-        await markSimulationError(countryId as any, simulationId);
+        await markSimulationError(
+          countryId as any,
+          simulationId,
+          error instanceof Error ? error.message : undefined
+        );
 
         // Log invalidation for cache monitoring
         cacheMonitor.logInvalidation(simulationKeys.byId(simulationId), {
@@ -265,7 +274,8 @@ export class HouseholdReportOrchestrator {
   private async markReportError(
     report: Report,
     countryId: string,
-    reportId: string
+    reportId: string,
+    errorMessage?: string
   ): Promise<void> {
     const errorReport: Report = {
       ...report,
@@ -274,7 +284,7 @@ export class HouseholdReportOrchestrator {
     };
 
     try {
-      await markReportCompleted(countryId as any, report.id!, errorReport);
+      await persistReportError(countryId as any, report.id!, errorReport, errorMessage);
 
       this.queryClient.invalidateQueries({
         queryKey: reportKeys.byId(report.id!),

@@ -1,12 +1,8 @@
-import type { ComponentType } from 'react';
 import type { Household } from '@/types/ingredients/Household';
 import type { Policy } from '@/types/ingredients/Policy';
 import type { Simulation } from '@/types/ingredients/Simulation';
 import type { UserPolicy } from '@/types/ingredients/UserPolicy';
-import EarningsVariationSubPage from './earnings-variation/EarningsVariationSubPage';
-import MarginalTaxRatesSubPage from './marginal-tax-rates/MarginalTaxRatesSubPage';
-import NetIncomeSubPage from './net-income/NetIncomeSubPage';
-import NotFoundSubPage from './NotFoundSubPage';
+import HouseholdOverview from './HouseholdOverview';
 
 interface Props {
   baseline: Household;
@@ -18,56 +14,28 @@ interface Props {
   view?: string;
 }
 
-interface ViewComponentProps {
-  baseline: Household;
-  reform: Household | null;
-  simulations: Simulation[];
-  policies?: Policy[];
-  userPolicies?: UserPolicy[];
-  households?: Household[];
-}
-
-/**
- * Map of view names to their corresponding components
- * Add new views here as they are implemented
- */
-const VIEW_MAP: Record<string, ComponentType<ViewComponentProps>> = {
-  'net-income': NetIncomeSubPage,
-  'earnings-variation': EarningsVariationSubPage,
-  'marginal-tax-rates': MarginalTaxRatesSubPage,
-};
-
 /**
  * Sub-router for Household Comparative Analysis tab
- * Maps :view URL parameter to specific chart components
- * Follows the same pattern as society-wide ComparativeAnalysisPage for consistency
+ * Legacy alias for the old comparative-analysis view.
+ * Household reports now render these analyses inline on the overview page.
  */
 export function HouseholdComparativeAnalysisPage({
   baseline,
   reform,
   simulations,
   policies,
-  userPolicies,
-  households,
+  userPolicies: _userPolicies,
+  households: _households,
   view,
 }: Props) {
-  // If no view specified, use default view
-  const effectiveView = view || 'net-income';
+  const outputs = reform ? [baseline, reform] : [baseline];
 
-  // Look up component in map
-  const ViewComponent = VIEW_MAP[effectiveView];
-
-  // If found, render it; otherwise show NotFound
-  return ViewComponent ? (
-    <ViewComponent
-      baseline={baseline}
-      reform={reform}
+  return (
+    <HouseholdOverview
+      outputs={outputs}
       simulations={simulations}
       policies={policies}
-      userPolicies={userPolicies}
-      households={households}
+      activeView={view}
     />
-  ) : (
-    <NotFoundSubPage />
   );
 }

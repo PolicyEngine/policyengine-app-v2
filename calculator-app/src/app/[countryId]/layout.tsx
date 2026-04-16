@@ -11,6 +11,7 @@ import { countryIds, type CountryId } from "@/libs/countries";
  * Layout for extracted Next.js pages under /:countryId/*.
  * Provides CountryContext, NavigationContext, and LocationContext
  * so shared components work identically in both router contexts.
+ * No-op touch to force a calculator-app redeploy.
  */
 export default function CountryLayout({
   children,

@@ -12,7 +12,6 @@ import { convertPoliciesToV1Format } from '@/utils/reproducibilityCode';
 import { getDisplayStatus } from '@/utils/statusMapping';
 import DynamicsSubPage from './DynamicsSubPage';
 import ErrorPage from './ErrorPage';
-import { HouseholdComparativeAnalysisPage } from './HouseholdComparativeAnalysisPage';
 import { HouseholdReportViewModel } from './HouseholdReportViewModel';
 import LoadingPage from './LoadingPage';
 import NotFoundSubPage from './NotFoundSubPage';
@@ -71,33 +70,27 @@ const INPUT_ONLY_TABS: Record<string, (props: InputTabProps) => React.ReactEleme
  * These tabs need the OUTPUT data (calculated household values)
  */
 const OUTPUT_TABS: Record<string, (props: OutputTabProps) => React.ReactElement> = {
-  overview: ({ output, policyLabels }) => (
-    <OverviewSubPage output={output} outputType="household" policyLabels={policyLabels} />
+  overview: ({ output, policyLabels, simulations, policies, activeView }) => (
+    <OverviewSubPage
+      output={output}
+      outputType="household"
+      policyLabels={policyLabels}
+      simulations={simulations}
+      policies={policies}
+      activeView={activeView}
+    />
   ),
 
-  'comparative-analysis': ({
-    output,
-    simulations,
-    policies,
-    userPolicies,
-    households,
-    activeView,
-  }) => {
-    const baseline = output[0];
-    const reform = output.length > 1 ? output[1] : null;
-    return (
-      <HouseholdComparativeAnalysisPage
-        key={`comparative-analysis-${activeView}`}
-        baseline={baseline}
-        reform={reform}
-        simulations={simulations || []}
-        policies={policies}
-        userPolicies={userPolicies}
-        households={households}
-        view={activeView}
-      />
-    );
-  },
+  'comparative-analysis': ({ output, policyLabels, simulations, policies, activeView }) => (
+    <OverviewSubPage
+      output={output}
+      outputType="household"
+      policyLabels={policyLabels}
+      simulations={simulations}
+      policies={policies}
+      activeView={activeView}
+    />
+  ),
 };
 
 interface HouseholdReportOutputProps {
