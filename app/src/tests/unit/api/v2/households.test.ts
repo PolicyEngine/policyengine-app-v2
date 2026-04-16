@@ -4,8 +4,8 @@ import {
   deleteHouseholdV2,
   fetchHouseholdByIdV2,
   listHouseholdsV2,
-  type HouseholdV2CreateRequest,
 } from '@/api/v2/households';
+import type { V2CreateHouseholdEnvelope } from '@/models/household/v2Types';
 import {
   createMockHouseholdV2Response,
   createMockV2CreateHouseholdEnvelope,
@@ -29,7 +29,7 @@ describe('households v2 API', () => {
   describe('createHouseholdV2', () => {
     test('given valid household then POST succeeds with correct URL and body', async () => {
       // Given
-      const request: HouseholdV2CreateRequest = createMockV2CreateHouseholdEnvelope();
+      const request: V2CreateHouseholdEnvelope = createMockV2CreateHouseholdEnvelope();
       const apiResponse = createMockHouseholdV2Response();
       vi.stubGlobal('fetch', mockFetchSuccess(apiResponse));
 
@@ -59,7 +59,7 @@ describe('households v2 API', () => {
 
     test('given API returns error then throws with status and message', async () => {
       // Given
-      const request: HouseholdV2CreateRequest = createMockV2CreateHouseholdEnvelope();
+      const request: V2CreateHouseholdEnvelope = createMockV2CreateHouseholdEnvelope();
       vi.stubGlobal('fetch', mockFetchError(500, 'Internal Server Error'));
 
       // When / Then

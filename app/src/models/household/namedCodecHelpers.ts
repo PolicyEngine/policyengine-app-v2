@@ -1,15 +1,10 @@
-import type {
-  CanonicalFieldMap,
-  CanonicalGroupSetup,
-  CanonicalHouseholdInputGroup,
-  CanonicalPersonSetup,
-} from './canonicalTypes';
-import { cloneValue, isRecord, normalizeCanonicalFieldMap } from './utils';
+import type { HouseholdFieldValue } from './appTypes';
+import { isRecord, normalizeHouseholdFieldMap } from './utils';
 
 export function parseNamedPeople(
   rawPeople: unknown,
   context: string
-): Record<string, CanonicalPersonSetup> {
+): Record<string, { values: Record<string, HouseholdFieldValue> }> {
   if (rawPeople === undefined) {
     return {};
   }
@@ -27,46 +22,11 @@ export function parseNamedPeople(
       return [
         personName,
         {
-          values: normalizeCanonicalFieldMap(rawPerson, `${context}: person "${personName}"`),
+          values: normalizeHouseholdFieldMap(rawPerson, `${context}: person "${personName}"`),
         },
       ];
     })
   );
-}
-
-export function parseNamedGroupCollection(args: {
-  rawGroupCollection: unknown;
-  context: string;
-  groupKey: string;
-  peopleNames: Set<string>;
-  onMultiple?: 'error' | 'first';
-}): CanonicalGroupSetup | undefined {
-  if (args.rawGroupCollection === undefined) {
-    return undefined;
-  }
-
-  if (!isRecord(args.rawGroupCollection)) {
-    throw new Error(`${args.context}: ${args.groupKey} must be an object`);
-  }
-
-  const entries = Object.entries(args.rawGroupCollection);
-  if (entries.length === 0) {
-    return undefined;
-  }
-  if (entries.length > 1 && (args.onMultiple ?? 'error') === 'error') {
-    throw new Error(
-      `${args.context}: expected at most one ${args.groupKey} entry, received ${entries.length}`
-    );
-  }
-
-  const [groupName, rawGroup] = entries[0];
-  return parseNamedGroup({
-    groupName,
-    rawGroup,
-    context: args.context,
-    groupKey: args.groupKey,
-    peopleNames: args.peopleNames,
-  });
 }
 
 export function validateNamedGroupCollection(args: {
@@ -100,7 +60,7 @@ function parseNamedGroup(args: {
   context: string;
   groupKey: string;
   peopleNames: Set<string>;
-}): CanonicalGroupSetup {
+}): { name?: string; members: string[]; values: Record<string, HouseholdFieldValue> } {
   const { groupName, rawGroup } = args;
   if (!isRecord(rawGroup)) {
     throw new Error(`${args.context}: ${args.groupKey}.${groupName} must be an object`);
@@ -123,23 +83,6 @@ function parseNamedGroup(args: {
   return {
     name: groupName,
     members,
-    values: normalizeCanonicalFieldMap(rawValues, `${args.context}: ${args.groupKey}.${groupName}`),
-  };
-}
-
-export function buildNamedGroupCollection(args: {
-  group: CanonicalGroupSetup;
-  fallbackName: string;
-}): Record<string, CanonicalHouseholdInputGroup> {
-  const groupName =
-    typeof args.group.name === 'string' && args.group.name.length > 0
-      ? args.group.name
-      : args.fallbackName;
-
-  return {
-    [groupName]: {
-      members: cloneValue(args.group.members),
-      ...(cloneValue(args.group.values) as CanonicalFieldMap),
-    },
+    values: normalizeHouseholdFieldMap(rawValues, `${args.context}: ${args.groupKey}.${groupName}`),
   };
 }

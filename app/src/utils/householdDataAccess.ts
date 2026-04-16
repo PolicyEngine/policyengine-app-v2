@@ -1,33 +1,46 @@
 import type {
-  Household,
-  HouseholdData,
-  HouseholdGroupEntity,
-  HouseholdGroupMap,
-  HouseholdPerson,
-  HouseholdValue,
-  HouseholdYearMap,
-} from '@/types/ingredients/Household';
+  AppHouseholdInputData,
+  AppHouseholdInputEnvelope,
+  AppHouseholdInputGroup,
+  AppHouseholdInputGroupMap,
+  AppHouseholdInputPerson,
+  HouseholdScalar,
+  HouseholdYearValueMap,
+} from '@/models/household/appTypes';
+import {
+  buildGeneratedGroupName,
+  getGroupDefinitionByAppKey,
+  type HouseholdGroupAppKey,
+} from '@/models/household/schema';
 
-const LEGACY_DEFAULT_GROUP_NAME_BY_ENTITY: Record<string, string> = {
-  households: 'your household',
-  families: 'your family',
-  taxUnits: 'your tax unit',
-  tax_units: 'your tax unit',
-  spmUnits: 'your household',
-  spm_units: 'your household',
-  maritalUnits: 'your marital unit',
-  marital_units: 'your marital unit',
-  benunits: 'your benefit unit',
-};
+function normalizeAppEntityKey(entityName: string): HouseholdGroupAppKey | undefined {
+  switch (entityName) {
+    case 'households':
+    case 'families':
+    case 'taxUnits':
+    case 'spmUnits':
+    case 'maritalUnits':
+    case 'benunits':
+      return entityName;
+    case 'tax_units':
+      return 'taxUnits';
+    case 'spm_units':
+      return 'spmUnits';
+    case 'marital_units':
+      return 'maritalUnits';
+    default:
+      return undefined;
+  }
+}
 
-export function isHouseholdYearMap(value: unknown): value is HouseholdYearMap {
+export function isHouseholdYearMap(value: unknown): value is HouseholdYearValueMap {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 export function getHouseholdYearValue(
-  value: HouseholdPerson[string] | HouseholdGroupEntity[string] | undefined,
+  value: AppHouseholdInputPerson[string] | AppHouseholdInputGroup[string] | undefined,
   year: string
-): HouseholdValue | undefined {
+): HouseholdScalar | undefined {
   if (!isHouseholdYearMap(value)) {
     return undefined;
   }
@@ -36,23 +49,20 @@ export function getHouseholdYearValue(
 }
 
 export function getHouseholdGroupCollection(
-  householdData: HouseholdData,
+  householdData: AppHouseholdInputData,
   entityName: string
-): HouseholdGroupMap | undefined {
-  switch (entityName) {
+): AppHouseholdInputGroupMap | undefined {
+  switch (normalizeAppEntityKey(entityName)) {
     case 'households':
       return householdData.households;
     case 'families':
       return householdData.families;
     case 'taxUnits':
-    case 'tax_units':
-      return householdData.tax_units ?? householdData.taxUnits;
+      return householdData.taxUnits;
     case 'spmUnits':
-    case 'spm_units':
-      return householdData.spm_units ?? householdData.spmUnits;
+      return householdData.spmUnits;
     case 'maritalUnits':
-    case 'marital_units':
-      return householdData.marital_units ?? householdData.maritalUnits;
+      return householdData.maritalUnits;
     case 'benunits':
       return householdData.benunits;
     default:
@@ -61,38 +71,32 @@ export function getHouseholdGroupCollection(
 }
 
 export function getPreferredHouseholdGroupName(
-  householdData: HouseholdData,
+  householdData: AppHouseholdInputData,
   entityName: string
 ): string | undefined {
   const groups = getHouseholdGroupCollection(householdData, entityName);
-  const legacyDefaultName = LEGACY_DEFAULT_GROUP_NAME_BY_ENTITY[entityName];
-
   if (!groups) {
-    return legacyDefaultName;
+    return undefined;
   }
 
   const groupNames = Object.keys(groups);
   if (groupNames.length === 0) {
-    return legacyDefaultName;
-  }
-
-  if (legacyDefaultName && legacyDefaultName in groups) {
-    return legacyDefaultName;
+    return undefined;
   }
 
   return [...groupNames].sort((left, right) => left.localeCompare(right))[0];
 }
 
 export function ensureHouseholdGroupCollection(
-  householdData: HouseholdData,
+  householdData: AppHouseholdInputData,
   entityName: string
-): HouseholdGroupMap {
+): AppHouseholdInputGroupMap {
   const existing = getHouseholdGroupCollection(householdData, entityName);
   if (existing) {
     return existing;
   }
 
-  switch (entityName) {
+  switch (normalizeAppEntityKey(entityName)) {
     case 'households':
       householdData.households = {};
       return householdData.households;
@@ -102,21 +106,12 @@ export function ensureHouseholdGroupCollection(
     case 'taxUnits':
       householdData.taxUnits = {};
       return householdData.taxUnits;
-    case 'tax_units':
-      householdData.tax_units = {};
-      return householdData.tax_units;
     case 'spmUnits':
       householdData.spmUnits = {};
       return householdData.spmUnits;
-    case 'spm_units':
-      householdData.spm_units = {};
-      return householdData.spm_units;
     case 'maritalUnits':
       householdData.maritalUnits = {};
       return householdData.maritalUnits;
-    case 'marital_units':
-      householdData.marital_units = {};
-      return householdData.marital_units;
     case 'benunits':
       householdData.benunits = {};
       return householdData.benunits;
@@ -125,21 +120,64 @@ export function ensureHouseholdGroupCollection(
   }
 }
 
+export function ensureHouseholdGroupInstance(
+  householdData: AppHouseholdInputData,
+  entityName: string
+): string {
+  const existingName = getPreferredHouseholdGroupName(householdData, entityName);
+  if (existingName) {
+    return existingName;
+  }
+
+  const normalizedEntityKey = normalizeAppEntityKey(entityName);
+  if (!normalizedEntityKey) {
+    throw new Error(`Unsupported household entity group "${entityName}"`);
+  }
+
+  const groupCollection = ensureHouseholdGroupCollection(householdData, normalizedEntityKey);
+  const groupDefinition = getGroupDefinitionByAppKey(normalizedEntityKey);
+
+  if (!groupDefinition) {
+    throw new Error(`Unsupported household entity group "${entityName}"`);
+  }
+
+  const peopleNames = Object.keys(householdData.people).sort((left, right) =>
+    left.localeCompare(right)
+  );
+  let nextIndex = 0;
+  let nextName = buildGeneratedGroupName(groupDefinition.generatedKeyPrefix, nextIndex);
+
+  while (nextName in groupCollection) {
+    nextIndex += 1;
+    nextName = buildGeneratedGroupName(groupDefinition.generatedKeyPrefix, nextIndex);
+  }
+
+  groupCollection[nextName] = {
+    members: peopleNames,
+  };
+
+  return nextName;
+}
+
 export function getAllHouseholdGroupCollections(
-  householdData: HouseholdData
-): Array<{ entityName: string; groups: HouseholdGroupMap }> {
+  householdData: AppHouseholdInputData
+): Array<{ entityName: string; groups: AppHouseholdInputGroupMap }> {
   return [
     ['households', householdData.households],
     ['families', householdData.families],
-    ['taxUnits', householdData.taxUnits ?? householdData.tax_units],
-    ['spmUnits', householdData.spmUnits ?? householdData.spm_units],
-    ['maritalUnits', householdData.maritalUnits ?? householdData.marital_units],
+    ['taxUnits', householdData.taxUnits],
+    ['spmUnits', householdData.spmUnits],
+    ['maritalUnits', householdData.maritalUnits],
     ['benunits', householdData.benunits],
   ]
-    .filter((entry): entry is [string, HouseholdGroupMap] => Boolean(entry[1]))
+    .filter((entry): entry is [string, AppHouseholdInputGroupMap] => Boolean(entry[1]))
     .map(([entityName, groups]) => ({ entityName, groups }));
 }
 
-export function cloneHousehold<T extends Household>(household: T): T {
+export function cloneHousehold<T extends AppHouseholdInputEnvelope>(household: T): T {
+  if (typeof structuredClone === 'function') {
+    return structuredClone(household);
+  }
+
   return JSON.parse(JSON.stringify(household)) as T;
 }

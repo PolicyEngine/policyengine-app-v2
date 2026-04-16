@@ -23,7 +23,7 @@ import {
   shadowCreateUserPolicyAssociation,
 } from '@/libs/migration/policyShadow';
 import { Household } from '@/models/Household';
-import type { CanonicalHouseholdInputEnvelope } from '@/models/household/canonicalTypes';
+import type { AppHouseholdInputEnvelope } from '@/models/household/appTypes';
 import { RootState } from '@/store';
 import { Policy } from '@/types/ingredients/Policy';
 import { UserPolicy } from '@/types/ingredients/UserPolicy';
@@ -37,7 +37,7 @@ import { useCreateReportAssociation, useUserReportStore } from './useUserReportA
 import { useCreateSimulationAssociation } from './useUserSimulationAssociations';
 
 export type SaveResult = 'success' | 'partial' | 'already_saved' | null;
-type SharedSaveHouseholdDetails = CanonicalHouseholdInputEnvelope | Household;
+type SharedSaveHouseholdDetails = AppHouseholdInputEnvelope | Household;
 
 function shadowSavedPolicyAssociation(association: UserPolicy, policyDetails?: Policy): void {
   const mappedV2PolicyId = getV2Id('Policy', association.policyId);
@@ -115,7 +115,7 @@ function shadowSavedHouseholdAssociation(
       ? householdDetails
           .withId(association.householdId)
           .withLabel(association.label ?? householdDetails.label ?? null)
-      : Household.fromCanonicalInput({
+      : Household.fromAppInput({
           ...householdDetails,
           id: association.householdId,
           label: association.label ?? householdDetails.label ?? null,

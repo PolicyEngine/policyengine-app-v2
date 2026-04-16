@@ -17,17 +17,17 @@ import {
   Text,
 } from '@/components/ui';
 import { colors, typography } from '@/designTokens';
-import { Household } from '@/types/ingredients/Household';
+import type { AppHouseholdInputEnvelope } from '@/models/household/appTypes';
 import { coerceByValueType } from '@/utils/valueCoercion';
 import { getValue, setValue, VariableInfo } from '@/utils/VariableResolver';
 
 export interface VariableInputProps {
   variable: VariableInfo;
-  household: Household;
+  household: AppHouseholdInputEnvelope;
   metadata: any;
   year: string;
   entityName?: string; // Required for person-level variables
-  onChange: (newHousehold: Household) => void;
+  onChange: (newHousehold: AppHouseholdInputEnvelope) => void;
   disabled?: boolean;
 }
 

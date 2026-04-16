@@ -11,7 +11,7 @@ import {
 import { useUpdateHouseholdAssociation } from '@/hooks/useUserHousehold';
 import { getV2Id, setV2Id } from '@/libs/migration/idMapping';
 import { Household as HouseholdModel } from '@/models/Household';
-import type { CanonicalHouseholdInputEnvelope } from '@/models/household/canonicalTypes';
+import type { AppHouseholdInputEnvelope } from '@/models/household/appTypes';
 import { createMockHouseholdData } from '@/tests/fixtures/models/shared';
 import type { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 
@@ -49,7 +49,7 @@ const replacedAssociation: UserHouseholdPopulation = {
   updatedAt: '2026-04-09T12:20:00Z',
 };
 
-const nextHousehold: CanonicalHouseholdInputEnvelope = {
+const nextHousehold: AppHouseholdInputEnvelope = {
   countryId: TEST_COUNTRY_ID,
   householdData: createMockHouseholdData({
     id: 'draft-replacement',

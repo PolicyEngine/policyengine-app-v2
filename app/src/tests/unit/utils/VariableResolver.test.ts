@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { Household } from '@/types/ingredients/Household';
+import type { AppHouseholdInputEnvelope } from '@/models/household/appTypes';
 import { getValue, setValue } from '@/utils/VariableResolver';
 
 const TEST_METADATA = {
@@ -39,7 +39,7 @@ const TEST_METADATA = {
   },
 };
 
-function createNonDefaultGroupHousehold(): Household {
+function createNonDefaultGroupHousehold(): AppHouseholdInputEnvelope {
   return {
     id: 'household-1',
     countryId: 'us',

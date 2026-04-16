@@ -5,7 +5,7 @@ import {
   shadowUpdateUserHouseholdAssociation,
 } from '@/libs/migration/householdShadow';
 import { Household } from '@/models/Household';
-import type { CanonicalHouseholdInputEnvelope } from '@/models/household/canonicalTypes';
+import type { AppHouseholdInputEnvelope } from '@/models/household/appTypes';
 import type { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 
 function buildAssociationReplacementError(args: {
@@ -25,7 +25,7 @@ function buildAssociationReplacementError(args: {
 
 export async function replaceHouseholdBaseForAssociation(args: {
   association: UserHouseholdPopulation;
-  nextHousehold: CanonicalHouseholdInputEnvelope;
+  nextHousehold: AppHouseholdInputEnvelope;
   store: Pick<UserHouseholdStore, 'update'>;
 }): Promise<UserHouseholdPopulation> {
   const { association, nextHousehold: nextHouseholdInput, store } = args;
@@ -36,7 +36,7 @@ export async function replaceHouseholdBaseForAssociation(args: {
     );
   }
 
-  const nextHouseholdModel = Household.fromCanonicalInput({
+  const nextHouseholdModel = Household.fromAppInput({
     ...nextHouseholdInput,
     label: nextHouseholdInput.id ? null : (association.label ?? null),
   });
@@ -61,7 +61,10 @@ export async function replaceHouseholdBaseForAssociation(args: {
       .withId(nextHouseholdId)
       .withLabel(updatedAssociation.label ?? association.label ?? null);
     const v2HouseholdId = await shadowCreateHousehold(nextHouseholdId, persistedHousehold);
-    await shadowUpdateUserHouseholdAssociation(updatedAssociation, v2HouseholdId ?? undefined);
+    await shadowUpdateUserHouseholdAssociation(updatedAssociation, {
+      previousHouseholdId: association.householdId,
+      v2HouseholdId,
+    });
   })();
 
   return updatedAssociation;

@@ -52,8 +52,6 @@ export {
   fetchHouseholdByIdV2,
   listHouseholdsV2,
   deleteHouseholdV2,
-  type HouseholdV2Response,
-  type HouseholdV2CreateRequest,
 } from './households';
 
 // Household Calculation (v2 Alpha async jobs)

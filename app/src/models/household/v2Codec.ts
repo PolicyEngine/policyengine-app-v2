@@ -1,6 +1,6 @@
 import type { CountryId } from '@/libs/countries';
 import { cloneAppHouseholdInputData } from './appCodec';
-import type { CanonicalFieldValue, CanonicalHouseholdInputData } from './canonicalTypes';
+import type { AppHouseholdInputData, HouseholdFieldValue } from './appTypes';
 import { buildGeneratedGroupName, GROUP_DEFINITIONS } from './schema';
 import {
   flattenEntityValues,
@@ -38,14 +38,14 @@ function coerceV2GroupRows(
   throw new Error('V2 household group rows must be arrays when present');
 }
 
-function buildCanonicalPeopleFromV2Envelope(args: {
+function buildAppPeopleFromV2Envelope(args: {
   people: V2HouseholdEnvelope['people'];
   year: number;
 }): {
-  people: CanonicalHouseholdInputData['people'];
+  people: AppHouseholdInputData['people'];
   personNameById: Map<number, string>;
 } {
-  const people: CanonicalHouseholdInputData['people'] = {};
+  const people: AppHouseholdInputData['people'] = {};
   const personNameById = new Map<number, string>();
   const usedNames = new Set<string>();
 
@@ -127,7 +127,7 @@ function parseV2GroupCollection(args: {
   personNameById: Map<number, string>;
   definition: (typeof GROUP_DEFINITIONS)[number];
   year: number;
-}): CanonicalHouseholdInputData[typeof args.definition.appKey] | undefined {
+}): AppHouseholdInputData[typeof args.definition.appKey] | undefined {
   const groupRows = coerceV2GroupRows(args.envelope[args.definition.v2Key]);
   if (groupRows.length === 0) {
     return undefined;
@@ -144,7 +144,7 @@ function parseV2GroupCollection(args: {
     );
   }
 
-  const groupMap: NonNullable<CanonicalHouseholdInputData[typeof args.definition.appKey]> = {};
+  const groupMap: NonNullable<AppHouseholdInputData[typeof args.definition.appKey]> = {};
 
   groupRows.forEach((rawGroup, index) => {
     if (!isRecord(rawGroup)) {
@@ -185,7 +185,7 @@ function parseV2GroupCollection(args: {
       ...(wrapEntityValuesForYear(
         omitRecordKeys(rawGroup, [args.definition.groupIdKey]),
         args.year
-      ) as Record<string, CanonicalFieldValue>),
+      ) as Record<string, HouseholdFieldValue>),
     };
   });
 
@@ -196,17 +196,17 @@ export function parseV2HouseholdEnvelope(envelope: V2HouseholdEnvelope): {
   countryId: CountryId;
   label: string | null;
   year: number;
-  householdData: CanonicalHouseholdInputData;
+  householdData: AppHouseholdInputData;
 } {
   const countryId = normalizeCountryId(envelope.country_id);
   const year = envelope.year;
-  const { people, personNameById } = buildCanonicalPeopleFromV2Envelope({
+  const { people, personNameById } = buildAppPeopleFromV2Envelope({
     people: envelope.people,
     year,
   });
   const peopleNames = Object.keys(people);
 
-  const householdData: CanonicalHouseholdInputData = { people };
+  const householdData: AppHouseholdInputData = { people };
 
   for (const definition of GROUP_DEFINITIONS) {
     const parsedGroupCollection = parseV2GroupCollection({
@@ -231,7 +231,7 @@ export function parseV2HouseholdEnvelope(envelope: V2HouseholdEnvelope): {
 }
 
 function buildV2PeopleFromAppInput(args: {
-  householdData: CanonicalHouseholdInputData;
+  householdData: AppHouseholdInputData;
   year: number;
 }): V2HouseholdPersonData[] {
   const personNames = Object.keys(args.householdData.people).sort((left, right) =>
@@ -282,8 +282,8 @@ function buildV2PeopleFromAppInput(args: {
 
 function buildV2GroupRowsFromAppInput(args: {
   groupMap: NonNullable<
-    CanonicalHouseholdInputData[keyof Pick<
-      CanonicalHouseholdInputData,
+    AppHouseholdInputData[keyof Pick<
+      AppHouseholdInputData,
       'households' | 'families' | 'taxUnits' | 'spmUnits' | 'maritalUnits' | 'benunits'
     >]
   >;
@@ -293,7 +293,7 @@ function buildV2GroupRowsFromAppInput(args: {
   return Object.entries(args.groupMap)
     .sort(([left], [right]) => left.localeCompare(right))
     .map(([, group], groupIndex) => {
-      const groupValues = omitRecordKeys(group, ['members']) as Record<string, CanonicalFieldValue>;
+      const groupValues = omitRecordKeys(group, ['members']) as Record<string, HouseholdFieldValue>;
 
       return {
         [args.definition.groupIdKey]: groupIndex,
@@ -306,7 +306,7 @@ export function buildV2CreateEnvelope(args: {
   countryId: CountryId;
   label: string | null;
   year: number | null;
-  householdData: CanonicalHouseholdInputData;
+  householdData: AppHouseholdInputData;
 }): V2CreateHouseholdEnvelope {
   const householdData = cloneAppHouseholdInputData(args.householdData);
   const year = args.year ?? inferYearFromData(householdData);

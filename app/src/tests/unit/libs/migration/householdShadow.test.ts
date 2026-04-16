@@ -44,6 +44,8 @@ const TEST_V1_USER_ID = 'anonymous';
 const TEST_V2_USER_ID = 'c93a763d-8d9f-4ab8-b04f-2fbba0183f35';
 const TEST_V1_ASSOC_ID = 'suh-abc123';
 const TEST_V2_ASSOC_ID = 'dd0e8400-e29b-41d4-a716-446655440008';
+const TEST_OLD_V1_HOUSEHOLD_ID = 'old-456';
+const TEST_OLD_V2_HOUSEHOLD_ID = '770e8400-e29b-41d4-a716-446655440099';
 
 const v1HouseholdData = createMockHouseholdData({
   id: TEST_V1_HOUSEHOLD_ID,
@@ -51,7 +53,7 @@ const v1HouseholdData = createMockHouseholdData({
   label: 'My household',
 });
 
-const v1Household = Household.fromCanonicalInput({
+const v1Household = Household.fromAppInput({
   id: v1HouseholdData.id,
   countryId: v1HouseholdData.countryId,
   label: v1HouseholdData.label,
@@ -276,6 +278,32 @@ describe('householdShadow', () => {
     });
     expect(updateUserHouseholdAssociationV2).not.toHaveBeenCalled();
     expect(getV2Id('UserHousehold', TEST_V1_ASSOC_ID)).toBe(TEST_V2_ASSOC_ID);
+  });
+
+  test('given immutable reassignment and missing association mapping then it recovers using the previous household mapping', async () => {
+    setV2Id('Household', TEST_OLD_V1_HOUSEHOLD_ID, TEST_OLD_V2_HOUSEHOLD_ID);
+    setV2Id('Household', TEST_V1_HOUSEHOLD_ID, TEST_V2_HOUSEHOLD_ID);
+    vi.mocked(fetchUserHouseholdAssociationByIdV2).mockResolvedValue({
+      ...v1Association,
+      id: TEST_V2_ASSOC_ID,
+      userId: TEST_V2_USER_ID,
+      householdId: TEST_OLD_V2_HOUSEHOLD_ID,
+    });
+
+    await shadowUpdateUserHouseholdAssociation(v1Association, {
+      previousHouseholdId: TEST_OLD_V1_HOUSEHOLD_ID,
+      v2HouseholdId: TEST_V2_HOUSEHOLD_ID,
+    });
+
+    expect(fetchUserHouseholdAssociationByIdV2).toHaveBeenCalledWith(
+      TEST_V2_USER_ID,
+      TEST_OLD_V2_HOUSEHOLD_ID
+    );
+    expect(updateUserHouseholdAssociationV2).toHaveBeenCalledWith(TEST_V2_ASSOC_ID, {
+      label: 'My household',
+      householdId: TEST_V2_HOUSEHOLD_ID,
+    });
+    expect(createUserHouseholdAssociationV2).not.toHaveBeenCalled();
   });
 
   test('given missing household mapping then it logs a skipped update instead of silently returning', async () => {

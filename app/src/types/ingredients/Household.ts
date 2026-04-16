@@ -1,9 +1,9 @@
 import type { CountryId } from '@/libs/countries';
 import type {
-  CanonicalHouseholdInputEnvelope,
-  CanonicalYearValueMap,
+  AppHouseholdInputEnvelope,
   HouseholdScalar,
-} from '@/models/household/canonicalTypes';
+  HouseholdYearValueMap,
+} from '@/models/household/appTypes';
 
 /**
  * Legacy compatibility aliases.
@@ -14,14 +14,14 @@ import type {
  */
 
 export type HouseholdValue = HouseholdScalar;
-export type HouseholdYearMap = CanonicalYearValueMap;
+export type HouseholdYearMap = HouseholdYearValueMap;
 
-/** @deprecated Prefer `CanonicalHouseholdInputPerson`. */
+/** @deprecated Prefer `AppHouseholdInputPerson`. */
 export interface HouseholdPerson {
   [key: string]: HouseholdYearMap | HouseholdValue;
 }
 
-/** @deprecated Prefer `CanonicalHouseholdInputGroup`. */
+/** @deprecated Prefer `AppHouseholdInputGroup`. */
 export interface HouseholdGroupEntity {
   members: string[];
   [key: string]: HouseholdYearMap | HouseholdValue | string[];
@@ -29,7 +29,7 @@ export interface HouseholdGroupEntity {
 
 export type HouseholdGroupMap = Record<string, HouseholdGroupEntity>;
 
-/** @deprecated Prefer `CanonicalHouseholdInputData`. */
+/** @deprecated Prefer `AppHouseholdInputData`. */
 export interface HouseholdData {
   people: Record<string, HouseholdPerson>;
   households?: HouseholdGroupMap;
@@ -43,8 +43,8 @@ export interface HouseholdData {
   marital_units?: HouseholdGroupMap;
 }
 
-/** @deprecated Prefer `CanonicalHouseholdInputEnvelope`. */
-export interface Household extends CanonicalHouseholdInputEnvelope {
+/** @deprecated Prefer `AppHouseholdInputEnvelope`. */
+export interface Household extends AppHouseholdInputEnvelope {
   id?: string;
   countryId: CountryId;
   householdData: HouseholdData;

@@ -81,7 +81,7 @@ import { useUpdatePolicyAssociation, useUserPolicies } from '@/hooks/useUserPoli
 import { getBasicInputFields, getDateRange } from '@/libs/metadataUtils';
 import { householdAssociationKeys } from '@/libs/queryKeys';
 import { Household as HouseholdModel } from '@/models/Household';
-import type { CanonicalHouseholdInputEnvelope } from '@/models/household/canonicalTypes';
+import type { AppHouseholdInputEnvelope } from '@/models/household/appTypes';
 import HistoricalValues from '@/pathways/report/components/policyParameterSelector/HistoricalValues';
 import {
   ModeSelectorButton,
@@ -3534,9 +3534,7 @@ function PopulationBrowseModal({
   // Creation mode state
   const [isCreationMode, setIsCreationMode] = useState(false);
   const [householdLabel, setHouseholdLabel] = useState('');
-  const [householdDraft, setHouseholdDraft] = useState<CanonicalHouseholdInputEnvelope | null>(
-    null
-  );
+  const [householdDraft, setHouseholdDraft] = useState<AppHouseholdInputEnvelope | null>(null);
   const [isEditingLabel, setIsEditingLabel] = useState(false);
 
   // Get report year (default to current year)
@@ -3703,8 +3701,8 @@ function PopulationBrowseModal({
     const householdIdStr = String(householdData.id);
     householdUsageStore.recordUsage(householdIdStr);
 
-    const household: CanonicalHouseholdInputEnvelope | null = householdData.household
-      ? householdData.household.toCanonicalInput()
+    const household: AppHouseholdInputEnvelope | null = householdData.household
+      ? householdData.household.toAppInput()
       : {
           id: householdIdStr,
           countryId,
@@ -3816,7 +3814,7 @@ function PopulationBrowseModal({
       householdUsageStore.recordUsage(householdId);
 
       // Create household with ID set for proper selection highlighting
-      const createdHousehold: CanonicalHouseholdInputEnvelope = {
+      const createdHousehold: AppHouseholdInputEnvelope = {
         ...householdDraft,
         id: householdId,
       };
@@ -4716,7 +4714,7 @@ function SimulationCanvas({
           type: 'household',
           population: {
             geography: null,
-            household: household.toCanonicalInput(),
+            household: household.toAppInput(),
             label: householdData.association.label || `Household #${householdId}`,
             type: 'household',
           },

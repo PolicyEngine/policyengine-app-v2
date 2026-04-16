@@ -13,7 +13,7 @@ import { useCreateHousehold } from '@/hooks/useCreateHousehold';
 import { useReportYear } from '@/hooks/useReportYear';
 import { getBasicInputFields } from '@/libs/metadataUtils';
 import { Household as HouseholdModel } from '@/models/Household';
-import type { CanonicalHouseholdInputEnvelope } from '@/models/household/canonicalTypes';
+import type { AppHouseholdInputEnvelope } from '@/models/household/appTypes';
 import { RootState } from '@/store';
 import { PopulationStateProps } from '@/types/pathwayState';
 import { HouseholdBuilder } from '@/utils/HouseholdBuilder';
@@ -22,7 +22,7 @@ import { HouseholdValidation } from '@/utils/HouseholdValidation';
 interface HouseholdBuilderViewProps {
   population: PopulationStateProps;
   countryId: string;
-  onSubmitSuccess: (householdId: string, household: CanonicalHouseholdInputEnvelope) => void;
+  onSubmitSuccess: (householdId: string, household: AppHouseholdInputEnvelope) => void;
   onBack?: () => void;
 }
 
@@ -69,7 +69,7 @@ export default function HouseholdBuilderView({
   }
 
   // Initialize household with "you" if none exists
-  const [household, setLocalHousehold] = useState<CanonicalHouseholdInputEnvelope>(() => {
+  const [household, setLocalHousehold] = useState<AppHouseholdInputEnvelope>(() => {
     if (population?.household) {
       return population.household;
     }
@@ -154,7 +154,7 @@ export default function HouseholdBuilderView({
     }
 
     const payload = HouseholdModel.fromDraft({
-      countryId: countryId as CanonicalHouseholdInputEnvelope['countryId'],
+      countryId: countryId as AppHouseholdInputEnvelope['countryId'],
       householdData: household.householdData,
     }).toV1CreationPayload();
 

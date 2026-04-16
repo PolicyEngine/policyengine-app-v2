@@ -1,31 +1,17 @@
 import type {
-  CanonicalFieldValue,
-  CanonicalHouseholdInputData,
-  CanonicalHouseholdInputEnvelope,
-  CanonicalHouseholdInputGroup,
-  CanonicalHouseholdInputGroupMap,
-  CanonicalHouseholdSetup,
-} from './canonicalTypes';
-import {
-  buildNamedGroupCollection,
-  parseNamedGroupCollection,
-  parseNamedPeople,
-  validateNamedGroupCollection,
-} from './namedCodecHelpers';
-import {
-  buildGeneratedGroupName,
-  GROUP_DEFINITIONS,
-  KNOWN_APP_ENTITY_KEYS,
-  KNOWN_V1_ENTITY_KEYS,
-} from './schema';
+  AppHouseholdInputData,
+  AppHouseholdInputEnvelope,
+  AppHouseholdInputGroup,
+  AppHouseholdInputGroupMap,
+  HouseholdFieldValue,
+} from './appTypes';
+import { parseNamedPeople, validateNamedGroupCollection } from './namedCodecHelpers';
+import { GROUP_DEFINITIONS, KNOWN_APP_ENTITY_KEYS, KNOWN_V1_ENTITY_KEYS } from './schema';
 import {
   cloneValue,
-  getCanonicalGroupSetup,
   isYearValueMap,
-  normalizeCanonicalFieldValue,
-  normalizeCanonicalSetup,
   normalizeCountryId,
-  SETUP_KEY_BY_APP_KEY,
+  normalizeHouseholdFieldValue,
   wrapForYear,
 } from './utils';
 import type {
@@ -43,41 +29,9 @@ function assertKnownAppEntityKeys(rawData: Record<string, unknown>): void {
   }
 }
 
-export function parseAppHouseholdInput(
-  input: CanonicalHouseholdInputEnvelope
-): CanonicalHouseholdSetup {
-  const rawData = input.householdData as unknown as Record<string, unknown>;
-  assertKnownAppEntityKeys(rawData);
-
-  const people = parseNamedPeople(rawData.people, 'Household input');
-  const peopleNames = new Set(Object.keys(people));
-  const setup: CanonicalHouseholdSetup = {
-    countryId: normalizeCountryId(input.countryId),
-    label: input.label ?? null,
-    year: input.year ?? null,
-    people,
-  };
-
-  for (const definition of GROUP_DEFINITIONS) {
-    const parsedGroup = parseNamedGroupCollection({
-      rawGroupCollection: rawData[definition.appKey],
-      context: 'Household input',
-      groupKey: definition.appKey,
-      peopleNames,
-      onMultiple: 'first',
-    });
-
-    if (parsedGroup) {
-      setup[SETUP_KEY_BY_APP_KEY[definition.appKey]] = parsedGroup;
-    }
-  }
-
-  return normalizeCanonicalSetup(setup);
-}
-
 export function cloneAppHouseholdInputData(
-  householdData: CanonicalHouseholdInputData
-): CanonicalHouseholdInputData {
+  householdData: AppHouseholdInputData
+): AppHouseholdInputData {
   const rawData = householdData as unknown as Record<string, unknown>;
   assertKnownAppEntityKeys(rawData);
   const people = parseNamedPeople(rawData.people, 'Household input');
@@ -95,35 +49,9 @@ export function cloneAppHouseholdInputData(
   return cloneValue(householdData);
 }
 
-export function buildAppHouseholdData(setup: CanonicalHouseholdSetup): CanonicalHouseholdInputData {
-  const normalizedSetup = normalizeCanonicalSetup(setup);
-  const householdData: CanonicalHouseholdInputData = {
-    people: Object.fromEntries(
-      Object.entries(normalizedSetup.people).map(([personName, person]) => [
-        personName,
-        person.values,
-      ])
-    ),
-  };
-
-  for (const definition of GROUP_DEFINITIONS) {
-    const group = getCanonicalGroupSetup(normalizedSetup, definition.appKey);
-    if (!group) {
-      continue;
-    }
-
-    householdData[definition.appKey] = buildNamedGroupCollection({
-      group,
-      fallbackName: buildGeneratedGroupName(definition.generatedKeyPrefix, 0),
-    });
-  }
-
-  return householdData;
-}
-
 export function buildAppHouseholdDataFromV1Data(
   householdData: V1HouseholdData
-): CanonicalHouseholdInputData {
+): AppHouseholdInputData {
   const rawData = householdData as unknown as Record<string, unknown>;
   const unknownKeys = Object.keys(rawData).filter((key) => !KNOWN_V1_ENTITY_KEYS.has(key));
 
@@ -131,18 +59,19 @@ export function buildAppHouseholdDataFromV1Data(
     throw new Error(`Unsupported household entities in v1 payload: ${unknownKeys.join(', ')}`);
   }
 
-  const people: CanonicalHouseholdInputData['people'] = Object.fromEntries(
+  const people: AppHouseholdInputData['people'] = Object.fromEntries(
     Object.entries(householdData.people).map(([personName, rawPerson]) => {
       const personData = Object.fromEntries(
         Object.entries(rawPerson).filter(([, fieldValue]) => fieldValue !== undefined)
-      ) as CanonicalHouseholdInputData['people'][string];
+      ) as AppHouseholdInputData['people'][string];
 
       return [personName, personData];
     })
   );
+
   const toAppGroupMap = (
     groupMap: Record<string, V1HouseholdGroupData> | undefined
-  ): CanonicalHouseholdInputGroupMap | undefined => {
+  ): AppHouseholdInputGroupMap | undefined => {
     if (!groupMap) {
       return undefined;
     }
@@ -176,7 +105,7 @@ export function buildAppHouseholdDataFromV1Data(
 }
 
 function buildV1FieldValueFromAppInput(
-  value: CanonicalFieldValue | string[],
+  value: HouseholdFieldValue | string[],
   year: number | null,
   context: string
 ): Record<string, string | number | boolean | null> {
@@ -184,7 +113,7 @@ function buildV1FieldValueFromAppInput(
     throw new Error(`${context} cannot serialize array values into a v1 field`);
   }
 
-  const normalizedValue = normalizeCanonicalFieldValue(value, context);
+  const normalizedValue = normalizeHouseholdFieldValue(value, context);
   if (isYearValueMap(normalizedValue)) {
     return cloneValue(normalizedValue);
   }
@@ -196,7 +125,7 @@ function buildV1FieldValueFromAppInput(
 }
 
 function buildV1GroupMapFromAppInput(
-  groupMap: Record<string, CanonicalHouseholdInputGroup> | undefined,
+  groupMap: Record<string, AppHouseholdInputGroup> | undefined,
   year: number | null,
   context: string
 ): Record<string, V1HouseholdGroupData> | undefined {
@@ -223,8 +152,8 @@ function buildV1GroupMapFromAppInput(
 }
 
 export function buildV1CreateEnvelopeFromAppInput(args: {
-  countryId: CanonicalHouseholdInputEnvelope['countryId'];
-  householdData: CanonicalHouseholdInputData;
+  countryId: AppHouseholdInputEnvelope['countryId'];
+  householdData: AppHouseholdInputData;
   label?: string | null;
   year?: number | null;
 }): V1HouseholdCreateEnvelope {

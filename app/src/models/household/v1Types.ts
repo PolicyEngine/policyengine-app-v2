@@ -1,4 +1,4 @@
-import type { HouseholdScalar } from './canonicalTypes';
+import type { HouseholdScalar } from './appTypes';
 
 export interface V1HouseholdMetadataEnvelope {
   id: string;

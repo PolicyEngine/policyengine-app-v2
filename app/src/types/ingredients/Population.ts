@@ -1,4 +1,4 @@
-import type { CanonicalHouseholdInputEnvelope } from '@/models/household/canonicalTypes';
+import type { AppHouseholdInputEnvelope } from '@/models/household/appTypes';
 import { Geography } from './Geography';
 
 /**
@@ -8,6 +8,6 @@ import { Geography } from './Geography';
 export interface Population {
   label?: string | null;
   isCreated?: boolean;
-  household?: CanonicalHouseholdInputEnvelope | null;
+  household?: AppHouseholdInputEnvelope | null;
   geography?: Geography | null;
 }

@@ -1,4 +1,4 @@
-import type { ComparableHousehold } from './canonicalTypes';
+import type { ComparableHousehold } from './appTypes';
 import { sortRecordKeysRecursively } from './utils';
 import type { V2CreateHouseholdEnvelope } from './v2Types';
 

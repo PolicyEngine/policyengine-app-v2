@@ -1,4 +1,4 @@
-import type { CanonicalHouseholdInputEnvelope } from '@/models/household/canonicalTypes';
+import type { AppHouseholdInputEnvelope } from '@/models/household/appTypes';
 import { Geography } from '@/types/ingredients/Geography';
 
 /**
@@ -17,6 +17,6 @@ import { Geography } from '@/types/ingredients/Geography';
 export interface PopulationStateProps {
   label: string | null; // Required field, can be null
   type: 'household' | 'geography' | null; // Tracks population type for easier management
-  household: CanonicalHouseholdInputEnvelope | null; // Mutually exclusive with geography
+  household: AppHouseholdInputEnvelope | null; // Mutually exclusive with geography
   geography: Geography | null; // Mutually exclusive with household
 }

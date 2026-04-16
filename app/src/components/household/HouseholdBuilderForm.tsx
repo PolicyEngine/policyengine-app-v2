@@ -28,8 +28,12 @@ import {
   Text,
 } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
-import { Household } from '@/types/ingredients/Household';
-import { getPreferredHouseholdGroupName } from '@/utils/householdDataAccess';
+import type { AppHouseholdInputEnvelope } from '@/models/household/appTypes';
+import {
+  cloneHousehold,
+  ensureHouseholdGroupInstance,
+  getPreferredHouseholdGroupName,
+} from '@/utils/householdDataAccess';
 import { sortPeopleKeys } from '@/utils/householdIndividuals';
 import {
   addVariable,
@@ -44,14 +48,14 @@ import VariableRow from './VariableRow';
 import VariableSearchDropdown from './VariableSearchDropdown';
 
 export interface HouseholdBuilderFormProps {
-  household: Household;
+  household: AppHouseholdInputEnvelope;
   metadata: any;
   year: string;
   maritalStatus: 'single' | 'married';
   numChildren: number;
   basicPersonFields: string[]; // Basic inputs for person entity (e.g., age, employment_income)
   basicNonPersonFields: string[]; // Basic inputs for household-level entities
-  onChange: (household: Household) => void;
+  onChange: (household: AppHouseholdInputEnvelope) => void;
   onMaritalStatusChange: (status: 'single' | 'married') => void;
   onNumChildrenChange: (num: number) => void;
   disabled?: boolean;
@@ -265,7 +269,7 @@ export default function HouseholdBuilderForm({
       setWarningMessage(null);
     }
 
-    let newHousehold: Household;
+    let newHousehold: AppHouseholdInputEnvelope;
     if (isPerson) {
       // For person-level variables selected from household, add to ALL people
       // Always call addVariable to ensure new members get it too
@@ -278,13 +282,17 @@ export default function HouseholdBuilderForm({
         setIsHouseholdSearchFocused(false);
         return;
       }
-      const targetEntityName = resolveDefaultGroupInstanceName(variable.name);
+      const ensuredHousehold = cloneHousehold(household);
+      const targetEntityName = ensureHouseholdGroupInstance(
+        ensuredHousehold.householdData,
+        resolveEntity(variable.name, metadata)?.plural || 'households'
+      );
       newHousehold = addVariableToEntity(
-        household,
+        ensuredHousehold,
         variable.name,
         metadata,
         year,
-        targetEntityName ?? 'your household'
+        targetEntityName
       );
     }
     onChange(newHousehold);

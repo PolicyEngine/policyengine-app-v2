@@ -1,7 +1,7 @@
 import type { V2PolicyResponse, V2PolicyResponseParameterValue } from '@/api/policy';
-import type { HouseholdV2Response } from '@/api/v2/households';
 import type { CountryId } from '@/libs/countries';
-import type { CanonicalHouseholdInputData } from '@/models/household/canonicalTypes';
+import type { AppHouseholdInputData } from '@/models/household/appTypes';
+import type { V2StoredHouseholdEnvelope } from '@/models/household/v2Types';
 
 // ============================================================================
 // Test constants
@@ -94,7 +94,7 @@ export interface HouseholdDataShape {
   countryId: CountryId;
   year: number | null;
   label: string | null;
-  data: CanonicalHouseholdInputData;
+  data: AppHouseholdInputData;
 }
 
 export const createMockHouseholdData = (
@@ -180,8 +180,8 @@ export const createMockV2PolicyResponseNoParams = (
 // ============================================================================
 
 export const createMockHouseholdV2Response = (
-  overrides?: Partial<HouseholdV2Response>
-): HouseholdV2Response => ({
+  overrides?: Partial<V2StoredHouseholdEnvelope>
+): V2StoredHouseholdEnvelope => ({
   id: TEST_HOUSEHOLD_IDS.HOUSEHOLD_A,
   country_id: TEST_COUNTRY_ID,
   year: 2026,
@@ -220,8 +220,8 @@ export const createMockHouseholdV2Response = (
 });
 
 export const createMockHouseholdV2ResponseMinimal = (
-  overrides?: Partial<HouseholdV2Response>
-): HouseholdV2Response =>
+  overrides?: Partial<V2StoredHouseholdEnvelope>
+): V2StoredHouseholdEnvelope =>
   createMockHouseholdV2Response({
     people: [{ name: 'single_adult', age: 30 }],
     tax_unit: [],

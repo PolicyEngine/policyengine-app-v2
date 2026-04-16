@@ -1,22 +1,7 @@
 import { countryIds, type CountryId } from '@/libs/countries';
-import type {
-  CanonicalFieldMap,
-  CanonicalFieldValue,
-  CanonicalGroupSetup,
-  CanonicalGroupSetupKey,
-  CanonicalHouseholdSetup,
-  HouseholdScalar,
-} from './canonicalTypes';
-import { GROUP_DEFINITIONS, type HouseholdGroupAppKey } from './schema';
+import type { HouseholdFieldValue, HouseholdScalar, HouseholdYearValueMap } from './appTypes';
 
-export const SETUP_KEY_BY_APP_KEY: Record<HouseholdGroupAppKey, CanonicalGroupSetupKey> = {
-  households: 'household',
-  families: 'family',
-  taxUnits: 'taxUnit',
-  spmUnits: 'spmUnit',
-  maritalUnits: 'maritalUnit',
-  benunits: 'benunit',
-};
+export type HouseholdFieldMap = Record<string, HouseholdFieldValue>;
 
 export function cloneValue<T>(value: T): T {
   if (typeof structuredClone === 'function') {
@@ -52,7 +37,7 @@ export function isYearKey(value: string): boolean {
   return /^\d{4}$/.test(value);
 }
 
-export function isYearValueMap(value: unknown): value is Record<string, HouseholdScalar> {
+export function isYearValueMap(value: unknown): value is HouseholdYearValueMap {
   if (!isRecord(value)) {
     return false;
   }
@@ -61,7 +46,7 @@ export function isYearValueMap(value: unknown): value is Record<string, Househol
   return keys.length > 0 && keys.every(isYearKey) && Object.values(value).every(isHouseholdScalar);
 }
 
-export function normalizeCanonicalFieldValue(value: unknown, context: string): CanonicalFieldValue {
+export function normalizeHouseholdFieldValue(value: unknown, context: string): HouseholdFieldValue {
   if (isHouseholdScalar(value)) {
     return value;
   }
@@ -73,7 +58,7 @@ export function normalizeCanonicalFieldValue(value: unknown, context: string): C
   throw new Error(`${context} must be a scalar or year-keyed scalar map`);
 }
 
-export function normalizeCanonicalFieldMap(values: unknown, context: string): CanonicalFieldMap {
+export function normalizeHouseholdFieldMap(values: unknown, context: string): HouseholdFieldMap {
   if (!isRecord(values)) {
     throw new Error(`${context} must be an object`);
   }
@@ -81,118 +66,8 @@ export function normalizeCanonicalFieldMap(values: unknown, context: string): Ca
   return Object.fromEntries(
     Object.entries(values)
       .filter(([, value]) => value !== undefined)
-      .map(([key, value]) => [key, normalizeCanonicalFieldValue(value, `${context}.${key}`)])
+      .map(([key, value]) => [key, normalizeHouseholdFieldValue(value, `${context}.${key}`)])
   );
-}
-
-export function getCanonicalGroupSetup(
-  setup: CanonicalHouseholdSetup,
-  appKey: HouseholdGroupAppKey
-): CanonicalGroupSetup | undefined {
-  return setup[SETUP_KEY_BY_APP_KEY[appKey]];
-}
-
-export function setCanonicalGroupSetup(
-  setup: CanonicalHouseholdSetup,
-  appKey: HouseholdGroupAppKey,
-  group: CanonicalGroupSetup
-): void {
-  switch (appKey) {
-    case 'households':
-      setup.household = group;
-      return;
-    case 'families':
-      setup.family = group;
-      return;
-    case 'taxUnits':
-      setup.taxUnit = group;
-      return;
-    case 'spmUnits':
-      setup.spmUnit = group;
-      return;
-    case 'maritalUnits':
-      setup.maritalUnit = group;
-      return;
-    case 'benunits':
-      setup.benunit = group;
-  }
-}
-
-function normalizeCanonicalGroupSetup(args: {
-  group: CanonicalGroupSetup;
-  groupLabel: string;
-  peopleNames: Set<string>;
-}): CanonicalGroupSetup {
-  if (!Array.isArray(args.group.members)) {
-    throw new Error(`${args.groupLabel}.members must be an array`);
-  }
-
-  const members = args.group.members.map((member) => String(member));
-  const unknownMembers = members.filter((member) => !args.peopleNames.has(member));
-
-  if (unknownMembers.length > 0) {
-    throw new Error(`${args.groupLabel} references unknown members: ${unknownMembers.join(', ')}`);
-  }
-
-  return {
-    name:
-      typeof args.group.name === 'string' && args.group.name.length > 0
-        ? args.group.name
-        : undefined,
-    members,
-    values: normalizeCanonicalFieldMap(args.group.values, `${args.groupLabel}.values`),
-  };
-}
-
-export function normalizeCanonicalSetup(setup: CanonicalHouseholdSetup): CanonicalHouseholdSetup {
-  if (!isRecord(setup.people)) {
-    throw new Error('Canonical household setup requires a people object');
-  }
-
-  const people = Object.fromEntries(
-    Object.entries(setup.people).map(([personName, person]) => {
-      if (!isRecord(person) || !('values' in person)) {
-        throw new Error(`Canonical household setup person "${personName}" is malformed`);
-      }
-
-      return [
-        personName,
-        {
-          values: normalizeCanonicalFieldMap(
-            (person as { values: unknown }).values,
-            `Canonical household person "${personName}"`
-          ),
-        },
-      ];
-    })
-  );
-
-  const normalized: CanonicalHouseholdSetup = {
-    countryId: normalizeCountryId(setup.countryId),
-    label: setup.label ?? null,
-    year: setup.year ?? null,
-    people,
-  };
-  const peopleNames = new Set(Object.keys(people));
-
-  for (const definition of GROUP_DEFINITIONS) {
-    const group = getCanonicalGroupSetup(setup, definition.appKey);
-    if (!group) {
-      continue;
-    }
-
-    setCanonicalGroupSetup(
-      normalized,
-      definition.appKey,
-      normalizeCanonicalGroupSetup({
-        group,
-        groupLabel: `Canonical household ${definition.appKey}`,
-        peopleNames,
-      })
-    );
-  }
-
-  return normalized;
 }
 
 export function inferYearFromData(value: unknown): number | null {
@@ -234,7 +109,7 @@ function selectYearValue(
 }
 
 export function flattenForYear(
-  value: CanonicalFieldValue,
+  value: HouseholdFieldValue,
   preferredYear: number | null
 ): HouseholdScalar {
   if (isYearValueMap(value)) {
@@ -243,12 +118,12 @@ export function flattenForYear(
   return value;
 }
 
-export function wrapForYear(value: HouseholdScalar, year: number): Record<string, HouseholdScalar> {
+export function wrapForYear(value: HouseholdScalar, year: number): HouseholdYearValueMap {
   return { [String(year)]: value };
 }
 
 export function flattenEntityValues(
-  values: CanonicalFieldMap,
+  values: HouseholdFieldMap,
   preferredYear: number | null
 ): Record<string, HouseholdScalar> {
   const flattened: Record<string, HouseholdScalar> = {};
@@ -266,15 +141,15 @@ export function flattenEntityValues(
 export function wrapEntityValuesForYear(
   values: Record<string, unknown>,
   year: number
-): CanonicalFieldMap {
-  const wrapped: CanonicalFieldMap = {};
+): HouseholdFieldMap {
+  const wrapped: HouseholdFieldMap = {};
 
   for (const [key, value] of Object.entries(values)) {
     if (value === undefined) {
       continue;
     }
 
-    const normalizedValue = normalizeCanonicalFieldValue(
+    const normalizedValue = normalizeHouseholdFieldValue(
       value,
       `Year-wrapped entity field "${key}"`
     );

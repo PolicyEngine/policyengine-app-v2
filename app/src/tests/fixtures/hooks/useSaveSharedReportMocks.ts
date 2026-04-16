@@ -5,7 +5,7 @@
 import { vi } from 'vitest';
 import { ReportIngredientsInput } from '@/hooks/utils/useFetchReportIngredients';
 import { Household } from '@/models/Household';
-import type { CanonicalHouseholdInputEnvelope } from '@/models/household/canonicalTypes';
+import type { AppHouseholdInputEnvelope } from '@/models/household/appTypes';
 import type { V1HouseholdMetadataEnvelope } from '@/models/household/v1Types';
 import { Policy } from '@/types/ingredients/Policy';
 
@@ -142,7 +142,7 @@ export const MOCK_POLICIES: Policy[] = [
   },
 ];
 
-export const MOCK_HOUSEHOLDS: CanonicalHouseholdInputEnvelope[] = [
+export const MOCK_HOUSEHOLDS: AppHouseholdInputEnvelope[] = [
   {
     id: TEST_IDS.HOUSEHOLD,
     countryId: TEST_COUNTRIES.UK,

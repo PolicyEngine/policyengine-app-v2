@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { Household as HouseholdModel } from '@/models/Household';
-import type { CanonicalHouseholdInputEnvelope } from '@/models/household/canonicalTypes';
+import type { AppHouseholdInputEnvelope } from '@/models/household/appTypes';
 import { Geography } from '@/types/ingredients/Geography';
 import { PopulationStateProps } from '@/types/pathwayState';
 
@@ -24,7 +24,7 @@ export function createPopulationCallbacks<TState, TMode>(
   returnMode: TMode,
   labelMode: TMode,
   onPopulationComplete?: {
-    onHouseholdComplete?: (householdId: string, household: CanonicalHouseholdInputEnvelope) => void;
+    onHouseholdComplete?: (householdId: string, household: AppHouseholdInputEnvelope) => void;
     onGeographyComplete?: (geographyId: string, label: string) => void;
   }
 ) {
@@ -57,7 +57,7 @@ export function createPopulationCallbacks<TState, TMode>(
     (householdId: string, household: HouseholdModel, label: string) => {
       setState((prev) =>
         populationUpdater(prev, {
-          household: household.withId(householdId).toCanonicalInput(),
+          household: household.withId(householdId).toAppInput(),
           geography: null,
           label,
           type: 'household',
@@ -84,7 +84,7 @@ export function createPopulationCallbacks<TState, TMode>(
   );
 
   const handleHouseholdSubmitSuccess = useCallback(
-    (householdId: string, household: CanonicalHouseholdInputEnvelope) => {
+    (householdId: string, household: AppHouseholdInputEnvelope) => {
       setState((prev) => {
         const population = populationSelector(prev);
         return populationUpdater(prev, {

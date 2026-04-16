@@ -152,18 +152,25 @@ export async function shadowCreateHousehold(
 
 export async function shadowUpdateUserHouseholdAssociation(
   v1Association: UserHouseholdPopulation,
-  v2HouseholdId = getV2Id('Household', v1Association.householdId),
-  v1Household?: Household
+  options: {
+    previousHouseholdId?: string;
+    v2HouseholdId?: string | null;
+    v1Household?: Household;
+  } = {}
 ): Promise<void> {
   if (!v1Association.id) {
     return;
   }
 
   const v2UserId = getOrCreateV2UserId(v1Association.userId);
-  let resolvedV2HouseholdId = v2HouseholdId;
+  let resolvedV2HouseholdId =
+    options.v2HouseholdId ?? getV2Id('Household', v1Association.householdId);
 
-  if (!resolvedV2HouseholdId && v1Household) {
-    resolvedV2HouseholdId = await shadowCreateHousehold(v1Association.householdId, v1Household);
+  if (!resolvedV2HouseholdId && options.v1Household) {
+    resolvedV2HouseholdId = await shadowCreateHousehold(
+      v1Association.householdId,
+      options.v1Household
+    );
   }
 
   if (!resolvedV2HouseholdId) {
@@ -178,9 +185,12 @@ export async function shadowUpdateUserHouseholdAssociation(
     let v2UserHouseholdId = getV2Id('UserHousehold', v1Association.id);
 
     if (!v2UserHouseholdId) {
+      const lookupV1HouseholdId = options.previousHouseholdId ?? v1Association.householdId;
+      const lookupV2HouseholdId =
+        getV2Id('Household', lookupV1HouseholdId) ?? resolvedV2HouseholdId;
       const existingV2Association = await fetchUserHouseholdAssociationByIdV2(
         v2UserId,
-        resolvedV2HouseholdId
+        lookupV2HouseholdId
       );
 
       if (existingV2Association?.id) {

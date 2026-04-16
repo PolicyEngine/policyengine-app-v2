@@ -250,10 +250,10 @@ export const mockGeographicAssociation2: UserGeographyPopulation = {
 };
 
 export const createMockHousehold1 = (): HouseholdModel =>
-  HouseholdModel.fromCanonicalInput(mockHousehold1.toCanonicalInput());
+  HouseholdModel.fromAppInput(mockHousehold1.toAppInput());
 
 export const createMockHousehold2 = (): HouseholdModel =>
-  HouseholdModel.fromCanonicalInput(mockHousehold2.toCanonicalInput());
+  HouseholdModel.fromAppInput(mockHousehold2.toAppInput());
 
 export const createMockHouseholdAssociation1 = (): UserHouseholdPopulation =>
   cloneValue(mockHouseholdAssociation1);

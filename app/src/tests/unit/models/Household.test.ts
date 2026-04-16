@@ -18,7 +18,7 @@ import {
 function createHousehold(overrides?: Parameters<typeof createMockHouseholdData>[0]): Household {
   const data = createMockHouseholdData(overrides);
 
-  return Household.fromCanonicalInput({
+  return Household.fromAppInput({
     id: data.id,
     countryId: data.countryId,
     label: data.label,
@@ -32,7 +32,7 @@ function createEmptyHousehold(
 ): Household {
   const data = createMockEmptyHouseholdData(overrides);
 
-  return Household.fromCanonicalInput({
+  return Household.fromAppInput({
     id: data.id,
     countryId: data.countryId,
     label: data.label,
@@ -50,7 +50,7 @@ describe('Household', () => {
       expect(household.countryId).toBe(TEST_COUNTRY_ID);
       expect(household.label).toBe(TEST_HOUSEHOLD_LABEL);
       expect(household.year).toBe(2026);
-      expect(household.data).toHaveProperty('taxUnits');
+      expect(household.householdData).toHaveProperty('taxUnits');
     });
 
     it('returns people, person count, and names from the canonical household shape', () => {
@@ -130,7 +130,7 @@ describe('Household', () => {
 
     it('rejects invalid secondary app-input groups instead of validating only the first one', () => {
       expect(() =>
-        Household.fromCanonicalInput({
+        Household.fromAppInput({
           countryId: 'us',
           year: 2026,
           householdData: {
@@ -148,7 +148,7 @@ describe('Household', () => {
 
     it('rejects invalid app-input groups regardless of object insertion order', () => {
       expect(() =>
-        Household.fromCanonicalInput({
+        Household.fromAppInput({
           countryId: 'us',
           year: 2026,
           householdData: {
@@ -166,7 +166,7 @@ describe('Household', () => {
 
     it('rejects malformed secondary app-input groups with non-array members', () => {
       expect(() =>
-        Household.fromCanonicalInput({
+        Household.fromAppInput({
           countryId: 'us',
           year: 2026,
           householdData: {
@@ -186,54 +186,6 @@ describe('Household', () => {
     });
   });
 
-  describe('fromCanonical', () => {
-    it('builds the app household shape from a canonical setup', () => {
-      const household = Household.fromCanonical(
-        {
-          countryId: 'us',
-          label: 'Canonical household',
-          year: 2026,
-          people: {
-            adult: {
-              values: {
-                age: { 2026: 35 },
-              },
-            },
-          },
-          household: {
-            members: ['adult'],
-            values: {},
-          },
-        },
-        { id: 'canonical-household' }
-      );
-
-      expect(household.id).toBe('canonical-household');
-      expect(household.householdData.households).toEqual({
-        household1: {
-          members: ['adult'],
-        },
-      });
-    });
-
-    it('rejects canonical setups that reference unknown people', () => {
-      expect(() =>
-        Household.fromCanonical({
-          countryId: 'us',
-          label: null,
-          year: 2026,
-          people: {
-            adult: { values: { age: { 2026: 35 } } },
-          },
-          taxUnit: {
-            members: ['child'],
-            values: {},
-          },
-        })
-      ).toThrow('Canonical household taxUnits references unknown members: child');
-    });
-  });
-
   describe('fromV1Metadata', () => {
     it('maps snake_case v1 household_json into the app household shape', () => {
       const household = Household.fromV1Metadata(mockHouseholdMetadata);
@@ -241,7 +193,7 @@ describe('Household', () => {
       expect(household.id).toBe('12345');
       expect(household.countryId).toBe('us');
       expect(household.year).toBeGreaterThanOrEqual(2025);
-      expect(household.data).toEqual({
+      expect(household.householdData).toEqual({
         people: mockHouseholdMetadata.household_json.people,
         taxUnits: mockHouseholdMetadata.household_json.tax_units,
         maritalUnits: mockHouseholdMetadata.household_json.marital_units,
@@ -302,7 +254,7 @@ describe('Household', () => {
       expect(household.countryId).toBe(TEST_COUNTRY_ID);
       expect(household.year).toBe(2026);
       expect(household.label).toBe('My v2 household');
-      expect(household.data).toEqual({
+      expect(household.householdData).toEqual({
         people: {
           adult: {
             age: { 2026: 35 },
@@ -370,15 +322,15 @@ describe('Household', () => {
         })
       );
 
-      expect(household.data.taxUnits).toEqual({
+      expect(household.householdData.taxUnits).toEqual({
         taxUnit1: { members: ['adult'] },
         taxUnit2: { members: ['child'] },
       });
-      expect(household.data.maritalUnits).toEqual({
+      expect(household.householdData.maritalUnits).toEqual({
         maritalUnit1: { members: ['adult'] },
         maritalUnit2: { members: ['child'] },
       });
-      expect(household.data.households).toEqual({
+      expect(household.householdData.households).toEqual({
         household1: { members: ['adult'] },
         household2: { members: ['child'] },
       });
@@ -387,7 +339,7 @@ describe('Household', () => {
     it('handles a minimal v2 response with no entity groups', () => {
       const household = Household.fromV2Response(createMockHouseholdV2ResponseMinimal());
 
-      expect(household.data).toEqual({
+      expect(household.householdData).toEqual({
         people: {
           single_adult: {
             age: { 2026: 30 },
@@ -441,18 +393,18 @@ describe('Household', () => {
         })
       );
 
-      expect(household.data.taxUnits).toEqual({
+      expect(household.householdData.taxUnits).toEqual({
         taxUnit1: {
           members: ['adult', 'child'],
         },
       });
-      expect(household.data.families).toEqual({
+      expect(household.householdData.families).toEqual({
         family1: {
           members: ['adult', 'child'],
           filing_status: { 2026: 'single' },
         },
       });
-      expect(household.data.households).toEqual({
+      expect(household.householdData.households).toEqual({
         household1: {
           members: ['adult', 'child'],
           state_name: { 2026: 'CA' },
@@ -542,21 +494,19 @@ describe('Household', () => {
     });
 
     it('wraps scalar canonical values with the household year before emitting v1 payloads', () => {
-      const household = Household.fromCanonical(
-        {
-          countryId: 'us',
-          label: 'Scalar household',
-          year: 2026,
+      const household = Household.fromAppInput({
+        id: 'scalar-household',
+        countryId: 'us',
+        label: 'Scalar household',
+        year: 2026,
+        householdData: {
           people: {
             adult: {
-              values: {
-                age: 35,
-              },
+              age: 35,
             },
           },
         },
-        { id: 'scalar-household' }
-      );
+      });
 
       expect(household.toV1CreationPayload()).toEqual({
         country_id: 'us',
@@ -763,7 +713,7 @@ describe('Household', () => {
   describe('serialization and equality', () => {
     it('round-trips through toJSON()', () => {
       const data = createMockHouseholdData();
-      const household = Household.fromCanonicalInput({
+      const household = Household.fromAppInput({
         id: data.id,
         countryId: data.countryId,
         label: data.label,
@@ -771,7 +721,13 @@ describe('Household', () => {
         householdData: data.data,
       });
 
-      expect(household.toJSON()).toEqual(data);
+      expect(household.toJSON()).toEqual({
+        id: data.id,
+        countryId: data.countryId,
+        label: data.label,
+        year: data.year,
+        householdData: data.data,
+      });
     });
 
     it('treats identical households as equal', () => {

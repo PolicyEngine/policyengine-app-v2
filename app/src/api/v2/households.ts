@@ -15,27 +15,15 @@ import type {
 import { API_V2_BASE_URL } from './taxBenefitModels';
 import { v2Fetch, v2FetchVoid } from './v2Fetch';
 
-// ============================================================================
-// Types for v2 Alpha /households API
-// ============================================================================
-
-export type HouseholdV2Response = V2StoredHouseholdEnvelope;
-
-export type HouseholdV2CreateRequest = V2CreateHouseholdEnvelope;
-
-// ============================================================================
-// API Functions
-// ============================================================================
-
 /**
  * Create a new household in v2 alpha API
  */
 export async function createHouseholdV2(
-  household: HouseholdV2CreateRequest
-): Promise<HouseholdV2Response> {
+  household: V2CreateHouseholdEnvelope
+): Promise<V2StoredHouseholdEnvelope> {
   const url = `${API_V2_BASE_URL}/households/`;
 
-  return v2Fetch<HouseholdV2Response>(url, 'createHouseholdV2', {
+  return v2Fetch<V2StoredHouseholdEnvelope>(url, 'createHouseholdV2', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -49,10 +37,12 @@ export async function createHouseholdV2(
  * Fetch a household by ID from v2 alpha API.
  * Throws with status code in message on any error (including 404).
  */
-export async function fetchHouseholdByIdV2(householdId: string): Promise<HouseholdV2Response> {
+export async function fetchHouseholdByIdV2(
+  householdId: string
+): Promise<V2StoredHouseholdEnvelope> {
   const url = `${API_V2_BASE_URL}/households/${householdId}`;
 
-  return v2Fetch<HouseholdV2Response>(url, `fetchHouseholdByIdV2(${householdId})`, {
+  return v2Fetch<V2StoredHouseholdEnvelope>(url, `fetchHouseholdByIdV2(${householdId})`, {
     method: 'GET',
     headers: {
       Accept: 'application/json',
@@ -67,7 +57,7 @@ export async function listHouseholdsV2(options?: {
   country_id?: CountryId;
   limit?: number;
   offset?: number;
-}): Promise<HouseholdV2Response[]> {
+}): Promise<V2StoredHouseholdEnvelope[]> {
   const params = new URLSearchParams();
 
   if (options?.country_id) {
@@ -83,7 +73,7 @@ export async function listHouseholdsV2(options?: {
   const queryString = params.toString();
   const url = `${API_V2_BASE_URL}/households/${queryString ? `?${queryString}` : ''}`;
 
-  return v2Fetch<HouseholdV2Response[]>(url, 'listHouseholdsV2', {
+  return v2Fetch<V2StoredHouseholdEnvelope[]>(url, 'listHouseholdsV2', {
     method: 'GET',
     headers: {
       Accept: 'application/json',
