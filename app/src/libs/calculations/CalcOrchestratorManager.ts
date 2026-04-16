@@ -71,7 +71,8 @@ export class CalcOrchestratorManager {
     } catch (error) {
       console.error(`[CalcOrchestratorManager] Failed to start calculation ${calcId}:`, error);
       this.cleanup(calcId);
-      throw error;
+      // Don't re-throw — async errors from useEffect can corrupt the Next.js
+      // router state. The error is logged and the orchestrator is cleaned up.
     }
   }
 

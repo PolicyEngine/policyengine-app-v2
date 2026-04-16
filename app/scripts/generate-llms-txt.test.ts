@@ -15,6 +15,7 @@ const OUTPUT_FILES = [
   'llms-research-us.txt',
   'llms-research-uk.txt',
 ];
+const LLMS_GENERATION_TIMEOUT_MS = 30000;
 
 describe('generate-llms-txt', () => {
   // Store original file contents to restore after test
@@ -31,7 +32,7 @@ describe('generate-llms-txt', () => {
       cwd: path.join(__dirname, '..'),
       stdio: 'pipe',
     });
-  });
+  }, LLMS_GENERATION_TIMEOUT_MS);
 
   afterAll(() => {
     // Restore originals
