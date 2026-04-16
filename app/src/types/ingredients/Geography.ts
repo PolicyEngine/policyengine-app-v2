@@ -5,12 +5,12 @@ import { countryIds } from '@/libs/countries';
  * Unlike Household, this is validation-only and doesn't require API persistence
  */
 export interface Geography {
-  id: string; // Format: "{countryId}-{geographyId}" e.g., "us-california" or "uk" for national
+  id: string; // Format: "{countryId}-{display-or-code}" for current UI compatibility
   countryId: (typeof countryIds)[number];
   scope: 'national' | 'subnational';
-  geographyId: string; // The geographic identifier from metadata options
-  // For UK: ALWAYS includes prefix ("constituency/Sheffield Central", "country/england")
-  // For US: NO prefix (just state code like "ca", "ny")
-  // National: Just country code ("uk", "us")
+  geographyId: string; // Canonical region code from selection or hydration
+  // National: country code ("uk", "us")
+  // Subnational US: "state/ca", "congressional_district/CA-12", "place/CA-44000"
+  // Subnational UK: "country/england", "constituency/Sheffield Central", "local_authority/Manchester"
   name?: string; // Human-readable name
 }

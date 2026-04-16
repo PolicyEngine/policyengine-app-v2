@@ -7,8 +7,7 @@ import { geographicAssociationKeys } from '@/libs/queryKeys';
 import { RootState } from '@/store';
 import { Geography } from '@/types/ingredients/Geography';
 import { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
-import { getCountryLabel } from '@/utils/geographyUtils';
-import { extractRegionDisplayValue } from '@/utils/regionStrategies';
+import { getCountryLabel, getRegionLabel } from '@/utils/geographyUtils';
 
 const apiGeographicStore = new ApiGeographicStore();
 const localGeographicStore = new LocalStorageGeographicStore();
@@ -153,32 +152,7 @@ export const useUserGeographics = (userId: string) => {
       return getCountryLabel(population.countryId);
     }
 
-    // For subnational, look up in metadata
-    // population.geographyId now contains the FULL prefixed value for UK regions
-    // e.g., "constituency/Sheffield Central" or "country/england"
-    if (metadata.economyOptions?.region) {
-      // Try exact match first (handles prefixed UK values)
-      const region = metadata.economyOptions.region.find((r) => r.name === population.geographyId);
-
-      if (region?.label) {
-        return region.label;
-      }
-
-      // Fallback: try adding prefixes (for backward compatibility)
-      const fallbackRegion = metadata.economyOptions.region.find(
-        (r) =>
-          r.name === `state/${population.geographyId}` ||
-          r.name === `constituency/${population.geographyId}` ||
-          r.name === `country/${population.geographyId}`
-      );
-
-      if (fallbackRegion?.label) {
-        return fallbackRegion.label;
-      }
-    }
-
-    // Fallback to geography ID (strip prefix for display if present)
-    return extractRegionDisplayValue(population.geographyId);
+    return getRegionLabel(population.geographyId, metadata);
   };
 
   // For geographic populations, we construct Geography objects from the population data

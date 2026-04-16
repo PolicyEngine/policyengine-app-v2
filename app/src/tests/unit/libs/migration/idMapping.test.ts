@@ -4,9 +4,13 @@ import {
   clearV2Mappings,
   getMappedV2UserId,
   getOrCreateV2UserId,
+  getResolvedDatasetId,
+  getResolvedRegionId,
   getV2AssociationTargetId,
   getV2Id,
   isUuid,
+  setResolvedDatasetId,
+  setResolvedRegionId,
   setV2AssociationTargetId,
   setV2Id,
 } from '@/libs/migration/idMapping';
@@ -65,6 +69,20 @@ describe('idMapping', () => {
 
       expect(getV2AssociationTargetId('UserHousehold', 'suh-1', 'hh-1')).toBeNull();
     });
+
+    test('given resolved region mapping then stores and retrieves by country and code', () => {
+      setResolvedRegionId('us', 'state/ca', 'uuid-region');
+
+      expect(getResolvedRegionId('us', 'state/ca')).toBe('uuid-region');
+      expect(localStorage.getItem('v1v2:region:us:state/ca')).toBe('uuid-region');
+    });
+
+    test('given resolved dataset mapping then stores and retrieves by country, code, and year key', () => {
+      setResolvedDatasetId('uk', 'country/england', 'latest', 'uuid-dataset');
+
+      expect(getResolvedDatasetId('uk', 'country/england', 'latest')).toBe('uuid-dataset');
+      expect(localStorage.getItem('v1v2:dataset:uk:country/england:latest')).toBe('uuid-dataset');
+    });
   });
 
   describe('clearV2Mappings', () => {
@@ -72,24 +90,28 @@ describe('idMapping', () => {
       setV2Id('Policy', 'sup-1', 'uuid-p1');
       setV2Id('Household', 'sup-2', 'uuid-h1');
       setV2AssociationTargetId('Policy', 'sup-3', 'target-1', 'uuid-policy-association');
+      setResolvedRegionId('us', 'state/ca', 'uuid-region');
 
       clearV2Mappings('Policy');
 
       expect(getV2Id('Policy', 'sup-1')).toBeNull();
       expect(getV2Id('Household', 'sup-2')).toBe('uuid-h1');
       expect(getV2AssociationTargetId('Policy', 'sup-3', 'target-1')).toBeNull();
+      expect(getResolvedRegionId('us', 'state/ca')).toBe('uuid-region');
     });
 
     test('given no entity type then clears all mappings', () => {
       setV2Id('Policy', 'sup-1', 'uuid-p1');
       setV2Id('Household', 'sup-2', 'uuid-h1');
       setV2AssociationTargetId('UserHousehold', 'suh-1', 'hh-1', 'uuid-association');
+      setResolvedDatasetId('us', 'state/ca', '2026', 'uuid-dataset');
 
       clearV2Mappings();
 
       expect(getV2Id('Policy', 'sup-1')).toBeNull();
       expect(getV2Id('Household', 'sup-2')).toBeNull();
       expect(getV2AssociationTargetId('UserHousehold', 'suh-1', 'hh-1')).toBeNull();
+      expect(getResolvedDatasetId('us', 'state/ca', '2026')).toBeNull();
     });
 
     test('given no mappings then does nothing', () => {
