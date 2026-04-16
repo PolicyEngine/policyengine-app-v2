@@ -75,7 +75,7 @@ export default function HouseholdBuilderForm({
   onNumChildrenChange,
   disabled = false,
 }: HouseholdBuilderFormProps) {
-  // State for custom variables
+  // State for custom variables shown in the builder UI.
   const [selectedVariables, setSelectedVariables] = useState<string[]>([]);
 
   // Search state for person variables (per person)
@@ -93,6 +93,10 @@ export default function HouseholdBuilderForm({
 
   // Get all input variables from metadata
   const allInputVariables = useMemo(() => getInputVariables(metadata), [metadata]);
+  const inputVariableLookup = useMemo(
+    () => new Map(allInputVariables.map((variable) => [variable.name, variable])),
+    [allInputVariables]
+  );
 
   // Get list of people, sorted in display order (you, partner, dependents)
   const people = useMemo(
@@ -160,11 +164,15 @@ export default function HouseholdBuilderForm({
       return [];
     }
 
-    return selectedVariables.filter((varName) => {
+    return Object.keys(personData).filter((varName) => {
+      if (!inputVariableLookup.has(varName)) {
+        return false;
+      }
+
       const entityInfo = resolveEntity(varName, metadata);
       // Exclude basic inputs - they're shown permanently above
       const isBasicInput = basicPersonFields.includes(varName);
-      return entityInfo?.isPerson && personData[varName] !== undefined && !isBasicInput;
+      return entityInfo?.isPerson && !isBasicInput;
     });
   };
 
@@ -232,14 +240,12 @@ export default function HouseholdBuilderForm({
     const newHousehold = removeVariableFromEntity(household, varName, metadata, person);
     onChange(newHousehold);
 
-    // Check if any other person still has this variable
     const stillUsedByOthers = Object.keys(newHousehold.householdData.people).some(
-      (p) => p !== person && newHousehold.householdData.people[p][varName]
+      (otherPerson) => otherPerson !== person && newHousehold.householdData.people[otherPerson][varName]
     );
 
-    // If no one else has it, remove from selectedVariables
     if (!stillUsedByOthers) {
-      setSelectedVariables(selectedVariables.filter((v) => v !== varName));
+      setSelectedVariables(selectedVariables.filter((selectedVariable) => selectedVariable !== varName));
     }
   };
 
@@ -272,7 +278,7 @@ export default function HouseholdBuilderForm({
       newHousehold = addVariable(household, variable.name, metadata, year);
     } else {
       // For non-person variables, only add if not already present
-      if (selectedVariables.includes(variable.name)) {
+      if (householdLevelVariables.some((selected) => selected.name === variable.name)) {
         setIsHouseholdSearchActive(false);
         setHouseholdSearchValue('');
         setIsHouseholdSearchFocused(false);
@@ -292,6 +298,7 @@ export default function HouseholdBuilderForm({
       );
     }
     onChange(newHousehold);
+
     if (!selectedVariables.includes(variable.name)) {
       setSelectedVariables([...selectedVariables, variable.name]);
     }
@@ -305,7 +312,7 @@ export default function HouseholdBuilderForm({
   const handleRemoveHouseholdVariable = (varName: string) => {
     const newHousehold = removeVariable(household, varName, metadata);
     onChange(newHousehold);
-    setSelectedVariables(selectedVariables.filter((v) => v !== varName));
+    setSelectedVariables(selectedVariables.filter((selectedVariable) => selectedVariable !== varName));
   };
 
   return (
@@ -338,7 +345,7 @@ export default function HouseholdBuilderForm({
       <Stack gap="md">
         {/* Marital Status and Children - side by side */}
         <div className="tw:grid tw:grid-cols-2 tw:gap-4">
-          <div>
+          <div className="tw:flex tw:flex-col tw:gap-[6px]">
             <Label>Marital status</Label>
             <Select
               value={maritalStatus}
@@ -357,7 +364,7 @@ export default function HouseholdBuilderForm({
             </Select>
           </div>
 
-          <div>
+          <div className="tw:flex tw:flex-col tw:gap-[6px]">
             <Label>Number of children</Label>
             <Select
               value={numChildren.toString()}
@@ -426,7 +433,7 @@ export default function HouseholdBuilderForm({
 
                         {/* Custom variables for this person */}
                         {personVars.map((varName) => {
-                          const variable = allInputVariables.find((v) => v.name === varName);
+                          const variable = inputVariableLookup.get(varName);
                           if (!variable) {
                             return null;
                           }
@@ -519,7 +526,7 @@ export default function HouseholdBuilderForm({
 
               {/* Custom household-level variables */}
               {householdLevelVariables.map(({ name: varName, entity, entityName }) => {
-                const variable = allInputVariables.find((v) => v.name === varName);
+                const variable = inputVariableLookup.get(varName);
                 if (!variable) {
                   return null;
                 }

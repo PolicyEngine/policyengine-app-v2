@@ -427,6 +427,13 @@ export class HouseholdBuilder {
         if (index > -1) {
           group.members.splice(index, 1);
         }
+
+        if (Array.isArray(group.members) && group.members.length === 0) {
+          const groupKey = Object.keys(groups).find((key) => groups[key] === group);
+          if (groupKey) {
+            delete groups[groupKey];
+          }
+        }
       });
     });
   }

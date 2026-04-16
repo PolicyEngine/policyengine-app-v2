@@ -240,6 +240,7 @@ export interface PopulationBrowseModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSelect: (population: PopulationStateProps) => void;
+  reportYear: string;
   onCreateNew?: () => void;
 }
 

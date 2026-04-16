@@ -21,7 +21,7 @@ import { UKOutlineIcon, USOutlineIcon } from '@/components/icons/CountryOutlineI
 import { Group } from '@/components/ui/Group';
 import { Stack } from '@/components/ui/Stack';
 import { Text } from '@/components/ui/Text';
-import { CURRENT_YEAR, MOCK_USER_ID } from '@/constants';
+import { MOCK_USER_ID } from '@/constants';
 import { colors, spacing } from '@/designTokens';
 import { useCreateHousehold } from '@/hooks/useCreateHousehold';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
@@ -36,6 +36,12 @@ import { Geography } from '@/types/ingredients/Geography';
 import { PopulationStateProps } from '@/types/pathwayState';
 import { generateGeographyLabel } from '@/utils/geographyUtils';
 import { HouseholdBuilder } from '@/utils/HouseholdBuilder';
+import {
+  deriveHouseholdBuilderComposition,
+  updateHouseholdBuilderChildCount,
+  updateHouseholdBuilderMaritalStatus,
+} from '@/utils/householdBuilderComposition';
+import { HouseholdValidation } from '@/utils/HouseholdValidation';
 import {
   getUKConstituencies,
   getUKCountries,
@@ -58,6 +64,7 @@ interface PopulationBrowseModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSelect: (population: PopulationStateProps) => void;
+  reportYear: string;
   onCreateNew: () => void;
 }
 
@@ -65,6 +72,7 @@ export function PopulationBrowseModal({
   isOpen,
   onClose,
   onSelect,
+  reportYear,
   onCreateNew: _onCreateNew,
 }: PopulationBrowseModalProps) {
   const countryId = useCurrentCountry() as 'us' | 'uk';
@@ -83,9 +91,9 @@ export function PopulationBrowseModal({
   const [isCreationMode, setIsCreationMode] = useState(false);
   const [householdLabel, setHouseholdLabel] = useState('');
   const [householdDraft, setHouseholdDraft] = useState<AppHouseholdInputEnvelope | null>(null);
-
-  // Get report year (default to current year)
-  const reportYear = CURRENT_YEAR.toString();
+  const [validation, setValidation] = useState<ReturnType<
+    typeof HouseholdValidation.isReadyForSimulation
+  > | null>(null);
 
   // Create household hook
   const { createHousehold, isPending: isCreating } = useCreateHousehold(
@@ -100,15 +108,15 @@ export function PopulationBrowseModal({
   }, [basicInputFields]);
 
   // Derive marital status and number of children from household draft
-  const householdPeople = useMemo(() => {
-    if (!householdDraft) {
-      return [];
-    }
-    return Object.keys(householdDraft.householdData.people || {});
-  }, [householdDraft]);
-
-  const maritalStatus = householdPeople.includes('your partner') ? 'married' : 'single';
-  const numChildren = householdPeople.filter((p) => p.includes('dependent')).length;
+  const composition = useMemo(
+    () =>
+      householdDraft ? deriveHouseholdBuilderComposition(householdDraft, reportYear) : undefined,
+    [householdDraft, reportYear]
+  );
+  const householdPeople = composition?.people ?? [];
+  const maritalStatus = composition?.maritalStatus ?? 'single';
+  const numChildren = composition?.numChildren ?? 0;
+  const validationMessage = validation?.errors[0]?.message ?? null;
 
   // Reset state on mount
   useEffect(() => {
@@ -118,8 +126,24 @@ export function PopulationBrowseModal({
       setIsCreationMode(false);
       setHouseholdLabel('');
       setHouseholdDraft(null);
+      setValidation(null);
     }
   }, [isOpen, countryId]);
+
+  useEffect(() => {
+    if (!isCreationMode || !householdDraft) {
+      setValidation(null);
+      return;
+    }
+
+    setValidation(null);
+
+    const timeoutId = setTimeout(() => {
+      setValidation(HouseholdValidation.isReadyForSimulation(householdDraft, reportYear));
+    }, 400);
+
+    return () => clearTimeout(timeoutId);
+  }, [householdDraft, isCreationMode, reportYear]);
 
   // Get geography categories based on country
   const geographyCategories = useMemo(() => {
@@ -280,6 +304,7 @@ export function PopulationBrowseModal({
     builder.addAdult('you', 30, { employment_income: 0 });
     setHouseholdDraft(builder.build());
     setHouseholdLabel('');
+    setValidation(null);
     setIsCreationMode(true);
   }, [countryId, reportYear]);
 
@@ -288,6 +313,12 @@ export function PopulationBrowseModal({
     setIsCreationMode(false);
     setHouseholdDraft(null);
     setHouseholdLabel('');
+    setValidation(null);
+  }, []);
+
+  const handleHouseholdDraftChange = useCallback((nextHousehold: AppHouseholdInputEnvelope) => {
+    setValidation(null);
+    setHouseholdDraft(nextHousehold);
   }, []);
 
   // Handle marital status change
@@ -297,21 +328,10 @@ export function PopulationBrowseModal({
         return;
       }
 
-      const builder = new HouseholdBuilder(countryId as 'us' | 'uk', reportYear);
-      builder.loadHousehold(householdDraft);
-
-      const hasPartner = householdPeople.includes('your partner');
-
-      if (newStatus === 'married' && !hasPartner) {
-        builder.addAdult('your partner', 30, { employment_income: 0 });
-        builder.setMaritalStatus('you', 'your partner');
-      } else if (newStatus === 'single' && hasPartner) {
-        builder.removePerson('your partner');
-      }
-
-      setHouseholdDraft(builder.build());
+      setValidation(null);
+      setHouseholdDraft(updateHouseholdBuilderMaritalStatus(householdDraft, reportYear, newStatus));
     },
-    [householdDraft, householdPeople, countryId, reportYear]
+    [householdDraft, reportYear]
   );
 
   // Handle number of children change
@@ -321,35 +341,22 @@ export function PopulationBrowseModal({
         return;
       }
 
-      const builder = new HouseholdBuilder(countryId as 'us' | 'uk', reportYear);
-      builder.loadHousehold(householdDraft);
-
-      const currentChildren = householdPeople.filter((p) => p.includes('dependent'));
-      const currentChildCount = currentChildren.length;
-
-      if (newCount !== currentChildCount) {
-        currentChildren.forEach((child) => builder.removePerson(child));
-
-        if (newCount > 0) {
-          const hasPartner = householdPeople.includes('your partner');
-          const parentIds = hasPartner ? ['you', 'your partner'] : ['you'];
-          const ordinals = ['first', 'second', 'third', 'fourth', 'fifth'];
-
-          for (let i = 0; i < newCount; i++) {
-            const childName = `your ${ordinals[i] || `${i + 1}th`} dependent`;
-            builder.addChild(childName, 10, parentIds, { employment_income: 0 });
-          }
-        }
-      }
-
-      setHouseholdDraft(builder.build());
+      setValidation(null);
+      setHouseholdDraft(updateHouseholdBuilderChildCount(householdDraft, reportYear, newCount));
     },
-    [householdDraft, householdPeople, countryId, reportYear]
+    [householdDraft, reportYear]
   );
 
   // Handle household creation submission
   const handleCreateHousehold = useCallback(async () => {
     if (!householdDraft || !householdLabel.trim()) {
+      return;
+    }
+
+    const nextValidation = HouseholdValidation.isReadyForSimulation(householdDraft, reportYear);
+    setValidation(nextValidation);
+
+    if (!nextValidation.isValid) {
       return;
     }
 
@@ -393,6 +400,7 @@ export function PopulationBrowseModal({
     onSelect,
     onClose,
     queryClient,
+    reportYear,
     userId,
   ]);
 
@@ -496,7 +504,8 @@ export function PopulationBrowseModal({
           basicPersonFields={basicInputFields.person || []}
           basicNonPersonFields={basicNonPersonFields}
           isCreating={isCreating}
-          onChange={setHouseholdDraft}
+          validationMessage={validationMessage}
+          onChange={handleHouseholdDraftChange}
           onMaritalStatusChange={handleMaritalStatusChange}
           onNumChildrenChange={handleNumChildrenChange}
         />
@@ -622,7 +631,9 @@ export function PopulationBrowseModal({
             onBack={handleExitCreationMode}
             onSubmit={handleCreateHousehold}
             isLoading={isCreating}
-            submitDisabled={!householdLabel.trim() || !householdDraft}
+            submitDisabled={
+              !householdLabel.trim() || !householdDraft || validation?.isValid === false
+            }
             submitLabel="Create household"
           />
         ) : undefined

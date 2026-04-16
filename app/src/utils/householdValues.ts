@@ -1,6 +1,7 @@
 import type { AppHouseholdInputEnvelope as Household } from '@/models/household/appTypes';
 import { MetadataState } from '@/types/metadata';
 import { getHouseholdGroupCollection, isHouseholdYearMap } from './householdDataAccess';
+import { normalizeVariableValueType } from './variableMetadata';
 
 /**
  * Extracts a value from household data for a specific variable
@@ -156,6 +157,10 @@ export function getInputFormattingProps(variable: any): {
   thousandSeparator: string;
   decimalScale?: number;
 } {
+  const valueType = normalizeVariableValueType(
+    variable?.valueType ?? variable?.value_type ?? variable?.data_type
+  );
+  const unit = variable?.unit ?? variable?.variable_unit ?? null;
   const currencyMap: Record<string, string> = {
     'currency-USD': '$',
     'currency-GBP': '£',
@@ -164,13 +169,13 @@ export function getInputFormattingProps(variable: any): {
 
   // Determine decimal scale based on valueType
   let decimalScale: number | undefined;
-  if (variable.valueType === 'int' || variable.valueType === 'Enum') {
+  if (valueType === 'int' || valueType === 'Enum') {
     decimalScale = 0;
-  } else if (variable.valueType === 'float') {
+  } else if (valueType === 'float') {
     // For currency, use 2 decimals; for percentages use 2; otherwise use 0 for simplicity
-    if (variable.unit && currencyMap[variable.unit]) {
+    if (unit && currencyMap[unit]) {
       decimalScale = 2;
-    } else if (variable.unit === '/1') {
+    } else if (unit === '/1') {
       decimalScale = 2;
     } else {
       decimalScale = 0;
@@ -178,16 +183,16 @@ export function getInputFormattingProps(variable: any): {
   }
 
   // Currency formatting
-  if (variable.unit && currencyMap[variable.unit]) {
+  if (unit && currencyMap[unit]) {
     return {
-      prefix: currencyMap[variable.unit],
+      prefix: currencyMap[unit],
       thousandSeparator: ',',
       decimalScale,
     };
   }
 
   // Percentage formatting
-  if (variable.unit === '/1') {
+  if (unit === '/1') {
     return {
       suffix: '%',
       thousandSeparator: ',',

@@ -141,6 +141,7 @@ export function SimulationCanvas({
         isOpen={canvas.populationBrowseState.isOpen}
         onClose={canvas.closePopulationBrowse}
         onSelect={canvas.handlePopulationSelectFromBrowse}
+        reportYear={reportYear}
         onCreateNew={() =>
           canvas.handleCreateCustom(canvas.populationBrowseState.simulationIndex, 'population')
         }
