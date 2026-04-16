@@ -22,6 +22,7 @@ import type { Household } from '@/types/ingredients/Household';
 import type { Policy } from '@/types/ingredients/Policy';
 import type { Simulation } from '@/types/ingredients/Simulation';
 import type { UserPolicy } from '@/types/ingredients/UserPolicy';
+import { getHeadOfHouseholdPersonName } from '@/utils/householdHead';
 import { getValueFromHousehold } from '@/utils/householdValues';
 import BaselineAndReformChart from './BaselineAndReformChart';
 import BaselineOnlyChart from './BaselineOnlyChart';
@@ -60,6 +61,14 @@ export default function EarningsVariationSubPage({
   const normalizedReportYear = reportYear ?? '';
   const deferredSearchQuery = useDeferredValue(searchQuery.trim().toLowerCase());
   const metadata = useSelector((state: RootState) => state.metadata);
+  const baselineFocusPersonName = useMemo(
+    () => getHeadOfHouseholdPersonName(baseline, normalizedReportYear),
+    [baseline, normalizedReportYear]
+  );
+  const reformFocusPersonName = useMemo(
+    () => (reform ? getHeadOfHouseholdPersonName(reform, normalizedReportYear) : null),
+    [normalizedReportYear, reform]
+  );
 
   // Get policy data for variations
   const baselinePolicy = policies?.find((p) => p.id === simulations[0]?.policyId);
@@ -87,6 +96,7 @@ export default function EarningsVariationSubPage({
     policyData: baselinePolicyData,
     year: normalizedReportYear,
     countryId,
+    personName: baselineFocusPersonName,
     enabled:
       shouldFetchInternally && !!reportYear && !!simulations[0]?.populationId && !!baselinePolicy,
   });
@@ -102,6 +112,7 @@ export default function EarningsVariationSubPage({
     policyData: reformPolicyData,
     year: normalizedReportYear,
     countryId,
+    personName: reformFocusPersonName ?? baselineFocusPersonName,
     enabled:
       shouldFetchInternally &&
       !!reportYear &&
@@ -354,6 +365,7 @@ export default function EarningsVariationSubPage({
         <BaselineAndReformChart
           baseline={baseline}
           baselineVariation={resolvedBaselineVariation}
+          focusPersonName={baselineFocusPersonName}
           reform={reform}
           reformVariation={resolvedReformVariation!}
           variableName={selectedVariable}
@@ -363,6 +375,7 @@ export default function EarningsVariationSubPage({
         <BaselineOnlyChart
           baseline={baseline}
           baselineVariation={resolvedBaselineVariation}
+          focusPersonName={baselineFocusPersonName}
           variableName={selectedVariable}
           year={normalizedReportYear}
         />

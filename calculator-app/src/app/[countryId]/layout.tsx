@@ -12,6 +12,7 @@ import { countryIds, type CountryId } from "@/libs/countries";
  * Provides CountryContext, NavigationContext, and LocationContext
  * so shared components work identically in both router contexts.
  * This comment exists to force calculator-next redeploys when needed.
+ * This line is a no-op touch for the calculator-app Vercel project.
  */
 export default function CountryLayout({
   children,

@@ -91,7 +91,13 @@ export const calculationKeys = {
 
 export const householdVariationKeys = {
   all: ['household-variations'] as const,
-  byParams: (householdId: string, policyId: string, year: string, countryId: string) =>
+  byParams: (
+    householdId: string,
+    policyId: string,
+    year: string,
+    countryId: string,
+    personName = ''
+  ) =>
     [
       ...householdVariationKeys.all,
       'household',
@@ -102,5 +108,7 @@ export const householdVariationKeys = {
       year,
       'country',
       countryId,
+      'person',
+      personName,
     ] as const,
 };
