@@ -12,6 +12,7 @@ interface UseHouseholdVariationParams {
   policyData: any;
   year: string;
   countryId: string;
+  personName?: string | null;
   enabled?: boolean;
 }
 
@@ -39,17 +40,29 @@ export function useHouseholdVariation({
   policyData,
   year,
   countryId,
+  personName,
   enabled = true,
 }: UseHouseholdVariationParams) {
   return useQuery({
-    queryKey: householdVariationKeys.byParams(householdId, policyId, year, countryId),
+    queryKey: householdVariationKeys.byParams(
+      householdId,
+      policyId,
+      year,
+      countryId,
+      personName ?? ''
+    ),
     queryFn: async () => {
       // Step 1: Fetch household input structure from API
       const householdMetadata = await fetchHouseholdById(countryId, householdId);
       const householdInput = householdMetadata.household_json;
 
       // Step 2: Build axes configuration
-      const householdWithAxes = buildHouseholdVariationAxes(householdInput, year, countryId);
+      const householdWithAxes = buildHouseholdVariationAxes(
+        householdInput,
+        year,
+        countryId,
+        personName
+      );
 
       // Step 3: Call calculate-full API
       const resultData = await fetchHouseholdVariation(countryId, householdWithAxes, policyData);

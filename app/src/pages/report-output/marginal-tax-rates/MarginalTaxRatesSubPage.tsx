@@ -29,8 +29,19 @@ import type { Household } from '@/types/ingredients/Household';
 import type { Policy } from '@/types/ingredients/Policy';
 import type { Simulation } from '@/types/ingredients/Simulation';
 import type { UserPolicy } from '@/types/ingredients/UserPolicy';
-import { getClampedChartHeight, getNiceTicks, RECHARTS_FONT_STYLE } from '@/utils/chartUtils';
+import {
+  getClampedChartHeight,
+  getNiceTicks,
+  getYAxisLayout,
+  RECHARTS_FONT_STYLE,
+} from '@/utils/chartUtils';
 import { currencySymbol } from '@/utils/formatters';
+import { getHeadOfHouseholdPersonName } from '@/utils/householdHead';
+import {
+  buildHouseholdVariationEarningsAxis,
+  getHouseholdVariationIndexForEarnings,
+  getHouseholdVariationMaxEarnings,
+} from '@/utils/householdVariationAxes';
 import { getValueFromHousehold } from '@/utils/householdValues';
 
 interface Props {
@@ -45,8 +56,8 @@ interface Props {
 }
 
 type ViewMode = 'both' | 'difference';
-
 function MTRTooltip({ active, payload, label, symbol }: any) {
+
   if (!active || !payload?.length) {
     return null;
   }
@@ -91,6 +102,14 @@ export default function MarginalTaxRatesSubPage({
   const normalizedReportYear = reportYear ?? '';
   const metadata = useSelector((state: RootState) => state.metadata);
   const chartHeight = getClampedChartHeight(viewportHeight, mobile);
+  const baselineFocusPersonName = useMemo(
+    () => getHeadOfHouseholdPersonName(baseline, normalizedReportYear),
+    [baseline, normalizedReportYear]
+  );
+  const reformFocusPersonName = useMemo(
+    () => (reform ? getHeadOfHouseholdPersonName(reform, normalizedReportYear) : null),
+    [normalizedReportYear, reform]
+  );
 
   const baselinePolicy = policies?.find((p) => p.id === simulations[0]?.policyId);
   const reformPolicy = simulations[1] && policies?.find((p) => p.id === simulations[1].policyId);
@@ -114,6 +133,7 @@ export default function MarginalTaxRatesSubPage({
     policyData: baselinePolicyData,
     year: normalizedReportYear,
     countryId,
+    personName: baselineFocusPersonName,
     enabled:
       shouldFetchInternally && !!reportYear && !!simulations[0]?.populationId && !!baselinePolicy,
   });
@@ -128,6 +148,7 @@ export default function MarginalTaxRatesSubPage({
     policyData: reformPolicyData,
     year: normalizedReportYear,
     countryId,
+    personName: reformFocusPersonName ?? baselineFocusPersonName,
     enabled:
       shouldFetchInternally &&
       !!reportYear &&
@@ -148,11 +169,13 @@ export default function MarginalTaxRatesSubPage({
     }
 
     const clipMTR = (values: number[]) => values.map((value) => Math.max(-2, Math.min(2, value)));
-    const firstPersonName = Object.keys(resolvedBaselineVariation.householdData?.people || {})[0];
+    const resolvedFocusPersonName =
+      baselineFocusPersonName ??
+      getHeadOfHouseholdPersonName(resolvedBaselineVariation, normalizedReportYear);
     const baselineMTR = getValueFromHousehold(
       'marginal_tax_rate',
       normalizedReportYear,
-      firstPersonName,
+      resolvedFocusPersonName,
       resolvedBaselineVariation,
       metadata
     );
@@ -161,7 +184,7 @@ export default function MarginalTaxRatesSubPage({
         ? getValueFromHousehold(
             'marginal_tax_rate',
             normalizedReportYear,
-            firstPersonName,
+            resolvedFocusPersonName,
             resolvedReformVariation,
             metadata
           )
@@ -173,23 +196,33 @@ export default function MarginalTaxRatesSubPage({
 
     const baselineMTRClipped = clipMTR(baselineMTR);
     const reformMTRClipped = Array.isArray(reformMTR) ? clipMTR(reformMTR) : null;
-    const firstPersonNameBaseline = Object.keys(baseline.householdData?.people || {})[0];
     const currentEarnings = getValueFromHousehold(
       'employment_income',
       normalizedReportYear,
-      firstPersonNameBaseline,
+      resolvedFocusPersonName,
       baseline,
       metadata
     ) as number;
-    const currentMTR = getValueFromHousehold(
+    const exactCurrentBaselineMTR = getValueFromHousehold(
       'marginal_tax_rate',
       normalizedReportYear,
-      firstPersonNameBaseline,
+      resolvedFocusPersonName,
       baseline,
       metadata
-    ) as number;
-    const maxEarnings = Math.max(countryId === 'ng' ? 1_200_000 : 200_000, 2 * currentEarnings);
-    const xValues = Array.from({ length: 401 }, (_, i) => (i * maxEarnings) / 400);
+    );
+    const exactCurrentReformMTR =
+      reform && resolvedReformVariation
+        ? getValueFromHousehold(
+            'marginal_tax_rate',
+            normalizedReportYear,
+            resolvedFocusPersonName,
+            reform,
+            metadata
+          )
+        : null;
+    const maxEarnings = getHouseholdVariationMaxEarnings(currentEarnings, countryId);
+    const xValues = buildHouseholdVariationEarningsAxis(maxEarnings);
+    const currentIndex = getHouseholdVariationIndexForEarnings(currentEarnings, maxEarnings);
     const mtrDifference = reformMTRClipped
       ? baselineMTRClipped.map((baseValue, index) => reformMTRClipped[index] - baseValue)
       : null;
@@ -204,7 +237,16 @@ export default function MarginalTaxRatesSubPage({
     return {
       chartData,
       currentEarnings,
-      currentMTR,
+      currentBaselineMTR:
+        typeof exactCurrentBaselineMTR === 'number'
+          ? Math.max(-2, Math.min(2, exactCurrentBaselineMTR))
+          : (baselineMTRClipped[currentIndex] ?? 0),
+      currentReformMTR:
+        typeof exactCurrentReformMTR === 'number'
+          ? Math.max(-2, Math.min(2, exactCurrentReformMTR))
+          : reformMTRClipped && reformMTRClipped[currentIndex] !== undefined
+            ? reformMTRClipped[currentIndex]
+            : null,
       diffTicks: getNiceTicks([Math.min(0, ...diffValues), Math.max(0, ...diffValues)]),
       maxEarnings,
       mtrDifference,
@@ -283,6 +325,12 @@ export default function MarginalTaxRatesSubPage({
   }
 
   const symbol = currencySymbol(countryId);
+  const formatMTR = (value: number) => `${(value * 100).toFixed(1)}%`;
+  const formatMTRTick = (value: number) => `${(value * 100).toFixed(0)}%`;
+  const mtrYAxis = getYAxisLayout(chartSeries.mtrTicks, true, formatMTRTick);
+  const diffYAxis = getYAxisLayout(chartSeries.diffTicks, true, formatMTR);
+  const bothChartMargin = { top: 20, right: 20, bottom: 80, left: mtrYAxis.marginLeft };
+  const diffChartMargin = { top: 20, right: 20, bottom: 80, left: diffYAxis.marginLeft };
 
   const renderChart = () => {
     if (!reform || !chartSeries.reformMTRClipped || viewMode === 'both') {
@@ -290,13 +338,12 @@ export default function MarginalTaxRatesSubPage({
         reform && chartSeries.reformMTRClipped ? colors.gray[600] : colors.primary[500];
       return (
         <ResponsiveContainer width="100%" height={chartHeight}>
-          <LineChart
-            data={chartSeries.chartData}
-            margin={{ top: 20, right: 20, bottom: 80, left: 80 }}
-          >
+          <LineChart data={chartSeries.chartData} margin={bothChartMargin}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis
               dataKey="earnings"
+              type="number"
+              domain={[0, chartSeries.maxEarnings]}
               ticks={chartSeries.xTicks}
               tick={RECHARTS_FONT_STYLE}
               tickFormatter={(v: number) => `${symbol}${v.toLocaleString()}`}
@@ -312,12 +359,14 @@ export default function MarginalTaxRatesSubPage({
               domain={[-2, 2]}
               ticks={chartSeries.mtrTicks}
               tick={RECHARTS_FONT_STYLE}
-              tickFormatter={(v: number) => `${(v * 100).toFixed(0)}%`}
+              tickFormatter={formatMTRTick}
+              width={mtrYAxis.yAxisWidth}
             >
               <Label
                 value="Marginal tax rate"
                 angle={-90}
-                position="insideLeft"
+                position="center"
+                dx={mtrYAxis.labelDx}
                 style={{ textAnchor: 'middle', ...RECHARTS_FONT_STYLE }}
               />
             </YAxis>
@@ -341,13 +390,24 @@ export default function MarginalTaxRatesSubPage({
                 dot={false}
               />
             )}
-            {!reform && (
+            <ReferenceDot
+              x={chartSeries.currentEarnings}
+              y={chartSeries.currentBaselineMTR}
+              r={5}
+              fill={baselineStroke}
+              stroke={colors.background.primary}
+              strokeWidth={2}
+              ifOverflow="visible"
+            />
+            {reform && chartSeries.currentReformMTR !== null && (
               <ReferenceDot
                 x={chartSeries.currentEarnings}
-                y={Math.max(-2, Math.min(2, chartSeries.currentMTR))}
+                y={chartSeries.currentReformMTR}
                 r={5}
                 fill={colors.primary[500]}
-                stroke={colors.primary[500]}
+                stroke={colors.background.primary}
+                strokeWidth={2}
+                ifOverflow="visible"
               />
             )}
           </LineChart>
@@ -361,13 +421,12 @@ export default function MarginalTaxRatesSubPage({
 
     return (
       <ResponsiveContainer width="100%" height={chartHeight}>
-        <AreaChart
-          data={chartSeries.chartData}
-          margin={{ top: 20, right: 20, bottom: 80, left: 80 }}
-        >
+        <AreaChart data={chartSeries.chartData} margin={diffChartMargin}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis
             dataKey="earnings"
+            type="number"
+            domain={[0, chartSeries.maxEarnings]}
             ticks={chartSeries.xTicks}
             tick={RECHARTS_FONT_STYLE}
             tickFormatter={(v: number) => `${symbol}${v.toLocaleString()}`}
@@ -386,12 +445,14 @@ export default function MarginalTaxRatesSubPage({
               chartSeries.diffTicks[chartSeries.diffTicks.length - 1],
             ]}
             tick={RECHARTS_FONT_STYLE}
-            tickFormatter={(v: number) => `${(v * 100).toFixed(1)}%`}
+            tickFormatter={formatMTR}
+            width={diffYAxis.yAxisWidth}
           >
             <Label
               value="Change in marginal tax rate"
               angle={-90}
-              position="insideLeft"
+              position="center"
+              dx={diffYAxis.labelDx}
               style={{ textAnchor: 'middle', ...RECHARTS_FONT_STYLE }}
             />
           </YAxis>

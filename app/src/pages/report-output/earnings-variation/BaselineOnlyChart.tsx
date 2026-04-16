@@ -20,18 +20,31 @@ import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useViewportSize } from '@/hooks/useViewportSize';
 import type { RootState } from '@/store';
 import type { Household } from '@/types/ingredients/Household';
-import { getClampedChartHeight, getNiceTicks, RECHARTS_FONT_STYLE } from '@/utils/chartUtils';
+import {
+  getClampedChartHeight,
+  getNiceTicks,
+  getYAxisLayout,
+  RECHARTS_FONT_STYLE,
+} from '@/utils/chartUtils';
 import { currencySymbol } from '@/utils/formatters';
+import { getHeadOfHouseholdPersonName } from '@/utils/householdHead';
+import {
+  buildHouseholdVariationEarningsAxis,
+  getHouseholdVariationIndexForEarnings,
+  getHouseholdVariationMaxEarnings,
+} from '@/utils/householdVariationAxes';
+import { formatChartValueForVariable } from '@/utils/chartValueFormatting';
 import { getValueFromHousehold } from '@/utils/householdValues';
 
 interface Props {
   baseline: Household;
   baselineVariation: Household;
+  focusPersonName?: string | null;
   variableName: string;
   year: string;
 }
 
-function EarningsTooltip({ active, payload, label, symbol }: any) {
+function EarningsTooltip({ active, payload, label, formatValue, symbol }: any) {
   if (!active || !payload?.length) {
     return null;
   }
@@ -46,7 +59,7 @@ function EarningsTooltip({ active, payload, label, symbol }: any) {
           key={p.name}
           style={{ margin: '2px 0', fontSize: typography.fontSize.sm, color: p.stroke }}
         >
-          {p.name}: {p.value}
+          {p.name}: {formatValue(Number(p.value))}
         </p>
       ))}
     </div>
@@ -60,6 +73,7 @@ function EarningsTooltip({ active, payload, label, symbol }: any) {
 export default function BaselineOnlyChart({
   baseline,
   baselineVariation,
+  focusPersonName,
   variableName,
   year,
 }: Props) {
@@ -77,27 +91,28 @@ export default function BaselineOnlyChart({
       return null;
     }
 
-    const currentValue = getValueFromHousehold(
-      variableName,
-      year,
-      null,
-      baseline,
-      metadata
-    ) as number;
-    const firstPersonName = Object.keys(baseline.householdData?.people || {})[0];
+    const resolvedFocusPersonName =
+      focusPersonName ?? getHeadOfHouseholdPersonName(baseline, year);
     const currentEarnings = getValueFromHousehold(
       'employment_income',
       year,
-      firstPersonName,
+      resolvedFocusPersonName,
       baseline,
       metadata
     ) as number;
-    const maxEarnings = Math.max(countryId === 'ng' ? 1_200_000 : 200_000, 2 * currentEarnings);
-    const xValues = Array.from({ length: 401 }, (_, i) => (i * maxEarnings) / 400);
+    const maxEarnings = getHouseholdVariationMaxEarnings(currentEarnings, countryId);
+    const xValues = buildHouseholdVariationEarningsAxis(maxEarnings);
+    const currentIndex = getHouseholdVariationIndexForEarnings(currentEarnings, maxEarnings);
     const chartData = xValues.map((earnings, index) => ({
       earnings,
       value: yValues[index],
     }));
+    const exactCurrentValue = getValueFromHousehold(variableName, year, null, baseline, metadata);
+    const currentValue =
+      typeof exactCurrentValue === 'number'
+        ? exactCurrentValue
+        : ((chartData[currentIndex]?.value ??
+            getValueFromHousehold(variableName, year, null, baseline, metadata)) as number);
     const yNumValues = chartData.map((datum) => datum.value);
 
     return {
@@ -119,17 +134,20 @@ export default function BaselineOnlyChart({
   }
 
   const symbol = currencySymbol(countryId);
+  const formatValue = (value: number) =>
+    formatChartValueForVariable(value, variable, countryId);
+  const yAxis = getYAxisLayout(chartSeries.yTicks, true, formatValue);
+  const chartMargin = { top: 20, right: 20, bottom: 80, left: yAxis.marginLeft };
 
   return (
     <div style={{ width: '100%', position: 'relative' }}>
       <ResponsiveContainer width="100%" height={chartHeight}>
-        <LineChart
-          data={chartSeries.chartData}
-          margin={{ top: 20, right: 20, bottom: 80, left: 80 }}
-        >
+        <LineChart data={chartSeries.chartData} margin={chartMargin}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis
             dataKey="earnings"
+            type="number"
+            domain={[0, chartSeries.maxEarnings]}
             ticks={chartSeries.xTicks}
             tick={RECHARTS_FONT_STYLE}
             tickFormatter={(v: number) => `${symbol}${v.toLocaleString()}`}
@@ -145,15 +163,18 @@ export default function BaselineOnlyChart({
             ticks={chartSeries.yTicks}
             domain={[chartSeries.yTicks[0], chartSeries.yTicks[chartSeries.yTicks.length - 1]]}
             tick={RECHARTS_FONT_STYLE}
+            tickFormatter={(value: number) => formatValue(value)}
+            width={yAxis.yAxisWidth}
           >
             <Label
               value={variable.label}
               angle={-90}
-              position="insideLeft"
+              position="center"
+              dx={yAxis.labelDx}
               style={{ textAnchor: 'middle', ...RECHARTS_FONT_STYLE }}
             />
           </YAxis>
-          <Tooltip content={<EarningsTooltip symbol={symbol} />} />
+          <Tooltip content={<EarningsTooltip symbol={symbol} formatValue={formatValue} />} />
           <Legend verticalAlign="top" align="left" />
           <Line
             type="monotone"
@@ -168,7 +189,9 @@ export default function BaselineOnlyChart({
             y={chartSeries.currentValue}
             r={5}
             fill={colors.primary[500]}
-            stroke={colors.primary[500]}
+            stroke={colors.background.primary}
+            strokeWidth={2}
+            ifOverflow="visible"
           />
         </LineChart>
       </ResponsiveContainer>
