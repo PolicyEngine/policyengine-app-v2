@@ -10,6 +10,9 @@ export const metadata: Metadata = {
   title: "PolicyEngine Calculator",
   description:
     "Calculate your taxes and benefits, create policy simulations, and analyze reform impacts.",
+  icons: {
+    icon: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({
