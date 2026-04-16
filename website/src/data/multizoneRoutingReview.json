@@ -1,0 +1,22 @@
+{
+  "app:us:keep-your-pay-act": {
+    "recommendation": "multizone",
+    "comment": ""
+  },
+  "app:us:oregon-kicker-refund": {
+    "recommendation": "multizone",
+    "comment": ""
+  },
+  "app:us:working-parents-tax-relief-act": {
+    "recommendation": "multizone",
+    "comment": ""
+  },
+  "app:us:watca": {
+    "recommendation": "multizone",
+    "comment": ""
+  },
+  "route:api": {
+    "recommendation": "multizone",
+    "comment": ""
+  }
+}
