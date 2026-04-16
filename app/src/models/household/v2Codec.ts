@@ -1,7 +1,11 @@
 import type { CountryId } from '@/libs/countries';
 import { cloneAppHouseholdInputData } from './appCodec';
 import type { AppHouseholdInputData, HouseholdFieldValue } from './appTypes';
-import { buildGeneratedGroupName, GROUP_DEFINITIONS } from './schema';
+import {
+  buildGeneratedGroupName,
+  getV2GroupDefinitions,
+  type HouseholdGroupDefinition,
+} from './schema';
 import {
   flattenEntityValues,
   inferYearFromData,
@@ -15,14 +19,24 @@ import type {
   V2HouseholdEnvelope,
   V2HouseholdGroupData,
   V2HouseholdPersonData,
+  V2SupportedCountryId,
+  V2UKCreateHouseholdEnvelope,
+  V2UKHouseholdPersonData,
+  V2USCreateHouseholdEnvelope,
+  V2USHouseholdPersonData,
 } from './v2Types';
 
-function coerceV2GroupRows(
-  value: V2HouseholdEnvelope[keyof Pick<
-    V2HouseholdEnvelope,
-    'tax_unit' | 'family' | 'spm_unit' | 'marital_unit' | 'household' | 'benunit'
-  >]
-): V2HouseholdGroupData[] {
+function normalizeV2CountryId(countryId: string): V2SupportedCountryId {
+  const normalized = normalizeCountryId(countryId);
+
+  if (normalized !== 'us' && normalized !== 'uk') {
+    throw new Error(`V2 household country "${normalized}" is not supported`);
+  }
+
+  return normalized;
+}
+
+function coerceV2GroupRows(value: unknown): V2HouseholdGroupData[] {
   if (value == null) {
     return [];
   }
@@ -41,6 +55,7 @@ function coerceV2GroupRows(
 function buildAppPeopleFromV2Envelope(args: {
   people: V2HouseholdEnvelope['people'];
   year: number;
+  countryId: V2SupportedCountryId;
 }): {
   people: AppHouseholdInputData['people'];
   personNameById: Map<number, string>;
@@ -48,6 +63,7 @@ function buildAppPeopleFromV2Envelope(args: {
   const people: AppHouseholdInputData['people'] = {};
   const personNameById = new Map<number, string>();
   const usedNames = new Set<string>();
+  const groupDefinitions = getV2GroupDefinitions(args.countryId);
 
   for (const [index, rawPerson] of args.people.entries()) {
     const person = isRecord(rawPerson) ? rawPerson : {};
@@ -70,7 +86,7 @@ function buildAppPeopleFromV2Envelope(args: {
       omitRecordKeys(person, [
         'name',
         'person_id',
-        ...GROUP_DEFINITIONS.map((d) => d.personLinkKey),
+        ...groupDefinitions.map((definition) => definition.personLinkKey),
       ]),
       args.year
     );
@@ -125,10 +141,12 @@ function parseV2GroupCollection(args: {
   envelope: V2HouseholdEnvelope;
   peopleNames: string[];
   personNameById: Map<number, string>;
-  definition: (typeof GROUP_DEFINITIONS)[number];
+  definition: HouseholdGroupDefinition;
   year: number;
 }): AppHouseholdInputData[typeof args.definition.appKey] | undefined {
-  const groupRows = coerceV2GroupRows(args.envelope[args.definition.v2Key]);
+  const groupRows = coerceV2GroupRows(
+    (args.envelope as unknown as Record<string, unknown>)[args.definition.v2Key]
+  );
   if (groupRows.length === 0) {
     return undefined;
   }
@@ -193,22 +211,23 @@ function parseV2GroupCollection(args: {
 }
 
 export function parseV2HouseholdEnvelope(envelope: V2HouseholdEnvelope): {
-  countryId: CountryId;
+  countryId: V2SupportedCountryId;
   label: string | null;
   year: number;
   householdData: AppHouseholdInputData;
 } {
-  const countryId = normalizeCountryId(envelope.country_id);
+  const countryId = normalizeV2CountryId(envelope.country_id);
   const year = envelope.year;
   const { people, personNameById } = buildAppPeopleFromV2Envelope({
     people: envelope.people,
     year,
+    countryId,
   });
   const peopleNames = Object.keys(people);
 
   const householdData: AppHouseholdInputData = { people };
 
-  for (const definition of GROUP_DEFINITIONS) {
+  for (const definition of getV2GroupDefinitions(countryId)) {
     const parsedGroupCollection = parseV2GroupCollection({
       envelope,
       peopleNames,
@@ -233,6 +252,7 @@ export function parseV2HouseholdEnvelope(envelope: V2HouseholdEnvelope): {
 function buildV2PeopleFromAppInput(args: {
   householdData: AppHouseholdInputData;
   year: number;
+  countryId: V2SupportedCountryId;
 }): V2HouseholdPersonData[] {
   const personNames = Object.keys(args.householdData.people).sort((left, right) =>
     left.localeCompare(right)
@@ -240,7 +260,7 @@ function buildV2PeopleFromAppInput(args: {
   const personNameSet = new Set(personNames);
   const personAssignments = new Map<string, Record<string, number>>();
 
-  for (const definition of GROUP_DEFINITIONS) {
+  for (const definition of getV2GroupDefinitions(args.countryId)) {
     const groupMap = args.householdData[definition.appKey];
     if (!groupMap) {
       continue;
@@ -287,7 +307,7 @@ function buildV2GroupRowsFromAppInput(args: {
       'households' | 'families' | 'taxUnits' | 'spmUnits' | 'maritalUnits' | 'benunits'
     >]
   >;
-  definition: (typeof GROUP_DEFINITIONS)[number];
+  definition: HouseholdGroupDefinition;
   year: number;
 }): V2HouseholdGroupData[] {
   return Object.entries(args.groupMap)
@@ -300,6 +320,108 @@ function buildV2GroupRowsFromAppInput(args: {
         ...flattenEntityValues(groupValues, args.year),
       };
     });
+}
+
+function buildUSCreateEnvelope(args: {
+  label: string | null;
+  year: number;
+  householdData: AppHouseholdInputData;
+}): V2USCreateHouseholdEnvelope {
+  const envelope: V2USCreateHouseholdEnvelope = {
+    country_id: 'us',
+    year: args.year,
+    label: args.label,
+    people: buildV2PeopleFromAppInput({
+      householdData: args.householdData,
+      year: args.year,
+      countryId: 'us',
+    }) as V2USHouseholdPersonData[],
+    household: [],
+    marital_unit: [],
+    family: [],
+    spm_unit: [],
+    tax_unit: [],
+  };
+
+  for (const definition of getV2GroupDefinitions('us')) {
+    const groupMap = args.householdData[definition.appKey];
+    if (!groupMap) {
+      continue;
+    }
+
+    const groupRows = buildV2GroupRowsFromAppInput({
+      groupMap,
+      definition,
+      year: args.year,
+    });
+
+    switch (definition.v2Key) {
+      case 'household':
+        envelope.household = groupRows;
+        break;
+      case 'marital_unit':
+        envelope.marital_unit = groupRows;
+        break;
+      case 'family':
+        envelope.family = groupRows;
+        break;
+      case 'spm_unit':
+        envelope.spm_unit = groupRows;
+        break;
+      case 'tax_unit':
+        envelope.tax_unit = groupRows;
+        break;
+      default:
+        throw new Error(`Unsupported US v2 household group key "${definition.v2Key}"`);
+    }
+  }
+
+  return envelope;
+}
+
+function buildUKCreateEnvelope(args: {
+  label: string | null;
+  year: number;
+  householdData: AppHouseholdInputData;
+}): V2UKCreateHouseholdEnvelope {
+  const envelope: V2UKCreateHouseholdEnvelope = {
+    country_id: 'uk',
+    year: args.year,
+    label: args.label,
+    people: buildV2PeopleFromAppInput({
+      householdData: args.householdData,
+      year: args.year,
+      countryId: 'uk',
+    }) as V2UKHouseholdPersonData[],
+    household: [],
+    benunit: [],
+  };
+
+  for (const definition of getV2GroupDefinitions('uk')) {
+    const groupMap = args.householdData[definition.appKey];
+    if (!groupMap) {
+      continue;
+    }
+
+    const groupRows = buildV2GroupRowsFromAppInput({
+      groupMap,
+      definition,
+      year: args.year,
+    });
+
+    switch (definition.v2Key) {
+      case 'household':
+        envelope.household = groupRows;
+        break;
+      case 'benunit':
+        envelope.benunit = groupRows;
+        break;
+      default:
+        throw new Error(`Unsupported UK v2 household group key "${definition.v2Key}"`);
+    }
+  }
+
+  return envelope;
 }
 
 export function buildV2CreateEnvelope(args: {
@@ -315,34 +437,20 @@ export function buildV2CreateEnvelope(args: {
     throw new Error('Household requires a year to convert to a v2 create envelope');
   }
 
-  const envelope: V2CreateHouseholdEnvelope = {
-    country_id: normalizeCountryId(args.countryId),
-    year,
-    label: args.label,
-    people: buildV2PeopleFromAppInput({
-      householdData,
-      year,
-    }),
-    tax_unit: [],
-    family: [],
-    spm_unit: [],
-    marital_unit: [],
-    household: [],
-    benunit: [],
-  };
+  const countryId = normalizeV2CountryId(args.countryId);
 
-  for (const definition of GROUP_DEFINITIONS) {
-    const groupMap = householdData[definition.appKey];
-    if (!groupMap) {
-      continue;
-    }
-
-    envelope[definition.v2Key] = buildV2GroupRowsFromAppInput({
-      groupMap,
-      definition,
-      year,
-    });
+  switch (countryId) {
+    case 'us':
+      return buildUSCreateEnvelope({
+        label: args.label,
+        year,
+        householdData,
+      });
+    case 'uk':
+      return buildUKCreateEnvelope({
+        label: args.label,
+        year,
+        householdData,
+      });
   }
-
-  return envelope;
 }

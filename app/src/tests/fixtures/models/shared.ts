@@ -1,7 +1,7 @@
 import type { V2PolicyResponse, V2PolicyResponseParameterValue } from '@/api/policy';
 import type { CountryId } from '@/libs/countries';
 import type { AppHouseholdInputData } from '@/models/household/appTypes';
-import type { V2StoredHouseholdEnvelope } from '@/models/household/v2Types';
+import type { V2USStoredHouseholdEnvelope } from '@/models/household/v2Types';
 
 // ============================================================================
 // Test constants
@@ -180,10 +180,10 @@ export const createMockV2PolicyResponseNoParams = (
 // ============================================================================
 
 export const createMockHouseholdV2Response = (
-  overrides?: Partial<V2StoredHouseholdEnvelope>
-): V2StoredHouseholdEnvelope => ({
+  overrides?: Partial<V2USStoredHouseholdEnvelope>
+): V2USStoredHouseholdEnvelope => ({
   id: TEST_HOUSEHOLD_IDS.HOUSEHOLD_A,
-  country_id: TEST_COUNTRY_ID,
+  country_id: 'us',
   year: 2026,
   label: 'My v2 household',
   people: [
@@ -213,15 +213,14 @@ export const createMockHouseholdV2Response = (
   spm_unit: [{ spm_unit_id: 0 }],
   marital_unit: [{ marital_unit_id: 0 }],
   household: [{ household_id: 0 }],
-  benunit: [],
   created_at: TEST_TIMESTAMP,
   updated_at: TEST_UPDATED_TIMESTAMP,
   ...overrides,
 });
 
 export const createMockHouseholdV2ResponseMinimal = (
-  overrides?: Partial<V2StoredHouseholdEnvelope>
-): V2StoredHouseholdEnvelope =>
+  overrides?: Partial<V2USStoredHouseholdEnvelope>
+): V2USStoredHouseholdEnvelope =>
   createMockHouseholdV2Response({
     people: [{ name: 'single_adult', age: 30 }],
     tax_unit: [],
@@ -229,7 +228,6 @@ export const createMockHouseholdV2ResponseMinimal = (
     spm_unit: [],
     marital_unit: [],
     household: [],
-    benunit: [],
     ...overrides,
   });
 

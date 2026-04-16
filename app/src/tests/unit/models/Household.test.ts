@@ -318,7 +318,6 @@ describe('Household', () => {
           household: [{ household_id: 0 }, { household_id: 1 }],
           family: [],
           spm_unit: [],
-          benunit: [],
         })
       );
 
@@ -389,7 +388,6 @@ describe('Household', () => {
           spm_unit: [],
           marital_unit: [],
           household: [{ state_name: 'CA' }],
-          benunit: [],
         })
       );
 
@@ -429,7 +427,6 @@ describe('Household', () => {
             spm_unit: [],
             marital_unit: [],
             household: [],
-            benunit: [],
           })
         )
       ).toThrow('V2 household tax_unit is missing numeric tax_unit_id');
@@ -458,7 +455,6 @@ describe('Household', () => {
             family: [],
             spm_unit: [],
             marital_unit: [],
-            benunit: [],
           })
         )
       ).toThrow('Duplicate person name "adult" in v2 household response');
@@ -592,7 +588,6 @@ describe('Household', () => {
         spm_unit: [{ spm_unit_id: 0 }],
         tax_unit: [{ tax_unit_id: 0 }],
         marital_unit: [],
-        benunit: [],
       });
     });
 
@@ -638,7 +633,42 @@ describe('Household', () => {
         spm_unit: [{ spm_unit_id: 0 }],
         tax_unit: [{ tax_unit_id: 0 }],
         marital_unit: [],
-        benunit: [],
+      });
+    });
+
+    it('emits only UK household and benunit groups for UK v2 envelopes', () => {
+      const household = Household.fromDraft({
+        countryId: 'uk',
+        year: 2026,
+        householdData: {
+          people: {
+            adult: { age: { 2026: 35 }, employment_income: { 2026: 50000 } },
+          },
+          households: {
+            household1: { members: ['adult'] },
+          },
+          benunits: {
+            benunit1: { members: ['adult'] },
+          },
+        },
+      });
+
+      expect(household.toV2CreateEnvelope()).toEqual({
+        country_id: 'uk',
+        year: 2026,
+        label: null,
+        people: [
+          {
+            name: 'adult',
+            person_id: 0,
+            person_household_id: 0,
+            person_benunit_id: 0,
+            age: 35,
+            employment_income: 50000,
+          },
+        ],
+        household: [{ household_id: 0 }],
+        benunit: [{ benunit_id: 0 }],
       });
     });
 
@@ -660,7 +690,13 @@ describe('Household', () => {
         },
       });
 
-      expect(household.toV2CreateEnvelope().marital_unit).toEqual([
+      const envelope = household.toV2CreateEnvelope();
+
+      expect(envelope.country_id).toBe('us');
+      if (envelope.country_id !== 'us') {
+        throw new Error('Expected US v2 envelope');
+      }
+      expect(envelope.marital_unit).toEqual([
         { marital_unit_id: 0 },
         { marital_unit_id: 1 },
         { marital_unit_id: 2 },
@@ -678,7 +714,6 @@ describe('Household', () => {
         year: 2026,
         label: TEST_HOUSEHOLD_LABEL,
         data: {
-          benunit: [],
           family: [{ family_id: 0 }],
           household: [{ household_id: 0 }],
           marital_unit: [],

@@ -22,6 +22,8 @@ export type HouseholdGroupV2Key =
   | 'marital_unit'
   | 'benunit';
 
+export type V2CountryId = 'us' | 'uk';
+
 export interface HouseholdGroupDefinition {
   appKey: HouseholdGroupAppKey;
   v1Key: HouseholdGroupV1Key;
@@ -82,6 +84,16 @@ export const GROUP_DEFINITIONS: readonly HouseholdGroupDefinition[] = [
   },
 ] as const;
 
+export const V2_GROUP_DEFINITIONS_BY_COUNTRY: Record<
+  V2CountryId,
+  readonly HouseholdGroupDefinition[]
+> = {
+  us: GROUP_DEFINITIONS.filter((definition) => definition.appKey !== 'benunits'),
+  uk: GROUP_DEFINITIONS.filter(
+    (definition) => definition.appKey === 'households' || definition.appKey === 'benunits'
+  ),
+};
+
 const GROUP_DEFINITION_BY_APP_KEY = new Map(
   GROUP_DEFINITIONS.map((definition) => [definition.appKey, definition])
 );
@@ -114,4 +126,8 @@ export function getGroupDefinitionByV1Key(key: string): HouseholdGroupDefinition
 
 export function buildGeneratedGroupName(prefix: string, index: number): string {
   return `${prefix}${index + 1}`;
+}
+
+export function getV2GroupDefinitions(countryId: V2CountryId): readonly HouseholdGroupDefinition[] {
+  return V2_GROUP_DEFINITIONS_BY_COUNTRY[countryId];
 }

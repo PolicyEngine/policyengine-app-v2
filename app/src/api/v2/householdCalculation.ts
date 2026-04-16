@@ -10,10 +10,13 @@
 import type {
   V2CreateHouseholdEnvelope,
   V2HouseholdCalculationPayload,
+  V2HouseholdCalculationResult,
   V2HouseholdEnvelope,
-  V2HouseholdGroupData,
-  V2HouseholdPersonData,
   V2StoredHouseholdEnvelope,
+  V2UKCreateHouseholdEnvelope,
+  V2UKHouseholdCalculationResult,
+  V2USCreateHouseholdEnvelope,
+  V2USHouseholdCalculationResult,
 } from '@/models/household/v2Types';
 import { API_V2_BASE_URL } from './taxBenefitModels';
 import { cancellableSleep, v2Fetch } from './v2Fetch';
@@ -21,25 +24,38 @@ import { cancellableSleep, v2Fetch } from './v2Fetch';
 export type { V2CreateHouseholdEnvelope, V2StoredHouseholdEnvelope };
 
 export type HouseholdCalculatePayload = V2HouseholdCalculationPayload;
+export type HouseholdCalculationResult = V2HouseholdCalculationResult;
 
 function householdToCalculatePayload(
   household: V2HouseholdEnvelope,
   policyId?: string,
   dynamicId?: string
 ): HouseholdCalculatePayload {
-  return {
-    country_id: household.country_id,
-    year: household.year,
-    people: household.people,
-    tax_unit: household.tax_unit,
-    family: household.family,
-    spm_unit: household.spm_unit,
-    marital_unit: household.marital_unit,
-    household: household.household,
-    benunit: household.benunit,
-    policy_id: policyId,
-    dynamic_id: dynamicId,
-  };
+  switch (household.country_id) {
+    case 'us':
+      return {
+        country_id: 'us',
+        year: household.year,
+        people: household.people,
+        tax_unit: household.tax_unit,
+        family: household.family,
+        spm_unit: household.spm_unit,
+        marital_unit: household.marital_unit,
+        household: household.household,
+        policy_id: policyId,
+        dynamic_id: dynamicId,
+      };
+    case 'uk':
+      return {
+        country_id: 'uk',
+        year: household.year,
+        people: household.people,
+        household: household.household,
+        benunit: household.benunit,
+        policy_id: policyId,
+        dynamic_id: dynamicId,
+      };
+  }
 }
 
 // ============================================================================
@@ -64,19 +80,6 @@ export interface HouseholdJobStatusResponse {
   status: HouseholdJobStatus;
   result: HouseholdCalculationResult | null;
   error_message: string | null;
-}
-
-/**
- * Calculation result structure from v2 alpha
- */
-export interface HouseholdCalculationResult {
-  person: V2HouseholdPersonData[];
-  benunit?: V2HouseholdGroupData[] | null;
-  marital_unit?: V2HouseholdGroupData[] | null;
-  family?: V2HouseholdGroupData[] | null;
-  spm_unit?: V2HouseholdGroupData[] | null;
-  tax_unit?: V2HouseholdGroupData[] | null;
-  household: V2HouseholdGroupData[];
 }
 
 // ============================================================================
@@ -182,18 +185,29 @@ export function calculationResultToHousehold(
   result: HouseholdCalculationResult,
   originalHousehold: V2HouseholdEnvelope
 ): V2CreateHouseholdEnvelope {
-  return {
-    country_id: originalHousehold.country_id,
-    year: originalHousehold.year,
-    label: originalHousehold.label,
-    people: result.person,
-    tax_unit: result.tax_unit ?? [],
-    family: result.family ?? [],
-    spm_unit: result.spm_unit ?? [],
-    marital_unit: result.marital_unit ?? [],
-    household: result.household ?? [],
-    benunit: result.benunit ?? [],
-  };
+  switch (originalHousehold.country_id) {
+    case 'us':
+      return {
+        country_id: 'us',
+        year: originalHousehold.year,
+        label: originalHousehold.label,
+        people: (result as V2USHouseholdCalculationResult).person,
+        tax_unit: (result as V2USHouseholdCalculationResult).tax_unit ?? [],
+        family: (result as V2USHouseholdCalculationResult).family ?? [],
+        spm_unit: (result as V2USHouseholdCalculationResult).spm_unit ?? [],
+        marital_unit: (result as V2USHouseholdCalculationResult).marital_unit ?? [],
+        household: (result as V2USHouseholdCalculationResult).household ?? [],
+      } satisfies V2USCreateHouseholdEnvelope;
+    case 'uk':
+      return {
+        country_id: 'uk',
+        year: originalHousehold.year,
+        label: originalHousehold.label,
+        people: (result as V2UKHouseholdCalculationResult).person,
+        household: (result as V2UKHouseholdCalculationResult).household ?? [],
+        benunit: (result as V2UKHouseholdCalculationResult).benunit ?? [],
+      } satisfies V2UKCreateHouseholdEnvelope;
+  }
 }
 
 /**

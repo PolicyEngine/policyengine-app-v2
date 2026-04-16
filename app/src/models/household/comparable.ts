@@ -6,15 +6,21 @@ export function buildComparableHousehold(args: {
   id: string;
   envelope: V2CreateHouseholdEnvelope;
 }): ComparableHousehold {
-  const comparableData = {
-    people: args.envelope.people,
-    tax_unit: args.envelope.tax_unit,
-    family: args.envelope.family,
-    spm_unit: args.envelope.spm_unit,
-    marital_unit: args.envelope.marital_unit,
-    household: args.envelope.household,
-    benunit: args.envelope.benunit,
-  };
+  const comparableData =
+    args.envelope.country_id === 'us'
+      ? {
+          people: args.envelope.people,
+          tax_unit: args.envelope.tax_unit,
+          family: args.envelope.family,
+          spm_unit: args.envelope.spm_unit,
+          marital_unit: args.envelope.marital_unit,
+          household: args.envelope.household,
+        }
+      : {
+          people: args.envelope.people,
+          household: args.envelope.household,
+          benunit: args.envelope.benunit,
+        };
 
   return {
     id: args.id,

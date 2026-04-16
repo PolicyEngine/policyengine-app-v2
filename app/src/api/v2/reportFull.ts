@@ -19,6 +19,7 @@ import {
   SimulationInfo,
 } from '@/api/v2/economyAnalysis';
 import { HouseholdImpactResponse } from '@/api/v2/householdAnalysis';
+import type { V2StoredHouseholdEnvelope } from '@/models/household/v2Types';
 import { API_V2_BASE_URL } from './taxBenefitModels';
 import { v2Fetch } from './v2Fetch';
 
@@ -38,29 +39,13 @@ export interface ReportReadResponse {
   created_at: string;
 }
 
-export interface HouseholdReadResponse {
-  id: string;
-  country_id: string;
-  year: number;
-  label: string | null;
-  people: Record<string, unknown>[];
-  tax_unit?: Record<string, unknown> | null;
-  family?: Record<string, unknown> | null;
-  spm_unit?: Record<string, unknown> | null;
-  marital_unit?: Record<string, unknown> | null;
-  household?: Record<string, unknown> | null;
-  benunit?: Record<string, unknown> | null;
-  created_at: string;
-  updated_at: string;
-}
-
 export interface ReportFullResponse {
   report: ReportReadResponse;
   baseline_simulation: SimulationInfo | null;
   reform_simulation: SimulationInfo | null;
   baseline_policy: V2PolicyResponse | null;
   reform_policy: V2PolicyResponse | null;
-  household: HouseholdReadResponse | null;
+  household: V2StoredHouseholdEnvelope | null;
   region: AnalysisRegionInfo | null;
   economic_impact: EconomicImpactResponse | null;
   household_impact: HouseholdImpactResponse | null;

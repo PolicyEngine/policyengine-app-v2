@@ -5,11 +5,13 @@ import {
   getHouseholdCalculationJobStatusV2,
   pollHouseholdCalculationJobV2,
   type HouseholdCalculatePayload,
+  type HouseholdCalculationResult,
   type V2CreateHouseholdEnvelope,
 } from '@/api/v2/householdCalculation';
 import {
   createMockHouseholdJobResponse,
   createMockHouseholdJobStatusResponse,
+  createMockUkV2CreateHouseholdEnvelope,
   createMockV2CreateHouseholdEnvelope,
   mockFetch404,
   mockFetchError,
@@ -30,16 +32,15 @@ describe('householdCalculation v2 API', () => {
   // ==========================================================================
 
   describe('calculationResultToHousehold', () => {
-    test('given result arrays then preserves the plural household shape', () => {
+    test('given US result arrays then preserves only the US household shape', () => {
       // Given
-      const result = {
+      const result: HouseholdCalculationResult = {
         person: [{ net_income: 45000 }],
         household: [{ total_tax: 5000 }],
         tax_unit: [{ income_tax: 3000 }],
         family: [{ benefits: 200 }],
         spm_unit: [{ poverty_gap: 0 }],
         marital_unit: [{ filing_status: 'single' }],
-        benunit: [{ uc_amount: 100 }],
       };
       const original = createMockV2CreateHouseholdEnvelope();
 
@@ -47,44 +48,45 @@ describe('householdCalculation v2 API', () => {
       const household = calculationResultToHousehold(result, original);
 
       // Then
+      expect(household.country_id).toBe('us');
+      if (household.country_id !== 'us') {
+        throw new Error('Expected US household envelope');
+      }
       expect(household.people).toEqual([{ net_income: 45000 }]);
       expect(household.household).toEqual([{ total_tax: 5000 }]);
       expect(household.tax_unit).toEqual([{ income_tax: 3000 }]);
       expect(household.family).toEqual([{ benefits: 200 }]);
       expect(household.spm_unit).toEqual([{ poverty_gap: 0 }]);
       expect(household.marital_unit).toEqual([{ filing_status: 'single' }]);
-      expect(household.benunit).toEqual([{ uc_amount: 100 }]);
+      expect('benunit' in household).toBe(false);
     });
 
-    test('given result then preserves country_id and year from original household', () => {
+    test('given UK result then preserves only the UK household shape', () => {
       // Given
-      const result = {
+      const result: HouseholdCalculationResult = {
         person: [{ net_income: 45000 }],
         household: [{ total_tax: 5000 }],
+        benunit: [{ uc_amount: 100 }],
       };
-      const original: V2CreateHouseholdEnvelope = {
-        country_id: 'uk',
-        year: 2025,
-        label: 'Original household',
-        people: [{ age: 40 }],
-        tax_unit: [],
-        family: [],
-        spm_unit: [],
-        marital_unit: [],
-        household: [],
-        benunit: [],
-      };
+      const original: V2CreateHouseholdEnvelope = createMockUkV2CreateHouseholdEnvelope();
 
       // When
       const household = calculationResultToHousehold(result, original);
 
       // Then
       expect(household.country_id).toBe('uk');
-      expect(household.year).toBe(2025);
-      expect(household.label).toBe('Original household');
+      if (household.country_id !== 'uk') {
+        throw new Error('Expected UK household envelope');
+      }
+      expect(household.household).toEqual([{ total_tax: 5000 }]);
+      expect(household.benunit).toEqual([{ uc_amount: 100 }]);
+      expect('tax_unit' in household).toBe(false);
+      expect('family' in household).toBe(false);
+      expect('spm_unit' in household).toBe(false);
+      expect('marital_unit' in household).toBe(false);
     });
 
-    test('given null optional arrays then maps them to empty arrays', () => {
+    test('given null optional US arrays then maps them to empty arrays', () => {
       // Given
       const result = {
         person: [{ net_income: 45000 }],
@@ -101,11 +103,14 @@ describe('householdCalculation v2 API', () => {
       const household = calculationResultToHousehold(result as any, original);
 
       // Then
+      expect(household.country_id).toBe('us');
+      if (household.country_id !== 'us') {
+        throw new Error('Expected US household envelope');
+      }
       expect(household.tax_unit).toEqual([]);
       expect(household.family).toEqual([]);
       expect(household.spm_unit).toEqual([]);
       expect(household.marital_unit).toEqual([]);
-      expect(household.benunit).toEqual([]);
     });
   });
 
@@ -125,7 +130,6 @@ describe('householdCalculation v2 API', () => {
         spm_unit: [],
         marital_unit: [],
         household: [],
-        benunit: [],
       };
       const jobResponse = createMockHouseholdJobResponse();
       vi.stubGlobal('fetch', mockFetchSuccess(jobResponse));
@@ -161,7 +165,6 @@ describe('householdCalculation v2 API', () => {
         spm_unit: [],
         marital_unit: [],
         household: [],
-        benunit: [],
       };
       vi.stubGlobal('fetch', mockFetchError(422, 'Validation error'));
 
@@ -169,6 +172,29 @@ describe('householdCalculation v2 API', () => {
       await expect(createHouseholdCalculationJobV2(payload)).rejects.toThrow(
         'createHouseholdCalculationJobV2: 422 Validation error'
       );
+    });
+  });
+
+  describe('createHouseholdCalculationJobV2 with UK payload', () => {
+    test('given valid UK payload then POST omits US-only entity groups', async () => {
+      const payload: HouseholdCalculatePayload = {
+        country_id: 'uk',
+        year: 2026,
+        people: [{ age: 30, employment_income: 50000 }],
+        household: [{ household_id: 0 }],
+        benunit: [{ benunit_id: 0 }],
+      };
+      const jobResponse = createMockHouseholdJobResponse();
+      vi.stubGlobal('fetch', mockFetchSuccess(jobResponse));
+
+      await createHouseholdCalculationJobV2(payload);
+
+      const requestInit = vi.mocked(fetch).mock.calls[0][1] as RequestInit;
+      expect(requestInit.body).toBe(JSON.stringify(payload));
+      expect(requestInit.body).not.toContain('tax_unit');
+      expect(requestInit.body).not.toContain('family');
+      expect(requestInit.body).not.toContain('spm_unit');
+      expect(requestInit.body).not.toContain('marital_unit');
     });
   });
 
