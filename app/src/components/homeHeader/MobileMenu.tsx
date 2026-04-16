@@ -1,5 +1,5 @@
 import { IconMenu2 } from '@tabler/icons-react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import CountrySelector from './CountrySelector';
 import { NavItemSetup } from './NavItem';
@@ -32,10 +32,18 @@ export default function MobileMenu({ opened, onOpen, onClose, navItems }: Mobile
         <SheetContent
           side="right"
           className="tw:w-[300px]"
-          style={{ backgroundColor: colors.primary[600] }}
+          style={{
+            backgroundColor: colors.primary[600],
+            width: 'min(300px, calc(100vw - 24px))',
+            maxWidth: '100vw',
+            boxSizing: 'border-box',
+          }}
         >
           <SheetHeader>
             <SheetTitle className="tw:text-white">Menu</SheetTitle>
+            <SheetDescription className="tw:sr-only">
+              Mobile site navigation and country selector links.
+            </SheetDescription>
           </SheetHeader>
           <div className="tw:flex tw:flex-col" style={{ gap: spacing.lg, padding: spacing.lg }}>
             {navItems.map((item) =>
