@@ -1,5 +1,4 @@
 import type { CountryId } from '@/libs/countries';
-import type { HouseholdGroupAppKey } from './schema';
 
 export type HouseholdScalar = string | number | boolean | null;
 export type CanonicalYearValueMap = Record<string, HouseholdScalar>;
@@ -64,27 +63,6 @@ export interface CanonicalHouseholdSetup {
   spmUnit?: CanonicalGroupSetup | undefined;
   maritalUnit?: CanonicalGroupSetup | undefined;
   benunit?: CanonicalGroupSetup | undefined;
-}
-
-export type CanonicalStructuredEntityValues = CanonicalFieldMap;
-
-export interface CanonicalStructuredGroup {
-  name: string;
-  members: string[];
-  values: CanonicalStructuredEntityValues;
-}
-
-export interface CanonicalStructuredHouseholdData {
-  people: Record<string, CanonicalStructuredEntityValues>;
-  groups: Partial<Record<HouseholdGroupAppKey, CanonicalStructuredGroup>>;
-}
-
-export interface CanonicalStructuredHouseholdState {
-  id: string;
-  countryId: CountryId;
-  label: string | null;
-  year: number | null;
-  data: CanonicalStructuredHouseholdData;
 }
 
 export interface HouseholdModelData {

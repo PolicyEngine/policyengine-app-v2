@@ -8,6 +8,18 @@ import type {
   HouseholdYearMap,
 } from '@/types/ingredients/Household';
 
+const LEGACY_DEFAULT_GROUP_NAME_BY_ENTITY: Record<string, string> = {
+  households: 'your household',
+  families: 'your family',
+  taxUnits: 'your tax unit',
+  tax_units: 'your tax unit',
+  spmUnits: 'your household',
+  spm_units: 'your household',
+  maritalUnits: 'your marital unit',
+  marital_units: 'your marital unit',
+  benunits: 'your benefit unit',
+};
+
 export function isHouseholdYearMap(value: unknown): value is HouseholdYearMap {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
@@ -46,6 +58,29 @@ export function getHouseholdGroupCollection(
     default:
       return undefined;
   }
+}
+
+export function getPreferredHouseholdGroupName(
+  householdData: HouseholdData,
+  entityName: string
+): string | undefined {
+  const groups = getHouseholdGroupCollection(householdData, entityName);
+  const legacyDefaultName = LEGACY_DEFAULT_GROUP_NAME_BY_ENTITY[entityName];
+
+  if (!groups) {
+    return legacyDefaultName;
+  }
+
+  const groupNames = Object.keys(groups);
+  if (groupNames.length === 0) {
+    return legacyDefaultName;
+  }
+
+  if (legacyDefaultName && legacyDefaultName in groups) {
+    return legacyDefaultName;
+  }
+
+  return [...groupNames].sort((left, right) => left.localeCompare(right))[0];
 }
 
 export function ensureHouseholdGroupCollection(

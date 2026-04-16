@@ -81,6 +81,30 @@ describe('Household', () => {
       expect(household.label).toBe(TEST_HOUSEHOLD_LABEL);
     });
 
+    it('preserves plural app household data when changing ids or labels', () => {
+      const household = createHousehold({
+        data: {
+          people: {
+            adult: { age: { 2026: 35 } },
+            child: { age: { 2026: 8 } },
+            childTwo: { age: { 2026: 6 } },
+          },
+          maritalUnits: {
+            maritalUnit1: { members: ['adult'] },
+            maritalUnit2: { members: ['child'] },
+            maritalUnit3: { members: ['childTwo'] },
+          },
+        },
+      });
+
+      expect(household.withId('new-id').householdData.maritalUnits).toEqual(
+        household.householdData.maritalUnits
+      );
+      expect(household.withLabel('Renamed household').householdData.maritalUnits).toEqual(
+        household.householdData.maritalUnits
+      );
+    });
+
     it('preserves multiple groups of the same type in the app household shape', () => {
       const household = createHousehold({
         data: {
@@ -163,7 +187,7 @@ describe('Household', () => {
   });
 
   describe('fromCanonical', () => {
-    it('stores only the canonical setup internally and still exposes the app household shape', () => {
+    it('builds the app household shape from a canonical setup', () => {
       const household = Household.fromCanonical(
         {
           countryId: 'us',

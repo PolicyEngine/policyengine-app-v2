@@ -5,12 +5,9 @@ import type {
   CanonicalGroupSetup,
   CanonicalGroupSetupKey,
   CanonicalHouseholdSetup,
-  CanonicalStructuredEntityValues,
-  CanonicalStructuredHouseholdData,
-  CanonicalStructuredHouseholdState,
   HouseholdScalar,
 } from './canonicalTypes';
-import { buildGeneratedGroupName, GROUP_DEFINITIONS, type HouseholdGroupAppKey } from './schema';
+import { GROUP_DEFINITIONS, type HouseholdGroupAppKey } from './schema';
 
 export const SETUP_KEY_BY_APP_KEY: Record<HouseholdGroupAppKey, CanonicalGroupSetupKey> = {
   households: 'household',
@@ -198,96 +195,6 @@ export function normalizeCanonicalSetup(setup: CanonicalHouseholdSetup): Canonic
   return normalized;
 }
 
-export function buildCanonicalSetupFromStructuredState(args: {
-  countryId: CountryId;
-  label: string | null;
-  year: number | null;
-  data: CanonicalStructuredHouseholdData;
-}): CanonicalHouseholdSetup {
-  const setup: CanonicalHouseholdSetup = {
-    countryId: normalizeCountryId(args.countryId),
-    label: args.label ?? null,
-    year: args.year ?? inferYearFromData(args.data),
-    people: Object.fromEntries(
-      Object.entries(args.data.people).map(([personName, values]) => [
-        personName,
-        {
-          values: normalizeCanonicalFieldMap(values, `Canonical household person "${personName}"`),
-        },
-      ])
-    ),
-  };
-  const peopleNames = new Set(Object.keys(setup.people));
-
-  for (const definition of GROUP_DEFINITIONS) {
-    const group = args.data.groups[definition.appKey];
-    if (!group) {
-      continue;
-    }
-
-    setCanonicalGroupSetup(
-      setup,
-      definition.appKey,
-      normalizeCanonicalGroupSetup({
-        group: {
-          name: group.name,
-          members: group.members,
-          values: group.values,
-        },
-        groupLabel: `Canonical household ${definition.appKey}`,
-        peopleNames,
-      })
-    );
-  }
-
-  return normalizeCanonicalSetup(setup);
-}
-
-export function buildStructuredHouseholdDataFromCanonicalSetup(
-  setup: CanonicalHouseholdSetup
-): CanonicalStructuredHouseholdData {
-  const normalizedSetup = normalizeCanonicalSetup(setup);
-  const groups: CanonicalStructuredHouseholdData['groups'] = {};
-
-  for (const definition of GROUP_DEFINITIONS) {
-    const group = getCanonicalGroupSetup(normalizedSetup, definition.appKey);
-    if (!group) {
-      continue;
-    }
-
-    groups[definition.appKey] = {
-      name: group.name ?? buildGeneratedGroupName(definition.generatedKeyPrefix, 0),
-      members: cloneValue(group.members),
-      values: cloneValue(group.values),
-    };
-  }
-
-  return {
-    people: Object.fromEntries(
-      Object.entries(normalizedSetup.people).map(([personName, person]) => [
-        personName,
-        cloneValue(person.values),
-      ])
-    ),
-    groups,
-  };
-}
-
-export function buildStructuredStateFromCanonicalSetup(args: {
-  id: string;
-  setup: CanonicalHouseholdSetup;
-}): CanonicalStructuredHouseholdState {
-  const normalizedSetup = normalizeCanonicalSetup(args.setup);
-
-  return {
-    id: args.id,
-    countryId: normalizedSetup.countryId,
-    label: normalizedSetup.label,
-    year: normalizedSetup.year,
-    data: buildStructuredHouseholdDataFromCanonicalSetup(normalizedSetup),
-  };
-}
-
 export function inferYearFromData(value: unknown): number | null {
   const years = new Set<number>();
 
@@ -341,7 +248,7 @@ export function wrapForYear(value: HouseholdScalar, year: number): Record<string
 }
 
 export function flattenEntityValues(
-  values: CanonicalStructuredEntityValues,
+  values: CanonicalFieldMap,
   preferredYear: number | null
 ): Record<string, HouseholdScalar> {
   const flattened: Record<string, HouseholdScalar> = {};
@@ -359,8 +266,8 @@ export function flattenEntityValues(
 export function wrapEntityValuesForYear(
   values: Record<string, unknown>,
   year: number
-): CanonicalStructuredEntityValues {
-  const wrapped: CanonicalStructuredEntityValues = {};
+): CanonicalFieldMap {
+  const wrapped: CanonicalFieldMap = {};
 
   for (const [key, value] of Object.entries(values)) {
     if (value === undefined) {

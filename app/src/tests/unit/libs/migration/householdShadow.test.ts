@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { createHouseholdV2 } from '@/api/v2';
 import {
   createUserHouseholdAssociationV2,
+  fetchUserHouseholdAssociationByIdV2,
   updateUserHouseholdAssociationV2,
 } from '@/api/v2/userHouseholdAssociations';
 import { logMigrationComparison } from '@/libs/migration/comparisonLogger';
@@ -24,6 +25,7 @@ vi.mock('@/api/v2', () => ({
 
 vi.mock('@/api/v2/userHouseholdAssociations', () => ({
   createUserHouseholdAssociationV2: vi.fn(),
+  fetchUserHouseholdAssociationByIdV2: vi.fn(),
   updateUserHouseholdAssociationV2: vi.fn(),
 }));
 
@@ -104,6 +106,7 @@ describe('householdShadow', () => {
       updatedAt: '2026-04-09T12:00:02Z',
       isCreated: true,
     });
+    vi.mocked(fetchUserHouseholdAssociationByIdV2).mockResolvedValue(null);
   });
 
   test('given successful v2 household create then it stores household and user-household mappings', async () => {
@@ -231,6 +234,63 @@ describe('householdShadow', () => {
       expect.any(Object),
       expect.any(Object),
       { skipFields: ['id', 'createdAt', 'updatedAt', 'isCreated'] }
+    );
+  });
+
+  test('given missing association mapping but existing v2 association then it recovers the mapping and updates', async () => {
+    setV2Id('Household', TEST_V1_HOUSEHOLD_ID, TEST_V2_HOUSEHOLD_ID);
+    vi.mocked(fetchUserHouseholdAssociationByIdV2).mockResolvedValue({
+      ...v1Association,
+      id: TEST_V2_ASSOC_ID,
+      userId: TEST_V2_USER_ID,
+      householdId: TEST_V2_HOUSEHOLD_ID,
+    });
+
+    await shadowUpdateUserHouseholdAssociation(v1Association);
+
+    expect(fetchUserHouseholdAssociationByIdV2).toHaveBeenCalledWith(
+      TEST_V2_USER_ID,
+      TEST_V2_HOUSEHOLD_ID
+    );
+    expect(getV2Id('UserHousehold', TEST_V1_ASSOC_ID)).toBe(TEST_V2_ASSOC_ID);
+    expect(updateUserHouseholdAssociationV2).toHaveBeenCalledWith(TEST_V2_ASSOC_ID, {
+      label: 'My household',
+      householdId: TEST_V2_HOUSEHOLD_ID,
+    });
+  });
+
+  test('given missing association mapping and no existing v2 association then it recreates the v2 association', async () => {
+    setV2Id('Household', TEST_V1_HOUSEHOLD_ID, TEST_V2_HOUSEHOLD_ID);
+
+    await shadowUpdateUserHouseholdAssociation(v1Association);
+
+    expect(fetchUserHouseholdAssociationByIdV2).toHaveBeenCalledWith(
+      TEST_V2_USER_ID,
+      TEST_V2_HOUSEHOLD_ID
+    );
+    expect(createUserHouseholdAssociationV2).toHaveBeenCalledWith({
+      userId: TEST_V2_USER_ID,
+      householdId: TEST_V2_HOUSEHOLD_ID,
+      countryId: TEST_COUNTRY_ID,
+      label: 'My household',
+    });
+    expect(updateUserHouseholdAssociationV2).not.toHaveBeenCalled();
+    expect(getV2Id('UserHousehold', TEST_V1_ASSOC_ID)).toBe(TEST_V2_ASSOC_ID);
+  });
+
+  test('given missing household mapping then it logs a skipped update instead of silently returning', async () => {
+    await shadowUpdateUserHouseholdAssociation(v1Association);
+
+    expect(fetchUserHouseholdAssociationByIdV2).not.toHaveBeenCalled();
+    expect(updateUserHouseholdAssociationV2).not.toHaveBeenCalled();
+    expect(sendMigrationLog).toHaveBeenCalledWith(
+      expect.objectContaining({
+        kind: 'event',
+        prefix: 'UserHouseholdMigration',
+        operation: 'UPDATE',
+        status: 'SKIPPED',
+        message: 'Shadow v2 update skipped: missing mapped v2 household id',
+      })
     );
   });
 });

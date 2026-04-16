@@ -17,7 +17,6 @@ import {
   GROUP_DEFINITIONS,
   KNOWN_APP_ENTITY_KEYS,
   KNOWN_V1_ENTITY_KEYS,
-  type HouseholdGroupAppKey,
 } from './schema';
 import {
   cloneValue,
@@ -94,14 +93,6 @@ export function cloneAppHouseholdInputData(
   }
 
   return cloneValue(householdData);
-}
-
-export function countAppHouseholdGroups(
-  householdData: CanonicalHouseholdInputData,
-  appKey: HouseholdGroupAppKey
-): number {
-  const groupMap = householdData[appKey];
-  return groupMap ? Object.keys(groupMap).length : 0;
 }
 
 export function buildAppHouseholdData(setup: CanonicalHouseholdSetup): CanonicalHouseholdInputData {
