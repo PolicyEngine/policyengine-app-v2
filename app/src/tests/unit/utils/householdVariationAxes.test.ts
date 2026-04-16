@@ -1,8 +1,8 @@
 import { describe, expect, test } from 'vitest';
 import {
-  HOUSEHOLD_VARIATION_POINT_COUNT,
   buildHouseholdVariationAxes,
   getHouseholdVariationIndexForEarnings,
+  HOUSEHOLD_VARIATION_POINT_COUNT,
 } from '@/utils/householdVariationAxes';
 
 const YEAR = '2026';

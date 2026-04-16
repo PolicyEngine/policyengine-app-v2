@@ -26,15 +26,15 @@ import {
   getYAxisLayout,
   RECHARTS_FONT_STYLE,
 } from '@/utils/chartUtils';
+import { formatChartValueForVariable } from '@/utils/chartValueFormatting';
 import { currencySymbol } from '@/utils/formatters';
 import { getHeadOfHouseholdPersonName } from '@/utils/householdHead';
+import { getValueFromHousehold } from '@/utils/householdValues';
 import {
   buildHouseholdVariationEarningsAxis,
   getHouseholdVariationIndexForEarnings,
   getHouseholdVariationMaxEarnings,
 } from '@/utils/householdVariationAxes';
-import { formatChartValueForVariable } from '@/utils/chartValueFormatting';
-import { getValueFromHousehold } from '@/utils/householdValues';
 
 interface Props {
   baseline: Household;
@@ -91,8 +91,7 @@ export default function BaselineOnlyChart({
       return null;
     }
 
-    const resolvedFocusPersonName =
-      focusPersonName ?? getHeadOfHouseholdPersonName(baseline, year);
+    const resolvedFocusPersonName = focusPersonName ?? getHeadOfHouseholdPersonName(baseline, year);
     const currentEarnings = getValueFromHousehold(
       'employment_income',
       year,
@@ -134,8 +133,7 @@ export default function BaselineOnlyChart({
   }
 
   const symbol = currencySymbol(countryId);
-  const formatValue = (value: number) =>
-    formatChartValueForVariable(value, variable, countryId);
+  const formatValue = (value: number) => formatChartValueForVariable(value, variable, countryId);
   const yAxis = getYAxisLayout(chartSeries.yTicks, true, formatValue);
   const chartMargin = { top: 20, right: 20, bottom: 80, left: yAxis.marginLeft };
 

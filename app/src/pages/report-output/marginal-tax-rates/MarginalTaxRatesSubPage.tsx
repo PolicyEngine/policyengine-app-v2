@@ -37,12 +37,12 @@ import {
 } from '@/utils/chartUtils';
 import { currencySymbol } from '@/utils/formatters';
 import { getHeadOfHouseholdPersonName } from '@/utils/householdHead';
+import { getValueFromHousehold } from '@/utils/householdValues';
 import {
   buildHouseholdVariationEarningsAxis,
   getHouseholdVariationIndexForEarnings,
   getHouseholdVariationMaxEarnings,
 } from '@/utils/householdVariationAxes';
-import { getValueFromHousehold } from '@/utils/householdValues';
 
 interface Props {
   baseline: Household;
@@ -57,7 +57,6 @@ interface Props {
 
 type ViewMode = 'both' | 'difference';
 function MTRTooltip({ active, payload, label, symbol }: any) {
-
   if (!active || !payload?.length) {
     return null;
   }

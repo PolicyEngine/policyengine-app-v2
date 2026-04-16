@@ -1,6 +1,9 @@
 export const HOUSEHOLD_VARIATION_POINT_COUNT = 401;
 
-export function getHouseholdVariationMaxEarnings(currentEarnings: number, countryId: string): number {
+export function getHouseholdVariationMaxEarnings(
+  currentEarnings: number,
+  countryId: string
+): number {
   return Math.max(countryId === 'ng' ? 1_200_000 : 200_000, 2 * currentEarnings);
 }
 

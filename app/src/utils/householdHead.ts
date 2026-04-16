@@ -1,4 +1,8 @@
-import type { Household, HouseholdGroupEntity, HouseholdPerson } from '@/types/ingredients/Household';
+import type {
+  Household,
+  HouseholdGroupEntity,
+  HouseholdPerson,
+} from '@/types/ingredients/Household';
 import { sortPeopleKeys } from './householdIndividuals';
 
 const GROUP_CANDIDATES = ['tax_units', 'taxUnits', 'households', 'families', 'benunits'] as const;
@@ -30,10 +34,7 @@ function getFirstAdultOrMember(
   return firstAdult ?? existingMembers[0];
 }
 
-function getPersonFromGroups(
-  household: Household,
-  year: string | null | undefined
-): string | null {
+function getPersonFromGroups(household: Household, year: string | null | undefined): string | null {
   const householdData = household.householdData ?? {};
   const people = householdData.people ?? {};
 
