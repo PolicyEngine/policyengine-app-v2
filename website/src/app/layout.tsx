@@ -14,6 +14,9 @@ export const metadata: Metadata = {
   },
   description:
     "Free, open-source tools to understand tax and benefit policies. Calculate your taxes and benefits, or analyze policy reforms.",
+  icons: {
+    icon: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({
