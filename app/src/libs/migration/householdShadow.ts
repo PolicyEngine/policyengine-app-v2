@@ -7,7 +7,14 @@ import {
 import { Household } from '@/models/Household';
 import type { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { logMigrationComparison } from './comparisonLogger';
-import { getOrCreateV2UserId, getV2Id, setV2Id } from './idMapping';
+import {
+  clearV2AssociationTargetId,
+  getOrCreateV2UserId,
+  getV2AssociationTargetId,
+  getV2Id,
+  setV2AssociationTargetId,
+  setV2Id,
+} from './idMapping';
 import { logMigrationConsole } from './migrationLogRuntime';
 import { sendMigrationLog } from './migrationLogTransport';
 
@@ -64,6 +71,12 @@ export async function shadowCreateUserHouseholdAssociation(
 
     if (v1Association.id && v2Result.id) {
       setV2Id('UserHousehold', v1Association.id, v2Result.id);
+      setV2AssociationTargetId(
+        'UserHousehold',
+        v1Association.id,
+        v1Association.householdId,
+        v2Result.id
+      );
     }
 
     logMigrationComparison(
@@ -183,32 +196,48 @@ export async function shadowUpdateUserHouseholdAssociation(
 
   try {
     let v2UserHouseholdId = getV2Id('UserHousehold', v1Association.id);
+    const lookupV1HouseholdId = options.previousHouseholdId ?? v1Association.householdId;
 
     if (!v2UserHouseholdId) {
-      const lookupV1HouseholdId = options.previousHouseholdId ?? v1Association.householdId;
-      const lookupV2HouseholdId =
-        getV2Id('Household', lookupV1HouseholdId) ?? resolvedV2HouseholdId;
-      const existingV2Association = await fetchUserHouseholdAssociationByIdV2(
-        v2UserId,
-        lookupV2HouseholdId
+      v2UserHouseholdId = getV2AssociationTargetId(
+        'UserHousehold',
+        v1Association.id,
+        lookupV1HouseholdId
       );
 
-      if (existingV2Association?.id) {
-        setV2Id('UserHousehold', v1Association.id, existingV2Association.id);
-        v2UserHouseholdId = existingV2Association.id;
+      if (v2UserHouseholdId) {
+        setV2Id('UserHousehold', v1Association.id, v2UserHouseholdId);
       } else {
-        await shadowCreateUserHouseholdAssociation(v1Association, resolvedV2HouseholdId);
-        const recreatedV2AssociationId = getV2Id('UserHousehold', v1Association.id);
+        const lookupV2HouseholdId =
+          getV2Id('Household', lookupV1HouseholdId) ?? resolvedV2HouseholdId;
+        const existingV2Association = await fetchUserHouseholdAssociationByIdV2(
+          v2UserId,
+          lookupV2HouseholdId
+        );
 
-        if (!recreatedV2AssociationId) {
-          logSkippedUserHouseholdUpdate(
-            v1Association,
-            'Shadow v2 update skipped: failed to recreate missing v2 association',
-            { v2HouseholdId: resolvedV2HouseholdId }
+        if (existingV2Association?.id) {
+          setV2Id('UserHousehold', v1Association.id, existingV2Association.id);
+          setV2AssociationTargetId(
+            'UserHousehold',
+            v1Association.id,
+            lookupV1HouseholdId,
+            existingV2Association.id
           );
-        }
+          v2UserHouseholdId = existingV2Association.id;
+        } else {
+          await shadowCreateUserHouseholdAssociation(v1Association, resolvedV2HouseholdId);
+          const recreatedV2AssociationId = getV2Id('UserHousehold', v1Association.id);
 
-        return;
+          if (!recreatedV2AssociationId) {
+            logSkippedUserHouseholdUpdate(
+              v1Association,
+              'Shadow v2 update skipped: failed to recreate missing v2 association',
+              { v2HouseholdId: resolvedV2HouseholdId }
+            );
+          }
+
+          return;
+        }
       }
     }
 
@@ -216,6 +245,17 @@ export async function shadowUpdateUserHouseholdAssociation(
       label: v1Association.label ?? null,
       householdId: resolvedV2HouseholdId,
     });
+
+    setV2AssociationTargetId(
+      'UserHousehold',
+      v1Association.id,
+      v1Association.householdId,
+      v2UserHouseholdId
+    );
+
+    if (options.previousHouseholdId && options.previousHouseholdId !== v1Association.householdId) {
+      clearV2AssociationTargetId('UserHousehold', v1Association.id, options.previousHouseholdId);
+    }
 
     logMigrationComparison(
       'UserHouseholdMigration',

@@ -10,7 +10,12 @@ import {
   shadowCreateHouseholdAndAssociation,
   shadowUpdateUserHouseholdAssociation,
 } from '@/libs/migration/householdShadow';
-import { getV2Id, setV2Id } from '@/libs/migration/idMapping';
+import {
+  getV2AssociationTargetId,
+  getV2Id,
+  setV2AssociationTargetId,
+  setV2Id,
+} from '@/libs/migration/idMapping';
 import { sendMigrationLog } from '@/libs/migration/migrationLogTransport';
 import { Household } from '@/models/Household';
 import {
@@ -132,6 +137,9 @@ describe('householdShadow', () => {
     });
     expect(getV2Id('Household', TEST_V1_HOUSEHOLD_ID)).toBe(TEST_V2_HOUSEHOLD_ID);
     expect(getV2Id('UserHousehold', TEST_V1_ASSOC_ID)).toBe(TEST_V2_ASSOC_ID);
+    expect(getV2AssociationTargetId('UserHousehold', TEST_V1_ASSOC_ID, TEST_V1_HOUSEHOLD_ID)).toBe(
+      TEST_V2_ASSOC_ID
+    );
   });
 
   test('given successful shadow create then it logs household and user-household comparisons', async () => {
@@ -261,6 +269,25 @@ describe('householdShadow', () => {
     });
   });
 
+  test('given missing association mapping but stored target mapping then it recovers without API lookup', async () => {
+    setV2Id('Household', TEST_V1_HOUSEHOLD_ID, TEST_V2_HOUSEHOLD_ID);
+    setV2AssociationTargetId(
+      'UserHousehold',
+      TEST_V1_ASSOC_ID,
+      TEST_V1_HOUSEHOLD_ID,
+      TEST_V2_ASSOC_ID
+    );
+
+    await shadowUpdateUserHouseholdAssociation(v1Association);
+
+    expect(fetchUserHouseholdAssociationByIdV2).not.toHaveBeenCalled();
+    expect(getV2Id('UserHousehold', TEST_V1_ASSOC_ID)).toBe(TEST_V2_ASSOC_ID);
+    expect(updateUserHouseholdAssociationV2).toHaveBeenCalledWith(TEST_V2_ASSOC_ID, {
+      label: 'My household',
+      householdId: TEST_V2_HOUSEHOLD_ID,
+    });
+  });
+
   test('given missing association mapping and no existing v2 association then it recreates the v2 association', async () => {
     setV2Id('Household', TEST_V1_HOUSEHOLD_ID, TEST_V2_HOUSEHOLD_ID);
 
@@ -304,6 +331,29 @@ describe('householdShadow', () => {
       householdId: TEST_V2_HOUSEHOLD_ID,
     });
     expect(createUserHouseholdAssociationV2).not.toHaveBeenCalled();
+  });
+
+  test('given immutable reassignment and stored previous target mapping then it recovers without API lookup', async () => {
+    setV2Id('Household', TEST_OLD_V1_HOUSEHOLD_ID, TEST_OLD_V2_HOUSEHOLD_ID);
+    setV2Id('Household', TEST_V1_HOUSEHOLD_ID, TEST_V2_HOUSEHOLD_ID);
+    setV2AssociationTargetId(
+      'UserHousehold',
+      TEST_V1_ASSOC_ID,
+      TEST_OLD_V1_HOUSEHOLD_ID,
+      TEST_V2_ASSOC_ID
+    );
+
+    await shadowUpdateUserHouseholdAssociation(v1Association, {
+      previousHouseholdId: TEST_OLD_V1_HOUSEHOLD_ID,
+      v2HouseholdId: TEST_V2_HOUSEHOLD_ID,
+    });
+
+    expect(fetchUserHouseholdAssociationByIdV2).not.toHaveBeenCalled();
+    expect(updateUserHouseholdAssociationV2).toHaveBeenCalledWith(TEST_V2_ASSOC_ID, {
+      label: 'My household',
+      householdId: TEST_V2_HOUSEHOLD_ID,
+    });
+    expect(getV2Id('UserHousehold', TEST_V1_ASSOC_ID)).toBe(TEST_V2_ASSOC_ID);
   });
 
   test('given missing household mapping then it logs a skipped update instead of silently returning', async () => {

@@ -1,10 +1,13 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import {
+  clearV2AssociationTargetId,
   clearV2Mappings,
   getMappedV2UserId,
   getOrCreateV2UserId,
+  getV2AssociationTargetId,
   getV2Id,
   isUuid,
+  setV2AssociationTargetId,
   setV2Id,
 } from '@/libs/migration/idMapping';
 
@@ -48,27 +51,45 @@ describe('idMapping', () => {
       expect(localStorage.getItem('v1v2:policy:42')).toBe('uuid-policy');
       expect(getV2Id('policy', '42')).toBe('uuid-policy');
     });
+
+    test('given association target mapping then stores and retrieves by association and target ids', () => {
+      setV2AssociationTargetId('UserHousehold', 'suh-1', 'hh-1', 'uuid-association');
+
+      expect(getV2AssociationTargetId('UserHousehold', 'suh-1', 'hh-1')).toBe('uuid-association');
+      expect(localStorage.getItem('v1v2-target:userhousehold:suh-1:hh-1')).toBe('uuid-association');
+    });
+
+    test('given cleared association target mapping then returns null', () => {
+      setV2AssociationTargetId('UserHousehold', 'suh-1', 'hh-1', 'uuid-association');
+      clearV2AssociationTargetId('UserHousehold', 'suh-1', 'hh-1');
+
+      expect(getV2AssociationTargetId('UserHousehold', 'suh-1', 'hh-1')).toBeNull();
+    });
   });
 
   describe('clearV2Mappings', () => {
     test('given entity type then clears only that type', () => {
       setV2Id('Policy', 'sup-1', 'uuid-p1');
       setV2Id('Household', 'sup-2', 'uuid-h1');
+      setV2AssociationTargetId('Policy', 'sup-3', 'target-1', 'uuid-policy-association');
 
       clearV2Mappings('Policy');
 
       expect(getV2Id('Policy', 'sup-1')).toBeNull();
       expect(getV2Id('Household', 'sup-2')).toBe('uuid-h1');
+      expect(getV2AssociationTargetId('Policy', 'sup-3', 'target-1')).toBeNull();
     });
 
     test('given no entity type then clears all mappings', () => {
       setV2Id('Policy', 'sup-1', 'uuid-p1');
       setV2Id('Household', 'sup-2', 'uuid-h1');
+      setV2AssociationTargetId('UserHousehold', 'suh-1', 'hh-1', 'uuid-association');
 
       clearV2Mappings();
 
       expect(getV2Id('Policy', 'sup-1')).toBeNull();
       expect(getV2Id('Household', 'sup-2')).toBeNull();
+      expect(getV2AssociationTargetId('UserHousehold', 'suh-1', 'hh-1')).toBeNull();
     });
 
     test('given no mappings then does nothing', () => {
