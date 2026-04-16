@@ -6,6 +6,7 @@
  */
 
 import { Household } from '@/types/ingredients/Household';
+import { getNormalizedVariableMetadata } from './variableMetadata';
 
 export interface EntityInfo {
   entity: string; // e.g., "person", "tax_unit", "spm_unit"
@@ -78,18 +79,20 @@ export function getVariableInfo(variableName: string, metadata: any): VariableIn
     return null;
   }
 
+  const normalizedVariable = getNormalizedVariableMetadata(variable);
+
   return {
-    name: variable.name,
-    label: variable.label,
-    entity: variable.entity,
-    valueType: variable.valueType,
-    unit: variable.unit,
-    defaultValue: variable.defaultValue,
-    isInputVariable: variable.isInputVariable,
-    hiddenInput: variable.hidden_input,
-    moduleName: variable.moduleName,
-    possibleValues: variable.possibleValues,
-    documentation: variable.documentation || variable.description,
+    name: normalizedVariable.name,
+    label: normalizedVariable.label,
+    entity: normalizedVariable.entity,
+    valueType: normalizedVariable.valueType,
+    unit: normalizedVariable.unit,
+    defaultValue: normalizedVariable.defaultValue,
+    isInputVariable: normalizedVariable.isInputVariable,
+    hiddenInput: normalizedVariable.hiddenInput,
+    moduleName: normalizedVariable.moduleName,
+    possibleValues: normalizedVariable.possibleValues,
+    documentation: normalizedVariable.documentation,
   };
 }
 
@@ -369,18 +372,6 @@ export function getInputVariables(metadata: any): VariableInfo[] {
   }
 
   return Object.values(metadata.variables)
-    .filter((v: any) => v.isInputVariable && !v.hidden_input)
-    .map((v: any) => ({
-      name: v.name,
-      label: v.label,
-      entity: v.entity,
-      valueType: v.valueType,
-      unit: v.unit,
-      defaultValue: v.defaultValue,
-      isInputVariable: v.isInputVariable,
-      hiddenInput: v.hidden_input,
-      moduleName: v.moduleName,
-      possibleValues: v.possibleValues,
-      documentation: v.documentation || v.description,
-    }));
+    .map((v: any) => getNormalizedVariableMetadata(v))
+    .filter((v: any) => v.isInputVariable && !v.hiddenInput);
 }

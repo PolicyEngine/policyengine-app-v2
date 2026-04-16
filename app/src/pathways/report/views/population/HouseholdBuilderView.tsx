@@ -9,7 +9,7 @@ import { useSelector } from 'react-redux';
 import { HouseholdAdapter } from '@/adapters/HouseholdAdapter';
 import PathwayView from '@/components/common/PathwayView';
 import HouseholdBuilderForm from '@/components/household/HouseholdBuilderForm';
-import { Spinner, Stack } from '@/components/ui';
+import { Alert, AlertDescription, Spinner, Stack } from '@/components/ui';
 import { useCreateHousehold } from '@/hooks/useCreateHousehold';
 import { useReportYear } from '@/hooks/useReportYear';
 import { getBasicInputFields } from '@/libs/metadataUtils';
@@ -17,6 +17,11 @@ import { RootState } from '@/store';
 import { Household } from '@/types/ingredients/Household';
 import { PopulationStateProps } from '@/types/pathwayState';
 import { HouseholdBuilder } from '@/utils/HouseholdBuilder';
+import {
+  deriveHouseholdBuilderComposition,
+  updateHouseholdBuilderChildCount,
+  updateHouseholdBuilderMaritalStatus,
+} from '@/utils/householdBuilderComposition';
 import { HouseholdValidation } from '@/utils/HouseholdValidation';
 
 interface HouseholdBuilderViewProps {
@@ -78,54 +83,18 @@ export default function HouseholdBuilderView({
     return builder.build();
   });
 
-  // Derive marital status and number of children from household (single source of truth)
-  const people = Object.keys(household.householdData.people);
-  const maritalStatus = people.includes('your partner') ? 'married' : 'single';
-  const numChildren = people.filter((p) => p.includes('dependent')).length;
+  const composition = deriveHouseholdBuilderComposition(household, reportYear);
+  const maritalStatus = composition.maritalStatus;
+  const numChildren = composition.numChildren;
 
   // Handler for marital status change - directly modifies household
   const handleMaritalStatusChange = (newStatus: 'single' | 'married') => {
-    const builder = new HouseholdBuilder(countryId as any, reportYear);
-    builder.loadHousehold(household);
-
-    const hasPartner = people.includes('your partner');
-
-    if (newStatus === 'married' && !hasPartner) {
-      builder.addAdult('your partner', 30, { employment_income: 0 });
-      builder.setMaritalStatus('you', 'your partner');
-    } else if (newStatus === 'single' && hasPartner) {
-      builder.removePerson('your partner');
-    }
-
-    setLocalHousehold(builder.build());
+    setLocalHousehold(updateHouseholdBuilderMaritalStatus(household, reportYear, newStatus));
   };
 
   // Handler for number of children change - directly modifies household
   const handleNumChildrenChange = (newCount: number) => {
-    const builder = new HouseholdBuilder(countryId as any, reportYear);
-    builder.loadHousehold(household);
-
-    const currentChildren = people.filter((p) => p.includes('dependent'));
-    const currentChildCount = currentChildren.length;
-
-    if (newCount !== currentChildCount) {
-      // Remove all existing children
-      currentChildren.forEach((child) => builder.removePerson(child));
-
-      // Add new children
-      if (newCount > 0) {
-        const hasPartner = people.includes('your partner');
-        const parentIds = hasPartner ? ['you', 'your partner'] : ['you'];
-        const ordinals = ['first', 'second', 'third', 'fourth', 'fifth'];
-
-        for (let i = 0; i < newCount; i++) {
-          const childName = `your ${ordinals[i] || `${i + 1}th`} dependent`;
-          builder.addChild(childName, 10, parentIds, { employment_income: 0 });
-        }
-      }
-    }
-
-    setLocalHousehold(builder.build());
+    setLocalHousehold(updateHouseholdBuilderChildCount(household, reportYear, newCount));
   };
 
   // Show error state if metadata failed to load
@@ -168,6 +137,7 @@ export default function HouseholdBuilderView({
 
   const validation = HouseholdValidation.isReadyForSimulation(household, reportYear);
   const canProceed = validation.isValid;
+  const validationMessage = validation.errors[0]?.message ?? null;
 
   const primaryAction = {
     label: 'Create household',
@@ -182,6 +152,12 @@ export default function HouseholdBuilderView({
         <div className="tw:absolute tw:inset-0 tw:bg-white/80 tw:flex tw:items-center tw:justify-center tw:z-50">
           <Spinner />
         </div>
+      )}
+
+      {validationMessage && (
+        <Alert variant="default">
+          <AlertDescription>{validationMessage}</AlertDescription>
+        </Alert>
       )}
 
       <HouseholdBuilderForm

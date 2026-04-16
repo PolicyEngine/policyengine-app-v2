@@ -441,12 +441,16 @@ export class HouseholdBuilder {
       >;
 
       // Remove person from each group in this entity type
-      Object.values(entities).forEach((group) => {
+      Object.entries(entities).forEach(([groupKey, group]) => {
         if (group.members) {
           const index = group.members.indexOf(personKey);
           if (index > -1) {
             group.members.splice(index, 1);
           }
+        }
+
+        if (Array.isArray(group.members) && group.members.length === 0) {
+          delete entities[groupKey];
         }
       });
     });

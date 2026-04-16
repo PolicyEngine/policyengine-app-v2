@@ -425,6 +425,20 @@ describe('HouseholdBuilder', () => {
       expect(countPeople(household)).toBe(1);
       verifyPersonExists(household, PERSON_NAMES.ADULT_2, PERSON_AGES.ADULT_DEFAULT);
     });
+
+    test('given a removal leaves a group empty when removePerson then deletes the empty group', () => {
+      // Given
+      builder.addAdult(PERSON_NAMES.ADULT_1, PERSON_AGES.ADULT_DEFAULT);
+
+      // When
+      builder.removePerson(PERSON_NAMES.ADULT_1);
+      const household = builder.build();
+
+      // Then
+      expect(household.householdData.maritalUnits).toEqual({});
+      expect(household.householdData.taxUnits).toEqual({});
+      expect(household.householdData.households).toEqual({});
+    });
   });
 
   describe('setPersonVariable method', () => {

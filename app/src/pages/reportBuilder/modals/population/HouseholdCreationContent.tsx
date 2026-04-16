@@ -2,6 +2,7 @@
  * HouseholdCreationContent - Household creation form wrapper
  */
 import HouseholdBuilderForm from '@/components/household/HouseholdBuilderForm';
+import { Alert, AlertDescription } from '@/components/ui';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Spinner } from '@/components/ui/Spinner';
 import { Household } from '@/types/ingredients/Household';
@@ -16,6 +17,7 @@ interface HouseholdCreationContentProps {
   basicPersonFields: string[];
   basicNonPersonFields: string[];
   isCreating: boolean;
+  validationMessage?: string | null;
   onChange: (household: Household) => void;
   onMaritalStatusChange: (status: 'single' | 'married') => void;
   onNumChildrenChange: (count: number) => void;
@@ -30,6 +32,7 @@ export function HouseholdCreationContent({
   basicPersonFields,
   basicNonPersonFields,
   isCreating,
+  validationMessage,
   onChange,
   onMaritalStatusChange,
   onNumChildrenChange,
@@ -40,7 +43,12 @@ export function HouseholdCreationContent({
 
   return (
     <ScrollArea style={{ flex: 1 }}>
-      <div style={{ position: 'relative' }}>
+      <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 16 }}>
+        {validationMessage && (
+          <Alert variant="default">
+            <AlertDescription>{validationMessage}</AlertDescription>
+          </Alert>
+        )}
         {isCreating && (
           <div
             style={{
