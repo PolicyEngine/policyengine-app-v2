@@ -21,8 +21,8 @@ import { MOBILE_BREAKPOINT_QUERY } from '@/hooks/useChartDimensions';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useViewportSize } from '@/hooks/useViewportSize';
+import type { AppHouseholdInputEnvelope as Household } from '@/models/household/appTypes';
 import type { RootState } from '@/store';
-import type { Household } from '@/types/ingredients/Household';
 import {
   getClampedChartHeight,
   getNiceTicks,

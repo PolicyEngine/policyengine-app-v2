@@ -1,5 +1,8 @@
+import type {
+  AppHouseholdInputEnvelope as Household,
+  AppHouseholdInputGroup as HouseholdGroupEntity,
+} from '@/models/household/appTypes';
 import { RootState } from '@/store';
-import { Household, HouseholdGroupEntity } from '@/types/ingredients/Household';
 import { getHouseholdYearValue } from '@/utils/householdDataAccess';
 import * as HouseholdQueries from './HouseholdQueries';
 

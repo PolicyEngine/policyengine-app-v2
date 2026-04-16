@@ -1,10 +1,10 @@
 import { countryIds } from '@/libs/countries';
-import {
-  Household,
-  HouseholdData,
-  HouseholdGroupEntity,
-  HouseholdPerson,
-} from '@/types/ingredients/Household';
+import type {
+  AppHouseholdInputEnvelope as Household,
+  AppHouseholdInputData as HouseholdData,
+  AppHouseholdInputGroup as HouseholdGroupEntity,
+  AppHouseholdInputPerson as HouseholdPerson,
+} from '@/models/household/appTypes';
 import {
   ensureHouseholdGroupCollection,
   getAllHouseholdGroupCollections,

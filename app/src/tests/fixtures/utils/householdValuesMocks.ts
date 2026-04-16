@@ -1,5 +1,5 @@
 import { CURRENT_YEAR } from '@/constants';
-import { Household } from '@/types/ingredients/Household';
+import type { AppHouseholdInputEnvelope as Household } from '@/models/household/appTypes';
 import { MetadataState } from '@/types/metadata';
 
 /**

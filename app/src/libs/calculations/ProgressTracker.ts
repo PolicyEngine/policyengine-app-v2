@@ -1,4 +1,4 @@
-import { HouseholdData } from '@/types/ingredients/Household';
+import type { AppHouseholdInputData as HouseholdData } from '@/models/household/appTypes';
 import { ProgressInfo } from './strategies/types';
 
 /**

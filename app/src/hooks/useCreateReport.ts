@@ -4,8 +4,8 @@ import { MOCK_USER_ID } from '@/constants';
 import { useCalcOrchestratorManager } from '@/contexts/CalcOrchestratorContext';
 import { countryIds } from '@/libs/countries';
 import { reportAssociationKeys, reportKeys } from '@/libs/queryKeys';
+import type { AppHouseholdInputEnvelope as Household } from '@/models/household/appTypes';
 import { Geography } from '@/types/ingredients/Geography';
-import { Household } from '@/types/ingredients/Household';
 import { Simulation } from '@/types/ingredients/Simulation';
 import { ReportCreationPayload } from '@/types/payloads';
 

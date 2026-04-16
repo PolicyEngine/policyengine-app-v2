@@ -1,6 +1,9 @@
 import type { HouseholdReportOrchestrator } from '@/libs/calculations/household/HouseholdReportOrchestrator';
+import type {
+  AppHouseholdInputEnvelope as Household,
+  AppHouseholdInputData as HouseholdData,
+} from '@/models/household/appTypes';
 import type { HouseholdReportConfig, SimulationConfig } from '@/types/calculation/household';
-import type { Household, HouseholdData } from '@/types/ingredients/Household';
 import type { Report } from '@/types/ingredients/Report';
 import type { Simulation } from '@/types/ingredients/Simulation';
 import type { UserPolicy } from '@/types/ingredients/UserPolicy';

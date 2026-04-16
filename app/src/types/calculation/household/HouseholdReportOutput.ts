@@ -1,4 +1,4 @@
-import type { HouseholdData } from '@/types/ingredients/Household';
+import type { AppHouseholdInputData as HouseholdData } from '@/models/household/appTypes';
 
 /**
  * Household report output structure

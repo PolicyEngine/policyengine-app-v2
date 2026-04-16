@@ -1,6 +1,6 @@
 import { CURRENT_YEAR } from '@/constants';
+import type { AppHouseholdInputData as HouseholdData } from '@/models/household/appTypes';
 import type { V1HouseholdMetadataEnvelope } from '@/models/household/v1Types';
-import { HouseholdData } from '@/types/ingredients/Household';
 
 export const mockEntityMetadata = {
   person: {

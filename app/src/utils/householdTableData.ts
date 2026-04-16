@@ -1,4 +1,4 @@
-import { Household } from '@/types/ingredients/Household';
+import type { AppHouseholdInputEnvelope as Household } from '@/models/household/appTypes';
 
 export interface HouseholdInputRow {
   category: string; // "Person 1", "Household", etc.

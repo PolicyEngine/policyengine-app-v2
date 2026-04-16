@@ -1,5 +1,8 @@
 import { Household as HouseholdModel } from '@/models/Household';
-import { Household, HouseholdPerson } from '@/types/ingredients/Household';
+import type {
+  AppHouseholdInputEnvelope as Household,
+  AppHouseholdInputPerson as HouseholdPerson,
+} from '@/models/household/appTypes';
 import { getHouseholdGroupCollection, getHouseholdYearValue } from '@/utils/householdDataAccess';
 
 /**

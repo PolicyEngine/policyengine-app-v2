@@ -1,6 +1,6 @@
 import { useSelector } from 'react-redux';
+import type { AppHouseholdInputEnvelope as Household } from '@/models/household/appTypes';
 import { RootState } from '@/store';
-import { Household } from '@/types/ingredients/Household';
 import VariableArithmetic from './VariableArithmetic';
 
 interface HouseholdBreakdownProps {

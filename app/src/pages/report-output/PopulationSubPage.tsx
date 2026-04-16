@@ -1,5 +1,5 @@
+import type { AppHouseholdInputEnvelope as Household } from '@/models/household/appTypes';
 import { Geography } from '@/types/ingredients/Geography';
-import { Household } from '@/types/ingredients/Household';
 import { Simulation } from '@/types/ingredients/Simulation';
 import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import GeographySubPage from './GeographySubPage';

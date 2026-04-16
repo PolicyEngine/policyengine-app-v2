@@ -1,6 +1,9 @@
 import { CURRENT_YEAR } from '@/constants';
+import type {
+  AppHouseholdInputEnvelope as Household,
+  AppHouseholdInputPerson as HouseholdPerson,
+} from '@/models/household/appTypes';
 import { RootState } from '@/store';
-import { Household, HouseholdPerson } from '@/types/ingredients/Household';
 import {
   ValidationError,
   ValidationResult,

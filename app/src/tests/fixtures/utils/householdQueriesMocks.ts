@@ -1,5 +1,8 @@
 import { CURRENT_YEAR } from '@/constants';
-import { Household, HouseholdPerson } from '@/types/ingredients/Household';
+import type {
+  AppHouseholdInputEnvelope as Household,
+  AppHouseholdInputPerson as HouseholdPerson,
+} from '@/models/household/appTypes';
 import { getHouseholdYearValue } from '@/utils/householdDataAccess';
 import { PersonWithName } from '@/utils/HouseholdQueries';
 

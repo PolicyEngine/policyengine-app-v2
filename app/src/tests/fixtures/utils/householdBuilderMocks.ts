@@ -1,5 +1,9 @@
 import { CURRENT_YEAR } from '@/constants';
-import { Household, HouseholdData, HouseholdPerson } from '@/types/ingredients/Household';
+import type {
+  AppHouseholdInputEnvelope as Household,
+  AppHouseholdInputData as HouseholdData,
+  AppHouseholdInputPerson as HouseholdPerson,
+} from '@/models/household/appTypes';
 import { getHouseholdGroupCollection } from '@/utils/householdDataAccess';
 
 // ============= TEST CONSTANTS =============

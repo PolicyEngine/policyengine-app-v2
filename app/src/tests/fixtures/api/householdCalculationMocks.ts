@@ -1,7 +1,7 @@
 import { vi } from 'vitest';
 import { HouseholdCalculationResponse } from '@/api/householdCalculation';
 import { CURRENT_YEAR } from '@/constants';
-import { Household } from '@/types/ingredients/Household';
+import type { AppHouseholdInputEnvelope as Household } from '@/models/household/appTypes';
 
 // Test IDs and constants
 export const TEST_COUNTRIES = {
@@ -73,7 +73,7 @@ export const mockHouseholdResult: Household = {
         family_size: { [CURRENT_YEAR]: 2 },
       },
     },
-    tax_units: {
+    taxUnits: {
       tax_unit1: {
         members: ['person1', 'person2'],
         adjusted_gross_income: { [CURRENT_YEAR]: 102000 },
@@ -134,7 +134,7 @@ export const mockLargeHouseholdResult: Household = {
         family_size: { [CURRENT_YEAR]: 5 },
       },
     },
-    tax_units: {
+    taxUnits: {
       tax_unit1: {
         members: ['person1', 'person2', 'person3', 'person4', 'person5'],
         adjusted_gross_income: { [CURRENT_YEAR]: 140000 },
