@@ -1,4 +1,4 @@
-import { Household } from '@/types/ingredients/Household';
+import type { AppHouseholdInputEnvelope as Household } from '@/models/household/appTypes';
 
 /**
  * Mock households for testing household table data utilities

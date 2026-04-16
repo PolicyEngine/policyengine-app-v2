@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useSimulationProgressDisplay } from '@/hooks/household';
-import type { Household } from '@/types/ingredients/Household';
+import type { AppHouseholdInputEnvelope as Household } from '@/models/household/appTypes';
 import type { Policy } from '@/types/ingredients/Policy';
 import type { Report } from '@/types/ingredients/Report';
 import type { Simulation } from '@/types/ingredients/Simulation';

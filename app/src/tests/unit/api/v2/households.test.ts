@@ -1,20 +1,19 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import type { V2HouseholdShape } from '@/api/v2/householdCalculation';
 import {
   createHouseholdV2,
   deleteHouseholdV2,
   fetchHouseholdByIdV2,
-  householdToV2Request,
   listHouseholdsV2,
-  v2ResponseToHousehold,
 } from '@/api/v2/households';
+import type { V2CreateHouseholdEnvelope } from '@/models/household/v2Types';
 import {
   createMockHouseholdV2Response,
-  createMockV2HouseholdShape,
+  createMockUkHouseholdV2Response,
+  createMockUkV2CreateHouseholdEnvelope,
+  createMockV2CreateHouseholdEnvelope,
   mockFetch404,
   mockFetchError,
   mockFetchSuccess,
-  TEST_COUNTRY_ID,
   TEST_IDS,
 } from '@/tests/fixtures/api/v2/shared';
 
@@ -26,122 +25,18 @@ describe('households v2 API', () => {
   });
 
   // ==========================================================================
-  // householdToV2Request
-  // ==========================================================================
-
-  describe('householdToV2Request', () => {
-    test('given a V2HouseholdShape then maps all fields to a create request', () => {
-      // Given
-      const shape: V2HouseholdShape = {
-        ...createMockV2HouseholdShape(),
-        id: TEST_IDS.HOUSEHOLD_ID,
-      };
-
-      // When
-      const request = householdToV2Request(shape);
-
-      // Then
-      expect(request).toEqual({
-        country_id: TEST_COUNTRY_ID,
-        year: 2026,
-        label: 'Test household',
-        people: [{ age: 30, employment_income: 50000 }],
-        tax_unit: { members: ['person1'] },
-        family: null,
-        spm_unit: null,
-        marital_unit: null,
-        household: null,
-        benunit: null,
-      });
-      // id should not appear in the create request
-      expect(request).not.toHaveProperty('id');
-    });
-
-    test('given undefined optional fields then null-coalesces them to null', () => {
-      // Given
-      const shape: V2HouseholdShape = {
-        country_id: 'us',
-        year: 2026,
-        people: [{ age: 25 }],
-        // label, tax_unit, family, etc. are all undefined
-      };
-
-      // When
-      const request = householdToV2Request(shape);
-
-      // Then
-      expect(request.label).toBeNull();
-      expect(request.tax_unit).toBeNull();
-      expect(request.family).toBeNull();
-      expect(request.spm_unit).toBeNull();
-      expect(request.marital_unit).toBeNull();
-      expect(request.household).toBeNull();
-      expect(request.benunit).toBeNull();
-    });
-  });
-
-  // ==========================================================================
-  // v2ResponseToHousehold
-  // ==========================================================================
-
-  describe('v2ResponseToHousehold', () => {
-    test('given an API response then maps id, country_id, and data fields', () => {
-      // Given
-      const response = createMockHouseholdV2Response();
-
-      // When
-      const household = v2ResponseToHousehold(response as any);
-
-      // Then
-      expect(household.id).toBe(TEST_IDS.HOUSEHOLD_ID);
-      expect(household.country_id).toBe(TEST_COUNTRY_ID);
-      expect(household.year).toBe(2026);
-      expect(household.label).toBe('Test household');
-      expect(household.people).toEqual([{ age: 30, employment_income: 50000 }]);
-      expect(household.tax_unit).toEqual({ members: ['person1'] });
-    });
-
-    test('given null optional fields in response then converts them to undefined', () => {
-      // Given
-      const response = createMockHouseholdV2Response();
-      // family, spm_unit, marital_unit, household, benunit are null in mock
-
-      // When
-      const household = v2ResponseToHousehold(response as any);
-
-      // Then
-      expect(household.family).toBeUndefined();
-      expect(household.spm_unit).toBeUndefined();
-      expect(household.marital_unit).toBeUndefined();
-      expect(household.household).toBeUndefined();
-      expect(household.benunit).toBeUndefined();
-    });
-
-    test('given null label in response then converts it to undefined', () => {
-      // Given
-      const response = { ...createMockHouseholdV2Response(), label: null };
-
-      // When
-      const household = v2ResponseToHousehold(response as any);
-
-      // Then
-      expect(household.label).toBeUndefined();
-    });
-  });
-
-  // ==========================================================================
   // createHouseholdV2
   // ==========================================================================
 
   describe('createHouseholdV2', () => {
     test('given valid household then POST succeeds with correct URL and body', async () => {
       // Given
-      const shape = createMockV2HouseholdShape();
+      const request: V2CreateHouseholdEnvelope = createMockV2CreateHouseholdEnvelope();
       const apiResponse = createMockHouseholdV2Response();
       vi.stubGlobal('fetch', mockFetchSuccess(apiResponse));
 
       // When
-      const result = await createHouseholdV2(shape as V2HouseholdShape);
+      const result = await createHouseholdV2(request);
 
       // Then
       expect(fetch).toHaveBeenCalledOnce();
@@ -155,19 +50,46 @@ describe('households v2 API', () => {
           },
         })
       );
-      expect(result.id).toBe(TEST_IDS.HOUSEHOLD_ID);
-      expect(result.country_id).toBe(TEST_COUNTRY_ID);
+      expect(fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/households/'),
+        expect.objectContaining({
+          body: JSON.stringify(request),
+        })
+      );
+      expect(result).toEqual(apiResponse);
     });
 
     test('given API returns error then throws with status and message', async () => {
       // Given
-      const shape = createMockV2HouseholdShape();
+      const request: V2CreateHouseholdEnvelope = createMockV2CreateHouseholdEnvelope();
       vi.stubGlobal('fetch', mockFetchError(500, 'Internal Server Error'));
 
       // When / Then
-      await expect(createHouseholdV2(shape as V2HouseholdShape)).rejects.toThrow(
+      await expect(createHouseholdV2(request)).rejects.toThrow(
         'createHouseholdV2: 500 Internal Server Error'
       );
+    });
+
+    test('given valid UK household then POST succeeds with a UK-shaped payload', async () => {
+      const request: V2CreateHouseholdEnvelope = createMockUkV2CreateHouseholdEnvelope();
+      const apiResponse = createMockUkHouseholdV2Response();
+      vi.stubGlobal('fetch', mockFetchSuccess(apiResponse));
+
+      const result = await createHouseholdV2(request);
+
+      expect(fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/households/'),
+        expect.objectContaining({
+          body: JSON.stringify(request),
+        })
+      );
+      expect(result).toEqual(apiResponse);
+      expect(result.country_id).toBe('uk');
+      if (result.country_id !== 'uk') {
+        throw new Error('Expected UK stored household');
+      }
+      expect(result.benunit).toEqual([{ benunit_id: 0 }]);
+      expect('tax_unit' in result).toBe(false);
     });
   });
 
@@ -193,7 +115,7 @@ describe('households v2 API', () => {
           headers: { Accept: 'application/json' },
         })
       );
-      expect(result.id).toBe(TEST_IDS.HOUSEHOLD_ID);
+      expect(result).toEqual(apiResponse);
     });
 
     test('given 404 response then throws not found error', async () => {
@@ -214,6 +136,21 @@ describe('households v2 API', () => {
       await expect(fetchHouseholdByIdV2(TEST_IDS.HOUSEHOLD_ID)).rejects.toThrow(
         `fetchHouseholdByIdV2(${TEST_IDS.HOUSEHOLD_ID}): 500 Server Error`
       );
+    });
+
+    test('given a UK household response then GET returns the UK household shape', async () => {
+      const apiResponse = createMockUkHouseholdV2Response();
+      vi.stubGlobal('fetch', mockFetchSuccess(apiResponse));
+
+      const result = await fetchHouseholdByIdV2(TEST_IDS.HOUSEHOLD_ID);
+
+      expect(result).toEqual(apiResponse);
+      expect(result.country_id).toBe('uk');
+      if (result.country_id !== 'uk') {
+        throw new Error('Expected UK stored household');
+      }
+      expect(result.benunit).toEqual([{ benunit_id: 0 }]);
+      expect('tax_unit' in result).toBe(false);
     });
   });
 
@@ -240,7 +177,7 @@ describe('households v2 API', () => {
       expect(calledUrl).toContain('limit=10');
       expect(calledUrl).toContain('offset=5');
       expect(result).toHaveLength(1);
-      expect(result[0].id).toBe(TEST_IDS.HOUSEHOLD_ID);
+      expect(result[0]).toEqual(apiResponse[0]);
     });
 
     test('given no filters then calls URL without query string', async () => {
@@ -256,6 +193,18 @@ describe('households v2 API', () => {
       expect(calledUrl).toMatch(/\/households\/$/);
       expect(calledUrl).not.toContain('?');
       expect(result).toHaveLength(1);
+    });
+
+    test('given UK filter then returns UK household rows unchanged', async () => {
+      const apiResponse = [createMockUkHouseholdV2Response()];
+      vi.stubGlobal('fetch', mockFetchSuccess(apiResponse));
+
+      const result = await listHouseholdsV2({ country_id: 'uk' });
+
+      const calledUrl = vi.mocked(fetch).mock.calls[0][0] as string;
+      expect(calledUrl).toContain('country_id=uk');
+      expect(result).toEqual(apiResponse);
+      expect(result[0].country_id).toBe('uk');
     });
   });
 

@@ -1,5 +1,6 @@
-import { Household } from '@/types/ingredients/Household';
+import type { AppHouseholdInputEnvelope as Household } from '@/models/household/appTypes';
 import { MetadataState } from '@/types/metadata';
+import { getHouseholdGroupCollection, isHouseholdYearMap } from './householdDataAccess';
 
 /**
  * Extracts a value from household data for a specific variable
@@ -37,7 +38,10 @@ export function getValueFromHousehold(
   }
 
   const householdData = household.householdData;
-  const entityGroup = householdData[entityPlural];
+  const entityGroup =
+    entityPlural === 'people'
+      ? householdData.people
+      : getHouseholdGroupCollection(householdData, entityPlural);
 
   if (!entityGroup) {
     console.warn(`Entity group ${entityPlural} not found in household data`);
@@ -108,6 +112,9 @@ export function getValueFromHousehold(
 
   // If no timePeriod specified, aggregate across all time periods
   if (!timePeriod) {
+    if (!isHouseholdYearMap(variableData)) {
+      return 0;
+    }
     const possibleTimePeriods = Object.keys(variableData);
     let total = 0;
     for (const period of possibleTimePeriods) {
@@ -127,8 +134,12 @@ export function getValueFromHousehold(
   }
 
   // Return the specific value
+  if (!isHouseholdYearMap(variableData)) {
+    return 0;
+  }
+
   const value = variableData[timePeriod];
-  return value !== undefined ? value : 0;
+  return typeof value === 'number' ? value : 0;
 }
 
 /**

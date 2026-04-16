@@ -52,10 +52,6 @@ export {
   fetchHouseholdByIdV2,
   listHouseholdsV2,
   deleteHouseholdV2,
-  householdToV2Request,
-  v2ResponseToHousehold,
-  type HouseholdV2Response,
-  type HouseholdV2CreateRequest,
 } from './households';
 
 // Household Calculation (v2 Alpha async jobs)
@@ -80,7 +76,7 @@ export {
   deleteUserHouseholdAssociationV2,
   type UserHouseholdAssociationV2Response,
   type UserHouseholdAssociationV2CreateRequest,
-  type UserHouseholdAssociationV2UpdateRequest,
+  type UserHouseholdAssociationV2UpdateInput,
 } from './userHouseholdAssociations';
 
 // Simulations (v2 Alpha — household + economy)

@@ -21,6 +21,7 @@ import {
   verifyPeopleArray,
   verifyPersonWithName,
 } from '@/tests/fixtures/utils/householdQueriesMocks';
+import { getHouseholdYearValue } from '@/utils/householdDataAccess';
 import {
   getAdultCount,
   getAdults,
@@ -61,10 +62,10 @@ describe('HouseholdQueries', () => {
       // Verify structure
       const adult1 = result.find((p) => p.name === QUERY_PERSON_NAMES.ADULT_1);
       expect(adult1).toBeDefined();
-      expect(adult1!.age[QUERY_YEARS.CURRENT]).toBe(QUERY_AGES.ADULT_30);
-      expect(adult1![QUERY_VARIABLE_NAMES.EMPLOYMENT_INCOME][QUERY_YEARS.CURRENT]).toBe(
-        QUERY_VARIABLE_VALUES.INCOME_50K
-      );
+      expect(getHouseholdYearValue(adult1!.age, QUERY_YEARS.CURRENT)).toBe(QUERY_AGES.ADULT_30);
+      expect(
+        getHouseholdYearValue(adult1![QUERY_VARIABLE_NAMES.EMPLOYMENT_INCOME], QUERY_YEARS.CURRENT)
+      ).toBe(QUERY_VARIABLE_VALUES.INCOME_50K);
     });
 
     test('given single person household when getting all then returns one person', () => {

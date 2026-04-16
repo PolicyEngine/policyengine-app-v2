@@ -5,6 +5,12 @@
  * Individual test files import what they need.
  */
 import { vi } from 'vitest';
+import type {
+  V2UKCreateHouseholdEnvelope,
+  V2UKStoredHouseholdEnvelope,
+  V2USCreateHouseholdEnvelope,
+  V2USStoredHouseholdEnvelope,
+} from '@/models/household/v2Types';
 
 // ============================================================================
 // Constants
@@ -108,36 +114,99 @@ export function createMockModelVersion(
 // Mock response factories — Households
 // ============================================================================
 
-export function createMockHouseholdV2Response(overrides?: Partial<{ id: string }>) {
+export function createMockHouseholdV2Response(
+  overrides?: Partial<V2USStoredHouseholdEnvelope>
+): V2USStoredHouseholdEnvelope {
   return {
     id: overrides?.id ?? TEST_IDS.HOUSEHOLD_ID,
-    country_id: TEST_COUNTRY_ID,
+    country_id: 'us',
     year: 2026,
     label: 'Test household',
-    people: [{ age: 30, employment_income: 50000 }],
-    tax_unit: { members: ['person1'] },
-    family: null,
-    spm_unit: null,
-    marital_unit: null,
-    household: null,
-    benunit: null,
+    people: [
+      {
+        name: 'adult',
+        person_id: 0,
+        person_tax_unit_id: 0,
+        age: 30,
+        employment_income: 50000,
+      },
+    ],
+    tax_unit: [{ tax_unit_id: 0 }],
+    family: [],
+    spm_unit: [],
+    marital_unit: [],
+    household: [],
     created_at: TEST_TIMESTAMP,
     updated_at: TEST_TIMESTAMP,
+    ...overrides,
   };
 }
 
-export function createMockV2HouseholdShape() {
+export function createMockUkHouseholdV2Response(
+  overrides?: Partial<V2UKStoredHouseholdEnvelope>
+): V2UKStoredHouseholdEnvelope {
   return {
-    country_id: TEST_COUNTRY_ID as 'us',
+    id: overrides?.id ?? TEST_IDS.HOUSEHOLD_ID,
+    country_id: 'uk',
     year: 2026,
     label: 'Test household',
-    people: [{ age: 30, employment_income: 50000 }],
-    tax_unit: { members: ['person1'] },
-    family: null,
-    spm_unit: null,
-    marital_unit: null,
-    household: null,
-    benunit: null,
+    people: [
+      {
+        name: 'adult',
+        person_id: 0,
+        person_household_id: 0,
+        person_benunit_id: 0,
+        age: 30,
+        employment_income: 50000,
+      },
+    ],
+    household: [{ household_id: 0 }],
+    benunit: [{ benunit_id: 0 }],
+    created_at: TEST_TIMESTAMP,
+    updated_at: TEST_TIMESTAMP,
+    ...overrides,
+  };
+}
+
+export function createMockV2CreateHouseholdEnvelope(): V2USCreateHouseholdEnvelope {
+  return {
+    country_id: 'us',
+    year: 2026,
+    label: 'Test household',
+    people: [
+      {
+        name: 'adult',
+        person_id: 0,
+        person_tax_unit_id: 0,
+        age: 30,
+        employment_income: 50000,
+      },
+    ],
+    tax_unit: [{ tax_unit_id: 0 }],
+    family: [],
+    spm_unit: [],
+    marital_unit: [],
+    household: [],
+  };
+}
+
+export function createMockUkV2CreateHouseholdEnvelope(): V2UKCreateHouseholdEnvelope {
+  return {
+    country_id: 'uk',
+    year: 2026,
+    label: 'Test household',
+    people: [
+      {
+        name: 'adult',
+        person_id: 0,
+        person_household_id: 0,
+        person_benunit_id: 0,
+        age: 30,
+        employment_income: 50000,
+      },
+    ],
+    household: [{ household_id: 0 }],
+    benunit: [{ benunit_id: 0 }],
   };
 }
 

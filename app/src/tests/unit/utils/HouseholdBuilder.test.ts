@@ -22,6 +22,7 @@ import {
   YEARS,
 } from '@/tests/fixtures/utils/householdBuilderMocks';
 import { HouseholdBuilder } from '@/utils/HouseholdBuilder';
+import { getHouseholdYearValue } from '@/utils/householdDataAccess';
 
 describe('HouseholdBuilder', () => {
   let builder: HouseholdBuilder;
@@ -91,7 +92,7 @@ describe('HouseholdBuilder', () => {
 
       // Then
       const person = household.householdData.people[PERSON_NAMES.ADULT_1];
-      expect(person.age[DEFAULT_YEAR]).toBe(PERSON_AGES.ADULT_DEFAULT);
+      expect(getHouseholdYearValue(person.age, DEFAULT_YEAR)).toBe(PERSON_AGES.ADULT_DEFAULT);
     });
 
     test('given invalid year format when constructed then throws error', () => {
@@ -116,13 +117,18 @@ describe('HouseholdBuilder', () => {
       const household1 = builder.build();
 
       // When
-      household1.householdData.people[PERSON_NAMES.ADULT_1].age[YEARS.CURRENT] = 99;
+      (household1.householdData.people[PERSON_NAMES.ADULT_1].age as Record<string, number>)[
+        YEARS.CURRENT
+      ] = 99;
       const household2 = builder.build();
 
       // Then
-      expect(household2.householdData.people[PERSON_NAMES.ADULT_1].age[YEARS.CURRENT]).toBe(
-        PERSON_AGES.ADULT_DEFAULT
-      );
+      expect(
+        getHouseholdYearValue(
+          household2.householdData.people[PERSON_NAMES.ADULT_1].age,
+          YEARS.CURRENT
+        )
+      ).toBe(PERSON_AGES.ADULT_DEFAULT);
     });
 
     test('given multiple builds when called then each returns independent copy', () => {
@@ -240,7 +246,7 @@ describe('HouseholdBuilder', () => {
 
       // Then
       const person = household.householdData.people[PERSON_NAMES.ADULT_1];
-      expect(person[VARIABLE_NAMES.EMPLOYMENT_INCOME][YEARS.PAST]).toBe(
+      expect(getHouseholdYearValue(person[VARIABLE_NAMES.EMPLOYMENT_INCOME], YEARS.PAST)).toBe(
         VARIABLE_VALUES.INCOME_DEFAULT
       );
     });
@@ -299,6 +305,28 @@ describe('HouseholdBuilder', () => {
       expect(
         countGroupMembers(household, ENTITY_NAMES.HOUSEHOLDS, GROUP_KEYS.DEFAULT_HOUSEHOLD)
       ).toBe(3);
+    });
+
+    test('given US child when addChild then creates a child marital unit', () => {
+      // Given
+      builder.addAdult(PERSON_NAMES.ADULT_1, PERSON_AGES.ADULT_DEFAULT);
+      builder.addAdult(PERSON_NAMES.ADULT_2, PERSON_AGES.ADULT_DEFAULT);
+
+      // When
+      builder.addChild(PERSON_NAMES.CHILD_1, PERSON_AGES.CHILD_DEFAULT, []);
+      const household = builder.build();
+
+      // Then
+      const maritalUnits = household.householdData.maritalUnits!;
+      expect(Object.keys(maritalUnits)).toHaveLength(2);
+      expect(Object.keys(maritalUnits)).toContain(`${PERSON_NAMES.CHILD_1}'s marital unit`);
+      expect(maritalUnits[GROUP_KEYS.DEFAULT_MARITAL_UNIT].members).toEqual([
+        PERSON_NAMES.ADULT_1,
+        PERSON_NAMES.ADULT_2,
+      ]);
+      expect(maritalUnits[`${PERSON_NAMES.CHILD_1}'s marital unit`].members).toEqual([
+        PERSON_NAMES.CHILD_1,
+      ]);
     });
 
     test('given child with variables when addChild then includes variables', () => {
@@ -471,7 +499,7 @@ describe('HouseholdBuilder', () => {
 
       // Then
       const person = household.householdData.people[PERSON_NAMES.ADULT_1];
-      expect(person[VARIABLE_NAMES.EMPLOYMENT_INCOME][YEARS.FUTURE]).toBe(
+      expect(getHouseholdYearValue(person[VARIABLE_NAMES.EMPLOYMENT_INCOME], YEARS.FUTURE)).toBe(
         VARIABLE_VALUES.INCOME_HIGH
       );
     });
@@ -555,7 +583,9 @@ describe('HouseholdBuilder', () => {
 
       // Then
       const group = household.householdData.households![GROUP_KEYS.DEFAULT_HOUSEHOLD];
-      expect(group[VARIABLE_NAMES.STATE_CODE][YEARS.PAST]).toBe(VARIABLE_VALUES.STATE_NY);
+      expect(getHouseholdYearValue(group[VARIABLE_NAMES.STATE_CODE], YEARS.PAST)).toBe(
+        VARIABLE_VALUES.STATE_NY
+      );
     });
   });
 
@@ -704,8 +734,8 @@ describe('HouseholdBuilder', () => {
       // Then
       const person1 = household.householdData.people[PERSON_NAMES.ADULT_1];
       const person2 = household.householdData.people[PERSON_NAMES.ADULT_2];
-      expect(person1.age[YEARS.CURRENT]).toBe(PERSON_AGES.ADULT_DEFAULT);
-      expect(person2.age[YEARS.FUTURE]).toBe(PERSON_AGES.ADULT_DEFAULT);
+      expect(getHouseholdYearValue(person1.age, YEARS.CURRENT)).toBe(PERSON_AGES.ADULT_DEFAULT);
+      expect(getHouseholdYearValue(person2.age, YEARS.FUTURE)).toBe(PERSON_AGES.ADULT_DEFAULT);
     });
 
     test('given invalid year when setCurrentYear then throws error', () => {
@@ -733,10 +763,12 @@ describe('HouseholdBuilder', () => {
 
       // Then
       const person = household.householdData.people[PERSON_NAMES.ADULT_1];
-      expect(person[VARIABLE_NAMES.EMPLOYMENT_INCOME][YEARS.PAST]).toBe(
+      expect(getHouseholdYearValue(person[VARIABLE_NAMES.EMPLOYMENT_INCOME], YEARS.PAST)).toBe(
         VARIABLE_VALUES.INCOME_DEFAULT
       );
-      expect(person[VARIABLE_NAMES.EMPLOYMENT_INCOME][YEARS.CURRENT]).toBeUndefined();
+      expect(
+        getHouseholdYearValue(person[VARIABLE_NAMES.EMPLOYMENT_INCOME], YEARS.CURRENT)
+      ).toBeUndefined();
     });
   });
 
@@ -794,11 +826,18 @@ describe('HouseholdBuilder', () => {
 
       // When
       const household = builder.getHousehold();
-      household.householdData.people[PERSON_NAMES.ADULT_1].age[YEARS.CURRENT] = 99;
+      (household.householdData.people[PERSON_NAMES.ADULT_1].age as Record<string, number>)[
+        YEARS.CURRENT
+      ] = 99;
       const builtHousehold = builder.build();
 
       // Then
-      expect(builtHousehold.householdData.people[PERSON_NAMES.ADULT_1].age[YEARS.CURRENT]).toBe(99);
+      expect(
+        getHouseholdYearValue(
+          builtHousehold.householdData.people[PERSON_NAMES.ADULT_1].age,
+          YEARS.CURRENT
+        )
+      ).toBe(99);
     });
   });
 

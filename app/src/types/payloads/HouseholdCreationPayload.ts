@@ -1,10 +1,8 @@
-import { HouseholdData as APIHouseholdData } from '@/types/metadata/householdMetadata';
+import type { V1HouseholdCreateEnvelope } from '@/models/household/v1Types';
 
 /**
- * Payload format for creating a household via the API
+ * Legacy compatibility alias for the v1 household create payload.
+ *
+ * New household model work should prefer `V1HouseholdCreateEnvelope`.
  */
-export interface HouseholdCreationPayload {
-  country_id: string;
-  data: APIHouseholdData;
-  label?: string;
-}
+export type HouseholdCreationPayload = V1HouseholdCreateEnvelope;

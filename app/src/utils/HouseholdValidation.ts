@@ -1,5 +1,9 @@
+import type {
+  AppHouseholdInputEnvelope as Household,
+  AppHouseholdInputGroup as HouseholdGroupEntity,
+} from '@/models/household/appTypes';
 import { RootState } from '@/store';
-import { Household, HouseholdGroupEntity } from '@/types/ingredients/Household';
+import { getHouseholdYearValue } from '@/utils/householdDataAccess';
 import * as HouseholdQueries from './HouseholdQueries';
 
 /**
@@ -96,7 +100,7 @@ export const HouseholdValidation = {
 
     Object.entries(household.householdData.people).forEach(([personId, person]) => {
       // Only validate age if it's expected to exist (this would come from metadata)
-      if (!person.age || !(currentYear in person.age)) {
+      if (getHouseholdYearValue(person.age, currentYear) === undefined) {
         warnings.push({
           code: 'MISSING_AGE',
           message: `Person ${personId} is missing age for year ${currentYear}`,

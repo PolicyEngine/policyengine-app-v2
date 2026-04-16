@@ -1,6 +1,6 @@
 import type { PolicyEngineBundle } from '@/api/societyWideCalculation';
 import { BASE_URL } from '@/constants';
-import { HouseholdData } from '@/types/ingredients/Household';
+import type { AppHouseholdInputData as HouseholdData } from '@/models/household/appTypes';
 
 export interface HouseholdCalculationResponse {
   status: 'ok' | 'error';

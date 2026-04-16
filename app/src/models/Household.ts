@@ -1,113 +1,221 @@
-import type { HouseholdV2Response } from '@/api/v2/households';
 import type { CountryId } from '@/libs/countries';
 import { BaseModel } from './BaseModel';
+import {
+  buildAppHouseholdDataFromV1Data,
+  buildV1CreateEnvelopeFromAppInput,
+  cloneAppHouseholdInputData,
+} from './household/appCodec';
+import type {
+  AppHouseholdInputData,
+  AppHouseholdInputEnvelope,
+  ComparableHousehold,
+  HouseholdModelData,
+} from './household/appTypes';
+import { buildComparableHousehold } from './household/comparable';
+import { cloneValue, deepEqual, inferYearFromData, normalizeCountryId } from './household/utils';
+import type { V1HouseholdCreateEnvelope, V1HouseholdMetadataEnvelope } from './household/v1Types';
+import { buildV2CreateEnvelope, parseV2HouseholdEnvelope } from './household/v2Codec';
+import type { V2CreateHouseholdEnvelope, V2StoredHouseholdEnvelope } from './household/v2Types';
 
-interface HouseholdData {
-  id: string;
-  countryId: CountryId;
-  label: string | null;
-  year: number | null;
-  data: Record<string, unknown>;
-}
+export type { ComparableHousehold, HouseholdModelData } from './household/appTypes';
 
-export class Household extends BaseModel<HouseholdData> {
+export class Household extends BaseModel<HouseholdModelData> {
   readonly id: string;
-  readonly countryId: CountryId;
-  readonly year: number | null;
 
-  private _label: string | null;
-  private _data: Record<string, unknown>;
+  private readonly countryIdValue: CountryId;
 
-  constructor(data: HouseholdData) {
+  private readonly labelValue: string | null;
+
+  private readonly yearValue: number | null;
+
+  private readonly appInputData: AppHouseholdInputData;
+
+  private constructor(args: {
+    id: string;
+    countryId: CountryId;
+    label?: string | null;
+    year?: number | null;
+    appInputData: AppHouseholdInputData;
+  }) {
     super();
-    if (!data.id) {
+
+    if (!args.id) {
       throw new Error('Household requires an id');
     }
-    this.id = data.id;
-    this.countryId = data.countryId;
-    this.year = data.year;
-    this._label = data.label;
-    this._data = data.data;
+
+    this.id = args.id;
+    this.countryIdValue = normalizeCountryId(args.countryId);
+    this.labelValue = args.label ?? null;
+    this.yearValue = args.year ?? null;
+    this.appInputData = cloneAppHouseholdInputData(args.appInputData);
   }
 
-  // --- Getters ---
+  get countryId(): CountryId {
+    return this.countryIdValue;
+  }
 
   get label(): string | null {
-    return this._label;
-  }
-  get data(): Record<string, unknown> {
-    return { ...this._data };
+    return this.labelValue;
   }
 
-  get people(): Record<string, unknown> {
-    return (this._data.people as Record<string, unknown>) ?? {};
+  get year(): number | null {
+    return this.yearValue;
+  }
+
+  get householdData(): AppHouseholdInputData {
+    return cloneValue(this.appInputData);
+  }
+
+  get people(): AppHouseholdInputData['people'] {
+    return cloneValue(this.appInputData.people);
   }
 
   get personCount(): number {
-    const p = this._data.people;
-    if (Array.isArray(p)) {
-      return p.length;
-    }
-    if (p && typeof p === 'object') {
-      return Object.keys(p).length;
-    }
-    return 0;
+    return Object.keys(this.appInputData.people).length;
   }
 
   get personNames(): string[] {
-    const p = this._data.people;
-    if (Array.isArray(p)) {
-      return p.map((_, i) => String(i));
-    }
-    if (p && typeof p === 'object') {
-      return Object.keys(p as Record<string, unknown>);
-    }
-    return [];
+    return Object.keys(this.appInputData.people);
   }
 
-  // --- Setters ---
+  static fromAppInput(input: AppHouseholdInputEnvelope): Household {
+    const appInputData = cloneAppHouseholdInputData(input.householdData);
+    const year = input.year ?? inferYearFromData(appInputData);
 
-  set label(value: string | null) {
-    this._label = value;
-  }
-
-  // --- Factories ---
-
-  static fromV2Response(response: HouseholdV2Response): Household {
     return new Household({
-      id: response.id,
-      countryId: response.country_id as CountryId,
-      label: response.label ?? null,
-      year: response.year ?? null,
-      data: {
-        people: response.people,
-        tax_unit: response.tax_unit,
-        family: response.family,
-        spm_unit: response.spm_unit,
-        marital_unit: response.marital_unit,
-        household: response.household,
-        benunit: response.benunit,
-      },
+      id: input.id ?? 'draft-household',
+      countryId: normalizeCountryId(input.countryId),
+      label: input.label ?? null,
+      year,
+      appInputData,
     });
   }
 
-  // --- Serialization ---
+  static fromDraft(args: {
+    countryId: AppHouseholdInputEnvelope['countryId'];
+    householdData: AppHouseholdInputData;
+    label?: string | null;
+    year?: number | null;
+    id?: string;
+  }): Household {
+    return Household.fromAppInput({
+      id: args.id,
+      countryId: args.countryId,
+      householdData: args.householdData,
+      label: args.label,
+      year: args.year,
+    });
+  }
 
-  toJSON(): HouseholdData {
+  static fromV1Metadata(metadata: V1HouseholdMetadataEnvelope): Household {
+    const appInputData = buildAppHouseholdDataFromV1Data(metadata.household_json);
+    const year = inferYearFromData(appInputData);
+
+    return Household.fromAppInput({
+      id: String(metadata.id),
+      countryId: metadata.country_id as CountryId,
+      label: metadata.label ?? null,
+      year,
+      householdData: appInputData,
+    });
+  }
+
+  static fromV1CreationPayload(
+    payload: V1HouseholdCreateEnvelope,
+    options: {
+      id?: string;
+      label?: string | null;
+    } = {}
+  ): Household {
+    const appInputData = buildAppHouseholdDataFromV1Data(payload.data);
+    const year = inferYearFromData(appInputData);
+
+    return Household.fromAppInput({
+      id: options.id ?? 'draft-household',
+      countryId: payload.country_id as CountryId,
+      label: options.label ?? payload.label ?? null,
+      year,
+      householdData: appInputData,
+    });
+  }
+
+  static fromV2Response(response: V2StoredHouseholdEnvelope): Household {
+    return Household.fromAppInput({
+      id: response.id,
+      ...parseV2HouseholdEnvelope(response),
+    });
+  }
+
+  static fromV2CreateEnvelope(envelope: V2CreateHouseholdEnvelope): Household {
+    return Household.fromAppInput({
+      id: 'draft-household',
+      ...parseV2HouseholdEnvelope(envelope),
+    });
+  }
+
+  withId(id: string): Household {
+    return new Household({
+      id,
+      countryId: this.countryId,
+      label: this.label,
+      year: this.year,
+      appInputData: this.appInputData,
+    });
+  }
+
+  withLabel(label: string | null): Household {
+    return new Household({
+      id: this.id,
+      countryId: this.countryId,
+      label,
+      year: this.year,
+      appInputData: this.appInputData,
+    });
+  }
+
+  toAppInput(): AppHouseholdInputEnvelope {
     return {
       id: this.id,
       countryId: this.countryId,
-      label: this._label,
+      label: this.label,
       year: this.year,
-      data: { ...this._data },
+      householdData: this.householdData,
+    };
+  }
+
+  toV1CreationPayload(): V1HouseholdCreateEnvelope {
+    return buildV1CreateEnvelopeFromAppInput({
+      countryId: this.countryId,
+      householdData: this.appInputData,
+      label: this.label,
+      year: this.year ?? inferYearFromData(this.appInputData),
+    });
+  }
+
+  toV2CreateEnvelope(): V2CreateHouseholdEnvelope {
+    return buildV2CreateEnvelope({
+      countryId: this.countryId,
+      label: this.label,
+      year: this.year,
+      householdData: this.appInputData,
+    });
+  }
+
+  toComparable(): ComparableHousehold {
+    return buildComparableHousehold({ id: this.id, envelope: this.toV2CreateEnvelope() });
+  }
+
+  toJSON(): HouseholdModelData {
+    return {
+      id: this.id,
+      countryId: this.countryId,
+      label: this.label,
+      year: this.year,
+      householdData: cloneValue(this.appInputData),
     };
   }
 
   isEqual(other: Household): boolean {
-    return (
-      this.id === other.id &&
-      this._label === other._label &&
-      JSON.stringify(this._data) === JSON.stringify(other._data)
-    );
+    return deepEqual(this.toJSON(), other.toJSON());
   }
 }

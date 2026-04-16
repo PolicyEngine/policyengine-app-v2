@@ -13,10 +13,15 @@ import { logMigrationConsole } from './migrationLogRuntime';
 import { sendMigrationLog } from './migrationLogTransport';
 
 const KEY_PREFIX = 'v1v2';
+const TARGET_KEY_PREFIX = 'v1v2-target';
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function storageKey(entityType: string, v1Id: string): string {
   return `${KEY_PREFIX}:${entityType.toLowerCase()}:${v1Id}`;
+}
+
+function targetStorageKey(entityType: string, v1AssociationId: string, v1TargetId: string): string {
+  return `${TARGET_KEY_PREFIX}:${entityType.toLowerCase()}:${v1AssociationId}:${v1TargetId}`;
 }
 
 function createUuid(): string {
@@ -80,13 +85,105 @@ export function getV2Id(entityType: string, v1Id: string): string | null {
   }
 }
 
+export function setV2AssociationTargetId(
+  entityType: string,
+  v1AssociationId: string,
+  v1TargetId: string,
+  v2Id: string
+): void {
+  try {
+    localStorage.setItem(targetStorageKey(entityType, v1AssociationId, v1TargetId), v2Id);
+  } catch (error) {
+    logMigrationConsole(
+      `[${entityType}Migration] Failed to store target mapping: ${v1AssociationId}/${v1TargetId} → ${v2Id}`,
+      error
+    );
+    sendMigrationLog({
+      kind: 'event',
+      prefix: `${entityType}Migration`,
+      status: 'FAILED',
+      message: 'Failed to store target mapping',
+      metadata: {
+        entityType,
+        v1AssociationId,
+        v1TargetId,
+        v2Id,
+        error: error instanceof Error ? error.message : String(error),
+      },
+      ts: new Date().toISOString(),
+    });
+  }
+}
+
+export function getV2AssociationTargetId(
+  entityType: string,
+  v1AssociationId: string,
+  v1TargetId: string
+): string | null {
+  try {
+    return localStorage.getItem(targetStorageKey(entityType, v1AssociationId, v1TargetId));
+  } catch (error) {
+    logMigrationConsole(
+      `[${entityType}Migration] Failed to read target mapping for ${v1AssociationId}/${v1TargetId}`,
+      error
+    );
+    sendMigrationLog({
+      kind: 'event',
+      prefix: `${entityType}Migration`,
+      status: 'FAILED',
+      message: 'Failed to read target mapping',
+      metadata: {
+        entityType,
+        v1AssociationId,
+        v1TargetId,
+        error: error instanceof Error ? error.message : String(error),
+      },
+      ts: new Date().toISOString(),
+    });
+    return null;
+  }
+}
+
+export function clearV2AssociationTargetId(
+  entityType: string,
+  v1AssociationId: string,
+  v1TargetId: string
+): void {
+  try {
+    localStorage.removeItem(targetStorageKey(entityType, v1AssociationId, v1TargetId));
+  } catch (error) {
+    logMigrationConsole(
+      `[${entityType}Migration] Failed to clear target mapping for ${v1AssociationId}/${v1TargetId}`,
+      error
+    );
+    sendMigrationLog({
+      kind: 'event',
+      prefix: `${entityType}Migration`,
+      status: 'FAILED',
+      message: 'Failed to clear target mapping',
+      metadata: {
+        entityType,
+        v1AssociationId,
+        v1TargetId,
+        error: error instanceof Error ? error.message : String(error),
+      },
+      ts: new Date().toISOString(),
+    });
+  }
+}
+
 export function clearV2Mappings(entityType?: string): void {
   try {
-    const prefix = entityType ? `${KEY_PREFIX}:${entityType.toLowerCase()}:` : `${KEY_PREFIX}:`;
+    const prefixes = entityType
+      ? [
+          `${KEY_PREFIX}:${entityType.toLowerCase()}:`,
+          `${TARGET_KEY_PREFIX}:${entityType.toLowerCase()}:`,
+        ]
+      : [`${KEY_PREFIX}:`, `${TARGET_KEY_PREFIX}:`];
     const keysToRemove: string[] = [];
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
-      if (key?.startsWith(prefix)) {
+      if (key && prefixes.some((prefix) => key.startsWith(prefix))) {
         keysToRemove.push(key);
       }
     }

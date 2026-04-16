@@ -1,6 +1,6 @@
 import { SocietyWideReportOutput } from '@/api/societyWideCalculation';
+import type { AppHouseholdInputData as HouseholdData } from '@/models/household/appTypes';
 import { CalcError, CalcMetadata, CalcParams, CalcStatus } from '@/types/calculation';
-import { HouseholdData } from '@/types/ingredients/Household';
 
 /**
  * Mock CalcError for testing

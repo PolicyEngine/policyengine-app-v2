@@ -3,7 +3,7 @@ import { fetchHouseholdById } from '@/api/household';
 import { fetchHouseholdVariation } from '@/api/householdVariation';
 import { countryIds } from '@/libs/countries';
 import { householdVariationKeys } from '@/libs/queryKeys';
-import type { Household } from '@/types/ingredients/Household';
+import type { AppHouseholdInputEnvelope as Household } from '@/models/household/appTypes';
 import { buildHouseholdVariationAxes } from '@/utils/householdVariationAxes';
 
 interface UseHouseholdVariationParams {

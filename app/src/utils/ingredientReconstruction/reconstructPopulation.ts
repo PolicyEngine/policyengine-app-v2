@@ -1,5 +1,5 @@
+import type { AppHouseholdInputEnvelope as Household } from '@/models/household/appTypes';
 import { Geography } from '@/types/ingredients/Geography';
-import { Household } from '@/types/ingredients/Household';
 import { PopulationStateProps } from '@/types/pathwayState';
 
 /**

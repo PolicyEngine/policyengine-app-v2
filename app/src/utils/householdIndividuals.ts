@@ -1,4 +1,7 @@
-import { Household, HouseholdGroupEntity } from '@/types/ingredients/Household';
+import type {
+  AppHouseholdInputEnvelope as Household,
+  AppHouseholdInputGroup as HouseholdGroupEntity,
+} from '@/models/household/appTypes';
 
 /**
  * Sort people keys in display order: you, your partner, then dependents by ordinal

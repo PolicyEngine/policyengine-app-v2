@@ -1,24 +1,28 @@
 import type {
-  Household,
-  HouseholdGroupEntity,
-  HouseholdPerson,
-} from '@/types/ingredients/Household';
+  AppHouseholdInputEnvelope,
+  AppHouseholdInputGroupMap,
+  AppHouseholdInputPerson,
+} from '@/models/household/appTypes';
+import { getHouseholdGroupCollection, getHouseholdYearValue } from './householdDataAccess';
 import { sortPeopleKeys } from './householdIndividuals';
 
-const GROUP_CANDIDATES = ['tax_units', 'taxUnits', 'households', 'families', 'benunits'] as const;
+const GROUP_CANDIDATES = ['taxUnits', 'households', 'families', 'benunits'] as const;
 
-function isAdult(person: HouseholdPerson | undefined, year: string | null | undefined): boolean {
+function isAdult(
+  person: AppHouseholdInputPerson | undefined,
+  year: string | null | undefined
+): boolean {
   if (!person || !year) {
     return false;
   }
 
-  const age = person.age?.[year];
+  const age = getHouseholdYearValue(person.age, year);
   return typeof age === 'number' && age >= 18;
 }
 
 function getFirstAdultOrMember(
   members: string[] | undefined,
-  people: Record<string, HouseholdPerson>,
+  people: Record<string, AppHouseholdInputPerson>,
   year: string | null | undefined
 ): string | null {
   if (!Array.isArray(members) || members.length === 0) {
@@ -34,12 +38,17 @@ function getFirstAdultOrMember(
   return firstAdult ?? existingMembers[0];
 }
 
-function getPersonFromGroups(household: Household, year: string | null | undefined): string | null {
+function getPersonFromGroups(
+  household: AppHouseholdInputEnvelope,
+  year: string | null | undefined
+): string | null {
   const householdData = household.householdData ?? {};
   const people = householdData.people ?? {};
 
   for (const groupName of GROUP_CANDIDATES) {
-    const groups = householdData[groupName] as Record<string, HouseholdGroupEntity> | undefined;
+    const groups = getHouseholdGroupCollection(householdData, groupName) as
+      | AppHouseholdInputGroupMap
+      | undefined;
     if (!groups) {
       continue;
     }
@@ -57,7 +66,7 @@ function getPersonFromGroups(household: Household, year: string | null | undefin
 }
 
 export function getHeadOfHouseholdPersonName(
-  household: Household,
+  household: AppHouseholdInputEnvelope,
   year: string | null | undefined
 ): string | null {
   const people = household.householdData?.people ?? {};

@@ -14,6 +14,7 @@ import {
 } from '@/hooks/useUserGeographic';
 import { useUpdateHouseholdAssociation, useUserHouseholds } from '@/hooks/useUserHousehold';
 import { countryIds } from '@/libs/countries';
+import { Household } from '@/models/Household';
 import { RootState } from '@/store';
 import { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
 import { formatDate } from '@/utils/dateUtils';
@@ -188,9 +189,11 @@ export default function PopulationsPage() {
   };
 
   // Helper function to get household configuration details
-  const getHouseholdDetails = (household: any) => {
-    const peopleCount = Object.keys(household?.household_json?.people || {}).length;
-    const familiesCount = Object.keys(household?.household_json?.families || {}).length;
+  const getHouseholdDetails = (household: Household | undefined) => {
+    const peopleCount = household?.personCount ?? 0;
+    const families =
+      (household?.householdData?.families as Record<string, unknown> | undefined) ?? {};
+    const familiesCount = Object.keys(families).length;
     return [
       { text: `${peopleCount} person${peopleCount !== 1 ? 's' : ''}`, badge: '' },
       { text: `${familiesCount} household${familiesCount !== 1 ? 's' : ''}`, badge: '' },

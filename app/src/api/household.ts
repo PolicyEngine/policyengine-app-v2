@@ -1,11 +1,11 @@
 import { BASE_URL } from '@/constants';
-import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
+import type { V1HouseholdMetadataEnvelope } from '@/models/household/v1Types';
 import { HouseholdCreationPayload } from '@/types/payloads';
 
 export async function fetchHouseholdById(
   country: string,
   household: string
-): Promise<HouseholdMetadata> {
+): Promise<V1HouseholdMetadataEnvelope> {
   const url = `${BASE_URL}/${country}/household/${household}`;
 
   const res = await fetch(url, {

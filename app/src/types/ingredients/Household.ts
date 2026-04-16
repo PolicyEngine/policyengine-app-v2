@@ -1,48 +1,53 @@
-import { countryIds } from '@/libs/countries';
+import type { CountryId } from '@/libs/countries';
+import type {
+  AppHouseholdInputEnvelope,
+  HouseholdScalar,
+  HouseholdYearValueMap,
+} from '@/models/household/appTypes';
 
 /**
- * Household - The canonical household data structure for API communication
- * This represents the actual household data structure used for simulations
+ * Legacy compatibility aliases.
  *
- * Use this for:
- * - API requests/responses
- * - Simulation data
- * - Data persistence
- * - Normalized cache storage
- *
- * Key principles:
- * - No ID until created via API
- * - Country-agnostic structure
- * - All group entities use same interface
+ * These names are compatibility aliases for pre-refactor app modules. They are
+ * not the canonical household type entry points. New household model work should
+ * import the explicit canonical/v1/v2 type families under `models/household`.
  */
-export interface Household {
-  id?: string; // Only present after API creation
-  countryId: (typeof countryIds)[number];
-  householdData: HouseholdData;
-}
 
-/**
- * The core household data structure matching API expectations
- * All group entities (families, taxUnits, etc.) use the same interface
- * The specific entities present depend on the country
- */
-export interface HouseholdData {
-  people: Record<string, HouseholdPerson>;
-  [groupEntity: string]: Record<string, HouseholdGroupEntity> | Record<string, HouseholdPerson>;
-}
+export type HouseholdValue = HouseholdScalar;
+export type HouseholdYearMap = HouseholdYearValueMap;
 
-/**
- * Person entity - can contain any variables
- */
+/** @deprecated Prefer `AppHouseholdInputPerson`. */
 export interface HouseholdPerson {
-  [key: string]: any;
+  [key: string]: HouseholdYearMap | HouseholdValue;
 }
 
-/**
- * Group entity used for families, tax units, households, etc.
- * Must have members array, can contain any other variables
- */
+/** @deprecated Prefer `AppHouseholdInputGroup`. */
 export interface HouseholdGroupEntity {
   members: string[];
-  [key: string]: any;
+  [key: string]: HouseholdYearMap | HouseholdValue | string[];
+}
+
+export type HouseholdGroupMap = Record<string, HouseholdGroupEntity>;
+
+/** @deprecated Prefer `AppHouseholdInputData`. */
+export interface HouseholdData {
+  people: Record<string, HouseholdPerson>;
+  households?: HouseholdGroupMap;
+  families?: HouseholdGroupMap;
+  taxUnits?: HouseholdGroupMap;
+  spmUnits?: HouseholdGroupMap;
+  maritalUnits?: HouseholdGroupMap;
+  benunits?: HouseholdGroupMap;
+  tax_units?: HouseholdGroupMap;
+  spm_units?: HouseholdGroupMap;
+  marital_units?: HouseholdGroupMap;
+}
+
+/** @deprecated Prefer `AppHouseholdInputEnvelope`. */
+export interface Household extends AppHouseholdInputEnvelope {
+  id?: string;
+  countryId: CountryId;
+  householdData: HouseholdData;
+  label?: string | null;
+  year?: number | null;
 }

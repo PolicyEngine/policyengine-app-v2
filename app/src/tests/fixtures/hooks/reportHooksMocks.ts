@@ -1,7 +1,7 @@
 import { QueryClient } from '@tanstack/react-query';
 import { vi } from 'vitest';
+import type { AppHouseholdInputEnvelope as Household } from '@/models/household/appTypes';
 import { Geography } from '@/types/ingredients/Geography';
-import { Household } from '@/types/ingredients/Household';
 import { Simulation } from '@/types/ingredients/Simulation';
 import { UserReport } from '@/types/ingredients/UserReport';
 
@@ -56,10 +56,10 @@ export const mockHousehold: Household = {
   householdData: {
     people: {},
     families: {},
-    tax_units: {},
-    spm_units: {},
+    taxUnits: {},
+    spmUnits: {},
     households: {},
-    marital_units: {},
+    maritalUnits: {},
   },
 };
 

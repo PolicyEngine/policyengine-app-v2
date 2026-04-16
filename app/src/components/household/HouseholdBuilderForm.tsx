@@ -28,7 +28,12 @@ import {
   Text,
 } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
-import { Household } from '@/types/ingredients/Household';
+import type { AppHouseholdInputEnvelope } from '@/models/household/appTypes';
+import {
+  cloneHousehold,
+  ensureHouseholdGroupInstance,
+  getPreferredHouseholdGroupName,
+} from '@/utils/householdDataAccess';
 import { sortPeopleKeys } from '@/utils/householdIndividuals';
 import {
   addVariable,
@@ -37,20 +42,21 @@ import {
   getVariableEntityDisplayInfo,
   getVariableInfo,
   removeVariable,
+  removeVariableFromEntity,
   resolveEntity,
 } from '@/utils/VariableResolver';
 import VariableRow from './VariableRow';
 import VariableSearchDropdown from './VariableSearchDropdown';
 
 export interface HouseholdBuilderFormProps {
-  household: Household;
+  household: AppHouseholdInputEnvelope;
   metadata: any;
   year: string;
   maritalStatus: 'single' | 'married';
   numChildren: number;
   basicPersonFields: string[]; // Basic inputs for person entity (e.g., age, employment_income)
   basicNonPersonFields: string[]; // Basic inputs for household-level entities
-  onChange: (household: Household) => void;
+  onChange: (household: AppHouseholdInputEnvelope) => void;
   onMaritalStatusChange: (status: 'single' | 'married') => void;
   onNumChildrenChange: (num: number) => void;
   disabled?: boolean;
@@ -138,6 +144,15 @@ export default function HouseholdBuilderForm({
     [householdSearchValue, allInputVariables]
   );
 
+  const resolveDefaultGroupInstanceName = (variableName: string): string | undefined => {
+    const entityInfo = resolveEntity(variableName, metadata);
+    if (!entityInfo || entityInfo.isPerson) {
+      return undefined;
+    }
+
+    return getPreferredHouseholdGroupName(household.householdData, entityInfo.plural);
+  };
+
   // Get variables for a specific person (custom only, not basic inputs)
   const getPersonVariables = (personName: string): string[] => {
     const personData = household.householdData.people[personName];
@@ -165,9 +180,14 @@ export default function HouseholdBuilderForm({
       })
       .map((varName) => {
         const entityInfo = resolveEntity(varName, metadata);
-        return { name: varName, entity: entityInfo?.plural || 'households' };
+        const entity = entityInfo?.plural || 'households';
+        return {
+          name: varName,
+          entity,
+          entityName: getPreferredHouseholdGroupName(household.householdData, entity),
+        };
       });
-  }, [selectedVariables, metadata, basicNonPersonFields]);
+  }, [selectedVariables, metadata, basicNonPersonFields, household]);
 
   // Handle opening person search
   const handleOpenPersonSearch = (person: string) => {
@@ -209,12 +229,7 @@ export default function HouseholdBuilderForm({
 
   // Handle removing person variable
   const handleRemovePersonVariable = (varName: string, person: string) => {
-    // Remove the variable data from this person's household data
-    const newHousehold = { ...household };
-    const personData = newHousehold.householdData.people[person];
-    if (personData && personData[varName]) {
-      delete personData[varName];
-    }
+    const newHousehold = removeVariableFromEntity(household, varName, metadata, person);
     onChange(newHousehold);
 
     // Check if any other person still has this variable
@@ -250,7 +265,7 @@ export default function HouseholdBuilderForm({
       setWarningMessage(null);
     }
 
-    let newHousehold: Household;
+    let newHousehold: AppHouseholdInputEnvelope;
     if (isPerson) {
       // For person-level variables selected from household, add to ALL people
       // Always call addVariable to ensure new members get it too
@@ -263,12 +278,17 @@ export default function HouseholdBuilderForm({
         setIsHouseholdSearchFocused(false);
         return;
       }
+      const ensuredHousehold = cloneHousehold(household);
+      const targetEntityName = ensureHouseholdGroupInstance(
+        ensuredHousehold.householdData,
+        resolveEntity(variable.name, metadata)?.plural || 'households'
+      );
       newHousehold = addVariableToEntity(
-        household,
+        ensuredHousehold,
         variable.name,
         metadata,
         year,
-        'your household'
+        targetEntityName
       );
     }
     onChange(newHousehold);
@@ -481,6 +501,7 @@ export default function HouseholdBuilderForm({
                 if (!variable) {
                   return null;
                 }
+                const entityName = resolveDefaultGroupInstanceName(fieldName);
                 return (
                   <VariableRow
                     key={fieldName}
@@ -488,6 +509,7 @@ export default function HouseholdBuilderForm({
                     household={household}
                     metadata={metadata}
                     year={year}
+                    entityName={entityName}
                     onChange={onChange}
                     disabled={disabled}
                     showRemoveColumn
@@ -496,7 +518,7 @@ export default function HouseholdBuilderForm({
               })}
 
               {/* Custom household-level variables */}
-              {householdLevelVariables.map(({ name: varName, entity }) => {
+              {householdLevelVariables.map(({ name: varName, entity, entityName }) => {
                 const variable = allInputVariables.find((v) => v.name === varName);
                 if (!variable) {
                   return null;
@@ -508,6 +530,7 @@ export default function HouseholdBuilderForm({
                     household={household}
                     metadata={metadata}
                     year={year}
+                    entityName={entityName}
                     onChange={onChange}
                     onRemove={() => handleRemoveHouseholdVariable(varName)}
                     disabled={disabled}

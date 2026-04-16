@@ -1,5 +1,5 @@
+import type { AppHouseholdInputEnvelope } from '@/models/household/appTypes';
 import { Geography } from './Geography';
-import { Household } from './Household';
 
 /**
  * Population type for Redux state management
@@ -8,6 +8,6 @@ import { Household } from './Household';
 export interface Population {
   label?: string | null;
   isCreated?: boolean;
-  household?: Household | null;
+  household?: AppHouseholdInputEnvelope | null;
   geography?: Geography | null;
 }

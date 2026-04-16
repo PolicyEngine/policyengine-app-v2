@@ -1,10 +1,10 @@
 import { vi } from 'vitest';
 import { SocietyWideCalculationResponse } from '@/api/societyWideCalculation';
+import type { AppHouseholdInputData as HouseholdData } from '@/models/household/appTypes';
 import {
   mockHouseholdResult,
   mockSocietyWideResult,
 } from '@/tests/fixtures/types/calculationFixtures';
-import { HouseholdData } from '@/types/ingredients/Household';
 
 /**
  * Test constants for strategy timing and progress

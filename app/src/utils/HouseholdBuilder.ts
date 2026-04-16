@@ -1,10 +1,14 @@
 import { countryIds } from '@/libs/countries';
+import type {
+  AppHouseholdInputEnvelope as Household,
+  AppHouseholdInputData as HouseholdData,
+  AppHouseholdInputGroup as HouseholdGroupEntity,
+  AppHouseholdInputPerson as HouseholdPerson,
+} from '@/models/household/appTypes';
 import {
-  Household,
-  HouseholdData,
-  HouseholdGroupEntity,
-  HouseholdPerson,
-} from '@/types/ingredients/Household';
+  ensureHouseholdGroupCollection,
+  getAllHouseholdGroupCollections,
+} from './householdDataAccess';
 
 // Country-specific default entities
 const COUNTRY_DEFAULT_ENTITIES = {
@@ -229,7 +233,9 @@ export class HouseholdBuilder {
       firstSpmUnit.members.push(personKey);
     }
 
-    // Handle marital units - adults share one, children get their own
+    // Handle marital units for builder-created US households.
+    // Adults share one default marital unit. Children get their own
+    // marital units by default, matching the legacy builder semantics.
     if (!this.household.householdData.maritalUnits) {
       this.household.householdData.maritalUnits = {};
     }
@@ -247,15 +253,13 @@ export class HouseholdBuilder {
         maritalUnits['your marital unit'].members.push(personKey);
       }
     } else {
-      // Children get their own marital unit
       const childMaritalUnitKey = `${personKey}'s marital unit`;
-      const childCount = Object.keys(maritalUnits).filter((k) =>
-        k.includes("'s marital unit")
-      ).length;
-      maritalUnits[childMaritalUnitKey] = {
-        members: [personKey],
-        marital_unit_id: { [this.currentYear]: childCount + 1 },
-      };
+      if (!maritalUnits[childMaritalUnitKey]) {
+        maritalUnits[childMaritalUnitKey] = { members: [] };
+      }
+      if (!maritalUnits[childMaritalUnitKey].members.includes(personKey)) {
+        maritalUnits[childMaritalUnitKey].members.push(personKey);
+      }
     }
 
     // Ensure default household exists
@@ -351,15 +355,7 @@ export class HouseholdBuilder {
    * Assign a person to a group entity
    */
   assignToGroupEntity(personKey: string, entityName: string, groupKey: string): HouseholdBuilder {
-    // Ensure the entity type exists
-    if (!this.household.householdData[entityName]) {
-      this.household.householdData[entityName] = {};
-    }
-
-    const entities = this.household.householdData[entityName] as Record<
-      string,
-      HouseholdGroupEntity
-    >;
+    const entities = ensureHouseholdGroupCollection(this.household.householdData, entityName);
 
     // Create group if doesn't exist
     if (!entities[groupKey]) {
@@ -405,10 +401,7 @@ export class HouseholdBuilder {
     variableName: string,
     value: any
   ): HouseholdBuilder {
-    const entities = this.household.householdData[entityName] as Record<
-      string,
-      HouseholdGroupEntity
-    >;
+    const entities = ensureHouseholdGroupCollection(this.household.householdData, entityName);
     if (!entities || !entities[groupKey]) {
       throw new Error(`Group ${groupKey} not found in ${entityName}`);
     }
@@ -428,25 +421,11 @@ export class HouseholdBuilder {
    * Remove person from all group entities
    */
   private removeFromAllGroups(personKey: string): void {
-    // Iterate through all properties of householdData
-    Object.keys(this.household.householdData).forEach((entityName) => {
-      // Skip 'people' as it's not a group entity
-      if (entityName === 'people') {
-        return;
-      }
-
-      const entities = this.household.householdData[entityName] as Record<
-        string,
-        HouseholdGroupEntity
-      >;
-
-      // Remove person from each group in this entity type
-      Object.values(entities).forEach((group) => {
-        if (group.members) {
-          const index = group.members.indexOf(personKey);
-          if (index > -1) {
-            group.members.splice(index, 1);
-          }
+    getAllHouseholdGroupCollections(this.household.householdData).forEach(({ groups }) => {
+      Object.values(groups).forEach((group) => {
+        const index = group.members.indexOf(personKey);
+        if (index > -1) {
+          group.members.splice(index, 1);
         }
       });
     });

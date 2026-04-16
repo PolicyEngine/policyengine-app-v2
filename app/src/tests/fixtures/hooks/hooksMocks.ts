@@ -1,11 +1,11 @@
 import { QueryClient } from '@tanstack/react-query';
 import { vi } from 'vitest';
 import { CURRENT_YEAR } from '@/constants';
+import type { V1HouseholdMetadataEnvelope } from '@/models/household/v1Types';
 import {
   UserGeographyPopulation,
   UserHouseholdPopulation,
 } from '@/types/ingredients/UserPopulation';
-import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
 import { HouseholdCreationPayload } from '@/types/payloads';
 
 // ============= TEST CONSTANTS =============
@@ -94,7 +94,7 @@ export const TEST_VALUES = {
 
 // ============= MOCK DATA OBJECTS =============
 
-export const mockHouseholdMetadata: HouseholdMetadata = {
+export const mockHouseholdMetadata: V1HouseholdMetadataEnvelope = {
   id: TEST_IDS.HOUSEHOLD_ID.split('-')[1],
   country_id: GEO_CONSTANTS.COUNTRY_US,
   household_json: {
@@ -171,6 +171,9 @@ export const mockHouseholdCreationPayload: HouseholdCreationPayload = {
     people: {
       person1: {
         age: { [CURRENT_YEAR]: TEST_VALUES.AGE },
+      },
+      person2: {
+        age: { [CURRENT_YEAR]: TEST_VALUES.AGE - 2 },
       },
     },
     tax_units: {

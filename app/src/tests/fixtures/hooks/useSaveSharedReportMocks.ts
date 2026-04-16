@@ -4,6 +4,9 @@
 
 import { vi } from 'vitest';
 import { ReportIngredientsInput } from '@/hooks/utils/useFetchReportIngredients';
+import { Household } from '@/models/Household';
+import type { AppHouseholdInputEnvelope } from '@/models/household/appTypes';
+import type { V1HouseholdMetadataEnvelope } from '@/models/household/v1Types';
 import { Policy } from '@/types/ingredients/Policy';
 
 // ============================================================================
@@ -109,6 +112,17 @@ export const MOCK_SAVED_USER_POLICY = {
   isCreated: true,
 };
 
+export const MOCK_SAVED_USER_HOUSEHOLD = {
+  id: 'suh-household-save-1',
+  userId: 'anonymous',
+  householdId: TEST_IDS.HOUSEHOLD,
+  countryId: TEST_COUNTRIES.UK,
+  label: 'My Household',
+  createdAt: '2026-04-08T12:00:00Z',
+  isCreated: true,
+  type: 'household' as const,
+};
+
 export const MOCK_EXISTING_USER_REPORT = {
   ...MOCK_SAVED_USER_REPORT,
   label: 'Already Saved Report',
@@ -127,6 +141,61 @@ export const MOCK_POLICIES: Policy[] = [
     ],
   },
 ];
+
+export const MOCK_HOUSEHOLDS: AppHouseholdInputEnvelope[] = [
+  {
+    id: TEST_IDS.HOUSEHOLD,
+    countryId: TEST_COUNTRIES.UK,
+    householdData: {
+      people: {
+        you: {
+          age: { '2026': 40 },
+          employment_income: { '2026': 30000 },
+        },
+      },
+      households: {
+        household1: {
+          members: ['you'],
+        },
+      },
+      benunits: {
+        benunit1: {
+          members: ['you'],
+        },
+      },
+    },
+  },
+];
+
+const MOCK_SHARED_V1_HOUSEHOLD_METADATA: V1HouseholdMetadataEnvelope = {
+  id: TEST_IDS.HOUSEHOLD,
+  country_id: TEST_COUNTRIES.UK,
+  label: 'Fetched Shared Household',
+  api_version: 'v1',
+  household_hash: 'shared-household-hash',
+  household_json: {
+    people: {
+      you: {
+        age: { '2026': 40 },
+        employment_income: { '2026': 30000 },
+      },
+    },
+    households: {
+      household1: {
+        members: ['you'],
+      },
+    },
+    benunits: {
+      benunit1: {
+        members: ['you'],
+      },
+    },
+  },
+};
+
+export const MOCK_SHARED_V1_HOUSEHOLD_MODEL = Household.fromV1Metadata(
+  MOCK_SHARED_V1_HOUSEHOLD_METADATA
+);
 
 // ============================================================================
 // Mock Hooks Factory

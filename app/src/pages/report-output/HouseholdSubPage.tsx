@@ -1,7 +1,7 @@
 import { useSelector } from 'react-redux';
 import GroupEntityDisplay from '@/components/report/GroupEntityDisplay';
+import type { AppHouseholdInputEnvelope as Household } from '@/models/household/appTypes';
 import { RootState } from '@/store';
-import { Household } from '@/types/ingredients/Household';
 import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { extractGroupEntities } from '@/utils/householdIndividuals';
 import { householdsAreEqual } from '@/utils/householdTableData';

@@ -1,6 +1,7 @@
 import type { V2PolicyResponse, V2PolicyResponseParameterValue } from '@/api/policy';
-import type { HouseholdV2Response } from '@/api/v2/households';
 import type { CountryId } from '@/libs/countries';
+import type { AppHouseholdInputData } from '@/models/household/appTypes';
+import type { V2USStoredHouseholdEnvelope } from '@/models/household/v2Types';
 
 // ============================================================================
 // Test constants
@@ -93,7 +94,7 @@ export interface HouseholdDataShape {
   countryId: CountryId;
   year: number | null;
   label: string | null;
-  data: Record<string, unknown>;
+  data: AppHouseholdInputData;
 }
 
 export const createMockHouseholdData = (
@@ -105,13 +106,13 @@ export const createMockHouseholdData = (
   label: TEST_HOUSEHOLD_LABEL,
   data: {
     people: {
-      adult: { age: { 2026: 35 }, income: { 2026: 50000 } },
+      adult: { age: { 2026: 35 }, employment_income: { 2026: 50000 } },
       child: { age: { 2026: 8 } },
     },
-    tax_unit: { unit_1: { members: ['adult', 'child'] } },
-    family: { family_1: { members: ['adult', 'child'] } },
-    spm_unit: { spm_1: { members: ['adult', 'child'] } },
-    household: { household_1: { members: ['adult', 'child'] } },
+    taxUnits: { taxUnit1: { members: ['adult', 'child'] } },
+    families: { family1: { members: ['adult', 'child'] } },
+    spmUnits: { spmUnit1: { members: ['adult', 'child'] } },
+    households: { household1: { members: ['adult', 'child'] } },
   },
   ...overrides,
 });
@@ -120,7 +121,7 @@ export const createMockEmptyHouseholdData = (
   overrides?: Partial<HouseholdDataShape>
 ): HouseholdDataShape =>
   createMockHouseholdData({
-    data: {},
+    data: { people: {} },
     ...overrides,
   });
 
@@ -179,38 +180,54 @@ export const createMockV2PolicyResponseNoParams = (
 // ============================================================================
 
 export const createMockHouseholdV2Response = (
-  overrides?: Partial<HouseholdV2Response>
-): HouseholdV2Response => ({
+  overrides?: Partial<V2USStoredHouseholdEnvelope>
+): V2USStoredHouseholdEnvelope => ({
   id: TEST_HOUSEHOLD_IDS.HOUSEHOLD_A,
-  country_id: TEST_COUNTRY_ID,
+  country_id: 'us',
   year: 2026,
   label: 'My v2 household',
   people: [
-    { name: 'adult', age: 35, income: 50000 },
-    { name: 'child', age: 8 },
+    {
+      name: 'adult',
+      person_id: 0,
+      person_household_id: 0,
+      person_tax_unit_id: 0,
+      person_family_id: 0,
+      person_spm_unit_id: 0,
+      person_marital_unit_id: 0,
+      age: 35,
+      employment_income: 50000,
+    },
+    {
+      name: 'child',
+      person_id: 1,
+      person_household_id: 0,
+      person_tax_unit_id: 0,
+      person_family_id: 0,
+      person_spm_unit_id: 0,
+      age: 8,
+    },
   ],
-  tax_unit: { unit_1: { members: ['adult', 'child'] } },
-  family: { family_1: { members: ['adult', 'child'] } },
-  spm_unit: { spm_1: { members: ['adult', 'child'] } },
-  marital_unit: { marital_1: { members: ['adult'] } },
-  household: { household_1: { members: ['adult', 'child'] } },
-  benunit: null,
+  tax_unit: [{ tax_unit_id: 0 }],
+  family: [{ family_id: 0 }],
+  spm_unit: [{ spm_unit_id: 0 }],
+  marital_unit: [{ marital_unit_id: 0 }],
+  household: [{ household_id: 0 }],
   created_at: TEST_TIMESTAMP,
   updated_at: TEST_UPDATED_TIMESTAMP,
   ...overrides,
 });
 
 export const createMockHouseholdV2ResponseMinimal = (
-  overrides?: Partial<HouseholdV2Response>
-): HouseholdV2Response =>
+  overrides?: Partial<V2USStoredHouseholdEnvelope>
+): V2USStoredHouseholdEnvelope =>
   createMockHouseholdV2Response({
     people: [{ name: 'single_adult', age: 30 }],
-    tax_unit: null,
-    family: null,
-    spm_unit: null,
-    marital_unit: null,
-    household: null,
-    benunit: null,
+    tax_unit: [],
+    family: [],
+    spm_unit: [],
+    marital_unit: [],
+    household: [],
     ...overrides,
   });
 

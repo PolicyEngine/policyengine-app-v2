@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { Household } from '@/models/Household';
+import { createMockUkHouseholdV2Response } from '@/tests/fixtures/api/v2/shared';
 import {
   createMockEmptyHouseholdData,
   createMockHouseholdData,
@@ -10,367 +11,802 @@ import {
   TEST_HOUSEHOLD_IDS,
   TEST_HOUSEHOLD_LABEL,
 } from '@/tests/fixtures/models/shared';
+import {
+  mockHouseholdMetadata,
+  mockHouseholdMetadataWithUnknownEntity,
+} from '@/tests/fixtures/models/v1HouseholdMocks';
+
+function createHousehold(overrides?: Parameters<typeof createMockHouseholdData>[0]): Household {
+  const data = createMockHouseholdData(overrides);
+
+  return Household.fromAppInput({
+    id: data.id,
+    countryId: data.countryId,
+    label: data.label,
+    year: data.year,
+    householdData: data.data,
+  });
+}
+
+function createEmptyHousehold(
+  overrides?: Parameters<typeof createMockEmptyHouseholdData>[0]
+): Household {
+  const data = createMockEmptyHouseholdData(overrides);
+
+  return Household.fromAppInput({
+    id: data.id,
+    countryId: data.countryId,
+    label: data.label,
+    year: data.year,
+    householdData: data.data,
+  });
+}
 
 describe('Household', () => {
-  // ========================================================================
-  // Constructor
-  // ========================================================================
+  describe('constructor and accessors', () => {
+    it('stores the core household fields', () => {
+      const household = createHousehold();
 
-  describe('constructor', () => {
-    it('given valid HouseholdData then sets id, countryId, label, and data', () => {
-      // Given
-      const data = createMockHouseholdData();
-
-      // When
-      const household = new Household(data);
-
-      // Then
       expect(household.id).toBe(TEST_HOUSEHOLD_ID);
       expect(household.countryId).toBe(TEST_COUNTRY_ID);
       expect(household.label).toBe(TEST_HOUSEHOLD_LABEL);
-      expect(household.data).toBeDefined();
-      expect(household.data.people).toBeDefined();
+      expect(household.year).toBe(2026);
+      expect(household.householdData).toHaveProperty('taxUnits');
     });
 
-    it('given null label then label is null', () => {
-      // Given
-      const data = createMockHouseholdData({ label: null });
+    it('returns people, person count, and names from the canonical household shape', () => {
+      const household = createHousehold();
 
-      // When
-      const household = new Household(data);
-
-      // Then
-      expect(household.label).toBeNull();
-    });
-  });
-
-  // ========================================================================
-  // label getter / setter
-  // ========================================================================
-
-  describe('label', () => {
-    it('given label set via setter then getter returns new value', () => {
-      // Given
-      const household = new Household(createMockHouseholdData());
-
-      // When
-      household.label = 'Renamed household';
-
-      // Then
-      expect(household.label).toBe('Renamed household');
+      expect(household.people).toEqual({
+        adult: { age: { 2026: 35 }, employment_income: { 2026: 50000 } },
+        child: { age: { 2026: 8 } },
+      });
+      expect(household.personCount).toBe(2);
+      expect(household.personNames).toEqual(['adult', 'child']);
     });
 
-    it('given label set to null then getter returns null', () => {
-      // Given
-      const household = new Household(createMockHouseholdData());
+    it('handles households without people', () => {
+      const household = createEmptyHousehold();
 
-      // When
-      household.label = null;
-
-      // Then
-      expect(household.label).toBeNull();
-    });
-  });
-
-  // ========================================================================
-  // data getter
-  // ========================================================================
-
-  describe('data', () => {
-    it('given household with data then returns the data object', () => {
-      // Given
-      const inputData = createMockHouseholdData();
-
-      // When
-      const household = new Household(inputData);
-
-      // Then
-      expect(household.data).toEqual(inputData.data);
-      expect(household.data).toHaveProperty('people');
-      expect(household.data).toHaveProperty('tax_unit');
+      expect(household.people).toEqual({});
+      expect(household.personCount).toBe(0);
+      expect(household.personNames).toEqual([]);
     });
 
-    it('given household with empty data then returns empty object', () => {
-      // Given
-      const inputData = createMockEmptyHouseholdData();
+    it('creates immutable copies when changing ids or labels', () => {
+      const household = createHousehold();
 
-      // When
-      const household = new Household(inputData);
-
-      // Then
-      expect(household.data).toEqual({});
-    });
-  });
-
-  // ========================================================================
-  // people getter
-  // ========================================================================
-
-  describe('people', () => {
-    it('given household with people then extracts people from data', () => {
-      // Given
-      const household = new Household(createMockHouseholdData());
-
-      // When
-      const people = household.people;
-
-      // Then
-      expect(people).toHaveProperty('adult');
-      expect(people).toHaveProperty('child');
+      expect(household.withId('new-id').id).toBe('new-id');
+      expect(household.withLabel('Renamed household').label).toBe('Renamed household');
+      expect(household.id).toBe(TEST_HOUSEHOLD_ID);
+      expect(household.label).toBe(TEST_HOUSEHOLD_LABEL);
     });
 
-    it('given household with no people key then returns empty object', () => {
-      // Given
-      const household = new Household(createMockEmptyHouseholdData());
-
-      // When
-      const people = household.people;
-
-      // Then
-      expect(people).toEqual({});
-    });
-
-    it('given household with people set to null then returns empty object', () => {
-      // Given
-      const household = new Household(createMockHouseholdData({ data: { people: null } }));
-
-      // When
-      const people = household.people;
-
-      // Then
-      expect(people).toEqual({});
-    });
-  });
-
-  // ========================================================================
-  // personCount
-  // ========================================================================
-
-  describe('personCount', () => {
-    it('given household with two people then returns 2', () => {
-      // Given
-      const household = new Household(createMockHouseholdData());
-
-      // When
-      const count = household.personCount;
-
-      // Then
-      expect(count).toBe(2);
-    });
-
-    it('given household with no people then returns 0', () => {
-      // Given
-      const household = new Household(createMockEmptyHouseholdData());
-
-      // When
-      const count = household.personCount;
-
-      // Then
-      expect(count).toBe(0);
-    });
-  });
-
-  // ========================================================================
-  // personNames
-  // ========================================================================
-
-  describe('personNames', () => {
-    it('given household with people then returns keys of people', () => {
-      // Given
-      const household = new Household(createMockHouseholdData());
-
-      // When
-      const names = household.personNames;
-
-      // Then
-      expect(names).toEqual(['adult', 'child']);
-    });
-
-    it('given household with no people then returns empty array', () => {
-      // Given
-      const household = new Household(createMockEmptyHouseholdData());
-
-      // When
-      const names = household.personNames;
-
-      // Then
-      expect(names).toEqual([]);
-    });
-  });
-
-  // ========================================================================
-  // fromV2Response()
-  // ========================================================================
-
-  describe('fromV2Response', () => {
-    it('given HouseholdV2Response then maps id and country_id correctly', () => {
-      // Given
-      const response = createMockHouseholdV2Response();
-
-      // When
-      const household = Household.fromV2Response(response);
-
-      // Then
-      expect(household.id).toBe(TEST_HOUSEHOLD_IDS.HOUSEHOLD_A);
-      expect(household.countryId).toBe(TEST_COUNTRY_ID);
-    });
-
-    it('given HouseholdV2Response with label then maps label', () => {
-      // Given
-      const response = createMockHouseholdV2Response({
-        label: 'Custom household',
+    it('preserves plural app household data when changing ids or labels', () => {
+      const household = createHousehold({
+        data: {
+          people: {
+            adult: { age: { 2026: 35 } },
+            child: { age: { 2026: 8 } },
+            childTwo: { age: { 2026: 6 } },
+          },
+          maritalUnits: {
+            maritalUnit1: { members: ['adult'] },
+            maritalUnit2: { members: ['child'] },
+            maritalUnit3: { members: ['childTwo'] },
+          },
+        },
       });
 
-      // When
-      const household = Household.fromV2Response(response);
-
-      // Then
-      expect(household.label).toBe('Custom household');
+      expect(household.withId('new-id').householdData.maritalUnits).toEqual(
+        household.householdData.maritalUnits
+      );
+      expect(household.withLabel('Renamed household').householdData.maritalUnits).toEqual(
+        household.householdData.maritalUnits
+      );
     });
 
-    it('given HouseholdV2Response with null label then label is null', () => {
-      // Given
-      const response = createMockHouseholdV2Response({ label: null });
+    it('preserves multiple groups of the same type in the app household shape', () => {
+      const household = createHousehold({
+        data: {
+          people: {
+            adult: { age: { 2026: 35 } },
+            child: { age: { 2026: 8 } },
+            childTwo: { age: { 2026: 6 } },
+          },
+          maritalUnits: {
+            maritalUnit1: { members: ['adult'] },
+            maritalUnit2: { members: ['child'] },
+            maritalUnit3: { members: ['childTwo'] },
+          },
+        },
+      });
 
-      // When
-      const household = Household.fromV2Response(response);
-
-      // Then
-      expect(household.label).toBeNull();
+      expect(household.householdData.maritalUnits).toEqual({
+        maritalUnit1: { members: ['adult'] },
+        maritalUnit2: { members: ['child'] },
+        maritalUnit3: { members: ['childTwo'] },
+      });
     });
 
-    it('given HouseholdV2Response then maps entity groups into data', () => {
-      // Given
-      const response = createMockHouseholdV2Response();
-
-      // When
-      const household = Household.fromV2Response(response);
-      const data = household.data;
-
-      // Then
-      expect(data.people).toEqual(response.people);
-      expect(data.tax_unit).toEqual(response.tax_unit);
-      expect(data.family).toEqual(response.family);
-      expect(data.spm_unit).toEqual(response.spm_unit);
-      expect(data.marital_unit).toEqual(response.marital_unit);
-      expect(data.household).toEqual(response.household);
-      expect(data.benunit).toBeNull();
+    it('rejects invalid secondary app-input groups instead of validating only the first one', () => {
+      expect(() =>
+        Household.fromAppInput({
+          countryId: 'us',
+          year: 2026,
+          householdData: {
+            people: {
+              adult: { age: { 2026: 35 } },
+            },
+            taxUnits: {
+              validTaxUnit: { members: ['adult'] },
+              invalidTaxUnit: { members: ['missing-person'] },
+            },
+          },
+        })
+      ).toThrow('references unknown members: missing-person');
     });
 
-    it('given minimal HouseholdV2Response then maps null groups into data', () => {
-      // Given
-      const response = createMockHouseholdV2ResponseMinimal();
-
-      // When
-      const household = Household.fromV2Response(response);
-      const data = household.data;
-
-      // Then
-      expect(data.tax_unit).toBeNull();
-      expect(data.family).toBeNull();
-      expect(data.spm_unit).toBeNull();
-      expect(data.marital_unit).toBeNull();
-      expect(data.household).toBeNull();
-      expect(data.benunit).toBeNull();
+    it('rejects invalid app-input groups regardless of object insertion order', () => {
+      expect(() =>
+        Household.fromAppInput({
+          countryId: 'us',
+          year: 2026,
+          householdData: {
+            people: {
+              adult: { age: { 2026: 35 } },
+            },
+            taxUnits: {
+              invalidTaxUnit: { members: ['missing-person'] },
+              validTaxUnit: { members: ['adult'] },
+            },
+          },
+        })
+      ).toThrow('references unknown members: missing-person');
     });
 
-    it('given HouseholdV2Response with country_id then casts to CountryId', () => {
-      // Given
-      const response = createMockHouseholdV2Response({ country_id: 'uk' });
+    it('rejects malformed secondary app-input groups with non-array members', () => {
+      expect(() =>
+        Household.fromAppInput({
+          countryId: 'us',
+          year: 2026,
+          householdData: {
+            people: {
+              adult: { age: { 2026: 35 } },
+              child: { age: { 2026: 8 } },
+            },
+            maritalUnits: {
+              validMaritalUnit: { members: ['adult'] },
+              invalidMaritalUnit: {
+                members: 'child' as unknown as string[],
+              },
+            },
+          },
+        })
+      ).toThrow('invalidMaritalUnit.members must be an array');
+    });
+  });
 
-      // When
-      const household = Household.fromV2Response(response);
+  describe('fromV1Metadata', () => {
+    it('maps snake_case v1 household_json into the app household shape', () => {
+      const household = Household.fromV1Metadata(mockHouseholdMetadata);
 
-      // Then
+      expect(household.id).toBe('12345');
+      expect(household.countryId).toBe('us');
+      expect(household.year).toBeGreaterThanOrEqual(2025);
+      expect(household.householdData).toEqual({
+        people: mockHouseholdMetadata.household_json.people,
+        taxUnits: mockHouseholdMetadata.household_json.tax_units,
+        maritalUnits: mockHouseholdMetadata.household_json.marital_units,
+        spmUnits: mockHouseholdMetadata.household_json.spm_units,
+        households: mockHouseholdMetadata.household_json.households,
+        families: mockHouseholdMetadata.household_json.families,
+      });
+    });
+
+    it('rejects unknown entities instead of silently accepting them', () => {
+      expect(() => Household.fromV1Metadata(mockHouseholdMetadataWithUnknownEntity)).toThrow(
+        'Unsupported household entities in v1 payload: unknown_entity'
+      );
+    });
+
+    it('rejects v1 member groups that reference unknown people', () => {
+      expect(() =>
+        Household.fromV1Metadata({
+          ...mockHouseholdMetadata,
+          household_json: {
+            ...mockHouseholdMetadata.household_json,
+            tax_units: {
+              taxUnit1: {
+                members: ['person1', 'missing-person'],
+              },
+            },
+          },
+        })
+      ).toThrow('references unknown members: missing-person');
+    });
+  });
+
+  describe('fromV1CreationPayload', () => {
+    it('builds a household model directly from a v1 create payload', () => {
+      const household = Household.fromV1CreationPayload(
+        {
+          country_id: 'us',
+          label: 'Created household',
+          data: mockHouseholdMetadata.household_json,
+        },
+        { id: 'created-id' }
+      );
+
+      expect(household.id).toBe('created-id');
+      expect(household.label).toBe('Created household');
+      expect(household.householdData.people).toEqual(mockHouseholdMetadata.household_json.people);
+      expect(household.householdData.taxUnits).toEqual(
+        mockHouseholdMetadata.household_json.tax_units
+      );
+    });
+  });
+
+  describe('fromV2Response', () => {
+    it('maps a v2 response into the app household shape with year-wrapped values', () => {
+      const household = Household.fromV2Response(createMockHouseholdV2Response());
+
+      expect(household.id).toBe(TEST_HOUSEHOLD_IDS.HOUSEHOLD_A);
+      expect(household.countryId).toBe(TEST_COUNTRY_ID);
+      expect(household.year).toBe(2026);
+      expect(household.label).toBe('My v2 household');
+      expect(household.householdData).toEqual({
+        people: {
+          adult: {
+            age: { 2026: 35 },
+            employment_income: { 2026: 50000 },
+          },
+          child: {
+            age: { 2026: 8 },
+          },
+        },
+        taxUnits: {
+          taxUnit1: {
+            members: ['adult', 'child'],
+          },
+        },
+        families: {
+          family1: {
+            members: ['adult', 'child'],
+          },
+        },
+        spmUnits: {
+          spmUnit1: {
+            members: ['adult', 'child'],
+          },
+        },
+        maritalUnits: {
+          maritalUnit1: {
+            members: ['adult'],
+          },
+        },
+        households: {
+          household1: {
+            members: ['adult', 'child'],
+          },
+        },
+      });
+    });
+
+    it('preserves multiple v2 group rows when reading a stored household response', () => {
+      const household = Household.fromV2Response(
+        createMockHouseholdV2Response({
+          people: [
+            {
+              name: 'adult',
+              person_id: 0,
+              person_tax_unit_id: 0,
+              person_marital_unit_id: 0,
+              person_household_id: 0,
+              age: 35,
+            },
+            {
+              name: 'child',
+              person_id: 1,
+              person_tax_unit_id: 1,
+              person_marital_unit_id: 1,
+              person_household_id: 1,
+              age: 8,
+            },
+          ],
+          tax_unit: [{ tax_unit_id: 0 }, { tax_unit_id: 1 }],
+          marital_unit: [{ marital_unit_id: 0 }, { marital_unit_id: 1 }],
+          household: [{ household_id: 0 }, { household_id: 1 }],
+          family: [],
+          spm_unit: [],
+        })
+      );
+
+      expect(household.householdData.taxUnits).toEqual({
+        taxUnit1: { members: ['adult'] },
+        taxUnit2: { members: ['child'] },
+      });
+      expect(household.householdData.maritalUnits).toEqual({
+        maritalUnit1: { members: ['adult'] },
+        maritalUnit2: { members: ['child'] },
+      });
+      expect(household.householdData.households).toEqual({
+        household1: { members: ['adult'] },
+        household2: { members: ['child'] },
+      });
+    });
+
+    it('handles a minimal v2 response with no entity groups', () => {
+      const household = Household.fromV2Response(createMockHouseholdV2ResponseMinimal());
+
+      expect(household.householdData).toEqual({
+        people: {
+          single_adult: {
+            age: { 2026: 30 },
+          },
+        },
+      });
+    });
+
+    it('parses UK stored v2 households using only household and benunit groups', () => {
+      const household = Household.fromV2Response(createMockUkHouseholdV2Response());
+
       expect(household.countryId).toBe('uk');
+      expect(household.householdData).toEqual({
+        people: {
+          adult: {
+            age: { 2026: 30 },
+            employment_income: { 2026: 50000 },
+          },
+        },
+        households: {
+          household1: {
+            members: ['adult'],
+          },
+        },
+        benunits: {
+          benunit1: {
+            members: ['adult'],
+          },
+        },
+      });
+    });
+
+    it('rejects multiple v2 group rows that do not link back to people', () => {
+      expect(() =>
+        Household.fromV2Response(
+          createMockHouseholdV2Response({
+            people: [
+              {
+                name: 'adult',
+                person_id: 0,
+                age: 35,
+              },
+            ],
+            tax_unit: [{ tax_unit_id: 0 }, { tax_unit_id: 1 }],
+            family: [],
+            spm_unit: [],
+            marital_unit: [],
+            household: [],
+          })
+        )
+      ).toThrow(
+        'V2 household tax_unit has multiple rows but people do not include person_tax_unit_id'
+      );
+    });
+
+    it('treats unlinked stored v2 groups as single groups containing all people', () => {
+      const household = Household.fromV2Response(
+        createMockHouseholdV2Response({
+          people: [
+            {
+              name: 'adult',
+              age: 35,
+            },
+            {
+              name: 'child',
+              age: 8,
+            },
+          ],
+          tax_unit: [{}],
+          family: [{ filing_status: 'single' }],
+          spm_unit: [],
+          marital_unit: [],
+          household: [{ state_name: 'CA' }],
+        })
+      );
+
+      expect(household.householdData.taxUnits).toEqual({
+        taxUnit1: {
+          members: ['adult', 'child'],
+        },
+      });
+      expect(household.householdData.families).toEqual({
+        family1: {
+          members: ['adult', 'child'],
+          filing_status: { 2026: 'single' },
+        },
+      });
+      expect(household.householdData.households).toEqual({
+        household1: {
+          members: ['adult', 'child'],
+          state_name: { 2026: 'CA' },
+        },
+      });
+    });
+
+    it('still rejects missing group ids when person linkage is explicitly present', () => {
+      expect(() =>
+        Household.fromV2Response(
+          createMockHouseholdV2Response({
+            people: [
+              {
+                name: 'adult',
+                person_id: 0,
+                person_tax_unit_id: 0,
+                age: 35,
+              },
+            ],
+            tax_unit: [{}],
+            family: [],
+            spm_unit: [],
+            marital_unit: [],
+            household: [],
+          })
+        )
+      ).toThrow('V2 household tax_unit is missing numeric tax_unit_id');
+    });
+
+    it('rejects duplicate explicit person names in v2 responses', () => {
+      expect(() =>
+        Household.fromV2Response(
+          createMockHouseholdV2Response({
+            people: [
+              {
+                name: 'adult',
+                person_id: 0,
+                person_household_id: 0,
+                age: 35,
+              },
+              {
+                name: 'adult',
+                person_id: 1,
+                person_household_id: 0,
+                age: 8,
+              },
+            ],
+            household: [{ household_id: 0 }],
+            tax_unit: [],
+            family: [],
+            spm_unit: [],
+            marital_unit: [],
+          })
+        )
+      ).toThrow('Duplicate person name "adult" in v2 household response');
     });
   });
 
-  // ========================================================================
-  // toJSON() roundtrip
-  // ========================================================================
+  describe('toV1CreationPayload', () => {
+    it('converts the app household shape back into the v1 creation payload shape', () => {
+      const household = createHousehold();
 
-  describe('toJSON', () => {
-    it('given household created from data then toJSON deep equals original data', () => {
-      // Given
-      const data = createMockHouseholdData();
-
-      // When
-      const household = new Household(data);
-      const json = household.toJSON();
-
-      // Then
-      expect(json).toEqual(data);
+      expect(household.toV1CreationPayload()).toEqual({
+        country_id: 'us',
+        label: TEST_HOUSEHOLD_LABEL,
+        data: {
+          people: {
+            adult: { age: { 2026: 35 }, employment_income: { 2026: 50000 } },
+            child: { age: { 2026: 8 } },
+          },
+          tax_units: {
+            taxUnit1: { members: ['adult', 'child'] },
+          },
+          families: {
+            family1: { members: ['adult', 'child'] },
+          },
+          spm_units: {
+            spmUnit1: { members: ['adult', 'child'] },
+          },
+          households: {
+            household1: { members: ['adult', 'child'] },
+          },
+        },
+      });
     });
 
-    it('given household with updated label then toJSON reflects the update', () => {
-      // Given
-      const data = createMockHouseholdData();
-      const household = new Household(data);
+    it('wraps scalar canonical values with the household year before emitting v1 payloads', () => {
+      const household = Household.fromAppInput({
+        id: 'scalar-household',
+        countryId: 'us',
+        label: 'Scalar household',
+        year: 2026,
+        householdData: {
+          people: {
+            adult: {
+              age: 35,
+            },
+          },
+        },
+      });
 
-      // When
-      household.label = 'Updated household';
-      const json = household.toJSON();
-
-      // Then
-      expect(json.label).toBe('Updated household');
-      expect(json.id).toBe(TEST_HOUSEHOLD_ID);
+      expect(household.toV1CreationPayload()).toEqual({
+        country_id: 'us',
+        label: 'Scalar household',
+        data: {
+          people: {
+            adult: {
+              age: { 2026: 35 },
+            },
+          },
+        },
+      });
     });
 
-    it('given empty household then toJSON roundtrips correctly', () => {
-      // Given
-      const data = createMockEmptyHouseholdData();
+    it('preserves multi-group household data when emitting a v1 payload', () => {
+      const household = Household.fromDraft({
+        countryId: 'us',
+        year: 2026,
+        householdData: {
+          people: {
+            adult: { age: { 2026: 35 } },
+            child: { age: { 2026: 8 } },
+            childTwo: { age: { 2026: 6 } },
+          },
+          maritalUnits: {
+            maritalUnit1: { members: ['adult'] },
+            maritalUnit2: { members: ['child'] },
+            maritalUnit3: { members: ['childTwo'] },
+          },
+        },
+      });
 
-      // When
-      const household = new Household(data);
-      const json = household.toJSON();
-
-      // Then
-      expect(json).toEqual(data);
-      expect(json.data).toEqual({});
+      expect(household.toV1CreationPayload()).toEqual({
+        country_id: 'us',
+        label: undefined,
+        data: {
+          people: {
+            adult: { age: { 2026: 35 } },
+            child: { age: { 2026: 8 } },
+            childTwo: { age: { 2026: 6 } },
+          },
+          marital_units: {
+            maritalUnit1: { members: ['adult'] },
+            maritalUnit2: { members: ['child'] },
+            maritalUnit3: { members: ['childTwo'] },
+          },
+        },
+      });
     });
   });
 
-  // ========================================================================
-  // isEqual
-  // ========================================================================
+  describe('toV2CreateEnvelope', () => {
+    it('flattens year-keyed values and attaches relationship ids for the v2 create envelope', () => {
+      const household = createHousehold();
 
-  describe('isEqual', () => {
-    it('given same id then returns true', () => {
-      // Given
-      const householdA = new Household(createMockHouseholdData());
-      const householdB = new Household(createMockHouseholdData());
+      expect(household.toV2CreateEnvelope()).toEqual({
+        country_id: 'us',
+        year: 2026,
+        label: TEST_HOUSEHOLD_LABEL,
+        people: [
+          {
+            name: 'adult',
+            person_id: 0,
+            person_household_id: 0,
+            person_family_id: 0,
+            person_spm_unit_id: 0,
+            person_tax_unit_id: 0,
+            age: 35,
+            employment_income: 50000,
+          },
+          {
+            name: 'child',
+            person_id: 1,
+            person_household_id: 0,
+            person_family_id: 0,
+            person_spm_unit_id: 0,
+            person_tax_unit_id: 0,
+            age: 8,
+          },
+        ],
+        household: [{ household_id: 0 }],
+        family: [{ family_id: 0 }],
+        spm_unit: [{ spm_unit_id: 0 }],
+        tax_unit: [{ tax_unit_id: 0 }],
+        marital_unit: [],
+      });
+    });
 
-      // When / Then
+    it('infers the year for draft households created without an explicit year', () => {
+      const household = Household.fromDraft({
+        countryId: 'us',
+        householdData: createMockHouseholdData().data,
+      });
+
+      expect(household.toV2CreateEnvelope().year).toBe(2026);
+    });
+
+    it('builds a v2 create envelope without the persisted id', () => {
+      const household = createHousehold();
+
+      expect(household.toV2CreateEnvelope()).toEqual({
+        country_id: 'us',
+        year: 2026,
+        label: TEST_HOUSEHOLD_LABEL,
+        people: [
+          {
+            name: 'adult',
+            person_id: 0,
+            person_household_id: 0,
+            person_family_id: 0,
+            person_spm_unit_id: 0,
+            person_tax_unit_id: 0,
+            age: 35,
+            employment_income: 50000,
+          },
+          {
+            name: 'child',
+            person_id: 1,
+            person_household_id: 0,
+            person_family_id: 0,
+            person_spm_unit_id: 0,
+            person_tax_unit_id: 0,
+            age: 8,
+          },
+        ],
+        household: [{ household_id: 0 }],
+        family: [{ family_id: 0 }],
+        spm_unit: [{ spm_unit_id: 0 }],
+        tax_unit: [{ tax_unit_id: 0 }],
+        marital_unit: [],
+      });
+    });
+
+    it('emits only UK household and benunit groups for UK v2 envelopes', () => {
+      const household = Household.fromDraft({
+        countryId: 'uk',
+        year: 2026,
+        householdData: {
+          people: {
+            adult: { age: { 2026: 35 }, employment_income: { 2026: 50000 } },
+          },
+          households: {
+            household1: { members: ['adult'] },
+          },
+          benunits: {
+            benunit1: { members: ['adult'] },
+          },
+        },
+      });
+
+      expect(household.toV2CreateEnvelope()).toEqual({
+        country_id: 'uk',
+        year: 2026,
+        label: null,
+        people: [
+          {
+            name: 'adult',
+            person_id: 0,
+            person_household_id: 0,
+            person_benunit_id: 0,
+            age: 35,
+            employment_income: 50000,
+          },
+        ],
+        household: [{ household_id: 0 }],
+        benunit: [{ benunit_id: 0 }],
+      });
+    });
+
+    it('preserves multiple stored v2 groups of the same type', () => {
+      const household = Household.fromDraft({
+        countryId: 'us',
+        year: 2026,
+        householdData: {
+          people: {
+            adult: { age: { 2026: 35 } },
+            child: { age: { 2026: 8 } },
+            childTwo: { age: { 2026: 6 } },
+          },
+          maritalUnits: {
+            maritalUnit1: { members: ['adult'] },
+            maritalUnit2: { members: ['child'] },
+            maritalUnit3: { members: ['childTwo'] },
+          },
+        },
+      });
+
+      const envelope = household.toV2CreateEnvelope();
+
+      expect(envelope.country_id).toBe('us');
+      if (envelope.country_id !== 'us') {
+        throw new Error('Expected US v2 envelope');
+      }
+      expect(envelope.marital_unit).toEqual([
+        { marital_unit_id: 0 },
+        { marital_unit_id: 1 },
+        { marital_unit_id: 2 },
+      ]);
+    });
+  });
+
+  describe('toComparable', () => {
+    it('returns a stable v2-shaped representation for household comparison', () => {
+      const household = createHousehold();
+
+      expect(household.toComparable()).toEqual({
+        id: TEST_HOUSEHOLD_ID,
+        countryId: 'us',
+        year: 2026,
+        label: TEST_HOUSEHOLD_LABEL,
+        data: {
+          family: [{ family_id: 0 }],
+          household: [{ household_id: 0 }],
+          marital_unit: [],
+          people: [
+            {
+              age: 35,
+              employment_income: 50000,
+              name: 'adult',
+              person_family_id: 0,
+              person_household_id: 0,
+              person_id: 0,
+              person_spm_unit_id: 0,
+              person_tax_unit_id: 0,
+            },
+            {
+              age: 8,
+              name: 'child',
+              person_family_id: 0,
+              person_household_id: 0,
+              person_id: 1,
+              person_spm_unit_id: 0,
+              person_tax_unit_id: 0,
+            },
+          ],
+          spm_unit: [{ spm_unit_id: 0 }],
+          tax_unit: [{ tax_unit_id: 0 }],
+        },
+      });
+    });
+  });
+
+  describe('serialization and equality', () => {
+    it('round-trips through toJSON()', () => {
+      const data = createMockHouseholdData();
+      const household = Household.fromAppInput({
+        id: data.id,
+        countryId: data.countryId,
+        label: data.label,
+        year: data.year,
+        householdData: data.data,
+      });
+
+      expect(household.toJSON()).toEqual({
+        id: data.id,
+        countryId: data.countryId,
+        label: data.label,
+        year: data.year,
+        householdData: data.data,
+      });
+    });
+
+    it('treats identical households as equal', () => {
+      const householdA = createHousehold();
+      const householdB = createHousehold();
+
       expect(householdA.isEqual(householdB)).toBe(true);
     });
 
-    it('given different id then returns false', () => {
-      // Given
-      const householdA = new Household(createMockHouseholdData());
-      const householdB = new Household(createMockHouseholdData({ id: 'different-id-999' }));
+    it('detects a change in household data', () => {
+      const householdA = createHousehold();
+      const householdB = createHousehold({
+        data: {
+          people: {
+            solo: { age: { 2026: 99 } },
+          },
+        },
+      });
 
-      // When / Then
-      expect(householdA.isEqual(householdB)).toBe(false);
-    });
-
-    it('given same id but different label then returns false', () => {
-      // Given
-      const householdA = new Household(createMockHouseholdData());
-      const householdB = new Household(createMockHouseholdData({ label: 'Different label' }));
-
-      // When / Then
-      expect(householdA.isEqual(householdB)).toBe(false);
-    });
-
-    it('given same id but different data then returns false', () => {
-      // Given
-      const householdA = new Household(createMockHouseholdData());
-      const householdB = new Household(
-        createMockHouseholdData({ data: { people: { solo: { age: 99 } } } })
-      );
-
-      // When / Then
       expect(householdA.isEqual(householdB)).toBe(false);
     });
   });

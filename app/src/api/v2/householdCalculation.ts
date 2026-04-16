@@ -7,64 +7,55 @@
  * Note: Variation/axes calculations are NOT supported in v2 alpha and remain on v1.
  */
 
-import type { CountryId } from '@/libs/countries';
+import type {
+  V2CreateHouseholdEnvelope,
+  V2HouseholdCalculationPayload,
+  V2HouseholdCalculationResult,
+  V2HouseholdEnvelope,
+  V2StoredHouseholdEnvelope,
+  V2UKCreateHouseholdEnvelope,
+  V2UKHouseholdCalculationResult,
+  V2USCreateHouseholdEnvelope,
+  V2USHouseholdCalculationResult,
+} from '@/models/household/v2Types';
 import { API_V2_BASE_URL } from './taxBenefitModels';
 import { cancellableSleep, v2Fetch } from './v2Fetch';
 
-/**
- * V2-specific flat household shape used by calculation endpoints.
- * This is the v2 API's native format — conversion from the app's
- * internal Household type happens in the adapter layer (Phase 2).
- */
-export interface V2HouseholdShape {
-  id?: string;
-  country_id: CountryId;
-  year: number;
-  label?: string | null;
-  people: Record<string, any>[];
-  tax_unit?: Record<string, any> | null;
-  family?: Record<string, any> | null;
-  spm_unit?: Record<string, any> | null;
-  marital_unit?: Record<string, any> | null;
-  household?: Record<string, any> | null;
-  benunit?: Record<string, any> | null;
-}
+export type { V2CreateHouseholdEnvelope, V2StoredHouseholdEnvelope };
 
-/**
- * Payload sent to POST /household/calculate
- */
-export interface HouseholdCalculatePayload {
-  country_id: CountryId;
-  year: number;
-  people: Record<string, any>[];
-  tax_unit?: Record<string, any> | null;
-  family?: Record<string, any> | null;
-  spm_unit?: Record<string, any> | null;
-  marital_unit?: Record<string, any> | null;
-  household?: Record<string, any> | null;
-  benunit?: Record<string, any> | null;
-  policy_id?: string;
-  dynamic_id?: string;
-}
+export type HouseholdCalculatePayload = V2HouseholdCalculationPayload;
+export type HouseholdCalculationResult = V2HouseholdCalculationResult;
 
 function householdToCalculatePayload(
-  household: V2HouseholdShape,
+  household: V2HouseholdEnvelope,
   policyId?: string,
   dynamicId?: string
 ): HouseholdCalculatePayload {
-  return {
-    country_id: household.country_id,
-    year: household.year,
-    people: household.people,
-    tax_unit: household.tax_unit ?? null,
-    family: household.family ?? null,
-    spm_unit: household.spm_unit ?? null,
-    marital_unit: household.marital_unit ?? null,
-    household: household.household ?? null,
-    benunit: household.benunit ?? null,
-    policy_id: policyId,
-    dynamic_id: dynamicId,
-  };
+  switch (household.country_id) {
+    case 'us':
+      return {
+        country_id: 'us',
+        year: household.year,
+        people: household.people,
+        tax_unit: household.tax_unit,
+        family: household.family,
+        spm_unit: household.spm_unit,
+        marital_unit: household.marital_unit,
+        household: household.household,
+        policy_id: policyId,
+        dynamic_id: dynamicId,
+      };
+    case 'uk':
+      return {
+        country_id: 'uk',
+        year: household.year,
+        people: household.people,
+        household: household.household,
+        benunit: household.benunit,
+        policy_id: policyId,
+        dynamic_id: dynamicId,
+      };
+  }
 }
 
 // ============================================================================
@@ -89,19 +80,6 @@ export interface HouseholdJobStatusResponse {
   status: HouseholdJobStatus;
   result: HouseholdCalculationResult | null;
   error_message: string | null;
-}
-
-/**
- * Calculation result structure from v2 alpha
- */
-export interface HouseholdCalculationResult {
-  person: Record<string, any>[];
-  benunit?: Record<string, any>[] | null;
-  marital_unit?: Record<string, any>[] | null;
-  family?: Record<string, any>[] | null;
-  spm_unit?: Record<string, any>[] | null;
-  tax_unit?: Record<string, any>[] | null;
-  household: Record<string, any>[];
 }
 
 // ============================================================================
@@ -205,20 +183,31 @@ export async function pollHouseholdCalculationJobV2(
  */
 export function calculationResultToHousehold(
   result: HouseholdCalculationResult,
-  originalHousehold: V2HouseholdShape
-): V2HouseholdShape {
-  return {
-    country_id: originalHousehold.country_id,
-    year: originalHousehold.year,
-    people: result.person,
-    // Extract first element from arrays (single household case)
-    tax_unit: result.tax_unit?.[0] ?? undefined,
-    family: result.family?.[0] ?? undefined,
-    spm_unit: result.spm_unit?.[0] ?? undefined,
-    marital_unit: result.marital_unit?.[0] ?? undefined,
-    household: result.household?.[0] ?? undefined,
-    benunit: result.benunit?.[0] ?? undefined,
-  };
+  originalHousehold: V2HouseholdEnvelope
+): V2CreateHouseholdEnvelope {
+  switch (originalHousehold.country_id) {
+    case 'us':
+      return {
+        country_id: 'us',
+        year: originalHousehold.year,
+        label: originalHousehold.label,
+        people: (result as V2USHouseholdCalculationResult).person,
+        tax_unit: (result as V2USHouseholdCalculationResult).tax_unit ?? [],
+        family: (result as V2USHouseholdCalculationResult).family ?? [],
+        spm_unit: (result as V2USHouseholdCalculationResult).spm_unit ?? [],
+        marital_unit: (result as V2USHouseholdCalculationResult).marital_unit ?? [],
+        household: (result as V2USHouseholdCalculationResult).household ?? [],
+      } satisfies V2USCreateHouseholdEnvelope;
+    case 'uk':
+      return {
+        country_id: 'uk',
+        year: originalHousehold.year,
+        label: originalHousehold.label,
+        people: (result as V2UKHouseholdCalculationResult).person,
+        household: (result as V2UKHouseholdCalculationResult).household ?? [],
+        benunit: (result as V2UKHouseholdCalculationResult).benunit ?? [],
+      } satisfies V2UKCreateHouseholdEnvelope;
+  }
 }
 
 /**
@@ -226,7 +215,7 @@ export function calculationResultToHousehold(
  * Creates job, polls for result, returns Household
  */
 export async function calculateHouseholdV2Alpha(
-  household: V2HouseholdShape,
+  household: V2HouseholdEnvelope,
   policyId?: string,
   dynamicId?: string,
   options: {
@@ -234,7 +223,7 @@ export async function calculateHouseholdV2Alpha(
     timeoutMs?: number;
     signal?: AbortSignal;
   } = {}
-): Promise<V2HouseholdShape> {
+): Promise<V2CreateHouseholdEnvelope> {
   // Convert to calculation payload format (arrays)
   const payload = householdToCalculatePayload(household, policyId, dynamicId);
 

@@ -1,12 +1,12 @@
 import { describe, expect, test } from 'vitest';
-import type { Household } from '@/types/ingredients/Household';
+import type { AppHouseholdInputEnvelope } from '@/models/household/appTypes';
 import { getHeadOfHouseholdPersonName } from '@/utils/householdHead';
 
 const YEAR = '2026';
 
 describe('getHeadOfHouseholdPersonName', () => {
   test('prefers the canonical "you" person when present', () => {
-    const household: Household = {
+    const household: AppHouseholdInputEnvelope = {
       countryId: 'us',
       householdData: {
         people: {
@@ -17,8 +17,8 @@ describe('getHeadOfHouseholdPersonName', () => {
             age: { [YEAR]: 36 },
           },
         },
-        tax_units: {
-          'your tax unit': {
+        taxUnits: {
+          taxUnit1: {
             members: ['spouse', 'you'],
           },
         },
@@ -29,7 +29,7 @@ describe('getHeadOfHouseholdPersonName', () => {
   });
 
   test('falls back to the first adult member of the first tax unit when flags are absent', () => {
-    const household: Household = {
+    const household: AppHouseholdInputEnvelope = {
       countryId: 'us',
       householdData: {
         people: {
@@ -40,8 +40,8 @@ describe('getHeadOfHouseholdPersonName', () => {
             age: { [YEAR]: 40 },
           },
         },
-        tax_units: {
-          'your tax unit': {
+        taxUnits: {
+          taxUnit1: {
             members: ['child', 'adult'],
           },
         },
@@ -52,7 +52,7 @@ describe('getHeadOfHouseholdPersonName', () => {
   });
 
   test('falls back to you when no explicit group structure exists', () => {
-    const household: Household = {
+    const household: AppHouseholdInputEnvelope = {
       countryId: 'us',
       householdData: {
         people: {
@@ -70,7 +70,7 @@ describe('getHeadOfHouseholdPersonName', () => {
   });
 
   test('uses stable sorted fallback when no other signal exists', () => {
-    const household: Household = {
+    const household: AppHouseholdInputEnvelope = {
       countryId: 'uk',
       householdData: {
         people: {

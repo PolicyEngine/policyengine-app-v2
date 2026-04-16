@@ -37,7 +37,6 @@ import {
 import { useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
 import { PolicyAdapter } from '@/adapters';
-import { HouseholdAdapter } from '@/adapters/HouseholdAdapter';
 import { geographyUsageStore, householdUsageStore } from '@/api/usageTracking';
 import HouseholdBuilderForm from '@/components/household/HouseholdBuilderForm';
 import { UKOutlineIcon, USOutlineIcon } from '@/components/icons/CountryOutlineIcons';
@@ -81,6 +80,8 @@ import { useUserHouseholds } from '@/hooks/useUserHousehold';
 import { useUpdatePolicyAssociation, useUserPolicies } from '@/hooks/useUserPolicy';
 import { getBasicInputFields, getDateRange } from '@/libs/metadataUtils';
 import { householdAssociationKeys } from '@/libs/queryKeys';
+import { Household as HouseholdModel } from '@/models/Household';
+import type { AppHouseholdInputEnvelope } from '@/models/household/appTypes';
 import HistoricalValues from '@/pathways/report/components/policyParameterSelector/HistoricalValues';
 import {
   ModeSelectorButton,
@@ -89,7 +90,6 @@ import {
 } from '@/pathways/report/components/valueSetters';
 import { RootState } from '@/store';
 import { Geography } from '@/types/ingredients/Geography';
-import { Household } from '@/types/ingredients/Household';
 import { Policy } from '@/types/ingredients/Policy';
 import { ParameterTreeNode } from '@/types/metadata';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
@@ -3534,7 +3534,7 @@ function PopulationBrowseModal({
   // Creation mode state
   const [isCreationMode, setIsCreationMode] = useState(false);
   const [householdLabel, setHouseholdLabel] = useState('');
-  const [householdDraft, setHouseholdDraft] = useState<Household | null>(null);
+  const [householdDraft, setHouseholdDraft] = useState<AppHouseholdInputEnvelope | null>(null);
   const [isEditingLabel, setIsEditingLabel] = useState(false);
 
   // Get report year (default to current year)
@@ -3639,9 +3639,7 @@ function PopulationBrowseModal({
         return {
           id: householdIdStr,
           label: h.association.label || `Household #${householdIdStr}`,
-          memberCount: h.household?.household_json?.people
-            ? Object.keys(h.household.household_json.people).length
-            : 0,
+          memberCount: h.household?.personCount ?? 0,
           sortTimestamp,
           household: h.household,
         };
@@ -3703,19 +3701,13 @@ function PopulationBrowseModal({
     const householdIdStr = String(householdData.id);
     householdUsageStore.recordUsage(householdIdStr);
 
-    // Convert HouseholdMetadata to Household using the adapter
-    // If household data isn't available, create a minimal household object with just the ID
-    let household: Household | null = null;
-    if (householdData.household) {
-      household = HouseholdAdapter.fromMetadata(householdData.household);
-    } else {
-      // Fallback: create minimal household with ID for selection to work
-      household = {
-        id: householdIdStr,
-        countryId,
-        householdData: { people: {} },
-      };
-    }
+    const household: AppHouseholdInputEnvelope | null = householdData.household
+      ? householdData.household.toAppInput()
+      : {
+          id: householdIdStr,
+          countryId,
+          householdData: { people: {} },
+        };
 
     const populationState: PopulationStateProps = {
       geography: null,
@@ -3809,7 +3801,10 @@ function PopulationBrowseModal({
       return;
     }
 
-    const payload = HouseholdAdapter.toCreationPayload(householdDraft.householdData, countryId);
+    const payload = HouseholdModel.fromDraft({
+      countryId,
+      householdData: householdDraft.householdData,
+    }).toV1CreationPayload();
 
     try {
       const result = await createHousehold(payload);
@@ -3819,7 +3814,7 @@ function PopulationBrowseModal({
       householdUsageStore.recordUsage(householdId);
 
       // Create household with ID set for proper selection highlighting
-      const createdHousehold: Household = {
+      const createdHousehold: AppHouseholdInputEnvelope = {
         ...householdDraft,
         id: householdId,
       };
@@ -4710,8 +4705,8 @@ function SimulationCanvas({
         (h) => String(h.association.householdId) === householdId
       );
       if (householdData?.household) {
-        const household = HouseholdAdapter.fromMetadata(householdData.household);
-        // Use the household.id from the adapter for consistent matching with currentPopulationId
+        const household = householdData.household;
+        // Use the household.id for consistent matching with currentPopulationId
         const resolvedId = household.id || householdId;
         results.push({
           id: resolvedId,
@@ -4719,7 +4714,7 @@ function SimulationCanvas({
           type: 'household',
           population: {
             geography: null,
-            household,
+            household: household.toAppInput(),
             label: householdData.association.label || `Household #${householdId}`,
             type: 'household',
           },

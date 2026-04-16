@@ -6,15 +6,15 @@
 
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
-import { HouseholdAdapter } from '@/adapters/HouseholdAdapter';
 import PathwayView from '@/components/common/PathwayView';
 import HouseholdBuilderForm from '@/components/household/HouseholdBuilderForm';
 import { Spinner, Stack } from '@/components/ui';
 import { useCreateHousehold } from '@/hooks/useCreateHousehold';
 import { useReportYear } from '@/hooks/useReportYear';
 import { getBasicInputFields } from '@/libs/metadataUtils';
+import { Household as HouseholdModel } from '@/models/Household';
+import type { AppHouseholdInputEnvelope } from '@/models/household/appTypes';
 import { RootState } from '@/store';
-import { Household } from '@/types/ingredients/Household';
 import { PopulationStateProps } from '@/types/pathwayState';
 import { HouseholdBuilder } from '@/utils/HouseholdBuilder';
 import { HouseholdValidation } from '@/utils/HouseholdValidation';
@@ -22,7 +22,7 @@ import { HouseholdValidation } from '@/utils/HouseholdValidation';
 interface HouseholdBuilderViewProps {
   population: PopulationStateProps;
   countryId: string;
-  onSubmitSuccess: (householdId: string, household: Household) => void;
+  onSubmitSuccess: (householdId: string, household: AppHouseholdInputEnvelope) => void;
   onBack?: () => void;
 }
 
@@ -69,7 +69,7 @@ export default function HouseholdBuilderView({
   }
 
   // Initialize household with "you" if none exists
-  const [household, setLocalHousehold] = useState<Household>(() => {
+  const [household, setLocalHousehold] = useState<AppHouseholdInputEnvelope>(() => {
     if (population?.household) {
       return population.household;
     }
@@ -153,8 +153,10 @@ export default function HouseholdBuilderView({
       return;
     }
 
-    // Convert to API format
-    const payload = HouseholdAdapter.toCreationPayload(household.householdData, countryId);
+    const payload = HouseholdModel.fromDraft({
+      countryId: countryId as AppHouseholdInputEnvelope['countryId'],
+      householdData: household.householdData,
+    }).toV1CreationPayload();
 
     try {
       const result = await createHousehold(payload);

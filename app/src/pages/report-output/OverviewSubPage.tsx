@@ -1,5 +1,5 @@
 import { SocietyWideReportOutput } from '@/api/societyWideCalculation';
-import { Household } from '@/types/ingredients/Household';
+import type { AppHouseholdInputEnvelope as Household } from '@/models/household/appTypes';
 import type { Policy } from '@/types/ingredients/Policy';
 import type { Simulation } from '@/types/ingredients/Simulation';
 import { ReportOutputType } from '../ReportOutput.page';
