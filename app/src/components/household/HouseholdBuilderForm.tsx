@@ -42,6 +42,7 @@ import {
   getVariableEntityDisplayInfo,
   getVariableInfo,
   removeVariable,
+  removeVariableFromEntity,
   resolveEntity,
 } from '@/utils/VariableResolver';
 import VariableRow from './VariableRow';
@@ -228,12 +229,7 @@ export default function HouseholdBuilderForm({
 
   // Handle removing person variable
   const handleRemovePersonVariable = (varName: string, person: string) => {
-    // Remove the variable data from this person's household data
-    const newHousehold = { ...household };
-    const personData = newHousehold.householdData.people[person];
-    if (personData && personData[varName]) {
-      delete personData[varName];
-    }
+    const newHousehold = removeVariableFromEntity(household, varName, metadata, person);
     onChange(newHousehold);
 
     // Check if any other person still has this variable

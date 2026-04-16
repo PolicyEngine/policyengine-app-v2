@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { AppHouseholdInputEnvelope } from '@/models/household/appTypes';
-import { getValue, setValue } from '@/utils/VariableResolver';
+import { getValue, removeVariableFromEntity, setValue } from '@/utils/VariableResolver';
 
 const TEST_METADATA = {
   variables: {
@@ -24,8 +24,23 @@ const TEST_METADATA = {
       hidden_input: false,
       moduleName: 'tax_unit',
     },
+    employment_income: {
+      name: 'employment_income',
+      label: 'Employment income',
+      entity: 'person',
+      valueType: 'float',
+      defaultValue: 0,
+      isInputVariable: true,
+      hidden_input: false,
+      moduleName: 'person',
+    },
   },
   entities: {
+    person: {
+      plural: 'people',
+      label: 'Person',
+      is_person: true,
+    },
     household: {
       plural: 'households',
       label: 'Household',
@@ -63,6 +78,25 @@ function createNonDefaultGroupHousehold(): AppHouseholdInputEnvelope {
   };
 }
 
+function createHouseholdWithPersonVariable(): AppHouseholdInputEnvelope {
+  return {
+    id: 'household-1',
+    countryId: 'us',
+    householdData: {
+      people: {
+        adult: {
+          age: { '2026': 35 },
+          employment_income: { '2026': 50000 },
+        },
+        child: {
+          age: { '2026': 8 },
+          employment_income: { '2026': 0 },
+        },
+      },
+    },
+  };
+}
+
 describe('VariableResolver', () => {
   it('reads household-level values from the first available real group name', () => {
     const household = createNonDefaultGroupHousehold();
@@ -94,6 +128,28 @@ describe('VariableResolver', () => {
     });
     expect(household.householdData.taxUnits?.taxUnit2?.taxable_income).toEqual({
       '2026': 50000,
+    });
+  });
+
+  it('removes a person-level variable immutably from only the targeted person', () => {
+    const household = createHouseholdWithPersonVariable();
+
+    const updatedHousehold = removeVariableFromEntity(
+      household,
+      'employment_income',
+      TEST_METADATA,
+      'adult'
+    );
+
+    expect(updatedHousehold.householdData.people.adult.employment_income).toBeUndefined();
+    expect(updatedHousehold.householdData.people.child.employment_income).toEqual({
+      '2026': 0,
+    });
+    expect(household.householdData.people.adult.employment_income).toEqual({
+      '2026': 50000,
+    });
+    expect(household.householdData.people.child.employment_income).toEqual({
+      '2026': 0,
     });
   });
 });

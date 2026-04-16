@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { Household } from '@/models/Household';
+import { createMockUkHouseholdV2Response } from '@/tests/fixtures/api/v2/shared';
 import {
   createMockEmptyHouseholdData,
   createMockHouseholdData,
@@ -342,6 +343,30 @@ describe('Household', () => {
         people: {
           single_adult: {
             age: { 2026: 30 },
+          },
+        },
+      });
+    });
+
+    it('parses UK stored v2 households using only household and benunit groups', () => {
+      const household = Household.fromV2Response(createMockUkHouseholdV2Response());
+
+      expect(household.countryId).toBe('uk');
+      expect(household.householdData).toEqual({
+        people: {
+          adult: {
+            age: { 2026: 30 },
+            employment_income: { 2026: 50000 },
+          },
+        },
+        households: {
+          household1: {
+            members: ['adult'],
+          },
+        },
+        benunits: {
+          benunit1: {
+            members: ['adult'],
           },
         },
       });

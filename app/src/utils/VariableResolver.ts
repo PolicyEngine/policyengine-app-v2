@@ -387,6 +387,34 @@ export function removeVariable(
 }
 
 /**
+ * Remove a variable from a single specific entity instance.
+ * Used for per-person variable removal in the household builder.
+ */
+export function removeVariableFromEntity(
+  household: AppHouseholdInputEnvelope,
+  variableName: string,
+  metadata: any,
+  entityName: string
+): AppHouseholdInputEnvelope {
+  const entityInfo = resolveEntity(variableName, metadata);
+
+  if (!entityInfo) {
+    return household;
+  }
+
+  const newHousehold = cloneHousehold(household);
+  const entityData = getEntityData(newHousehold, entityInfo.plural);
+
+  if (!entityData || !entityData[entityName]) {
+    return household;
+  }
+
+  delete entityData[entityName][variableName];
+
+  return newHousehold;
+}
+
+/**
  * Get all input variables from metadata (excluding hidden and computed)
  */
 export function getInputVariables(metadata: any): VariableInfo[] {

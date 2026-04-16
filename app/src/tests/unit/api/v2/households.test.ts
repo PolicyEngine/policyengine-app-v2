@@ -8,6 +8,8 @@ import {
 import type { V2CreateHouseholdEnvelope } from '@/models/household/v2Types';
 import {
   createMockHouseholdV2Response,
+  createMockUkHouseholdV2Response,
+  createMockUkV2CreateHouseholdEnvelope,
   createMockV2CreateHouseholdEnvelope,
   mockFetch404,
   mockFetchError,
@@ -67,6 +69,28 @@ describe('households v2 API', () => {
         'createHouseholdV2: 500 Internal Server Error'
       );
     });
+
+    test('given valid UK household then POST succeeds with a UK-shaped payload', async () => {
+      const request: V2CreateHouseholdEnvelope = createMockUkV2CreateHouseholdEnvelope();
+      const apiResponse = createMockUkHouseholdV2Response();
+      vi.stubGlobal('fetch', mockFetchSuccess(apiResponse));
+
+      const result = await createHouseholdV2(request);
+
+      expect(fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/households/'),
+        expect.objectContaining({
+          body: JSON.stringify(request),
+        })
+      );
+      expect(result).toEqual(apiResponse);
+      expect(result.country_id).toBe('uk');
+      if (result.country_id !== 'uk') {
+        throw new Error('Expected UK stored household');
+      }
+      expect(result.benunit).toEqual([{ benunit_id: 0 }]);
+      expect('tax_unit' in result).toBe(false);
+    });
   });
 
   // ==========================================================================
@@ -113,6 +137,21 @@ describe('households v2 API', () => {
         `fetchHouseholdByIdV2(${TEST_IDS.HOUSEHOLD_ID}): 500 Server Error`
       );
     });
+
+    test('given a UK household response then GET returns the UK household shape', async () => {
+      const apiResponse = createMockUkHouseholdV2Response();
+      vi.stubGlobal('fetch', mockFetchSuccess(apiResponse));
+
+      const result = await fetchHouseholdByIdV2(TEST_IDS.HOUSEHOLD_ID);
+
+      expect(result).toEqual(apiResponse);
+      expect(result.country_id).toBe('uk');
+      if (result.country_id !== 'uk') {
+        throw new Error('Expected UK stored household');
+      }
+      expect(result.benunit).toEqual([{ benunit_id: 0 }]);
+      expect('tax_unit' in result).toBe(false);
+    });
   });
 
   // ==========================================================================
@@ -154,6 +193,18 @@ describe('households v2 API', () => {
       expect(calledUrl).toMatch(/\/households\/$/);
       expect(calledUrl).not.toContain('?');
       expect(result).toHaveLength(1);
+    });
+
+    test('given UK filter then returns UK household rows unchanged', async () => {
+      const apiResponse = [createMockUkHouseholdV2Response()];
+      vi.stubGlobal('fetch', mockFetchSuccess(apiResponse));
+
+      const result = await listHouseholdsV2({ country_id: 'uk' });
+
+      const calledUrl = vi.mocked(fetch).mock.calls[0][0] as string;
+      expect(calledUrl).toContain('country_id=uk');
+      expect(result).toEqual(apiResponse);
+      expect(result[0].country_id).toBe('uk');
     });
   });
 
