@@ -1252,12 +1252,6 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://policyengine.org/uk/energy-price-shock</loc>
-    <lastmod>2026-03-12</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://policyengine.org/us/keep-your-pay-act</loc>
     <lastmod>2026-03-09</lastmod>
     <changefreq>weekly</changefreq>

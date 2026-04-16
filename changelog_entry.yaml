@@ -1,4 +1,4 @@
 - bump: patch
   changes:
-    added:
-      - Add Working Parents Tax Relief Act calculator at /us/working-parents-tax-relief-act
+    removed:
+      - Temporarily remove energy price shock UK interactive from apps listing and sitemap
