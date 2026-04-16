@@ -164,15 +164,11 @@ export default function HouseholdBuilderForm({
       return [];
     }
 
-    return Object.keys(personData).filter((varName) => {
-      if (!inputVariableLookup.has(varName)) {
-        return false;
-      }
-
+    return selectedVariables.filter((varName) => {
       const entityInfo = resolveEntity(varName, metadata);
       // Exclude basic inputs - they're shown permanently above
       const isBasicInput = basicPersonFields.includes(varName);
-      return entityInfo?.isPerson && !isBasicInput;
+      return entityInfo?.isPerson && personData[varName] !== undefined && !isBasicInput;
     });
   };
 
@@ -241,11 +237,14 @@ export default function HouseholdBuilderForm({
     onChange(newHousehold);
 
     const stillUsedByOthers = Object.keys(newHousehold.householdData.people).some(
-      (otherPerson) => otherPerson !== person && newHousehold.householdData.people[otherPerson][varName]
+      (otherPerson) =>
+        otherPerson !== person && newHousehold.householdData.people[otherPerson][varName]
     );
 
     if (!stillUsedByOthers) {
-      setSelectedVariables(selectedVariables.filter((selectedVariable) => selectedVariable !== varName));
+      setSelectedVariables(
+        selectedVariables.filter((selectedVariable) => selectedVariable !== varName)
+      );
     }
   };
 
@@ -278,7 +277,7 @@ export default function HouseholdBuilderForm({
       newHousehold = addVariable(household, variable.name, metadata, year);
     } else {
       // For non-person variables, only add if not already present
-      if (householdLevelVariables.some((selected) => selected.name === variable.name)) {
+      if (selectedVariables.includes(variable.name)) {
         setIsHouseholdSearchActive(false);
         setHouseholdSearchValue('');
         setIsHouseholdSearchFocused(false);
@@ -312,7 +311,9 @@ export default function HouseholdBuilderForm({
   const handleRemoveHouseholdVariable = (varName: string) => {
     const newHousehold = removeVariable(household, varName, metadata);
     onChange(newHousehold);
-    setSelectedVariables(selectedVariables.filter((selectedVariable) => selectedVariable !== varName));
+    setSelectedVariables(
+      selectedVariables.filter((selectedVariable) => selectedVariable !== varName)
+    );
   };
 
   return (

@@ -102,9 +102,9 @@ export function IngredientSectionFull({
       };
     }
     return {
-      label: currentLabel || `Population #${currentId}`,
+      label: currentLabel || `Household #${currentId}`,
       description: '',
-      populationType: 'geography',
+      populationType: 'household',
     };
   })();
 

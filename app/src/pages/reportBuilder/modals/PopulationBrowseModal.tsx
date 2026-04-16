@@ -18,6 +18,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
 import { geographyUsageStore, householdUsageStore } from '@/api/usageTracking';
 import { UKOutlineIcon, USOutlineIcon } from '@/components/icons/CountryOutlineIcons';
+import { Button, Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui';
 import { Group } from '@/components/ui/Group';
 import { Stack } from '@/components/ui/Stack';
 import { Text } from '@/components/ui/Text';
@@ -94,10 +95,12 @@ export function PopulationBrowseModal({
   const [validation, setValidation] = useState<ReturnType<
     typeof HouseholdValidation.isReadyForSimulation
   > | null>(null);
+  const [showUnnamedWarning, setShowUnnamedWarning] = useState(false);
+  const trimmedHouseholdLabel = householdLabel.trim();
 
   // Create household hook
   const { createHousehold, isPending: isCreating } = useCreateHousehold(
-    householdLabel || undefined
+    trimmedHouseholdLabel || undefined
   );
 
   // Get all basic non-person fields dynamically
@@ -127,6 +130,7 @@ export function PopulationBrowseModal({
       setHouseholdLabel('');
       setHouseholdDraft(null);
       setValidation(null);
+      setShowUnnamedWarning(false);
     }
   }, [isOpen, countryId]);
 
@@ -305,6 +309,7 @@ export function PopulationBrowseModal({
     setHouseholdDraft(builder.build());
     setHouseholdLabel('');
     setValidation(null);
+    setShowUnnamedWarning(false);
     setIsCreationMode(true);
   }, [countryId, reportYear]);
 
@@ -314,6 +319,7 @@ export function PopulationBrowseModal({
     setHouseholdDraft(null);
     setHouseholdLabel('');
     setValidation(null);
+    setShowUnnamedWarning(false);
   }, []);
 
   const handleHouseholdDraftChange = useCallback((nextHousehold: AppHouseholdInputEnvelope) => {
@@ -349,7 +355,7 @@ export function PopulationBrowseModal({
 
   // Handle household creation submission
   const handleCreateHousehold = useCallback(async () => {
-    if (!householdDraft || !householdLabel.trim()) {
+    if (!householdDraft) {
       return;
     }
 
@@ -379,7 +385,7 @@ export function PopulationBrowseModal({
       const populationState = {
         geography: null,
         household: createdHousehold,
-        label: householdLabel,
+        label: trimmedHouseholdLabel || null,
         type: 'household' as const,
       };
 
@@ -401,8 +407,22 @@ export function PopulationBrowseModal({
     onClose,
     queryClient,
     reportYear,
+    trimmedHouseholdLabel,
     userId,
   ]);
+
+  const handleSubmitHouseholdCreation = useCallback(() => {
+    if (!householdDraft) {
+      return;
+    }
+
+    if (!trimmedHouseholdLabel) {
+      setShowUnnamedWarning(true);
+      return;
+    }
+
+    void handleCreateHousehold();
+  }, [handleCreateHousehold, householdDraft, trimmedHouseholdLabel]);
 
   const colorConfig = INGREDIENT_COLORS.population;
 
@@ -603,41 +623,70 @@ export function PopulationBrowseModal({
   };
 
   return (
-    <BrowseModalTemplate
-      isOpen={isOpen}
-      onClose={onClose}
-      headerIcon={<IconUsers size={20} color={colorConfig.icon} />}
-      headerTitle={isCreationMode ? 'Create household' : 'Household(s)'}
-      headerSubtitle={
-        isCreationMode
-          ? 'Configure your household composition and details'
-          : 'Choose a geographic region or create a household'
-      }
-      colorConfig={colorConfig}
-      sidebarSections={browseSidebarSections}
-      renderMainContent={renderMainContent}
-      statusHeader={
-        isCreationMode ? (
-          <PopulationStatusHeader
-            householdLabel={householdLabel}
-            setHouseholdLabel={setHouseholdLabel}
-            memberCount={householdPeople.length}
-          />
-        ) : undefined
-      }
-      footer={
-        isCreationMode ? (
-          <CreationModeFooter
-            onBack={handleExitCreationMode}
-            onSubmit={handleCreateHousehold}
-            isLoading={isCreating}
-            submitDisabled={
-              !householdLabel.trim() || !householdDraft || validation?.isValid === false
-            }
-            submitLabel="Create household"
-          />
-        ) : undefined
-      }
-    />
+    <>
+      <BrowseModalTemplate
+        isOpen={isOpen}
+        onClose={onClose}
+        headerIcon={<IconUsers size={20} color={colorConfig.icon} />}
+        headerTitle={isCreationMode ? 'Create household' : 'Household(s)'}
+        headerSubtitle={
+          isCreationMode
+            ? 'Configure your household composition and details'
+            : 'Choose a geographic region or create a household'
+        }
+        colorConfig={colorConfig}
+        sidebarSections={browseSidebarSections}
+        renderMainContent={renderMainContent}
+        statusHeader={
+          isCreationMode ? (
+            <PopulationStatusHeader
+              householdLabel={householdLabel}
+              setHouseholdLabel={setHouseholdLabel}
+              memberCount={householdPeople.length}
+            />
+          ) : undefined
+        }
+        footer={
+          isCreationMode ? (
+            <CreationModeFooter
+              onBack={handleExitCreationMode}
+              onSubmit={handleSubmitHouseholdCreation}
+              isLoading={isCreating}
+              submitDisabled={!householdDraft || validation?.isValid === false}
+              submitLabel="Create household"
+            />
+          ) : undefined
+        }
+      />
+
+      <Dialog
+        open={showUnnamedWarning}
+        onOpenChange={(open) => !open && setShowUnnamedWarning(false)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Unnamed household</DialogTitle>
+          </DialogHeader>
+          <Stack gap="md">
+            <Text size="sm">
+              This household has no name. Are you sure you want to save it without a name?
+            </Text>
+            <Group justify="end" gap="sm">
+              <Button variant="outline" onClick={() => setShowUnnamedWarning(false)}>
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  setShowUnnamedWarning(false);
+                  void handleCreateHousehold();
+                }}
+              >
+                Save anyway
+              </Button>
+            </Group>
+          </Stack>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
