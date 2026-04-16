@@ -30,7 +30,7 @@ describe('householdCalculation v2 API', () => {
   // ==========================================================================
 
   describe('calculationResultToHousehold', () => {
-    test('given result arrays then maps them to flat household shape', () => {
+    test('given result arrays then preserves the plural household shape', () => {
       // Given
       const result = {
         person: [{ net_income: 45000 }],
@@ -48,12 +48,12 @@ describe('householdCalculation v2 API', () => {
 
       // Then
       expect(household.people).toEqual([{ net_income: 45000 }]);
-      expect(household.household).toEqual({ total_tax: 5000 });
-      expect(household.tax_unit).toEqual({ income_tax: 3000 });
-      expect(household.family).toEqual({ benefits: 200 });
-      expect(household.spm_unit).toEqual({ poverty_gap: 0 });
-      expect(household.marital_unit).toEqual({ filing_status: 'single' });
-      expect(household.benunit).toEqual({ uc_amount: 100 });
+      expect(household.household).toEqual([{ total_tax: 5000 }]);
+      expect(household.tax_unit).toEqual([{ income_tax: 3000 }]);
+      expect(household.family).toEqual([{ benefits: 200 }]);
+      expect(household.spm_unit).toEqual([{ poverty_gap: 0 }]);
+      expect(household.marital_unit).toEqual([{ filing_status: 'single' }]);
+      expect(household.benunit).toEqual([{ uc_amount: 100 }]);
     });
 
     test('given result then preserves country_id and year from original household', () => {
@@ -65,7 +65,14 @@ describe('householdCalculation v2 API', () => {
       const original: V2CreateHouseholdEnvelope = {
         country_id: 'uk',
         year: 2025,
+        label: 'Original household',
         people: [{ age: 40 }],
+        tax_unit: [],
+        family: [],
+        spm_unit: [],
+        marital_unit: [],
+        household: [],
+        benunit: [],
       };
 
       // When
@@ -74,9 +81,10 @@ describe('householdCalculation v2 API', () => {
       // Then
       expect(household.country_id).toBe('uk');
       expect(household.year).toBe(2025);
+      expect(household.label).toBe('Original household');
     });
 
-    test('given null or missing optional arrays then maps to undefined', () => {
+    test('given null optional arrays then maps them to empty arrays', () => {
       // Given
       const result = {
         person: [{ net_income: 45000 }],
@@ -93,11 +101,11 @@ describe('householdCalculation v2 API', () => {
       const household = calculationResultToHousehold(result as any, original);
 
       // Then
-      expect(household.tax_unit).toBeUndefined();
-      expect(household.family).toBeUndefined();
-      expect(household.spm_unit).toBeUndefined();
-      expect(household.marital_unit).toBeUndefined();
-      expect(household.benunit).toBeUndefined();
+      expect(household.tax_unit).toEqual([]);
+      expect(household.family).toEqual([]);
+      expect(household.spm_unit).toEqual([]);
+      expect(household.marital_unit).toEqual([]);
+      expect(household.benunit).toEqual([]);
     });
   });
 
@@ -112,12 +120,12 @@ describe('householdCalculation v2 API', () => {
         country_id: 'us',
         year: 2026,
         people: [{ age: 30, employment_income: 50000 }],
-        tax_unit: { tax_unit_id: 0 },
-        family: null,
-        spm_unit: null,
-        marital_unit: null,
-        household: null,
-        benunit: null,
+        tax_unit: [{ tax_unit_id: 0 }],
+        family: [],
+        spm_unit: [],
+        marital_unit: [],
+        household: [],
+        benunit: [],
       };
       const jobResponse = createMockHouseholdJobResponse();
       vi.stubGlobal('fetch', mockFetchSuccess(jobResponse));
@@ -148,6 +156,12 @@ describe('householdCalculation v2 API', () => {
         country_id: 'us',
         year: 2026,
         people: [{ age: 30 }],
+        tax_unit: [],
+        family: [],
+        spm_unit: [],
+        marital_unit: [],
+        household: [],
+        benunit: [],
       };
       vi.stubGlobal('fetch', mockFetchError(422, 'Validation error'));
 

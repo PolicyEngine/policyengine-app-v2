@@ -20,12 +20,12 @@ export interface V2HouseholdData {
   year: number;
   label?: string | null;
   people: V2HouseholdPersonData[];
-  tax_unit?: V2HouseholdGroupData | null;
-  family?: V2HouseholdGroupData | null;
-  spm_unit?: V2HouseholdGroupData | null;
-  marital_unit?: V2HouseholdGroupData | null;
-  household?: V2HouseholdGroupData | null;
-  benunit?: V2HouseholdGroupData | null;
+  tax_unit: V2HouseholdGroupData[];
+  family: V2HouseholdGroupData[];
+  spm_unit: V2HouseholdGroupData[];
+  marital_unit: V2HouseholdGroupData[];
+  household: V2HouseholdGroupData[];
+  benunit: V2HouseholdGroupData[];
 }
 
 export interface V2CreateHouseholdEnvelope extends V2HouseholdData {

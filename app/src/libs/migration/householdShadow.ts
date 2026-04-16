@@ -106,29 +106,20 @@ export async function shadowCreateHousehold(
     );
     return v2Household.id;
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    const isRepresentabilityGap = errorMessage.startsWith(
-      'Household cannot be converted to stored v2 shape:'
-    );
-
     logMigrationConsole(
-      isRepresentabilityGap
-        ? '[HouseholdMigration] Shadow v2 household create skipped (stored v2 shape unsupported):'
-        : '[HouseholdMigration] Shadow v2 household create failed (non-blocking):',
+      '[HouseholdMigration] Shadow v2 household create failed (non-blocking):',
       error
     );
     sendMigrationLog({
       kind: 'event',
       prefix: 'HouseholdMigration',
       operation: 'CREATE',
-      status: isRepresentabilityGap ? 'SKIPPED' : 'FAILED',
-      message: isRepresentabilityGap
-        ? 'Shadow v2 household create skipped: stored v2 shape unsupported'
-        : 'Shadow v2 household create failed (non-blocking)',
+      status: 'FAILED',
+      message: 'Shadow v2 household create failed (non-blocking)',
       metadata: {
         householdId: v1HouseholdId,
         countryId: v1Household.countryId,
-        error: errorMessage,
+        error: error instanceof Error ? error.message : String(error),
       },
       ts: new Date().toISOString(),
     });

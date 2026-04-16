@@ -316,6 +316,50 @@ describe('Household', () => {
       });
     });
 
+    it('preserves multiple v2 group rows when reading a stored household response', () => {
+      const household = Household.fromV2Response(
+        createMockHouseholdV2Response({
+          people: [
+            {
+              name: 'adult',
+              person_id: 0,
+              person_tax_unit_id: 0,
+              person_marital_unit_id: 0,
+              person_household_id: 0,
+              age: 35,
+            },
+            {
+              name: 'child',
+              person_id: 1,
+              person_tax_unit_id: 1,
+              person_marital_unit_id: 1,
+              person_household_id: 1,
+              age: 8,
+            },
+          ],
+          tax_unit: [{ tax_unit_id: 0 }, { tax_unit_id: 1 }],
+          marital_unit: [{ marital_unit_id: 0 }, { marital_unit_id: 1 }],
+          household: [{ household_id: 0 }, { household_id: 1 }],
+          family: [],
+          spm_unit: [],
+          benunit: [],
+        })
+      );
+
+      expect(household.data.taxUnits).toEqual({
+        taxUnit1: { members: ['adult'] },
+        taxUnit2: { members: ['child'] },
+      });
+      expect(household.data.maritalUnits).toEqual({
+        maritalUnit1: { members: ['adult'] },
+        maritalUnit2: { members: ['child'] },
+      });
+      expect(household.data.households).toEqual({
+        household1: { members: ['adult'] },
+        household2: { members: ['child'] },
+      });
+    });
+
     it('handles a minimal v2 response with no entity groups', () => {
       const household = Household.fromV2Response(createMockHouseholdV2ResponseMinimal());
 
@@ -328,7 +372,7 @@ describe('Household', () => {
       });
     });
 
-    it('rejects v2 groups that do not link back to any people', () => {
+    it('rejects multiple v2 group rows that do not link back to people', () => {
       expect(() =>
         Household.fromV2Response(
           createMockHouseholdV2Response({
@@ -339,14 +383,16 @@ describe('Household', () => {
                 age: 35,
               },
             ],
-            tax_unit: { tax_unit_id: 0 },
-            family: null,
-            spm_unit: null,
-            marital_unit: null,
-            household: null,
+            tax_unit: [{ tax_unit_id: 0 }, { tax_unit_id: 1 }],
+            family: [],
+            spm_unit: [],
+            marital_unit: [],
+            household: [],
           })
         )
-      ).toThrow('V2 household tax_unit has no linked members');
+      ).toThrow(
+        'V2 household tax_unit has multiple rows but people do not include person_tax_unit_id'
+      );
     });
 
     it('treats unlinked stored v2 groups as single groups containing all people', () => {
@@ -362,12 +408,12 @@ describe('Household', () => {
               age: 8,
             },
           ],
-          tax_unit: {},
-          family: { filing_status: 'single' },
-          spm_unit: null,
-          marital_unit: null,
-          household: { state_name: 'CA' },
-          benunit: null,
+          tax_unit: [{}],
+          family: [{ filing_status: 'single' }],
+          spm_unit: [],
+          marital_unit: [],
+          household: [{ state_name: 'CA' }],
+          benunit: [],
         })
       );
 
@@ -402,12 +448,12 @@ describe('Household', () => {
                 age: 35,
               },
             ],
-            tax_unit: {},
-            family: null,
-            spm_unit: null,
-            marital_unit: null,
-            household: null,
-            benunit: null,
+            tax_unit: [{}],
+            family: [],
+            spm_unit: [],
+            marital_unit: [],
+            household: [],
+            benunit: [],
           })
         )
       ).toThrow('V2 household tax_unit is missing numeric tax_unit_id');
@@ -431,12 +477,12 @@ describe('Household', () => {
                 age: 8,
               },
             ],
-            household: { household_id: 0 },
-            tax_unit: null,
-            family: null,
-            spm_unit: null,
-            marital_unit: null,
-            benunit: null,
+            household: [{ household_id: 0 }],
+            tax_unit: [],
+            family: [],
+            spm_unit: [],
+            marital_unit: [],
+            benunit: [],
           })
         )
       ).toThrow('Duplicate person name "adult" in v2 household response');
@@ -567,18 +613,12 @@ describe('Household', () => {
             age: 8,
           },
         ],
-        household: {
-          household_id: 0,
-        },
-        family: {
-          family_id: 0,
-        },
-        spm_unit: {
-          spm_unit_id: 0,
-        },
-        tax_unit: {
-          tax_unit_id: 0,
-        },
+        household: [{ household_id: 0 }],
+        family: [{ family_id: 0 }],
+        spm_unit: [{ spm_unit_id: 0 }],
+        tax_unit: [{ tax_unit_id: 0 }],
+        marital_unit: [],
+        benunit: [],
       });
     });
 
@@ -619,22 +659,16 @@ describe('Household', () => {
             age: 8,
           },
         ],
-        household: {
-          household_id: 0,
-        },
-        family: {
-          family_id: 0,
-        },
-        spm_unit: {
-          spm_unit_id: 0,
-        },
-        tax_unit: {
-          tax_unit_id: 0,
-        },
+        household: [{ household_id: 0 }],
+        family: [{ family_id: 0 }],
+        spm_unit: [{ spm_unit_id: 0 }],
+        tax_unit: [{ tax_unit_id: 0 }],
+        marital_unit: [],
+        benunit: [],
       });
     });
 
-    it('rejects households that require multiple stored v2 groups of the same type', () => {
+    it('preserves multiple stored v2 groups of the same type', () => {
       const household = Household.fromDraft({
         countryId: 'us',
         year: 2026,
@@ -652,9 +686,11 @@ describe('Household', () => {
         },
       });
 
-      expect(() => household.toV2CreateEnvelope()).toThrow(
-        'Household cannot be converted to stored v2 shape: maritalUnits has 3 groups'
-      );
+      expect(household.toV2CreateEnvelope().marital_unit).toEqual([
+        { marital_unit_id: 0 },
+        { marital_unit_id: 1 },
+        { marital_unit_id: 2 },
+      ]);
     });
   });
 
@@ -668,14 +704,10 @@ describe('Household', () => {
         year: 2026,
         label: TEST_HOUSEHOLD_LABEL,
         data: {
-          benunit: null,
-          family: {
-            family_id: 0,
-          },
-          household: {
-            household_id: 0,
-          },
-          marital_unit: null,
+          benunit: [],
+          family: [{ family_id: 0 }],
+          household: [{ household_id: 0 }],
+          marital_unit: [],
           people: [
             {
               age: 35,
@@ -697,12 +729,8 @@ describe('Household', () => {
               person_tax_unit_id: 0,
             },
           ],
-          spm_unit: {
-            spm_unit_id: 0,
-          },
-          tax_unit: {
-            tax_unit_id: 0,
-          },
+          spm_unit: [{ spm_unit_id: 0 }],
+          tax_unit: [{ tax_unit_id: 0 }],
         },
       });
     });

@@ -307,7 +307,7 @@ describe('HouseholdBuilder', () => {
       ).toBe(3);
     });
 
-    test('given US child when addChild then does not create a child marital unit', () => {
+    test('given US child when addChild then creates a child marital unit', () => {
       // Given
       builder.addAdult(PERSON_NAMES.ADULT_1, PERSON_AGES.ADULT_DEFAULT);
       builder.addAdult(PERSON_NAMES.ADULT_2, PERSON_AGES.ADULT_DEFAULT);
@@ -318,11 +318,14 @@ describe('HouseholdBuilder', () => {
 
       // Then
       const maritalUnits = household.householdData.maritalUnits!;
-      expect(Object.keys(maritalUnits)).toHaveLength(1);
-      expect(Object.keys(maritalUnits)).not.toContain(`${PERSON_NAMES.CHILD_1}'s marital unit`);
+      expect(Object.keys(maritalUnits)).toHaveLength(2);
+      expect(Object.keys(maritalUnits)).toContain(`${PERSON_NAMES.CHILD_1}'s marital unit`);
       expect(maritalUnits[GROUP_KEYS.DEFAULT_MARITAL_UNIT].members).toEqual([
         PERSON_NAMES.ADULT_1,
         PERSON_NAMES.ADULT_2,
+      ]);
+      expect(maritalUnits[`${PERSON_NAMES.CHILD_1}'s marital unit`].members).toEqual([
+        PERSON_NAMES.CHILD_1,
       ]);
     });
 

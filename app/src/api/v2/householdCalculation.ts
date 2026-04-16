@@ -31,12 +31,12 @@ function householdToCalculatePayload(
     country_id: household.country_id,
     year: household.year,
     people: household.people,
-    tax_unit: household.tax_unit ?? null,
-    family: household.family ?? null,
-    spm_unit: household.spm_unit ?? null,
-    marital_unit: household.marital_unit ?? null,
-    household: household.household ?? null,
-    benunit: household.benunit ?? null,
+    tax_unit: household.tax_unit,
+    family: household.family,
+    spm_unit: household.spm_unit,
+    marital_unit: household.marital_unit,
+    household: household.household,
+    benunit: household.benunit,
     policy_id: policyId,
     dynamic_id: dynamicId,
   };
@@ -185,14 +185,14 @@ export function calculationResultToHousehold(
   return {
     country_id: originalHousehold.country_id,
     year: originalHousehold.year,
+    label: originalHousehold.label,
     people: result.person,
-    // Extract first element from arrays (single household case)
-    tax_unit: result.tax_unit?.[0] ?? undefined,
-    family: result.family?.[0] ?? undefined,
-    spm_unit: result.spm_unit?.[0] ?? undefined,
-    marital_unit: result.marital_unit?.[0] ?? undefined,
-    household: result.household?.[0] ?? undefined,
-    benunit: result.benunit?.[0] ?? undefined,
+    tax_unit: result.tax_unit ?? [],
+    family: result.family ?? [],
+    spm_unit: result.spm_unit ?? [],
+    marital_unit: result.marital_unit ?? [],
+    household: result.household ?? [],
+    benunit: result.benunit ?? [],
   };
 }
 

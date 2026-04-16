@@ -179,8 +179,8 @@ describe('householdShadow', () => {
     );
   });
 
-  test('given a multi-group household unsupported by stored v2 then it skips shadow create non-blockingly', async () => {
-    const unsupportedHousehold = Household.fromDraft({
+  test('given a multi-group household then it still shadow creates in v2', async () => {
+    const multiGroupHousehold = Household.fromDraft({
       countryId: TEST_COUNTRY_ID,
       year: 2026,
       householdData: {
@@ -198,30 +198,21 @@ describe('householdShadow', () => {
       label: 'Complex household',
       id: TEST_V1_HOUSEHOLD_ID,
     });
-    const infoSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
 
     await expect(
       shadowCreateHouseholdAndAssociation({
         v1HouseholdId: TEST_V1_HOUSEHOLD_ID,
-        v1Household: unsupportedHousehold,
+        v1Household: multiGroupHousehold,
         v1Association,
       })
-    ).resolves.toBeNull();
+    ).resolves.toBe(TEST_V2_HOUSEHOLD_ID);
 
-    expect(createHouseholdV2).not.toHaveBeenCalled();
-    expect(createUserHouseholdAssociationV2).not.toHaveBeenCalled();
-    expect(infoSpy).toHaveBeenCalledWith(
-      expect.stringContaining('[HouseholdMigration] Shadow v2 household create skipped'),
-      expect.any(Error)
-    );
-    expect(sendMigrationLog).toHaveBeenCalledWith(
+    expect(createHouseholdV2).toHaveBeenCalledWith(
       expect.objectContaining({
-        kind: 'event',
-        prefix: 'HouseholdMigration',
-        operation: 'CREATE',
-        status: 'SKIPPED',
+        marital_unit: [{ marital_unit_id: 0 }, { marital_unit_id: 1 }, { marital_unit_id: 2 }],
       })
     );
+    expect(createUserHouseholdAssociationV2).toHaveBeenCalledTimes(1);
   });
 
   test('given mapped ids then it updates the existing v2 user-household association', async () => {

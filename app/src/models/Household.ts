@@ -5,7 +5,6 @@ import {
   buildAppHouseholdDataFromV1Data,
   buildV1CreateEnvelopeFromAppInput,
   cloneAppHouseholdInputData,
-  countAppHouseholdGroups,
   parseAppHouseholdInput,
 } from './household/appCodec';
 import type {
@@ -16,7 +15,6 @@ import type {
   HouseholdModelData,
 } from './household/canonicalTypes';
 import { buildComparableHousehold } from './household/comparable';
-import { GROUP_DEFINITIONS } from './household/schema';
 import {
   cloneValue,
   deepEqual,
@@ -170,13 +168,17 @@ export class Household extends BaseModel<HouseholdModelData> {
   }
 
   static fromV2Response(response: V2StoredHouseholdEnvelope): Household {
-    return Household.fromCanonical(parseV2HouseholdEnvelope(response), {
+    return Household.fromCanonicalInput({
       id: response.id,
+      ...parseV2HouseholdEnvelope(response),
     });
   }
 
   static fromV2CreateEnvelope(envelope: V2CreateHouseholdEnvelope): Household {
-    return Household.fromCanonical(parseV2HouseholdEnvelope(envelope), { id: 'draft-household' });
+    return Household.fromCanonicalInput({
+      id: 'draft-household',
+      ...parseV2HouseholdEnvelope(envelope),
+    });
   }
 
   withId(id: string): Household {
@@ -222,17 +224,12 @@ export class Household extends BaseModel<HouseholdModelData> {
   }
 
   toV2CreateEnvelope(): V2CreateHouseholdEnvelope {
-    for (const definition of GROUP_DEFINITIONS) {
-      const groupCount = countAppHouseholdGroups(this.appInputData, definition.appKey);
-
-      if (groupCount > 1) {
-        throw new Error(
-          `Household cannot be converted to stored v2 shape: ${definition.appKey} has ${groupCount} groups, but v2 /households supports at most 1`
-        );
-      }
-    }
-
-    return buildV2CreateEnvelope(this.toCanonical());
+    return buildV2CreateEnvelope({
+      countryId: this.countryId,
+      label: this.label,
+      year: this.year,
+      householdData: this.appInputData,
+    });
   }
 
   toComparable(): ComparableHousehold {
