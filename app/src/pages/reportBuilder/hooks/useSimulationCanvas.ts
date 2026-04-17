@@ -11,13 +11,12 @@
  */
 
 import { useCallback, useMemo, useState } from 'react';
-import { useSelector } from 'react-redux';
 import { geographyUsageStore, householdUsageStore } from '@/api/usageTracking';
 import { MOCK_USER_ID } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useRegions } from '@/hooks/useRegions';
 import { useUserHouseholds } from '@/hooks/useUserHousehold';
 import { useUserPolicies } from '@/hooks/useUserPolicy';
-import { RootState } from '@/store';
 import { Geography } from '@/types/ingredients/Geography';
 import { PolicyStateProps, PopulationStateProps } from '@/types/pathwayState';
 import { countPolicyModifications } from '@/utils/countParameterChanges';
@@ -62,8 +61,7 @@ export function useSimulationCanvas({
   const userId = MOCK_USER_ID.toString();
   const { data: policies, isLoading: policiesLoading } = useUserPolicies(userId);
   const { data: households, isLoading: householdsLoading } = useUserHouseholds(userId);
-  const regionOptions = useSelector((state: RootState) => state.metadata.economyOptions.region);
-  const metadataLoading = useSelector((state: RootState) => state.metadata.loading);
+  const { data: regions = [], isLoading: regionsLoading } = useRegions(countryId);
   const isGeographySelected = !!reportState.simulations[0]?.population?.geography?.id;
 
   // Show loading skeleton until all data sources have resolved.
@@ -72,10 +70,10 @@ export function useSimulationCanvas({
   const isInitialLoading =
     policiesLoading ||
     householdsLoading ||
-    metadataLoading ||
+    regionsLoading ||
     policies === undefined ||
     households === undefined ||
-    regionOptions.length === 0;
+    regions.length === 0;
 
   // ---------------------------------------------------------------------------
   // Modal visibility state
@@ -122,10 +120,13 @@ export function useSimulationCanvas({
   const recentPopulations: RecentPopulation[] = useMemo(() => {
     const results: Array<RecentPopulation & { timestamp: string }> = [];
 
-    const regions = regionOptions || [];
     const allRegions: RegionOption[] =
       countryId === 'us'
-        ? [...getUSStates(regions), ...getUSCongressionalDistricts(regions), ...getUSPlaces()]
+        ? [
+            ...getUSStates(regions),
+            ...getUSCongressionalDistricts(regions),
+            ...getUSPlaces(regions),
+          ]
         : [
             ...getUKCountries(regions),
             ...getUKConstituencies(regions),
@@ -192,7 +193,7 @@ export function useSimulationCanvas({
       .sort((a, b) => b.timestamp.localeCompare(a.timestamp))
       .slice(0, 10)
       .map(({ timestamp: _t, ...rest }) => rest);
-  }, [countryId, households, regionOptions]);
+  }, [countryId, households, regions]);
 
   // ---------------------------------------------------------------------------
   // Helpers

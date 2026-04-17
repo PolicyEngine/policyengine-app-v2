@@ -1,7 +1,10 @@
 import type { ChoroplethDataPoint } from '@/components/visualization/USDistrictChoroplethMap';
+import type { RegionRecord } from '@/models/region';
 import type { MetadataRegionEntry } from '@/types/metadata';
 import type { USCongressionalDistrictBreakdown } from '@/types/metadata/ReportOutputSocietyWideByCongressionalDistrict';
 import { US_REGION_TYPES } from '@/types/regionTypes';
+
+type DistrictRegionSource = MetadataRegionEntry | RegionRecord;
 
 /**
  * Type for district label lookup map (district ID -> label)
@@ -27,24 +30,27 @@ export function normalizeDistrictId(districtId: string): string {
 }
 
 /**
- * Builds a lookup map from district ID to label from metadata regions.
+ * Builds a lookup map from district ID to label from canonical region records or legacy metadata.
  *
- * @param regions - Array of region entries from metadata.economyOptions.region
+ * @param regions - Array of canonical region records or legacy metadata entries
  * @returns Map from district ID (e.g., "AL-01") to label (e.g., "Alabama's 1st congressional district")
  *
  * @example
  * ```typescript
- * const labelLookup = buildDistrictLabelLookup(metadata.economyOptions.region);
+ * const labelLookup = buildDistrictLabelLookup(regions);
  * labelLookup.get('AL-01'); // "Alabama's 1st congressional district"
  * ```
  */
-export function buildDistrictLabelLookup(regions: MetadataRegionEntry[]): DistrictLabelLookup {
+export function buildDistrictLabelLookup(regions: DistrictRegionSource[]): DistrictLabelLookup {
   const lookup = new Map<string, string>();
 
   for (const region of regions) {
-    if (region.type === US_REGION_TYPES.CONGRESSIONAL_DISTRICT) {
+    const regionType = 'regionType' in region ? region.regionType : region.type;
+    const regionCode = 'code' in region ? region.code : region.name;
+
+    if (regionType === US_REGION_TYPES.CONGRESSIONAL_DISTRICT) {
       // Strip "congressional_district/" prefix so keys match API district IDs (e.g., "AL-01")
-      const key = region.name.replace(/^congressional_district\//, '');
+      const key = regionCode.replace(/^congressional_district\//, '');
       lookup.set(key, region.label);
     }
   }
@@ -59,12 +65,12 @@ export function buildDistrictLabelLookup(regions: MetadataRegionEntry[]): Distri
  * the DISTRICT_ID property in the GeoJSON file. This avoids runtime FIPS
  * code conversion - the GeoJSON was pre-processed to include DISTRICT_ID.
  *
- * Labels are sourced from API metadata to avoid duplicating state name mappings
+ * Labels are sourced from region metadata to avoid duplicating state name mappings
  * and ordinal formatting logic.
  *
  * @param apiData - Congressional district breakdown data from API
  * @param valueField - Which field to use as the value
- * @param labelLookup - Map from district ID to human-readable label (from metadata)
+ * @param labelLookup - Map from district ID to human-readable label (from region metadata)
  * @returns Array of ChoroplethDataPoint ready for visualization
  *
  * @example

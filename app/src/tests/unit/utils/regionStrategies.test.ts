@@ -6,13 +6,16 @@ import {
   expectedUKCountries,
   expectedUKLocalAuthorities,
   expectedUSCongressionalDistricts,
+  expectedUSPlaces,
   expectedUSStates,
   INVALID_PLACE_REGION_STRINGS,
   mockPlaceLasVegasNV,
   mockPlaceNYC,
   mockPlacePatersonNJ,
   mockSingleDistrictState,
+  mockUKRegionRecords,
   mockUKRegions,
+  mockUSRegionRecords,
   mockUSRegions,
   TEST_REGIONS,
 } from '@/tests/fixtures/utils/regionStrategiesMocks';
@@ -30,6 +33,7 @@ import {
   getUKCountries,
   getUKLocalAuthorities,
   getUSCongressionalDistricts,
+  getUSPlaces,
   getUSStates,
   parsePlaceRegionString,
   placeToRegionString,
@@ -70,6 +74,17 @@ describe('regionStrategies', () => {
       // Then
       expect(result).toEqual([]);
     });
+
+    test('given v2 region records then returns canonical state options', () => {
+      // When
+      const result = getUSStates(mockUSRegionRecords);
+
+      // Then
+      expect(result).toEqual([
+        { value: 'state/ca', label: 'California', type: US_REGION_TYPES.STATE },
+        { value: 'state/ny', label: 'New York', type: US_REGION_TYPES.STATE },
+      ]);
+    });
   });
 
   describe('getUSCongressionalDistricts', () => {
@@ -105,6 +120,39 @@ describe('regionStrategies', () => {
 
       // Then
       expect(result).toEqual([]);
+    });
+
+    test('given v2 region records then preserves district state metadata', () => {
+      // When
+      const result = getUSCongressionalDistricts(mockUSRegionRecords);
+
+      // Then
+      expect(result).toEqual([
+        {
+          value: 'congressional_district/CA-01',
+          label: "California's 1st congressional district",
+          type: US_REGION_TYPES.CONGRESSIONAL_DISTRICT,
+          stateAbbreviation: 'CA',
+          stateName: 'California',
+        },
+        {
+          value: 'congressional_district/NY-01',
+          label: "New York's 1st congressional district",
+          type: US_REGION_TYPES.CONGRESSIONAL_DISTRICT,
+          stateAbbreviation: 'NY',
+          stateName: 'New York',
+        },
+      ]);
+    });
+  });
+
+  describe('getUSPlaces', () => {
+    test('given v2 region records then returns canonical place options', () => {
+      // When
+      const result = getUSPlaces(mockUSRegionRecords);
+
+      // Then
+      expect(result).toEqual(expectedUSPlaces);
     });
   });
 
@@ -233,6 +281,17 @@ describe('regionStrategies', () => {
       // Then
       expect(result).toEqual([]);
     });
+
+    test('given v2 region records then returns country options', () => {
+      // When
+      const result = getUKCountries(mockUKRegionRecords);
+
+      // Then
+      expect(result).toEqual([
+        { value: 'country/england', label: 'England', type: UK_REGION_TYPES.COUNTRY },
+        { value: 'country/scotland', label: 'Scotland', type: UK_REGION_TYPES.COUNTRY },
+      ]);
+    });
   });
 
   describe('getUKConstituencies', () => {
@@ -257,6 +316,20 @@ describe('regionStrategies', () => {
 
       // Then
       expect(result).toEqual([]);
+    });
+
+    test('given v2 region records then returns constituency options', () => {
+      // When
+      const result = getUKConstituencies(mockUKRegionRecords);
+
+      // Then
+      expect(result).toEqual([
+        {
+          value: 'constituency/Sheffield Central',
+          label: 'Sheffield Central',
+          type: UK_REGION_TYPES.CONSTITUENCY,
+        },
+      ]);
     });
   });
 
@@ -293,6 +366,20 @@ describe('regionStrategies', () => {
 
       // Then
       expect(result).toEqual([]);
+    });
+
+    test('given v2 region records then returns local authority options', () => {
+      // When
+      const result = getUKLocalAuthorities(mockUKRegionRecords);
+
+      // Then
+      expect(result).toEqual([
+        {
+          value: 'local_authority/Westminster',
+          label: 'Westminster',
+          type: UK_REGION_TYPES.LOCAL_AUTHORITY,
+        },
+      ]);
     });
   });
 

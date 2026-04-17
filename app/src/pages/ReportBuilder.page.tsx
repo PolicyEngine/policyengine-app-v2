@@ -76,6 +76,7 @@ import { colors, spacing, typography } from '@/designTokens';
 import { useCreateHousehold } from '@/hooks/useCreateHousehold';
 import { useCreatePolicy } from '@/hooks/useCreatePolicy';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useRegions } from '@/hooks/useRegions';
 import { useUserHouseholds } from '@/hooks/useUserHousehold';
 import { useUpdatePolicyAssociation, useUserPolicies } from '@/hooks/useUserPolicy';
 import { getBasicInputFields, getDateRange } from '@/libs/metadataUtils';
@@ -3523,7 +3524,7 @@ function PopulationBrowseModal({
   const userId = MOCK_USER_ID.toString();
   const queryClient = useQueryClient();
   const { data: households, isLoading: householdsLoading } = useUserHouseholds(userId);
-  const regionOptions = useSelector((state: RootState) => state.metadata.economyOptions.region);
+  const { data: regions = [] } = useRegions(countryId);
   const metadata = useSelector((state: RootState) => state.metadata);
   const basicInputFields = useSelector(getBasicInputFields);
 
@@ -3578,9 +3579,9 @@ function PopulationBrowseModal({
   // Get geography categories based on country
   const geographyCategories = useMemo(() => {
     if (countryId === 'uk') {
-      const ukCountries = getUKCountries(regionOptions);
-      const ukConstituencies = getUKConstituencies(regionOptions);
-      const ukLocalAuthorities = getUKLocalAuthorities(regionOptions);
+      const ukCountries = getUKCountries(regions);
+      const ukConstituencies = getUKConstituencies(regions);
+      const ukLocalAuthorities = getUKLocalAuthorities(regions);
       return [
         {
           id: 'countries' as const,
@@ -3603,8 +3604,8 @@ function PopulationBrowseModal({
       ];
     }
     // US
-    const usStates = getUSStates(regionOptions);
-    const usDistricts = getUSCongressionalDistricts(regionOptions);
+    const usStates = getUSStates(regions);
+    const usDistricts = getUSCongressionalDistricts(regions);
     return [
       { id: 'states' as const, label: 'States', count: usStates.length, regions: usStates },
       {
@@ -3614,7 +3615,7 @@ function PopulationBrowseModal({
         regions: usDistricts,
       },
     ];
-  }, [countryId, regionOptions]);
+  }, [countryId, regions]);
 
   // Get regions for active category
   const activeRegions = useMemo(() => {
@@ -4600,7 +4601,7 @@ function SimulationCanvas({
   const userId = MOCK_USER_ID.toString();
   const { data: policies } = useUserPolicies(userId);
   const { data: households } = useUserHouseholds(userId);
-  const regionOptions = useSelector((state: RootState) => state.metadata.economyOptions.region);
+  const { data: regions = [] } = useRegions(countryId);
   // Any geography selection (nationwide or subnational) requires dual-simulation
   // Only households allow single-simulation reports
   const isGeographySelected = !!reportState.simulations[0]?.population?.geography?.id;
@@ -4651,7 +4652,6 @@ function SimulationCanvas({
     const results: Array<RecentPopulation & { timestamp: string }> = [];
 
     // Get all region options for lookup
-    const regions = regionOptions || [];
     const allRegions: RegionOption[] =
       countryId === 'us'
         ? [...getUSStates(regions), ...getUSCongressionalDistricts(regions)]
@@ -4728,7 +4728,7 @@ function SimulationCanvas({
       .sort((a, b) => b.timestamp.localeCompare(a.timestamp))
       .slice(0, 10)
       .map(({ timestamp: _t, ...rest }) => rest);
-  }, [countryId, households, regionOptions]);
+  }, [countryId, households, regions]);
 
   const handleAddSimulation = useCallback(() => {
     if (reportState.simulations.length >= 2) {

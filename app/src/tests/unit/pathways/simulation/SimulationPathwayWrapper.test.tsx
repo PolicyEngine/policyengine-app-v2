@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { useCreateSimulation } from '@/hooks/useCreateSimulation';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useRegions } from '@/hooks/useRegions';
 import { useUserGeographics } from '@/hooks/useUserGeographic';
 import { useUserHouseholds } from '@/hooks/useUserHousehold';
 import { useUserPolicies } from '@/hooks/useUserPolicy';
@@ -19,6 +20,7 @@ import {
   resetAllMocks,
   TEST_COUNTRY_ID,
 } from '@/tests/fixtures/pathways/simulation/SimulationPathwayWrapperMocks';
+import { mockUSRegionRecords } from '@/tests/fixtures/utils/regionStrategiesMocks';
 
 // Mock dependencies
 vi.mock('react-router-dom', async () => {
@@ -72,6 +74,10 @@ vi.mock('@/hooks/useCurrentCountry', () => ({
   useCurrentCountry: vi.fn(),
 }));
 
+vi.mock('@/hooks/useRegions', () => ({
+  useRegions: vi.fn(),
+}));
+
 describe('SimulationPathwayWrapper', () => {
   beforeEach(() => {
     resetAllMocks();
@@ -83,6 +89,12 @@ describe('SimulationPathwayWrapper', () => {
     vi.mocked(useUserPolicies).mockReturnValue(mockUseUserPolicies);
     vi.mocked(useUserHouseholds).mockReturnValue(mockUseUserHouseholds);
     vi.mocked(useUserGeographics).mockReturnValue(mockUseUserGeographics);
+    vi.mocked(useRegions).mockReturnValue({
+      data: mockUSRegionRecords,
+      isLoading: false,
+      isError: false,
+      error: null,
+    } as ReturnType<typeof useRegions>);
   });
 
   describe('Error handling', () => {

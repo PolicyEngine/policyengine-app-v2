@@ -83,6 +83,11 @@ export const reportKeys = {
   byUser: (userId: string) => [...reportKeys.all, 'user_id', userId] as const,
 };
 
+export const regionKeys = {
+  all: ['regions'] as const,
+  byCountry: (countryId: string) => [...regionKeys.all, 'country', countryId] as const,
+};
+
 export const calculationKeys = {
   all: ['calculations'] as const,
   byReportId: (reportId: string) => ['calculations', 'report', reportId] as const,

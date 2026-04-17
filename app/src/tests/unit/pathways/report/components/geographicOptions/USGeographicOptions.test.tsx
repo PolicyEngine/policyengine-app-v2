@@ -1,26 +1,29 @@
 import { render, screen, userEvent } from '@test-utils';
-import { describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { useRegions } from '@/hooks/useRegions';
 import USGeographicOptions from '@/pathways/report/components/geographicOptions/USGeographicOptions';
 import {
   mockUSDistrictOptions,
   mockUSStateOptions,
 } from '@/tests/fixtures/pathways/report/components/geographicOptionsMocks';
+import { mockUSRegionRecords } from '@/tests/fixtures/utils/regionStrategiesMocks';
 import { US_REGION_TYPES } from '@/utils/regionStrategies';
 
-// Mock the regionStrategies place functions to avoid the object-as-React-child bug
-// (getPlaceStateNames returns {value, label}[] but USPlaceSelector maps them as string children)
-vi.mock('@/utils/regionStrategies', async () => {
-  const actual = await vi.importActual<typeof import('@/utils/regionStrategies')>(
-    '@/utils/regionStrategies'
-  );
-  return {
-    ...actual,
-    getPlaceStateNames: () => ['California', 'Nevada', 'New Jersey', 'New York'],
-    filterPlacesByState: () => [],
-  };
-});
+vi.mock('@/hooks/useRegions', () => ({
+  useRegions: vi.fn(),
+}));
 
 describe('USGeographicOptions', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(useRegions).mockReturnValue({
+      data: mockUSRegionRecords,
+      isLoading: false,
+      isError: false,
+      error: null,
+    } as ReturnType<typeof useRegions>);
+  });
+
   test('given component then renders all scope options', () => {
     // Given
     const onScopeChange = vi.fn();

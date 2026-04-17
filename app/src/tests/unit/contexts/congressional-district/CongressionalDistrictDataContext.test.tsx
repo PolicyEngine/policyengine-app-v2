@@ -11,11 +11,17 @@ import {
   CongressionalDistrictDataProvider,
   useCongressionalDistrictData,
 } from '@/contexts/congressional-district/CongressionalDistrictDataContext';
+import { useRegions } from '@/hooks/useRegions';
 import { MOCK_ALABAMA_DISTRICT_DATA } from '@/tests/fixtures/contexts/congressional-district/congressionalDistrictMocks';
+import { mockUSRegionRecords } from '@/tests/fixtures/utils/regionStrategiesMocks';
 
 // Mock the API module
 vi.mock('@/api/societyWideCalculation', () => ({
   fetchSocietyWideCalculation: vi.fn(),
+}));
+
+vi.mock('@/hooks/useRegions', () => ({
+  useRegions: vi.fn(),
 }));
 
 // Create a mock Redux store with metadata
@@ -61,6 +67,12 @@ const createWrapper = (
 describe('CongressionalDistrictDataContext', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(useRegions).mockReturnValue({
+      data: mockUSRegionRecords,
+      isLoading: false,
+      isError: false,
+      error: null,
+    } as ReturnType<typeof useRegions>);
   });
 
   describe('useCongressionalDistrictData hook', () => {
@@ -364,8 +376,14 @@ describe('CongressionalDistrictDataContext', () => {
       });
     });
 
-    test('given no states in metadata then totalStates is 0', () => {
-      // Given - empty regions
+    test('given no canonical states then totalStates is 0', () => {
+      // Given
+      vi.mocked(useRegions).mockReturnValueOnce({
+        data: [] as typeof mockUSRegionRecords,
+        isLoading: false,
+        isError: false,
+        error: null,
+      } as ReturnType<typeof useRegions>);
       const store = createMockStore([]);
       const wrapper = createWrapper(store, {
         reformPolicyId: '123',

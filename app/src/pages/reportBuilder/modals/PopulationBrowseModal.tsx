@@ -25,6 +25,7 @@ import { CURRENT_YEAR, MOCK_USER_ID } from '@/constants';
 import { colors, spacing } from '@/designTokens';
 import { useCreateHousehold } from '@/hooks/useCreateHousehold';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useRegions } from '@/hooks/useRegions';
 import { useUserHouseholds } from '@/hooks/useUserHousehold';
 import { getBasicInputFields } from '@/libs/metadataUtils';
 import { householdAssociationKeys } from '@/libs/queryKeys';
@@ -70,7 +71,7 @@ export function PopulationBrowseModal({
   const userId = MOCK_USER_ID.toString();
   const queryClient = useQueryClient();
   const { data: households, isLoading: householdsLoading } = useUserHouseholds(userId);
-  const regionOptions = useSelector((state: RootState) => state.metadata.economyOptions.region);
+  const { data: regions = [] } = useRegions(countryId);
   const metadata = useSelector((state: RootState) => state.metadata);
   const basicInputFields = useSelector(getBasicInputFields);
 
@@ -123,9 +124,9 @@ export function PopulationBrowseModal({
   // Get geography categories based on country
   const geographyCategories = useMemo(() => {
     if (countryId === 'uk') {
-      const ukCountries = getUKCountries(regionOptions);
-      const ukConstituencies = getUKConstituencies(regionOptions);
-      const ukLocalAuthorities = getUKLocalAuthorities(regionOptions);
+      const ukCountries = getUKCountries(regions);
+      const ukConstituencies = getUKConstituencies(regions);
+      const ukLocalAuthorities = getUKLocalAuthorities(regions);
       return [
         {
           id: 'countries' as const,
@@ -148,9 +149,9 @@ export function PopulationBrowseModal({
       ];
     }
     // US
-    const usStates = getUSStates(regionOptions);
-    const usDistricts = getUSCongressionalDistricts(regionOptions);
-    const usPlaces = getUSPlaces();
+    const usStates = getUSStates(regions);
+    const usDistricts = getUSCongressionalDistricts(regions);
+    const usPlaces = getUSPlaces(regions);
     return [
       {
         id: 'states' as const,
@@ -171,7 +172,7 @@ export function PopulationBrowseModal({
         regions: usPlaces,
       },
     ];
-  }, [countryId, regionOptions]);
+  }, [countryId, regions]);
 
   // Get regions for active category
   const activeRegions = useMemo(() => {

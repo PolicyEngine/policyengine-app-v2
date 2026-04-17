@@ -12,6 +12,7 @@ import { MOCK_USER_ID } from '@/constants';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { usePathwayNavigation } from '@/hooks/usePathwayNavigation';
+import { useRegions } from '@/hooks/useRegions';
 import { useUserGeographics } from '@/hooks/useUserGeographic';
 import { useUserHouseholds } from '@/hooks/useUserHousehold';
 import { useUserPolicies } from '@/hooks/useUserPolicy';
@@ -67,6 +68,7 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
   // Get metadata for population views
   const metadata = useSelector((state: RootState) => state.metadata);
   const currentLawId = useSelector((state: RootState) => state.metadata.currentLawId);
+  const { data: regions = [] } = useRegions(countryId);
 
   // ========== NAVIGATION ==========
   const { currentMode, navigateToMode, goBack, canGoBack } = usePathwayNavigation(
@@ -298,7 +300,7 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
       currentView = (
         <PopulationScopeView
           countryId={countryId}
-          regionData={metadata.economyOptions?.region || []}
+          regionData={regions}
           onScopeSelected={populationCallbacks.handleScopeSelected}
           onBack={canGoBack ? goBack : undefined}
           onCancel={handleCancel}
