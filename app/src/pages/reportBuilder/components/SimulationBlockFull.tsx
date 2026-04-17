@@ -10,9 +10,9 @@ import { Button, Group, Text, Tooltip, TooltipContent, TooltipTrigger } from '@/
 import { colors } from '@/designTokens';
 import { FONT_SIZES } from '../constants';
 import { styles } from '../styles';
+import type { SimulationBlockProps } from '../types';
 import { EditableLabel } from './EditableLabel';
 import { IngredientSectionFull } from './IngredientSectionFull';
-import type { SimulationBlockProps } from './SimulationBlock';
 
 export function SimulationBlockFull({
   simulation,

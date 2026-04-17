@@ -14,9 +14,9 @@ import {
   PopulationBrowseModal,
 } from '../modals';
 import { styles } from '../styles';
-import type { IngredientPickerState, ReportBuilderState } from '../types';
+import type { IngredientPickerState, ReportBuilderState, SimulationBlockProps } from '../types';
 import { AddSimulationCard } from './AddSimulationCard';
-import { SimulationBlock, type SimulationBlockProps } from './SimulationBlock';
+import { SimulationBlock } from './SimulationBlock';
 import { SimulationCanvasSkeleton } from './SimulationCanvasSkeleton';
 
 interface SimulationCanvasProps {
