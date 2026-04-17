@@ -51,9 +51,7 @@ describe('proxyTrackerRequest', () => {
     const fetchSpy = vi.spyOn(globalThis, 'fetch');
 
     // When
-    const result = await proxyTrackerRequest(
-      `${TRACKER_PREFIX}/../admin`
-    );
+    const result = await proxyTrackerRequest(`${TRACKER_PREFIX}/../admin`);
 
     // Then
     expect(result).toBeNull();
@@ -67,9 +65,7 @@ describe('proxyTrackerRequest', () => {
     // When
     // If the proxy naively concatenated strings, `//evil.example.com` would
     // become a protocol-relative URL pointing at evil.example.com.
-    const result = await proxyTrackerRequest(
-      `${TRACKER_PREFIX}//evil.example.com/leak`
-    );
+    const result = await proxyTrackerRequest(`${TRACKER_PREFIX}//evil.example.com/leak`);
 
     // Then
     expect(result).toBeNull();
@@ -122,10 +118,7 @@ describe('proxyTrackerRequest', () => {
 
   test('given upstream returns a non-200 status then returns null', async () => {
     // Given
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockResolvedValue(new Response('', { status: 500 }))
-    );
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('', { status: 500 })));
 
     // When
     const result = await proxyTrackerRequest(`${TRACKER_PREFIX}/x`);
@@ -136,10 +129,7 @@ describe('proxyTrackerRequest', () => {
 
   test('given upstream throws then returns null', async () => {
     // Given
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockRejectedValue(new Error('network'))
-    );
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('network')));
 
     // When
     const result = await proxyTrackerRequest(`${TRACKER_PREFIX}/x`);

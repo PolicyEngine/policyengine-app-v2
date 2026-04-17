@@ -18,7 +18,6 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import ReactMarkdown, { type Components } from 'react-markdown';
-import rehypeRaw from 'rehype-raw';
 import remarkGfm from 'remark-gfm';
 import OptimisedImage from '@/components/ui/OptimisedImage';
 import type { MarkdownFormatterProps } from '@/types/blog';
@@ -31,6 +30,7 @@ import {
   blogTypography,
 } from './blogStyles';
 import { LazyPlot } from './LazyPlot';
+import { isSafeHref } from './safeHref';
 import { useDisplayCategory } from './useDisplayCategory';
 
 // Google Fonts URL for code blocks (Roboto Mono). Injected lazily from the
@@ -83,9 +83,7 @@ interface AnchorLikeElementProps {
   [key: string]: unknown;
 }
 
-function elementProps(
-  node: React.ReactNode
-): AnchorLikeElementProps | null {
+function elementProps(node: React.ReactNode): AnchorLikeElementProps | null {
   if (!isReactElement(node)) {
     return null;
   }
@@ -195,10 +193,7 @@ export function HighlightedBlock({
     } else {
       left = <MarkdownFormatter markdown={parts[0]} />;
       right = (
-        <MarkdownFormatter
-          markdown={parts[1]}
-          backgroundColor={blogColors.backgroundSecondary}
-        />
+        <MarkdownFormatter markdown={parts[1]} backgroundColor={blogColors.backgroundSecondary} />
       );
     }
   }
@@ -354,16 +349,11 @@ export function MarkdownFormatter({
       const childArray = React.Children.toArray(children);
       const anchorTag = childArray.find((child) => {
         const props = elementProps(child);
-        return (
-          typeof props?.href === 'string' &&
-          props.href.startsWith('https://twitter.com/')
-        );
+        return typeof props?.href === 'string' && props.href.startsWith('https://twitter.com/');
       });
       const anchorHref = elementProps(anchorTag)?.href;
       const tweetId =
-        typeof anchorHref === 'string'
-          ? anchorHref.split('/').pop()?.split('?')[0]
-          : undefined;
+        typeof anchorHref === 'string' ? anchorHref.split('/').pop()?.split('?')[0] : undefined;
 
       if (tweetId) {
         // Twitter embed would go here - for now just render as blockquote
@@ -522,20 +512,13 @@ export function MarkdownFormatter({
 
       try {
         const childArray = React.Children.toArray(children);
-        const pChild = childArray.find(
-          (child) => elementProps(child)?.node?.tagName === 'p'
-        );
+        const pChild = childArray.find((child) => elementProps(child)?.node?.tagName === 'p');
         const pChildren = elementProps(pChild)?.children;
         const pChildrenArray = React.Children.toArray(pChildren);
-        const aChild = pChildrenArray.find(
-          (child) => elementProps(child)?.node?.tagName === 'a'
-        );
-        const footnoteLinkBack =
-          elementProps(aChild)?.node?.properties?.href;
+        const aChild = pChildrenArray.find((child) => elementProps(child)?.node?.tagName === 'a');
+        const footnoteLinkBack = elementProps(aChild)?.node?.properties?.href;
         const extractedValue =
-          typeof footnoteLinkBack === 'string'
-            ? footnoteLinkBack.split('-').pop() ?? ''
-            : '';
+          typeof footnoteLinkBack === 'string' ? (footnoteLinkBack.split('-').pop() ?? '') : '';
         value = extractedValue;
         validValue = /^-?\d+$/.test(extractedValue);
       } catch {
@@ -601,11 +584,30 @@ export function MarkdownFormatter({
         id = href.replace('#user-content-fnref-', 'user-content-fn-');
       }
 
+      // Never pass untrusted schemes (javascript:, data:, vbscript:, …) to
+      // the anchor href. If the href is unsafe, fall through to rendering
+      // the link text as a plain span so the content is still visible.
+      const safeHref = href && isSafeHref(href) ? href : undefined;
+
       // CTA button styling for links with class="cta-button"
       if (className === 'cta-button') {
+        if (!safeHref) {
+          return (
+            <span
+              style={{
+                display: 'inline-block',
+                color: blogColors.textSecondary,
+                fontWeight: blogFontWeights.semiBold,
+                fontFamily: blogTypography.bodyFont,
+              }}
+            >
+              {children}
+            </span>
+          );
+        }
         return (
           <a
-            href={href}
+            href={safeHref}
             target="_blank"
             rel="noopener noreferrer"
             style={{
@@ -632,17 +634,21 @@ export function MarkdownFormatter({
         );
       }
 
+      if (!safeHref) {
+        return <span style={{ color: blogColors.textSecondary }}>{children}</span>;
+      }
+
       return (
         <a
           id={id}
-          href={href}
-          target={href?.startsWith('#') ? '' : '_blank'}
+          href={safeHref}
+          target={safeHref.startsWith('#') ? '' : '_blank'}
           rel="noopener noreferrer"
           style={{
             color: blogColors.link,
             textDecoration: 'none',
             borderBottom: `1px solid ${blogColors.link}`,
-            fontWeight: href?.startsWith('#') ? 'normal' : blogFontWeights.medium,
+            fontWeight: safeHref.startsWith('#') ? 'normal' : blogFontWeights.medium,
             transition: 'background-color 0.2s ease, color 0.2s ease',
             borderRadius: blogRadius.sm,
             // Add scroll margin for footnote references so they don't hide behind navbar
@@ -940,9 +946,7 @@ export function MarkdownFormatter({
       });
       const codeClassName = elementProps(codeChild)?.className;
       const language =
-        typeof codeClassName === 'string'
-          ? codeClassName.replace('language-', '')
-          : undefined;
+        typeof codeClassName === 'string' ? codeClassName.replace('language-', '') : undefined;
 
       return (
         <div
@@ -980,7 +984,7 @@ export function MarkdownFormatter({
   };
 
   return (
-    <ReactMarkdown rehypePlugins={[rehypeRaw]} remarkPlugins={[remarkGfm]} components={components}>
+    <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
       {markdown}
     </ReactMarkdown>
   );
@@ -1003,19 +1007,23 @@ function parseInlineLinks(text: string): React.ReactNode[] {
     }
     // Add the link
     parts.push(
-      <a
-        key={match.index}
-        href={match[2]}
-        target="_blank"
-        rel="noopener noreferrer"
-        style={{
-          color: blogColors.link,
-          textDecoration: 'none',
-          borderBottom: `1px solid ${blogColors.link}`,
-        }}
-      >
-        {match[1]}
-      </a>
+      isSafeHref(match[2]) ? (
+        <a
+          key={match.index}
+          href={match[2]}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            color: blogColors.link,
+            textDecoration: 'none',
+            borderBottom: `1px solid ${blogColors.link}`,
+          }}
+        >
+          {match[1]}
+        </a>
+      ) : (
+        <span key={match.index}>{match[1]}</span>
+      )
     );
     lastIndex = match.index + match[0].length;
   }

@@ -46,6 +46,11 @@ const ALLOW_ONLY_IN_APP = new Set<string>([
   "useRobotoMonoFont",
   // Internal helper constants/types only present in app/.
   "ROBOTO_MONO_HREF",
+  // Type-guard helpers introduced by #988 to strip `as any` casts. The
+  // website/ copy uses different source-level conventions and does not need
+  // these helpers (its renderers already type-narrow inline).
+  "isReactElement",
+  "elementProps",
 ]);
 
 const ALLOW_ONLY_IN_WEBSITE = new Set<string>([

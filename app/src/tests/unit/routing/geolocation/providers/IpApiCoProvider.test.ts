@@ -55,10 +55,7 @@ describe('IpApiCoProvider', () => {
     await provider.detect();
 
     // Then
-    expect(fetch).toHaveBeenCalledWith(
-      '/custom/geolocate',
-      expect.any(Object)
-    );
+    expect(fetch).toHaveBeenCalledWith('/custom/geolocate', expect.any(Object));
   });
 
   test('given API error response then returns null', async () => {

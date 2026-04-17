@@ -10,7 +10,6 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
-import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
 import {
   blogColors,
@@ -21,6 +20,7 @@ import {
   blogTypography,
 } from "./blogStyles";
 import { LazyPlot } from "./LazyPlot";
+import { isSafeHref } from "./safeHref";
 import { useDisplayCategory } from "./useDisplayCategory";
 
 function safeJsonParse(
@@ -470,10 +470,29 @@ export function MarkdownFormatter({
         id = href.replace("#user-content-fnref-", "user-content-fn-");
       }
 
+      // Never pass untrusted schemes (javascript:, data:, vbscript:, …) to
+      // the anchor href. If the href is unsafe, fall through to rendering
+      // the link text as a plain span so the content is still visible.
+      const safeHref = href && isSafeHref(href) ? href : undefined;
+
       if (className === "cta-button") {
+        if (!safeHref) {
+          return (
+            <span
+              style={{
+                display: "inline-block",
+                color: blogColors.textSecondary,
+                fontWeight: blogFontWeights.semiBold,
+                fontFamily: blogTypography.bodyFont,
+              }}
+            >
+              {children}
+            </span>
+          );
+        }
         return (
           <a
-            href={href}
+            href={safeHref}
             target="_blank"
             rel="noopener noreferrer"
             style={{
@@ -500,17 +519,23 @@ export function MarkdownFormatter({
         );
       }
 
+      if (!safeHref) {
+        return (
+          <span style={{ color: blogColors.textSecondary }}>{children}</span>
+        );
+      }
+
       return (
         <a
           id={id}
-          href={href}
-          target={href?.startsWith("#") ? "" : "_blank"}
+          href={safeHref}
+          target={safeHref.startsWith("#") ? "" : "_blank"}
           rel="noopener noreferrer"
           style={{
             color: blogColors.link,
             textDecoration: "none",
             borderBottom: `1px solid ${blogColors.link}`,
-            fontWeight: href?.startsWith("#")
+            fontWeight: safeHref.startsWith("#")
               ? "normal"
               : blogFontWeights.medium,
             transition: "background-color 0.2s ease, color 0.2s ease",
@@ -840,11 +865,7 @@ export function MarkdownFormatter({
   };
 
   return (
-    <ReactMarkdown
-      rehypePlugins={[rehypeRaw]}
-      remarkPlugins={[remarkGfm]}
-      components={components}
-    >
+    <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
       {markdown}
     </ReactMarkdown>
   );
@@ -865,19 +886,23 @@ function parseInlineLinks(text: string): React.ReactNode[] {
       parts.push(text.slice(lastIndex, match.index));
     }
     parts.push(
-      <a
-        key={match.index}
-        href={match[2]}
-        target="_blank"
-        rel="noopener noreferrer"
-        style={{
-          color: blogColors.link,
-          textDecoration: "none",
-          borderBottom: `1px solid ${blogColors.link}`,
-        }}
-      >
-        {match[1]}
-      </a>,
+      isSafeHref(match[2]) ? (
+        <a
+          key={match.index}
+          href={match[2]}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            color: blogColors.link,
+            textDecoration: "none",
+            borderBottom: `1px solid ${blogColors.link}`,
+          }}
+        >
+          {match[1]}
+        </a>
+      ) : (
+        <span key={match.index}>{match[1]}</span>
+      ),
     );
     lastIndex = match.index + match[0].length;
   }
