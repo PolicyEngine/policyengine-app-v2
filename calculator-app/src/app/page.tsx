@@ -22,7 +22,14 @@ export default function RootPage() {
       }
 
       try {
-        const country = await geolocationService.detectCountry();
+        const detected = await geolocationService.detectCountry();
+        // Validate against the supported country list before caching so a
+        // bad provider response (or an unsupported country) cannot poison
+        // the cache or drive the router into an unknown route. We widen
+        // `countryIds` to `readonly string[]` here so `.includes()` narrows
+        // the arbitrary detected value for us.
+        const allowedCountryIds: readonly string[] = countryIds;
+        const country = allowedCountryIds.includes(detected) ? detected : "us";
         cacheCountry(country);
         router.replace(`/${country}/reports`);
       } catch (error) {
