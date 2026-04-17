@@ -17,6 +17,16 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+/**
+ * Encode JSON for safe inlining inside a `<script>` tag. Mirrors
+ * website/src/lib/encodeJsonForScript.ts; kept as a local copy here
+ * because this script runs under tsx on Node and cannot cleanly import
+ * from the website/ package (which is CommonJS-typed).
+ */
+function encodeJsonForScript(value: unknown): string {
+  return JSON.stringify(value).replace(/</g, '\\u003c');
+}
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -344,7 +354,7 @@ function generateHtmlPage(
   <meta property="og:site_name" content="PolicyEngine" />
 
   <!-- Structured data -->
-  <script type="application/ld+json">${JSON.stringify({
+  <script type="application/ld+json">${encodeJsonForScript({
     '@context': 'https://schema.org',
     '@type': 'Article',
     headline: post.title,
@@ -365,7 +375,7 @@ function generateHtmlPage(
         url: `${BASE_URL}/assets/logos/policyengine/teal.png`,
       },
     },
-  }).replace(/</g, '\\u003c')}</script>
+  })}</script>
 
   <style>
     body { max-width: 800px; margin: 2rem auto; padding: 0 1rem; font-family: system-ui, -apple-system, sans-serif; line-height: 1.6; color: #1a1a1a; }
