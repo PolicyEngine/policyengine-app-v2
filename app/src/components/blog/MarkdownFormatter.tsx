@@ -55,6 +55,44 @@ function useRobotoMonoFont(): void {
 }
 
 /**
+ * Type guard for React elements whose children/props we introspect. Using
+ * `React.isValidElement` here lets us drop `as any` casts in the custom
+ * renderers — if the node isn't a valid element we return early instead of
+ * dereferencing untyped props.
+ */
+function isReactElement(
+  node: React.ReactNode
+): node is React.ReactElement<Record<string, unknown>> {
+  return React.isValidElement(node);
+}
+
+/**
+ * Narrowed shape of the `props` object react-markdown exposes on anchor-like
+ * elements inside custom renderers. Only the fields actually read below are
+ * listed; anything else is kept as an index signature so we don't need `any`.
+ */
+interface AnchorLikeElementProps {
+  href?: string;
+  className?: string;
+  id?: string;
+  children?: React.ReactNode;
+  node?: {
+    tagName?: string;
+    properties?: { href?: string };
+  };
+  [key: string]: unknown;
+}
+
+function elementProps(
+  node: React.ReactNode
+): AnchorLikeElementProps | null {
+  if (!isReactElement(node)) {
+    return null;
+  }
+  return node.props as AnchorLikeElementProps;
+}
+
+/**
  * Parse JSON safely with fallback
  */
 function safeJsonParse(data: string | string[]): any {
@@ -314,10 +352,18 @@ export function MarkdownFormatter({
     blockquote: ({ children }) => {
       // Check if this is a Twitter embed
       const childArray = React.Children.toArray(children);
-      const anchorTag = childArray.find((child: any) =>
-        child?.props?.href?.startsWith('https://twitter.com/')
-      );
-      const tweetId = (anchorTag as any)?.props?.href?.split('/')?.pop()?.split('?')[0];
+      const anchorTag = childArray.find((child) => {
+        const props = elementProps(child);
+        return (
+          typeof props?.href === 'string' &&
+          props.href.startsWith('https://twitter.com/')
+        );
+      });
+      const anchorHref = elementProps(anchorTag)?.href;
+      const tweetId =
+        typeof anchorHref === 'string'
+          ? anchorHref.split('/').pop()?.split('?')[0]
+          : undefined;
 
       if (tweetId) {
         // Twitter embed would go here - for now just render as blockquote
@@ -476,15 +522,23 @@ export function MarkdownFormatter({
 
       try {
         const childArray = React.Children.toArray(children);
-        const pChild = childArray.find((child: any) => child?.props?.node?.tagName === 'p');
-        const aChild = (pChild as any)?.props?.children?.find(
-          (child: any) => child?.props?.node?.tagName === 'a'
+        const pChild = childArray.find(
+          (child) => elementProps(child)?.node?.tagName === 'p'
         );
-        const footnoteLinkBack = aChild?.props?.node?.properties?.href;
-        const extractedValue = footnoteLinkBack?.split('-').pop() || '';
+        const pChildren = elementProps(pChild)?.children;
+        const pChildrenArray = React.Children.toArray(pChildren);
+        const aChild = pChildrenArray.find(
+          (child) => elementProps(child)?.node?.tagName === 'a'
+        );
+        const footnoteLinkBack =
+          elementProps(aChild)?.node?.properties?.href;
+        const extractedValue =
+          typeof footnoteLinkBack === 'string'
+            ? footnoteLinkBack.split('-').pop() ?? ''
+            : '';
         value = extractedValue;
         validValue = /^-?\d+$/.test(extractedValue);
-      } catch (e) {
+      } catch {
         // Ignore parsing errors
       }
 
@@ -775,7 +829,7 @@ export function MarkdownFormatter({
     // Footnotes section
     section: ({ children, className }) => {
       const filteredChildren = React.Children.toArray(children).filter(
-        (child: any) => child?.props?.id !== 'footnote-label'
+        (child) => elementProps(child)?.id !== 'footnote-label'
       );
 
       if (className === 'footnotes') {
@@ -880,10 +934,15 @@ export function MarkdownFormatter({
 
     // Pre (code blocks)
     pre: ({ children }) => {
-      const codeChild = React.Children.toArray(children).find((child: any) =>
-        child.props?.className?.includes('language-')
-      );
-      const language = (codeChild as any)?.props?.className?.replace('language-', '');
+      const codeChild = React.Children.toArray(children).find((child) => {
+        const className = elementProps(child)?.className;
+        return typeof className === 'string' && className.includes('language-');
+      });
+      const codeClassName = elementProps(codeChild)?.className;
+      const language =
+        typeof codeClassName === 'string'
+          ? codeClassName.replace('language-', '')
+          : undefined;
 
       return (
         <div
