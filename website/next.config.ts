@@ -41,6 +41,9 @@ const nextConfig: NextConfig = {
         // Oregon Kicker Refund calculator (Vercel)
         { source: "/us/oregon-kicker-refund", destination: "https://oregon-kicker-refund.vercel.app/us/oregon-kicker-refund" },
         { source: "/us/oregon-kicker-refund/:path*", destination: "https://oregon-kicker-refund.vercel.app/us/oregon-kicker-refund/:path*" },
+        // Marriage calculator (Vercel)
+        { source: "/us/marriage", destination: "https://marriage-zeta-beryl.vercel.app/us/marriage" },
+        { source: "/us/marriage/:path*", destination: "https://marriage-zeta-beryl.vercel.app/us/marriage/:path*" },
         // Working Parents Tax Relief Act calculator (Vercel)
         { source: "/us/working-parents-tax-relief-act", destination: "https://wptra.vercel.app/us/working-parents-tax-relief-act" },
         { source: "/us/working-parents-tax-relief-act/:path*", destination: "https://wptra.vercel.app/us/working-parents-tax-relief-act/:path*" },
