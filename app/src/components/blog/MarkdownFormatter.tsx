@@ -77,9 +77,13 @@ function Td({ children }: { children?: React.ReactNode }) {
   const ref = useRef<HTMLTableCellElement>(null);
   const [columnNumber, setColumnNumber] = useState<number | null>(null);
 
+  // Match the website/ copy: `ref.current?.cellIndex` is not a reactive value,
+  // so listing it as a dep is misleading. Run once after mount (and because
+  // DOM geometry is being measured, `useLayoutEffect` would be marginally
+  // better, but we keep `useEffect` to avoid SSR hydration warnings).
   useEffect(() => {
     setColumnNumber(ref.current?.cellIndex ?? null);
-  }, [ref.current?.cellIndex]);
+  }, []);
 
   return (
     <td
@@ -108,7 +112,7 @@ function Tr({ children }: { children?: React.ReactNode }) {
 
   useEffect(() => {
     setRowIndex(ref.current?.rowIndex ?? 0);
-  }, [ref.current?.rowIndex]);
+  }, []);
 
   return (
     <tr
@@ -152,7 +156,7 @@ export function HighlightedBlock({
 
   useEffect(() => {
     setHeight(ref.current?.clientHeight ?? 0);
-  }, [ref.current?.clientHeight]);
+  }, []);
 
   return (
     <>
