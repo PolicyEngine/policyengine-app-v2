@@ -189,6 +189,11 @@ These checks apply to the app being routed to.
    Treat root `/_next/static/...` assets as a risk unless the host has an
    explicit zone asset rewrite and no collision risk.
 
+   Also inspect public assets such as favicons, logos, Open Graph images, and
+   downloadable files. Root paths like `/favicon.svg` may resolve to the host
+   website instead of the zone unless they are path-scoped or explicitly
+   rewritten.
+
 4. The app hydrates through the host URL. There should be no failed critical
    JavaScript or CSS requests.
 

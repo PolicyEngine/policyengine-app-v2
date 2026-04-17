@@ -8,11 +8,43 @@ findings so the preview page remains useful to the team.
 
 | Session | Scope | Status | Notes |
 | --- | --- | --- | --- |
-| Session A - direct rewrite calculators | Oregon Kicker, WATCA, Keep Your Pay Act, Working Parents | In progress | Oregon is the baseline audited case. |
-| Session B - Vercel research interactives | Public Vercel-backed research apps | Not started | Audit as multizone targets by default. |
+| Session A - direct rewrite calculators | Oregon Kicker, WATCA, Keep Your Pay Act, Working Parents | Audited | All four are multizone-ready for routing; WATCA and Working Parents have polish follow-ups. |
+| Session B - Vercel research interactives | Public Vercel-backed research apps | Audited | Most zones need path-scoped asset/base path work before host rewrites; Marriage and student loan decisions are deferred. |
 | Session C - static/GitHub Pages/legacy embeds | Static or GitHub Pages interactives | Audited | Most durable static apps need zone rebuilds with PolicyEngine base paths plus host rewrites; local article/static artifacts can remain iframe/static exceptions. |
 | Session D - special routes | API docs, TAXSIM, model docs, slides, bespoke routes | In progress | API docs is the reference asset-prefix zone. |
 | Session E - lower-priority/unlisted | Not listed in research or ownership unclear | Not started | Prioritize after main public interactives. |
+
+## Session B - Vercel Research Interactives
+
+Audited on April 17, 2026. These apps are shown in research and should be
+treated as multizone targets by default unless noted otherwise.
+
+| App | Public path | Origin/source | Source repo | Recommendation | Summary |
+| --- | --- | --- | --- | --- | --- |
+| Scotland income tax analysis dashboard | `/uk/scotland-income-tax-reform` | `https://scotland-income-tax-reform.vercel.app/` | `PolicyEngine/scotland-income-tax-reform` | `multizone-zone-work` | Next dashboard has no `basePath` or `assetPrefix`; origin public path returns 404 and root HTML emits `/_next/static` assets. Host has no rewrite. |
+| Introducing the PE-84 | `/us/pe84` | `https://april-fools-2026-two.vercel.app/calculator` | `PolicyEngine/april-fools-2026` | `multizone-zone-work` | Next app has empty `next.config.ts`, root `/_next/static` assets, root-relative icon metadata, and `/us/pe84` returns 404. Host has no rewrite. |
+| Student loan visualisation | `/uk/student-loan-visualisation` | `https://student-loan-visualisation.vercel.app/` | `PolicyEngine/student-loan-visualisation` | `simple-rewrite` | Single-file static HTML with external D3/fonts and inline data; no app router or local asset bundle found. A base rewrite to the root document is likely sufficient if the team keeps this as a static article-style interactive. |
+| Energy price shock | `/uk/energy-price-shock` | `https://energy-price-shock.vercel.app/` | `PolicyEngine/energy-price-shock` | `multizone-zone-work` | Vite app uses default root base and deployed HTML emits `/assets/...`; origin public path returns 404. Needs path-scoped Vite `base` or a dedicated asset prefix plus host rewrites. |
+| Council tax to land value tax reform dashboard | `/uk/uk-land-value-tax` | `https://uk-land-value-tax.vercel.app/` | `PolicyEngine/uk-land-value-tax` | `multizone-zone-work` | Next dashboard has no `basePath` or `assetPrefix`; origin public path returns 404 and root HTML emits `/_next/static` assets. Host has no rewrite. |
+| UK Spring Statement 2026 analysis dashboard | `/uk/spring-statement-2026` | `https://uk-spring-statement-2026-policy-engine.vercel.app/` | `PolicyEngine/uk-spring-statement-2026` | `multizone-zone-work` | Next static export emits root `/_next/static` assets, metadata lacks first-party canonical/OG URL, and origin public path returns 404. Host has no rewrite. |
+| Cliff Watch | `/us/cliff-watch` | `https://cliff-watch.vercel.app/` | `PolicyEngine/cliff-watch` | `multizone-zone-work` | Vite app uses `base: "/"`, emits `/assets/...`, and origin public path returns 404. It calls `https://api.policyengine.org` directly but also has root-relative `/api/...` fallback calls that need scrutiny under the website host. |
+| Marriage incentive calculator | `/us/marriage` | `https://marriage-zeta-beryl.vercel.app/` | `PolicyEngine/marriage` | `needs-investigation` | Defer migration decision. The repo is one shared US/UK app: it has UK calculator logic via `?country=uk`, but the deployed Next `basePath`, assets, metadata, and nav are US-scoped at `/us/marriage`. Tackle US and UK marriage routing together rather than in the straightforward batch. |
+| The SALTernative | `/us/salternative` | `https://salt-amt-calculator.vercel.app/?embedded=true` | `PolicyEngine/salt-amt-calculator` | `multizone-zone-work` | Vite app currently serves `/us/salternative` through SPA fallback, but HTML emits root `/assets/...`, title is still generic, and `vite.config.ts` uses `base: "/"`. API calls use Modal absolute URLs. |
+| Two-child limit calculator | `/uk/two-child-limit-comparison` | `https://uk-two-child-limit-app.vercel.app` | `PolicyEngine/uk-two-child-limit-app` | `multizone-zone-work` | Vite app uses default root base, emits `/assets/...`, origin public path returns 404, and app code fetches root-relative `/data/all-results.csv`. Needs path-scoped assets and data URL handling before host rewrites. |
+
+### Session B Host Findings
+
+- No Session B public paths currently have host rewrites in `website/next.config.ts`.
+- For the Next zones that currently emit root `/_next/static` assets, add zone
+  `basePath` or a separate `assetPrefix` before adding host rewrites to avoid
+  collisions with the website app and other zones.
+- For Vite zones that emit root `/assets/...`, set `base` to the public path or
+  a dedicated zone asset prefix and audit any root-relative data/API calls.
+- `PolicyEngine/marriage` should be deferred from the straightforward batch.
+  It is one shared app with both US and UK calculator logic, but its production
+  routing and metadata are US-path scoped. The duplicate UK `apps.json` row for
+  `marriage` is not covered by the US `/us/marriage` base path, so US and UK
+  marriage should be handled in one follow-up routing decision.
 
 ## Oregon Kicker Refund
 
@@ -97,7 +129,7 @@ findings so the preview page remains useful to the team.
 - Target zone setup: static zone built for `/us/tanf-calculator` or a separate scoped asset prefix
 - Host status: fail for multizone; host URL returns the website iframe wrapper
 - Zone status: fail for multizone; zone is built for GitHub Pages project path only
-- Asset status: fail for multizone; live HTML emits `/tanf-calculator/assets/...`
+- Asset status: fail for multizone; live HTML emits `/tanf-calculator/assets/...`, and favicon is a relative `policyengine-logo.png` asset that must remain path-scoped after any public-path rebuild
 - Dev setup status: partial; Vite base is explicit, but no PolicyEngine base-path build mode was found
 - Metadata status: fail; only a basic `<title>` was found, with no canonical/OG ownership
 - API status: pass in audit scope; no direct `api.policyengine.org` calls were found by code search
@@ -133,7 +165,7 @@ findings so the preview page remains useful to the team.
 - Target zone setup: keep as local static iframe unless the article interactive gets an owning source repo and durable app lifecycle
 - Host status: pass for current iframe/static pattern
 - Zone status: not applicable for multizone; this is a bundled article artifact, not a separately hosted zone
-- Asset status: pass for current static artifact; relative assets are colocated under the website public asset path
+- Asset status: partial for current static artifact; JS/CSS are colocated relative `./assets/...`, but the artifact still references root `/vite.svg` for the favicon
 - Dev setup status: not audited; no source repo found
 - Metadata status: partial; static HTML has title but no canonical/OG metadata in the artifact
 - API status: pass; local artifact audit did not find API calls
@@ -169,7 +201,7 @@ findings so the preview page remains useful to the team.
 - Target zone setup: build with `BASE_PATH=/us/obbba-household-by-household` or adopt a scoped asset prefix, then add host rewrites
 - Host status: fail for multizone; host currently serves iframe wrapper
 - Zone status: partial; repo already documents the PolicyEngine base path mismatch and supports `BASE_PATH`, but the live GitHub Pages build is still project-path scoped
-- Asset status: fail for current multizone; live HTML emits `/obbba-household-by-household/_app/...`
+- Asset status: fail for current multizone; live HTML emits `/obbba-household-by-household/_app/...` and `/obbba-household-by-household/favicon.png`, which are project-path scoped rather than PolicyEngine-path scoped
 - Dev setup status: pass/partial; environment-driven base path exists
 - Metadata status: not found in source audit
 - API status: pass in audit scope; no direct `api.policyengine.org` calls were found by code search
@@ -212,3 +244,64 @@ findings so the preview page remains useful to the team.
 - API status: pass in audit scope; no direct `api.policyengine.org` calls were found by code search
 - Blockers: repair GitHub Pages production build before multizone migration work
 - Follow-ups: after deployment is fixed, add PolicyEngine base-path build and beforeFiles host rewrites
+
+## Keep Your Pay Act
+
+- Recommendation: `multizone-ready`
+- Public path: `/us/keep-your-pay-act`
+- Origin: `https://keep-your-pay-act.vercel.app`
+- Source repo: `PolicyEngine/keep-your-pay-act`
+- Current host setup: `beforeFiles` base and nested rewrites in `website/next.config.ts`
+- Current zone setup: Next `basePath` defaults to `/us/keep-your-pay-act`
+- Target zone setup: path-scoped `basePath`
+- Host status: pass; `https://www.policyengine.org/us/keep-your-pay-act` returns HTTP 200
+- Zone status: pass; `frontend/next.config.js` defaults `NEXT_PUBLIC_BASE_PATH` to `/us/keep-your-pay-act`
+- Asset status: pass; live HTML emits `/us/keep-your-pay-act/_next/static/...`, `/us/keep-your-pay-act/favicon.svg`, and `/us/keep-your-pay-act/policyengine-logo-teal.png`; representative host CSS asset returned HTTP 200
+- Dev setup status: pass; `NEXT_PUBLIC_BASE_PATH=""` disables the base path for local dev
+- Metadata status: pass; canonical, Open Graph URL, and sitemap point to `https://policyengine.org/us/keep-your-pay-act`
+- API status: pass; app calls `https://api.policyengine.org` directly
+- Blockers: none found
+- Follow-ups: none for multizone readiness
+
+## Working Parents Tax Relief Act
+
+- Recommendation: `multizone-ready`
+- Public path: `/us/working-parents-tax-relief-act`
+- Origin: `https://wptra.vercel.app`
+- Source repo: `PolicyEngine/working-parents-tax-relief-act`
+- Current host setup: `beforeFiles` base and nested rewrites in `website/next.config.ts`
+- Current zone setup: Next `basePath` defaults to `/us/working-parents-tax-relief-act`
+- Target zone setup: path-scoped `basePath`
+- Host status: pass; `https://www.policyengine.org/us/working-parents-tax-relief-act` returns HTTP 200
+- Zone status: pass; `frontend/next.config.js` defaults `NEXT_PUBLIC_BASE_PATH` to `/us/working-parents-tax-relief-act`
+- Asset status: pass for critical assets; live HTML emits `/us/working-parents-tax-relief-act/_next/static/...` and representative host CSS asset returned HTTP 200
+- Dev setup status: pass; `NEXT_PUBLIC_BASE_PATH=""` disables the base path for local dev
+- Metadata status: pass for canonical and Open Graph URL; sitemap points to `https://policyengine.org/us/working-parents-tax-relief-act`
+- API status: pass; app calls `https://api.policyengine.org` directly
+- Blockers: none found for multizone routing
+- Follow-ups: path-scope the favicon; live HTML currently renders `<link rel="icon" href="/favicon.svg"/>`, which may resolve to the website host favicon under multizone routing
+
+## Working Americans' Tax Cut Act
+
+- Recommendation: `multizone-ready`
+- Public path: `/us/watca`
+- Origin: `https://working-americans-tax-cut-act-one.vercel.app`
+- Source repo: `PolicyEngine/working-Americans-tax-cut-act-`
+- Current host setup: `beforeFiles` base and nested rewrites in `website/next.config.ts`
+- Current zone setup: Next `basePath` is hardcoded to `/us/watca`
+- Target zone setup: path-scoped `basePath`
+- Host status: pass; `https://www.policyengine.org/us/watca` returns HTTP 200
+- Zone status: pass for routing; `frontend/next.config.ts` sets `basePath: "/us/watca"` and `NEXT_PUBLIC_BASE_PATH: "/us/watca"`
+- Asset status: pass; live HTML emits `/us/watca/_next/static/...` and representative host CSS asset returned HTTP 200
+- Dev setup status: follow-up; unlike Oregon and Keep Your Pay, the base path is hardcoded and does not provide a `next dev` escape hatch
+- Metadata status: follow-up; `frontend/app/layout.tsx` has title and description, but no first-party canonical, Open Graph URL, or sitemap found
+- API status: pass; app calls `https://api.policyengine.org` directly
+- Blockers: none found for multizone routing
+- Follow-ups: add `NEXT_PUBLIC_BASE_PATH=""` local-dev handling and policyengine.org canonical/Open Graph/sitemap metadata
+
+## Rubric Finding: Root Public Assets
+
+Session A found a non-blocking but reusable check: public assets outside
+`/_next`, especially favicons, can still leak to root paths even when critical
+Next assets are path-scoped. Future audits should check favicons, logos, Open
+Graph images, and downloadable assets, not only JS/CSS chunks.
