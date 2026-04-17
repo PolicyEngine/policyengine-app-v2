@@ -51,7 +51,7 @@
     "recommendation": "multizone",
     "auditSession": "Session B - Vercel research interactives",
     "auditStatus": "audited",
-    "comment": "US zone is path-scoped at /us/marriage, emits /us/marriage/_next/static assets, uses policyengine.org metadata, and calls api.policyengine.org; host beforeFiles rewrites are still missing."
+    "comment": "Defer migration decision. This is one shared US/UK app: UK logic exists via ?country=uk, but basePath, assets, metadata, and nav are US-scoped at /us/marriage. Handle US and UK marriage routing together."
   },
   "app:us:oregon-kicker-refund": {
     "recommendation": "multizone",

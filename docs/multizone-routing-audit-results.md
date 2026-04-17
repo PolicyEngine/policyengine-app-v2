@@ -9,7 +9,7 @@ findings so the preview page remains useful to the team.
 | Session | Scope | Status | Notes |
 | --- | --- | --- | --- |
 | Session A - direct rewrite calculators | Oregon Kicker, WATCA, Keep Your Pay Act, Working Parents | Audited | All four are multizone-ready for routing; WATCA and Working Parents have polish follow-ups. |
-| Session B - Vercel research interactives | Public Vercel-backed research apps | Audited | Most zones need path-scoped asset/base path work before host rewrites; US Marriage is host-work only. |
+| Session B - Vercel research interactives | Public Vercel-backed research apps | Audited | Most zones need path-scoped asset/base path work before host rewrites; Marriage and student loan decisions are deferred. |
 | Session C - static/GitHub Pages/legacy embeds | Static or GitHub Pages interactives | Not started | Determine whether to migrate hosting or keep iframe by exception. |
 | Session D - special routes | API docs, TAXSIM, model docs, slides, bespoke routes | In progress | API docs is the reference asset-prefix zone. |
 | Session E - lower-priority/unlisted | Not listed in research or ownership unclear | Not started | Prioritize after main public interactives. |
@@ -28,7 +28,7 @@ treated as multizone targets by default unless noted otherwise.
 | Council tax to land value tax reform dashboard | `/uk/uk-land-value-tax` | `https://uk-land-value-tax.vercel.app/` | `PolicyEngine/uk-land-value-tax` | `multizone-zone-work` | Next dashboard has no `basePath` or `assetPrefix`; origin public path returns 404 and root HTML emits `/_next/static` assets. Host has no rewrite. |
 | UK Spring Statement 2026 analysis dashboard | `/uk/spring-statement-2026` | `https://uk-spring-statement-2026-policy-engine.vercel.app/` | `PolicyEngine/uk-spring-statement-2026` | `multizone-zone-work` | Next static export emits root `/_next/static` assets, metadata lacks first-party canonical/OG URL, and origin public path returns 404. Host has no rewrite. |
 | Cliff Watch | `/us/cliff-watch` | `https://cliff-watch.vercel.app/` | `PolicyEngine/cliff-watch` | `multizone-zone-work` | Vite app uses `base: "/"`, emits `/assets/...`, and origin public path returns 404. It calls `https://api.policyengine.org` directly but also has root-relative `/api/...` fallback calls that need scrutiny under the website host. |
-| Marriage incentive calculator | `/us/marriage` | `https://marriage-zeta-beryl.vercel.app/` | `PolicyEngine/marriage` | `multizone-host-work` | US zone already defaults `basePath` to `/us/marriage`, `/us/marriage` returns 200, assets are path-scoped, canonical/OG URLs point to `policyengine.org`, and API calls use `https://api.policyengine.org`. Host still needs beforeFiles base/nested rewrites. |
+| Marriage incentive calculator | `/us/marriage` | `https://marriage-zeta-beryl.vercel.app/` | `PolicyEngine/marriage` | `needs-investigation` | Defer migration decision. The repo is one shared US/UK app: it has UK calculator logic via `?country=uk`, but the deployed Next `basePath`, assets, metadata, and nav are US-scoped at `/us/marriage`. Tackle US and UK marriage routing together rather than in the straightforward batch. |
 | The SALTernative | `/us/salternative` | `https://salt-amt-calculator.vercel.app/?embedded=true` | `PolicyEngine/salt-amt-calculator` | `multizone-zone-work` | Vite app currently serves `/us/salternative` through SPA fallback, but HTML emits root `/assets/...`, title is still generic, and `vite.config.ts` uses `base: "/"`. API calls use Modal absolute URLs. |
 | Two-child limit calculator | `/uk/two-child-limit-comparison` | `https://uk-two-child-limit-app.vercel.app` | `PolicyEngine/uk-two-child-limit-app` | `multizone-zone-work` | Vite app uses default root base, emits `/assets/...`, origin public path returns 404, and app code fetches root-relative `/data/all-results.csv`. Needs path-scoped assets and data URL handling before host rewrites. |
 
@@ -40,10 +40,11 @@ treated as multizone targets by default unless noted otherwise.
   collisions with the website app and other zones.
 - For Vite zones that emit root `/assets/...`, set `base` to the public path or
   a dedicated zone asset prefix and audit any root-relative data/API calls.
-- `PolicyEngine/marriage` is the only audited Session B app that already passes
-  the zone-side multizone checks for its assigned US path. The duplicate UK
-  `apps.json` row for `marriage` is not covered by the US `/us/marriage`
-  basePath and should be audited separately if it remains public.
+- `PolicyEngine/marriage` should be deferred from the straightforward batch.
+  It is one shared app with both US and UK calculator logic, but its production
+  routing and metadata are US-path scoped. The duplicate UK `apps.json` row for
+  `marriage` is not covered by the US `/us/marriage` base path, so US and UK
+  marriage should be handled in one follow-up routing decision.
 
 ## Oregon Kicker Refund
 
