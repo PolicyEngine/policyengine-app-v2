@@ -39,6 +39,13 @@ describe('ResultPersister', () => {
     it('given complete report status then persists to report', async () => {
       // Given
       const status = mockCompleteSocietyWideStatus();
+      status.runMetadata = {
+        country_package_version: '1.620.0',
+        policyengine_version: '0.94.2',
+        data_version: '2026.04.17',
+        runtime_app_name: 'policyengine-app-v2',
+        resolved_dataset: 'enhanced_us_household',
+      };
       (markReportCompleted as any).mockResolvedValue(undefined);
 
       // When
@@ -52,7 +59,8 @@ describe('ResultPersister', () => {
           id: TEST_CALC_IDS.REPORT_123,
           status: 'complete',
           output: status.result,
-        })
+        }),
+        status.runMetadata
       );
     });
 
@@ -135,6 +143,12 @@ describe('ResultPersister', () => {
       const status: CalcStatus = {
         status: 'complete',
         result,
+        runMetadata: {
+          country_package_version: '1.602.0',
+          policyengine_version: '0.93.1',
+          data_version: '2026.04.17',
+          runtime_app_name: 'policyengine-app-v2',
+        },
         metadata: {
           calcId: 'sim-456',
           targetType: 'simulation',
@@ -148,7 +162,12 @@ describe('ResultPersister', () => {
       await persister.persist(status, TEST_COUNTRIES.US, TEST_YEARS.DEFAULT);
 
       // Then
-      expect(updateSimulationOutput).toHaveBeenCalledWith(TEST_COUNTRIES.US, 'sim-456', result);
+      expect(updateSimulationOutput).toHaveBeenCalledWith(
+        TEST_COUNTRIES.US,
+        'sim-456',
+        result,
+        status.runMetadata
+      );
     });
 
     it('given simulation persistence then invalidates simulation cache', async () => {
@@ -254,6 +273,12 @@ describe('ResultPersister', () => {
       queryClient.setQueryData(calculationKeys.bySimulationId(TEST_CALC_IDS.SIM_1), {
         status: 'complete',
         result: result1,
+        runMetadata: {
+          country_package_version: '1.700.0',
+          policyengine_version: '0.95.0',
+          data_version: '2026.04.17',
+          runtime_app_name: 'policyengine-app-v2',
+        },
         metadata: {
           calcId: TEST_CALC_IDS.SIM_1,
           targetType: 'simulation',
@@ -264,6 +289,12 @@ describe('ResultPersister', () => {
       queryClient.setQueryData(calculationKeys.bySimulationId(TEST_CALC_IDS.SIM_2), {
         status: 'complete',
         result: result2,
+        runMetadata: {
+          country_package_version: '1.700.0',
+          policyengine_version: '0.95.0',
+          data_version: '2026.04.17',
+          runtime_app_name: 'policyengine-app-v2',
+        },
         metadata: status.metadata,
       });
 
@@ -281,7 +312,14 @@ describe('ResultPersister', () => {
           id: TEST_CALC_IDS.REPORT_123,
           status: 'complete',
           output: [result1, result2],
-        })
+        }),
+        {
+          country_package_version: '1.700.0',
+          policyengine_version: '0.95.0',
+          data_version: '2026.04.17',
+          runtime_app_name: 'policyengine-app-v2',
+          resolved_dataset: null,
+        }
       );
     });
   });

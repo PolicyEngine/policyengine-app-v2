@@ -480,6 +480,40 @@ describe('updateSimulationOutput', () => {
       updateSimulationOutput(TEST_COUNTRIES.US, SIMULATION_IDS.VALID, mockSimulationOutput)
     ).rejects.toThrow(networkError);
   });
+
+  test('given run metadata then includes it in the PATCH payload', async () => {
+    const mockFetch = vi.mocked(global.fetch);
+    mockFetch.mockResolvedValueOnce(
+      mockSuccessResponse(mockUpdateSimulationOutputSuccessResponse) as any
+    );
+    const runMetadata = {
+      country_package_version: '1.602.0',
+      policyengine_version: '0.93.1',
+      data_version: '2026.04.17',
+      runtime_app_name: 'policyengine-app-v2',
+    };
+
+    await updateSimulationOutput(
+      TEST_COUNTRIES.US,
+      SIMULATION_IDS.VALID,
+      mockSimulationOutput,
+      runMetadata
+    );
+
+    expect(mockFetch).toHaveBeenCalledWith(`${BASE_URL}/${TEST_COUNTRIES.US}/simulation`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify({
+        id: parseInt(SIMULATION_IDS.VALID, 10),
+        output: JSON.stringify(mockSimulationOutput),
+        status: 'complete',
+        ...runMetadata,
+      }),
+    });
+  });
 });
 
 describe('markSimulationCompleted', () => {

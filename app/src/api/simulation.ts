@@ -3,6 +3,7 @@ import { BASE_URL } from '@/constants';
 import { countryIds } from '@/libs/countries';
 import { SimulationMetadata } from '@/types/metadata/simulationMetadata';
 import { SimulationCreationPayload } from '@/types/payloads';
+import type { RunMetadata } from '@/types/runMetadata';
 
 export async function fetchSimulationById(
   countryId: (typeof countryIds)[number],
@@ -83,11 +84,16 @@ export async function createSimulation(
 export async function updateSimulationOutput(
   countryId: (typeof countryIds)[number],
   simulationId: string,
-  output: unknown
+  output: unknown,
+  runMetadata?: RunMetadata
 ): Promise<SimulationMetadata> {
   const url = `${BASE_URL}/${countryId}/simulation`;
 
-  const payload = SimulationAdapter.toCompletedPayload(parseInt(simulationId, 10), output);
+  const payload = SimulationAdapter.toCompletedPayload(
+    parseInt(simulationId, 10),
+    output,
+    runMetadata
+  );
 
   const response = await fetch(url, {
     method: 'PATCH',
@@ -120,9 +126,10 @@ export async function updateSimulationOutput(
 export async function markSimulationCompleted(
   countryId: (typeof countryIds)[number],
   simulationId: string,
-  output: unknown
+  output: unknown,
+  runMetadata?: RunMetadata
 ): Promise<SimulationMetadata> {
-  return updateSimulationOutput(countryId, simulationId, output);
+  return updateSimulationOutput(countryId, simulationId, output, runMetadata);
 }
 
 /**
@@ -132,11 +139,16 @@ export async function markSimulationCompleted(
 export async function markSimulationError(
   countryId: (typeof countryIds)[number],
   simulationId: string,
-  errorMessage?: string
+  errorMessage?: string,
+  runMetadata?: RunMetadata
 ): Promise<SimulationMetadata> {
   const url = `${BASE_URL}/${countryId}/simulation`;
 
-  const payload = SimulationAdapter.toErrorPayload(parseInt(simulationId, 10), errorMessage);
+  const payload = SimulationAdapter.toErrorPayload(
+    parseInt(simulationId, 10),
+    errorMessage,
+    runMetadata
+  );
 
   const response = await fetch(url, {
     method: 'PATCH',

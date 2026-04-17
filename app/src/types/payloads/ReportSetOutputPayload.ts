@@ -1,8 +1,10 @@
+import type { RunMetadata } from '@/types/runMetadata';
+
 /**
  * Payload format for updating a report's output via the API
  * Note: Report PATCH takes id in body, not URL path
  */
-export interface ReportSetOutputPayload {
+export interface ReportSetOutputPayload extends RunMetadata {
   id: number;
   status: 'pending' | 'complete' | 'error';
   output?: string | null; // JSON-stringified output or null
