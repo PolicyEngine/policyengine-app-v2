@@ -132,7 +132,7 @@ export function isGeographicMetadataWithAssociation(
 
 export const useUserGeographics = (userId: string) => {
   const countryId = useCurrentCountry();
-  const { data: regions, isLoading: regionsLoading, error: regionsError } = useRegions(countryId);
+  const { data: regions } = useRegions(countryId);
 
   // First, get the populations
   const {
@@ -182,9 +182,9 @@ export const useUserGeographics = (userId: string) => {
 
   return {
     data: geographicsWithAssociations,
-    isLoading: populationsLoading || regionsLoading,
-    isError: !!populationsError || !!regionsError,
-    error: populationsError || regionsError,
+    isLoading: populationsLoading,
+    isError: !!populationsError,
+    error: populationsError,
     associations: populations, // Still available if needed separately
   };
 };

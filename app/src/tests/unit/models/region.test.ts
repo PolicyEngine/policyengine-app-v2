@@ -17,6 +17,7 @@ describe('region model helpers', () => {
       parent_code: 'us',
       filter_field: null,
       filter_value: null,
+      filter_strategy: null,
       requires_filter: false,
       state_code: 'CA',
       state_name: 'California',
@@ -31,6 +32,7 @@ describe('region model helpers', () => {
       parentCode: 'us',
       filterField: null,
       filterValue: null,
+      filterStrategy: null,
       requiresFilter: false,
       stateCode: 'CA',
       stateName: 'California',
@@ -46,6 +48,7 @@ describe('region model helpers', () => {
       parent_code: 'uk',
       filter_field: 'country',
       filter_value: 'england',
+      filter_strategy: 'row_filter',
       requires_filter: true,
     });
 
@@ -73,7 +76,10 @@ describe('region model helpers', () => {
   test('given supported legacy region codes then normalizes to canonical codes', () => {
     expect(normalizeRegionCode('us', 'ca')).toBe('state/ca');
     expect(normalizeRegionCode('us', 'CA-12')).toBe('congressional_district/CA-12');
+    expect(normalizeRegionCode('us', 'us-ca')).toBe('state/ca');
+    expect(normalizeRegionCode('us', 'us-DE-00')).toBe('congressional_district/DE-00');
     expect(normalizeRegionCode('uk', 'england')).toBe('country/england');
+    expect(normalizeRegionCode('uk', 'uk-scotland')).toBe('country/scotland');
   });
 
   test('given unsupported legacy region code then preserves original value', () => {

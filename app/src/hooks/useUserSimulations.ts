@@ -56,7 +56,7 @@ export interface EnhancedUserSimulation {
 export const useUserSimulations = (userId: string) => {
   const country = useCurrentCountry();
   const queryClient = useQueryClient();
-  const { data: regions, isLoading: regionsLoading, error: regionsError } = useRegions(country);
+  const { data: regions } = useRegions(country);
 
   // Step 1: Fetch all user associations in parallel
   const {
@@ -138,7 +138,6 @@ export const useUserSimulations = (userId: string) => {
     { isLoading: simAssocLoading, error: simAssocError },
     { isLoading: polAssocLoading, error: polAssocError },
     { isLoading: housAssocLoading, error: housAssocError },
-    { isLoading: regionsLoading, error: regionsError },
     { isLoading: simulationResults.isLoading, error: simulationResults.error },
     { isLoading: policyResults.isLoading, error: policyResults.error },
     { isLoading: householdResults.isLoading, error: householdResults.error }

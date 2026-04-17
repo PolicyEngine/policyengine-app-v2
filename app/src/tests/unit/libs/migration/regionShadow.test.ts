@@ -1,20 +1,12 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { fetchDatasets } from '@/api/v2/datasets';
 import { fetchRegionByCode } from '@/api/v2/regions';
 import { logMigrationComparison } from '@/libs/migration/comparisonLogger';
 import { getResolvedDatasetId, getResolvedRegionId } from '@/libs/migration/idMapping';
 import { sendMigrationLog } from '@/libs/migration/migrationLogTransport';
 import {
   clearRegionShadowCachesForTest,
-  inferRegionFilterStrategy,
-  selectDatasetForRegionYear,
   shadowResolveRegionTarget,
 } from '@/libs/migration/regionShadow';
-import type { V2DatasetMetadata } from '@/types/metadata';
-
-vi.mock('@/api/v2/datasets', () => ({
-  fetchDatasets: vi.fn(),
-}));
 
 vi.mock('@/api/v2/regions', () => ({
   fetchRegionByCode: vi.fn(),
@@ -32,20 +24,6 @@ vi.mock('@/libs/migration/migrationLogTransport', () => ({
   sendMigrationLog: vi.fn(),
 }));
 
-function createDataset(overrides: Partial<V2DatasetMetadata>): V2DatasetMetadata {
-  return {
-    id: overrides.id ?? 'dataset-1',
-    name: overrides.name ?? 'CPS 2025',
-    description: overrides.description ?? 'Dataset',
-    filepath: overrides.filepath ?? 'datasets/example.csv',
-    year: overrides.year ?? 2025,
-    is_output_dataset: overrides.is_output_dataset ?? false,
-    tax_benefit_model_id: overrides.tax_benefit_model_id ?? 'model-us',
-    created_at: overrides.created_at ?? '2026-01-01T00:00:00Z',
-    updated_at: overrides.updated_at ?? '2026-01-01T00:00:00Z',
-  };
-}
-
 describe('regionShadow', () => {
   beforeEach(() => {
     localStorage.clear();
@@ -57,7 +35,7 @@ describe('regionShadow', () => {
     vi.restoreAllMocks();
   });
 
-  test('given exact-year dataset match then resolves region target and stores mappings', async () => {
+  test('given canonical region match then resolves region target and stores only region mapping', async () => {
     vi.mocked(fetchRegionByCode).mockResolvedValue({
       id: 'region-ca',
       code: 'state/ca',
@@ -66,6 +44,7 @@ describe('regionShadow', () => {
       requires_filter: false,
       filter_field: null,
       filter_value: null,
+      filter_strategy: null,
       parent_code: 'us',
       state_code: 'CA',
       state_name: 'California',
@@ -73,10 +52,6 @@ describe('regionShadow', () => {
       created_at: '2026-01-01T00:00:00Z',
       updated_at: '2026-01-01T00:00:00Z',
     });
-    vi.mocked(fetchDatasets).mockResolvedValue([
-      createDataset({ id: 'dataset-2024', year: 2024 }),
-      createDataset({ id: 'dataset-2025', year: 2025 }),
-    ]);
 
     const result = await shadowResolveRegionTarget({
       countryId: 'us',
@@ -91,14 +66,14 @@ describe('regionShadow', () => {
       regionId: 'region-ca',
       label: 'California',
       regionType: 'state',
-      datasetId: 'dataset-2025',
-      year: 2025,
+      datasetId: null,
+      year: null,
       filterField: null,
       filterValue: null,
       filterStrategy: null,
     });
     expect(getResolvedRegionId('us', 'state/ca')).toBe('region-ca');
-    expect(getResolvedDatasetId('us', 'state/ca', '2025')).toBe('dataset-2025');
+    expect(getResolvedDatasetId('us', 'state/ca', '2025')).toBeNull();
     expect(logMigrationComparison).toHaveBeenCalledWith(
       'RegionMigration',
       'RESOLVE',
@@ -126,7 +101,6 @@ describe('regionShadow', () => {
     });
 
     expect(result).toBeNull();
-    expect(fetchDatasets).not.toHaveBeenCalled();
     expect(sendMigrationLog).toHaveBeenCalledWith(
       expect.objectContaining({
         kind: 'event',
@@ -137,49 +111,49 @@ describe('regionShadow', () => {
     );
   });
 
-  test('given target year without exact match then dataset selection falls back deterministically', () => {
-    const datasets = [
-      createDataset({ id: 'dataset-2024', year: 2024 }),
-      createDataset({ id: 'dataset-2025', year: 2025 }),
-      createDataset({ id: 'dataset-2027', year: 2027 }),
-    ];
+  test('given filtered region metadata then preserves filter strategy from canonical record', async () => {
+    vi.mocked(fetchRegionByCode).mockResolvedValue({
+      id: 'region-district-de-00',
+      code: 'congressional_district/DE-00',
+      label: 'Delaware At-Large',
+      region_type: 'congressional_district',
+      requires_filter: true,
+      filter_field: 'congressional_district',
+      filter_value: 'DE-00',
+      filter_strategy: 'weight_replacement',
+      parent_code: 'us',
+      state_code: 'DE',
+      state_name: 'Delaware',
+      tax_benefit_model_id: 'model-us',
+      created_at: '2026-01-01T00:00:00Z',
+      updated_at: '2026-01-01T00:00:00Z',
+    });
 
-    expect(selectDatasetForRegionYear(datasets, 2026)?.id).toBe('dataset-2025');
-    expect(selectDatasetForRegionYear(datasets, 2023)?.id).toBe('dataset-2024');
-    expect(selectDatasetForRegionYear(datasets, null)?.id).toBe('dataset-2027');
+    const result = await shadowResolveRegionTarget({
+      countryId: 'us',
+      regionCode: 'DE-00',
+    });
+
+    expect(result?.filterStrategy).toBe('weight_replacement');
+    expect(result?.filterField).toBe('congressional_district');
+    expect(result?.filterValue).toBe('DE-00');
   });
 
-  test('given supported region types then infers filter strategy from canonical metadata', () => {
-    expect(
-      inferRegionFilterStrategy({
-        id: 'place-1',
-        countryId: 'us',
-        code: 'place/ca-44000',
-        label: 'Los Angeles',
-        regionType: 'place',
-        parentCode: 'state/ca',
-        filterField: 'place_fips',
-        filterValue: '44000',
-        requiresFilter: true,
-        stateCode: 'CA',
-        stateName: 'California',
-      })
-    ).toBe('row_filter');
+  test('given repeated skipped resolution then caches null result and avoids repeated logs', async () => {
+    vi.mocked(fetchRegionByCode).mockRejectedValue(new Error('Region not found: state/zz'));
 
-    expect(
-      inferRegionFilterStrategy({
-        id: 'constituency-1',
-        countryId: 'uk',
-        code: 'constituency/Sheffield Central',
-        label: 'Sheffield Central',
-        regionType: 'constituency',
-        parentCode: 'country/england',
-        filterField: 'constituency_code',
-        filterValue: 'E14000915',
-        requiresFilter: true,
-        stateCode: null,
-        stateName: null,
-      })
-    ).toBe('weight_replacement');
+    const first = await shadowResolveRegionTarget({
+      countryId: 'us',
+      regionCode: 'zz',
+    });
+    const second = await shadowResolveRegionTarget({
+      countryId: 'us',
+      regionCode: 'zz',
+    });
+
+    expect(first).toBeNull();
+    expect(second).toBeNull();
+    expect(fetchRegionByCode).toHaveBeenCalledTimes(1);
+    expect(sendMigrationLog).toHaveBeenCalledTimes(1);
   });
 });

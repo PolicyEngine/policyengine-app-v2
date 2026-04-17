@@ -10,6 +10,7 @@ import * as policyApi from '@/api/policy';
 import * as reportApi from '@/api/report';
 import * as simulationApi from '@/api/simulation';
 import { CountryProvider } from '@/contexts/CountryContext';
+import { useRegions } from '@/hooks/useRegions';
 import { useHouseholdAssociationsByUser } from '@/hooks/useUserHousehold';
 import { usePolicyAssociationsByUser } from '@/hooks/useUserPolicy';
 import {
@@ -112,6 +113,26 @@ describe('useUserReports', () => {
     vi.clearAllMocks();
     queryClient = createMockQueryClient();
     store = createMockStore();
+    vi.mocked(useRegions).mockReturnValue({
+      data: [
+        {
+          id: 'region-state-ca',
+          countryId: 'us',
+          code: 'state/ca',
+          label: 'California',
+          regionType: 'state',
+          parentCode: 'us',
+          filterField: null,
+          filterValue: null,
+          filterStrategy: null,
+          requiresFilter: false,
+          stateCode: 'CA',
+          stateName: 'California',
+        },
+      ],
+      isLoading: false,
+      error: null,
+    } as ReturnType<typeof useRegions>);
 
     // Setup default mock implementations
     (useReportAssociationsByUser as any).mockReturnValue({
@@ -288,6 +309,29 @@ describe('useUserReports', () => {
         name: 'California',
         countryId: 'us',
         scope: 'subnational',
+      });
+    });
+
+    test('given regions lookup fails then it still returns reports with fallback geography data', async () => {
+      vi.mocked(useRegions).mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        error: new Error('regions unavailable'),
+      } as ReturnType<typeof useRegions>);
+
+      const { result } = renderHook(() => useUserReports(TEST_USER_ID), { wrapper });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      expect(result.current.isError).toBe(false);
+      const reportWithGeography = result.current.data.find((r) =>
+        r.simulations?.some((s) => s.populationType === 'geography')
+      );
+      expect(reportWithGeography?.geographies?.[0]).toMatchObject({
+        geographyId: 'state/ca',
+        name: 'ca',
       });
     });
 
@@ -764,6 +808,24 @@ describe('useUserReportById', () => {
     expect(geography?.name).toBe('California');
     expect(geography?.countryId).toBe('us');
     expect(geography?.scope).toBe('subnational');
+  });
+
+  test('given regions lookup fails then it still returns report context with fallback geography data', async () => {
+    vi.mocked(useRegions).mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      error: new Error('regions unavailable'),
+    } as ReturnType<typeof useRegions>);
+
+    const { result } = renderHook(() => useUserReportById(TEST_REPORT_ID), { wrapper });
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(result.current.error).toBeNull();
+    const geography = result.current.geographies.find((g) => g.geographyId === 'state/ca');
+    expect(geography?.name).toBe('ca');
   });
 
   test('given geography simulation with no matching region data then falls back to populationId as name', async () => {

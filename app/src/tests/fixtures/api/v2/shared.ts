@@ -396,6 +396,7 @@ export function createMockRegionResponse() {
     requires_filter: false,
     filter_field: null,
     filter_value: null,
+    filter_strategy: null,
     parent_code: 'us',
     state_code: 'CA',
     state_name: 'California',

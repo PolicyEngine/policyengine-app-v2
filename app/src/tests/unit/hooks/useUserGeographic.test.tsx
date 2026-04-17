@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { LocalStorageGeographicStore } from '@/api/geographicAssociation';
+import { useRegions } from '@/hooks/useRegions';
 import {
   useCreateGeographicAssociation,
   useGeographicAssociation,
@@ -109,6 +110,40 @@ describe('useUserGeographic hooks', () => {
     vi.clearAllMocks();
     queryClient = createMockQueryClient();
     mockShadowResolveRegionTarget.mockResolvedValue(null);
+    vi.mocked(useRegions).mockReturnValue({
+      data: [
+        {
+          id: 'region-state-ca',
+          countryId: 'us',
+          code: 'state/ca',
+          label: 'California',
+          regionType: 'state',
+          parentCode: 'us',
+          filterField: null,
+          filterValue: null,
+          filterStrategy: null,
+          requiresFilter: false,
+          stateCode: 'CA',
+          stateName: 'California',
+        },
+        {
+          id: 'region-state-ny',
+          countryId: 'us',
+          code: 'state/ny',
+          label: 'New York',
+          regionType: 'state',
+          parentCode: 'us',
+          filterField: null,
+          filterValue: null,
+          filterStrategy: null,
+          requiresFilter: false,
+          stateCode: 'NY',
+          stateName: 'New York',
+        },
+      ],
+      isLoading: false,
+      error: null,
+    } as ReturnType<typeof useRegions>);
 
     // Get the mock store instance
     const mockStore =
@@ -475,6 +510,30 @@ describe('useUserGeographic hooks', () => {
         countryId: 'us',
         regionCode: 'state/ny',
         selectedLabel: 'New York',
+      });
+    });
+
+    test('given regions lookup fails then it still returns reconstructed geographies without surfacing an error', async () => {
+      vi.mocked(useRegions).mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        error: new Error('regions unavailable'),
+      } as ReturnType<typeof useRegions>);
+
+      const { result } = renderHook(() => useUserGeographics(TEST_IDS.USER_ID), { wrapper });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      expect(result.current.isError).toBe(false);
+      expect(result.current.error).toBeNull();
+      expect(result.current.data?.[0].geography).toEqual({
+        id: 'state/ca',
+        countryId: 'us',
+        scope: 'subnational',
+        geographyId: 'state/ca',
+        name: 'ca',
       });
     });
 

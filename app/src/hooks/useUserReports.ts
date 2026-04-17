@@ -65,7 +65,7 @@ export interface EnhancedUserReport {
 export const useUserReports = (userId: string) => {
   const country = useCurrentCountry();
   const queryClient = useQueryClient();
-  const { data: regions, isLoading: regionsLoading, error: regionsError } = useRegions(country);
+  const { data: regions } = useRegions(country);
 
   // Step 1: Fetch all user associations in parallel
   const {
@@ -173,7 +173,6 @@ export const useUserReports = (userId: string) => {
     { isLoading: simAssocLoading, error: simAssocError },
     { isLoading: polAssocLoading, error: polAssocError },
     { isLoading: housAssocLoading, error: housAssocError },
-    { isLoading: regionsLoading, error: regionsError },
     { isLoading: reportResults.isLoading, error: reportResults.error },
     { isLoading: simulationResults.isLoading, error: simulationResults.error },
     { isLoading: policyResults.isLoading, error: policyResults.error },
@@ -402,7 +401,7 @@ export const useUserReportById = (userReportId: string, options?: { enabled?: bo
 
   const { data: policyAssociations } = usePolicyAssociationsByUser(userId || '');
   const { data: householdAssociations } = useHouseholdAssociationsByUser(userId || '');
-  const { data: regions, isLoading: regionsLoading, error: regionsError } = useRegions(country);
+  const { data: regions } = useRegions(country);
 
   const matchedUserSimulations = simulationAssociations?.filter((sa) =>
     finalReport?.simulationIds?.includes(sa.simulationId)
@@ -477,14 +476,12 @@ export const useUserReportById = (userReportId: string, options?: { enabled?: bo
     userHouseholds,
     isLoading:
       userReportLoading ||
-      regionsLoading ||
       repLoading ||
       simulationResults.isLoading ||
       policyResults.isLoading ||
       householdResults.isLoading,
     error:
       userReportError ||
-      regionsError ||
       repError ||
       simulationResults.error ||
       policyResults.error ||

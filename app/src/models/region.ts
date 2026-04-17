@@ -12,6 +12,7 @@ export interface RegionRecord {
   parentCode: string | null;
   filterField: string | null;
   filterValue: string | null;
+  filterStrategy: RegionFilterStrategy;
   requiresFilter: boolean;
   stateCode: string | null;
   stateName: string | null;
@@ -38,6 +39,7 @@ interface RegionRecordSource {
   parent_code: string | null;
   filter_field: string | null;
   filter_value: string | null;
+  filter_strategy?: RegionFilterStrategy;
   requires_filter: boolean;
   state_code?: string | null;
   state_name?: string | null;
@@ -45,6 +47,9 @@ interface RegionRecordSource {
 
 const US_STATE_CODE_RE = /^[a-z]{2}$/i;
 const US_DISTRICT_CODE_RE = /^[a-z]{2}-\d{1,2}$/i;
+const US_LEGACY_STATE_CODE_RE = /^us-([a-z]{2})$/i;
+const US_LEGACY_DISTRICT_CODE_RE = /^us-([a-z]{2}-\d{1,2})$/i;
+const UK_LEGACY_COUNTRY_CODE_RE = /^uk-(.+)$/i;
 const UK_COUNTRY_CODES = new Set(['england', 'scotland', 'wales', 'ni', 'northern_ireland']);
 
 export function toRegionRecord(countryId: CountryId, region: RegionRecordSource): RegionRecord {
@@ -57,6 +62,7 @@ export function toRegionRecord(countryId: CountryId, region: RegionRecordSource)
     parentCode: region.parent_code,
     filterField: region.filter_field,
     filterValue: region.filter_value,
+    filterStrategy: region.filter_strategy ?? null,
     requiresFilter: region.requires_filter,
     stateCode: region.state_code ?? null,
     stateName: region.state_name ?? null,
@@ -69,7 +75,7 @@ export function createResolvedRegionTarget(args: {
   year?: number | null;
   filterStrategy?: RegionFilterStrategy;
 }): ResolvedRegionTarget {
-  const { datasetId, filterStrategy = null, region, year = null } = args;
+  const { datasetId, filterStrategy = args.region.filterStrategy, region, year = null } = args;
 
   return {
     countryId: region.countryId,
@@ -108,12 +114,30 @@ export function normalizeRegionCode(countryId: CountryId, regionCode: string): R
     if (US_DISTRICT_CODE_RE.test(trimmedCode)) {
       return `congressional_district/${trimmedCode.toUpperCase()}`;
     }
+
+    const legacyStateMatch = trimmedCode.match(US_LEGACY_STATE_CODE_RE);
+    if (legacyStateMatch) {
+      return `state/${legacyStateMatch[1].toLowerCase()}`;
+    }
+
+    const legacyDistrictMatch = trimmedCode.match(US_LEGACY_DISTRICT_CODE_RE);
+    if (legacyDistrictMatch) {
+      return `congressional_district/${legacyDistrictMatch[1].toUpperCase()}`;
+    }
   }
 
   if (countryId === 'uk') {
     const normalizedCode = trimmedCode.toLowerCase().replace(/\s+/g, '_');
     if (UK_COUNTRY_CODES.has(normalizedCode)) {
       return `country/${normalizedCode}`;
+    }
+
+    const legacyCountryMatch = trimmedCode.match(UK_LEGACY_COUNTRY_CODE_RE);
+    if (legacyCountryMatch) {
+      const normalizedLegacyCode = legacyCountryMatch[1].toLowerCase().replace(/[-\s]+/g, '_');
+      if (UK_COUNTRY_CODES.has(normalizedLegacyCode)) {
+        return `country/${normalizedLegacyCode}`;
+      }
     }
   }
 

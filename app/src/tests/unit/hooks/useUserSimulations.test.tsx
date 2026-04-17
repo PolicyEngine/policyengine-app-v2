@@ -1,6 +1,7 @@
 import { QueryClient } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { useRegions } from '@/hooks/useRegions';
 import { useUserSimulations } from '@/hooks/useUserSimulations';
 import {
   createMockQueryClient,
@@ -57,6 +58,11 @@ describe('useUserSimulations', () => {
     queryClient = createMockQueryClient();
     store = createMockStore();
     wrapper = createWrapper(queryClient, store);
+    vi.mocked(useRegions).mockReturnValue({
+      data: [],
+      isLoading: false,
+      error: null,
+    } as unknown as ReturnType<typeof useRegions>);
   });
 
   it('given user ID then returns hook result structure', async () => {
@@ -83,6 +89,23 @@ describe('useUserSimulations', () => {
 
     expect(result.current.data).toHaveLength(0);
     expect(result.current.isError).toBe(false);
+  });
+
+  it('given regions lookup fails then it does not surface an error for otherwise valid v1 data', async () => {
+    vi.mocked(useRegions).mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      error: new Error('regions unavailable'),
+    } as unknown as ReturnType<typeof useRegions>);
+
+    const { result } = renderHook(() => useUserSimulations(TEST_USER_ID), { wrapper });
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(result.current.isError).toBe(false);
+    expect(result.current.error).toBeNull();
   });
 
   it('given hook then provides helper functions', async () => {

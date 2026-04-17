@@ -164,11 +164,7 @@ export function useFetchReportIngredients(
   const currentCountry = useCurrentCountry();
   // Use country from input if available (for shared reports), otherwise use current country
   const country = input?.userReport.countryId ?? currentCountry;
-  const {
-    data: regions,
-    isLoading: regionsLoading,
-    error: regionsError,
-  } = useRegions(country, {
+  const { data: regions } = useRegions(country, {
     enabled: isEnabled,
   });
 
@@ -248,8 +244,7 @@ export function useFetchReportIngredients(
     { isLoading: reportResults.isLoading, error: reportResults.error },
     { isLoading: simulationResults.isLoading, error: simulationResults.error },
     { isLoading: policyResults.isLoading, error: policyResults.error },
-    { isLoading: householdResults.isLoading, error: householdResults.error },
-    { isLoading: regionsLoading, error: regionsError }
+    { isLoading: householdResults.isLoading, error: householdResults.error }
   );
 
   return {

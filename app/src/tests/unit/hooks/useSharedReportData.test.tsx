@@ -5,6 +5,7 @@ import { fetchHouseholdById } from '@/api/household';
 import { fetchPolicyById } from '@/api/policy';
 import { fetchReportById } from '@/api/report';
 import { fetchSimulationById } from '@/api/simulation';
+import { useRegions } from '@/hooks/useRegions';
 import { useSharedReportData } from '@/hooks/useSharedReportData';
 import {
   createMockStore,
@@ -40,6 +41,14 @@ vi.mock('@/api/household', () => ({
   fetchHouseholdById: vi.fn(),
 }));
 
+vi.mock('@/hooks/useRegions', () => ({
+  useRegions: vi.fn(() => ({
+    data: [],
+    isLoading: false,
+    error: null,
+  })),
+}));
+
 describe('useSharedReportData', () => {
   let queryClient: QueryClient;
   let store: ReturnType<typeof createMockStore>;
@@ -50,6 +59,11 @@ describe('useSharedReportData', () => {
     queryClient = createQueryClient();
     store = createMockStore();
     wrapper = createWrapper(queryClient, store);
+    vi.mocked(useRegions).mockReturnValue({
+      data: [],
+      isLoading: false,
+      error: null,
+    } as unknown as ReturnType<typeof useRegions>);
   });
 
   test('given null shareData then returns empty results without fetching', async () => {
@@ -214,5 +228,28 @@ describe('useSharedReportData', () => {
     });
 
     expect(result.current.error).toBeTruthy();
+  });
+
+  test('given regions lookup fails then it still returns shared report data without surfacing the regions error', async () => {
+    vi.mocked(useRegions).mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      error: new Error('regions unavailable'),
+    } as unknown as ReturnType<typeof useRegions>);
+    vi.mocked(fetchReportById).mockResolvedValue(MOCK_REPORT_METADATA);
+    vi.mocked(fetchSimulationById).mockResolvedValue(MOCK_SIMULATION_METADATA);
+    vi.mocked(fetchPolicyById).mockResolvedValue(MOCK_POLICY_METADATA);
+
+    const { result } = renderHook(() => useSharedReportData(MOCK_SHARE_DATA), { wrapper });
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(result.current.error).toBeNull();
+    expect(result.current.geographies[0]).toMatchObject({
+      geographyId: 'us',
+      name: 'United States',
+    });
   });
 });
