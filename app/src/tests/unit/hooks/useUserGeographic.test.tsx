@@ -20,6 +20,8 @@ import {
   TEST_LABELS,
 } from '@/tests/fixtures/hooks/hooksMocks';
 
+const mockShadowResolveRegionTarget = vi.fn().mockResolvedValue(null);
+
 // Mock useCurrentCountry hook
 vi.mock('@/hooks/useCurrentCountry', () => ({
   useCurrentCountry: vi.fn(() => 'us'),
@@ -58,6 +60,10 @@ vi.mock('@/hooks/useRegions', () => ({
     isLoading: false,
     error: null,
   })),
+}));
+
+vi.mock('@/libs/migration/regionShadow', () => ({
+  shadowResolveRegionTarget: (...args: unknown[]) => mockShadowResolveRegionTarget(...args),
 }));
 
 // Mock the stores first
@@ -102,6 +108,7 @@ describe('useUserGeographic hooks', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     queryClient = createMockQueryClient();
+    mockShadowResolveRegionTarget.mockResolvedValue(null);
 
     // Get the mock store instance
     const mockStore =
@@ -450,6 +457,25 @@ describe('useUserGeographic hooks', () => {
         name: 'California',
       });
       expect(result.current.data?.[1].geography?.name).toBe('New York');
+    });
+
+    test('given canonical geography records then it resolves region targets in the background', async () => {
+      renderHook(() => useUserGeographics(TEST_IDS.USER_ID), { wrapper });
+
+      await waitFor(() => {
+        expect(mockShadowResolveRegionTarget).toHaveBeenCalledTimes(2);
+      });
+
+      expect(mockShadowResolveRegionTarget).toHaveBeenCalledWith({
+        countryId: 'us',
+        regionCode: 'state/ca',
+        selectedLabel: 'California',
+      });
+      expect(mockShadowResolveRegionTarget).toHaveBeenCalledWith({
+        countryId: 'us',
+        regionCode: 'state/ny',
+        selectedLabel: 'New York',
+      });
     });
 
     test('given a national geography association then it uses the country display name', async () => {

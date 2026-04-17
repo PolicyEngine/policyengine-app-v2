@@ -1,7 +1,9 @@
+import { useEffect, useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiGeographicStore, LocalStorageGeographicStore } from '@/api/geographicAssociation';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useRegions } from '@/hooks/useRegions';
+import { shadowResolveRegionTarget } from '@/libs/migration/regionShadow';
 import { queryConfig } from '@/libs/queryConfig';
 import { geographicAssociationKeys } from '@/libs/queryKeys';
 import { buildCanonicalGeography } from '@/models/geography';
@@ -141,23 +143,42 @@ export const useUserGeographics = (userId: string) => {
 
   // For geographic populations, we construct Geography objects from the population data
   // since they don't require API fetching like households do
-  const geographicsWithAssociations: UserGeographicMetadataWithAssociation[] | undefined =
-    populations?.map((population) => {
-      const geography: Geography = buildCanonicalGeography({
-        countryId: population.countryId,
-        scope: population.scope,
-        geographyId: population.geographyId,
-        regions,
-      });
+  const geographicsWithAssociations = useMemo<UserGeographicMetadataWithAssociation[] | undefined>(
+    () =>
+      populations?.map((population) => {
+        const geography: Geography = buildCanonicalGeography({
+          countryId: population.countryId,
+          scope: population.scope,
+          geographyId: population.geographyId,
+          regions,
+        });
 
-      return {
-        association: population,
-        geography,
-        isLoading: false,
-        error: null,
-        isError: false,
-      };
-    });
+        return {
+          association: population,
+          geography,
+          isLoading: false,
+          error: null,
+          isError: false,
+        };
+      }),
+    [populations, regions]
+  );
+
+  useEffect(() => {
+    if (!geographicsWithAssociations?.length) {
+      return;
+    }
+
+    void Promise.allSettled(
+      geographicsWithAssociations.map(({ association, geography }) =>
+        shadowResolveRegionTarget({
+          countryId: association.countryId,
+          regionCode: geography?.geographyId ?? association.geographyId,
+          selectedLabel: geography?.name ?? null,
+        })
+      )
+    );
+  }, [geographicsWithAssociations]);
 
   return {
     data: geographicsWithAssociations,
