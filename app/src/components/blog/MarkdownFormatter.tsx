@@ -33,13 +33,25 @@ import {
 import { LazyPlot } from './LazyPlot';
 import { useDisplayCategory } from './useDisplayCategory';
 
-// Import Google Fonts for code blocks (Roboto Mono)
-const fontLinkElement = document.createElement('link');
-fontLinkElement.rel = 'stylesheet';
-fontLinkElement.href =
+// Google Fonts URL for code blocks (Roboto Mono). Injected lazily from the
+// component so SSR / non-browser environments (vitest jsdom setup, etc.) do
+// not hit `document` at module-evaluation time.
+const ROBOTO_MONO_HREF =
   'https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&display=swap';
-if (!document.head.querySelector(`link[href="${fontLinkElement.href}"]`)) {
-  document.head.appendChild(fontLinkElement);
+
+function useRobotoMonoFont(): void {
+  useEffect(() => {
+    if (typeof document === 'undefined') {
+      return;
+    }
+    if (document.head.querySelector(`link[href="${ROBOTO_MONO_HREF}"]`)) {
+      return;
+    }
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = ROBOTO_MONO_HREF;
+    document.head.appendChild(link);
+  }, []);
 }
 
 /**
@@ -272,6 +284,8 @@ export function MarkdownFormatter({
   const hookDisplayCategory = useDisplayCategory();
   const displayCategory = propDisplayCategory || hookDisplayCategory;
   const mobile = displayCategory === 'mobile';
+
+  useRobotoMonoFont();
 
   if (!markdown) {
     return null;
