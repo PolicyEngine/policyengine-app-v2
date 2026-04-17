@@ -10,7 +10,7 @@
  * The component that consumes this hook is responsible only for rendering.
  */
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { geographyUsageStore, householdUsageStore } from '@/api/usageTracking';
 import { MOCK_USER_ID } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
@@ -51,6 +51,8 @@ interface UseSimulationCanvasArgs {
   setPickerState: React.Dispatch<React.SetStateAction<IngredientPickerState>>;
 }
 
+const REGION_LOAD_TIMEOUT_MS = 10_000;
+
 export function useSimulationCanvas({
   reportState,
   setReportState,
@@ -61,19 +63,38 @@ export function useSimulationCanvas({
   const userId = MOCK_USER_ID.toString();
   const { data: policies, isLoading: policiesLoading } = useUserPolicies(userId);
   const { data: households, isLoading: householdsLoading } = useUserHouseholds(userId);
-  const { data: regions = [], isLoading: regionsLoading } = useRegions(countryId);
+  const { data: regions, isLoading: regionsLoading } = useRegions(countryId);
+  const regionRecords = regions ?? [];
   const isGeographySelected = !!reportState.simulations[0]?.population?.geography?.id;
+  const [hasRegionLoadTimedOut, setHasRegionLoadTimedOut] = useState(false);
 
-  // Show loading skeleton until all data sources have resolved.
-  // Region options check guards against a race condition where metadata initial
-  // state has loading=false but region=[] before the actual data arrives.
+  const isWaitingForRegions = regionsLoading || regionRecords.length === 0;
+
+  useEffect(() => {
+    if (!isWaitingForRegions) {
+      setHasRegionLoadTimedOut(false);
+      return;
+    }
+
+    setHasRegionLoadTimedOut(false);
+    const timeoutId = window.setTimeout(() => {
+      setHasRegionLoadTimedOut(true);
+    }, REGION_LOAD_TIMEOUT_MS);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [countryId, isWaitingForRegions]);
+
+  // Show loading skeleton until the primary data sources resolve. Regions are
+  // best-effort here; if they never arrive, stop blocking the builder after a
+  // short timeout instead of rendering a permanent skeleton.
   const isInitialLoading =
     policiesLoading ||
     householdsLoading ||
-    regionsLoading ||
     policies === undefined ||
     households === undefined ||
-    regions.length === 0;
+    (!hasRegionLoadTimedOut && isWaitingForRegions);
 
   // ---------------------------------------------------------------------------
   // Modal visibility state
@@ -123,14 +144,14 @@ export function useSimulationCanvas({
     const allRegions: RegionOption[] =
       countryId === 'us'
         ? [
-            ...getUSStates(regions),
-            ...getUSCongressionalDistricts(regions),
-            ...getUSPlaces(regions),
+            ...getUSStates(regionRecords),
+            ...getUSCongressionalDistricts(regionRecords),
+            ...getUSPlaces(regionRecords),
           ]
         : [
-            ...getUKCountries(regions),
-            ...getUKConstituencies(regions),
-            ...getUKLocalAuthorities(regions),
+            ...getUKCountries(regionRecords),
+            ...getUKConstituencies(regionRecords),
+            ...getUKLocalAuthorities(regionRecords),
           ];
 
     for (const geoId of geographyUsageStore.getRecentIds(10)) {
@@ -193,7 +214,7 @@ export function useSimulationCanvas({
       .sort((a, b) => b.timestamp.localeCompare(a.timestamp))
       .slice(0, 10)
       .map(({ timestamp: _t, ...rest }) => rest);
-  }, [countryId, households, regions]);
+  }, [countryId, households, regionRecords]);
 
   // ---------------------------------------------------------------------------
   // Helpers

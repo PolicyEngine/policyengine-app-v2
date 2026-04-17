@@ -2,7 +2,6 @@ import { fetchRegionByCode } from '@/api/v2/regions';
 import type { CountryId } from '@/libs/countries';
 import {
   createResolvedRegionTarget,
-  getRegionYearKey,
   normalizeRegionCode,
   toRegionRecord,
   type RegionRecord,
@@ -76,8 +75,6 @@ function buildResolutionComparable(args: {
       regionType: null,
       filterField: null,
       filterValue: null,
-      datasetYear: null,
-      datasetId: null,
       filterStrategy: null,
     },
     v2: {
@@ -87,8 +84,6 @@ function buildResolutionComparable(args: {
       regionType: target.regionType,
       filterField: target.filterField,
       filterValue: target.filterValue,
-      datasetYear: target.year,
-      datasetId: target.datasetId,
       filterStrategy: target.filterStrategy,
     },
     skipFields: [
@@ -96,8 +91,6 @@ function buildResolutionComparable(args: {
       'regionType',
       'filterField',
       'filterValue',
-      'datasetYear',
-      'datasetId',
       'filterStrategy',
     ],
   };
@@ -106,19 +99,16 @@ function buildResolutionComparable(args: {
 async function shadowResolveRegionTargetImpl(args: {
   countryId: CountryId;
   regionCode: string;
-  year?: number | null;
   selectedLabel?: string | null;
   region?: RegionRecord;
 }): Promise<ResolvedRegionTarget | null> {
-  const { countryId, region, selectedLabel, year = null } = args;
+  const { countryId, region, selectedLabel } = args;
   const canonicalCode = normalizeRegionCode(countryId, args.regionCode);
-  const yearKey = getRegionYearKey(year);
 
   if (!SUPPORTED_REGION_COUNTRIES.has(countryId)) {
     logRegionEvent('SKIPPED', 'Region resolution skipped: unsupported country', {
       countryId,
       regionCode: canonicalCode,
-      year: yearKey,
     });
     return null;
   }
@@ -139,7 +129,6 @@ async function shadowResolveRegionTargetImpl(args: {
       {
         countryId,
         regionCode: canonicalCode,
-        year: yearKey,
         error: errorMessage,
       }
     );
@@ -151,8 +140,6 @@ async function shadowResolveRegionTargetImpl(args: {
   // the app has enough context to ask for a region+year-backed dataset correctly.
   const target = createResolvedRegionTarget({
     region: resolvedRegion,
-    datasetId: null,
-    year: null,
   });
 
   setResolvedRegionId(countryId, resolvedRegion.code, resolvedRegion.id);
@@ -174,7 +161,6 @@ async function shadowResolveRegionTargetImpl(args: {
 export async function shadowResolveRegionTarget(args: {
   countryId: CountryId;
   regionCode: string;
-  year?: number | null;
   selectedLabel?: string | null;
   region?: RegionRecord;
 }): Promise<ResolvedRegionTarget | null> {

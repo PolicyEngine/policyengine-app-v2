@@ -24,8 +24,6 @@ export interface ResolvedRegionTarget {
   regionId: string;
   label: string | null;
   regionType: string | null;
-  datasetId: string | null;
-  year: number | null;
   filterField: string | null;
   filterValue: string | null;
   filterStrategy: RegionFilterStrategy;
@@ -71,11 +69,9 @@ export function toRegionRecord(countryId: CountryId, region: RegionRecordSource)
 
 export function createResolvedRegionTarget(args: {
   region: RegionRecord;
-  datasetId: string | null;
-  year?: number | null;
   filterStrategy?: RegionFilterStrategy;
 }): ResolvedRegionTarget {
-  const { datasetId, filterStrategy = args.region.filterStrategy, region, year = null } = args;
+  const { filterStrategy = args.region.filterStrategy, region } = args;
 
   return {
     countryId: region.countryId,
@@ -83,16 +79,10 @@ export function createResolvedRegionTarget(args: {
     regionId: region.id,
     label: region.label,
     regionType: region.regionType,
-    datasetId,
-    year,
     filterField: region.filterField,
     filterValue: region.filterValue,
     filterStrategy,
   };
-}
-
-export function getRegionYearKey(year?: number | null): string {
-  return year == null ? 'latest' : String(year);
 }
 
 export function normalizeRegionCode(countryId: CountryId, regionCode: string): RegionCode {

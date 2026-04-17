@@ -2,7 +2,6 @@ import { describe, expect, test } from 'vitest';
 import {
   createResolvedRegionTarget,
   getRegionCodeCandidates,
-  getRegionYearKey,
   normalizeRegionCode,
   toRegionRecord,
 } from '@/models/region';
@@ -39,7 +38,7 @@ describe('region model helpers', () => {
     });
   });
 
-  test('given region and dataset resolution then creates a ResolvedRegionTarget', () => {
+  test('given resolved canonical region then creates a ResolvedRegionTarget', () => {
     const region = toRegionRecord('uk', {
       id: 'region-uk-england',
       code: 'country/england',
@@ -55,8 +54,6 @@ describe('region model helpers', () => {
     expect(
       createResolvedRegionTarget({
         region,
-        datasetId: 'dataset-123',
-        year: 2026,
         filterStrategy: 'row_filter',
       })
     ).toEqual({
@@ -65,8 +62,6 @@ describe('region model helpers', () => {
       regionId: 'region-uk-england',
       label: 'England',
       regionType: 'country',
-      datasetId: 'dataset-123',
-      year: 2026,
       filterField: 'country',
       filterValue: 'england',
       filterStrategy: 'row_filter',
@@ -91,11 +86,5 @@ describe('region model helpers', () => {
     expect(getRegionCodeCandidates('Sheffield Central')).toContain(
       'constituency/Sheffield Central'
     );
-  });
-
-  test('given nullable year then uses latest year key', () => {
-    expect(getRegionYearKey()).toBe('latest');
-    expect(getRegionYearKey(null)).toBe('latest');
-    expect(getRegionYearKey(2026)).toBe('2026');
   });
 });

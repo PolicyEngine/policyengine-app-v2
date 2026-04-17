@@ -28,10 +28,6 @@ function resolvedRegionKey(countryId: string, regionCode: string): string {
   return `${countryId}:${regionCode}`;
 }
 
-function resolvedDatasetKey(countryId: string, regionCode: string, yearKey: string): string {
-  return `${countryId}:${regionCode}:${yearKey}`;
-}
-
 function createUuid(): string {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
     return crypto.randomUUID();
@@ -233,21 +229,4 @@ export function setResolvedRegionId(countryId: string, regionCode: string, regio
 
 export function getResolvedRegionId(countryId: string, regionCode: string): string | null {
   return getV2Id('Region', resolvedRegionKey(countryId, regionCode));
-}
-
-export function setResolvedDatasetId(
-  countryId: string,
-  regionCode: string,
-  yearKey: string,
-  datasetId: string
-): void {
-  setV2Id('Dataset', resolvedDatasetKey(countryId, regionCode, yearKey), datasetId);
-}
-
-export function getResolvedDatasetId(
-  countryId: string,
-  regionCode: string,
-  yearKey: string
-): string | null {
-  return getV2Id('Dataset', resolvedDatasetKey(countryId, regionCode, yearKey));
 }

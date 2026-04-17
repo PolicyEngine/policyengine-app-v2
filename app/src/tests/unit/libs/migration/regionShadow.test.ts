@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { fetchRegionByCode } from '@/api/v2/regions';
 import { logMigrationComparison } from '@/libs/migration/comparisonLogger';
-import { getResolvedDatasetId, getResolvedRegionId } from '@/libs/migration/idMapping';
+import { getResolvedRegionId } from '@/libs/migration/idMapping';
 import { sendMigrationLog } from '@/libs/migration/migrationLogTransport';
 import {
   clearRegionShadowCachesForTest,
@@ -56,7 +56,6 @@ describe('regionShadow', () => {
     const result = await shadowResolveRegionTarget({
       countryId: 'us',
       regionCode: 'ca',
-      year: 2025,
       selectedLabel: 'California',
     });
 
@@ -66,14 +65,11 @@ describe('regionShadow', () => {
       regionId: 'region-ca',
       label: 'California',
       regionType: 'state',
-      datasetId: null,
-      year: null,
       filterField: null,
       filterValue: null,
       filterStrategy: null,
     });
     expect(getResolvedRegionId('us', 'state/ca')).toBe('region-ca');
-    expect(getResolvedDatasetId('us', 'state/ca', '2025')).toBeNull();
     expect(logMigrationComparison).toHaveBeenCalledWith(
       'RegionMigration',
       'RESOLVE',
@@ -84,8 +80,6 @@ describe('regionShadow', () => {
           'regionType',
           'filterField',
           'filterValue',
-          'datasetYear',
-          'datasetId',
           'filterStrategy',
         ]),
       })
