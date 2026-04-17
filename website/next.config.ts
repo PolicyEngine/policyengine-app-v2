@@ -41,9 +41,13 @@ const nextConfig: NextConfig = {
         // Oregon Kicker Refund calculator (Vercel)
         { source: "/us/oregon-kicker-refund", destination: "https://oregon-kicker-refund.vercel.app/us/oregon-kicker-refund" },
         { source: "/us/oregon-kicker-refund/:path*", destination: "https://oregon-kicker-refund.vercel.app/us/oregon-kicker-refund/:path*" },
-        // Marriage calculator (Vercel)
+        // Marriage calculator (Vercel) — US variant at the zone's basePath,
+        // UK variant reuses the same origin with ?country=uk (the zone only
+        // has one basePath; the zone reads country from the query string).
         { source: "/us/marriage", destination: "https://marriage-zeta-beryl.vercel.app/us/marriage" },
         { source: "/us/marriage/:path*", destination: "https://marriage-zeta-beryl.vercel.app/us/marriage/:path*" },
+        { source: "/uk/marriage", destination: "https://marriage-zeta-beryl.vercel.app/us/marriage?country=uk" },
+        { source: "/uk/marriage/:path*", destination: "https://marriage-zeta-beryl.vercel.app/us/marriage/:path*?country=uk" },
         // Working Parents Tax Relief Act calculator (Vercel)
         { source: "/us/working-parents-tax-relief-act", destination: "https://wptra.vercel.app/us/working-parents-tax-relief-act" },
         { source: "/us/working-parents-tax-relief-act/:path*", destination: "https://wptra.vercel.app/us/working-parents-tax-relief-act/:path*" },
