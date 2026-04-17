@@ -135,13 +135,21 @@ function recommendationForApp(app: AppEntry): {
 
   if (STATIC_SLUGS.has(app.slug)) {
     return {
-      label: "Keep iframe/static hosting",
-      kind: "iframe",
-      notes: "Static hosting is appropriate unless route ownership requirements change.",
+      label: "Audit for multi-zone/static route ownership",
+      kind: "multizone",
+      notes: "Static hosting can work, but audit first-party route ownership before keeping iframe.",
     };
   }
 
   if (!app.displayWithResearch) {
+    if (app.source.includes("vercel.app")) {
+      return {
+        label: "Audit for multi-zone if kept as product surface",
+        kind: "multizone",
+        notes: "Not shown in research listing; lower priority unless it remains public.",
+      };
+    }
+
     return {
       label: "Keep iframe",
       kind: "iframe",
@@ -151,9 +159,9 @@ function recommendationForApp(app: AppEntry): {
 
   if (app.source.includes("vercel.app")) {
     return {
-      label: "Iframe now; simple rewrite if first-party URL needed",
-      kind: "rewrite",
-      notes: "Shown in research listing.",
+      label: "Multi-zone target; audit zone readiness",
+      kind: "multizone",
+      notes: "Shown in research listing and deployed on Vercel.",
     };
   }
 

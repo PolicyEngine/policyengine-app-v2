@@ -1,22 +1,32 @@
 {
   "app:us:keep-your-pay-act": {
     "recommendation": "multizone",
+    "auditSession": "Session A - direct rewrite calculators",
+    "auditStatus": "not-started",
     "comment": ""
   },
   "app:us:oregon-kicker-refund": {
     "recommendation": "multizone",
-    "comment": ""
+    "auditSession": "Session A - direct rewrite calculators",
+    "auditStatus": "audited",
+    "comment": "Baseline pilot: zone repo already defaults basePath to /us/oregon-kicker-refund, emits path-scoped assets, and uses policyengine.org metadata."
   },
   "app:us:working-parents-tax-relief-act": {
     "recommendation": "multizone",
+    "auditSession": "Session A - direct rewrite calculators",
+    "auditStatus": "not-started",
     "comment": ""
   },
   "app:us:watca": {
     "recommendation": "multizone",
+    "auditSession": "Session A - direct rewrite calculators",
+    "auditStatus": "not-started",
     "comment": ""
   },
   "route:api": {
     "recommendation": "multizone",
-    "comment": ""
+    "auditSession": "Session D - special routes",
+    "auditStatus": "audited",
+    "comment": "Reference zone: household-api-docs uses production-only assetPrefix /_zones/household-api-docs and disables it during next dev."
   }
 }

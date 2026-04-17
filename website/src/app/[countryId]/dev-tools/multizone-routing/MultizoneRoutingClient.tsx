@@ -7,8 +7,12 @@ import { Input } from "@/components/ui/input";
 import { colors, spacing, typography } from "@policyengine/design-system/tokens";
 import type { RecommendationKind, RoutingInventoryRow } from "./routingInventory";
 
+type AuditStatus = "not-started" | "in-progress" | "audited" | "blocked";
+
 export type TeamInput = {
   recommendation: RecommendationKind;
+  auditSession?: string;
+  auditStatus?: AuditStatus;
   comment: string;
 };
 
@@ -16,6 +20,13 @@ const RECOMMENDATION_LABELS: Record<RecommendationKind, string> = {
   iframe: "Keep iframe/static",
   rewrite: "Simple rewrite",
   multizone: "Multi-zone",
+};
+
+const STATUS_LABELS: Record<AuditStatus, string> = {
+  "not-started": "Not started",
+  "in-progress": "In progress",
+  audited: "Audited",
+  blocked: "Blocked",
 };
 
 function badgeStyle(kind: RecommendationKind): CSSProperties {
@@ -54,6 +65,47 @@ function badgeStyle(kind: RecommendationKind): CSSProperties {
   };
 }
 
+function statusBadgeStyle(status: AuditStatus): CSSProperties {
+  const palette: Record<
+    AuditStatus,
+    { bg: string; color: string; border: string }
+  > = {
+    "not-started": {
+      bg: colors.gray[50],
+      color: colors.text.secondary,
+      border: colors.border.light,
+    },
+    "in-progress": {
+      bg: "#EFF6FF",
+      color: "#1D4ED8",
+      border: "#BFDBFE",
+    },
+    audited: {
+      bg: "#ECFDF5",
+      color: "#047857",
+      border: "#A7F3D0",
+    },
+    blocked: {
+      bg: "#FEF2F2",
+      color: "#B91C1C",
+      border: "#FECACA",
+    },
+  };
+  const selected = palette[status];
+  return {
+    display: "inline-flex",
+    alignItems: "center",
+    border: `1px solid ${selected.border}`,
+    borderRadius: "999px",
+    padding: "2px 8px",
+    backgroundColor: selected.bg,
+    color: selected.color,
+    fontSize: typography.fontSize.xs,
+    fontWeight: typography.fontWeight.semibold,
+    whiteSpace: "nowrap",
+  };
+}
+
 export default function MultizoneRoutingClient({
   rows,
   reviewInputs,
@@ -72,6 +124,8 @@ export default function MultizoneRoutingClient({
         ...row,
         teamRecommendation:
           reviewInputs[row.id]?.recommendation ?? row.recommendationKind,
+        auditSession: reviewInputs[row.id]?.auditSession ?? "Unassigned",
+        auditStatus: reviewInputs[row.id]?.auditStatus ?? "not-started",
         teamComment: reviewInputs[row.id]?.comment ?? "",
       })),
     [reviewInputs, rows],
@@ -91,6 +145,8 @@ export default function MultizoneRoutingClient({
         row.deployed,
         row.source,
         row.notes,
+        row.auditSession,
+        row.auditStatus,
         row.teamComment,
       ]
         .join(" ")
@@ -113,6 +169,8 @@ export default function MultizoneRoutingClient({
       multizone: mergedRows.filter(
         (row) => row.teamRecommendation === "multizone",
       ).length,
+      audited: mergedRows.filter((row) => row.auditStatus === "audited")
+        .length,
     }),
     [mergedRows, rows],
   );
@@ -130,8 +188,8 @@ export default function MultizoneRoutingClient({
         {[
           ["Total rows", counts.total],
           ["apps.json rows", counts.apps],
-          ["Direct rewrites/proxies", counts.rewrites],
           ["Team multizone picks", counts.multizone],
+          ["Audited", counts.audited],
         ].map(([label, value]) => (
           <div
             key={label}
@@ -178,8 +236,9 @@ export default function MultizoneRoutingClient({
       >
         Team input is shared through{" "}
         <code>website/src/data/multizoneRoutingReview.json</code>. Edit that
-        file in this PR branch to update the Team input and Team comment
-        columns; the preview will reflect committed changes after redeploy.
+        file in this PR branch to update the Audit session, Audit status, Team
+        input, and Team comment columns; the preview will reflect committed
+        changes after redeploy.
       </div>
 
       <div
@@ -261,6 +320,8 @@ export default function MultizoneRoutingClient({
                 "Country",
                 "Current setup",
                 "Suggested setup",
+                "Audit session",
+                "Audit status",
                 "Team input",
                 "Team comment",
                 "Framework",
@@ -306,6 +367,12 @@ export default function MultizoneRoutingClient({
                 <td style={cellStyle}>
                   <span style={badgeStyle(row.recommendationKind)}>
                     {row.recommendedSetup}
+                  </span>
+                </td>
+                <td style={cellStyle}>{row.auditSession}</td>
+                <td style={cellStyle}>
+                  <span style={statusBadgeStyle(row.auditStatus)}>
+                    {STATUS_LABELS[row.auditStatus]}
                   </span>
                 </td>
                 <td style={cellStyle}>
