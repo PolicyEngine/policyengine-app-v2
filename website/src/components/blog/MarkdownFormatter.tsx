@@ -136,13 +136,24 @@ export function HighlightedBlock({
   if (!left && !right && data) {
     const content = data[0];
     const parts = content.split("&&&");
-    left = <MarkdownFormatter markdown={parts[0]} />;
-    right = (
-      <MarkdownFormatter
-        markdown={parts[1]}
-        backgroundColor={blogColors.backgroundSecondary}
-      />
-    );
+    if (parts.length !== 2) {
+      // Malformed highlighted-block: fall back to rendering the single pane
+      // so we still show the content instead of silently breaking the layout.
+      console.warn(
+        `[HighlightedBlock] Expected 2 parts separated by "&&&" but got ${parts.length}; ` +
+          "rendering as a single column.",
+      );
+      left = <MarkdownFormatter markdown={content} />;
+      right = null;
+    } else {
+      left = <MarkdownFormatter markdown={parts[0]} />;
+      right = (
+        <MarkdownFormatter
+          markdown={parts[1]}
+          backgroundColor={blogColors.backgroundSecondary}
+        />
+      );
+    }
   }
 
   const ref = useRef<HTMLDivElement>(null);
