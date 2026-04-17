@@ -136,12 +136,21 @@ export function PopulationBrowseModal({
         const usageTimestamp = householdUsageStore.getLastUsed(householdIdStr);
         const sortTimestamp =
           usageTimestamp || h.association.updatedAt || h.association.createdAt || '';
+        const isSelectable = Boolean(h.household);
         return {
           id: householdIdStr,
           label: h.association.label || `Household #${householdIdStr}`,
           memberCount: h.household?.personCount ?? 0,
           sortTimestamp,
           household: h.household,
+          isSelectable,
+          statusMessage: isSelectable
+            ? undefined
+            : h.error
+              ? 'Failed to load'
+              : h.isLoading
+                ? 'Loading...'
+                : 'Failed to load',
         };
       })
       .sort((a, b) => b.sortTimestamp.localeCompare(a.sortTimestamp));
@@ -193,10 +202,14 @@ export function PopulationBrowseModal({
   };
 
   const handleSelectHousehold = (householdData: (typeof sortedHouseholds)[0]) => {
+    if (!householdData.household) {
+      return;
+    }
+
     const householdIdStr = String(householdData.id);
     householdUsageStore.recordUsage(householdIdStr);
 
-    const household = householdData.household?.toAppInput() ?? null;
+    const household = householdData.household.toAppInput();
 
     onSelect({
       geography: null,
@@ -350,6 +363,8 @@ export function PopulationBrowseModal({
           id: h.id,
           label: h.label,
           memberCount: h.memberCount,
+          disabled: !h.isSelectable,
+          statusMessage: h.statusMessage,
         }))}
         householdsLoading={householdsLoading}
         getSectionTitle={getSectionTitle}
