@@ -41,6 +41,9 @@ const nextConfig: NextConfig = {
         // Oregon Kicker Refund calculator (Vercel)
         { source: "/us/oregon-kicker-refund", destination: "https://oregon-kicker-refund.vercel.app/us/oregon-kicker-refund" },
         { source: "/us/oregon-kicker-refund/:path*", destination: "https://oregon-kicker-refund.vercel.app/us/oregon-kicker-refund/:path*" },
+        // SPM threshold calculator (Vercel) — PolicyEngine/spm-calculator
+        { source: "/us/spm-calculator", destination: "https://spm-calculator.vercel.app/us/spm-calculator" },
+        { source: "/us/spm-calculator/:path*", destination: "https://spm-calculator.vercel.app/us/spm-calculator/:path*" },
         // Marriage calculator (Vercel) — US variant at the zone's basePath;
         // UK variant reuses the same origin with ?country=uk. Rewrites are
         // server-side, so the query only reaches the zone's Node runtime;
