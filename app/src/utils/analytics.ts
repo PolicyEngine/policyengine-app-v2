@@ -28,7 +28,11 @@ export function trackSimulationCompleted(params: {
 
 /** Fires after 15s on an iframe tool page */
 export function trackToolEngaged(params: { toolSlug: string; toolTitle: string }) {
-  trackEvent('tool_engaged', params);
+  trackEvent('tool_engaged', {
+    ...params,
+    tool_name: params.toolSlug,
+    tool_title: params.toolTitle,
+  });
 }
 
 /** Fires when user clicks the email contact link */
