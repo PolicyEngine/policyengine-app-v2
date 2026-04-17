@@ -2,8 +2,8 @@
   "app:us:keep-your-pay-act": {
     "recommendation": "multizone",
     "auditSession": "Session A - direct rewrite calculators",
-    "auditStatus": "not-started",
-    "comment": ""
+    "auditStatus": "audited",
+    "comment": "Multizone-ready: repo defaults basePath to /us/keep-your-pay-act, live HTML emits path-scoped _next assets, metadata/sitemap use policyengine.org, and API calls go directly to api.policyengine.org."
   },
   "app:us:oregon-kicker-refund": {
     "recommendation": "multizone",
@@ -14,14 +14,14 @@
   "app:us:working-parents-tax-relief-act": {
     "recommendation": "multizone",
     "auditSession": "Session A - direct rewrite calculators",
-    "auditStatus": "not-started",
-    "comment": ""
+    "auditStatus": "audited",
+    "comment": "Multizone-ready with a small polish follow-up: repo defaults basePath to /us/working-parents-tax-relief-act, assets and metadata are path/first-party, but favicon currently renders as /favicon.svg."
   },
   "app:us:watca": {
     "recommendation": "multizone",
     "auditSession": "Session A - direct rewrite calculators",
-    "auditStatus": "not-started",
-    "comment": ""
+    "auditStatus": "audited",
+    "comment": "Multizone-ready for routing: repo hardcodes basePath /us/watca and host/assets work. Follow up to add policyengine.org canonical/OG/sitemap metadata and a next-dev basePath escape hatch."
   },
   "route:api": {
     "recommendation": "multizone",
