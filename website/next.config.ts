@@ -41,9 +41,11 @@ const nextConfig: NextConfig = {
         // Oregon Kicker Refund calculator (Vercel)
         { source: "/us/oregon-kicker-refund", destination: "https://oregon-kicker-refund.vercel.app/us/oregon-kicker-refund" },
         { source: "/us/oregon-kicker-refund/:path*", destination: "https://oregon-kicker-refund.vercel.app/us/oregon-kicker-refund/:path*" },
-        // Marriage calculator (Vercel) — US variant at the zone's basePath,
-        // UK variant reuses the same origin with ?country=uk (the zone only
-        // has one basePath; the zone reads country from the query string).
+        // Marriage calculator (Vercel) — US variant at the zone's basePath;
+        // UK variant reuses the same origin with ?country=uk. Rewrites are
+        // server-side, so the query only reaches the zone's Node runtime;
+        // the zone's server component reads searchParams.country and seeds
+        // the client with an initialCountry prop (PolicyEngine/marriage#113).
         { source: "/us/marriage", destination: "https://marriage-zeta-beryl.vercel.app/us/marriage" },
         { source: "/us/marriage/:path*", destination: "https://marriage-zeta-beryl.vercel.app/us/marriage/:path*" },
         { source: "/uk/marriage", destination: "https://marriage-zeta-beryl.vercel.app/us/marriage?country=uk" },
