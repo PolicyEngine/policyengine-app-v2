@@ -115,7 +115,6 @@ export default defineConfig({
           'vendor-markdown': [
             'react-markdown',
             'rehype-katex',
-            'rehype-raw',
             'remark-gfm',
             'remark-math',
             'react-syntax-highlighter',

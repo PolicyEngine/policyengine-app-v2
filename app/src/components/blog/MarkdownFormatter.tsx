@@ -18,7 +18,6 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import ReactMarkdown, { type Components } from 'react-markdown';
-import rehypeRaw from 'rehype-raw';
 import remarkGfm from 'remark-gfm';
 import OptimisedImage from '@/components/ui/OptimisedImage';
 import type { MarkdownFormatterProps } from '@/types/blog';
@@ -31,15 +30,64 @@ import {
   blogTypography,
 } from './blogStyles';
 import { LazyPlot } from './LazyPlot';
+import { isSafeHref } from './safeHref';
 import { useDisplayCategory } from './useDisplayCategory';
 
-// Import Google Fonts for code blocks (Roboto Mono)
-const fontLinkElement = document.createElement('link');
-fontLinkElement.rel = 'stylesheet';
-fontLinkElement.href =
+// Google Fonts URL for code blocks (Roboto Mono). Injected lazily from the
+// component so SSR / non-browser environments (vitest jsdom setup, etc.) do
+// not hit `document` at module-evaluation time.
+const ROBOTO_MONO_HREF =
   'https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&display=swap';
-if (!document.head.querySelector(`link[href="${fontLinkElement.href}"]`)) {
-  document.head.appendChild(fontLinkElement);
+
+function useRobotoMonoFont(): void {
+  useEffect(() => {
+    if (typeof document === 'undefined') {
+      return;
+    }
+    if (document.head.querySelector(`link[href="${ROBOTO_MONO_HREF}"]`)) {
+      return;
+    }
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = ROBOTO_MONO_HREF;
+    document.head.appendChild(link);
+  }, []);
+}
+
+/**
+ * Type guard for React elements whose children/props we introspect. Using
+ * `React.isValidElement` here lets us drop `as any` casts in the custom
+ * renderers — if the node isn't a valid element we return early instead of
+ * dereferencing untyped props.
+ */
+function isReactElement(
+  node: React.ReactNode
+): node is React.ReactElement<Record<string, unknown>> {
+  return React.isValidElement(node);
+}
+
+/**
+ * Narrowed shape of the `props` object react-markdown exposes on anchor-like
+ * elements inside custom renderers. Only the fields actually read below are
+ * listed; anything else is kept as an index signature so we don't need `any`.
+ */
+interface AnchorLikeElementProps {
+  href?: string;
+  className?: string;
+  id?: string;
+  children?: React.ReactNode;
+  node?: {
+    tagName?: string;
+    properties?: { href?: string };
+  };
+  [key: string]: unknown;
+}
+
+function elementProps(node: React.ReactNode): AnchorLikeElementProps | null {
+  if (!isReactElement(node)) {
+    return null;
+  }
+  return node.props as AnchorLikeElementProps;
 }
 
 /**
@@ -65,9 +113,13 @@ function Td({ children }: { children?: React.ReactNode }) {
   const ref = useRef<HTMLTableCellElement>(null);
   const [columnNumber, setColumnNumber] = useState<number | null>(null);
 
+  // Match the website/ copy: `ref.current?.cellIndex` is not a reactive value,
+  // so listing it as a dep is misleading. Run once after mount (and because
+  // DOM geometry is being measured, `useLayoutEffect` would be marginally
+  // better, but we keep `useEffect` to avoid SSR hydration warnings).
   useEffect(() => {
     setColumnNumber(ref.current?.cellIndex ?? null);
-  }, [ref.current?.cellIndex]);
+  }, []);
 
   return (
     <td
@@ -96,7 +148,7 @@ function Tr({ children }: { children?: React.ReactNode }) {
 
   useEffect(() => {
     setRowIndex(ref.current?.rowIndex ?? 0);
-  }, [ref.current?.rowIndex]);
+  }, []);
 
   return (
     <tr
@@ -129,10 +181,21 @@ export function HighlightedBlock({
   if (!left && !right && data) {
     const content = data[0];
     const parts = content.split('&&&');
-    left = <MarkdownFormatter markdown={parts[0]} />;
-    right = (
-      <MarkdownFormatter markdown={parts[1]} backgroundColor={blogColors.backgroundSecondary} />
-    );
+    if (parts.length !== 2) {
+      // Malformed highlighted-block: fall back to rendering the single pane
+      // so we still show the content instead of silently breaking the layout.
+      console.warn(
+        `[HighlightedBlock] Expected 2 parts separated by "&&&" but got ${parts.length}; ` +
+          'rendering as a single column.'
+      );
+      left = <MarkdownFormatter markdown={content} />;
+      right = null;
+    } else {
+      left = <MarkdownFormatter markdown={parts[0]} />;
+      right = (
+        <MarkdownFormatter markdown={parts[1]} backgroundColor={blogColors.backgroundSecondary} />
+      );
+    }
   }
 
   const ref = useRef<HTMLDivElement>(null);
@@ -140,7 +203,7 @@ export function HighlightedBlock({
 
   useEffect(() => {
     setHeight(ref.current?.clientHeight ?? 0);
-  }, [ref.current?.clientHeight]);
+  }, []);
 
   return (
     <>
@@ -273,6 +336,8 @@ export function MarkdownFormatter({
   const displayCategory = propDisplayCategory || hookDisplayCategory;
   const mobile = displayCategory === 'mobile';
 
+  useRobotoMonoFont();
+
   if (!markdown) {
     return null;
   }
@@ -282,10 +347,13 @@ export function MarkdownFormatter({
     blockquote: ({ children }) => {
       // Check if this is a Twitter embed
       const childArray = React.Children.toArray(children);
-      const anchorTag = childArray.find((child: any) =>
-        child?.props?.href?.startsWith('https://twitter.com/')
-      );
-      const tweetId = (anchorTag as any)?.props?.href?.split('/')?.pop()?.split('?')[0];
+      const anchorTag = childArray.find((child) => {
+        const props = elementProps(child);
+        return typeof props?.href === 'string' && props.href.startsWith('https://twitter.com/');
+      });
+      const anchorHref = elementProps(anchorTag)?.href;
+      const tweetId =
+        typeof anchorHref === 'string' ? anchorHref.split('/').pop()?.split('?')[0] : undefined;
 
       if (tweetId) {
         // Twitter embed would go here - for now just render as blockquote
@@ -444,15 +512,16 @@ export function MarkdownFormatter({
 
       try {
         const childArray = React.Children.toArray(children);
-        const pChild = childArray.find((child: any) => child?.props?.node?.tagName === 'p');
-        const aChild = (pChild as any)?.props?.children?.find(
-          (child: any) => child?.props?.node?.tagName === 'a'
-        );
-        const footnoteLinkBack = aChild?.props?.node?.properties?.href;
-        const extractedValue = footnoteLinkBack?.split('-').pop() || '';
+        const pChild = childArray.find((child) => elementProps(child)?.node?.tagName === 'p');
+        const pChildren = elementProps(pChild)?.children;
+        const pChildrenArray = React.Children.toArray(pChildren);
+        const aChild = pChildrenArray.find((child) => elementProps(child)?.node?.tagName === 'a');
+        const footnoteLinkBack = elementProps(aChild)?.node?.properties?.href;
+        const extractedValue =
+          typeof footnoteLinkBack === 'string' ? (footnoteLinkBack.split('-').pop() ?? '') : '';
         value = extractedValue;
         validValue = /^-?\d+$/.test(extractedValue);
-      } catch (e) {
+      } catch {
         // Ignore parsing errors
       }
 
@@ -515,11 +584,30 @@ export function MarkdownFormatter({
         id = href.replace('#user-content-fnref-', 'user-content-fn-');
       }
 
+      // Never pass untrusted schemes (javascript:, data:, vbscript:, …) to
+      // the anchor href. If the href is unsafe, fall through to rendering
+      // the link text as a plain span so the content is still visible.
+      const safeHref = href && isSafeHref(href) ? href : undefined;
+
       // CTA button styling for links with class="cta-button"
       if (className === 'cta-button') {
+        if (!safeHref) {
+          return (
+            <span
+              style={{
+                display: 'inline-block',
+                color: blogColors.textSecondary,
+                fontWeight: blogFontWeights.semiBold,
+                fontFamily: blogTypography.bodyFont,
+              }}
+            >
+              {children}
+            </span>
+          );
+        }
         return (
           <a
-            href={href}
+            href={safeHref}
             target="_blank"
             rel="noopener noreferrer"
             style={{
@@ -546,17 +634,21 @@ export function MarkdownFormatter({
         );
       }
 
+      if (!safeHref) {
+        return <span style={{ color: blogColors.textSecondary }}>{children}</span>;
+      }
+
       return (
         <a
           id={id}
-          href={href}
-          target={href?.startsWith('#') ? '' : '_blank'}
+          href={safeHref}
+          target={safeHref.startsWith('#') ? '' : '_blank'}
           rel="noopener noreferrer"
           style={{
             color: blogColors.link,
             textDecoration: 'none',
             borderBottom: `1px solid ${blogColors.link}`,
-            fontWeight: href?.startsWith('#') ? 'normal' : blogFontWeights.medium,
+            fontWeight: safeHref.startsWith('#') ? 'normal' : blogFontWeights.medium,
             transition: 'background-color 0.2s ease, color 0.2s ease',
             borderRadius: blogRadius.sm,
             // Add scroll margin for footnote references so they don't hide behind navbar
@@ -743,7 +835,7 @@ export function MarkdownFormatter({
     // Footnotes section
     section: ({ children, className }) => {
       const filteredChildren = React.Children.toArray(children).filter(
-        (child: any) => child?.props?.id !== 'footnote-label'
+        (child) => elementProps(child)?.id !== 'footnote-label'
       );
 
       if (className === 'footnotes') {
@@ -848,10 +940,13 @@ export function MarkdownFormatter({
 
     // Pre (code blocks)
     pre: ({ children }) => {
-      const codeChild = React.Children.toArray(children).find((child: any) =>
-        child.props?.className?.includes('language-')
-      );
-      const language = (codeChild as any)?.props?.className?.replace('language-', '');
+      const codeChild = React.Children.toArray(children).find((child) => {
+        const className = elementProps(child)?.className;
+        return typeof className === 'string' && className.includes('language-');
+      });
+      const codeClassName = elementProps(codeChild)?.className;
+      const language =
+        typeof codeClassName === 'string' ? codeClassName.replace('language-', '') : undefined;
 
       return (
         <div
@@ -889,7 +984,7 @@ export function MarkdownFormatter({
   };
 
   return (
-    <ReactMarkdown rehypePlugins={[rehypeRaw]} remarkPlugins={[remarkGfm]} components={components}>
+    <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
       {markdown}
     </ReactMarkdown>
   );
@@ -912,19 +1007,23 @@ function parseInlineLinks(text: string): React.ReactNode[] {
     }
     // Add the link
     parts.push(
-      <a
-        key={match.index}
-        href={match[2]}
-        target="_blank"
-        rel="noopener noreferrer"
-        style={{
-          color: blogColors.link,
-          textDecoration: 'none',
-          borderBottom: `1px solid ${blogColors.link}`,
-        }}
-      >
-        {match[1]}
-      </a>
+      isSafeHref(match[2]) ? (
+        <a
+          key={match.index}
+          href={match[2]}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            color: blogColors.link,
+            textDecoration: 'none',
+            borderBottom: `1px solid ${blogColors.link}`,
+          }}
+        >
+          {match[1]}
+        </a>
+      ) : (
+        <span key={match.index}>{match[1]}</span>
+      )
     );
     lastIndex = match.index + match[0].length;
   }

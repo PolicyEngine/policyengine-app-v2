@@ -154,6 +154,23 @@ jobs:
         working-directory: ./website
         run: bun run test
 
+  check-markdown-drift:
+    name: Check MarkdownFormatter drift
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Verify MarkdownFormatter copies have matching top-level API
+        run: bunx tsx scripts/check-markdown-drift.ts
+
   check-embeds:
     name: Check embedded site URLs
     runs-on: ubuntu-latest

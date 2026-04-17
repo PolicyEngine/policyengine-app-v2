@@ -6,6 +6,7 @@
 import appsData from "./app/src/data/apps/apps.json";
 import postsData from "./app/src/data/posts/posts.json";
 import authorsData from "./app/src/data/posts/authors.json";
+import { encodeJsonForScript } from "./website/src/lib/encodeJsonForScript";
 
 // Types
 type PathParts = {
@@ -79,8 +80,8 @@ export function isLLMBot(userAgent: string | null): boolean {
   return LLM_USER_AGENTS_LOWER.some((bot) => lower.includes(bot));
 }
 
-const TRACKER_PREFIX = "/us/state-legislative-tracker";
-const TRACKER_MODAL_ORIGIN =
+export const TRACKER_PREFIX = "/us/state-legislative-tracker";
+export const TRACKER_MODAL_ORIGIN =
   "https://policyengine--state-legislative-tracker.modal.run";
 
 const DEFAULT_OG = {
@@ -206,6 +207,8 @@ function generateOgHtml(metadata: OgMetadata, url: string): string {
   const twitterHandle = "@ThePolicyEngine";
   const safeTitle = escapeHtml(metadata.title);
   const safeDescription = escapeHtml(metadata.description);
+  const safeUrl = escapeHtml(url);
+  const safeImage = escapeHtml(metadata.image);
   const jsonLd = generateJsonLd(metadata, url);
 
   return `<!DOCTYPE html>
@@ -220,8 +223,8 @@ function generateOgHtml(metadata: OgMetadata, url: string): string {
   <!-- Open Graph -->
   <meta property="og:title" content="${safeTitle}" />
   <meta property="og:description" content="${safeDescription}" />
-  <meta property="og:image" content="${metadata.image}" />
-  <meta property="og:url" content="${url}" />
+  <meta property="og:image" content="${safeImage}" />
+  <meta property="og:url" content="${safeUrl}" />
   <meta property="og:type" content="${metadata.type}" />
   <meta property="og:site_name" content="${siteName}" />
 
@@ -230,15 +233,15 @@ function generateOgHtml(metadata: OgMetadata, url: string): string {
   <meta name="twitter:site" content="${twitterHandle}" />
   <meta name="twitter:title" content="${safeTitle}" />
   <meta name="twitter:description" content="${safeDescription}" />
-  <meta name="twitter:image" content="${metadata.image}" />
+  <meta name="twitter:image" content="${safeImage}" />
 
   <!-- Structured Data -->
-  <script type="application/ld+json">${JSON.stringify(jsonLd).replace(/</g, "\\u003c")}</script>
+  <script type="application/ld+json">${encodeJsonForScript(jsonLd)}</script>
 </head>
 <body>
   <h1>${safeTitle}</h1>
   <p>${safeDescription}</p>
-  <p><a href="${url}">View on PolicyEngine</a></p>
+  <p><a href="${safeUrl}">View on PolicyEngine</a></p>
 </body>
 </html>`;
 }
@@ -378,6 +381,129 @@ export const config = {
 };
 
 /**
+ * Allowlist of upstream `Content-Type` values the tracker proxy will forward.
+ * Any other value is rewritten to `text/html` to prevent the proxy from being
+ * abused to serve arbitrary content (e.g. JavaScript) from policyengine.org.
+ */
+const TRACKER_ALLOWED_CONTENT_TYPES = [
+  "text/html",
+  "text/plain",
+  "application/json",
+] as const;
+
+/**
+ * Response headers we refuse to forward from the tracker upstream to the
+ * browser. Forwarding these would give the upstream origin the ability to
+ * set cookies or wipe browser storage for the policyengine.org origin.
+ */
+const TRACKER_BLOCKED_RESPONSE_HEADERS = new Set([
+  "set-cookie",
+  "link",
+  "clear-site-data",
+]);
+
+function pickAllowedContentType(raw: string | null): string {
+  if (!raw) {
+    return "text/html";
+  }
+  // Content-Type may include charset or boundary parameters; compare the
+  // media type portion only.
+  const mediaType = raw.split(";")[0].trim().toLowerCase();
+  if (
+    TRACKER_ALLOWED_CONTENT_TYPES.some((allowed) => allowed === mediaType)
+  ) {
+    return raw;
+  }
+  return "text/html";
+}
+
+/**
+ * Proxy a tracker request to the upstream Modal origin with path-traversal
+ * protection and a strict response-header allowlist.
+ *
+ * Exported for unit tests.
+ */
+export async function proxyTrackerRequest(
+  pathname: string,
+): Promise<Response | null> {
+  if (!pathname.startsWith(TRACKER_PREFIX)) {
+    return null;
+  }
+
+  const trackerPath = pathname.slice(TRACKER_PREFIX.length) || "/";
+  const expectedOrigin = new URL(TRACKER_MODAL_ORIGIN).origin;
+
+  // Reject path-traversal attempts *before* URL parsing, since `new URL()`
+  // silently normalises `/foo/../bar` to `/bar`. Any segment that is `..`
+  // or that starts with `//` indicates an attempt to escape the tracker
+  // subtree or smuggle an absolute URL.
+  if (
+    trackerPath.includes("..") ||
+    trackerPath.startsWith("//") ||
+    trackerPath.includes("\\")
+  ) {
+    return null;
+  }
+
+  let modalUrl: URL;
+  try {
+    modalUrl = new URL(trackerPath, TRACKER_MODAL_ORIGIN);
+  } catch {
+    return null;
+  }
+
+  // Defense in depth: even after the pre-check above, assert that the
+  // resolved URL is on the expected Modal origin. `new URL(x, base)` only
+  // swaps origin when `x` itself is a full URL, so this catches any
+  // remaining absolute-URL smuggling.
+  if (modalUrl.origin !== expectedOrigin) {
+    return null;
+  }
+
+  try {
+    const response = await fetch(modalUrl.toString());
+    if (!response.ok) {
+      return null;
+    }
+
+    const safeHeaders = new Headers();
+    safeHeaders.set(
+      "Content-Type",
+      pickAllowedContentType(response.headers.get("Content-Type")),
+    );
+    safeHeaders.set("Cache-Control", "public, max-age=3600");
+
+    // Copy through a small allow-list of benign response headers, skipping
+    // anything dangerous.
+    for (const [name, value] of response.headers) {
+      const lower = name.toLowerCase();
+      if (TRACKER_BLOCKED_RESPONSE_HEADERS.has(lower)) {
+        continue;
+      }
+      // Content-Type and Cache-Control already set above.
+      if (lower === "content-type" || lower === "cache-control") {
+        continue;
+      }
+      // Only copy a conservative set of headers through.
+      if (
+        lower === "etag" ||
+        lower === "last-modified" ||
+        lower === "content-language"
+      ) {
+        safeHeaders.set(name, value);
+      }
+    }
+
+    return new Response(response.body, {
+      status: response.status,
+      headers: safeHeaders,
+    });
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Try to serve a pre-rendered HTML page for the given blog post slug.
  * The HTML files are generated at build time by generate-prerender.ts and
  * live in /prerender/{slug}.html inside the public directory.
@@ -428,23 +554,11 @@ export default async function middleware(request: Request) {
       isSearchEngine(userAgent) ||
       isLLMBot(userAgent)
     ) {
-      try {
-        const trackerPath = url.pathname.slice(TRACKER_PREFIX.length) || "/";
-        const modalUrl = `${TRACKER_MODAL_ORIGIN}${trackerPath}`;
-        const response = await fetch(modalUrl);
-        if (!response.ok) {
-          return; // Fall through to app shell on upstream error
-        }
-        return new Response(response.body, {
-          status: response.status,
-          headers: {
-            "Content-Type": response.headers.get("Content-Type") || "text/html",
-            "Cache-Control": "public, max-age=3600",
-          },
-        });
-      } catch {
-        return; // Fall through to app shell if Modal is unreachable
+      const proxied = await proxyTrackerRequest(url.pathname);
+      if (proxied) {
+        return proxied;
       }
+      return; // Fall through to app shell if Modal is unreachable / invalid
     }
     return;
   }

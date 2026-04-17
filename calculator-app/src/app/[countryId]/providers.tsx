@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { QueryNormalizerProvider } from "@normy/react-query";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Provider, useDispatch } from "react-redux";
@@ -13,16 +13,6 @@ import { setCurrentCountry } from "@/reducers/metadataReducer";
 import { AppDispatch, store } from "@/store";
 import { cacheMonitor } from "@/utils/cacheMonitor";
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: Infinity,
-    },
-  },
-});
-
-cacheMonitor.init(queryClient);
-
 /**
  * Same provider tree as CalculatorApp, minus the router.
  * Used by extracted Next.js route pages so that shared hooks
@@ -33,13 +23,37 @@ export function CalculatorProviders({
 }: {
   children: React.ReactNode;
 }) {
+  // Construct the QueryClient inside component state so each browser tab
+  // gets its own client (avoids cross-request pollution during SSR) and so
+  // the client is never shared across React trees on navigation.
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            // Five minutes is a reasonable default for calculator metadata:
+            // long enough to avoid thrashing between route transitions,
+            // short enough that stale reforms get refreshed on refocus.
+            staleTime: 5 * 60 * 1000,
+            refetchOnWindowFocus: true,
+          },
+        },
+      }),
+  );
+
+  // Initialise cache monitor as an effect so we don't run side effects during
+  // render. It is safe to run every mount because `queryClient` is stable.
+  useEffect(() => {
+    cacheMonitor.init(queryClient);
+  }, [queryClient]);
+
   return (
     <AppProvider mode="calculator">
       <Provider store={store}>
         <QueryNormalizerProvider
           queryClient={queryClient}
           normalizerConfig={{
-            devLogging: import.meta.env.DEV,
+            devLogging: process.env.NODE_ENV !== "production",
           }}
         >
           <QueryClientProvider client={queryClient}>

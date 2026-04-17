@@ -15,6 +15,7 @@
     "lint": "turbo run lint",
     "format": "turbo run format",
     "typecheck": "turbo run typecheck",
+    "check-markdown-drift": "bunx tsx scripts/check-markdown-drift.ts",
     "design-system:build": "bun run --filter=@policyengine/design-system build",
     "calculator:dev": "bun run --filter=@policyengine/calculator dev",
     "website:dev": "bun run --filter=@policyengine/website dev"

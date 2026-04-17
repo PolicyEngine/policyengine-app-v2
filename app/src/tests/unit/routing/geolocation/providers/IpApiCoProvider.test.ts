@@ -20,7 +20,7 @@ describe('IpApiCoProvider', () => {
     // Then
     expect(result).toBe('US');
     expect(fetch).toHaveBeenCalledWith(
-      'https://ipapi.co/country_code/',
+      '/api/geolocate',
       expect.objectContaining({
         method: 'GET',
         headers: { Accept: 'text/plain' },
@@ -43,30 +43,26 @@ describe('IpApiCoProvider', () => {
     expect(result).toBe('GB');
   });
 
-  test('given API key then includes key in request', async () => {
+  test('given custom proxy URL then uses it', async () => {
     // Given
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
       text: vi.fn().mockResolvedValue('US'),
     });
-    const apiKey = 'test-api-key';
-    const provider = new IpApiCoProvider(apiKey);
+    const provider = new IpApiCoProvider('/custom/geolocate');
 
     // When
     await provider.detect();
 
     // Then
-    expect(fetch).toHaveBeenCalledWith(
-      'https://ipapi.co/country_code/?key=test-api-key',
-      expect.any(Object)
-    );
+    expect(fetch).toHaveBeenCalledWith('/custom/geolocate', expect.any(Object));
   });
 
   test('given API error response then returns null', async () => {
     // Given
     global.fetch = vi.fn().mockResolvedValue({
       ok: false,
-      status: 429,
+      status: 502,
     });
     const provider = new IpApiCoProvider();
 
