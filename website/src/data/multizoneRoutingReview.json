@@ -1,4 +1,10 @@
 {
+  "app:uk:2025-year-in-review": {
+    "recommendation": "multizone",
+    "auditSession": "Session C - static/GitHub Pages/legacy embeds",
+    "auditStatus": "audited",
+    "comment": "Static Vite/GitHub Pages app is built for /2025-year-in-review, not /uk/2025-year-in-review; UK metadata also points to the US PolicyEngine URL. Needs zone base-path work plus host rewrites."
+  },
   "app:uk:energy-price-shock": {
     "recommendation": "multizone",
     "auditSession": "Session B - Vercel research interactives",
@@ -35,11 +41,29 @@
     "auditStatus": "audited",
     "comment": "Next zone has no basePath/assetPrefix, emits root /_next/static assets, and origin /uk/uk-land-value-tax returns 404; zone work needed before host rewrites."
   },
+  "app:uk:uk-salary-sacrifice-tool": {
+    "recommendation": "multizone",
+    "auditSession": "Session C - static/GitHub Pages/legacy embeds",
+    "auditStatus": "audited",
+    "comment": "Vite app currently emits /uk-salary-sacrifice-analysis/assets on GitHub Pages and has no host rewrite. Needs a PolicyEngine public-path build or scoped asset prefix before multizone."
+  },
+  "app:us:2025-year-in-review": {
+    "recommendation": "multizone",
+    "auditSession": "Session C - static/GitHub Pages/legacy embeds",
+    "auditStatus": "audited",
+    "comment": "Dedicated website iframe page wraps a Vite/GitHub Pages app built for /2025-year-in-review. Promote by rebuilding for /us/2025-year-in-review or adding scoped asset proxy plus beforeFiles rewrites."
+  },
   "app:us:cliff-watch": {
     "recommendation": "multizone",
     "auditSession": "Session B - Vercel research interactives",
     "auditStatus": "audited",
     "comment": "Vite zone currently emits root /assets paths and origin /us/cliff-watch returns 404; also audit root-relative /api fallbacks before adding host rewrites."
+  },
+  "app:us:encode-policy-multi-agent-ai": {
+    "recommendation": "iframe",
+    "auditSession": "Session C - static/GitHub Pages/legacy embeds",
+    "auditStatus": "audited",
+    "comment": "Bundled local article artifact under website/public/assets/posts with colocated JS/CSS and no standalone source repo found; note root /vite.svg favicon. Keep iframe/static unless source ownership is reconstructed."
   },
   "app:us:keep-your-pay-act": {
     "recommendation": "multizone",
@@ -52,6 +76,24 @@
     "auditSession": "Session B - Vercel research interactives",
     "auditStatus": "audited",
     "comment": "Defer migration decision. This is one shared US/UK app: UK logic exists via ?country=uk, but basePath, assets, metadata, and nav are US-scoped at /us/marriage. Handle US and UK marriage routing together."
+  },
+  "app:us:obbba-household-by-household": {
+    "recommendation": "multizone",
+    "auditSession": "Session C - static/GitHub Pages/legacy embeds",
+    "auditStatus": "audited",
+    "comment": "SvelteKit static export already supports BASE_PATH, but live GitHub Pages assets and favicon are scoped to /obbba-household-by-household. Rebuild with BASE_PATH=/us/obbba-household-by-household and add host rewrites."
+  },
+  "app:us:obbba-household-explorer": {
+    "recommendation": "iframe",
+    "auditSession": "Session C - static/GitHub Pages/legacy embeds",
+    "auditStatus": "audited",
+    "comment": "Legacy/alias row points to the household-by-household origin but uses a different public slug. Keep iframe or canonicalize/remove rather than making a separate zone."
+  },
+  "app:us:obbba-scatter": {
+    "recommendation": "multizone",
+    "auditSession": "Session C - static/GitHub Pages/legacy embeds",
+    "auditStatus": "blocked",
+    "comment": "Current source URL https://policyengine.github.io/obbba-scatter returns 404 and no standalone PolicyEngine repo was found. Need source/deployment ownership before classification can be finalized."
   },
   "app:us:oregon-kicker-refund": {
     "recommendation": "multizone",
@@ -70,6 +112,18 @@
     "auditSession": "Session B - Vercel research interactives",
     "auditStatus": "audited",
     "comment": "Vite zone serves /us/salternative via SPA fallback but still emits root /assets paths and has generic title metadata; path-scoped base or asset prefix needed."
+  },
+  "app:us:snap-district-map": {
+    "recommendation": "multizone",
+    "auditSession": "Session C - static/GitHub Pages/legacy embeds",
+    "auditStatus": "audited",
+    "comment": "GitHub Pages deployment appears to serve unbuilt Vite source (/src/main.jsx) even though repo has base /snap-district-map. Fix production build, then add PolicyEngine base-path build and host rewrites."
+  },
+  "app:us:tanf-calculator": {
+    "recommendation": "multizone",
+    "auditSession": "Session C - static/GitHub Pages/legacy embeds",
+    "auditStatus": "audited",
+    "comment": "Vite/GitHub Pages app emits /tanf-calculator/assets and host currently uses generic iframe wrapper. Needs /us/tanf-calculator build or scoped asset proxy plus beforeFiles rewrites."
   },
   "app:us:working-parents-tax-relief-act": {
     "recommendation": "multizone",
