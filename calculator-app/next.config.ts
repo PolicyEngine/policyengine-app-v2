@@ -4,10 +4,28 @@ import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+// Where the canonical /api/geolocate Vercel Function lives (deployed as part
+// of the Next.js website at policyengine.org). Calculator-app rewrites to the
+// website origin so IPAPI_CO_KEY is configured in a single Vercel project.
+const WEBSITE_ORIGIN =
+  process.env.NEXT_PUBLIC_WEBSITE_URL || "https://policyengine.org";
+
 const nextConfig: NextConfig = {
   // Compile TypeScript files from ../app/src/ (the shared Vite codebase)
   experimental: {
     externalDir: true,
+  },
+
+  async rewrites() {
+    return [
+      // Proxy geolocation lookups to the website so the ipapi.co API key
+      // stays on a single Vercel project. Client code still calls
+      // `/api/geolocate` on whatever origin it is running on.
+      {
+        source: "/api/geolocate",
+        destination: `${WEBSITE_ORIGIN}/api/geolocate`,
+      },
+    ];
   },
 
   webpack: (config, { dev }) => {
