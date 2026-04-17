@@ -1,15 +1,69 @@
 {
+  "app:uk:2025-year-in-review": {
+    "recommendation": "multizone",
+    "auditSession": "Session C - static/GitHub Pages/legacy embeds",
+    "auditStatus": "audited",
+    "comment": "Static Vite/GitHub Pages app is built for /2025-year-in-review, not /uk/2025-year-in-review; UK metadata also points to the US PolicyEngine URL. Needs zone base-path work plus host rewrites."
+  },
+  "app:uk:uk-salary-sacrifice-tool": {
+    "recommendation": "multizone",
+    "auditSession": "Session C - static/GitHub Pages/legacy embeds",
+    "auditStatus": "audited",
+    "comment": "Vite app currently emits /uk-salary-sacrifice-analysis/assets on GitHub Pages and has no host rewrite. Needs a PolicyEngine public-path build or scoped asset prefix before multizone."
+  },
+  "app:us:2025-year-in-review": {
+    "recommendation": "multizone",
+    "auditSession": "Session C - static/GitHub Pages/legacy embeds",
+    "auditStatus": "audited",
+    "comment": "Dedicated website iframe page wraps a Vite/GitHub Pages app built for /2025-year-in-review. Promote by rebuilding for /us/2025-year-in-review or adding scoped asset proxy plus beforeFiles rewrites."
+  },
+  "app:us:encode-policy-multi-agent-ai": {
+    "recommendation": "iframe",
+    "auditSession": "Session C - static/GitHub Pages/legacy embeds",
+    "auditStatus": "audited",
+    "comment": "Bundled local article artifact under website/public/assets/posts with relative assets and no standalone source repo found. Keep iframe/static unless source ownership is reconstructed."
+  },
   "app:us:keep-your-pay-act": {
     "recommendation": "multizone",
     "auditSession": "Session A - direct rewrite calculators",
     "auditStatus": "not-started",
     "comment": ""
   },
+  "app:us:obbba-household-by-household": {
+    "recommendation": "multizone",
+    "auditSession": "Session C - static/GitHub Pages/legacy embeds",
+    "auditStatus": "audited",
+    "comment": "SvelteKit static export already supports BASE_PATH, but live GitHub Pages assets are scoped to /obbba-household-by-household. Rebuild with BASE_PATH=/us/obbba-household-by-household and add host rewrites."
+  },
+  "app:us:obbba-household-explorer": {
+    "recommendation": "iframe",
+    "auditSession": "Session C - static/GitHub Pages/legacy embeds",
+    "auditStatus": "audited",
+    "comment": "Legacy/alias row points to the household-by-household origin but uses a different public slug. Keep iframe or canonicalize/remove rather than making a separate zone."
+  },
+  "app:us:obbba-scatter": {
+    "recommendation": "multizone",
+    "auditSession": "Session C - static/GitHub Pages/legacy embeds",
+    "auditStatus": "blocked",
+    "comment": "Current source URL https://policyengine.github.io/obbba-scatter returns 404 and no standalone PolicyEngine repo was found. Need source/deployment ownership before classification can be finalized."
+  },
   "app:us:oregon-kicker-refund": {
     "recommendation": "multizone",
     "auditSession": "Session A - direct rewrite calculators",
     "auditStatus": "audited",
     "comment": "Baseline pilot: zone repo already defaults basePath to /us/oregon-kicker-refund, emits path-scoped assets, and uses policyengine.org metadata."
+  },
+  "app:us:snap-district-map": {
+    "recommendation": "multizone",
+    "auditSession": "Session C - static/GitHub Pages/legacy embeds",
+    "auditStatus": "audited",
+    "comment": "GitHub Pages deployment appears to serve unbuilt Vite source (/src/main.jsx) even though repo has base /snap-district-map. Fix production build, then add PolicyEngine base-path build and host rewrites."
+  },
+  "app:us:tanf-calculator": {
+    "recommendation": "multizone",
+    "auditSession": "Session C - static/GitHub Pages/legacy embeds",
+    "auditStatus": "audited",
+    "comment": "Vite/GitHub Pages app emits /tanf-calculator/assets and host currently uses generic iframe wrapper. Needs /us/tanf-calculator build or scoped asset proxy plus beforeFiles rewrites."
   },
   "app:us:working-parents-tax-relief-act": {
     "recommendation": "multizone",

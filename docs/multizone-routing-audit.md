@@ -277,6 +277,49 @@ For audits, record whether the app already has a local-dev escape hatch for
 follow-up, not a blocker, unless it prevents the app team from developing the
 zone independently.
 
+## Static SPA Path Pattern
+
+Vite, SvelteKit static export, and GitHub Pages apps usually do not use Next
+`basePath` or `assetPrefix`, but they still need equivalent path-scoped assets
+before promotion to a first-party route.
+
+For Vite apps, inspect `base` in `vite.config.*`. A GitHub Pages project base
+such as:
+
+```js
+export default defineConfig({
+  base: "/example-project/",
+});
+```
+
+is not sufficient for a PolicyEngine country route such as
+`/us/example-project` unless the host also proxies `/example-project` assets.
+Prefer adding a PolicyEngine build mode:
+
+```sh
+vite build --base /us/example-project/
+```
+
+For SvelteKit static exports, inspect `kit.paths.base` in `svelte.config.*`.
+An environment-driven base path is useful:
+
+```js
+paths: {
+  base: process.env.BASE_PATH || "/example-project",
+}
+```
+
+Then the production PolicyEngine build can set:
+
+```sh
+BASE_PATH=/us/example-project npm run build
+```
+
+For both patterns, verify live HTML emits assets under the intended public path
+or under a separately proxied prefix. Root or GitHub Pages project-path assets
+should be treated as zone work until the host rewrites and deployment mode are
+explicit.
+
 ## Useful Commands
 
 Find the app in the website host:
