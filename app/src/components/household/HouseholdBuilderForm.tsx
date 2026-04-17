@@ -8,16 +8,16 @@
  * - Inline search for adding custom variables per person or household-level
  */
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { IconInfoCircle, IconPlus } from '@tabler/icons-react';
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-  Alert,
-  AlertDescription,
   Button,
+  Card,
+  CardContent,
   Label,
   Select,
   SelectContent,
@@ -62,6 +62,11 @@ export interface HouseholdBuilderFormProps {
   disabled?: boolean;
 }
 
+interface BuilderWarning {
+  title: string;
+  description: string;
+}
+
 export default function HouseholdBuilderForm({
   household,
   metadata,
@@ -89,7 +94,16 @@ export default function HouseholdBuilderForm({
   const [, setIsHouseholdSearchFocused] = useState(false);
 
   // Warning message state (shown when variable added to different entity than expected)
-  const [warningMessage, setWarningMessage] = useState<string | null>(null);
+  const [warningMessage, setWarningMessage] = useState<BuilderWarning | null>(null);
+  const warningTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (warningTimerRef.current) {
+        clearTimeout(warningTimerRef.current);
+      }
+    };
+  }, []);
 
   // Get all input variables from metadata
   const allInputVariables = useMemo(() => getInputVariables(metadata), [metadata]);
@@ -157,6 +171,18 @@ export default function HouseholdBuilderForm({
     return getPreferredHouseholdGroupName(household.householdData, entityInfo.plural);
   };
 
+  const showWarning = (warning: BuilderWarning) => {
+    setWarningMessage(warning);
+
+    if (warningTimerRef.current) {
+      clearTimeout(warningTimerRef.current);
+    }
+
+    warningTimerRef.current = setTimeout(() => {
+      setWarningMessage(null);
+    }, 5000);
+  };
+
   // Get variables for a specific person (custom only, not basic inputs)
   const getPersonVariables = (personName: string): string[] => {
     const personData = household.householdData.people[personName];
@@ -209,11 +235,10 @@ export default function HouseholdBuilderForm({
 
     // If non-person variable selected from person context, show warning
     if (!isPerson) {
-      setWarningMessage(
-        `"${variable.label}" is a variable applied household-wide. It was added to your household variables.`
-      );
-      // Auto-dismiss warning after 5 seconds
-      setTimeout(() => setWarningMessage(null), 5000);
+      showWarning({
+        title: 'Added to household variables',
+        description: `"${variable.label}" applies household-wide, so it was added under Household.`,
+      });
     } else {
       setWarningMessage(null);
     }
@@ -261,11 +286,10 @@ export default function HouseholdBuilderForm({
 
     // If person variable selected from household context, show warning
     if (isPerson) {
-      setWarningMessage(
-        `"${variable.label}" is a variable applied to an individual. It was added to all household members.`
-      );
-      // Auto-dismiss warning after 5 seconds
-      setTimeout(() => setWarningMessage(null), 5000);
+      showWarning({
+        title: 'Added to all household members',
+        description: `"${variable.label}" applies to individuals, so it was added to each household member.`,
+      });
     } else {
       setWarningMessage(null);
     }
@@ -320,26 +344,36 @@ export default function HouseholdBuilderForm({
     <Stack gap="lg">
       {/* Floating notification when variable added to different entity */}
       {warningMessage && (
-        <Alert
-          variant="default"
-          className="tw:fixed tw:z-[1000] tw:opacity-100 tw:bg-white"
+        <div
+          className="tw:fixed tw:z-[1000]"
           style={{
             top: `calc(60px + ${spacing.xl})`,
             right: spacing.xl,
             maxWidth: 'min(400px, calc(100vw - 40px))',
-            border: `1px solid ${colors.primary[500]}`,
           }}
         >
-          <IconInfoCircle size={16} />
-          <AlertDescription>{warningMessage}</AlertDescription>
-          <button
-            type="button"
-            onClick={() => setWarningMessage(null)}
-            className="tw:absolute tw:top-2 tw:right-2 tw:bg-transparent tw:border-none tw:cursor-pointer tw:p-1"
-          >
-            ×
-          </button>
-        </Alert>
+          <Card className="tw:gap-0 tw:border-border/70 tw:shadow-lg">
+            <CardContent className="tw:px-4 tw:py-4">
+              <div className="tw:flex tw:items-start tw:gap-3">
+                <div className="tw:flex tw:h-10 tw:w-10 tw:shrink-0 tw:items-center tw:justify-center tw:rounded-full tw:bg-primary-100 tw:text-primary-700">
+                  <IconInfoCircle size={20} />
+                </div>
+                <div className="tw:min-w-0 tw:flex-1">
+                  <Text fw={typography.fontWeight.semibold}>{warningMessage.title}</Text>
+                  <Text
+                    size="sm"
+                    style={{
+                      color: colors.gray[600],
+                      marginTop: spacing.xs,
+                    }}
+                  >
+                    {warningMessage.description}
+                  </Text>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       )}
 
       {/* Household Information */}
