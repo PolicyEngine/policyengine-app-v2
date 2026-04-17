@@ -30,9 +30,6 @@ const nextConfig: NextConfig = {
         "import.meta.env.VITE_CALCULATOR_URL": JSON.stringify(
           process.env.NEXT_PUBLIC_CALCULATOR_URL || "",
         ),
-        "import.meta.env.VITE_IPAPI_CO_KEY": JSON.stringify(
-          process.env.NEXT_PUBLIC_IPAPI_CO_KEY || "",
-        ),
       }),
     );
 
