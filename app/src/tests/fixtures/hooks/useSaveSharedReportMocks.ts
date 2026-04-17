@@ -48,7 +48,6 @@ export const MOCK_SAVE_SHARE_DATA: ReportIngredientsInput = {
   userHouseholds: [],
   userGeographies: [
     {
-      type: 'geography',
       geographyId: TEST_IDS.GEOGRAPHY,
       countryId: TEST_COUNTRIES.US,
       scope: 'national',

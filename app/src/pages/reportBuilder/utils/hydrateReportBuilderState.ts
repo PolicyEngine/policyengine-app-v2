@@ -4,10 +4,7 @@ import type { Policy } from '@/types/ingredients/Policy';
 import type { Report } from '@/types/ingredients/Report';
 import type { Simulation } from '@/types/ingredients/Simulation';
 import type { UserPolicy } from '@/types/ingredients/UserPolicy';
-import type {
-  UserGeographyPopulation,
-  UserHouseholdPopulation,
-} from '@/types/ingredients/UserPopulation';
+import type { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import type { UserReport } from '@/types/ingredients/UserReport';
 import type { UserSimulation } from '@/types/ingredients/UserSimulation';
 import type { SimulationStateProps } from '@/types/pathwayState';
@@ -24,7 +21,6 @@ interface HydrateArgs {
   userSimulations?: UserSimulation[];
   userPolicies?: UserPolicy[];
   userHouseholds?: UserHouseholdPopulation[];
-  userGeographies?: UserGeographyPopulation[];
   currentLawId: number;
 }
 

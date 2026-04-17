@@ -11,7 +11,6 @@ import type { Policy } from '@/types/ingredients/Policy';
 import type { Report } from '@/types/ingredients/Report';
 import type { Simulation } from '@/types/ingredients/Simulation';
 import type { UserPolicy } from '@/types/ingredients/UserPolicy';
-import type { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
 import type { UserSimulation } from '@/types/ingredients/UserSimulation';
 import { resolveDefaultReportOutputSubpage } from '@/utils/reportOutputSubpage';
 import { convertPoliciesToV1Format } from '@/utils/reproducibilityCode';
@@ -47,7 +46,6 @@ interface InputTabProps {
   policies?: Policy[];
   userPolicies?: UserPolicy[];
   geographies?: Geography[];
-  userGeographies?: UserGeographyPopulation[];
   datasets?: DatasetEntry[];
   reportOutput?: Partial<SocietyWideOutput> | null;
 }

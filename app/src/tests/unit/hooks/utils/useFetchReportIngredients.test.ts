@@ -34,7 +34,7 @@ describe('useFetchReportIngredients', () => {
       expect(result.userReport.userId).toBe(TEST_USER_IDS.CUSTOM);
       expect(result.userSimulations[0].userId).toBe(TEST_USER_IDS.CUSTOM);
       expect(result.userPolicies[0].userId).toBe(TEST_USER_IDS.CUSTOM);
-      expect(result.userGeographies[0].userId).toBe(TEST_USER_IDS.CUSTOM);
+      expect(result.userGeographies[0]).toEqual(SOCIETY_WIDE_INPUT.userGeographies[0]);
     });
 
     test('given input without userReport.id then falls back to reportId', () => {
@@ -103,13 +103,12 @@ describe('useFetchReportIngredients', () => {
       expect(result.userPolicies[1].userId).toBe(TEST_USER_IDS.SHARED);
     });
 
-    test('given geography with all fields then preserves scope and type', () => {
+    test('given geography selection then preserves canonical geography fields', () => {
       // When
       const result = expandUserAssociations(SOCIETY_WIDE_INPUT);
 
       // Then
       const geography = result.userGeographies[0];
-      expect(geography.type).toBe('geography');
       expect(geography.scope).toBe('national');
       expect(geography.geographyId).toBe(TEST_IDS.GEOGRAPHIES.NATIONAL);
     });

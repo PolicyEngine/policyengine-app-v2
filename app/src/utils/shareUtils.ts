@@ -13,11 +13,9 @@
 
 import { ReportIngredientsInput } from '@/hooks/utils/useFetchReportIngredients';
 import { CountryId, countryIds } from '@/libs/countries';
+import type { SavedGeographySelection } from '@/models/geography';
 import { UserPolicy } from '@/types/ingredients/UserPolicy';
-import {
-  UserGeographyPopulation,
-  UserHouseholdPopulation,
-} from '@/types/ingredients/UserPopulation';
+import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { UserReport } from '@/types/ingredients/UserReport';
 import { UserSimulation } from '@/types/ingredients/UserSimulation';
 
@@ -209,7 +207,7 @@ export function createShareData(
   userSimulations: UserSimulation[],
   userPolicies: UserPolicy[],
   userHouseholds: UserHouseholdPopulation[],
-  userGeographies: UserGeographyPopulation[]
+  userGeographies: SavedGeographySelection[]
 ): ReportIngredientsInput | null {
   // userReport must have an id and reportId
   if (!userReport.id || !userReport.reportId) {
@@ -229,7 +227,7 @@ export function createShareData(
     userSimulations: userSimulations.map(stripUserFields),
     userPolicies: userPolicies.map(stripUserFields),
     userHouseholds: userHouseholds.map(stripUserFields),
-    userGeographies: userGeographies.map(stripUserFields),
+    userGeographies: userGeographies.map((geography) => ({ ...geography })),
   };
 }
 

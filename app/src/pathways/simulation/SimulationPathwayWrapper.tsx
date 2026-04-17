@@ -65,8 +65,6 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
     return state;
   });
 
-  // Get metadata for population views
-  const metadata = useSelector((state: RootState) => state.metadata);
   const currentLawId = useSelector((state: RootState) => state.metadata.currentLawId);
   const { data: regions = [] } = useRegions(countryId);
 
@@ -342,7 +340,6 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
       currentView = (
         <GeographicConfirmationView
           population={simulationState.population}
-          metadata={metadata}
           onSubmitSuccess={populationCallbacks.handleGeographicSubmitSuccess}
           onBack={canGoBack ? goBack : undefined}
         />

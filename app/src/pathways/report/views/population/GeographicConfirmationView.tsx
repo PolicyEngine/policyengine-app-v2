@@ -8,20 +8,18 @@ import PathwayView from '@/components/common/PathwayView';
 import { Stack } from '@/components/ui';
 import { MOCK_USER_ID } from '@/constants';
 import { useCreateGeographicAssociation } from '@/hooks/useUserGeographic';
+import { getCountryDisplayName, getGeographyRegionTypeLabel } from '@/models/geography';
 import { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
 import { PopulationStateProps } from '@/types/pathwayState';
-import { getCountryLabel, getRegionLabel, getRegionTypeLabel } from '@/utils/geographyUtils';
 
 interface GeographicConfirmationViewProps {
   population: PopulationStateProps;
-  metadata: any;
   onSubmitSuccess: (geographyId: string, label: string) => void;
   onBack?: () => void;
 }
 
 export default function GeographicConfirmationView({
   population,
-  metadata,
   onSubmitSuccess,
   onBack,
 }: GeographicConfirmationViewProps) {
@@ -77,16 +75,15 @@ export default function GeographicConfirmationView({
             <strong>Scope:</strong> National
           </p>
           <p>
-            <strong>Country:</strong> {getCountryLabel(geographyCountryId)}
+            <strong>Country:</strong> {getCountryDisplayName(geographyCountryId)}
           </p>
         </Stack>
       );
     }
 
     // Subnational
-    const regionCode = population.geography.geographyId;
-    const regionLabel = getRegionLabel(regionCode, metadata);
-    const regionTypeName = getRegionTypeLabel(geographyCountryId, regionCode, metadata);
+    const regionLabel = population.geography.name || population.geography.geographyId;
+    const regionTypeName = getGeographyRegionTypeLabel(population.geography);
 
     return (
       <Stack gap="md">

@@ -8,6 +8,14 @@ import {
 import type { Geography } from '@/types/ingredients/Geography';
 import { extractRegionDisplayValue } from '@/utils/regionStrategies';
 
+export interface SavedGeographySelection {
+  id?: string;
+  countryId: CountryId;
+  scope: Geography['scope'];
+  geographyId: string;
+  label?: string;
+}
+
 const COUNTRY_LABELS: Record<CountryId, string> = {
   us: 'United States',
   uk: 'United Kingdom',
@@ -89,6 +97,22 @@ export function buildCanonicalGeography(args: {
     scope,
     geographyId: canonicalCode,
     name: getGeographyDisplayName(countryId, scope, canonicalCode, regions),
+  };
+}
+
+export function createSavedGeographySelection(args: {
+  geography: Geography;
+  id?: string;
+  label?: string | null;
+}): SavedGeographySelection {
+  const { geography, id, label } = args;
+
+  return {
+    id,
+    countryId: geography.countryId,
+    scope: geography.scope,
+    geographyId: geography.geographyId,
+    label: label ?? geography.name ?? undefined,
   };
 }
 

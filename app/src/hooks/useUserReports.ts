@@ -7,21 +7,17 @@ import { fetchSimulationById } from '@/api/simulation';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useRegions } from '@/hooks/useRegions';
 import { GC_TIME_5_MIN } from '@/libs/queryConfig';
-import { buildCanonicalGeography, getCanonicalGeographyCode } from '@/models/geography';
+import { buildCanonicalGeography } from '@/models/geography';
 import { Household as HouseholdModel } from '@/models/Household';
 import { Geography } from '@/types/ingredients/Geography';
 import { Policy } from '@/types/ingredients/Policy';
 import { Report } from '@/types/ingredients/Report';
 import { Simulation } from '@/types/ingredients/Simulation';
 import { UserPolicy } from '@/types/ingredients/UserPolicy';
-import {
-  UserGeographyPopulation,
-  UserHouseholdPopulation,
-} from '@/types/ingredients/UserPopulation';
+import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { UserReport } from '@/types/ingredients/UserReport';
 import { UserSimulation } from '@/types/ingredients/UserSimulation';
 import { householdKeys, policyKeys, reportKeys, simulationKeys } from '../libs/queryKeys';
-import { useGeographicAssociationsByUser } from './useUserGeographic';
 import { useHouseholdAssociationsByUser } from './useUserHousehold';
 import { usePolicyAssociationsByUser } from './useUserPolicy';
 import { useReportAssociationById, useReportAssociationsByUser } from './useUserReportAssociations';
@@ -49,7 +45,6 @@ export interface EnhancedUserReport {
   userSimulations?: UserSimulation[];
   userPolicies?: UserPolicy[];
   userHouseholds?: UserHouseholdPopulation[];
-  userGeographies?: UserGeographyPopulation[];
 
   // Status
   isLoading: boolean;
@@ -407,7 +402,6 @@ export const useUserReportById = (userReportId: string, options?: { enabled?: bo
 
   const { data: policyAssociations } = usePolicyAssociationsByUser(userId || '');
   const { data: householdAssociations } = useHouseholdAssociationsByUser(userId || '');
-  const { data: geographyAssociations } = useGeographicAssociationsByUser(userId || '');
   const { data: regions, isLoading: regionsLoading, error: regionsError } = useRegions(country);
 
   const matchedUserSimulations = simulationAssociations?.filter((sa) =>
@@ -471,15 +465,6 @@ export const useUserReportById = (userReportId: string, options?: { enabled?: bo
     }
   });
 
-  // Step 8: Filter geography associations for geographies used in this report
-  const userGeographies = geographyAssociations?.filter((ga) =>
-    geographies.some(
-      (g) =>
-        g.countryId === ga.countryId &&
-        g.geographyId === getCanonicalGeographyCode(ga.countryId, ga.scope, ga.geographyId, regions)
-    )
-  );
-
   return {
     userReport,
     report: finalReport,
@@ -490,7 +475,6 @@ export const useUserReportById = (userReportId: string, options?: { enabled?: bo
     userSimulations,
     userPolicies,
     userHouseholds,
-    userGeographies,
     isLoading:
       userReportLoading ||
       regionsLoading ||

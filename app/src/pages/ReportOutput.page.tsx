@@ -12,6 +12,7 @@ import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useSaveSharedReport } from '@/hooks/useSaveSharedReport';
 import { useSharedReportData } from '@/hooks/useSharedReportData';
 import { useUserReportById } from '@/hooks/useUserReports';
+import { createSavedGeographySelection } from '@/models/geography';
 import type { EconomyOutput, Report } from '@/types/ingredients/Report';
 import { formatReportTimestamp } from '@/utils/dateUtils';
 import { resolveDefaultReportOutputSubpage } from '@/utils/reportOutputSubpage';
@@ -123,7 +124,6 @@ export default function ReportOutputPage({
     userSimulations,
     userPolicies,
     userHouseholds,
-    userGeographies,
     isLoading: dataLoading,
     error: dataError,
   } = data;
@@ -166,7 +166,7 @@ export default function ReportOutputPage({
       userSimulations ?? [],
       userPolicies ?? [],
       userHouseholds ?? [],
-      userGeographies ?? []
+      (geographies ?? []).map((geography) => createSavedGeographySelection({ geography }))
     );
 
     return shareDataToEncode ? `${CALCULATOR_URL}${buildSharePath(shareDataToEncode)}` : undefined;

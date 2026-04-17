@@ -164,7 +164,7 @@ describe('useSharedReportData', () => {
     expect(result.current.userGeographies[0]).toMatchObject({
       geographyId: 'us',
       label: 'United States',
-      userId: 'shared',
+      scope: 'national',
     });
   });
 

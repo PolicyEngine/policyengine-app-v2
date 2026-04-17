@@ -155,7 +155,6 @@ describe('ReportOutputPage', () => {
       households: [],
       userHouseholds: [],
       geographies: [MOCK_GEOGRAPHY_UK_NATIONAL],
-      userGeographies: [],
       isLoading: false,
       error: null,
     });
@@ -180,7 +179,6 @@ describe('ReportOutputPage', () => {
       households: [],
       userHouseholds: [],
       geographies: [MOCK_GEOGRAPHY_UK_COUNTRY],
-      userGeographies: [],
       isLoading: false,
       error: null,
     });
@@ -205,7 +203,6 @@ describe('ReportOutputPage', () => {
       households: [],
       userHouseholds: [],
       geographies: [MOCK_GEOGRAPHY_UK_CONSTITUENCY],
-      userGeographies: [],
       isLoading: false,
       error: null,
     });
@@ -230,7 +227,6 @@ describe('ReportOutputPage', () => {
       households: [],
       userHouseholds: [],
       geographies: [MOCK_GEOGRAPHY_UK_LOCAL_AUTHORITY],
-      userGeographies: [],
       isLoading: false,
       error: null,
     });

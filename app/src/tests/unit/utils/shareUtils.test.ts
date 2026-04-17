@@ -255,7 +255,6 @@ describe('shareUtils', () => {
         userHouseholds: [],
         userGeographies: [
           {
-            type: 'geography',
             geographyId: 'geo-1',
             countryId: 'us',
             scope: 'national',

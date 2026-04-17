@@ -21,7 +21,6 @@ export const MOCK_SHARE_DATA: ReportIngredientsInput = {
   userHouseholds: [],
   userGeographies: [
     {
-      type: 'geography',
       geographyId: 'us',
       countryId: 'us',
       scope: 'national',

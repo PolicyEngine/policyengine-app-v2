@@ -20,7 +20,7 @@ import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useRegions } from '@/hooks/useRegions';
 import { GC_TIME_5_MIN } from '@/libs/queryConfig';
 import { householdKeys, policyKeys, reportKeys, simulationKeys } from '@/libs/queryKeys';
-import { buildCanonicalGeography } from '@/models/geography';
+import { buildCanonicalGeography, type SavedGeographySelection } from '@/models/geography';
 import { Household as HouseholdModel } from '@/models/Household';
 import type { AppHouseholdInputEnvelope as Household } from '@/models/household/appTypes';
 import type { RegionRecord } from '@/models/region';
@@ -29,10 +29,7 @@ import { Policy } from '@/types/ingredients/Policy';
 import { Report } from '@/types/ingredients/Report';
 import { Simulation } from '@/types/ingredients/Simulation';
 import { UserPolicy } from '@/types/ingredients/UserPolicy';
-import {
-  UserGeographyPopulation,
-  UserHouseholdPopulation,
-} from '@/types/ingredients/UserPopulation';
+import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { UserReport } from '@/types/ingredients/UserReport';
 import { UserSimulation } from '@/types/ingredients/UserSimulation';
 import { combineLoadingStates, extractUniqueIds, useParallelQueries } from './queryUtils';
@@ -83,10 +80,7 @@ export type ShareableUserHousehold = Omit<
   UserHouseholdPopulation,
   'userId' | 'createdAt' | 'updatedAt'
 >;
-export type ShareableUserGeography = Omit<
-  UserGeographyPopulation,
-  'userId' | 'createdAt' | 'updatedAt'
->;
+export type ShareableUserGeography = SavedGeographySelection;
 
 /**
  * Input for useFetchReportIngredients
@@ -126,7 +120,7 @@ export function expandUserAssociations(
   userSimulations: UserSimulation[];
   userPolicies: UserPolicy[];
   userHouseholds: UserHouseholdPopulation[];
-  userGeographies: UserGeographyPopulation[];
+  userGeographies: SavedGeographySelection[];
 } {
   return {
     userReport: {
@@ -148,7 +142,6 @@ export function expandUserAssociations(
     })),
     userGeographies: input.userGeographies.map((g) => ({
       ...g,
-      userId,
     })),
   };
 }
@@ -171,7 +164,13 @@ export function useFetchReportIngredients(
   const currentCountry = useCurrentCountry();
   // Use country from input if available (for shared reports), otherwise use current country
   const country = input?.userReport.countryId ?? currentCountry;
-  const { data: regions, isLoading: regionsLoading, error: regionsError } = useRegions(country);
+  const {
+    data: regions,
+    isLoading: regionsLoading,
+    error: regionsError,
+  } = useRegions(country, {
+    enabled: isEnabled,
+  });
 
   // Step 1: Fetch the base Report using reportId from userReport
   const reportId = input?.userReport.reportId;
