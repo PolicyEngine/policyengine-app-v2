@@ -44,7 +44,7 @@ export function HouseholdCreationContent({
   }
 
   return (
-    <ScrollArea style={{ flex: 1 }}>
+    <ScrollArea style={{ flex: 1, minHeight: 0, height: '100%' }}>
       <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 16 }}>
         {validationMessage && (
           <Alert variant="default">

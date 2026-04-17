@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { IconHome, IconX } from '@tabler/icons-react';
+import { IconChevronLeft, IconHome, IconX } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
@@ -34,6 +34,7 @@ type PendingUnnamedAction = 'create' | 'save-as-new' | 'update-existing' | null;
 interface HouseholdCreationModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onBack?: () => void;
   onHouseholdSaved: (population: PopulationStateProps) => void;
   reportYear: string;
   initialPopulation?: PopulationStateProps;
@@ -64,6 +65,7 @@ function cloneHouseholdWithLabel(
 export function HouseholdCreationModal({
   isOpen,
   onClose,
+  onBack = onClose,
   onHouseholdSaved,
   reportYear,
   initialPopulation,
@@ -336,10 +338,9 @@ export function HouseholdCreationModal({
       >
         <DialogContent
           showCloseButton={false}
-          className="tw:sm:max-w-none tw:p-0"
+          className="tw:sm:max-w-[90vw] tw:p-0"
           style={{
-            maxWidth: '1100px',
-            width: '90vw',
+            maxWidth: '1400px',
             height: '85vh',
             maxHeight: '800px',
             display: 'flex',
@@ -403,7 +404,16 @@ export function HouseholdCreationModal({
             isReadOnly={isReadOnly}
           />
 
-          <div style={{ flex: 1, overflow: 'hidden', padding: spacing.xl, paddingTop: spacing.lg }}>
+          <div
+            style={{
+              flex: 1,
+              minHeight: 0,
+              overflow: 'hidden',
+              display: 'flex',
+              padding: spacing.xl,
+              paddingTop: spacing.lg,
+            }}
+          >
             <HouseholdCreationContent
               householdDraft={household}
               metadata={metadata}
@@ -438,9 +448,15 @@ export function HouseholdCreationModal({
                 width: '100%',
               }}
             >
-              <Button variant="ghost" onClick={onClose}>
-                Cancel
-              </Button>
+              <Group gap="sm">
+                <Button variant="ghost" onClick={onBack}>
+                  <IconChevronLeft size={16} />
+                  Back
+                </Button>
+                <Button variant="ghost" onClick={onClose}>
+                  Cancel
+                </Button>
+              </Group>
               <div />
               <Group gap="sm" justify="end">
                 {!forceReadOnly && effectiveEditorMode === 'display' && (

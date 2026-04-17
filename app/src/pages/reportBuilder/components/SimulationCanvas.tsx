@@ -154,6 +154,7 @@ export function SimulationCanvas({
       <HouseholdCreationModal
         isOpen={canvas.householdEditorState.isOpen}
         onClose={canvas.closeHouseholdEditor}
+        onBack={canvas.returnToPopulationBrowse}
         onHouseholdSaved={canvas.handleHouseholdSaved}
         reportYear={reportYear}
         initialPopulation={canvas.householdEditorState.initialPopulation}
@@ -165,6 +166,7 @@ export function SimulationCanvas({
       <PolicyCreationModal
         isOpen={canvas.policyCreationState.isOpen}
         onClose={canvas.closePolicyCreation}
+        onBack={canvas.returnToPolicyBrowse}
         onPolicyCreated={(policy) =>
           canvas.handlePolicyCreated(canvas.policyCreationState.simulationIndex, policy)
         }

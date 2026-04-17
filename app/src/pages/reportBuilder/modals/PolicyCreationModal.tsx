@@ -9,7 +9,7 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { IconScale, IconX } from '@tabler/icons-react';
+import { IconChevronLeft, IconScale, IconX } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import { PolicyAdapter } from '@/adapters';
 import { createPolicy as createPolicyApi } from '@/api/policy';
@@ -63,6 +63,7 @@ import {
 interface PolicyCreationModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onBack?: () => void;
   onPolicyCreated: (policy: PolicyStateProps) => void;
   reportYear: string;
   simulationIndex: number;
@@ -75,6 +76,7 @@ interface PolicyCreationModalProps {
 export function PolicyCreationModal({
   isOpen,
   onClose,
+  onBack = onClose,
   onPolicyCreated,
   reportYear,
   simulationIndex,
@@ -571,9 +573,15 @@ export function PolicyCreationModal({
               width: '100%',
             }}
           >
-            <Button variant="ghost" onClick={onClose}>
-              Cancel
-            </Button>
+            <Group gap="sm">
+              <Button variant="ghost" onClick={onBack}>
+                <IconChevronLeft size={16} />
+                Back
+              </Button>
+              <Button variant="ghost" onClick={onClose}>
+                Cancel
+              </Button>
+            </Group>
             <div style={{ textAlign: 'center' }}>
               {modificationCount > 0 && (
                 <Group

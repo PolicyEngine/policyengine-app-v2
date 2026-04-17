@@ -36,6 +36,7 @@ import {
 import { getSamplePopulations } from '../constants';
 import { createCurrentLawPolicy } from '../currentLaw';
 import type {
+  HouseholdEditorState,
   IngredientPickerState,
   IngredientType,
   PolicyBrowseState,
@@ -114,10 +115,10 @@ export function useSimulationCanvas({
     isOpen: false,
     simulationIndex: 0,
   });
-  const [householdEditorState, setHouseholdEditorState] = useState({
+  const [householdEditorState, setHouseholdEditorState] = useState<HouseholdEditorState>({
     isOpen: false,
     simulationIndex: 0,
-  } as import('../types').HouseholdEditorState);
+  });
 
   // ---------------------------------------------------------------------------
   // Computed / derived data
@@ -546,6 +547,20 @@ export function useSimulationCanvas({
     () => setHouseholdEditorState((prev) => ({ ...prev, isOpen: false })),
     []
   );
+  const returnToPolicyBrowse = useCallback(() => {
+    setPolicyCreationState((prev) => ({ ...prev, isOpen: false }));
+    setPolicyBrowseState({
+      isOpen: true,
+      simulationIndex: policyCreationState.simulationIndex,
+    });
+  }, [policyCreationState.simulationIndex]);
+  const returnToPopulationBrowse = useCallback(() => {
+    setHouseholdEditorState((prev) => ({ ...prev, isOpen: false }));
+    setPopulationBrowseState({
+      isOpen: true,
+      simulationIndex: householdEditorState.simulationIndex,
+    });
+  }, [householdEditorState.simulationIndex]);
 
   const closeIngredientPicker = useCallback(
     () => setPickerState((prev) => ({ ...prev, isOpen: false })),
@@ -603,6 +618,8 @@ export function useSimulationCanvas({
     closePolicyCreation,
     closePopulationBrowse,
     closeHouseholdEditor,
+    returnToPolicyBrowse,
+    returnToPopulationBrowse,
     closeIngredientPicker,
   };
 }
