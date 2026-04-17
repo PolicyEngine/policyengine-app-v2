@@ -114,7 +114,9 @@ export const KNOWN_V1_ENTITY_KEYS = new Set<string>([
 export const PERSON_LINK_KEYS = new Set(
   GROUP_DEFINITIONS.map((definition) => definition.personLinkKey)
 );
+export const GROUP_ID_KEYS = new Set(GROUP_DEFINITIONS.map((definition) => definition.groupIdKey));
 export const PERSON_META_KEYS = new Set(['name', 'person_id', ...PERSON_LINK_KEYS]);
+export const GROUP_META_KEYS = new Set(['members', ...GROUP_ID_KEYS]);
 
 export function getGroupDefinitionByAppKey(key: string): HouseholdGroupDefinition | undefined {
   return GROUP_DEFINITION_BY_APP_KEY.get(key as HouseholdGroupAppKey);

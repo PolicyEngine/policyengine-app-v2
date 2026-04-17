@@ -29,9 +29,11 @@ import {
 } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import type { AppHouseholdInputEnvelope } from '@/models/household/appTypes';
+import { GROUP_META_KEYS, PERSON_META_KEYS } from '@/models/household/schema';
 import {
   cloneHousehold,
   ensureHouseholdGroupInstance,
+  getAllHouseholdGroupCollections,
   getPreferredHouseholdGroupName,
 } from '@/utils/householdDataAccess';
 import { sortPeopleKeys } from '@/utils/householdIndividuals';
@@ -41,7 +43,6 @@ import {
   getInputVariables,
   getVariableEntityDisplayInfo,
   getVariableInfo,
-  removeVariable,
   removeVariableFromEntity,
   resolveEntity,
 } from '@/utils/VariableResolver';
@@ -60,6 +61,7 @@ export interface HouseholdBuilderFormProps {
   onMaritalStatusChange: (status: 'single' | 'married') => void;
   onNumChildrenChange: (num: number) => void;
   disabled?: boolean;
+  isReadOnly?: boolean;
 }
 
 interface BuilderWarning {
@@ -79,10 +81,8 @@ export default function HouseholdBuilderForm({
   onMaritalStatusChange,
   onNumChildrenChange,
   disabled = false,
+  isReadOnly = false,
 }: HouseholdBuilderFormProps) {
-  // State for custom variables shown in the builder UI.
-  const [selectedVariables, setSelectedVariables] = useState<string[]>([]);
-
   // Search state for person variables (per person)
   const [activePersonSearch, setActivePersonSearch] = useState<string | null>(null);
   const [personSearchValue, setPersonSearchValue] = useState('');
@@ -190,34 +190,62 @@ export default function HouseholdBuilderForm({
       return [];
     }
 
-    return selectedVariables.filter((varName) => {
-      const entityInfo = resolveEntity(varName, metadata);
-      // Exclude basic inputs - they're shown permanently above
-      const isBasicInput = basicPersonFields.includes(varName);
-      return entityInfo?.isPerson && personData[varName] !== undefined && !isBasicInput;
-    });
+    return Object.keys(personData)
+      .filter((varName) => {
+        if (PERSON_META_KEYS.has(varName) || basicPersonFields.includes(varName)) {
+          return false;
+        }
+
+        const entityInfo = resolveEntity(varName, metadata);
+        return (
+          entityInfo?.isPerson &&
+          personData[varName] !== undefined &&
+          inputVariableLookup.has(varName)
+        );
+      })
+      .sort((left, right) =>
+        (inputVariableLookup.get(left)?.label || left).localeCompare(
+          inputVariableLookup.get(right)?.label || right
+        )
+      );
   };
 
   // Get all household-level variables (consolidated from tax_unit, spm_unit, household)
   // Exclude basic inputs which are shown permanently
   const householdLevelVariables = useMemo(() => {
-    return selectedVariables
-      .filter((varName) => {
-        const entityInfo = resolveEntity(varName, metadata);
-        // Exclude basic inputs - they're shown permanently above
-        const isBasicInput = basicNonPersonFields.includes(varName);
-        return !entityInfo?.isPerson && !isBasicInput;
-      })
-      .map((varName) => {
-        const entityInfo = resolveEntity(varName, metadata);
-        const entity = entityInfo?.plural || 'households';
-        return {
-          name: varName,
-          entity,
-          entityName: getPreferredHouseholdGroupName(household.householdData, entity),
-        };
+    const variables: Array<{ name: string; entity: string; entityName: string }> = [];
+
+    getAllHouseholdGroupCollections(household.householdData).forEach(({ entityName, groups }) => {
+      Object.entries(groups).forEach(([groupName, group]) => {
+        Object.keys(group)
+          .filter((varName) => {
+            if (GROUP_META_KEYS.has(varName) || basicNonPersonFields.includes(varName)) {
+              return false;
+            }
+
+            const entityInfo = resolveEntity(varName, metadata);
+            return (
+              !entityInfo?.isPerson &&
+              group[varName] !== undefined &&
+              inputVariableLookup.has(varName)
+            );
+          })
+          .forEach((varName) => {
+            variables.push({
+              name: varName,
+              entity: entityName,
+              entityName: groupName,
+            });
+          });
       });
-  }, [selectedVariables, metadata, basicNonPersonFields, household]);
+    });
+
+    return variables.sort((left, right) =>
+      `${inputVariableLookup.get(left.name)?.label || left.name}:${left.entityName}`.localeCompare(
+        `${inputVariableLookup.get(right.name)?.label || right.name}:${right.entityName}`
+      )
+    );
+  }, [basicNonPersonFields, household, inputVariableLookup, metadata]);
 
   // Handle opening person search
   const handleOpenPersonSearch = (person: string) => {
@@ -247,10 +275,6 @@ export default function HouseholdBuilderForm({
     const newHousehold = addVariableToEntity(household, variable.name, metadata, year, person);
     onChange(newHousehold);
 
-    if (!selectedVariables.includes(variable.name)) {
-      setSelectedVariables([...selectedVariables, variable.name]);
-    }
-
     setActivePersonSearch(null);
     setPersonSearchValue('');
     setIsPersonSearchFocused(false);
@@ -260,17 +284,6 @@ export default function HouseholdBuilderForm({
   const handleRemovePersonVariable = (varName: string, person: string) => {
     const newHousehold = removeVariableFromEntity(household, varName, metadata, person);
     onChange(newHousehold);
-
-    const stillUsedByOthers = Object.keys(newHousehold.householdData.people).some(
-      (otherPerson) =>
-        otherPerson !== person && newHousehold.householdData.people[otherPerson][varName]
-    );
-
-    if (!stillUsedByOthers) {
-      setSelectedVariables(
-        selectedVariables.filter((selectedVariable) => selectedVariable !== varName)
-      );
-    }
   };
 
   // Handle opening household search
@@ -301,7 +314,10 @@ export default function HouseholdBuilderForm({
       newHousehold = addVariable(household, variable.name, metadata, year);
     } else {
       // For non-person variables, only add if not already present
-      if (selectedVariables.includes(variable.name)) {
+      const existingEntityInfo = householdLevelVariables.find(
+        (entry) => entry.name === variable.name
+      );
+      if (existingEntityInfo) {
         setIsHouseholdSearchActive(false);
         setHouseholdSearchValue('');
         setIsHouseholdSearchFocused(false);
@@ -322,22 +338,15 @@ export default function HouseholdBuilderForm({
     }
     onChange(newHousehold);
 
-    if (!selectedVariables.includes(variable.name)) {
-      setSelectedVariables([...selectedVariables, variable.name]);
-    }
-
     setIsHouseholdSearchActive(false);
     setHouseholdSearchValue('');
     setIsHouseholdSearchFocused(false);
   };
 
   // Handle removing household variable
-  const handleRemoveHouseholdVariable = (varName: string) => {
-    const newHousehold = removeVariable(household, varName, metadata);
+  const handleRemoveHouseholdVariable = (varName: string, entityName: string) => {
+    const newHousehold = removeVariableFromEntity(household, varName, metadata, entityName);
     onChange(newHousehold);
-    setSelectedVariables(
-      selectedVariables.filter((selectedVariable) => selectedVariable !== varName)
-    );
   };
 
   return (
@@ -481,14 +490,18 @@ export default function HouseholdBuilderForm({
                               year={year}
                               entityName={person}
                               onChange={onChange}
-                              onRemove={() => handleRemovePersonVariable(varName, person)}
+                              onRemove={
+                                isReadOnly
+                                  ? undefined
+                                  : () => handleRemovePersonVariable(varName, person)
+                              }
                               disabled={disabled}
                             />
                           );
                         })}
 
                         {/* Add variable search or link */}
-                        {activePersonSearch === person ? (
+                        {!isReadOnly && activePersonSearch === person ? (
                           <VariableSearchDropdown
                             searchValue={personSearchValue}
                             onSearchChange={setPersonSearchValue}
@@ -510,7 +523,7 @@ export default function HouseholdBuilderForm({
                               setIsPersonSearchFocused(false);
                             }}
                           />
-                        ) : (
+                        ) : !isReadOnly ? (
                           <Button
                             variant="ghost"
                             size="sm"
@@ -520,7 +533,7 @@ export default function HouseholdBuilderForm({
                             <IconPlus size={14} />
                             Add variable to {getPersonDisplayName(person)}
                           </Button>
-                        )}
+                        ) : null}
                       </Stack>
                     </AccordionContent>
                   </AccordionItem>
@@ -567,21 +580,25 @@ export default function HouseholdBuilderForm({
                 }
                 return (
                   <VariableRow
-                    key={`${entity}-${varName}`}
+                    key={`${entity}-${entityName}-${varName}`}
                     variable={variable}
                     household={household}
                     metadata={metadata}
                     year={year}
                     entityName={entityName}
                     onChange={onChange}
-                    onRemove={() => handleRemoveHouseholdVariable(varName)}
+                    onRemove={
+                      isReadOnly
+                        ? undefined
+                        : () => handleRemoveHouseholdVariable(varName, entityName)
+                    }
                     disabled={disabled}
                   />
                 );
               })}
 
               {/* Add variable search or link */}
-              {isHouseholdSearchActive ? (
+              {!isReadOnly && isHouseholdSearchActive ? (
                 <VariableSearchDropdown
                   searchValue={householdSearchValue}
                   onSearchChange={setHouseholdSearchValue}
@@ -600,7 +617,7 @@ export default function HouseholdBuilderForm({
                     setIsHouseholdSearchFocused(false);
                   }}
                 />
-              ) : (
+              ) : !isReadOnly ? (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -610,7 +627,7 @@ export default function HouseholdBuilderForm({
                   <IconPlus size={14} />
                   Add variable to your household
                 </Button>
-              )}
+              ) : null}
             </Stack>
           </AccordionContent>
         </AccordionItem>

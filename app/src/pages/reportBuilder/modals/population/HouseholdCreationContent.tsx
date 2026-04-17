@@ -18,6 +18,7 @@ interface HouseholdCreationContentProps {
   basicNonPersonFields: string[];
   isCreating: boolean;
   validationMessage?: string | null;
+  isReadOnly?: boolean;
   onChange: (household: AppHouseholdInputEnvelope) => void;
   onMaritalStatusChange: (status: 'single' | 'married') => void;
   onNumChildrenChange: (count: number) => void;
@@ -33,6 +34,7 @@ export function HouseholdCreationContent({
   basicNonPersonFields,
   isCreating,
   validationMessage,
+  isReadOnly = false,
   onChange,
   onMaritalStatusChange,
   onNumChildrenChange,
@@ -49,7 +51,7 @@ export function HouseholdCreationContent({
             <AlertDescription>{validationMessage}</AlertDescription>
           </Alert>
         )}
-        {isCreating && (
+        {isCreating && !isReadOnly && (
           <div
             style={{
               position: 'absolute',
@@ -75,7 +77,8 @@ export function HouseholdCreationContent({
           onChange={onChange}
           onMaritalStatusChange={onMaritalStatusChange}
           onNumChildrenChange={onNumChildrenChange}
-          disabled={isCreating}
+          disabled={isCreating || isReadOnly}
+          isReadOnly={isReadOnly}
         />
       </div>
     </ScrollArea>

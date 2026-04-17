@@ -4,16 +4,19 @@
  * Props-based instead of Redux-based
  */
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import PathwayView from '@/components/common/PathwayView';
-import HouseholdBuilderForm from '@/components/household/HouseholdBuilderForm';
-import { Alert, AlertDescription, Spinner, Stack } from '@/components/ui';
+import { Spinner, Stack } from '@/components/ui';
 import { useCreateHousehold } from '@/hooks/useCreateHousehold';
 import { useReportYear } from '@/hooks/useReportYear';
 import { getBasicInputFields } from '@/libs/metadataUtils';
 import { Household as HouseholdModel } from '@/models/Household';
 import type { AppHouseholdInputEnvelope } from '@/models/household/appTypes';
+import {
+  HouseholdCreationContent,
+  PopulationStatusHeader,
+} from '@/pages/reportBuilder/modals/population';
 import { RootState } from '@/store';
 import { PopulationStateProps } from '@/types/pathwayState';
 import { HouseholdBuilder } from '@/utils/HouseholdBuilder';
@@ -37,7 +40,6 @@ export default function HouseholdBuilderView({
   onSubmitSuccess,
   onBack,
 }: HouseholdBuilderViewProps) {
-  const { createHousehold, isPending } = useCreateHousehold(population?.label || '');
   const reportYear = useReportYear();
 
   // Get metadata-driven options
@@ -76,25 +78,51 @@ export default function HouseholdBuilderView({
   // Initialize household with "you" if none exists
   const [household, setLocalHousehold] = useState<AppHouseholdInputEnvelope>(() => {
     if (population?.household) {
-      return population.household;
+      return {
+        ...population.household,
+        label: population.label ?? population.household.label ?? null,
+      };
     }
     const builder = new HouseholdBuilder(countryId as any, reportYear);
     builder.addAdult('you', 30, { employment_income: 0 });
     return builder.build();
   });
+  const { createHousehold, isPending } = useCreateHousehold(household.label || undefined);
+  const [validation, setValidation] = useState<ReturnType<
+    typeof HouseholdValidation.isReadyForSimulation
+  > | null>(null);
 
   const composition = deriveHouseholdBuilderComposition(household, reportYear);
   const maritalStatus = composition.maritalStatus;
   const numChildren = composition.numChildren;
+  const validationMessage = validation?.errors[0]?.message ?? null;
+
+  useEffect(() => {
+    setValidation(null);
+    const timeoutId = setTimeout(() => {
+      setValidation(HouseholdValidation.isReadyForSimulation(household, reportYear));
+    }, 400);
+
+    return () => clearTimeout(timeoutId);
+  }, [household, reportYear]);
 
   // Handler for marital status change - directly modifies household
   const handleMaritalStatusChange = (newStatus: 'single' | 'married') => {
+    setValidation(null);
     setLocalHousehold(updateHouseholdBuilderMaritalStatus(household, reportYear, newStatus));
   };
 
   // Handler for number of children change - directly modifies household
   const handleNumChildrenChange = (newCount: number) => {
+    setValidation(null);
     setLocalHousehold(updateHouseholdBuilderChildCount(household, reportYear, newCount));
+  };
+
+  const handleHouseholdLabelChange = (label: string) => {
+    setLocalHousehold((prev) => ({
+      ...prev,
+      label: label.trim() ? label : null,
+    }));
   };
 
   // Show error state if metadata failed to load
@@ -131,15 +159,16 @@ export default function HouseholdBuilderView({
       const result = await createHousehold(payload);
 
       const householdId = result.result.household_id;
-      onSubmitSuccess(householdId, household);
+      onSubmitSuccess(householdId, {
+        ...household,
+        id: householdId,
+      });
     } catch (err) {
       // Error is handled by the mutation
     }
   };
 
-  const validation = HouseholdValidation.isReadyForSimulation(household, reportYear);
-  const canProceed = validation.isValid;
-  const validationMessage = validation.errors[0]?.message ?? null;
+  const canProceed = validation?.isValid ?? false;
 
   const primaryAction = {
     label: 'Create household',
@@ -156,24 +185,25 @@ export default function HouseholdBuilderView({
         </div>
       )}
 
-      {validationMessage && (
-        <Alert variant="default">
-          <AlertDescription>{validationMessage}</AlertDescription>
-        </Alert>
-      )}
+      <PopulationStatusHeader
+        householdLabel={household.label ?? ''}
+        setHouseholdLabel={handleHouseholdLabelChange}
+        memberCount={composition.people.length}
+      />
 
-      <HouseholdBuilderForm
-        household={household}
+      <HouseholdCreationContent
+        householdDraft={household}
         metadata={metadata}
-        year={reportYear}
+        reportYear={reportYear}
         maritalStatus={maritalStatus}
         numChildren={numChildren}
         basicPersonFields={basicInputFields.person || []}
         basicNonPersonFields={basicNonPersonFields}
+        isCreating={loading || isPending}
+        validationMessage={validationMessage}
         onChange={setLocalHousehold}
         onMaritalStatusChange={handleMaritalStatusChange}
         onNumChildrenChange={handleNumChildrenChange}
-        disabled={loading || isPending}
       />
     </Stack>
   );

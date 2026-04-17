@@ -48,6 +48,7 @@ export function IngredientSectionFull({
   currentLabel,
   isReadOnly,
   onViewPolicy,
+  onViewPopulation,
 }: IngredientSectionProps) {
   const countryConfig = COUNTRY_CONFIG[countryId] || COUNTRY_CONFIG.us;
   const colorConfig = INGREDIENT_COLORS[type];
@@ -133,6 +134,11 @@ export function IngredientSectionFull({
   // Show policy details action for non-current-law policies.
   const showViewPolicyButton =
     type === 'policy' && !isCurrentLaw(currentId) && !!currentId && onViewPolicy;
+  const showViewPopulationButton =
+    type === 'population' &&
+    selectedPopulationLabel?.populationType === 'household' &&
+    !!currentId &&
+    onViewPopulation;
 
   return (
     <div
@@ -256,15 +262,19 @@ export function IngredientSectionFull({
               flexShrink: 0,
             }}
           >
-            {/* Policy details gear */}
-            {showViewPolicyButton && (
+            {/* Policy / household details gear */}
+            {(showViewPolicyButton || showViewPopulationButton) && (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button
                     type="button"
                     onClick={(e: React.MouseEvent) => {
                       e.stopPropagation();
-                      onViewPolicy();
+                      if (showViewPolicyButton) {
+                        onViewPolicy?.();
+                      } else {
+                        onViewPopulation?.();
+                      }
                     }}
                     style={{
                       background: colors.white,
@@ -283,7 +293,13 @@ export function IngredientSectionFull({
                   </button>
                 </TooltipTrigger>
                 <TooltipContent side="bottom">
-                  {isReadOnly ? 'View policy' : 'View/edit policy'}
+                  {showViewPolicyButton
+                    ? isReadOnly
+                      ? 'View policy'
+                      : 'View/edit policy'
+                    : isReadOnly
+                      ? 'View household'
+                      : 'View/edit household'}
                 </TooltipContent>
               </Tooltip>
             )}

@@ -18,6 +18,7 @@ interface EditableLabelProps {
   emptyStateText?: string;
   textColor?: string;
   emptyTextColor?: string;
+  readOnly?: boolean;
 }
 
 export function EditableLabel({
@@ -27,6 +28,7 @@ export function EditableLabel({
   emptyStateText,
   textColor = colors.gray[800],
   emptyTextColor = colors.gray[400],
+  readOnly = false,
 }: EditableLabelProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [inputValue, setInputValue] = useState(value);
@@ -39,7 +41,7 @@ export function EditableLabel({
   }, [value, isEditing]);
 
   const handleSubmit = () => {
-    onChange(inputValue || placeholder);
+    onChange(inputValue);
     setIsEditing(false);
   };
 
@@ -52,7 +54,7 @@ export function EditableLabel({
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: spacing.xs, minWidth: 0, flex: 1 }}>
-      {isEditing ? (
+      {isEditing && !readOnly ? (
         <>
           <Input
             value={inputValue}
@@ -101,20 +103,22 @@ export function EditableLabel({
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
               marginRight: 8,
-              cursor: 'pointer',
+              cursor: readOnly ? 'default' : 'pointer',
             }}
-            onClick={handleStartEditing}
+            onClick={readOnly ? undefined : handleStartEditing}
           >
             {displayText}
           </Text>
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={handleStartEditing}
-            style={{ flexShrink: 0 }}
-          >
-            <IconPencil size={14} />
-          </Button>
+          {!readOnly && (
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={handleStartEditing}
+              style={{ flexShrink: 0 }}
+            >
+              <IconPencil size={14} />
+            </Button>
+          )}
         </>
       )}
     </div>

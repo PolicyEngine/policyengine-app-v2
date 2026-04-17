@@ -7,6 +7,7 @@
 
 import { useSimulationCanvas } from '../hooks/useSimulationCanvas';
 import {
+  HouseholdCreationModal,
   IngredientPickerModal,
   PolicyBrowseModal,
   PolicyCreationModal,
@@ -65,6 +66,7 @@ export function SimulationCanvas({
             onDeselectPopulation={() => canvas.handleDeselectPopulation(0)}
             onEditPolicy={isViewOnly ? noop : () => canvas.handleEditPolicy(0)}
             onViewPolicy={() => canvas.handleViewPolicy(0)}
+            onViewPopulation={() => canvas.handleViewPopulation(0)}
             onCreateCustomPolicy={isViewOnly ? noop : () => canvas.handleCreateCustom(0, 'policy')}
             onBrowseMorePolicies={isViewOnly ? noop : () => canvas.handleBrowseMorePolicies(0)}
             onBrowseMorePopulations={
@@ -92,6 +94,7 @@ export function SimulationCanvas({
               onDeselectPopulation={() => canvas.handleDeselectPopulation(1)}
               onEditPolicy={isViewOnly ? noop : () => canvas.handleEditPolicy(1)}
               onViewPolicy={() => canvas.handleViewPolicy(1)}
+              onViewPopulation={() => canvas.handleViewPopulation(1)}
               onCreateCustomPolicy={
                 isViewOnly ? noop : () => canvas.handleCreateCustom(1, 'policy')
               }
@@ -142,9 +145,21 @@ export function SimulationCanvas({
         onClose={canvas.closePopulationBrowse}
         onSelect={canvas.handlePopulationSelectFromBrowse}
         reportYear={reportYear}
-        onCreateNew={() =>
-          canvas.handleCreateCustom(canvas.populationBrowseState.simulationIndex, 'population')
-        }
+        onCreateNew={() => {
+          canvas.closePopulationBrowse();
+          canvas.handleCreateCustom(canvas.populationBrowseState.simulationIndex, 'population');
+        }}
+      />
+
+      <HouseholdCreationModal
+        isOpen={canvas.householdEditorState.isOpen}
+        onClose={canvas.closeHouseholdEditor}
+        onHouseholdSaved={canvas.handleHouseholdSaved}
+        reportYear={reportYear}
+        initialPopulation={canvas.householdEditorState.initialPopulation}
+        initialAssociation={canvas.householdEditorState.initialAssociation}
+        initialEditorMode={canvas.householdEditorState.initialEditorMode}
+        forceReadOnly={isViewOnly}
       />
 
       <PolicyCreationModal

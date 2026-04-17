@@ -2,6 +2,7 @@
  * Type definitions for ReportBuilder components
  */
 import { ReactNode } from 'react';
+import type { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { PopulationStateProps, SimulationStateProps } from '@/types/pathwayState';
 
 // ============================================================================
@@ -176,6 +177,7 @@ export interface IngredientSectionProps {
   currentLabel?: string;
   isReadOnly?: boolean;
   onViewPolicy?: () => void;
+  onViewPopulation?: () => void;
 }
 
 export interface SimulationBlockProps {
@@ -191,6 +193,7 @@ export interface SimulationBlockProps {
   onDeselectPopulation: () => void;
   onEditPolicy: () => void;
   onViewPolicy: () => void;
+  onViewPopulation: () => void;
   onCreateCustomPolicy: () => void;
   onBrowseMorePolicies: () => void;
   onBrowseMorePopulations: () => void;
@@ -225,6 +228,14 @@ export interface PolicyBrowseState {
   isOpen: boolean;
   simulationIndex: number;
   initialPolicy?: import('@/types/pathwayState').PolicyStateProps;
+  initialEditorMode?: 'create' | 'display' | 'edit';
+}
+
+export interface HouseholdEditorState {
+  isOpen: boolean;
+  simulationIndex: number;
+  initialPopulation?: PopulationStateProps;
+  initialAssociation?: UserHouseholdPopulation;
   initialEditorMode?: 'create' | 'display' | 'edit';
 }
 

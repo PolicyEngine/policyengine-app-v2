@@ -114,6 +114,10 @@ export function useSimulationCanvas({
     isOpen: false,
     simulationIndex: 0,
   });
+  const [householdEditorState, setHouseholdEditorState] = useState({
+    isOpen: false,
+    simulationIndex: 0,
+  } as import('../types').HouseholdEditorState);
 
   // ---------------------------------------------------------------------------
   // Computed / derived data
@@ -458,6 +462,37 @@ export function useSimulationCanvas({
     [populationBrowseState.simulationIndex, updatePopulationWithInheritance]
   );
 
+  const handleHouseholdSaved = useCallback(
+    (population: PopulationStateProps) => {
+      updatePopulationWithInheritance(householdEditorState.simulationIndex, population);
+    },
+    [householdEditorState.simulationIndex, updatePopulationWithInheritance]
+  );
+
+  const handleViewPopulation = useCallback(
+    (simulationIndex: number) => {
+      const currentPopulation = reportState.simulations[simulationIndex]?.population;
+      const householdId = currentPopulation?.household?.id;
+
+      if (!householdId || !currentPopulation?.household) {
+        return;
+      }
+
+      const initialAssociation = households?.find(
+        (item) => String(item.association.householdId) === householdId
+      )?.association;
+
+      setHouseholdEditorState({
+        isOpen: true,
+        simulationIndex,
+        initialPopulation: currentPopulation,
+        initialAssociation,
+        initialEditorMode: 'display',
+      });
+    },
+    [households, reportState.simulations]
+  );
+
   // ---------------------------------------------------------------------------
   // Ingredient picker / create-custom actions
   // ---------------------------------------------------------------------------
@@ -479,10 +514,14 @@ export function useSimulationCanvas({
       if (ingredientType === 'policy') {
         setPolicyCreationState({ isOpen: true, simulationIndex });
       } else if (ingredientType === 'population') {
-        window.location.href = `/${countryId}/households/create`;
+        setHouseholdEditorState({
+          isOpen: true,
+          simulationIndex,
+          initialEditorMode: 'create',
+        });
       }
     },
-    [countryId]
+    []
   );
 
   // ---------------------------------------------------------------------------
@@ -501,6 +540,10 @@ export function useSimulationCanvas({
 
   const closePopulationBrowse = useCallback(
     () => setPopulationBrowseState((prev) => ({ ...prev, isOpen: false })),
+    []
+  );
+  const closeHouseholdEditor = useCallback(
+    () => setHouseholdEditorState((prev) => ({ ...prev, isOpen: false })),
     []
   );
 
@@ -543,6 +586,8 @@ export function useSimulationCanvas({
     handleDeselectPopulation,
     handleBrowseMorePopulations,
     handlePopulationSelectFromBrowse,
+    handleHouseholdSaved,
+    handleViewPopulation,
 
     // Ingredient picker / custom
     handleIngredientSelect,
@@ -553,9 +598,11 @@ export function useSimulationCanvas({
     policyBrowseState,
     policyCreationState,
     populationBrowseState,
+    householdEditorState,
     closePolicyBrowse,
     closePolicyCreation,
     closePopulationBrowse,
+    closeHouseholdEditor,
     closeIngredientPicker,
   };
 }
