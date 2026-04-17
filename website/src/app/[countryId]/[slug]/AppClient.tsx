@@ -24,7 +24,11 @@ interface AppClientProps {
 
 function trackToolEngaged(params: { toolSlug: string; toolTitle: string }) {
   if (typeof window !== "undefined" && window.gtag) {
-    window.gtag("event", "tool_engaged", params);
+    window.gtag("event", "tool_engaged", {
+      ...params,
+      tool_name: params.toolSlug,
+      tool_title: params.toolTitle,
+    });
   }
 }
 
