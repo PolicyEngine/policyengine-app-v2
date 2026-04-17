@@ -62,6 +62,27 @@ function cloneHouseholdWithLabel(
   };
 }
 
+function isHouseholdWithToAppInput(
+  household: unknown
+): household is { toAppInput: () => AppHouseholdInputEnvelope } {
+  return (
+    typeof household === 'object' &&
+    household !== null &&
+    'toAppInput' in household &&
+    typeof (household as { toAppInput?: unknown }).toAppInput === 'function'
+  );
+}
+
+function normalizeAppHouseholdInput(
+  household: AppHouseholdInputEnvelope | { toAppInput: () => AppHouseholdInputEnvelope }
+): AppHouseholdInputEnvelope {
+  if (isHouseholdWithToAppInput(household)) {
+    return household.toAppInput();
+  }
+
+  return household;
+}
+
 export function HouseholdCreationModal({
   isOpen,
   onClose,
@@ -84,9 +105,15 @@ export function HouseholdCreationModal({
       return null;
     }
 
+    const appInputHousehold = normalizeAppHouseholdInput(
+      initialHousehold as
+        | AppHouseholdInputEnvelope
+        | { toAppInput: () => AppHouseholdInputEnvelope }
+    );
+
     return cloneHouseholdWithLabel(
-      initialHousehold,
-      initialPopulation?.label ?? initialHousehold.label ?? null
+      appInputHousehold,
+      initialPopulation?.label ?? appInputHousehold.label ?? null
     );
   }, [initialPopulation]);
 
@@ -325,6 +352,12 @@ export function HouseholdCreationModal({
 
   const colorConfig = INGREDIENT_COLORS.population;
   const footerLoading = isCreating || isUpdating;
+  const modalTitle =
+    effectiveEditorMode === 'display'
+      ? 'Household details'
+      : effectiveEditorMode === 'edit'
+        ? 'Edit household'
+        : 'Create a household';
 
   return (
     <>
@@ -340,6 +373,7 @@ export function HouseholdCreationModal({
           showCloseButton={false}
           className="tw:sm:max-w-[90vw] tw:p-0"
           style={{
+            width: '90vw',
             maxWidth: '1400px',
             height: '85vh',
             maxHeight: '800px',
@@ -347,13 +381,7 @@ export function HouseholdCreationModal({
             flexDirection: 'column',
           }}
         >
-          <DialogTitle className="tw:sr-only">
-            {effectiveEditorMode === 'display'
-              ? 'Household details'
-              : effectiveEditorMode === 'edit'
-                ? 'Edit household'
-                : 'Household editor'}
-          </DialogTitle>
+          <DialogTitle className="tw:sr-only">{modalTitle}</DialogTitle>
           <DialogDescription className="tw:sr-only">
             Create, review, or edit a household configuration.
           </DialogDescription>
@@ -384,11 +412,7 @@ export function HouseholdCreationModal({
                   <IconHome size={18} color={colorConfig.icon} />
                 </div>
                 <Text fw={600} style={{ fontSize: FONT_SIZES.normal, color: colors.gray[800] }}>
-                  {effectiveEditorMode === 'display'
-                    ? 'Household details'
-                    : effectiveEditorMode === 'edit'
-                      ? 'Edit household'
-                      : 'Household editor'}
+                  {modalTitle}
                 </Text>
               </Group>
               <Button variant="ghost" size="icon-sm" onClick={onClose} style={{ flexShrink: 0 }}>

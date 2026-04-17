@@ -24,6 +24,36 @@ interface HydrateArgs {
   currentLawId: number;
 }
 
+function isHouseholdWithToAppInput(
+  household: unknown
+): household is { toAppInput: () => Household } {
+  return (
+    typeof household === 'object' &&
+    household !== null &&
+    'toAppInput' in household &&
+    typeof (household as { toAppInput?: unknown }).toAppInput === 'function'
+  );
+}
+
+function normalizeHousehold(
+  household:
+    | Household
+    | {
+        toAppInput: () => Household;
+      }
+    | undefined
+): Household | null {
+  if (!household) {
+    return null;
+  }
+
+  if (isHouseholdWithToAppInput(household)) {
+    return household.toAppInput();
+  }
+
+  return household;
+}
+
 export function hydrateReportBuilderState({
   userReport,
   report,
@@ -62,7 +92,7 @@ export function hydrateReportBuilderState({
       populationState = {
         label: userHousehold?.label || null,
         type: 'household' as const,
-        household: household || null,
+        household: normalizeHousehold(household),
         geography: null,
       };
     } else {

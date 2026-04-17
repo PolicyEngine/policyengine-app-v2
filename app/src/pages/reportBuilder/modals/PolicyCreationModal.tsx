@@ -138,6 +138,12 @@ export function PolicyCreationModal({
   const effectiveEditorMode: EditorMode = forceReadOnly ? 'display' : editorMode;
   const isReadOnly = effectiveEditorMode === 'display';
   const colorConfig = INGREDIENT_COLORS.policy;
+  const modalTitle =
+    effectiveEditorMode === 'display'
+      ? 'Policy details'
+      : effectiveEditorMode === 'edit'
+        ? 'Edit policy'
+        : 'Create a policy';
 
   // Reset state when modal opens; pre-populate from initialPolicy when editing
   useEffect(() => {
@@ -470,6 +476,7 @@ export function PolicyCreationModal({
         showCloseButton={false}
         className="tw:sm:max-w-[90vw] tw:p-0"
         style={{
+          width: '90vw',
           maxWidth: '1400px',
           height: '85vh',
           maxHeight: '800px',
@@ -477,13 +484,7 @@ export function PolicyCreationModal({
           flexDirection: 'column',
         }}
       >
-        <DialogTitle className="tw:sr-only">
-          {effectiveEditorMode === 'display'
-            ? 'Policy details'
-            : effectiveEditorMode === 'edit'
-              ? 'Edit policy'
-              : 'Policy editor'}
-        </DialogTitle>
+        <DialogTitle className="tw:sr-only">{modalTitle}</DialogTitle>
         <DialogDescription className="tw:sr-only">
           Create or edit a policy reform by modifying parameter values.
         </DialogDescription>
@@ -514,11 +515,7 @@ export function PolicyCreationModal({
                 <IconScale size={18} color={colorConfig.icon} />
               </div>
               <Text fw={600} style={{ fontSize: FONT_SIZES.normal, color: colors.gray[800] }}>
-                {effectiveEditorMode === 'display'
-                  ? 'Policy details'
-                  : effectiveEditorMode === 'edit'
-                    ? 'Edit policy'
-                    : 'Policy editor'}
+                {modalTitle}
               </Text>
             </Group>
             <Button variant="ghost" size="icon-sm" onClick={onClose} style={{ flexShrink: 0 }}>
