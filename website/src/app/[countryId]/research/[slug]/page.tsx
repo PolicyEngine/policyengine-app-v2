@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { getArticleContent, getAllSlugs, getPostBySlug } from "@/lib/articles";
+import { encodeJsonForScript } from "@/lib/encodeJsonForScript";
 import { isNotebookFile } from "@/lib/notebookUtils";
 import ArticleClient from "./ArticleClient";
 
@@ -93,7 +94,7 @@ export default async function ArticlePage({
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: encodeJsonForScript(jsonLd) }}
       />
       <ArticleClient
         post={post}

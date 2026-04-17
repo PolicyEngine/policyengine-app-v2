@@ -6,6 +6,7 @@
 import appsData from "./app/src/data/apps/apps.json";
 import postsData from "./app/src/data/posts/posts.json";
 import authorsData from "./app/src/data/posts/authors.json";
+import { encodeJsonForScript } from "./website/src/lib/encodeJsonForScript";
 
 // Types
 type PathParts = {
@@ -233,7 +234,7 @@ function generateOgHtml(metadata: OgMetadata, url: string): string {
   <meta name="twitter:image" content="${metadata.image}" />
 
   <!-- Structured Data -->
-  <script type="application/ld+json">${JSON.stringify(jsonLd).replace(/</g, "\\u003c")}</script>
+  <script type="application/ld+json">${encodeJsonForScript(jsonLd)}</script>
 </head>
 <body>
   <h1>${safeTitle}</h1>
