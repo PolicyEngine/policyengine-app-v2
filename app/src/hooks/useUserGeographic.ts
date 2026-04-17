@@ -1,13 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useSelector } from 'react-redux';
 import { ApiGeographicStore, LocalStorageGeographicStore } from '@/api/geographicAssociation';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useRegions } from '@/hooks/useRegions';
 import { queryConfig } from '@/libs/queryConfig';
 import { geographicAssociationKeys } from '@/libs/queryKeys';
-import { RootState } from '@/store';
+import { buildCanonicalGeography } from '@/models/geography';
 import { Geography } from '@/types/ingredients/Geography';
 import { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
-import { getCountryLabel, getRegionLabel } from '@/utils/geographyUtils';
 
 const apiGeographicStore = new ApiGeographicStore();
 const localGeographicStore = new LocalStorageGeographicStore();
@@ -130,8 +129,8 @@ export function isGeographicMetadataWithAssociation(
 }
 
 export const useUserGeographics = (userId: string) => {
-  // Get metadata for label lookups
-  const metadata = useSelector((state: RootState) => state.metadata);
+  const countryId = useCurrentCountry();
+  const { data: regions, isLoading: regionsLoading, error: regionsError } = useRegions(countryId);
 
   // First, get the populations
   const {
@@ -140,33 +139,16 @@ export const useUserGeographics = (userId: string) => {
     error: populationsError,
   } = useGeographicAssociationsByUser(userId);
 
-  // Helper function to get proper label from metadata or fallback
-  const getGeographyName = (population: UserGeographyPopulation): string => {
-    // If label exists, use it
-    if (population.label) {
-      return population.label;
-    }
-
-    // For national scope, use country name
-    if (population.scope === 'national') {
-      return getCountryLabel(population.countryId);
-    }
-
-    return getRegionLabel(population.geographyId, metadata);
-  };
-
   // For geographic populations, we construct Geography objects from the population data
   // since they don't require API fetching like households do
   const geographicsWithAssociations: UserGeographicMetadataWithAssociation[] | undefined =
     populations?.map((population) => {
-      // Construct a Geography object from the population data
-      const geography: Geography = {
-        id: population.geographyId,
+      const geography: Geography = buildCanonicalGeography({
         countryId: population.countryId,
         scope: population.scope,
         geographyId: population.geographyId,
-        name: getGeographyName(population),
-      };
+        regions,
+      });
 
       return {
         association: population,
@@ -179,9 +161,9 @@ export const useUserGeographics = (userId: string) => {
 
   return {
     data: geographicsWithAssociations,
-    isLoading: populationsLoading,
-    isError: !!populationsError,
-    error: populationsError,
+    isLoading: populationsLoading || regionsLoading,
+    isError: !!populationsError || !!regionsError,
+    error: populationsError || regionsError,
     associations: populations, // Still available if needed separately
   };
 };

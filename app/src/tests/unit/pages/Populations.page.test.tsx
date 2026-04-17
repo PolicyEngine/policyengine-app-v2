@@ -1,6 +1,6 @@
 import { render, screen, userEvent, waitFor } from '@test-utils';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { useGeographicAssociationsByUser } from '@/hooks/useUserGeographic';
+import { useUserGeographics } from '@/hooks/useUserGeographic';
 import { useUserHouseholds } from '@/hooks/useUserHousehold';
 import PopulationsPage from '@/pages/Populations.page';
 import {
@@ -25,7 +25,7 @@ vi.mock('@/hooks/useUserHousehold', () => ({
 }));
 
 vi.mock('@/hooks/useUserGeographic', () => ({
-  useGeographicAssociationsByUser: vi.fn(),
+  useUserGeographics: vi.fn(),
   useUpdateGeographicAssociation: vi.fn(() => ({
     mutate: vi.fn(),
     isPending: false,
@@ -73,7 +73,7 @@ describe('PopulationsPage', () => {
       error: null,
     });
 
-    (useGeographicAssociationsByUser as any).mockReturnValue({
+    (useUserGeographics as any).mockReturnValue({
       data: geographicAssociationsData,
       isLoading: false,
       isError: false,
@@ -117,7 +117,7 @@ describe('PopulationsPage', () => {
 
       // Then
       expect(useUserHouseholds).toHaveBeenCalledWith(POPULATION_TEST_IDS.USER_ID);
-      expect(useGeographicAssociationsByUser).toHaveBeenCalledWith(POPULATION_TEST_IDS.USER_ID);
+      expect(useUserGeographics).toHaveBeenCalledWith(POPULATION_TEST_IDS.USER_ID);
     });
   });
 
@@ -198,7 +198,7 @@ describe('PopulationsPage', () => {
       // Given
       const emptyState = createEmptyDataState();
       (useUserHouseholds as any).mockReturnValue(emptyState.household);
-      (useGeographicAssociationsByUser as any).mockReturnValue(emptyState.geographic);
+      (useUserGeographics as any).mockReturnValue(emptyState.geographic);
 
       // When
       renderPage();
@@ -214,7 +214,7 @@ describe('PopulationsPage', () => {
       // Given
       const loadingState = createLoadingState(true, false);
       (useUserHouseholds as any).mockReturnValue(loadingState.household);
-      (useGeographicAssociationsByUser as any).mockReturnValue(loadingState.geographic);
+      (useUserGeographics as any).mockReturnValue(loadingState.geographic);
 
       // When
       renderPage();
@@ -227,7 +227,7 @@ describe('PopulationsPage', () => {
       // Given
       const loadingState = createLoadingState(false, true);
       (useUserHouseholds as any).mockReturnValue(loadingState.household);
-      (useGeographicAssociationsByUser as any).mockReturnValue(loadingState.geographic);
+      (useUserGeographics as any).mockReturnValue(loadingState.geographic);
 
       // When
       renderPage();
@@ -240,7 +240,7 @@ describe('PopulationsPage', () => {
       // Given
       const loadingState = createLoadingState(true, true);
       (useUserHouseholds as any).mockReturnValue(loadingState.household);
-      (useGeographicAssociationsByUser as any).mockReturnValue(loadingState.geographic);
+      (useUserGeographics as any).mockReturnValue(loadingState.geographic);
 
       // When
       renderPage();
@@ -256,7 +256,7 @@ describe('PopulationsPage', () => {
       // Given
       const errorState = createErrorState(true, false);
       (useUserHouseholds as any).mockReturnValue(errorState.household);
-      (useGeographicAssociationsByUser as any).mockReturnValue(errorState.geographic);
+      (useUserGeographics as any).mockReturnValue(errorState.geographic);
 
       // When
       renderPage();
@@ -269,7 +269,7 @@ describe('PopulationsPage', () => {
       // Given
       const errorState = createErrorState(false, true);
       (useUserHouseholds as any).mockReturnValue(errorState.household);
-      (useGeographicAssociationsByUser as any).mockReturnValue(errorState.geographic);
+      (useUserGeographics as any).mockReturnValue(errorState.geographic);
 
       // When
       renderPage();
@@ -282,7 +282,7 @@ describe('PopulationsPage', () => {
       // Given
       const errorState = createErrorState(true, true);
       (useUserHouseholds as any).mockReturnValue(errorState.household);
-      (useGeographicAssociationsByUser as any).mockReturnValue(errorState.geographic);
+      (useUserGeographics as any).mockReturnValue(errorState.geographic);
 
       // When
       renderPage();

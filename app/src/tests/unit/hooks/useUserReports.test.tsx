@@ -64,6 +64,36 @@ vi.mock('@/hooks/useUserHousehold', () => ({
   useHouseholdAssociationsByUser: vi.fn(),
 }));
 
+vi.mock('@/hooks/useUserGeographic', () => ({
+  useGeographicAssociationsByUser: vi.fn(() => ({
+    data: [],
+    isLoading: false,
+    error: null,
+  })),
+}));
+
+vi.mock('@/hooks/useRegions', () => ({
+  useRegions: vi.fn(() => ({
+    data: [
+      {
+        id: 'region-state-ca',
+        countryId: 'us',
+        code: 'state/ca',
+        label: 'California',
+        regionType: 'state',
+        parentCode: 'us',
+        filterField: null,
+        filterValue: null,
+        requiresFilter: false,
+        stateCode: 'CA',
+        stateName: 'California',
+      },
+    ],
+    isLoading: false,
+    error: null,
+  })),
+}));
+
 // Helper to create mock store
 const createMockStore = () => {
   return configureStore({
@@ -253,6 +283,12 @@ describe('useUserReports', () => {
 
       expect(reportWithGeography).toBeDefined();
       expect(reportWithGeography?.geographies).toBeDefined();
+      expect(reportWithGeography?.geographies?.[0]).toMatchObject({
+        geographyId: 'state/ca',
+        name: 'California',
+        countryId: 'us',
+        scope: 'subnational',
+      });
     });
 
     test('given no reports then returns empty array', async () => {

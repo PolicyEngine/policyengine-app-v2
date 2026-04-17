@@ -11,18 +11,19 @@
  * and returns the fully-hydrated base ingredients.
  */
 
-import { useSelector } from 'react-redux';
 import { PolicyAdapter, ReportAdapter, SimulationAdapter } from '@/adapters';
 import { fetchHouseholdById } from '@/api/household';
 import { fetchPolicyById } from '@/api/policy';
 import { fetchReportById } from '@/api/report';
 import { fetchSimulationById } from '@/api/simulation';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useRegions } from '@/hooks/useRegions';
 import { GC_TIME_5_MIN } from '@/libs/queryConfig';
 import { householdKeys, policyKeys, reportKeys, simulationKeys } from '@/libs/queryKeys';
+import { buildCanonicalGeography } from '@/models/geography';
 import { Household as HouseholdModel } from '@/models/Household';
 import type { AppHouseholdInputEnvelope as Household } from '@/models/household/appTypes';
-import { RootState } from '@/store';
+import type { RegionRecord } from '@/models/region';
 import { Geography } from '@/types/ingredients/Geography';
 import { Policy } from '@/types/ingredients/Policy';
 import { Report } from '@/types/ingredients/Report';
@@ -34,11 +35,7 @@ import {
 } from '@/types/ingredients/UserPopulation';
 import { UserReport } from '@/types/ingredients/UserReport';
 import { UserSimulation } from '@/types/ingredients/UserSimulation';
-import { findPlaceFromRegionString, getPlaceDisplayName } from '@/utils/regionStrategies';
 import { combineLoadingStates, extractUniqueIds, useParallelQueries } from './queryUtils';
-
-// Type for geography options from redux store
-type GeographyOption = { name: string; label: string };
 
 /**
  * Construct Geography objects from geography-type simulations
@@ -52,40 +49,22 @@ type GeographyOption = { name: string; label: string };
  */
 export function buildGeographiesFromSimulations(
   simulations: Simulation[],
-  geographyOptions: GeographyOption[] | undefined
+  regions: RegionRecord[] | undefined
 ): Geography[] {
-  const geographies: Geography[] = [];
-
-  simulations.forEach((sim) => {
-    if (sim.populationType === 'geography' && sim.populationId && sim.countryId) {
-      const isNational = sim.populationId === sim.countryId;
-
-      let name: string;
-      if (isNational) {
-        name = sim.countryId.toUpperCase();
-      } else if (sim.populationId.startsWith('place/')) {
-        // For US places (municipalities), use the place lookup function
-        const place = findPlaceFromRegionString(sim.populationId);
-        name = place ? getPlaceDisplayName(place.name) : sim.populationId;
-      } else {
-        // For subnational, extract the base geography ID and look up in metadata
-        const parts = sim.populationId.split('-');
-        const baseGeographyId = parts.length > 1 ? parts.slice(1).join('-') : sim.populationId;
-        const regionData = geographyOptions?.find((r) => r.name === baseGeographyId);
-        name = regionData?.label || sim.populationId;
-      }
-
-      geographies.push({
-        id: sim.populationId,
-        countryId: sim.countryId,
-        scope: isNational ? 'national' : 'subnational',
-        geographyId: sim.populationId,
-        name,
-      });
+  return simulations.flatMap((sim) => {
+    if (!(sim.populationType === 'geography' && sim.populationId && sim.countryId)) {
+      return [];
     }
-  });
 
-  return geographies;
+    return [
+      buildCanonicalGeography({
+        countryId: sim.countryId,
+        scope: sim.populationId === sim.countryId ? 'national' : 'subnational',
+        geographyId: sim.populationId,
+        regions,
+      }),
+    ];
+  });
 }
 
 /**
@@ -192,9 +171,7 @@ export function useFetchReportIngredients(
   const currentCountry = useCurrentCountry();
   // Use country from input if available (for shared reports), otherwise use current country
   const country = input?.userReport.countryId ?? currentCountry;
-
-  // Get geography metadata for building Geography objects
-  const geographyOptions = useSelector((state: RootState) => state.metadata.economyOptions.region);
+  const { data: regions, isLoading: regionsLoading, error: regionsError } = useRegions(country);
 
   // Step 1: Fetch the base Report using reportId from userReport
   const reportId = input?.userReport.reportId;
@@ -265,14 +242,15 @@ export function useFetchReportIngredients(
   const households = householdResults.queries.map((q) => q.data).filter((h): h is Household => !!h);
 
   // Step 5: Construct Geography objects from geography-type simulations
-  const geographies = buildGeographiesFromSimulations(simulations, geographyOptions);
+  const geographies = buildGeographiesFromSimulations(simulations, regions);
 
   // Combine loading states
   const { isLoading, error } = combineLoadingStates(
     { isLoading: reportResults.isLoading, error: reportResults.error },
     { isLoading: simulationResults.isLoading, error: simulationResults.error },
     { isLoading: policyResults.isLoading, error: policyResults.error },
-    { isLoading: householdResults.isLoading, error: householdResults.error }
+    { isLoading: householdResults.isLoading, error: householdResults.error },
+    { isLoading: regionsLoading, error: regionsError }
   );
 
   return {

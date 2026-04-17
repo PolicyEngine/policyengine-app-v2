@@ -7,6 +7,7 @@ import {
   useCreateGeographicAssociation,
   useGeographicAssociation,
   useGeographicAssociationsByUser,
+  useUserGeographics,
   useUserGeographicStore,
 } from '@/hooks/useUserGeographic';
 import {
@@ -22,6 +23,41 @@ import {
 // Mock useCurrentCountry hook
 vi.mock('@/hooks/useCurrentCountry', () => ({
   useCurrentCountry: vi.fn(() => 'us'),
+}));
+
+vi.mock('@/hooks/useRegions', () => ({
+  useRegions: vi.fn(() => ({
+    data: [
+      {
+        id: 'region-state-ca',
+        countryId: 'us',
+        code: 'state/ca',
+        label: 'California',
+        regionType: 'state',
+        parentCode: 'us',
+        filterField: null,
+        filterValue: null,
+        requiresFilter: false,
+        stateCode: 'CA',
+        stateName: 'California',
+      },
+      {
+        id: 'region-state-ny',
+        countryId: 'us',
+        code: 'state/ny',
+        label: 'New York',
+        regionType: 'state',
+        parentCode: 'us',
+        filterField: null,
+        filterValue: null,
+        requiresFilter: false,
+        stateCode: 'NY',
+        stateName: 'New York',
+      },
+    ],
+    isLoading: false,
+    error: null,
+  })),
 }));
 
 // Mock the stores first
@@ -394,6 +430,53 @@ describe('useUserGeographic hooks', () => {
       // Then
       expect(refetchResult.data).toEqual([]);
       expect(mockStore.findByUser).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe('useUserGeographics', () => {
+    test('given geography associations then it reconstructs canonical geography records', async () => {
+      const { result } = renderHook(() => useUserGeographics(TEST_IDS.USER_ID), { wrapper });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      expect(result.current.data).toHaveLength(2);
+      expect(result.current.data?.[0].geography).toEqual({
+        id: 'state/ca',
+        countryId: 'us',
+        scope: 'subnational',
+        geographyId: 'state/ca',
+        name: 'California',
+      });
+      expect(result.current.data?.[1].geography?.name).toBe('New York');
+    });
+
+    test('given a national geography association then it uses the country display name', async () => {
+      const mockStore = (LocalStorageGeographicStore as any)();
+      mockStore.findByUser.mockResolvedValue([
+        {
+          ...mockUserGeographicAssociation,
+          countryId: 'uk',
+          scope: 'national',
+          geographyId: 'uk',
+          label: 'United Kingdom National',
+        },
+      ]);
+
+      const { result } = renderHook(() => useUserGeographics(TEST_IDS.USER_ID), { wrapper });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      expect(result.current.data?.[0].geography).toEqual({
+        id: 'uk',
+        countryId: 'uk',
+        scope: 'national',
+        geographyId: 'uk',
+        name: 'United Kingdom',
+      });
     });
   });
 });

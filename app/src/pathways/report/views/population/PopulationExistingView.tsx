@@ -5,7 +5,6 @@
  */
 
 import { useState } from 'react';
-import { useSelector } from 'react-redux';
 import PathwayView from '@/components/common/PathwayView';
 import { MOCK_USER_ID } from '@/constants';
 import {
@@ -18,10 +17,9 @@ import {
   UserHouseholdMetadataWithAssociation,
   useUserHouseholds,
 } from '@/hooks/useUserHousehold';
+import { getCountryDisplayName } from '@/models/geography';
 import { Household as HouseholdModel } from '@/models/Household';
-import { RootState } from '@/store';
 import { Geography } from '@/types/ingredients/Geography';
-import { getCountryLabel, getRegionLabel } from '@/utils/geographyUtils';
 import {
   isGeographicAssociationReady,
   isHouseholdAssociationReady,
@@ -41,7 +39,6 @@ export default function PopulationExistingView({
   onCancel,
 }: PopulationExistingViewProps) {
   const userId = MOCK_USER_ID.toString();
-  const metadata = useSelector((state: RootState) => state.metadata);
 
   // Fetch household populations
   const {
@@ -237,15 +234,10 @@ export default function PopulationExistingView({
       return 'Unknown Location';
     }
 
-    // If it's a national scope, return the country name
     if (geography.scope === 'national') {
-      return getCountryLabel(geography.countryId);
+      return getCountryDisplayName(geography.countryId);
     }
 
-    // For subnational, look up in metadata
-    if (geography.scope === 'subnational') {
-      return getRegionLabel(geography.geographyId, metadata);
-    }
     return geography.name || geography.geographyId;
   };
 

@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useSelector } from 'react-redux';
 import { BulletsValue, ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
 import { RenameIngredientModal } from '@/components/common/RenameIngredientModal';
 import IngredientReadView from '@/components/IngredientReadView';
@@ -8,23 +7,17 @@ import { MOCK_USER_ID } from '@/constants';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useDisclosure } from '@/hooks/useDisclosure';
-import {
-  useGeographicAssociationsByUser,
-  useUpdateGeographicAssociation,
-} from '@/hooks/useUserGeographic';
+import { useUpdateGeographicAssociation, useUserGeographics } from '@/hooks/useUserGeographic';
 import { useUpdateHouseholdAssociation, useUserHouseholds } from '@/hooks/useUserHousehold';
 import { countryIds } from '@/libs/countries';
+import { getCountryDisplayName, getGeographyRegionTypeLabel } from '@/models/geography';
 import { Household } from '@/models/Household';
-import { RootState } from '@/store';
-import { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
+import { Geography } from '@/types/ingredients/Geography';
 import { formatDate } from '@/utils/dateUtils';
-import { getCountryLabel } from '@/utils/geographyUtils';
-import { extractRegionDisplayValue } from '@/utils/regionStrategies';
 
 export default function PopulationsPage() {
   const userId = MOCK_USER_ID.toString(); // TODO: Replace with actual user ID retrieval logic
   // TODO: Session storage hard-fixes "anonymous" as user ID; this should really just be anything
-  const metadata = useSelector((state: RootState) => state.metadata);
   const countryId = useCurrentCountry();
 
   // Fetch household associations
@@ -41,7 +34,7 @@ export default function PopulationsPage() {
     isLoading: isGeographicLoading,
     isError: isGeographicError,
     error: geographicError,
-  } = useGeographicAssociationsByUser(userId);
+  } = useUserGeographics(userId);
 
   const nav = useAppNavigate();
 
@@ -72,14 +65,14 @@ export default function PopulationsPage() {
     const household = householdData?.find(
       (item) => (item.association.id || item.association.householdId.toString()) === recordId
     );
-    const geography = geographicData?.find((item) => item.geographyId === recordId);
+    const geography = geographicData?.find((item) => item.association.geographyId === recordId);
 
     if (!household && !geography) {
       return;
     }
 
     const type: 'household' | 'geography' = household ? 'household' : 'geography';
-    const userIdValue = household ? household.association.userId : geography!.userId;
+    const userIdValue = household ? household.association.userId : geography!.association.userId;
 
     setRenamingId(recordId);
     setRenamingType(type);
@@ -121,16 +114,18 @@ export default function PopulationsPage() {
 
   // Find the item being renamed for current label
   const renamingHousehold = householdData?.find((item) => item.association.id === renamingId);
-  const renamingGeography = geographicData?.find((item) => item.id === renamingId);
+  const renamingGeography = geographicData?.find(
+    (item) => item.association.geographyId === renamingId
+  );
 
   const currentLabel =
     renamingType === 'household'
       ? renamingHousehold?.association.label ||
         `Household #${renamingHousehold?.association.householdId}`
-      : renamingGeography?.label || '';
+      : renamingGeography?.association.label || '';
 
   // Helper function to get geographic scope details
-  const getGeographicDetails = (geography: UserGeographyPopulation) => {
+  const getGeographicDetails = (geography: Geography) => {
     const details = [];
 
     // Add geography scope
@@ -139,50 +134,16 @@ export default function PopulationsPage() {
 
     // Add region if subnational
     if (geography.scope === 'subnational' && geography.geographyId) {
-      let regionLabel = geography.geographyId;
-      const fullRegionName = geography.geographyId;
-      if (metadata.economyOptions?.region) {
-        const region = metadata.economyOptions.region.find((r) => r.name === geography.geographyId);
-
-        if (region) {
-          regionLabel = region.label;
-        } else {
-          const fallbackRegion = metadata.economyOptions.region.find(
-            (r) =>
-              r.name === `state/${geography.geographyId}` ||
-              r.name === `constituency/${geography.geographyId}` ||
-              r.name === `country/${geography.geographyId}`
-          );
-          if (fallbackRegion) {
-            regionLabel = fallbackRegion.label;
-          }
-        }
+      if (geography.countryId === 'uk' && geography.geographyId.startsWith('constituency/')) {
+        details.push({ text: getCountryDisplayName(geography.countryId), badge: '' });
       }
 
-      if (regionLabel === geography.geographyId) {
-        regionLabel = extractRegionDisplayValue(geography.geographyId);
-      }
-
-      let regionTypeLabel = 'Region';
-      if (geography.countryId === 'us') {
-        regionTypeLabel = 'State';
-      } else if (geography.countryId === 'uk') {
-        if (fullRegionName.startsWith('country/')) {
-          regionTypeLabel = 'Country';
-        } else if (fullRegionName.startsWith('constituency/')) {
-          regionTypeLabel = 'Constituency';
-        }
-      }
-
-      if (geography.countryId === 'uk' && fullRegionName.startsWith('constituency/')) {
-        const countryLabel = getCountryLabel(geography.countryId);
-        details.push({ text: countryLabel, badge: '' });
-      }
-
-      details.push({ text: `${regionTypeLabel}: ${regionLabel}`, badge: '' });
+      details.push({
+        text: `${getGeographyRegionTypeLabel(geography)}: ${geography.name ?? geography.geographyId}`,
+        badge: '',
+      });
     } else {
-      const countryLabel = getCountryLabel(geography.countryId);
-      details.push({ text: countryLabel, badge: '' });
+      details.push({ text: getCountryDisplayName(geography.countryId), badge: '' });
     }
 
     return details;
@@ -267,22 +228,22 @@ export default function PopulationsPage() {
   // Transform geographic data
   const geographicRecords: IngredientRecord[] =
     geographicData?.map((association) => {
-      const detailsItems = getGeographicDetails(association);
+      const detailsItems = getGeographicDetails(association.geography!);
 
       return {
-        id: association.geographyId,
+        id: association.association.geographyId,
         type: 'geography',
-        userId: association.userId,
-        geographyId: association.geographyId,
+        userId: association.association.userId,
+        geographyId: association.geography?.geographyId ?? association.association.geographyId,
         populationName: {
-          text: association.label,
+          text: association.association.label || association.geography?.name || '',
         } as TextValue,
         dateCreated: {
-          text: association.createdAt
+          text: association.association.createdAt
             ? formatDate(
-                association.createdAt,
+                association.association.createdAt,
                 'short-month-day-year',
-                association?.countryId as (typeof countryIds)[number],
+                association.association.countryId as (typeof countryIds)[number],
                 true
               )
             : '',

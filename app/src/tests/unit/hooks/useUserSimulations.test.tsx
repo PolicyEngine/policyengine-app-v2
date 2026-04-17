@@ -39,6 +39,14 @@ vi.mock('@/hooks/useCurrentCountry', () => ({
   useCurrentCountry: vi.fn(() => 'us'),
 }));
 
+vi.mock('@/hooks/useRegions', () => ({
+  useRegions: vi.fn(() => ({
+    data: [],
+    isLoading: false,
+    error: null,
+  })),
+}));
+
 describe('useUserSimulations', () => {
   let queryClient: QueryClient;
   let store: ReturnType<typeof createMockStore>;

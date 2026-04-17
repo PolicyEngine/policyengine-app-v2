@@ -283,8 +283,30 @@ export const createMockUserHouseholdsData = () => [
 ];
 
 export const createMockGeographicAssociationsData = () => [
-  createMockGeographicAssociation1(),
-  createMockGeographicAssociation2(),
+  {
+    association: createMockGeographicAssociation1(),
+    geography: {
+      id: 'state/ca',
+      countryId: 'us',
+      scope: 'subnational' as const,
+      geographyId: 'state/ca',
+      name: 'California',
+    },
+    isLoading: false,
+    error: null,
+  },
+  {
+    association: createMockGeographicAssociation2(),
+    geography: {
+      id: 'uk',
+      countryId: 'uk',
+      scope: 'national' as const,
+      geographyId: 'uk',
+      name: 'United Kingdom',
+    },
+    isLoading: false,
+    error: null,
+  },
 ];
 
 // Combined mock data for useUserHouseholds hook
@@ -305,7 +327,7 @@ export const mockUseUserHouseholds = vi.fn(() => ({
   error: null,
 }));
 
-export const mockUseGeographicAssociationsByUser = vi.fn(() => ({
+export const mockUseUserGeographics = vi.fn(() => ({
   data: createMockGeographicAssociationsData(),
   isLoading: false,
   isError: false,
