@@ -196,7 +196,9 @@ export async function shadowResolveRegionTarget(args: {
     regionCode: canonicalCode,
   })
     .then((target) => {
-      resolvedTargetCache.set(cacheKey, target);
+      if (target) {
+        resolvedTargetCache.set(cacheKey, target);
+      }
       return target;
     })
     .finally(() => {

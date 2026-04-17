@@ -139,7 +139,7 @@ describe('regionShadow', () => {
     expect(result?.filterValue).toBe('DE-00');
   });
 
-  test('given repeated skipped resolution then caches null result and avoids repeated logs', async () => {
+  test('given repeated skipped resolution then it retries instead of caching null results', async () => {
     vi.mocked(fetchRegionByCode).mockRejectedValue(new Error('Region not found: state/zz'));
 
     const first = await shadowResolveRegionTarget({
@@ -153,7 +153,7 @@ describe('regionShadow', () => {
 
     expect(first).toBeNull();
     expect(second).toBeNull();
-    expect(fetchRegionByCode).toHaveBeenCalledTimes(1);
-    expect(sendMigrationLog).toHaveBeenCalledTimes(1);
+    expect(fetchRegionByCode).toHaveBeenCalledTimes(2);
+    expect(sendMigrationLog).toHaveBeenCalledTimes(2);
   });
 });
