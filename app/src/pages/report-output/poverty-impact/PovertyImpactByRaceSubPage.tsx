@@ -36,6 +36,34 @@ interface Props {
   fillHeight?: boolean;
 }
 
+/** CSV for Poverty impact by race. Dynamic race keys. */
+export function buildPovertyByRaceCsv(output: SocietyWideReportOutput): string[][] {
+  type RaceData = Record<string, { baseline: number; reform: number }>;
+  const raceImpact: RaceData = (output.poverty_by_race as any)?.poverty || {};
+  const allImpact = output.poverty.poverty;
+  const header = ['Race', 'Baseline rate (%)', 'Reform rate (%)', 'Relative change (%)'];
+  const rows: string[][] = [header];
+  for (const key of Object.keys(raceImpact).filter((k) => k !== 'all')) {
+    const b = raceImpact[key];
+    const rel = b.baseline === 0 ? 0 : b.reform / b.baseline - 1;
+    rows.push([
+      key.charAt(0).toUpperCase() + key.slice(1),
+      (b.baseline * 100).toFixed(2),
+      (b.reform * 100).toFixed(2),
+      (rel * 100).toFixed(2),
+    ]);
+  }
+  const all = allImpact.all;
+  const rel = all.baseline === 0 ? 0 : all.reform / all.baseline - 1;
+  rows.push([
+    'All',
+    (all.baseline * 100).toFixed(2),
+    (all.reform * 100).toFixed(2),
+    (rel * 100).toFixed(2),
+  ]);
+  return rows;
+}
+
 export default function PovertyImpactByRaceSubPage({
   output,
   chartHeight: chartHeightProp,
@@ -189,7 +217,11 @@ export default function PovertyImpactByRaceSubPage({
   }
 
   return (
-    <ChartContainer title={getChartTitle()} downloadFilename="poverty-impact-by-race.svg">
+    <ChartContainer
+      title={getChartTitle()}
+      downloadFilename="poverty-impact-by-race.svg"
+      csvData={() => buildPovertyByRaceCsv(output)}
+    >
       <Stack gap="sm">
         <ResponsiveContainer width="100%" height={chartHeight}>
           {barChart}

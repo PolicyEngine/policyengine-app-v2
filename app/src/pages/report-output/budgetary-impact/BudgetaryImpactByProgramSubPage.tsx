@@ -94,6 +94,30 @@ export default function BudgetaryImpactByProgramSubPage({ output }: Props) {
     { name: 'Total', value: budgetaryImpact / 1e9, isTotal: true },
   ];
 
+  // CSV export: one row per program with baseline/reform/difference in billions, plus total.
+  const buildCsv = (): string[][] => {
+    const header = [
+      'Program',
+      'Baseline spending (billions)',
+      'Reform spending (billions)',
+      'Difference (billions)',
+    ];
+    const rows: string[][] = [header];
+    for (const [key, values] of Object.entries(detailedBudget)) {
+      if (values.difference === 0) {
+        continue;
+      }
+      rows.push([
+        variables[key]?.label || key,
+        (values.baseline / 1e9).toFixed(3),
+        (values.reform / 1e9).toFixed(3),
+        (values.difference / 1e9).toFixed(3),
+      ]);
+    }
+    rows.push(['Total', '', '', (budgetaryImpact / 1e9).toFixed(3)]);
+    return rows;
+  };
+
   const data = computeWaterfallData(items, (v) => formatBillions(v * 1e9, countryId));
 
   // Attach hover text to each datum for the tooltip
@@ -111,6 +135,7 @@ export default function BudgetaryImpactByProgramSubPage({ output }: Props) {
     <ChartContainer
       title={getBudgetChartTitle(budgetaryImpact, countryId, metadata)}
       downloadFilename="budgetary-impact-by-program.svg"
+      csvData={buildCsv}
     >
       <WaterfallChart
         data={dataWithHover}

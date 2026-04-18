@@ -1,13 +1,12 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { IconArrowsMinimize, IconDownload } from '@tabler/icons-react';
+import { IconArrowsMinimize } from '@tabler/icons-react';
 import { motion } from 'framer-motion';
+import { ChartDownloadMenu, type ChartCsvData } from '@/components/ChartDownloadMenu';
 import { Text } from '@/components/ui';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { colors, spacing } from '@/designTokens';
 import { typography } from '@/designTokens/typography';
-import { trackChartCsvDownloaded } from '@/utils/analytics';
-import { downloadChartAsSvg } from '@/utils/chartUtils';
 
 const FADE_MS = 150;
 const RESIZE_S = 0.35;
@@ -42,6 +41,9 @@ interface DashboardCardProps {
   expandedTitle?: string;
   /** SVG download filename — renders a download button in the expanded toolbar */
   downloadFilename?: string;
+  /** Optional CSV data for the expanded chart. When set alongside
+   * downloadFilename, the download button becomes a dropdown with SVG + CSV. */
+  csvData?: ChartCsvData;
 
   // Style overrides (apply only when shrunken/idle)
   shrunkenBackground?: string;
@@ -84,6 +86,7 @@ export default function DashboardCard({
   expandedControls,
   expandedTitle,
   downloadFilename,
+  csvData,
   shrunkenBackground,
   shrunkenBorderColor,
   padding: paddingProp,
@@ -192,6 +195,11 @@ export default function DashboardCard({
   const shrunkenContentOpacity = phase === 'idle' ? 1 : 0;
   const mountExpanded = phase === 'expanded' || phase === 'pre-collapse';
   const expandedContentOpacity = phase === 'expanded' && expandedVisible ? 1 : 0;
+  // Clip overflow during animations and in idle state so mini-chart content
+  // doesn't bleed past the rounded corners. Once the card is fully expanded,
+  // let overflow be visible so Recharts tooltips near the chart edges (e.g.
+  // decile 8–10 on Winners & Losers) don't get cut off by the card boundary.
+  const cardOverflow = phase === 'expanded' ? 'visible' : 'hidden';
 
   // Animate target: cell size when shrinking, expanded size when growing
   const getAnimateTarget = (): { width: number; height: number } | undefined => {
@@ -265,7 +273,7 @@ export default function DashboardCard({
           border: `1px solid ${cardBorderColor}`,
           padding: cardPadding,
           cursor: !isExpanded && onToggleMode ? 'pointer' : undefined,
-          overflow: 'hidden',
+          overflow: cardOverflow,
           boxShadow: isLifted ? '0 8px 32px rgba(0,0,0,0.12)' : 'none',
           display: 'flex',
           flexDirection: 'column',
@@ -273,7 +281,7 @@ export default function DashboardCard({
         onClick={!isExpanded ? onToggleMode : undefined}
       >
         {/* Content area */}
-        <div style={{ position: 'relative', flex: 1, minHeight: 0, overflow: 'hidden' }}>
+        <div style={{ position: 'relative', flex: 1, minHeight: 0, overflow: cardOverflow }}>
           {/* Shrunken layer — always mounted, opacity-controlled */}
           <div
             style={{
@@ -378,28 +386,14 @@ export default function DashboardCard({
                   }}
                 >
                   {downloadFilename && (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon-xs"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            trackChartCsvDownloaded();
-                            if (expandedContentRef.current) {
-                              downloadChartAsSvg(expandedContentRef.current, {
-                                title: expandedTitle,
-                                filename: downloadFilename,
-                              });
-                            }
-                          }}
-                          aria-label="Download as SVG"
-                        >
-                          <IconDownload size={16} />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent side="left">Download as SVG</TooltipContent>
-                    </Tooltip>
+                    <ChartDownloadMenu
+                      containerRef={expandedContentRef}
+                      svgFilename={downloadFilename}
+                      title={expandedTitle}
+                      csvData={csvData}
+                      iconSize={16}
+                      buttonSize="icon-xs"
+                    />
                   )}
                   {onToggleMode && expandButton}
                 </div>

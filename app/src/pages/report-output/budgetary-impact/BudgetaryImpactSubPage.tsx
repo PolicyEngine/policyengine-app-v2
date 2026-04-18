@@ -30,6 +30,26 @@ interface Props {
   fillHeight?: boolean;
 }
 
+/** CSV for Budgetary impact waterfall (values in USD billions). */
+export function buildBudgetaryImpactCsv(
+  output: SocietyWideReportOutput,
+  countryId: string
+): string[][] {
+  const budgetaryImpact = output.budget.budgetary_impact;
+  const spendingImpact = output.budget.benefit_spending_impact;
+  const stateTaxImpact = output.budget.state_tax_revenue_impact;
+  const taxImpact = output.budget.tax_revenue_impact - stateTaxImpact;
+  const isUS = countryId === 'us';
+  const items: Array<[string, number]> = [
+    [isUS ? 'Federal tax revenues' : 'Tax revenues', taxImpact / 1e9],
+    ['State and local income tax revenues', stateTaxImpact / 1e9],
+    ['Benefit spending', -spendingImpact / 1e9],
+    ['Net impact', budgetaryImpact / 1e9],
+  ];
+  const header = ['Line item', 'Value (billions)'];
+  return [header, ...items.filter(([, v]) => v !== 0).map(([k, v]) => [k, v.toFixed(3)])];
+}
+
 export default function BudgetaryImpactSubPage({
   output,
   chartHeight: chartHeightProp,
@@ -134,6 +154,7 @@ export default function BudgetaryImpactSubPage({
     <ChartContainer
       title={getBudgetChartTitle(budgetaryImpact, countryId, metadata)}
       downloadFilename="budgetary-impact.svg"
+      csvData={() => buildBudgetaryImpactCsv(output, countryId)}
     >
       <WaterfallChart {...waterfallProps} height={chartHeight} />
     </ChartContainer>

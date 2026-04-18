@@ -37,6 +37,21 @@ interface Props {
   fillHeight?: boolean;
 }
 
+/**
+ * Build a CSV-ready table for the relative distributional impact by income decile.
+ * Columns: Decile, Relative change (%).
+ */
+export function buildDistributionalRelativeCsv(output: SocietyWideReportOutput): string[][] {
+  const decileRelative = output.decile.relative;
+  const rows: string[][] = [['Decile', 'Relative change (%)']];
+  Object.keys(decileRelative)
+    .sort((a, b) => Number(a) - Number(b))
+    .forEach((decile) => {
+      rows.push([decile, (decileRelative[decile] * 100).toFixed(2)]);
+    });
+  return rows;
+}
+
 export default function DistributionalImpactIncomeRelativeSubPage({
   output,
   chartHeight: chartHeightProp,
@@ -163,6 +178,7 @@ export default function DistributionalImpactIncomeRelativeSubPage({
     <ChartContainer
       title={getChartTitle()}
       downloadFilename="distributional-impact-income-relative.svg"
+      csvData={() => buildDistributionalRelativeCsv(output)}
     >
       <Stack gap="sm">
         <ResponsiveContainer width="100%" height={chartHeight}>

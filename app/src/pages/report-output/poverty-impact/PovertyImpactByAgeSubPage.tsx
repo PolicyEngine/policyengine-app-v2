@@ -37,6 +37,46 @@ interface Props {
   fillHeight?: boolean;
 }
 
+type PovertySource =
+  | SocietyWideReportOutput['poverty']['poverty']
+  | SocietyWideReportOutput['poverty']['deep_poverty'];
+
+/**
+ * Shared builder for poverty impact CSVs.
+ * Columns: Group, Baseline rate (%), Reform rate (%), Relative change (%).
+ */
+export function buildPovertyImpactCsv(
+  source: PovertySource,
+  rows: Array<{ label: string; key: keyof PovertySource }>
+): string[][] {
+  const header = ['Group', 'Baseline rate (%)', 'Reform rate (%)', 'Relative change (%)'];
+  const out: string[][] = [header];
+  for (const { label, key } of rows) {
+    const bucket = source[key as keyof typeof source] as { baseline: number; reform: number };
+    if (!bucket) {
+      continue;
+    }
+    const relChange = bucket.baseline === 0 ? 0 : bucket.reform / bucket.baseline - 1;
+    out.push([
+      label,
+      (bucket.baseline * 100).toFixed(2),
+      (bucket.reform * 100).toFixed(2),
+      (relChange * 100).toFixed(2),
+    ]);
+  }
+  return out;
+}
+
+/** CSV for Poverty impact by age. */
+export function buildPovertyByAgeCsv(output: SocietyWideReportOutput): string[][] {
+  return buildPovertyImpactCsv(output.poverty.poverty, [
+    { label: 'Children', key: 'child' as const },
+    { label: 'Working-age adults', key: 'adult' as const },
+    { label: 'Seniors', key: 'senior' as const },
+    { label: 'All', key: 'all' as const },
+  ]);
+}
+
 export default function PovertyImpactByAgeSubPage({
   output,
   chartHeight: chartHeightProp,
@@ -190,7 +230,11 @@ export default function PovertyImpactByAgeSubPage({
   }
 
   return (
-    <ChartContainer title={getChartTitle()} downloadFilename="poverty-impact-by-age.svg">
+    <ChartContainer
+      title={getChartTitle()}
+      downloadFilename="poverty-impact-by-age.svg"
+      csvData={() => buildPovertyByAgeCsv(output)}
+    >
       <Stack gap="sm">
         <ResponsiveContainer width="100%" height={chartHeight}>
           {barChart}

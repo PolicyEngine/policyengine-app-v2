@@ -29,6 +29,16 @@ interface Props {
   output: SocietyWideReportOutput;
 }
 
+/** CSV for absolute wealth distributional impact. */
+export function buildWealthAverageCsv(output: SocietyWideReportOutput): string[][] {
+  const data = output.wealth_decile?.average || {};
+  const rows: string[][] = [['Wealth decile', 'Absolute change in household income']];
+  for (const k of Object.keys(data).sort((a, b) => Number(a) - Number(b))) {
+    rows.push([k, data[k].toFixed(2)]);
+  }
+  return rows;
+}
+
 export default function DistributionalImpactWealthAverageSubPage({ output }: Props) {
   const mobile = useMediaQuery(MOBILE_BREAKPOINT_QUERY);
   const countryId = useCurrentCountry();
@@ -102,6 +112,7 @@ export default function DistributionalImpactWealthAverageSubPage({ output }: Pro
     <ChartContainer
       title={getChartTitle()}
       downloadFilename="distributional-impact-wealth-average.svg"
+      csvData={() => buildWealthAverageCsv(output)}
     >
       <Stack gap="sm">
         <ResponsiveContainer width="100%" height={chartHeight}>
