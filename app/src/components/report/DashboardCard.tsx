@@ -196,10 +196,12 @@ export default function DashboardCard({
   const mountExpanded = phase === 'expanded' || phase === 'pre-collapse';
   const expandedContentOpacity = phase === 'expanded' && expandedVisible ? 1 : 0;
   // Clip overflow during animations and in idle state so mini-chart content
-  // doesn't bleed past the rounded corners. Once the card is fully expanded,
-  // let overflow be visible so Recharts tooltips near the chart edges (e.g.
+  // doesn't bleed past the rounded corners. While the card sits at expanded
+  // dimensions (either fully expanded or fading out on pre-collapse), let
+  // overflow be visible so Recharts tooltips near the chart edges (e.g.
   // decile 8–10 on Winners & Losers) don't get cut off by the card boundary.
-  const cardOverflow = phase === 'expanded' ? 'visible' : 'hidden';
+  const cardOverflow =
+    phase === 'expanded' || phase === 'pre-collapse' ? 'visible' : 'hidden';
 
   // Animate target: cell size when shrinking, expanded size when growing
   const getAnimateTarget = (): { width: number; height: number } | undefined => {
