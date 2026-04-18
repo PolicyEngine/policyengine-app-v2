@@ -6,6 +6,38 @@ import { US_REGION_TYPES } from '@/types/regionTypes';
 
 type DistrictRegionSource = MetadataRegionEntry | RegionRecord;
 
+function isV2RegionRecord(region: DistrictRegionSource): region is RegionRecord {
+  return 'regionType' in region && 'code' in region;
+}
+
+function isV1MetadataRegionEntry(region: DistrictRegionSource): region is MetadataRegionEntry {
+  return 'type' in region && 'name' in region;
+}
+
+function getDistrictRegionType(region: DistrictRegionSource): string {
+  if (isV2RegionRecord(region)) {
+    return region.regionType;
+  }
+
+  if (isV1MetadataRegionEntry(region)) {
+    return region.type;
+  }
+
+  return '';
+}
+
+function getDistrictRegionCode(region: DistrictRegionSource): string {
+  if (isV2RegionRecord(region)) {
+    return region.code;
+  }
+
+  if (isV1MetadataRegionEntry(region)) {
+    return region.name;
+  }
+
+  return '';
+}
+
 /**
  * Type for district label lookup map (district ID -> label)
  */
@@ -45,8 +77,8 @@ export function buildDistrictLabelLookup(regions: DistrictRegionSource[]): Distr
   const lookup = new Map<string, string>();
 
   for (const region of regions) {
-    const regionType = 'regionType' in region ? region.regionType : region.type;
-    const regionCode = 'code' in region ? region.code : region.name;
+    const regionType = getDistrictRegionType(region);
+    const regionCode = getDistrictRegionCode(region);
 
     if (regionType === US_REGION_TYPES.CONGRESSIONAL_DISTRICT) {
       // Strip "congressional_district/" prefix so keys match API district IDs (e.g., "AL-01")

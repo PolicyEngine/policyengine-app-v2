@@ -34,20 +34,60 @@ export interface PlaceOption {
 
 type RegionOptionSource = MetadataRegionEntry | RegionRecord;
 
+function isV2RegionRecord(region: RegionOptionSource): region is RegionRecord {
+  return 'regionType' in region && 'code' in region;
+}
+
+function isV1MetadataRegionEntry(region: RegionOptionSource): region is MetadataRegionEntry {
+  return 'type' in region && 'name' in region;
+}
+
 function getRegionCode(region: RegionOptionSource): string {
-  return 'code' in region ? region.code : region.name;
+  if (isV2RegionRecord(region)) {
+    return region.code;
+  }
+
+  if (isV1MetadataRegionEntry(region)) {
+    return region.name;
+  }
+
+  return '';
 }
 
 function getRegionType(region: RegionOptionSource): string {
-  return 'regionType' in region ? region.regionType : region.type;
+  if (isV2RegionRecord(region)) {
+    return region.regionType;
+  }
+
+  if (isV1MetadataRegionEntry(region)) {
+    return region.type;
+  }
+
+  return '';
 }
 
 function getRegionStateAbbreviation(region: RegionOptionSource): string | undefined {
-  return 'stateCode' in region ? (region.stateCode ?? undefined) : region.state_abbreviation;
+  if (isV2RegionRecord(region)) {
+    return region.stateCode ?? undefined;
+  }
+
+  if (isV1MetadataRegionEntry(region)) {
+    return region.state_abbreviation;
+  }
+
+  return undefined;
 }
 
 function getRegionStateName(region: RegionOptionSource): string | undefined {
-  return 'stateName' in region ? (region.stateName ?? undefined) : region.state_name;
+  if (isV2RegionRecord(region)) {
+    return region.stateName ?? undefined;
+  }
+
+  if (isV1MetadataRegionEntry(region)) {
+    return region.state_name;
+  }
+
+  return undefined;
 }
 
 /**
