@@ -116,34 +116,53 @@ export function createSavedGeographySelection(args: {
   };
 }
 
-export function getGeographyRegionTypeLabel(geography: Geography): string {
+type GeographyRegionType =
+  | 'national'
+  | 'state'
+  | 'congressional_district'
+  | 'place'
+  | 'country'
+  | 'constituency'
+  | 'local_authority'
+  | 'region';
+
+export function getGeographyRegionType(geography: Geography): GeographyRegionType {
   if (geography.scope === 'national') {
-    return 'National';
+    return 'national';
   }
 
-  if (geography.geographyId.startsWith('state/')) {
-    return 'State';
-  }
+  const [regionType] = geography.geographyId.split('/', 1);
 
-  if (geography.geographyId.startsWith('congressional_district/')) {
-    return 'Congressional district';
+  switch (regionType) {
+    case 'state':
+    case 'congressional_district':
+    case 'place':
+    case 'country':
+    case 'constituency':
+    case 'local_authority':
+      return regionType;
+    default:
+      return 'region';
   }
+}
 
-  if (geography.geographyId.startsWith('place/')) {
-    return 'City';
+export function getGeographyRegionTypeLabel(geography: Geography): string {
+  switch (getGeographyRegionType(geography)) {
+    case 'national':
+      return 'National';
+    case 'state':
+      return 'State';
+    case 'congressional_district':
+      return 'Congressional district';
+    case 'place':
+      return 'City';
+    case 'country':
+      return 'Country';
+    case 'constituency':
+      return 'Constituency';
+    case 'local_authority':
+      return 'Local authority';
+    default:
+      return 'Region';
   }
-
-  if (geography.geographyId.startsWith('country/')) {
-    return 'Country';
-  }
-
-  if (geography.geographyId.startsWith('constituency/')) {
-    return 'Constituency';
-  }
-
-  if (geography.geographyId.startsWith('local_authority/')) {
-    return 'Local authority';
-  }
-
-  return 'Region';
 }
