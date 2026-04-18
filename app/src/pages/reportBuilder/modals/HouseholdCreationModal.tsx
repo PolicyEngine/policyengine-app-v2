@@ -14,6 +14,7 @@ import { useUpdateHouseholdAssociation } from '@/hooks/useUserHousehold';
 import { getBasicInputFields } from '@/libs/metadataUtils';
 import { Household as HouseholdModel } from '@/models/Household';
 import type { AppHouseholdInputEnvelope } from '@/models/household/appTypes';
+import { EditableLabel } from '@/pages/reportBuilder/components/EditableLabel';
 import { RootState } from '@/store';
 import type { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { PopulationStateProps } from '@/types/pathwayState';
@@ -26,7 +27,7 @@ import {
 import { cloneHousehold } from '@/utils/householdDataAccess';
 import { HouseholdValidation } from '@/utils/HouseholdValidation';
 import { FONT_SIZES, INGREDIENT_COLORS } from '../constants';
-import { HouseholdCreationContent, PopulationStatusHeader } from './population';
+import { HouseholdCreationContent } from './population';
 
 type HouseholdEditorMode = 'create' | 'display' | 'edit';
 type PendingUnnamedAction = 'create' | 'save-as-new' | 'update-existing' | null;
@@ -357,7 +358,7 @@ export function HouseholdCreationModal({
       ? 'Household details'
       : effectiveEditorMode === 'edit'
         ? 'Edit household'
-        : 'Create a household';
+        : 'Create new household';
 
   return (
     <>
@@ -395,7 +396,7 @@ export function HouseholdCreationModal({
             }}
           >
             <Group justify="space-between" align="center" wrap="nowrap" style={{ width: '100%' }}>
-              <Group gap="md" align="center" wrap="nowrap">
+              <Group gap="md" align="center" wrap="nowrap" style={{ minWidth: 0, flex: 1 }}>
                 <div
                   style={{
                     width: 32,
@@ -411,22 +412,59 @@ export function HouseholdCreationModal({
                 >
                   <IconHome size={18} color={colorConfig.icon} />
                 </div>
-                <Text fw={600} style={{ fontSize: FONT_SIZES.normal, color: colors.gray[800] }}>
+                <Text
+                  fw={600}
+                  style={{
+                    fontSize: FONT_SIZES.normal,
+                    color: colors.gray[800],
+                    flexShrink: 0,
+                  }}
+                >
                   {modalTitle}
                 </Text>
+                <div
+                  style={{
+                    minWidth: 280,
+                    flex: 1,
+                    border: `1px solid ${colors.border.light}`,
+                    background: colors.gray[50],
+                    borderRadius: spacing.radius.container,
+                    padding: `${spacing.xs} ${spacing.sm}`,
+                  }}
+                >
+                  <EditableLabel
+                    value={household?.label ?? ''}
+                    onChange={handleHouseholdLabelChange}
+                    placeholder="Enter household name..."
+                    emptyStateText="Click to name your household..."
+                    readOnly={isReadOnly}
+                  />
+                </div>
               </Group>
-              <Button variant="ghost" size="icon-sm" onClick={onClose} style={{ flexShrink: 0 }}>
-                <IconX size={18} />
-              </Button>
+              <Group gap="md" align="center" wrap="nowrap" style={{ flexShrink: 0 }}>
+                <Group gap="xs" align="center" wrap="nowrap">
+                  {memberCount > 0 && (
+                    <div
+                      style={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: '50%',
+                        background: colors.primary[500],
+                      }}
+                    />
+                  )}
+                  <Text style={{ fontSize: FONT_SIZES.small, color: colors.gray[600] }}>
+                    {memberCount > 0
+                      ? `${memberCount} household member${memberCount !== 1 ? 's' : ''}`
+                      : 'No household members yet'}
+                  </Text>
+                </Group>
+                <Button variant="ghost" size="icon-sm" onClick={onClose} style={{ flexShrink: 0 }}>
+                  <IconX size={18} />
+                </Button>
+              </Group>
             </Group>
           </div>
-
-          <PopulationStatusHeader
-            householdLabel={household?.label ?? ''}
-            setHouseholdLabel={handleHouseholdLabelChange}
-            memberCount={memberCount}
-            isReadOnly={isReadOnly}
-          />
 
           <div
             style={{
@@ -434,7 +472,8 @@ export function HouseholdCreationModal({
               minHeight: 0,
               overflow: 'hidden',
               display: 'flex',
-              padding: spacing.xl,
+              paddingLeft: spacing.xl,
+              paddingRight: spacing.xl,
               paddingTop: spacing.lg,
             }}
           >

@@ -29,6 +29,7 @@ import { useCreatePolicy } from '@/hooks/useCreatePolicy';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useUpdatePolicyAssociation } from '@/hooks/useUserPolicy';
 import { getDateRange, selectSearchableParameters } from '@/libs/metadataUtils';
+import { EditableLabel } from '@/pages/reportBuilder/components/EditableLabel';
 import { ValueSetterMode } from '@/pathways/report/components/valueSetters';
 import { RootState } from '@/store';
 import { Policy } from '@/types/ingredients/Policy';
@@ -120,8 +121,6 @@ export function PolicyCreationModal({
   // Parameter search state
   const [parameterSearch, setParameterSearch] = useState('');
   const [hoveredParamName, setHoveredParamName] = useState<string | null>(null);
-  const [footerHovered, setFooterHovered] = useState(false);
-
   // API hooks
   const { createPolicy, isPending: isCreating } = useCreatePolicy(policyLabel || undefined);
   const updatePolicyAssociation = useUpdatePolicyAssociation();
@@ -143,7 +142,7 @@ export function PolicyCreationModal({
       ? 'Policy details'
       : effectiveEditorMode === 'edit'
         ? 'Edit policy'
-        : 'Create a policy';
+        : 'Create new policy';
 
   // Reset state when modal opens; pre-populate from initialPolicy when editing
   useEffect(() => {
@@ -394,6 +393,7 @@ export function PolicyCreationModal({
           policyLabel={policyLabel}
           onLabelChange={setPolicyLabel}
           isReadOnly={isReadOnly}
+          showNamingCard={false}
           modificationCount={modificationCount}
           modifiedParams={modifiedParams}
           hoveredParamName={hoveredParamName}
@@ -498,7 +498,7 @@ export function PolicyCreationModal({
           }}
         >
           <Group justify="space-between" align="center" wrap="nowrap" style={{ width: '100%' }}>
-            <Group gap="md" align="center" wrap="nowrap">
+            <Group gap="md" align="center" wrap="nowrap" style={{ minWidth: 0, flex: 1 }}>
               <div
                 style={{
                   width: 32,
@@ -514,13 +514,64 @@ export function PolicyCreationModal({
               >
                 <IconScale size={18} color={colorConfig.icon} />
               </div>
-              <Text fw={600} style={{ fontSize: FONT_SIZES.normal, color: colors.gray[800] }}>
+              <Text
+                fw={600}
+                style={{
+                  fontSize: FONT_SIZES.normal,
+                  color: colors.gray[800],
+                  flexShrink: 0,
+                }}
+              >
                 {modalTitle}
               </Text>
+              <div
+                style={{
+                  minWidth: 280,
+                  flex: 1,
+                  border: `1px solid ${colors.border.light}`,
+                  background: colors.gray[50],
+                  borderRadius: spacing.radius.container,
+                  padding: `${spacing.xs} ${spacing.sm}`,
+                }}
+              >
+                <EditableLabel
+                  value={policyLabel}
+                  onChange={setPolicyLabel}
+                  placeholder="Enter policy name..."
+                  emptyStateText="Click to name your policy..."
+                  readOnly={isReadOnly}
+                />
+              </div>
             </Group>
-            <Button variant="ghost" size="icon-sm" onClick={onClose} style={{ flexShrink: 0 }}>
-              <IconX size={18} />
-            </Button>
+            <Group gap="md" align="center" wrap="nowrap" style={{ flexShrink: 0 }}>
+              <Group
+                gap="xs"
+                justify="center"
+                align="center"
+                wrap="nowrap"
+                style={{ cursor: modificationCount > 0 ? 'pointer' : 'default' }}
+                onClick={modificationCount > 0 ? () => setActiveTab('overview') : undefined}
+              >
+                {modificationCount > 0 && (
+                  <div
+                    style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: '50%',
+                      background: colors.primary[500],
+                    }}
+                  />
+                )}
+                <Text style={{ fontSize: FONT_SIZES.small, color: colors.gray[600] }}>
+                  {modificationCount > 0
+                    ? `${modificationCount} provision${modificationCount !== 1 ? 's' : ''}`
+                    : 'No provisions yet'}
+                </Text>
+              </Group>
+              <Button variant="ghost" size="icon-sm" onClick={onClose} style={{ flexShrink: 0 }}>
+                <IconX size={18} />
+              </Button>
+            </Group>
           </Group>
         </div>
 
@@ -579,36 +630,7 @@ export function PolicyCreationModal({
                 Cancel
               </Button>
             </Group>
-            <div style={{ textAlign: 'center' }}>
-              {modificationCount > 0 && (
-                <Group
-                  gap="xs"
-                  justify="center"
-                  style={{ cursor: 'pointer' }}
-                  onClick={() => setActiveTab('overview')}
-                  onMouseEnter={() => setFooterHovered(true)}
-                  onMouseLeave={() => setFooterHovered(false)}
-                >
-                  <div
-                    style={{
-                      width: 8,
-                      height: 8,
-                      borderRadius: '50%',
-                      background: colors.primary[500],
-                    }}
-                  />
-                  <Text
-                    style={{
-                      fontSize: FONT_SIZES.small,
-                      color: footerHovered ? colors.primary[600] : colors.gray[600],
-                      transition: 'color 0.15s ease',
-                    }}
-                  >
-                    {modificationCount} parameter{modificationCount !== 1 ? 's' : ''} modified
-                  </Text>
-                </Group>
-              )}
-            </div>
+            <div />
             <Group gap="sm" justify="end">
               {!forceReadOnly && effectiveEditorMode === 'create' && (
                 <Button

@@ -12,6 +12,7 @@ interface PopulationStatusHeaderProps {
   setHouseholdLabel: (label: string) => void;
   memberCount: number;
   isReadOnly?: boolean;
+  hideLabel?: boolean;
 }
 
 export function PopulationStatusHeader({
@@ -19,6 +20,7 @@ export function PopulationStatusHeader({
   setHouseholdLabel,
   memberCount,
   isReadOnly = false,
+  hideLabel = false,
 }: PopulationStatusHeaderProps) {
   const colorConfig = INGREDIENT_COLORS.population;
 
@@ -62,14 +64,15 @@ export function PopulationStatusHeader({
             <IconHome size={18} color={colorConfig.icon} />
           </div>
 
-          {/* Editable household name */}
-          <EditableLabel
-            value={householdLabel}
-            onChange={setHouseholdLabel}
-            placeholder="Enter household name..."
-            emptyStateText="Click to name your household..."
-            readOnly={isReadOnly}
-          />
+          {!hideLabel && (
+            <EditableLabel
+              value={householdLabel}
+              onChange={setHouseholdLabel}
+              placeholder="Enter household name..."
+              emptyStateText="Click to name your household..."
+              readOnly={isReadOnly}
+            />
+          )}
         </Group>
 
         {/* Right side: Member count */}
