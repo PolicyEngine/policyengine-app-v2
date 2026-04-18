@@ -67,25 +67,40 @@ describe('BudgetaryImpactSubPage', () => {
     expect(screen.getByText(/This reform would have no effect on the budget/i)).toBeInTheDocument();
   });
 
-  test('given output then renders download SVG button', () => {
+  test('given output then renders download chart button', () => {
     // When
     render(<BudgetaryImpactSubPage output={MOCK_POSITIVE_IMPACT} />);
 
-    // Then
-    expect(screen.getByLabelText(/download as svg/i)).toBeInTheDocument();
+    // Then — the button now opens a menu with SVG + CSV options when csvData is provided
+    expect(screen.getByLabelText(/download chart/i)).toBeInTheDocument();
   });
 
-  test('given user clicks download SVG then calls downloadChartAsSvg', async () => {
+  test('given user picks SVG from download menu then calls downloadChartAsSvg', async () => {
     // Given
     const user = userEvent.setup();
     const { downloadChartAsSvg } = await import('@/utils/chartUtils');
     render(<BudgetaryImpactSubPage output={MOCK_POSITIVE_IMPACT} />);
 
-    // When
-    await user.click(screen.getByLabelText(/download as svg/i));
+    // When — open the menu, then click the SVG option
+    await user.click(screen.getByLabelText(/download chart/i));
+    await user.click(await screen.findByRole('menuitem', { name: /download as svg/i }));
 
     // Then
     expect(downloadChartAsSvg).toHaveBeenCalled();
+  });
+
+  test('given user picks CSV from download menu then calls downloadCsv', async () => {
+    // Given
+    const user = userEvent.setup();
+    const { downloadCsv } = await import('@/utils/chartUtils');
+    render(<BudgetaryImpactSubPage output={MOCK_POSITIVE_IMPACT} />);
+
+    // When
+    await user.click(screen.getByLabelText(/download chart/i));
+    await user.click(await screen.findByRole('menuitem', { name: /download data \(csv\)/i }));
+
+    // Then
+    expect(downloadCsv).toHaveBeenCalled();
   });
 
   test('given large positive impact then formats with bn suffix', () => {

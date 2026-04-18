@@ -29,6 +29,16 @@ interface Props {
   output: SocietyWideReportOutput;
 }
 
+/** CSV for relative wealth distributional impact. */
+export function buildWealthRelativeCsv(output: SocietyWideReportOutput): string[][] {
+  const data = output.wealth_decile?.relative || {};
+  const rows: string[][] = [['Wealth decile', 'Relative change (%)']];
+  for (const k of Object.keys(data).sort((a, b) => Number(a) - Number(b))) {
+    rows.push([k, (data[k] * 100).toFixed(2)]);
+  }
+  return rows;
+}
+
 export default function DistributionalImpactWealthRelativeSubPage({ output }: Props) {
   const mobile = useMediaQuery(MOBILE_BREAKPOINT_QUERY);
   const countryId = useCurrentCountry();
@@ -92,6 +102,7 @@ export default function DistributionalImpactWealthRelativeSubPage({ output }: Pr
     <ChartContainer
       title={getChartTitle()}
       downloadFilename="distributional-impact-wealth-relative.svg"
+      csvData={() => buildWealthRelativeCsv(output)}
     >
       <Stack gap="sm">
         <ResponsiveContainer width="100%" height={chartHeight}>

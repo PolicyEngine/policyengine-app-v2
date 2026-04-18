@@ -37,6 +37,29 @@ interface Props {
   fillHeight?: boolean;
 }
 
+/** CSV for Deep poverty impact by age. */
+export function buildDeepPovertyByAgeCsv(output: SocietyWideReportOutput): string[][] {
+  const src = output.poverty.deep_poverty;
+  const header = ['Group', 'Baseline rate (%)', 'Reform rate (%)', 'Relative change (%)'];
+  const rows: string[][] = [header];
+  const buckets: Array<[string, { baseline: number; reform: number }]> = [
+    ['Children', src.child],
+    ['Working-age adults', src.adult],
+    ['Seniors', src.senior],
+    ['All', src.all],
+  ];
+  for (const [label, b] of buckets) {
+    const rel = b.baseline === 0 ? 0 : b.reform / b.baseline - 1;
+    rows.push([
+      label,
+      (b.baseline * 100).toFixed(2),
+      (b.reform * 100).toFixed(2),
+      (rel * 100).toFixed(2),
+    ]);
+  }
+  return rows;
+}
+
 export default function DeepPovertyImpactByAgeSubPage({
   output,
   chartHeight: chartHeightProp,
@@ -191,7 +214,11 @@ export default function DeepPovertyImpactByAgeSubPage({
   }
 
   return (
-    <ChartContainer title={getChartTitle()} downloadFilename="deep-poverty-impact-by-age.svg">
+    <ChartContainer
+      title={getChartTitle()}
+      downloadFilename="deep-poverty-impact-by-age.svg"
+      csvData={() => buildDeepPovertyByAgeCsv(output)}
+    >
       <Stack gap="sm">
         <ResponsiveContainer width="100%" height={chartHeight}>
           {barChart}

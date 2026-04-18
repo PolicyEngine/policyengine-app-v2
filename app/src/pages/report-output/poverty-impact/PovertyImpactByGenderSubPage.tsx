@@ -31,6 +31,34 @@ import {
 import { formatNumber, formatPercent } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
 
+/** CSV for Poverty impact by gender. */
+export function buildPovertyByGenderCsv(output: SocietyWideReportOutput, deep = false): string[][] {
+  const source = deep ? output.poverty.deep_poverty : output.poverty.poverty;
+  const byGender = deep
+    ? output.poverty_by_gender?.deep_poverty
+    : output.poverty_by_gender?.poverty;
+  const header = ['Gender', 'Baseline rate (%)', 'Reform rate (%)', 'Relative change (%)'];
+  const rows: string[][] = [header];
+  const buckets: Array<[string, { baseline: number; reform: number } | undefined]> = [
+    ['Male', byGender?.male],
+    ['Female', byGender?.female],
+    ['All', source.all],
+  ];
+  for (const [label, b] of buckets) {
+    if (!b) {
+      continue;
+    }
+    const rel = b.baseline === 0 ? 0 : b.reform / b.baseline - 1;
+    rows.push([
+      label,
+      (b.baseline * 100).toFixed(2),
+      (b.reform * 100).toFixed(2),
+      (rel * 100).toFixed(2),
+    ]);
+  }
+  return rows;
+}
+
 interface Props {
   output: SocietyWideReportOutput;
   chartHeight?: number;
@@ -193,7 +221,11 @@ export default function PovertyImpactByGenderSubPage({
   }
 
   return (
-    <ChartContainer title={getChartTitle()} downloadFilename="poverty-impact-by-gender.svg">
+    <ChartContainer
+      title={getChartTitle()}
+      downloadFilename="poverty-impact-by-gender.svg"
+      csvData={() => buildPovertyByGenderCsv(output)}
+    >
       <Stack gap="sm">
         <ResponsiveContainer width="100%" height={chartHeight}>
           {barChart}

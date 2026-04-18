@@ -141,8 +141,12 @@ export default function ReportOutputPage({
   const activeView = view || '';
   const versionMetadata = extractReportVersionMetadata(report?.output);
 
-  // Format the report creation timestamp using the current country's locale
-  const timestamp = formatReportTimestamp(userReport?.createdAt, countryId);
+  // Show the most recent run timestamp (updatedAt is set whenever a report is
+  // replaced/rerun; fall back to createdAt for reports that have never been rerun).
+  const timestamp = formatReportTimestamp(
+    userReport?.updatedAt ?? userReport?.createdAt,
+    countryId
+  );
 
   // Hook for saving shared reports with all ingredients
   const { saveSharedReport, saveResult, setSaveResult } = useSaveSharedReport();
