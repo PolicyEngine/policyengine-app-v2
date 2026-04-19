@@ -16,6 +16,7 @@ import type { Geography } from '@/types/ingredients/Geography';
 import type { Report } from '@/types/ingredients/Report';
 import type { Simulation } from '@/types/ingredients/Simulation';
 import { isUKLocalLevelGeography } from '@/utils/geographyUtils';
+import BudgetaryImpactByLevelSubPage from './budgetary-impact/BudgetaryImpactByLevelSubPage';
 import BudgetaryImpactByProgramSubPage from './budgetary-impact/BudgetaryImpactByProgramSubPage';
 import { ConstituencySubPage } from './ConstituencySubPage';
 import DistributionalImpactWealthAverageSubPage from './distributional-impact/DistributionalImpactWealthAverageSubPage';
@@ -125,6 +126,12 @@ export default function MigrationSubPage({
       {countryId === 'uk' && (
         <CollapsibleSection label="Budgetary impact by program" defaultOpen={false}>
           <BudgetaryImpactByProgramSubPage output={output} />
+        </CollapsibleSection>
+      )}
+
+      {countryId === 'us' && output.budget.federal_budgetary_impact !== undefined && (
+        <CollapsibleSection label="Federal vs. state budgetary impact" defaultOpen={false}>
+          <BudgetaryImpactByLevelSubPage output={output} />
         </CollapsibleSection>
       )}
 
