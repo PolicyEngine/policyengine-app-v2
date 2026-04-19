@@ -1,4 +1,4 @@
-- bump: patch
+- bump: minor
   changes:
-    removed:
-      - Temporarily remove energy price shock UK interactive from apps listing and sitemap
+    added:
+      - Federal vs. state budgetary impact sub-page on US reform reports, driven by the new federal_budgetary_impact and state_budgetary_impact fields from policyengine-api. Shows a waterfall with federal share, state share, and total, with a fallback message when the economy worker has not yet populated the new fields.
