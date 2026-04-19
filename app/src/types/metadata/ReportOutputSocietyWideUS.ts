@@ -5,7 +5,12 @@ export interface ReportOutputSocietyWideUS {
     baseline_net_income: number;
     benefit_spending_impact: number;
     budgetary_impact: number;
+    federal_budgetary_impact?: number;
+    federal_tax_revenue_impact?: number;
+    federal_benefit_spending_impact?: number;
     households: number;
+    state_budgetary_impact?: number;
+    state_benefit_spending_impact?: number;
     state_tax_revenue_impact: number;
     tax_revenue_impact: number;
   };

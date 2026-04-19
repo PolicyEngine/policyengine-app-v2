@@ -1,6 +1,7 @@
 import type { ComponentType } from 'react';
 import type { SocietyWideReportOutput as SocietyWideOutput } from '@/api/societyWideCalculation';
 import { CongressionalDistrictDataProvider } from '@/contexts/CongressionalDistrictDataContext';
+import BudgetaryImpactByLevelSubPage from './budgetary-impact/BudgetaryImpactByLevelSubPage';
 import BudgetaryImpactByProgramSubPage from './budgetary-impact/BudgetaryImpactByProgramSubPage';
 import BudgetaryImpactSubPage from './budgetary-impact/BudgetaryImpactSubPage';
 import { AbsoluteChangeByDistrict } from './congressional-district/AbsoluteChangeByDistrict';
@@ -42,6 +43,7 @@ interface ViewComponentProps {
  */
 const VIEW_MAP: Record<string, ComponentType<ViewComponentProps>> = {
   'budgetary-impact-overall': BudgetaryImpactSubPage,
+  'budgetary-impact-by-level': BudgetaryImpactByLevelSubPage,
   'budgetary-impact-by-program': BudgetaryImpactByProgramSubPage,
   'distributional-impact-income-relative': DistributionalImpactIncomeRelativeSubPage,
   'distributional-impact-income-average': DistributionalImpactIncomeAverageSubPage,
