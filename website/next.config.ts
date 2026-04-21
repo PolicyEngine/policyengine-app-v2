@@ -59,6 +59,9 @@ const nextConfig: NextConfig = {
         // Household API docs (Vercel) — beforeFiles so it intercepts before Next.js trailing slash redirect
         { source: "/us/api", destination: "https://household-api-docs-policy-engine.vercel.app/us/api/" },
         { source: "/us/api/:path*", destination: "https://household-api-docs-policy-engine.vercel.app/us/api/:path*" },
+        // Python client docs — same household-api-docs deployment, served at top-level /us/python
+        { source: "/us/python", destination: "https://household-api-docs-policy-engine.vercel.app/us/python" },
+        { source: "/us/python/:path*", destination: "https://household-api-docs-policy-engine.vercel.app/us/python/:path*" },
         // Zone asset proxy — API docs uses assetPrefix: '/_zones/household-api-docs'
         { source: "/_zones/household-api-docs/:path*", destination: "https://household-api-docs-policy-engine.vercel.app/_zones/household-api-docs/:path*" },
       ],
