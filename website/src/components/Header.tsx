@@ -587,6 +587,7 @@ export default function Header() {
     { label: "Research", href: `/${countryId}/research`, hasDropdown: false },
     { label: "Model", href: `/${countryId}/model`, hasDropdown: false, external: true },
     { label: "API", href: `/${countryId}/api`, hasDropdown: false, external: true },
+    { label: "Python", href: `/${countryId}/python`, hasDropdown: false, external: true },
     {
       label: "About",
       hasDropdown: true,
