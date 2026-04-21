@@ -12,7 +12,7 @@ findings so the preview page remains useful to the team.
 | Session B - Vercel research interactives | Public Vercel-backed research apps | Audited | Most zones need path-scoped asset/base path work before host rewrites; Marriage and student loan decisions are deferred. |
 | Session C - static/GitHub Pages/legacy embeds | Static or GitHub Pages interactives | Audited | Most durable static apps need zone rebuilds with PolicyEngine base paths plus host rewrites; local article/static artifacts can remain iframe/static exceptions. |
 | Session D - special routes | API docs, TAXSIM, model docs, slides, bespoke routes | Audited | TAXSIM, slides, API docs, and California are ready/near-ready; model, ads, and AI inequality need zone work; state tracker remains a Modal proxy exception. |
-| Session E - lower-priority/unlisted | Not listed in research or ownership unclear | Not started | Prioritize after main public interactives. |
+| Session E - lower-priority/unlisted | Not listed in research or ownership unclear | Audited | Remaining `apps.json` rows are now covered; most are older Vite/CRA/Next embeds needing zone-side public-path work. |
 
 ## Session B - Vercel Research Interactives
 
@@ -88,6 +88,51 @@ Modal apps and static GitHub Pages surfaces can be durable direct rewrites when
 their deployment model is intentionally not a Next/Vercel zone. The audit should
 still record why they are exceptions and what would have to change to promote
 them later.
+
+## Session E - Lower-Priority And Previously Unlisted Apps
+
+Audited on April 21, 2026. This session covered older, duplicate, not-research,
+or previously unassigned `apps.json` rows. After this session, every app row has
+a shared review entry.
+
+| App | Public path | Origin/source | Source repo | Recommendation | Summary |
+| --- | --- | --- | --- | --- | --- |
+| Social Security taxation reform dashboard | `/us/taxation-of-benefits-reforms` | `https://crfb-tob-impacts.vercel.app/` | `PolicyEngine/crfb-tob-impacts` | `multizone-zone-work` | Next static export already supports env-driven `basePath`/`assetPrefix`, but current deployment has empty base path, root `/_next` assets, and public path returns 404. |
+| ACA Reforms Calculator | `/us/aca-reforms-calculator` | `https://aca-calc.vercel.app/?embedded=true` | `PolicyEngine/ACA-Calc` | `multizone-zone-work` | Vite app serves the public path through SPA fallback, but emits root `/assets`. Treat this as the canonical ACA route if migrated. |
+| ACA Reforms Calculator legacy slug | `/us/aca-calc` | `https://aca-calc.vercel.app/?embedded=true` | `PolicyEngine/ACA-Calc` | `simple-rewrite` | Duplicate row for the same ACA app. Prefer redirect/canonicalization to `/us/aca-reforms-calculator` rather than a second zone. |
+| Child Tax Credit calculator | `/us/child-tax-credit-calculator` | `https://ctc-calculator.vercel.app/?embedded=true` | `PolicyEngine/ctc-calculator` | `multizone-zone-work` | Older static app uses relative `script/...` assets and public path returns 404. Needs source modernization or path-scoped static build. |
+| 2024 election CTC comparison | `/us/child-tax-credit-2024-election-calculator` | `https://vance-harris-ctc-comparison.vercel.app/?embedded=true` | `PolicyEngine/vance-harris-ctc-comparison` | `multizone-zone-work` | Vite app serves the public path through SPA fallback but emits root `/assets`; needs path-scoped build. |
+| GiveCalc | `/us/givecalc` | `https://givecalc.vercel.app/?embedded=true` | `PolicyEngine/givecalc` | `multizone-zone-work` | Vite app public path returns 404 and root HTML emits `/assets`; needs path-scoped build. |
+| UK 2024 manifestos comparison | `/uk/2024-manifestos` | `https://uk-2024-manifestos-comparison.vercel.app/?embedded=true` | `PolicyEngine/uk-2024-manifestos-comparison` | `multizone-zone-work` | Vite app public path returns 404 and root HTML emits `/assets` plus `/vite.svg`; needs path-scoped build. |
+| State EITCs and CTCs | `/us/state-eitcs-ctcs` | `https://us-state-eitcs-ctcs.vercel.app/?embedded=true` | `PolicyEngine/us-state-eitcs-ctcs` | `multizone-zone-work` | Vite app public path returns 404 and root HTML emits `/assets`; needs path-scoped build. |
+| 2024 election personal impact calculator | `/us/2024-election-calculator` | `https://2024-election-dashboard.vercel.app/?embedded=true` | `PolicyEngine/2024-election-dashboard` | `multizone-zone-work` | Vite app public path returns 404 and root HTML emits `/assets`; needs path-scoped build. |
+| Rhode Island Child Tax Credit calculator | `/us/rhode-island-ctc-calculator` | `https://ri-ctc-calculator-policy-engine.vercel.app/` | `PolicyEngine/ri-ctc-calculator` | `multizone-zone-work` | Next app has no `basePath`; public path returns 404 and root HTML emits `/_next` assets. |
+| UK student loan deductions calculator | `/uk/uk-student-loan-calculator` | `https://uk-student-loan-calculator.vercel.app/` | `PolicyEngine/student-loan-calculator` | `multizone-zone-work` | Vite app public path returns 404 and root HTML emits `/assets` plus `/vite.svg`; needs path-scoped build. |
+| Scottish Budget 2026-27 | `/uk/scottish-budget-2026-27` | `https://post-scottish-budget-dashboard.vercel.app/` | `PolicyEngine/scottish-budget-2026-2027` | `multizone-zone-work` | Vite app public path returns 404 and root HTML emits `/assets`; needs path-scoped build. |
+| UK local areas dashboard | `/uk/local-areas-dashboard` | `https://local-area.vercel.app/` | `PolicyEngine/uk-local-areas-dashboard` | `multizone-zone-work` | Older Next/pages app public path returns 404 and root HTML emits `/_next`; needs basePath/assetPrefix work. |
+| UK Autumn Budget 2025 analysis dashboard | `/uk/autumn-budget-2025` | `https://uk-autumn-budget-dashboard.vercel.app/` | `PolicyEngine/uk-autumn-budget-dashboard` | `multizone-zone-work` | Vite app public path returns 404 and root HTML emits `/assets` plus `/vite.svg`; needs path-scoped build. |
+| UK public services spending analysis dashboard | `/uk/public-services-spending` | `https://uk-public-services-imputation.vercel.app` | `PolicyEngine/uk-public-services-imputation` | `multizone-zone-work` | CRA/static dashboard serves the public path but emits root `/static` assets; needs `PUBLIC_URL` or equivalent path strategy. |
+| Marriage incentive calculator - UK row | `/uk/marriage` | `https://marriage-zeta-beryl.vercel.app/` | `PolicyEngine/marriage` | `needs-investigation` | Duplicate UK row for the shared marriage app. Keep deferred with the US marriage audit because production routing is currently US-scoped and UK behavior is query-driven. |
+
+### Session E Host Findings
+
+- The remaining unreviewed rows are mostly older Vite/CRA apps or root-mounted
+  Next apps. They should not be first in the migration order.
+- Canonicalize duplicates before migration. The ACA duplicate and UK marriage
+  duplicate should not become independent zones unless the team explicitly wants
+  separate public products.
+- Several Vite apps return 404 at the intended PolicyEngine public path, while
+  ACA and the CTC election comparison serve paths through SPA fallback but still
+  emit root `/assets`. Both cases require zone-side public-path work before host
+  rewrites.
+- `crfb-tob-impacts` is a useful lower-priority pilot candidate later because
+  its Next config already supports env-driven `basePath` and `assetPrefix`.
+
+### Rubric Finding: Inventory Completion
+
+The audit review JSON now has an entry for every `apps.json` app row. Future app
+additions should include an audit-session/status entry when the app is added, or
+the review page should flag missing review metadata automatically.
 
 ## Oregon Kicker Refund
 

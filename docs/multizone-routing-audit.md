@@ -55,6 +55,10 @@ Use these sessions to split work without duplicating effort. Each session should
 update the relevant row in `website/src/data/multizoneRoutingReview.json` with
 its `auditSession`, `auditStatus`, and summary comment.
 
+Every `apps.json` app row should have a matching review entry. When new apps are
+added, add the review metadata in the same PR or explicitly mark the row as
+`not-started`.
+
 ### Session A - Direct Rewrite Calculators
 
 Start here because these are closest to Oregon Kicker and are likely the first
