@@ -64,6 +64,10 @@ const nextConfig: NextConfig = {
       ],
       // afterFiles: checked after pages/public files but before dynamic routes.
       afterFiles: [
+        // PostHog analytics proxy — first-party path bypasses ad blockers that
+        // filter *.i.posthog.com. Static rule must come first.
+        { source: "/ingest/static/:path*", destination: "https://us-assets.i.posthog.com/static/:path*" },
+        { source: "/ingest/:path*", destination: "https://us.i.posthog.com/:path*" },
         // State legislative tracker (Modal)
         { source: "/_tracker/:path*", destination: "https://policyengine--state-legislative-tracker.modal.run/_tracker/:path*" },
         // Tracker assets at root paths — temporary until tracker repo updates to use absolute URLs
