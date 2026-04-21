@@ -59,6 +59,12 @@
     "auditStatus": "audited",
     "comment": "Vite zone currently emits root /assets paths and origin /us/cliff-watch returns 404; also audit root-relative /api fallbacks before adding host rewrites."
   },
+  "app:us:california-wealth-tax": {
+    "recommendation": "multizone",
+    "auditSession": "Session D - special routes",
+    "auditStatus": "audited",
+    "comment": "Embed zone is path-scoped and metadata points to /us/california-wealth-tax. Promote by replacing the dedicated iframe page with a first-party route or keeping SyncedAppIframe only if query-sync embedding remains required."
+  },
   "app:us:encode-policy-multi-agent-ai": {
     "recommendation": "iframe",
     "auditSession": "Session C - static/GitHub Pages/legacy embeds",
@@ -119,6 +125,12 @@
     "auditStatus": "audited",
     "comment": "GitHub Pages deployment appears to serve unbuilt Vite source (/src/main.jsx) even though repo has base /snap-district-map. Fix production build, then add PolicyEngine base-path build and host rewrites."
   },
+  "app:us:state-legislative-tracker": {
+    "recommendation": "rewrite",
+    "auditSession": "Session D - special routes",
+    "auditStatus": "audited",
+    "comment": "Modal/Vite app works through direct beforeFiles proxy plus /_tracker and root logo rewrites. Keep as direct proxy unless it moves to a first-party static/Next zone."
+  },
   "app:us:tanf-calculator": {
     "recommendation": "multizone",
     "auditSession": "Session C - static/GitHub Pages/legacy embeds",
@@ -142,5 +154,41 @@
     "auditSession": "Session D - special routes",
     "auditStatus": "audited",
     "comment": "Reference zone: household-api-docs uses production-only assetPrefix /_zones/household-api-docs and disables it during next dev."
+  },
+  "route:ads-dashboard": {
+    "recommendation": "multizone",
+    "auditSession": "Session D - special routes",
+    "auditStatus": "audited",
+    "comment": "Currently a dedicated iframe page. Vite app emits root /assets and /vite.svg, so it needs BASE_URL/public-path work before first-party multizone routing."
+  },
+  "route:ai-inequality": {
+    "recommendation": "multizone",
+    "auditSession": "Session D - special routes",
+    "auditStatus": "audited",
+    "comment": "Currently dedicated iframe pages with country query handling. CRA app emits root /static assets and has subroute /income-shift, so it needs a public-path strategy before host rewrites."
+  },
+  "route:model": {
+    "recommendation": "multizone",
+    "auditSession": "Session D - special routes",
+    "auditStatus": "audited",
+    "comment": "Current afterFiles rewrite injects country query but origin emits root /_next assets and has no basePath. Needs basePath/assetPrefix and first-party metadata before formal multizone."
+  },
+  "route:plugin-blog": {
+    "recommendation": "rewrite",
+    "auditSession": "Session D - special routes",
+    "auditStatus": "audited",
+    "comment": "Static GitHub Pages site is already path-scoped under /plugin-blog/assets and host has afterFiles rewrites. Keep simple rewrite/static hosting."
+  },
+  "route:slides": {
+    "recommendation": "multizone",
+    "auditSession": "Session D - special routes",
+    "auditStatus": "audited",
+    "comment": "Multizone-ready for routing: Next app hardcodes basePath /slides and live HTML emits /slides/_next assets. Follow up with local-dev basePath escape hatch if desired."
+  },
+  "route:taxsim": {
+    "recommendation": "multizone",
+    "auditSession": "Session D - special routes",
+    "auditStatus": "audited",
+    "comment": "Multizone-ready: Next static export uses basePath /us/taxsim, custom data asset helper, first-party metadata, and host rewrites. Minor follow-up: root icon metadata may resolve to host root."
   }
 }

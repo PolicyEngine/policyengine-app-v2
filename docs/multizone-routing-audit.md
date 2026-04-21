@@ -44,6 +44,11 @@ audit finds a concrete blocker or a durable reason to keep the app embedded.
 - `needs-investigation`: The source repo, framework, or deployed behavior is not
   clear enough to classify.
 
+For non-Next/non-Vercel surfaces such as Modal apps or static GitHub Pages
+content, record whether the current direct rewrite is an intentional proxy
+exception. Do not force those into the same implementation shape as Next zones
+unless the deployment model is also changing.
+
 ## Parallel Session Plan
 
 Use these sessions to split work without duplicating effort. Each session should

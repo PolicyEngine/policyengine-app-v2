@@ -11,7 +11,7 @@ findings so the preview page remains useful to the team.
 | Session A - direct rewrite calculators | Oregon Kicker, WATCA, Keep Your Pay Act, Working Parents | Audited | All four are multizone-ready for routing; WATCA and Working Parents have polish follow-ups. |
 | Session B - Vercel research interactives | Public Vercel-backed research apps | Audited | Most zones need path-scoped asset/base path work before host rewrites; Marriage and student loan decisions are deferred. |
 | Session C - static/GitHub Pages/legacy embeds | Static or GitHub Pages interactives | Audited | Most durable static apps need zone rebuilds with PolicyEngine base paths plus host rewrites; local article/static artifacts can remain iframe/static exceptions. |
-| Session D - special routes | API docs, TAXSIM, model docs, slides, bespoke routes | In progress | API docs is the reference asset-prefix zone. |
+| Session D - special routes | API docs, TAXSIM, model docs, slides, bespoke routes | Audited | TAXSIM, slides, API docs, and California are ready/near-ready; model, ads, and AI inequality need zone work; state tracker remains a Modal proxy exception. |
 | Session E - lower-priority/unlisted | Not listed in research or ownership unclear | Not started | Prioritize after main public interactives. |
 
 ## Session B - Vercel Research Interactives
@@ -45,6 +45,49 @@ treated as multizone targets by default unless noted otherwise.
   routing and metadata are US-path scoped. The duplicate UK `apps.json` row for
   `marriage` is not covered by the US `/us/marriage` base path, so US and UK
   marriage should be handled in one follow-up routing decision.
+
+## Session D - Special Routes
+
+Audited on April 21, 2026. These routes do not all follow the normal
+`apps.json` research interactive path; several already have bespoke host
+rewrites or dedicated website iframe pages.
+
+| Surface | Public path | Origin/source | Source repo | Recommendation | Summary |
+| --- | --- | --- | --- | --- | --- |
+| Household API docs | `/us/api` | `https://household-api-docs-policy-engine.vercel.app/us/api/` | `PolicyEngine/household-api-docs` | `multizone-ready` | Existing reference zone. Host has beforeFiles page rewrites plus `/_zones/household-api-docs/:path*`; zone uses production-only `assetPrefix` and disables it during `next dev`. |
+| TAXSIM emulator | `/us/taxsim` | `https://policyengine-taxsim-policy-engine.vercel.app/us/taxsim` | `PolicyEngine/policyengine-taxsim` | `multizone-ready` | Next static export already has `basePath: "/us/taxsim"`, helper logic for public data assets, first-party canonical/OG metadata, and host rewrites. Minor follow-up: root icon metadata uses `/policyengine.png`. |
+| PolicyEngine model documentation | `/:countryId/model` | `https://policyengine-model-phi.vercel.app/?country=:countryId` | `PolicyEngine/policyengine-model` | `multizone-zone-work` | Current host afterFiles rewrite injects country query, but the zone has no `basePath`, emits root `/_next/static` assets, and only has minimal title metadata. Needs asset/base path strategy and first-party metadata before formal multizone. |
+| PolicyEngine slides | `/slides` | `https://policyengine-slides.vercel.app/slides` | `PolicyEngine/policyengine-slides` | `multizone-ready` | Next app hardcodes `basePath: "/slides"` and live HTML emits `/slides/_next/static/...`; host afterFiles rewrites already cover base and nested paths. Follow up with local-dev basePath escape hatch if desired. |
+| Plugin blog | `/plugin-blog` | `https://policyengine.github.io/plugin-blog/` | `PolicyEngine/plugin-blog` | `simple-rewrite` | Static GitHub Pages surface is already path-scoped under `/plugin-blog/assets/...` and host rewrites are sufficient. Keep as simple static rewrite unless product requirements change. |
+| Ads transparency dashboard | `/us/ads-dashboard` | `https://policyengine-ads-dashboard.vercel.app?embedded=true` | `PolicyEngine/policyengine-ads-dashboard` | `multizone-zone-work` | Currently a dedicated website iframe page. Vite config uses `base: process.env.BASE_URL || "/"`; live HTML emits root `/assets/...` and `/vite.svg`. Needs PolicyEngine public path or asset-prefix build before host rewrites. |
+| AI and inequality | `/:countryId/ai-inequality` and `/:countryId/ai-inequality/income-shift` | `https://ai-inequality-theta.vercel.app` | `PolicyEngine/ai-inequality` | `multizone-zone-work` | Currently dedicated iframe pages with country query handling. Create React App build uses `homepage: "."` and live HTML emits root `/static/...`, `/favicon.svg`, and `/manifest.json`. Needs a route/base strategy for both main and income-shift paths. |
+| State legislative tracker | `/:countryId/state-legislative-tracker` | `https://policyengine--state-legislative-tracker.modal.run/` | `PolicyEngine/state-legislative-tracker` | `simple-rewrite` | Modal/Vite app is not a normal Vercel/Next zone. Current beforeFiles proxy plus `/_tracker` asset rewrite and root logo rewrites are the working pattern. Keep direct proxy unless the app moves to static/Next hosting. |
+| California wealth tax | `/us/california-wealth-tax` and `/us/california-wealth-tax/embed` | `https://california-wealth-tax.vercel.app/us/california-wealth-tax/embed` | `PolicyEngine/california-wealth-tax` | `multizone-ready` for embed route; host work for top-level route | Embed zone defaults `basePath` to `/us/california-wealth-tax/embed`, emits path-scoped `_next` assets, and has first-party metadata for `/us/california-wealth-tax`. The website top-level route still wraps it in `SyncedAppIframe` for query syncing. |
+
+### Session D Host Findings
+
+- Special routes fall into three patterns rather than one:
+  path-mounted Next zones, static rewrites, and non-zone proxy exceptions.
+- TAXSIM, slides, API docs, and California demonstrate valid first-party path
+  ownership patterns, but use different asset strategies: `basePath`,
+  `assetPrefix`, and embed-path `basePath`.
+- Model docs should not be treated as a finished zone despite having a host
+  rewrite; it currently emits root `/_next` assets and relies on country query
+  injection.
+- State legislative tracker should remain a direct Modal proxy unless its
+  deployment model changes. Its extra root asset rewrites are a signal that it
+  is not yet a clean zone.
+- Dedicated iframe pages for ads dashboard and AI inequality are conversion
+  candidates, but both need zone-side asset/public-path work before host
+  rewrites.
+
+### Rubric Finding: Proxy Exceptions
+
+Not every first-party route should be forced into the same multizone shape.
+Modal apps and static GitHub Pages surfaces can be durable direct rewrites when
+their deployment model is intentionally not a Next/Vercel zone. The audit should
+still record why they are exceptions and what would have to change to promote
+them later.
 
 ## Oregon Kicker Refund
 
