@@ -154,6 +154,14 @@
       "source": "/uk/api/:path*",
       "destination": "https://household-api-docs-policy-engine.vercel.app/uk/api/:path*"
     },
+    {
+      "source": "/ingest/static/:path*",
+      "destination": "https://us-assets.i.posthog.com/static/:path*"
+    },
+    {
+      "source": "/ingest/:path*",
+      "destination": "https://us.i.posthog.com/:path*"
+    },
     { "source": "/(.*)", "destination": "/website.html" }
   ],
   "headers": [
