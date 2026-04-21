@@ -1,4 +1,4 @@
 - bump: patch
   changes:
-    removed:
-      - Temporarily remove energy price shock UK interactive from apps listing and sitemap
+    fixed:
+      - Proxy /ingest to PostHog so analytics from the state legislative tracker are captured on policyengine.org
