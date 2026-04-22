@@ -1,4 +1,4 @@
 - bump: patch
   changes:
-    fixed:
-      - Proxy /ingest to PostHog so analytics from the state legislative tracker are captured on policyengine.org
+    added:
+      - Restore energy price shock UK interactive with updated data
