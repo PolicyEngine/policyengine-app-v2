@@ -57,7 +57,8 @@
     "date": "2026-03-13",
     "url": "https://arxiv.org/pdf/2602.15607",
     "image": "arxiv-carbon-budget.webp",
-    "tags": ["uk", "policy"]
+    "tags": ["uk", "policy"],
+    "featured": true
   },
   {
     "title": "Informing policy using micro-simulations",
@@ -65,7 +66,8 @@
     "date": "2026-01-05",
     "url": "https://fellows.ai.gov.uk/articles/nikhil-woodruff-micro-simulation/",
     "image": "no10-fellowship.webp",
-    "tags": ["uk", "technical"]
+    "tags": ["uk", "technical"],
+    "featured": true
   },
   {
     "title": "Rhode Island House Committee on Finance H. 7127, Governor's proposed Child Tax Credit",
