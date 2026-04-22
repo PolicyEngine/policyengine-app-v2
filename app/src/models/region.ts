@@ -1,9 +1,12 @@
+import type { V2RegionMetadata } from '@/api/v2/regions';
 import type { CountryId } from '@/libs/countries';
+import type { MetadataRegionEntry } from '@/types/metadata';
 
 export type RegionCode = string;
 export type RegionFilterStrategy = 'row_filter' | 'weight_replacement' | null;
+export type RegionSource = 'v1_metadata' | 'v2_api';
 
-export interface RegionRecord {
+export interface Region {
   id: string;
   countryId: CountryId;
   code: RegionCode;
@@ -16,7 +19,11 @@ export interface RegionRecord {
   requiresFilter: boolean;
   stateCode: string | null;
   stateName: string | null;
+  source?: RegionSource;
+  sourceId?: string | null;
 }
+
+export type RegionRecord = Region;
 
 export interface ResolvedRegionTarget {
   countryId: CountryId;
@@ -29,19 +36,21 @@ export interface ResolvedRegionTarget {
   filterStrategy: RegionFilterStrategy;
 }
 
-interface RegionRecordSource {
-  id: string;
-  code: string;
-  label: string;
-  region_type: string;
-  parent_code: string | null;
-  filter_field: string | null;
-  filter_value: string | null;
+type V2RegionSource = Pick<
+  V2RegionMetadata,
+  | 'id'
+  | 'code'
+  | 'label'
+  | 'region_type'
+  | 'parent_code'
+  | 'filter_field'
+  | 'filter_value'
+  | 'requires_filter'
+> & {
   filter_strategy?: RegionFilterStrategy;
-  requires_filter: boolean;
   state_code?: string | null;
   state_name?: string | null;
-}
+};
 
 const US_STATE_CODE_RE = /^[a-z]{2}$/i;
 const US_DISTRICT_CODE_RE = /^[a-z]{2}-\d{1,2}$/i;
@@ -50,7 +59,33 @@ const US_LEGACY_DISTRICT_CODE_RE = /^us-([a-z]{2}-\d{1,2})$/i;
 const UK_LEGACY_COUNTRY_CODE_RE = /^uk-(.+)$/i;
 const UK_COUNTRY_CODES = new Set(['england', 'scotland', 'wales', 'ni', 'northern_ireland']);
 
-export function toRegionRecord(countryId: CountryId, region: RegionRecordSource): RegionRecord {
+function buildMetadataRegionId(countryId: CountryId, regionName: string): string {
+  return `metadata:${countryId}:${regionName}`;
+}
+
+export function fromMetadataRegionEntry(
+  countryId: CountryId,
+  region: MetadataRegionEntry
+): RegionRecord {
+  return {
+    id: buildMetadataRegionId(countryId, region.name),
+    countryId,
+    code: region.name,
+    label: region.label,
+    regionType: region.type,
+    parentCode: null,
+    filterField: null,
+    filterValue: null,
+    filterStrategy: null,
+    requiresFilter: false,
+    stateCode: region.state_abbreviation ?? null,
+    stateName: region.state_name ?? null,
+    source: 'v1_metadata',
+    sourceId: null,
+  };
+}
+
+export function fromV2RegionMetadata(countryId: CountryId, region: V2RegionSource): RegionRecord {
   return {
     id: region.id,
     countryId,
@@ -64,8 +99,13 @@ export function toRegionRecord(countryId: CountryId, region: RegionRecordSource)
     requiresFilter: region.requires_filter,
     stateCode: region.state_code ?? null,
     stateName: region.state_name ?? null,
+    source: 'v2_api',
+    sourceId: region.id,
   };
 }
+
+// Compatibility alias for existing v2 callers while the Region refactor lands.
+export const toRegionRecord = fromV2RegionMetadata;
 
 export function createResolvedRegionTarget(args: {
   region: RegionRecord;

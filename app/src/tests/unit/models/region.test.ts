@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import {
   createResolvedRegionTarget,
+  fromMetadataRegionEntry,
   getRegionCodeCandidates,
   normalizeRegionCode,
   toRegionRecord,
@@ -35,6 +36,35 @@ describe('region model helpers', () => {
       requiresFilter: false,
       stateCode: 'CA',
       stateName: 'California',
+      source: 'v2_api',
+      sourceId: 'region-1',
+    });
+  });
+
+  test('given metadata region entry then converts to app-level Region', () => {
+    const result = fromMetadataRegionEntry('us', {
+      name: 'congressional_district/CA-01',
+      label: "California's 1st congressional district",
+      type: 'congressional_district',
+      state_abbreviation: 'CA',
+      state_name: 'California',
+    });
+
+    expect(result).toEqual({
+      id: 'metadata:us:congressional_district/CA-01',
+      countryId: 'us',
+      code: 'congressional_district/CA-01',
+      label: "California's 1st congressional district",
+      regionType: 'congressional_district',
+      parentCode: null,
+      filterField: null,
+      filterValue: null,
+      filterStrategy: null,
+      requiresFilter: false,
+      stateCode: 'CA',
+      stateName: 'California',
+      source: 'v1_metadata',
+      sourceId: null,
     });
   });
 
