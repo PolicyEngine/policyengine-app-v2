@@ -11,9 +11,8 @@ import { useState } from 'react';
 import PathwayView from '@/components/common/PathwayView';
 import { Stack } from '@/components/ui';
 import { countryIds } from '@/libs/countries';
-import type { RegionRecord } from '@/models/region';
+import type { Region } from '@/models/region';
 import { Geography } from '@/types/ingredients/Geography';
-import { MetadataRegionEntry } from '@/types/metadata';
 import {
   ScopeType,
   UK_REGION_TYPES,
@@ -35,7 +34,7 @@ import USGeographicOptions from '../../components/geographicOptions/USGeographic
 
 interface PopulationScopeViewProps {
   countryId: (typeof countryIds)[number];
-  regionData: Array<MetadataRegionEntry | RegionRecord>;
+  regionData: Region[];
   onScopeSelected: (geography: Geography | null, scopeType: ScopeType) => void;
   onBack?: () => void;
   onCancel?: () => void;

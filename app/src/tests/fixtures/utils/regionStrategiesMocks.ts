@@ -1,5 +1,5 @@
-import type { RegionRecord } from '@/models/region';
-import { MetadataRegionEntry } from '@/types/metadata';
+import { fromMetadataRegionEntry, type RegionRecord } from '@/models/region';
+import type { MetadataRegionEntry } from '@/types/metadata';
 import { UK_REGION_TYPES, US_REGION_TYPES } from '@/types/regionTypes';
 import { PlaceOption } from '@/utils/regionStrategies';
 
@@ -66,8 +66,14 @@ export const INVALID_PLACE_REGION_STRINGS = {
   NONEXISTENT: 'place/XX-99999',
 } as const;
 
-// Mock metadata regions for UK
-export const mockUKRegions: MetadataRegionEntry[] = [
+function adaptMetadataRegions(
+  countryId: 'us' | 'uk',
+  regions: MetadataRegionEntry[]
+): RegionRecord[] {
+  return regions.map((region) => fromMetadataRegionEntry(countryId, region));
+}
+
+const mockUKMetadataRegions: MetadataRegionEntry[] = [
   { name: 'uk', label: 'the UK', type: UK_REGION_TYPES.NATIONAL },
   { name: 'country/england', label: 'England', type: UK_REGION_TYPES.COUNTRY },
   { name: 'country/scotland', label: 'Scotland', type: UK_REGION_TYPES.COUNTRY },
@@ -105,8 +111,9 @@ export const mockUKRegions: MetadataRegionEntry[] = [
   },
 ];
 
-// Mock metadata regions for US
-export const mockUSRegions: MetadataRegionEntry[] = [
+export const mockUKRegions: RegionRecord[] = adaptMetadataRegions('uk', mockUKMetadataRegions);
+
+const mockUSMetadataRegions: MetadataRegionEntry[] = [
   { name: 'us', label: 'the US', type: US_REGION_TYPES.NATIONAL },
   { name: 'state/ca', label: 'California', type: US_REGION_TYPES.STATE },
   { name: 'state/ny', label: 'New York', type: US_REGION_TYPES.STATE },
@@ -134,6 +141,8 @@ export const mockUSRegions: MetadataRegionEntry[] = [
     state_name: 'New York',
   },
 ];
+
+export const mockUSRegions: RegionRecord[] = adaptMetadataRegions('us', mockUSMetadataRegions);
 
 export const mockUSRegionRecords: RegionRecord[] = [
   {
@@ -420,8 +429,7 @@ export const expectedCaliforniaDistricts = [
   },
 ];
 
-// Mock single-district state (for at-large test)
-export const mockSingleDistrictState: MetadataRegionEntry[] = [
+const mockSingleDistrictMetadata: MetadataRegionEntry[] = [
   {
     name: 'congressional_district/AK-00',
     label: "Alaska's at-large congressional district",
@@ -430,3 +438,8 @@ export const mockSingleDistrictState: MetadataRegionEntry[] = [
     state_name: 'Alaska',
   },
 ];
+
+export const mockSingleDistrictState: RegionRecord[] = adaptMetadataRegions(
+  'us',
+  mockSingleDistrictMetadata
+);

@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
+import { fromMetadataRegionEntry } from '@/models/region';
 import { UK_REGION_TYPES, US_REGION_TYPES } from '@/types/regionTypes';
 import PopulationScopeView from './PopulationScopeView';
 
@@ -25,7 +26,7 @@ const usRegionData = [
   { name: 'state/fl', label: 'Florida', type: US_REGION_TYPES.STATE },
   { name: 'state/ny', label: 'New York', type: US_REGION_TYPES.STATE },
   { name: 'state/tx', label: 'Texas', type: US_REGION_TYPES.STATE },
-];
+].map((region) => fromMetadataRegionEntry('us', region));
 
 // Mock region data for UK constituencies
 const ukRegionData = [
@@ -42,7 +43,7 @@ const ukRegionData = [
   { name: 'country/england', label: 'England', type: UK_REGION_TYPES.COUNTRY },
   { name: 'country/scotland', label: 'Scotland', type: UK_REGION_TYPES.COUNTRY },
   { name: 'country/wales', label: 'Wales', type: UK_REGION_TYPES.COUNTRY },
-];
+].map((region) => fromMetadataRegionEntry('uk', region));
 
 export const US: Story = {
   args: {

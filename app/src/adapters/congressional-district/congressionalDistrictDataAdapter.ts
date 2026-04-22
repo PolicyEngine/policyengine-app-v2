@@ -1,42 +1,7 @@
 import type { ChoroplethDataPoint } from '@/components/visualization/USDistrictChoroplethMap';
-import type { RegionRecord } from '@/models/region';
-import type { MetadataRegionEntry } from '@/types/metadata';
+import type { Region } from '@/models/region';
 import type { USCongressionalDistrictBreakdown } from '@/types/metadata/ReportOutputSocietyWideByCongressionalDistrict';
 import { US_REGION_TYPES } from '@/types/regionTypes';
-
-type DistrictRegionSource = MetadataRegionEntry | RegionRecord;
-
-function isV2RegionRecord(region: DistrictRegionSource): region is RegionRecord {
-  return 'regionType' in region && 'code' in region;
-}
-
-function isV1MetadataRegionEntry(region: DistrictRegionSource): region is MetadataRegionEntry {
-  return 'type' in region && 'name' in region;
-}
-
-function getDistrictRegionType(region: DistrictRegionSource): string {
-  if (isV2RegionRecord(region)) {
-    return region.regionType;
-  }
-
-  if (isV1MetadataRegionEntry(region)) {
-    return region.type;
-  }
-
-  return '';
-}
-
-function getDistrictRegionCode(region: DistrictRegionSource): string {
-  if (isV2RegionRecord(region)) {
-    return region.code;
-  }
-
-  if (isV1MetadataRegionEntry(region)) {
-    return region.name;
-  }
-
-  return '';
-}
 
 /**
  * Type for district label lookup map (district ID -> label)
@@ -62,9 +27,9 @@ export function normalizeDistrictId(districtId: string): string {
 }
 
 /**
- * Builds a lookup map from district ID to label from canonical region records or legacy metadata.
+ * Builds a lookup map from district ID to label from canonical region records.
  *
- * @param regions - Array of canonical region records or legacy metadata entries
+ * @param regions - Array of canonical region records
  * @returns Map from district ID (e.g., "AL-01") to label (e.g., "Alabama's 1st congressional district")
  *
  * @example
@@ -73,16 +38,13 @@ export function normalizeDistrictId(districtId: string): string {
  * labelLookup.get('AL-01'); // "Alabama's 1st congressional district"
  * ```
  */
-export function buildDistrictLabelLookup(regions: DistrictRegionSource[]): DistrictLabelLookup {
+export function buildDistrictLabelLookup(regions: Region[]): DistrictLabelLookup {
   const lookup = new Map<string, string>();
 
   for (const region of regions) {
-    const regionType = getDistrictRegionType(region);
-    const regionCode = getDistrictRegionCode(region);
-
-    if (regionType === US_REGION_TYPES.CONGRESSIONAL_DISTRICT) {
+    if (region.regionType === US_REGION_TYPES.CONGRESSIONAL_DISTRICT) {
       // Strip "congressional_district/" prefix so keys match API district IDs (e.g., "AL-01")
-      const key = regionCode.replace(/^congressional_district\//, '');
+      const key = region.code.replace(/^congressional_district\//, '');
       lookup.set(key, region.label);
     }
   }

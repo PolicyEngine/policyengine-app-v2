@@ -1,10 +1,7 @@
 import { countryIds } from '@/libs/countries';
-import type { RegionRecord } from '@/models/region';
-import { MetadataRegionEntry } from '@/types/metadata';
+import type { Region } from '@/models/region';
 import { ScopeType, UK_REGION_TYPES, US_REGION_TYPES } from '@/types/regionTypes';
 
-// Re-export types for convenience
-export type { MetadataRegionEntry };
 export { US_REGION_TYPES, UK_REGION_TYPES };
 export type { ScopeType };
 
@@ -32,62 +29,20 @@ export interface PlaceOption {
   stateName: string;
 }
 
-type RegionOptionSource = MetadataRegionEntry | RegionRecord;
-
-function isV2RegionRecord(region: RegionOptionSource): region is RegionRecord {
-  return 'regionType' in region && 'code' in region;
+function getRegionCode(region: Region): string {
+  return region.code;
 }
 
-function isV1MetadataRegionEntry(region: RegionOptionSource): region is MetadataRegionEntry {
-  return 'type' in region && 'name' in region;
+function getRegionType(region: Region): string {
+  return region.regionType;
 }
 
-function getRegionCode(region: RegionOptionSource): string {
-  if (isV2RegionRecord(region)) {
-    return region.code;
-  }
-
-  if (isV1MetadataRegionEntry(region)) {
-    return region.name;
-  }
-
-  return '';
+function getRegionStateAbbreviation(region: Region): string | undefined {
+  return region.stateCode ?? undefined;
 }
 
-function getRegionType(region: RegionOptionSource): string {
-  if (isV2RegionRecord(region)) {
-    return region.regionType;
-  }
-
-  if (isV1MetadataRegionEntry(region)) {
-    return region.type;
-  }
-
-  return '';
-}
-
-function getRegionStateAbbreviation(region: RegionOptionSource): string | undefined {
-  if (isV2RegionRecord(region)) {
-    return region.stateCode ?? undefined;
-  }
-
-  if (isV1MetadataRegionEntry(region)) {
-    return region.state_abbreviation;
-  }
-
-  return undefined;
-}
-
-function getRegionStateName(region: RegionOptionSource): string | undefined {
-  if (isV2RegionRecord(region)) {
-    return region.stateName ?? undefined;
-  }
-
-  if (isV1MetadataRegionEntry(region)) {
-    return region.state_name;
-  }
-
-  return undefined;
+function getRegionStateName(region: Region): string | undefined {
+  return region.stateName ?? undefined;
 }
 
 /**
@@ -564,7 +519,7 @@ export function findPlaceFromRegionString(regionString: string): PlaceOption | u
  * the static 100k+ place list so metadata-backed UI flows continue to work
  * while v1 metadata remains the surfaced region source.
  */
-export function getUSPlaces(regions: RegionOptionSource[]): RegionOption[] {
+export function getUSPlaces(regions: Region[]): RegionOption[] {
   const placeRegions = regions
     .filter((region) => getRegionType(region) === US_REGION_TYPES.PLACE)
     .map((region) => ({
@@ -591,7 +546,7 @@ export function getUSPlaces(regions: RegionOptionSource[]): RegionOption[] {
 /**
  * Get US states from either legacy metadata or canonical v2 region records.
  */
-export function getUSStates(regions: RegionOptionSource[]): RegionOption[] {
+export function getUSStates(regions: Region[]): RegionOption[] {
   return regions
     .filter((region) => getRegionType(region) === US_REGION_TYPES.STATE)
     .map((r) => ({
@@ -605,7 +560,7 @@ export function getUSStates(regions: RegionOptionSource[]): RegionOption[] {
  * Get US congressional districts from either legacy metadata or canonical v2 region records.
  * Districts include state abbreviation/name metadata when available.
  */
-export function getUSCongressionalDistricts(regions: RegionOptionSource[]): RegionOption[] {
+export function getUSCongressionalDistricts(regions: Region[]): RegionOption[] {
   return regions
     .filter((region) => getRegionType(region) === US_REGION_TYPES.CONGRESSIONAL_DISTRICT)
     .map((r) => ({
@@ -664,7 +619,7 @@ export function formatDistrictOptionsForDisplay(districts: RegionOption[]): Regi
 /**
  * Get UK countries from either legacy metadata or canonical v2 region records.
  */
-export function getUKCountries(regions: RegionOptionSource[]): RegionOption[] {
+export function getUKCountries(regions: Region[]): RegionOption[] {
   return regions
     .filter((region) => getRegionType(region) === UK_REGION_TYPES.COUNTRY)
     .map((r) => ({
@@ -677,7 +632,7 @@ export function getUKCountries(regions: RegionOptionSource[]): RegionOption[] {
 /**
  * Get UK constituencies from either legacy metadata or canonical v2 region records.
  */
-export function getUKConstituencies(regions: RegionOptionSource[]): RegionOption[] {
+export function getUKConstituencies(regions: Region[]): RegionOption[] {
   return regions
     .filter((region) => getRegionType(region) === UK_REGION_TYPES.CONSTITUENCY)
     .map((r) => ({
@@ -690,7 +645,7 @@ export function getUKConstituencies(regions: RegionOptionSource[]): RegionOption
 /**
  * Get UK local authorities from either legacy metadata or canonical v2 region records.
  */
-export function getUKLocalAuthorities(regions: RegionOptionSource[]): RegionOption[] {
+export function getUKLocalAuthorities(regions: Region[]): RegionOption[] {
   return regions
     .filter((region) => getRegionType(region) === UK_REGION_TYPES.LOCAL_AUTHORITY)
     .map((r) => ({
