@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { LocalStorageGeographicStore } from '@/api/geographicAssociation';
-import { useRegions } from '@/hooks/useRegions';
+import { useApiRegions } from '@/hooks/useApiRegions';
 import {
   useCreateGeographicAssociation,
   useGeographicAssociation,
@@ -28,8 +28,8 @@ vi.mock('@/hooks/useCurrentCountry', () => ({
   useCurrentCountry: vi.fn(() => 'us'),
 }));
 
-vi.mock('@/hooks/useRegions', () => ({
-  useRegions: vi.fn(() => ({
+vi.mock('@/hooks/useApiRegions', () => ({
+  useApiRegions: vi.fn(() => ({
     data: [
       {
         id: 'region-state-ca',
@@ -110,7 +110,7 @@ describe('useUserGeographic hooks', () => {
     vi.clearAllMocks();
     queryClient = createMockQueryClient();
     mockShadowResolveRegionTarget.mockResolvedValue(null);
-    vi.mocked(useRegions).mockReturnValue({
+    vi.mocked(useApiRegions).mockReturnValue({
       data: [
         {
           id: 'region-state-ca',
@@ -143,7 +143,7 @@ describe('useUserGeographic hooks', () => {
       ],
       isLoading: false,
       error: null,
-    } as ReturnType<typeof useRegions>);
+    } as ReturnType<typeof useApiRegions>);
 
     // Get the mock store instance
     const mockStore =
@@ -514,11 +514,11 @@ describe('useUserGeographic hooks', () => {
     });
 
     test('given regions lookup fails then it still returns reconstructed geographies without surfacing an error', async () => {
-      vi.mocked(useRegions).mockReturnValue({
+      vi.mocked(useApiRegions).mockReturnValue({
         data: undefined,
         isLoading: false,
         error: new Error('regions unavailable'),
-      } as ReturnType<typeof useRegions>);
+      } as ReturnType<typeof useApiRegions>);
 
       const { result } = renderHook(() => useUserGeographics(TEST_IDS.USER_ID), { wrapper });
 

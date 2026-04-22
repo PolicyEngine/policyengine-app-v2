@@ -3,8 +3,8 @@ import { PolicyAdapter, SimulationAdapter } from '@/adapters';
 import { fetchHouseholdById } from '@/api/household';
 import { fetchPolicyById } from '@/api/policy';
 import { fetchSimulationById } from '@/api/simulation';
+import { useApiRegions } from '@/hooks/useApiRegions';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { useRegions } from '@/hooks/useRegions';
 import { buildCanonicalGeography } from '@/models/geography';
 import { Household as HouseholdModel } from '@/models/Household';
 import type { AppHouseholdInputEnvelope as Household } from '@/models/household/appTypes';
@@ -56,7 +56,7 @@ export interface EnhancedUserSimulation {
 export const useUserSimulations = (userId: string) => {
   const country = useCurrentCountry();
   const queryClient = useQueryClient();
-  const { data: regions } = useRegions(country);
+  const { data: regions } = useApiRegions(country);
 
   // Step 1: Fetch all user associations in parallel
   const {

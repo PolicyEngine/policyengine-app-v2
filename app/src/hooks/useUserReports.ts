@@ -4,8 +4,8 @@ import { fetchHouseholdById } from '@/api/household';
 import { fetchPolicyById } from '@/api/policy';
 import { fetchReportById } from '@/api/report';
 import { fetchSimulationById } from '@/api/simulation';
+import { useApiRegions } from '@/hooks/useApiRegions';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { useRegions } from '@/hooks/useRegions';
 import { GC_TIME_5_MIN } from '@/libs/queryConfig';
 import { buildCanonicalGeography } from '@/models/geography';
 import { Household as HouseholdModel } from '@/models/Household';
@@ -65,7 +65,7 @@ export interface EnhancedUserReport {
 export const useUserReports = (userId: string) => {
   const country = useCurrentCountry();
   const queryClient = useQueryClient();
-  const { data: regions } = useRegions(country);
+  const { data: regions } = useApiRegions(country);
 
   // Step 1: Fetch all user associations in parallel
   const {
@@ -401,7 +401,7 @@ export const useUserReportById = (userReportId: string, options?: { enabled?: bo
 
   const { data: policyAssociations } = usePolicyAssociationsByUser(userId || '');
   const { data: householdAssociations } = useHouseholdAssociationsByUser(userId || '');
-  const { data: regions } = useRegions(country);
+  const { data: regions } = useApiRegions(country);
 
   const matchedUserSimulations = simulationAssociations?.filter((sa) =>
     finalReport?.simulationIds?.includes(sa.simulationId)

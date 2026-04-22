@@ -1,7 +1,7 @@
 import { QueryClient } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { useRegions } from '@/hooks/useRegions';
+import { useApiRegions } from '@/hooks/useApiRegions';
 import { useUserSimulations } from '@/hooks/useUserSimulations';
 import {
   createMockQueryClient,
@@ -40,8 +40,8 @@ vi.mock('@/hooks/useCurrentCountry', () => ({
   useCurrentCountry: vi.fn(() => 'us'),
 }));
 
-vi.mock('@/hooks/useRegions', () => ({
-  useRegions: vi.fn(() => ({
+vi.mock('@/hooks/useApiRegions', () => ({
+  useApiRegions: vi.fn(() => ({
     data: [],
     isLoading: false,
     error: null,
@@ -58,11 +58,11 @@ describe('useUserSimulations', () => {
     queryClient = createMockQueryClient();
     store = createMockStore();
     wrapper = createWrapper(queryClient, store);
-    vi.mocked(useRegions).mockReturnValue({
+    vi.mocked(useApiRegions).mockReturnValue({
       data: [],
       isLoading: false,
       error: null,
-    } as unknown as ReturnType<typeof useRegions>);
+    } as unknown as ReturnType<typeof useApiRegions>);
   });
 
   it('given user ID then returns hook result structure', async () => {
@@ -92,11 +92,11 @@ describe('useUserSimulations', () => {
   });
 
   it('given regions lookup fails then it does not surface an error for otherwise valid v1 data', async () => {
-    vi.mocked(useRegions).mockReturnValue({
+    vi.mocked(useApiRegions).mockReturnValue({
       data: undefined,
       isLoading: false,
       error: new Error('regions unavailable'),
-    } as unknown as ReturnType<typeof useRegions>);
+    } as unknown as ReturnType<typeof useApiRegions>);
 
     const { result } = renderHook(() => useUserSimulations(TEST_USER_ID), { wrapper });
 
