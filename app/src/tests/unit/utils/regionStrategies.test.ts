@@ -147,6 +147,28 @@ describe('regionStrategies', () => {
   });
 
   describe('getUSPlaces', () => {
+    test('given metadata-backed regions without places then falls back to the static place list', () => {
+      // When
+      const result = getUSPlaces(mockUSRegions);
+
+      // Then
+      expect(result.length).toBeGreaterThan(expectedUSPlaces.length);
+      expect(result).toContainEqual({
+        value: 'place/NY-51000',
+        label: 'New York City',
+        type: US_REGION_TYPES.PLACE,
+        stateAbbreviation: 'NY',
+        stateName: 'New York',
+      });
+      expect(result).toContainEqual({
+        value: 'place/NJ-57000',
+        label: 'Paterson',
+        type: US_REGION_TYPES.PLACE,
+        stateAbbreviation: 'NJ',
+        stateName: 'New Jersey',
+      });
+    });
+
     test('given v2 region records then returns canonical place options', () => {
       // When
       const result = getUSPlaces(mockUSRegionRecords);

@@ -560,11 +560,12 @@ export function findPlaceFromRegionString(regionString: string): PlaceOption | u
 
 /**
  * Get US places as RegionOption array for use in geography selectors.
- * The canonical source is the v2 `/regions` response; the static place list is now
- * only retained for legacy parsing and label fallback paths.
+ * Prefer canonical place regions when they are present. Otherwise fall back to
+ * the static 100k+ place list so metadata-backed UI flows continue to work
+ * while v1 metadata remains the surfaced region source.
  */
 export function getUSPlaces(regions: RegionOptionSource[]): RegionOption[] {
-  return regions
+  const placeRegions = regions
     .filter((region) => getRegionType(region) === US_REGION_TYPES.PLACE)
     .map((region) => ({
       value: getRegionCode(region),
@@ -573,6 +574,18 @@ export function getUSPlaces(regions: RegionOptionSource[]): RegionOption[] {
       stateAbbreviation: getRegionStateAbbreviation(region),
       stateName: getRegionStateName(region),
     }));
+
+  if (placeRegions.length > 0) {
+    return placeRegions;
+  }
+
+  return US_PLACES_OVER_100K.map((place) => ({
+    value: placeToRegionString(place),
+    label: getPlaceDisplayName(place.name),
+    type: US_REGION_TYPES.PLACE,
+    stateAbbreviation: place.stateAbbrev,
+    stateName: place.stateName,
+  }));
 }
 
 /**
