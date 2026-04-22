@@ -40,7 +40,8 @@
     "date": "2026-03-20",
     "url": "https://www.booker.senate.gov/news/press/what-theyre-saying-booker-announces-keep-your-pay-act-to-provide-wallet-relief-and-put-more-money-in-your-pocket",
     "image": "booker-keep-your-pay.webp",
-    "tags": ["us", "tax"]
+    "tags": ["us", "tax"],
+    "featured": true
   },
   {
     "title": "Break glass: a plan for the next economic shock",
