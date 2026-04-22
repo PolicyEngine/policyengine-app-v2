@@ -1,0 +1,30 @@
+name: Multizone tracking audit
+
+# Guards against the class of bug where a multizone rewrite is added
+# (or its destination is edited) but the target zone lacks the GA4
+# bootstrap — silently dropping page_view and tool_engaged events for
+# every click that lands on that zone.
+#
+# See PolicyEngine/marriage#114 and PolicyEngine/policyengine-model#21
+# for the incident this check was built in response to.
+
+on:
+  pull_request:
+    paths:
+      - "website/next.config.ts"
+      - ".github/scripts/audit-multizone-tracking.mjs"
+      - ".github/workflows/multizone-tracking-audit.yml"
+
+jobs:
+  audit:
+    name: Audit GA4 tracking on multizone destinations
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Run multizone tracking audit
+        run: node .github/scripts/audit-multizone-tracking.mjs
