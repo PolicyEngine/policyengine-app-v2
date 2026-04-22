@@ -1,5 +1,14 @@
 [
   {
+    "title": "Congresswoman McDonald Rivet introduces game-changing tax cut for working families",
+    "outlet": "U.S. House (McDonald Rivet)",
+    "date": "2026-04-22",
+    "url": "https://mcdonaldrivet.house.gov/media/press-releases/icymi-congresswoman-mcdonald-rivet-introduces-game-changing-tax-cut-working",
+    "image": "mcdonald-rivet-wptra.webp",
+    "tags": ["us", "tax"],
+    "featured": true
+  },
+  {
     "title": "One Big Beautiful Bill? A preliminary assessment",
     "outlet": "Brookings Institution",
     "date": "2026-03-23",
@@ -31,8 +40,7 @@
     "date": "2026-03-20",
     "url": "https://www.booker.senate.gov/news/press/what-theyre-saying-booker-announces-keep-your-pay-act-to-provide-wallet-relief-and-put-more-money-in-your-pocket",
     "image": "booker-keep-your-pay.webp",
-    "tags": ["us", "tax"],
-    "featured": true
+    "tags": ["us", "tax"]
   },
   {
     "title": "Break glass: a plan for the next economic shock",
@@ -40,8 +48,7 @@
     "date": "2026-03-06",
     "url": "https://www.crfb.org/papers/break-glass-plan-next-economic-shock",
     "image": "crfb-break-glass.webp",
-    "tags": ["us", "policy"],
-    "featured": true
+    "tags": ["us", "policy"]
   },
   {
     "title": "Agent-based macroeconomics for the UK's seventh carbon budget",
@@ -49,8 +56,7 @@
     "date": "2026-03-13",
     "url": "https://arxiv.org/pdf/2602.15607",
     "image": "arxiv-carbon-budget.webp",
-    "tags": ["uk", "policy"],
-    "featured": true
+    "tags": ["uk", "policy"]
   },
   {
     "title": "Informing policy using micro-simulations",
@@ -58,8 +64,7 @@
     "date": "2026-01-05",
     "url": "https://fellows.ai.gov.uk/articles/nikhil-woodruff-micro-simulation/",
     "image": "no10-fellowship.webp",
-    "tags": ["uk", "technical"],
-    "featured": true
+    "tags": ["uk", "technical"]
   },
   {
     "title": "Rhode Island House Committee on Finance H. 7127, Governor's proposed Child Tax Credit",
