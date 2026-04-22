@@ -46,7 +46,7 @@ import { countPolicyModifications } from '@/utils/countParameterChanges';
 import { formatPeriod } from '@/utils/dateUtils';
 import { formatLabelParts, getHierarchicalLabels } from '@/utils/parameterLabels';
 import { formatParameterValue } from '@/utils/policyTableHelpers';
-import { FONT_SIZES, INGREDIENT_COLORS } from '../constants';
+import { BROWSE_MODAL_CONFIG, FONT_SIZES, INGREDIENT_COLORS } from '../constants';
 import { getReportYearDateBounds } from '../utils/reportYearDates';
 import {
   ChangesCard,
@@ -474,12 +474,12 @@ export function PolicyCreationModal({
     >
       <DialogContent
         showCloseButton={false}
-        className="tw:sm:max-w-[90vw] tw:p-0"
+        className="tw:sm:max-w-none tw:p-0 tw:gap-0"
         style={{
-          width: '90vw',
-          maxWidth: '1400px',
-          height: '85vh',
-          maxHeight: '800px',
+          width: BROWSE_MODAL_CONFIG.width,
+          maxWidth: BROWSE_MODAL_CONFIG.maxWidth,
+          height: BROWSE_MODAL_CONFIG.height,
+          maxHeight: BROWSE_MODAL_CONFIG.maxHeight,
           display: 'flex',
           flexDirection: 'column',
         }}
