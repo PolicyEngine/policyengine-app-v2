@@ -12,7 +12,7 @@ import { RenameIngredientModal } from '@/components/common/RenameIngredientModal
 import IngredientReadView from '@/components/IngredientReadView';
 import { MultiSimOutputTypeCell } from '@/components/report/MultiSimReportOutputTypeCell';
 import { ReportOutputTypeCell } from '@/components/report/ReportOutputTypeCell';
-import { Stack } from '@/components/ui';
+import { Button, Stack } from '@/components/ui';
 import { MOCK_USER_ID } from '@/constants';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
@@ -50,6 +50,10 @@ export default function ReportsPage() {
   const handleBuildReport = () => {
     const targetPath = `/${countryId}/reports/create`;
     nav.push(targetPath);
+  };
+
+  const handleOpenModalDebug = () => {
+    nav.push(`/${countryId}/reports/modal-debug`);
   };
 
   const handleCloseRename = () => {
@@ -222,6 +226,9 @@ export default function ReportsPage() {
           searchValue={searchValue}
           onSearchChange={setSearchValue}
         />
+        <Button variant="outline" onClick={handleOpenModalDebug} className="tw:self-start">
+          Open modal pathway debug page
+        </Button>
       </Stack>
 
       <RenameIngredientModal

@@ -8,6 +8,7 @@ import StandardLayout from './components/StandardLayout';
 import NotFoundPage from './pages/NotFound.page';
 import PoliciesPage from './pages/Policies.page';
 import PopulationsPage from './pages/Populations.page';
+import ModalPathwayDebugPage from './pages/reportBuilder/ModalPathwayDebugPage';
 import ModifyReportPage from './pages/reportBuilder/ModifyReportPage';
 import ReportBuilderPage from './pages/reportBuilder/ReportBuilderPage';
 import ReportOutputPage from './pages/ReportOutput.page';
@@ -81,6 +82,10 @@ const router = createBrowserRouter(
                 {
                   path: 'report-output/:reportId/:subpage?/:view?',
                   element: <ReportOutputRoute />,
+                },
+                {
+                  path: 'reports/modal-debug',
+                  element: <ModalPathwayDebugPage />,
                 },
               ],
             },
