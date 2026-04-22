@@ -1,5 +1,14 @@
 [
   {
+    "title": "Congresswoman McDonald Rivet introduces game-changing tax cut for working families",
+    "outlet": "U.S. House (McDonald Rivet)",
+    "date": "2026-04-22",
+    "url": "https://mcdonaldrivet.house.gov/media/press-releases/icymi-congresswoman-mcdonald-rivet-introduces-game-changing-tax-cut-working",
+    "image": "mcdonald-rivet-wptra.webp",
+    "tags": ["us", "tax"],
+    "featured": true
+  },
+  {
     "title": "One Big Beautiful Bill? A preliminary assessment",
     "outlet": "Brookings Institution",
     "date": "2026-03-23",
@@ -40,8 +49,7 @@
     "date": "2026-03-06",
     "url": "https://www.crfb.org/papers/break-glass-plan-next-economic-shock",
     "image": "crfb-break-glass.webp",
-    "tags": ["us", "policy"],
-    "featured": true
+    "tags": ["us", "policy"]
   },
   {
     "title": "Agent-based macroeconomics for the UK's seventh carbon budget",
