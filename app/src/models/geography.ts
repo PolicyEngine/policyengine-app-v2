@@ -2,8 +2,8 @@ import type { CountryId } from '@/libs/countries';
 import {
   getRegionCodeCandidates,
   normalizeRegionCode,
+  type Region,
   type RegionCode,
-  type RegionRecord,
 } from '@/models/region';
 import type { Geography } from '@/types/ingredients/Geography';
 import { extractRegionDisplayValue } from '@/utils/regionStrategies';
@@ -29,10 +29,10 @@ export function getCountryDisplayName(countryId: CountryId): string {
 }
 
 export function findRegionRecord(
-  regions: RegionRecord[] | undefined,
+  regions: Region[] | undefined,
   countryId: CountryId,
   regionCode: string
-): RegionRecord | undefined {
+): Region | undefined {
   if (!regions?.length) {
     return undefined;
   }
@@ -52,7 +52,7 @@ export function getCanonicalGeographyCode(
   countryId: CountryId,
   scope: Geography['scope'],
   geographyId: string,
-  regions?: RegionRecord[]
+  regions?: Region[]
 ): string {
   if (scope === 'national') {
     return countryId;
@@ -68,7 +68,7 @@ export function getGeographyDisplayName(
   countryId: CountryId,
   scope: Geography['scope'],
   geographyId: string,
-  regions?: RegionRecord[]
+  regions?: Region[]
 ): string {
   if (scope === 'national') {
     return getCountryDisplayName(countryId);
@@ -85,7 +85,7 @@ export function buildCanonicalGeography(args: {
   countryId: CountryId;
   scope: Geography['scope'];
   geographyId: string;
-  regions?: RegionRecord[];
+  regions?: Region[];
   id?: string;
 }): Geography {
   const { countryId, geographyId, id, regions, scope } = args;

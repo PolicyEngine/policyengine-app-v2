@@ -1,11 +1,11 @@
 import { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import type { CountryId } from '@/libs/countries';
-import { fromMetadataRegionEntry, type RegionRecord } from '@/models/region';
+import { fromMetadataRegionEntry, type Region } from '@/models/region';
 import type { RootState } from '@/store';
 
 interface UseMetadataRegionsResult {
-  data: RegionRecord[] | undefined;
+  data: Region[] | undefined;
   isLoading: boolean;
   isError: boolean;
   isSuccess: boolean;

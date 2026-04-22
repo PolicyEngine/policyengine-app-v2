@@ -59,7 +59,7 @@ export function buildDistrictLabelLookup(regions: Region[]): DistrictLabelLookup
  * the DISTRICT_ID property in the GeoJSON file. This avoids runtime FIPS
  * code conversion - the GeoJSON was pre-processed to include DISTRICT_ID.
  *
- * Labels are sourced from region metadata to avoid duplicating state name mappings
+ * Labels are sourced from canonical region data to avoid duplicating state name mappings
  * and ordinal formatting logic.
  *
  * @param apiData - Congressional district breakdown data from API
@@ -75,7 +75,7 @@ export function buildDistrictLabelLookup(regions: Region[]): DistrictLabelLookup
  *     { district: 'CA-52', average_household_income_change: 612.88, relative_household_income_change: 0.041 },
  *   ]
  * };
- * const labelLookup = buildDistrictLabelLookup(metadata.economyOptions.region);
+ * const labelLookup = buildDistrictLabelLookup(regions);
  *
  * const points = transformDistrictData(apiData, 'average_household_income_change', labelLookup);
  * // points[0] = { geoId: 'AL-01', label: "Alabama's 1st congressional district", value: 312.45 }
@@ -100,7 +100,7 @@ export function transformDistrictData(
  * Transform API data for average household income change visualization.
  *
  * @param apiData - Congressional district breakdown data from API
- * @param labelLookup - Map from district ID to human-readable label (from metadata)
+ * @param labelLookup - Map from district ID to human-readable label (from region data)
  * @returns Array of ChoroplethDataPoint with average income changes
  */
 export function transformDistrictAbsoluteChange(
@@ -114,7 +114,7 @@ export function transformDistrictAbsoluteChange(
  * Transform API data for relative household income change visualization.
  *
  * @param apiData - Congressional district breakdown data from API
- * @param labelLookup - Map from district ID to human-readable label (from metadata)
+ * @param labelLookup - Map from district ID to human-readable label (from region data)
  * @returns Array of ChoroplethDataPoint with relative income changes
  */
 export function transformDistrictRelativeChange(

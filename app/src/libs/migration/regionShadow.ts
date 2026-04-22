@@ -2,9 +2,9 @@ import { fetchRegionByCode } from '@/api/v2/regions';
 import type { CountryId } from '@/libs/countries';
 import {
   createResolvedRegionTarget,
+  fromV2RegionMetadata,
   normalizeRegionCode,
-  toRegionRecord,
-  type RegionRecord,
+  type Region,
   type ResolvedRegionTarget,
 } from '@/models/region';
 import { logMigrationComparison } from './comparisonLogger';
@@ -15,7 +15,7 @@ import { sendMigrationLog } from './migrationLogTransport';
 const SUPPORTED_REGION_COUNTRIES = new Set<CountryId>(['us', 'uk']);
 const inFlightResolutions = new Map<string, Promise<ResolvedRegionTarget | null>>();
 const resolvedTargetCache = new Map<string, ResolvedRegionTarget | null>();
-const regionPromiseCache = new Map<string, Promise<RegionRecord>>();
+const regionPromiseCache = new Map<string, Promise<Region>>();
 
 function logRegionEvent(
   status: 'FAILED' | 'SKIPPED',
@@ -37,8 +37,8 @@ function logRegionEvent(
 async function fetchRegionRecordCached(
   countryId: CountryId,
   regionCode: string,
-  region?: RegionRecord
-): Promise<RegionRecord> {
+  region?: Region
+): Promise<Region> {
   if (region) {
     return region;
   }
@@ -50,7 +50,7 @@ async function fetchRegionRecordCached(
   }
 
   const promise = fetchRegionByCode(countryId, regionCode)
-    .then((record) => toRegionRecord(countryId, record))
+    .then((record) => fromV2RegionMetadata(countryId, record))
     .catch((error) => {
       regionPromiseCache.delete(cacheKey);
       throw error;
@@ -100,7 +100,7 @@ async function shadowResolveRegionTargetImpl(args: {
   countryId: CountryId;
   regionCode: string;
   selectedLabel?: string | null;
-  region?: RegionRecord;
+  region?: Region;
 }): Promise<ResolvedRegionTarget | null> {
   const { countryId, region, selectedLabel } = args;
   const canonicalCode = normalizeRegionCode(countryId, args.regionCode);
@@ -113,7 +113,7 @@ async function shadowResolveRegionTargetImpl(args: {
     return null;
   }
 
-  let resolvedRegion: RegionRecord;
+  let resolvedRegion: Region;
   try {
     resolvedRegion = await fetchRegionRecordCached(countryId, canonicalCode, region);
   } catch (error) {
@@ -162,7 +162,7 @@ export async function shadowResolveRegionTarget(args: {
   countryId: CountryId;
   regionCode: string;
   selectedLabel?: string | null;
-  region?: RegionRecord;
+  region?: Region;
 }): Promise<ResolvedRegionTarget | null> {
   const canonicalCode = normalizeRegionCode(args.countryId, args.regionCode);
   const cacheKey = `${args.countryId}:${canonicalCode}`;

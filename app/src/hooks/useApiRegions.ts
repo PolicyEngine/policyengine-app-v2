@@ -3,14 +3,14 @@ import { fetchRegions } from '@/api/v2/regions';
 import type { CountryId } from '@/libs/countries';
 import { queryConfig } from '@/libs/queryConfig';
 import { regionKeys } from '@/libs/queryKeys';
-import { toRegionRecord } from '@/models/region';
+import { fromV2RegionMetadata } from '@/models/region';
 
 export function useApiRegions(countryId: CountryId, options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: [...regionKeys.byCountry(countryId), 'source', 'api'] as const,
     queryFn: async () => {
       const regions = await fetchRegions(countryId);
-      return regions.map((region) => toRegionRecord(countryId, region));
+      return regions.map((region) => fromV2RegionMetadata(countryId, region));
     },
     enabled: options?.enabled ?? true,
     ...queryConfig.api,

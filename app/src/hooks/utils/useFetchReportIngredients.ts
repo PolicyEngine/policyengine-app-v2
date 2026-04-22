@@ -23,7 +23,7 @@ import { householdKeys, policyKeys, reportKeys, simulationKeys } from '@/libs/qu
 import { buildCanonicalGeography, type SavedGeographySelection } from '@/models/geography';
 import { Household as HouseholdModel } from '@/models/Household';
 import type { AppHouseholdInputEnvelope as Household } from '@/models/household/appTypes';
-import type { RegionRecord } from '@/models/region';
+import type { Region } from '@/models/region';
 import { Geography } from '@/types/ingredients/Geography';
 import { Policy } from '@/types/ingredients/Policy';
 import { Report } from '@/types/ingredients/Report';
@@ -38,7 +38,7 @@ import { combineLoadingStates, extractUniqueIds, useParallelQueries } from './qu
  * Construct Geography objects from geography-type simulations
  *
  * Extracts geography metadata from simulations and builds Geography objects.
- * For subnational regions, looks up display names from metadata.
+ * For subnational regions, looks up display names from canonical region records.
  *
  * @param simulations - Array of simulations to extract geographies from
  * @param geographyOptions - Region metadata for name lookups
@@ -46,7 +46,7 @@ import { combineLoadingStates, extractUniqueIds, useParallelQueries } from './qu
  */
 export function buildGeographiesFromSimulations(
   simulations: Simulation[],
-  regions: RegionRecord[] | undefined
+  regions: Region[] | undefined
 ): Geography[] {
   return simulations.flatMap((sim) => {
     if (!(sim.populationType === 'geography' && sim.populationId && sim.countryId)) {
