@@ -2,6 +2,7 @@
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { PolicyAdapter } from '@/adapters';
 import { fetchPolicyById } from '@/api/policy';
+import { assertSupportedMode, usesV2ShadowMode } from '@/config/migrationMode';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import {
   shadowCreateUserPolicyAssociation,
@@ -15,6 +16,18 @@ import { UserPolicy } from '../types/ingredients/UserPolicy';
 
 const apiPolicyStore = new ApiPolicyStore();
 const localPolicyStore = new LocalStoragePolicyStore();
+const SUPPORTED_POLICY_WRITE_MODES = ['v1_only', 'v1_primary_v2_shadow'] as const;
+
+function getPolicyWriteConfig(
+  context: string,
+  options?: { skipV2AssociationShadow?: boolean }
+): { shouldShadowV2: boolean } {
+  const mode = assertSupportedMode('policies', SUPPORTED_POLICY_WRITE_MODES, context);
+
+  return {
+    shouldShadowV2: usesV2ShadowMode(mode) && !options?.skipV2AssociationShadow,
+  };
+}
 
 export const useUserPolicyStore = () => {
   const isLoggedIn = false; // TODO: Replace with actual auth check in future
@@ -49,10 +62,10 @@ export const usePolicyAssociation = (userId: string, policyId: string) => {
   });
 };
 
-export const useCreatePolicyAssociation = (options?: { shadowV2?: boolean }) => {
+export const useCreatePolicyAssociation = (options?: { skipV2AssociationShadow?: boolean }) => {
   const store = useUserPolicyStore();
   const queryClient = useQueryClient();
-  const shadowV2 = options?.shadowV2 ?? true;
+  const { shouldShadowV2 } = getPolicyWriteConfig('useCreatePolicyAssociation', options);
 
   return useMutation({
     mutationFn: (userPolicy: Omit<UserPolicy, 'id' | 'createdAt'>) => store.create(userPolicy),
@@ -77,7 +90,7 @@ export const useCreatePolicyAssociation = (options?: { shadowV2?: boolean }) => 
         newAssociation
       );
 
-      if (shadowV2) {
+      if (shouldShadowV2) {
         void shadowCreateUserPolicyAssociation(newAssociation);
       }
     },
@@ -87,6 +100,7 @@ export const useCreatePolicyAssociation = (options?: { shadowV2?: boolean }) => 
 export const useUpdatePolicyAssociation = () => {
   const store = useUserPolicyStore();
   const queryClient = useQueryClient();
+  const { shouldShadowV2 } = getPolicyWriteConfig('useUpdatePolicyAssociation');
 
   return useMutation({
     mutationFn: ({
@@ -116,7 +130,9 @@ export const useUpdatePolicyAssociation = () => {
         updatedAssociation
       );
 
-      void shadowUpdateUserPolicyAssociation(updatedAssociation);
+      if (shouldShadowV2) {
+        void shadowUpdateUserPolicyAssociation(updatedAssociation);
+      }
     },
   });
 };

@@ -9,6 +9,7 @@
 import { useCallback, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { PolicyAdapter } from '@/adapters/PolicyAdapter';
+import { assertSupportedMode, usesV2ShadowMode } from '@/config/migrationMode';
 import { ReportIngredientsInput } from '@/hooks/utils/useFetchReportIngredients';
 import { CountryId } from '@/libs/countries';
 import {
@@ -140,9 +141,15 @@ function shadowSavedHouseholdAssociation(
  * - Skips current law policies (they're pre-defined, not user-created)
  */
 export function useSaveSharedReport() {
+  const policyWriteMode = assertSupportedMode(
+    'policies',
+    ['v1_only', 'v1_primary_v2_shadow'],
+    'useSaveSharedReport'
+  );
+  const shouldShadowPolicies = usesV2ShadowMode(policyWriteMode);
   const createReportAssociation = useCreateReportAssociation();
   const createSimulationAssociation = useCreateSimulationAssociation();
-  const createPolicyAssociation = useCreatePolicyAssociation({ shadowV2: false });
+  const createPolicyAssociation = useCreatePolicyAssociation({ skipV2AssociationShadow: true });
   const createHouseholdAssociation = useCreateHouseholdAssociation();
   const createGeographicAssociation = useCreateGeographicAssociation();
   const reportStore = useUserReportStore();
@@ -202,7 +209,9 @@ export function useSaveSharedReport() {
           label: policy.label ?? undefined,
         });
 
-        shadowSavedPolicyAssociation(association, policiesById.get(String(policy.policyId)));
+        if (shouldShadowPolicies) {
+          shadowSavedPolicyAssociation(association, policiesById.get(String(policy.policyId)));
+        }
         return association;
       });
 

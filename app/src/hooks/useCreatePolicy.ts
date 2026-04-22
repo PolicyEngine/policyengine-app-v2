@@ -1,5 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 import { createPolicy } from '@/api/policy';
+import { assertSupportedMode, usesV2ShadowMode } from '@/config/migrationMode';
 import { MOCK_USER_ID } from '@/constants';
 import { shadowCreatePolicyAndAssociation } from '@/libs/migration/policyShadow';
 import type { UserPolicy } from '@/types/ingredients/UserPolicy';
@@ -9,8 +10,14 @@ import { useCreatePolicyAssociation } from './useUserPolicy';
 
 export function useCreatePolicy(policyLabel?: string) {
   const countryId = useCurrentCountry();
+  const policyWriteMode = assertSupportedMode(
+    'policies',
+    ['v1_only', 'v1_primary_v2_shadow'],
+    'useCreatePolicy'
+  );
+  const shouldShadowV2 = usesV2ShadowMode(policyWriteMode);
   // const user = MOCK_USER_ID; // TODO: Replace with actual user context or auth hook in future
-  const createAssociation = useCreatePolicyAssociation({ shadowV2: false });
+  const createAssociation = useCreatePolicyAssociation({ skipV2AssociationShadow: true });
 
   const mutation = useMutation({
     mutationFn: (data: PolicyCreationPayload) => createPolicy(countryId, data),
@@ -32,13 +39,15 @@ export function useCreatePolicy(policyLabel?: string) {
         console.error('Policy created but association failed:', error);
       }
 
-      void shadowCreatePolicyAndAssociation({
-        countryId,
-        label: policyLabel,
-        v1PolicyId: data.result.policy_id,
-        v1PolicyPayload: policyPayload,
-        v1Association: association,
-      });
+      if (shouldShadowV2) {
+        void shadowCreatePolicyAndAssociation({
+          countryId,
+          label: policyLabel,
+          v1PolicyId: data.result.policy_id,
+          v1PolicyPayload: policyPayload,
+          v1Association: association,
+        });
+      }
     },
   });
 

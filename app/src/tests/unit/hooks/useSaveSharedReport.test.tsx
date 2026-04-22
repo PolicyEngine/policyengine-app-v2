@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { ENTITY_MIGRATION_MODE } from '@/config/migrationMode';
 import { useSaveSharedReport } from '@/hooks/useSaveSharedReport';
 import {
   shadowCreateHouseholdAndAssociation,
@@ -83,6 +84,7 @@ vi.mock('@/hooks/useUserReportAssociations', () => ({
 
 describe('useSaveSharedReport', () => {
   let queryClient: QueryClient;
+  const defaultPolicyMigrationMode = ENTITY_MIGRATION_MODE.policies;
 
   const createMockStore = (currentLawId: string = CURRENT_LAW_ID) => {
     const metadataReducer = () => ({
@@ -108,6 +110,7 @@ describe('useSaveSharedReport', () => {
     vi.clearAllMocks();
     vi.stubEnv('NEXT_PUBLIC_VERCEL_ENV', 'preview');
     vi.spyOn(console, 'info').mockImplementation(() => {});
+    ENTITY_MIGRATION_MODE.policies = defaultPolicyMigrationMode;
     queryClient = new QueryClient({
       defaultOptions: { queries: { retry: false } },
     });
@@ -227,6 +230,21 @@ describe('useSaveSharedReport', () => {
       '550e8400-e29b-41d4-a716-446655440000'
     );
     expect(shadowCreatePolicyAndAssociation).not.toHaveBeenCalled();
+  });
+
+  test('given v1-only policy mode then shared save skips policy shadow writes', async () => {
+    ENTITY_MIGRATION_MODE.policies = 'v1_only';
+    const store = createMockStore();
+    const wrapper = createWrapper(store);
+
+    const { result } = renderHook(() => useSaveSharedReport(), { wrapper });
+
+    await act(async () => {
+      await result.current.saveSharedReport(MOCK_SAVE_SHARE_DATA, MOCK_POLICIES);
+    });
+
+    expect(shadowCreatePolicyAndAssociation).not.toHaveBeenCalled();
+    expect(shadowCreateUserPolicyAssociation).not.toHaveBeenCalled();
   });
 
   test('given existing report then returns already_saved without creating duplicates', async () => {
