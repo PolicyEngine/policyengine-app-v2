@@ -1,4 +1,4 @@
-.PHONY: help install dev build test lint format clean deploy
+.PHONY: help install dev build test lint format clean deploy pw-test pw-update pw-report
 
 help:
 	@echo "Available commands:"
@@ -11,6 +11,9 @@ help:
 	@echo "  make format     - Format code"
 	@echo "  make clean      - Clean build artifacts"
 	@echo "  make deploy     - Build and deploy to GitHub Pages"
+	@echo "  make pw-test    - Run Playwright visual tests"
+	@echo "  make pw-update  - Update visual test baselines"
+	@echo "  make pw-report  - Open Playwright HTML report"
 
 install:
 	bun install
@@ -41,3 +44,12 @@ clean:
 
 deploy: build
 	@echo "Build complete. GitHub Actions will handle deployment"
+
+pw-test:
+	cd app && npx playwright test --grep @visual
+
+pw-update:
+	cd app && npx playwright test --grep @visual --update-snapshots
+
+pw-report:
+	cd app && bunx playwright show-report
