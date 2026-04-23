@@ -21,10 +21,10 @@ import { useCalcOrchestratorManager } from '@/contexts/CalcOrchestratorContext';
 import { useUpdateReportAssociation } from '@/hooks/useUserReportAssociations';
 import { reportAssociationKeys, reportKeys } from '@/libs/queryKeys';
 import { RootState } from '@/store';
-import { Report } from '@/types/ingredients/Report';
 import { Simulation } from '@/types/ingredients/Simulation';
 import { toApiPolicyId } from '../currentLaw';
 import { ReportBuilderState } from '../types';
+import { buildExplicitReportCreationPayload } from '../utils/buildExplicitReportCreationPayload';
 
 interface UseModifyReportSubmissionArgs {
   reportState: ReportBuilderState;
@@ -124,12 +124,13 @@ export function useModifyReportSubmission({
       throw new Error('No simulations created');
     }
 
-    const reportPayload = ReportAdapter.toCreationPayload({
+    const reportPayload = buildExplicitReportCreationPayload({
       countryId,
       year: reportState.year,
       simulationIds,
-      apiVersion: null,
-    } as Report);
+      simulation1: simulations[0],
+      simulation2: simulations[1] || null,
+    });
 
     return { simulationIds, simulations, reportPayload };
   }, [reportState, countryId, currentLawId]);

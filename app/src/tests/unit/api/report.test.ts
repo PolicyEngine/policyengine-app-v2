@@ -150,6 +150,34 @@ describe('report API', () => {
         'Failed to update report report-123'
       );
     });
+
+    test('given run metadata then includes it in the PATCH payload', async () => {
+      const countryId = 'us';
+      const reportId = 'report-123';
+      const runMetadata = {
+        country_package_version: '1.620.0',
+        policyengine_version: '0.94.2',
+        data_version: '2026.04.17',
+        runtime_app_name: 'policyengine-app-v2',
+        resolved_dataset: 'enhanced_us_household',
+      };
+      const mockResponse = {
+        ok: true,
+        json: vi.fn().mockResolvedValue({ status: 'ok', result: mockReportMetadata }),
+      };
+      (global.fetch as any).mockResolvedValue(mockResponse);
+
+      await markReportCompleted(countryId, reportId, mockReport, runMetadata);
+
+      expect(global.fetch).toHaveBeenCalledWith(`${BASE_URL}/${countryId}/report`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...mockCompletedReportPayload,
+          ...runMetadata,
+        }),
+      });
+    });
   });
 
   describe('markReportError', () => {

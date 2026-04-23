@@ -1,9 +1,11 @@
 import { QueryClient } from '@tanstack/react-query';
 import { markReportCompleted } from '@/api/report';
 import { updateSimulationOutput } from '@/api/simulation';
+import { mergeConsistentRunMetadata } from '@/libs/calculations/runMetadata';
 import { calculationKeys, reportKeys, simulationKeys } from '@/libs/queryKeys';
 import type { CalcStatus } from '@/types/calculation';
 import type { Report } from '@/types/ingredients/Report';
+import type { RunMetadata } from '@/types/runMetadata';
 
 /**
  * Persists calculation results to the appropriate backend resource
@@ -26,13 +28,20 @@ export class ResultPersister {
 
     try {
       if (status.metadata.targetType === 'report') {
-        await this.persistToReport(status.metadata.calcId, status.result, countryId, year);
+        await this.persistToReport(
+          status.metadata.calcId,
+          status.result,
+          countryId,
+          year,
+          status.runMetadata
+        );
       } else {
         await this.persistToSimulation(
           status.metadata.calcId,
           status.result,
           countryId,
-          status.metadata.reportId // Pass parent reportId for household sim-level calcs
+          status.metadata.reportId, // Pass parent reportId for household sim-level calcs
+          status.runMetadata
         );
       }
     } catch (error) {
@@ -41,13 +50,20 @@ export class ResultPersister {
       await this.sleep(1000);
       try {
         if (status.metadata.targetType === 'report') {
-          await this.persistToReport(status.metadata.calcId, status.result, countryId, year);
+          await this.persistToReport(
+            status.metadata.calcId,
+            status.result,
+            countryId,
+            year,
+            status.runMetadata
+          );
         } else {
           await this.persistToSimulation(
             status.metadata.calcId,
             status.result,
             countryId,
-            status.metadata.reportId // Pass parent reportId for household sim-level calcs
+            status.metadata.reportId, // Pass parent reportId for household sim-level calcs
+            status.runMetadata
           );
         }
       } catch (retryError) {
@@ -66,7 +82,8 @@ export class ResultPersister {
     reportId: string,
     result: any,
     countryId: string,
-    year: string
+    year: string,
+    runMetadata?: RunMetadata
   ): Promise<void> {
     // Create a Report object with the result
     const report: Report = {
@@ -80,7 +97,7 @@ export class ResultPersister {
     };
 
     // Use existing markReportCompleted API
-    await markReportCompleted(countryId as any, reportId, report);
+    await markReportCompleted(countryId as any, reportId, report, runMetadata);
 
     // Invalidate report metadata cache so Reports page shows updated status
     // WHY: Reports page reads from reportKeys.byId(), not calculation cache.
@@ -101,10 +118,11 @@ export class ResultPersister {
     simulationId: string,
     result: any,
     countryId: string,
-    reportId?: string
+    reportId?: string,
+    runMetadata?: RunMetadata
   ): Promise<void> {
     // Use new updateSimulationOutput API
-    await updateSimulationOutput(countryId as any, simulationId, result);
+    await updateSimulationOutput(countryId as any, simulationId, result, runMetadata);
 
     // Invalidate simulation metadata cache so Reports page shows updated status
     // WHY: Reports page may display simulation info, and we need fresh data after persistence.
@@ -128,9 +146,31 @@ export class ResultPersister {
         const aggregatedOutput = await this.aggregateSimulationOutputs(reportId);
 
         // Mark report as complete with aggregated output
-        await this.persistToReport(reportId, aggregatedOutput, countryId, report.year);
+        await this.persistToReport(
+          reportId,
+          aggregatedOutput,
+          countryId,
+          report.year,
+          this.aggregateRunMetadata(reportId)
+        );
       }
     }
+  }
+
+  private aggregateRunMetadata(reportId: string): RunMetadata | undefined {
+    const report = this.queryClient.getQueryData<Report>(reportKeys.byId(reportId));
+    if (!report) {
+      return undefined;
+    }
+
+    const runMetadataItems = report.simulationIds.map((simId) => {
+      const simStatus = this.queryClient.getQueryData<CalcStatus>(
+        calculationKeys.bySimulationId(simId)
+      );
+      return simStatus?.runMetadata;
+    });
+
+    return mergeConsistentRunMetadata(runMetadataItems);
   }
 
   /**
