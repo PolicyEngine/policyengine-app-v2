@@ -2,6 +2,7 @@
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { fetchHouseholdById } from '@/api/household';
 import type { UserHouseholdStore } from '@/api/householdAssociation';
+import { assertSupportedMode, usesV2ShadowMode } from '@/config/migrationMode';
 import { replaceHouseholdBaseForAssociation as replaceHouseholdBaseForAssociationAction } from '@/hooks/household/replaceHouseholdBaseForAssociation';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { shadowUpdateUserHouseholdAssociation } from '@/libs/migration/householdShadow';
@@ -14,6 +15,15 @@ import { householdAssociationKeys, householdKeys } from '../libs/queryKeys';
 
 const apiHouseholdStore = new ApiHouseholdStore();
 const localHouseholdStore = new LocalStorageHouseholdStore();
+const SUPPORTED_HOUSEHOLD_WRITE_MODES = ['v1_only', 'v1_primary_v2_shadow'] as const;
+
+function getHouseholdWriteConfig(context: string): { shouldShadowV2: boolean } {
+  const mode = assertSupportedMode('households', SUPPORTED_HOUSEHOLD_WRITE_MODES, context);
+
+  return {
+    shouldShadowV2: usesV2ShadowMode(mode),
+  };
+}
 
 export const useUserHouseholdStore = () => {
   const isLoggedIn = false; // TODO: Replace with actual auth check in future
@@ -78,6 +88,7 @@ export async function replaceHouseholdBaseForAssociation(args: {
   association: UserHouseholdPopulation;
   nextHousehold: AppHouseholdInputEnvelope;
   store?: Pick<UserHouseholdStore, 'update'>;
+  shouldShadowV2?: boolean;
 }): Promise<UserHouseholdPopulation> {
   return replaceHouseholdBaseForAssociationAction({
     ...args,
@@ -88,6 +99,7 @@ export async function replaceHouseholdBaseForAssociation(args: {
 export const useUpdateHouseholdAssociation = () => {
   const store = useUserHouseholdStore();
   const queryClient = useQueryClient();
+  const { shouldShadowV2 } = getHouseholdWriteConfig('useUpdateHouseholdAssociation');
 
   return useMutation({
     mutationFn: async ({
@@ -110,6 +122,7 @@ export const useUpdateHouseholdAssociation = () => {
           association,
           nextHousehold,
           store,
+          shouldShadowV2,
         });
       }
 
@@ -156,7 +169,7 @@ export const useUpdateHouseholdAssociation = () => {
         });
       }
 
-      if (!variables.nextHousehold) {
+      if (!variables.nextHousehold && shouldShadowV2) {
         void shadowUpdateUserHouseholdAssociation(updatedAssociation);
       }
     },

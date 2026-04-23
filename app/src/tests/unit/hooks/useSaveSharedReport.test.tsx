@@ -85,6 +85,7 @@ vi.mock('@/hooks/useUserReportAssociations', () => ({
 describe('useSaveSharedReport', () => {
   let queryClient: QueryClient;
   const defaultPolicyMigrationMode = ENTITY_MIGRATION_MODE.policies;
+  const defaultHouseholdMigrationMode = ENTITY_MIGRATION_MODE.households;
 
   const createMockStore = (currentLawId: string = CURRENT_LAW_ID) => {
     const metadataReducer = () => ({
@@ -111,6 +112,7 @@ describe('useSaveSharedReport', () => {
     vi.stubEnv('NEXT_PUBLIC_VERCEL_ENV', 'preview');
     vi.spyOn(console, 'info').mockImplementation(() => {});
     ENTITY_MIGRATION_MODE.policies = defaultPolicyMigrationMode;
+    ENTITY_MIGRATION_MODE.households = defaultHouseholdMigrationMode;
     queryClient = new QueryClient({
       defaultOptions: { queries: { retry: false } },
     });
@@ -397,6 +399,21 @@ describe('useSaveSharedReport', () => {
       '550e8400-e29b-41d4-a716-446655440123'
     );
     expect(shadowCreateHouseholdAndAssociation).not.toHaveBeenCalled();
+  });
+
+  test('given v1-only household mode then shared save skips household shadow writes', async () => {
+    ENTITY_MIGRATION_MODE.households = 'v1_only';
+    const store = createMockStore();
+    const wrapper = createWrapper(store);
+
+    const { result } = renderHook(() => useSaveSharedReport(), { wrapper });
+
+    await act(async () => {
+      await result.current.saveSharedReport(MOCK_SHARE_DATA_WITH_HOUSEHOLD, [], MOCK_HOUSEHOLDS);
+    });
+
+    expect(shadowCreateHouseholdAndAssociation).not.toHaveBeenCalled();
+    expect(shadowCreateUserHouseholdAssociation).not.toHaveBeenCalled();
   });
 
   test('given shareData without label then generates default label', async () => {

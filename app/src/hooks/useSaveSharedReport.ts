@@ -147,6 +147,12 @@ export function useSaveSharedReport() {
     'useSaveSharedReport'
   );
   const shouldShadowPolicies = usesV2ShadowMode(policyWriteMode);
+  const householdWriteMode = assertSupportedMode(
+    'households',
+    ['v1_only', 'v1_primary_v2_shadow'],
+    'useSaveSharedReport'
+  );
+  const shouldShadowHouseholds = usesV2ShadowMode(householdWriteMode);
   const createReportAssociation = useCreateReportAssociation();
   const createSimulationAssociation = useCreateSimulationAssociation();
   const createPolicyAssociation = useCreatePolicyAssociation({ skipV2AssociationShadow: true });
@@ -224,7 +230,9 @@ export function useSaveSharedReport() {
         label: hh.label ?? undefined,
       });
 
-      shadowSavedHouseholdAssociation(association, householdsById.get(String(hh.householdId)));
+      if (shouldShadowHouseholds) {
+        shadowSavedHouseholdAssociation(association, householdsById.get(String(hh.householdId)));
+      }
       return association;
     });
 

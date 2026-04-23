@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { createHousehold } from '@/api/household';
+import { ENTITY_MIGRATION_MODE } from '@/config/migrationMode';
 // Now import the actual implementations
 import { useCreateHousehold } from '@/hooks/useCreateHousehold';
 import { useCreateHouseholdAssociation } from '@/hooks/useUserHousehold';
@@ -49,11 +50,13 @@ vi.mock('@/hooks/useUserHousehold', () => ({
 describe('useCreateHousehold', () => {
   let queryClient: QueryClient;
   let consoleMocks: ReturnType<typeof setupMockConsole>;
+  const defaultHouseholdMigrationMode = ENTITY_MIGRATION_MODE.households;
 
   beforeEach(() => {
     vi.clearAllMocks();
     queryClient = createMockQueryClient();
     consoleMocks = setupMockConsole();
+    ENTITY_MIGRATION_MODE.households = defaultHouseholdMigrationMode;
 
     // Set up the mocked functions
     (createHousehold as any).mockImplementation(mockCreateHousehold);
@@ -167,6 +170,27 @@ describe('useCreateHousehold', () => {
         ...mockHouseholdCreationPayload,
         label: TEST_LABELS.HOUSEHOLD,
       });
+    });
+
+    test('given v1-only mode then successful create skips household shadow create', async () => {
+      ENTITY_MIGRATION_MODE.households = 'v1_only';
+      const { result } = renderHook(() => useCreateHousehold(TEST_LABELS.HOUSEHOLD), { wrapper });
+
+      await result.current.createHousehold(mockHouseholdCreationPayload);
+
+      await waitFor(() => {
+        expect(shadowCreateHouseholdAndAssociation).not.toHaveBeenCalled();
+      });
+    });
+
+    test('given unsupported household mode then hook fails fast', () => {
+      ENTITY_MIGRATION_MODE.households = 'v2_only';
+
+      expect(() =>
+        renderHook(() => useCreateHousehold(TEST_LABELS.HOUSEHOLD), { wrapper })
+      ).toThrow(
+        '[MigrationMode] Unsupported mode "v2_only" for households in useCreateHousehold. Supported modes: v1_only, v1_primary_v2_shadow'
+      );
     });
   });
 
