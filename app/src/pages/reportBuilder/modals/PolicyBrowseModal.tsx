@@ -27,6 +27,7 @@ import { useCreatePolicy } from '@/hooks/useCreatePolicy';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useUpdatePolicyAssociation, useUserPolicies } from '@/hooks/useUserPolicy';
 import { getDateRange } from '@/libs/metadataUtils';
+import { EditableLabel } from '@/pages/reportBuilder/components/EditableLabel';
 import { ValueSetterMode } from '@/pathways/report/components/valueSetters';
 import { RootState } from '@/store';
 import { Policy } from '@/types/ingredients/Policy';
@@ -62,6 +63,8 @@ interface PolicyBrowseModalProps {
   onSelect: (policy: PolicyStateProps) => void;
   reportYear: string;
 }
+
+type PendingUnnamedAction = 'create' | 'save-as-new' | 'update-existing' | null;
 
 export function PolicyBrowseModal({
   isOpen,
@@ -112,10 +115,13 @@ export function PolicyBrowseModal({
   const [footerHovered, setFooterHovered] = useState(false);
   const [originalLabel, setOriginalLabel] = useState('');
   const [showSameNameWarning, setShowSameNameWarning] = useState(false);
-  const [showUnnamedWarning, setShowUnnamedWarning] = useState(false);
+  const [pendingUnnamedAction, setPendingUnnamedAction] = useState<PendingUnnamedAction>(null);
 
   // API hook for creating policy
-  const { createPolicy, isPending: isCreating } = useCreatePolicy(policyLabel || undefined);
+  const normalizedPolicyLabel = policyLabel.trim();
+  const { createPolicy, isPending: isCreating } = useCreatePolicy(
+    normalizedPolicyLabel || undefined
+  );
 
   const isReadOnly = editorMode === 'display';
 
@@ -393,7 +399,7 @@ export function PolicyBrowseModal({
       const result = await createPolicy(payload);
       const createdPolicy: PolicyStateProps = {
         id: result.result.policy_id,
-        label: policyLabel || null,
+        label: normalizedPolicyLabel || null,
         parameters: policyParameters,
       };
       onSelect(createdPolicy);
@@ -401,22 +407,22 @@ export function PolicyBrowseModal({
     } catch (error) {
       console.error('Failed to create policy:', error);
     }
-  }, [policyLabel, policyParameters, createPolicy, onSelect, onClose]);
+  }, [normalizedPolicyLabel, policyParameters, createPolicy, onSelect, onClose]);
 
   // Same-name guard for "Save as new policy"
   const handleSaveAsNewPolicy = useCallback(() => {
-    const currentName = (policyLabel || '').trim();
+    const currentName = normalizedPolicyLabel;
     const origName = (originalLabel || '').trim();
     if (editorMode === 'edit' && currentName && currentName === origName) {
       setShowSameNameWarning(true);
     } else {
-      handleCreatePolicy();
+      void handleCreatePolicy();
     }
-  }, [policyLabel, originalLabel, editorMode, handleCreatePolicy]);
+  }, [normalizedPolicyLabel, originalLabel, editorMode, handleCreatePolicy]);
 
   // Handle updating an existing policy (create new base policy, update association)
   const handleUpdateExistingPolicy = useCallback(async () => {
-    if (!policyLabel.trim() || !editingAssociationId) {
+    if (!editingAssociationId) {
       return;
     }
     setIsUpdating(true);
@@ -427,15 +433,16 @@ export function PolicyBrowseModal({
     try {
       const result = await createPolicyApi(countryId, payload);
       const newPolicyId = result.result.policy_id;
+      const desiredLabel = normalizedPolicyLabel || undefined;
 
       await updatePolicyAssociation.mutateAsync({
         userPolicyId: editingAssociationId,
-        updates: { policyId: newPolicyId, label: policyLabel },
+        updates: { policyId: newPolicyId, label: desiredLabel },
       });
 
       onSelect({
         id: newPolicyId,
-        label: policyLabel,
+        label: desiredLabel ?? null,
         parameters: policyParameters,
       });
       onClose();
@@ -444,7 +451,7 @@ export function PolicyBrowseModal({
       setIsUpdating(false);
     }
   }, [
-    policyLabel,
+    normalizedPolicyLabel,
     policyParameters,
     editingAssociationId,
     countryId,
@@ -452,6 +459,52 @@ export function PolicyBrowseModal({
     onSelect,
     onClose,
   ]);
+
+  const runPendingUnnamedAction = useCallback(() => {
+    const action = pendingUnnamedAction;
+    setPendingUnnamedAction(null);
+
+    if (action === 'create') {
+      void handleCreatePolicy();
+    } else if (action === 'save-as-new') {
+      void handleSaveAsNewPolicy();
+    } else if (action === 'update-existing') {
+      void handleUpdateExistingPolicy();
+    }
+  }, [handleCreatePolicy, handleSaveAsNewPolicy, handleUpdateExistingPolicy, pendingUnnamedAction]);
+
+  const requestSaveAction = useCallback(
+    (action: Exclude<PendingUnnamedAction, null>) => {
+      const currentName = normalizedPolicyLabel;
+      const origName = (originalLabel || '').trim();
+
+      if (!currentName) {
+        setPendingUnnamedAction(action);
+        return;
+      }
+
+      if (action === 'save-as-new' && editorMode === 'edit' && currentName === origName) {
+        setShowSameNameWarning(true);
+        return;
+      }
+
+      if (action === 'create') {
+        void handleCreatePolicy();
+      } else if (action === 'save-as-new') {
+        void handleSaveAsNewPolicy();
+      } else {
+        void handleUpdateExistingPolicy();
+      }
+    },
+    [
+      normalizedPolicyLabel,
+      originalLabel,
+      editorMode,
+      handleCreatePolicy,
+      handleSaveAsNewPolicy,
+      handleUpdateExistingPolicy,
+    ]
+  );
 
   // Policy for drawer preview
   const drawerPolicy = useMemo(() => {
@@ -527,6 +580,7 @@ export function PolicyBrowseModal({
           policyLabel={policyLabel}
           onLabelChange={setPolicyLabel}
           isReadOnly={isReadOnly}
+          showNamingCard={false}
           modificationCount={modificationCount}
           modifiedParams={modifiedParams}
           hoveredParamName={hoveredParamName}
@@ -660,24 +714,33 @@ export function PolicyBrowseModal({
 
   // ========== Render ==========
 
-  // Header title based on editor mode
-  const getEditorHeaderTitle = () => {
-    if (editorMode === 'display') {
-      return 'Policy details';
-    }
-    if (editorMode === 'edit') {
-      return 'Edit policy';
-    }
-    return 'Policy editor';
-  };
-
   return (
     <>
       <BrowseModalTemplate
         isOpen={isOpen}
         onClose={onClose}
         headerIcon={<IconScale size={20} color={colorConfig.icon} />}
-        headerTitle={isCreationMode ? getEditorHeaderTitle() : 'Select policy'}
+        headerTitle={
+          isCreationMode ? (
+            <EditableLabel
+              value={policyLabel}
+              onChange={setPolicyLabel}
+              placeholder="Enter policy name..."
+              emptyStateText="Click to name your policy..."
+              readOnly={isReadOnly}
+              fitContentWhileEditing
+              controlOutsideField
+              showFieldWhenEmptyOrEditing
+              fieldStyle={{
+                background: colors.gray[100],
+                borderBottom: `1px solid ${colors.border.light}`,
+                padding: `${spacing.xs} ${spacing.sm}`,
+              }}
+            />
+          ) : (
+            'Select policy'
+          )
+        }
         headerSubtitle={
           isCreationMode ? undefined : 'Choose an existing policy or create a new one'
         }
@@ -732,13 +795,7 @@ export function PolicyBrowseModal({
               <Group gap="sm" justify="end">
                 {editorMode === 'create' && (
                   <Button
-                    onClick={() => {
-                      if (!policyLabel.trim()) {
-                        setShowUnnamedWarning(true);
-                      } else {
-                        handleCreatePolicy();
-                      }
-                    }}
+                    onClick={() => requestSaveAction('create')}
                     disabled={isCreating || modificationCount === 0}
                   >
                     {isCreating && <Spinner size="sm" />}
@@ -755,19 +812,13 @@ export function PolicyBrowseModal({
                   <>
                     <EditAndUpdateButton
                       label="Update existing policy"
-                      onClick={handleUpdateExistingPolicy}
+                      onClick={() => requestSaveAction('update-existing')}
                       loading={isUpdating}
-                      disabled={!policyLabel.trim() || isCreating || modificationCount === 0}
+                      disabled={isCreating || modificationCount === 0}
                     />
                     <EditAndSaveNewButton
                       label="Save as new policy"
-                      onClick={() => {
-                        if (!policyLabel.trim()) {
-                          setShowUnnamedWarning(true);
-                        } else {
-                          handleSaveAsNewPolicy();
-                        }
-                      }}
+                      onClick={() => requestSaveAction('save-as-new')}
                       loading={isCreating}
                       disabled={isUpdating || modificationCount === 0}
                     />
@@ -811,8 +862,8 @@ export function PolicyBrowseModal({
       </Dialog>
 
       <Dialog
-        open={showUnnamedWarning}
-        onOpenChange={(open) => !open && setShowUnnamedWarning(false)}
+        open={pendingUnnamedAction !== null}
+        onOpenChange={(open) => !open && setPendingUnnamedAction(null)}
       >
         <DialogContent>
           <DialogHeader>
@@ -823,17 +874,10 @@ export function PolicyBrowseModal({
               This policy has no name. Are you sure you want to save it without a name?
             </Text>
             <Group justify="end" gap="sm">
-              <Button variant="outline" onClick={() => setShowUnnamedWarning(false)}>
+              <Button variant="outline" onClick={() => setPendingUnnamedAction(null)}>
                 Cancel
               </Button>
-              <Button
-                onClick={() => {
-                  setShowUnnamedWarning(false);
-                  handleCreatePolicy();
-                }}
-              >
-                Save anyway
-              </Button>
+              <Button onClick={runPendingUnnamedAction}>Save anyway</Button>
             </Group>
           </Stack>
         </DialogContent>

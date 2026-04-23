@@ -412,34 +412,21 @@ export function HouseholdCreationModal({
                 >
                   <IconHome size={18} color={colorConfig.icon} />
                 </div>
-                <Text
-                  fw={600}
-                  style={{
-                    fontSize: FONT_SIZES.normal,
-                    color: colors.gray[800],
-                    flexShrink: 0,
-                  }}
-                >
-                  {modalTitle}
-                </Text>
-                <div
-                  style={{
-                    minWidth: 280,
-                    flex: 1,
-                    border: `1px solid ${colors.border.light}`,
-                    background: colors.gray[50],
-                    borderRadius: spacing.radius.container,
+                <EditableLabel
+                  value={household?.label ?? ''}
+                  onChange={handleHouseholdLabelChange}
+                  placeholder="Enter household name..."
+                  emptyStateText="Click to name your household..."
+                  readOnly={isReadOnly}
+                  fitContentWhileEditing
+                  controlOutsideField
+                  showFieldWhenEmptyOrEditing
+                  fieldStyle={{
+                    background: colors.gray[100],
+                    borderBottom: `1px solid ${colors.border.light}`,
                     padding: `${spacing.xs} ${spacing.sm}`,
                   }}
-                >
-                  <EditableLabel
-                    value={household?.label ?? ''}
-                    onChange={handleHouseholdLabelChange}
-                    placeholder="Enter household name..."
-                    emptyStateText="Click to name your household..."
-                    readOnly={isReadOnly}
-                  />
-                </div>
+                />
               </Group>
               <Group gap="md" align="center" wrap="nowrap" style={{ flexShrink: 0 }}>
                 <Group gap="xs" align="center" wrap="nowrap">

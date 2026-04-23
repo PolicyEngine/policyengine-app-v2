@@ -74,6 +74,8 @@ interface PolicyCreationModalProps {
   forceReadOnly?: boolean;
 }
 
+type PendingUnnamedAction = 'create' | 'save-as-new' | 'update-existing' | null;
+
 export function PolicyCreationModal({
   isOpen,
   onClose,
@@ -122,7 +124,10 @@ export function PolicyCreationModal({
   const [parameterSearch, setParameterSearch] = useState('');
   const [hoveredParamName, setHoveredParamName] = useState<string | null>(null);
   // API hooks
-  const { createPolicy, isPending: isCreating } = useCreatePolicy(policyLabel || undefined);
+  const normalizedPolicyLabel = policyLabel.trim();
+  const { createPolicy, isPending: isCreating } = useCreatePolicy(
+    normalizedPolicyLabel || undefined
+  );
   const updatePolicyAssociation = useUpdatePolicyAssociation();
   const [isUpdating, setIsUpdating] = useState(false);
 
@@ -295,7 +300,7 @@ export function PolicyCreationModal({
       const result = await createPolicy(payload);
       const createdPolicy: PolicyStateProps = {
         id: result.result.policy_id,
-        label: policyLabel || null,
+        label: normalizedPolicyLabel || null,
         parameters: policyParameters,
       };
       onPolicyCreated(createdPolicy);
@@ -303,27 +308,27 @@ export function PolicyCreationModal({
     } catch (error) {
       console.error('Failed to create policy:', error);
     }
-  }, [policyLabel, policyParameters, createPolicy, onPolicyCreated, onClose]);
+  }, [normalizedPolicyLabel, policyParameters, createPolicy, onPolicyCreated, onClose]);
 
   // Same-name warning for "Save as new" when name matches original
   const [showSameNameWarning, setShowSameNameWarning] = useState(false);
 
   // Unnamed-policy warning for creating/saving without a name
-  const [showUnnamedWarning, setShowUnnamedWarning] = useState(false);
+  const [pendingUnnamedAction, setPendingUnnamedAction] = useState<PendingUnnamedAction>(null);
 
   const handleSaveAsNewPolicy = useCallback(() => {
-    const currentName = (policyLabel || '').trim();
+    const currentName = normalizedPolicyLabel;
     const originalName = (initialPolicy?.label || '').trim();
     if (effectiveEditorMode === 'edit' && currentName && currentName === originalName) {
       setShowSameNameWarning(true);
     } else {
-      handleCreatePolicy();
+      void handleCreatePolicy();
     }
-  }, [policyLabel, initialPolicy?.label, effectiveEditorMode, handleCreatePolicy]);
+  }, [normalizedPolicyLabel, initialPolicy?.label, effectiveEditorMode, handleCreatePolicy]);
 
   // Handle updating an existing policy (create new base policy, update association)
   const handleUpdateExistingPolicy = useCallback(async () => {
-    if (!policyLabel.trim() || !initialAssociationId) {
+    if (!initialAssociationId) {
       return;
     }
     setIsUpdating(true);
@@ -334,15 +339,16 @@ export function PolicyCreationModal({
     try {
       const result = await createPolicyApi(countryId, payload);
       const newPolicyId = result.result.policy_id;
+      const desiredLabel = normalizedPolicyLabel || undefined;
 
       await updatePolicyAssociation.mutateAsync({
         userPolicyId: initialAssociationId,
-        updates: { policyId: newPolicyId, label: policyLabel },
+        updates: { policyId: newPolicyId, label: desiredLabel },
       });
 
       onPolicyCreated({
         id: newPolicyId,
-        label: policyLabel || null,
+        label: desiredLabel ?? null,
         parameters: policyParameters,
       });
       onClose();
@@ -351,7 +357,7 @@ export function PolicyCreationModal({
       setIsUpdating(false);
     }
   }, [
-    policyLabel,
+    normalizedPolicyLabel,
     policyParameters,
     initialAssociationId,
     countryId,
@@ -359,6 +365,56 @@ export function PolicyCreationModal({
     onPolicyCreated,
     onClose,
   ]);
+
+  const runPendingUnnamedAction = useCallback(() => {
+    const action = pendingUnnamedAction;
+    setPendingUnnamedAction(null);
+
+    if (action === 'create') {
+      void handleCreatePolicy();
+    } else if (action === 'save-as-new') {
+      void handleSaveAsNewPolicy();
+    } else if (action === 'update-existing') {
+      void handleUpdateExistingPolicy();
+    }
+  }, [handleCreatePolicy, handleSaveAsNewPolicy, handleUpdateExistingPolicy, pendingUnnamedAction]);
+
+  const requestSaveAction = useCallback(
+    (action: Exclude<PendingUnnamedAction, null>) => {
+      const currentName = normalizedPolicyLabel;
+      const originalName = (initialPolicy?.label || '').trim();
+
+      if (!currentName) {
+        setPendingUnnamedAction(action);
+        return;
+      }
+
+      if (
+        action === 'save-as-new' &&
+        effectiveEditorMode === 'edit' &&
+        currentName === originalName
+      ) {
+        setShowSameNameWarning(true);
+        return;
+      }
+
+      if (action === 'create') {
+        void handleCreatePolicy();
+      } else if (action === 'save-as-new') {
+        void handleSaveAsNewPolicy();
+      } else {
+        void handleUpdateExistingPolicy();
+      }
+    },
+    [
+      normalizedPolicyLabel,
+      initialPolicy?.label,
+      effectiveEditorMode,
+      handleCreatePolicy,
+      handleSaveAsNewPolicy,
+      handleUpdateExistingPolicy,
+    ]
+  );
 
   // Get base and reform values for chart
   const getChartValues = () => {
@@ -514,34 +570,21 @@ export function PolicyCreationModal({
               >
                 <IconScale size={18} color={colorConfig.icon} />
               </div>
-              <Text
-                fw={600}
-                style={{
-                  fontSize: FONT_SIZES.normal,
-                  color: colors.gray[800],
-                  flexShrink: 0,
-                }}
-              >
-                {modalTitle}
-              </Text>
-              <div
-                style={{
-                  minWidth: 280,
-                  flex: 1,
-                  border: `1px solid ${colors.border.light}`,
-                  background: colors.gray[50],
-                  borderRadius: spacing.radius.container,
+              <EditableLabel
+                value={policyLabel}
+                onChange={setPolicyLabel}
+                placeholder="Enter policy name..."
+                emptyStateText="Click to name your policy..."
+                readOnly={isReadOnly}
+                fitContentWhileEditing
+                controlOutsideField
+                showFieldWhenEmptyOrEditing
+                fieldStyle={{
+                  background: colors.gray[100],
+                  borderBottom: `1px solid ${colors.border.light}`,
                   padding: `${spacing.xs} ${spacing.sm}`,
                 }}
-              >
-                <EditableLabel
-                  value={policyLabel}
-                  onChange={setPolicyLabel}
-                  placeholder="Enter policy name..."
-                  emptyStateText="Click to name your policy..."
-                  readOnly={isReadOnly}
-                />
-              </div>
+              />
             </Group>
             <Group gap="md" align="center" wrap="nowrap" style={{ flexShrink: 0 }}>
               <Group
@@ -634,13 +677,7 @@ export function PolicyCreationModal({
             <Group gap="sm" justify="end">
               {!forceReadOnly && effectiveEditorMode === 'create' && (
                 <Button
-                  onClick={() => {
-                    if (!policyLabel.trim()) {
-                      setShowUnnamedWarning(true);
-                    } else {
-                      handleCreatePolicy();
-                    }
-                  }}
+                  onClick={() => requestSaveAction('create')}
                   disabled={isCreating || modificationCount === 0}
                 >
                   {isCreating && <Spinner size="sm" />}
@@ -661,19 +698,13 @@ export function PolicyCreationModal({
                 <>
                   <EditAndUpdateButton
                     label="Update existing policy"
-                    onClick={handleUpdateExistingPolicy}
+                    onClick={() => requestSaveAction('update-existing')}
                     loading={isUpdating}
-                    disabled={!policyLabel.trim() || isCreating || modificationCount === 0}
+                    disabled={isCreating || modificationCount === 0}
                   />
                   <EditAndSaveNewButton
                     label="Save as new policy"
-                    onClick={() => {
-                      if (!policyLabel.trim()) {
-                        setShowUnnamedWarning(true);
-                      } else {
-                        handleSaveAsNewPolicy();
-                      }
-                    }}
+                    onClick={() => requestSaveAction('save-as-new')}
                     loading={isCreating}
                     disabled={isUpdating || modificationCount === 0}
                   />
@@ -723,10 +754,10 @@ export function PolicyCreationModal({
 
         {/* Unnamed policy warning modal */}
         <Dialog
-          open={showUnnamedWarning}
+          open={pendingUnnamedAction !== null}
           onOpenChange={(open) => {
             if (!open) {
-              setShowUnnamedWarning(false);
+              setPendingUnnamedAction(null);
             }
           }}
         >
@@ -742,17 +773,10 @@ export function PolicyCreationModal({
                 This policy has no name. Are you sure you want to save it without a name?
               </Text>
               <Group justify="end" gap="sm">
-                <Button variant="outline" onClick={() => setShowUnnamedWarning(false)}>
+                <Button variant="outline" onClick={() => setPendingUnnamedAction(null)}>
                   Cancel
                 </Button>
-                <Button
-                  onClick={() => {
-                    setShowUnnamedWarning(false);
-                    handleCreatePolicy();
-                  }}
-                >
-                  Save anyway
-                </Button>
+                <Button onClick={runPendingUnnamedAction}>Save anyway</Button>
               </Group>
             </Stack>
           </DialogContent>

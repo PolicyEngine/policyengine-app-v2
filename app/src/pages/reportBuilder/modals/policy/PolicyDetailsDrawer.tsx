@@ -114,7 +114,7 @@ export function PolicyDetailsDrawer({
           <div style={{ padding: spacing.lg, borderBottom: `1px solid ${colors.gray[200]}` }}>
             <Group justify="space-between" align="center">
               <Text fw={600} style={{ fontSize: FONT_SIZES.normal, color: colors.gray[900] }}>
-                Policy details
+                {policy.label || 'Untitled policy'}
               </Text>
               <Button variant="ghost" size="icon-sm" onClick={onClose}>
                 <IconX size={18} />
@@ -133,6 +133,7 @@ export function PolicyDetailsDrawer({
               policyLabel={policy.label}
               onLabelChange={() => {}}
               isReadOnly
+              showNamingCard={false}
               modificationCount={policy.paramCount}
               modifiedParams={modifiedParams}
               hoveredParamName={hoveredParamName}
