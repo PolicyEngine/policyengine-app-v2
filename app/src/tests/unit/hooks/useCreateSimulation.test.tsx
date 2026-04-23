@@ -5,6 +5,7 @@ import { Provider } from 'react-redux';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { createSimulation } from '@/api/simulation';
+import { ENTITY_MIGRATION_MODE } from '@/config/migrationMode';
 import { CountryProvider } from '@/contexts/CountryContext';
 import { useCreateSimulation } from '@/hooks/useCreateSimulation';
 import { useCreateSimulationAssociation } from '@/hooks/useUserSimulationAssociations';
@@ -52,9 +53,11 @@ describe('useCreateSimulation', () => {
   let queryClient: QueryClient;
   let mockStore: any;
   let consoleSpies: ReturnType<typeof setupConsoleSpies>;
+  const defaultSimulationMigrationMode = ENTITY_MIGRATION_MODE.simulations;
 
   beforeEach(() => {
     vi.clearAllMocks();
+    ENTITY_MIGRATION_MODE.simulations = defaultSimulationMigrationMode;
 
     // Create query client with spy
     queryClient = new QueryClient({
@@ -177,6 +180,16 @@ describe('useCreateSimulation', () => {
         isCreated: true,
         countryId: 'us',
       });
+    });
+
+    test('given unsupported simulation mode then hook fails fast', () => {
+      ENTITY_MIGRATION_MODE.simulations = 'v1_primary_v2_shadow';
+
+      expect(() =>
+        renderHook(() => useCreateSimulation(TEST_LABELS.SIMULATION), { wrapper })
+      ).toThrow(
+        '[MigrationMode] Unsupported mode "v1_primary_v2_shadow" for simulations in useCreateSimulation. Supported modes: v1_only'
+      );
     });
   });
 

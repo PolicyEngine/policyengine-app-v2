@@ -1,11 +1,13 @@
 import { useMutation } from '@tanstack/react-query';
 import { createSimulation } from '@/api/simulation';
+import { assertSupportedMode } from '@/config/migrationMode';
 import { MOCK_USER_ID } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { SimulationCreationPayload } from '@/types/payloads';
 import { useCreateSimulationAssociation } from './useUserSimulationAssociations';
 
 export function useCreateSimulation(simulationLabel?: string) {
+  assertSupportedMode('simulations', ['v1_only'], 'useCreateSimulation');
   const country = useCurrentCountry();
   // const user = MOCK_USER_ID; // TODO: Replace with actual user context or auth hook in future
   const createAssociation = useCreateSimulationAssociation();

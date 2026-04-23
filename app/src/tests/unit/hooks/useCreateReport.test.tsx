@@ -3,6 +3,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { createReportAndAssociateWithUser } from '@/api/report';
+import { ENTITY_MIGRATION_MODE } from '@/config/migrationMode';
 import { useCreateReport } from '@/hooks/useCreateReport';
 import { mockReport } from '@/tests/fixtures/adapters/reportMocks';
 // Removed - old calculation manager mocks no longer needed
@@ -68,9 +69,11 @@ vi.mock('@/contexts/CalcOrchestratorContext', () => ({
 describe('useCreateReport', () => {
   let queryClient: ReturnType<typeof createMockQueryClient>;
   let consoleMocks: ReturnType<typeof setupConsoleMocks>;
+  const defaultReportMigrationMode = ENTITY_MIGRATION_MODE.reports;
 
   beforeEach(() => {
     vi.clearAllMocks();
+    ENTITY_MIGRATION_MODE.reports = defaultReportMigrationMode;
     queryClient = createMockQueryClient();
     consoleMocks = setupConsoleMocks();
 
@@ -171,6 +174,14 @@ describe('useCreateReport', () => {
         expect(cachedReport).toBeDefined();
         expect(cachedReport).toEqual(mockReport);
       });
+    });
+
+    test('given unsupported report mode then hook fails fast', () => {
+      ENTITY_MIGRATION_MODE.reports = 'v1_primary_v2_shadow';
+
+      expect(() => renderHook(() => useCreateReport(TEST_LABEL), { wrapper })).toThrow(
+        '[MigrationMode] Unsupported mode "v1_primary_v2_shadow" for reports in useCreateReport. Supported modes: v1_only'
+      );
     });
   });
 
