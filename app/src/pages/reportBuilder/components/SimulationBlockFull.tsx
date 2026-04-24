@@ -162,6 +162,7 @@ export function SimulationBlockFull({
       <IngredientSectionFull
         type="population"
         currentId={currentPopulationId}
+        currentPopulation={effectivePopulation}
         currentLabel={populationLabel}
         countryId={countryId}
         onQuickSelectPopulation={onQuickSelectPopulation}

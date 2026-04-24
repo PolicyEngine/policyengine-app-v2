@@ -41,6 +41,12 @@ export function SimulationCanvas({
   const canvas = useSimulationCanvas({ reportState, setReportState, pickerState, setPickerState });
   const isViewOnly = Boolean(isReadOnly);
   const noop = () => {};
+  const handleHouseholdModalBack = isViewOnly
+    ? canvas.closeHouseholdEditor
+    : canvas.returnToPopulationBrowse;
+  const handlePolicyModalBack = isViewOnly
+    ? canvas.closePolicyCreation
+    : canvas.returnToPolicyBrowse;
 
   if (canvas.isInitialLoading) {
     return <SimulationCanvasSkeleton />;
@@ -154,7 +160,7 @@ export function SimulationCanvas({
       <HouseholdCreationModal
         isOpen={canvas.householdEditorState.isOpen}
         onClose={canvas.closeHouseholdEditor}
-        onBack={canvas.returnToPopulationBrowse}
+        onBack={handleHouseholdModalBack}
         onHouseholdSaved={canvas.handleHouseholdSaved}
         reportYear={reportYear}
         initialPopulation={canvas.householdEditorState.initialPopulation}
@@ -166,7 +172,7 @@ export function SimulationCanvas({
       <PolicyCreationModal
         isOpen={canvas.policyCreationState.isOpen}
         onClose={canvas.closePolicyCreation}
-        onBack={canvas.returnToPolicyBrowse}
+        onBack={handlePolicyModalBack}
         onPolicyCreated={(policy) =>
           canvas.handlePolicyCreated(canvas.policyCreationState.simulationIndex, policy)
         }

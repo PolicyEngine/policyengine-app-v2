@@ -148,6 +148,7 @@ export function SimulationBlock({
       <IngredientSection
         type="population"
         currentId={currentPopulationId}
+        currentPopulation={effectivePopulation}
         countryId={countryId}
         onQuickSelectPopulation={onQuickSelectPopulation}
         onSelectRecentPopulation={onSelectRecentPopulation}

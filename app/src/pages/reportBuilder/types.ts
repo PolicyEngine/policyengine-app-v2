@@ -159,6 +159,7 @@ export interface BrowseMoreChipProps {
 export interface IngredientSectionProps {
   type: IngredientType;
   currentId?: string;
+  currentPopulation?: PopulationStateProps;
   countryId?: 'us' | 'uk';
   onQuickSelectPolicy?: () => void;
   onSelectSavedPolicy?: (id: string, label: string, paramCount: number) => void;

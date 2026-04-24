@@ -88,6 +88,23 @@ function getConfiguredGroupCollections(
   }));
 }
 
+function getUnexpectedGroupCollections(
+  householdData: AppHouseholdInputData,
+  countryId: CountryId
+): string[] {
+  if (countryId !== 'us' && countryId !== 'uk') {
+    return [];
+  }
+
+  const allowedEntityNames = new Set<string>(
+    getV2GroupDefinitions(countryId).map((definition) => definition.appKey)
+  );
+
+  return getAllHouseholdGroupCollections(householdData)
+    .map(({ entityName }) => entityName)
+    .filter((entityName) => !allowedEntityNames.has(entityName));
+}
+
 const COUNTRY_VALIDATION_STRATEGIES: Partial<Record<CountryId, CountryValidationStrategy>> = {
   us: (household, errors, warnings) =>
     HouseholdValidation.validateUSHousehold(household, errors, warnings),
@@ -154,6 +171,14 @@ export const HouseholdValidation = {
           field: `people.${personId}.age`,
         });
       }
+    });
+
+    getUnexpectedGroupCollections(household.householdData, countryId).forEach((entityName) => {
+      warnings.push({
+        code: 'UNEXPECTED_GROUP_COLLECTION',
+        message: `Group collection ${entityName} is not used for ${countryId.toUpperCase()} households`,
+        field: entityName,
+      });
     });
 
     // Check that country-configured group entities have valid structure.

@@ -91,6 +91,37 @@ describe('HouseholdValidation', () => {
       expect(result.errors[0].message).toContain(VALIDATION_COUNTRIES.UK);
     });
 
+    test('given UK household with US-only group collections when validating then returns warning', () => {
+      // Given
+      const householdWithUnexpectedGroups = {
+        ...mockValidUKHousehold,
+        householdData: {
+          ...mockValidUKHousehold.householdData,
+          taxUnits: {
+            [VALIDATION_GROUP_KEYS.DEFAULT_TAX_UNIT]: {
+              members: [VALIDATION_PERSON_NAMES.ADULT_1, VALIDATION_PERSON_NAMES.ADULT_2],
+            },
+          },
+        },
+      };
+
+      // When
+      const result = HouseholdValidation.validateForCountry(
+        householdWithUnexpectedGroups,
+        VALIDATION_COUNTRIES.UK,
+        VALIDATION_YEARS.DEFAULT
+      );
+
+      // Then
+      verifyNoErrors(result);
+      verifyWarningCount(result, 1);
+      verifyValidationWarning(
+        result.warnings,
+        VALIDATION_WARNING_CODES.UNEXPECTED_GROUP_COLLECTION,
+        VALIDATION_ENTITY_NAMES.TAX_UNITS
+      );
+    });
+
     test('given household with missing age when validating then returns warning', () => {
       // When
       const result = HouseholdValidation.validateForCountry(
