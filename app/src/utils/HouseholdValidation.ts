@@ -3,7 +3,10 @@ import type {
   AppHouseholdInputGroup as HouseholdGroupEntity,
 } from '@/models/household/appTypes';
 import { RootState } from '@/store';
-import { getHouseholdYearValue } from '@/utils/householdDataAccess';
+import {
+  getAllHouseholdGroupCollections,
+  getHouseholdYearValue,
+} from '@/utils/householdDataAccess';
 import * as HouseholdQueries from './HouseholdQueries';
 
 /**
@@ -109,13 +112,11 @@ export const HouseholdValidation = {
       }
     });
 
-    // Check that group entities have valid structure
-    Object.entries(household.householdData).forEach(([entityName, entityData]) => {
-      if (entityName === 'people') {
-        return;
-      }
-
-      const entities = entityData as Record<string, HouseholdGroupEntity>;
+    // Check that group entities have valid structure.
+    // Loaded households may carry optional group keys with explicit `undefined`
+    // values, so iterate only over concrete group collections.
+    getAllHouseholdGroupCollections(household.householdData).forEach(({ entityName, groups }) => {
+      const entities = groups as Record<string, HouseholdGroupEntity>;
       Object.entries(entities).forEach(([groupKey, group]) => {
         if (!Array.isArray(group.members)) {
           errors.push({

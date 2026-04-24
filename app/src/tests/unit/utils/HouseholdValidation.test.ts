@@ -235,6 +235,32 @@ describe('HouseholdValidation', () => {
       expect(errors).toHaveLength(0);
       // No warnings since the mock has age for default year
     });
+
+    test('given household with undefined optional group collections when validating then does not throw', () => {
+      // Given
+      const errors: any[] = [];
+      const warnings: any[] = [];
+      const householdWithUndefinedGroups = {
+        ...mockValidUSHousehold,
+        householdData: {
+          ...mockValidUSHousehold.householdData,
+          families: undefined,
+          spmUnits: undefined,
+          maritalUnits: undefined,
+        },
+      };
+
+      // When / Then
+      expect(() =>
+        HouseholdValidation.validateGenericHousehold(
+          householdWithUndefinedGroups,
+          errors,
+          warnings,
+          VALIDATION_YEARS.DEFAULT
+        )
+      ).not.toThrow();
+      expect(errors).toHaveLength(0);
+    });
   });
 
   describe('validateUSHousehold', () => {
