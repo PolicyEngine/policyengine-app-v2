@@ -1,14 +1,13 @@
 import { useState } from 'react';
 import { IconSettings } from '@tabler/icons-react';
 import { ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
-import { RenameIngredientModal } from '@/components/common/RenameIngredientModal';
 import IngredientReadView from '@/components/IngredientReadView';
 import { Stack } from '@/components/ui';
 import { CURRENT_YEAR, MOCK_USER_ID } from '@/constants';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useDisclosure } from '@/hooks/useDisclosure';
-import { useUpdatePolicyAssociation, useUserPolicies } from '@/hooks/useUserPolicy';
+import { useUserPolicies } from '@/hooks/useUserPolicy';
 import type { EditorMode } from '@/pages/reportBuilder/modals/policyCreation/types';
 import { PolicyCreationModal } from '@/pages/reportBuilder/modals/PolicyCreationModal';
 import { PolicyStateProps } from '@/types/pathwayState';
@@ -23,19 +22,11 @@ export default function PoliciesPage() {
 
   const [searchValue, setSearchValue] = useState('');
 
-  // Rename modal state
-  const [renamingPolicyId, setRenamingPolicyId] = useState<string | null>(null);
-  const [renameOpened, { close: closeRename }] = useDisclosure(false);
-  const [renameError, setRenameError] = useState<string | null>(null);
-
   // Policy editor modal state
   const [editingPolicy, setEditingPolicy] = useState<PolicyStateProps | null>(null);
   const [editingAssociationId, setEditingAssociationId] = useState<string | null>(null);
   const [editorMode, setEditorMode] = useState<EditorMode>('edit');
   const [editorOpened, { open: openEditor, close: closeEditor }] = useDisclosure(false);
-
-  // Rename mutation hook
-  const updateAssociation = useUpdatePolicyAssociation();
 
   const handleBuildPolicy = () => {
     nav.push(`/${countryId}/policies/create`);
@@ -54,34 +45,6 @@ export default function PoliciesPage() {
       openEditor();
     }
   };
-
-  const handleCloseRename = () => {
-    closeRename();
-    setRenamingPolicyId(null);
-    setRenameError(null); // Clear error on close
-  };
-
-  const handleRename = async (newLabel: string) => {
-    if (!renamingPolicyId) {
-      return;
-    }
-
-    try {
-      await updateAssociation.mutateAsync({
-        userPolicyId: renamingPolicyId,
-        updates: { label: newLabel },
-      });
-      handleCloseRename();
-    } catch (error) {
-      console.error('[PoliciesPage] Failed to rename policy:', error);
-      setRenameError('Failed to rename policy. Please try again.');
-    }
-  };
-
-  // Find the policy being renamed for current label
-  const renamingPolicy = data?.find((item) => item.association.id === renamingPolicyId);
-  const currentLabel =
-    renamingPolicy?.association.label || `Policy #${renamingPolicy?.association.policyId}`;
 
   // Define column configurations for policies
   const policyColumns: ColumnConfig[] = [
@@ -156,16 +119,6 @@ export default function PoliciesPage() {
           onSearchChange={setSearchValue}
         />
       </Stack>
-
-      <RenameIngredientModal
-        opened={renameOpened}
-        onClose={handleCloseRename}
-        currentLabel={currentLabel}
-        onRename={handleRename}
-        isLoading={updateAssociation.isPending}
-        ingredientType="policy"
-        submissionError={renameError}
-      />
 
       <PolicyCreationModal
         isOpen={editorOpened}
