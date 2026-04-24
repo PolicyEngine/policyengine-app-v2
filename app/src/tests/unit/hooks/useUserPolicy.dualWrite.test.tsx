@@ -7,10 +7,12 @@ import { ENTITY_MIGRATION_MODE } from '@/config/migrationMode';
 import {
   getPolicyWriteConfig,
   useCreatePolicyAssociation,
+  usePolicyAssociationStoreForMode,
   useUpdatePolicyAssociation,
 } from '@/hooks/useUserPolicy';
 import * as comparisonLogger from '@/libs/migration/comparisonLogger';
 import * as idMapping from '@/libs/migration/idMapping';
+import { queryConfig } from '@/libs/queryConfig';
 import { UserPolicy } from '@/types/ingredients/UserPolicy';
 
 // ============================================================================
@@ -161,6 +163,20 @@ describe('getPolicyWriteConfig', () => {
     expect(() => getPolicyWriteConfig('test')).toThrow(
       '[MigrationMode] Unsupported mode "v2_only" for policies in test. Supported modes: v1_only, v1_primary_v2_shadow'
     );
+  });
+});
+
+describe('usePolicyAssociationStoreForMode', () => {
+  test('given current auth model then it returns the local store facade and local query config', () => {
+    const { result } = renderHook(() => usePolicyAssociationStoreForMode(), {
+      wrapper: createWrapper(createQueryClient()),
+    });
+
+    expect(result.current.store.create).toBeDefined();
+    expect(result.current.store.update).toBeDefined();
+    expect(result.current.store.findByUser).toBeDefined();
+    expect(result.current.store.findById).toBeDefined();
+    expect(result.current.config).toEqual(queryConfig.localStorage);
   });
 });
 

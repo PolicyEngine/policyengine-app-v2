@@ -14,21 +14,32 @@ import { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
 const apiGeographicStore = new ApiGeographicStore();
 const localGeographicStore = new LocalStorageGeographicStore();
 
+type SavedGeographyAssociationStoreSelection = {
+  store: ApiGeographicStore | LocalStorageGeographicStore;
+  config: typeof queryConfig.api | typeof queryConfig.localStorage;
+};
+
 function assertSavedGeographyWriteMode(context: string): void {
   assertSupportedMode('saved_geographies', ['v1_only'], context);
 }
 
 export const useUserGeographicStore = () => {
-  const isLoggedIn = false; // TODO: Replace with actual auth check in future
-  return isLoggedIn ? apiGeographicStore : localGeographicStore;
+  return useSavedGeographyAssociationStoreForMode().store;
 };
+
+export const useSavedGeographyAssociationStoreForMode =
+  (): SavedGeographyAssociationStoreSelection => {
+    const isLoggedIn = false; // TODO: Replace with actual auth check in future
+    return {
+      store: isLoggedIn ? apiGeographicStore : localGeographicStore,
+      config: isLoggedIn ? queryConfig.api : queryConfig.localStorage,
+    };
+  };
 
 // This fetches only the user-geographic associations
 export const useGeographicAssociationsByUser = (userId: string) => {
-  const store = useUserGeographicStore();
+  const { store, config } = useSavedGeographyAssociationStoreForMode();
   const countryId = useCurrentCountry();
-  const isLoggedIn = false; // TODO: Replace with actual auth check in future
-  const config = isLoggedIn ? queryConfig.api : queryConfig.localStorage;
 
   return useQuery({
     queryKey: geographicAssociationKeys.byUser(userId, countryId),
@@ -38,9 +49,7 @@ export const useGeographicAssociationsByUser = (userId: string) => {
 };
 
 export const useGeographicAssociation = (userId: string, geographyId: string) => {
-  const store = useUserGeographicStore();
-  const isLoggedIn = false; // TODO: Replace with actual auth check in future
-  const config = isLoggedIn ? queryConfig.api : queryConfig.localStorage;
+  const { store, config } = useSavedGeographyAssociationStoreForMode();
 
   return useQuery({
     queryKey: geographicAssociationKeys.specific(userId, geographyId),
@@ -51,7 +60,7 @@ export const useGeographicAssociation = (userId: string, geographyId: string) =>
 
 export const useCreateGeographicAssociation = () => {
   assertSavedGeographyWriteMode('useCreateGeographicAssociation');
-  const store = useUserGeographicStore();
+  const { store } = useSavedGeographyAssociationStoreForMode();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -77,7 +86,7 @@ export const useCreateGeographicAssociation = () => {
 
 export const useUpdateGeographicAssociation = () => {
   assertSavedGeographyWriteMode('useUpdateGeographicAssociation');
-  const store = useUserGeographicStore();
+  const { store } = useSavedGeographyAssociationStoreForMode();
   const queryClient = useQueryClient();
 
   return useMutation({

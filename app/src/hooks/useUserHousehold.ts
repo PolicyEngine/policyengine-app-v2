@@ -20,6 +20,11 @@ const apiHouseholdStore = new ApiHouseholdStore();
 const localHouseholdStore = new LocalStorageHouseholdStore();
 const SUPPORTED_HOUSEHOLD_WRITE_MODES = ['v1_only', 'v1_primary_v2_shadow'] as const;
 
+type HouseholdAssociationStoreSelection = {
+  store: ApiHouseholdStore | LocalStorageHouseholdStore;
+  config: typeof queryConfig.api | typeof queryConfig.localStorage;
+};
+
 type HouseholdWriteConfigOptions = {
   skipDuplicateV2AssociationShadow?: boolean;
 };
@@ -36,18 +41,22 @@ export function getHouseholdWriteConfig(
 }
 
 export const useUserHouseholdStore = () => {
+  return useHouseholdAssociationStoreForMode().store;
+};
+
+export const useHouseholdAssociationStoreForMode = (): HouseholdAssociationStoreSelection => {
   const isLoggedIn = false; // TODO: Replace with actual auth check in future
-  return isLoggedIn ? apiHouseholdStore : localHouseholdStore;
+  return {
+    store: isLoggedIn ? apiHouseholdStore : localHouseholdStore,
+    config: isLoggedIn ? queryConfig.api : queryConfig.localStorage,
+  };
 };
 
 // This fetches only the user-household associations; see
 // 'useUserHouseholds' below to also fetch full household details
 export const useHouseholdAssociationsByUser = (userId: string) => {
-  const store = useUserHouseholdStore();
+  const { store, config } = useHouseholdAssociationStoreForMode();
   const countryId = useCurrentCountry();
-  const isLoggedIn = false; // TODO: Replace with actual auth check in future
-  // TODO: Should we determine user ID from auth context here? Or pass as arg?
-  const config = isLoggedIn ? queryConfig.api : queryConfig.localStorage;
 
   return useQuery({
     queryKey: householdAssociationKeys.byUser(userId, countryId),
@@ -57,9 +66,7 @@ export const useHouseholdAssociationsByUser = (userId: string) => {
 };
 
 export const useHouseholdAssociation = (userId: string, householdId: string) => {
-  const store = useUserHouseholdStore();
-  const isLoggedIn = false; // TODO: Replace with actual auth check in future
-  const config = isLoggedIn ? queryConfig.api : queryConfig.localStorage;
+  const { store, config } = useHouseholdAssociationStoreForMode();
 
   return useQuery({
     queryKey: householdAssociationKeys.specific(userId, householdId),
@@ -69,7 +76,7 @@ export const useHouseholdAssociation = (userId: string, householdId: string) => 
 };
 
 export const useCreateHouseholdAssociation = (options?: HouseholdWriteConfigOptions) => {
-  const store = useUserHouseholdStore();
+  const { store } = useHouseholdAssociationStoreForMode();
   const queryClient = useQueryClient();
   const { shouldShadowV2 } = getHouseholdWriteConfig('useCreateHouseholdAssociation', options);
 
@@ -112,7 +119,7 @@ export async function replaceHouseholdBaseForAssociation(args: {
 }
 
 export const useUpdateHouseholdAssociation = () => {
-  const store = useUserHouseholdStore();
+  const { store } = useHouseholdAssociationStoreForMode();
   const queryClient = useQueryClient();
   const { shouldShadowV2 } = getHouseholdWriteConfig('useUpdateHouseholdAssociation');
 

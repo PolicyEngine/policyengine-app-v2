@@ -18,6 +18,11 @@ const apiPolicyStore = new ApiPolicyStore();
 const localPolicyStore = new LocalStoragePolicyStore();
 const SUPPORTED_POLICY_WRITE_MODES = ['v1_only', 'v1_primary_v2_shadow'] as const;
 
+type PolicyAssociationStoreSelection = {
+  store: ApiPolicyStore | LocalStoragePolicyStore;
+  config: typeof queryConfig.api | typeof queryConfig.localStorage;
+};
+
 type PolicyWriteConfigOptions = {
   skipDuplicateV2AssociationShadow?: boolean;
 };
@@ -34,18 +39,22 @@ export function getPolicyWriteConfig(
 }
 
 export const useUserPolicyStore = () => {
+  return usePolicyAssociationStoreForMode().store;
+};
+
+export const usePolicyAssociationStoreForMode = (): PolicyAssociationStoreSelection => {
   const isLoggedIn = false; // TODO: Replace with actual auth check in future
-  return isLoggedIn ? apiPolicyStore : localPolicyStore;
+  return {
+    store: isLoggedIn ? apiPolicyStore : localPolicyStore,
+    config: isLoggedIn ? queryConfig.api : queryConfig.localStorage,
+  };
 };
 
 // This fetches only the user-policy associations; see
 // 'useUserPolicies' below to also fetch full policy details
 export const usePolicyAssociationsByUser = (userId: string) => {
-  const store = useUserPolicyStore();
+  const { store, config } = usePolicyAssociationStoreForMode();
   const countryId = useCurrentCountry();
-  const isLoggedIn = false; // TODO: Replace with actual auth check in future
-  // TODO: Should we determine user ID from auth context here? Or pass as arg?
-  const config = isLoggedIn ? queryConfig.api : queryConfig.localStorage;
 
   return useQuery({
     queryKey: policyAssociationKeys.byUser(userId, countryId),
@@ -55,9 +64,7 @@ export const usePolicyAssociationsByUser = (userId: string) => {
 };
 
 export const usePolicyAssociation = (userId: string, policyId: string) => {
-  const store = useUserPolicyStore();
-  const isLoggedIn = false; // TODO: Replace with actual auth check in future
-  const config = isLoggedIn ? queryConfig.api : queryConfig.localStorage;
+  const { store, config } = usePolicyAssociationStoreForMode();
 
   return useQuery({
     queryKey: policyAssociationKeys.specific(userId, policyId),
@@ -67,7 +74,7 @@ export const usePolicyAssociation = (userId: string, policyId: string) => {
 };
 
 export const useCreatePolicyAssociation = (options?: PolicyWriteConfigOptions) => {
-  const store = useUserPolicyStore();
+  const { store } = usePolicyAssociationStoreForMode();
   const queryClient = useQueryClient();
   const { shouldShadowV2 } = getPolicyWriteConfig('useCreatePolicyAssociation', options);
 
@@ -102,7 +109,7 @@ export const useCreatePolicyAssociation = (options?: PolicyWriteConfigOptions) =
 };
 
 export const useUpdatePolicyAssociation = () => {
-  const store = useUserPolicyStore();
+  const { store } = usePolicyAssociationStoreForMode();
   const queryClient = useQueryClient();
   const { shouldShadowV2 } = getPolicyWriteConfig('useUpdatePolicyAssociation');
 

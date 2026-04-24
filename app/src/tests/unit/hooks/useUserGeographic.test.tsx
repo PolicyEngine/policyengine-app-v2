@@ -9,10 +9,12 @@ import {
   useCreateGeographicAssociation,
   useGeographicAssociation,
   useGeographicAssociationsByUser,
+  useSavedGeographyAssociationStoreForMode,
   useUpdateGeographicAssociation,
   useUserGeographics,
   useUserGeographicStore,
 } from '@/hooks/useUserGeographic';
+import { queryConfig } from '@/libs/queryConfig';
 import {
   createMockQueryClient,
   GEO_CONSTANTS,
@@ -186,6 +188,20 @@ describe('useUserGeographic hooks', () => {
 
     // Note: Cannot test logged-in case as isLoggedIn is hardcoded to false
     // This would need to be refactored to accept auth context
+  });
+
+  describe('useSavedGeographyAssociationStoreForMode', () => {
+    test('given current auth model then it returns the local store facade and local query config', () => {
+      const { result } = renderHook(() => useSavedGeographyAssociationStoreForMode(), {
+        wrapper,
+      });
+
+      expect(result.current.store.create).toBeDefined();
+      expect(result.current.store.update).toBeDefined();
+      expect(result.current.store.findByUser).toBeDefined();
+      expect(result.current.store.findById).toBeDefined();
+      expect(result.current.config).toEqual(queryConfig.localStorage);
+    });
   });
 
   describe('useGeographicAssociationsByUser', () => {
