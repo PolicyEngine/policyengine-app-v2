@@ -1,89 +1,49 @@
 /**
- * PolicyBrowseModal - Full-featured policy browsing and creation modal
+ * PolicyBrowseModal - Browse and select policies.
  *
- * Uses BrowseModalTemplate for visual layout and delegates to sub-components:
- * - Browse mode: PolicyBrowseContent for main content
- * - Creation mode: PolicyCreationContent + PolicyParameterTree
+ * Editing and creation are delegated to PolicyCreationModal so there is a
+ * single policy editor/viewer flow in report builder.
  */
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { IconChevronRight, IconFolder, IconPlus, IconScale, IconStar } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
-import { PolicyAdapter } from '@/adapters';
-import { createPolicy as createPolicyApi } from '@/api/policy';
-import {
-  EditAndSaveNewButton,
-  EditAndUpdateButton,
-  EditDefaultButton,
-} from '@/components/common/ActionButtons';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Group } from '@/components/ui/Group';
-import { Spinner } from '@/components/ui/Spinner';
 import { Stack } from '@/components/ui/Stack';
 import { Text } from '@/components/ui/Text';
 import { MOCK_USER_ID } from '@/constants';
 import { colors, spacing } from '@/designTokens';
-import { useCreatePolicy } from '@/hooks/useCreatePolicy';
-import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useUpdatePolicyAssociation, useUserPolicies } from '@/hooks/useUserPolicy';
-import { getDateRange } from '@/libs/metadataUtils';
-import { EditableLabel } from '@/pages/reportBuilder/components/EditableLabel';
-import { ValueSetterMode } from '@/pathways/report/components/valueSetters';
 import { RootState } from '@/store';
-import { Policy } from '@/types/ingredients/Policy';
-import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import { PolicyStateProps } from '@/types/pathwayState';
-import { PolicyCreationPayload } from '@/types/payloads';
-import { Parameter } from '@/types/subIngredients/parameter';
-import { ValueInterval, ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
 import { countPolicyModifications } from '@/utils/countParameterChanges';
-import { formatPeriod } from '@/utils/dateUtils';
-import {
-  formatLabelParts,
-  getHierarchicalLabels,
-  getHierarchicalLabelsFromTree,
-} from '@/utils/parameterLabels';
-import { formatParameterValue } from '@/utils/policyTableHelpers';
+import { formatLabelParts, getHierarchicalLabelsFromTree } from '@/utils/parameterLabels';
 import { FONT_SIZES, INGREDIENT_COLORS } from '../constants';
 import { createCurrentLawPolicy } from '../currentLaw';
-import { getReportYearDateBounds } from '../utils/reportYearDates';
 import { BrowseModalTemplate } from './BrowseModalTemplate';
-import {
-  PolicyBrowseContent,
-  PolicyCreationContent,
-  PolicyDetailsDrawer,
-  PolicyParameterTree,
-} from './policy';
-import { PolicyOverviewContent } from './policyCreation';
-import type { EditorMode, ModifiedParam, SidebarTab } from './policyCreation/types';
+import { PolicyBrowseContent, PolicyDetailsDrawer } from './policy';
 
 interface PolicyBrowseModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSelect: (policy: PolicyStateProps) => void;
   reportYear: string;
+  onCreateNew: () => void;
+  onEditPolicy: (policy: PolicyStateProps, associationId?: string) => void;
 }
-
-type PendingUnnamedAction = 'create' | 'save-as-new' | 'update-existing' | null;
 
 export function PolicyBrowseModal({
   isOpen,
   onClose,
   onSelect,
-  reportYear,
+  reportYear: _reportYear,
+  onCreateNew,
+  onEditPolicy,
 }: PolicyBrowseModalProps) {
-  const countryId = useCurrentCountry();
   const userId = MOCK_USER_ID.toString();
   const { data: policies, isLoading } = useUserPolicies(userId);
-  const {
-    parameterTree,
-    parameters,
-    loading: metadataLoading,
-  } = useSelector((state: RootState) => state.metadata);
-  const { minDate, maxDate } = useSelector(getDateRange);
+  const { parameterTree, parameters } = useSelector((state: RootState) => state.metadata);
   const updatePolicyAssociation = useUpdatePolicyAssociation();
 
-  // Browse mode state
   const [searchQuery, setSearchQuery] = useState('');
   const [activeSection, setActiveSection] = useState<'frequently-selected' | 'my-policies'>(
     'frequently-selected'
@@ -91,77 +51,23 @@ export function PolicyBrowseModal({
   const [selectedPolicyId, setSelectedPolicyId] = useState<string | null>(null);
   const [drawerPolicyId, setDrawerPolicyId] = useState<string | null>(null);
 
-  // Creation/editor mode state
-  const [isCreationMode, setIsCreationMode] = useState(false);
-  const [editorMode, setEditorMode] = useState<EditorMode>('create');
-  const [editingAssociationId, setEditingAssociationId] = useState<string | null>(null);
-  const [isUpdating, setIsUpdating] = useState(false);
-  const [activeTab, setActiveTab] = useState<SidebarTab>('overview');
-  const [policyLabel, setPolicyLabel] = useState<string>('');
-  const [policyParameters, setPolicyParameters] = useState<Parameter[]>([]);
-  const [selectedParam, setSelectedParam] = useState<ParameterMetadata | null>(null);
-  const [expandedMenuItems, setExpandedMenuItems] = useState<Set<string>>(new Set());
-  const [valueSetterMode, setValueSetterMode] = useState<ValueSetterMode>(ValueSetterMode.DEFAULT);
-  const [intervals, setIntervals] = useState<ValueInterval[]>([]);
-  const {
-    reportYear: resolvedReportYear,
-    startDate: defaultStartDate,
-    endDate: defaultEndDate,
-  } = getReportYearDateBounds(reportYear);
-  const [startDate, setStartDate] = useState<string>(defaultStartDate);
-  const [endDate, setEndDate] = useState<string>(defaultEndDate);
-  const [parameterSearch, setParameterSearch] = useState('');
-  const [hoveredParamName, setHoveredParamName] = useState<string | null>(null);
-  const [footerHovered, setFooterHovered] = useState(false);
-  const [originalLabel, setOriginalLabel] = useState('');
-  const [showSameNameWarning, setShowSameNameWarning] = useState(false);
-  const [pendingUnnamedAction, setPendingUnnamedAction] = useState<PendingUnnamedAction>(null);
-
-  // API hook for creating policy
-  const normalizedPolicyLabel = policyLabel.trim();
-  const { createPolicy, isPending: isCreating } = useCreatePolicy(
-    normalizedPolicyLabel || undefined
-  );
-
-  const isReadOnly = editorMode === 'display';
-
-  // editingAssociationId tracks the UserPolicy association being edited
-  // for "Update existing policy" functionality
-
-  // Reset state on mount
   useEffect(() => {
     if (isOpen) {
       setSearchQuery('');
       setActiveSection('frequently-selected');
       setSelectedPolicyId(null);
       setDrawerPolicyId(null);
-      setIsCreationMode(false);
-      setEditorMode('create');
-
-      setEditingAssociationId(null);
-      setIsUpdating(false);
-      setActiveTab('overview');
-      setPolicyLabel('');
-      setPolicyParameters([]);
-      setSelectedParam(null);
-      setExpandedMenuItems(new Set());
-      setIntervals([]);
-      setStartDate(defaultStartDate);
-      setEndDate(defaultEndDate);
-      setParameterSearch('');
     }
-  }, [isOpen, defaultStartDate, defaultEndDate]);
+  }, [isOpen]);
 
-  // Transform policies data, sorted by most recent
   const userPolicies = useMemo(() => {
     return (policies || [])
       .map((p) => {
         const policyId = p.association.policyId.toString();
-        const label = p.association.label || `Policy #${policyId}`;
         return {
           id: policyId,
           associationId: p.association.id,
-          label,
+          label: p.association.label || `Policy #${policyId}`,
           paramCount: countPolicyModifications(p.policy),
           parameters: p.policy?.parameters || [],
           createdAt: p.association.createdAt,
@@ -175,49 +81,39 @@ export function PolicyBrowseModal({
       });
   }, [policies]);
 
-  // Filter policies based on search
   const filteredPolicies = useMemo(() => {
-    let result = userPolicies;
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      result = result.filter((p) => {
-        if (p.label.toLowerCase().includes(query)) {
-          return true;
-        }
-        const paramDisplayNames = p.parameters
-          .map((param) => {
-            const hierarchicalLabels = getHierarchicalLabelsFromTree(param.name, parameterTree);
-            return hierarchicalLabels.length > 0
-              ? formatLabelParts(hierarchicalLabels)
-              : param.name.split('.').pop() || param.name;
-          })
-          .join(' ')
-          .toLowerCase();
-        if (paramDisplayNames.includes(query)) {
-          return true;
-        }
-        return false;
-      });
+    if (!searchQuery.trim()) {
+      return userPolicies;
     }
-    return result;
-  }, [userPolicies, searchQuery, parameterTree]);
 
-  // Get policies for current section
-  const displayedPolicies = useMemo(() => {
-    return filteredPolicies;
-  }, [filteredPolicies]);
+    const query = searchQuery.toLowerCase();
+    return userPolicies.filter((policy) => {
+      if (policy.label.toLowerCase().includes(query)) {
+        return true;
+      }
 
-  // Get section title
-  const getSectionTitle = () => {
-    switch (activeSection) {
-      case 'my-policies':
-        return 'My policies';
-      default:
-        return 'Policies';
+      const paramDisplayNames = policy.parameters
+        .map((param) => {
+          const hierarchicalLabels = getHierarchicalLabelsFromTree(param.name, parameterTree);
+          return hierarchicalLabels.length > 0
+            ? formatLabelParts(hierarchicalLabels)
+            : param.name.split('.').pop() || param.name;
+        })
+        .join(' ')
+        .toLowerCase();
+
+      return paramDisplayNames.includes(query);
+    });
+  }, [parameterTree, searchQuery, userPolicies]);
+
+  const drawerPolicy = useMemo(() => {
+    if (!drawerPolicyId) {
+      return null;
     }
-  };
 
-  // Handle policy selection
+    return userPolicies.find((policy) => policy.id === drawerPolicyId) || null;
+  }, [drawerPolicyId, userPolicies]);
+
   const handleSelectPolicy = (policy: {
     id: string;
     label: string;
@@ -230,295 +126,20 @@ export function PolicyBrowseModal({
         updates: {},
       });
     }
-    onSelect({ id: policy.id, label: policy.label, parameters: Array(policy.paramCount).fill({}) });
+
+    onSelect({
+      id: policy.id,
+      label: policy.label,
+      parameters: Array(policy.paramCount).fill({}),
+    });
     onClose();
   };
 
-  // Handle current law selection
   const handleSelectCurrentLaw = () => {
     onSelect(createCurrentLawPolicy());
     onClose();
   };
 
-  // ========== Creation Mode Logic ==========
-
-  // Create local policy state object
-  const localPolicy: PolicyStateProps = useMemo(
-    () => ({
-      label: policyLabel,
-      parameters: policyParameters,
-    }),
-    [policyLabel, policyParameters]
-  );
-
-  // Count modifications
-  const modificationCount = countPolicyModifications(localPolicy);
-
-  // Get modified parameter data for the overview tab grid
-  const modifiedParams: ModifiedParam[] = useMemo(() => {
-    return policyParameters.map((p) => {
-      const metadata = parameters[p.name];
-      const hierarchicalLabels = getHierarchicalLabels(p.name, parameters);
-      const displayLabel =
-        hierarchicalLabels.length > 0
-          ? formatLabelParts(hierarchicalLabels)
-          : p.name.split('.').pop() || p.name;
-      const changes = p.values.map((interval) => ({
-        period: formatPeriod(interval.startDate, interval.endDate),
-        value: formatParameterValue(interval.value, metadata?.unit),
-      }));
-      return { paramName: p.name, label: displayLabel, changes };
-    });
-  }, [policyParameters, parameters]);
-
-  // Handle search selection
-  const handleSearchSelect = useCallback(
-    (paramName: string) => {
-      const param = parameters[paramName];
-      if (!param || param.type !== 'parameter') {
-        return;
-      }
-      const pathParts = paramName.split('.');
-      const newExpanded = new Set(expandedMenuItems);
-      let currentPath = '';
-      for (let i = 0; i < pathParts.length - 1; i++) {
-        currentPath = currentPath ? `${currentPath}.${pathParts[i]}` : pathParts[i];
-        newExpanded.add(currentPath);
-      }
-      setExpandedMenuItems(newExpanded);
-      setSelectedParam(param);
-      setIntervals([]);
-      setValueSetterMode(ValueSetterMode.DEFAULT);
-      setParameterSearch('');
-      setActiveTab('parameters');
-    },
-    [parameters, expandedMenuItems]
-  );
-
-  // Handle menu item click
-  const handleMenuItemClick = useCallback(
-    (paramName: string) => {
-      const param = parameters[paramName];
-      if (param && param.type === 'parameter') {
-        setSelectedParam(param);
-        setIntervals([]);
-        setValueSetterMode(ValueSetterMode.DEFAULT);
-        setActiveTab('parameters');
-      }
-      setExpandedMenuItems((prev) => {
-        const newSet = new Set(prev);
-        if (newSet.has(paramName)) {
-          newSet.delete(paramName);
-        } else {
-          newSet.add(paramName);
-        }
-        return newSet;
-      });
-    },
-    [parameters]
-  );
-
-  // Handle value submission
-  const handleValueSubmit = useCallback(() => {
-    if (!selectedParam || intervals.length === 0) {
-      return;
-    }
-    const updatedParameters = [...policyParameters];
-    let existingParam = updatedParameters.find((p) => p.name === selectedParam.parameter);
-    if (!existingParam) {
-      existingParam = { name: selectedParam.parameter, values: [] };
-      updatedParameters.push(existingParam);
-    }
-    const paramCollection = new ValueIntervalCollection(existingParam.values);
-    intervals.forEach((interval) => {
-      paramCollection.addInterval(interval);
-    });
-    existingParam.values = paramCollection.getIntervals();
-    setPolicyParameters(updatedParameters);
-    setIntervals([]);
-  }, [selectedParam, intervals, policyParameters]);
-
-  // Handle entering creation mode (new policy)
-  const handleEnterCreationMode = useCallback(() => {
-    setPolicyLabel('');
-    setPolicyParameters([]);
-    setSelectedParam(null);
-    setExpandedMenuItems(new Set());
-    setIntervals([]);
-    setStartDate(defaultStartDate);
-    setEndDate(defaultEndDate);
-    setParameterSearch('');
-    setActiveTab('overview');
-    setEditorMode('create');
-    setEditingAssociationId(null);
-    setIsUpdating(false);
-    setIsCreationMode(true);
-  }, [defaultStartDate, defaultEndDate]);
-
-  // Handle opening an existing policy in the editor (display mode)
-  const handleOpenInEditor = useCallback(
-    (policy: { id: string; associationId?: string; label: string; parameters: Parameter[] }) => {
-      setDrawerPolicyId(null);
-      setPolicyLabel(policy.label);
-      setOriginalLabel(policy.label);
-      setPolicyParameters(policy.parameters);
-      setSelectedParam(null);
-      setExpandedMenuItems(new Set());
-      setIntervals([]);
-      setStartDate(defaultStartDate);
-      setEndDate(defaultEndDate);
-      setParameterSearch('');
-      setActiveTab('overview');
-      setEditorMode('display');
-      setEditingAssociationId(policy.associationId || null);
-      setIsCreationMode(true);
-    },
-    [defaultStartDate, defaultEndDate]
-  );
-
-  // Exit editor / creation mode
-  const handleExitCreationMode = useCallback(() => {
-    setIsCreationMode(false);
-    setPolicyLabel('');
-    setPolicyParameters([]);
-    setSelectedParam(null);
-    setExpandedMenuItems(new Set());
-    setIntervals([]);
-    setParameterSearch('');
-    setEditorMode('create');
-
-    setEditingAssociationId(null);
-    setIsUpdating(false);
-  }, []);
-
-  // Handle policy creation
-  const handleCreatePolicy = useCallback(async () => {
-    const policyData: Partial<Policy> = { parameters: policyParameters };
-    const payload: PolicyCreationPayload = PolicyAdapter.toCreationPayload(policyData as Policy);
-    try {
-      const result = await createPolicy(payload);
-      const createdPolicy: PolicyStateProps = {
-        id: result.result.policy_id,
-        label: normalizedPolicyLabel || null,
-        parameters: policyParameters,
-      };
-      onSelect(createdPolicy);
-      onClose();
-    } catch (error) {
-      console.error('Failed to create policy:', error);
-    }
-  }, [normalizedPolicyLabel, policyParameters, createPolicy, onSelect, onClose]);
-
-  // Same-name guard for "Save as new policy"
-  const handleSaveAsNewPolicy = useCallback(() => {
-    const currentName = normalizedPolicyLabel;
-    const origName = (originalLabel || '').trim();
-    if (editorMode === 'edit' && currentName && currentName === origName) {
-      setShowSameNameWarning(true);
-    } else {
-      void handleCreatePolicy();
-    }
-  }, [normalizedPolicyLabel, originalLabel, editorMode, handleCreatePolicy]);
-
-  // Handle updating an existing policy (create new base policy, update association)
-  const handleUpdateExistingPolicy = useCallback(async () => {
-    if (!editingAssociationId) {
-      return;
-    }
-    setIsUpdating(true);
-
-    const policyData: Partial<Policy> = { parameters: policyParameters };
-    const payload: PolicyCreationPayload = PolicyAdapter.toCreationPayload(policyData as Policy);
-
-    try {
-      const result = await createPolicyApi(countryId, payload);
-      const newPolicyId = result.result.policy_id;
-      const desiredLabel = normalizedPolicyLabel || undefined;
-
-      await updatePolicyAssociation.mutateAsync({
-        userPolicyId: editingAssociationId,
-        updates: { policyId: newPolicyId, label: desiredLabel },
-      });
-
-      onSelect({
-        id: newPolicyId,
-        label: desiredLabel ?? null,
-        parameters: policyParameters,
-      });
-      onClose();
-    } catch (error) {
-      console.error('Failed to update policy:', error);
-      setIsUpdating(false);
-    }
-  }, [
-    normalizedPolicyLabel,
-    policyParameters,
-    editingAssociationId,
-    countryId,
-    updatePolicyAssociation,
-    onSelect,
-    onClose,
-  ]);
-
-  const runPendingUnnamedAction = useCallback(() => {
-    const action = pendingUnnamedAction;
-    setPendingUnnamedAction(null);
-
-    if (action === 'create') {
-      void handleCreatePolicy();
-    } else if (action === 'save-as-new') {
-      void handleSaveAsNewPolicy();
-    } else if (action === 'update-existing') {
-      void handleUpdateExistingPolicy();
-    }
-  }, [handleCreatePolicy, handleSaveAsNewPolicy, handleUpdateExistingPolicy, pendingUnnamedAction]);
-
-  const requestSaveAction = useCallback(
-    (action: Exclude<PendingUnnamedAction, null>) => {
-      const currentName = normalizedPolicyLabel;
-      const origName = (originalLabel || '').trim();
-
-      if (!currentName) {
-        setPendingUnnamedAction(action);
-        return;
-      }
-
-      if (action === 'save-as-new' && editorMode === 'edit' && currentName === origName) {
-        setShowSameNameWarning(true);
-        return;
-      }
-
-      if (action === 'create') {
-        void handleCreatePolicy();
-      } else if (action === 'save-as-new') {
-        void handleSaveAsNewPolicy();
-      } else {
-        void handleUpdateExistingPolicy();
-      }
-    },
-    [
-      normalizedPolicyLabel,
-      originalLabel,
-      editorMode,
-      handleCreatePolicy,
-      handleSaveAsNewPolicy,
-      handleUpdateExistingPolicy,
-    ]
-  );
-
-  // Policy for drawer preview
-  const drawerPolicy = useMemo(() => {
-    if (!drawerPolicyId) {
-      return null;
-    }
-    return userPolicies.find((p) => p.id === drawerPolicyId) || null;
-  }, [drawerPolicyId, userPolicies]);
-
-  const colorConfig = INGREDIENT_COLORS.policy;
-
-  // ========== Sidebar Rendering ==========
-
-  // Browse mode sidebar sections
   const browseSidebarSections = useMemo(
     () => [
       {
@@ -544,82 +165,17 @@ export function PolicyBrowseModal({
             id: 'create-new',
             label: 'Create new policy',
             icon: <IconPlus size={16} />,
-            isActive: isCreationMode,
-            onClick: handleEnterCreationMode,
+            onClick: onCreateNew,
           },
         ],
       },
     ],
-    [activeSection, userPolicies.length, isCreationMode, handleEnterCreationMode]
+    [activeSection, onCreateNew, userPolicies.length]
   );
 
-  // Creation mode custom sidebar
-  const renderCreationSidebar = () => (
-    <PolicyParameterTree
-      parameterTree={parameterTree}
-      parameters={parameters}
-      metadataLoading={metadataLoading}
-      selectedParam={selectedParam}
-      expandedMenuItems={expandedMenuItems}
-      parameterSearch={parameterSearch}
-      setParameterSearch={setParameterSearch}
-      onMenuItemClick={handleMenuItemClick}
-      onSearchSelect={handleSearchSelect}
-      activeTab={activeTab}
-      onTabChange={setActiveTab}
-    />
-  );
-
-  // ========== Main Content Rendering ==========
-
-  // Overview content for creation mode — naming, param grid, action buttons
-  const renderOverviewContent = () => (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <div style={{ flex: 1, overflow: 'auto', padding: spacing.lg }}>
-        <PolicyOverviewContent
-          policyLabel={policyLabel}
-          onLabelChange={setPolicyLabel}
-          isReadOnly={isReadOnly}
-          showNamingCard={false}
-          modificationCount={modificationCount}
-          modifiedParams={modifiedParams}
-          hoveredParamName={hoveredParamName}
-          onHoverParam={setHoveredParamName}
-          onClickParam={handleSearchSelect}
-        />
-      </div>
-    </div>
-  );
+  const colorConfig = INGREDIENT_COLORS.policy;
 
   const renderMainContent = () => {
-    if (isCreationMode) {
-      if (activeTab === 'overview') {
-        return renderOverviewContent();
-      }
-      return (
-        <PolicyCreationContent
-          selectedParam={selectedParam}
-          localPolicy={localPolicy}
-          policyLabel={policyLabel}
-          policyParameters={policyParameters}
-          reportYear={resolvedReportYear}
-          setPolicyParameters={setPolicyParameters}
-          minDate={minDate}
-          maxDate={maxDate}
-          intervals={intervals}
-          setIntervals={setIntervals}
-          startDate={startDate}
-          setStartDate={setStartDate}
-          endDate={endDate}
-          setEndDate={setEndDate}
-          valueSetterMode={valueSetterMode}
-          setValueSetterMode={setValueSetterMode}
-          onValueSubmit={handleValueSubmit}
-          isReadOnly={isReadOnly}
-        />
-      );
-    }
-
     if (activeSection === 'frequently-selected') {
       return (
         <Stack gap="lg" style={{ height: '100%' }}>
@@ -677,7 +233,7 @@ export function PolicyBrowseModal({
     return (
       <>
         <PolicyBrowseContent
-          displayedPolicies={displayedPolicies}
+          displayedPolicies={filteredPolicies}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           activeSection={activeSection}
@@ -688,8 +244,8 @@ export function PolicyBrowseModal({
             handleSelectPolicy(policy);
           }}
           onPolicyInfoClick={(policyId) => setDrawerPolicyId(policyId)}
-          onEnterCreationMode={handleEnterCreationMode}
-          getSectionTitle={getSectionTitle}
+          onEnterCreationMode={onCreateNew}
+          getSectionTitle={() => (activeSection === 'my-policies' ? 'My policies' : 'Policies')}
         />
         <PolicyDetailsDrawer
           policy={drawerPolicy}
@@ -703,185 +259,35 @@ export function PolicyBrowseModal({
             }
           }}
           onEdit={() => {
-            if (drawerPolicy) {
-              handleOpenInEditor(drawerPolicy);
+            if (!drawerPolicy) {
+              return;
             }
+
+            setDrawerPolicyId(null);
+            onEditPolicy(
+              {
+                id: drawerPolicy.id,
+                label: drawerPolicy.label,
+                parameters: drawerPolicy.parameters,
+              },
+              drawerPolicy.associationId
+            );
           }}
         />
       </>
     );
   };
 
-  // ========== Render ==========
-
   return (
-    <>
-      <BrowseModalTemplate
-        isOpen={isOpen}
-        onClose={onClose}
-        headerIcon={<IconScale size={20} color={colorConfig.icon} />}
-        headerTitle={
-          isCreationMode ? (
-            <EditableLabel
-              value={policyLabel}
-              onChange={setPolicyLabel}
-              placeholder="Enter policy name..."
-              emptyStateText="Click to name your policy..."
-              readOnly={isReadOnly}
-              fitContentWhileEditing
-              controlOutsideField
-              showFieldWhenEmptyOrEditing
-              fieldStyle={{
-                background: colors.gray[100],
-                borderBottom: `1px solid ${colors.border.light}`,
-                padding: `${spacing.xs} ${spacing.sm}`,
-              }}
-            />
-          ) : (
-            'Select policy'
-          )
-        }
-        headerSubtitle={
-          isCreationMode ? undefined : 'Choose an existing policy or create a new one'
-        }
-        colorConfig={colorConfig}
-        sidebarSections={isCreationMode ? undefined : browseSidebarSections}
-        renderSidebar={isCreationMode ? renderCreationSidebar : undefined}
-        sidebarWidth={isCreationMode ? 280 : undefined}
-        renderMainContent={renderMainContent}
-        footer={
-          isCreationMode ? (
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'auto 1fr auto',
-                alignItems: 'center',
-                width: '100%',
-              }}
-            >
-              <Button variant="ghost" onClick={handleExitCreationMode}>
-                Cancel
-              </Button>
-              <div style={{ textAlign: 'center' }}>
-                {modificationCount > 0 && (
-                  <Group
-                    gap="xs"
-                    justify="center"
-                    style={{ cursor: 'pointer' }}
-                    onClick={() => setActiveTab('overview')}
-                    onMouseEnter={() => setFooterHovered(true)}
-                    onMouseLeave={() => setFooterHovered(false)}
-                  >
-                    <div
-                      style={{
-                        width: 8,
-                        height: 8,
-                        borderRadius: '50%',
-                        background: colors.primary[500],
-                      }}
-                    />
-                    <Text
-                      style={{
-                        fontSize: FONT_SIZES.small,
-                        color: footerHovered ? colors.primary[600] : colors.gray[600],
-                        transition: 'color 0.15s ease',
-                      }}
-                    >
-                      {modificationCount} parameter{modificationCount !== 1 ? 's' : ''} modified
-                    </Text>
-                  </Group>
-                )}
-              </div>
-              <Group gap="sm" justify="end">
-                {editorMode === 'create' && (
-                  <Button
-                    onClick={() => requestSaveAction('create')}
-                    disabled={isCreating || modificationCount === 0}
-                  >
-                    {isCreating && <Spinner size="sm" />}
-                    Create policy
-                  </Button>
-                )}
-                {editorMode === 'display' && (
-                  <EditDefaultButton
-                    label="Edit this policy"
-                    onClick={() => setEditorMode('edit')}
-                  />
-                )}
-                {editorMode === 'edit' && (
-                  <>
-                    <EditAndUpdateButton
-                      label="Update existing policy"
-                      onClick={() => requestSaveAction('update-existing')}
-                      loading={isUpdating}
-                      disabled={isCreating || modificationCount === 0}
-                    />
-                    <EditAndSaveNewButton
-                      label="Save as new policy"
-                      onClick={() => requestSaveAction('save-as-new')}
-                      loading={isCreating}
-                      disabled={isUpdating || modificationCount === 0}
-                    />
-                  </>
-                )}
-              </Group>
-            </div>
-          ) : undefined
-        }
-        contentPadding={isCreationMode ? 0 : undefined}
-      />
-
-      <Dialog
-        open={showSameNameWarning}
-        onOpenChange={(open) => !open && setShowSameNameWarning(false)}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Same name</DialogTitle>
-          </DialogHeader>
-          <Stack gap="md">
-            <Text size="sm">
-              Both the original and new policy will have the name &quot;{policyLabel.trim()}&quot;.
-              Are you sure you want to save?
-            </Text>
-            <Group justify="end" gap="sm">
-              <Button variant="outline" onClick={() => setShowSameNameWarning(false)}>
-                Cancel
-              </Button>
-              <Button
-                onClick={() => {
-                  setShowSameNameWarning(false);
-                  handleCreatePolicy();
-                }}
-              >
-                Save anyway
-              </Button>
-            </Group>
-          </Stack>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog
-        open={pendingUnnamedAction !== null}
-        onOpenChange={(open) => !open && setPendingUnnamedAction(null)}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Unnamed policy</DialogTitle>
-          </DialogHeader>
-          <Stack gap="md">
-            <Text size="sm">
-              This policy has no name. Are you sure you want to save it without a name?
-            </Text>
-            <Group justify="end" gap="sm">
-              <Button variant="outline" onClick={() => setPendingUnnamedAction(null)}>
-                Cancel
-              </Button>
-              <Button onClick={runPendingUnnamedAction}>Save anyway</Button>
-            </Group>
-          </Stack>
-        </DialogContent>
-      </Dialog>
-    </>
+    <BrowseModalTemplate
+      isOpen={isOpen}
+      onClose={onClose}
+      headerIcon={<IconScale size={20} color={colorConfig.icon} />}
+      headerTitle="Select policy"
+      headerSubtitle="Choose an existing policy or create a new one"
+      colorConfig={colorConfig}
+      sidebarSections={browseSidebarSections}
+      renderMainContent={renderMainContent}
+    />
   );
 }

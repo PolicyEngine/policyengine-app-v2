@@ -96,7 +96,9 @@ export default function VariableInput({
   };
 
   const commitNumericInputValue = () => {
-    const parsedValue = parseNumericInput(numericInputValue);
+    const cleanedNumericInput = numericInputValue.replace(/,/g, '').trim();
+    const isClearedNumericInput = cleanedNumericInput === '';
+    const parsedValue = isClearedNumericInput ? 0 : parseNumericInput(numericInputValue);
     if (parsedValue === null) {
       setIsEditingNumericValue(false);
       setNumericInputValue(formatNumericDisplay(editableNumericValue, numericFormatting));
@@ -109,7 +111,11 @@ export default function VariableInput({
     setIsEditingNumericValue(false);
     setNumericInputValue(formatNumericDisplay(parsedValue, numericFormatting));
 
-    if (coercedValue === rawNumericValue) {
+    if (isClearedNumericInput && currentValue === 0) {
+      return;
+    }
+
+    if (!isClearedNumericInput && coercedValue === rawNumericValue) {
       return;
     }
 

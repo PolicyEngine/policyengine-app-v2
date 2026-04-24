@@ -144,6 +144,8 @@ export function SimulationCanvas({
         onClose={canvas.closePolicyBrowse}
         onSelect={canvas.handlePolicySelectFromBrowse}
         reportYear={reportYear}
+        onCreateNew={canvas.handleCreatePolicyFromBrowse}
+        onEditPolicy={canvas.handleEditPolicyFromBrowse}
       />
 
       <PopulationBrowseModal
@@ -179,6 +181,7 @@ export function SimulationCanvas({
         simulationIndex={canvas.policyCreationState.simulationIndex}
         initialPolicy={canvas.policyCreationState.initialPolicy}
         initialEditorMode={canvas.policyCreationState.initialEditorMode}
+        initialAssociationId={canvas.policyCreationState.initialAssociationId}
         reportYear={reportYear}
         forceReadOnly={isViewOnly}
       />

@@ -349,6 +349,31 @@ export function useSimulationCanvas({
     [updatePolicy]
   );
 
+  const resolvePolicyForEditor = useCallback(
+    (policy: PolicyStateProps) => {
+      let resolvedPolicy = policy;
+      let initialAssociationId: string | undefined;
+
+      if (policy.id) {
+        const fullPolicy = policies?.find((p) => p.association.policyId.toString() === policy.id);
+        if (fullPolicy) {
+          initialAssociationId = fullPolicy.association.id;
+
+          const hasRealParams = policy.parameters.length > 0 && !!policy.parameters[0]?.name;
+          if (!hasRealParams && fullPolicy.policy?.parameters) {
+            resolvedPolicy = {
+              ...policy,
+              parameters: fullPolicy.policy.parameters,
+            };
+          }
+        }
+      }
+
+      return { resolvedPolicy, initialAssociationId };
+    },
+    [policies]
+  );
+
   const handleEditPolicy = useCallback(
     (simulationIndex: number) => {
       const currentPolicy = reportState.simulations[simulationIndex]?.policy;
@@ -356,30 +381,16 @@ export function useSimulationCanvas({
         return;
       }
 
-      // Resolve full parameters: in-session policies have real params,
-      // saved policies have placeholder Array(n).fill({})
-      let resolvedPolicy = currentPolicy;
-      const hasRealParams =
-        currentPolicy.parameters.length > 0 && !!currentPolicy.parameters[0]?.name;
-      if (!hasRealParams && currentPolicy.id) {
-        const fullPolicy = policies?.find(
-          (p) => p.association.policyId.toString() === currentPolicy.id
-        );
-        if (fullPolicy?.policy?.parameters) {
-          resolvedPolicy = {
-            ...currentPolicy,
-            parameters: fullPolicy.policy.parameters,
-          };
-        }
-      }
+      const { resolvedPolicy, initialAssociationId } = resolvePolicyForEditor(currentPolicy);
 
       setPolicyCreationState({
         isOpen: true,
         simulationIndex,
         initialPolicy: resolvedPolicy,
+        initialAssociationId,
       });
     },
-    [reportState.simulations, policies]
+    [reportState.simulations, resolvePolicyForEditor]
   );
 
   const handleViewPolicy = useCallback(
@@ -389,30 +400,40 @@ export function useSimulationCanvas({
         return;
       }
 
-      // Resolve full parameters (same as handleEditPolicy)
-      let resolvedPolicy = currentPolicy;
-      const hasRealParams =
-        currentPolicy.parameters.length > 0 && !!currentPolicy.parameters[0]?.name;
-      if (!hasRealParams && currentPolicy.id) {
-        const fullPolicy = policies?.find(
-          (p) => p.association.policyId.toString() === currentPolicy.id
-        );
-        if (fullPolicy?.policy?.parameters) {
-          resolvedPolicy = {
-            ...currentPolicy,
-            parameters: fullPolicy.policy.parameters,
-          };
-        }
-      }
+      const { resolvedPolicy, initialAssociationId } = resolvePolicyForEditor(currentPolicy);
 
       setPolicyCreationState({
         isOpen: true,
         simulationIndex,
         initialPolicy: resolvedPolicy,
+        initialAssociationId,
         initialEditorMode: 'display',
       });
     },
-    [reportState.simulations, policies]
+    [reportState.simulations, resolvePolicyForEditor]
+  );
+
+  const handleCreatePolicyFromBrowse = useCallback(() => {
+    setPolicyBrowseState((prev) => ({ ...prev, isOpen: false }));
+    setPolicyCreationState({
+      isOpen: true,
+      simulationIndex: policyBrowseState.simulationIndex,
+      initialEditorMode: 'create',
+    });
+  }, [policyBrowseState.simulationIndex]);
+
+  const handleEditPolicyFromBrowse = useCallback(
+    (policy: PolicyStateProps, initialAssociationId?: string) => {
+      setPolicyBrowseState((prev) => ({ ...prev, isOpen: false }));
+      setPolicyCreationState({
+        isOpen: true,
+        simulationIndex: policyBrowseState.simulationIndex,
+        initialPolicy: policy,
+        initialAssociationId,
+        initialEditorMode: 'edit',
+      });
+    },
+    [policyBrowseState.simulationIndex]
   );
 
   // ---------------------------------------------------------------------------
@@ -594,6 +615,8 @@ export function useSimulationCanvas({
     handleBrowseMorePolicies,
     handlePolicySelectFromBrowse,
     handlePolicyCreated,
+    handleCreatePolicyFromBrowse,
+    handleEditPolicyFromBrowse,
 
     // Population actions
     handleQuickSelectPopulation,

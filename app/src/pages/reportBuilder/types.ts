@@ -230,6 +230,7 @@ export interface PolicyBrowseState {
   simulationIndex: number;
   initialPolicy?: import('@/types/pathwayState').PolicyStateProps;
   initialEditorMode?: 'create' | 'display' | 'edit';
+  initialAssociationId?: string;
 }
 
 export interface HouseholdEditorState {
