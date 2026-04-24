@@ -2,7 +2,10 @@ import { describe, expect, test } from 'vitest';
 import {
   assertSupportedMode,
   ENTITY_MIGRATION_MODE,
+  getMigrationEntityResponsibility,
   getMigrationMode,
+  governsAssociationWrites,
+  governsCanonicalRegionSource,
   isV1Only,
   isV1OnlyMode,
   isV1PrimaryV2Shadow,
@@ -12,6 +15,7 @@ import {
   isV2Primary,
   isV2PrimaryMode,
   MIGRATION_ENTITIES,
+  MIGRATION_ENTITY_RESPONSIBILITIES,
   usesV1Shadow,
   usesV1ShadowMode,
   usesV2Shadow,
@@ -26,6 +30,7 @@ describe('migrationMode', () => {
         'policies',
         'households',
         'regions',
+        'saved_geographies',
         'simulations',
         'reports',
       ]);
@@ -34,6 +39,7 @@ describe('migrationMode', () => {
         policies: 'v1_primary_v2_shadow',
         households: 'v1_primary_v2_shadow',
         regions: 'v1_primary_v2_shadow',
+        saved_geographies: 'v1_only',
         simulations: 'v1_only',
         reports: 'v1_only',
       });
@@ -43,8 +49,27 @@ describe('migrationMode', () => {
       expect(getMigrationMode('policies')).toBe('v1_primary_v2_shadow');
       expect(getMigrationMode('households')).toBe('v1_primary_v2_shadow');
       expect(getMigrationMode('regions')).toBe('v1_primary_v2_shadow');
+      expect(getMigrationMode('saved_geographies')).toBe('v1_only');
       expect(getMigrationMode('simulations')).toBe('v1_only');
       expect(getMigrationMode('reports')).toBe('v1_only');
+    });
+
+    test('given the support matrix then entity responsibilities are explicit', () => {
+      expect(MIGRATION_ENTITY_RESPONSIBILITIES).toEqual({
+        policies: 'entity_and_association_writes',
+        households: 'entity_and_association_writes',
+        regions: 'canonical_region_source_and_shadow_resolution',
+        saved_geographies: 'association_writes',
+        simulations: 'entity_and_association_writes',
+        reports: 'entity_and_association_writes',
+      });
+
+      expect(getMigrationEntityResponsibility('policies')).toBe('entity_and_association_writes');
+      expect(getMigrationEntityResponsibility('households')).toBe('entity_and_association_writes');
+      expect(getMigrationEntityResponsibility('regions')).toBe(
+        'canonical_region_source_and_shadow_resolution'
+      );
+      expect(getMigrationEntityResponsibility('saved_geographies')).toBe('association_writes');
     });
   });
 
@@ -79,8 +104,12 @@ describe('migrationMode', () => {
   });
 
   describe('entity helpers', () => {
-    test('given default entity config then v1-only entities are simulations and reports', () => {
-      expect(MIGRATION_ENTITIES.filter(isV1Only)).toEqual(['simulations', 'reports']);
+    test('given default entity config then v1-only entities are saved geographies simulations and reports', () => {
+      expect(MIGRATION_ENTITIES.filter(isV1Only)).toEqual([
+        'saved_geographies',
+        'simulations',
+        'reports',
+      ]);
     });
 
     test('given default entity config then v1-primary-v2-shadow entities are policies households and regions', () => {
@@ -102,6 +131,20 @@ describe('migrationMode', () => {
         'policies',
         'households',
         'regions',
+      ]);
+    });
+
+    test('given the support matrix then only regions govern canonical region sourcing', () => {
+      expect(MIGRATION_ENTITIES.filter(governsCanonicalRegionSource)).toEqual(['regions']);
+    });
+
+    test('given the support matrix then all entities except regions govern association writes', () => {
+      expect(MIGRATION_ENTITIES.filter(governsAssociationWrites)).toEqual([
+        'policies',
+        'households',
+        'saved_geographies',
+        'simulations',
+        'reports',
       ]);
     });
   });

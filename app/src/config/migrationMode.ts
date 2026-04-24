@@ -2,6 +2,7 @@ export const MIGRATION_ENTITIES = [
   'policies',
   'households',
   'regions',
+  'saved_geographies',
   'simulations',
   'reports',
 ] as const;
@@ -10,16 +11,40 @@ export type MigrationEntity = (typeof MIGRATION_ENTITIES)[number];
 
 export type MigrationMode = 'v1_only' | 'v1_primary_v2_shadow' | 'v2_primary_v1_shadow' | 'v2_only';
 
+export type MigrationEntityResponsibility =
+  | 'entity_and_association_writes'
+  | 'canonical_region_source_and_shadow_resolution'
+  | 'association_writes';
+
 export const ENTITY_MIGRATION_MODE: Record<MigrationEntity, MigrationMode> = {
   policies: 'v1_primary_v2_shadow',
   households: 'v1_primary_v2_shadow',
   regions: 'v1_primary_v2_shadow',
+  saved_geographies: 'v1_only',
   simulations: 'v1_only',
   reports: 'v1_only',
 };
 
+export const MIGRATION_ENTITY_RESPONSIBILITIES: Record<
+  MigrationEntity,
+  MigrationEntityResponsibility
+> = {
+  policies: 'entity_and_association_writes',
+  households: 'entity_and_association_writes',
+  regions: 'canonical_region_source_and_shadow_resolution',
+  saved_geographies: 'association_writes',
+  simulations: 'entity_and_association_writes',
+  reports: 'entity_and_association_writes',
+};
+
 export function getMigrationMode(entity: MigrationEntity): MigrationMode {
   return ENTITY_MIGRATION_MODE[entity];
+}
+
+export function getMigrationEntityResponsibility(
+  entity: MigrationEntity
+): MigrationEntityResponsibility {
+  return MIGRATION_ENTITY_RESPONSIBILITIES[entity];
 }
 
 export function isV1OnlyMode(mode: MigrationMode): boolean {
@@ -68,6 +93,19 @@ export function usesV2Shadow(entity: MigrationEntity): boolean {
 
 export function usesV1Shadow(entity: MigrationEntity): boolean {
   return usesV1ShadowMode(getMigrationMode(entity));
+}
+
+export function governsAssociationWrites(entity: MigrationEntity): boolean {
+  const responsibility = getMigrationEntityResponsibility(entity);
+  return (
+    responsibility === 'entity_and_association_writes' || responsibility === 'association_writes'
+  );
+}
+
+export function governsCanonicalRegionSource(entity: MigrationEntity): boolean {
+  return (
+    getMigrationEntityResponsibility(entity) === 'canonical_region_source_and_shadow_resolution'
+  );
 }
 
 export function assertSupportedMode(
