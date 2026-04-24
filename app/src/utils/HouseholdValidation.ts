@@ -59,17 +59,27 @@ function getConfiguredGroupCollections(
   countryId: CountryId
 ): Array<{ entityName: string; groups: Record<string, HouseholdGroupEntity> }> {
   if (countryId === 'us' || countryId === 'uk') {
-    return getV2GroupDefinitions(countryId)
-      .map((definition) => ({
+    const configuredCollections: Array<{
+      entityName: string;
+      groups: Record<string, HouseholdGroupEntity>;
+    }> = [];
+
+    for (const definition of getV2GroupDefinitions(countryId)) {
+      const groups = getHouseholdGroupCollection(householdData, definition.appKey) as
+        | Record<string, HouseholdGroupEntity>
+        | undefined;
+
+      if (!groups) {
+        continue;
+      }
+
+      configuredCollections.push({
         entityName: definition.appKey,
-        groups: getHouseholdGroupCollection(householdData, definition.appKey) as
-          | Record<string, HouseholdGroupEntity>
-          | undefined,
-      }))
-      .filter(
-        (entry): entry is { entityName: string; groups: Record<string, HouseholdGroupEntity> } =>
-          Boolean(entry.groups)
-      );
+        groups,
+      });
+    }
+
+    return configuredCollections;
   }
 
   return getAllHouseholdGroupCollections(householdData).map(({ entityName, groups }) => ({
