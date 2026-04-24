@@ -131,6 +131,20 @@ export default function HouseholdOverview({
   const [hasOpenedMtr, setHasOpenedMtr] = useState(activeView === 'marginal-tax-rates');
   const metadata = useSelector((state: RootState) => state.metadata);
 
+  useEffect(() => {
+    if (activeView === 'net-income') {
+      setBreakdownOpen(true);
+    }
+    if (activeView === 'earnings-variation') {
+      setEarningsOpen(true);
+      setHasOpenedEarnings(true);
+    }
+    if (activeView === 'marginal-tax-rates') {
+      setMtrOpen(true);
+      setHasOpenedMtr(true);
+    }
+  }, [activeView]);
+
   const rootVariable = metadata.variables.household_net_income;
   if (!rootVariable) {
     return (
@@ -194,20 +208,6 @@ export default function HouseholdOverview({
     : colors.primary[700];
 
   const hasAnalysisInputs = !!simulations?.length && !!policies?.length;
-
-  useEffect(() => {
-    if (activeView === 'net-income') {
-      setBreakdownOpen(true);
-    }
-    if (activeView === 'earnings-variation') {
-      setEarningsOpen(true);
-      setHasOpenedEarnings(true);
-    }
-    if (activeView === 'marginal-tax-rates') {
-      setMtrOpen(true);
-      setHasOpenedMtr(true);
-    }
-  }, [activeView]);
 
   const toggleEarnings = () => {
     setEarningsOpen((previous) => {

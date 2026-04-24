@@ -388,6 +388,8 @@ export function useSimulationCanvas({
         simulationIndex,
         initialPolicy: resolvedPolicy,
         initialAssociationId,
+        initialEditorMode: 'edit',
+        returnToBrowseOnBack: false,
       });
     },
     [reportState.simulations, resolvePolicyForEditor]
@@ -408,6 +410,7 @@ export function useSimulationCanvas({
         initialPolicy: resolvedPolicy,
         initialAssociationId,
         initialEditorMode: 'display',
+        returnToBrowseOnBack: false,
       });
     },
     [reportState.simulations, resolvePolicyForEditor]
@@ -419,6 +422,7 @@ export function useSimulationCanvas({
       isOpen: true,
       simulationIndex: policyBrowseState.simulationIndex,
       initialEditorMode: 'create',
+      returnToBrowseOnBack: true,
     });
   }, [policyBrowseState.simulationIndex]);
 
@@ -431,6 +435,7 @@ export function useSimulationCanvas({
         initialPolicy: policy,
         initialAssociationId,
         initialEditorMode: 'edit',
+        returnToBrowseOnBack: true,
       });
     },
     [policyBrowseState.simulationIndex]
@@ -510,6 +515,32 @@ export function useSimulationCanvas({
         initialPopulation: currentPopulation,
         initialAssociation,
         initialEditorMode: 'display',
+        returnToBrowseOnBack: false,
+      });
+    },
+    [households, reportState.simulations]
+  );
+
+  const handleEditPopulation = useCallback(
+    (simulationIndex: number) => {
+      const currentPopulation = reportState.simulations[simulationIndex]?.population;
+      const householdId = currentPopulation?.household?.id;
+
+      if (!householdId || !currentPopulation?.household) {
+        return;
+      }
+
+      const initialAssociation = households?.find(
+        (item) => String(item.association.householdId) === householdId
+      )?.association;
+
+      setHouseholdEditorState({
+        isOpen: true,
+        simulationIndex,
+        initialPopulation: currentPopulation,
+        initialAssociation,
+        initialEditorMode: 'edit',
+        returnToBrowseOnBack: false,
       });
     },
     [households, reportState.simulations]
@@ -540,6 +571,7 @@ export function useSimulationCanvas({
           isOpen: true,
           simulationIndex,
           initialEditorMode: 'create',
+          returnToBrowseOnBack: true,
         });
       }
     },
@@ -625,6 +657,7 @@ export function useSimulationCanvas({
     handleBrowseMorePopulations,
     handlePopulationSelectFromBrowse,
     handleHouseholdSaved,
+    handleEditPopulation,
     handleViewPopulation,
 
     // Ingredient picker / custom

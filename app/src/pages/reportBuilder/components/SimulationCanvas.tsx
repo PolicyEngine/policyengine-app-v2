@@ -41,10 +41,12 @@ export function SimulationCanvas({
   const canvas = useSimulationCanvas({ reportState, setReportState, pickerState, setPickerState });
   const isViewOnly = Boolean(isReadOnly);
   const noop = () => {};
-  const handleHouseholdModalBack = isViewOnly
+  const handleHouseholdModalBack =
+    isViewOnly || !canvas.householdEditorState.returnToBrowseOnBack
     ? canvas.closeHouseholdEditor
     : canvas.returnToPopulationBrowse;
-  const handlePolicyModalBack = isViewOnly
+  const handlePolicyModalBack =
+    isViewOnly || !canvas.policyCreationState.returnToBrowseOnBack
     ? canvas.closePolicyCreation
     : canvas.returnToPolicyBrowse;
 
@@ -71,8 +73,12 @@ export function SimulationCanvas({
             onDeselectPolicy={() => canvas.handleDeselectPolicy(0)}
             onDeselectPopulation={() => canvas.handleDeselectPopulation(0)}
             onEditPolicy={isViewOnly ? noop : () => canvas.handleEditPolicy(0)}
-            onViewPolicy={() => canvas.handleViewPolicy(0)}
-            onViewPopulation={() => canvas.handleViewPopulation(0)}
+            onViewPolicy={() =>
+              isViewOnly ? canvas.handleViewPolicy(0) : canvas.handleEditPolicy(0)
+            }
+            onViewPopulation={() =>
+              isViewOnly ? canvas.handleViewPopulation(0) : canvas.handleEditPopulation(0)
+            }
             onCreateCustomPolicy={isViewOnly ? noop : () => canvas.handleCreateCustom(0, 'policy')}
             onBrowseMorePolicies={isViewOnly ? noop : () => canvas.handleBrowseMorePolicies(0)}
             onBrowseMorePopulations={
@@ -99,8 +105,12 @@ export function SimulationCanvas({
               onDeselectPolicy={() => canvas.handleDeselectPolicy(1)}
               onDeselectPopulation={() => canvas.handleDeselectPopulation(1)}
               onEditPolicy={isViewOnly ? noop : () => canvas.handleEditPolicy(1)}
-              onViewPolicy={() => canvas.handleViewPolicy(1)}
-              onViewPopulation={() => canvas.handleViewPopulation(1)}
+              onViewPolicy={() =>
+                isViewOnly ? canvas.handleViewPolicy(1) : canvas.handleEditPolicy(1)
+              }
+              onViewPopulation={() =>
+                isViewOnly ? canvas.handleViewPopulation(1) : canvas.handleEditPopulation(1)
+              }
               onCreateCustomPolicy={
                 isViewOnly ? noop : () => canvas.handleCreateCustom(1, 'policy')
               }

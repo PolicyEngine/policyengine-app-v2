@@ -231,6 +231,7 @@ export interface PolicyBrowseState {
   initialPolicy?: import('@/types/pathwayState').PolicyStateProps;
   initialEditorMode?: 'create' | 'display' | 'edit';
   initialAssociationId?: string;
+  returnToBrowseOnBack?: boolean;
 }
 
 export interface HouseholdEditorState {
@@ -239,6 +240,7 @@ export interface HouseholdEditorState {
   initialPopulation?: PopulationStateProps;
   initialAssociation?: UserHouseholdPopulation;
   initialEditorMode?: 'create' | 'display' | 'edit';
+  returnToBrowseOnBack?: boolean;
 }
 
 export interface PolicyBrowseModalProps {
