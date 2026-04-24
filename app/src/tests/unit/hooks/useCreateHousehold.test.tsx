@@ -44,6 +44,19 @@ vi.mock('@/libs/queryKeys', () => ({
 }));
 
 vi.mock('@/hooks/useUserHousehold', () => ({
+  getHouseholdWriteConfig: (context: string) => {
+    const mode = ENTITY_MIGRATION_MODE.households;
+
+    if (mode !== 'v1_only' && mode !== 'v1_primary_v2_shadow') {
+      throw new Error(
+        `[MigrationMode] Unsupported mode "${mode}" for households in ${context}. Supported modes: v1_only, v1_primary_v2_shadow`
+      );
+    }
+
+    return {
+      shouldShadowV2: mode === 'v1_primary_v2_shadow',
+    };
+  },
   useCreateHouseholdAssociation: vi.fn(),
 }));
 

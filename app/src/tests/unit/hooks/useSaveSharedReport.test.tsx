@@ -73,6 +73,9 @@ vi.mock('@/libs/migration/migrationLogTransport', () => ({
 }));
 
 vi.mock('@/hooks/useUserHousehold', () => ({
+  getHouseholdWriteConfig: () => ({
+    shouldShadowV2: ENTITY_MIGRATION_MODE.households === 'v1_primary_v2_shadow',
+  }),
   useCreateHouseholdAssociation: () => mockCreateHousehold,
 }));
 

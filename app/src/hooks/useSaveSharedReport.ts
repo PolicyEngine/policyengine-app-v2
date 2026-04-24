@@ -9,7 +9,6 @@
 import { useCallback, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { PolicyAdapter } from '@/adapters/PolicyAdapter';
-import { assertSupportedMode, usesV2ShadowMode } from '@/config/migrationMode';
 import { ReportIngredientsInput } from '@/hooks/utils/useFetchReportIngredients';
 import { CountryId } from '@/libs/countries';
 import {
@@ -32,7 +31,7 @@ import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { UserReport } from '@/types/ingredients/UserReport';
 import { getShareDataUserReportId } from '@/utils/shareUtils';
 import { useCreateGeographicAssociation } from './useUserGeographic';
-import { useCreateHouseholdAssociation } from './useUserHousehold';
+import { getHouseholdWriteConfig, useCreateHouseholdAssociation } from './useUserHousehold';
 import { getPolicyWriteConfig, useCreatePolicyAssociation } from './useUserPolicy';
 import { useCreateReportAssociation, useUserReportStore } from './useUserReportAssociations';
 import { useCreateSimulationAssociation } from './useUserSimulationAssociations';
@@ -142,18 +141,15 @@ function shadowSavedHouseholdAssociation(
  */
 export function useSaveSharedReport() {
   const { shouldShadowV2: shouldShadowPolicies } = getPolicyWriteConfig('useSaveSharedReport');
-  const householdWriteMode = assertSupportedMode(
-    'households',
-    ['v1_only', 'v1_primary_v2_shadow'],
-    'useSaveSharedReport'
-  );
-  const shouldShadowHouseholds = usesV2ShadowMode(householdWriteMode);
+  const { shouldShadowV2: shouldShadowHouseholds } = getHouseholdWriteConfig('useSaveSharedReport');
   const createReportAssociation = useCreateReportAssociation();
   const createSimulationAssociation = useCreateSimulationAssociation();
   const createPolicyAssociation = useCreatePolicyAssociation({
     skipDuplicateV2AssociationShadow: true,
   });
-  const createHouseholdAssociation = useCreateHouseholdAssociation();
+  const createHouseholdAssociation = useCreateHouseholdAssociation({
+    skipDuplicateV2AssociationShadow: true,
+  });
   const createGeographicAssociation = useCreateGeographicAssociation();
   const reportStore = useUserReportStore();
 

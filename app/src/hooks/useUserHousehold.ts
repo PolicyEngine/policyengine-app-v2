@@ -5,7 +5,10 @@ import type { UserHouseholdStore } from '@/api/householdAssociation';
 import { assertSupportedMode, usesV2ShadowMode } from '@/config/migrationMode';
 import { replaceHouseholdBaseForAssociation as replaceHouseholdBaseForAssociationAction } from '@/hooks/household/replaceHouseholdBaseForAssociation';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { shadowUpdateUserHouseholdAssociation } from '@/libs/migration/householdShadow';
+import {
+  shadowCreateUserHouseholdAssociation,
+  shadowUpdateUserHouseholdAssociation,
+} from '@/libs/migration/householdShadow';
 import { Household } from '@/models/Household';
 import type { AppHouseholdInputEnvelope } from '@/models/household/appTypes';
 import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
@@ -17,11 +20,18 @@ const apiHouseholdStore = new ApiHouseholdStore();
 const localHouseholdStore = new LocalStorageHouseholdStore();
 const SUPPORTED_HOUSEHOLD_WRITE_MODES = ['v1_only', 'v1_primary_v2_shadow'] as const;
 
-function getHouseholdWriteConfig(context: string): { shouldShadowV2: boolean } {
+type HouseholdWriteConfigOptions = {
+  skipDuplicateV2AssociationShadow?: boolean;
+};
+
+export function getHouseholdWriteConfig(
+  context: string,
+  options?: HouseholdWriteConfigOptions
+): { shouldShadowV2: boolean } {
   const mode = assertSupportedMode('households', SUPPORTED_HOUSEHOLD_WRITE_MODES, context);
 
   return {
-    shouldShadowV2: usesV2ShadowMode(mode),
+    shouldShadowV2: usesV2ShadowMode(mode) && !options?.skipDuplicateV2AssociationShadow,
   };
 }
 
@@ -58,9 +68,10 @@ export const useHouseholdAssociation = (userId: string, householdId: string) => 
   });
 };
 
-export const useCreateHouseholdAssociation = () => {
+export const useCreateHouseholdAssociation = (options?: HouseholdWriteConfigOptions) => {
   const store = useUserHouseholdStore();
   const queryClient = useQueryClient();
+  const { shouldShadowV2 } = getHouseholdWriteConfig('useCreateHouseholdAssociation', options);
 
   return useMutation({
     mutationFn: (household: Omit<UserHouseholdPopulation, 'createdAt' | 'type'>) => {
@@ -80,6 +91,10 @@ export const useCreateHouseholdAssociation = () => {
         householdAssociationKeys.specific(newAssociation.userId, newAssociation.householdId),
         newAssociation
       );
+
+      if (shouldShadowV2) {
+        void shadowCreateUserHouseholdAssociation(newAssociation);
+      }
     },
   });
 };

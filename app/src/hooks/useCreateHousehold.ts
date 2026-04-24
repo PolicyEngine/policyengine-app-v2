@@ -1,22 +1,18 @@
 import { useMutation } from '@tanstack/react-query';
 import { createHousehold } from '@/api/household';
-import { assertSupportedMode, usesV2ShadowMode } from '@/config/migrationMode';
 import { MOCK_USER_ID } from '@/constants';
 import { countryIds } from '@/libs/countries';
 import { shadowCreateHouseholdAndAssociation } from '@/libs/migration/householdShadow';
 import { Household } from '@/models/Household';
 import type { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
-import { useCreateHouseholdAssociation } from './useUserHousehold';
+import { getHouseholdWriteConfig, useCreateHouseholdAssociation } from './useUserHousehold';
 
 export function useCreateHousehold(householdLabel?: string) {
-  const householdWriteMode = assertSupportedMode(
-    'households',
-    ['v1_only', 'v1_primary_v2_shadow'],
-    'useCreateHousehold'
-  );
-  const shouldShadowV2 = usesV2ShadowMode(householdWriteMode);
+  const { shouldShadowV2 } = getHouseholdWriteConfig('useCreateHousehold');
   // const user = MOCK_USER_ID; // TODO: Replace with actual user context or auth hook in future
-  const createAssociation = useCreateHouseholdAssociation();
+  const createAssociation = useCreateHouseholdAssociation({
+    skipDuplicateV2AssociationShadow: true,
+  });
 
   const mutation = useMutation({
     mutationFn: createHousehold,

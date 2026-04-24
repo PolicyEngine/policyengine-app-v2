@@ -9,7 +9,11 @@ import {
   updateUserHouseholdAssociationV2,
 } from '@/api/v2/userHouseholdAssociations';
 import { ENTITY_MIGRATION_MODE } from '@/config/migrationMode';
-import { useUpdateHouseholdAssociation } from '@/hooks/useUserHousehold';
+import {
+  getHouseholdWriteConfig,
+  useCreateHouseholdAssociation,
+  useUpdateHouseholdAssociation,
+} from '@/hooks/useUserHousehold';
 import { getV2Id, setV2Id } from '@/libs/migration/idMapping';
 import { Household as HouseholdModel } from '@/models/Household';
 import type { AppHouseholdInputEnvelope } from '@/models/household/appTypes';
@@ -113,6 +117,122 @@ function createWrapper(queryClient: QueryClient) {
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
 }
+
+describe('getHouseholdWriteConfig', () => {
+  beforeEach(() => {
+    ENTITY_MIGRATION_MODE.households = DEFAULT_HOUSEHOLD_MIGRATION_MODE;
+  });
+
+  test('given v1-only mode then it disables v2 shadowing', () => {
+    ENTITY_MIGRATION_MODE.households = 'v1_only';
+
+    expect(getHouseholdWriteConfig('test').shouldShadowV2).toBe(false);
+  });
+
+  test('given v1-primary-v2-shadow mode then it enables v2 shadowing', () => {
+    ENTITY_MIGRATION_MODE.households = 'v1_primary_v2_shadow';
+
+    expect(getHouseholdWriteConfig('test').shouldShadowV2).toBe(true);
+  });
+
+  test('given duplicate-shadow skip option then it disables only the association shadow', () => {
+    ENTITY_MIGRATION_MODE.households = 'v1_primary_v2_shadow';
+
+    expect(getHouseholdWriteConfig('test', { skipDuplicateV2AssociationShadow: true })).toEqual({
+      shouldShadowV2: false,
+    });
+  });
+
+  test('given unsupported household mode then it fails fast clearly', () => {
+    ENTITY_MIGRATION_MODE.households = 'v2_only';
+
+    expect(() => getHouseholdWriteConfig('test')).toThrow(
+      '[MigrationMode] Unsupported mode "v2_only" for households in test. Supported modes: v1_only, v1_primary_v2_shadow'
+    );
+  });
+});
+
+describe('useCreateHouseholdAssociation dual-write', () => {
+  let queryClient: QueryClient;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    localStorage.clear();
+    ENTITY_MIGRATION_MODE.households = DEFAULT_HOUSEHOLD_MIGRATION_MODE;
+    queryClient = createQueryClient();
+
+    setV2Id('User', TEST_USER_ID, TEST_V2_USER_ID);
+    setV2Id('Household', TEST_OLD_V1_HOUSEHOLD_ID, TEST_OLD_V2_HOUSEHOLD_ID);
+
+    mockStoreCreate.mockResolvedValue(initialAssociation);
+    vi.mocked(createUserHouseholdAssociationV2).mockResolvedValue({
+      ...initialAssociation,
+      userId: TEST_V2_USER_ID,
+      householdId: TEST_OLD_V2_HOUSEHOLD_ID,
+      id: TEST_V2_ASSOC_ID,
+    });
+  });
+
+  test('given v1-primary-v2-shadow mode then direct create shadows the v2 association', async () => {
+    const { result } = renderHook(() => useCreateHouseholdAssociation(), {
+      wrapper: createWrapper(queryClient),
+    });
+
+    await act(async () => {
+      await result.current.mutateAsync({
+        userId: TEST_USER_ID,
+        householdId: TEST_OLD_V1_HOUSEHOLD_ID,
+        countryId: TEST_COUNTRY_ID,
+        label: TEST_LABEL,
+      });
+    });
+
+    await waitFor(() => {
+      expect(createUserHouseholdAssociationV2).toHaveBeenCalledWith({
+        userId: TEST_V2_USER_ID,
+        householdId: TEST_OLD_V2_HOUSEHOLD_ID,
+        countryId: TEST_COUNTRY_ID,
+        label: TEST_LABEL,
+      });
+    });
+  });
+
+  test('given v1-only mode then direct create skips the v2 association shadow', async () => {
+    ENTITY_MIGRATION_MODE.households = 'v1_only';
+
+    const { result } = renderHook(() => useCreateHouseholdAssociation(), {
+      wrapper: createWrapper(queryClient),
+    });
+
+    await act(async () => {
+      await result.current.mutateAsync({
+        userId: TEST_USER_ID,
+        householdId: TEST_OLD_V1_HOUSEHOLD_ID,
+        countryId: TEST_COUNTRY_ID,
+        label: TEST_LABEL,
+      });
+    });
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+
+    expect(createUserHouseholdAssociationV2).not.toHaveBeenCalled();
+  });
+
+  test('given unsupported household mode then create hook fails fast', () => {
+    ENTITY_MIGRATION_MODE.households = 'v2_only';
+
+    expect(() =>
+      renderHook(() => useCreateHouseholdAssociation(), {
+        wrapper: createWrapper(queryClient),
+      })
+    ).toThrow(
+      '[MigrationMode] Unsupported mode "v2_only" for households in useCreateHouseholdAssociation. Supported modes: v1_only, v1_primary_v2_shadow'
+    );
+  });
+});
 
 describe('useUpdateHouseholdAssociation dual-write', () => {
   let queryClient: QueryClient;
