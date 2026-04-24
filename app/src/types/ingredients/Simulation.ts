@@ -1,5 +1,10 @@
 import { countryIds } from '@/libs/countries';
 
+export type SimulationPopulationType = 'household' | 'geography';
+export type SimulationType = 'household' | 'economy';
+export type SimulationStatus = 'pending' | 'complete' | 'error';
+export type SimulationSource = 'v1_api' | 'v2_household_api' | 'v2_economy_api';
+
 /**
  * Simulation type for position-based storage
  * ID is optional and only exists after API creation
@@ -18,11 +23,21 @@ export interface Simulation {
   id?: string; // Optional - only exists after API creation
   countryId?: (typeof countryIds)[number];
   apiVersion?: string;
+  simulationType?: SimulationType;
   policyId?: string;
   populationId?: string; // Can be either householdId or geographyId
-  populationType?: 'household' | 'geography'; // Indicates the type of populationId
+  populationType?: SimulationPopulationType; // Indicates the type of populationId
+  year?: number | null;
   label: string | null; // Always present, even if null
   isCreated: boolean; // Always present, defaults to false
   output?: unknown | null; // Calculation result (for household simulations)
-  status?: 'pending' | 'complete' | 'error'; // Calculation status (matches API)
+  status?: SimulationStatus; // Calculation status (matches API)
+  source?: SimulationSource;
+  backendStatus?: string | null;
+  regionCode?: string | null;
+  datasetId?: string | null;
+  outputDatasetId?: string | null;
+  filterField?: string | null;
+  filterValue?: string | null;
+  errorMessage?: string | null;
 }

@@ -23,10 +23,11 @@ describe('SimulationAdapter', () => {
       const result = SimulationAdapter.fromMetadata(metadata);
 
       // Then
-      expect(result).toEqual({
+      expect(result).toMatchObject({
         id: String(TEST_SIMULATION_IDS.SIM_123),
         countryId: TEST_COUNTRIES.US,
         apiVersion: '1.0.0',
+        simulationType: 'household',
         policyId: TEST_POLICY_IDS.POLICY_1,
         populationId: TEST_POPULATION_IDS.HOUSEHOLD_1,
         populationType: 'household',
@@ -34,6 +35,14 @@ describe('SimulationAdapter', () => {
         isCreated: true,
         output: { household_net_income: { 2024: 50000 } },
         status: 'complete',
+        source: 'v1_api',
+        backendStatus: 'complete',
+        regionCode: null,
+        datasetId: null,
+        outputDatasetId: null,
+        filterField: null,
+        filterValue: null,
+        errorMessage: null,
       });
     });
 
@@ -45,8 +54,10 @@ describe('SimulationAdapter', () => {
       const result = SimulationAdapter.fromMetadata(metadata);
 
       // Then
+      expect(result.simulationType).toBe('economy');
       expect(result.populationType).toBe('geography');
       expect(result.populationId).toBe(TEST_POPULATION_IDS.GEOGRAPHY_US);
+      expect(result.regionCode).toBe(TEST_POPULATION_IDS.GEOGRAPHY_US);
       expect(result.status).toBe('pending');
       expect(result.output).toBeNull();
     });

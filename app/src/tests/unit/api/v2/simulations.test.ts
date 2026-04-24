@@ -83,12 +83,16 @@ describe('simulations v2 API', () => {
 
       // Then
       expect(sim.id).toBe(TEST_IDS.SIMULATION_ID);
+      expect(sim.simulationType).toBe('household');
       expect(sim.policyId).toBe(TEST_IDS.POLICY_ID);
       expect(sim.populationId).toBe(TEST_IDS.HOUSEHOLD_ID);
       expect(sim.populationType).toBe('household');
       expect(sim.label).toBeNull();
       expect(sim.isCreated).toBe(true);
       expect(sim.output).toEqual({ net_income: 45000 });
+      expect(sim.source).toBe('v2_household_api');
+      expect(sim.backendStatus).toBe('completed');
+      expect(sim.errorMessage).toBeNull();
     });
 
     test('given null policy_id then maps to undefined policyId', () => {
@@ -117,6 +121,8 @@ describe('simulations v2 API', () => {
 
       // Then
       expect(sim.populationId).toBe('state/ca');
+      expect(sim.regionCode).toBe('state/ca');
+      expect(sim.datasetId).toBe(TEST_IDS.DATASET_ID);
     });
 
     test('given response without region then falls back to dataset_id', () => {
@@ -128,6 +134,8 @@ describe('simulations v2 API', () => {
 
       // Then
       expect(sim.populationId).toBe(TEST_IDS.DATASET_ID);
+      expect(sim.regionCode).toBeNull();
+      expect(sim.datasetId).toBe(TEST_IDS.DATASET_ID);
     });
 
     test('given null policy_id then maps to undefined', () => {
@@ -149,6 +157,7 @@ describe('simulations v2 API', () => {
       const sim = fromEconomySimulationResponse(response as any);
 
       // Then
+      expect(sim.simulationType).toBe('economy');
       expect(sim.populationType).toBe('geography');
     });
 
@@ -164,6 +173,8 @@ describe('simulations v2 API', () => {
       expect(sim.status).toBe('complete');
       expect(sim.label).toBeNull();
       expect(sim.isCreated).toBe(true);
+      expect(sim.source).toBe('v2_economy_api');
+      expect(sim.backendStatus).toBe('completed');
     });
   });
 

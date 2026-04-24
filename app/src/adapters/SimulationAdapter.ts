@@ -1,3 +1,4 @@
+import { fromV1SimulationMetadata } from '@/models/simulationDomain';
 import { Simulation } from '@/types/ingredients/Simulation';
 import { SimulationMetadata } from '@/types/metadata/simulationMetadata';
 import { SimulationCreationPayload, SimulationSetOutputPayload } from '@/types/payloads';
@@ -16,68 +17,10 @@ import { SimulationCreationPayload, SimulationSetOutputPayload } from '@/types/p
  */
 export class SimulationAdapter {
   /**
-   * Maps API status values to canonical Simulation status values.
-   * Supports both current and legacy API responses.
-   */
-  private static mapApiStatusToSimulationStatus(apiStatus?: string): Simulation['status'] {
-    if (!apiStatus) {
-      return undefined;
-    }
-
-    const statusMap: Record<string, NonNullable<Simulation['status']>> = {
-      ok: 'complete',
-      computing: 'pending',
-      error: 'error',
-      pending: 'pending',
-      complete: 'complete',
-    };
-
-    return statusMap[apiStatus];
-  }
-
-  /**
    * Converts SimulationMetadata from API GET response to Simulation type
    */
   static fromMetadata(metadata: SimulationMetadata): Simulation {
-    if (!metadata.population_id) {
-      throw new Error('Simulation metadata missing population_id');
-    }
-
-    // Use population_type directly from metadata if available
-    let populationType: 'household' | 'geography';
-
-    if (metadata.population_type) {
-      populationType = metadata.population_type;
-    } else {
-      throw new Error('Simulation metadata missing population_type');
-    }
-
-    // Parse output if it's a stringified JSON
-    let parsedOutput = metadata.output;
-    if (metadata.output && typeof metadata.output === 'string') {
-      try {
-        parsedOutput = JSON.parse(metadata.output);
-      } catch (error) {
-        console.error('[SimulationAdapter.fromMetadata] Failed to parse output:', error);
-        // Keep original value if parsing fails
-        parsedOutput = metadata.output;
-      }
-    }
-
-    const simulation = {
-      id: String(metadata.id),
-      countryId: metadata.country_id,
-      apiVersion: metadata.api_version,
-      policyId: String(metadata.policy_id),
-      populationId: String(metadata.population_id),
-      populationType,
-      label: null,
-      isCreated: true,
-      output: parsedOutput,
-      status: this.mapApiStatusToSimulationStatus(metadata.status),
-    };
-
-    return simulation;
+    return fromV1SimulationMetadata(metadata);
   }
 
   /**

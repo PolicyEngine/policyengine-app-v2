@@ -11,6 +11,10 @@
  * - GET  /simulations/economy/{id}         - Get economy simulation status/result
  */
 
+import {
+  fromV2EconomySimulationResponse,
+  fromV2HouseholdSimulationResponse,
+} from '@/models/simulationDomain';
 import { Simulation } from '@/types/ingredients/Simulation';
 import { API_V2_BASE_URL } from './taxBenefitModels';
 import { cancellableSleep, v2Fetch } from './v2Fetch';
@@ -39,7 +43,7 @@ export interface HouseholdSimulationResponse {
   status: SimulationStatus;
   household_id: string | null;
   policy_id: string | null;
-  household_result: Record<string, any> | null;
+  household_result: Record<string, unknown> | null;
   error_message: string | null;
 }
 
@@ -74,52 +78,14 @@ export interface EconomySimulationResponse {
   error_message: string | null;
 }
 
-// ============================================================================
-// Conversion Functions
-// ============================================================================
-
-/** Map API status to app domain status */
-function toAppStatus(status: SimulationStatus): Simulation['status'] {
-  switch (status) {
-    case 'completed':
-      return 'complete';
-    case 'failed':
-      return 'error';
-    case 'pending':
-    case 'execution_deferred':
-    case 'running':
-      return 'pending';
-    default:
-      console.warn(`[v2 API] Unknown simulation status: "${status}", treating as pending`);
-      return 'pending';
-  }
-}
-
 /** Convert household simulation response to app Simulation */
 export function fromHouseholdSimulationResponse(response: HouseholdSimulationResponse): Simulation {
-  return {
-    id: response.id,
-    policyId: response.policy_id ?? undefined,
-    populationId: response.household_id ?? undefined,
-    populationType: 'household',
-    label: null,
-    isCreated: true,
-    output: response.household_result,
-    status: toAppStatus(response.status),
-  };
+  return fromV2HouseholdSimulationResponse(response);
 }
 
 /** Convert economy simulation response to app Simulation */
 export function fromEconomySimulationResponse(response: EconomySimulationResponse): Simulation {
-  return {
-    id: response.id,
-    policyId: response.policy_id ?? undefined,
-    populationId: response.region?.code ?? response.dataset_id ?? undefined,
-    populationType: 'geography',
-    label: null,
-    isCreated: true,
-    status: toAppStatus(response.status),
-  };
+  return fromV2EconomySimulationResponse(response);
 }
 
 // ============================================================================
@@ -319,7 +285,7 @@ interface GenericSimulationResponse {
   output_dataset_id: string | null;
   filter_field: string | null;
   filter_value: string | null;
-  household_result: Record<string, any> | null;
+  household_result: Record<string, unknown> | null;
   error_message: string | null;
 }
 
