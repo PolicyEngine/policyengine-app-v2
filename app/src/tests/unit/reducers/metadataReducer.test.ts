@@ -101,6 +101,30 @@ describe('metadataReducer', () => {
       expectEmptyMetadata(state);
     });
 
+    test('given setCurrentCountry when country is unchanged then preserves metadata', () => {
+      // Given
+      const initialState = createMockStateWithData({
+        currentCountry: TEST_COUNTRY_US,
+        version: TEST_VERSION,
+      });
+      const action = setCurrentCountry(TEST_COUNTRY_US);
+
+      // When
+      const state = metadataReducer(initialState, action);
+
+      // Then
+      expectCurrentCountry(state, TEST_COUNTRY_US);
+      expect(state.variables).toEqual(MOCK_VARIABLES);
+      expect(state.parameters).toEqual(MOCK_PARAMETERS);
+      expect(state.entities).toEqual(MOCK_ENTITIES);
+      expect(state.variableModules).toEqual(MOCK_VARIABLE_MODULES);
+      expect(state.economyOptions).toEqual(MOCK_ECONOMY_OPTIONS);
+      expect(state.currentLawId).toBe(TEST_CURRENT_LAW_ID);
+      expect(state.basicInputs).toEqual(MOCK_BASIC_INPUTS);
+      expect(state.modelledPolicies).toEqual(MOCK_MODELLED_POLICIES);
+      expectVersion(state, TEST_VERSION);
+    });
+
     test('given setCurrentCountry then preserves loading and error states', () => {
       // Given
       const initialState = createMockStateWithData({

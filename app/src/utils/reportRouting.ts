@@ -17,5 +17,5 @@ export function getReportOutputPath(countryId: string, userReportId: string | nu
  * @returns Absolute path to the report configuration page
  */
 export function getReportConfigPath(countryId: string, userReportId: string | number): string {
-  return `/${countryId}/reports/create/${userReportId}`;
+  return `/${countryId}/report-output/${userReportId}/config`;
 }
