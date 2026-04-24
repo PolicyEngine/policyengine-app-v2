@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiGeographicStore, LocalStorageGeographicStore } from '@/api/geographicAssociation';
+import { assertSupportedMode } from '@/config/migrationMode';
 import { useApiRegions } from '@/hooks/useApiRegions';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { shadowResolveRegionTarget } from '@/libs/migration/regionShadow';
@@ -12,6 +13,10 @@ import { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
 
 const apiGeographicStore = new ApiGeographicStore();
 const localGeographicStore = new LocalStorageGeographicStore();
+
+function assertSavedGeographyWriteMode(context: string): void {
+  assertSupportedMode('saved_geographies', ['v1_only'], context);
+}
 
 export const useUserGeographicStore = () => {
   const isLoggedIn = false; // TODO: Replace with actual auth check in future
@@ -45,6 +50,7 @@ export const useGeographicAssociation = (userId: string, geographyId: string) =>
 };
 
 export const useCreateGeographicAssociation = () => {
+  assertSavedGeographyWriteMode('useCreateGeographicAssociation');
   const store = useUserGeographicStore();
   const queryClient = useQueryClient();
 
@@ -70,6 +76,7 @@ export const useCreateGeographicAssociation = () => {
 };
 
 export const useUpdateGeographicAssociation = () => {
+  assertSavedGeographyWriteMode('useUpdateGeographicAssociation');
   const store = useUserGeographicStore();
   const queryClient = useQueryClient();
 
