@@ -1,13 +1,14 @@
 import { useState } from 'react';
-import { IconSettings } from '@tabler/icons-react';
+import { IconPencil, IconSettings } from '@tabler/icons-react';
 import { ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
+import { RenameIngredientModal } from '@/components/common/RenameIngredientModal';
 import IngredientReadView from '@/components/IngredientReadView';
 import { Stack } from '@/components/ui';
 import { CURRENT_YEAR, MOCK_USER_ID } from '@/constants';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useDisclosure } from '@/hooks/useDisclosure';
-import { useUserPolicies } from '@/hooks/useUserPolicy';
+import { useUpdatePolicyAssociation, useUserPolicies } from '@/hooks/useUserPolicy';
 import type { EditorMode } from '@/pages/reportBuilder/modals/policyCreation/types';
 import { PolicyCreationModal } from '@/pages/reportBuilder/modals/PolicyCreationModal';
 import { PolicyStateProps } from '@/types/pathwayState';
@@ -21,15 +22,48 @@ export default function PoliciesPage() {
   const countryId = useCurrentCountry();
 
   const [searchValue, setSearchValue] = useState('');
+  const [renamingPolicyId, setRenamingPolicyId] = useState<string | null>(null);
+  const [renameError, setRenameError] = useState<string | null>(null);
+  const [renameOpened, { open: openRename, close: closeRename }] = useDisclosure(false);
 
   // Policy editor modal state
   const [editingPolicy, setEditingPolicy] = useState<PolicyStateProps | null>(null);
   const [editingAssociationId, setEditingAssociationId] = useState<string | null>(null);
   const [editorMode, setEditorMode] = useState<EditorMode>('edit');
   const [editorOpened, { open: openEditor, close: closeEditor }] = useDisclosure(false);
+  const updateAssociation = useUpdatePolicyAssociation();
 
   const handleBuildPolicy = () => {
     nav.push(`/${countryId}/policies/create`);
+  };
+
+  const handleOpenRename = (recordId: string) => {
+    setRenamingPolicyId(recordId);
+    setRenameError(null);
+    openRename();
+  };
+
+  const handleCloseRename = () => {
+    closeRename();
+    setRenamingPolicyId(null);
+    setRenameError(null);
+  };
+
+  const handleRename = async (newLabel: string) => {
+    if (!renamingPolicyId) {
+      return;
+    }
+
+    try {
+      await updateAssociation.mutateAsync({
+        userPolicyId: renamingPolicyId,
+        updates: { label: newLabel },
+      });
+      handleCloseRename();
+    } catch (error) {
+      console.error('[PoliciesPage] Failed to rename policy:', error);
+      setRenameError('Failed to rename policy. Please try again.');
+    }
   };
 
   const handleOpenEditor = (recordId: string, mode: EditorMode = 'edit') => {
@@ -67,9 +101,14 @@ export default function PoliciesPage() {
       key: 'actions',
       header: '',
       type: 'actions',
-      actions: [{ action: 'edit', tooltip: 'View/edit policy', icon: <IconSettings size={16} /> }],
+      actions: [
+        { action: 'rename', tooltip: 'Rename policy', icon: <IconPencil size={16} /> },
+        { action: 'edit', tooltip: 'View/edit policy', icon: <IconSettings size={16} /> },
+      ],
       onAction: (action: string, recordId: string) => {
-        if (action === 'edit') {
+        if (action === 'rename') {
+          handleOpenRename(recordId);
+        } else if (action === 'edit') {
           handleOpenEditor(recordId, 'display');
         }
       },
@@ -101,6 +140,10 @@ export default function PoliciesPage() {
         } as TextValue,
       };
     }) || [];
+
+  const renamingPolicy = data?.find((item) => item.association.id === renamingPolicyId);
+  const currentLabel =
+    renamingPolicy?.association.label || `Policy #${renamingPolicy?.association.policyId}`;
 
   return (
     <>
@@ -137,6 +180,16 @@ export default function PoliciesPage() {
         initialPolicy={editingPolicy ?? undefined}
         initialEditorMode={editorMode}
         initialAssociationId={editingAssociationId ?? undefined}
+      />
+
+      <RenameIngredientModal
+        opened={renameOpened}
+        onClose={handleCloseRename}
+        currentLabel={currentLabel}
+        onRename={handleRename}
+        isLoading={updateAssociation.isPending}
+        ingredientType="policy"
+        submissionError={renameError}
       />
     </>
   );
