@@ -23,6 +23,7 @@ interface VariableArithmeticProps {
   isAdd: boolean;
   defaultExpanded?: boolean;
   childrenOnly?: boolean;
+  childVisibility?: 'nonzero' | 'all';
 }
 
 /**
@@ -38,6 +39,7 @@ export default function VariableArithmetic({
   isAdd,
   defaultExpanded = false,
   childrenOnly = false,
+  childVisibility = 'nonzero',
 }: VariableArithmeticProps) {
   const [expanded, setExpanded] = useState(defaultExpanded);
   const reportYear = useReportYear();
@@ -86,13 +88,16 @@ export default function VariableArithmetic({
     }
   }
 
-  // Filter child variables to only show non-zero ones
-  const visibleAdds = addsArray.filter((v) =>
-    shouldShowVariable(v, baseline, reform, metadata, false)
-  );
-  const visibleSubtracts = subtractsArray.filter((v) =>
-    shouldShowVariable(v, baseline, reform, metadata, false)
-  );
+  // Allow the root level to force-show direct children while deeper levels
+  // continue hiding zero-value branches.
+  const visibleAdds =
+    childVisibility === 'all'
+      ? addsArray
+      : addsArray.filter((v) => shouldShowVariable(v, baseline, reform, metadata, false));
+  const visibleSubtracts =
+    childVisibility === 'all'
+      ? subtractsArray
+      : subtractsArray.filter((v) => shouldShowVariable(v, baseline, reform, metadata, false));
 
   // Recursively render children
   const childAddNodes = visibleAdds.map((childVar) => (
@@ -103,6 +108,7 @@ export default function VariableArithmetic({
       reform={reform}
       isAdd={isAdd} // Children of additions keep the same sign
       defaultExpanded={false}
+      childVisibility="nonzero"
     />
   ));
 
@@ -114,6 +120,7 @@ export default function VariableArithmetic({
       reform={reform}
       isAdd={!isAdd} // Children of subtractions flip the sign
       defaultExpanded={false}
+      childVisibility="nonzero"
     />
   ));
 
