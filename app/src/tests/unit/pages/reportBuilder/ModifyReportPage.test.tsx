@@ -66,7 +66,7 @@ describe('ModifyReportPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockUseAppLocation.mockReturnValue({
-      pathname: '/us/report-output/sur-123/config',
+      pathname: '/us/reports/create/sur-123',
       search: '',
     });
     mockUseReportBuilderState.mockReturnValue({
@@ -108,7 +108,7 @@ describe('ModifyReportPage', () => {
       .replace(/=+$/, '');
 
     mockUseAppLocation.mockReturnValue({
-      pathname: '/us/report-output/sur-shared-123/config',
+      pathname: '/us/reports/create/sur-shared-123',
       search: `?share=${encodedShare}`,
     });
 

@@ -2,6 +2,7 @@
 
 import { use, useEffect, useMemo } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { CalculatorProviders } from "./providers";
 import { CountryProvider } from "@/contexts/CountryContext";
 import { LocationProvider } from "@/contexts/LocationContext";
 import { NavigationProvider } from "@/contexts/NavigationContext";
@@ -60,7 +61,9 @@ export default function CountryLayout({
   return (
     <CountryProvider value={countryId as CountryId}>
       <NavigationProvider value={navValue}>
-        <LocationProvider value={locationValue}>{children}</LocationProvider>
+        <LocationProvider value={locationValue}>
+          <CalculatorProviders>{children}</CalculatorProviders>
+        </LocationProvider>
       </NavigationProvider>
     </CountryProvider>
   );

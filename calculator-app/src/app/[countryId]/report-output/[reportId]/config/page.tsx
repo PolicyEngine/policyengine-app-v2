@@ -1,22 +1,20 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import { use } from "react";
-import StandardLayout from "@/components/StandardLayout";
-import ModifyReportPage from "@/pages/reportBuilder/ModifyReportPage";
-import { CalculatorProviders } from "../../../providers";
-
-export default function ReportConfigRoute({
+export default async function ReportConfigRoute({
   params,
+  searchParams,
 }: {
-  params: Promise<{ reportId: string }>;
+  params: Promise<{ countryId: string; reportId: string }>;
+  searchParams: Promise<{ share?: string | string[] }>;
 }) {
-  const { reportId } = use(params);
+  const { countryId, reportId } = await params;
+  const { share } = await searchParams;
 
-  return (
-    <CalculatorProviders>
-      <StandardLayout>
-        <ModifyReportPage userReportId={reportId} />
-      </StandardLayout>
-    </CalculatorProviders>
-  );
+  const nextPath = `/${countryId}/reports/create/${reportId}`;
+  if (typeof share !== "string" || share.length === 0) {
+    redirect(nextPath);
+  }
+
+  const query = new URLSearchParams({ share });
+  redirect(`${nextPath}?${query.toString()}`);
 }
