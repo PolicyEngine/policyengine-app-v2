@@ -1,29 +1,50 @@
+import { useEffect, useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useSelector } from 'react-redux';
 import { ApiGeographicStore, LocalStorageGeographicStore } from '@/api/geographicAssociation';
+import { assertSupportedMode, getSupportedMigrationModes } from '@/config/migrationMode';
+import { useApiRegions } from '@/hooks/useApiRegions';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { shadowResolveRegionTarget } from '@/libs/migration/regionShadow';
 import { queryConfig } from '@/libs/queryConfig';
 import { geographicAssociationKeys } from '@/libs/queryKeys';
-import { RootState } from '@/store';
+import { buildCanonicalGeography } from '@/models/geography';
 import { Geography } from '@/types/ingredients/Geography';
 import { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
-import { getCountryLabel } from '@/utils/geographyUtils';
-import { extractRegionDisplayValue } from '@/utils/regionStrategies';
 
 const apiGeographicStore = new ApiGeographicStore();
 const localGeographicStore = new LocalStorageGeographicStore();
 
-export const useUserGeographicStore = () => {
-  const isLoggedIn = false; // TODO: Replace with actual auth check in future
-  return isLoggedIn ? apiGeographicStore : localGeographicStore;
+type SavedGeographyAssociationStoreSelection = {
+  store: ApiGeographicStore | LocalStorageGeographicStore;
+  config: typeof queryConfig.api | typeof queryConfig.localStorage;
 };
 
-// This fetches only the user-geographic associations
+function assertSavedGeographyWriteMode(context: string): void {
+  assertSupportedMode(
+    'saved_geographies',
+    getSupportedMigrationModes('saved_geographies'),
+    context
+  );
+}
+
+export const useUserGeographicStore = () => {
+  return useSavedGeographyAssociationStoreForMode().store;
+};
+
+export const useSavedGeographyAssociationStoreForMode =
+  (): SavedGeographyAssociationStoreSelection => {
+    const isLoggedIn = false; // TODO: Replace with actual auth check in future
+    return {
+      store: isLoggedIn ? apiGeographicStore : localGeographicStore,
+      config: isLoggedIn ? queryConfig.api : queryConfig.localStorage,
+    };
+  };
+
+// `saved_geographies` controls persisted user geography rows.
+// Canonical `regions` remain a separate concern for lookup and shadow resolution.
 export const useGeographicAssociationsByUser = (userId: string) => {
-  const store = useUserGeographicStore();
+  const { store, config } = useSavedGeographyAssociationStoreForMode();
   const countryId = useCurrentCountry();
-  const isLoggedIn = false; // TODO: Replace with actual auth check in future
-  const config = isLoggedIn ? queryConfig.api : queryConfig.localStorage;
 
   return useQuery({
     queryKey: geographicAssociationKeys.byUser(userId, countryId),
@@ -33,9 +54,7 @@ export const useGeographicAssociationsByUser = (userId: string) => {
 };
 
 export const useGeographicAssociation = (userId: string, geographyId: string) => {
-  const store = useUserGeographicStore();
-  const isLoggedIn = false; // TODO: Replace with actual auth check in future
-  const config = isLoggedIn ? queryConfig.api : queryConfig.localStorage;
+  const { store, config } = useSavedGeographyAssociationStoreForMode();
 
   return useQuery({
     queryKey: geographicAssociationKeys.specific(userId, geographyId),
@@ -45,7 +64,8 @@ export const useGeographicAssociation = (userId: string, geographyId: string) =>
 };
 
 export const useCreateGeographicAssociation = () => {
-  const store = useUserGeographicStore();
+  assertSavedGeographyWriteMode('useCreateGeographicAssociation');
+  const { store } = useSavedGeographyAssociationStoreForMode();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -70,7 +90,8 @@ export const useCreateGeographicAssociation = () => {
 };
 
 export const useUpdateGeographicAssociation = () => {
-  const store = useUserGeographicStore();
+  assertSavedGeographyWriteMode('useUpdateGeographicAssociation');
+  const { store } = useSavedGeographyAssociationStoreForMode();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -131,8 +152,8 @@ export function isGeographicMetadataWithAssociation(
 }
 
 export const useUserGeographics = (userId: string) => {
-  // Get metadata for label lookups
-  const metadata = useSelector((state: RootState) => state.metadata);
+  const countryId = useCurrentCountry();
+  const { data: regions } = useApiRegions(countryId);
 
   // First, get the populations
   const {
@@ -141,67 +162,44 @@ export const useUserGeographics = (userId: string) => {
     error: populationsError,
   } = useGeographicAssociationsByUser(userId);
 
-  // Helper function to get proper label from metadata or fallback
-  const getGeographyName = (population: UserGeographyPopulation): string => {
-    // If label exists, use it
-    if (population.label) {
-      return population.label;
-    }
-
-    // For national scope, use country name
-    if (population.scope === 'national') {
-      return getCountryLabel(population.countryId);
-    }
-
-    // For subnational, look up in metadata
-    // population.geographyId now contains the FULL prefixed value for UK regions
-    // e.g., "constituency/Sheffield Central" or "country/england"
-    if (metadata.economyOptions?.region) {
-      // Try exact match first (handles prefixed UK values)
-      const region = metadata.economyOptions.region.find((r) => r.name === population.geographyId);
-
-      if (region?.label) {
-        return region.label;
-      }
-
-      // Fallback: try adding prefixes (for backward compatibility)
-      const fallbackRegion = metadata.economyOptions.region.find(
-        (r) =>
-          r.name === `state/${population.geographyId}` ||
-          r.name === `constituency/${population.geographyId}` ||
-          r.name === `country/${population.geographyId}`
-      );
-
-      if (fallbackRegion?.label) {
-        return fallbackRegion.label;
-      }
-    }
-
-    // Fallback to geography ID (strip prefix for display if present)
-    return extractRegionDisplayValue(population.geographyId);
-  };
-
   // For geographic populations, we construct Geography objects from the population data
   // since they don't require API fetching like households do
-  const geographicsWithAssociations: UserGeographicMetadataWithAssociation[] | undefined =
-    populations?.map((population) => {
-      // Construct a Geography object from the population data
-      const geography: Geography = {
-        id: population.geographyId,
-        countryId: population.countryId,
-        scope: population.scope,
-        geographyId: population.geographyId,
-        name: getGeographyName(population),
-      };
+  const geographicsWithAssociations = useMemo<UserGeographicMetadataWithAssociation[] | undefined>(
+    () =>
+      populations?.map((population) => {
+        const geography: Geography = buildCanonicalGeography({
+          countryId: population.countryId,
+          scope: population.scope,
+          geographyId: population.geographyId,
+          regions,
+        });
 
-      return {
-        association: population,
-        geography,
-        isLoading: false,
-        error: null,
-        isError: false,
-      };
-    });
+        return {
+          association: population,
+          geography,
+          isLoading: false,
+          error: null,
+          isError: false,
+        };
+      }),
+    [populations, regions]
+  );
+
+  useEffect(() => {
+    if (!geographicsWithAssociations?.length) {
+      return;
+    }
+
+    void Promise.allSettled(
+      geographicsWithAssociations.map(({ association, geography }) =>
+        shadowResolveRegionTarget({
+          countryId: association.countryId,
+          regionCode: geography?.geographyId ?? association.geographyId,
+          selectedLabel: association.label ?? geography?.name ?? null,
+        })
+      )
+    );
+  }, [geographicsWithAssociations]);
 
   return {
     data: geographicsWithAssociations,

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { IconSettings } from '@tabler/icons-react';
+import { IconPencil, IconSettings } from '@tabler/icons-react';
 import { ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
 import { RenameIngredientModal } from '@/components/common/RenameIngredientModal';
 import IngredientReadView from '@/components/IngredientReadView';
@@ -22,43 +22,31 @@ export default function PoliciesPage() {
   const countryId = useCurrentCountry();
 
   const [searchValue, setSearchValue] = useState('');
-
-  // Rename modal state
   const [renamingPolicyId, setRenamingPolicyId] = useState<string | null>(null);
-  const [renameOpened, { close: closeRename }] = useDisclosure(false);
   const [renameError, setRenameError] = useState<string | null>(null);
+  const [renameOpened, { open: openRename, close: closeRename }] = useDisclosure(false);
 
   // Policy editor modal state
   const [editingPolicy, setEditingPolicy] = useState<PolicyStateProps | null>(null);
   const [editingAssociationId, setEditingAssociationId] = useState<string | null>(null);
   const [editorMode, setEditorMode] = useState<EditorMode>('edit');
   const [editorOpened, { open: openEditor, close: closeEditor }] = useDisclosure(false);
-
-  // Rename mutation hook
   const updateAssociation = useUpdatePolicyAssociation();
 
   const handleBuildPolicy = () => {
     nav.push(`/${countryId}/policies/create`);
   };
 
-  const handleOpenEditor = (recordId: string, mode: EditorMode = 'edit') => {
-    const item = data?.find((p) => p.association.id?.toString() === recordId);
-    if (item) {
-      setEditingPolicy({
-        id: item.association.policyId.toString(),
-        label: item.association.label || `Policy #${item.association.policyId}`,
-        parameters: item.policy?.parameters || [],
-      });
-      setEditingAssociationId(recordId);
-      setEditorMode(mode);
-      openEditor();
-    }
+  const handleOpenRename = (recordId: string) => {
+    setRenamingPolicyId(recordId);
+    setRenameError(null);
+    openRename();
   };
 
   const handleCloseRename = () => {
     closeRename();
     setRenamingPolicyId(null);
-    setRenameError(null); // Clear error on close
+    setRenameError(null);
   };
 
   const handleRename = async (newLabel: string) => {
@@ -78,10 +66,19 @@ export default function PoliciesPage() {
     }
   };
 
-  // Find the policy being renamed for current label
-  const renamingPolicy = data?.find((item) => item.association.id === renamingPolicyId);
-  const currentLabel =
-    renamingPolicy?.association.label || `Policy #${renamingPolicy?.association.policyId}`;
+  const handleOpenEditor = (recordId: string, mode: EditorMode = 'edit') => {
+    const item = data?.find((p) => p.association.id?.toString() === recordId);
+    if (item) {
+      setEditingPolicy({
+        id: item.association.policyId.toString(),
+        label: item.association.label || `Policy #${item.association.policyId}`,
+        parameters: item.policy?.parameters || [],
+      });
+      setEditingAssociationId(recordId);
+      setEditorMode(mode);
+      openEditor();
+    }
+  };
 
   // Define column configurations for policies
   const policyColumns: ColumnConfig[] = [
@@ -104,9 +101,14 @@ export default function PoliciesPage() {
       key: 'actions',
       header: '',
       type: 'actions',
-      actions: [{ action: 'edit', tooltip: 'View/edit policy', icon: <IconSettings size={16} /> }],
+      actions: [
+        { action: 'rename', tooltip: 'Rename policy', icon: <IconPencil size={16} /> },
+        { action: 'edit', tooltip: 'View/edit policy', icon: <IconSettings size={16} /> },
+      ],
       onAction: (action: string, recordId: string) => {
-        if (action === 'edit') {
+        if (action === 'rename') {
+          handleOpenRename(recordId);
+        } else if (action === 'edit') {
           handleOpenEditor(recordId, 'display');
         }
       },
@@ -139,6 +141,10 @@ export default function PoliciesPage() {
       };
     }) || [];
 
+  const renamingPolicy = data?.find((item) => item.association.id === renamingPolicyId);
+  const currentLabel =
+    renamingPolicy?.association.label || `Policy #${renamingPolicy?.association.policyId}`;
+
   return (
     <>
       <Stack gap="md">
@@ -157,16 +163,6 @@ export default function PoliciesPage() {
         />
       </Stack>
 
-      <RenameIngredientModal
-        opened={renameOpened}
-        onClose={handleCloseRename}
-        currentLabel={currentLabel}
-        onRename={handleRename}
-        isLoading={updateAssociation.isPending}
-        ingredientType="policy"
-        submissionError={renameError}
-      />
-
       <PolicyCreationModal
         isOpen={editorOpened}
         onClose={() => {
@@ -184,6 +180,16 @@ export default function PoliciesPage() {
         initialPolicy={editingPolicy ?? undefined}
         initialEditorMode={editorMode}
         initialAssociationId={editingAssociationId ?? undefined}
+      />
+
+      <RenameIngredientModal
+        opened={renameOpened}
+        onClose={handleCloseRename}
+        currentLabel={currentLabel}
+        onRename={handleRename}
+        isLoading={updateAssociation.isPending}
+        ingredientType="policy"
+        submissionError={renameError}
       />
     </>
   );

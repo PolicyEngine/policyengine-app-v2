@@ -7,11 +7,9 @@
  * Returns the same shape as useUserReportById for component compatibility.
  */
 
+import type { SavedGeographySelection } from '@/models/geography';
 import { UserPolicy } from '@/types/ingredients/UserPolicy';
-import {
-  UserGeographyPopulation,
-  UserHouseholdPopulation,
-} from '@/types/ingredients/UserPopulation';
+import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { UserReport } from '@/types/ingredients/UserReport';
 import { UserSimulation } from '@/types/ingredients/UserSimulation';
 import {
@@ -33,7 +31,7 @@ interface UseSharedReportDataResult {
   userSimulations: UserSimulation[];
   userPolicies: UserPolicy[];
   userHouseholds: UserHouseholdPopulation[];
-  userGeographies: UserGeographyPopulation[];
+  userGeographies: SavedGeographySelection[];
 
   // Base ingredients (fetched from API)
   report: ReturnType<typeof useFetchReportIngredients>['report'];
@@ -84,7 +82,7 @@ export function useSharedReportData(
     geographies,
 
     // Status
-    isLoading,
+    isLoading: shareData ? isLoading : false,
     error,
   };
 }

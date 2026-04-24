@@ -70,7 +70,6 @@ export const SOCIETY_WIDE_INPUT: ReportIngredientsInput = {
   userHouseholds: [],
   userGeographies: [
     {
-      type: 'geography',
       geographyId: TEST_IDS.GEOGRAPHIES.NATIONAL,
       countryId: TEST_COUNTRIES.US,
       scope: 'national',
@@ -179,12 +178,10 @@ export const createExpectedExpandedSocietyWide = (userId: string = TEST_USER_IDS
   userHouseholds: [],
   userGeographies: [
     {
-      type: 'geography',
       geographyId: TEST_IDS.GEOGRAPHIES.NATIONAL,
       countryId: TEST_COUNTRIES.US,
       scope: 'national',
       label: 'United States',
-      userId,
     },
   ],
 });

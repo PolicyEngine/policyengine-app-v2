@@ -1,4 +1,5 @@
 import type { ChoroplethDataPoint } from '@/components/visualization/USDistrictChoroplethMap';
+import { fromMetadataRegionEntry, type Region } from '@/models/region';
 import type { MetadataRegionEntry } from '@/types/metadata';
 import type { USCongressionalDistrictBreakdown } from '@/types/metadata/ReportOutputSocietyWideByCongressionalDistrict';
 import { UK_REGION_TYPES, US_REGION_TYPES } from '@/types/regionTypes';
@@ -31,10 +32,11 @@ export const MOCK_DISTRICT_DATA: USCongressionalDistrictBreakdown = {
   ],
 };
 
-/**
- * Mock metadata regions containing congressional districts and other region types
- */
-export const MOCK_REGIONS: MetadataRegionEntry[] = [
+function adaptMetadataRegions(countryId: 'us' | 'uk', regions: MetadataRegionEntry[]): Region[] {
+  return regions.map((region) => fromMetadataRegionEntry(countryId, region));
+}
+
+const MOCK_METADATA_REGIONS: MetadataRegionEntry[] = [
   {
     name: 'us',
     label: 'United States',
@@ -75,11 +77,13 @@ export const MOCK_REGIONS: MetadataRegionEntry[] = [
   },
 ];
 
+export const MOCK_REGIONS: Region[] = adaptMetadataRegions('us', MOCK_METADATA_REGIONS);
+
 /**
  * Mock regions with non-US types mixed in (for filtering tests)
  */
-export const MOCK_MIXED_REGIONS: MetadataRegionEntry[] = [
-  ...MOCK_REGIONS,
+const MOCK_MIXED_METADATA_REGIONS: MetadataRegionEntry[] = [
+  ...MOCK_METADATA_REGIONS,
   {
     name: 'uk',
     label: 'United Kingdom',
@@ -90,6 +94,11 @@ export const MOCK_MIXED_REGIONS: MetadataRegionEntry[] = [
     label: 'Westminster North',
     type: UK_REGION_TYPES.CONSTITUENCY,
   },
+];
+
+export const MOCK_MIXED_REGIONS: Region[] = [
+  ...MOCK_REGIONS,
+  ...adaptMetadataRegions('uk', MOCK_MIXED_METADATA_REGIONS.slice(MOCK_METADATA_REGIONS.length)),
 ];
 
 /**

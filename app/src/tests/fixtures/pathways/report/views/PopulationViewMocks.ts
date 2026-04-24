@@ -1,3 +1,4 @@
+import { mockUSRegionRecords } from '@/tests/fixtures/utils/regionStrategiesMocks';
 import { PopulationStateProps } from '@/types/pathwayState';
 
 export const TEST_POPULATION_LABEL = 'Test Population';
@@ -42,10 +43,7 @@ export const mockPopulationStateWithGeography: PopulationStateProps = {
   },
 };
 
-export const mockRegionData: any[] = [
-  { name: 'Alabama', code: 'al', geography_id: 'us_al' },
-  { name: 'California', code: 'ca', geography_id: 'us_ca' },
-];
+export const mockRegionData = mockUSRegionRecords;
 
 export function resetAllMocks() {
   mockOnUpdateLabel.mockClear();

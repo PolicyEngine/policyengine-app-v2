@@ -11,13 +11,17 @@ import {
   mockLoadingHookReturn,
 } from '@/tests/fixtures/pages/policiesMocks';
 
+const { mockUpdatePolicyAssociation } = vi.hoisted(() => ({
+  mockUpdatePolicyAssociation: {
+    mutateAsync: vi.fn(),
+    isPending: false,
+  },
+}));
+
 // Mock the hooks
 vi.mock('@/hooks/useUserPolicy', () => ({
   useUserPolicies: vi.fn(),
-  useUpdatePolicyAssociation: vi.fn(() => ({
-    mutateAsync: vi.fn(),
-    isPending: false,
-  })),
+  useUpdatePolicyAssociation: vi.fn(() => mockUpdatePolicyAssociation),
   useCreatePolicyAssociation: vi.fn(() => ({
     mutateAsync: vi.fn(),
     isPending: false,
@@ -57,6 +61,7 @@ vi.mock('@/components/IngredientReadView', () => ({
     }: any) => {
       const actionsColumn = columns?.find((col: any) => col.type === 'actions');
       const handleAction = actionsColumn?.onAction;
+      const actions = actionsColumn?.actions ?? [];
 
       return (
         <div data-testid="ingredient-read-view">
@@ -71,15 +76,17 @@ vi.mock('@/components/IngredientReadView', () => ({
                 <>
                   <div data-testid="policy-name">{(data[0].policyName as any).text}</div>
                   <div data-testid="parameter-changes">{(data[0].provisions as any).text}</div>
-                  {handleAction && (
-                    <button
-                      type="button"
-                      onClick={() => handleAction('edit', data[0].id)}
-                      data-testid="edit-policy-button"
-                    >
-                      Edit Policy
-                    </button>
-                  )}
+                  {handleAction &&
+                    actions.map((action: any) => (
+                      <button
+                        key={action.action}
+                        type="button"
+                        onClick={() => handleAction(action.action, data[0].id)}
+                        data-testid={`${action.action}-policy-button`}
+                      >
+                        {action.action}
+                      </button>
+                    ))}
                 </>
               )}
             </>
@@ -105,13 +112,23 @@ vi.mock('@/pages/reportBuilder/modals/PolicyCreationModal', () => ({
 
 // Mock RenameIngredientModal component
 vi.mock('@/components/common/RenameIngredientModal', () => ({
-  RenameIngredientModal: vi.fn(() => null),
+  RenameIngredientModal: vi.fn(({ opened, currentLabel, onRename }: any) =>
+    opened ? (
+      <div>
+        <div data-testid="rename-current-label">{currentLabel}</div>
+        <button type="button" onClick={() => onRename('Renamed policy')}>
+          Confirm rename
+        </button>
+      </div>
+    ) : null
+  ),
 }));
 
 describe('PoliciesPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     (useUserPolicies as any).mockReturnValue(mockDefaultHookReturn);
+    mockUpdatePolicyAssociation.mutateAsync.mockReset();
   });
 
   test('given policies data when rendering then displays policies page', () => {
@@ -267,5 +284,20 @@ describe('PoliciesPage', () => {
 
     // Then - the edit action column should render
     expect(screen.getByTestId('edit-policy-button')).toBeInTheDocument();
+  });
+
+  test('given user clicks rename action then updates the user policy association label', async () => {
+    const user = userEvent.setup();
+    mockUpdatePolicyAssociation.mutateAsync.mockResolvedValue({ label: 'Renamed policy' });
+    render(<PoliciesPage />);
+
+    await user.click(screen.getByTestId('rename-policy-button'));
+    expect(screen.getByTestId('rename-current-label')).toHaveTextContent('Test Policy 1');
+    await user.click(screen.getByRole('button', { name: 'Confirm rename' }));
+
+    expect(mockUpdatePolicyAssociation.mutateAsync).toHaveBeenCalledWith({
+      userPolicyId: 'assoc-1',
+      updates: { label: 'Renamed policy' },
+    });
   });
 });

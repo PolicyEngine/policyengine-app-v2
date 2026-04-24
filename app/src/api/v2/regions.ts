@@ -13,6 +13,7 @@ export interface V2RegionMetadata {
   requires_filter: boolean;
   filter_field: string | null; // e.g., "state_code", "place_fips"
   filter_value: string | null; // e.g., "CA", "44000"
+  filter_strategy: 'row_filter' | 'weight_replacement' | null;
   parent_code: string | null; // e.g., "us", "state/ca"
   state_code: string | null; // For US regions
   state_name: string | null; // For US regions

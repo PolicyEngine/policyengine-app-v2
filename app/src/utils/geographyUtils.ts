@@ -1,3 +1,4 @@
+import { getRegionCodeCandidates, normalizeRegionCode } from '@/models/region';
 import type { Geography } from '@/types/ingredients/Geography';
 import { MetadataState } from '@/types/metadata';
 import { UK_REGION_TYPES } from '@/types/regionTypes';
@@ -21,7 +22,7 @@ export function getUKRegionTypeFromGeography(
     return null;
   }
 
-  const { geographyId } = geography;
+  const geographyId = normalizeRegionCode('uk', geography.geographyId);
 
   // National: geographyId equals country code
   if (geographyId === 'uk') {
@@ -84,28 +85,15 @@ export function getRegionLabel(regionCode: string, metadata: MetadataState): str
     return regionCode.replace('place/', '');
   }
 
-  // regionCode now contains the FULL prefixed value for UK regions
-  // e.g., "constituency/Sheffield Central" or "country/england"
-  // For US: just the state code like "ca"
+  const region = metadata.economyOptions.region.find((entry) =>
+    getRegionCodeCandidates(regionCode).includes(entry.name)
+  );
 
-  // Try exact match first (handles prefixed UK values and US state codes)
-  const region = metadata.economyOptions.region.find((r) => r.name === regionCode);
-
-  if (region) {
+  if (region?.label) {
     return region.label;
   }
 
-  // Fallback: if no match, try stripping prefix for display
-  // This handles edge cases where we might receive unprefixed values
-  const fallbackRegion = metadata.economyOptions.region.find(
-    (r) =>
-      r.name === `state/${regionCode}` ||
-      r.name === `country/${regionCode}` ||
-      r.name === `constituency/${regionCode}` ||
-      r.name === `local_authority/${regionCode}`
-  );
-
-  return fallbackRegion?.label || regionCode;
+  return regionCode;
 }
 
 export function getRegionType(countryCode: string): 'state' | 'constituency' {
@@ -133,11 +121,8 @@ export function getRegionTypeLabel(
       return 'City';
     }
 
-    const region = metadata.economyOptions.region.find(
-      (r) =>
-        r.name === regionCode ||
-        r.name === `state/${regionCode}` ||
-        r.name === `congressional_district/${regionCode}`
+    const region = metadata.economyOptions.region.find((entry) =>
+      getRegionCodeCandidates(regionCode).includes(entry.name)
     );
 
     if (region) {
@@ -155,12 +140,8 @@ export function getRegionTypeLabel(
 
   // UK strategy: check metadata to determine if it's a country, constituency, or local authority
   if (countryId === 'uk') {
-    const region = metadata.economyOptions.region.find(
-      (r) =>
-        r.name === regionCode ||
-        r.name === `country/${regionCode}` ||
-        r.name === `constituency/${regionCode}` ||
-        r.name === `local_authority/${regionCode}`
+    const region = metadata.economyOptions.region.find((entry) =>
+      getRegionCodeCandidates(regionCode).includes(entry.name)
     );
 
     if (region) {

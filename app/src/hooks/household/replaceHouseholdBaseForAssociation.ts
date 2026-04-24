@@ -27,8 +27,9 @@ export async function replaceHouseholdBaseForAssociation(args: {
   association: UserHouseholdPopulation;
   nextHousehold: AppHouseholdInputEnvelope;
   store: Pick<UserHouseholdStore, 'update'>;
+  shouldShadowV2?: boolean;
 }): Promise<UserHouseholdPopulation> {
-  const { association, nextHousehold: nextHouseholdInput, store } = args;
+  const { association, nextHousehold: nextHouseholdInput, store, shouldShadowV2 = true } = args;
 
   if (!association.id) {
     throw new Error(
@@ -56,16 +57,18 @@ export async function replaceHouseholdBaseForAssociation(args: {
     });
   }
 
-  void (async () => {
-    const persistedHousehold = nextHouseholdModel
-      .withId(nextHouseholdId)
-      .withLabel(updatedAssociation.label ?? association.label ?? null);
-    const v2HouseholdId = await shadowCreateHousehold(nextHouseholdId, persistedHousehold);
-    await shadowUpdateUserHouseholdAssociation(updatedAssociation, {
-      previousHouseholdId: association.householdId,
-      v2HouseholdId,
-    });
-  })();
+  if (shouldShadowV2) {
+    void (async () => {
+      const persistedHousehold = nextHouseholdModel
+        .withId(nextHouseholdId)
+        .withLabel(updatedAssociation.label ?? association.label ?? null);
+      const v2HouseholdId = await shadowCreateHousehold(nextHouseholdId, persistedHousehold);
+      await shadowUpdateUserHouseholdAssociation(updatedAssociation, {
+        previousHouseholdId: association.householdId,
+        v2HouseholdId,
+      });
+    })();
+  }
 
   return updatedAssociation;
 }

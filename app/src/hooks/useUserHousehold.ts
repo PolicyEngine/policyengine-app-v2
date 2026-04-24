@@ -2,9 +2,17 @@
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { fetchHouseholdById } from '@/api/household';
 import type { UserHouseholdStore } from '@/api/householdAssociation';
+import {
+  assertSupportedMode,
+  getSupportedMigrationModes,
+  usesV2ShadowMode,
+} from '@/config/migrationMode';
 import { replaceHouseholdBaseForAssociation as replaceHouseholdBaseForAssociationAction } from '@/hooks/household/replaceHouseholdBaseForAssociation';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { shadowUpdateUserHouseholdAssociation } from '@/libs/migration/householdShadow';
+import {
+  shadowCreateUserHouseholdAssociation,
+  shadowUpdateUserHouseholdAssociation,
+} from '@/libs/migration/householdShadow';
 import { Household } from '@/models/Household';
 import type { AppHouseholdInputEnvelope } from '@/models/household/appTypes';
 import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
@@ -15,19 +23,43 @@ import { householdAssociationKeys, householdKeys } from '../libs/queryKeys';
 const apiHouseholdStore = new ApiHouseholdStore();
 const localHouseholdStore = new LocalStorageHouseholdStore();
 
+type HouseholdAssociationStoreSelection = {
+  store: ApiHouseholdStore | LocalStorageHouseholdStore;
+  config: typeof queryConfig.api | typeof queryConfig.localStorage;
+};
+
+type HouseholdWriteConfigOptions = {
+  skipDuplicateV2AssociationShadow?: boolean;
+};
+
+export function getHouseholdWriteConfig(
+  context: string,
+  options?: HouseholdWriteConfigOptions
+): { shouldShadowV2: boolean } {
+  const mode = assertSupportedMode('households', getSupportedMigrationModes('households'), context);
+
+  return {
+    shouldShadowV2: usesV2ShadowMode(mode) && !options?.skipDuplicateV2AssociationShadow,
+  };
+}
+
 export const useUserHouseholdStore = () => {
+  return useHouseholdAssociationStoreForMode().store;
+};
+
+export const useHouseholdAssociationStoreForMode = (): HouseholdAssociationStoreSelection => {
   const isLoggedIn = false; // TODO: Replace with actual auth check in future
-  return isLoggedIn ? apiHouseholdStore : localHouseholdStore;
+  return {
+    store: isLoggedIn ? apiHouseholdStore : localHouseholdStore,
+    config: isLoggedIn ? queryConfig.api : queryConfig.localStorage,
+  };
 };
 
 // This fetches only the user-household associations; see
 // 'useUserHouseholds' below to also fetch full household details
 export const useHouseholdAssociationsByUser = (userId: string) => {
-  const store = useUserHouseholdStore();
+  const { store, config } = useHouseholdAssociationStoreForMode();
   const countryId = useCurrentCountry();
-  const isLoggedIn = false; // TODO: Replace with actual auth check in future
-  // TODO: Should we determine user ID from auth context here? Or pass as arg?
-  const config = isLoggedIn ? queryConfig.api : queryConfig.localStorage;
 
   return useQuery({
     queryKey: householdAssociationKeys.byUser(userId, countryId),
@@ -37,9 +69,7 @@ export const useHouseholdAssociationsByUser = (userId: string) => {
 };
 
 export const useHouseholdAssociation = (userId: string, householdId: string) => {
-  const store = useUserHouseholdStore();
-  const isLoggedIn = false; // TODO: Replace with actual auth check in future
-  const config = isLoggedIn ? queryConfig.api : queryConfig.localStorage;
+  const { store, config } = useHouseholdAssociationStoreForMode();
 
   return useQuery({
     queryKey: householdAssociationKeys.specific(userId, householdId),
@@ -48,9 +78,10 @@ export const useHouseholdAssociation = (userId: string, householdId: string) => 
   });
 };
 
-export const useCreateHouseholdAssociation = () => {
-  const store = useUserHouseholdStore();
+export const useCreateHouseholdAssociation = (options?: HouseholdWriteConfigOptions) => {
+  const { store } = useHouseholdAssociationStoreForMode();
   const queryClient = useQueryClient();
+  const { shouldShadowV2 } = getHouseholdWriteConfig('useCreateHouseholdAssociation', options);
 
   return useMutation({
     mutationFn: (household: Omit<UserHouseholdPopulation, 'createdAt' | 'type'>) => {
@@ -70,6 +101,10 @@ export const useCreateHouseholdAssociation = () => {
         householdAssociationKeys.specific(newAssociation.userId, newAssociation.householdId),
         newAssociation
       );
+
+      if (shouldShadowV2) {
+        void shadowCreateUserHouseholdAssociation(newAssociation);
+      }
     },
   });
 };
@@ -78,6 +113,7 @@ export async function replaceHouseholdBaseForAssociation(args: {
   association: UserHouseholdPopulation;
   nextHousehold: AppHouseholdInputEnvelope;
   store?: Pick<UserHouseholdStore, 'update'>;
+  shouldShadowV2?: boolean;
 }): Promise<UserHouseholdPopulation> {
   return replaceHouseholdBaseForAssociationAction({
     ...args,
@@ -86,8 +122,9 @@ export async function replaceHouseholdBaseForAssociation(args: {
 }
 
 export const useUpdateHouseholdAssociation = () => {
-  const store = useUserHouseholdStore();
+  const { store } = useHouseholdAssociationStoreForMode();
   const queryClient = useQueryClient();
+  const { shouldShadowV2 } = getHouseholdWriteConfig('useUpdateHouseholdAssociation');
 
   return useMutation({
     mutationFn: async ({
@@ -110,6 +147,7 @@ export const useUpdateHouseholdAssociation = () => {
           association,
           nextHousehold,
           store,
+          shouldShadowV2,
         });
       }
 
@@ -156,7 +194,7 @@ export const useUpdateHouseholdAssociation = () => {
         });
       }
 
-      if (!variables.nextHousehold) {
+      if (!variables.nextHousehold && shouldShadowV2) {
         void shadowUpdateUserHouseholdAssociation(updatedAssociation);
       }
     },

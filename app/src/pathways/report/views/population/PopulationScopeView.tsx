@@ -11,6 +11,7 @@ import { useState } from 'react';
 import PathwayView from '@/components/common/PathwayView';
 import { Stack } from '@/components/ui';
 import { countryIds } from '@/libs/countries';
+import type { Region } from '@/models/region';
 import { Geography } from '@/types/ingredients/Geography';
 import {
   ScopeType,
@@ -25,6 +26,7 @@ import {
   getUKCountries,
   getUKLocalAuthorities,
   getUSCongressionalDistricts,
+  getUSPlaces,
   getUSStates,
 } from '@/utils/regionStrategies';
 import UKGeographicOptions from '../../components/geographicOptions/UKGeographicOptions';
@@ -32,7 +34,7 @@ import USGeographicOptions from '../../components/geographicOptions/USGeographic
 
 interface PopulationScopeViewProps {
   countryId: (typeof countryIds)[number];
-  regionData: any[];
+  regionData: Region[];
   onScopeSelected: (geography: Geography | null, scopeType: ScopeType) => void;
   onBack?: () => void;
   onCancel?: () => void;
@@ -54,6 +56,7 @@ export default function PopulationScopeView({
   const ukCountries = countryId === 'uk' ? getUKCountries(regionData) : [];
   const ukConstituencies = countryId === 'uk' ? getUKConstituencies(regionData) : [];
   const ukLocalAuthorities = countryId === 'uk' ? getUKLocalAuthorities(regionData) : [];
+  const usPlaces = countryId === 'us' ? getUSPlaces(regionData) : [];
 
   const handleScopeChange = (value: ScopeType) => {
     setScope(value);
@@ -76,7 +79,17 @@ export default function PopulationScopeView({
     }
 
     // Create geography from scope selection
-    const geography = createGeographyFromScope(scope, countryId, selectedRegion);
+    const regionOptions =
+      countryId === 'us'
+        ? [...usStates, ...usDistricts, ...usPlaces]
+        : [...ukCountries, ...ukConstituencies, ...ukLocalAuthorities];
+    const selectedRegionOption = regionOptions.find((option) => option.value === selectedRegion);
+    const geography = createGeographyFromScope(
+      scope,
+      countryId,
+      selectedRegion,
+      selectedRegionOption?.label
+    );
 
     onScopeSelected(geography as Geography | null, scope);
   }

@@ -1,4 +1,5 @@
-import { MetadataRegionEntry } from '@/types/metadata';
+import { fromMetadataRegionEntry, type RegionRecord } from '@/models/region';
+import type { MetadataRegionEntry } from '@/types/metadata';
 import { UK_REGION_TYPES, US_REGION_TYPES } from '@/types/regionTypes';
 import { PlaceOption } from '@/utils/regionStrategies';
 
@@ -65,8 +66,14 @@ export const INVALID_PLACE_REGION_STRINGS = {
   NONEXISTENT: 'place/XX-99999',
 } as const;
 
-// Mock metadata regions for UK
-export const mockUKRegions: MetadataRegionEntry[] = [
+function adaptMetadataRegions(
+  countryId: 'us' | 'uk',
+  regions: MetadataRegionEntry[]
+): RegionRecord[] {
+  return regions.map((region) => fromMetadataRegionEntry(countryId, region));
+}
+
+const mockUKMetadataRegions: MetadataRegionEntry[] = [
   { name: 'uk', label: 'the UK', type: UK_REGION_TYPES.NATIONAL },
   { name: 'country/england', label: 'England', type: UK_REGION_TYPES.COUNTRY },
   { name: 'country/scotland', label: 'Scotland', type: UK_REGION_TYPES.COUNTRY },
@@ -104,8 +111,9 @@ export const mockUKRegions: MetadataRegionEntry[] = [
   },
 ];
 
-// Mock metadata regions for US
-export const mockUSRegions: MetadataRegionEntry[] = [
+export const mockUKRegions: RegionRecord[] = adaptMetadataRegions('uk', mockUKMetadataRegions);
+
+const mockUSMetadataRegions: MetadataRegionEntry[] = [
   { name: 'us', label: 'the US', type: US_REGION_TYPES.NATIONAL },
   { name: 'state/ca', label: 'California', type: US_REGION_TYPES.STATE },
   { name: 'state/ny', label: 'New York', type: US_REGION_TYPES.STATE },
@@ -131,6 +139,182 @@ export const mockUSRegions: MetadataRegionEntry[] = [
     type: US_REGION_TYPES.CONGRESSIONAL_DISTRICT,
     state_abbreviation: 'NY',
     state_name: 'New York',
+  },
+];
+
+export const mockUSRegions: RegionRecord[] = adaptMetadataRegions('us', mockUSMetadataRegions);
+
+export const mockUSRegionRecords: RegionRecord[] = [
+  {
+    id: 'region-us',
+    countryId: 'us',
+    code: 'us',
+    label: 'the US',
+    regionType: US_REGION_TYPES.NATIONAL,
+    parentCode: null,
+    filterField: null,
+    filterValue: null,
+    filterStrategy: null,
+    requiresFilter: false,
+    stateCode: null,
+    stateName: null,
+  },
+  {
+    id: 'region-us-ca',
+    countryId: 'us',
+    code: 'state/ca',
+    label: 'California',
+    regionType: US_REGION_TYPES.STATE,
+    parentCode: 'us',
+    filterField: null,
+    filterValue: null,
+    filterStrategy: null,
+    requiresFilter: false,
+    stateCode: 'CA',
+    stateName: 'California',
+  },
+  {
+    id: 'region-us-ny',
+    countryId: 'us',
+    code: 'state/ny',
+    label: 'New York',
+    regionType: US_REGION_TYPES.STATE,
+    parentCode: 'us',
+    filterField: null,
+    filterValue: null,
+    filterStrategy: null,
+    requiresFilter: false,
+    stateCode: 'NY',
+    stateName: 'New York',
+  },
+  {
+    id: 'region-us-ca-01',
+    countryId: 'us',
+    code: 'congressional_district/CA-01',
+    label: "California's 1st congressional district",
+    regionType: US_REGION_TYPES.CONGRESSIONAL_DISTRICT,
+    parentCode: 'state/ca',
+    filterField: null,
+    filterValue: null,
+    filterStrategy: null,
+    requiresFilter: false,
+    stateCode: 'CA',
+    stateName: 'California',
+  },
+  {
+    id: 'region-us-ny-01',
+    countryId: 'us',
+    code: 'congressional_district/NY-01',
+    label: "New York's 1st congressional district",
+    regionType: US_REGION_TYPES.CONGRESSIONAL_DISTRICT,
+    parentCode: 'state/ny',
+    filterField: null,
+    filterValue: null,
+    filterStrategy: null,
+    requiresFilter: false,
+    stateCode: 'NY',
+    stateName: 'New York',
+  },
+  {
+    id: 'region-us-place-nyc',
+    countryId: 'us',
+    code: 'place/NY-51000',
+    label: 'New York City',
+    regionType: US_REGION_TYPES.PLACE,
+    parentCode: 'state/ny',
+    filterField: 'place_fips',
+    filterValue: '51000',
+    filterStrategy: 'row_filter',
+    requiresFilter: true,
+    stateCode: 'NY',
+    stateName: 'New York',
+  },
+  {
+    id: 'region-us-place-paterson',
+    countryId: 'us',
+    code: 'place/NJ-57000',
+    label: 'Paterson',
+    regionType: US_REGION_TYPES.PLACE,
+    parentCode: 'state/nj',
+    filterField: 'place_fips',
+    filterValue: '57000',
+    filterStrategy: 'row_filter',
+    requiresFilter: true,
+    stateCode: 'NJ',
+    stateName: 'New Jersey',
+  },
+];
+
+export const mockUKRegionRecords: RegionRecord[] = [
+  {
+    id: 'region-uk',
+    countryId: 'uk',
+    code: 'uk',
+    label: 'the UK',
+    regionType: UK_REGION_TYPES.NATIONAL,
+    parentCode: null,
+    filterField: null,
+    filterValue: null,
+    filterStrategy: null,
+    requiresFilter: false,
+    stateCode: null,
+    stateName: null,
+  },
+  {
+    id: 'region-uk-england',
+    countryId: 'uk',
+    code: 'country/england',
+    label: 'England',
+    regionType: UK_REGION_TYPES.COUNTRY,
+    parentCode: 'uk',
+    filterField: null,
+    filterValue: null,
+    filterStrategy: null,
+    requiresFilter: false,
+    stateCode: null,
+    stateName: null,
+  },
+  {
+    id: 'region-uk-scotland',
+    countryId: 'uk',
+    code: 'country/scotland',
+    label: 'Scotland',
+    regionType: UK_REGION_TYPES.COUNTRY,
+    parentCode: 'uk',
+    filterField: null,
+    filterValue: null,
+    filterStrategy: null,
+    requiresFilter: false,
+    stateCode: null,
+    stateName: null,
+  },
+  {
+    id: 'region-uk-sheffield',
+    countryId: 'uk',
+    code: 'constituency/Sheffield Central',
+    label: 'Sheffield Central',
+    regionType: UK_REGION_TYPES.CONSTITUENCY,
+    parentCode: 'country/england',
+    filterField: 'constituency',
+    filterValue: 'Sheffield Central',
+    filterStrategy: 'weight_replacement',
+    requiresFilter: true,
+    stateCode: null,
+    stateName: null,
+  },
+  {
+    id: 'region-uk-westminster',
+    countryId: 'uk',
+    code: 'local_authority/Westminster',
+    label: 'Westminster',
+    regionType: UK_REGION_TYPES.LOCAL_AUTHORITY,
+    parentCode: 'country/england',
+    filterField: 'local_authority',
+    filterValue: 'Westminster',
+    filterStrategy: 'weight_replacement',
+    requiresFilter: true,
+    stateCode: null,
+    stateName: null,
   },
 ];
 
@@ -210,6 +394,23 @@ export const expectedUSCongressionalDistricts = [
   },
 ];
 
+export const expectedUSPlaces = [
+  {
+    value: 'place/NY-51000',
+    label: 'New York City',
+    type: US_REGION_TYPES.PLACE,
+    stateAbbreviation: 'NY',
+    stateName: 'New York',
+  },
+  {
+    value: 'place/NJ-57000',
+    label: 'Paterson',
+    type: US_REGION_TYPES.PLACE,
+    stateAbbreviation: 'NJ',
+    stateName: 'New Jersey',
+  },
+];
+
 // California districts only (for filtering tests)
 export const expectedCaliforniaDistricts = [
   {
@@ -228,13 +429,17 @@ export const expectedCaliforniaDistricts = [
   },
 ];
 
-// Mock single-district state (for at-large test)
-export const mockSingleDistrictState: MetadataRegionEntry[] = [
+const mockSingleDistrictMetadata: MetadataRegionEntry[] = [
   {
-    name: 'congressional_district/AK-00',
+    name: 'congressional_district/AK-01',
     label: "Alaska's at-large congressional district",
     type: US_REGION_TYPES.CONGRESSIONAL_DISTRICT,
     state_abbreviation: 'AK',
     state_name: 'Alaska',
   },
 ];
+
+export const mockSingleDistrictState: RegionRecord[] = adaptMetadataRegions(
+  'us',
+  mockSingleDistrictMetadata
+);

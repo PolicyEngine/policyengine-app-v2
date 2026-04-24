@@ -3,12 +3,18 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { LocalStorageGeographicStore } from '@/api/geographicAssociation';
+import { ENTITY_MIGRATION_MODE } from '@/config/migrationMode';
+import { useApiRegions } from '@/hooks/useApiRegions';
 import {
   useCreateGeographicAssociation,
   useGeographicAssociation,
   useGeographicAssociationsByUser,
+  useSavedGeographyAssociationStoreForMode,
+  useUpdateGeographicAssociation,
+  useUserGeographics,
   useUserGeographicStore,
 } from '@/hooks/useUserGeographic';
+import { queryConfig } from '@/libs/queryConfig';
 import {
   createMockQueryClient,
   GEO_CONSTANTS,
@@ -19,15 +25,57 @@ import {
   TEST_LABELS,
 } from '@/tests/fixtures/hooks/hooksMocks';
 
+const mockShadowResolveRegionTarget = vi.fn().mockResolvedValue(null);
+
 // Mock useCurrentCountry hook
 vi.mock('@/hooks/useCurrentCountry', () => ({
   useCurrentCountry: vi.fn(() => 'us'),
+}));
+
+vi.mock('@/hooks/useApiRegions', () => ({
+  useApiRegions: vi.fn(() => ({
+    data: [
+      {
+        id: 'region-state-ca',
+        countryId: 'us',
+        code: 'state/ca',
+        label: 'California',
+        regionType: 'state',
+        parentCode: 'us',
+        filterField: null,
+        filterValue: null,
+        requiresFilter: false,
+        stateCode: 'CA',
+        stateName: 'California',
+      },
+      {
+        id: 'region-state-ny',
+        countryId: 'us',
+        code: 'state/ny',
+        label: 'New York',
+        regionType: 'state',
+        parentCode: 'us',
+        filterField: null,
+        filterValue: null,
+        requiresFilter: false,
+        stateCode: 'NY',
+        stateName: 'New York',
+      },
+    ],
+    isLoading: false,
+    error: null,
+  })),
+}));
+
+vi.mock('@/libs/migration/regionShadow', () => ({
+  shadowResolveRegionTarget: (...args: unknown[]) => mockShadowResolveRegionTarget(...args),
 }));
 
 // Mock the stores first
 vi.mock('@/api/geographicAssociation', () => {
   const mockStore = {
     create: vi.fn(),
+    update: vi.fn(),
     findByUser: vi.fn(),
     findById: vi.fn(),
   };
@@ -62,10 +110,47 @@ vi.mock('@/libs/queryKeys', () => ({
 
 describe('useUserGeographic hooks', () => {
   let queryClient: QueryClient;
+  const defaultSavedGeographyMigrationMode = ENTITY_MIGRATION_MODE.saved_geographies;
 
   beforeEach(() => {
     vi.clearAllMocks();
     queryClient = createMockQueryClient();
+    mockShadowResolveRegionTarget.mockResolvedValue(null);
+    ENTITY_MIGRATION_MODE.saved_geographies = defaultSavedGeographyMigrationMode;
+    vi.mocked(useApiRegions).mockReturnValue({
+      data: [
+        {
+          id: 'region-state-ca',
+          countryId: 'us',
+          code: 'state/ca',
+          label: 'California',
+          regionType: 'state',
+          parentCode: 'us',
+          filterField: null,
+          filterValue: null,
+          filterStrategy: null,
+          requiresFilter: false,
+          stateCode: 'CA',
+          stateName: 'California',
+        },
+        {
+          id: 'region-state-ny',
+          countryId: 'us',
+          code: 'state/ny',
+          label: 'New York',
+          regionType: 'state',
+          parentCode: 'us',
+          filterField: null,
+          filterValue: null,
+          filterStrategy: null,
+          requiresFilter: false,
+          stateCode: 'NY',
+          stateName: 'New York',
+        },
+      ],
+      isLoading: false,
+      error: null,
+    } as ReturnType<typeof useApiRegions>);
 
     // Get the mock store instance
     const mockStore =
@@ -74,6 +159,13 @@ describe('useUserGeographic hooks', () => {
 
     // Set default mock implementations
     mockStore.create.mockImplementation((input: any) => Promise.resolve(input));
+    mockStore.update.mockImplementation(
+      (_userId: string, _geographyId: string, updates: Record<string, unknown>) =>
+        Promise.resolve({
+          ...mockUserGeographicAssociation,
+          ...updates,
+        })
+    );
     mockStore.findByUser.mockResolvedValue(mockUserGeographicAssociationList);
     mockStore.findById.mockResolvedValue(mockUserGeographicAssociation);
   });
@@ -96,6 +188,20 @@ describe('useUserGeographic hooks', () => {
 
     // Note: Cannot test logged-in case as isLoggedIn is hardcoded to false
     // This would need to be refactored to accept auth context
+  });
+
+  describe('useSavedGeographyAssociationStoreForMode', () => {
+    test('given current auth model then it returns the local store facade and local query config', () => {
+      const { result } = renderHook(() => useSavedGeographyAssociationStoreForMode(), {
+        wrapper,
+      });
+
+      expect(result.current.store.create).toBeDefined();
+      expect(result.current.store.update).toBeDefined();
+      expect(result.current.store.findByUser).toBeDefined();
+      expect(result.current.store.findById).toBeDefined();
+      expect(result.current.config).toEqual(queryConfig.localStorage);
+    });
   });
 
   describe('useGeographicAssociationsByUser', () => {
@@ -315,6 +421,14 @@ describe('useUserGeographic hooks', () => {
       expect(queryClient.setQueryData).not.toHaveBeenCalled();
     });
 
+    test('given unsupported saved geography mode then create hook fails fast', () => {
+      ENTITY_MIGRATION_MODE.saved_geographies = 'v1_primary_v2_shadow';
+
+      expect(() => renderHook(() => useCreateGeographicAssociation(), { wrapper })).toThrow(
+        '[MigrationMode] Unsupported mode "v1_primary_v2_shadow" for saved_geographies in useCreateGeographicAssociation. Supported modes: v1_only'
+      );
+    });
+
     test('given multiple associations created then each updates cache independently', async () => {
       // Given
       const { result } = renderHook(() => useCreateGeographicAssociation(), { wrapper });
@@ -349,6 +463,45 @@ describe('useUserGeographic hooks', () => {
       // Then
       expect(mockStore.create).toHaveBeenCalledTimes(2);
       expect(queryClient.invalidateQueries).toHaveBeenCalledTimes(4); // 2 calls per creation
+    });
+  });
+
+  describe('useUpdateGeographicAssociation', () => {
+    test('given valid association update then it invalidates the related caches', async () => {
+      const { result } = renderHook(() => useUpdateGeographicAssociation(), { wrapper });
+
+      await result.current.mutateAsync({
+        userId: TEST_IDS.USER_ID,
+        geographyId: GEO_CONSTANTS.COUNTRY_US,
+        updates: { label: 'Renamed Geography' },
+      });
+
+      const mockStore = (LocalStorageGeographicStore as any)();
+      expect(mockStore.update).toHaveBeenCalledWith(TEST_IDS.USER_ID, GEO_CONSTANTS.COUNTRY_US, {
+        label: 'Renamed Geography',
+      });
+      expect(queryClient.invalidateQueries).toHaveBeenCalledWith({
+        queryKey: QUERY_KEY_PATTERNS.GEO_ASSOCIATION_BY_USER(TEST_IDS.USER_ID),
+      });
+      expect(queryClient.invalidateQueries).toHaveBeenCalledWith({
+        queryKey: QUERY_KEY_PATTERNS.GEO_ASSOCIATION_BY_GEOGRAPHY(
+          mockUserGeographicAssociation.geographyId
+        ),
+      });
+      expect(queryClient.invalidateQueries).toHaveBeenCalledWith({
+        queryKey: QUERY_KEY_PATTERNS.GEO_ASSOCIATION_SPECIFIC(
+          TEST_IDS.USER_ID,
+          mockUserGeographicAssociation.geographyId
+        ),
+      });
+    });
+
+    test('given unsupported saved geography mode then update hook fails fast', () => {
+      ENTITY_MIGRATION_MODE.saved_geographies = 'v2_only';
+
+      expect(() => renderHook(() => useUpdateGeographicAssociation(), { wrapper })).toThrow(
+        '[MigrationMode] Unsupported mode "v2_only" for saved_geographies in useUpdateGeographicAssociation. Supported modes: v1_only'
+      );
     });
   });
 
@@ -394,6 +547,96 @@ describe('useUserGeographic hooks', () => {
       // Then
       expect(refetchResult.data).toEqual([]);
       expect(mockStore.findByUser).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe('useUserGeographics', () => {
+    test('given geography associations then it reconstructs canonical geography records', async () => {
+      const { result } = renderHook(() => useUserGeographics(TEST_IDS.USER_ID), { wrapper });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      expect(result.current.data).toHaveLength(2);
+      expect(result.current.data?.[0].geography).toEqual({
+        id: 'state/ca',
+        countryId: 'us',
+        scope: 'subnational',
+        geographyId: 'state/ca',
+        name: 'California',
+      });
+      expect(result.current.data?.[1].geography?.name).toBe('New York');
+    });
+
+    test('given canonical geography records then it resolves region targets in the background', async () => {
+      renderHook(() => useUserGeographics(TEST_IDS.USER_ID), { wrapper });
+
+      await waitFor(() => {
+        expect(mockShadowResolveRegionTarget).toHaveBeenCalledTimes(2);
+      });
+
+      expect(mockShadowResolveRegionTarget).toHaveBeenCalledWith({
+        countryId: 'us',
+        regionCode: 'state/ca',
+        selectedLabel: TEST_LABELS.GEOGRAPHY,
+      });
+      expect(mockShadowResolveRegionTarget).toHaveBeenCalledWith({
+        countryId: 'us',
+        regionCode: 'state/ny',
+        selectedLabel: TEST_LABELS.GEOGRAPHY_2,
+      });
+    });
+
+    test('given regions lookup fails then it still returns reconstructed geographies without surfacing an error', async () => {
+      vi.mocked(useApiRegions).mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        error: new Error('regions unavailable'),
+      } as ReturnType<typeof useApiRegions>);
+
+      const { result } = renderHook(() => useUserGeographics(TEST_IDS.USER_ID), { wrapper });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      expect(result.current.isError).toBe(false);
+      expect(result.current.error).toBeNull();
+      expect(result.current.data?.[0].geography).toEqual({
+        id: 'state/ca',
+        countryId: 'us',
+        scope: 'subnational',
+        geographyId: 'state/ca',
+        name: 'ca',
+      });
+    });
+
+    test('given a national geography association then it uses the country display name', async () => {
+      const mockStore = (LocalStorageGeographicStore as any)();
+      mockStore.findByUser.mockResolvedValue([
+        {
+          ...mockUserGeographicAssociation,
+          countryId: 'uk',
+          scope: 'national',
+          geographyId: 'uk',
+          label: 'United Kingdom National',
+        },
+      ]);
+
+      const { result } = renderHook(() => useUserGeographics(TEST_IDS.USER_ID), { wrapper });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      expect(result.current.data?.[0].geography).toEqual({
+        id: 'uk',
+        countryId: 'uk',
+        scope: 'national',
+        geographyId: 'uk',
+        name: 'United Kingdom',
+      });
     });
   });
 });

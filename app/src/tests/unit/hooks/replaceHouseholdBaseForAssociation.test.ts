@@ -67,4 +67,31 @@ describe('replaceHouseholdBaseForAssociation', () => {
     expect(shadowCreateHousehold).not.toHaveBeenCalled();
     expect(shadowUpdateUserHouseholdAssociation).not.toHaveBeenCalled();
   });
+
+  test('given shadowing disabled then replacement updates v1 state without any v2 shadow work', async () => {
+    vi.mocked(createHousehold).mockResolvedValue({
+      result: { household_id: TEST_CREATED_HOUSEHOLD_ID },
+    });
+    const store = {
+      update: vi.fn().mockResolvedValue({
+        ...association,
+        householdId: TEST_CREATED_HOUSEHOLD_ID,
+      }),
+    };
+
+    const updatedAssociation = await replaceHouseholdBaseForAssociation({
+      association,
+      nextHousehold,
+      store,
+      shouldShadowV2: false,
+    });
+
+    expect(updatedAssociation).toEqual(
+      expect.objectContaining({
+        householdId: TEST_CREATED_HOUSEHOLD_ID,
+      })
+    );
+    expect(shadowCreateHousehold).not.toHaveBeenCalled();
+    expect(shadowUpdateUserHouseholdAssociation).not.toHaveBeenCalled();
+  });
 });

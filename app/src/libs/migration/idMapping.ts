@@ -24,6 +24,10 @@ function targetStorageKey(entityType: string, v1AssociationId: string, v1TargetI
   return `${TARGET_KEY_PREFIX}:${entityType.toLowerCase()}:${v1AssociationId}:${v1TargetId}`;
 }
 
+function resolvedRegionKey(countryId: string, regionCode: string): string {
+  return `${countryId}:${regionCode}`;
+}
+
 function createUuid(): string {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
     return crypto.randomUUID();
@@ -217,4 +221,12 @@ export function getOrCreateV2UserId(v1UserId: string): string {
 
 export function getMappedV2UserId(v1UserId: string): string | null {
   return getV2Id('User', v1UserId) ?? (isUuid(v1UserId) ? v1UserId : null);
+}
+
+export function setResolvedRegionId(countryId: string, regionCode: string, regionId: string): void {
+  setV2Id('Region', resolvedRegionKey(countryId, regionCode), regionId);
+}
+
+export function getResolvedRegionId(countryId: string, regionCode: string): string | null {
+  return getV2Id('Region', resolvedRegionKey(countryId, regionCode));
 }

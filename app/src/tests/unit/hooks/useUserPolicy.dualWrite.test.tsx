@@ -3,9 +3,16 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import * as v2PolicyApi from '@/api/v2/userPolicyAssociations';
-import { useCreatePolicyAssociation, useUpdatePolicyAssociation } from '@/hooks/useUserPolicy';
+import { ENTITY_MIGRATION_MODE } from '@/config/migrationMode';
+import {
+  getPolicyWriteConfig,
+  useCreatePolicyAssociation,
+  usePolicyAssociationStoreForMode,
+  useUpdatePolicyAssociation,
+} from '@/hooks/useUserPolicy';
 import * as comparisonLogger from '@/libs/migration/comparisonLogger';
 import * as idMapping from '@/libs/migration/idMapping';
+import { queryConfig } from '@/libs/queryConfig';
 import { UserPolicy } from '@/types/ingredients/UserPolicy';
 
 // ============================================================================
@@ -20,6 +27,7 @@ const TEST_V1_ASSOC_ID = 'sup-abc123';
 const TEST_V2_ASSOC_ID = '550e8400-e29b-41d4-a716-446655440000';
 const TEST_V2_POLICY_ID = '6f52cd3e-3f6f-4d13-9b0f-f2a7ad460d9d';
 const TEST_V2_USER_ID = 'c93a763d-8d9f-4ab8-b04f-2fbba0183f35';
+const DEFAULT_POLICY_MIGRATION_MODE = ENTITY_MIGRATION_MODE.policies;
 
 // ============================================================================
 // Mock data
@@ -124,6 +132,54 @@ function createWrapper(queryClient: QueryClient) {
 // Tests
 // ============================================================================
 
+describe('getPolicyWriteConfig', () => {
+  beforeEach(() => {
+    ENTITY_MIGRATION_MODE.policies = DEFAULT_POLICY_MIGRATION_MODE;
+  });
+
+  test('given v1-only mode then it disables v2 shadowing', () => {
+    ENTITY_MIGRATION_MODE.policies = 'v1_only';
+
+    expect(getPolicyWriteConfig('test').shouldShadowV2).toBe(false);
+  });
+
+  test('given v1-primary-v2-shadow mode then it enables v2 shadowing', () => {
+    ENTITY_MIGRATION_MODE.policies = 'v1_primary_v2_shadow';
+
+    expect(getPolicyWriteConfig('test').shouldShadowV2).toBe(true);
+  });
+
+  test('given duplicate-shadow skip option then it disables only the association shadow', () => {
+    ENTITY_MIGRATION_MODE.policies = 'v1_primary_v2_shadow';
+
+    expect(getPolicyWriteConfig('test', { skipDuplicateV2AssociationShadow: true })).toEqual({
+      shouldShadowV2: false,
+    });
+  });
+
+  test('given unsupported policy mode then it fails fast clearly', () => {
+    ENTITY_MIGRATION_MODE.policies = 'v2_only';
+
+    expect(() => getPolicyWriteConfig('test')).toThrow(
+      '[MigrationMode] Unsupported mode "v2_only" for policies in test. Supported modes: v1_only, v1_primary_v2_shadow'
+    );
+  });
+});
+
+describe('usePolicyAssociationStoreForMode', () => {
+  test('given current auth model then it returns the local store facade and local query config', () => {
+    const { result } = renderHook(() => usePolicyAssociationStoreForMode(), {
+      wrapper: createWrapper(createQueryClient()),
+    });
+
+    expect(result.current.store.create).toBeDefined();
+    expect(result.current.store.update).toBeDefined();
+    expect(result.current.store.findByUser).toBeDefined();
+    expect(result.current.store.findById).toBeDefined();
+    expect(result.current.config).toEqual(queryConfig.localStorage);
+  });
+});
+
 describe('useCreatePolicyAssociation dual-write', () => {
   let queryClient: QueryClient;
 
@@ -132,6 +188,7 @@ describe('useCreatePolicyAssociation dual-write', () => {
     vi.stubEnv('NEXT_PUBLIC_VERCEL_ENV', 'preview');
     vi.spyOn(console, 'info').mockImplementation(() => {});
     localStorage.clear();
+    ENTITY_MIGRATION_MODE.policies = DEFAULT_POLICY_MIGRATION_MODE;
     idMapping.setV2Id('Policy', TEST_POLICY_ID, TEST_V2_POLICY_ID);
     idMapping.setV2Id('User', TEST_USER_ID, TEST_V2_USER_ID);
     queryClient = createQueryClient();
@@ -265,6 +322,44 @@ describe('useCreatePolicyAssociation dual-write', () => {
       );
     });
   });
+
+  test('given v1-only mode then create skips the v2 shadow write', async () => {
+    ENTITY_MIGRATION_MODE.policies = 'v1_only';
+    mockStoreCreate.mockResolvedValue(mockV1CreateResult);
+
+    const v2CreateSpy = vi.spyOn(v2PolicyApi, 'createUserPolicyAssociationV2');
+
+    const { result } = renderHook(() => useCreatePolicyAssociation(), {
+      wrapper: createWrapper(queryClient),
+    });
+
+    await act(async () => {
+      await result.current.mutateAsync({
+        userId: TEST_USER_ID,
+        policyId: TEST_POLICY_ID,
+        countryId: TEST_COUNTRY_ID,
+        label: TEST_LABEL,
+      });
+    });
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+
+    expect(v2CreateSpy).not.toHaveBeenCalled();
+  });
+
+  test('given unsupported policy mode then create hook fails fast', () => {
+    ENTITY_MIGRATION_MODE.policies = 'v2_only';
+
+    expect(() =>
+      renderHook(() => useCreatePolicyAssociation(), {
+        wrapper: createWrapper(queryClient),
+      })
+    ).toThrow(
+      '[MigrationMode] Unsupported mode "v2_only" for policies in useCreatePolicyAssociation. Supported modes: v1_only, v1_primary_v2_shadow'
+    );
+  });
 });
 
 describe('useUpdatePolicyAssociation dual-write', () => {
@@ -275,6 +370,7 @@ describe('useUpdatePolicyAssociation dual-write', () => {
     vi.stubEnv('NEXT_PUBLIC_VERCEL_ENV', 'preview');
     vi.spyOn(console, 'info').mockImplementation(() => {});
     localStorage.clear();
+    ENTITY_MIGRATION_MODE.policies = DEFAULT_POLICY_MIGRATION_MODE;
     queryClient = createQueryClient();
   });
 
@@ -368,5 +464,29 @@ describe('useUpdatePolicyAssociation dual-write', () => {
         expect.any(Error)
       );
     });
+  });
+
+  test('given v1-only mode then update skips the v2 shadow write', async () => {
+    ENTITY_MIGRATION_MODE.policies = 'v1_only';
+    mockStoreUpdate.mockResolvedValue(mockV1UpdateResult);
+
+    const v2UpdateSpy = vi.spyOn(v2PolicyApi, 'updateUserPolicyAssociationV2');
+
+    const { result } = renderHook(() => useUpdatePolicyAssociation(), {
+      wrapper: createWrapper(queryClient),
+    });
+
+    await act(async () => {
+      await result.current.mutateAsync({
+        userPolicyId: TEST_V1_ASSOC_ID,
+        updates: { label: 'Renamed policy' },
+      });
+    });
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+
+    expect(v2UpdateSpy).not.toHaveBeenCalled();
   });
 });

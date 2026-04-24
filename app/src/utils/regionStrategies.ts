@@ -1,9 +1,7 @@
 import { countryIds } from '@/libs/countries';
-import { MetadataRegionEntry } from '@/types/metadata';
+import type { Region } from '@/models/region';
 import { ScopeType, UK_REGION_TYPES, US_REGION_TYPES } from '@/types/regionTypes';
 
-// Re-export types for convenience
-export type { MetadataRegionEntry };
 export { US_REGION_TYPES, UK_REGION_TYPES };
 export type { ScopeType };
 
@@ -29,6 +27,22 @@ export interface PlaceOption {
   name: string;
   stateAbbrev: string;
   stateName: string;
+}
+
+function getRegionCode(region: Region): string {
+  return region.code;
+}
+
+function getRegionType(region: Region): string {
+  return region.regionType;
+}
+
+function getRegionStateAbbreviation(region: Region): string | undefined {
+  return region.stateCode ?? undefined;
+}
+
+function getRegionStateName(region: Region): string | undefined {
+  return region.stateName ?? undefined;
 }
 
 /**
@@ -500,10 +514,26 @@ export function findPlaceFromRegionString(regionString: string): PlaceOption | u
 }
 
 /**
- * Get US places as RegionOption array for use in geography selectors
- * Uses the static US_PLACES_OVER_100K data (333 cities with 100k+ population)
+ * Get US places as RegionOption array for use in geography selectors.
+ * Prefer canonical place regions when they are present. Otherwise fall back to
+ * the static 100k+ place list so metadata-backed UI flows continue to work
+ * while v1 metadata remains the surfaced region source.
  */
-export function getUSPlaces(): RegionOption[] {
+export function getUSPlaces(regions: Region[]): RegionOption[] {
+  const placeRegions = regions
+    .filter((region) => getRegionType(region) === US_REGION_TYPES.PLACE)
+    .map((region) => ({
+      value: getRegionCode(region),
+      label: region.label,
+      type: US_REGION_TYPES.PLACE,
+      stateAbbreviation: getRegionStateAbbreviation(region),
+      stateName: getRegionStateName(region),
+    }));
+
+  if (placeRegions.length > 0) {
+    return placeRegions;
+  }
+
   return US_PLACES_OVER_100K.map((place) => ({
     value: placeToRegionString(place),
     label: getPlaceDisplayName(place.name),
@@ -514,31 +544,31 @@ export function getUSPlaces(): RegionOption[] {
 }
 
 /**
- * Get US states from metadata (filters by type)
+ * Get US states from either legacy metadata or canonical v2 region records.
  */
-export function getUSStates(regions: MetadataRegionEntry[]): RegionOption[] {
+export function getUSStates(regions: Region[]): RegionOption[] {
   return regions
-    .filter((r) => r.type === US_REGION_TYPES.STATE)
+    .filter((region) => getRegionType(region) === US_REGION_TYPES.STATE)
     .map((r) => ({
-      value: r.name,
+      value: getRegionCode(r),
       label: r.label,
-      type: r.type,
+      type: US_REGION_TYPES.STATE,
     }));
 }
 
 /**
- * Get US congressional districts from metadata (filters by type)
- * Districts include state_abbreviation and state_name from the API
+ * Get US congressional districts from either legacy metadata or canonical v2 region records.
+ * Districts include state abbreviation/name metadata when available.
  */
-export function getUSCongressionalDistricts(regions: MetadataRegionEntry[]): RegionOption[] {
+export function getUSCongressionalDistricts(regions: Region[]): RegionOption[] {
   return regions
-    .filter((r) => r.type === US_REGION_TYPES.CONGRESSIONAL_DISTRICT)
+    .filter((region) => getRegionType(region) === US_REGION_TYPES.CONGRESSIONAL_DISTRICT)
     .map((r) => ({
-      value: r.name,
+      value: getRegionCode(r),
       label: r.label,
-      type: r.type,
-      stateAbbreviation: r.state_abbreviation,
-      stateName: r.state_name,
+      type: US_REGION_TYPES.CONGRESSIONAL_DISTRICT,
+      stateAbbreviation: getRegionStateAbbreviation(r),
+      stateName: getRegionStateName(r),
     }));
 }
 
@@ -587,41 +617,41 @@ export function formatDistrictOptionsForDisplay(districts: RegionOption[]): Regi
 }
 
 /**
- * Get UK countries from metadata (filters by type)
+ * Get UK countries from either legacy metadata or canonical v2 region records.
  */
-export function getUKCountries(regions: MetadataRegionEntry[]): RegionOption[] {
+export function getUKCountries(regions: Region[]): RegionOption[] {
   return regions
-    .filter((r) => r.type === UK_REGION_TYPES.COUNTRY)
+    .filter((region) => getRegionType(region) === UK_REGION_TYPES.COUNTRY)
     .map((r) => ({
-      value: r.name,
+      value: getRegionCode(r),
       label: r.label,
-      type: r.type,
+      type: UK_REGION_TYPES.COUNTRY,
     }));
 }
 
 /**
- * Get UK constituencies from metadata (filters by type)
+ * Get UK constituencies from either legacy metadata or canonical v2 region records.
  */
-export function getUKConstituencies(regions: MetadataRegionEntry[]): RegionOption[] {
+export function getUKConstituencies(regions: Region[]): RegionOption[] {
   return regions
-    .filter((r) => r.type === UK_REGION_TYPES.CONSTITUENCY)
+    .filter((region) => getRegionType(region) === UK_REGION_TYPES.CONSTITUENCY)
     .map((r) => ({
-      value: r.name,
+      value: getRegionCode(r),
       label: r.label,
-      type: r.type,
+      type: UK_REGION_TYPES.CONSTITUENCY,
     }));
 }
 
 /**
- * Get UK local authorities from metadata (filters by type)
+ * Get UK local authorities from either legacy metadata or canonical v2 region records.
  */
-export function getUKLocalAuthorities(regions: MetadataRegionEntry[]): RegionOption[] {
+export function getUKLocalAuthorities(regions: Region[]): RegionOption[] {
   return regions
-    .filter((r) => r.type === UK_REGION_TYPES.LOCAL_AUTHORITY)
+    .filter((region) => getRegionType(region) === UK_REGION_TYPES.LOCAL_AUTHORITY)
     .map((r) => ({
-      value: r.name,
+      value: getRegionCode(r),
       label: r.label,
-      type: r.type,
+      type: UK_REGION_TYPES.LOCAL_AUTHORITY,
     }));
 }
 
@@ -650,12 +680,14 @@ export function extractRegionDisplayValue(fullValue: string): string {
 export function createGeographyFromScope(
   scope: ScopeType,
   countryId: (typeof countryIds)[number],
-  selectedRegion?: string
+  selectedRegion?: string,
+  selectedRegionLabel?: string
 ): {
   id: string;
   countryId: (typeof countryIds)[number];
   scope: 'national' | 'subnational';
   geographyId: string;
+  name?: string;
 } | null {
   // Household scope doesn't create geography
   if (scope === 'household') {
@@ -689,5 +721,6 @@ export function createGeographyFromScope(
     countryId,
     scope: 'subnational',
     geographyId: selectedRegion, // STORE FULL PREFIXED VALUE
+    name: selectedRegionLabel,
   };
 }

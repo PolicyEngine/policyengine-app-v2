@@ -3,11 +3,9 @@
  */
 
 import { ReportIngredientsInput } from '@/hooks/utils/useFetchReportIngredients';
+import type { SavedGeographySelection } from '@/models/geography';
 import { UserPolicy } from '@/types/ingredients/UserPolicy';
-import {
-  UserGeographyPopulation,
-  UserHouseholdPopulation,
-} from '@/types/ingredients/UserPopulation';
+import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { UserReport } from '@/types/ingredients/UserReport';
 import { UserSimulation } from '@/types/ingredients/UserSimulation';
 
@@ -54,7 +52,6 @@ export const VALID_SHARE_DATA: ReportIngredientsInput = {
   userHouseholds: [],
   userGeographies: [
     {
-      type: 'geography',
       geographyId: TEST_COUNTRIES.US,
       countryId: TEST_COUNTRIES.US,
       scope: 'national',
@@ -119,10 +116,8 @@ export const MOCK_USER_POLICIES: UserPolicy[] = [
   },
 ];
 
-export const MOCK_USER_GEOGRAPHIES: UserGeographyPopulation[] = [
+export const MOCK_USER_GEOGRAPHIES: SavedGeographySelection[] = [
   {
-    type: 'geography',
-    userId: 'anonymous',
     geographyId: 'geo-1',
     countryId: TEST_COUNTRIES.US,
     scope: 'national',

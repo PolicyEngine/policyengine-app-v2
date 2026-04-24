@@ -35,7 +35,7 @@ export const mockUSDistrictOptions: RegionOption[] = [
 // Mock US single-district state (at-large)
 export const mockUSSingleDistrictOptions: RegionOption[] = [
   {
-    value: 'congressional_district/AK-00',
+    value: 'congressional_district/AK-01',
     label: "Alaska's at-large congressional district",
     type: US_REGION_TYPES.CONGRESSIONAL_DISTRICT,
     stateAbbreviation: 'AK',

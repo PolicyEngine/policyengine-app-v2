@@ -49,7 +49,6 @@ export function useReportBuilderState(
         userSimulations: data.userSimulations,
         userPolicies: data.userPolicies,
         userHouseholds: data.userHouseholds,
-        userGeographies: data.userGeographies,
         currentLawId,
       });
       setReportState(hydrated);
@@ -67,7 +66,6 @@ export function useReportBuilderState(
     data.userSimulations,
     data.userPolicies,
     data.userHouseholds,
-    data.userGeographies,
     currentLawId,
     reportState,
   ]);

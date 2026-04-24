@@ -7,14 +7,17 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { fetchHouseholdById } from '@/api/household';
 import { LocalStorageHouseholdStore } from '@/api/householdAssociation';
+import { ENTITY_MIGRATION_MODE } from '@/config/migrationMode';
 import { CountryProvider } from '@/contexts/CountryContext';
 import {
   useCreateHouseholdAssociation,
   useHouseholdAssociation,
   useHouseholdAssociationsByUser,
+  useHouseholdAssociationStoreForMode,
   useUserHouseholds,
   useUserHouseholdStore,
 } from '@/hooks/useUserHousehold';
+import { queryConfig } from '@/libs/queryConfig';
 import { Household as HouseholdModel } from '@/models/Household';
 import {
   createMockQueryClient,
@@ -28,6 +31,11 @@ import {
   TEST_IDS,
   TEST_LABELS,
 } from '@/tests/fixtures/hooks/hooksMocks';
+
+vi.mock('@/libs/migration/householdShadow', () => ({
+  shadowCreateUserHouseholdAssociation: vi.fn(),
+  shadowUpdateUserHouseholdAssociation: vi.fn(),
+}));
 
 // Mock the stores first
 vi.mock('@/api/householdAssociation', () => {
@@ -77,11 +85,13 @@ describe('useUserHousehold hooks', () => {
   let queryClient: QueryClient;
   let consoleMocks: ReturnType<typeof setupMockConsole>;
   let store: any;
+  const defaultHouseholdMigrationMode = ENTITY_MIGRATION_MODE.households;
 
   beforeEach(() => {
     vi.clearAllMocks();
     queryClient = createMockQueryClient();
     consoleMocks = setupMockConsole();
+    ENTITY_MIGRATION_MODE.households = defaultHouseholdMigrationMode;
 
     // Create Redux store for useUserHouseholds
     store = configureStore({
@@ -130,6 +140,17 @@ describe('useUserHousehold hooks', () => {
       expect(result.current.create).toBeDefined();
       expect(result.current.findByUser).toBeDefined();
       expect(result.current.findById).toBeDefined();
+    });
+  });
+
+  describe('useHouseholdAssociationStoreForMode', () => {
+    test('given current auth model then it returns the local store facade and local query config', () => {
+      const { result } = renderHook(() => useHouseholdAssociationStoreForMode(), { wrapper });
+
+      expect(result.current.store.create).toBeDefined();
+      expect(result.current.store.findByUser).toBeDefined();
+      expect(result.current.store.findById).toBeDefined();
+      expect(result.current.config).toEqual(queryConfig.localStorage);
     });
   });
 

@@ -1,13 +1,13 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useSelector } from 'react-redux';
 import { PolicyAdapter, SimulationAdapter } from '@/adapters';
 import { fetchHouseholdById } from '@/api/household';
 import { fetchPolicyById } from '@/api/policy';
 import { fetchSimulationById } from '@/api/simulation';
+import { useApiRegions } from '@/hooks/useApiRegions';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { buildCanonicalGeography } from '@/models/geography';
 import { Household as HouseholdModel } from '@/models/Household';
 import type { AppHouseholdInputEnvelope as Household } from '@/models/household/appTypes';
-import { RootState } from '@/store';
 import { Geography } from '@/types/ingredients/Geography';
 import { Policy } from '@/types/ingredients/Policy';
 import { Simulation } from '@/types/ingredients/Simulation';
@@ -56,9 +56,7 @@ export interface EnhancedUserSimulation {
 export const useUserSimulations = (userId: string) => {
   const country = useCurrentCountry();
   const queryClient = useQueryClient();
-
-  // Get geography data from metadata
-  const geographyOptions = useSelector((state: RootState) => state.metadata.economyOptions.region);
+  const { data: regions } = useApiRegions(country);
 
   // Step 1: Fetch all user associations in parallel
   const {
@@ -163,7 +161,7 @@ export const useUserSimulations = (userId: string) => {
         let geography: Geography | undefined;
         let userHousehold: UserHouseholdPopulation | undefined;
 
-        if (simulation?.populationId && simulation?.populationType) {
+        if (simulation?.populationId && simulation?.populationType && simulation.countryId) {
           if (simulation.populationType === 'household') {
             household = householdResults.queries.find(
               (q) => q.data?.id === simulation.populationId
@@ -172,18 +170,12 @@ export const useUserSimulations = (userId: string) => {
               (ha) => ha.householdId === simulation.populationId
             );
           } else if (simulation.populationType === 'geography') {
-            // Treat as geography - create a Geography object from the ID
-            const regionData = geographyOptions?.find((r) => r.name === simulation.populationId);
-
-            if (regionData) {
-              geography = {
-                id: `${simulation.countryId}-${simulation.populationId}`,
-                countryId: simulation.countryId,
-                scope: 'subnational' as const,
-                geographyId: simulation.populationId,
-                name: regionData.label || regionData.name,
-              } as Geography;
-            }
+            geography = buildCanonicalGeography({
+              countryId: simulation.countryId,
+              scope: simulation.populationId === simulation.countryId ? 'national' : 'subnational',
+              geographyId: simulation.populationId,
+              regions,
+            });
           }
         }
 

@@ -6,14 +6,13 @@
  */
 
 import { useCallback, useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
 import { CURRENT_YEAR } from '@/constants';
 import { useAppNavigate } from '@/contexts/NavigationContext';
 import { ReportYearProvider } from '@/contexts/ReportYearContext';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { usePathwayNavigation } from '@/hooks/usePathwayNavigation';
+import { useRegions } from '@/hooks/useRegions';
 import type { AppHouseholdInputEnvelope } from '@/models/household/appTypes';
-import { RootState } from '@/store';
 import { StandalonePopulationViewMode } from '@/types/pathwayModes/PopulationViewMode';
 import { PopulationStateProps } from '@/types/pathwayState';
 import { createPopulationCallbacks } from '@/utils/pathwayCallbacks';
@@ -41,8 +40,7 @@ export default function PopulationPathwayWrapper({ onComplete }: PopulationPathw
     return initializePopulationState();
   });
 
-  // Get metadata for views
-  const metadata = useSelector((state: RootState) => state.metadata);
+  const { data: regions = [] } = useRegions(countryId);
 
   // ========== NAVIGATION ==========
   const { currentMode, navigateToMode, goBack, canGoBack } = usePathwayNavigation(
@@ -90,7 +88,7 @@ export default function PopulationPathwayWrapper({ onComplete }: PopulationPathw
       currentView = (
         <PopulationScopeView
           countryId={countryId}
-          regionData={metadata.economyOptions?.region || []}
+          regionData={regions}
           onScopeSelected={populationCallbacks.handleScopeSelected}
           onBack={canGoBack ? goBack : undefined}
           onCancel={handleCancel}
@@ -132,7 +130,6 @@ export default function PopulationPathwayWrapper({ onComplete }: PopulationPathw
       currentView = (
         <GeographicConfirmationView
           population={populationState}
-          metadata={metadata}
           onSubmitSuccess={populationCallbacks.handleGeographicSubmitSuccess}
           onBack={canGoBack ? goBack : undefined}
         />

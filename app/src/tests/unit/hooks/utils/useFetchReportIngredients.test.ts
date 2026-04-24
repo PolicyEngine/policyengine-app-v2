@@ -1,5 +1,9 @@
 import { describe, expect, test } from 'vitest';
-import { expandUserAssociations } from '@/hooks/utils/useFetchReportIngredients';
+import {
+  buildGeographiesFromSimulations,
+  expandUserAssociations,
+} from '@/hooks/utils/useFetchReportIngredients';
+import { toRegionRecord } from '@/models/region';
 import {
   createExpectedExpandedSocietyWide,
   createExpectedExpandedWithoutId,
@@ -30,7 +34,7 @@ describe('useFetchReportIngredients', () => {
       expect(result.userReport.userId).toBe(TEST_USER_IDS.CUSTOM);
       expect(result.userSimulations[0].userId).toBe(TEST_USER_IDS.CUSTOM);
       expect(result.userPolicies[0].userId).toBe(TEST_USER_IDS.CUSTOM);
-      expect(result.userGeographies[0].userId).toBe(TEST_USER_IDS.CUSTOM);
+      expect(result.userGeographies[0]).toEqual(SOCIETY_WIDE_INPUT.userGeographies[0]);
     });
 
     test('given input without userReport.id then falls back to reportId', () => {
@@ -99,15 +103,58 @@ describe('useFetchReportIngredients', () => {
       expect(result.userPolicies[1].userId).toBe(TEST_USER_IDS.SHARED);
     });
 
-    test('given geography with all fields then preserves scope and type', () => {
+    test('given geography selection then preserves canonical geography fields', () => {
       // When
       const result = expandUserAssociations(SOCIETY_WIDE_INPUT);
 
       // Then
       const geography = result.userGeographies[0];
-      expect(geography.type).toBe('geography');
       expect(geography.scope).toBe('national');
       expect(geography.geographyId).toBe(TEST_IDS.GEOGRAPHIES.NATIONAL);
+    });
+  });
+
+  describe('buildGeographiesFromSimulations', () => {
+    test('given geography simulations then resolves canonical geography labels from regions', () => {
+      const simulations = [
+        {
+          id: 'sim-geography',
+          countryId: 'us',
+          populationId: 'ca',
+          populationType: 'geography' as const,
+        },
+        {
+          id: 'sim-household',
+          countryId: 'us',
+          populationId: 'household-123',
+          populationType: 'household' as const,
+        },
+      ];
+
+      const regions = [
+        toRegionRecord('us', {
+          id: 'region-state-ca',
+          code: 'state/ca',
+          label: 'California',
+          region_type: 'state',
+          parent_code: 'us',
+          filter_field: null,
+          filter_value: null,
+          requires_filter: false,
+          state_code: 'CA',
+          state_name: 'California',
+        }),
+      ];
+
+      expect(buildGeographiesFromSimulations(simulations as any, regions)).toEqual([
+        {
+          id: 'state/ca',
+          countryId: 'us',
+          scope: 'subnational',
+          geographyId: 'state/ca',
+          name: 'California',
+        },
+      ]);
     });
   });
 });

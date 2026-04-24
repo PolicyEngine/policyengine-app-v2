@@ -15,7 +15,6 @@ import {
   useReducer,
   useRef,
 } from 'react';
-import { useSelector } from 'react-redux';
 import {
   buildDistrictLabelLookup,
   normalizeDistrictId,
@@ -24,7 +23,7 @@ import {
   fetchSocietyWideCalculation,
   SocietyWideCalculationResponse,
 } from '@/api/societyWideCalculation';
-import type { RootState } from '@/store';
+import { useRegions } from '@/hooks/useRegions';
 import type { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
 import { getUSStates } from '@/utils/regionStrategies';
 import { fetchReducer, initialFetchState } from './reducer';
@@ -62,10 +61,9 @@ export function CongressionalDistrictDataProvider({
   year,
   region,
 }: CongressionalDistrictDataProviderProps) {
-  // Get regions from Redux metadata to extract US states
-  const regions = useSelector((state: RootState) => state.metadata.economyOptions.region);
+  const { data: regions = [] } = useRegions('us');
 
-  // Extract all state codes from metadata (e.g., ['state/al', 'state/ak', ...])
+  // Extract all state codes from canonical region records (e.g., ['state/al', 'state/ak', ...])
   const allStateCodes = useMemo(() => {
     const states = getUSStates(regions);
     return states.map((s) => s.value);
@@ -80,7 +78,7 @@ export function CongressionalDistrictDataProvider({
     [isStateLevelReport, region, allStateCodes]
   );
 
-  // Build district label lookup from metadata
+  // Build district label lookup from canonical region records
   const labelLookup = useMemo(() => buildDistrictLabelLookup(regions), [regions]);
 
   // Use reducer for atomic state updates

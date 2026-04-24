@@ -2,7 +2,9 @@ import { render, screen } from '@test-utils';
 import { useParams } from 'react-router-dom';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useRegions } from '@/hooks/useRegions';
 import PopulationPathwayWrapper from '@/pathways/population/PopulationPathwayWrapper';
+import { mockUSRegionRecords } from '@/tests/fixtures/utils/regionStrategiesMocks';
 
 const mockNavigate = vi.fn();
 const mockUseParams = { countryId: 'us' };
@@ -45,11 +47,21 @@ vi.mock('@/hooks/useCurrentCountry', () => ({
   useCurrentCountry: vi.fn(),
 }));
 
+vi.mock('@/hooks/useRegions', () => ({
+  useRegions: vi.fn(),
+}));
+
 describe('PopulationPathwayWrapper', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(useParams).mockReturnValue(mockUseParams);
     vi.mocked(useCurrentCountry).mockReturnValue('us');
+    vi.mocked(useRegions).mockReturnValue({
+      data: mockUSRegionRecords,
+      isLoading: false,
+      isError: false,
+      error: null,
+    } as ReturnType<typeof useRegions>);
   });
 
   test('given valid countryId then renders without error', () => {

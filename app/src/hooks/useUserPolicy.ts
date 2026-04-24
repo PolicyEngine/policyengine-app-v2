@@ -2,6 +2,11 @@
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { PolicyAdapter } from '@/adapters';
 import { fetchPolicyById } from '@/api/policy';
+import {
+  assertSupportedMode,
+  getSupportedMigrationModes,
+  usesV2ShadowMode,
+} from '@/config/migrationMode';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import {
   shadowCreateUserPolicyAssociation,
@@ -16,19 +21,43 @@ import { UserPolicy } from '../types/ingredients/UserPolicy';
 const apiPolicyStore = new ApiPolicyStore();
 const localPolicyStore = new LocalStoragePolicyStore();
 
+type PolicyAssociationStoreSelection = {
+  store: ApiPolicyStore | LocalStoragePolicyStore;
+  config: typeof queryConfig.api | typeof queryConfig.localStorage;
+};
+
+type PolicyWriteConfigOptions = {
+  skipDuplicateV2AssociationShadow?: boolean;
+};
+
+export function getPolicyWriteConfig(
+  context: string,
+  options?: PolicyWriteConfigOptions
+): { shouldShadowV2: boolean } {
+  const mode = assertSupportedMode('policies', getSupportedMigrationModes('policies'), context);
+
+  return {
+    shouldShadowV2: usesV2ShadowMode(mode) && !options?.skipDuplicateV2AssociationShadow,
+  };
+}
+
 export const useUserPolicyStore = () => {
+  return usePolicyAssociationStoreForMode().store;
+};
+
+export const usePolicyAssociationStoreForMode = (): PolicyAssociationStoreSelection => {
   const isLoggedIn = false; // TODO: Replace with actual auth check in future
-  return isLoggedIn ? apiPolicyStore : localPolicyStore;
+  return {
+    store: isLoggedIn ? apiPolicyStore : localPolicyStore,
+    config: isLoggedIn ? queryConfig.api : queryConfig.localStorage,
+  };
 };
 
 // This fetches only the user-policy associations; see
 // 'useUserPolicies' below to also fetch full policy details
 export const usePolicyAssociationsByUser = (userId: string) => {
-  const store = useUserPolicyStore();
+  const { store, config } = usePolicyAssociationStoreForMode();
   const countryId = useCurrentCountry();
-  const isLoggedIn = false; // TODO: Replace with actual auth check in future
-  // TODO: Should we determine user ID from auth context here? Or pass as arg?
-  const config = isLoggedIn ? queryConfig.api : queryConfig.localStorage;
 
   return useQuery({
     queryKey: policyAssociationKeys.byUser(userId, countryId),
@@ -38,9 +67,7 @@ export const usePolicyAssociationsByUser = (userId: string) => {
 };
 
 export const usePolicyAssociation = (userId: string, policyId: string) => {
-  const store = useUserPolicyStore();
-  const isLoggedIn = false; // TODO: Replace with actual auth check in future
-  const config = isLoggedIn ? queryConfig.api : queryConfig.localStorage;
+  const { store, config } = usePolicyAssociationStoreForMode();
 
   return useQuery({
     queryKey: policyAssociationKeys.specific(userId, policyId),
@@ -49,10 +76,10 @@ export const usePolicyAssociation = (userId: string, policyId: string) => {
   });
 };
 
-export const useCreatePolicyAssociation = (options?: { shadowV2?: boolean }) => {
-  const store = useUserPolicyStore();
+export const useCreatePolicyAssociation = (options?: PolicyWriteConfigOptions) => {
+  const { store } = usePolicyAssociationStoreForMode();
   const queryClient = useQueryClient();
-  const shadowV2 = options?.shadowV2 ?? true;
+  const { shouldShadowV2 } = getPolicyWriteConfig('useCreatePolicyAssociation', options);
 
   return useMutation({
     mutationFn: (userPolicy: Omit<UserPolicy, 'id' | 'createdAt'>) => store.create(userPolicy),
@@ -77,7 +104,7 @@ export const useCreatePolicyAssociation = (options?: { shadowV2?: boolean }) => 
         newAssociation
       );
 
-      if (shadowV2) {
+      if (shouldShadowV2) {
         void shadowCreateUserPolicyAssociation(newAssociation);
       }
     },
@@ -85,8 +112,9 @@ export const useCreatePolicyAssociation = (options?: { shadowV2?: boolean }) => 
 };
 
 export const useUpdatePolicyAssociation = () => {
-  const store = useUserPolicyStore();
+  const { store } = usePolicyAssociationStoreForMode();
   const queryClient = useQueryClient();
+  const { shouldShadowV2 } = getPolicyWriteConfig('useUpdatePolicyAssociation');
 
   return useMutation({
     mutationFn: ({
@@ -116,7 +144,9 @@ export const useUpdatePolicyAssociation = () => {
         updatedAssociation
       );
 
-      void shadowUpdateUserPolicyAssociation(updatedAssociation);
+      if (shouldShadowV2) {
+        void shadowUpdateUserPolicyAssociation(updatedAssociation);
+      }
     },
   });
 };

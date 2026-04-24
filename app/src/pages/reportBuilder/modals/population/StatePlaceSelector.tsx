@@ -12,7 +12,8 @@ import { Input } from '@/components/ui/input';
 import { Stack } from '@/components/ui/Stack';
 import { Text } from '@/components/ui/Text';
 import { colors, spacing } from '@/designTokens';
-import { getPlaceDisplayName, getUSPlaces, RegionOption } from '@/utils/regionStrategies';
+import { useRegions } from '@/hooks/useRegions';
+import { getUSPlaces, RegionOption } from '@/utils/regionStrategies';
 import { FONT_SIZES, INGREDIENT_COLORS } from '../../constants';
 
 // ============================================================================
@@ -251,11 +252,7 @@ function StateGroupSection({
       <StateHeader stateName={group.stateName} stateAbbreviation={group.stateAbbreviation} />
       <div style={styles.placeGrid}>
         {group.places.map((place) => (
-          <PlaceChip
-            key={place.value}
-            label={getPlaceDisplayName(place.label)}
-            onClick={() => onSelectPlace(place)}
-          />
+          <PlaceChip key={place.value} label={place.label} onClick={() => onSelectPlace(place)} />
         ))}
       </div>
     </div>
@@ -271,8 +268,8 @@ export function StatePlaceSelector({
   setSearchQuery,
   onSelectPlace,
 }: StatePlaceSelectorProps) {
-  // Get all US places as RegionOption array
-  const allPlaces = useMemo(() => getUSPlaces(), []);
+  const { data: regions = [] } = useRegions('us');
+  const allPlaces = useMemo(() => getUSPlaces(regions), [regions]);
 
   const stateGroups = useMemo(() => groupPlacesByState(allPlaces), [allPlaces]);
 

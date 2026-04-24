@@ -4,9 +4,11 @@ import {
   clearV2Mappings,
   getMappedV2UserId,
   getOrCreateV2UserId,
+  getResolvedRegionId,
   getV2AssociationTargetId,
   getV2Id,
   isUuid,
+  setResolvedRegionId,
   setV2AssociationTargetId,
   setV2Id,
 } from '@/libs/migration/idMapping';
@@ -65,6 +67,13 @@ describe('idMapping', () => {
 
       expect(getV2AssociationTargetId('UserHousehold', 'suh-1', 'hh-1')).toBeNull();
     });
+
+    test('given resolved region mapping then stores and retrieves by country and code', () => {
+      setResolvedRegionId('us', 'state/ca', 'uuid-region');
+
+      expect(getResolvedRegionId('us', 'state/ca')).toBe('uuid-region');
+      expect(localStorage.getItem('v1v2:region:us:state/ca')).toBe('uuid-region');
+    });
   });
 
   describe('clearV2Mappings', () => {
@@ -72,12 +81,14 @@ describe('idMapping', () => {
       setV2Id('Policy', 'sup-1', 'uuid-p1');
       setV2Id('Household', 'sup-2', 'uuid-h1');
       setV2AssociationTargetId('Policy', 'sup-3', 'target-1', 'uuid-policy-association');
+      setResolvedRegionId('us', 'state/ca', 'uuid-region');
 
       clearV2Mappings('Policy');
 
       expect(getV2Id('Policy', 'sup-1')).toBeNull();
       expect(getV2Id('Household', 'sup-2')).toBe('uuid-h1');
       expect(getV2AssociationTargetId('Policy', 'sup-3', 'target-1')).toBeNull();
+      expect(getResolvedRegionId('us', 'state/ca')).toBe('uuid-region');
     });
 
     test('given no entity type then clears all mappings', () => {

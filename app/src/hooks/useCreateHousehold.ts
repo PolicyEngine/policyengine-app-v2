@@ -5,11 +5,14 @@ import { countryIds } from '@/libs/countries';
 import { shadowCreateHouseholdAndAssociation } from '@/libs/migration/householdShadow';
 import { Household } from '@/models/Household';
 import type { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
-import { useCreateHouseholdAssociation } from './useUserHousehold';
+import { getHouseholdWriteConfig, useCreateHouseholdAssociation } from './useUserHousehold';
 
 export function useCreateHousehold(householdLabel?: string) {
+  const { shouldShadowV2 } = getHouseholdWriteConfig('useCreateHousehold');
   // const user = MOCK_USER_ID; // TODO: Replace with actual user context or auth hook in future
-  const createAssociation = useCreateHouseholdAssociation();
+  const createAssociation = useCreateHouseholdAssociation({
+    skipDuplicateV2AssociationShadow: true,
+  });
 
   const mutation = useMutation({
     mutationFn: createHousehold,
@@ -31,14 +34,16 @@ export function useCreateHousehold(householdLabel?: string) {
         console.error('Household created but association failed:', error);
       }
 
-      void shadowCreateHouseholdAndAssociation({
-        v1HouseholdId: data.result.household_id,
-        v1Household: Household.fromV1CreationPayload(householdPayload, {
-          id: data.result.household_id,
-          label: resolvedLabel ?? null,
-        }),
-        v1Association: association,
-      });
+      if (shouldShadowV2) {
+        void shadowCreateHouseholdAndAssociation({
+          v1HouseholdId: data.result.household_id,
+          v1Household: Household.fromV1CreationPayload(householdPayload, {
+            id: data.result.household_id,
+            label: resolvedLabel ?? null,
+          }),
+          v1Association: association,
+        });
+      }
     },
   });
 

@@ -31,8 +31,8 @@ import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { UserReport } from '@/types/ingredients/UserReport';
 import { getShareDataUserReportId } from '@/utils/shareUtils';
 import { useCreateGeographicAssociation } from './useUserGeographic';
-import { useCreateHouseholdAssociation } from './useUserHousehold';
-import { useCreatePolicyAssociation } from './useUserPolicy';
+import { getHouseholdWriteConfig, useCreateHouseholdAssociation } from './useUserHousehold';
+import { getPolicyWriteConfig, useCreatePolicyAssociation } from './useUserPolicy';
 import { useCreateReportAssociation, useUserReportStore } from './useUserReportAssociations';
 import { useCreateSimulationAssociation } from './useUserSimulationAssociations';
 
@@ -140,10 +140,16 @@ function shadowSavedHouseholdAssociation(
  * - Skips current law policies (they're pre-defined, not user-created)
  */
 export function useSaveSharedReport() {
+  const { shouldShadowV2: shouldShadowPolicies } = getPolicyWriteConfig('useSaveSharedReport');
+  const { shouldShadowV2: shouldShadowHouseholds } = getHouseholdWriteConfig('useSaveSharedReport');
   const createReportAssociation = useCreateReportAssociation();
   const createSimulationAssociation = useCreateSimulationAssociation();
-  const createPolicyAssociation = useCreatePolicyAssociation({ shadowV2: false });
-  const createHouseholdAssociation = useCreateHouseholdAssociation();
+  const createPolicyAssociation = useCreatePolicyAssociation({
+    skipDuplicateV2AssociationShadow: true,
+  });
+  const createHouseholdAssociation = useCreateHouseholdAssociation({
+    skipDuplicateV2AssociationShadow: true,
+  });
   const createGeographicAssociation = useCreateGeographicAssociation();
   const reportStore = useUserReportStore();
 
@@ -202,7 +208,9 @@ export function useSaveSharedReport() {
           label: policy.label ?? undefined,
         });
 
-        shadowSavedPolicyAssociation(association, policiesById.get(String(policy.policyId)));
+        if (shouldShadowPolicies) {
+          shadowSavedPolicyAssociation(association, policiesById.get(String(policy.policyId)));
+        }
         return association;
       });
 
@@ -215,7 +223,9 @@ export function useSaveSharedReport() {
         label: hh.label ?? undefined,
       });
 
-      shadowSavedHouseholdAssociation(association, householdsById.get(String(hh.householdId)));
+      if (shouldShadowHouseholds) {
+        shadowSavedHouseholdAssociation(association, householdsById.get(String(hh.householdId)));
+      }
       return association;
     });
 

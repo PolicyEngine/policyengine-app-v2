@@ -5,12 +5,13 @@ import { shadowCreatePolicyAndAssociation } from '@/libs/migration/policyShadow'
 import type { UserPolicy } from '@/types/ingredients/UserPolicy';
 import { PolicyCreationPayload } from '@/types/payloads';
 import { useCurrentCountry } from './useCurrentCountry';
-import { useCreatePolicyAssociation } from './useUserPolicy';
+import { getPolicyWriteConfig, useCreatePolicyAssociation } from './useUserPolicy';
 
 export function useCreatePolicy(policyLabel?: string) {
   const countryId = useCurrentCountry();
+  const { shouldShadowV2 } = getPolicyWriteConfig('useCreatePolicy');
   // const user = MOCK_USER_ID; // TODO: Replace with actual user context or auth hook in future
-  const createAssociation = useCreatePolicyAssociation({ shadowV2: false });
+  const createAssociation = useCreatePolicyAssociation({ skipDuplicateV2AssociationShadow: true });
 
   const mutation = useMutation({
     mutationFn: (data: PolicyCreationPayload) => createPolicy(countryId, data),
@@ -32,13 +33,15 @@ export function useCreatePolicy(policyLabel?: string) {
         console.error('Policy created but association failed:', error);
       }
 
-      void shadowCreatePolicyAndAssociation({
-        countryId,
-        label: policyLabel,
-        v1PolicyId: data.result.policy_id,
-        v1PolicyPayload: policyPayload,
-        v1Association: association,
-      });
+      if (shouldShadowV2) {
+        void shadowCreatePolicyAndAssociation({
+          countryId,
+          label: policyLabel,
+          v1PolicyId: data.result.policy_id,
+          v1PolicyPayload: policyPayload,
+          v1Association: association,
+        });
+      }
     },
   });
 

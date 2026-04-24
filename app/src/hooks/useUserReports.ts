@@ -1,28 +1,23 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useSelector } from 'react-redux';
 import { PolicyAdapter, ReportAdapter, SimulationAdapter } from '@/adapters';
 import { fetchHouseholdById } from '@/api/household';
 import { fetchPolicyById } from '@/api/policy';
 import { fetchReportById } from '@/api/report';
 import { fetchSimulationById } from '@/api/simulation';
+import { useApiRegions } from '@/hooks/useApiRegions';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { GC_TIME_5_MIN } from '@/libs/queryConfig';
+import { buildCanonicalGeography } from '@/models/geography';
 import { Household as HouseholdModel } from '@/models/Household';
-import { RootState } from '@/store';
 import { Geography } from '@/types/ingredients/Geography';
 import { Policy } from '@/types/ingredients/Policy';
 import { Report } from '@/types/ingredients/Report';
 import { Simulation } from '@/types/ingredients/Simulation';
 import { UserPolicy } from '@/types/ingredients/UserPolicy';
-import {
-  UserGeographyPopulation,
-  UserHouseholdPopulation,
-} from '@/types/ingredients/UserPopulation';
+import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { UserReport } from '@/types/ingredients/UserReport';
 import { UserSimulation } from '@/types/ingredients/UserSimulation';
-import { findPlaceFromRegionString, getPlaceDisplayName } from '@/utils/regionStrategies';
 import { householdKeys, policyKeys, reportKeys, simulationKeys } from '../libs/queryKeys';
-import { useGeographicAssociationsByUser } from './useUserGeographic';
 import { useHouseholdAssociationsByUser } from './useUserHousehold';
 import { usePolicyAssociationsByUser } from './useUserPolicy';
 import { useReportAssociationById, useReportAssociationsByUser } from './useUserReportAssociations';
@@ -50,7 +45,6 @@ export interface EnhancedUserReport {
   userSimulations?: UserSimulation[];
   userPolicies?: UserPolicy[];
   userHouseholds?: UserHouseholdPopulation[];
-  userGeographies?: UserGeographyPopulation[];
 
   // Status
   isLoading: boolean;
@@ -71,9 +65,7 @@ export interface EnhancedUserReport {
 export const useUserReports = (userId: string) => {
   const country = useCurrentCountry();
   const queryClient = useQueryClient();
-
-  // Get geography data from metadata
-  const geographyOptions = useSelector((state: RootState) => state.metadata.economyOptions.region);
+  const { data: regions } = useApiRegions(country);
 
   // Step 1: Fetch all user associations in parallel
   const {
@@ -218,7 +210,7 @@ export const useUserReports = (userId: string) => {
         const reportGeographies: Geography[] = [];
 
         reportSimulations.forEach((sim) => {
-          if (sim.populationId && sim.populationType) {
+          if (sim.populationId && sim.populationType && sim.countryId) {
             if (sim.populationType === 'household') {
               const household = householdResults.queries.find(
                 (q) => q.data?.id === sim.populationId
@@ -227,17 +219,14 @@ export const useUserReports = (userId: string) => {
                 reportHouseholds.push(household);
               }
             } else if (sim.populationType === 'geography') {
-              // Create Geography object from the ID
-              const regionData = geographyOptions?.find((r) => r.name === sim.populationId);
-              if (regionData) {
-                reportGeographies.push({
-                  id: `${sim.countryId}-${sim.populationId}`,
+              reportGeographies.push(
+                buildCanonicalGeography({
                   countryId: sim.countryId,
-                  scope: 'subnational' as const,
+                  scope: sim.populationId === sim.countryId ? 'national' : 'subnational',
                   geographyId: sim.populationId,
-                  name: regionData.label || regionData.name,
-                } as Geography);
-              }
+                  regions,
+                })
+              );
             }
           }
         });
@@ -412,7 +401,7 @@ export const useUserReportById = (userReportId: string, options?: { enabled?: bo
 
   const { data: policyAssociations } = usePolicyAssociationsByUser(userId || '');
   const { data: householdAssociations } = useHouseholdAssociationsByUser(userId || '');
-  const { data: geographyAssociations } = useGeographicAssociationsByUser(userId || '');
+  const { data: regions } = useApiRegions(country);
 
   const matchedUserSimulations = simulationAssociations?.filter((sa) =>
     finalReport?.simulationIds?.includes(sa.simulationId)
@@ -461,51 +450,19 @@ export const useUserReportById = (userReportId: string, options?: { enabled?: bo
     households.some((h) => h.id === ha.householdId)
   );
 
-  // Step 7: Get geography data from simulations
-  const geographyOptions = useSelector((state: RootState) => state.metadata.economyOptions.region);
-
   const geographies: Geography[] = [];
   simulations.forEach((sim) => {
     if (sim.populationType === 'geography' && sim.populationId && sim.countryId) {
-      // Use the simulation's populationId as-is for the Geography id
-      // The populationId is already in the correct format from createGeographyFromScope
-      const isNational = sim.populationId === sim.countryId;
-
-      let name: string;
-      if (isNational) {
-        name = sim.countryId.toUpperCase();
-      } else if (sim.populationId.startsWith('place/')) {
-        // For US places (municipalities), use the place lookup function
-        // Import at top: import { findPlaceFromRegionString, getPlaceDisplayName } from '@/utils/regionStrategies';
-        const place = findPlaceFromRegionString(sim.populationId);
-        name = place ? getPlaceDisplayName(place.name) : sim.populationId;
-      } else {
-        // For subnational, extract the base geography ID and look up in metadata
-        // e.g., "us-fl" -> "fl", "uk-scotland" -> "scotland"
-        const parts = sim.populationId.split('-');
-        const baseGeographyId = parts.length > 1 ? parts.slice(1).join('-') : sim.populationId;
-
-        // Try to find the label in metadata
-        const regionData = geographyOptions?.find((r) => r.name === baseGeographyId);
-        name = regionData?.label || sim.populationId;
-      }
-
-      const geography: Geography = {
-        id: sim.populationId,
-        countryId: sim.countryId,
-        scope: isNational ? 'national' : 'subnational',
-        geographyId: sim.populationId,
-        name,
-      };
-
-      geographies.push(geography);
+      geographies.push(
+        buildCanonicalGeography({
+          countryId: sim.countryId,
+          scope: sim.populationId === sim.countryId ? 'national' : 'subnational',
+          geographyId: sim.populationId,
+          regions,
+        })
+      );
     }
   });
-
-  // Step 8: Filter geography associations for geographies used in this report
-  const userGeographies = geographyAssociations?.filter((ga) =>
-    geographies.some((g) => g.id === ga.geographyId)
-  );
 
   return {
     userReport,
@@ -517,7 +474,6 @@ export const useUserReportById = (userReportId: string, options?: { enabled?: bo
     userSimulations,
     userPolicies,
     userHouseholds,
-    userGeographies,
     isLoading:
       userReportLoading ||
       repLoading ||

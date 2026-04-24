@@ -7,13 +7,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui';
-import {
-  filterPlacesByState,
-  findPlaceFromRegionString,
-  getPlaceDisplayName,
-  getPlaceStateNames,
-  placeToRegionString,
-} from '@/utils/regionStrategies';
+import { useRegions } from '@/hooks/useRegions';
+import { findPlaceFromRegionString, getUSPlaces } from '@/utils/regionStrategies';
 
 interface USPlaceSelectorProps {
   selectedPlace: string;
@@ -22,31 +17,38 @@ interface USPlaceSelectorProps {
 
 export default function USPlaceSelector({ selectedPlace, onPlaceChange }: USPlaceSelectorProps) {
   const [selectedStateName, setSelectedStateName] = useState<string>('');
+  const { data: regions = [] } = useRegions('us');
+  const allPlaces = useMemo(() => getUSPlaces(regions), [regions]);
 
   // Get unique state names for the state dropdown
-  const stateNames = useMemo(() => getPlaceStateNames(), []);
+  const stateNames = useMemo(() => {
+    const names = new Set(allPlaces.map((place) => place.stateName).filter(Boolean));
+    return [...names].sort().map((stateName) => ({ value: stateName!, label: stateName! }));
+  }, [allPlaces]);
 
   // Initialize selectedStateName from selectedPlace if one is already selected
   useEffect(() => {
     if (selectedPlace) {
-      const place = findPlaceFromRegionString(selectedPlace);
-      if (place && place.stateName !== selectedStateName) {
+      const place =
+        allPlaces.find((region) => region.value === selectedPlace) ??
+        findPlaceFromRegionString(selectedPlace);
+      if (place?.stateName && place.stateName !== selectedStateName) {
         setSelectedStateName(place.stateName);
       }
     }
-  }, [selectedPlace, selectedStateName]);
+  }, [allPlaces, selectedPlace, selectedStateName]);
 
   // Filter places based on selected state name
-  const filteredPlaces = useMemo(() => filterPlacesByState(selectedStateName), [selectedStateName]);
+  const filteredPlaces = useMemo(
+    () => allPlaces.filter((place) => place.stateName === selectedStateName),
+    [allPlaces, selectedStateName]
+  );
 
-  // Format places for the dropdown with clean display names, sorted alphabetically
+  // Format places for the dropdown sorted alphabetically
   const placeOptions = useMemo(
     () =>
       filteredPlaces
-        .map((p) => ({
-          value: placeToRegionString(p),
-          label: getPlaceDisplayName(p.name),
-        }))
+        .map((place) => ({ value: place.value, label: place.label }))
         .sort((a, b) => a.label.localeCompare(b.label)),
     [filteredPlaces]
   );
@@ -56,9 +58,9 @@ export default function USPlaceSelector({ selectedPlace, onPlaceChange }: USPlac
     setSelectedStateName(stateName);
     // Auto-select the first place when a state is chosen
     if (stateName) {
-      const statePlaces = filterPlacesByState(stateName);
+      const statePlaces = allPlaces.filter((place) => place.stateName === stateName);
       if (statePlaces.length > 0) {
-        onPlaceChange(placeToRegionString(statePlaces[0]));
+        onPlaceChange(statePlaces[0].value);
       }
     } else {
       onPlaceChange('');
