@@ -121,6 +121,19 @@ function buildResolutionComparable(args: {
   };
 }
 
+function logResolvedRegionComparison(args: {
+  countryId: CountryId;
+  code: string;
+  selectedLabel?: string | null;
+  target: ResolvedRegionTarget;
+}): void {
+  const comparable = buildResolutionComparable(args);
+
+  logMigrationComparison('RegionMigration', 'RESOLVE', comparable.v1, comparable.v2, {
+    skipFields: comparable.skipFields,
+  });
+}
+
 async function shadowResolveRegionTargetImpl(args: {
   countryId: CountryId;
   regionCode: string;
@@ -135,6 +148,8 @@ async function shadowResolveRegionTargetImpl(args: {
     logRegionEvent('SKIPPED', 'Region resolution skipped: unsupported country', {
       countryId,
       regionCode: canonicalCode,
+      originalRegionCode,
+      selectedLabel: selectedLabel ?? null,
     });
     return null;
   }
@@ -160,6 +175,8 @@ async function shadowResolveRegionTargetImpl(args: {
       {
         countryId,
         regionCode: canonicalCode,
+        originalRegionCode,
+        selectedLabel: selectedLabel ?? null,
         error: errorMessage,
       }
     );
@@ -175,17 +192,6 @@ async function shadowResolveRegionTargetImpl(args: {
 
   setResolvedRegionId(countryId, resolvedRegion.code, resolvedRegion.id);
 
-  const comparable = buildResolutionComparable({
-    countryId,
-    code: canonicalCode,
-    selectedLabel,
-    target,
-  });
-
-  logMigrationComparison('RegionMigration', 'RESOLVE', comparable.v1, comparable.v2, {
-    skipFields: comparable.skipFields,
-  });
-
   return target;
 }
 
@@ -197,18 +203,30 @@ export async function shadowResolveRegionTarget(args: {
 }): Promise<ResolvedRegionTarget | null> {
   const canonicalCode = normalizeRegionCode(args.countryId, args.regionCode);
   const cacheKey = `${args.countryId}:${canonicalCode}`;
+  const logComparison = (target: ResolvedRegionTarget | null): ResolvedRegionTarget | null => {
+    if (target) {
+      logResolvedRegionComparison({
+        countryId: args.countryId,
+        code: canonicalCode,
+        selectedLabel: args.selectedLabel,
+        target,
+      });
+    }
+
+    return target;
+  };
   const cachedTarget = resolvedTargetCache.get(cacheKey);
 
   if (cachedTarget !== undefined) {
-    return cachedTarget;
+    return logComparison(cachedTarget);
   }
 
   const inFlight = inFlightResolutions.get(cacheKey);
   if (inFlight) {
-    return inFlight;
+    return inFlight.then(logComparison);
   }
 
-  const promise = shadowResolveRegionTargetImpl({
+  const resolutionPromise = shadowResolveRegionTargetImpl({
     ...args,
     originalRegionCode: args.regionCode,
     regionCode: canonicalCode,
@@ -223,8 +241,8 @@ export async function shadowResolveRegionTarget(args: {
       inFlightResolutions.delete(cacheKey);
     });
 
-  inFlightResolutions.set(cacheKey, promise);
-  return promise;
+  inFlightResolutions.set(cacheKey, resolutionPromise);
+  return resolutionPromise.then(logComparison);
 }
 
 export function clearRegionShadowCachesForTest(): void {

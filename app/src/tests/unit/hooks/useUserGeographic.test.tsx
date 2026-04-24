@@ -579,12 +579,12 @@ describe('useUserGeographic hooks', () => {
       expect(mockShadowResolveRegionTarget).toHaveBeenCalledWith({
         countryId: 'us',
         regionCode: 'state/ca',
-        selectedLabel: 'California',
+        selectedLabel: TEST_LABELS.GEOGRAPHY,
       });
       expect(mockShadowResolveRegionTarget).toHaveBeenCalledWith({
         countryId: 'us',
         regionCode: 'state/ny',
-        selectedLabel: 'New York',
+        selectedLabel: TEST_LABELS.GEOGRAPHY_2,
       });
     });
 

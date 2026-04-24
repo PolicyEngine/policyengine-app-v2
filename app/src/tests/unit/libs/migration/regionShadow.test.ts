@@ -163,4 +163,37 @@ describe('regionShadow', () => {
     expect(fetchRegionByCode).toHaveBeenCalledTimes(2);
     expect(sendMigrationLog).toHaveBeenCalledTimes(2);
   });
+
+  test('given cached successful resolution then it still emits a comparison log for each call', async () => {
+    vi.mocked(fetchRegionByCode).mockResolvedValue({
+      id: 'region-ca',
+      code: 'state/ca',
+      label: 'California',
+      region_type: 'state',
+      requires_filter: false,
+      filter_field: null,
+      filter_value: null,
+      filter_strategy: null,
+      parent_code: 'us',
+      state_code: 'CA',
+      state_name: 'California',
+      tax_benefit_model_id: 'model-us',
+      created_at: '2026-01-01T00:00:00Z',
+      updated_at: '2026-01-01T00:00:00Z',
+    });
+
+    await shadowResolveRegionTarget({
+      countryId: 'us',
+      regionCode: 'ca',
+      selectedLabel: 'Saved California',
+    });
+    await shadowResolveRegionTarget({
+      countryId: 'us',
+      regionCode: 'state/ca',
+      selectedLabel: 'Saved California copy',
+    });
+
+    expect(fetchRegionByCode).toHaveBeenCalledTimes(1);
+    expect(logMigrationComparison).toHaveBeenCalledTimes(2);
+  });
 });

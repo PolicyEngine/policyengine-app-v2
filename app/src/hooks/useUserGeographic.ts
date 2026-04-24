@@ -195,7 +195,7 @@ export const useUserGeographics = (userId: string) => {
         shadowResolveRegionTarget({
           countryId: association.countryId,
           regionCode: geography?.geographyId ?? association.geographyId,
-          selectedLabel: geography?.name ?? null,
+          selectedLabel: association.label ?? geography?.name ?? null,
         })
       )
     );
