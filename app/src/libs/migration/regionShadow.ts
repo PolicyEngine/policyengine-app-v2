@@ -38,6 +38,7 @@ function logRegionEvent(
 async function fetchRegionRecordCached(
   countryId: CountryId,
   regionCode: string,
+  originalRegionCode: string,
   region?: Region
 ): Promise<Region> {
   if (region) {
@@ -50,7 +51,10 @@ async function fetchRegionRecordCached(
     return cachedPromise;
   }
 
-  const fetchCandidates = [regionCode, ...getLegacyRegionCodeFallbacks(countryId, regionCode)];
+  const fetchCandidates = [
+    regionCode,
+    ...getLegacyRegionCodeFallbacks(countryId, originalRegionCode),
+  ];
 
   const promise = (async () => {
     let lastError: unknown;
@@ -120,10 +124,11 @@ function buildResolutionComparable(args: {
 async function shadowResolveRegionTargetImpl(args: {
   countryId: CountryId;
   regionCode: string;
+  originalRegionCode: string;
   selectedLabel?: string | null;
   region?: Region;
 }): Promise<ResolvedRegionTarget | null> {
-  const { countryId, region, selectedLabel } = args;
+  const { countryId, originalRegionCode, region, selectedLabel } = args;
   const canonicalCode = normalizeRegionCode(countryId, args.regionCode);
 
   if (!SUPPORTED_REGION_COUNTRIES.has(countryId)) {
@@ -136,7 +141,12 @@ async function shadowResolveRegionTargetImpl(args: {
 
   let resolvedRegion: Region;
   try {
-    resolvedRegion = await fetchRegionRecordCached(countryId, canonicalCode, region);
+    resolvedRegion = await fetchRegionRecordCached(
+      countryId,
+      canonicalCode,
+      originalRegionCode,
+      region
+    );
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     const status =
@@ -200,6 +210,7 @@ export async function shadowResolveRegionTarget(args: {
 
   const promise = shadowResolveRegionTargetImpl({
     ...args,
+    originalRegionCode: args.regionCode,
     regionCode: canonicalCode,
   })
     .then((target) => {

@@ -58,8 +58,6 @@ const US_LEGACY_STATE_CODE_RE = /^us-([a-z]{2})$/i;
 const US_LEGACY_DISTRICT_CODE_RE = /^us-([a-z]{2}-\d{1,2})$/i;
 const UK_LEGACY_COUNTRY_CODE_RE = /^uk-(.+)$/i;
 const UK_COUNTRY_CODES = new Set(['england', 'scotland', 'wales', 'ni', 'northern_ireland']);
-const US_AT_LARGE_DISTRICT_STATES = new Set(['AK', 'DE', 'ND', 'SD', 'VT', 'WY']);
-
 function buildMetadataRegionId(countryId: CountryId, regionName: string): string {
   return `metadata:${countryId}:${regionName}`;
 }
@@ -97,21 +95,28 @@ function normalizeCongressionalDistrictCode(regionCode: string): string {
   return `${prefix}${normalizeUSDistrictId(districtId)}`;
 }
 
-function getLegacyUSDistrictAlias(canonicalDistrictId: string): string | null {
-  const normalizedDistrictId = normalizeUSDistrictId(canonicalDistrictId);
-  const match = normalizedDistrictId.match(/^([A-Z]{2})-(\d{2})$/);
+function getExplicitLegacyUSDistrictAlias(regionCode: string): string | null {
+  const trimmedCode = regionCode.trim();
+  const districtMatch = trimmedCode.match(
+    /^(?:congressional_district\/|us-)?([A-Za-z]{2}-(?:00|98))$/i
+  );
 
-  if (!match) {
+  if (!districtMatch) {
     return null;
   }
 
-  const [, state, num] = match;
+  const alias = districtMatch[1].toUpperCase();
+  const [, state, num] = alias.match(/^([A-Z]{2})-(\d{2})$/) ?? [];
 
-  if (state === 'DC' && num === '01') {
+  if (!state || !num) {
+    return null;
+  }
+
+  if (state === 'DC' && num === '98') {
     return 'DC-98';
   }
 
-  if (US_AT_LARGE_DISTRICT_STATES.has(state) && num === '01') {
+  if (num === '00') {
     return `${state}-00`;
   }
 
@@ -253,19 +258,12 @@ export function getLegacyRegionCodeFallbacks(
     return [];
   }
 
-  const canonicalCode = normalizeRegionCode(countryId, regionCode);
-  const districtMatch = canonicalCode.match(/^congressional_district\/([A-Z]{2}-\d{2})$/);
-
-  if (!districtMatch) {
+  const legacyAlias = getExplicitLegacyUSDistrictAlias(regionCode);
+  if (!legacyAlias) {
     return [];
   }
 
-  const alias = getLegacyUSDistrictAlias(districtMatch[1]);
-  if (!alias) {
-    return [];
-  }
-
-  return [`congressional_district/${alias}`];
+  return [`congressional_district/${legacyAlias}`];
 }
 
 export function getRegionCodeCandidates(regionCode: string): RegionCode[] {

@@ -143,13 +143,11 @@ describe('region model helpers', () => {
     );
   });
 
-  test('given canonical at-large districts then returns legacy fetch fallbacks only for backend compatibility', () => {
-    expect(getLegacyRegionCodeFallbacks('us', 'congressional_district/DE-01')).toEqual([
+  test('given legacy district aliases then returns backend fetch fallbacks only for compatibility', () => {
+    expect(getLegacyRegionCodeFallbacks('us', 'congressional_district/DE-00')).toEqual([
       'congressional_district/DE-00',
     ]);
-    expect(getLegacyRegionCodeFallbacks('us', 'congressional_district/DC-01')).toEqual([
-      'congressional_district/DC-98',
-    ]);
+    expect(getLegacyRegionCodeFallbacks('us', 'DC-98')).toEqual(['congressional_district/DC-98']);
     expect(getLegacyRegionCodeFallbacks('us', 'congressional_district/CA-01')).toEqual([]);
   });
 });
