@@ -3,6 +3,7 @@ import type { CountryId } from '@/libs/countries';
 import {
   createResolvedRegionTarget,
   fromV2RegionMetadata,
+  getLegacyRegionCodeFallbacks,
   normalizeRegionCode,
   type Region,
   type ResolvedRegionTarget,
@@ -49,12 +50,32 @@ async function fetchRegionRecordCached(
     return cachedPromise;
   }
 
-  const promise = fetchRegionByCode(countryId, regionCode)
-    .then((record) => fromV2RegionMetadata(countryId, record))
-    .catch((error) => {
-      regionPromiseCache.delete(cacheKey);
-      throw error;
-    });
+  const fetchCandidates = [regionCode, ...getLegacyRegionCodeFallbacks(countryId, regionCode)];
+
+  const promise = (async () => {
+    let lastError: unknown;
+
+    for (const candidateCode of fetchCandidates) {
+      try {
+        const record = await fetchRegionByCode(countryId, candidateCode);
+        return fromV2RegionMetadata(countryId, record);
+      } catch (error) {
+        lastError = error;
+
+        const isNotFound = error instanceof Error && error.message.startsWith('Region not found:');
+        const isLastCandidate = candidateCode === fetchCandidates[fetchCandidates.length - 1];
+
+        if (!isNotFound || isLastCandidate) {
+          throw error;
+        }
+      }
+    }
+
+    throw lastError ?? new Error(`Failed to resolve region ${regionCode} for ${countryId}`);
+  })().catch((error) => {
+    regionPromiseCache.delete(cacheKey);
+    throw error;
+  });
   regionPromiseCache.set(cacheKey, promise);
   return promise;
 }

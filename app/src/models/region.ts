@@ -58,19 +58,76 @@ const US_LEGACY_STATE_CODE_RE = /^us-([a-z]{2})$/i;
 const US_LEGACY_DISTRICT_CODE_RE = /^us-([a-z]{2}-\d{1,2})$/i;
 const UK_LEGACY_COUNTRY_CODE_RE = /^uk-(.+)$/i;
 const UK_COUNTRY_CODES = new Set(['england', 'scotland', 'wales', 'ni', 'northern_ireland']);
+const US_AT_LARGE_DISTRICT_STATES = new Set(['AK', 'DE', 'ND', 'SD', 'VT', 'WY']);
 
 function buildMetadataRegionId(countryId: CountryId, regionName: string): string {
   return `metadata:${countryId}:${regionName}`;
+}
+
+function normalizeUSDistrictId(districtId: string): string {
+  const trimmedDistrictId = districtId.trim().toUpperCase();
+  const match = trimmedDistrictId.match(/^([A-Z]{2})-(\d{1,2})$/);
+
+  if (!match) {
+    return trimmedDistrictId;
+  }
+
+  const [, state, num] = match;
+
+  if (state === 'DC' && num === '98') {
+    return 'DC-01';
+  }
+
+  if (num === '00') {
+    return `${state}-01`;
+  }
+
+  return `${state}-${num.padStart(2, '0')}`;
+}
+
+function normalizeCongressionalDistrictCode(regionCode: string): string {
+  const trimmedCode = regionCode.trim();
+  const match = trimmedCode.match(/^(congressional_district\/)?([A-Za-z]{2}-\d{1,2})$/);
+
+  if (!match) {
+    return trimmedCode;
+  }
+
+  const [, prefix = '', districtId] = match;
+  return `${prefix}${normalizeUSDistrictId(districtId)}`;
+}
+
+function getLegacyUSDistrictAlias(canonicalDistrictId: string): string | null {
+  const normalizedDistrictId = normalizeUSDistrictId(canonicalDistrictId);
+  const match = normalizedDistrictId.match(/^([A-Z]{2})-(\d{2})$/);
+
+  if (!match) {
+    return null;
+  }
+
+  const [, state, num] = match;
+
+  if (state === 'DC' && num === '01') {
+    return 'DC-98';
+  }
+
+  if (US_AT_LARGE_DISTRICT_STATES.has(state) && num === '01') {
+    return `${state}-00`;
+  }
+
+  return null;
 }
 
 export function fromMetadataRegionEntry(
   countryId: CountryId,
   region: MetadataRegionEntry
 ): RegionRecord {
+  const normalizedCode = normalizeRegionCode(countryId, region.name);
+
   return {
-    id: buildMetadataRegionId(countryId, region.name),
+    id: buildMetadataRegionId(countryId, normalizedCode),
     countryId,
-    code: region.name,
+    code: normalizedCode,
     label: region.label,
     regionType: region.type,
     parentCode: null,
@@ -86,15 +143,21 @@ export function fromMetadataRegionEntry(
 }
 
 export function fromV2RegionMetadata(countryId: CountryId, region: V2RegionSource): RegionRecord {
+  const normalizedCode = normalizeRegionCode(countryId, region.code);
+  const normalizedFilterValue =
+    countryId === 'us' && region.region_type === 'congressional_district' && region.filter_value
+      ? normalizeUSDistrictId(region.filter_value)
+      : region.filter_value;
+
   return {
     id: region.id,
     countryId,
-    code: region.code,
+    code: normalizedCode,
     label: region.label,
     regionType: region.region_type,
     parentCode: region.parent_code,
     filterField: region.filter_field,
-    filterValue: region.filter_value,
+    filterValue: normalizedFilterValue,
     filterStrategy: region.filter_strategy ?? null,
     requiresFilter: region.requires_filter,
     stateCode: region.state_code ?? null,
@@ -132,17 +195,21 @@ export function normalizeRegionCode(countryId: CountryId, regionCode: string): R
     return trimmedCode;
   }
 
-  if (trimmedCode === countryId || trimmedCode.includes('/')) {
+  if (trimmedCode === countryId) {
     return trimmedCode;
   }
 
   if (countryId === 'us') {
+    if (trimmedCode.startsWith('congressional_district/')) {
+      return normalizeCongressionalDistrictCode(trimmedCode);
+    }
+
     if (US_STATE_CODE_RE.test(trimmedCode)) {
       return `state/${trimmedCode.toLowerCase()}`;
     }
 
     if (US_DISTRICT_CODE_RE.test(trimmedCode)) {
-      return `congressional_district/${trimmedCode.toUpperCase()}`;
+      return `congressional_district/${normalizeUSDistrictId(trimmedCode)}`;
     }
 
     const legacyStateMatch = trimmedCode.match(US_LEGACY_STATE_CODE_RE);
@@ -152,8 +219,12 @@ export function normalizeRegionCode(countryId: CountryId, regionCode: string): R
 
     const legacyDistrictMatch = trimmedCode.match(US_LEGACY_DISTRICT_CODE_RE);
     if (legacyDistrictMatch) {
-      return `congressional_district/${legacyDistrictMatch[1].toUpperCase()}`;
+      return `congressional_district/${normalizeUSDistrictId(legacyDistrictMatch[1])}`;
     }
+  }
+
+  if (trimmedCode.includes('/')) {
+    return trimmedCode;
   }
 
   if (countryId === 'uk') {
@@ -172,6 +243,29 @@ export function normalizeRegionCode(countryId: CountryId, regionCode: string): R
   }
 
   return trimmedCode;
+}
+
+export function getLegacyRegionCodeFallbacks(
+  countryId: CountryId,
+  regionCode: RegionCode
+): RegionCode[] {
+  if (countryId !== 'us') {
+    return [];
+  }
+
+  const canonicalCode = normalizeRegionCode(countryId, regionCode);
+  const districtMatch = canonicalCode.match(/^congressional_district\/([A-Z]{2}-\d{2})$/);
+
+  if (!districtMatch) {
+    return [];
+  }
+
+  const alias = getLegacyUSDistrictAlias(districtMatch[1]);
+  if (!alias) {
+    return [];
+  }
+
+  return [`congressional_district/${alias}`];
 }
 
 export function getRegionCodeCandidates(regionCode: string): RegionCode[] {

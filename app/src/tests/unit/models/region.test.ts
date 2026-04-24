@@ -2,6 +2,8 @@ import { describe, expect, test } from 'vitest';
 import {
   createResolvedRegionTarget,
   fromMetadataRegionEntry,
+  fromV2RegionMetadata,
+  getLegacyRegionCodeFallbacks,
   getRegionCodeCandidates,
   normalizeRegionCode,
   toRegionRecord,
@@ -68,6 +70,25 @@ describe('region model helpers', () => {
     });
   });
 
+  test('given buggy district codes from v2 then converts them to canonical app-level regions', () => {
+    const result = fromV2RegionMetadata('us', {
+      id: 'region-de-at-large',
+      code: 'congressional_district/DE-00',
+      label: "Delaware's at-large congressional district",
+      region_type: 'congressional_district',
+      parent_code: 'us',
+      filter_field: 'congressional_district',
+      filter_value: 'DE-00',
+      filter_strategy: 'weight_replacement',
+      requires_filter: true,
+      state_code: 'DE',
+      state_name: 'Delaware',
+    });
+
+    expect(result.code).toBe('congressional_district/DE-01');
+    expect(result.filterValue).toBe('DE-01');
+  });
+
   test('given resolved canonical region then creates a ResolvedRegionTarget', () => {
     const region = toRegionRecord('uk', {
       id: 'region-uk-england',
@@ -102,7 +123,11 @@ describe('region model helpers', () => {
     expect(normalizeRegionCode('us', 'ca')).toBe('state/ca');
     expect(normalizeRegionCode('us', 'CA-12')).toBe('congressional_district/CA-12');
     expect(normalizeRegionCode('us', 'us-ca')).toBe('state/ca');
-    expect(normalizeRegionCode('us', 'us-DE-00')).toBe('congressional_district/DE-00');
+    expect(normalizeRegionCode('us', 'us-DE-00')).toBe('congressional_district/DE-01');
+    expect(normalizeRegionCode('us', 'congressional_district/DE-00')).toBe(
+      'congressional_district/DE-01'
+    );
+    expect(normalizeRegionCode('us', 'DC-98')).toBe('congressional_district/DC-01');
     expect(normalizeRegionCode('uk', 'england')).toBe('country/england');
     expect(normalizeRegionCode('uk', 'uk-scotland')).toBe('country/scotland');
   });
@@ -116,5 +141,15 @@ describe('region model helpers', () => {
     expect(getRegionCodeCandidates('Sheffield Central')).toContain(
       'constituency/Sheffield Central'
     );
+  });
+
+  test('given canonical at-large districts then returns legacy fetch fallbacks only for backend compatibility', () => {
+    expect(getLegacyRegionCodeFallbacks('us', 'congressional_district/DE-01')).toEqual([
+      'congressional_district/DE-00',
+    ]);
+    expect(getLegacyRegionCodeFallbacks('us', 'congressional_district/DC-01')).toEqual([
+      'congressional_district/DC-98',
+    ]);
+    expect(getLegacyRegionCodeFallbacks('us', 'congressional_district/CA-01')).toEqual([]);
   });
 });

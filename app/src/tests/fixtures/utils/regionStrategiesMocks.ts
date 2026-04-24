@@ -431,7 +431,7 @@ export const expectedCaliforniaDistricts = [
 
 const mockSingleDistrictMetadata: MetadataRegionEntry[] = [
   {
-    name: 'congressional_district/AK-00',
+    name: 'congressional_district/AK-01',
     label: "Alaska's at-large congressional district",
     type: US_REGION_TYPES.CONGRESSIONAL_DISTRICT,
     state_abbreviation: 'AK',
