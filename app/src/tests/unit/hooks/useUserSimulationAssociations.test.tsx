@@ -5,6 +5,7 @@ import {
   useCreateSimulationAssociation,
   useSimulationAssociation,
   useSimulationAssociationsByUser,
+  useSimulationAssociationStoreForCapability,
   useUserSimulationStore,
 } from '@/hooks/useUserSimulationAssociations';
 import {
@@ -19,16 +20,35 @@ import {
 
 // Mock the stores
 vi.mock('@/api/simulationAssociation', () => {
-  const mockStore = {
+  const localStore = {
     create: vi.fn(),
     findByUser: vi.fn(),
     findById: vi.fn(),
+    update: vi.fn(),
+  };
+  const apiStore = {
+    create: vi.fn(),
+    findByUser: vi.fn(),
+    findById: vi.fn(),
+    update: vi.fn(),
+  };
+  const mixedStore = {
+    create: vi.fn(),
+    findByUser: vi.fn(),
+    findById: vi.fn(),
+    update: vi.fn(),
   };
   return {
-    ApiSimulationStore: vi.fn(() => mockStore),
-    LocalStorageSimulationStore: vi.fn(() => mockStore),
+    ApiSimulationStore: vi.fn(() => apiStore),
+    LocalStorageSimulationStore: vi.fn(() => localStore),
+    MixedSimulationStore: vi.fn(() => mixedStore),
   };
 });
+
+vi.mock('@/config/simulationCapability', () => ({
+  assertSupportedSimulationCapabilityMode: vi.fn(() => 'v1_only'),
+  isSimulationCapabilityV1Only: vi.fn(() => true),
+}));
 
 // Mock useCurrentCountry
 vi.mock('@/hooks/useCurrentCountry', () => ({
@@ -60,6 +80,8 @@ vi.mock('@/libs/queryKeys', () => ({
 
 // Get mock store for type safety
 const { LocalStorageSimulationStore } = await import('@/api/simulationAssociation');
+const { assertSupportedSimulationCapabilityMode, isSimulationCapabilityV1Only } =
+  await import('@/config/simulationCapability');
 
 describe('useUserSimulationAssociations', () => {
   let queryClient: QueryClient;
@@ -67,6 +89,8 @@ describe('useUserSimulationAssociations', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(assertSupportedSimulationCapabilityMode).mockReturnValue('v1_only');
+    vi.mocked(isSimulationCapabilityV1Only).mockReturnValue(true);
     queryClient = createMockQueryClient();
     wrapper = createWrapper(queryClient);
 
@@ -84,6 +108,21 @@ describe('useUserSimulationAssociations', () => {
       expect(result.current.create).toBeDefined();
       expect(result.current.findByUser).toBeDefined();
       expect(result.current.findById).toBeDefined();
+    });
+  });
+
+  describe('useSimulationAssociationStoreForCapability', () => {
+    it('given mixed capability mode then returns the mixed store selection', () => {
+      vi.mocked(assertSupportedSimulationCapabilityMode).mockReturnValue('mixed');
+      vi.mocked(isSimulationCapabilityV1Only).mockReturnValue(false);
+
+      const { result } = renderHook(() => useSimulationAssociationStoreForCapability());
+
+      expect(result.current.store).toBeDefined();
+      expect(result.current.config).toEqual({
+        staleTime: 5 * 60 * 1000,
+        gcTime: 10 * 60 * 1000,
+      });
     });
   });
 

@@ -1,5 +1,10 @@
-import { UserSimulationAdapter } from '@/adapters/UserSimulationAdapter';
-import { UserSimulationCreationPayload } from '@/types/payloads';
+import {
+  createUserSimulationAssociationV2,
+  fetchUserSimulationAssociationByIdV2,
+  fetchUserSimulationAssociationsV2,
+  updateUserSimulationAssociationV2,
+} from '@/api/v2/userSimulationAssociations';
+import { getMappedV2UserId, getOrCreateV2UserId, isUuid } from '@/libs/migration/idMapping';
 import { UserSimulation } from '../types/ingredients/UserSimulation';
 
 export interface UserSimulationStore {
@@ -12,80 +17,51 @@ export interface UserSimulationStore {
 }
 
 export class ApiSimulationStore implements UserSimulationStore {
-  // TODO: Modify value to match to-be-created API endpoint structure
-  private readonly BASE_URL = '/api/user-simulation-associations';
-
   async create(simulation: Omit<UserSimulation, 'id' | 'createdAt'>): Promise<UserSimulation> {
-    const payload: UserSimulationCreationPayload =
-      UserSimulationAdapter.toCreationPayload(simulation);
+    const v2UserId = getOrCreateV2UserId(simulation.userId);
 
-    const response = await fetch(`${this.BASE_URL}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
+    return createUserSimulationAssociationV2({
+      userId: v2UserId,
+      simulationId: simulation.simulationId,
+      countryId: simulation.countryId,
+      label: simulation.label,
     });
-
-    if (!response.ok) {
-      throw new Error('Failed to create simulation association');
-    }
-
-    const apiResponse = await response.json();
-    return UserSimulationAdapter.fromApiResponse(apiResponse);
   }
 
   async findByUser(userId: string, countryId?: string): Promise<UserSimulation[]> {
-    const response = await fetch(`${this.BASE_URL}/user/${userId}`, {
-      headers: { 'Content-Type': 'application/json' },
-    });
-    if (!response.ok) {
-      throw new Error('Failed to fetch user associations');
+    const v2UserId = getMappedV2UserId(userId);
+
+    if (!v2UserId) {
+      return [];
     }
 
-    const apiResponses = await response.json();
-
-    // Convert each API response to UserSimulation and filter by country if specified
-    const simulations = apiResponses.map((apiData: any) =>
-      UserSimulationAdapter.fromApiResponse(apiData)
-    );
-    return countryId
-      ? simulations.filter((s: UserSimulation) => s.countryId === countryId)
-      : simulations;
+    return fetchUserSimulationAssociationsV2(v2UserId, countryId);
   }
 
   async findById(userId: string, simulationId: string): Promise<UserSimulation | null> {
-    const response = await fetch(`${this.BASE_URL}/${userId}/${simulationId}`, {
-      headers: { 'Content-Type': 'application/json' },
-    });
+    const v2UserId = getMappedV2UserId(userId);
 
-    if (response.status === 404) {
+    if (!v2UserId) {
       return null;
     }
 
-    if (!response.ok) {
-      throw new Error('Failed to fetch association');
-    }
-
-    const apiData = await response.json();
-    return UserSimulationAdapter.fromApiResponse(apiData);
+    const associations = await fetchUserSimulationAssociationsV2(v2UserId);
+    return associations.find((association) => association.simulationId === simulationId) ?? null;
   }
 
   async update(
-    _userSimulationId: string,
-    _updates: Partial<UserSimulation>
+    userSimulationId: string,
+    updates: Partial<UserSimulation>
   ): Promise<UserSimulation> {
-    // TODO: Implement when backend API endpoint is available
-    // Expected endpoint: PUT /api/user-simulation-associations/:userSimulationId
-    // Expected payload: UserSimulationUpdatePayload (to be created)
+    const existingAssociation = await fetchUserSimulationAssociationByIdV2(userSimulationId);
 
-    console.warn(
-      '[ApiSimulationStore.update] API endpoint not yet implemented. ' +
-        'This method will be activated when user authentication is added.'
-    );
+    if (!existingAssociation) {
+      throw new Error(`UserSimulation with id ${userSimulationId} not found`);
+    }
 
-    throw new Error(
-      'Simulation updates via API are not yet supported. ' +
-        'Please ensure you are using localStorage mode.'
-    );
+    return updateUserSimulationAssociationV2(userSimulationId, existingAssociation.userId, {
+      label: updates.label ?? existingAssociation.label ?? null,
+    });
   }
 
   // Not yet implemented, but keeping for future use
@@ -100,6 +76,50 @@ export class ApiSimulationStore implements UserSimulationStore {
     }
   }
   */
+}
+
+export class MixedSimulationStore implements UserSimulationStore {
+  constructor(
+    private readonly localStore: LocalStorageSimulationStore,
+    private readonly apiStore: ApiSimulationStore
+  ) {}
+
+  async create(simulation: Omit<UserSimulation, 'id' | 'createdAt'>): Promise<UserSimulation> {
+    if (isUuid(simulation.simulationId)) {
+      return this.apiStore.create(simulation);
+    }
+
+    return this.localStore.create(simulation);
+  }
+
+  async findByUser(userId: string, countryId?: string): Promise<UserSimulation[]> {
+    const [localAssociations, v2Associations] = await Promise.all([
+      this.localStore.findByUser(userId, countryId),
+      this.apiStore.findByUser(userId, countryId),
+    ]);
+
+    return [...localAssociations, ...v2Associations];
+  }
+
+  async findById(userId: string, simulationId: string): Promise<UserSimulation | null> {
+    const localAssociation = await this.localStore.findById(userId, simulationId);
+    if (localAssociation) {
+      return localAssociation;
+    }
+
+    return this.apiStore.findById(userId, simulationId);
+  }
+
+  async update(
+    userSimulationId: string,
+    updates: Partial<UserSimulation>
+  ): Promise<UserSimulation> {
+    if (isUuid(userSimulationId)) {
+      return this.apiStore.update(userSimulationId, updates);
+    }
+
+    return this.localStore.update(userSimulationId, updates);
+  }
 }
 
 export class LocalStorageSimulationStore implements UserSimulationStore {

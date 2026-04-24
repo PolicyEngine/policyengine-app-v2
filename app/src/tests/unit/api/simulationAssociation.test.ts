@@ -1,181 +1,238 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { UserSimulationAdapter } from '@/adapters/UserSimulationAdapter';
-import { ApiSimulationStore, LocalStorageSimulationStore } from '@/api/simulationAssociation';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-  mockErrorFetchResponse,
+  ApiSimulationStore,
+  LocalStorageSimulationStore,
+  MixedSimulationStore,
+} from '@/api/simulationAssociation';
+import {
+  createUserSimulationAssociationV2,
+  fetchUserSimulationAssociationByIdV2,
+  fetchUserSimulationAssociationsV2,
+  updateUserSimulationAssociationV2,
+} from '@/api/v2/userSimulationAssociations';
+import { getMappedV2UserId, getOrCreateV2UserId } from '@/libs/migration/idMapping';
+import {
   mockSimulation,
-  mockSimulationApiResponse,
   mockSimulationInput,
-  mockSuccessFetchResponse,
+  TEST_COUNTRIES,
   TEST_LABELS,
   TEST_SIM_IDS,
   TEST_USER_IDS,
 } from '@/tests/fixtures/api/simulationAssociationMocks';
 
-// Mock the adapter
-vi.mock('@/adapters/UserSimulationAdapter');
+vi.mock('@/api/v2/userSimulationAssociations', () => ({
+  createUserSimulationAssociationV2: vi.fn(),
+  fetchUserSimulationAssociationsV2: vi.fn(),
+  fetchUserSimulationAssociationByIdV2: vi.fn(),
+  updateUserSimulationAssociationV2: vi.fn(),
+}));
 
-// Mock fetch
-global.fetch = vi.fn();
+vi.mock('@/libs/migration/idMapping', () => ({
+  getMappedV2UserId: vi.fn(),
+  getOrCreateV2UserId: vi.fn(),
+  isUuid: (id: string) =>
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id),
+}));
 
 describe('ApiSimulationStore', () => {
   let store: ApiSimulationStore;
 
   beforeEach(() => {
-    store = new ApiSimulationStore();
     vi.clearAllMocks();
-    (UserSimulationAdapter.toCreationPayload as any).mockReturnValue(mockSimulationApiResponse());
-    (UserSimulationAdapter.fromApiResponse as any).mockReturnValue(mockSimulation());
-  });
-
-  afterEach(() => {
-    vi.resetAllMocks();
+    store = new ApiSimulationStore();
   });
 
   describe('create', () => {
-    it('given valid simulation then creates simulation association', async () => {
-      // Given
-      (global.fetch as any).mockResolvedValue(
-        mockSuccessFetchResponse(mockSimulationApiResponse())
-      );
+    it('given association input then it creates through the v2 client using the mapped v2 user id', async () => {
+      const v2Association = mockSimulation({
+        id: 'dd0e8400-e29b-41d4-a716-446655440008',
+        userId: '550e8400-e29b-41d4-a716-446655440000',
+        simulationId: '990e8400-e29b-41d4-a716-446655440004',
+      });
+      vi.mocked(getOrCreateV2UserId).mockReturnValue(v2Association.userId);
+      vi.mocked(createUserSimulationAssociationV2).mockResolvedValue(v2Association);
 
-      // When
-      const result = await store.create(mockSimulationInput());
-
-      // Then
-      expect(fetch).toHaveBeenCalledWith(
-        '/api/user-simulation-associations',
-        expect.objectContaining({
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(mockSimulationApiResponse()),
+      const result = await store.create(
+        mockSimulationInput({
+          simulationId: v2Association.simulationId,
         })
       );
-      expect(result).toEqual(mockSimulation());
-    });
 
-    it('given API error then throws error', async () => {
-      // Given
-      (global.fetch as any).mockResolvedValue(mockErrorFetchResponse(500));
-
-      // When/Then
-      await expect(store.create(mockSimulationInput())).rejects.toThrow(
-        'Failed to create simulation association'
-      );
+      expect(getOrCreateV2UserId).toHaveBeenCalledWith(TEST_USER_IDS.USER_123);
+      expect(createUserSimulationAssociationV2).toHaveBeenCalledWith({
+        userId: v2Association.userId,
+        simulationId: v2Association.simulationId,
+        countryId: TEST_COUNTRIES.US,
+        label: TEST_LABELS.TEST_SIMULATION_1,
+      });
+      expect(result).toEqual(v2Association);
     });
   });
 
   describe('findByUser', () => {
-    it('given valid user ID then fetches user simulation associations', async () => {
-      // Given
-      (global.fetch as any).mockResolvedValue({
-        ok: true,
-        json: async () => [mockSimulationApiResponse()],
-      });
+    it('given no mapped v2 user id then it returns an empty list', async () => {
+      vi.mocked(getMappedV2UserId).mockReturnValue(null);
 
-      // When
-      const result = await store.findByUser(TEST_USER_IDS.USER_123);
-
-      // Then
-      expect(fetch).toHaveBeenCalledWith(
-        '/api/user-simulation-associations/user/user-123',
-        expect.objectContaining({
-          headers: { 'Content-Type': 'application/json' },
-        })
-      );
-      expect(result).toEqual([mockSimulation()]);
+      await expect(store.findByUser(TEST_USER_IDS.USER_123)).resolves.toEqual([]);
+      expect(fetchUserSimulationAssociationsV2).not.toHaveBeenCalled();
     });
 
-    it('given API error then throws error', async () => {
-      // Given
-      (global.fetch as any).mockResolvedValue({
-        ok: false,
-        status: 500,
+    it('given a mapped v2 user id then it fetches via the v2 client', async () => {
+      const v2Association = mockSimulation({
+        id: 'dd0e8400-e29b-41d4-a716-446655440008',
+        userId: '550e8400-e29b-41d4-a716-446655440000',
+        simulationId: '990e8400-e29b-41d4-a716-446655440004',
       });
+      vi.mocked(getMappedV2UserId).mockReturnValue(v2Association.userId);
+      vi.mocked(fetchUserSimulationAssociationsV2).mockResolvedValue([v2Association]);
 
-      // When/Then
-      await expect(store.findByUser(TEST_USER_IDS.USER_123)).rejects.toThrow(
-        'Failed to fetch user associations'
+      const result = await store.findByUser(TEST_USER_IDS.USER_123, TEST_COUNTRIES.US);
+
+      expect(fetchUserSimulationAssociationsV2).toHaveBeenCalledWith(
+        v2Association.userId,
+        TEST_COUNTRIES.US
       );
+      expect(result).toEqual([v2Association]);
     });
   });
 
   describe('findById', () => {
-    it('given valid IDs then fetches specific association', async () => {
-      // Given
-      (global.fetch as any).mockResolvedValue({
-        ok: true,
-        status: 200,
-        json: async () => mockSimulationApiResponse(),
-      });
+    it('given no mapped v2 user id then it returns null', async () => {
+      vi.mocked(getMappedV2UserId).mockReturnValue(null);
 
-      // When
-      const result = await store.findById(TEST_USER_IDS.USER_123, TEST_SIM_IDS.SIM_456);
-
-      // Then
-      expect(fetch).toHaveBeenCalledWith(
-        '/api/user-simulation-associations/user-123/sim-456',
-        expect.objectContaining({
-          headers: { 'Content-Type': 'application/json' },
-        })
-      );
-      expect(result).toEqual(mockSimulation());
+      await expect(
+        store.findById(TEST_USER_IDS.USER_123, TEST_SIM_IDS.SIM_456)
+      ).resolves.toBeNull();
+      expect(fetchUserSimulationAssociationsV2).not.toHaveBeenCalled();
     });
 
-    it('given 404 response then returns null', async () => {
-      // Given
-      (global.fetch as any).mockResolvedValue({
-        ok: false,
-        status: 404,
+    it('given a mapped v2 user id then it filters the user association list by simulation id', async () => {
+      const v2UserId = '550e8400-e29b-41d4-a716-446655440000';
+      const v2Association = mockSimulation({
+        id: 'dd0e8400-e29b-41d4-a716-446655440008',
+        userId: v2UserId,
+        simulationId: '990e8400-e29b-41d4-a716-446655440004',
       });
+      vi.mocked(getMappedV2UserId).mockReturnValue(v2UserId);
+      vi.mocked(fetchUserSimulationAssociationsV2).mockResolvedValue([v2Association]);
 
-      // When
-      const result = await store.findById(TEST_USER_IDS.USER_123, 'nonexistent');
+      const result = await store.findById(TEST_USER_IDS.USER_123, v2Association.simulationId);
 
-      // Then
-      expect(result).toBeNull();
-    });
-
-    it('given other error then throws error', async () => {
-      // Given
-      (global.fetch as any).mockResolvedValue({
-        ok: false,
-        status: 500,
-      });
-
-      // When/Then
-      await expect(store.findById(TEST_USER_IDS.USER_123, TEST_SIM_IDS.SIM_456)).rejects.toThrow(
-        'Failed to fetch association'
-      );
+      expect(result).toEqual(v2Association);
     });
   });
 
   describe('update', () => {
-    it('given update called then throws not supported error', async () => {
-      // Given & When & Then
-      await expect(store.update('sus-abc123', { label: 'Updated Label' })).rejects.toThrow(
-        'Please ensure you are using localStorage mode'
+    it('given a v2 association id then it fetches the association and updates it through the v2 client', async () => {
+      const v2Association = mockSimulation({
+        id: 'dd0e8400-e29b-41d4-a716-446655440008',
+        userId: '550e8400-e29b-41d4-a716-446655440000',
+        simulationId: '990e8400-e29b-41d4-a716-446655440004',
+      });
+      vi.mocked(fetchUserSimulationAssociationByIdV2).mockResolvedValue(v2Association);
+      vi.mocked(updateUserSimulationAssociationV2).mockResolvedValue({
+        ...v2Association,
+        label: 'Updated simulation',
+      });
+
+      const result = await store.update(v2Association.id!, { label: 'Updated simulation' });
+
+      expect(fetchUserSimulationAssociationByIdV2).toHaveBeenCalledWith(v2Association.id);
+      expect(updateUserSimulationAssociationV2).toHaveBeenCalledWith(
+        v2Association.id!,
+        v2Association.userId,
+        { label: 'Updated simulation' }
       );
+      expect(result.label).toBe('Updated simulation');
     });
 
-    it('given update called then logs warning', async () => {
-      // Given
-      const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    it('given an unknown v2 association id then it throws a clear error', async () => {
+      vi.mocked(fetchUserSimulationAssociationByIdV2).mockResolvedValue(null);
 
-      // When
-      try {
-        await store.update('sus-abc123', { label: 'Updated Label' });
-      } catch {
-        // Expected to throw
-      }
-
-      // Then
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('API endpoint not yet implemented')
-      );
-
-      consoleWarnSpy.mockRestore();
+      await expect(
+        store.update('dd0e8400-e29b-41d4-a716-446655440008', { label: 'Updated simulation' })
+      ).rejects.toThrow('UserSimulation with id dd0e8400-e29b-41d4-a716-446655440008 not found');
     });
+  });
+});
+
+describe('MixedSimulationStore', () => {
+  let localStore: LocalStorageSimulationStore;
+  let apiStore: ApiSimulationStore;
+  let store: MixedSimulationStore;
+
+  beforeEach(() => {
+    localStore = new LocalStorageSimulationStore();
+    apiStore = new ApiSimulationStore();
+    store = new MixedSimulationStore(localStore, apiStore);
+
+    vi.spyOn(localStore, 'create').mockResolvedValue(mockSimulation({ id: 'sus-local-1' }));
+    vi.spyOn(localStore, 'findByUser').mockResolvedValue([mockSimulation({ id: 'sus-local-1' })]);
+    vi.spyOn(localStore, 'findById').mockResolvedValue(mockSimulation({ id: 'sus-local-1' }));
+    vi.spyOn(localStore, 'update').mockResolvedValue(mockSimulation({ id: 'sus-local-1' }));
+
+    vi.spyOn(apiStore, 'create').mockResolvedValue(
+      mockSimulation({
+        id: 'dd0e8400-e29b-41d4-a716-446655440008',
+        simulationId: '990e8400-e29b-41d4-a716-446655440004',
+      })
+    );
+    vi.spyOn(apiStore, 'findByUser').mockResolvedValue([
+      mockSimulation({
+        id: 'dd0e8400-e29b-41d4-a716-446655440008',
+        simulationId: '990e8400-e29b-41d4-a716-446655440004',
+      }),
+    ]);
+    vi.spyOn(apiStore, 'findById').mockResolvedValue(
+      mockSimulation({
+        id: 'dd0e8400-e29b-41d4-a716-446655440008',
+        simulationId: '990e8400-e29b-41d4-a716-446655440004',
+      })
+    );
+    vi.spyOn(apiStore, 'update').mockResolvedValue(
+      mockSimulation({
+        id: 'dd0e8400-e29b-41d4-a716-446655440008',
+        simulationId: '990e8400-e29b-41d4-a716-446655440004',
+        label: 'Updated simulation',
+      })
+    );
+  });
+
+  it('routes local simulation creates to the local store', async () => {
+    const localInput = mockSimulationInput({ simulationId: TEST_SIM_IDS.SIM_456 });
+
+    await store.create(localInput);
+
+    expect(localStore.create).toHaveBeenCalledWith(localInput);
+    expect(apiStore.create).not.toHaveBeenCalled();
+  });
+
+  it('routes uuid simulation creates to the v2 store', async () => {
+    const v2Input = mockSimulationInput({
+      simulationId: '990e8400-e29b-41d4-a716-446655440004',
+    });
+
+    await store.create(v2Input);
+
+    expect(apiStore.create).toHaveBeenCalledWith(v2Input);
+    expect(localStore.create).not.toHaveBeenCalled();
+  });
+
+  it('merges local and v2 associations for findByUser', async () => {
+    const result = await store.findByUser(TEST_USER_IDS.USER_123, TEST_COUNTRIES.US);
+
+    expect(result).toHaveLength(2);
+    expect(localStore.findByUser).toHaveBeenCalledWith(TEST_USER_IDS.USER_123, TEST_COUNTRIES.US);
+    expect(apiStore.findByUser).toHaveBeenCalledWith(TEST_USER_IDS.USER_123, TEST_COUNTRIES.US);
+  });
+
+  it('routes uuid association updates to the v2 store', async () => {
+    await store.update('dd0e8400-e29b-41d4-a716-446655440008', {
+      label: 'Updated simulation',
+    });
+
+    expect(apiStore.update).toHaveBeenCalled();
+    expect(localStore.update).not.toHaveBeenCalled();
   });
 });
 
@@ -184,7 +241,6 @@ describe('LocalStorageSimulationStore', () => {
   let mockLocalStorage: { [key: string]: string };
 
   beforeEach(() => {
-    // Mock localStorage
     mockLocalStorage = {};
     global.localStorage = {
       getItem: vi.fn((key) => mockLocalStorage[key] || null),
@@ -205,219 +261,37 @@ describe('LocalStorageSimulationStore', () => {
     vi.clearAllMocks();
   });
 
-  describe('create', () => {
-    it('given new simulation then stores in localStorage', async () => {
-      // When
-      const result = await store.create(
-        mockSimulationInput({ label: TEST_LABELS.TEST_SIMULATION_1 })
-      );
+  it('stores a new local association with a generated sus- id', async () => {
+    const result = await store.create(
+      mockSimulationInput({ label: TEST_LABELS.TEST_SIMULATION_1 })
+    );
 
-      // Then
-      expect(result).toMatchObject({
-        userId: TEST_USER_IDS.USER_123,
-        simulationId: TEST_SIM_IDS.SIM_456,
-        label: TEST_LABELS.TEST_SIMULATION_1,
-      });
-      expect(result.id).toMatch(/^sus-/);
-      expect(result.createdAt).toBeDefined();
-      expect(result.isCreated).toBe(true);
-      expect(localStorage.setItem).toHaveBeenCalled();
+    expect(result).toMatchObject({
+      userId: TEST_USER_IDS.USER_123,
+      simulationId: TEST_SIM_IDS.SIM_456,
+      label: TEST_LABELS.TEST_SIMULATION_1,
     });
-
-    it('given simulation then generates unique ID', async () => {
-      // When
-      const result1 = await store.create(
-        mockSimulationInput({ label: TEST_LABELS.TEST_SIMULATION_1 })
-      );
-      const result2 = await store.create(
-        mockSimulationInput({
-          simulationId: TEST_SIM_IDS.SIM_999,
-          label: TEST_LABELS.TEST_SIMULATION_2,
-        })
-      );
-
-      // Then
-      expect(result1.id).toMatch(/^sus-/);
-      expect(result2.id).toMatch(/^sus-/);
-      expect(result1.id).not.toBe(result2.id);
-    });
-
-    it('given duplicate simulation then creates new association with unique ID', async () => {
-      // Given
-      const first = await store.create(mockSimulationInput());
-
-      // When
-      const second = await store.create(mockSimulationInput());
-
-      // Then
-      expect(second).toMatchObject({
-        userId: first.userId,
-        simulationId: first.simulationId,
-        countryId: first.countryId,
-      });
-      expect(second.id).toBeDefined();
-      expect(second.id).not.toBe(first.id);
-      expect(second.id).toMatch(/^sus-/);
-    });
+    expect(result.id).toMatch(/^sus-/);
+    expect(result.createdAt).toBeDefined();
+    expect(result.isCreated).toBe(true);
+    expect(localStorage.setItem).toHaveBeenCalled();
   });
 
-  describe('findByUser', () => {
-    it('given user with simulations then returns all user simulations', async () => {
-      // Given
-      await store.create(mockSimulationInput({ label: TEST_LABELS.TEST_SIMULATION_1 }));
-      await store.create(
-        mockSimulationInput({
-          simulationId: TEST_SIM_IDS.SIM_999,
-          label: TEST_LABELS.TEST_SIMULATION_2,
-        })
-      );
+  it('allows duplicate local associations by generating distinct ids', async () => {
+    const first = await store.create(mockSimulationInput());
+    const second = await store.create(mockSimulationInput());
 
-      // When
-      const result = await store.findByUser(TEST_USER_IDS.USER_123);
-
-      // Then
-      expect(result).toHaveLength(2);
-      expect(result[0].simulationId).toBe(TEST_SIM_IDS.SIM_456);
-      expect(result[1].simulationId).toBe(TEST_SIM_IDS.SIM_999);
-    });
-
-    it('given user with no simulations then returns empty array', async () => {
-      // When
-      const result = await store.findByUser('nonexistent-user');
-
-      // Then
-      expect(result).toEqual([]);
-    });
+    expect(second.id).toMatch(/^sus-/);
+    expect(second.id).not.toBe(first.id);
+    expect(second.simulationId).toBe(first.simulationId);
   });
 
-  describe('findById', () => {
-    it('given existing simulation then returns it', async () => {
-      // Given
-      await store.create(mockSimulationInput());
+  it('updates a local association by association id rather than simulation id', async () => {
+    const created = await store.create(mockSimulationInput());
 
-      // When
-      const result = await store.findById(TEST_USER_IDS.USER_123, TEST_SIM_IDS.SIM_456);
+    const updated = await store.update(created.id!, { label: 'Renamed simulation' });
 
-      // Then
-      expect(result).toMatchObject({
-        userId: TEST_USER_IDS.USER_123,
-        simulationId: TEST_SIM_IDS.SIM_456,
-      });
-    });
-
-    it('given nonexistent simulation then returns null', async () => {
-      // When
-      const result = await store.findById(TEST_USER_IDS.USER_123, 'nonexistent');
-
-      // Then
-      expect(result).toBeNull();
-    });
-  });
-
-  describe('update', () => {
-    it('given existing simulation then update succeeds and returns updated simulation', async () => {
-      // Given
-      const created = await store.create(
-        mockSimulationInput({ label: TEST_LABELS.TEST_SIMULATION_1 })
-      );
-
-      // When
-      const result = await store.update(created.id!, { label: 'Updated Label' });
-
-      // Then
-      expect(result.label).toBe('Updated Label');
-      expect(result.id).toBe(created.id);
-      expect(result.simulationId).toBe(created.simulationId);
-      expect(result.updatedAt).toBeDefined();
-    });
-
-    it('given nonexistent simulation then update throws error', async () => {
-      // Given - no simulation created
-
-      // When & Then
-      await expect(store.update('sus-nonexistent', { label: 'Updated Label' })).rejects.toThrow(
-        'UserSimulation with id sus-nonexistent not found'
-      );
-    });
-
-    it('given existing simulation then updatedAt timestamp is set', async () => {
-      // Given
-      const created = await store.create(
-        mockSimulationInput({ label: TEST_LABELS.TEST_SIMULATION_1 })
-      );
-      const beforeUpdate = new Date().toISOString();
-
-      // When
-      const result = await store.update(created.id!, { label: 'Updated Label' });
-
-      // Then
-      expect(result.updatedAt).toBeDefined();
-      expect(result.updatedAt! >= beforeUpdate).toBe(true);
-    });
-
-    it('given existing simulation then update persists to localStorage', async () => {
-      // Given
-      const created = await store.create(
-        mockSimulationInput({ label: TEST_LABELS.TEST_SIMULATION_1 })
-      );
-
-      // When
-      await store.update(created.id!, { label: 'Updated Label' });
-
-      // Then
-      const persisted = await store.findById(created.userId, created.simulationId);
-      expect(persisted?.label).toBe('Updated Label');
-    });
-
-    it('given multiple simulations then updates correct one by ID', async () => {
-      // Given
-      const created1 = await store.create(
-        mockSimulationInput({ label: TEST_LABELS.TEST_SIMULATION_1 })
-      );
-      const created2 = await store.create(
-        mockSimulationInput({
-          simulationId: TEST_SIM_IDS.SIM_999,
-          label: TEST_LABELS.TEST_SIMULATION_2,
-        })
-      );
-
-      // When
-      await store.update(created1.id!, { label: 'Updated Label' });
-
-      // Then
-      const updated = await store.findById(created1.userId, created1.simulationId);
-      const unchanged = await store.findById(created2.userId, created2.simulationId);
-      expect(updated?.label).toBe('Updated Label');
-      expect(unchanged?.label).toBe(TEST_LABELS.TEST_SIMULATION_2);
-    });
-
-    it('given update with partial data then only specified fields are updated', async () => {
-      // Given
-      const created = await store.create(
-        mockSimulationInput({ label: TEST_LABELS.TEST_SIMULATION_1 })
-      );
-
-      // When
-      const result = await store.update(created.id!, { label: 'Updated Label' });
-
-      // Then
-      expect(result.label).toBe('Updated Label');
-      expect(result.countryId).toBe(created.countryId); // unchanged
-    });
-  });
-
-  describe('error handling', () => {
-    it('given localStorage error on get then returns empty array', async () => {
-      // Given
-      (localStorage.getItem as any).mockImplementation(() => {
-        throw new Error('Storage error');
-      });
-
-      // When
-      const result = await store.findByUser(TEST_USER_IDS.USER_123);
-
-      // Then
-      expect(result).toEqual([]);
-    });
+    expect(updated.label).toBe('Renamed simulation');
+    expect(updated.updatedAt).toBeDefined();
   });
 });
