@@ -727,6 +727,58 @@ describe('Household', () => {
         { marital_unit_id: 2 },
       ]);
     });
+
+    it('regenerates system ids instead of reusing persisted person and group ids from app input', () => {
+      const household = Household.fromAppInput({
+        countryId: 'us',
+        year: 2026,
+        householdData: {
+          people: {
+            you: {
+              age: { 2026: 30 },
+              person_id: { 2026: 99 },
+              person_marital_unit_id: { 2026: 7 },
+            },
+            partner: {
+              age: { 2026: 31 },
+              person_id: { 2026: 42 },
+              person_marital_unit_id: { 2026: 7 },
+            },
+          },
+          maritalUnits: {
+            maritalUnit1: {
+              members: ['partner', 'you'],
+              marital_unit_id: { 2026: 7 },
+            },
+          },
+        },
+      });
+
+      expect(household.toV2CreateEnvelope()).toEqual({
+        country_id: 'us',
+        year: 2026,
+        label: null,
+        people: [
+          {
+            name: 'partner',
+            person_id: 0,
+            person_marital_unit_id: 0,
+            age: 31,
+          },
+          {
+            name: 'you',
+            person_id: 1,
+            person_marital_unit_id: 0,
+            age: 30,
+          },
+        ],
+        household: [],
+        family: [],
+        spm_unit: [],
+        tax_unit: [],
+        marital_unit: [{ marital_unit_id: 0 }],
+      });
+    });
   });
 
   describe('toComparable', () => {
