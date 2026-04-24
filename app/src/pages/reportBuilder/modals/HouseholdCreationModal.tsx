@@ -178,11 +178,11 @@ export function HouseholdCreationModal({
 
     setValidation(null);
     const timeoutId = setTimeout(() => {
-      setValidation(HouseholdValidation.isReadyForSimulation(household, reportYear));
+      setValidation(HouseholdValidation.isReadyForSimulation(household, countryId, reportYear));
     }, 400);
 
     return () => clearTimeout(timeoutId);
-  }, [household, isOpen, isReadOnly, reportYear]);
+  }, [countryId, household, isOpen, isReadOnly, reportYear]);
 
   const validationMessage = isReadOnly ? null : (validation?.errors[0]?.message ?? null);
 
@@ -253,7 +253,11 @@ export function HouseholdCreationModal({
       return;
     }
 
-    const nextValidation = HouseholdValidation.isReadyForSimulation(household, reportYear);
+    const nextValidation = HouseholdValidation.isReadyForSimulation(
+      household,
+      countryId,
+      reportYear
+    );
     setValidation(nextValidation);
     if (!nextValidation.isValid) {
       return;
@@ -271,14 +275,18 @@ export function HouseholdCreationModal({
     } catch (error) {
       console.error('Failed to create household:', error);
     }
-  }, [createHousehold, household, persistCreatedHousehold, reportYear]);
+  }, [countryId, createHousehold, household, persistCreatedHousehold, reportYear]);
 
   const handleUpdateExistingHousehold = useCallback(async () => {
     if (!household || !initialAssociation?.id) {
       return;
     }
 
-    const nextValidation = HouseholdValidation.isReadyForSimulation(household, reportYear);
+    const nextValidation = HouseholdValidation.isReadyForSimulation(
+      household,
+      countryId,
+      reportYear
+    );
     setValidation(nextValidation);
     if (!nextValidation.isValid) {
       return;
@@ -316,6 +324,7 @@ export function HouseholdCreationModal({
     household,
     initialAssociation,
     persistCreatedHousehold,
+    countryId,
     reportYear,
     updateHouseholdAssociation,
   ]);

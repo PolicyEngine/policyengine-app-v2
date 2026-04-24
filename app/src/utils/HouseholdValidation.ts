@@ -1,10 +1,14 @@
+import { type CountryId } from '@/libs/countries';
 import type {
+  AppHouseholdInputData,
   AppHouseholdInputEnvelope as Household,
   AppHouseholdInputGroup as HouseholdGroupEntity,
 } from '@/models/household/appTypes';
+import { getV2GroupDefinitions } from '@/models/household/schema';
 import { RootState } from '@/store';
 import {
   getAllHouseholdGroupCollections,
+  getHouseholdGroupCollection,
   getHouseholdYearValue,
 } from '@/utils/householdDataAccess';
 import * as HouseholdQueries from './HouseholdQueries';
@@ -44,9 +48,45 @@ export interface VariableMetadata {
   defaultValue: any;
 }
 
+type CountryValidationStrategy = (
+  household: Household,
+  errors: ValidationError[],
+  warnings: ValidationWarning[]
+) => void;
+
+function getConfiguredGroupCollections(
+  householdData: AppHouseholdInputData,
+  countryId: CountryId
+): Array<{ entityName: string; groups: Record<string, HouseholdGroupEntity> }> {
+  if (countryId === 'us' || countryId === 'uk') {
+    return getV2GroupDefinitions(countryId)
+      .map((definition) => ({
+        entityName: definition.appKey,
+        groups: getHouseholdGroupCollection(householdData, definition.appKey) as
+          | Record<string, HouseholdGroupEntity>
+          | undefined,
+      }))
+      .filter(
+        (entry): entry is { entityName: string; groups: Record<string, HouseholdGroupEntity> } =>
+          Boolean(entry.groups)
+      );
+  }
+
+  return getAllHouseholdGroupCollections(householdData).map(({ entityName, groups }) => ({
+    entityName,
+    groups: groups as Record<string, HouseholdGroupEntity>,
+  }));
+}
+
+const COUNTRY_VALIDATION_STRATEGIES: Partial<Record<CountryId, CountryValidationStrategy>> = {
+  us: (household, errors, warnings) =>
+    HouseholdValidation.validateUSHousehold(household, errors, warnings),
+  uk: (household, errors) => HouseholdValidation.validateUKHousehold(household, errors),
+};
+
 /**
  * Validation utilities for Household structures
- * Country-agnostic base validation with country-specific extensions
+ * Generic structural validation with country-specific strategy extensions
  * TODO: Determine how many of these utils we need; were unexpectedly built by AI,
  * but could be useful down the road; not thoroughly tested
  */
@@ -55,7 +95,7 @@ export const HouseholdValidation = {
    * Validate a household for a specific country
    * @param year - Year to validate against (required - should come from report context)
    */
-  validateForCountry(household: Household, countryId: string, year: string): ValidationResult {
+  validateForCountry(household: Household, countryId: CountryId, year: string): ValidationResult {
     const errors: ValidationError[] = [];
     const warnings: ValidationWarning[] = [];
 
@@ -69,17 +109,10 @@ export const HouseholdValidation = {
     }
 
     // Generic validation with report year
-    this.validateGenericHousehold(household, errors, warnings, year);
+    this.validateGenericHousehold(household, errors, warnings, year, countryId);
 
-    // Country-specific validation
-    switch (countryId) {
-      case 'us':
-        this.validateUSHousehold(household, errors, warnings);
-        break;
-      case 'uk':
-        this.validateUKHousehold(household, errors);
-        break;
-    }
+    const strategy = COUNTRY_VALIDATION_STRATEGIES[countryId];
+    strategy?.(household, errors, warnings);
 
     return {
       isValid: errors.length === 0,
@@ -96,7 +129,8 @@ export const HouseholdValidation = {
     household: Household,
     errors: ValidationError[],
     warnings: ValidationWarning[],
-    year: string
+    year: string,
+    countryId: CountryId = household.countryId
   ): void {
     // Check that all people have required fields based on metadata
     const currentYear = year;
@@ -112,21 +146,23 @@ export const HouseholdValidation = {
       }
     });
 
-    // Check that group entities have valid structure.
-    // Loaded households may carry optional group keys with explicit `undefined`
-    // values, so iterate only over concrete group collections.
-    getAllHouseholdGroupCollections(household.householdData).forEach(({ entityName, groups }) => {
-      const entities = groups as Record<string, HouseholdGroupEntity>;
-      Object.entries(entities).forEach(([groupKey, group]) => {
-        if (!Array.isArray(group.members)) {
-          errors.push({
-            code: 'INVALID_GROUP_STRUCTURE',
-            message: `Group ${groupKey} in ${entityName} must have a members array`,
-            field: `${entityName}.${groupKey}.members`,
-          });
-        }
-      });
-    });
+    // Check that country-configured group entities have valid structure.
+    // For supported country-specific household models, this uses the same
+    // country schema layer as the V2 codecs. Other countries fall back to
+    // validating whatever concrete group collections are present.
+    getConfiguredGroupCollections(household.householdData, countryId).forEach(
+      ({ entityName, groups }) => {
+        Object.entries(groups).forEach(([groupKey, group]) => {
+          if (!Array.isArray(group.members)) {
+            errors.push({
+              code: 'INVALID_GROUP_STRUCTURE',
+              message: `Group ${groupKey} in ${entityName} must have a members array`,
+              field: `${entityName}.${groupKey}.members`,
+            });
+          }
+        });
+      }
+    );
   },
 
   /**
@@ -278,7 +314,7 @@ export const HouseholdValidation = {
    * Check if household structure is complete enough for simulation
    * @param year - Year to validate against (required - should come from report context)
    */
-  isReadyForSimulation(household: Household, year: string): ValidationResult {
+  isReadyForSimulation(household: Household, countryId: CountryId, year: string): ValidationResult {
     const errors: ValidationError[] = [];
     const warnings: ValidationWarning[] = [];
 
@@ -292,7 +328,7 @@ export const HouseholdValidation = {
     }
 
     // Validate structure
-    const structureValidation = this.validateForCountry(household, household.countryId, year);
+    const structureValidation = this.validateForCountry(household, countryId, year);
     errors.push(...structureValidation.errors);
     warnings.push(...structureValidation.warnings);
 

@@ -564,6 +564,7 @@ describe('HouseholdValidation', () => {
       // When
       const result = HouseholdValidation.isReadyForSimulation(
         mockValidUSHousehold,
+        VALIDATION_COUNTRIES.US,
         VALIDATION_YEARS.DEFAULT
       );
 
@@ -578,6 +579,7 @@ describe('HouseholdValidation', () => {
       // When
       const result = HouseholdValidation.isReadyForSimulation(
         mockEmptyHousehold,
+        VALIDATION_COUNTRIES.US,
         VALIDATION_YEARS.DEFAULT
       );
 
@@ -593,6 +595,7 @@ describe('HouseholdValidation', () => {
       // When
       const result = HouseholdValidation.isReadyForSimulation(
         mockHouseholdInvalidGroupStructure,
+        VALIDATION_COUNTRIES.US,
         VALIDATION_YEARS.DEFAULT
       );
 
@@ -608,6 +611,7 @@ describe('HouseholdValidation', () => {
       // When
       const result = HouseholdValidation.isReadyForSimulation(
         mockHouseholdMissingAge,
+        VALIDATION_COUNTRIES.US,
         VALIDATION_YEARS.DEFAULT
       );
 

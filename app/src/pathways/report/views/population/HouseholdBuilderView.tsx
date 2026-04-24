@@ -9,6 +9,7 @@ import { useSelector } from 'react-redux';
 import PathwayView from '@/components/common/PathwayView';
 import { Spinner, Stack } from '@/components/ui';
 import { useCreateHousehold } from '@/hooks/useCreateHousehold';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useReportYear } from '@/hooks/useReportYear';
 import { getBasicInputFields } from '@/libs/metadataUtils';
 import { Household as HouseholdModel } from '@/models/Household';
@@ -40,6 +41,7 @@ export default function HouseholdBuilderView({
   onSubmitSuccess,
   onBack,
 }: HouseholdBuilderViewProps) {
+  const currentCountryId = useCurrentCountry();
   const reportYear = useReportYear();
 
   // Get metadata-driven options
@@ -100,11 +102,13 @@ export default function HouseholdBuilderView({
   useEffect(() => {
     setValidation(null);
     const timeoutId = setTimeout(() => {
-      setValidation(HouseholdValidation.isReadyForSimulation(household, reportYear));
+      setValidation(
+        HouseholdValidation.isReadyForSimulation(household, currentCountryId, reportYear)
+      );
     }, 400);
 
     return () => clearTimeout(timeoutId);
-  }, [household, reportYear]);
+  }, [currentCountryId, household, reportYear]);
 
   // Handler for marital status change - directly modifies household
   const handleMaritalStatusChange = (newStatus: 'single' | 'married') => {
@@ -145,7 +149,11 @@ export default function HouseholdBuilderView({
 
   const handleSubmit = async () => {
     // Validate household
-    const validation = HouseholdValidation.isReadyForSimulation(household, reportYear);
+    const validation = HouseholdValidation.isReadyForSimulation(
+      household,
+      currentCountryId,
+      reportYear
+    );
     if (!validation.isValid) {
       return;
     }
