@@ -16,6 +16,21 @@ export type MigrationEntityResponsibility =
   | 'canonical_region_source_and_shadow_resolution'
   | 'association_writes';
 
+/**
+ * Supported migration modes by entity.
+ *
+ * `regions` governs canonical region sourcing and shadow region resolution.
+ * `saved_geographies` governs persisted user geography-association writes.
+ */
+export const ENTITY_SUPPORTED_MODES: Record<MigrationEntity, readonly MigrationMode[]> = {
+  policies: ['v1_only', 'v1_primary_v2_shadow'],
+  households: ['v1_only', 'v1_primary_v2_shadow'],
+  regions: ['v1_only', 'v1_primary_v2_shadow', 'v2_primary_v1_shadow', 'v2_only'],
+  saved_geographies: ['v1_only'],
+  simulations: ['v1_only'],
+  reports: ['v1_only'],
+};
+
 export const ENTITY_MIGRATION_MODE: Record<MigrationEntity, MigrationMode> = {
   policies: 'v1_primary_v2_shadow',
   households: 'v1_primary_v2_shadow',
@@ -45,6 +60,10 @@ export function getMigrationEntityResponsibility(
   entity: MigrationEntity
 ): MigrationEntityResponsibility {
   return MIGRATION_ENTITY_RESPONSIBILITIES[entity];
+}
+
+export function getSupportedMigrationModes(entity: MigrationEntity): readonly MigrationMode[] {
+  return ENTITY_SUPPORTED_MODES[entity];
 }
 
 export function isV1OnlyMode(mode: MigrationMode): boolean {

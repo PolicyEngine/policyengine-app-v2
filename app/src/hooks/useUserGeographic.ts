@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiGeographicStore, LocalStorageGeographicStore } from '@/api/geographicAssociation';
-import { assertSupportedMode } from '@/config/migrationMode';
+import { assertSupportedMode, getSupportedMigrationModes } from '@/config/migrationMode';
 import { useApiRegions } from '@/hooks/useApiRegions';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { shadowResolveRegionTarget } from '@/libs/migration/regionShadow';
@@ -20,7 +20,11 @@ type SavedGeographyAssociationStoreSelection = {
 };
 
 function assertSavedGeographyWriteMode(context: string): void {
-  assertSupportedMode('saved_geographies', ['v1_only'], context);
+  assertSupportedMode(
+    'saved_geographies',
+    getSupportedMigrationModes('saved_geographies'),
+    context
+  );
 }
 
 export const useUserGeographicStore = () => {
@@ -36,7 +40,8 @@ export const useSavedGeographyAssociationStoreForMode =
     };
   };
 
-// This fetches only the user-geographic associations
+// `saved_geographies` controls persisted user geography rows.
+// Canonical `regions` remain a separate concern for lookup and shadow resolution.
 export const useGeographicAssociationsByUser = (userId: string) => {
   const { store, config } = useSavedGeographyAssociationStoreForMode();
   const countryId = useCurrentCountry();

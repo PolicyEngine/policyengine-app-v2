@@ -2,7 +2,11 @@
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { fetchHouseholdById } from '@/api/household';
 import type { UserHouseholdStore } from '@/api/householdAssociation';
-import { assertSupportedMode, usesV2ShadowMode } from '@/config/migrationMode';
+import {
+  assertSupportedMode,
+  getSupportedMigrationModes,
+  usesV2ShadowMode,
+} from '@/config/migrationMode';
 import { replaceHouseholdBaseForAssociation as replaceHouseholdBaseForAssociationAction } from '@/hooks/household/replaceHouseholdBaseForAssociation';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import {
@@ -18,7 +22,6 @@ import { householdAssociationKeys, householdKeys } from '../libs/queryKeys';
 
 const apiHouseholdStore = new ApiHouseholdStore();
 const localHouseholdStore = new LocalStorageHouseholdStore();
-const SUPPORTED_HOUSEHOLD_WRITE_MODES = ['v1_only', 'v1_primary_v2_shadow'] as const;
 
 type HouseholdAssociationStoreSelection = {
   store: ApiHouseholdStore | LocalStorageHouseholdStore;
@@ -33,7 +36,7 @@ export function getHouseholdWriteConfig(
   context: string,
   options?: HouseholdWriteConfigOptions
 ): { shouldShadowV2: boolean } {
-  const mode = assertSupportedMode('households', SUPPORTED_HOUSEHOLD_WRITE_MODES, context);
+  const mode = assertSupportedMode('households', getSupportedMigrationModes('households'), context);
 
   return {
     shouldShadowV2: usesV2ShadowMode(mode) && !options?.skipDuplicateV2AssociationShadow,

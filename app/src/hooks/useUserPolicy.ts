@@ -2,7 +2,11 @@
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { PolicyAdapter } from '@/adapters';
 import { fetchPolicyById } from '@/api/policy';
-import { assertSupportedMode, usesV2ShadowMode } from '@/config/migrationMode';
+import {
+  assertSupportedMode,
+  getSupportedMigrationModes,
+  usesV2ShadowMode,
+} from '@/config/migrationMode';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import {
   shadowCreateUserPolicyAssociation,
@@ -16,7 +20,6 @@ import { UserPolicy } from '../types/ingredients/UserPolicy';
 
 const apiPolicyStore = new ApiPolicyStore();
 const localPolicyStore = new LocalStoragePolicyStore();
-const SUPPORTED_POLICY_WRITE_MODES = ['v1_only', 'v1_primary_v2_shadow'] as const;
 
 type PolicyAssociationStoreSelection = {
   store: ApiPolicyStore | LocalStoragePolicyStore;
@@ -31,7 +34,7 @@ export function getPolicyWriteConfig(
   context: string,
   options?: PolicyWriteConfigOptions
 ): { shouldShadowV2: boolean } {
-  const mode = assertSupportedMode('policies', SUPPORTED_POLICY_WRITE_MODES, context);
+  const mode = assertSupportedMode('policies', getSupportedMigrationModes('policies'), context);
 
   return {
     shouldShadowV2: usesV2ShadowMode(mode) && !options?.skipDuplicateV2AssociationShadow,

@@ -17,7 +17,8 @@ export function shouldLoadApiRegionShadow(mode: MigrationMode): boolean {
 
 export const REGION_MIGRATION_MODE = getMigrationMode('regions');
 
-// Central control for which region source the shared facade should surface.
+// `regions` controls canonical region sourcing for selectors and lookup helpers.
+// Persisted user geography rows are governed separately by `saved_geographies`.
 export const REGION_SURFACE_SOURCE = getRegionSurfaceSource(REGION_MIGRATION_MODE);
 
 // Separate from surfaced source: keep v2 region loading available for

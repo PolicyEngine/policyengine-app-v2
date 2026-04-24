@@ -2,8 +2,10 @@ import { describe, expect, test } from 'vitest';
 import {
   assertSupportedMode,
   ENTITY_MIGRATION_MODE,
+  ENTITY_SUPPORTED_MODES,
   getMigrationEntityResponsibility,
   getMigrationMode,
+  getSupportedMigrationModes,
   governsAssociationWrites,
   governsCanonicalRegionSource,
   isV1Only,
@@ -70,6 +72,21 @@ describe('migrationMode', () => {
         'canonical_region_source_and_shadow_resolution'
       );
       expect(getMigrationEntityResponsibility('saved_geographies')).toBe('association_writes');
+    });
+
+    test('given supported modes then the association activation surface is documented explicitly', () => {
+      expect(ENTITY_SUPPORTED_MODES).toEqual({
+        policies: ['v1_only', 'v1_primary_v2_shadow'],
+        households: ['v1_only', 'v1_primary_v2_shadow'],
+        regions: ['v1_only', 'v1_primary_v2_shadow', 'v2_primary_v1_shadow', 'v2_only'],
+        saved_geographies: ['v1_only'],
+        simulations: ['v1_only'],
+        reports: ['v1_only'],
+      });
+
+      expect(getSupportedMigrationModes('policies')).toEqual(['v1_only', 'v1_primary_v2_shadow']);
+      expect(getSupportedMigrationModes('households')).toEqual(['v1_only', 'v1_primary_v2_shadow']);
+      expect(getSupportedMigrationModes('saved_geographies')).toEqual(['v1_only']);
     });
   });
 
