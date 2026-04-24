@@ -1,13 +1,13 @@
-import { render, screen } from '@testing-library/react';
-import { configureStore } from '@reduxjs/toolkit';
 import type { ReactNode } from 'react';
+import { configureStore } from '@reduxjs/toolkit';
+import { render, screen } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { describe, expect, test } from 'vitest';
 import HouseholdBreakdown from '@/components/household/HouseholdBreakdown';
 import VariableArithmetic from '@/components/household/VariableArithmetic';
 import { ReportYearProvider } from '@/contexts/ReportYearContext';
-import metadataReducer from '@/reducers/metadataReducer';
 import type { AppHouseholdInputEnvelope as Household } from '@/models/household/appTypes';
+import metadataReducer from '@/reducers/metadataReducer';
 import type { MetadataState } from '@/types/metadata';
 
 const TEST_METADATA: MetadataState = {
@@ -21,11 +21,7 @@ const TEST_METADATA: MetadataState = {
       label: 'net income',
       unit: 'currency-USD',
       valueType: 'float',
-      adds: [
-        'household_market_income',
-        'household_benefits',
-        'household_refundable_tax_credits',
-      ],
+      adds: ['household_market_income', 'household_benefits', 'household_refundable_tax_credits'],
       subtracts: ['household_tax_before_refundable_credits'],
     } as any,
     household_market_income: {
