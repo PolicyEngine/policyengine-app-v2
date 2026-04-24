@@ -18,14 +18,18 @@ const apiPolicyStore = new ApiPolicyStore();
 const localPolicyStore = new LocalStoragePolicyStore();
 const SUPPORTED_POLICY_WRITE_MODES = ['v1_only', 'v1_primary_v2_shadow'] as const;
 
-function getPolicyWriteConfig(
+type PolicyWriteConfigOptions = {
+  skipDuplicateV2AssociationShadow?: boolean;
+};
+
+export function getPolicyWriteConfig(
   context: string,
-  options?: { skipV2AssociationShadow?: boolean }
+  options?: PolicyWriteConfigOptions
 ): { shouldShadowV2: boolean } {
   const mode = assertSupportedMode('policies', SUPPORTED_POLICY_WRITE_MODES, context);
 
   return {
-    shouldShadowV2: usesV2ShadowMode(mode) && !options?.skipV2AssociationShadow,
+    shouldShadowV2: usesV2ShadowMode(mode) && !options?.skipDuplicateV2AssociationShadow,
   };
 }
 
@@ -62,7 +66,7 @@ export const usePolicyAssociation = (userId: string, policyId: string) => {
   });
 };
 
-export const useCreatePolicyAssociation = (options?: { skipV2AssociationShadow?: boolean }) => {
+export const useCreatePolicyAssociation = (options?: PolicyWriteConfigOptions) => {
   const store = useUserPolicyStore();
   const queryClient = useQueryClient();
   const { shouldShadowV2 } = getPolicyWriteConfig('useCreatePolicyAssociation', options);

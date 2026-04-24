@@ -1,23 +1,17 @@
 import { useMutation } from '@tanstack/react-query';
 import { createPolicy } from '@/api/policy';
-import { assertSupportedMode, usesV2ShadowMode } from '@/config/migrationMode';
 import { MOCK_USER_ID } from '@/constants';
 import { shadowCreatePolicyAndAssociation } from '@/libs/migration/policyShadow';
 import type { UserPolicy } from '@/types/ingredients/UserPolicy';
 import { PolicyCreationPayload } from '@/types/payloads';
 import { useCurrentCountry } from './useCurrentCountry';
-import { useCreatePolicyAssociation } from './useUserPolicy';
+import { getPolicyWriteConfig, useCreatePolicyAssociation } from './useUserPolicy';
 
 export function useCreatePolicy(policyLabel?: string) {
   const countryId = useCurrentCountry();
-  const policyWriteMode = assertSupportedMode(
-    'policies',
-    ['v1_only', 'v1_primary_v2_shadow'],
-    'useCreatePolicy'
-  );
-  const shouldShadowV2 = usesV2ShadowMode(policyWriteMode);
+  const { shouldShadowV2 } = getPolicyWriteConfig('useCreatePolicy');
   // const user = MOCK_USER_ID; // TODO: Replace with actual user context or auth hook in future
-  const createAssociation = useCreatePolicyAssociation({ skipV2AssociationShadow: true });
+  const createAssociation = useCreatePolicyAssociation({ skipDuplicateV2AssociationShadow: true });
 
   const mutation = useMutation({
     mutationFn: (data: PolicyCreationPayload) => createPolicy(countryId, data),

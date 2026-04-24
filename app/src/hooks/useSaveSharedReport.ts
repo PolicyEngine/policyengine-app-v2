@@ -33,7 +33,7 @@ import { UserReport } from '@/types/ingredients/UserReport';
 import { getShareDataUserReportId } from '@/utils/shareUtils';
 import { useCreateGeographicAssociation } from './useUserGeographic';
 import { useCreateHouseholdAssociation } from './useUserHousehold';
-import { useCreatePolicyAssociation } from './useUserPolicy';
+import { getPolicyWriteConfig, useCreatePolicyAssociation } from './useUserPolicy';
 import { useCreateReportAssociation, useUserReportStore } from './useUserReportAssociations';
 import { useCreateSimulationAssociation } from './useUserSimulationAssociations';
 
@@ -141,12 +141,7 @@ function shadowSavedHouseholdAssociation(
  * - Skips current law policies (they're pre-defined, not user-created)
  */
 export function useSaveSharedReport() {
-  const policyWriteMode = assertSupportedMode(
-    'policies',
-    ['v1_only', 'v1_primary_v2_shadow'],
-    'useSaveSharedReport'
-  );
-  const shouldShadowPolicies = usesV2ShadowMode(policyWriteMode);
+  const { shouldShadowV2: shouldShadowPolicies } = getPolicyWriteConfig('useSaveSharedReport');
   const householdWriteMode = assertSupportedMode(
     'households',
     ['v1_only', 'v1_primary_v2_shadow'],
@@ -155,7 +150,9 @@ export function useSaveSharedReport() {
   const shouldShadowHouseholds = usesV2ShadowMode(householdWriteMode);
   const createReportAssociation = useCreateReportAssociation();
   const createSimulationAssociation = useCreateSimulationAssociation();
-  const createPolicyAssociation = useCreatePolicyAssociation({ skipV2AssociationShadow: true });
+  const createPolicyAssociation = useCreatePolicyAssociation({
+    skipDuplicateV2AssociationShadow: true,
+  });
   const createHouseholdAssociation = useCreateHouseholdAssociation();
   const createGeographicAssociation = useCreateGeographicAssociation();
   const reportStore = useUserReportStore();

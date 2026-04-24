@@ -49,6 +49,9 @@ vi.mock('@/hooks/useUserSimulationAssociations', () => ({
 
 vi.mock('@/hooks/useUserPolicy', () => ({
   useCreatePolicyAssociation: () => mockCreatePolicy,
+  getPolicyWriteConfig: () => ({
+    shouldShadowV2: ENTITY_MIGRATION_MODE.policies === 'v1_primary_v2_shadow',
+  }),
 }));
 
 vi.mock('@/libs/migration/idMapping', () => ({

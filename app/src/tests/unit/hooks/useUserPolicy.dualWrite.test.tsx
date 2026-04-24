@@ -4,7 +4,11 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import * as v2PolicyApi from '@/api/v2/userPolicyAssociations';
 import { ENTITY_MIGRATION_MODE } from '@/config/migrationMode';
-import { useCreatePolicyAssociation, useUpdatePolicyAssociation } from '@/hooks/useUserPolicy';
+import {
+  getPolicyWriteConfig,
+  useCreatePolicyAssociation,
+  useUpdatePolicyAssociation,
+} from '@/hooks/useUserPolicy';
 import * as comparisonLogger from '@/libs/migration/comparisonLogger';
 import * as idMapping from '@/libs/migration/idMapping';
 import { UserPolicy } from '@/types/ingredients/UserPolicy';
@@ -125,6 +129,40 @@ function createWrapper(queryClient: QueryClient) {
 // ============================================================================
 // Tests
 // ============================================================================
+
+describe('getPolicyWriteConfig', () => {
+  beforeEach(() => {
+    ENTITY_MIGRATION_MODE.policies = DEFAULT_POLICY_MIGRATION_MODE;
+  });
+
+  test('given v1-only mode then it disables v2 shadowing', () => {
+    ENTITY_MIGRATION_MODE.policies = 'v1_only';
+
+    expect(getPolicyWriteConfig('test').shouldShadowV2).toBe(false);
+  });
+
+  test('given v1-primary-v2-shadow mode then it enables v2 shadowing', () => {
+    ENTITY_MIGRATION_MODE.policies = 'v1_primary_v2_shadow';
+
+    expect(getPolicyWriteConfig('test').shouldShadowV2).toBe(true);
+  });
+
+  test('given duplicate-shadow skip option then it disables only the association shadow', () => {
+    ENTITY_MIGRATION_MODE.policies = 'v1_primary_v2_shadow';
+
+    expect(getPolicyWriteConfig('test', { skipDuplicateV2AssociationShadow: true })).toEqual({
+      shouldShadowV2: false,
+    });
+  });
+
+  test('given unsupported policy mode then it fails fast clearly', () => {
+    ENTITY_MIGRATION_MODE.policies = 'v2_only';
+
+    expect(() => getPolicyWriteConfig('test')).toThrow(
+      '[MigrationMode] Unsupported mode "v2_only" for policies in test. Supported modes: v1_only, v1_primary_v2_shadow'
+    );
+  });
+});
 
 describe('useCreatePolicyAssociation dual-write', () => {
   let queryClient: QueryClient;
