@@ -234,7 +234,7 @@ describe('userHouseholdAssociations', () => {
       });
     });
 
-    test('given a successful PUT then it returns the updated association', async () => {
+    test('given a successful PUT then it returns the updated association with user_id query param', async () => {
       // Given
       const mockResponse = {
         ...createMockUserHouseholdAssociationV2Response(),
@@ -243,14 +243,20 @@ describe('userHouseholdAssociations', () => {
       vi.stubGlobal('fetch', mockFetchSuccess(mockResponse));
 
       // When
-      const result = await updateUserHouseholdAssociationV2(TEST_IDS.ASSOCIATION_ID, {
-        label: 'Updated household',
-      });
+      const result = await updateUserHouseholdAssociationV2(
+        TEST_IDS.ASSOCIATION_ID,
+        TEST_IDS.USER_ID,
+        {
+          label: 'Updated household',
+        }
+      );
 
       // Then
       expect(result.label).toBe('Updated household');
       expect(fetch).toHaveBeenCalledWith(
-        expect.stringContaining(`/user-household-associations/${TEST_IDS.ASSOCIATION_ID}`),
+        expect.stringContaining(
+          `/user-household-associations/${TEST_IDS.ASSOCIATION_ID}?user_id=${TEST_IDS.USER_ID}`
+        ),
         expect.objectContaining({
           method: 'PUT',
           body: JSON.stringify({ label: 'Updated household' }),

@@ -278,10 +278,14 @@ describe('useUpdateHouseholdAssociation dual-write', () => {
 
     expect(createHousehold).not.toHaveBeenCalled();
     await waitFor(() => {
-      expect(updateUserHouseholdAssociationV2).toHaveBeenCalledWith(TEST_V2_ASSOC_ID, {
-        label: 'Renamed household',
-        householdId: TEST_OLD_V2_HOUSEHOLD_ID,
-      });
+      expect(updateUserHouseholdAssociationV2).toHaveBeenCalledWith(
+        TEST_V2_ASSOC_ID,
+        TEST_V2_USER_ID,
+        {
+          label: 'Renamed household',
+          householdId: TEST_OLD_V2_HOUSEHOLD_ID,
+        }
+      );
     });
   });
 
@@ -363,10 +367,14 @@ describe('useUpdateHouseholdAssociation dual-write', () => {
     });
     expect(createUserHouseholdAssociationV2).not.toHaveBeenCalled();
     await waitFor(() => {
-      expect(updateUserHouseholdAssociationV2).toHaveBeenCalledWith(TEST_V2_ASSOC_ID, {
-        label: TEST_LABEL,
-        householdId: TEST_NEW_V2_HOUSEHOLD_ID,
-      });
+      expect(updateUserHouseholdAssociationV2).toHaveBeenCalledWith(
+        TEST_V2_ASSOC_ID,
+        TEST_V2_USER_ID,
+        {
+          label: TEST_LABEL,
+          householdId: TEST_NEW_V2_HOUSEHOLD_ID,
+        }
+      );
     });
 
     expect(getV2Id('Household', TEST_NEW_V1_HOUSEHOLD_ID)).toBe(TEST_NEW_V2_HOUSEHOLD_ID);
