@@ -95,28 +95,28 @@ function normalizeCongressionalDistrictCode(regionCode: string): string {
   return `${prefix}${normalizeUSDistrictId(districtId)}`;
 }
 
-function getExplicitLegacyUSDistrictAlias(regionCode: string): string | null {
+function getLegacyUSDistrictFetchAlias(regionCode: string): string | null {
   const trimmedCode = regionCode.trim();
   const districtMatch = trimmedCode.match(
-    /^(?:congressional_district\/|us-)?([A-Za-z]{2}-(?:00|98))$/i
+    /^(?:congressional_district\/|us-)?([A-Za-z]{2}-\d{1,2})$/i
   );
 
   if (!districtMatch) {
     return null;
   }
 
-  const alias = districtMatch[1].toUpperCase();
-  const [, state, num] = alias.match(/^([A-Z]{2})-(\d{2})$/) ?? [];
+  const normalizedDistrictId = normalizeUSDistrictId(districtMatch[1]);
+  const [, state, num] = normalizedDistrictId.match(/^([A-Z]{2})-(\d{2})$/) ?? [];
 
   if (!state || !num) {
     return null;
   }
 
-  if (state === 'DC' && num === '98') {
+  if (state === 'DC' && num === '01') {
     return 'DC-98';
   }
 
-  if (num === '00') {
+  if (num === '01') {
     return `${state}-00`;
   }
 
@@ -258,7 +258,7 @@ export function getLegacyRegionCodeFallbacks(
     return [];
   }
 
-  const legacyAlias = getExplicitLegacyUSDistrictAlias(regionCode);
+  const legacyAlias = getLegacyUSDistrictFetchAlias(regionCode);
   if (!legacyAlias) {
     return [];
   }

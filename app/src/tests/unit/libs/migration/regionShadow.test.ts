@@ -146,6 +146,45 @@ describe('regionShadow', () => {
     expect(result?.filterValue).toBe('DE-01');
   });
 
+  test('given canonical district input then it still retries stale backend aliases', async () => {
+    vi.mocked(fetchRegionByCode).mockImplementation(async (_countryId, regionCode) => {
+      if (regionCode === 'congressional_district/DE-01') {
+        throw new Error('Region not found: congressional_district/DE-01');
+      }
+
+      if (regionCode === 'congressional_district/DE-00') {
+        return {
+          id: 'region-district-de-00',
+          code: 'congressional_district/DE-00',
+          label: 'Delaware At-Large',
+          region_type: 'congressional_district',
+          requires_filter: true,
+          filter_field: 'congressional_district',
+          filter_value: 'DE-00',
+          filter_strategy: 'weight_replacement',
+          parent_code: 'us',
+          state_code: 'DE',
+          state_name: 'Delaware',
+          tax_benefit_model_id: 'model-us',
+          created_at: '2026-01-01T00:00:00Z',
+          updated_at: '2026-01-01T00:00:00Z',
+        };
+      }
+
+      throw new Error(`Unexpected region code: ${regionCode}`);
+    });
+
+    const result = await shadowResolveRegionTarget({
+      countryId: 'us',
+      regionCode: 'congressional_district/DE-01',
+    });
+
+    expect(fetchRegionByCode).toHaveBeenNthCalledWith(1, 'us', 'congressional_district/DE-01');
+    expect(fetchRegionByCode).toHaveBeenNthCalledWith(2, 'us', 'congressional_district/DE-00');
+    expect(result?.code).toBe('congressional_district/DE-01');
+    expect(result?.filterValue).toBe('DE-01');
+  });
+
   test('given repeated skipped resolution then it retries instead of caching null results', async () => {
     vi.mocked(fetchRegionByCode).mockRejectedValue(new Error('Region not found: state/zz'));
 

@@ -38,7 +38,6 @@ function logRegionEvent(
 async function fetchRegionRecordCached(
   countryId: CountryId,
   regionCode: string,
-  originalRegionCode: string,
   region?: Region
 ): Promise<Region> {
   if (region) {
@@ -51,10 +50,7 @@ async function fetchRegionRecordCached(
     return cachedPromise;
   }
 
-  const fetchCandidates = [
-    regionCode,
-    ...getLegacyRegionCodeFallbacks(countryId, originalRegionCode),
-  ];
+  const fetchCandidates = [regionCode, ...getLegacyRegionCodeFallbacks(countryId, regionCode)];
 
   const promise = (async () => {
     let lastError: unknown;
@@ -156,12 +152,7 @@ async function shadowResolveRegionTargetImpl(args: {
 
   let resolvedRegion: Region;
   try {
-    resolvedRegion = await fetchRegionRecordCached(
-      countryId,
-      canonicalCode,
-      originalRegionCode,
-      region
-    );
+    resolvedRegion = await fetchRegionRecordCached(countryId, canonicalCode, region);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     const status =
