@@ -38,6 +38,7 @@ export default function HouseholdBreakdown({
         isAdd
         defaultExpanded={false}
         childrenOnly
+        childVisibility="all"
       />
     </div>
   );
