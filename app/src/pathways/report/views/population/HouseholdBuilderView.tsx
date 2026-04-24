@@ -1,23 +1,24 @@
 /**
- * HouseholdBuilderView - View for building custom household
- * Duplicated from HouseholdBuilderFrame
- * Props-based instead of Redux-based
+ * HouseholdBuilderView - Standalone household builder pathway view
  */
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { IconHome } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import PathwayView from '@/components/common/PathwayView';
-import { Spinner, Stack } from '@/components/ui';
+import { Group, Spinner, Stack, Text } from '@/components/ui';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
+import { colors, spacing } from '@/designTokens';
 import { useCreateHousehold } from '@/hooks/useCreateHousehold';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useReportYear } from '@/hooks/useReportYear';
 import { getBasicInputFields } from '@/libs/metadataUtils';
 import { Household as HouseholdModel } from '@/models/Household';
 import type { AppHouseholdInputEnvelope } from '@/models/household/appTypes';
-import {
-  HouseholdCreationContent,
-  PopulationStatusHeader,
-} from '@/pages/reportBuilder/modals/population';
+import { EditableLabel } from '@/pages/reportBuilder/components/EditableLabel';
+import { FONT_SIZES, INGREDIENT_COLORS } from '@/pages/reportBuilder/constants';
+import { HouseholdCreationContent } from '@/pages/reportBuilder/modals/population';
 import { RootState } from '@/store';
 import { PopulationStateProps } from '@/types/pathwayState';
 import { HouseholdBuilder } from '@/utils/HouseholdBuilder';
@@ -33,6 +34,76 @@ interface HouseholdBuilderViewProps {
   countryId: string;
   onSubmitSuccess: (householdId: string, household: AppHouseholdInputEnvelope) => void;
   onBack?: () => void;
+}
+
+function buildViewHeader(
+  householdLabel: string | null,
+  setHouseholdLabel: (label: string) => void,
+  memberCount: number
+) {
+  const colorConfig = INGREDIENT_COLORS.population;
+
+  return (
+    <div
+      style={{
+        padding: spacing.md,
+        borderRadius: spacing.radius.feature,
+        border: `1px solid ${colors.border.light}`,
+        background: colors.white,
+      }}
+    >
+      <Group justify="space-between" align="center" wrap="nowrap" style={{ width: '100%' }}>
+        <Group gap="md" align="center" wrap="nowrap" style={{ minWidth: 0, flex: 1 }}>
+          <div
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: spacing.radius.container,
+              background: `linear-gradient(135deg, ${colorConfig.bg} 0%, ${colors.white} 100%)`,
+              border: `1px solid ${colorConfig.border}`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+            }}
+          >
+            <IconHome size={18} color={colorConfig.icon} />
+          </div>
+          <EditableLabel
+            value={householdLabel ?? ''}
+            onChange={setHouseholdLabel}
+            placeholder="Enter household name..."
+            emptyStateText="Click to name your household..."
+            fitContentWhileEditing
+            controlOutsideField
+            showFieldWhenEmptyOrEditing
+            fieldStyle={{
+              background: colors.gray[100],
+              borderBottom: `1px solid ${colors.border.light}`,
+              padding: `${spacing.xs} ${spacing.sm}`,
+            }}
+          />
+        </Group>
+        <Group gap="xs" align="center" wrap="nowrap" style={{ flexShrink: 0 }}>
+          {memberCount > 0 && (
+            <div
+              style={{
+                width: 8,
+                height: 8,
+                borderRadius: '50%',
+                background: colors.primary[500],
+              }}
+            />
+          )}
+          <Text style={{ fontSize: FONT_SIZES.small, color: colors.gray[600] }}>
+            {memberCount > 0
+              ? `${memberCount} household member${memberCount !== 1 ? 's' : ''}`
+              : 'No household members yet'}
+          </Text>
+        </Group>
+      </Group>
+    </div>
+  );
 }
 
 export default function HouseholdBuilderView({
@@ -93,6 +164,7 @@ export default function HouseholdBuilderView({
   const [validation, setValidation] = useState<ReturnType<
     typeof HouseholdValidation.isReadyForSimulation
   > | null>(null);
+  const [showUnnamedWarning, setShowUnnamedWarning] = useState(false);
 
   const composition = deriveHouseholdBuilderComposition(household, reportYear);
   const maritalStatus = composition.maritalStatus;
@@ -147,7 +219,7 @@ export default function HouseholdBuilderView({
     );
   }
 
-  const handleSubmit = async () => {
+  const handleSubmit = useCallback(async () => {
     // Validate household
     const validation = HouseholdValidation.isReadyForSimulation(
       household,
@@ -174,13 +246,24 @@ export default function HouseholdBuilderView({
     } catch (err) {
       // Error is handled by the mutation
     }
-  };
+  }, [countryId, createHousehold, currentCountryId, household, onSubmitSuccess, reportYear]);
+
+  const requestSubmit = useCallback(() => {
+    if (!household.label?.trim()) {
+      setShowUnnamedWarning(true);
+      return;
+    }
+
+    void handleSubmit();
+  }, [handleSubmit, household.label]);
 
   const canProceed = validation?.isValid ?? false;
+  const viewTitle = population?.household ? 'Edit household' : 'Create household';
+  const primaryActionLabel = population?.household ? 'Save household' : 'Create household';
 
   const primaryAction = {
-    label: 'Create household',
-    onClick: handleSubmit,
+    label: primaryActionLabel,
+    onClick: requestSubmit,
     isLoading: isPending,
     isDisabled: !canProceed,
   };
@@ -193,11 +276,11 @@ export default function HouseholdBuilderView({
         </div>
       )}
 
-      <PopulationStatusHeader
-        householdLabel={household.label ?? ''}
-        setHouseholdLabel={handleHouseholdLabelChange}
-        memberCount={composition.people.length}
-      />
+      {buildViewHeader(
+        household.label ?? '',
+        handleHouseholdLabelChange,
+        composition.people.length
+      )}
 
       <HouseholdCreationContent
         householdDraft={household}
@@ -217,11 +300,40 @@ export default function HouseholdBuilderView({
   );
 
   return (
-    <PathwayView
-      title="Build your household"
-      content={content}
-      primaryAction={primaryAction}
-      backAction={onBack ? { onClick: onBack } : undefined}
-    />
+    <>
+      <PathwayView
+        title={viewTitle}
+        content={content}
+        primaryAction={primaryAction}
+        backAction={onBack ? { onClick: onBack } : undefined}
+      />
+
+      <Dialog open={showUnnamedWarning} onOpenChange={setShowUnnamedWarning}>
+        <DialogContent>
+          <DialogTitle>Unnamed household</DialogTitle>
+          <DialogDescription className="tw:sr-only">
+            Confirm saving a household without a name
+          </DialogDescription>
+          <Stack gap="md">
+            <Text size="sm">
+              This household has no name. Are you sure you want to save it without a name?
+            </Text>
+            <Group justify="end" gap="sm">
+              <Button variant="outline" onClick={() => setShowUnnamedWarning(false)}>
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  setShowUnnamedWarning(false);
+                  void handleSubmit();
+                }}
+              >
+                Save anyway
+              </Button>
+            </Group>
+          </Stack>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
