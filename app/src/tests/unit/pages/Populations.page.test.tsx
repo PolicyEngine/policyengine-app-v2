@@ -15,20 +15,33 @@ import {
   setupMockConsole,
 } from '@/tests/fixtures/pages/populationsMocks';
 
+const { mockUpdateHouseholdAssociation, mockUpdateGeographicAssociation, renameHarnessState } =
+  vi.hoisted(() => ({
+    mockUpdateHouseholdAssociation: {
+      mutateAsync: vi.fn(),
+      isPending: false,
+    },
+    mockUpdateGeographicAssociation: {
+      mutateAsync: vi.fn(),
+      isPending: false,
+    },
+    renameHarnessState: {
+      enabled: false,
+    },
+  }));
+
 // Mock the hooks first
 vi.mock('@/hooks/useUserHousehold', () => ({
   useUserHouseholds: vi.fn(),
   useUpdateHouseholdAssociation: vi.fn(() => ({
-    mutate: vi.fn(),
-    isPending: false,
+    ...mockUpdateHouseholdAssociation,
   })),
 }));
 
 vi.mock('@/hooks/useUserGeographic', () => ({
   useUserGeographics: vi.fn(),
   useUpdateGeographicAssociation: vi.fn(() => ({
-    mutate: vi.fn(),
-    isPending: false,
+    ...mockUpdateGeographicAssociation,
   })),
 }));
 
@@ -54,6 +67,58 @@ vi.mock('@/constants', () => ({
   CURRENT_YEAR: '2026',
 }));
 
+vi.mock('@/components/IngredientReadView', async () => {
+  const actual = await vi.importActual<typeof import('@/components/IngredientReadView')>(
+    '@/components/IngredientReadView'
+  );
+
+  return {
+    default: (props: any) => {
+      if (!renameHarnessState.enabled) {
+        const ActualIngredientReadView = actual.default;
+        return <ActualIngredientReadView {...props} />;
+      }
+
+      const actionsColumn = props.columns.find((column: any) => column.type === 'menu');
+
+      return (
+        <div>
+          {props.data.map((record: any) => (
+            <button
+              key={record.id}
+              type="button"
+              onClick={() => actionsColumn.onAction('rename', record.id)}
+            >
+              Rename {record.id}
+            </button>
+          ))}
+        </div>
+      );
+    },
+  };
+});
+
+vi.mock('@/components/common/RenameIngredientModal', async () => {
+  const actual = await vi.importActual<typeof import('@/components/common/RenameIngredientModal')>(
+    '@/components/common/RenameIngredientModal'
+  );
+
+  return {
+    RenameIngredientModal: (props: any) => {
+      if (!renameHarnessState.enabled) {
+        const ActualRenameIngredientModal = actual.RenameIngredientModal;
+        return <ActualRenameIngredientModal {...props} />;
+      }
+
+      return props.opened ? (
+        <button type="button" onClick={() => props.onRename(`Renamed ${props.currentLabel}`)}>
+          Confirm rename
+        </button>
+      ) : null;
+    },
+  };
+});
+
 describe('PopulationsPage', () => {
   let consoleMocks: ReturnType<typeof setupMockConsole>;
   let userHouseholdsData: ReturnType<typeof createMockUserHouseholdsData>;
@@ -64,6 +129,9 @@ describe('PopulationsPage', () => {
     consoleMocks = setupMockConsole();
     userHouseholdsData = createMockUserHouseholdsData();
     geographicAssociationsData = createMockGeographicAssociationsData();
+    renameHarnessState.enabled = false;
+    mockUpdateHouseholdAssociation.mutateAsync.mockReset();
+    mockUpdateGeographicAssociation.mutateAsync.mockReset();
 
     // Set default mock implementations
     (useUserHouseholds as any).mockReturnValue({
@@ -324,6 +392,47 @@ describe('PopulationsPage', () => {
           expect(checkboxes[0]).toBeChecked();
         });
       }
+    });
+
+    test('given household rename action then routes through update household association hook', async () => {
+      renameHarnessState.enabled = true;
+      mockUpdateHouseholdAssociation.mutateAsync.mockResolvedValue({
+        label: 'Renamed My Test Household',
+      });
+      const user = userEvent.setup();
+      renderPage();
+
+      await user.click(screen.getByRole('button', { name: 'Rename 1' }));
+      await user.click(screen.getByRole('button', { name: 'Confirm rename' }));
+
+      await waitFor(() => {
+        expect(mockUpdateHouseholdAssociation.mutateAsync).toHaveBeenCalledWith({
+          userHouseholdId: '1',
+          updates: { label: 'Renamed My Test Household' },
+        });
+      });
+      expect(mockUpdateGeographicAssociation.mutateAsync).not.toHaveBeenCalled();
+    });
+
+    test('given geography rename action then routes through update geographic association hook', async () => {
+      renameHarnessState.enabled = true;
+      mockUpdateGeographicAssociation.mutateAsync.mockResolvedValue({
+        label: 'Renamed California Population',
+      });
+      const user = userEvent.setup();
+      renderPage();
+
+      await user.click(screen.getByRole('button', { name: 'Rename ca' }));
+      await user.click(screen.getByRole('button', { name: 'Confirm rename' }));
+
+      await waitFor(() => {
+        expect(mockUpdateGeographicAssociation.mutateAsync).toHaveBeenCalledWith({
+          userId: 'test-user-123',
+          geographyId: 'ca',
+          updates: { label: 'Renamed California Population' },
+        });
+      });
+      expect(mockUpdateHouseholdAssociation.mutateAsync).not.toHaveBeenCalled();
     });
   });
 
