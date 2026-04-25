@@ -2,12 +2,16 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import {
   clearV2AssociationTargetId,
   clearV2Mappings,
+  getMappedSimulationId,
+  getMappedUserSimulationAssociationId,
   getMappedV2UserId,
   getOrCreateV2UserId,
   getResolvedRegionId,
   getV2AssociationTargetId,
   getV2Id,
   isUuid,
+  setMappedSimulationId,
+  setMappedUserSimulationAssociationId,
   setResolvedRegionId,
   setV2AssociationTargetId,
   setV2Id,
@@ -73,6 +77,26 @@ describe('idMapping', () => {
 
       expect(getResolvedRegionId('us', 'state/ca')).toBe('uuid-region');
       expect(localStorage.getItem('v1v2:region:us:state/ca')).toBe('uuid-region');
+    });
+
+    test('given mapped simulation ids then stores and retrieves the explicit simulation mapping', () => {
+      setMappedSimulationId('123', '550e8400-e29b-41d4-a716-446655440000');
+
+      expect(getMappedSimulationId('123')).toBe('550e8400-e29b-41d4-a716-446655440000');
+      expect(localStorage.getItem('v1v2:simulation:123')).toBe(
+        '550e8400-e29b-41d4-a716-446655440000'
+      );
+    });
+
+    test('given mapped user-simulation association ids then stores and retrieves the explicit association mapping', () => {
+      setMappedUserSimulationAssociationId('sus-local-1', '650e8400-e29b-41d4-a716-446655440000');
+
+      expect(getMappedUserSimulationAssociationId('sus-local-1')).toBe(
+        '650e8400-e29b-41d4-a716-446655440000'
+      );
+      expect(localStorage.getItem('v1v2:usersimulation:sus-local-1')).toBe(
+        '650e8400-e29b-41d4-a716-446655440000'
+      );
     });
   });
 

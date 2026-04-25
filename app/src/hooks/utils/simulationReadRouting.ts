@@ -5,8 +5,14 @@ import { fetchSimulationById } from '@/api/simulation';
 import { fetchHouseholdByIdV2 } from '@/api/v2/households';
 import { fetchPolicyByIdV2 } from '@/api/v2/policies';
 import { fetchSimulationByIdV2 } from '@/api/v2/simulations';
+import { getSimulationCapabilityMode } from '@/config/simulationCapability';
 import { FOREVER } from '@/constants';
 import type { CountryId } from '@/libs/countries';
+import { getMappedSimulationId } from '@/libs/migration/idMapping';
+import {
+  compareMappedSimulationRead,
+  logSkippedSimulationRead,
+} from '@/libs/migration/simulationMigration';
 import { Household } from '@/models/Household';
 import type { Policy } from '@/types/ingredients/Policy';
 import type { Simulation } from '@/types/ingredients/Simulation';
@@ -21,7 +27,21 @@ export async function fetchHydratedSimulation(
   }
 
   const metadata = await fetchSimulationById(countryId, simulationId);
-  return SimulationAdapter.fromMetadata(metadata);
+  const simulation = SimulationAdapter.fromMetadata(metadata);
+
+  if (getSimulationCapabilityMode('reads') !== 'v1_only' && simulation.id) {
+    const mappedV2SimulationId = getMappedSimulationId(simulation.id);
+
+    if (mappedV2SimulationId) {
+      void compareMappedSimulationRead(simulation, mappedV2SimulationId);
+    } else {
+      logSkippedSimulationRead(simulation.id, 'Read comparison skipped: missing mapped v2 id', {
+        countryId,
+      });
+    }
+  }
+
+  return simulation;
 }
 
 export async function fetchHydratedPolicy(countryId: CountryId, policyId: string): Promise<Policy> {

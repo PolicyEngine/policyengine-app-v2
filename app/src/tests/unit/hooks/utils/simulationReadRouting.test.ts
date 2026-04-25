@@ -5,11 +5,17 @@ import { fetchSimulationById } from '@/api/simulation';
 import { fetchHouseholdByIdV2 } from '@/api/v2/households';
 import { fetchPolicyByIdV2 } from '@/api/v2/policies';
 import { fetchSimulationByIdV2 } from '@/api/v2/simulations';
+import { getSimulationCapabilityMode } from '@/config/simulationCapability';
 import {
   fetchHydratedHousehold,
   fetchHydratedPolicy,
   fetchHydratedSimulation,
 } from '@/hooks/utils/simulationReadRouting';
+import { getMappedSimulationId } from '@/libs/migration/idMapping';
+import {
+  compareMappedSimulationRead,
+  logSkippedSimulationRead,
+} from '@/libs/migration/simulationMigration';
 import { mockSimulationMetadata } from '@/tests/fixtures/adapters/SimulationAdapterMocks';
 import { createMockHouseholdV2Response, TEST_IDS } from '@/tests/fixtures/api/v2/shared';
 
@@ -19,6 +25,19 @@ vi.mock('@/api/simulation', () => ({
 
 vi.mock('@/api/v2/simulations', () => ({
   fetchSimulationByIdV2: vi.fn(),
+}));
+
+vi.mock('@/config/simulationCapability', () => ({
+  getSimulationCapabilityMode: vi.fn(() => 'v1_only'),
+}));
+
+vi.mock('@/libs/migration/idMapping', () => ({
+  getMappedSimulationId: vi.fn(() => null),
+}));
+
+vi.mock('@/libs/migration/simulationMigration', () => ({
+  compareMappedSimulationRead: vi.fn(),
+  logSkippedSimulationRead: vi.fn(),
 }));
 
 vi.mock('@/api/policy', () => ({
@@ -40,6 +59,8 @@ vi.mock('@/api/v2/households', () => ({
 describe('simulationReadRouting', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(getSimulationCapabilityMode).mockReturnValue('v1_only');
+    vi.mocked(getMappedSimulationId).mockReturnValue(null);
   });
 
   describe('fetchHydratedSimulation', () => {
@@ -50,8 +71,39 @@ describe('simulationReadRouting', () => {
 
       expect(fetchSimulationById).toHaveBeenCalledWith('us', '123');
       expect(fetchSimulationByIdV2).not.toHaveBeenCalled();
+      expect(compareMappedSimulationRead).not.toHaveBeenCalled();
+      expect(logSkippedSimulationRead).not.toHaveBeenCalled();
       expect(result.id).toBe('123');
       expect(result.source).toBe('v1_api');
+    });
+
+    test('given mixed read mode and mapped v2 simulation then it triggers background comparison', async () => {
+      vi.mocked(getSimulationCapabilityMode).mockReturnValue('mixed');
+      vi.mocked(getMappedSimulationId).mockReturnValue('550e8400-e29b-41d4-a716-446655440000');
+      vi.mocked(fetchSimulationById).mockResolvedValue(mockSimulationMetadata());
+
+      const result = await fetchHydratedSimulation('us', '123');
+
+      expect(compareMappedSimulationRead).toHaveBeenCalledWith(
+        expect.objectContaining({ id: '123', source: 'v1_api' }),
+        '550e8400-e29b-41d4-a716-446655440000'
+      );
+      expect(logSkippedSimulationRead).not.toHaveBeenCalled();
+      expect(result.id).toBe('123');
+    });
+
+    test('given mixed read mode without mapped v2 simulation then it logs a skipped comparison', async () => {
+      vi.mocked(getSimulationCapabilityMode).mockReturnValue('mixed');
+      vi.mocked(fetchSimulationById).mockResolvedValue(mockSimulationMetadata());
+
+      await fetchHydratedSimulation('us', '123');
+
+      expect(compareMappedSimulationRead).not.toHaveBeenCalled();
+      expect(logSkippedSimulationRead).toHaveBeenCalledWith(
+        '123',
+        'Read comparison skipped: missing mapped v2 id',
+        { countryId: 'us' }
+      );
     });
 
     test('given a uuid simulation id then it fetches through the v2 simulation api', async () => {

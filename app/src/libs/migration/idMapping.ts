@@ -223,6 +223,25 @@ export function getMappedV2UserId(v1UserId: string): string | null {
   return getV2Id('User', v1UserId) ?? (isUuid(v1UserId) ? v1UserId : null);
 }
 
+export function setMappedSimulationId(v1SimulationId: string, v2SimulationId: string): void {
+  setV2Id('Simulation', v1SimulationId, v2SimulationId);
+}
+
+export function getMappedSimulationId(v1SimulationId: string): string | null {
+  return getV2Id('Simulation', v1SimulationId);
+}
+
+export function setMappedUserSimulationAssociationId(
+  v1AssociationId: string,
+  v2AssociationId: string
+): void {
+  setV2Id('UserSimulation', v1AssociationId, v2AssociationId);
+}
+
+export function getMappedUserSimulationAssociationId(v1AssociationId: string): string | null {
+  return getV2Id('UserSimulation', v1AssociationId);
+}
+
 export function setResolvedRegionId(countryId: string, regionCode: string, regionId: string): void {
   setV2Id('Region', resolvedRegionKey(countryId, regionCode), regionId);
 }

@@ -10,7 +10,15 @@ import {
   fetchUserSimulationAssociationsV2,
   updateUserSimulationAssociationV2,
 } from '@/api/v2/userSimulationAssociations';
-import { getMappedV2UserId, getOrCreateV2UserId } from '@/libs/migration/idMapping';
+import {
+  getMappedUserSimulationAssociationId,
+  getMappedV2UserId,
+  getOrCreateV2UserId,
+} from '@/libs/migration/idMapping';
+import {
+  logSkippedUserSimulationAssociationOperation,
+  logUserSimulationAssociationComparison,
+} from '@/libs/migration/simulationMigration';
 import {
   mockSimulation,
   mockSimulationInput,
@@ -28,10 +36,16 @@ vi.mock('@/api/v2/userSimulationAssociations', () => ({
 }));
 
 vi.mock('@/libs/migration/idMapping', () => ({
+  getMappedUserSimulationAssociationId: vi.fn(),
   getMappedV2UserId: vi.fn(),
   getOrCreateV2UserId: vi.fn(),
   isUuid: (id: string) =>
     /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id),
+}));
+
+vi.mock('@/libs/migration/simulationMigration', () => ({
+  logSkippedUserSimulationAssociationOperation: vi.fn(),
+  logUserSimulationAssociationComparison: vi.fn(),
 }));
 
 describe('ApiSimulationStore', () => {
@@ -40,6 +54,7 @@ describe('ApiSimulationStore', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     store = new ApiSimulationStore();
+    vi.mocked(getMappedUserSimulationAssociationId).mockReturnValue(null);
   });
 
   describe('create', () => {
@@ -65,6 +80,17 @@ describe('ApiSimulationStore', () => {
         countryId: TEST_COUNTRIES.US,
         label: TEST_LABELS.TEST_SIMULATION_1,
       });
+      expect(logUserSimulationAssociationComparison).toHaveBeenCalledWith(
+        'CREATE',
+        expect.objectContaining({
+          userId: TEST_USER_IDS.USER_123,
+          simulationId: v2Association.simulationId,
+          countryId: TEST_COUNTRIES.US,
+          label: TEST_LABELS.TEST_SIMULATION_1,
+        }),
+        v2Association,
+        { v2UserId: v2Association.userId }
+      );
       expect(result).toEqual(v2Association);
     });
   });
@@ -75,6 +101,14 @@ describe('ApiSimulationStore', () => {
 
       await expect(store.findByUser(TEST_USER_IDS.USER_123)).resolves.toEqual([]);
       expect(fetchUserSimulationAssociationsV2).not.toHaveBeenCalled();
+      expect(logSkippedUserSimulationAssociationOperation).toHaveBeenCalledWith(
+        'LIST',
+        'Association list fetch skipped: missing mapped v2 user id',
+        {
+          userId: TEST_USER_IDS.USER_123,
+          countryId: null,
+        }
+      );
     });
 
     it('given a mapped v2 user id then it fetches via the v2 client', async () => {
@@ -104,6 +138,14 @@ describe('ApiSimulationStore', () => {
         store.findById(TEST_USER_IDS.USER_123, TEST_SIM_IDS.SIM_456)
       ).resolves.toBeNull();
       expect(fetchUserSimulationAssociationsV2).not.toHaveBeenCalled();
+      expect(logSkippedUserSimulationAssociationOperation).toHaveBeenCalledWith(
+        'READ',
+        'Association fetch skipped: missing mapped v2 user id',
+        {
+          userId: TEST_USER_IDS.USER_123,
+          simulationId: TEST_SIM_IDS.SIM_456,
+        }
+      );
     });
 
     it('given a mapped v2 user id then it filters the user association list by simulation id', async () => {
@@ -143,6 +185,19 @@ describe('ApiSimulationStore', () => {
         v2Association.userId,
         { label: 'Updated simulation' }
       );
+      expect(logUserSimulationAssociationComparison).toHaveBeenCalledWith(
+        'UPDATE',
+        expect.objectContaining({
+          userId: v2Association.userId,
+          simulationId: v2Association.simulationId,
+          countryId: v2Association.countryId,
+          label: 'Updated simulation',
+        }),
+        expect.objectContaining({
+          label: 'Updated simulation',
+        }),
+        { v2UserId: v2Association.userId }
+      );
       expect(result.label).toBe('Updated simulation');
     });
 
@@ -152,6 +207,13 @@ describe('ApiSimulationStore', () => {
       await expect(
         store.update('dd0e8400-e29b-41d4-a716-446655440008', { label: 'Updated simulation' })
       ).rejects.toThrow('UserSimulation with id dd0e8400-e29b-41d4-a716-446655440008 not found');
+      expect(logSkippedUserSimulationAssociationOperation).toHaveBeenCalledWith(
+        'UPDATE',
+        'Association update skipped: missing v2 association record',
+        {
+          userSimulationId: 'dd0e8400-e29b-41d4-a716-446655440008',
+        }
+      );
     });
   });
 });
@@ -224,6 +286,22 @@ describe('MixedSimulationStore', () => {
     expect(result).toHaveLength(2);
     expect(localStore.findByUser).toHaveBeenCalledWith(TEST_USER_IDS.USER_123, TEST_COUNTRIES.US);
     expect(apiStore.findByUser).toHaveBeenCalledWith(TEST_USER_IDS.USER_123, TEST_COUNTRIES.US);
+  });
+
+  it('filters mapped v2 associations that already correspond to a local association id', async () => {
+    const localAssociation = mockSimulation({ id: 'sus-local-1' });
+    const v2Association = mockSimulation({
+      id: 'dd0e8400-e29b-41d4-a716-446655440008',
+      simulationId: '990e8400-e29b-41d4-a716-446655440004',
+    });
+
+    vi.spyOn(localStore, 'findByUser').mockResolvedValue([localAssociation]);
+    vi.spyOn(apiStore, 'findByUser').mockResolvedValue([v2Association]);
+    vi.mocked(getMappedUserSimulationAssociationId).mockReturnValue(v2Association.id!);
+
+    const result = await store.findByUser(TEST_USER_IDS.USER_123, TEST_COUNTRIES.US);
+
+    expect(result).toEqual([localAssociation]);
   });
 
   it('routes uuid association updates to the v2 store', async () => {

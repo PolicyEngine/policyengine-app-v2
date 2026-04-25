@@ -4,7 +4,16 @@ import {
   fetchUserSimulationAssociationsV2,
   updateUserSimulationAssociationV2,
 } from '@/api/v2/userSimulationAssociations';
-import { getMappedV2UserId, getOrCreateV2UserId, isUuid } from '@/libs/migration/idMapping';
+import {
+  getMappedUserSimulationAssociationId,
+  getMappedV2UserId,
+  getOrCreateV2UserId,
+  isUuid,
+} from '@/libs/migration/idMapping';
+import {
+  logSkippedUserSimulationAssociationOperation,
+  logUserSimulationAssociationComparison,
+} from '@/libs/migration/simulationMigration';
 import { UserSimulation } from '../types/ingredients/UserSimulation';
 
 export interface UserSimulationStore {
@@ -19,19 +28,32 @@ export interface UserSimulationStore {
 export class ApiSimulationStore implements UserSimulationStore {
   async create(simulation: Omit<UserSimulation, 'id' | 'createdAt'>): Promise<UserSimulation> {
     const v2UserId = getOrCreateV2UserId(simulation.userId);
-
-    return createUserSimulationAssociationV2({
+    const createdAssociation = await createUserSimulationAssociationV2({
       userId: v2UserId,
       simulationId: simulation.simulationId,
       countryId: simulation.countryId,
       label: simulation.label,
     });
+
+    logUserSimulationAssociationComparison('CREATE', simulation, createdAssociation, {
+      v2UserId,
+    });
+
+    return createdAssociation;
   }
 
   async findByUser(userId: string, countryId?: string): Promise<UserSimulation[]> {
     const v2UserId = getMappedV2UserId(userId);
 
     if (!v2UserId) {
+      logSkippedUserSimulationAssociationOperation(
+        'LIST',
+        'Association list fetch skipped: missing mapped v2 user id',
+        {
+          userId,
+          countryId: countryId ?? null,
+        }
+      );
       return [];
     }
 
@@ -42,6 +64,14 @@ export class ApiSimulationStore implements UserSimulationStore {
     const v2UserId = getMappedV2UserId(userId);
 
     if (!v2UserId) {
+      logSkippedUserSimulationAssociationOperation(
+        'READ',
+        'Association fetch skipped: missing mapped v2 user id',
+        {
+          userId,
+          simulationId,
+        }
+      );
       return null;
     }
 
@@ -56,12 +86,39 @@ export class ApiSimulationStore implements UserSimulationStore {
     const existingAssociation = await fetchUserSimulationAssociationByIdV2(userSimulationId);
 
     if (!existingAssociation) {
+      logSkippedUserSimulationAssociationOperation(
+        'UPDATE',
+        'Association update skipped: missing v2 association record',
+        {
+          userSimulationId,
+        }
+      );
       throw new Error(`UserSimulation with id ${userSimulationId} not found`);
     }
 
-    return updateUserSimulationAssociationV2(userSimulationId, existingAssociation.userId, {
-      label: updates.label ?? existingAssociation.label ?? null,
-    });
+    const updatedAssociation = await updateUserSimulationAssociationV2(
+      userSimulationId,
+      existingAssociation.userId,
+      {
+        label: updates.label ?? existingAssociation.label ?? null,
+      }
+    );
+
+    logUserSimulationAssociationComparison(
+      'UPDATE',
+      {
+        userId: existingAssociation.userId,
+        simulationId: existingAssociation.simulationId,
+        countryId: existingAssociation.countryId,
+        label: updates.label ?? existingAssociation.label,
+      },
+      updatedAssociation,
+      {
+        v2UserId: existingAssociation.userId,
+      }
+    );
+
+    return updatedAssociation;
   }
 
   // Not yet implemented, but keeping for future use
@@ -98,7 +155,20 @@ export class MixedSimulationStore implements UserSimulationStore {
       this.apiStore.findByUser(userId, countryId),
     ]);
 
-    return [...localAssociations, ...v2Associations];
+    const mappedV2AssociationIds = new Set(
+      localAssociations
+        .map((association) =>
+          association.id ? getMappedUserSimulationAssociationId(association.id) : null
+        )
+        .filter((id): id is string => !!id)
+    );
+
+    return [
+      ...localAssociations,
+      ...v2Associations.filter(
+        (association) => !association.id || !mappedV2AssociationIds.has(association.id)
+      ),
+    ];
   }
 
   async findById(userId: string, simulationId: string): Promise<UserSimulation | null> {
