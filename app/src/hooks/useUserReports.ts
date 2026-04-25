@@ -1,9 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { PolicyAdapter, ReportAdapter, SimulationAdapter } from '@/adapters';
-import { fetchHouseholdById } from '@/api/household';
-import { fetchPolicyById } from '@/api/policy';
+import { ReportAdapter } from '@/adapters';
 import { fetchReportById } from '@/api/report';
-import { fetchSimulationById } from '@/api/simulation';
 import { useApiRegions } from '@/hooks/useApiRegions';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { GC_TIME_5_MIN } from '@/libs/queryConfig';
@@ -23,6 +20,11 @@ import { usePolicyAssociationsByUser } from './useUserPolicy';
 import { useReportAssociationById, useReportAssociationsByUser } from './useUserReportAssociations';
 import { useSimulationAssociationsByUser } from './useUserSimulationAssociations';
 import { combineLoadingStates, extractUniqueIds, useParallelQueries } from './utils/queryUtils';
+import {
+  fetchHydratedHousehold,
+  fetchHydratedPolicy,
+  fetchHydratedSimulation,
+} from './utils/simulationReadRouting';
 
 /**
  * Enhanced result type that includes all relationships
@@ -117,11 +119,7 @@ export const useUserReports = (userId: string) => {
   // Step 5: Fetch simulations
   const simulationResults = useParallelQueries<Simulation>(simulationIds, {
     queryKey: simulationKeys.byId,
-    queryFn: async (id) => {
-      const metadata = await fetchSimulationById(country, id);
-      const transformed = SimulationAdapter.fromMetadata(metadata);
-      return transformed;
-    },
+    queryFn: (id) => fetchHydratedSimulation(country, id),
     enabled: simulationIds.length > 0,
     // staleTime: Infinity - Never auto-refetch, rely on invalidateQueries() for targeted refetching
     // When orchestrator calls invalidateQueries({ queryKey: simulationKeys.byId(simId) }),
@@ -147,10 +145,7 @@ export const useUserReports = (userId: string) => {
   // Step 7: Fetch policies
   const policyResults = useParallelQueries<Policy>(policyIds, {
     queryKey: policyKeys.byId,
-    queryFn: async (id) => {
-      const metadata = await fetchPolicyById(country, id);
-      return PolicyAdapter.fromMetadata(metadata);
-    },
+    queryFn: (id) => fetchHydratedPolicy(country, id),
     enabled: policyIds.length > 0,
     staleTime: 5 * 60 * 1000,
     structuralSharing: false,
@@ -159,10 +154,7 @@ export const useUserReports = (userId: string) => {
   // Step 8: Fetch households
   const householdResults = useParallelQueries<HouseholdModel>(householdIds, {
     queryKey: householdKeys.byId,
-    queryFn: async (id) => {
-      const metadata = await fetchHouseholdById(country, id);
-      return HouseholdModel.fromV1Metadata(metadata);
-    },
+    queryFn: (id) => fetchHydratedHousehold(country, id),
     enabled: householdIds.length > 0,
     staleTime: 5 * 60 * 1000,
   });
@@ -362,11 +354,7 @@ export const useUserReportById = (userReportId: string, options?: { enabled?: bo
 
   const simulationResults = useParallelQueries<Simulation>(simulationIds, {
     queryKey: simulationKeys.byId,
-    queryFn: async (id) => {
-      const metadata = await fetchSimulationById(country, id);
-      const transformed = SimulationAdapter.fromMetadata(metadata);
-      return transformed;
-    },
+    queryFn: (id) => fetchHydratedSimulation(country, id),
     enabled: isEnabled && simulationIds.length > 0,
     // staleTime: Infinity - Never auto-refetch, rely on invalidateQueries() for targeted refetching
     // When orchestrator calls invalidateQueries({ queryKey: simulationKeys.byId(simId) }),
@@ -385,10 +373,7 @@ export const useUserReportById = (userReportId: string, options?: { enabled?: bo
 
   const policyResults = useParallelQueries<Policy>(policyIds, {
     queryKey: policyKeys.byId,
-    queryFn: async (id) => {
-      const metadata = await fetchPolicyById(country, id);
-      return PolicyAdapter.fromMetadata(metadata);
-    },
+    queryFn: (id) => fetchHydratedPolicy(country, id),
     enabled: isEnabled && policyIds.length > 0,
     staleTime: 5 * 60 * 1000,
     structuralSharing: false,
@@ -434,10 +419,7 @@ export const useUserReportById = (userReportId: string, options?: { enabled?: bo
 
   const householdResults = useParallelQueries<HouseholdModel>(householdIds, {
     queryKey: householdKeys.byId,
-    queryFn: async (id) => {
-      const metadata = await fetchHouseholdById(country, id);
-      return HouseholdModel.fromV1Metadata(metadata);
-    },
+    queryFn: (id) => fetchHydratedHousehold(country, id),
     enabled: isEnabled && householdIds.length > 0,
     staleTime: 5 * 60 * 1000,
   });

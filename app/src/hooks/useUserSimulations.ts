@@ -1,8 +1,4 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { PolicyAdapter, SimulationAdapter } from '@/adapters';
-import { fetchHouseholdById } from '@/api/household';
-import { fetchPolicyById } from '@/api/policy';
-import { fetchSimulationById } from '@/api/simulation';
 import { useApiRegions } from '@/hooks/useApiRegions';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { buildCanonicalGeography } from '@/models/geography';
@@ -19,6 +15,11 @@ import { useHouseholdAssociationsByUser } from './useUserHousehold';
 import { usePolicyAssociationsByUser } from './useUserPolicy';
 import { useSimulationAssociationsByUser } from './useUserSimulationAssociations';
 import { combineLoadingStates, extractUniqueIds, useParallelQueries } from './utils/queryUtils';
+import {
+  fetchHydratedHousehold,
+  fetchHydratedPolicy,
+  fetchHydratedSimulation,
+} from './utils/simulationReadRouting';
 
 /**
  * Enhanced result type that includes all relationships
@@ -83,10 +84,7 @@ export const useUserSimulations = (userId: string) => {
   // Step 3: Fetch simulations using parallel queries utility
   const simulationResults = useParallelQueries<Simulation>(simulationIds, {
     queryKey: simulationKeys.byId,
-    queryFn: async (id) => {
-      const metadata = await fetchSimulationById(country, id);
-      return SimulationAdapter.fromMetadata(metadata);
-    },
+    queryFn: (id) => fetchHydratedSimulation(country, id),
     enabled: !!simulationAssociations && simulationAssociations.length > 0,
     staleTime: 5 * 60 * 1000,
   });
@@ -113,10 +111,7 @@ export const useUserSimulations = (userId: string) => {
   // Step 5: Fetch policies (only those not already in cache)
   const policyResults = useParallelQueries<Policy>(policyIds, {
     queryKey: policyKeys.byId,
-    queryFn: async (id) => {
-      const metadata = await fetchPolicyById(country, id);
-      return PolicyAdapter.fromMetadata(metadata);
-    },
+    queryFn: (id) => fetchHydratedPolicy(country, id),
     enabled: policyIds.length > 0,
     staleTime: 5 * 60 * 1000,
     structuralSharing: false,
@@ -125,10 +120,7 @@ export const useUserSimulations = (userId: string) => {
   // Step 6: Fetch households (populations)
   const householdResults = useParallelQueries<Household>(householdIds, {
     queryKey: householdKeys.byId,
-    queryFn: async (id) => {
-      const metadata = await fetchHouseholdById(country, id);
-      return HouseholdModel.fromV1Metadata(metadata);
-    },
+    queryFn: (id) => fetchHydratedHousehold(country, id),
     enabled: householdIds.length > 0,
     staleTime: 5 * 60 * 1000,
   });
@@ -232,7 +224,7 @@ export const useUserSimulations = (userId: string) => {
       queryClient.getQueryData<Simulation>(simulationKeys.byId(id)),
     getNormalizedPolicy: (id: string) => queryClient.getQueryData<Policy>(policyKeys.byId(id)),
     getNormalizedHousehold: (id: string) =>
-      queryClient.getQueryData<Household>(householdKeys.byId(id)),
+      queryClient.getQueryData<HouseholdModel>(householdKeys.byId(id)),
   };
 };
 
@@ -254,10 +246,7 @@ export const useUserSimulationById = (userId: string, simulationId: string) => {
     error: simError,
   } = useQuery({
     queryKey: simulationKeys.byId(simulationId),
-    queryFn: async () => {
-      const metadata = await fetchSimulationById(country, simulationId);
-      return SimulationAdapter.fromMetadata(metadata);
-    },
+    queryFn: () => fetchHydratedSimulation(country, simulationId),
     enabled: !cachedSimulation,
     staleTime: 5 * 60 * 1000,
   });
@@ -267,10 +256,7 @@ export const useUserSimulationById = (userId: string, simulationId: string) => {
   // Fetch related entities if we have a simulation
   const { data: policy } = useQuery({
     queryKey: policyKeys.byId(finalSimulation?.policyId?.toString() ?? ''),
-    queryFn: async () => {
-      const metadata = await fetchPolicyById(country, finalSimulation!.policyId!.toString());
-      return PolicyAdapter.fromMetadata(metadata);
-    },
+    queryFn: () => fetchHydratedPolicy(country, finalSimulation!.policyId!.toString()),
     enabled: !!finalSimulation?.policyId,
     staleTime: 5 * 60 * 1000,
   });
@@ -281,10 +267,7 @@ export const useUserSimulationById = (userId: string, simulationId: string) => {
 
   const { data: household } = useQuery({
     queryKey: householdKeys.byId(populationId ?? ''),
-    queryFn: async () => {
-      const metadata = await fetchHouseholdById(country, populationId!);
-      return HouseholdModel.fromV1Metadata(metadata);
-    },
+    queryFn: () => fetchHydratedHousehold(country, populationId!),
     enabled: !!populationId,
     staleTime: 5 * 60 * 1000,
     retry: 1, // Only retry once if it's not a household

@@ -11,11 +11,8 @@
  * and returns the fully-hydrated base ingredients.
  */
 
-import { PolicyAdapter, ReportAdapter, SimulationAdapter } from '@/adapters';
-import { fetchHouseholdById } from '@/api/household';
-import { fetchPolicyById } from '@/api/policy';
+import { ReportAdapter } from '@/adapters';
 import { fetchReportById } from '@/api/report';
-import { fetchSimulationById } from '@/api/simulation';
 import { useApiRegions } from '@/hooks/useApiRegions';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { GC_TIME_5_MIN } from '@/libs/queryConfig';
@@ -33,6 +30,11 @@ import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { UserReport } from '@/types/ingredients/UserReport';
 import { UserSimulation } from '@/types/ingredients/UserSimulation';
 import { combineLoadingStates, extractUniqueIds, useParallelQueries } from './queryUtils';
+import {
+  fetchHydratedHousehold,
+  fetchHydratedPolicy,
+  fetchHydratedSimulation,
+} from './simulationReadRouting';
 
 /**
  * Construct Geography objects from geography-type simulations
@@ -191,10 +193,7 @@ export function useFetchReportIngredients(
 
   const simulationResults = useParallelQueries<Simulation>(isEnabled ? simulationIds : [], {
     queryKey: simulationKeys.byId,
-    queryFn: async (id) => {
-      const metadata = await fetchSimulationById(country, id);
-      return SimulationAdapter.fromMetadata(metadata);
-    },
+    queryFn: (id) => fetchHydratedSimulation(country, id),
     enabled: isEnabled && simulationIds.length > 0,
     staleTime: Infinity,
     gcTime: GC_TIME_5_MIN,
@@ -209,10 +208,7 @@ export function useFetchReportIngredients(
 
   const policyResults = useParallelQueries<Policy>(isEnabled ? policyIds : [], {
     queryKey: policyKeys.byId,
-    queryFn: async (id) => {
-      const metadata = await fetchPolicyById(country, id);
-      return PolicyAdapter.fromMetadata(metadata);
-    },
+    queryFn: (id) => fetchHydratedPolicy(country, id),
     enabled: isEnabled && policyIds.length > 0,
     staleTime: 5 * 60 * 1000,
     structuralSharing: false,
@@ -226,10 +222,7 @@ export function useFetchReportIngredients(
 
   const householdResults = useParallelQueries<Household>(isEnabled ? householdIds : [], {
     queryKey: householdKeys.byId,
-    queryFn: async (id) => {
-      const metadata = await fetchHouseholdById(country, id);
-      return HouseholdModel.fromV1Metadata(metadata);
-    },
+    queryFn: (id) => fetchHydratedHousehold(country, id),
     enabled: isEnabled && householdIds.length > 0,
     staleTime: 5 * 60 * 1000,
   });
