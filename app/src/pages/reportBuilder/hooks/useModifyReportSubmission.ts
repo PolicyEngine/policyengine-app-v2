@@ -16,6 +16,7 @@ import { ReportAdapter, SimulationAdapter } from '@/adapters';
 import { createReport as createBaseReport, createReportAndAssociateWithUser } from '@/api/report';
 import { createSimulation } from '@/api/simulation';
 import { LocalStorageSimulationStore } from '@/api/simulationAssociation';
+import { assertReportLinkedSimulationCreateBoundary } from '@/config/simulationCapability';
 import { MOCK_USER_ID } from '@/constants';
 import { useCalcOrchestratorManager } from '@/contexts/CalcOrchestratorContext';
 import { useUpdateReportAssociation } from '@/hooks/useUserReportAssociations';
@@ -46,6 +47,7 @@ export function useModifyReportSubmission({
   existingUserReportId,
   onSuccess,
 }: UseModifyReportSubmissionArgs): UseModifyReportSubmissionReturn {
+  assertReportLinkedSimulationCreateBoundary('useModifyReportSubmission');
   const currentLawId = useSelector((state: RootState) => state.metadata.currentLawId);
   const manager = useCalcOrchestratorManager();
   const updateReportAssociation = useUpdateReportAssociation();
@@ -87,6 +89,7 @@ export function useModifyReportSubmission({
         continue;
       }
 
+      // Report-linked simulation creation remains on the v1/Phase 4 boundary.
       const payload = SimulationAdapter.toCreationPayload({
         populationId,
         policyId,

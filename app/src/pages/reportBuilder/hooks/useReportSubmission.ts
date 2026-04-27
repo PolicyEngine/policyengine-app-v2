@@ -15,6 +15,7 @@ import { useSelector } from 'react-redux';
 import { ReportAdapter, SimulationAdapter } from '@/adapters';
 import { createSimulation } from '@/api/simulation';
 import { LocalStorageSimulationStore } from '@/api/simulationAssociation';
+import { assertReportLinkedSimulationCreateBoundary } from '@/config/simulationCapability';
 import { MOCK_USER_ID } from '@/constants';
 import { useCreateReport } from '@/hooks/useCreateReport';
 import { RootState } from '@/store';
@@ -82,6 +83,7 @@ export function useReportSubmission({
   countryId,
   onSuccess,
 }: UseReportSubmissionArgs): UseReportSubmissionReturn {
+  assertReportLinkedSimulationCreateBoundary('useReportSubmission');
   const currentLawId = useSelector((state: RootState) => state.metadata.currentLawId);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { createReport } = useCreateReport(reportState.label || undefined);
@@ -134,6 +136,7 @@ export function useReportSubmission({
           populationType,
         };
 
+        // Report-linked simulation creation remains on the v1/Phase 4 boundary.
         const payload = SimulationAdapter.toCreationPayload(simulationData);
         const result = await createSimulation(countryId, payload);
         const simulationId = result.result.simulation_id;

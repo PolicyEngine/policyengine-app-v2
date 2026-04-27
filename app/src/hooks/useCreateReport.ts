@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createReportAndAssociateWithUser, CreateReportWithAssociationResult } from '@/api/report';
 import { assertSupportedMode, getSupportedMigrationModes } from '@/config/migrationMode';
+import { assertReportLinkedSimulationCreateBoundary } from '@/config/simulationCapability';
 import { MOCK_USER_ID } from '@/constants';
 import { useCalcOrchestratorManager } from '@/contexts/CalcOrchestratorContext';
 import { countryIds } from '@/libs/countries';
@@ -39,11 +40,11 @@ interface ExtendedCreateReportResult extends CreateReportWithAssociationResult {
   };
 }
 
-// Note: Much of this code's complexity is due to mapping v2 concepts (simulations, populations)
-// to the v1 API, which cannot run reports as subsets of simulations. This should be simplified
-// with the creation of API v2, where we can merely pass simulation IDs to create a report.
+// Phase 3 intentionally keeps report-linked creation on the v1/Phase 4 boundary.
+// API v2 report and economy orchestration should enter through the Phase 4 analysis flow.
 export function useCreateReport(reportLabel?: string) {
   assertSupportedMode('reports', getSupportedMigrationModes('reports'), 'useCreateReport');
+  assertReportLinkedSimulationCreateBoundary('useCreateReport');
   const queryClient = useQueryClient();
   const manager = useCalcOrchestratorManager();
 

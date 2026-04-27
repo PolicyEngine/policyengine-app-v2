@@ -65,3 +65,13 @@ export function assertSupportedSimulationCapabilityMode(
 
   return mode;
 }
+
+export function assertReportLinkedSimulationCreateBoundary(
+  context?: string
+): SimulationCapabilityMode {
+  return assertSupportedSimulationCapabilityMode(
+    'report_linked_create',
+    ['v1_only', 'phase4_only'],
+    context
+  );
+}

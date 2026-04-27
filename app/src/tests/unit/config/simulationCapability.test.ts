@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import {
+  assertReportLinkedSimulationCreateBoundary,
   assertSupportedSimulationCapabilityMode,
   getSimulationCapabilityMode,
   isSimulationCapabilityMixed,
@@ -79,6 +80,25 @@ describe('simulationCapability', () => {
       ).toThrow(
         '[SimulationCapability] Unsupported mode "phase4_only" for report_linked_create in useReportSubmission. Supported modes: v1_only'
       );
+    });
+  });
+
+  describe('assertReportLinkedSimulationCreateBoundary', () => {
+    test('given default phase 4 boundary then report-linked creation is allowed to use legacy flow', () => {
+      expect(assertReportLinkedSimulationCreateBoundary('useCreateReport')).toBe('phase4_only');
+    });
+
+    test('given v2 report-linked activation then it fails fast', () => {
+      const previousMode = SIMULATION_CAPABILITY_MODE.report_linked_create;
+      SIMULATION_CAPABILITY_MODE.report_linked_create = 'v2_enabled';
+
+      try {
+        expect(() => assertReportLinkedSimulationCreateBoundary('useCreateReport')).toThrow(
+          '[SimulationCapability] Unsupported mode "v2_enabled" for report_linked_create in useCreateReport. Supported modes: v1_only, phase4_only'
+        );
+      } finally {
+        SIMULATION_CAPABILITY_MODE.report_linked_create = previousMode;
+      }
     });
   });
 });

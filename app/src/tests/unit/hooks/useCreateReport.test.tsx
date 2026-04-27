@@ -4,6 +4,7 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { createReportAndAssociateWithUser } from '@/api/report';
 import { ENTITY_MIGRATION_MODE } from '@/config/migrationMode';
+import { SIMULATION_CAPABILITY_MODE } from '@/config/simulationCapability';
 import { useCreateReport } from '@/hooks/useCreateReport';
 import { mockReport } from '@/tests/fixtures/adapters/reportMocks';
 // Removed - old calculation manager mocks no longer needed
@@ -70,10 +71,12 @@ describe('useCreateReport', () => {
   let queryClient: ReturnType<typeof createMockQueryClient>;
   let consoleMocks: ReturnType<typeof setupConsoleMocks>;
   const defaultReportMigrationMode = ENTITY_MIGRATION_MODE.reports;
+  const defaultSimulationCapabilityMode = { ...SIMULATION_CAPABILITY_MODE };
 
   beforeEach(() => {
     vi.clearAllMocks();
     ENTITY_MIGRATION_MODE.reports = defaultReportMigrationMode;
+    Object.assign(SIMULATION_CAPABILITY_MODE, defaultSimulationCapabilityMode);
     queryClient = createMockQueryClient();
     consoleMocks = setupConsoleMocks();
 
@@ -181,6 +184,14 @@ describe('useCreateReport', () => {
 
       expect(() => renderHook(() => useCreateReport(TEST_LABEL), { wrapper })).toThrow(
         '[MigrationMode] Unsupported mode "v1_primary_v2_shadow" for reports in useCreateReport. Supported modes: v1_only'
+      );
+    });
+
+    test('given v2 report-linked simulation activation then hook fails fast', () => {
+      SIMULATION_CAPABILITY_MODE.report_linked_create = 'v2_enabled';
+
+      expect(() => renderHook(() => useCreateReport(TEST_LABEL), { wrapper })).toThrow(
+        '[SimulationCapability] Unsupported mode "v2_enabled" for report_linked_create in useCreateReport. Supported modes: v1_only, phase4_only'
       );
     });
   });

@@ -4,6 +4,7 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { SIMULATION_CAPABILITY_MODE } from '@/config/simulationCapability';
 import { useReportSubmission } from '@/pages/reportBuilder/hooks/useReportSubmission';
 import {
   createTestStore,
@@ -63,9 +64,11 @@ describe('useReportSubmission', () => {
   let queryClient: QueryClient;
   let mockStore: ReturnType<typeof createTestStore>;
   let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
+  const defaultSimulationCapabilityMode = { ...SIMULATION_CAPABILITY_MODE };
 
   beforeEach(() => {
     vi.clearAllMocks();
+    Object.assign(SIMULATION_CAPABILITY_MODE, defaultSimulationCapabilityMode);
     setupDefaultMocks();
 
     queryClient = new QueryClient({
@@ -94,6 +97,26 @@ describe('useReportSubmission', () => {
       </QueryClientProvider>
     </Provider>
   );
+
+  describe('phase 4 boundary', () => {
+    test('given v2 report-linked simulation activation then hook fails fast', () => {
+      SIMULATION_CAPABILITY_MODE.report_linked_create = 'v2_enabled';
+
+      expect(() =>
+        renderHook(
+          () =>
+            useReportSubmission({
+              reportState: mockSingleSimReportState,
+              countryId: 'us',
+              onSuccess: mockOnSuccess,
+            }),
+          { wrapper }
+        )
+      ).toThrow(
+        '[SimulationCapability] Unsupported mode "v2_enabled" for report_linked_create in useReportSubmission. Supported modes: v1_only, phase4_only'
+      );
+    });
+  });
 
   describe('localStorage association creation', () => {
     test('given single simulation when submitted then creates localStorage association', async () => {
