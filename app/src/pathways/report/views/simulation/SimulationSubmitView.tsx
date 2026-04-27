@@ -43,10 +43,15 @@ export default function SimulationSubmitView({
       throw new Error('Simulation submission requires a selected population');
     }
 
+    const policyId = simulation.policy.id;
+    if (!policyId) {
+      throw new Error('Simulation submission requires a selected policy');
+    }
+
     // Convert state to partial Simulation for adapter
     const simulationData: Partial<Simulation> = {
       populationId,
-      policyId: simulation.policy.id,
+      policyId,
       populationType,
     };
 
@@ -58,7 +63,7 @@ export default function SimulationSubmitView({
         payload: serializedSimulationCreationPayload,
         populationId,
         populationType,
-        policyId: simulation.policy.id,
+        policyId,
       },
       {
         onSuccess: (data) => {
