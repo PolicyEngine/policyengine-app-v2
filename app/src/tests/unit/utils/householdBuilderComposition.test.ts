@@ -16,7 +16,7 @@ describe('householdBuilderComposition', () => {
     builder.setMaritalStatus('alex', 'sam');
     builder.addChild('morgan', 12, ['alex', 'sam'], { employment_income: 0 });
 
-    const composition = deriveHouseholdBuilderComposition(builder.build(), YEAR);
+    const composition = deriveHouseholdBuilderComposition(builder.buildModel(), YEAR);
 
     expect(composition.primaryPersonKey).toBe('alex');
     expect(composition.partnerKey).toBe('sam');
@@ -31,13 +31,18 @@ describe('householdBuilderComposition', () => {
     builder.addAdult('sam', 33, { employment_income: 0 });
     builder.setMaritalStatus('alex', 'sam');
 
-    const updatedHousehold = updateHouseholdBuilderMaritalStatus(builder.build(), YEAR, 'single');
+    const updatedHousehold = updateHouseholdBuilderMaritalStatus(
+      builder.buildModel(),
+      YEAR,
+      'single'
+    );
+    const updatedHouseholdInput = updatedHousehold.toAppInput();
 
-    expect(updatedHousehold.householdData.people.alex).toBeDefined();
-    expect(updatedHousehold.householdData.people.sam).toBeUndefined();
-    expect(updatedHousehold.householdData.maritalUnits?.['your marital unit']?.members).toEqual([
-      'alex',
-    ]);
+    expect(updatedHouseholdInput.householdData.people.alex).toBeDefined();
+    expect(updatedHouseholdInput.householdData.people.sam).toBeUndefined();
+    expect(
+      updatedHouseholdInput.householdData.maritalUnits?.['your marital unit']?.members
+    ).toEqual(['alex']);
   });
 
   test('preserves existing children when increasing the child count', () => {
@@ -45,8 +50,8 @@ describe('householdBuilderComposition', () => {
     builder.addAdult('alex', 34, { employment_income: 0 });
     builder.addChild('morgan', 12, ['alex'], { employment_income: 0 });
 
-    const updatedHousehold = updateHouseholdBuilderChildCount(builder.build(), YEAR, 2);
-    const people = Object.keys(updatedHousehold.householdData.people);
+    const updatedHousehold = updateHouseholdBuilderChildCount(builder.buildModel(), YEAR, 2);
+    const people = Object.keys(updatedHousehold.toAppInput().householdData.people);
 
     expect(people).toContain('morgan');
     expect(people).toContain('your second dependent');

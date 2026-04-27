@@ -105,7 +105,11 @@ import {
 import { countPolicyModifications } from '@/utils/countParameterChanges';
 import { formatPeriod } from '@/utils/dateUtils';
 import { generateGeographyLabel } from '@/utils/geographyUtils';
-import { HouseholdBuilder } from '@/utils/HouseholdBuilder';
+import {
+  deriveHouseholdBuilderComposition,
+  updateHouseholdBuilderChildCount,
+  updateHouseholdBuilderMaritalStatus,
+} from '@/utils/householdBuilderComposition';
 import { formatLabelParts, getHierarchicalLabels } from '@/utils/parameterLabels';
 import { initializePolicyState } from '@/utils/pathwayState/initializePolicyState';
 import { initializePopulationState } from '@/utils/pathwayState/initializePopulationState';
@@ -3535,7 +3539,7 @@ function PopulationBrowseModal({
   // Creation mode state
   const [isCreationMode, setIsCreationMode] = useState(false);
   const [householdLabel, setHouseholdLabel] = useState('');
-  const [householdDraft, setHouseholdDraft] = useState<AppHouseholdInputEnvelope | null>(null);
+  const [householdDraft, setHouseholdDraft] = useState<HouseholdModel | null>(null);
   const [isEditingLabel, setIsEditingLabel] = useState(false);
 
   // Get report year (default to current year)
@@ -3558,11 +3562,15 @@ function PopulationBrowseModal({
     if (!householdDraft) {
       return [];
     }
-    return Object.keys(householdDraft.householdData.people || {});
+    return householdDraft.personNames;
   }, [householdDraft]);
 
-  const maritalStatus = householdPeople.includes('your partner') ? 'married' : 'single';
-  const numChildren = householdPeople.filter((p) => p.includes('dependent')).length;
+  const householdComposition = useMemo(
+    () => (householdDraft ? deriveHouseholdBuilderComposition(householdDraft, reportYear) : null),
+    [householdDraft, reportYear]
+  );
+  const maritalStatus = householdComposition?.maritalStatus ?? 'single';
+  const numChildren = householdComposition?.numChildren ?? 0;
 
   // Reset state on mount
   useEffect(() => {
@@ -3723,9 +3731,12 @@ function PopulationBrowseModal({
 
   // Enter creation mode
   const handleEnterCreationMode = useCallback(() => {
-    const builder = new HouseholdBuilder(countryId as 'us' | 'uk', reportYear);
-    builder.addAdult('you', 30, { employment_income: 0 });
-    setHouseholdDraft(builder.build());
+    setHouseholdDraft(
+      HouseholdModel.empty(
+        countryId as AppHouseholdInputEnvelope['countryId'],
+        reportYear
+      ).addAdult('you', 30, { employment_income: 0 })
+    );
     setHouseholdLabel('');
     setIsCreationMode(true);
   }, [countryId, reportYear]);
@@ -3744,21 +3755,9 @@ function PopulationBrowseModal({
         return;
       }
 
-      const builder = new HouseholdBuilder(countryId as 'us' | 'uk', reportYear);
-      builder.loadHousehold(householdDraft);
-
-      const hasPartner = householdPeople.includes('your partner');
-
-      if (newStatus === 'married' && !hasPartner) {
-        builder.addAdult('your partner', 30, { employment_income: 0 });
-        builder.setMaritalStatus('you', 'your partner');
-      } else if (newStatus === 'single' && hasPartner) {
-        builder.removePerson('your partner');
-      }
-
-      setHouseholdDraft(builder.build());
+      setHouseholdDraft(updateHouseholdBuilderMaritalStatus(householdDraft, reportYear, newStatus));
     },
-    [householdDraft, householdPeople, countryId, reportYear]
+    [householdDraft, reportYear]
   );
 
   // Handle number of children change
@@ -3768,32 +3767,9 @@ function PopulationBrowseModal({
         return;
       }
 
-      const builder = new HouseholdBuilder(countryId as 'us' | 'uk', reportYear);
-      builder.loadHousehold(householdDraft);
-
-      const currentChildren = householdPeople.filter((p) => p.includes('dependent'));
-      const currentChildCount = currentChildren.length;
-
-      if (newCount !== currentChildCount) {
-        // Remove all existing children
-        currentChildren.forEach((child) => builder.removePerson(child));
-
-        // Add new children
-        if (newCount > 0) {
-          const hasPartner = householdPeople.includes('your partner');
-          const parentIds = hasPartner ? ['you', 'your partner'] : ['you'];
-          const ordinals = ['first', 'second', 'third', 'fourth', 'fifth'];
-
-          for (let i = 0; i < newCount; i++) {
-            const childName = `your ${ordinals[i] || `${i + 1}th`} dependent`;
-            builder.addChild(childName, 10, parentIds, { employment_income: 0 });
-          }
-        }
-      }
-
-      setHouseholdDraft(builder.build());
+      setHouseholdDraft(updateHouseholdBuilderChildCount(householdDraft, reportYear, newCount));
     },
-    [householdDraft, householdPeople, countryId, reportYear]
+    [householdDraft, reportYear]
   );
 
   // Handle household creation submission
@@ -3802,10 +3778,8 @@ function PopulationBrowseModal({
       return;
     }
 
-    const payload = HouseholdModel.fromDraft({
-      countryId,
-      householdData: householdDraft.householdData,
-    }).toV1CreationPayload();
+    const householdToCreate = householdDraft.withLabel(householdLabel);
+    const payload = householdToCreate.toV1CreationPayload();
 
     try {
       const result = await createHousehold(payload);
@@ -3815,10 +3789,7 @@ function PopulationBrowseModal({
       householdUsageStore.recordUsage(householdId);
 
       // Create household with ID set for proper selection highlighting
-      const createdHousehold: AppHouseholdInputEnvelope = {
-        ...householdDraft,
-        id: householdId,
-      };
+      const createdHousehold = householdToCreate.withId(householdId).toAppInput();
 
       const populationState = {
         geography: null,

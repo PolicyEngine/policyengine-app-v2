@@ -187,6 +187,51 @@ describe('Household', () => {
     });
   });
 
+  describe('builder operations', () => {
+    it('creates builder-ready US households with country defaults', () => {
+      const household = Household.empty('us', 2026)
+        .addAdult('you', 30, { employment_income: 0 })
+        .addAdult('your partner', 30, { employment_income: 0 })
+        .addChild('your child', 10, ['you', 'your partner'], { employment_income: 0 });
+
+      const householdData = household.toAppInput().householdData;
+
+      expect(householdData.people.you.age).toEqual({ 2026: 30 });
+      expect(householdData.people['your child'].is_tax_unit_dependent).toEqual({ 2026: true });
+      expect(householdData.taxUnits?.['your tax unit']?.members).toEqual([
+        'you',
+        'your partner',
+        'your child',
+      ]);
+      expect(householdData.maritalUnits?.['your marital unit']?.members).toEqual([
+        'you',
+        'your partner',
+      ]);
+      expect(householdData.maritalUnits?.["your child's marital unit"]?.members).toEqual([
+        'your child',
+      ]);
+    });
+
+    it('updates variables and removes people immutably', () => {
+      const household = Household.empty('us', 2026)
+        .addAdult('you', 30)
+        .addAdult('your partner', 30)
+        .setPersonVariable('you', 'employment_income', 42_000)
+        .setGroupVariable('households', 'your household', 'state_name', 'CA');
+
+      const singleHousehold = household.removePerson('your partner');
+
+      expect(household.toAppInput().householdData.people['your partner']).toBeDefined();
+      expect(singleHousehold.toAppInput().householdData.people['your partner']).toBeUndefined();
+      expect(singleHousehold.toAppInput().householdData.people.you.employment_income).toEqual({
+        2026: 42000,
+      });
+      expect(
+        singleHousehold.toAppInput().householdData.households?.['your household']?.state_name
+      ).toEqual({ 2026: 'CA' });
+    });
+  });
+
   describe('fromV1Metadata', () => {
     it('maps snake_case v1 household_json into the app household shape', () => {
       const household = Household.fromV1Metadata(mockHouseholdMetadata);

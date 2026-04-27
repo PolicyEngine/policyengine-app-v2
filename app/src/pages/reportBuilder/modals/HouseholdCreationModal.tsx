@@ -18,13 +18,11 @@ import { EditableLabel } from '@/pages/reportBuilder/components/EditableLabel';
 import { RootState } from '@/store';
 import type { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { PopulationStateProps } from '@/types/pathwayState';
-import { HouseholdBuilder } from '@/utils/HouseholdBuilder';
 import {
   deriveHouseholdBuilderComposition,
   updateHouseholdBuilderChildCount,
   updateHouseholdBuilderMaritalStatus,
 } from '@/utils/householdBuilderComposition';
-import { cloneHousehold } from '@/utils/householdDataAccess';
 import { HouseholdValidation } from '@/utils/HouseholdValidation';
 import { BROWSE_MODAL_CONFIG, FONT_SIZES, INGREDIENT_COLORS } from '../constants';
 import { HouseholdCreationContent } from './population';
@@ -44,23 +42,10 @@ interface HouseholdCreationModalProps {
   forceReadOnly?: boolean;
 }
 
-function buildStarterHousehold(
-  countryId: 'us' | 'uk',
-  reportYear: string
-): AppHouseholdInputEnvelope {
-  const builder = new HouseholdBuilder(countryId, reportYear);
-  builder.addAdult('you', 30, { employment_income: 0 });
-  return builder.build();
-}
-
-function cloneHouseholdWithLabel(
-  household: AppHouseholdInputEnvelope,
-  label: string | null
-): AppHouseholdInputEnvelope {
-  return {
-    ...cloneHousehold(household),
-    label,
-  };
+function buildStarterHousehold(countryId: 'us' | 'uk', reportYear: string): HouseholdModel {
+  return HouseholdModel.empty(countryId, reportYear).addAdult('you', 30, {
+    employment_income: 0,
+  });
 }
 
 function isHouseholdWithToAppInput(
@@ -74,14 +59,19 @@ function isHouseholdWithToAppInput(
   );
 }
 
-function normalizeAppHouseholdInput(
-  household: AppHouseholdInputEnvelope | { toAppInput: () => AppHouseholdInputEnvelope }
-): AppHouseholdInputEnvelope {
-  if (isHouseholdWithToAppInput(household)) {
-    return household.toAppInput();
+function normalizeHouseholdModel(
+  household:
+    | AppHouseholdInputEnvelope
+    | HouseholdModel
+    | { toAppInput: () => AppHouseholdInputEnvelope }
+): HouseholdModel {
+  if (household instanceof HouseholdModel) {
+    return household;
   }
 
-  return household;
+  return HouseholdModel.fromAppInput(
+    isHouseholdWithToAppInput(household) ? household.toAppInput() : household
+  );
 }
 
 export function HouseholdCreationModal({
@@ -106,15 +96,15 @@ export function HouseholdCreationModal({
       return null;
     }
 
-    const appInputHousehold = normalizeAppHouseholdInput(
+    const initialHouseholdModel = normalizeHouseholdModel(
       initialHousehold as
         | AppHouseholdInputEnvelope
+        | HouseholdModel
         | { toAppInput: () => AppHouseholdInputEnvelope }
     );
 
-    return cloneHouseholdWithLabel(
-      appInputHousehold,
-      initialPopulation?.label ?? appInputHousehold.label ?? null
+    return initialHouseholdModel.withLabel(
+      initialPopulation?.label ?? initialHouseholdModel.label ?? null
     );
   }, [initialPopulation]);
 
@@ -125,7 +115,7 @@ export function HouseholdCreationModal({
   const effectiveEditorMode: HouseholdEditorMode = forceReadOnly ? 'display' : editorMode;
   const isReadOnly = effectiveEditorMode === 'display';
 
-  const [household, setHousehold] = useState<AppHouseholdInputEnvelope | null>(null);
+  const [household, setHousehold] = useState<HouseholdModel | null>(null);
   const [validation, setValidation] = useState<ReturnType<
     typeof HouseholdValidation.isReadyForSimulation
   > | null>(null);
@@ -140,14 +130,7 @@ export function HouseholdCreationModal({
     setEditorMode(resolvedInitialEditorMode);
     setPendingUnnamedAction(null);
     setValidation(null);
-    setHousehold(
-      normalizedInitialHousehold
-        ? cloneHouseholdWithLabel(
-            normalizedInitialHousehold,
-            normalizedInitialHousehold.label ?? null
-          )
-        : buildStarterHousehold(countryId, reportYear)
-    );
+    setHousehold(normalizedInitialHousehold ?? buildStarterHousehold(countryId, reportYear));
   }, [countryId, isOpen, normalizedInitialHousehold, reportYear, resolvedInitialEditorMode]);
 
   const { createHousehold, isPending: isCreating } = useCreateHousehold(
@@ -178,7 +161,9 @@ export function HouseholdCreationModal({
 
     setValidation(null);
     const timeoutId = setTimeout(() => {
-      setValidation(HouseholdValidation.isReadyForSimulation(household, countryId, reportYear));
+      setValidation(
+        HouseholdValidation.isReadyForSimulation(household.toAppInput(), countryId, reportYear)
+      );
     }, 400);
 
     return () => clearTimeout(timeoutId);
@@ -194,21 +179,19 @@ export function HouseholdCreationModal({
       return true;
     }
 
-    return !HouseholdModel.fromAppInput(household).isEqual(
-      HouseholdModel.fromAppInput(normalizedInitialHousehold)
-    );
+    return !household.isEqual(normalizedInitialHousehold);
   }, [household, normalizedInitialHousehold]);
 
   const isValidationBlocking =
     !isReadOnly && (!household || validation === null || validation.isValid === false);
 
-  const handleHouseholdChange = useCallback((nextHousehold: AppHouseholdInputEnvelope) => {
+  const handleHouseholdChange = useCallback((nextHousehold: HouseholdModel) => {
     setValidation(null);
     setHousehold(nextHousehold);
   }, []);
 
   const handleHouseholdLabelChange = useCallback((label: string) => {
-    setHousehold((prev) => (prev ? { ...prev, label: label.trim() ? label : null } : prev));
+    setHousehold((prev) => (prev ? prev.withLabel(label.trim() ? label : null) : prev));
   }, []);
 
   const handleMaritalStatusChange = useCallback(
@@ -236,11 +219,12 @@ export function HouseholdCreationModal({
   );
 
   const persistCreatedHousehold = useCallback(
-    (savedHousehold: AppHouseholdInputEnvelope) => {
+    (savedHousehold: HouseholdModel) => {
+      const savedHouseholdInput = savedHousehold.toAppInput();
       onHouseholdSaved({
         geography: null,
-        household: savedHousehold,
-        label: savedHousehold.label ?? null,
+        household: savedHouseholdInput,
+        label: savedHouseholdInput.label ?? null,
         type: 'household',
       });
       onClose();
@@ -254,7 +238,7 @@ export function HouseholdCreationModal({
     }
 
     const nextValidation = HouseholdValidation.isReadyForSimulation(
-      household,
+      household.toAppInput(),
       countryId,
       reportYear
     );
@@ -264,13 +248,10 @@ export function HouseholdCreationModal({
     }
 
     try {
-      const payload = HouseholdModel.fromAppInput(household).toV1CreationPayload();
+      const payload = household.toV1CreationPayload();
       const result = await createHousehold(payload);
       const householdId = String(result.result.household_id);
-      const savedHousehold = HouseholdModel.fromAppInput(household)
-        .withId(householdId)
-        .withLabel(household.label ?? null)
-        .toAppInput();
+      const savedHousehold = household.withId(householdId).withLabel(household.label ?? null);
       persistCreatedHousehold(savedHousehold);
     } catch (error) {
       console.error('Failed to create household:', error);
@@ -283,7 +264,7 @@ export function HouseholdCreationModal({
     }
 
     const nextValidation = HouseholdValidation.isReadyForSimulation(
-      household,
+      household.toAppInput(),
       countryId,
       reportYear
     );
@@ -298,7 +279,7 @@ export function HouseholdCreationModal({
         userHouseholdId: initialAssociation.id,
         updates: {},
         association: initialAssociation,
-        nextHousehold: household,
+        nextHousehold: household.toAppInput(),
       });
 
       const desiredLabel = household.label ?? undefined;
@@ -309,10 +290,9 @@ export function HouseholdCreationModal({
         });
       }
 
-      const savedHousehold = HouseholdModel.fromAppInput(household)
+      const savedHousehold = household
         .withId(updatedAssociation.householdId)
-        .withLabel(updatedAssociation.label ?? desiredLabel ?? null)
-        .toAppInput();
+        .withLabel(updatedAssociation.label ?? desiredLabel ?? null);
 
       persistCreatedHousehold(savedHousehold);
     } catch (error) {

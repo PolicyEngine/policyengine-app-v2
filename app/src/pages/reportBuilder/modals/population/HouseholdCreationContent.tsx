@@ -5,11 +5,11 @@ import HouseholdBuilderForm from '@/components/household/HouseholdBuilderForm';
 import { Alert, AlertDescription } from '@/components/ui';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Spinner } from '@/components/ui/Spinner';
-import type { AppHouseholdInputEnvelope } from '@/models/household/appTypes';
+import type { Household } from '@/models/Household';
 import { MetadataState } from '@/types/metadata';
 
 interface HouseholdCreationContentProps {
-  householdDraft: AppHouseholdInputEnvelope | null;
+  householdDraft: Household | null;
   metadata: MetadataState;
   reportYear: string;
   maritalStatus: 'single' | 'married';
@@ -19,7 +19,7 @@ interface HouseholdCreationContentProps {
   isCreating: boolean;
   validationMessage?: string | null;
   isReadOnly?: boolean;
-  onChange: (household: AppHouseholdInputEnvelope) => void;
+  onChange: (household: Household) => void;
   onMaritalStatusChange: (status: 'single' | 'married') => void;
   onNumChildrenChange: (count: number) => void;
 }

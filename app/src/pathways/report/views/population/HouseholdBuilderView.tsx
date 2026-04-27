@@ -21,7 +21,6 @@ import { FONT_SIZES, INGREDIENT_COLORS } from '@/pages/reportBuilder/constants';
 import { HouseholdCreationContent } from '@/pages/reportBuilder/modals/population';
 import { RootState } from '@/store';
 import { PopulationStateProps } from '@/types/pathwayState';
-import { HouseholdBuilder } from '@/utils/HouseholdBuilder';
 import {
   deriveHouseholdBuilderComposition,
   updateHouseholdBuilderChildCount,
@@ -149,16 +148,18 @@ export default function HouseholdBuilderView({
   }
 
   // Initialize household with "you" if none exists
-  const [household, setLocalHousehold] = useState<AppHouseholdInputEnvelope>(() => {
+  const [household, setLocalHousehold] = useState<HouseholdModel>(() => {
     if (population?.household) {
-      return {
+      return HouseholdModel.fromAppInput({
         ...population.household,
         label: population.label ?? population.household.label ?? null,
-      };
+      });
     }
-    const builder = new HouseholdBuilder(countryId as any, reportYear);
-    builder.addAdult('you', 30, { employment_income: 0 });
-    return builder.build();
+
+    return HouseholdModel.empty(
+      countryId as AppHouseholdInputEnvelope['countryId'],
+      reportYear
+    ).addAdult('you', 30, { employment_income: 0 });
   });
   const { createHousehold, isPending } = useCreateHousehold(household.label || undefined);
   const [validation, setValidation] = useState<ReturnType<
@@ -175,7 +176,11 @@ export default function HouseholdBuilderView({
     setValidation(null);
     const timeoutId = setTimeout(() => {
       setValidation(
-        HouseholdValidation.isReadyForSimulation(household, currentCountryId, reportYear)
+        HouseholdValidation.isReadyForSimulation(
+          household.toAppInput(),
+          currentCountryId,
+          reportYear
+        )
       );
     }, 400);
 
@@ -195,10 +200,7 @@ export default function HouseholdBuilderView({
   };
 
   const handleHouseholdLabelChange = (label: string) => {
-    setLocalHousehold((prev) => ({
-      ...prev,
-      label: label.trim() ? label : null,
-    }));
+    setLocalHousehold((prev) => prev.withLabel(label.trim() ? label : null));
   };
 
   // Show error state if metadata failed to load
@@ -222,7 +224,7 @@ export default function HouseholdBuilderView({
   const handleSubmit = useCallback(async () => {
     // Validate household
     const validation = HouseholdValidation.isReadyForSimulation(
-      household,
+      household.toAppInput(),
       currentCountryId,
       reportYear
     );
@@ -230,23 +232,17 @@ export default function HouseholdBuilderView({
       return;
     }
 
-    const payload = HouseholdModel.fromDraft({
-      countryId: countryId as AppHouseholdInputEnvelope['countryId'],
-      householdData: household.householdData,
-    }).toV1CreationPayload();
+    const payload = household.toV1CreationPayload();
 
     try {
       const result = await createHousehold(payload);
 
       const householdId = result.result.household_id;
-      onSubmitSuccess(householdId, {
-        ...household,
-        id: householdId,
-      });
+      onSubmitSuccess(householdId, household.withId(householdId).toAppInput());
     } catch (err) {
       // Error is handled by the mutation
     }
-  }, [countryId, createHousehold, currentCountryId, household, onSubmitSuccess, reportYear]);
+  }, [createHousehold, currentCountryId, household, onSubmitSuccess, reportYear]);
 
   const requestSubmit = useCallback(() => {
     if (!household.label?.trim()) {

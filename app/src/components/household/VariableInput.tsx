@@ -5,7 +5,7 @@
  * Uses VariableResolver for entity-aware value getting/setting.
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Input,
   Select,
@@ -17,7 +17,7 @@ import {
   Text,
 } from '@/components/ui';
 import { colors, typography } from '@/designTokens';
-import type { AppHouseholdInputEnvelope } from '@/models/household/appTypes';
+import { Household as HouseholdModel } from '@/models/Household';
 import { getInputFormattingProps } from '@/utils/householdValues';
 import { coerceByValueType } from '@/utils/valueCoercion';
 import { getNormalizedVariableMetadata } from '@/utils/variableMetadata';
@@ -25,11 +25,11 @@ import { getValue, setValue, VariableInfo } from '@/utils/VariableResolver';
 
 export interface VariableInputProps {
   variable: VariableInfo;
-  household: AppHouseholdInputEnvelope;
+  household: HouseholdModel;
   metadata: any;
   year: string;
   entityName?: string; // Required for person-level variables
-  onChange: (newHousehold: AppHouseholdInputEnvelope) => void;
+  onChange: (newHousehold: HouseholdModel) => void;
   disabled?: boolean;
 }
 
@@ -50,7 +50,8 @@ export default function VariableInput({
         ? variable.label
         : metadata?.variables?.[variable.name]?.label || '',
   };
-  const currentValue = getValue(household, resolvedVariable.name, metadata, year, entityName);
+  const householdInput = useMemo(() => household.toAppInput(), [household]);
+  const currentValue = getValue(householdInput, resolvedVariable.name, metadata, year, entityName);
   const numericFormatting = getInputFormattingProps(resolvedVariable);
   const isPercentage = resolvedVariable.unit === '/1';
   const rawNumericValue =
@@ -67,8 +68,8 @@ export default function VariableInput({
   const [textInputValue, setTextInputValue] = useState(textValue);
 
   const handleChange = (value: any) => {
-    const newHousehold = setValue(household, variable.name, value, metadata, year, entityName);
-    onChange(newHousehold);
+    const newHousehold = setValue(householdInput, variable.name, value, metadata, year, entityName);
+    onChange(HouseholdModel.fromAppInput(newHousehold));
   };
 
   useEffect(() => {

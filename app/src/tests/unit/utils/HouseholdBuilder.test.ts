@@ -834,7 +834,7 @@ describe('HouseholdBuilder', () => {
       verifyPersonExists(household, PERSON_NAMES.ADULT_1, PERSON_AGES.ADULT_DEFAULT);
     });
 
-    test('given getHousehold when modified then affects builder state', () => {
+    test('given getHousehold when modified then does not affect builder state', () => {
       // Given
       builder.addAdult(PERSON_NAMES.ADULT_1, PERSON_AGES.ADULT_DEFAULT);
 
@@ -851,7 +851,7 @@ describe('HouseholdBuilder', () => {
           builtHousehold.householdData.people[PERSON_NAMES.ADULT_1].age,
           YEARS.CURRENT
         )
-      ).toBe(99);
+      ).toBe(PERSON_AGES.ADULT_DEFAULT);
     });
   });
 
