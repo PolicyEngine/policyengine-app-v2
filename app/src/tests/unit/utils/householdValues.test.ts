@@ -405,6 +405,21 @@ describe('getInputFormattingProps', () => {
   });
 
   describe('Edge cases', () => {
+    test('given snake_case metadata keys then normalizes formatting source fields', () => {
+      // Given
+      const variable = { data_type: 'integer', unit: 'currency-USD' };
+
+      // When
+      const result = getInputFormattingProps(variable);
+
+      // Then
+      expect(result).toEqual({
+        prefix: '$',
+        thousandSeparator: ',',
+        decimalScale: 0,
+      });
+    });
+
     test('given variable without valueType then handles gracefully', () => {
       // Given
       const variable = { unit: 'currency-USD' };

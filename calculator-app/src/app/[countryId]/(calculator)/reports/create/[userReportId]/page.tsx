@@ -1,14 +1,20 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import { use } from "react";
-import ModifyReportPage from "@/pages/reportBuilder/ModifyReportPage";
-
-export default function ModifyReportRoute({
+export default async function ModifyReportRoute({
   params,
+  searchParams,
 }: {
-  params: Promise<{ userReportId: string }>;
+  params: Promise<{ countryId: string; userReportId: string }>;
+  searchParams: Promise<{ share?: string | string[] }>;
 }) {
-  const { userReportId } = use(params);
+  const { countryId, userReportId } = await params;
+  const { share } = await searchParams;
 
-  return <ModifyReportPage userReportId={userReportId} />;
+  const nextPath = `/${countryId}/report-output/${userReportId}/config`;
+  if (typeof share !== "string" || share.length === 0) {
+    redirect(nextPath);
+  }
+
+  const query = new URLSearchParams({ share });
+  redirect(`${nextPath}?${query.toString()}`);
 }

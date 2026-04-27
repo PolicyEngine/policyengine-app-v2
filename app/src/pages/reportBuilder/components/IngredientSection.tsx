@@ -23,6 +23,7 @@ import { CountryMapIcon } from './shared';
 export function IngredientSection({
   type,
   currentId,
+  currentPopulation: _currentPopulation,
   countryId = 'us',
   onQuickSelectPolicy,
   onSelectSavedPolicy,

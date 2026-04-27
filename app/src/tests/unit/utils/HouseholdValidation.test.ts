@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { Household } from '@/models/Household';
 import {
   mockBoolMetadata,
   mockEmptyHousehold,
@@ -38,6 +39,16 @@ import { HouseholdValidation } from '@/utils/HouseholdValidation';
 vi.mock('@/utils/HouseholdQueries', () => ({
   getPersonCount: vi.fn(),
 }));
+
+function withHouseholdData(
+  household: Household,
+  householdData: ReturnType<Household['toAppInput']>['householdData']
+): Household {
+  return Household.fromAppInput({
+    ...household.toAppInput(),
+    householdData,
+  });
+}
 
 describe('HouseholdValidation', () => {
   beforeEach(() => {
@@ -89,6 +100,34 @@ describe('HouseholdValidation', () => {
       verifyValidationError(result.errors, VALIDATION_ERROR_CODES.COUNTRY_MISMATCH, 'countryId');
       expect(result.errors[0].message).toContain(VALIDATION_COUNTRIES.US);
       expect(result.errors[0].message).toContain(VALIDATION_COUNTRIES.UK);
+    });
+
+    test('given UK household with US-only group collections when validating then returns warning', () => {
+      // Given
+      const householdWithUnexpectedGroups = withHouseholdData(mockValidUKHousehold, {
+        ...mockValidUKHousehold.householdData,
+        taxUnits: {
+          [VALIDATION_GROUP_KEYS.DEFAULT_TAX_UNIT]: {
+            members: [VALIDATION_PERSON_NAMES.ADULT_1, VALIDATION_PERSON_NAMES.CHILD_1],
+          },
+        },
+      });
+
+      // When
+      const result = HouseholdValidation.validateForCountry(
+        householdWithUnexpectedGroups,
+        VALIDATION_COUNTRIES.UK,
+        VALIDATION_YEARS.DEFAULT
+      );
+
+      // Then
+      verifyNoErrors(result);
+      verifyWarningCount(result, 1);
+      verifyValidationWarning(
+        result.warnings,
+        VALIDATION_WARNING_CODES.UNEXPECTED_GROUP_COLLECTION,
+        VALIDATION_ENTITY_NAMES.TAX_UNITS
+      );
     });
 
     test('given household with missing age when validating then returns warning', () => {
@@ -235,6 +274,29 @@ describe('HouseholdValidation', () => {
       expect(errors).toHaveLength(0);
       // No warnings since the mock has age for default year
     });
+
+    test('given household with undefined optional group collections when validating then does not throw', () => {
+      // Given
+      const errors: any[] = [];
+      const warnings: any[] = [];
+      const householdWithUndefinedGroups = withHouseholdData(mockValidUSHousehold, {
+        ...mockValidUSHousehold.householdData,
+        families: undefined,
+        spmUnits: undefined,
+        maritalUnits: undefined,
+      });
+
+      // When / Then
+      expect(() =>
+        HouseholdValidation.validateGenericHousehold(
+          householdWithUndefinedGroups,
+          errors,
+          warnings,
+          VALIDATION_YEARS.DEFAULT
+        )
+      ).not.toThrow();
+      expect(errors).toHaveLength(0);
+    });
   });
 
   describe('validateUSHousehold', () => {
@@ -307,17 +369,14 @@ describe('HouseholdValidation', () => {
       // Given
       const errors: any[] = [];
       const warnings: any[] = [];
-      const household = {
-        ...mockValidUSHousehold,
-        householdData: {
-          ...mockValidUSHousehold.householdData,
-          maritalUnits: {
-            [VALIDATION_GROUP_KEYS.DEFAULT_MARITAL_UNIT]: {
-              members: [VALIDATION_PERSON_NAMES.ADULT_1, VALIDATION_PERSON_NAMES.ADULT_2],
-            },
+      const household = withHouseholdData(mockValidUSHousehold, {
+        ...mockValidUSHousehold.householdData,
+        maritalUnits: {
+          [VALIDATION_GROUP_KEYS.DEFAULT_MARITAL_UNIT]: {
+            members: [VALIDATION_PERSON_NAMES.ADULT_1, VALIDATION_PERSON_NAMES.ADULT_2],
           },
         },
-      };
+      });
       vi.mocked(HouseholdQueries.getPersonCount).mockReturnValue(2);
 
       // When
@@ -331,14 +390,11 @@ describe('HouseholdValidation', () => {
       // Given
       const errors: any[] = [];
       const warnings: any[] = [];
-      const household = {
-        ...mockValidUSHousehold,
-        householdData: {
-          people: mockValidUSHousehold.householdData.people,
-          households: mockValidUSHousehold.householdData.households,
-          // No taxUnits property
-        },
-      };
+      const household = withHouseholdData(mockValidUSHousehold, {
+        people: mockValidUSHousehold.householdData.people,
+        households: mockValidUSHousehold.householdData.households,
+        // No taxUnits property
+      });
 
       // When
       HouseholdValidation.validateUSHousehold(household, errors, warnings);
@@ -379,14 +435,11 @@ describe('HouseholdValidation', () => {
     test('given UK household without benefit units entity when validating then no errors', () => {
       // Given
       const errors: any[] = [];
-      const household = {
-        ...mockValidUKHousehold,
-        householdData: {
-          people: mockValidUKHousehold.householdData.people,
-          households: mockValidUKHousehold.householdData.households,
-          // No benunits property
-        },
-      };
+      const household = withHouseholdData(mockValidUKHousehold, {
+        people: mockValidUKHousehold.householdData.people,
+        households: mockValidUKHousehold.householdData.households,
+        // No benunits property
+      });
 
       // When
       HouseholdValidation.validateUKHousehold(household, errors);
@@ -538,6 +591,7 @@ describe('HouseholdValidation', () => {
       // When
       const result = HouseholdValidation.isReadyForSimulation(
         mockValidUSHousehold,
+        VALIDATION_COUNTRIES.US,
         VALIDATION_YEARS.DEFAULT
       );
 
@@ -552,6 +606,7 @@ describe('HouseholdValidation', () => {
       // When
       const result = HouseholdValidation.isReadyForSimulation(
         mockEmptyHousehold,
+        VALIDATION_COUNTRIES.US,
         VALIDATION_YEARS.DEFAULT
       );
 
@@ -567,6 +622,7 @@ describe('HouseholdValidation', () => {
       // When
       const result = HouseholdValidation.isReadyForSimulation(
         mockHouseholdInvalidGroupStructure,
+        VALIDATION_COUNTRIES.US,
         VALIDATION_YEARS.DEFAULT
       );
 
@@ -582,6 +638,7 @@ describe('HouseholdValidation', () => {
       // When
       const result = HouseholdValidation.isReadyForSimulation(
         mockHouseholdMissingAge,
+        VALIDATION_COUNTRIES.US,
         VALIDATION_YEARS.DEFAULT
       );
 

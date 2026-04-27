@@ -7,15 +7,16 @@
 
 import { useSimulationCanvas } from '../hooks/useSimulationCanvas';
 import {
+  HouseholdCreationModal,
   IngredientPickerModal,
   PolicyBrowseModal,
   PolicyCreationModal,
   PopulationBrowseModal,
 } from '../modals';
 import { styles } from '../styles';
-import type { IngredientPickerState, ReportBuilderState } from '../types';
+import type { IngredientPickerState, ReportBuilderState, SimulationBlockProps } from '../types';
 import { AddSimulationCard } from './AddSimulationCard';
-import { SimulationBlock, type SimulationBlockProps } from './SimulationBlock';
+import { SimulationBlock } from './SimulationBlock';
 import { SimulationCanvasSkeleton } from './SimulationCanvasSkeleton';
 
 interface SimulationCanvasProps {
@@ -40,6 +41,14 @@ export function SimulationCanvas({
   const canvas = useSimulationCanvas({ reportState, setReportState, pickerState, setPickerState });
   const isViewOnly = Boolean(isReadOnly);
   const noop = () => {};
+  const handleHouseholdModalBack =
+    isViewOnly || !canvas.householdEditorState.returnToBrowseOnBack
+      ? canvas.closeHouseholdEditor
+      : canvas.returnToPopulationBrowse;
+  const handlePolicyModalBack =
+    isViewOnly || !canvas.policyCreationState.returnToBrowseOnBack
+      ? canvas.closePolicyCreation
+      : canvas.returnToPolicyBrowse;
 
   if (canvas.isInitialLoading) {
     return <SimulationCanvasSkeleton />;
@@ -64,7 +73,12 @@ export function SimulationCanvas({
             onDeselectPolicy={() => canvas.handleDeselectPolicy(0)}
             onDeselectPopulation={() => canvas.handleDeselectPopulation(0)}
             onEditPolicy={isViewOnly ? noop : () => canvas.handleEditPolicy(0)}
-            onViewPolicy={() => canvas.handleViewPolicy(0)}
+            onViewPolicy={() =>
+              isViewOnly ? canvas.handleViewPolicy(0) : canvas.handleEditPolicy(0)
+            }
+            onViewPopulation={() =>
+              isViewOnly ? canvas.handleViewPopulation(0) : canvas.handleEditPopulation(0)
+            }
             onCreateCustomPolicy={isViewOnly ? noop : () => canvas.handleCreateCustom(0, 'policy')}
             onBrowseMorePolicies={isViewOnly ? noop : () => canvas.handleBrowseMorePolicies(0)}
             onBrowseMorePopulations={
@@ -91,7 +105,12 @@ export function SimulationCanvas({
               onDeselectPolicy={() => canvas.handleDeselectPolicy(1)}
               onDeselectPopulation={() => canvas.handleDeselectPopulation(1)}
               onEditPolicy={isViewOnly ? noop : () => canvas.handleEditPolicy(1)}
-              onViewPolicy={() => canvas.handleViewPolicy(1)}
+              onViewPolicy={() =>
+                isViewOnly ? canvas.handleViewPolicy(1) : canvas.handleEditPolicy(1)
+              }
+              onViewPopulation={() =>
+                isViewOnly ? canvas.handleViewPopulation(1) : canvas.handleEditPopulation(1)
+              }
               onCreateCustomPolicy={
                 isViewOnly ? noop : () => canvas.handleCreateCustom(1, 'policy')
               }
@@ -135,26 +154,44 @@ export function SimulationCanvas({
         onClose={canvas.closePolicyBrowse}
         onSelect={canvas.handlePolicySelectFromBrowse}
         reportYear={reportYear}
+        onCreateNew={canvas.handleCreatePolicyFromBrowse}
+        onEditPolicy={canvas.handleEditPolicyFromBrowse}
       />
 
       <PopulationBrowseModal
         isOpen={canvas.populationBrowseState.isOpen}
         onClose={canvas.closePopulationBrowse}
         onSelect={canvas.handlePopulationSelectFromBrowse}
-        onCreateNew={() =>
-          canvas.handleCreateCustom(canvas.populationBrowseState.simulationIndex, 'population')
-        }
+        reportYear={reportYear}
+        onCreateNew={() => {
+          canvas.closePopulationBrowse();
+          canvas.handleCreateCustom(canvas.populationBrowseState.simulationIndex, 'population');
+        }}
+      />
+
+      <HouseholdCreationModal
+        isOpen={canvas.householdEditorState.isOpen}
+        onClose={canvas.closeHouseholdEditor}
+        onBack={handleHouseholdModalBack}
+        onHouseholdSaved={canvas.handleHouseholdSaved}
+        reportYear={reportYear}
+        initialPopulation={canvas.householdEditorState.initialPopulation}
+        initialAssociation={canvas.householdEditorState.initialAssociation}
+        initialEditorMode={canvas.householdEditorState.initialEditorMode}
+        forceReadOnly={isViewOnly}
       />
 
       <PolicyCreationModal
         isOpen={canvas.policyCreationState.isOpen}
         onClose={canvas.closePolicyCreation}
+        onBack={handlePolicyModalBack}
         onPolicyCreated={(policy) =>
           canvas.handlePolicyCreated(canvas.policyCreationState.simulationIndex, policy)
         }
         simulationIndex={canvas.policyCreationState.simulationIndex}
         initialPolicy={canvas.policyCreationState.initialPolicy}
         initialEditorMode={canvas.policyCreationState.initialEditorMode}
+        initialAssociationId={canvas.policyCreationState.initialAssociationId}
         reportYear={reportYear}
         forceReadOnly={isViewOnly}
       />

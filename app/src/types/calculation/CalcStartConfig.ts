@@ -1,4 +1,4 @@
-import type { AppHouseholdInputEnvelope as Household } from '@/models/household/appTypes';
+import type { Household } from '@/models/Household';
 import type { Geography } from '@/types/ingredients/Geography';
 import type { Simulation } from '@/types/ingredients/Simulation';
 

@@ -1,8 +1,5 @@
-import { Household as HouseholdModel } from '@/models/Household';
-import type {
-  AppHouseholdInputEnvelope as Household,
-  AppHouseholdInputPerson as HouseholdPerson,
-} from '@/models/household/appTypes';
+import { Household } from '@/models/Household';
+import type { AppHouseholdInputPerson as HouseholdPerson } from '@/models/household/appTypes';
 import { getHouseholdGroupCollection, getHouseholdYearValue } from '@/utils/householdDataAccess';
 
 /**
@@ -99,11 +96,7 @@ export function getGroupVariable(
  * Count total people in household
  */
 export function getPersonCount(household: Household): number {
-  if (household instanceof HouseholdModel) {
-    return household.personCount;
-  }
-
-  return Object.keys(household.householdData.people).length;
+  return household.personCount;
 }
 
 /**

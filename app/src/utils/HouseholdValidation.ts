@@ -1,9 +1,16 @@
+import { type CountryId } from '@/libs/countries';
+import type { Household as HouseholdModel } from '@/models/Household';
 import type {
-  AppHouseholdInputEnvelope as Household,
+  AppHouseholdInputData,
   AppHouseholdInputGroup as HouseholdGroupEntity,
 } from '@/models/household/appTypes';
+import { getV2GroupDefinitions } from '@/models/household/schema';
 import { RootState } from '@/store';
-import { getHouseholdYearValue } from '@/utils/householdDataAccess';
+import {
+  getAllHouseholdGroupCollections,
+  getHouseholdGroupCollection,
+  getHouseholdYearValue,
+} from '@/utils/householdDataAccess';
 import * as HouseholdQueries from './HouseholdQueries';
 
 /**
@@ -41,9 +48,72 @@ export interface VariableMetadata {
   defaultValue: any;
 }
 
+type CountryValidationStrategy = (
+  household: HouseholdModel,
+  errors: ValidationError[],
+  warnings: ValidationWarning[]
+) => void;
+
+function getConfiguredGroupCollections(
+  householdData: AppHouseholdInputData,
+  countryId: CountryId
+): Array<{ entityName: string; groups: Record<string, HouseholdGroupEntity> }> {
+  if (countryId === 'us' || countryId === 'uk') {
+    const configuredCollections: Array<{
+      entityName: string;
+      groups: Record<string, HouseholdGroupEntity>;
+    }> = [];
+
+    for (const definition of getV2GroupDefinitions(countryId)) {
+      const groups = getHouseholdGroupCollection(householdData, definition.appKey) as
+        | Record<string, HouseholdGroupEntity>
+        | undefined;
+
+      if (!groups) {
+        continue;
+      }
+
+      configuredCollections.push({
+        entityName: definition.appKey,
+        groups,
+      });
+    }
+
+    return configuredCollections;
+  }
+
+  return getAllHouseholdGroupCollections(householdData).map(({ entityName, groups }) => ({
+    entityName,
+    groups: groups as Record<string, HouseholdGroupEntity>,
+  }));
+}
+
+function getUnexpectedGroupCollections(
+  householdData: AppHouseholdInputData,
+  countryId: CountryId
+): string[] {
+  if (countryId !== 'us' && countryId !== 'uk') {
+    return [];
+  }
+
+  const allowedEntityNames = new Set<string>(
+    getV2GroupDefinitions(countryId).map((definition) => definition.appKey)
+  );
+
+  return getAllHouseholdGroupCollections(householdData)
+    .map(({ entityName }) => entityName)
+    .filter((entityName) => !allowedEntityNames.has(entityName));
+}
+
+const COUNTRY_VALIDATION_STRATEGIES: Partial<Record<CountryId, CountryValidationStrategy>> = {
+  us: (household, errors, warnings) =>
+    HouseholdValidation.validateUSHousehold(household, errors, warnings),
+  uk: (household, errors) => HouseholdValidation.validateUKHousehold(household, errors),
+};
+
 /**
  * Validation utilities for Household structures
- * Country-agnostic base validation with country-specific extensions
+ * Generic structural validation with country-specific strategy extensions
  * TODO: Determine how many of these utils we need; were unexpectedly built by AI,
  * but could be useful down the road; not thoroughly tested
  */
@@ -52,7 +122,11 @@ export const HouseholdValidation = {
    * Validate a household for a specific country
    * @param year - Year to validate against (required - should come from report context)
    */
-  validateForCountry(household: Household, countryId: string, year: string): ValidationResult {
+  validateForCountry(
+    household: HouseholdModel,
+    countryId: CountryId,
+    year: string
+  ): ValidationResult {
     const errors: ValidationError[] = [];
     const warnings: ValidationWarning[] = [];
 
@@ -66,17 +140,10 @@ export const HouseholdValidation = {
     }
 
     // Generic validation with report year
-    this.validateGenericHousehold(household, errors, warnings, year);
+    this.validateGenericHousehold(household, errors, warnings, year, countryId);
 
-    // Country-specific validation
-    switch (countryId) {
-      case 'us':
-        this.validateUSHousehold(household, errors, warnings);
-        break;
-      case 'uk':
-        this.validateUKHousehold(household, errors);
-        break;
-    }
+    const strategy = COUNTRY_VALIDATION_STRATEGIES[countryId];
+    strategy?.(household, errors, warnings);
 
     return {
       isValid: errors.length === 0,
@@ -90,10 +157,11 @@ export const HouseholdValidation = {
    * @param year - Year to validate against (required - should come from report context)
    */
   validateGenericHousehold(
-    household: Household,
+    household: HouseholdModel,
     errors: ValidationError[],
     warnings: ValidationWarning[],
-    year: string
+    year: string,
+    countryId: CountryId = household.countryId
   ): void {
     // Check that all people have required fields based on metadata
     const currentYear = year;
@@ -109,30 +177,38 @@ export const HouseholdValidation = {
       }
     });
 
-    // Check that group entities have valid structure
-    Object.entries(household.householdData).forEach(([entityName, entityData]) => {
-      if (entityName === 'people') {
-        return;
-      }
-
-      const entities = entityData as Record<string, HouseholdGroupEntity>;
-      Object.entries(entities).forEach(([groupKey, group]) => {
-        if (!Array.isArray(group.members)) {
-          errors.push({
-            code: 'INVALID_GROUP_STRUCTURE',
-            message: `Group ${groupKey} in ${entityName} must have a members array`,
-            field: `${entityName}.${groupKey}.members`,
-          });
-        }
+    getUnexpectedGroupCollections(household.householdData, countryId).forEach((entityName) => {
+      warnings.push({
+        code: 'UNEXPECTED_GROUP_COLLECTION',
+        message: `Group collection ${entityName} is not used for ${countryId.toUpperCase()} households`,
+        field: entityName,
       });
     });
+
+    // Check that country-configured group entities have valid structure.
+    // For supported country-specific household models, this uses the same
+    // country schema layer as the V2 codecs. Other countries fall back to
+    // validating whatever concrete group collections are present.
+    getConfiguredGroupCollections(household.householdData, countryId).forEach(
+      ({ entityName, groups }) => {
+        Object.entries(groups).forEach(([groupKey, group]) => {
+          if (!Array.isArray(group.members)) {
+            errors.push({
+              code: 'INVALID_GROUP_STRUCTURE',
+              message: `Group ${groupKey} in ${entityName} must have a members array`,
+              field: `${entityName}.${groupKey}.members`,
+            });
+          }
+        });
+      }
+    );
   },
 
   /**
    * US-specific validation
    */
   validateUSHousehold(
-    household: Household,
+    household: HouseholdModel,
     errors: ValidationError[],
     warnings: ValidationWarning[]
   ): void {
@@ -186,7 +262,7 @@ export const HouseholdValidation = {
   /**
    * UK-specific validation
    */
-  validateUKHousehold(household: Household, errors: ValidationError[]): void {
+  validateUKHousehold(household: HouseholdModel, errors: ValidationError[]): void {
     // Check for UK-specific entities if they exist
     if (household.householdData.benunits) {
       const benunits = household.householdData.benunits as Record<string, HouseholdGroupEntity>;
@@ -277,7 +353,11 @@ export const HouseholdValidation = {
    * Check if household structure is complete enough for simulation
    * @param year - Year to validate against (required - should come from report context)
    */
-  isReadyForSimulation(household: Household, year: string): ValidationResult {
+  isReadyForSimulation(
+    household: HouseholdModel,
+    countryId: CountryId,
+    year: string
+  ): ValidationResult {
     const errors: ValidationError[] = [];
     const warnings: ValidationWarning[] = [];
 
@@ -291,7 +371,7 @@ export const HouseholdValidation = {
     }
 
     // Validate structure
-    const structureValidation = this.validateForCountry(household, household.countryId, year);
+    const structureValidation = this.validateForCountry(household, countryId, year);
     errors.push(...structureValidation.errors);
     warnings.push(...structureValidation.warnings);
 

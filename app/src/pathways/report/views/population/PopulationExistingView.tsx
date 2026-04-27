@@ -211,9 +211,9 @@ export default function PopulationExistingView({
         subtitle = 'Household data not loaded yet';
       } else if ('label' in association.association && association.association.label) {
         title = association.association.label;
-        subtitle = `Population #${association.household!.id}`;
+        subtitle = `Household #${association.household!.id}`;
       } else {
-        title = `Population #${association.household!.id}`;
+        title = `Household #${association.household!.id}`;
         subtitle = '';
       }
 

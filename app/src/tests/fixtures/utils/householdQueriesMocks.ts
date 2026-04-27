@@ -1,10 +1,15 @@
 import { CURRENT_YEAR } from '@/constants';
+import { Household } from '@/models/Household';
 import type {
-  AppHouseholdInputEnvelope as Household,
+  AppHouseholdInputEnvelope,
   AppHouseholdInputPerson as HouseholdPerson,
 } from '@/models/household/appTypes';
 import { getHouseholdYearValue } from '@/utils/householdDataAccess';
 import { PersonWithName } from '@/utils/HouseholdQueries';
+
+function makeHousehold(input: AppHouseholdInputEnvelope): Household {
+  return Household.fromAppInput(input);
+}
 
 // ============= TEST CONSTANTS =============
 
@@ -165,16 +170,16 @@ export const mockPersonMultiYear: HouseholdPerson = {
 };
 
 // Empty household
-export const mockEmptyHousehold: Household = {
+export const mockEmptyHousehold: Household = makeHousehold({
   countryId: QUERY_COUNTRIES.US as any,
   householdData: {
     people: {},
     households: {},
   },
-};
+});
 
 // Household with 2 adults and 2 children
-export const mockHouseholdTwoAdultsTwoChildren: Household = {
+export const mockHouseholdTwoAdultsTwoChildren: Household = makeHousehold({
   countryId: QUERY_COUNTRIES.US as any,
   householdData: {
     people: {
@@ -217,10 +222,10 @@ export const mockHouseholdTwoAdultsTwoChildren: Household = {
       },
     },
   },
-};
+});
 
 // Household with person whose age changes (child to adult)
-export const mockHouseholdAgeTransition: Household = {
+export const mockHouseholdAgeTransition: Household = makeHousehold({
   countryId: QUERY_COUNTRIES.US as any,
   householdData: {
     people: {
@@ -232,10 +237,10 @@ export const mockHouseholdAgeTransition: Household = {
       },
     },
   },
-};
+});
 
 // Household with multi-year variables
-export const mockHouseholdMultiYear: Household = {
+export const mockHouseholdMultiYear: Household = makeHousehold({
   countryId: QUERY_COUNTRIES.US as any,
   householdData: {
     people: {
@@ -247,10 +252,10 @@ export const mockHouseholdMultiYear: Household = {
       },
     },
   },
-};
+});
 
 // Household with multiple groups
-export const mockHouseholdMultipleGroups: Household = {
+export const mockHouseholdMultipleGroups: Household = makeHousehold({
   countryId: QUERY_COUNTRIES.US as any,
   householdData: {
     people: {
@@ -269,10 +274,10 @@ export const mockHouseholdMultipleGroups: Household = {
       },
     },
   },
-};
+});
 
 // UK household with benefit units
-export const mockUKHousehold: Household = {
+export const mockUKHousehold: Household = makeHousehold({
   countryId: QUERY_COUNTRIES.UK as any,
   householdData: {
     people: {
@@ -290,7 +295,7 @@ export const mockUKHousehold: Household = {
       },
     },
   },
-};
+});
 
 // ============= EXPECTED RESULTS =============
 
@@ -362,17 +367,18 @@ export const expectedGroupsMultiple = [
 export const createHouseholdWithPeople = (
   people: Record<string, HouseholdPerson>,
   countryId: string = QUERY_COUNTRIES.US
-): Household => ({
-  countryId: countryId as any,
-  householdData: {
-    people,
-    households: {
-      [QUERY_GROUP_KEYS.DEFAULT_HOUSEHOLD]: {
-        members: Object.keys(people),
+): Household =>
+  makeHousehold({
+    countryId: countryId as any,
+    householdData: {
+      people,
+      households: {
+        [QUERY_GROUP_KEYS.DEFAULT_HOUSEHOLD]: {
+          members: Object.keys(people),
+        },
       },
     },
-  },
-});
+  });
 
 // Helper to create a person with age
 export const createPersonWithAge = (

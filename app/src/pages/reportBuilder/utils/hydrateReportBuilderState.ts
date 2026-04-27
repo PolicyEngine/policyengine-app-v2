@@ -1,4 +1,4 @@
-import type { AppHouseholdInputEnvelope as Household } from '@/models/household/appTypes';
+import { Household } from '@/models/Household';
 import type { Geography } from '@/types/ingredients/Geography';
 import type { Policy } from '@/types/ingredients/Policy';
 import type { Report } from '@/types/ingredients/Report';
@@ -62,7 +62,7 @@ export function hydrateReportBuilderState({
       populationState = {
         label: userHousehold?.label || null,
         type: 'household' as const,
-        household: household || null,
+        household: household?.withLabel(userHousehold?.label ?? household.label ?? null) ?? null,
         geography: null,
       };
     } else {

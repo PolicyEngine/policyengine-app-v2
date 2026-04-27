@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { Household } from '@/models/Household';
 import type { AppHouseholdInputEnvelope } from '@/models/household/appTypes';
 import { getValue, removeVariableFromEntity, setValue } from '@/utils/VariableResolver';
 
@@ -54,8 +55,8 @@ const TEST_METADATA = {
   },
 };
 
-function createNonDefaultGroupHousehold(): AppHouseholdInputEnvelope {
-  return {
+function createNonDefaultGroupHousehold(): Household {
+  const household: AppHouseholdInputEnvelope = {
     id: 'household-1',
     countryId: 'us',
     householdData: {
@@ -76,10 +77,12 @@ function createNonDefaultGroupHousehold(): AppHouseholdInputEnvelope {
       },
     },
   };
+
+  return Household.fromAppInput(household);
 }
 
-function createHouseholdWithPersonVariable(): AppHouseholdInputEnvelope {
-  return {
+function createHouseholdWithPersonVariable(): Household {
+  const household: AppHouseholdInputEnvelope = {
     id: 'household-1',
     countryId: 'us',
     householdData: {
@@ -95,6 +98,8 @@ function createHouseholdWithPersonVariable(): AppHouseholdInputEnvelope {
       },
     },
   };
+
+  return Household.fromAppInput(household);
 }
 
 describe('VariableResolver', () => {

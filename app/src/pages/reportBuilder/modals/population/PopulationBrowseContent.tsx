@@ -24,6 +24,8 @@ interface HouseholdItem {
   id: string;
   label: string;
   memberCount: number;
+  disabled?: boolean;
+  statusMessage?: string;
 }
 
 interface PopulationBrowseContentProps {
@@ -185,12 +187,21 @@ export function PopulationBrowseContent({
               {filteredHouseholds.map((household) => (
                 <div
                   key={household.id}
-                  style={styles.householdCard}
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => onSelectHousehold(household)}
+                  style={{
+                    ...styles.householdCard,
+                    cursor: household.disabled ? 'not-allowed' : 'pointer',
+                    opacity: household.disabled ? 0.6 : 1,
+                  }}
+                  role={household.disabled ? undefined : 'button'}
+                  tabIndex={household.disabled ? -1 : 0}
+                  aria-disabled={household.disabled || undefined}
+                  onClick={() => {
+                    if (!household.disabled) {
+                      onSelectHousehold(household);
+                    }
+                  }}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
+                    if (!household.disabled && (e.key === 'Enter' || e.key === ' ')) {
                       e.preventDefault();
                       onSelectHousehold(household);
                     }
@@ -215,13 +226,19 @@ export function PopulationBrowseContent({
                         <Text fw={600} style={{ fontSize: FONT_SIZES.normal }}>
                           {household.label}
                         </Text>
-                        <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
-                          {household.memberCount}{' '}
-                          {household.memberCount === 1 ? 'member' : 'members'}
-                        </Text>
+                        {household.statusMessage ? (
+                          <Text c={colors.error} style={{ fontSize: FONT_SIZES.small }}>
+                            {household.statusMessage}
+                          </Text>
+                        ) : (
+                          <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
+                            {household.memberCount}{' '}
+                            {household.memberCount === 1 ? 'member' : 'members'}
+                          </Text>
+                        )}
                       </Stack>
                     </Group>
-                    <IconChevronRight size={16} color={colors.gray[400]} />
+                    {!household.disabled && <IconChevronRight size={16} color={colors.gray[400]} />}
                   </Group>
                 </div>
               ))}
