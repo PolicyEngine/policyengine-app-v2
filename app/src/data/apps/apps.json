@@ -402,10 +402,14 @@
     "type": "iframe",
     "slug": "state-eitcs-ctcs",
     "title": "State EITCs and CTCs",
-    "description": "Explore state-level earned income and child tax credits",
-    "source": "https://us-state-eitcs-ctcs.vercel.app/?embedded=true",
+    "description": "Explore state-level earned income and child tax credits across all US states, including eligibility rules, credit amounts, and phase-out ranges",
+    "source": "https://policyengine.github.io/us-state-eitcs-ctcs/",
     "tags": ["us", "policy", "interactives"],
-    "countryId": "us"
+    "countryId": "us",
+    "displayWithResearch": true,
+    "image": "state-eitcs-ctcs.png",
+    "date": "2026-04-27 12:00:00",
+    "authors": ["pavel-makarchuk"]
   },
   {
     "type": "iframe",
