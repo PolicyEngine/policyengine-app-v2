@@ -125,6 +125,19 @@
   },
   {
     "type": "iframe",
+    "slug": "utah-2026-tax-changes",
+    "title": "Utah 2026 tax changes calculator",
+    "description": "Estimate the impact of Utah's 2026 tax changes, including SB60's income tax rate cut from 4.5% to 4.45% and HB290's expansion of the state Child Tax Credit",
+    "source": "https://policyengine-utah-2026-tax-changes.vercel.app/us/utah-2026-tax-changes",
+    "tags": ["us", "policy", "interactives"],
+    "countryId": "us",
+    "displayWithResearch": true,
+    "image": "utah-2026-dashboard.png",
+    "date": "2026-04-27 12:00:00",
+    "authors": ["david-trimmer"]
+  },
+  {
+    "type": "iframe",
     "slug": "watca",
     "title": "Working Americans' Tax Cut Act calculator",
     "description": "Estimate the household and national impact of the cost-of-living exemption and millionaire surtax proposed by Senator Van Hollen",
