@@ -43,12 +43,12 @@ export function SimulationCanvas({
   const noop = () => {};
   const handleHouseholdModalBack =
     isViewOnly || !canvas.householdEditorState.returnToBrowseOnBack
-    ? canvas.closeHouseholdEditor
-    : canvas.returnToPopulationBrowse;
+      ? canvas.closeHouseholdEditor
+      : canvas.returnToPopulationBrowse;
   const handlePolicyModalBack =
     isViewOnly || !canvas.policyCreationState.returnToBrowseOnBack
-    ? canvas.closePolicyCreation
-    : canvas.returnToPolicyBrowse;
+      ? canvas.closePolicyCreation
+      : canvas.returnToPolicyBrowse;
 
   if (canvas.isInitialLoading) {
     return <SimulationCanvasSkeleton />;
