@@ -1,4 +1,4 @@
 - bump: patch
   changes:
     added:
-      - Restore energy price shock UK interactive with updated data
+      - Add Utah 2026 tax changes calculator at /us/utah-2026-tax-changes

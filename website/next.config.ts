@@ -56,6 +56,9 @@ const nextConfig: NextConfig = {
         // Working Parents Tax Relief Act calculator (Vercel)
         { source: "/us/working-parents-tax-relief-act", destination: "https://wptra.vercel.app/us/working-parents-tax-relief-act" },
         { source: "/us/working-parents-tax-relief-act/:path*", destination: "https://wptra.vercel.app/us/working-parents-tax-relief-act/:path*" },
+        // Utah 2026 tax changes calculator (Vercel)
+        { source: "/us/utah-2026-tax-changes", destination: "https://policyengine-utah-2026-tax-changes.vercel.app/us/utah-2026-tax-changes" },
+        { source: "/us/utah-2026-tax-changes/:path*", destination: "https://policyengine-utah-2026-tax-changes.vercel.app/us/utah-2026-tax-changes/:path*" },
         // Household API docs (Vercel) — beforeFiles so it intercepts before Next.js trailing slash redirect
         { source: "/us/api", destination: "https://household-api-docs-policy-engine.vercel.app/us/api/" },
         { source: "/us/api/:path*", destination: "https://household-api-docs-policy-engine.vercel.app/us/api/:path*" },
