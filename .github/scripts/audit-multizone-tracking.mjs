@@ -156,11 +156,25 @@ for (const destination of destinations) {
     continue;
   }
   const testUrl = `https://policyengine.org${sourcePath}`;
-  const result = await checkUrl(testUrl);
+  let result = await checkUrl(testUrl);
+  // If policyengine.org returns 404, the rewrite likely hasn't been
+  // deployed yet (e.g. this PR adds it). Fall back to testing the
+  // destination URL directly — what we care about is whether the
+  // destination zone has gtag, not whether the rewrite is live.
+  let testedDestinationDirectly = false;
+  if (!result.ok && result.status === 404) {
+    const stripped = destination.replace(/\/:path\*?$/, "");
+    const fallback = await checkUrl(stripped);
+    if (fallback.ok || fallback.status !== 404) {
+      result = fallback;
+      testedDestinationDirectly = true;
+    }
+  }
   results.push({ destination, testUrl, ...result });
   const mark = result.ok ? "✓" : "✗";
   console.log(`${mark} ${testUrl}`);
   console.log(`    ${result.reason}`);
+  if (testedDestinationDirectly) console.log(`    (tested destination directly — rewrite not yet live on production)`);
   if (destination !== testUrl) console.log(`    (rewrites to ${destination})`);
 }
 
