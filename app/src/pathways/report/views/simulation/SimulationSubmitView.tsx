@@ -39,6 +39,10 @@ export default function SimulationSubmitView({
       populationType = 'geography';
     }
 
+    if (!populationId || !populationType) {
+      throw new Error('Simulation submission requires a selected population');
+    }
+
     // Convert state to partial Simulation for adapter
     const simulationData: Partial<Simulation> = {
       populationId,
@@ -49,11 +53,19 @@ export default function SimulationSubmitView({
     const serializedSimulationCreationPayload: SimulationCreationPayload =
       SimulationAdapter.toCreationPayload(simulationData);
 
-    createSimulation(serializedSimulationCreationPayload, {
-      onSuccess: (data) => {
-        onSubmitSuccess(data.result.simulation_id);
+    createSimulation(
+      {
+        payload: serializedSimulationCreationPayload,
+        populationId,
+        populationType,
+        policyId: simulation.policy.id,
       },
-    });
+      {
+        onSuccess: (data) => {
+          onSubmitSuccess(data.result.simulation_id);
+        },
+      }
+    );
   }
 
   // Create summary boxes based on the current simulation state

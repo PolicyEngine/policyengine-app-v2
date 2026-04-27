@@ -5,11 +5,13 @@ import { Provider } from 'react-redux';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { createSimulation } from '@/api/simulation';
-import { ENTITY_MIGRATION_MODE } from '@/config/migrationMode';
+import { createHouseholdSimulation } from '@/api/v2/simulations';
+import { SIMULATION_CAPABILITY_MODE } from '@/config/simulationCapability';
 import { CountryProvider } from '@/contexts/CountryContext';
 import { useCreateSimulation } from '@/hooks/useCreateSimulation';
 import { useCreateSimulationAssociation } from '@/hooks/useUserSimulationAssociations';
 import type { CountryId } from '@/libs/countries';
+import { getV2Id } from '@/libs/migration/idMapping';
 import {
   mockSimulationPayload,
   mockSimulationPayloadGeography,
@@ -33,8 +35,18 @@ vi.mock('@/api/simulation', () => ({
   createSimulation: vi.fn(),
 }));
 
+vi.mock('@/api/v2/simulations', () => ({
+  createHouseholdSimulation: vi.fn(),
+}));
+
 vi.mock('@/hooks/useUserSimulationAssociations', () => ({
   useCreateSimulationAssociation: vi.fn(),
+}));
+
+vi.mock('@/libs/migration/idMapping', () => ({
+  getV2Id: vi.fn(),
+  isUuid: (id: string) =>
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id),
 }));
 
 vi.mock('@/constants', () => ({
@@ -53,11 +65,11 @@ describe('useCreateSimulation', () => {
   let queryClient: QueryClient;
   let mockStore: any;
   let consoleSpies: ReturnType<typeof setupConsoleSpies>;
-  const defaultSimulationMigrationMode = ENTITY_MIGRATION_MODE.simulations;
+  const defaultSimulationCapabilityMode = { ...SIMULATION_CAPABILITY_MODE };
 
   beforeEach(() => {
     vi.clearAllMocks();
-    ENTITY_MIGRATION_MODE.simulations = defaultSimulationMigrationMode;
+    Object.assign(SIMULATION_CAPABILITY_MODE, defaultSimulationCapabilityMode);
 
     // Create query client with spy
     queryClient = new QueryClient({
@@ -79,6 +91,25 @@ describe('useCreateSimulation', () => {
 
     // Wire up the mocked functions
     (createSimulation as any).mockImplementation(mockCreateSimulation);
+    (createHouseholdSimulation as any).mockResolvedValue({
+      id: '550e8400-e29b-41d4-a716-446655440000',
+      status: 'completed',
+      household_id: '650e8400-e29b-41d4-a716-446655440000',
+      policy_id: '750e8400-e29b-41d4-a716-446655440000',
+      household_result: null,
+      error_message: null,
+    });
+    (getV2Id as any).mockImplementation((entityType: string, id: string) => {
+      if (entityType === 'Household' && id === mockSimulationPayload.population_id) {
+        return '650e8400-e29b-41d4-a716-446655440000';
+      }
+
+      if (entityType === 'Policy' && id === String(mockSimulationPayload.policy_id)) {
+        return '750e8400-e29b-41d4-a716-446655440000';
+      }
+
+      return null;
+    });
     (useCreateSimulationAssociation as any).mockImplementation(() => ({
       mutateAsync: mockCreateSimulationAssociationMutateAsync,
     }));
@@ -182,13 +213,89 @@ describe('useCreateSimulation', () => {
       });
     });
 
-    test('given unsupported simulation mode then hook fails fast', () => {
-      ENTITY_MIGRATION_MODE.simulations = 'v1_primary_v2_shadow';
+    test('given v2 household create enabled then it creates through the v2 household simulation api', async () => {
+      SIMULATION_CAPABILITY_MODE.standalone_household_create = 'v2_enabled';
+      SIMULATION_CAPABILITY_MODE.associations = 'mixed';
 
-      expect(() =>
-        renderHook(() => useCreateSimulation(TEST_LABELS.SIMULATION), { wrapper })
-      ).toThrow(
-        '[MigrationMode] Unsupported mode "v1_primary_v2_shadow" for simulations in useCreateSimulation. Supported modes: v1_only'
+      const { result } = renderHook(() => useCreateSimulation(TEST_LABELS.SIMULATION), { wrapper });
+
+      const response = await result.current.createSimulation({
+        payload: mockSimulationPayload,
+        populationId: mockSimulationPayload.population_id,
+        populationType: 'household',
+        policyId: String(mockSimulationPayload.policy_id),
+      });
+
+      expect(createHouseholdSimulation).toHaveBeenCalledWith({
+        household_id: '650e8400-e29b-41d4-a716-446655440000',
+        policy_id: '750e8400-e29b-41d4-a716-446655440000',
+      });
+      expect(createSimulation).not.toHaveBeenCalled();
+      expect(mockCreateSimulationAssociationMutateAsync).toHaveBeenCalledWith({
+        userId: 'anonymous',
+        simulationId: '550e8400-e29b-41d4-a716-446655440000',
+        label: TEST_LABELS.SIMULATION,
+        isCreated: true,
+        countryId: 'us',
+      });
+      expect(response).toEqual({
+        result: {
+          simulation_id: '550e8400-e29b-41d4-a716-446655440000',
+        },
+      });
+    });
+
+    test('given v2 household create enabled without mixed associations then it fails fast', async () => {
+      SIMULATION_CAPABILITY_MODE.standalone_household_create = 'v2_enabled';
+      SIMULATION_CAPABILITY_MODE.associations = 'v1_only';
+
+      const { result } = renderHook(() => useCreateSimulation(TEST_LABELS.SIMULATION), { wrapper });
+
+      await expect(
+        result.current.createSimulation({
+          payload: mockSimulationPayload,
+          populationId: mockSimulationPayload.population_id,
+          populationType: 'household',
+          policyId: String(mockSimulationPayload.policy_id),
+        })
+      ).rejects.toThrow(
+        '[SimulationCapability] Unsupported mode "v1_only" for associations in useCreateSimulation. Supported modes: mixed, v2_enabled'
+      );
+    });
+
+    test('given v2 household create enabled without mapped household id then it fails clearly', async () => {
+      SIMULATION_CAPABILITY_MODE.standalone_household_create = 'v2_enabled';
+      SIMULATION_CAPABILITY_MODE.associations = 'mixed';
+      vi.mocked(getV2Id).mockImplementation((entityType: string, id: string) => {
+        if (entityType === 'Policy' && id === String(mockSimulationPayload.policy_id)) {
+          return '750e8400-e29b-41d4-a716-446655440000';
+        }
+
+        return null;
+      });
+
+      const { result } = renderHook(() => useCreateSimulation(TEST_LABELS.SIMULATION), { wrapper });
+
+      await expect(
+        result.current.createSimulation({
+          payload: mockSimulationPayload,
+          populationId: mockSimulationPayload.population_id,
+          populationType: 'household',
+          policyId: String(mockSimulationPayload.policy_id),
+        })
+      ).rejects.toThrow(
+        `[SimulationCapability] Missing mapped v2 household id for standalone household simulation create: ${mockSimulationPayload.population_id}`
+      );
+      expect(createHouseholdSimulation).not.toHaveBeenCalled();
+    });
+
+    test('given unsupported standalone economy activation then it fails fast', async () => {
+      SIMULATION_CAPABILITY_MODE.standalone_economy_create = 'v2_enabled';
+
+      const { result } = renderHook(() => useCreateSimulation(TEST_LABELS.SIMULATION), { wrapper });
+
+      await expect(result.current.createSimulation(mockSimulationPayloadGeography)).rejects.toThrow(
+        '[SimulationCapability] Unsupported mode "v2_enabled" for standalone_economy_create in useCreateSimulation. Supported modes: v1_only, phase4_only'
       );
     });
   });
