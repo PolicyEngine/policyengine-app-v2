@@ -13,7 +13,6 @@ import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useUpdateHouseholdAssociation } from '@/hooks/useUserHousehold';
 import { getBasicInputFields } from '@/libs/metadataUtils';
 import { Household as HouseholdModel } from '@/models/Household';
-import type { AppHouseholdInputEnvelope } from '@/models/household/appTypes';
 import { EditableLabel } from '@/pages/reportBuilder/components/EditableLabel';
 import { RootState } from '@/store';
 import type { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
@@ -48,32 +47,6 @@ function buildStarterHousehold(countryId: 'us' | 'uk', reportYear: string): Hous
   });
 }
 
-function isHouseholdWithToAppInput(
-  household: unknown
-): household is { toAppInput: () => AppHouseholdInputEnvelope } {
-  return (
-    typeof household === 'object' &&
-    household !== null &&
-    'toAppInput' in household &&
-    typeof (household as { toAppInput?: unknown }).toAppInput === 'function'
-  );
-}
-
-function normalizeHouseholdModel(
-  household:
-    | AppHouseholdInputEnvelope
-    | HouseholdModel
-    | { toAppInput: () => AppHouseholdInputEnvelope }
-): HouseholdModel {
-  if (household instanceof HouseholdModel) {
-    return household;
-  }
-
-  return HouseholdModel.fromAppInput(
-    isHouseholdWithToAppInput(household) ? household.toAppInput() : household
-  );
-}
-
 export function HouseholdCreationModal({
   isOpen,
   onClose,
@@ -96,16 +69,7 @@ export function HouseholdCreationModal({
       return null;
     }
 
-    const initialHouseholdModel = normalizeHouseholdModel(
-      initialHousehold as
-        | AppHouseholdInputEnvelope
-        | HouseholdModel
-        | { toAppInput: () => AppHouseholdInputEnvelope }
-    );
-
-    return initialHouseholdModel.withLabel(
-      initialPopulation?.label ?? initialHouseholdModel.label ?? null
-    );
+    return initialHousehold.withLabel(initialPopulation?.label ?? initialHousehold.label ?? null);
   }, [initialPopulation]);
 
   const resolvedInitialEditorMode: HouseholdEditorMode = forceReadOnly
@@ -161,9 +125,7 @@ export function HouseholdCreationModal({
 
     setValidation(null);
     const timeoutId = setTimeout(() => {
-      setValidation(
-        HouseholdValidation.isReadyForSimulation(household.toAppInput(), countryId, reportYear)
-      );
+      setValidation(HouseholdValidation.isReadyForSimulation(household, countryId, reportYear));
     }, 400);
 
     return () => clearTimeout(timeoutId);
@@ -220,11 +182,10 @@ export function HouseholdCreationModal({
 
   const persistCreatedHousehold = useCallback(
     (savedHousehold: HouseholdModel) => {
-      const savedHouseholdInput = savedHousehold.toAppInput();
       onHouseholdSaved({
         geography: null,
-        household: savedHouseholdInput,
-        label: savedHouseholdInput.label ?? null,
+        household: savedHousehold,
+        label: savedHousehold.label ?? null,
         type: 'household',
       });
       onClose();
@@ -238,7 +199,7 @@ export function HouseholdCreationModal({
     }
 
     const nextValidation = HouseholdValidation.isReadyForSimulation(
-      household.toAppInput(),
+      household,
       countryId,
       reportYear
     );
@@ -264,7 +225,7 @@ export function HouseholdCreationModal({
     }
 
     const nextValidation = HouseholdValidation.isReadyForSimulation(
-      household.toAppInput(),
+      household,
       countryId,
       reportYear
     );
@@ -279,7 +240,7 @@ export function HouseholdCreationModal({
         userHouseholdId: initialAssociation.id,
         updates: {},
         association: initialAssociation,
-        nextHousehold: household.toAppInput(),
+        nextHousehold: household,
       });
 
       const desiredLabel = household.label ?? undefined;

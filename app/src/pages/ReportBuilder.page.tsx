@@ -79,10 +79,10 @@ import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useRegions } from '@/hooks/useRegions';
 import { useUserHouseholds } from '@/hooks/useUserHousehold';
 import { useUpdatePolicyAssociation, useUserPolicies } from '@/hooks/useUserPolicy';
+import type { CountryId } from '@/libs/countries';
 import { getBasicInputFields, getDateRange } from '@/libs/metadataUtils';
 import { householdAssociationKeys } from '@/libs/queryKeys';
 import { Household as HouseholdModel } from '@/models/Household';
-import type { AppHouseholdInputEnvelope } from '@/models/household/appTypes';
 import HistoricalValues from '@/pathways/report/components/policyParameterSelector/HistoricalValues';
 import {
   ModeSelectorButton,
@@ -204,11 +204,11 @@ const getSamplePopulations = (countryId: 'us' | 'uk') => {
     household: {
       label: 'Smith family (4 members)',
       type: 'household' as const,
-      household: {
+      household: HouseholdModel.fromAppInput({
         id: 'sample-household',
         countryId,
         householdData: { people: { person1: { age: { 2025: 40 } } } },
-      },
+      }),
       geography: null,
     },
     nationwide: {
@@ -1400,7 +1400,7 @@ function IngredientPickerModal({
     onSelect({
       label,
       type: 'household',
-      household: { id: householdId, countryId, householdData: { people: {} } },
+      household: HouseholdModel.empty(countryId as CountryId, CURRENT_YEAR).withId(householdId),
       geography: null,
     });
     onClose();
@@ -3710,13 +3710,9 @@ function PopulationBrowseModal({
     const householdIdStr = String(householdData.id);
     householdUsageStore.recordUsage(householdIdStr);
 
-    const household: AppHouseholdInputEnvelope | null = householdData.household
-      ? householdData.household.toAppInput()
-      : {
-          id: householdIdStr,
-          countryId,
-          householdData: { people: {} },
-        };
+    const household =
+      householdData.household ??
+      HouseholdModel.empty(countryId as CountryId, reportYear).withId(householdIdStr);
 
     const populationState: PopulationStateProps = {
       geography: null,
@@ -3732,10 +3728,9 @@ function PopulationBrowseModal({
   // Enter creation mode
   const handleEnterCreationMode = useCallback(() => {
     setHouseholdDraft(
-      HouseholdModel.empty(
-        countryId as AppHouseholdInputEnvelope['countryId'],
-        reportYear
-      ).addAdult('you', 30, { employment_income: 0 })
+      HouseholdModel.empty(countryId as CountryId, reportYear).addAdult('you', 30, {
+        employment_income: 0,
+      })
     );
     setHouseholdLabel('');
     setIsCreationMode(true);
@@ -3789,7 +3784,7 @@ function PopulationBrowseModal({
       householdUsageStore.recordUsage(householdId);
 
       // Create household with ID set for proper selection highlighting
-      const createdHousehold = householdToCreate.withId(householdId).toAppInput();
+      const createdHousehold = householdToCreate.withId(householdId);
 
       const populationState = {
         geography: null,
@@ -4685,7 +4680,7 @@ function SimulationCanvas({
           type: 'household',
           population: {
             geography: null,
-            household: household.toAppInput(),
+            household,
             label: householdData.association.label || `Household #${householdId}`,
             type: 'household',
           },

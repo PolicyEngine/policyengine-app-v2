@@ -209,11 +209,9 @@ export function PopulationBrowseModal({
     const householdIdStr = String(householdData.id);
     householdUsageStore.recordUsage(householdIdStr);
 
-    const household = householdData.household.toAppInput();
-
     onSelect({
       geography: null,
-      household,
+      household: householdData.household,
       label: householdData.label,
       type: 'household',
     });

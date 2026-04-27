@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { Household } from '@/models/Household';
 import {
   mockBoolMetadata,
   mockEmptyHousehold,
@@ -38,6 +39,16 @@ import { HouseholdValidation } from '@/utils/HouseholdValidation';
 vi.mock('@/utils/HouseholdQueries', () => ({
   getPersonCount: vi.fn(),
 }));
+
+function withHouseholdData(
+  household: Household,
+  householdData: ReturnType<Household['toAppInput']>['householdData']
+): Household {
+  return Household.fromAppInput({
+    ...household.toAppInput(),
+    householdData,
+  });
+}
 
 describe('HouseholdValidation', () => {
   beforeEach(() => {
@@ -93,17 +104,14 @@ describe('HouseholdValidation', () => {
 
     test('given UK household with US-only group collections when validating then returns warning', () => {
       // Given
-      const householdWithUnexpectedGroups = {
-        ...mockValidUKHousehold,
-        householdData: {
-          ...mockValidUKHousehold.householdData,
-          taxUnits: {
-            [VALIDATION_GROUP_KEYS.DEFAULT_TAX_UNIT]: {
-              members: [VALIDATION_PERSON_NAMES.ADULT_1, VALIDATION_PERSON_NAMES.ADULT_2],
-            },
+      const householdWithUnexpectedGroups = withHouseholdData(mockValidUKHousehold, {
+        ...mockValidUKHousehold.householdData,
+        taxUnits: {
+          [VALIDATION_GROUP_KEYS.DEFAULT_TAX_UNIT]: {
+            members: [VALIDATION_PERSON_NAMES.ADULT_1, VALIDATION_PERSON_NAMES.CHILD_1],
           },
         },
-      };
+      });
 
       // When
       const result = HouseholdValidation.validateForCountry(
@@ -271,15 +279,12 @@ describe('HouseholdValidation', () => {
       // Given
       const errors: any[] = [];
       const warnings: any[] = [];
-      const householdWithUndefinedGroups = {
-        ...mockValidUSHousehold,
-        householdData: {
-          ...mockValidUSHousehold.householdData,
-          families: undefined,
-          spmUnits: undefined,
-          maritalUnits: undefined,
-        },
-      };
+      const householdWithUndefinedGroups = withHouseholdData(mockValidUSHousehold, {
+        ...mockValidUSHousehold.householdData,
+        families: undefined,
+        spmUnits: undefined,
+        maritalUnits: undefined,
+      });
 
       // When / Then
       expect(() =>
@@ -364,17 +369,14 @@ describe('HouseholdValidation', () => {
       // Given
       const errors: any[] = [];
       const warnings: any[] = [];
-      const household = {
-        ...mockValidUSHousehold,
-        householdData: {
-          ...mockValidUSHousehold.householdData,
-          maritalUnits: {
-            [VALIDATION_GROUP_KEYS.DEFAULT_MARITAL_UNIT]: {
-              members: [VALIDATION_PERSON_NAMES.ADULT_1, VALIDATION_PERSON_NAMES.ADULT_2],
-            },
+      const household = withHouseholdData(mockValidUSHousehold, {
+        ...mockValidUSHousehold.householdData,
+        maritalUnits: {
+          [VALIDATION_GROUP_KEYS.DEFAULT_MARITAL_UNIT]: {
+            members: [VALIDATION_PERSON_NAMES.ADULT_1, VALIDATION_PERSON_NAMES.ADULT_2],
           },
         },
-      };
+      });
       vi.mocked(HouseholdQueries.getPersonCount).mockReturnValue(2);
 
       // When
@@ -388,14 +390,11 @@ describe('HouseholdValidation', () => {
       // Given
       const errors: any[] = [];
       const warnings: any[] = [];
-      const household = {
-        ...mockValidUSHousehold,
-        householdData: {
-          people: mockValidUSHousehold.householdData.people,
-          households: mockValidUSHousehold.householdData.households,
-          // No taxUnits property
-        },
-      };
+      const household = withHouseholdData(mockValidUSHousehold, {
+        people: mockValidUSHousehold.householdData.people,
+        households: mockValidUSHousehold.householdData.households,
+        // No taxUnits property
+      });
 
       // When
       HouseholdValidation.validateUSHousehold(household, errors, warnings);
@@ -436,14 +435,11 @@ describe('HouseholdValidation', () => {
     test('given UK household without benefit units entity when validating then no errors', () => {
       // Given
       const errors: any[] = [];
-      const household = {
-        ...mockValidUKHousehold,
-        householdData: {
-          people: mockValidUKHousehold.householdData.people,
-          households: mockValidUKHousehold.householdData.households,
-          // No benunits property
-        },
-      };
+      const household = withHouseholdData(mockValidUKHousehold, {
+        people: mockValidUKHousehold.householdData.people,
+        households: mockValidUKHousehold.householdData.households,
+        // No benunits property
+      });
 
       // When
       HouseholdValidation.validateUKHousehold(household, errors);

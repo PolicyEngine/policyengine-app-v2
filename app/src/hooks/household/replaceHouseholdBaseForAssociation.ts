@@ -5,7 +5,6 @@ import {
   shadowUpdateUserHouseholdAssociation,
 } from '@/libs/migration/householdShadow';
 import { Household } from '@/models/Household';
-import type { AppHouseholdInputEnvelope } from '@/models/household/appTypes';
 import type { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 
 function buildAssociationReplacementError(args: {
@@ -25,11 +24,11 @@ function buildAssociationReplacementError(args: {
 
 export async function replaceHouseholdBaseForAssociation(args: {
   association: UserHouseholdPopulation;
-  nextHousehold: AppHouseholdInputEnvelope;
+  nextHousehold: Household;
   store: Pick<UserHouseholdStore, 'update'>;
   shouldShadowV2?: boolean;
 }): Promise<UserHouseholdPopulation> {
-  const { association, nextHousehold: nextHouseholdInput, store, shouldShadowV2 = true } = args;
+  const { association, nextHousehold, store, shouldShadowV2 = true } = args;
 
   if (!association.id) {
     throw new Error(
@@ -37,10 +36,9 @@ export async function replaceHouseholdBaseForAssociation(args: {
     );
   }
 
-  const nextHouseholdModel = Household.fromAppInput({
-    ...nextHouseholdInput,
-    label: nextHouseholdInput.id ? null : (association.label ?? null),
-  });
+  const nextHouseholdModel = nextHousehold.withLabel(
+    nextHousehold.id ? null : (association.label ?? null)
+  );
   const createdHousehold = await createHousehold(nextHouseholdModel.toV1CreationPayload());
   const nextHouseholdId = String(createdHousehold.result.household_id);
   let updatedAssociation: UserHouseholdPopulation;

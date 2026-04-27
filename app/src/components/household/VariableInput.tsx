@@ -5,7 +5,7 @@
  * Uses VariableResolver for entity-aware value getting/setting.
  */
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Input,
   Select,
@@ -50,8 +50,7 @@ export default function VariableInput({
         ? variable.label
         : metadata?.variables?.[variable.name]?.label || '',
   };
-  const householdInput = useMemo(() => household.toAppInput(), [household]);
-  const currentValue = getValue(householdInput, resolvedVariable.name, metadata, year, entityName);
+  const currentValue = getValue(household, resolvedVariable.name, metadata, year, entityName);
   const numericFormatting = getInputFormattingProps(resolvedVariable);
   const isPercentage = resolvedVariable.unit === '/1';
   const rawNumericValue =
@@ -68,8 +67,8 @@ export default function VariableInput({
   const [textInputValue, setTextInputValue] = useState(textValue);
 
   const handleChange = (value: any) => {
-    const newHousehold = setValue(householdInput, variable.name, value, metadata, year, entityName);
-    onChange(HouseholdModel.fromAppInput(newHousehold));
+    const newHousehold = setValue(household, variable.name, value, metadata, year, entityName);
+    onChange(newHousehold);
   };
 
   useEffect(() => {

@@ -1,7 +1,7 @@
 import { type CountryId } from '@/libs/countries';
+import type { Household as HouseholdModel } from '@/models/Household';
 import type {
   AppHouseholdInputData,
-  AppHouseholdInputEnvelope as Household,
   AppHouseholdInputGroup as HouseholdGroupEntity,
 } from '@/models/household/appTypes';
 import { getV2GroupDefinitions } from '@/models/household/schema';
@@ -49,7 +49,7 @@ export interface VariableMetadata {
 }
 
 type CountryValidationStrategy = (
-  household: Household,
+  household: HouseholdModel,
   errors: ValidationError[],
   warnings: ValidationWarning[]
 ) => void;
@@ -122,7 +122,11 @@ export const HouseholdValidation = {
    * Validate a household for a specific country
    * @param year - Year to validate against (required - should come from report context)
    */
-  validateForCountry(household: Household, countryId: CountryId, year: string): ValidationResult {
+  validateForCountry(
+    household: HouseholdModel,
+    countryId: CountryId,
+    year: string
+  ): ValidationResult {
     const errors: ValidationError[] = [];
     const warnings: ValidationWarning[] = [];
 
@@ -153,7 +157,7 @@ export const HouseholdValidation = {
    * @param year - Year to validate against (required - should come from report context)
    */
   validateGenericHousehold(
-    household: Household,
+    household: HouseholdModel,
     errors: ValidationError[],
     warnings: ValidationWarning[],
     year: string,
@@ -204,7 +208,7 @@ export const HouseholdValidation = {
    * US-specific validation
    */
   validateUSHousehold(
-    household: Household,
+    household: HouseholdModel,
     errors: ValidationError[],
     warnings: ValidationWarning[]
   ): void {
@@ -258,7 +262,7 @@ export const HouseholdValidation = {
   /**
    * UK-specific validation
    */
-  validateUKHousehold(household: Household, errors: ValidationError[]): void {
+  validateUKHousehold(household: HouseholdModel, errors: ValidationError[]): void {
     // Check for UK-specific entities if they exist
     if (household.householdData.benunits) {
       const benunits = household.householdData.benunits as Record<string, HouseholdGroupEntity>;
@@ -349,7 +353,11 @@ export const HouseholdValidation = {
    * Check if household structure is complete enough for simulation
    * @param year - Year to validate against (required - should come from report context)
    */
-  isReadyForSimulation(household: Household, countryId: CountryId, year: string): ValidationResult {
+  isReadyForSimulation(
+    household: HouseholdModel,
+    countryId: CountryId,
+    year: string
+  ): ValidationResult {
     const errors: ValidationError[] = [];
     const warnings: ValidationWarning[] = [];
 

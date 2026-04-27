@@ -1,4 +1,4 @@
-import type { AppHouseholdInputEnvelope as Household } from '@/models/household/appTypes';
+import { Household } from '@/models/Household';
 import type { Geography } from '@/types/ingredients/Geography';
 import type { Policy } from '@/types/ingredients/Policy';
 import type { Report } from '@/types/ingredients/Report';
@@ -22,36 +22,6 @@ interface HydrateArgs {
   userPolicies?: UserPolicy[];
   userHouseholds?: UserHouseholdPopulation[];
   currentLawId: number;
-}
-
-function isHouseholdWithToAppInput(
-  household: unknown
-): household is { toAppInput: () => Household } {
-  return (
-    typeof household === 'object' &&
-    household !== null &&
-    'toAppInput' in household &&
-    typeof (household as { toAppInput?: unknown }).toAppInput === 'function'
-  );
-}
-
-function normalizeHousehold(
-  household:
-    | Household
-    | {
-        toAppInput: () => Household;
-      }
-    | undefined
-): Household | null {
-  if (!household) {
-    return null;
-  }
-
-  if (isHouseholdWithToAppInput(household)) {
-    return household.toAppInput();
-  }
-
-  return household;
 }
 
 export function hydrateReportBuilderState({
@@ -92,7 +62,7 @@ export function hydrateReportBuilderState({
       populationState = {
         label: userHousehold?.label || null,
         type: 'household' as const,
-        household: normalizeHousehold(household),
+        household: household?.withLabel(userHousehold?.label ?? household.label ?? null) ?? null,
         geography: null,
       };
     } else {

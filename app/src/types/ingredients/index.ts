@@ -1,7 +1,7 @@
 // This file contains type guards and union types for ingredients
 
+import { Household } from '@/models/Household';
 import { Geography } from './Geography';
-import { Household } from './Household';
 import { Policy } from './Policy';
 import { Population } from './Population';
 import { Report } from './Report';
@@ -33,7 +33,7 @@ export function isSimulation(obj: BaseIngredient): obj is Simulation {
  * Type guard to check if an object is a Household
  */
 export function isHousehold(obj: BaseIngredient): obj is Household {
-  return 'householdData' in obj;
+  return obj instanceof Household || 'householdData' in obj;
 }
 
 /**

@@ -1,6 +1,7 @@
 import { CURRENT_YEAR } from '@/constants';
+import { Household } from '@/models/Household';
 import type {
-  AppHouseholdInputEnvelope as Household,
+  AppHouseholdInputEnvelope,
   AppHouseholdInputPerson as HouseholdPerson,
 } from '@/models/household/appTypes';
 import { RootState } from '@/store';
@@ -10,6 +11,10 @@ import {
   ValidationWarning,
   VariableMetadata,
 } from '@/utils/HouseholdValidation';
+
+function makeHousehold(input: AppHouseholdInputEnvelope): Household {
+  return Household.fromAppInput(input);
+}
 
 // ============= TEST CONSTANTS =============
 
@@ -131,7 +136,7 @@ export const mockPersonMissingYear: HouseholdPerson = {
 };
 
 // Valid US household
-export const mockValidUSHousehold: Household = {
+export const mockValidUSHousehold: Household = makeHousehold({
   countryId: VALIDATION_COUNTRIES.US,
   householdData: {
     people: {
@@ -149,10 +154,10 @@ export const mockValidUSHousehold: Household = {
       },
     },
   },
-};
+});
 
 // US household with orphan person (not in tax unit)
-export const mockUSHouseholdOrphanPerson: Household = {
+export const mockUSHouseholdOrphanPerson: Household = makeHousehold({
   countryId: VALIDATION_COUNTRIES.US,
   householdData: {
     people: {
@@ -175,10 +180,10 @@ export const mockUSHouseholdOrphanPerson: Household = {
       },
     },
   },
-};
+});
 
 // US household with no tax units
-export const mockUSHouseholdNoTaxUnits: Household = {
+export const mockUSHouseholdNoTaxUnits: Household = makeHousehold({
   countryId: VALIDATION_COUNTRIES.US,
   householdData: {
     people: {
@@ -191,10 +196,10 @@ export const mockUSHouseholdNoTaxUnits: Household = {
     },
     taxUnits: {},
   },
-};
+});
 
 // US household with invalid marital unit (0 members - empty is invalid)
-export const mockUSHouseholdInvalidMaritalUnit: Household = {
+export const mockUSHouseholdInvalidMaritalUnit: Household = makeHousehold({
   countryId: VALIDATION_COUNTRIES.US,
   householdData: {
     people: {
@@ -211,10 +216,10 @@ export const mockUSHouseholdInvalidMaritalUnit: Household = {
       },
     },
   },
-};
+});
 
 // Valid UK household
-export const mockValidUKHousehold: Household = {
+export const mockValidUKHousehold: Household = makeHousehold({
   countryId: VALIDATION_COUNTRIES.UK,
   householdData: {
     people: {
@@ -232,10 +237,10 @@ export const mockValidUKHousehold: Household = {
       },
     },
   },
-};
+});
 
 // UK household with empty benefit unit
-export const mockUKHouseholdEmptyBenUnit: Household = {
+export const mockUKHouseholdEmptyBenUnit: Household = makeHousehold({
   countryId: VALIDATION_COUNTRIES.UK,
   householdData: {
     people: {
@@ -255,10 +260,10 @@ export const mockUKHouseholdEmptyBenUnit: Household = {
       },
     },
   },
-};
+});
 
 // Household with country mismatch
-export const mockHouseholdCountryMismatch: Household = {
+export const mockHouseholdCountryMismatch: Household = makeHousehold({
   countryId: VALIDATION_COUNTRIES.US,
   householdData: {
     people: {
@@ -270,10 +275,10 @@ export const mockHouseholdCountryMismatch: Household = {
       },
     },
   },
-};
+});
 
 // Household with missing age
-export const mockHouseholdMissingAge: Household = {
+export const mockHouseholdMissingAge: Household = makeHousehold({
   countryId: VALIDATION_COUNTRIES.US,
   householdData: {
     people: {
@@ -286,9 +291,10 @@ export const mockHouseholdMissingAge: Household = {
       },
     },
   },
-};
+});
 
-// Household with invalid group structure (missing members array)
+// Deliberately bypasses the Household constructor so validation can exercise
+// structurally invalid input that the model itself rejects.
 export const mockHouseholdInvalidGroupStructure: Household = {
   countryId: VALIDATION_COUNTRIES.US,
   householdData: {
@@ -301,16 +307,16 @@ export const mockHouseholdInvalidGroupStructure: Household = {
       } as any,
     },
   },
-};
+} as unknown as Household;
 
 // Empty household
-export const mockEmptyHousehold: Household = {
+export const mockEmptyHousehold: Household = makeHousehold({
   countryId: VALIDATION_COUNTRIES.US,
   householdData: {
     people: {},
     households: {},
   },
-};
+});
 
 // ============= MOCK VARIABLE METADATA =============
 

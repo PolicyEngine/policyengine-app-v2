@@ -7,7 +7,6 @@ import { useApiRegions } from '@/hooks/useApiRegions';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { buildCanonicalGeography } from '@/models/geography';
 import { Household as HouseholdModel } from '@/models/Household';
-import type { AppHouseholdInputEnvelope as Household } from '@/models/household/appTypes';
 import { Geography } from '@/types/ingredients/Geography';
 import { Policy } from '@/types/ingredients/Policy';
 import { Simulation } from '@/types/ingredients/Simulation';
@@ -30,7 +29,7 @@ export interface EnhancedUserSimulation {
 
   // Related entities
   policy?: Policy;
-  household?: Household;
+  household?: HouseholdModel;
   geography?: Geography;
 
   // User associations for related entities
@@ -123,7 +122,7 @@ export const useUserSimulations = (userId: string) => {
   });
 
   // Step 6: Fetch households (populations)
-  const householdResults = useParallelQueries<Household>(householdIds, {
+  const householdResults = useParallelQueries<HouseholdModel>(householdIds, {
     queryKey: householdKeys.byId,
     queryFn: async (id) => {
       const metadata = await fetchHouseholdById(country, id);
@@ -157,7 +156,7 @@ export const useUserSimulations = (userId: string) => {
           : undefined;
 
         // Determine if populationId is household or geography based on populationType
-        let household: Household | undefined;
+        let household: HouseholdModel | undefined;
         let geography: Geography | undefined;
         let userHousehold: UserHouseholdPopulation | undefined;
 
@@ -232,7 +231,7 @@ export const useUserSimulations = (userId: string) => {
       queryClient.getQueryData<Simulation>(simulationKeys.byId(id)),
     getNormalizedPolicy: (id: string) => queryClient.getQueryData<Policy>(policyKeys.byId(id)),
     getNormalizedHousehold: (id: string) =>
-      queryClient.getQueryData<Household>(householdKeys.byId(id)),
+      queryClient.getQueryData<HouseholdModel>(householdKeys.byId(id)),
   };
 };
 

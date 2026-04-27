@@ -5,9 +5,10 @@
  * getters/setters that access the correct location in household data.
  */
 
-import type { AppHouseholdInputEnvelope } from '@/models/household/appTypes';
+import { Household as HouseholdModel } from '@/models/Household';
+import { cloneAppHouseholdInputData } from '@/models/household/appCodec';
+import type { AppHouseholdInputData } from '@/models/household/appTypes';
 import {
-  cloneHousehold,
   ensureHouseholdGroupCollection,
   ensureHouseholdGroupInstance,
   getHouseholdGroupCollection,
@@ -15,6 +16,23 @@ import {
   isHouseholdYearMap,
 } from './householdDataAccess';
 import { getNormalizedVariableMetadata } from './variableMetadata';
+
+function cloneHouseholdData(household: HouseholdModel): AppHouseholdInputData {
+  return cloneAppHouseholdInputData(household.householdData);
+}
+
+function withHouseholdData(
+  household: HouseholdModel,
+  householdData: AppHouseholdInputData
+): HouseholdModel {
+  return HouseholdModel.fromDraft({
+    id: household.id,
+    countryId: household.countryId,
+    label: household.label,
+    year: household.year,
+    householdData,
+  });
+}
 
 export interface EntityInfo {
   entity: string; // e.g., "person", "tax_unit", "spm_unit"
@@ -108,11 +126,9 @@ export function getVariableInfo(variableName: string, metadata: any): VariableIn
  * Get the entity data object from household based on plural name
  */
 function getEntityData(
-  household: AppHouseholdInputEnvelope,
+  householdData: AppHouseholdInputData,
   entityPlural: string
 ): Record<string, any> | null {
-  const householdData = household.householdData;
-
   if (entityPlural === 'people') {
     return householdData.people;
   }
@@ -121,11 +137,9 @@ function getEntityData(
 }
 
 function ensureEntityData(
-  household: AppHouseholdInputEnvelope,
+  householdData: AppHouseholdInputData,
   entityPlural: string
 ): Record<string, any> | null {
-  const householdData = household.householdData;
-
   if (entityPlural === 'people') {
     return householdData.people;
   }
@@ -134,7 +148,7 @@ function ensureEntityData(
 }
 
 function resolveEntityInstanceName(
-  household: AppHouseholdInputEnvelope,
+  householdData: AppHouseholdInputData,
   entityInfo: EntityInfo,
   entityName?: string
 ): string | null {
@@ -147,7 +161,7 @@ function resolveEntityInstanceName(
     return null;
   }
 
-  const resolvedName = getPreferredHouseholdGroupName(household.householdData, entityInfo.plural);
+  const resolvedName = getPreferredHouseholdGroupName(householdData, entityInfo.plural);
   if (!resolvedName) {
     console.warn(`[VariableResolver] Entity ${entityInfo.plural} not found in household`);
     return null;
@@ -167,24 +181,25 @@ function resolveEntityInstanceName(
  *                     Required for person-level variables, optional for others
  */
 export function getValue(
-  household: AppHouseholdInputEnvelope,
+  household: HouseholdModel,
   variableName: string,
   metadata: any,
   year: string,
   entityName?: string
 ): any {
+  const householdData = household.householdData;
   const entityInfo = resolveEntity(variableName, metadata);
   if (!entityInfo) {
     console.warn(`[VariableResolver] Unknown variable: ${variableName}`);
     return null;
   }
 
-  const entityData = getEntityData(household, entityInfo.plural);
+  const entityData = getEntityData(householdData, entityInfo.plural);
   if (!entityData) {
     return null;
   }
 
-  const instanceName = resolveEntityInstanceName(household, entityInfo, entityName);
+  const instanceName = resolveEntityInstanceName(householdData, entityInfo, entityName);
   if (!instanceName) {
     return null;
   }
@@ -218,13 +233,13 @@ export function getValue(
  * @param entityName - Specific entity instance name (required for person-level)
  */
 export function setValue(
-  household: AppHouseholdInputEnvelope,
+  household: HouseholdModel,
   variableName: string,
   value: any,
   metadata: any,
   year: string,
   entityName?: string
-): AppHouseholdInputEnvelope {
+): HouseholdModel {
   const entityInfo = resolveEntity(variableName, metadata);
   if (!entityInfo) {
     console.warn(`[VariableResolver] Unknown variable: ${variableName}`);
@@ -232,15 +247,15 @@ export function setValue(
   }
 
   // Deep clone to maintain immutability
-  const newHousehold = cloneHousehold(household);
-  const entityData = ensureEntityData(newHousehold, entityInfo.plural);
+  const newHouseholdData = cloneHouseholdData(household);
+  const entityData = ensureEntityData(newHouseholdData, entityInfo.plural);
 
   if (!entityData) {
     console.warn(`[VariableResolver] Entity ${entityInfo.plural} not found in household`);
     return household;
   }
 
-  const instanceName = resolveEntityInstanceName(newHousehold, entityInfo, entityName);
+  const instanceName = resolveEntityInstanceName(newHouseholdData, entityInfo, entityName);
   if (!instanceName) {
     return household;
   }
@@ -259,7 +274,7 @@ export function setValue(
   // Set the value
   entityData[instanceName][variableName][year] = value;
 
-  return newHousehold;
+  return withHouseholdData(household, newHouseholdData);
 }
 
 /**
@@ -267,11 +282,11 @@ export function setValue(
  * Note: Currently unused. Kept for potential future use if we add "Add variable to all members" functionality
  */
 export function addVariable(
-  household: AppHouseholdInputEnvelope,
+  household: HouseholdModel,
   variableName: string,
   metadata: any,
   year: string
-): AppHouseholdInputEnvelope {
+): HouseholdModel {
   const entityInfo = resolveEntity(variableName, metadata);
   const variableInfo = getVariableInfo(variableName, metadata);
 
@@ -279,8 +294,8 @@ export function addVariable(
     return household;
   }
 
-  const newHousehold = cloneHousehold(household);
-  const entityData = ensureEntityData(newHousehold, entityInfo.plural);
+  const newHouseholdData = cloneHouseholdData(household);
+  const entityData = ensureEntityData(newHouseholdData, entityInfo.plural);
 
   if (!entityData) {
     return household;
@@ -289,8 +304,8 @@ export function addVariable(
   const instanceNames = Object.keys(entityData);
   if (instanceNames.length === 0) {
     const instanceName = entityInfo.isPerson
-      ? resolveEntityInstanceName(newHousehold, entityInfo)
-      : ensureHouseholdGroupInstance(newHousehold.householdData, entityInfo.plural);
+      ? resolveEntityInstanceName(newHouseholdData, entityInfo)
+      : ensureHouseholdGroupInstance(newHouseholdData, entityInfo.plural);
     if (!instanceName) {
       return household;
     }
@@ -309,7 +324,7 @@ export function addVariable(
     }
   }
 
-  return newHousehold;
+  return withHouseholdData(household, newHouseholdData);
 }
 
 /**
@@ -317,12 +332,12 @@ export function addVariable(
  * Use this for per-person variable assignment
  */
 export function addVariableToEntity(
-  household: AppHouseholdInputEnvelope,
+  household: HouseholdModel,
   variableName: string,
   metadata: any,
   year: string,
-  entityName: string
-): AppHouseholdInputEnvelope {
+  entityName?: string
+): HouseholdModel {
   const entityInfo = resolveEntity(variableName, metadata);
   const variableInfo = getVariableInfo(variableName, metadata);
 
@@ -330,18 +345,19 @@ export function addVariableToEntity(
     return household;
   }
 
-  const newHousehold = cloneHousehold(household);
-  const entityData = ensureEntityData(newHousehold, entityInfo.plural);
+  const newHouseholdData = cloneHouseholdData(household);
+  const entityData = ensureEntityData(newHouseholdData, entityInfo.plural);
 
   if (!entityData) {
     return household;
   }
 
-  const resolvedEntityName = entityData[entityName]
-    ? entityName
-    : entityInfo.isPerson
-      ? resolveEntityInstanceName(newHousehold, entityInfo, entityName)
-      : ensureHouseholdGroupInstance(newHousehold.householdData, entityInfo.plural);
+  const resolvedEntityName =
+    entityName && entityData[entityName]
+      ? entityName
+      : entityInfo.isPerson
+        ? resolveEntityInstanceName(newHouseholdData, entityInfo, entityName)
+        : ensureHouseholdGroupInstance(newHouseholdData, entityInfo.plural);
   if (!resolvedEntityName) {
     return household;
   }
@@ -357,25 +373,25 @@ export function addVariableToEntity(
     };
   }
 
-  return newHousehold;
+  return withHouseholdData(household, newHouseholdData);
 }
 
 /**
  * Remove a variable from all entity instances
  */
 export function removeVariable(
-  household: AppHouseholdInputEnvelope,
+  household: HouseholdModel,
   variableName: string,
   metadata: any
-): AppHouseholdInputEnvelope {
+): HouseholdModel {
   const entityInfo = resolveEntity(variableName, metadata);
 
   if (!entityInfo) {
     return household;
   }
 
-  const newHousehold = cloneHousehold(household);
-  const entityData = getEntityData(newHousehold, entityInfo.plural);
+  const newHouseholdData = cloneHouseholdData(household);
+  const entityData = getEntityData(newHouseholdData, entityInfo.plural);
 
   if (!entityData) {
     return household;
@@ -386,7 +402,7 @@ export function removeVariable(
     delete entityData[instanceName][variableName];
   }
 
-  return newHousehold;
+  return withHouseholdData(household, newHouseholdData);
 }
 
 /**
@@ -394,19 +410,19 @@ export function removeVariable(
  * Used for per-person variable removal in the household builder.
  */
 export function removeVariableFromEntity(
-  household: AppHouseholdInputEnvelope,
+  household: HouseholdModel,
   variableName: string,
   metadata: any,
   entityName: string
-): AppHouseholdInputEnvelope {
+): HouseholdModel {
   const entityInfo = resolveEntity(variableName, metadata);
 
   if (!entityInfo) {
     return household;
   }
 
-  const newHousehold = cloneHousehold(household);
-  const entityData = getEntityData(newHousehold, entityInfo.plural);
+  const newHouseholdData = cloneHouseholdData(household);
+  const entityData = getEntityData(newHouseholdData, entityInfo.plural);
 
   if (!entityData || !entityData[entityName]) {
     return household;
@@ -414,7 +430,7 @@ export function removeVariableFromEntity(
 
   delete entityData[entityName][variableName];
 
-  return newHousehold;
+  return withHouseholdData(household, newHouseholdData);
 }
 
 /**

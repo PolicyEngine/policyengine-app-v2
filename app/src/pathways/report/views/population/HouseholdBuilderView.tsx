@@ -13,9 +13,9 @@ import { colors, spacing } from '@/designTokens';
 import { useCreateHousehold } from '@/hooks/useCreateHousehold';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useReportYear } from '@/hooks/useReportYear';
+import type { CountryId } from '@/libs/countries';
 import { getBasicInputFields } from '@/libs/metadataUtils';
 import { Household as HouseholdModel } from '@/models/Household';
-import type { AppHouseholdInputEnvelope } from '@/models/household/appTypes';
 import { EditableLabel } from '@/pages/reportBuilder/components/EditableLabel';
 import { FONT_SIZES, INGREDIENT_COLORS } from '@/pages/reportBuilder/constants';
 import { HouseholdCreationContent } from '@/pages/reportBuilder/modals/population';
@@ -31,7 +31,7 @@ import { HouseholdValidation } from '@/utils/HouseholdValidation';
 interface HouseholdBuilderViewProps {
   population: PopulationStateProps;
   countryId: string;
-  onSubmitSuccess: (householdId: string, household: AppHouseholdInputEnvelope) => void;
+  onSubmitSuccess: (householdId: string, household: HouseholdModel) => void;
   onBack?: () => void;
 }
 
@@ -150,16 +150,12 @@ export default function HouseholdBuilderView({
   // Initialize household with "you" if none exists
   const [household, setLocalHousehold] = useState<HouseholdModel>(() => {
     if (population?.household) {
-      return HouseholdModel.fromAppInput({
-        ...population.household,
-        label: population.label ?? population.household.label ?? null,
-      });
+      return population.household.withLabel(population.label ?? population.household.label ?? null);
     }
 
-    return HouseholdModel.empty(
-      countryId as AppHouseholdInputEnvelope['countryId'],
-      reportYear
-    ).addAdult('you', 30, { employment_income: 0 });
+    return HouseholdModel.empty(countryId as CountryId, reportYear).addAdult('you', 30, {
+      employment_income: 0,
+    });
   });
   const { createHousehold, isPending } = useCreateHousehold(household.label || undefined);
   const [validation, setValidation] = useState<ReturnType<
@@ -176,11 +172,7 @@ export default function HouseholdBuilderView({
     setValidation(null);
     const timeoutId = setTimeout(() => {
       setValidation(
-        HouseholdValidation.isReadyForSimulation(
-          household.toAppInput(),
-          currentCountryId,
-          reportYear
-        )
+        HouseholdValidation.isReadyForSimulation(household, currentCountryId, reportYear)
       );
     }, 400);
 
@@ -224,7 +216,7 @@ export default function HouseholdBuilderView({
   const handleSubmit = useCallback(async () => {
     // Validate household
     const validation = HouseholdValidation.isReadyForSimulation(
-      household.toAppInput(),
+      household,
       currentCountryId,
       reportYear
     );
@@ -238,7 +230,7 @@ export default function HouseholdBuilderView({
       const result = await createHousehold(payload);
 
       const householdId = result.result.household_id;
-      onSubmitSuccess(householdId, household.withId(householdId).toAppInput());
+      onSubmitSuccess(householdId, household.withId(householdId));
     } catch (err) {
       // Error is handled by the mutation
     }

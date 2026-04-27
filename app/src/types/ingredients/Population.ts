@@ -1,4 +1,4 @@
-import type { AppHouseholdInputEnvelope } from '@/models/household/appTypes';
+import type { Household } from '@/models/Household';
 import { Geography } from './Geography';
 
 /**
@@ -8,6 +8,6 @@ import { Geography } from './Geography';
 export interface Population {
   label?: string | null;
   isCreated?: boolean;
-  household?: AppHouseholdInputEnvelope | null;
+  household?: Household | null;
   geography?: Geography | null;
 }
