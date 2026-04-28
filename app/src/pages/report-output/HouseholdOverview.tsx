@@ -5,8 +5,8 @@ import HouseholdBreakdown from '@/components/household/HouseholdBreakdown';
 import MetricCard from '@/components/report/MetricCard';
 import { Group, Stack, Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
-import type { AppHouseholdInputEnvelope as Household } from '@/models/household/appTypes';
 import { RootState } from '@/store';
+import type { HouseholdCalculationOutput } from '@/types/calculation/household';
 import type { Policy } from '@/types/ingredients/Policy';
 import type { Simulation } from '@/types/ingredients/Simulation';
 import { calculateVariableComparison } from '@/utils/householdComparison';
@@ -15,7 +15,7 @@ import EarningsVariationSubPage from './earnings-variation/EarningsVariationSubP
 import MarginalTaxRatesSubPage from './marginal-tax-rates/MarginalTaxRatesSubPage';
 
 interface HouseholdOverviewProps {
-  outputs: Household[];
+  outputs: HouseholdCalculationOutput[];
   policyLabels?: string[];
   simulations?: Simulation[];
   policies?: Policy[];

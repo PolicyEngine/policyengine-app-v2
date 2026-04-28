@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useSimulationProgressDisplay } from '@/hooks/household';
-import type { AppHouseholdInputEnvelope as Household } from '@/models/household/appTypes';
+import type { Household } from '@/models/Household';
+import type { HouseholdCalculationOutput } from '@/types/calculation/household';
 import type { Policy } from '@/types/ingredients/Policy';
 import type { Report } from '@/types/ingredients/Report';
 import type { Simulation } from '@/types/ingredients/Simulation';
@@ -37,7 +38,7 @@ interface InputTabProps {
  * Props available to output tabs (need calculation results)
  */
 interface OutputTabProps extends InputTabProps {
-  output: Household[];
+  output: HouseholdCalculationOutput[];
   policyLabels: string[];
   activeView: string;
 }

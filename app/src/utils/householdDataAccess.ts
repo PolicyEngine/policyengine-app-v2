@@ -7,15 +7,30 @@ import type {
   HouseholdYearValueMap,
 } from '@/models/household/appTypes';
 import { normalizeHouseholdGroupAppKey } from '@/models/household/schema';
+import type {
+  HouseholdCalculationData,
+  HouseholdCalculationGroup,
+  HouseholdCalculationGroupMap,
+  HouseholdCalculationPerson,
+  HouseholdCalculationValue,
+  HouseholdCalculationYearValueMap,
+} from '@/types/calculation/household';
 
-export function isHouseholdYearMap(value: unknown): value is HouseholdYearValueMap {
+type HouseholdDataLike = AppHouseholdInputData | HouseholdCalculationData;
+type HouseholdPersonLike = AppHouseholdInputPerson | HouseholdCalculationPerson;
+type HouseholdGroupLike = AppHouseholdInputGroup | HouseholdCalculationGroup;
+type HouseholdGroupMapLike = AppHouseholdInputGroupMap | HouseholdCalculationGroupMap;
+type HouseholdYearMapLike = HouseholdYearValueMap | HouseholdCalculationYearValueMap;
+type HouseholdValueLike = HouseholdScalar | HouseholdCalculationValue;
+
+export function isHouseholdYearMap(value: unknown): value is HouseholdYearMapLike {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 export function getHouseholdYearValue(
-  value: AppHouseholdInputPerson[string] | AppHouseholdInputGroup[string] | undefined,
+  value: HouseholdPersonLike[string] | HouseholdGroupLike[string] | undefined,
   year: string
-): HouseholdScalar | undefined {
+): HouseholdValueLike | undefined {
   if (!isHouseholdYearMap(value)) {
     return undefined;
   }
@@ -24,9 +39,9 @@ export function getHouseholdYearValue(
 }
 
 export function getHouseholdGroupCollection(
-  householdData: AppHouseholdInputData,
+  householdData: HouseholdDataLike,
   entityName: string
-): AppHouseholdInputGroupMap | undefined {
+): HouseholdGroupMapLike | undefined {
   switch (normalizeHouseholdGroupAppKey(entityName)) {
     case 'households':
       return householdData.households;

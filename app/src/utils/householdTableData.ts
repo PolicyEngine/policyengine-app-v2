@@ -1,4 +1,6 @@
-import type { AppHouseholdInputEnvelope as Household } from '@/models/household/appTypes';
+import type { Household } from '@/models/Household';
+
+type HouseholdTableInput = Pick<Household, 'id' | 'countryId' | 'householdData'>;
 
 export interface HouseholdInputRow {
   category: string; // "Person 1", "Household", etc.
@@ -10,7 +12,7 @@ export interface HouseholdInputRow {
 /**
  * Extract household input values as structured table rows
  */
-export function extractHouseholdInputs(household: Household): HouseholdInputRow[] {
+export function extractHouseholdInputs(household: HouseholdTableInput): HouseholdInputRow[] {
   const rows: HouseholdInputRow[] = [];
 
   if (!household.householdData) {
@@ -84,8 +86,8 @@ function formatParameterLabel(paramName: string): string {
  * Check if two households are structurally equal
  */
 export function householdsAreEqual(
-  household1: Household | undefined,
-  household2: Household | undefined
+  household1: HouseholdTableInput | undefined,
+  household2: HouseholdTableInput | undefined
 ): boolean {
   if (!household1 || !household2) {
     return false;

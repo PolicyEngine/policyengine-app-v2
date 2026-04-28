@@ -1,10 +1,10 @@
 import { vi } from 'vitest';
 import { SocietyWideCalculationResponse } from '@/api/societyWideCalculation';
-import type { AppHouseholdInputData as HouseholdData } from '@/models/household/appTypes';
 import {
   mockHouseholdResult,
   mockSocietyWideResult,
 } from '@/tests/fixtures/types/calculationFixtures';
+import type { HouseholdCalculationData } from '@/types/calculation/household';
 
 /**
  * Test constants for strategy timing and progress
@@ -67,7 +67,7 @@ export const mockSocietyWideErrorResponse = (): SocietyWideCalculationResponse =
  * Mock household API response (successful)
  * Note: Household API returns data directly, not a status object
  */
-export const mockHouseholdSuccessResponse = (): HouseholdData => mockHouseholdResult();
+export const mockHouseholdSuccessResponse = (): HouseholdCalculationData => mockHouseholdResult();
 
 /**
  * Mock fetch functions

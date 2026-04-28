@@ -4,8 +4,8 @@ import { useSelector } from 'react-redux';
 import { Button, Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import { useReportYear } from '@/hooks/useReportYear';
-import type { AppHouseholdInputEnvelope as Household } from '@/models/household/appTypes';
 import { RootState } from '@/store';
+import type { HouseholdCalculationOutput } from '@/types/calculation/household';
 import { MetadataState } from '@/types/metadata';
 import { calculateVariableComparison } from '@/utils/householdComparison';
 import { getDisplayStyleConfig } from '@/utils/householdDisplayStyles';
@@ -18,8 +18,8 @@ import {
 
 interface VariableArithmeticProps {
   variableName: string;
-  baseline: Household;
-  reform: Household | null;
+  baseline: HouseholdCalculationOutput;
+  reform: HouseholdCalculationOutput | null;
   isAdd: boolean;
   defaultExpanded?: boolean;
   childrenOnly?: boolean;

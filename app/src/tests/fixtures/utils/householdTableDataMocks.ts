@@ -1,10 +1,12 @@
-import type { AppHouseholdInputEnvelope as Household } from '@/models/household/appTypes';
+import type { Household } from '@/models/Household';
+
+type HouseholdTableMock = Pick<Household, 'id' | 'countryId' | 'householdData'>;
 
 /**
  * Mock households for testing household table data utilities
  */
 
-export const MOCK_HOUSEHOLD_SIMPLE: Household = {
+export const MOCK_HOUSEHOLD_SIMPLE: HouseholdTableMock = {
   id: 'household-1',
   countryId: 'us',
   householdData: {
@@ -47,7 +49,7 @@ export const MOCK_HOUSEHOLD_SIMPLE: Household = {
   },
 };
 
-export const MOCK_HOUSEHOLD_COMPLEX: Household = {
+export const MOCK_HOUSEHOLD_COMPLEX: HouseholdTableMock = {
   id: 'household-2',
   countryId: 'us',
   householdData: {
@@ -106,7 +108,7 @@ export const MOCK_HOUSEHOLD_COMPLEX: Household = {
   },
 };
 
-export const MOCK_HOUSEHOLD_EMPTY: Household = {
+export const MOCK_HOUSEHOLD_EMPTY: HouseholdTableMock = {
   id: 'household-empty',
   countryId: 'us',
   householdData: {
@@ -118,7 +120,7 @@ export const MOCK_HOUSEHOLD_EMPTY: Household = {
 };
 
 // Clone of simple household for equality testing
-export const MOCK_HOUSEHOLD_SIMPLE_CLONE: Household = {
+export const MOCK_HOUSEHOLD_SIMPLE_CLONE: HouseholdTableMock = {
   id: 'household-1-clone',
   countryId: 'us',
   householdData: {

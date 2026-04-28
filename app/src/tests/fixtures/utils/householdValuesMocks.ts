@@ -1,5 +1,5 @@
 import { CURRENT_YEAR } from '@/constants';
-import type { AppHouseholdInputEnvelope as Household } from '@/models/household/appTypes';
+import type { HouseholdCalculationOutput } from '@/types/calculation/household';
 import { MetadataState } from '@/types/metadata';
 
 /**
@@ -78,7 +78,7 @@ export const MOCK_METADATA: MetadataState = {
   parameterTree: null,
 };
 
-export const MOCK_HOUSEHOLD_DATA: Household = {
+export const MOCK_HOUSEHOLD_DATA: HouseholdCalculationOutput = {
   id: 'test-household',
   countryId: 'us',
   householdData: {
@@ -114,7 +114,7 @@ export const MOCK_HOUSEHOLD_DATA: Household = {
   },
 };
 
-export const MOCK_HOUSEHOLD_DATA_REFORM: Household = {
+export const MOCK_HOUSEHOLD_DATA_REFORM: HouseholdCalculationOutput = {
   id: 'test-household-reform',
   countryId: 'us',
   householdData: {
@@ -150,7 +150,7 @@ export const MOCK_HOUSEHOLD_DATA_REFORM: Household = {
   },
 };
 
-export const MOCK_HOUSEHOLD_DATA_MULTI_PERIOD: Household = {
+export const MOCK_HOUSEHOLD_DATA_MULTI_PERIOD: HouseholdCalculationOutput = {
   id: 'test-household-multi',
   countryId: 'us',
   householdData: {

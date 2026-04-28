@@ -1,7 +1,7 @@
-import type {
-  AppHouseholdInputEnvelope as Household,
-  AppHouseholdInputGroup as HouseholdGroupEntity,
-} from '@/models/household/appTypes';
+import type { Household } from '@/models/Household';
+import type { AppHouseholdInputGroup as HouseholdGroupEntity } from '@/models/household/appTypes';
+
+type HouseholdEntityInput = Pick<Household, 'householdData'>;
 
 /**
  * Sort people keys in display order: you, your partner, then dependents by ordinal
@@ -78,7 +78,7 @@ function hasEntityVariables(entityData: HouseholdGroupEntity): boolean {
  * Only includes group entities that have variables defined (not just members)
  */
 export function extractGroupEntities(
-  household: Household,
+  household: HouseholdEntityInput,
   variablesMetadata?: Record<string, any>
 ): GroupEntity[] {
   const groupEntities: GroupEntity[] = [];

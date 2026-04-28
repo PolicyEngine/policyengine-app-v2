@@ -1,15 +1,26 @@
 import type {
-  AppHouseholdInputEnvelope,
+  AppHouseholdInputData,
   AppHouseholdInputGroupMap,
   AppHouseholdInputPerson,
 } from '@/models/household/appTypes';
+import type {
+  HouseholdCalculationData,
+  HouseholdCalculationGroupMap,
+  HouseholdCalculationOutput,
+  HouseholdCalculationPerson,
+} from '@/types/calculation/household';
 import { getHouseholdGroupCollection, getHouseholdYearValue } from './householdDataAccess';
 import { sortPeopleKeys } from './householdIndividuals';
 
 const GROUP_CANDIDATES = ['taxUnits', 'households', 'families', 'benunits'] as const;
+type HouseholdHeadInput = Pick<HouseholdCalculationOutput, 'householdData'> & {
+  householdData: AppHouseholdInputData | HouseholdCalculationData;
+};
+type HouseholdHeadPerson = AppHouseholdInputPerson | HouseholdCalculationPerson;
+type HouseholdHeadGroupMap = AppHouseholdInputGroupMap | HouseholdCalculationGroupMap;
 
 function isAdult(
-  person: AppHouseholdInputPerson | undefined,
+  person: HouseholdHeadPerson | undefined,
   year: string | null | undefined
 ): boolean {
   if (!person || !year) {
@@ -22,7 +33,7 @@ function isAdult(
 
 function getFirstAdultOrMember(
   members: string[] | undefined,
-  people: Record<string, AppHouseholdInputPerson>,
+  people: Record<string, HouseholdHeadPerson>,
   year: string | null | undefined
 ): string | null {
   if (!Array.isArray(members) || members.length === 0) {
@@ -39,7 +50,7 @@ function getFirstAdultOrMember(
 }
 
 function getPersonFromGroups(
-  household: AppHouseholdInputEnvelope,
+  household: HouseholdHeadInput,
   year: string | null | undefined
 ): string | null {
   const householdData = household.householdData ?? {};
@@ -47,7 +58,7 @@ function getPersonFromGroups(
 
   for (const groupName of GROUP_CANDIDATES) {
     const groups = getHouseholdGroupCollection(householdData, groupName) as
-      | AppHouseholdInputGroupMap
+      | HouseholdHeadGroupMap
       | undefined;
     if (!groups) {
       continue;
@@ -66,7 +77,7 @@ function getPersonFromGroups(
 }
 
 export function getHeadOfHouseholdPersonName(
-  household: AppHouseholdInputEnvelope,
+  household: HouseholdHeadInput,
   year: string | null | undefined
 ): string | null {
   const people = household.householdData?.people ?? {};

@@ -1,4 +1,4 @@
-import type { AppHouseholdInputEnvelope as Household } from '@/models/household/appTypes';
+import type { HouseholdCalculationOutput } from '@/types/calculation/household';
 import { MetadataState } from '@/types/metadata';
 import { getHouseholdGroupCollection, isHouseholdYearMap } from './householdDataAccess';
 import { normalizeVariableValueType } from './variableMetadata';
@@ -19,7 +19,7 @@ export function getValueFromHousehold(
   variableName: string,
   timePeriod: string | null,
   entityName: string | null,
-  household: Household,
+  household: HouseholdCalculationOutput,
   metadata: MetadataState,
   valueFromFirstOnly = false
 ): number | number[] {
@@ -291,8 +291,8 @@ export function getParameterAtInstant(parameter: any, instant: string): any {
  */
 export function shouldShowVariable(
   variableName: string,
-  householdBaseline: Household,
-  householdReform: Household | null,
+  householdBaseline: HouseholdCalculationOutput,
+  householdReform: HouseholdCalculationOutput | null,
   metadata: MetadataState,
   forceShow = false
 ): boolean {

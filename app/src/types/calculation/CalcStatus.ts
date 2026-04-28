@@ -1,12 +1,12 @@
 import { SocietyWideReportOutput } from '@/api/societyWideCalculation';
-import type { AppHouseholdInputData as HouseholdData } from '@/models/household/appTypes';
 import { CalcError } from './CalcError';
 import { CalcMetadata } from './CalcMetadata';
+import type { HouseholdCalculationData } from './household';
 
 /**
  * Union type for all possible calculation results
  */
-export type CalcResult = SocietyWideReportOutput | HouseholdData;
+export type CalcResult = SocietyWideReportOutput | HouseholdCalculationData;
 
 /**
  * Calculation status values

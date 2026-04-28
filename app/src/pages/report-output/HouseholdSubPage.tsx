@@ -1,14 +1,14 @@
 import { useSelector } from 'react-redux';
 import GroupEntityDisplay from '@/components/report/GroupEntityDisplay';
-import type { AppHouseholdInputEnvelope as Household } from '@/models/household/appTypes';
+import type { Household } from '@/models/Household';
 import { RootState } from '@/store';
 import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { extractGroupEntities } from '@/utils/householdIndividuals';
 import { householdsAreEqual } from '@/utils/householdTableData';
 
 interface HouseholdSubPageProps {
-  baselineHousehold?: Household;
-  reformHousehold?: Household;
+  baselineHousehold?: Pick<Household, 'id' | 'countryId' | 'householdData'>;
+  reformHousehold?: Pick<Household, 'id' | 'countryId' | 'householdData'>;
   userHouseholds?: UserHouseholdPopulation[];
 }
 
