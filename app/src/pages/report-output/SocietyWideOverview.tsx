@@ -3,6 +3,7 @@ import {
   IconChartBar,
   IconCoin,
   IconHome,
+  IconInfoCircle,
   IconMap,
   IconScale,
   IconUsers,
@@ -13,7 +14,16 @@ import { normalizeDistrictId } from '@/adapters/congressional-district/congressi
 import { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import DashboardCard from '@/components/report/DashboardCard';
 import MetricCard from '@/components/report/MetricCard';
-import { Group, Progress, SegmentedControl, Stack, Text } from '@/components/ui';
+import {
+  Group,
+  Progress,
+  SegmentedControl,
+  Stack,
+  Text,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui';
 import { MapTypeToggle } from '@/components/visualization/choropleth/MapTypeToggle';
 import type { MapVisualizationType } from '@/components/visualization/choropleth/types';
 import { USDistrictChoroplethMap } from '@/components/visualization/USDistrictChoroplethMap';
@@ -60,6 +70,10 @@ const GRID_GAP = 16;
 //   outer: 200×3 + 16×2 = 632, minus border(2) + padding(32) + controls(39) = 559
 //   minus map Box border (2px) = 557
 const CONGRESSIONAL_MAP_H = 557;
+const CONGRESSIONAL_OUTCOME_TOOLTIP_TEXT =
+  'Winner % and Loser % show the share of people in households whose net income changes by at least 0.1%. Winners gain more than 0.1%; losers lose at least 0.1%. These shares are people-weighted when household size data is available.';
+const CONGRESSIONAL_OUTCOME_TOOLTIP_LABEL =
+  'Explain congressional district winner and loser percentages';
 
 // Poverty segmented control types and options
 type PovertyDepth = 'regular' | 'deep';
@@ -1113,7 +1127,8 @@ export default function SocietyWideOverview({
   const cardHeader = (
     IconComponent: React.ComponentType<{ size: number; color: string; stroke: number }>,
     labelText: string,
-    hero = false
+    hero = false,
+    tooltipText?: string
   ) => (
     <Group gap={hero ? 'lg' : 'md'} align="center">
       <div
@@ -1143,6 +1158,32 @@ export default function SocietyWideOverview({
       >
         {labelText}
       </Text>
+      {tooltipText && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              aria-label={CONGRESSIONAL_OUTCOME_TOOLTIP_LABEL}
+              onClick={(event) => event.stopPropagation()}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: 0,
+                border: 'none',
+                background: 'transparent',
+                color: colors.text.tertiary,
+                cursor: 'help',
+              }}
+            >
+              <IconInfoCircle size={16} stroke={1.6} />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="tw:max-w-[320px]">
+            {tooltipText}
+          </TooltipContent>
+        </Tooltip>
+      )}
     </Group>
   );
 
@@ -1514,7 +1555,12 @@ export default function SocietyWideOverview({
           mode={modeOf('congressional')}
           zIndex={zOf('congressional')}
           gridGap={GRID_GAP}
-          header={cardHeader(IconMap, 'Congressional district impact')}
+          header={cardHeader(
+            IconMap,
+            'Congressional district impact',
+            false,
+            CONGRESSIONAL_OUTCOME_TOOLTIP_TEXT
+          )}
           onToggleMode={() => toggle('congressional')}
         />
       )}
