@@ -16,8 +16,8 @@ import { fetchHouseholdById } from '@/api/household';
 import { fetchPolicyById } from '@/api/policy';
 import { fetchReportById } from '@/api/report';
 import { fetchSimulationById } from '@/api/simulation';
-import { useApiRegions } from '@/hooks/useApiRegions';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useRegions } from '@/hooks/useRegions';
 import { GC_TIME_5_MIN } from '@/libs/queryConfig';
 import { householdKeys, policyKeys, reportKeys, simulationKeys } from '@/libs/queryKeys';
 import { buildCanonicalGeography, type SavedGeographySelection } from '@/models/geography';
@@ -163,7 +163,7 @@ export function useFetchReportIngredients(
   const currentCountry = useCurrentCountry();
   // Use country from input if available (for shared reports), otherwise use current country
   const country = input?.userReport.countryId ?? currentCountry;
-  const { data: regions } = useApiRegions(country, {
+  const { data: regions } = useRegions(country, {
     enabled: isEnabled,
   });
 
