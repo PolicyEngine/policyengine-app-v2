@@ -105,11 +105,6 @@ import {
 import { countPolicyModifications } from '@/utils/countParameterChanges';
 import { formatPeriod } from '@/utils/dateUtils';
 import { generateGeographyLabel } from '@/utils/geographyUtils';
-import {
-  deriveHouseholdBuilderComposition,
-  updateHouseholdBuilderChildCount,
-  updateHouseholdBuilderMaritalStatus,
-} from '@/utils/householdBuilderComposition';
 import { formatLabelParts, getHierarchicalLabels } from '@/utils/parameterLabels';
 import { initializePolicyState } from '@/utils/pathwayState/initializePolicyState';
 import { initializePopulationState } from '@/utils/pathwayState/initializePopulationState';
@@ -3564,7 +3559,7 @@ function PopulationBrowseModal({
   }, [householdDraft]);
 
   const householdComposition = useMemo(
-    () => (householdDraft ? deriveHouseholdBuilderComposition(householdDraft, reportYear) : null),
+    () => (householdDraft ? householdDraft.deriveBuilderComposition(reportYear) : null),
     [householdDraft, reportYear]
   );
   const maritalStatus = householdComposition?.maritalStatus ?? 'single';
@@ -3748,7 +3743,7 @@ function PopulationBrowseModal({
         return;
       }
 
-      setHouseholdDraft(updateHouseholdBuilderMaritalStatus(householdDraft, reportYear, newStatus));
+      setHouseholdDraft(householdDraft.withBuilderMaritalStatus(reportYear, newStatus));
     },
     [householdDraft, reportYear]
   );
@@ -3760,7 +3755,7 @@ function PopulationBrowseModal({
         return;
       }
 
-      setHouseholdDraft(updateHouseholdBuilderChildCount(householdDraft, reportYear, newCount));
+      setHouseholdDraft(householdDraft.withBuilderChildCount(reportYear, newCount));
     },
     [householdDraft, reportYear]
   );

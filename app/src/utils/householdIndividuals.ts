@@ -1,7 +1,8 @@
 import type { Household } from '@/models/Household';
-import type { AppHouseholdInputGroup as HouseholdGroupEntity } from '@/models/household/appTypes';
-
-type HouseholdEntityInput = Pick<Household, 'householdData'>;
+import type {
+  AppHouseholdInputPerson,
+  AppHouseholdInputGroup as HouseholdGroupEntity,
+} from '@/models/household/appTypes';
 
 /**
  * Sort people keys in display order: you, your partner, then dependents by ordinal
@@ -78,74 +79,52 @@ function hasEntityVariables(entityData: HouseholdGroupEntity): boolean {
  * Only includes group entities that have variables defined (not just members)
  */
 export function extractGroupEntities(
-  household: HouseholdEntityInput,
+  household: Household,
   variablesMetadata?: Record<string, any>
 ): GroupEntity[] {
   const groupEntities: GroupEntity[] = [];
+  const people = household.people;
+  const peopleInstances: GroupEntityInstance[] = [];
 
-  if (!household.householdData) {
-    return groupEntities;
-  }
+  Object.entries(people).forEach(([personId, personData]) => {
+    peopleInstances.push({
+      id: personId,
+      name: formatPersonName(personId),
+      members: [extractEntityMember(personId, personData, variablesMetadata)],
+    });
+  });
 
-  const { householdData } = household;
+  groupEntities.push({
+    entityType: 'people',
+    entityTypeName: formatEntityTypeName('people'),
+    instances: peopleInstances,
+  });
 
-  // Iterate over all keys in householdData
-  Object.entries(householdData).forEach(([entityType, entities]) => {
-    if (entityType === 'people') {
-      // People is special - each person is their own "instance"
-      const peopleInstances: GroupEntityInstance[] = [];
+  household.getAllGroupCollections().forEach(({ entityName, groups }) => {
+    const instances: GroupEntityInstance[] = [];
 
-      Object.entries(entities).forEach(([personId, personData]) => {
-        peopleInstances.push({
-          id: personId,
-          name: formatPersonName(personId),
-          members: [extractEntityMember(personId, personData, variablesMetadata)],
-        });
-      });
-
-      groupEntities.push({
-        entityType: 'people',
-        entityTypeName: formatEntityTypeName('people'),
-        instances: peopleInstances,
-      });
-    } else {
-      // Group entities (households, tax_units, etc.)
-      // Only include if they have variables defined
-      const instances: GroupEntityInstance[] = [];
-
-      Object.entries(entities as Record<string, HouseholdGroupEntity>).forEach(
-        ([entityId, entityData]) => {
-          // Skip this entity if it has no variables (only 'members')
-          if (!hasEntityVariables(entityData)) {
-            return;
-          }
-
-          const members = extractMembersFromGroupEntity(
-            entityData,
-            householdData.people,
-            variablesMetadata
-          );
-
-          // Extract the entity's own variables (not member variables)
-          const entityVariables = extractEntityVariables(entityData, variablesMetadata);
-
-          instances.push({
-            id: entityId,
-            name: formatEntityInstanceName(entityType, entityId),
-            members,
-            variables: entityVariables, // Add entity-level variables
-          });
-        }
-      );
-
-      // Only add this entity type if it has at least one instance with variables
-      if (instances.length > 0) {
-        groupEntities.push({
-          entityType,
-          entityTypeName: formatEntityTypeName(entityType),
-          instances,
-        });
+    Object.entries(groups).forEach(([entityId, entityData]) => {
+      if (!hasEntityVariables(entityData)) {
+        return;
       }
+
+      const members = extractMembersFromGroupEntity(entityData, people, variablesMetadata);
+      const entityVariables = extractEntityVariables(entityData, variablesMetadata);
+
+      instances.push({
+        id: entityId,
+        name: formatEntityInstanceName(entityName, entityId),
+        members,
+        variables: entityVariables,
+      });
+    });
+
+    if (instances.length > 0) {
+      groupEntities.push({
+        entityType: entityName,
+        entityTypeName: formatEntityTypeName(entityName),
+        instances,
+      });
     }
   });
 
@@ -190,7 +169,7 @@ function extractEntityVariables(
  */
 export function extractMembersFromGroupEntity(
   groupEntity: HouseholdGroupEntity,
-  people: Record<string, any>,
+  people: Record<string, AppHouseholdInputPerson>,
   variablesMetadata?: Record<string, any>
 ): EntityMember[] {
   const members: EntityMember[] = [];
@@ -214,7 +193,7 @@ export function extractMembersFromGroupEntity(
  */
 function extractEntityMember(
   memberId: string,
-  memberData: any,
+  memberData: AppHouseholdInputPerson,
   variablesMetadata?: Record<string, any>
 ): EntityMember {
   const variables: EntityVariable[] = [];

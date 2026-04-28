@@ -21,11 +21,6 @@ import { FONT_SIZES, INGREDIENT_COLORS } from '@/pages/reportBuilder/constants';
 import { HouseholdCreationContent } from '@/pages/reportBuilder/modals/population';
 import { RootState } from '@/store';
 import { PopulationStateProps } from '@/types/pathwayState';
-import {
-  deriveHouseholdBuilderComposition,
-  updateHouseholdBuilderChildCount,
-  updateHouseholdBuilderMaritalStatus,
-} from '@/utils/householdBuilderComposition';
 import { HouseholdValidation } from '@/utils/HouseholdValidation';
 
 interface HouseholdBuilderViewProps {
@@ -163,7 +158,7 @@ export default function HouseholdBuilderView({
   > | null>(null);
   const [showUnnamedWarning, setShowUnnamedWarning] = useState(false);
 
-  const composition = deriveHouseholdBuilderComposition(household, reportYear);
+  const composition = household.deriveBuilderComposition(reportYear);
   const maritalStatus = composition.maritalStatus;
   const numChildren = composition.numChildren;
   const validationMessage = validation?.errors[0]?.message ?? null;
@@ -182,13 +177,13 @@ export default function HouseholdBuilderView({
   // Handler for marital status change - directly modifies household
   const handleMaritalStatusChange = (newStatus: 'single' | 'married') => {
     setValidation(null);
-    setLocalHousehold(updateHouseholdBuilderMaritalStatus(household, reportYear, newStatus));
+    setLocalHousehold(household.withBuilderMaritalStatus(reportYear, newStatus));
   };
 
   // Handler for number of children change - directly modifies household
   const handleNumChildrenChange = (newCount: number) => {
     setValidation(null);
-    setLocalHousehold(updateHouseholdBuilderChildCount(household, reportYear, newCount));
+    setLocalHousehold(household.withBuilderChildCount(reportYear, newCount));
   };
 
   const handleHouseholdLabelChange = (label: string) => {

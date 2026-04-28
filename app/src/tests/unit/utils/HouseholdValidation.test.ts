@@ -5,7 +5,6 @@ import {
   mockEmptyHousehold,
   mockFloatMetadata,
   mockHouseholdCountryMismatch,
-  mockHouseholdInvalidGroupStructure,
   mockHouseholdMissingAge,
   mockIntMetadata,
   mockReduxStateNoMetadata,
@@ -132,23 +131,6 @@ describe('HouseholdValidation', () => {
       );
     });
 
-    test('given household with invalid group structure when validating then returns error', () => {
-      // When
-      const result = HouseholdValidation.validateForCountry(
-        mockHouseholdInvalidGroupStructure,
-        VALIDATION_COUNTRIES.US,
-        VALIDATION_YEARS.DEFAULT
-      );
-
-      // Then
-      verifyHasErrors(result, 1);
-      verifyValidationError(
-        result.errors,
-        VALIDATION_ERROR_CODES.INVALID_GROUP_STRUCTURE,
-        `households.${VALIDATION_GROUP_KEYS.DEFAULT_HOUSEHOLD}.members`
-      );
-    });
-
     test('given Canada household when validating then performs generic validation only', () => {
       // When
       const result = HouseholdValidation.validateForCountry(
@@ -201,24 +183,6 @@ describe('HouseholdValidation', () => {
       expect(errors).toHaveLength(0);
       expect(warnings).toHaveLength(1);
       verifyValidationWarning(warnings, VALIDATION_WARNING_CODES.MISSING_AGE);
-    });
-
-    test('given group without members array when validating then adds error', () => {
-      // Given
-      const errors: any[] = [];
-      const warnings: any[] = [];
-
-      // When
-      HouseholdValidation.validateGenericHousehold(
-        mockHouseholdInvalidGroupStructure,
-        errors,
-        warnings,
-        VALIDATION_YEARS.DEFAULT
-      );
-
-      // Then
-      expect(errors).toHaveLength(1);
-      verifyValidationError(errors, VALIDATION_ERROR_CODES.INVALID_GROUP_STRUCTURE);
     });
 
     test('given different year when validating then uses that year for age check', () => {
@@ -586,19 +550,6 @@ describe('HouseholdValidation', () => {
       // Then
       verifyHasErrors(result, 1);
       verifyValidationError(result.errors, VALIDATION_ERROR_CODES.NO_PEOPLE, 'people');
-    });
-
-    test('given household with structural errors when checking ready then includes those errors', () => {
-      // When
-      const result = HouseholdValidation.isReadyForSimulation(
-        mockHouseholdInvalidGroupStructure,
-        VALIDATION_COUNTRIES.US,
-        VALIDATION_YEARS.DEFAULT
-      );
-
-      // Then
-      verifyHasErrors(result, 1);
-      verifyValidationError(result.errors, VALIDATION_ERROR_CODES.INVALID_GROUP_STRUCTURE);
     });
 
     test('given household with warnings when checking ready then includes warnings', () => {

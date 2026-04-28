@@ -1,7 +1,5 @@
 import type { Household } from '@/models/Household';
 
-type HouseholdTableInput = Pick<Household, 'id' | 'countryId' | 'householdData'>;
-
 export interface HouseholdInputRow {
   category: string; // "Person 1", "Household", etc.
   label: string; // "Age", "Employment Income"
@@ -12,34 +10,28 @@ export interface HouseholdInputRow {
 /**
  * Extract household input values as structured table rows
  */
-export function extractHouseholdInputs(household: HouseholdTableInput): HouseholdInputRow[] {
+export function extractHouseholdInputs(household: Household): HouseholdInputRow[] {
   const rows: HouseholdInputRow[] = [];
-
-  if (!household.householdData) {
-    return rows;
-  }
-
-  const { people, households: householdVars } = household.householdData;
+  const people = household.people;
+  const householdVars = household.getGroupCollection('households');
 
   // Extract person-level inputs
-  if (people) {
-    Object.entries(people).forEach(([personId, personData]) => {
-      // For each parameter in person data
-      Object.entries(personData).forEach(([paramName, paramValues]) => {
-        // paramValues is typically { "2024": value, "2025": value, ... }
-        if (typeof paramValues === 'object' && paramValues !== null) {
-          const firstValue = Object.values(paramValues)[0];
+  Object.entries(people).forEach(([personId, personData]) => {
+    // For each parameter in person data
+    Object.entries(personData).forEach(([paramName, paramValues]) => {
+      // paramValues is typically { "2024": value, "2025": value, ... }
+      if (typeof paramValues === 'object' && paramValues !== null) {
+        const firstValue = Object.values(paramValues)[0];
 
-          rows.push({
-            category: personId,
-            label: formatParameterLabel(paramName),
-            paramName,
-            value: firstValue,
-          });
-        }
-      });
+        rows.push({
+          category: personId,
+          label: formatParameterLabel(paramName),
+          paramName,
+          value: firstValue,
+        });
+      }
     });
-  }
+  });
 
   // Extract household-level inputs
   // householdVars is a Record<string, HouseholdGroupEntity>

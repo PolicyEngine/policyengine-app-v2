@@ -1,14 +1,9 @@
 import { describe, expect, test } from 'vitest';
 import { Household } from '@/models/Household';
-import {
-  deriveHouseholdBuilderComposition,
-  updateHouseholdBuilderChildCount,
-  updateHouseholdBuilderMaritalStatus,
-} from '@/utils/householdBuilderComposition';
 
 const YEAR = '2026';
 
-describe('householdBuilderComposition', () => {
+describe('Household builder composition methods', () => {
   test('derives partner and child composition without relying on canonical labels', () => {
     const household = Household.empty('us', YEAR)
       .addAdult('alex', 34, { employment_income: 0 })
@@ -16,7 +11,7 @@ describe('householdBuilderComposition', () => {
       .setMaritalStatus('alex', 'sam')
       .addChild('morgan', 12, ['alex', 'sam'], { employment_income: 0 });
 
-    const composition = deriveHouseholdBuilderComposition(household, YEAR);
+    const composition = household.deriveBuilderComposition(YEAR);
 
     expect(composition.primaryPersonKey).toBe('alex');
     expect(composition.partnerKey).toBe('sam');
@@ -31,7 +26,7 @@ describe('householdBuilderComposition', () => {
       .addAdult('sam', 33, { employment_income: 0 })
       .setMaritalStatus('alex', 'sam');
 
-    const updatedHousehold = updateHouseholdBuilderMaritalStatus(household, YEAR, 'single');
+    const updatedHousehold = household.withBuilderMaritalStatus(YEAR, 'single');
     const updatedHouseholdInput = updatedHousehold.toAppInput();
 
     expect(updatedHouseholdInput.householdData.people.alex).toBeDefined();
@@ -46,11 +41,11 @@ describe('householdBuilderComposition', () => {
       .addAdult('alex', 34, { employment_income: 0 })
       .addChild('morgan', 12, ['alex'], { employment_income: 0 });
 
-    const updatedHousehold = updateHouseholdBuilderChildCount(household, YEAR, 2);
+    const updatedHousehold = household.withBuilderChildCount(YEAR, 2);
     const people = Object.keys(updatedHousehold.toAppInput().householdData.people);
 
     expect(people).toContain('morgan');
     expect(people).toContain('your second dependent');
-    expect(deriveHouseholdBuilderComposition(updatedHousehold, YEAR).numChildren).toBe(2);
+    expect(updatedHousehold.deriveBuilderComposition(YEAR).numChildren).toBe(2);
   });
 });

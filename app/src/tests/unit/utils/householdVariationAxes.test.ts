@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+import { Household } from '@/models/Household';
 import {
   buildHouseholdVariationAxes,
   getHouseholdVariationIndexForEarnings,
@@ -9,21 +10,25 @@ const YEAR = '2026';
 
 describe('buildHouseholdVariationAxes', () => {
   test('varies the requested person instead of defaulting to object order', () => {
-    const householdInput = {
-      people: {
-        spouse: {
-          employment_income: { [YEAR]: 60000 },
-        },
-        filer: {
-          employment_income: { [YEAR]: 45000 },
+    const household = Household.fromAppInput({
+      id: 'variation-household',
+      countryId: 'us',
+      householdData: {
+        people: {
+          spouse: {
+            employment_income: { [YEAR]: 60000 },
+          },
+          filer: {
+            employment_income: { [YEAR]: 45000 },
+          },
         },
       },
-    };
+    });
 
-    const result = buildHouseholdVariationAxes(householdInput, YEAR, 'us', 'filer');
+    const result = buildHouseholdVariationAxes(household, YEAR, 'filer');
 
-    expect(result.people.filer.employment_income[YEAR]).toBeNull();
-    expect(result.people.spouse.employment_income[YEAR]).toBe(60000);
+    expect(result.people.filer.employment_income?.[YEAR]).toBeNull();
+    expect(result.people.spouse.employment_income?.[YEAR]).toBe(60000);
     expect(result.axes[0][0].count).toBe(HOUSEHOLD_VARIATION_POINT_COUNT);
   });
 });

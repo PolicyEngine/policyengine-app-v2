@@ -39,6 +39,23 @@ import type { V2CreateHouseholdEnvelope, V2StoredHouseholdEnvelope } from './hou
 export type { ComparableHousehold, HouseholdModelData } from './household/appTypes';
 
 type HouseholdDefaultEntityKey = 'people' | HouseholdGroupAppKey;
+export type HouseholdBuilderMaritalStatus = 'single' | 'married';
+
+export interface HouseholdBuilderComposition {
+  people: string[];
+  primaryPersonKey: string | null;
+  partnerKey: string | null;
+  childKeys: string[];
+  maritalStatus: HouseholdBuilderMaritalStatus;
+  numChildren: number;
+}
+
+const BUILDER_DEFAULT_ADULT_AGE = 30;
+const BUILDER_DEFAULT_CHILD_AGE = 10;
+const BUILDER_DEFAULT_EMPLOYMENT_INCOME = 0;
+const BUILDER_PRIMARY_PERSON_NAME = 'you';
+const BUILDER_DEFAULT_PARTNER_NAME = 'your partner';
+const BUILDER_DEPENDENT_ORDINALS = ['first', 'second', 'third', 'fourth', 'fifth'];
 
 export interface PersonWithName extends AppHouseholdInputPerson {
   name: string;
@@ -193,6 +210,76 @@ function getYearValue(
   }
 
   return value[year];
+}
+
+function getBuilderPersonAge(
+  person: AppHouseholdInputPerson | undefined,
+  year: string
+): number | null {
+  const age = getYearValue(person?.age, year);
+  return typeof age === 'number' ? age : null;
+}
+
+function isManagedBuilderChild(person: AppHouseholdInputPerson | undefined, year: string): boolean {
+  if (!person) {
+    return false;
+  }
+
+  const age = getBuilderPersonAge(person, year);
+  if (age !== null) {
+    return age < 18;
+  }
+
+  return getYearValue(person.is_tax_unit_dependent, year) === true;
+}
+
+function sortBuilderPersonKeys(peopleKeys: string[]): string[] {
+  return [...peopleKeys].sort((left, right) => {
+    if (left === BUILDER_PRIMARY_PERSON_NAME) {
+      return -1;
+    }
+    if (right === BUILDER_PRIMARY_PERSON_NAME) {
+      return 1;
+    }
+
+    if (left === BUILDER_DEFAULT_PARTNER_NAME) {
+      return -1;
+    }
+    if (right === BUILDER_DEFAULT_PARTNER_NAME) {
+      return 1;
+    }
+
+    const leftOrdinalIndex = BUILDER_DEPENDENT_ORDINALS.findIndex((ordinal) =>
+      left.includes(ordinal)
+    );
+    const rightOrdinalIndex = BUILDER_DEPENDENT_ORDINALS.findIndex((ordinal) =>
+      right.includes(ordinal)
+    );
+    if (leftOrdinalIndex !== -1 && rightOrdinalIndex !== -1) {
+      return leftOrdinalIndex - rightOrdinalIndex;
+    }
+
+    return left.localeCompare(right);
+  });
+}
+
+function getBuilderDependentName(index: number): string {
+  return `your ${BUILDER_DEPENDENT_ORDINALS[index] || `${index + 1}th`} dependent`;
+}
+
+function getUniqueBuilderPersonName(existingKeys: Set<string>, preferredName: string): string {
+  if (!existingKeys.has(preferredName)) {
+    return preferredName;
+  }
+
+  let suffix = 2;
+  let candidate = `${preferredName} ${suffix}`;
+  while (existingKeys.has(candidate)) {
+    suffix += 1;
+    candidate = `${preferredName} ${suffix}`;
+  }
+
+  return candidate;
 }
 
 function setYearValue(
@@ -478,6 +565,89 @@ export class Household extends BaseModel<HouseholdModelData> {
     return entityKey in (getGroupCollectionFromData(this.appInputData, entityName) ?? {});
   }
 
+  getBuilderPrimaryPersonKey(year: string): string | null {
+    const people = sortBuilderPersonKeys(Object.keys(this.appInputData.people));
+
+    if (people.includes(BUILDER_PRIMARY_PERSON_NAME)) {
+      return BUILDER_PRIMARY_PERSON_NAME;
+    }
+
+    const adults = this.getAdults(year).map((person) => person.name);
+    if (adults.length > 0) {
+      return adults[0];
+    }
+
+    return people[0] ?? null;
+  }
+
+  getBuilderPartnerKey(year: string, primaryPersonKey?: string | null): string | null {
+    const resolvedPrimaryPersonKey = primaryPersonKey ?? this.getBuilderPrimaryPersonKey(year);
+    if (!resolvedPrimaryPersonKey) {
+      return null;
+    }
+
+    const maritalUnits = getGroupCollectionFromData(this.appInputData, 'maritalUnits') ?? {};
+    for (const unit of Object.values(maritalUnits)) {
+      if (!unit.members.includes(resolvedPrimaryPersonKey)) {
+        continue;
+      }
+
+      const partnerKey = unit.members.find((member) => member !== resolvedPrimaryPersonKey) ?? null;
+      if (partnerKey) {
+        return partnerKey;
+      }
+    }
+
+    const people = Object.keys(this.appInputData.people);
+    if (
+      people.includes(BUILDER_DEFAULT_PARTNER_NAME) &&
+      BUILDER_DEFAULT_PARTNER_NAME !== resolvedPrimaryPersonKey
+    ) {
+      return BUILDER_DEFAULT_PARTNER_NAME;
+    }
+
+    const adults = this.getAdults(year).map((person) => person.name);
+    return adults.find((personKey) => personKey !== resolvedPrimaryPersonKey) ?? null;
+  }
+
+  getBuilderChildKeys(
+    year: string,
+    primaryPersonKey?: string | null,
+    partnerKey?: string | null
+  ): string[] {
+    const resolvedPrimaryPersonKey = primaryPersonKey ?? this.getBuilderPrimaryPersonKey(year);
+    const resolvedPartnerKey =
+      partnerKey ?? this.getBuilderPartnerKey(year, resolvedPrimaryPersonKey);
+
+    return sortBuilderPersonKeys(
+      Object.entries(this.appInputData.people)
+        .filter(([personKey, person]) => {
+          if (personKey === resolvedPrimaryPersonKey || personKey === resolvedPartnerKey) {
+            return false;
+          }
+
+          return isManagedBuilderChild(person, year);
+        })
+        .map(([personKey]) => personKey)
+    );
+  }
+
+  deriveBuilderComposition(year: string): HouseholdBuilderComposition {
+    const people = sortBuilderPersonKeys(Object.keys(this.appInputData.people));
+    const primaryPersonKey = this.getBuilderPrimaryPersonKey(year);
+    const partnerKey = this.getBuilderPartnerKey(year, primaryPersonKey);
+    const childKeys = this.getBuilderChildKeys(year, primaryPersonKey, partnerKey);
+
+    return {
+      people,
+      primaryPersonKey,
+      partnerKey,
+      childKeys,
+      maritalStatus: partnerKey ? 'married' : 'single',
+      numChildren: childKeys.length,
+    };
+  }
+
   static fromAppInput(input: AppHouseholdInputEnvelope): Household {
     const appInputData = cloneAppHouseholdInputData(input.householdData);
     const year = input.year ?? inferYearFromData(appInputData);
@@ -636,6 +806,57 @@ export class Household extends BaseModel<HouseholdModelData> {
     for (let index = 0; index < count; index += 1) {
       const name = count === 1 ? baseName : `${baseName} ${index + 1}`;
       nextHousehold = nextHousehold.addChild(name, age, parentIds, variables);
+    }
+
+    return nextHousehold;
+  }
+
+  withBuilderMaritalStatus(year: string, newStatus: HouseholdBuilderMaritalStatus): Household {
+    const composition = this.deriveBuilderComposition(year);
+
+    if (!composition.primaryPersonKey) {
+      return this;
+    }
+
+    if (newStatus === 'married' && !composition.partnerKey) {
+      const existingKeys = new Set(Object.keys(this.appInputData.people));
+      const partnerKey = getUniqueBuilderPersonName(existingKeys, BUILDER_DEFAULT_PARTNER_NAME);
+
+      return this.addAdult(partnerKey, BUILDER_DEFAULT_ADULT_AGE, {
+        employment_income: BUILDER_DEFAULT_EMPLOYMENT_INCOME,
+      }).setMaritalStatus(composition.primaryPersonKey, partnerKey);
+    }
+
+    if (newStatus === 'single' && composition.partnerKey) {
+      return this.removePerson(composition.partnerKey);
+    }
+
+    return this;
+  }
+
+  withBuilderChildCount(year: string, newCount: number): Household {
+    const composition = this.deriveBuilderComposition(year);
+    let nextHousehold = this.withHouseholdData(this.appInputData);
+
+    if (newCount < composition.childKeys.length) {
+      for (const childKey of composition.childKeys.slice(newCount)) {
+        nextHousehold = nextHousehold.removePerson(childKey);
+      }
+    }
+
+    if (newCount > composition.childKeys.length) {
+      const existingKeys = new Set(Object.keys(this.appInputData.people));
+      const parentIds = [composition.primaryPersonKey, composition.partnerKey].filter(
+        Boolean
+      ) as string[];
+
+      for (let index = composition.childKeys.length; index < newCount; index += 1) {
+        const childKey = getUniqueBuilderPersonName(existingKeys, getBuilderDependentName(index));
+        existingKeys.add(childKey);
+        nextHousehold = nextHousehold.addChild(childKey, BUILDER_DEFAULT_CHILD_AGE, parentIds, {
+          employment_income: BUILDER_DEFAULT_EMPLOYMENT_INCOME,
+        });
+      }
     }
 
     return nextHousehold;

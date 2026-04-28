@@ -293,22 +293,6 @@ export const mockHouseholdMissingAge: Household = makeHousehold({
   },
 });
 
-// Deliberately bypasses the Household constructor so validation can exercise
-// structurally invalid input that the model itself rejects.
-export const mockHouseholdInvalidGroupStructure: Household = {
-  countryId: VALIDATION_COUNTRIES.US,
-  householdData: {
-    people: {
-      [VALIDATION_PERSON_NAMES.ADULT_1]: mockPersonWithAge,
-    },
-    households: {
-      [VALIDATION_GROUP_KEYS.DEFAULT_HOUSEHOLD]: {
-        // Missing members array
-      } as any,
-    },
-  },
-} as unknown as Household;
-
 // Empty household
 export const mockEmptyHousehold: Household = makeHousehold({
   countryId: VALIDATION_COUNTRIES.US,

@@ -17,11 +17,6 @@ import { EditableLabel } from '@/pages/reportBuilder/components/EditableLabel';
 import { RootState } from '@/store';
 import type { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { PopulationStateProps } from '@/types/pathwayState';
-import {
-  deriveHouseholdBuilderComposition,
-  updateHouseholdBuilderChildCount,
-  updateHouseholdBuilderMaritalStatus,
-} from '@/utils/householdBuilderComposition';
 import { HouseholdValidation } from '@/utils/HouseholdValidation';
 import { BROWSE_MODAL_CONFIG, FONT_SIZES, INGREDIENT_COLORS } from '../constants';
 import { HouseholdCreationContent } from './population';
@@ -110,7 +105,7 @@ export function HouseholdCreationModal({
   );
 
   const composition = useMemo(
-    () => (household ? deriveHouseholdBuilderComposition(household, reportYear) : undefined),
+    () => (household ? household.deriveBuilderComposition(reportYear) : undefined),
     [household, reportYear]
   );
   const maritalStatus = composition?.maritalStatus ?? 'single';
@@ -163,7 +158,7 @@ export function HouseholdCreationModal({
       }
 
       setValidation(null);
-      setHousehold(updateHouseholdBuilderMaritalStatus(household, reportYear, newStatus));
+      setHousehold(household.withBuilderMaritalStatus(reportYear, newStatus));
     },
     [household, reportYear]
   );
@@ -175,7 +170,7 @@ export function HouseholdCreationModal({
       }
 
       setValidation(null);
-      setHousehold(updateHouseholdBuilderChildCount(household, reportYear, newCount));
+      setHousehold(household.withBuilderChildCount(reportYear, newCount));
     },
     [household, reportYear]
   );

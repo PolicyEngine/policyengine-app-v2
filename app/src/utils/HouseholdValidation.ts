@@ -1,12 +1,8 @@
 import { type CountryId } from '@/libs/countries';
 import type { Household as HouseholdModel } from '@/models/Household';
-import type {
-  AppHouseholdInputData,
-  AppHouseholdInputGroup as HouseholdGroupEntity,
-} from '@/models/household/appTypes';
+import type { AppHouseholdInputGroup as HouseholdGroupEntity } from '@/models/household/appTypes';
 import { getV2GroupDefinitions } from '@/models/household/schema';
 import { RootState } from '@/store';
-import { getHouseholdGroupCollection, getHouseholdYearValue } from '@/utils/householdDataAccess';
 
 /**
  * Validation result type
@@ -49,19 +45,8 @@ type CountryValidationStrategy = (
   warnings: ValidationWarning[]
 ) => void;
 
-function isHouseholdModel(household: HouseholdModel): boolean {
-  return (
-    typeof household.getGroupCollection === 'function' &&
-    typeof household.getAllGroupCollections === 'function'
-  );
-}
-
 function getValidationPersonNames(household: HouseholdModel): string[] {
-  if (isHouseholdModel(household)) {
-    return household.personNames;
-  }
-
-  return Object.keys(household.householdData?.people ?? {});
+  return household.personNames;
 }
 
 function getValidationPersonYearValue(
@@ -70,50 +55,25 @@ function getValidationPersonYearValue(
   variableName: string,
   year: string
 ) {
-  if (isHouseholdModel(household)) {
-    return household.getPersonVariableAtYear(personName, variableName, year);
-  }
-
-  return getHouseholdYearValue(household.householdData?.people?.[personName]?.[variableName], year);
+  return household.getPersonVariableAtYear(personName, variableName, year);
 }
 
 function getValidationGroupCollection(
   household: HouseholdModel,
   entityName: string
 ): Record<string, HouseholdGroupEntity> | undefined {
-  if (isHouseholdModel(household)) {
-    return household.getGroupCollection(entityName) as
-      | Record<string, HouseholdGroupEntity>
-      | undefined;
-  }
-
-  return getHouseholdGroupCollection(
-    household.householdData as AppHouseholdInputData,
-    entityName
-  ) as Record<string, HouseholdGroupEntity> | undefined;
+  return household.getGroupCollection(entityName) as
+    | Record<string, HouseholdGroupEntity>
+    | undefined;
 }
 
 function getValidationGroupCollections(
   household: HouseholdModel
 ): Array<{ entityName: string; groups: Record<string, HouseholdGroupEntity> }> {
-  if (isHouseholdModel(household)) {
-    return household.getAllGroupCollections().map(({ entityName, groups }) => ({
-      entityName,
-      groups: groups as Record<string, HouseholdGroupEntity>,
-    }));
-  }
-
-  const householdData = household.householdData as AppHouseholdInputData;
-  return [
-    ['households', householdData.households],
-    ['families', householdData.families],
-    ['taxUnits', householdData.taxUnits],
-    ['spmUnits', householdData.spmUnits],
-    ['maritalUnits', householdData.maritalUnits],
-    ['benunits', householdData.benunits],
-  ]
-    .filter((entry): entry is [string, Record<string, HouseholdGroupEntity>] => Boolean(entry[1]))
-    .map(([entityName, groups]) => ({ entityName, groups }));
+  return household.getAllGroupCollections().map(({ entityName, groups }) => ({
+    entityName,
+    groups: groups as Record<string, HouseholdGroupEntity>,
+  }));
 }
 
 function getConfiguredGroupCollections(

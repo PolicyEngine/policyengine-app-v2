@@ -16,8 +16,8 @@ import type {
 } from '@/models/household/pythonPackageTypes';
 import { cloneValue } from '@/models/household/utils';
 import {
-  getHouseholdVariationMaxEarnings,
-  HOUSEHOLD_VARIATION_POINT_COUNT,
+  addHouseholdVariationAxesToPythonPackageData,
+  type HouseholdVariationAxis,
 } from './householdVariationAxes';
 
 // Default year fallback - use the app's current year constant
@@ -26,15 +26,7 @@ const DEFAULT_YEAR = parseInt(CURRENT_YEAR, 10);
 type PolicyData = { baseline: { data: any }; reform: { data: any } };
 
 type HouseholdSituation = PythonPackageHouseholdData & {
-  axes?: Array<
-    Array<{
-      name: string;
-      period: string;
-      min: number;
-      max: number;
-      count: number;
-    }>
-  >;
+  axes?: HouseholdVariationAxis[][];
 };
 
 // Maps region prefixes (from metadata) to HuggingFace subfolder names.
@@ -258,66 +250,6 @@ function cleanNullValuesForYear(
   return householdInputCopy;
 }
 
-function getVariationPersonKey(householdInput: PythonPackageHouseholdData): string | null {
-  if (householdInput.people.you) {
-    return 'you';
-  }
-
-  return Object.keys(householdInput.people)[0] ?? null;
-}
-
-function getEarningsForYear(
-  person: PythonPackageHouseholdPersonData | undefined,
-  year: number
-): number {
-  const value = person?.employment_income;
-  if (!isYearValueMap(value)) {
-    return 0;
-  }
-
-  const earnings = value[String(year)];
-  return typeof earnings === 'number' ? earnings : 0;
-}
-
-function addEarningVariationAxis(
-  householdInput: HouseholdSituation,
-  countryId: string,
-  year: number
-): HouseholdSituation {
-  const personKey = getVariationPersonKey(householdInput);
-  if (!personKey) {
-    return householdInput;
-  }
-
-  const yearKey = String(year);
-  const person = householdInput.people[personKey];
-  if (!person) {
-    return householdInput;
-  }
-
-  const currentEarnings = getEarningsForYear(person, year);
-  const employmentIncome = isYearValueMap(person.employment_income) ? person.employment_income : {};
-
-  person.employment_income = {
-    ...employmentIncome,
-    [yearKey]: null,
-  };
-
-  householdInput.axes = [
-    [
-      {
-        name: 'employment_income',
-        period: yearKey,
-        min: 0,
-        max: getHouseholdVariationMaxEarnings(currentEarnings, countryId),
-        count: HOUSEHOLD_VARIATION_POINT_COUNT,
-      },
-    ],
-  ];
-
-  return householdInput;
-}
-
 function buildHouseholdSituation(
   household: Household | null,
   countryId: string,
@@ -327,8 +259,8 @@ function buildHouseholdSituation(
   const householdInput = household?.toPythonPackage() ?? { people: {} };
   const situation = cleanNullValuesForYear(householdInput, year);
 
-  if (earningVariation) {
-    return addEarningVariationAxis(situation, countryId, year);
+  if (earningVariation && Object.keys(situation.people).length > 0) {
+    return addHouseholdVariationAxesToPythonPackageData(situation, String(year), countryId);
   }
 
   return situation;
