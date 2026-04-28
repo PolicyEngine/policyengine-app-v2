@@ -94,6 +94,13 @@ describe('SocietyWideCalcStrategy', () => {
       expect(result.status).toBe('complete');
       expect(result.result).toBeDefined();
       expect(result.error).toBeUndefined();
+      expect(result.runMetadata).toEqual({
+        country_package_version: apiResponse.result?.model_version ?? null,
+        policyengine_version: apiResponse.result?.policyengine_version ?? null,
+        data_version: apiResponse.result?.data_version ?? null,
+        runtime_app_name: 'policyengine-app-v2',
+        resolved_dataset: apiResponse.result?.dataset ?? null,
+      });
     });
 
     it('given error response then returns error status', async () => {
@@ -448,6 +455,13 @@ describe('SocietyWideCalcStrategy', () => {
       expect(result.status).toBe('complete');
       expect(result.progress).toBeUndefined();
       expect(result.result).toBeDefined();
+      expect(result.runMetadata).toEqual({
+        country_package_version: apiResponse.result?.model_version ?? null,
+        policyengine_version: apiResponse.result?.policyengine_version ?? null,
+        data_version: apiResponse.result?.data_version ?? null,
+        runtime_app_name: 'policyengine-app-v2',
+        resolved_dataset: apiResponse.result?.dataset ?? null,
+      });
     });
   });
 });

@@ -12,18 +12,18 @@
  */
 import { useCallback, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { ReportAdapter, SimulationAdapter } from '@/adapters';
+import { SimulationAdapter } from '@/adapters';
 import { createSimulation } from '@/api/simulation';
 import { LocalStorageSimulationStore } from '@/api/simulationAssociation';
 import { MOCK_USER_ID } from '@/constants';
 import { useCreateReport } from '@/hooks/useCreateReport';
 import { RootState } from '@/store';
-import { Report } from '@/types/ingredients/Report';
 import { Simulation } from '@/types/ingredients/Simulation';
 import { SimulationStateProps } from '@/types/pathwayState';
 import { trackReportStarted } from '@/utils/analytics';
 import { toApiPolicyId } from '../currentLaw';
 import { ReportBuilderState } from '../types';
+import { buildExplicitReportCreationPayload } from '../utils/buildExplicitReportCreationPayload';
 
 interface UseReportSubmissionArgs {
   reportState: ReportBuilderState;
@@ -159,14 +159,13 @@ export function useReportSubmission({
         return;
       }
 
-      const reportData: Partial<Report> = {
+      const serializedPayload = buildExplicitReportCreationPayload({
         countryId,
         year: reportState.year,
         simulationIds,
-        apiVersion: null,
-      };
-
-      const serializedPayload = ReportAdapter.toCreationPayload(reportData as Report);
+        simulation1: simulations[0],
+        simulation2: simulations[1] || null,
+      });
 
       await createReport(
         {

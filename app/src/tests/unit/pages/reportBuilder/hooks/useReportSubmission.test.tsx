@@ -11,7 +11,10 @@ import {
   mockCreateReportFn,
   mockCreateSimulationFn,
   mockLocalStorageCreateFn,
+  mockHouseholdComparisonReportState,
+  mockHouseholdSingleReportState,
   mockOnSuccess,
+  TEST_POLICY_IDS,
   mockSingleSimReportState,
   mockTwoSimReportState,
   setupDefaultMocks,
@@ -43,13 +46,6 @@ vi.mock('@/adapters', () => ({
       population_id: data.populationId,
       policy_id: data.policyId,
       population_type: data.populationType,
-    }),
-  },
-  ReportAdapter: {
-    toCreationPayload: (data: any) => ({
-      country_id: data.countryId,
-      year: data.year,
-      simulation_ids: data.simulationIds,
     }),
   },
 }));
@@ -216,6 +212,166 @@ describe('useReportSubmission', () => {
             policy_id: CURRENT_LAW_ID.toString(),
             population_type: 'geography',
           })
+        );
+      });
+    });
+
+    test('given two simulations when submitted then creates report with explicit economy spec', async () => {
+      const { result } = renderHook(
+        () =>
+          useReportSubmission({
+            reportState: mockTwoSimReportState,
+            countryId: 'us',
+            onSuccess: mockOnSuccess,
+          }),
+        { wrapper }
+      );
+
+      await result.current.handleSubmit();
+
+      await waitFor(() => {
+        expect(mockCreateReportFn).toHaveBeenCalledWith(
+          expect.objectContaining({
+            payload: {
+              simulation_1_id: Number(TEST_SIMULATION_IDS.SIM_NEW_1),
+              simulation_2_id: Number(TEST_SIMULATION_IDS.SIM_NEW_2),
+              year: '2026',
+              report_spec_schema_version: 1,
+              report_spec: {
+                country_id: 'us',
+                report_kind: 'economy_comparison',
+                time_period: '2026',
+                region: TEST_POPULATION.GEOGRAPHY_ID,
+                baseline_policy_id: CURRENT_LAW_ID,
+                reform_policy_id: Number(TEST_POLICY_IDS.REFORM_POLICY),
+                dataset: 'default',
+                target: 'general',
+                options: {},
+              },
+            },
+          }),
+          expect.any(Object)
+        );
+      });
+    });
+
+    test('given one geography simulation when submitted then creates report with explicit economy single spec', async () => {
+      const { result } = renderHook(
+        () =>
+          useReportSubmission({
+            reportState: mockSingleSimReportState,
+            countryId: 'us',
+            onSuccess: mockOnSuccess,
+          }),
+        { wrapper }
+      );
+
+      await result.current.handleSubmit();
+
+      await waitFor(() => {
+        expect(mockCreateReportFn).toHaveBeenCalledWith(
+          expect.objectContaining({
+            payload: {
+              simulation_1_id: Number(TEST_SIMULATION_IDS.SIM_NEW_1),
+              simulation_2_id: null,
+              year: '2026',
+              report_spec_schema_version: 1,
+              report_spec: {
+                country_id: 'us',
+                report_kind: 'economy_single',
+                time_period: '2026',
+                region: TEST_POPULATION.GEOGRAPHY_ID,
+                baseline_policy_id: CURRENT_LAW_ID,
+                reform_policy_id: CURRENT_LAW_ID,
+                dataset: 'default',
+                target: 'general',
+                options: {},
+              },
+            },
+          }),
+          expect.any(Object)
+        );
+      });
+    });
+
+    test('given one household simulation when submitted then creates report with explicit household single spec', async () => {
+      const { result } = renderHook(
+        () =>
+          useReportSubmission({
+            reportState: mockHouseholdSingleReportState,
+            countryId: 'us',
+            onSuccess: mockOnSuccess,
+          }),
+        { wrapper }
+      );
+
+      await result.current.handleSubmit();
+
+      await waitFor(() => {
+        expect(mockCreateReportFn).toHaveBeenCalledWith(
+          expect.objectContaining({
+            payload: {
+              simulation_1_id: Number(TEST_SIMULATION_IDS.SIM_NEW_1),
+              simulation_2_id: null,
+              year: '2026',
+              report_spec_schema_version: 1,
+              report_spec: {
+                country_id: 'us',
+                report_kind: 'household_single',
+                time_period: '2026',
+                simulation_1: {
+                  population_type: 'household',
+                  population_id: TEST_POPULATION.HOUSEHOLD_ID,
+                  policy_id: CURRENT_LAW_ID,
+                },
+                simulation_2: null,
+              },
+            },
+          }),
+          expect.any(Object)
+        );
+      });
+    });
+
+    test('given two household simulations when submitted then creates report with explicit household comparison spec', async () => {
+      const { result } = renderHook(
+        () =>
+          useReportSubmission({
+            reportState: mockHouseholdComparisonReportState,
+            countryId: 'us',
+            onSuccess: mockOnSuccess,
+          }),
+        { wrapper }
+      );
+
+      await result.current.handleSubmit();
+
+      await waitFor(() => {
+        expect(mockCreateReportFn).toHaveBeenCalledWith(
+          expect.objectContaining({
+            payload: {
+              simulation_1_id: Number(TEST_SIMULATION_IDS.SIM_NEW_1),
+              simulation_2_id: Number(TEST_SIMULATION_IDS.SIM_NEW_2),
+              year: '2026',
+              report_spec_schema_version: 1,
+              report_spec: {
+                country_id: 'us',
+                report_kind: 'household_comparison',
+                time_period: '2026',
+                simulation_1: {
+                  population_type: 'household',
+                  population_id: TEST_POPULATION.HOUSEHOLD_ID,
+                  policy_id: CURRENT_LAW_ID,
+                },
+                simulation_2: {
+                  population_type: 'household',
+                  population_id: TEST_POPULATION.HOUSEHOLD_ID,
+                  policy_id: Number(TEST_POLICY_IDS.REFORM_POLICY),
+                },
+              },
+            },
+          }),
+          expect.any(Object)
         );
       });
     });

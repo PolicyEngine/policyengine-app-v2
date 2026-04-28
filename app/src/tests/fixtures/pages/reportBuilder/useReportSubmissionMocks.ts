@@ -5,12 +5,12 @@ import metadataReducer from '@/reducers/metadataReducer';
 
 // Test constants
 export const TEST_SIMULATION_IDS = {
-  SIM_NEW_1: 'new-sim-1',
-  SIM_NEW_2: 'new-sim-2',
+  SIM_NEW_1: '1',
+  SIM_NEW_2: '2',
 } as const;
 
 export const TEST_POLICY_IDS = {
-  REFORM_POLICY: 'policy-reform-1',
+  REFORM_POLICY: '101',
   CURRENT_LAW: 'current-law',
 } as const;
 
@@ -51,6 +51,65 @@ export const mockSingleSimReportState: ReportBuilderState = {
           name: 'US',
         },
         household: null,
+      },
+    },
+  ],
+};
+
+export const mockHouseholdSingleReportState: ReportBuilderState = {
+  label: TEST_LABELS.REPORT,
+  year: '2026',
+  simulations: [
+    {
+      label: TEST_LABELS.BASELINE,
+      policy: { id: TEST_POLICY_IDS.CURRENT_LAW, label: 'Current law', parameters: [] },
+      population: {
+        label: 'Household ABC',
+        type: 'household',
+        geography: null,
+        household: {
+          id: TEST_POPULATION.HOUSEHOLD_ID,
+          householdId: TEST_POPULATION.HOUSEHOLD_ID,
+          countryId: 'us',
+          label: 'Household ABC',
+        } as any,
+      },
+    },
+  ],
+};
+
+export const mockHouseholdComparisonReportState: ReportBuilderState = {
+  label: TEST_LABELS.REPORT,
+  year: '2026',
+  simulations: [
+    {
+      label: TEST_LABELS.BASELINE,
+      policy: { id: TEST_POLICY_IDS.CURRENT_LAW, label: 'Current law', parameters: [] },
+      population: {
+        label: 'Household ABC',
+        type: 'household',
+        geography: null,
+        household: {
+          id: TEST_POPULATION.HOUSEHOLD_ID,
+          householdId: TEST_POPULATION.HOUSEHOLD_ID,
+          countryId: 'us',
+          label: 'Household ABC',
+        } as any,
+      },
+    },
+    {
+      label: TEST_LABELS.REFORM,
+      policy: { id: TEST_POLICY_IDS.REFORM_POLICY, label: 'Reform', parameters: [] },
+      population: {
+        label: 'Household ABC',
+        type: 'household',
+        geography: null,
+        household: {
+          id: TEST_POPULATION.HOUSEHOLD_ID,
+          householdId: TEST_POPULATION.HOUSEHOLD_ID,
+          countryId: 'us',
+          label: 'Household ABC',
+        } as any,
       },
     },
   ],
