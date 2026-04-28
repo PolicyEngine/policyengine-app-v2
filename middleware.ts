@@ -25,7 +25,15 @@ type OgMetadata = {
 };
 
 // Constants
-const BASE_URL = "https://policyengine.org";
+const BASE_URL = "https://www.policyengine.org";
+
+// Paths that Vercel rewrites to external apps with their own SSR + meta tags.
+// Let all user agents (including bots) pass through to the actual app.
+const REWRITE_PREFIXES = [
+  "/us/keep-your-pay-act",
+  "/us/taxsim",
+  "/us/api",
+];
 
 export const CRAWLER_USER_AGENTS = [
   "facebookexternalhit",
@@ -88,7 +96,7 @@ const DEFAULT_OG = {
   title: "PolicyEngine",
   description:
     "Free, open-source tools to understand tax and benefit policies. Calculate your taxes and benefits, or analyze policy reforms.",
-  image: "https://policyengine.org/assets/logos/policyengine/teal.png",
+  image: "https://www.policyengine.org/assets/logos/policyengine/teal.png",
 };
 
 const STATIC_PAGES: Record<string, { title: string; description: string }> = {
@@ -537,6 +545,13 @@ export default async function middleware(request: Request) {
   // Let pre-rendered files pass through to avoid recursion when the
   // middleware fetches /prerender/{slug}.html internally.
   if (url.pathname.startsWith("/prerender/")) {
+    return;
+  }
+
+  // Let rewritten tool paths pass through — the external apps have their own
+  // SSR, meta tags, OG images, and JSON-LD, so the middleware stub would be
+  // strictly less content than what the actual app serves.
+  if (REWRITE_PREFIXES.some((p) => url.pathname.startsWith(p))) {
     return;
   }
 
