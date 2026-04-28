@@ -1,8 +1,5 @@
 import { Household as HouseholdModel } from '@/models/Household';
-import type {
-  AppHouseholdInputData,
-  AppHouseholdInputGroup as HouseholdGroupEntity,
-} from '@/models/household/appTypes';
+import type { AppHouseholdInputGroup as HouseholdGroupEntity } from '@/models/household/appTypes';
 import { sortPeopleKeys } from '@/utils/householdIndividuals';
 
 const DEFAULT_ADULT_AGE = 30;
@@ -26,25 +23,15 @@ function getPersonAge(person: Record<string, any> | undefined, year: string): nu
   return typeof age === 'number' ? age : null;
 }
 
-function getAdults(householdData: AppHouseholdInputData, year: string): string[] {
-  return sortPeopleKeys(
-    Object.entries(householdData.people || {})
-      .filter(([, person]) => {
-        const age = getPersonAge(person, year);
-        return age !== null && age >= 18;
-      })
-      .map(([personKey]) => personKey)
-  );
-}
-
-function getPrimaryPersonKey(householdData: AppHouseholdInputData, year: string): string | null {
+function getPrimaryPersonKey(household: HouseholdModel, year: string): string | null {
+  const householdData = household.householdData;
   const people = sortPeopleKeys(Object.keys(householdData.people || {}));
 
   if (people.includes(PRIMARY_PERSON_NAME)) {
     return PRIMARY_PERSON_NAME;
   }
 
-  const adults = getAdults(householdData, year);
+  const adults = household.getAdults(year).map((person) => person.name);
   if (adults.length > 0) {
     return adults[0];
   }
@@ -53,16 +40,17 @@ function getPrimaryPersonKey(householdData: AppHouseholdInputData, year: string)
 }
 
 function getMaritalUnits(
-  householdData: AppHouseholdInputData
+  householdData: ReturnType<HouseholdModel['toAppInput']>['householdData']
 ): Record<string, HouseholdGroupEntity> {
   return (householdData.maritalUnits as Record<string, HouseholdGroupEntity> | undefined) || {};
 }
 
 function getPartnerKey(
-  householdData: AppHouseholdInputData,
+  household: HouseholdModel,
   year: string,
   primaryPersonKey: string | null
 ): string | null {
+  const householdData = household.householdData;
   if (!primaryPersonKey) {
     return null;
   }
@@ -84,7 +72,7 @@ function getPartnerKey(
     return DEFAULT_PARTNER_NAME;
   }
 
-  const adults = getAdults(householdData, year);
+  const adults = household.getAdults(year).map((person) => person.name);
   return adults.find((personKey) => personKey !== primaryPersonKey) ?? null;
 }
 
@@ -102,11 +90,12 @@ function isManagedChild(person: Record<string, any> | undefined, year: string): 
 }
 
 function getChildKeys(
-  householdData: AppHouseholdInputData,
+  household: HouseholdModel,
   year: string,
   primaryPersonKey: string | null,
   partnerKey: string | null
 ): string[] {
+  const householdData = household.householdData;
   return sortPeopleKeys(
     Object.entries(householdData.people || {})
       .filter(([personKey, person]) => {
@@ -145,9 +134,9 @@ export function deriveHouseholdBuilderComposition(
 ): HouseholdBuilderComposition {
   const householdData = household.householdData;
   const people = sortPeopleKeys(Object.keys(householdData.people || {}));
-  const primaryPersonKey = getPrimaryPersonKey(householdData, year);
-  const partnerKey = getPartnerKey(householdData, year, primaryPersonKey);
-  const childKeys = getChildKeys(householdData, year, primaryPersonKey, partnerKey);
+  const primaryPersonKey = getPrimaryPersonKey(household, year);
+  const partnerKey = getPartnerKey(household, year, primaryPersonKey);
+  const childKeys = getChildKeys(household, year, primaryPersonKey, partnerKey);
 
   return {
     people,

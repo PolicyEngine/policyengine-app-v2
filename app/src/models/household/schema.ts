@@ -122,6 +122,28 @@ export function getGroupDefinitionByAppKey(key: string): HouseholdGroupDefinitio
   return GROUP_DEFINITION_BY_APP_KEY.get(key as HouseholdGroupAppKey);
 }
 
+export function normalizeHouseholdGroupAppKey(
+  entityName: string
+): HouseholdGroupAppKey | undefined {
+  switch (entityName) {
+    case 'households':
+    case 'families':
+    case 'taxUnits':
+    case 'spmUnits':
+    case 'maritalUnits':
+    case 'benunits':
+      return entityName;
+    case 'tax_units':
+      return 'taxUnits';
+    case 'spm_units':
+      return 'spmUnits';
+    case 'marital_units':
+      return 'maritalUnits';
+    default:
+      return undefined;
+  }
+}
+
 export function getGroupDefinitionByV1Key(key: string): HouseholdGroupDefinition | undefined {
   return GROUP_DEFINITION_BY_V1_KEY.get(key as HouseholdGroupV1Key);
 }

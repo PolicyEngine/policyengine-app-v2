@@ -232,6 +232,59 @@ describe('Household', () => {
     });
   });
 
+  describe('household queries', () => {
+    it('derives people, adults, children, and counts from the model', () => {
+      const household = createHousehold();
+
+      expect(household.getAllPeople().map((person) => person.name)).toEqual(['adult', 'child']);
+      expect(household.getAdults('2026').map((person) => person.name)).toEqual(['adult']);
+      expect(household.getChildren('2026').map((person) => person.name)).toEqual(['child']);
+      expect(household.getAdultCount('2026')).toBe(1);
+      expect(household.getChildCount('2026')).toBe(1);
+      expect(household.isEmpty()).toBe(false);
+      expect(createEmptyHousehold().isEmpty()).toBe(true);
+    });
+
+    it('reads group members and year-keyed variables from the model', () => {
+      const household = createHousehold();
+
+      expect(household.getPersonVariableAtYear('adult', 'employment_income', '2026')).toBe(50000);
+      expect(household.getGroupMembers('tax_units', 'taxUnit1')).toEqual(['adult', 'child']);
+      expect(household.getGroups('households')).toEqual([
+        { key: 'household1', members: ['adult', 'child'] },
+      ]);
+    });
+  });
+
+  describe('entity variable updates', () => {
+    it('sets, adds, and removes entity variables immutably', () => {
+      const household = createHousehold();
+
+      const updated = household.setEntityVariableAtYear(
+        'people',
+        'adult',
+        'employment_income',
+        '2026',
+        60000
+      );
+      const added = updated.addEntityVariableIfMissingAtYear(
+        'tax_units',
+        'your tax unit',
+        'taxable_income',
+        '2026',
+        60000
+      );
+      const removed = added.removeEntityVariable('people', 'adult', 'employment_income');
+
+      expect(updated.getPersonVariableAtYear('adult', 'employment_income', '2026')).toBe(60000);
+      expect(
+        added.getGroupVariableAtYear('taxUnits', 'your tax unit', 'taxable_income', '2026')
+      ).toBe(60000);
+      expect(removed.getPersonVariableAtYear('adult', 'employment_income', '2026')).toBeUndefined();
+      expect(household.getPersonVariableAtYear('adult', 'employment_income', '2026')).toBe(50000);
+    });
+  });
+
   describe('fromV1Metadata', () => {
     it('maps snake_case v1 household_json into the app household shape', () => {
       const household = Household.fromV1Metadata(mockHouseholdMetadata);

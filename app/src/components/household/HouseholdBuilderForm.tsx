@@ -30,10 +30,6 @@ import {
 import { colors, spacing, typography } from '@/designTokens';
 import { Household as HouseholdModel } from '@/models/Household';
 import { GROUP_META_KEYS, PERSON_META_KEYS } from '@/models/household/schema';
-import {
-  getAllHouseholdGroupCollections,
-  getPreferredHouseholdGroupName,
-} from '@/utils/householdDataAccess';
 import { sortPeopleKeys } from '@/utils/householdIndividuals';
 import {
   addVariable,
@@ -168,7 +164,7 @@ export default function HouseholdBuilderForm({
       return undefined;
     }
 
-    return getPreferredHouseholdGroupName(householdData, entityInfo.plural);
+    return household.getPreferredGroupName(entityInfo.plural);
   };
 
   const showWarning = (warning: BuilderWarning) => {
@@ -215,7 +211,7 @@ export default function HouseholdBuilderForm({
   const householdLevelVariables = useMemo(() => {
     const variables: Array<{ name: string; entity: string; entityName: string }> = [];
 
-    getAllHouseholdGroupCollections(householdData).forEach(({ entityName, groups }) => {
+    household.getAllGroupCollections().forEach(({ entityName, groups }) => {
       Object.entries(groups).forEach(([groupName, group]) => {
         Object.keys(group)
           .filter((varName) => {
@@ -245,7 +241,7 @@ export default function HouseholdBuilderForm({
         `${inputVariableLookup.get(right.name)?.label || right.name}:${right.entityName}`
       )
     );
-  }, [basicNonPersonFields, householdData, inputVariableLookup, metadata]);
+  }, [basicNonPersonFields, household, inputVariableLookup, metadata]);
 
   // Handle opening person search
   const handleOpenPersonSearch = (person: string) => {

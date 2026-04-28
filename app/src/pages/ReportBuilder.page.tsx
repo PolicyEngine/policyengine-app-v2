@@ -204,11 +204,9 @@ const getSamplePopulations = (countryId: 'us' | 'uk') => {
     household: {
       label: 'Smith family (4 members)',
       type: 'household' as const,
-      household: HouseholdModel.fromAppInput({
-        id: 'sample-household',
-        countryId,
-        householdData: { people: { person1: { age: { 2025: 40 } } } },
-      }),
+      household: HouseholdModel.empty(countryId, CURRENT_YEAR)
+        .withId('sample-household')
+        .addAdult('you', 40),
       geography: null,
     },
     nationwide: {

@@ -9,14 +9,27 @@ import type {
   AppHouseholdInputData,
   AppHouseholdInputEnvelope,
   AppHouseholdInputGroup,
+  AppHouseholdInputGroupMap,
+  AppHouseholdInputPerson,
   ComparableHousehold,
   HouseholdFieldValue,
   HouseholdModelData,
   HouseholdScalar,
 } from './household/appTypes';
 import { buildComparableHousehold } from './household/comparable';
-import type { HouseholdGroupAppKey } from './household/schema';
-import { cloneValue, deepEqual, inferYearFromData, normalizeCountryId } from './household/utils';
+import {
+  buildGeneratedGroupName,
+  getGroupDefinitionByAppKey,
+  normalizeHouseholdGroupAppKey,
+  type HouseholdGroupAppKey,
+} from './household/schema';
+import {
+  cloneValue,
+  deepEqual,
+  inferYearFromData,
+  isYearValueMap,
+  normalizeCountryId,
+} from './household/utils';
 import type { V1HouseholdCreateEnvelope, V1HouseholdMetadataEnvelope } from './household/v1Types';
 import { buildV2CreateEnvelope, parseV2HouseholdEnvelope } from './household/v2Codec';
 import type { V2CreateHouseholdEnvelope, V2StoredHouseholdEnvelope } from './household/v2Types';
@@ -25,13 +38,14 @@ export type { ComparableHousehold, HouseholdModelData } from './household/appTyp
 
 type HouseholdDefaultEntityKey = 'people' | HouseholdGroupAppKey;
 
-const COUNTRY_DEFAULT_ENTITIES: Partial<Record<CountryId, HouseholdDefaultEntityKey[]>> = {
-  us: ['people', 'families', 'taxUnits', 'spmUnits', 'households', 'maritalUnits'],
-  uk: ['people', 'benunits', 'households'],
-  ca: ['people', 'households'],
-  ng: ['people', 'households'],
-  il: ['people', 'households'],
-};
+export interface PersonWithName extends AppHouseholdInputPerson {
+  name: string;
+}
+
+export interface HouseholdGroupSummary {
+  key: string;
+  members: string[];
+}
 
 function normalizeYear(year: string | number): string {
   const normalized = String(year);
@@ -130,6 +144,155 @@ function getAllGroupCollections(
   ].filter((groups): groups is Record<string, AppHouseholdInputGroup> => Boolean(groups));
 }
 
+function getGroupCollectionFromData(
+  householdData: AppHouseholdInputData,
+  entityName: string
+): AppHouseholdInputGroupMap | undefined {
+  const entityKey = normalizeHouseholdGroupAppKey(entityName);
+  if (!entityKey) {
+    return undefined;
+  }
+
+  return householdData[entityKey];
+}
+
+function normalizeGroupKeyOrThrow(entityName: string): HouseholdGroupAppKey {
+  const entityKey = normalizeHouseholdGroupAppKey(entityName);
+  if (!entityKey) {
+    throw new Error(`Unsupported household entity group "${entityName}"`);
+  }
+
+  return entityKey;
+}
+
+function getPreferredGroupNameFromData(
+  householdData: AppHouseholdInputData,
+  entityName: string
+): string | undefined {
+  const groups = getGroupCollectionFromData(householdData, entityName);
+  if (!groups) {
+    return undefined;
+  }
+
+  const groupNames = Object.keys(groups);
+  if (groupNames.length === 0) {
+    return undefined;
+  }
+
+  return [...groupNames].sort((left, right) => left.localeCompare(right))[0];
+}
+
+function getYearValue(
+  value: AppHouseholdInputPerson[string] | AppHouseholdInputGroup[string] | undefined,
+  year: string
+): HouseholdScalar | undefined {
+  if (!isYearValueMap(value)) {
+    return undefined;
+  }
+
+  return value[year];
+}
+
+function setYearValue(
+  target: Record<string, HouseholdFieldValue | string[]>,
+  variableName: string,
+  year: string,
+  value: HouseholdScalar
+): void {
+  const existing = target[variableName];
+  target[variableName] = {
+    ...(isYearValueMap(existing) ? existing : {}),
+    [year]: value,
+  };
+}
+
+function removeVariableFromEntityData(
+  entityData: Record<string, HouseholdFieldValue | string[]> | undefined,
+  variableName: string
+): void {
+  if (entityData) {
+    delete entityData[variableName];
+  }
+}
+
+function applyDefaultHouseholdGroups(
+  householdData: AppHouseholdInputData,
+  personKey: string
+): void {
+  addPersonToFirstGroup(
+    ensureGroupCollection(householdData, 'households'),
+    'your household',
+    personKey
+  );
+}
+
+function applyUSDefaultGroups(
+  householdData: AppHouseholdInputData,
+  personKey: string,
+  personType: 'adult' | 'child'
+): void {
+  addPersonToFirstGroup(
+    ensureGroupCollection(householdData, 'taxUnits'),
+    'your tax unit',
+    personKey
+  );
+  addPersonToFirstGroup(ensureGroupCollection(householdData, 'families'), 'your family', personKey);
+  addPersonToFirstGroup(
+    ensureGroupCollection(householdData, 'spmUnits'),
+    'your household',
+    personKey
+  );
+
+  const maritalUnits = ensureGroupCollection(householdData, 'maritalUnits');
+  const maritalUnitKey =
+    personType === 'adult' ? 'your marital unit' : `${personKey}'s marital unit`;
+  addPersonToNamedGroup(maritalUnits, maritalUnitKey, personKey);
+
+  applyDefaultHouseholdGroups(householdData, personKey);
+}
+
+function applyUKDefaultGroups(householdData: AppHouseholdInputData, personKey: string): void {
+  addPersonToFirstGroup(
+    ensureGroupCollection(householdData, 'benunits'),
+    'your benefit unit',
+    personKey
+  );
+  applyDefaultHouseholdGroups(householdData, personKey);
+}
+
+interface HouseholdCountryStrategy {
+  defaultEntities: HouseholdDefaultEntityKey[];
+  applyPersonDefaults: (
+    householdData: AppHouseholdInputData,
+    personKey: string,
+    personType: 'adult' | 'child'
+  ) => void;
+}
+
+const DEFAULT_COUNTRY_STRATEGY: HouseholdCountryStrategy = {
+  defaultEntities: ['people', 'households'],
+  applyPersonDefaults: (householdData, personKey) =>
+    applyDefaultHouseholdGroups(householdData, personKey),
+};
+
+const HOUSEHOLD_COUNTRY_STRATEGIES: Partial<Record<CountryId, HouseholdCountryStrategy>> = {
+  us: {
+    defaultEntities: ['people', 'families', 'taxUnits', 'spmUnits', 'households', 'maritalUnits'],
+    applyPersonDefaults: applyUSDefaultGroups,
+  },
+  uk: {
+    defaultEntities: ['people', 'benunits', 'households'],
+    applyPersonDefaults: applyUKDefaultGroups,
+  },
+  ca: DEFAULT_COUNTRY_STRATEGY,
+  ng: DEFAULT_COUNTRY_STRATEGY,
+  il: DEFAULT_COUNTRY_STRATEGY,
+};
+
+function getHouseholdCountryStrategy(countryId: CountryId): HouseholdCountryStrategy {
+  return HOUSEHOLD_COUNTRY_STRATEGIES[normalizeCountryId(countryId)] ?? DEFAULT_COUNTRY_STRATEGY;
+}
+
 export class Household extends BaseModel<HouseholdModelData> {
   readonly id: string;
 
@@ -189,6 +352,130 @@ export class Household extends BaseModel<HouseholdModelData> {
     return Object.keys(this.appInputData.people);
   }
 
+  getAllPeople(): PersonWithName[] {
+    return Object.entries(this.appInputData.people).map(([name, person]) => ({
+      name,
+      ...cloneValue(person),
+    }));
+  }
+
+  getAdults(year: string): PersonWithName[] {
+    return this.getAllPeople().filter((person) => {
+      const age = getYearValue(person.age, year);
+      return typeof age === 'number' && age >= 18;
+    });
+  }
+
+  getChildren(year: string): PersonWithName[] {
+    return this.getAllPeople().filter((person) => {
+      const age = getYearValue(person.age, year);
+      return typeof age === 'number' && age < 18;
+    });
+  }
+
+  getAdultCount(year: string): number {
+    return this.getAdults(year).length;
+  }
+
+  getChildCount(year: string): number {
+    return this.getChildren(year).length;
+  }
+
+  isEmpty(): boolean {
+    return this.personCount === 0;
+  }
+
+  getPersonVariableAtYear(
+    personName: string,
+    variableName: string,
+    year: string
+  ): HouseholdScalar | undefined {
+    return getYearValue(this.appInputData.people[personName]?.[variableName], year);
+  }
+
+  getGroupVariableAtYear(
+    entityName: string,
+    groupKey: string,
+    variableName: string,
+    year: string
+  ): HouseholdScalar | undefined {
+    const groups = getGroupCollectionFromData(this.appInputData, entityName);
+    return getYearValue(groups?.[groupKey]?.[variableName], year);
+  }
+
+  getEntityVariableAtYear(
+    entityName: string,
+    entityKey: string,
+    variableName: string,
+    year: string
+  ): HouseholdScalar | undefined {
+    if (entityName === 'people') {
+      return this.getPersonVariableAtYear(entityKey, variableName, year);
+    }
+
+    return this.getGroupVariableAtYear(entityName, entityKey, variableName, year);
+  }
+
+  getGroupCollection(entityName: string): AppHouseholdInputGroupMap | undefined {
+    const groups = getGroupCollectionFromData(this.appInputData, entityName);
+    return groups ? cloneValue(groups) : undefined;
+  }
+
+  getPreferredGroupName(entityName: string): string | undefined {
+    return getPreferredGroupNameFromData(this.appInputData, entityName);
+  }
+
+  getGroupMembers(entityName: string, groupKey: string): string[] {
+    const groups = getGroupCollectionFromData(this.appInputData, entityName);
+    return cloneValue(groups?.[groupKey]?.members ?? []);
+  }
+
+  getGroups(entityName: string): HouseholdGroupSummary[] {
+    const groups = getGroupCollectionFromData(this.appInputData, entityName);
+    if (!groups) {
+      return [];
+    }
+
+    return Object.entries(groups).map(([key, group]) => ({
+      key,
+      members: cloneValue(group.members),
+    }));
+  }
+
+  getAllGroupCollections(): Array<{
+    entityName: HouseholdGroupAppKey;
+    groups: AppHouseholdInputGroupMap;
+  }> {
+    return [
+      ['households', this.appInputData.households],
+      ['families', this.appInputData.families],
+      ['taxUnits', this.appInputData.taxUnits],
+      ['spmUnits', this.appInputData.spmUnits],
+      ['maritalUnits', this.appInputData.maritalUnits],
+      ['benunits', this.appInputData.benunits],
+    ]
+      .filter((entry): entry is [HouseholdGroupAppKey, AppHouseholdInputGroupMap] =>
+        Boolean(entry[1])
+      )
+      .map(([entityName, groups]) => ({ entityName, groups: cloneValue(groups) }));
+  }
+
+  getEntityInstanceNames(entityName: string): string[] {
+    if (entityName === 'people') {
+      return Object.keys(this.appInputData.people);
+    }
+
+    return Object.keys(getGroupCollectionFromData(this.appInputData, entityName) ?? {});
+  }
+
+  hasEntityInstance(entityName: string, entityKey: string): boolean {
+    if (entityName === 'people') {
+      return entityKey in this.appInputData.people;
+    }
+
+    return entityKey in (getGroupCollectionFromData(this.appInputData, entityName) ?? {});
+  }
+
   static fromAppInput(input: AppHouseholdInputEnvelope): Household {
     const appInputData = cloneAppHouseholdInputData(input.householdData);
     const year = input.year ?? inferYearFromData(appInputData);
@@ -222,10 +509,7 @@ export class Household extends BaseModel<HouseholdModelData> {
     const householdData: AppHouseholdInputData = {
       people: {},
     };
-    const defaultEntities = COUNTRY_DEFAULT_ENTITIES[normalizeCountryId(countryId)] ?? [
-      'people',
-      'households',
-    ];
+    const defaultEntities = getHouseholdCountryStrategy(countryId).defaultEntities;
 
     for (const entity of defaultEntities) {
       if (entity !== 'people') {
@@ -423,6 +707,24 @@ export class Household extends BaseModel<HouseholdModelData> {
     return this.withHouseholdData(nextData);
   }
 
+  setPersonVariableAtYear(
+    personKey: string,
+    variableName: string,
+    year: string,
+    value: HouseholdScalar
+  ): Household {
+    const nextData = cloneAppHouseholdInputData(this.appInputData);
+    const person = nextData.people[personKey];
+
+    if (!person) {
+      throw new Error(`Person ${personKey} not found`);
+    }
+
+    setYearValue(person, variableName, normalizeYear(year), value);
+
+    return this.withHouseholdData(nextData);
+  }
+
   setGroupVariable(
     entityName: HouseholdGroupAppKey,
     groupKey: string,
@@ -440,6 +742,121 @@ export class Household extends BaseModel<HouseholdModelData> {
     groups[groupKey][variableName] = normalizeBuilderFieldValue(value, year);
 
     return this.withHouseholdData(nextData);
+  }
+
+  setGroupVariableAtYear(
+    entityName: string,
+    groupKey: string,
+    variableName: string,
+    year: string,
+    value: HouseholdScalar
+  ): Household {
+    const nextData = cloneAppHouseholdInputData(this.appInputData);
+    const entityKey = normalizeGroupKeyOrThrow(entityName);
+    const groups = ensureGroupCollection(nextData, entityKey);
+
+    if (!groups[groupKey]) {
+      throw new Error(`Group ${groupKey} not found in ${String(entityKey)}`);
+    }
+
+    setYearValue(groups[groupKey], variableName, normalizeYear(year), value);
+
+    return this.withHouseholdData(nextData);
+  }
+
+  setEntityVariableAtYear(
+    entityName: string,
+    entityKey: string,
+    variableName: string,
+    year: string,
+    value: HouseholdScalar
+  ): Household {
+    if (entityName === 'people') {
+      return this.setPersonVariableAtYear(entityKey, variableName, year, value);
+    }
+
+    return this.setGroupVariableAtYear(entityName, entityKey, variableName, year, value);
+  }
+
+  addEntityVariableIfMissingAtYear(
+    entityName: string,
+    entityKey: string,
+    variableName: string,
+    year: string,
+    value: HouseholdScalar
+  ): Household {
+    if (this.getEntityVariableAtYear(entityName, entityKey, variableName, year) !== undefined) {
+      return this;
+    }
+
+    if (entityName === 'people' && !this.hasEntityInstance(entityName, entityKey)) {
+      const nextData = cloneAppHouseholdInputData(this.appInputData);
+      nextData.people[entityKey] = {};
+      return this.withHouseholdData(nextData).setPersonVariableAtYear(
+        entityKey,
+        variableName,
+        year,
+        value
+      );
+    }
+
+    if (entityName !== 'people' && !this.hasEntityInstance(entityName, entityKey)) {
+      const nextData = cloneAppHouseholdInputData(this.appInputData);
+      const entityGroupKey = normalizeGroupKeyOrThrow(entityName);
+      ensureGroupCollection(nextData, entityGroupKey)[entityKey] = { members: [] };
+      return this.withHouseholdData(nextData).setGroupVariableAtYear(
+        entityGroupKey,
+        entityKey,
+        variableName,
+        year,
+        value
+      );
+    }
+
+    return this.setEntityVariableAtYear(entityName, entityKey, variableName, year, value);
+  }
+
+  removeEntityVariable(entityName: string, entityKey: string, variableName: string): Household {
+    const nextData = cloneAppHouseholdInputData(this.appInputData);
+
+    if (entityName === 'people') {
+      removeVariableFromEntityData(nextData.people[entityKey], variableName);
+      return this.withHouseholdData(nextData);
+    }
+
+    const groups = getGroupCollectionFromData(nextData, entityName);
+    removeVariableFromEntityData(groups?.[entityKey], variableName);
+
+    return this.withHouseholdData(nextData);
+  }
+
+  ensureGroupInstance(entityName: string): { household: Household; groupKey: string } {
+    const existingName = this.getPreferredGroupName(entityName);
+    if (existingName) {
+      return { household: this, groupKey: existingName };
+    }
+
+    const entityKey = normalizeGroupKeyOrThrow(entityName);
+    const groupDefinition = getGroupDefinitionByAppKey(entityKey);
+    if (!groupDefinition) {
+      throw new Error(`Unsupported household entity group "${entityName}"`);
+    }
+
+    const nextData = cloneAppHouseholdInputData(this.appInputData);
+    const groupCollection = ensureGroupCollection(nextData, entityKey);
+    let nextIndex = 0;
+    let nextName = buildGeneratedGroupName(groupDefinition.generatedKeyPrefix, nextIndex);
+
+    while (nextName in groupCollection) {
+      nextIndex += 1;
+      nextName = buildGeneratedGroupName(groupDefinition.generatedKeyPrefix, nextIndex);
+    }
+
+    groupCollection[nextName] = {
+      members: Object.keys(nextData.people).sort((left, right) => left.localeCompare(right)),
+    };
+
+    return { household: this.withHouseholdData(nextData), groupKey: nextName };
   }
 
   toAppInput(): AppHouseholdInputEnvelope {
@@ -503,64 +920,12 @@ export class Household extends BaseModel<HouseholdModelData> {
     personKey: string,
     personType: 'adult' | 'child'
   ): AppHouseholdInputData {
-    switch (this.countryId) {
-      case 'us':
-        this.applyUSDefaults(householdData, personKey, personType);
-        break;
-      case 'uk':
-        this.applyUKDefaults(householdData, personKey);
-        break;
-      default:
-        this.applyDefaultHousehold(householdData, personKey);
-        break;
-    }
+    getHouseholdCountryStrategy(this.countryId).applyPersonDefaults(
+      householdData,
+      personKey,
+      personType
+    );
 
     return householdData;
-  }
-
-  private applyUSDefaults(
-    householdData: AppHouseholdInputData,
-    personKey: string,
-    personType: 'adult' | 'child'
-  ): void {
-    addPersonToFirstGroup(
-      ensureGroupCollection(householdData, 'taxUnits'),
-      'your tax unit',
-      personKey
-    );
-    addPersonToFirstGroup(
-      ensureGroupCollection(householdData, 'families'),
-      'your family',
-      personKey
-    );
-    addPersonToFirstGroup(
-      ensureGroupCollection(householdData, 'spmUnits'),
-      'your household',
-      personKey
-    );
-
-    const maritalUnits = ensureGroupCollection(householdData, 'maritalUnits');
-    const maritalUnitKey =
-      personType === 'adult' ? 'your marital unit' : `${personKey}'s marital unit`;
-    addPersonToNamedGroup(maritalUnits, maritalUnitKey, personKey);
-
-    this.applyDefaultHousehold(householdData, personKey);
-  }
-
-  private applyUKDefaults(householdData: AppHouseholdInputData, personKey: string): void {
-    addPersonToFirstGroup(
-      ensureGroupCollection(householdData, 'benunits'),
-      'your benefit unit',
-      personKey
-    );
-    this.applyDefaultHousehold(householdData, personKey);
-  }
-
-  private applyDefaultHousehold(householdData: AppHouseholdInputData, personKey: string): void {
-    addPersonToFirstGroup(
-      ensureGroupCollection(householdData, 'households'),
-      'your household',
-      personKey
-    );
   }
 }

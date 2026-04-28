@@ -6,33 +6,7 @@
  */
 
 import { Household as HouseholdModel } from '@/models/Household';
-import { cloneAppHouseholdInputData } from '@/models/household/appCodec';
-import type { AppHouseholdInputData } from '@/models/household/appTypes';
-import {
-  ensureHouseholdGroupCollection,
-  ensureHouseholdGroupInstance,
-  getHouseholdGroupCollection,
-  getPreferredHouseholdGroupName,
-  isHouseholdYearMap,
-} from './householdDataAccess';
 import { getNormalizedVariableMetadata } from './variableMetadata';
-
-function cloneHouseholdData(household: HouseholdModel): AppHouseholdInputData {
-  return cloneAppHouseholdInputData(household.householdData);
-}
-
-function withHouseholdData(
-  household: HouseholdModel,
-  householdData: AppHouseholdInputData
-): HouseholdModel {
-  return HouseholdModel.fromDraft({
-    id: household.id,
-    countryId: household.countryId,
-    label: household.label,
-    year: household.year,
-    householdData,
-  });
-}
 
 export interface EntityInfo {
   entity: string; // e.g., "person", "tax_unit", "spm_unit"
@@ -122,33 +96,8 @@ export function getVariableInfo(variableName: string, metadata: any): VariableIn
   };
 }
 
-/**
- * Get the entity data object from household based on plural name
- */
-function getEntityData(
-  householdData: AppHouseholdInputData,
-  entityPlural: string
-): Record<string, any> | null {
-  if (entityPlural === 'people') {
-    return householdData.people;
-  }
-
-  return getHouseholdGroupCollection(householdData, entityPlural) ?? null;
-}
-
-function ensureEntityData(
-  householdData: AppHouseholdInputData,
-  entityPlural: string
-): Record<string, any> | null {
-  if (entityPlural === 'people') {
-    return householdData.people;
-  }
-
-  return ensureHouseholdGroupCollection(householdData, entityPlural);
-}
-
 function resolveEntityInstanceName(
-  householdData: AppHouseholdInputData,
+  household: HouseholdModel,
   entityInfo: EntityInfo,
   entityName?: string
 ): string | null {
@@ -161,7 +110,7 @@ function resolveEntityInstanceName(
     return null;
   }
 
-  const resolvedName = getPreferredHouseholdGroupName(householdData, entityInfo.plural);
+  const resolvedName = household.getPreferredGroupName(entityInfo.plural);
   if (!resolvedName) {
     console.warn(`[VariableResolver] Entity ${entityInfo.plural} not found in household`);
     return null;
@@ -187,38 +136,19 @@ export function getValue(
   year: string,
   entityName?: string
 ): any {
-  const householdData = household.householdData;
   const entityInfo = resolveEntity(variableName, metadata);
   if (!entityInfo) {
     console.warn(`[VariableResolver] Unknown variable: ${variableName}`);
     return null;
   }
 
-  const entityData = getEntityData(householdData, entityInfo.plural);
-  if (!entityData) {
-    return null;
-  }
-
-  const instanceName = resolveEntityInstanceName(householdData, entityInfo, entityName);
+  const entityType = entityInfo.isPerson ? 'people' : entityInfo.plural;
+  const instanceName = resolveEntityInstanceName(household, entityInfo, entityName);
   if (!instanceName) {
     return null;
   }
 
-  const instance = entityData[instanceName];
-  if (!instance) {
-    return null;
-  }
-
-  const variableData = instance[variableName];
-  if (!variableData) {
-    return null;
-  }
-
-  if (!isHouseholdYearMap(variableData)) {
-    return null;
-  }
-
-  return variableData[year] ?? null;
+  return household.getEntityVariableAtYear(entityType, instanceName, variableName, year) ?? null;
 }
 
 /**
@@ -246,35 +176,18 @@ export function setValue(
     return household;
   }
 
-  // Deep clone to maintain immutability
-  const newHouseholdData = cloneHouseholdData(household);
-  const entityData = ensureEntityData(newHouseholdData, entityInfo.plural);
-
-  if (!entityData) {
-    console.warn(`[VariableResolver] Entity ${entityInfo.plural} not found in household`);
-    return household;
-  }
-
-  const instanceName = resolveEntityInstanceName(newHouseholdData, entityInfo, entityName);
+  const entityType = entityInfo.isPerson ? 'people' : entityInfo.plural;
+  const instanceName = resolveEntityInstanceName(household, entityInfo, entityName);
   if (!instanceName) {
     return household;
   }
 
-  // Ensure instance exists
-  if (!entityData[instanceName]) {
+  if (!household.hasEntityInstance(entityType, instanceName)) {
     console.warn(`[VariableResolver] Entity instance ${instanceName} not found`);
     return household;
   }
 
-  // Ensure variable object exists
-  if (!entityData[instanceName][variableName]) {
-    entityData[instanceName][variableName] = {};
-  }
-
-  // Set the value
-  entityData[instanceName][variableName][year] = value;
-
-  return withHouseholdData(household, newHouseholdData);
+  return household.setEntityVariableAtYear(entityType, instanceName, variableName, year, value);
 }
 
 /**
@@ -294,37 +207,30 @@ export function addVariable(
     return household;
   }
 
-  const newHouseholdData = cloneHouseholdData(household);
-  const entityData = ensureEntityData(newHouseholdData, entityInfo.plural);
-
-  if (!entityData) {
-    return household;
-  }
-
-  const instanceNames = Object.keys(entityData);
+  const entityType = entityInfo.isPerson ? 'people' : entityInfo.plural;
+  let nextHousehold = household;
+  const instanceNames = nextHousehold.getEntityInstanceNames(entityType);
   if (instanceNames.length === 0) {
-    const instanceName = entityInfo.isPerson
-      ? resolveEntityInstanceName(newHouseholdData, entityInfo)
-      : ensureHouseholdGroupInstance(newHouseholdData, entityInfo.plural);
-    if (!instanceName) {
+    if (entityInfo.isPerson) {
       return household;
     }
-    if (!entityData[instanceName]) {
-      entityData[instanceName] = entityInfo.isPerson ? {} : { members: [] };
-    }
-    instanceNames.push(instanceName);
+
+    const ensured = nextHousehold.ensureGroupInstance(entityInfo.plural);
+    nextHousehold = ensured.household;
+    instanceNames.push(ensured.groupKey);
   }
 
-  // Add variable to all instances of this entity type
   for (const instanceName of instanceNames) {
-    if (!entityData[instanceName][variableName]) {
-      entityData[instanceName][variableName] = {
-        [year]: variableInfo.defaultValue,
-      };
-    }
+    nextHousehold = nextHousehold.addEntityVariableIfMissingAtYear(
+      entityType,
+      instanceName,
+      variableName,
+      year,
+      variableInfo.defaultValue
+    );
   }
 
-  return withHouseholdData(household, newHouseholdData);
+  return nextHousehold;
 }
 
 /**
@@ -345,35 +251,29 @@ export function addVariableToEntity(
     return household;
   }
 
-  const newHouseholdData = cloneHouseholdData(household);
-  const entityData = ensureEntityData(newHouseholdData, entityInfo.plural);
-
-  if (!entityData) {
-    return household;
-  }
-
+  const entityType = entityInfo.isPerson ? 'people' : entityInfo.plural;
+  let nextHousehold = household;
   const resolvedEntityName =
-    entityName && entityData[entityName]
+    entityName && nextHousehold.hasEntityInstance(entityType, entityName)
       ? entityName
       : entityInfo.isPerson
-        ? resolveEntityInstanceName(newHouseholdData, entityInfo, entityName)
-        : ensureHouseholdGroupInstance(newHouseholdData, entityInfo.plural);
+        ? resolveEntityInstanceName(nextHousehold, entityInfo, entityName)
+        : (() => {
+            const ensured = nextHousehold.ensureGroupInstance(entityInfo.plural);
+            nextHousehold = ensured.household;
+            return ensured.groupKey;
+          })();
   if (!resolvedEntityName) {
     return household;
   }
 
-  // Add variable only to the specified entity instance
-  if (!entityData[resolvedEntityName]) {
-    entityData[resolvedEntityName] = entityInfo.isPerson ? {} : { members: [] };
-  }
-
-  if (!entityData[resolvedEntityName][variableName]) {
-    entityData[resolvedEntityName][variableName] = {
-      [year]: variableInfo.defaultValue,
-    };
-  }
-
-  return withHouseholdData(household, newHouseholdData);
+  return nextHousehold.addEntityVariableIfMissingAtYear(
+    entityType,
+    resolvedEntityName,
+    variableName,
+    year,
+    variableInfo.defaultValue
+  );
 }
 
 /**
@@ -390,19 +290,14 @@ export function removeVariable(
     return household;
   }
 
-  const newHouseholdData = cloneHouseholdData(household);
-  const entityData = getEntityData(newHouseholdData, entityInfo.plural);
+  const entityType = entityInfo.isPerson ? 'people' : entityInfo.plural;
+  let nextHousehold = household;
 
-  if (!entityData) {
-    return household;
+  for (const instanceName of nextHousehold.getEntityInstanceNames(entityType)) {
+    nextHousehold = nextHousehold.removeEntityVariable(entityType, instanceName, variableName);
   }
 
-  // Remove variable from all instances
-  for (const instanceName of Object.keys(entityData)) {
-    delete entityData[instanceName][variableName];
-  }
-
-  return withHouseholdData(household, newHouseholdData);
+  return nextHousehold;
 }
 
 /**
@@ -421,16 +316,12 @@ export function removeVariableFromEntity(
     return household;
   }
 
-  const newHouseholdData = cloneHouseholdData(household);
-  const entityData = getEntityData(newHouseholdData, entityInfo.plural);
-
-  if (!entityData || !entityData[entityName]) {
+  const entityType = entityInfo.isPerson ? 'people' : entityInfo.plural;
+  if (!household.hasEntityInstance(entityType, entityName)) {
     return household;
   }
 
-  delete entityData[entityName][variableName];
-
-  return withHouseholdData(household, newHouseholdData);
+  return household.removeEntityVariable(entityType, entityName, variableName);
 }
 
 /**

@@ -6,12 +6,7 @@ import type {
 } from '@/models/household/appTypes';
 import { getV2GroupDefinitions } from '@/models/household/schema';
 import { RootState } from '@/store';
-import {
-  getAllHouseholdGroupCollections,
-  getHouseholdGroupCollection,
-  getHouseholdYearValue,
-} from '@/utils/householdDataAccess';
-import * as HouseholdQueries from './HouseholdQueries';
+import { getHouseholdGroupCollection, getHouseholdYearValue } from '@/utils/householdDataAccess';
 
 /**
  * Validation result type
@@ -54,8 +49,75 @@ type CountryValidationStrategy = (
   warnings: ValidationWarning[]
 ) => void;
 
+function isHouseholdModel(household: HouseholdModel): boolean {
+  return (
+    typeof household.getGroupCollection === 'function' &&
+    typeof household.getAllGroupCollections === 'function'
+  );
+}
+
+function getValidationPersonNames(household: HouseholdModel): string[] {
+  if (isHouseholdModel(household)) {
+    return household.personNames;
+  }
+
+  return Object.keys(household.householdData?.people ?? {});
+}
+
+function getValidationPersonYearValue(
+  household: HouseholdModel,
+  personName: string,
+  variableName: string,
+  year: string
+) {
+  if (isHouseholdModel(household)) {
+    return household.getPersonVariableAtYear(personName, variableName, year);
+  }
+
+  return getHouseholdYearValue(household.householdData?.people?.[personName]?.[variableName], year);
+}
+
+function getValidationGroupCollection(
+  household: HouseholdModel,
+  entityName: string
+): Record<string, HouseholdGroupEntity> | undefined {
+  if (isHouseholdModel(household)) {
+    return household.getGroupCollection(entityName) as
+      | Record<string, HouseholdGroupEntity>
+      | undefined;
+  }
+
+  return getHouseholdGroupCollection(
+    household.householdData as AppHouseholdInputData,
+    entityName
+  ) as Record<string, HouseholdGroupEntity> | undefined;
+}
+
+function getValidationGroupCollections(
+  household: HouseholdModel
+): Array<{ entityName: string; groups: Record<string, HouseholdGroupEntity> }> {
+  if (isHouseholdModel(household)) {
+    return household.getAllGroupCollections().map(({ entityName, groups }) => ({
+      entityName,
+      groups: groups as Record<string, HouseholdGroupEntity>,
+    }));
+  }
+
+  const householdData = household.householdData as AppHouseholdInputData;
+  return [
+    ['households', householdData.households],
+    ['families', householdData.families],
+    ['taxUnits', householdData.taxUnits],
+    ['spmUnits', householdData.spmUnits],
+    ['maritalUnits', householdData.maritalUnits],
+    ['benunits', householdData.benunits],
+  ]
+    .filter((entry): entry is [string, Record<string, HouseholdGroupEntity>] => Boolean(entry[1]))
+    .map(([entityName, groups]) => ({ entityName, groups }));
+}
+
 function getConfiguredGroupCollections(
-  householdData: AppHouseholdInputData,
+  household: HouseholdModel,
   countryId: CountryId
 ): Array<{ entityName: string; groups: Record<string, HouseholdGroupEntity> }> {
   if (countryId === 'us' || countryId === 'uk') {
@@ -65,9 +127,7 @@ function getConfiguredGroupCollections(
     }> = [];
 
     for (const definition of getV2GroupDefinitions(countryId)) {
-      const groups = getHouseholdGroupCollection(householdData, definition.appKey) as
-        | Record<string, HouseholdGroupEntity>
-        | undefined;
+      const groups = getValidationGroupCollection(household, definition.appKey);
 
       if (!groups) {
         continue;
@@ -82,16 +142,10 @@ function getConfiguredGroupCollections(
     return configuredCollections;
   }
 
-  return getAllHouseholdGroupCollections(householdData).map(({ entityName, groups }) => ({
-    entityName,
-    groups: groups as Record<string, HouseholdGroupEntity>,
-  }));
+  return getValidationGroupCollections(household);
 }
 
-function getUnexpectedGroupCollections(
-  householdData: AppHouseholdInputData,
-  countryId: CountryId
-): string[] {
+function getUnexpectedGroupCollections(household: HouseholdModel, countryId: CountryId): string[] {
   if (countryId !== 'us' && countryId !== 'uk') {
     return [];
   }
@@ -100,7 +154,7 @@ function getUnexpectedGroupCollections(
     getV2GroupDefinitions(countryId).map((definition) => definition.appKey)
   );
 
-  return getAllHouseholdGroupCollections(householdData)
+  return getValidationGroupCollections(household)
     .map(({ entityName }) => entityName)
     .filter((entityName) => !allowedEntityNames.has(entityName));
 }
@@ -166,9 +220,9 @@ export const HouseholdValidation = {
     // Check that all people have required fields based on metadata
     const currentYear = year;
 
-    Object.entries(household.householdData.people).forEach(([personId, person]) => {
+    getValidationPersonNames(household).forEach((personId) => {
       // Only validate age if it's expected to exist (this would come from metadata)
-      if (getHouseholdYearValue(person.age, currentYear) === undefined) {
+      if (getValidationPersonYearValue(household, personId, 'age', currentYear) === undefined) {
         warnings.push({
           code: 'MISSING_AGE',
           message: `Person ${personId} is missing age for year ${currentYear}`,
@@ -177,7 +231,7 @@ export const HouseholdValidation = {
       }
     });
 
-    getUnexpectedGroupCollections(household.householdData, countryId).forEach((entityName) => {
+    getUnexpectedGroupCollections(household, countryId).forEach((entityName) => {
       warnings.push({
         code: 'UNEXPECTED_GROUP_COLLECTION',
         message: `Group collection ${entityName} is not used for ${countryId.toUpperCase()} households`,
@@ -189,19 +243,17 @@ export const HouseholdValidation = {
     // For supported country-specific household models, this uses the same
     // country schema layer as the V2 codecs. Other countries fall back to
     // validating whatever concrete group collections are present.
-    getConfiguredGroupCollections(household.householdData, countryId).forEach(
-      ({ entityName, groups }) => {
-        Object.entries(groups).forEach(([groupKey, group]) => {
-          if (!Array.isArray(group.members)) {
-            errors.push({
-              code: 'INVALID_GROUP_STRUCTURE',
-              message: `Group ${groupKey} in ${entityName} must have a members array`,
-              field: `${entityName}.${groupKey}.members`,
-            });
-          }
-        });
-      }
-    );
+    getConfiguredGroupCollections(household, countryId).forEach(({ entityName, groups }) => {
+      Object.entries(groups).forEach(([groupKey, group]) => {
+        if (!Array.isArray(group.members)) {
+          errors.push({
+            code: 'INVALID_GROUP_STRUCTURE',
+            message: `Group ${groupKey} in ${entityName} must have a members array`,
+            field: `${entityName}.${groupKey}.members`,
+          });
+        }
+      });
+    });
   },
 
   /**
@@ -217,7 +269,7 @@ export const HouseholdValidation = {
       const taxUnits = household.householdData.taxUnits as Record<string, HouseholdGroupEntity>;
 
       // Must have at least one tax unit if there are people
-      if (HouseholdQueries.getPersonCount(household) > 0 && Object.keys(taxUnits).length === 0) {
+      if (household.personCount > 0 && Object.keys(taxUnits).length === 0) {
         warnings.push({
           code: 'NO_TAX_UNITS',
           message: 'US households with people typically have at least one tax unit',
@@ -362,7 +414,7 @@ export const HouseholdValidation = {
     const warnings: ValidationWarning[] = [];
 
     // Must have at least one person
-    if (HouseholdQueries.getPersonCount(household) === 0) {
+    if (household.personCount === 0) {
       errors.push({
         code: 'NO_PEOPLE',
         message: 'Household must have at least one person for simulation',

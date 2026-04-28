@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import { Household } from '@/models/Household';
 import {
   mockBoolMetadata,
@@ -32,13 +32,7 @@ import {
   verifyValidationWarning,
   verifyWarningCount,
 } from '@/tests/fixtures/utils/householdValidationMocks';
-import * as HouseholdQueries from '@/utils/HouseholdQueries';
 import { HouseholdValidation } from '@/utils/HouseholdValidation';
-
-// Mock HouseholdQueries
-vi.mock('@/utils/HouseholdQueries', () => ({
-  getPersonCount: vi.fn(),
-}));
 
 function withHouseholdData(
   household: Household,
@@ -51,15 +45,8 @@ function withHouseholdData(
 }
 
 describe('HouseholdValidation', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   describe('validateForCountry', () => {
     test('given valid US household when validating then returns valid result', () => {
-      // Given
-      vi.mocked(HouseholdQueries.getPersonCount).mockReturnValue(2);
-
       // When
       const result = HouseholdValidation.validateForCountry(
         mockValidUSHousehold,
@@ -73,9 +60,6 @@ describe('HouseholdValidation', () => {
     });
 
     test('given valid UK household when validating then returns valid result', () => {
-      // Given
-      vi.mocked(HouseholdQueries.getPersonCount).mockReturnValue(2);
-
       // When
       const result = HouseholdValidation.validateForCountry(
         mockValidUKHousehold,
@@ -304,7 +288,6 @@ describe('HouseholdValidation', () => {
       // Given
       const errors: any[] = [];
       const warnings: any[] = [];
-      vi.mocked(HouseholdQueries.getPersonCount).mockReturnValue(2);
 
       // When
       HouseholdValidation.validateUSHousehold(mockValidUSHousehold, errors, warnings);
@@ -318,7 +301,6 @@ describe('HouseholdValidation', () => {
       // Given
       const errors: any[] = [];
       const warnings: any[] = [];
-      vi.mocked(HouseholdQueries.getPersonCount).mockReturnValue(3);
 
       // When
       HouseholdValidation.validateUSHousehold(mockUSHouseholdOrphanPerson, errors, warnings);
@@ -337,7 +319,6 @@ describe('HouseholdValidation', () => {
       // Given
       const errors: any[] = [];
       const warnings: any[] = [];
-      vi.mocked(HouseholdQueries.getPersonCount).mockReturnValue(1);
 
       // When
       HouseholdValidation.validateUSHousehold(mockUSHouseholdNoTaxUnits, errors, warnings);
@@ -352,7 +333,6 @@ describe('HouseholdValidation', () => {
       // Given
       const errors: any[] = [];
       const warnings: any[] = [];
-      vi.mocked(HouseholdQueries.getPersonCount).mockReturnValue(1);
 
       // When
       HouseholdValidation.validateUSHousehold(mockUSHouseholdInvalidMaritalUnit, errors, warnings);
@@ -377,7 +357,6 @@ describe('HouseholdValidation', () => {
           },
         },
       });
-      vi.mocked(HouseholdQueries.getPersonCount).mockReturnValue(2);
 
       // When
       HouseholdValidation.validateUSHousehold(household, errors, warnings);
@@ -585,9 +564,6 @@ describe('HouseholdValidation', () => {
 
   describe('isReadyForSimulation', () => {
     test('given valid household when checking ready for simulation then returns valid', () => {
-      // Given
-      vi.mocked(HouseholdQueries.getPersonCount).mockReturnValue(2);
-
       // When
       const result = HouseholdValidation.isReadyForSimulation(
         mockValidUSHousehold,
@@ -600,9 +576,6 @@ describe('HouseholdValidation', () => {
     });
 
     test('given empty household when checking ready for simulation then returns error', () => {
-      // Given
-      vi.mocked(HouseholdQueries.getPersonCount).mockReturnValue(0);
-
       // When
       const result = HouseholdValidation.isReadyForSimulation(
         mockEmptyHousehold,
@@ -616,9 +589,6 @@ describe('HouseholdValidation', () => {
     });
 
     test('given household with structural errors when checking ready then includes those errors', () => {
-      // Given
-      vi.mocked(HouseholdQueries.getPersonCount).mockReturnValue(1);
-
       // When
       const result = HouseholdValidation.isReadyForSimulation(
         mockHouseholdInvalidGroupStructure,
@@ -632,9 +602,6 @@ describe('HouseholdValidation', () => {
     });
 
     test('given household with warnings when checking ready then includes warnings', () => {
-      // Given
-      vi.mocked(HouseholdQueries.getPersonCount).mockReturnValue(2);
-
       // When
       const result = HouseholdValidation.isReadyForSimulation(
         mockHouseholdMissingAge,
