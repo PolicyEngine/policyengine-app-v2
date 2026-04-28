@@ -44,6 +44,20 @@ const LEGEND_TEXT_MAP: Record<string, string> = {
 
 const BAR_SIZE = 18;
 
+/** CSV for Winners & Losers by wealth decile. */
+export function buildWinnersLosersWealthCsv(output: SocietyWideReportOutput): string[][] {
+  const deciles: Record<string, number[]> = output.intra_wealth_decile?.deciles || {};
+  const all: Record<string, number> = output.intra_wealth_decile?.all || {};
+  const header = ['Wealth decile', ...CATEGORIES.map((c) => `${LEGEND_TEXT_MAP[c]} (%)`)];
+  const fmt = (v: number | undefined) => ((v ?? 0) * 100).toFixed(2);
+  const rows: string[][] = [header];
+  for (let i = 0; i < 10; i++) {
+    rows.push([String(i + 1), ...CATEGORIES.map((c) => fmt(deciles[c]?.[i]))]);
+  }
+  rows.push(['All', ...CATEGORIES.map((c) => fmt(all[c]))]);
+  return rows;
+}
+
 function WinnersLosersTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) {
     return null;
@@ -129,7 +143,11 @@ export default function WinnersLosersWealthDecileSubPage({ output }: Props) {
   };
 
   return (
-    <ChartContainer title={getChartTitle()} downloadFilename="winners-losers-wealth-decile.svg">
+    <ChartContainer
+      title={getChartTitle()}
+      downloadFilename="winners-losers-wealth-decile.svg"
+      csvData={() => buildWinnersLosersWealthCsv(output)}
+    >
       <Stack gap="sm">
         <div style={{ display: 'flex' }}>
           {/* Chart area */}

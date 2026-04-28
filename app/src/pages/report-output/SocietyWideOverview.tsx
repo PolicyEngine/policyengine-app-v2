@@ -26,24 +26,42 @@ import { formatParameterValue } from '@/utils/chartValueUtils';
 import { formatBudgetaryImpact } from '@/utils/formatPowers';
 import { currencySymbol, formatCurrencyAbbr } from '@/utils/formatters';
 import { DIVERGING_GRAY_TEAL } from '@/utils/visualization/colorScales';
-import BudgetaryImpactSubPage from './budgetary-impact/BudgetaryImpactSubPage';
+import BudgetaryImpactSubPage, {
+  buildBudgetaryImpactCsv,
+} from './budgetary-impact/BudgetaryImpactSubPage';
 import { getBudgetChartTitle } from './budgetary-impact/budgetChartUtils';
 import {
   getDistributionalAverageTitle,
   getDistributionalRelativeTitle,
   getWinnersLosersTitle,
 } from './distributional-impact/distributionalChartUtils';
-import DistributionalImpactIncomeAverageSubPage from './distributional-impact/DistributionalImpactIncomeAverageSubPage';
-import DistributionalImpactIncomeRelativeSubPage from './distributional-impact/DistributionalImpactIncomeRelativeSubPage';
-import WinnersLosersIncomeDecileSubPage from './distributional-impact/WinnersLosersIncomeDecileSubPage';
+import DistributionalImpactIncomeAverageSubPage, {
+  buildDistributionalAbsoluteCsv,
+} from './distributional-impact/DistributionalImpactIncomeAverageSubPage';
+import DistributionalImpactIncomeRelativeSubPage, {
+  buildDistributionalRelativeCsv,
+} from './distributional-impact/DistributionalImpactIncomeRelativeSubPage';
+import WinnersLosersIncomeDecileSubPage, {
+  buildWinnersLosersCsv,
+} from './distributional-impact/WinnersLosersIncomeDecileSubPage';
 import { getInequalityTitle } from './inequality-impact/inequalityChartUtils';
-import InequalityImpactSubPage from './inequality-impact/InequalityImpactSubPage';
-import DeepPovertyImpactByAgeSubPage from './poverty-impact/DeepPovertyImpactByAgeSubPage';
+import InequalityImpactSubPage, {
+  buildInequalityCsv,
+} from './inequality-impact/InequalityImpactSubPage';
+import DeepPovertyImpactByAgeSubPage, {
+  buildDeepPovertyByAgeCsv,
+} from './poverty-impact/DeepPovertyImpactByAgeSubPage';
 import DeepPovertyImpactByGenderSubPage from './poverty-impact/DeepPovertyImpactByGenderSubPage';
 import { getDeepPovertyTitle, getPovertyTitle } from './poverty-impact/povertyChartUtils';
-import PovertyImpactByAgeSubPage from './poverty-impact/PovertyImpactByAgeSubPage';
-import PovertyImpactByGenderSubPage from './poverty-impact/PovertyImpactByGenderSubPage';
-import PovertyImpactByRaceSubPage from './poverty-impact/PovertyImpactByRaceSubPage';
+import PovertyImpactByAgeSubPage, {
+  buildPovertyByAgeCsv,
+} from './poverty-impact/PovertyImpactByAgeSubPage';
+import PovertyImpactByGenderSubPage, {
+  buildPovertyByGenderCsv,
+} from './poverty-impact/PovertyImpactByGenderSubPage';
+import PovertyImpactByRaceSubPage, {
+  buildPovertyByRaceCsv,
+} from './poverty-impact/PovertyImpactByRaceSubPage';
 
 interface SocietyWideOverviewProps {
   output: SocietyWideReportOutput;
@@ -1099,6 +1117,24 @@ export default function SocietyWideOverview({
     return `${depthPrefix}poverty-impact-${breakdownSuffix}.svg`;
   })();
 
+  // Poverty CSV depends on the same selection.
+  const povertyCsvData = () => {
+    if (povertyDepth === 'regular') {
+      if (povertyBreakdown === 'by-age') {
+        return buildPovertyByAgeCsv(output);
+      }
+      if (povertyBreakdown === 'by-gender') {
+        return buildPovertyByGenderCsv(output);
+      }
+      return buildPovertyByRaceCsv(output);
+    }
+    if (povertyBreakdown === 'by-age') {
+      return buildDeepPovertyByAgeCsv(output);
+    }
+    // Deep poverty by gender reuses the shared builder with deep=true.
+    return buildPovertyByGenderCsv(output, true);
+  };
+
   // Decile impact mini chart data (absolute)
   const decileKeys = Object.keys(output.decile.average).sort((a, b) => Number(a) - Number(b));
   const decileAbsValues = decileKeys.map((d) => output.decile.average[d]);
@@ -1246,6 +1282,7 @@ export default function SocietyWideOverview({
         }
         expandedTitle={getBudgetChartTitle(output.budget.budgetary_impact, countryId, metadata)}
         downloadFilename="budgetary-impact.svg"
+        csvData={() => buildBudgetaryImpactCsv(output, countryId)}
         expandedContent={<BudgetaryImpactSubPage output={output} fillHeight />}
         onToggleMode={() => toggle('budget')}
       />
@@ -1312,6 +1349,11 @@ export default function SocietyWideOverview({
           decileMode === 'absolute'
             ? 'distributional-impact-income-average.svg'
             : 'distributional-impact-income-relative.svg'
+        }
+        csvData={() =>
+          decileMode === 'absolute'
+            ? buildDistributionalAbsoluteCsv(output)
+            : buildDistributionalRelativeCsv(output)
         }
         expandedContent={
           decileMode === 'absolute' ? (
@@ -1417,6 +1459,7 @@ export default function SocietyWideOverview({
         }
         expandedTitle={getWinnersLosersTitle(output, countryId, metadata)}
         downloadFilename="winners-losers-income-decile.svg"
+        csvData={() => buildWinnersLosersCsv(output)}
         expandedContent={<WinnersLosersIncomeDecileSubPage output={output} fillHeight />}
         onToggleMode={() => toggle('winners')}
       />
@@ -1470,6 +1513,7 @@ export default function SocietyWideOverview({
             : getDeepPovertyTitle(output, countryId, metadata)
         }
         downloadFilename={povertyDownloadFilename}
+        csvData={povertyCsvData}
         expandedContent={povertyChart}
         onToggleMode={() => toggle('poverty')}
       />
@@ -1503,6 +1547,7 @@ export default function SocietyWideOverview({
         }
         expandedTitle={getInequalityTitle(output, metadata)}
         downloadFilename="inequality-impact.svg"
+        csvData={() => buildInequalityCsv(output)}
         expandedContent={<InequalityImpactSubPage output={output} fillHeight />}
         onToggleMode={() => toggle('inequality')}
       />

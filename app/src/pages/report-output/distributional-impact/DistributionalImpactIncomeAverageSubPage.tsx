@@ -37,6 +37,21 @@ interface Props {
   fillHeight?: boolean;
 }
 
+/**
+ * Build a CSV-ready table for the absolute distributional impact by income decile.
+ * Columns: Decile, Absolute change in household income.
+ */
+export function buildDistributionalAbsoluteCsv(output: SocietyWideReportOutput): string[][] {
+  const decileAverage = output.decile.average;
+  const rows: string[][] = [['Decile', 'Absolute change in household income']];
+  Object.keys(decileAverage)
+    .sort((a, b) => Number(a) - Number(b))
+    .forEach((decile) => {
+      rows.push([decile, decileAverage[decile].toFixed(2)]);
+    });
+  return rows;
+}
+
 export default function DistributionalImpactIncomeAverageSubPage({
   output,
   chartHeight: chartHeightProp,
@@ -173,6 +188,7 @@ export default function DistributionalImpactIncomeAverageSubPage({
     <ChartContainer
       title={getChartTitle()}
       downloadFilename="distributional-impact-income-average.svg"
+      csvData={() => buildDistributionalAbsoluteCsv(output)}
     >
       <Stack gap="sm">
         <ResponsiveContainer width="100%" height={chartHeight}>

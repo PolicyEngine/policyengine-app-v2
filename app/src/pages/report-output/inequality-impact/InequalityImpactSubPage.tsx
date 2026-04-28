@@ -36,6 +36,28 @@ interface Props {
   fillHeight?: boolean;
 }
 
+/** CSV for Inequality impact (Gini, Top 10% share, Top 1% share). */
+export function buildInequalityCsv(output: SocietyWideReportOutput): string[][] {
+  const { gini, top_10_pct_share: top10, top_1_pct_share: top1 } = output.inequality;
+  const header = ['Metric', 'Baseline', 'Reform', 'Relative change (%)'];
+  const rows: string[][] = [header];
+  const items: Array<[string, { baseline: number; reform: number }, number]> = [
+    ['Gini index', gini, 3],
+    ['Top 10% share', top10, 4],
+    ['Top 1% share', top1, 4],
+  ];
+  for (const [label, b, decimals] of items) {
+    const rel = b.baseline === 0 ? 0 : b.reform / b.baseline - 1;
+    rows.push([
+      label,
+      b.baseline.toFixed(decimals),
+      b.reform.toFixed(decimals),
+      (rel * 100).toFixed(2),
+    ]);
+  }
+  return rows;
+}
+
 export default function InequalityImpactSubPage({
   output,
   chartHeight: chartHeightProp,
@@ -181,7 +203,11 @@ export default function InequalityImpactSubPage({
   }
 
   return (
-    <ChartContainer title={getChartTitle()} downloadFilename="inequality-impact.svg">
+    <ChartContainer
+      title={getChartTitle()}
+      downloadFilename="inequality-impact.svg"
+      csvData={() => buildInequalityCsv(output)}
+    >
       <Stack gap="sm">
         <ResponsiveContainer width="100%" height={chartHeight}>
           {barChart}

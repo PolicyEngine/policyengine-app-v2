@@ -46,6 +46,23 @@ const LEGEND_TEXT_MAP: Record<string, string> = {
 
 const BAR_SIZE = 18;
 
+/**
+ * Build a CSV-ready table for the Winners & Losers chart.
+ * Columns: Decile, Gain >5%, Gain <5%, No change, Lose <5%, Lose >5% (all as %).
+ */
+export function buildWinnersLosersCsv(output: SocietyWideReportOutput): string[][] {
+  const deciles = output.intra_decile.deciles;
+  const all = output.intra_decile.all;
+  const header = ['Decile', ...CATEGORIES.map((c) => `${LEGEND_TEXT_MAP[c]} (%)`)];
+  const fmt = (v: number) => (v * 100).toFixed(2);
+  const rows: string[][] = [header];
+  for (let i = 0; i < 10; i++) {
+    rows.push([String(i + 1), ...CATEGORIES.map((c) => fmt(deciles[c][i]))]);
+  }
+  rows.push(['All', ...CATEGORIES.map((c) => fmt(all[c]))]);
+  return rows;
+}
+
 function WinnersLosersTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) {
     return null;
@@ -285,7 +302,11 @@ export default function WinnersLosersIncomeDecileSubPage({
   }
 
   return (
-    <ChartContainer title={getChartTitle()} downloadFilename="winners-losers-income-decile.svg">
+    <ChartContainer
+      title={getChartTitle()}
+      downloadFilename="winners-losers-income-decile.svg"
+      csvData={() => buildWinnersLosersCsv(output)}
+    >
       <Stack gap="sm">
         <div style={{ display: 'flex' }}>
           <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>

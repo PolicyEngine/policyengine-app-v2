@@ -55,7 +55,12 @@ export function trackPolicyCreated() {
   trackEvent('policy_created');
 }
 
-/** Fires when user downloads CSV data from a chart */
+/** Fires when user downloads a chart as SVG */
+export function trackChartSvgDownloaded() {
+  trackEvent('chart_svg_downloaded');
+}
+
+/** Fires when user downloads chart data as CSV */
 export function trackChartCsvDownloaded() {
   trackEvent('chart_csv_downloaded');
 }
