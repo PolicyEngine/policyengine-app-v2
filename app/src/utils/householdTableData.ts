@@ -83,19 +83,15 @@ function formatParameterLabel(paramName: string): string {
 }
 
 /**
- * Check if two households are structurally equal
+ * Check if two native household model instances are equal.
  */
 export function householdsAreEqual(
-  household1: HouseholdTableInput | undefined,
-  household2: HouseholdTableInput | undefined
+  household1: Household | undefined,
+  household2: Household | undefined
 ): boolean {
   if (!household1 || !household2) {
     return false;
   }
-  if (household1.id === household2.id) {
-    return true;
-  }
 
-  // Deep comparison of householdData
-  return JSON.stringify(household1.householdData) === JSON.stringify(household2.householdData);
+  return household1.isEqual(household2);
 }

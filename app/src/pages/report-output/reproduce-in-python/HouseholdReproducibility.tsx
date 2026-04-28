@@ -18,6 +18,7 @@ import {
 } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import { useReportYear } from '@/hooks/useReportYear';
+import type { Household } from '@/models/Household';
 import { trackPythonCodeCopied } from '@/utils/analytics';
 import { getColabLink, getReproducibilityCodeBlock } from '@/utils/reproducibilityCode';
 
@@ -29,7 +30,7 @@ interface PolicyData {
 interface HouseholdReproducibilityProps {
   countryId: string;
   policy: PolicyData;
-  householdInput: any;
+  household: Household | null;
   region?: string;
   dataset?: string | null;
   policyengineVersion?: string | null;
@@ -38,7 +39,7 @@ interface HouseholdReproducibilityProps {
 export default function HouseholdReproducibility({
   countryId,
   policy,
-  householdInput,
+  household,
   region = 'us',
   dataset = null,
   policyengineVersion = null,
@@ -55,7 +56,7 @@ export default function HouseholdReproducibility({
     region,
     year,
     dataset,
-    householdInput,
+    household,
     earningVariation,
     true,
     policyengineVersion

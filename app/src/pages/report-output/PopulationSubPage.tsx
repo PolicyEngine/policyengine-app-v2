@@ -8,7 +8,7 @@ import HouseholdSubPage from './HouseholdSubPage';
 interface PopulationSubPageProps {
   baselineSimulation?: Simulation;
   reformSimulation?: Simulation;
-  households?: Array<Pick<Household, 'id' | 'countryId' | 'householdData'>>;
+  households?: Household[];
   geographies?: Geography[];
   userHouseholds?: UserHouseholdPopulation[];
 }

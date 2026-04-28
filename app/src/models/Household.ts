@@ -17,6 +17,8 @@ import type {
   HouseholdScalar,
 } from './household/appTypes';
 import { buildComparableHousehold } from './household/comparable';
+import { buildPythonPackageHouseholdDataFromAppInput } from './household/pythonPackageCodec';
+import type { PythonPackageHouseholdData } from './household/pythonPackageTypes';
 import {
   buildGeneratedGroupName,
   getGroupDefinitionByAppKey,
@@ -874,6 +876,13 @@ export class Household extends BaseModel<HouseholdModelData> {
       countryId: this.countryId,
       householdData: this.appInputData,
       label: this.label,
+      year: this.year ?? inferYearFromData(this.appInputData),
+    });
+  }
+
+  toPythonPackage(): PythonPackageHouseholdData {
+    return buildPythonPackageHouseholdDataFromAppInput({
+      householdData: this.appInputData,
       year: this.year ?? inferYearFromData(this.appInputData),
     });
   }

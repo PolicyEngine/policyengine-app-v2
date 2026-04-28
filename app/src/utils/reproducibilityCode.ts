@@ -7,9 +7,35 @@
  */
 
 import { CURRENT_YEAR } from '@/constants';
+import type { Household } from '@/models/Household';
+import type { HouseholdScalar } from '@/models/household/appTypes';
+import type {
+  PythonPackageHouseholdData,
+  PythonPackageHouseholdGroupData,
+  PythonPackageHouseholdPersonData,
+} from '@/models/household/pythonPackageTypes';
+import { cloneValue } from '@/models/household/utils';
+import {
+  getHouseholdVariationMaxEarnings,
+  HOUSEHOLD_VARIATION_POINT_COUNT,
+} from './householdVariationAxes';
 
 // Default year fallback - use the app's current year constant
 const DEFAULT_YEAR = parseInt(CURRENT_YEAR, 10);
+
+type PolicyData = { baseline: { data: any }; reform: { data: any } };
+
+type HouseholdSituation = PythonPackageHouseholdData & {
+  axes?: Array<
+    Array<{
+      name: string;
+      period: string;
+      min: number;
+      max: number;
+      count: number;
+    }>
+  >;
+};
 
 // Maps region prefixes (from metadata) to HuggingFace subfolder names.
 // Note: place/ is NOT included — places use the parent state's dataset + filtering.
@@ -185,10 +211,7 @@ function getBaselineCode(
 /**
  * Generate reform policy code
  */
-function getReformCode(
-  policy: { baseline: { data: any }; reform: { data: any } },
-  countryId: string
-): string[] {
+function getReformCode(policy: PolicyData, countryId: string): string[] {
   if (!policy?.baseline?.data || Object.keys(policy.reform.data).length === 0) {
     return [];
   }
@@ -200,44 +223,135 @@ function getReformCode(
   return lines;
 }
 
+function isYearValueMap(value: unknown): value is Record<string, HouseholdScalar> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function cleanNullValuesForYear(
+  householdInput: PythonPackageHouseholdData,
+  year: number
+): HouseholdSituation {
+  const yearKey = String(year);
+  const householdInputCopy = cloneValue(householdInput) as HouseholdSituation;
+  const entityCollections = Object.values(householdInputCopy) as Array<
+    Record<string, PythonPackageHouseholdPersonData | PythonPackageHouseholdGroupData> | undefined
+  >;
+
+  for (const entityCollection of entityCollections) {
+    if (!entityCollection) {
+      continue;
+    }
+
+    for (const entity of Object.values(entityCollection)) {
+      for (const [variable, value] of Object.entries(entity)) {
+        if (variable === 'members') {
+          continue;
+        }
+
+        if (isYearValueMap(value) && value[yearKey] === null) {
+          delete entity[variable];
+        }
+      }
+    }
+  }
+
+  return householdInputCopy;
+}
+
+function getVariationPersonKey(householdInput: PythonPackageHouseholdData): string | null {
+  if (householdInput.people.you) {
+    return 'you';
+  }
+
+  return Object.keys(householdInput.people)[0] ?? null;
+}
+
+function getEarningsForYear(
+  person: PythonPackageHouseholdPersonData | undefined,
+  year: number
+): number {
+  const value = person?.employment_income;
+  if (!isYearValueMap(value)) {
+    return 0;
+  }
+
+  const earnings = value[String(year)];
+  return typeof earnings === 'number' ? earnings : 0;
+}
+
+function addEarningVariationAxis(
+  householdInput: HouseholdSituation,
+  countryId: string,
+  year: number
+): HouseholdSituation {
+  const personKey = getVariationPersonKey(householdInput);
+  if (!personKey) {
+    return householdInput;
+  }
+
+  const yearKey = String(year);
+  const person = householdInput.people[personKey];
+  if (!person) {
+    return householdInput;
+  }
+
+  const currentEarnings = getEarningsForYear(person, year);
+  const employmentIncome = isYearValueMap(person.employment_income) ? person.employment_income : {};
+
+  person.employment_income = {
+    ...employmentIncome,
+    [yearKey]: null,
+  };
+
+  householdInput.axes = [
+    [
+      {
+        name: 'employment_income',
+        period: yearKey,
+        min: 0,
+        max: getHouseholdVariationMaxEarnings(currentEarnings, countryId),
+        count: HOUSEHOLD_VARIATION_POINT_COUNT,
+      },
+    ],
+  ];
+
+  return householdInput;
+}
+
+function buildHouseholdSituation(
+  household: Household | null,
+  countryId: string,
+  year: number,
+  earningVariation: boolean
+): HouseholdSituation {
+  const householdInput = household?.toPythonPackage() ?? { people: {} };
+  const situation = cleanNullValuesForYear(householdInput, year);
+
+  if (earningVariation) {
+    return addEarningVariationAxis(situation, countryId, year);
+  }
+
+  return situation;
+}
+
 /**
  * Generate situation code for household simulation
  */
 function getSituationCode(
   type: 'household' | 'policy',
-  policy: { baseline: { data: any }; reform: { data: any } },
+  policy: PolicyData,
+  countryId: string,
   year: number,
-  householdInput: any,
+  household: Household | null,
   earningVariation: boolean
 ): string[] {
   if (type !== 'household') {
     return [];
   }
 
-  // Deep copy the household input
-  const householdInputCopy = JSON.parse(JSON.stringify(householdInput));
+  const householdSituation = buildHouseholdSituation(household, countryId, year, earningVariation);
 
-  // Clean up null values and handle earning variation
-  for (const entityPlural of Object.keys(householdInputCopy)) {
-    for (const entity of Object.keys(householdInputCopy[entityPlural])) {
-      for (const variable of Object.keys(householdInputCopy[entityPlural][entity])) {
-        if (variable !== 'members') {
-          if (householdInputCopy[entityPlural][entity][variable][year] === null) {
-            delete householdInputCopy[entityPlural][entity][variable];
-          }
-        }
-        if (earningVariation && variable === 'employment_income') {
-          delete householdInputCopy[entityPlural][entity][variable];
-        }
-      }
-    }
-  }
-
-  if (earningVariation) {
-    householdInputCopy.axes = [[{ name: 'employment_income', count: 200, min: 0, max: 200_000 }]];
-  }
-
-  let householdJson = JSON.stringify(householdInputCopy, null, 2);
+  let householdJson = JSON.stringify(householdSituation, null, 2);
   householdJson = sanitizeStringToPython(householdJson);
 
   const lines: string[] = ['', '', `situation = ${householdJson}`, '', 'simulation = Simulation('];
@@ -364,11 +478,11 @@ function getPlaceImplementationCode(
 export function getReproducibilityCodeBlock(
   type: 'household' | 'policy',
   countryId: string,
-  policy: { baseline: { data: any }; reform: { data: any } },
+  policy: PolicyData,
   region: string,
   year: number,
   dataset: string | null = null,
-  householdInput: any = null,
+  household: Household | null = null,
   earningVariation: boolean = false,
   isDefaultDataset: boolean = true,
   policyengineVersion: string | null = null
@@ -377,7 +491,7 @@ export function getReproducibilityCodeBlock(
     ...getHeaderCode(type, countryId, policy, region, policyengineVersion),
     ...getBaselineCode(policy, countryId),
     ...getReformCode(policy, countryId),
-    ...getSituationCode(type, policy, year, householdInput, earningVariation),
+    ...getSituationCode(type, policy, countryId, year, household, earningVariation),
     ...getImplementationCode(type, region, countryId, year, policy, dataset, isDefaultDataset),
   ];
 }

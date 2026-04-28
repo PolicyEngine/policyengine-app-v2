@@ -33,7 +33,7 @@ export function isSimulation(obj: BaseIngredient): obj is Simulation {
  * Type guard to check if an object is a Household
  */
 export function isHousehold(obj: BaseIngredient): obj is Household {
-  return obj instanceof Household || 'householdData' in obj;
+  return obj instanceof Household;
 }
 
 /**

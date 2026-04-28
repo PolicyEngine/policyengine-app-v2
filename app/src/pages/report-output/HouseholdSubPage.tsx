@@ -7,8 +7,8 @@ import { extractGroupEntities } from '@/utils/householdIndividuals';
 import { householdsAreEqual } from '@/utils/householdTableData';
 
 interface HouseholdSubPageProps {
-  baselineHousehold?: Pick<Household, 'id' | 'countryId' | 'householdData'>;
-  reformHousehold?: Pick<Household, 'id' | 'countryId' | 'householdData'>;
+  baselineHousehold?: Household;
+  reformHousehold?: Household;
   userHouseholds?: UserHouseholdPopulation[];
 }
 

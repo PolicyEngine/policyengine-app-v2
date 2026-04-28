@@ -677,6 +677,55 @@ describe('Household', () => {
     });
   });
 
+  describe('toPythonPackage', () => {
+    it('converts the app household shape into the Python package situation shape', () => {
+      const household = createHousehold();
+
+      expect(household.toPythonPackage()).toEqual({
+        people: {
+          adult: { age: { 2026: 35 }, employment_income: { 2026: 50000 } },
+          child: { age: { 2026: 8 } },
+        },
+        tax_units: {
+          taxUnit1: { members: ['adult', 'child'] },
+        },
+        families: {
+          family1: { members: ['adult', 'child'] },
+        },
+        spm_units: {
+          spmUnit1: { members: ['adult', 'child'] },
+        },
+        households: {
+          household1: { members: ['adult', 'child'] },
+        },
+      });
+    });
+
+    it('wraps scalar canonical values with the household year before emitting Python package data', () => {
+      const household = Household.fromAppInput({
+        id: 'scalar-household',
+        countryId: 'us',
+        label: 'Scalar household',
+        year: 2026,
+        householdData: {
+          people: {
+            adult: {
+              age: 35,
+            },
+          },
+        },
+      });
+
+      expect(household.toPythonPackage()).toEqual({
+        people: {
+          adult: {
+            age: { 2026: 35 },
+          },
+        },
+      });
+    });
+  });
+
   describe('toV2CreateEnvelope', () => {
     it('flattens year-keyed values and attaches relationship ids for the v2 create envelope', () => {
       const household = createHousehold();

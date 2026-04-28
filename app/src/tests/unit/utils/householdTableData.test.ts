@@ -111,8 +111,8 @@ describe('householdTableData', () => {
       expect(householdsAreEqual(MOCK_HOUSEHOLD_SIMPLE, MOCK_HOUSEHOLD_SIMPLE)).toBe(true);
     });
 
-    it('returns true when households have identical data', () => {
-      expect(householdsAreEqual(MOCK_HOUSEHOLD_SIMPLE, MOCK_HOUSEHOLD_SIMPLE_CLONE)).toBe(true);
+    it('returns false when households have identical data but distinct model identities', () => {
+      expect(householdsAreEqual(MOCK_HOUSEHOLD_SIMPLE, MOCK_HOUSEHOLD_SIMPLE_CLONE)).toBe(false);
     });
 
     it('returns false when households have different data', () => {
