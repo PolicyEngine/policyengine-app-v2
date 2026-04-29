@@ -1,5 +1,9 @@
 import type { NextConfig } from "next";
 
+const ukChatOrigin = (
+  process.env.UK_CHAT_ORIGIN ?? "https://policyengine-uk-chat.vercel.app"
+).replace(/\/$/, "");
+
 const nextConfig: NextConfig = {
   async redirects() {
     return [
@@ -54,8 +58,8 @@ const nextConfig: NextConfig = {
         { source: "/uk/marriage", destination: "https://marriage-zeta-beryl.vercel.app/us/marriage?country=uk" },
         { source: "/uk/marriage/:path*", destination: "https://marriage-zeta-beryl.vercel.app/us/marriage/:path*?country=uk" },
         // UK chat assistant (Vercel)
-        { source: "/uk/chat", destination: "https://policyengine-uk-chat.vercel.app" },
-        { source: "/uk/chat/:path*", destination: "https://policyengine-uk-chat.vercel.app/:path*" },
+        { source: "/uk/chat", destination: ukChatOrigin },
+        { source: "/uk/chat/:path*", destination: ukChatOrigin + "/:path*" },
         // Working Parents Tax Relief Act calculator (Vercel)
         { source: "/us/working-parents-tax-relief-act", destination: "https://wptra.vercel.app/us/working-parents-tax-relief-act" },
         { source: "/us/working-parents-tax-relief-act/:path*", destination: "https://wptra.vercel.app/us/working-parents-tax-relief-act/:path*" },
