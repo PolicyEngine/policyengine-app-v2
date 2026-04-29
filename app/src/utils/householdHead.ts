@@ -1,8 +1,10 @@
+import type { CountryId } from '@/libs/countries';
 import type {
   AppHouseholdInputData,
   AppHouseholdInputGroupMap,
   AppHouseholdInputPerson,
 } from '@/models/household/appTypes';
+import { getHouseholdGroupDefinitions, type HouseholdGroupAppKey } from '@/models/household/schema';
 import type {
   HouseholdCalculationData,
   HouseholdCalculationGroupMap,
@@ -12,12 +14,27 @@ import type {
 import { getHouseholdGroupCollection, getHouseholdYearValue } from './householdDataAccess';
 import { sortPeopleKeys } from './householdIndividuals';
 
-const GROUP_CANDIDATES = ['taxUnits', 'households', 'families', 'benunits'] as const;
-type HouseholdHeadInput = Pick<HouseholdCalculationOutput, 'householdData'> & {
+const GROUP_CANDIDATE_PRIORITY: readonly HouseholdGroupAppKey[] = [
+  'taxUnits',
+  'benunits',
+  'households',
+  'families',
+  'spmUnits',
+  'maritalUnits',
+];
+type HouseholdHeadInput = Pick<HouseholdCalculationOutput, 'countryId' | 'householdData'> & {
   householdData: AppHouseholdInputData | HouseholdCalculationData;
 };
 type HouseholdHeadPerson = AppHouseholdInputPerson | HouseholdCalculationPerson;
 type HouseholdHeadGroupMap = AppHouseholdInputGroupMap | HouseholdCalculationGroupMap;
+
+function getGroupCandidates(countryId: CountryId): readonly HouseholdGroupAppKey[] {
+  const configuredGroups = new Set(
+    getHouseholdGroupDefinitions(countryId).map((definition) => definition.appKey)
+  );
+
+  return GROUP_CANDIDATE_PRIORITY.filter((groupName) => configuredGroups.has(groupName));
+}
 
 function isAdult(
   person: HouseholdHeadPerson | undefined,
@@ -56,7 +73,7 @@ function getPersonFromGroups(
   const householdData = household.householdData ?? {};
   const people = householdData.people ?? {};
 
-  for (const groupName of GROUP_CANDIDATES) {
+  for (const groupName of getGroupCandidates(household.countryId)) {
     const groups = getHouseholdGroupCollection(householdData, groupName) as
       | HouseholdHeadGroupMap
       | undefined;

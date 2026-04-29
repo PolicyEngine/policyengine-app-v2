@@ -211,7 +211,7 @@ export default function HouseholdBuilderForm({
   const householdLevelVariables = useMemo(() => {
     const variables: Array<{ name: string; entity: string; entityName: string }> = [];
 
-    household.getAllGroupCollections().forEach(({ entityName, groups }) => {
+    household.getConfiguredGroupCollections().forEach(({ entityName, groups }) => {
       Object.entries(groups).forEach(([groupName, group]) => {
         Object.keys(group)
           .filter((varName) => {

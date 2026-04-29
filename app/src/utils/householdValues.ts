@@ -1,3 +1,4 @@
+import { isHouseholdGroupEntityConfigured } from '@/models/household/schema';
 import type { HouseholdCalculationOutput } from '@/types/calculation/household';
 import { MetadataState } from '@/types/metadata';
 import { getHouseholdGroupCollection, isHouseholdYearMap } from './householdDataAccess';
@@ -35,6 +36,16 @@ export function getValueFromHousehold(
 
   if (!entityPlural) {
     console.warn(`Entity ${entity} not found in metadata`);
+    return 0;
+  }
+
+  if (
+    entityPlural !== 'people' &&
+    !isHouseholdGroupEntityConfigured(household.countryId, entityPlural)
+  ) {
+    console.warn(
+      `Entity group ${entityPlural} is not configured for ${household.countryId} households`
+    );
     return 0;
   }
 

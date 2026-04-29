@@ -6,7 +6,12 @@ import type {
   HouseholdFieldValue,
 } from './appTypes';
 import { parseNamedPeople, validateNamedGroupCollection } from './namedCodecHelpers';
-import { GROUP_DEFINITIONS, KNOWN_APP_ENTITY_KEYS, KNOWN_V1_ENTITY_KEYS } from './schema';
+import {
+  getHouseholdGroupDefinitions,
+  GROUP_DEFINITIONS,
+  KNOWN_APP_ENTITY_KEYS,
+  KNOWN_V1_ENTITY_KEYS,
+} from './schema';
 import {
   cloneValue,
   isYearValueMap,
@@ -158,42 +163,42 @@ export function buildV1CreateEnvelopeFromAppInput(args: {
   year?: number | null;
 }): V1HouseholdCreateEnvelope {
   const clonedData = cloneAppHouseholdInputData(args.householdData);
+  const countryId = normalizeCountryId(args.countryId);
   const year = args.year ?? null;
+  const data: V1HouseholdData = {
+    people: Object.fromEntries(
+      Object.entries(clonedData.people).map(([personName, rawPerson]) => {
+        const personData: V1HouseholdPersonData = Object.fromEntries(
+          Object.entries(rawPerson).map(([fieldKey, fieldValue]) => [
+            fieldKey,
+            buildV1FieldValueFromAppInput(
+              fieldValue,
+              year,
+              `Household input.people.${personName}.${fieldKey}`
+            ),
+          ])
+        );
+
+        return [personName, personData];
+      })
+    ),
+  };
+
+  for (const definition of getHouseholdGroupDefinitions(countryId)) {
+    const groupMap = buildV1GroupMapFromAppInput(
+      clonedData[definition.appKey],
+      year,
+      `Household input.${definition.appKey}`
+    );
+
+    if (groupMap) {
+      data[definition.v1Key] = groupMap;
+    }
+  }
 
   return {
-    country_id: normalizeCountryId(args.countryId),
+    country_id: countryId,
     label: args.label ?? undefined,
-    data: {
-      people: Object.fromEntries(
-        Object.entries(clonedData.people).map(([personName, rawPerson]) => {
-          const personData: V1HouseholdPersonData = Object.fromEntries(
-            Object.entries(rawPerson).map(([fieldKey, fieldValue]) => [
-              fieldKey,
-              buildV1FieldValueFromAppInput(
-                fieldValue,
-                year,
-                `Household input.people.${personName}.${fieldKey}`
-              ),
-            ])
-          );
-
-          return [personName, personData];
-        })
-      ),
-      households: buildV1GroupMapFromAppInput(
-        clonedData.households,
-        year,
-        'Household input.households'
-      ),
-      families: buildV1GroupMapFromAppInput(clonedData.families, year, 'Household input.families'),
-      tax_units: buildV1GroupMapFromAppInput(clonedData.taxUnits, year, 'Household input.taxUnits'),
-      spm_units: buildV1GroupMapFromAppInput(clonedData.spmUnits, year, 'Household input.spmUnits'),
-      marital_units: buildV1GroupMapFromAppInput(
-        clonedData.maritalUnits,
-        year,
-        'Household input.maritalUnits'
-      ),
-      benunits: buildV1GroupMapFromAppInput(clonedData.benunits, year, 'Household input.benunits'),
-    },
+    data,
   };
 }

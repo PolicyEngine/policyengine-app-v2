@@ -1,3 +1,4 @@
+import type { CountryId } from '@/libs/countries';
 import { cloneAppHouseholdInputData } from './appCodec';
 import type {
   AppHouseholdInputData,
@@ -9,6 +10,7 @@ import type {
   PythonPackageHouseholdData,
   PythonPackageHouseholdGroupData,
 } from './pythonPackageTypes';
+import { getHouseholdGroupDefinitions } from './schema';
 import { cloneValue, isYearValueMap, normalizeHouseholdFieldValue, wrapForYear } from './utils';
 
 function buildPythonPackageFieldValueFromAppInput(
@@ -63,13 +65,14 @@ function buildPythonPackageGroupMapFromAppInput(
 }
 
 export function buildPythonPackageHouseholdDataFromAppInput(args: {
+  countryId: CountryId;
   householdData: AppHouseholdInputData;
   year?: number | null;
 }): PythonPackageHouseholdData {
   const clonedData = cloneAppHouseholdInputData(args.householdData);
   const year = args.year ?? null;
 
-  return {
+  const householdData: PythonPackageHouseholdData = {
     people: Object.fromEntries(
       Object.entries(clonedData.people).map(([personName, rawPerson]) => {
         const personData = Object.fromEntries(
@@ -86,35 +89,19 @@ export function buildPythonPackageHouseholdDataFromAppInput(args: {
         return [personName, personData];
       })
     ),
-    households: buildPythonPackageGroupMapFromAppInput(
-      clonedData.households,
-      year,
-      'Household input.households'
-    ),
-    families: buildPythonPackageGroupMapFromAppInput(
-      clonedData.families,
-      year,
-      'Household input.families'
-    ),
-    tax_units: buildPythonPackageGroupMapFromAppInput(
-      clonedData.taxUnits,
-      year,
-      'Household input.taxUnits'
-    ),
-    spm_units: buildPythonPackageGroupMapFromAppInput(
-      clonedData.spmUnits,
-      year,
-      'Household input.spmUnits'
-    ),
-    marital_units: buildPythonPackageGroupMapFromAppInput(
-      clonedData.maritalUnits,
-      year,
-      'Household input.maritalUnits'
-    ),
-    benunits: buildPythonPackageGroupMapFromAppInput(
-      clonedData.benunits,
-      year,
-      'Household input.benunits'
-    ),
   };
+
+  for (const definition of getHouseholdGroupDefinitions(args.countryId)) {
+    const groupMap = buildPythonPackageGroupMapFromAppInput(
+      clonedData[definition.appKey],
+      year,
+      `Household input.${definition.appKey}`
+    );
+
+    if (groupMap) {
+      householdData[definition.v1Key] = groupMap;
+    }
+  }
+
+  return householdData;
 }

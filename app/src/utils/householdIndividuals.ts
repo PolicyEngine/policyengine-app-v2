@@ -100,7 +100,7 @@ export function extractGroupEntities(
     instances: peopleInstances,
   });
 
-  household.getAllGroupCollections().forEach(({ entityName, groups }) => {
+  household.getConfiguredGroupCollections().forEach(({ entityName, groups }) => {
     const instances: GroupEntityInstance[] = [];
 
     Object.entries(groups).forEach(([entityId, entityData]) => {

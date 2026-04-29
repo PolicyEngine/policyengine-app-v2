@@ -1,7 +1,7 @@
 import { type CountryId } from '@/libs/countries';
 import type { Household as HouseholdModel } from '@/models/Household';
 import type { AppHouseholdInputGroup as HouseholdGroupEntity } from '@/models/household/appTypes';
-import { getV2GroupDefinitions } from '@/models/household/schema';
+import { getHouseholdGroupDefinitions } from '@/models/household/schema';
 import { RootState } from '@/store';
 
 /**
@@ -80,38 +80,30 @@ function getConfiguredGroupCollections(
   household: HouseholdModel,
   countryId: CountryId
 ): Array<{ entityName: string; groups: Record<string, HouseholdGroupEntity> }> {
-  if (countryId === 'us' || countryId === 'uk') {
-    const configuredCollections: Array<{
-      entityName: string;
-      groups: Record<string, HouseholdGroupEntity>;
-    }> = [];
+  const configuredCollections: Array<{
+    entityName: string;
+    groups: Record<string, HouseholdGroupEntity>;
+  }> = [];
 
-    for (const definition of getV2GroupDefinitions(countryId)) {
-      const groups = getValidationGroupCollection(household, definition.appKey);
+  for (const definition of getHouseholdGroupDefinitions(countryId)) {
+    const groups = getValidationGroupCollection(household, definition.appKey);
 
-      if (!groups) {
-        continue;
-      }
-
-      configuredCollections.push({
-        entityName: definition.appKey,
-        groups,
-      });
+    if (!groups) {
+      continue;
     }
 
-    return configuredCollections;
+    configuredCollections.push({
+      entityName: definition.appKey,
+      groups,
+    });
   }
 
-  return getValidationGroupCollections(household);
+  return configuredCollections;
 }
 
 function getUnexpectedGroupCollections(household: HouseholdModel, countryId: CountryId): string[] {
-  if (countryId !== 'us' && countryId !== 'uk') {
-    return [];
-  }
-
   const allowedEntityNames = new Set<string>(
-    getV2GroupDefinitions(countryId).map((definition) => definition.appKey)
+    getHouseholdGroupDefinitions(countryId).map((definition) => definition.appKey)
   );
 
   return getValidationGroupCollections(household)
@@ -200,9 +192,6 @@ export const HouseholdValidation = {
     });
 
     // Check that country-configured group entities have valid structure.
-    // For supported country-specific household models, this uses the same
-    // country schema layer as the V2 codecs. Other countries fall back to
-    // validating whatever concrete group collections are present.
     getConfiguredGroupCollections(household, countryId).forEach(({ entityName, groups }) => {
       Object.entries(groups).forEach(([groupKey, group]) => {
         if (!Array.isArray(group.members)) {

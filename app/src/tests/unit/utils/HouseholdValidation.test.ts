@@ -131,7 +131,7 @@ describe('HouseholdValidation', () => {
       );
     });
 
-    test('given Canada household when validating then performs generic validation only', () => {
+    test('given Canada household when validating then uses default group strategy', () => {
       // When
       const result = HouseholdValidation.validateForCountry(
         mockValidUSHousehold,
@@ -140,10 +140,16 @@ describe('HouseholdValidation', () => {
       );
 
       // Then
-      // Should have country mismatch error but no US-specific warnings
+      // Should have country mismatch error, no US-specific warnings, and one default-strategy
+      // warning for the US-only tax units collection.
       verifyHasErrors(result, 1);
       verifyValidationError(result.errors, VALIDATION_ERROR_CODES.COUNTRY_MISMATCH);
-      expect(result.warnings).toHaveLength(0);
+      verifyWarningCount(result, 1);
+      verifyValidationWarning(
+        result.warnings,
+        VALIDATION_WARNING_CODES.UNEXPECTED_GROUP_COLLECTION,
+        VALIDATION_ENTITY_NAMES.TAX_UNITS
+      );
     });
   });
 

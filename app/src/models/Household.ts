@@ -22,6 +22,9 @@ import type { PythonPackageHouseholdData } from './household/pythonPackageTypes'
 import {
   buildGeneratedGroupName,
   getGroupDefinitionByAppKey,
+  getHouseholdDefaultEntityKeys,
+  getHouseholdGroupDefinitions,
+  isHouseholdGroupEntityConfigured,
   normalizeHouseholdGroupAppKey,
   type HouseholdGroupAppKey,
 } from './household/schema';
@@ -38,7 +41,6 @@ import type { V2CreateHouseholdEnvelope, V2StoredHouseholdEnvelope } from './hou
 
 export type { ComparableHousehold, HouseholdModelData } from './household/appTypes';
 
-type HouseholdDefaultEntityKey = 'people' | HouseholdGroupAppKey;
 export type HouseholdBuilderMaritalStatus = 'single' | 'married';
 
 export interface HouseholdBuilderComposition {
@@ -179,6 +181,20 @@ function normalizeGroupKeyOrThrow(entityName: string): HouseholdGroupAppKey {
   const entityKey = normalizeHouseholdGroupAppKey(entityName);
   if (!entityKey) {
     throw new Error(`Unsupported household entity group "${entityName}"`);
+  }
+
+  return entityKey;
+}
+
+function normalizeConfiguredGroupKeyOrThrow(
+  countryId: CountryId,
+  entityName: string
+): HouseholdGroupAppKey {
+  const entityKey = normalizeGroupKeyOrThrow(entityName);
+  if (!isHouseholdGroupEntityConfigured(countryId, entityKey)) {
+    throw new Error(
+      `Group entity "${entityName}" is not configured for ${countryId.toUpperCase()} households`
+    );
   }
 
   return entityKey;
@@ -350,7 +366,6 @@ function applyUKDefaultGroups(householdData: AppHouseholdInputData, personKey: s
 }
 
 interface HouseholdCountryStrategy {
-  defaultEntities: HouseholdDefaultEntityKey[];
   applyPersonDefaults: (
     householdData: AppHouseholdInputData,
     personKey: string,
@@ -359,18 +374,15 @@ interface HouseholdCountryStrategy {
 }
 
 const DEFAULT_COUNTRY_STRATEGY: HouseholdCountryStrategy = {
-  defaultEntities: ['people', 'households'],
   applyPersonDefaults: (householdData, personKey) =>
     applyDefaultHouseholdGroups(householdData, personKey),
 };
 
 const HOUSEHOLD_COUNTRY_STRATEGIES: Partial<Record<CountryId, HouseholdCountryStrategy>> = {
   us: {
-    defaultEntities: ['people', 'families', 'taxUnits', 'spmUnits', 'households', 'maritalUnits'],
     applyPersonDefaults: applyUSDefaultGroups,
   },
   uk: {
-    defaultEntities: ['people', 'benunits', 'households'],
     applyPersonDefaults: applyUKDefaultGroups,
   },
   ca: DEFAULT_COUNTRY_STRATEGY,
@@ -510,6 +522,10 @@ export class Household extends BaseModel<HouseholdModelData> {
     return groups ? cloneValue(groups) : undefined;
   }
 
+  isConfiguredGroupEntity(entityName: string): boolean {
+    return isHouseholdGroupEntityConfigured(this.countryId, entityName);
+  }
+
   getPreferredGroupName(entityName: string): string | undefined {
     return getPreferredGroupNameFromData(this.appInputData, entityName);
   }
@@ -544,6 +560,18 @@ export class Household extends BaseModel<HouseholdModelData> {
       ['benunits', this.appInputData.benunits],
     ]
       .filter((entry): entry is [HouseholdGroupAppKey, AppHouseholdInputGroupMap] =>
+        Boolean(entry[1])
+      )
+      .map(([entityName, groups]) => ({ entityName, groups: cloneValue(groups) }));
+  }
+
+  getConfiguredGroupCollections(): Array<{
+    entityName: HouseholdGroupAppKey;
+    groups: AppHouseholdInputGroupMap;
+  }> {
+    return getHouseholdGroupDefinitions(this.countryId)
+      .map((definition) => [definition.appKey, this.appInputData[definition.appKey]] as const)
+      .filter((entry): entry is readonly [HouseholdGroupAppKey, AppHouseholdInputGroupMap] =>
         Boolean(entry[1])
       )
       .map(([entityName, groups]) => ({ entityName, groups: cloneValue(groups) }));
@@ -586,15 +614,18 @@ export class Household extends BaseModel<HouseholdModelData> {
       return null;
     }
 
-    const maritalUnits = getGroupCollectionFromData(this.appInputData, 'maritalUnits') ?? {};
-    for (const unit of Object.values(maritalUnits)) {
-      if (!unit.members.includes(resolvedPrimaryPersonKey)) {
-        continue;
-      }
+    if (this.isConfiguredGroupEntity('maritalUnits')) {
+      const maritalUnits = getGroupCollectionFromData(this.appInputData, 'maritalUnits') ?? {};
+      for (const unit of Object.values(maritalUnits)) {
+        if (!unit.members.includes(resolvedPrimaryPersonKey)) {
+          continue;
+        }
 
-      const partnerKey = unit.members.find((member) => member !== resolvedPrimaryPersonKey) ?? null;
-      if (partnerKey) {
-        return partnerKey;
+        const partnerKey =
+          unit.members.find((member) => member !== resolvedPrimaryPersonKey) ?? null;
+        if (partnerKey) {
+          return partnerKey;
+        }
       }
     }
 
@@ -681,9 +712,8 @@ export class Household extends BaseModel<HouseholdModelData> {
     const householdData: AppHouseholdInputData = {
       people: {},
     };
-    const defaultEntities = getHouseholdCountryStrategy(countryId).defaultEntities;
 
-    for (const entity of defaultEntities) {
+    for (const entity of getHouseholdDefaultEntityKeys(countryId)) {
       if (entity !== 'people') {
         householdData[entity] = {};
       }
@@ -880,7 +910,7 @@ export class Household extends BaseModel<HouseholdModelData> {
   }
 
   setMaritalStatus(person1Key: string, person2Key: string): Household {
-    if (this.countryId !== 'us') {
+    if (!this.isConfiguredGroupEntity('maritalUnits')) {
       return this;
     }
 
@@ -898,8 +928,9 @@ export class Household extends BaseModel<HouseholdModelData> {
     entityName: HouseholdGroupAppKey,
     groupKey: string
   ): Household {
+    const entityKey = normalizeConfiguredGroupKeyOrThrow(this.countryId, entityName);
     const nextData = cloneAppHouseholdInputData(this.appInputData);
-    const groups = ensureGroupCollection(nextData, entityName);
+    const groups = ensureGroupCollection(nextData, entityKey);
 
     if (!groups[groupKey]) {
       groups[groupKey] = { members: [] };
@@ -954,12 +985,13 @@ export class Household extends BaseModel<HouseholdModelData> {
     variableName: string,
     value: HouseholdFieldValue
   ): Household {
+    const entityKey = normalizeConfiguredGroupKeyOrThrow(this.countryId, entityName);
     const year = resolveRequiredYear(this.year, this.appInputData);
     const nextData = cloneAppHouseholdInputData(this.appInputData);
-    const groups = ensureGroupCollection(nextData, entityName);
+    const groups = ensureGroupCollection(nextData, entityKey);
 
     if (!groups[groupKey]) {
-      throw new Error(`Group ${groupKey} not found in ${String(entityName)}`);
+      throw new Error(`Group ${groupKey} not found in ${String(entityKey)}`);
     }
 
     groups[groupKey][variableName] = normalizeBuilderFieldValue(value, year);
@@ -975,7 +1007,7 @@ export class Household extends BaseModel<HouseholdModelData> {
     value: HouseholdScalar
   ): Household {
     const nextData = cloneAppHouseholdInputData(this.appInputData);
-    const entityKey = normalizeGroupKeyOrThrow(entityName);
+    const entityKey = normalizeConfiguredGroupKeyOrThrow(this.countryId, entityName);
     const groups = ensureGroupCollection(nextData, entityKey);
 
     if (!groups[groupKey]) {
@@ -1008,11 +1040,14 @@ export class Household extends BaseModel<HouseholdModelData> {
     year: string,
     value: HouseholdScalar
   ): Household {
-    if (this.getEntityVariableAtYear(entityName, entityKey, variableName, year) !== undefined) {
-      return this;
-    }
+    if (entityName === 'people') {
+      if (this.getEntityVariableAtYear(entityName, entityKey, variableName, year) !== undefined) {
+        return this;
+      }
+      if (this.hasEntityInstance(entityName, entityKey)) {
+        return this.setPersonVariableAtYear(entityKey, variableName, year, value);
+      }
 
-    if (entityName === 'people' && !this.hasEntityInstance(entityName, entityKey)) {
       const nextData = cloneAppHouseholdInputData(this.appInputData);
       nextData.people[entityKey] = {};
       return this.withHouseholdData(nextData).setPersonVariableAtYear(
@@ -1023,9 +1058,13 @@ export class Household extends BaseModel<HouseholdModelData> {
       );
     }
 
-    if (entityName !== 'people' && !this.hasEntityInstance(entityName, entityKey)) {
+    const entityGroupKey = normalizeConfiguredGroupKeyOrThrow(this.countryId, entityName);
+    if (this.getGroupVariableAtYear(entityGroupKey, entityKey, variableName, year) !== undefined) {
+      return this;
+    }
+
+    if (!this.hasEntityInstance(entityGroupKey, entityKey)) {
       const nextData = cloneAppHouseholdInputData(this.appInputData);
-      const entityGroupKey = normalizeGroupKeyOrThrow(entityName);
       ensureGroupCollection(nextData, entityGroupKey)[entityKey] = { members: [] };
       return this.withHouseholdData(nextData).setGroupVariableAtYear(
         entityGroupKey,
@@ -1036,7 +1075,7 @@ export class Household extends BaseModel<HouseholdModelData> {
       );
     }
 
-    return this.setEntityVariableAtYear(entityName, entityKey, variableName, year, value);
+    return this.setGroupVariableAtYear(entityGroupKey, entityKey, variableName, year, value);
   }
 
   removeEntityVariable(entityName: string, entityKey: string, variableName: string): Household {
@@ -1047,19 +1086,20 @@ export class Household extends BaseModel<HouseholdModelData> {
       return this.withHouseholdData(nextData);
     }
 
-    const groups = getGroupCollectionFromData(nextData, entityName);
+    const entityGroupKey = normalizeConfiguredGroupKeyOrThrow(this.countryId, entityName);
+    const groups = getGroupCollectionFromData(nextData, entityGroupKey);
     removeVariableFromEntityData(groups?.[entityKey], variableName);
 
     return this.withHouseholdData(nextData);
   }
 
   ensureGroupInstance(entityName: string): { household: Household; groupKey: string } {
-    const existingName = this.getPreferredGroupName(entityName);
+    const entityKey = normalizeConfiguredGroupKeyOrThrow(this.countryId, entityName);
+    const existingName = getPreferredGroupNameFromData(this.appInputData, entityKey);
     if (existingName) {
       return { household: this, groupKey: existingName };
     }
 
-    const entityKey = normalizeGroupKeyOrThrow(entityName);
     const groupDefinition = getGroupDefinitionByAppKey(entityKey);
     if (!groupDefinition) {
       throw new Error(`Unsupported household entity group "${entityName}"`);
@@ -1103,6 +1143,7 @@ export class Household extends BaseModel<HouseholdModelData> {
 
   toPythonPackage(): PythonPackageHouseholdData {
     return buildPythonPackageHouseholdDataFromAppInput({
+      countryId: this.countryId,
       householdData: this.appInputData,
       year: this.year ?? inferYearFromData(this.appInputData),
     });

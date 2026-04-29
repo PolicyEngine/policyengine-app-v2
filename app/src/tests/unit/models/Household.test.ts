@@ -212,6 +212,51 @@ describe('Household', () => {
       ]);
     });
 
+    it('creates builder-ready UK households with UK group defaults only', () => {
+      const household = Household.empty('uk', 2026).addAdult('you', 30, {
+        employment_income: 0,
+      });
+      const householdData = household.toAppInput().householdData;
+
+      expect(householdData.households?.['your household']?.members).toEqual(['you']);
+      expect(householdData.benunits?.['your benefit unit']?.members).toEqual(['you']);
+      expect(householdData.taxUnits).toBeUndefined();
+      expect(household.getConfiguredGroupCollections().map(({ entityName }) => entityName)).toEqual(
+        ['households', 'benunits']
+      );
+    });
+
+    it('rejects group mutations for entities not configured for the household country', () => {
+      const household = Household.empty('uk', 2026).addAdult('you', 30);
+
+      expect(() => household.assignToGroupEntity('you', 'taxUnits', 'taxUnit1')).toThrow(
+        'Group entity "taxUnits" is not configured for UK households'
+      );
+      expect(() => household.ensureGroupInstance('tax_units')).toThrow(
+        'Group entity "tax_units" is not configured for UK households'
+      );
+    });
+
+    it('ignores unsupported marital-unit group data when deriving UK builder composition', () => {
+      const household = Household.fromAppInput({
+        countryId: 'uk',
+        year: 2026,
+        householdData: {
+          people: {
+            adult: { age: { 2026: 35 } },
+            child: { age: { 2026: 8 }, is_tax_unit_dependent: { 2026: true } },
+          },
+          maritalUnits: {
+            staleMaritalUnit: {
+              members: ['adult', 'child'],
+            },
+          },
+        },
+      });
+
+      expect(household.getBuilderPartnerKey('2026', 'adult')).toBeNull();
+    });
+
     it('updates variables and removes people immutably', () => {
       const household = Household.empty('us', 2026)
         .addAdult('you', 30)
@@ -675,6 +720,45 @@ describe('Household', () => {
         },
       });
     });
+
+    it('uses country group strategy when emitting v1 creation payloads', () => {
+      const household = Household.fromAppInput({
+        id: 'uk-household',
+        countryId: 'uk',
+        label: 'UK household',
+        year: 2026,
+        householdData: {
+          people: {
+            adult: { age: { 2026: 35 } },
+          },
+          households: {
+            household1: { members: ['adult'] },
+          },
+          benunits: {
+            benunit1: { members: ['adult'] },
+          },
+          taxUnits: {
+            taxUnit1: { members: ['adult'] },
+          },
+        },
+      });
+
+      expect(household.toV1CreationPayload()).toEqual({
+        country_id: 'uk',
+        label: 'UK household',
+        data: {
+          people: {
+            adult: { age: { 2026: 35 } },
+          },
+          households: {
+            household1: { members: ['adult'] },
+          },
+          benunits: {
+            benunit1: { members: ['adult'] },
+          },
+        },
+      });
+    });
   });
 
   describe('toPythonPackage', () => {
@@ -721,6 +805,76 @@ describe('Household', () => {
           adult: {
             age: { 2026: 35 },
           },
+        },
+      });
+    });
+
+    it('uses UK group entity strategy when emitting Python package data', () => {
+      const household = Household.fromAppInput({
+        id: 'uk-household',
+        countryId: 'uk',
+        label: 'UK household',
+        year: 2026,
+        householdData: {
+          people: {
+            adult: { age: { 2026: 35 } },
+          },
+          households: {
+            household1: { members: ['adult'] },
+          },
+          benunits: {
+            benunit1: { members: ['adult'] },
+          },
+          taxUnits: {
+            taxUnit1: { members: ['adult'] },
+          },
+        },
+      });
+
+      expect(household.toPythonPackage()).toEqual({
+        people: {
+          adult: { age: { 2026: 35 } },
+        },
+        households: {
+          household1: { members: ['adult'] },
+        },
+        benunits: {
+          benunit1: { members: ['adult'] },
+        },
+      });
+    });
+
+    it('uses US group entity strategy when emitting Python package data', () => {
+      const household = Household.fromAppInput({
+        id: 'us-household',
+        countryId: 'us',
+        label: 'US household',
+        year: 2026,
+        householdData: {
+          people: {
+            adult: { age: { 2026: 35 } },
+          },
+          households: {
+            household1: { members: ['adult'] },
+          },
+          taxUnits: {
+            taxUnit1: { members: ['adult'] },
+          },
+          benunits: {
+            benunit1: { members: ['adult'] },
+          },
+        },
+      });
+
+      expect(household.toPythonPackage()).toEqual({
+        people: {
+          adult: { age: { 2026: 35 } },
+        },
+        households: {
+          household1: { members: ['adult'] },
+        },
+        tax_units: {
+          taxUnit1: { members: ['adult'] },
         },
       });
     });

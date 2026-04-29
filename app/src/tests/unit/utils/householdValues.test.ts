@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import {
   EXPECTED_FORMATTED_VALUES,
   EXPECTED_VALUES,
@@ -156,6 +156,65 @@ describe('getValueFromHousehold', () => {
 
     // Then
     expect(result).toBe(EXPECTED_VALUES.BENEFITS_PERSON_1);
+  });
+
+  test('given group entity not configured for household country then returns zero', () => {
+    // Given
+    const metadata = {
+      ...MOCK_METADATA,
+      variables: {
+        ...MOCK_METADATA.variables,
+        taxable_income: {
+          entity: 'tax_unit',
+          label: 'Taxable income',
+          unit: 'currency-GBP',
+          valueType: 'float',
+        },
+      },
+      entities: {
+        ...MOCK_METADATA.entities,
+        tax_unit: {
+          plural: 'tax_units',
+          label: 'Tax Unit',
+          description: 'A tax filing unit',
+        },
+      },
+    };
+    const household = {
+      ...MOCK_HOUSEHOLD_DATA,
+      countryId: 'uk' as const,
+      householdData: {
+        ...MOCK_HOUSEHOLD_DATA.householdData,
+        taxUnits: {
+          taxUnit1: {
+            members: [],
+            taxable_income: {
+              [TEST_TIME_PERIODS.CURRENT]: 50000,
+            },
+          },
+        },
+      },
+    };
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+
+    try {
+      // When
+      const result = getValueFromHousehold(
+        'taxable_income',
+        TEST_TIME_PERIODS.CURRENT,
+        'taxUnit1',
+        household,
+        metadata
+      );
+
+      // Then
+      expect(result).toBe(0);
+      expect(warnSpy).toHaveBeenCalledWith(
+        'Entity group tax_units is not configured for uk households'
+      );
+    } finally {
+      warnSpy.mockRestore();
+    }
   });
 });
 

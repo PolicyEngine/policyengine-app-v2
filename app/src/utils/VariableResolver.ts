@@ -101,6 +101,13 @@ function resolveEntityInstanceName(
   entityInfo: EntityInfo,
   entityName?: string
 ): string | null {
+  if (!entityInfo.isPerson && !household.isConfiguredGroupEntity(entityInfo.plural)) {
+    console.warn(
+      `[VariableResolver] Entity ${entityInfo.plural} is not configured for ${household.countryId} households`
+    );
+    return null;
+  }
+
   if (entityName) {
     return entityName;
   }
@@ -207,6 +214,10 @@ export function addVariable(
     return household;
   }
 
+  if (!entityInfo.isPerson && !household.isConfiguredGroupEntity(entityInfo.plural)) {
+    return household;
+  }
+
   const entityType = entityInfo.isPerson ? 'people' : entityInfo.plural;
   let nextHousehold = household;
   const instanceNames = nextHousehold.getEntityInstanceNames(entityType);
@@ -251,6 +262,10 @@ export function addVariableToEntity(
     return household;
   }
 
+  if (!entityInfo.isPerson && !household.isConfiguredGroupEntity(entityInfo.plural)) {
+    return household;
+  }
+
   const entityType = entityInfo.isPerson ? 'people' : entityInfo.plural;
   let nextHousehold = household;
   const resolvedEntityName =
@@ -290,6 +305,10 @@ export function removeVariable(
     return household;
   }
 
+  if (!entityInfo.isPerson && !household.isConfiguredGroupEntity(entityInfo.plural)) {
+    return household;
+  }
+
   const entityType = entityInfo.isPerson ? 'people' : entityInfo.plural;
   let nextHousehold = household;
 
@@ -313,6 +332,10 @@ export function removeVariableFromEntity(
   const entityInfo = resolveEntity(variableName, metadata);
 
   if (!entityInfo) {
+    return household;
+  }
+
+  if (!entityInfo.isPerson && !household.isConfiguredGroupEntity(entityInfo.plural)) {
     return household;
   }
 

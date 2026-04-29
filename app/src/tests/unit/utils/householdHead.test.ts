@@ -51,6 +51,34 @@ describe('getHeadOfHouseholdPersonName', () => {
     expect(getHeadOfHouseholdPersonName(household, YEAR)).toBe('adult');
   });
 
+  test('uses country-specific group candidates for UK households', () => {
+    const household: AppHouseholdInputEnvelope = {
+      countryId: 'uk',
+      householdData: {
+        people: {
+          taxAdult: {
+            age: { [YEAR]: 45 },
+          },
+          benefitAdult: {
+            age: { [YEAR]: 35 },
+          },
+        },
+        taxUnits: {
+          taxUnit1: {
+            members: ['taxAdult'],
+          },
+        },
+        benunits: {
+          benunit1: {
+            members: ['benefitAdult'],
+          },
+        },
+      },
+    };
+
+    expect(getHeadOfHouseholdPersonName(household, YEAR)).toBe('benefitAdult');
+  });
+
   test('falls back to you when no explicit group structure exists', () => {
     const household: AppHouseholdInputEnvelope = {
       countryId: 'us',
