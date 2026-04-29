@@ -24,6 +24,7 @@ import {
   getGroupDefinitionByAppKey,
   getHouseholdDefaultEntityKeys,
   getHouseholdGroupDefinitions,
+  GROUP_META_KEYS,
   isHouseholdGroupEntityConfigured,
   normalizeHouseholdGroupAppKey,
   type HouseholdGroupAppKey,
@@ -66,6 +67,12 @@ export interface PersonWithName extends AppHouseholdInputPerson {
 export interface HouseholdGroupSummary {
   key: string;
   members: string[];
+}
+
+export interface HouseholdGroupVariableReference {
+  name: string;
+  entity: HouseholdGroupAppKey;
+  entityName: string;
 }
 
 function normalizeYear(year: string | number): string {
@@ -575,6 +582,28 @@ export class Household extends BaseModel<HouseholdModelData> {
         Boolean(entry[1])
       )
       .map(([entityName, groups]) => ({ entityName, groups: cloneValue(groups) }));
+  }
+
+  getHouseholdLevelVariables(): HouseholdGroupVariableReference[] {
+    const variables: HouseholdGroupVariableReference[] = [];
+
+    for (const { entityName, groups } of this.getConfiguredGroupCollections()) {
+      for (const [groupName, group] of Object.entries(groups)) {
+        for (const variableName of Object.keys(group)) {
+          if (GROUP_META_KEYS.has(variableName) || group[variableName] === undefined) {
+            continue;
+          }
+
+          variables.push({
+            name: variableName,
+            entity: entityName,
+            entityName: groupName,
+          });
+        }
+      }
+    }
+
+    return variables;
   }
 
   getEntityInstanceNames(entityName: string): string[] {

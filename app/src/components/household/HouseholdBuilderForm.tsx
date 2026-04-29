@@ -29,7 +29,7 @@ import {
 } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import { Household as HouseholdModel } from '@/models/Household';
-import { GROUP_META_KEYS, PERSON_META_KEYS } from '@/models/household/schema';
+import { PERSON_META_KEYS } from '@/models/household/schema';
 import { sortPeopleKeys } from '@/utils/householdIndividuals';
 import {
   addVariable,
@@ -206,41 +206,23 @@ export default function HouseholdBuilderForm({
       );
   };
 
-  // Get all household-level variables (consolidated from tax_unit, spm_unit, household)
-  // Exclude basic inputs which are shown permanently
+  // Exclude basic inputs which are shown permanently.
   const householdLevelVariables = useMemo(() => {
-    const variables: Array<{ name: string; entity: string; entityName: string }> = [];
+    return household
+      .getHouseholdLevelVariables()
+      .filter(({ name }) => {
+        if (basicNonPersonFields.includes(name)) {
+          return false;
+        }
 
-    household.getConfiguredGroupCollections().forEach(({ entityName, groups }) => {
-      Object.entries(groups).forEach(([groupName, group]) => {
-        Object.keys(group)
-          .filter((varName) => {
-            if (GROUP_META_KEYS.has(varName) || basicNonPersonFields.includes(varName)) {
-              return false;
-            }
-
-            const entityInfo = resolveEntity(varName, metadata);
-            return (
-              !entityInfo?.isPerson &&
-              group[varName] !== undefined &&
-              inputVariableLookup.has(varName)
-            );
-          })
-          .forEach((varName) => {
-            variables.push({
-              name: varName,
-              entity: entityName,
-              entityName: groupName,
-            });
-          });
-      });
-    });
-
-    return variables.sort((left, right) =>
-      `${inputVariableLookup.get(left.name)?.label || left.name}:${left.entityName}`.localeCompare(
-        `${inputVariableLookup.get(right.name)?.label || right.name}:${right.entityName}`
-      )
-    );
+        const entityInfo = resolveEntity(name, metadata);
+        return !entityInfo?.isPerson && inputVariableLookup.has(name);
+      })
+      .sort((left, right) =>
+        `${inputVariableLookup.get(left.name)?.label || left.name}:${left.entityName}`.localeCompare(
+          `${inputVariableLookup.get(right.name)?.label || right.name}:${right.entityName}`
+        )
+      );
   }, [basicNonPersonFields, household, inputVariableLookup, metadata]);
 
   // Handle opening person search

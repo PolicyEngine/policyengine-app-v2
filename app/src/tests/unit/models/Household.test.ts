@@ -257,6 +257,49 @@ describe('Household', () => {
       expect(household.getBuilderPartnerKey('2026', 'adult')).toBeNull();
     });
 
+    it('lists non-person variables from configured household groups only', () => {
+      const household = Household.fromAppInput({
+        countryId: 'uk',
+        year: 2026,
+        householdData: {
+          people: {
+            adult: { age: { 2026: 35 } },
+          },
+          households: {
+            household1: {
+              members: ['adult'],
+              household_net_income: { 2026: 42000 },
+            },
+          },
+          benunits: {
+            benunit1: {
+              members: ['adult'],
+              housing_benefit: { 2026: 1000 },
+            },
+          },
+          taxUnits: {
+            taxUnit1: {
+              members: ['adult'],
+              taxable_income: { 2026: 50000 },
+            },
+          },
+        },
+      });
+
+      expect(household.getHouseholdLevelVariables()).toEqual([
+        {
+          name: 'household_net_income',
+          entity: 'households',
+          entityName: 'household1',
+        },
+        {
+          name: 'housing_benefit',
+          entity: 'benunits',
+          entityName: 'benunit1',
+        },
+      ]);
+    });
+
     it('updates variables and removes people immutably', () => {
       const household = Household.empty('us', 2026)
         .addAdult('you', 30)
