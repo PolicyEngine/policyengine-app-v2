@@ -115,6 +115,14 @@
       "destination": "https://policyengine-taxsim-policy-engine.vercel.app/us/taxsim/:path*"
     },
     {
+      "source": "/uk/chat",
+      "destination": "https://policyengine-uk-chat.vercel.app"
+    },
+    {
+      "source": "/uk/chat/:path*",
+      "destination": "https://policyengine-uk-chat.vercel.app/:path*"
+    },
+    {
       "source": "/:countryId/model",
       "destination": "https://policyengine-model-phi.vercel.app/?country=:countryId"
     },
