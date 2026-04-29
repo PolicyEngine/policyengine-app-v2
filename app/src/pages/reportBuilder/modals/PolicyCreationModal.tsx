@@ -187,7 +187,8 @@ export function PolicyCreationModal({
           ? formatLabelParts(hierarchicalLabels)
           : p.name.split('.').pop() || p.name;
 
-      const changes = p.values.map((interval) => ({
+      const changes = p.values.map((interval, index) => ({
+        index,
         period: formatPeriod(interval.startDate, interval.endDate),
         value: formatParameterValue(interval.value, metadata?.unit),
       }));
@@ -253,17 +254,6 @@ export function PolicyCreationModal({
     [parameters]
   );
 
-  // Handle parameter selection from changes card
-  const handleSelectParam = useCallback(
-    (paramName: string) => {
-      const metadata = parameters[paramName];
-      if (metadata) {
-        setSelectedParam(metadata);
-      }
-    },
-    [parameters]
-  );
-
   // Handle value submission
   const handleValueSubmit = useCallback(() => {
     if (!selectedParam || intervals.length === 0) {
@@ -287,6 +277,30 @@ export function PolicyCreationModal({
     setPolicyParameters(updatedParameters);
     setIntervals([]);
   }, [selectedParam, intervals, policyParameters]);
+
+  const handleRemoveParamChange = useCallback(
+    (paramName: string, indexToRemove: number) => {
+      if (isReadOnly) {
+        return;
+      }
+
+      setPolicyParameters((currentParameters) =>
+        currentParameters
+          .map((param) => {
+            if (param.name !== paramName) {
+              return param;
+            }
+
+            return {
+              ...param,
+              values: param.values.filter((_, index) => index !== indexToRemove),
+            };
+          })
+          .filter((param) => param.values.length > 0)
+      );
+    },
+    [isReadOnly]
+  );
 
   // Handle policy creation
   const handleCreatePolicy = useCallback(async () => {
@@ -501,9 +515,8 @@ export function PolicyCreationModal({
                   modifiedParams={modifiedParams.filter(
                     (p) => p.paramName === selectedParam?.parameter
                   )}
-                  modificationCount={modificationCount}
-                  selectedParamName={selectedParam?.parameter}
-                  onSelectParam={handleSelectParam}
+                  isReadOnly={isReadOnly}
+                  onRemoveChange={handleRemoveParamChange}
                 />
               </Stack>
               <HistoricalValuesCard
@@ -762,9 +775,7 @@ export function PolicyCreationModal({
           }}
         >
           <DialogContent>
-            <DialogTitle>
-              <strong>Unnamed policy</strong>
-            </DialogTitle>
+            <DialogTitle>Unnamed policy</DialogTitle>
             <DialogDescription className="tw:sr-only">
               Confirm saving an unnamed policy
             </DialogDescription>
