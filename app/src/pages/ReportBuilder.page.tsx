@@ -3720,11 +3720,7 @@ function PopulationBrowseModal({
 
   // Enter creation mode
   const handleEnterCreationMode = useCallback(() => {
-    setHouseholdDraft(
-      HouseholdModel.empty(countryId as CountryId, reportYear).addAdult('you', 30, {
-        employment_income: 0,
-      })
-    );
+    setHouseholdDraft(HouseholdModel.starter(countryId as CountryId, reportYear));
     setHouseholdLabel('');
     setIsCreationMode(true);
   }, [countryId, reportYear]);

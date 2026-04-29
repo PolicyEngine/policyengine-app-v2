@@ -29,17 +29,3 @@ function formatParameterLabel(paramName: string): string {
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ');
 }
-
-/**
- * Check if two native household model instances are equal.
- */
-export function householdsAreEqual(
-  household1: Household | undefined,
-  household2: Household | undefined
-): boolean {
-  if (!household1 || !household2) {
-    return false;
-  }
-
-  return household1.isEqual(household2);
-}

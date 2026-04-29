@@ -3,13 +3,8 @@ import {
   MOCK_HOUSEHOLD_COMPLEX,
   MOCK_HOUSEHOLD_EMPTY,
   MOCK_HOUSEHOLD_SIMPLE,
-  MOCK_HOUSEHOLD_SIMPLE_CLONE,
 } from '@/tests/fixtures/utils/householdTableDataMocks';
-import {
-  extractHouseholdInputs,
-  HouseholdInputRow,
-  householdsAreEqual,
-} from '@/utils/householdTableData';
+import { extractHouseholdInputs, HouseholdInputRow } from '@/utils/householdTableData';
 
 describe('householdTableData', () => {
   describe('extractHouseholdInputs', () => {
@@ -97,34 +92,6 @@ describe('householdTableData', () => {
         expect(typeof row.label).toBe('string');
         expect(typeof row.paramName).toBe('string');
       });
-    });
-  });
-
-  describe('householdsAreEqual', () => {
-    it('returns false when either household is undefined', () => {
-      expect(householdsAreEqual(undefined, MOCK_HOUSEHOLD_SIMPLE)).toBe(false);
-      expect(householdsAreEqual(MOCK_HOUSEHOLD_SIMPLE, undefined)).toBe(false);
-      expect(householdsAreEqual(undefined, undefined)).toBe(false);
-    });
-
-    it('returns true when households have the same ID', () => {
-      expect(householdsAreEqual(MOCK_HOUSEHOLD_SIMPLE, MOCK_HOUSEHOLD_SIMPLE)).toBe(true);
-    });
-
-    it('returns false when households have identical data but distinct model identities', () => {
-      expect(householdsAreEqual(MOCK_HOUSEHOLD_SIMPLE, MOCK_HOUSEHOLD_SIMPLE_CLONE)).toBe(false);
-    });
-
-    it('returns false when households have different data', () => {
-      expect(householdsAreEqual(MOCK_HOUSEHOLD_SIMPLE, MOCK_HOUSEHOLD_COMPLEX)).toBe(false);
-    });
-
-    it('returns false when comparing with empty household', () => {
-      expect(householdsAreEqual(MOCK_HOUSEHOLD_SIMPLE, MOCK_HOUSEHOLD_EMPTY)).toBe(false);
-    });
-
-    it('returns true for two empty households', () => {
-      expect(householdsAreEqual(MOCK_HOUSEHOLD_EMPTY, MOCK_HOUSEHOLD_EMPTY)).toBe(true);
     });
   });
 });

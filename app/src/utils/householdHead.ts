@@ -1,24 +1,17 @@
 import { Household } from '@/models/Household';
-import type {
-  AppHouseholdInputData,
-  AppHouseholdInputGroupMap,
-  AppHouseholdInputPerson,
-} from '@/models/household/appTypes';
 import { getHouseholdHeadGroupKeys } from '@/models/household/schema';
 import type {
-  HouseholdCalculationData,
-  HouseholdCalculationGroupMap,
   HouseholdCalculationOutput,
   HouseholdCalculationPerson,
 } from '@/types/calculation/household';
-import { getHouseholdGroupCollection, getHouseholdYearValue } from './householdDataAccess';
+import {
+  getHouseholdCalculationGroupCollection,
+  getHouseholdCalculationYearValue,
+} from './householdCalculationOutput';
 import { sortPeopleKeys } from './householdIndividuals';
 
-type HouseholdHeadInput = Pick<HouseholdCalculationOutput, 'countryId' | 'householdData'> & {
-  householdData: AppHouseholdInputData | HouseholdCalculationData;
-};
-type HouseholdHeadPerson = AppHouseholdInputPerson | HouseholdCalculationPerson;
-type HouseholdHeadGroupMap = AppHouseholdInputGroupMap | HouseholdCalculationGroupMap;
+type HouseholdHeadInput = Pick<HouseholdCalculationOutput, 'countryId' | 'householdData'>;
+type HouseholdHeadPerson = HouseholdCalculationPerson;
 
 function isAdult(
   person: HouseholdHeadPerson | undefined,
@@ -28,7 +21,7 @@ function isAdult(
     return false;
   }
 
-  const age = getHouseholdYearValue(person.age, year);
+  const age = getHouseholdCalculationYearValue(person.age, year);
   return typeof age === 'number' && age >= 18;
 }
 
@@ -58,9 +51,7 @@ function getPersonFromGroups(
   const people = householdData.people ?? {};
 
   for (const groupName of getHouseholdHeadGroupKeys(household.countryId)) {
-    const groups = getHouseholdGroupCollection(householdData, groupName) as
-      | HouseholdHeadGroupMap
-      | undefined;
+    const groups = getHouseholdCalculationGroupCollection(householdData, groupName);
     if (!groups) {
       continue;
     }

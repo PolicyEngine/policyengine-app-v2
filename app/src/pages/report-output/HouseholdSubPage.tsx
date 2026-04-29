@@ -4,7 +4,6 @@ import type { Household } from '@/models/Household';
 import { RootState } from '@/store';
 import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { extractGroupEntities } from '@/utils/householdIndividuals';
-import { householdsAreEqual } from '@/utils/householdTableData';
 
 interface HouseholdSubPageProps {
   baselineHousehold?: Household;
@@ -32,7 +31,9 @@ export default function HouseholdSubPage({
   }
 
   // Check if households are the same
-  const householdsSame = householdsAreEqual(baselineHousehold, reformHousehold);
+  const householdsSame = Boolean(
+    baselineHousehold && reformHousehold && baselineHousehold.isEqual(reformHousehold)
+  );
 
   // Get custom labels from userHouseholds, fallback to generic labels
   const baselineUserHousehold = userHouseholds?.find(

@@ -29,7 +29,6 @@ import {
 } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import { Household as HouseholdModel } from '@/models/Household';
-import { sortPeopleKeys } from '@/utils/householdIndividuals';
 import {
   addVariable,
   addVariableToEntity,
@@ -98,8 +97,6 @@ export default function HouseholdBuilderForm({
     };
   }, []);
 
-  const householdData = useMemo(() => household.householdData, [household]);
-
   // Get all input variables from metadata
   const allInputVariables = useMemo(() => getInputVariables(metadata), [metadata]);
   const inputVariableLookup = useMemo(
@@ -108,10 +105,7 @@ export default function HouseholdBuilderForm({
   );
 
   // Get list of people, sorted in display order (you, partner, dependents)
-  const people = useMemo(
-    () => sortPeopleKeys(Object.keys(householdData.people || {})),
-    [householdData]
-  );
+  const people = useMemo(() => household.getSortedPersonNames(), [household]);
 
   // Helper to get person display name (entirely lowercase)
   const getPersonDisplayName = (personKey: string): string => {

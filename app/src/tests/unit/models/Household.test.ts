@@ -65,12 +65,45 @@ describe('Household', () => {
       expect(household.personNames).toEqual(['adult', 'child']);
     });
 
+    it('returns sorted person names using builder display order', () => {
+      const household = createHousehold({
+        data: {
+          people: {
+            'your second dependent': { age: { 2026: 10 } },
+            'your partner': { age: { 2026: 35 } },
+            you: { age: { 2026: 34 } },
+            alex: { age: { 2026: 25 } },
+            'your first dependent': { age: { 2026: 8 } },
+          },
+        },
+      });
+
+      expect(household.getSortedPersonNames()).toEqual([
+        'you',
+        'your partner',
+        'your first dependent',
+        'your second dependent',
+        'alex',
+      ]);
+    });
+
     it('handles households without people', () => {
       const household = createEmptyHousehold();
 
       expect(household.people).toEqual({});
       expect(household.personCount).toBe(0);
       expect(household.personNames).toEqual([]);
+    });
+
+    it('creates starter households through the model factory', () => {
+      const household = Household.starter('uk', 2026);
+
+      expect(household.personNames).toEqual(['you']);
+      expect(household.getPersonVariableAtYear('you', 'age', '2026')).toBe(30);
+      expect(household.getPersonVariableAtYear('you', 'employment_income', '2026')).toBe(0);
+      expect(household.getGroupCount('benunits')).toBe(1);
+      expect(household.getHouseholdUnitCount()).toBe(1);
+      expect(household.householdData.taxUnits).toBeUndefined();
     });
 
     it('creates immutable copies when changing ids or labels', () => {

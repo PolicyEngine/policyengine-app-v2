@@ -1,13 +1,13 @@
 import { describe, expect, test } from 'vitest';
 import { Household } from '@/models/Household';
-import type { AppHouseholdInputEnvelope } from '@/models/household/appTypes';
+import type { HouseholdCalculationOutput } from '@/types/calculation/household';
 import { getHeadOfHouseholdPersonName } from '@/utils/householdHead';
 
 const YEAR = '2026';
 
 describe('getHeadOfHouseholdPersonName', () => {
   test('prefers the canonical "you" person when present', () => {
-    const household: AppHouseholdInputEnvelope = {
+    const household: HouseholdCalculationOutput = {
       countryId: 'us',
       householdData: {
         people: {
@@ -30,7 +30,7 @@ describe('getHeadOfHouseholdPersonName', () => {
   });
 
   test('falls back to the first adult member of the first tax unit when flags are absent', () => {
-    const household: AppHouseholdInputEnvelope = {
+    const household: HouseholdCalculationOutput = {
       countryId: 'us',
       householdData: {
         people: {
@@ -53,7 +53,7 @@ describe('getHeadOfHouseholdPersonName', () => {
   });
 
   test('uses country-specific group candidates for UK households', () => {
-    const household: AppHouseholdInputEnvelope = {
+    const household: HouseholdCalculationOutput = {
       countryId: 'uk',
       householdData: {
         people: {
@@ -109,7 +109,7 @@ describe('getHeadOfHouseholdPersonName', () => {
   });
 
   test('falls back to you when no explicit group structure exists', () => {
-    const household: AppHouseholdInputEnvelope = {
+    const household: HouseholdCalculationOutput = {
       countryId: 'us',
       householdData: {
         people: {
@@ -127,7 +127,7 @@ describe('getHeadOfHouseholdPersonName', () => {
   });
 
   test('uses stable sorted fallback when no other signal exists', () => {
-    const household: AppHouseholdInputEnvelope = {
+    const household: HouseholdCalculationOutput = {
       countryId: 'uk',
       householdData: {
         people: {

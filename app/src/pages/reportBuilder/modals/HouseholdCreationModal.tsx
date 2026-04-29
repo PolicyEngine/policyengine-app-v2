@@ -36,12 +36,6 @@ interface HouseholdCreationModalProps {
   forceReadOnly?: boolean;
 }
 
-function buildStarterHousehold(countryId: 'us' | 'uk', reportYear: string): HouseholdModel {
-  return HouseholdModel.empty(countryId, reportYear).addAdult('you', 30, {
-    employment_income: 0,
-  });
-}
-
 export function HouseholdCreationModal({
   isOpen,
   onClose,
@@ -89,7 +83,7 @@ export function HouseholdCreationModal({
     setEditorMode(resolvedInitialEditorMode);
     setPendingUnnamedAction(null);
     setValidation(null);
-    setHousehold(normalizedInitialHousehold ?? buildStarterHousehold(countryId, reportYear));
+    setHousehold(normalizedInitialHousehold ?? HouseholdModel.starter(countryId, reportYear));
   }, [countryId, isOpen, normalizedInitialHousehold, reportYear, resolvedInitialEditorMode]);
 
   const { createHousehold, isPending: isCreating } = useCreateHousehold(

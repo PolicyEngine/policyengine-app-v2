@@ -339,6 +339,12 @@ function sortBuilderPersonKeys(peopleKeys: string[]): string[] {
     if (leftOrdinalIndex !== -1 && rightOrdinalIndex !== -1) {
       return leftOrdinalIndex - rightOrdinalIndex;
     }
+    if (leftOrdinalIndex !== -1) {
+      return -1;
+    }
+    if (rightOrdinalIndex !== -1) {
+      return 1;
+    }
 
     return left.localeCompare(right);
   });
@@ -516,6 +522,14 @@ export class Household extends BaseModel<HouseholdModelData> {
 
   get personNames(): string[] {
     return Object.keys(this.appInputData.people);
+  }
+
+  getSortedPersonNames(): string[] {
+    return sortBuilderPersonKeys(Object.keys(this.appInputData.people));
+  }
+
+  getHouseholdUnitCount(): number {
+    return this.getGroupCount('households');
   }
 
   getAllPeople(): PersonWithName[] {
@@ -815,7 +829,7 @@ export class Household extends BaseModel<HouseholdModelData> {
   }
 
   getBuilderPrimaryPersonKey(year: string): string | null {
-    const people = sortBuilderPersonKeys(Object.keys(this.appInputData.people));
+    const people = this.getSortedPersonNames();
 
     if (people.includes(BUILDER_PRIMARY_PERSON_NAME)) {
       return BUILDER_PRIMARY_PERSON_NAME;
@@ -871,7 +885,7 @@ export class Household extends BaseModel<HouseholdModelData> {
     const resolvedPartnerKey =
       partnerKey ?? this.getBuilderPartnerKey(year, resolvedPrimaryPersonKey);
 
-    return sortBuilderPersonKeys(
+    return Household.sortPersonNames(
       Object.entries(this.appInputData.people)
         .filter(([personKey, person]) => {
           if (personKey === resolvedPrimaryPersonKey || personKey === resolvedPartnerKey) {
@@ -885,7 +899,7 @@ export class Household extends BaseModel<HouseholdModelData> {
   }
 
   deriveBuilderComposition(year: string): HouseholdBuilderComposition {
-    const people = sortBuilderPersonKeys(Object.keys(this.appInputData.people));
+    const people = this.getSortedPersonNames();
     const primaryPersonKey = this.getBuilderPrimaryPersonKey(year);
     const partnerKey = this.getBuilderPartnerKey(year, primaryPersonKey);
     const childKeys = this.getBuilderChildKeys(year, primaryPersonKey, partnerKey);
@@ -902,7 +916,7 @@ export class Household extends BaseModel<HouseholdModelData> {
 
   getHeadPersonName(year: string | null | undefined): string | null {
     const people = this.appInputData.people;
-    const orderedPeople = sortBuilderPersonKeys(Object.keys(people));
+    const orderedPeople = this.getSortedPersonNames();
     const normalizedYear = year ? String(year) : null;
 
     if (orderedPeople.length === 0) {
@@ -989,6 +1003,20 @@ export class Household extends BaseModel<HouseholdModelData> {
       year: Number(normalizeYear(year)),
       appInputData: householdData,
     });
+  }
+
+  static starter(countryId: CountryId, year: string | number): Household {
+    return Household.empty(countryId, year).addAdult(
+      BUILDER_PRIMARY_PERSON_NAME,
+      BUILDER_DEFAULT_ADULT_AGE,
+      {
+        employment_income: BUILDER_DEFAULT_EMPLOYMENT_INCOME,
+      }
+    );
+  }
+
+  static sortPersonNames(personNames: string[]): string[] {
+    return sortBuilderPersonKeys(personNames);
   }
 
   static fromV1Metadata(metadata: V1HouseholdMetadataEnvelope): Household {

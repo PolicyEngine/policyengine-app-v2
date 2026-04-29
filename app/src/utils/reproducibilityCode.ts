@@ -8,26 +8,16 @@
 
 import { CURRENT_YEAR } from '@/constants';
 import type { Household } from '@/models/Household';
-import type { HouseholdScalar } from '@/models/household/appTypes';
-import type {
-  PythonPackageHouseholdData,
-  PythonPackageHouseholdGroupData,
-  PythonPackageHouseholdPersonData,
-} from '@/models/household/pythonPackageTypes';
-import { cloneValue } from '@/models/household/utils';
 import {
-  addHouseholdVariationAxesToPythonPackageData,
-  type HouseholdVariationAxis,
-} from './householdVariationAxes';
+  addVariationAxesToPythonPackageHouseholdData,
+  cleanPythonPackageHouseholdNullValuesForYear,
+} from '@/models/household/pythonPackageCodec';
+import type { PythonPackageHouseholdSituation } from '@/models/household/pythonPackageTypes';
 
 // Default year fallback - use the app's current year constant
 const DEFAULT_YEAR = parseInt(CURRENT_YEAR, 10);
 
 type PolicyData = { baseline: { data: any }; reform: { data: any } };
-
-type HouseholdSituation = PythonPackageHouseholdData & {
-  axes?: HouseholdVariationAxis[][];
-};
 
 // Maps region prefixes (from metadata) to HuggingFace subfolder names.
 // Note: place/ is NOT included — places use the parent state's dataset + filtering.
@@ -215,52 +205,17 @@ function getReformCode(policy: PolicyData, countryId: string): string[] {
   return lines;
 }
 
-function isYearValueMap(value: unknown): value is Record<string, HouseholdScalar> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
-function cleanNullValuesForYear(
-  householdInput: PythonPackageHouseholdData,
-  year: number
-): HouseholdSituation {
-  const yearKey = String(year);
-  const householdInputCopy = cloneValue(householdInput) as HouseholdSituation;
-  const entityCollections = Object.values(householdInputCopy) as Array<
-    Record<string, PythonPackageHouseholdPersonData | PythonPackageHouseholdGroupData> | undefined
-  >;
-
-  for (const entityCollection of entityCollections) {
-    if (!entityCollection) {
-      continue;
-    }
-
-    for (const entity of Object.values(entityCollection)) {
-      for (const [variable, value] of Object.entries(entity)) {
-        if (variable === 'members') {
-          continue;
-        }
-
-        if (isYearValueMap(value) && value[yearKey] === null) {
-          delete entity[variable];
-        }
-      }
-    }
-  }
-
-  return householdInputCopy;
-}
-
 function buildHouseholdSituation(
   household: Household | null,
   countryId: string,
   year: number,
   earningVariation: boolean
-): HouseholdSituation {
+): PythonPackageHouseholdSituation {
   const householdInput = household?.toPythonPackage() ?? { people: {} };
-  const situation = cleanNullValuesForYear(householdInput, year);
+  const situation = cleanPythonPackageHouseholdNullValuesForYear(householdInput, year);
 
   if (earningVariation && Object.keys(situation.people).length > 0) {
-    return addHouseholdVariationAxesToPythonPackageData(situation, String(year), countryId);
+    return addVariationAxesToPythonPackageHouseholdData(situation, String(year), countryId);
   }
 
   return situation;

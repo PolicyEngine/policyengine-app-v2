@@ -13,7 +13,6 @@ import { colors, spacing } from '@/designTokens';
 import { useCreateHousehold } from '@/hooks/useCreateHousehold';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useReportYear } from '@/hooks/useReportYear';
-import type { CountryId } from '@/libs/countries';
 import { getBasicInputFields } from '@/libs/metadataUtils';
 import { Household as HouseholdModel } from '@/models/Household';
 import { EditableLabel } from '@/pages/reportBuilder/components/EditableLabel';
@@ -102,7 +101,6 @@ function buildViewHeader(
 
 export default function HouseholdBuilderView({
   population,
-  countryId,
   onSubmitSuccess,
   onBack,
 }: HouseholdBuilderViewProps) {
@@ -148,9 +146,7 @@ export default function HouseholdBuilderView({
       return population.household.withLabel(population.label ?? population.household.label ?? null);
     }
 
-    return HouseholdModel.empty(countryId as CountryId, reportYear).addAdult('you', 30, {
-      employment_income: 0,
-    });
+    return HouseholdModel.starter(currentCountryId, reportYear);
   });
   const { createHousehold, isPending } = useCreateHousehold(household.label || undefined);
   const [validation, setValidation] = useState<ReturnType<

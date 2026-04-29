@@ -25,3 +25,19 @@ export interface PythonPackageHouseholdGroupProperties {
 export type PythonPackageHouseholdGroupData = PythonPackageHouseholdMemberGroup & {
   [key: string]: Record<string, HouseholdScalar> | string[] | undefined;
 };
+
+export interface PythonPackageHouseholdVariationAxis {
+  name: string;
+  period: string;
+  min: number;
+  max: number;
+  count: number;
+}
+
+export type PythonPackageHouseholdWithAxes = PythonPackageHouseholdData & {
+  axes: PythonPackageHouseholdVariationAxis[][];
+};
+
+export type PythonPackageHouseholdSituation = PythonPackageHouseholdData & {
+  axes?: PythonPackageHouseholdVariationAxis[][];
+};
