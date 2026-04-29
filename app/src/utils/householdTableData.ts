@@ -11,56 +11,12 @@ export interface HouseholdInputRow {
  * Extract household input values as structured table rows
  */
 export function extractHouseholdInputs(household: Household): HouseholdInputRow[] {
-  const rows: HouseholdInputRow[] = [];
-  const people = household.people;
-  const householdVars = household.getGroupCollection('households');
-
-  // Extract person-level inputs
-  Object.entries(people).forEach(([personId, personData]) => {
-    // For each parameter in person data
-    Object.entries(personData).forEach(([paramName, paramValues]) => {
-      // paramValues is typically { "2024": value, "2025": value, ... }
-      if (typeof paramValues === 'object' && paramValues !== null) {
-        const firstValue = Object.values(paramValues)[0];
-
-        rows.push({
-          category: personId,
-          label: formatParameterLabel(paramName),
-          paramName,
-          value: firstValue,
-        });
-      }
-    });
-  });
-
-  // Extract household-level inputs
-  // householdVars is a Record<string, HouseholdGroupEntity>
-  // Each entity has a members array and other parameters
-  if (householdVars) {
-    Object.entries(householdVars).forEach(([_householdId, householdEntity]) => {
-      if (typeof householdEntity === 'object' && householdEntity !== null) {
-        Object.entries(householdEntity).forEach(([paramName, paramValues]) => {
-          // Skip the 'members' array - it's metadata, not an input
-          if (paramName === 'members') {
-            return;
-          }
-
-          if (typeof paramValues === 'object' && paramValues !== null) {
-            const firstValue = Object.values(paramValues)[0];
-
-            rows.push({
-              category: 'Household',
-              label: formatParameterLabel(paramName),
-              paramName,
-              value: firstValue,
-            });
-          }
-        });
-      }
-    });
-  }
-
-  return rows;
+  return household.getHouseholdInputVariableEntries().map((entry) => ({
+    category: entry.entity === 'people' ? entry.entityName : 'Household',
+    label: formatParameterLabel(entry.name),
+    paramName: entry.name,
+    value: entry.value,
+  }));
 }
 
 /**

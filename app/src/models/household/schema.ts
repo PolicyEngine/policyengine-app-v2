@@ -113,6 +113,15 @@ export const V2_GROUP_DEFINITIONS_BY_COUNTRY: Record<
   uk: HOUSEHOLD_GROUP_DEFINITIONS_BY_COUNTRY.uk,
 };
 
+export const HOUSEHOLD_HEAD_GROUP_PRIORITY: readonly HouseholdGroupAppKey[] = [
+  'taxUnits',
+  'benunits',
+  'households',
+  'families',
+  'spmUnits',
+  'maritalUnits',
+];
+
 const GROUP_DEFINITION_BY_APP_KEY = new Map(
   GROUP_DEFINITIONS.map((definition) => [definition.appKey, definition])
 );
@@ -198,6 +207,14 @@ export function getHouseholdDefaultEntityKeys(
     'people',
     ...getHouseholdGroupDefinitions(countryId).map((definition) => definition.appKey),
   ];
+}
+
+export function getHouseholdHeadGroupKeys(countryId: CountryId): readonly HouseholdGroupAppKey[] {
+  const configuredGroups = new Set(
+    getHouseholdGroupDefinitions(countryId).map((definition) => definition.appKey)
+  );
+
+  return HOUSEHOLD_HEAD_GROUP_PRIORITY.filter((groupName) => configuredGroups.has(groupName));
 }
 
 export function getV2GroupDefinitions(countryId: V2CountryId): readonly HouseholdGroupDefinition[] {

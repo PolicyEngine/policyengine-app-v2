@@ -29,7 +29,6 @@ import {
 } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
 import { Household as HouseholdModel } from '@/models/Household';
-import { PERSON_META_KEYS } from '@/models/household/schema';
 import { sortPeopleKeys } from '@/utils/householdIndividuals';
 import {
   addVariable,
@@ -181,23 +180,15 @@ export default function HouseholdBuilderForm({
 
   // Get variables for a specific person (custom only, not basic inputs)
   const getPersonVariables = (personName: string): string[] => {
-    const personData = householdData.people[personName];
-    if (!personData) {
-      return [];
-    }
-
-    return Object.keys(personData)
+    return household
+      .getPersonLevelVariables(personName)
       .filter((varName) => {
-        if (PERSON_META_KEYS.has(varName) || basicPersonFields.includes(varName)) {
+        if (basicPersonFields.includes(varName)) {
           return false;
         }
 
         const entityInfo = resolveEntity(varName, metadata);
-        return (
-          entityInfo?.isPerson &&
-          personData[varName] !== undefined &&
-          inputVariableLookup.has(varName)
-        );
+        return entityInfo?.isPerson && inputVariableLookup.has(varName);
       })
       .sort((left, right) =>
         (inputVariableLookup.get(left)?.label || left).localeCompare(

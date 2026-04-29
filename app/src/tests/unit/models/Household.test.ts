@@ -289,11 +289,13 @@ describe('Household', () => {
       expect(household.getHouseholdLevelVariables()).toEqual([
         {
           name: 'household_net_income',
+          value: { 2026: 42000 },
           entity: 'households',
           entityName: 'household1',
         },
         {
           name: 'housing_benefit',
+          value: { 2026: 1000 },
           entity: 'benunits',
           entityName: 'benunit1',
         },

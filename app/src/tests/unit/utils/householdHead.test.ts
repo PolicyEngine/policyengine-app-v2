@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+import { Household } from '@/models/Household';
 import type { AppHouseholdInputEnvelope } from '@/models/household/appTypes';
 import { getHeadOfHouseholdPersonName } from '@/utils/householdHead';
 
@@ -75,6 +76,34 @@ describe('getHeadOfHouseholdPersonName', () => {
         },
       },
     };
+
+    expect(getHeadOfHouseholdPersonName(household, YEAR)).toBe('benefitAdult');
+  });
+
+  test('delegates native Household instances to the model', () => {
+    const household = Household.fromAppInput({
+      countryId: 'uk',
+      householdData: {
+        people: {
+          taxAdult: {
+            age: { [YEAR]: 45 },
+          },
+          benefitAdult: {
+            age: { [YEAR]: 35 },
+          },
+        },
+        taxUnits: {
+          taxUnit1: {
+            members: ['taxAdult'],
+          },
+        },
+        benunits: {
+          benunit1: {
+            members: ['benefitAdult'],
+          },
+        },
+      },
+    });
 
     expect(getHeadOfHouseholdPersonName(household, YEAR)).toBe('benefitAdult');
   });
