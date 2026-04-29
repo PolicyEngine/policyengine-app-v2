@@ -7,6 +7,11 @@ import { PolicyCreationPayload } from '@/types/payloads';
 import { useCurrentCountry } from './useCurrentCountry';
 import { getPolicyWriteConfig, useCreatePolicyAssociation } from './useUserPolicy';
 
+interface CreatePolicyVariables {
+  payload: PolicyCreationPayload;
+  label?: string;
+}
+
 export function useCreatePolicy(policyLabel?: string) {
   const countryId = useCurrentCountry();
   const { shouldShadowV2 } = getPolicyWriteConfig('useCreatePolicy');
@@ -14,8 +19,9 @@ export function useCreatePolicy(policyLabel?: string) {
   const createAssociation = useCreatePolicyAssociation({ skipDuplicateV2AssociationShadow: true });
 
   const mutation = useMutation({
-    mutationFn: (data: PolicyCreationPayload) => createPolicy(countryId, data),
-    onSuccess: async (data, policyPayload) => {
+    mutationFn: ({ payload }: CreatePolicyVariables) => createPolicy(countryId, payload),
+    onSuccess: async (data, { payload, label }) => {
+      const resolvedLabel = label ?? policyLabel;
       let association: UserPolicy | undefined;
 
       try {
@@ -26,7 +32,7 @@ export function useCreatePolicy(policyLabel?: string) {
           userId,
           policyId: data.result.policy_id, // This is from the API response structure; may be modified in API v2
           countryId,
-          label: policyLabel,
+          label: resolvedLabel,
           isCreated: true,
         });
       } catch (error) {
@@ -36,17 +42,27 @@ export function useCreatePolicy(policyLabel?: string) {
       if (shouldShadowV2) {
         void shadowCreatePolicyAndAssociation({
           countryId,
-          label: policyLabel,
+          label: resolvedLabel,
           v1PolicyId: data.result.policy_id,
-          v1PolicyPayload: policyPayload,
+          v1PolicyPayload: payload,
           v1Association: association,
         });
       }
     },
   });
 
+  const createPolicyWithLabel = (
+    payload: PolicyCreationPayload,
+    label?: string,
+    options?: Parameters<typeof mutation.mutateAsync>[1]
+  ) => mutation.mutateAsync({ payload, label }, options);
+
   return {
-    createPolicy: mutation.mutateAsync,
+    createPolicy: (
+      payload: PolicyCreationPayload,
+      options?: Parameters<typeof mutation.mutateAsync>[1]
+    ) => createPolicyWithLabel(payload, policyLabel, options),
+    createPolicyWithLabel,
     isPending: mutation.isPending,
     error: mutation.error,
   };

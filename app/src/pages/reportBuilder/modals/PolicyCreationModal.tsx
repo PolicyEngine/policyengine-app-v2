@@ -60,6 +60,7 @@ import {
   SidebarTab,
   ValueSetterCard,
 } from './policyCreation';
+import { SaveAsNewNameDialog } from './SaveAsNewNameDialog';
 
 interface PolicyCreationModalProps {
   isOpen: boolean;
@@ -125,7 +126,7 @@ export function PolicyCreationModal({
   const [hoveredParamName, setHoveredParamName] = useState<string | null>(null);
   // API hooks
   const normalizedPolicyLabel = policyLabel.trim();
-  const { createPolicy, isPending: isCreating } = useCreatePolicy(
+  const { createPolicyWithLabel, isPending: isCreating } = useCreatePolicy(
     normalizedPolicyLabel || undefined
   );
   const updatePolicyAssociation = useUpdatePolicyAssociation();
@@ -303,42 +304,39 @@ export function PolicyCreationModal({
   );
 
   // Handle policy creation
-  const handleCreatePolicy = useCallback(async () => {
-    const policyData: Partial<Policy> = {
-      parameters: policyParameters,
-    };
-
-    const payload: PolicyCreationPayload = PolicyAdapter.toCreationPayload(policyData as Policy);
-
-    try {
-      const result = await createPolicy(payload);
-      const createdPolicy: PolicyStateProps = {
-        id: result.result.policy_id,
-        label: normalizedPolicyLabel || null,
+  const handleCreatePolicy = useCallback(
+    async (labelOverride?: string | null) => {
+      const resolvedLabel =
+        labelOverride === undefined ? normalizedPolicyLabel : (labelOverride?.trim() ?? '');
+      const policyData: Partial<Policy> = {
         parameters: policyParameters,
       };
-      onPolicyCreated(createdPolicy);
-      onClose();
-    } catch (error) {
-      console.error('Failed to create policy:', error);
-    }
-  }, [normalizedPolicyLabel, policyParameters, createPolicy, onPolicyCreated, onClose]);
 
-  // Same-name warning for "Save as new" when name matches original
-  const [showSameNameWarning, setShowSameNameWarning] = useState(false);
+      const payload: PolicyCreationPayload = PolicyAdapter.toCreationPayload(policyData as Policy);
+
+      try {
+        const result = await createPolicyWithLabel(payload, resolvedLabel || undefined);
+        const createdPolicy: PolicyStateProps = {
+          id: result.result.policy_id,
+          label: resolvedLabel || null,
+          parameters: policyParameters,
+        };
+        onPolicyCreated(createdPolicy);
+        onClose();
+      } catch (error) {
+        console.error('Failed to create policy:', error);
+      }
+    },
+    [normalizedPolicyLabel, policyParameters, createPolicyWithLabel, onPolicyCreated, onClose]
+  );
 
   // Unnamed-policy warning for creating/saving without a name
   const [pendingUnnamedAction, setPendingUnnamedAction] = useState<PendingUnnamedAction>(null);
+  const [saveAsNewNamePromptOpen, setSaveAsNewNamePromptOpen] = useState(false);
 
   const handleSaveAsNewPolicy = useCallback(() => {
-    const currentName = normalizedPolicyLabel;
-    const originalName = (initialPolicy?.label || '').trim();
-    if (effectiveEditorMode === 'edit' && currentName && currentName === originalName) {
-      setShowSameNameWarning(true);
-    } else {
-      void handleCreatePolicy();
-    }
-  }, [normalizedPolicyLabel, initialPolicy?.label, effectiveEditorMode, handleCreatePolicy]);
+    setSaveAsNewNamePromptOpen(true);
+  }, []);
 
   // Handle updating an existing policy (create new base policy, update association)
   const handleUpdateExistingPolicy = useCallback(async () => {
@@ -396,38 +394,24 @@ export function PolicyCreationModal({
   const requestSaveAction = useCallback(
     (action: Exclude<PendingUnnamedAction, null>) => {
       const currentName = normalizedPolicyLabel;
-      const originalName = (initialPolicy?.label || '').trim();
+
+      if (action === 'save-as-new') {
+        handleSaveAsNewPolicy();
+        return;
+      }
 
       if (!currentName) {
         setPendingUnnamedAction(action);
         return;
       }
 
-      if (
-        action === 'save-as-new' &&
-        effectiveEditorMode === 'edit' &&
-        currentName === originalName
-      ) {
-        setShowSameNameWarning(true);
-        return;
-      }
-
       if (action === 'create') {
         void handleCreatePolicy();
-      } else if (action === 'save-as-new') {
-        void handleSaveAsNewPolicy();
       } else {
         void handleUpdateExistingPolicy();
       }
     },
-    [
-      normalizedPolicyLabel,
-      initialPolicy?.label,
-      effectiveEditorMode,
-      handleCreatePolicy,
-      handleSaveAsNewPolicy,
-      handleUpdateExistingPolicy,
-    ]
+    [normalizedPolicyLabel, handleCreatePolicy, handleSaveAsNewPolicy, handleUpdateExistingPolicy]
   );
 
   // Get base and reform values for chart
@@ -727,43 +711,21 @@ export function PolicyCreationModal({
           </div>
         </div>
 
-        {/* Same-name warning modal */}
-        <Dialog
-          open={showSameNameWarning}
-          onOpenChange={(open) => {
-            if (!open) {
-              setShowSameNameWarning(false);
-            }
+        <SaveAsNewNameDialog
+          open={saveAsNewNamePromptOpen}
+          ingredientType="policy"
+          currentName={policyLabel}
+          isSaving={isCreating}
+          onCancel={() => setSaveAsNewNamePromptOpen(false)}
+          onKeepSameName={() => {
+            setSaveAsNewNamePromptOpen(false);
+            void handleCreatePolicy(policyLabel);
           }}
-        >
-          <DialogContent>
-            <DialogTitle>
-              <strong>Same name</strong>
-            </DialogTitle>
-            <DialogDescription className="tw:sr-only">
-              Confirm saving a policy with the same name
-            </DialogDescription>
-            <Stack gap="md">
-              <Text size="sm">
-                Both the original and new policy will have the name &ldquo;
-                {policyLabel}&rdquo;. Are you sure you want to save?
-              </Text>
-              <Group justify="end" gap="sm">
-                <Button variant="outline" onClick={() => setShowSameNameWarning(false)}>
-                  Cancel
-                </Button>
-                <Button
-                  onClick={() => {
-                    setShowSameNameWarning(false);
-                    handleCreatePolicy();
-                  }}
-                >
-                  Save anyway
-                </Button>
-              </Group>
-            </Stack>
-          </DialogContent>
-        </Dialog>
+          onSaveWithName={(name) => {
+            setSaveAsNewNamePromptOpen(false);
+            void handleCreatePolicy(name);
+          }}
+        />
 
         {/* Unnamed policy warning modal */}
         <Dialog

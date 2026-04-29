@@ -20,6 +20,7 @@ import { PopulationStateProps } from '@/types/pathwayState';
 import { HouseholdValidation } from '@/utils/HouseholdValidation';
 import { BROWSE_MODAL_CONFIG, FONT_SIZES, INGREDIENT_COLORS } from '../constants';
 import { HouseholdCreationContent } from './population';
+import { SaveAsNewNameDialog } from './SaveAsNewNameDialog';
 
 type HouseholdEditorMode = 'create' | 'display' | 'edit';
 type PendingUnnamedAction = 'create' | 'save-as-new' | 'update-existing' | null;
@@ -74,6 +75,7 @@ export function HouseholdCreationModal({
   > | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [pendingUnnamedAction, setPendingUnnamedAction] = useState<PendingUnnamedAction>(null);
+  const [saveAsNewNamePromptOpen, setSaveAsNewNamePromptOpen] = useState(false);
 
   useEffect(() => {
     if (!isOpen) {
@@ -82,11 +84,12 @@ export function HouseholdCreationModal({
 
     setEditorMode(resolvedInitialEditorMode);
     setPendingUnnamedAction(null);
+    setSaveAsNewNamePromptOpen(false);
     setValidation(null);
     setHousehold(normalizedInitialHousehold ?? HouseholdModel.starter(countryId, reportYear));
   }, [countryId, isOpen, normalizedInitialHousehold, reportYear, resolvedInitialEditorMode]);
 
-  const { createHousehold, isPending: isCreating } = useCreateHousehold(
+  const { createHouseholdWithLabel, isPending: isCreating } = useCreateHousehold(
     household?.label || undefined
   );
 
@@ -182,31 +185,41 @@ export function HouseholdCreationModal({
     [onClose, onHouseholdSaved]
   );
 
-  const handleCreateNewHousehold = useCallback(async () => {
-    if (!household) {
-      return;
-    }
+  const handleCreateNewHousehold = useCallback(
+    async (labelOverride?: string | null) => {
+      if (!household) {
+        return;
+      }
 
-    const nextValidation = HouseholdValidation.isReadyForSimulation(
-      household,
-      countryId,
-      reportYear
-    );
-    setValidation(nextValidation);
-    if (!nextValidation.isValid) {
-      return;
-    }
+      const householdToSave =
+        labelOverride === undefined
+          ? household
+          : household.withLabel(labelOverride?.trim() ? labelOverride.trim() : null);
 
-    try {
-      const payload = household.toV1CreationPayload();
-      const result = await createHousehold(payload);
-      const householdId = String(result.result.household_id);
-      const savedHousehold = household.withId(householdId).withLabel(household.label ?? null);
-      persistCreatedHousehold(savedHousehold);
-    } catch (error) {
-      console.error('Failed to create household:', error);
-    }
-  }, [countryId, createHousehold, household, persistCreatedHousehold, reportYear]);
+      const nextValidation = HouseholdValidation.isReadyForSimulation(
+        householdToSave,
+        countryId,
+        reportYear
+      );
+      setValidation(nextValidation);
+      if (!nextValidation.isValid) {
+        return;
+      }
+
+      try {
+        const payload = householdToSave.toV1CreationPayload();
+        const result = await createHouseholdWithLabel(payload, householdToSave.label ?? undefined);
+        const householdId = String(result.result.household_id);
+        const savedHousehold = householdToSave
+          .withId(householdId)
+          .withLabel(householdToSave.label ?? null);
+        persistCreatedHousehold(savedHousehold);
+      } catch (error) {
+        console.error('Failed to create household:', error);
+      }
+    },
+    [countryId, createHouseholdWithLabel, household, persistCreatedHousehold, reportYear]
+  );
 
   const handleUpdateExistingHousehold = useCallback(async () => {
     if (!household || !initialAssociation?.id) {
@@ -276,12 +289,17 @@ export function HouseholdCreationModal({
         return;
       }
 
+      if (action === 'save-as-new') {
+        setSaveAsNewNamePromptOpen(true);
+        return;
+      }
+
       if (!household.label?.trim()) {
         setPendingUnnamedAction(action);
         return;
       }
 
-      if (action === 'create' || action === 'save-as-new') {
+      if (action === 'create') {
         void handleCreateNewHousehold();
       } else {
         void handleUpdateExistingHousehold();
@@ -514,6 +532,22 @@ export function HouseholdCreationModal({
           </Stack>
         </DialogContent>
       </Dialog>
+
+      <SaveAsNewNameDialog
+        open={saveAsNewNamePromptOpen}
+        ingredientType="household"
+        currentName={household?.label ?? ''}
+        isSaving={isCreating}
+        onCancel={() => setSaveAsNewNamePromptOpen(false)}
+        onKeepSameName={() => {
+          setSaveAsNewNamePromptOpen(false);
+          void handleCreateNewHousehold(household?.label ?? null);
+        }}
+        onSaveWithName={(name) => {
+          setSaveAsNewNamePromptOpen(false);
+          void handleCreateNewHousehold(name);
+        }}
+      />
     </>
   );
 }

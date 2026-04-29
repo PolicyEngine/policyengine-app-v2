@@ -1,7 +1,9 @@
-import { render, screen } from '@test-utils';
-import { describe, expect, test, vi } from 'vitest';
+import { fireEvent, render, screen, userEvent, waitFor } from '@test-utils';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { PolicyCreationModal } from '@/pages/reportBuilder/modals/PolicyCreationModal';
 import type { PolicyStateProps } from '@/types/pathwayState';
+
+const mockCreatePolicyWithLabel = vi.hoisted(() => vi.fn());
 
 const mockReduxState = {
   metadata: {
@@ -28,7 +30,7 @@ vi.mock('@/hooks/useCurrentCountry', () => ({
 
 vi.mock('@/hooks/useCreatePolicy', () => ({
   useCreatePolicy: () => ({
-    createPolicy: vi.fn(),
+    createPolicyWithLabel: mockCreatePolicyWithLabel,
     isPending: false,
   }),
 }));
@@ -55,7 +57,23 @@ const initialPolicy: PolicyStateProps = {
   parameters: [],
 };
 
+const modifiedPolicy: PolicyStateProps = {
+  id: 'pol-123',
+  label: 'Test policy',
+  parameters: [
+    {
+      name: 'gov.test.parameter',
+      values: [{ startDate: '2024-01-01', endDate: '2024-12-31', value: 1 }],
+    },
+  ],
+};
+
 describe('PolicyCreationModal', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockCreatePolicyWithLabel.mockResolvedValue({ result: { policy_id: 'pol-new' } });
+  });
+
   test('given forceReadOnly then does not render edit transition actions', () => {
     render(
       <PolicyCreationModal
@@ -91,5 +109,62 @@ describe('PolicyCreationModal', () => {
     );
 
     expect(screen.getByRole('button', { name: /edit this policy/i })).toBeInTheDocument();
+  });
+
+  test('given save as new policy then asks for a new name before creating', async () => {
+    const user = userEvent.setup();
+    const onPolicyCreated = vi.fn();
+
+    render(
+      <PolicyCreationModal
+        isOpen
+        onClose={vi.fn()}
+        onPolicyCreated={onPolicyCreated}
+        reportYear="2024"
+        simulationIndex={0}
+        initialPolicy={modifiedPolicy}
+        initialEditorMode="edit"
+      />
+    );
+
+    await user.click(screen.getByRole('button', { name: /save as new policy/i }));
+
+    expect(screen.getByRole('heading', { name: /save as new policy/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /keep same name/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /cancel/i })).toBeInTheDocument();
+
+    const nameInput = screen.getByRole('textbox', { name: /new policy name/i });
+    fireEvent.change(nameInput, { target: { value: 'Renamed policy' } });
+    await user.click(screen.getByRole('button', { name: /save with new name/i }));
+
+    await waitFor(() => {
+      expect(mockCreatePolicyWithLabel).toHaveBeenCalledWith(expect.any(Object), 'Renamed policy');
+    });
+    expect(onPolicyCreated).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'pol-new', label: 'Renamed policy' })
+    );
+  });
+
+  test('given keep same name from save as new policy then creates with current name', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <PolicyCreationModal
+        isOpen
+        onClose={vi.fn()}
+        onPolicyCreated={vi.fn()}
+        reportYear="2024"
+        simulationIndex={0}
+        initialPolicy={modifiedPolicy}
+        initialEditorMode="edit"
+      />
+    );
+
+    await user.click(screen.getByRole('button', { name: /save as new policy/i }));
+    await user.click(screen.getByRole('button', { name: /keep same name/i }));
+
+    await waitFor(() => {
+      expect(mockCreatePolicyWithLabel).toHaveBeenCalledWith(expect.any(Object), 'Test policy');
+    });
   });
 });
