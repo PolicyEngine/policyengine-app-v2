@@ -18,6 +18,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import ReactMarkdown, { type Components } from 'react-markdown';
+import rehypeRaw from 'rehype-raw';
 import remarkGfm from 'remark-gfm';
 import OptimisedImage from '@/components/ui/OptimisedImage';
 import type { MarkdownFormatterProps } from '@/types/blog';
@@ -984,7 +985,7 @@ export function MarkdownFormatter({
   };
 
   return (
-    <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
+    <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]} components={components}>
       {markdown}
     </ReactMarkdown>
   );
