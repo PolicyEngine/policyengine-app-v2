@@ -985,11 +985,7 @@ export function MarkdownFormatter({
   };
 
   return (
-    <ReactMarkdown
-      remarkPlugins={[remarkGfm]}
-      rehypePlugins={[rehypeRaw]}
-      components={components}
-    >
+    <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]} components={components}>
       {markdown}
     </ReactMarkdown>
   );

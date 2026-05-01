@@ -66,8 +66,25 @@ describe('MarkdownFormatter', () => {
       expect(screen.getByRole('list')).toBeInTheDocument();
     });
 
-    test('given raw HTML markdown then does not render raw elements', () => {
+    test('given markdown with iframe then renders embedded iframe', () => {
       // Given
+      const markdown =
+        'Embed below.\n\n<iframe src="https://example.com/embed.html" width="100%" height="400" frameborder="0"></iframe>';
+
+      // When
+      const { container } = render(<MarkdownFormatter markdown={markdown} />);
+
+      // Then
+      expect(screen.getByText('Embed below.')).toBeInTheDocument();
+      const iframe = container.querySelector('iframe');
+      expect(iframe).not.toBeNull();
+      expect(iframe).toHaveAttribute('src', 'https://example.com/embed.html');
+    });
+
+    test('given raw HTML with dangerous attributes then strips event handlers', () => {
+      // Given – raw HTML is rendered (so iframes work) but the custom component
+      // overrides only forward a safe subset of attributes, dropping inline
+      // event handlers such as onerror.
       const markdown =
         'Paragraph before HTML.\n\n<img src="x" alt="malicious" onerror="alert(1)" />';
 
@@ -76,7 +93,8 @@ describe('MarkdownFormatter', () => {
 
       // Then
       expect(screen.getByText('Paragraph before HTML.')).toBeInTheDocument();
-      expect(screen.queryByRole('img', { name: 'malicious' })).toBeNull();
+      const img = screen.getByRole('img', { name: 'malicious' });
+      expect(img).not.toHaveAttribute('onerror');
     });
   });
 
