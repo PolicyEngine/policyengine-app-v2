@@ -26,8 +26,5 @@ rm -rf "$WEBSITE_ASSETS_DIR"
 mkdir -p "$WEBSITE_ROOT/public"
 cp -R "$APP_ASSETS_DIR" "$WEBSITE_ASSETS_DIR"
 
-echo "[build.sh] Copied assets. Verifying citation images:"
-ls "$WEBSITE_ASSETS_DIR/citations/" | grep -E "uhero|vermont|booker" || echo "[build.sh] no matching citation images found"
-
 cd "$WEBSITE_ROOT"
 bun run build:next
