@@ -1,10 +1,10 @@
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { describe, expect, test } from 'vitest';
+import { Household } from '@/models/Household';
 import {
   mockBoolMetadata,
   mockEmptyHousehold,
   mockFloatMetadata,
   mockHouseholdCountryMismatch,
-  mockHouseholdInvalidGroupStructure,
   mockHouseholdMissingAge,
   mockIntMetadata,
   mockReduxStateNoMetadata,
@@ -31,24 +31,21 @@ import {
   verifyValidationWarning,
   verifyWarningCount,
 } from '@/tests/fixtures/utils/householdValidationMocks';
-import * as HouseholdQueries from '@/utils/HouseholdQueries';
 import { HouseholdValidation } from '@/utils/HouseholdValidation';
 
-// Mock HouseholdQueries
-vi.mock('@/utils/HouseholdQueries', () => ({
-  getPersonCount: vi.fn(),
-}));
+function withHouseholdData(
+  household: Household,
+  householdData: ReturnType<Household['toAppInput']>['householdData']
+): Household {
+  return Household.fromAppInput({
+    ...household.toAppInput(),
+    householdData,
+  });
+}
 
 describe('HouseholdValidation', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   describe('validateForCountry', () => {
     test('given valid US household when validating then returns valid result', () => {
-      // Given
-      vi.mocked(HouseholdQueries.getPersonCount).mockReturnValue(2);
-
       // When
       const result = HouseholdValidation.validateForCountry(
         mockValidUSHousehold,
@@ -62,9 +59,6 @@ describe('HouseholdValidation', () => {
     });
 
     test('given valid UK household when validating then returns valid result', () => {
-      // Given
-      vi.mocked(HouseholdQueries.getPersonCount).mockReturnValue(2);
-
       // When
       const result = HouseholdValidation.validateForCountry(
         mockValidUKHousehold,
@@ -91,6 +85,34 @@ describe('HouseholdValidation', () => {
       expect(result.errors[0].message).toContain(VALIDATION_COUNTRIES.UK);
     });
 
+    test('given UK household with US-only group collections when validating then returns warning', () => {
+      // Given
+      const householdWithUnexpectedGroups = withHouseholdData(mockValidUKHousehold, {
+        ...mockValidUKHousehold.householdData,
+        taxUnits: {
+          [VALIDATION_GROUP_KEYS.DEFAULT_TAX_UNIT]: {
+            members: [VALIDATION_PERSON_NAMES.ADULT_1, VALIDATION_PERSON_NAMES.CHILD_1],
+          },
+        },
+      });
+
+      // When
+      const result = HouseholdValidation.validateForCountry(
+        householdWithUnexpectedGroups,
+        VALIDATION_COUNTRIES.UK,
+        VALIDATION_YEARS.DEFAULT
+      );
+
+      // Then
+      verifyNoErrors(result);
+      verifyWarningCount(result, 1);
+      verifyValidationWarning(
+        result.warnings,
+        VALIDATION_WARNING_CODES.UNEXPECTED_GROUP_COLLECTION,
+        VALIDATION_ENTITY_NAMES.TAX_UNITS
+      );
+    });
+
     test('given household with missing age when validating then returns warning', () => {
       // When
       const result = HouseholdValidation.validateForCountry(
@@ -109,24 +131,7 @@ describe('HouseholdValidation', () => {
       );
     });
 
-    test('given household with invalid group structure when validating then returns error', () => {
-      // When
-      const result = HouseholdValidation.validateForCountry(
-        mockHouseholdInvalidGroupStructure,
-        VALIDATION_COUNTRIES.US,
-        VALIDATION_YEARS.DEFAULT
-      );
-
-      // Then
-      verifyHasErrors(result, 1);
-      verifyValidationError(
-        result.errors,
-        VALIDATION_ERROR_CODES.INVALID_GROUP_STRUCTURE,
-        `households.${VALIDATION_GROUP_KEYS.DEFAULT_HOUSEHOLD}.members`
-      );
-    });
-
-    test('given Canada household when validating then performs generic validation only', () => {
+    test('given Canada household when validating then uses default group strategy', () => {
       // When
       const result = HouseholdValidation.validateForCountry(
         mockValidUSHousehold,
@@ -135,10 +140,16 @@ describe('HouseholdValidation', () => {
       );
 
       // Then
-      // Should have country mismatch error but no US-specific warnings
+      // Should have country mismatch error, no US-specific warnings, and one default-strategy
+      // warning for the US-only tax units collection.
       verifyHasErrors(result, 1);
       verifyValidationError(result.errors, VALIDATION_ERROR_CODES.COUNTRY_MISMATCH);
-      expect(result.warnings).toHaveLength(0);
+      verifyWarningCount(result, 1);
+      verifyValidationWarning(
+        result.warnings,
+        VALIDATION_WARNING_CODES.UNEXPECTED_GROUP_COLLECTION,
+        VALIDATION_ENTITY_NAMES.TAX_UNITS
+      );
     });
   });
 
@@ -180,24 +191,6 @@ describe('HouseholdValidation', () => {
       verifyValidationWarning(warnings, VALIDATION_WARNING_CODES.MISSING_AGE);
     });
 
-    test('given group without members array when validating then adds error', () => {
-      // Given
-      const errors: any[] = [];
-      const warnings: any[] = [];
-
-      // When
-      HouseholdValidation.validateGenericHousehold(
-        mockHouseholdInvalidGroupStructure,
-        errors,
-        warnings,
-        VALIDATION_YEARS.DEFAULT
-      );
-
-      // Then
-      expect(errors).toHaveLength(1);
-      verifyValidationError(errors, VALIDATION_ERROR_CODES.INVALID_GROUP_STRUCTURE);
-    });
-
     test('given different year when validating then uses that year for age check', () => {
       // Given
       const errors: any[] = [];
@@ -235,6 +228,29 @@ describe('HouseholdValidation', () => {
       expect(errors).toHaveLength(0);
       // No warnings since the mock has age for default year
     });
+
+    test('given household with undefined optional group collections when validating then does not throw', () => {
+      // Given
+      const errors: any[] = [];
+      const warnings: any[] = [];
+      const householdWithUndefinedGroups = withHouseholdData(mockValidUSHousehold, {
+        ...mockValidUSHousehold.householdData,
+        families: undefined,
+        spmUnits: undefined,
+        maritalUnits: undefined,
+      });
+
+      // When / Then
+      expect(() =>
+        HouseholdValidation.validateGenericHousehold(
+          householdWithUndefinedGroups,
+          errors,
+          warnings,
+          VALIDATION_YEARS.DEFAULT
+        )
+      ).not.toThrow();
+      expect(errors).toHaveLength(0);
+    });
   });
 
   describe('validateUSHousehold', () => {
@@ -242,7 +258,6 @@ describe('HouseholdValidation', () => {
       // Given
       const errors: any[] = [];
       const warnings: any[] = [];
-      vi.mocked(HouseholdQueries.getPersonCount).mockReturnValue(2);
 
       // When
       HouseholdValidation.validateUSHousehold(mockValidUSHousehold, errors, warnings);
@@ -256,7 +271,6 @@ describe('HouseholdValidation', () => {
       // Given
       const errors: any[] = [];
       const warnings: any[] = [];
-      vi.mocked(HouseholdQueries.getPersonCount).mockReturnValue(3);
 
       // When
       HouseholdValidation.validateUSHousehold(mockUSHouseholdOrphanPerson, errors, warnings);
@@ -275,7 +289,6 @@ describe('HouseholdValidation', () => {
       // Given
       const errors: any[] = [];
       const warnings: any[] = [];
-      vi.mocked(HouseholdQueries.getPersonCount).mockReturnValue(1);
 
       // When
       HouseholdValidation.validateUSHousehold(mockUSHouseholdNoTaxUnits, errors, warnings);
@@ -290,7 +303,6 @@ describe('HouseholdValidation', () => {
       // Given
       const errors: any[] = [];
       const warnings: any[] = [];
-      vi.mocked(HouseholdQueries.getPersonCount).mockReturnValue(1);
 
       // When
       HouseholdValidation.validateUSHousehold(mockUSHouseholdInvalidMaritalUnit, errors, warnings);
@@ -307,18 +319,14 @@ describe('HouseholdValidation', () => {
       // Given
       const errors: any[] = [];
       const warnings: any[] = [];
-      const household = {
-        ...mockValidUSHousehold,
-        householdData: {
-          ...mockValidUSHousehold.householdData,
-          maritalUnits: {
-            [VALIDATION_GROUP_KEYS.DEFAULT_MARITAL_UNIT]: {
-              members: [VALIDATION_PERSON_NAMES.ADULT_1, VALIDATION_PERSON_NAMES.ADULT_2],
-            },
+      const household = withHouseholdData(mockValidUSHousehold, {
+        ...mockValidUSHousehold.householdData,
+        maritalUnits: {
+          [VALIDATION_GROUP_KEYS.DEFAULT_MARITAL_UNIT]: {
+            members: [VALIDATION_PERSON_NAMES.ADULT_1, VALIDATION_PERSON_NAMES.ADULT_2],
           },
         },
-      };
-      vi.mocked(HouseholdQueries.getPersonCount).mockReturnValue(2);
+      });
 
       // When
       HouseholdValidation.validateUSHousehold(household, errors, warnings);
@@ -331,14 +339,11 @@ describe('HouseholdValidation', () => {
       // Given
       const errors: any[] = [];
       const warnings: any[] = [];
-      const household = {
-        ...mockValidUSHousehold,
-        householdData: {
-          people: mockValidUSHousehold.householdData.people,
-          households: mockValidUSHousehold.householdData.households,
-          // No taxUnits property
-        },
-      };
+      const household = withHouseholdData(mockValidUSHousehold, {
+        people: mockValidUSHousehold.householdData.people,
+        households: mockValidUSHousehold.householdData.households,
+        // No taxUnits property
+      });
 
       // When
       HouseholdValidation.validateUSHousehold(household, errors, warnings);
@@ -379,14 +384,11 @@ describe('HouseholdValidation', () => {
     test('given UK household without benefit units entity when validating then no errors', () => {
       // Given
       const errors: any[] = [];
-      const household = {
-        ...mockValidUKHousehold,
-        householdData: {
-          people: mockValidUKHousehold.householdData.people,
-          households: mockValidUKHousehold.householdData.households,
-          // No benunits property
-        },
-      };
+      const household = withHouseholdData(mockValidUKHousehold, {
+        people: mockValidUKHousehold.householdData.people,
+        households: mockValidUKHousehold.householdData.households,
+        // No benunits property
+      });
 
       // When
       HouseholdValidation.validateUKHousehold(household, errors);
@@ -532,12 +534,10 @@ describe('HouseholdValidation', () => {
 
   describe('isReadyForSimulation', () => {
     test('given valid household when checking ready for simulation then returns valid', () => {
-      // Given
-      vi.mocked(HouseholdQueries.getPersonCount).mockReturnValue(2);
-
       // When
       const result = HouseholdValidation.isReadyForSimulation(
         mockValidUSHousehold,
+        VALIDATION_COUNTRIES.US,
         VALIDATION_YEARS.DEFAULT
       );
 
@@ -546,12 +546,10 @@ describe('HouseholdValidation', () => {
     });
 
     test('given empty household when checking ready for simulation then returns error', () => {
-      // Given
-      vi.mocked(HouseholdQueries.getPersonCount).mockReturnValue(0);
-
       // When
       const result = HouseholdValidation.isReadyForSimulation(
         mockEmptyHousehold,
+        VALIDATION_COUNTRIES.US,
         VALIDATION_YEARS.DEFAULT
       );
 
@@ -560,28 +558,11 @@ describe('HouseholdValidation', () => {
       verifyValidationError(result.errors, VALIDATION_ERROR_CODES.NO_PEOPLE, 'people');
     });
 
-    test('given household with structural errors when checking ready then includes those errors', () => {
-      // Given
-      vi.mocked(HouseholdQueries.getPersonCount).mockReturnValue(1);
-
-      // When
-      const result = HouseholdValidation.isReadyForSimulation(
-        mockHouseholdInvalidGroupStructure,
-        VALIDATION_YEARS.DEFAULT
-      );
-
-      // Then
-      verifyHasErrors(result, 1);
-      verifyValidationError(result.errors, VALIDATION_ERROR_CODES.INVALID_GROUP_STRUCTURE);
-    });
-
     test('given household with warnings when checking ready then includes warnings', () => {
-      // Given
-      vi.mocked(HouseholdQueries.getPersonCount).mockReturnValue(2);
-
       // When
       const result = HouseholdValidation.isReadyForSimulation(
         mockHouseholdMissingAge,
+        VALIDATION_COUNTRIES.US,
         VALIDATION_YEARS.DEFAULT
       );
 

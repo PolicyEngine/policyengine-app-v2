@@ -1,7 +1,9 @@
 /**
  * Constants for ReportBuilder components
  */
+import { CURRENT_YEAR } from '@/constants';
 import { colors, typography } from '@/designTokens';
+import { Household as HouseholdModel } from '@/models/Household';
 import { IngredientColorConfig } from './types';
 
 // ============================================================================
@@ -73,11 +75,9 @@ export const getSamplePopulations = (countryId: 'us' | 'uk') => {
     household: {
       label: 'Smith family (4 members)',
       type: 'household' as const,
-      household: {
-        id: 'sample-household',
-        countryId,
-        householdData: { people: { person1: { age: { 2025: 40 } } } },
-      },
+      household: HouseholdModel.empty(countryId, CURRENT_YEAR)
+        .withId('sample-household')
+        .addAdult('you', 40),
       geography: null,
     },
     nationwide: {

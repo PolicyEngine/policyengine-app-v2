@@ -16,13 +16,12 @@ import { fetchHouseholdById } from '@/api/household';
 import { fetchPolicyById } from '@/api/policy';
 import { fetchReportById } from '@/api/report';
 import { fetchSimulationById } from '@/api/simulation';
-import { useApiRegions } from '@/hooks/useApiRegions';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useRegions } from '@/hooks/useRegions';
 import { GC_TIME_5_MIN } from '@/libs/queryConfig';
 import { householdKeys, policyKeys, reportKeys, simulationKeys } from '@/libs/queryKeys';
 import { buildCanonicalGeography, type SavedGeographySelection } from '@/models/geography';
 import { Household as HouseholdModel } from '@/models/Household';
-import type { AppHouseholdInputEnvelope as Household } from '@/models/household/appTypes';
 import type { Region } from '@/models/region';
 import { Geography } from '@/types/ingredients/Geography';
 import { Policy } from '@/types/ingredients/Policy';
@@ -102,7 +101,7 @@ export interface ReportIngredientsResult {
   report: Report | undefined;
   simulations: Simulation[];
   policies: Policy[];
-  households: Household[];
+  households: HouseholdModel[];
   geographies: Geography[];
   isLoading: boolean;
   error: Error | null;
@@ -164,7 +163,7 @@ export function useFetchReportIngredients(
   const currentCountry = useCurrentCountry();
   // Use country from input if available (for shared reports), otherwise use current country
   const country = input?.userReport.countryId ?? currentCountry;
-  const { data: regions } = useApiRegions(country, {
+  const { data: regions } = useRegions(country, {
     enabled: isEnabled,
   });
 
@@ -224,7 +223,7 @@ export function useFetchReportIngredients(
   const householdSimulations = simulations.filter((s) => s.populationType === 'household');
   const householdIds = extractUniqueIds(householdSimulations, 'populationId');
 
-  const householdResults = useParallelQueries<Household>(isEnabled ? householdIds : [], {
+  const householdResults = useParallelQueries<HouseholdModel>(isEnabled ? householdIds : [], {
     queryKey: householdKeys.byId,
     queryFn: async (id) => {
       const metadata = await fetchHouseholdById(country, id);
@@ -234,7 +233,9 @@ export function useFetchReportIngredients(
     staleTime: 5 * 60 * 1000,
   });
 
-  const households = householdResults.queries.map((q) => q.data).filter((h): h is Household => !!h);
+  const households = householdResults.queries
+    .map((q) => q.data)
+    .filter((h): h is HouseholdModel => !!h);
 
   // Step 5: Construct Geography objects from geography-type simulations
   const geographies = buildGeographiesFromSimulations(simulations, regions);

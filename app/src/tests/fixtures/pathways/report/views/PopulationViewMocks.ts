@@ -1,3 +1,4 @@
+import { Household } from '@/models/Household';
 import { mockUSRegionRecords } from '@/tests/fixtures/utils/regionStrategiesMocks';
 import { PopulationStateProps } from '@/types/pathwayState';
 
@@ -20,13 +21,13 @@ export const mockPopulationStateEmpty: PopulationStateProps = {
 export const mockPopulationStateWithHousehold: PopulationStateProps = {
   label: 'My Household',
   type: 'household',
-  household: {
+  household: Household.fromAppInput({
     id: '789',
     countryId: 'us',
     householdData: {
       people: {},
     },
-  },
+  }),
   geography: null,
 };
 

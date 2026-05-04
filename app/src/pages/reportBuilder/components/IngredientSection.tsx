@@ -23,6 +23,7 @@ import { CountryMapIcon } from './shared';
 export function IngredientSection({
   type,
   currentId,
+  currentPopulation: _currentPopulation,
   countryId = 'us',
   onQuickSelectPolicy,
   onSelectSavedPolicy,
@@ -124,7 +125,12 @@ export function IngredientSection({
                   if (currentId === policy.id && onDeselectPolicy) {
                     onDeselectPolicy();
                   } else {
-                    onSelectSavedPolicy?.(policy.id, policy.label, policy.paramCount);
+                    onSelectSavedPolicy?.(
+                      policy.id,
+                      policy.label,
+                      policy.paramCount,
+                      policy.associationId
+                    );
                   }
                 }}
                 colorConfig={colorConfig}

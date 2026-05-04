@@ -10,7 +10,7 @@ import * as policyApi from '@/api/policy';
 import * as reportApi from '@/api/report';
 import * as simulationApi from '@/api/simulation';
 import { CountryProvider } from '@/contexts/CountryContext';
-import { useApiRegions } from '@/hooks/useApiRegions';
+import { useRegions } from '@/hooks/useRegions';
 import { useHouseholdAssociationsByUser } from '@/hooks/useUserHousehold';
 import { usePolicyAssociationsByUser } from '@/hooks/useUserPolicy';
 import {
@@ -73,8 +73,8 @@ vi.mock('@/hooks/useUserGeographic', () => ({
   })),
 }));
 
-vi.mock('@/hooks/useApiRegions', () => ({
-  useApiRegions: vi.fn(() => ({
+vi.mock('@/hooks/useRegions', () => ({
+  useRegions: vi.fn(() => ({
     data: [
       {
         id: 'region-state-ca',
@@ -113,7 +113,7 @@ describe('useUserReports', () => {
     vi.clearAllMocks();
     queryClient = createMockQueryClient();
     store = createMockStore();
-    vi.mocked(useApiRegions).mockReturnValue({
+    vi.mocked(useRegions).mockReturnValue({
       data: [
         {
           id: 'region-state-ca',
@@ -132,7 +132,7 @@ describe('useUserReports', () => {
       ],
       isLoading: false,
       error: null,
-    } as ReturnType<typeof useApiRegions>);
+    } as ReturnType<typeof useRegions>);
 
     // Setup default mock implementations
     (useReportAssociationsByUser as any).mockReturnValue({
@@ -313,11 +313,11 @@ describe('useUserReports', () => {
     });
 
     test('given regions lookup fails then it still returns reports with fallback geography data', async () => {
-      vi.mocked(useApiRegions).mockReturnValue({
+      vi.mocked(useRegions).mockReturnValue({
         data: undefined,
         isLoading: false,
         error: new Error('regions unavailable'),
-      } as ReturnType<typeof useApiRegions>);
+      } as ReturnType<typeof useRegions>);
 
       const { result } = renderHook(() => useUserReports(TEST_USER_ID), { wrapper });
 
@@ -811,11 +811,11 @@ describe('useUserReportById', () => {
   });
 
   test('given regions lookup fails then it still returns report context with fallback geography data', async () => {
-    vi.mocked(useApiRegions).mockReturnValue({
+    vi.mocked(useRegions).mockReturnValue({
       data: undefined,
       isLoading: false,
       error: new Error('regions unavailable'),
-    } as ReturnType<typeof useApiRegions>);
+    } as ReturnType<typeof useRegions>);
 
     const { result } = renderHook(() => useUserReportById(TEST_REPORT_ID), { wrapper });
 

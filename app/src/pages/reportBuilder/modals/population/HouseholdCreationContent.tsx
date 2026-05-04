@@ -2,13 +2,14 @@
  * HouseholdCreationContent - Household creation form wrapper
  */
 import HouseholdBuilderForm from '@/components/household/HouseholdBuilderForm';
+import { Alert, AlertDescription } from '@/components/ui';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Spinner } from '@/components/ui/Spinner';
-import type { AppHouseholdInputEnvelope } from '@/models/household/appTypes';
+import type { Household } from '@/models/Household';
 import { MetadataState } from '@/types/metadata';
 
 interface HouseholdCreationContentProps {
-  householdDraft: AppHouseholdInputEnvelope | null;
+  householdDraft: Household | null;
   metadata: MetadataState;
   reportYear: string;
   maritalStatus: 'single' | 'married';
@@ -16,7 +17,9 @@ interface HouseholdCreationContentProps {
   basicPersonFields: string[];
   basicNonPersonFields: string[];
   isCreating: boolean;
-  onChange: (household: AppHouseholdInputEnvelope) => void;
+  validationMessage?: string | null;
+  isReadOnly?: boolean;
+  onChange: (household: Household) => void;
   onMaritalStatusChange: (status: 'single' | 'married') => void;
   onNumChildrenChange: (count: number) => void;
 }
@@ -30,6 +33,8 @@ export function HouseholdCreationContent({
   basicPersonFields,
   basicNonPersonFields,
   isCreating,
+  validationMessage,
+  isReadOnly = false,
   onChange,
   onMaritalStatusChange,
   onNumChildrenChange,
@@ -39,9 +44,14 @@ export function HouseholdCreationContent({
   }
 
   return (
-    <ScrollArea style={{ flex: 1 }}>
-      <div style={{ position: 'relative' }}>
-        {isCreating && (
+    <ScrollArea style={{ flex: 1, minHeight: 0, height: '100%' }}>
+      <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 16 }}>
+        {validationMessage && (
+          <Alert variant="default">
+            <AlertDescription>{validationMessage}</AlertDescription>
+          </Alert>
+        )}
+        {isCreating && !isReadOnly && (
           <div
             style={{
               position: 'absolute',
@@ -67,7 +77,8 @@ export function HouseholdCreationContent({
           onChange={onChange}
           onMaritalStatusChange={onMaritalStatusChange}
           onNumChildrenChange={onNumChildrenChange}
-          disabled={isCreating}
+          disabled={isCreating || isReadOnly}
+          isReadOnly={isReadOnly}
         />
       </div>
     </ScrollArea>

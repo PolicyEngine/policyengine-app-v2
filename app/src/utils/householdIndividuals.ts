@@ -1,42 +1,11 @@
-import type {
-  AppHouseholdInputEnvelope as Household,
-  AppHouseholdInputGroup as HouseholdGroupEntity,
-} from '@/models/household/appTypes';
+import { Household, type HouseholdVariableEntry } from '@/models/Household';
 
 /**
  * Sort people keys in display order: you, your partner, then dependents by ordinal
  * This ensures consistent ordering across the UI regardless of object key order
  */
 export function sortPeopleKeys(peopleKeys: string[]): string[] {
-  const ordinalOrder = ['first', 'second', 'third', 'fourth', 'fifth'];
-
-  return [...peopleKeys].sort((a, b) => {
-    // "you" always first
-    if (a === 'you') {
-      return -1;
-    }
-    if (b === 'you') {
-      return 1;
-    }
-
-    // "your partner" always second
-    if (a === 'your partner') {
-      return -1;
-    }
-    if (b === 'your partner') {
-      return 1;
-    }
-
-    // Sort dependents by ordinal (first, second, third, etc.)
-    const aOrdinalIndex = ordinalOrder.findIndex((ord) => a.includes(ord));
-    const bOrdinalIndex = ordinalOrder.findIndex((ord) => b.includes(ord));
-    if (aOrdinalIndex !== -1 && bOrdinalIndex !== -1) {
-      return aOrdinalIndex - bOrdinalIndex;
-    }
-
-    // Fallback to alphabetical for any other keys
-    return a.localeCompare(b);
-  });
+  return Household.sortPersonNames(peopleKeys);
 }
 
 export interface EntityVariable {
@@ -66,13 +35,6 @@ export interface GroupEntityInstance {
 }
 
 /**
- * Check if a group entity has any variables (other than 'members')
- */
-function hasEntityVariables(entityData: HouseholdGroupEntity): boolean {
-  return Object.keys(entityData).some((key) => key !== 'members');
-}
-
-/**
  * Extract all group entities from household data
  * Returns entities like people, households, tax_units, etc.
  * Only includes group entities that have variables defined (not just members)
@@ -82,131 +44,72 @@ export function extractGroupEntities(
   variablesMetadata?: Record<string, any>
 ): GroupEntity[] {
   const groupEntities: GroupEntity[] = [];
+  const peopleInstances: GroupEntityInstance[] = [];
 
-  if (!household.householdData) {
-    return groupEntities;
-  }
+  household.personNames.forEach((personId) => {
+    peopleInstances.push({
+      id: personId,
+      name: formatPersonName(personId),
+      members: [
+        extractEntityMember(
+          personId,
+          household.getPersonVariableEntries(personId),
+          variablesMetadata
+        ),
+      ],
+    });
+  });
 
-  const { householdData } = household;
+  groupEntities.push({
+    entityType: 'people',
+    entityTypeName: formatEntityTypeName('people'),
+    instances: peopleInstances,
+  });
 
-  // Iterate over all keys in householdData
-  Object.entries(householdData).forEach(([entityType, entities]) => {
-    if (entityType === 'people') {
-      // People is special - each person is their own "instance"
-      const peopleInstances: GroupEntityInstance[] = [];
-
-      Object.entries(entities).forEach(([personId, personData]) => {
-        peopleInstances.push({
-          id: personId,
-          name: formatPersonName(personId),
-          members: [extractEntityMember(personId, personData, variablesMetadata)],
-        });
-      });
-
-      groupEntities.push({
-        entityType: 'people',
-        entityTypeName: formatEntityTypeName('people'),
-        instances: peopleInstances,
-      });
-    } else {
-      // Group entities (households, tax_units, etc.)
-      // Only include if they have variables defined
-      const instances: GroupEntityInstance[] = [];
-
-      Object.entries(entities as Record<string, HouseholdGroupEntity>).forEach(
-        ([entityId, entityData]) => {
-          // Skip this entity if it has no variables (only 'members')
-          if (!hasEntityVariables(entityData)) {
-            return;
-          }
-
-          const members = extractMembersFromGroupEntity(
-            entityData,
-            householdData.people,
+  household
+    .getConfiguredGroupsWithVariables()
+    .forEach(({ entityName, groupName, members, variables }) => {
+      const groupEntity = groupEntities.find((entity) => entity.entityType === entityName);
+      const instances = groupEntity?.instances ?? [];
+      const entityMembers = members
+        .filter((memberId) => household.hasEntityInstance('people', memberId))
+        .map((memberId) =>
+          extractEntityMember(
+            memberId,
+            household.getPersonVariableEntries(memberId),
             variablesMetadata
-          );
+          )
+        );
 
-          // Extract the entity's own variables (not member variables)
-          const entityVariables = extractEntityVariables(entityData, variablesMetadata);
+      instances.push({
+        id: groupName,
+        name: formatEntityInstanceName(entityName, groupName),
+        members: entityMembers,
+        variables: formatEntityVariables(variables, variablesMetadata),
+      });
 
-          instances.push({
-            id: entityId,
-            name: formatEntityInstanceName(entityType, entityId),
-            members,
-            variables: entityVariables, // Add entity-level variables
-          });
-        }
-      );
-
-      // Only add this entity type if it has at least one instance with variables
-      if (instances.length > 0) {
+      if (!groupEntity) {
         groupEntities.push({
-          entityType,
-          entityTypeName: formatEntityTypeName(entityType),
+          entityType: entityName,
+          entityTypeName: formatEntityTypeName(entityName),
           instances,
         });
       }
-    }
-  });
+    });
 
   return groupEntities;
 }
 
-/**
- * Extract variables from the entity itself (not from its members)
- */
-function extractEntityVariables(
-  entityData: HouseholdGroupEntity,
+function formatEntityVariables(
+  variables: HouseholdVariableEntry[],
   variablesMetadata?: Record<string, any>
 ): EntityVariable[] {
-  const variables: EntityVariable[] = [];
-
-  Object.entries(entityData).forEach(([paramName, paramValues]) => {
-    // Skip the 'members' array - it's metadata, not a variable
-    if (paramName === 'members') {
-      return;
-    }
-
-    // paramValues is typically { "2024": value, "2025": value, ... }
-    if (typeof paramValues === 'object' && paramValues !== null) {
-      const firstValue = Object.values(paramValues)[0];
-      const unit = variablesMetadata?.[paramName]?.unit;
-
-      variables.push({
-        paramName,
-        label: formatParameterLabel(paramName),
-        value: firstValue,
-        unit,
-      });
-    }
-  });
-
-  return variables;
-}
-
-/**
- * Extract members from a group entity
- * Returns the people who are members of this entity with their variables
- */
-export function extractMembersFromGroupEntity(
-  groupEntity: HouseholdGroupEntity,
-  people: Record<string, any>,
-  variablesMetadata?: Record<string, any>
-): EntityMember[] {
-  const members: EntityMember[] = [];
-
-  if (!groupEntity.members) {
-    return members;
-  }
-
-  groupEntity.members.forEach((personId) => {
-    const personData = people[personId];
-    if (personData) {
-      members.push(extractEntityMember(personId, personData, variablesMetadata));
-    }
-  });
-
-  return members;
+  return variables.map(({ name, value }) => ({
+    paramName: name,
+    label: formatParameterLabel(name),
+    value: getFirstDisplayValue(value),
+    unit: variablesMetadata?.[name]?.unit,
+  }));
 }
 
 /**
@@ -214,31 +117,22 @@ export function extractMembersFromGroupEntity(
  */
 function extractEntityMember(
   memberId: string,
-  memberData: any,
+  variables: HouseholdVariableEntry[],
   variablesMetadata?: Record<string, any>
 ): EntityMember {
-  const variables: EntityVariable[] = [];
-
-  Object.entries(memberData).forEach(([paramName, paramValues]) => {
-    // paramValues is typically { "2024": value, "2025": value, ... }
-    if (typeof paramValues === 'object' && paramValues !== null) {
-      const firstValue = Object.values(paramValues)[0];
-      const unit = variablesMetadata?.[paramName]?.unit;
-
-      variables.push({
-        paramName,
-        label: formatParameterLabel(paramName),
-        value: firstValue,
-        unit,
-      });
-    }
-  });
-
   return {
     id: memberId,
     name: formatPersonName(memberId),
-    variables,
+    variables: formatEntityVariables(variables, variablesMetadata),
   };
+}
+
+function getFirstDisplayValue(value: HouseholdVariableEntry['value']): any {
+  if (typeof value === 'object' && value !== null) {
+    return Object.values(value)[0];
+  }
+
+  return value;
 }
 
 /**

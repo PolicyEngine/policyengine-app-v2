@@ -1,10 +1,6 @@
-import type {
-  AppHouseholdInputEnvelope as Household,
-  AppHouseholdInputGroup as HouseholdGroupEntity,
-} from '@/models/household/appTypes';
+import { type CountryId } from '@/libs/countries';
+import type { Household as HouseholdModel } from '@/models/Household';
 import { RootState } from '@/store';
-import { getHouseholdYearValue } from '@/utils/householdDataAccess';
-import * as HouseholdQueries from './HouseholdQueries';
 
 /**
  * Validation result type
@@ -41,9 +37,21 @@ export interface VariableMetadata {
   defaultValue: any;
 }
 
+type CountryValidationStrategy = (
+  household: HouseholdModel,
+  errors: ValidationError[],
+  warnings: ValidationWarning[]
+) => void;
+
+const COUNTRY_VALIDATION_STRATEGIES: Partial<Record<CountryId, CountryValidationStrategy>> = {
+  us: (household, errors, warnings) =>
+    HouseholdValidation.validateUSHousehold(household, errors, warnings),
+  uk: (household, errors) => HouseholdValidation.validateUKHousehold(household, errors),
+};
+
 /**
  * Validation utilities for Household structures
- * Country-agnostic base validation with country-specific extensions
+ * Generic structural validation with country-specific strategy extensions
  * TODO: Determine how many of these utils we need; were unexpectedly built by AI,
  * but could be useful down the road; not thoroughly tested
  */
@@ -52,7 +60,11 @@ export const HouseholdValidation = {
    * Validate a household for a specific country
    * @param year - Year to validate against (required - should come from report context)
    */
-  validateForCountry(household: Household, countryId: string, year: string): ValidationResult {
+  validateForCountry(
+    household: HouseholdModel,
+    countryId: CountryId,
+    year: string
+  ): ValidationResult {
     const errors: ValidationError[] = [];
     const warnings: ValidationWarning[] = [];
 
@@ -66,17 +78,10 @@ export const HouseholdValidation = {
     }
 
     // Generic validation with report year
-    this.validateGenericHousehold(household, errors, warnings, year);
+    this.validateGenericHousehold(household, errors, warnings, year, countryId);
 
-    // Country-specific validation
-    switch (countryId) {
-      case 'us':
-        this.validateUSHousehold(household, errors, warnings);
-        break;
-      case 'uk':
-        this.validateUKHousehold(household, errors);
-        break;
-    }
+    const strategy = COUNTRY_VALIDATION_STRATEGIES[countryId];
+    strategy?.(household, errors, warnings);
 
     return {
       isValid: errors.length === 0,
@@ -90,17 +95,18 @@ export const HouseholdValidation = {
    * @param year - Year to validate against (required - should come from report context)
    */
   validateGenericHousehold(
-    household: Household,
+    household: HouseholdModel,
     errors: ValidationError[],
     warnings: ValidationWarning[],
-    year: string
+    year: string,
+    countryId: CountryId = household.countryId
   ): void {
     // Check that all people have required fields based on metadata
     const currentYear = year;
 
-    Object.entries(household.householdData.people).forEach(([personId, person]) => {
+    household.personNames.forEach((personId) => {
       // Only validate age if it's expected to exist (this would come from metadata)
-      if (getHouseholdYearValue(person.age, currentYear) === undefined) {
+      if (household.getPersonVariableAtYear(personId, 'age', currentYear) === undefined) {
         warnings.push({
           code: 'MISSING_AGE',
           message: `Person ${personId} is missing age for year ${currentYear}`,
@@ -109,14 +115,17 @@ export const HouseholdValidation = {
       }
     });
 
-    // Check that group entities have valid structure
-    Object.entries(household.householdData).forEach(([entityName, entityData]) => {
-      if (entityName === 'people') {
-        return;
-      }
+    household.getUnexpectedGroupCollections(countryId).forEach((entityName) => {
+      warnings.push({
+        code: 'UNEXPECTED_GROUP_COLLECTION',
+        message: `Group collection ${entityName} is not used for ${countryId.toUpperCase()} households`,
+        field: entityName,
+      });
+    });
 
-      const entities = entityData as Record<string, HouseholdGroupEntity>;
-      Object.entries(entities).forEach(([groupKey, group]) => {
+    // Check that country-configured group entities have valid structure.
+    household.getConfiguredGroupCollections(countryId).forEach(({ entityName, groups }) => {
+      Object.entries(groups).forEach(([groupKey, group]) => {
         if (!Array.isArray(group.members)) {
           errors.push({
             code: 'INVALID_GROUP_STRUCTURE',
@@ -132,16 +141,14 @@ export const HouseholdValidation = {
    * US-specific validation
    */
   validateUSHousehold(
-    household: Household,
+    household: HouseholdModel,
     errors: ValidationError[],
     warnings: ValidationWarning[]
   ): void {
     // Check for US-specific entities if they exist
-    if (household.householdData.taxUnits) {
-      const taxUnits = household.householdData.taxUnits as Record<string, HouseholdGroupEntity>;
-
+    if (household.hasGroupCollection('taxUnits')) {
       // Must have at least one tax unit if there are people
-      if (HouseholdQueries.getPersonCount(household) > 0 && Object.keys(taxUnits).length === 0) {
+      if (household.personCount > 0 && household.getGroupCount('taxUnits') === 0) {
         warnings.push({
           code: 'NO_TAX_UNITS',
           message: 'US households with people typically have at least one tax unit',
@@ -150,35 +157,24 @@ export const HouseholdValidation = {
       }
 
       // Check that all people are in a tax unit
-      const allPeople = Object.keys(household.householdData.people);
-      const peopleInTaxUnits = new Set(Object.values(taxUnits).flatMap((unit) => unit.members));
-
-      allPeople.forEach((personId) => {
-        if (!peopleInTaxUnits.has(personId)) {
-          warnings.push({
-            code: 'PERSON_NOT_IN_TAX_UNIT',
-            message: `Person ${personId} is not assigned to any tax unit`,
-            field: `people.${personId}`,
-          });
-        }
+      household.getPeopleNotInGroupCollection('taxUnits').forEach((personId) => {
+        warnings.push({
+          code: 'PERSON_NOT_IN_TAX_UNIT',
+          message: `Person ${personId} is not assigned to any tax unit`,
+          field: `people.${personId}`,
+        });
       });
     }
 
     // Validate marital units if they exist
     // Marital units can have 1 member (single) or 2 members (married couple)
-    if (household.householdData.maritalUnits) {
-      const maritalUnits = household.householdData.maritalUnits as Record<
-        string,
-        HouseholdGroupEntity
-      >;
-      Object.entries(maritalUnits).forEach(([unitId, unit]) => {
-        if (unit.members.length === 0 || unit.members.length > 2) {
-          errors.push({
-            code: 'INVALID_MARITAL_UNIT',
-            message: `Marital unit ${unitId} must have 1 or 2 members`,
-            field: `maritalUnits.${unitId}`,
-          });
-        }
+    if (household.hasGroupCollection('maritalUnits')) {
+      household.getGroupsWithMemberCountOutside('maritalUnits', 1, 2).forEach((unit) => {
+        errors.push({
+          code: 'INVALID_MARITAL_UNIT',
+          message: `Marital unit ${unit.key} must have 1 or 2 members`,
+          field: `maritalUnits.${unit.key}`,
+        });
       });
     }
   },
@@ -186,20 +182,16 @@ export const HouseholdValidation = {
   /**
    * UK-specific validation
    */
-  validateUKHousehold(household: Household, errors: ValidationError[]): void {
+  validateUKHousehold(household: HouseholdModel, errors: ValidationError[]): void {
     // Check for UK-specific entities if they exist
-    if (household.householdData.benunits) {
-      const benunits = household.householdData.benunits as Record<string, HouseholdGroupEntity>;
-
+    if (household.hasGroupCollection('benunits')) {
       // UK-specific validation rules for benefit units
-      Object.entries(benunits).forEach(([unitId, unit]) => {
-        if (!unit.members || unit.members.length === 0) {
-          errors.push({
-            code: 'EMPTY_BENUNIT',
-            message: `Benefit unit ${unitId} has no members`,
-            field: `benunits.${unitId}`,
-          });
-        }
+      household.getGroupsWithMemberCountOutside('benunits', 1).forEach((unit) => {
+        errors.push({
+          code: 'EMPTY_BENUNIT',
+          message: `Benefit unit ${unit.key} has no members`,
+          field: `benunits.${unit.key}`,
+        });
       });
     }
   },
@@ -277,12 +269,16 @@ export const HouseholdValidation = {
    * Check if household structure is complete enough for simulation
    * @param year - Year to validate against (required - should come from report context)
    */
-  isReadyForSimulation(household: Household, year: string): ValidationResult {
+  isReadyForSimulation(
+    household: HouseholdModel,
+    countryId: CountryId,
+    year: string
+  ): ValidationResult {
     const errors: ValidationError[] = [];
     const warnings: ValidationWarning[] = [];
 
     // Must have at least one person
-    if (HouseholdQueries.getPersonCount(household) === 0) {
+    if (household.personCount === 0) {
       errors.push({
         code: 'NO_PEOPLE',
         message: 'Household must have at least one person for simulation',
@@ -291,7 +287,7 @@ export const HouseholdValidation = {
     }
 
     // Validate structure
-    const structureValidation = this.validateForCountry(household, household.countryId, year);
+    const structureValidation = this.validateForCountry(household, countryId, year);
     errors.push(...structureValidation.errors);
     warnings.push(...structureValidation.warnings);
 

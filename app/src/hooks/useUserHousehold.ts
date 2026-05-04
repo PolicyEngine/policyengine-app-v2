@@ -14,7 +14,6 @@ import {
   shadowUpdateUserHouseholdAssociation,
 } from '@/libs/migration/householdShadow';
 import { Household } from '@/models/Household';
-import type { AppHouseholdInputEnvelope } from '@/models/household/appTypes';
 import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { ApiHouseholdStore, LocalStorageHouseholdStore } from '../api/householdAssociation';
 import { queryConfig } from '../libs/queryConfig';
@@ -111,7 +110,7 @@ export const useCreateHouseholdAssociation = (options?: HouseholdWriteConfigOpti
 
 export async function replaceHouseholdBaseForAssociation(args: {
   association: UserHouseholdPopulation;
-  nextHousehold: AppHouseholdInputEnvelope;
+  nextHousehold: Household;
   store?: Pick<UserHouseholdStore, 'update'>;
   shouldShadowV2?: boolean;
 }): Promise<UserHouseholdPopulation> {
@@ -136,7 +135,7 @@ export const useUpdateHouseholdAssociation = () => {
       userHouseholdId: string;
       updates: Partial<UserHouseholdPopulation>;
       association?: UserHouseholdPopulation;
-      nextHousehold?: AppHouseholdInputEnvelope;
+      nextHousehold?: Household;
     }) => {
       if (nextHousehold) {
         if (!association) {

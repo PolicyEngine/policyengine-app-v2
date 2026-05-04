@@ -17,8 +17,8 @@ import { colors, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useHouseholdVariation } from '@/hooks/useHouseholdVariation';
 import { useReportYear } from '@/hooks/useReportYear';
-import type { AppHouseholdInputEnvelope as Household } from '@/models/household/appTypes';
 import type { RootState } from '@/store';
+import type { HouseholdCalculationOutput } from '@/types/calculation/household';
 import type { Policy } from '@/types/ingredients/Policy';
 import type { Simulation } from '@/types/ingredients/Simulation';
 import type { UserPolicy } from '@/types/ingredients/UserPolicy';
@@ -28,14 +28,14 @@ import BaselineAndReformChart from './BaselineAndReformChart';
 import BaselineOnlyChart from './BaselineOnlyChart';
 
 interface Props {
-  baseline: Household;
-  reform: Household | null;
+  baseline: HouseholdCalculationOutput;
+  reform: HouseholdCalculationOutput | null;
   simulations: Simulation[];
   policies?: Policy[];
   userPolicies?: UserPolicy[];
-  households?: Household[];
-  baselineVariation?: Household | null;
-  reformVariation?: Household | null;
+  households?: HouseholdCalculationOutput[];
+  baselineVariation?: HouseholdCalculationOutput | null;
+  reformVariation?: HouseholdCalculationOutput | null;
 }
 
 /**

@@ -9,7 +9,7 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { IconScale, IconX } from '@tabler/icons-react';
+import { IconChevronLeft, IconScale, IconX } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import { PolicyAdapter } from '@/adapters';
 import { createPolicy as createPolicyApi } from '@/api/policy';
@@ -29,6 +29,7 @@ import { useCreatePolicy } from '@/hooks/useCreatePolicy';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useUpdatePolicyAssociation } from '@/hooks/useUserPolicy';
 import { getDateRange, selectSearchableParameters } from '@/libs/metadataUtils';
+import { EditableLabel } from '@/pages/reportBuilder/components/EditableLabel';
 import { ValueSetterMode } from '@/pathways/report/components/valueSetters';
 import { RootState } from '@/store';
 import { Policy } from '@/types/ingredients/Policy';
@@ -45,7 +46,7 @@ import { countPolicyModifications } from '@/utils/countParameterChanges';
 import { formatPeriod } from '@/utils/dateUtils';
 import { formatLabelParts, getHierarchicalLabels } from '@/utils/parameterLabels';
 import { formatParameterValue } from '@/utils/policyTableHelpers';
-import { FONT_SIZES, INGREDIENT_COLORS } from '../constants';
+import { BROWSE_MODAL_CONFIG, FONT_SIZES, INGREDIENT_COLORS } from '../constants';
 import { getReportYearDateBounds } from '../utils/reportYearDates';
 import {
   ChangesCard,
@@ -59,10 +60,12 @@ import {
   SidebarTab,
   ValueSetterCard,
 } from './policyCreation';
+import { SaveAsNewNameDialog } from './SaveAsNewNameDialog';
 
 interface PolicyCreationModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onBack?: () => void;
   onPolicyCreated: (policy: PolicyStateProps) => void;
   reportYear: string;
   simulationIndex: number;
@@ -72,9 +75,12 @@ interface PolicyCreationModalProps {
   forceReadOnly?: boolean;
 }
 
+type PendingUnnamedAction = 'create' | 'save-as-new' | 'update-existing' | null;
+
 export function PolicyCreationModal({
   isOpen,
   onClose,
+  onBack = onClose,
   onPolicyCreated,
   reportYear,
   simulationIndex,
@@ -118,10 +124,11 @@ export function PolicyCreationModal({
   // Parameter search state
   const [parameterSearch, setParameterSearch] = useState('');
   const [hoveredParamName, setHoveredParamName] = useState<string | null>(null);
-  const [footerHovered, setFooterHovered] = useState(false);
-
   // API hooks
-  const { createPolicy, isPending: isCreating } = useCreatePolicy(policyLabel || undefined);
+  const normalizedPolicyLabel = policyLabel.trim();
+  const { createPolicyWithLabel, isPending: isCreating } = useCreatePolicy(
+    normalizedPolicyLabel || undefined
+  );
   const updatePolicyAssociation = useUpdatePolicyAssociation();
   const [isUpdating, setIsUpdating] = useState(false);
 
@@ -136,6 +143,12 @@ export function PolicyCreationModal({
   const effectiveEditorMode: EditorMode = forceReadOnly ? 'display' : editorMode;
   const isReadOnly = effectiveEditorMode === 'display';
   const colorConfig = INGREDIENT_COLORS.policy;
+  const modalTitle =
+    effectiveEditorMode === 'display'
+      ? 'Policy details'
+      : effectiveEditorMode === 'edit'
+        ? 'Edit policy'
+        : 'Create new policy';
 
   // Reset state when modal opens; pre-populate from initialPolicy when editing
   useEffect(() => {
@@ -175,7 +188,8 @@ export function PolicyCreationModal({
           ? formatLabelParts(hierarchicalLabels)
           : p.name.split('.').pop() || p.name;
 
-      const changes = p.values.map((interval) => ({
+      const changes = p.values.map((interval, index) => ({
+        index,
         period: formatPeriod(interval.startDate, interval.endDate),
         value: formatParameterValue(interval.value, metadata?.unit),
       }));
@@ -241,17 +255,6 @@ export function PolicyCreationModal({
     [parameters]
   );
 
-  // Handle parameter selection from changes card
-  const handleSelectParam = useCallback(
-    (paramName: string) => {
-      const metadata = parameters[paramName];
-      if (metadata) {
-        setSelectedParam(metadata);
-      }
-    },
-    [parameters]
-  );
-
   // Handle value submission
   const handleValueSubmit = useCallback(() => {
     if (!selectedParam || intervals.length === 0) {
@@ -276,47 +279,68 @@ export function PolicyCreationModal({
     setIntervals([]);
   }, [selectedParam, intervals, policyParameters]);
 
+  const handleRemoveParamChange = useCallback(
+    (paramName: string, indexToRemove: number) => {
+      if (isReadOnly) {
+        return;
+      }
+
+      setPolicyParameters((currentParameters) =>
+        currentParameters
+          .map((param) => {
+            if (param.name !== paramName) {
+              return param;
+            }
+
+            return {
+              ...param,
+              values: param.values.filter((_, index) => index !== indexToRemove),
+            };
+          })
+          .filter((param) => param.values.length > 0)
+      );
+    },
+    [isReadOnly]
+  );
+
   // Handle policy creation
-  const handleCreatePolicy = useCallback(async () => {
-    const policyData: Partial<Policy> = {
-      parameters: policyParameters,
-    };
-
-    const payload: PolicyCreationPayload = PolicyAdapter.toCreationPayload(policyData as Policy);
-
-    try {
-      const result = await createPolicy(payload);
-      const createdPolicy: PolicyStateProps = {
-        id: result.result.policy_id,
-        label: policyLabel || null,
+  const handleCreatePolicy = useCallback(
+    async (labelOverride?: string | null) => {
+      const resolvedLabel =
+        labelOverride === undefined ? normalizedPolicyLabel : (labelOverride?.trim() ?? '');
+      const policyData: Partial<Policy> = {
         parameters: policyParameters,
       };
-      onPolicyCreated(createdPolicy);
-      onClose();
-    } catch (error) {
-      console.error('Failed to create policy:', error);
-    }
-  }, [policyLabel, policyParameters, createPolicy, onPolicyCreated, onClose]);
 
-  // Same-name warning for "Save as new" when name matches original
-  const [showSameNameWarning, setShowSameNameWarning] = useState(false);
+      const payload: PolicyCreationPayload = PolicyAdapter.toCreationPayload(policyData as Policy);
+
+      try {
+        const result = await createPolicyWithLabel(payload, resolvedLabel || undefined);
+        const createdPolicy: PolicyStateProps = {
+          id: result.result.policy_id,
+          label: resolvedLabel || null,
+          parameters: policyParameters,
+        };
+        onPolicyCreated(createdPolicy);
+        onClose();
+      } catch (error) {
+        console.error('Failed to create policy:', error);
+      }
+    },
+    [normalizedPolicyLabel, policyParameters, createPolicyWithLabel, onPolicyCreated, onClose]
+  );
 
   // Unnamed-policy warning for creating/saving without a name
-  const [showUnnamedWarning, setShowUnnamedWarning] = useState(false);
+  const [pendingUnnamedAction, setPendingUnnamedAction] = useState<PendingUnnamedAction>(null);
+  const [saveAsNewNamePromptOpen, setSaveAsNewNamePromptOpen] = useState(false);
 
   const handleSaveAsNewPolicy = useCallback(() => {
-    const currentName = (policyLabel || '').trim();
-    const originalName = (initialPolicy?.label || '').trim();
-    if (effectiveEditorMode === 'edit' && currentName && currentName === originalName) {
-      setShowSameNameWarning(true);
-    } else {
-      handleCreatePolicy();
-    }
-  }, [policyLabel, initialPolicy?.label, effectiveEditorMode, handleCreatePolicy]);
+    setSaveAsNewNamePromptOpen(true);
+  }, []);
 
   // Handle updating an existing policy (create new base policy, update association)
   const handleUpdateExistingPolicy = useCallback(async () => {
-    if (!policyLabel.trim() || !initialAssociationId) {
+    if (!initialAssociationId) {
       return;
     }
     setIsUpdating(true);
@@ -327,15 +351,19 @@ export function PolicyCreationModal({
     try {
       const result = await createPolicyApi(countryId, payload);
       const newPolicyId = result.result.policy_id;
+      const desiredLabel = normalizedPolicyLabel || undefined;
 
       await updatePolicyAssociation.mutateAsync({
         userPolicyId: initialAssociationId,
-        updates: { policyId: newPolicyId, label: policyLabel },
+        updates: { policyId: newPolicyId, label: desiredLabel },
+        replacementPolicyCountryId: countryId,
+        replacementPolicyPayload: payload,
       });
 
       onPolicyCreated({
         id: newPolicyId,
-        label: policyLabel || null,
+        associationId: initialAssociationId,
+        label: desiredLabel ?? null,
         parameters: policyParameters,
       });
       onClose();
@@ -344,7 +372,7 @@ export function PolicyCreationModal({
       setIsUpdating(false);
     }
   }, [
-    policyLabel,
+    normalizedPolicyLabel,
     policyParameters,
     initialAssociationId,
     countryId,
@@ -352,6 +380,42 @@ export function PolicyCreationModal({
     onPolicyCreated,
     onClose,
   ]);
+
+  const runPendingUnnamedAction = useCallback(() => {
+    const action = pendingUnnamedAction;
+    setPendingUnnamedAction(null);
+
+    if (action === 'create') {
+      void handleCreatePolicy();
+    } else if (action === 'save-as-new') {
+      void handleSaveAsNewPolicy();
+    } else if (action === 'update-existing') {
+      void handleUpdateExistingPolicy();
+    }
+  }, [handleCreatePolicy, handleSaveAsNewPolicy, handleUpdateExistingPolicy, pendingUnnamedAction]);
+
+  const requestSaveAction = useCallback(
+    (action: Exclude<PendingUnnamedAction, null>) => {
+      const currentName = normalizedPolicyLabel;
+
+      if (action === 'save-as-new') {
+        handleSaveAsNewPolicy();
+        return;
+      }
+
+      if (!currentName) {
+        setPendingUnnamedAction(action);
+        return;
+      }
+
+      if (action === 'create') {
+        void handleCreatePolicy();
+      } else {
+        void handleUpdateExistingPolicy();
+      }
+    },
+    [normalizedPolicyLabel, handleCreatePolicy, handleSaveAsNewPolicy, handleUpdateExistingPolicy]
+  );
 
   // Get base and reform values for chart
   const getChartValues = () => {
@@ -386,6 +450,7 @@ export function PolicyCreationModal({
           policyLabel={policyLabel}
           onLabelChange={setPolicyLabel}
           isReadOnly={isReadOnly}
+          showNamingCard={false}
           modificationCount={modificationCount}
           modifiedParams={modifiedParams}
           hoveredParamName={hoveredParamName}
@@ -437,9 +502,8 @@ export function PolicyCreationModal({
                   modifiedParams={modifiedParams.filter(
                     (p) => p.paramName === selectedParam?.parameter
                   )}
-                  modificationCount={modificationCount}
-                  selectedParamName={selectedParam?.parameter}
-                  onSelectParam={handleSelectParam}
+                  isReadOnly={isReadOnly}
+                  onRemoveChange={handleRemoveParamChange}
                 />
               </Stack>
               <HistoricalValuesCard
@@ -466,22 +530,17 @@ export function PolicyCreationModal({
     >
       <DialogContent
         showCloseButton={false}
-        className="tw:sm:max-w-[90vw] tw:p-0"
+        className="tw:sm:max-w-none tw:p-0 tw:gap-0"
         style={{
-          maxWidth: '1400px',
-          height: '85vh',
-          maxHeight: '800px',
+          width: BROWSE_MODAL_CONFIG.width,
+          maxWidth: BROWSE_MODAL_CONFIG.maxWidth,
+          height: BROWSE_MODAL_CONFIG.height,
+          maxHeight: BROWSE_MODAL_CONFIG.maxHeight,
           display: 'flex',
           flexDirection: 'column',
         }}
       >
-        <DialogTitle className="tw:sr-only">
-          {effectiveEditorMode === 'display'
-            ? 'Policy details'
-            : effectiveEditorMode === 'edit'
-              ? 'Edit policy'
-              : 'Policy editor'}
-        </DialogTitle>
+        <DialogTitle className="tw:sr-only">{modalTitle}</DialogTitle>
         <DialogDescription className="tw:sr-only">
           Create or edit a policy reform by modifying parameter values.
         </DialogDescription>
@@ -495,7 +554,7 @@ export function PolicyCreationModal({
           }}
         >
           <Group justify="space-between" align="center" wrap="nowrap" style={{ width: '100%' }}>
-            <Group gap="md" align="center" wrap="nowrap">
+            <Group gap="md" align="center" wrap="nowrap" style={{ minWidth: 0, flex: 1 }}>
               <div
                 style={{
                   width: 32,
@@ -511,17 +570,51 @@ export function PolicyCreationModal({
               >
                 <IconScale size={18} color={colorConfig.icon} />
               </div>
-              <Text fw={600} style={{ fontSize: FONT_SIZES.normal, color: colors.gray[800] }}>
-                {effectiveEditorMode === 'display'
-                  ? 'Policy details'
-                  : effectiveEditorMode === 'edit'
-                    ? 'Edit policy'
-                    : 'Policy editor'}
-              </Text>
+              <EditableLabel
+                value={policyLabel}
+                onChange={setPolicyLabel}
+                placeholder="Enter policy name..."
+                emptyStateText="Click to name your policy..."
+                readOnly={isReadOnly}
+                fitContentWhileEditing
+                controlOutsideField
+                showFieldWhenEmptyOrEditing
+                fieldStyle={{
+                  background: colors.gray[100],
+                  borderBottom: `1px solid ${colors.border.light}`,
+                  padding: `${spacing.xs} ${spacing.sm}`,
+                }}
+              />
             </Group>
-            <Button variant="ghost" size="icon-sm" onClick={onClose} style={{ flexShrink: 0 }}>
-              <IconX size={18} />
-            </Button>
+            <Group gap="md" align="center" wrap="nowrap" style={{ flexShrink: 0 }}>
+              <Group
+                gap="xs"
+                justify="center"
+                align="center"
+                wrap="nowrap"
+                style={{ cursor: modificationCount > 0 ? 'pointer' : 'default' }}
+                onClick={modificationCount > 0 ? () => setActiveTab('overview') : undefined}
+              >
+                {modificationCount > 0 && (
+                  <div
+                    style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: '50%',
+                      background: colors.primary[500],
+                    }}
+                  />
+                )}
+                <Text style={{ fontSize: FONT_SIZES.small, color: colors.gray[600] }}>
+                  {modificationCount > 0
+                    ? `${modificationCount} provision${modificationCount !== 1 ? 's' : ''}`
+                    : 'No provisions yet'}
+                </Text>
+              </Group>
+              <Button variant="ghost" size="icon-sm" onClick={onClose} style={{ flexShrink: 0 }}>
+                <IconX size={18} />
+              </Button>
+            </Group>
           </Group>
         </div>
 
@@ -571,49 +664,20 @@ export function PolicyCreationModal({
               width: '100%',
             }}
           >
-            <Button variant="ghost" onClick={onClose}>
-              Cancel
-            </Button>
-            <div style={{ textAlign: 'center' }}>
-              {modificationCount > 0 && (
-                <Group
-                  gap="xs"
-                  justify="center"
-                  style={{ cursor: 'pointer' }}
-                  onClick={() => setActiveTab('overview')}
-                  onMouseEnter={() => setFooterHovered(true)}
-                  onMouseLeave={() => setFooterHovered(false)}
-                >
-                  <div
-                    style={{
-                      width: 8,
-                      height: 8,
-                      borderRadius: '50%',
-                      background: colors.primary[500],
-                    }}
-                  />
-                  <Text
-                    style={{
-                      fontSize: FONT_SIZES.small,
-                      color: footerHovered ? colors.primary[600] : colors.gray[600],
-                      transition: 'color 0.15s ease',
-                    }}
-                  >
-                    {modificationCount} parameter{modificationCount !== 1 ? 's' : ''} modified
-                  </Text>
-                </Group>
-              )}
-            </div>
+            <Group gap="sm">
+              <Button variant="ghost" onClick={onBack}>
+                <IconChevronLeft size={16} />
+                Back
+              </Button>
+              <Button variant="ghost" onClick={onClose}>
+                Cancel
+              </Button>
+            </Group>
+            <div />
             <Group gap="sm" justify="end">
               {!forceReadOnly && effectiveEditorMode === 'create' && (
                 <Button
-                  onClick={() => {
-                    if (!policyLabel.trim()) {
-                      setShowUnnamedWarning(true);
-                    } else {
-                      handleCreatePolicy();
-                    }
-                  }}
+                  onClick={() => requestSaveAction('create')}
                   disabled={isCreating || modificationCount === 0}
                 >
                   {isCreating && <Spinner size="sm" />}
@@ -634,19 +698,13 @@ export function PolicyCreationModal({
                 <>
                   <EditAndUpdateButton
                     label="Update existing policy"
-                    onClick={handleUpdateExistingPolicy}
+                    onClick={() => requestSaveAction('update-existing')}
                     loading={isUpdating}
-                    disabled={!policyLabel.trim() || isCreating || modificationCount === 0}
+                    disabled={isCreating || modificationCount === 0}
                   />
                   <EditAndSaveNewButton
                     label="Save as new policy"
-                    onClick={() => {
-                      if (!policyLabel.trim()) {
-                        setShowUnnamedWarning(true);
-                      } else {
-                        handleSaveAsNewPolicy();
-                      }
-                    }}
+                    onClick={() => requestSaveAction('save-as-new')}
                     loading={isCreating}
                     disabled={isUpdating || modificationCount === 0}
                   />
@@ -656,57 +714,33 @@ export function PolicyCreationModal({
           </div>
         </div>
 
-        {/* Same-name warning modal */}
-        <Dialog
-          open={showSameNameWarning}
-          onOpenChange={(open) => {
-            if (!open) {
-              setShowSameNameWarning(false);
-            }
+        <SaveAsNewNameDialog
+          open={saveAsNewNamePromptOpen}
+          ingredientType="policy"
+          currentName={policyLabel}
+          isSaving={isCreating}
+          onCancel={() => setSaveAsNewNamePromptOpen(false)}
+          onKeepSameName={() => {
+            setSaveAsNewNamePromptOpen(false);
+            void handleCreatePolicy(policyLabel);
           }}
-        >
-          <DialogContent>
-            <DialogTitle>
-              <strong>Same name</strong>
-            </DialogTitle>
-            <DialogDescription className="tw:sr-only">
-              Confirm saving a policy with the same name
-            </DialogDescription>
-            <Stack gap="md">
-              <Text size="sm">
-                Both the original and new policy will have the name &ldquo;
-                {policyLabel}&rdquo;. Are you sure you want to save?
-              </Text>
-              <Group justify="end" gap="sm">
-                <Button variant="outline" onClick={() => setShowSameNameWarning(false)}>
-                  Cancel
-                </Button>
-                <Button
-                  onClick={() => {
-                    setShowSameNameWarning(false);
-                    handleCreatePolicy();
-                  }}
-                >
-                  Save anyway
-                </Button>
-              </Group>
-            </Stack>
-          </DialogContent>
-        </Dialog>
+          onSaveWithName={(name) => {
+            setSaveAsNewNamePromptOpen(false);
+            void handleCreatePolicy(name);
+          }}
+        />
 
         {/* Unnamed policy warning modal */}
         <Dialog
-          open={showUnnamedWarning}
+          open={pendingUnnamedAction !== null}
           onOpenChange={(open) => {
             if (!open) {
-              setShowUnnamedWarning(false);
+              setPendingUnnamedAction(null);
             }
           }}
         >
           <DialogContent>
-            <DialogTitle>
-              <strong>Unnamed policy</strong>
-            </DialogTitle>
+            <DialogTitle>Unnamed policy</DialogTitle>
             <DialogDescription className="tw:sr-only">
               Confirm saving an unnamed policy
             </DialogDescription>
@@ -715,17 +749,10 @@ export function PolicyCreationModal({
                 This policy has no name. Are you sure you want to save it without a name?
               </Text>
               <Group justify="end" gap="sm">
-                <Button variant="outline" onClick={() => setShowUnnamedWarning(false)}>
+                <Button variant="outline" onClick={() => setPendingUnnamedAction(null)}>
                   Cancel
                 </Button>
-                <Button
-                  onClick={() => {
-                    setShowUnnamedWarning(false);
-                    handleCreatePolicy();
-                  }}
-                >
-                  Save anyway
-                </Button>
+                <Button onClick={runPendingUnnamedAction}>Save anyway</Button>
               </Group>
             </Stack>
           </DialogContent>

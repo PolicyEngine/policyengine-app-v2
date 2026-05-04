@@ -5,7 +5,13 @@ import { countryIds } from '@/libs/countries';
 import { shadowCreateHouseholdAndAssociation } from '@/libs/migration/householdShadow';
 import { Household } from '@/models/Household';
 import type { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
+import type { HouseholdCreationPayload } from '@/types/payloads';
 import { getHouseholdWriteConfig, useCreateHouseholdAssociation } from './useUserHousehold';
+
+interface CreateHouseholdVariables {
+  payload: HouseholdCreationPayload;
+  label?: string;
+}
 
 export function useCreateHousehold(householdLabel?: string) {
   const { shouldShadowV2 } = getHouseholdWriteConfig('useCreateHousehold');
@@ -15,9 +21,9 @@ export function useCreateHousehold(householdLabel?: string) {
   });
 
   const mutation = useMutation({
-    mutationFn: createHousehold,
-    onSuccess: async (data, householdPayload) => {
-      const resolvedLabel = householdLabel ?? householdPayload.label;
+    mutationFn: ({ payload }: CreateHouseholdVariables) => createHousehold(payload),
+    onSuccess: async (data, { payload, label }) => {
+      const resolvedLabel = label ?? householdLabel ?? payload.label;
       let association: UserHouseholdPopulation | undefined;
 
       try {
@@ -27,7 +33,7 @@ export function useCreateHousehold(householdLabel?: string) {
         association = await createAssociation.mutateAsync({
           userId,
           householdId: data.result.household_id, // This is from the API response structure; may be modified in API v2
-          countryId: householdPayload.country_id as (typeof countryIds)[number], // Use the country from the creation payload
+          countryId: payload.country_id as (typeof countryIds)[number], // Use the country from the creation payload
           label: resolvedLabel,
         });
       } catch (error) {
@@ -37,7 +43,7 @@ export function useCreateHousehold(householdLabel?: string) {
       if (shouldShadowV2) {
         void shadowCreateHouseholdAndAssociation({
           v1HouseholdId: data.result.household_id,
-          v1Household: Household.fromV1CreationPayload(householdPayload, {
+          v1Household: Household.fromV1CreationPayload(payload, {
             id: data.result.household_id,
             label: resolvedLabel ?? null,
           }),
@@ -47,8 +53,18 @@ export function useCreateHousehold(householdLabel?: string) {
     },
   });
 
+  const createHouseholdWithLabel = (
+    payload: HouseholdCreationPayload,
+    label?: string,
+    options?: Parameters<typeof mutation.mutateAsync>[1]
+  ) => mutation.mutateAsync({ payload, label }, options);
+
   return {
-    createHousehold: mutation.mutateAsync,
+    createHousehold: (
+      payload: HouseholdCreationPayload,
+      options?: Parameters<typeof mutation.mutateAsync>[1]
+    ) => createHouseholdWithLabel(payload, householdLabel, options),
+    createHouseholdWithLabel,
     isPending: mutation.isPending,
     error: mutation.error,
   };

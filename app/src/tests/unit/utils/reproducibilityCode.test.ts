@@ -1,19 +1,20 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import { TEST_COUNTRIES } from '@/tests/fixtures/constants';
 import {
   BASELINE_AND_REFORM_POLICY,
-  COMPLEX_HOUSEHOLD_INPUT,
+  COMPLEX_HOUSEHOLD,
   EMPTY_POLICY,
   EXPECTED_COLAB_LINKS,
   EXPECTED_IMPORTS,
-  HOUSEHOLD_INPUT_WITH_NULLS,
+  HOUSEHOLD_WITH_NULLS,
   POLICY_WITH_INFINITY,
   POLICY_WITH_NEGATIVE_INFINITY,
   REFORM_ONLY_POLICY,
-  SIMPLE_HOUSEHOLD_INPUT,
+  SIMPLE_HOUSEHOLD,
   TEST_DATASETS,
   TEST_REGIONS,
   TEST_YEARS,
+  UK_SIMPLE_HOUSEHOLD,
   V2_POLICIES_BOTH_CUSTOM,
   V2_POLICIES_EMPTY,
   V2_POLICIES_WITH_REFORM,
@@ -185,7 +186,7 @@ describe('reproducibilityCode', () => {
           TEST_REGIONS.US_NATIONAL,
           TEST_YEARS.DEFAULT,
           null,
-          SIMPLE_HOUSEHOLD_INPUT,
+          SIMPLE_HOUSEHOLD,
           false
         );
         const code = lines.join('\n');
@@ -199,6 +200,30 @@ describe('reproducibilityCode', () => {
         expect(code).not.toContain(EXPECTED_IMPORTS.REFORM_IMPORT);
       });
 
+      test('given household simulation then serializes through the Python package boundary', () => {
+        const toV1CreationPayloadSpy = vi.spyOn(SIMPLE_HOUSEHOLD, 'toV1CreationPayload');
+        const toPythonPackageSpy = vi.spyOn(SIMPLE_HOUSEHOLD, 'toPythonPackage');
+
+        try {
+          getReproducibilityCodeBlock(
+            'household',
+            TEST_COUNTRIES.US,
+            EMPTY_POLICY,
+            TEST_REGIONS.US_NATIONAL,
+            TEST_YEARS.DEFAULT,
+            null,
+            SIMPLE_HOUSEHOLD,
+            false
+          );
+
+          expect(toPythonPackageSpy).toHaveBeenCalledOnce();
+          expect(toV1CreationPayloadSpy).not.toHaveBeenCalled();
+        } finally {
+          toPythonPackageSpy.mockRestore();
+          toV1CreationPayloadSpy.mockRestore();
+        }
+      });
+
       test('given UK household then uses policyengine_uk import', () => {
         // When
         const lines = getReproducibilityCodeBlock(
@@ -208,7 +233,7 @@ describe('reproducibilityCode', () => {
           TEST_REGIONS.UK_NATIONAL,
           TEST_YEARS.DEFAULT,
           null,
-          SIMPLE_HOUSEHOLD_INPUT,
+          UK_SIMPLE_HOUSEHOLD,
           false
         );
         const code = lines.join('\n');
@@ -226,7 +251,7 @@ describe('reproducibilityCode', () => {
           TEST_REGIONS.US_NATIONAL,
           TEST_YEARS.DEFAULT,
           null,
-          SIMPLE_HOUSEHOLD_INPUT,
+          SIMPLE_HOUSEHOLD,
           false
         );
         const code = lines.join('\n');
@@ -264,7 +289,7 @@ describe('reproducibilityCode', () => {
           TEST_REGIONS.UK_NATIONAL,
           TEST_YEARS.DEFAULT,
           null,
-          SIMPLE_HOUSEHOLD_INPUT,
+          UK_SIMPLE_HOUSEHOLD,
           false,
           true,
           '3.4.0'
@@ -284,7 +309,7 @@ describe('reproducibilityCode', () => {
           TEST_REGIONS.US_NATIONAL,
           TEST_YEARS.DEFAULT,
           null,
-          SIMPLE_HOUSEHOLD_INPUT,
+          SIMPLE_HOUSEHOLD,
           true // earningVariation enabled
         );
         const code = lines.join('\n');
@@ -293,7 +318,7 @@ describe('reproducibilityCode', () => {
         expect(code).toContain('axes');
         expect(code).toContain('employment_income');
         expect(code).toContain('count');
-        expect(code).toContain('200');
+        expect(code).toContain('401');
       });
 
       test('given household input with null values then cleans them up', () => {
@@ -305,7 +330,7 @@ describe('reproducibilityCode', () => {
           TEST_REGIONS.US_NATIONAL,
           TEST_YEARS.DEFAULT,
           null,
-          HOUSEHOLD_INPUT_WITH_NULLS,
+          HOUSEHOLD_WITH_NULLS,
           false
         );
         const code = lines.join('\n');
@@ -325,7 +350,7 @@ describe('reproducibilityCode', () => {
           TEST_REGIONS.US_NATIONAL,
           TEST_YEARS.DEFAULT,
           null,
-          COMPLEX_HOUSEHOLD_INPUT,
+          COMPLEX_HOUSEHOLD,
           false
         );
         const code = lines.join('\n');
@@ -665,7 +690,7 @@ describe('reproducibilityCode', () => {
           TEST_REGIONS.US_NATIONAL,
           TEST_YEARS.DEFAULT,
           null,
-          SIMPLE_HOUSEHOLD_INPUT,
+          SIMPLE_HOUSEHOLD,
           false
         ).join('\n');
 
@@ -697,7 +722,7 @@ describe('reproducibilityCode', () => {
           TEST_REGIONS.US_NATIONAL,
           TEST_YEARS.DEFAULT,
           null,
-          SIMPLE_HOUSEHOLD_INPUT,
+          SIMPLE_HOUSEHOLD,
           true
         ).join('\n');
 

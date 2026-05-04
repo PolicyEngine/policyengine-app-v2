@@ -2,16 +2,16 @@ import { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { Stack, Text } from '@/components/ui';
 import { colors, spacing, typography } from '@/designTokens';
-import type { AppHouseholdInputEnvelope as Household } from '@/models/household/appTypes';
 import { RootState } from '@/store';
+import type { HouseholdCalculationOutput } from '@/types/calculation/household';
 import { MetadataState } from '@/types/metadata';
 import { calculateVariableComparison } from '@/utils/householdComparison';
 import { formatVariableValue } from '@/utils/householdValues';
 import HouseholdBreakdown from './HouseholdBreakdown';
 
 interface HouseholdSummaryCardProps {
-  baseline: Household;
-  reform: Household | null;
+  baseline: HouseholdCalculationOutput;
+  reform: HouseholdCalculationOutput | null;
   policyLabels?: string[];
 }
 

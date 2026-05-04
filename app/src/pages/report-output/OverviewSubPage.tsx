@@ -1,5 +1,5 @@
 import { SocietyWideReportOutput } from '@/api/societyWideCalculation';
-import type { AppHouseholdInputEnvelope as Household } from '@/models/household/appTypes';
+import type { HouseholdCalculationOutput } from '@/types/calculation/household';
 import type { Policy } from '@/types/ingredients/Policy';
 import type { Simulation } from '@/types/ingredients/Simulation';
 import { ReportOutputType } from '../ReportOutput.page';
@@ -7,7 +7,7 @@ import HouseholdOverview from './HouseholdOverview';
 import SocietyWideOverview from './SocietyWideOverview';
 
 interface OverviewSubPageProps {
-  output: SocietyWideReportOutput | Household | Household[];
+  output: SocietyWideReportOutput | HouseholdCalculationOutput | HouseholdCalculationOutput[];
   outputType: ReportOutputType;
   policyLabels?: string[];
   simulations?: Simulation[];
@@ -32,7 +32,7 @@ export default function OverviewSubPage({
   }
 
   // Household output can be single or array (for multiple simulations)
-  const householdOutputs = Array.isArray(output) ? output : [output as Household];
+  const householdOutputs = Array.isArray(output) ? output : [output as HouseholdCalculationOutput];
 
   return (
     <HouseholdOverview

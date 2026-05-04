@@ -6,9 +6,13 @@
  */
 import { BackBreadcrumb } from '@/components/common/BackBreadcrumb';
 import { styles } from '../styles';
-import type { IngredientPickerState, ReportBuilderState, TopBarAction } from '../types';
+import type {
+  IngredientPickerState,
+  ReportBuilderState,
+  SimulationBlockProps,
+  TopBarAction,
+} from '../types';
 import { ReportMetaPanel } from './ReportMetaPanel';
-import type { SimulationBlockProps } from './SimulationBlock';
 import { SimulationBlockFull } from './SimulationBlockFull';
 import { SimulationCanvas } from './SimulationCanvas';
 import { TopBar } from './TopBar';

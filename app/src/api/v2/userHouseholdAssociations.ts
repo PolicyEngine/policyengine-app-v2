@@ -191,9 +191,11 @@ export async function fetchUserHouseholdAssociationByIdV2(
  */
 export async function updateUserHouseholdAssociationV2(
   associationId: string,
+  userId: string,
   updates: UserHouseholdAssociationV2UpdateInput
 ): Promise<UserHouseholdPopulation> {
-  const url = `${API_V2_BASE_URL}${BASE_PATH}/${associationId}`;
+  const params = new URLSearchParams({ user_id: userId });
+  const url = `${API_V2_BASE_URL}${BASE_PATH}/${associationId}?${params}`;
   const body = toV2UpdateRequest(updates);
 
   const json = await v2Fetch<UserHouseholdAssociationV2Response>(

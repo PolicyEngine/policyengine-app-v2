@@ -37,6 +37,18 @@ interface UseReportSubmissionReturn {
   isReportConfigured: boolean;
 }
 
+function getJourneyProfiler(): {
+  markStart?: (name: string, category?: 'user-interaction' | 'api-call' | 'render') => void;
+  markEnd?: (name: string, category?: 'user-interaction' | 'api-call' | 'render') => void;
+  markEvent?: (name: string, category?: 'user-interaction' | 'api-call' | 'render') => void;
+} | null {
+  if (!import.meta.env.DEV || typeof window === 'undefined') {
+    return null;
+  }
+
+  return (window as any).__journeyProfiler ?? null;
+}
+
 function convertToSimulation(
   simState: SimulationStateProps,
   simulationId: string,
@@ -95,12 +107,15 @@ export function useReportSubmission({
       return;
     }
 
+    const journeyProfiler = getJourneyProfiler();
     setIsSubmitting(true);
     trackReportStarted();
+    journeyProfiler?.markStart?.('report-submit', 'user-interaction');
 
     try {
       const simulationIds: string[] = [];
       const simulations: (Simulation | null)[] = [];
+      journeyProfiler?.markStart?.('report-submit-simulations', 'api-call');
 
       for (const simState of reportState.simulations) {
         const policyId = simState.policy?.id
@@ -153,9 +168,12 @@ export function useReportSubmission({
         simulations.push(simulation);
       }
 
+      journeyProfiler?.markEnd?.('report-submit-simulations', 'api-call');
+
       if (simulationIds.length === 0) {
         console.error('[useReportSubmission] No simulations created');
         setIsSubmitting(false);
+        journeyProfiler?.markEnd?.('report-submit', 'user-interaction');
         return;
       }
 
@@ -168,6 +186,7 @@ export function useReportSubmission({
 
       const serializedPayload = ReportAdapter.toCreationPayload(reportData as Report);
 
+      journeyProfiler?.markStart?.('report-submit-create-report', 'api-call');
       await createReport(
         {
           countryId,
@@ -185,17 +204,25 @@ export function useReportSubmission({
         },
         {
           onSuccess: (data) => {
+            journeyProfiler?.markEvent?.('report-submit-success-handoff', 'render');
             onSuccess(data.userReport.id);
           },
           onError: (error) => {
             console.error('[useReportSubmission] Report creation failed:', error);
             setIsSubmitting(false);
+            journeyProfiler?.markEnd?.('report-submit-create-report', 'api-call');
+            journeyProfiler?.markEnd?.('report-submit', 'user-interaction');
           },
         }
       );
+      journeyProfiler?.markEnd?.('report-submit-create-report', 'api-call');
+      journeyProfiler?.markEnd?.('report-submit', 'user-interaction');
     } catch (error) {
       console.error('[useReportSubmission] Error running report:', error);
       setIsSubmitting(false);
+      journeyProfiler?.markEnd?.('report-submit-create-report', 'api-call');
+      journeyProfiler?.markEnd?.('report-submit-simulations', 'api-call');
+      journeyProfiler?.markEnd?.('report-submit', 'user-interaction');
     }
   }, [
     isReportConfigured,

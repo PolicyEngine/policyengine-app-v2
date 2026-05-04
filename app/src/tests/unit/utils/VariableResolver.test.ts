@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import { Household } from '@/models/Household';
 import type { AppHouseholdInputEnvelope } from '@/models/household/appTypes';
 import { getValue, removeVariableFromEntity, setValue } from '@/utils/VariableResolver';
 
@@ -54,8 +55,8 @@ const TEST_METADATA = {
   },
 };
 
-function createNonDefaultGroupHousehold(): AppHouseholdInputEnvelope {
-  return {
+function createNonDefaultGroupHousehold(): Household {
+  const household: AppHouseholdInputEnvelope = {
     id: 'household-1',
     countryId: 'us',
     householdData: {
@@ -76,10 +77,12 @@ function createNonDefaultGroupHousehold(): AppHouseholdInputEnvelope {
       },
     },
   };
+
+  return Household.fromAppInput(household);
 }
 
-function createHouseholdWithPersonVariable(): AppHouseholdInputEnvelope {
-  return {
+function createHouseholdWithPersonVariable(): Household {
+  const household: AppHouseholdInputEnvelope = {
     id: 'household-1',
     countryId: 'us',
     householdData: {
@@ -95,6 +98,8 @@ function createHouseholdWithPersonVariable(): AppHouseholdInputEnvelope {
       },
     },
   };
+
+  return Household.fromAppInput(household);
 }
 
 describe('VariableResolver', () => {
@@ -129,6 +134,46 @@ describe('VariableResolver', () => {
     expect(household.householdData.taxUnits?.taxUnit2?.taxable_income).toEqual({
       '2026': 50000,
     });
+  });
+
+  it('ignores group variables that are not configured for the household country', () => {
+    const household = Household.fromAppInput({
+      id: 'uk-household',
+      countryId: 'uk',
+      householdData: {
+        people: {
+          adult: { age: { '2026': 35 } },
+        },
+        taxUnits: {
+          taxUnit1: {
+            members: ['adult'],
+            taxable_income: { '2026': 50000 },
+          },
+        },
+      },
+    });
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+
+    try {
+      const updatedHousehold = setValue(household, 'taxable_income', 75000, TEST_METADATA, '2026');
+      const removedHousehold = removeVariableFromEntity(
+        household,
+        'taxable_income',
+        TEST_METADATA,
+        'taxUnit1'
+      );
+
+      expect(updatedHousehold).toBe(household);
+      expect(removedHousehold).toBe(household);
+      expect(household.householdData.taxUnits?.taxUnit1?.taxable_income).toEqual({
+        '2026': 50000,
+      });
+      expect(warnSpy).toHaveBeenCalledWith(
+        '[VariableResolver] Entity tax_units is not configured for uk households'
+      );
+    } finally {
+      warnSpy.mockRestore();
+    }
   });
 
   it('removes a person-level variable immutably from only the targeted person', () => {

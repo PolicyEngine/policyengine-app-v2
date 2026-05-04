@@ -16,7 +16,6 @@ import {
 } from '@/hooks/useUserHousehold';
 import { getV2Id, setV2Id } from '@/libs/migration/idMapping';
 import { Household as HouseholdModel } from '@/models/Household';
-import type { AppHouseholdInputEnvelope } from '@/models/household/appTypes';
 import { createMockHouseholdData } from '@/tests/fixtures/models/shared';
 import type { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 
@@ -55,14 +54,14 @@ const replacedAssociation: UserHouseholdPopulation = {
   updatedAt: '2026-04-09T12:20:00Z',
 };
 
-const nextHousehold: AppHouseholdInputEnvelope = {
+const nextHousehold = HouseholdModel.fromAppInput({
   countryId: TEST_COUNTRY_ID,
   householdData: createMockHouseholdData({
     id: 'draft-replacement',
     countryId: TEST_COUNTRY_ID,
     label: TEST_LABEL,
   }).data,
-};
+});
 
 const { mockStoreCreate, mockStoreUpdate, mockStoreFindByUser, mockStoreFindById } = vi.hoisted(
   () => ({
@@ -278,10 +277,14 @@ describe('useUpdateHouseholdAssociation dual-write', () => {
 
     expect(createHousehold).not.toHaveBeenCalled();
     await waitFor(() => {
-      expect(updateUserHouseholdAssociationV2).toHaveBeenCalledWith(TEST_V2_ASSOC_ID, {
-        label: 'Renamed household',
-        householdId: TEST_OLD_V2_HOUSEHOLD_ID,
-      });
+      expect(updateUserHouseholdAssociationV2).toHaveBeenCalledWith(
+        TEST_V2_ASSOC_ID,
+        TEST_V2_USER_ID,
+        {
+          label: 'Renamed household',
+          householdId: TEST_OLD_V2_HOUSEHOLD_ID,
+        }
+      );
     });
   });
 
@@ -363,10 +366,14 @@ describe('useUpdateHouseholdAssociation dual-write', () => {
     });
     expect(createUserHouseholdAssociationV2).not.toHaveBeenCalled();
     await waitFor(() => {
-      expect(updateUserHouseholdAssociationV2).toHaveBeenCalledWith(TEST_V2_ASSOC_ID, {
-        label: TEST_LABEL,
-        householdId: TEST_NEW_V2_HOUSEHOLD_ID,
-      });
+      expect(updateUserHouseholdAssociationV2).toHaveBeenCalledWith(
+        TEST_V2_ASSOC_ID,
+        TEST_V2_USER_ID,
+        {
+          label: TEST_LABEL,
+          householdId: TEST_NEW_V2_HOUSEHOLD_ID,
+        }
+      );
     });
 
     expect(getV2Id('Household', TEST_NEW_V1_HOUSEHOLD_ID)).toBe(TEST_NEW_V2_HOUSEHOLD_ID);

@@ -2,8 +2,8 @@ import { useEffect, useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiGeographicStore, LocalStorageGeographicStore } from '@/api/geographicAssociation';
 import { assertSupportedMode, getSupportedMigrationModes } from '@/config/migrationMode';
-import { useApiRegions } from '@/hooks/useApiRegions';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useRegions } from '@/hooks/useRegions';
 import { shadowResolveRegionTarget } from '@/libs/migration/regionShadow';
 import { queryConfig } from '@/libs/queryConfig';
 import { geographicAssociationKeys } from '@/libs/queryKeys';
@@ -153,7 +153,7 @@ export function isGeographicMetadataWithAssociation(
 
 export const useUserGeographics = (userId: string) => {
   const countryId = useCurrentCountry();
-  const { data: regions } = useApiRegions(countryId);
+  const { data: regions } = useRegions(countryId);
 
   // First, get the populations
   const {
