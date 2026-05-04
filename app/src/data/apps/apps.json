@@ -138,6 +138,19 @@
   },
   {
     "type": "iframe",
+    "slug": "wv-sb392-tax-cut",
+    "title": "West Virginia SB 392 income tax cut calculator",
+    "description": "Estimate the household and statewide impact of West Virginia Senate Bill 392, which reduces personal income tax rates by approximately 5% starting in 2026",
+    "source": "https://wv-sb392-tax-cut.vercel.app/us/wv-sb392-tax-cut",
+    "tags": ["us", "policy", "interactives"],
+    "countryId": "us",
+    "displayWithResearch": true,
+    "image": "wv-income-tax-cut-dashboard.png",
+    "date": "2026-05-04 12:00:00",
+    "authors": ["david-trimmer"]
+  },
+  {
+    "type": "iframe",
     "slug": "watca",
     "title": "Working Americans' Tax Cut Act calculator",
     "description": "Estimate the household and national impact of the cost-of-living exemption and millionaire surtax proposed by Senator Van Hollen",
