@@ -26,6 +26,22 @@
     "featured": true
   },
   {
+    "title": "The true cost of subsidizing childcare",
+    "outlet": "UHERO (University of Hawaii Economic Research Organization)",
+    "date": "2026-05-01",
+    "url": "https://uhero.hawaii.edu/the-true-cost-of-subsidizing-childcare/",
+    "image": "uhero-childcare.webp",
+    "tags": ["us", "policy"]
+  },
+  {
+    "title": "FGA Action response to 26-0804",
+    "outlet": "Vermont Legislature (House Ways and Means)",
+    "date": "2026-04-21",
+    "url": "https://legislature.vermont.gov/Documents/2026/Workgroups/House%20Ways%20and%20Means/Bills/DR%2026-0804/W~Public%20Comment~FGA%20Action%20response%20to%2026-0804~4-21-2026.pdf",
+    "image": "vermont-fga-26-0804.webp",
+    "tags": ["us", "tax"]
+  },
+  {
     "title": "National Insurance Contributions (Employer Pensions Contributions) Bill",
     "outlet": "UK Parliament (Hansard)",
     "date": "2026-02-24",
