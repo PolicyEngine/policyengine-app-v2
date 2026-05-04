@@ -129,6 +129,7 @@ export function PolicyBrowseModal({
 
     onSelect({
       id: policy.id,
+      associationId: policy.associationId,
       label: policy.label,
       parameters: Array(policy.paramCount).fill({}),
     });
@@ -267,6 +268,7 @@ export function PolicyBrowseModal({
             onEditPolicy(
               {
                 id: drawerPolicy.id,
+                associationId: drawerPolicy.associationId,
                 label: drawerPolicy.label,
                 parameters: drawerPolicy.parameters,
               },

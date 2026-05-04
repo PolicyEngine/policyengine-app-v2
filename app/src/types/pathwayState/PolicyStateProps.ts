@@ -12,6 +12,7 @@ import { Parameter } from '@/types/subIngredients/parameter';
  */
 export interface PolicyStateProps {
   id?: string; // Populated after API creation, current law selection, or loading existing
+  associationId?: string; // UserPolicy association id used when replacing an existing saved policy
   label: string | null; // Required field, can be null
   parameters: Parameter[]; // Always present, empty array if no params
 }

@@ -2,13 +2,17 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { createPolicyV2 } from '@/api/v2';
 import { fetchParametersByName } from '@/api/v2/parameterTree';
 import { fetchModelByCountry } from '@/api/v2/taxBenefitModels';
-import { createUserPolicyAssociationV2 } from '@/api/v2/userPolicyAssociations';
+import {
+  createUserPolicyAssociationV2,
+  updateUserPolicyAssociationV2,
+} from '@/api/v2/userPolicyAssociations';
 import { logMigrationComparison } from '@/libs/migration/comparisonLogger';
 import { getV2Id, setV2Id } from '@/libs/migration/idMapping';
 import { sendMigrationLog } from '@/libs/migration/migrationLogTransport';
 import {
   buildV2PolicyCreateRequest,
   shadowCreatePolicyAndAssociation,
+  shadowUpdateUserPolicyAssociation,
 } from '@/libs/migration/policyShadow';
 import type { UserPolicy } from '@/types/ingredients/UserPolicy';
 import type { PolicyCreationPayload } from '@/types/payloads';
@@ -48,6 +52,8 @@ const TEST_V1_USER_ID = 'anonymous';
 const TEST_V2_USER_ID = 'c93a763d-8d9f-4ab8-b04f-2fbba0183f35';
 const TEST_V1_ASSOC_ID = 'sup-abc123';
 const TEST_V2_ASSOC_ID = 'dd0e8400-e29b-41d4-a716-446655440008';
+const TEST_REPLACEMENT_V1_POLICY_ID = '43';
+const TEST_REPLACEMENT_V2_POLICY_ID = '990e8400-e29b-41d4-a716-446655440004';
 
 const policyPayload: PolicyCreationPayload = {
   data: {
@@ -129,6 +135,16 @@ describe('policyShadow', () => {
       label: 'My reform',
       createdAt: '2026-04-02T12:00:01Z',
       updatedAt: '2026-04-02T12:00:01Z',
+      isCreated: true,
+    });
+    vi.mocked(updateUserPolicyAssociationV2).mockResolvedValue({
+      id: TEST_V2_ASSOC_ID,
+      userId: TEST_V2_USER_ID,
+      policyId: TEST_REPLACEMENT_V2_POLICY_ID,
+      countryId: TEST_COUNTRY_ID,
+      label: 'Updated reform',
+      createdAt: '2026-04-02T12:00:01Z',
+      updatedAt: '2026-04-02T13:00:01Z',
       isCreated: true,
     });
     setV2Id('User', TEST_V1_USER_ID, TEST_V2_USER_ID);
@@ -218,6 +234,39 @@ describe('policyShadow', () => {
       expect.any(Object),
       { skipFields: ['id', 'createdAt', 'updatedAt', 'isCreated'] }
     );
+  });
+
+  test('given policy association update with replacement payload then creates v2 policy and repoints v2 association', async () => {
+    setV2Id('UserPolicy', TEST_V1_ASSOC_ID, TEST_V2_ASSOC_ID);
+    vi.mocked(createPolicyV2).mockResolvedValue({
+      ...v2PolicyResponse,
+      id: TEST_REPLACEMENT_V2_POLICY_ID,
+      name: 'Updated reform',
+    });
+
+    const updatedAssociation: UserPolicy = {
+      ...v1Association,
+      policyId: TEST_REPLACEMENT_V1_POLICY_ID,
+      label: 'Updated reform',
+      updatedAt: '2026-04-02T13:00:00Z',
+    };
+
+    await shadowUpdateUserPolicyAssociation(updatedAssociation, {
+      countryId: TEST_COUNTRY_ID,
+      v1PolicyPayload: policyPayload,
+    });
+
+    expect(createPolicyV2).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: 'Updated reform',
+        tax_benefit_model_id: TEST_MODEL_ID,
+      })
+    );
+    expect(getV2Id('Policy', TEST_REPLACEMENT_V1_POLICY_ID)).toBe(TEST_REPLACEMENT_V2_POLICY_ID);
+    expect(updateUserPolicyAssociationV2).toHaveBeenCalledWith(TEST_V2_ASSOC_ID, TEST_V2_USER_ID, {
+      policy_id: TEST_REPLACEMENT_V2_POLICY_ID,
+      label: 'Updated reform',
+    });
   });
 
   test('given v2 policy create fails then it does not throw or create user-policy association', async () => {

@@ -130,6 +130,7 @@ export function useSimulationCanvas({
         const policyId = p.association.policyId.toString();
         return {
           id: policyId,
+          associationId: p.association.id,
           label: p.association.label || `Policy #${policyId}`,
           paramCount: countPolicyModifications(p.policy),
           createdAt: p.association.createdAt,
@@ -310,9 +311,16 @@ export function useSimulationCanvas({
   );
 
   const handleSelectSavedPolicy = useCallback(
-    (simulationIndex: number, policyId: string, label: string, paramCount: number) => {
+    (
+      simulationIndex: number,
+      policyId: string,
+      label: string,
+      paramCount: number,
+      associationId?: string
+    ) => {
       updatePolicy(simulationIndex, {
         id: policyId,
+        associationId,
         label,
         parameters: Array(paramCount).fill({}),
       });
@@ -342,6 +350,7 @@ export function useSimulationCanvas({
     (simulationIndex: number, policy: PolicyStateProps) => {
       updatePolicy(simulationIndex, {
         id: policy.id,
+        associationId: policy.associationId,
         label: policy.label,
         parameters: policy.parameters,
       });
@@ -352,12 +361,12 @@ export function useSimulationCanvas({
   const resolvePolicyForEditor = useCallback(
     (policy: PolicyStateProps) => {
       let resolvedPolicy = policy;
-      let initialAssociationId: string | undefined;
+      let initialAssociationId = policy.associationId;
 
       if (policy.id) {
         const fullPolicy = policies?.find((p) => p.association.policyId.toString() === policy.id);
         if (fullPolicy) {
-          initialAssociationId = fullPolicy.association.id;
+          initialAssociationId ??= fullPolicy.association.id;
 
           const hasRealParams = policy.parameters.length > 0 && !!policy.parameters[0]?.name;
           if (!hasRealParams && fullPolicy.policy?.parameters) {

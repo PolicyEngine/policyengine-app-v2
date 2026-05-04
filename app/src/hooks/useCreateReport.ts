@@ -95,6 +95,10 @@ export function useCreateReport(reportLabel?: string) {
         // Determine calculation type from simulation
         const simulation1 = simulations?.simulation1;
         const simulation2 = simulations?.simulation2;
+        // Household comparisons intentionally support one shared household across
+        // baseline/reform simulations. The builder locks the reform population to
+        // inherit the baseline household, so each per-simulation calculation uses
+        // household1 with that simulation's policy.
         const household = populations?.household1;
         const geography = populations?.geography1;
 

@@ -65,8 +65,8 @@ export function SimulationCanvas({
             countryId={canvas.countryId}
             onLabelChange={(label) => canvas.handleSimulationLabelChange(0, label)}
             onQuickSelectPolicy={() => canvas.handleQuickSelectPolicy(0)}
-            onSelectSavedPolicy={(id, label, paramCount) =>
-              canvas.handleSelectSavedPolicy(0, id, label, paramCount)
+            onSelectSavedPolicy={(id, label, paramCount, associationId) =>
+              canvas.handleSelectSavedPolicy(0, id, label, paramCount, associationId)
             }
             onQuickSelectPopulation={() => canvas.handleQuickSelectPopulation(0, 'nationwide')}
             onSelectRecentPopulation={(pop) => canvas.handleSelectRecentPopulation(0, pop)}
@@ -97,8 +97,8 @@ export function SimulationCanvas({
               countryId={canvas.countryId}
               onLabelChange={(label) => canvas.handleSimulationLabelChange(1, label)}
               onQuickSelectPolicy={() => canvas.handleQuickSelectPolicy(1)}
-              onSelectSavedPolicy={(id, label, paramCount) =>
-                canvas.handleSelectSavedPolicy(1, id, label, paramCount)
+              onSelectSavedPolicy={(id, label, paramCount, associationId) =>
+                canvas.handleSelectSavedPolicy(1, id, label, paramCount, associationId)
               }
               onQuickSelectPopulation={() => canvas.handleQuickSelectPopulation(1, 'nationwide')}
               onSelectRecentPopulation={(pop) => canvas.handleSelectRecentPopulation(1, pop)}

@@ -86,4 +86,51 @@ describe('useSimulationCanvas', () => {
     });
     expect(result.current.isInitialLoading).toBe(false);
   });
+
+  test('given a selected policy has an association id then edit mode does not depend on stale saved policies', () => {
+    const reportStateWithPolicy: ReportBuilderState = {
+      ...reportState,
+      simulations: [
+        {
+          ...initializeSimulationState(),
+          policy: {
+            id: 'policy-replacement',
+            associationId: 'user-policy-123',
+            label: 'Editable policy',
+            parameters: [
+              {
+                name: 'gov.test.parameter',
+                values: [],
+              },
+            ],
+          },
+        },
+      ],
+    };
+
+    mockUseUserPolicies.mockReturnValue({ data: [], isLoading: false });
+
+    const { result } = renderHook(() =>
+      useSimulationCanvas({
+        reportState: reportStateWithPolicy,
+        setReportState,
+        pickerState,
+        setPickerState,
+      })
+    );
+
+    act(() => {
+      result.current.handleEditPolicy(0);
+    });
+
+    expect(result.current.policyCreationState).toMatchObject({
+      isOpen: true,
+      simulationIndex: 0,
+      initialAssociationId: 'user-policy-123',
+      initialPolicy: {
+        id: 'policy-replacement',
+        associationId: 'user-policy-123',
+      },
+    });
+  });
 });

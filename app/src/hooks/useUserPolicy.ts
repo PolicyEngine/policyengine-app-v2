@@ -13,6 +13,7 @@ import {
   shadowUpdateUserPolicyAssociation,
 } from '@/libs/migration/policyShadow';
 import { Policy } from '@/types/ingredients/Policy';
+import type { PolicyCreationPayload } from '@/types/payloads';
 import { ApiPolicyStore, LocalStoragePolicyStore } from '../api/policyAssociation';
 import { queryConfig } from '../libs/queryConfig';
 import { policyAssociationKeys, policyKeys } from '../libs/queryKeys';
@@ -28,6 +29,13 @@ type PolicyAssociationStoreSelection = {
 
 type PolicyWriteConfigOptions = {
   skipDuplicateV2AssociationShadow?: boolean;
+};
+
+type UpdatePolicyAssociationVariables = {
+  userPolicyId: string;
+  updates: Partial<UserPolicy>;
+  replacementPolicyPayload?: PolicyCreationPayload;
+  replacementPolicyCountryId?: string;
 };
 
 export function getPolicyWriteConfig(
@@ -117,15 +125,10 @@ export const useUpdatePolicyAssociation = () => {
   const { shouldShadowV2 } = getPolicyWriteConfig('useUpdatePolicyAssociation');
 
   return useMutation({
-    mutationFn: ({
-      userPolicyId,
-      updates,
-    }: {
-      userPolicyId: string;
-      updates: Partial<UserPolicy>;
-    }) => store.update(userPolicyId, updates),
+    mutationFn: ({ userPolicyId, updates }: UpdatePolicyAssociationVariables) =>
+      store.update(userPolicyId, updates),
 
-    onSuccess: (updatedAssociation) => {
+    onSuccess: (updatedAssociation, variables) => {
       // Invalidate all related queries to trigger refetch
       queryClient.invalidateQueries({
         queryKey: policyAssociationKeys.byUser(
@@ -145,7 +148,10 @@ export const useUpdatePolicyAssociation = () => {
       );
 
       if (shouldShadowV2) {
-        void shadowUpdateUserPolicyAssociation(updatedAssociation);
+        void shadowUpdateUserPolicyAssociation(updatedAssociation, {
+          countryId: variables.replacementPolicyCountryId,
+          v1PolicyPayload: variables.replacementPolicyPayload,
+        });
       }
     },
   });

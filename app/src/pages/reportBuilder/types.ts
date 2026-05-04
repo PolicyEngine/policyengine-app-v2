@@ -41,6 +41,7 @@ export interface IngredientColorConfig {
 
 export interface SavedPolicy {
   id: string;
+  associationId?: string;
   label: string;
   paramCount: number;
   createdAt?: string;
@@ -162,7 +163,12 @@ export interface IngredientSectionProps {
   currentPopulation?: PopulationStateProps;
   countryId?: 'us' | 'uk';
   onQuickSelectPolicy?: () => void;
-  onSelectSavedPolicy?: (id: string, label: string, paramCount: number) => void;
+  onSelectSavedPolicy?: (
+    id: string,
+    label: string,
+    paramCount: number,
+    associationId?: string
+  ) => void;
   onQuickSelectPopulation?: (type: 'nationwide') => void;
   onSelectRecentPopulation?: (population: PopulationStateProps) => void;
   onDeselectPopulation?: () => void;
@@ -187,7 +193,12 @@ export interface SimulationBlockProps {
   countryId: 'us' | 'uk';
   onLabelChange: (label: string) => void;
   onQuickSelectPolicy: () => void;
-  onSelectSavedPolicy: (id: string, label: string, paramCount: number) => void;
+  onSelectSavedPolicy: (
+    id: string,
+    label: string,
+    paramCount: number,
+    associationId?: string
+  ) => void;
   onQuickSelectPopulation: () => void;
   onSelectRecentPopulation: (population: PopulationStateProps) => void;
   onDeselectPolicy: () => void;

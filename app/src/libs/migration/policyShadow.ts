@@ -33,6 +33,11 @@ type PolicyBuildResult = {
   comparablePolicy: ComparablePolicy;
 };
 
+interface ShadowUpdateUserPolicyAssociationOptions {
+  countryId?: string;
+  v1PolicyPayload?: PolicyCreationPayload;
+}
+
 function dateOnly(date: string): string {
   return date.split('T')[0];
 }
@@ -226,7 +231,63 @@ export async function shadowCreateUserPolicyAssociation(
   }
 }
 
-export async function shadowUpdateUserPolicyAssociation(v1Association: UserPolicy): Promise<void> {
+async function createAndMapV2Policy(args: {
+  countryId: string;
+  label?: string | null;
+  v1PolicyId: string;
+  v1PolicyPayload: PolicyCreationPayload;
+}): Promise<PolicyV2Response> {
+  const { payload, comparablePolicy } = await buildV2PolicyCreateRequest(
+    args.v1PolicyId,
+    args.countryId,
+    args.v1PolicyPayload,
+    args.label
+  );
+  const v2Policy = await createPolicyV2(payload);
+
+  setV2Id('Policy', args.v1PolicyId, v2Policy.id);
+  logMigrationComparison(
+    'PolicyMigration',
+    'CREATE',
+    comparablePolicy as unknown as Record<string, unknown>,
+    buildComparableV2Policy(v2Policy, args.countryId) as unknown as Record<string, unknown>,
+    { skipFields: ['id'] }
+  );
+
+  return v2Policy;
+}
+
+async function resolveUpdatedV2PolicyId(
+  v1Association: UserPolicy,
+  options?: ShadowUpdateUserPolicyAssociationOptions
+): Promise<string | undefined> {
+  if (!options?.v1PolicyPayload) {
+    return undefined;
+  }
+
+  const mappedPolicyId = getV2Id('Policy', v1Association.policyId);
+  if (mappedPolicyId) {
+    return mappedPolicyId;
+  }
+
+  if (!options.countryId) {
+    return undefined;
+  }
+
+  const v2Policy = await createAndMapV2Policy({
+    countryId: options.countryId,
+    label: v1Association.label,
+    v1PolicyId: v1Association.policyId,
+    v1PolicyPayload: options.v1PolicyPayload,
+  });
+
+  return v2Policy.id;
+}
+
+export async function shadowUpdateUserPolicyAssociation(
+  v1Association: UserPolicy,
+  options?: ShadowUpdateUserPolicyAssociationOptions
+): Promise<void> {
   if (!v1Association.id) {
     return;
   }
@@ -239,7 +300,9 @@ export async function shadowUpdateUserPolicyAssociation(v1Association: UserPolic
   }
 
   try {
+    const v2PolicyId = await resolveUpdatedV2PolicyId(v1Association, options);
     const v2Result = await updateUserPolicyAssociationV2(v2UserPolicyId, v2UserId, {
+      ...(v2PolicyId ? { policy_id: v2PolicyId } : {}),
       label: v1Association.label ?? null,
     });
 
@@ -249,7 +312,7 @@ export async function shadowUpdateUserPolicyAssociation(v1Association: UserPolic
       buildComparableUserPolicyAssociation(
         v1Association,
         v2UserId,
-        v2Result.policyId
+        v2PolicyId ?? v2Result.policyId
       ) as unknown as Record<string, unknown>,
       v2Result as unknown as Record<string, unknown>,
       { skipFields: ['id', 'createdAt', 'updatedAt', 'isCreated'] }
@@ -287,22 +350,12 @@ export async function shadowCreatePolicyAndAssociation({
   v1Association?: UserPolicy;
 }): Promise<void> {
   try {
-    const { payload, comparablePolicy } = await buildV2PolicyCreateRequest(
-      v1PolicyId,
+    const v2Policy = await createAndMapV2Policy({
       countryId,
+      label,
+      v1PolicyId,
       v1PolicyPayload,
-      label
-    );
-    const v2Policy = await createPolicyV2(payload);
-
-    setV2Id('Policy', v1PolicyId, v2Policy.id);
-    logMigrationComparison(
-      'PolicyMigration',
-      'CREATE',
-      comparablePolicy as unknown as Record<string, unknown>,
-      buildComparableV2Policy(v2Policy, countryId) as unknown as Record<string, unknown>,
-      { skipFields: ['id'] }
-    );
+    });
 
     if (v1Association) {
       await shadowCreateUserPolicyAssociation(v1Association, v2Policy.id);

@@ -356,10 +356,13 @@ export function PolicyCreationModal({
       await updatePolicyAssociation.mutateAsync({
         userPolicyId: initialAssociationId,
         updates: { policyId: newPolicyId, label: desiredLabel },
+        replacementPolicyCountryId: countryId,
+        replacementPolicyPayload: payload,
       });
 
       onPolicyCreated({
         id: newPolicyId,
+        associationId: initialAssociationId,
         label: desiredLabel ?? null,
         parameters: policyParameters,
       });
