@@ -59,6 +59,9 @@ const nextConfig: NextConfig = {
         // Utah 2026 tax changes calculator (Vercel)
         { source: "/us/utah-2026-tax-changes", destination: "https://policyengine-utah-2026-tax-changes.vercel.app/us/utah-2026-tax-changes" },
         { source: "/us/utah-2026-tax-changes/:path*", destination: "https://policyengine-utah-2026-tax-changes.vercel.app/us/utah-2026-tax-changes/:path*" },
+        // West Virginia SB 392 income tax cut calculator (Vercel)
+        { source: "/us/wv-sb392-tax-cut", destination: "https://wv-sb392-tax-cut.vercel.app/us/wv-sb392-tax-cut" },
+        { source: "/us/wv-sb392-tax-cut/:path*", destination: "https://wv-sb392-tax-cut.vercel.app/us/wv-sb392-tax-cut/:path*" },
         // Household API docs (Vercel) — beforeFiles so it intercepts before Next.js trailing slash redirect
         { source: "/us/api", destination: "https://household-api-docs-policy-engine.vercel.app/us/api/" },
         { source: "/us/api/:path*", destination: "https://household-api-docs-policy-engine.vercel.app/us/api/:path*" },
