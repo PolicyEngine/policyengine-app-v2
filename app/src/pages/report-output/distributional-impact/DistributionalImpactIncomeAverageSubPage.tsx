@@ -30,6 +30,7 @@ import {
 } from '@/utils/chartUtils';
 import { currencySymbol, formatCurrency, ordinal, precision } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
+import { getDecileAverageCsvRows } from './distributionalChartUtils';
 
 interface Props {
   output: SocietyWideReportOutput;
@@ -173,6 +174,8 @@ export default function DistributionalImpactIncomeAverageSubPage({
     <ChartContainer
       title={getChartTitle()}
       downloadFilename="distributional-impact-income-average.svg"
+      csvFilename="distributional-impact-income-average.csv"
+      csvData={getDecileAverageCsvRows(output)}
     >
       <Stack gap="sm">
         <ResponsiveContainer width="100%" height={chartHeight}>

@@ -5,6 +5,15 @@
 import { typography } from '@/designTokens';
 import { colors } from '@/designTokens/colors';
 
+export type CsvCell = string | number | null | undefined;
+export type CsvData = CsvCell[][];
+
+export function buildCsvContent(data: CsvData): string {
+  return data
+    .map((row) => row.map((cell) => `"${String(cell ?? '').replace(/"/g, '""')}"`).join(','))
+    .join('\r\n');
+}
+
 /**
  * Gets the label for the reform policy line in parameter charts
  *
@@ -37,8 +46,8 @@ export function getReformPolicyLabel(
  * @param data - 2D array of data to export
  * @param filename - Name of the file to download
  */
-export function downloadCsv(data: string[][], filename: string): void {
-  const csvContent = data.map((row) => row.map((cell) => `"${cell}"`).join(',')).join('\r\n');
+export function downloadCsv(data: CsvData, filename: string): void {
+  const csvContent = buildCsvContent(data);
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const tempLink = document.createElement('a');

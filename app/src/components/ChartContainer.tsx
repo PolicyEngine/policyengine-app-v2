@@ -11,7 +11,7 @@ import {
 } from '@/components/ui';
 import { typography } from '@/designTokens';
 import { trackChartCsvDownloaded, trackChartSvgDownload } from '@/utils/analytics';
-import { downloadChartAsSvg, downloadCsv } from '@/utils/chartUtils';
+import { downloadChartAsSvg, downloadCsv, type CsvData } from '@/utils/chartUtils';
 
 interface ChartContainerProps {
   children: ReactNode;
@@ -19,7 +19,7 @@ interface ChartContainerProps {
   /** When set, renders a download button that exports the chart as SVG */
   downloadFilename?: string;
   /** CSV rows to export when the CSV download button is used */
-  csvData?: string[][];
+  csvData?: CsvData;
   /** When set with csvData, renders a download button that exports chart data as CSV */
   csvFilename?: string;
 }

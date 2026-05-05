@@ -30,6 +30,7 @@ import {
 } from '@/utils/chartUtils';
 import { formatPercent, ordinal, precision } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
+import { getDecileRelativeCsvRows } from './distributionalChartUtils';
 
 interface Props {
   output: SocietyWideReportOutput;
@@ -163,6 +164,8 @@ export default function DistributionalImpactIncomeRelativeSubPage({
     <ChartContainer
       title={getChartTitle()}
       downloadFilename="distributional-impact-income-relative.svg"
+      csvFilename="distributional-impact-income-relative.csv"
+      csvData={getDecileRelativeCsvRows(output)}
     >
       <Stack gap="sm">
         <ResponsiveContainer width="100%" height={chartHeight}>

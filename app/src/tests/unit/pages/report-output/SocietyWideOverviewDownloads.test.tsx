@@ -91,7 +91,7 @@ describe('SocietyWideOverview chart downloads', () => {
           'Lose less than 5%',
           'Lose more than 5%',
         ],
-        ['All', '0.2', '0.1', '0.6', '0.05', '0.05'],
+        ['All', 0.2, 0.1, 0.6, 0.05, 0.05],
       ]),
     });
   });

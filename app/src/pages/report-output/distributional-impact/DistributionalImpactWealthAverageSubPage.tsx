@@ -24,6 +24,7 @@ import { absoluteChangeMessage } from '@/utils/chartMessages';
 import { getClampedChartHeight, getNiceTicks, RECHARTS_FONT_STYLE } from '@/utils/chartUtils';
 import { currencySymbol, formatCurrency, ordinal, precision } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
+import { getDecileAverageCsvRows } from './distributionalChartUtils';
 
 interface Props {
   output: SocietyWideReportOutput;
@@ -102,6 +103,8 @@ export default function DistributionalImpactWealthAverageSubPage({ output }: Pro
     <ChartContainer
       title={getChartTitle()}
       downloadFilename="distributional-impact-wealth-average.svg"
+      csvFilename="distributional-impact-wealth-average.csv"
+      csvData={getDecileAverageCsvRows(output, 'wealth')}
     >
       <Stack gap="sm">
         <ResponsiveContainer width="100%" height={chartHeight}>

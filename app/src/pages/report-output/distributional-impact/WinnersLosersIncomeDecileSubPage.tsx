@@ -12,21 +12,18 @@ import type { RootState } from '@/store';
 import { RECHARTS_FONT_STYLE } from '@/utils/chartUtils';
 import { formatPercent } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
+import {
+  WINNERS_LOSERS_CATEGORIES as CATEGORIES,
+  getWinnersLosersCsvRows,
+} from './distributionalChartUtils';
+
+export { getWinnersLosersCsvRows } from './distributionalChartUtils';
 
 interface Props {
   output: SocietyWideReportOutput;
   chartHeight?: number;
   fillHeight?: boolean;
 }
-
-// Category definitions and styling
-const CATEGORIES = [
-  'Gain more than 5%',
-  'Gain less than 5%',
-  'No change',
-  'Lose less than 5%',
-  'Lose more than 5%',
-] as const;
 
 const COLOR_MAP: Record<string, string> = {
   'Gain more than 5%': colors.primary[700],
@@ -51,23 +48,6 @@ const TOOLTIP_WRAPPER_STYLE = {
   pointerEvents: 'none' as const,
   maxWidth: 'min(280px, calc(100vw - 32px))',
 };
-
-function formatCsvValue(value: number | null | undefined): string {
-  return value === null || value === undefined ? '' : String(value);
-}
-
-export function getWinnersLosersCsvRows(output: SocietyWideReportOutput): string[][] {
-  const deciles = output.intra_decile.deciles ?? {};
-  const all = output.intra_decile.all ?? {};
-  const header = ['Income decile', ...CATEGORIES];
-  const allRow = ['All', ...CATEGORIES.map((cat) => formatCsvValue(all[cat]))];
-  const decileRows = Array.from({ length: 10 }, (_, index) => [
-    String(index + 1),
-    ...CATEGORIES.map((cat) => formatCsvValue(deciles[cat]?.[index])),
-  ]);
-
-  return [header, allRow, ...decileRows];
-}
 
 function WinnersLosersTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) {

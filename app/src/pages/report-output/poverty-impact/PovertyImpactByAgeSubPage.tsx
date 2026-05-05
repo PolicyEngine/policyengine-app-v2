@@ -30,6 +30,7 @@ import {
 } from '@/utils/chartUtils';
 import { formatNumber, formatPercent } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
+import { getPovertyByAgeCsvRows } from './povertyChartUtils';
 
 interface Props {
   output: SocietyWideReportOutput;
@@ -190,7 +191,12 @@ export default function PovertyImpactByAgeSubPage({
   }
 
   return (
-    <ChartContainer title={getChartTitle()} downloadFilename="poverty-impact-by-age.svg">
+    <ChartContainer
+      title={getChartTitle()}
+      downloadFilename="poverty-impact-by-age.svg"
+      csvFilename="poverty-impact-by-age.csv"
+      csvData={getPovertyByAgeCsvRows(output)}
+    >
       <Stack gap="sm">
         <ResponsiveContainer width="100%" height={chartHeight}>
           {barChart}

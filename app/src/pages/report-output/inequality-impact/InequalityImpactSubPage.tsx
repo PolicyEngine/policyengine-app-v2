@@ -29,6 +29,7 @@ import {
 } from '@/utils/chartUtils';
 import { formatPercent, precision } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
+import { getInequalityCsvRows } from './inequalityChartUtils';
 
 interface Props {
   output: SocietyWideReportOutput;
@@ -181,7 +182,12 @@ export default function InequalityImpactSubPage({
   }
 
   return (
-    <ChartContainer title={getChartTitle()} downloadFilename="inequality-impact.svg">
+    <ChartContainer
+      title={getChartTitle()}
+      downloadFilename="inequality-impact.svg"
+      csvFilename="inequality-impact.csv"
+      csvData={getInequalityCsvRows(output)}
+    >
       <Stack gap="sm">
         <ResponsiveContainer width="100%" height={chartHeight}>
           {barChart}

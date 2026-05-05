@@ -76,7 +76,7 @@ describe('WinnersLosersIncomeDecileSubPage', () => {
     });
   });
 
-  test('given output then CSV rows include All and each income decile', () => {
+  test('given output then CSV rows include each income decile and All', () => {
     // When
     const rows = getWinnersLosersCsvRows(MOCK_WINNERS_LOSERS_OUTPUT);
 
@@ -90,8 +90,9 @@ describe('WinnersLosersIncomeDecileSubPage', () => {
       'Lose more than 5%',
     ]);
     expect(rows).toHaveLength(12);
-    expect(rows[1][0]).toBe('All');
-    expect(rows[11][0]).toBe('10');
+    expect(rows[1][0]).toBe('1');
+    expect(rows[10][0]).toBe('10');
+    expect(rows[11][0]).toBe('All');
   });
 });
 

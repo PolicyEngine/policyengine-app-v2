@@ -7,7 +7,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { colors, spacing } from '@/designTokens';
 import { typography } from '@/designTokens/typography';
 import { trackChartCsvDownloaded, trackChartSvgDownload } from '@/utils/analytics';
-import { downloadChartAsSvg, downloadCsv } from '@/utils/chartUtils';
+import { downloadChartAsSvg, downloadCsv, type CsvData } from '@/utils/chartUtils';
 
 const FADE_MS = 150;
 const RESIZE_S = 0.35;
@@ -43,7 +43,7 @@ interface DashboardCardProps {
   /** SVG download filename — renders a download button in the expanded toolbar */
   downloadFilename?: string;
   /** CSV rows to export from the expanded toolbar */
-  csvData?: string[][];
+  csvData?: CsvData;
   /** CSV download filename — renders a CSV download button when csvData is provided */
   csvFilename?: string;
 
